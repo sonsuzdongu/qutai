@@ -174,7 +174,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
    - ✅ **Clickable options:** when a choice is needed, the agent presents options as buttons via the `ask_user` tool
 5. ✅ **AI search:** answers with sources using the providers' web search tools (searches are visible in chat, citations in source cards; can be turned off in settings)
 6. ✅ **Multi-tab:** `read_tab` tool (reads other tabs without bringing them to the front), "compare selected tabs" in the tab switcher
-7. **Page translation** (in place) and **reader mode** · M
+7. ⏸ **Page translation** (in place) and **reader mode** · M (postponed per user decision)
 8. **Per-site agent permissions** and **action history** · M
 9. **Searching history in natural language**, **email draft**, **form profile** · M
    - ✅ **Memory** (in place of the form profile): the agent stores lasting information the user tells it on the phone and
