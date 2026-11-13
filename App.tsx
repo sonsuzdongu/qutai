@@ -4,12 +4,12 @@ import { Alert, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
-import { getProvider } from './src/ai/providers';
+import { getProvider, modelLabel } from './src/ai/providers';
 import type { Turn } from './src/ai/types';
 import { Browser, useBrowser } from './src/browser/Browser';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
-import { ChatItem, ClaudePanel } from './src/components/ClaudePanel';
+import { AssistantPanel, ChatItem } from './src/components/AssistantPanel';
 import { SettingsModal } from './src/components/SettingsModal';
 import { TabSwitcher } from './src/components/TabSwitcher';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
@@ -19,7 +19,7 @@ const newItem = (kind: ChatItem['kind'], text: string): ChatItem => ({ id: Strin
 
 function askConfirmation(description: string): Promise<boolean> {
   return new Promise((resolve) => {
-    Alert.alert('Claude bu işlemi yapmak istiyor', description, [
+    Alert.alert('ALPAI bu işlemi yapmak istiyor', description, [
       { text: 'Reddet', style: 'cancel', onPress: () => resolve(false) },
       { text: 'İzin ver', onPress: () => resolve(true) },
     ]);
@@ -123,8 +123,8 @@ export default function App() {
             loading={tab.loading}
             canGoBack={tab.canGoBack}
             tabCount={browser.tabs.length}
-            claudeOpen={panelOpen}
-            claudeRunning={running}
+            assistantOpen={panelOpen}
+            assistantRunning={running}
             onSubmit={(url) => tab.loadUrl(url)}
             onBack={() => tab.webview?.goBack()}
             onReload={() => tab.webview?.reload()}
@@ -134,7 +134,7 @@ export default function App() {
               await tab.captureThumbnail();
               setTabsVisible(true);
             }}
-            onToggleClaude={() => setPanelOpen((v) => !v)}
+            onToggleAssistant={() => setPanelOpen((v) => !v)}
           />
           {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard. */}
           <KeyboardAvoidingView style={styles.flex} behavior="padding">
@@ -142,8 +142,9 @@ export default function App() {
           </KeyboardAvoidingView>
         </SafeAreaView>
 
-        <ClaudePanel
+        <AssistantPanel
           open={panelOpen}
+          modelInfo={`${getProvider(settings.provider).label} · ${modelLabel(settings.provider, settings.models[settings.provider])}`}
           items={items}
           running={running}
           onClose={closePanel}

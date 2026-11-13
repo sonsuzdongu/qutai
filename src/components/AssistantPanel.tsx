@@ -26,6 +26,8 @@ type Props = {
   open: boolean;
   items: ChatItem[];
   running: boolean;
+  /** Provider and model shown under the title, e.g. "OpenAI · GPT-5.6 Terra". */
+  modelInfo: string;
   onClose: () => void;
   onSend: (text: string) => void;
   onStop: () => void;
@@ -40,7 +42,17 @@ const MAX_WIDTH = 420;
  * side panel. It stays mounted while closed so the conversation keeps its
  * scroll position.
  */
-export function ClaudePanel({ open, items, running, onClose, onSend, onStop, onNewChat, onOpenSettings }: Props) {
+export function AssistantPanel({
+  open,
+  items,
+  running,
+  modelInfo,
+  onClose,
+  onSend,
+  onStop,
+  onNewChat,
+  onOpenSettings,
+}: Props) {
   const { width: screenWidth } = useWindowDimensions();
   const width = Math.min(Math.round(screenWidth * 0.88), MAX_WIDTH);
   const insets = useSafeAreaInsets();
@@ -101,9 +113,14 @@ export function ClaudePanel({ open, items, running, onClose, onSend, onStop, onN
             ]}
           >
             <View style={styles.header}>
-              <Text style={styles.title}>✳︎ Claude</Text>
-              {running && <Text style={styles.status}>çalışıyor…</Text>}
-              <View style={styles.headerSpacer} />
+              <View style={styles.headerTitle}>
+                <Text style={styles.title}>✦ ALPAI</Text>
+                <Pressable onPress={onOpenSettings} hitSlop={4} accessibilityLabel={`Model: ${modelInfo}. Değiştir`}>
+                  <Text style={styles.status} numberOfLines={1}>
+                    {running ? 'çalışıyor…' : modelInfo}
+                  </Text>
+                </Pressable>
+              </View>
               {items.length > 0 && !running && (
                 <HeaderButton label="＋" accessibilityLabel="Yeni sohbet" onPress={onNewChat} />
               )}
@@ -133,7 +150,7 @@ export function ClaudePanel({ open, items, running, onClose, onSend, onStop, onN
                 style={styles.input}
                 value={text}
                 onChangeText={setText}
-                placeholder="Claude'a bir görev verin…"
+                placeholder="ALPAI'ye bir görev verin…"
                 multiline
                 editable={!running}
               />
@@ -218,13 +235,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingLeft: 16,
     paddingRight: 8,
-    height: 48,
+    height: 56,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#e0ddd4',
   },
   title: { fontWeight: '700', color: '#c96442', fontSize: 17 },
-  status: { color: '#999', fontSize: 13, marginLeft: 8 },
-  headerSpacer: { flex: 1 },
+  status: { color: '#999', fontSize: 12, marginTop: 1 },
+  headerTitle: { flex: 1, marginRight: 8 },
   headerButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerButtonText: { fontSize: 18, color: '#555' },
   messagesContent: { padding: 12, gap: 8 },

@@ -3,12 +3,12 @@
  * source in a string: Hermes compiles functions to bytecode, so we cannot use
  * Function.prototype.toString() to ship code into the WebView.
  *
- * Exposes window.__claudeAgent with: readPage, click, type, select, scroll, scrollTo.
+ * Exposes window.__alpaiAgent with: readPage, click, type, select, scroll, scrollTo.
  * Elements are addressed by numeric refs assigned during readPage.
  */
 export const PAGE_SCRIPT = String.raw`
 (function () {
-  if (window.__claudeAgent) return;
+  if (window.__alpaiAgent) return;
 
   var MAX_CHARS = 20000;
   var INTERACTIVE = [
@@ -285,7 +285,7 @@ export const PAGE_SCRIPT = String.raw`
     return 'Scrolled to ' + describe(el);
   }
 
-  window.__claudeAgent = {
+  window.__alpaiAgent = {
     readPage: readPage,
     click: click,
     type: type,

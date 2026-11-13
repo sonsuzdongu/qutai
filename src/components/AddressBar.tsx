@@ -7,13 +7,13 @@ type Props = {
   canGoBack: boolean;
   tabCount: number;
   incognito: boolean;
-  claudeOpen: boolean;
-  claudeRunning: boolean;
+  assistantOpen: boolean;
+  assistantRunning: boolean;
   onSubmit: (url: string) => void;
   onBack: () => void;
   onReload: () => void;
   onOpenTabs: () => void;
-  onToggleClaude: () => void;
+  onToggleAssistant: () => void;
 };
 
 export function toUrl(input: string): string {
@@ -37,13 +37,13 @@ export function AddressBar({
   canGoBack,
   tabCount,
   incognito,
-  claudeOpen,
-  claudeRunning,
+  assistantOpen,
+  assistantRunning,
   onSubmit,
   onBack,
   onReload,
   onOpenTabs,
-  onToggleClaude,
+  onToggleAssistant,
 }: Props) {
   const [text, setText] = useState(url);
   const [editing, setEditing] = useState(false);
@@ -102,15 +102,15 @@ export function AddressBar({
         </View>
       </Pressable>
       <Pressable
-        onPress={onToggleClaude}
+        onPress={onToggleAssistant}
         hitSlop={6}
-        style={[styles.claudeButton, claudeOpen && styles.claudeButtonActive]}
-        accessibilityLabel={claudeOpen ? 'Claude panelini kapat' : 'Claude panelini aç'}
+        style={[styles.assistantButton, assistantOpen && styles.assistantButtonActive]}
+        accessibilityLabel={assistantOpen ? 'ALPAI panelini kapat' : 'ALPAI panelini aç'}
       >
-        {claudeRunning && !claudeOpen ? (
+        {assistantRunning && !assistantOpen ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
-          <Text style={styles.claudeIcon}>✳︎</Text>
+          <Text style={styles.assistantIcon}>✦</Text>
         )}
       </Pressable>
     </View>
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 3,
   },
   tabCountText: { fontSize: 12, fontWeight: '700', color: '#333' },
-  claudeButton: {
+  assistantButton: {
     width: 34,
     height: 34,
     borderRadius: 17,
@@ -190,8 +190,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#c96442',
   },
-  claudeButtonActive: { backgroundColor: '#8f4026' },
-  claudeIcon: { fontSize: 18, color: '#fff', fontWeight: '700' },
+  assistantButtonActive: { backgroundColor: '#8f4026' },
+  assistantIcon: { fontSize: 18, color: '#fff', fontWeight: '700' },
 });
 
 const darkStyles = StyleSheet.create({

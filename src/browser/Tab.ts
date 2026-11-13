@@ -99,13 +99,13 @@ export class Tab {
   }
 
   handleMessage(data: string): boolean {
-    let msg: { __claude?: string; id?: string; ok?: boolean; result?: unknown; error?: string };
+    let msg: { __alpai?: string; id?: string; ok?: boolean; result?: unknown; error?: string };
     try {
       msg = JSON.parse(data);
     } catch {
       return false;
     }
-    if (msg.__claude !== this.nonce || !msg.id) return false;
+    if (msg.__alpai !== this.nonce || !msg.id) return false;
     const p = this.pending.get(msg.id);
     if (!p) return true;
     this.pending.delete(msg.id);
@@ -181,12 +181,12 @@ export class Tab {
 ${PAGE_SCRIPT}
 (function () {
   var send = function (payload) {
-    payload.__claude = ${JSON.stringify(this.nonce)};
+    payload.__alpai = ${JSON.stringify(this.nonce)};
     payload.id = ${JSON.stringify(id)};
     window.ReactNativeWebView.postMessage(JSON.stringify(payload));
   };
   try {
-    var result = window.__claudeAgent[${JSON.stringify(command)}].apply(null, ${JSON.stringify(args)});
+    var result = window.__alpaiAgent[${JSON.stringify(command)}].apply(null, ${JSON.stringify(args)});
     send({ ok: true, result: result });
   } catch (e) {
     send({ ok: false, error: String((e && e.message) || e) });
