@@ -68,6 +68,7 @@ export const tr: Record<keyof typeof en, string> = {
   'action.typeRedacted': '⌨️ [{ref}] alanına yazdı',
   'action.searchHistory': '🕘 Geçmişte aranıyor: {query}',
   'action.draftEmail': '✉️ E-posta taslağı: {subject}',
+  'action.clickAt': '👆 ({x}, {y}) noktasına dokunuluyor',
   'action.wait': '⏳ {seconds} sn bekleniyor',
 
   'find.placeholder': 'Sayfada bul',

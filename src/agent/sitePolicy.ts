@@ -28,13 +28,14 @@ export const ACTIONS_NEEDING_CONFIRMATION = new Set([
   'navigate',
   'open_tab',
   'click',
+  'click_at',
   'type',
   'select_option',
   'save_screenshot',
 ]);
 
 /** Actions that interact with the page; not allowed on read-only sites. */
-const WRITE_ACTIONS = new Set(['click', 'type', 'select_option']);
+const WRITE_ACTIONS = new Set(['click', 'click_at', 'type', 'select_option']);
 
 export type Decision = { kind: 'run' } | { kind: 'confirm' } | { kind: 'refuse'; reason: string };
 

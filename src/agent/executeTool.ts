@@ -46,6 +46,7 @@ export type ToolContext = {
 const PAGE_TOOLS = new Set([
   'read_page',
   'click',
+  'click_at',
   'type',
   'select_option',
   'scroll',
@@ -81,6 +82,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.saveScreenshot');
     case 'view_screenshot':
       return t('action.viewScreenshot');
+    case 'click_at':
+      return t('action.clickAt', { x: str(input.x), y: str(input.y) });
     case 'read_aloud':
       return t(input.text ? 'action.readAloudText' : 'action.readAloudPage');
     case 'list_tabs':
@@ -267,6 +270,7 @@ const LOGGED_TOOLS = new Set([
   'navigate',
   'go_back',
   'click',
+  'click_at',
   'type',
   'select_option',
   'read_page',
@@ -439,8 +443,33 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
       }
       case 'view_screenshot': {
         await showTab(ctx, tab);
-        const image = await captureForModel(tab);
-        return { content: `Screenshot of the visible area of ${tab.url}.`, isError: false, images: [image] };
+        const { width, height, ...image } = await captureForModel(tab);
+        tab.modelScreenshotSize = { width, height };
+        return {
+          content:
+            `Screenshot of the visible area of ${tab.url} (${width}×${height} pixels). ` +
+            'To click something that has no ref, call click_at with x and y in these pixels.',
+          isError: false,
+          images: [image],
+        };
+      }
+      case 'click_at': {
+        const size = tab.modelScreenshotSize;
+        if (!size)
+          return { content: 'Call view_screenshot first; click_at uses its pixel coordinates.', isError: true };
+        const x = Number(input.x);
+        const y = Number(input.y);
+        if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x > size.width || y > size.height) {
+          return {
+            content: `x and y must be inside the screenshot (0–${size.width}, 0–${size.height}).`,
+            isError: true,
+          };
+        }
+        const result = await tab.run<string>('clickAt', [x / size.width, y / size.height]);
+        // The page may have changed; old coordinates are no longer reliable.
+        tab.modelScreenshotSize = null;
+        await tab.settle();
+        return { content: `${result}. Take a new screenshot to see the result.`, isError: false };
       }
       case 'read_aloud': {
         const text = typeof input.text === 'string' ? input.text.trim() : '';

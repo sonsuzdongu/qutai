@@ -23,12 +23,17 @@ export function modelImageSize(width: number, height: number, pixelRatio: number
 }
 
 /** Captures the visible part of the tab as a compact JPEG for the model to look at. */
-export async function captureForModel(tab: Tab): Promise<ToolImage> {
+export async function captureForModel(tab: Tab): Promise<ToolImage & { width: number; height: number }> {
   const view = await measure(tab);
   if (view.width === 0 || view.height === 0) throw new Error(t('error.tabNotVisible'));
   const size = modelImageSize(view.width, view.height, PixelRatio.get());
   const data = await captureRef(tab.container!, { format: 'jpg', quality: 0.7, result: 'base64', ...size });
-  return { mediaType: 'image/jpeg', data };
+  // view-shot sizes are in points; the image has that many points times the pixel ratio.
+  const pixels = {
+    width: Math.round(size.width * PixelRatio.get()),
+    height: Math.round(size.height * PixelRatio.get()),
+  };
+  return { mediaType: 'image/jpeg', data, ...pixels };
 }
 
 /**

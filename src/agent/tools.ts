@@ -173,6 +173,20 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'click_at',
+    description:
+      'Click a point of the latest view_screenshot, for things without a ref (maps, canvases, image buttons). ' +
+      'x and y are pixels in that screenshot. Prefer click with a ref whenever read_page lists the element.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        x: { type: 'number', description: 'Horizontal position in screenshot pixels' },
+        y: { type: 'number', description: 'Vertical position in screenshot pixels' },
+      },
+      required: ['x', 'y'],
+    },
+  },
+  {
     name: 'search_history',
     description:
       "Search the user's browsing history on this phone (normal tabs only) by words in page titles and addresses, " +

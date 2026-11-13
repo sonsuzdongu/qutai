@@ -223,6 +223,27 @@ export const PAGE_SCRIPT = String.raw`
     return 'Clicked ' + desc;
   }
 
+  // Clicks whatever is at a point given as fractions of the visible area (from a screenshot),
+  // for things without a ref such as maps and canvases.
+  function clickAt(fx, fy) {
+    var vv = window.visualViewport;
+    var w = vv ? vv.width : window.innerWidth;
+    var h = vv ? vv.height : window.innerHeight;
+    var x = (vv ? vv.offsetLeft : 0) + Math.min(Math.max(Number(fx), 0), 1) * w;
+    var y = (vv ? vv.offsetTop : 0) + Math.min(Math.max(Number(fy), 0), 1) * h;
+    var el = document.elementFromPoint(x, y);
+    if (!el) throw new Error('Nothing at that point.');
+    var opts = { bubbles: true, cancelable: true, view: window, clientX: x, clientY: y };
+    try { el.dispatchEvent(new PointerEvent('pointerdown', opts)); } catch (e) {}
+    el.dispatchEvent(new MouseEvent('mousedown', opts));
+    try { el.dispatchEvent(new PointerEvent('pointerup', opts)); } catch (e) {}
+    el.dispatchEvent(new MouseEvent('mouseup', opts));
+    el.dispatchEvent(new MouseEvent('click', opts));
+    var target = el.closest ? el.closest('a, button, input, select, textarea, [role], [onclick]') || el : el;
+    if (typeof target.focus === 'function') target.focus();
+    return 'Clicked ' + describe(target) + ' at (' + Math.round(x) + ', ' + Math.round(y) + ')';
+  }
+
   function type(ref, text, clear, submit) {
     var el = getEl(ref);
     el.scrollIntoView({ block: 'center' });
@@ -586,6 +607,7 @@ export const PAGE_SCRIPT = String.raw`
   window.__kutaiAgent = {
     readPage: readPage,
     click: click,
+    clickAt: clickAt,
     type: type,
     select: select,
     scroll: scroll,

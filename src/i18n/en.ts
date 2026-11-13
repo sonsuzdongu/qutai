@@ -67,6 +67,7 @@ export const en = {
   'action.typeRedacted': '⌨️ Typed into [{ref}]',
   'action.searchHistory': '🕘 Searching history: {query}',
   'action.draftEmail': '✉️ Email draft: {subject}',
+  'action.clickAt': '👆 Tapping at ({x}, {y})',
   'action.wait': '⏳ Waiting {seconds}s',
 
   'find.placeholder': 'Find in page',

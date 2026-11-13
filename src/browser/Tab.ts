@@ -19,6 +19,7 @@ export const NEW_TAB_URL = 'kutai://newtab';
 export type PageCommand =
   | 'readPage'
   | 'click'
+  | 'clickAt'
   | 'type'
   | 'select'
   | 'scroll'
@@ -74,6 +75,8 @@ export class Tab {
   loadError: LoadError | null = null;
   /** Data URI kept in memory only, so nothing from incognito tabs touches the disk. */
   thumbnail: string | null = null;
+  /** Pixel size of the last screenshot shown to the model, so click_at can map its coordinates. */
+  modelScreenshotSize: { width: number; height: number } | null = null;
   /** Width / height of the captured view, so cards can show the top of the page. */
   thumbnailAspect = 0.6;
 
