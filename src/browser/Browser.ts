@@ -12,6 +12,7 @@ export class Browser {
   private counter = 0;
   private version = 0;
   private listeners = new Set<() => void>();
+  private visitListeners = new Set<(tab: Tab) => void>();
 
   constructor(session?: Session | null) {
     if (session?.tabs.length) {
@@ -32,6 +33,19 @@ export class Browser {
   };
 
   getVersion = () => this.version;
+
+  /** Called when a normal (non-incognito) tab finishes loading a page; used for history. */
+  onVisit(listener: (tab: Tab) => void) {
+    this.visitListeners.add(listener);
+    return () => {
+      this.visitListeners.delete(listener);
+    };
+  }
+
+  notifyVisit(tab: Tab) {
+    if (tab.incognito) return;
+    this.visitListeners.forEach((l) => l(tab));
+  }
 
   private emit = () => {
     this.version++;

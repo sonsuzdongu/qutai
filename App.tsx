@@ -26,6 +26,7 @@ import { getDb } from './src/storage/db';
 import { loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 import { usePersistSession } from './src/storage/usePersistSession';
+import { useRecordHistory } from './src/storage/useRecordHistory';
 
 const KEEP_AWAKE_TAG = 'alpai-agent';
 
@@ -70,6 +71,7 @@ function BrowserApp({ initialSession }: { initialSession: Session | null }) {
   const tab = browser.active;
   useHardwareBack(browser);
   usePersistSession(browser);
+  useRecordHistory(browser);
 
   const turnsRef = useRef<Turn[]>([]);
   const abortRef = useRef<AbortController | null>(null);
