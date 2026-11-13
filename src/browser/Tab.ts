@@ -3,6 +3,7 @@ import type { View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import type { WebView, WebViewNavigation } from 'react-native-webview';
 import { sleep } from '../utils/sleep';
+import { classifyLoadError, LoadError } from './navigation';
 import { PAGE_SCRIPT } from './pageScript';
 
 type Pending = {
@@ -43,6 +44,9 @@ export class Tab {
   openedFromNewTab = false;
   loading = false;
   canGoBack = false;
+  canGoForward = false;
+  /** Why the last page failed to load; cleared when the next load starts. */
+  loadError: LoadError | null = null;
   /** Data URI kept in memory only, so nothing from incognito tabs touches the disk. */
   thumbnail: string | null = null;
   /** Width / height of the captured view, so cards can show the top of the page. */
@@ -117,6 +121,8 @@ export class Tab {
     this.source = { uri: NEW_TAB_URL };
     this.title = '';
     this.canGoBack = false;
+    this.canGoForward = false;
+    this.loadError = null;
     this.openedFromNewTab = false;
     this.onChange();
   }
@@ -143,6 +149,7 @@ export class Tab {
     this.url = nav.url;
     this.title = nav.title;
     this.canGoBack = nav.canGoBack;
+    this.canGoForward = nav.canGoForward;
     this.onChange();
   }
 
@@ -165,6 +172,12 @@ export class Tab {
 
   handleLoadStart() {
     this.loading = true;
+    this.loadError = null;
+    this.onChange();
+  }
+
+  handleError(error: { code: number; description: string }) {
+    this.loadError = { kind: classifyLoadError(error.code, error.description), ...error };
     this.onChange();
   }
 

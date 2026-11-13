@@ -70,6 +70,8 @@ export const tr: Record<keyof typeof en, string> = {
   'omnibox.pasteAndGo': 'Yapıştır ve git',
 
   'menu.close': 'Menüyü kapat',
+  'menu.forward': 'İleri',
+  'menu.stop': 'Yüklemeyi durdur',
   'menu.reload': 'Yenile',
   'menu.addBookmark': 'Yer imlerine ekle',
   'menu.removeBookmark': 'Yer iminden kaldır',
@@ -152,6 +154,17 @@ export const tr: Record<keyof typeof en, string> = {
   'library.emptyBookmarksHint': '⋮ menüsünden sayfa ekleyebilirsiniz.',
   'library.noResults': 'Sonuç yok',
   'library.delete': 'Sil',
+
+  'external.title': 'Başka bir uygulamada açılsın mı?',
+  'external.open': 'Aç',
+  'external.noApp': 'Bu cihazda bu bağlantıyı açabilecek bir uygulama yok.',
+  'loadError.title': 'Bu sayfa açılamadı',
+  'loadError.offline': 'İnternet bağlantısı yok. Bağlantınızı kontrol edin.',
+  'loadError.dns': 'Sitenin adresi bulunamadı.',
+  'loadError.timeout': 'Site zamanında yanıt vermedi.',
+  'loadError.ssl': 'Bağlantı güvenli değil: sitenin sertifikası doğrulanamadı.',
+  'loadError.generic': 'Sayfa yüklenirken bir sorun oluştu.',
+  'loadError.retry': 'Tekrar dene',
 
   'error.api': 'API hatası {status}',
   'error.geminiFailed': 'Gemini isteği başarısız oldu.',

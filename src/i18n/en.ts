@@ -69,6 +69,8 @@ export const en = {
   'omnibox.pasteAndGo': 'Paste and go',
 
   'menu.close': 'Close menu',
+  'menu.forward': 'Forward',
+  'menu.stop': 'Stop loading',
   'menu.reload': 'Reload',
   'menu.addBookmark': 'Add bookmark',
   'menu.removeBookmark': 'Remove bookmark',
@@ -151,6 +153,17 @@ export const en = {
   'library.emptyBookmarksHint': 'Add pages from the ⋮ menu.',
   'library.noResults': 'No results',
   'library.delete': 'Delete',
+
+  'external.title': 'Open in another app?',
+  'external.open': 'Open',
+  'external.noApp': 'No app on this device can open this link.',
+  'loadError.title': "Can't open this page",
+  'loadError.offline': "You're offline. Check your internet connection.",
+  'loadError.dns': "The site's address couldn't be found.",
+  'loadError.timeout': 'The site took too long to respond.',
+  'loadError.ssl': "The connection isn't secure: the site's certificate couldn't be verified.",
+  'loadError.generic': 'Something went wrong while loading the page.',
+  'loadError.retry': 'Try again',
 
   'error.api': 'API error {status}',
   'error.geminiFailed': 'The Gemini request failed.',

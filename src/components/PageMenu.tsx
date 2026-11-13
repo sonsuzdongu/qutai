@@ -11,15 +11,19 @@ export type MenuItem = {
   section?: boolean;
 };
 
+export type IconItem = { icon: string; label: string; onPress: () => void; disabled?: boolean; active?: boolean };
+
 type Props = {
   visible: boolean;
+  /** Compact icon buttons along the top, like Chrome's forward / bookmark / reload row. */
+  iconRow?: IconItem[];
   items: MenuItem[];
   incognito: boolean;
   onClose: () => void;
 };
 
 /** Overflow menu anchored under the ⋮ button, like the Chrome page menu. */
-export function PageMenu({ visible, items, incognito, onClose }: Props) {
+export function PageMenu({ visible, iconRow, items, incognito, onClose }: Props) {
   const insets = useSafeAreaInsets();
   const theme = incognito ? dark : light;
 
@@ -27,6 +31,35 @@ export function PageMenu({ visible, items, incognito, onClose }: Props) {
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('menu.close')} />
       <View style={[styles.menu, theme.menu, { top: insets.top + 48, right: insets.right + 8 }]}>
+        {iconRow && iconRow.length > 0 && (
+          <View style={[styles.iconRow, theme.separator]}>
+            {iconRow.map((item) => (
+              <Pressable
+                key={item.label}
+                disabled={item.disabled}
+                onPress={() => {
+                  onClose();
+                  item.onPress();
+                }}
+                style={({ pressed }) => [styles.iconButton, pressed && theme.pressed]}
+                accessibilityRole="button"
+                accessibilityLabel={item.label}
+                accessibilityState={{ disabled: item.disabled }}
+              >
+                <Text
+                  style={[
+                    styles.iconRowText,
+                    theme.text,
+                    item.active && styles.active,
+                    item.disabled && styles.disabled,
+                  ]}
+                >
+                  {item.icon}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
         {items.map((item) => (
           <View key={item.label}>
             {item.section && <View style={[styles.separator, theme.separator]} />}
@@ -67,6 +100,17 @@ const styles = StyleSheet.create({
   label: { fontSize: 15 },
   disabled: { opacity: 0.35 },
   separator: { height: StyleSheet.hairlineWidth, marginVertical: 4 },
+  iconRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 2,
+    marginBottom: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#e0ddd4',
+  },
+  iconButton: { width: 48, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 10 },
+  iconRowText: { fontSize: 20 },
+  active: { color: '#c96442' },
 });
 
 const light = StyleSheet.create({

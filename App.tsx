@@ -13,7 +13,7 @@ import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
 import { AssistantPanel, ChatItem } from './src/components/AssistantPanel';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
-import { MenuItem, PageMenu } from './src/components/PageMenu';
+import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
 import { SettingsModal } from './src/components/SettingsModal';
 import { TabSwitcher } from './src/components/TabSwitcher';
 import { Toast, useToast } from './src/components/Toast';
@@ -218,11 +218,17 @@ function BrowserApp({
 
   // Page actions make no sense on the app's own new tab page.
   const onNewTab = tab.isNewTab;
-  const menuItems: MenuItem[] = [
-    { icon: '↻', label: t('menu.reload'), disabled: onNewTab, onPress: () => tab.webview?.reload() },
+  const iconRow: IconItem[] = [
+    {
+      icon: '→',
+      label: t('menu.forward'),
+      disabled: !tab.canGoForward,
+      onPress: () => tab.webview?.goForward(),
+    },
     {
       icon: bookmarked ? '★' : '☆',
       label: t(bookmarked ? 'menu.removeBookmark' : 'menu.addBookmark'),
+      active: bookmarked,
       disabled: !/^https?:\/\//i.test(tab.url),
       onPress: () =>
         runAction(async () => {
@@ -235,6 +241,12 @@ function BrowserApp({
           return t('menu.bookmarkAdded');
         }),
     },
+    tab.loading
+      ? { icon: '✕', label: t('menu.stop'), onPress: () => tab.webview?.stopLoading() }
+      : { icon: '↻', label: t('menu.reload'), disabled: onNewTab, onPress: () => tab.webview?.reload() },
+  ];
+
+  const menuItems: MenuItem[] = [
     {
       icon: '⤴',
       label: t('menu.shareLink'),
@@ -342,6 +354,7 @@ function BrowserApp({
             <BrowserView
               browser={browser}
               newTabActions={{
+                onNotice: toast.show,
                 searchEngine: settings.searchEngine,
                 onAsk: (text) => {
                   setPanelOpen(true);
@@ -377,6 +390,7 @@ function BrowserApp({
         />
         <PageMenu
           visible={menuVisible}
+          iconRow={iconRow}
           items={menuItems}
           incognito={tab.incognito}
           onClose={() => setMenuVisible(false)}

@@ -161,6 +161,7 @@ export async function executeTool(
       case 'read_page': {
         const page = await tab.run<PageSnapshot>('readPage', [input.offset ?? 0]);
         const header = [
+          ...(tab.loadError ? [`Page failed to load: ${tab.loadError.description} (${tab.loadError.kind})`] : []),
           `Tab: ${tab.id}`,
           `URL: ${page.url}`,
           `Title: ${page.title}`,
@@ -174,6 +175,12 @@ export async function executeTool(
       case 'navigate': {
         const url = normalizeUrl(input.url);
         await tab.navigate(url);
+        if (tab.loadError) {
+          return {
+            content: `Could not load ${url}: ${tab.loadError.description} (${tab.loadError.kind}).`,
+            isError: true,
+          };
+        }
         return { content: `Opened ${tab.url || url}. Call read_page to see it.`, isError: false };
       }
       case 'go_back': {

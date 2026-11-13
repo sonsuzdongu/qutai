@@ -2,7 +2,10 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
 import type { SearchEngineId } from '../browser/search';
+import { classifyLoadError, linkTarget } from '../browser/navigation';
+import { openExternal } from '../browser/openExternal';
 import type { Tab } from '../browser/Tab';
+import { ErrorPage } from './ErrorPage';
 import type { LibraryTab } from './LibraryScreen';
 import { NewTabPage } from './NewTabPage';
 
@@ -11,13 +14,15 @@ import { NewTabPage } from './NewTabPage';
  * mounted and laid out (only made invisible) so they keep their state and the
  * agent can still read and click in a tab the user isn't looking at.
  */
-export type NewTabActions = {
+export type TabActions = {
+  /** Short notice for the user, e.g. when no app can open a link. */
+  onNotice: (message: string) => void;
   searchEngine: SearchEngineId;
   onAsk: (text: string) => void;
   onOpenLibrary: (tab: LibraryTab) => void;
 };
 
-export function BrowserView({ browser, newTabActions }: { browser: Browser; newTabActions: NewTabActions }) {
+export function BrowserView({ browser, newTabActions }: { browser: Browser; newTabActions: TabActions }) {
   return (
     <View style={styles.container}>
       {/* Sleeping tabs have no WebView until they are woken. */}
@@ -45,7 +50,7 @@ function TabWebView({
   tab: Tab;
   browser: Browser;
   active: boolean;
-  newTabActions: NewTabActions;
+  newTabActions: TabActions;
 }) {
   // On iOS `incognito` gives each tab a non-persistent data store. On Android the
   // same prop calls CookieManager.removeAllCookies(), which logs the user out of
@@ -85,6 +90,24 @@ function TabWebView({
           }}
           // Links opened from an incognito tab stay incognito.
           onOpenWindow={(e) => browser.openTab(e.nativeEvent.targetUrl, { incognito: tab.incognito, openerId: tab.id })}
+          // Every URL reaches onShouldStartLoadWithRequest; the default allowlist would hand other
+          // schemes to canOpenURL, which silently drops links to apps the OS doesn't let us see.
+          originWhitelist={['*']}
+          onShouldStartLoadWithRequest={(request) => {
+            if (linkTarget(request.url) !== 'external') return true;
+            // Only the page itself may hand off to another app; frames (often ads) can't.
+            if (request.isTopFrame !== false) openExternal(request.url, tab, newTabActions.onNotice);
+            return false;
+          }}
+          onError={(e) => tab.handleError(e.nativeEvent)}
+          renderError={(_domain, code, description) => (
+            <ErrorPage
+              kind={classifyLoadError(code, description)}
+              url={tab.url}
+              incognito={tab.incognito}
+              onRetry={() => tab.webview?.reload()}
+            />
+          )}
           allowsBackForwardNavigationGestures
           javaScriptEnabled
           domStorageEnabled
