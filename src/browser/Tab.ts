@@ -2,6 +2,7 @@ import type { ComponentRef } from 'react';
 import type { View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import type { WebView, WebViewNavigation } from 'react-native-webview';
+import { Conversation } from '../chat/Conversation';
 import { sleep } from '../utils/sleep';
 import { classifyLoadError, LoadError } from './navigation';
 import { PAGE_SCRIPT } from './pageScript';
@@ -33,8 +34,17 @@ export type PageCommand =
  * One browser tab: owns its WebView, injects the page script, sends commands,
  * matches the replies coming back through onMessage, and tracks page loads.
  */
+/** Random id that survives restarts, used to store the tab's conversation. */
+export function newTabUid(): string {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
 export class Tab {
   readonly id: string;
+  /** Stable across restarts and reopening (unlike id); the tab's conversation is saved under it. */
+  readonly uid: string;
+  /** This tab's own conversation with the assistant. */
+  readonly conversation: Conversation;
   readonly incognito: boolean;
   /** The tab whose link opened this one; back returns there once this tab has no history. */
   readonly openerId: string | undefined;
@@ -79,8 +89,13 @@ export class Tab {
     incognito: boolean,
     openerId: string | undefined,
     private onChange: () => void,
+    uid: string = newTabUid(),
   ) {
     this.id = id;
+    this.uid = uid;
+    this.conversation = new Conversation(onChange);
+    // Incognito conversations are never saved, so there is nothing to load.
+    this.conversation.loaded = incognito;
     this.url = url;
     this.incognito = incognito;
     this.openerId = openerId;

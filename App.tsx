@@ -5,8 +5,8 @@ import { Alert, AppState, KeyboardAvoidingView, StyleSheet, View } from 'react-n
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
+import { newItem } from './src/chat/Conversation';
 import { getProvider, modelLabel } from './src/ai/providers';
-import type { Turn } from './src/ai/types';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import type { ContextTarget } from './src/browser/contextMenu';
 import { quoteSelection } from './src/browser/selection';
@@ -15,7 +15,7 @@ import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
 import { ContextAction, ContextMenuSheet } from './src/components/ContextMenuSheet';
-import { AssistantPanel, QuickAction, ChatItem } from './src/components/AssistantPanel';
+import { AssistantPanel, QuickAction } from './src/components/AssistantPanel';
 import { FindBar } from './src/components/FindBar';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
 import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
@@ -33,7 +33,7 @@ import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { t, useLanguage } from './src/i18n';
 import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmarks';
 import { getDb } from './src/storage/db';
-import { clearChat, loadChat, SavedChat, saveChat } from './src/storage/chat';
+import { clearChat, deleteOrphanChats, loadChat, saveChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 import { usePersistSession } from './src/storage/usePersistSession';
@@ -41,13 +41,8 @@ import { useRecordHistory } from './src/storage/useRecordHistory';
 
 const KEEP_AWAKE_TAG = 'alpai-agent';
 
-let itemCounter = 0;
-const newItem = (kind: ChatItem['kind'], text: string): ChatItem => ({ id: String(++itemCounter), kind, text });
-
-/** Restored messages keep their ids, so new ones must continue after the highest. */
-function continueItemIds(items: ChatItem[]) {
-  itemCounter = Math.max(itemCounter, ...items.map((item) => Number(item.id) || 0));
-}
+// Conversations saved by earlier versions belong to the tab that is active on the first start.
+let legacyChatPending = true;
 
 function askConfirmation(description: string): Promise<boolean> {
   return new Promise((resolve) => {
@@ -67,38 +62,26 @@ function askConfirmation(description: string): Promise<boolean> {
 export default function App() {
   // Re-renders the whole tree in the new language when the device language changes.
   useLanguage();
-  const [restored, setRestored] = useState<{
-    session: Session | null;
-    recentlyClosed: ClosedTab[];
-    chat: SavedChat | null;
-  } | null>(null);
+  const [restored, setRestored] = useState<{ session: Session | null; recentlyClosed: ClosedTab[] } | null>(null);
 
   useEffect(() => {
     getDb()
-      .then((db) => Promise.all([loadSession(db), loadRecentlyClosed(db), loadChat(db)]))
-      .catch((): [null, ClosedTab[], null] => [null, [], null])
-      .then(([session, recentlyClosed, chat]) => setRestored({ session, recentlyClosed, chat }));
+      .then((db) => Promise.all([loadSession(db), loadRecentlyClosed(db)]))
+      .catch((): [null, ClosedTab[]] => [null, []])
+      .then(([session, recentlyClosed]) => setRestored({ session, recentlyClosed }));
   }, []);
 
   // Reading the saved session takes a few milliseconds; tabs are created only after it.
   if (!restored) return <View style={styles.container} />;
-  return (
-    <BrowserApp
-      initialSession={restored.session}
-      recentlyClosed={restored.recentlyClosed}
-      initialChat={restored.chat}
-    />
-  );
+  return <BrowserApp initialSession={restored.session} recentlyClosed={restored.recentlyClosed} />;
 }
 
 function BrowserApp({
   initialSession,
   recentlyClosed,
-  initialChat,
 }: {
   initialSession: Session | null;
   recentlyClosed: ClosedTab[];
-  initialChat: SavedChat | null;
 }) {
   const [browserInstance] = useState(() => new Browser(initialSession, recentlyClosed));
   const browser = useBrowser(browserInstance);
@@ -107,19 +90,11 @@ function BrowserApp({
   usePersistSession(browser);
   useRecordHistory(browser);
 
-  const turnsRef = useRef<Turn[]>(initialChat?.turns ?? []);
-  // A conversation that touched an incognito tab is never written to disk.
-  const privacyRef = useRef({ touchedIncognito: false });
-  const abortRef = useRef<AbortController | null>(null);
-
-  const [items, setItems] = useState<ChatItem[]>(() => {
-    const restoredItems = initialChat?.items ?? [];
-    continueItemIds(restoredItems);
-    return restoredItems;
-  });
-  const [running, setRunning] = useState(false);
+  // Each tab has its own conversation; only one task runs at a time across all tabs.
+  const conversation = tab.conversation;
+  const runningTab = browser.tabs.find((x) => x.conversation.running);
+  const running = runningTab !== undefined;
   const [panelOpen, setPanelOpen] = useState(false);
-  const [draft, setDraft] = useState('');
   const [focusRequest, setFocusRequest] = useState(0);
   // Text selected on a page; like find in page, it only counts for the page it came from.
   const [selection, setSelection] = useState<{ tabId: string; url: string; text: string } | null>(null);
@@ -151,33 +126,68 @@ function BrowserApp({
       .catch(() => {});
   }, []);
 
-  const addItem = (item: ChatItem) => setItems((prev) => [...prev, item]);
+  // A tab's saved conversation is read from disk the first time the tab is shown.
+  useEffect(() => {
+    const target = browser.active;
+    if (target.conversation.loaded) return;
+    const adoptLegacy = legacyChatPending;
+    legacyChatPending = false;
+    getDb()
+      .then((db) => loadChat(db, target.uid, { adoptLegacy }))
+      .catch(() => null)
+      .then((saved) => target.conversation.restore(saved));
+  }, [browser, tab]);
+
+  // Once at start: forget conversations of tabs that are gone (also those that fell out of recently closed).
+  useEffect(() => {
+    getDb()
+      .then((db) =>
+        deleteOrphanChats(db, [
+          ...browserInstance.tabs.map((x) => x.uid),
+          ...browserInstance.recentlyClosed.flatMap((c) => (c.uid ? [c.uid] : [])),
+        ]),
+      )
+      .catch(() => {});
+  }, [browserInstance]);
+
+  /** Writes a tab's conversation; incognito ones never touch the disk and private ones are removed. */
+  const persistConversation = (owner: Tab) => {
+    if (owner.incognito) return;
+    const chat = owner.conversation;
+    getDb()
+      .then((db) =>
+        chat.privacy.touchedIncognito ? clearChat(db, owner.uid) : saveChat(db, owner.uid, chat.toSaved()),
+      )
+      .catch(() => {});
+  };
 
   const send = async (text: string) => {
+    if (running) return;
+    // The conversation belongs to the tab the user is looking at when they send the task,
+    // and stays there even if the agent moves to other tabs.
+    const current = browser.active;
+    const chat = current.conversation;
     // Marked before anything is shown, so a message typed in an incognito tab is never saved.
-    if (browser.active.incognito) privacyRef.current.touchedIncognito = true;
-    addItem(newItem('user', text));
+    if (current.incognito) chat.privacy.touchedIncognito = true;
+    chat.add(newItem('user', text));
 
     const provider = settings.provider;
     const apiKey = settings.apiKeys[provider];
     if (!apiKey) {
-      addItem(newItem('error', t('chat.missingKey', { provider: getProvider(provider).label })));
+      chat.add(newItem('error', t('chat.missingKey', { provider: getProvider(provider).label })));
+      persistConversation(current);
       setSettingsVisible(true);
       return;
     }
 
-    // The agent starts in the tab the user is looking at when they send the task.
-    const current = browser.active;
     const agentTab = { id: current.id };
     const where = current.isNewTab
       ? 'new tab page, no web page loaded'
       : `${current.title || '(no title)'} — ${current.url}`;
     const pageInfo = `\n\n[Current tab ${current.id}: ${where}. Open tabs: ${browser.tabs.length}]`;
-    turnsRef.current.push({ role: 'user', text: text + pageInfo });
+    chat.turns.push({ role: 'user', text: text + pageInfo });
 
-    const abort = new AbortController();
-    abortRef.current = abort;
-    setRunning(true);
+    const signal = chat.start();
     browser.setAgentTab(agentTab);
     // If the screen turned off mid-task, the OS would freeze the app and the task would stall.
     activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch(() => {});
@@ -186,48 +196,32 @@ function BrowserApp({
         provider,
         apiKey,
         model: settings.models[provider],
-        turns: turnsRef.current,
+        turns: chat.turns,
         browser,
         agentTab,
-        privacy: privacyRef.current,
+        privacy: chat.privacy,
         confirm: settings.confirmActions ? askConfirmation : undefined,
-        signal: abort.signal,
+        signal,
         onEvent: (event) => {
           const kind = event.type === 'text' ? 'assistant' : event.type;
-          addItem(newItem(kind, event.text));
+          chat.add(newItem(kind, event.text));
         },
       });
-      if (abort.signal.aborted) addItem(newItem('info', t('chat.stopped')));
+      if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
     } catch (e) {
-      if (abort.signal.aborted) addItem(newItem('info', t('chat.stopped')));
-      else addItem(newItem('error', e instanceof Error ? e.message : String(e)));
+      if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
+      else chat.add(newItem('error', e instanceof Error ? e.message : String(e)));
     } finally {
-      abortRef.current = null;
-      setRunning(false);
+      chat.finish();
       browser.setAgentTab(null);
       deactivateKeepAwake(KEEP_AWAKE_TAG).catch(() => {});
+      persistConversation(current);
     }
   };
 
-  // Saves the conversation whenever it settles; private (incognito) conversations are removed instead.
-  useEffect(() => {
-    if (running) return;
-    const timer = setTimeout(() => {
-      getDb()
-        .then((db) =>
-          privacyRef.current.touchedIncognito ? clearChat(db) : saveChat(db, { items, turns: turnsRef.current }),
-        )
-        .catch(() => {});
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [items, running]);
-
-  const stop = () => abortRef.current?.abort();
-
   const newChat = () => {
-    turnsRef.current = [];
-    privacyRef.current = { touchedIncognito: false };
-    setItems([]);
+    conversation.clear();
+    persistConversation(tab);
   };
 
   /** Runs a menu action and reports the outcome in a toast instead of failing silently. */
@@ -443,7 +437,7 @@ function BrowserApp({
       {
         label: t('selection.ask'),
         onPress: () => {
-          setDraft(`${quote}\n\n`);
+          conversation.setDraft(`${quote}\n\n`);
           setPanelOpen(true);
           setFocusRequest((n) => n + 1);
         },
@@ -544,15 +538,17 @@ function BrowserApp({
         <AssistantPanel
           open={panelOpen}
           quickActions={quickActions}
-          draft={draft}
-          onDraftChange={setDraft}
+          draft={conversation.draft}
+          onDraftChange={(text) => conversation.setDraft(text)}
           focusRequest={focusRequest}
           modelInfo={`${getProvider(settings.provider).label} · ${modelLabel(settings.provider, settings.models[settings.provider])}`}
-          items={items}
-          running={running}
+          items={conversation.items}
+          running={conversation.running}
+          busyElsewhere={running && !conversation.running}
+          onShowRunningTab={() => runningTab && browser.switchTab(runningTab.id)}
           onClose={closePanel}
           onSend={send}
-          onStop={stop}
+          onStop={() => conversation.stop()}
           onNewChat={newChat}
           onOpenSettings={() => setSettingsVisible(true)}
           onOpenLink={(url) => {

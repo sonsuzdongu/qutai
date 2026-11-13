@@ -26,6 +26,8 @@ export const tr: Record<keyof typeof en, string> = {
     'Bu sayfada ne yapmamı istersiniz?\n\nÖrneğin: “Bu sayfayı özetle” ya da “İstanbul–Ankara uçak biletlerini karşılaştır”.',
   'chat.placeholder': "ALPAI'ye bir görev verin…",
   'chat.working': 'çalışıyor…',
+  'chat.busyElsewhere': 'ALPAI başka bir sekmede çalışıyor',
+  'chat.showTab': 'Göster',
   'chat.newChat': 'Yeni sohbet',
   'chat.settings': 'Ayarlar',
   'chat.closePanel': 'Paneli kapat',

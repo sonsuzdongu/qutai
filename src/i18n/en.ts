@@ -25,6 +25,8 @@ export const en = {
     'What should I do on this page?\n\nFor example: “Summarize this page” or “Compare flights from Istanbul to Ankara”.',
   'chat.placeholder': 'Give ALPAI a task…',
   'chat.working': 'working…',
+  'chat.busyElsewhere': 'ALPAI is working in another tab',
+  'chat.showTab': 'Show',
   'chat.newChat': 'New chat',
   'chat.settings': 'Settings',
   'chat.closePanel': 'Close panel',

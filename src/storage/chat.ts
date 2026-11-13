@@ -5,7 +5,6 @@ import { Db, deleteKey, getJson, setJson } from './db';
 
 export type SavedChat = { items: ChatItem[]; turns: Turn[] };
 
-const KEY = 'chat';
 const MAX_ITEMS = 300;
 const MAX_TURNS_JSON = 1_000_000;
 
@@ -31,17 +30,42 @@ export function prepareForStorage(chat: SavedChat): SavedChat {
   return { items: chat.items.slice(-MAX_ITEMS), turns };
 }
 
-export async function loadChat(db: Db): Promise<SavedChat | null> {
-  const chat = await getJson<SavedChat>(db, KEY);
-  if (!chat || !Array.isArray(chat.items) || !Array.isArray(chat.turns)) return null;
-  return chat;
+const LEGACY_KEY = 'chat';
+const keyFor = (uid: string) => `chat:${uid}`;
+
+function isSavedChat(chat: SavedChat | null): chat is SavedChat {
+  return !!chat && Array.isArray(chat.items) && Array.isArray(chat.turns);
 }
 
-export async function saveChat(db: Db, chat: SavedChat): Promise<void> {
-  if (chat.items.length === 0 && chat.turns.length === 0) return deleteKey(db, KEY);
-  await setJson(db, KEY, prepareForStorage(chat));
+/**
+ * Loads a tab's conversation. With adoptLegacy, the single conversation saved by earlier
+ * versions moves to this tab (once) when the tab has none of its own.
+ */
+export async function loadChat(db: Db, uid: string, { adoptLegacy = false } = {}): Promise<SavedChat | null> {
+  const chat = await getJson<SavedChat>(db, keyFor(uid));
+  if (isSavedChat(chat)) return chat;
+  if (!adoptLegacy) return null;
+  const legacy = await getJson<SavedChat>(db, LEGACY_KEY);
+  await deleteKey(db, LEGACY_KEY);
+  if (!isSavedChat(legacy)) return null;
+  await setJson(db, keyFor(uid), legacy);
+  return legacy;
 }
 
-export async function clearChat(db: Db): Promise<void> {
-  await deleteKey(db, KEY);
+export async function saveChat(db: Db, uid: string, chat: SavedChat): Promise<void> {
+  if (chat.items.length === 0 && chat.turns.length === 0) return deleteKey(db, keyFor(uid));
+  await setJson(db, keyFor(uid), prepareForStorage(chat));
+}
+
+export async function clearChat(db: Db, uid: string): Promise<void> {
+  await deleteKey(db, keyFor(uid));
+}
+
+/** Deletes conversations of tabs that are neither open nor in recently closed. */
+export async function deleteOrphanChats(db: Db, keepUids: string[]): Promise<void> {
+  const rows = await db.getAllAsync<{ key: string }>("SELECT key FROM kv WHERE key LIKE 'chat:%'", []);
+  const keep = new Set(keepUids.map(keyFor));
+  for (const { key } of rows) {
+    if (!keep.has(key)) await deleteKey(db, key);
+  }
 }

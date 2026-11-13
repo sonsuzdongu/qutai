@@ -5,7 +5,8 @@ import { NEW_TAB_URL, Tab } from './Tab';
 /** New tabs open the app's own new tab page. */
 export const HOME_URL = NEW_TAB_URL;
 
-export type ClosedTab = { url: string; title: string; closedAt: number };
+/** uid lets a reopened tab get its conversation back. */
+export type ClosedTab = { url: string; title: string; closedAt: number; uid?: string };
 
 const MAX_RECENTLY_CLOSED = 25;
 /** Background tabs beyond this many keep only their URL and title (each WebView costs a lot of memory). */
@@ -29,7 +30,11 @@ export class Browser {
     this.recentlyClosed = recentlyClosed.slice(0, MAX_RECENTLY_CLOSED);
     if (session?.tabs.length) {
       session.tabs.forEach((saved, i) => {
-        const tab = this.openTab(saved.url, { activate: i === session.activeIndex, asleep: i !== session.activeIndex });
+        const tab = this.openTab(saved.url, {
+          activate: i === session.activeIndex,
+          asleep: i !== session.activeIndex,
+          uid: saved.uid,
+        });
         tab.title = saved.title;
       });
     } else {
@@ -83,9 +88,10 @@ export class Browser {
       incognito = false,
       openerId,
       asleep = false,
-    }: { activate?: boolean; incognito?: boolean; openerId?: string; asleep?: boolean } = {},
+      uid,
+    }: { activate?: boolean; incognito?: boolean; openerId?: string; asleep?: boolean; uid?: string } = {},
   ): Tab {
-    const tab = new Tab(String(++this.counter), url, incognito, openerId, this.emit);
+    const tab = new Tab(String(++this.counter), url, incognito, openerId, this.emit, uid);
     tab.asleep = asleep && !activate;
     if (tab.asleep) tab.lastActiveAt = 0;
     this.tabs.push(tab);
@@ -114,11 +120,12 @@ export class Browser {
     this.tabs.splice(this.tabs.indexOf(tab), 1);
     const remembered = !tab.incognito && /^https?:\/\//i.test(tab.url);
     if (remembered) {
-      this.recentlyClosed = [{ url: tab.url, title: tab.title, closedAt: Date.now() }, ...this.recentlyClosed].slice(
-        0,
-        MAX_RECENTLY_CLOSED,
-      );
+      this.recentlyClosed = [
+        { url: tab.url, title: tab.title, closedAt: Date.now(), uid: tab.uid },
+        ...this.recentlyClosed,
+      ].slice(0, MAX_RECENTLY_CLOSED);
     }
+    tab.conversation.stop();
     tab.dispose();
 
     if (this.tabs.length === 0) {
@@ -169,7 +176,7 @@ export class Browser {
     const closed = this.recentlyClosed[index];
     if (!closed) return undefined;
     this.recentlyClosed = this.recentlyClosed.filter((_, i) => i !== index);
-    const tab = this.openTab(closed.url);
+    const tab = this.openTab(closed.url, { uid: closed.uid });
     tab.title = closed.title;
     return tab;
   }

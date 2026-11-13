@@ -39,6 +39,9 @@ type Props = {
   focusRequest: number;
   items: ChatItem[];
   running: boolean;
+  /** Another tab's conversation is running a task (only one runs at a time). */
+  busyElsewhere: boolean;
+  onShowRunningTab: () => void;
   /** Provider and model shown under the title, e.g. "OpenAI · GPT-5.6 Terra". */
   modelInfo: string;
   onClose: () => void;
@@ -66,6 +69,8 @@ export function AssistantPanel({
   focusRequest,
   items,
   running,
+  busyElsewhere,
+  onShowRunningTab,
   modelInfo,
   onClose,
   onSend,
@@ -116,7 +121,7 @@ export function AssistantPanel({
 
   const send = () => {
     const t = text.trim();
-    if (!t || running) return;
+    if (!t || running || busyElsewhere) return;
     setText('');
     onSend(t);
   };
@@ -180,7 +185,14 @@ export function AssistantPanel({
               ))}
             </ScrollView>
 
-            {!running && !text.trim() && quickActions.length > 0 && (
+            {busyElsewhere && (
+              <Pressable onPress={onShowRunningTab} style={styles.busy} accessibilityRole="button">
+                <Text style={styles.busyText}>{t('chat.busyElsewhere')}</Text>
+                <Text style={styles.busyAction}>{t('chat.showTab')}</Text>
+              </Pressable>
+            )}
+
+            {!running && !busyElsewhere && !text.trim() && quickActions.length > 0 && (
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -221,7 +233,7 @@ export function AssistantPanel({
                 </Pressable>
               ) : (
                 <Pressable
-                  style={[styles.sendButton, !text.trim() && styles.sendDisabled]}
+                  style={[styles.sendButton, (!text.trim() || busyElsewhere) && styles.sendDisabled]}
                   onPress={send}
                   accessibilityLabel={t('common.send')}
                 >
@@ -357,6 +369,20 @@ const styles = StyleSheet.create({
   assistantText: { color: '#222', fontSize: 15, lineHeight: 21 },
   action: { color: '#777', fontSize: 12, marginLeft: 4 },
   error: { color: '#b3261e', fontSize: 13, marginLeft: 4 },
+  busy: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginHorizontal: 8,
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 12,
+    backgroundColor: '#f1e4dc',
+  },
+  busyText: { flex: 1, fontSize: 13, color: '#6b4a3a' },
+  busyAction: { fontSize: 13, fontWeight: '700', color: '#c96442' },
   chips: { flexGrow: 0 },
   chipsContent: { paddingHorizontal: 8, paddingTop: 8, gap: 6 },
   chip: {
