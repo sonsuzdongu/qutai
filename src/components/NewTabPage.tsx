@@ -92,7 +92,7 @@ export function NewTabPage({ incognito, searchEngine, active, onNavigate, onAsk,
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={[styles.logo, theme.logo]}>{incognito ? '🕶' : '✦ ALPAI'}</Text>
+      <Text style={[styles.logo, theme.logo]}>{incognito ? '🕶' : '✦ Kutai'}</Text>
 
       <View style={[styles.searchRow, theme.search]}>
         <TextInput

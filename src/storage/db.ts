@@ -50,7 +50,7 @@ let opening: Promise<Db> | null = null;
 
 export function getDb(): Promise<Db> {
   opening ??= (async () => {
-    const db = await openDatabaseAsync('alpai.db');
+    const db = await openDatabaseAsync('kutai.db');
     await db.execAsync('PRAGMA journal_mode = WAL');
     await migrate(db);
     return db;

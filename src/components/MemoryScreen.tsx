@@ -8,7 +8,7 @@ import { addMemory, clearMemories, deleteMemory, listMemories, updateMemory } fr
 
 type Props = { visible: boolean; onClose: () => void };
 
-/** Lists what ALPAI remembers about the user; everything can be edited or deleted. */
+/** Lists what Kutai remembers about the user; everything can be edited or deleted. */
 export function MemoryScreen({ visible, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>

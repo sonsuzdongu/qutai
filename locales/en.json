@@ -1,6 +1,6 @@
 {
   "ios": {
-    "CFBundleDisplayName": "ALPAI",
-    "NSPhotoLibraryAddUsageDescription": "ALPAI adds the screenshots you choose to save to your photos."
+    "CFBundleDisplayName": "Kutai",
+    "NSPhotoLibraryAddUsageDescription": "Kutai adds the screenshots you choose to save to your photos."
   }
 }

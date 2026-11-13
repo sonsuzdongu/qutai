@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "ALPAI",
-    "slug": "alpai",
+    "name": "Kutai",
+    "slug": "kutai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -34,7 +34,7 @@
         "expo-media-library",
         {
           "photosPermission": false,
-          "savePhotosPermission": "ALPAI adds the screenshots you choose to save to your photos.",
+          "savePhotosPermission": "Kutai adds the screenshots you choose to save to your photos.",
           "granularPermissions": []
         }
       ],

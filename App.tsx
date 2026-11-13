@@ -40,7 +40,7 @@ import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/st
 import { usePersistSession } from './src/storage/usePersistSession';
 import { useRecordHistory } from './src/storage/useRecordHistory';
 
-const KEEP_AWAKE_TAG = 'alpai-agent';
+const KEEP_AWAKE_TAG = 'kutai-agent';
 const memoryStore = deviceMemoryStore(getDb);
 
 // Conversations saved by earlier versions belong to the tab that is active on the first start.
