@@ -12,6 +12,7 @@ import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
 import { AssistantPanel, ChatItem } from './src/components/AssistantPanel';
+import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
 import { MenuItem, PageMenu } from './src/components/PageMenu';
 import { SettingsModal } from './src/components/SettingsModal';
 import { TabSwitcher } from './src/components/TabSwitcher';
@@ -87,6 +88,7 @@ function BrowserApp({ initialSession }: { initialSession: Session | null }) {
   const [tabsVisible, setTabsVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [library, setLibrary] = useState<LibraryTab | null>(null);
   const toast = useToast();
   const speaking = useIsSpeaking();
   useIncognitoProtection(tab.incognito || (tabsVisible && browser.tabsOf(true).length > 0));
@@ -226,6 +228,8 @@ function BrowserApp({ initialSession }: { initialSession: Session | null }) {
               await speakPage(tab);
             }),
         },
+    { icon: '🔖', label: t('menu.bookmarks'), section: true, onPress: () => setLibrary('bookmarks') },
+    { icon: '🕘', label: t('menu.history'), onPress: () => setLibrary('history') },
     { icon: '＋', label: t('menu.newTab'), section: true, onPress: () => browser.openTab() },
     { icon: '🕶', label: t('menu.newIncognitoTab'), onPress: () => browser.openTab(undefined, { incognito: true }) },
   ];
@@ -303,6 +307,15 @@ function BrowserApp({ initialSession }: { initialSession: Session | null }) {
           items={menuItems}
           incognito={tab.incognito}
           onClose={() => setMenuVisible(false)}
+        />
+        <LibraryScreen
+          visible={library !== null}
+          initialTab={library ?? 'bookmarks'}
+          onOpen={(url) => {
+            setLibrary(null);
+            tab.loadUrl(url);
+          }}
+          onClose={() => setLibrary(null)}
         />
         <TabSwitcher visible={tabsVisible} browser={browser} onClose={() => setTabsVisible(false)} />
         <SettingsModal
