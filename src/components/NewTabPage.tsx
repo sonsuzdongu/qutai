@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
 import { getLanguage, t } from '../i18n';
 import { hostOf } from '../i18n/format';
@@ -11,6 +12,7 @@ import type { LibraryTab } from './LibraryScreen';
 
 type Props = {
   incognito: boolean;
+  searchEngine: SearchEngineId;
   /** Data is refreshed each time the page comes on screen. */
   active: boolean;
   onNavigate: (url: string) => void;
@@ -32,7 +34,7 @@ function defaultSites(): TopSite[] {
 
 type Data = { sites: TopSite[]; bookmarks: Bookmark[]; recent: HistoryEntry[] };
 
-export function NewTabPage({ incognito, active, onNavigate, onAsk, onOpenLibrary }: Props) {
+export function NewTabPage({ incognito, searchEngine, active, onNavigate, onAsk, onOpenLibrary }: Props) {
   const [text, setText] = useState('');
   const [data, setData] = useState<Data | null>(null);
   const [reload, setReload] = useState(0);
@@ -58,7 +60,7 @@ export function NewTabPage({ incognito, active, onNavigate, onAsk, onOpenLibrary
   }, [active, incognito, reload]);
 
   const submit = () => {
-    if (text.trim()) onNavigate(toUrl(text));
+    if (text.trim()) onNavigate(toUrl(text, searchEngine));
   };
   const ask = () => {
     if (!text.trim()) return;

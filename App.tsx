@@ -308,6 +308,7 @@ function BrowserApp({
         <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
           <AddressBar
             url={onNewTab ? '' : tab.url}
+            searchEngine={settings.searchEngine}
             loading={tab.loading}
             canGoBack={tab.canGoBack || tab.openedFromNewTab}
             tabCount={browser.tabs.length}
@@ -336,6 +337,7 @@ function BrowserApp({
             <BrowserView
               browser={browser}
               newTabActions={{
+                searchEngine: settings.searchEngine,
                 onAsk: (text) => {
                   setPanelOpen(true);
                   send(text);

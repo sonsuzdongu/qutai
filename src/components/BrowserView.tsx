@@ -1,6 +1,7 @@
 import { Platform, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
+import type { SearchEngineId } from '../browser/search';
 import type { Tab } from '../browser/Tab';
 import type { LibraryTab } from './LibraryScreen';
 import { NewTabPage } from './NewTabPage';
@@ -11,6 +12,7 @@ import { NewTabPage } from './NewTabPage';
  * agent can still read and click in a tab the user isn't looking at.
  */
 export type NewTabActions = {
+  searchEngine: SearchEngineId;
   onAsk: (text: string) => void;
   onOpenLibrary: (tab: LibraryTab) => void;
 };
@@ -63,6 +65,7 @@ function TabWebView({
       {tab.isNewTab ? (
         <NewTabPage
           incognito={tab.incognito}
+          searchEngine={newTabActions.searchEngine}
           active={active}
           onNavigate={(url) => tab.loadUrl(url)}
           onAsk={newTabActions.onAsk}

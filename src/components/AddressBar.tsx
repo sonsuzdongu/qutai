@@ -11,6 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
 import { t } from '../i18n';
 
@@ -22,6 +23,7 @@ type Props = {
   incognito: boolean;
   assistantOpen: boolean;
   assistantRunning: boolean;
+  searchEngine: SearchEngineId;
   onSubmit: (url: string) => void;
   onBack: () => void;
   onOpenMenu: () => void;
@@ -45,6 +47,7 @@ export function AddressBar({
   incognito,
   assistantOpen,
   assistantRunning,
+  searchEngine,
   onSubmit,
   onBack,
   onOpenMenu,
@@ -67,7 +70,7 @@ export function AddressBar({
           value={text}
           onChangeText={setText}
           onBlur={() => setEditing(false)}
-          onSubmitEditing={() => text.trim() && onSubmit(toUrl(text))}
+          onSubmitEditing={() => text.trim() && onSubmit(toUrl(text, searchEngine))}
           autoFocus
           selectTextOnFocus
           autoCapitalize="none"

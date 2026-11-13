@@ -3,6 +3,7 @@ import { Linking, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextIn
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProvider, PROVIDER_ORDER } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
+import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { t } from '../i18n';
 import type { Settings } from '../storage/settings';
 
@@ -117,6 +118,25 @@ function SettingsForm({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
         )}
         <Text style={styles.hint}>{t('settings.modelHint')}</Text>
 
+        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.search')}</Text>
+        {SEARCH_ENGINE_ORDER.map((id) => (
+          <Pressable key={id} style={styles.option} onPress={() => setDraft({ ...draft, searchEngine: id })}>
+            <Text style={styles.radio}>{draft.searchEngine === id ? '◉' : '○'}</Text>
+            <Text style={styles.optionText}>{SEARCH_ENGINES[id].name}</Text>
+          </Pressable>
+        ))}
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.searchSuggestions')}</Text>
+            <Text style={styles.hint}>{t('settings.searchSuggestionsHint')}</Text>
+          </View>
+          <Switch
+            value={draft.searchSuggestions}
+            onValueChange={(searchSuggestions) => setDraft({ ...draft, searchSuggestions })}
+          />
+        </View>
+
+        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.assistant')}</Text>
         <View style={styles.switchRow}>
           <View style={styles.flex}>
             <Text style={styles.label}>{t('settings.confirmActions')}</Text>
@@ -148,6 +168,7 @@ const styles = StyleSheet.create({
   save: { fontSize: 16, color: '#c96442', fontWeight: '600' },
   content: { padding: 16, gap: 8 },
   label: { fontSize: 15, fontWeight: '600', marginTop: 12 },
+  sectionLabel: { fontSize: 13, color: '#888', textTransform: 'uppercase', marginTop: 24 },
   hint: { fontSize: 13, color: '#888', lineHeight: 18 },
   link: { color: '#c96442', fontWeight: '600' },
   segment: { flexDirection: 'row', backgroundColor: '#e8e6df', borderRadius: 10, padding: 3 },

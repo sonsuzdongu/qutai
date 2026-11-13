@@ -102,6 +102,11 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.customModel': 'Özel model kimliği',
   'settings.customModelPlaceholder': 'örn. {model}',
   'settings.modelHint': 'Tarayıcı görevleri çok adımlıdır; küçük modeller yanlış öğeye tıklayabilir veya takılabilir.',
+  'settings.search': 'Arama',
+  'settings.searchSuggestions': 'Arama önerileri',
+  'settings.searchSuggestionsHint':
+    'Adres çubuğuna yazdıklarınız öneriler için arama motoruna gönderilir. Gizli sekmelerde her zaman kapalıdır.',
+  'settings.assistant': 'Asistan',
   'settings.confirmActions': 'Her eylemden önce onay iste',
   'settings.confirmActionsHint': 'Tıklama, yazma ve sayfa açma işlemlerinden önce size sorulur.',
 

@@ -101,6 +101,11 @@ export const en = {
   'settings.customModel': 'Custom model ID',
   'settings.customModelPlaceholder': 'e.g. {model}',
   'settings.modelHint': 'Browsing tasks take many steps; small models may click the wrong thing or get stuck.',
+  'settings.search': 'Search',
+  'settings.searchSuggestions': 'Search suggestions',
+  'settings.searchSuggestionsHint':
+    'What you type in the address bar is sent to the search engine for suggestions. Always off in incognito tabs.',
+  'settings.assistant': 'Assistant',
   'settings.confirmActions': 'Ask before every action',
   'settings.confirmActionsHint': "You'll be asked before ALPAI clicks, types or opens a page.",
 
