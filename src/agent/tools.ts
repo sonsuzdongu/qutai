@@ -28,28 +28,6 @@ export const MEMORY_TOOLS: ToolDefinition[] = [
 
 export const TOOLS: ToolDefinition[] = [
   {
-    name: 'ask_user',
-    description:
-      'Ask the user to choose between options, shown to them as tappable buttons. Use this instead of writing a numbered ' +
-      'list whenever you need the user to pick something (e.g. which product, which size, the options of a dropdown on the page, ' +
-      'or whether to continue). Your turn ends here; their choice arrives as the next user message. ' +
-      'They can also type a different answer.',
-    input_schema: {
-      type: 'object',
-      properties: {
-        question: { type: 'string', description: 'Short question shown above the buttons' },
-        options: {
-          type: 'array',
-          items: { type: 'string' },
-          minItems: 2,
-          maxItems: 8,
-          description: 'Between 2 and 8 short, distinct options (a few words each)',
-        },
-      },
-      required: ['question', 'options'],
-    },
-  },
-  {
     name: 'read_page',
     description:
       'Read the current page as text. Interactive elements are listed as "[ref=N] kind "label"". ' +
@@ -205,6 +183,28 @@ export const TOOLS: ToolDefinition[] = [
       type: 'object',
       properties: { seconds: { type: 'number', description: 'Seconds to wait, max 10' } },
       required: ['seconds'],
+    },
+  },
+  {
+    name: 'ask_user',
+    description:
+      'Ask the user to choose between options, shown to them as tappable buttons. Use this instead of writing a numbered ' +
+      'list whenever you need the user to pick something (e.g. which product, which size, the options of a dropdown on the page, ' +
+      'or whether to continue). Your turn ends here; their choice arrives as the next user message. ' +
+      'They can also type a different answer.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        question: { type: 'string', description: 'Short question shown above the buttons' },
+        options: {
+          type: 'array',
+          items: { type: 'string' },
+          minItems: 2,
+          maxItems: 8,
+          description: 'Between 2 and 8 short, distinct options (a few words each)',
+        },
+      },
+      required: ['question', 'options'],
     },
   },
 ];
