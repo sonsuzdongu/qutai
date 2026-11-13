@@ -9,6 +9,8 @@ export type MenuItem = {
   disabled?: boolean;
   /** Draws a separator above this item. */
   section?: boolean;
+  /** Shows a check mark, for on/off options like the desktop site. */
+  checked?: boolean;
 };
 
 export type IconItem = { icon: string; label: string; onPress: () => void; disabled?: boolean; active?: boolean };
@@ -74,7 +76,10 @@ export function PageMenu({ visible, iconRow, items, incognito, onClose }: Props)
               accessibilityState={{ disabled: item.disabled }}
             >
               <Text style={[styles.icon, item.disabled && styles.disabled]}>{item.icon}</Text>
-              <Text style={[styles.label, theme.text, item.disabled && styles.disabled]}>{item.label}</Text>
+              <Text style={[styles.label, styles.labelFlex, theme.text, item.disabled && styles.disabled]}>
+                {item.label}
+              </Text>
+              {item.checked && <Text style={styles.check}>✓</Text>}
             </Pressable>
           </View>
         ))}
@@ -98,6 +103,8 @@ const styles = StyleSheet.create({
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 11 },
   icon: { width: 22, fontSize: 17, textAlign: 'center' },
   label: { fontSize: 15 },
+  labelFlex: { flex: 1 },
+  check: { fontSize: 16, color: '#c96442', fontWeight: '700' },
   disabled: { opacity: 0.35 },
   separator: { height: StyleSheet.hairlineWidth, marginVertical: 4 },
   iconRow: {

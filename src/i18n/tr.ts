@@ -86,6 +86,7 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.copyLink': 'Linki kopyala',
   'menu.linkCopied': 'Link kopyalandı',
   'menu.find': 'Sayfada bul',
+  'menu.desktopSite': 'Masaüstü sitesi',
   'menu.savePdf': 'PDF olarak kaydet',
   'menu.pdfPreparing': 'PDF hazırlanıyor…',
   'menu.pdfImagesMissing': "{count} görsel PDF'e eklenemedi",

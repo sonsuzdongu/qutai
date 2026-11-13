@@ -85,6 +85,7 @@ export const en = {
   'menu.copyLink': 'Copy link',
   'menu.linkCopied': 'Link copied',
   'menu.find': 'Find in page',
+  'menu.desktopSite': 'Desktop site',
   'menu.savePdf': 'Save as PDF',
   'menu.pdfPreparing': 'Preparing PDF…',
   'menu.pdfImagesMissing': "{count} image(s) couldn't be added to the PDF",

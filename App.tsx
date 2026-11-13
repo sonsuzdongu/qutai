@@ -276,6 +276,13 @@ function BrowserApp({
       onPress: () => setFindFor({ tabId: tab.id, url: tab.url }),
     },
     {
+      icon: '🖥',
+      label: t('menu.desktopSite'),
+      checked: tab.desktop,
+      disabled: onNewTab,
+      onPress: () => tab.toggleDesktop(),
+    },
+    {
       icon: '📄',
       label: t('menu.savePdf'),
       disabled: onNewTab,

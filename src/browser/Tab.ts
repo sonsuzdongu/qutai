@@ -50,6 +50,8 @@ export class Tab {
    * Restored tabs start asleep so a long session doesn't load every page at launch.
    */
   asleep = false;
+  /** Ask sites for their desktop layout (per tab, like "Request desktop site"). */
+  desktop = false;
   /** The first page was opened from the new tab page, so back can return there. */
   openedFromNewTab = false;
   loading = false;
@@ -117,6 +119,14 @@ export class Tab {
     } catch {
       // A failed thumbnail just falls back to the placeholder card.
     }
+  }
+
+  /** Switches between the mobile and desktop site and reloads, so the site sees the new identity. */
+  toggleDesktop() {
+    this.desktop = !this.desktop;
+    this.onChange();
+    // Give the WebView a moment to receive the new user agent before reloading.
+    setTimeout(() => this.webview?.reload(), 50);
   }
 
   get isNewTab(): boolean {

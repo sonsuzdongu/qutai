@@ -2,6 +2,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
 import type { SearchEngineId } from '../browser/search';
+import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT } from '../browser/desktopMode';
 import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { openExternal } from '../browser/openExternal';
 import type { Tab } from '../browser/Tab';
@@ -108,6 +109,9 @@ function TabWebView({
               onRetry={() => tab.webview?.reload()}
             />
           )}
+          userAgent={tab.desktop ? DESKTOP_USER_AGENT : undefined}
+          contentMode={tab.desktop ? 'desktop' : 'recommended'}
+          injectedJavaScript={tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : undefined}
           allowsBackForwardNavigationGestures
           javaScriptEnabled
           domStorageEnabled
