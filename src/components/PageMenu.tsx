@@ -1,5 +1,6 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { t } from '../i18n';
 
 export type MenuItem = {
   icon: string;
@@ -24,7 +25,7 @@ export function PageMenu({ visible, items, incognito, onClose }: Props) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
-      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Menüyü kapat" />
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('menu.close')} />
       <View style={[styles.menu, theme.menu, { top: insets.top + 48, right: insets.right + 8 }]}>
         {items.map((item) => (
           <View key={item.label}>

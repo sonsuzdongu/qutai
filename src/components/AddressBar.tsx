@@ -11,6 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { t } from '../i18n';
 
 type Props = {
   url: string;
@@ -79,7 +80,7 @@ export function AddressBar({
           autoCorrect={false}
           keyboardType="url"
           returnKeyType="go"
-          placeholder="Adres veya arama"
+          placeholder={t('address.placeholder')}
         />
       ) : (
         <Pressable
@@ -89,7 +90,7 @@ export function AddressBar({
             setEditing(true);
           }}
           accessibilityRole="button"
-          accessibilityLabel={`Adres: ${url}. Düzenlemek için dokunun`}
+          accessibilityLabel={t('address.a11y', { url })}
         >
           {incognito && <Text style={styles.incognitoBadge}>🕶</Text>}
           <Text
@@ -97,22 +98,27 @@ export function AddressBar({
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {url ? displayUrl(url) : 'Adres veya arama'}
+            {url ? displayUrl(url) : t('address.placeholder')}
           </Text>
         </Pressable>
       )}
 
-      <Pressable onPress={onOpenTabs} hitSlop={6} style={styles.icon} accessibilityLabel={`${tabCount} sekme`}>
+      <Pressable
+        onPress={onOpenTabs}
+        hitSlop={6}
+        style={styles.icon}
+        accessibilityLabel={t('address.tabs', { count: tabCount })}
+      >
         <View style={[styles.tabCount, dark?.tabCount]}>
           <Text style={[styles.tabCountText, dark?.text]}>{tabCount}</Text>
         </View>
       </Pressable>
-      <IconButton label="⋮" onPress={onOpenMenu} incognito={incognito} accessibilityLabel="Sayfa menüsü" />
+      <IconButton label="⋮" onPress={onOpenMenu} incognito={incognito} accessibilityLabel={t('address.menu')} />
       <Pressable
         onPress={onToggleAssistant}
         hitSlop={6}
         style={[styles.assistantButton, assistantOpen && styles.assistantButtonActive]}
-        accessibilityLabel={assistantOpen ? 'ALPAI panelini kapat' : 'ALPAI panelini aç'}
+        accessibilityLabel={t(assistantOpen ? 'address.closeAssistant' : 'address.openAssistant')}
       >
         {assistantRunning && !assistantOpen ? (
           <ActivityIndicator size="small" color="#fff" />

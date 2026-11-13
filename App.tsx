@@ -21,6 +21,7 @@ import { savePagePdf } from './src/device/pdf';
 import { saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
+import { t, useLanguage } from './src/i18n';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 
 const KEEP_AWAKE_TAG = 'alpai-agent';
@@ -31,11 +32,11 @@ const newItem = (kind: ChatItem['kind'], text: string): ChatItem => ({ id: Strin
 function askConfirmation(description: string): Promise<boolean> {
   return new Promise((resolve) => {
     Alert.alert(
-      'ALPAI bu işlemi yapmak istiyor',
+      t('confirm.title'),
       description,
       [
-        { text: 'Reddet', style: 'cancel', onPress: () => resolve(false) },
-        { text: 'İzin ver', onPress: () => resolve(true) },
+        { text: t('confirm.deny'), style: 'cancel', onPress: () => resolve(false) },
+        { text: t('confirm.allow'), onPress: () => resolve(true) },
       ],
       // Android: back button or a tap outside counts as declining.
       { cancelable: true, onDismiss: () => resolve(false) },
@@ -44,6 +45,8 @@ function askConfirmation(description: string): Promise<boolean> {
 }
 
 export default function App() {
+  // Re-renders the whole tree in the new language when the device language changes.
+  useLanguage();
   const [browserInstance] = useState(() => new Browser());
   const browser = useBrowser(browserInstance);
   const tab = browser.active;
@@ -79,7 +82,7 @@ export default function App() {
     const provider = settings.provider;
     const apiKey = settings.apiKeys[provider];
     if (!apiKey) {
-      addItem(newItem('error', `Önce ayarlardan ${getProvider(provider).label} API anahtarınızı girin.`));
+      addItem(newItem('error', t('chat.missingKey', { provider: getProvider(provider).label })));
       setSettingsVisible(true);
       return;
     }
@@ -110,9 +113,9 @@ export default function App() {
           addItem(newItem(kind, event.text));
         },
       });
-      if (abort.signal.aborted) addItem(newItem('info', '⏹ Durduruldu'));
+      if (abort.signal.aborted) addItem(newItem('info', t('chat.stopped')));
     } catch (e) {
-      if (abort.signal.aborted) addItem(newItem('info', '⏹ Durduruldu'));
+      if (abort.signal.aborted) addItem(newItem('info', t('chat.stopped')));
       else addItem(newItem('error', e instanceof Error ? e.message : String(e)));
     } finally {
       abortRef.current = null;
@@ -134,59 +137,59 @@ export default function App() {
       const message = await action();
       if (message) toast.show(message);
     } catch (e) {
-      toast.show(`Hata: ${e instanceof Error ? e.message : String(e)}`);
+      toast.show(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
     }
   };
 
   const menuItems: MenuItem[] = [
-    { icon: '↻', label: 'Yenile', onPress: () => tab.webview?.reload() },
+    { icon: '↻', label: t('menu.reload'), onPress: () => tab.webview?.reload() },
     {
       icon: '⤴',
-      label: 'Linki paylaş',
+      label: t('menu.shareLink'),
       section: true,
       onPress: () => runAction(() => shareLink(tab)),
     },
     {
       icon: '⧉',
-      label: 'Linki kopyala',
+      label: t('menu.copyLink'),
       onPress: () =>
         runAction(async () => {
           await copyLink(tab);
-          return 'Link kopyalandı';
+          return t('menu.linkCopied');
         }),
     },
     {
       icon: '📄',
-      label: 'PDF olarak kaydet',
+      label: t('menu.savePdf'),
       section: true,
       onPress: () =>
         runAction(async () => {
-          toast.show('PDF hazırlanıyor…');
+          toast.show(t('menu.pdfPreparing'));
           const pdf = await savePagePdf(tab);
-          if (pdf.imagesMissing > 0) return `${pdf.imagesMissing} görsel PDF'e eklenemedi`;
+          if (pdf.imagesMissing > 0) return t('menu.pdfImagesMissing', { count: pdf.imagesMissing });
         }),
     },
     {
       icon: '📸',
-      label: 'Ekran görüntüsünü kaydet',
+      label: t('menu.saveScreenshot'),
       onPress: () =>
         runAction(async () => {
           await saveScreenshot(tab);
-          return "Ekran görüntüsü Fotoğraflar'a kaydedildi";
+          return t('menu.screenshotSaved');
         }),
     },
     speaking
-      ? { icon: '⏹', label: 'Okumayı durdur', onPress: () => runAction(stopSpeaking) }
+      ? { icon: '⏹', label: t('menu.stopReading'), onPress: () => runAction(stopSpeaking) }
       : {
           icon: '🔊',
-          label: 'Sayfayı sesli oku',
+          label: t('menu.readAloud'),
           onPress: () =>
             runAction(async () => {
               await speakPage(tab);
             }),
         },
-    { icon: '＋', label: 'Yeni sekme', section: true, onPress: () => browser.openTab() },
-    { icon: '🕶', label: 'Yeni gizli sekme', onPress: () => browser.openTab(undefined, { incognito: true }) },
+    { icon: '＋', label: t('menu.newTab'), section: true, onPress: () => browser.openTab() },
+    { icon: '🕶', label: t('menu.newIncognitoTab'), onPress: () => browser.openTab(undefined, { incognito: true }) },
   ];
 
   const onSaveSettings = async (next: Settings) => {
@@ -195,7 +198,7 @@ export default function App() {
     try {
       await saveSettings(next);
     } catch (e) {
-      Alert.alert('Ayarlar kaydedilemedi', e instanceof Error ? e.message : String(e));
+      Alert.alert(t('settings.saveFailed'), e instanceof Error ? e.message : String(e));
     }
   };
 
@@ -242,7 +245,7 @@ export default function App() {
             runAction(async () => {
               if (action === 'copy') {
                 await copyText(text);
-                return 'Kopyalandı';
+                return t('common.copied');
               }
               if (action === 'share') return shareText(text);
               if (speaking) return stopSpeaking();

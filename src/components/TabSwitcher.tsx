@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
+import { t } from '../i18n';
 
 type Props = {
   visible: boolean;
@@ -52,10 +53,10 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
   };
 
   const closeAll = () => {
-    Alert.alert(incognito ? 'Tüm gizli sekmeler kapatılsın mı?' : 'Tüm sekmeler kapatılsın mı?', undefined, [
-      { text: 'Vazgeç', style: 'cancel' },
+    Alert.alert(t(incognito ? 'tabs.closeAllIncognitoConfirm' : 'tabs.closeAllConfirm'), undefined, [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Kapat',
+        text: t('common.close'),
         style: 'destructive',
         onPress: () => {
           if (incognito) browser.closeAllIncognito();
@@ -70,13 +71,13 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
       <View style={styles.header}>
         <View style={[styles.segment, theme.segment]}>
           <SegmentButton
-            label={`Sekmeler · ${browser.tabsOf(false).length}`}
+            label={t('tabs.normal', { count: browser.tabsOf(false).length })}
             selected={!incognito}
             incognito={incognito}
             onPress={() => setIncognito(false)}
           />
           <SegmentButton
-            label={`🕶 Gizli · ${browser.tabsOf(true).length}`}
+            label={t('tabs.incognito', { count: browser.tabsOf(true).length })}
             selected={incognito}
             incognito={incognito}
             onPress={() => setIncognito(true)}
@@ -85,11 +86,7 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
       </View>
 
       {incognito && Platform.OS === 'android' && tabs.length > 0 && (
-        <Text style={styles.warning}>
-          {
-            "⚠️ Android'de gizli sekmeler çerezleri normal sekmelerle paylaşıyor. Önbellek ve form kaydı kapalı, ancak oturumlar tam yalıtılmış değil."
-          }
-        </Text>
+        <Text style={styles.warning}>{t('tabs.androidIncognitoWarning')}</Text>
       )}
 
       <FlatList
@@ -115,17 +112,17 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
 
       <View style={[styles.toolbar, theme.toolbar]}>
         <Pressable onPress={closeAll} disabled={tabs.length === 0} hitSlop={8} style={styles.toolbarSide}>
-          <Text style={[styles.toolbarText, theme.text, tabs.length === 0 && styles.dimmed]}>Tümünü kapat</Text>
+          <Text style={[styles.toolbarText, theme.text, tabs.length === 0 && styles.dimmed]}>{t('tabs.closeAll')}</Text>
         </Pressable>
         <Pressable
           onPress={newTab}
           style={[styles.newTab, theme.newTab]}
-          accessibilityLabel={incognito ? 'Yeni gizli sekme' : 'Yeni sekme'}
+          accessibilityLabel={t(incognito ? 'menu.newIncognitoTab' : 'menu.newTab')}
         >
           <Text style={styles.newTabText}>＋</Text>
         </Pressable>
         <Pressable onPress={onClose} hitSlop={8} style={[styles.toolbarSide, styles.alignRight]}>
-          <Text style={[styles.toolbarText, styles.bold, theme.accent]}>Bitti</Text>
+          <Text style={[styles.toolbarText, styles.bold, theme.accent]}>{t('common.done')}</Text>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -182,13 +179,13 @@ function TabCard({
     <Pressable
       onPress={onPress}
       style={[styles.card, theme.card, { width }, active && theme.activeCard]}
-      accessibilityLabel={`${tab.title || host} sekmesi`}
+      accessibilityLabel={t('tabs.tabA11y', { title: tab.title || host })}
     >
       <View style={styles.cardHeader}>
         <Text style={[styles.cardTitle, theme.text]} numberOfLines={1}>
-          {tab.title || host || 'Yeni sekme'}
+          {tab.title || host || t('menu.newTab')}
         </Text>
-        <Pressable onPress={onCloseTab} hitSlop={10} style={styles.cardClose} accessibilityLabel="Sekmeyi kapat">
+        <Pressable onPress={onCloseTab} hitSlop={10} style={styles.cardClose} accessibilityLabel={t('tabs.closeTab')}>
           <Text style={[styles.cardCloseText, theme.text]}>✕</Text>
         </Pressable>
       </View>
@@ -214,14 +211,11 @@ function EmptyState({ incognito }: { incognito: boolean }) {
     <View style={styles.empty}>
       <Text style={styles.emptyIcon}>{incognito ? '🕶' : '🗂'}</Text>
       <Text style={[styles.emptyTitle, incognito ? dark.text : light.text]}>
-        {incognito ? 'Gizli sekme yok' : 'Açık sekme yok'}
+        {t(incognito ? 'tabs.emptyIncognito' : 'tabs.empty')}
       </Text>
       {incognito && (
         <Text style={[styles.emptyBody, dark.dimText]}>
-          Gizli sekmelerde gezinti geçmişi tutulmaz ve sekme ekranındaki önizlemeler yalnızca bellekte saklanır.
-          {Platform.OS === 'ios'
-            ? ' Her gizli sekmenin çerezleri ve site verileri ayrıdır, sekme kapatılınca silinir.'
-            : " Android'de çerezler şimdilik normal sekmelerle paylaşılıyor."}
+          {t('tabs.incognitoInfo')} {t(Platform.OS === 'ios' ? 'tabs.incognitoInfoIos' : 'tabs.incognitoInfoAndroid')}
         </Text>
       )}
     </View>

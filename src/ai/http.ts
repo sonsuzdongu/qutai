@@ -1,4 +1,5 @@
 import { waitForForeground } from '../utils/foreground';
+import { t } from '../i18n';
 import { sleep } from '../utils/sleep';
 
 const MAX_RETRIES = 3;
@@ -46,6 +47,6 @@ export async function postJson<T>(
       const e = Array.isArray(err) ? err[0]?.error : err?.error;
       detail = e?.message ?? '';
     } catch {}
-    throw new Error(`API hatası ${res.status}${detail ? `: ${detail}` : ''}`);
+    throw new Error(`${t('error.api', { status: res.status })}${detail ? `: ${detail}` : ''}`);
   }
 }

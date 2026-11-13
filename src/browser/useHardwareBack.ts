@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BackHandler, TextInput, ToastAndroid } from 'react-native';
 import type { Browser } from './Browser';
+import { t } from '../i18n';
 
 export type BackAction = 'blur-input' | 'page-back' | 'close-to-opener' | 'exit';
 
@@ -54,7 +55,7 @@ export function useHardwareBack(browser: Browser) {
             return false;
           }
           lastExitPress = now;
-          ToastAndroid.show('Kapatmak için bir kez daha geri basın', ToastAndroid.SHORT);
+          ToastAndroid.show(t('back.exitHint'), ToastAndroid.SHORT);
           return true;
         }
       }

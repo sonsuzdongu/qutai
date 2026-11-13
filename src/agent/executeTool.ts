@@ -1,6 +1,7 @@
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { savePagePdf } from '../device/pdf';
+import { t } from '../i18n';
 import { captureForModel, saveScreenshot } from '../device/screenshot';
 import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
@@ -32,43 +33,44 @@ const ACTIONS_NEEDING_CONFIRMATION = new Set([
   'save_screenshot',
 ]);
 
-/** Short Turkish label shown in the chat for each tool call. */
+/** Short label shown in the chat for each tool call. */
 export function describeToolCall(name: string, input: Record<string, unknown>): string {
+  const str = (value: unknown) => String(value ?? '');
   switch (name) {
     case 'read_page':
-      return '📄 Sayfa okunuyor';
+      return t('action.readPage');
     case 'navigate':
-      return `🌐 Açılıyor: ${input.url}`;
+      return t('action.navigate', { url: str(input.url) });
     case 'go_back':
-      return '⬅️ Geri gidiliyor';
+      return t('action.goBack');
     case 'click':
-      return `👆 Tıklanıyor (ref ${input.ref})`;
+      return t('action.click', { ref: str(input.ref) });
     case 'type':
-      return `⌨️ Yazılıyor (ref ${input.ref}): "${String(input.text).slice(0, 40)}"`;
+      return t('action.type', { ref: str(input.ref), text: str(input.text).slice(0, 40) });
     case 'select_option':
-      return `🔽 Seçiliyor (ref ${input.ref}): ${input.value}`;
+      return t('action.select', { ref: str(input.ref), value: str(input.value) });
     case 'scroll':
-      return `↕️ Kaydırılıyor: ${input.direction}`;
+      return t('action.scroll', { direction: str(input.direction) });
     case 'scroll_to':
-      return `↕️ Öğeye kaydırılıyor (ref ${input.ref})`;
+      return t('action.scrollTo', { ref: str(input.ref) });
     case 'save_pdf':
-      return '📄 PDF hazırlanıyor';
+      return t('action.savePdf');
     case 'save_screenshot':
-      return '📸 Ekran görüntüsü kaydediliyor';
+      return t('action.saveScreenshot');
     case 'view_screenshot':
-      return '👁 Sayfaya bakılıyor';
+      return t('action.viewScreenshot');
     case 'read_aloud':
-      return input.text ? '🔊 Sesli okunuyor' : '🔊 Sayfa sesli okunuyor';
+      return t(input.text ? 'action.readAloudText' : 'action.readAloudPage');
     case 'list_tabs':
-      return '🗂 Sekmeler listeleniyor';
+      return t('action.listTabs');
     case 'open_tab':
-      return `➕ Yeni sekme: ${input.url}`;
+      return t('action.openTab', { url: str(input.url) });
     case 'switch_tab':
-      return `🔀 Sekmeye geçiliyor (${input.tab_id})`;
+      return t('action.switchTab', { id: str(input.tab_id) });
     case 'close_tab':
-      return `✖️ Sekme kapatılıyor (${input.tab_id})`;
+      return t('action.closeTab', { id: str(input.tab_id) });
     case 'wait':
-      return `⏳ ${input.seconds} sn bekleniyor`;
+      return t('action.wait', { seconds: str(input.seconds) });
     default:
       return `🔧 ${name}`;
   }

@@ -50,12 +50,14 @@ export type ModelRequest = {
   signal: AbortSignal;
 };
 
+export type ModelTag = 'recommended' | 'fastest' | 'strongest';
+
 export type Provider = {
   id: ProviderId;
   label: string;
   keyPlaceholder: string;
   keyUrl: string;
-  models: { id: string; label: string }[];
+  models: { id: string; name: string; tag?: ModelTag }[];
   defaultModel: string;
   call: (req: ModelRequest) => Promise<ModelReply>;
 };

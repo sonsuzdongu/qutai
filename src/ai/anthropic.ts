@@ -97,9 +97,9 @@ export const anthropic: Provider = {
   keyPlaceholder: 'sk-ant-...',
   keyUrl: 'https://platform.claude.com/settings/keys',
   models: [
-    { id: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5 (önerilen)' },
-    { id: 'claude-haiku-5-5', label: 'Claude Haiku 5.5 (en hızlı)' },
-    { id: 'claude-opus-5-5', label: 'Claude Opus 5.5 (en güçlü)' },
+    { id: 'claude-sonnet-5-5', name: 'Claude Sonnet 5.5', tag: 'recommended' },
+    { id: 'claude-haiku-5-5', name: 'Claude Haiku 5.5', tag: 'fastest' },
+    { id: 'claude-opus-5-5', name: 'Claude Opus 5.5', tag: 'strongest' },
   ],
   defaultModel: 'claude-sonnet-5-5',
   call,

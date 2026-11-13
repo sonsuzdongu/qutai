@@ -3,6 +3,7 @@ import { Linking, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextIn
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProvider, PROVIDER_ORDER } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
+import { t } from '../i18n';
 import type { Settings } from '../storage/settings';
 
 type Props = {
@@ -44,16 +45,16 @@ function SettingsForm({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Pressable onPress={onClose} hitSlop={8}>
-          <Text style={styles.cancel}>Vazgeç</Text>
+          <Text style={styles.cancel}>{t('common.cancel')}</Text>
         </Pressable>
-        <Text style={styles.title}>Ayarlar</Text>
+        <Text style={styles.title}>{t('settings.title')}</Text>
         <Pressable onPress={save} hitSlop={8}>
-          <Text style={styles.save}>Kaydet</Text>
+          <Text style={styles.save}>{t('common.save')}</Text>
         </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>Yapay zekâ sağlayıcısı</Text>
+        <Text style={styles.label}>{t('settings.provider')}</Text>
         <View style={styles.segment}>
           {PROVIDER_ORDER.map((id: ProviderId) => {
             const selected = id === draft.provider;
@@ -74,7 +75,7 @@ function SettingsForm({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
           })}
         </View>
 
-        <Text style={styles.label}>{provider.label} API anahtarı</Text>
+        <Text style={styles.label}>{t('settings.apiKey', { provider: provider.label })}</Text>
         <TextInput
           key={draft.provider}
           style={styles.input}
@@ -86,42 +87,40 @@ function SettingsForm({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
           secureTextEntry
         />
         <Text style={styles.hint}>
-          Anahtarlar yalnızca bu cihazda, şifreli depolamada saklanır.{' '}
+          {t('settings.keyHint')}{' '}
           <Text style={styles.link} onPress={() => Linking.openURL(provider.keyUrl)}>
-            Anahtar al →
+            {t('settings.getKey')}
           </Text>
         </Text>
 
-        <Text style={styles.label}>Model</Text>
+        <Text style={styles.label}>{t('settings.model')}</Text>
         {provider.models.map((m) => (
           <Pressable key={m.id} style={styles.option} onPress={() => setModel(m.id)}>
             <Text style={styles.radio}>{model === m.id ? '◉' : '○'}</Text>
-            <Text style={styles.optionText}>{m.label}</Text>
+            <Text style={styles.optionText}>{m.tag ? `${m.name} (${t(`model.${m.tag}`)})` : m.name}</Text>
           </Pressable>
         ))}
         <Pressable style={styles.option} onPress={() => !isCustomModel && setModel('')}>
           <Text style={styles.radio}>{isCustomModel ? '◉' : '○'}</Text>
-          <Text style={styles.optionText}>Özel model kimliği</Text>
+          <Text style={styles.optionText}>{t('settings.customModel')}</Text>
         </Pressable>
         {isCustomModel && (
           <TextInput
             style={styles.input}
             value={model}
             onChangeText={setModel}
-            placeholder={`örn. ${provider.defaultModel}`}
+            placeholder={t('settings.customModelPlaceholder', { model: provider.defaultModel })}
             autoCapitalize="none"
             autoCorrect={false}
             autoFocus
           />
         )}
-        <Text style={styles.hint}>
-          Tarayıcı görevleri çok adımlıdır; küçük modeller yanlış öğeye tıklayabilir veya takılabilir.
-        </Text>
+        <Text style={styles.hint}>{t('settings.modelHint')}</Text>
 
         <View style={styles.switchRow}>
           <View style={styles.flex}>
-            <Text style={styles.label}>Her eylemden önce onay iste</Text>
-            <Text style={styles.hint}>Tıklama, yazma ve sayfa açma işlemlerinden önce size sorulur.</Text>
+            <Text style={styles.label}>{t('settings.confirmActions')}</Text>
+            <Text style={styles.hint}>{t('settings.confirmActionsHint')}</Text>
           </View>
           <Switch
             value={draft.confirmActions}

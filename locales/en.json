@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "ALPAI",
+    "NSPhotoLibraryAddUsageDescription": "ALPAI adds the screenshots you choose to save to your photos."
+  }
+}

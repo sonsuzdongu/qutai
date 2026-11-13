@@ -12,9 +12,5 @@ export function getProvider(id: ProviderId): Provider {
 }
 
 export function modelLabel(id: ProviderId, model: string): string {
-  return (
-    getProvider(id)
-      .models.find((m) => m.id === model)
-      ?.label.replace(/ \(.*\)$/, '') ?? model
-  );
+  return getProvider(id).models.find((m) => m.id === model)?.name ?? model;
 }

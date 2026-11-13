@@ -1,5 +1,6 @@
 import { getProvider } from '../ai/providers';
 import type { ProviderId, ToolResult, Turn } from '../ai/types';
+import { t } from '../i18n';
 import { getBackgroundCount, isForeground, waitForForeground } from '../utils/foreground';
 import { describeToolCall, executeTool, ToolContext } from './executeTool';
 import { SYSTEM_PROMPT } from './systemPrompt';
@@ -28,9 +29,9 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
 
   const pauseWhileBackgrounded = async () => {
     if (isForeground()) return;
-    onEvent({ type: 'info', text: '⏸ Uygulama arka planda, görev duraklatıldı' });
+    onEvent({ type: 'info', text: t('chat.paused') });
     await waitForForeground(signal);
-    if (!signal.aborted) onEvent({ type: 'info', text: '▶️ Devam ediliyor' });
+    if (!signal.aborted) onEvent({ type: 'info', text: t('chat.resumed') });
   };
 
   for (let step = 0; step < MAX_STEPS; step++) {
@@ -68,8 +69,8 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
           })),
         });
       }
-      if (reply.stop === 'max_tokens') onEvent({ type: 'error', text: 'Yanıt uzunluk sınırına ulaştı.' });
-      if (reply.stop === 'refusal') onEvent({ type: 'error', text: 'Model bu isteği yerine getirmeyi reddetti.' });
+      if (reply.stop === 'max_tokens') onEvent({ type: 'error', text: t('chat.maxTokens') });
+      if (reply.stop === 'refusal') onEvent({ type: 'error', text: t('chat.refusal') });
       return;
     }
 
@@ -102,7 +103,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     turns.push({ role: 'tool_results', results });
   }
 
-  onEvent({ type: 'error', text: `Adım sınırına (${MAX_STEPS}) ulaşıldı. Devam etmek için tekrar yazabilirsiniz.` });
+  onEvent({ type: 'error', text: t('chat.stepLimit', { max: MAX_STEPS }) });
 }
 
 /**

@@ -1,4 +1,5 @@
 import { postJson } from './http';
+import { t } from '../i18n';
 import { canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
 
 type Step = { type?: string; [key: string]: unknown };
@@ -79,7 +80,7 @@ async function call(req: ModelRequest): Promise<ModelReply> {
     }
   }
 
-  if (res.status === 'failed') throw new Error('Gemini isteği başarısız oldu.');
+  if (res.status === 'failed') throw new Error(t('error.geminiFailed'));
 
   let stop: StopReason = toolCalls.length > 0 ? 'tool_use' : 'end';
   if (res.status === 'incomplete') stop = 'max_tokens';
@@ -93,9 +94,9 @@ export const gemini: Provider = {
   keyPlaceholder: 'AIza...',
   keyUrl: 'https://aistudio.google.com/apikey',
   models: [
-    { id: 'gemini-4-hydrogen', label: 'Gemini 4 Hydrogen (önerilen)' },
-    { id: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash (en hızlı)' },
-    { id: 'gemini-4-carbon', label: 'Gemini 4 Carbon (en güçlü)' },
+    { id: 'gemini-4-hydrogen', name: 'Gemini 4 Hydrogen', tag: 'recommended' },
+    { id: 'gemini-3.8-flash', name: 'Gemini 3.8 Flash', tag: 'fastest' },
+    { id: 'gemini-4-carbon', name: 'Gemini 4 Carbon', tag: 'strongest' },
   ],
   defaultModel: 'gemini-4-hydrogen',
   call,

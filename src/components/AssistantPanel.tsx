@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsSpeaking } from '../device/speech';
+import { t } from '../i18n';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 
 export type ChatItem = {
@@ -100,7 +101,7 @@ export function AssistantPanel({
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents={open ? 'auto' : 'none'}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: progress }]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Paneli kapat" />
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('chat.closePanel')} />
       </Animated.View>
 
       <Animated.View style={[styles.panel, { width, transform: [{ translateX }] }]}>
@@ -118,18 +119,22 @@ export function AssistantPanel({
           >
             <View style={styles.header}>
               <View style={styles.headerTitle}>
-                <Text style={styles.title}>✦ ALPAI</Text>
-                <Pressable onPress={onOpenSettings} hitSlop={4} accessibilityLabel={`Model: ${modelInfo}. Değiştir`}>
+                <Text style={styles.title}>{t('chat.title')}</Text>
+                <Pressable
+                  onPress={onOpenSettings}
+                  hitSlop={4}
+                  accessibilityLabel={t('chat.modelA11y', { model: modelInfo })}
+                >
                   <Text style={styles.status} numberOfLines={1}>
-                    {running ? 'çalışıyor…' : modelInfo}
+                    {running ? t('chat.working') : modelInfo}
                   </Text>
                 </Pressable>
               </View>
               {items.length > 0 && !running && (
-                <HeaderButton label="＋" accessibilityLabel="Yeni sohbet" onPress={onNewChat} />
+                <HeaderButton label="＋" accessibilityLabel={t('chat.newChat')} onPress={onNewChat} />
               )}
-              <HeaderButton label="⚙︎" accessibilityLabel="Ayarlar" onPress={onOpenSettings} />
-              <HeaderButton label="✕" accessibilityLabel="Paneli kapat" onPress={onClose} />
+              <HeaderButton label="⚙︎" accessibilityLabel={t('chat.settings')} onPress={onOpenSettings} />
+              <HeaderButton label="✕" accessibilityLabel={t('chat.closePanel')} onPress={onClose} />
             </View>
 
             <ScrollView
@@ -138,12 +143,7 @@ export function AssistantPanel({
               contentContainerStyle={styles.messagesContent}
               keyboardShouldPersistTaps="handled"
             >
-              {items.length === 0 && (
-                <Text style={styles.empty}>
-                  Bu sayfada ne yapmamı istersiniz?{'\n\n'}Örneğin: “Bu sayfayı özetle” ya da “İstanbul–Ankara uçak
-                  biletlerini karşılaştır”.
-                </Text>
-              )}
+              {items.length === 0 && <Text style={styles.empty}>{t('chat.empty')}</Text>}
               {items.map((item) => (
                 <ChatRow key={item.id} item={item} speaking={speaking} onAction={onMessageAction} />
               ))}
@@ -154,19 +154,23 @@ export function AssistantPanel({
                 style={styles.input}
                 value={text}
                 onChangeText={setText}
-                placeholder="ALPAI'ye bir görev verin…"
+                placeholder={t('chat.placeholder')}
                 multiline
                 editable={!running}
               />
               {running ? (
-                <Pressable style={[styles.sendButton, styles.stopButton]} onPress={onStop} accessibilityLabel="Durdur">
+                <Pressable
+                  style={[styles.sendButton, styles.stopButton]}
+                  onPress={onStop}
+                  accessibilityLabel={t('common.stop')}
+                >
                   <Text style={styles.sendText}>■</Text>
                 </Pressable>
               ) : (
                 <Pressable
                   style={[styles.sendButton, !text.trim() && styles.sendDisabled]}
                   onPress={send}
-                  accessibilityLabel="Gönder"
+                  accessibilityLabel={t('common.send')}
                 >
                   <Text style={styles.sendText}>↑</Text>
                 </Pressable>
@@ -224,9 +228,12 @@ function ChatRow({
             </Text>
           </View>
           <View style={styles.messageActions}>
-            <MessageButton label="⧉ Kopyala" onPress={() => onAction('copy', item.text)} />
-            <MessageButton label={speaking ? '⏹ Durdur' : '🔊 Oku'} onPress={() => onAction('speak', item.text)} />
-            <MessageButton label="⤴ Paylaş" onPress={() => onAction('share', item.text)} />
+            <MessageButton label={t('chat.copy')} onPress={() => onAction('copy', item.text)} />
+            <MessageButton
+              label={t(speaking ? 'chat.stopReading' : 'chat.read')}
+              onPress={() => onAction('speak', item.text)}
+            />
+            <MessageButton label={t('chat.share')} onPress={() => onAction('share', item.text)} />
           </View>
         </View>
       );

@@ -110,9 +110,9 @@ export const openai: Provider = {
   keyPlaceholder: 'sk-...',
   keyUrl: 'https://platform.openai.com/api-keys',
   models: [
-    { id: 'gpt-5.6-terra', label: 'GPT-5.6 Terra (önerilen)' },
-    { id: 'gpt-5.6-luna', label: 'GPT-5.6 Luna (en hızlı)' },
-    { id: 'gpt-6-astra', label: 'GPT-6 Astra (en güçlü)' },
+    { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra', tag: 'recommended' },
+    { id: 'gpt-5.6-luna', name: 'GPT-5.6 Luna', tag: 'fastest' },
+    { id: 'gpt-6-astra', name: 'GPT-6 Astra', tag: 'strongest' },
   ],
   defaultModel: 'gpt-5.6-terra',
   call,

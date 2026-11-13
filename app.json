@@ -10,6 +10,9 @@
       "supportsTablet": true,
       "config": {
         "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true
       }
     },
     "android": {
@@ -31,10 +34,29 @@
         "expo-media-library",
         {
           "photosPermission": false,
-          "savePhotosPermission": "ALPAI, kaydetmek istediğiniz ekran görüntülerini fotoğraflarınıza ekler.",
+          "savePhotosPermission": "ALPAI adds the screenshots you choose to save to your photos.",
           "granularPermissions": []
         }
+      ],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": {
+            "ios": [
+              "en",
+              "tr"
+            ],
+            "android": [
+              "en",
+              "tr"
+            ]
+          }
+        }
       ]
-    ]
+    ],
+    "locales": {
+      "tr": "./locales/tr.json",
+      "en": "./locales/en.json"
+    }
   }
 }

@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "ALPAI",
+    "NSPhotoLibraryAddUsageDescription": "ALPAI, kaydetmek istediğiniz ekran görüntülerini fotoğraflarınıza ekler."
+  }
+}

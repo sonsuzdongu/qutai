@@ -1,6 +1,7 @@
 import * as Speech from 'expo-speech';
 import { useSyncExternalStore } from 'react';
 import type { Tab } from '../browser/Tab';
+import { t } from '../i18n';
 
 /** Upper bound per utterance; Android's engine rejects long inputs. */
 const CHUNK_CHARS = 3000;
@@ -63,7 +64,7 @@ export async function speak(text: string, language?: string): Promise<void> {
 /** Reads the main content of the page (article or main area, without menus and footers). */
 export async function speakPage(tab: Tab): Promise<{ chars: number; truncated: boolean }> {
   const page = await tab.run<{ lang: string; truncated: boolean; text: string }>('readableText', [20000]);
-  if (!page.text.trim()) throw new Error('Sayfada okunacak metin bulunamadı.');
+  if (!page.text.trim()) throw new Error(t('error.nothingToRead'));
   await speak(page.text, page.lang || undefined);
   return { chars: page.text.length, truncated: page.truncated };
 }

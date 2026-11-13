@@ -2,6 +2,7 @@ import { File, Paths } from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import type { Tab } from '../browser/Tab';
+import { t } from '../i18n';
 
 type Snapshot = {
   title: string;
@@ -24,7 +25,7 @@ export function pdfFileName(title: string, url: string): string {
     try {
       return new URL(url).hostname.replace(/^www\./, '');
     } catch {
-      return 'sayfa';
+      return t('pdf.fallbackName');
     }
   })();
   const base = (title || fallback)
@@ -32,7 +33,7 @@ export function pdfFileName(title: string, url: string): string {
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, 80);
-  return `${base || 'sayfa'}.pdf`;
+  return `${base || t('pdf.fallbackName')}.pdf`;
 }
 
 /**
