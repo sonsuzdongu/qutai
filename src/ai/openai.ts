@@ -15,13 +15,22 @@ function toInput(turns: Turn[], model: string): Item[] {
     if (turn.role === 'user') {
       input.push({ role: 'user', content: turn.text });
     } else if (turn.role === 'tool_results') {
-      turn.results.forEach((r) =>
+      turn.results.forEach((r) => {
+        const text = r.isError ? `[error] ${r.content}` : r.content;
         input.push({
           type: 'function_call_output',
           call_id: r.callId,
-          output: r.isError ? `[error] ${r.content}` : r.content,
-        }),
-      );
+          output: r.images?.length
+            ? [
+                { type: 'input_text', text },
+                ...r.images.map((img) => ({
+                  type: 'input_image',
+                  image_url: `data:${img.mediaType};base64,${img.data}`,
+                })),
+              ]
+            : text,
+        });
+      });
     } else if (canReplay(turn, 'openai', model)) {
       // With store: false, every output item (encrypted reasoning, message phase, calls) is replayed unchanged.
       input.push(...(turn.raw as Item[]));

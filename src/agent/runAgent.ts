@@ -8,8 +8,9 @@ import type { AgentEvent } from './types';
 
 const MAX_STEPS = 40;
 const KEEP_FULL_RESULTS = 2;
+const KEEP_IMAGES = 1;
 const COMPACT_THRESHOLD = 1500;
-const SAFE_TO_RETRY = new Set(['read_page', 'list_tabs', 'scroll', 'scroll_to', 'wait']);
+const SAFE_TO_RETRY = new Set(['read_page', 'view_screenshot', 'list_tabs', 'scroll', 'scroll_to', 'wait']);
 
 export type AgentOptions = ToolContext & {
   provider: ProviderId;
@@ -90,7 +91,13 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
         result = await executeTool(call.name, call.input, opts);
       }
       if (result.isError) onEvent({ type: 'error', text: result.content.slice(0, 200) });
-      results.push({ callId: call.id, name: call.name, content: result.content, isError: result.isError });
+      results.push({
+        callId: call.id,
+        name: call.name,
+        content: result.content,
+        isError: result.isError,
+        images: result.images,
+      });
     }
     turns.push({ role: 'tool_results', results });
   }
@@ -103,8 +110,9 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
  * sessions don't blow up cost and latency. With OpenAI this changes the
  * history prefix, so the API may drop older reasoning; that trade-off is accepted.
  */
-function compactHistory(turns: Turn[]): Turn[] {
+export function compactHistory(turns: Turn[]): Turn[] {
   let kept = 0;
+  let keptImages = 0;
   const out: Turn[] = [];
   for (let i = turns.length - 1; i >= 0; i--) {
     const turn = turns[i];
@@ -112,7 +120,13 @@ function compactHistory(turns: Turn[]): Turn[] {
       out.unshift(turn);
       continue;
     }
-    const results = [...turn.results].reverse().map((r) => {
+    const results = [...turn.results].reverse().map((original) => {
+      let r = original;
+      // Screenshots cost far more than text, so only the latest ones are kept.
+      if (r.images?.length) {
+        if (keptImages < KEEP_IMAGES) keptImages++;
+        else r = { ...r, images: undefined, content: `${r.content}\n[Older screenshot removed]` };
+      }
       if (r.content.length <= COMPACT_THRESHOLD) return r;
       if (kept < KEEP_FULL_RESULTS) {
         kept++;

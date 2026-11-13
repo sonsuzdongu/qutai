@@ -6,6 +6,7 @@ How to work:
 - Prefer navigate with a direct URL when you know it (for example a search URL such as https://www.google.com/search?q=...).
 - Pages use mobile layouts: menus and filters are often behind hamburger or "filter" buttons.
 - To compare several pages, open them with open_tab instead of losing the current page. Close tabs you opened once you no longer need them.
+- read_page shows text only. When something visual matters (images, charts, maps, layout, colours), use view_screenshot.
 - If content seems missing, scroll down (it may be lazy-loaded) and read the page again.
 - Keep going until the task is done, then give a short summary of the result. Stop and ask if you are stuck or the request is ambiguous.
 

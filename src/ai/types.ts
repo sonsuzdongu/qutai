@@ -4,7 +4,16 @@ export type ProviderId = 'anthropic' | 'openai' | 'gemini';
 
 export type ToolCall = { id: string; name: string; input: Record<string, unknown> };
 
-export type ToolResult = { callId: string; name: string; content: string; isError: boolean };
+export type ToolImage = { mediaType: 'image/jpeg' | 'image/png'; data: string };
+
+export type ToolResult = {
+  callId: string;
+  name: string;
+  content: string;
+  isError: boolean;
+  /** Base64 images returned alongside the text, e.g. page screenshots. */
+  images?: ToolImage[];
+};
 
 /**
  * Provider-neutral conversation history. Assistant turns also keep the

@@ -27,7 +27,15 @@ function toMessages(turns: Turn[], model: string): Message[] {
         turn.results.map((r) => ({
           type: 'tool_result',
           tool_use_id: r.callId,
-          content: r.content,
+          content: r.images?.length
+            ? [
+                { type: 'text', text: r.content },
+                ...r.images.map((img) => ({
+                  type: 'image',
+                  source: { type: 'base64', media_type: img.mediaType, data: img.data },
+                })),
+              ]
+            : r.content,
           ...(r.isError ? { is_error: true } : {}),
         })),
       );

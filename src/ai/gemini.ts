@@ -19,7 +19,10 @@ function toSteps(turns: Turn[], model: string): Step[] {
           type: 'function_result',
           call_id: r.callId,
           name: r.name,
-          result: [{ type: 'text', text: r.content }],
+          result: [
+            { type: 'text', text: r.content },
+            ...(r.images ?? []).map((img) => ({ type: 'image', data: img.data, mime_type: img.mediaType })),
+          ],
           ...(r.isError ? { is_error: true } : {}),
         }),
       );

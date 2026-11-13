@@ -85,6 +85,13 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'view_screenshot',
+    description:
+      'Look at the visible part of the current page as an image. Use it when the text from read_page is not enough: ' +
+      'images, charts, maps, canvas content, layout, colours or visual state. Scroll first to see other parts.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
     name: 'save_pdf',
     description:
       'Turn the current page into a PDF and open the system share sheet, where the user can save it (e.g. to Files) or send it. ' +

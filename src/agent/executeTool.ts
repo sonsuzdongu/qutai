@@ -1,7 +1,8 @@
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { savePagePdf } from '../device/pdf';
-import { saveScreenshot } from '../device/screenshot';
+import { captureForModel, saveScreenshot } from '../device/screenshot';
+import type { ToolImage } from '../ai/types';
 import { sleep } from '../utils/sleep';
 
 type PageSnapshot = {
@@ -53,6 +54,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return '📄 PDF hazırlanıyor';
     case 'save_screenshot':
       return '📸 Ekran görüntüsü kaydediliyor';
+    case 'view_screenshot':
+      return '👁 Sayfaya bakılıyor';
     case 'list_tabs':
       return '🗂 Sekmeler listeleniyor';
     case 'open_tab':
@@ -107,7 +110,7 @@ export async function executeTool(
   name: string,
   input: Record<string, unknown>,
   ctx: ToolContext,
-): Promise<{ content: string; isError: boolean }> {
+): Promise<{ content: string; isError: boolean; images?: ToolImage[] }> {
   const { browser } = ctx;
 
   if (ctx.confirm && ACTIONS_NEEDING_CONFIRMATION.has(name)) {
@@ -192,6 +195,11 @@ export async function executeTool(
           content: `Created "${pdf.fileName}" (${pdf.pages} page(s)) and showed the share sheet to the user.${missing}`,
           isError: false,
         };
+      }
+      case 'view_screenshot': {
+        await showTab(ctx, tab);
+        const image = await captureForModel(tab);
+        return { content: `Screenshot of the visible area of ${tab.url}.`, isError: false, images: [image] };
       }
       case 'save_screenshot': {
         await showTab(ctx, tab);
