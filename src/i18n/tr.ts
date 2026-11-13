@@ -54,6 +54,8 @@ export const tr: Record<keyof typeof en, string> = {
   'action.openTab': '➕ Yeni sekme: {url}',
   'action.switchTab': '🔀 Sekmeye geçiliyor ({id})',
   'action.closeTab': '✖️ Sekme kapatılıyor ({id})',
+  'action.remember': '🧠 Hatırlanıyor: {text}',
+  'action.forget': '🧠 Bir anı siliniyor',
   'action.wait': '⏳ {seconds} sn bekleniyor',
 
   'find.placeholder': 'Sayfada bul',
@@ -146,6 +148,7 @@ export const tr: Record<keyof typeof en, string> = {
   'selection.share': 'Paylaş',
   'selection.explainPrompt': 'Sayfadaki bu metni basitçe açıkla:\n\n{text}',
   'selection.translatePrompt': 'Sayfadaki bu metni Türkçeye çevir:\n\n{text}',
+
 
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',

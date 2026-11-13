@@ -13,6 +13,8 @@ export type Settings = {
   searchSuggestions: boolean;
   /** Page text size in percent, for every tab. */
   textZoom: number;
+  /** The assistant remembers facts about the user across conversations. */
+  memoryEnabled: boolean;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -27,6 +29,7 @@ export const DEFAULT_SETTINGS: Settings = {
   searchEngine: 'google',
   searchSuggestions: true,
   textZoom: 100,
+  memoryEnabled: true,
 };
 
 const KEYS = {
@@ -35,6 +38,7 @@ const KEYS = {
   searchEngine: 'search_engine',
   searchSuggestions: 'search_suggestions',
   textZoom: 'text_zoom',
+  memoryEnabled: 'memory_enabled',
   apiKey: (id: ProviderId) => `api_key_${id}`,
   model: (id: ProviderId) => `model_${id}`,
   // Written by the first, Claude-only version of the app.
@@ -61,6 +65,7 @@ export async function loadSettings(): Promise<Settings> {
     searchEngine,
     searchSuggestions,
     textZoom,
+    memoryEnabled,
     legacyApiKey,
     legacyModel,
     ...perProvider
@@ -70,6 +75,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.searchEngine),
     get(KEYS.searchSuggestions),
     get(KEYS.textZoom),
+    get(KEYS.memoryEnabled),
     get(KEYS.legacyApiKey),
     get(KEYS.legacyModel),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
@@ -83,6 +89,7 @@ export async function loadSettings(): Promise<Settings> {
     searchEngine: isSearchEngine(searchEngine) ? searchEngine : DEFAULT_SETTINGS.searchEngine,
     searchSuggestions: searchSuggestions !== 'false',
     textZoom: clampTextZoom(Number(textZoom) || DEFAULT_SETTINGS.textZoom),
+    memoryEnabled: memoryEnabled !== 'false',
   };
   PROVIDER_ORDER.forEach((id, i) => {
     settings.apiKeys[id] = perProvider[i * 2] ?? '';
@@ -104,6 +111,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.searchEngine, settings.searchEngine),
     set(KEYS.searchSuggestions, String(settings.searchSuggestions)),
     set(KEYS.textZoom, String(settings.textZoom)),
+    set(KEYS.memoryEnabled, String(settings.memoryEnabled)),
     ...PROVIDER_ORDER.flatMap((id) => [
       set(KEYS.apiKey(id), settings.apiKeys[id]),
       set(KEYS.model(id), settings.models[id]),

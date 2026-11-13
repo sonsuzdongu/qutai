@@ -4,7 +4,8 @@ import { t } from '../i18n';
 import { getBackgroundCount, isForeground, waitForForeground } from '../utils/foreground';
 import { describeToolCall, executeTool, ToolContext } from './executeTool';
 import { SYSTEM_PROMPT } from './systemPrompt';
-import { TOOLS } from './tools';
+import { memoryPrompt } from './memory';
+import { MEMORY_TOOLS, TOOLS } from './tools';
 import type { AgentEvent } from './types';
 
 const MAX_STEPS = 40;
@@ -41,8 +42,8 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     const reply = await provider.call({
       apiKey: opts.apiKey,
       model: opts.model,
-      system: SYSTEM_PROMPT,
-      tools: TOOLS,
+      system: await systemPrompt(opts),
+      tools: opts.memory ? [...TOOLS, ...MEMORY_TOOLS] : TOOLS,
       turns: compactHistory(turns),
       signal,
     });
@@ -104,6 +105,13 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
   }
 
   onEvent({ type: 'error', text: t('chat.stepLimit', { max: MAX_STEPS }) });
+}
+
+/** The base prompt plus what is remembered about the user, re-read every step since the agent may change it. */
+async function systemPrompt(opts: AgentOptions): Promise<string> {
+  if (!opts.memory) return SYSTEM_PROMPT;
+  const memories = await opts.memory.list().catch(() => []);
+  return SYSTEM_PROMPT + memoryPrompt(memories, !opts.privacy?.touchedIncognito);
 }
 
 /**

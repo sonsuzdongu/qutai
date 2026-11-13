@@ -1,5 +1,31 @@
 import type { ToolDefinition } from './types';
 
+/** Offered only while memory is turned on in settings. */
+export const MEMORY_TOOLS: ToolDefinition[] = [
+  {
+    name: 'remember',
+    description:
+      'Save one lasting fact about the user for future conversations (stored on their phone; they can see and delete it in settings). ' +
+      'Only facts the user told you themselves. Never passwords, one-time codes or payment card details.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        text: { type: 'string', description: 'One short, self-contained fact, e.g. "Phone: +90 555 123 45 67"' },
+      },
+      required: ['text'],
+    },
+  },
+  {
+    name: 'forget',
+    description: 'Delete a saved memory by its id (shown in brackets in the memory list).',
+    input_schema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'The memory id' } },
+      required: ['id'],
+    },
+  },
+];
+
 export const TOOLS: ToolDefinition[] = [
   {
     name: 'read_page',

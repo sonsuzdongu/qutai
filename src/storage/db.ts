@@ -29,6 +29,13 @@ const MIGRATIONS: string[] = [
      key TEXT PRIMARY KEY NOT NULL,
      value TEXT NOT NULL
    );`,
+  // Ids are random strings and rows carry updated_at, so memories can later sync with a server.
+  `CREATE TABLE memories (
+     id TEXT PRIMARY KEY NOT NULL,
+     text TEXT NOT NULL,
+     created_at INTEGER NOT NULL,
+     updated_at INTEGER NOT NULL
+   );`,
 ];
 
 export async function migrate(db: Db): Promise<void> {

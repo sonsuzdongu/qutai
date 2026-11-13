@@ -6,6 +6,7 @@ import { captureForModel, saveScreenshot } from '../device/screenshot';
 import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import { sleep } from '../utils/sleep';
+import type { MemoryStore } from './memory';
 
 type PageSnapshot = {
   url: string;
@@ -24,6 +25,8 @@ export type ToolContext = {
   confirm?: (description: string) => Promise<boolean>;
   /** Set when the agent works in an incognito tab, so the conversation is never saved to disk. */
   privacy?: { touchedIncognito: boolean };
+  /** Long-term memory about the user; absent when memory is turned off. */
+  memory?: MemoryStore;
 };
 
 /** Tools that need a loaded web page. */
@@ -86,8 +89,39 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.closeTab', { id: str(input.tab_id) });
     case 'wait':
       return t('action.wait', { seconds: str(input.seconds) });
+    case 'remember':
+      return t('action.remember', { text: str(input.text).slice(0, 80) });
+    case 'forget':
+      return t('action.forget');
     default:
       return `🔧 ${name}`;
+  }
+}
+
+async function memoryTool(
+  name: 'remember' | 'forget',
+  input: Record<string, unknown>,
+  ctx: ToolContext,
+): Promise<{ content: string; isError: boolean }> {
+  if (!ctx.memory) return { content: 'Memory is turned off in settings.', isError: true };
+  // Incognito conversations leave nothing behind, memories included.
+  if (ctx.privacy?.touchedIncognito) {
+    return {
+      content: 'Not saved: this conversation involves incognito tabs, so nothing is remembered.',
+      isError: true,
+    };
+  }
+  try {
+    if (name === 'remember') {
+      const memory = await ctx.memory.add(String(input.text ?? ''));
+      return { content: `Remembered [${memory.id}]: ${memory.text}`, isError: false };
+    }
+    const removed = await ctx.memory.remove(String(input.id ?? ''));
+    return removed
+      ? { content: 'Forgotten.', isError: false }
+      : { content: `No memory with id ${String(input.id)}.`, isError: true };
+  } catch (e) {
+    return { content: e instanceof Error ? e.message : String(e), isError: true };
   }
 }
 
@@ -140,6 +174,8 @@ export async function executeTool(
       return { content: 'The user declined this action. Ask them how to proceed.', isError: true };
     }
   }
+
+  if (name === 'remember' || name === 'forget') return memoryTool(name, input, ctx);
 
   const tab = currentTab(ctx);
   if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;

@@ -53,6 +53,8 @@ export const en = {
   'action.openTab': '➕ New tab: {url}',
   'action.switchTab': '🔀 Switching to tab ({id})',
   'action.closeTab': '✖️ Closing tab ({id})',
+  'action.remember': '🧠 Remembering: {text}',
+  'action.forget': '🧠 Forgetting a memory',
   'action.wait': '⏳ Waiting {seconds}s',
 
   'find.placeholder': 'Find in page',
@@ -145,6 +147,7 @@ export const en = {
   'selection.share': 'Share',
   'selection.explainPrompt': 'Explain this text from the page in simple terms:\n\n{text}',
   'selection.translatePrompt': 'Translate this text from the page into English:\n\n{text}',
+
 
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",

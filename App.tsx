@@ -33,6 +33,7 @@ import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { t, useLanguage } from './src/i18n';
 import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmarks';
 import { getDb } from './src/storage/db';
+import { deviceMemoryStore } from './src/storage/memory';
 import { clearChat, deleteOrphanChats, loadChat, saveChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
@@ -40,6 +41,7 @@ import { usePersistSession } from './src/storage/usePersistSession';
 import { useRecordHistory } from './src/storage/useRecordHistory';
 
 const KEEP_AWAKE_TAG = 'alpai-agent';
+const memoryStore = deviceMemoryStore(getDb);
 
 // Conversations saved by earlier versions belong to the tab that is active on the first start.
 let legacyChatPending = true;
@@ -200,6 +202,7 @@ function BrowserApp({
         browser,
         agentTab,
         privacy: chat.privacy,
+        memory: settings.memoryEnabled ? memoryStore : undefined,
         confirm: settings.confirmActions ? askConfirmation : undefined,
         signal,
         onEvent: (event) => {
