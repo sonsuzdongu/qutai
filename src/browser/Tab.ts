@@ -16,7 +16,17 @@ type Pending = {
 export const NEW_TAB_URL = 'alpai://newtab';
 
 export type PageCommand =
-  'readPage' | 'click' | 'type' | 'select' | 'scroll' | 'scrollTo' | 'snapshotHtml' | 'readableText';
+  | 'readPage'
+  | 'click'
+  | 'type'
+  | 'select'
+  | 'scroll'
+  | 'scrollTo'
+  | 'snapshotHtml'
+  | 'readableText'
+  | 'findInPage'
+  | 'findStep'
+  | 'clearFind';
 
 /**
  * One browser tab: owns its WebView, injects the page script, sends commands,

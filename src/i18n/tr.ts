@@ -54,6 +54,11 @@ export const tr: Record<keyof typeof en, string> = {
   'action.closeTab': '✖️ Sekme kapatılıyor ({id})',
   'action.wait': '⏳ {seconds} sn bekleniyor',
 
+  'find.placeholder': 'Sayfada bul',
+  'find.none': 'Sonuç yok',
+  'find.previous': 'Önceki eşleşme',
+  'find.next': 'Sonraki eşleşme',
+
   'back.exitHint': 'Kapatmak için bir kez daha geri basın',
 
   'address.placeholder': 'Adres veya arama',
@@ -80,6 +85,7 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.shareLink': 'Linki paylaş',
   'menu.copyLink': 'Linki kopyala',
   'menu.linkCopied': 'Link kopyalandı',
+  'menu.find': 'Sayfada bul',
   'menu.savePdf': 'PDF olarak kaydet',
   'menu.pdfPreparing': 'PDF hazırlanıyor…',
   'menu.pdfImagesMissing': "{count} görsel PDF'e eklenemedi",

@@ -483,6 +483,100 @@ export const PAGE_SCRIPT = String.raw`
     };
   }
 
+  // ---------- Find in page ----------
+
+  var MAX_MATCHES = 1000;
+  var MATCH_STYLE = 'background:#ffe066;color:inherit;border-radius:2px;';
+  var CURRENT_STYLE = 'background:#ff9f43;color:inherit;border-radius:2px;';
+  var find = { marks: [], index: -1 };
+
+  // Case-insensitive and lenient about Turkish dotted/dotless i, so "istanbul" finds
+  // "İSTANBUL" and "ISTANBUL". Folding keeps one character per character, so indices
+  // in the folded text match the original.
+  function foldChar(ch) {
+    if (ch === 'İ' || ch === 'I' || ch === 'ı') return 'i';
+    var lower = ch.toLowerCase();
+    return lower.length === 1 ? lower : ch;
+  }
+  function fold(text) {
+    var out = '';
+    for (var i = 0; i < text.length; i++) out += foldChar(text[i]);
+    return out;
+  }
+
+  function clearFind() {
+    var parents = [];
+    for (var i = 0; i < find.marks.length; i++) {
+      var mark = find.marks[i];
+      var parent = mark.parentNode;
+      if (!parent) continue;
+      parent.replaceChild(document.createTextNode(mark.textContent), mark);
+      parents.push(parent);
+    }
+    for (var j = 0; j < parents.length; j++) parents[j].normalize();
+    find = { marks: [], index: -1 };
+    return { index: -1, count: 0 };
+  }
+
+  function showMatch() {
+    for (var i = 0; i < find.marks.length; i++) {
+      find.marks[i].setAttribute('style', i === find.index ? CURRENT_STYLE : MATCH_STYLE);
+    }
+    var current = find.marks[find.index];
+    if (current) current.scrollIntoView({ block: 'center', inline: 'nearest' });
+    return { index: find.index, count: find.marks.length };
+  }
+
+  function findInPage(query) {
+    clearFind();
+    var needle = fold(String(query || ''));
+    if (!needle.trim()) return { index: -1, count: 0 };
+
+    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (node) {
+        var el = node.parentElement;
+        if (!el || el.closest('script, style, noscript, template, textarea, [aria-hidden="true"]')) return NodeFilter.FILTER_REJECT;
+        if (el.getClientRects().length === 0) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+
+    var marks = [];
+    for (var n = 0; n < nodes.length && marks.length < MAX_MATCHES; n++) {
+      var node = nodes[n];
+      var haystack = fold(node.data);
+      var starts = [];
+      var at = haystack.indexOf(needle);
+      while (at !== -1 && marks.length + starts.length < MAX_MATCHES) {
+        starts.push(at);
+        at = haystack.indexOf(needle, at + needle.length);
+      }
+      // Split from the end so earlier offsets stay valid.
+      var nodeMarks = [];
+      for (var k = starts.length - 1; k >= 0; k--) {
+        node.splitText(starts[k] + needle.length);
+        var match = node.splitText(starts[k]);
+        var mark = document.createElement('mark');
+        mark.setAttribute('data-alpai-find', '');
+        mark.textContent = match.data;
+        match.parentNode.replaceChild(mark, match);
+        nodeMarks.unshift(mark);
+      }
+      marks = marks.concat(nodeMarks);
+    }
+    find = { marks: marks, index: marks.length ? 0 : -1 };
+    return showMatch();
+  }
+
+  function findStep(delta) {
+    var count = find.marks.length;
+    if (!count) return { index: -1, count: 0 };
+    find.index = (find.index + (Number(delta) || 1) + count) % count;
+    return showMatch();
+  }
+
   window.__alpaiAgent = {
     readPage: readPage,
     click: click,
@@ -491,7 +585,10 @@ export const PAGE_SCRIPT = String.raw`
     scroll: scroll,
     scrollTo: scrollTo,
     snapshotHtml: snapshotHtml,
-    readableText: readableText
+    readableText: readableText,
+    findInPage: findInPage,
+    findStep: findStep,
+    clearFind: clearFind
   };
 })();
 `;

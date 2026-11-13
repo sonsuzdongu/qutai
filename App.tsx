@@ -12,6 +12,7 @@ import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
 import { AssistantPanel, ChatItem } from './src/components/AssistantPanel';
+import { FindBar } from './src/components/FindBar';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
 import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
 import { SettingsModal } from './src/components/SettingsModal';
@@ -119,6 +120,8 @@ function BrowserApp({
   const [menuVisible, setMenuVisible] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [library, setLibrary] = useState<LibraryTab | null>(null);
+  // Find in page belongs to one page: it closes by itself when the tab or the URL changes.
+  const [findFor, setFindFor] = useState<{ tabId: string; url: string } | null>(null);
   const toast = useToast();
   const speaking = useIsSpeaking();
   useIncognitoProtection(tab.incognito || (tabsVisible && browser.tabsOf(true).length > 0));
@@ -218,6 +221,7 @@ function BrowserApp({
 
   // Page actions make no sense on the app's own new tab page.
   const onNewTab = tab.isNewTab;
+  const findOpen = findFor?.tabId === tab.id && findFor.url === tab.url;
   const iconRow: IconItem[] = [
     {
       icon: '→',
@@ -265,10 +269,16 @@ function BrowserApp({
         }),
     },
     {
+      icon: '🔍',
+      label: t('menu.find'),
+      section: true,
+      disabled: onNewTab,
+      onPress: () => setFindFor({ tabId: tab.id, url: tab.url }),
+    },
+    {
       icon: '📄',
       label: t('menu.savePdf'),
       disabled: onNewTab,
-      section: true,
       onPress: () =>
         runAction(async () => {
           toast.show(t('menu.pdfPreparing'));
@@ -318,37 +328,41 @@ function BrowserApp({
       <View style={[styles.container, tab.incognito && styles.incognito]}>
         <StatusBar style={tab.incognito || tabsVisible ? 'light' : 'dark'} />
         <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
-          <AddressBar
-            url={onNewTab ? '' : tab.url}
-            searchEngine={settings.searchEngine}
-            searchSuggestions={settings.searchSuggestions}
-            onAsk={(text) => {
-              setPanelOpen(true);
-              send(text);
-            }}
-            loading={tab.loading}
-            canGoBack={tab.canGoBack || tab.openedFromNewTab}
-            tabCount={browser.tabs.length}
-            assistantOpen={panelOpen}
-            assistantRunning={running}
-            onSubmit={(url) => tab.loadUrl(url)}
-            onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
-            onOpenMenu={() => {
-              // The menu shows "add" or "remove" depending on whether this page is already saved.
-              getDb()
-                .then((db) => isBookmarked(db, tab.url))
-                .then(setBookmarked)
-                .catch(() => setBookmarked(false))
-                .finally(() => setMenuVisible(true));
-            }}
-            incognito={tab.incognito}
-            onOpenTabs={async () => {
-              // Thumbnails can only be taken while a tab is on screen.
-              await tab.captureThumbnail();
-              setTabsVisible(true);
-            }}
-            onToggleAssistant={() => setPanelOpen((v) => !v)}
-          />
+          {findOpen ? (
+            <FindBar tab={tab} onClose={() => setFindFor(null)} />
+          ) : (
+            <AddressBar
+              url={onNewTab ? '' : tab.url}
+              searchEngine={settings.searchEngine}
+              searchSuggestions={settings.searchSuggestions}
+              onAsk={(text) => {
+                setPanelOpen(true);
+                send(text);
+              }}
+              loading={tab.loading}
+              canGoBack={tab.canGoBack || tab.openedFromNewTab}
+              tabCount={browser.tabs.length}
+              assistantOpen={panelOpen}
+              assistantRunning={running}
+              onSubmit={(url) => tab.loadUrl(url)}
+              onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
+              onOpenMenu={() => {
+                // The menu shows "add" or "remove" depending on whether this page is already saved.
+                getDb()
+                  .then((db) => isBookmarked(db, tab.url))
+                  .then(setBookmarked)
+                  .catch(() => setBookmarked(false))
+                  .finally(() => setMenuVisible(true));
+              }}
+              incognito={tab.incognito}
+              onOpenTabs={async () => {
+                // Thumbnails can only be taken while a tab is on screen.
+                await tab.captureThumbnail();
+                setTabsVisible(true);
+              }}
+              onToggleAssistant={() => setPanelOpen((v) => !v)}
+            />
+          )}
           {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard. */}
           <KeyboardAvoidingView style={styles.flex} behavior="padding">
             <BrowserView

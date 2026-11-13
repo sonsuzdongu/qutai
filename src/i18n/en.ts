@@ -53,6 +53,11 @@ export const en = {
   'action.closeTab': '✖️ Closing tab ({id})',
   'action.wait': '⏳ Waiting {seconds}s',
 
+  'find.placeholder': 'Find in page',
+  'find.none': 'No matches',
+  'find.previous': 'Previous match',
+  'find.next': 'Next match',
+
   'back.exitHint': 'Press back again to exit',
 
   'address.placeholder': 'Search or type address',
@@ -79,6 +84,7 @@ export const en = {
   'menu.shareLink': 'Share link',
   'menu.copyLink': 'Copy link',
   'menu.linkCopied': 'Link copied',
+  'menu.find': 'Find in page',
   'menu.savePdf': 'Save as PDF',
   'menu.pdfPreparing': 'Preparing PDF…',
   'menu.pdfImagesMissing': "{count} image(s) couldn't be added to the PDF",
