@@ -58,11 +58,36 @@ App ──(session token)──► ALPAI server ──(our key)──► Anthrop
 - [ ] Terms of use
 - [ ] Check the commercial terms of use of Anthropic, OpenAI and Google; we are responsible for end-user usage
 
+## Once we move to our own build (development build)
+
+Expo Go can only run the native modules bundled with it. The items below require an app we build
+ourselves; they will all be handled together during the switch.
+
+- [ ] Development build setup (EAS); an Apple Developer account is required for iOS
+- [ ] Voice commands (speech-to-text): the device's own speech recognition engine; free, works offline on most devices. Microphone button in the panel
+  - Decision: The paid "audio recording + AI transcription" route will not be used; until then the keyboard's microphone key is enough
+- [ ] Real cookie isolation for private tabs on Android (WebView profile API)
+- [ ] App attestation (App Attest, Play Integrity; `expo-app-integrity`), see ALPAI Credits / Abuse protection
+- [ ] "Share to ALPAI" from other apps, Siri / Shortcuts (`expo-app-intents`), home screen widget (`expo-widgets`)
+
+## Device integrations (work in Expo Go)
+
+Both as a tool the agent can use and as a button the user can tap in the panel.
+
+- [ ] Turn the page into a PDF (`expo-print`); for images on sites that require sign-in, first convert the page's images to embedded data. Fallback: PDF from screenshots
+- [ ] Screenshot: save the visible area to the gallery (`expo-media-library`, write-only permission); also send the same image to the AI. Later: full page (scroll and stitch)
+- [ ] Read aloud (`expo-speech`)
+- [ ] Share menu (`expo-sharing`) and copying to the clipboard (`expo-clipboard`, write-only)
+- [ ] Keep the screen on while a task is running (`expo-keep-awake`)
+- [ ] Block screenshots in private tabs (`expo-screen-capture`)
+- [ ] File download support
+- [ ] Later: location, camera and QR, calendar, email and SMS drafts, biometric authentication, haptics
+- [ ] Security: tools that send data out (location, etc.) ask for user confirmation every time; clipboard reading and contacts are not given as tools. An iOS usage description string in `app.json` for each permission
+
 ## Other
 
 - [ ] Test on a real device: keyboard behavior (especially Android), tab thumbnails, private mode, Android back button and back gesture
 - [ ] End-to-end test with real API keys on all three providers
-- [ ] Real cookie isolation for private tabs on Android (WebView profile API, requires a development build)
-- [ ] Screenshot tool and clicking by coordinates (for canvas, maps and image-heavy sites)
+- [ ] Clicking by coordinates (for canvas, maps and image-heavy sites; together with the screenshot tool)
 - [ ] Running in the background: a foreground service for Android or a server-side browser (decision pending)
 - [ ] Streaming responses, storing chat history
