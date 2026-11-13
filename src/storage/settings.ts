@@ -17,6 +17,10 @@ export type Settings = {
   memoryEnabled: boolean;
   /** The assistant may use the provider's web search (each search is billed to the user's API key). */
   webSearch: boolean;
+  /** Block requests to known ad and tracker servers. */
+  blockAds: boolean;
+  /** Hide cookie consent banners. */
+  hideCookieBanners: boolean;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -33,6 +37,8 @@ export const DEFAULT_SETTINGS: Settings = {
   textZoom: 100,
   memoryEnabled: true,
   webSearch: true,
+  blockAds: true,
+  hideCookieBanners: true,
 };
 
 const KEYS = {
@@ -43,6 +49,8 @@ const KEYS = {
   textZoom: 'text_zoom',
   memoryEnabled: 'memory_enabled',
   webSearch: 'web_search',
+  blockAds: 'block_ads',
+  hideCookieBanners: 'hide_cookie_banners',
   apiKey: (id: ProviderId) => `api_key_${id}`,
   model: (id: ProviderId) => `model_${id}`,
   // Written by the first, Claude-only version of the app.
@@ -71,6 +79,8 @@ export async function loadSettings(): Promise<Settings> {
     textZoom,
     memoryEnabled,
     webSearch,
+    blockAds,
+    hideCookieBanners,
     legacyApiKey,
     legacyModel,
     ...perProvider
@@ -82,6 +92,8 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.textZoom),
     get(KEYS.memoryEnabled),
     get(KEYS.webSearch),
+    get(KEYS.blockAds),
+    get(KEYS.hideCookieBanners),
     get(KEYS.legacyApiKey),
     get(KEYS.legacyModel),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
@@ -97,6 +109,8 @@ export async function loadSettings(): Promise<Settings> {
     textZoom: clampTextZoom(Number(textZoom) || DEFAULT_SETTINGS.textZoom),
     memoryEnabled: memoryEnabled !== 'false',
     webSearch: webSearch !== 'false',
+    blockAds: blockAds !== 'false',
+    hideCookieBanners: hideCookieBanners !== 'false',
   };
   PROVIDER_ORDER.forEach((id, i) => {
     settings.apiKeys[id] = perProvider[i * 2] ?? '';
@@ -120,6 +134,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.textZoom, String(settings.textZoom)),
     set(KEYS.memoryEnabled, String(settings.memoryEnabled)),
     set(KEYS.webSearch, String(settings.webSearch)),
+    set(KEYS.blockAds, String(settings.blockAds)),
+    set(KEYS.hideCookieBanners, String(settings.hideCookieBanners)),
     ...PROVIDER_ORDER.flatMap((id) => [
       set(KEYS.apiKey(id), settings.apiKeys[id]),
       set(KEYS.model(id), settings.models[id]),

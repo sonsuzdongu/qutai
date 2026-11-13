@@ -146,6 +146,25 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions }: Omit<Props
           />
         </View>
 
+        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.content')}</Text>
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.blockAds')}</Text>
+            <Text style={styles.hint}>{t('settings.blockAdsHint')}</Text>
+          </View>
+          <Switch value={draft.blockAds} onValueChange={(blockAds) => setDraft({ ...draft, blockAds })} />
+        </View>
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.hideCookieBanners')}</Text>
+            <Text style={styles.hint}>{t('settings.hideCookieBannersHint')}</Text>
+          </View>
+          <Switch
+            value={draft.hideCookieBanners}
+            onValueChange={(hideCookieBanners) => setDraft({ ...draft, hideCookieBanners })}
+          />
+        </View>
+
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.assistant')}</Text>
         <View style={styles.switchRow}>
           <View style={styles.flex}>

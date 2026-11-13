@@ -594,6 +594,8 @@ function BrowserApp({
             <BrowserView
               browser={browser}
               newTabActions={{
+                blockAds: settings.blockAds,
+                hideCookieBanners: settings.hideCookieBanners,
                 onContextMenu: (source, target) => setContext({ tab: source, target }),
                 onDownload: (source, url) =>
                   runAction(async () => {

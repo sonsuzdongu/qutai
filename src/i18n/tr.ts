@@ -217,6 +217,14 @@ export const tr: Record<keyof typeof en, string> = {
   'downloads.androidStarted': 'İndiriliyor; bildirimden takip edebilirsiniz',
   'downloads.androidNoPermission': 'Kutai depolama izni olmadan dosya kaydedemiyor.',
 
+  'settings.content': 'İçerik',
+  'settings.blockAds': 'Reklam ve izleyicileri engelle',
+  'settings.blockAdsHint':
+    'Bilinen reklam ve izleyici sunucularına giden istekleri durdurur. Bu sürümde sayfaya gömülü bazı reklamlar yine görünebilir.',
+  'settings.hideCookieBanners': 'Çerez bildirimlerini gizle',
+  'settings.hideCookieBannersHint':
+    'Yaygın onay araçlarının çerez pencerelerini gizler. Site bu durumda varsayılanını, genellikle yalnızca zorunlu çerezleri kullanır.',
+
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',
   'settings.provider': 'Yapay zekâ sağlayıcısı',

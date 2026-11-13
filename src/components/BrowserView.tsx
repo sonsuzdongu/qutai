@@ -5,6 +5,7 @@ import type { Browser } from '../browser/Browser';
 import type { SearchEngineId } from '../browser/search';
 import { CONTEXT_MENU_SCRIPT, ContextTarget, parseContextTarget } from '../browser/contextMenu';
 import { parseSelection, SELECTION_SCRIPT } from '../browser/selection';
+import { AD_BLOCK_SCRIPT, COOKIE_BANNER_SCRIPT, isAdUrl } from '../content';
 import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
 import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { openExternal } from '../browser/openExternal';
@@ -20,6 +21,8 @@ import { NewTabPage } from './NewTabPage';
  * agent can still read and click in a tab the user isn't looking at.
  */
 export type TabActions = {
+  blockAds: boolean;
+  hideCookieBanners: boolean;
   /** A link or image was long-pressed in this tab. */
   onContextMenu: (tab: Tab, target: ContextTarget) => void;
   /** The text selection in this tab changed ("" when cleared). */
@@ -71,6 +74,11 @@ function TabWebView({
   const iosIncognito = tab.incognito && Platform.OS === 'ios';
   const androidIncognito = tab.incognito && Platform.OS === 'android';
   const { textZoom } = newTabActions;
+  // Runs before the page's own scripts: request blocking and banner hiding (no flash of the banner).
+  const earlyScript =
+    [newTabActions.blockAds ? AD_BLOCK_SCRIPT : '', newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : ''].join(
+      '\n',
+    ) || undefined;
   // Runs after every page load: long-press menu, text selection, desktop viewport (Android) and text size (iOS).
   const pageSetupScript = [
     CONTEXT_MENU_SCRIPT,
@@ -121,11 +129,16 @@ function TabWebView({
             if (!nav.loading) browser.notifyVisit(tab);
           }}
           // Links opened from an incognito tab stay incognito.
-          onOpenWindow={(e) => browser.openTab(e.nativeEvent.targetUrl, { incognito: tab.incognito, openerId: tab.id })}
+          onOpenWindow={(e) => {
+            if (newTabActions.blockAds && isAdUrl(e.nativeEvent.targetUrl)) return;
+            browser.openTab(e.nativeEvent.targetUrl, { incognito: tab.incognito, openerId: tab.id });
+          }}
           // Every URL reaches onShouldStartLoadWithRequest; the default allowlist would hand other
           // schemes to canOpenURL, which silently drops links to apps the OS doesn't let us see.
           originWhitelist={['*']}
           onShouldStartLoadWithRequest={(request) => {
+            // Ad and tracker pages, frames and redirects never load.
+            if (newTabActions.blockAds && isAdUrl(request.url)) return false;
             if (linkTarget(request.url) !== 'external') return true;
             // Only the page itself may hand off to another app; frames (often ads) can't.
             if (request.isTopFrame !== false) openExternal(request.url, tab, newTabActions.onNotice);
@@ -143,6 +156,7 @@ function TabWebView({
           userAgent={tab.desktop ? DESKTOP_USER_AGENT : undefined}
           contentMode={tab.desktop ? 'desktop' : 'recommended'}
           injectedJavaScript={pageSetupScript}
+          injectedJavaScriptBeforeContentLoaded={earlyScript}
           textZoom={newTabActions.textZoom}
           // The app shows its own long-press menu for links and images.
           allowsLinkPreview={false}

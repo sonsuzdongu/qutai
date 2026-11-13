@@ -215,6 +215,14 @@ export const en = {
   'downloads.androidStarted': 'Downloading — see the notification',
   'downloads.androidNoPermission': "Kutai can't save files without storage permission.",
 
+  'settings.content': 'Content',
+  'settings.blockAds': 'Block ads and trackers',
+  'settings.blockAdsHint':
+    'Stops requests to known ad and tracker servers. In this version some ads built into pages can still appear.',
+  'settings.hideCookieBanners': 'Hide cookie banners',
+  'settings.hideCookieBannersHint':
+    'Hides consent pop-ups of common consent tools. Sites then use their defaults, usually only necessary cookies.',
+
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",
   'settings.provider': 'AI provider',
