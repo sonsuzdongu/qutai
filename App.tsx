@@ -7,6 +7,7 @@ import { runAgent } from './src/agent/runAgent';
 import { getProvider, modelLabel } from './src/ai/providers';
 import type { Turn } from './src/ai/types';
 import { Browser, useBrowser } from './src/browser/Browser';
+import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
 import { AssistantPanel, ChatItem } from './src/components/AssistantPanel';
@@ -30,6 +31,7 @@ export default function App() {
   const [browserInstance] = useState(() => new Browser());
   const browser = useBrowser(browserInstance);
   const tab = browser.active;
+  useHardwareBack(browser);
 
   const turnsRef = useRef<Turn[]>([]);
   const abortRef = useRef<AbortController | null>(null);

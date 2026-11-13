@@ -20,6 +20,8 @@ export type PageCommand = 'readPage' | 'click' | 'type' | 'select' | 'scroll' | 
 export class Tab {
   readonly id: string;
   readonly incognito: boolean;
+  /** The tab whose link opened this one; back returns there once this tab has no history. */
+  readonly openerId: string | undefined;
   webview: ComponentRef<typeof WebView> | null = null;
   /** The view wrapping the WebView, used for tab switcher thumbnails. */
   container: ComponentRef<typeof View> | null = null;
@@ -45,11 +47,13 @@ export class Tab {
     id: string,
     url: string,
     incognito: boolean,
+    openerId: string | undefined,
     private onChange: () => void,
   ) {
     this.id = id;
     this.url = url;
     this.incognito = incognito;
+    this.openerId = openerId;
     this.source = { uri: url };
   }
 

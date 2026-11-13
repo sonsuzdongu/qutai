@@ -170,7 +170,7 @@ export async function executeTool(
       case 'open_tab': {
         await tab.captureThumbnail();
         // Tabs opened from an incognito tab stay incognito, like in regular browsers.
-        const opened = browser.openTab(normalizeUrl(input.url), { incognito: tab.incognito });
+        const opened = browser.openTab(normalizeUrl(input.url), { incognito: tab.incognito, openerId: tab.id });
         ctx.agentTab.id = opened.id;
         await opened.waitForNextLoad();
         return { content: `Opened tab id=${opened.id} at ${opened.url}. Call read_page to see it.`, isError: false };

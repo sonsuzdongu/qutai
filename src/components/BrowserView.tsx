@@ -43,7 +43,7 @@ function TabWebView({ tab, browser, active }: { tab: Tab; browser: Browser; acti
         onLoadEnd={() => tab.handleLoadEnd()}
         onNavigationStateChange={(nav) => tab.handleNavigationStateChange(nav)}
         // Links opened from an incognito tab stay incognito.
-        onOpenWindow={(e) => browser.openTab(e.nativeEvent.targetUrl, { incognito: tab.incognito })}
+        onOpenWindow={(e) => browser.openTab(e.nativeEvent.targetUrl, { incognito: tab.incognito, openerId: tab.id })}
         allowsBackForwardNavigationGestures
         javaScriptEnabled
         domStorageEnabled

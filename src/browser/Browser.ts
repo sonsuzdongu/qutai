@@ -42,8 +42,15 @@ export class Browser {
     return this.tabs.filter((t) => t.incognito === incognito);
   }
 
-  openTab(url: string = HOME_URL, { activate = true, incognito = false } = {}): Tab {
-    const tab = new Tab(String(++this.counter), url, incognito, this.emit);
+  openTab(
+    url: string = HOME_URL,
+    {
+      activate = true,
+      incognito = false,
+      openerId,
+    }: { activate?: boolean; incognito?: boolean; openerId?: string } = {},
+  ): Tab {
+    const tab = new Tab(String(++this.counter), url, incognito, openerId, this.emit);
     this.tabs.push(tab);
     if (activate || !this.activeId) this.activeId = tab.id;
     this.emit();
@@ -70,9 +77,11 @@ export class Browser {
       return;
     }
     if (this.activeId === id) {
-      // Prefer the neighbour in the same mode; leaving incognito falls back to the last normal tab.
+      // Return to the tab that opened this one, like regular browsers. Otherwise prefer the
+      // neighbour in the same mode; leaving incognito falls back to the last normal tab.
+      const opener = tab.openerId ? this.getTab(tab.openerId) : undefined;
       const remaining = sameMode.filter((t) => t !== tab);
-      const next = remaining[Math.min(indexInMode, remaining.length - 1)] ?? this.tabs[this.tabs.length - 1];
+      const next = opener ?? remaining[Math.min(indexInMode, remaining.length - 1)] ?? this.tabs[this.tabs.length - 1];
       this.activeId = next.id;
     }
     this.emit();
