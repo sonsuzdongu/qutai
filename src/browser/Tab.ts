@@ -11,6 +11,9 @@ type Pending = {
   timer: ReturnType<typeof setTimeout>;
 };
 
+/** Internal address of the app's own new tab page; never handed to a WebView. */
+export const NEW_TAB_URL = 'alpai://newtab';
+
 export type PageCommand =
   'readPage' | 'click' | 'type' | 'select' | 'scroll' | 'scrollTo' | 'snapshotHtml' | 'readableText';
 
@@ -36,6 +39,8 @@ export class Tab {
    * Restored tabs start asleep so a long session doesn't load every page at launch.
    */
   asleep = false;
+  /** The first page was opened from the new tab page, so back can return there. */
+  openedFromNewTab = false;
   loading = false;
   canGoBack = false;
   /** Data URI kept in memory only, so nothing from incognito tabs touches the disk. */
@@ -100,7 +105,32 @@ export class Tab {
     }
   }
 
+  get isNewTab(): boolean {
+    return this.url === NEW_TAB_URL;
+  }
+
+  /** Shows the new tab page again (back from the first page opened from it). */
+  showNewTab() {
+    this.dispose();
+    this.webview = null;
+    this.url = NEW_TAB_URL;
+    this.source = { uri: NEW_TAB_URL };
+    this.title = '';
+    this.canGoBack = false;
+    this.openedFromNewTab = false;
+    this.onChange();
+  }
+
   loadUrl(url: string) {
+    if (this.isNewTab) {
+      // Leaving the new tab page mounts a WebView with this URL.
+      this.url = url;
+      this.title = '';
+      this.openedFromNewTab = true;
+      this.source = { uri: url };
+      this.onChange();
+      return;
+    }
     if (url === this.source.uri && this.webview) {
       this.webview.injectJavaScript(`window.location.href = ${JSON.stringify(url)}; true;`);
     } else {

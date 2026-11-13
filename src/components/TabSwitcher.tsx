@@ -244,10 +244,8 @@ function TabCard({
 }) {
   const theme = incognito ? dark : light;
   const previewHeight = width * 1.25;
-  const host = tab.url
-    .replace(/^https?:\/\//i, '')
-    .replace(/^www\./i, '')
-    .split('/')[0];
+  // The new tab page has no host; the card falls back to its "New tab" title.
+  const host = tab.isNewTab ? '' : hostOf(tab.url);
 
   return (
     <Pressable

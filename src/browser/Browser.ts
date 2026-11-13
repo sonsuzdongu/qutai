@@ -1,8 +1,9 @@
 import { useSyncExternalStore } from 'react';
 import type { Session } from '../storage/session';
-import { Tab } from './Tab';
+import { NEW_TAB_URL, Tab } from './Tab';
 
-export const HOME_URL = 'https://www.google.com';
+/** New tabs open the app's own new tab page. */
+export const HOME_URL = NEW_TAB_URL;
 
 export type ClosedTab = { url: string; title: string; closedAt: number };
 

@@ -147,7 +147,10 @@ function BrowserApp({
     // The agent starts in the tab the user is looking at when they send the task.
     const current = browser.active;
     const agentTab = { id: current.id };
-    const pageInfo = `\n\n[Current tab ${current.id}: ${current.title || '(no title)'} — ${current.url}. Open tabs: ${browser.tabs.length}]`;
+    const where = current.isNewTab
+      ? 'new tab page, no web page loaded'
+      : `${current.title || '(no title)'} — ${current.url}`;
+    const pageInfo = `\n\n[Current tab ${current.id}: ${where}. Open tabs: ${browser.tabs.length}]`;
     turnsRef.current.push({ role: 'user', text: text + pageInfo });
 
     const abort = new AbortController();
@@ -213,8 +216,10 @@ function BrowserApp({
     }
   };
 
+  // Page actions make no sense on the app's own new tab page.
+  const onNewTab = tab.isNewTab;
   const menuItems: MenuItem[] = [
-    { icon: '↻', label: t('menu.reload'), onPress: () => tab.webview?.reload() },
+    { icon: '↻', label: t('menu.reload'), disabled: onNewTab, onPress: () => tab.webview?.reload() },
     {
       icon: bookmarked ? '★' : '☆',
       label: t(bookmarked ? 'menu.removeBookmark' : 'menu.addBookmark'),
@@ -233,12 +238,14 @@ function BrowserApp({
     {
       icon: '⤴',
       label: t('menu.shareLink'),
+      disabled: onNewTab,
       section: true,
       onPress: () => runAction(() => shareLink(tab)),
     },
     {
       icon: '⧉',
       label: t('menu.copyLink'),
+      disabled: onNewTab,
       onPress: () =>
         runAction(async () => {
           await copyLink(tab);
@@ -248,6 +255,7 @@ function BrowserApp({
     {
       icon: '📄',
       label: t('menu.savePdf'),
+      disabled: onNewTab,
       section: true,
       onPress: () =>
         runAction(async () => {
@@ -259,6 +267,7 @@ function BrowserApp({
     {
       icon: '📸',
       label: t('menu.saveScreenshot'),
+      disabled: onNewTab,
       onPress: () =>
         runAction(async () => {
           await saveScreenshot(tab);
@@ -270,6 +279,7 @@ function BrowserApp({
       : {
           icon: '🔊',
           label: t('menu.readAloud'),
+          disabled: onNewTab,
           onPress: () =>
             runAction(async () => {
               await speakPage(tab);
@@ -297,14 +307,14 @@ function BrowserApp({
         <StatusBar style={tab.incognito || tabsVisible ? 'light' : 'dark'} />
         <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
           <AddressBar
-            url={tab.url}
+            url={onNewTab ? '' : tab.url}
             loading={tab.loading}
-            canGoBack={tab.canGoBack}
+            canGoBack={tab.canGoBack || tab.openedFromNewTab}
             tabCount={browser.tabs.length}
             assistantOpen={panelOpen}
             assistantRunning={running}
             onSubmit={(url) => tab.loadUrl(url)}
-            onBack={() => tab.webview?.goBack()}
+            onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
             onOpenMenu={() => {
               // The menu shows "add" or "remove" depending on whether this page is already saved.
               getDb()
@@ -323,7 +333,16 @@ function BrowserApp({
           />
           {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard. */}
           <KeyboardAvoidingView style={styles.flex} behavior="padding">
-            <BrowserView browser={browser} />
+            <BrowserView
+              browser={browser}
+              newTabActions={{
+                onAsk: (text) => {
+                  setPanelOpen(true);
+                  send(text);
+                },
+                onOpenLibrary: setLibrary,
+              }}
+            />
           </KeyboardAvoidingView>
         </SafeAreaView>
 

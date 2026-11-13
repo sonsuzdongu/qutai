@@ -83,6 +83,14 @@ export const en = {
   'menu.newTab': 'New tab',
   'menu.newIncognitoTab': 'New incognito tab',
 
+  'newTab.ask': 'Ask ALPAI',
+  'newTab.recent': 'Recently visited',
+  'newTab.seeAll': 'See all',
+  'newTab.removeSite': 'Remove "{title}" from frequently visited?',
+  'newTab.remove': 'Remove',
+  'newTab.incognitoTitle': "You're incognito",
+  'newTab.page': 'New tab page (no web page loaded)',
+
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",
   'settings.provider': 'AI provider',

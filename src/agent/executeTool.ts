@@ -26,6 +26,19 @@ export type ToolContext = {
   privacy?: { touchedIncognito: boolean };
 };
 
+/** Tools that need a loaded web page. */
+const PAGE_TOOLS = new Set([
+  'read_page',
+  'click',
+  'type',
+  'select_option',
+  'scroll',
+  'scroll_to',
+  'save_pdf',
+  'save_screenshot',
+  'view_screenshot',
+]);
+
 const ACTIONS_NEEDING_CONFIRMATION = new Set([
   'navigate',
   'open_tab',
@@ -108,7 +121,8 @@ function tabList(ctx: ToolContext): string {
       ]
         .filter(Boolean)
         .join(', ');
-      return `- id=${t.id} "${t.title || '(no title)'}" ${t.url}${marks ? ` (${marks})` : ''}`;
+      const page = t.isNewTab ? 'new tab page (no web page)' : `"${t.title || '(no title)'}" ${t.url}`;
+      return `- id=${t.id} ${page}${marks ? ` (${marks})` : ''}`;
     })
     .join('\n');
 }
@@ -133,6 +147,13 @@ export async function executeTool(
     const loaded = tab.waitForNextLoad();
     tab.wake();
     await loaded;
+  }
+
+  if (tab.isNewTab && PAGE_TOOLS.has(name)) {
+    return {
+      content: 'This tab shows the new tab page; no web page is loaded. Use navigate to open one.',
+      isError: name !== 'read_page',
+    };
   }
 
   try {
@@ -220,6 +241,7 @@ export async function executeTool(
           await speak(text, typeof input.language === 'string' ? input.language : undefined);
           return { content: `Started reading ${text.length} characters aloud.`, isError: false };
         }
+        if (tab.isNewTab) return { content: 'No web page is loaded in this tab.', isError: true };
         const page = await speakPage(tab);
         const note = page.truncated ? ' The page is long; only the beginning is read.' : '';
         return { content: `Started reading the page aloud (${page.chars} characters).${note}`, isError: false };

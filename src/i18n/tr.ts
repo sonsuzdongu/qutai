@@ -84,6 +84,14 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.newTab': 'Yeni sekme',
   'menu.newIncognitoTab': 'Yeni gizli sekme',
 
+  'newTab.ask': "ALPAI'ye sor",
+  'newTab.recent': 'Son ziyaret edilenler',
+  'newTab.seeAll': 'Tümü',
+  'newTab.removeSite': '"{title}" sık ziyaret edilenlerden kaldırılsın mı?',
+  'newTab.remove': 'Kaldır',
+  'newTab.incognitoTitle': 'Gizli moddasınız',
+  'newTab.page': 'Yeni sekme sayfası (web sayfası yüklü değil)',
+
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',
   'settings.provider': 'Yapay zekâ sağlayıcısı',

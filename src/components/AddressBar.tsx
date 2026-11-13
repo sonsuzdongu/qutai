@@ -11,6 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { toUrl } from '../browser/url';
 import { t } from '../i18n';
 
 type Props = {
@@ -27,13 +28,6 @@ type Props = {
   onOpenTabs: () => void;
   onToggleAssistant: () => void;
 };
-
-export function toUrl(input: string): string {
-  const text = input.trim();
-  if (/^https?:\/\//i.test(text)) return text;
-  if (!/\s/.test(text) && /\.[a-z]{2,}(\/|$|:)/i.test(text)) return `https://${text}`;
-  return `https://www.google.com/search?q=${encodeURIComponent(text)}`;
-}
 
 /** URL as shown when not editing: no scheme, no "www.", no trailing slash. */
 function displayUrl(url: string): string {
