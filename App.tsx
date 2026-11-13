@@ -11,8 +11,11 @@ import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
 import { AssistantPanel, ChatItem } from './src/components/AssistantPanel';
+import { MenuItem, PageMenu } from './src/components/PageMenu';
 import { SettingsModal } from './src/components/SettingsModal';
 import { TabSwitcher } from './src/components/TabSwitcher';
+import { Toast, useToast } from './src/components/Toast';
+import { copyLink, shareLink } from './src/device/link';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 
 let itemCounter = 0;
@@ -50,6 +53,8 @@ export default function App() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [tabsVisible, setTabsVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const toast = useToast();
 
   useEffect(() => {
     loadSettings()
@@ -111,6 +116,37 @@ export default function App() {
     setItems([]);
   };
 
+  /** Runs a menu action and reports the outcome in a toast instead of failing silently. */
+  const runAction = async (action: () => Promise<string | void>) => {
+    try {
+      const message = await action();
+      if (message) toast.show(message);
+    } catch (e) {
+      toast.show(`Hata: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const menuItems: MenuItem[] = [
+    { icon: '↻', label: 'Yenile', onPress: () => tab.webview?.reload() },
+    {
+      icon: '⤴',
+      label: 'Linki paylaş',
+      section: true,
+      onPress: () => runAction(() => shareLink(tab)),
+    },
+    {
+      icon: '⧉',
+      label: 'Linki kopyala',
+      onPress: () =>
+        runAction(async () => {
+          await copyLink(tab);
+          return 'Link kopyalandı';
+        }),
+    },
+    { icon: '＋', label: 'Yeni sekme', section: true, onPress: () => browser.openTab() },
+    { icon: '🕶', label: 'Yeni gizli sekme', onPress: () => browser.openTab(undefined, { incognito: true }) },
+  ];
+
   const onSaveSettings = async (next: Settings) => {
     setSettings(next);
     setSettingsVisible(false);
@@ -135,7 +171,7 @@ export default function App() {
             assistantRunning={running}
             onSubmit={(url) => tab.loadUrl(url)}
             onBack={() => tab.webview?.goBack()}
-            onReload={() => tab.webview?.reload()}
+            onOpenMenu={() => setMenuVisible(true)}
             incognito={tab.incognito}
             onOpenTabs={async () => {
               // Thumbnails can only be taken while a tab is on screen.
@@ -161,6 +197,12 @@ export default function App() {
           onNewChat={newChat}
           onOpenSettings={() => setSettingsVisible(true)}
         />
+        <PageMenu
+          visible={menuVisible}
+          items={menuItems}
+          incognito={tab.incognito}
+          onClose={() => setMenuVisible(false)}
+        />
         <TabSwitcher visible={tabsVisible} browser={browser} onClose={() => setTabsVisible(false)} />
         <SettingsModal
           visible={settingsVisible}
@@ -168,6 +210,7 @@ export default function App() {
           onSave={onSaveSettings}
           onClose={() => setSettingsVisible(false)}
         />
+        <Toast key={toast.key} message={toast.message} onHidden={toast.hide} />
       </View>
     </SafeAreaProvider>
   );

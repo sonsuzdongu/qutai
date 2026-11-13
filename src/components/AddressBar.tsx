@@ -1,5 +1,16 @@
-import { useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
 type Props = {
   url: string;
@@ -11,7 +22,7 @@ type Props = {
   assistantRunning: boolean;
   onSubmit: (url: string) => void;
   onBack: () => void;
-  onReload: () => void;
+  onOpenMenu: () => void;
   onOpenTabs: () => void;
   onToggleAssistant: () => void;
 };
@@ -41,7 +52,7 @@ export function AddressBar({
   assistantRunning,
   onSubmit,
   onBack,
-  onReload,
+  onOpenMenu,
   onOpenTabs,
   onToggleAssistant,
 }: Props) {
@@ -91,16 +102,12 @@ export function AddressBar({
         </Pressable>
       )}
 
-      {loading ? (
-        <ActivityIndicator style={styles.icon} color={incognito ? '#f2f1f5' : undefined} />
-      ) : (
-        <IconButton label="↻" onPress={onReload} incognito={incognito} />
-      )}
       <Pressable onPress={onOpenTabs} hitSlop={6} style={styles.icon} accessibilityLabel={`${tabCount} sekme`}>
         <View style={[styles.tabCount, dark?.tabCount]}>
           <Text style={[styles.tabCountText, dark?.text]}>{tabCount}</Text>
         </View>
       </Pressable>
+      <IconButton label="⋮" onPress={onOpenMenu} incognito={incognito} accessibilityLabel="Sayfa menüsü" />
       <Pressable
         onPress={onToggleAssistant}
         hitSlop={6}
@@ -113,6 +120,33 @@ export function AddressBar({
           <Text style={styles.assistantIcon}>✦</Text>
         )}
       </Pressable>
+      {loading && <LoadingBar />}
+    </View>
+  );
+}
+
+/** Thin indeterminate progress line along the bottom edge while a page loads. */
+function LoadingBar() {
+  const { width } = useWindowDimensions();
+  const [progress] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(progress, {
+        toValue: 1,
+        duration: 1100,
+        easing: Easing.inOut(Easing.ease),
+        useNativeDriver: true,
+      }),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [progress]);
+
+  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [-width * 0.4, width] });
+  return (
+    <View style={styles.loadingTrack} pointerEvents="none">
+      <Animated.View style={[styles.loadingBar, { width: width * 0.4, transform: [{ translateX }] }]} />
     </View>
   );
 }
@@ -122,14 +156,22 @@ function IconButton({
   onPress,
   disabled,
   incognito,
+  accessibilityLabel,
 }: {
   label: string;
   onPress: () => void;
   disabled?: boolean;
   incognito?: boolean;
+  accessibilityLabel?: string;
 }) {
   return (
-    <Pressable onPress={onPress} disabled={disabled} hitSlop={6} style={styles.icon}>
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      hitSlop={6}
+      style={styles.icon}
+      accessibilityLabel={accessibilityLabel}
+    >
       <Text style={[styles.iconText, incognito && darkStyles.text, disabled && styles.disabled]}>{label}</Text>
     </Pressable>
   );
@@ -170,6 +212,8 @@ const styles = StyleSheet.create({
   icon: { width: 32, height: 36, alignItems: 'center', justifyContent: 'center' },
   iconText: { fontSize: 22, color: '#333' },
   disabled: { color: '#bbb' },
+  loadingTrack: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, overflow: 'hidden' },
+  loadingBar: { height: 2, backgroundColor: '#c96442', borderRadius: 1 },
   tabCount: {
     minWidth: 22,
     height: 22,
