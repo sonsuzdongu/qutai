@@ -76,7 +76,38 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     }
 
     const results: ToolResult[] = [];
+    let waitingForUser = false;
     for (const call of reply.toolCalls) {
+      if (waitingForUser) {
+        results.push({
+          callId: call.id,
+          name: call.name,
+          content: "Not executed: waiting for the user's answer.",
+          isError: true,
+        });
+        continue;
+      }
+      if (call.name === 'ask_user') {
+        const choices = parseChoices(call.input);
+        if (!choices) {
+          results.push({
+            callId: call.id,
+            name: call.name,
+            content: 'Give a question and 2 to 8 options.',
+            isError: true,
+          });
+          continue;
+        }
+        onEvent({ type: 'choices', text: choices.question, options: choices.options });
+        results.push({
+          callId: call.id,
+          name: call.name,
+          content: 'The options are shown to the user as buttons. Their answer will arrive as the next user message.',
+          isError: false,
+        });
+        waitingForUser = true;
+        continue;
+      }
       if (signal.aborted) {
         results.push({ callId: call.id, name: call.name, content: 'Stopped by the user.', isError: true });
         continue;
@@ -102,9 +133,22 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       });
     }
     turns.push({ role: 'tool_results', results });
+    // The run ends with the question; the user's answer starts the next one.
+    if (waitingForUser) return;
   }
 
   onEvent({ type: 'error', text: t('chat.stepLimit', { max: MAX_STEPS }) });
+}
+
+const MAX_CHOICES = 8;
+
+/** Validates ask_user input: a question and 2–8 distinct, non-empty options. */
+export function parseChoices(input: Record<string, unknown>): { question: string; options: string[] } | null {
+  const question = typeof input.question === 'string' ? input.question.trim() : '';
+  const raw = Array.isArray(input.options) ? input.options : [];
+  const options = [...new Set(raw.map((o) => (typeof o === 'string' ? o.trim().slice(0, 120) : '')).filter(Boolean))];
+  if (!question || options.length < 2) return null;
+  return { question: question.slice(0, 500), options: options.slice(0, MAX_CHOICES) };
 }
 
 /** The base prompt plus what is remembered about the user, re-read every step since the agent may change it. */

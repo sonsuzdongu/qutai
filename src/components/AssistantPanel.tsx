@@ -22,8 +22,12 @@ import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 
 export type ChatItem = {
   id: string;
-  kind: 'user' | 'assistant' | 'action' | 'error' | 'info';
+  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices';
   text: string;
+  /** For 'choices': the buttons offered. */
+  options?: string[];
+  /** For 'choices': the option the user tapped. */
+  chosen?: string;
 };
 
 /** A one-tap task shown above the input, e.g. "Summarize". */
@@ -47,6 +51,8 @@ type Props = {
   onClose: () => void;
   onSend: (text: string) => void;
   onStop: () => void;
+  /** An option of an ask_user question was tapped. */
+  onChoose: (itemId: string, option: string) => void;
   onNewChat: () => void;
   onOpenSettings: () => void;
   onMessageAction: (action: MessageAction, text: string) => void;
@@ -75,6 +81,7 @@ export function AssistantPanel({
   onClose,
   onSend,
   onStop,
+  onChoose,
   onNewChat,
   onOpenSettings,
   onMessageAction,
@@ -126,6 +133,10 @@ export function AssistantPanel({
     onSend(t);
   };
 
+  // Only the latest question is answerable, and only until the user has replied in some other way.
+  const lastUserIndex = items.findLastIndex((item) => item.kind === 'user');
+  const canChoose = (index: number) => !running && !busyElsewhere && index > lastUserIndex && !items[index].chosen;
+
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [width, 0] });
 
   return (
@@ -174,13 +185,14 @@ export function AssistantPanel({
               keyboardShouldPersistTaps="handled"
             >
               {items.length === 0 && <Text style={styles.empty}>{t('chat.empty')}</Text>}
-              {items.map((item) => (
+              {items.map((item, index) => (
                 <ChatRow
                   key={item.id}
                   item={item}
                   speaking={speaking}
                   onAction={onMessageAction}
                   onOpenLink={onOpenLink}
+                  onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
                 />
               ))}
             </ScrollView>
@@ -271,11 +283,14 @@ function ChatRow({
   speaking,
   onAction,
   onOpenLink,
+  onChoose,
 }: {
   item: ChatItem;
   speaking: boolean;
   onAction: (action: MessageAction, text: string) => void;
   onOpenLink: (url: string) => void;
+  /** Set while the question can still be answered. */
+  onChoose?: (itemId: string, option: string) => void;
 }) {
   switch (item.kind) {
     case 'user':
@@ -300,6 +315,37 @@ function ChatRow({
             />
             <MessageButton label={t('chat.share')} onPress={() => onAction('share', item.text)} />
           </View>
+        </View>
+      );
+    case 'choices':
+      return (
+        <View style={styles.choices}>
+          <View style={[styles.bubble, styles.assistantBubble]}>
+            <MarkdownText text={item.text} style={styles.assistantText} onOpenLink={onOpenLink} />
+          </View>
+          {(item.options ?? []).map((option) => {
+            const chosen = item.chosen === option;
+            return (
+              <Pressable
+                key={option}
+                onPress={() => onChoose?.(item.id, option)}
+                disabled={!onChoose}
+                style={({ pressed }) => [
+                  styles.choice,
+                  chosen && styles.choiceChosen,
+                  !onChoose && !chosen && styles.choiceClosed,
+                  pressed && styles.pressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: !onChoose, selected: chosen }}
+              >
+                <Text style={[styles.choiceText, chosen && styles.choiceTextChosen]}>
+                  {chosen ? '✓ ' : ''}
+                  {option}
+                </Text>
+              </Pressable>
+            );
+          })}
         </View>
       );
     case 'error':
@@ -369,6 +415,21 @@ const styles = StyleSheet.create({
   assistantText: { color: '#222', fontSize: 15, lineHeight: 21 },
   action: { color: '#777', fontSize: 12, marginLeft: 4 },
   error: { color: '#b3261e', fontSize: 13, marginLeft: 4 },
+  choices: { alignSelf: 'stretch', gap: 6 },
+  choice: {
+    alignSelf: 'flex-start',
+    maxWidth: '100%',
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#c96442',
+    backgroundColor: '#fff',
+  },
+  choiceChosen: { backgroundColor: '#c96442' },
+  choiceClosed: { opacity: 0.4 },
+  choiceText: { fontSize: 15, color: '#c96442', fontWeight: '600' },
+  choiceTextChosen: { color: '#fff' },
   busy: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -3,8 +3,8 @@ import type { ChatItem } from '../components/AssistantPanel';
 
 let itemCounter = 0;
 
-export function newItem(kind: ChatItem['kind'], text: string): ChatItem {
-  return { id: String(++itemCounter), kind, text };
+export function newItem(kind: ChatItem['kind'], text: string, options?: string[]): ChatItem {
+  return options ? { id: String(++itemCounter), kind, text, options } : { id: String(++itemCounter), kind, text };
 }
 
 /** Saved messages keep their ids, so new ones must continue after the highest. */
@@ -37,6 +37,12 @@ export class Conversation {
   add(item: ChatItem) {
     // A new array, so memoized lists notice the change.
     this.items = [...this.items, item];
+    this.onChange();
+  }
+
+  /** Records which option was tapped, so the buttons show the answer and can't be used again. */
+  choose(itemId: string, option: string) {
+    this.items = this.items.map((item) => (item.id === itemId ? { ...item, chosen: option } : item));
     this.onChange();
   }
 

@@ -206,6 +206,7 @@ function BrowserApp({
         confirm: settings.confirmActions ? askConfirmation : undefined,
         signal,
         onEvent: (event) => {
+          if (event.type === 'choices') return chat.add(newItem('choices', event.text, event.options));
           const kind = event.type === 'text' ? 'assistant' : event.type;
           chat.add(newItem(kind, event.text));
         },
@@ -552,6 +553,10 @@ function BrowserApp({
           onClose={closePanel}
           onSend={send}
           onStop={() => conversation.stop()}
+          onChoose={(itemId, option) => {
+            conversation.choose(itemId, option);
+            send(option);
+          }}
           onNewChat={newChat}
           onOpenSettings={() => setSettingsVisible(true)}
           onOpenLink={(url) => {
