@@ -1,4 +1,4 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 
@@ -27,12 +27,16 @@ type Props = {
 /** Overflow menu anchored under the ⋮ button, like the Chrome page menu. */
 export function PageMenu({ visible, iconRow, items, incognito, onClose }: Props) {
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
+  const top = insets.top + 48;
+  // Long menus scroll instead of running off small screens; the icon row stays on top.
+  const listMaxHeight = height - top - insets.bottom - (iconRow?.length ? 70 : 20);
   const theme = incognito ? dark : light;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('menu.close')} />
-      <View style={[styles.menu, theme.menu, { top: insets.top + 48, right: insets.right + 8 }]}>
+      <View style={[styles.menu, theme.menu, { top, right: insets.right + 8 }]}>
         {iconRow && iconRow.length > 0 && (
           <View style={[styles.iconRow, theme.separator]}>
             {iconRow.map((item) => (
@@ -62,27 +66,29 @@ export function PageMenu({ visible, iconRow, items, incognito, onClose }: Props)
             ))}
           </View>
         )}
-        {items.map((item) => (
-          <View key={item.label}>
-            {item.section && <View style={[styles.separator, theme.separator]} />}
-            <Pressable
-              disabled={item.disabled}
-              onPress={() => {
-                onClose();
-                item.onPress();
-              }}
-              style={({ pressed }) => [styles.item, pressed && theme.pressed]}
-              accessibilityRole="menuitem"
-              accessibilityState={{ disabled: item.disabled }}
-            >
-              <Text style={[styles.icon, item.disabled && styles.disabled]}>{item.icon}</Text>
-              <Text style={[styles.label, styles.labelFlex, theme.text, item.disabled && styles.disabled]}>
-                {item.label}
-              </Text>
-              {item.checked && <Text style={styles.check}>✓</Text>}
-            </Pressable>
-          </View>
-        ))}
+        <ScrollView style={{ maxHeight: listMaxHeight }} bounces={false}>
+          {items.map((item) => (
+            <View key={item.label}>
+              {item.section && <View style={[styles.separator, theme.separator]} />}
+              <Pressable
+                disabled={item.disabled}
+                onPress={() => {
+                  onClose();
+                  item.onPress();
+                }}
+                style={({ pressed }) => [styles.item, pressed && theme.pressed]}
+                accessibilityRole="menuitem"
+                accessibilityState={{ disabled: item.disabled }}
+              >
+                <Text style={[styles.icon, item.disabled && styles.disabled]}>{item.icon}</Text>
+                <Text style={[styles.label, styles.labelFlex, theme.text, item.disabled && styles.disabled]}>
+                  {item.label}
+                </Text>
+                {item.checked && <Text style={styles.check}>✓</Text>}
+              </Pressable>
+            </View>
+          ))}
+        </ScrollView>
       </View>
     </Modal>
   );
