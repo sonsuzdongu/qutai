@@ -175,12 +175,12 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 5. ✅ **AI search:** answers with sources using the providers' web search tools (searches are visible in chat, citations in source cards; can be turned off in settings)
 6. ✅ **Multi-tab:** `read_tab` tool (reads other tabs without bringing them to the front), "compare selected tabs" in the tab switcher
 7. ⏸ **Page translation** (in place) and **reader mode** · M (postponed per user decision)
-8. **Per-site agent permissions** and **action history** · M
-9. **Searching history in natural language**, **email draft**, **form profile** · M
+8. ✅ **Per-site agent permissions** (default, always allow, ask on every action, read only, blocked) and **action history** (30 days; private tabs and typed text are not logged)
+9. ✅ **Searching history in natural language** (`search_history`), **email draft** (`draft_email`), **form profile** (via memory)
    - ✅ **Memory** (in place of the form profile): the agent stores lasting information the user tells it on the phone and
      uses it in tasks; it can be viewed, edited, deleted and turned off in settings. Passwords/cards/one-time codes
      are not stored, nothing is recorded from private chats
-10. **Deep research** (in the foreground, with the existing agent) · L
+10. ✅ **Deep research** (in the foreground, with the existing agent; 80 steps, markdown report with sources, share as PDF)
 
 ### Phase 3 – Modern browser (mostly Expo Go)
 
