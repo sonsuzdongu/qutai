@@ -22,6 +22,8 @@ export type ToolContext = {
   agentTab: { id: string };
   /** Asks the user before an action that changes the page. Resolve false to block it. */
   confirm?: (description: string) => Promise<boolean>;
+  /** Set when the agent works in an incognito tab, so the conversation is never saved to disk. */
+  privacy?: { touchedIncognito: boolean };
 };
 
 const ACTIONS_NEEDING_CONFIRMATION = new Set([
@@ -126,6 +128,7 @@ export async function executeTool(
   }
 
   const tab = currentTab(ctx);
+  if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
   if (tab.asleep) {
     const loaded = tab.waitForNextLoad();
     tab.wake();

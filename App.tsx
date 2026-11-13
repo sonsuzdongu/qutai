@@ -25,6 +25,7 @@ import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { t, useLanguage } from './src/i18n';
 import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmarks';
 import { getDb } from './src/storage/db';
+import { clearChat, loadChat, SavedChat, saveChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 import { usePersistSession } from './src/storage/usePersistSession';
@@ -34,6 +35,11 @@ const KEEP_AWAKE_TAG = 'alpai-agent';
 
 let itemCounter = 0;
 const newItem = (kind: ChatItem['kind'], text: string): ChatItem => ({ id: String(++itemCounter), kind, text });
+
+/** Restored messages keep their ids, so new ones must continue after the highest. */
+function continueItemIds(items: ChatItem[]) {
+  itemCounter = Math.max(itemCounter, ...items.map((item) => Number(item.id) || 0));
+}
 
 function askConfirmation(description: string): Promise<boolean> {
   return new Promise((resolve) => {
@@ -53,26 +59,38 @@ function askConfirmation(description: string): Promise<boolean> {
 export default function App() {
   // Re-renders the whole tree in the new language when the device language changes.
   useLanguage();
-  const [restored, setRestored] = useState<{ session: Session | null; recentlyClosed: ClosedTab[] } | null>(null);
+  const [restored, setRestored] = useState<{
+    session: Session | null;
+    recentlyClosed: ClosedTab[];
+    chat: SavedChat | null;
+  } | null>(null);
 
   useEffect(() => {
     getDb()
-      .then((db) => Promise.all([loadSession(db), loadRecentlyClosed(db)]))
-      .catch((): [null, ClosedTab[]] => [null, []])
-      .then(([session, recentlyClosed]) => setRestored({ session, recentlyClosed }));
+      .then((db) => Promise.all([loadSession(db), loadRecentlyClosed(db), loadChat(db)]))
+      .catch((): [null, ClosedTab[], null] => [null, [], null])
+      .then(([session, recentlyClosed, chat]) => setRestored({ session, recentlyClosed, chat }));
   }, []);
 
   // Reading the saved session takes a few milliseconds; tabs are created only after it.
   if (!restored) return <View style={styles.container} />;
-  return <BrowserApp initialSession={restored.session} recentlyClosed={restored.recentlyClosed} />;
+  return (
+    <BrowserApp
+      initialSession={restored.session}
+      recentlyClosed={restored.recentlyClosed}
+      initialChat={restored.chat}
+    />
+  );
 }
 
 function BrowserApp({
   initialSession,
   recentlyClosed,
+  initialChat,
 }: {
   initialSession: Session | null;
   recentlyClosed: ClosedTab[];
+  initialChat: SavedChat | null;
 }) {
   const [browserInstance] = useState(() => new Browser(initialSession, recentlyClosed));
   const browser = useBrowser(browserInstance);
@@ -81,10 +99,16 @@ function BrowserApp({
   usePersistSession(browser);
   useRecordHistory(browser);
 
-  const turnsRef = useRef<Turn[]>([]);
+  const turnsRef = useRef<Turn[]>(initialChat?.turns ?? []);
+  // A conversation that touched an incognito tab is never written to disk.
+  const privacyRef = useRef({ touchedIncognito: false });
   const abortRef = useRef<AbortController | null>(null);
 
-  const [items, setItems] = useState<ChatItem[]>([]);
+  const [items, setItems] = useState<ChatItem[]>(() => {
+    const restoredItems = initialChat?.items ?? [];
+    continueItemIds(restoredItems);
+    return restoredItems;
+  });
   const [running, setRunning] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const closePanel = useCallback(() => setPanelOpen(false), []);
@@ -108,6 +132,8 @@ function BrowserApp({
   const addItem = (item: ChatItem) => setItems((prev) => [...prev, item]);
 
   const send = async (text: string) => {
+    // Marked before anything is shown, so a message typed in an incognito tab is never saved.
+    if (browser.active.incognito) privacyRef.current.touchedIncognito = true;
     addItem(newItem('user', text));
 
     const provider = settings.provider;
@@ -137,6 +163,7 @@ function BrowserApp({
         turns: turnsRef.current,
         browser,
         agentTab,
+        privacy: privacyRef.current,
         confirm: settings.confirmActions ? askConfirmation : undefined,
         signal: abort.signal,
         onEvent: (event) => {
@@ -155,10 +182,24 @@ function BrowserApp({
     }
   };
 
+  // Saves the conversation whenever it settles; private (incognito) conversations are removed instead.
+  useEffect(() => {
+    if (running) return;
+    const timer = setTimeout(() => {
+      getDb()
+        .then((db) =>
+          privacyRef.current.touchedIncognito ? clearChat(db) : saveChat(db, { items, turns: turnsRef.current }),
+        )
+        .catch(() => {});
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [items, running]);
+
   const stop = () => abortRef.current?.abort();
 
   const newChat = () => {
     turnsRef.current = [];
+    privacyRef.current = { touchedIncognito: false };
     setItems([]);
   };
 
