@@ -1,8 +1,16 @@
 import { useEffect } from 'react';
-import { BackHandler, TextInput } from 'react-native';
+import { BackHandler, TextInput, ToastAndroid } from 'react-native';
 import type { Browser } from './Browser';
 
 export type BackAction = 'blur-input' | 'page-back' | 'close-to-opener' | 'exit';
+
+/** How long after the warning a second back press closes the app. Matches the short toast duration. */
+export const EXIT_CONFIRM_MS = 2000;
+
+/** Exit only on a second press shortly after the first; the first press shows a warning. */
+export function confirmsExit(now: number, lastExitPress: number | null): boolean {
+  return lastExitPress !== null && now - lastExitPress <= EXIT_CONFIRM_MS;
+}
 
 /** Decides what the Android back button does, in the order regular browsers use. */
 export function backAction(browser: Browser, inputFocused: boolean): BackAction {
@@ -20,10 +28,15 @@ export function backAction(browser: Browser, inputFocused: boolean): BackAction 
  */
 export function useHardwareBack(browser: Browser) {
   useEffect(() => {
+    let lastExitPress: number | null = null;
+
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
       const focused = TextInput.State.currentlyFocusedInput();
       const tab = browser.active;
-      switch (backAction(browser, !!focused)) {
+      const action = backAction(browser, !!focused);
+      if (action !== 'exit') lastExitPress = null;
+
+      switch (action) {
         case 'blur-input':
           TextInput.State.blurTextInput(focused);
           return true;
@@ -33,9 +46,17 @@ export function useHardwareBack(browser: Browser) {
         case 'close-to-opener':
           browser.closeTab(tab.id);
           return true;
-        case 'exit':
-          // Default handling: on Android 12+ the app moves to the background and keeps its tabs.
-          return false;
+        case 'exit': {
+          const now = Date.now();
+          if (confirmsExit(now, lastExitPress)) {
+            lastExitPress = null;
+            // Default handling: on Android 12+ the app moves to the background and keeps its tabs.
+            return false;
+          }
+          lastExitPress = now;
+          ToastAndroid.show('Kapatmak için bir kez daha geri basın', ToastAndroid.SHORT);
+          return true;
+        }
       }
     });
     return () => sub.remove();
