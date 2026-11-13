@@ -8,6 +8,8 @@ export const HOME_URL = NEW_TAB_URL;
 export type ClosedTab = { url: string; title: string; closedAt: number };
 
 const MAX_RECENTLY_CLOSED = 25;
+/** Background tabs beyond this many keep only their URL and title (each WebView costs a lot of memory). */
+export const MAX_AWAKE_TABS = 5;
 
 /** Holds all tabs and notifies React when anything about them changes. */
 export class Browser {
@@ -17,6 +19,8 @@ export class Browser {
   recentlyClosed: ClosedTab[] = [];
 
   private counter = 0;
+  /** The tab the agent is working in, which must not fall asleep under it. */
+  private agentTab: { id: string } | null = null;
   private version = 0;
   private listeners = new Set<() => void>();
   private visitListeners = new Set<(tab: Tab) => void>();
@@ -83,8 +87,10 @@ export class Browser {
   ): Tab {
     const tab = new Tab(String(++this.counter), url, incognito, openerId, this.emit);
     tab.asleep = asleep && !activate;
+    if (tab.asleep) tab.lastActiveAt = 0;
     this.tabs.push(tab);
-    if (activate || !this.activeId) this.activeId = tab.id;
+    if (activate || !this.activeId) this.setActive(tab);
+    this.sleepInactive();
     this.emit();
     return tab;
   }
@@ -92,8 +98,9 @@ export class Browser {
   switchTab(id: string) {
     const tab = this.getTab(id);
     if (!tab || id === this.activeId) return;
-    this.activeId = id;
+    this.setActive(tab);
     tab.wake();
+    this.sleepInactive();
     this.emit();
   }
 
@@ -124,11 +131,37 @@ export class Browser {
       const opener = tab.openerId ? this.getTab(tab.openerId) : undefined;
       const remaining = sameMode.filter((t) => t !== tab);
       const next = opener ?? remaining[Math.min(indexInMode, remaining.length - 1)] ?? this.tabs[this.tabs.length - 1];
-      this.activeId = next.id;
+      this.setActive(next);
       next.wake();
     }
     this.emit();
     return remembered;
+  }
+
+  private setActive(tab: Tab) {
+    const now = Date.now();
+    const previous = this.getTab(this.activeId);
+    if (previous) previous.lastActiveAt = now;
+    tab.lastActiveAt = now;
+    this.activeId = tab.id;
+  }
+
+  /** Keeps the agent's tab (the object is updated as the agent moves between tabs) awake. */
+  setAgentTab(agentTab: { id: string } | null) {
+    this.agentTab = agentTab;
+  }
+
+  /**
+   * Puts the least recently used background tabs to sleep until at most `maxAwake` tabs have a
+   * WebView. The active tab, the agent's tab and incognito tabs always stay awake.
+   */
+  sleepInactive(maxAwake = MAX_AWAKE_TABS) {
+    const keep = new Set([this.activeId, this.agentTab?.id]);
+    const awake = this.tabs.filter((t) => !t.asleep && !t.isNewTab);
+    const sleepable = awake
+      .filter((t) => !t.incognito && !keep.has(t.id))
+      .sort((a, b) => a.lastActiveAt - b.lastActiveAt);
+    sleepable.slice(0, Math.max(0, awake.length - maxAwake)).forEach((t) => t.sleep());
   }
 
   /** Reopens a recently closed tab (the latest by default) and shows it. */

@@ -1,7 +1,7 @@
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
+import { Alert, AppState, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
@@ -133,6 +133,12 @@ function BrowserApp({
   const speaking = useIsSpeaking();
   useIncognitoProtection(tab.incognito || (tabsVisible && browser.tabsOf(true).length > 0));
 
+  // On low memory, everything but the tab on screen (and the agent's tab) gives up its WebView.
+  useEffect(() => {
+    const sub = AppState.addEventListener('memoryWarning', () => browserInstance.sleepInactive(0));
+    return () => sub.remove();
+  }, [browserInstance]);
+
   useEffect(() => {
     loadSettings()
       .then(setSettings)
@@ -166,6 +172,7 @@ function BrowserApp({
     const abort = new AbortController();
     abortRef.current = abort;
     setRunning(true);
+    browser.setAgentTab(agentTab);
     // If the screen turned off mid-task, the OS would freeze the app and the task would stall.
     activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch(() => {});
     try {
@@ -191,6 +198,7 @@ function BrowserApp({
     } finally {
       abortRef.current = null;
       setRunning(false);
+      browser.setAgentTab(null);
       deactivateKeepAwake(KEEP_AWAKE_TAG).catch(() => {});
     }
   };

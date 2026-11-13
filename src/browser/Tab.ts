@@ -51,6 +51,8 @@ export class Tab {
    * Restored tabs start asleep so a long session doesn't load every page at launch.
    */
   asleep = false;
+  /** When the tab was last on screen; the least recently used tabs are put to sleep first. */
+  lastActiveAt = Date.now();
   /** Ask sites for their desktop layout (per tab, like "Request desktop site"). */
   desktop = false;
   /** The first page was opened from the new tab page, so back can return there. */
@@ -90,6 +92,20 @@ export class Tab {
     if (!this.asleep) return;
     this.asleep = false;
     this.source = { uri: this.url };
+    this.onChange();
+  }
+
+  /**
+   * Frees the tab's WebView to save memory; it reloads from its URL when shown again.
+   * Incognito tabs never sleep: their cookies and site data live only in their WebView.
+   */
+  sleep() {
+    if (this.asleep || this.incognito || this.isNewTab) return;
+    const thumbnail = this.thumbnail;
+    this.dispose();
+    this.thumbnail = thumbnail;
+    this.webview = null;
+    this.asleep = true;
     this.onChange();
   }
 
