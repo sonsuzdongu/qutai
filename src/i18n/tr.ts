@@ -65,6 +65,10 @@ export const tr: Record<keyof typeof en, string> = {
 
   'menu.close': 'Menüyü kapat',
   'menu.reload': 'Yenile',
+  'menu.addBookmark': 'Yer imlerine ekle',
+  'menu.removeBookmark': 'Yer iminden kaldır',
+  'menu.bookmarkAdded': 'Yer imlerine eklendi',
+  'menu.bookmarkRemoved': 'Yer iminden kaldırıldı',
   'menu.shareLink': 'Linki paylaş',
   'menu.copyLink': 'Linki kopyala',
   'menu.linkCopied': 'Link kopyalandı',

@@ -22,6 +22,7 @@ import { saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { t, useLanguage } from './src/i18n';
+import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmarks';
 import { getDb } from './src/storage/db';
 import { loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
@@ -85,6 +86,7 @@ function BrowserApp({ initialSession }: { initialSession: Session | null }) {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [tabsVisible, setTabsVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
   const toast = useToast();
   const speaking = useIsSpeaking();
   useIncognitoProtection(tab.incognito || (tabsVisible && browser.tabsOf(true).length > 0));
@@ -165,6 +167,21 @@ function BrowserApp({ initialSession }: { initialSession: Session | null }) {
   const menuItems: MenuItem[] = [
     { icon: '↻', label: t('menu.reload'), onPress: () => tab.webview?.reload() },
     {
+      icon: bookmarked ? '★' : '☆',
+      label: t(bookmarked ? 'menu.removeBookmark' : 'menu.addBookmark'),
+      disabled: !/^https?:\/\//i.test(tab.url),
+      onPress: () =>
+        runAction(async () => {
+          const db = await getDb();
+          if (bookmarked) {
+            await removeBookmark(db, tab.url);
+            return t('menu.bookmarkRemoved');
+          }
+          await addBookmark(db, tab.url, tab.title);
+          return t('menu.bookmarkAdded');
+        }),
+    },
+    {
       icon: '⤴',
       label: t('menu.shareLink'),
       section: true,
@@ -237,7 +254,14 @@ function BrowserApp({ initialSession }: { initialSession: Session | null }) {
             assistantRunning={running}
             onSubmit={(url) => tab.loadUrl(url)}
             onBack={() => tab.webview?.goBack()}
-            onOpenMenu={() => setMenuVisible(true)}
+            onOpenMenu={() => {
+              // The menu shows "add" or "remove" depending on whether this page is already saved.
+              getDb()
+                .then((db) => isBookmarked(db, tab.url))
+                .then(setBookmarked)
+                .catch(() => setBookmarked(false))
+                .finally(() => setMenuVisible(true));
+            }}
             incognito={tab.incognito}
             onOpenTabs={async () => {
               // Thumbnails can only be taken while a tab is on screen.

@@ -64,6 +64,10 @@ export const en = {
 
   'menu.close': 'Close menu',
   'menu.reload': 'Reload',
+  'menu.addBookmark': 'Add bookmark',
+  'menu.removeBookmark': 'Remove bookmark',
+  'menu.bookmarkAdded': 'Bookmark added',
+  'menu.bookmarkRemoved': 'Bookmark removed',
   'menu.shareLink': 'Share link',
   'menu.copyLink': 'Copy link',
   'menu.linkCopied': 'Link copied',
