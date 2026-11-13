@@ -60,7 +60,7 @@ App ──(session token)──► ALPAI server ──(our key)──► Anthrop
 
 ## Other
 
-- [ ] Test on a real device: keyboard behavior (especially Android), tab thumbnails, private mode
+- [ ] Test on a real device: keyboard behavior (especially Android), tab thumbnails, private mode, Android back button and back gesture
 - [ ] End-to-end test with real API keys on all three providers
 - [ ] Real cookie isolation for private tabs on Android (WebView profile API, requires a development build)
 - [ ] Screenshot tool and clicking by coordinates (for canvas, maps and image-heavy sites)
