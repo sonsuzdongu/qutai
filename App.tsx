@@ -20,10 +20,16 @@ const newItem = (kind: ChatItem['kind'], text: string): ChatItem => ({ id: Strin
 
 function askConfirmation(description: string): Promise<boolean> {
   return new Promise((resolve) => {
-    Alert.alert('ALPAI bu işlemi yapmak istiyor', description, [
-      { text: 'Reddet', style: 'cancel', onPress: () => resolve(false) },
-      { text: 'İzin ver', onPress: () => resolve(true) },
-    ]);
+    Alert.alert(
+      'ALPAI bu işlemi yapmak istiyor',
+      description,
+      [
+        { text: 'Reddet', style: 'cancel', onPress: () => resolve(false) },
+        { text: 'İzin ver', onPress: () => resolve(true) },
+      ],
+      // Android: back button or a tap outside counts as declining.
+      { cancelable: true, onDismiss: () => resolve(false) },
+    );
   });
 }
 
