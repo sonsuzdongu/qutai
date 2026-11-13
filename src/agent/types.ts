@@ -17,4 +17,4 @@ export type AgentEvent =
   /** The agent asks the user to pick one of these options; the run ends until they answer. */
   | { type: 'choices'; text: string; options: string[] }
   /** Pages read during this task, sent once before the run ends. */
-  | { type: 'sources'; sources: Source[] };
+  | { type: 'sources'; sources: Source[]; searchWidget?: string };

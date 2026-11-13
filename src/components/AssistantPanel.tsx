@@ -20,6 +20,7 @@ import { t } from '../i18n';
 import type { Source } from '../agent/types';
 import { hostOf } from '../i18n/format';
 import { MarkdownText } from './MarkdownText';
+import { SearchSuggestions } from './SearchSuggestions';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 
 export type ChatItem = {
@@ -34,6 +35,8 @@ export type ChatItem = {
   streaming?: boolean;
   /** For 'sources': the pages the answer is based on. */
   sources?: Source[];
+  /** For 'sources': Google's search suggestions widget, shown with Gemini answers grounded in Google Search. */
+  searchWidget?: string;
 };
 
 /** A one-tap task shown above the input, e.g. "Summarize". */
@@ -393,7 +396,7 @@ function ChatRow({
     case 'sources':
       return (
         <View style={styles.sources}>
-          <Text style={styles.sourcesTitle}>{t('chat.sources')}</Text>
+          {item.sources?.length ? <Text style={styles.sourcesTitle}>{t('chat.sources')}</Text> : null}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sourcesRow}>
             {(item.sources ?? []).map((source, i) => (
               <Pressable
@@ -414,6 +417,7 @@ function ChatRow({
               </Pressable>
             ))}
           </ScrollView>
+          {item.searchWidget ? <SearchSuggestions html={item.searchWidget} onOpenLink={onOpenLink} /> : null}
         </View>
       );
     case 'error':

@@ -47,6 +47,8 @@ export type ModelReply = {
   citations: Citation[];
   /** Queries the provider searched the web for during this reply. */
   searches: string[];
+  /** Google's search suggestions widget (HTML), which must be shown with answers grounded in Google Search. */
+  searchWidget?: string;
 };
 
 export type ModelRequest = {

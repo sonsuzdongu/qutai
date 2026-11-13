@@ -71,6 +71,7 @@ async function call(req: ModelRequest): Promise<ModelReply> {
   const toolCalls: ToolCall[] = [];
   const citations: Citation[] = [];
   const searches: string[] = [];
+  let searchWidget: string | undefined;
   for (const step of steps) {
     if (step.type === 'model_output' && Array.isArray(step.content)) {
       for (const part of step.content as Step[]) {
@@ -79,6 +80,11 @@ async function call(req: ModelRequest): Promise<ModelReply> {
           if (a.type === 'url_citation' && typeof a.url === 'string')
             citations.push({ url: a.url, title: String(a.title ?? '') });
         }
+      }
+    } else if (step.type === 'google_search_result' && Array.isArray(step.result)) {
+      for (const r of step.result as Step[]) {
+        if (typeof r.search_suggestions === 'string' && r.search_suggestions.trim())
+          searchWidget = r.search_suggestions;
       }
     } else if (step.type === 'google_search_call') {
       const queries = (step.arguments as { queries?: unknown } | undefined)?.queries;
@@ -97,7 +103,7 @@ async function call(req: ModelRequest): Promise<ModelReply> {
   let stop: StopReason = toolCalls.length > 0 ? 'tool_use' : 'end';
   if (res.status === 'incomplete') stop = 'max_tokens';
 
-  return { text: texts.join('\n\n'), toolCalls, stop, raw: steps, citations, searches };
+  return { text: texts.join('\n\n'), toolCalls, stop, raw: steps, citations, searches, searchWidget };
 }
 
 export const gemini: Provider = {

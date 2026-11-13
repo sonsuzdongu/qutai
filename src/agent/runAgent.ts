@@ -56,8 +56,10 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     const tab = opts.browser.getTab(opts.agentTab.id);
     if (tab) addSource({ url: tab.url, title: tab.title, incognito: tab.incognito });
   };
+  let searchWidget: string | undefined;
   const flushSources = () => {
-    if (sources.length) onEvent({ type: 'sources', sources: sources.splice(0) });
+    if (sources.length || searchWidget) onEvent({ type: 'sources', sources: sources.splice(0), searchWidget });
+    searchWidget = undefined;
   };
 
   const maxSteps = opts.research ? MAX_RESEARCH_STEPS : MAX_STEPS;
@@ -90,6 +92,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       rawProvider: provider.id,
       rawModel: opts.model,
     });
+    if (reply.searchWidget) searchWidget = reply.searchWidget;
     reply.searches.forEach((query) => onEvent({ type: 'action', text: t('action.webSearch', { query }) }));
     // Pages found by web search open in the conversation's own mode.
     reply.citations.forEach((c) =>

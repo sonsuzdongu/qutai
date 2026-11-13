@@ -5,8 +5,8 @@ import type { ChatItem } from '../components/AssistantPanel';
 let itemCounter = 0;
 const STREAM_FLUSH_MS = 50;
 
-export function sourcesItem(sources: Source[]): ChatItem {
-  return { id: String(++itemCounter), kind: 'sources', text: '', sources };
+export function sourcesItem(sources: Source[], searchWidget?: string): ChatItem {
+  return { id: String(++itemCounter), kind: 'sources', text: '', sources, ...(searchWidget ? { searchWidget } : {}) };
 }
 
 export function newItem(kind: ChatItem['kind'], text: string, options?: string[]): ChatItem {
