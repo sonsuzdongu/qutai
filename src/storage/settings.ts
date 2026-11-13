@@ -25,6 +25,10 @@ export type Settings = {
   theme: ThemeSetting;
   /** In the dark theme, darken sites that have no dark design of their own. */
   darkSites: boolean;
+  /** Address bar at the top (default) or the bottom of the screen. */
+  addressBarPosition: 'top' | 'bottom';
+  /** Light vibrations for taps like switching tabs. */
+  haptics: boolean;
 };
 
 export type ThemeSetting = 'system' | 'light' | 'dark';
@@ -48,6 +52,8 @@ export const DEFAULT_SETTINGS: Settings = {
   hideCookieBanners: true,
   theme: 'system',
   darkSites: true,
+  addressBarPosition: 'top',
+  haptics: true,
 };
 
 const KEYS = {
@@ -62,6 +68,8 @@ const KEYS = {
   hideCookieBanners: 'hide_cookie_banners',
   theme: 'theme',
   darkSites: 'dark_sites',
+  addressBarPosition: 'address_bar_position',
+  haptics: 'haptics',
   apiKey: (id: ProviderId) => `api_key_${id}`,
   model: (id: ProviderId) => `model_${id}`,
   // Written by the first, Claude-only version of the app.
@@ -94,6 +102,8 @@ export async function loadSettings(): Promise<Settings> {
     hideCookieBanners,
     theme,
     darkSites,
+    addressBarPosition,
+    haptics,
     legacyApiKey,
     legacyModel,
     ...perProvider
@@ -109,6 +119,8 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.hideCookieBanners),
     get(KEYS.theme),
     get(KEYS.darkSites),
+    get(KEYS.addressBarPosition),
+    get(KEYS.haptics),
     get(KEYS.legacyApiKey),
     get(KEYS.legacyModel),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
@@ -128,6 +140,8 @@ export async function loadSettings(): Promise<Settings> {
     hideCookieBanners: hideCookieBanners !== 'false',
     theme: THEMES.includes(theme as ThemeSetting) ? (theme as ThemeSetting) : 'system',
     darkSites: darkSites !== 'false',
+    addressBarPosition: addressBarPosition === 'bottom' ? 'bottom' : 'top',
+    haptics: haptics !== 'false',
   };
   PROVIDER_ORDER.forEach((id, i) => {
     settings.apiKeys[id] = perProvider[i * 2] ?? '';
@@ -155,6 +169,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.hideCookieBanners, String(settings.hideCookieBanners)),
     set(KEYS.theme, settings.theme),
     set(KEYS.darkSites, String(settings.darkSites)),
+    set(KEYS.addressBarPosition, settings.addressBarPosition),
+    set(KEYS.haptics, String(settings.haptics)),
     ...PROVIDER_ORDER.flatMap((id) => [
       set(KEYS.apiKey(id), settings.apiKeys[id]),
       set(KEYS.model(id), settings.models[id]),

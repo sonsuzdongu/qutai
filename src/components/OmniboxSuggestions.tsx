@@ -13,6 +13,8 @@ type Props = {
   incognito: boolean;
   /** Dark appearance (incognito or dark theme); privacy still follows `incognito` only. */
   dark?: boolean;
+  /** The address bar is at the bottom, so the list opens upwards. */
+  above?: boolean;
   searchEngine: SearchEngineId;
   suggestionsEnabled: boolean;
   onNavigate: (url: string) => void;
@@ -26,6 +28,7 @@ export function OmniboxSuggestions({
   text,
   incognito,
   dark,
+  above,
   searchEngine,
   suggestionsEnabled,
   onNavigate,
@@ -80,7 +83,7 @@ export function OmniboxSuggestions({
   const remoteItems = remoteAllowed && remote.query === query ? remote.items : [];
 
   return (
-    <View style={[styles.panel, darkUI && styles.panelDark]}>
+    <View style={[styles.panel, above && styles.panelAbove, darkUI && styles.panelDark]}>
       <ScrollView keyboardShouldPersistTaps="always" style={styles.scroll}>
         {!query && <PasteRow android={canPaste} incognito={darkUI} onPaste={go} />}
 
@@ -210,6 +213,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 12,
     overflow: 'hidden',
+  },
+  panelAbove: {
+    top: 'auto',
+    bottom: '100%',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    borderTopLeftRadius: 14,
+    borderTopRightRadius: 14,
   },
   panelDark: { backgroundColor: '#2b2a33' },
   scroll: { flexGrow: 0 },

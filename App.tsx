@@ -47,6 +47,7 @@ import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
 import { searchHistory } from './src/storage/history';
 import { composeEmail } from './src/device/email';
 import { shareReportPdf } from './src/device/reportPdf';
+import { bump, setHapticsEnabled, success, tick } from './src/device/haptics';
 import { deleteDownloadedFile, downloadFile } from './src/device/download';
 import { DownloadStore } from './src/storage/downloads';
 import { DownloadsScreen } from './src/components/DownloadsScreen';
@@ -173,6 +174,7 @@ function BrowserApp({
     Appearance.setColorScheme(settings.theme === 'system' ? 'unspecified' : settings.theme);
   }, [settings.theme]);
   const darkMode = useColorScheme() === 'dark';
+  useEffect(() => setHapticsEnabled(settings.haptics), [settings.haptics]);
 
   useEffect(() => {
     loadSettings()
@@ -287,6 +289,7 @@ function BrowserApp({
         },
       });
       if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
+      else success();
     } catch (e) {
       if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
       else chat.add(newItem('error', e instanceof Error ? e.message : String(e)));
@@ -564,48 +567,60 @@ function BrowserApp({
     }
   };
 
+  // The address bar (or the find bar in its place), at the top or the bottom of the screen.
+  const topBar = findOpen ? (
+    <FindBar tab={tab} darkMode={darkMode} onClose={() => setFindFor(null)} />
+  ) : (
+    <AddressBar
+      url={onNewTab ? '' : tab.url}
+      searchEngine={settings.searchEngine}
+      searchSuggestions={settings.searchSuggestions}
+      onAsk={(text) => {
+        setPanelOpen(true);
+        send(text);
+      }}
+      loading={tab.loading}
+      canGoBack={tab.canGoBack || tab.openedFromNewTab}
+      tabCount={browser.tabs.length}
+      assistantOpen={panelOpen}
+      assistantRunning={running}
+      onSubmit={(url) => tab.loadUrl(url)}
+      onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
+      onOpenMenu={() => {
+        // The menu shows "add" or "remove" depending on whether this page is already saved.
+        getDb()
+          .then((db) => isBookmarked(db, tab.url))
+          .then(setBookmarked)
+          .catch(() => setBookmarked(false))
+          .finally(() => setMenuVisible(true));
+      }}
+      incognito={tab.incognito}
+      darkMode={darkMode}
+      position={settings.addressBarPosition}
+      onSwipe={(direction) => {
+        const same = browser.tabsOf(tab.incognito);
+        const next = same[same.indexOf(tab) + direction];
+        if (!next) return;
+        tick();
+        browser.switchTab(next.id);
+      }}
+      onOpenTabs={async () => {
+        // Thumbnails can only be taken while a tab is on screen.
+        await tab.captureThumbnail();
+        setTabsVisible(true);
+      }}
+      onToggleAssistant={() => setPanelOpen((v) => !v)}
+    />
+  );
+  const barAtBottom = settings.addressBarPosition === 'bottom';
+
   return (
     <SafeAreaProvider>
       <View style={[styles.container, (tab.incognito || darkMode) && styles.incognito]}>
         <StatusBar style={tab.incognito || tabsVisible || darkMode ? 'light' : 'dark'} />
         <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
-          {findOpen ? (
-            <FindBar tab={tab} darkMode={darkMode} onClose={() => setFindFor(null)} />
-          ) : (
-            <AddressBar
-              url={onNewTab ? '' : tab.url}
-              searchEngine={settings.searchEngine}
-              searchSuggestions={settings.searchSuggestions}
-              onAsk={(text) => {
-                setPanelOpen(true);
-                send(text);
-              }}
-              loading={tab.loading}
-              canGoBack={tab.canGoBack || tab.openedFromNewTab}
-              tabCount={browser.tabs.length}
-              assistantOpen={panelOpen}
-              assistantRunning={running}
-              onSubmit={(url) => tab.loadUrl(url)}
-              onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
-              onOpenMenu={() => {
-                // The menu shows "add" or "remove" depending on whether this page is already saved.
-                getDb()
-                  .then((db) => isBookmarked(db, tab.url))
-                  .then(setBookmarked)
-                  .catch(() => setBookmarked(false))
-                  .finally(() => setMenuVisible(true));
-              }}
-              incognito={tab.incognito}
-              darkMode={darkMode}
-              onOpenTabs={async () => {
-                // Thumbnails can only be taken while a tab is on screen.
-                await tab.captureThumbnail();
-                setTabsVisible(true);
-              }}
-              onToggleAssistant={() => setPanelOpen((v) => !v)}
-            />
-          )}
           {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard. */}
+          {barAtBottom ? null : topBar}
           <KeyboardAvoidingView style={styles.flex} behavior="padding">
             <BrowserView
               browser={browser}
@@ -614,7 +629,10 @@ function BrowserApp({
                 darkSites: settings.darkSites,
                 blockAds: settings.blockAds,
                 hideCookieBanners: settings.hideCookieBanners,
-                onContextMenu: (source, target) => setContext({ tab: source, target }),
+                onContextMenu: (source, target) => {
+                  bump();
+                  setContext({ tab: source, target });
+                },
                 onDownload: (source, url) =>
                   runAction(async () => {
                     toast.show(t('downloads.started'));
@@ -637,8 +655,13 @@ function BrowserApp({
               }}
             />
             {selectedText ? (
-              <SelectionBar actions={selectionActions(selectedText)} dark={tab.incognito || darkMode} />
+              <SelectionBar
+                actions={selectionActions(selectedText)}
+                dark={tab.incognito || darkMode}
+                bottomOffset={barAtBottom ? 52 : 0}
+              />
             ) : null}
+            {barAtBottom ? topBar : null}
           </KeyboardAvoidingView>
         </SafeAreaView>
 
@@ -660,6 +683,7 @@ function BrowserApp({
           onSend={send}
           onStop={() => conversation.stop()}
           onChoose={(itemId, option) => {
+            tick();
             conversation.choose(itemId, option);
             send(option);
           }}

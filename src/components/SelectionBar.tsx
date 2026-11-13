@@ -3,9 +3,18 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 export type SelectionAction = { label: string; onPress: () => void };
 
 /** Floats at the bottom of the page while text is selected; the OS copy menu stays near the selection. */
-export function SelectionBar({ actions, dark }: { actions: SelectionAction[]; dark: boolean }) {
+export function SelectionBar({
+  actions,
+  dark,
+  bottomOffset = 0,
+}: {
+  actions: SelectionAction[];
+  dark: boolean;
+  /** Extra space at the bottom, e.g. for an address bar there. */
+  bottomOffset?: number;
+}) {
   return (
-    <View style={styles.wrap} pointerEvents="box-none">
+    <View style={[styles.wrap, { bottom: 16 + bottomOffset }]} pointerEvents="box-none">
       <View style={[styles.bar, dark && styles.barDark]}>
         {actions.map((action, i) => (
           <Pressable

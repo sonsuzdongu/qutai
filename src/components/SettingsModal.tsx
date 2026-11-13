@@ -169,6 +169,29 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions }: Omit<Props
           </View>
           <Switch value={draft.darkSites} onValueChange={(darkSites) => setDraft({ ...draft, darkSites })} />
         </View>
+        <Text style={styles.label}>{t('settings.addressBarPosition')}</Text>
+        <View style={styles.segment}>
+          {(['top', 'bottom'] as const).map((position) => (
+            <Pressable
+              key={position}
+              onPress={() => setDraft({ ...draft, addressBarPosition: position })}
+              style={[styles.segmentButton, draft.addressBarPosition === position && styles.segmentSelected]}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: draft.addressBarPosition === position }}
+            >
+              <Text style={[styles.segmentText, draft.addressBarPosition === position && styles.segmentTextSelected]}>
+                {t(`settings.addressBar.${position}`)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.haptics')}</Text>
+            <Text style={styles.hint}>{t('settings.hapticsHint')}</Text>
+          </View>
+          <Switch value={draft.haptics} onValueChange={(haptics) => setDraft({ ...draft, haptics })} />
+        </View>
 
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.content')}</Text>
         <View style={styles.switchRow}>

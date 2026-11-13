@@ -230,6 +230,13 @@ export const en = {
   'settings.darkSites': 'Dark sites in dark mode',
   'settings.darkSitesHint': 'Sites without a dark design of their own are shown dark too.',
 
+  'settings.addressBarPosition': 'Address bar',
+  'settings.addressBar.top': 'Top',
+  'settings.addressBar.bottom': 'Bottom',
+  'settings.haptics': 'Haptic feedback',
+  'settings.hapticsHint':
+    'Light vibrations when switching tabs, opening the long-press menu or when a task finishes. Swipe the address bar sideways to switch tabs.',
+
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",
   'settings.provider': 'AI provider',

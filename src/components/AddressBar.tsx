@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
   Easing,
   Keyboard,
+  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
@@ -25,6 +26,10 @@ type Props = {
   incognito: boolean;
   /** Dark theme (incognito is always dark). */
   darkMode?: boolean;
+  /** Where the bar sits; at the bottom, suggestions open upwards. */
+  position?: 'top' | 'bottom';
+  /** Horizontal swipe on the bar: -1 for the previous tab, 1 for the next one. */
+  onSwipe?: (direction: -1 | 1) => void;
   assistantOpen: boolean;
   assistantRunning: boolean;
   searchEngine: SearchEngineId;
@@ -52,6 +57,8 @@ export function AddressBar({
   tabCount,
   incognito,
   darkMode,
+  position = 'top',
+  onSwipe,
   assistantOpen,
   assistantRunning,
   searchEngine,
@@ -68,13 +75,26 @@ export function AddressBar({
   const darkUI = incognito || !!darkMode;
   const dark = darkUI ? darkStyles : null;
 
+  const bottom = position === 'bottom';
+  // Swiping sideways on the bar switches tabs; taps and vertical moves are left alone.
+  const swipe = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_e, g) => Math.abs(g.dx) > 24 && Math.abs(g.dy) < 12,
+        onPanResponderRelease: (_e, g) => {
+          if (Math.abs(g.dx) > 60) onSwipe?.(g.dx < 0 ? 1 : -1);
+        },
+      }),
+    [onSwipe],
+  );
+
   const finishEditing = () => {
     Keyboard.dismiss();
     setEditing(false);
   };
 
   return (
-    <View style={[styles.bar, dark?.bar]}>
+    <View style={[styles.bar, bottom && styles.barBottom, dark?.bar]} {...(editing ? {} : swipe.panHandlers)}>
       <IconButton label="‹" onPress={onBack} disabled={!canGoBack} incognito={darkUI} />
 
       {/* A TextInput scrolls long URLs to the cursor, so a plain Text is shown until the user taps to edit. */}
@@ -164,10 +184,10 @@ export function AddressBar({
           <Text style={styles.assistantIcon}>✦</Text>
         )}
       </Pressable>
-      {loading && <LoadingBar />}
+      {loading && <LoadingBar top={bottom} />}
       {editing && (
         <Pressable
-          style={styles.backdrop}
+          style={[styles.backdrop, bottom && styles.backdropAbove]}
           onPress={finishEditing}
           accessibilityLabel={t('common.close')}
           accessibilityRole="button"
@@ -178,6 +198,7 @@ export function AddressBar({
           text={text}
           incognito={incognito}
           dark={darkUI}
+          above={bottom}
           searchEngine={searchEngine}
           suggestionsEnabled={searchSuggestions}
           onNavigate={(next) => {
@@ -195,7 +216,7 @@ export function AddressBar({
 }
 
 /** Thin indeterminate progress line along the bottom edge while a page loads. */
-function LoadingBar() {
+function LoadingBar({ top }: { top: boolean }) {
   const { width } = useWindowDimensions();
   const [progress] = useState(() => new Animated.Value(0));
 
@@ -214,7 +235,7 @@ function LoadingBar() {
 
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [-width * 0.4, width] });
   return (
-    <View style={styles.loadingTrack} pointerEvents="none">
+    <View style={[styles.loadingTrack, top && styles.loadingTrackTop]} pointerEvents="none">
       <Animated.View style={[styles.loadingBar, { width: width * 0.4, transform: [{ translateX }] }]} />
     </View>
   );
@@ -280,6 +301,12 @@ const styles = StyleSheet.create({
   fieldTextFlex: { flex: 1 },
   input: { paddingVertical: 0, height: '100%' },
   backdrop: { position: 'absolute', top: '100%', left: 0, right: 0, height: 4000, backgroundColor: 'rgba(0,0,0,0.25)' },
+  backdropAbove: { top: 'auto', bottom: '100%' },
+  barBottom: {
+    borderBottomWidth: 0,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#d6d3c9',
+  },
   clear: {
     width: 20,
     height: 20,
@@ -297,6 +324,7 @@ const styles = StyleSheet.create({
   iconText: { fontSize: 22, color: '#333' },
   disabled: { color: '#bbb' },
   loadingTrack: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, overflow: 'hidden' },
+  loadingTrackTop: { bottom: 'auto', top: 0 },
   loadingBar: { height: 2, backgroundColor: '#c96442', borderRadius: 1 },
   tabCount: {
     minWidth: 22,
@@ -323,7 +351,7 @@ const styles = StyleSheet.create({
 });
 
 const darkStyles = StyleSheet.create({
-  bar: { backgroundColor: '#24232b', borderBottomColor: '#3a3944' },
+  bar: { backgroundColor: '#24232b', borderBottomColor: '#3a3944', borderTopColor: '#3a3944' },
   field: { backgroundColor: '#3a3944' },
   text: { color: '#f2f1f5' },
   tabCount: { borderColor: '#f2f1f5' },

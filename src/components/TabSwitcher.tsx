@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { matchesTabQuery } from '../browser/tabSearch';
+import { bump } from '../device/haptics';
 import { t } from '../i18n';
 import { hostOf } from '../i18n/format';
 
@@ -75,6 +76,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
 
   const closeTab = (tab: Tab) => {
     // Only normal web pages are remembered, so only those can be undone.
+    bump();
     if (!browser.closeTab(tab.id)) return;
     setUndoVisible(true);
     if (undoTimer.current) clearTimeout(undoTimer.current);

@@ -232,6 +232,13 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.darkSites': 'Koyu temada siteleri de koyulaştır',
   'settings.darkSitesHint': 'Kendi koyu tasarımı olmayan siteler de koyu gösterilir.',
 
+  'settings.addressBarPosition': 'Adres çubuğu',
+  'settings.addressBar.top': 'Üstte',
+  'settings.addressBar.bottom': 'Altta',
+  'settings.haptics': 'Titreşimli geri bildirim',
+  'settings.hapticsHint':
+    'Sekme değiştirirken, uzun basma menüsü açılırken veya bir görev bittiğinde hafif titreşim. Sekme değiştirmek için adres çubuğunu yana kaydırabilirsiniz.',
+
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',
   'settings.provider': 'Yapay zekâ sağlayıcısı',
