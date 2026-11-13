@@ -7,7 +7,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { runAgent } from './src/agent/runAgent';
 import { getProvider, modelLabel } from './src/ai/providers';
 import type { Turn } from './src/ai/types';
-import { Browser, useBrowser } from './src/browser/Browser';
+import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
@@ -25,7 +25,7 @@ import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { t, useLanguage } from './src/i18n';
 import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmarks';
 import { getDb } from './src/storage/db';
-import { loadSession, Session } from './src/storage/session';
+import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 import { usePersistSession } from './src/storage/usePersistSession';
 import { useRecordHistory } from './src/storage/useRecordHistory';
@@ -53,22 +53,28 @@ function askConfirmation(description: string): Promise<boolean> {
 export default function App() {
   // Re-renders the whole tree in the new language when the device language changes.
   useLanguage();
-  const [restored, setRestored] = useState<{ session: Session | null } | null>(null);
+  const [restored, setRestored] = useState<{ session: Session | null; recentlyClosed: ClosedTab[] } | null>(null);
 
   useEffect(() => {
     getDb()
-      .then(loadSession)
-      .catch(() => null)
-      .then((session) => setRestored({ session }));
+      .then((db) => Promise.all([loadSession(db), loadRecentlyClosed(db)]))
+      .catch((): [null, ClosedTab[]] => [null, []])
+      .then(([session, recentlyClosed]) => setRestored({ session, recentlyClosed }));
   }, []);
 
   // Reading the saved session takes a few milliseconds; tabs are created only after it.
   if (!restored) return <View style={styles.container} />;
-  return <BrowserApp initialSession={restored.session} />;
+  return <BrowserApp initialSession={restored.session} recentlyClosed={restored.recentlyClosed} />;
 }
 
-function BrowserApp({ initialSession }: { initialSession: Session | null }) {
-  const [browserInstance] = useState(() => new Browser(initialSession));
+function BrowserApp({
+  initialSession,
+  recentlyClosed,
+}: {
+  initialSession: Session | null;
+  recentlyClosed: ClosedTab[];
+}) {
+  const [browserInstance] = useState(() => new Browser(initialSession, recentlyClosed));
   const browser = useBrowser(browserInstance);
   const tab = browser.active;
   useHardwareBack(browser);

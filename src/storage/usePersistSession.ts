@@ -2,12 +2,12 @@ import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import type { Browser } from '../browser/Browser';
 import { getDb } from './db';
-import { saveSession, sessionFromBrowser } from './session';
+import { saveRecentlyClosed, saveSession, sessionFromBrowser } from './session';
 
 const SAVE_DELAY_MS = 800;
 
 /**
- * Saves the open (non-incognito) tabs shortly after they change, and right away when the
+ * Saves the open (non-incognito) tabs and recently closed tabs shortly after they change, and right away when the
  * app leaves the foreground, since the OS may kill it there without warning.
  */
 export function usePersistSession(browser: Browser) {
@@ -18,11 +18,12 @@ export function usePersistSession(browser: Browser) {
     const save = () => {
       timer = null;
       const session = sessionFromBrowser(browser);
-      const json = JSON.stringify(session);
+      const closed = browser.recentlyClosed;
+      const json = JSON.stringify([session, closed]);
       if (json === lastSaved) return;
       lastSaved = json;
       getDb()
-        .then((db) => saveSession(db, session))
+        .then((db) => Promise.all([saveSession(db, session), saveRecentlyClosed(db, closed)]))
         .catch(() => {
           lastSaved = '';
         });

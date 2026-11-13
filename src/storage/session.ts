@@ -1,4 +1,4 @@
-import type { Browser } from '../browser/Browser';
+import type { Browser, ClosedTab } from '../browser/Browser';
 import { Db, getJson, setJson } from './db';
 
 export type SavedTab = { url: string; title: string };
@@ -27,4 +27,15 @@ export async function loadSession(db: Db): Promise<Session | null> {
 
 export async function saveSession(db: Db, session: Session): Promise<void> {
   await setJson(db, KEY, session);
+}
+
+const CLOSED_KEY = 'recentlyClosed';
+
+export async function loadRecentlyClosed(db: Db): Promise<ClosedTab[]> {
+  const list = await getJson<ClosedTab[]>(db, CLOSED_KEY);
+  return Array.isArray(list) ? list.filter((t) => typeof t?.url === 'string' && /^https?:\/\//i.test(t.url)) : [];
+}
+
+export async function saveRecentlyClosed(db: Db, list: ClosedTab[]): Promise<void> {
+  await setJson(db, CLOSED_KEY, list);
 }

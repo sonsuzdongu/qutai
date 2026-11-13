@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
+import { hostOf } from '../i18n/format';
 
 type Props = {
   visible: boolean;
@@ -41,6 +42,29 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
 
   const tabs = browser.tabsOf(incognito);
   const theme = incognito ? dark : light;
+
+  const [undoVisible, setUndoVisible] = useState(false);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (undoTimer.current) clearTimeout(undoTimer.current);
+    },
+    [],
+  );
+
+  const closeTab = (tab: Tab) => {
+    // Only normal web pages are remembered, so only those can be undone.
+    if (!browser.closeTab(tab.id)) return;
+    setUndoVisible(true);
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    undoTimer.current = setTimeout(() => setUndoVisible(false), 4000);
+  };
+
+  const undoClose = () => {
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    setUndoVisible(false);
+    browser.reopenClosed(0);
+  };
 
   const select = (tab: Tab) => {
     browser.switchTab(tab.id);
@@ -98,6 +122,17 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.grid}
         ListEmptyComponent={<EmptyState incognito={incognito} />}
+        ListFooterComponent={
+          incognito ? undefined : (
+            <RecentlyClosed
+              browser={browser}
+              onReopen={(index) => {
+                browser.reopenClosed(index);
+                onClose();
+              }}
+            />
+          )
+        }
         renderItem={({ item }) => (
           <TabCard
             tab={item}
@@ -105,10 +140,19 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
             active={item.id === browser.activeId}
             incognito={incognito}
             onPress={() => select(item)}
-            onCloseTab={() => browser.closeTab(item.id)}
+            onCloseTab={() => closeTab(item)}
           />
         )}
       />
+
+      {undoVisible && (
+        <View style={styles.undoBar} accessibilityLiveRegion="polite">
+          <Text style={styles.undoText}>{t('tabs.closed')}</Text>
+          <Pressable onPress={undoClose} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.undoAction}>{t('tabs.undo')}</Text>
+          </Pressable>
+        </View>
+      )}
 
       <View style={[styles.toolbar, theme.toolbar]}>
         <Pressable onPress={closeAll} disabled={tabs.length === 0} hitSlop={8} style={styles.toolbarSide}>
@@ -126,6 +170,36 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
         </Pressable>
       </View>
     </SafeAreaView>
+  );
+}
+
+const RECENT_SHOWN = 8;
+
+function RecentlyClosed({ browser, onReopen }: { browser: Browser; onReopen: (index: number) => void }) {
+  const closed = browser.recentlyClosed.slice(0, RECENT_SHOWN);
+  if (closed.length === 0) return null;
+  return (
+    <View style={styles.recent}>
+      <Text style={styles.recentTitle}>{t('tabs.recentlyClosed')}</Text>
+      {closed.map((item, index) => (
+        <Pressable
+          key={`${item.closedAt}-${index}`}
+          onPress={() => onReopen(index)}
+          style={({ pressed }) => [styles.recentRow, pressed && styles.recentPressed]}
+          accessibilityRole="button"
+        >
+          <Text style={styles.recentIcon}>↺</Text>
+          <View style={styles.recentText}>
+            <Text style={styles.recentRowTitle} numberOfLines={1}>
+              {item.title || hostOf(item.url)}
+            </Text>
+            <Text style={styles.recentHost} numberOfLines={1}>
+              {hostOf(item.url)}
+            </Text>
+          </View>
+        </Pressable>
+      ))}
+    </View>
   );
 }
 
@@ -254,6 +328,29 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 44 },
   emptyTitle: { fontSize: 18, fontWeight: '600' },
   emptyBody: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  undoBar: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 84,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(30,30,30,0.94)',
+  },
+  undoText: { color: '#fff', fontSize: 14 },
+  undoAction: { color: '#f0a07f', fontSize: 14, fontWeight: '700' },
+  recent: { marginTop: 8, borderRadius: 14, backgroundColor: '#fff', paddingVertical: 6 },
+  recentTitle: { fontSize: 13, fontWeight: '600', color: '#777', paddingHorizontal: 14, paddingVertical: 6 },
+  recentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8 },
+  recentPressed: { backgroundColor: '#f1efe8' },
+  recentIcon: { fontSize: 16, color: '#999', width: 18, textAlign: 'center' },
+  recentText: { flex: 1 },
+  recentRowTitle: { fontSize: 14, color: '#222' },
+  recentHost: { fontSize: 12, color: '#888' },
   toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
