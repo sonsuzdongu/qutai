@@ -97,6 +97,7 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.savePdf': 'PDF olarak kaydet',
   'menu.pdfPreparing': 'PDF hazırlanıyor…',
   'menu.pdfImagesMissing': "{count} görsel PDF'e eklenemedi",
+  'menu.print': 'Yazdır',
   'menu.saveScreenshot': 'Ekran görüntüsünü kaydet',
   'menu.screenshotSaved': "Ekran görüntüsü Fotoğraflar'a kaydedildi",
   'menu.readAloud': 'Sayfayı sesli oku',

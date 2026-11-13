@@ -20,7 +20,7 @@ import { TabSwitcher } from './src/components/TabSwitcher';
 import { TextSizeSheet } from './src/components/TextSizeSheet';
 import { Toast, useToast } from './src/components/Toast';
 import { copyLink, copyText, shareLink, shareText } from './src/device/link';
-import { savePagePdf } from './src/device/pdf';
+import { printPage, savePagePdf } from './src/device/pdf';
 import { saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
@@ -299,6 +299,12 @@ function BrowserApp({
           const pdf = await savePagePdf(tab);
           if (pdf.imagesMissing > 0) return t('menu.pdfImagesMissing', { count: pdf.imagesMissing });
         }),
+    },
+    {
+      icon: '🖨',
+      label: t('menu.print'),
+      disabled: onNewTab,
+      onPress: () => runAction(() => printPage(tab)),
     },
     {
       icon: '📸',

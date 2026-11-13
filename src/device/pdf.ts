@@ -41,6 +41,12 @@ export function pdfFileName(title: string, url: string): string {
  * user can save it to Files or send it. The temporary file is removed afterwards,
  * so nothing from incognito tabs stays on the device.
  */
+/** Opens the system print dialog (AirPrint on iOS) for the current page. */
+export async function printPage(tab: Tab): Promise<void> {
+  const snapshot = await tab.run<Snapshot>('snapshotHtml', [], 60000);
+  await Print.printAsync({ html: snapshot.html, width: PAGE_WIDTH, height: PAGE_HEIGHT });
+}
+
 export async function savePagePdf(tab: Tab): Promise<PdfResult> {
   // Snapshotting fetches images, so it gets more time than ordinary page commands.
   const snapshot = await tab.run<Snapshot>('snapshotHtml', [], 60000);

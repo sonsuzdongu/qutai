@@ -96,6 +96,7 @@ export const en = {
   'menu.savePdf': 'Save as PDF',
   'menu.pdfPreparing': 'Preparing PDF…',
   'menu.pdfImagesMissing': "{count} image(s) couldn't be added to the PDF",
+  'menu.print': 'Print',
   'menu.saveScreenshot': 'Save screenshot',
   'menu.screenshotSaved': 'Screenshot saved to Photos',
   'menu.readAloud': 'Read page aloud',
