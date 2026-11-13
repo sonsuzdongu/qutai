@@ -6,6 +6,7 @@ import type { SearchEngineId } from '../browser/search';
 import { CONTEXT_MENU_SCRIPT, ContextTarget, parseContextTarget } from '../browser/contextMenu';
 import { parseSelection, SELECTION_SCRIPT } from '../browser/selection';
 import { AD_BLOCK_SCRIPT, COOKIE_BANNER_SCRIPT, isAdUrl } from '../content';
+import { DARK_SITE_SCRIPT } from '../content/darkSites';
 import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
 import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { openExternal } from '../browser/openExternal';
@@ -21,6 +22,9 @@ import { NewTabPage } from './NewTabPage';
  * agent can still read and click in a tab the user isn't looking at.
  */
 export type TabActions = {
+  /** Dark theme is on (sites are darkened when darkSites is also on). */
+  darkMode: boolean;
+  darkSites: boolean;
   blockAds: boolean;
   hideCookieBanners: boolean;
   /** A link or image was long-pressed in this tab. */
@@ -85,6 +89,7 @@ function TabWebView({
     SELECTION_SCRIPT,
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
     Platform.OS === 'ios' && textZoom !== 100 ? textZoomScript(textZoom) : '',
+    Platform.OS === 'ios' && newTabActions.darkMode && newTabActions.darkSites ? DARK_SITE_SCRIPT : '',
   ].join('\n');
 
   // iOS: apply a new text size to the page already on screen too.
@@ -104,6 +109,7 @@ function TabWebView({
       {tab.isNewTab ? (
         <NewTabPage
           incognito={tab.incognito}
+          darkMode={newTabActions.darkMode}
           searchEngine={newTabActions.searchEngine}
           active={active}
           onNavigate={(url) => tab.loadUrl(url)}
@@ -155,6 +161,7 @@ function TabWebView({
           )}
           userAgent={tab.desktop ? DESKTOP_USER_AGENT : undefined}
           contentMode={tab.desktop ? 'desktop' : 'recommended'}
+          forceDarkOn={newTabActions.darkMode && newTabActions.darkSites}
           injectedJavaScript={pageSetupScript}
           injectedJavaScriptBeforeContentLoaded={earlyScript}
           textZoom={newTabActions.textZoom}

@@ -146,6 +146,30 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions }: Omit<Props
           />
         </View>
 
+        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.appearance')}</Text>
+        <View style={styles.segment}>
+          {(['system', 'light', 'dark'] as const).map((theme) => (
+            <Pressable
+              key={theme}
+              onPress={() => setDraft({ ...draft, theme })}
+              style={[styles.segmentButton, draft.theme === theme && styles.segmentSelected]}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: draft.theme === theme }}
+            >
+              <Text style={[styles.segmentText, draft.theme === theme && styles.segmentTextSelected]}>
+                {t(`settings.theme.${theme}`)}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.darkSites')}</Text>
+            <Text style={styles.hint}>{t('settings.darkSitesHint')}</Text>
+          </View>
+          <Switch value={draft.darkSites} onValueChange={(darkSites) => setDraft({ ...draft, darkSites })} />
+        </View>
+
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.content')}</Text>
         <View style={styles.switchRow}>
           <View style={styles.flex}>

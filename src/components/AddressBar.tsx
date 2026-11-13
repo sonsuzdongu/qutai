@@ -23,6 +23,8 @@ type Props = {
   canGoBack: boolean;
   tabCount: number;
   incognito: boolean;
+  /** Dark theme (incognito is always dark). */
+  darkMode?: boolean;
   assistantOpen: boolean;
   assistantRunning: boolean;
   searchEngine: SearchEngineId;
@@ -49,6 +51,7 @@ export function AddressBar({
   canGoBack,
   tabCount,
   incognito,
+  darkMode,
   assistantOpen,
   assistantRunning,
   searchEngine,
@@ -62,7 +65,8 @@ export function AddressBar({
 }: Props) {
   const [text, setText] = useState(url);
   const [editing, setEditing] = useState(false);
-  const dark = incognito ? darkStyles : null;
+  const darkUI = incognito || !!darkMode;
+  const dark = darkUI ? darkStyles : null;
 
   const finishEditing = () => {
     Keyboard.dismiss();
@@ -71,14 +75,14 @@ export function AddressBar({
 
   return (
     <View style={[styles.bar, dark?.bar]}>
-      <IconButton label="‹" onPress={onBack} disabled={!canGoBack} incognito={incognito} />
+      <IconButton label="‹" onPress={onBack} disabled={!canGoBack} incognito={darkUI} />
 
       {/* A TextInput scrolls long URLs to the cursor, so a plain Text is shown until the user taps to edit. */}
       {editing ? (
         <View style={[styles.field, styles.fieldRow, dark?.field]}>
           <TextInput
             style={[styles.fieldText, styles.fieldTextFlex, styles.input, dark?.text]}
-            placeholderTextColor={incognito ? '#8f8e99' : '#999'}
+            placeholderTextColor={darkUI ? '#8f8e99' : '#999'}
             value={text}
             onChangeText={setText}
             onBlur={() => setEditing(false)}
@@ -147,7 +151,7 @@ export function AddressBar({
           <Text style={[styles.tabCountText, dark?.text]}>{tabCount}</Text>
         </View>
       </Pressable>
-      <IconButton label="⋮" onPress={onOpenMenu} incognito={incognito} accessibilityLabel={t('address.menu')} />
+      <IconButton label="⋮" onPress={onOpenMenu} incognito={darkUI} accessibilityLabel={t('address.menu')} />
       <Pressable
         onPress={onToggleAssistant}
         hitSlop={6}
@@ -173,6 +177,7 @@ export function AddressBar({
         <OmniboxSuggestions
           text={text}
           incognito={incognito}
+          dark={darkUI}
           searchEngine={searchEngine}
           suggestionsEnabled={searchSuggestions}
           onNavigate={(next) => {

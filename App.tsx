@@ -1,7 +1,16 @@
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, AppState, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
+import {
+  Alert,
+  Appearance,
+  AppState,
+  KeyboardAvoidingView,
+  Platform,
+  useColorScheme,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
@@ -158,6 +167,12 @@ function BrowserApp({
     const sub = AppState.addEventListener('memoryWarning', () => browserInstance.sleepInactive(0));
     return () => sub.remove();
   }, [browserInstance]);
+
+  // The theme setting overrides the system appearance for the whole app, web pages included.
+  useEffect(() => {
+    Appearance.setColorScheme(settings.theme === 'system' ? 'unspecified' : settings.theme);
+  }, [settings.theme]);
+  const darkMode = useColorScheme() === 'dark';
 
   useEffect(() => {
     loadSettings()
@@ -551,11 +566,11 @@ function BrowserApp({
 
   return (
     <SafeAreaProvider>
-      <View style={[styles.container, tab.incognito && styles.incognito]}>
-        <StatusBar style={tab.incognito || tabsVisible ? 'light' : 'dark'} />
+      <View style={[styles.container, (tab.incognito || darkMode) && styles.incognito]}>
+        <StatusBar style={tab.incognito || tabsVisible || darkMode ? 'light' : 'dark'} />
         <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
           {findOpen ? (
-            <FindBar tab={tab} onClose={() => setFindFor(null)} />
+            <FindBar tab={tab} darkMode={darkMode} onClose={() => setFindFor(null)} />
           ) : (
             <AddressBar
               url={onNewTab ? '' : tab.url}
@@ -581,6 +596,7 @@ function BrowserApp({
                   .finally(() => setMenuVisible(true));
               }}
               incognito={tab.incognito}
+              darkMode={darkMode}
               onOpenTabs={async () => {
                 // Thumbnails can only be taken while a tab is on screen.
                 await tab.captureThumbnail();
@@ -594,6 +610,8 @@ function BrowserApp({
             <BrowserView
               browser={browser}
               newTabActions={{
+                darkMode,
+                darkSites: settings.darkSites,
                 blockAds: settings.blockAds,
                 hideCookieBanners: settings.hideCookieBanners,
                 onContextMenu: (source, target) => setContext({ tab: source, target }),
@@ -618,11 +636,14 @@ function BrowserApp({
                 onOpenLibrary: setLibrary,
               }}
             />
-            {selectedText ? <SelectionBar actions={selectionActions(selectedText)} dark={tab.incognito} /> : null}
+            {selectedText ? (
+              <SelectionBar actions={selectionActions(selectedText)} dark={tab.incognito || darkMode} />
+            ) : null}
           </KeyboardAvoidingView>
         </SafeAreaView>
 
         <AssistantPanel
+          dark={darkMode}
           open={panelOpen}
           quickActions={quickActions}
           draft={conversation.draft}
@@ -673,6 +694,7 @@ function BrowserApp({
           iconRow={iconRow}
           items={menuItems}
           incognito={tab.incognito}
+          darkMode={darkMode}
           onClose={() => setMenuVisible(false)}
         />
         <LibraryScreen
@@ -685,6 +707,7 @@ function BrowserApp({
           onClose={() => setLibrary(null)}
         />
         <TabSwitcher
+          darkMode={darkMode}
           visible={tabsVisible}
           browser={browser}
           onClose={() => setTabsVisible(false)}

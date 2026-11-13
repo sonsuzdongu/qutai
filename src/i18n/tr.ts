@@ -225,6 +225,13 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.hideCookieBannersHint':
     'Yaygın onay araçlarının çerez pencerelerini gizler. Site bu durumda varsayılanını, genellikle yalnızca zorunlu çerezleri kullanır.',
 
+  'settings.appearance': 'Görünüm',
+  'settings.theme.system': 'Sistem',
+  'settings.theme.light': 'Açık',
+  'settings.theme.dark': 'Koyu',
+  'settings.darkSites': 'Koyu temada siteleri de koyulaştır',
+  'settings.darkSitesHint': 'Kendi koyu tasarımı olmayan siteler de koyu gösterilir.',
+
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',
   'settings.provider': 'Yapay zekâ sağlayıcısı',

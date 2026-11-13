@@ -223,6 +223,13 @@ export const en = {
   'settings.hideCookieBannersHint':
     'Hides consent pop-ups of common consent tools. Sites then use their defaults, usually only necessary cookies.',
 
+  'settings.appearance': 'Appearance',
+  'settings.theme.system': 'System',
+  'settings.theme.light': 'Light',
+  'settings.theme.dark': 'Dark',
+  'settings.darkSites': 'Dark sites in dark mode',
+  'settings.darkSitesHint': 'Sites without a dark design of their own are shown dark too.',
+
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",
   'settings.provider': 'AI provider',

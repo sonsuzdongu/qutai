@@ -12,6 +12,7 @@ import type { LibraryTab } from './LibraryScreen';
 
 type Props = {
   incognito: boolean;
+  darkMode?: boolean;
   searchEngine: SearchEngineId;
   /** Data is refreshed each time the page comes on screen. */
   active: boolean;
@@ -34,7 +35,7 @@ function defaultSites(): TopSite[] {
 
 type Data = { sites: TopSite[]; bookmarks: Bookmark[]; recent: HistoryEntry[] };
 
-export function NewTabPage({ incognito, searchEngine, active, onNavigate, onAsk, onOpenLibrary }: Props) {
+export function NewTabPage({ incognito, darkMode, searchEngine, active, onNavigate, onAsk, onOpenLibrary }: Props) {
   const [text, setText] = useState('');
   const [data, setData] = useState<Data | null>(null);
   const [reload, setReload] = useState(0);
@@ -84,7 +85,8 @@ export function NewTabPage({ incognito, searchEngine, active, onNavigate, onAsk,
     ]);
   };
 
-  const theme = incognito ? dark : light;
+  const darkUI = incognito || !!darkMode;
+  const theme = darkUI ? dark : light;
 
   return (
     <ScrollView
@@ -101,7 +103,7 @@ export function NewTabPage({ incognito, searchEngine, active, onNavigate, onAsk,
           onChangeText={setText}
           onSubmitEditing={submit}
           placeholder={t('address.placeholder')}
-          placeholderTextColor={incognito ? '#8f8e99' : '#999'}
+          placeholderTextColor={darkUI ? '#8f8e99' : '#999'}
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"

@@ -11,6 +11,8 @@ import { LocalSuggestion, localSuggestions } from '../storage/omnibox';
 type Props = {
   text: string;
   incognito: boolean;
+  /** Dark appearance (incognito or dark theme); privacy still follows `incognito` only. */
+  dark?: boolean;
   searchEngine: SearchEngineId;
   suggestionsEnabled: boolean;
   onNavigate: (url: string) => void;
@@ -20,7 +22,16 @@ type Props = {
 const REMOTE_DELAY_MS = 200;
 
 /** Dropdown under the address bar while editing. */
-export function OmniboxSuggestions({ text, incognito, searchEngine, suggestionsEnabled, onNavigate, onAsk }: Props) {
+export function OmniboxSuggestions({
+  text,
+  incognito,
+  dark,
+  searchEngine,
+  suggestionsEnabled,
+  onNavigate,
+  onAsk,
+}: Props) {
+  const darkUI = incognito || !!dark;
   const query = text.trim();
   const [local, setLocal] = useState<{ query: string; items: LocalSuggestion[] }>({ query: '', items: [] });
   const [remote, setRemote] = useState<{ query: string; items: string[] }>({ query: '', items: [] });
@@ -69,21 +80,21 @@ export function OmniboxSuggestions({ text, incognito, searchEngine, suggestionsE
   const remoteItems = remoteAllowed && remote.query === query ? remote.items : [];
 
   return (
-    <View style={[styles.panel, incognito && styles.panelDark]}>
+    <View style={[styles.panel, darkUI && styles.panelDark]}>
       <ScrollView keyboardShouldPersistTaps="always" style={styles.scroll}>
-        {!query && <PasteRow android={canPaste} incognito={incognito} onPaste={go} />}
+        {!query && <PasteRow android={canPaste} incognito={darkUI} onPaste={go} />}
 
         {query.length > 0 && (
           <Row
             icon="✦"
             title={t('omnibox.ask', { text: query })}
-            incognito={incognito}
+            incognito={darkUI}
             accent
             onPress={() => onAsk(query)}
           />
         )}
         {query.length > 0 && looksLikeUrl(query) && (
-          <Row icon="🌐" title={query} incognito={incognito} onPress={() => go(query)} />
+          <Row icon="🌐" title={query} incognito={darkUI} onPress={() => go(query)} />
         )}
         {localItems.map((item) => (
           <Row
@@ -91,15 +102,15 @@ export function OmniboxSuggestions({ text, incognito, searchEngine, suggestionsE
             icon={item.bookmarked ? '★' : '🕘'}
             title={item.title || hostOf(item.url)}
             subtitle={item.url.replace(/^https?:\/\/(www\.)?/i, '')}
-            incognito={incognito}
+            incognito={darkUI}
             onPress={() => onNavigate(item.url)}
           />
         ))}
         {remoteItems.map((suggestion) => (
-          <Row key={suggestion} icon="🔍" title={suggestion} incognito={incognito} onPress={() => go(suggestion)} />
+          <Row key={suggestion} icon="🔍" title={suggestion} incognito={darkUI} onPress={() => go(suggestion)} />
         ))}
         {query.length > 0 && !looksLikeUrl(query) && !remoteItems.includes(query) && (
-          <Row icon="🔍" title={query} incognito={incognito} onPress={() => go(query)} />
+          <Row icon="🔍" title={query} incognito={darkUI} onPress={() => go(query)} />
         )}
       </ScrollView>
     </View>

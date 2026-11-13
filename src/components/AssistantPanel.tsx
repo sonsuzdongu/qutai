@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   BackHandler,
@@ -72,9 +72,13 @@ type Props = {
   onOpenLink: (url: string) => void;
   /** A source under an answer was tapped. */
   onOpenSource: (source: Source) => void;
+  dark?: boolean;
 };
 
 const MAX_WIDTH = 420;
+
+/** Dark styles for the panel's parts, or null in the light theme. */
+const PanelTheme = createContext<typeof darkStyles | null>(null);
 
 /**
  * Side panel that slides in from the right over the page, like the Chrome
@@ -103,7 +107,9 @@ export function AssistantPanel({
   onMessageAction,
   onOpenLink,
   onOpenSource,
+  dark = false,
 }: Props) {
+  const d = dark ? darkStyles : null;
   const speaking = useIsSpeaking();
   const { width: screenWidth } = useWindowDimensions();
   const width = Math.min(Math.round(screenWidth * 0.88), MAX_WIDTH);
@@ -157,142 +163,145 @@ export function AssistantPanel({
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [width, 0] });
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents={open ? 'auto' : 'none'}>
-      <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: progress }]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('chat.closePanel')} />
-      </Animated.View>
+    <PanelTheme.Provider value={d}>
+      <View style={StyleSheet.absoluteFill} pointerEvents={open ? 'auto' : 'none'}>
+        <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: progress }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('chat.closePanel')} />
+        </Animated.View>
 
-      <Animated.View style={[styles.panel, { width, transform: [{ translateX }] }]}>
-        {/* The panel spans the full screen height, so the keyboard offset needs no extra correction. */}
-        <KeyboardAvoidingView style={styles.flex} behavior="padding">
-          <View
-            style={[
-              styles.flex,
-              {
-                paddingTop: insets.top,
-                paddingRight: insets.right,
-                paddingBottom: keyboardVisible ? 0 : insets.bottom,
-              },
-            ]}
-          >
-            <View style={styles.header}>
-              <View style={styles.headerTitle}>
-                <Text style={styles.title}>{t('chat.title')}</Text>
-                <Pressable
-                  onPress={onOpenSettings}
-                  hitSlop={4}
-                  accessibilityLabel={t('chat.modelA11y', { model: modelInfo })}
-                >
-                  <Text style={styles.status} numberOfLines={1}>
-                    {running ? t('chat.working') : modelInfo}
-                  </Text>
-                </Pressable>
-              </View>
-              {items.length > 0 && !running && (
-                <HeaderButton label="＋" accessibilityLabel={t('chat.newChat')} onPress={onNewChat} />
-              )}
-              <HeaderButton label="⚙︎" accessibilityLabel={t('chat.settings')} onPress={onOpenSettings} />
-              <HeaderButton label="✕" accessibilityLabel={t('chat.closePanel')} onPress={onClose} />
-            </View>
-
-            <ScrollView
-              ref={scrollRef}
-              style={styles.flex}
-              contentContainerStyle={styles.messagesContent}
-              keyboardShouldPersistTaps="handled"
-              // Follow a reply while it is being written.
-              onContentSizeChange={() => {
-                if (open && running) scrollRef.current?.scrollToEnd({ animated: false });
-              }}
+        <Animated.View style={[styles.panel, d?.panel, { width, transform: [{ translateX }] }]}>
+          {/* The panel spans the full screen height, so the keyboard offset needs no extra correction. */}
+          <KeyboardAvoidingView style={styles.flex} behavior="padding">
+            <View
+              style={[
+                styles.flex,
+                {
+                  paddingTop: insets.top,
+                  paddingRight: insets.right,
+                  paddingBottom: keyboardVisible ? 0 : insets.bottom,
+                },
+              ]}
             >
-              {items.length === 0 && <Text style={styles.empty}>{t('chat.empty')}</Text>}
-              {items.map((item, index) => (
-                <ChatRow
-                  key={item.id}
-                  item={item}
-                  speaking={speaking}
-                  onAction={onMessageAction}
-                  onOpenLink={onOpenLink}
-                  onOpenSource={onOpenSource}
-                  onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
-                />
-              ))}
-            </ScrollView>
-
-            {busyElsewhere && (
-              <Pressable onPress={onShowRunningTab} style={styles.busy} accessibilityRole="button">
-                <Text style={styles.busyText}>{t('chat.busyElsewhere')}</Text>
-                <Text style={styles.busyAction}>{t('chat.showTab')}</Text>
-              </Pressable>
-            )}
-
-            {!running && !busyElsewhere && (
-              <View style={styles.modeRow}>
-                <Pressable
-                  onPress={() => onResearchChange(!research)}
-                  style={[styles.chip, research && styles.chipOn]}
-                  accessibilityRole="switch"
-                  accessibilityState={{ checked: research }}
-                >
-                  <Text style={[styles.chipText, research && styles.chipTextOn]}>{t('chat.research')}</Text>
-                </Pressable>
-                {research ? <Text style={styles.modeHint}>{t('chat.researchHint')}</Text> : null}
-              </View>
-            )}
-
-            {!running && !busyElsewhere && !research && !text.trim() && quickActions.length > 0 && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                style={styles.chips}
-                contentContainerStyle={styles.chipsContent}
-              >
-                {quickActions.map((action) => (
+              <View style={[styles.header, d?.header]}>
+                <View style={styles.headerTitle}>
+                  <Text style={styles.title}>{t('chat.title')}</Text>
                   <Pressable
-                    key={action.label}
-                    onPress={() => onSend(action.prompt)}
-                    style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
-                    accessibilityRole="button"
+                    onPress={onOpenSettings}
+                    hitSlop={4}
+                    accessibilityLabel={t('chat.modelA11y', { model: modelInfo })}
                   >
-                    <Text style={styles.chipText}>{action.label}</Text>
+                    <Text style={styles.status} numberOfLines={1}>
+                      {running ? t('chat.working') : modelInfo}
+                    </Text>
                   </Pressable>
+                </View>
+                {items.length > 0 && !running && (
+                  <HeaderButton label="＋" accessibilityLabel={t('chat.newChat')} onPress={onNewChat} />
+                )}
+                <HeaderButton label="⚙︎" accessibilityLabel={t('chat.settings')} onPress={onOpenSettings} />
+                <HeaderButton label="✕" accessibilityLabel={t('chat.closePanel')} onPress={onClose} />
+              </View>
+
+              <ScrollView
+                ref={scrollRef}
+                style={styles.flex}
+                contentContainerStyle={styles.messagesContent}
+                keyboardShouldPersistTaps="handled"
+                // Follow a reply while it is being written.
+                onContentSizeChange={() => {
+                  if (open && running) scrollRef.current?.scrollToEnd({ animated: false });
+                }}
+              >
+                {items.length === 0 && <Text style={[styles.empty, d?.dim]}>{t('chat.empty')}</Text>}
+                {items.map((item, index) => (
+                  <ChatRow
+                    key={item.id}
+                    item={item}
+                    speaking={speaking}
+                    onAction={onMessageAction}
+                    onOpenLink={onOpenLink}
+                    onOpenSource={onOpenSource}
+                    onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
+                  />
                 ))}
               </ScrollView>
-            )}
 
-            <View style={styles.inputRow}>
-              <TextInput
-                ref={inputRef}
-                style={styles.input}
-                value={text}
-                onChangeText={setText}
-                placeholder={t(research ? 'chat.researchPlaceholder' : 'chat.placeholder')}
-                multiline
-                editable={!running}
-              />
-              {running ? (
-                <Pressable
-                  style={[styles.sendButton, styles.stopButton]}
-                  onPress={onStop}
-                  accessibilityLabel={t('common.stop')}
-                >
-                  <Text style={styles.sendText}>■</Text>
-                </Pressable>
-              ) : (
-                <Pressable
-                  style={[styles.sendButton, (!text.trim() || busyElsewhere) && styles.sendDisabled]}
-                  onPress={send}
-                  accessibilityLabel={t('common.send')}
-                >
-                  <Text style={styles.sendText}>↑</Text>
+              {busyElsewhere && (
+                <Pressable onPress={onShowRunningTab} style={[styles.busy, d?.busy]} accessibilityRole="button">
+                  <Text style={styles.busyText}>{t('chat.busyElsewhere')}</Text>
+                  <Text style={styles.busyAction}>{t('chat.showTab')}</Text>
                 </Pressable>
               )}
+
+              {!running && !busyElsewhere && (
+                <View style={styles.modeRow}>
+                  <Pressable
+                    onPress={() => onResearchChange(!research)}
+                    style={[styles.chip, d?.chip, research && styles.chipOn]}
+                    accessibilityRole="switch"
+                    accessibilityState={{ checked: research }}
+                  >
+                    <Text style={[styles.chipText, d?.text, research && styles.chipTextOn]}>{t('chat.research')}</Text>
+                  </Pressable>
+                  {research ? <Text style={styles.modeHint}>{t('chat.researchHint')}</Text> : null}
+                </View>
+              )}
+
+              {!running && !busyElsewhere && !research && !text.trim() && quickActions.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  style={styles.chips}
+                  contentContainerStyle={styles.chipsContent}
+                >
+                  {quickActions.map((action) => (
+                    <Pressable
+                      key={action.label}
+                      onPress={() => onSend(action.prompt)}
+                      style={({ pressed }) => [styles.chip, d?.chip, pressed && styles.pressed]}
+                      accessibilityRole="button"
+                    >
+                      <Text style={[styles.chipText, d?.text]}>{action.label}</Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              )}
+
+              <View style={[styles.inputRow, d?.inputRow]}>
+                <TextInput
+                  ref={inputRef}
+                  style={[styles.input, d?.input]}
+                  placeholderTextColor={dark ? '#8f8e99' : '#999'}
+                  value={text}
+                  onChangeText={setText}
+                  placeholder={t(research ? 'chat.researchPlaceholder' : 'chat.placeholder')}
+                  multiline
+                  editable={!running}
+                />
+                {running ? (
+                  <Pressable
+                    style={[styles.sendButton, styles.stopButton]}
+                    onPress={onStop}
+                    accessibilityLabel={t('common.stop')}
+                  >
+                    <Text style={styles.sendText}>■</Text>
+                  </Pressable>
+                ) : (
+                  <Pressable
+                    style={[styles.sendButton, (!text.trim() || busyElsewhere) && styles.sendDisabled]}
+                    onPress={send}
+                    accessibilityLabel={t('common.send')}
+                  >
+                    <Text style={styles.sendText}>↑</Text>
+                  </Pressable>
+                )}
+              </View>
             </View>
-          </View>
-        </KeyboardAvoidingView>
-      </Animated.View>
-    </View>
+          </KeyboardAvoidingView>
+        </Animated.View>
+      </View>
+    </PanelTheme.Provider>
   );
 }
 
@@ -307,7 +316,7 @@ function HeaderButton({
 }) {
   return (
     <Pressable onPress={onPress} hitSlop={6} style={styles.headerButton} accessibilityLabel={accessibilityLabel}>
-      <Text style={styles.headerButtonText}>{label}</Text>
+      <Text style={[styles.headerButtonText, useContext(PanelTheme)?.text]}>{label}</Text>
     </Pressable>
   );
 }
@@ -330,6 +339,8 @@ function ChatRow({
   /** Set while the question can still be answered. */
   onChoose?: (itemId: string, option: string) => void;
 }) {
+  const d = useContext(PanelTheme);
+  const textStyle = d ? DARK_ASSISTANT_TEXT : styles.assistantText;
   switch (item.kind) {
     case 'user':
       return (
@@ -342,11 +353,12 @@ function ChatRow({
     case 'assistant':
       return (
         <View style={styles.assistantRow}>
-          <View style={[styles.bubble, styles.assistantBubble]}>
+          <View style={[styles.bubble, styles.assistantBubble, d?.assistantBubble]}>
             <MarkdownText
               text={item.streaming ? `${item.text} ▍` : item.text}
-              style={styles.assistantText}
+              style={textStyle}
               onOpenLink={onOpenLink}
+              dark={!!d}
             />
           </View>
           {item.streaming ? null : (
@@ -365,8 +377,8 @@ function ChatRow({
     case 'choices':
       return (
         <View style={styles.choices}>
-          <View style={[styles.bubble, styles.assistantBubble]}>
-            <MarkdownText text={item.text} style={styles.assistantText} onOpenLink={onOpenLink} />
+          <View style={[styles.bubble, styles.assistantBubble, d?.assistantBubble]}>
+            <MarkdownText text={item.text} style={textStyle} onOpenLink={onOpenLink} dark={!!d} />
           </View>
           {(item.options ?? []).map((option) => {
             const chosen = item.chosen === option;
@@ -377,6 +389,7 @@ function ChatRow({
                 disabled={!onChoose}
                 style={({ pressed }) => [
                   styles.choice,
+                  d?.choice,
                   chosen && styles.choiceChosen,
                   !onChoose && !chosen && styles.choiceClosed,
                   pressed && styles.pressed,
@@ -402,11 +415,11 @@ function ChatRow({
               <Pressable
                 key={source.url}
                 onPress={() => onOpenSource(source)}
-                style={({ pressed }) => [styles.source, pressed && styles.pressed]}
+                style={({ pressed }) => [styles.source, d?.chip, pressed && styles.pressed]}
                 accessibilityRole="link"
                 accessibilityLabel={source.title || hostOf(source.url)}
               >
-                <Text style={styles.sourceTitle} numberOfLines={2}>
+                <Text style={[styles.sourceTitle, d?.text]} numberOfLines={2}>
                   <Text style={styles.sourceIndex}>{i + 1} </Text>
                   {source.title || hostOf(source.url)}
                 </Text>
@@ -423,7 +436,7 @@ function ChatRow({
     case 'error':
       return <Text style={styles.error}>⚠️ {item.text}</Text>;
     default:
-      return <Text style={styles.action}>{item.text}</Text>;
+      return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
   }
 }
 
@@ -579,3 +592,18 @@ const styles = StyleSheet.create({
   stopButton: { backgroundColor: '#444' },
   sendText: { color: '#fff', fontSize: 18, fontWeight: '700' },
 });
+
+const darkStyles = StyleSheet.create({
+  panel: { backgroundColor: '#1f1e24' },
+  header: { borderBottomColor: '#3a3944' },
+  inputRow: { borderTopColor: '#3a3944' },
+  input: { backgroundColor: '#2b2a33', borderColor: '#42414d', color: '#f2f1f5' },
+  chip: { backgroundColor: '#2b2a33', borderColor: '#42414d' },
+  choice: { backgroundColor: '#2b2a33' },
+  text: { color: '#f2f1f5' },
+  dim: { color: '#9a99a3' },
+  assistantBubble: { backgroundColor: '#2b2a33', borderColor: '#3a3944' },
+  busy: { backgroundColor: '#3a2c26' },
+});
+
+const DARK_ASSISTANT_TEXT = { ...styles.assistantText, color: '#f2f1f5' };

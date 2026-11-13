@@ -8,6 +8,7 @@ type Props = {
   style: TextStyle;
   /** Called for http(s) links; other schemes are shown as plain text. */
   onOpenLink: (url: string) => void;
+  dark?: boolean;
 };
 
 const MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });
@@ -35,7 +36,8 @@ export function columnWidths(table: { header: { text: string }[]; rows: { text: 
 }
 
 /** Renders the assistant's markdown with native components: selectable text, tappable links. */
-export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink }: Props) {
+export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink, dark }: Props) {
+  const d = dark ? darkStyles : null;
   const tokens = useMemo(() => Lexer.lex(text), [text]);
   const inline = (items: Token[] | undefined, key: string): ReactNode[] =>
     (items ?? []).map((token, i) => renderInline(token, `${key}.${i}`));
@@ -68,7 +70,7 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
         );
       case 'codespan':
         return (
-          <Text key={key} style={styles.codespan}>
+          <Text key={key} style={[styles.codespan, d?.code]}>
             {decodeEntities((token as Tokens.Codespan).text)}
           </Text>
         );
@@ -134,15 +136,20 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
       }
       case 'code':
         return (
-          <ScrollView key={key} horizontal style={styles.codeBlock} contentContainerStyle={styles.codeContent}>
-            <Text style={styles.codeText} selectable>
+          <ScrollView
+            key={key}
+            horizontal
+            style={[styles.codeBlock, d?.code]}
+            contentContainerStyle={styles.codeContent}
+          >
+            <Text style={[styles.codeText, d?.codeText]} selectable>
               {(token as Tokens.Code).text}
             </Text>
           </ScrollView>
         );
       case 'blockquote':
         return (
-          <View key={key} style={styles.quote}>
+          <View key={key} style={[styles.quote, d?.border]}>
             {blocks((token as Tokens.Blockquote).tokens, key)}
           </View>
         );
@@ -152,7 +159,7 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
         const table = token as Tokens.Table;
         const widths = columnWidths(table);
         const row = (cells: Tokens.TableCell[], rowKey: string, header: boolean) => (
-          <View key={rowKey} style={[styles.tableRow, header && styles.tableHeader]}>
+          <View key={rowKey} style={[styles.tableRow, d?.border, header && (d?.tableHeader ?? styles.tableHeader)]}>
             {cells.map((cell, col) => (
               <Text
                 key={`${rowKey}.${col}`}
@@ -165,7 +172,7 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
           </View>
         );
         return (
-          <ScrollView key={key} horizontal style={styles.table}>
+          <ScrollView key={key} horizontal style={[styles.table, d?.border]}>
             <View>
               {row(table.header, `${key}.h`, true)}
               {table.rows.map((cells, i) => row(cells, `${key}.${i}`, false))}
@@ -214,4 +221,11 @@ const styles = StyleSheet.create({
   tableRow: { flexDirection: 'row', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#e0ddd4' },
   tableHeader: { backgroundColor: '#f5f4ef' },
   cell: { paddingHorizontal: 8, paddingVertical: 6, fontSize: 13, lineHeight: 18 },
+});
+
+const darkStyles = StyleSheet.create({
+  code: { backgroundColor: '#35343e' },
+  codeText: { color: '#e6e5ea' },
+  border: { borderColor: '#42414d', borderBottomColor: '#3a3944', borderLeftColor: '#42414d' },
+  tableHeader: { backgroundColor: '#2b2a33' },
 });

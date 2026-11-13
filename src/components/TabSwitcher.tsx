@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -21,6 +21,8 @@ import { hostOf } from '../i18n/format';
 
 type Props = {
   visible: boolean;
+  /** Dark theme; incognito tabs are always dark. */
+  darkMode?: boolean;
   browser: Browser;
   onClose: () => void;
   /** The user picked tabs to compare with the assistant. */
@@ -28,18 +30,28 @@ type Props = {
 };
 
 const PADDING = 12;
+
+const DarkMode = createContext(false);
+
+/** Incognito keeps its own purple look; the dark theme keeps the normal orange accent. */
+function useTheme(incognito: boolean) {
+  const darkMode = useContext(DarkMode);
+  return incognito ? dark : darkMode ? darkNormal : light;
+}
 const GAP = 12;
 
-export function TabSwitcher({ visible, browser, onClose, onCompare }: Props) {
+export function TabSwitcher({ visible, darkMode = false, browser, onClose, onCompare }: Props) {
   return (
     <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={onClose}>
       {/* Mounted only while visible, so it opens in the mode of the tab on screen. */}
-      {visible && <TabSwitcherContent browser={browser} onClose={onClose} onCompare={onCompare} />}
+      <DarkMode.Provider value={darkMode}>
+        {visible && <TabSwitcherContent browser={browser} onClose={onClose} onCompare={onCompare} />}
+      </DarkMode.Provider>
     </Modal>
   );
 }
 
-function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visible'>) {
+function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visible' | 'darkMode'>) {
   const [incognito, setIncognito] = useState(browser.active.incognito);
   const { width } = useWindowDimensions();
   const cardWidth = (width - PADDING * 2 - GAP) / 2;
@@ -50,7 +62,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
   const allTabs = browser.tabsOf(incognito);
   const searching = query.trim() !== '';
   const tabs = searching ? allTabs.filter((tab) => matchesTabQuery(tab, query)) : allTabs;
-  const theme = incognito ? dark : light;
+  const theme = useTheme(incognito);
 
   const [undoVisible, setUndoVisible] = useState(false);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -293,7 +305,7 @@ function SegmentButton({
   incognito: boolean;
   onPress: () => void;
 }) {
-  const theme = incognito ? dark : light;
+  const theme = useTheme(incognito);
   return (
     <Pressable
       onPress={onPress}
@@ -324,7 +336,7 @@ function TabCard({
   onPress: () => void;
   onCloseTab: () => void;
 }) {
-  const theme = incognito ? dark : light;
+  const theme = useTheme(incognito);
   const previewHeight = width * 1.25;
   // The new tab page has no host; the card falls back to its "New tab" title.
   const host = tab.isNewTab ? '' : hostOf(tab.url);
@@ -374,14 +386,13 @@ function TabCard({
 }
 
 function EmptyState({ incognito }: { incognito: boolean }) {
+  const theme = useTheme(incognito);
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyIcon}>{incognito ? '🕶' : '🗂'}</Text>
-      <Text style={[styles.emptyTitle, incognito ? dark.text : light.text]}>
-        {t(incognito ? 'tabs.emptyIncognito' : 'tabs.empty')}
-      </Text>
+      <Text style={[styles.emptyTitle, theme.text]}>{t(incognito ? 'tabs.emptyIncognito' : 'tabs.empty')}</Text>
       {incognito && (
-        <Text style={[styles.emptyBody, dark.dimText]}>
+        <Text style={[styles.emptyBody, theme.dimText]}>
           {t('tabs.incognitoInfo')} {t(Platform.OS === 'ios' ? 'tabs.incognitoInfoIos' : 'tabs.incognitoInfoAndroid')}
         </Text>
       )}
@@ -505,4 +516,11 @@ const dark = StyleSheet.create({
   search: { backgroundColor: '#2b2a33' },
   toolbar: { backgroundColor: '#24232b', borderTopColor: '#3a3944' },
   newTab: { backgroundColor: '#7542e5' },
+});
+
+const darkNormal = StyleSheet.create({
+  ...dark,
+  accent: { color: '#e08a66' },
+  activeCard: { borderColor: '#c96442' },
+  newTab: { backgroundColor: '#c96442' },
 });

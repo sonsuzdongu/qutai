@@ -21,7 +21,14 @@ export type Settings = {
   blockAds: boolean;
   /** Hide cookie consent banners. */
   hideCookieBanners: boolean;
+  /** App appearance; 'system' follows the phone. */
+  theme: ThemeSetting;
+  /** In the dark theme, darken sites that have no dark design of their own. */
+  darkSites: boolean;
 };
+
+export type ThemeSetting = 'system' | 'light' | 'dark';
+const THEMES: ThemeSetting[] = ['system', 'light', 'dark'];
 
 export const DEFAULT_SETTINGS: Settings = {
   provider: 'anthropic',
@@ -39,6 +46,8 @@ export const DEFAULT_SETTINGS: Settings = {
   webSearch: true,
   blockAds: true,
   hideCookieBanners: true,
+  theme: 'system',
+  darkSites: true,
 };
 
 const KEYS = {
@@ -51,6 +60,8 @@ const KEYS = {
   webSearch: 'web_search',
   blockAds: 'block_ads',
   hideCookieBanners: 'hide_cookie_banners',
+  theme: 'theme',
+  darkSites: 'dark_sites',
   apiKey: (id: ProviderId) => `api_key_${id}`,
   model: (id: ProviderId) => `model_${id}`,
   // Written by the first, Claude-only version of the app.
@@ -81,6 +92,8 @@ export async function loadSettings(): Promise<Settings> {
     webSearch,
     blockAds,
     hideCookieBanners,
+    theme,
+    darkSites,
     legacyApiKey,
     legacyModel,
     ...perProvider
@@ -94,6 +107,8 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.webSearch),
     get(KEYS.blockAds),
     get(KEYS.hideCookieBanners),
+    get(KEYS.theme),
+    get(KEYS.darkSites),
     get(KEYS.legacyApiKey),
     get(KEYS.legacyModel),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
@@ -111,6 +126,8 @@ export async function loadSettings(): Promise<Settings> {
     webSearch: webSearch !== 'false',
     blockAds: blockAds !== 'false',
     hideCookieBanners: hideCookieBanners !== 'false',
+    theme: THEMES.includes(theme as ThemeSetting) ? (theme as ThemeSetting) : 'system',
+    darkSites: darkSites !== 'false',
   };
   PROVIDER_ORDER.forEach((id, i) => {
     settings.apiKeys[id] = perProvider[i * 2] ?? '';
@@ -136,6 +153,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.webSearch, String(settings.webSearch)),
     set(KEYS.blockAds, String(settings.blockAds)),
     set(KEYS.hideCookieBanners, String(settings.hideCookieBanners)),
+    set(KEYS.theme, settings.theme),
+    set(KEYS.darkSites, String(settings.darkSites)),
     ...PROVIDER_ORDER.flatMap((id) => [
       set(KEYS.apiKey(id), settings.apiKeys[id]),
       set(KEYS.model(id), settings.models[id]),

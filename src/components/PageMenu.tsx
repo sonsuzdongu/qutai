@@ -21,17 +21,18 @@ type Props = {
   iconRow?: IconItem[];
   items: MenuItem[];
   incognito: boolean;
+  darkMode?: boolean;
   onClose: () => void;
 };
 
 /** Overflow menu anchored under the ⋮ button, like the Chrome page menu. */
-export function PageMenu({ visible, iconRow, items, incognito, onClose }: Props) {
+export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose }: Props) {
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const top = insets.top + 48;
   // Long menus scroll instead of running off small screens; the icon row stays on top.
   const listMaxHeight = height - top - insets.bottom - (iconRow?.length ? 70 : 20);
-  const theme = incognito ? dark : light;
+  const theme = incognito || darkMode ? dark : light;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>

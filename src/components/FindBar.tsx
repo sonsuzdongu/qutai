@@ -8,10 +8,10 @@ type Result = { index: number; count: number };
 const SEARCH_DELAY_MS = 200;
 
 /** Replaces the address bar while searching the page; matches are highlighted by the page script. */
-export function FindBar({ tab, onClose }: { tab: Tab; onClose: () => void }) {
+export function FindBar({ tab, darkMode, onClose }: { tab: Tab; darkMode?: boolean; onClose: () => void }) {
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<Result & { query: string }>({ query: '', index: -1, count: 0 });
-  const dark = tab.incognito;
+  const dark = tab.incognito || !!darkMode;
 
   useEffect(() => {
     const timer = setTimeout(() => {
