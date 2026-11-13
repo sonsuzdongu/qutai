@@ -165,8 +165,8 @@ Goal: ALPAI can be used as an everyday browser.
 
 Goal: a Comet-like experience; easy access to AI and reliable answers.
 
-1. **Quick action chips:** Summarize, Translate, Key points, Is this product good?, Compare · S
-2. **Ask about selected text:** Ask, Explain, Translate, Share (native menu on iOS, page script on Android) · M
+1. ✅ **Quick action chips:** Summarize, Translate, Key points, Is this product good?, Compare
+2. ✅ **Ask about selected text:** Ask, Explain, Translate, Share (page script and a strip at the bottom of the page on both platforms)
 3. **Smart address bar:** natural language commands go to ALPAI · M
 4. **Sources:** clickable source links in answers, tabs used · M
 5. **AI search:** answers with sources using the providers' web search tools · M
