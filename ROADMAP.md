@@ -173,7 +173,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
    - ✅ Each tab has its own chat (persistent; the chat comes back with a reopened tab; one task at a time)
    - ✅ **Clickable options:** when a choice is needed, the agent presents options as buttons via the `ask_user` tool
 5. ✅ **AI search:** answers with sources using the providers' web search tools (searches are visible in chat, citations in source cards; can be turned off in settings)
-6. **Multi-tab:** `read_tab` tool, "compare selected tabs" · M
+6. ✅ **Multi-tab:** `read_tab` tool (reads other tabs without bringing them to the front), "compare selected tabs" in the tab switcher
 7. **Page translation** (in place) and **reader mode** · M
 8. **Per-site agent permissions** and **action history** · M
 9. **Searching history in natural language**, **email draft**, **form profile** · M
