@@ -7,6 +7,7 @@ import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { t } from '../i18n';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { ActionLogScreen } from './ActionLogScreen';
+import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { MemoryScreen } from './MemoryScreen';
 import { SitePermissionsScreen } from './SitePermissionsScreen';
 import type { Settings } from '../storage/settings';
@@ -17,24 +18,32 @@ type Props = {
   onSave: (settings: Settings) => void;
   onClose: () => void;
   sitePermissions: SitePermissionStore;
+  onClearData: (options: ClearOptions) => Promise<void>;
 };
 
-export function SettingsModal({ visible, settings, onSave, onClose, sitePermissions }: Props) {
+export function SettingsModal({ visible, settings, onSave, onClose, sitePermissions, onClearData }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {/* Mounted only while visible, so the draft always starts from the saved settings. */}
       {visible && (
-        <SettingsForm settings={settings} onSave={onSave} onClose={onClose} sitePermissions={sitePermissions} />
+        <SettingsForm
+          settings={settings}
+          onSave={onSave}
+          onClose={onClose}
+          sitePermissions={sitePermissions}
+          onClearData={onClearData}
+        />
       )}
     </Modal>
   );
 }
 
-function SettingsForm({ settings, onSave, onClose, sitePermissions }: Omit<Props, 'visible'>) {
+function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData }: Omit<Props, 'visible'>) {
   const [draft, setDraft] = useState(settings);
   const [memoryVisible, setMemoryVisible] = useState(false);
   const [sitesVisible, setSitesVisible] = useState(false);
   const [actionLogVisible, setActionLogVisible] = useState(false);
+  const [clearDataVisible, setClearDataVisible] = useState(false);
   const provider = getProvider(draft.provider);
   const model = draft.models[draft.provider];
   const isCustomModel = !provider.models.some((m) => m.id === model);
@@ -212,6 +221,27 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions }: Omit<Props
           />
         </View>
 
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.httpsOnly')}</Text>
+            <Text style={styles.hint}>{t('settings.httpsOnlyHint')}</Text>
+          </View>
+          <Switch value={draft.httpsOnly} onValueChange={(httpsOnly) => setDraft({ ...draft, httpsOnly })} />
+        </View>
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.thirdPartyCookies')}</Text>
+            <Text style={styles.hint}>{t('settings.thirdPartyCookiesHint')}</Text>
+          </View>
+          <Switch
+            value={draft.blockThirdPartyCookies}
+            onValueChange={(blockThirdPartyCookies) => setDraft({ ...draft, blockThirdPartyCookies })}
+          />
+        </View>
+        <Pressable onPress={() => setClearDataVisible(true)} style={styles.option} accessibilityRole="button">
+          <Text style={[styles.optionText, styles.link]}>{t('settings.clearData')} ›</Text>
+        </Pressable>
+
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.assistant')}</Text>
         <View style={styles.switchRow}>
           <View style={styles.flex}>
@@ -257,6 +287,7 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions }: Omit<Props
       <MemoryScreen visible={memoryVisible} onClose={() => setMemoryVisible(false)} />
       <SitePermissionsScreen visible={sitesVisible} store={sitePermissions} onClose={() => setSitesVisible(false)} />
       <ActionLogScreen visible={actionLogVisible} onClose={() => setActionLogVisible(false)} />
+      <ClearDataScreen visible={clearDataVisible} onClear={onClearData} onClose={() => setClearDataVisible(false)} />
     </SafeAreaView>
   );
 }

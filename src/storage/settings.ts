@@ -29,6 +29,10 @@ export type Settings = {
   addressBarPosition: 'top' | 'bottom';
   /** Light vibrations for taps like switching tabs. */
   haptics: boolean;
+  /** Open sites over https:// only, asking before falling back to http://. */
+  httpsOnly: boolean;
+  /** Block third-party cookies (Android; iOS blocks them anyway). */
+  blockThirdPartyCookies: boolean;
 };
 
 export type ThemeSetting = 'system' | 'light' | 'dark';
@@ -54,6 +58,8 @@ export const DEFAULT_SETTINGS: Settings = {
   darkSites: true,
   addressBarPosition: 'top',
   haptics: true,
+  httpsOnly: false,
+  blockThirdPartyCookies: true,
 };
 
 const KEYS = {
@@ -70,6 +76,8 @@ const KEYS = {
   darkSites: 'dark_sites',
   addressBarPosition: 'address_bar_position',
   haptics: 'haptics',
+  httpsOnly: 'https_only',
+  blockThirdPartyCookies: 'block_third_party_cookies',
   apiKey: (id: ProviderId) => `api_key_${id}`,
   model: (id: ProviderId) => `model_${id}`,
   // Written by the first, Claude-only version of the app.
@@ -104,6 +112,8 @@ export async function loadSettings(): Promise<Settings> {
     darkSites,
     addressBarPosition,
     haptics,
+    httpsOnly,
+    blockThirdPartyCookies,
     legacyApiKey,
     legacyModel,
     ...perProvider
@@ -121,6 +131,8 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.darkSites),
     get(KEYS.addressBarPosition),
     get(KEYS.haptics),
+    get(KEYS.httpsOnly),
+    get(KEYS.blockThirdPartyCookies),
     get(KEYS.legacyApiKey),
     get(KEYS.legacyModel),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
@@ -142,6 +154,8 @@ export async function loadSettings(): Promise<Settings> {
     darkSites: darkSites !== 'false',
     addressBarPosition: addressBarPosition === 'bottom' ? 'bottom' : 'top',
     haptics: haptics !== 'false',
+    httpsOnly: httpsOnly === 'true',
+    blockThirdPartyCookies: blockThirdPartyCookies !== 'false',
   };
   PROVIDER_ORDER.forEach((id, i) => {
     settings.apiKeys[id] = perProvider[i * 2] ?? '';
@@ -171,6 +185,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.darkSites, String(settings.darkSites)),
     set(KEYS.addressBarPosition, settings.addressBarPosition),
     set(KEYS.haptics, String(settings.haptics)),
+    set(KEYS.httpsOnly, String(settings.httpsOnly)),
+    set(KEYS.blockThirdPartyCookies, String(settings.blockThirdPartyCookies)),
     ...PROVIDER_ORDER.flatMap((id) => [
       set(KEYS.apiKey(id), settings.apiKeys[id]),
       set(KEYS.model(id), settings.models[id]),

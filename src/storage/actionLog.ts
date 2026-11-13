@@ -48,3 +48,7 @@ export async function pruneActions(db: Db, now = Date.now()): Promise<void> {
 export async function clearActions(db: Db): Promise<void> {
   await db.runAsync('DELETE FROM agent_actions', []);
 }
+
+export async function deleteActionsSince(db: Db, from: number): Promise<void> {
+  await db.runAsync('DELETE FROM agent_actions WHERE at >= ?', [from]);
+}

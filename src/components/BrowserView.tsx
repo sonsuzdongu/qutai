@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Platform, StyleSheet, View } from 'react-native';
+import { Alert, Platform, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
 import type { SearchEngineId } from '../browser/search';
@@ -7,6 +7,7 @@ import { CONTEXT_MENU_SCRIPT, ContextTarget, parseContextTarget } from '../brows
 import { parseSelection, SELECTION_SCRIPT } from '../browser/selection';
 import { AD_BLOCK_SCRIPT, COOKIE_BANNER_SCRIPT, isAdUrl } from '../content';
 import { DARK_SITE_SCRIPT } from '../content/darkSites';
+import { allowInsecure, upgradeToHttps } from '../browser/httpsOnly';
 import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
 import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { openExternal } from '../browser/openExternal';
@@ -22,6 +23,10 @@ import { NewTabPage } from './NewTabPage';
  * agent can still read and click in a tab the user isn't looking at.
  */
 export type TabActions = {
+  /** Open http:// pages over https:// (asking before falling back). */
+  httpsOnly: boolean;
+  /** Android: block third-party cookies (iOS always does). */
+  blockThirdPartyCookies: boolean;
   /** Dark theme is on (sites are darkened when darkSites is also on). */
   darkMode: boolean;
   darkSites: boolean;
@@ -145,12 +150,35 @@ function TabWebView({
           onShouldStartLoadWithRequest={(request) => {
             // Ad and tracker pages, frames and redirects never load.
             if (newTabActions.blockAds && isAdUrl(request.url)) return false;
+            if (request.isTopFrame !== false) {
+              const secure = upgradeToHttps(request.url, newTabActions.httpsOnly);
+              if (secure !== request.url) {
+                tab.markHttpsUpgrade(request.url);
+                tab.loadUrl(secure);
+                return false;
+              }
+            }
             if (linkTarget(request.url) !== 'external') return true;
             // Only the page itself may hand off to another app; frames (often ads) can't.
             if (request.isTopFrame !== false) openExternal(request.url, tab, newTabActions.onNotice);
             return false;
           }}
-          onError={(e) => tab.handleError(e.nativeEvent)}
+          onError={(e) => {
+            tab.handleError(e.nativeEvent);
+            const insecure = tab.takeHttpsUpgrade();
+            if (!insecure) return;
+            Alert.alert(t('https.failedTitle'), t('https.failedBody', { url: insecure }), [
+              { text: t('common.cancel'), style: 'cancel' },
+              {
+                text: t('https.continue'),
+                style: 'destructive',
+                onPress: () => {
+                  allowInsecure(insecure);
+                  tab.loadUrl(insecure);
+                },
+              },
+            ]);
+          }}
           renderError={(_domain, code, description) => (
             <ErrorPage
               kind={classifyLoadError(code, description)}
@@ -161,6 +189,7 @@ function TabWebView({
           )}
           userAgent={tab.desktop ? DESKTOP_USER_AGENT : undefined}
           contentMode={tab.desktop ? 'desktop' : 'recommended'}
+          thirdPartyCookiesEnabled={!newTabActions.blockThirdPartyCookies}
           forceDarkOn={newTabActions.darkMode && newTabActions.darkSites}
           injectedJavaScript={pageSetupScript}
           injectedJavaScriptBeforeContentLoaded={earlyScript}

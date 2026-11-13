@@ -249,6 +249,11 @@ export class Browser {
     this.groups = this.groups.filter((g) => this.tabs.some((t) => t.groupId === g.id));
   }
 
+  clearRecentlyClosed() {
+    this.recentlyClosed = [];
+    this.emit();
+  }
+
   /** Reopens a recently closed tab (the latest by default) and shows it. */
   reopenClosed(index = 0): Tab | undefined {
     const closed = this.recentlyClosed[index];

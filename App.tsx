@@ -44,9 +44,12 @@ import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmar
 import { getDb } from './src/storage/db';
 import { deviceMemoryStore } from './src/storage/memory';
 import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
-import { searchHistory } from './src/storage/history';
+import { deleteHistorySince, searchHistory } from './src/storage/history';
 import { composeEmail } from './src/device/email';
 import { shareReportPdf } from './src/device/reportPdf';
+import { clearInsecureExceptions, upgradeToHttps } from './src/browser/httpsOnly';
+import { ClearOptions, rangeStart } from './src/storage/clearData';
+import { deleteActionsSince } from './src/storage/actionLog';
 import { bump, setHapticsEnabled, success, tick } from './src/device/haptics';
 import { deleteDownloadedFile, downloadFile } from './src/device/download';
 import { DownloadStore } from './src/storage/downloads';
@@ -557,6 +560,36 @@ function BrowserApp({
       : []),
   ];
 
+  /** Settings > Clear browsing data. History and activity follow the time range; the rest is cleared entirely. */
+  const clearData = async (options: ClearOptions) => {
+    const from = rangeStart(options.range);
+    const db = await getDb();
+    if (options.history) await deleteHistorySince(db, from);
+    if (options.activity) await deleteActionsSince(db, from);
+    if (options.recentlyClosed) browser.clearRecentlyClosed();
+    if (options.chats) {
+      browser.tabs.forEach((x) => {
+        if (!x.conversation.running) x.conversation.clear();
+      });
+      await deleteOrphanChats(
+        db,
+        browser.tabs.filter((x) => x.conversation.running).map((x) => x.uid),
+      );
+    }
+    if (options.downloads) {
+      for (const entry of downloads.list()) {
+        deleteDownloadedFile(entry.uri);
+        await downloads.remove(entry.id);
+      }
+    }
+    if (options.cache) {
+      // The data store is shared by all tabs, so one WebView clears it for every site.
+      browser.tabs.find((x) => x.webview)?.webview?.clearCache?.(true);
+      clearInsecureExceptions();
+    }
+    toast.show(t('clearData.done'));
+  };
+
   const onSaveSettings = async (next: Settings) => {
     setSettings(next);
     setSettingsVisible(false);
@@ -584,7 +617,7 @@ function BrowserApp({
       tabCount={browser.tabs.length}
       assistantOpen={panelOpen}
       assistantRunning={running}
-      onSubmit={(url) => tab.loadUrl(url)}
+      onSubmit={(url) => tab.loadUrl(upgradeToHttps(url, settings.httpsOnly))}
       onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
       onOpenMenu={() => {
         // The menu shows "add" or "remove" depending on whether this page is already saved.
@@ -628,6 +661,8 @@ function BrowserApp({
                 darkMode,
                 darkSites: settings.darkSites,
                 blockAds: settings.blockAds,
+                httpsOnly: settings.httpsOnly,
+                blockThirdPartyCookies: settings.blockThirdPartyCookies,
                 hideCookieBanners: settings.hideCookieBanners,
                 onContextMenu: (source, target) => {
                   bump();
@@ -744,6 +779,7 @@ function BrowserApp({
         />
         <SettingsModal
           sitePermissions={sitePermissions}
+          onClearData={clearData}
           visible={settingsVisible}
           settings={settings}
           onSave={onSaveSettings}

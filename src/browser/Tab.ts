@@ -74,6 +74,8 @@ export class Tab {
   loading = false;
   canGoBack = false;
   canGoForward = false;
+  /** The http:// address this tab was upgraded from (HTTPS-only), until the https:// page loads. */
+  httpsUpgradedFrom: string | null = null;
   /** Why the last page failed to load; cleared when the next load starts. */
   loadError: LoadError | null = null;
   /** Data URI kept in memory only, so nothing from incognito tabs touches the disk. */
@@ -239,7 +241,21 @@ export class Tab {
     this.onChange();
   }
 
+  /** HTTPS-only opened this http:// address over https:// instead. */
+  markHttpsUpgrade(from: string) {
+    this.httpsUpgradedFrom = from;
+  }
+
+  /** After a failed load: the http:// address the failed https:// page was upgraded from, if any (once). */
+  takeHttpsUpgrade(): string | null {
+    const from = this.httpsUpgradedFrom;
+    this.httpsUpgradedFrom = null;
+    return from;
+  }
+
   handleLoadEnd() {
+    // The upgraded page loaded fine, so there is nothing to fall back to.
+    if (!this.loadError) this.httpsUpgradedFrom = null;
     this.loading = false;
     const waiters = this.loadWaiters;
     this.loadWaiters = [];

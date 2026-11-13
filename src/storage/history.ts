@@ -84,3 +84,8 @@ export async function searchHistory(
   }
   return [...byUrl.values()].slice(0, limit);
 }
+
+/** Deletes visits from `from` on (0 deletes everything). */
+export async function deleteHistorySince(db: Db, from: number): Promise<void> {
+  await db.runAsync('DELETE FROM history WHERE visited_at >= ?', [from]);
+}
