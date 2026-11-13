@@ -17,6 +17,7 @@ import { TabSwitcher } from './src/components/TabSwitcher';
 import { Toast, useToast } from './src/components/Toast';
 import { copyLink, shareLink } from './src/device/link';
 import { savePagePdf } from './src/device/pdf';
+import { saveScreenshot } from './src/device/screenshot';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 
 let itemCounter = 0;
@@ -153,6 +154,15 @@ export default function App() {
           toast.show('PDF hazırlanıyor…');
           const pdf = await savePagePdf(tab);
           if (pdf.imagesMissing > 0) return `${pdf.imagesMissing} görsel PDF'e eklenemedi`;
+        }),
+    },
+    {
+      icon: '📸',
+      label: 'Ekran görüntüsünü kaydet',
+      onPress: () =>
+        runAction(async () => {
+          await saveScreenshot(tab);
+          return "Ekran görüntüsü Fotoğraflar'a kaydedildi";
         }),
     },
     { icon: '＋', label: 'Yeni sekme', section: true, onPress: () => browser.openTab() },

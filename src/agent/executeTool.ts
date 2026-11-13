@@ -1,6 +1,7 @@
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { savePagePdf } from '../device/pdf';
+import { saveScreenshot } from '../device/screenshot';
 import { sleep } from '../utils/sleep';
 
 type PageSnapshot = {
@@ -20,7 +21,14 @@ export type ToolContext = {
   confirm?: (description: string) => Promise<boolean>;
 };
 
-const ACTIONS_NEEDING_CONFIRMATION = new Set(['navigate', 'open_tab', 'click', 'type', 'select_option']);
+const ACTIONS_NEEDING_CONFIRMATION = new Set([
+  'navigate',
+  'open_tab',
+  'click',
+  'type',
+  'select_option',
+  'save_screenshot',
+]);
 
 /** Short Turkish label shown in the chat for each tool call. */
 export function describeToolCall(name: string, input: Record<string, unknown>): string {
@@ -43,6 +51,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return `↕️ Öğeye kaydırılıyor (ref ${input.ref})`;
     case 'save_pdf':
       return '📄 PDF hazırlanıyor';
+    case 'save_screenshot':
+      return '📸 Ekran görüntüsü kaydediliyor';
     case 'list_tabs':
       return '🗂 Sekmeler listeleniyor';
     case 'open_tab':
@@ -69,6 +79,13 @@ function currentTab(ctx: ToolContext): Tab {
   // The user closed the agent's tab; continue in whatever is on screen.
   ctx.agentTab.id = ctx.browser.active.id;
   return ctx.browser.active;
+}
+
+/** Screenshots can only be taken of the tab on screen, so bring the agent's tab to the front first. */
+async function showTab(ctx: ToolContext, tab: Tab) {
+  if (ctx.browser.activeId === tab.id) return;
+  ctx.browser.switchTab(tab.id);
+  await sleep(400);
 }
 
 function tabList(ctx: ToolContext): string {
@@ -175,6 +192,11 @@ export async function executeTool(
           content: `Created "${pdf.fileName}" (${pdf.pages} page(s)) and showed the share sheet to the user.${missing}`,
           isError: false,
         };
+      }
+      case 'save_screenshot': {
+        await showTab(ctx, tab);
+        await saveScreenshot(tab);
+        return { content: "Saved a screenshot of the visible area to the user's photo library.", isError: false };
       }
       case 'list_tabs':
         return { content: tabList(ctx), isError: false };

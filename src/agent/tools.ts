@@ -92,6 +92,13 @@ export const TOOLS: ToolDefinition[] = [
     input_schema: { type: 'object', properties: {} },
   },
   {
+    name: 'save_screenshot',
+    description:
+      "Save a screenshot of the visible part of the current page to the user's photo library. " +
+      'Scroll first if the user wants a specific part of the page.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
     name: 'list_tabs',
     description: 'List open tabs with their ids, titles and URLs, and which one you are working in.',
     input_schema: { type: 'object', properties: {} },
