@@ -28,8 +28,8 @@ putting the AI experience front and center.
 | Multiple tabs, tab switching, private mode | ✅ | | No cookie isolation on Android (see Build) |
 | Back, reload, share, copy URL | ✅ | | |
 | Forward, stop loading | ⬜ | Go · S | `goForward`, `stopLoading` are available |
-| History, bookmarks, recently closed tabs | ⬜ | Go · M | `expo-sqlite`; private tabs are not saved |
-| Session restore (tabs when the app opens) | ⬜ | Go · M | Not in the list, but the most basic expectation |
+| History, bookmarks, recently closed tabs | ✅ | | `expo-sqlite`; private tabs are not saved |
+| Session restore (tabs when the app opens) | ✅ | | Restored tabs start asleep and load when opened |
 | Autocomplete from history / bookmarks / most visited | ⬜ | Go · M | Depends on history |
 | Live suggestions from the search engine | ⬜ | Go · S | Every typed letter goes to the search engine; should be off in private mode |
 | Search engine choice | ⬜ | Go · S | Google, DuckDuckGo, Bing, Yandex… |
@@ -49,7 +49,7 @@ putting the AI experience front and center.
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
 | Grid view, close, close all, private tabs | ✅ | | |
-| Reopening a closed tab | ⬜ | Go · S | Undo notification + recently closed list |
+| Reopening a closed tab | ✅ | | Undo bar + recently closed list |
 | Search across tabs | ⬜ | Go · S | |
 | Tab groups, naming, moving | ⬜ | Go · M | |
 | Drag to reorder | ⬜ | Go · M | `react-native-gesture-handler` + `reanimated` |
@@ -153,7 +153,7 @@ Ordering criteria: the gap the user will notice most → least effort → infras
 
 Goal: ALPAI can be used as an everyday browser.
 
-1. **Persistent data layer** (`expo-sqlite`): session restore, history, bookmarks, recently closed tabs, chat history. Private tabs write nothing · M
+1. ✅ **Persistent data layer** (`expo-sqlite`): session restore, history, bookmarks and their screen, recently closed tabs, chat. Private tabs write nothing
 2. **New tab screen:** speed dial sites, bookmarks, recently visited · M
 3. **Address bar:** autocomplete from history and bookmarks, search suggestions (off in private mode), search engine choice, paste and go, clear, HTTPS indicator · M
 4. **Navigation:** forward, stop, reliable opening of external app links (tel:, mailto:, `intent://`), error page in Turkish · S

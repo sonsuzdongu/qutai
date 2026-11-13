@@ -3,6 +3,9 @@
 An AI-powered mobile browser for iOS and Android: an agent that can read and use the page for you,
 tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models.
 
+Open tabs, history, bookmarks, recently closed tabs and chats are stored on the device (`expo-sqlite`); private tabs
+and chats that touch a private tab save nothing.
+
 The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
 
 From the page menu (⋮) and by asking the agent: save the page as PDF, save a screenshot to Photos,
@@ -43,6 +46,8 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/browser/Browser.ts` | Tab manager (open, close, switch, private tabs) and change notifications to React |
 | `src/components/BrowserView.tsx` | Draws the WebViews of all tabs stacked on top of each other; hidden tabs keep running |
 | `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters |
+| `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, settings |
+| `src/i18n/` | Turkish and English UI strings, date formats |
 | `src/device/` | Device features: PDF, screenshot, read aloud, share/copy, private mode protection |
 | `src/agent/tools.ts` | Tools exposed to the model (`read_page`, `click`, `type`, `navigate`, `open_tab`, `view_screenshot`, `save_pdf`, `read_aloud`…) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
