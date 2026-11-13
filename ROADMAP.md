@@ -134,7 +134,7 @@ should not be done; leave it to the system password manager.
 | Citing sources, tabs used | ⬜ | Go · M | Clickable source links in the answer + list of tabs used; needs link support in chat |
 | AI search (answers with sources) | ⬜ | Go · M | Providers' own web search tools (Anthropic web search, OpenAI web search, Gemini Google Search grounding). No need for our own search infrastructure; there is an extra charge per search |
 | Deep research | ⬜ | Go · L | Existing agent + multiple sources + synthesis; Server later because of the background problem with long tasks |
-| Smart address bar | ⬜ | Go · M | A natural language command typed into the address bar is routed to ALPAI |
+| Smart address bar | ✖️ | – | Will not be done, per user decision |
 | Shopping and travel assistant | 🟡 | Go · M | The agent can do this; missing: ready-made flows and a comparison table |
 | Form assistant | 🟡 | Go · M | The agent can fill forms; no profile (name, address) stored on the device |
 | Email assistant | ⬜ | Go · S | Draft with `expo-mail-composer`; the user presses the send button |
@@ -167,7 +167,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 
 1. ✅ **Quick action chips:** Summarize, Translate, Key points, Is this product good?, Compare
 2. ✅ **Ask about selected text:** Ask, Explain, Translate, Share (page script and a strip at the bottom of the page on both platforms)
-3. **Smart address bar:** natural language commands go to ALPAI · M
+3. ~~**Smart address bar:** natural language commands go to ALPAI~~ (will not be done)
 4. **Sources:** clickable source links in answers, tabs used · M
 5. **AI search:** answers with sources using the providers' web search tools · M
 6. **Multi-tab:** `read_tab` tool, "compare selected tabs" · M
