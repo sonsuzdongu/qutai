@@ -172,7 +172,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
    - ✅ Intermediate step: answers are rendered as markdown, links are clickable
    - ✅ Each tab has its own chat (persistent; the chat comes back with a reopened tab; one task at a time)
    - ✅ **Clickable options:** when a choice is needed, the agent presents options as buttons via the `ask_user` tool
-5. **AI search:** answers with sources using the providers' web search tools · M
+5. ✅ **AI search:** answers with sources using the providers' web search tools (searches are visible in chat, citations in source cards; can be turned off in settings)
 6. **Multi-tab:** `read_tab` tool, "compare selected tabs" · M
 7. **Page translation** (in place) and **reader mode** · M
 8. **Per-site agent permissions** and **action history** · M
@@ -225,7 +225,7 @@ deep research, price and page tracking, Safe Browsing checks.
 | Single tab or multiple tabs? | Multiple tabs (opening, switching, listing tabs); reading without switching to the tab is Phase 2 |
 | What can the agent complete? | Clicking, typing, selecting, navigating via the DOM, PDF, screenshots, read-aloud. It cannot click inside canvas and maps |
 | How is permission obtained? | Mandatory confirmation for sensitive actions + optional confirmation for every action. Per-site permissions are Phase 2 |
-| Are sources transparent? | Yes: pages read below the answer; AI search sources in Phase 2 |
+| Are sources transparent? | Yes: pages read and AI search citations below the answer |
 | Free / paid limits | Unlimited with your own key; ALPAI credits are planned |
 | iOS / Android differences | Private mode isolation, text selection menu, download and PiP behaviors differ |
 
