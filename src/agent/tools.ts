@@ -85,6 +85,13 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'save_pdf',
+    description:
+      'Turn the current page into a PDF and open the system share sheet, where the user can save it (e.g. to Files) or send it. ' +
+      'Use when the user asks for a PDF, a printable copy, or to save the page as a document.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
     name: 'list_tabs',
     description: 'List open tabs with their ids, titles and URLs, and which one you are working in.',
     input_schema: { type: 'object', properties: {} },

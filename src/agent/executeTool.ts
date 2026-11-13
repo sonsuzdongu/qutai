@@ -1,5 +1,6 @@
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
+import { savePagePdf } from '../device/pdf';
 import { sleep } from '../utils/sleep';
 
 type PageSnapshot = {
@@ -40,6 +41,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return `↕️ Kaydırılıyor: ${input.direction}`;
     case 'scroll_to':
       return `↕️ Öğeye kaydırılıyor (ref ${input.ref})`;
+    case 'save_pdf':
+      return '📄 PDF hazırlanıyor';
     case 'list_tabs':
       return '🗂 Sekmeler listeleniyor';
     case 'open_tab':
@@ -164,6 +167,14 @@ export async function executeTool(
       case 'scroll_to': {
         const result = await tab.run<string>('scrollTo', [input.ref]);
         return { content: result, isError: false };
+      }
+      case 'save_pdf': {
+        const pdf = await savePagePdf(tab);
+        const missing = pdf.imagesMissing > 0 ? ` ${pdf.imagesMissing} image(s) could not be embedded.` : '';
+        return {
+          content: `Created "${pdf.fileName}" (${pdf.pages} page(s)) and showed the share sheet to the user.${missing}`,
+          isError: false,
+        };
       }
       case 'list_tabs':
         return { content: tabList(ctx), isError: false };

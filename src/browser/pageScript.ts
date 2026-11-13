@@ -285,13 +285,174 @@ export const PAGE_SCRIPT = String.raw`
     return 'Scrolled to ' + describe(el);
   }
 
+  // ---------- Page snapshot (for PDF export) ----------
+
+  var MAX_IMAGE_BYTES = 4e6;
+  var MAX_INLINE_BYTES = 25e6;
+
+  function withTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise(function (_, reject) { setTimeout(function () { reject(new Error('timeout')); }, ms); })
+    ]);
+  }
+
+  function blobToDataUrl(blob) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(reader.result); };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  // The PDF is rendered by a separate WebView without this page's cookies, so images are
+  // fetched here (with cookies when same-origin) and embedded as data URLs.
+  function fetchAsDataUrl(src) {
+    var sameOrigin = new URL(src, location.href).origin === location.origin;
+    var request = fetch(src, { credentials: sameOrigin ? 'include' : 'omit', mode: 'cors' })
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.blob();
+      })
+      .then(function (blob) {
+        if (blob.size > MAX_IMAGE_BYTES) throw new Error('too large');
+        return blobToDataUrl(blob);
+      });
+    return withTimeout(request, 8000);
+  }
+
+  function imageSource(img) {
+    // Lazy-loading scripts often keep the real URL in a data attribute until the image scrolls into view.
+    var lazy = img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || img.getAttribute('data-original');
+    if (img.naturalWidth === 0 && lazy) return new URL(lazy, location.href).href;
+    return img.currentSrc || img.src || '';
+  }
+
+  function snapshotHtml() {
+    var root = document.documentElement;
+    var clone = root.cloneNode(true);
+
+    // Form state lives in properties, not attributes, so it is copied over explicitly.
+    var fields = root.querySelectorAll('input, textarea, select');
+    var clonedFields = clone.querySelectorAll('input, textarea, select');
+    for (var i = 0; i < fields.length && i < clonedFields.length; i++) {
+      var f = fields[i];
+      var c = clonedFields[i];
+      if (f.type === 'password') { c.removeAttribute('value'); continue; }
+      if (f.tagName === 'TEXTAREA') c.textContent = f.value;
+      else if (f.tagName === 'SELECT') {
+        for (var o = 0; o < c.options.length; o++) c.options[o].toggleAttribute('selected', o === f.selectedIndex);
+      } else if (f.type === 'checkbox' || f.type === 'radio') c.toggleAttribute('checked', f.checked);
+      else c.setAttribute('value', f.value);
+    }
+
+    // Canvas content (charts etc.) is not part of the DOM; replace it with an image when allowed.
+    var canvases = root.querySelectorAll('canvas');
+    var clonedCanvases = clone.querySelectorAll('canvas');
+    for (var k = 0; k < canvases.length && k < clonedCanvases.length; k++) {
+      try {
+        var img = document.createElement('img');
+        img.src = canvases[k].toDataURL('image/png');
+        img.style.cssText = 'width:' + canvases[k].clientWidth + 'px;max-width:100%';
+        clonedCanvases[k].replaceWith(img);
+      } catch (e) {}
+    }
+
+    // Inline readable stylesheets, which also covers CSS behind a login.
+    var sheets = root.querySelectorAll('link[rel~="stylesheet"], style');
+    var clonedSheets = clone.querySelectorAll('link[rel~="stylesheet"], style');
+    var css = '';
+    for (var s = 0; s < sheets.length && s < clonedSheets.length; s++) {
+      var sheet = sheets[s].sheet;
+      if (!sheet) continue;
+      try {
+        var rules = sheet.cssRules;
+        var text = '';
+        for (var r = 0; r < rules.length; r++) text += rules[r].cssText + '\n';
+        css += text;
+        clonedSheets[s].remove();
+      } catch (e) {
+        // Cross-origin stylesheet: keep the <link>; it loads by absolute URL.
+      }
+    }
+
+    var remove = clone.querySelectorAll('script, noscript, iframe, object, embed, link[rel="preload"], link[rel="modulepreload"], link[rel="prefetch"]');
+    for (var x = 0; x < remove.length; x++) remove[x].remove();
+
+    var head = clone.querySelector('head');
+    if (!head) { head = document.createElement('head'); clone.insertBefore(head, clone.firstChild); }
+    var base = document.createElement('base');
+    base.setAttribute('href', location.href);
+    head.insertBefore(base, head.firstChild);
+    var meta = document.createElement('meta');
+    meta.setAttribute('charset', 'utf-8');
+    head.insertBefore(meta, head.firstChild);
+    var style = document.createElement('style');
+    style.textContent = css +
+      '\n@page { margin: 12mm; }' +
+      '\nhtml, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }' +
+      '\nimg { max-width: 100%; }';
+    head.appendChild(style);
+
+    var images = root.querySelectorAll('img');
+    var clonedImages = clone.querySelectorAll('img');
+    var jobs = [];
+    var cache = {};
+    for (var m = 0; m < images.length && m < clonedImages.length; m++) {
+      var src = imageSource(images[m]);
+      var target = clonedImages[m];
+      target.removeAttribute('srcset');
+      target.removeAttribute('loading');
+      target.removeAttribute('sizes');
+      if (!src || src.indexOf('data:') === 0) continue;
+      target.setAttribute('src', src);
+      jobs.push({ src: src, target: target });
+    }
+    var pictureSources = clone.querySelectorAll('picture source');
+    for (var p = 0; p < pictureSources.length; p++) pictureSources[p].remove();
+
+    var inlinedBytes = 0;
+    var inlined = 0;
+    var failed = 0;
+    var index = 0;
+    function worker() {
+      if (index >= jobs.length) return Promise.resolve();
+      var job = jobs[index++];
+      if (inlinedBytes > MAX_INLINE_BYTES) { failed++; return worker(); }
+      if (!cache[job.src]) cache[job.src] = fetchAsDataUrl(job.src);
+      return cache[job.src].then(function (dataUrl) {
+        job.target.setAttribute('src', dataUrl);
+        inlinedBytes += dataUrl.length;
+        inlined++;
+      }, function () {
+        // Left as an absolute URL; public images still load in the PDF renderer.
+        failed++;
+      }).then(worker);
+    }
+    var workers = [];
+    for (var w = 0; w < 4; w++) workers.push(worker());
+
+    return Promise.all(workers).then(function () {
+      return {
+        title: document.title,
+        url: location.href,
+        images: jobs.length,
+        inlined: inlined,
+        failed: failed,
+        html: '<!DOCTYPE html>\n' + clone.outerHTML
+      };
+    });
+  }
+
   window.__alpaiAgent = {
     readPage: readPage,
     click: click,
     type: type,
     select: select,
     scroll: scroll,
-    scrollTo: scrollTo
+    scrollTo: scrollTo,
+    snapshotHtml: snapshotHtml
   };
 })();
 `;

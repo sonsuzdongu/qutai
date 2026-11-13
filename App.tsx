@@ -16,6 +16,7 @@ import { SettingsModal } from './src/components/SettingsModal';
 import { TabSwitcher } from './src/components/TabSwitcher';
 import { Toast, useToast } from './src/components/Toast';
 import { copyLink, shareLink } from './src/device/link';
+import { savePagePdf } from './src/device/pdf';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 
 let itemCounter = 0;
@@ -141,6 +142,17 @@ export default function App() {
         runAction(async () => {
           await copyLink(tab);
           return 'Link kopyalandı';
+        }),
+    },
+    {
+      icon: '📄',
+      label: 'PDF olarak kaydet',
+      section: true,
+      onPress: () =>
+        runAction(async () => {
+          toast.show('PDF hazırlanıyor…');
+          const pdf = await savePagePdf(tab);
+          if (pdf.imagesMissing > 0) return `${pdf.imagesMissing} görsel PDF'e eklenemedi`;
         }),
     },
     { icon: '＋', label: 'Yeni sekme', section: true, onPress: () => browser.openTab() },

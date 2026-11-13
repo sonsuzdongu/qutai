@@ -11,7 +11,7 @@ type Pending = {
   timer: ReturnType<typeof setTimeout>;
 };
 
-export type PageCommand = 'readPage' | 'click' | 'type' | 'select' | 'scroll' | 'scrollTo';
+export type PageCommand = 'readPage' | 'click' | 'type' | 'select' | 'scroll' | 'scrollTo' | 'snapshotHtml';
 
 /**
  * One browser tab: owns its WebView, injects the page script, sends commands,
@@ -189,11 +189,13 @@ ${PAGE_SCRIPT}
     payload.id = ${JSON.stringify(id)};
     window.ReactNativeWebView.postMessage(JSON.stringify(payload));
   };
+  var fail = function (e) { send({ ok: false, error: String((e && e.message) || e) }); };
   try {
     var result = window.__alpaiAgent[${JSON.stringify(command)}].apply(null, ${JSON.stringify(args)});
-    send({ ok: true, result: result });
+    // Commands may return a promise (e.g. snapshots that fetch images).
+    Promise.resolve(result).then(function (value) { send({ ok: true, result: value }); }, fail);
   } catch (e) {
-    send({ ok: false, error: String((e && e.message) || e) });
+    fail(e);
   }
 })();
 true;`;
