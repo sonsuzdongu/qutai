@@ -3,6 +3,9 @@
 An AI-powered mobile browser for iOS and Android: an agent that can read and use the page for you,
 tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models.
 
+From the page menu (⋮) and by asking the agent: save the page as PDF, save a screenshot to Photos,
+read the page aloud, share/copy the link. When needed, the agent can also look at a screenshot of the page.
+
 ## Running
 
 ```bash
@@ -10,8 +13,7 @@ npm install
 npx expo start
 ```
 
-Scan the QR code with **Expo Go** on your phone. All the native modules used (`react-native-webview`,
-`expo-secure-store`, `react-native-view-shot`) come bundled with Expo Go.
+Scan the QR code with **Expo Go** on your phone. All the native modules used come bundled with Expo Go.
 
 Open the panel with the ✦ button in the top bar, then pick a provider via the ⚙︎ icon and enter your API key:
 
@@ -39,7 +41,8 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/browser/Browser.ts` | Tab manager (open, close, switch, private tabs) and change notifications to React |
 | `src/components/BrowserView.tsx` | Draws the WebViews of all tabs stacked on top of each other; hidden tabs keep running |
 | `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters |
-| `src/agent/tools.ts` | Tools exposed to the model (`read_page`, `click`, `type`, `navigate`, `open_tab`…) |
+| `src/device/` | Device features: PDF, screenshot, read aloud, share/copy, private mode protection |
+| `src/agent/tools.ts` | Tools exposed to the model (`read_page`, `click`, `type`, `navigate`, `open_tab`, `view_screenshot`, `save_pdf`, `read_aloud`…) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |
@@ -55,8 +58,12 @@ provider or model changes mid-chat, the history is rebuilt from the text and too
   on Android it deletes all cookies; private tabs share cookies with normal tabs. Real isolation requires the
   Android WebView profile API (development build). On iOS, each private tab uses its own separate, non-persistent data
   store.
-- **No screenshot tool.** For now the agent only sees the DOM text. It struggles with canvas, maps and image-heavy
-  sites.
+- **The agent can see the screen but cannot click by coordinates.** It can look at the page with `view_screenshot`, but
+  clicking only works through DOM elements (`ref`); it cannot click elements inside a canvas or map. The screenshot
+  covers only the visible area.
+- **The PDF is generated from a snapshot.** On very dynamic pages (content drawn by scripts) the PDF may look different
+  from what is on screen.
+- **The agent is deliberately not given a tool for writing to the clipboard.** Only the user copies.
 - **API keys are on the device.** Fine for personal use. Distribution requires a backend proxy that holds the keys.
 - **Model quality varies.** Browser tasks are multi-step; small models may click the wrong element.
 - **Old page outputs are trimmed.** This lowers cost, but on OpenAI previous reasoning items may not be reused

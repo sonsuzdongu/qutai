@@ -74,19 +74,25 @@ ourselves; they will all be handled together during the switch.
 
 Both as a tool the agent can use and as a button the user can tap in the panel.
 
-- [ ] Turn the page into a PDF (`expo-print`); for images on sites that require sign-in, first convert the page's images to embedded data. Fallback: PDF from screenshots
-- [ ] Screenshot: save the visible area to the gallery (`expo-media-library`, write-only permission); also send the same image to the AI. Later: full page (scroll and stitch)
-- [ ] Read aloud (`expo-speech`)
-- [ ] Share menu (`expo-sharing`) and copying to the clipboard (`expo-clipboard`, write-only)
-- [ ] Keep the screen on while a task is running (`expo-keep-awake`)
-- [ ] Block screenshots in private tabs (`expo-screen-capture`)
+- [x] Page menu (⋮), loading bar, notification (toast)
+- [x] Turn the page into a PDF (`expo-print`); images and readable CSS are embedded in the page, save/send via the share menu
+  - [ ] Fallback: PDF from screenshots (for very dynamic pages)
+- [x] Screenshot: save the visible area to the gallery (`expo-media-library`, add-only permission)
+- [x] The agent can look at a screenshot (`view_screenshot`; tool result with an image on all three providers)
+  - [ ] Full-page screenshot (scroll and stitch)
+- [x] Read aloud (`expo-speech`): the page's main content, the agent's text, chat messages
+- [x] Share / copy link; copy / share chat messages (`expo-clipboard`)
+  - Decision: The agent was not given a clipboard-writing tool (attack that swaps a copied IBAN or wallet address)
+- [x] Keep the screen on while a task is running (`expo-keep-awake`)
+- [x] Block screenshots and the app switcher preview in private tabs (`expo-screen-capture`)
 - [ ] File download support
+- [ ] Before submitting to the stores: review the legacy storage permissions (`READ_EXTERNAL_STORAGE`, `READ_MEDIA_VISUAL_USER_SELECTED`) that the `expo-media-library` plugin adds on Android
 - [ ] Later: location, camera and QR, calendar, email and SMS drafts, biometric authentication, haptics
 - [ ] Security: tools that send data out (location, etc.) ask for user confirmation every time; clipboard reading and contacts are not given as tools. An iOS usage description string in `app.json` for each permission
 
 ## Other
 
-- [ ] Test on a real device: keyboard behavior (especially Android), tab thumbnails, private mode, Android back button and back gesture
+- [ ] Test on a real device: keyboard behavior (especially Android), tab thumbnails, private mode, Android back button and back gesture, PDF, saving to the gallery (especially Android in Expo Go), read aloud (on iOS there is no sound in silent mode), screenshot blocking in private tabs
 - [ ] End-to-end test with real API keys on all three providers
 - [ ] Clicking by coordinates (for canvas, maps and image-heavy sites; together with the screenshot tool)
 - [ ] Running in the background: a foreground service for Android or a server-side browser (decision pending)
