@@ -57,6 +57,7 @@ export const tr: Record<keyof typeof en, string> = {
   'action.closeTab': '✖️ Sekme kapatılıyor ({id})',
   'action.remember': '🧠 Hatırlanıyor: {text}',
   'action.forget': '🧠 Bir anı siliniyor',
+  'action.webSearch': '🔎 Arandı: {query}',
   'action.wait': '⏳ {seconds} sn bekleniyor',
 
   'find.placeholder': 'Sayfada bul',
@@ -150,6 +151,9 @@ export const tr: Record<keyof typeof en, string> = {
   'selection.explainPrompt': 'Sayfadaki bu metni basitçe açıkla:\n\n{text}',
   'selection.translatePrompt': 'Sayfadaki bu metni Türkçeye çevir:\n\n{text}',
 
+  'settings.webSearch': 'AI arama',
+  'settings.webSearchHint':
+    'ALPAI, sağlayıcının kendi arama aracıyla internette arayıp kaynakları gösterebilir. Aramalar token ücretine ek olarak {provider} tarafından API anahtarınıza faturalanır.',
   'settings.memory': 'Hafıza',
   'settings.memoryEnabled': 'Benimle ilgili bilgileri hatırla',
   'settings.memoryHint':

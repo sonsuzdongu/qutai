@@ -56,6 +56,7 @@ export const en = {
   'action.closeTab': '✖️ Closing tab ({id})',
   'action.remember': '🧠 Remembering: {text}',
   'action.forget': '🧠 Forgetting a memory',
+  'action.webSearch': '🔎 Searched: {query}',
   'action.wait': '⏳ Waiting {seconds}s',
 
   'find.placeholder': 'Find in page',
@@ -149,6 +150,9 @@ export const en = {
   'selection.explainPrompt': 'Explain this text from the page in simple terms:\n\n{text}',
   'selection.translatePrompt': 'Translate this text from the page into English:\n\n{text}',
 
+  'settings.webSearch': 'AI search',
+  'settings.webSearchHint':
+    "ALPAI can search the web with the provider's built-in search and show the sources. Searches are billed to your API key by {provider} in addition to tokens.",
   'settings.memory': 'Memory',
   'settings.memoryEnabled': 'Remember things about me',
   'settings.memoryHint':

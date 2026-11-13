@@ -23,6 +23,8 @@ export type AgentOptions = ToolContext & {
   model: string;
   /** Conversation history; new turns are appended in place. */
   turns: Turn[];
+  /** Let the model search the web with the provider's own search tool (billed by the provider). */
+  webSearch?: boolean;
   signal: AbortSignal;
   onEvent: (event: AgentEvent) => void;
 };
@@ -39,12 +41,14 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
   };
 
   const sources: Source[] = [];
+  const addSource = (source: Source) => {
+    if (!/^https?:\/\//i.test(source.url) || sources.length >= MAX_SOURCES) return;
+    const key = source.url.split('#')[0];
+    if (!sources.some((s) => s.url.split('#')[0] === key)) sources.push(source);
+  };
   const noteSource = () => {
     const tab = opts.browser.getTab(opts.agentTab.id);
-    if (!tab || !/^https?:\/\//i.test(tab.url)) return;
-    const key = tab.url.split('#')[0];
-    if (sources.some((s) => s.url.split('#')[0] === key) || sources.length >= MAX_SOURCES) return;
-    sources.push({ url: tab.url, title: tab.title, incognito: tab.incognito });
+    if (tab) addSource({ url: tab.url, title: tab.title, incognito: tab.incognito });
   };
   const flushSources = () => {
     if (sources.length) onEvent({ type: 'sources', sources: sources.splice(0) });
@@ -59,6 +63,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       model: opts.model,
       system: await systemPrompt(opts),
       tools: opts.memory ? [...TOOLS, ...MEMORY_TOOLS] : TOOLS,
+      webSearch: !!opts.webSearch,
       turns: compactHistory(turns),
       signal,
     });
@@ -70,7 +75,14 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       rawProvider: provider.id,
       rawModel: opts.model,
     });
+    reply.searches.forEach((query) => onEvent({ type: 'action', text: t('action.webSearch', { query }) }));
+    // Pages found by web search open in the conversation's own mode.
+    reply.citations.forEach((c) =>
+      addSource({ url: c.url, title: c.title, incognito: !!opts.privacy?.touchedIncognito }),
+    );
     if (reply.text) onEvent({ type: 'text', text: reply.text });
+    // A long web search was paused by the provider; sending the reply back continues it.
+    if (reply.stop === 'pause') continue;
 
     if (reply.stop !== 'tool_use') {
       // A reply cut off mid-call can still contain tool calls; every call needs a result before the next request.
@@ -169,11 +181,19 @@ export function parseChoices(input: Record<string, unknown>): { question: string
   return { question: question.slice(0, 500), options: options.slice(0, MAX_CHOICES) };
 }
 
+const WEB_SEARCH_PROMPT = `
+
+Web search:
+- You can search the web with your built-in web search. Use it for facts, news, prices and other current information, or to find which site to open. It is faster than navigating to a search engine page.
+- Use the browser tools instead when the user asks about the page they are on, or when you need to act on a site (log in, fill in, click, buy).
+- Cite the pages you used; they are shown to the user as sources.`;
+
 /** The base prompt plus what is remembered about the user, re-read every step since the agent may change it. */
 async function systemPrompt(opts: AgentOptions): Promise<string> {
-  if (!opts.memory) return SYSTEM_PROMPT;
+  const search = opts.webSearch ? WEB_SEARCH_PROMPT : '';
+  if (!opts.memory) return SYSTEM_PROMPT + search;
   const memories = await opts.memory.list().catch(() => []);
-  return SYSTEM_PROMPT + memoryPrompt(memories, !opts.privacy?.touchedIncognito);
+  return SYSTEM_PROMPT + search + memoryPrompt(memories, !opts.privacy?.touchedIncognito);
 }
 
 /**

@@ -1,5 +1,5 @@
 import { postJson } from './http';
-import { canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
+import { Citation, canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
 
 type Block = { type: string; [key: string]: unknown };
 type Message = { role: 'user' | 'assistant'; content: Block[] };
@@ -60,10 +60,15 @@ function toStop(reason: string): StopReason {
       return 'max_tokens';
     case 'refusal':
       return 'refusal';
+    case 'pause_turn':
+      return 'pause';
     default:
       return 'end';
   }
 }
+
+// The basic version: later ones filter results through code execution by default.
+const WEB_SEARCH_TOOL = { type: 'web_search_20250305', name: 'web_search', max_uses: 5 };
 
 async function call(req: ModelRequest): Promise<ModelReply> {
   const res = await postJson<Response>(
@@ -73,22 +78,40 @@ async function call(req: ModelRequest): Promise<ModelReply> {
       model: req.model,
       max_tokens: 8192,
       system: [{ type: 'text', text: req.system, cache_control: { type: 'ephemeral' } }],
-      tools: req.tools,
+      tools: req.webSearch ? [...req.tools, WEB_SEARCH_TOOL] : req.tools,
       messages: toMessages(req.turns, req.model),
     },
     req.signal,
   );
 
-  const text = res.content
-    .filter((b) => b.type === 'text' && typeof b.text === 'string')
-    .map((b) => (b.text as string).trim())
+  // Cited answers arrive as many text blocks that split sentences, so consecutive text blocks
+  // are joined as they are; other blocks (searches, tool calls) start a new paragraph.
+  const paragraphs: string[] = [''];
+  const citations: Citation[] = [];
+  const searches: string[] = [];
+  for (const b of res.content) {
+    if (b.type === 'text' && typeof b.text === 'string') {
+      paragraphs[paragraphs.length - 1] += b.text;
+      for (const c of (b.citations as Block[] | undefined) ?? []) {
+        if (typeof c.url === 'string') citations.push({ url: c.url, title: String(c.title ?? '') });
+      }
+    } else {
+      paragraphs.push('');
+      if (b.type === 'server_tool_use' && b.name === 'web_search') {
+        const query = (b.input as { query?: unknown } | undefined)?.query;
+        if (typeof query === 'string') searches.push(query);
+      }
+    }
+  }
+  const text = paragraphs
+    .map((p) => p.trim())
     .filter(Boolean)
     .join('\n\n');
   const toolCalls: ToolCall[] = res.content
     .filter((b) => b.type === 'tool_use')
     .map((b) => ({ id: b.id as string, name: b.name as string, input: (b.input as Record<string, unknown>) ?? {} }));
 
-  return { text, toolCalls, stop: toStop(res.stop_reason), raw: res.content };
+  return { text, toolCalls, stop: toStop(res.stop_reason), raw: res.content, citations, searches };
 }
 
 export const anthropic: Provider = {

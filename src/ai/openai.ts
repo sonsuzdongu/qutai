@@ -1,5 +1,5 @@
 import { postJson } from './http';
-import { canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
+import { Citation, canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
 
 type Item = { type?: string; [key: string]: unknown };
 
@@ -62,14 +62,17 @@ async function call(req: ModelRequest): Promise<ModelReply> {
       model: req.model,
       instructions: req.system,
       input: toInput(req.turns, req.model),
-      tools: req.tools.map((t) => ({
-        type: 'function',
-        name: t.name,
-        description: t.description,
-        parameters: t.input_schema,
-        // Our schemas have optional fields, which strict mode doesn't allow.
-        strict: false,
-      })),
+      tools: [
+        ...req.tools.map((t) => ({
+          type: 'function',
+          name: t.name,
+          description: t.description,
+          parameters: t.input_schema,
+          // Our schemas have optional fields, which strict mode doesn't allow.
+          strict: false,
+        })),
+        ...(req.webSearch ? [{ type: 'web_search' }] : []),
+      ],
       store: false,
       max_output_tokens: 32000,
     },
@@ -79,13 +82,23 @@ async function call(req: ModelRequest): Promise<ModelReply> {
   const texts: string[] = [];
   let refused = false;
   const toolCalls: ToolCall[] = [];
+  const citations: Citation[] = [];
+  const searches: string[] = [];
   for (const item of res.output ?? []) {
     if (item.type === 'message' && Array.isArray(item.content)) {
       for (const part of item.content as Item[]) {
         if (part.type === 'output_text' && typeof part.text === 'string' && part.text.trim())
           texts.push(part.text.trim());
+        for (const a of (part.annotations as Item[] | undefined) ?? []) {
+          if (a.type === 'url_citation' && typeof a.url === 'string')
+            citations.push({ url: a.url, title: String(a.title ?? '') });
+        }
         if (part.type === 'refusal') refused = true;
       }
+    } else if (item.type === 'web_search_call') {
+      const action = (item.action ?? {}) as Item;
+      if (typeof action.query === 'string') searches.push(action.query);
+      if (Array.isArray(action.queries)) searches.push(...action.queries.filter((q) => typeof q === 'string'));
     } else if (item.type === 'function_call') {
       toolCalls.push({
         id: item.call_id as string,
@@ -101,7 +114,7 @@ async function call(req: ModelRequest): Promise<ModelReply> {
   }
   if (refused) stop = 'refusal';
 
-  return { text: texts.join('\n\n'), toolCalls, stop, raw: res.output };
+  return { text: texts.join('\n\n'), toolCalls, stop, raw: res.output, citations, searches: [...new Set(searches)] };
 }
 
 export const openai: Provider = {

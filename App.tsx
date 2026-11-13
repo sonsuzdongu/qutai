@@ -203,6 +203,7 @@ function BrowserApp({
         agentTab,
         privacy: chat.privacy,
         memory: settings.memoryEnabled ? memoryStore : undefined,
+        webSearch: settings.webSearch,
         confirm: settings.confirmActions ? askConfirmation : undefined,
         signal,
         onEvent: (event) => {

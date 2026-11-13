@@ -150,6 +150,14 @@ function SettingsForm({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
           />
         </View>
 
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.webSearch')}</Text>
+            <Text style={styles.hint}>{t('settings.webSearchHint', { provider: provider.label })}</Text>
+          </View>
+          <Switch value={draft.webSearch} onValueChange={(webSearch) => setDraft({ ...draft, webSearch })} />
+        </View>
+
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.memory')}</Text>
         <View style={styles.switchRow}>
           <View style={styles.flex}>

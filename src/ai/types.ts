@@ -32,13 +32,21 @@ export type Turn =
     }
   | { role: 'tool_results'; results: ToolResult[] };
 
-export type StopReason = 'tool_use' | 'end' | 'max_tokens' | 'refusal';
+/** 'pause': the provider paused a long server-side step (web search); send the reply back to continue. */
+export type StopReason = 'tool_use' | 'end' | 'max_tokens' | 'refusal' | 'pause';
+
+/** A web page the answer cites, from the provider's own web search. */
+export type Citation = { url: string; title: string };
 
 export type ModelReply = {
   text: string;
   toolCalls: ToolCall[];
   stop: StopReason;
   raw: unknown;
+  /** Pages cited from the provider's web search. */
+  citations: Citation[];
+  /** Queries the provider searched the web for during this reply. */
+  searches: string[];
 };
 
 export type ModelRequest = {
@@ -46,6 +54,8 @@ export type ModelRequest = {
   model: string;
   system: string;
   tools: ToolDefinition[];
+  /** Let the model search the web with the provider's built-in search tool. */
+  webSearch: boolean;
   turns: Turn[];
   signal: AbortSignal;
 };

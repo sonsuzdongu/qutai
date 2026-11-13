@@ -1,6 +1,6 @@
 import { postJson } from './http';
 import { t } from '../i18n';
-import { canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
+import { Citation, canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
 
 type Step = { type?: string; [key: string]: unknown };
 
@@ -51,12 +51,15 @@ async function call(req: ModelRequest): Promise<ModelReply> {
       model: req.model,
       system_instruction: req.system,
       input: toSteps(req.turns, req.model),
-      tools: req.tools.map((t) => ({
-        type: 'function',
-        name: t.name,
-        description: t.description,
-        ...(hasParameters(t.input_schema) ? { parameters: t.input_schema } : {}),
-      })),
+      tools: [
+        ...req.tools.map((t) => ({
+          type: 'function',
+          name: t.name,
+          description: t.description,
+          ...(hasParameters(t.input_schema) ? { parameters: t.input_schema } : {}),
+        })),
+        ...(req.webSearch ? [{ type: 'google_search' }] : []),
+      ],
       generation_config: { max_output_tokens: 32000 },
       store: false,
     },
@@ -66,11 +69,20 @@ async function call(req: ModelRequest): Promise<ModelReply> {
   const steps = res.steps ?? [];
   const texts: string[] = [];
   const toolCalls: ToolCall[] = [];
+  const citations: Citation[] = [];
+  const searches: string[] = [];
   for (const step of steps) {
     if (step.type === 'model_output' && Array.isArray(step.content)) {
       for (const part of step.content as Step[]) {
         if (part.type === 'text' && typeof part.text === 'string' && part.text.trim()) texts.push(part.text.trim());
+        for (const a of (part.annotations as Step[] | undefined) ?? []) {
+          if (a.type === 'url_citation' && typeof a.url === 'string')
+            citations.push({ url: a.url, title: String(a.title ?? '') });
+        }
       }
+    } else if (step.type === 'google_search_call') {
+      const queries = (step.arguments as { queries?: unknown } | undefined)?.queries;
+      if (Array.isArray(queries)) searches.push(...queries.filter((q): q is string => typeof q === 'string'));
     } else if (step.type === 'function_call') {
       toolCalls.push({
         id: step.id as string,
@@ -85,7 +97,7 @@ async function call(req: ModelRequest): Promise<ModelReply> {
   let stop: StopReason = toolCalls.length > 0 ? 'tool_use' : 'end';
   if (res.status === 'incomplete') stop = 'max_tokens';
 
-  return { text: texts.join('\n\n'), toolCalls, stop, raw: steps };
+  return { text: texts.join('\n\n'), toolCalls, stop, raw: steps, citations, searches };
 }
 
 export const gemini: Provider = {

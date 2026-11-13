@@ -15,6 +15,8 @@ export type Settings = {
   textZoom: number;
   /** The assistant remembers facts about the user across conversations. */
   memoryEnabled: boolean;
+  /** The assistant may use the provider's web search (each search is billed to the user's API key). */
+  webSearch: boolean;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -30,6 +32,7 @@ export const DEFAULT_SETTINGS: Settings = {
   searchSuggestions: true,
   textZoom: 100,
   memoryEnabled: true,
+  webSearch: true,
 };
 
 const KEYS = {
@@ -39,6 +42,7 @@ const KEYS = {
   searchSuggestions: 'search_suggestions',
   textZoom: 'text_zoom',
   memoryEnabled: 'memory_enabled',
+  webSearch: 'web_search',
   apiKey: (id: ProviderId) => `api_key_${id}`,
   model: (id: ProviderId) => `model_${id}`,
   // Written by the first, Claude-only version of the app.
@@ -66,6 +70,7 @@ export async function loadSettings(): Promise<Settings> {
     searchSuggestions,
     textZoom,
     memoryEnabled,
+    webSearch,
     legacyApiKey,
     legacyModel,
     ...perProvider
@@ -76,6 +81,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.searchSuggestions),
     get(KEYS.textZoom),
     get(KEYS.memoryEnabled),
+    get(KEYS.webSearch),
     get(KEYS.legacyApiKey),
     get(KEYS.legacyModel),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
@@ -90,6 +96,7 @@ export async function loadSettings(): Promise<Settings> {
     searchSuggestions: searchSuggestions !== 'false',
     textZoom: clampTextZoom(Number(textZoom) || DEFAULT_SETTINGS.textZoom),
     memoryEnabled: memoryEnabled !== 'false',
+    webSearch: webSearch !== 'false',
   };
   PROVIDER_ORDER.forEach((id, i) => {
     settings.apiKeys[id] = perProvider[i * 2] ?? '';
@@ -112,6 +119,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.searchSuggestions, String(settings.searchSuggestions)),
     set(KEYS.textZoom, String(settings.textZoom)),
     set(KEYS.memoryEnabled, String(settings.memoryEnabled)),
+    set(KEYS.webSearch, String(settings.webSearch)),
     ...PROVIDER_ORDER.flatMap((id) => [
       set(KEYS.apiKey(id), settings.apiKeys[id]),
       set(KEYS.model(id), settings.models[id]),
