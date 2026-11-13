@@ -68,14 +68,18 @@ function toStop(reason: string): StopReason {
 }
 
 // The basic version: later ones filter results through code execution by default.
-const WEB_SEARCH_TOOL = { type: 'web_search_20250305', name: 'web_search', max_uses: 5 };
+const webSearchTool = (research?: boolean) => ({
+  type: 'web_search_20250305',
+  name: 'web_search',
+  max_uses: research ? 20 : 5,
+});
 
 async function call(req: ModelRequest): Promise<ModelReply> {
   const body = {
     model: req.model,
     max_tokens: 8192,
     system: [{ type: 'text', text: req.system, cache_control: { type: 'ephemeral' } }],
-    tools: req.webSearch ? [...req.tools, WEB_SEARCH_TOOL] : req.tools,
+    tools: req.webSearch ? [...req.tools, webSearchTool(req.research)] : req.tools,
     messages: toMessages(req.turns, req.model),
   };
   const headers = { 'x-api-key': req.apiKey, 'anthropic-version': '2023-06-01' };

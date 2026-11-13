@@ -70,7 +70,9 @@ async function call(req: ModelRequest): Promise<ModelReply> {
         // Our schemas have optional fields, which strict mode doesn't allow.
         strict: false,
       })),
-      ...(req.webSearch ? [{ type: 'web_search' }] : []),
+      ...(req.webSearch
+        ? [req.research ? { type: 'web_search', search_context_size: 'high' } : { type: 'web_search' }]
+        : []),
     ],
     store: false,
     max_output_tokens: 32000,

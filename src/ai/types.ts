@@ -56,6 +56,8 @@ export type ModelRequest = {
   tools: ToolDefinition[];
   /** Let the model search the web with the provider's built-in search tool. */
   webSearch: boolean;
+  /** Deep research: allows more searches and more search context per request. */
+  research?: boolean;
   turns: Turn[];
   signal: AbortSignal;
   /** When set, the reply is streamed and text arrives here piece by piece (providers that support it). */

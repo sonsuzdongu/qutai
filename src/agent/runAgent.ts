@@ -9,6 +9,8 @@ import { MEMORY_TOOLS, TOOLS } from './tools';
 import type { AgentEvent, Source } from './types';
 
 const MAX_STEPS = 40;
+/** Research reads many pages, so it may take more steps. */
+const MAX_RESEARCH_STEPS = 80;
 const KEEP_FULL_RESULTS = 2;
 const KEEP_IMAGES = 1;
 const COMPACT_THRESHOLD = 1500;
@@ -23,6 +25,8 @@ export type AgentOptions = ToolContext & {
   model: string;
   /** Conversation history; new turns are appended in place. */
   turns: Turn[];
+  /** Deep research: a thorough, sourced report with more steps and searches. */
+  research?: boolean;
   /** Stream replies as they are written (text_delta events). */
   stream?: boolean;
   /** Let the model search the web with the provider's own search tool (billed by the provider). */
@@ -56,7 +60,8 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     if (sources.length) onEvent({ type: 'sources', sources: sources.splice(0) });
   };
 
-  for (let step = 0; step < MAX_STEPS; step++) {
+  const maxSteps = opts.research ? MAX_RESEARCH_STEPS : MAX_STEPS;
+  for (let step = 0; step < maxSteps; step++) {
     await pauseWhileBackgrounded();
     if (signal.aborted) return;
 
@@ -67,6 +72,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       system: await systemPrompt(opts),
       tools: opts.memory ? [...TOOLS, ...MEMORY_TOOLS] : TOOLS,
       webSearch: !!opts.webSearch,
+      research: opts.research,
       onText: opts.stream
         ? (delta) => {
             streamed = true;
@@ -181,7 +187,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     if (waitingForUser) return;
   }
 
-  onEvent({ type: 'error', text: t('chat.stepLimit', { max: MAX_STEPS }) });
+  onEvent({ type: 'error', text: t('chat.stepLimit', { max: maxSteps }) });
 }
 
 const MAX_CHOICES = 8;
@@ -202,9 +208,18 @@ Web search:
 - Use the browser tools instead when the user asks about the page they are on, or when you need to act on a site (log in, fill in, click, buy).
 - Cite the pages you used; they are shown to the user as sources.`;
 
+const RESEARCH_PROMPT = `
+
+Deep research mode: the user wants a thorough, well-sourced report. Work like a careful researcher:
+1. Break the question into 3 to 6 sub-questions and mention them briefly.
+2. Search with several different queries (other languages too when useful). Open the most relevant primary sources with open_tab and read them with read_page or read_tab instead of relying on search snippets. Close the tabs you opened when you are done.
+3. Check important facts in at least two independent sources; point out disagreements and how recent each source is.
+4. Write the report in Markdown: a short summary first, then a section per sub-question, a comparison table when it helps, and caveats or open questions. Cite sources inline as [1], [2] and list them at the end as numbered links.
+Take as many steps as you need, but stop searching once new sources add nothing. Write in the user's language; this report may be long.`;
+
 /** The base prompt plus what is remembered about the user, re-read every step since the agent may change it. */
 async function systemPrompt(opts: AgentOptions): Promise<string> {
-  const search = opts.webSearch ? WEB_SEARCH_PROMPT : '';
+  const search = (opts.webSearch ? WEB_SEARCH_PROMPT : '') + (opts.research ? RESEARCH_PROMPT : '');
   if (!opts.memory) return SYSTEM_PROMPT + search;
   const memories = await opts.memory.list().catch(() => []);
   return SYSTEM_PROMPT + search + memoryPrompt(memories, !opts.privacy?.touchedIncognito);

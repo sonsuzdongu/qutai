@@ -37,6 +37,7 @@ import { deviceMemoryStore } from './src/storage/memory';
 import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
 import { searchHistory } from './src/storage/history';
 import { composeEmail } from './src/device/email';
+import { shareReportPdf } from './src/device/reportPdf';
 import { SitePermissionStore } from './src/storage/sitePermissions';
 import { siteKey } from './src/agent/sitePolicy';
 import { SitePermissionSheet } from './src/components/SitePermissionSheet';
@@ -227,6 +228,9 @@ function BrowserApp({
     const pageInfo = `\n\n[Current tab ${current.id}: ${where}. Open tabs: ${browser.tabs.length}]`;
     chat.turns.push({ role: 'user', text: text + pageInfo });
 
+    // Research applies to this one message.
+    const research = chat.research;
+    if (research) chat.setResearch(false);
     const signal = chat.start();
     browser.setAgentTab(agentTab);
     // If the screen turned off mid-task, the OS would freeze the app and the task would stall.
@@ -241,7 +245,9 @@ function BrowserApp({
         agentTab,
         privacy: chat.privacy,
         memory: settings.memoryEnabled ? memoryStore : undefined,
-        webSearch: settings.webSearch,
+        // Research without web search would be guesswork, so it always searches.
+        webSearch: settings.webSearch || research,
+        research,
         stream: true,
         confirm: askConfirmation,
         confirmByDefault: settings.confirmActions,
@@ -603,6 +609,8 @@ function BrowserApp({
           draft={conversation.draft}
           onDraftChange={(text) => conversation.setDraft(text)}
           focusRequest={focusRequest}
+          research={conversation.research}
+          onResearchChange={(on) => conversation.setResearch(on)}
           modelInfo={`${getProvider(settings.provider).label} · ${modelLabel(settings.provider, settings.models[settings.provider])}`}
           items={conversation.items}
           running={conversation.running}
@@ -635,6 +643,7 @@ function BrowserApp({
                 return t('common.copied');
               }
               if (action === 'share') return shareText(text);
+              if (action === 'pdf') return shareReportPdf(text);
               if (speaking) return stopSpeaking();
               await speak(text);
             })

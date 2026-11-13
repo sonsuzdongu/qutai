@@ -29,6 +29,8 @@ export class Conversation {
   running = false;
   /** Set when the conversation touched an incognito tab, so it is never written to disk. */
   privacy = { touchedIncognito: false };
+  /** The next message starts a deep research task (switched off again once it is sent). */
+  research = false;
   /** Saved messages have been read from disk (or there was nothing to read). */
   loaded = false;
 
@@ -94,6 +96,11 @@ export class Conversation {
       text === ''
         ? this.items.filter((item) => item.id !== id)
         : this.items.map((item) => (item.id === id ? { id, kind: 'assistant', text: text ?? item.text } : item));
+    this.onChange();
+  }
+
+  setResearch(on: boolean) {
+    this.research = on;
     this.onChange();
   }
 

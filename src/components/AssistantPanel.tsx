@@ -45,6 +45,9 @@ type Props = {
   /** The message being typed; owned by the app so other features (e.g. selected text) can prefill it. */
   draft: string;
   onDraftChange: (text: string) => void;
+  /** The next message runs as deep research. */
+  research: boolean;
+  onResearchChange: (on: boolean) => void;
   /** Bumped to focus the input, e.g. after prefilling a quote. */
   focusRequest: number;
   items: ChatItem[];
@@ -81,6 +84,8 @@ export function AssistantPanel({
   draft: text,
   onDraftChange: setText,
   focusRequest,
+  research,
+  onResearchChange,
   items,
   running,
   busyElsewhere,
@@ -218,7 +223,21 @@ export function AssistantPanel({
               </Pressable>
             )}
 
-            {!running && !busyElsewhere && !text.trim() && quickActions.length > 0 && (
+            {!running && !busyElsewhere && (
+              <View style={styles.modeRow}>
+                <Pressable
+                  onPress={() => onResearchChange(!research)}
+                  style={[styles.chip, research && styles.chipOn]}
+                  accessibilityRole="switch"
+                  accessibilityState={{ checked: research }}
+                >
+                  <Text style={[styles.chipText, research && styles.chipTextOn]}>{t('chat.research')}</Text>
+                </Pressable>
+                {research ? <Text style={styles.modeHint}>{t('chat.researchHint')}</Text> : null}
+              </View>
+            )}
+
+            {!running && !busyElsewhere && !research && !text.trim() && quickActions.length > 0 && (
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -245,7 +264,7 @@ export function AssistantPanel({
                 style={styles.input}
                 value={text}
                 onChangeText={setText}
-                placeholder={t('chat.placeholder')}
+                placeholder={t(research ? 'chat.researchPlaceholder' : 'chat.placeholder')}
                 multiline
                 editable={!running}
               />
@@ -290,7 +309,7 @@ function HeaderButton({
   );
 }
 
-export type MessageAction = 'copy' | 'speak' | 'share';
+export type MessageAction = 'copy' | 'speak' | 'share' | 'pdf';
 
 function ChatRow({
   item,
@@ -335,6 +354,7 @@ function ChatRow({
                 onPress={() => onAction('speak', item.text)}
               />
               <MessageButton label={t('chat.share')} onPress={() => onAction('share', item.text)} />
+              <MessageButton label={t('chat.pdf')} onPress={() => onAction('pdf', item.text)} />
             </View>
           )}
         </View>
@@ -518,6 +538,10 @@ const styles = StyleSheet.create({
     borderColor: '#d6d3c9',
   },
   chipText: { fontSize: 13, color: '#444' },
+  chipOn: { backgroundColor: '#c96442', borderColor: '#c96442' },
+  chipTextOn: { color: '#fff', fontWeight: '600' },
+  modeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8, paddingTop: 8 },
+  modeHint: { flex: 1, fontSize: 12, color: '#8a8780' },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
