@@ -114,6 +114,17 @@ export const en = {
   'newTab.incognitoTitle': "You're incognito",
   'newTab.page': 'New tab page (no web page loaded)',
 
+  'contextMenu.openInNewTab': 'Open in new tab',
+  'contextMenu.openInIncognito': 'Open in incognito tab',
+  'contextMenu.openInNewIncognito': 'Open in new incognito tab',
+  'contextMenu.ask': 'Summarize with ALPAI',
+  'contextMenu.askPrompt': 'Open this link in a new tab and summarize it: {url}',
+  'contextMenu.saveImage': 'Save image',
+  'contextMenu.openImage': 'Open image in new tab',
+  'contextMenu.copyImageLink': 'Copy image address',
+  'contextMenu.openedInBackground': 'Opened in a new tab',
+  'contextMenu.imageSaved': 'Image saved to Photos',
+
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",
   'settings.provider': 'AI provider',
@@ -185,6 +196,7 @@ export const en = {
   'error.tabNotReady': 'The tab is not ready yet.',
   'error.tabNotVisible': 'The tab is not visible.',
   'error.photosPermission': 'Permission to save to Photos was denied. You can allow it in Settings.',
+  'error.imageUnreadable': "The image couldn't be read.",
   'error.nothingToRead': 'No readable text found on this page.',
 
   'pdf.fallbackName': 'page',

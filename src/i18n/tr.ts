@@ -115,6 +115,17 @@ export const tr: Record<keyof typeof en, string> = {
   'newTab.incognitoTitle': 'Gizli moddasınız',
   'newTab.page': 'Yeni sekme sayfası (web sayfası yüklü değil)',
 
+  'contextMenu.openInNewTab': 'Yeni sekmede aç',
+  'contextMenu.openInIncognito': 'Gizli sekmede aç',
+  'contextMenu.openInNewIncognito': 'Yeni gizli sekmede aç',
+  'contextMenu.ask': 'ALPAI ile özetle',
+  'contextMenu.askPrompt': 'Bu bağlantıyı yeni bir sekmede açıp özetle: {url}',
+  'contextMenu.saveImage': 'Görseli kaydet',
+  'contextMenu.openImage': 'Görseli yeni sekmede aç',
+  'contextMenu.copyImageLink': 'Görsel adresini kopyala',
+  'contextMenu.openedInBackground': 'Yeni sekmede açıldı',
+  'contextMenu.imageSaved': "Görsel Fotoğraflar'a kaydedildi",
+
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',
   'settings.provider': 'Yapay zekâ sağlayıcısı',
@@ -186,6 +197,7 @@ export const tr: Record<keyof typeof en, string> = {
   'error.tabNotReady': 'Sekme henüz hazır değil.',
   'error.tabNotVisible': 'Sekme görünür değil.',
   'error.photosPermission': "Fotoğraflara kaydetme izni verilmedi. Ayarlar'dan izin verebilirsiniz.",
+  'error.imageUnreadable': 'Görsel okunamadı.',
   'error.nothingToRead': 'Sayfada okunacak metin bulunamadı.',
 
   'pdf.fallbackName': 'sayfa',

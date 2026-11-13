@@ -3,6 +3,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
 import type { SearchEngineId } from '../browser/search';
+import { CONTEXT_MENU_SCRIPT, ContextTarget, parseContextTarget } from '../browser/contextMenu';
 import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
 import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { openExternal } from '../browser/openExternal';
@@ -17,6 +18,8 @@ import { NewTabPage } from './NewTabPage';
  * agent can still read and click in a tab the user isn't looking at.
  */
 export type TabActions = {
+  /** A link or image was long-pressed in this tab. */
+  onContextMenu: (tab: Tab, target: ContextTarget) => void;
   /** Page text size in percent. */
   textZoom: number;
   /** Short notice for the user, e.g. when no app can open a link. */
@@ -62,12 +65,12 @@ function TabWebView({
   const iosIncognito = tab.incognito && Platform.OS === 'ios';
   const androidIncognito = tab.incognito && Platform.OS === 'android';
   const { textZoom } = newTabActions;
-  // Runs after every page load: desktop viewport (Android) and text size (iOS).
-  const pageSetupScript =
-    [
-      tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
-      Platform.OS === 'ios' && textZoom !== 100 ? textZoomScript(textZoom) : '',
-    ].join('\n') || undefined;
+  // Runs after every page load: long-press menu, desktop viewport (Android) and text size (iOS).
+  const pageSetupScript = [
+    CONTEXT_MENU_SCRIPT,
+    tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
+    Platform.OS === 'ios' && textZoom !== 100 ? textZoomScript(textZoom) : '',
+  ].join('\n');
 
   // iOS: apply a new text size to the page already on screen too.
   useEffect(() => {
@@ -97,7 +100,11 @@ function TabWebView({
           ref={(ref) => tab.setWebView(ref)}
           source={tab.source}
           style={styles.flex}
-          onMessage={(e) => tab.handleMessage(e.nativeEvent.data)}
+          onMessage={(e) => {
+            if (tab.handleMessage(e.nativeEvent.data)) return;
+            const target = parseContextTarget(e.nativeEvent.data);
+            if (target && active) newTabActions.onContextMenu(tab, target);
+          }}
           onLoadStart={() => tab.handleLoadStart()}
           onLoadEnd={() => tab.handleLoadEnd()}
           onNavigationStateChange={(nav) => {
@@ -128,6 +135,8 @@ function TabWebView({
           contentMode={tab.desktop ? 'desktop' : 'recommended'}
           injectedJavaScript={pageSetupScript}
           textZoom={newTabActions.textZoom}
+          // The app shows its own long-press menu for links and images.
+          allowsLinkPreview={false}
           allowsBackForwardNavigationGestures
           javaScriptEnabled
           domStorageEnabled

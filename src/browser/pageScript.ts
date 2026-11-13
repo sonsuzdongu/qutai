@@ -308,7 +308,8 @@ export const PAGE_SCRIPT = String.raw`
 
   // The PDF is rendered by a separate WebView without this page's cookies, so images are
   // fetched here (with cookies when same-origin) and embedded as data URLs.
-  function fetchAsDataUrl(src) {
+  function fetchAsDataUrl(src, maxBytes) {
+    maxBytes = maxBytes || MAX_IMAGE_BYTES;
     var sameOrigin = new URL(src, location.href).origin === location.origin;
     var request = fetch(src, { credentials: sameOrigin ? 'include' : 'omit', mode: 'cors' })
       .then(function (res) {
@@ -316,7 +317,7 @@ export const PAGE_SCRIPT = String.raw`
         return res.blob();
       })
       .then(function (blob) {
-        if (blob.size > MAX_IMAGE_BYTES) throw new Error('too large');
+        if (blob.size > maxBytes) throw new Error('too large');
         return blobToDataUrl(blob);
       });
     return withTimeout(request, 8000);
@@ -443,6 +444,11 @@ export const PAGE_SCRIPT = String.raw`
         html: '<!DOCTYPE html>\n' + clone.outerHTML
       };
     });
+  }
+
+  // Fetches one image as a data URL with this page's cookies (for saving long-pressed images).
+  function imageData(src) {
+    return fetchAsDataUrl(src, 25e6);
   }
 
   // ---------- Readable text (for reading aloud) ----------
@@ -588,7 +594,8 @@ export const PAGE_SCRIPT = String.raw`
     readableText: readableText,
     findInPage: findInPage,
     findStep: findStep,
-    clearFind: clearFind
+    clearFind: clearFind,
+    imageData: imageData
   };
 })();
 `;

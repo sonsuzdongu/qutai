@@ -8,9 +8,12 @@ import { runAgent } from './src/agent/runAgent';
 import { getProvider, modelLabel } from './src/ai/providers';
 import type { Turn } from './src/ai/types';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
+import type { ContextTarget } from './src/browser/contextMenu';
+import type { Tab } from './src/browser/Tab';
 import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
+import { ContextAction, ContextMenuSheet } from './src/components/ContextMenuSheet';
 import { AssistantPanel, ChatItem } from './src/components/AssistantPanel';
 import { FindBar } from './src/components/FindBar';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
@@ -21,6 +24,7 @@ import { TextSizeSheet } from './src/components/TextSizeSheet';
 import { Toast, useToast } from './src/components/Toast';
 import { copyLink, copyText, shareLink, shareText } from './src/device/link';
 import { printPage, savePagePdf } from './src/device/pdf';
+import { saveImage } from './src/device/saveImage';
 import { saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
@@ -122,6 +126,7 @@ function BrowserApp({
   const [bookmarked, setBookmarked] = useState(false);
   const [library, setLibrary] = useState<LibraryTab | null>(null);
   const [textSizeVisible, setTextSizeVisible] = useState(false);
+  const [context, setContext] = useState<{ tab: Tab; target: ContextTarget } | null>(null);
   // Find in page belongs to one page: it closes by itself when the tab or the URL changes.
   const [findFor, setFindFor] = useState<{ tabId: string; url: string } | null>(null);
   const toast = useToast();
@@ -333,6 +338,81 @@ function BrowserApp({
     { icon: '🕶', label: t('menu.newIncognitoTab'), onPress: () => browser.openTab(undefined, { incognito: true }) },
   ];
 
+  /** Actions for a long-pressed link and/or image. Links from incognito tabs stay incognito. */
+  const contextActions = (source: Tab, target: ContextTarget): ContextAction[] => {
+    const actions: ContextAction[] = [];
+    const openBehind = (url: string) => {
+      browser.openTab(url, { activate: false, incognito: source.incognito, openerId: source.id });
+      toast.show(t('contextMenu.openedInBackground'));
+    };
+    if (target.href) {
+      const href = target.href;
+      if (source.incognito) {
+        actions.push({
+          icon: '🕶',
+          label: t('contextMenu.openInNewIncognito'),
+          onPress: () => browser.openTab(href, { incognito: true, openerId: source.id }),
+        });
+      } else {
+        actions.push(
+          { icon: '＋', label: t('contextMenu.openInNewTab'), onPress: () => openBehind(href) },
+          {
+            icon: '🕶',
+            label: t('contextMenu.openInIncognito'),
+            onPress: () => browser.openTab(href, { incognito: true }),
+          },
+        );
+      }
+      actions.push(
+        {
+          icon: '⧉',
+          label: t('menu.copyLink'),
+          onPress: () =>
+            runAction(async () => {
+              await copyText(href);
+              return t('menu.linkCopied');
+            }),
+        },
+        { icon: '⤴', label: t('menu.shareLink'), onPress: () => runAction(() => shareText(href)) },
+        {
+          icon: '✦',
+          label: t('contextMenu.ask'),
+          onPress: () => {
+            setPanelOpen(true);
+            send(t('contextMenu.askPrompt', { url: href }));
+          },
+        },
+      );
+    }
+    if (target.src) {
+      const src = target.src;
+      actions.push({
+        icon: '⬇︎',
+        label: t('contextMenu.saveImage'),
+        onPress: () =>
+          runAction(async () => {
+            await saveImage(source, src);
+            return t('contextMenu.imageSaved');
+          }),
+      });
+      if (!src.startsWith('data:')) {
+        actions.push(
+          { icon: '🖼', label: t('contextMenu.openImage'), onPress: () => openBehind(src) },
+          {
+            icon: '⧉',
+            label: t('contextMenu.copyImageLink'),
+            onPress: () =>
+              runAction(async () => {
+                await copyText(src);
+                return t('common.copied');
+              }),
+          },
+        );
+      }
+    }
+    return actions;
+  };
+
   const onSaveSettings = async (next: Settings) => {
     setSettings(next);
     setSettingsVisible(false);
@@ -388,6 +468,7 @@ function BrowserApp({
             <BrowserView
               browser={browser}
               newTabActions={{
+                onContextMenu: (source, target) => setContext({ tab: source, target }),
                 textZoom: settings.textZoom,
                 onNotice: toast.show,
                 searchEngine: settings.searchEngine,
@@ -445,6 +526,11 @@ function BrowserApp({
           settings={settings}
           onSave={onSaveSettings}
           onClose={() => setSettingsVisible(false)}
+        />
+        <ContextMenuSheet
+          target={context?.target ?? null}
+          actions={context ? contextActions(context.tab, context.target) : []}
+          onClose={() => setContext(null)}
         />
         <TextSizeSheet
           visible={textSizeVisible}
