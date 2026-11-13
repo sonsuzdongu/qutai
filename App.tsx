@@ -22,7 +22,10 @@ import { saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { t, useLanguage } from './src/i18n';
+import { getDb } from './src/storage/db';
+import { loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
+import { usePersistSession } from './src/storage/usePersistSession';
 
 const KEEP_AWAKE_TAG = 'alpai-agent';
 
@@ -47,10 +50,26 @@ function askConfirmation(description: string): Promise<boolean> {
 export default function App() {
   // Re-renders the whole tree in the new language when the device language changes.
   useLanguage();
-  const [browserInstance] = useState(() => new Browser());
+  const [restored, setRestored] = useState<{ session: Session | null } | null>(null);
+
+  useEffect(() => {
+    getDb()
+      .then(loadSession)
+      .catch(() => null)
+      .then((session) => setRestored({ session }));
+  }, []);
+
+  // Reading the saved session takes a few milliseconds; tabs are created only after it.
+  if (!restored) return <View style={styles.container} />;
+  return <BrowserApp initialSession={restored.session} />;
+}
+
+function BrowserApp({ initialSession }: { initialSession: Session | null }) {
+  const [browserInstance] = useState(() => new Browser(initialSession));
   const browser = useBrowser(browserInstance);
   const tab = browser.active;
   useHardwareBack(browser);
+  usePersistSession(browser);
 
   const turnsRef = useRef<Turn[]>([]);
   const abortRef = useRef<AbortController | null>(null);

@@ -31,6 +31,11 @@ export class Tab {
 
   url: string;
   title = '';
+  /**
+   * A sleeping tab has no WebView: it keeps only its URL and title until it is shown.
+   * Restored tabs start asleep so a long session doesn't load every page at launch.
+   */
+  asleep = false;
   loading = false;
   canGoBack = false;
   /** Data URI kept in memory only, so nothing from incognito tabs touches the disk. */
@@ -56,6 +61,14 @@ export class Tab {
     this.incognito = incognito;
     this.openerId = openerId;
     this.source = { uri: url };
+  }
+
+  /** Creates the WebView for a sleeping tab; the page loads from its saved URL. */
+  wake() {
+    if (!this.asleep) return;
+    this.asleep = false;
+    this.source = { uri: this.url };
+    this.onChange();
   }
 
   /** Stable ref callback for the tab's WebView. */

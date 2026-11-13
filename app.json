@@ -52,7 +52,8 @@
             ]
           }
         }
-      ]
+      ],
+      "expo-sqlite"
     ],
     "locales": {
       "tr": "./locales/tr.json",

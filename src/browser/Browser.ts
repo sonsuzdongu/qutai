@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import type { Session } from '../storage/session';
 import { Tab } from './Tab';
 
 export const HOME_URL = 'https://www.google.com';
@@ -12,8 +13,15 @@ export class Browser {
   private version = 0;
   private listeners = new Set<() => void>();
 
-  constructor() {
-    this.openTab(HOME_URL);
+  constructor(session?: Session | null) {
+    if (session?.tabs.length) {
+      session.tabs.forEach((saved, i) => {
+        const tab = this.openTab(saved.url, { activate: i === session.activeIndex, asleep: i !== session.activeIndex });
+        tab.title = saved.title;
+      });
+    } else {
+      this.openTab(HOME_URL);
+    }
   }
 
   subscribe = (listener: () => void) => {
@@ -48,9 +56,11 @@ export class Browser {
       activate = true,
       incognito = false,
       openerId,
-    }: { activate?: boolean; incognito?: boolean; openerId?: string } = {},
+      asleep = false,
+    }: { activate?: boolean; incognito?: boolean; openerId?: string; asleep?: boolean } = {},
   ): Tab {
     const tab = new Tab(String(++this.counter), url, incognito, openerId, this.emit);
+    tab.asleep = asleep && !activate;
     this.tabs.push(tab);
     if (activate || !this.activeId) this.activeId = tab.id;
     this.emit();
@@ -58,8 +68,10 @@ export class Browser {
   }
 
   switchTab(id: string) {
-    if (!this.getTab(id) || id === this.activeId) return;
+    const tab = this.getTab(id);
+    if (!tab || id === this.activeId) return;
     this.activeId = id;
+    tab.wake();
     this.emit();
   }
 
@@ -83,6 +95,7 @@ export class Browser {
       const remaining = sameMode.filter((t) => t !== tab);
       const next = opener ?? remaining[Math.min(indexInMode, remaining.length - 1)] ?? this.tabs[this.tabs.length - 1];
       this.activeId = next.id;
+      next.wake();
     }
     this.emit();
   }

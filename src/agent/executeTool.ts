@@ -126,6 +126,11 @@ export async function executeTool(
   }
 
   const tab = currentTab(ctx);
+  if (tab.asleep) {
+    const loaded = tab.waitForNextLoad();
+    tab.wake();
+    await loaded;
+  }
 
   try {
     switch (name) {

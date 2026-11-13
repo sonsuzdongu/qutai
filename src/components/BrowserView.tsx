@@ -11,9 +11,12 @@ import type { Tab } from '../browser/Tab';
 export function BrowserView({ browser }: { browser: Browser }) {
   return (
     <View style={styles.container}>
-      {browser.tabs.map((tab) => (
-        <TabWebView key={tab.id} tab={tab} browser={browser} active={tab.id === browser.activeId} />
-      ))}
+      {/* Sleeping tabs have no WebView until they are woken. */}
+      {browser.tabs
+        .filter((tab) => !tab.asleep)
+        .map((tab) => (
+          <TabWebView key={tab.id} tab={tab} browser={browser} active={tab.id === browser.activeId} />
+        ))}
     </View>
   );
 }
