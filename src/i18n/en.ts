@@ -158,6 +158,8 @@ export const en = {
   'tabs.closed': 'Tab closed',
   'tabs.undo': 'Undo',
   'tabs.recentlyClosed': 'Recently closed',
+  'tabs.search': 'Search tabs',
+  'tabs.noResults': 'No matching tabs',
   'tabs.closeTab': 'Close tab',
   'tabs.empty': 'No open tabs',
   'tabs.emptyIncognito': 'No incognito tabs',

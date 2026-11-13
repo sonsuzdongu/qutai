@@ -8,12 +8,14 @@ import {
   Pressable,
   StyleSheet,
   Text,
+  TextInput,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
+import { matchesTabQuery } from '../browser/tabSearch';
 import { t } from '../i18n';
 import { hostOf } from '../i18n/format';
 
@@ -40,7 +42,10 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
   const { width } = useWindowDimensions();
   const cardWidth = (width - PADDING * 2 - GAP) / 2;
 
-  const tabs = browser.tabsOf(incognito);
+  const [query, setQuery] = useState('');
+  const allTabs = browser.tabsOf(incognito);
+  const searching = query.trim() !== '';
+  const tabs = searching ? allTabs.filter((tab) => matchesTabQuery(tab, query)) : allTabs;
   const theme = incognito ? dark : light;
 
   const [undoVisible, setUndoVisible] = useState(false);
@@ -98,18 +103,42 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
             label={t('tabs.normal', { count: browser.tabsOf(false).length })}
             selected={!incognito}
             incognito={incognito}
-            onPress={() => setIncognito(false)}
+            onPress={() => {
+              setIncognito(false);
+              setQuery('');
+            }}
           />
           <SegmentButton
             label={t('tabs.incognito', { count: browser.tabsOf(true).length })}
             selected={incognito}
             incognito={incognito}
-            onPress={() => setIncognito(true)}
+            onPress={() => {
+              setIncognito(true);
+              setQuery('');
+            }}
           />
         </View>
       </View>
 
-      {incognito && Platform.OS === 'android' && tabs.length > 0 && (
+      {allTabs.length > 1 && (
+        <View style={[styles.search, theme.search]}>
+          <Text style={[styles.searchIcon, theme.dimText]}>⌕</Text>
+          <TextInput
+            style={[styles.searchInput, theme.text]}
+            value={query}
+            onChangeText={setQuery}
+            placeholder={t('tabs.search')}
+            placeholderTextColor={incognito ? '#8f8e99' : '#999'}
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+            accessibilityLabel={t('tabs.search')}
+          />
+        </View>
+      )}
+
+      {incognito && Platform.OS === 'android' && allTabs.length > 0 && (
         <Text style={styles.warning}>{t('tabs.androidIncognitoWarning')}</Text>
       )}
 
@@ -121,9 +150,16 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.grid}
-        ListEmptyComponent={<EmptyState incognito={incognito} />}
+        keyboardShouldPersistTaps="handled"
+        ListEmptyComponent={
+          searching ? (
+            <Text style={[styles.noResults, theme.dimText]}>{t('tabs.noResults')}</Text>
+          ) : (
+            <EmptyState incognito={incognito} />
+          )
+        }
         ListFooterComponent={
-          incognito ? undefined : (
+          incognito || searching ? undefined : (
             <RecentlyClosed
               browser={browser}
               onReopen={(index) => {
@@ -155,8 +191,10 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
       )}
 
       <View style={[styles.toolbar, theme.toolbar]}>
-        <Pressable onPress={closeAll} disabled={tabs.length === 0} hitSlop={8} style={styles.toolbarSide}>
-          <Text style={[styles.toolbarText, theme.text, tabs.length === 0 && styles.dimmed]}>{t('tabs.closeAll')}</Text>
+        <Pressable onPress={closeAll} disabled={allTabs.length === 0} hitSlop={8} style={styles.toolbarSide}>
+          <Text style={[styles.toolbarText, theme.text, allTabs.length === 0 && styles.dimmed]}>
+            {t('tabs.closeAll')}
+          </Text>
         </Pressable>
         <Pressable
           onPress={newTab}
@@ -311,6 +349,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 17,
   },
+  search: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginHorizontal: PADDING,
+    marginBottom: 4,
+    paddingHorizontal: 12,
+    height: 38,
+    borderRadius: 10,
+  },
+  searchIcon: { fontSize: 17 },
+  searchInput: { flex: 1, fontSize: 15, paddingVertical: 0, height: '100%' },
+  noResults: { textAlign: 'center', fontSize: 15, marginTop: 40 },
   grid: { padding: PADDING, gap: GAP, flexGrow: 1 },
   row: { gap: GAP },
   card: { borderRadius: 14, overflow: 'hidden', borderWidth: 2, borderColor: 'transparent' },
@@ -374,6 +425,7 @@ const light = StyleSheet.create({
   card: { backgroundColor: '#fff' },
   activeCard: { borderColor: '#c96442' },
   preview: { backgroundColor: '#f5f4ef' },
+  search: { backgroundColor: '#fff' },
   toolbar: { backgroundColor: '#f5f4ef', borderTopColor: '#d6d3c9' },
   newTab: { backgroundColor: '#c96442' },
 });
@@ -388,6 +440,7 @@ const dark = StyleSheet.create({
   card: { backgroundColor: '#2b2a33' },
   activeCard: { borderColor: '#a77bff' },
   preview: { backgroundColor: '#35343e' },
+  search: { backgroundColor: '#2b2a33' },
   toolbar: { backgroundColor: '#24232b', borderTopColor: '#3a3944' },
   newTab: { backgroundColor: '#7542e5' },
 });

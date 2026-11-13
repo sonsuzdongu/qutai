@@ -159,6 +159,8 @@ export const tr: Record<keyof typeof en, string> = {
   'tabs.closed': 'Sekme kapatıldı',
   'tabs.undo': 'Geri al',
   'tabs.recentlyClosed': 'Son kapatılanlar',
+  'tabs.search': 'Sekmelerde ara',
+  'tabs.noResults': 'Eşleşen sekme yok',
   'tabs.closeTab': 'Sekmeyi kapat',
   'tabs.empty': 'Açık sekme yok',
   'tabs.emptyIncognito': 'Gizli sekme yok',
