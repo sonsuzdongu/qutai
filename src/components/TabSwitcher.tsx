@@ -1,11 +1,12 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import {
   Alert,
-  FlatList,
+  Animated,
   Image,
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,10 +14,12 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { Browser } from '../browser/Browser';
+import { Browser, TabGroup, useBrowser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { matchesTabQuery } from '../browser/tabSearch';
 import { bump } from '../device/haptics';
+import { ActionSheet, SheetAction } from './ActionSheet';
+import { dropTab, Measurable, sectionsOf, TabDrag } from './tabDrag';
 import { t } from '../i18n';
 import { hostOf } from '../i18n/format';
 
@@ -53,6 +56,8 @@ export function TabSwitcher({ visible, darkMode = false, browser, onClose, onCom
 }
 
 function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visible' | 'darkMode'>) {
+  // Redraws on its own when tabs or groups change, not only when the app does.
+  useBrowser(browser);
   const [incognito, setIncognito] = useState(browser.active.incognito);
   const { width } = useWindowDimensions();
   const cardWidth = (width - PADDING * 2 - GAP) / 2;
@@ -64,27 +69,55 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
   const searching = query.trim() !== '';
   const tabs = searching ? allTabs.filter((tab) => matchesTabQuery(tab, query)) : allTabs;
   const theme = useTheme(incognito);
+  const darkMode = useContext(DarkMode);
+
+  // Long press picks a card up for dragging; a long press without moving opens its menu.
+  const [drag] = useState(() => new TabDrag());
+  const [, setDragVersion] = useState(0);
+  const [menuTab, setMenuTab] = useState<Tab | null>(null);
+  useEffect(() => {
+    drag.setHandlers({
+      drop: (id, x, y) => dropTab(browser, id, drag.dropTargets, x, y),
+      menu: (id) => setMenuTab(browser.getTab(id) ?? null),
+      change: () => setDragVersion((v) => v + 1),
+    });
+  });
+  const startDrag = (tab: Tab) => {
+    bump();
+    drag.start(tab.id);
+  };
+
+  /** The long-press menu of a card: grouping and closing. */
+  const cardActions = (tab: Tab): SheetAction[] => [
+    {
+      label: t('tabs.newGroup'),
+      onPress: () => browser.createGroup([tab.id], t('tabs.groupName', { number: browser.groups.length + 1 })),
+    },
+    ...browser.groups
+      .filter((g) => g.id !== tab.groupId && browser.tabs.some((x) => x.groupId === g.id && x.incognito === incognito))
+      .map((g) => ({ label: t('tabs.addToGroup', { name: g.name }), onPress: () => browser.setGroup(tab.id, g.id) })),
+    ...(tab.groupId ? [{ label: t('tabs.removeFromGroup'), onPress: () => browser.setGroup(tab.id, null) }] : []),
+    { label: t('tabs.closeTab'), destructive: true, onPress: () => closeTab(tab) },
+  ];
 
   const [undoVisible, setUndoVisible] = useState(false);
-  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (undoTimer.current) clearTimeout(undoTimer.current);
-    },
-    [],
-  );
+  // Bumped on every close, so the 4-second undo window restarts.
+  const [undoKey, setUndoKey] = useState(0);
+  useEffect(() => {
+    if (!undoVisible) return;
+    const timer = setTimeout(() => setUndoVisible(false), 4000);
+    return () => clearTimeout(timer);
+  }, [undoVisible, undoKey]);
 
   const closeTab = (tab: Tab) => {
     // Only normal web pages are remembered, so only those can be undone.
     bump();
     if (!browser.closeTab(tab.id)) return;
     setUndoVisible(true);
-    if (undoTimer.current) clearTimeout(undoTimer.current);
-    undoTimer.current = setTimeout(() => setUndoVisible(false), 4000);
+    setUndoKey((k) => k + 1);
   };
 
   const undoClose = () => {
-    if (undoTimer.current) clearTimeout(undoTimer.current);
     setUndoVisible(false);
     browser.reopenClosed(0);
   };
@@ -177,44 +210,74 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
         <Text style={styles.warning}>{t('tabs.androidIncognitoWarning')}</Text>
       )}
 
-      <FlatList
-        // Copy: the tabs array is mutated in place, and FlatList skips re-rendering for the same reference.
-        data={[...tabs]}
-        extraData={browser.getVersion()}
-        keyExtractor={(tab) => tab.id}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
+      <ScrollView
         contentContainerStyle={styles.grid}
         keyboardShouldPersistTaps="handled"
-        ListEmptyComponent={
-          searching ? (
+        scrollEnabled={drag.id === null}
+        {...drag.responder.panHandlers}
+      >
+        {tabs.length === 0 &&
+          (searching ? (
             <Text style={[styles.noResults, theme.dimText]}>{t('tabs.noResults')}</Text>
           ) : (
             <EmptyState incognito={incognito} />
-          )
-        }
-        ListFooterComponent={
-          incognito || searching ? undefined : (
-            <RecentlyClosed
-              browser={browser}
-              onReopen={(index) => {
-                browser.reopenClosed(index);
-                onClose();
-              }}
-            />
-          )
-        }
-        renderItem={({ item }) => (
-          <TabCard
-            tab={item}
-            width={cardWidth}
-            active={item.id === browser.activeId}
-            incognito={incognito}
-            selection={comparing ? { selected: comparing.includes(item.id), disabled: item.isNewTab } : undefined}
-            onPress={() => select(item)}
-            onCloseTab={() => closeTab(item)}
+          ))}
+        {sectionsOf(tabs, browser).map((section) => {
+          const group = browser.getGroup(section.groupId ?? undefined);
+          return (
+            <View key={section.key} style={group ? [styles.group, { borderColor: group.color }] : undefined}>
+              {group && (
+                <GroupHeader
+                  group={group}
+                  count={section.tabs.length}
+                  incognito={incognito}
+                  register={(view) => drag.register('group', group.id, view)}
+                  onToggle={() => browser.toggleGroup(group.id)}
+                  onRename={(name) => browser.renameGroup(group.id, name)}
+                  onUngroup={() => browser.ungroup(group.id)}
+                />
+              )}
+              {group?.collapsed ? null : (
+                <View style={styles.cards}>
+                  {section.tabs.map((item) => (
+                    <TabCard
+                      key={item.id}
+                      tab={item}
+                      width={group ? cardWidth - 5 : cardWidth}
+                      active={item.id === browser.activeId}
+                      incognito={incognito}
+                      selection={
+                        comparing ? { selected: comparing.includes(item.id), disabled: item.isNewTab } : undefined
+                      }
+                      dragging={drag.id === item.id ? drag.pan : undefined}
+                      register={(view) => drag.register('tab', item.id, view)}
+                      onPress={() => select(item)}
+                      onLongPress={comparing || searching ? undefined : () => startDrag(item)}
+                      onPressOut={() => drag.pressOut(item.id)}
+                      onCloseTab={() => closeTab(item)}
+                    />
+                  ))}
+                </View>
+              )}
+            </View>
+          );
+        })}
+        {incognito || searching ? null : (
+          <RecentlyClosed
+            browser={browser}
+            onReopen={(index) => {
+              browser.reopenClosed(index);
+              onClose();
+            }}
           />
         )}
+      </ScrollView>
+
+      <ActionSheet
+        title={menuTab ? menuTab.title || menuTab.url : null}
+        actions={menuTab ? cardActions(menuTab) : []}
+        dark={incognito || darkMode}
+        onClose={() => setMenuTab(null)}
       />
 
       {undoVisible && (
@@ -320,13 +383,63 @@ function SegmentButton({
   );
 }
 
+function GroupHeader({
+  group,
+  count,
+  incognito,
+  register,
+  onToggle,
+  onRename,
+  onUngroup,
+}: {
+  group: TabGroup;
+  count: number;
+  incognito: boolean;
+  register: (view: Measurable | null) => void;
+  onToggle: () => void;
+  onRename: (name: string) => void;
+  onUngroup: () => void;
+}) {
+  const theme = useTheme(incognito);
+  const [name, setName] = useState(group.name);
+  return (
+    <View ref={(view) => register(view)} style={styles.groupHeader}>
+      <Pressable
+        onPress={onToggle}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: !group.collapsed }}
+      >
+        <Text style={[styles.groupChevron, { color: group.color }]}>{group.collapsed ? '▸' : '▾'}</Text>
+      </Pressable>
+      <TextInput
+        value={name}
+        onChangeText={setName}
+        onEndEditing={() => onRename(name)}
+        style={[styles.groupName, { color: group.color }]}
+        maxLength={40}
+        returnKeyType="done"
+        accessibilityLabel={t('tabs.groupNameA11y')}
+      />
+      <Text style={[styles.groupCount, theme.dimText]}>{count}</Text>
+      <Pressable onPress={onUngroup} hitSlop={8} accessibilityLabel={t('tabs.ungroup')} accessibilityRole="button">
+        <Text style={[styles.groupUngroup, theme.dimText]}>✕</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 function TabCard({
   tab,
   width,
   active,
   incognito,
   selection,
+  dragging,
+  register,
   onPress,
+  onLongPress,
+  onPressOut,
   onCloseTab,
 }: {
   tab: Tab;
@@ -335,6 +448,11 @@ function TabCard({
   incognito: boolean;
   /** Set in compare mode. */
   selection?: { selected: boolean; disabled: boolean };
+  /** The finger's offset while this card is being dragged. */
+  dragging?: Animated.ValueXY;
+  register: (view: Measurable | null) => void;
+  onLongPress?: () => void;
+  onPressOut: () => void;
   onPress: () => void;
   onCloseTab: () => void;
 }) {
@@ -344,46 +462,59 @@ function TabCard({
   const host = tab.isNewTab ? '' : hostOf(tab.url);
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.card,
-        theme.card,
-        { width },
-        (selection ? selection.selected : active) && theme.activeCard,
-        selection?.disabled && styles.dimmed,
-      ]}
-      accessibilityLabel={t('tabs.tabA11y', { title: tab.title || host })}
-      accessibilityState={selection ? { selected: selection.selected, disabled: selection.disabled } : undefined}
+    <Animated.View
+      ref={(view) => register(view)}
+      style={dragging && [styles.dragging, { transform: dragging.getTranslateTransform() }]}
     >
-      <View style={styles.cardHeader}>
-        <Text style={[styles.cardTitle, theme.text]} numberOfLines={1}>
-          {tab.title || host || t('menu.newTab')}
-        </Text>
-        {selection ? (
-          <View style={styles.cardClose}>
-            <Text style={[styles.check, selection.selected && theme.accent]}>{selection.selected ? '●' : '○'}</Text>
-          </View>
-        ) : (
-          <Pressable onPress={onCloseTab} hitSlop={10} style={styles.cardClose} accessibilityLabel={t('tabs.closeTab')}>
-            <Text style={[styles.cardCloseText, theme.text]}>✕</Text>
-          </Pressable>
-        )}
-      </View>
-      <View style={[styles.preview, theme.preview, { height: previewHeight }]}>
-        {tab.thumbnail ? (
-          // Sized by the captured aspect ratio and clipped, so the top of the page is what shows.
-          <Image source={{ uri: tab.thumbnail }} style={{ width, height: width / tab.thumbnailAspect }} />
-        ) : (
-          <View style={styles.placeholder}>
-            <Text style={[styles.placeholderLetter, theme.dimText]}>{(host[0] || '?').toUpperCase()}</Text>
-            <Text style={[styles.placeholderHost, theme.dimText]} numberOfLines={1}>
-              {host}
-            </Text>
-          </View>
-        )}
-      </View>
-    </Pressable>
+      <Pressable
+        onPress={onPress}
+        onLongPress={onLongPress}
+        onPressOut={onPressOut}
+        delayLongPress={350}
+        style={[
+          styles.card,
+          theme.card,
+          { width },
+          (selection ? selection.selected : active) && theme.activeCard,
+          selection?.disabled && styles.dimmed,
+        ]}
+        accessibilityLabel={t('tabs.tabA11y', { title: tab.title || host })}
+        accessibilityState={selection ? { selected: selection.selected, disabled: selection.disabled } : undefined}
+      >
+        <View style={styles.cardHeader}>
+          <Text style={[styles.cardTitle, theme.text]} numberOfLines={1}>
+            {tab.title || host || t('menu.newTab')}
+          </Text>
+          {selection ? (
+            <View style={styles.cardClose}>
+              <Text style={[styles.check, selection.selected && theme.accent]}>{selection.selected ? '●' : '○'}</Text>
+            </View>
+          ) : (
+            <Pressable
+              onPress={onCloseTab}
+              hitSlop={10}
+              style={styles.cardClose}
+              accessibilityLabel={t('tabs.closeTab')}
+            >
+              <Text style={[styles.cardCloseText, theme.text]}>✕</Text>
+            </Pressable>
+          )}
+        </View>
+        <View style={[styles.preview, theme.preview, { height: previewHeight }]}>
+          {tab.thumbnail ? (
+            // Sized by the captured aspect ratio and clipped, so the top of the page is what shows.
+            <Image source={{ uri: tab.thumbnail }} style={{ width, height: width / tab.thumbnailAspect }} />
+          ) : (
+            <View style={styles.placeholder}>
+              <Text style={[styles.placeholderLetter, theme.dimText]}>{(host[0] || '?').toUpperCase()}</Text>
+              <Text style={[styles.placeholderHost, theme.dimText]} numberOfLines={1}>
+                {host}
+              </Text>
+            </View>
+          )}
+        </View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -437,6 +568,14 @@ const styles = StyleSheet.create({
   searchIcon: { fontSize: 17 },
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 0, height: '100%' },
   noResults: { textAlign: 'center', fontSize: 15, marginTop: 40 },
+  cards: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
+  group: { borderLeftWidth: 3, paddingLeft: 7, gap: 8 },
+  groupHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 32 },
+  groupChevron: { fontSize: 16, width: 16 },
+  groupName: { flex: 1, fontSize: 15, fontWeight: '700', paddingVertical: 0 },
+  groupCount: { fontSize: 13 },
+  groupUngroup: { fontSize: 13, paddingHorizontal: 4 },
+  dragging: { zIndex: 20, elevation: 12, opacity: 0.92 },
   grid: { padding: PADDING, gap: GAP, flexGrow: 1 },
   row: { gap: GAP },
   card: { borderRadius: 14, overflow: 'hidden', borderWidth: 2, borderColor: 'transparent' },

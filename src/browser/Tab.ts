@@ -65,6 +65,8 @@ export class Tab {
   asleep = false;
   /** When the tab was last on screen; the least recently used tabs are put to sleep first. */
   lastActiveAt = Date.now();
+  /** The tab group this tab belongs to, if any. */
+  groupId: string | undefined;
   /** Ask sites for their desktop layout (per tab, like "Request desktop site"). */
   desktop = false;
   /** The first page was opened from the new tab page, so back can return there. */
