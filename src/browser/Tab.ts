@@ -11,7 +11,8 @@ type Pending = {
   timer: ReturnType<typeof setTimeout>;
 };
 
-export type PageCommand = 'readPage' | 'click' | 'type' | 'select' | 'scroll' | 'scrollTo' | 'snapshotHtml';
+export type PageCommand =
+  'readPage' | 'click' | 'type' | 'select' | 'scroll' | 'scrollTo' | 'snapshotHtml' | 'readableText';
 
 /**
  * One browser tab: owns its WebView, injects the page script, sends commands,

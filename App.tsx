@@ -18,6 +18,7 @@ import { Toast, useToast } from './src/components/Toast';
 import { copyLink, shareLink } from './src/device/link';
 import { savePagePdf } from './src/device/pdf';
 import { saveScreenshot } from './src/device/screenshot';
+import { speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 
 let itemCounter = 0;
@@ -57,6 +58,7 @@ export default function App() {
   const [tabsVisible, setTabsVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const toast = useToast();
+  const speaking = useIsSpeaking();
 
   useEffect(() => {
     loadSettings()
@@ -165,6 +167,16 @@ export default function App() {
           return "Ekran görüntüsü Fotoğraflar'a kaydedildi";
         }),
     },
+    speaking
+      ? { icon: '⏹', label: 'Okumayı durdur', onPress: () => runAction(stopSpeaking) }
+      : {
+          icon: '🔊',
+          label: 'Sayfayı sesli oku',
+          onPress: () =>
+            runAction(async () => {
+              await speakPage(tab);
+            }),
+        },
     { icon: '＋', label: 'Yeni sekme', section: true, onPress: () => browser.openTab() },
     { icon: '🕶', label: 'Yeni gizli sekme', onPress: () => browser.openTab(undefined, { incognito: true }) },
   ];

@@ -445,6 +445,44 @@ export const PAGE_SCRIPT = String.raw`
     });
   }
 
+  // ---------- Readable text (for reading aloud) ----------
+
+  var NOT_CONTENT = 'nav, header, footer, aside, form, button, script, style, noscript, svg, ' +
+    '[role="navigation"], [role="banner"], [role="contentinfo"], [role="complementary"], [aria-hidden="true"], ' +
+    '[class*="cookie"], [id*="cookie"], [class*="advert"], [class*="share"]';
+
+  function readableText(maxChars) {
+    maxChars = Number(maxChars) || 20000;
+    var candidates = document.querySelectorAll('article, main, [role="main"]');
+    var root = null;
+    var best = 0;
+    for (var i = 0; i < candidates.length; i++) {
+      var len = (candidates[i].innerText || '').length;
+      if (len > best) { best = len; root = candidates[i]; }
+    }
+    if (!root || best < 200) root = document.body;
+
+    var clone = root.cloneNode(true);
+    var junk = clone.querySelectorAll(NOT_CONTENT);
+    for (var j = 0; j < junk.length; j++) junk[j].remove();
+
+    // innerText needs layout, so the cleaned clone is measured off-screen.
+    var holder = document.createElement('div');
+    holder.style.cssText = 'position:fixed;left:-99999px;top:0;width:800px;';
+    holder.appendChild(clone);
+    document.body.appendChild(holder);
+    var text = (clone.innerText || '').replace(/\n{3,}/g, '\n\n').replace(/[ \t]+/g, ' ').trim();
+    holder.remove();
+
+    var title = clean(document.title);
+    if (title && text.indexOf(title) !== 0) text = title + '.\n\n' + text;
+    return {
+      lang: document.documentElement.lang || '',
+      truncated: text.length > maxChars,
+      text: text.slice(0, maxChars)
+    };
+  }
+
   window.__alpaiAgent = {
     readPage: readPage,
     click: click,
@@ -452,7 +490,8 @@ export const PAGE_SCRIPT = String.raw`
     select: select,
     scroll: scroll,
     scrollTo: scrollTo,
-    snapshotHtml: snapshotHtml
+    snapshotHtml: snapshotHtml,
+    readableText: readableText
   };
 })();
 `;

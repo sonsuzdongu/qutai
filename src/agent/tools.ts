@@ -106,6 +106,19 @@ export const TOOLS: ToolDefinition[] = [
     input_schema: { type: 'object', properties: {} },
   },
   {
+    name: 'read_aloud',
+    description:
+      "Read text aloud with the device's text-to-speech voice. Pass `text` to read something you wrote (e.g. a summary); " +
+      "omit it to read the main content of the current page. Reading continues after you reply; it doesn't block.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        text: { type: 'string', description: 'Text to read. Omit to read the current page.' },
+        language: { type: 'string', description: 'BCP 47 language code of the text, e.g. "tr-TR" or "en-US"' },
+      },
+    },
+  },
+  {
     name: 'list_tabs',
     description: 'List open tabs with their ids, titles and URLs, and which one you are working in.',
     input_schema: { type: 'object', properties: {} },

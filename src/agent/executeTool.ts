@@ -2,6 +2,7 @@ import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { savePagePdf } from '../device/pdf';
 import { captureForModel, saveScreenshot } from '../device/screenshot';
+import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import { sleep } from '../utils/sleep';
 
@@ -56,6 +57,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return '📸 Ekran görüntüsü kaydediliyor';
     case 'view_screenshot':
       return '👁 Sayfaya bakılıyor';
+    case 'read_aloud':
+      return input.text ? '🔊 Sesli okunuyor' : '🔊 Sayfa sesli okunuyor';
     case 'list_tabs':
       return '🗂 Sekmeler listeleniyor';
     case 'open_tab':
@@ -200,6 +203,16 @@ export async function executeTool(
         await showTab(ctx, tab);
         const image = await captureForModel(tab);
         return { content: `Screenshot of the visible area of ${tab.url}.`, isError: false, images: [image] };
+      }
+      case 'read_aloud': {
+        const text = typeof input.text === 'string' ? input.text.trim() : '';
+        if (text) {
+          await speak(text, typeof input.language === 'string' ? input.language : undefined);
+          return { content: `Started reading ${text.length} characters aloud.`, isError: false };
+        }
+        const page = await speakPage(tab);
+        const note = page.truncated ? ' The page is long; only the beginning is read.' : '';
+        return { content: `Started reading the page aloud (${page.chars} characters).${note}`, isError: false };
       }
       case 'save_screenshot': {
         await showTab(ctx, tab);
