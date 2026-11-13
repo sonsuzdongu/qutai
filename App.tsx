@@ -20,6 +20,7 @@ import { copyLink, copyText, shareLink, shareText } from './src/device/link';
 import { savePagePdf } from './src/device/pdf';
 import { saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
+import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 
 const KEEP_AWAKE_TAG = 'alpai-agent';
@@ -62,6 +63,7 @@ export default function App() {
   const [menuVisible, setMenuVisible] = useState(false);
   const toast = useToast();
   const speaking = useIsSpeaking();
+  useIncognitoProtection(tab.incognito || (tabsVisible && browser.tabsOf(true).length > 0));
 
   useEffect(() => {
     loadSettings()
