@@ -159,6 +159,20 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'read_tab',
+    description:
+      'Read another open tab as text without switching to it, e.g. to compare pages. Same format as read_page; ' +
+      'its refs are only usable after switch_tab. Long pages are split; pass the offset from the previous result.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        tab_id: { type: 'string', description: 'Tab id from list_tabs' },
+        offset: { type: 'integer', description: 'Line to start reading from (default 0)' },
+      },
+      required: ['tab_id'],
+    },
+  },
+  {
     name: 'switch_tab',
     description: 'Switch to another open tab by id. Further page tools act on that tab.',
     input_schema: {

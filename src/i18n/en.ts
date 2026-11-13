@@ -57,6 +57,7 @@ export const en = {
   'action.remember': '🧠 Remembering: {text}',
   'action.forget': '🧠 Forgetting a memory',
   'action.webSearch': '🔎 Searched: {query}',
+  'action.readTab': '📑 Reading tab {id}',
   'action.wait': '⏳ Waiting {seconds}s',
 
   'find.placeholder': 'Find in page',

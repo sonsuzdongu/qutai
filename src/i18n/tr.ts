@@ -58,6 +58,7 @@ export const tr: Record<keyof typeof en, string> = {
   'action.remember': '🧠 Hatırlanıyor: {text}',
   'action.forget': '🧠 Bir anı siliniyor',
   'action.webSearch': '🔎 Arandı: {query}',
+  'action.readTab': '📑 Sekme {id} okunuyor',
   'action.wait': '⏳ {seconds} sn bekleniyor',
 
   'find.placeholder': 'Sayfada bul',

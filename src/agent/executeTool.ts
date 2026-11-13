@@ -85,6 +85,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.openTab', { url: str(input.url) });
     case 'switch_tab':
       return t('action.switchTab', { id: str(input.tab_id) });
+    case 'read_tab':
+      return t('action.readTab', { id: str(input.tab_id) });
     case 'close_tab':
       return t('action.closeTab', { id: str(input.tab_id) });
     case 'wait':
@@ -95,6 +97,47 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.forget');
     default:
       return `🔧 ${name}`;
+  }
+}
+
+function formatPage(tab: Tab, page: PageSnapshot, tool: 'read_page' | 'read_tab'): string {
+  const header = [
+    ...(tab.loadError ? [`Page failed to load: ${tab.loadError.description} (${tab.loadError.kind})`] : []),
+    `Tab: ${tab.id}`,
+    `URL: ${page.url}`,
+    `Title: ${page.title}`,
+    `Scroll: y=${page.scroll.y}, viewport=${page.scroll.viewportHeight}, page height=${page.scroll.pageHeight}`,
+  ].join('\n');
+  const more = tool === 'read_tab' ? `read_tab with tab_id=${tab.id} and` : 'read_page with';
+  const note = page.truncated ? `\n[Content truncated. Call ${more} offset=${page.nextOffset} to read the rest.]` : '';
+  return `${header}\n\n${page.content}${note}`;
+}
+
+/** Reads another tab in the background, without bringing it to the front or moving the agent there. */
+async function readTab(
+  input: Record<string, unknown>,
+  ctx: ToolContext,
+): Promise<{ content: string; isError: boolean }> {
+  const target = ctx.browser.getTab(String(input.tab_id ?? ''));
+  if (!target) return { content: `No tab with id=${String(input.tab_id)}.\n${tabList(ctx)}`, isError: true };
+  if (target.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
+  if (target.isNewTab)
+    return { content: `Tab ${target.id} shows the new tab page; no web page is loaded.`, isError: true };
+  try {
+    if (target.asleep) {
+      // A sleeping tab gets its WebView back off screen; the page loads from its saved address.
+      const loaded = target.waitForNextLoad();
+      target.wake();
+      await loaded;
+    }
+    const page = await target.run<PageSnapshot>('readPage', [input.offset ?? 0]);
+    const hint =
+      target.id === ctx.agentTab.id
+        ? ''
+        : '\n[Read only. To click or type here, call switch_tab first, then read_page.]';
+    return { content: formatPage(target, page, 'read_tab') + hint, isError: false };
+  } catch (e) {
+    return { content: `Error: ${e instanceof Error ? e.message : String(e)}`, isError: true };
   }
 }
 
@@ -176,6 +219,7 @@ export async function executeTool(
   }
 
   if (name === 'remember' || name === 'forget') return memoryTool(name, input, ctx);
+  if (name === 'read_tab') return readTab(input, ctx);
 
   const tab = currentTab(ctx);
   if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
@@ -196,17 +240,7 @@ export async function executeTool(
     switch (name) {
       case 'read_page': {
         const page = await tab.run<PageSnapshot>('readPage', [input.offset ?? 0]);
-        const header = [
-          ...(tab.loadError ? [`Page failed to load: ${tab.loadError.description} (${tab.loadError.kind})`] : []),
-          `Tab: ${tab.id}`,
-          `URL: ${page.url}`,
-          `Title: ${page.title}`,
-          `Scroll: y=${page.scroll.y}, viewport=${page.scroll.viewportHeight}, page height=${page.scroll.pageHeight}`,
-        ].join('\n');
-        const note = page.truncated
-          ? `\n[Content truncated. Call read_page with offset=${page.nextOffset} to read the rest.]`
-          : '';
-        return { content: `${header}\n\n${page.content}${note}`, isError: false };
+        return { content: formatPage(tab, page, 'read_page'), isError: false };
       }
       case 'navigate': {
         const url = normalizeUrl(input.url);

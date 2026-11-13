@@ -15,7 +15,7 @@ const COMPACT_THRESHOLD = 1500;
 /** Tools whose result shows the agent the page's content, which makes the page a source. */
 const READING_TOOLS = new Set(['read_page', 'view_screenshot']);
 const MAX_SOURCES = 10;
-const SAFE_TO_RETRY = new Set(['read_page', 'view_screenshot', 'list_tabs', 'scroll', 'scroll_to', 'wait']);
+const SAFE_TO_RETRY = new Set(['read_page', 'read_tab', 'view_screenshot', 'list_tabs', 'scroll', 'scroll_to', 'wait']);
 
 export type AgentOptions = ToolContext & {
   provider: ProviderId;
@@ -154,6 +154,10 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       }
       if (result.isError) onEvent({ type: 'error', text: result.content.slice(0, 200) });
       else if (READING_TOOLS.has(call.name)) noteSource();
+      else if (call.name === 'read_tab') {
+        const read = opts.browser.getTab(String(call.input.tab_id ?? ''));
+        if (read) addSource({ url: read.url, title: read.title, incognito: read.incognito });
+      }
       results.push({
         callId: call.id,
         name: call.name,
