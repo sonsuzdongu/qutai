@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Animated,
   Easing,
+  Keyboard,
   Platform,
   Pressable,
   StyleSheet,
@@ -14,6 +15,7 @@ import {
 import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
 import { t } from '../i18n';
+import { OmniboxSuggestions } from './OmniboxSuggestions';
 
 type Props = {
   url: string;
@@ -24,7 +26,9 @@ type Props = {
   assistantOpen: boolean;
   assistantRunning: boolean;
   searchEngine: SearchEngineId;
+  searchSuggestions: boolean;
   onSubmit: (url: string) => void;
+  onAsk: (text: string) => void;
   onBack: () => void;
   onOpenMenu: () => void;
   onOpenTabs: () => void;
@@ -48,7 +52,9 @@ export function AddressBar({
   assistantOpen,
   assistantRunning,
   searchEngine,
+  searchSuggestions,
   onSubmit,
+  onAsk,
   onBack,
   onOpenMenu,
   onOpenTabs,
@@ -58,27 +64,48 @@ export function AddressBar({
   const [editing, setEditing] = useState(false);
   const dark = incognito ? darkStyles : null;
 
+  const finishEditing = () => {
+    Keyboard.dismiss();
+    setEditing(false);
+  };
+
   return (
     <View style={[styles.bar, dark?.bar]}>
       <IconButton label="‹" onPress={onBack} disabled={!canGoBack} incognito={incognito} />
 
       {/* A TextInput scrolls long URLs to the cursor, so a plain Text is shown until the user taps to edit. */}
       {editing ? (
-        <TextInput
-          style={[styles.field, styles.fieldText, dark?.field, dark?.text]}
-          placeholderTextColor={incognito ? '#8f8e99' : '#999'}
-          value={text}
-          onChangeText={setText}
-          onBlur={() => setEditing(false)}
-          onSubmitEditing={() => text.trim() && onSubmit(toUrl(text, searchEngine))}
-          autoFocus
-          selectTextOnFocus
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="url"
-          returnKeyType="go"
-          placeholder={t('address.placeholder')}
-        />
+        <View style={[styles.field, styles.fieldRow, dark?.field]}>
+          <TextInput
+            style={[styles.fieldText, styles.fieldTextFlex, styles.input, dark?.text]}
+            placeholderTextColor={incognito ? '#8f8e99' : '#999'}
+            value={text}
+            onChangeText={setText}
+            onBlur={() => setEditing(false)}
+            onSubmitEditing={() => {
+              if (!text.trim()) return;
+              finishEditing();
+              onSubmit(toUrl(text, searchEngine));
+            }}
+            autoFocus
+            selectTextOnFocus
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            returnKeyType="go"
+            placeholder={t('address.placeholder')}
+          />
+          {text.length > 0 && (
+            <Pressable
+              onPress={() => setText('')}
+              hitSlop={8}
+              style={[styles.clear, dark?.clear]}
+              accessibilityLabel={t('address.clear')}
+            >
+              <Text style={[styles.clearText, dark?.text]}>✕</Text>
+            </Pressable>
+          )}
+        </View>
       ) : (
         <Pressable
           style={[styles.field, styles.fieldRow, dark?.field]}
@@ -90,6 +117,16 @@ export function AddressBar({
           accessibilityLabel={t('address.a11y', { url })}
         >
           {incognito && <Text style={styles.incognitoBadge}>🕶</Text>}
+          {/^https:\/\//i.test(url) && (
+            <Text style={[styles.security, dark?.dim]} accessibilityLabel={t('address.secure')}>
+              🔒
+            </Text>
+          )}
+          {/^http:\/\//i.test(url) && (
+            <Text style={[styles.security, styles.insecure]} accessibilityLabel={t('address.notSecure')}>
+              ⚠︎
+            </Text>
+          )}
           <Text
             style={[styles.fieldText, styles.fieldTextFlex, dark?.text, !url && styles.placeholder]}
             numberOfLines={1}
@@ -124,6 +161,30 @@ export function AddressBar({
         )}
       </Pressable>
       {loading && <LoadingBar />}
+      {editing && (
+        <Pressable
+          style={styles.backdrop}
+          onPress={finishEditing}
+          accessibilityLabel={t('common.close')}
+          accessibilityRole="button"
+        />
+      )}
+      {editing && (
+        <OmniboxSuggestions
+          text={text}
+          incognito={incognito}
+          searchEngine={searchEngine}
+          suggestionsEnabled={searchSuggestions}
+          onNavigate={(next) => {
+            finishEditing();
+            onSubmit(next);
+          }}
+          onAsk={(query) => {
+            finishEditing();
+            onAsk(query);
+          }}
+        />
+      )}
     </View>
   );
 }
@@ -182,6 +243,8 @@ function IconButton({
 
 const styles = StyleSheet.create({
   bar: {
+    // Above the page, so the suggestion dropdown can overlap it.
+    zIndex: 10,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 6,
@@ -210,6 +273,19 @@ const styles = StyleSheet.create({
   },
   fieldRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 6 },
   fieldTextFlex: { flex: 1 },
+  input: { paddingVertical: 0, height: '100%' },
+  backdrop: { position: 'absolute', top: '100%', left: 0, right: 0, height: 4000, backgroundColor: 'rgba(0,0,0,0.25)' },
+  clear: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#d6d3c9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  clearText: { fontSize: 11, color: '#555', fontWeight: '700' },
+  security: { fontSize: 12, color: '#888' },
+  insecure: { color: '#b3261e', fontSize: 14 },
   incognitoBadge: { fontSize: 14 },
   placeholder: { color: '#999' },
   icon: { width: 32, height: 36, alignItems: 'center', justifyContent: 'center' },
@@ -246,4 +322,6 @@ const darkStyles = StyleSheet.create({
   field: { backgroundColor: '#3a3944' },
   text: { color: '#f2f1f5' },
   tabCount: { borderColor: '#f2f1f5' },
+  clear: { backgroundColor: '#52515c' },
+  dim: { color: '#a9a8b3' },
 });

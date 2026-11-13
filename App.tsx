@@ -309,6 +309,11 @@ function BrowserApp({
           <AddressBar
             url={onNewTab ? '' : tab.url}
             searchEngine={settings.searchEngine}
+            searchSuggestions={settings.searchSuggestions}
+            onAsk={(text) => {
+              setPanelOpen(true);
+              send(text);
+            }}
             loading={tab.loading}
             canGoBack={tab.canGoBack || tab.openedFromNewTab}
             tabCount={browser.tabs.length}

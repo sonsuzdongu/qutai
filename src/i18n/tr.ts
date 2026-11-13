@@ -63,6 +63,12 @@ export const tr: Record<keyof typeof en, string> = {
   'address.openAssistant': 'ALPAI panelini aç',
   'address.closeAssistant': 'ALPAI panelini kapat',
 
+  'address.clear': 'Temizle',
+  'address.secure': 'Güvenli bağlantı',
+  'address.notSecure': 'Güvenli değil',
+  'omnibox.ask': 'ALPAI’ye sor: “{text}”',
+  'omnibox.pasteAndGo': 'Yapıştır ve git',
+
   'menu.close': 'Menüyü kapat',
   'menu.reload': 'Yenile',
   'menu.addBookmark': 'Yer imlerine ekle',

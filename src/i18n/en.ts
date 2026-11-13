@@ -62,6 +62,12 @@ export const en = {
   'address.openAssistant': 'Open ALPAI panel',
   'address.closeAssistant': 'Close ALPAI panel',
 
+  'address.clear': 'Clear',
+  'address.secure': 'Secure connection',
+  'address.notSecure': 'Not secure',
+  'omnibox.ask': 'Ask ALPAI: “{text}”',
+  'omnibox.pasteAndGo': 'Paste and go',
+
   'menu.close': 'Close menu',
   'menu.reload': 'Reload',
   'menu.addBookmark': 'Add bookmark',
