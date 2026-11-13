@@ -99,4 +99,5 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
 - [ ] End-to-end test with real API keys on all three providers
 - [ ] Clicking by coordinates (for canvas, maps and image-heavy sites; together with the screenshot tool)
 - [ ] Running in the background: a foreground service for Android or a server-side browser (decision pending)
-- [ ] Streaming responses, storing chat history
+- [ ] Streaming responses
+- [x] Storing chat history (per tab, persistent)
