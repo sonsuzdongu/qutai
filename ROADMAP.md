@@ -110,7 +110,7 @@ putting the AI experience front and center.
 | Bottom / top toolbar choice | ⬜ | Go · M | Bottom bar for one-handed use |
 | Gestures | 🟡 | Go · M | iOS edge swipe and Android back exist; no swiping on the address bar to switch tabs |
 | Haptic feedback | ⬜ | Go · S | |
-| Language selection | ⬜ | Go · M | The UI is currently Turkish only; `expo-localization` |
+| Language selection | ✅ | | Turkish and English, matches the device language; iOS and Android per-app language settings supported |
 | Accessibility | 🟡 | Go · M | Labels partly present; no screen reader testing done |
 | Being the default browser | ⬜ | Build · M | Android: intent filters. iOS: requires a special entitlement from Apple |
 | Home screen widgets | ⬜ | Build | `expo-widgets` |
@@ -185,7 +185,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 5. Clearing browsing data, HTTPS-only, third-party cookie setting · M
 6. Biometric lock (app and private tabs), QR scanning/generation · S
 7. Offline saving, fullscreen video (Android) · S
-8. English UI, accessibility review · M
+8. Accessibility review · M
 
 ### Phase 4 – Things that require our own build
 
@@ -222,9 +222,10 @@ deep research, price and page tracking, Safe Browsing checks.
 | Free / paid limits | Unlimited with your own key; ALPAI credits are planned |
 | iOS / Android differences | Private mode isolation, text selection menu, download and PiP behaviors differ |
 
-## 5. Pending decisions
+## 5. Decisions
 
-- [ ] Default search engine and search suggestions: every typed letter goes to the search engine. On by default?
+- [x] Start: Phase 1 (browser foundation)
+- [x] Search suggestions on by default; always off in private mode
+- [x] UI language: Turkish and English; matches the device language, English by default (done)
 - [ ] AI search: the providers' web search tools have an extra charge per search. Should it be on with the user's own key?
-- [ ] UI language: Turkish only, or English too?
 - [ ] Should sync be end-to-end encrypted? (Recommended: yes)

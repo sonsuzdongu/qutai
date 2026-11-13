@@ -3,6 +3,8 @@
 An AI-powered mobile browser for iOS and Android: an agent that can read and use the page for you,
 tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models.
 
+The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
+
 From the page menu (⋮) and by asking the agent: save the page as PDF, save a screenshot to Photos,
 read the page aloud, share/copy the link. When needed, the agent can also look at a screenshot of the page.
 
