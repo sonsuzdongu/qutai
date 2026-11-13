@@ -555,6 +555,10 @@ function BrowserApp({
           onStop={stop}
           onNewChat={newChat}
           onOpenSettings={() => setSettingsVisible(true)}
+          onOpenLink={(url) => {
+            browser.openTab(url, { incognito: browser.active.incognito });
+            closePanel();
+          }}
           onMessageAction={(action, text) =>
             runAction(async () => {
               if (action === 'copy') {

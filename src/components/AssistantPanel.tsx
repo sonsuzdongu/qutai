@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsSpeaking } from '../device/speech';
 import { t } from '../i18n';
+import { MarkdownText } from './MarkdownText';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 
 export type ChatItem = {
@@ -46,6 +47,8 @@ type Props = {
   onNewChat: () => void;
   onOpenSettings: () => void;
   onMessageAction: (action: MessageAction, text: string) => void;
+  /** A link in an answer was tapped. */
+  onOpenLink: (url: string) => void;
 };
 
 const MAX_WIDTH = 420;
@@ -70,6 +73,7 @@ export function AssistantPanel({
   onNewChat,
   onOpenSettings,
   onMessageAction,
+  onOpenLink,
 }: Props) {
   const speaking = useIsSpeaking();
   const { width: screenWidth } = useWindowDimensions();
@@ -166,7 +170,13 @@ export function AssistantPanel({
             >
               {items.length === 0 && <Text style={styles.empty}>{t('chat.empty')}</Text>}
               {items.map((item) => (
-                <ChatRow key={item.id} item={item} speaking={speaking} onAction={onMessageAction} />
+                <ChatRow
+                  key={item.id}
+                  item={item}
+                  speaking={speaking}
+                  onAction={onMessageAction}
+                  onOpenLink={onOpenLink}
+                />
               ))}
             </ScrollView>
 
@@ -248,10 +258,12 @@ function ChatRow({
   item,
   speaking,
   onAction,
+  onOpenLink,
 }: {
   item: ChatItem;
   speaking: boolean;
   onAction: (action: MessageAction, text: string) => void;
+  onOpenLink: (url: string) => void;
 }) {
   switch (item.kind) {
     case 'user':
@@ -266,9 +278,7 @@ function ChatRow({
       return (
         <View style={styles.assistantRow}>
           <View style={[styles.bubble, styles.assistantBubble]}>
-            <Text style={styles.assistantText} selectable>
-              {item.text}
-            </Text>
+            <MarkdownText text={item.text} style={styles.assistantText} onOpenLink={onOpenLink} />
           </View>
           <View style={styles.messageActions}>
             <MessageButton label={t('chat.copy')} onPress={() => onAction('copy', item.text)} />
