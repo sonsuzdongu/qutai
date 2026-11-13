@@ -34,6 +34,10 @@ import { t, useLanguage } from './src/i18n';
 import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmarks';
 import { getDb } from './src/storage/db';
 import { deviceMemoryStore } from './src/storage/memory';
+import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
+import { SitePermissionStore } from './src/storage/sitePermissions';
+import { siteKey } from './src/agent/sitePolicy';
+import { SitePermissionSheet } from './src/components/SitePermissionSheet';
 import { clearChat, deleteOrphanChats, loadChat, saveChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
@@ -42,17 +46,36 @@ import { useRecordHistory } from './src/storage/useRecordHistory';
 
 const KEEP_AWAKE_TAG = 'kutai-agent';
 const memoryStore = deviceMemoryStore(getDb);
+const sitePermissions = new SitePermissionStore(getDb);
+
+/** Records an agent action for the activity screen. */
+function logAction(entry: ActionEntry) {
+  getDb()
+    .then((db) => addAction(db, entry))
+    .catch(() => {});
+}
 
 // Conversations saved by earlier versions belong to the tab that is active on the first start.
 let legacyChatPending = true;
 
-function askConfirmation(description: string): Promise<boolean> {
+function askConfirmation(description: string, host: string | null): Promise<boolean> {
   return new Promise((resolve) => {
     Alert.alert(
       t('confirm.title'),
-      description,
+      host ? `${description}\n\n${host}` : description,
       [
         { text: t('confirm.deny'), style: 'cancel', onPress: () => resolve(false) },
+        ...(host
+          ? [
+              {
+                text: t('confirm.always', { host }),
+                onPress: () => {
+                  sitePermissions.set(host, 'allow').catch(() => {});
+                  resolve(true);
+                },
+              },
+            ]
+          : []),
         { text: t('confirm.allow'), onPress: () => resolve(true) },
       ],
       // Android: back button or a tap outside counts as declining.
@@ -109,6 +132,7 @@ function BrowserApp({
   const [bookmarked, setBookmarked] = useState(false);
   const [library, setLibrary] = useState<LibraryTab | null>(null);
   const [textSizeVisible, setTextSizeVisible] = useState(false);
+  const [permissionHost, setPermissionHost] = useState<string | null>(null);
   const [context, setContext] = useState<{ tab: Tab; target: ContextTarget } | null>(null);
   // Find in page belongs to one page: it closes by itself when the tab or the URL changes.
   const [findFor, setFindFor] = useState<{ tabId: string; url: string } | null>(null);
@@ -139,6 +163,14 @@ function BrowserApp({
       .catch(() => null)
       .then((saved) => target.conversation.restore(saved));
   }, [browser, tab]);
+
+  // Once at start: load site permissions and trim the activity history.
+  useEffect(() => {
+    sitePermissions.load();
+    getDb()
+      .then((db) => pruneActions(db))
+      .catch(() => {});
+  }, []);
 
   // Once at start: forget conversations of tabs that are gone (also those that fell out of recently closed).
   useEffect(() => {
@@ -205,7 +237,10 @@ function BrowserApp({
         memory: settings.memoryEnabled ? memoryStore : undefined,
         webSearch: settings.webSearch,
         stream: true,
-        confirm: settings.confirmActions ? askConfirmation : undefined,
+        confirm: askConfirmation,
+        confirmByDefault: settings.confirmActions,
+        sites: sitePermissions,
+        log: logAction,
         signal,
         onEvent: (event) => {
           if (event.type === 'text_delta') return chat.appendStreaming(event.text);
@@ -246,6 +281,7 @@ function BrowserApp({
   // Page actions make no sense on the app's own new tab page.
   const onNewTab = tab.isNewTab;
   const findOpen = findFor?.tabId === tab.id && findFor.url === tab.url;
+  const currentSite = siteKey(tab.url);
   const iconRow: IconItem[] = [
     {
       icon: '→',
@@ -298,6 +334,15 @@ function BrowserApp({
       section: true,
       disabled: onNewTab,
       onPress: () => setFindFor({ tabId: tab.id, url: tab.url }),
+    },
+    {
+      icon: '🛡',
+      label: t('menu.sitePermission', {
+        level: t(`site.level.${currentSite ? sitePermissions.levelFor(currentSite) : 'default'}`),
+      }),
+      section: true,
+      disabled: !currentSite,
+      onPress: () => setPermissionHost(currentSite),
     },
     {
       icon: 'Aa',
@@ -615,6 +660,7 @@ function BrowserApp({
           }}
         />
         <SettingsModal
+          sitePermissions={sitePermissions}
           visible={settingsVisible}
           settings={settings}
           onSave={onSaveSettings}
@@ -624,6 +670,12 @@ function BrowserApp({
           target={context?.target ?? null}
           actions={context ? contextActions(context.tab, context.target) : []}
           onClose={() => setContext(null)}
+        />
+        <SitePermissionSheet
+          host={permissionHost}
+          level={permissionHost ? sitePermissions.levelFor(permissionHost) : 'default'}
+          onSelect={(level) => permissionHost && sitePermissions.set(permissionHost, level).catch(() => {})}
+          onClose={() => setPermissionHost(null)}
         />
         <TextSizeSheet
           visible={textSizeVisible}

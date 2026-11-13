@@ -6,7 +6,9 @@ import { captureForModel, saveScreenshot } from '../device/screenshot';
 import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import { sleep } from '../utils/sleep';
+import type { ActionEntry } from '../storage/actionLog';
 import type { MemoryStore } from './memory';
+import { decide, SitePolicy, siteKey } from './sitePolicy';
 
 type PageSnapshot = {
   url: string;
@@ -21,8 +23,14 @@ export type ToolContext = {
   browser: Browser;
   /** The tab the agent works in. It can differ from the tab the user is looking at. */
   agentTab: { id: string };
-  /** Asks the user before an action that changes the page. Resolve false to block it. */
-  confirm?: (description: string) => Promise<boolean>;
+  /** Asks the user before an action that changes the page (host: the site it acts on). Resolve false to block it. */
+  confirm?: (description: string, host: string | null) => Promise<boolean>;
+  /** The global "ask before actions" setting, for sites without their own permission. Defaults to true when confirm is set. */
+  confirmByDefault?: boolean;
+  /** Per-site permissions (allow, ask, read-only, blocked). */
+  sites?: SitePolicy;
+  /** Records what the agent did, for the action history. Not called for incognito tabs. */
+  log?: (entry: ActionEntry) => void;
   /** Set when the agent works in an incognito tab, so the conversation is never saved to disk. */
   privacy?: { touchedIncognito: boolean };
   /** Long-term memory about the user; absent when memory is turned off. */
@@ -40,15 +48,6 @@ const PAGE_TOOLS = new Set([
   'save_pdf',
   'save_screenshot',
   'view_screenshot',
-]);
-
-const ACTIONS_NEEDING_CONFIRMATION = new Set([
-  'navigate',
-  'open_tab',
-  'click',
-  'type',
-  'select_option',
-  'save_screenshot',
 ]);
 
 /** Short label shown in the chat for each tool call. */
@@ -204,19 +203,77 @@ function tabList(ctx: ToolContext): string {
     .join('\n');
 }
 
-export async function executeTool(
+type ToolOutput = { content: string; isError: boolean; images?: ToolImage[] };
+
+/** Actions kept in the action history; bookkeeping (listing tabs, waiting, scrolling) is left out. */
+const LOGGED_TOOLS = new Set([
+  'navigate',
+  'go_back',
+  'click',
+  'type',
+  'select_option',
+  'read_page',
+  'read_tab',
+  'view_screenshot',
+  'save_pdf',
+  'save_screenshot',
+  'read_aloud',
+  'open_tab',
+  'close_tab',
+  'remember',
+  'forget',
+]);
+
+/** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
+function actionTarget(
   name: string,
   input: Record<string, unknown>,
   ctx: ToolContext,
-): Promise<{ content: string; isError: boolean; images?: ToolImage[] }> {
-  const { browser } = ctx;
+): { url: string; tab?: Tab } | null {
+  if (name === 'navigate' || name === 'open_tab') return { url: normalizeUrl(input.url) };
+  if (['list_tabs', 'switch_tab', 'close_tab', 'wait', 'remember', 'forget', 'ask_user'].includes(name)) return null;
+  const tab =
+    name === 'read_tab'
+      ? ctx.browser.getTab(String(input.tab_id ?? ''))
+      : (ctx.browser.getTab(ctx.agentTab.id) ?? ctx.browser.active);
+  return tab ? { url: tab.url, tab } : null;
+}
 
-  if (ctx.confirm && ACTIONS_NEEDING_CONFIRMATION.has(name)) {
-    const allowed = await ctx.confirm(describeToolCall(name, input));
-    if (!allowed) {
-      return { content: 'The user declined this action. Ask them how to proceed.', isError: true };
+export async function executeTool(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  const target = actionTarget(name, input, ctx);
+  const host = target ? siteKey(target.url) : null;
+  const level = host && ctx.sites ? ctx.sites.levelFor(host) : 'default';
+  const decision = decide(name, host, level, ctx.confirm ? (ctx.confirmByDefault ?? true) : false);
+  const fromTab = ctx.browser.getTab(ctx.agentTab.id);
+
+  const record = (result: ToolOutput): ToolOutput => {
+    const incognito = !!(ctx.privacy?.touchedIncognito || target?.tab?.incognito || fromTab?.incognito);
+    if (ctx.log && LOGGED_TOOLS.has(name) && !incognito) {
+      ctx.log({
+        at: Date.now(),
+        host,
+        url: target && host ? target.url : null,
+        tool: name,
+        // Typed text can be personal, so the history only says where something was typed.
+        description:
+          name === 'type' ? t('action.typeRedacted', { ref: String(input.ref ?? '') }) : describeToolCall(name, input),
+        ok: !result.isError,
+      });
     }
+    return result;
+  };
+
+  // Refused and declined actions are recorded too, so the history shows what was stopped.
+  if (decision.kind === 'refuse') return record({ content: decision.reason, isError: true });
+  if (decision.kind === 'confirm' && ctx.confirm) {
+    const allowed = await ctx.confirm(describeToolCall(name, input), host);
+    if (!allowed) return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true });
   }
+  return record(await runTool(name, input, ctx));
+}
+
+async function runTool(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  const { browser } = ctx;
 
   if (name === 'remember' || name === 'forget') return memoryTool(name, input, ctx);
   if (name === 'read_tab') return readTab(input, ctx);

@@ -5,7 +5,10 @@ import { getProvider, PROVIDER_ORDER } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { t } from '../i18n';
+import type { SitePermissionStore } from '../storage/sitePermissions';
+import { ActionLogScreen } from './ActionLogScreen';
 import { MemoryScreen } from './MemoryScreen';
+import { SitePermissionsScreen } from './SitePermissionsScreen';
 import type { Settings } from '../storage/settings';
 
 type Props = {
@@ -13,20 +16,25 @@ type Props = {
   settings: Settings;
   onSave: (settings: Settings) => void;
   onClose: () => void;
+  sitePermissions: SitePermissionStore;
 };
 
-export function SettingsModal({ visible, settings, onSave, onClose }: Props) {
+export function SettingsModal({ visible, settings, onSave, onClose, sitePermissions }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {/* Mounted only while visible, so the draft always starts from the saved settings. */}
-      {visible && <SettingsForm settings={settings} onSave={onSave} onClose={onClose} />}
+      {visible && (
+        <SettingsForm settings={settings} onSave={onSave} onClose={onClose} sitePermissions={sitePermissions} />
+      )}
     </Modal>
   );
 }
 
-function SettingsForm({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
+function SettingsForm({ settings, onSave, onClose, sitePermissions }: Omit<Props, 'visible'>) {
   const [draft, setDraft] = useState(settings);
   const [memoryVisible, setMemoryVisible] = useState(false);
+  const [sitesVisible, setSitesVisible] = useState(false);
+  const [actionLogVisible, setActionLogVisible] = useState(false);
   const provider = getProvider(draft.provider);
   const model = draft.models[draft.provider];
   const isCustomModel = !provider.models.some((m) => m.id === model);
@@ -158,6 +166,13 @@ function SettingsForm({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
           <Switch value={draft.webSearch} onValueChange={(webSearch) => setDraft({ ...draft, webSearch })} />
         </View>
 
+        <Pressable onPress={() => setSitesVisible(true)} style={styles.option} accessibilityRole="button">
+          <Text style={[styles.optionText, styles.link]}>{t('settings.sitePermissions')} ›</Text>
+        </Pressable>
+        <Pressable onPress={() => setActionLogVisible(true)} style={styles.option} accessibilityRole="button">
+          <Text style={[styles.optionText, styles.link]}>{t('settings.actionLog')} ›</Text>
+        </Pressable>
+
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.memory')}</Text>
         <View style={styles.switchRow}>
           <View style={styles.flex}>
@@ -174,6 +189,8 @@ function SettingsForm({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
         </Pressable>
       </ScrollView>
       <MemoryScreen visible={memoryVisible} onClose={() => setMemoryVisible(false)} />
+      <SitePermissionsScreen visible={sitesVisible} store={sitePermissions} onClose={() => setSitesVisible(false)} />
+      <ActionLogScreen visible={actionLogVisible} onClose={() => setActionLogVisible(false)} />
     </SafeAreaView>
   );
 }
