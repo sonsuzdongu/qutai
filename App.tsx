@@ -14,7 +14,7 @@ import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
 import { ContextAction, ContextMenuSheet } from './src/components/ContextMenuSheet';
-import { AssistantPanel, ChatItem } from './src/components/AssistantPanel';
+import { AssistantPanel, QuickAction, ChatItem } from './src/components/AssistantPanel';
 import { FindBar } from './src/components/FindBar';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
 import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
@@ -421,6 +421,19 @@ function BrowserApp({
     return actions;
   };
 
+  // One-tap tasks in the panel; page tasks need a web page, comparing needs several tabs.
+  const quickActions: QuickAction[] = [
+    ...(onNewTab
+      ? []
+      : (['summarize', 'keyPoints', 'translate', 'review'] as const).map((id) => ({
+          label: t(`quick.${id}`),
+          prompt: t(`quick.${id}Prompt`),
+        }))),
+    ...(browser.tabsOf(tab.incognito).filter((x) => !x.isNewTab).length > 1
+      ? [{ label: t('quick.compare'), prompt: t('quick.comparePrompt') }]
+      : []),
+  ];
+
   const onSaveSettings = async (next: Settings) => {
     setSettings(next);
     setSettingsVisible(false);
@@ -492,6 +505,7 @@ function BrowserApp({
 
         <AssistantPanel
           open={panelOpen}
+          quickActions={quickActions}
           modelInfo={`${getProvider(settings.provider).label} · ${modelLabel(settings.provider, settings.models[settings.provider])}`}
           items={items}
           running={running}

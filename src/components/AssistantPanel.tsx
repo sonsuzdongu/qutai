@@ -24,8 +24,12 @@ export type ChatItem = {
   text: string;
 };
 
+/** A one-tap task shown above the input, e.g. "Summarize". */
+export type QuickAction = { label: string; prompt: string };
+
 type Props = {
   open: boolean;
+  quickActions: QuickAction[];
   items: ChatItem[];
   running: boolean;
   /** Provider and model shown under the title, e.g. "OpenAI · GPT-5.6 Terra". */
@@ -47,6 +51,7 @@ const MAX_WIDTH = 420;
  */
 export function AssistantPanel({
   open,
+  quickActions,
   items,
   running,
   modelInfo,
@@ -148,6 +153,27 @@ export function AssistantPanel({
                 <ChatRow key={item.id} item={item} speaking={speaking} onAction={onMessageAction} />
               ))}
             </ScrollView>
+
+            {!running && !text.trim() && quickActions.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                style={styles.chips}
+                contentContainerStyle={styles.chipsContent}
+              >
+                {quickActions.map((action) => (
+                  <Pressable
+                    key={action.label}
+                    onPress={() => onSend(action.prompt)}
+                    style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.chipText}>{action.label}</Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
 
             <View style={styles.inputRow}>
               <TextInput
@@ -304,6 +330,17 @@ const styles = StyleSheet.create({
   assistantText: { color: '#222', fontSize: 15, lineHeight: 21 },
   action: { color: '#777', fontSize: 12, marginLeft: 4 },
   error: { color: '#b3261e', fontSize: 13, marginLeft: 4 },
+  chips: { flexGrow: 0 },
+  chipsContent: { paddingHorizontal: 8, paddingTop: 8, gap: 6 },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
+    backgroundColor: '#fff',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#d6d3c9',
+  },
+  chipText: { fontSize: 13, color: '#444' },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',

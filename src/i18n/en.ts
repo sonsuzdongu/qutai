@@ -125,6 +125,18 @@ export const en = {
   'contextMenu.openedInBackground': 'Opened in a new tab',
   'contextMenu.imageSaved': 'Image saved to Photos',
 
+  'quick.summarize': '✦ Summarize',
+  'quick.summarizePrompt': 'Summarize this page in a few short paragraphs.',
+  'quick.keyPoints': '• Key points',
+  'quick.keyPointsPrompt': 'List the key points of this page as short bullets.',
+  'quick.translate': '🌐 Translate',
+  'quick.translatePrompt': 'Translate the main content of this page into English.',
+  'quick.review': '🛒 Is this product good?',
+  'quick.reviewPrompt':
+    'Is the product on this page a good buy? Look at its specs, price and reviews, and list the pros and cons.',
+  'quick.compare': '⚖ Compare tabs',
+  'quick.comparePrompt': 'Compare the pages in my open tabs and show the main differences in a short table.',
+
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",
   'settings.provider': 'AI provider',

@@ -126,6 +126,18 @@ export const tr: Record<keyof typeof en, string> = {
   'contextMenu.openedInBackground': 'Yeni sekmede açıldı',
   'contextMenu.imageSaved': "Görsel Fotoğraflar'a kaydedildi",
 
+  'quick.summarize': '✦ Özetle',
+  'quick.summarizePrompt': 'Bu sayfayı birkaç kısa paragrafta özetle.',
+  'quick.keyPoints': '• Önemli noktalar',
+  'quick.keyPointsPrompt': 'Bu sayfanın önemli noktalarını kısa maddeler halinde listele.',
+  'quick.translate': '🌐 Çevir',
+  'quick.translatePrompt': 'Bu sayfanın ana içeriğini Türkçeye çevir.',
+  'quick.review': '🛒 Bu ürün iyi mi?',
+  'quick.reviewPrompt':
+    'Bu sayfadaki ürün almaya değer mi? Özelliklerine, fiyatına ve yorumlarına bakıp artılarını ve eksilerini listele.',
+  'quick.compare': '⚖ Sekmeleri karşılaştır',
+  'quick.comparePrompt': 'Açık sekmelerimdeki sayfaları karşılaştır ve temel farkları kısa bir tabloda göster.',
+
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',
   'settings.provider': 'Yapay zekâ sağlayıcısı',
