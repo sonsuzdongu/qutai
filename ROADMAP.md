@@ -169,11 +169,17 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 2. ✅ **Ask about selected text:** Ask, Explain, Translate, Share (page script and a strip at the bottom of the page on both platforms)
 3. ~~**Smart address bar:** natural language commands go to ALPAI~~ (will not be done)
 4. **Sources:** clickable source links in answers, tabs used · M
+   - ✅ Intermediate step: answers are rendered as markdown, links are clickable
+   - ✅ Each tab has its own chat (persistent; the chat comes back with a reopened tab; one task at a time)
+   - **Clickable options:** when a choice is needed, the agent presents options as buttons via the `ask_user` tool · S
 5. **AI search:** answers with sources using the providers' web search tools · M
 6. **Multi-tab:** `read_tab` tool, "compare selected tabs" · M
 7. **Page translation** (in place) and **reader mode** · M
 8. **Per-site agent permissions** and **action history** · M
 9. **Searching history in natural language**, **email draft**, **form profile** · M
+   - ✅ **Memory** (in place of the form profile): the agent stores lasting information the user tells it on the phone and
+     uses it in tasks; it can be viewed, edited, deleted and turned off in settings. Passwords/cards/one-time codes
+     are not stored, nothing is recorded from private chats
 10. **Deep research** (in the foreground, with the existing agent) · L
 
 ### Phase 3 – Modern browser (mostly Expo Go)
@@ -196,7 +202,8 @@ app verification.
 
 ### Phase 5 – Things that require a server
 
-Account system (shared with the credit system), end-to-end encrypted sync, ALPAI credits, background
+Account system (shared with the credit system), end-to-end encrypted sync (including memory; deletion markers must be
+kept for deletions), ALPAI credits, background
 deep research, price and page tracking, Safe Browsing checks.
 
 ---
