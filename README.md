@@ -1,7 +1,7 @@
-# Claude Browser (mobile)
+# ALPAI
 
-A prototype of the "Claude in Chrome" idea for iOS and Android: a built-in browser and a Claude agent that can read
-and use the page for you.
+An AI-powered mobile browser for iOS and Android: an agent that can read and use the page for you,
+tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models.
 
 ## Running
 
@@ -11,40 +11,59 @@ npx expo start
 ```
 
 Scan the QR code with **Expo Go** on your phone. All the native modules used (`react-native-webview`,
-`expo-secure-store`) come bundled with Expo Go. Once the app opens, enter your Anthropic API key via the ⚙︎ icon.
+`expo-secure-store`, `react-native-view-shot`) come bundled with Expo Go.
+
+Open the panel with the ✦ button in the top bar, then pick a provider via the ⚙︎ icon and enter your API key:
+
+| Provider | API | Key |
+|---|---|---|
+| Anthropic | Messages API | https://platform.claude.com/settings/keys |
+| OpenAI | Responses API | https://platform.openai.com/api-keys |
+| Google Gemini | Interactions API | https://aistudio.google.com/apikey |
 
 ## How does it work?
 
 ```
-User ──► ChatPanel ──► runAgent ──► Claude Messages API (tool use)
-                                │
-                                ▼ tool call
-                           executeTool ──► Browser ► Tab ──injectJavaScript──► WebView
-                                ▲                                                    │
-                                └──────────── onMessage (result) ◄─────────── pageScript (window.__claudeAgent)
+User ──► AssistantPanel ──► runAgent ──► provider adapter ──► Anthropic / OpenAI / Gemini
+                                     │
+                                     ▼ tool call
+                                executeTool ──► Browser ► Tab ──injectJavaScript──► WebView
+                                     ▲                                                  │
+                                     └────────── onMessage (result) ◄────────── pageScript (window.__alpaiAgent)
 ```
 
 | File | Role |
 |---|---|
 | `src/browser/pageScript.ts` | JS injected into the page: converts the DOM to text, gives elements a `ref` number, clicks and types |
 | `src/browser/Tab.ts` | A single tab: sends commands to the WebView, matches responses, waits for page loads |
-| `src/browser/Browser.ts` | Tab manager (open, close, switch) and change notifications to React |
+| `src/browser/Browser.ts` | Tab manager (open, close, switch, private tabs) and change notifications to React |
 | `src/components/BrowserView.tsx` | Draws the WebViews of all tabs stacked on top of each other; hidden tabs keep running |
-| `src/agent/tools.ts` | Tools exposed to Claude (`read_page`, `click`, `type`, `navigate`, `open_tab`…) |
-| `src/utils/foreground.ts` | Pauses the agent when the app goes to the background, resumes it when it comes back to the foreground |
+| `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters |
+| `src/agent/tools.ts` | Tools exposed to the model (`read_page`, `click`, `type`, `navigate`, `open_tab`…) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
-| `src/agent/runAgent.ts` | Agent loop, retries and trimming of old page snapshots |
+| `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |
+| `src/utils/foreground.ts` | Pauses the agent when the app goes to the background, resumes it when it comes back to the foreground |
+
+Along with each assistant response, the provider's raw output is also stored (Claude's thinking blocks, OpenAI's
+encrypted reasoning content, Gemini's thought signatures) and sent back unchanged to the same model. If the
+provider or model changes mid-chat, the history is rebuilt from the text and tool calls.
 
 ## Known limitations / next steps
 
-- **No screenshots.** For now the agent only sees the DOM text. It struggles with canvas, maps and image-heavy
-  sites. Next step: a screenshot tool and clicking by coordinates.
-- **The API key is on the device.** Fine for personal use. Distribution requires a backend proxy that holds the key.
-- **Does not run in the background.** iOS and Android freeze the app within a few seconds in the background, and the
-  WebView stops too. The task pauses and resumes where it left off when the app comes back to the foreground.
-- **Tabs consume memory.** Each tab stays open as a separate WebView. If many tabs are open, the system may close the
-  app on older Android devices.
+- **Private mode is not fully isolated on Android.** The `incognito` prop of `react-native-webview` is not used because
+  on Android it deletes all cookies; private tabs share cookies with normal tabs. Real isolation requires the
+  Android WebView profile API (development build). On iOS, each private tab uses its own separate, non-persistent data
+  store.
+- **No screenshot tool.** For now the agent only sees the DOM text. It struggles with canvas, maps and image-heavy
+  sites.
+- **API keys are on the device.** Fine for personal use. Distribution requires a backend proxy that holds the keys.
+- **Model quality varies.** Browser tasks are multi-step; small models may click the wrong element.
+- **Old page outputs are trimmed.** This lowers cost, but on OpenAI previous reasoning items may not be reused
+  because the history changes.
+- **Does not run in the background.** iOS and Android freeze the app in the background. The task pauses and resumes
+  where it left off when the app comes back to the foreground.
+- **Tabs consume memory.** Each tab stays open as a separate WebView.
 - **Cross-origin iframes** (e.g. payment forms, some captchas) cannot be read.
 - **Prompt injection** is a risk. The system prompt marks page content as untrusted data and asks for confirmation
   for sensitive actions. The "Ask before every action" option in Settings provides extra protection.
