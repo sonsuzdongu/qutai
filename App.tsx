@@ -15,10 +15,10 @@ import { MenuItem, PageMenu } from './src/components/PageMenu';
 import { SettingsModal } from './src/components/SettingsModal';
 import { TabSwitcher } from './src/components/TabSwitcher';
 import { Toast, useToast } from './src/components/Toast';
-import { copyLink, shareLink } from './src/device/link';
+import { copyLink, copyText, shareLink, shareText } from './src/device/link';
 import { savePagePdf } from './src/device/pdf';
 import { saveScreenshot } from './src/device/screenshot';
-import { speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
+import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 
 let itemCounter = 0;
@@ -230,6 +230,17 @@ export default function App() {
           onStop={stop}
           onNewChat={newChat}
           onOpenSettings={() => setSettingsVisible(true)}
+          onMessageAction={(action, text) =>
+            runAction(async () => {
+              if (action === 'copy') {
+                await copyText(text);
+                return 'Kopyalandı';
+              }
+              if (action === 'share') return shareText(text);
+              if (speaking) return stopSpeaking();
+              await speak(text);
+            })
+          }
         />
         <PageMenu
           visible={menuVisible}

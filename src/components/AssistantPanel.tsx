@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIsSpeaking } from '../device/speech';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 
 export type ChatItem = {
@@ -33,6 +34,7 @@ type Props = {
   onStop: () => void;
   onNewChat: () => void;
   onOpenSettings: () => void;
+  onMessageAction: (action: MessageAction, text: string) => void;
 };
 
 const MAX_WIDTH = 420;
@@ -52,7 +54,9 @@ export function AssistantPanel({
   onStop,
   onNewChat,
   onOpenSettings,
+  onMessageAction,
 }: Props) {
+  const speaking = useIsSpeaking();
   const { width: screenWidth } = useWindowDimensions();
   const width = Math.min(Math.round(screenWidth * 0.88), MAX_WIDTH);
   const insets = useSafeAreaInsets();
@@ -141,7 +145,7 @@ export function AssistantPanel({
                 </Text>
               )}
               {items.map((item) => (
-                <ChatRow key={item.id} item={item} />
+                <ChatRow key={item.id} item={item} speaking={speaking} onAction={onMessageAction} />
               ))}
             </ScrollView>
 
@@ -191,18 +195,39 @@ function HeaderButton({
   );
 }
 
-function ChatRow({ item }: { item: ChatItem }) {
+export type MessageAction = 'copy' | 'speak' | 'share';
+
+function ChatRow({
+  item,
+  speaking,
+  onAction,
+}: {
+  item: ChatItem;
+  speaking: boolean;
+  onAction: (action: MessageAction, text: string) => void;
+}) {
   switch (item.kind) {
     case 'user':
       return (
         <View style={[styles.bubble, styles.userBubble]}>
-          <Text style={styles.userText}>{item.text}</Text>
+          <Text style={styles.userText} selectable>
+            {item.text}
+          </Text>
         </View>
       );
     case 'assistant':
       return (
-        <View style={[styles.bubble, styles.assistantBubble]}>
-          <Text style={styles.assistantText}>{item.text}</Text>
+        <View style={styles.assistantRow}>
+          <View style={[styles.bubble, styles.assistantBubble]}>
+            <Text style={styles.assistantText} selectable>
+              {item.text}
+            </Text>
+          </View>
+          <View style={styles.messageActions}>
+            <MessageButton label="⧉ Kopyala" onPress={() => onAction('copy', item.text)} />
+            <MessageButton label={speaking ? '⏹ Durdur' : '🔊 Oku'} onPress={() => onAction('speak', item.text)} />
+            <MessageButton label="⤴ Paylaş" onPress={() => onAction('share', item.text)} />
+          </View>
         </View>
       );
     case 'error':
@@ -212,8 +237,21 @@ function ChatRow({ item }: { item: ChatItem }) {
   }
 }
 
+function MessageButton({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} hitSlop={6} style={({ pressed }) => [styles.messageButton, pressed && styles.pressed]}>
+      <Text style={styles.messageButtonText}>{label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  assistantRow: { alignSelf: 'flex-start', maxWidth: '90%', gap: 4 },
+  messageActions: { flexDirection: 'row', gap: 4, marginLeft: 4 },
+  messageButton: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
+  messageButtonText: { fontSize: 12, color: '#8a8780' },
+  pressed: { backgroundColor: '#ebe8e0' },
   backdrop: { backgroundColor: 'rgba(0,0,0,0.35)' },
   panel: {
     position: 'absolute',
@@ -250,6 +288,7 @@ const styles = StyleSheet.create({
   userBubble: { alignSelf: 'flex-end', backgroundColor: '#c96442' },
   assistantBubble: {
     alignSelf: 'flex-start',
+    maxWidth: '100%',
     backgroundColor: '#fff',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: '#e0ddd4',
