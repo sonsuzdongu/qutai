@@ -168,10 +168,10 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 1. ✅ **Quick action chips:** Summarize, Translate, Key points, Is this product good?, Compare
 2. ✅ **Ask about selected text:** Ask, Explain, Translate, Share (page script and a strip at the bottom of the page on both platforms)
 3. ~~**Smart address bar:** natural language commands go to ALPAI~~ (will not be done)
-4. **Sources:** clickable source links in answers, tabs used · M
+4. ✅ **Sources:** pages read, shown below answers (switches to its tab if open, otherwise opens in a new tab)
    - ✅ Intermediate step: answers are rendered as markdown, links are clickable
    - ✅ Each tab has its own chat (persistent; the chat comes back with a reopened tab; one task at a time)
-   - **Clickable options:** when a choice is needed, the agent presents options as buttons via the `ask_user` tool · S
+   - ✅ **Clickable options:** when a choice is needed, the agent presents options as buttons via the `ask_user` tool
 5. **AI search:** answers with sources using the providers' web search tools · M
 6. **Multi-tab:** `read_tab` tool, "compare selected tabs" · M
 7. **Page translation** (in place) and **reader mode** · M
@@ -225,7 +225,7 @@ deep research, price and page tracking, Safe Browsing checks.
 | Single tab or multiple tabs? | Multiple tabs (opening, switching, listing tabs); reading without switching to the tab is Phase 2 |
 | What can the agent complete? | Clicking, typing, selecting, navigating via the DOM, PDF, screenshots, read-aloud. It cannot click inside canvas and maps |
 | How is permission obtained? | Mandatory confirmation for sensitive actions + optional confirmation for every action. Per-site permissions are Phase 2 |
-| Are sources transparent? | Not yet (Phase 2) |
+| Are sources transparent? | Yes: pages read below the answer; AI search sources in Phase 2 |
 | Free / paid limits | Unlimited with your own key; ALPAI credits are planned |
 | iOS / Android differences | Private mode isolation, text selection menu, download and PiP behaviors differ |
 
