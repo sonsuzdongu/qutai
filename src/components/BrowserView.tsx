@@ -9,6 +9,7 @@ import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../
 import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { openExternal } from '../browser/openExternal';
 import type { Tab } from '../browser/Tab';
+import { t } from '../i18n';
 import { ErrorPage } from './ErrorPage';
 import type { LibraryTab } from './LibraryScreen';
 import { NewTabPage } from './NewTabPage';
@@ -23,6 +24,8 @@ export type TabActions = {
   onContextMenu: (tab: Tab, target: ContextTarget) => void;
   /** The text selection in this tab changed ("" when cleared). */
   onSelection: (tab: Tab, text: string) => void;
+  /** iOS: the page offered a file the WebView can't show. */
+  onDownload: (tab: Tab, url: string) => void;
   /** Page text size in percent. */
   textZoom: number;
   /** Short notice for the user, e.g. when no app can open a link. */
@@ -143,6 +146,10 @@ function TabWebView({
           textZoom={newTabActions.textZoom}
           // The app shows its own long-press menu for links and images.
           allowsLinkPreview={false}
+          onFileDownload={(e) => newTabActions.onDownload(tab, e.nativeEvent.downloadUrl)}
+          // Android hands downloads to the system download manager (with the site's cookies).
+          downloadingMessage={t('downloads.androidStarted')}
+          lackPermissionToDownloadMessage={t('downloads.androidNoPermission')}
           allowsBackForwardNavigationGestures
           javaScriptEnabled
           domStorageEnabled

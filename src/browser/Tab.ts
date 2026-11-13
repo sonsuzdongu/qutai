@@ -29,7 +29,8 @@ export type PageCommand =
   | 'findInPage'
   | 'findStep'
   | 'clearFind'
-  | 'imageData';
+  | 'imageData'
+  | 'fileData';
 
 /**
  * One browser tab: owns its WebView, injects the page script, sends commands,

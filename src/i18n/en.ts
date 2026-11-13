@@ -206,6 +206,15 @@ export const en = {
   'settings.sitePermissions': 'Site permissions',
   'settings.actionLog': 'Kutai activity',
 
+  'menu.downloads': 'Downloads',
+  'downloads.title': 'Downloads',
+  'downloads.empty': 'No downloads yet.',
+  'downloads.delete': 'Delete file',
+  'downloads.started': 'Downloading…',
+  'downloads.done': 'Downloaded: {name}',
+  'downloads.androidStarted': 'Downloading — see the notification',
+  'downloads.androidNoPermission': "Kutai can't save files without storage permission.",
+
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",
   'settings.provider': 'AI provider',

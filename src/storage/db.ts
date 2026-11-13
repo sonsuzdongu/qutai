@@ -51,6 +51,14 @@ const MIGRATIONS: string[] = [
      ok INTEGER NOT NULL
    );
    CREATE INDEX agent_actions_at ON agent_actions (at DESC);`,
+  `CREATE TABLE downloads (
+     id TEXT PRIMARY KEY NOT NULL,
+     url TEXT NOT NULL,
+     name TEXT NOT NULL,
+     uri TEXT NOT NULL,
+     size INTEGER,
+     created_at INTEGER NOT NULL
+   );`,
 ];
 
 export async function migrate(db: Db): Promise<void> {

@@ -1,7 +1,7 @@
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, AppState, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
+import { Alert, AppState, KeyboardAvoidingView, Platform, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
@@ -38,6 +38,10 @@ import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
 import { searchHistory } from './src/storage/history';
 import { composeEmail } from './src/device/email';
 import { shareReportPdf } from './src/device/reportPdf';
+import { deleteDownloadedFile, downloadFile } from './src/device/download';
+import { DownloadStore } from './src/storage/downloads';
+import { DownloadsScreen } from './src/components/DownloadsScreen';
+import * as Sharing from 'expo-sharing';
 import { SitePermissionStore } from './src/storage/sitePermissions';
 import { siteKey } from './src/agent/sitePolicy';
 import { SitePermissionSheet } from './src/components/SitePermissionSheet';
@@ -50,6 +54,7 @@ import { useRecordHistory } from './src/storage/useRecordHistory';
 const KEEP_AWAKE_TAG = 'kutai-agent';
 const memoryStore = deviceMemoryStore(getDb);
 const sitePermissions = new SitePermissionStore(getDb);
+const downloads = new DownloadStore(getDb);
 
 const historySearch = {
   search: async (query: string, from: number, to: number) => searchHistory(await getDb(), { query, from, to }),
@@ -140,6 +145,7 @@ function BrowserApp({
   const [library, setLibrary] = useState<LibraryTab | null>(null);
   const [textSizeVisible, setTextSizeVisible] = useState(false);
   const [permissionHost, setPermissionHost] = useState<string | null>(null);
+  const [downloadsVisible, setDownloadsVisible] = useState(false);
   const [context, setContext] = useState<{ tab: Tab; target: ContextTarget } | null>(null);
   // Find in page belongs to one page: it closes by itself when the tab or the URL changes.
   const [findFor, setFindFor] = useState<{ tabId: string; url: string } | null>(null);
@@ -174,6 +180,7 @@ function BrowserApp({
   // Once at start: load site permissions and trim the activity history.
   useEffect(() => {
     sitePermissions.load();
+    downloads.load();
     getDb()
       .then((db) => pruneActions(db))
       .catch(() => {});
@@ -259,7 +266,7 @@ function BrowserApp({
         onEvent: (event) => {
           if (event.type === 'text_delta') return chat.appendStreaming(event.text);
           if (event.type === 'text') return chat.finishStreaming(event.text);
-          if (event.type === 'sources') return chat.add(sourcesItem(event.sources));
+          if (event.type === 'sources') return chat.add(sourcesItem(event.sources, event.searchWidget));
           if (event.type === 'choices') return chat.add(newItem('choices', event.text, event.options));
           chat.add(newItem(event.type, event.text));
         },
@@ -410,6 +417,9 @@ function BrowserApp({
         },
     { icon: '🔖', label: t('menu.bookmarks'), section: true, onPress: () => setLibrary('bookmarks') },
     { icon: '🕘', label: t('menu.history'), onPress: () => setLibrary('history') },
+    ...(Platform.OS === 'ios'
+      ? [{ icon: '⬇︎', label: t('menu.downloads'), onPress: () => setDownloadsVisible(true) }]
+      : []),
     { icon: '＋', label: t('menu.newTab'), section: true, onPress: () => browser.openTab() },
     { icon: '🕶', label: t('menu.newIncognitoTab'), onPress: () => browser.openTab(undefined, { incognito: true }) },
   ];
@@ -585,6 +595,13 @@ function BrowserApp({
               browser={browser}
               newTabActions={{
                 onContextMenu: (source, target) => setContext({ tab: source, target }),
+                onDownload: (source, url) =>
+                  runAction(async () => {
+                    toast.show(t('downloads.started'));
+                    const entry = await downloadFile(source, url);
+                    await downloads.add(entry);
+                    return t('downloads.done', { name: entry.name });
+                  }),
                 onSelection: (source, text) =>
                   setSelection((prev) =>
                     text ? { tabId: source.id, url: source.url, text } : prev?.tabId === source.id ? null : prev,
@@ -687,6 +704,20 @@ function BrowserApp({
           target={context?.target ?? null}
           actions={context ? contextActions(context.tab, context.target) : []}
           onClose={() => setContext(null)}
+        />
+        <DownloadsScreen
+          visible={downloadsVisible}
+          store={downloads}
+          onOpen={(entry) =>
+            runAction(() => Sharing.shareAsync(entry.uri, { dialogTitle: entry.name }).then(() => undefined))
+          }
+          onDelete={(entry) =>
+            runAction(async () => {
+              deleteDownloadedFile(entry.uri);
+              await downloads.remove(entry.id);
+            })
+          }
+          onClose={() => setDownloadsVisible(false)}
         />
         <SitePermissionSheet
           host={permissionHost}

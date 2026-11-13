@@ -208,6 +208,15 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.sitePermissions': 'Site izinleri',
   'settings.actionLog': 'Kutai işlem geçmişi',
 
+  'menu.downloads': 'İndirilenler',
+  'downloads.title': 'İndirilenler',
+  'downloads.empty': 'Henüz indirilen dosya yok.',
+  'downloads.delete': 'Dosyayı sil',
+  'downloads.started': 'İndiriliyor…',
+  'downloads.done': 'İndirildi: {name}',
+  'downloads.androidStarted': 'İndiriliyor; bildirimden takip edebilirsiniz',
+  'downloads.androidNoPermission': 'Kutai depolama izni olmadan dosya kaydedemiyor.',
+
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',
   'settings.provider': 'Yapay zekâ sağlayıcısı',
