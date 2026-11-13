@@ -157,9 +157,9 @@ Goal: ALPAI can be used as an everyday browser.
 2. ✅ **New tab screen:** speed dial sites, bookmarks, recently visited
 3. ✅ **Address bar:** autocomplete from history and bookmarks, search suggestions (off in private mode), search engine choice, paste and go, clear, HTTPS indicator
 4. ✅ **Navigation:** forward, stop, reliable opening of external app links (tel:, mailto:, `intent://`), error page in Turkish
-5. **Page tools:** find in page, desktop site, text size, print · M
-6. **Long-press menu:** open link in new tab / private tab, copy link, save image · M
-7. **Tabs:** reopen closed tab, search in tabs, **putting unused tabs to sleep** (memory) · M
+5. ✅ **Page tools:** find in page, desktop site, text size, print
+6. ✅ **Long-press menu:** open link in new tab / private tab, copy/share link, summarize with ALPAI, save image
+7. ✅ **Tabs:** reopen closed tab, search in tabs, **putting unused tabs to sleep** (at most 5 open WebViews; private tabs are not put to sleep)
 
 ### Phase 2 – Putting AI front and center (Expo Go)
 
