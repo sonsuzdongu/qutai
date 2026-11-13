@@ -1,3 +1,4 @@
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
@@ -20,6 +21,8 @@ import { savePagePdf } from './src/device/pdf';
 import { saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
+
+const KEEP_AWAKE_TAG = 'alpai-agent';
 
 let itemCounter = 0;
 const newItem = (kind: ChatItem['kind'], text: string): ChatItem => ({ id: String(++itemCounter), kind, text });
@@ -88,6 +91,8 @@ export default function App() {
     const abort = new AbortController();
     abortRef.current = abort;
     setRunning(true);
+    // If the screen turned off mid-task, the OS would freeze the app and the task would stall.
+    activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch(() => {});
     try {
       await runAgent({
         provider,
@@ -110,6 +115,7 @@ export default function App() {
     } finally {
       abortRef.current = null;
       setRunning(false);
+      deactivateKeepAwake(KEEP_AWAKE_TAG).catch(() => {});
     }
   };
 
