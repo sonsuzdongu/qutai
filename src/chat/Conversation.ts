@@ -3,6 +3,7 @@ import type { Source } from '../agent/types';
 import type { ChatItem } from '../components/AssistantPanel';
 
 let itemCounter = 0;
+const STREAM_FLUSH_MS = 50;
 
 export function sourcesItem(sources: Source[]): ChatItem {
   return { id: String(++itemCounter), kind: 'sources', text: '', sources };
@@ -32,6 +33,9 @@ export class Conversation {
   loaded = false;
 
   private abortController: AbortController | null = null;
+  private streamingId: string | null = null;
+  private pendingText = '';
+  private flushTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private onChange: () => void) {}
 
@@ -48,6 +52,48 @@ export class Conversation {
   /** Records which option was tapped, so the buttons show the answer and can't be used again. */
   choose(itemId: string, option: string) {
     this.items = this.items.map((item) => (item.id === itemId ? { ...item, chosen: option } : item));
+    this.onChange();
+  }
+
+  /** Adds a piece of a streamed reply. Updates are batched so the screen redraws at most every 50 ms. */
+  appendStreaming(delta: string) {
+    this.pendingText += delta;
+    this.flushTimer ??= setTimeout(() => this.flushStreaming(), STREAM_FLUSH_MS);
+  }
+
+  private flushStreaming() {
+    if (this.flushTimer) clearTimeout(this.flushTimer);
+    this.flushTimer = null;
+    if (!this.pendingText) return;
+    const text = this.pendingText;
+    this.pendingText = '';
+    const id = this.streamingId;
+    if (id) {
+      this.items = this.items.map((item) => (item.id === id ? { ...item, text: item.text + text } : item));
+    } else {
+      const item = { ...newItem('assistant', text), streaming: true };
+      this.streamingId = item.id;
+      this.items = [...this.items, item];
+    }
+    this.onChange();
+  }
+
+  /**
+   * Ends a streamed reply. With text, it replaces what was streamed ("" removes the bubble);
+   * without (e.g. after an error), the streamed part stays as it is.
+   */
+  finishStreaming(text?: string) {
+    this.flushStreaming();
+    const id = this.streamingId;
+    this.streamingId = null;
+    if (!id) {
+      if (text) this.add(newItem('assistant', text));
+      return;
+    }
+    this.items =
+      text === ''
+        ? this.items.filter((item) => item.id !== id)
+        : this.items.map((item) => (item.id === id ? { id, kind: 'assistant', text: text ?? item.text } : item));
     this.onChange();
   }
 

@@ -58,6 +58,8 @@ export type ModelRequest = {
   webSearch: boolean;
   turns: Turn[];
   signal: AbortSignal;
+  /** When set, the reply is streamed and text arrives here piece by piece (providers that support it). */
+  onText?: (delta: string) => void;
 };
 
 export type ModelTag = 'recommended' | 'fastest' | 'strongest';

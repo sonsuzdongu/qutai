@@ -30,6 +30,8 @@ export type ChatItem = {
   options?: string[];
   /** For 'choices': the option the user tapped. */
   chosen?: string;
+  /** For 'assistant': the reply is still being written. */
+  streaming?: boolean;
   /** For 'sources': the pages the answer is based on. */
   sources?: Source[];
 };
@@ -190,6 +192,10 @@ export function AssistantPanel({
               style={styles.flex}
               contentContainerStyle={styles.messagesContent}
               keyboardShouldPersistTaps="handled"
+              // Follow a reply while it is being written.
+              onContentSizeChange={() => {
+                if (open && running) scrollRef.current?.scrollToEnd({ animated: false });
+              }}
             >
               {items.length === 0 && <Text style={styles.empty}>{t('chat.empty')}</Text>}
               {items.map((item, index) => (
@@ -315,16 +321,22 @@ function ChatRow({
       return (
         <View style={styles.assistantRow}>
           <View style={[styles.bubble, styles.assistantBubble]}>
-            <MarkdownText text={item.text} style={styles.assistantText} onOpenLink={onOpenLink} />
-          </View>
-          <View style={styles.messageActions}>
-            <MessageButton label={t('chat.copy')} onPress={() => onAction('copy', item.text)} />
-            <MessageButton
-              label={t(speaking ? 'chat.stopReading' : 'chat.read')}
-              onPress={() => onAction('speak', item.text)}
+            <MarkdownText
+              text={item.streaming ? `${item.text} ▍` : item.text}
+              style={styles.assistantText}
+              onOpenLink={onOpenLink}
             />
-            <MessageButton label={t('chat.share')} onPress={() => onAction('share', item.text)} />
           </View>
+          {item.streaming ? null : (
+            <View style={styles.messageActions}>
+              <MessageButton label={t('chat.copy')} onPress={() => onAction('copy', item.text)} />
+              <MessageButton
+                label={t(speaking ? 'chat.stopReading' : 'chat.read')}
+                onPress={() => onAction('speak', item.text)}
+              />
+              <MessageButton label={t('chat.share')} onPress={() => onAction('share', item.text)} />
+            </View>
+          )}
         </View>
       );
     case 'choices':

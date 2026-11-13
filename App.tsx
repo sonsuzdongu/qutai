@@ -204,13 +204,15 @@ function BrowserApp({
         privacy: chat.privacy,
         memory: settings.memoryEnabled ? memoryStore : undefined,
         webSearch: settings.webSearch,
+        stream: true,
         confirm: settings.confirmActions ? askConfirmation : undefined,
         signal,
         onEvent: (event) => {
+          if (event.type === 'text_delta') return chat.appendStreaming(event.text);
+          if (event.type === 'text') return chat.finishStreaming(event.text);
           if (event.type === 'sources') return chat.add(sourcesItem(event.sources));
           if (event.type === 'choices') return chat.add(newItem('choices', event.text, event.options));
-          const kind = event.type === 'text' ? 'assistant' : event.type;
-          chat.add(newItem(kind, event.text));
+          chat.add(newItem(event.type, event.text));
         },
       });
       if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
@@ -218,6 +220,7 @@ function BrowserApp({
       if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
       else chat.add(newItem('error', e instanceof Error ? e.message : String(e)));
     } finally {
+      chat.finishStreaming();
       chat.finish();
       browser.setAgentTab(null);
       deactivateKeepAwake(KEEP_AWAKE_TAG).catch(() => {});

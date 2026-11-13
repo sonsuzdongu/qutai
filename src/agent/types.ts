@@ -9,6 +9,8 @@ export type Source = { url: string; title: string; incognito: boolean };
 
 export type AgentEvent =
   | { type: 'text'; text: string }
+  /** A piece of the reply being streamed; the complete text follows as a 'text' event. */
+  | { type: 'text_delta'; text: string }
   | { type: 'action'; text: string }
   | { type: 'info'; text: string }
   | { type: 'error'; text: string }

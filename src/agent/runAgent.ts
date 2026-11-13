@@ -23,6 +23,8 @@ export type AgentOptions = ToolContext & {
   model: string;
   /** Conversation history; new turns are appended in place. */
   turns: Turn[];
+  /** Stream replies as they are written (text_delta events). */
+  stream?: boolean;
   /** Let the model search the web with the provider's own search tool (billed by the provider). */
   webSearch?: boolean;
   signal: AbortSignal;
@@ -58,12 +60,19 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     await pauseWhileBackgrounded();
     if (signal.aborted) return;
 
+    let streamed = false;
     const reply = await provider.call({
       apiKey: opts.apiKey,
       model: opts.model,
       system: await systemPrompt(opts),
       tools: opts.memory ? [...TOOLS, ...MEMORY_TOOLS] : TOOLS,
       webSearch: !!opts.webSearch,
+      onText: opts.stream
+        ? (delta) => {
+            streamed = true;
+            onEvent({ type: 'text_delta', text: delta });
+          }
+        : undefined,
       turns: compactHistory(turns),
       signal,
     });
@@ -80,7 +89,8 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     reply.citations.forEach((c) =>
       addSource({ url: c.url, title: c.title, incognito: !!opts.privacy?.touchedIncognito }),
     );
-    if (reply.text) onEvent({ type: 'text', text: reply.text });
+    // After streaming, the final text replaces what was shown (an empty one removes it).
+    if (reply.text || streamed) onEvent({ type: 'text', text: reply.text });
     // A long web search was paused by the provider; sending the reply back continues it.
     if (reply.stop === 'pause') continue;
 

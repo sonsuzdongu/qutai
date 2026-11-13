@@ -1,5 +1,7 @@
-import { postJson } from './http';
+import { postJson, postSse } from './http';
 import { Citation, canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
+
+const RESPONSES_URL = 'https://api.openai.com/v1/responses';
 
 type Item = { type?: string; [key: string]: unknown };
 
@@ -55,30 +57,61 @@ function parseArguments(raw: unknown): Record<string, unknown> {
 }
 
 async function call(req: ModelRequest): Promise<ModelReply> {
-  const res = await postJson<Response>(
-    'https://api.openai.com/v1/responses',
-    { authorization: `Bearer ${req.apiKey}` },
-    {
-      model: req.model,
-      instructions: req.system,
-      input: toInput(req.turns, req.model),
-      tools: [
-        ...req.tools.map((t) => ({
-          type: 'function',
-          name: t.name,
-          description: t.description,
-          parameters: t.input_schema,
-          // Our schemas have optional fields, which strict mode doesn't allow.
-          strict: false,
-        })),
-        ...(req.webSearch ? [{ type: 'web_search' }] : []),
-      ],
-      store: false,
-      max_output_tokens: 32000,
-    },
-    req.signal,
-  );
+  const body = {
+    model: req.model,
+    instructions: req.system,
+    input: toInput(req.turns, req.model),
+    tools: [
+      ...req.tools.map((t) => ({
+        type: 'function',
+        name: t.name,
+        description: t.description,
+        parameters: t.input_schema,
+        // Our schemas have optional fields, which strict mode doesn't allow.
+        strict: false,
+      })),
+      ...(req.webSearch ? [{ type: 'web_search' }] : []),
+    ],
+    store: false,
+    max_output_tokens: 32000,
+  };
+  const headers = { authorization: `Bearer ${req.apiKey}` };
+  const res = req.onText
+    ? await streamResponse(headers, body, req.signal, req.onText)
+    : await postJson<Response>(RESPONSES_URL, headers, body, req.signal);
+  return toReply(res);
+}
 
+/** Streams text deltas; the final event carries the complete response, so nothing has to be rebuilt. */
+async function streamResponse(
+  headers: Record<string, string>,
+  body: Record<string, unknown>,
+  signal: AbortSignal,
+  onText: (delta: string) => void,
+): Promise<Response> {
+  let final: Response | null = null;
+  let lastItem = -1;
+  await postSse(RESPONSES_URL, headers, { ...body, stream: true }, signal, ({ data }) => {
+    const e = data as Item & { response?: Response & { error?: { message?: string } }; message?: string };
+    if (e.type === 'response.output_text.delta' && typeof e.delta === 'string') {
+      // Separate the texts of different output messages like the final reply does.
+      const item = Number(e.output_index ?? 0);
+      if (lastItem !== -1 && item !== lastItem) onText('\n\n');
+      lastItem = item;
+      onText(e.delta);
+    } else if (e.type === 'response.completed' || e.type === 'response.incomplete') {
+      final = e.response ?? null;
+    } else if (e.type === 'response.failed') {
+      throw new Error(e.response?.error?.message ?? 'The response failed');
+    } else if (e.type === 'error') {
+      throw new Error(typeof e.message === 'string' ? e.message : 'Stream error');
+    }
+  });
+  if (!final) throw new Error('The response ended unexpectedly');
+  return final;
+}
+
+function toReply(res: Response): ModelReply {
   const texts: string[] = [];
   let refused = false;
   const toolCalls: ToolCall[] = [];
