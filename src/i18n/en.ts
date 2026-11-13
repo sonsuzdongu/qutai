@@ -148,6 +148,22 @@ export const en = {
   'selection.explainPrompt': 'Explain this text from the page in simple terms:\n\n{text}',
   'selection.translatePrompt': 'Translate this text from the page into English:\n\n{text}',
 
+  'settings.memory': 'Memory',
+  'settings.memoryEnabled': 'Remember things about me',
+  'settings.memoryHint':
+    'ALPAI saves facts you tell it (name, phone, address, preferences) on this phone and uses them in later conversations, e.g. to fill in forms. Never passwords or card details; nothing from incognito.',
+  'settings.manageMemory': 'Manage memory',
+  'memory.title': 'Memory',
+  'memory.hint': 'Saved only on this phone. ALPAI uses these facts when they help with a task. Tap one to edit it.',
+  'memory.empty': 'Nothing saved yet. Tell ALPAI something like "Remember my phone number is …".',
+  'memory.addPlaceholder': 'Add a fact, e.g. "Name: Jane Smith"',
+  'memory.add': 'Add',
+  'memory.delete': 'Delete memory',
+  'memory.editHint': 'Edit',
+  'memory.clearAll': 'Delete all',
+  'memory.clearConfirm': 'Delete all memories?',
+  'memory.clearConfirmBody': "ALPAI will forget everything it saved about you. This can't be undone.",
+  'memory.saveFailed': "Couldn't save",
 
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",

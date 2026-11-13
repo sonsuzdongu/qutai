@@ -149,6 +149,23 @@ export const tr: Record<keyof typeof en, string> = {
   'selection.explainPrompt': 'Sayfadaki bu metni basitçe açıkla:\n\n{text}',
   'selection.translatePrompt': 'Sayfadaki bu metni Türkçeye çevir:\n\n{text}',
 
+  'settings.memory': 'Hafıza',
+  'settings.memoryEnabled': 'Benimle ilgili bilgileri hatırla',
+  'settings.memoryHint':
+    'ALPAI ona söylediğiniz bilgileri (ad, telefon, adres, tercihler) bu telefonda saklar ve sonraki sohbetlerde, örneğin form doldururken kullanır. Şifre ve kart bilgisi asla saklanmaz; gizli sekmelerden hiçbir şey kaydedilmez.',
+  'settings.manageMemory': 'Hafızayı yönet',
+  'memory.title': 'Hafıza',
+  'memory.hint':
+    'Yalnızca bu telefonda saklanır. ALPAI bu bilgileri bir göreve yardımcı olduklarında kullanır. Düzenlemek için dokunun.',
+  'memory.empty': "Henüz bir şey kaydedilmedi. ALPAI'ye örneğin “Telefon numaramın … olduğunu hatırla” deyin.",
+  'memory.addPlaceholder': 'Bilgi ekleyin, örn. "Ad: Ayşe Yılmaz"',
+  'memory.add': 'Ekle',
+  'memory.delete': 'Bilgiyi sil',
+  'memory.editHint': 'Düzenle',
+  'memory.clearAll': 'Tümünü sil',
+  'memory.clearConfirm': 'Tüm hafıza silinsin mi?',
+  'memory.clearConfirmBody': 'ALPAI sizinle ilgili kaydettiği her şeyi unutacak. Bu geri alınamaz.',
+  'memory.saveFailed': 'Kaydedilemedi',
 
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',

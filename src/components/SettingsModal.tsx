@@ -5,6 +5,7 @@ import { getProvider, PROVIDER_ORDER } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { t } from '../i18n';
+import { MemoryScreen } from './MemoryScreen';
 import type { Settings } from '../storage/settings';
 
 type Props = {
@@ -25,6 +26,7 @@ export function SettingsModal({ visible, settings, onSave, onClose }: Props) {
 
 function SettingsForm({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
   const [draft, setDraft] = useState(settings);
+  const [memoryVisible, setMemoryVisible] = useState(false);
   const provider = getProvider(draft.provider);
   const model = draft.models[draft.provider];
   const isCustomModel = !provider.models.some((m) => m.id === model);
@@ -147,7 +149,23 @@ function SettingsForm({ settings, onSave, onClose }: Omit<Props, 'visible'>) {
             onValueChange={(confirmActions) => setDraft({ ...draft, confirmActions })}
           />
         </View>
+
+        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.memory')}</Text>
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.memoryEnabled')}</Text>
+            <Text style={styles.hint}>{t('settings.memoryHint')}</Text>
+          </View>
+          <Switch
+            value={draft.memoryEnabled}
+            onValueChange={(memoryEnabled) => setDraft({ ...draft, memoryEnabled })}
+          />
+        </View>
+        <Pressable onPress={() => setMemoryVisible(true)} style={styles.option} accessibilityRole="button">
+          <Text style={[styles.optionText, styles.link]}>{t('settings.manageMemory')} ›</Text>
+        </Pressable>
       </ScrollView>
+      <MemoryScreen visible={memoryVisible} onClose={() => setMemoryVisible(false)} />
     </SafeAreaView>
   );
 }
