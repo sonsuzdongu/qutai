@@ -60,6 +60,8 @@ export const tr: Record<keyof typeof en, string> = {
   'action.webSearch': '🔎 Arandı: {query}',
   'action.readTab': '📑 Sekme {id} okunuyor',
   'action.typeRedacted': '⌨️ [{ref}] alanına yazdı',
+  'action.searchHistory': '🕘 Geçmişte aranıyor: {query}',
+  'action.draftEmail': '✉️ E-posta taslağı: {subject}',
   'action.wait': '⏳ {seconds} sn bekleniyor',
 
   'find.placeholder': 'Sayfada bul',

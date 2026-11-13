@@ -53,7 +53,8 @@
           }
         }
       ],
-      "expo-sqlite"
+      "expo-sqlite",
+      "expo-mail-composer"
     ],
     "locales": {
       "tr": "./locales/tr.json",

@@ -59,6 +59,8 @@ export const en = {
   'action.webSearch': '🔎 Searched: {query}',
   'action.readTab': '📑 Reading tab {id}',
   'action.typeRedacted': '⌨️ Typed into [{ref}]',
+  'action.searchHistory': '🕘 Searching history: {query}',
+  'action.draftEmail': '✉️ Email draft: {subject}',
   'action.wait': '⏳ Waiting {seconds}s',
 
   'find.placeholder': 'Find in page',

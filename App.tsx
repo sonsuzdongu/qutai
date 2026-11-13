@@ -35,6 +35,8 @@ import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmar
 import { getDb } from './src/storage/db';
 import { deviceMemoryStore } from './src/storage/memory';
 import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
+import { searchHistory } from './src/storage/history';
+import { composeEmail } from './src/device/email';
 import { SitePermissionStore } from './src/storage/sitePermissions';
 import { siteKey } from './src/agent/sitePolicy';
 import { SitePermissionSheet } from './src/components/SitePermissionSheet';
@@ -47,6 +49,10 @@ import { useRecordHistory } from './src/storage/useRecordHistory';
 const KEEP_AWAKE_TAG = 'kutai-agent';
 const memoryStore = deviceMemoryStore(getDb);
 const sitePermissions = new SitePermissionStore(getDb);
+
+const historySearch = {
+  search: async (query: string, from: number, to: number) => searchHistory(await getDb(), { query, from, to }),
+};
 
 /** Records an agent action for the activity screen. */
 function logAction(entry: ActionEntry) {
@@ -241,6 +247,8 @@ function BrowserApp({
         confirmByDefault: settings.confirmActions,
         sites: sitePermissions,
         log: logAction,
+        history: historySearch,
+        composeEmail,
         signal,
         onEvent: (event) => {
           if (event.type === 'text_delta') return chat.appendStreaming(event.text);

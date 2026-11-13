@@ -1,3 +1,4 @@
+import { foldForSearch } from '../browser/tabSearch';
 import type { Db } from './db';
 
 export type HistoryEntry = { id: number; url: string; title: string; visitedAt: number };
@@ -48,4 +49,38 @@ export async function clearHistory(db: Db): Promise<void> {
 
 export async function pruneHistory(db: Db, now = Date.now()): Promise<void> {
   await db.runAsync('DELETE FROM history WHERE visited_at < ?', [now - KEEP_DAYS * 24 * 60 * 60 * 1000]);
+}
+
+export type HistoryMatch = { url: string; title: string; lastVisit: number; visits: number };
+
+const SEARCH_SCAN_ROWS = 5000;
+
+/**
+ * Pages in a time range whose title or address contains every word of the query (any case,
+ * Turkish İ/ı folded), one entry per address with its visit count, most recent first. SQLite's
+ * LIKE only folds ASCII letters, so matching happens here.
+ */
+export async function searchHistory(
+  db: Db,
+  {
+    query,
+    from = 0,
+    to = Number.MAX_SAFE_INTEGER,
+    limit = 20,
+  }: { query: string; from?: number; to?: number; limit?: number },
+): Promise<HistoryMatch[]> {
+  const words = foldForSearch(query).split(/\s+/).filter(Boolean);
+  const rows = await db.getAllAsync<Row>(
+    'SELECT * FROM history WHERE visited_at >= ? AND visited_at <= ? ORDER BY visited_at DESC, id DESC LIMIT ?',
+    [from, to, SEARCH_SCAN_ROWS],
+  );
+  const byUrl = new Map<string, HistoryMatch>();
+  for (const row of rows) {
+    const text = foldForSearch(`${row.title} ${row.url}`);
+    if (!words.every((w) => text.includes(w))) continue;
+    const seen = byUrl.get(row.url);
+    if (seen) seen.visits++;
+    else byUrl.set(row.url, { url: row.url, title: row.title, lastVisit: row.visited_at, visits: 1 });
+  }
+  return [...byUrl.values()].slice(0, limit);
 }

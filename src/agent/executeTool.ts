@@ -7,6 +7,7 @@ import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import { sleep } from '../utils/sleep';
 import type { ActionEntry } from '../storage/actionLog';
+import type { HistoryMatch } from '../storage/history';
 import type { MemoryStore } from './memory';
 import { decide, SitePolicy, siteKey } from './sitePolicy';
 
@@ -29,6 +30,10 @@ export type ToolContext = {
   confirmByDefault?: boolean;
   /** Per-site permissions (allow, ask, read-only, blocked). */
   sites?: SitePolicy;
+  /** Browsing history search (search_history); absent in tests or when unavailable. */
+  history?: { search(query: string, from: number, to: number): Promise<HistoryMatch[]> };
+  /** Opens the email composer; resolves with what the user did (sent, saved, cancelled…). */
+  composeEmail?: (draft: EmailDraft) => Promise<string>;
   /** Records what the agent did, for the action history. Not called for incognito tabs. */
   log?: (entry: ActionEntry) => void;
   /** Set when the agent works in an incognito tab, so the conversation is never saved to disk. */
@@ -86,6 +91,10 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.switchTab', { id: str(input.tab_id) });
     case 'read_tab':
       return t('action.readTab', { id: str(input.tab_id) });
+    case 'search_history':
+      return t('action.searchHistory', { query: str(input.query) });
+    case 'draft_email':
+      return t('action.draftEmail', { subject: str(input.subject).slice(0, 60) });
     case 'close_tab':
       return t('action.closeTab', { id: str(input.tab_id) });
     case 'wait':
@@ -137,6 +146,52 @@ async function readTab(
     return { content: formatPage(target, page, 'read_tab') + hint, isError: false };
   } catch (e) {
     return { content: `Error: ${e instanceof Error ? e.message : String(e)}`, isError: true };
+  }
+}
+
+const DAY_MS = 86_400_000;
+
+function formatVisit(ts: number): string {
+  const d = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+async function searchHistoryTool(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  if (!ctx.history) return { content: 'History is not available.', isError: true };
+  const now = Date.now();
+  const since = Math.max(0, Number(input.since_days_ago ?? 90) || 0);
+  const until = Math.max(0, Number(input.until_days_ago ?? 0) || 0);
+  const query = String(input.query ?? '');
+  const matches = await ctx.history.search(query, now - since * DAY_MS, now - until * DAY_MS);
+  const header = `Today: ${formatVisit(now)}. History matches for "${query}" (${since}–${until} days ago):`;
+  if (matches.length === 0)
+    return {
+      content: `${header}\nNo pages found. Try fewer or other keywords, or a longer time range.`,
+      isError: false,
+    };
+  const lines = matches.map(
+    (m) =>
+      `- ${formatVisit(m.lastVisit)} · ${m.title || '(no title)'} — ${m.url}${m.visits > 1 ? ` (${m.visits} visits)` : ''}`,
+  );
+  return { content: `${header}\n${lines.join('\n')}`, isError: false };
+}
+
+async function draftEmail(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  if (!ctx.composeEmail) return { content: 'Email drafts are not available.', isError: true };
+  const raw = Array.isArray(input.to) ? input.to : typeof input.to === 'string' ? [input.to] : [];
+  const to = raw.map((a) => String(a).trim()).filter((a) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a));
+  try {
+    const status = await ctx.composeEmail({ to, subject: String(input.subject ?? ''), body: String(input.body ?? '') });
+    return {
+      content: `The email composer was shown; the user's choice: ${status}. You cannot send it yourself.`,
+      isError: false,
+    };
+  } catch (e) {
+    return {
+      content: `Could not open the email composer: ${e instanceof Error ? e.message : String(e)}`,
+      isError: true,
+    };
   }
 }
 
@@ -205,6 +260,8 @@ function tabList(ctx: ToolContext): string {
 
 type ToolOutput = { content: string; isError: boolean; images?: ToolImage[] };
 
+export type EmailDraft = { to: string[]; subject: string; body: string };
+
 /** Actions kept in the action history; bookkeeping (listing tabs, waiting, scrolling) is left out. */
 const LOGGED_TOOLS = new Set([
   'navigate',
@@ -222,6 +279,7 @@ const LOGGED_TOOLS = new Set([
   'close_tab',
   'remember',
   'forget',
+  'draft_email',
 ]);
 
 /** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
@@ -231,7 +289,20 @@ function actionTarget(
   ctx: ToolContext,
 ): { url: string; tab?: Tab } | null {
   if (name === 'navigate' || name === 'open_tab') return { url: normalizeUrl(input.url) };
-  if (['list_tabs', 'switch_tab', 'close_tab', 'wait', 'remember', 'forget', 'ask_user'].includes(name)) return null;
+  if (
+    [
+      'list_tabs',
+      'switch_tab',
+      'close_tab',
+      'wait',
+      'remember',
+      'forget',
+      'ask_user',
+      'search_history',
+      'draft_email',
+    ].includes(name)
+  )
+    return null;
   const tab =
     name === 'read_tab'
       ? ctx.browser.getTab(String(input.tab_id ?? ''))
@@ -277,6 +348,8 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
 
   if (name === 'remember' || name === 'forget') return memoryTool(name, input, ctx);
   if (name === 'read_tab') return readTab(input, ctx);
+  if (name === 'search_history') return searchHistoryTool(input, ctx);
+  if (name === 'draft_email') return draftEmail(input, ctx);
 
   const tab = currentTab(ctx);
   if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;

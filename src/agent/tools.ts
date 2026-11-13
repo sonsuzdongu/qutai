@@ -173,6 +173,36 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'search_history',
+    description:
+      "Search the user's browsing history on this phone (normal tabs only) by words in page titles and addresses, " +
+      'e.g. when they ask about a page they saw before. Turn their description into short keywords and an optional ' +
+      'time range in days ago. Returns matching pages with the time of the last visit.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Keywords that should appear in the title or address; empty lists all' },
+        since_days_ago: { type: 'integer', description: 'Search from this many days ago (default 90)' },
+        until_days_ago: { type: 'integer', description: 'Up to this many days ago (default 0, now)' },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'draft_email',
+    description:
+      "Open the phone's email composer with a draft. The user reviews it and decides whether to send; you cannot send email yourself.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        to: { type: 'array', items: { type: 'string' }, description: 'Recipient email addresses (optional)' },
+        subject: { type: 'string' },
+        body: { type: 'string', description: 'Plain text body' },
+      },
+      required: ['subject', 'body'],
+    },
+  },
+  {
     name: 'switch_tab',
     description: 'Switch to another open tab by id. Further page tools act on that tab.',
     input_schema: {
