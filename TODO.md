@@ -1,5 +1,7 @@
 # To Do
 
+For the feature inventory comparison and the phased plan, see `ROADMAP.md`.
+
 ## ALPAI Credits (paid usage)
 
 Besides their own API keys, users should also be able to pay to use our AI credits.
