@@ -10,6 +10,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TextInputInstance,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -30,6 +31,11 @@ export type QuickAction = { label: string; prompt: string };
 type Props = {
   open: boolean;
   quickActions: QuickAction[];
+  /** The message being typed; owned by the app so other features (e.g. selected text) can prefill it. */
+  draft: string;
+  onDraftChange: (text: string) => void;
+  /** Bumped to focus the input, e.g. after prefilling a quote. */
+  focusRequest: number;
   items: ChatItem[];
   running: boolean;
   /** Provider and model shown under the title, e.g. "OpenAI · GPT-5.6 Terra". */
@@ -52,6 +58,9 @@ const MAX_WIDTH = 420;
 export function AssistantPanel({
   open,
   quickActions,
+  draft: text,
+  onDraftChange: setText,
+  focusRequest,
   items,
   running,
   modelInfo,
@@ -69,8 +78,15 @@ export function AssistantPanel({
   const keyboardVisible = useKeyboardVisible();
 
   const [progress] = useState(() => new Animated.Value(0));
-  const [text, setText] = useState('');
   const scrollRef = useRef<ScrollViewInstance>(null);
+  const inputRef = useRef<TextInputInstance>(null);
+
+  useEffect(() => {
+    if (!focusRequest) return;
+    // Wait for the slide-in animation, otherwise the keyboard opens over a moving panel.
+    const timer = setTimeout(() => inputRef.current?.focus(), 250);
+    return () => clearTimeout(timer);
+  }, [focusRequest]);
 
   useEffect(() => {
     Animated.timing(progress, {
@@ -177,6 +193,7 @@ export function AssistantPanel({
 
             <View style={styles.inputRow}>
               <TextInput
+                ref={inputRef}
                 style={styles.input}
                 value={text}
                 onChangeText={setText}

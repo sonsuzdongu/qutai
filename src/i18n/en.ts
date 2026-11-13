@@ -137,6 +137,13 @@ export const en = {
   'quick.compare': '⚖ Compare tabs',
   'quick.comparePrompt': 'Compare the pages in my open tabs and show the main differences in a short table.',
 
+  'selection.ask': '✦ Ask',
+  'selection.explain': 'Explain',
+  'selection.translate': 'Translate',
+  'selection.share': 'Share',
+  'selection.explainPrompt': 'Explain this text from the page in simple terms:\n\n{text}',
+  'selection.translatePrompt': 'Translate this text from the page into English:\n\n{text}',
+
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",
   'settings.provider': 'AI provider',

@@ -4,6 +4,7 @@ import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
 import type { SearchEngineId } from '../browser/search';
 import { CONTEXT_MENU_SCRIPT, ContextTarget, parseContextTarget } from '../browser/contextMenu';
+import { parseSelection, SELECTION_SCRIPT } from '../browser/selection';
 import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
 import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { openExternal } from '../browser/openExternal';
@@ -20,6 +21,8 @@ import { NewTabPage } from './NewTabPage';
 export type TabActions = {
   /** A link or image was long-pressed in this tab. */
   onContextMenu: (tab: Tab, target: ContextTarget) => void;
+  /** The text selection in this tab changed ("" when cleared). */
+  onSelection: (tab: Tab, text: string) => void;
   /** Page text size in percent. */
   textZoom: number;
   /** Short notice for the user, e.g. when no app can open a link. */
@@ -65,9 +68,10 @@ function TabWebView({
   const iosIncognito = tab.incognito && Platform.OS === 'ios';
   const androidIncognito = tab.incognito && Platform.OS === 'android';
   const { textZoom } = newTabActions;
-  // Runs after every page load: long-press menu, desktop viewport (Android) and text size (iOS).
+  // Runs after every page load: long-press menu, text selection, desktop viewport (Android) and text size (iOS).
   const pageSetupScript = [
     CONTEXT_MENU_SCRIPT,
+    SELECTION_SCRIPT,
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
     Platform.OS === 'ios' && textZoom !== 100 ? textZoomScript(textZoom) : '',
   ].join('\n');
@@ -102,6 +106,8 @@ function TabWebView({
           style={styles.flex}
           onMessage={(e) => {
             if (tab.handleMessage(e.nativeEvent.data)) return;
+            const selection = parseSelection(e.nativeEvent.data);
+            if (selection !== null) return newTabActions.onSelection(tab, selection);
             const target = parseContextTarget(e.nativeEvent.data);
             if (target && active) newTabActions.onContextMenu(tab, target);
           }}

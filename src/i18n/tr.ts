@@ -138,6 +138,13 @@ export const tr: Record<keyof typeof en, string> = {
   'quick.compare': '⚖ Sekmeleri karşılaştır',
   'quick.comparePrompt': 'Açık sekmelerimdeki sayfaları karşılaştır ve temel farkları kısa bir tabloda göster.',
 
+  'selection.ask': '✦ Sor',
+  'selection.explain': 'Açıkla',
+  'selection.translate': 'Çevir',
+  'selection.share': 'Paylaş',
+  'selection.explainPrompt': 'Sayfadaki bu metni basitçe açıkla:\n\n{text}',
+  'selection.translatePrompt': 'Sayfadaki bu metni Türkçeye çevir:\n\n{text}',
+
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',
   'settings.provider': 'Yapay zekâ sağlayıcısı',

@@ -9,6 +9,7 @@ import { getProvider, modelLabel } from './src/ai/providers';
 import type { Turn } from './src/ai/types';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import type { ContextTarget } from './src/browser/contextMenu';
+import { quoteSelection } from './src/browser/selection';
 import type { Tab } from './src/browser/Tab';
 import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar } from './src/components/AddressBar';
@@ -19,6 +20,7 @@ import { FindBar } from './src/components/FindBar';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
 import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
 import { SettingsModal } from './src/components/SettingsModal';
+import { SelectionAction, SelectionBar } from './src/components/SelectionBar';
 import { TabSwitcher } from './src/components/TabSwitcher';
 import { TextSizeSheet } from './src/components/TextSizeSheet';
 import { Toast, useToast } from './src/components/Toast';
@@ -117,6 +119,10 @@ function BrowserApp({
   });
   const [running, setRunning] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [focusRequest, setFocusRequest] = useState(0);
+  // Text selected on a page; like find in page, it only counts for the page it came from.
+  const [selection, setSelection] = useState<{ tabId: string; url: string; text: string } | null>(null);
   const closePanel = useCallback(() => setPanelOpen(false), []);
 
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -421,6 +427,33 @@ function BrowserApp({
     return actions;
   };
 
+  const selectedText =
+    selection && selection.tabId === tab.id && selection.url === tab.url && !panelOpen && !running && !findOpen
+      ? selection.text
+      : '';
+
+  /** Actions for text selected on the page; "Ask" quotes it in the chat input for the user's own question. */
+  const selectionActions = (text: string): SelectionAction[] => {
+    const quote = quoteSelection(text);
+    const ask = (prompt: string) => {
+      setPanelOpen(true);
+      send(prompt);
+    };
+    return [
+      {
+        label: t('selection.ask'),
+        onPress: () => {
+          setDraft(`${quote}\n\n`);
+          setPanelOpen(true);
+          setFocusRequest((n) => n + 1);
+        },
+      },
+      { label: t('selection.explain'), onPress: () => ask(t('selection.explainPrompt', { text: quote })) },
+      { label: t('selection.translate'), onPress: () => ask(t('selection.translatePrompt', { text: quote })) },
+      { label: t('selection.share'), onPress: () => runAction(() => shareText(text)) },
+    ];
+  };
+
   // One-tap tasks in the panel; page tasks need a web page, comparing needs several tabs.
   const quickActions: QuickAction[] = [
     ...(onNewTab
@@ -490,6 +523,10 @@ function BrowserApp({
               browser={browser}
               newTabActions={{
                 onContextMenu: (source, target) => setContext({ tab: source, target }),
+                onSelection: (source, text) =>
+                  setSelection((prev) =>
+                    text ? { tabId: source.id, url: source.url, text } : prev?.tabId === source.id ? null : prev,
+                  ),
                 textZoom: settings.textZoom,
                 onNotice: toast.show,
                 searchEngine: settings.searchEngine,
@@ -500,12 +537,16 @@ function BrowserApp({
                 onOpenLibrary: setLibrary,
               }}
             />
+            {selectedText ? <SelectionBar actions={selectionActions(selectedText)} dark={tab.incognito} /> : null}
           </KeyboardAvoidingView>
         </SafeAreaView>
 
         <AssistantPanel
           open={panelOpen}
           quickActions={quickActions}
+          draft={draft}
+          onDraftChange={setDraft}
+          focusRequest={focusRequest}
           modelInfo={`${getProvider(settings.provider).label} · ${modelLabel(settings.provider, settings.models[settings.provider])}`}
           items={items}
           running={running}
