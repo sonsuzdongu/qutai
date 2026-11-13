@@ -227,5 +227,5 @@ deep research, price and page tracking, Safe Browsing checks.
 - [x] Start: Phase 1 (browser foundation)
 - [x] Search suggestions on by default; always off in private mode
 - [x] UI language: Turkish and English; matches the device language, English by default (done)
-- [ ] AI search: the providers' web search tools have an extra charge per search. Should it be on with the user's own key?
+- [x] AI search: on by default, can be turned off in settings (the extra per-search charge goes to the user's own key)
 - [ ] Should sync be end-to-end encrypted? (Recommended: yes)
