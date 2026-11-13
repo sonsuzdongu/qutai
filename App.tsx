@@ -17,6 +17,7 @@ import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
 import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
 import { SettingsModal } from './src/components/SettingsModal';
 import { TabSwitcher } from './src/components/TabSwitcher';
+import { TextSizeSheet } from './src/components/TextSizeSheet';
 import { Toast, useToast } from './src/components/Toast';
 import { copyLink, copyText, shareLink, shareText } from './src/device/link';
 import { savePagePdf } from './src/device/pdf';
@@ -120,6 +121,7 @@ function BrowserApp({
   const [menuVisible, setMenuVisible] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [library, setLibrary] = useState<LibraryTab | null>(null);
+  const [textSizeVisible, setTextSizeVisible] = useState(false);
   // Find in page belongs to one page: it closes by itself when the tab or the URL changes.
   const [findFor, setFindFor] = useState<{ tabId: string; url: string } | null>(null);
   const toast = useToast();
@@ -276,6 +278,11 @@ function BrowserApp({
       onPress: () => setFindFor({ tabId: tab.id, url: tab.url }),
     },
     {
+      icon: 'Aa',
+      label: t('menu.textSize'),
+      onPress: () => setTextSizeVisible(true),
+    },
+    {
       icon: '🖥',
       label: t('menu.desktopSite'),
       checked: tab.desktop,
@@ -375,6 +382,7 @@ function BrowserApp({
             <BrowserView
               browser={browser}
               newTabActions={{
+                textZoom: settings.textZoom,
                 onNotice: toast.show,
                 searchEngine: settings.searchEngine,
                 onAsk: (text) => {
@@ -431,6 +439,12 @@ function BrowserApp({
           settings={settings}
           onSave={onSaveSettings}
           onClose={() => setSettingsVisible(false)}
+        />
+        <TextSizeSheet
+          visible={textSizeVisible}
+          zoom={settings.textZoom}
+          onChange={(textZoom) => onSaveSettings({ ...settings, textZoom })}
+          onClose={() => setTextSizeVisible(false)}
         />
         <Toast key={toast.key} message={toast.message} onHidden={toast.hide} />
       </View>

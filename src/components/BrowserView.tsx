@@ -1,8 +1,9 @@
+import { useEffect } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
 import type { SearchEngineId } from '../browser/search';
-import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT } from '../browser/desktopMode';
+import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
 import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { openExternal } from '../browser/openExternal';
 import type { Tab } from '../browser/Tab';
@@ -16,6 +17,8 @@ import { NewTabPage } from './NewTabPage';
  * agent can still read and click in a tab the user isn't looking at.
  */
 export type TabActions = {
+  /** Page text size in percent. */
+  textZoom: number;
   /** Short notice for the user, e.g. when no app can open a link. */
   onNotice: (message: string) => void;
   searchEngine: SearchEngineId;
@@ -58,6 +61,18 @@ function TabWebView({
   // every normal tab and still shares cookies, so it is deliberately not used there.
   const iosIncognito = tab.incognito && Platform.OS === 'ios';
   const androidIncognito = tab.incognito && Platform.OS === 'android';
+  const { textZoom } = newTabActions;
+  // Runs after every page load: desktop viewport (Android) and text size (iOS).
+  const pageSetupScript =
+    [
+      tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
+      Platform.OS === 'ios' && textZoom !== 100 ? textZoomScript(textZoom) : '',
+    ].join('\n') || undefined;
+
+  // iOS: apply a new text size to the page already on screen too.
+  useEffect(() => {
+    if (Platform.OS === 'ios') tab.webview?.injectJavaScript(textZoomScript(textZoom));
+  }, [tab, textZoom]);
 
   return (
     <View
@@ -111,7 +126,8 @@ function TabWebView({
           )}
           userAgent={tab.desktop ? DESKTOP_USER_AGENT : undefined}
           contentMode={tab.desktop ? 'desktop' : 'recommended'}
-          injectedJavaScript={tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : undefined}
+          injectedJavaScript={pageSetupScript}
+          textZoom={newTabActions.textZoom}
           allowsBackForwardNavigationGestures
           javaScriptEnabled
           domStorageEnabled

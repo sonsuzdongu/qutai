@@ -59,6 +59,12 @@ export const tr: Record<keyof typeof en, string> = {
   'find.previous': 'Önceki eşleşme',
   'find.next': 'Sonraki eşleşme',
 
+  'textSize.title': 'Yazı boyutu',
+  'textSize.sample': 'Pijamalı hasta yağız şoföre çabucak güvendi.',
+  'textSize.smaller': 'Daha küçük yazı',
+  'textSize.larger': 'Daha büyük yazı',
+  'textSize.reset': 'Sıfırla',
+
   'back.exitHint': 'Kapatmak için bir kez daha geri basın',
 
   'address.placeholder': 'Adres veya arama',
@@ -86,6 +92,7 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.copyLink': 'Linki kopyala',
   'menu.linkCopied': 'Link kopyalandı',
   'menu.find': 'Sayfada bul',
+  'menu.textSize': 'Yazı boyutu',
   'menu.desktopSite': 'Masaüstü sitesi',
   'menu.savePdf': 'PDF olarak kaydet',
   'menu.pdfPreparing': 'PDF hazırlanıyor…',

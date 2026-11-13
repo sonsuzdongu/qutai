@@ -58,6 +58,12 @@ export const en = {
   'find.previous': 'Previous match',
   'find.next': 'Next match',
 
+  'textSize.title': 'Text size',
+  'textSize.sample': 'The quick brown fox jumps over the lazy dog.',
+  'textSize.smaller': 'Smaller text',
+  'textSize.larger': 'Larger text',
+  'textSize.reset': 'Reset',
+
   'back.exitHint': 'Press back again to exit',
 
   'address.placeholder': 'Search or type address',
@@ -85,6 +91,7 @@ export const en = {
   'menu.copyLink': 'Copy link',
   'menu.linkCopied': 'Link copied',
   'menu.find': 'Find in page',
+  'menu.textSize': 'Text size',
   'menu.desktopSite': 'Desktop site',
   'menu.savePdf': 'Save as PDF',
   'menu.pdfPreparing': 'Preparing PDF…',

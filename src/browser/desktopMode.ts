@@ -16,3 +16,11 @@ export const DESKTOP_VIEWPORT_SCRIPT = `(function () {
   if (!meta) { meta = document.createElement('meta'); meta.name = 'viewport'; document.head.appendChild(meta); }
   meta.setAttribute('content', 'width=1024');
 })(); true;`;
+
+/**
+ * iOS has no text zoom setting for web views; text-size-adjust scales page text the same way.
+ * (Android uses the WebView's own textZoom instead.)
+ */
+export function textZoomScript(percent: number): string {
+  return `document.documentElement.style.webkitTextSizeAdjust = '${Math.round(percent)}%'; true;`;
+}

@@ -11,6 +11,8 @@ export type Settings = {
   searchEngine: SearchEngineId;
   /** Live suggestions from the search engine while typing; always off in incognito tabs. */
   searchSuggestions: boolean;
+  /** Page text size in percent, for every tab. */
+  textZoom: number;
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -24,6 +26,7 @@ export const DEFAULT_SETTINGS: Settings = {
   confirmActions: false,
   searchEngine: 'google',
   searchSuggestions: true,
+  textZoom: 100,
 };
 
 const KEYS = {
@@ -31,6 +34,7 @@ const KEYS = {
   confirmActions: 'confirm_actions',
   searchEngine: 'search_engine',
   searchSuggestions: 'search_suggestions',
+  textZoom: 'text_zoom',
   apiKey: (id: ProviderId) => `api_key_${id}`,
   model: (id: ProviderId) => `model_${id}`,
   // Written by the first, Claude-only version of the app.
@@ -38,22 +42,38 @@ const KEYS = {
   legacyModel: 'model',
 };
 
+export const TEXT_ZOOM_MIN = 50;
+export const TEXT_ZOOM_MAX = 200;
+
+export function clampTextZoom(value: number): number {
+  return Math.min(TEXT_ZOOM_MAX, Math.max(TEXT_ZOOM_MIN, Math.round(value / 10) * 10));
+}
+
 function isProvider(value: string | null): value is ProviderId {
   return !!value && (PROVIDER_ORDER as string[]).includes(value);
 }
 
 export async function loadSettings(): Promise<Settings> {
   const get = (key: string) => SecureStore.getItemAsync(key);
-  const [provider, confirmActions, searchEngine, searchSuggestions, legacyApiKey, legacyModel, ...perProvider] =
-    await Promise.all([
-      get(KEYS.provider),
-      get(KEYS.confirmActions),
-      get(KEYS.searchEngine),
-      get(KEYS.searchSuggestions),
-      get(KEYS.legacyApiKey),
-      get(KEYS.legacyModel),
-      ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
-    ]);
+  const [
+    provider,
+    confirmActions,
+    searchEngine,
+    searchSuggestions,
+    textZoom,
+    legacyApiKey,
+    legacyModel,
+    ...perProvider
+  ] = await Promise.all([
+    get(KEYS.provider),
+    get(KEYS.confirmActions),
+    get(KEYS.searchEngine),
+    get(KEYS.searchSuggestions),
+    get(KEYS.textZoom),
+    get(KEYS.legacyApiKey),
+    get(KEYS.legacyModel),
+    ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
+  ]);
 
   const settings: Settings = {
     provider: isProvider(provider) ? provider : DEFAULT_SETTINGS.provider,
@@ -62,6 +82,7 @@ export async function loadSettings(): Promise<Settings> {
     confirmActions: confirmActions === 'true',
     searchEngine: isSearchEngine(searchEngine) ? searchEngine : DEFAULT_SETTINGS.searchEngine,
     searchSuggestions: searchSuggestions !== 'false',
+    textZoom: clampTextZoom(Number(textZoom) || DEFAULT_SETTINGS.textZoom),
   };
   PROVIDER_ORDER.forEach((id, i) => {
     settings.apiKeys[id] = perProvider[i * 2] ?? '';
@@ -82,6 +103,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.confirmActions, String(settings.confirmActions)),
     set(KEYS.searchEngine, settings.searchEngine),
     set(KEYS.searchSuggestions, String(settings.searchSuggestions)),
+    set(KEYS.textZoom, String(settings.textZoom)),
     ...PROVIDER_ORDER.flatMap((id) => [
       set(KEYS.apiKey(id), settings.apiKeys[id]),
       set(KEYS.model(id), settings.models[id]),
