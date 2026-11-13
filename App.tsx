@@ -4,14 +4,15 @@ import { Alert, KeyboardAvoidingView, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
-import type { Message } from './src/agent/types';
+import { getProvider } from './src/ai/providers';
+import type { Turn } from './src/ai/types';
 import { Browser, useBrowser } from './src/browser/Browser';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
 import { ChatItem, ClaudePanel } from './src/components/ClaudePanel';
 import { SettingsModal } from './src/components/SettingsModal';
 import { TabSwitcher } from './src/components/TabSwitcher';
-import { DEFAULT_MODEL, loadSettings, saveSettings, Settings } from './src/storage/settings';
+import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 
 let itemCounter = 0;
 const newItem = (kind: ChatItem['kind'], text: string): ChatItem => ({ id: String(++itemCounter), kind, text });
@@ -25,23 +26,12 @@ function askConfirmation(description: string): Promise<boolean> {
   });
 }
 
-function addUserText(messages: Message[], text: string) {
-  const last = messages[messages.length - 1];
-  // A failed request can leave a user turn at the end; merge instead of sending two in a row.
-  if (last?.role === 'user') {
-    const blocks = typeof last.content === 'string' ? [{ type: 'text' as const, text: last.content }] : last.content;
-    last.content = [...blocks, { type: 'text', text }];
-  } else {
-    messages.push({ role: 'user', content: text });
-  }
-}
-
 export default function App() {
   const [browserInstance] = useState(() => new Browser());
   const browser = useBrowser(browserInstance);
   const tab = browser.active;
 
-  const messagesRef = useRef<Message[]>([]);
+  const turnsRef = useRef<Turn[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
   const [items, setItems] = useState<ChatItem[]>([]);
@@ -49,7 +39,7 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState(false);
   const closePanel = useCallback(() => setPanelOpen(false), []);
 
-  const [settings, setSettings] = useState<Settings>({ apiKey: '', model: DEFAULT_MODEL, confirmActions: false });
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [tabsVisible, setTabsVisible] = useState(false);
 
@@ -64,8 +54,10 @@ export default function App() {
   const send = async (text: string) => {
     addItem(newItem('user', text));
 
-    if (!settings.apiKey) {
-      addItem(newItem('error', 'Önce ayarlardan Anthropic API anahtarınızı girin.'));
+    const provider = settings.provider;
+    const apiKey = settings.apiKeys[provider];
+    if (!apiKey) {
+      addItem(newItem('error', `Önce ayarlardan ${getProvider(provider).label} API anahtarınızı girin.`));
       setSettingsVisible(true);
       return;
     }
@@ -74,16 +66,17 @@ export default function App() {
     const current = browser.active;
     const agentTab = { id: current.id };
     const pageInfo = `\n\n[Current tab ${current.id}: ${current.title || '(no title)'} — ${current.url}. Open tabs: ${browser.tabs.length}]`;
-    addUserText(messagesRef.current, text + pageInfo);
+    turnsRef.current.push({ role: 'user', text: text + pageInfo });
 
     const abort = new AbortController();
     abortRef.current = abort;
     setRunning(true);
     try {
       await runAgent({
-        apiKey: settings.apiKey,
-        model: settings.model,
-        messages: messagesRef.current,
+        provider,
+        apiKey,
+        model: settings.models[provider],
+        turns: turnsRef.current,
         browser,
         agentTab,
         confirm: settings.confirmActions ? askConfirmation : undefined,
@@ -106,7 +99,7 @@ export default function App() {
   const stop = () => abortRef.current?.abort();
 
   const newChat = () => {
-    messagesRef.current = [];
+    turnsRef.current = [];
     setItems([]);
   };
 

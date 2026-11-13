@@ -1,27 +1,29 @@
+import { getProvider } from '../ai/providers';
+import type { ProviderId, ToolResult, Turn } from '../ai/types';
 import { getBackgroundCount, isForeground, waitForForeground } from '../utils/foreground';
-import { sleep } from '../utils/sleep';
 import { describeToolCall, executeTool, ToolContext } from './executeTool';
 import { SYSTEM_PROMPT } from './systemPrompt';
 import { TOOLS } from './tools';
-import type { AgentEvent, ApiResponse, ContentBlock, Message, ToolResultBlock, ToolUseBlock } from './types';
+import type { AgentEvent } from './types';
 
-const API_URL = 'https://api.anthropic.com/v1/messages';
 const MAX_STEPS = 40;
 const KEEP_FULL_RESULTS = 2;
 const COMPACT_THRESHOLD = 1500;
 const SAFE_TO_RETRY = new Set(['read_page', 'list_tabs', 'scroll', 'scroll_to', 'wait']);
 
 export type AgentOptions = ToolContext & {
+  provider: ProviderId;
   apiKey: string;
   model: string;
-  /** Conversation history; new messages are appended in place. */
-  messages: Message[];
+  /** Conversation history; new turns are appended in place. */
+  turns: Turn[];
   signal: AbortSignal;
   onEvent: (event: AgentEvent) => void;
 };
 
 export async function runAgent(opts: AgentOptions): Promise<void> {
-  const { messages, signal, onEvent } = opts;
+  const { turns, signal, onEvent } = opts;
+  const provider = getProvider(opts.provider);
 
   const pauseWhileBackgrounded = async () => {
     if (isForeground()) return;
@@ -34,134 +36,91 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     await pauseWhileBackgrounded();
     if (signal.aborted) return;
 
-    const response = await callClaude(opts.apiKey, opts.model, compactHistory(messages), signal);
-    messages.push({ role: 'assistant', content: response.content });
+    const reply = await provider.call({
+      apiKey: opts.apiKey,
+      model: opts.model,
+      system: SYSTEM_PROMPT,
+      tools: TOOLS,
+      turns: compactHistory(turns),
+      signal,
+    });
+    turns.push({
+      role: 'assistant',
+      text: reply.text,
+      toolCalls: reply.toolCalls,
+      raw: reply.raw,
+      rawProvider: provider.id,
+      rawModel: opts.model,
+    });
+    if (reply.text) onEvent({ type: 'text', text: reply.text });
 
-    for (const block of response.content) {
-      if (block.type === 'text' && typeof block.text === 'string' && block.text.trim()) {
-        onEvent({ type: 'text', text: block.text.trim() });
+    if (reply.stop !== 'tool_use') {
+      // A reply cut off mid-call can still contain tool calls; every call needs a result before the next request.
+      if (reply.toolCalls.length > 0) {
+        turns.push({
+          role: 'tool_results',
+          results: reply.toolCalls.map((c) => ({
+            callId: c.id,
+            name: c.name,
+            content: 'Not executed: the response was cut off.',
+            isError: true,
+          })),
+        });
       }
-    }
-
-    if (response.stop_reason === 'max_tokens') {
-      onEvent({ type: 'error', text: 'Yanıt uzunluk sınırına ulaştı.' });
+      if (reply.stop === 'max_tokens') onEvent({ type: 'error', text: 'Yanıt uzunluk sınırına ulaştı.' });
+      if (reply.stop === 'refusal') onEvent({ type: 'error', text: 'Model bu isteği yerine getirmeyi reddetti.' });
       return;
     }
-    if (response.stop_reason === 'refusal') {
-      onEvent({ type: 'error', text: 'Claude bu isteği yerine getirmeyi reddetti.' });
-      return;
-    }
-    if (response.stop_reason !== 'tool_use') return;
 
-    const toolUses = response.content.filter((b): b is ToolUseBlock => b.type === 'tool_use');
-    const results: ToolResultBlock[] = [];
-    for (const use of toolUses) {
+    const results: ToolResult[] = [];
+    for (const call of reply.toolCalls) {
       if (signal.aborted) {
-        // Every tool_use needs a matching tool_result, even when we stop early.
-        results.push({ type: 'tool_result', tool_use_id: use.id, content: 'Stopped by the user.', is_error: true });
+        results.push({ callId: call.id, name: call.name, content: 'Stopped by the user.', isError: true });
         continue;
       }
       await pauseWhileBackgrounded();
-      onEvent({ type: 'action', text: describeToolCall(use.name, use.input) });
+      onEvent({ type: 'action', text: describeToolCall(call.name, call.input) });
       const backgroundsBefore = getBackgroundCount();
-      let result = await executeTool(use.name, use.input, opts);
+      let result = await executeTool(call.name, call.input, opts);
       // The WebView freezes in the background, so a failure there is retried once after resuming.
       // Only read-only tools: a frozen click may still run on resume, and repeating it would act twice.
       const backgrounded = getBackgroundCount() !== backgroundsBefore;
-      if (result.isError && backgrounded && SAFE_TO_RETRY.has(use.name) && !signal.aborted) {
+      if (result.isError && backgrounded && SAFE_TO_RETRY.has(call.name) && !signal.aborted) {
         await pauseWhileBackgrounded();
-        result = await executeTool(use.name, use.input, opts);
+        result = await executeTool(call.name, call.input, opts);
       }
       if (result.isError) onEvent({ type: 'error', text: result.content.slice(0, 200) });
-      results.push({
-        type: 'tool_result',
-        tool_use_id: use.id,
-        content: result.content,
-        is_error: result.isError || undefined,
-      });
+      results.push({ callId: call.id, name: call.name, content: result.content, isError: result.isError });
     }
-    messages.push({ role: 'user', content: results });
+    turns.push({ role: 'tool_results', results });
   }
 
   onEvent({ type: 'error', text: `Adım sınırına (${MAX_STEPS}) ulaşıldı. Devam etmek için tekrar yazabilirsiniz.` });
 }
 
-async function callClaude(
-  apiKey: string,
-  model: string,
-  messages: Message[],
-  signal: AbortSignal,
-): Promise<ApiResponse> {
-  const body = JSON.stringify({
-    model,
-    max_tokens: 8192,
-    system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
-    tools: TOOLS,
-    messages,
-  });
-
-  for (let attempt = 0; ; attempt++) {
-    let res: Response;
-    try {
-      res = await fetch(API_URL, {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body,
-        signal,
-      });
-    } catch (e) {
-      // Requests are often cut off when the OS suspends the app; retry once we are back.
-      if (signal.aborted || attempt >= 3) throw e;
-      await waitForForeground(signal);
-      await sleep(1000 * 2 ** attempt);
-      continue;
-    }
-
-    if (res.ok) return (await res.json()) as ApiResponse;
-
-    const retryable = res.status === 429 || res.status === 529 || res.status >= 500;
-    if (retryable && attempt < 3) {
-      await sleep(1000 * 2 ** attempt);
-      continue;
-    }
-
-    let detail = '';
-    try {
-      const err = await res.json();
-      detail = err?.error?.message ?? '';
-    } catch {}
-    throw new Error(`API hatası ${res.status}${detail ? `: ${detail}` : ''}`);
-  }
-}
-
 /**
  * Page snapshots are large. Keep only the most recent ones in full so long
- * sessions don't blow up cost and latency.
+ * sessions don't blow up cost and latency. With OpenAI this changes the
+ * history prefix, so the API may drop older reasoning; that trade-off is accepted.
  */
-function compactHistory(messages: Message[]): Message[] {
+function compactHistory(turns: Turn[]): Turn[] {
   let kept = 0;
-  const out: Message[] = [];
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    if (msg.role !== 'user' || typeof msg.content === 'string') {
-      out.unshift(msg);
+  const out: Turn[] = [];
+  for (let i = turns.length - 1; i >= 0; i--) {
+    const turn = turns[i];
+    if (turn.role !== 'tool_results') {
+      out.unshift(turn);
       continue;
     }
-    const content = msg.content.map((block): ContentBlock => {
-      if (block.type !== 'tool_result') return block;
-      const result = block as ToolResultBlock;
-      if (result.content.length <= COMPACT_THRESHOLD) return result;
+    const results = [...turn.results].reverse().map((r) => {
+      if (r.content.length <= COMPACT_THRESHOLD) return r;
       if (kept < KEEP_FULL_RESULTS) {
         kept++;
-        return result;
+        return r;
       }
-      return { ...result, content: `${result.content.slice(0, 300)}\n[Older page snapshot removed]` };
+      return { ...r, content: `${r.content.slice(0, 300)}\n[Older page snapshot removed]` };
     });
-    out.unshift({ ...msg, content });
+    out.unshift({ role: 'tool_results', results: results.reverse() });
   }
   return out;
 }
