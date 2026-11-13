@@ -23,26 +23,30 @@ type Props = {
   visible: boolean;
   browser: Browser;
   onClose: () => void;
+  /** The user picked tabs to compare with the assistant. */
+  onCompare: (tabs: Tab[]) => void;
 };
 
 const PADDING = 12;
 const GAP = 12;
 
-export function TabSwitcher({ visible, browser, onClose }: Props) {
+export function TabSwitcher({ visible, browser, onClose, onCompare }: Props) {
   return (
     <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={onClose}>
       {/* Mounted only while visible, so it opens in the mode of the tab on screen. */}
-      {visible && <TabSwitcherContent browser={browser} onClose={onClose} />}
+      {visible && <TabSwitcherContent browser={browser} onClose={onClose} onCompare={onCompare} />}
     </Modal>
   );
 }
 
-function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
+function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visible'>) {
   const [incognito, setIncognito] = useState(browser.active.incognito);
   const { width } = useWindowDimensions();
   const cardWidth = (width - PADDING * 2 - GAP) / 2;
 
   const [query, setQuery] = useState('');
+  // Compare mode: tapping cards selects them instead of switching tabs.
+  const [comparing, setComparing] = useState<string[] | null>(null);
   const allTabs = browser.tabsOf(incognito);
   const searching = query.trim() !== '';
   const tabs = searching ? allTabs.filter((tab) => matchesTabQuery(tab, query)) : allTabs;
@@ -72,8 +76,18 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
   };
 
   const select = (tab: Tab) => {
+    if (comparing) {
+      if (tab.isNewTab) return;
+      setComparing(comparing.includes(tab.id) ? comparing.filter((id) => id !== tab.id) : [...comparing, tab.id]);
+      return;
+    }
     browser.switchTab(tab.id);
     onClose();
+  };
+  const comparable = allTabs.filter((tab) => !tab.isNewTab).length >= 2;
+  const compareSelected = () => {
+    const chosen = allTabs.filter((tab) => comparing?.includes(tab.id));
+    if (chosen.length >= 2) onCompare(chosen);
   };
 
   const newTab = () => {
@@ -98,6 +112,11 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
   return (
     <SafeAreaView style={[styles.container, theme.container]}>
       <View style={styles.header}>
+        {comparable && !comparing ? (
+          <Pressable onPress={() => setComparing([])} hitSlop={8} style={styles.compare} accessibilityRole="button">
+            <Text style={[styles.compareText, theme.accent]}>{t('tabs.compare')}</Text>
+          </Pressable>
+        ) : null}
         <View style={[styles.segment, theme.segment]}>
           <SegmentButton
             label={t('tabs.normal', { count: browser.tabsOf(false).length })}
@@ -106,6 +125,7 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
             onPress={() => {
               setIncognito(false);
               setQuery('');
+              setComparing(null);
             }}
           />
           <SegmentButton
@@ -115,6 +135,7 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
             onPress={() => {
               setIncognito(true);
               setQuery('');
+              setComparing(null);
             }}
           />
         </View>
@@ -175,6 +196,7 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
             width={cardWidth}
             active={item.id === browser.activeId}
             incognito={incognito}
+            selection={comparing ? { selected: comparing.includes(item.id), disabled: item.isNewTab } : undefined}
             onPress={() => select(item)}
             onCloseTab={() => closeTab(item)}
           />
@@ -190,23 +212,42 @@ function TabSwitcherContent({ browser, onClose }: Omit<Props, 'visible'>) {
         </View>
       )}
 
-      <View style={[styles.toolbar, theme.toolbar]}>
-        <Pressable onPress={closeAll} disabled={allTabs.length === 0} hitSlop={8} style={styles.toolbarSide}>
-          <Text style={[styles.toolbarText, theme.text, allTabs.length === 0 && styles.dimmed]}>
-            {t('tabs.closeAll')}
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={newTab}
-          style={[styles.newTab, theme.newTab]}
-          accessibilityLabel={t(incognito ? 'menu.newIncognitoTab' : 'menu.newTab')}
-        >
-          <Text style={styles.newTabText}>＋</Text>
-        </Pressable>
-        <Pressable onPress={onClose} hitSlop={8} style={[styles.toolbarSide, styles.alignRight]}>
-          <Text style={[styles.toolbarText, styles.bold, theme.accent]}>{t('common.done')}</Text>
-        </Pressable>
-      </View>
+      {comparing ? (
+        <View style={[styles.toolbar, theme.toolbar]}>
+          <Pressable onPress={() => setComparing(null)} hitSlop={8} style={styles.toolbarSide}>
+            <Text style={[styles.toolbarText, theme.text]}>{t('common.cancel')}</Text>
+          </Pressable>
+          <Pressable
+            onPress={compareSelected}
+            disabled={comparing.length < 2}
+            style={[styles.compareButton, theme.newTab, comparing.length < 2 && styles.dimmed]}
+            accessibilityRole="button"
+          >
+            <Text style={styles.compareButtonText}>
+              {comparing.length < 2 ? t('tabs.compareHint') : t('tabs.compareCount', { count: comparing.length })}
+            </Text>
+          </Pressable>
+          <View style={styles.toolbarSide} />
+        </View>
+      ) : (
+        <View style={[styles.toolbar, theme.toolbar]}>
+          <Pressable onPress={closeAll} disabled={allTabs.length === 0} hitSlop={8} style={styles.toolbarSide}>
+            <Text style={[styles.toolbarText, theme.text, allTabs.length === 0 && styles.dimmed]}>
+              {t('tabs.closeAll')}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={newTab}
+            style={[styles.newTab, theme.newTab]}
+            accessibilityLabel={t(incognito ? 'menu.newIncognitoTab' : 'menu.newTab')}
+          >
+            <Text style={styles.newTabText}>＋</Text>
+          </Pressable>
+          <Pressable onPress={onClose} hitSlop={8} style={[styles.toolbarSide, styles.alignRight]}>
+            <Text style={[styles.toolbarText, styles.bold, theme.accent]}>{t('common.done')}</Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -270,6 +311,7 @@ function TabCard({
   width,
   active,
   incognito,
+  selection,
   onPress,
   onCloseTab,
 }: {
@@ -277,6 +319,8 @@ function TabCard({
   width: number;
   active: boolean;
   incognito: boolean;
+  /** Set in compare mode. */
+  selection?: { selected: boolean; disabled: boolean };
   onPress: () => void;
   onCloseTab: () => void;
 }) {
@@ -288,16 +332,29 @@ function TabCard({
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.card, theme.card, { width }, active && theme.activeCard]}
+      style={[
+        styles.card,
+        theme.card,
+        { width },
+        (selection ? selection.selected : active) && theme.activeCard,
+        selection?.disabled && styles.dimmed,
+      ]}
       accessibilityLabel={t('tabs.tabA11y', { title: tab.title || host })}
+      accessibilityState={selection ? { selected: selection.selected, disabled: selection.disabled } : undefined}
     >
       <View style={styles.cardHeader}>
         <Text style={[styles.cardTitle, theme.text]} numberOfLines={1}>
           {tab.title || host || t('menu.newTab')}
         </Text>
-        <Pressable onPress={onCloseTab} hitSlop={10} style={styles.cardClose} accessibilityLabel={t('tabs.closeTab')}>
-          <Text style={[styles.cardCloseText, theme.text]}>✕</Text>
-        </Pressable>
+        {selection ? (
+          <View style={styles.cardClose}>
+            <Text style={[styles.check, selection.selected && theme.accent]}>{selection.selected ? '●' : '○'}</Text>
+          </View>
+        ) : (
+          <Pressable onPress={onCloseTab} hitSlop={10} style={styles.cardClose} accessibilityLabel={t('tabs.closeTab')}>
+            <Text style={[styles.cardCloseText, theme.text]}>✕</Text>
+          </Pressable>
+        )}
       </View>
       <View style={[styles.preview, theme.preview, { height: previewHeight }]}>
         {tab.thumbnail ? (
@@ -335,6 +392,11 @@ function EmptyState({ incognito }: { incognito: boolean }) {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingHorizontal: PADDING, paddingVertical: 10, alignItems: 'center' },
+  compare: { position: 'absolute', right: PADDING, top: 0, bottom: 0, justifyContent: 'center' },
+  compareText: { fontSize: 15, fontWeight: '600' },
+  compareButton: { flex: 2, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  compareButtonText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  check: { fontSize: 16, color: '#999' },
   segment: { flexDirection: 'row', borderRadius: 10, padding: 3 },
   segmentButton: { paddingVertical: 7, paddingHorizontal: 16, borderRadius: 8 },
   segmentText: { fontSize: 14 },

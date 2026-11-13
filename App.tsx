@@ -600,7 +600,17 @@ function BrowserApp({
           }}
           onClose={() => setLibrary(null)}
         />
-        <TabSwitcher visible={tabsVisible} browser={browser} onClose={() => setTabsVisible(false)} />
+        <TabSwitcher
+          visible={tabsVisible}
+          browser={browser}
+          onClose={() => setTabsVisible(false)}
+          onCompare={(picked) => {
+            setTabsVisible(false);
+            setPanelOpen(true);
+            const list = picked.map((x) => `- tab ${x.id}: ${x.title || x.url} (${x.url})`).join('\n');
+            send(t('tabs.comparePrompt', { tabs: list }));
+          }}
+        />
         <SettingsModal
           visible={settingsVisible}
           settings={settings}
