@@ -1,7 +1,12 @@
 import type { Turn } from '../ai/types';
+import type { Source } from '../agent/types';
 import type { ChatItem } from '../components/AssistantPanel';
 
 let itemCounter = 0;
+
+export function sourcesItem(sources: Source[]): ChatItem {
+  return { id: String(++itemCounter), kind: 'sources', text: '', sources };
+}
 
 export function newItem(kind: ChatItem['kind'], text: string, options?: string[]): ChatItem {
   return options ? { id: String(++itemCounter), kind, text, options } : { id: String(++itemCounter), kind, text };

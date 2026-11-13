@@ -17,17 +17,21 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsSpeaking } from '../device/speech';
 import { t } from '../i18n';
+import type { Source } from '../agent/types';
+import { hostOf } from '../i18n/format';
 import { MarkdownText } from './MarkdownText';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 
 export type ChatItem = {
   id: string;
-  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices';
+  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices' | 'sources';
   text: string;
   /** For 'choices': the buttons offered. */
   options?: string[];
   /** For 'choices': the option the user tapped. */
   chosen?: string;
+  /** For 'sources': the pages the answer is based on. */
+  sources?: Source[];
 };
 
 /** A one-tap task shown above the input, e.g. "Summarize". */
@@ -58,6 +62,8 @@ type Props = {
   onMessageAction: (action: MessageAction, text: string) => void;
   /** A link in an answer was tapped. */
   onOpenLink: (url: string) => void;
+  /** A source under an answer was tapped. */
+  onOpenSource: (source: Source) => void;
 };
 
 const MAX_WIDTH = 420;
@@ -86,6 +92,7 @@ export function AssistantPanel({
   onOpenSettings,
   onMessageAction,
   onOpenLink,
+  onOpenSource,
 }: Props) {
   const speaking = useIsSpeaking();
   const { width: screenWidth } = useWindowDimensions();
@@ -192,6 +199,7 @@ export function AssistantPanel({
                   speaking={speaking}
                   onAction={onMessageAction}
                   onOpenLink={onOpenLink}
+                  onOpenSource={onOpenSource}
                   onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
                 />
               ))}
@@ -283,12 +291,14 @@ function ChatRow({
   speaking,
   onAction,
   onOpenLink,
+  onOpenSource,
   onChoose,
 }: {
   item: ChatItem;
   speaking: boolean;
   onAction: (action: MessageAction, text: string) => void;
   onOpenLink: (url: string) => void;
+  onOpenSource: (source: Source) => void;
   /** Set while the question can still be answered. */
   onChoose?: (itemId: string, option: string) => void;
 }) {
@@ -346,6 +356,32 @@ function ChatRow({
               </Pressable>
             );
           })}
+        </View>
+      );
+    case 'sources':
+      return (
+        <View style={styles.sources}>
+          <Text style={styles.sourcesTitle}>{t('chat.sources')}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sourcesRow}>
+            {(item.sources ?? []).map((source, i) => (
+              <Pressable
+                key={source.url}
+                onPress={() => onOpenSource(source)}
+                style={({ pressed }) => [styles.source, pressed && styles.pressed]}
+                accessibilityRole="link"
+                accessibilityLabel={source.title || hostOf(source.url)}
+              >
+                <Text style={styles.sourceTitle} numberOfLines={2}>
+                  <Text style={styles.sourceIndex}>{i + 1} </Text>
+                  {source.title || hostOf(source.url)}
+                </Text>
+                <Text style={styles.sourceHost} numberOfLines={1}>
+                  {source.incognito ? '🕶 ' : ''}
+                  {hostOf(source.url)}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
         </View>
       );
     case 'error':
@@ -415,6 +451,21 @@ const styles = StyleSheet.create({
   assistantText: { color: '#222', fontSize: 15, lineHeight: 21 },
   action: { color: '#777', fontSize: 12, marginLeft: 4 },
   error: { color: '#b3261e', fontSize: 13, marginLeft: 4 },
+  sources: { alignSelf: 'stretch', gap: 4 },
+  sourcesTitle: { fontSize: 12, color: '#8a8780', marginLeft: 4 },
+  sourcesRow: { gap: 6, paddingRight: 8 },
+  source: {
+    width: 150,
+    padding: 8,
+    gap: 2,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#e0ddd4',
+  },
+  sourceIndex: { color: '#c96442', fontWeight: '700' },
+  sourceTitle: { fontSize: 12.5, color: '#333', lineHeight: 16 },
+  sourceHost: { fontSize: 11, color: '#999' },
   choices: { alignSelf: 'stretch', gap: 6 },
   choice: {
     alignSelf: 'flex-start',

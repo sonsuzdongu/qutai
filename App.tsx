@@ -5,7 +5,7 @@ import { Alert, AppState, KeyboardAvoidingView, StyleSheet, View } from 'react-n
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
-import { newItem } from './src/chat/Conversation';
+import { newItem, sourcesItem } from './src/chat/Conversation';
 import { getProvider, modelLabel } from './src/ai/providers';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import type { ContextTarget } from './src/browser/contextMenu';
@@ -206,6 +206,7 @@ function BrowserApp({
         confirm: settings.confirmActions ? askConfirmation : undefined,
         signal,
         onEvent: (event) => {
+          if (event.type === 'sources') return chat.add(sourcesItem(event.sources));
           if (event.type === 'choices') return chat.add(newItem('choices', event.text, event.options));
           const kind = event.type === 'text' ? 'assistant' : event.type;
           chat.add(newItem(kind, event.text));
@@ -559,6 +560,13 @@ function BrowserApp({
           }}
           onNewChat={newChat}
           onOpenSettings={() => setSettingsVisible(true)}
+          onOpenSource={(source) => {
+            // A page that is still open is shown in its tab; otherwise it opens again in the same mode.
+            const open = browser.tabs.find((x) => x.incognito === source.incognito && x.url === source.url);
+            if (open) browser.switchTab(open.id);
+            else browser.openTab(source.url, { incognito: source.incognito });
+            closePanel();
+          }}
           onOpenLink={(url) => {
             browser.openTab(url, { incognito: browser.active.incognito });
             closePanel();

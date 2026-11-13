@@ -28,6 +28,7 @@ export const tr: Record<keyof typeof en, string> = {
   'chat.working': 'çalışıyor…',
   'chat.busyElsewhere': 'ALPAI başka bir sekmede çalışıyor',
   'chat.showTab': 'Göster',
+  'chat.sources': 'Kaynaklar',
   'chat.newChat': 'Yeni sohbet',
   'chat.settings': 'Ayarlar',
   'chat.closePanel': 'Paneli kapat',

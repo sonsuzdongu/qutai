@@ -6,12 +6,15 @@ import { describeToolCall, executeTool, ToolContext } from './executeTool';
 import { SYSTEM_PROMPT } from './systemPrompt';
 import { memoryPrompt } from './memory';
 import { MEMORY_TOOLS, TOOLS } from './tools';
-import type { AgentEvent } from './types';
+import type { AgentEvent, Source } from './types';
 
 const MAX_STEPS = 40;
 const KEEP_FULL_RESULTS = 2;
 const KEEP_IMAGES = 1;
 const COMPACT_THRESHOLD = 1500;
+/** Tools whose result shows the agent the page's content, which makes the page a source. */
+const READING_TOOLS = new Set(['read_page', 'view_screenshot']);
+const MAX_SOURCES = 10;
 const SAFE_TO_RETRY = new Set(['read_page', 'view_screenshot', 'list_tabs', 'scroll', 'scroll_to', 'wait']);
 
 export type AgentOptions = ToolContext & {
@@ -33,6 +36,18 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     onEvent({ type: 'info', text: t('chat.paused') });
     await waitForForeground(signal);
     if (!signal.aborted) onEvent({ type: 'info', text: t('chat.resumed') });
+  };
+
+  const sources: Source[] = [];
+  const noteSource = () => {
+    const tab = opts.browser.getTab(opts.agentTab.id);
+    if (!tab || !/^https?:\/\//i.test(tab.url)) return;
+    const key = tab.url.split('#')[0];
+    if (sources.some((s) => s.url.split('#')[0] === key) || sources.length >= MAX_SOURCES) return;
+    sources.push({ url: tab.url, title: tab.title, incognito: tab.incognito });
+  };
+  const flushSources = () => {
+    if (sources.length) onEvent({ type: 'sources', sources: sources.splice(0) });
   };
 
   for (let step = 0; step < MAX_STEPS; step++) {
@@ -70,6 +85,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
           })),
         });
       }
+      flushSources();
       if (reply.stop === 'max_tokens') onEvent({ type: 'error', text: t('chat.maxTokens') });
       if (reply.stop === 'refusal') onEvent({ type: 'error', text: t('chat.refusal') });
       return;
@@ -98,6 +114,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
           });
           continue;
         }
+        flushSources();
         onEvent({ type: 'choices', text: choices.question, options: choices.options });
         results.push({
           callId: call.id,
@@ -124,6 +141,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
         result = await executeTool(call.name, call.input, opts);
       }
       if (result.isError) onEvent({ type: 'error', text: result.content.slice(0, 200) });
+      else if (READING_TOOLS.has(call.name)) noteSource();
       results.push({
         callId: call.id,
         name: call.name,

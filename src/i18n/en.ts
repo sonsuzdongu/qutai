@@ -27,6 +27,7 @@ export const en = {
   'chat.working': 'working…',
   'chat.busyElsewhere': 'ALPAI is working in another tab',
   'chat.showTab': 'Show',
+  'chat.sources': 'Sources',
   'chat.newChat': 'New chat',
   'chat.settings': 'Settings',
   'chat.closePanel': 'Close panel',
