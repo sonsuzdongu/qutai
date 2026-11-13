@@ -94,7 +94,7 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
 
 ## Other
 
-- [ ] Test on a real device: keyboard behavior (especially Android), tab thumbnails, private mode, Android back button and back gesture, PDF, saving to the gallery (especially Android in Expo Go), read aloud (on iOS there is no sound in silent mode), screenshot blocking in private tabs, session restore (by force-closing and reopening the app), date formats on the history/bookmarks screen (Hermes Intl)
+- [ ] Test on a real device: keyboard behavior (especially Android), tab thumbnails, private mode, Android back button and back gesture, PDF, saving to the gallery (especially Android in Expo Go), read aloud (on iOS there is no sound in silent mode), screenshot blocking in private tabs, session restore (by force-closing and reopening the app), date formats on the history/bookmarks screen (Hermes Intl), external app links (tel:, mailto:, WhatsApp, Android intent://), error page (airplane mode), tapping the address bar suggestion list (with the keyboard open), iOS paste button
 - [ ] End-to-end test with real API keys on all three providers
 - [ ] Clicking by coordinates (for canvas, maps and image-heavy sites; together with the screenshot tool)
 - [ ] Running in the background: a foreground service for Android or a server-side browser (decision pending)

@@ -27,22 +27,22 @@ putting the AI experience front and center.
 | Address bar, URL / search distinction | ✅ | | |
 | Multiple tabs, tab switching, private mode | ✅ | | No cookie isolation on Android (see Build) |
 | Back, reload, share, copy URL | ✅ | | |
-| Forward, stop loading | ⬜ | Go · S | `goForward`, `stopLoading` are available |
+| Forward, stop loading | ✅ | | In the icon row at the top of the menu |
 | History, bookmarks, recently closed tabs | ✅ | | `expo-sqlite`; private tabs are not saved |
 | Session restore (tabs when the app opens) | ✅ | | Restored tabs start asleep and load when opened |
-| Autocomplete from history / bookmarks / most visited | ⬜ | Go · M | Depends on history |
-| Live suggestions from the search engine | ⬜ | Go · S | Every typed letter goes to the search engine; should be off in private mode |
-| Search engine choice | ⬜ | Go · S | Google, DuckDuckGo, Bing, Yandex… |
-| Start page and speed dial | ⬜ | Go · M | Native "new tab" screen |
-| Paste and go, clearing the field | ⬜ | Go · S | On iOS, `ClipboardPasteButton` does not trigger a permission prompt |
-| HTTPS indicator, domain info | ⬜ | Go · S | Lock icon; WebView cannot access certificate details |
+| Autocomplete from history / bookmarks / most visited | ✅ | | Suggestion list; domain matches first |
+| Live suggestions from the search engine | ✅ | | On by default, can be turned off in settings; off in private mode. Bing has no suggestion service |
+| Search engine choice | ✅ | | Google, DuckDuckGo, Bing, Yandex |
+| Start page and speed dial | ✅ | | New tab screen: most visited, bookmarks, recent visits, Ask ALPAI |
+| Paste and go, clearing the field | ✅ | | System paste button on iOS |
+| HTTPS indicator, domain info | ✅ | | 🔒 / ⚠︎ Not secure; WebView cannot access certificate details |
 | Find in page | ⬜ | Go · M | No WebView API; highlighting via page script |
 | Desktop site | ⬜ | Go · S | Per-tab `userAgent` + reload |
 | Reader mode | ⬜ | Go · M | Reuses the content extraction code written for read-aloud |
 | QR code scanning / generation | ⬜ | Go · S | `expo-camera`; pure JS library for generation |
 | Voice search | ⬜ | Build | Decision: the device's speech recognition engine |
 | Download manager | ⬜ | Go/Build · L | See section 6 |
-| Detecting natural-language AI commands | ⬜ | Go · M | See Smart address bar |
+| Detecting natural-language AI commands | 🟡 | Go · M | "Ask ALPAI" is at the top of the suggestion list; automatic detection is Phase 2 |
 
 ### Tab management (section 3)
 
@@ -66,7 +66,7 @@ putting the AI experience front and center.
 | Network-level ad / tracker blocking | ⬜ | Build · L | iOS: WKContentRuleList; Android: request interception. WebView does not expose this |
 | Clearing history and data | ⬜ | Go/Build · M | History and cache in Go; clearing cookies requires a native module |
 | Cookie management, third-party cookies | ⬜ | Go/Build · S–M | Android has `thirdPartyCookiesEnabled`; iOS WebKit already blocks them |
-| HTTPS indicator | ⬜ | Go · S | |
+| HTTPS indicator | ✅ | | |
 | HTTPS-only | ⬜ | Go · S | `http` → `https` upgrade on main-frame navigations; subresources out of scope |
 | Malicious site warning | 🟡 | Server · M | Android System WebView has its own Safe Browsing protection; Safe Browsing API for a full solution |
 | Site permissions (camera, microphone, location) | ⬜ | Go/Build · M | Sites' permission requests are not handled yet; the app's own permissions must be added too |
@@ -86,8 +86,8 @@ putting the AI experience front and center.
 | Translation | ⬜ | Go · M | With AI, in place without breaking the layout |
 | Select text to share, ask | ⬜ | Go · M | Native menu on iOS (`menuItems`); page script + on-screen button on Android |
 | Open link in new tab, save image | ⬜ | Go · M | Long-press menu via page script |
-| Open in external app (tel:, mailto:, app links) | 🟡 | Go · S | The library routes non-`http`/`https` links to the system, but asks `canOpenURL` first. On iOS and Android 11+ this can return `false` for undeclared schemes and silently swallow the link; Android `intent://` links must be handled separately. Needs testing on a device |
-| Error page (no connection, site not found) | ⬜ | Go · S | Currently the library's raw English error screen is shown; a Turkish screen with a retry button is needed |
+| Open in external app (tel:, mailto:, app links) | ✅ | | By asking the user; iframes cannot open apps; Android `intent://` and web fallback supported |
+| Error page (no connection, site not found) | ✅ | | Explanation by error type and "Try again"; in two languages |
 | Fullscreen video | 🟡 | Go · S | Default on iOS; `allowsFullscreenVideo` must be enabled on Android |
 | Picture-in-Picture | ⬜ | Go/Build | Feature exists on iOS; native for Android |
 | Background audio | ⬜ | Build | iOS background audio mode setting |
@@ -154,9 +154,9 @@ Ordering criteria: the gap the user will notice most → least effort → infras
 Goal: ALPAI can be used as an everyday browser.
 
 1. ✅ **Persistent data layer** (`expo-sqlite`): session restore, history, bookmarks and their screen, recently closed tabs, chat. Private tabs write nothing
-2. **New tab screen:** speed dial sites, bookmarks, recently visited · M
-3. **Address bar:** autocomplete from history and bookmarks, search suggestions (off in private mode), search engine choice, paste and go, clear, HTTPS indicator · M
-4. **Navigation:** forward, stop, reliable opening of external app links (tel:, mailto:, `intent://`), error page in Turkish · S
+2. ✅ **New tab screen:** speed dial sites, bookmarks, recently visited
+3. ✅ **Address bar:** autocomplete from history and bookmarks, search suggestions (off in private mode), search engine choice, paste and go, clear, HTTPS indicator
+4. ✅ **Navigation:** forward, stop, reliable opening of external app links (tel:, mailto:, `intent://`), error page in Turkish
 5. **Page tools:** find in page, desktop site, text size, print · M
 6. **Long-press menu:** open link in new tab / private tab, copy link, save image · M
 7. **Tabs:** reopen closed tab, search in tabs, **putting unused tabs to sleep** (memory) · M
