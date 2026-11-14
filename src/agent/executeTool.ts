@@ -19,7 +19,7 @@ import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import type { AttachmentInfo } from '../chat/attachments';
 import { readPdfTool, viewAttachmentTool } from './fileTools';
-import { editImageTool } from './imageTools';
+import { editImageTool, uploadImageTool } from './imageTools';
 import { sleep } from '../utils/sleep';
 import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch, SiteVisits } from '../storage/history';
@@ -119,6 +119,18 @@ export type ToolContext = {
   imageInput?: boolean;
   /** Adds an edited image (edit_image) to the conversation as a card, which also puts it in its attachments. */
   offerImage?: (info: AttachmentInfo) => void;
+  /**
+   * Asks the user with a picture in the dialog (upload_image: "Give this image to <site>?"), every time: no "always
+   * allow", whatever the site's setting. Resolve false when declined or dismissed.
+   */
+  confirmImage?: (options: {
+    title: string;
+    message: string;
+    image: { uri: string; aspectRatio: number };
+    confirmText: string;
+  }) => Promise<boolean>;
+  /** An image was given to a page (kept when old edited images are pruned). */
+  imageUsed?: (id: string) => void;
 };
 
 /** Tools that need a loaded web page. */
@@ -134,6 +146,7 @@ const PAGE_TOOLS = new Set([
   'save_pdf',
   'save_screenshot',
   'view_screenshot',
+  'upload_image',
 ]);
 
 /** Short label shown in the chat for each tool call. */
@@ -168,6 +181,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.viewAttachment');
     case 'edit_image':
       return t('action.editImage');
+    case 'upload_image':
+      return t('action.uploadImage', { ref: str(input.ref) });
     case 'read_pdf':
       return input.view_pages !== undefined && input.view_pages !== null
         ? t('action.viewPdfPages')
@@ -898,6 +913,8 @@ const LOGGED_TOOLS = new Set([
   'download_file',
   'save_file',
   'read_pdf',
+  // Only that an image was given to the site and where: never the image.
+  'upload_image',
 ]);
 
 /** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
@@ -941,7 +958,7 @@ function actionTarget(
 }
 
 /** Tools that confirm on their own every time, whatever the "ask before actions" setting. */
-const ALWAYS_CONFIRMED = new Set(['get_location', 'read_calendar', 'download_file']);
+const ALWAYS_CONFIRMED = new Set(['get_location', 'read_calendar', 'download_file', 'upload_image']);
 
 /**
  * Tools that can run while the app is in the background with "Keep working in the background" on (Android): they
@@ -1165,6 +1182,8 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
       isError: name !== 'read_page',
     };
   }
+  // Confirms on its own with the image, every time.
+  if (name === 'upload_image') return uploadImageTool(input, ctx, tab);
 
   try {
     switch (name) {

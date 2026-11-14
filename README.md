@@ -108,6 +108,27 @@ files and their cards say so. Without the assistant, the full-screen preview of 
 (original, square, 4:3, 16:9, following the photo's orientation), longest side (2048, 1024, 512) or an exact size
 (cropped to fill), and a largest file size; the copy is attached to the message being written.
 
+Uploading images (`upload_image`): the assistant puts an image of the conversation (attached, or an edit) into a
+page's file field. The page script (`src/browser/pageScript.ts`) resolves the target: the file input itself, its label,
+the input inside the element, the one its `aria-controls` names, or the only one in its wrapper (a styled button over a
+hidden input; `read_page` now lists hidden file inputs as "(hidden)" and labels that open one); failing that it clicks
+the element with the file chooser held back and catches the input the click would open (pages that create one on the
+fly); failing that it treats the element as a drop zone. The bytes go to the page in 384 KB base64 pieces over the tab's
+authenticated command channel, after the user has confirmed, into a closure of the page script under a one-time token;
+the page sees nothing until a `File` is built and assigned with a `DataTransfer` (`input.files`, then `input` and
+`change` events) or dropped (`dragenter`, `dragover`, `drop` with the same `DataTransfer`). After 0.8 s it reports
+whether the field still holds the file, a new preview image, the file name on the page, and the field's and form's
+validation errors (the same reporting as `read_page`). It never submits. Checked in headless Chromium 147 and WebKit
+26.4 (Playwright) against a fixture: plain input, label over a hidden input, button next to a hidden input, an input
+made on click, a drop zone, a zone that ignores drops, `accept` mismatch, a disabled input, a same-origin frame, a
+cross-origin frame. Every upload asks "Give this image to <site>?" with the image, its size and bytes, every time,
+whatever the site's setting. Refused: ids not in this conversation (screenshots and other tabs have no id), PDFs,
+read-only and blocked sites, an incognito image into a normal tab or the reverse, a disabled field, an `accept` that
+doesn't take the format (the error names the accepted types and the edit_image format to use). Not https, a frame
+from another site, or an uploader that ignores the file: the user may save the prepared image to Photos under its name
+and pick it with the site's button. Attached images are re-encoded for the upload (no EXIF); edits are clean already.
+On Android in the background, the confirmation pauses the task with a notification like other confirmations.
+
 From the page menu (⋮) and by asking the agent: save the page as PDF (from its HTML, or from screenshots for pages
 that come out wrong), save a screenshot of the visible area or the whole page (scrolled and stitched) to Photos,
 read the page aloud, share/copy the link. When needed, the agent can also look at a screenshot of the page.
@@ -301,7 +322,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/content/filterLists.ts`, `src/content/blocking.ts` | Ad and tracker blocking: filter lists reduced to domains (pure parser and matcher), their download, updates and per-platform compilation; `src/content/adBlock.ts` is the built-in script blocker |
 | `src/backup/` | The encrypted backup file: what goes in it, the encryption, and merging or replacing on import |
 | `src/ai/audit.ts`, `src/storage/sentLog.ts` | "What was sent to the AI": the entry recorded for each request and how long it is kept |
-| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`, `view_attachment`, `read_pdf`), images (`edit_image`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
+| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`, `view_attachment`, `read_pdf`), images (`edit_image`, `upload_image`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |

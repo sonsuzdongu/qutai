@@ -564,3 +564,26 @@ export function presetInput(preset: ResizePreset, source: Size): Record<string, 
   const height = r >= 1 ? Math.max(1, Math.round(preset.edge / r)) : preset.edge;
   return { ...input, width, height, fit: 'cover' };
 }
+
+/**
+ * Whether a file input's `accept` takes a file of this name and type (as browsers match it: extensions, exact
+ * types, "image/*"); an empty accept takes anything. The page script checks the same before assigning.
+ */
+export function acceptsFile(accept: string, name: string, mimeType: string): boolean {
+  if (!accept.trim()) return true;
+  const ext = (/\.[^.]+$/.exec(name)?.[0] ?? '').toLowerCase();
+  const mime = mimeType.toLowerCase();
+  return accept.split(',').some((raw) => {
+    const a = raw.trim().toLowerCase();
+    if (!a) return false;
+    if (a.startsWith('.')) return a === ext || (a === '.jpeg' && ext === '.jpg') || (a === '.jpg' && ext === '.jpeg');
+    if (a.endsWith('/*')) return mime.startsWith(a.slice(0, -1));
+    return a === mime || (a === 'image/jpg' && mime === 'image/jpeg');
+  });
+}
+
+/** The edit_image format that an `accept` list takes, preferring JPEG, then PNG, then WebP; null for none. */
+export function formatForAccept(accept: string): OutputFormat | null {
+  const order: OutputFormat[] = ['jpeg', 'png', 'webp'];
+  return order.find((f) => acceptsFile(accept, `x.${FORMAT_EXT[f]}`, FORMAT_MIME[f])) ?? null;
+}

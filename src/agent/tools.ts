@@ -227,6 +227,24 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'upload_image',
+    description:
+      "Put an image from this conversation (one the user attached, or an edit_image result) into a web page's file " +
+      'upload field, as if the user had chosen it. The user confirms every time, seeing the image and the site. ' +
+      'Give the ref of the file field, or of the label, button or drop zone the site uses to upload (read_page lists ' +
+      'hidden file fields as "(hidden)"). Prepare the image with edit_image first so it meets the field\'s accept and ' +
+      'stated size or dimensions. The result says what the page did (preview, errors). It never submits the form. ' +
+      'When the site cannot take it, it offers the user to save the image to Photos to pick it themselves.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'The image id ("att-…"/"inc-…")' },
+        ref: { type: 'integer', description: 'Ref of the file field, or of its label, upload button or drop zone' },
+      },
+      required: ['id', 'ref'],
+    },
+  },
+  {
     name: 'save_pdf',
     description:
       'Turn the current page into a PDF and open the system share sheet, where the user can save it (e.g. to Files) or send it. ' +

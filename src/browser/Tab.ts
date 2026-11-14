@@ -51,12 +51,17 @@ export type PageCommand =
   | 'fileData'
   | 'captureBegin'
   | 'captureStep'
-  | 'captureEnd';
+  | 'captureEnd'
+  | 'fileTarget'
+  | 'fileBegin'
+  | 'fileChunk'
+  | 'fileAbort'
+  | 'fileAssign';
 
 /** Commands that search the text on screen: in reader mode they run in the reader view. */
 const READER_COMMANDS = new Set<PageCommand>(['findInPage', 'findStep', 'clearFind']);
 /** Commands that act on the page itself: reader mode closes first, so the user sees what happens. */
-const PAGE_ACTIONS = new Set<PageCommand>(['click', 'clickAt', 'type', 'select', 'scroll', 'scrollTo', 'captureBegin']);
+const PAGE_ACTIONS = new Set<PageCommand>(['click', 'clickAt', 'type', 'select', 'scroll', 'scrollTo', 'captureBegin', 'fileAssign']);
 
 /** Reader mode for the page on screen: its extracted article, shown over the (untouched) page. */
 export type ReaderState = { article: ReaderArticle; pageKey: string };

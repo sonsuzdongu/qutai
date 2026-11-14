@@ -378,17 +378,13 @@ export async function shareAttachment(info: AttachmentInfo): Promise<void> {
 }
 
 /**
- * Adds the original image to the photo library (add-only permission, as for saved screenshots), under the
- * attachment's name (a copy named so is what the library gets, so the user finds "photo-1024x1024.jpg", not
- * "original.jpg"). Resolves with that name.
+ * Adds an image file to the photo library (add-only permission, as for saved screenshots) under `name`: a copy named
+ * so is what the library gets, so the user finds "photo-1024x1024.jpg", not "original.jpg". Resolves with the name.
  */
-export async function saveAttachmentToPhotos(info: AttachmentInfo): Promise<string> {
-  const file = originalFile(info.id);
-  if (!file) throw new AttachmentError(t('attach.gone'));
+export async function saveImageFileToPhotos(file: File, name: string): Promise<string> {
   const { Asset, requestPermissionsAsync } = await import('expo-media-library');
   const permission = await requestPermissionsAsync(true, ['photo']);
   if (!permission.granted) throw new PermissionDeniedError(t('error.photosPermission'), permission.canAskAgain);
-  const name = safeFileName(info.name, `image.${extensionOf('', info.mimeType)}`);
   const dir = new Directory(Paths.cache, `qutai-photo-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`);
   dir.create({ intermediates: true, idempotent: true });
   try {
@@ -399,4 +395,11 @@ export async function saveAttachmentToPhotos(info: AttachmentInfo): Promise<stri
   } finally {
     if (dir.exists) dir.delete();
   }
+}
+
+/** Adds the original image to the photo library under the attachment's name. Resolves with that name. */
+export async function saveAttachmentToPhotos(info: AttachmentInfo): Promise<string> {
+  const file = originalFile(info.id);
+  if (!file) throw new AttachmentError(t('attach.gone'));
+  return saveImageFileToPhotos(file, safeFileName(info.name, `image.${extensionOf('', info.mimeType)}`));
 }

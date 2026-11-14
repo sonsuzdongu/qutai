@@ -4,6 +4,7 @@ import {
   Animated,
   AppState,
   Easing,
+  Image,
   Keyboard,
   Modal,
   Pressable,
@@ -51,6 +52,8 @@ export type DialogOptions = {
   message?: string;
   /** One to three buttons; just "OK" when left out. A cancel button is also what the backdrop and back button do. */
   buttons?: DialogButton[];
+  /** A picture under the title (e.g. the image a page is about to get); width over height for its shape. */
+  image?: { uri: string; aspectRatio: number; label: string };
   /** A checkbox line under the message, e.g. "Always allow on this site". */
   checkbox?: { label: string; initial?: boolean };
   /** A single-line text field; the other buttons stay disabled while it is empty. */
@@ -231,7 +234,7 @@ function DialogView({ entry }: { entry: Entry }) {
   const reduceMotion = useReduceMotion();
   const keyboard = useKeyboardHeight();
   const { fontScale, height } = useWindowDimensions();
-  const { title, message, buttons, checkbox, input } = entry.options;
+  const { title, message, buttons, checkbox, input, image } = entry.options;
 
   const [checked, setChecked] = useState(checkbox?.initial ?? false);
   const [text, setText] = useState(input?.initial ?? '');
@@ -352,6 +355,14 @@ function DialogView({ entry }: { entry: Entry }) {
               >
                 {title}
               </Text>
+              {image ? (
+                <Image
+                  source={{ uri: image.uri }}
+                  style={[styles.image, { aspectRatio: image.aspectRatio > 0 ? image.aspectRatio : 1 }]}
+                  resizeMode="contain"
+                  accessibilityLabel={image.label}
+                />
+              ) : null}
               {message ? (
                 <Text style={styles.message} maxFontSizeMultiplier={MAX_FONT_SCALE}>
                   {message}
@@ -456,6 +467,7 @@ const useStyles = makeStyles((c) => ({
   bodyContent: { gap: 8 },
   title: { fontSize: 18, fontWeight: '700', color: c.text },
   message: { fontSize: 15, lineHeight: 21, color: c.textSecondary },
+  image: { width: '100%', maxHeight: 200, borderRadius: 8, backgroundColor: c.border },
   input: {
     color: c.text,
     minHeight: 44,

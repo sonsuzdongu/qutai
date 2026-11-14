@@ -9,6 +9,7 @@ import {
   EditRequest,
   editedName,
   fitToBudget,
+  FORMAT_EXT,
   FORMAT_MIME,
   formatLabel,
   mapRect,
@@ -244,6 +245,54 @@ export async function editImage(source: AttachmentInfo, req: EditRequest, incogn
     return { info, format, steps, notes };
   } finally {
     image?.dispose();
+    if (piece.exists) piece.delete();
+  }
+}
+
+export type UploadableImage = {
+  file: File;
+  name: string;
+  mimeType: string;
+  width: number;
+  height: number;
+  /** A copy made for this upload, which the caller deletes. */
+  temporary: boolean;
+};
+
+/**
+ * The file a web page gets for an image (upload_image), never with metadata: an edited image is one already (Skia
+ * wrote it); an attached image is re-encoded at its full size in its format (JPEG for HEIC and others), which leaves
+ * EXIF and GPS out. Larger than MAX_OUTPUT_PIXELS: an error asking for edit_image first.
+ */
+export async function uploadableImage(info: AttachmentInfo): Promise<UploadableImage> {
+  const file = originalFile(info.id);
+  if (!file) throw new ImageEditError(`The image ${info.id} is no longer on this phone.`);
+  if (!info.width || !info.height) throw new ImageEditError('The size of this image is unknown.');
+  const size = { width: info.width, height: info.height };
+  if (info.derivedFrom) return { file, name: info.name, mimeType: info.mimeType, ...size, temporary: false };
+  const format = defaultFormat(info.mimeType);
+  const plan = planEdit(
+    { gravity: 'center', rotate: 0, flipH: false, flipV: false, fit: 'fit', allowUpscale: false, quality: 95, background: '#ffffff' },
+    size,
+  );
+  if (typeof plan === 'string')
+    throw new ImageEditError(`${plan} Make a smaller copy with edit_image first, then upload that.`);
+  const piece = await decodePiece(file.uri, size, plan, mayHaveAlpha(info.mimeType));
+  try {
+    const encoded = Skia.Image.MakeImageFromEncoded(await Skia.Data.fromURI(piece.uri));
+    if (!encoded) throw new ImageEditError('The image could not be decoded.');
+    let bytes: Uint8Array;
+    try {
+      bytes = encoded.encodeToBytes(SKIA_FORMAT[format], format === 'png' ? 100 : 95);
+    } finally {
+      encoded.dispose();
+    }
+    if (!bytes?.length) throw new ImageEditError(`This phone could not encode ${formatLabel(format)}.`);
+    const out = tempFile(FORMAT_EXT[format]);
+    out.writeSync(bytes);
+    const base = info.name.replace(/\.[a-z0-9]{2,5}$/i, '') || 'image';
+    return { file: out, name: `${base}.${FORMAT_EXT[format]}`, mimeType: FORMAT_MIME[format], ...size, temporary: true };
+  } finally {
     if (piece.exists) piece.delete();
   }
 }

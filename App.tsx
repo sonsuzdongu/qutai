@@ -197,6 +197,25 @@ async function askConfirmation(description: string, host: string | null, signal:
 }
 
 /**
+ * The assistant giving a picture to a page (upload_image), or saving it to Photos instead: the picture and what
+ * happens, every time, with no "always allow" (an image can be personal, whatever the site's setting). Stopping the
+ * task dismisses it as declined.
+ */
+async function askImageConfirmation(
+  options: { title: string; message: string; image: { uri: string; aspectRatio: number }; confirmText: string },
+  signal: AbortSignal,
+): Promise<boolean> {
+  const result = await dialog.show({
+    title: options.title,
+    message: options.message,
+    image: { ...options.image, label: options.title },
+    buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: options.confirmText, primary: true }],
+    signal,
+  });
+  return result.button === 1;
+}
+
+/**
  * Before the assistant first enters remembered personal details on a site in a task: which kinds, on which site.
  * "Allow once" (emphasised) covers the site until the task ends; "Always allow on this site" is saved (not offered in
  * incognito). Stopping the task dismisses it as declined.
@@ -703,6 +722,8 @@ function BrowserApp({
         stream: provider !== 'gemini' || (settings.geminiStreaming && geminiStreamingAvailable()),
         confirm: (description, host) => askConfirmation(description, host, signal),
         confirmPersonal: (host, kinds, incognito) => askPersonalData(host, kinds, incognito, signal),
+        confirmImage: (options) => askImageConfirmation(options, signal),
+        imageUsed: (id) => chat.markImageUsed(id),
         providerLabel: getProvider(provider).label,
         confirmByDefault: settings.confirmActions,
         sites: sitePermissions,

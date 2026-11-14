@@ -49,12 +49,14 @@ export const PAGE_SCRIPT = String.raw`
   }
 
   function labelOf(el) {
+    // The element's own document: fields in same-origin frames have their labels there.
+    var doc = el.ownerDocument || document;
     var t = el.getAttribute('aria-label') || '';
     if (!t) {
       var lb = el.getAttribute('aria-labelledby');
       if (lb) {
         var parts = lb.split(/\s+/).map(function (id) {
-          var n = document.getElementById(id); return n ? n.innerText : '';
+          var n = doc.getElementById(id); return n ? n.innerText : '';
         });
         t = parts.join(' ');
       }
@@ -63,7 +65,7 @@ export const PAGE_SCRIPT = String.raw`
     if (!t && (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT')) {
       if (el.id) {
         try {
-          var l = document.querySelector('label[for="' + CSS.escape(el.id) + '"]');
+          var l = doc.querySelector('label[for="' + CSS.escape(el.id) + '"]');
           if (l) t = l.innerText;
         } catch (e) {}
       }
@@ -369,7 +371,11 @@ export const PAGE_SCRIPT = String.raw`
       if (SKIP[tag]) return;
       if (el.getAttribute('aria-hidden') === 'true') return;
       var st = window.getComputedStyle(el);
-      if (st.display === 'none' || st.visibility === 'hidden') return;
+      if (st.display === 'none' || st.visibility === 'hidden') {
+        // A hidden file field behind a styled button is still where a file goes (upload_image).
+        if (tag === 'INPUT' && (el.type || '').toLowerCase() === 'file') { flush(); push(describe(el) + ' (hidden)'); }
+        return;
+      }
 
       if (tag === 'IFRAME') {
         try {
@@ -388,7 +394,7 @@ export const PAGE_SCRIPT = String.raw`
         if (!el.querySelector(INTERACTIVE)) return;
       }
 
-      if (tag !== 'BODY' && tag !== 'HTML' && el.matches(INTERACTIVE)) {
+      if (tag !== 'BODY' && tag !== 'HTML' && (el.matches(INTERACTIVE) || (tag === 'LABEL' && isFileInput(el.control)))) {
         if (hasBox(el) || tag === 'INPUT' || tag === 'SELECT') {
           flush();
           push(describe(el));
@@ -1562,6 +1568,253 @@ export const PAGE_SCRIPT = String.raw`
     return true;
   }
 
+
+  // ---------- Files from the app (upload_image) ----------
+  // The image arrives in base64 chunks under a one-time token and is kept in this closure only (not on window, not
+  // in the DOM) until fileAssign puts the finished File into the field; a new transfer or fileAbort drops it.
+  var incoming = null;
+
+  function isFileInput(el) {
+    return !!el && el.tagName === 'INPUT' && (el.type || '').toLowerCase() === 'file';
+  }
+
+  // The file input behind an element: the field itself, its label, the field inside it, the one its aria-controls
+  // names, or the only one in its nearby wrapper (a styled button over a hidden input). Null when none is found.
+  function fileInputOf(el) {
+    if (isFileInput(el)) return { input: el, how: 'the file field itself' };
+    if (el.tagName === 'LABEL' && isFileInput(el.control)) return { input: el.control, how: 'the field of this label' };
+    var lab = el.closest && el.closest('label');
+    if (lab && isFileInput(lab.control)) return { input: lab.control, how: 'the field of the label around it' };
+    var doc = el.ownerDocument || document;
+    var controls = el.getAttribute('aria-controls');
+    if (controls) {
+      var named = doc.getElementById(controls.split(/\s+/)[0]);
+      if (isFileInput(named)) return { input: named, how: 'the field it controls' };
+    }
+    var inner = el.querySelectorAll ? el.querySelectorAll('input[type=file]') : [];
+    if (inner.length === 1) return { input: inner[0], how: 'the file field inside it' };
+    var scope = el.parentElement;
+    for (var depth = 0; scope && depth < 4 && scope !== doc.body; depth++, scope = scope.parentElement) {
+      var near = scope.querySelectorAll('input[type=file]');
+      if (near.length === 1) return { input: near[0], how: 'the hidden file field next to it' };
+      if (near.length > 1) break;
+    }
+    return null;
+  }
+
+  // What upload_image would put the file into, before anything happens: a file field (with its accept, multiple and
+  // state), an element to probe with a click (its uploader may create the field), or a frame out of reach.
+  function fileTarget(ref) {
+    var el = getEl(ref);
+    if (el.tagName === 'IFRAME') {
+      var reachable = false;
+      try { reachable = !!(el.contentDocument && el.contentDocument.body); } catch (e) {}
+      var src = el.getAttribute('src') || '';
+      if (!reachable) return { kind: 'frame', origin: src.slice(0, 120) };
+    }
+    var found = fileInputOf(el);
+    if (!found) return { kind: 'probe', element: describe(el) };
+    var input = found.input;
+    return {
+      kind: 'input',
+      how: found.how,
+      element: describe(el),
+      field: input === el ? '' : describe(input),
+      accept: input.getAttribute('accept') || '',
+      multiple: !!input.multiple,
+      disabled: !!input.disabled,
+      required: !!input.required
+    };
+  }
+
+  function fileBegin(token, total) {
+    incoming = { token: String(token), parts: [], size: 0, total: Number(total) };
+    return true;
+  }
+
+  function fileChunk(token, index, b64) {
+    if (!incoming || incoming.token !== String(token) || index !== incoming.parts.length) {
+      incoming = null;
+      throw new Error('The file transfer was interrupted.');
+    }
+    var bin = atob(b64);
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    incoming.parts.push(bytes);
+    incoming.size += bytes.length;
+    return incoming.size;
+  }
+
+  function fileAbort() {
+    incoming = null;
+    return true;
+  }
+
+  function acceptsFile(accept, name, mime) {
+    if (!accept) return true;
+    var ext = ((/\.[^.]+$/.exec(name) || [''])[0]).toLowerCase();
+    return accept.split(',').some(function (a) {
+      a = a.trim().toLowerCase();
+      if (!a) return false;
+      if (a.charAt(0) === '.') return a === ext || (a === '.jpeg' && ext === '.jpg') || (a === '.jpg' && ext === '.jpeg');
+      if (a.slice(-2) === '/*') return mime.indexOf(a.slice(0, -1)) === 0;
+      return a === mime || (a === 'image/jpg' && mime === 'image/jpeg');
+    });
+  }
+
+  // Clicks the element with the file chooser held back: an input[type=file] its click would open (through
+  // HTMLInputElement.click, showPicker, or a label's activation) is caught instead of showing the picker.
+  function inputOpenedBy(el) {
+    var W = (el.ownerDocument && el.ownerDocument.defaultView) || window;
+    var proto = W.HTMLInputElement.prototype;
+    var origClick = proto.click;
+    var origPicker = proto.showPicker;
+    var caught = null;
+    function grab(input) { if (!caught && isFileInput(input)) caught = input; }
+    proto.click = function () {
+      if (isFileInput(this)) { grab(this); return; }
+      return origClick.apply(this, arguments);
+    };
+    if (origPicker) {
+      proto.showPicker = function () {
+        if (isFileInput(this)) { grab(this); return; }
+        return origPicker.apply(this, arguments);
+      };
+    }
+    function onClick(e) {
+      if (isFileInput(e.target)) { grab(e.target); e.preventDefault(); }
+    }
+    W.addEventListener('click', onClick, true);
+    try {
+      fireMouse(el);
+      el.click();
+    } finally {
+      proto.click = origClick;
+      if (origPicker) proto.showPicker = origPicker;
+      W.removeEventListener('click', onClick, true);
+    }
+    return caught;
+  }
+
+  function previewImages(scope) {
+    var set = [];
+    if (!scope) return set;
+    var imgs = scope.querySelectorAll('img');
+    for (var i = 0; i < imgs.length; i++) {
+      var src = imgs[i].currentSrc || imgs[i].src || '';
+      if (/^(blob:|data:image\/)/.test(src)) set.push(imgs[i]);
+    }
+    return set;
+  }
+
+  // A frame from another site inside the element or its close wrappers (not the whole page).
+  function hasForeignFrame(el) {
+    var scope = el;
+    for (var depth = 0; depth < 2 && scope.parentElement && scope.parentElement !== el.ownerDocument.body; depth++) scope = scope.parentElement;
+    var frames = scope.querySelectorAll('iframe');
+    for (var i = 0; i < frames.length; i++) {
+      var reachable = false;
+      try { reachable = !!frames[i].contentDocument; } catch (e) {}
+      if (!reachable) return true;
+    }
+    return false;
+  }
+
+  function scopeAround(el) {
+    var scope = el.isConnected ? (formScope(el) || el.parentElement) : null;
+    for (var depth = 0; scope && depth < 3 && scope.parentElement && scope !== scope.ownerDocument.body; depth++) {
+      if (scope.querySelectorAll('img').length) break;
+      scope = scope.parentElement;
+    }
+    return scope;
+  }
+
+  // Puts the transferred file into the field behind ref (or drops it on ref when it is a drop zone), fires the
+  // events pages listen for, waits a moment and reports what the page did. Never submits anything.
+  function fileAssign(token, ref, name, mime) {
+    var data = incoming;
+    incoming = null;
+    if (!data || data.token !== String(token) || data.size !== data.total) throw new Error('The file did not arrive completely.');
+    var el = getEl(ref);
+    var found = fileInputOf(el);
+    var input = found ? found.input : null;
+    var how = found ? found.how : '';
+    if (!input) {
+      input = inputOpenedBy(el);
+      if (input) how = 'the file field its button opens';
+    }
+    var target = input || el;
+    var W = (target.ownerDocument && target.ownerDocument.defaultView) || window;
+    if (input) {
+      if (input.disabled) return { ok: false, reason: 'disabled' };
+      var accept = input.getAttribute('accept') || '';
+      if (!acceptsFile(accept, name, mime)) return { ok: false, reason: 'accept', accept: accept };
+    }
+    var file = new W.File(data.parts, name, { type: mime, lastModified: Date.now() });
+    data = null;
+    // A field the page made without adding it (opened by a button) shows its result near the button.
+    var scope = scopeAround(input && input.isConnected ? input : el);
+    var form = input && input.isConnected ? formScope(input) : null;
+    var before = previewImages(scope);
+    var dt = new W.DataTransfer();
+    dt.items.add(file);
+    var mode;
+    var handled = true;
+    if (input) {
+      mode = 'input';
+      input.files = dt.files;
+      input.dispatchEvent(new W.Event('input', { bubbles: true, composed: true }));
+      input.dispatchEvent(new W.Event('change', { bubbles: true }));
+      touched.add(input);
+    } else {
+      // A drop zone without a file field: the drag sequence with the same DataTransfer. A zone that handles drops
+      // cancels dragover and drop; one that doesn't leaves them alone, and nothing happened.
+      mode = 'drop';
+      var r = el.getBoundingClientRect();
+      var opts = { bubbles: true, cancelable: true, composed: true, dataTransfer: dt,
+        clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 };
+      el.dispatchEvent(new W.DragEvent('dragenter', opts));
+      el.dispatchEvent(new W.DragEvent('dragover', opts));
+      handled = !el.dispatchEvent(new W.DragEvent('drop', opts));
+    }
+    return new Promise(function (resolve) { setTimeout(resolve, 800); }).then(function () {
+      var holds = false;
+      if (input && input.files) {
+        for (var i = 0; i < input.files.length; i++) if (input.files[i].name === name) holds = true;
+      }
+      var after = previewImages(scope);
+      var preview = after.some(function (img) { return before.indexOf(img) < 0; });
+      var shown = !!(scope && scope.isConnected && clean(scope.innerText).indexOf(name) >= 0);
+      var errors = [];
+      function addError(text) {
+        var said = errors.some(function (e) { return e.indexOf(text.replace(/^ref=\d+( "[^"]*")?: /, '')) >= 0; });
+        if (!said) errors.push(text);
+      }
+      if (input && input.isConnected) {
+        var err = fieldError(input);
+        if (err !== null) addError('ref=' + getRef(input) + ': ' + (err || 'invalid'));
+      }
+      var nearErr = target.isConnected ? errorTextNear(target) : '';
+      if (nearErr) addError(nearErr);
+      if (form) formErrorsIn(form, 6).forEach(addError);
+      return {
+        ok: true,
+        mode: mode,
+        how: how,
+        field: input && input.isConnected ? describe(input) : '',
+        detached: !!(input && !input.isConnected),
+        handled: handled,
+        holds: holds,
+        multiple: !!(input && input.multiple),
+        preview: preview,
+        nameShown: shown,
+        // An uploader inside a frame from another site is out of reach; say so when nothing took the file.
+        foreignFrame: !input && !handled && el.isConnected && hasForeignFrame(el),
+        errors: errors.slice(0, 8)
+      };
+    });
+  }
+
   window.__qutaiAgent = {
     readPage: readPage,
     readSource: readSource,
@@ -1584,7 +1837,12 @@ export const PAGE_SCRIPT = String.raw`
     fileData: fileData,
     captureBegin: captureBegin,
     captureStep: captureStep,
-    captureEnd: captureEnd
+    captureEnd: captureEnd,
+    fileTarget: fileTarget,
+    fileBegin: fileBegin,
+    fileChunk: fileChunk,
+    fileAbort: fileAbort,
+    fileAssign: fileAssign
   };
 })();
 `;
