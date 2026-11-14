@@ -1,4 +1,4 @@
-import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
+import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -75,7 +75,6 @@ import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/st
 import { usePersistSession } from './src/storage/usePersistSession';
 import { useRecordHistory } from './src/storage/useRecordHistory';
 
-const KEEP_AWAKE_TAG = 'qutai-agent';
 const memoryStore = deviceMemoryStore(getDb);
 const sitePermissions = new SitePermissionStore(getDb);
 const downloads = new DownloadStore(getDb);
@@ -123,6 +122,9 @@ function askConfirmation(description: string, host: string | null): Promise<bool
 export default function App() {
   // Re-renders the whole tree in the new language when the device language changes.
   useLanguage();
+  // The screen stays on while the app is open: reading pages and watching a task run shouldn't
+  // be interrupted by the screen dimming or locking (and a locked phone would freeze a task).
+  useKeepAwake();
   const [restored, setRestored] = useState<{
     session: Session | null;
     recentlyClosed: ClosedTab[];
@@ -310,8 +312,6 @@ function BrowserApp({
     if (research) chat.setResearch(false);
     const signal = chat.start();
     browser.setAgentTab(agentTab);
-    // If the screen turned off mid-task, the OS would freeze the app and the task would stall.
-    activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch(() => {});
     try {
       await runAgent({
         provider,
@@ -356,7 +356,6 @@ function BrowserApp({
       chat.finishStreaming();
       chat.finish();
       browser.setAgentTab(null);
-      deactivateKeepAwake(KEEP_AWAKE_TAG).catch(() => {});
       persistConversation(current);
     }
   };
