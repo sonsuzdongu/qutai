@@ -457,7 +457,8 @@ export const en = {
   'settings.unsavedBody': 'Your AI provider, key or model changes are not saved yet.',
   'settings.discard': 'Discard',
   'chat.emptyTitle': 'What should I do?',
-  'chat.emptyLeadPage': 'Ask about this page or give me a task. I can read it, click, fill in forms and open other tabs.',
+  'chat.emptyLeadPage':
+    'Ask about this page or give me a task. I can read it, click, fill in forms and open other tabs.',
   'chat.emptyLeadWeb': 'Give me a task on the web. I search, compare and do the clicking for you.',
   'chat.examplePage1': 'What is this page about, in three sentences?',
   'chat.examplePage2': 'Find the cheapest option on this page',

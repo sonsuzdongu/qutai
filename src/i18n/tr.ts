@@ -464,7 +464,8 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.unsavedBody': 'Yapay zekâ sağlayıcısı, anahtar veya model değişiklikleriniz henüz kaydedilmedi.',
   'settings.discard': 'Sil',
   'chat.emptyTitle': 'Ne yapayım?',
-  'chat.emptyLeadPage': 'Bu sayfayla ilgili sorun ya da bir görev verin. Okuyabilir, tıklayabilir, form doldurabilir ve başka sekmeler açabilirim.',
+  'chat.emptyLeadPage':
+    'Bu sayfayla ilgili sorun ya da bir görev verin. Okuyabilir, tıklayabilir, form doldurabilir ve başka sekmeler açabilirim.',
   'chat.emptyLeadWeb': 'Web’de bir görev verin. Sizin için arar, karşılaştırır ve tıklamaları yaparım.',
   'chat.examplePage1': 'Bu sayfa ne anlatıyor, üç cümleyle?',
   'chat.examplePage2': 'Bu sayfadaki en ucuz seçeneği bul',

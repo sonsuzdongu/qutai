@@ -23,6 +23,7 @@ import { dropTab, Measurable, sectionsOf, TabDrag } from './tabDrag';
 import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
 import { Icon } from '../ui/Icon';
+import { siteColor } from '../ui/siteColor';
 import { hostOf } from '../i18n/format';
 
 type Props = {
@@ -38,6 +39,11 @@ type Props = {
 const PADDING = 12;
 
 const DarkMode = createContext(false);
+
+/** The address after the site, e.g. "/dp/B0C…?ref=x" → "/dp/B0C…". */
+function pathOf(url: string): string {
+  return url.replace(/^[a-z]+:\/\/[^/]+/i, '').replace(/[?#].*$/, '') || '/';
+}
 
 /** Icon colours that match a theme's text styles. */
 function iconColors(theme: object) {
@@ -529,10 +535,22 @@ function TabCard({
             // Sized by the captured aspect ratio and clipped, so the top of the page is what shows.
             <Image source={{ uri: tab.thumbnail }} style={{ width, height: width / tab.thumbnailAspect }} />
           ) : (
+            // No snapshot yet (e.g. restored tabs): the site plus the page's own title and path, so
+            // several tabs of one site still look different.
             <View style={styles.placeholder}>
-              <Text style={[styles.placeholderLetter, theme.dimText]}>{(host[0] || '?').toUpperCase()}</Text>
-              <Text style={[styles.placeholderHost, theme.dimText]} numberOfLines={1}>
-                {host}
+              <View style={styles.placeholderSite}>
+                <View style={[styles.badge, { backgroundColor: siteColor(host) }]}>
+                  <Text style={styles.badgeLetter}>{(host[0] || '?').toUpperCase()}</Text>
+                </View>
+                <Text style={[styles.placeholderHost, theme.dimText]} numberOfLines={1}>
+                  {host}
+                </Text>
+              </View>
+              <Text style={[styles.placeholderTitle, theme.text]} numberOfLines={4}>
+                {tab.title || host}
+              </Text>
+              <Text style={[styles.placeholderPath, theme.dimText]} numberOfLines={1}>
+                {pathOf(tab.url)}
               </Text>
             </View>
           )}
@@ -609,9 +627,13 @@ const useStyles = makeStyles((c) => ({
   cardClose: { width: 32, height: 34, alignItems: 'center', justifyContent: 'center' },
   cardCloseText: { fontSize: 13 },
   preview: { overflow: 'hidden' },
-  placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 8 },
-  placeholderLetter: { fontSize: 40, fontWeight: '700' },
-  placeholderHost: { fontSize: 12, marginTop: 4 },
+  placeholder: { flex: 1, padding: 10, gap: 8 },
+  placeholderSite: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  badge: { width: 22, height: 22, borderRadius: 6, alignItems: 'center', justifyContent: 'center' },
+  badgeLetter: { color: '#ffffff', fontSize: 12, fontWeight: '700' },
+  placeholderHost: { flex: 1, fontSize: 11.5 },
+  placeholderTitle: { fontSize: 14, lineHeight: 19, fontWeight: '600' },
+  placeholderPath: { fontSize: 11, marginTop: 'auto' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 },
   emptyIcon: { fontSize: 44 },
   emptyTitle: { fontSize: 18, fontWeight: '600' },

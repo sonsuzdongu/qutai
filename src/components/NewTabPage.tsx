@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Aurora } from '../ui/Aurora';
+import { siteColor } from '../ui/siteColor';
 import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles } from '../ui/theme';
@@ -154,7 +155,7 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
                     onLongPress={() => removeSite(site)}
                     accessibilityLabel={site.title || site.host}
                   >
-                    <View style={[styles.tileIcon, { backgroundColor: colorFor(site.host) }]}>
+                    <View style={[styles.tileIcon, { backgroundColor: siteColor(site.host) }]}>
                       <Text style={styles.tileLetter}>{(site.host[0] || '?').toUpperCase()}</Text>
                     </View>
                     <Text style={styles.tileTitle} numberOfLines={1}>
@@ -207,7 +208,7 @@ function LinkRow({ title, url, onPress }: { title: string; url: string; onPress:
   const host = hostOf(url);
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}>
-      <View style={[styles.linkIcon, { backgroundColor: colorFor(host) }]}>
+      <View style={[styles.linkIcon, { backgroundColor: siteColor(host) }]}>
         <Text style={styles.linkLetter}>{(host[0] || '?').toUpperCase()}</Text>
       </View>
       <View style={styles.flex}>
@@ -223,11 +224,6 @@ function LinkRow({ title, url, onPress }: { title: string; url: string; onPress:
 }
 
 /** A stable colour per site, so tiles are recognisable without loading favicons from third parties. */
-function colorFor(host: string): string {
-  let hash = 0;
-  for (let i = 0; i < host.length; i++) hash = (hash * 31 + host.charCodeAt(i)) | 0;
-  return `hsl(${Math.abs(hash) % 360}, 45%, 52%)`;
-}
 
 const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
