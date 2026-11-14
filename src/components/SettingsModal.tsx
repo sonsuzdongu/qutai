@@ -16,6 +16,7 @@ import { makeStyles, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { ActionLogScreen } from './ActionLogScreen';
+import { SentLogScreen } from './SentLogScreen';
 import { BackupScreen } from './BackupScreen';
 import { AiChoice, AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
@@ -78,6 +79,7 @@ function SettingsPages({
   const [memoryVisible, setMemoryVisible] = useState(false);
   const [sitesVisible, setSitesVisible] = useState(false);
   const [actionLogVisible, setActionLogVisible] = useState(false);
+  const [sentLogVisible, setSentLogVisible] = useState(false);
   const [clearDataVisible, setClearDataVisible] = useState(false);
   const [legal, setLegal] = useState<LegalKind | null>(null);
   const [backupJob, setBackupJob] = useState<'export' | Uint8Array | null>(null);
@@ -239,6 +241,7 @@ function SettingsPages({
             <LinkRow label={t('settings.manageMemory')} onPress={() => setMemoryVisible(true)} />
             <LinkRow label={t('settings.sitePermissions')} onPress={() => setSitesVisible(true)} />
             <LinkRow label={t('settings.actionLog')} onPress={() => setActionLogVisible(true)} />
+            <LinkRow label={t('settings.sentLog')} onPress={() => setSentLogVisible(true)} />
           </>
         )}
 
@@ -390,6 +393,7 @@ function SettingsPages({
       <MemoryScreen visible={memoryVisible} onClose={() => setMemoryVisible(false)} />
       <SitePermissionsScreen visible={sitesVisible} store={sitePermissions} onClose={() => setSitesVisible(false)} />
       <ActionLogScreen visible={actionLogVisible} onClose={() => setActionLogVisible(false)} />
+      <SentLogScreen visible={sentLogVisible} onClose={() => setSentLogVisible(false)} />
       <BackupScreen job={backupJob} appLock={settings.appLock} onClose={() => setBackupJob(null)} />
       <ClearDataScreen visible={clearDataVisible} onClear={onClearData} onClose={() => setClearDataVisible(false)} />
     </SafeAreaView>

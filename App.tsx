@@ -75,6 +75,8 @@ import { captureRef } from 'react-native-view-shot';
 import { clearInsecureExceptions, upgradeToHttps } from './src/browser/httpsOnly';
 import { ClearOptions, rangeStart } from './src/storage/clearData';
 import { deleteActionsSince } from './src/storage/actionLog';
+import { deleteSentSince, moveSentConversation, pruneSent } from './src/storage/sentLog';
+import { SentLogScreen } from './src/components/SentLogScreen';
 import { bump, setHapticsEnabled, success, tick } from './src/device/haptics';
 import { deleteDownloadedFile, downloadFile } from './src/device/download';
 import { DownloadStore } from './src/storage/downloads';
@@ -239,6 +241,8 @@ function BrowserApp({
     else browser.openTab();
   };
   const [settingsVisible, setSettingsVisible] = useState(false);
+  /** "What was sent to the AI" opened from the assistant panel, for this conversation key. */
+  const [sentFor, setSentFor] = useState<string | null>(null);
   const [tabsVisible, setTabsVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
@@ -287,12 +291,15 @@ function BrowserApp({
       .then((saved) => conversation.restore(saved));
   }, [conversation]);
 
-  // Once at start: load site permissions and trim the activity history.
+  // Once at start: load site permissions and trim the activity history and the log of what was sent to the AI.
   useEffect(() => {
     sitePermissions.load();
     downloads.load();
     getDb()
-      .then((db) => pruneActions(db))
+      .then(async (db) => {
+        await pruneActions(db);
+        await pruneSent(db);
+      })
       .catch(() => {});
   }, []);
 
@@ -327,7 +334,10 @@ function BrowserApp({
     () =>
       browserInstance.onChatMoved((chat, fromKey) => {
         getDb()
-          .then((db) => storeChat(db, chat, fromKey))
+          .then(async (db) => {
+            await storeChat(db, chat, fromKey);
+            await moveSentConversation(db, fromKey, chat.key);
+          })
           .catch(() => {});
       }),
     [browserInstance],
@@ -395,6 +405,10 @@ function BrowserApp({
         },
         showAppSettings: () => setSettingsVisible(true),
         signal,
+        audit: {
+          conversation: () => chat.key,
+          incognito: () => chat.incognito || chat.privacy.touchedIncognito,
+        },
         onEvent: (event) => {
           if (event.type === 'text_delta') return chat.appendStreaming(event.text);
           if (event.type === 'text') return chat.finishStreaming(event.text);
@@ -771,12 +785,13 @@ function BrowserApp({
       : []),
   ];
 
-  /** Settings > Clear browsing data. History and activity follow the time range; the rest is cleared entirely. */
+  /** Settings > Clear browsing data. History, activity and the AI request log follow the time range; the rest is cleared entirely. */
   const clearData = async (options: ClearOptions) => {
     const from = rangeStart(options.range);
     const db = await getDb();
     if (options.history) await deleteHistorySince(db, from);
     if (options.activity) await deleteActionsSince(db, from);
+    if (options.aiRequests) await deleteSentSince(db, from);
     if (options.recentlyClosed) browser.clearRecentlyClosed();
     if (options.chats) {
       browser.conversations.forEach((x) => {
@@ -964,6 +979,7 @@ function BrowserApp({
               }}
               onNewChat={newChat}
               onOpenSettings={() => setSettingsVisible(true)}
+              onShowSent={() => setSentFor(conversation.key)}
               onOpenSource={(source) => {
                 // A page that is still open is shown in its tab; otherwise it opens again in the same mode.
                 const open = browser.tabs.find((x) => x.incognito === source.incognito && x.url === source.url);
@@ -1021,6 +1037,11 @@ function BrowserApp({
               const list = picked.map((x) => `- tab ${x.id}: ${x.title || x.url} (${x.url})`).join('\n');
               send(t('tabs.comparePrompt', { tabs: list }));
             }}
+          />
+          <SentLogScreen
+            visible={sentFor !== null}
+            conversation={sentFor ?? undefined}
+            onClose={() => setSentFor(null)}
           />
           <SettingsModal
             sitePermissions={sitePermissions}

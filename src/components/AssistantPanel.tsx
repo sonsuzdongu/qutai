@@ -75,6 +75,8 @@ type Props = {
   onChoose: (itemId: string, option: string) => void;
   onNewChat: () => void;
   onOpenSettings: () => void;
+  /** Opens "What was sent to the AI" for this conversation. */
+  onShowSent: () => void;
   onMessageAction: (action: MessageAction, text: string) => void;
   /** A link in an answer was tapped. */
   onOpenLink: (url: string) => void;
@@ -116,6 +118,7 @@ export function AssistantPanel({
   onChoose,
   onNewChat,
   onOpenSettings,
+  onShowSent,
   onMessageAction,
   onOpenLink,
   onCall,
@@ -255,6 +258,7 @@ export function AssistantPanel({
                     onOpenLink={onOpenLink}
                     onCall={onCall}
                     onOpenSource={onOpenSource}
+                    onShowSent={onShowSent}
                     onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
                   />
                 ))}
@@ -408,6 +412,7 @@ function ChatRow({
   onOpenLink,
   onCall,
   onOpenSource,
+  onShowSent,
   onChoose,
 }: {
   item: ChatItem;
@@ -416,6 +421,7 @@ function ChatRow({
   onOpenLink: (url: string) => void;
   onCall: (number: string) => void;
   onOpenSource: (source: Source) => void;
+  onShowSent: () => void;
   /** Set while the question can still be answered. */
   onChoose?: (itemId: string, option: string) => void;
 }) {
@@ -455,6 +461,7 @@ function ChatRow({
               />
               <MessageButton label={t('chat.share')} onPress={() => onAction('share', item.text)} />
               <MessageButton label={t('chat.pdf')} onPress={() => onAction('pdf', item.text)} />
+              <MessageButton label={t('chat.sent')} accessibilityLabel={t('chat.sentA11y')} onPress={onShowSent} />
             </View>
           )}
         </View>
@@ -556,10 +563,24 @@ function ChatRow({
   }
 }
 
-function MessageButton({ label, onPress }: { label: string; onPress: () => void }) {
+function MessageButton({
+  label,
+  accessibilityLabel,
+  onPress,
+}: {
+  label: string;
+  accessibilityLabel?: string;
+  onPress: () => void;
+}) {
   const styles = useStyles();
   return (
-    <Pressable onPress={onPress} hitSlop={6} style={({ pressed }) => [styles.messageButton, pressed && styles.pressed]}>
+    <Pressable
+      onPress={onPress}
+      hitSlop={6}
+      style={({ pressed }) => [styles.messageButton, pressed && styles.pressed]}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+    >
       <Text style={styles.messageButtonText}>{label}</Text>
     </Pressable>
   );

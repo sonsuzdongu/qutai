@@ -91,6 +91,24 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
      setting TEXT NOT NULL,
      updated_at INTEGER NOT NULL
    );`,
+  // "What was sent to the AI": the outline of each request (no content, see storage/sentLog.ts).
+  `CREATE TABLE ai_requests (
+     id TEXT PRIMARY KEY NOT NULL,
+     at INTEGER NOT NULL,
+     provider TEXT NOT NULL,
+     model TEXT NOT NULL,
+     host TEXT,
+     conversation TEXT NOT NULL,
+     items TEXT NOT NULL,
+     total_chars INTEGER NOT NULL,
+     images INTEGER NOT NULL,
+     resent_turns INTEGER NOT NULL,
+     resent_chars INTEGER NOT NULL,
+     web_search INTEGER NOT NULL,
+     research INTEGER NOT NULL
+   );
+   CREATE INDEX ai_requests_at ON ai_requests (at DESC);
+   CREATE INDEX ai_requests_conversation ON ai_requests (conversation);`,
 ];
 
 /**

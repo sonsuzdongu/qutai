@@ -17,10 +17,24 @@ phone. Always in a backup: bookmarks and folders, history, the assistant's memor
 location) and preferences (including reader mode and appearance). Optional: open tabs and tab groups (on by default),
 the assistant's conversations (off) and its activity history (off), and the AI provider keys (off; only with an explicit
 "Include my AI provider keys"). Never in a backup: incognito data (it is never stored), downloads and saved pages,
+the "What was sent to the AI" list,
 caches and thumbnails, and the app/incognito lock settings. Importing checks the password and the whole file first,
 shows what it contains, then merges it with the phone's data (keeping what is there) or replaces each kind it contains,
 in one database transaction, and restarts the app. The file is encrypted with XChaCha20-Poly1305 under a key derived
 from the password with scrypt (`src/backup/crypto.ts` documents the format); the password cannot be recovered.
+
+Requests to the AI go from the phone straight to the provider chosen in Settings, with the user's own key.
+"What was sent to the AI" (Settings › Assistant, or "ⓘ Sent" under an answer) lists every request, newest first:
+time, provider and model, the site, and what was new in it (the message, page text with its site and size, page source,
+screenshots, another tab's text, history matches, memory, that a location was sent, calendar details, other tool
+results), plus the size of the earlier conversation that is resent with each request and the fixed instructions and
+tool list. Every request is recorded at one place, the provider wrapper in `src/ai/providers.ts` (`src/ai/audit.ts`
+builds the entry; the API key is never touched). Retention (`src/storage/sentLog.ts`): the outline (time, provider,
+model, site, kinds and sizes) stays in SQLite for 30 days / 2000 entries like the activity history; the content itself
+is kept only in memory until the app closes (the latest 60 requests, 2M characters, 4 images), so page text is never
+copied to disk again, and location coordinates are never kept. Incognito conversations, and ones that touched an
+incognito tab, stay in memory only and their earlier entries are removed from disk. Clear browsing data has its own
+item for it.
 
 The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
 

@@ -247,7 +247,9 @@ deep research, price and page tracking, Safe Browsing checks.
 - ✅ Serverless backup: while there is no sync, exporting/importing an encrypted backup file (Settings › Backup;
   scrypt + XChaCha20-Poly1305 from `@noble`, randomness from `expo-crypto`, which needs **a new development build**
   for exporting; merge or replace on import, then the app reloads)
-- "What was sent to the AI" log: showing the user the page content sent with each request (a direct answer to privacy concerns)
+- ✅ "What was sent to the AI" log: every request recorded at the provider wrapper, listed with provider, model, site
+  and what was new in it (exact text and screenshots while the app runs; only the outline is kept on disk, 30 days;
+  incognito never written); Settings › Assistant and "ⓘ Sent" under answers; its own item in Clear browsing data
 - An optional 'Summarize results' chip on search results pages, keeping the results list intact
 
 ## 3. Things we recommend not doing

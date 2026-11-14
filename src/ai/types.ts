@@ -64,6 +64,21 @@ export type ModelRequest = {
   signal: AbortSignal;
   /** When set, the reply is streamed and text arrives here piece by piece (providers that support it). */
   onText?: (delta: string) => void;
+  /** Context for the "What was sent to the AI" log; every request is recorded (see providers.ts). */
+  audit: RequestAudit;
+};
+
+export type RequestAudit = {
+  /** Key of the conversation the request belongs to. */
+  conversation: string;
+  /** Incognito, or touched an incognito tab: the log keeps it in memory only. */
+  incognito: boolean;
+  /** Site of the tab the assistant works in (host only). */
+  host: string | null;
+  /** Site each tool result was read from (host only), by call id. */
+  resultHosts?: ReadonlyMap<string, string>;
+  /** The memory section of the system prompt and how many memories it lists. */
+  memory?: { text: string; count: number };
 };
 
 export type ModelTag = 'recommended' | 'fastest' | 'strongest';

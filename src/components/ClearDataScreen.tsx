@@ -12,9 +12,18 @@ type Props = { visible: boolean; onClear: (options: ClearOptions) => Promise<voi
 
 export type { ClearOptions };
 
-const ITEMS = ['history', 'cache', 'recentlyClosed', 'chats', 'activity', 'downloads', 'offlinePages'] as const;
+const ITEMS = [
+  'history',
+  'cache',
+  'recentlyClosed',
+  'chats',
+  'activity',
+  'aiRequests',
+  'downloads',
+  'offlinePages',
+] as const;
 
-/** Clears browsing data: history and activity for a time range, the rest entirely. */
+/** Clears browsing data: history, activity and the AI request log for a time range, the rest entirely. */
 export function ClearDataScreen({ visible, onClear, onClose }: Props) {
   const styles = useStyles();
   const [options, setOptions] = useState<ClearOptions>({
@@ -24,6 +33,7 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
     recentlyClosed: false,
     chats: false,
     activity: false,
+    aiRequests: false,
     downloads: false,
     offlinePages: false,
   });

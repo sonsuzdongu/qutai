@@ -22,6 +22,8 @@ import { isSearchEngine } from '../browser/search';
  *   activity?: [{ at, host, url, tool, description, ok }]
  * }
  *
+ * Never included: the "What was sent to the AI" list (ai_requests), which is a log of this phone's requests.
+ *
  * A kind that is present replaces or merges with the phone's data on import; an absent kind is left alone.
  */
 

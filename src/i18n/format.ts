@@ -39,6 +39,11 @@ export function formatDateTime(date: Date): string {
   }).format(date);
 }
 
+/** A localized number with at most one decimal, e.g. "12.5" or "12,5". */
+export function formatNumber(n: number): string {
+  return new Intl.NumberFormat(locale(), { maximumFractionDigits: 1 }).format(n);
+}
+
 export function timeLabel(ts: number): string {
   return new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit' }).format(ts);
 }

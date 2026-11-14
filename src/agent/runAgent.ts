@@ -5,12 +5,13 @@ import { getBackgroundCount, isForeground, waitForForeground } from '../utils/fo
 import { describeToolCall, executeTool, ToolContext } from './executeTool';
 import { SYSTEM_PROMPT } from './systemPrompt';
 import { memoryPrompt } from './memory';
+import { siteKey } from './sitePolicy';
 import { MEMORY_TOOLS, TOOLS } from './tools';
 import type { AgentEvent, Source } from './types';
 
 const MAX_STEPS = 40;
 /** On the final step: leave the user with where things stand instead of stopping mid-task. */
-const LAST_STEP_PROMPT =
+export const LAST_STEP_PROMPT =
   '\n\nThis is your last step for this message. Do not call tools. Reply with what you did, what you found ' +
   '(from your notes), and what is left, so the user can tell you to continue.';
 /** Research reads many pages, so it may take more steps. */
@@ -46,6 +47,8 @@ export type AgentOptions = ToolContext & {
   webSearch?: boolean;
   signal: AbortSignal;
   onEvent: (event: AgentEvent) => void;
+  /** For the "What was sent to the AI" log; read before each request, since both can change during a task. */
+  audit: { conversation: () => string; incognito: () => boolean };
 };
 
 export async function runAgent(opts: AgentOptions): Promise<void> {
@@ -75,16 +78,24 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     searchWidget = undefined;
   };
 
+  // The site each tool result came from, for the "What was sent to the AI" log.
+  const resultHosts = new Map<string, string>();
+  const noteResultHost = (callId: string, url: string | undefined) => {
+    const host = url ? siteKey(url) : null;
+    if (host) resultHosts.set(callId, host);
+  };
+
   const maxSteps = opts.research ? MAX_RESEARCH_STEPS : MAX_STEPS;
   for (let step = 0; step < maxSteps; step++) {
     await pauseWhileBackgrounded();
     if (signal.aborted) return;
 
     let streamed = false;
+    const prompt = await systemPrompt(opts);
     const reply = await provider.call({
       apiKey: opts.apiKey,
       model: opts.model,
-      system: (await systemPrompt(opts)) + (step === maxSteps - 1 ? LAST_STEP_PROMPT : ''),
+      system: prompt.text + (step === maxSteps - 1 ? LAST_STEP_PROMPT : ''),
       tools: opts.memory ? [...TOOLS, ...MEMORY_TOOLS] : TOOLS,
       webSearch: !!opts.webSearch,
       research: opts.research,
@@ -96,6 +107,13 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
         : undefined,
       turns: compactHistory(turns),
       signal,
+      audit: {
+        conversation: opts.audit.conversation(),
+        incognito: opts.audit.incognito(),
+        host: siteKey(opts.browser.getTab(opts.agentTab.id)?.url ?? ''),
+        resultHosts,
+        memory: prompt.memory,
+      },
     });
     turns.push({
       role: 'assistant',
@@ -184,6 +202,8 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
         await pauseWhileBackgrounded();
         result = await executeTool(call.name, call.input, opts);
       }
+      if (call.name === 'read_tab') noteResultHost(call.id, opts.browser.getTab(String(call.input.tab_id ?? ''))?.url);
+      else noteResultHost(call.id, opts.browser.getTab(opts.agentTab.id)?.url);
       if (result.isError) onEvent({ type: 'error', text: result.content.slice(0, 200) });
       else if (READING_TOOLS.has(call.name)) noteSource();
       else if (call.name === 'read_tab') {
@@ -217,14 +237,14 @@ export function parseChoices(input: Record<string, unknown>): { question: string
   return { question: question.slice(0, 500), options: options.slice(0, MAX_CHOICES) };
 }
 
-const WEB_SEARCH_PROMPT = `
+export const WEB_SEARCH_PROMPT = `
 
 Web search:
 - You can search the web with your built-in web search. Use it for facts, news, prices and other current information, or to find which site to open. It is faster than navigating to a search engine page.
 - Use the browser tools instead when the user asks about the page they are on, or when you need to act on a site (log in, fill in, click, buy).
 - Cite the pages you used; they are shown to the user as sources.`;
 
-const RESEARCH_PROMPT = `
+export const RESEARCH_PROMPT = `
 
 Deep research mode: the user wants a thorough, well-sourced report. Work like a careful researcher:
 1. Break the question into 3 to 6 sub-questions and mention them briefly.
@@ -233,12 +253,17 @@ Deep research mode: the user wants a thorough, well-sourced report. Work like a 
 4. Write the report in Markdown: a short summary first, then a section per sub-question, a comparison table when it helps, and caveats or open questions. Cite sources inline as [1], [2] and list them at the end as numbered links.
 Take as many steps as you need, but stop searching once new sources add nothing. Write in the user's language; this report may be long.`;
 
-/** The base prompt plus what is remembered about the user, re-read every step since the agent may change it. */
-async function systemPrompt(opts: AgentOptions): Promise<string> {
+/**
+ * The base prompt plus what is remembered about the user, re-read every step since the agent may change it.
+ * The memory section is also returned on its own for the "What was sent to the AI" log.
+ */
+async function systemPrompt(opts: AgentOptions): Promise<{ text: string; memory?: { text: string; count: number } }> {
   const search = (opts.webSearch ? WEB_SEARCH_PROMPT : '') + (opts.research ? RESEARCH_PROMPT : '');
-  if (!opts.memory) return SYSTEM_PROMPT + search;
+  if (!opts.memory) return { text: SYSTEM_PROMPT + search };
   const memories = await opts.memory.list().catch(() => []);
-  return SYSTEM_PROMPT + search + memoryPrompt(memories, !opts.privacy?.touchedIncognito);
+  const section = memoryPrompt(memories, !opts.privacy?.touchedIncognito);
+  const count = section.split('\n- [').length - 1;
+  return { text: SYSTEM_PROMPT + search + section, memory: { text: section, count } };
 }
 
 /**

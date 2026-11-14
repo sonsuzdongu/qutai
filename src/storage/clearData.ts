@@ -8,6 +8,8 @@ export type ClearOptions = {
   recentlyClosed: boolean;
   chats: boolean;
   activity: boolean;
+  /** The log of what was sent to the AI. */
+  aiRequests: boolean;
   downloads: boolean;
   offlinePages: boolean;
 };
