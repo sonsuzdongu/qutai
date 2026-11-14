@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
+import { Aurora } from '../ui/Aurora';
 import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles } from '../ui/theme';
@@ -94,95 +95,96 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
   const theme = darkUI ? dark : light;
 
   return (
-    <ScrollView
-      style={[styles.flex, theme.page]}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >
-      {incognito ? (
-        <View style={styles.logoRow}>
-          <Icon name="incognito" size={40} color="#f2f1f5" />
-        </View>
-      ) : (
-        <View style={styles.logoRow} accessible accessibilityRole="header" accessibilityLabel="Qutai">
-          <QutaiMark size={44} sweepWhenIdle animate={active} />
-          <Text style={[styles.logo, theme.logo]}>Qutai</Text>
-        </View>
-      )}
-
-      <View style={[styles.searchRow, theme.search]}>
-        <TextInput
-          style={[styles.searchInput, theme.text]}
-          value={text}
-          onChangeText={setText}
-          onSubmitEditing={submit}
-          placeholder={t('address.placeholder')}
-          placeholderTextColor={darkUI ? '#a9a8b3' : '#6b6862'}
-          autoCapitalize="none"
-          autoCorrect={false}
-          returnKeyType="search"
-        />
-        <Pressable
-          onPress={ask}
-          disabled={!text.trim()}
-          style={[styles.askButton, !text.trim() && styles.dimmed]}
-          accessibilityLabel={t('newTab.ask')}
-        >
-          <View style={styles.askInner}>
-            <Icon name="assistant" size={15} color="#ffffff" />
-            <Text style={styles.askText}>{t('newTab.ask')}</Text>
+    <View style={[styles.flex, theme.page]}>
+      {/* Incognito keeps its own plain look. */}
+      {!incognito && <Aurora base={darkUI ? '#1c1b22' : '#f5f4ef'} dark={darkUI} fade={0.5} />}
+      <ScrollView style={styles.flex} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {incognito ? (
+          <View style={styles.logoRow}>
+            <Icon name="incognito" size={40} color="#f2f1f5" />
           </View>
-        </Pressable>
-      </View>
+        ) : (
+          <View style={styles.logoRow} accessible accessibilityRole="header" accessibilityLabel="Qutai">
+            <QutaiMark size={44} sweepWhenIdle animate={active} />
+            <Text style={[styles.logo, theme.logo]}>Qutai</Text>
+          </View>
+        )}
 
-      {incognito ? (
-        <View style={[styles.card, theme.card]}>
-          <Text style={[styles.cardTitle, theme.text]}>{t('newTab.incognitoTitle')}</Text>
-          <Text style={[styles.cardBody, theme.dim]}>
-            {t('tabs.incognitoInfo')} {t(Platform.OS === 'ios' ? 'tabs.incognitoInfoIos' : 'tabs.incognitoInfoAndroid')}
-          </Text>
-        </View>
-      ) : (
-        data && (
-          <>
-            <View style={styles.grid}>
-              {data.sites.map((site) => (
-                <Pressable
-                  key={site.host}
-                  style={styles.tile}
-                  onPress={() => onNavigate(site.url)}
-                  onLongPress={() => removeSite(site)}
-                  accessibilityLabel={site.title || site.host}
-                >
-                  <View style={[styles.tileIcon, { backgroundColor: colorFor(site.host) }]}>
-                    <Text style={styles.tileLetter}>{(site.host[0] || '?').toUpperCase()}</Text>
-                  </View>
-                  <Text style={styles.tileTitle} numberOfLines={1}>
-                    {site.title || site.host}
-                  </Text>
-                </Pressable>
-              ))}
+        <View style={[styles.searchRow, theme.search]}>
+          <TextInput
+            style={[styles.searchInput, theme.text]}
+            value={text}
+            onChangeText={setText}
+            onSubmitEditing={submit}
+            placeholder={t('address.placeholder')}
+            placeholderTextColor={darkUI ? '#a9a8b3' : '#6b6862'}
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="search"
+          />
+          <Pressable
+            onPress={ask}
+            disabled={!text.trim()}
+            style={[styles.askButton, !text.trim() && styles.dimmed]}
+            accessibilityLabel={t('newTab.ask')}
+          >
+            <View style={styles.askInner}>
+              <Icon name="assistant" size={15} color="#ffffff" />
+              <Text style={styles.askText}>{t('newTab.ask')}</Text>
             </View>
+          </Pressable>
+        </View>
 
-            {data.bookmarks.length > 0 && (
-              <Section title={t('library.bookmarks')} onSeeAll={() => onOpenLibrary('bookmarks')}>
-                {data.bookmarks.map((b) => (
-                  <LinkRow key={b.url} title={b.title} url={b.url} onPress={() => onNavigate(b.url)} />
+        {incognito ? (
+          <View style={[styles.card, theme.card]}>
+            <Text style={[styles.cardTitle, theme.text]}>{t('newTab.incognitoTitle')}</Text>
+            <Text style={[styles.cardBody, theme.dim]}>
+              {t('tabs.incognitoInfo')}{' '}
+              {t(Platform.OS === 'ios' ? 'tabs.incognitoInfoIos' : 'tabs.incognitoInfoAndroid')}
+            </Text>
+          </View>
+        ) : (
+          data && (
+            <>
+              <View style={styles.grid}>
+                {data.sites.map((site) => (
+                  <Pressable
+                    key={site.host}
+                    style={styles.tile}
+                    onPress={() => onNavigate(site.url)}
+                    onLongPress={() => removeSite(site)}
+                    accessibilityLabel={site.title || site.host}
+                  >
+                    <View style={[styles.tileIcon, { backgroundColor: colorFor(site.host) }]}>
+                      <Text style={styles.tileLetter}>{(site.host[0] || '?').toUpperCase()}</Text>
+                    </View>
+                    <Text style={styles.tileTitle} numberOfLines={1}>
+                      {site.title || site.host}
+                    </Text>
+                  </Pressable>
                 ))}
-              </Section>
-            )}
+              </View>
 
-            {data.recent.length > 0 && (
-              <Section title={t('newTab.recent')} onSeeAll={() => onOpenLibrary('history')}>
-                {data.recent.map((h) => (
-                  <LinkRow key={h.id} title={h.title} url={h.url} onPress={() => onNavigate(h.url)} />
-                ))}
-              </Section>
-            )}
-          </>
-        )
-      )}
-    </ScrollView>
+              {data.bookmarks.length > 0 && (
+                <Section title={t('library.bookmarks')} onSeeAll={() => onOpenLibrary('bookmarks')}>
+                  {data.bookmarks.map((b) => (
+                    <LinkRow key={b.url} title={b.title} url={b.url} onPress={() => onNavigate(b.url)} />
+                  ))}
+                </Section>
+              )}
+
+              {data.recent.length > 0 && (
+                <Section title={t('newTab.recent')} onSeeAll={() => onOpenLibrary('history')}>
+                  {data.recent.map((h) => (
+                    <LinkRow key={h.id} title={h.title} url={h.url} onPress={() => onNavigate(h.url)} />
+                  ))}
+                </Section>
+              )}
+            </>
+          )
+        )}
+      </ScrollView>
+    </View>
   );
 }
 
