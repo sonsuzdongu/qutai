@@ -360,6 +360,14 @@ export const en = {
   'settings.memoryEnabled': 'Remember things about me',
   'settings.memoryHint':
     'Qutai saves facts you tell it (name, phone, address, preferences) on this phone and uses them in later conversations, e.g. to fill in forms. Never passwords or card details; nothing from incognito.',
+  'settings.customInstructions': 'Custom instructions',
+  'settings.customInstructionsHint':
+    "Your standing preferences, added to every request to the AI. They can't turn off Qutai's safety rules or confirmations.",
+  'settings.customInstructionsPlaceholder': 'e.g. Answer briefly. Prefer metric units.',
+  'settings.customExample1': 'Answer briefly',
+  'settings.customExample2': 'Always reply in Turkish',
+  'settings.customExample3': 'Prefer metric units',
+  'settings.customExampleHint': 'Adds it as a line',
   'settings.geminiStreaming': 'Stream Gemini responses (experimental)',
   'settings.geminiStreamingHint': 'Answers appear as they are written. Turn this off if replies fail.',
   'settings.backgroundTasks': 'Keep working in the background',
@@ -533,6 +541,7 @@ export const en = {
   'sentLog.instructionsResearch': 'In deep research',
   'sentLog.instructionsLastStep': 'On the last step',
   'sentLog.instructionsTools': 'Tool list',
+  'sentLog.instructionsCustom': 'Your custom instructions',
   'sentLog.kind.message': 'Your message',
   'sentLog.kind.page': 'Page text',
   'sentLog.kind.source': 'Page source',

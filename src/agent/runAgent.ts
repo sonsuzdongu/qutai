@@ -14,7 +14,7 @@ import {
 } from '../device/backgroundTask';
 import { getBackgroundCount, isForeground, waitForForeground } from '../utils/foreground';
 import { backgroundBlocker, describeToolCall, executeTool, ToolContext } from './executeTool';
-import { SYSTEM_PROMPT } from './systemPrompt';
+import { customInstructionsPrompt, SYSTEM_PROMPT } from './systemPrompt';
 import { memoryPrompt } from './memory';
 import { siteKey } from './sitePolicy';
 import { MEMORY_TOOLS, TOOLS } from './tools';
@@ -58,6 +58,8 @@ export type AgentOptions = ToolContext & {
   webSearch?: boolean;
   signal: AbortSignal;
   onEvent: (event: AgentEvent) => void;
+  /** The user's custom instructions from settings; '' or absent for none. */
+  customInstructions?: string;
   /** For the "What was sent to the AI" log; read before each request, since both can change during a task. */
   audit: { conversation: () => string; incognito: () => boolean };
 };
@@ -319,11 +321,13 @@ Take as many steps as you need, but stop searching once new sources add nothing.
  */
 async function systemPrompt(opts: AgentOptions): Promise<{ text: string; memory?: { text: string; count: number } }> {
   const search = (opts.webSearch ? WEB_SEARCH_PROMPT : '') + (opts.research ? RESEARCH_PROMPT : '');
-  if (!opts.memory) return { text: SYSTEM_PROMPT + search };
+  // Last, so everything it could conflict with comes before it (its wording puts it below the safety rules).
+  const custom = customInstructionsPrompt(opts.customInstructions ?? '');
+  if (!opts.memory) return { text: SYSTEM_PROMPT + search + custom };
   const memories = await opts.memory.list().catch(() => []);
   const section = memoryPrompt(memories, !opts.privacy?.touchedIncognito);
   const count = section.split('\n- [').length - 1;
-  return { text: SYSTEM_PROMPT + search + section, memory: { text: section, count } };
+  return { text: SYSTEM_PROMPT + search + section + custom, memory: { text: section, count } };
 }
 
 /**

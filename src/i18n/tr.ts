@@ -361,6 +361,14 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.memoryEnabled': 'Benimle ilgili bilgileri hatırla',
   'settings.memoryHint':
     'Qutai ona söylediğiniz bilgileri (ad, telefon, adres, tercihler) bu telefonda saklar ve sonraki sohbetlerde, örneğin form doldururken kullanır. Şifre ve kart bilgisi asla saklanmaz; gizli sekmelerden hiçbir şey kaydedilmez.',
+  'settings.customInstructions': 'Özel talimatlar',
+  'settings.customInstructionsHint':
+    'Kalıcı tercihleriniz; AI’a giden her isteğe eklenir. Qutai’nin güvenlik kurallarını ve onaylarını kapatamaz.',
+  'settings.customInstructionsPlaceholder': 'örn. Kısa yanıt ver. Metrik birimler kullan.',
+  'settings.customExample1': 'Kısa yanıt ver',
+  'settings.customExample2': 'Her zaman Türkçe yanıt ver',
+  'settings.customExample3': 'Metrik birimler kullan',
+  'settings.customExampleHint': 'Satır olarak ekler',
   'settings.geminiStreaming': 'Gemini yanıtlarını akış olarak göster (deneysel)',
   'settings.geminiStreamingHint': 'Yanıtlar yazıldıkça görünür. Yanıtlar başarısız olursa bunu kapatın.',
   'settings.backgroundTasks': 'Arka planda çalışmaya devam et',
@@ -535,6 +543,7 @@ export const tr: Record<keyof typeof en, string> = {
   'sentLog.instructionsResearch': 'Derin araştırmada',
   'sentLog.instructionsLastStep': 'Son adımda',
   'sentLog.instructionsTools': 'Araç listesi',
+  'sentLog.instructionsCustom': 'Özel talimatlarınız',
   'sentLog.kind.message': 'Mesajınız',
   'sentLog.kind.page': 'Sayfa metni',
   'sentLog.kind.source': 'Sayfa kaynağı',

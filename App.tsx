@@ -593,6 +593,7 @@ function BrowserApp({
         agentTab,
         privacy: chat.privacy,
         memory: settings.memoryEnabled ? memoryStore : undefined,
+        customInstructions: settings.customInstructions,
         // Research without web search would be guesswork, so it always searches.
         webSearch: settings.webSearch || research,
         research,
@@ -1473,6 +1474,7 @@ function BrowserApp({
           <SentLogScreen
             visible={sentFor !== null}
             conversation={sentFor ?? undefined}
+            customInstructions={settings.customInstructions}
             onClose={() => setSentFor(null)}
           />
           <SettingsModal

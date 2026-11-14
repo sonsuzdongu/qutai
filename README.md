@@ -16,7 +16,7 @@ same format, so bookmarks can always be taken to another browser.
 There is no account and no sync, so Settings › Backup exports everything to one password-protected file
 (`qutai-backup-YYYY-MM-DD.qutai`, saved through the share sheet to Files, Drive…) and imports it on this or another
 phone. Always in a backup: bookmarks and folders, history, the assistant's memory (with its categories), site permissions (assistant level and
-location) and preferences (including reader mode and appearance). Optional: open tabs and tab groups (on by default),
+location) and preferences (including reader mode, appearance and custom instructions). Optional: open tabs and tab groups (on by default),
 the assistant's conversations (off) and its activity history (off), and the AI provider keys (off; only with an explicit
 "Include my AI provider keys"). Never in a backup: incognito data (it is never stored), downloads and saved pages,
 the "What was sent to the AI" list,
@@ -30,7 +30,7 @@ Requests to the AI go from the phone straight to the provider chosen in Settings
 time, provider and model, the site, and what was new in it (the message, page text with its site and size, page source,
 screenshots, another tab's text, history matches, memory, that a location was sent, calendar details, other tool
 results), plus the size of the earlier conversation that is resent with each request and the fixed instructions and
-tool list. Every request is recorded at one place, the provider wrapper in `src/ai/providers.ts` (`src/ai/audit.ts`
+tool list (with the user's custom instructions from Settings › Assistant, which go with every request). Every request is recorded at one place, the provider wrapper in `src/ai/providers.ts` (`src/ai/audit.ts`
 builds the entry; the API key is never touched). Retention (`src/storage/sentLog.ts`): the outline (time, provider,
 model, site, kinds and sizes) stays in SQLite for 30 days / 2000 entries like the activity history; the content itself
 is kept only in memory until the app closes (the latest 60 requests, 2M characters, 4 images), so page text is never

@@ -4,6 +4,7 @@ import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES, ReaderFont, ReaderTheme } from '../browser/reader';
 import { isSearchEngine, SearchEngineId } from '../browser/search';
 import type { VoiceOnline } from '../device/voiceInput';
+import { cleanCustomInstructions } from '../agent/systemPrompt';
 
 export type Settings = {
   provider: ProviderId;
@@ -17,6 +18,11 @@ export type Settings = {
   textZoom: number;
   /** The assistant remembers facts about the user across conversations. */
   memoryEnabled: boolean;
+  /**
+   * The user's standing instructions for the assistant ("Answer briefly"), added to every request below the safety
+   * rules (agent/systemPrompt.ts customInstructionsPrompt). Also where setup's answer-style question writes.
+   */
+  customInstructions: string;
   /** The assistant may use the provider's web search (each search is billed to the user's API key). */
   webSearch: boolean;
   /** Block requests to known ad and tracker servers. */
@@ -95,6 +101,7 @@ export const DEFAULT_SETTINGS: Settings = {
   searchSuggestions: true,
   textZoom: 100,
   memoryEnabled: true,
+  customInstructions: '',
   webSearch: true,
   blockAds: true,
   hideCookieBanners: true,
@@ -130,6 +137,7 @@ const KEYS = {
   searchSuggestions: 'search_suggestions',
   textZoom: 'text_zoom',
   memoryEnabled: 'memory_enabled',
+  customInstructions: 'custom_instructions',
   webSearch: 'web_search',
   blockAds: 'block_ads',
   hideCookieBanners: 'hide_cookie_banners',
@@ -183,6 +191,7 @@ export async function loadSettings(): Promise<Settings> {
     searchSuggestions,
     textZoom,
     memoryEnabled,
+    customInstructions,
     webSearch,
     blockAds,
     hideCookieBanners,
@@ -219,6 +228,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.searchSuggestions),
     get(KEYS.textZoom),
     get(KEYS.memoryEnabled),
+    get(KEYS.customInstructions),
     get(KEYS.webSearch),
     get(KEYS.blockAds),
     get(KEYS.hideCookieBanners),
@@ -259,6 +269,7 @@ export async function loadSettings(): Promise<Settings> {
     searchSuggestions: searchSuggestions !== 'false',
     textZoom: clampTextZoom(Number(textZoom) || DEFAULT_SETTINGS.textZoom),
     memoryEnabled: memoryEnabled !== 'false',
+    customInstructions: cleanCustomInstructions(customInstructions ?? ''),
     webSearch: webSearch !== 'false',
     blockAds: blockAds !== 'false',
     hideCookieBanners: hideCookieBanners !== 'false',
@@ -307,6 +318,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.searchSuggestions, String(settings.searchSuggestions)),
     set(KEYS.textZoom, String(settings.textZoom)),
     set(KEYS.memoryEnabled, String(settings.memoryEnabled)),
+    set(KEYS.customInstructions, cleanCustomInstructions(settings.customInstructions)),
     set(KEYS.webSearch, String(settings.webSearch)),
     set(KEYS.blockAds, String(settings.blockAds)),
     set(KEYS.hideCookieBanners, String(settings.hideCookieBanners)),

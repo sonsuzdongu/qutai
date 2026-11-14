@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Image, Modal, Platform, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LAST_STEP_PROMPT, RESEARCH_PROMPT, WEB_SEARCH_PROMPT } from '../agent/runAgent';
-import { SYSTEM_PROMPT } from '../agent/systemPrompt';
+import { customInstructionsPrompt, SYSTEM_PROMPT } from '../agent/systemPrompt';
 import { MEMORY_TOOLS, TOOLS } from '../agent/tools';
 import { getProvider, modelLabel } from '../ai/providers';
 import type { ToolImage } from '../ai/types';
@@ -27,6 +27,8 @@ type Props = {
   visible: boolean;
   /** Opened from a conversation: show its requests first (the user can switch to all). */
   conversation?: string;
+  /** The user's custom instructions, shown with the fixed instructions (they go with every request). */
+  customInstructions?: string;
   onClose: () => void;
 };
 
@@ -35,10 +37,10 @@ const MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });
 const PREVIEW_CHARS = 3000;
 
 /** "What was sent to the AI": each request to the provider, newest first, and what left the phone with it. */
-export function SentLogScreen({ visible, conversation, onClose }: Props) {
+export function SentLogScreen({ visible, conversation, customInstructions, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      {visible && <SentLog conversation={conversation} onClose={onClose} />}
+      {visible && <SentLog conversation={conversation} customInstructions={customInstructions} onClose={onClose} />}
       <DialogHost />
     </Modal>
   );
@@ -81,7 +83,15 @@ function chipsOf(entry: SentRequest): string[] {
 
 const providerLine = (e: SentRequest) => `${getProvider(e.provider).label} · ${modelLabel(e.provider, e.model)}`;
 
-function SentLog({ conversation, onClose }: { conversation?: string; onClose: () => void }) {
+function SentLog({
+  conversation,
+  customInstructions,
+  onClose,
+}: {
+  conversation?: string;
+  customInstructions?: string;
+  onClose: () => void;
+}) {
   const styles = useStyles();
   const [onlyThis, setOnlyThis] = useState(!!conversation);
   const [entries, setEntries] = useState<SentRequest[] | null>(null);
@@ -125,7 +135,7 @@ function SentLog({ conversation, onClose }: { conversation?: string; onClose: ()
             <Text style={styles.done}>{t('common.done')}</Text>
           </Pressable>
         </View>
-        {open === 'instructions' ? <Instructions /> : <RequestDetail entry={open} />}
+        {open === 'instructions' ? <Instructions customInstructions={customInstructions ?? ''} /> : <RequestDetail entry={open} />}
       </SafeAreaView>
     );
   }
@@ -322,14 +332,17 @@ function LongText({ text }: { text: string }) {
 }
 
 /** The fixed part of every request: the instructions and the tool list. */
-function Instructions() {
+function Instructions({ customInstructions }: { customInstructions: string }) {
   const styles = useStyles();
+  const custom = customInstructionsPrompt(customInstructions).trim();
   const sections: { title: string; text: string }[] = [
     { title: t('sentLog.instructionsBase'), text: SYSTEM_PROMPT },
     { title: t('sentLog.instructionsWebSearch'), text: WEB_SEARCH_PROMPT.trim() },
     { title: t('sentLog.instructionsResearch'), text: RESEARCH_PROMPT.trim() },
     { title: t('sentLog.instructionsLastStep'), text: LAST_STEP_PROMPT.trim() },
     { title: t('sentLog.instructionsTools'), text: JSON.stringify([...TOOLS, ...MEMORY_TOOLS], null, 2) },
+    // Sent with every request while set; shown here once instead of in each entry.
+    ...(custom ? [{ title: t('sentLog.instructionsCustom'), text: custom }] : []),
   ];
   return (
     <ScrollView contentContainerStyle={styles.list}>

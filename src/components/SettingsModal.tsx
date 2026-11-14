@@ -1,6 +1,7 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ReactNode, useEffect, useRef, useState } from 'react';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { cleanCustomInstructions, MAX_CUSTOM_INSTRUCTIONS } from '../agent/systemPrompt';
 import { getProvider } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { authenticate, canAuthenticate } from '../device/biometric';
@@ -288,6 +289,10 @@ function SettingsPages({
               value={settings.memoryEnabled}
               onChange={(memoryEnabled) => set({ memoryEnabled })}
             />
+            <CustomInstructionsField
+              value={settings.customInstructions}
+              onSave={(customInstructions) => set({ customInstructions })}
+            />
             <Text style={[styles.label, styles.sectionLabel]}>{t('settings.voiceSection')}</Text>
             <SwitchRow
               title={t('settings.voiceAutoSend')}
@@ -511,7 +516,11 @@ function SettingsPages({
         onClose={() => setListsVisible(false)}
       />
       <ActionLogScreen visible={actionLogVisible} onClose={() => setActionLogVisible(false)} />
-      <SentLogScreen visible={sentLogVisible} onClose={() => setSentLogVisible(false)} />
+      <SentLogScreen
+        visible={sentLogVisible}
+        customInstructions={settings.customInstructions}
+        onClose={() => setSentLogVisible(false)}
+      />
       <BackupScreen job={backupJob} appLock={settings.appLock} onClose={() => setBackupJob(null)} />
       <ClearDataScreen visible={clearDataVisible} onClear={onClearData} onClose={() => setClearDataVisible(false)} />
     </SafeAreaView>
@@ -599,6 +608,74 @@ function SwitchRow({
   );
 }
 
+const INSTRUCTION_EXAMPLES = ['settings.customExample1', 'settings.customExample2', 'settings.customExample3'] as const;
+
+/**
+ * Settings › Assistant › Custom instructions: saved when the field loses focus (and when the page closes), so
+ * typing doesn't rewrite secure storage on every key. Examples are added as their own line with a tap.
+ */
+function CustomInstructionsField({ value, onSave }: { value: string; onSave: (text: string) => void }) {
+  const styles = useStyles();
+  const palette = usePalette();
+  const [text, setText] = useState(value);
+  const latest = useRef({ text, value, onSave });
+  useEffect(() => {
+    latest.current = { text, value, onSave };
+  });
+  const save = (next = text) => {
+    const clean = cleanCustomInstructions(next);
+    if (clean !== value) onSave(clean);
+  };
+  useEffect(
+    () => () => {
+      const { text: last, value: saved, onSave: store } = latest.current;
+      const clean = cleanCustomInstructions(last);
+      if (clean !== saved) store(clean);
+    },
+    [],
+  );
+  const addExample = (example: string) => {
+    if (text.includes(example)) return;
+    const next = (text.trim() ? `${text.trim()}\n${example}` : example).slice(0, MAX_CUSTOM_INSTRUCTIONS);
+    setText(next);
+    save(next);
+  };
+  return (
+    <>
+      <Text style={styles.label}>{t('settings.customInstructions')}</Text>
+      <Text style={styles.hint}>{t('settings.customInstructionsHint')}</Text>
+      <TextInput
+        style={styles.customInput}
+        value={text}
+        onChangeText={setText}
+        onEndEditing={() => save()}
+        placeholder={t('settings.customInstructionsPlaceholder')}
+        placeholderTextColor={palette.textSecondary}
+        maxLength={MAX_CUSTOM_INSTRUCTIONS}
+        multiline
+        textAlignVertical="top"
+        accessibilityLabel={t('settings.customInstructions')}
+      />
+      <View style={styles.customFooter}>
+        <View style={styles.customExamples}>
+          {INSTRUCTION_EXAMPLES.map((key) => (
+            <Pressable
+              key={key}
+              onPress={() => addExample(t(key))}
+              style={({ pressed }) => [styles.customExample, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityHint={t('settings.customExampleHint')}
+            >
+              <Text style={styles.customExampleText}>{t(key)}</Text>
+            </Pressable>
+          ))}
+        </View>
+        <Text style={styles.hint}>{`${text.length}/${MAX_CUSTOM_INSTRUCTIONS}`}</Text>
+      </View>
+    </>
+  );
+}
+
 function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
   const styles = useStyles();
   return (
@@ -669,6 +746,31 @@ const useStyles = makeStyles((c) => ({
   sectionLabel: { fontSize: 13, color: c.textSecondary, textTransform: 'uppercase', marginTop: 24 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   voiceMode: { marginTop: 8 },
+  customInput: {
+    color: c.text,
+    minHeight: 96,
+    maxHeight: 180,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingTop: 10,
+    paddingBottom: 10,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    fontSize: 15,
+    marginTop: 6,
+  },
+  customFooter: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  customExamples: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  customExample: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    backgroundColor: c.surface,
+  },
+  customExampleText: { fontSize: 13, color: c.text },
   link: { color: c.tintText, fontWeight: '600' },
   segment: { flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
   segmentButton: {

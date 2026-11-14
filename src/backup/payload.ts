@@ -1,4 +1,5 @@
 import { isSiteLevel, SiteLevel } from '../agent/sitePolicy';
+import { cleanCustomInstructions } from '../agent/systemPrompt';
 import { cleanMemoryText, isMemoryCategory, MAX_MEMORIES, MemoryCategory, sensitiveReason } from '../agent/memory';
 import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES } from '../browser/reader';
@@ -74,6 +75,8 @@ export type BackupSettings = Partial<{
   searchSuggestions: boolean;
   textZoom: number;
   memoryEnabled: boolean;
+  /** Not in backups made before custom instructions existed. */
+  customInstructions: string;
   webSearch: boolean;
   blockAds: boolean;
   hideCookieBanners: boolean;
@@ -362,6 +365,7 @@ function parseSettings(v: unknown): BackupSettings | undefined {
   if (readerTheme) out.readerTheme = readerTheme;
   const readerFont = oneOf(v.readerFont, READER_FONTS);
   if (readerFont) out.readerFont = readerFont;
+  if (typeof v.customInstructions === 'string') out.customInstructions = cleanCustomInstructions(v.customInstructions);
   return out;
 }
 

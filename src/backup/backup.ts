@@ -40,6 +40,7 @@ function backupSettings(s: Settings): BackupSettings {
     searchSuggestions: s.searchSuggestions,
     textZoom: s.textZoom,
     memoryEnabled: s.memoryEnabled,
+    customInstructions: s.customInstructions,
     webSearch: s.webSearch,
     blockAds: s.blockAds,
     hideCookieBanners: s.hideCookieBanners,
@@ -117,6 +118,7 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
     take('searchSuggestions', s.searchSuggestions);
     take('textZoom', s.textZoom === undefined ? undefined : clampTextZoom(s.textZoom));
     take('memoryEnabled', s.memoryEnabled);
+    take('customInstructions', s.customInstructions);
     take('webSearch', s.webSearch);
     take('blockAds', s.blockAds);
     take('hideCookieBanners', s.hideCookieBanners);
