@@ -53,17 +53,15 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   const steps = legalOnly ? (['legal'] as Step[]) : ALL_STEPS;
   const [index, setIndex] = useState(0);
   const scrollRef = useRef<ScrollViewInstance>(null);
-  // Step changes blur out and back into focus: the blur sits over the content area only (not the
-  // progress dots or the button). On Android it needs a BlurTargetView holding what it blurs.
+  // Step changes blur the whole screen out and back into focus. On Android the blur needs a
+  // BlurTargetView holding what it blurs.
   const targetRef = useRef<ComponentRef<typeof View>>(null);
-  const areaRef = useRef<ComponentRef<typeof View>>(null);
-  const [area, setArea] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [switching, setSwitching] = useState(false);
   const reduceMotion = useReducedMotion();
   const blur = useSharedValue(0);
   const blurProps = useAnimatedProps(() => ({ intensity: blur.value }));
-  const blurStyle = useAnimatedStyle(() => ({ opacity: blur.value > 0.5 ? 1 : 0 }));
-  const contentStyle = useAnimatedStyle(() => ({ opacity: 1 - (blur.value / BLUR_MAX) * 0.35 }));
+  // The layer fades in with the blur rather than appearing at once (that jump read as a flicker).
+  const blurStyle = useAnimatedStyle(() => ({ opacity: Math.min(1, blur.value / 12) }));
   const show = (to: number) => {
     setIndex(to);
     // Each step starts at its top.
@@ -134,159 +132,151 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
               <View style={styles.topSpacer} />
             </View>
 
-            <Animated.View
-              ref={areaRef}
-              style={[styles.flex, contentStyle]}
-              onLayout={() =>
-                areaRef.current?.measureInWindow((x, y, width, height) => setArea({ x, y, width, height }))
-              }
-            >
-              <ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-                <View style={styles.step}>
-                  {step === 'welcome' && (
-                    <>
-                      <View style={styles.hero}>
-                        <QutaiMark size={72} alwaysSparkle />
-                        <GradientText style={styles.wordmark}>Qutai</GradientText>
-                        <Text style={styles.lead}>{t('onboarding.tagline')}</Text>
-                      </View>
-                      <Feature icon="summarize" title={t('onboarding.f1Title')} body={t('onboarding.f1Body')} />
-                      <Feature icon="assistant" title={t('onboarding.f2Title')} body={t('onboarding.f2Body')} />
-                      <Feature icon="shield" title={t('onboarding.f3Title')} body={t('onboarding.f3Body')} />
-                    </>
-                  )}
+            <ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+              <View style={styles.step}>
+                {step === 'welcome' && (
+                  <>
+                    <View style={styles.hero}>
+                      <QutaiMark size={72} alwaysSparkle />
+                      <GradientText style={styles.wordmark}>Qutai</GradientText>
+                      <Text style={styles.lead}>{t('onboarding.tagline')}</Text>
+                    </View>
+                    <Feature icon="summarize" title={t('onboarding.f1Title')} body={t('onboarding.f1Body')} />
+                    <Feature icon="assistant" title={t('onboarding.f2Title')} body={t('onboarding.f2Body')} />
+                    <Feature icon="shield" title={t('onboarding.f3Title')} body={t('onboarding.f3Body')} />
+                  </>
+                )}
 
-                  {step === 'legal' && (
-                    <>
-                      <Text style={styles.title} accessibilityRole="header">
-                        {t(legalOnly ? 'onboarding.legalUpdatedTitle' : 'onboarding.legalTitle')}
-                      </Text>
-                      <Text style={styles.lead}>{t('onboarding.legalLead')}</Text>
-                      <View style={styles.card}>
-                        <Bullet text={t('onboarding.legal1')} />
-                        <Bullet text={t('onboarding.legal2')} />
-                        <Bullet text={t('onboarding.legal3')} />
-                        <Bullet text={t('onboarding.legal4')} />
-                      </View>
-                      <View style={styles.linkRow}>
-                        <Pressable
-                          onPress={() => setReading('privacy')}
-                          style={styles.linkUnderline}
-                          accessibilityRole="link"
-                          hitSlop={6}
-                        >
-                          <Text style={styles.link}>{t('settings.privacyPolicy')}</Text>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => setReading('terms')}
-                          style={styles.linkUnderline}
-                          accessibilityRole="link"
-                          hitSlop={6}
-                        >
-                          <Text style={styles.link}>{t('settings.terms')}</Text>
-                        </Pressable>
-                      </View>
+                {step === 'legal' && (
+                  <>
+                    <Text style={styles.title} accessibilityRole="header">
+                      {t(legalOnly ? 'onboarding.legalUpdatedTitle' : 'onboarding.legalTitle')}
+                    </Text>
+                    <Text style={styles.lead}>{t('onboarding.legalLead')}</Text>
+                    <View style={styles.card}>
+                      <Bullet text={t('onboarding.legal1')} />
+                      <Bullet text={t('onboarding.legal2')} />
+                      <Bullet text={t('onboarding.legal3')} />
+                      <Bullet text={t('onboarding.legal4')} />
+                    </View>
+                    <View style={styles.linkRow}>
                       <Pressable
-                        onPress={() => setAccepted(!accepted)}
-                        style={styles.checkRow}
-                        accessibilityRole="checkbox"
-                        accessibilityState={{ checked: accepted }}
+                        onPress={() => setReading('privacy')}
+                        style={styles.linkUnderline}
+                        accessibilityRole="link"
+                        hitSlop={6}
                       >
-                        <View style={[styles.checkbox, accepted && styles.checkboxOn]}>
-                          {accepted && <Icon name="check" size={16} color="#ffffff" />}
-                        </View>
-                        <Text style={styles.checkText}>{t('onboarding.acceptCheck')}</Text>
+                        <Text style={styles.link}>{t('settings.privacyPolicy')}</Text>
                       </Pressable>
-                    </>
-                  )}
+                      <Pressable
+                        onPress={() => setReading('terms')}
+                        style={styles.linkUnderline}
+                        accessibilityRole="link"
+                        hitSlop={6}
+                      >
+                        <Text style={styles.link}>{t('settings.terms')}</Text>
+                      </Pressable>
+                    </View>
+                    <Pressable
+                      onPress={() => setAccepted(!accepted)}
+                      style={styles.checkRow}
+                      accessibilityRole="checkbox"
+                      accessibilityState={{ checked: accepted }}
+                    >
+                      <View style={[styles.checkbox, accepted && styles.checkboxOn]}>
+                        {accepted && <Icon name="check" size={16} color="#ffffff" />}
+                      </View>
+                      <Text style={styles.checkText}>{t('onboarding.acceptCheck')}</Text>
+                    </Pressable>
+                  </>
+                )}
 
-                  {step === 'ai' && (
-                    <>
-                      <Text style={styles.title} accessibilityRole="header">
-                        {t('onboarding.aiTitle')}
-                      </Text>
-                      <Text style={styles.lead}>{t('onboarding.aiLead')}</Text>
-                      <AiProviderFields
-                        value={draft}
-                        onChange={(ai) =>
-                          setDraft((d) => ({ ...d, provider: ai.provider, apiKeys: ai.apiKeys, models: ai.models }))
-                        }
+                {step === 'ai' && (
+                  <>
+                    <Text style={styles.title} accessibilityRole="header">
+                      {t('onboarding.aiTitle')}
+                    </Text>
+                    <Text style={styles.lead}>{t('onboarding.aiLead')}</Text>
+                    <AiProviderFields
+                      value={draft}
+                      onChange={(ai) =>
+                        setDraft((d) => ({ ...d, provider: ai.provider, apiKeys: ai.apiKeys, models: ai.models }))
+                      }
+                    />
+                  </>
+                )}
+
+                {step === 'protection' && (
+                  <>
+                    <Text style={styles.title} accessibilityRole="header">
+                      {t('onboarding.protectionTitle')}
+                    </Text>
+                    <Text style={styles.lead}>{t('onboarding.protectionLead')}</Text>
+                    <View style={styles.card}>
+                      <Toggle
+                        title={t('settings.blockAds')}
+                        body={t('onboarding.blockAdsHint')}
+                        value={draft.blockAds}
+                        onChange={(v) => set('blockAds', v)}
                       />
-                    </>
-                  )}
+                      <Toggle
+                        title={t('settings.thirdPartyCookies')}
+                        body={t('onboarding.trackersHint')}
+                        value={draft.blockThirdPartyCookies}
+                        onChange={(v) => set('blockThirdPartyCookies', v)}
+                      />
+                      <Toggle
+                        title={t('settings.hideCookieBanners')}
+                        body={t('onboarding.cookieBannersHint')}
+                        value={draft.hideCookieBanners}
+                        onChange={(v) => set('hideCookieBanners', v)}
+                      />
+                      <Toggle
+                        title={t('settings.httpsOnly')}
+                        body={t('onboarding.httpsOnlyHint')}
+                        value={draft.httpsOnly}
+                        onChange={(v) => set('httpsOnly', v)}
+                      />
+                    </View>
+                    <Text style={styles.label}>{t('settings.search')}</Text>
+                    <View style={styles.card}>
+                      {SEARCH_ENGINE_ORDER.map((id) => (
+                        <Pressable
+                          key={id}
+                          style={styles.option}
+                          onPress={() => set('searchEngine', id)}
+                          accessibilityRole="radio"
+                          accessibilityState={{ checked: draft.searchEngine === id }}
+                        >
+                          <Radio selected={draft.searchEngine === id} />
+                          <Text style={styles.optionText}>{SEARCH_ENGINES[id].name}</Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </>
+                )}
 
-                  {step === 'protection' && (
-                    <>
-                      <Text style={styles.title} accessibilityRole="header">
-                        {t('onboarding.protectionTitle')}
-                      </Text>
-                      <Text style={styles.lead}>{t('onboarding.protectionLead')}</Text>
-                      <View style={styles.card}>
-                        <Toggle
-                          title={t('settings.blockAds')}
-                          body={t('onboarding.blockAdsHint')}
-                          value={draft.blockAds}
-                          onChange={(v) => set('blockAds', v)}
-                        />
-                        <Toggle
-                          title={t('settings.thirdPartyCookies')}
-                          body={t('onboarding.trackersHint')}
-                          value={draft.blockThirdPartyCookies}
-                          onChange={(v) => set('blockThirdPartyCookies', v)}
-                        />
-                        <Toggle
-                          title={t('settings.hideCookieBanners')}
-                          body={t('onboarding.cookieBannersHint')}
-                          value={draft.hideCookieBanners}
-                          onChange={(v) => set('hideCookieBanners', v)}
-                        />
-                        <Toggle
-                          title={t('settings.httpsOnly')}
-                          body={t('onboarding.httpsOnlyHint')}
-                          value={draft.httpsOnly}
-                          onChange={(v) => set('httpsOnly', v)}
-                        />
-                      </View>
-                      <Text style={styles.label}>{t('settings.search')}</Text>
-                      <View style={styles.card}>
-                        {SEARCH_ENGINE_ORDER.map((id) => (
-                          <Pressable
-                            key={id}
-                            style={styles.option}
-                            onPress={() => set('searchEngine', id)}
-                            accessibilityRole="radio"
-                            accessibilityState={{ checked: draft.searchEngine === id }}
-                          >
-                            <Radio selected={draft.searchEngine === id} />
-                            <Text style={styles.optionText}>{SEARCH_ENGINES[id].name}</Text>
-                          </Pressable>
-                        ))}
-                      </View>
-                    </>
-                  )}
-
-                  {step === 'browser' && (
-                    <>
-                      <Text style={styles.title} accessibilityRole="header">
-                        {t('onboarding.browserTitle')}
-                      </Text>
-                      <Text style={styles.lead}>{t('onboarding.browserLead')}</Text>
-                      <Pressable
-                        onPress={() => openDefaultBrowserSettings().catch(() => {})}
-                        style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
-                        accessibilityRole="button"
-                      >
-                        <Icon name="openInNew" size={18} color={palette.tintText} />
-                        <Text style={styles.secondaryText}>{t('onboarding.setDefault')}</Text>
-                      </Pressable>
-                      <Text style={styles.hint}>
-                        {t(Platform.OS === 'ios' ? 'onboarding.browserHintIos' : 'onboarding.browserHintAndroid')}
-                      </Text>
-                    </>
-                  )}
-                </View>
-              </ScrollView>
-            </Animated.View>
+                {step === 'browser' && (
+                  <>
+                    <Text style={styles.title} accessibilityRole="header">
+                      {t('onboarding.browserTitle')}
+                    </Text>
+                    <Text style={styles.lead}>{t('onboarding.browserLead')}</Text>
+                    <Pressable
+                      onPress={() => openDefaultBrowserSettings().catch(() => {})}
+                      style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+                      accessibilityRole="button"
+                    >
+                      <Icon name="openInNew" size={18} color={palette.tintText} />
+                      <Text style={styles.secondaryText}>{t('onboarding.setDefault')}</Text>
+                    </Pressable>
+                    <Text style={styles.hint}>
+                      {t(Platform.OS === 'ios' ? 'onboarding.browserHintIos' : 'onboarding.browserHintAndroid')}
+                    </Text>
+                  </>
+                )}
+              </View>
+            </ScrollView>
 
             <View style={styles.bottom}>
               <GradientButton
@@ -300,19 +290,14 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
           </KeyboardAvoidingView>
         </SafeAreaView>
       </BlurTargetView>
-      {area && (
-        <AnimatedBlur
-          blurTarget={targetRef}
-          blurMethod="dimezisBlurViewSdk31Plus"
-          animatedProps={blurProps}
-          tint="default"
-          pointerEvents="none"
-          style={[
-            { position: 'absolute', left: area.x, top: area.y, width: area.width, height: area.height },
-            blurStyle,
-          ]}
-        />
-      )}
+      <AnimatedBlur
+        blurTarget={targetRef}
+        blurMethod="dimezisBlurViewSdk31Plus"
+        animatedProps={blurProps}
+        tint="default"
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, blurStyle]}
+      />
       <LegalScreen kind={reading} onClose={() => setReading(null)} />
     </View>
   );
@@ -320,8 +305,8 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
 
 const AnimatedBlur = Animated.createAnimatedComponent(BlurView);
 const BLUR_MAX = 45;
-const BLUR_OUT_MS = 180;
-const BLUR_IN_MS = 320;
+const BLUR_OUT_MS = 220;
+const BLUR_IN_MS = 380;
 
 function Feature({ icon, title, body }: { icon: IconName; title: string; body: string }) {
   const styles = useStyles();
