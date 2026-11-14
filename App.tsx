@@ -55,6 +55,7 @@ import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
 import { deleteHistorySince, searchHistory } from './src/storage/history';
 import { composeEmail } from './src/device/email';
 import { placeCall } from './src/device/phone';
+import { SEARCH_ENGINES, searchResultsOf } from './src/browser/search';
 import { openSmsComposer } from './src/device/sms';
 import { initNotifications } from './src/device/notifications';
 import { nowContext } from './src/agent/scheduling';
@@ -793,8 +794,22 @@ function BrowserApp({
     ];
   };
 
-  // One-tap tasks in the panel; page tasks need a web page, comparing needs several tabs.
+  // One-tap tasks in the panel; page tasks need a web page, comparing needs several tabs. On a search
+  // engine's results page, summarising the results comes first (the page itself is left as it is).
+  const results = onNewTab ? null : searchResultsOf(tab.url);
   const quickActions: QuickAction[] = [
+    ...(results
+      ? [
+          {
+            icon: 'summarize' as const,
+            label: t('quick.summarizeResults'),
+            prompt: t('quick.summarizeResultsPrompt', {
+              query: results.query.slice(0, 200),
+              engine: SEARCH_ENGINES[results.engine].name,
+            }),
+          },
+        ]
+      : []),
     ...(onNewTab
       ? []
       : (['summarize', 'keyPoints', 'translate', 'review'] as const).map((id) => ({

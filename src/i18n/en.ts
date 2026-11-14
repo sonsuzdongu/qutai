@@ -223,6 +223,9 @@ export const en = {
 
   'quick.summarize': 'Summarize',
   'quick.summarizePrompt': 'Summarize this page in a few short paragraphs.',
+  'quick.summarizeResults': 'Summarize results',
+  'quick.summarizeResultsPrompt':
+    'Summarize the {engine} results on this page for “{query}”: what they say about it, in a few short points, citing the result each point comes from with its link. Read the results from this page; don’t leave it or change the search.',
   'quick.keyPoints': 'Key points',
   'quick.keyPointsPrompt': 'List the key points of this page as short bullets.',
   'quick.translate': 'Translate',

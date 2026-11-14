@@ -224,6 +224,9 @@ export const tr: Record<keyof typeof en, string> = {
 
   'quick.summarize': 'Özetle',
   'quick.summarizePrompt': 'Bu sayfayı birkaç kısa paragrafta özetle.',
+  'quick.summarizeResults': 'Sonuçları özetle',
+  'quick.summarizeResultsPrompt':
+    'Bu sayfadaki “{query}” için {engine} sonuçlarını özetle: konu hakkında ne dediklerini birkaç kısa maddede, her maddenin geldiği sonucu bağlantısıyla belirterek yaz. Sonuçları bu sayfadan oku; sayfadan çıkma ve aramayı değiştirme.',
   'quick.keyPoints': 'Önemli noktalar',
   'quick.keyPointsPrompt': 'Bu sayfanın önemli noktalarını kısa maddeler halinde listele.',
   'quick.translate': 'Çevir',

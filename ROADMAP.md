@@ -258,7 +258,7 @@ deep research, price and page tracking, Safe Browsing checks.
 - ✅ "What was sent to the AI" log: every request recorded at the provider wrapper, listed with provider, model, site
   and what was new in it (exact text and screenshots while the app runs; only the outline is kept on disk, 30 days;
   incognito never written); Settings › Assistant and "ⓘ Sent" under answers; its own item in Clear browsing data
-- An optional 'Summarize results' chip on search results pages, keeping the results list intact
+- ✅ A 'Summarize results' chip in the Qutai panel on Google, DuckDuckGo, Bing and Yandex results pages (detected from the URL, with the query); the results page itself is left intact (`searchResultsOf` in `src/browser/search.ts`)
 
 ## 3. Things we recommend not doing
 

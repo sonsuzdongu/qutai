@@ -6,6 +6,8 @@ type SearchEngine = {
   searchUrl: (query: string) => string;
   /** OpenSearch-style suggestion endpoint answering `[query, [suggestions…]]`. Missing when the engine offers none. */
   suggestUrl?: (query: string, language: string) => string;
+  /** How its results pages look: the host, the path and the parameter holding the query. */
+  results: { host: RegExp; path: RegExp; param: string };
 };
 
 const q = encodeURIComponent;
@@ -17,24 +19,28 @@ export const SEARCH_ENGINES: Record<SearchEngineId, SearchEngine> = {
     searchUrl: (query) => `https://www.google.com/search?q=${q(query)}`,
     suggestUrl: (query, lang) =>
       `https://suggestqueries.google.com/complete/search?client=firefox&hl=${q(lang)}&q=${q(query)}`,
+    results: { host: /^(www\.)?google\.[a-z]{2,3}(\.[a-z]{2})?$/, path: /^\/search\/?$/, param: 'q' },
   },
   duckduckgo: {
     id: 'duckduckgo',
     name: 'DuckDuckGo',
     searchUrl: (query) => `https://duckduckgo.com/?q=${q(query)}`,
     suggestUrl: (query) => `https://duckduckgo.com/ac/?type=list&q=${q(query)}`,
+    results: { host: /^((html|lite)\.)?duckduckgo\.com$/, path: /^\/(html\/?|lite\/?)?$/, param: 'q' },
   },
   // Bing's public suggestion endpoint answers 204 No Content, so it gets local suggestions only.
   bing: {
     id: 'bing',
     name: 'Bing',
     searchUrl: (query) => `https://www.bing.com/search?q=${q(query)}`,
+    results: { host: /^(www\.)?bing\.com$/, path: /^\/search\/?$/, param: 'q' },
   },
   yandex: {
     id: 'yandex',
     name: 'Yandex',
     searchUrl: (query) => `https://yandex.com/search/?text=${q(query)}`,
     suggestUrl: (query, lang) => `https://suggest.yandex.com/suggest-ff.cgi?uil=${q(lang)}&part=${q(query)}`,
+    results: { host: /^(www\.)?yandex\.(com|ru|com\.tr|by|kz|uz)$/, path: /^\/search\/?$/, param: 'text' },
   },
 };
 
@@ -42,6 +48,28 @@ export const SEARCH_ENGINE_ORDER: SearchEngineId[] = ['google', 'duckduckgo', 'b
 
 export function isSearchEngine(value: unknown): value is SearchEngineId {
   return typeof value === 'string' && value in SEARCH_ENGINES;
+}
+
+/**
+ * The search behind a results page of one of the supported engines (any engine, not only the one chosen in
+ * Settings), or null for other pages and for results pages without a query.
+ */
+export function searchResultsOf(url: string): { engine: SearchEngineId; query: string } | null {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null;
+  const host = parsed.hostname.toLowerCase();
+  for (const id of SEARCH_ENGINE_ORDER) {
+    const { results } = SEARCH_ENGINES[id];
+    if (!results.host.test(host) || !results.path.test(parsed.pathname)) continue;
+    const query = (parsed.searchParams.get(results.param) ?? '').replace(/\s+/g, ' ').trim();
+    return query ? { engine: id, query } : null;
+  }
+  return null;
 }
 
 /** Parses the OpenSearch suggestion format `[query, [suggestion, …], …]`. */
