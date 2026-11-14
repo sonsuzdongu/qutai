@@ -409,6 +409,7 @@ function GroupHeader({
         hitSlop={8}
         accessibilityRole="button"
         accessibilityState={{ expanded: !group.collapsed }}
+        accessibilityLabel={group.name}
       >
         <Text style={[styles.groupChevron, { color: group.color }]}>{group.collapsed ? '▸' : '▾'}</Text>
       </Pressable>

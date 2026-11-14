@@ -2,13 +2,14 @@ import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   Alert,
   Appearance,
   AppState,
   KeyboardAvoidingView,
   Platform,
-  useColorScheme,
   StyleSheet,
+  useColorScheme,
   View,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -336,12 +337,18 @@ function BrowserApp({
           if (event.type === 'text_delta') return chat.appendStreaming(event.text);
           if (event.type === 'text') return chat.finishStreaming(event.text);
           if (event.type === 'sources') return chat.add(sourcesItem(event.sources, event.searchWidget));
-          if (event.type === 'choices') return chat.add(newItem('choices', event.text, event.options));
+          if (event.type === 'choices') {
+            AccessibilityInfo.announceForAccessibility(event.text);
+            return chat.add(newItem('choices', event.text, event.options));
+          }
           chat.add(newItem(event.type, event.text));
         },
       });
       if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
-      else success();
+      else {
+        success();
+        AccessibilityInfo.announceForAccessibility(t('a11y.taskDone'));
+      }
     } catch (e) {
       if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
       else chat.add(newItem('error', e instanceof Error ? e.message : String(e)));

@@ -16,6 +16,7 @@ import {
 import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
 import { t } from '../i18n';
+import { useReduceMotion } from '../utils/useReduceMotion';
 import { OmniboxSuggestions } from './OmniboxSuggestions';
 
 type Props = {
@@ -102,6 +103,7 @@ export function AddressBar({
         <View style={[styles.field, styles.fieldRow, dark?.field]}>
           <TextInput
             style={[styles.fieldText, styles.fieldTextFlex, styles.input, dark?.text]}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
             placeholderTextColor={darkUI ? '#8f8e99' : '#999'}
             value={text}
             onChangeText={setText}
@@ -153,6 +155,7 @@ export function AddressBar({
           )}
           <Text
             style={[styles.fieldText, styles.fieldTextFlex, dark?.text, !url && styles.placeholder]}
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
             numberOfLines={1}
             ellipsizeMode="tail"
           >
@@ -168,7 +171,9 @@ export function AddressBar({
         accessibilityLabel={t('address.tabs', { count: tabCount })}
       >
         <View style={[styles.tabCount, dark?.tabCount]}>
-          <Text style={[styles.tabCountText, dark?.text]}>{tabCount}</Text>
+          <Text style={[styles.tabCountText, dark?.text]} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+            {tabCount}
+          </Text>
         </View>
       </Pressable>
       <IconButton label="⋮" onPress={onOpenMenu} incognito={darkUI} accessibilityLabel={t('address.menu')} />
@@ -219,8 +224,11 @@ export function AddressBar({
 function LoadingBar({ top }: { top: boolean }) {
   const { width } = useWindowDimensions();
   const [progress] = useState(() => new Animated.Value(0));
+  const reduceMotion = useReduceMotion();
 
   useEffect(() => {
+    // With reduced motion the bar stays still.
+    if (reduceMotion) return;
     const loop = Animated.loop(
       Animated.timing(progress, {
         toValue: 1,
@@ -231,7 +239,7 @@ function LoadingBar({ top }: { top: boolean }) {
     );
     loop.start();
     return () => loop.stop();
-  }, [progress]);
+  }, [progress, reduceMotion]);
 
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [-width * 0.4, width] });
   return (
@@ -262,7 +270,12 @@ function IconButton({
       style={styles.icon}
       accessibilityLabel={accessibilityLabel}
     >
-      <Text style={[styles.iconText, incognito && darkStyles.text, disabled && styles.disabled]}>{label}</Text>
+      <Text
+        style={[styles.iconText, incognito && darkStyles.text, disabled && styles.disabled]}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -349,6 +362,9 @@ const styles = StyleSheet.create({
   assistantButtonActive: { backgroundColor: '#8f4026' },
   assistantIcon: { fontSize: 18, color: '#fff', fontWeight: '700' },
 });
+
+/** The bar has a fixed height, so very large text sizes are capped there. */
+const MAX_FONT_SCALE = 1.4;
 
 const darkStyles = StyleSheet.create({
   bar: { backgroundColor: '#24232b', borderBottomColor: '#3a3944', borderTopColor: '#3a3944' },

@@ -301,6 +301,8 @@ export const en = {
   'offline.saved': 'Saved for offline reading',
   'offline.incognito': "Pages from incognito tabs aren't saved.",
 
+  'a11y.taskDone': 'Kutai finished the task',
+
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",
   'settings.provider': 'AI provider',

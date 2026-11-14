@@ -304,6 +304,8 @@ export const tr: Record<keyof typeof en, string> = {
   'offline.saved': 'Çevrimdışı okumak için kaydedildi',
   'offline.incognito': 'Gizli sekmelerdeki sayfalar kaydedilmez.',
 
+  'a11y.taskDone': 'Kutai görevi bitirdi',
+
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',
   'settings.provider': 'Yapay zekâ sağlayıcısı',

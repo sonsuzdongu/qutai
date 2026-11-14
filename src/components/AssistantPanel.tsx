@@ -22,6 +22,7 @@ import { hostOf } from '../i18n/format';
 import { MarkdownText } from './MarkdownText';
 import { SearchSuggestions } from './SearchSuggestions';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
+import { useReduceMotion } from '../utils/useReduceMotion';
 
 export type ChatItem = {
   id: string;
@@ -115,6 +116,7 @@ export function AssistantPanel({
   const width = Math.min(Math.round(screenWidth * 0.88), MAX_WIDTH);
   const insets = useSafeAreaInsets();
   const keyboardVisible = useKeyboardVisible();
+  const reduceMotion = useReduceMotion();
 
   const [progress] = useState(() => new Animated.Value(0));
   const scrollRef = useRef<ScrollViewInstance>(null);
@@ -130,11 +132,11 @@ export function AssistantPanel({
   useEffect(() => {
     Animated.timing(progress, {
       toValue: open ? 1 : 0,
-      duration: 220,
+      duration: reduceMotion ? 0 : 220,
       useNativeDriver: true,
     }).start();
     if (!open) Keyboard.dismiss();
-  }, [open, progress]);
+  }, [open, progress, reduceMotion]);
 
   useEffect(() => {
     if (!open) return;
@@ -169,7 +171,11 @@ export function AssistantPanel({
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('chat.closePanel')} />
         </Animated.View>
 
-        <Animated.View style={[styles.panel, d?.panel, { width, transform: [{ translateX }] }]}>
+        <Animated.View
+          style={[styles.panel, d?.panel, { width, transform: [{ translateX }] }]}
+          // VoiceOver stays inside the panel while it is open.
+          accessibilityViewIsModal={open}
+        >
           {/* The panel spans the full screen height, so the keyboard offset needs no extra correction. */}
           <KeyboardAvoidingView style={styles.flex} behavior="padding">
             <View
