@@ -1,4 +1,5 @@
 import type { ToolDefinition } from '../agent/types';
+import type { AttachmentInfo } from '../chat/attachments';
 
 export type ProviderId = 'anthropic' | 'openai' | 'gemini' | 'openrouter' | 'custom';
 
@@ -21,7 +22,17 @@ export type ToolResult = {
  * signatures), which must be sent back unchanged to the same provider.
  */
 export type Turn =
-  | { role: 'user'; text: string }
+  | {
+      role: 'user';
+      text: string;
+      /** Files the user attached (manifest only; saved with the history). */
+      attachments?: AttachmentInfo[];
+      /**
+       * The attached images' model copies, set only on the copy of the history a request is built from
+       * (runAgent's prepareTurns), never on the saved turns. Adapters send these with the message.
+       */
+      images?: ToolImage[];
+    }
   | {
       role: 'assistant';
       text: string;

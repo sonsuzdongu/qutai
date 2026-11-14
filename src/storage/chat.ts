@@ -1,6 +1,7 @@
 import { compactHistory } from '../agent/runAgent';
 import { PROVIDER_ORDER } from '../ai/providers';
 import type { Turn } from '../ai/types';
+import { attachmentIdsIn } from '../chat/attachments';
 import type { Conversation, ModelChoice } from '../chat/Conversation';
 import type { ChatItem } from '../components/AssistantPanel';
 import { Db, deleteKey, getJson, setJson } from './db';
@@ -13,14 +14,16 @@ const MAX_DRAFT = 20_000;
 
 /**
  * Shrinks a conversation for storage: page snapshots are compacted the same way as when
- * sending, screenshots are dropped, and the oldest exchanges go first if it is still too
+ * sending, screenshots are dropped (attached images are kept as files, see device/attachments.ts), and the oldest exchanges go first if it is still too
  * large. Cuts happen only at user turns, so tool calls always keep their results.
  */
 export function prepareForStorage(chat: SavedChat): SavedChat {
   let turns = compactHistory(chat.turns).map((turn) =>
     turn.role === 'tool_results'
       ? { ...turn, results: turn.results.map((r) => (r.images ? { ...r, images: undefined } : r)) }
-      : turn,
+      : turn.role === 'user' && turn.images
+        ? { ...turn, images: undefined }
+        : turn,
   );
   while (JSON.stringify(turns).length > MAX_TURNS_JSON) {
     const nextUser = turns.findIndex((turn, i) => i > 0 && turn.role === 'user');
@@ -106,6 +109,12 @@ export async function storeChat(db: Db, chat: Conversation, fromKey = chat.key):
     await saveChat(db, chat.key, chat.toSaved());
     if (moved) await clearChat(db, fromKey);
   }
+}
+
+/** Ids of the attachments every saved conversation refers to (in its messages or its history). */
+export async function savedAttachmentIds(db: Db): Promise<string[]> {
+  const rows = await db.getAllAsync<{ value: string }>("SELECT value FROM kv WHERE key LIKE 'chat:%'", []);
+  return rows.flatMap((row) => attachmentIdsIn(row.value));
 }
 
 /** Deletes conversations of tabs and groups that are gone (keys of open tabs, groups and recently closed tabs are kept). */

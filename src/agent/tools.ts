@@ -140,6 +140,17 @@ export const TOOLS: ToolDefinition[] = [
     input_schema: { type: 'object', properties: {} },
   },
   {
+    name: 'view_attachment',
+    description:
+      'Look again at an image the user attached earlier in this conversation, by its id. Recent attachments are ' +
+      'already in their message; use this only for one noted as "attached earlier and not shown any more".',
+    input_schema: {
+      type: 'object',
+      properties: { id: { type: 'string', description: 'The attachment id, e.g. "att-…"' } },
+      required: ['id'],
+    },
+  },
+  {
     name: 'save_pdf',
     description:
       'Turn the current page into a PDF and open the system share sheet, where the user can save it (e.g. to Files) or send it. ' +

@@ -37,6 +37,8 @@ import type { SmsOffer } from '../device/sms';
 import type { WhatsAppOffer } from '../device/whatsapp';
 import type { SavedTask } from '../storage/savedTasks';
 import { composedFileAvailable, FileOffer } from '../device/composedFile';
+import type { AttachmentInfo } from '../chat/attachments';
+import { AttachmentThumb } from './AttachmentViews';
 import { formatNumber, formatSize, hostOf } from '../i18n/format';
 import { hasTable, MarkdownText } from './MarkdownText';
 import { SearchSuggestions } from './SearchSuggestions';
@@ -65,6 +67,8 @@ export type ChatItem = {
   whatsapp?: WhatsAppOffer;
   /** For 'file': the composed file behind the Share / Save buttons (only its name and size; the content is not saved). */
   file?: FileOffer;
+  /** For 'user': the files attached to the message (their manifest; the files are on the phone). */
+  attachments?: AttachmentInfo[];
 };
 
 /** Voice input: the settings it follows and where its messages go. */
@@ -142,6 +146,13 @@ type Props = {
   /** A saved task opened from its reminder waits in the input: its name, for the "Run now" row. */
   preparedTask: string | null;
   onRunPrepared: () => void;
+  /** Files attached to the message being written (thumbnails above the input). */
+  pending: AttachmentInfo[];
+  /** The attach button: Photos, Camera, File. */
+  onAttach: () => void;
+  onRemovePending: (id: string) => void;
+  /** A thumbnail (pending or sent) was tapped: full-screen preview. */
+  onOpenAttachment: (info: AttachmentInfo) => void;
 };
 
 const MAX_WIDTH = 420;
@@ -194,6 +205,10 @@ export function AssistantPanel({
   onUserMessageMenu,
   preparedTask,
   onRunPrepared,
+  pending,
+  onAttach,
+  onRemovePending,
+  onOpenAttachment,
 }: Props) {
   const styles = useStyles();
   const palette = usePalette();
@@ -290,10 +305,11 @@ export function AssistantPanel({
 
   const send = () => {
     const t = text.trim();
-    if (!t || running || busyElsewhere) return;
+    if ((!t && !pending.length) || running || busyElsewhere) return;
     setText('');
     onSend(t);
   };
+  const canSend = (!!text.trim() || pending.length > 0) && !busyElsewhere;
 
   // Only the latest question is answerable, and only until the user has replied in some other way.
   const lastUserIndex = items.findLastIndex((item) => item.kind === 'user');
@@ -383,6 +399,7 @@ export function AssistantPanel({
                   <ChatRow
                     key={item.id}
                     item={item}
+                    onOpenAttachment={onOpenAttachment}
                     speaking={speaking}
                     onAction={(action, message) =>
                       action === 'userMenu' ? onUserMessageMenu(message) : onMessageAction(action, message)
@@ -465,7 +482,43 @@ export function AssistantPanel({
                 <Text style={styles.modeHint}>{t('chat.researchHint')}</Text>
               ) : null}
 
+              {pending.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  style={styles.pendingRow}
+                  contentContainerStyle={styles.pendingContent}
+                >
+                  {pending.map((a, i) => (
+                    <View key={a.id}>
+                      <AttachmentThumb info={a} index={i} size={56} onPress={() => onOpenAttachment(a)} />
+                      {!running && (
+                        <Pressable
+                          onPress={() => onRemovePending(a.id)}
+                          style={styles.thumbRemove}
+                          hitSlop={8}
+                          accessibilityRole="button"
+                          accessibilityLabel={t('attach.remove', { name: a.name })}
+                        >
+                          <Icon name="close" size={12} color="#ffffff" />
+                        </Pressable>
+                      )}
+                    </View>
+                  ))}
+                </ScrollView>
+              )}
               <View style={[styles.inputRow, d?.inputRow]}>
+                <Pressable
+                  onPress={onAttach}
+                  disabled={running}
+                  style={[styles.attachButton, running && styles.sendDisabled]}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('attach.button')}
+                >
+                  <Icon name="attach" size={20} color={palette.textSecondary} />
+                </Pressable>
                 <TextInput
                   ref={inputRef}
                   style={[styles.input, d?.input]}
@@ -489,7 +542,7 @@ export function AssistantPanel({
                   </Pressable>
                 ) : (
                   <Pressable
-                    style={[styles.sendButton, (!text.trim() || busyElsewhere) && styles.sendDisabled]}
+                    style={[styles.sendButton, !canSend && styles.sendDisabled]}
                     onPress={send}
                     accessibilityLabel={t('common.send')}
                   >
@@ -647,8 +700,10 @@ function ChatRow({
   onOpenSource,
   onShowSent,
   onChoose,
+  onOpenAttachment,
 }: {
   item: ChatItem;
+  onOpenAttachment: (info: AttachmentInfo) => void;
   speaking: boolean;
   onAction: (action: ItemAction, text: string) => void;
   onOpenLink: (url: string) => void;
@@ -669,16 +724,27 @@ function ChatRow({
   switch (item.kind) {
     case 'user':
       return (
-        // Long press: Copy, Save as task.
-        <Pressable
-          onLongPress={() => onAction('userMenu', item.text)}
-          style={[styles.bubble, styles.userBubble]}
-          accessibilityHint={t('chat.userMessageHint')}
-          accessibilityActions={[{ name: 'longpress', label: t('tasks.saveAsTask') }]}
-          onAccessibilityAction={() => onAction('userMenu', item.text)}
-        >
-          <Text style={styles.userText}>{item.text}</Text>
-        </Pressable>
+        <View style={styles.userRow}>
+          {item.attachments?.length ? (
+            <View style={styles.sentThumbs}>
+              {item.attachments.map((a, i) => (
+                <AttachmentThumb key={a.id} info={a} index={i} size={72} onPress={() => onOpenAttachment(a)} />
+              ))}
+            </View>
+          ) : null}
+          {item.text ? (
+            // Long press: Copy, Save as task.
+            <Pressable
+              onLongPress={() => onAction('userMenu', item.text)}
+              style={[styles.bubble, styles.userBubble]}
+              accessibilityHint={t('chat.userMessageHint')}
+              accessibilityActions={[{ name: 'longpress', label: t('tasks.saveAsTask') }]}
+              onAccessibilityAction={() => onAction('userMenu', item.text)}
+            >
+              <Text style={styles.userText}>{item.text}</Text>
+            </Pressable>
+          ) : null}
+        </View>
       );
     case 'assistant':
       return (
@@ -1004,6 +1070,22 @@ const useStyles = makeStyles((c) => ({
   exampleText: { flex: 1, color: c.text, fontSize: 14.5, lineHeight: 20 },
   bubble: { borderRadius: 14, paddingHorizontal: 12, paddingVertical: 8, maxWidth: '90%' },
   userBubble: { alignSelf: 'flex-end', backgroundColor: c.tint },
+  userRow: { alignItems: 'flex-end', gap: 4 },
+  sentThumbs: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 4, maxWidth: '90%' },
+  thumbRemove: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pendingRow: { flexGrow: 0, maxHeight: 76 },
+  pendingContent: { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4, gap: 10 },
+  attachButton: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
   assistantBubble: {
     alignSelf: 'flex-start',
     maxWidth: '100%',

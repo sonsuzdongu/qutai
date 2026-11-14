@@ -13,7 +13,17 @@ import { Db, getDb } from './db';
  */
 
 export type SentKind =
-  'message' | 'page' | 'source' | 'screenshot' | 'tab' | 'history' | 'memory' | 'location' | 'calendar' | 'tool';
+  | 'message'
+  | 'page'
+  | 'source'
+  | 'screenshot'
+  | 'attachment'
+  | 'tab'
+  | 'history'
+  | 'memory'
+  | 'location'
+  | 'calendar'
+  | 'tool';
 
 /** One thing that left the phone with a request. Sizes only: no content here. */
 export type SentItem = {

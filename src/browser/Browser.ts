@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { Conversation, groupChatKey } from '../chat/Conversation';
 import { forgetIncognitoFiles } from '../device/composedFile';
+import { forgetIncognitoAttachments } from '../device/attachments';
 import { endIncognitoProfile, newIncognitoProfile } from '../device/webviewProfile';
 import type { Session } from '../storage/session';
 import { NEW_TAB_URL, Tab } from './Tab';
@@ -621,6 +622,12 @@ export class Browser {
     if (this.tabs.some((t) => t.incognito)) return;
     // Files the assistant made in incognito conversations go with the session.
     forgetIncognitoFiles();
+    // So do the files attached in incognito conversations.
+    try {
+      forgetIncognitoAttachments();
+    } catch {
+      // Nothing to remove.
+    }
     if (!this.incognitoProfile) return;
     endIncognitoProfile(this.incognitoProfile);
     this.incognitoProfile = undefined;

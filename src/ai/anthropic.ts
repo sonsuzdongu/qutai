@@ -20,7 +20,14 @@ function toMessages(turns: Turn[], model: string): Message[] {
 
   for (const turn of turns) {
     if (turn.role === 'user') {
-      push('user', [{ type: 'text', text: turn.text }]);
+      // Images first, then the text that refers to them (Anthropic's vision guide recommends this order).
+      push('user', [
+        ...(turn.images ?? []).map((img) => ({
+          type: 'image',
+          source: { type: 'base64', media_type: img.mediaType, data: img.data },
+        })),
+        { type: 'text', text: turn.text },
+      ]);
     } else if (turn.role === 'tool_results') {
       push(
         'user',

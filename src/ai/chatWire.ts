@@ -7,7 +7,7 @@
  * - Messages and tools: OpenAI's Chat Completions reference (openai-openapi, ChatCompletionRequest*Message).
  *   A `tool` message carries text only ("For tool messages, only type `text` is supported"), so images a tool
  *   returned (screenshots) follow the tool messages as one user message with `image_url` parts (base64 data
- *   URLs), the usual pattern for this format.
+ *   URLs), the usual pattern for this format. Images the user attached go in the user message the same way.
  * - Streaming: `choices[0].delta` with `content`, and `tool_calls` whose `function.arguments` arrive as string
  *   fragments keyed by `index` (the `id` and name come with the first fragment); `finish_reason` at the end;
  *   OpenRouter adds `reasoning_details` deltas, a final usage chunk, and reports errors mid-stream as a chunk
@@ -79,7 +79,17 @@ export function toChatMessages(system: string, turns: Turn[], provider: Provider
   const messages: ChatMessage[] = [{ role: 'system', content: system }];
   for (const turn of turns) {
     if (turn.role === 'user') {
-      pushUser(messages, turn.text);
+      pushUser(
+        messages,
+        turn.images?.length
+          ? [
+              { type: 'text', text: turn.text },
+              ...turn.images.map(
+                (img): ChatContentPart => ({ type: 'image_url', image_url: { url: `data:${img.mediaType};base64,${img.data}` } }),
+              ),
+            ]
+          : turn.text,
+      );
     } else if (turn.role === 'tool_results') {
       const images: ChatContentPart[] = [];
       for (const r of turn.results) {

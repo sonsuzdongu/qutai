@@ -6,6 +6,7 @@ import type { CallOffer } from '../device/phone';
 import { formatSize } from '../i18n/format';
 import type { SmsOffer } from '../device/sms';
 import type { WhatsAppOffer } from '../device/whatsapp';
+import { AttachmentInfo, MAX_ATTACHMENTS } from './attachments';
 
 let itemCounter = 0;
 const STREAM_FLUSH_MS = 50;
@@ -35,6 +36,13 @@ export function whatsAppItem(whatsapp: WhatsAppOffer): ChatItem {
 /** A file the assistant composed (save_file), with Share and Save buttons; the text is what older versions show. */
 export function fileItem(file: FileOffer): ChatItem {
   return { id: String(++itemCounter), kind: 'file', text: `📄 ${file.name} · ${formatSize(file.size)}`, file };
+}
+
+/** A message the user sent, with the files attached to it. */
+export function userItem(text: string, attachments: AttachmentInfo[]): ChatItem {
+  return attachments.length
+    ? { id: String(++itemCounter), kind: 'user', text, attachments }
+    : { id: String(++itemCounter), kind: 'user', text };
 }
 
 export function newItem(kind: ChatItem['kind'], text: string, options?: string[]): ChatItem {
@@ -82,6 +90,11 @@ export class Conversation {
    * group, with the panel closed, or with Qutai in the background). Cleared once the conversation is shown.
    */
   unseen: 'done' | 'failed' | 'needsAnswer' | null = null;
+  /**
+   * Files attached to the message being written, shown as thumbnails above the input until it is sent. Kept in
+   * memory only (their files are pruned at the next start if the app closes first).
+   */
+  pending: AttachmentInfo[] = [];
   /** Saved messages have been read from disk (or there was nothing to read). */
   loaded = false;
   /** Reading the saved messages has started (so they are read only once). */
@@ -187,6 +200,43 @@ export class Conversation {
   setModel(choice: ModelChoice | null) {
     this.model = choice;
     this.onChange();
+  }
+
+  /** Adds attachments to the message being written, up to MAX_ATTACHMENTS; returns those that didn't fit. */
+  addPending(list: AttachmentInfo[]): AttachmentInfo[] {
+    const room = Math.max(0, MAX_ATTACHMENTS - this.pending.length);
+    this.pending = [...this.pending, ...list.slice(0, room)];
+    this.onChange();
+    return list.slice(room);
+  }
+
+  removePending(id: string) {
+    this.pending = this.pending.filter((a) => a.id !== id);
+    this.onChange();
+  }
+
+  /** The attachments of the message being sent; the input row is empty again. */
+  takePending(): AttachmentInfo[] {
+    const list = this.pending;
+    this.pending = [];
+    if (list.length) this.onChange();
+    return list;
+  }
+
+  /** Every attachment the user sent in this conversation, oldest first: the manifest tools look ids up in. */
+  get attachments(): AttachmentInfo[] {
+    const out: AttachmentInfo[] = [];
+    for (const item of this.items) if (item.attachments) out.push(...item.attachments);
+    for (const turn of this.turns) {
+      if (turn.role !== 'user' || !turn.attachments) continue;
+      for (const a of turn.attachments) if (!out.some((b) => b.id === a.id)) out.push(a);
+    }
+    return out;
+  }
+
+  /** Ids of every file this conversation refers to (sent or about to be), so pruning keeps them. */
+  attachmentIds(): string[] {
+    return [...this.attachments, ...this.pending].map((a) => a.id);
   }
 
   setDraft(text: string) {

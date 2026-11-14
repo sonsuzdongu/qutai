@@ -71,6 +71,8 @@ const ICONS = {
   play: { ios: 'play.fill', android: 'play_arrow' },
   pause: { ios: 'pause.fill', android: 'pause' },
   tasks: { ios: 'list.bullet.rectangle', android: 'checklist' },
+  attach: { ios: 'paperclip', android: 'attach_file' },
+  photo: { ios: 'camera', android: 'photo_camera' },
   // Memory categories.
   person: { ios: 'person.crop.circle', android: 'person' },
   home: { ios: 'house', android: 'home' },

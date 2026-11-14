@@ -1,4 +1,5 @@
 import { getProvider } from '../ai/providers';
+import { droppedImageNote, KEEP_IMAGE_MESSAGES, MAX_SENT_IMAGES } from '../chat/attachments';
 import type { ProviderId, ToolResult, Turn } from '../ai/types';
 import { t } from '../i18n';
 import {
@@ -13,6 +14,7 @@ import {
   whileWaitingForUser,
 } from '../device/backgroundTask';
 import { getBackgroundCount, isForeground, waitForForeground } from '../utils/foreground';
+import { withAttachedImages } from './attachedImages';
 import { backgroundBlocker, describeToolCall, executeTool, ToolContext } from './executeTool';
 import { customInstructionsPrompt, SYSTEM_PROMPT } from './systemPrompt';
 import { memoryPrompt } from './memory';
@@ -25,6 +27,10 @@ const MAX_STEPS = 40;
 export const NO_IMAGE_INPUT =
   "This model can't take images, so no screenshot was taken. Use read_page to see the page's text, links and " +
   'form fields instead, and do not call view_screenshot again in this task.';
+/** view_attachment's result for a model without image input. */
+export const NO_IMAGE_INPUT_ATTACHMENT =
+  "This model can't take images, so the attachment can't be shown. Tell the user to switch to a model that takes " +
+  'images (the model under the panel title) if they want you to look at it.';
 /** On the final step: leave the user with where things stand instead of stopping mid-task. */
 export const LAST_STEP_PROMPT =
   '\n\nThis is your last step for this message. Do not call tools. Reply with what you did, what you found ' +
@@ -42,6 +48,7 @@ const SAFE_TO_RETRY = new Set([
   'read_source',
   'read_tab',
   'view_screenshot',
+  'view_attachment',
   'list_tabs',
   'scroll',
   'scroll_to',
@@ -162,7 +169,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
             onEvent({ type: 'text_delta', text: delta });
           }
         : undefined,
-      turns: compactHistory(turns),
+      turns: await withAttachedImages(compactHistory(turns)),
       maxOutputTokens: opts.maxOutputTokens,
       endpoint: opts.endpoint,
       signal,
@@ -265,8 +272,11 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       const pausesBefore = getBackgroundPauseCount();
       takeNeedsForeground();
       const run = (): ReturnType<typeof executeTool> =>
-        call.name === 'view_screenshot' && opts.imageInput === false
-          ? Promise.resolve({ content: NO_IMAGE_INPUT, isError: true })
+        (call.name === 'view_screenshot' || call.name === 'view_attachment') && opts.imageInput === false
+          ? Promise.resolve({
+              content: call.name === 'view_attachment' ? NO_IMAGE_INPUT_ATTACHMENT : NO_IMAGE_INPUT,
+              isError: true,
+            })
           : executeTool(call.name, call.input, ctx);
       let result = await run();
       noteBackgroundProgress();
@@ -360,13 +370,36 @@ async function systemPrompt(opts: AgentOptions): Promise<{ text: string; memory?
  * Page snapshots are large. Keep only the most recent ones in full so long
  * sessions don't blow up cost and latency. With OpenAI this changes the
  * history prefix, so the API may drop older reasoning; that trade-off is accepted.
+ *
+ * Images the user attached stay with the KEEP_IMAGE_MESSAGES most recent user messages (MAX_SENT_IMAGES at most);
+ * older ones are taken off the turn and named in its text instead, so the model can still refer to them by id.
  */
 export function compactHistory(turns: Turn[]): Turn[] {
   let kept = 0;
   let keptImages = 0;
+  let userMessages = 0;
+  let userImages = 0;
   const out: Turn[] = [];
   for (let i = turns.length - 1; i >= 0; i--) {
     const turn = turns[i];
+    if (turn.role === 'user') {
+      const images = turn.attachments?.filter((a) => a.kind === 'image') ?? [];
+      const recent = userMessages++ < KEEP_IMAGE_MESSAGES;
+      if (images.length && recent && userImages + images.length <= MAX_SENT_IMAGES) {
+        userImages += images.length;
+        out.unshift(turn);
+      } else if (images.length) {
+        const others = turn.attachments!.filter((a) => a.kind !== 'image');
+        const notes = images.map(droppedImageNote).join('\n');
+        const compacted = { ...turn, text: `${turn.text}\n${notes}` };
+        if (others.length) compacted.attachments = others;
+        else delete compacted.attachments;
+        out.unshift(compacted);
+      } else {
+        out.unshift(turn);
+      }
+      continue;
+    }
     if (turn.role !== 'tool_results') {
       out.unshift(turn);
       continue;

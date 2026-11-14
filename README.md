@@ -52,6 +52,25 @@ only. Nothing is recorded to disk, and no audio goes to Qutai or the AI provider
 panel closes, another tab or a dialog comes up, the app leaves the screen, a call comes in or a site starts using the
 microphone; what was heard stays in the field.
 
+Attachments: the paperclip next to the message field attaches up to 4 images per message, from Photos (the system
+photo picker, no photo library permission) or the camera; they show as removable thumbnails above the field, then in
+the sent message, and a tap opens them full screen with Share and Save (to Photos). The attach sheet says that
+attachments go to the AI provider with the message. Each attachment gets a stable id (`att-…`, `inc-…` in incognito)
+and a small manifest in the conversation (id, name, MIME type, width, height, size; `src/chat/attachments.ts`). On the
+phone (`src/device/attachments.ts`) the original is kept as picked, untouched, and a copy for the model is made once:
+orientation applied, metadata (EXIF location) stripped by re-encoding, longest side at most 1568 px, JPEG (PNG stays
+PNG while under the cap), at most 1 MB. The message text the model gets lists them ("image 1: id=…, name, 4032×3024,
+you see it at 1568×1176"). All five providers get the images with the message in their documented form (Anthropic
+`image` blocks, OpenAI Responses `input_image`, Gemini `image` parts, Chat Completions `image_url` parts). Retention:
+images ride along with the 3 most recent user messages, 8 at most; older ones are named in the text instead, and the
+assistant can look again with `view_attachment`. A model without image input (OpenRouter's catalogue, the custom
+endpoint's setting) gets nothing: the chat says so before sending and the message stays in the field. Normal
+conversations keep the files with the chat and delete them when nothing refers to them (the chat cleared, Clear
+browsing data › chats, and at start for conversations that are gone); incognito ones live in a cache folder emptied
+when the incognito session ends and at every start. The encrypted backup leaves attachment files out (a restored chat
+shows "Not available"). "What was sent to the AI" shows attached images with the message like screenshots. Pasting an
+image into the field is not supported (React Native's text input doesn't expose pasted images).
+
 From the page menu (⋮) and by asking the agent: save the page as PDF (from its HTML, or from screenshots for pages
 that come out wrong), save a screenshot of the visible area or the whole page (scrolled and stitched) to Photos,
 read the page aloud, share/copy the link. When needed, the agent can also look at a screenshot of the page.
@@ -245,7 +264,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/content/filterLists.ts`, `src/content/blocking.ts` | Ad and tracker blocking: filter lists reduced to domains (pure parser and matcher), their download, updates and per-platform compilation; `src/content/adBlock.ts` is the built-in script blocker |
 | `src/backup/` | The encrypted backup file: what goes in it, the encryption, and merging or replacing on import |
 | `src/ai/audit.ts`, `src/storage/sentLog.ts` | "What was sent to the AI": the entry recorded for each request and how long it is kept |
-| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
+| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`, `view_attachment`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |
@@ -259,7 +278,9 @@ encrypted reasoning content, Gemini's thought signatures, OpenRouter's `reasonin
 the same model. If the provider or model changes mid-chat, the history is rebuilt from the text and tool calls. With
 OpenRouter, a request rejected (400) while it replays reasoning details is repeated once with those turns rebuilt
 from text and tool calls. In the Chat Completions format a `tool` message carries text only, so a screenshot a tool
-returned follows the tool messages as one user message with `image_url` parts.
+returned follows the tool messages as one user message with `image_url` parts. Images the user attached are not in the
+saved history: user turns keep their manifest, and each request adds the model copies of the images still in context
+(`src/agent/attachedImages.ts`), whichever provider it goes to.
 
 Anthropic, OpenAI and OpenRouter replies are streamed (OpenRouter: a stream that fails for any reason but a lost
 connection or an HTTP error is repeated once without streaming). Gemini replies are streamed only with "Stream Gemini responses

@@ -22,7 +22,13 @@ function toSteps(turns: Turn[], model: string): Step[] {
   const steps: Step[] = [];
   for (const turn of turns) {
     if (turn.role === 'user') {
-      steps.push({ type: 'user_input', content: [{ type: 'text', text: turn.text }] });
+      steps.push({
+        type: 'user_input',
+        content: [
+          { type: 'text', text: turn.text },
+          ...(turn.images ?? []).map((img) => ({ type: 'image', data: img.data, mime_type: img.mediaType })),
+        ],
+      });
     } else if (turn.role === 'tool_results') {
       turn.results.forEach((r) =>
         steps.push({

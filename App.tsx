@@ -18,7 +18,19 @@ import type { PersonalKind } from './src/agent/personalData';
 import { runAgent } from './src/agent/runAgent';
 import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
 import { personalKindsLabel } from './src/components/memoryCategories';
-import { Conversation, callItem, fileItem, newItem, smsItem, sourcesItem, whatsAppItem } from './src/chat/Conversation';
+import { Conversation, callItem, fileItem, newItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
+import { AttachmentInfo, describeAttachments, MAX_ATTACHMENTS } from './src/chat/attachments';
+import {
+  AttachmentError,
+  deleteAttachment,
+  forgetIncognitoAttachments,
+  pickImages,
+  pruneAttachments,
+  saveAttachmentToPhotos,
+  shareAttachment,
+  takePhoto,
+} from './src/device/attachments';
+import { AttachmentPreview } from './src/components/AttachmentViews';
 import { geminiStreamingAvailable } from './src/ai/gemini';
 import { getProvider, isConfigured, modelLabel, requestTarget } from './src/ai/providers';
 import { loadCatalog } from './src/ai/openrouterModels';
@@ -123,7 +135,7 @@ import {
   onBackgroundStopRequested,
   TaskOutcome,
 } from './src/device/backgroundTask';
-import { deleteOrphanChats, loadChat, storeChat } from './src/storage/chat';
+import { deleteOrphanChats, loadChat, savedAttachmentIds, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 import { usePersistSession } from './src/storage/usePersistSession';
@@ -447,17 +459,35 @@ function BrowserApp({
       .catch(() => {});
   }, []);
 
-  // Once at start: forget conversations of tabs that are gone (also those that fell out of recently closed).
+  // Once at start: forget conversations of tabs that are gone (also those that fell out of recently closed), then the
+  // attached files nothing refers to any more; incognito attachments never outlive the app run.
   useEffect(() => {
+    try {
+      forgetIncognitoAttachments();
+    } catch {
+      // Nothing to remove.
+    }
     getDb()
-      .then((db) =>
-        deleteOrphanChats(db, [
+      .then(async (db) => {
+        await deleteOrphanChats(db, [
           ...browserInstance.conversations.map((x) => x.key),
           ...browserInstance.recentlyClosed.flatMap((c) => (c.uid ? [c.uid] : [])),
-        ]),
-      )
+        ]);
+        await pruneAttachmentFiles();
+      })
       .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [browserInstance]);
+
+  /** Deletes attached files that no saved or open conversation (or message being written) refers to. */
+  const pruneAttachmentFiles = async () => {
+    const db = await getDb();
+    const keep = new Set([
+      ...(await savedAttachmentIds(db)),
+      ...browserInstance.conversations.flatMap((x) => x.attachmentIds()),
+    ]);
+    pruneAttachments(keep);
+  };
 
   // The chat input is saved shortly after typing stops, so closing the app doesn't lose it.
   const [draftSaver] = useState(() => ({ timer: null as ReturnType<typeof setTimeout> | null }));
@@ -578,8 +608,18 @@ function BrowserApp({
     const chat = browser.conversationOf(current);
     // Marked before anything is shown, so a message typed in an incognito tab is never saved.
     if (current.incognito) chat.privacy.touchedIncognito = true;
+    // Images go only to a model that takes them: said before anything is sent, with the message kept in the input.
+    if (chat.pending.some((a) => a.kind === 'image')) {
+      const blocked = await imagesBlockedFor(chat);
+      if (blocked) {
+        chat.setDraft(text);
+        chat.add(newItem('error', t('attach.noImageInput', { model: blocked })));
+        return;
+      }
+    }
     if (prepared?.chat === chat) setPrepared(null);
-    chat.add(newItem('user', text));
+    const attachments = chat.takePending();
+    chat.add(userItem(text, attachments));
 
     // The conversation's own model choice, if its provider is still set up; otherwise the default in Settings.
     // Read once here: a running task keeps the model it started with.
@@ -610,7 +650,13 @@ function BrowserApp({
       : `${current.title || '(no title)'} — ${current.url}`;
     const pageNote = options.noPage && !current.isNewTab ? " This task isn't about this page; don't read it unless needed." : '';
     const pageInfo = `\n\n[Current tab ${current.id}: ${where}.${pageNote} Open tabs: ${browser.tabs.length}. ${nowContext()}]`;
-    chat.turns.push({ role: 'user', text: text + pageInfo });
+    const message = text || (attachments.length ? 'See the attached files.' : '');
+    const attached = attachments.length ? `\n\n${describeAttachments(attachments)}` : '';
+    chat.turns.push({
+      role: 'user',
+      text: message + attached + pageInfo,
+      ...(attachments.length ? { attachments } : {}),
+    });
 
     // Research applies to this one message.
     const research = chat.research;
@@ -686,6 +732,7 @@ function BrowserApp({
           chat.add(fileItem(file));
         },
         showAppSettings: () => setSettingsVisible(true),
+        attachments: () => chat.attachments,
         signal,
         audit: {
           conversation: () => chat.key,
@@ -728,6 +775,49 @@ function BrowserApp({
       // Saved under the conversation's key now, which may have changed meanwhile (e.g. the tab founded a group).
       persistConversation(chat);
     }
+  };
+
+  /**
+   * The model a message from this conversation would go to, by name, when it can't take images; null when it can
+   * (or when the provider isn't set up, which send reports on its own).
+   */
+  const imagesBlockedFor = async (chat: Conversation): Promise<string | null> => {
+    const choice = chat.model && isConfigured(settings, chat.model.provider) ? chat.model : null;
+    const provider = choice?.provider ?? settings.provider;
+    if (!isConfigured(settings, provider)) return null;
+    if (getProvider(provider).catalog) await loadCatalog();
+    const target = requestTarget(settings, provider, choice?.model);
+    return target.images ? null : modelLabel(provider, target.model);
+  };
+
+  // Attachments: the attach sheet, the full-screen preview.
+  const [attachSheet, setAttachSheet] = useState(false);
+  const [previewAttachment, setPreviewAttachment] = useState<AttachmentInfo | null>(null);
+  const attachmentIncognito = (chat: Conversation) => chat.incognito || chat.privacy.touchedIncognito;
+
+  const attach = async (how: 'photos' | 'camera') => {
+    const chat = conversation;
+    const room = MAX_ATTACHMENTS - chat.pending.length;
+    if (room <= 0) return toast.show(t('attach.full', { max: MAX_ATTACHMENTS }));
+    try {
+      const incognito = attachmentIncognito(chat);
+      const added =
+        how === 'photos' ? await pickImages(room, incognito) : [await takePhoto(incognito)].filter((a) => a !== null);
+      // Anything over the limit (several picked while another was added) goes again.
+      chat.addPending(added).forEach((a) => deleteAttachment(a.id));
+    } catch (e) {
+      if (e instanceof PermissionDeniedError) {
+        if (!e.canAskAgain) offerSettings(t('attach.cameraDenied'));
+        else toast.show(t('attach.cameraDenied'));
+        return;
+      }
+      toast.show(e instanceof AttachmentError ? e.message : t('attach.failed'));
+    }
+  };
+
+  const removePending = (id: string) => {
+    conversation.removePending(id);
+    deleteAttachment(id);
   };
 
   /**
@@ -846,8 +936,13 @@ function BrowserApp({
   };
 
   const newChat = () => {
-    conversation.clear();
-    persistConversation(conversation);
+    const chat = conversation;
+    chat.clear();
+    // Its attached files go once the cleared conversation is saved.
+    getDb()
+      .then((db) => storeChat(db, chat))
+      .then(pruneAttachmentFiles)
+      .catch(() => {});
   };
 
   /** Runs a menu action and reports the outcome in a toast instead of failing silently. */
@@ -1236,6 +1331,7 @@ function BrowserApp({
         db,
         browser.conversations.filter((x) => x.running).map((x) => x.key),
       );
+      await pruneAttachmentFiles();
     }
     if (options.downloads) {
       for (const entry of downloads.list()) {
@@ -1410,6 +1506,10 @@ function BrowserApp({
                 prepared && prepared.chat === conversation && conversation.draft.trim() ? prepared.task.name : null
               }
               onRunPrepared={runPrepared}
+              pending={conversation.pending}
+              onAttach={() => setAttachSheet(true)}
+              onRemovePending={removePending}
+              onOpenAttachment={setPreviewAttachment}
               voice={{
                 incognito: tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
                 online: settings.voiceOnline,
@@ -1689,6 +1789,30 @@ function BrowserApp({
             }
             dark={darkMode}
             onClose={() => setMessageMenu(null)}
+          />
+          <ActionSheet
+            title={
+              attachSheet
+                ? t('attach.sheetNote', { provider: getProvider(conversation.model?.provider ?? settings.provider).label })
+                : null
+            }
+            actions={[
+              { label: t('attach.photos'), onPress: () => attach('photos') },
+              { label: t('attach.camera'), onPress: () => attach('camera') },
+            ]}
+            dark={darkMode}
+            onClose={() => setAttachSheet(false)}
+          />
+          <AttachmentPreview
+            info={previewAttachment}
+            onClose={() => setPreviewAttachment(null)}
+            onShare={(info) => runAction(() => shareAttachment(info))}
+            onSave={(info) =>
+              runAction(async () => {
+                await saveAttachmentToPhotos(info);
+                return t('contextMenu.imageSaved');
+              })
+            }
           />
           <TasksScreen
             visible={tasksScreen !== null}

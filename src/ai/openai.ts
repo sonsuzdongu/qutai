@@ -15,7 +15,19 @@ function toInput(turns: Turn[], model: string): Item[] {
   const input: Item[] = [];
   for (const turn of turns) {
     if (turn.role === 'user') {
-      input.push({ role: 'user', content: turn.text });
+      input.push({
+        role: 'user',
+        content: turn.images?.length
+          ? [
+              { type: 'input_text', text: turn.text },
+              ...turn.images.map((img) => ({
+                type: 'input_image',
+                image_url: `data:${img.mediaType};base64,${img.data}`,
+                detail: 'auto',
+              })),
+            ]
+          : turn.text,
+      });
     } else if (turn.role === 'tool_results') {
       turn.results.forEach((r) => {
         const text = r.isError ? `[error] ${r.content}` : r.content;

@@ -7,6 +7,7 @@ const TOOL_KINDS: Record<string, SentKind> = {
   read_page: 'page',
   read_source: 'source',
   view_screenshot: 'screenshot',
+  view_attachment: 'attachment',
   read_tab: 'tab',
   search_history: 'history',
   get_location: 'location',
@@ -25,7 +26,7 @@ const imageBytes = (images: ToolImage[]) => images.reduce((sum, img) => sum + Ma
 
 /** Characters and images of a turn as sent (assistant turns: their text and tool calls). */
 function turnSize(turn: Turn): { chars: number; images: number } {
-  if (turn.role === 'user') return { chars: turn.text.length, images: 0 };
+  if (turn.role === 'user') return { chars: turn.text.length, images: turn.images?.length ?? 0 };
   if (turn.role === 'assistant') {
     let chars = turn.text.length;
     for (const call of turn.toolCalls) chars += call.name.length + JSON.stringify(call.input).length;
@@ -79,8 +80,9 @@ function build(providerId: ProviderId, req: ModelRequest) {
   }
   for (const turn of turns.slice(lastReply + 1)) {
     if (turn.role === 'user') {
-      items.push({ kind: 'message', chars: turn.text.length });
-      content.push({ text: turn.text });
+      // Attached images are shown with the message, like screenshots with a tool result.
+      items.push({ kind: 'message', chars: turn.text.length, ...(turn.images?.length ? { imageBytes: imageBytes(turn.images) } : {}) });
+      content.push({ text: turn.text, ...(turn.images?.length ? { images: turn.images } : {}) });
     } else if (turn.role === 'tool_results') {
       for (const r of turn.results) {
         const kind = TOOL_KINDS[r.name] ?? 'tool';
