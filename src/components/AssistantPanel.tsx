@@ -22,7 +22,7 @@ import { Icon, IconName } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import type { Source } from '../agent/types';
 import { hostOf } from '../i18n/format';
-import { MarkdownText } from './MarkdownText';
+import { hasTable, MarkdownText } from './MarkdownText';
 import { SearchSuggestions } from './SearchSuggestions';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 import { useReduceMotion } from '../utils/useReduceMotion';
@@ -358,6 +358,7 @@ function ChatRow({
   const styles = useStyles();
   const d = useContext(PanelTheme);
   const textStyle = styles.assistantText;
+  const wide = item.kind === 'assistant' && hasTable(item.text);
   switch (item.kind) {
     case 'user':
       return (
@@ -369,8 +370,9 @@ function ChatRow({
       );
     case 'assistant':
       return (
-        <View style={styles.assistantRow}>
-          <View style={[styles.bubble, styles.assistantBubble, d?.assistantBubble]}>
+        // Tables need the room: the message spans the panel instead of shrink-wrapping at 90%.
+        <View style={[styles.assistantRow, wide && styles.wideRow]}>
+          <View style={[styles.bubble, styles.assistantBubble, d?.assistantBubble, wide && styles.wideBubble]}>
             <MarkdownText
               text={item.streaming ? `${item.text} ▍` : item.text}
               style={textStyle}
@@ -469,6 +471,8 @@ function MessageButton({ label, onPress }: { label: string; onPress: () => void 
 const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
   assistantRow: { alignSelf: 'flex-start', maxWidth: '90%', gap: 4 },
+  wideRow: { alignSelf: 'stretch', maxWidth: '100%' },
+  wideBubble: { alignSelf: 'stretch' },
   messageActions: { flexDirection: 'row', gap: 4, marginLeft: 4 },
   messageButton: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
   messageButtonText: { fontSize: 12, color: c.textSecondary },

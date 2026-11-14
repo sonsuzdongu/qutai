@@ -28,6 +28,11 @@ export function decodeEntities(text: string): string {
 
 export const isWebUrl = (url: string) => /^https?:\/\//i.test(url);
 
+/** Whether the markdown has a table (a header row followed by a |---| separator row). */
+export function hasTable(text: string): boolean {
+  return /^\s*\|?.*\|.*\n\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/m.test(text);
+}
+
 /** Rough column width for tables, from the longest cell (tables scroll sideways when wide). */
 export function columnWidths(table: { header: { text: string }[]; rows: { text: string }[][] }): number[] {
   return table.header.map((cell, col) => {
@@ -165,7 +170,13 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
             {cells.map((cell, col) => (
               <Text
                 key={`${rowKey}.${col}`}
-                style={[style, styles.cell, { width: widths[col] }, header && styles.bold]}
+                // Estimated widths are the minimum; spare room is shared out so the table fills the bubble.
+                style={[
+                  style,
+                  styles.cell,
+                  { minWidth: widths[col], flexGrow: widths[col], flexBasis: widths[col] },
+                  header && styles.bold,
+                ]}
                 selectable
               >
                 {inline(cell.tokens, `${rowKey}.${col}`)}
@@ -174,8 +185,13 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
           </View>
         );
         return (
-          <ScrollView key={key} horizontal style={[styles.table, d?.border]}>
-            <View>
+          <ScrollView
+            key={key}
+            horizontal
+            style={[styles.table, d?.border]}
+            contentContainerStyle={styles.tableContent}
+          >
+            <View style={styles.tableBody}>
               {row(table.header, `${key}.h`, true)}
               {table.rows.map((cells, i) => row(cells, `${key}.${i}`, false))}
             </View>
@@ -219,7 +235,10 @@ const useStyles = makeStyles((c) => ({
   codeText: { fontFamily: MONO, fontSize: 12.5, color: c.text },
   quote: { borderLeftWidth: 3, borderLeftColor: c.separator, paddingLeft: 10, gap: 4 },
   hr: { height: StyleSheet.hairlineWidth, backgroundColor: '#d6d3c9', marginVertical: 4 },
-  table: { borderRadius: 8, borderWidth: StyleSheet.hairlineWidth, borderColor: c.border },
+  // flexGrow 0: a horizontal ScrollView grows by default, which left a gap under tables on Android.
+  table: { flexGrow: 0, borderRadius: 8, borderWidth: StyleSheet.hairlineWidth, borderColor: c.border },
+  tableContent: { flexGrow: 1 },
+  tableBody: { flexGrow: 1 },
   tableRow: { flexDirection: 'row', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.separator },
   tableHeader: { backgroundColor: c.chrome },
   cell: { paddingHorizontal: 8, paddingVertical: 6, fontSize: 13, lineHeight: 18 },
