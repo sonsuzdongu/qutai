@@ -21,8 +21,6 @@ export const en = {
   'chat.maxTokens': 'The response reached the length limit.',
   'chat.refusal': 'The model declined this request.',
   'chat.stepLimit': 'Reached the step limit ({max}). Send another message to continue.',
-  'chat.empty':
-    'What should I do on this page?\n\nFor example: “Summarize this page” or “Compare flights from Istanbul to Ankara”.',
   'chat.placeholder': 'Give Qutai a task…',
   'chat.working': 'working…',
   'chat.busyElsewhere': 'Qutai is working in another tab',
@@ -458,4 +456,14 @@ export const en = {
   'settings.unsavedTitle': 'Discard changes?',
   'settings.unsavedBody': 'Your AI provider, key or model changes are not saved yet.',
   'settings.discard': 'Discard',
+  'chat.emptyTitle': 'What should I do?',
+  'chat.emptyLeadPage': 'Ask about this page or give me a task. I can read it, click, fill in forms and open other tabs.',
+  'chat.emptyLeadWeb': 'Give me a task on the web. I search, compare and do the clicking for you.',
+  'chat.examplePage1': 'What is this page about, in three sentences?',
+  'chat.examplePage2': 'Find the cheapest option on this page',
+  'chat.examplePage3': 'Fill in this form with my details',
+  'chat.exampleWeb1': 'Compare flights from Istanbul to Ankara next Friday',
+  'chat.exampleWeb2': 'Find a vegetarian lasagna recipe and save it as a PDF',
+  'chat.exampleWeb3': 'What are today’s top tech news?',
+  'chat.exampleHint': 'Puts this in the message box',
 } as const;

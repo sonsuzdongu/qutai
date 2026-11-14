@@ -22,8 +22,6 @@ export const tr: Record<keyof typeof en, string> = {
   'chat.maxTokens': 'Yanıt uzunluk sınırına ulaştı.',
   'chat.refusal': 'Model bu isteği yerine getirmeyi reddetti.',
   'chat.stepLimit': 'Adım sınırına ({max}) ulaşıldı. Devam etmek için tekrar yazabilirsiniz.',
-  'chat.empty':
-    'Bu sayfada ne yapmamı istersiniz?\n\nÖrneğin: “Bu sayfayı özetle” ya da “İstanbul–Ankara uçak biletlerini karşılaştır”.',
   'chat.placeholder': "Qutai'ye bir görev verin…",
   'chat.working': 'çalışıyor…',
   'chat.busyElsewhere': 'Qutai başka bir sekmede çalışıyor',
@@ -465,4 +463,14 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.unsavedTitle': 'Değişiklikler silinsin mi?',
   'settings.unsavedBody': 'Yapay zekâ sağlayıcısı, anahtar veya model değişiklikleriniz henüz kaydedilmedi.',
   'settings.discard': 'Sil',
+  'chat.emptyTitle': 'Ne yapayım?',
+  'chat.emptyLeadPage': 'Bu sayfayla ilgili sorun ya da bir görev verin. Okuyabilir, tıklayabilir, form doldurabilir ve başka sekmeler açabilirim.',
+  'chat.emptyLeadWeb': 'Web’de bir görev verin. Sizin için arar, karşılaştırır ve tıklamaları yaparım.',
+  'chat.examplePage1': 'Bu sayfa ne anlatıyor, üç cümleyle?',
+  'chat.examplePage2': 'Bu sayfadaki en ucuz seçeneği bul',
+  'chat.examplePage3': 'Bu formu benim bilgilerimle doldur',
+  'chat.exampleWeb1': 'Gelecek cuma İstanbul–Ankara uçuşlarını karşılaştır',
+  'chat.exampleWeb2': 'Vejetaryen lazanya tarifi bul ve PDF olarak kaydet',
+  'chat.exampleWeb3': 'Bugünün öne çıkan teknoloji haberleri neler?',
+  'chat.exampleHint': 'Bunu mesaj kutusuna yazar',
 };

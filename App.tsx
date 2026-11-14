@@ -857,6 +857,7 @@ function BrowserApp({
           <ErrorBoundary full>
             <AssistantPanel
               dark={darkMode}
+              hasPage={!tab.isNewTab}
               open={panelOpen}
               quickActions={quickActions}
               draft={conversation.draft}

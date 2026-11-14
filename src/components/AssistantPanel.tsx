@@ -77,6 +77,8 @@ type Props = {
   /** A source under an answer was tapped. */
   onOpenSource: (source: Source) => void;
   dark?: boolean;
+  /** A web page is open in the tab (not the new tab page); picks the examples in the empty chat. */
+  hasPage?: boolean;
 };
 
 const MAX_WIDTH = 420;
@@ -112,6 +114,7 @@ export function AssistantPanel({
   onOpenLink,
   onOpenSource,
   dark = false,
+  hasPage = false,
 }: Props) {
   const styles = useStyles();
   const palette = usePalette();
@@ -224,7 +227,16 @@ export function AssistantPanel({
                   if (open && running) scrollRef.current?.scrollToEnd({ animated: false });
                 }}
               >
-                {items.length === 0 && <Text style={[styles.empty, d?.dim]}>{t('chat.empty')}</Text>}
+                {items.length === 0 && (
+                  <EmptyState
+                    hasPage={hasPage}
+                    animate={open}
+                    onPick={(example) => {
+                      setText(example);
+                      inputRef.current?.focus();
+                    }}
+                  />
+                )}
                 {items.map((item, index) => (
                   <ChatRow
                     key={item.id}
@@ -245,8 +257,15 @@ export function AssistantPanel({
                 </Pressable>
               )}
 
+              {/* One row: the research switch first, then the one-tap tasks (hidden while typing or researching). */}
               {!running && !busyElsewhere && (
-                <View style={styles.modeRow}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  style={styles.chips}
+                  contentContainerStyle={styles.chipsContent}
+                >
                   <Pressable
                     onPress={() => onResearchChange(!research)}
                     style={[styles.chip, d?.chip, research && styles.chipOn]}
@@ -256,31 +275,24 @@ export function AssistantPanel({
                     <Icon name="research" size={15} color={research ? '#ffffff' : palette.textSecondary} />
                     <Text style={[styles.chipText, d?.text, research && styles.chipTextOn]}>{t('chat.research')}</Text>
                   </Pressable>
-                  {research ? <Text style={styles.modeHint}>{t('chat.researchHint')}</Text> : null}
-                </View>
-              )}
-
-              {!running && !busyElsewhere && !research && !text.trim() && quickActions.length > 0 && (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  style={styles.chips}
-                  contentContainerStyle={styles.chipsContent}
-                >
-                  {quickActions.map((action) => (
-                    <Pressable
-                      key={action.label}
-                      onPress={() => onSend(action.prompt)}
-                      style={({ pressed }) => [styles.chip, d?.chip, pressed && styles.pressed]}
-                      accessibilityRole="button"
-                    >
-                      <Icon name={action.icon} size={15} color={palette.textSecondary} />
-                      <Text style={[styles.chipText, d?.text]}>{action.label}</Text>
-                    </Pressable>
-                  ))}
+                  {!research &&
+                    !text.trim() &&
+                    quickActions.map((action) => (
+                      <Pressable
+                        key={action.label}
+                        onPress={() => onSend(action.prompt)}
+                        style={({ pressed }) => [styles.chip, d?.chip, pressed && styles.pressed]}
+                        accessibilityRole="button"
+                      >
+                        <Icon name={action.icon} size={15} color={palette.textSecondary} />
+                        <Text style={[styles.chipText, d?.text]}>{action.label}</Text>
+                      </Pressable>
+                    ))}
                 </ScrollView>
               )}
+              {research && !running && !busyElsewhere ? (
+                <Text style={styles.modeHint}>{t('chat.researchHint')}</Text>
+              ) : null}
 
               <View style={[styles.inputRow, d?.inputRow]}>
                 <TextInput
@@ -316,6 +328,46 @@ export function AssistantPanel({
         </Animated.View>
       </View>
     </PanelTheme.Provider>
+  );
+}
+
+/** The empty chat: what Qutai can do, with examples that fill the input (nothing is sent until the user does). */
+function EmptyState({
+  hasPage,
+  animate,
+  onPick,
+}: {
+  hasPage: boolean;
+  animate: boolean;
+  onPick: (example: string) => void;
+}) {
+  const styles = useStyles();
+  const palette = usePalette();
+  const examples = hasPage
+    ? [t('chat.examplePage1'), t('chat.examplePage2'), t('chat.examplePage3')]
+    : [t('chat.exampleWeb1'), t('chat.exampleWeb2'), t('chat.exampleWeb3')];
+  return (
+    <View style={styles.emptyBox}>
+      <QutaiMark size={52} sweepWhenIdle animate={animate} />
+      <Text style={styles.emptyTitle} accessibilityRole="header">
+        {t('chat.emptyTitle')}
+      </Text>
+      <Text style={styles.emptyLead}>{t(hasPage ? 'chat.emptyLeadPage' : 'chat.emptyLeadWeb')}</Text>
+      <View style={styles.examples}>
+        {examples.map((example) => (
+          <Pressable
+            key={example}
+            onPress={() => onPick(example)}
+            style={({ pressed }) => [styles.example, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityHint={t('chat.exampleHint')}
+          >
+            <Text style={styles.exampleText}>{example}</Text>
+            <Icon name="chevronRight" size={18} color={palette.textSecondary} />
+          </Pressable>
+        ))}
+      </View>
+    </View>
   );
 }
 
@@ -508,7 +560,22 @@ const useStyles = makeStyles((c) => ({
   headerButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerButtonText: { fontSize: 18, color: c.textSecondary },
   messagesContent: { padding: 12, gap: 8 },
-  empty: { color: c.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 8 },
+  emptyBox: { alignItems: 'center', gap: 8, paddingTop: 24, paddingHorizontal: 4 },
+  emptyTitle: { color: c.text, fontSize: 19, fontWeight: '700', marginTop: 6 },
+  emptyLead: { color: c.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center', maxWidth: 300 },
+  examples: { alignSelf: 'stretch', gap: 8, marginTop: 10 },
+  example: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.separator,
+  },
+  exampleText: { flex: 1, color: c.text, fontSize: 14.5, lineHeight: 20 },
   bubble: { borderRadius: 14, paddingHorizontal: 12, paddingVertical: 8, maxWidth: '90%' },
   userBubble: { alignSelf: 'flex-end', backgroundColor: c.tint },
   assistantBubble: {
@@ -582,8 +649,7 @@ const useStyles = makeStyles((c) => ({
   chipText: { fontSize: 13, color: c.text },
   chipOn: { backgroundColor: c.tint, borderColor: c.tint },
   chipTextOn: { color: c.onTint, fontWeight: '600' },
-  modeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8, paddingTop: 8 },
-  modeHint: { flex: 1, fontSize: 12, color: c.textSecondary },
+  modeHint: { fontSize: 12, lineHeight: 17, color: c.textSecondary, paddingHorizontal: 12, paddingTop: 6 },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
