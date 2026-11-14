@@ -80,7 +80,8 @@ const useStyles = makeStyles((c) => ({
     gap: 14,
   },
   title: { fontSize: 17, fontWeight: '700', color: c.text },
-  code: { padding: 16, backgroundColor: c.surface, borderRadius: 12 },
+  // Always white: scanners need a light margin around the code, in dark mode and in the shared image too.
+  code: { padding: 16, backgroundColor: '#ffffff', borderRadius: 12 },
   row: { flexDirection: 'row' },
   url: { fontSize: 13, color: c.textSecondary, textAlign: 'center' },
   buttons: { flexDirection: 'row', gap: 10, alignSelf: 'stretch' },
