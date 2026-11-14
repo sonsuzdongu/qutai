@@ -109,6 +109,15 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
    );
    CREATE INDEX ai_requests_at ON ai_requests (at DESC);
    CREATE INDEX ai_requests_conversation ON ai_requests (conversation);`,
+  // Whether a site itself may use the camera or the microphone (kind 'camera' or 'microphone'; setting
+  // 'allow' or 'block'; no row means ask). Like site_location, apart from what the assistant may do.
+  `CREATE TABLE site_media (
+     host TEXT NOT NULL,
+     kind TEXT NOT NULL,
+     setting TEXT NOT NULL,
+     updated_at INTEGER NOT NULL,
+     PRIMARY KEY (host, kind)
+   );`,
 ];
 
 /**

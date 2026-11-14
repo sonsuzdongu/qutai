@@ -1,8 +1,6 @@
 import { AppState } from 'react-native';
 import type { ComponentRef } from 'react';
 import type { WebView } from 'react-native-webview';
-import { siteKey } from '../agent/sitePolicy';
-import { dialog } from '../components/Dialog';
 import {
   ensureLocationPermission,
   hasLocationPermission,
@@ -14,6 +12,7 @@ import {
 import { offerSettings, PermissionDeniedError } from '../device/settings';
 import { t } from '../i18n';
 import type { LocationSetting } from '../storage/sitePermissions';
+import { askSitePermission, requestingSite } from './sitePrompt';
 
 /**
  * Web pages' navigator.geolocation, answered by the app.
@@ -284,11 +283,8 @@ export class PageGeolocation {
     this.tab.notifyLocationUse();
   }
 
-  /** The site the request is for, if it may ask at all: https only, and only the tab's own site. */
   private siteOf(origin: string): string | null {
-    if (!/^https:\/\//i.test(origin)) return null;
-    const host = siteKey(origin);
-    return host && host === siteKey(this.tab.url) ? host : null;
+    return requestingSite(origin, this.tab.url);
   }
 
   /** The stored setting; incognito tabs keep a block but never use a stored allow. */
@@ -326,30 +322,24 @@ export class PageGeolocation {
 
   private async ask(origin: string, host: string): Promise<boolean> {
     const incognito = this.tab.incognito;
-    const buttons = [
-      { text: t('location.deny'), style: 'cancel' as const },
-      // The easiest choice is the narrowest one; "Always allow" stays a plain secondary action.
-      { text: t('location.allowOnce'), primary: true },
-      ...(incognito ? [] : [{ text: t('location.allowAlways') }]),
-    ];
     const generation = this.generation;
-    const result = await dialog.show({
+    const answer = await askSitePermission({
       title: t('location.promptTitle', { host }),
-      message: t(incognito ? 'location.promptIncognito' : 'location.promptBody'),
-      buttons,
+      message: t(incognito ? 'sitePrompt.incognito' : 'location.promptBody'),
+      incognito,
       signal: this.abort.signal,
     });
     if (generation !== this.generation) return false;
-    if (result.button === 1) {
+    if (answer === 'once') {
       // Incognito: this request only; normal tabs: until the page is left or reloaded.
       if (!incognito) this.allowedOnce.add(origin);
       return true;
     }
-    if (result.button === 2 && settings) {
+    if (answer === 'always' && settings) {
       await settings.setLocation(host, 'allow').catch(() => {});
       return true;
     }
-    if (result.button === 0) this.deniedOnce.add(origin);
+    if (answer === 'deny') this.deniedOnce.add(origin);
     return false;
   }
 

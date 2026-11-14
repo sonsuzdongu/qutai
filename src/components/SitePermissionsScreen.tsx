@@ -16,7 +16,7 @@ export function SitePermissionsScreen({ visible, store, onClose }: Props) {
   const version = useSyncExternalStore(store.subscribe, () =>
     store
       .list()
-      .map((p) => p.host + p.level + p.location)
+      .map((p) => p.host + p.level + p.location + p.camera + p.microphone)
       .join(),
   );
   const sites = store.list();
@@ -56,6 +56,16 @@ export function SitePermissionsScreen({ visible, store, onClose }: Props) {
                     {t(`site.locationSummary.${item.location}`)}
                   </Text>
                 )}
+                {item.camera !== 'ask' && (
+                  <Text style={[styles.level, item.camera === 'block' && styles.danger]}>
+                    {t(`site.cameraSummary.${item.camera}`)}
+                  </Text>
+                )}
+                {item.microphone !== 'ask' && (
+                  <Text style={[styles.level, item.microphone === 'block' && styles.danger]}>
+                    {t(`site.microphoneSummary.${item.microphone}`)}
+                  </Text>
+                )}
               </View>
               <Pressable
                 onPress={() => store.reset(item.host)}
@@ -74,6 +84,9 @@ export function SitePermissionsScreen({ visible, store, onClose }: Props) {
           onSelect={(level) => editing && store.set(editing, level)}
           location={editing ? store.locationFor(editing) : 'ask'}
           onSelectLocation={(setting) => editing && store.setLocation(editing, setting)}
+          camera={editing ? store.mediaFor(editing, 'camera') : 'ask'}
+          microphone={editing ? store.mediaFor(editing, 'microphone') : 'ask'}
+          onSelectMedia={(kind, setting) => editing && store.setMedia(editing, kind, setting)}
           onClose={() => setEditing(null)}
         />
       </SafeAreaView>

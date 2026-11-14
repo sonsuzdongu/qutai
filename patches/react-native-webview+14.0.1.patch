@@ -1,0 +1,208 @@
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebChromeClient.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebChromeClient.java
+index 1b5c4c9..c86cb6d 100644
+--- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebChromeClient.java
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebChromeClient.java
+@@ -149,8 +149,10 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
+             String androidPermission = null;
+ 
+             if (requestedResource.equals(PermissionRequest.RESOURCE_AUDIO_CAPTURE)) {
++                if (!isMediaCaptureGranted(request, "microphone")) continue;
+                 androidPermission = Manifest.permission.RECORD_AUDIO;
+             } else if (requestedResource.equals(PermissionRequest.RESOURCE_VIDEO_CAPTURE)) {
++                if (!isMediaCaptureGranted(request, "camera")) continue;
+                 androidPermission = Manifest.permission.CAMERA;
+             } else if(requestedResource.equals(PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID)) {
+                 if (mAllowsProtectedMedia) {
+@@ -177,6 +179,12 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
+ 
+         // If all the permissions are already granted, send the response to the WebView synchronously
+         if (requestedAndroidPermissions.isEmpty()) {
++            // Qutai patch: nothing allowed is a refusal, not an empty grant.
++            if (grantedPermissions.isEmpty()) {
++                request.deny();
++                grantedPermissions = null;
++                return;
++            }
+             request.grant(grantedPermissions.toArray(new String[0]));
+             grantedPermissions = null;
+             return;
+@@ -190,6 +198,24 @@ public class RNCWebChromeClient extends WebChromeClient implements LifecycleEven
+     }
+ 
+ 
++    /**
++     * Qutai patch: whether the WebView's mediaCaptureGrant ("<origin> camera microphone") names the
++     * requesting frame's origin and this kind. Anything else is refused without asking the OS.
++     */
++    private boolean isMediaCaptureGranted(PermissionRequest request, String kind) {
++        String grant = mWebView.mediaCaptureGrant;
++        Uri origin = request.getOrigin();
++        if (grant == null || origin == null || origin.getHost() == null) return false;
++        String[] parts = grant.trim().split(" ");
++        if (parts.length < 2) return false;
++        String requester = origin.getScheme() + "://" + origin.getHost() + (origin.getPort() > 0 ? ":" + origin.getPort() : "");
++        if (!requester.equals(parts[0])) return false;
++        for (int i = 1; i < parts.length; i++) {
++            if (parts[i].equals(kind)) return true;
++        }
++        return false;
++    }
++
+     @Override
+     public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
+ 
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
+index 80c6803..b812e37 100644
+--- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
+@@ -224,6 +224,9 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+         }
+     }
+ 
++    // Qutai patch: camera and microphone only for "<origin> camera microphone"; null refuses both.
++    public @Nullable String mediaCaptureGrant = null;
++
+     WebChromeClient mWebChromeClient;
+     @Override
+     public void setWebChromeClient(WebChromeClient client) {
+diff --git a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
+index fa8efb8..25a1453 100644
+--- a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
++++ b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
+@@ -429,6 +429,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+     @Override
+     public void setMediaCapturePermissionGrantType(RNCWebViewWrapper view, @Nullable String value) {}
+ 
++    // Qutai patch: read by RNCWebChromeClient.onPermissionRequest.
++    @Override
++    @ReactProp(name = "mediaCaptureGrant")
++    public void setMediaCaptureGrant(RNCWebViewWrapper view, @Nullable String value) {
++        view.getWebView().mediaCaptureGrant = value;
++    }
++
+     @Override
+     public void setFraudulentWebsiteWarningEnabled(RNCWebViewWrapper view, boolean value) {}
+     /* !iOS PROPS - no implemented here */
+diff --git a/node_modules/react-native-webview/apple/RNCWebView.mm b/node_modules/react-native-webview/apple/RNCWebView.mm
+index 2be7877..30b26ca 100644
+--- a/node_modules/react-native-webview/apple/RNCWebView.mm
++++ b/node_modules/react-native-webview/apple/RNCWebView.mm
+@@ -468,6 +468,10 @@ - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &
+ #endif
+ 
+ #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 150000 /* iOS 15 */
++    // Qutai patch
++    if (oldViewProps.mediaCaptureGrant != newViewProps.mediaCaptureGrant) {
++        [_view setMediaCaptureGrant:RCTNSStringFromString(newViewProps.mediaCaptureGrant)];
++    }
+     if (oldViewProps.mediaCapturePermissionGrantType != newViewProps.mediaCapturePermissionGrantType) {
+         if (newViewProps.mediaCapturePermissionGrantType == RNCWebViewMediaCapturePermissionGrantType::Prompt) {
+             [_view setMediaCapturePermissionGrantType:RNCWebViewPermissionGrantType_Prompt];
+diff --git a/node_modules/react-native-webview/apple/RNCWebViewImpl.h b/node_modules/react-native-webview/apple/RNCWebViewImpl.h
+index 1f637c1..8003ad1 100644
+--- a/node_modules/react-native-webview/apple/RNCWebViewImpl.h
++++ b/node_modules/react-native-webview/apple/RNCWebViewImpl.h
+@@ -134,6 +134,8 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
+ 
+ #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 150000 /* iOS 15 */
+ @property (nonatomic, assign) RNCWebViewPermissionGrantType mediaCapturePermissionGrantType;
++// Qutai patch: "<origin> camera microphone"; once set, decides media capture instead of the grant type.
++@property (nonatomic, copy) NSString * _Nullable mediaCaptureGrant;
+ #endif
+ 
+ #if !TARGET_OS_OSX
+diff --git a/node_modules/react-native-webview/apple/RNCWebViewImpl.m b/node_modules/react-native-webview/apple/RNCWebViewImpl.m
+index 3890426..2293887 100644
+--- a/node_modules/react-native-webview/apple/RNCWebViewImpl.m
++++ b/node_modules/react-native-webview/apple/RNCWebViewImpl.m
+@@ -1300,6 +1300,28 @@ - (void)webView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSSt
+ }
+ 
+ #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 150000 /* iOS 15 */
++/**
++ * Qutai patch: grants only what mediaCaptureGrant names ("<origin> camera microphone"), to the main
++ * frame of exactly that origin.
++ */
++static BOOL RNCMediaCaptureGranted(NSString *grant, WKSecurityOrigin *origin, WKFrameInfo *frame, WKMediaCaptureType type) API_AVAILABLE(ios(15.0), macos(12.0)) {
++  if (!frame.isMainFrame) return NO;
++  NSArray<NSString *> *parts = [grant componentsSeparatedByString:@" "];
++  if (parts.count < 2) return NO;
++  NSString *requester = origin.port > 0
++    ? [NSString stringWithFormat:@"%@://%@:%ld", origin.protocol, origin.host, (long)origin.port]
++    : [NSString stringWithFormat:@"%@://%@", origin.protocol, origin.host];
++  if (![requester isEqualToString:parts[0]]) return NO;
++  BOOL camera = [parts containsObject:@"camera"];
++  BOOL microphone = [parts containsObject:@"microphone"];
++  switch (type) {
++    case WKMediaCaptureTypeCamera: return camera;
++    case WKMediaCaptureTypeMicrophone: return microphone;
++    case WKMediaCaptureTypeCameraAndMicrophone: return camera && microphone;
++    default: return NO;
++  }
++}
++
+ /**
+  * Media capture permissions (prevent multiple prompts)
+  */
+@@ -1308,6 +1330,10 @@ - (void)                         webView:(WKWebView *)webView
+                         initiatedByFrame:(WKFrameInfo *)frame
+                                     type:(WKMediaCaptureType)type
+                          decisionHandler:(void (^)(WKPermissionDecision decision))decisionHandler {
++  if (_mediaCaptureGrant != nil) {
++    decisionHandler(RNCMediaCaptureGranted(_mediaCaptureGrant, origin, frame, type) ? WKPermissionDecisionGrant : WKPermissionDecisionDeny);
++    return;
++  }
+   if (_mediaCapturePermissionGrantType == RNCWebViewPermissionGrantType_GrantIfSameHost_ElsePrompt || _mediaCapturePermissionGrantType == RNCWebViewPermissionGrantType_GrantIfSameHost_ElseDeny) {
+     if ([origin.host isEqualToString:webView.URL.host]) {
+       decisionHandler(WKPermissionDecisionGrant);
+diff --git a/node_modules/react-native-webview/lib/WebViewTypes.d.ts b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
+index f666e81..17f7f60 100644
+--- a/node_modules/react-native-webview/lib/WebViewTypes.d.ts
++++ b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
+@@ -582,6 +582,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+      * Available on iOS 15 and later.
+      */
+     mediaCapturePermissionGrantType?: MediaCapturePermissionGrantType;
++
++    /**
++     * Qutai patch. Camera and microphone requests (getUserMedia) are granted only to the origin and
++     * kinds named here, as "<origin> camera microphone" (e.g. "https://meet.example.com camera");
++     * everything else is refused without a prompt. iOS: main frame only, and it takes over from
++     * mediaCapturePermissionGrantType once set. Android: the requesting frame's origin must match.
++     */
++    mediaCaptureGrant?: string;
+     /**
+      * A Boolean value which, when set to `true`, WebView will be rendered with Apple Pay support.
+      *  Once set, websites will be able to invoke apple pay from React Native Webview.
+diff --git a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
+index ca3af15..09e569b 100644
+--- a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
++++ b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
+@@ -208,6 +208,8 @@ export interface NativeProps extends ViewProps {
+     'prompt' | 'grant' | 'deny' | 'grantIfSameHostElsePrompt' | 'grantIfSameHostElseDeny',
+     'prompt'
+   >;
++  // Qutai patch: see mediaCaptureGrant in WebViewTypes.ts.
++  mediaCaptureGrant?: string;
+   pagingEnabled?: boolean;
+   pullToRefreshEnabled?: boolean;
+   refreshControlLightMode?: boolean;
+diff --git a/node_modules/react-native-webview/src/WebViewTypes.ts b/node_modules/react-native-webview/src/WebViewTypes.ts
+index 4e7247f..ce7e7a9 100644
+--- a/node_modules/react-native-webview/src/WebViewTypes.ts
++++ b/node_modules/react-native-webview/src/WebViewTypes.ts
+@@ -730,6 +730,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+    */
+   mediaCapturePermissionGrantType?: MediaCapturePermissionGrantType;
+ 
++  /**
++   * Qutai patch. Camera and microphone requests (getUserMedia) are granted only to the origin and
++   * kinds named here, as "<origin> camera microphone" (e.g. "https://meet.example.com camera");
++   * everything else is refused without a prompt. iOS: main frame only, and it takes over from
++   * mediaCapturePermissionGrantType once set. Android: the requesting frame's origin must match.
++   */
++  mediaCaptureGrant?: string;
++
+   /**
+    * A Boolean value which, when set to `true`, WebView will be rendered with Apple Pay support.
+    *  Once set, websites will be able to invoke apple pay from React Native Webview.

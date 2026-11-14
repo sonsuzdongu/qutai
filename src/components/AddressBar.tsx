@@ -26,7 +26,10 @@ type Props = {
   loading: boolean;
   /** The page has used the location (shown as a small pin; tapping it opens the site's permissions). */
   usingLocation?: boolean;
-  onLocationPress?: () => void;
+  /** The page is capturing from the camera / microphone (small icons; tapping one opens the site's permissions). */
+  usingCamera?: boolean;
+  usingMicrophone?: boolean;
+  onSitePermissionsPress?: () => void;
   /** Reader mode: shown as a small icon when the page looks like an article ('available') or reader mode is on. */
   readerState?: 'none' | 'available' | 'on';
   onToggleReader?: () => void;
@@ -65,7 +68,9 @@ export function AddressBar({
   url,
   loading,
   usingLocation,
-  onLocationPress,
+  usingCamera,
+  usingMicrophone,
+  onSitePermissionsPress,
   readerState = 'none',
   onToggleReader,
   canGoBack,
@@ -213,9 +218,29 @@ export function AddressBar({
           >
             {url ? displayUrl(url) : t('address.placeholder')}
           </Text>
+          {usingCamera && (
+            <Pressable
+              onPress={onSitePermissionsPress}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('address.usingCamera')}
+            >
+              <Icon name="camera" size={13} color={palette.danger} />
+            </Pressable>
+          )}
+          {usingMicrophone && (
+            <Pressable
+              onPress={onSitePermissionsPress}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('address.usingMicrophone')}
+            >
+              <Icon name="microphone" size={13} color={palette.danger} />
+            </Pressable>
+          )}
           {usingLocation && (
             <Pressable
-              onPress={onLocationPress}
+              onPress={onSitePermissionsPress}
               hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel={t('address.usingLocation')}

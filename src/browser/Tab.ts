@@ -6,6 +6,7 @@ import { Conversation } from '../chat/Conversation';
 import { sleep } from '../utils/sleep';
 import { siteKey } from '../agent/sitePolicy';
 import { PageGeolocation } from './geolocation';
+import { PageMediaCapture } from './mediaCapture';
 import { classifyLoadError, LoadError } from './navigation';
 import { PAGE_SCRIPT } from './pageScript';
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, ReaderArticle } from './reader';
@@ -115,6 +116,8 @@ export class Tab {
 
   /** The page's navigator.geolocation, answered by the app with the user's per-site permission. */
   readonly geolocation: PageGeolocation = new PageGeolocation(this);
+  /** The page's camera and microphone (getUserMedia), gated by the user's per-site permission. */
+  readonly media: PageMediaCapture = new PageMediaCapture(this);
 
   private pending = new Map<string, Pending>();
   private probeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -155,7 +158,8 @@ export class Tab {
    * Incognito tabs never sleep: their cookies and site data live only in their WebView.
    */
   sleep() {
-    if (this.asleep || this.incognito || this.isNewTab) return;
+    // A tab using the camera or microphone stays awake (capture would end without the user stopping it).
+    if (this.asleep || this.incognito || this.isNewTab || this.media.capturing) return;
     this.reader = null;
     const thumbnail = this.thumbnail;
     this.dispose();
@@ -167,6 +171,11 @@ export class Tab {
 
   /** The page started or stopped using the location (address bar indicator). */
   notifyLocationUse() {
+    this.onChange();
+  }
+
+  /** The camera / microphone grant, playback rule or live capture changed (WebView props, address bar). */
+  notifyMediaChange() {
     this.onChange();
   }
 
@@ -255,8 +264,11 @@ export class Tab {
   }
 
   handleNavigationStateChange(nav: WebViewNavigation) {
-    // Location given to one site never carries over to the next (same-document changes stay).
-    if (siteKey(nav.url) !== siteKey(this.url)) this.geolocation.reset();
+    // Location, camera and microphone given to one site never carry over to the next (same-document changes stay).
+    if (siteKey(nav.url) !== siteKey(this.url)) {
+      this.geolocation.reset();
+      this.media.reset();
+    }
     // Another page (also one a script switched to without loading): reader mode belongs to the old one.
     if (pageKey(nav.url) !== pageKey(this.url)) {
       if (this.reader && pageKey(nav.url) !== this.reader.pageKey) this.reader = null;
@@ -288,8 +300,9 @@ export class Tab {
   }
 
   handleLoadStart() {
-    // A new document: its watches and "allow once" answers start over, and reader mode ends.
+    // A new document: its watches, capture and "allow once" answers start over, and reader mode ends.
     this.geolocation.reset();
+    this.media.reset();
     this.reader = null;
     this.readerAvailable = false;
     this.loading = true;
@@ -432,6 +445,7 @@ export class Tab {
     this.probeTimer = null;
     this.reader = null;
     this.geolocation.reset();
+    this.media.reset();
     this.thumbnail = null;
     this.pending.forEach((p) => {
       clearTimeout(p.timer);

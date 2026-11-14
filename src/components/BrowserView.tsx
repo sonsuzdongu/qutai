@@ -13,7 +13,7 @@ import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { mayOfferExternal, noteUserGesture } from '../browser/externalGuard';
 import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
 import { geolocationScript } from '../browser/geolocation';
-import { MEDIA_CAPTURE_BLOCK_SCRIPT } from '../browser/mediaCapture';
+import { mediaCaptureScript } from '../browser/mediaCapture';
 import { openExternal } from '../browser/openExternal';
 import { parsePullState, PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
 import { handleUserAgentMessage, USER_AGENT_SCRIPT, useChromeUserAgent } from '../browser/userAgent';
@@ -106,18 +106,19 @@ function TabWebView({
     newTabActions.blockAds ? AD_BLOCK_SCRIPT : '',
     newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : '',
   ].join('\n');
-  // Android: pages get no camera or microphone (iOS refuses natively: mediaCapturePermissionGrantType).
-  const mediaBlock = Platform.OS === 'android' ? MEDIA_CAPTURE_BLOCK_SCRIPT : '';
+  // getUserMedia asks the app (per-site permission) before the WebView's own capture may run; the native
+  // mediaCaptureGrant prop below is what enforces it. Every frame on iOS (frames are refused), main frame on Android.
+  const mediaScript = mediaCaptureScript(tab.media.nonce);
   const earlyScript = [
     geoScript,
-    mediaBlock,
+    mediaScript,
     mainFrameEarly.trim() ? `if (window.top === window) (function () {\n${mainFrameEarly}\n})();` : '',
   ].join('\n');
   // Runs after every page load: long-press menu, text selection, desktop viewport (Android) and text size (iOS).
   const pageSetupScript = [
     // Android may run the early script too soon for the new page; installing again is a no-op otherwise.
     Platform.OS === 'android' ? geoScript : '',
-    mediaBlock,
+    Platform.OS === 'android' ? mediaScript : '',
     CONTEXT_MENU_SCRIPT,
     SELECTION_SCRIPT,
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
@@ -139,6 +140,17 @@ function TabWebView({
   useEffect(() => {
     if (Platform.OS === 'ios') tab.webview?.injectJavaScript(textZoomScript(textZoom));
   }, [tab, textZoom]);
+
+  // The camera / microphone grant reached the WebView: the page may now call the real getUserMedia.
+  const mediaGrant = tab.media.grant;
+  useEffect(() => {
+    tab.media.applied(mediaGrant);
+  }, [tab, mediaGrant]);
+
+  // Capture is paused while another tab is shown (and while the app is in the background).
+  useEffect(() => {
+    tab.media.setShown(active);
+  }, [tab, active]);
 
   return (
     <View
@@ -182,6 +194,7 @@ function TabWebView({
             onMessage={(e) => {
               if (tab.handleMessage(e.nativeEvent.data)) return;
               if (tab.geolocation.handleMessage(e.nativeEvent.data)) return;
+              if (tab.media.handleMessage(e.nativeEvent.data)) return;
               if (handleUserAgentMessage(e.nativeEvent.data)) return;
               const pull = parsePullState(e.nativeEvent.data);
               if (pull !== null) return setAtTop(pull);
@@ -265,9 +278,13 @@ function TabWebView({
             userAgent={tab.desktop ? DESKTOP_USER_AGENT : Platform.OS === 'android' ? chromeUserAgent : undefined}
             contentMode={tab.desktop ? 'desktop' : 'recommended'}
             thirdPartyCookiesEnabled={!newTabActions.blockThirdPartyCookies}
-            // Videos can go full screen (Android) and play in the page (iOS).
+            // Videos can go full screen (Android) and play in the page (iOS; also a page's camera preview).
             allowsFullscreenVideo
             allowsInlineMediaPlayback
+            // Android: a page that was allowed to capture may play its own preview without another tap (the
+            // user's tap is long gone after the prompt). iOS sets this only when the WebView is created; WebKit
+            // already lets a capturing page play its stream.
+            mediaPlaybackRequiresUserAction={Platform.OS === 'android' ? !tab.media.playbackUnlocked : undefined}
             forceDarkOn={newTabActions.darkMode && newTabActions.darkSites}
             injectedJavaScript={pageSetupScript}
             injectedJavaScriptBeforeContentLoaded={earlyScript}
@@ -275,8 +292,10 @@ function TabWebView({
             injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
             // Android: native geolocation would grant every site once Qutai has the permission; the script handles it.
             geolocationEnabled={false}
-            // iOS: no camera or microphone for pages until there is a per-site prompt (WebKit would ask per
-            // origin, then share Qutai's camera permission). Android: see MEDIA_CAPTURE_BLOCK_SCRIPT.
+            // Camera and microphone (patched react-native-webview): refused unless this names the requesting
+            // origin and kind, which it does only while a request the user allowed is answered. See mediaCapture.ts.
+            mediaCaptureGrant={mediaGrant}
+            // iOS until the grant is first set (and if the patch were missing): WebKit refuses without a prompt.
             mediaCapturePermissionGrantType="deny"
             textZoom={newTabActions.textZoom}
             // The app shows its own long-press menu for links and images.

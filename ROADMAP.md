@@ -17,7 +17,7 @@ The browser foundation and the AI experience are both in place: data is stored o
 features are built, and the assistant reads, clicks (also by coordinates), uses other tabs and can add to the
 calendar, share a location or offer a call. What is left is mostly what needs a server (accounts, sync, Qutai
 credits, background tasks), native work in our own build (voice commands, network-level blocking, Android private
-tab isolation, per-site camera and microphone), and testing on real devices: most of it has never run on a phone.
+tab isolation), and testing on real devices: most of it has never run on a phone.
 
 ---
 
@@ -72,7 +72,7 @@ tab isolation, per-site camera and microphone), and testing on real devices: mos
 | HTTPS indicator | ✅ | | |
 | HTTPS-only | ✅ | | `http` → `https` upgrade on main-frame navigations, with a warning when a site falls back; subresources out of scope |
 | Malicious site warning | 🟡 | Server · M | Android System WebView has its own Safe Browsing protection; Safe Browsing API for a full solution |
-| Site permissions (camera, microphone, location) | 🟡 | Build · M | Location done: per-site ask / allow / block, answered by the app (`src/browser/geolocation.ts`), frames refused. Camera and microphone are refused for every web page; a per-site prompt needs a native per-origin hook |
+| Site permissions (camera, microphone, location) | ✅ | | Per-site ask / allow / block for each, frames refused. Location is answered by the app (`src/browser/geolocation.ts`); camera and microphone are gated natively per origin and kind by a small react-native-webview patch, with the prompt from the app (`src/browser/mediaCapture.ts`). Needs testing on phones |
 | Password manager, form filling | ⬜ | ✕ / Go | **I do not recommend writing our own password manager.** Relying on iOS and Android system autofill is safer; the assistant fills forms from its memory (name, address) |
 | Biometric lock | ✅ | | `expo-local-authentication`; app and private tabs; Face ID on iOS |
 | DNS over HTTPS | ⬜ | ✕ | WebView uses the system DNS; the user can turn on the OS "Private DNS" setting |
@@ -215,9 +215,8 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 
 Merged with the "Our own build (development build)" section in `TODO.md`:
 voice commands, Android private tab isolation, network-level ad and tracker blocking (with URL lists; iOS
-WKContentRuleList, Android request interception), cookie management and cookie deletion, per-site camera and
-microphone for web pages, Android PiP, background audio, being the default browser on iOS, widgets, "Share with
-Qutai", app verification. Done since: Face ID on iOS, downloads requiring login (the page's own cookies on iOS, the
+WKContentRuleList, Android request interception), cookie management and cookie deletion, Android PiP, background audio, being the default browser on iOS, widgets, "Share with
+Qutai", app verification. Done since: Face ID on iOS, per-site camera and microphone for web pages, downloads requiring login (the page's own cookies on iOS, the
 system download manager on Android), Android default browser (intent filters).
 
 Added from Comet reviews:

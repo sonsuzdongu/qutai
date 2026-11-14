@@ -62,6 +62,8 @@ const ICONS = {
   check: { ios: 'checkmark', android: 'check' },
   phone: { ios: 'phone.fill', android: 'call' },
   location: { ios: 'location.fill', android: 'location_on' },
+  camera: { ios: 'video.fill', android: 'videocam' },
+  microphone: { ios: 'mic.fill', android: 'mic' },
   reader: { ios: 'doc.plaintext', android: 'chrome_reader_mode' },
   play: { ios: 'play.fill', android: 'play_arrow' },
   pause: { ios: 'pause.fill', android: 'pause' },

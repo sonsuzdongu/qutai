@@ -81,7 +81,6 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
-        "android.permission.RECORD_AUDIO",
         "android.permission.SYSTEM_ALERT_WINDOW",
         "com.google.android.c2dm.permission.RECEIVE",
         "com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE",
@@ -138,9 +137,9 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Qutai uses the camera to scan QR codes, and to take a photo or video when you upload one to a web page.",
-          "microphonePermission": "Qutai uses the microphone only to record sound when you take a video to upload to a web page.",
-          "recordAudioAndroid": false
+          "cameraPermission": "Qutai uses the camera to scan QR codes, to take a photo or video for a web page’s upload field, and for sites you allow to use it, such as video calls.",
+          "microphonePermission": "Qutai uses the microphone for sites you allow to use it, such as video calls and voice input, and to record sound when you take a video to upload to a web page.",
+          "recordAudioAndroid": true
         }
       ],
       [

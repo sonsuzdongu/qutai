@@ -14,7 +14,7 @@ import { isSearchEngine } from '../browser/search';
  *   bookmarks?: { folders: [{ id, parentId, title, createdAt }], items: [{ url, title, createdAt, folderId }] },
  *   history?: [{ url, title, visitedAt }],
  *   memories?: [{ text, createdAt, updatedAt }],
- *   sites?: { permissions: [{ host, level }], location: [{ host, setting }] },
+ *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }] },
  *   settings?: { theme: "dark", textZoom: 120, models: { anthropic: "…" }, … },
  *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…" },   // only when the user opted in
  *   tabs?: { tabs: [{ url, title, uid, groupId? }], activeIndex, groups: [{ id, name, color, collapsed? }] },
@@ -35,6 +35,8 @@ export type BackupVisit = { url: string; title: string; visitedAt: number };
 export type BackupMemory = { text: string; createdAt: number; updatedAt: number };
 export type BackupSitePermission = { host: string; level: Exclude<SiteLevel, 'default'> };
 export type BackupLocation = { host: string; setting: 'allow' | 'block' };
+/** A site's camera or microphone setting (not in backups made before it existed). */
+export type BackupMedia = { host: string; kind: 'camera' | 'microphone'; setting: 'allow' | 'block' };
 export type BackupTab = { url: string; title: string; uid: string; groupId?: string };
 export type BackupGroup = { id: string; name: string; color: string; collapsed?: boolean };
 export type BackupChat = { key: string; items: unknown[]; turns: unknown[] };
@@ -82,7 +84,7 @@ export type BackupPayload = {
   bookmarks?: { folders: BackupFolder[]; items: BackupBookmark[] };
   history?: BackupVisit[];
   memories?: BackupMemory[];
-  sites?: { permissions: BackupSitePermission[]; location: BackupLocation[] };
+  sites?: { permissions: BackupSitePermission[]; location: BackupLocation[]; media?: BackupMedia[] };
   settings?: BackupSettings;
   apiKeys?: Partial<Record<ProviderId, string>>;
   tabs?: { tabs: BackupTab[]; activeIndex: number; groups: BackupGroup[] };
@@ -238,7 +240,15 @@ function parseSites(v: unknown): BackupPayload['sites'] {
     const setting = oneOf(l.setting, ['allow', 'block'] as const);
     if (host && setting) location.set(host, { host, setting });
   }
-  return { permissions: [...permissions.values()], location: [...location.values()] };
+  const media = new Map<string, BackupMedia>();
+  for (const m of list(v.media, LIMITS.sites * 2)) {
+    if (!isObj(m)) continue;
+    const host = siteHost(m.host);
+    const kind = oneOf(m.kind, ['camera', 'microphone'] as const);
+    const setting = oneOf(m.setting, ['allow', 'block'] as const);
+    if (host && kind && setting) media.set(`${kind} ${host}`, { host, kind, setting });
+  }
+  return { permissions: [...permissions.values()], location: [...location.values()], media: [...media.values()] };
 }
 
 const BOOLEAN_SETTINGS = [
@@ -504,7 +514,7 @@ export function summarize(p: BackupPayload): BackupSummary {
     ...(p.bookmarks ? { bookmarks: p.bookmarks.items.length, folders: p.bookmarks.folders.length } : {}),
     ...(p.history ? { history: p.history.length } : {}),
     ...(p.memories ? { memories: p.memories.length } : {}),
-    ...(p.sites ? { sites: new Set([...p.sites.permissions, ...p.sites.location].map((s) => s.host)).size } : {}),
+    ...(p.sites ? { sites: new Set([...p.sites.permissions, ...p.sites.location, ...(p.sites.media ?? [])].map((s) => s.host)).size } : {}),
     ...(p.settings ? { settings: true } : {}),
     ...(p.tabs ? { tabs: p.tabs.tabs.length } : {}),
     ...(p.chats ? { chats: p.chats.length } : {}),

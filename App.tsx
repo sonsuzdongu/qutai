@@ -86,6 +86,7 @@ import { SitePermissionStore } from './src/storage/sitePermissions';
 import { siteKey } from './src/agent/sitePolicy';
 import { SitePermissionSheet } from './src/components/SitePermissionSheet';
 import { configurePageLocation } from './src/browser/geolocation';
+import { configurePageMedia } from './src/browser/mediaCapture';
 import { deleteOrphanChats, loadChat, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
@@ -96,6 +97,8 @@ const memoryStore = deviceMemoryStore(getDb);
 const sitePermissions = new SitePermissionStore(getDb);
 // Web pages' location requests check (and "Always allow" saves) the per-site location setting.
 configurePageLocation(sitePermissions);
+// Their camera and microphone requests check (and "Always allow" saves) the per-site camera and microphone settings.
+configurePageMedia(sitePermissions);
 const getSitePermissionsVersion = () => sitePermissions.version;
 const downloads = new DownloadStore(getDb);
 
@@ -846,7 +849,9 @@ function BrowserApp({
       }}
       loading={tab.loading}
       usingLocation={!onNewTab && tab.geolocation.inUse}
-      onLocationPress={() => setPermissionHost(siteKey(tab.url))}
+      usingCamera={!onNewTab && tab.media.camera}
+      usingMicrophone={!onNewTab && tab.media.microphone}
+      onSitePermissionsPress={() => setPermissionHost(siteKey(tab.url))}
       canGoBack={tab.canGoBack || tab.openedFromNewTab}
       tabCount={browser.tabs.length}
       assistantOpen={panelOpen}
@@ -1078,6 +1083,14 @@ function BrowserApp({
             onSelectLocation={(setting) =>
               permissionHost && sitePermissions.setLocation(permissionHost, setting).catch(() => {})
             }
+            camera={permissionHost ? sitePermissions.mediaFor(permissionHost, 'camera') : 'ask'}
+            microphone={permissionHost ? sitePermissions.mediaFor(permissionHost, 'microphone') : 'ask'}
+            onSelectMedia={(kind, setting) =>
+              permissionHost && sitePermissions.setMedia(permissionHost, kind, setting).catch(() => {})
+            }
+            // The page on screen is capturing on this site: offer to stop it right here.
+            capturing={!!permissionHost && siteKey(tab.url) === permissionHost && tab.media.capturing}
+            onStopCapture={() => tab.media.stop()}
             onClose={() => setPermissionHost(null)}
           />
           <TextSizeSheet

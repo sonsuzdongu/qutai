@@ -3,18 +3,57 @@ import { Db } from './db';
 
 export type SitePermission = { host: string; level: SiteLevel; updatedAt: number };
 
-/** Whether a site itself may use the user's location. 'ask' (the default) is not stored. */
-export type LocationSetting = 'ask' | 'allow' | 'block';
+/** Whether a site itself may use something on the phone (location, camera…). 'ask' (the default) is not stored. */
+export type PermissionSetting = 'ask' | 'allow' | 'block';
 
-export const LOCATION_SETTINGS: LocationSetting[] = ['ask', 'allow', 'block'];
+export const PERMISSION_SETTINGS: PermissionSetting[] = ['ask', 'allow', 'block'];
 
-function isLocationSetting(value: unknown): value is LocationSetting {
-  return typeof value === 'string' && (LOCATION_SETTINGS as string[]).includes(value);
+/** Whether a site itself may use the user's location. */
+export type LocationSetting = PermissionSetting;
+
+export const LOCATION_SETTINGS = PERMISSION_SETTINGS;
+
+/** What a page can capture with getUserMedia; each has its own per-site setting. */
+export type MediaKind = 'camera' | 'microphone';
+
+export const MEDIA_KINDS: MediaKind[] = ['camera', 'microphone'];
+
+export function isPermissionSetting(value: unknown): value is PermissionSetting {
+  return typeof value === 'string' && (PERMISSION_SETTINGS as string[]).includes(value);
+}
+
+export function isMediaKind(value: unknown): value is MediaKind {
+  return typeof value === 'string' && (MEDIA_KINDS as string[]).includes(value);
 }
 
 export async function listLocationSettings(db: Db): Promise<{ host: string; setting: LocationSetting }[]> {
   const rows = await db.getAllAsync<{ host: string; setting: string }>('SELECT host, setting FROM site_location', []);
-  return rows.flatMap((r) => (isLocationSetting(r.setting) ? [{ host: r.host, setting: r.setting }] : []));
+  return rows.flatMap((r) => (isPermissionSetting(r.setting) ? [{ host: r.host, setting: r.setting }] : []));
+}
+
+export async function listMediaSettings(
+  db: Db,
+): Promise<{ host: string; kind: MediaKind; setting: PermissionSetting }[]> {
+  const rows = await db.getAllAsync<{ host: string; kind: string; setting: string }>(
+    'SELECT host, kind, setting FROM site_media',
+    [],
+  );
+  return rows.flatMap((r) =>
+    isMediaKind(r.kind) && isPermissionSetting(r.setting) ? [{ host: r.host, kind: r.kind, setting: r.setting }] : [],
+  );
+}
+
+/** Saves whether a site may use the camera or the microphone; 'ask' removes the entry. */
+export async function setMediaSetting(db: Db, host: string, kind: MediaKind, setting: PermissionSetting): Promise<void> {
+  if (setting === 'ask') {
+    await db.runAsync('DELETE FROM site_media WHERE host = ? AND kind = ?', [host, kind]);
+    return;
+  }
+  await db.runAsync(
+    'INSERT INTO site_media (host, kind, setting, updated_at) VALUES (?, ?, ?, ?) ' +
+      'ON CONFLICT(host, kind) DO UPDATE SET setting = excluded.setting, updated_at = excluded.updated_at',
+    [host, kind, setting, Date.now()],
+  );
 }
 
 /** Saves a site's location setting; 'ask' removes the entry. */
@@ -51,17 +90,25 @@ export async function setSitePermission(db: Db, host: string, level: SiteLevel):
   );
 }
 
-/** A site with its own setting: what the assistant may do there and/or whether it may use the location. */
-export type SiteEntry = { host: string; level: SiteLevel; location: LocationSetting };
+/** A site with its own setting: what the assistant may do there, and what the site itself may use. */
+export type SiteEntry = {
+  host: string;
+  level: SiteLevel;
+  location: LocationSetting;
+  camera: PermissionSetting;
+  microphone: PermissionSetting;
+};
 
 /**
  * Site permissions with an in-memory copy, so the agent can check them synchronously.
- * Also holds each site's location setting (whether the site itself may use the location).
- * Listeners are told about changes (for screens showing them).
+ * Also holds each site's location, camera and microphone settings (whether the site itself may
+ * use them). Listeners are told about changes (for screens showing them, and pages capturing).
  */
 export class SitePermissionStore implements SitePolicy {
   private levels = new Map<string, SiteLevel>();
   private locations = new Map<string, LocationSetting>();
+  /** Keyed `${kind} ${host}`. */
+  private media = new Map<string, PermissionSetting>();
   private listeners = new Set<() => void>();
   private loading: Promise<void> | null = null;
 
@@ -69,11 +116,15 @@ export class SitePermissionStore implements SitePolicy {
 
   load(): Promise<void> {
     this.loading ??= this.getDb()
-      .then((db) => Promise.all([listSitePermissions(db), listLocationSettings(db)]))
-      .then(([list, locations]) => {
+      .then((db) => Promise.all([listSitePermissions(db), listLocationSettings(db), listMediaSettings(db)]))
+      .then(([list, locations, media]) => {
         // Changes made while loading win over what was on disk.
         for (const p of list) if (!this.levels.has(p.host)) this.levels.set(p.host, p.level);
         for (const l of locations) if (!this.locations.has(l.host)) this.locations.set(l.host, l.setting);
+        for (const m of media) {
+          const key = `${m.kind} ${m.host}`;
+          if (!this.media.has(key)) this.media.set(key, m.setting);
+        }
         this.emit();
       })
       .catch(() => {});
@@ -88,12 +139,33 @@ export class SitePermissionStore implements SitePolicy {
     return this.locations.get(host) ?? 'ask';
   }
 
-  /** Every site with an assistant level or a location setting of its own. */
+  mediaFor(host: string, kind: MediaKind): PermissionSetting {
+    return this.media.get(`${kind} ${host}`) ?? 'ask';
+  }
+
+  /** Every site with an assistant level or a location, camera or microphone setting of its own. */
   list(): SiteEntry[] {
-    const hosts = new Set([...this.levels.keys(), ...this.locations.keys()]);
+    const hosts = new Set([
+      ...this.levels.keys(),
+      ...this.locations.keys(),
+      ...[...this.media.keys()].map((key) => key.slice(key.indexOf(' ') + 1)),
+    ]);
     return [...hosts]
-      .map((host) => ({ host, level: this.levelFor(host), location: this.locationFor(host) }))
+      .map((host) => ({
+        host,
+        level: this.levelFor(host),
+        location: this.locationFor(host),
+        camera: this.mediaFor(host, 'camera'),
+        microphone: this.mediaFor(host, 'microphone'),
+      }))
       .sort((a, b) => a.host.localeCompare(b.host));
+  }
+
+  async setMedia(host: string, kind: MediaKind, setting: PermissionSetting): Promise<void> {
+    if (setting === 'ask') this.media.delete(`${kind} ${host}`);
+    else this.media.set(`${kind} ${host}`, setting);
+    this.emit();
+    await setMediaSetting(await this.getDb(), host, kind, setting);
   }
 
   async setLocation(host: string, setting: LocationSetting): Promise<void> {
@@ -105,7 +177,11 @@ export class SitePermissionStore implements SitePolicy {
 
   /** Back to the defaults for everything on this site. */
   async reset(host: string): Promise<void> {
-    await Promise.all([this.set(host, 'default'), this.setLocation(host, 'ask')]);
+    await Promise.all([
+      this.set(host, 'default'),
+      this.setLocation(host, 'ask'),
+      ...MEDIA_KINDS.map((kind) => this.setMedia(host, kind, 'ask')),
+    ]);
   }
 
   async set(host: string, level: SiteLevel): Promise<void> {

@@ -153,7 +153,7 @@ provider or model changes mid-chat, the history is rebuilt from the text and too
 
 Each permission is asked for the first time a feature needs it, never at launch: camera (QR codes, photos for
 upload fields), add-only Photos (saving screenshots and images), Face ID, write-only calendar and reminders, location
-while in use (per-site), local notifications. Web pages get no camera or microphone. The full list per platform, with
+while in use (per-site), local notifications, camera and microphone for sites you allow (per site, each asked separately). The full list per platform, with
 the feature, when the user is asked, the config line that declares it and what is blocked, is in
 [docs/permissions.md](docs/permissions.md); use it for the App Store privacy labels and the Play Data safety form.
 
@@ -187,8 +187,11 @@ the feature, when the user is asked, the config line that declares it and what i
   in older development builds: **a new development build is needed**. On Android the location script is injected
   before the page's own, but may run too late for a page that asks the moment it loads; it is installed again after
   the load.
-- **Web pages cannot use the camera or microphone** (`getUserMedia` is refused). Upload fields still work, including
-  taking a photo or video with the system camera on iOS. A per-site prompt needs native work (see `TODO.md`).
+- **Camera and microphone for web pages** (`getUserMedia`, video calls) work per site, like location: ask, allow or
+  block for each, "Allow once" for the page, https only, the site in the address bar only (frames from other sites
+  are refused). This relies on a small patch to react-native-webview (`patches/`, applied by `postinstall`) that lets
+  the WebView grant only the origin and kinds the user allowed: **a new development build is needed**. Capture is
+  paused while another tab is shown or Qutai is in the background, and screen sharing (`getDisplayMedia`) is refused.
 - **Backups leave things out.** Downloads, saved pages, the "What was sent to the AI" list, caches and the lock
   settings are never in a backup file.
 - **Reader mode is a heuristic.** It is offered only on pages with enough article text (600 characters, 3 paragraphs)

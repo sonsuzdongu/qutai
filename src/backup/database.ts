@@ -3,7 +3,7 @@ import { Db, getJson, SqlValue } from '../storage/db';
 import { listActions } from '../storage/actionLog';
 import { listMemories } from '../storage/memory';
 import { loadSession } from '../storage/session';
-import { listLocationSettings, listSitePermissions } from '../storage/sitePermissions';
+import { listLocationSettings, listMediaSettings, listSitePermissions } from '../storage/sitePermissions';
 import type { BackupChat, BackupPayload, BackupTab } from './payload';
 
 /**
@@ -22,7 +22,7 @@ export async function collectBackup(
   db: Db,
   choice: ExportChoice,
 ): Promise<Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'>> {
-  const [version, bookmarks, history, memories, permissions, location] = await Promise.all([
+  const [version, bookmarks, history, memories, permissions, location, media] = await Promise.all([
     db.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []),
     exportBookmarks(db),
     db.getAllAsync<{ url: string; title: string; visited_at: number }>(
@@ -32,6 +32,7 @@ export async function collectBackup(
     listMemories(db),
     listSitePermissions(db),
     listLocationSettings(db),
+    listMediaSettings(db),
   ]);
   const payload: Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'> = {
     schemaVersion: version?.user_version ?? 0,
@@ -44,6 +45,7 @@ export async function collectBackup(
     sites: {
       permissions: permissions.flatMap((p) => (p.level === 'default' ? [] : [{ host: p.host, level: p.level }])),
       location: location.flatMap((l) => (l.setting === 'ask' ? [] : [{ host: l.host, setting: l.setting }])),
+      media: media.flatMap((m) => (m.setting === 'ask' ? [] : [{ host: m.host, kind: m.kind, setting: m.setting }])),
     },
   };
   if (choice.tabs) {
@@ -108,7 +110,7 @@ async function insertRows(db: Db, sql: string, columns: number, rows: SqlValue[]
  *   already bookmarked keeps its title and folder.
  * - history: each visit is added unless the same URL at the same time is already there.
  * - memories: added unless the same text (any case) is remembered, up to the limit of 100.
- * - site permissions and location: the backup's setting applies only to sites with none on the phone.
+ * - site permissions, location, camera and microphone: the backup's setting applies only to sites with none on the phone.
  * - tabs: the backup's tabs are added after the open ones (a tab or group already here is skipped).
  * - chats: added for the tabs and groups that don't have one.
  * - activity: entries are added unless the same one is already there.
@@ -210,6 +212,7 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
       if (replace) {
         await db.runAsync('DELETE FROM site_permissions', []);
         await db.runAsync('DELETE FROM site_location', []);
+        await db.runAsync('DELETE FROM site_media', []);
       }
       await insertRows(
         db,
@@ -222,6 +225,12 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
         'INSERT OR IGNORE INTO site_location (host, setting, updated_at)',
         3,
         p.sites.location.map((s) => [s.host, s.setting, now]),
+      );
+      await insertRows(
+        db,
+        'INSERT OR IGNORE INTO site_media (host, kind, setting, updated_at)',
+        4,
+        (p.sites.media ?? []).map((s) => [s.host, s.kind, s.setting, now]),
       );
     }
 
