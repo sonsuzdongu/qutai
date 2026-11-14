@@ -25,6 +25,7 @@ import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { LegalScreen } from './LegalScreen';
 import { MemoryScreen } from './MemoryScreen';
 import { SitePermissionsScreen } from './SitePermissionsScreen';
+import { FilterListsScreen } from './FilterListsScreen';
 import { dialog, DialogHost } from './Dialog';
 
 type Props = {
@@ -80,6 +81,7 @@ function SettingsPages({
   const aiDirty = !sameAi(ai, pickAi(settings));
   const [memoryVisible, setMemoryVisible] = useState(false);
   const [sitesVisible, setSitesVisible] = useState(false);
+  const [listsVisible, setListsVisible] = useState(false);
   const [actionLogVisible, setActionLogVisible] = useState(false);
   const [sentLogVisible, setSentLogVisible] = useState(false);
   const [clearDataVisible, setClearDataVisible] = useState(false);
@@ -269,6 +271,7 @@ function SettingsPages({
               value={settings.blockAds}
               onChange={(blockAds) => set({ blockAds })}
             />
+            <LinkRow label={t('settings.filterLists')} onPress={() => setListsVisible(true)} />
             <SwitchRow
               title={t('settings.thirdPartyCookies')}
               hint={t('settings.thirdPartyCookiesHint')}
@@ -411,7 +414,18 @@ function SettingsPages({
       </ScrollView>
       <LegalScreen kind={legal} onClose={() => setLegal(null)} />
       <MemoryScreen visible={memoryVisible} onClose={() => setMemoryVisible(false)} />
-      <SitePermissionsScreen visible={sitesVisible} store={sitePermissions} onClose={() => setSitesVisible(false)} />
+      <SitePermissionsScreen
+        visible={sitesVisible}
+        store={sitePermissions}
+        blockingEnabled={settings.blockAds}
+        onClose={() => setSitesVisible(false)}
+      />
+      <FilterListsScreen
+        visible={listsVisible}
+        blockingEnabled={settings.blockAds}
+        allowed={settings.blockAds && settings.legalAcceptedVersion > 0}
+        onClose={() => setListsVisible(false)}
+      />
       <ActionLogScreen visible={actionLogVisible} onClose={() => setActionLogVisible(false)} />
       <SentLogScreen visible={sentLogVisible} onClose={() => setSentLogVisible(false)} />
       <BackupScreen job={backupJob} appLock={settings.appLock} onClose={() => setBackupJob(null)} />

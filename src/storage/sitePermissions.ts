@@ -56,6 +56,24 @@ export async function setMediaSetting(db: Db, host: string, kind: MediaKind, set
   );
 }
 
+/** Sites where network ad and tracker blocking is off. */
+export async function listBlockingOff(db: Db): Promise<string[]> {
+  const rows = await db.getAllAsync<{ host: string }>('SELECT host FROM site_blocking ORDER BY host', []);
+  return rows.map((r) => r.host);
+}
+
+/** Turns ad and tracker blocking off (or back on) for one site. */
+export async function setBlockingOff(db: Db, host: string, off: boolean): Promise<void> {
+  if (!off) {
+    await db.runAsync('DELETE FROM site_blocking WHERE host = ?', [host]);
+    return;
+  }
+  await db.runAsync(
+    'INSERT INTO site_blocking (host, updated_at) VALUES (?, ?) ON CONFLICT(host) DO UPDATE SET updated_at = excluded.updated_at',
+    [host, Date.now()],
+  );
+}
+
 /** Saves a site's location setting; 'ask' removes the entry. */
 export async function setLocationSetting(db: Db, host: string, setting: LocationSetting): Promise<void> {
   if (setting === 'ask') {
@@ -97,6 +115,8 @@ export type SiteEntry = {
   location: LocationSetting;
   camera: PermissionSetting;
   microphone: PermissionSetting;
+  /** Ad and tracker blocking is on for this site (the default). */
+  blocking: boolean;
 };
 
 /**
@@ -109,6 +129,12 @@ export class SitePermissionStore implements SitePolicy {
   private locations = new Map<string, LocationSetting>();
   /** Keyed `${kind} ${host}`. */
   private media = new Map<string, PermissionSetting>();
+  /** Sites where ad and tracker blocking is off ("Don't block on this site"). */
+  private blockingOff = new Set<string>();
+  /** Changes made before loading finished: they win over what was on disk. */
+  private blockingTouched = new Set<string>();
+  /** The same, sorted; a new array only when it changes (a WebView prop). */
+  private blockingOffList: string[] = [];
   private listeners = new Set<() => void>();
   private loading: Promise<void> | null = null;
 
@@ -116,8 +142,10 @@ export class SitePermissionStore implements SitePolicy {
 
   load(): Promise<void> {
     this.loading ??= this.getDb()
-      .then((db) => Promise.all([listSitePermissions(db), listLocationSettings(db), listMediaSettings(db)]))
-      .then(([list, locations, media]) => {
+      .then((db) =>
+        Promise.all([listSitePermissions(db), listLocationSettings(db), listMediaSettings(db), listBlockingOff(db)]),
+      )
+      .then(([list, locations, media, blockingOff]) => {
         // Changes made while loading win over what was on disk.
         for (const p of list) if (!this.levels.has(p.host)) this.levels.set(p.host, p.level);
         for (const l of locations) if (!this.locations.has(l.host)) this.locations.set(l.host, l.setting);
@@ -125,6 +153,8 @@ export class SitePermissionStore implements SitePolicy {
           const key = `${m.kind} ${m.host}`;
           if (!this.media.has(key)) this.media.set(key, m.setting);
         }
+        for (const host of blockingOff) if (!this.blockingTouched.has(host)) this.blockingOff.add(host);
+        this.blockingOffList = [...this.blockingOff].sort();
         this.emit();
       })
       .catch(() => {});
@@ -143,12 +173,32 @@ export class SitePermissionStore implements SitePolicy {
     return this.media.get(`${kind} ${host}`) ?? 'ask';
   }
 
+  /** Whether ad and tracker blocking is on for this site (sites are keyed without "www."). */
+  blockingFor(host: string): boolean {
+    return !this.blockingOff.has(host);
+  }
+
+  /** The sites where blocking is off, sorted (for the WebViews; their subdomains count too). */
+  blockingOffSites(): string[] {
+    return this.blockingOffList;
+  }
+
+  async setBlocking(host: string, on: boolean): Promise<void> {
+    this.blockingTouched.add(host);
+    if (on) this.blockingOff.delete(host);
+    else this.blockingOff.add(host);
+    this.blockingOffList = [...this.blockingOff].sort();
+    this.emit();
+    await setBlockingOff(await this.getDb(), host, !on);
+  }
+
   /** Every site with an assistant level or a location, camera or microphone setting of its own. */
   list(): SiteEntry[] {
     const hosts = new Set([
       ...this.levels.keys(),
       ...this.locations.keys(),
       ...[...this.media.keys()].map((key) => key.slice(key.indexOf(' ') + 1)),
+      ...this.blockingOff,
     ]);
     return [...hosts]
       .map((host) => ({
@@ -157,6 +207,7 @@ export class SitePermissionStore implements SitePolicy {
         location: this.locationFor(host),
         camera: this.mediaFor(host, 'camera'),
         microphone: this.mediaFor(host, 'microphone'),
+        blocking: this.blockingFor(host),
       }))
       .sort((a, b) => a.host.localeCompare(b.host));
   }
@@ -181,6 +232,7 @@ export class SitePermissionStore implements SitePolicy {
       this.set(host, 'default'),
       this.setLocation(host, 'ask'),
       ...MEDIA_KINDS.map((kind) => this.setMedia(host, kind, 'ask')),
+      this.setBlocking(host, true),
     ]);
   }
 

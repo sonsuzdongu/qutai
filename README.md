@@ -162,6 +162,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/i18n/` | Turkish and English UI strings, date formats |
 | `src/device/` | Device features: PDF, screenshots (also full page), read aloud, voice input (`voiceInput.ts`), share/copy, downloads, private mode protection, calendar and reminders, notifications, location, opening system settings, the phone dialer |
 | `src/browser/geolocation.ts` | Web pages' `navigator.geolocation`, answered by the app with a per-site location permission (ask / allow / block) |
+| `src/content/filterLists.ts`, `src/content/blocking.ts` | Ad and tracker blocking: filter lists reduced to domains (pure parser and matcher), their download, updates and per-platform compilation; `src/content/adBlock.ts` is the built-in script blocker |
 | `src/backup/` | The encrypted backup file: what goes in it, the encryption, and merging or replacing on import |
 | `src/ai/audit.ts`, `src/storage/sentLog.ts` | "What was sent to the AI": the entry recorded for each request and how long it is kept |
 | `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`), memory, `ask_user`, `draft_email`, `search_history`, and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `open_settings`) |
@@ -223,6 +224,15 @@ the feature, when the user is asked, the config line that declares it and what i
   are refused). This relies on a small patch to react-native-webview (`patches/`, applied by `postinstall`) that lets
   the WebView grant only the origin and kinds the user allowed: **a new development build is needed**. Capture is
   paused while another tab is shown or Qutai is in the background, and screen sharing (`getDisplayMedia`) is refused.
+- **Ad and tracker blocking is domain-based.** Filter lists the user picks (EasyList, EasyPrivacy, AdGuard Turkish,
+  or any list by https URL) are downloaded on the phone from their publishers, never bundled; only their rules that
+  block a whole domain are used, so ads served from a site's own domain, path rules and element hiding are not
+  covered. Resources hard-coded in a page's HTML are blocked too (Android: request interception; iOS: WebKit content
+  rule lists, which don't report how many requests they blocked). It needs the react-native-webview patch: **a new
+  development build is needed**; an older build keeps only the built-in script blocker, which stops what scripts add
+  later and can't touch resources in the HTML. Qutai's own requests (AI providers, list downloads, search
+  suggestions) never pass through the blocker. "Block ads and trackers here" in a site's permissions turns it off
+  for that site.
 - **Voice input needs a new development build** (`expo-speech-recognition` is a native module; older builds start
   and the button says a newer build is needed). On iOS, on-device support can only be read for the phone's own
   language, so dictating in the other UI language counts as online (asked first, refused in incognito). On Android

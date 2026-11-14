@@ -65,7 +65,7 @@ credits, background tasks), native work in our own build (network-level blocking
 | Private browsing | ✅ | | iOS: a data store per private tab. Android: one WebView profile per private session, emptied when the last private tab closes and deleted at the next start; WebViews without profile support share cookies with normal tabs (said in the app) |
 | Screenshot restriction in private mode | ✅ | | |
 | Hiding cookie banners and ad slots (visual) | ✅ | | CSS injection into the page (`src/content/`) |
-| Network-level ad / tracker blocking | 🟡 | Build · L | URL-based blocking from a short built-in list: navigations, iframes, pop-ups and requests added by scripts. Resources hard-coded in the HTML and full filter lists need native blocking (iOS WKContentRuleList, Android request interception) |
+| Network-level ad / tracker blocking | ✅ | Build · L | Domain-based, from filter lists the user picks (EasyList, EasyPrivacy, AdGuard Turkish; custom lists by URL), downloaded on the phone from their publishers and updated every few days. Android: native request interception (`shouldInterceptRequest`) with a blocked-request count per page; iOS: compiled WebKit content rule lists (no counts). Per-site off switch. Path, element-hiding and script rules of the lists are skipped. The built-in script blocker still catches what scripts add later. Not tested on a device; needs a new development build |
 | Clearing history and data | 🟡 | Build · S | By time range: history, cache, recently closed, chats, activity, "sent to the AI", downloads, saved pages. Clearing cookies needs a native module |
 | Cookie management, third-party cookies | 🟡 | Build · M | Third-party cookies blocked by default (Android setting; iOS WebKit blocks them anyway). No per-site cookie list or deletion |
 | HTTPS indicator | ✅ | | |
@@ -213,13 +213,13 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 ### Phase 4 – Things that require our own build
 
 Merged with the "Our own build (development build)" section in `TODO.md`:
-Network-level ad and tracker blocking (with URL lists; iOS
-WKContentRuleList, Android request interception), cookie management and cookie deletion, Android PiP, background audio, being the default browser on iOS, widgets, "Share with
-Qutai", app verification. Done since: Face ID on iOS, Android private tab isolation (WebView profiles), per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the
+Cookie management and cookie deletion, Android PiP, background audio, being the default browser on iOS, widgets, "Share with
+Qutai", app verification. Done since: network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
+Android request interception), Face ID on iOS, Android private tab isolation (WebView profiles), per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the
 system download manager on Android), Android default browser (intent filters).
 
 Added from Comet reviews:
-- Ready-made filter lists for ad blocking (EasyList etc.) and letting the user add lists
+- ✅ Ready-made filter lists for ad blocking (EasyList, EasyPrivacy, AdGuard Turkish) and letting the user add lists by URL, with each list's home page and licence shown; domain rules only (the share each list contributes is shown per list). Not tested on a phone yet; needs a new development build
 - ✅ Voice input in the assistant panel, with the assistant going quiet when the user starts speaking (barge-in): the phone's own speech recognition, on-device where the phone and language allow it, otherwise the phone's speech service only after the user agreed once (never in incognito). Not tested on a phone yet; needs a new development build
 - Passwords: instead of our own manager, verify and fix that the system's (Google, iCloud Keychain) autofill works in the WebView
 - Background audio and headphone media keys, site shortcut on the home screen

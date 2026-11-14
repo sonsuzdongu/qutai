@@ -8,15 +8,21 @@ import { SitePermissionSheet } from './SitePermissionSheet';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
 
-type Props = { visible: boolean; store: SitePermissionStore; onClose: () => void };
+type Props = {
+  visible: boolean;
+  store: SitePermissionStore;
+  /** "Block ads and trackers" is on in Settings. */
+  blockingEnabled: boolean;
+  onClose: () => void;
+};
 
 /** Sites with their own permission; tap to change, ✕ to go back to the default. */
-export function SitePermissionsScreen({ visible, store, onClose }: Props) {
+export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose }: Props) {
   const styles = useStyles();
   const version = useSyncExternalStore(store.subscribe, () =>
     store
       .list()
-      .map((p) => p.host + p.level + p.location + p.camera + p.microphone)
+      .map((p) => p.host + p.level + p.location + p.camera + p.microphone + p.blocking)
       .join(),
   );
   const sites = store.list();
@@ -61,6 +67,7 @@ export function SitePermissionsScreen({ visible, store, onClose }: Props) {
                     {t(`site.cameraSummary.${item.camera}`)}
                   </Text>
                 )}
+                {!item.blocking && <Text style={styles.level}>{t('site.blockingOffSummary')}</Text>}
                 {item.microphone !== 'ask' && (
                   <Text style={[styles.level, item.microphone === 'block' && styles.danger]}>
                     {t(`site.microphoneSummary.${item.microphone}`)}
@@ -87,6 +94,9 @@ export function SitePermissionsScreen({ visible, store, onClose }: Props) {
           camera={editing ? store.mediaFor(editing, 'camera') : 'ask'}
           microphone={editing ? store.mediaFor(editing, 'microphone') : 'ask'}
           onSelectMedia={(kind, setting) => editing && store.setMedia(editing, kind, setting)}
+          blocking={editing ? store.blockingFor(editing) : true}
+          onSetBlocking={(on) => editing && store.setBlocking(editing, on)}
+          blockingEnabled={blockingEnabled}
           onClose={() => setEditing(null)}
         />
       </SafeAreaView>

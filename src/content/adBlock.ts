@@ -1,6 +1,7 @@
 /**
- * Ad and tracker servers (matched with their subdomains). A short built-in list for now; the
- * development build will use full filter lists with native request blocking.
+ * Ad and tracker servers (matched with their subdomains). A short built-in list for the page script below: it
+ * catches what scripts add later and is the fallback until the filter lists (native blocking, see blocking.ts)
+ * have been downloaded.
  */
 export const AD_HOSTS = [
   'doubleclick.net',
@@ -45,6 +46,13 @@ export const AD_HOSTS = [
   'crazyegg.com',
 ];
 
+/** Whether a host is one of these sites or a subdomain of one (sites where blocking is off). */
+export function isHostIn(host: string | null, sites: string[]): boolean {
+  if (!host) return false;
+  const h = host.toLowerCase();
+  return sites.some((s) => h === s || h.endsWith(`.${s}`));
+}
+
 /** Whether a URL points to a listed ad or tracker server (or a subdomain of one). */
 export function isAdUrl(url: string, hosts: string[] = AD_HOSTS): boolean {
   const match = /^(?:https?:)?\/\/([^/?#:]+)/i.exec(url.trim());
@@ -56,12 +64,18 @@ export function isAdUrl(url: string, hosts: string[] = AD_HOSTS): boolean {
 /**
  * Runs before the page's own scripts: stops scripts from loading resources from ad servers
  * later on (inserted elements, fetch, XHR, beacons, pop-ups). What the page's HTML loads
- * directly can't be stopped from here; that needs native blocking.
+ * directly can't be stopped from here; that needs native blocking. Does nothing on the sites in offSites
+ * ("Don't block on this site") and their subdomains.
  */
-export function adBlockScript(hosts: string[] = AD_HOSTS): string {
+export function adBlockScript(hosts: string[] = AD_HOSTS, offSites: string[] = []): string {
   return `(function () {
   if (window.__qutaiAdBlock) return;
   window.__qutaiAdBlock = true;
+  var OFF = ${JSON.stringify(offSites)};
+  var here = location.hostname.toLowerCase();
+  for (var j = 0; j < OFF.length; j++) {
+    if (here === OFF[j] || here.slice(-OFF[j].length - 1) === '.' + OFF[j]) return;
+  }
   var HOSTS = ${JSON.stringify(hosts)};
   function blocked(url) {
     try {

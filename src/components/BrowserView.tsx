@@ -1,11 +1,12 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
 import type { SearchEngineId } from '../browser/search';
 import { CONTEXT_MENU_SCRIPT, ContextTarget, parseContextTarget } from '../browser/contextMenu';
 import { parseSelection, SELECTION_SCRIPT } from '../browser/selection';
-import { AD_BLOCK_SCRIPT, COOKIE_BANNER_SCRIPT, isAdUrl } from '../content';
+import { adBlockScript, COOKIE_BANNER_SCRIPT, isAdUrl, isHostIn } from '../content';
+import { siteKey } from '../agent/sitePolicy';
 import { DARK_SITE_SCRIPT } from '../content/darkSites';
 import { allowInsecure, upgradeToHttps } from '../browser/httpsOnly';
 import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
@@ -41,6 +42,13 @@ export type TabActions = {
   darkMode: boolean;
   darkSites: boolean;
   blockAds: boolean;
+  /**
+   * Sites where ad and tracker blocking is off ("Don't block on this site"), with their subdomains; read natively
+   * on every request (Android) or navigation (iOS), so a change applies from the next load.
+   */
+  blockingOffSites: string[];
+  /** iOS: the compiled WebKit content rule lists to attach (see blocking.ts); empty until lists are compiled. */
+  contentRuleLists: string[];
   hideCookieBanners: boolean;
   /** A link or image was long-pressed in this tab. */
   onContextMenu: (tab: Tab, target: ContextTarget) => void;
@@ -99,16 +107,22 @@ function TabWebView({
   // see webviewProfile.ts), or share the default one where the WebView is too old.
   const iosIncognito = tab.incognito && Platform.OS === 'ios';
   const androidIncognito = tab.incognito && Platform.OS === 'android';
-  const { textZoom } = newTabActions;
+  const { textZoom, blockAds, blockingOffSites } = newTabActions;
+  // The page script blocker (complements the native one: it catches what scripts add later) skips off sites itself.
+  const adScript = useMemo(
+    () => (blockAds ? adBlockScript(undefined, blockingOffSites) : ''),
+    [blockAds, blockingOffSites],
+  );
+  const offSitesProp = useMemo(() => blockingOffSites.join('\n'), [blockingOffSites]);
+  const ruleListsProp = useMemo(() => newTabActions.contentRuleLists.join('\n'), [newTabActions.contentRuleLists]);
+  // Navigations and windows the app itself blocks (built-in list) are let through on off sites.
+  const scriptBlocking = () => blockAds && !isHostIn(siteKey(tab.url), blockingOffSites);
   // The page's navigator.geolocation goes through the app (per-site permission); installed in every frame
   // (frames are always refused). Android runs it in the main frame only and leaves native geolocation off.
   const geoScript = geolocationScript(tab.geolocation.nonce);
   // Runs before the page's own scripts: request blocking and banner hiding (no flash of the banner), main frame
   // only, and the geolocation bridge.
-  const mainFrameEarly = [
-    newTabActions.blockAds ? AD_BLOCK_SCRIPT : '',
-    newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : '',
-  ].join('\n');
+  const mainFrameEarly = [adScript, newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : ''].join('\n');
   // getUserMedia asks the app (per-site permission) before the WebView's own capture may run; the native
   // mediaCaptureGrant prop below is what enforces it. Every frame on iOS (frames are refused), main frame on Android.
   const mediaScript = mediaCaptureScript(tab.media.nonce);
@@ -228,7 +242,7 @@ function TabWebView({
             }}
             // Links opened from an incognito tab stay incognito.
             onOpenWindow={(e) => {
-              if (newTabActions.blockAds && isAdUrl(e.nativeEvent.targetUrl)) return;
+              if (scriptBlocking() && isAdUrl(e.nativeEvent.targetUrl)) return;
               // A window the page opens joins the page's tab group (pages that open several windows
               // stay together, and the assistant can manage and close them as one).
               browser.openTab(e.nativeEvent.targetUrl, { incognito: tab.incognito, openerId: tab.id, group: true });
@@ -238,7 +252,7 @@ function TabWebView({
             originWhitelist={['*']}
             onShouldStartLoadWithRequest={(request) => {
               // Ad and tracker pages, frames and redirects never load.
-              if (newTabActions.blockAds && isAdUrl(request.url)) return false;
+              if (scriptBlocking() && isAdUrl(request.url)) return false;
               if (request.isTopFrame !== false) {
                 const secure = upgradeToHttps(request.url, newTabActions.httpsOnly);
                 if (secure !== request.url) {
@@ -316,6 +330,13 @@ function TabWebView({
             // Android (patched react-native-webview): the incognito session's own cookies and site data. Read only
             // when the WebView is created, before it loads anything; a tab's profile never changes.
             webviewProfile={tab.profile}
+            // Network ad and tracker blocking (patched react-native-webview). Android: every request but the page's
+            // own document is checked natively against the filter lists' domains; iOS: the compiled WebKit rule lists
+            // are attached. Not on sites where the user turned it off. Incognito tabs block the same way.
+            contentBlocking={blockAds}
+            contentBlockingOffSites={offSitesProp}
+            contentRuleLists={ruleListsProp}
+            onContentBlocked={(e) => tab.handleContentBlocked(e.nativeEvent.blocked)}
             cacheEnabled={!androidIncognito}
             saveFormDataDisabled={androidIncognito}
           />

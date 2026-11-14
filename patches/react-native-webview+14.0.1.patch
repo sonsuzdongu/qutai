@@ -52,10 +52,30 @@ index 1b5c4c9..c86cb6d 100644
      public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
  
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
-index 80c6803..ac85555 100644
+index 80c6803..c958266 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
-@@ -224,6 +224,13 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -38,15 +38,19 @@ import com.facebook.react.uimanager.events.Event;
+ import com.facebook.react.views.scroll.OnScrollDispatchHelper;
+ import com.facebook.react.views.scroll.ScrollEvent;
+ import com.facebook.react.views.scroll.ScrollEventType;
++import com.reactnativecommunity.webview.events.TopContentBlockedEvent;
+ import com.reactnativecommunity.webview.events.TopCustomMenuSelectionEvent;
+ import com.reactnativecommunity.webview.events.TopMessageEvent;
+ 
+ import org.json.JSONException;
+ import org.json.JSONObject;
+ 
++import java.util.Collections;
+ import java.util.List;
+ import java.util.Map;
+ import java.util.Set;
++import java.util.concurrent.atomic.AtomicBoolean;
++import java.util.concurrent.atomic.AtomicInteger;
+ 
+ public class RNCWebView extends WebView implements LifecycleEventListener {
+     protected @Nullable
+@@ -224,6 +228,48 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -66,12 +86,49 @@ index 80c6803..ac85555 100644
 +    public @Nullable String profileName = null;
 +    boolean profileReleased = false;
 +
++    // Qutai patch: network ad and tracker blocking (RNCWebViewContentBlocker). Read on WebView's request threads.
++    public volatile boolean contentBlocking = false;
++    public volatile Set<String> contentBlockingOffSites = Collections.emptySet();
++    /** Host of the top-level page (updated by main-frame requests and page starts). */
++    volatile @Nullable String contentTopHost = null;
++    /** URL of the last main-frame request seen by shouldInterceptRequest. */
++    volatile @Nullable String contentMainFrameUrl = null;
++    private final AtomicInteger contentBlockedCount = new AtomicInteger();
++    private final AtomicBoolean contentBlockedEmitPending = new AtomicBoolean();
++    private volatile boolean contentBlockerDestroyed = false;
++    /** Blocked counts reach JS at most this often, as the page's running total. */
++    private static final long CONTENT_BLOCKED_BATCH_MS = 500;
++
++    /** A request was blocked (any thread). */
++    void noteContentBlocked() {
++        contentBlockedCount.incrementAndGet();
++        scheduleContentBlockedEvent();
++    }
++
++    /** A new page: its count starts over (any thread). */
++    void resetContentBlocked() {
++        if (contentBlockedCount.getAndSet(0) != 0) scheduleContentBlockedEvent();
++    }
++
++    private void scheduleContentBlockedEvent() {
++        if (contentBlockerDestroyed || !contentBlockedEmitPending.compareAndSet(false, true)) return;
++        postDelayed(() -> {
++            contentBlockedEmitPending.set(false);
++            if (contentBlockerDestroyed) return;
++            WritableMap data = Arguments.createMap();
++            data.putInt("blocked", contentBlockedCount.get());
++            dispatchEvent(this, new TopContentBlockedEvent(RNCWebViewWrapper.getReactTagFromWebView(this), data));
++        }, CONTENT_BLOCKED_BATCH_MS);
++    }
++
      WebChromeClient mWebChromeClient;
      @Override
      public void setWebChromeClient(WebChromeClient client) {
-@@ -420,6 +427,8 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -419,7 +465,10 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+         if (mWebChromeClient != null) {
              mWebChromeClient.onHideCustomView();
          }
++        contentBlockerDestroyed = true;
          super.destroy();
 +        // Qutai patch: the profile may be emptied once no WebView uses it.
 +        RNCWebViewProfiles.release(this);
@@ -79,10 +136,18 @@ index 80c6803..ac85555 100644
  
    public ThemedReactContext getThemedReactContext() {
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
-index 209b855..b99c9b5 100644
+index 209b855..5840e46 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
-@@ -49,9 +49,11 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -1,6 +1,7 @@
+ package com.reactnativecommunity.webview;
+ 
+ import android.graphics.Bitmap;
++import android.net.Uri;
+ import android.net.http.SslError;
+ import android.os.Build;
+ import android.os.SystemClock;
+@@ -49,9 +50,11 @@ public class RNCWebViewClient extends WebViewClient {
      @Override
      public void onPageFinished(WebView webView, String url) {
          super.onPageFinished(webView, url);
@@ -96,6 +161,265 @@ index 209b855..b99c9b5 100644
          }
  
          if (!mLastLoadFailed) {
+@@ -63,9 +66,49 @@ public class RNCWebViewClient extends WebViewClient {
+         }
+     }
+ 
++    /**
++     * Qutai patch: network ad and tracker blocking. Runs on WebView's request threads for every request but the page's
++     * own document (never blocked: a blocked page would look like a broken browser), and blocks subresources and
++     * frames whose host the content blocker lists, with an empty 403. Service worker and WebSocket requests don't
++     * pass through here.
++     */
++    @Override
++    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
++        if (view instanceof RNCWebView) {
++            RNCWebView webView = (RNCWebView) view;
++            Uri url = request.getUrl();
++            String host = url != null ? url.getHost() : null;
++            if (request.isForMainFrame()) {
++                webView.contentTopHost = host;
++                webView.contentMainFrameUrl = url != null ? url.toString() : null;
++                webView.resetContentBlocked();
++            } else if (webView.contentBlocking && host != null) {
++                String scheme = url.getScheme();
++                if (("https".equals(scheme) || "http".equals(scheme))
++                        && RNCWebViewContentBlocker.shouldBlock(host, webView.contentTopHost, webView.contentBlockingOffSites)) {
++                    webView.noteContentBlocked();
++                    return RNCWebViewContentBlocker.blockedResponse();
++                }
++            }
++        }
++        return super.shouldInterceptRequest(view, request);
++    }
++
++    /** Qutai patch: the top-level page for the content blocker (navigations that made no request, e.g. history). */
++    private void noteContentTopPage(WebView webView, String url, boolean newDocument) {
++        if (!(webView instanceof RNCWebView) || url == null) return;
++        RNCWebView rncWebView = (RNCWebView) webView;
++        rncWebView.contentTopHost = Uri.parse(url).getHost();
++        if (newDocument && !url.equals(rncWebView.contentMainFrameUrl)) {
++            rncWebView.contentMainFrameUrl = url;
++            rncWebView.resetContentBlocked();
++        }
++    }
++
+     @Override
+     public void doUpdateVisitedHistory (WebView webView, String url, boolean isReload) {
+       super.doUpdateVisitedHistory(webView, url, isReload);
++      noteContentTopPage(webView, url, false);
+ 
+       ((RNCWebView) webView).dispatchEvent(
+         webView,
+@@ -78,6 +121,7 @@ public class RNCWebViewClient extends WebViewClient {
+     public void onPageStarted(WebView webView, String url, Bitmap favicon) {
+       super.onPageStarted(webView, url, favicon);
+       mLastLoadFailed = false;
++      noteContentTopPage(webView, url, true);
+ 
+       RNCWebView reactWebView = (RNCWebView) webView;
+       reactWebView.callInjectedJavaScriptBeforeContentLoaded();
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewContentBlocker.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewContentBlocker.java
+new file mode 100644
+index 0000000..b53d506
+--- /dev/null
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewContentBlocker.java
+@@ -0,0 +1,195 @@
++package com.reactnativecommunity.webview;
++
++import android.util.Log;
++import android.webkit.WebResourceResponse;
++
++import androidx.annotation.Nullable;
++
++import com.facebook.react.bridge.Promise;
++
++import java.io.BufferedReader;
++import java.io.ByteArrayInputStream;
++import java.io.FileInputStream;
++import java.io.InputStreamReader;
++import java.nio.charset.StandardCharsets;
++import java.util.Arrays;
++import java.util.Collections;
++import java.util.HashMap;
++import java.util.HashSet;
++import java.util.Locale;
++import java.util.Map;
++import java.util.Set;
++import java.util.concurrent.ExecutorService;
++import java.util.concurrent.Executors;
++
++/**
++ * Qutai patch: network ad and tracker blocking by domain (the contentBlocking prop).
++ *
++ * The app writes one file of domains compiled from the user's filter lists (src/content/filterLists.ts ›
++ * androidBlockerFile): a header line, then "b domain" (blocked), "t domain" (blocked when third-party) and
++ * "e domain" (exception) lines. It is read on a background thread into immutable hash sets that replace the
++ * previous ones in one volatile write, so WebView's request threads always see a complete set. A file that fails
++ * to load leaves the previous sets in use.
++ *
++ * A lookup walks the request host's parent domains ("a.b.example.com", "b.example.com", "example.com"), one hash
++ * lookup each: O(labels). An exception anywhere in that chain wins.
++ */
++public final class RNCWebViewContentBlocker {
++    private static final String TAG = "RNCWebViewContentBlocker";
++    private static final String HEADER = "qutai-content-blocker 1";
++    /** A broken or hostile file must not exhaust memory. */
++    private static final int MAX_ENTRIES = 500_000;
++    private static final int MAX_LINE = 300;
++
++    private static final class Sets {
++        final Set<String> block;
++        final Set<String> thirdParty;
++        final Set<String> allow;
++
++        Sets(Set<String> block, Set<String> thirdParty, Set<String> allow) {
++            this.block = block;
++            this.thirdParty = thirdParty;
++            this.allow = allow;
++        }
++    }
++
++    private static volatile @Nullable Sets sSets = null;
++    private static final ExecutorService sLoader = Executors.newSingleThreadExecutor();
++
++    private RNCWebViewContentBlocker() {}
++
++    /** Loads the domain file off the UI thread ("" clears it); resolves with the number of entries. */
++    public static void load(final String path, final Promise promise) {
++        sLoader.execute(() -> {
++            if (path == null || path.isEmpty()) {
++                sSets = null;
++                promise.resolve(0);
++                return;
++            }
++            Set<String> block = new HashSet<>();
++            Set<String> thirdParty = new HashSet<>();
++            Set<String> allow = new HashSet<>();
++            int count = 0;
++            try (BufferedReader reader = new BufferedReader(
++                    new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8))) {
++                String line = reader.readLine();
++                if (line == null || !line.trim().equals(HEADER)) {
++                    promise.reject("E_CONTENT_BLOCKER", "Not a content blocker file");
++                    return;
++                }
++                while ((line = reader.readLine()) != null && count < MAX_ENTRIES) {
++                    if (line.length() < 3 || line.length() > MAX_LINE || line.charAt(1) != ' ') continue;
++                    String domain = line.substring(2).trim().toLowerCase(Locale.ROOT);
++                    if (domain.isEmpty() || domain.indexOf('.') < 0) continue;
++                    switch (line.charAt(0)) {
++                        case 'b': block.add(domain); break;
++                        case 't': thirdParty.add(domain); break;
++                        case 'e': allow.add(domain); break;
++                        default: continue;
++                    }
++                    count++;
++                }
++            } catch (Exception | OutOfMemoryError e) {
++                Log.e(TAG, "Could not load the content blocker; the previous one stays", e);
++                promise.reject("E_CONTENT_BLOCKER", e.getMessage());
++                return;
++            }
++            sSets = new Sets(
++                    Collections.unmodifiableSet(block),
++                    Collections.unmodifiableSet(thirdParty),
++                    Collections.unmodifiableSet(allow));
++            promise.resolve(count);
++        });
++    }
++
++    /** "example.com\nother.org" (the contentBlockingOffSites prop) as a set. */
++    public static Set<String> parseSites(@Nullable String value) {
++        if (value == null || value.trim().isEmpty()) return Collections.emptySet();
++        Set<String> sites = new HashSet<>();
++        for (String site : value.split("\n")) {
++            String s = site.trim().toLowerCase(Locale.ROOT);
++            if (!s.isEmpty()) sites.add(s);
++        }
++        return Collections.unmodifiableSet(sites);
++    }
++
++    /**
++     * Whether a request to host, from a page whose top-level host is pageHost, is blocked. Called on WebView's
++     * request threads. Never blocks anything on a page of an "off" site (or one of its subdomains).
++     */
++    static boolean shouldBlock(String rawHost, @Nullable String pageHost, Set<String> offSites) {
++        Sets sets = sSets;
++        if (sets == null) return false;
++        String host = normalize(rawHost);
++        if (host.isEmpty()) return false;
++        String page = pageHost != null ? normalize(pageHost) : null;
++        if (page != null && !offSites.isEmpty()) {
++            for (String d = page; d != null; d = parent(d, true)) {
++                if (offSites.contains(d)) return false;
++            }
++        }
++        boolean blocked = false;
++        boolean thirdPartyOnly = false;
++        for (String d = host; d != null; d = parent(d, false)) {
++            if (sets.allow.contains(d)) return false;
++            if (sets.block.contains(d)) blocked = true;
++            else if (sets.thirdParty.contains(d)) thirdPartyOnly = true;
++        }
++        if (blocked) return true;
++        return thirdPartyOnly && (page == null || page.isEmpty() || !registrableDomain(host).equals(registrableDomain(page)));
++    }
++
++    /** A new empty 403 response for a blocked request (its stream is read once). */
++    static WebResourceResponse blockedResponse() {
++        Map<String, String> headers = new HashMap<>();
++        headers.put("Cache-Control", "no-store");
++        return new WebResourceResponse("text/plain", "utf-8", 403, "Blocked", headers, new ByteArrayInputStream(new byte[0]));
++    }
++
++    private static String normalize(String host) {
++        String h = host.toLowerCase(Locale.ROOT);
++        if (h.endsWith(".")) h = h.substring(0, h.length() - 1);
++        // IPv6 literals: never in the sets.
++        if (h.startsWith("[")) return "";
++        return h;
++    }
++
++    /** "a.b.example.com" -> "b.example.com"; null once only the top-level domain is left (or, if allowTld, none). */
++    private static @Nullable String parent(String domain, boolean allowTld) {
++        int dot = domain.indexOf('.');
++        if (dot < 0) return null;
++        String rest = domain.substring(dot + 1);
++        if (!allowTld && rest.indexOf('.') < 0) return null;
++        return rest;
++    }
++
++    /** Same heuristic as filterLists.ts › SECOND_LEVEL_SUFFIXES (keep in sync). */
++    private static final Set<String> SECOND_LEVEL = new HashSet<>(Arrays.asList(
++            "ac", "co", "com", "edu", "gen", "go", "gob", "gouv", "gov", "k12", "ltd", "mil", "ne", "net", "nic", "nom",
++            "or", "org", "plc", "sch"));
++    private static final Set<String> TR_SECOND_LEVEL = new HashSet<>(Arrays.asList(
++            "av", "bbs", "bel", "biz", "dr", "info", "kep", "name", "pol", "tel", "tsk", "tv", "web"));
++
++    /**
++     * The site a host belongs to, for third-party rules: the last two labels, or three under a two-letter country
++     * code whose second level looks public ("bbc.co.uk", "hurriyet.com.tr"). No full Public Suffix List: hosting
++     * suffixes such as github.io count as one site (fewer blocks there, never more). IPv4 addresses are their own site.
++     */
++    static String registrableDomain(String host) {
++        String[] labels = host.split("\\.");
++        int n = labels.length;
++        if (n <= 2) return host;
++        if (labels[n - 1].matches("\\d+")) return host;
++        String tld = labels[n - 1];
++        String second = labels[n - 2];
++        boolean country = tld.length() == 2
++                && (SECOND_LEVEL.contains(second) || (tld.equals("tr") && TR_SECOND_LEVEL.contains(second)));
++        int keep = country ? 3 : 2;
++        StringBuilder out = new StringBuilder();
++        for (int i = n - keep; i < n; i++) {
++            if (out.length() > 0) out.append('.');
++            out.append(labels[i]);
++        }
++        return out.toString();
++    }
++}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
 index f83033b..0d86191 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
@@ -278,14 +602,72 @@ index 0000000..a229911
 +        return profile != null ? profile.getCookieManager() : null;
 +    }
 +}
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopContentBlockedEvent.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopContentBlockedEvent.kt
+new file mode 100644
+index 0000000..ecb67ea
+--- /dev/null
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopContentBlockedEvent.kt
+@@ -0,0 +1,25 @@
++package com.reactnativecommunity.webview.events
++
++import com.facebook.react.bridge.WritableMap
++import com.facebook.react.uimanager.events.Event
++import com.facebook.react.uimanager.events.RCTEventEmitter
++
++/**
++ * Qutai patch: the number of requests the content blocker stopped on the current page (sent in batches).
++ */
++class TopContentBlockedEvent(viewId: Int, private val mEventData: WritableMap) :
++  Event<TopContentBlockedEvent>(viewId) {
++  companion object {
++    const val EVENT_NAME = "topContentBlocked"
++  }
++
++  override fun getEventName(): String = EVENT_NAME
++
++  override fun canCoalesce(): Boolean = false
++
++  override fun getCoalescingKey(): Short = 0
++
++  override fun dispatch(rctEventEmitter: RCTEventEmitter) =
++    rctEventEmitter.receiveEvent(viewTag, eventName, mEventData)
++
++}
 diff --git a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index fa8efb8..ee5bd6b 100644
+index fa8efb8..f34404f 100644
 --- a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-@@ -160,6 +160,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -23,6 +23,7 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
+ import com.reactnativecommunity.webview.events.TopLoadingStartEvent;
+ import com.reactnativecommunity.webview.events.TopMessageEvent;
+ import com.reactnativecommunity.webview.events.TopOpenWindowEvent;
++import com.reactnativecommunity.webview.events.TopContentBlockedEvent;
+ import com.reactnativecommunity.webview.events.TopRenderProcessGoneEvent;
+ import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEvent;
+ 
+@@ -160,6 +161,32 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
          mRNCWebViewManagerImpl.setIncognito(view, value);
      }
  
++    // Qutai patch: network ad and tracker blocking (see RNCWebViewContentBlocker).
++    @Override
++    @ReactProp(name = "contentBlocking")
++    public void setContentBlocking(RNCWebViewWrapper view, boolean value) {
++        view.getWebView().contentBlocking = value;
++    }
++
++    @Override
++    @ReactProp(name = "contentBlockingOffSites")
++    public void setContentBlockingOffSites(RNCWebViewWrapper view, @Nullable String value) {
++        view.getWebView().contentBlockingOffSites = RNCWebViewContentBlocker.parseSites(value);
++    }
++
++    @Override
++    @ReactProp(name = "contentRuleLists")
++    public void setContentRuleLists(RNCWebViewWrapper view, @Nullable String value) {
++        // iOS only (WebKit content rule lists).
++    }
++
 +    // Qutai patch: the WebView profile (own cookies and storage) for this view; set before the source loads.
 +    @Override
 +    @ReactProp(name = "webviewProfile")
@@ -296,7 +678,7 @@ index fa8efb8..ee5bd6b 100644
      @Override
      @ReactProp(name = "injectedJavaScript")
      public void setInjectedJavaScript(RNCWebViewWrapper view, @Nullable String value) {
-@@ -429,6 +436,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -429,6 +456,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
      @Override
      public void setMediaCapturePermissionGrantType(RNCWebViewWrapper view, @Nullable String value) {}
  
@@ -310,19 +692,30 @@ index fa8efb8..ee5bd6b 100644
      @Override
      public void setFraudulentWebsiteWarningEnabled(RNCWebViewWrapper view, boolean value) {}
      /* !iOS PROPS - no implemented here */
+@@ -537,6 +571,8 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+         export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
+         export.put(TopHttpErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpError"));
+         export.put(TopRenderProcessGoneEvent.EVENT_NAME, MapBuilder.of("registrationName", "onRenderProcessGone"));
++        // Qutai patch
++        export.put(TopContentBlockedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onContentBlocked"));
+         export.put(TopCustomMenuSelectionEvent.EVENT_NAME, MapBuilder.of("registrationName", "onCustomMenuSelection"));
+         export.put(TopOpenWindowEvent.EVENT_NAME, MapBuilder.of("registrationName", "onOpenWindow"));
+         return export;
 diff --git a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewModule.java b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewModule.java
-index ca9ff96..a5dfab8 100644
+index ca9ff96..e439db4 100644
 --- a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewModule.java
 +++ b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewModule.java
-@@ -7,6 +7,7 @@ import android.webkit.ValueCallback;
+@@ -6,7 +6,9 @@ import android.webkit.ValueCallback;
+ 
  import androidx.annotation.NonNull;
  
++import com.facebook.react.bridge.Promise;
  import com.facebook.react.bridge.ReactApplicationContext;
 +import com.facebook.react.bridge.UiThreadUtil;
  import com.facebook.react.module.annotations.ReactModule;
  
  @ReactModule(name = RNCWebViewModuleImpl.NAME)
-@@ -23,6 +24,22 @@ public class RNCWebViewModule extends NativeRNCWebViewModuleSpec {
+@@ -23,6 +25,43 @@ public class RNCWebViewModule extends NativeRNCWebViewModuleSpec {
          mRNCWebViewModuleImpl.shouldStartLoadWithLockIdentifier(shouldStart, lockIdentifier);
      }
  
@@ -342,17 +735,62 @@ index ca9ff96..a5dfab8 100644
 +        UiThreadUtil.runOnUiThread(() -> RNCWebViewProfiles.deleteUnused(prefix));
 +    }
 +
++    // Qutai patch: network ad and tracker blocking (see RNCWebViewContentBlocker). The rule list methods are iOS's.
++    @Override
++    public void loadContentBlocker(String path, Promise promise) {
++        RNCWebViewContentBlocker.load(path, promise);
++    }
++
++    @Override
++    public void compileContentRuleList(String identifier, String path, Promise promise) {
++        promise.resolve(null);
++    }
++
++    @Override
++    public void hasContentRuleList(String identifier, Promise promise) {
++        promise.resolve(false);
++    }
++
++    @Override
++    public void removeContentRuleLists(String prefix, String keep, Promise promise) {
++        promise.resolve(null);
++    }
++
      public boolean startPhotoPickerIntent(final ValueCallback<Uri[]> callback, final String[] acceptTypes, final boolean allowMultiple, final boolean isCaptureEnabled) {
          return mRNCWebViewModuleImpl.startPhotoPickerIntent(acceptTypes, allowMultiple, callback, isCaptureEnabled);
      }
 diff --git a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index 974337f..d2f42b0 100644
+index 974337f..1d52e74 100644
 --- a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-@@ -127,6 +127,12 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
+@@ -19,6 +19,7 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
+ import com.reactnativecommunity.webview.events.TopLoadingStartEvent;
+ import com.reactnativecommunity.webview.events.TopMessageEvent;
+ import com.reactnativecommunity.webview.events.TopOpenWindowEvent;
++import com.reactnativecommunity.webview.events.TopContentBlockedEvent;
+ import com.reactnativecommunity.webview.events.TopRenderProcessGoneEvent;
+ import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEvent;
+ 
+@@ -127,6 +128,28 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
          mRNCWebViewManagerImpl.setIncognito(view, value);
      }
  
++    // Qutai patch: network ad and tracker blocking (see RNCWebViewContentBlocker).
++    @ReactProp(name = "contentBlocking")
++    public void setContentBlocking(RNCWebViewWrapper view, boolean value) {
++        view.getWebView().contentBlocking = value;
++    }
++
++    @ReactProp(name = "contentBlockingOffSites")
++    public void setContentBlockingOffSites(RNCWebViewWrapper view, @Nullable String value) {
++        view.getWebView().contentBlockingOffSites = RNCWebViewContentBlocker.parseSites(value);
++    }
++
++    @ReactProp(name = "contentRuleLists")
++    public void setContentRuleLists(RNCWebViewWrapper view, @Nullable String value) {
++        // iOS only (WebKit content rule lists).
++    }
++
 +    // Qutai patch: the WebView profile (own cookies and storage) for this view; set before the source loads.
 +    @ReactProp(name = "webviewProfile")
 +    public void setWebviewProfile(RNCWebViewWrapper view, @Nullable String value) {
@@ -362,19 +800,30 @@ index 974337f..d2f42b0 100644
      @ReactProp(name = "injectedJavaScript")
      public void setInjectedJavaScript(RNCWebViewWrapper view, @Nullable String value) {
          mRNCWebViewManagerImpl.setInjectedJavaScript(view, value);
+@@ -304,6 +327,8 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
+         export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
+         export.put(TopHttpErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpError"));
+         export.put(TopRenderProcessGoneEvent.EVENT_NAME, MapBuilder.of("registrationName", "onRenderProcessGone"));
++        // Qutai patch
++        export.put(TopContentBlockedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onContentBlocked"));
+         export.put(TopCustomMenuSelectionEvent.EVENT_NAME, MapBuilder.of("registrationName", "onCustomMenuSelection"));
+         export.put(TopOpenWindowEvent.EVENT_NAME, MapBuilder.of("registrationName", "onOpenWindow"));
+         return export;
 diff --git a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewModule.java b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewModule.java
-index 07f2eee..02537db 100644
+index 07f2eee..1773460 100644
 --- a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewModule.java
 +++ b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewModule.java
-@@ -7,6 +7,7 @@ import android.webkit.ValueCallback;
+@@ -6,7 +6,9 @@ import android.webkit.ValueCallback;
+ 
  import androidx.annotation.NonNull;
  
++import com.facebook.react.bridge.Promise;
  import com.facebook.react.bridge.ReactApplicationContext;
 +import com.facebook.react.bridge.UiThreadUtil;
  import com.facebook.react.bridge.ReactContextBaseJavaModule;
  import com.facebook.react.bridge.ReactMethod;
  import com.facebook.react.module.annotations.ReactModule;
-@@ -25,6 +26,22 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule {
+@@ -25,6 +27,43 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule {
          mRNCWebViewModuleImpl.shouldStartLoadWithLockIdentifier(shouldStart, lockIdentifier);
      }
  
@@ -394,16 +843,49 @@ index 07f2eee..02537db 100644
 +        UiThreadUtil.runOnUiThread(() -> RNCWebViewProfiles.deleteUnused(prefix));
 +    }
 +
++    // Qutai patch: network ad and tracker blocking (see RNCWebViewContentBlocker). The rule list methods are iOS's.
++    @ReactMethod
++    public void loadContentBlocker(String path, Promise promise) {
++        RNCWebViewContentBlocker.load(path, promise);
++    }
++
++    @ReactMethod
++    public void compileContentRuleList(String identifier, String path, Promise promise) {
++        promise.resolve(null);
++    }
++
++    @ReactMethod
++    public void hasContentRuleList(String identifier, Promise promise) {
++        promise.resolve(false);
++    }
++
++    @ReactMethod
++    public void removeContentRuleLists(String prefix, String keep, Promise promise) {
++        promise.resolve(null);
++    }
++
      public boolean startPhotoPickerIntent(final ValueCallback<Uri[]> callback, final String[] acceptTypes, final boolean allowMultiple, final boolean isCaptureEnabled) {
          return mRNCWebViewModuleImpl.startPhotoPickerIntent(acceptTypes, allowMultiple, callback, isCaptureEnabled);
      }
 diff --git a/node_modules/react-native-webview/apple/RNCWebView.mm b/node_modules/react-native-webview/apple/RNCWebView.mm
-index 2be7877..30b26ca 100644
+index 2be7877..7862279 100644
 --- a/node_modules/react-native-webview/apple/RNCWebView.mm
 +++ b/node_modules/react-native-webview/apple/RNCWebView.mm
-@@ -468,6 +468,10 @@ - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &
+@@ -467,7 +467,22 @@ - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &
+     }
  #endif
  
++    // Qutai patch: network ad and tracker blocking.
++    if (oldViewProps.contentBlocking != newViewProps.contentBlocking) {
++        [_view setContentBlocking:newViewProps.contentBlocking];
++    }
++    if (oldViewProps.contentBlockingOffSites != newViewProps.contentBlockingOffSites) {
++        [_view setContentBlockingOffSites:RCTNSStringFromString(newViewProps.contentBlockingOffSites)];
++    }
++    if (oldViewProps.contentRuleLists != newViewProps.contentRuleLists) {
++        [_view setContentRuleLists:RCTNSStringFromString(newViewProps.contentRuleLists)];
++    }
++
  #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 150000 /* iOS 15 */
 +    // Qutai patch
 +    if (oldViewProps.mediaCaptureGrant != newViewProps.mediaCaptureGrant) {
@@ -413,11 +895,19 @@ index 2be7877..30b26ca 100644
          if (newViewProps.mediaCapturePermissionGrantType == RNCWebViewMediaCapturePermissionGrantType::Prompt) {
              [_view setMediaCapturePermissionGrantType:RNCWebViewPermissionGrantType_Prompt];
 diff --git a/node_modules/react-native-webview/apple/RNCWebViewImpl.h b/node_modules/react-native-webview/apple/RNCWebViewImpl.h
-index 1f637c1..8003ad1 100644
+index 1f637c1..87c7200 100644
 --- a/node_modules/react-native-webview/apple/RNCWebViewImpl.h
 +++ b/node_modules/react-native-webview/apple/RNCWebViewImpl.h
-@@ -134,6 +134,8 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
+@@ -132,8 +132,16 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
+ @property (nonatomic, assign) BOOL textInteractionEnabled;
+ #endif
  
++// Qutai patch: network ad and tracker blocking with compiled WebKit content rule lists (identifiers one per line,
++// see RNCWebViewModule compileContentRuleList), not attached while the top-level page is on one of the off sites.
++@property (nonatomic, assign) BOOL contentBlocking;
++@property (nonatomic, copy) NSString * _Nullable contentBlockingOffSites;
++@property (nonatomic, copy) NSString * _Nullable contentRuleLists;
++
  #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 150000 /* iOS 15 */
  @property (nonatomic, assign) RNCWebViewPermissionGrantType mediaCapturePermissionGrantType;
 +// Qutai patch: "<origin> camera microphone"; once set, decides media capture instead of the grant type.
@@ -426,10 +916,56 @@ index 1f637c1..8003ad1 100644
  
  #if !TARGET_OS_OSX
 diff --git a/node_modules/react-native-webview/apple/RNCWebViewImpl.m b/node_modules/react-native-webview/apple/RNCWebViewImpl.m
-index 3890426..2293887 100644
+index 3890426..a88672c 100644
 --- a/node_modules/react-native-webview/apple/RNCWebViewImpl.m
 +++ b/node_modules/react-native-webview/apple/RNCWebViewImpl.m
-@@ -1300,6 +1300,28 @@ - (void)webView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSSt
+@@ -152,6 +152,34 @@ @implementation RNCWebViewImpl
+ #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 130000 /* __IPHONE_13_0 */
+   BOOL _savedAutomaticallyAdjustsScrollIndicatorInsets;
+ #endif
++  // Qutai patch: content blocking.
++  NSArray<NSString *> *_contentRuleListIds;
++  NSSet<NSString *> *_contentOffSiteSet;
++  NSArray<WKContentRuleList *> *_attachedContentRuleLists;
++}
++
++/**
++ * Qutai patch: compiled content rule lists looked up so far, by identifier (shared by all WebViews, main thread
++ * only), so a new WebView attaches them before its first load.
++ */
++static NSMutableDictionary<NSString *, WKContentRuleList *> *RNCContentRuleListCache(void)
++{
++  static NSMutableDictionary<NSString *, WKContentRuleList *> *cache;
++  static dispatch_once_t once;
++  dispatch_once(&once, ^{
++    cache = [NSMutableDictionary new];
++  });
++  return cache;
++}
++
++static NSArray<NSString *> *RNCLines(NSString *value)
++{
++  NSMutableArray<NSString *> *lines = [NSMutableArray new];
++  for (NSString *line in [value ?: @"" componentsSeparatedByString:@"\n"]) {
++    NSString *trimmed = [[line stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] lowercaseString];
++    if (trimmed.length > 0) [lines addObject:trimmed];
++  }
++  return lines;
+ }
+ 
+ - (instancetype)initWithFrame:(CGRect)frame
+@@ -585,6 +613,10 @@ - (void)didMoveToWindow
+       _webView.inspectable = _webviewDebuggingEnabled;
+ #endif
+ 
++    // Qutai patch: a new WebView (and user content controller) gets the content rule lists before it loads.
++    _attachedContentRuleLists = nil;
++    [self applyContentRuleListsForURL:nil];
++
+     [self addSubview:_webView];
+     [self setHideKeyboardAccessoryView: _savedHideKeyboardAccessoryView];
+     [self setKeyboardDisplayRequiresUserAction: _savedKeyboardDisplayRequiresUserAction];
+@@ -1300,6 +1332,28 @@ - (void)webView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSSt
  }
  
  #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 150000 /* iOS 15 */
@@ -458,7 +994,7 @@ index 3890426..2293887 100644
  /**
   * Media capture permissions (prevent multiple prompts)
   */
-@@ -1308,6 +1330,10 @@ - (void)                         webView:(WKWebView *)webView
+@@ -1308,6 +1362,10 @@ - (void)                         webView:(WKWebView *)webView
                          initiatedByFrame:(WKFrameInfo *)frame
                                      type:(WKMediaCaptureType)type
                           decisionHandler:(void (^)(WKPermissionDecision decision))decisionHandler {
@@ -469,11 +1005,111 @@ index 3890426..2293887 100644
    if (_mediaCapturePermissionGrantType == RNCWebViewPermissionGrantType_GrantIfSameHost_ElsePrompt || _mediaCapturePermissionGrantType == RNCWebViewPermissionGrantType_GrantIfSameHost_ElseDeny) {
      if ([origin.host isEqualToString:webView.URL.host]) {
        decisionHandler(WKPermissionDecisionGrant);
+@@ -1456,6 +1514,10 @@ - (void)                    webView:(WKWebView *)webView
+                     decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler
+ {
+   WKNavigationResponsePolicy policy = WKNavigationResponsePolicyAllow;
++  // Qutai patch: a new top-level page (after redirects): content blocking follows its site's switch.
++  if (navigationResponse.forMainFrame) {
++    [self applyContentRuleListsForURL:navigationResponse.response.URL];
++  }
+   if ([navigationResponse.response isKindOfClass:[NSHTTPURLResponse class]]) {
+     NSHTTPURLResponse *response = (NSHTTPURLResponse *)navigationResponse.response;
+     NSInteger statusCode = response.statusCode;
+@@ -1842,6 +1904,80 @@ - (void)syncCookiesToWebView:(void (^)(void))completion {
+   [self writeCookiesToWebView:cookies completion:completion];
+ }
+ 
++#pragma mark - Qutai patch: content blocking
++
++- (void)setContentBlocking:(BOOL)contentBlocking
++{
++  _contentBlocking = contentBlocking;
++  [self applyContentRuleListsForURL:_webView.URL];
++}
++
++- (void)setContentBlockingOffSites:(NSString *)contentBlockingOffSites
++{
++  _contentBlockingOffSites = [contentBlockingOffSites copy];
++  _contentOffSiteSet = [NSSet setWithArray:RNCLines(contentBlockingOffSites)];
++  [self applyContentRuleListsForURL:_webView.URL];
++}
++
++- (void)setContentRuleLists:(NSString *)contentRuleLists
++{
++  _contentRuleLists = [contentRuleLists copy];
++  NSArray<NSString *> *ids = RNCLines(contentRuleLists);
++  _contentRuleListIds = ids;
++  NSMutableDictionary<NSString *, WKContentRuleList *> *cache = RNCContentRuleListCache();
++  for (NSString *identifier in ids) {
++    if (cache[identifier] != nil) continue;
++    __weak RNCWebViewImpl *weakSelf = self;
++    [[WKContentRuleListStore defaultStore] lookUpContentRuleListForIdentifier:identifier completionHandler:^(WKContentRuleList *list, NSError *error) {
++      dispatch_async(dispatch_get_main_queue(), ^{
++        if (list == nil) return;
++        RNCContentRuleListCache()[identifier] = list;
++        RNCWebViewImpl *strongSelf = weakSelf;
++        if (strongSelf != nil) [strongSelf applyContentRuleListsForURL:strongSelf->_webView.URL];
++      });
++    }];
++  }
++  [self applyContentRuleListsForURL:_webView.URL];
++}
++
++/** Whether host is one of the off sites or a subdomain of one. */
++- (BOOL)isContentBlockingOffForHost:(NSString *)host
++{
++  if (host.length == 0 || _contentOffSiteSet.count == 0) return NO;
++  NSString *h = host.lowercaseString;
++  for (NSString *site in _contentOffSiteSet) {
++    if ([h isEqualToString:site] || [h hasSuffix:[@"." stringByAppendingString:site]]) return YES;
++  }
++  return NO;
++}
++
++/**
++ * Attaches the compiled lists to this WebView's user content controller, or none when blocking is off or the
++ * top-level page (url, or the current one when nil) is on an off site. Takes effect for the following loads.
++ */
++- (void)applyContentRuleListsForURL:(NSURL *)url
++{
++  if (_webView == nil) return;
++  NSURL *page = url ?: _webView.URL;
++  NSMutableArray<WKContentRuleList *> *wanted = [NSMutableArray new];
++  if (_contentBlocking && ![self isContentBlockingOffForHost:page.host]) {
++    NSMutableDictionary<NSString *, WKContentRuleList *> *cache = RNCContentRuleListCache();
++    for (NSString *identifier in _contentRuleListIds) {
++      WKContentRuleList *list = cache[identifier];
++      if (list != nil) [wanted addObject:list];
++    }
++  }
++  if (_attachedContentRuleLists != nil && [wanted isEqualToArray:_attachedContentRuleLists]) return;
++  WKUserContentController *controller = _webView.configuration.userContentController;
++  for (WKContentRuleList *list in _attachedContentRuleLists) {
++    [controller removeContentRuleList:list];
++  }
++  for (WKContentRuleList *list in wanted) {
++    [controller addContentRuleList:list];
++  }
++  _attachedContentRuleLists = wanted;
++}
++
+ - (void)resetupScripts:(WKWebViewConfiguration *)wkWebViewConfig {
+   [wkWebViewConfig.userContentController removeAllUserScripts];
+   [wkWebViewConfig.userContentController removeScriptMessageHandlerForName:MessageHandlerName];
 diff --git a/node_modules/react-native-webview/apple/RNCWebViewModule.mm b/node_modules/react-native-webview/apple/RNCWebViewModule.mm
-index 547b95f..6a5f890 100644
+index 547b95f..79c7d4b 100644
 --- a/node_modules/react-native-webview/apple/RNCWebViewModule.mm
 +++ b/node_modules/react-native-webview/apple/RNCWebViewModule.mm
-@@ -21,6 +21,16 @@ @implementation RNCWebViewModule
+@@ -1,6 +1,7 @@
+ #import "RNCWebViewModule.h"
+ 
+ #import "RNCWebViewDecisionManager.h"
++#import <WebKit/WebKit.h>
+ 
+ #ifdef RCT_NEW_ARCH_ENABLED
+ #import <React/RCTFabricComponentsPlugins.h>
+@@ -21,6 +22,69 @@ @implementation RNCWebViewModule
      [[RNCWebViewDecisionManager getInstance] setResult:shouldStart forLockIdentifier:(int)lockIdentifier];
  }
  
@@ -487,28 +1123,99 @@ index 547b95f..6a5f890 100644
 +
 +RCT_EXPORT_METHOD(deleteUnusedProfiles:(NSString *)prefix) {}
 +
++// Qutai patch: network ad and tracker blocking with WebKit content rule lists (the domain file is Android's).
++RCT_EXPORT_METHOD(loadContentBlocker:(NSString *)path resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
++{
++    resolve(@0);
++}
++
++/** Compiles a list from a JSON file (read here, off the main thread; WebKit compiles on its own queue). */
++RCT_EXPORT_METHOD(compileContentRuleList:(NSString *)identifier path:(NSString *)path resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
++{
++    NSError *readError = nil;
++    NSString *json = [NSString stringWithContentsOfFile:path encoding:NSUTF8StringEncoding error:&readError];
++    if (json == nil) {
++        reject(@"E_CONTENT_RULES", readError.localizedDescription ?: @"Unreadable rule list", readError);
++        return;
++    }
++    [[WKContentRuleListStore defaultStore] compileContentRuleListForIdentifier:identifier
++                                                        encodedContentRuleList:json
++                                                             completionHandler:^(WKContentRuleList *list, NSError *error) {
++        if (list == nil) {
++            reject(@"E_CONTENT_RULES", error.localizedDescription ?: @"Could not compile the rule list", error);
++        } else {
++            resolve(nil);
++        }
++    }];
++}
++
++RCT_EXPORT_METHOD(hasContentRuleList:(NSString *)identifier resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
++{
++    [[WKContentRuleListStore defaultStore] lookUpContentRuleListForIdentifier:identifier completionHandler:^(WKContentRuleList *list, NSError *error) {
++        resolve(@(list != nil));
++    }];
++}
++
++/** Removes the compiled lists whose identifier starts with prefix, except those in keep (one per line). */
++RCT_EXPORT_METHOD(removeContentRuleLists:(NSString *)prefix keep:(NSString *)keep resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
++{
++    WKContentRuleListStore *store = [WKContentRuleListStore defaultStore];
++    NSSet<NSString *> *kept = [NSSet setWithArray:[keep componentsSeparatedByString:@"\n"]];
++    [store getAvailableContentRuleListIdentifiers:^(NSArray<NSString *> *identifiers) {
++        dispatch_group_t group = dispatch_group_create();
++        for (NSString *identifier in identifiers) {
++            if (prefix.length == 0 || ![identifier hasPrefix:prefix] || [kept containsObject:identifier]) continue;
++            dispatch_group_enter(group);
++            [store removeContentRuleListForIdentifier:identifier completionHandler:^(NSError *error) {
++                dispatch_group_leave(group);
++            }];
++        }
++        dispatch_group_notify(group, dispatch_get_main_queue(), ^{
++            resolve(nil);
++        });
++    }];
++}
++
  #ifdef RCT_NEW_ARCH_ENABLED
  - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const facebook::react::ObjCTurboModule::InitParams &)params {
    return std::make_shared<facebook::react::NativeRNCWebViewModuleSpecJSI>(params);
 diff --git a/node_modules/react-native-webview/lib/NativeRNCWebViewModule.d.ts b/node_modules/react-native-webview/lib/NativeRNCWebViewModule.d.ts
-index ae60768..360d020 100644
+index ae60768..572ce6c 100644
 --- a/node_modules/react-native-webview/lib/NativeRNCWebViewModule.d.ts
 +++ b/node_modules/react-native-webview/lib/NativeRNCWebViewModule.d.ts
-@@ -2,6 +2,9 @@ import type { TurboModule } from 'react-native';
+@@ -2,6 +2,13 @@ import type { TurboModule } from 'react-native';
  import { Double } from 'react-native/Libraries/Types/CodegenTypes';
  export interface Spec extends TurboModule {
      shouldStartLoadWithLockIdentifier(shouldStart: boolean, lockIdentifier: Double): void;
 +    isMultiProfileSupported(): boolean;
 +    endProfile(name: string): void;
 +    deleteUnusedProfiles(prefix: string): void;
++    loadContentBlocker(path: string): Promise<number>;
++    compileContentRuleList(identifier: string, path: string): Promise<void>;
++    hasContentRuleList(identifier: string): Promise<boolean>;
++    removeContentRuleLists(prefix: string, keep: string): Promise<void>;
  }
  declare const _default: Spec;
  export default _default;
 diff --git a/node_modules/react-native-webview/lib/WebViewTypes.d.ts b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
-index f666e81..bb4eca0 100644
+index f666e81..f028bf5 100644
 --- a/node_modules/react-native-webview/lib/WebViewTypes.d.ts
 +++ b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
-@@ -582,6 +582,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+@@ -97,6 +97,13 @@ export type WebViewErrorEvent = NativeSyntheticEvent<WebViewError>;
+ export type WebViewTerminatedEvent = NativeSyntheticEvent<WebViewNativeEvent>;
+ export type WebViewHttpErrorEvent = NativeSyntheticEvent<WebViewHttpError>;
+ export type WebViewRenderProcessGoneEvent = NativeSyntheticEvent<WebViewRenderProcessGoneDetail>;
++
++/** Qutai patch: requests blocked on the current page so far (Android). */
++export interface WebViewContentBlockedDetail {
++    blocked: number;
++}
++
++export type WebViewContentBlockedEvent = NativeSyntheticEvent<WebViewContentBlockedDetail>;
+ export type WebViewOpenWindowEvent = NativeSyntheticEvent<WebViewOpenWindow>;
+ export type WebViewScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+ export type DataDetectorTypes = 'phoneNumber' | 'link' | 'address' | 'calendarEvent' | 'trackingNumber' | 'flightNumber' | 'lookupSuggestion' | 'none' | 'all';
+@@ -582,6 +589,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
       * Available on iOS 15 and later.
       */
      mediaCapturePermissionGrantType?: MediaCapturePermissionGrantType;
@@ -523,7 +1230,7 @@ index f666e81..bb4eca0 100644
      /**
       * A Boolean value which, when set to `true`, WebView will be rendered with Apple Pay support.
       *  Once set, websites will be able to invoke apple pay from React Native Webview.
-@@ -779,6 +787,14 @@ export interface MacOSWebViewProps extends WebViewSharedProps {
+@@ -779,6 +794,14 @@ export interface MacOSWebViewProps extends WebViewSharedProps {
  export interface AndroidWebViewProps extends WebViewSharedProps {
      onNavigationStateChange?: (event: WebViewNavigation) => void;
      onContentSizeChange?: (event: WebViewEvent) => void;
@@ -538,11 +1245,38 @@ index f666e81..bb4eca0 100644
      /**
       * Function that is invoked when the `WebView` process crashes or is killed by the OS.
       * Works only on Android (minimum API level 26).
+@@ -974,6 +997,26 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+     onLoadSubResourceError?: (event: WebViewErrorEvent) => void;
+ }
+ export interface WebViewSharedProps extends ViewProps {
++    /**
++     * Qutai patch: network ad and tracker blocking. Android: every request except the page's own document is checked
++     * against the domains loaded with RNCWebViewModule.loadContentBlocker (shouldInterceptRequest) and blocked with an
++     * empty 403 response. iOS: the compiled WebKit content rule lists named in contentRuleLists are attached.
++     * Default false.
++     */
++    contentBlocking?: boolean;
++
++    /**
++     * Qutai patch: sites (one per line, e.g. "example.com") where nothing is blocked, with their subdomains; matched
++     * against the top-level page's host. Applies from the next request (Android) or navigation (iOS).
++     */
++    contentBlockingOffSites?: string;
++
++    /** Qutai patch, iOS: identifiers (one per line) of compiled lists in WKContentRuleListStore's default store. */
++    contentRuleLists?: string;
++
++    /** Qutai patch, Android: the number of requests blocked on the current page, in batches (at most ~2 per second). */
++    onContentBlocked?: (event: WebViewContentBlockedEvent) => void;
++
+     /**
+      * Loads static html or a uri (with optional headers) in the WebView.
+      */
 diff --git a/node_modules/react-native-webview/src/NativeRNCWebViewModule.ts b/node_modules/react-native-webview/src/NativeRNCWebViewModule.ts
-index 146bdf3..96409cf 100644
+index 146bdf3..04964d0 100644
 --- a/node_modules/react-native-webview/src/NativeRNCWebViewModule.ts
 +++ b/node_modules/react-native-webview/src/NativeRNCWebViewModule.ts
-@@ -4,6 +4,13 @@ import { Double } from 'react-native/Libraries/Types/CodegenTypes';
+@@ -4,6 +4,22 @@ import { Double } from 'react-native/Libraries/Types/CodegenTypes';
  
  export interface Spec extends TurboModule {
    shouldStartLoadWithLockIdentifier(shouldStart: boolean, lockIdentifier: Double): void;
@@ -553,23 +1287,49 @@ index 146bdf3..96409cf 100644
 +  endProfile(name: string): void;
 +  /** Deletes the profiles whose name starts with prefix that this run hasn't used (left from an earlier run). */
 +  deleteUnusedProfiles(prefix: string): void;
++  // Qutai patch: network ad and tracker blocking (each platform's methods resolve and do nothing on the other).
++  /** Android: loads the domain file (see RNCWebViewContentBlocker); "" turns blocking off. Resolves with its size. */
++  loadContentBlocker(path: string): Promise<number>;
++  /** iOS: compiles a WebKit content rule list from a JSON file into the default store under this identifier. */
++  compileContentRuleList(identifier: string, path: string): Promise<void>;
++  /** iOS: whether the default store has a compiled list with this identifier. */
++  hasContentRuleList(identifier: string): Promise<boolean>;
++  /** iOS: removes the compiled lists whose identifier starts with prefix, except those in keep (one per line). */
++  removeContentRuleLists(prefix: string, keep: string): Promise<void>;
  }
  
  export default TurboModuleRegistry.getEnforcing<Spec>('RNCWebViewModule');
 diff --git a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
-index ca3af15..4f6adad 100644
+index ca3af15..5eb085f 100644
 --- a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
 +++ b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
-@@ -136,6 +136,8 @@ export interface NativeProps extends ViewProps {
+@@ -124,6 +124,11 @@ type WebViewRenderProcessGoneEvent = Readonly<{
+   didCrash: boolean;
+ }>;
+ 
++// Qutai patch: requests blocked on the current page so far (Android; sent in batches).
++type WebViewContentBlockedEvent = Readonly<{
++  blocked: Int32;
++}>;
++
+ type WebViewDownloadEvent = Readonly<{
+   downloadUrl: string;
+ }>;
+@@ -136,6 +141,13 @@ export interface NativeProps extends ViewProps {
    allowsProtectedMedia?: boolean;
    allowsFullscreenVideo?: boolean;
    androidLayerType?: WithDefault<'none' | 'software' | 'hardware', 'none'>;
 +  // Qutai patch: see webviewProfile in WebViewTypes.ts. Android; iOS ignores it.
 +  webviewProfile?: string;
++  // Qutai patch: network ad and tracker blocking, see contentBlocking in WebViewTypes.ts.
++  contentBlocking?: WithDefault<boolean, false>;
++  contentBlockingOffSites?: string;
++  contentRuleLists?: string;
++  onContentBlocked?: DirectEventHandler<WebViewContentBlockedEvent>;
    cacheMode?: WithDefault<
      'LOAD_DEFAULT' | 'LOAD_CACHE_ELSE_NETWORK' | 'LOAD_NO_CACHE' | 'LOAD_CACHE_ONLY',
      'LOAD_DEFAULT'
-@@ -208,6 +210,8 @@ export interface NativeProps extends ViewProps {
+@@ -208,6 +220,8 @@ export interface NativeProps extends ViewProps {
      'prompt' | 'grant' | 'deny' | 'grantIfSameHostElsePrompt' | 'grantIfSameHostElseDeny',
      'prompt'
    >;
@@ -579,10 +1339,24 @@ index ca3af15..4f6adad 100644
    pullToRefreshEnabled?: boolean;
    refreshControlLightMode?: boolean;
 diff --git a/node_modules/react-native-webview/src/WebViewTypes.ts b/node_modules/react-native-webview/src/WebViewTypes.ts
-index 4e7247f..6b6effc 100644
+index 4e7247f..5345839 100644
 --- a/node_modules/react-native-webview/src/WebViewTypes.ts
 +++ b/node_modules/react-native-webview/src/WebViewTypes.ts
-@@ -730,6 +730,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+@@ -149,6 +149,13 @@ export type WebViewHttpErrorEvent = NativeSyntheticEvent<WebViewHttpError>;
+ 
+ export type WebViewRenderProcessGoneEvent = NativeSyntheticEvent<WebViewRenderProcessGoneDetail>;
+ 
++/** Qutai patch: requests blocked on the current page so far (Android). */
++export interface WebViewContentBlockedDetail {
++  blocked: number;
++}
++
++export type WebViewContentBlockedEvent = NativeSyntheticEvent<WebViewContentBlockedDetail>;
++
+ export type WebViewOpenWindowEvent = NativeSyntheticEvent<WebViewOpenWindow>;
+ 
+ export type WebViewScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
+@@ -730,6 +737,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
     */
    mediaCapturePermissionGrantType?: MediaCapturePermissionGrantType;
  
@@ -597,7 +1371,7 @@ index 4e7247f..6b6effc 100644
    /**
     * A Boolean value which, when set to `true`, WebView will be rendered with Apple Pay support.
     *  Once set, websites will be able to invoke apple pay from React Native Webview.
-@@ -950,6 +958,14 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -950,6 +965,14 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
    onNavigationStateChange?: (event: WebViewNavigation) => void;
    onContentSizeChange?: (event: WebViewEvent) => void;
  
@@ -612,3 +1386,30 @@ index 4e7247f..6b6effc 100644
    /**
     * Function that is invoked when the `WebView` process crashes or is killed by the OS.
     * Works only on Android (minimum API level 26).
+@@ -1172,6 +1195,26 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+ }
+ 
+ export interface WebViewSharedProps extends ViewProps {
++  /**
++   * Qutai patch: network ad and tracker blocking. Android: every request except the page's own document is checked
++   * against the domains loaded with RNCWebViewModule.loadContentBlocker (shouldInterceptRequest) and blocked with an
++   * empty 403 response. iOS: the compiled WebKit content rule lists named in contentRuleLists are attached.
++   * Default false.
++   */
++  contentBlocking?: boolean;
++
++  /**
++   * Qutai patch: sites (one per line, e.g. "example.com") where nothing is blocked, with their subdomains; matched
++   * against the top-level page's host. Applies from the next request (Android) or navigation (iOS).
++   */
++  contentBlockingOffSites?: string;
++
++  /** Qutai patch, iOS: identifiers (one per line) of compiled lists in WKContentRuleListStore's default store. */
++  contentRuleLists?: string;
++
++  /** Qutai patch, Android: the number of requests blocked on the current page, in batches (at most ~2 per second). */
++  onContentBlocked?: (event: WebViewContentBlockedEvent) => void;
++
+   /**
+    * Loads static html or a uri (with optional headers) in the WebView.
+    */

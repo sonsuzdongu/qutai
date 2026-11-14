@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SITE_LEVELS, SiteLevel } from '../agent/sitePolicy';
 import { t } from '../i18n';
 import { LocationSetting, MediaKind, PERMISSION_SETTINGS, PermissionSetting } from '../storage/sitePermissions';
 import { makeStyles } from '../ui/theme';
 import { Radio } from '../ui/Radio';
+import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { BottomSheet } from './BottomSheet';
 
 type Props = {
@@ -21,6 +23,18 @@ type Props = {
   /** The page on screen is using the camera or microphone on this site (offers a stop button). */
   capturing?: boolean;
   onStopCapture?: () => void;
+  /** Ad and tracker blocking is on for this site ("Don't block on this site" turns it off). */
+  blocking: boolean;
+  onSetBlocking: (on: boolean) => void;
+  /** "Block ads and trackers" is on in Settings (otherwise the switch has nothing to do). */
+  blockingEnabled: boolean;
+  /**
+   * Requests blocked on the page on screen: a number (Android), 'unavailable' (iOS: WebKit doesn't report them),
+   * or undefined when the sheet isn't about the page on screen.
+   */
+  blockedCount?: number | 'unavailable';
+  /** Reloads the page on screen, for a changed blocking switch to take effect (only for the page's own site). */
+  onReload?: () => void;
   onClose: () => void;
 };
 
@@ -36,9 +50,17 @@ export function SitePermissionSheet({
   onSelectMedia,
   capturing,
   onStopCapture,
+  blocking,
+  onSetBlocking,
+  blockingEnabled,
+  blockedCount,
+  onReload,
   onClose,
 }: Props) {
   const styles = useStyles();
+  // After the switch changes, offer to reload: blocking changes apply from the next load.
+  const [changedFor, setChangedFor] = useState<string | null>(null);
+  const changed = host !== null && changedFor === host;
   return (
     <BottomSheet visible={host !== null} onClose={onClose} style={styles.sheet} bottomPadding={12}>
       <Text style={styles.title}>{t('site.title')}</Text>
@@ -58,6 +80,46 @@ export function SitePermissionSheet({
           <Text style={styles.hint}>{t('site.stopCaptureHint')}</Text>
         </Pressable>
       )}
+      <View style={styles.blockRow}>
+        <View style={styles.texts}>
+          <Text style={styles.label}>{t('site.blockingTitle')}</Text>
+          <Text style={styles.hint}>
+            {!blockingEnabled
+              ? t('site.blockingOffInSettings')
+              : blocking
+                ? t('site.blockingOnHint')
+                : t('site.blockingOffHint')}
+          </Text>
+          {blockingEnabled && blocking && blockedCount !== undefined && (
+            <Text style={styles.hint}>
+              {blockedCount === 'unavailable'
+                ? t('site.blockedCountUnavailable')
+                : t('site.blockedCount', { count: blockedCount })}
+            </Text>
+          )}
+          {changed && onReload && (
+            <Pressable
+              onPress={() => {
+                onReload();
+                onClose();
+              }}
+              hitSlop={8}
+              accessibilityRole="button"
+            >
+              <Text style={styles.link}>{t('site.blockingReload')}</Text>
+            </Pressable>
+          )}
+        </View>
+        <ThemedSwitch
+          value={blocking}
+          disabled={!blockingEnabled}
+          onValueChange={(on) => {
+            onSetBlocking(on);
+            setChangedFor(host);
+          }}
+          accessibilityLabel={t('site.blockingTitle')}
+        />
+      </View>
       {SITE_LEVELS.map((option) => {
         const selected = option === level;
         return (
@@ -156,6 +218,8 @@ const useStyles = makeStyles((c) => ({
   label: { fontSize: 15, fontWeight: '600', color: c.text },
   danger: { color: c.danger },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  blockRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 10 },
+  link: { fontSize: 14, fontWeight: '700', color: c.tintText, marginTop: 4 },
   stop: { paddingHorizontal: 20, paddingVertical: 10, gap: 2 },
   stopText: { fontSize: 15, fontWeight: '700', color: c.danger },
   section: { fontSize: 15, fontWeight: '700', color: c.text, paddingHorizontal: 20, marginTop: 12, marginBottom: 8 },

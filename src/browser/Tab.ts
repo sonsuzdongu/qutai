@@ -123,6 +123,11 @@ export class Tab {
   readonly geolocation: PageGeolocation = new PageGeolocation(this);
   /** The page's camera and microphone (getUserMedia), gated by the user's per-site permission. */
   readonly media: PageMediaCapture = new PageMediaCapture(this);
+  /**
+   * Android: requests the network blocker stopped on the page on screen (the WebView counts them and reports the
+   * total in batches; it starts again at 0 when a new page loads in the tab). Kept in memory only, also in incognito.
+   */
+  blockedCount = 0;
 
   private pending = new Map<string, Pending>();
   private probeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -171,7 +176,15 @@ export class Tab {
     this.dispose();
     this.thumbnail = thumbnail;
     this.webview = null;
+    this.blockedCount = 0;
     this.asleep = true;
+    this.onChange();
+  }
+
+  /** The WebView's count of blocked requests for its current page (Android). */
+  handleContentBlocked(count: number) {
+    if (count === this.blockedCount) return;
+    this.blockedCount = count;
     this.onChange();
   }
 

@@ -68,6 +68,7 @@ import { toUrl } from './src/browser/url';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { LockScreen } from './src/components/LockScreen';
 import { Onboarding } from './src/components/Onboarding';
+import { contentBlocking } from './src/content/blocking';
 import { isIncomingWebLink } from './src/device/defaultBrowser';
 import { LEGAL_VERSION } from './src/legal/documents';
 import { LogoMotion } from './src/ui/QutaiMark';
@@ -233,6 +234,22 @@ function BrowserApp({
   const closePanel = useCallback(() => setPanelOpen(false), []);
 
   const [settings, setSettings] = useState<Settings>(initialSettings);
+
+  // Network ad and tracker blocking: the master switch, and list downloads only once the terms are accepted (the
+  // browser shows only after that) and while blocking is on: at start and when the app comes back, rate-limited.
+  useSyncExternalStore(contentBlocking.subscribe, contentBlocking.getVersion);
+  useEffect(() => {
+    contentBlocking.setMaster(settings.blockAds).catch(() => {});
+  }, [settings.blockAds]);
+  const blockingAllowed = settings.blockAds && settings.legalAcceptedVersion > 0;
+  useEffect(() => {
+    if (!blockingAllowed) return;
+    contentBlocking.autoUpdate(true).catch(() => {});
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') contentBlocking.autoUpdate(true).catch(() => {});
+    });
+    return () => sub.remove();
+  }, [blockingAllowed]);
 
   // App lock: on start and whenever the app went to the background. Incognito lock: incognito tabs
   // stay hidden after leaving the app until the user unlocks them again.
@@ -949,6 +966,8 @@ function BrowserApp({
                     darkMode,
                     darkSites: settings.darkSites,
                     blockAds: settings.blockAds,
+                    blockingOffSites: sitePermissions.blockingOffSites(),
+                    contentRuleLists: contentBlocking.ruleLists,
                     httpsOnly: settings.httpsOnly,
                     blockThirdPartyCookies: settings.blockThirdPartyCookies,
                     hideCookieBanners: settings.hideCookieBanners,
@@ -1148,6 +1167,18 @@ function BrowserApp({
             // The page on screen is capturing on this site: offer to stop it right here.
             capturing={!!permissionHost && siteKey(tab.url) === permissionHost && tab.media.capturing}
             onStopCapture={() => tab.media.stop()}
+            blocking={permissionHost ? sitePermissions.blockingFor(permissionHost) : true}
+            onSetBlocking={(on) => permissionHost && sitePermissions.setBlocking(permissionHost, on).catch(() => {})}
+            blockingEnabled={settings.blockAds}
+            // The count belongs to the page on screen (Android); WebKit doesn't report one (iOS).
+            blockedCount={
+              !!permissionHost && siteKey(tab.url) === permissionHost && contentBlocking.active
+                ? Platform.OS === 'ios'
+                  ? 'unavailable'
+                  : tab.blockedCount
+                : undefined
+            }
+            onReload={!!permissionHost && siteKey(tab.url) === permissionHost ? () => tab.webview?.reload() : undefined}
             onClose={() => setPermissionHost(null)}
           />
           <TextSizeSheet

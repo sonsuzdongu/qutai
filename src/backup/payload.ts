@@ -14,7 +14,8 @@ import { isSearchEngine } from '../browser/search';
  *   bookmarks?: { folders: [{ id, parentId, title, createdAt }], items: [{ url, title, createdAt, folderId }] },
  *   history?: [{ url, title, visitedAt }],
  *   memories?: [{ text, createdAt, updatedAt }],
- *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }] },
+ *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }],
+ *            blockingOff?: [host] },
  *   settings?: { theme: "dark", textZoom: 120, models: { anthropic: "…" }, … },
  *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…" },   // only when the user opted in
  *   tabs?: { tabs: [{ url, title, uid, groupId? }], activeIndex, groups: [{ id, name, color, collapsed? }] },
@@ -85,7 +86,13 @@ export type BackupPayload = {
   bookmarks?: { folders: BackupFolder[]; items: BackupBookmark[] };
   history?: BackupVisit[];
   memories?: BackupMemory[];
-  sites?: { permissions: BackupSitePermission[]; location: BackupLocation[]; media?: BackupMedia[] };
+  sites?: {
+    permissions: BackupSitePermission[];
+    location: BackupLocation[];
+    media?: BackupMedia[];
+    /** Sites where ad and tracker blocking is off. */
+    blockingOff?: string[];
+  };
   settings?: BackupSettings;
   apiKeys?: Partial<Record<ProviderId, string>>;
   tabs?: { tabs: BackupTab[]; activeIndex: number; groups: BackupGroup[] };
@@ -249,7 +256,17 @@ function parseSites(v: unknown): BackupPayload['sites'] {
     const setting = oneOf(m.setting, ['allow', 'block'] as const);
     if (host && kind && setting) media.set(`${kind} ${host}`, { host, kind, setting });
   }
-  return { permissions: [...permissions.values()], location: [...location.values()], media: [...media.values()] };
+  const blockingOff = new Set<string>();
+  for (const h of list(v.blockingOff, LIMITS.sites)) {
+    const host = siteHost(h);
+    if (host) blockingOff.add(host);
+  }
+  return {
+    permissions: [...permissions.values()],
+    location: [...location.values()],
+    media: [...media.values()],
+    blockingOff: [...blockingOff],
+  };
 }
 
 const BOOLEAN_SETTINGS = [
@@ -528,7 +545,14 @@ export function summarize(p: BackupPayload): BackupSummary {
     ...(p.bookmarks ? { bookmarks: p.bookmarks.items.length, folders: p.bookmarks.folders.length } : {}),
     ...(p.history ? { history: p.history.length } : {}),
     ...(p.memories ? { memories: p.memories.length } : {}),
-    ...(p.sites ? { sites: new Set([...p.sites.permissions, ...p.sites.location, ...(p.sites.media ?? [])].map((s) => s.host)).size } : {}),
+    ...(p.sites
+      ? {
+          sites: new Set([
+            ...[...p.sites.permissions, ...p.sites.location, ...(p.sites.media ?? [])].map((s) => s.host),
+            ...(p.sites.blockingOff ?? []),
+          ]).size,
+        }
+      : {}),
     ...(p.settings ? { settings: true } : {}),
     ...(p.tabs ? { tabs: p.tabs.tabs.length } : {}),
     ...(p.chats ? { chats: p.chats.length } : {}),

@@ -3,7 +3,12 @@ import { Db, getJson, SqlValue } from '../storage/db';
 import { listActions } from '../storage/actionLog';
 import { listMemories } from '../storage/memory';
 import { loadSession } from '../storage/session';
-import { listLocationSettings, listMediaSettings, listSitePermissions } from '../storage/sitePermissions';
+import {
+  listBlockingOff,
+  listLocationSettings,
+  listMediaSettings,
+  listSitePermissions,
+} from '../storage/sitePermissions';
 import type { BackupChat, BackupPayload, BackupTab } from './payload';
 
 /**
@@ -22,7 +27,7 @@ export async function collectBackup(
   db: Db,
   choice: ExportChoice,
 ): Promise<Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'>> {
-  const [version, bookmarks, history, memories, permissions, location, media] = await Promise.all([
+  const [version, bookmarks, history, memories, permissions, location, media, blockingOff] = await Promise.all([
     db.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []),
     exportBookmarks(db),
     db.getAllAsync<{ url: string; title: string; visited_at: number }>(
@@ -33,6 +38,7 @@ export async function collectBackup(
     listSitePermissions(db),
     listLocationSettings(db),
     listMediaSettings(db),
+    listBlockingOff(db),
   ]);
   const payload: Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'> = {
     schemaVersion: version?.user_version ?? 0,
@@ -46,6 +52,7 @@ export async function collectBackup(
       permissions: permissions.flatMap((p) => (p.level === 'default' ? [] : [{ host: p.host, level: p.level }])),
       location: location.flatMap((l) => (l.setting === 'ask' ? [] : [{ host: l.host, setting: l.setting }])),
       media: media.flatMap((m) => (m.setting === 'ask' ? [] : [{ host: m.host, kind: m.kind, setting: m.setting }])),
+      blockingOff,
     },
   };
   if (choice.tabs) {
@@ -213,6 +220,7 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
         await db.runAsync('DELETE FROM site_permissions', []);
         await db.runAsync('DELETE FROM site_location', []);
         await db.runAsync('DELETE FROM site_media', []);
+        await db.runAsync('DELETE FROM site_blocking', []);
       }
       await insertRows(
         db,
@@ -231,6 +239,12 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
         'INSERT OR IGNORE INTO site_media (host, kind, setting, updated_at)',
         4,
         (p.sites.media ?? []).map((s) => [s.host, s.kind, s.setting, now]),
+      );
+      await insertRows(
+        db,
+        'INSERT OR IGNORE INTO site_blocking (host, updated_at)',
+        2,
+        (p.sites.blockingOff ?? []).map((host) => [host, now]),
       );
     }
 

@@ -118,6 +118,11 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
      updated_at INTEGER NOT NULL,
      PRIMARY KEY (host, kind)
    );`,
+  // Sites where network ad and tracker blocking is off ("Don't block on this site"); no row means it's on.
+  `CREATE TABLE site_blocking (
+     host TEXT PRIMARY KEY,
+     updated_at INTEGER NOT NULL
+   );`,
 ];
 
 /**
