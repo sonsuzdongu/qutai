@@ -4,6 +4,7 @@ import {
   BackHandler,
   Keyboard,
   KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   ScrollViewInstance,
@@ -33,7 +34,8 @@ import { QutaiMark } from '../ui/QutaiMark';
 import type { Source } from '../agent/types';
 import type { CallOffer } from '../device/phone';
 import type { SmsOffer } from '../device/sms';
-import { hostOf } from '../i18n/format';
+import { composedFileAvailable, FileOffer } from '../device/composedFile';
+import { formatNumber, formatSize, hostOf } from '../i18n/format';
 import { hasTable, MarkdownText } from './MarkdownText';
 import { SearchSuggestions } from './SearchSuggestions';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
@@ -41,7 +43,7 @@ import { useReduceMotion } from '../utils/useReduceMotion';
 
 export type ChatItem = {
   id: string;
-  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices' | 'sources' | 'call' | 'sms';
+  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices' | 'sources' | 'call' | 'sms' | 'file';
   text: string;
   /** For 'choices': the buttons offered. */
   options?: string[];
@@ -57,6 +59,8 @@ export type ChatItem = {
   call?: CallOffer;
   /** For 'sms': the prepared text message behind the "Open in Messages" button. */
   sms?: SmsOffer;
+  /** For 'file': the composed file behind the Share / Save buttons (only its name and size; the content is not saved). */
+  file?: FileOffer;
 };
 
 /** Voice input: the settings it follows and where its messages go. */
@@ -108,6 +112,8 @@ type Props = {
   onCall: (number: string) => void;
   /** The "Open in Messages" button of a prepared text message was tapped. */
   onSms: (offer: SmsOffer) => void;
+  /** Share or Save on a file the assistant composed. */
+  onFile: (action: 'share' | 'save', file: FileOffer) => void;
   /** A source under an answer was tapped. */
   onOpenSource: (source: Source) => void;
   dark?: boolean;
@@ -150,6 +156,7 @@ export function AssistantPanel({
   onOpenLink,
   onCall,
   onSms,
+  onFile,
   onOpenSource,
   dark = false,
   hasPage = false,
@@ -341,6 +348,7 @@ export function AssistantPanel({
                     onOpenLink={onOpenLink}
                     onCall={onCall}
                     onSms={onSms}
+                    onFile={onFile}
                     onOpenSource={onOpenSource}
                     onShowSent={leavePanel(onShowSent)}
                     onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
@@ -545,6 +553,7 @@ function ChatRow({
   onOpenLink,
   onCall,
   onSms,
+  onFile,
   onOpenSource,
   onShowSent,
   onChoose,
@@ -555,6 +564,7 @@ function ChatRow({
   onOpenLink: (url: string) => void;
   onCall: (number: string) => void;
   onSms: (offer: SmsOffer) => void;
+  onFile: (action: 'share' | 'save', file: FileOffer) => void;
   onOpenSource: (source: Source) => void;
   onShowSent: () => void;
   /** Set while the question can still be answered. */
@@ -721,6 +731,57 @@ function ChatRow({
             <Icon name="message" size={17} color={palette.onTint} />
             <Text style={styles.callButtonText}>{t('chat.openInMessages')}</Text>
           </Pressable>
+        </View>
+      );
+    }
+    case 'file': {
+      const file = item.file;
+      if (!file) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      const details = [
+        file.format.toUpperCase(),
+        formatSize(file.size),
+        ...(file.rows !== undefined ? [t('chat.fileRows', { count: formatNumber(file.rows) })] : []),
+      ].join(' · ');
+      const available = composedFileAvailable(file.id);
+      return (
+        <View style={[styles.smsCard, d?.assistantBubble]}>
+          <View style={styles.fileHeader}>
+            <Icon name="document" size={22} color={palette.textSecondary} />
+            <View style={styles.callInfo}>
+              <Text style={[styles.callName, d?.text]} numberOfLines={2}>
+                {file.name}
+              </Text>
+              <Text style={[styles.callNumber, d?.dim]}>{details}</Text>
+            </View>
+          </View>
+          {available ? (
+            <View style={styles.fileButtons}>
+              {Platform.OS === 'android' ? (
+                <Pressable
+                  onPress={() => onFile('save', file)}
+                  style={({ pressed }) => [styles.fileButton, d?.chip, pressed && styles.pressed]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('chat.fileSaveLabel', { name: file.name })}
+                >
+                  <Icon name="download" size={17} color={palette.tintText} />
+                  <Text style={styles.fileButtonText}>{t('chat.fileSave')}</Text>
+                </Pressable>
+              ) : null}
+              <Pressable
+                onPress={() => onFile('share', file)}
+                style={({ pressed }) => [styles.callButton, pressed && styles.callButtonPressed]}
+                accessibilityRole="button"
+                accessibilityLabel={t('chat.fileShareLabel', { name: file.name })}
+              >
+                <Icon name="share" size={17} color={palette.onTint} />
+                <Text style={styles.callButtonText}>
+                  {t(Platform.OS === 'ios' ? 'chat.fileShareIos' : 'chat.fileShare')}
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Text style={[styles.callNumber, d?.dim]}>{t('chat.fileExpired')}</Text>
+          )}
         </View>
       );
     }
@@ -896,6 +957,20 @@ const useStyles = makeStyles((c) => ({
     borderLeftColor: c.separator,
   },
   smsButton: { alignSelf: 'flex-end', justifyContent: 'center' },
+  fileHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  fileButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+  fileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 22,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.separator,
+    backgroundColor: c.surface,
+  },
+  fileButtonText: { color: c.tintText, fontSize: 15, fontWeight: '700' },
   callButtonText: { color: c.onTint, fontSize: 15, fontWeight: '700' },
   busy: {
     flexDirection: 'row',

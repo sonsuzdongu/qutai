@@ -67,6 +67,7 @@ const ICONS = {
   camera: { ios: 'video.fill', android: 'videocam' },
   microphone: { ios: 'mic.fill', android: 'mic' },
   reader: { ios: 'doc.plaintext', android: 'chrome_reader_mode' },
+  document: { ios: 'doc.text', android: 'description' },
   play: { ios: 'play.fill', android: 'play_arrow' },
   pause: { ios: 'pause.fill', android: 'pause' },
 } satisfies Record<string, SymbolName>;

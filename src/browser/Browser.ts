@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { Conversation, groupChatKey } from '../chat/Conversation';
+import { forgetIncognitoFiles } from '../device/composedFile';
 import { endIncognitoProfile, newIncognitoProfile } from '../device/webviewProfile';
 import type { Session } from '../storage/session';
 import { NEW_TAB_URL, Tab } from './Tab';
@@ -617,7 +618,10 @@ export class Browser {
    * (native side), and the next incognito tab starts a new session with a new profile.
    */
   private endIncognitoSessionIfOver() {
-    if (!this.incognitoProfile || this.tabs.some((t) => t.incognito)) return;
+    if (this.tabs.some((t) => t.incognito)) return;
+    // Files the assistant made in incognito conversations go with the session.
+    forgetIncognitoFiles();
+    if (!this.incognitoProfile) return;
     endIncognitoProfile(this.incognitoProfile);
     this.incognitoProfile = undefined;
   }

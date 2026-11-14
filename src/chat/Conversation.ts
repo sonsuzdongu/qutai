@@ -1,7 +1,9 @@
 import type { Turn } from '../ai/types';
 import type { Source } from '../agent/types';
 import type { ChatItem } from '../components/AssistantPanel';
+import type { FileOffer } from '../device/composedFile';
 import type { CallOffer } from '../device/phone';
+import { formatSize } from '../i18n/format';
 import type { SmsOffer } from '../device/sms';
 
 let itemCounter = 0;
@@ -21,6 +23,11 @@ export function callItem(call: CallOffer): ChatItem {
 export function smsItem(sms: SmsOffer): ChatItem {
   const text = `💬 ${sms.name ? `${sms.name} · ` : ''}${sms.number}`;
   return { id: String(++itemCounter), kind: 'sms', text, sms };
+}
+
+/** A file the assistant composed (save_file), with Share and Save buttons; the text is what older versions show. */
+export function fileItem(file: FileOffer): ChatItem {
+  return { id: String(++itemCounter), kind: 'file', text: `📄 ${file.name} · ${formatSize(file.size)}`, file };
 }
 
 export function newItem(kind: ChatItem['kind'], text: string, options?: string[]): ChatItem {

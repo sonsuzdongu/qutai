@@ -15,7 +15,7 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
-import { Conversation, callItem, newItem, smsItem, sourcesItem } from './src/chat/Conversation';
+import { Conversation, callItem, fileItem, newItem, smsItem, sourcesItem } from './src/chat/Conversation';
 import { geminiStreamingAvailable } from './src/ai/gemini';
 import { getProvider, modelLabel } from './src/ai/providers';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
@@ -87,6 +87,7 @@ import { deleteSentSince, moveSentConversation, pruneSent } from './src/storage/
 import { SentLogScreen } from './src/components/SentLogScreen';
 import { bump, setHapticsEnabled, success, tick } from './src/device/haptics';
 import { DownloadCancelled, deleteDownloadedFile, downloadFile, startAgentDownload } from './src/device/download';
+import { FileExpiredError, saveComposedFileToFolder, shareComposedFile } from './src/device/composedFile';
 import { DownloadStore } from './src/storage/downloads';
 import { DownloadsScreen } from './src/components/DownloadsScreen';
 import * as Sharing from 'expo-sharing';
@@ -579,6 +580,10 @@ function BrowserApp({
           chat.add(smsItem(offer));
         },
         startDownload: (tab, url, name, type) => startAgentDownload(tab, url, name, type, downloads, toast.show),
+        offerFile: (file) => {
+          AccessibilityInfo.announceForAccessibility(file.name);
+          chat.add(fileItem(file));
+        },
         showAppSettings: () => setSettingsVisible(true),
         signal,
         audit: {
@@ -1231,6 +1236,17 @@ function BrowserApp({
                 bump();
                 openSmsComposer(offer, () => toast.show(t('common.copied')));
               }}
+              onFile={(action, file) =>
+                runAction(async () => {
+                  try {
+                    if (action === 'share') return void (await shareComposedFile(file.id));
+                    if (await saveComposedFileToFolder(file.id)) return t('chat.fileSaved', { name: file.name });
+                  } catch (e) {
+                    if (e instanceof FileExpiredError) return t('chat.fileExpired');
+                    throw e;
+                  }
+                })
+              }
               onMessageAction={(action, text) =>
                 runAction(async () => {
                   if (action === 'copy') {

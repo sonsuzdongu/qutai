@@ -166,6 +166,39 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'save_file',
+    description:
+      'Give the user a file made from what you gathered: a table (CSV), a list or report (Markdown or text), or data ' +
+      '(JSON). It appears in the chat as a card the user taps to share or save it; nothing is saved without that. ' +
+      'For CSV pass the table as rows (arrays, with column names in columns, or objects): the tool handles quoting, ' +
+      'Excel compatibility and line endings. Max 2 MB.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'File name without extension, e.g. "Laptop prices"' },
+        format: { type: 'string', enum: ['csv', 'md', 'txt', 'json'] },
+        rows: {
+          type: 'array',
+          description: 'CSV only: one entry per row, each an array of cells or an object of column name to value',
+          items: {},
+        },
+        columns: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'CSV only: column names (header row; the key order for object rows)',
+        },
+        content: { type: 'string', description: 'md, txt or json: the whole file content' },
+        delimiter: {
+          type: 'string',
+          enum: [',', ';', '\t'],
+          description: 'CSV separator (default ","); ";" when the user opens it in Excel with Turkish or European settings',
+        },
+        bom: { type: 'boolean', description: 'CSV: start with a UTF-8 byte order mark so Excel shows accents (default true)' },
+      },
+      required: ['name', 'format'],
+    },
+  },
+  {
     name: 'save_screenshot',
     description:
       "Save a screenshot of the current page to the user's photo library: the visible part, or the whole page with full_page. " +

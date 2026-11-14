@@ -8,6 +8,7 @@ import { savePagePdf, savePdfFromScreenshots } from '../device/pdf';
 import { t } from '../i18n';
 import { captureForModel, saveFullPageScreenshot, saveScreenshot } from '../device/screenshot';
 import { fileNameFromUrl, isRiskyDownload, probeDownload } from '../device/download';
+import { composedFileName, composeFile, FileOffer, isFileFormat, keepComposedFile } from '../device/composedFile';
 import { formatSize } from '../i18n/format';
 import { CallOffer, normalizePhone } from '../device/phone';
 import { MAX_SMS_BODY, SmsOffer } from '../device/sms';
@@ -75,6 +76,8 @@ export type ToolContext = {
   composeEmail?: (draft: EmailDraft) => Promise<string>;
   /** Adds a Call button to the conversation (offer_call). It never dials: only the user's tap on it does. */
   offerCall?: (offer: CallOffer) => void;
+  /** Adds a card with Share / Save buttons for a composed file (save_file). Nothing is written until the user taps. */
+  offerFile?: (file: FileOffer) => void;
   /** Adds an "Open in Messages" card to the conversation (draft_sms). It never sends: the user does, in Messages. */
   offerSms?: (offer: SmsOffer) => void;
   /** The AI provider's name (e.g. "Anthropic"), for confirmations that send something to it. */
@@ -181,6 +184,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.scheduleNotification', { title: str(input.title).slice(0, 60) });
     case 'get_location':
       return t('action.getLocation');
+    case 'save_file':
+      return t('action.saveFile', { name: composedFileName(input.name, isFileFormat(input.format) ? input.format : 'txt') });
     case 'download_file':
       return typeof input.url === 'string' && input.url.trim()
         ? t('action.downloadFile', { name: fileNameFromUrl(input.url.trim()) })
@@ -658,6 +663,27 @@ async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext
   }
 }
 
+/**
+ * A file composed from what the assistant gathered, offered as a chat card. Nothing is written to shared storage
+ * here: the user's tap shares or saves it. Kept in memory only (incognito ones until the incognito session ends).
+ */
+function saveFileTool(input: Record<string, unknown>, ctx: ToolContext): ToolOutput {
+  if (!ctx.offerFile) return { content: 'Files are not available here.', isError: true };
+  const file = composeFile(input);
+  if (typeof file === 'string') return { content: `${file} No file was made.`, isError: true };
+  const tab = ctx.browser.getTab(ctx.agentTab.id);
+  const incognito = !!(ctx.privacy?.touchedIncognito || tab?.incognito);
+  ctx.offerFile(keepComposedFile(file, incognito));
+  const rows = file.rows !== undefined ? `, ${file.rows} data row${file.rows === 1 ? '' : 's'}` : '';
+  return {
+    content:
+      `A card for "${file.name}" (${formatSize(file.size)}${rows}) is shown in the chat. Nothing is saved yet: the ` +
+      'user taps it to share it or save it (e.g. to Files). It is kept only while the app runs' +
+      `${incognito ? ' and this incognito session lasts' : ''}. Do not repeat the whole content in your reply.`,
+    isError: false,
+  };
+}
+
 /** Two decimal coordinates, e.g. "41.0082, 28.9784": a location is not something to remember. */
 const COORDINATES = /-?\d{1,3}\.\d{3,}\s*[,;/ ]\s*-?\d{1,3}\.\d{3,}/;
 /** A date and time as read_calendar returns them ("2026-11-15T19:30"); two or more look like a copied schedule. */
@@ -793,6 +819,7 @@ const LOGGED_TOOLS = new Set([
   // Only that the calendar was read and the range: the events are never written to the history.
   'read_calendar',
   'download_file',
+  'save_file',
 ]);
 
 /** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
@@ -815,6 +842,7 @@ function actionTarget(
       'draft_email',
       'offer_call',
       'draft_sms',
+      'save_file',
       'open_settings',
       'get_location',
       'read_calendar',
@@ -862,6 +890,7 @@ const BACKGROUND_TOOLS = new Set([
   // Only add a card to the conversation; the user acts on it later.
   'offer_call',
   'draft_sms',
+  'save_file',
 ]);
 
 /**
@@ -961,6 +990,7 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
   if (name === 'open_settings') return openSettingsTool(input, ctx);
   if (name === 'offer_call') return offerCallTool(input, ctx);
   if (name === 'draft_sms') return draftSmsTool(input, ctx);
+  if (name === 'save_file') return saveFileTool(input, ctx);
 
   const tab = currentTab(ctx);
   if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;

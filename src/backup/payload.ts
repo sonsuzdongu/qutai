@@ -367,7 +367,8 @@ function parseTabs(v: unknown): BackupPayload['tabs'] {
   return { tabs, activeIndex, groups: [...groups.values()].filter((g) => used.has(g.id)) };
 }
 
-const ITEM_KINDS = ['user', 'assistant', 'action', 'error', 'info', 'choices', 'sources', 'call', 'sms'] as const;
+const ITEM_KINDS = ['user', 'assistant', 'action', 'error', 'info', 'choices', 'sources', 'call', 'sms', 'file'] as const;
+const FILE_FORMATS = ['csv', 'md', 'txt', 'json'] as const;
 
 function parseChatItem(v: unknown): Record<string, unknown> | undefined {
   if (!isObj(v)) return undefined;
@@ -400,6 +401,17 @@ function parseChatItem(v: unknown): Record<string, unknown> | undefined {
       number: v.sms.number,
       body: v.sms.body.slice(0, 1000),
       ...(typeof v.sms.name === 'string' ? { name: v.sms.name.slice(0, 200) } : {}),
+    };
+  }
+  // A composed file's card: only its name and size (the content is never stored, so it shows as expired).
+  const format = isObj(v.file) ? oneOf(v.file.format, FILE_FORMATS) : undefined;
+  if (isObj(v.file) && format && str(v.file.id, 64) && str(v.file.name, 200) && Number.isFinite(v.file.size)) {
+    item.file = {
+      id: str(v.file.id, 64),
+      name: str(v.file.name, 200),
+      format,
+      size: Math.max(0, Math.floor(v.file.size as number)),
+      ...(Number.isFinite(v.file.rows) ? { rows: Math.max(0, Math.floor(v.file.rows as number)) } : {}),
     };
   }
   // Left out: Google's search widget (HTML from the file would be shown in a web view) and "still writing".
