@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Dark. -->
 <resources>
+  <color name="qutai_widget_bg">#24232B</color>
+  <color name="qutai_widget_field">#2B2A33</color>
+  <color name="qutai_widget_button">#3A3944</color>
+  <color name="qutai_widget_icon">#D6D3E0</color>
+  <color name="qutai_widget_text">#F2F1F5</color>
+  <color name="qutai_widget_hint">#A9A8B3</color>
   <color name="qutai_shortcut_bg">#3A3944</color>
   <color name="qutai_shortcut_fg">#D6D3E0</color>
 </resources>

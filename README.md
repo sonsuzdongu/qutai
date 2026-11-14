@@ -79,6 +79,11 @@ from outside opens in an incognito tab. Each item is handled once (`src/device/e
   the site's letter badge; it opens the page in Qutai like any link. Not offered in incognito tabs. iOS gives apps no
   way to add a page to the Home Screen (Safari's "Add to Home Screen" is its own), so there is none there.
 
+- **Home screen widget (Android):** "Qutai search" in the launcher's widget list: a search bar (opens a new tab with
+  the address field ready), the assistant button, and New tab / Incognito / Scan QR. Resizable down to the bar alone;
+  light, dark and Material You colours. It shows no history, tabs or other personal data, since others see a home
+  screen. iOS has no widget yet (see Known limitations).
+
 ### The `qutai://` URL scheme
 
 For automation, for example the Shortcuts app's *Open URL* action on iPhone or any app that can open a link on
@@ -289,7 +294,8 @@ the feature, when the user is asked, the config line that declares it and what i
 - **Ways in from other apps are partly Android-only** (needs **a new development build**). Sharing to Qutai works on
   Android only: an iOS share extension is a separate target with an App Group that needs the owner's Apple account
   (`TODO.md` has the next step). Only text and links are accepted, not images or files. There are no Siri / App
-  Intents actions yet; the Shortcuts app can use the `qutai://` links. "Add to home screen" is Android-only.
+  Intents actions yet; the Shortcuts app can use the `qutai://` links. "Add to home screen" and the home screen
+  widget are Android-only: an iOS widget is a WidgetKit extension that also needs an App Group.
 - **Nothing recent has been tested on a device.** The features added since the move to a development build (and many
   before it) are implemented but not yet tried on a phone; `TODO.md` has the checklist.
 - **Prompt injection** is a risk. The system prompt marks page content as untrusted data and asks for confirmation

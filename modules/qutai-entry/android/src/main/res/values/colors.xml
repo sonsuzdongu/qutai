@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Launcher shortcut colours, light (the app's own palette). -->
+<!-- Widget and launcher shortcut colours, light (the app's own palette). -->
 <resources>
+  <color name="qutai_widget_bg">#F5F4EF</color>
+  <color name="qutai_widget_field">#FFFFFF</color>
+  <color name="qutai_widget_button">#ECEAE3</color>
+  <color name="qutai_widget_icon">#4A4458</color>
+  <color name="qutai_widget_text">#1C1B1F</color>
+  <color name="qutai_widget_hint">#6B6862</color>
   <color name="qutai_shortcut_bg">#ECEAE3</color>
   <color name="qutai_shortcut_fg">#4A4458</color>
 </resources>

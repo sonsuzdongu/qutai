@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The widget at one cell of height: only the search bar (Android 12+ picks it by size). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/qutai_widget_bg"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:padding="4dp">
+  <LinearLayout
+      android:id="@+id/qutai_widget_search"
+      android:contentDescription="@string/qutai_widget_hint"
+      android:layout_width="match_parent"
+      android:layout_height="48dp"
+      android:background="@drawable/qutai_widget_field"
+      android:gravity="center_vertical"
+      android:orientation="horizontal"
+      android:paddingStart="14dp"
+      android:paddingEnd="4dp">
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/qutai_widget_ic_search" />
+    <TextView
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="@string/qutai_widget_hint"
+        android:textColor="@color/qutai_widget_hint"
+        android:textSize="15sp" />
+    <ImageView
+        android:id="@+id/qutai_widget_ask"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:contentDescription="@string/qutai_widget_ask"
+        android:padding="9dp"
+        android:src="@drawable/qutai_widget_ic_ask" />
+  </LinearLayout>
+</LinearLayout>

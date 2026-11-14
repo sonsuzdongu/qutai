@@ -117,7 +117,7 @@ credits, background tasks), native work in our own build (network-level blocking
 | Being the default browser | 🟡 | Build · M | Android: intent filters for http/https, and a shortcut to the default apps settings. iOS: requires a special entitlement from Apple |
 | Share to Qutai | 🟡 | Build · M | Android: share sheet, text-selection menu and web searches, with a chooser (open, search, ask as an unsent draft, summarize). iOS share extension open (needs an App Group in the Apple account; `expo-share-intent`) |
 | Launcher shortcuts, `qutai://` links | ✅ | Build · S | Long-press the icon: New tab, New incognito tab, Ask Qutai, Scan QR (both platforms); `qutai://open`, `search`, `ask`, `new-tab`, `new-private-tab`, `scan` for automation (Shortcuts app). Siri / App Intents open (`expo-app-intents` is alpha) |
-| Home screen widgets | ⬜ | Build | `expo-widgets` |
+| Home screen widgets | 🟡 | Build · M | Android: a search/ask bar with New tab, Incognito and Scan QR, no personal data, Material You. iOS open (WidgetKit extension + App Group; `expo-widgets`) |
 
 ### Account and sync (section 8)
 
@@ -215,8 +215,8 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 ### Phase 4 – Things that require our own build
 
 Merged with the "Our own build (development build)" section in `TODO.md`:
-Cookie management and cookie deletion, being the default browser on iOS, widgets, "Share with
-Qutai" on iOS, app verification. Done since: "Share to Qutai" on Android, launcher shortcuts and the `qutai://` links, background audio and media controls, Android picture-in-picture, network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
+Cookie management and cookie deletion, being the default browser on iOS, iOS widgets, "Share with
+Qutai" on iOS, app verification. Done since: "Share to Qutai" on Android, launcher shortcuts and the `qutai://` links, the Android home screen widget, background audio and media controls, Android picture-in-picture, network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
 Android request interception), Face ID on iOS, Android private tab isolation (WebView profiles), per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the
 system download manager on Android), Android default browser (intent filters).
 

@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Android 12+: Material You colours from the wallpaper, light. -->
 <resources>
+  <color name="qutai_widget_bg">@android:color/system_neutral1_50</color>
+  <color name="qutai_widget_field">@android:color/system_neutral1_10</color>
+  <color name="qutai_widget_button">@android:color/system_accent1_100</color>
+  <color name="qutai_widget_icon">@android:color/system_accent1_700</color>
+  <color name="qutai_widget_text">@android:color/system_neutral1_900</color>
+  <color name="qutai_widget_hint">@android:color/system_neutral2_700</color>
   <color name="qutai_shortcut_bg">@android:color/system_accent1_100</color>
   <color name="qutai_shortcut_fg">@android:color/system_accent1_700</color>
 </resources>

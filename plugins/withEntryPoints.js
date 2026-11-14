@@ -13,7 +13,8 @@ const { AndroidConfig, withAndroidManifest, withDangerousMod, withInfoPlist } = 
  * - Launcher shortcuts (long-press the app icon): New tab, New incognito tab, Ask Qutai, Scan QR code. Static, so
  *   they exist before the first launch; labels and icons are the module's resources (English and Turkish).
  *   Each is a qutai:// link to the main activity.
- * No permission is added: pinned "Add to home screen" shortcuts need none either.
+ * - The home screen widget's receiver (layouts, colours and labels in the module's resources).
+ * No permission is added: pinned "Add to home screen" shortcuts and the widget need none.
  *
  * iOS: the same four Home Screen quick actions (UIApplicationShortcutItems; the module's app delegate subscriber
  * hands them to JavaScript). Titles are translated through InfoPlist.strings from locales/*.json, keyed by the
@@ -53,6 +54,8 @@ const SHORTCUTS = [
     ios: { title: 'Scan QR code', symbol: 'qrcode.viewfinder' },
   },
 ];
+
+const WIDGET = 'expo.modules.qutaientry.QutaiWidgetProvider';
 
 const TEXT_FILTERS = [
   { action: 'android.intent.action.SEND', mimeType: 'text/plain' },
@@ -103,6 +106,16 @@ function withAndroidEntryPoints(config) {
     );
     activity['meta-data'].push({
       $: { 'android:name': 'android.app.shortcuts', 'android:resource': '@xml/qutai_shortcuts' },
+    });
+
+    const application = AndroidConfig.Manifest.getMainApplicationOrThrow(config.modResults);
+    application.receiver = (application.receiver ?? []).filter((r) => r.$['android:name'] !== WIDGET);
+    application.receiver.push({
+      $: { 'android:name': WIDGET, 'android:exported': 'false', 'android:label': '@string/qutai_widget_name' },
+      'intent-filter': [{ action: [{ $: { 'android:name': 'android.appwidget.action.APPWIDGET_UPDATE' } }] }],
+      'meta-data': [
+        { $: { 'android:name': 'android.appwidget.provider', 'android:resource': '@xml/qutai_widget_info' } },
+      ],
     });
     return config;
   });
