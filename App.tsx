@@ -35,10 +35,12 @@ import { SelectionAction, SelectionBar } from './src/components/SelectionBar';
 import { TabSwitcher } from './src/components/TabSwitcher';
 import { TextSizeSheet } from './src/components/TextSizeSheet';
 import { Toast, useToast } from './src/components/Toast';
+import { CaptureOverlay } from './src/components/CaptureOverlay';
 import { copyLink, copyText, shareLink, shareText } from './src/device/link';
-import { printPage, savePagePdf } from './src/device/pdf';
+import { printPage, savePagePdf, savePdfFromScreenshots } from './src/device/pdf';
 import { saveImage } from './src/device/saveImage';
-import { saveScreenshot } from './src/device/screenshot';
+import { CaptureCancelled } from './src/device/fullPage';
+import { saveFullPageScreenshot, saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { t, useLanguage } from './src/i18n';
@@ -422,6 +424,7 @@ function BrowserApp({
       const message = await action();
       if (message) toast.show(message);
     } catch (e) {
+      if (e instanceof CaptureCancelled) return toast.show(e.message);
       toast.show(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
     }
   };
@@ -553,6 +556,16 @@ function BrowserApp({
             }),
         },
         {
+          icon: 'pdf',
+          label: t('menu.pdfFromScreenshots'),
+          disabled: onNewTab,
+          onPress: () =>
+            runAction(async () => {
+              const pdf = await savePdfFromScreenshots(tab);
+              if (pdf.truncated) return t('menu.captureTruncated');
+            }),
+        },
+        {
           icon: 'saveOffline',
           label: t('menu.saveOffline'),
           disabled: onNewTab,
@@ -580,6 +593,18 @@ function BrowserApp({
             runAction(async () => {
               await saveScreenshot(tab);
               return t('menu.screenshotSaved');
+            }),
+        },
+        {
+          icon: 'screenshot',
+          label: t('menu.saveFullScreenshot'),
+          disabled: onNewTab,
+          onPress: () =>
+            runAction(async () => {
+              const shot = await saveFullPageScreenshot(tab);
+              const saved =
+                shot.images > 1 ? t('menu.fullScreenshotParts', { count: shot.images }) : t('menu.fullScreenshotSaved');
+              return shot.truncated ? `${saved} ${t('menu.captureTruncated')}` : saved;
             }),
         },
         {
@@ -1020,6 +1045,7 @@ function BrowserApp({
             onClose={() => setScannerVisible(false)}
           />
           <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
+          <CaptureOverlay />
           <Toast key={toast.key} message={toast.message} onHidden={toast.hide} />
         </View>
       </SafeAreaProvider>

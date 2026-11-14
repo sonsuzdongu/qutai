@@ -3,9 +3,9 @@ import type { Tab } from '../browser/Tab';
 import { Platform } from 'react-native';
 import { addCalendarEvent, addReminder, DeviceToolError } from '../device/calendar';
 import { scheduleNotification } from '../device/notifications';
-import { savePagePdf } from '../device/pdf';
+import { savePagePdf, savePdfFromScreenshots } from '../device/pdf';
 import { t } from '../i18n';
-import { captureForModel, saveScreenshot } from '../device/screenshot';
+import { captureForModel, saveFullPageScreenshot, saveScreenshot } from '../device/screenshot';
 import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import { sleep } from '../utils/sleep';
@@ -97,9 +97,9 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'scroll_to':
       return t('action.scrollTo', { ref: str(input.ref) });
     case 'save_pdf':
-      return t('action.savePdf');
+      return t(input.from_screenshots === true ? 'action.savePdfScreenshots' : 'action.savePdf');
     case 'save_screenshot':
-      return t('action.saveScreenshot');
+      return t(input.full_page === true ? 'action.saveFullScreenshot' : 'action.saveScreenshot');
     case 'view_screenshot':
       return t('action.viewScreenshot');
     case 'click_at':
@@ -575,6 +575,16 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
         return { content: result, isError: false };
       }
       case 'save_pdf': {
+        if (input.from_screenshots === true) {
+          // Screens are captured from the view, so the tab has to be on screen.
+          await showTab(ctx, tab);
+          const pdf = await savePdfFromScreenshots(tab);
+          const cut = pdf.truncated ? ' The page was very long, so only its first part is in the PDF.' : '';
+          return {
+            content: `Created "${pdf.fileName}" from screenshots (${pdf.pages} page(s)) and showed the share sheet to the user.${cut}`,
+            isError: false,
+          };
+        }
         const pdf = await savePagePdf(tab);
         const missing = pdf.imagesMissing > 0 ? ` ${pdf.imagesMissing} image(s) could not be embedded.` : '';
         return {
@@ -625,6 +635,13 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
       }
       case 'save_screenshot': {
         await showTab(ctx, tab);
+        if (input.full_page === true) {
+          const shot = await saveFullPageScreenshot(tab);
+          const parts =
+            shot.images > 1 ? ` The page was too long for one image, so it was saved as ${shot.images} images.` : '';
+          const cut = shot.truncated ? ' The page was very long; only its first part was captured.' : '';
+          return { content: `Saved a full-page screenshot to the user's photo library.${parts}${cut}`, isError: false };
+        }
         await saveScreenshot(tab);
         return { content: "Saved a screenshot of the visible area to the user's photo library.", isError: false };
       }

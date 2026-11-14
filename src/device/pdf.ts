@@ -3,6 +3,7 @@ import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
+import { pieceBase64, withFullPage } from './fullPage';
 
 export type Snapshot = {
   title: string;
@@ -72,4 +73,64 @@ export async function savePagePdf(tab: Tab): Promise<PdfResult> {
   }
 
   return { pages: printed.numberOfPages, fileName, imagesMissing: snapshot.failed };
+}
+
+/** Escapes text for an HTML attribute or element. */
+function escapeHtml(text: string) {
+  return text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+}
+
+/**
+ * The other way to make a PDF, for pages the HTML snapshot gets wrong (content drawn by
+ * scripts, canvas, maps): the page is captured screen by screen and each screen becomes one
+ * PDF page whose size matches the screen's shape, so nothing is cut in the middle of a line.
+ * Images are inlined as data URIs, which expo-print supports on both platforms (iOS can't
+ * load local files from print HTML). Shared like the ordinary PDF; temporary files are removed.
+ */
+export async function savePdfFromScreenshots(tab: Tab): Promise<PdfResult & { truncated: boolean }> {
+  const title = tab.title;
+  const url = tab.url;
+  // The capture overlay stays up while the PDF is made, and goes before the share sheet opens.
+  const { printed, truncated } = await withFullPage(tab, async (capture) => {
+    const pageHeight = Math.round((PAGE_WIDTH * capture.height) / capture.width);
+    const pages: string[] = [];
+    for (const piece of capture.pieces) {
+      const base64 = await pieceBase64(piece, capture.width, capture.height);
+      pages.push(`<div class="page"><img src="data:image/jpeg;base64,${base64}"></div>`);
+    }
+    const html =
+      '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+      `<title>${escapeHtml(title || url)}</title><style>` +
+      `@page { size: ${PAGE_WIDTH}px ${pageHeight}px; margin: 0; }` +
+      'html, body { margin: 0; padding: 0; background: #fff; }' +
+      // A hair under the page height so rounding never spills onto an empty extra page.
+      `.page { width: ${PAGE_WIDTH}px; height: ${pageHeight - 1}px; overflow: hidden; page-break-after: always; break-after: page; }` +
+      '.page:last-child { page-break-after: auto; break-after: auto; }' +
+      `img { display: block; width: ${PAGE_WIDTH}px; height: auto; }` +
+      `</style></head><body>${pages.join('')}</body></html>`;
+
+    const printed = await Print.printToFileAsync({
+      html,
+      width: PAGE_WIDTH,
+      height: pageHeight,
+      margins: { top: 0, bottom: 0, left: 0, right: 0 },
+    });
+    return { printed, truncated: capture.truncated };
+  });
+
+  const fileName = pdfFileName(title, url);
+  const file = new File(Paths.cache, fileName);
+  try {
+    await new File(printed.uri).move(file, { overwrite: true });
+    await Sharing.shareAsync(file.uri, {
+      mimeType: 'application/pdf',
+      UTI: 'com.adobe.pdf',
+      dialogTitle: fileName,
+    });
+  } finally {
+    if (file.exists) file.delete();
+    const original = new File(printed.uri);
+    if (original.exists) original.delete();
+  }
+  return { pages: printed.numberOfPages, fileName, imagesMissing: 0, truncated };
 }

@@ -138,14 +138,34 @@ export const TOOLS: ToolDefinition[] = [
     description:
       'Turn the current page into a PDF and open the system share sheet, where the user can save it (e.g. to Files) or send it. ' +
       'Use when the user asks for a PDF, a printable copy, or to save the page as a document.',
-    input_schema: { type: 'object', properties: {} },
+    input_schema: {
+      type: 'object',
+      properties: {
+        from_screenshots: {
+          type: 'boolean',
+          description:
+            'Build the PDF from screenshots of the whole page instead of its HTML (text is not selectable). ' +
+            'Only when the user says the normal PDF looked wrong or empty, or the page is mostly a canvas, map or app-like drawing.',
+        },
+      },
+    },
   },
   {
     name: 'save_screenshot',
     description:
-      "Save a screenshot of the visible part of the current page to the user's photo library. " +
+      "Save a screenshot of the current page to the user's photo library: the visible part, or the whole page with full_page. " +
       'Scroll first if the user wants a specific part of the page.',
-    input_schema: { type: 'object', properties: {} },
+    input_schema: {
+      type: 'object',
+      properties: {
+        full_page: {
+          type: 'boolean',
+          description:
+            'Scroll through the whole page and save it as one tall image (very long pages are split into several images or cut off). ' +
+            'Only when the user asks for the whole or full page.',
+        },
+      },
+    },
   },
   {
     name: 'read_aloud',

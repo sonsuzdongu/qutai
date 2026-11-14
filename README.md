@@ -8,7 +8,8 @@ and chats that touch a private tab save nothing. Each tab has its own chat with 
 
 The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
 
-From the page menu (⋮) and by asking the agent: save the page as PDF, save a screenshot to Photos,
+From the page menu (⋮) and by asking the agent: save the page as PDF (from its HTML, or from screenshots for pages
+that come out wrong), save a screenshot of the visible area or the whole page (scrolled and stitched) to Photos,
 read the page aloud, share/copy the link. When needed, the agent can also look at a screenshot of the page.
 
 ## Running
@@ -112,10 +113,13 @@ provider or model changes mid-chat, the history is rebuilt from the text and too
   Android WebView profile API (development build). On iOS, each private tab uses its own separate, non-persistent data
   store.
 - **The agent can see the screen but cannot click by coordinates.** It can look at the page with `view_screenshot`, but
-  clicking only works through DOM elements (`ref`); it cannot click elements inside a canvas or map. The screenshot
-  covers only the visible area.
+  clicking only works through DOM elements (`ref`); it cannot click elements inside a canvas or map. What the model
+  sees (`view_screenshot`) covers only the visible area.
 - **The PDF is generated from a snapshot.** On very dynamic pages (content drawn by scripts) the PDF may look different
-  from what is on screen.
+  from what is on screen; "PDF from screenshots" is the fallback (images only, text not selectable).
+- **Full-page captures have limits.** At most 25 screens / 20,000 CSS pixels (endless feeds are cut off, with a
+  notice); images taller than 8192 px are split into several. Pages that scroll an inner element instead of the
+  window come out as a single screen.
 - **The agent is deliberately not given a tool for writing to the clipboard.** Only the user copies.
 - **API keys are on the device.** Fine for personal use. Distribution requires a backend proxy that holds the keys.
 - **Model quality varies.** Browser tasks are multi-step; small models may click the wrong element.

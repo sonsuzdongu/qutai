@@ -5,6 +5,7 @@ import { captureRef } from 'react-native-view-shot';
 import type { ToolImage } from '../ai/types';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
+import { stitchCapture, withFullPage } from './fullPage';
 
 /** Longest side of screenshots sent to the model, in pixels: readable text without huge token costs. */
 const MODEL_IMAGE_MAX_PX = 1024;
@@ -53,4 +54,28 @@ export async function saveScreenshot(tab: Tab): Promise<void> {
     const file = new File(uri);
     if (file.exists) file.delete();
   }
+}
+
+export type FullPageResult = { images: number; truncated: boolean };
+
+/**
+ * Saves the whole page (scrolled and stitched) to the photo library. Very long pages become
+ * several images, cut between screens; the result says how many and whether the end is missing.
+ */
+export async function saveFullPageScreenshot(tab: Tab): Promise<FullPageResult> {
+  if (!tab.container) throw new Error(t('error.tabNotReady'));
+
+  // Asked before capturing, so a refusal doesn't waste a long capture.
+  const permission = await requestPermissionsAsync(true, ['photo']);
+  if (!permission.granted) throw new Error(t('error.photosPermission'));
+
+  return withFullPage(tab, async (capture) => {
+    const { files, truncated } = await stitchCapture(capture);
+    try {
+      for (const file of files) await Asset.create(file.uri);
+    } finally {
+      files.forEach((file) => file.exists && file.delete());
+    }
+    return { images: files.length, truncated };
+  });
 }

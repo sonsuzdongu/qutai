@@ -124,7 +124,8 @@ function TabWebView({
       ref={(ref) => tab.setContainer(ref)}
       collapsable={false}
       style={[StyleSheet.absoluteFill, active ? styles.visible : styles.hidden]}
-      pointerEvents={active ? 'auto' : 'none'}
+      // A full-page capture scrolls the page itself; touches would get in its way.
+      pointerEvents={active && !tab.capturing ? 'auto' : 'none'}
       importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}
       accessibilityElementsHidden={!active}
       // Touches inside the page land here too; they let the page ask to open another app.
@@ -142,7 +143,7 @@ function TabWebView({
         />
       ) : (
         <PullToRefresh
-          enabled={atTop}
+          enabled={atTop && !tab.capturing}
           refreshing={refreshing}
           tint={palette.tint}
           background={palette.surface}
@@ -175,7 +176,10 @@ function TabWebView({
               tab.handleLoadEnd();
               setRefreshing(false);
             }}
-            pullToRefreshEnabled
+            pullToRefreshEnabled={!tab.capturing}
+            // Scrollbars would be drawn on every piece of a full-page capture.
+            showsVerticalScrollIndicator={!tab.capturing}
+            showsHorizontalScrollIndicator={!tab.capturing}
             onNavigationStateChange={(nav) => {
               tab.handleNavigationStateChange(nav);
               if (!nav.loading) browser.notifyVisit(tab);

@@ -31,7 +31,10 @@ export type PageCommand =
   | 'findStep'
   | 'clearFind'
   | 'imageData'
-  | 'fileData';
+  | 'fileData'
+  | 'captureBegin'
+  | 'captureStep'
+  | 'captureEnd';
 
 /**
  * One browser tab: owns its WebView, injects the page script, sends commands,
@@ -86,6 +89,8 @@ export class Tab {
   thumbnail: string | null = null;
   /** Pixel size of the last screenshot shown to the model, so click_at can map its coordinates. */
   modelScreenshotSize: { width: number; height: number } | null = null;
+  /** A full-page capture is scrolling this tab: touches, pull to refresh and scrollbars are off. */
+  capturing = false;
   /** Width / height of the captured view, so cards can show the top of the page. */
   thumbnailAspect = 0.6;
 
@@ -163,6 +168,11 @@ export class Tab {
     } catch {
       // A failed thumbnail just falls back to the placeholder card.
     }
+  }
+
+  setCapturing(on: boolean) {
+    this.capturing = on;
+    this.onChange();
   }
 
   /** Switches between the mobile and desktop site and reloads, so the site sees the new identity. */

@@ -78,7 +78,7 @@ putting the AI experience front and center.
 
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
-| Save as PDF | ✅ | | |
+| Save as PDF | ✅ | | From the page's HTML, or from full-page screenshots for very dynamic pages |
 | Printing | ⬜ | Go · S | `Print.printAsync` with the same page copy |
 | Offline saving | ⬜ | Go · M | The page copy written for PDF is saved to a file |
 | Reader mode | ⬜ | Go · M | |

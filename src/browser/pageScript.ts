@@ -644,6 +644,103 @@ export const PAGE_SCRIPT = String.raw`
     return showMatch();
   }
 
+  // Full-page capture: the app scrolls the page step by step and photographs each step.
+  // Fixed elements (headers, chat buttons, cookie bars) are shown only on the first step,
+  // sticky ones stay at their place in the page, and scrollbars and smooth scrolling are off.
+  var CAPTURE_STYLE_ID = '__qutai-capture-style';
+  var capture = null;
+
+  function captureMetrics() {
+    var se = document.scrollingElement || document.documentElement;
+    return {
+      y: Math.round(window.scrollY || se.scrollTop || 0),
+      viewportHeight: window.innerHeight,
+      pageHeight: Math.max(se.scrollHeight, document.body ? document.body.scrollHeight : 0)
+    };
+  }
+
+  function captureBegin() {
+    if (capture) captureEnd();
+    capture = { x: window.scrollX || 0, y: window.scrollY || 0 };
+    var all = document.querySelectorAll('body *');
+    for (var i = 0; i < all.length; i++) {
+      var pos = getComputedStyle(all[i]).position;
+      if (pos === 'fixed') all[i].setAttribute('data-qutai-capture', 'fixed');
+      else if (pos === 'sticky' || pos === '-webkit-sticky') all[i].setAttribute('data-qutai-capture', 'sticky');
+    }
+    var style = document.createElement('style');
+    style.id = CAPTURE_STYLE_ID;
+    style.textContent =
+      'html, body { scroll-behavior: auto !important; scrollbar-width: none !important; }' +
+      'html::-webkit-scrollbar, body::-webkit-scrollbar { display: none !important; }' +
+      '[data-qutai-capture="sticky"] { position: relative !important; top: auto !important; bottom: auto !important; }' +
+      'html[data-qutai-capture-rest] [data-qutai-capture="fixed"] { visibility: hidden !important; }';
+    (document.head || document.documentElement).appendChild(style);
+    window.scrollTo(0, 0);
+    return captureMetrics();
+  }
+
+  function nextFrame() {
+    return new Promise(function (resolve) { requestAnimationFrame(function () { requestAnimationFrame(resolve); }); });
+  }
+
+  function wait(ms) {
+    return new Promise(function (resolve) { setTimeout(resolve, ms); });
+  }
+
+  // Images in view that are still loading (lazy images start when they scroll in); gives up after a while.
+  function waitForVisibleImages(timeoutMs) {
+    var start = Date.now();
+    function pending() {
+      var imgs = document.images;
+      for (var i = 0; i < imgs.length; i++) {
+        if (imgs[i].complete) continue;
+        var r = imgs[i].getBoundingClientRect();
+        if (r.bottom > 0 && r.top < window.innerHeight && r.width > 0) return true;
+      }
+      return false;
+    }
+    function loop() {
+      if (!pending() || Date.now() - start > timeoutMs) return Promise.resolve();
+      return wait(100).then(loop);
+    }
+    return loop();
+  }
+
+  function captureStep(y, index) {
+    if (index > 0) document.documentElement.setAttribute('data-qutai-capture-rest', '');
+    else document.documentElement.removeAttribute('data-qutai-capture-rest');
+    return new Promise(function (resolve) {
+      var done = false;
+      var finish = function () {
+        if (done) return;
+        done = true;
+        window.removeEventListener('scroll', finish);
+        resolve();
+      };
+      window.addEventListener('scroll', finish);
+      window.scrollTo(0, y);
+      // No scroll event when the page is already there.
+      setTimeout(finish, 150);
+    })
+      .then(nextFrame)
+      .then(function () { return waitForVisibleImages(1500); })
+      .then(function () { return wait(120); })
+      .then(nextFrame)
+      .then(captureMetrics);
+  }
+
+  function captureEnd() {
+    var style = document.getElementById(CAPTURE_STYLE_ID);
+    if (style) style.remove();
+    document.documentElement.removeAttribute('data-qutai-capture-rest');
+    var marked = document.querySelectorAll('[data-qutai-capture]');
+    for (var i = 0; i < marked.length; i++) marked[i].removeAttribute('data-qutai-capture');
+    if (capture) window.scrollTo(capture.x, capture.y);
+    capture = null;
+    return true;
+  }
+
   window.__qutaiAgent = {
     readPage: readPage,
     readSource: readSource,
@@ -659,7 +756,10 @@ export const PAGE_SCRIPT = String.raw`
     findStep: findStep,
     clearFind: clearFind,
     imageData: imageData,
-    fileData: fileData
+    fileData: fileData,
+    captureBegin: captureBegin,
+    captureStep: captureStep,
+    captureEnd: captureEnd
   };
 })();
 `;
