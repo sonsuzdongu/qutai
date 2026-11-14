@@ -8,6 +8,7 @@ import { savePagePdf, savePdfFromScreenshots } from '../device/pdf';
 import { t } from '../i18n';
 import { captureForModel, saveFullPageScreenshot, saveScreenshot } from '../device/screenshot';
 import { CallOffer, normalizePhone } from '../device/phone';
+import { MAX_SMS_BODY, SmsOffer } from '../device/sms';
 import { ensureLocationPermission, LocationUnavailableError, readPosition } from '../device/location';
 import { openSystemSettings, PermissionDeniedError } from '../device/settings';
 import { speak, speakPage } from '../device/speech';
@@ -57,6 +58,8 @@ export type ToolContext = {
   composeEmail?: (draft: EmailDraft) => Promise<string>;
   /** Adds a Call button to the conversation (offer_call). It never dials: only the user's tap on it does. */
   offerCall?: (offer: CallOffer) => void;
+  /** Adds an "Open in Messages" card to the conversation (draft_sms). It never sends: the user does, in Messages. */
+  offerSms?: (offer: SmsOffer) => void;
   /** The AI provider's name (e.g. "Anthropic"), for confirmations that send something to it. */
   providerLabel?: string;
   /** Shows Qutai's own Settings screen (open_settings with target "app"). */
@@ -130,6 +133,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.draftEmail', { subject: str(input.subject).slice(0, 60) });
     case 'offer_call':
       return t('action.offerCall', { who: (str(input.name).trim() || str(input.phone)).slice(0, 60) });
+    case 'draft_sms':
+      return t('action.draftSms', { who: (str(input.name).trim() || str(input.phone)).slice(0, 60) });
     case 'close_tab':
       return t('action.closeTab', { id: str(input.tab_id) });
     case 'close_tabs':
@@ -286,6 +291,35 @@ function offerCallTool(input: Record<string, unknown>, ctx: ToolContext): ToolOu
     content:
       `A Call button for ${name ? `${name}, ` : ''}${phone.number} is shown in the chat. No call has been made: ` +
       'the user taps the button to call themselves. Do not say you called; tell them where the number came from.',
+    isError: false,
+  };
+}
+
+/** Who a text message was prepared for, for the action history: the name, never the number or the text. */
+function draftSmsLog(input: Record<string, unknown>): string {
+  const name = typeof input.name === 'string' ? input.name.trim().slice(0, 60) : '';
+  return name ? t('action.draftSmsLogged', { name }) : t('action.draftSmsLoggedNoName');
+}
+
+/**
+ * Shows a prepared text message in the chat. Nothing opens or is sent here: page content is untrusted and
+ * premium-rate numbers exist, so the card shows the full number and text first, the user's tap opens the
+ * Messages app, and the user sends it there.
+ */
+function draftSmsTool(input: Record<string, unknown>, ctx: ToolContext): ToolOutput {
+  if (!ctx.offerSms) return { content: 'Text message drafts are not available here.', isError: true };
+  const phone = normalizePhone(input.phone);
+  if (!phone.ok) return { content: `${phone.error} No message was prepared.`, isError: true };
+  const body = typeof input.body === 'string' ? input.body.trim() : '';
+  if (!body) return { content: 'The message text is empty. No message was prepared.', isError: true };
+  if (body.length > MAX_SMS_BODY)
+    return { content: `The text is longer than ${MAX_SMS_BODY} characters; shorten it. No message was prepared.`, isError: true };
+  const name = typeof input.name === 'string' ? input.name.replace(/\s+/g, ' ').trim().slice(0, 80) : '';
+  ctx.offerSms({ number: phone.number, body, ...(name ? { name } : {}) });
+  return {
+    content:
+      `A text message to ${name ? `${name}, ` : ''}${phone.number} is shown in the chat with an "Open in Messages" ` +
+      'button. Nothing has been sent: the user opens it in Messages and sends it themselves. Do not say it was sent.',
     isError: false,
   };
 }
@@ -559,6 +593,7 @@ const LOGGED_TOOLS = new Set([
   'forget',
   'draft_email',
   'offer_call',
+  'draft_sms',
   'add_calendar_event',
   'add_reminder',
   'schedule_notification',
@@ -586,6 +621,7 @@ function actionTarget(
       'search_history',
       'draft_email',
       'offer_call',
+      'draft_sms',
       'open_settings',
       'get_location',
       ...SCHEDULING_TOOLS,
@@ -629,6 +665,8 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
             ? t('action.typeRedacted', { ref: String(input.ref ?? '') })
             : name === 'offer_call'
               ? offerCallLog(input)
+              : name === 'draft_sms'
+              ? draftSmsLog(input)
               : name in SCHEDULING_LOG_KEYS
               ? t(SCHEDULING_LOG_KEYS[name as SchedulingTool])
               : describeToolCall(name, input),
@@ -660,6 +698,7 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
   if (name === 'draft_email') return draftEmail(input, ctx);
   if (name === 'open_settings') return openSettingsTool(input, ctx);
   if (name === 'offer_call') return offerCallTool(input, ctx);
+  if (name === 'draft_sms') return draftSmsTool(input, ctx);
 
   const tab = currentTab(ctx);
   if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;

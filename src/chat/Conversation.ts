@@ -2,6 +2,7 @@ import type { Turn } from '../ai/types';
 import type { Source } from '../agent/types';
 import type { ChatItem } from '../components/AssistantPanel';
 import type { CallOffer } from '../device/phone';
+import type { SmsOffer } from '../device/sms';
 
 let itemCounter = 0;
 const STREAM_FLUSH_MS = 50;
@@ -14,6 +15,12 @@ export function sourcesItem(sources: Source[], searchWidget?: string): ChatItem 
 export function callItem(call: CallOffer): ChatItem {
   const text = `📞 ${call.name ? `${call.name} · ` : ''}${call.number}`;
   return { id: String(++itemCounter), kind: 'call', text, call };
+}
+
+/** An "Open in Messages" card offered by the assistant; the text is what versions without the card show instead. */
+export function smsItem(sms: SmsOffer): ChatItem {
+  const text = `💬 ${sms.name ? `${sms.name} · ` : ''}${sms.number}`;
+  return { id: String(++itemCounter), kind: 'sms', text, sms };
 }
 
 export function newItem(kind: ChatItem['kind'], text: string, options?: string[]): ChatItem {

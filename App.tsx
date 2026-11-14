@@ -15,7 +15,7 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
-import { Conversation, callItem, newItem, sourcesItem } from './src/chat/Conversation';
+import { Conversation, callItem, newItem, smsItem, sourcesItem } from './src/chat/Conversation';
 import { getProvider, modelLabel } from './src/ai/providers';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import type { ContextTarget } from './src/browser/contextMenu';
@@ -55,6 +55,7 @@ import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
 import { deleteHistorySince, searchHistory } from './src/storage/history';
 import { composeEmail } from './src/device/email';
 import { placeCall } from './src/device/phone';
+import { openSmsComposer } from './src/device/sms';
 import { initNotifications } from './src/device/notifications';
 import { nowContext } from './src/agent/scheduling';
 import { shareReportPdf } from './src/device/reportPdf';
@@ -415,6 +416,14 @@ function BrowserApp({
               : t('chat.callNumberLabel', { number: offer.number }),
           );
           chat.add(callItem(offer));
+        },
+        offerSms: (offer) => {
+          AccessibilityInfo.announceForAccessibility(
+            offer.name
+              ? t('chat.smsLabel', { name: offer.name, number: offer.number })
+              : t('chat.smsNumberLabel', { number: offer.number }),
+          );
+          chat.add(smsItem(offer));
         },
         showAppSettings: () => setSettingsVisible(true),
         signal,
@@ -1013,6 +1022,10 @@ function BrowserApp({
               onCall={(number) => {
                 bump();
                 placeCall(number, () => toast.show(t('common.copied')));
+              }}
+              onSms={(offer) => {
+                bump();
+                openSmsComposer(offer, () => toast.show(t('common.copied')));
               }}
               onMessageAction={(action, text) =>
                 runAction(async () => {

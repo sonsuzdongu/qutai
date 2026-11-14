@@ -268,6 +268,22 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'draft_sms',
+    description:
+      'Prepare a text message (SMS) and show it in the chat with an "Open in Messages" button. It does not send: ' +
+      "the user sees the full number and text, taps the button, and sends it themselves from the phone's Messages " +
+      'app. Take the number from the user or a page they asked about, never invent one. One plain number only.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        phone: { type: 'string', description: 'The recipient\'s phone number, in any formatting' },
+        body: { type: 'string', description: 'The message text, plain text, at most 1000 characters' },
+        name: { type: 'string', description: 'Who the number belongs to (optional)' },
+      },
+      required: ['phone', 'body'],
+    },
+  },
+  {
     name: 'add_calendar_event',
     description:
       "Add an event to the user's calendar (e.g. a booked ticket, reservation or appointment). The user sees exactly " +

@@ -23,6 +23,7 @@ import { GradientText } from '../ui/BrandGradient';
 import { QutaiMark } from '../ui/QutaiMark';
 import type { Source } from '../agent/types';
 import type { CallOffer } from '../device/phone';
+import type { SmsOffer } from '../device/sms';
 import { hostOf } from '../i18n/format';
 import { hasTable, MarkdownText } from './MarkdownText';
 import { SearchSuggestions } from './SearchSuggestions';
@@ -31,7 +32,7 @@ import { useReduceMotion } from '../utils/useReduceMotion';
 
 export type ChatItem = {
   id: string;
-  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices' | 'sources' | 'call';
+  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices' | 'sources' | 'call' | 'sms';
   text: string;
   /** For 'choices': the buttons offered. */
   options?: string[];
@@ -45,6 +46,8 @@ export type ChatItem = {
   searchWidget?: string;
   /** For 'call': the number behind the Call button (stays usable, unlike ask_user options). */
   call?: CallOffer;
+  /** For 'sms': the prepared text message behind the "Open in Messages" button. */
+  sms?: SmsOffer;
 };
 
 /** A one-tap task shown above the input, e.g. "Summarize". */
@@ -82,6 +85,8 @@ type Props = {
   onOpenLink: (url: string) => void;
   /** A Call button or a tel: link in an answer was tapped; number is already normalised. */
   onCall: (number: string) => void;
+  /** The "Open in Messages" button of a prepared text message was tapped. */
+  onSms: (offer: SmsOffer) => void;
   /** A source under an answer was tapped. */
   onOpenSource: (source: Source) => void;
   dark?: boolean;
@@ -122,6 +127,7 @@ export function AssistantPanel({
   onMessageAction,
   onOpenLink,
   onCall,
+  onSms,
   onOpenSource,
   dark = false,
   hasPage = false,
@@ -257,6 +263,7 @@ export function AssistantPanel({
                     onAction={onMessageAction}
                     onOpenLink={onOpenLink}
                     onCall={onCall}
+                    onSms={onSms}
                     onOpenSource={onOpenSource}
                     onShowSent={onShowSent}
                     onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
@@ -411,6 +418,7 @@ function ChatRow({
   onAction,
   onOpenLink,
   onCall,
+  onSms,
   onOpenSource,
   onShowSent,
   onChoose,
@@ -420,6 +428,7 @@ function ChatRow({
   onAction: (action: MessageAction, text: string) => void;
   onOpenLink: (url: string) => void;
   onCall: (number: string) => void;
+  onSms: (offer: SmsOffer) => void;
   onOpenSource: (source: Source) => void;
   onShowSent: () => void;
   /** Set while the question can still be answered. */
@@ -552,6 +561,39 @@ function ChatRow({
           >
             <Icon name="phone" size={17} color={palette.onTint} />
             <Text style={styles.callButtonText}>{t('chat.call')}</Text>
+          </Pressable>
+        </View>
+      );
+    }
+    case 'sms': {
+      const sms = item.sms;
+      if (!sms) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      const label = sms.name
+        ? t('chat.smsLabel', { name: sms.name, number: sms.number })
+        : t('chat.smsNumberLabel', { number: sms.number });
+      return (
+        <View style={[styles.smsCard, d?.assistantBubble]}>
+          <View style={styles.callInfo}>
+            {sms.name ? (
+              <Text style={[styles.callName, d?.text]} numberOfLines={2}>
+                {sms.name}
+              </Text>
+            ) : null}
+            <Text style={[styles.callNumber, d?.dim]} selectable>
+              {sms.number}
+            </Text>
+          </View>
+          <Text style={[styles.smsBody, d?.text]} selectable>
+            {sms.body}
+          </Text>
+          <Pressable
+            onPress={() => onSms(sms)}
+            style={({ pressed }) => [styles.callButton, styles.smsButton, pressed && styles.callButtonPressed]}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+          >
+            <Icon name="message" size={17} color={palette.onTint} />
+            <Text style={styles.callButtonText}>{t('chat.openInMessages')}</Text>
           </Pressable>
         </View>
       );
@@ -711,6 +753,23 @@ const useStyles = makeStyles((c) => ({
     backgroundColor: c.tint,
   },
   callButtonPressed: { opacity: 0.8 },
+  smsCard: {
+    alignSelf: 'stretch',
+    gap: 8,
+    padding: 12,
+    borderRadius: 14,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.separator,
+  },
+  smsBody: {
+    fontSize: 15,
+    color: c.text,
+    paddingLeft: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: c.separator,
+  },
+  smsButton: { alignSelf: 'flex-end', justifyContent: 'center' },
   callButtonText: { color: c.onTint, fontSize: 15, fontWeight: '700' },
   busy: {
     flexDirection: 'row',

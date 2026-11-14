@@ -344,7 +344,7 @@ function parseTabs(v: unknown): BackupPayload['tabs'] {
   return { tabs, activeIndex, groups: [...groups.values()].filter((g) => used.has(g.id)) };
 }
 
-const ITEM_KINDS = ['user', 'assistant', 'action', 'error', 'info', 'choices', 'sources', 'call'] as const;
+const ITEM_KINDS = ['user', 'assistant', 'action', 'error', 'info', 'choices', 'sources', 'call', 'sms'] as const;
 
 function parseChatItem(v: unknown): Record<string, unknown> | undefined {
   if (!isObj(v)) return undefined;
@@ -365,6 +365,18 @@ function parseChatItem(v: unknown): Record<string, unknown> | undefined {
     item.call = {
       number: v.call.number,
       ...(typeof v.call.name === 'string' ? { name: v.call.name.slice(0, 200) } : {}),
+    };
+  }
+  if (
+    isObj(v.sms) &&
+    typeof v.sms.number === 'string' &&
+    /^\+?\d{3,15}$/.test(v.sms.number) &&
+    typeof v.sms.body === 'string'
+  ) {
+    item.sms = {
+      number: v.sms.number,
+      body: v.sms.body.slice(0, 1000),
+      ...(typeof v.sms.name === 'string' ? { name: v.sms.name.slice(0, 200) } : {}),
     };
   }
   // Left out: Google's search widget (HTML from the file would be shown in a web view) and "still writing".

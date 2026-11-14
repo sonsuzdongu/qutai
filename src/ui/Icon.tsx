@@ -61,6 +61,7 @@ const ICONS = {
   openInNew: { ios: 'plus.square.on.square', android: 'open_in_new' },
   check: { ios: 'checkmark', android: 'check' },
   phone: { ios: 'phone.fill', android: 'call' },
+  message: { ios: 'message.fill', android: 'sms' },
   location: { ios: 'location.fill', android: 'location_on' },
   camera: { ios: 'video.fill', android: 'videocam' },
   microphone: { ios: 'mic.fill', android: 'mic' },
