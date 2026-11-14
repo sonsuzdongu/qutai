@@ -41,6 +41,8 @@ export type Settings = {
   showAssistantButton: boolean;
   /** The logo's orbit sweeps now and then (it still shows, without moving, while a task runs). */
   animateLogo: boolean;
+  /** Pinch-zoom every page, even those that turn zooming off. */
+  forceZoom: boolean;
   /** The first-run setup was completed (or skipped through). */
   onboarded: boolean;
   /** Version of the privacy policy and terms the user accepted (0: none yet). */
@@ -76,6 +78,7 @@ export const DEFAULT_SETTINGS: Settings = {
   incognitoLock: false,
   showAssistantButton: true,
   animateLogo: true,
+  forceZoom: false,
   onboarded: false,
   legalAcceptedVersion: 0,
 };
@@ -100,6 +103,7 @@ const KEYS = {
   incognitoLock: 'incognito_lock',
   showAssistantButton: 'show_assistant_button',
   animateLogo: 'animate_logo',
+  forceZoom: 'force_zoom',
   onboarded: 'onboarded',
   legalAcceptedVersion: 'legal_accepted_version',
   apiKey: (id: ProviderId) => `api_key_${id}`,
@@ -142,6 +146,7 @@ export async function loadSettings(): Promise<Settings> {
     incognitoLock,
     showAssistantButton,
     animateLogo,
+    forceZoom,
     onboarded,
     legalAcceptedVersion,
     legacyApiKey,
@@ -167,6 +172,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.incognitoLock),
     get(KEYS.showAssistantButton),
     get(KEYS.animateLogo),
+    get(KEYS.forceZoom),
     get(KEYS.onboarded),
     get(KEYS.legalAcceptedVersion),
     get(KEYS.legacyApiKey),
@@ -196,6 +202,7 @@ export async function loadSettings(): Promise<Settings> {
     incognitoLock: incognitoLock === 'true',
     showAssistantButton: showAssistantButton !== 'false',
     animateLogo: animateLogo !== 'false',
+    forceZoom: forceZoom === 'true',
     onboarded: onboarded === 'true',
     legalAcceptedVersion: Math.max(0, Math.floor(Number(legalAcceptedVersion) || 0)),
   };
@@ -233,6 +240,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.incognitoLock, String(settings.incognitoLock)),
     set(KEYS.showAssistantButton, String(settings.showAssistantButton)),
     set(KEYS.animateLogo, String(settings.animateLogo)),
+    set(KEYS.forceZoom, String(settings.forceZoom)),
     set(KEYS.onboarded, String(settings.onboarded)),
     set(KEYS.legalAcceptedVersion, String(settings.legalAcceptedVersion)),
     ...PROVIDER_ORDER.flatMap((id) => [

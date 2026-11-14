@@ -146,6 +146,13 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
         </View>
         <View style={styles.switchRow}>
           <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.forceZoom')}</Text>
+            <Text style={styles.hint}>{t('settings.forceZoomHint')}</Text>
+          </View>
+          <ThemedSwitch value={draft.forceZoom} onValueChange={(forceZoom) => setDraft({ ...draft, forceZoom })} />
+        </View>
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
             <Text style={styles.label}>{t('settings.showAssistantButton')}</Text>
             <Text style={styles.hint}>{t('settings.showAssistantButtonHint')}</Text>
           </View>

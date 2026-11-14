@@ -813,6 +813,7 @@ function BrowserApp({
                       text ? { tabId: source.id, url: source.url, text } : prev?.tabId === source.id ? null : prev,
                     ),
                   textZoom: settings.textZoom,
+                  forceZoom: settings.forceZoom,
                   onNotice: toast.show,
                   searchEngine: settings.searchEngine,
                   onAsk: (text) => {

@@ -449,4 +449,6 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.showAssistantButtonHint': 'Adres çubuğunda. Kapalıyken Qutai’yi sayfa menüsünden açın.',
   'settings.animateLogo': 'Logoyu canlandır',
   'settings.animateLogoHint': 'Yörünge ara sıra Q’nun çevresinde döner. Qutai çalışırken her durumda görünür.',
+  'settings.forceZoom': 'Yakınlaştırmaya zorla',
+  'settings.forceZoomHint': 'Site kapatmış olsa bile her sayfada iki parmakla yakınlaştırın.',
 };

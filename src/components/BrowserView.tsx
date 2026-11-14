@@ -11,6 +11,7 @@ import { allowInsecure, upgradeToHttps } from '../browser/httpsOnly';
 import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
 import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { mayOfferExternal, noteUserGesture } from '../browser/externalGuard';
+import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
 import { openExternal } from '../browser/openExternal';
 import { parsePullState, PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
 import type { Tab } from '../browser/Tab';
@@ -43,6 +44,8 @@ export type TabActions = {
   onDownload: (tab: Tab, url: string) => void;
   /** Page text size in percent. */
   textZoom: number;
+  /** Pinch-zoom pages that turn zooming off. */
+  forceZoom: boolean;
   /** Short notice for the user, e.g. when no app can open a link. */
   onNotice: (message: string) => void;
   searchEngine: SearchEngineId;
@@ -99,6 +102,7 @@ function TabWebView({
     Platform.OS === 'android' ? PULL_STATE_SCRIPT : '',
     Platform.OS === 'ios' && textZoom !== 100 ? textZoomScript(textZoom) : '',
     Platform.OS === 'ios' && newTabActions.darkMode && newTabActions.darkSites ? DARK_SITE_SCRIPT : '',
+    newTabActions.forceZoom ? FORCE_ZOOM_SCRIPT : '',
   ].join('\n');
 
   const palette = usePalette();
