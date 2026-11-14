@@ -85,7 +85,9 @@ export function QutaiMark({ size, working = false, sweepWhenIdle = false, animat
 
   return (
     <View style={{ width: size, height: size }} accessible={false}>
-      <Image source={LOGO} style={StyleSheet.absoluteFill} resizeMode="contain" />
+      {/* Explicit width and height: an image from require() otherwise takes the file's own size
+          (384 pt), and absoluteFill alone doesn't override that. */}
+      <Image source={LOGO} style={{ width: size, height: size }} resizeMode="contain" />
       <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
         <Group transform={[{ scale: size / 100 }]}>
           {SPARKS.map((spark) => (
