@@ -1,6 +1,8 @@
 {
   "ios": {
     "CFBundleDisplayName": "Kutai",
-    "NSPhotoLibraryAddUsageDescription": "Kutai adds the screenshots you choose to save to your photos."
+    "NSPhotoLibraryAddUsageDescription": "Kutai adds the screenshots you choose to save to your photos.",
+    "NSCameraUsageDescription": "Kutai uses the camera to scan QR codes.",
+    "NSFaceIDUsageDescription": "Kutai uses Face ID to unlock the app and incognito tabs."
   }
 }

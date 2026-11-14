@@ -33,6 +33,10 @@ export type Settings = {
   httpsOnly: boolean;
   /** Block third-party cookies (Android; iOS blocks them anyway). */
   blockThirdPartyCookies: boolean;
+  /** Ask for Face ID / fingerprint / passcode when opening the app. */
+  appLock: boolean;
+  /** Ask before showing incognito tabs again after leaving the app. */
+  incognitoLock: boolean;
 };
 
 export type ThemeSetting = 'system' | 'light' | 'dark';
@@ -60,6 +64,8 @@ export const DEFAULT_SETTINGS: Settings = {
   haptics: true,
   httpsOnly: false,
   blockThirdPartyCookies: true,
+  appLock: false,
+  incognitoLock: false,
 };
 
 const KEYS = {
@@ -78,6 +84,8 @@ const KEYS = {
   haptics: 'haptics',
   httpsOnly: 'https_only',
   blockThirdPartyCookies: 'block_third_party_cookies',
+  appLock: 'app_lock',
+  incognitoLock: 'incognito_lock',
   apiKey: (id: ProviderId) => `api_key_${id}`,
   model: (id: ProviderId) => `model_${id}`,
   // Written by the first, Claude-only version of the app.
@@ -114,6 +122,8 @@ export async function loadSettings(): Promise<Settings> {
     haptics,
     httpsOnly,
     blockThirdPartyCookies,
+    appLock,
+    incognitoLock,
     legacyApiKey,
     legacyModel,
     ...perProvider
@@ -133,6 +143,8 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.haptics),
     get(KEYS.httpsOnly),
     get(KEYS.blockThirdPartyCookies),
+    get(KEYS.appLock),
+    get(KEYS.incognitoLock),
     get(KEYS.legacyApiKey),
     get(KEYS.legacyModel),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
@@ -156,6 +168,8 @@ export async function loadSettings(): Promise<Settings> {
     haptics: haptics !== 'false',
     httpsOnly: httpsOnly === 'true',
     blockThirdPartyCookies: blockThirdPartyCookies !== 'false',
+    appLock: appLock === 'true',
+    incognitoLock: incognitoLock === 'true',
   };
   PROVIDER_ORDER.forEach((id, i) => {
     settings.apiKeys[id] = perProvider[i * 2] ?? '';
@@ -187,6 +201,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.haptics, String(settings.haptics)),
     set(KEYS.httpsOnly, String(settings.httpsOnly)),
     set(KEYS.blockThirdPartyCookies, String(settings.blockThirdPartyCookies)),
+    set(KEYS.appLock, String(settings.appLock)),
+    set(KEYS.incognitoLock, String(settings.incognitoLock)),
     ...PROVIDER_ORDER.flatMap((id) => [
       set(KEYS.apiKey(id), settings.apiKeys[id]),
       set(KEYS.model(id), settings.models[id]),

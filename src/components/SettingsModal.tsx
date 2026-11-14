@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProvider, PROVIDER_ORDER } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
@@ -8,6 +8,7 @@ import { t } from '../i18n';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { ActionLogScreen } from './ActionLogScreen';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
+import { authenticate, canAuthenticate } from '../device/biometric';
 import { MemoryScreen } from './MemoryScreen';
 import { SitePermissionsScreen } from './SitePermissionsScreen';
 import type { Settings } from '../storage/settings';
@@ -50,6 +51,13 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
 
   const setApiKey = (value: string) => setDraft({ ...draft, apiKeys: { ...draft.apiKeys, [draft.provider]: value } });
   const setModel = (value: string) => setDraft({ ...draft, models: { ...draft.models, [draft.provider]: value } });
+
+  /** Turning a lock on needs a phone with a screen lock, and the user proving it's them once. */
+  const setLock = async (key: 'appLock' | 'incognitoLock', on: boolean) => {
+    if (!on) return setDraft((d) => ({ ...d, [key]: false }));
+    if (!(await canAuthenticate())) return Alert.alert(t('settings.lockUnavailable'));
+    if (await authenticate(t('lock.confirmPrompt'))) setDraft((d) => ({ ...d, [key]: true }));
+  };
 
   const save = () => {
     const apiKeys = { ...draft.apiKeys };
@@ -241,6 +249,22 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
         <Pressable onPress={() => setClearDataVisible(true)} style={styles.option} accessibilityRole="button">
           <Text style={[styles.optionText, styles.link]}>{t('settings.clearData')} ›</Text>
         </Pressable>
+
+        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.security')}</Text>
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.appLock')}</Text>
+            <Text style={styles.hint}>{t('settings.appLockHint')}</Text>
+          </View>
+          <Switch value={draft.appLock} onValueChange={(on) => setLock('appLock', on)} />
+        </View>
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.incognitoLock')}</Text>
+            <Text style={styles.hint}>{t('settings.incognitoLockHint')}</Text>
+          </View>
+          <Switch value={draft.incognitoLock} onValueChange={(on) => setLock('incognitoLock', on)} />
+        </View>
 
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.assistant')}</Text>
         <View style={styles.switchRow}>

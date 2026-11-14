@@ -54,7 +54,21 @@
         }
       ],
       "expo-sqlite",
-      "expo-mail-composer"
+      "expo-mail-composer",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Kutai uses the camera to scan QR codes.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Kutai uses Face ID to unlock the app and incognito tabs."
+        }
+      ]
     ],
     "locales": {
       "tr": "./locales/tr.json",

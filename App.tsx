@@ -47,6 +47,13 @@ import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
 import { deleteHistorySince, searchHistory } from './src/storage/history';
 import { composeEmail } from './src/device/email';
 import { shareReportPdf } from './src/device/reportPdf';
+import { authenticate } from './src/device/biometric';
+import { scannedTarget } from './src/device/qr';
+import { toUrl } from './src/browser/url';
+import { LockScreen } from './src/components/LockScreen';
+import { QrCodeSheet } from './src/components/QrCodeSheet';
+import { QrScanner } from './src/components/QrScanner';
+import { captureRef } from 'react-native-view-shot';
 import { clearInsecureExceptions, upgradeToHttps } from './src/browser/httpsOnly';
 import { ClearOptions, rangeStart } from './src/storage/clearData';
 import { deleteActionsSince } from './src/storage/actionLog';
@@ -112,26 +119,40 @@ function askConfirmation(description: string, host: string | null): Promise<bool
 export default function App() {
   // Re-renders the whole tree in the new language when the device language changes.
   useLanguage();
-  const [restored, setRestored] = useState<{ session: Session | null; recentlyClosed: ClosedTab[] } | null>(null);
+  const [restored, setRestored] = useState<{
+    session: Session | null;
+    recentlyClosed: ClosedTab[];
+    settings: Settings;
+  } | null>(null);
 
   useEffect(() => {
+    // Settings come first too, so a locked app never shows its tabs before the lock screen.
+    const settings = loadSettings().catch(() => DEFAULT_SETTINGS);
     getDb()
       .then((db) => Promise.all([loadSession(db), loadRecentlyClosed(db)]))
       .catch((): [null, ClosedTab[]] => [null, []])
-      .then(([session, recentlyClosed]) => setRestored({ session, recentlyClosed }));
+      .then(async ([session, recentlyClosed]) => setRestored({ session, recentlyClosed, settings: await settings }));
   }, []);
 
   // Reading the saved session takes a few milliseconds; tabs are created only after it.
   if (!restored) return <View style={styles.container} />;
-  return <BrowserApp initialSession={restored.session} recentlyClosed={restored.recentlyClosed} />;
+  return (
+    <BrowserApp
+      initialSession={restored.session}
+      recentlyClosed={restored.recentlyClosed}
+      initialSettings={restored.settings}
+    />
+  );
 }
 
 function BrowserApp({
   initialSession,
   recentlyClosed,
+  initialSettings,
 }: {
   initialSession: Session | null;
   recentlyClosed: ClosedTab[];
+  initialSettings: Settings;
 }) {
   const [browserInstance] = useState(() => new Browser(initialSession, recentlyClosed));
   const browser = useBrowser(browserInstance);
@@ -150,7 +171,35 @@ function BrowserApp({
   const [selection, setSelection] = useState<{ tabId: string; url: string; text: string } | null>(null);
   const closePanel = useCallback(() => setPanelOpen(false), []);
 
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState<Settings>(initialSettings);
+
+  // App lock: on start and whenever the app went to the background. Incognito lock: incognito tabs
+  // stay hidden after leaving the app until the user unlocks them again.
+  const [appLocked, setAppLocked] = useState(initialSettings.appLock);
+  const [incognitoUnlocked, setIncognitoUnlocked] = useState(false);
+  const lock: 'app' | 'incognito' | null = appLocked
+    ? 'app'
+    : settings.incognitoLock && tab.incognito && !incognitoUnlocked
+      ? 'incognito'
+      : null;
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state !== 'background') return;
+      setIncognitoUnlocked(false);
+      if (settings.appLock) setAppLocked(true);
+    });
+    return () => sub.remove();
+  }, [settings.appLock]);
+  const unlock = async () => {
+    if (!(await authenticate(t(lock === 'incognito' ? 'lock.incognitoPrompt' : 'lock.appPrompt')))) return;
+    setAppLocked(false);
+    setIncognitoUnlocked(true);
+  };
+  const leaveIncognito = () => {
+    const normal = browser.tabsOf(false);
+    if (normal.length) browser.switchTab(normal[normal.length - 1].id);
+    else browser.openTab();
+  };
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [tabsVisible, setTabsVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -159,6 +208,8 @@ function BrowserApp({
   const [textSizeVisible, setTextSizeVisible] = useState(false);
   const [permissionHost, setPermissionHost] = useState<string | null>(null);
   const [downloadsVisible, setDownloadsVisible] = useState(false);
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
+  const [scannerVisible, setScannerVisible] = useState(false);
   const [context, setContext] = useState<{ tab: Tab; target: ContextTarget } | null>(null);
   // Find in page belongs to one page: it closes by itself when the tab or the URL changes.
   const [findFor, setFindFor] = useState<{ tabId: string; url: string } | null>(null);
@@ -178,12 +229,6 @@ function BrowserApp({
   }, [settings.theme]);
   const darkMode = useColorScheme() === 'dark';
   useEffect(() => setHapticsEnabled(settings.haptics), [settings.haptics]);
-
-  useEffect(() => {
-    loadSettings()
-      .then(setSettings)
-      .catch(() => {});
-  }, []);
 
   // A tab's saved conversation is read from disk the first time the tab is shown.
   useEffect(() => {
@@ -397,6 +442,17 @@ function BrowserApp({
       checked: tab.desktop,
       disabled: onNewTab,
       onPress: () => tab.toggleDesktop(),
+    },
+    {
+      icon: '🔳',
+      label: t('menu.qrCode'),
+      disabled: onNewTab,
+      onPress: () => setQrUrl(tab.url),
+    },
+    {
+      icon: '📷',
+      label: t('menu.scanQr'),
+      onPress: () => setScannerVisible(true),
     },
     {
       icon: '📄',
@@ -816,6 +872,28 @@ function BrowserApp({
           onChange={(textZoom) => onSaveSettings({ ...settings, textZoom })}
           onClose={() => setTextSizeVisible(false)}
         />
+        <QrCodeSheet
+          url={qrUrl}
+          onShareLink={(url) => runAction(() => shareText(url))}
+          onShareImage={(view) =>
+            runAction(async () => {
+              const uri = await captureRef(view, { format: 'png', result: 'tmpfile' });
+              await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
+            })
+          }
+          onClose={() => setQrUrl(null)}
+        />
+        <QrScanner
+          visible={scannerVisible}
+          onScan={(data) => {
+            setScannerVisible(false);
+            const target = scannedTarget(data);
+            if (target.kind === 'url') browser.openTab(target.value, { incognito: tab.incognito });
+            else if (target.value) tab.loadUrl(toUrl(target.value, settings.searchEngine));
+          }}
+          onClose={() => setScannerVisible(false)}
+        />
+        <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
         <Toast key={toast.key} message={toast.message} onHidden={toast.hide} />
       </View>
     </SafeAreaProvider>
