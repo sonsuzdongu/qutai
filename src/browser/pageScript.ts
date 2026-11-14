@@ -271,6 +271,25 @@ export const PAGE_SCRIPT = String.raw`
     return scope ? formErrorsIn(scope, 8) : [];
   }
 
+  // Checkboxes and radios: whether they were already ticked when the page loaded (the checked attribute) or when
+  // first read, so the model can tell a pre-ticked add-on or consent from one the agent ticked.
+  var firstChecked = new WeakMap();
+  var toggled = new WeakSet();
+  var CHECK_ROLES = /^(checkbox|radio|switch|menuitemcheckbox|menuitemradio)$/;
+
+  function checkState(el, checked, markup) {
+    if (!firstChecked.has(el)) firstChecked.set(el, checked);
+    var preset = markup || firstChecked.get(el) === true;
+    if (checked) return preset && !toggled.has(el) ? '(checked, pre-ticked)' : '(checked)';
+    return preset ? '(unchecked, was pre-ticked)' : '(unchecked)';
+  }
+
+  function checkTarget(el) {
+    var t = el.tagName === 'LABEL' && el.control ? el.control : el;
+    var type = (t.type || '').toLowerCase();
+    return (t.tagName === 'INPUT' && (type === 'checkbox' || type === 'radio')) || CHECK_ROLES.test(t.getAttribute('role') || '') ? t : null;
+  }
+
   function describe(el) {
     var tag = el.tagName.toLowerCase();
     var kind = el.getAttribute('role') || tag;
@@ -281,7 +300,7 @@ export const PAGE_SCRIPT = String.raw`
 
     if (tag === 'input' || tag === 'textarea') {
       var type = (el.type || '').toLowerCase();
-      if (type === 'checkbox' || type === 'radio') parts.push(el.checked ? '(checked)' : '(unchecked)');
+      if (type === 'checkbox' || type === 'radio') parts.push(checkState(el, el.checked, el.defaultChecked));
       else if (type === 'password') { if (el.value) parts.push('(filled)'); }
       else if (el.value) parts.push('value="' + clean(el.value).slice(0, 60) + '"');
       parts = parts.concat(formNotes(el, tag));
@@ -295,6 +314,10 @@ export const PAGE_SCRIPT = String.raw`
       var href = el.getAttribute('href') || '';
       if (href && href.indexOf('javascript:') !== 0) parts.push('href=' + href.slice(0, 100));
     } else {
+      if (CHECK_ROLES.test(el.getAttribute('role') || '')) {
+        var ariaChecked = el.getAttribute('aria-checked');
+        parts.push(ariaChecked === 'mixed' ? '(mixed)' : checkState(el, ariaChecked === 'true', false));
+      }
       parts = parts.concat(formNotes(el, tag));
     }
     var expanded = el.getAttribute('aria-expanded');
@@ -450,9 +473,12 @@ export const PAGE_SCRIPT = String.raw`
     var el = getEl(ref);
     el.scrollIntoView({ block: 'center', inline: 'center' });
     var desc = describe(el);
+    var box = checkTarget(el);
+    if (box) checkState(box, box.tagName === 'INPUT' ? box.checked : box.getAttribute('aria-checked') === 'true', !!box.defaultChecked);
     fireMouse(el);
     if (typeof el.focus === 'function') el.focus();
     el.click();
+    if (box) toggled.add(box);
     return 'Clicked ' + desc;
   }
 
