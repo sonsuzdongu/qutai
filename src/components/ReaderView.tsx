@@ -152,6 +152,8 @@ export function ReaderView({ tab, prefs, dark, onOpenSettings, onSelection, onNo
         // Nothing is stored for the article; incognito tabs keep nothing at all (as their pages do).
         domStorageEnabled={false}
         incognito={tab.incognito && Platform.OS === 'ios'}
+        // Android: the incognito session's profile, so the article's images load with its cookies, not the normal ones.
+        webviewProfile={tab.profile}
         cacheEnabled={!tab.incognito}
         saveFormDataDisabled
         // Sizes come from the reader's own text size; Android must not scale them again.

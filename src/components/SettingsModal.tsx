@@ -8,6 +8,7 @@ import { appVersion } from '../device/appVersion';
 import { BackupTooLargeError, pickBackupFile, PickerUnavailableError } from '../device/backupFile';
 import { rateApp } from '../device/rateApp';
 import { voiceModeSummary, VoiceModeSummary } from '../device/voiceInput';
+import { incognitoIsolated } from '../device/webviewProfile';
 import { getLanguage, t } from '../i18n';
 import type { LegalKind } from '../legal/documents';
 import type { Settings } from '../storage/settings';
@@ -296,7 +297,11 @@ function SettingsPages({
             />
             <SwitchRow
               title={t('settings.incognitoLock')}
-              hint={t('settings.incognitoLockHint')}
+              hint={
+                incognitoIsolated()
+                  ? t('settings.incognitoLockHint')
+                  : `${t('settings.incognitoLockHint')} ${t('settings.incognitoSharedHint')}`
+              }
               value={settings.incognitoLock}
               onChange={(on) => setLock('incognitoLock', on)}
             />

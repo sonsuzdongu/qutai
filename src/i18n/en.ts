@@ -564,6 +564,8 @@ export const en = {
   'settings.appLockHint': 'Face ID, fingerprint or passcode when opening Qutai.',
   'settings.incognitoLock': 'Lock incognito tabs',
   'settings.incognitoLockHint': 'Unlock again to see incognito tabs after leaving Qutai.',
+  'settings.incognitoSharedHint':
+    'Incognito tabs share cookies with normal tabs on this phone: its Android System WebView is too old. Update “Android System WebView” from Google Play.',
   'settings.lockUnavailable': 'Set up a screen lock on your phone first.',
 
   'menu.saveOffline': 'Save for offline',
@@ -608,7 +610,7 @@ export const en = {
   'tabs.normal': 'Tabs · {count}',
   'tabs.incognito': '🕶 Incognito · {count}',
   'tabs.androidIncognitoWarning':
-    "⚠️ On Android, incognito tabs share cookies with normal tabs. Cache and form saving are off, but sessions aren't fully isolated.",
+    '⚠️ On this phone, incognito tabs share cookies and site data with normal tabs: its Android System WebView is too old to keep them apart. Update “Android System WebView” from Google Play.',
   'tabs.closeAll': 'Close all',
   'tabs.tabA11y': '{title} tab',
   'tabs.closed': 'Tab closed',
@@ -641,7 +643,10 @@ export const en = {
   'tabs.incognitoInfo':
     "Incognito tabs don't keep browsing history, and their previews in the tab switcher stay in memory only.",
   'tabs.incognitoInfoIos': 'Each incognito tab has its own cookies and site data, deleted when the tab is closed.',
-  'tabs.incognitoInfoAndroid': 'On Android, cookies are currently shared with normal tabs.',
+  'tabs.incognitoInfoAndroid':
+    'Incognito tabs share their own cookies and site data with each other, apart from normal tabs; they are deleted when you close the last incognito tab.',
+  'tabs.incognitoInfoAndroidShared':
+    'On this phone, incognito tabs share cookies and site data with normal tabs because its Android System WebView is too old. Update “Android System WebView” from Google Play to keep them apart.',
 
   'library.bookmarks': 'Bookmarks',
   'library.history': 'History',

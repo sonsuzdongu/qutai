@@ -94,7 +94,9 @@ function TabWebView({
 }) {
   // On iOS `incognito` gives each tab a non-persistent data store. On Android the
   // same prop calls CookieManager.removeAllCookies(), which logs the user out of
-  // every normal tab and still shares cookies, so it is deliberately not used there.
+  // every normal tab and still shares cookies, so it is deliberately not used there:
+  // incognito tabs get the incognito session's WebView profile instead (tab.profile,
+  // see webviewProfile.ts), or share the default one where the WebView is too old.
   const iosIncognito = tab.incognito && Platform.OS === 'ios';
   const androidIncognito = tab.incognito && Platform.OS === 'android';
   const { textZoom } = newTabActions;
@@ -311,6 +313,9 @@ function TabWebView({
             javaScriptEnabled
             domStorageEnabled
             incognito={iosIncognito}
+            // Android (patched react-native-webview): the incognito session's own cookies and site data. Read only
+            // when the WebView is created, before it loads anything; a tab's profile never changes.
+            webviewProfile={tab.profile}
             cacheEnabled={!androidIncognito}
             saveFormDataDisabled={androidIncognito}
           />

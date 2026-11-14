@@ -5,9 +5,10 @@ import { siteColor } from '../ui/siteColor';
 import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles } from '../ui/theme';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
+import { incognitoInfoKey } from '../device/webviewProfile';
 import { getLanguage, t } from '../i18n';
 import { hostOf } from '../i18n/format';
 import { Bookmark, listBookmarks } from '../storage/bookmarks';
@@ -142,7 +143,7 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
             <Text style={[styles.cardTitle, theme.text]}>{t('newTab.incognitoTitle')}</Text>
             <Text style={[styles.cardBody, theme.dim]}>
               {t('tabs.incognitoInfo')}{' '}
-              {t(Platform.OS === 'ios' ? 'tabs.incognitoInfoIos' : 'tabs.incognitoInfoAndroid')}
+              {t(incognitoInfoKey())}
             </Text>
           </View>
         ) : (

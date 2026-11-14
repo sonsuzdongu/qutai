@@ -69,6 +69,11 @@ export class Tab {
    */
   conversation: Conversation;
   readonly incognito: boolean;
+  /**
+   * Android: the WebView profile (own cookies and site data) of an incognito tab, shared by the incognito session's
+   * tabs; set when the tab opens, before its WebView exists. Undefined: the default profile.
+   */
+  profile: string | undefined;
   /** The tab whose link opened this one; back returns there once this tab has no history. */
   readonly openerId: string | undefined;
   webview: ComponentRef<typeof WebView> | null = null;
@@ -155,7 +160,8 @@ export class Tab {
 
   /**
    * Frees the tab's WebView to save memory; it reloads from its URL when shown again.
-   * Incognito tabs never sleep: their cookies and site data live only in their WebView.
+   * Incognito tabs never sleep: on iOS their cookies and site data live only in their WebView (Android keeps them in
+   * the incognito session's profile, see webviewProfile.ts, but a reload would still lose the page's state).
    */
   sleep() {
     // A tab using the camera or microphone stays awake (capture would end without the user stopping it).

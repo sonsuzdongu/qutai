@@ -566,6 +566,8 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.appLockHint': 'Qutai açılırken Face ID, parmak izi veya cihaz şifresi.',
   'settings.incognitoLock': 'Gizli sekmeleri kilitle',
   'settings.incognitoLockHint': "Qutai'den çıktıktan sonra gizli sekmeleri görmek için yeniden kilit açılır.",
+  'settings.incognitoSharedHint':
+    'Bu telefonda gizli sekmeler çerezleri normal sekmelerle paylaşıyor: Android System WebView sürümü çok eski. Google Play’den “Android System WebView” uygulamasını güncelleyin.',
   'settings.lockUnavailable': 'Önce telefonunuzda ekran kilidi ayarlayın.',
 
   'menu.saveOffline': 'Çevrimdışı kaydet',
@@ -611,7 +613,7 @@ export const tr: Record<keyof typeof en, string> = {
   'tabs.normal': 'Sekmeler · {count}',
   'tabs.incognito': '🕶 Gizli · {count}',
   'tabs.androidIncognitoWarning':
-    "⚠️ Android'de gizli sekmeler çerezleri normal sekmelerle paylaşıyor. Önbellek ve form kaydı kapalı, ancak oturumlar tam yalıtılmış değil.",
+    '⚠️ Bu telefonda gizli sekmeler çerezleri ve site verilerini normal sekmelerle paylaşıyor: Android System WebView sürümü bunları ayırmak için çok eski. Google Play’den “Android System WebView” uygulamasını güncelleyin.',
   'tabs.closeAll': 'Tümünü kapat',
   'tabs.tabA11y': '{title} sekmesi',
   'tabs.closed': 'Sekme kapatıldı',
@@ -644,7 +646,10 @@ export const tr: Record<keyof typeof en, string> = {
   'tabs.incognitoInfo':
     'Gizli sekmelerde gezinti geçmişi tutulmaz ve sekme ekranındaki önizlemeler yalnızca bellekte saklanır.',
   'tabs.incognitoInfoIos': 'Her gizli sekmenin çerezleri ve site verileri ayrıdır, sekme kapatılınca silinir.',
-  'tabs.incognitoInfoAndroid': "Android'de çerezler şimdilik normal sekmelerle paylaşılıyor.",
+  'tabs.incognitoInfoAndroid':
+    'Gizli sekmelerin çerezleri ve site verileri normal sekmelerden ayrıdır, gizli sekmeler arasında ortaktır; son gizli sekmeyi kapattığınızda silinir.',
+  'tabs.incognitoInfoAndroidShared':
+    'Bu telefonda Android System WebView sürümü çok eski olduğu için gizli sekmeler çerezleri ve site verilerini normal sekmelerle paylaşıyor. Ayırmak için Google Play’den “Android System WebView” uygulamasını güncelleyin.',
 
   'library.bookmarks': 'Yer imleri',
   'library.history': 'Geçmiş',

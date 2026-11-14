@@ -16,7 +16,7 @@ Infrastructure and size are given only for what is still missing or partial; don
 The browser foundation and the AI experience are both in place: data is stored on the device, the everyday browser
 features are built, and the assistant reads, clicks (also by coordinates), uses other tabs and can add to the
 calendar, share a location or offer a call. What is left is mostly what needs a server (accounts, sync, Qutai
-credits, background tasks), native work in our own build (network-level blocking, Android private tab isolation), and testing on real devices: most of it has never run on a phone.
+credits, background tasks), native work in our own build (network-level blocking), and testing on real devices: most of it has never run on a phone.
 
 ---
 
@@ -27,7 +27,7 @@ credits, background tasks), native work in our own build (network-level blocking
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
 | Address bar, URL / search distinction | ✅ | | |
-| Multiple tabs, tab switching, private mode | ✅ | | No cookie isolation on Android (see Build) |
+| Multiple tabs, tab switching, private mode | ✅ | | Android: private tabs share one profile of their own (WebView multi-profile API; old WebViews share cookies, and the app says so) |
 | Back, reload, share, copy URL | ✅ | | |
 | Forward, stop loading | ✅ | | In the icon row at the top of the menu |
 | History, bookmarks, recently closed tabs | ✅ | | `expo-sqlite`; private tabs are not saved; bookmark folders, HTML import/export |
@@ -62,7 +62,7 @@ credits, background tasks), native work in our own build (network-level blocking
 
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
-| Private browsing | 🟡 | Build · M | Full on iOS; cookie isolation on Android needs the WebView profile API |
+| Private browsing | ✅ | | iOS: a data store per private tab. Android: one WebView profile per private session, emptied when the last private tab closes and deleted at the next start; WebViews without profile support share cookies with normal tabs (said in the app) |
 | Screenshot restriction in private mode | ✅ | | |
 | Hiding cookie banners and ad slots (visual) | ✅ | | CSS injection into the page (`src/content/`) |
 | Network-level ad / tracker blocking | 🟡 | Build · L | URL-based blocking from a short built-in list: navigations, iframes, pop-ups and requests added by scripts. Resources hard-coded in the HTML and full filter lists need native blocking (iOS WKContentRuleList, Android request interception) |
@@ -213,9 +213,9 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 ### Phase 4 – Things that require our own build
 
 Merged with the "Our own build (development build)" section in `TODO.md`:
-Android private tab isolation, network-level ad and tracker blocking (with URL lists; iOS
+Network-level ad and tracker blocking (with URL lists; iOS
 WKContentRuleList, Android request interception), cookie management and cookie deletion, Android PiP, background audio, being the default browser on iOS, widgets, "Share with
-Qutai", app verification. Done since: Face ID on iOS, per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the
+Qutai", app verification. Done since: Face ID on iOS, Android private tab isolation (WebView profiles), per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the
 system download manager on Android), Android default browser (intent filters).
 
 Added from Comet reviews:

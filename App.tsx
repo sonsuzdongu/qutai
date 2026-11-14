@@ -48,6 +48,7 @@ import { saveFullPageScreenshot, saveScreenshot } from './src/device/screenshot'
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { stopVoiceInput } from './src/device/voiceInput';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
+import { deleteLeftoverIncognitoProfiles } from './src/device/webviewProfile';
 import { t, useLanguage } from './src/i18n';
 import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmarks';
 import { getDb } from './src/storage/db';
@@ -202,6 +203,9 @@ function BrowserApp({
   initialSettings: Settings;
 }) {
   const [browserInstance] = useState(() => new Browser(initialSession, recentlyClosed));
+  // Android: incognito profiles left from an earlier run (the app was killed with incognito tabs open; they are
+  // never restored) are deleted before any incognito tab opens again.
+  useEffect(() => deleteLeftoverIncognitoProfiles(), []);
   // As the default browser, links from other apps open in a new tab (at launch and while running).
   useEffect(() => {
     const open = (url: string | null | undefined) => {
@@ -855,8 +859,9 @@ function BrowserApp({
       }
     }
     if (options.cache) {
-      // The data store is shared by all tabs, so one WebView clears it for every site.
-      browser.tabs.find((x) => x.webview)?.webview?.clearCache?.(true);
+      // The data store is shared by all normal tabs, so one WebView clears it for every site. Not an incognito
+      // tab's: on Android it has its own profile (deleted with the incognito session), so it would clear only that.
+      browser.tabs.find((x) => x.webview && !x.incognito)?.webview?.clearCache?.(true);
       clearInsecureExceptions();
     }
     toast.show(t('clearData.done'));

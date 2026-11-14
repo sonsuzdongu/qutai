@@ -3,7 +3,6 @@ import {
   Animated,
   Image,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -17,6 +16,7 @@ import { Browser, ClosedGroup, TabGroup, useBrowser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { matchesTabQuery } from '../browser/tabSearch';
 import { bump } from '../device/haptics';
+import { incognitoInfoKey, incognitoIsolated } from '../device/webviewProfile';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { dropTab, Measurable, sectionsOf, TabDrag } from './tabDrag';
 import { t } from '../i18n';
@@ -268,7 +268,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
         </View>
       )}
 
-      {incognito && Platform.OS === 'android' && allTabs.length > 0 && (
+      {incognito && !incognitoIsolated() && allTabs.length > 0 && (
         <Text style={styles.warning}>{t('tabs.androidIncognitoWarning')}</Text>
       )}
 
@@ -629,7 +629,7 @@ function EmptyState({ incognito }: { incognito: boolean }) {
       <Text style={[styles.emptyTitle, theme.text]}>{t(incognito ? 'tabs.emptyIncognito' : 'tabs.empty')}</Text>
       {incognito && (
         <Text style={[styles.emptyBody, theme.dimText]}>
-          {t('tabs.incognitoInfo')} {t(Platform.OS === 'ios' ? 'tabs.incognitoInfoIos' : 'tabs.incognitoInfoAndroid')}
+          {t('tabs.incognitoInfo')} {t(incognitoInfoKey())}
         </Text>
       )}
     </View>

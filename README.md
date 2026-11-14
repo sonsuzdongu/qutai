@@ -185,10 +185,15 @@ the feature, when the user is asked, the config line that declares it and what i
 
 ## Known limitations / next steps
 
-- **Private mode is not fully isolated on Android.** The `incognito` prop of `react-native-webview` is not used because
-  on Android it deletes all cookies; private tabs share cookies with normal tabs. Real isolation requires the
-  Android WebView profile API (development build). On iOS, each private tab uses its own separate, non-persistent data
-  store.
+- **Private mode isolation differs per platform.** iOS: each private tab has its own non-persistent data store
+  (cookies and site data), gone when the tab closes. Android: the private tabs open at the same time share one private
+  session, a WebView profile of their own (cookies, localStorage/IndexedDB, cache, service workers), apart from normal
+  tabs (androidx.webkit multi-profile API through the patched `react-native-webview`: `webviewProfile` prop,
+  `RNCWebViewProfiles.java`, `src/device/webviewProfile.ts`). WebView can't delete a profile the running app has used,
+  so each session gets a new profile: closing the last private tab empties it (once its last WebView is destroyed) and
+  it is deleted at the next start, as is one left by an app that was killed. On phones whose Android System WebView
+  lacks profile support, private tabs share cookies and site data with normal tabs (cache and form saving off); the
+  tab switcher, the new private tab page and Settings say so and suggest updating Android System WebView.
 - **Clicking by coordinates works only on what the agent has seen.** `click_at` clicks a point of the latest
   `view_screenshot`, which covers only the visible area; everything else is clicked through DOM elements (`ref`).
 - **The PDF is generated from a snapshot.** On very dynamic pages (content drawn by scripts) the PDF may look different

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { Conversation, groupChatKey } from '../chat/Conversation';
+import { endIncognitoProfile, newIncognitoProfile } from '../device/webviewProfile';
 import type { Session } from '../storage/session';
 import { NEW_TAB_URL, Tab } from './Tab';
 
@@ -54,6 +55,11 @@ export class Browser {
   private pendingJoins = new Map<string, Tab[]>();
 
   private counter = 0;
+  /**
+   * Android: the WebView profile shared by the open incognito tabs (one private session; a new one, with a new
+   * name, after the last incognito tab closes). Undefined while no incognito tab is open or without profile support.
+   */
+  private incognitoProfile: string | undefined;
   /** The tab the agent is working in, which must not fall asleep under it. */
   private agentTab: { id: string } | null = null;
   private version = 0;
@@ -177,6 +183,7 @@ export class Browser {
     } = {},
   ): Tab {
     const tab = new Tab(String(++this.counter), url, incognito, openerId, this.emit, uid);
+    if (incognito) tab.profile = this.incognitoProfile ??= newIncognitoProfile();
     tab.asleep = asleep && !activate;
     if (tab.asleep) tab.lastActiveAt = 0;
     this.tabs.push(tab);
@@ -247,6 +254,7 @@ export class Browser {
     }
     closing.forEach((t) => t.dispose());
     this.dropEmptyGroups();
+    this.endIncognitoSessionIfOver();
 
     if (this.tabs.length === 0) {
       this.openTab(HOME_URL);
@@ -585,9 +593,22 @@ export class Browser {
     return tab;
   }
 
-  /** Closes every incognito tab, which discards their cookies and storage on iOS. */
+  /**
+   * Closes every incognito tab, which ends the incognito session: their cookies and site data are discarded (iOS:
+   * each tab's own data store; Android with profile support: the session's profile, see webviewProfile.ts).
+   */
   closeAllIncognito() {
     this.closeTabs(this.tabsOf(true).map((t) => t.id));
+  }
+
+  /**
+   * The last incognito tab is gone: its profile's data is removed once React has destroyed the last WebView using it
+   * (native side), and the next incognito tab starts a new session with a new profile.
+   */
+  private endIncognitoSessionIfOver() {
+    if (!this.incognitoProfile || this.tabs.some((t) => t.incognito)) return;
+    endIncognitoProfile(this.incognitoProfile);
+    this.incognitoProfile = undefined;
   }
 }
 
