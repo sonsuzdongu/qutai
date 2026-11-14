@@ -19,6 +19,21 @@ export function groupNameFor(url: string, n: number): string {
 /** uid lets a reopened tab get its conversation back (a group's too, when it was the group's last tab). */
 export type ClosedTab = { url: string; title: string; closedAt: number; uid?: string };
 
+/** What undoing "close all tabs in the group" needs (kept in memory only, for the undo bar). */
+export type ClosedGroup = {
+  group: TabGroup;
+  /** Its normal tabs in order; entry is the tab's line in recently closed (web pages only). */
+  tabs: { url: string; title: string; uid: string; entry?: ClosedTab }[];
+  /** The group's conversation and the closed tab it is kept under meanwhile. */
+  chat?: { chat: Conversation; uid: string };
+  /** Index in `tabs` of the tab that was active, or -1. */
+  activeIndex: number;
+  /** The tab that followed the group, so it comes back in the same place. */
+  afterId?: string;
+  /** The new tab opened because no tab was left. */
+  placeholderId?: string;
+};
+
 const MAX_RECENTLY_CLOSED = 25;
 /** Background tabs beyond this many keep only their URL and title (each WebView costs a lot of memory). */
 export const MAX_AWAKE_TABS = 5;
@@ -174,49 +189,169 @@ export class Browser {
 
   /** Returns true when the tab was remembered in recently closed (normal web pages only). */
   closeTab(id: string): boolean {
-    const tab = this.getTab(id);
-    if (!tab) return false;
-    const sameMode = this.tabsOf(tab.incognito);
-    const indexInMode = sameMode.indexOf(tab);
+    return this.closeTabs([id]).remembered.length > 0;
+  }
 
-    this.tabs.splice(this.tabs.indexOf(tab), 1);
-    const lastOfGroup = !!tab.groupId && !this.tabs.some((t) => t.groupId === tab.groupId);
-    const remembered = !tab.incognito && /^https?:\/\//i.test(tab.url);
-    if (remembered) {
-      this.recentlyClosed = [
-        { url: tab.url, title: tab.title, closedAt: Date.now(), uid: tab.uid },
-        ...this.recentlyClosed,
-      ].slice(0, MAX_RECENTLY_CLOSED);
+  /**
+   * Closes these tabs in one step (one change notification and session save). Normal web pages are
+   * remembered in recently closed in their tab order, the first on top, so reopening them one by one
+   * puts them back in order. A group whose last tab closes keeps its conversation under one of its
+   * remembered tabs (the active one if it was there, else the first), so reopening that tab brings it back.
+   */
+  closeTabs(ids: string[]): { remembered: ClosedTab[]; chats: Map<string, { chat: Conversation; uid: string }> } {
+    const closing = this.tabs.filter((t) => ids.includes(t.id));
+    const chats = new Map<string, { chat: Conversation; uid: string }>();
+    if (closing.length === 0) return { remembered: [], chats };
+    const active = this.active;
+    const sameMode = this.tabsOf(active.incognito);
+    const indexInMode = sameMode.indexOf(active);
+
+    this.tabs = this.tabs.filter((t) => !closing.includes(t));
+    const now = Date.now();
+    const kept = closing.filter((t) => !t.incognito && /^https?:\/\//i.test(t.url));
+    const remembered = kept.map((t) => ({ url: t.url, title: t.title, closedAt: now, uid: t.uid }));
+    if (remembered.length) {
+      this.recentlyClosed = [...remembered, ...this.recentlyClosed].slice(0, MAX_RECENTLY_CLOSED);
     }
-    tab.conversation.stop();
-    if (lastOfGroup) {
-      // The group goes with its last tab; its conversation is kept under the tab, like a closed
+    closing.forEach((t) => t.conversation.stop());
+    for (const groupId of new Set(closing.flatMap((t) => (t.groupId ? [t.groupId] : [])))) {
+      if (this.tabs.some((t) => t.groupId === groupId)) continue;
+      // The group goes with its last tab; its conversation is kept under a closed tab, like a closed
       // tab's own, so reopening it from recently closed brings the conversation back.
-      const chat = this.groupChats.get(tab.groupId!);
-      this.groupChats.delete(tab.groupId!);
-      if (chat) {
-        chat.stop();
-        if (!chat.isBlank) this.moveChat(chat, tab.uid);
-      }
+      const chat = this.groupChats.get(groupId);
+      this.groupChats.delete(groupId);
+      if (!chat) continue;
+      chat.stop();
+      if (chat.isBlank) continue;
+      const members = closing.filter((t) => t.groupId === groupId);
+      const heir =
+        kept.find((t) => t === active && t.groupId === groupId) ??
+        kept.find((t) => t.groupId === groupId) ??
+        members[members.length - 1];
+      this.moveChat(chat, heir.uid);
+      chats.set(groupId, { chat, uid: heir.uid });
     }
-    tab.dispose();
+    closing.forEach((t) => t.dispose());
     this.dropEmptyGroups();
 
     if (this.tabs.length === 0) {
       this.openTab(HOME_URL);
-      return remembered;
+      return { remembered, chats };
     }
-    if (this.activeId === id) {
-      // Return to the tab that opened this one, like regular browsers. Otherwise prefer the
-      // neighbour in the same mode; leaving incognito falls back to the last normal tab.
-      const opener = tab.openerId ? this.getTab(tab.openerId) : undefined;
-      const remaining = sameMode.filter((t) => t !== tab);
-      const next = opener ?? remaining[Math.min(indexInMode, remaining.length - 1)] ?? this.tabs[this.tabs.length - 1];
+    if (closing.includes(active)) {
+      // Return to the tab that opened the active one, like regular browsers. Otherwise prefer the
+      // next tab in the same mode (else the one before); leaving incognito falls back to the last normal tab.
+      const opener = active.openerId ? this.getTab(active.openerId) : undefined;
+      const open = (t: Tab) => !closing.includes(t);
+      const next =
+        opener ??
+        sameMode.slice(indexInMode + 1).find(open) ??
+        sameMode.slice(0, indexInMode).reverse().find(open) ??
+        this.tabs[this.tabs.length - 1];
       this.setActive(next);
       next.wake();
     }
     this.emit();
-    return remembered;
+    return { remembered, chats };
+  }
+
+  /**
+   * The assistant is working in this group: one of its conversations runs a task, or the agent's
+   * working tab is one of its tabs.
+   */
+  isTaskRunningIn(groupId: string): boolean {
+    const members = this.tabs.filter((t) => t.groupId === groupId);
+    return (
+      !!this.groupChats.get(groupId)?.running ||
+      members.some((t) => t.conversation.running || t.id === this.agentTab?.id)
+    );
+  }
+
+  /**
+   * Closes every tab of a group in one step, stopping a task the assistant runs there (also one whose
+   * working tab is in the group). Returns what undoing it needs, or null when there is nothing to bring
+   * back (incognito tabs are never remembered).
+   */
+  closeGroup(id: string): ClosedGroup | null {
+    const group = this.getGroup(id);
+    const members = this.tabs.filter((t) => t.groupId === id);
+    if (!group || members.length === 0) return null;
+    // Only one task runs at a time, so a running conversation is the one using the agent's tab.
+    if (members.some((t) => t.id === this.agentTab?.id)) {
+      this.conversations.filter((c) => c.running).forEach((c) => c.stop());
+    }
+    const last = this.tabs.indexOf(members[members.length - 1]);
+    const after = this.tabs.slice(last + 1).find((t) => t.groupId !== id);
+    const activeIndex = members.findIndex((t) => t.id === this.activeId);
+    const before = new Set(this.tabs);
+    const { remembered, chats } = this.closeTabs(members.map((t) => t.id));
+    const restorable = members.filter((t) => !t.incognito);
+    if (restorable.length === 0) return null;
+    const placeholder = this.tabs.find((t) => !before.has(t));
+    return {
+      group: { ...group },
+      tabs: restorable.map((t) => ({
+        url: t.url,
+        title: t.title,
+        uid: t.uid,
+        entry: remembered.find((c) => c.uid === t.uid),
+      })),
+      chat: chats.get(id),
+      activeIndex: activeIndex >= 0 && !members[activeIndex].incognito ? restorable.indexOf(members[activeIndex]) : -1,
+      afterId: after?.id,
+      placeholderId: placeholder?.id,
+    };
+  }
+
+  /**
+   * Undoes `closeGroup`: the group comes back with its name, colour and conversation, its tabs in
+   * their order where they were (asleep, except the one that was active). Tabs already reopened from
+   * recently closed meanwhile are left out; if that took the conversation along, the group starts a new one.
+   */
+  restoreGroup(closed: ClosedGroup) {
+    const tabs = closed.tabs.filter((t) => !t.entry || this.recentlyClosed.includes(t.entry));
+    if (tabs.length === 0) return;
+    const entries = new Set(tabs.map((t) => t.entry));
+    this.recentlyClosed = this.recentlyClosed.filter((c) => !entries.has(c));
+    const group = { ...closed.group };
+    if (this.getGroup(group.id)) group.id = `${group.id}r`;
+    this.groups.push(group);
+
+    const heirBack = closed.chat && tabs.some((t) => t.uid === closed.chat!.uid);
+    let chat = heirBack ? closed.chat!.chat : undefined;
+    if (!chat) {
+      chat = new Conversation(this.emit, groupChatKey(group.id));
+      chat.loaded = true;
+    }
+    this.groupChats.set(group.id, chat);
+    if (heirBack) this.moveChat(chat, groupChatKey(group.id));
+
+    const activate = closed.activeIndex >= 0 ? closed.tabs[closed.activeIndex] : undefined;
+    const restored = tabs.map((saved) => {
+      const tab = new Tab(String(++this.counter), saved.url, false, undefined, this.emit, saved.uid);
+      tab.title = saved.title;
+      tab.groupId = group.id;
+      if (saved !== activate) {
+        tab.asleep = true;
+        tab.lastActiveAt = 0;
+      }
+      return tab;
+    });
+    const after = closed.afterId ? this.getTab(closed.afterId) : undefined;
+    this.tabs.splice(after ? this.tabs.indexOf(after) : this.tabs.length, 0, ...restored);
+
+    const active = restored[tabs.indexOf(activate!)];
+    if (active) {
+      this.setActive(active);
+      // The new tab opened only because nothing was left goes again if it was never used.
+      const placeholder = closed.placeholderId ? this.getTab(closed.placeholderId) : undefined;
+      if (placeholder?.isNewTab && placeholder.conversation.isEmpty && !placeholder.conversation.draft) {
+        this.tabs.splice(this.tabs.indexOf(placeholder), 1);
+        placeholder.dispose();
+      }
+    }
+    this.sleepInactive();
+    this.emit();
   }
 
   private setActive(tab: Tab) {
@@ -398,7 +533,7 @@ export class Browser {
 
   /** Closes every incognito tab, which discards their cookies and storage on iOS. */
   closeAllIncognito() {
-    this.tabsOf(true).forEach((t) => this.closeTab(t.id));
+    this.closeTabs(this.tabsOf(true).map((t) => t.id));
   }
 }
 

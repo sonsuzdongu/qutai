@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Browser, TabGroup, useBrowser } from '../browser/Browser';
+import { Browser, ClosedGroup, TabGroup, useBrowser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { matchesTabQuery } from '../browser/tabSearch';
 import { bump } from '../device/haptics';
@@ -119,26 +119,63 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
     { label: t('tabs.closeTab'), destructive: true, onPress: () => closeTab(tab) },
   ];
 
-  const [undoVisible, setUndoVisible] = useState(false);
+  /** What the undo bar brings back: the last closed tab, or a whole closed group. */
+  const [undo, setUndo] = useState<{ count: number; group?: ClosedGroup } | null>(null);
   // Bumped on every close, so the 4-second undo window restarts.
   const [undoKey, setUndoKey] = useState(0);
   useEffect(() => {
-    if (!undoVisible) return;
-    const timer = setTimeout(() => setUndoVisible(false), 4000);
+    if (!undo) return;
+    const timer = setTimeout(() => setUndo(null), 4000);
     return () => clearTimeout(timer);
-  }, [undoVisible, undoKey]);
+  }, [undo, undoKey]);
+  const showUndo = (next: { count: number; group?: ClosedGroup }) => {
+    setUndo(next);
+    setUndoKey((k) => k + 1);
+  };
 
   const closeTab = (tab: Tab) => {
     // Only normal web pages are remembered, so only those can be undone.
     bump();
     if (!browser.closeTab(tab.id)) return;
-    setUndoVisible(true);
-    setUndoKey((k) => k + 1);
+    showUndo({ count: 1 });
   };
 
   const undoClose = () => {
-    setUndoVisible(false);
-    browser.reopenClosed(0);
+    setUndo(null);
+    if (undo?.group) browser.restoreGroup(undo.group);
+    else browser.reopenClosed(0);
+  };
+
+  // The group header's options: ungroup (tabs stay open) or close all of its tabs.
+  const [menuGroup, setMenuGroup] = useState<TabGroup | null>(null);
+  const groupSize = (group: TabGroup) => browser.tabs.filter((x) => x.groupId === group.id).length;
+
+  const closeGroupTabs = async (group: TabGroup) => {
+    if (browser.isTaskRunningIn(group.id)) {
+      const confirmed = await dialog.confirm({
+        title: t('tabs.groupTaskRunning'),
+        message: t('tabs.groupTaskRunningBody'),
+        confirmText: t('tabs.stopAndClose'),
+        destructive: true,
+      });
+      if (!confirmed) return;
+    }
+    bump();
+    // Incognito tabs are never remembered, so closing an incognito group can't be undone.
+    const closed = browser.closeGroup(group.id);
+    if (closed) showUndo({ count: closed.tabs.length, group: closed });
+  };
+
+  const groupActions = (group: TabGroup): SheetAction[] => {
+    const count = groupSize(group);
+    return [
+      { label: t('tabs.ungroup'), onPress: () => browser.ungroup(group.id) },
+      {
+        label: count === 1 ? t('tabs.closeGroupTab') : t('tabs.closeGroupTabs', { count }),
+        destructive: true,
+        onPress: () => void closeGroupTabs(group),
+      },
+    ];
   };
 
   const select = (tab: Tab) => {
@@ -169,7 +206,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
         style: 'destructive',
         onPress: () => {
           if (incognito) browser.closeAllIncognito();
-          else browser.tabsOf(false).forEach((t) => browser.closeTab(t.id));
+          else browser.closeTabs(browser.tabsOf(false).map((t) => t.id));
         },
       },
     ]);
@@ -259,7 +296,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
                   register={(view) => drag.register('group', group.id, view)}
                   onToggle={() => browser.toggleGroup(group.id)}
                   onRename={(name) => browser.renameGroup(group.id, name)}
-                  onUngroup={() => browser.ungroup(group.id)}
+                  onOptions={() => setMenuGroup(group)}
                 />
               )}
               {group?.collapsed ? null : (
@@ -305,9 +342,25 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
         onClose={() => setMenuTab(null)}
       />
 
-      {undoVisible && (
+      <ActionSheet
+        title={
+          menuGroup
+            ? t(groupSize(menuGroup) === 1 ? 'tabs.groupSheetTitleOne' : 'tabs.groupSheetTitle', {
+                name: menuGroup.name,
+                count: groupSize(menuGroup),
+              })
+            : null
+        }
+        actions={menuGroup ? groupActions(menuGroup) : []}
+        dark={incognito || darkMode}
+        onClose={() => setMenuGroup(null)}
+      />
+
+      {undo && (
         <View style={styles.undoBar} accessibilityLiveRegion="polite">
-          <Text style={styles.undoText}>{t('tabs.closed')}</Text>
+          <Text style={styles.undoText}>
+            {undo.count === 1 ? t('tabs.closed') : t('tabs.closedCount', { count: undo.count })}
+          </Text>
           <Pressable onPress={undoClose} hitSlop={8} accessibilityRole="button">
             <Text style={styles.undoAction}>{t('tabs.undo')}</Text>
           </Pressable>
@@ -418,7 +471,7 @@ function GroupHeader({
   register,
   onToggle,
   onRename,
-  onUngroup,
+  onOptions,
 }: {
   group: TabGroup;
   count: number;
@@ -426,7 +479,8 @@ function GroupHeader({
   register: (view: Measurable | null) => void;
   onToggle: () => void;
   onRename: (name: string) => void;
-  onUngroup: () => void;
+  /** Opens the group's options (ungroup, or close all of its tabs). */
+  onOptions: () => void;
 }) {
   const styles = useStyles();
   const theme = useTheme(incognito);
@@ -452,7 +506,12 @@ function GroupHeader({
         accessibilityLabel={t('tabs.groupNameA11y')}
       />
       <Text style={[styles.groupCount, theme.dimText]}>{count}</Text>
-      <Pressable onPress={onUngroup} hitSlop={8} accessibilityLabel={t('tabs.ungroup')} accessibilityRole="button">
+      <Pressable
+        onPress={onOptions}
+        hitSlop={8}
+        accessibilityLabel={t('tabs.groupOptions', { name: group.name })}
+        accessibilityRole="button"
+      >
         <Icon name="close" size={14} color={iconColors(theme).dim} />
       </Pressable>
     </View>

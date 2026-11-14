@@ -858,7 +858,7 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
         if (keep) ids.delete(keep);
         const closing = [...ids].filter((id) => browser.getTab(id));
         if (!closing.length) return { content: `Nothing to close.\n${tabList(ctx)}`, isError: true };
-        closing.forEach((id) => browser.closeTab(id));
+        browser.closeTabs(closing);
         if (keep && browser.getTab(keep)) browser.switchTab(keep);
         if (!browser.getTab(ctx.agentTab.id)) ctx.agentTab.id = browser.active.id;
         return { content: `Closed ${closing.length} tab(s). Open tabs:\n${tabList(ctx)}`, isError: false };
