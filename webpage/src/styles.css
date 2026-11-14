@@ -1,8 +1,9 @@
-/* Qutai website. Paper and lapis, like a miniature manuscript; system fonts only (a serif for display).
+/* Qutai website. Light parchment like games.sonsuzdongu.com, in every colour scheme; lapis only for accents.
+   System fonts only (a serif for display).
    Text colours are measured for 4.5:1 or better on the surfaces they sit on. */
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   --font: -apple-system, BlinkMacSystemFont, 'Segoe UI Variable Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --display: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, ui-serif, serif;
   --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
@@ -17,12 +18,12 @@
   --gold: #a87a2a;
   --coral: #b8432f;
 
-  --bg: #f5efe3;
-  --bg-alt: #ece3d1;
-  --surface: #fbf8f1;
-  --text: #1d1a15;
-  --muted: #554d42;
-  --line: #d6c8ad;
+  --bg: #f2e7cf;
+  --bg-alt: #ebdcbb;
+  --surface: #fbf5e6;
+  --text: #292119;
+  --muted: #574a39;
+  --line: #d6c39c;
   --accent: #1f4fa3;
   --accent-soft: #e2e6ef;
   --us: #e6ebf5;
@@ -48,49 +49,19 @@
   --gutter: max(16px, env(safe-area-inset-left), env(safe-area-inset-right));
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #12100d;
-    --bg-alt: #1a1712;
-    --surface: #1f1b15;
-    --text: #f2eadb;
-    --muted: #bcb09a;
-    --line: #3b3327;
-    --accent: #9cc0ff;
-    --accent-soft: #1b2440;
-    --us: #1a2440;
-    --good: #6fd29b;
-    --part: #f0b45e;
-    --bad: #ff9b8e;
-    --neutral: #a99f8c;
-    --focus: #9cc0ff;
-    --gold: #c89a45;
-
-    --app-bg: #1c1b22;
-    --app-chrome: #24232b;
-    --app-surface: #2b2a33;
-    --app-sunken: #35343e;
-    --app-text: #f2f1f5;
-    --app-muted: #a9a8b3;
-    --app-border: #42414d;
-  }
-}
-
 /* Lapis bands keep their colours in both schemes and re-point the tokens for what sits on them. */
+/* Bands: a lighter sheet of the same paper with gilded rules, instead of dark blocks. */
 .band.dark {
-  --text: #f4ecdc;
-  --muted: #c9bfab;
-  --line: rgb(244 236 220 / 0.18);
-  --accent: #9cc8ff;
-  --accent-soft: rgb(255 255 255 / 0.07);
-  --surface: rgb(255 255 255 / 0.05);
-  --focus: #9cc8ff;
-  background: var(--lapis);
-  color: var(--text);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  box-shadow:
+    inset 0 4px 0 -2px color-mix(in srgb, var(--gold) 35%, transparent),
+    inset 0 -4px 0 -2px color-mix(in srgb, var(--gold) 35%, transparent);
 }
 
 .band.alt {
-  background: var(--bg-alt);
+  background: color-mix(in srgb, var(--bg-alt) 55%, transparent);
 }
 
 *,
@@ -107,7 +78,10 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 12% 4%, rgb(255 255 255 / 0.65), transparent 34%),
+    radial-gradient(circle at 88% 96%, rgb(255 255 255 / 0.45), transparent 36%);
   color: var(--text);
   font: 400 1.0625rem/1.6 var(--font);
   -webkit-font-smoothing: antialiased;
@@ -404,12 +378,6 @@ h3 {
   background-size: 64px 64px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .miniature-placeholder {
-    background-color: #241f17;
-  }
-}
-
 .miniature-placeholder span {
   font: 500 0.95rem/1.2 var(--display);
   color: #1d1a15;
@@ -491,64 +459,71 @@ h3 {
   will-change: transform;
 }
 
-.hero-chips {
+.hero-plaque {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 28px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
+  box-shadow:
+    inset 0 3px 0 -2px color-mix(in srgb, var(--gold) 45%, transparent),
+    inset 0 -3px 0 -2px color-mix(in srgb, var(--gold) 45%, transparent);
+}
+
+.hero-caption {
+  font: italic 400 1.08rem/1.3 var(--display);
+  color: var(--muted);
+}
+
+.hero-points {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 0;
 }
 
-.hero-chips li {
-  position: absolute;
+.hero-points li {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
+  gap: 7px;
+  font-size: 0.92rem;
   font-weight: 600;
-  padding: 9px 14px;
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--line);
-  box-shadow: 0 14px 30px -18px rgb(40 25 5 / 0.5);
-  will-change: transform;
 }
 
-.hero-chips .icon {
+.hero-points li + li::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  margin: 0 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  transform: rotate(45deg);
+}
+
+.hero-points .icon {
   color: var(--accent);
 }
 
-.chip-1 {
-  left: -18px;
-  top: 14%;
-}
-
-.chip-2 {
-  right: -14px;
-  top: 8%;
-}
-
-.chip-3 {
-  left: 6%;
-  bottom: -18px;
-}
-
-.chip-4 {
-  right: 8%;
-  bottom: 12%;
-}
-
 @media (max-width: 760px) {
-  .hero-chips {
-    display: flex;
-    flex-wrap: wrap;
+  .hero-plaque {
     justify-content: center;
-    gap: 8px;
-    margin-top: 18px;
+    text-align: center;
   }
-  .hero-chips li {
-    position: static;
-    box-shadow: none;
-    transform: none !important;
+  .hero-points {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    justify-content: center;
+    gap: 8px 22px;
+    text-align: left;
+  }
+  .hero-points li + li::before {
+    display: none;
   }
 }
 
@@ -742,11 +717,6 @@ h3 {
 
 /* ---------- Privacy (lapis band) ---------- */
 
-.privacy .datapath {
-  background: rgb(255 255 255 / 0.04);
-  border: 1px solid var(--line);
-}
-
 .privacy-grid {
   list-style: none;
   margin: 0;
@@ -853,7 +823,7 @@ h3 {
   padding: 28px 26px 30px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: var(--bg);
 }
 
 .start-num {
@@ -989,8 +959,9 @@ h3 {
 /* ---------- Footer ---------- */
 
 .site-footer {
-  background: var(--navy);
-  color: #d9cfbb;
+  background: color-mix(in srgb, var(--bg-alt) 70%, transparent);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
   padding: 48px 0 calc(48px + env(safe-area-inset-bottom));
 }
 
@@ -1006,7 +977,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #f4ecdc;
+  color: var(--text);
 }
 
 .footer-brand strong {
@@ -1023,7 +994,7 @@ h3 {
 }
 
 .footer-links a {
-  color: #f4ecdc;
+  color: var(--accent);
   display: inline-block;
   padding: 6px 0;
 }
@@ -1033,9 +1004,7 @@ h3 {
   max-width: 60rem;
 }
 
-.site-footer :focus-visible {
-  outline-color: #9cc8ff;
-}
+
 
 .notfound {
   display: grid;
@@ -1208,16 +1177,6 @@ h3 {
   font-size: 9.5px;
 }
 
-@media (prefers-color-scheme: dark) {
-  .ph-head-model {
-    color: #5cb8f0;
-  }
-  .ph-buy {
-    background: #f2f1f5;
-    color: #1c1b22;
-  }
-}
-
 .ph-msgs {
   flex: 1;
   padding: 8px 10px;
@@ -1344,12 +1303,6 @@ h3 {
   border-radius: 10px;
   font-weight: 600;
   color: var(--app-tint);
-}
-
-@media (prefers-color-scheme: dark) {
-  .ph-dialog-buttons span {
-    color: #5cb8f0;
-  }
 }
 
 .ph-dialog-buttons .ph-allow {
@@ -1850,7 +1803,6 @@ h3 {
 
 @media (prefers-reduced-motion: reduce) {
   .hero-art-frame,
-  .hero-chips li,
   .statement-phone {
     will-change: auto;
   }

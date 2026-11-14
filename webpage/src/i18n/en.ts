@@ -35,6 +35,7 @@ export const en = {
   'hero.github': 'View on GitHub',
   'hero.status': 'In development. Coming to the App Store and Google Play; not released yet.',
 
+  'hero.caption': 'The robots of Qutai at work',
   'hero.chip1': 'Reads your tabs',
   'hero.chip2': 'Remembers you',
   'hero.chip3': 'Asks first',
@@ -45,12 +46,12 @@ export const en = {
     'Qutai is a browser with an assistant at its core. It reads the page, compares your tabs, fills in forms, books and researches, remembers what you tell it on your phone, and stops to ask before anything that matters.',
 
   'art.placeholder': 'Miniature in preparation',
-  'art.hero.alt': 'Ottoman miniature: robot scribes in colourful kaftans read web pages on tablets in a palace library, with the domes of Istanbul through the window.',
-  'art.compare.alt': 'Ottoman miniature: a robot in a bazaar shop weighs two pairs of slippers while two tablets show the shops’ pages.',
+  'art.hero.alt': 'Ottoman miniature: robot scribes in colourful kaftans read web pages on tablets in a palace library, with the Golden Horn and Galata Tower through the window.',
+  'art.compare.alt': 'Ottoman miniature: a robot in a bazaar shop weighs two pairs of slippers on a balance while two tablets show the shops’ pages and a customer looks on.',
   'art.checkout.alt': 'Ottoman miniature: a robot fills in an order form at a counter and waits, while the patron holds the purse.',
-  'art.booking.alt': 'Ottoman miniature: a robot writes a dinner booking into a calendar scroll in a caravanserai courtyard.',
-  'art.research.alt': 'Ottoman miniature: a robot scholar among open books links passages with gold threads into one report.',
-  'art.memory.alt': 'Ottoman miniature: a robot sorts keepsakes into an inlaid chest while its owner holds the key.',
+  'art.booking.alt': 'Ottoman miniature: in a garden courtyard a robot writes a dinner booking on a calendar scroll beside an old telephone while a table is set.',
+  'art.research.alt': 'Ottoman miniature: at night, a robot scholar writes a report among open books, a celestial globe and an astrolabe.',
+  'art.memory.alt': 'Ottoman miniature: a robot kneels and sorts keepsakes into an inlaid chest while its owner watches from the sofa.',
 
   'agent.compare.kicker': 'Read, compare, decide',
   'agent.checkout.kicker': 'Fill, check, stop',

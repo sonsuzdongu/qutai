@@ -6,10 +6,10 @@ its place on the page shows a patterned placeholder.
 
 ## Adding a painting
 
-1. Make the image (prompts below). Landscape, at least 1920 px wide; PNG, JPEG or WebP.
+1. Make the image (prompts below). Landscape, ideally 1920 px wide or more (1500 px and up works); PNG, JPEG or WebP.
 2. Save it in `webpage/art-src/` with the exact name from the table (`hero.png`, `compare.jpg`, …).
-3. Run `npm run art`. It writes `src/art/<name>-640.webp`, `-1280.webp` and `-1920.webp` (the originals stay out of
-   git).
+3. Run `npm run art`. It writes `src/art/<name>-640.webp`, `-960.webp`, `-1280.webp` and one at the original width up to 1920
+   (the originals stay out of git).
 4. `npm run build` (or `npm run dev`): the page uses the painting automatically. Commit `src/art/`.
 
 | File | Where it appears | Ratio |

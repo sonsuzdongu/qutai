@@ -5,10 +5,14 @@ export type ArtName = 'hero' | 'compare' | 'checkout' | 'booking' | 'research' |
 
 // The paintings that exist (made by `npm run art` from art-src/, see ART.md), resolved at build time.
 const FILES = import.meta.glob<string>('../art/*.webp', { eager: true, query: '?url', import: 'default' });
-const WIDTHS = [640, 1280, 1920];
 
+/** Every size of one painting (`<name>-<width>.webp`), narrowest first. */
 function sources(name: ArtName) {
-  return WIDTHS.map((w) => ({ w, url: FILES[`../art/${name}-${w}.webp`] })).filter((s) => s.url);
+  return Object.entries(FILES)
+    .map(([path, url]) => ({ m: path.match(new RegExp(`/${name}-(\\d+)\\.webp$`)), url }))
+    .filter((s) => s.m)
+    .map((s) => ({ w: Number(s.m![1]), url: s.url }))
+    .sort((a, b) => a.w - b.w);
 }
 
 /**
@@ -41,7 +45,7 @@ export function Miniature({
           sizes={sizes}
           alt={alt}
           loading={priority ? 'eager' : 'lazy'}
-          fetchPriority={priority ? 'high' : 'auto'}
+          fetchPriority={priority ? 'high' : 'low'}
           decoding="async"
         />
       ) : (

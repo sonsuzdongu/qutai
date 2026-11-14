@@ -36,6 +36,7 @@ export const tr: Messages = {
   'hero.github': 'GitHub’da incele',
   'hero.status': 'Geliştirme aşamasında. App Store ve Google Play’e geliyor; henüz yayımlanmadı.',
 
+  'hero.caption': 'Qutai’nin robotları iş başında',
   'hero.chip1': 'Sekmeleri okur',
   'hero.chip2': 'Sizi hatırlar',
   'hero.chip3': 'Önce sorar',
@@ -46,12 +47,12 @@ export const tr: Messages = {
     'Qutai, merkezinde bir asistan olan bir tarayıcı. Sayfayı okur, sekmelerinizi karşılaştırır, form doldurur, rezervasyon yapar, araştırır; ona anlattıklarınızı telefonunuzda hatırlar ve önemli bir adımdan önce durup size sorar.',
 
   'art.placeholder': 'Minyatür hazırlanıyor',
-  'art.hero.alt': 'Osmanlı minyatürü: renkli kaftanlı robot kâtipler bir saray kütüphanesinde tabletlerde web sayfaları okuyor; pencereden İstanbul’un kubbeleri görünüyor.',
-  'art.compare.alt': 'Osmanlı minyatürü: çarşıdaki bir dükkânda robot iki çift pabucu tartıyor; iki tablette dükkânların sayfaları açık.',
+  'art.hero.alt': 'Osmanlı minyatürü: renkli kaftanlı robot kâtipler bir saray kütüphanesinde tabletlerde web sayfaları okuyor; pencereden Haliç ve Galata Kulesi görünüyor.',
+  'art.compare.alt': 'Osmanlı minyatürü: çarşıdaki bir dükkânda robot iki çift pabucu terazide tartıyor; iki tablette dükkânların sayfaları açık, bir müşteri izliyor.',
   'art.checkout.alt': 'Osmanlı minyatürü: robot tezgâhta sipariş formunu dolduruyor ve bekliyor; kese sahibinin elinde.',
-  'art.booking.alt': 'Osmanlı minyatürü: bir kervansaray avlusunda robot akşam yemeği rezervasyonunu takvim tomarına yazıyor.',
-  'art.research.alt': 'Osmanlı minyatürü: açık kitaplar arasında bir robot âlim, pasajları altın iplerle tek bir rapora bağlıyor.',
-  'art.memory.alt': 'Osmanlı minyatürü: robot hatıraları sedefli bir sandığa yerleştiriyor; anahtar sahibinin elinde.',
+  'art.booking.alt': 'Osmanlı minyatürü: bir bahçe avlusunda robot, eski bir telefonun yanında akşam yemeği rezervasyonunu takvim tomarına yazıyor; masa kuruluyor.',
+  'art.research.alt': 'Osmanlı minyatürü: gece, açık kitaplar, gök küresi ve usturlap arasında bir robot âlim rapor yazıyor.',
+  'art.memory.alt': 'Osmanlı minyatürü: robot diz çöküp hatıraları sedefli bir sandığa yerleştiriyor; sahibi sedirden izliyor.',
 
   'agent.compare.kicker': 'Oku, karşılaştır, karar ver',
   'agent.checkout.kicker': 'Doldur, kontrol et, dur',

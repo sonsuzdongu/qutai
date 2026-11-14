@@ -57,11 +57,11 @@ export function Header() {
 
 export function Hero() {
   const { t } = useI18n();
-  const chips: { key: MessageKey; icon: IconName; depth: string }[] = [
-    { key: 'hero.chip1', icon: 'tabs', depth: '-0.10' },
-    { key: 'hero.chip2', icon: 'bookmark', depth: '-0.18' },
-    { key: 'hero.chip3', icon: 'hand', depth: '-0.06' },
-    { key: 'hero.chip4', icon: 'key', depth: '-0.14' },
+  const points: { key: MessageKey; icon: IconName }[] = [
+    { key: 'hero.chip1', icon: 'tabs' },
+    { key: 'hero.chip2', icon: 'bookmark' },
+    { key: 'hero.chip3', icon: 'hand' },
+    { key: 'hero.chip4', icon: 'key' },
   ];
   return (
     <section className="hero" aria-labelledby="hero-title">
@@ -84,14 +84,18 @@ export function Hero() {
         <div className="hero-art-frame" data-depth="0.04">
           <Miniature name="hero" ratio="3x2" sizes="(min-width: 1200px) 1100px, 100vw" priority />
         </div>
-        <ul className="hero-chips">
-          {chips.map((c, i) => (
-            <li key={c.key} className={`chip-${i + 1}`} data-depth={c.depth}>
-              <Icon name={c.icon} size={16} />
-              {t(c.key)}
-            </li>
-          ))}
-        </ul>
+        {/* A caption plaque under the painting, like a museum label: what the scene is, and four points. */}
+        <div className="hero-plaque">
+          <p className="hero-caption">{t('hero.caption')}</p>
+          <ul className="hero-points">
+            {points.map((c) => (
+              <li key={c.key}>
+                <Icon name={c.icon} size={16} />
+                {t(c.key)}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </section>
   );

@@ -39,7 +39,6 @@ export type RowId =
   | 'reader'
   | 'backgroundAudio'
   | 'sync'
-  | 'desktop'
   | 'availability'
   | 'price';
 
@@ -111,7 +110,6 @@ export const GROUPS: Group[] = [
     label: { en: 'Availability', tr: 'Erişim' },
     rows: [
       { id: 'sync', label: { en: 'Sync across devices', tr: 'Cihazlar arası eşitleme' } },
-      { id: 'desktop', label: { en: 'Desktop version', tr: 'Masaüstü sürümü' } },
       { id: 'availability', label: { en: 'In the App Store or Google Play', tr: 'App Store’da ya da Google Play’de' } },
       { id: 'price', label: { en: 'Price of the AI features', tr: 'Yapay zekâ özelliklerinin fiyatı' } },
     ],
@@ -212,12 +210,14 @@ export const QUTAI: Product = {
       note: t('An encrypted backup file instead; optional sync is planned.', 'Yerine şifreli yedek dosyası; isteğe bağlı eşitleme planlanıyor.'),
       source: src('README.md'),
     },
-    desktop: { state: 'no' },
     availability: { state: 'no', note: t('In development, not released yet.', 'Geliştirme aşamasında, henüz yayımlanmadı.') },
     price: {
       state: 'yes',
       value: t('Free, open source', 'Ücretsiz, açık kaynak'),
-      note: t('You pay your AI provider for what you use.', 'Kullandığınız kadarını AI sağlayıcınıza ödersiniz.'),
+      note: t(
+        'You pay your AI provider for what you use; later you will also be able to get the AI from Qutai as a paid service (planned).',
+        'Kullandığınız kadarını AI sağlayıcınıza ödersiniz; dilerseniz ileride bu hizmeti ücretli olarak Qutai’den de alabileceksiniz (planlanıyor).',
+      ),
       source: src('README.md'),
     },
   },
@@ -285,7 +285,6 @@ export const COMPETITORS: Product[] = [
         source: 'https://www.perplexity.ai/hub/blog/meet-comet-for-ios',
         checked: D,
       },
-      desktop: { state: 'yes', source: 'https://www.perplexity.ai/comet', checked: D },
       availability: {
         state: 'yes',
         note: t('App Store and Google Play.', 'App Store ve Google Play.'),
@@ -329,7 +328,6 @@ export const COMPETITORS: Product[] = [
         source: 'https://apps.apple.com/us/app/sigma-ai-browser/id6670252712',
         checked: D,
       },
-      desktop: { state: 'yes', source: 'https://www.sigmabrowser.com/', checked: D },
       availability: {
         state: 'partial',
         note: t('App Store only so far.', 'Şimdilik yalnızca App Store.'),
@@ -398,7 +396,6 @@ export const COMPETITORS: Product[] = [
         source: 'https://apps.apple.com/us/app/brave-private-web-browser-vpn/id1052879175',
         checked: D,
       },
-      desktop: { state: 'yes', source: 'https://brave.com/leo/', checked: D },
       availability: {
         state: 'yes',
         note: t('App Store and Google Play.', 'App Store ve Google Play.'),
@@ -465,11 +462,6 @@ export const COMPETITORS: Product[] = [
         state: 'yes',
         note: t('Tabs, favourites and passwords, when signed in.', 'Oturum açıkken sekmeler, sık kullanılanlar ve şifreler.'),
         source: 'https://explore.microsoft.com/en-us/edge/mobile',
-        checked: D,
-      },
-      desktop: {
-        state: 'yes',
-        source: 'https://blogs.windows.com/msedgedev/2026/05/13/new-updates-to-edge-across-desktop-and-mobile/',
         checked: D,
       },
       availability: {
@@ -563,7 +555,6 @@ export const COMPETITORS: Product[] = [
         source: 'https://support.google.com/chrome/answer/165139?co=GENIE.Platform%3DAndroid&hl=en',
         checked: D,
       },
-      desktop: { state: 'yes', source: 'https://www.google.com/chrome/', checked: D },
       availability: {
         state: 'yes',
         note: t('App Store and Google Play.', 'App Store ve Google Play.'),
@@ -632,7 +623,6 @@ export const COMPETITORS: Product[] = [
         source: 'https://play.google.com/store/apps/details?id=com.opera.browser',
         checked: D,
       },
-      desktop: { state: 'yes', source: 'https://www.opera.com/', checked: D },
       availability: {
         state: 'yes',
         note: t('App Store and Google Play.', 'App Store ve Google Play.'),
@@ -700,7 +690,6 @@ export const COMPETITORS: Product[] = [
         source: 'https://duckduckgo.com/duckduckgo-help-pages/sync-and-backup',
         checked: D,
       },
-      desktop: { state: 'yes', source: 'https://duckduckgo.com/duckduckgo-help-pages/ad-blocking', checked: D },
       availability: {
         state: 'yes',
         note: t('App Store and Google Play.', 'App Store ve Google Play.'),
@@ -764,12 +753,6 @@ export const COMPETITORS: Product[] = [
       sync: {
         state: 'yes',
         note: t('Bookmarks and history, with a Samsung Account.', 'Samsung Hesabıyla yer imleri ve geçmiş.'),
-        source: 'https://news.samsung.com/global/samsung-takes-its-browser-beyond-mobile-extending-agentic-ai-across-devices',
-        checked: D,
-      },
-      desktop: {
-        state: 'yes',
-        note: t('Windows.', 'Windows.'),
         source: 'https://news.samsung.com/global/samsung-takes-its-browser-beyond-mobile-extending-agentic-ai-across-devices',
         checked: D,
       },

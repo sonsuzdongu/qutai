@@ -40,8 +40,8 @@ function head(lang) {
   return [
     `<title>${esc(t['meta.title'])}</title>`,
     `<meta name="description" content="${esc(t['meta.description'])}" />`,
-    `<meta name="color-scheme" content="light dark" />`,
-    `<meta name="theme-color" content="#061634" />`,
+    `<meta name="color-scheme" content="light" />`,
+    `<meta name="theme-color" content="#f2e7cf" />`,
     `<link rel="canonical" href="${pageUrl(lang)}" />`,
     `<link rel="alternate" hreflang="en" href="${pageUrl('en')}" />`,
     `<link rel="alternate" hreflang="tr" href="${pageUrl('tr')}" />`,
@@ -73,11 +73,22 @@ function head(lang) {
     .join('\n    ');
 }
 
+/** The hero painting (the page's largest element) is preloaded from the head, so it starts before the CSS. */
+function heroPreload(body) {
+  const img = body.match(/<img [^>]*fetchPriority="high"[^>]*>/i)?.[0];
+  const srcset = img?.match(/srcSet="([^"]+)"/i)?.[1];
+  const sizes = img?.match(/sizes="([^"]+)"/i)?.[1];
+  return srcset
+    ? `<link rel="preload" as="image" imagesrcset="${srcset}" imagesizes="${sizes ?? '100vw'}" fetchpriority="high" />\n    `
+    : '';
+}
+
 for (const lang of LANGS) {
+  const body = render(lang);
   const html = template
     .replace('<html lang="en">', `<html lang="${lang}" dir="ltr">`)
-    .replace('<!--head-->', head(lang))
-    .replace('<!--app-->', render(lang));
+    .replace('<!--head-->', heroPreload(body) + head(lang))
+    .replace('<!--app-->', body);
   await mkdir(`${client}${lang}`, { recursive: true });
   await writeFile(`${client}${lang}/index.html`, html);
 }
