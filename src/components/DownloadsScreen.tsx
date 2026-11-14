@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 import { dayLabel } from '../i18n/format';
 import type { DownloadEntry, DownloadStore } from '../storage/downloads';
+import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
 
 type Props = {
@@ -29,7 +30,7 @@ export function DownloadsScreen({ visible, store, onOpen, onDelete, onClose }: P
   const entries = store.list();
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <View style={styles.header}>
           <View style={styles.side} />
           <Text style={styles.title}>{t('downloads.title')}</Text>

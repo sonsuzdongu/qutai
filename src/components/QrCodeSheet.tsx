@@ -1,11 +1,10 @@
 import type { ComponentRef } from 'react';
 import { memo, useMemo, useRef } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, Text, View } from 'react-native';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 import { qrMatrix } from '../device/qr';
-import { DialogHost } from './Dialog';
+import { BottomSheet } from './BottomSheet';
 
 type Props = {
   /** The address to encode; null hides the sheet. */
@@ -38,13 +37,17 @@ const QrGrid = memo(function QrGrid({ text }: { text: string }) {
 /** Shows the page's address as a QR code, to open it on another device. */
 export function QrCodeSheet({ url, onShareLink, onShareImage, onClose }: Props) {
   const styles = useStyles();
-  const insets = useSafeAreaInsets();
   const codeRef = useRef<ComponentRef<typeof View>>(null);
   return (
-    <Modal visible={url !== null} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={t('common.close')} />
+    <BottomSheet
+      visible={url !== null}
+      onClose={onClose}
+      style={styles.sheet}
+      contentStyle={styles.content}
+      bottomPadding={16}
+    >
       {url && (
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + 16 }]}>
+        <>
           <Text style={styles.title}>{t('qr.title')}</Text>
           <View ref={codeRef} collapsable={false} style={styles.code} accessibilityLabel={t('qr.a11y', { url })}>
             <QrGrid text={url} />
@@ -64,23 +67,15 @@ export function QrCodeSheet({ url, onShareLink, onShareImage, onClose }: Props) 
               <Text style={[styles.buttonText, styles.primaryText]}>{t('qr.shareImage')}</Text>
             </Pressable>
           </View>
-        </View>
+        </>
       )}
-      <DialogHost />
-    </Modal>
+    </BottomSheet>
   );
 }
 
 const useStyles = makeStyles((c) => ({
-  backdrop: { flex: 1, backgroundColor: c.backdrop },
-  sheet: {
-    backgroundColor: c.bg,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    padding: 20,
-    alignItems: 'center',
-    gap: 14,
-  },
+  sheet: { paddingTop: 20 },
+  content: { paddingHorizontal: 20, alignItems: 'center', gap: 14 },
   title: { fontSize: 17, fontWeight: '700', color: c.text },
   // Always white: scanners need a light margin around the code, in dark mode and in the shared image too.
   code: { padding: 16, backgroundColor: '#ffffff', borderRadius: 12 },

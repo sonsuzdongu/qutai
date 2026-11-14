@@ -4,7 +4,6 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Modal,
-  Platform,
   Pressable,
   SectionList,
   StyleSheet,
@@ -608,10 +607,8 @@ function ToolButton({
 function Overlay({ onCancel, children }: { onCancel: () => void; children: ReactNode }) {
   const styles = useStyles();
   return (
-    <KeyboardAvoidingView
-      style={[StyleSheet.absoluteFill, styles.overlay]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    // Padding on Android too: the Modal is edge to edge there, so its window no longer resizes for the keyboard.
+    <KeyboardAvoidingView style={[StyleSheet.absoluteFill, styles.overlay]} behavior="padding">
       <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel={t('common.close')} />
       <View style={styles.dialog} accessibilityViewIsModal>
         {children}

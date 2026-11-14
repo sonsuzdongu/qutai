@@ -6,6 +6,7 @@ import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
 import { getDb } from '../storage/db';
 import { addMemory, clearMemories, deleteMemory, listMemories, updateMemory } from '../storage/memory';
+import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 
 type Props = { visible: boolean; onClose: () => void };
@@ -61,7 +62,7 @@ function MemoryList({ onClose }: { onClose: () => void }) {
     ]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
       <View style={styles.header}>
         <Pressable onPress={clearAll} disabled={!memories?.length} hitSlop={8} style={styles.side}>
           <Text style={[styles.clear, !memories?.length && styles.disabled]}>{t('memory.clearAll')}</Text>

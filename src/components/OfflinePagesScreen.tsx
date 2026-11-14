@@ -9,6 +9,7 @@ import { dayLabel, hostOf } from '../i18n/format';
 import { getDb } from '../storage/db';
 import { listOfflinePages, OfflinePage, removeOfflinePage } from '../storage/offlinePages';
 import { formatSize } from './DownloadsScreen';
+import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
 
 type Props = { visible: boolean; onOpenLive: (url: string) => void; onClose: () => void };
@@ -77,7 +78,7 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
       <View style={styles.header}>
         <View style={styles.side} />
         <Text style={styles.title}>{t('offline.title')}</Text>

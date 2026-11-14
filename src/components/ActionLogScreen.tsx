@@ -6,6 +6,7 @@ import { makeStyles } from '../ui/theme';
 import { groupByDay, timeLabel } from '../i18n/format';
 import { ActionEntry, clearActions, listActions } from '../storage/actionLog';
 import { getDb } from '../storage/db';
+import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 
 type Entry = ActionEntry & { id: number };
@@ -47,7 +48,7 @@ function ActionLog({ onClose }: { onClose: () => void }) {
     ]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
       <View style={styles.header}>
         <Pressable onPress={clearAll} disabled={!entries?.length} hitSlop={8} style={styles.side}>
           <Text style={[styles.clear, !entries?.length && styles.disabled]}>{t('actionLog.clear')}</Text>

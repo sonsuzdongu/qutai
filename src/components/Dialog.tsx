@@ -6,7 +6,6 @@ import {
   Easing,
   Keyboard,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -19,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
+import { useKeyboardHeight } from '../utils/useKeyboardHeight';
 import { useReduceMotion } from '../utils/useReduceMotion';
 
 /**
@@ -211,21 +211,6 @@ export function DialogHost({ root = false, hold = false }: { root?: boolean; hol
   const { current, host, background: inBackground } = useSyncExternalStore(subscribe, getSnapshot);
   if (!current || host !== id || inBackground) return null;
   return <DialogView key={current.id} entry={current} />;
-}
-
-function useKeyboardHeight() {
-  const [height, setHeight] = useState(0);
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const onShow = Keyboard.addListener(showEvent, (e) => setHeight(e.endCoordinates.height));
-    const onHide = Keyboard.addListener(hideEvent, () => setHeight(0));
-    return () => {
-      onShow.remove();
-      onHide.remove();
-    };
-  }, []);
-  return height;
 }
 
 function DialogView({ entry }: { entry: Entry }) {

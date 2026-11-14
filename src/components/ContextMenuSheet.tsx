@@ -1,10 +1,8 @@
-import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import type { ContextTarget } from '../browser/contextMenu';
-import { t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
-import { DialogHost } from './Dialog';
+import { BottomSheet } from './BottomSheet';
 
 export type ContextAction = { icon: IconName; label: string; onPress: () => void };
 
@@ -18,12 +16,10 @@ type Props = {
 export function ContextMenuSheet({ target, actions, onClose }: Props) {
   const styles = useStyles();
   const palette = usePalette();
-  const insets = useSafeAreaInsets();
   return (
-    <Modal visible={target !== null} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={t('common.close')} />
+    <BottomSheet visible={target !== null} onClose={onClose} style={styles.sheet}>
       {target && (
-        <View style={[styles.sheet, { paddingBottom: insets.bottom + 8 }]}>
+        <>
           <View style={styles.header}>
             {target.src ? <Image source={{ uri: target.src }} style={styles.preview} resizeMode="cover" /> : null}
             <View style={styles.headerText}>
@@ -51,16 +47,14 @@ export function ContextMenuSheet({ target, actions, onClose }: Props) {
               <Text style={styles.label}>{action.label}</Text>
             </Pressable>
           ))}
-        </View>
+        </>
       )}
-      <DialogHost />
-    </Modal>
+    </BottomSheet>
   );
 }
 
 const useStyles = makeStyles((c) => ({
-  backdrop: { flex: 1, backgroundColor: c.backdrop },
-  sheet: { backgroundColor: c.bg, borderTopLeftRadius: 18, borderTopRightRadius: 18, paddingTop: 8 },
+  sheet: { paddingTop: 8 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

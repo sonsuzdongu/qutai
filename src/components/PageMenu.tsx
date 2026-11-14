@@ -56,6 +56,7 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose
       animationType="fade"
       onRequestClose={() => (sub ? setSub(null) : close())}
       statusBarTranslucent
+      navigationBarTranslucent
     >
       <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel={t('menu.close')} />
       <View style={[styles.menu, theme.menu, { top, right: insets.right + 8 }]}>

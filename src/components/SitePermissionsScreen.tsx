@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { SitePermissionSheet } from './SitePermissionSheet';
+import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
 
 type Props = { visible: boolean; store: SitePermissionStore; onClose: () => void };
@@ -24,7 +25,7 @@ export function SitePermissionsScreen({ visible, store, onClose }: Props) {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <View style={styles.header}>
           <View style={styles.side} />
           <Text style={styles.title}>{t('site.listTitle')}</Text>

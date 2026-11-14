@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { ClearOptions } from '../storage/clearData';
+import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 
 type Props = { visible: boolean; onClear: (options: ClearOptions) => Promise<void>; onClose: () => void };
@@ -42,7 +43,7 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <View style={styles.header}>
           <Pressable onPress={onClose} hitSlop={8} style={styles.side}>
             <Text style={styles.cancel}>{t('common.cancel')}</Text>
