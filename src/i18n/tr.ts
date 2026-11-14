@@ -442,4 +442,6 @@ export const tr: Record<keyof typeof en, string> = {
   'onboarding.browserHintIos': 'Ayarlar’da Varsayılan Tarayıcı Uygulaması’nı açıp Qutai’yi seçin, sonra geri dönün.',
   'settings.rate': 'Qutai’yi değerlendirin',
   'settings.rateUnavailable': 'Değerlendirme, Qutai App Store ve Google Play’de yayımlandığında açılacak.',
+  'address.undo': 'Geri al',
+  'address.undoClear': 'Temizlemeyi geri al: yazdığınızı geri getir',
 };

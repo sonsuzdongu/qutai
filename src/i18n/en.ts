@@ -435,4 +435,6 @@ export const en = {
   'onboarding.browserHintIos': 'In Settings, open Default Browser App and choose Qutai, then come back.',
   'settings.rate': 'Rate Qutai',
   'settings.rateUnavailable': 'Rating will be available once Qutai is in the App Store and Google Play.',
+  'address.undo': 'Undo',
+  'address.undoClear': 'Undo clear: bring back what you typed',
 } as const;

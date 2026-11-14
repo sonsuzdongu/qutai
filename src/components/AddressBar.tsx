@@ -75,6 +75,12 @@ export function AddressBar({
 }: Props) {
   const styles = useStyles();
   const [text, setText] = useState(url);
+  // What the clear button removed, so one tap can bring it back (an accidental clear is common).
+  const [cleared, setCleared] = useState<string | null>(null);
+  const changeText = (next: string) => {
+    setText(next);
+    setCleared(null);
+  };
   const [editing, setEditing] = useState(false);
   const darkUI = incognito || !!darkMode;
   const palette = usePalette();
@@ -122,8 +128,11 @@ export function AddressBar({
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             placeholderTextColor={darkUI ? '#a9a8b3' : '#6b6862'}
             value={text}
-            onChangeText={setText}
-            onBlur={() => setEditing(false)}
+            onChangeText={changeText}
+            onBlur={() => {
+              setEditing(false);
+              setCleared(null);
+            }}
             onSubmitEditing={() => {
               if (!text.trim()) return;
               finishEditing();
@@ -137,16 +146,30 @@ export function AddressBar({
             returnKeyType="go"
             placeholder={t('address.placeholder')}
           />
-          {text.length > 0 && (
+          {text.length > 0 ? (
             <Pressable
-              onPress={() => setText('')}
+              onPress={() => {
+                setCleared(text);
+                setText('');
+              }}
               hitSlop={8}
               style={[styles.clear, dark?.clear]}
               accessibilityLabel={t('address.clear')}
             >
               <Icon name="close" size={12} color={darkUI ? darkPalette.text : palette.text} />
             </Pressable>
-          )}
+          ) : cleared ? (
+            <Pressable
+              onPress={() => changeText(cleared)}
+              hitSlop={8}
+              style={styles.undo}
+              accessibilityRole="button"
+              accessibilityLabel={t('address.undoClear')}
+            >
+              <Icon name="reopen" size={14} color={darkUI ? darkPalette.tintText : palette.tintText} />
+              <Text style={[styles.undoText, darkUI && { color: darkPalette.tintText }]}>{t('address.undo')}</Text>
+            </Pressable>
+          ) : null}
         </View>
       ) : (
         <Pressable
@@ -336,6 +359,8 @@ const useStyles = makeStyles((c) => ({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: c.border,
   },
+  undo: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 4 },
+  undoText: { color: c.tintText, fontSize: 13, fontWeight: '600' },
   clear: {
     width: 20,
     height: 20,
