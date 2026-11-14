@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Animated,
   Easing,
   Keyboard,
@@ -18,6 +17,7 @@ import { toUrl } from '../browser/url';
 import { t } from '../i18n';
 import { darkPalette, makeStyles, usePalette } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
+import { QutaiMark } from '../ui/QutaiMark';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { OmniboxSuggestions } from './OmniboxSuggestions';
 
@@ -199,11 +199,8 @@ export function AddressBar({
         style={[styles.assistantButton, assistantOpen && styles.assistantButtonActive]}
         accessibilityLabel={t(assistantOpen ? 'address.closeAssistant' : 'address.openAssistant')}
       >
-        {assistantRunning && !assistantOpen ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Icon name="assistant" size={20} color="#ffffff" />
-        )}
+        {/* The orbit circles while a task runs. */}
+        <QutaiMark size={34} working={assistantRunning} />
       </Pressable>
       {loading && <LoadingBar top={bottom} />}
       {editing && (
@@ -369,17 +366,8 @@ const useStyles = makeStyles((c) => ({
     paddingHorizontal: 3,
   },
   tabCountText: { fontSize: 12, fontWeight: '700', color: c.text },
-  assistantButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    marginLeft: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: c.tint,
-  },
-  assistantButtonActive: { backgroundColor: '#8f4026' },
-  assistantIcon: { fontSize: 18, color: c.onTint, fontWeight: '700' },
+  assistantButton: { width: 34, height: 34, marginLeft: 2 },
+  assistantButtonActive: { opacity: 0.7 },
 }));
 
 /** The bar has a fixed height, so very large text sizes are capped there. */

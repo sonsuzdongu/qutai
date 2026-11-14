@@ -19,6 +19,7 @@ import { useIsSpeaking } from '../device/speech';
 import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
+import { QutaiMark } from '../ui/QutaiMark';
 import type { Source } from '../agent/types';
 import { hostOf } from '../i18n/format';
 import { MarkdownText } from './MarkdownText';
@@ -43,7 +44,7 @@ export type ChatItem = {
 };
 
 /** A one-tap task shown above the input, e.g. "Summarize". */
-export type QuickAction = { label: string; prompt: string };
+export type QuickAction = { icon: IconName; label: string; prompt: string };
 
 type Props = {
   open: boolean;
@@ -113,6 +114,7 @@ export function AssistantPanel({
   dark = false,
 }: Props) {
   const styles = useStyles();
+  const palette = usePalette();
   const d = dark ? darkStyles : null;
   const speaking = useIsSpeaking();
   const { width: screenWidth } = useWindowDimensions();
@@ -192,6 +194,7 @@ export function AssistantPanel({
               ]}
             >
               <View style={[styles.header, d?.header]}>
+                <QutaiMark size={30} working={running} sweepWhenIdle animate={open} />
                 <View style={styles.headerTitle}>
                   <Text style={styles.title}>{t('chat.title')}</Text>
                   <Pressable
@@ -250,6 +253,7 @@ export function AssistantPanel({
                     accessibilityRole="switch"
                     accessibilityState={{ checked: research }}
                   >
+                    <Icon name="research" size={15} color={research ? '#ffffff' : palette.textSecondary} />
                     <Text style={[styles.chipText, d?.text, research && styles.chipTextOn]}>{t('chat.research')}</Text>
                   </Pressable>
                   {research ? <Text style={styles.modeHint}>{t('chat.researchHint')}</Text> : null}
@@ -271,6 +275,7 @@ export function AssistantPanel({
                       style={({ pressed }) => [styles.chip, d?.chip, pressed && styles.pressed]}
                       accessibilityRole="button"
                     >
+                      <Icon name={action.icon} size={15} color={palette.textSecondary} />
                       <Text style={[styles.chipText, d?.text]}>{action.label}</Text>
                     </Pressable>
                   ))}
@@ -495,7 +500,7 @@ const useStyles = makeStyles((c) => ({
   },
   title: { fontWeight: '700', color: c.tintText, fontSize: 17 },
   status: { color: c.textSecondary, fontSize: 12, marginTop: 1 },
-  headerTitle: { flex: 1, marginRight: 8 },
+  headerTitle: { flex: 1, marginLeft: 10, marginRight: 8 },
   headerButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerButtonText: { fontSize: 18, color: c.textSecondary },
   messagesContent: { padding: 12, gap: 8 },
@@ -560,6 +565,9 @@ const useStyles = makeStyles((c) => ({
   chips: { flexGrow: 0 },
   chipsContent: { paddingHorizontal: 8, paddingTop: 8, gap: 6 },
   chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 16,

@@ -1,4 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
+import { Icon } from '../ui/Icon';
+import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles } from '../ui/theme';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SearchEngineId } from '../browser/search';
@@ -97,7 +99,16 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={[styles.logo, theme.logo]}>{incognito ? '🕶' : '✦ Qutai'}</Text>
+      {incognito ? (
+        <View style={styles.logoRow}>
+          <Icon name="incognito" size={40} color="#f2f1f5" />
+        </View>
+      ) : (
+        <View style={styles.logoRow} accessible accessibilityRole="header" accessibilityLabel="Qutai">
+          <QutaiMark size={44} sweepWhenIdle animate={active} />
+          <Text style={[styles.logo, theme.logo]}>Qutai</Text>
+        </View>
+      )}
 
       <View style={[styles.searchRow, theme.search]}>
         <TextInput
@@ -117,7 +128,10 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
           style={[styles.askButton, !text.trim() && styles.dimmed]}
           accessibilityLabel={t('newTab.ask')}
         >
-          <Text style={styles.askText}>✦ {t('newTab.ask')}</Text>
+          <View style={styles.askInner}>
+            <Icon name="assistant" size={15} color="#ffffff" />
+            <Text style={styles.askText}>{t('newTab.ask')}</Text>
+          </View>
         </Pressable>
       </View>
 
@@ -217,7 +231,9 @@ function colorFor(host: string): string {
 const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 40, paddingBottom: 40, gap: 20 },
-  logo: { fontSize: 28, fontWeight: '700', textAlign: 'center' },
+  logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  logo: { fontSize: 30, fontWeight: '700', letterSpacing: -0.5 },
+  askInner: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   searchRow: {
     flexDirection: 'row',
     alignItems: 'center',

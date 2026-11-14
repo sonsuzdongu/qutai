@@ -638,11 +638,12 @@ function BrowserApp({
     ...(onNewTab
       ? []
       : (['summarize', 'keyPoints', 'translate', 'review'] as const).map((id) => ({
+          icon: id,
           label: t(`quick.${id}`),
           prompt: t(`quick.${id}Prompt`),
         }))),
     ...(browser.tabsOf(tab.incognito).filter((x) => !x.isNewTab).length > 1
-      ? [{ label: t('quick.compare'), prompt: t('quick.comparePrompt') }]
+      ? [{ icon: 'compare' as const, label: t('quick.compare'), prompt: t('quick.comparePrompt') }]
       : []),
   ];
 
