@@ -14,7 +14,8 @@
       "infoPlist": {
         "CFBundleAllowMixedLocalizations": true
       },
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "bundleIdentifier": "com.sonsuzdongu.qutai"
     },
     "android": {
       "adaptiveIcon": {
@@ -41,7 +42,8 @@
           ]
         }
       ],
-      "versionCode": 1
+      "versionCode": 1,
+      "package": "com.sonsuzdongu.qutai"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -93,6 +95,7 @@
     "locales": {
       "tr": "./locales/tr.json",
       "en": "./locales/en.json"
-    }
+    },
+    "scheme": "qutai"
   }
 }
