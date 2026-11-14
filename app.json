@@ -118,6 +118,8 @@
         }
       ],
       "./plugins/withLegacyStorageWrite",
+      "./plugins/withBackgroundMedia",
+      "./plugins/withPictureInPicture",
       [
         "expo-localization",
         {

@@ -91,8 +91,8 @@ credits, background tasks), native work in our own build (network-level blocking
 | Open in external app (tel:, mailto:, app links) | ✅ | | By asking the user; iframes cannot open apps; Android `intent://` and web fallback supported |
 | Error page (no connection, site not found) | ✅ | | Explanation by error type and "Try again"; in two languages |
 | Fullscreen video | ✅ | | Default on iOS; `allowsFullscreenVideo` on Android |
-| Picture-in-Picture | ⬜ | Go/Build | Feature exists on iOS; native for Android |
-| Background audio | ⬜ | Build | iOS background audio mode setting |
+| Picture-in-Picture | ✅ | Build | iOS: the system player's PiP (not for incognito tabs). Android: a playing full-screen video when the user goes home (local module `modules/qutai-media`); setting; not for incognito tabs or with the app lock on. Not tested on a phone |
+| Background audio | ✅ | Build | "Keep playing in the background" (on by default). iOS: audio background mode, WebKit handles the audio session and lock screen (videos pause when leaving, as WebKit does). Android: `mediaPlayback` foreground service with a media notification while a tab plays sound. Not tested on a phone |
 | File and image download | ✅ | | See section 6; images are saved to Photos from the long-press menu |
 
 ### Download manager (section 6)
@@ -213,8 +213,8 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 ### Phase 4 – Things that require our own build
 
 Merged with the "Our own build (development build)" section in `TODO.md`:
-Cookie management and cookie deletion, Android PiP, background audio, being the default browser on iOS, widgets, "Share with
-Qutai", app verification. Done since: network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
+Cookie management and cookie deletion, being the default browser on iOS, widgets, "Share with
+Qutai", app verification. Done since: background audio and media controls, Android picture-in-picture, network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
 Android request interception), Face ID on iOS, Android private tab isolation (WebView profiles), per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the
 system download manager on Android), Android default browser (intent filters).
 
@@ -222,7 +222,8 @@ Added from Comet reviews:
 - ✅ Ready-made filter lists for ad blocking (EasyList, EasyPrivacy, AdGuard Turkish) and letting the user add lists by URL, with each list's home page and licence shown; domain rules only (the share each list contributes is shown per list). Not tested on a phone yet; needs a new development build
 - ✅ Voice input in the assistant panel, with the assistant going quiet when the user starts speaking (barge-in): the phone's own speech recognition, on-device where the phone and language allow it, otherwise the phone's speech service only after the user agreed once (never in incognito). Not tested on a phone yet; needs a new development build
 - Passwords: instead of our own manager, verify and fix that the system's (Google, iCloud Keychain) autofill works in the WebView
-- Background audio and headphone media keys, site shortcut on the home screen
+- ✅ Background audio and headphone media keys: "Keep playing in the background", the lock screen, notification (Android) and headphone buttons control the page's media through its Media Session (Android gets a small Media Session of its own, the WebView has none); a speaker in the tab switcher pauses a playing tab. Not tested on a phone yet; needs a new development build
+- Site shortcut on the home screen
 - ✅ Reader mode, together with read-aloud: the article only, in a themed view (light, dark, sepia; serif or sans; easier-reading spacing for dyslexic readers; the shared text size and the system font size); read aloud reads exactly what is shown, paragraph by paragraph, with play/pause/stop and the paragraph highlighted. Offered only on pages with enough article text (600 characters and 3 paragraphs)
 - iOS default browser: applying for Apple's `com.apple.developer.web-browser` entitlement
 

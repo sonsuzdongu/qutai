@@ -1,0 +1,20 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.sonsuzdongu.qutai'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.qutaimedia"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  // The patched react-native-webview's RNCWebViewPlayback (page playback state and commands, patches/).
+  implementation project(':react-native-webview')
+}

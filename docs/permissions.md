@@ -4,7 +4,8 @@ Every permission and usage description Qutai declares, what needs it and when th
 App Store privacy labels and the Google Play Data safety form.
 
 `ios/` and `android/` are generated (Continuous Native Generation), so everything here comes from `app.json` (config
-plugins, `ios.infoPlist`, `android.blockedPermissions`), `plugins/withLegacyStorageWrite.js`, the native libraries'
+plugins, `ios.infoPlist`, `android.blockedPermissions`), `plugins/withLegacyStorageWrite.js`, `plugins/withBackgroundMedia.js`,
+`plugins/withPictureInPicture.js`, the native libraries'
 own manifests and the translated iOS strings in `locales/en.json` and `locales/tr.json`. react-native-webview carries a small
 patch (`patches/`, applied by `postinstall`) that decides camera and microphone requests from web pages. To see what a build will
 declare, run `npx expo config --type introspect` (or `npx expo prebuild --no-install` in a copy of the project). The
@@ -28,9 +29,16 @@ is asked for at launch: each permission is asked the first time the feature need
 | `NSRemindersFullAccessUsageDescription` (iOS 17+), `NSRemindersUsageDescription` (iOS 16 and older) | The assistant adds a reminder the user confirmed. iOS has no write-only Reminders access; Qutai only writes | First reminder the user confirms | `expo-calendar` plugin, `remindersPermission` |
 | `NSLocationWhenInUseUsageDescription` | Position for sites the user allows (per-site setting) and for the assistant's `get_location` (confirmed every time). Foreground only, approximate accepted | First time a site or the assistant needs it | `expo-location` plugin, `locationWhenInUsePermission` (every "always"/background/motion option `false`) |
 | Notifications (no Info.plist key) | Local notifications the assistant schedules after the user confirms. No push: no `aps-environment` entitlement, no push token | First scheduled notification | `expo-notifications` plugin, `enableRemoteNotifications: false` |
+| `UIBackgroundModes`: `audio` (no prompt) | "Keep playing in the background": music, podcasts and other sound the user starts in a web page go on when Qutai is in the background or the screen locks, with WebKit's lock screen and headphone controls. Also what the system player's picture-in-picture needs to go on outside the app. WebKit switches the audio session to playback only while a page plays audible media and leaves it after the sound stops, so a silent app is suspended as usual | Never (no permission) | `plugins/withBackgroundMedia.js` |
 | `NSLocalNetworkUsageDescription`, `NSBonjourServices` | Development builds only: the dev client finding the Metro server. `expo-dev-client` removes both from release builds in a build phase, so they are not translated | Development builds only | `expo-dev-client` plugin |
 
 Other store-facing iOS declarations:
+
+- Audio background mode (App Review guideline 2.5.4: background services only for their intended purpose, "audio
+  playback"): it is used only for playback the user started in a web page (a site's music, podcast or video player).
+  Qutai never plays sound of its own in the background (read-aloud and the assistant's speech stop when it leaves the
+  foreground) and doesn't keep a silent audio session. Review notes: "Qutai is a web browser; audio a user plays on a
+  website (e.g. a podcast or music site) continues in the background, like Safari."
 
 - `ITSAppUsesNonExemptEncryption` is `false` (`ios.config.usesNonExemptEncryption`): Qutai only uses HTTPS and the
   operating system's own encryption (Keychain via `expo-secure-store`).
@@ -65,6 +73,7 @@ Install-time permissions (no prompt):
 | `RECEIVE_BOOT_COMPLETED` | Scheduled notifications survive a restart | `expo-notifications` |
 | `WAKE_LOCK` | Required by the Firebase Messaging library that `expo-notifications` bundles. Qutai doesn't use push; kept so the library can't fail on a missing permission | `expo-notifications` (Firebase Messaging) |
 | `DETECT_SCREEN_CAPTURE` (Android 14+) | `expo-screen-capture` registers a screen-capture callback as soon as it loads, which needs this permission. Qutai only blocks screenshots in incognito tabs (`FLAG_SECURE`) and doesn't listen for them | `expo-screen-capture` |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | "Keep playing in the background": the `mediaPlayback` foreground service (`expo.modules.qutaimedia.MediaPlaybackService`, local module `modules/qutai-media`) runs only while a tab plays sound and up to two minutes after it pauses, with a media notification (play/pause, previous/next when the site offers them, lock screen, headphone buttons). Started only while Qutai is on screen, stopped when playback ends, the tab closes, the setting is turned off or Qutai is swiped away. Its notification needs no `POST_NOTIFICATIONS` prompt: media session notifications are exempt on Android 13+ | `plugins/withBackgroundMedia.js` (the service, `foregroundServiceType="mediaPlayback"`, `exported="false"`) |
 | `<package>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | AndroidX's private permission for the app's own broadcast receivers | `androidx.core` |
 
 Blocked (`android.blockedPermissions` in `app.json`, removed from the merged manifest):
@@ -77,6 +86,23 @@ Blocked (`android.blockedPermissions` in `app.json`, removed from the merged man
 | `com.google.android.c2dm.permission.RECEIVE` | Firebase Messaging (`expo-notifications`) | No push notifications |
 | `com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE` | Install Referrer (`expo-application`) | Qutai doesn't read the install referrer |
 | `READ_APP_BADGE` and the launcher badge permissions (Samsung, HTC, Sony, Huawei, OPPO, …) | ShortcutBadger (`expo-notifications`) | Qutai never sets a badge count |
+
+Main activity: `android:supportsPictureInPicture="true"` and `configChanges` including
+`screenSize|smallestScreenSize|screenLayout|orientation` (`plugins/withPictureInPicture.js`), for picture-in-picture of
+a playing full-screen video when the user goes home. No permission; it is not offered for incognito tabs or while the
+app lock is on, and Settings › Appearance › "Picture-in-picture" turns it off.
+
+Google Play Console, "Foreground service permissions" declaration (App content), for `mediaPlayback`:
+
+- Use case: "Media playback"; description: "Qutai is a web browser. When the user plays audio or video on a website
+  (music, podcasts, talks) and leaves the app or locks the screen, playback continues in a foreground service with a
+  media notification and controls. It runs only while a page is playing (and two minutes after it pauses) and can be
+  turned off in Settings."
+- Impact if deferred or interrupted: playback the user started stops as soon as they leave the app.
+- Video: required; record the user starting playback on a site, pressing Home, the notification and lock screen
+  controls, and pausing (the policy says background audio the user didn't start, such as automatic sounds, doesn't
+  qualify). Not recorded yet: it needs a device.
+- Picture-in-picture is a separate feature, not a foreground service; it needs no declaration.
 
 Debug builds also get `ACCESS_NETWORK_STATE`, `ACCESS_LOCAL_NETWORK` and `CHANGE_WIFI_MULTICAST_STATE` from the dev
 client and React Native's debug manifest.
@@ -95,6 +121,7 @@ Qutai doesn't call `canOpenURL`; links to other apps go straight to `openURL`.
 | Location (`navigator.geolocation`) | Qutai's per-site prompt (ask / allow / block), see `src/browser/geolocation.ts` | Same; the WebView's own geolocation is off |
 | Camera and microphone (`getUserMedia`) | Qutai's per-site prompt, camera and microphone separately (ask / allow / block), see `src/browser/mediaCapture.ts`. WebKit grants only the main frame of the allowed origin and only the allowed kinds (patched react-native-webview, `mediaCaptureGrant`); everything else is refused without a prompt | Same rule; the patched `onPermissionRequest` grants only the requesting frame's origin when it is the allowed one, and only the allowed kinds, and never asks the OS for anything else. Frames from other sites are refused on both. Screen sharing (`getDisplayMedia`) is refused |
 | Upload field (`<input type="file">`) | Photo picker (no permission), Files, or the system camera ("Take Photo or Video": camera prompt, plus microphone for a video with sound) | System file picker (no permission); the camera option is offered only once Qutai holds `CAMERA` |
+| Media playback | Plays as in Safari. With "Keep playing in the background" on, `<audio>` and audio-only media go on in the background (WebKit pauses `<video>` elements when the app leaves the foreground, except in picture-in-picture); the lock screen, Control Center and headphones control the page through WebKit's own Now Playing and the page's Media Session. Incognito tabs: the page's Media Session title, artist and artwork are replaced with "Private tab" | With the setting on, the page's sound goes on in the background with Qutai's media notification (the page's Media Session metadata, or its title and site; "Private tab" for incognito tabs, never artwork). Media inside frames isn't seen on Android, so it gets no notification and may stop in the background |
 | Downloads | Saved in the app's own Downloads folder (no permission) | System download manager; asks for `WRITE_EXTERNAL_STORAGE` on Android 9 and older |
 
 ## Notes for the store forms
@@ -104,6 +131,8 @@ Qutai doesn't call `canOpenURL`; links to other apps go straight to `openURL`.
 - Location goes only to sites the user allowed and, when the user confirms each time, to the AI provider.
 - Camera and microphone: a page gets the live stream only on a site the user allowed for that device; Qutai doesn't
   record or keep it, and the assistant can't grant it.
+- Media playback in the background: no data leaves the phone for it. On Android the notification's artwork is
+  loaded from the address the page's Media Session gives (https only, normal tabs only), without cookies.
 - Photos: write-only; nothing is read from the library. Reminders: Qutai only writes, though iOS grants read access
   too.
 - Calendar: read only by the assistant's `read_calendar`, when the user asks about their schedule and confirms the

@@ -45,6 +45,10 @@ export type Settings = {
   animateLogo: boolean;
   /** Pinch-zoom every page, even those that turn zooming off. */
   forceZoom: boolean;
+  /** Sound a page plays keeps playing when Qutai is in the background or the screen locks. */
+  backgroundPlayback: boolean;
+  /** Android: a full-screen video goes into picture-in-picture when the user leaves Qutai. */
+  pictureInPicture: boolean;
   /** Reader mode colours: following the app's appearance, light, dark or sepia. */
   readerTheme: ReaderTheme;
   readerFont: ReaderFont;
@@ -93,6 +97,8 @@ export const DEFAULT_SETTINGS: Settings = {
   showAssistantButton: true,
   animateLogo: true,
   forceZoom: false,
+  backgroundPlayback: true,
+  pictureInPicture: true,
   readerTheme: 'auto',
   readerFont: 'serif',
   readerEasyReading: false,
@@ -123,6 +129,8 @@ const KEYS = {
   showAssistantButton: 'show_assistant_button',
   animateLogo: 'animate_logo',
   forceZoom: 'force_zoom',
+  backgroundPlayback: 'background_playback',
+  pictureInPicture: 'picture_in_picture',
   readerTheme: 'reader_theme',
   readerFont: 'reader_font',
   readerEasyReading: 'reader_easy_reading',
@@ -171,6 +179,8 @@ export async function loadSettings(): Promise<Settings> {
     showAssistantButton,
     animateLogo,
     forceZoom,
+    backgroundPlayback,
+    pictureInPicture,
     readerTheme,
     readerFont,
     readerEasyReading,
@@ -202,6 +212,8 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.showAssistantButton),
     get(KEYS.animateLogo),
     get(KEYS.forceZoom),
+    get(KEYS.backgroundPlayback),
+    get(KEYS.pictureInPicture),
     get(KEYS.readerTheme),
     get(KEYS.readerFont),
     get(KEYS.readerEasyReading),
@@ -237,6 +249,8 @@ export async function loadSettings(): Promise<Settings> {
     showAssistantButton: showAssistantButton !== 'false',
     animateLogo: animateLogo !== 'false',
     forceZoom: forceZoom === 'true',
+    backgroundPlayback: backgroundPlayback !== 'false',
+    pictureInPicture: pictureInPicture !== 'false',
     readerTheme: READER_THEMES.includes(readerTheme as ReaderTheme) ? (readerTheme as ReaderTheme) : 'auto',
     readerFont: READER_FONTS.includes(readerFont as ReaderFont) ? (readerFont as ReaderFont) : 'serif',
     readerEasyReading: readerEasyReading === 'true',
@@ -280,6 +294,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.showAssistantButton, String(settings.showAssistantButton)),
     set(KEYS.animateLogo, String(settings.animateLogo)),
     set(KEYS.forceZoom, String(settings.forceZoom)),
+    set(KEYS.backgroundPlayback, String(settings.backgroundPlayback)),
+    set(KEYS.pictureInPicture, String(settings.pictureInPicture)),
     set(KEYS.readerTheme, settings.readerTheme),
     set(KEYS.readerFont, settings.readerFont),
     set(KEYS.readerEasyReading, String(settings.readerEasyReading)),

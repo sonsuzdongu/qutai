@@ -16,6 +16,7 @@ import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
 import { geolocationScript } from '../browser/geolocation';
 import { FILE_CAPTURE_SCRIPT, handleFileCaptureMessage } from '../browser/fileCapture';
 import { mediaCaptureScript } from '../browser/mediaCapture';
+import { playbackScript } from '../browser/playback';
 import { openExternal } from '../browser/openExternal';
 import { parsePullState, PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
 import { handleUserAgentMessage, USER_AGENT_SCRIPT, useChromeUserAgent } from '../browser/userAgent';
@@ -126,9 +127,13 @@ function TabWebView({
   // getUserMedia asks the app (per-site permission) before the WebView's own capture may run; the native
   // mediaCaptureGrant prop below is what enforces it. Every frame on iOS (frames are refused), main frame on Android.
   const mediaScript = mediaCaptureScript(tab.media.nonce);
+  // Watches the page's media (audible tab, background playback, media controls); every frame on iOS, main frame on
+  // Android. See playback.ts.
+  const playScript = playbackScript(tab.playback.nonce, tab.incognito, t('playback.privateTab'));
   const earlyScript = [
     geoScript,
     mediaScript,
+    playScript,
     mainFrameEarly.trim() ? `if (window.top === window) (function () {\n${mainFrameEarly}\n})();` : '',
   ].join('\n');
   // Runs after every page load: long-press menu, text selection, desktop viewport (Android) and text size (iOS).
@@ -136,6 +141,7 @@ function TabWebView({
     // Android may run the early script too soon for the new page; installing again is a no-op otherwise.
     Platform.OS === 'android' ? geoScript : '',
     Platform.OS === 'android' ? mediaScript : '',
+    Platform.OS === 'android' ? playScript : '',
     Platform.OS === 'android' ? FILE_CAPTURE_SCRIPT : '',
     CONTEXT_MENU_SCRIPT,
     SELECTION_SCRIPT,
@@ -213,6 +219,7 @@ function TabWebView({
               if (tab.handleMessage(e.nativeEvent.data)) return;
               if (tab.geolocation.handleMessage(e.nativeEvent.data)) return;
               if (tab.media.handleMessage(e.nativeEvent.data)) return;
+              if (tab.playback.handleMessage(e.nativeEvent.data)) return;
               if (handleFileCaptureMessage(tab, e.nativeEvent.data)) return;
               if (handleUserAgentMessage(e.nativeEvent.data)) return;
               const pull = parsePullState(e.nativeEvent.data);
@@ -300,6 +307,11 @@ function TabWebView({
             // Videos can go full screen (Android) and play in the page (iOS; also a page's camera preview).
             allowsFullscreenVideo
             allowsInlineMediaPlayback
+            // iOS: the system player's picture-in-picture, never for incognito tabs (read when the WebView is created).
+            allowsPictureInPictureMediaPlayback={!tab.incognito}
+            // Android (patched react-native-webview): the playback script's reports also reach the background playback
+            // service natively, which keeps working while React Native is paused. "private": no title or site shown.
+            mediaPlayback={Platform.OS === 'android' ? `${tab.playback.nonce}${tab.incognito ? ' private' : ''}` : undefined}
             // Android: a page that was allowed to capture may play its own preview without another tap (the
             // user's tap is long gone after the prompt). iOS sets this only when the WebView is created; WebKit
             // already lets a capturing page play its stream.

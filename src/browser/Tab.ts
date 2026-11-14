@@ -7,6 +7,7 @@ import { sleep } from '../utils/sleep';
 import { siteKey } from '../agent/sitePolicy';
 import { PageGeolocation } from './geolocation';
 import { PageMediaCapture } from './mediaCapture';
+import { PagePlayback } from './playback';
 import { classifyLoadError, LoadError } from './navigation';
 import { PAGE_SCRIPT } from './pageScript';
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, ReaderArticle } from './reader';
@@ -123,6 +124,8 @@ export class Tab {
   readonly geolocation: PageGeolocation = new PageGeolocation(this);
   /** The page's camera and microphone (getUserMedia), gated by the user's per-site permission. */
   readonly media: PageMediaCapture = new PageMediaCapture(this);
+  /** Media playing in the page (audible tabs never sleep; speaker in the tab switcher). */
+  readonly playback: PagePlayback = new PagePlayback(this);
   /**
    * Android: requests the network blocker stopped on the page on screen (the WebView counts them and reports the
    * total in batches; it starts again at 0 when a new page loads in the tab). Kept in memory only, also in incognito.
@@ -169,8 +172,9 @@ export class Tab {
    * the incognito session's profile, see webviewProfile.ts, but a reload would still lose the page's state).
    */
   sleep() {
-    // A tab using the camera or microphone stays awake (capture would end without the user stopping it).
-    if (this.asleep || this.incognito || this.isNewTab || this.media.capturing) return;
+    // A tab using the camera or microphone, or playing sound, stays awake (capture or playback would end without the
+    // user stopping it).
+    if (this.asleep || this.incognito || this.isNewTab || this.media.capturing || this.playback.audible) return;
     this.reader = null;
     const thumbnail = this.thumbnail;
     this.dispose();
@@ -195,6 +199,11 @@ export class Tab {
 
   /** The camera / microphone grant, playback rule or live capture changed (WebView props, address bar). */
   notifyMediaChange() {
+    this.onChange();
+  }
+
+  /** The page started or stopped playing media (tab switcher speaker, sleep rule). */
+  notifyPlaybackChange() {
     this.onChange();
   }
 
@@ -322,6 +331,7 @@ export class Tab {
     // A new document: its watches, capture and "allow once" answers start over, and reader mode ends.
     this.geolocation.reset();
     this.media.reset();
+    this.playback.reset();
     this.reader = null;
     this.readerAvailable = false;
     this.loading = true;
@@ -465,6 +475,7 @@ export class Tab {
     this.reader = null;
     this.geolocation.reset();
     this.media.reset();
+    this.playback.reset();
     this.thumbnail = null;
     this.pending.forEach((p) => {
       clearTimeout(p.timer);

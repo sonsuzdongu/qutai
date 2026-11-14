@@ -71,6 +71,8 @@ export type BackupSettings = Partial<{
   showAssistantButton: boolean;
   animateLogo: boolean;
   forceZoom: boolean;
+  backgroundPlayback: boolean;
+  pictureInPicture: boolean;
   readerTheme: string;
   readerFont: string;
   readerEasyReading: boolean;
@@ -283,6 +285,8 @@ const BOOLEAN_SETTINGS = [
   'showAssistantButton',
   'animateLogo',
   'forceZoom',
+  'backgroundPlayback',
+  'pictureInPicture',
   'readerEasyReading',
   'voiceAutoSend',
 ] as const;

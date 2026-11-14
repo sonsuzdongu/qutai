@@ -52,6 +52,8 @@ function backupSettings(s: Settings): BackupSettings {
     showAssistantButton: s.showAssistantButton,
     animateLogo: s.animateLogo,
     forceZoom: s.forceZoom,
+    backgroundPlayback: s.backgroundPlayback,
+    pictureInPicture: s.pictureInPicture,
     readerTheme: s.readerTheme,
     readerFont: s.readerFont,
     readerEasyReading: s.readerEasyReading,
@@ -127,6 +129,8 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
     take('showAssistantButton', s.showAssistantButton);
     take('animateLogo', s.animateLogo);
     take('forceZoom', s.forceZoom);
+    take('backgroundPlayback', s.backgroundPlayback);
+    take('pictureInPicture', s.pictureInPicture);
     take('readerTheme', s.readerTheme as ReaderTheme | undefined);
     take('readerFont', s.readerFont as ReaderFont | undefined);
     take('readerEasyReading', s.readerEasyReading);

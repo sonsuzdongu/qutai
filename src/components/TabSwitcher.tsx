@@ -572,6 +572,18 @@ function TabCard({
         accessibilityState={selection ? { selected: selection.selected, disabled: selection.disabled } : undefined}
       >
         <View style={styles.cardHeader}>
+          {tab.playback.audible && !selection && (
+            // This tab plays sound (also while another tab is on screen); a tap pauses it.
+            <Pressable
+              onPress={() => tab.playback.command('pause')}
+              hitSlop={8}
+              style={styles.cardSpeaker}
+              accessibilityRole="button"
+              accessibilityLabel={t('tabs.playingPause')}
+            >
+              <Icon name="readAloud" size={14} color={iconColors(theme).accent} />
+            </Pressable>
+          )}
           <Text style={[styles.cardTitle, theme.text]} numberOfLines={1}>
             {tab.title || host || t('menu.newTab')}
           </Text>
@@ -685,6 +697,7 @@ const useStyles = makeStyles((c) => ({
   cardHeader: { flexDirection: 'row', alignItems: 'center', paddingLeft: 10, height: 34 },
   cardTitle: { flex: 1, fontSize: 13, fontWeight: '500' },
   cardClose: { width: 32, height: 34, alignItems: 'center', justifyContent: 'center' },
+  cardSpeaker: { width: 26, height: 34, alignItems: 'center', justifyContent: 'center', marginLeft: -6 },
   cardCloseText: { fontSize: 13 },
   preview: { overflow: 'hidden' },
   placeholder: { flex: 1, padding: 10, gap: 8 },

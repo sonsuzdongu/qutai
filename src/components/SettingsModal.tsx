@@ -354,6 +354,21 @@ function SettingsPages({
               value={settings.forceZoom}
               onChange={(forceZoom) => set({ forceZoom })}
             />
+            <Text style={[styles.label, styles.sectionLabel]}>{t('settings.mediaSection')}</Text>
+            <SwitchRow
+              title={t('settings.backgroundPlayback')}
+              hint={t(Platform.OS === 'android' ? 'settings.backgroundPlaybackHintAndroid' : 'settings.backgroundPlaybackHint')}
+              value={settings.backgroundPlayback}
+              onChange={(backgroundPlayback) => set({ backgroundPlayback })}
+            />
+            {Platform.OS === 'android' && (
+              <SwitchRow
+                title={t('settings.pictureInPicture')}
+                hint={t('settings.pictureInPictureHint')}
+                value={settings.pictureInPicture}
+                onChange={(pictureInPicture) => set({ pictureInPicture })}
+              />
+            )}
             <SwitchRow
               title={t('settings.haptics')}
               hint={t('settings.hapticsHint')}

@@ -93,6 +93,8 @@ import { siteKey } from './src/agent/sitePolicy';
 import { SitePermissionSheet } from './src/components/SitePermissionSheet';
 import { configurePageLocation } from './src/browser/geolocation';
 import { configurePageMedia } from './src/browser/mediaCapture';
+import { pauseAllPages } from './src/browser/playback';
+import { configureBackgroundMedia, setPictureInPictureAllowed } from './src/device/backgroundMedia';
 import { deleteOrphanChats, loadChat, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
@@ -312,6 +314,23 @@ function BrowserApp({
 
   // Lets reminders scheduled by the assistant show while Qutai is open; asks for no permission.
   useEffect(() => initNotifications(), []);
+
+  // Media in pages: "Keep playing in the background" (Android: the playback service; iOS: WebKit plays on by
+  // itself, so with the setting off pages are paused when the app leaves the foreground). The labels follow the
+  // app's language.
+  const playbackChannel = t('playback.channel');
+  useEffect(() => {
+    configureBackgroundMedia(settings.backgroundPlayback);
+    if (Platform.OS !== 'ios' || settings.backgroundPlayback) return;
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'background') pauseAllPages();
+    });
+    return () => sub.remove();
+  }, [settings.backgroundPlayback, playbackChannel]);
+  // Android picture-in-picture for a playing full-screen video: never for incognito tabs, and not while the app
+  // lock is on (the lock must cover the app whenever it comes back; a PiP window would show the page around it).
+  const pipAllowed = settings.pictureInPicture && !settings.appLock && !tab.incognito;
+  useEffect(() => setPictureInPictureAllowed(pipAllowed), [pipAllowed]);
 
   // The theme setting overrides the system appearance for the whole app, web pages included.
   useEffect(() => {

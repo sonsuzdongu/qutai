@@ -1,0 +1,4 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- The service and its permissions are declared by the app's config plugin (plugins/withBackgroundMedia.js),
+       so they show in `npx expo config --type introspect` and in docs/permissions.md. -->
+</manifest>

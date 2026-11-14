@@ -52,7 +52,7 @@ index 1b5c4c9..c86cb6d 100644
      public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
  
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
-index 80c6803..c958266 100644
+index 80c6803..60db0d6 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 @@ -38,15 +38,19 @@ import com.facebook.react.uimanager.events.Event;
@@ -75,7 +75,7 @@ index 80c6803..c958266 100644
  
  public class RNCWebView extends WebView implements LifecycleEventListener {
      protected @Nullable
-@@ -224,6 +228,48 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -224,6 +228,53 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -84,6 +84,11 @@ index 80c6803..c958266 100644
 +
 +    // Qutai patch: the WebView profile this view uses (null: the default one); see RNCWebViewProfiles.
 +    public @Nullable String profileName = null;
++
++    // Qutai patch: the key of the app's playback script messages, and whether this is an incognito tab; see
++    // RNCWebViewPlayback.
++    public @Nullable String mediaPlaybackKey = null;
++    public boolean mediaPlaybackPrivate = false;
 +    boolean profileReleased = false;
 +
 +    // Qutai patch: network ad and tracker blocking (RNCWebViewContentBlocker). Read on WebView's request threads.
@@ -124,7 +129,7 @@ index 80c6803..c958266 100644
      WebChromeClient mWebChromeClient;
      @Override
      public void setWebChromeClient(WebChromeClient client) {
-@@ -419,7 +465,10 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -419,7 +470,12 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          if (mWebChromeClient != null) {
              mWebChromeClient.onHideCustomView();
          }
@@ -132,9 +137,24 @@ index 80c6803..c958266 100644
          super.destroy();
 +        // Qutai patch: the profile may be emptied once no WebView uses it.
 +        RNCWebViewProfiles.release(this);
++        // Qutai patch: the page's media is gone with it.
++        RNCWebViewPlayback.gone(this);
      }
  
    public ThemedReactContext getThemedReactContext() {
+@@ -446,7 +502,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+         public void postMessage(String message) {
+             if (mWebView.getMessagingEnabled()) {
+                 // Post to main thread because `mWebView.getUrl()` requires to be executed on main.
+-                mWebView.post(() -> mWebView.onMessage(message, mWebView.getUrl()));
++                mWebView.post(() -> {
++                    // Qutai patch: playback state also goes straight to the app's media service (works in the background).
++                    RNCWebViewPlayback.report(mWebView, message);
++                    mWebView.onMessage(message, mWebView.getUrl());
++                });
+             } else {
+                 FLog.w(TAG, "ReactNativeWebView.postMessage method was called but messaging is disabled. Pass an onMessage handler to the WebView.");
+             }
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 index 209b855..5840e46 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
@@ -421,7 +441,7 @@ index 0000000..b53d506
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
-index f83033b..0d86191 100644
+index f83033b..f3a7fd2 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
 @@ -111,8 +111,9 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
@@ -436,6 +456,119 @@ index f83033b..0d86191 100644
              } catch (e: MalformedURLException) {
                  Log.w(TAG, "Error getting cookie for DownloadManager", e)
              }
+@@ -182,6 +183,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+                             mWebView.visibility = View.GONE
+                         }
+                         mWebView.themedReactContext.addLifecycleEventListener(this)
++                        // Qutai patch: a full-screen video may go into picture-in-picture.
++                        RNCWebViewPlayback.fullscreen(mWebView, true)
+                     }
+ 
+                     override fun onHideCustomView() {
+@@ -204,6 +207,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+                         mCustomViewCallback = null
+                         activity.requestedOrientation = initialRequestedOrientation
+                         mWebView.themedReactContext.removeLifecycleEventListener(this)
++                        RNCWebViewPlayback.fullscreen(mWebView, false)
+                     }
+                 }
+             webChromeClient.setAllowsProtectedMedia(mAllowsProtectedMedia);
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPlayback.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPlayback.java
+new file mode 100644
+index 0000000..392b475
+--- /dev/null
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPlayback.java
+@@ -0,0 +1,90 @@
++package com.reactnativecommunity.webview;
++
++import android.webkit.WebView;
++
++import androidx.annotation.Nullable;
++
++import org.json.JSONObject;
++
++/**
++ * Qutai patch: media playing in pages, for the app's background playback service and picture-in-picture
++ * (modules/qutai-media in the app).
++ *
++ * The app's page script posts its media state as {"__qutaiPlayback":"<key>",...}. React Native stops delivering
++ * events and view commands while the activity is paused, so these messages are also handed to a native listener
++ * here, on the main thread, and the listener can run playback commands in the page directly. Only messages that
++ * carry the view's key (set by the app through the mediaPlayback prop, known only to its own page script) reach it.
++ */
++public final class RNCWebViewPlayback {
++    private RNCWebViewPlayback() {}
++
++    public interface Listener {
++        /** A page reported its media state (the script's JSON). Main thread. */
++        void onPlaybackState(WebView view, boolean isPrivate, String json);
++
++        /** The page showed or left a full-screen video (WebChromeClient custom view). Main thread. */
++        void onFullscreenChanged(WebView view, boolean fullscreen);
++
++        /** The WebView was destroyed (its tab closed or put to sleep). Main thread. */
++        void onWebViewGone(WebView view);
++    }
++
++    private static volatile @Nullable Listener listener;
++
++    public static void setListener(@Nullable Listener value) {
++        listener = value;
++    }
++
++    /** From the mediaPlayback prop: "<key>" or "<key> private"; empty or null turns it off. */
++    static void configure(RNCWebView view, @Nullable String value) {
++        if (value == null || value.trim().isEmpty()) {
++            view.mediaPlaybackKey = null;
++            view.mediaPlaybackPrivate = false;
++            return;
++        }
++        String[] parts = value.trim().split("\\s+");
++        view.mediaPlaybackKey = parts[0];
++        view.mediaPlaybackPrivate = parts.length > 1 && "private".equals(parts[1]);
++    }
++
++    /** Called for every message the page posts (main thread); forwards the view's own playback messages. */
++    static void report(RNCWebView view, String message) {
++        String key = view.mediaPlaybackKey;
++        Listener current = listener;
++        if (key == null || current == null || message == null) return;
++        if (!message.startsWith("{\"__qutaiPlayback\":" + JSONObject.quote(key) + ",")) return;
++        current.onPlaybackState(view, view.mediaPlaybackPrivate, message);
++    }
++
++    static void fullscreen(RNCWebView view, boolean on) {
++        Listener current = listener;
++        if (current != null) current.onFullscreenChanged(view, on);
++    }
++
++    static void gone(RNCWebView view) {
++        Listener current = listener;
++        if (current != null) current.onWebViewGone(view);
++    }
++
++    /** Whether the view belongs to an incognito tab ("private"); true for views the app didn't configure. */
++    public static boolean isPrivate(WebView view) {
++        if (!(view instanceof RNCWebView)) return true;
++        RNCWebView web = (RNCWebView) view;
++        return web.mediaPlaybackKey == null || web.mediaPlaybackPrivate;
++    }
++
++    /**
++     * Runs a playback command in the page's script: play, pause, stop, nexttrack, previoustrack, seekto (seconds),
++     * seekforward, seekbackward. Main thread.
++     */
++    public static void command(WebView view, String action, double seconds) {
++        if (!(view instanceof RNCWebView)) return;
++        String key = ((RNCWebView) view).mediaPlaybackKey;
++        if (key == null) return;
++        String arg = Double.isNaN(seconds) || Double.isInfinite(seconds) ? "null" : Double.toString(seconds);
++        view.evaluateJavascript(
++            "window.__qutaiPlayback && window.__qutaiPlayback(" + JSONObject.quote(key) + ", " + JSONObject.quote(action)
++                + ", " + arg + "); void 0;",
++            null);
++    }
++}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewProfiles.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewProfiles.java
 new file mode 100644
 index 0000000..a229911
@@ -634,7 +767,7 @@ index 0000000..ecb67ea
 +
 +}
 diff --git a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index fa8efb8..f34404f 100644
+index fa8efb8..95b379c 100644
 --- a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 @@ -23,6 +23,7 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
@@ -645,7 +778,7 @@ index fa8efb8..f34404f 100644
  import com.reactnativecommunity.webview.events.TopRenderProcessGoneEvent;
  import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEvent;
  
-@@ -160,6 +161,32 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -160,6 +161,39 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
          mRNCWebViewManagerImpl.setIncognito(view, value);
      }
  
@@ -668,6 +801,13 @@ index fa8efb8..f34404f 100644
 +        // iOS only (WebKit content rule lists).
 +    }
 +
++    // Qutai patch: playback messages for the app's background playback service; see RNCWebViewPlayback.
++    @Override
++    @ReactProp(name = "mediaPlayback")
++    public void setMediaPlayback(RNCWebViewWrapper view, @Nullable String value) {
++        RNCWebViewPlayback.configure(view.getWebView(), value);
++    }
++
 +    // Qutai patch: the WebView profile (own cookies and storage) for this view; set before the source loads.
 +    @Override
 +    @ReactProp(name = "webviewProfile")
@@ -678,7 +818,7 @@ index fa8efb8..f34404f 100644
      @Override
      @ReactProp(name = "injectedJavaScript")
      public void setInjectedJavaScript(RNCWebViewWrapper view, @Nullable String value) {
-@@ -429,6 +456,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -429,6 +463,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
      @Override
      public void setMediaCapturePermissionGrantType(RNCWebViewWrapper view, @Nullable String value) {}
  
@@ -692,7 +832,7 @@ index fa8efb8..f34404f 100644
      @Override
      public void setFraudulentWebsiteWarningEnabled(RNCWebViewWrapper view, boolean value) {}
      /* !iOS PROPS - no implemented here */
-@@ -537,6 +571,8 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -537,6 +578,8 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
          export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
          export.put(TopHttpErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpError"));
          export.put(TopRenderProcessGoneEvent.EVENT_NAME, MapBuilder.of("registrationName", "onRenderProcessGone"));
@@ -760,7 +900,7 @@ index ca9ff96..e439db4 100644
          return mRNCWebViewModuleImpl.startPhotoPickerIntent(acceptTypes, allowMultiple, callback, isCaptureEnabled);
      }
 diff --git a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index 974337f..1d52e74 100644
+index 974337f..e0ba7f8 100644
 --- a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 @@ -19,6 +19,7 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
@@ -771,7 +911,7 @@ index 974337f..1d52e74 100644
  import com.reactnativecommunity.webview.events.TopRenderProcessGoneEvent;
  import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEvent;
  
-@@ -127,6 +128,28 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
+@@ -127,6 +128,34 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
          mRNCWebViewManagerImpl.setIncognito(view, value);
      }
  
@@ -791,6 +931,12 @@ index 974337f..1d52e74 100644
 +        // iOS only (WebKit content rule lists).
 +    }
 +
++    // Qutai patch: playback messages for the app's background playback service; see RNCWebViewPlayback.
++    @ReactProp(name = "mediaPlayback")
++    public void setMediaPlayback(RNCWebViewWrapper view, @Nullable String value) {
++        RNCWebViewPlayback.configure(view.getWebView(), value);
++    }
++
 +    // Qutai patch: the WebView profile (own cookies and storage) for this view; set before the source loads.
 +    @ReactProp(name = "webviewProfile")
 +    public void setWebviewProfile(RNCWebViewWrapper view, @Nullable String value) {
@@ -800,7 +946,7 @@ index 974337f..1d52e74 100644
      @ReactProp(name = "injectedJavaScript")
      public void setInjectedJavaScript(RNCWebViewWrapper view, @Nullable String value) {
          mRNCWebViewManagerImpl.setInjectedJavaScript(view, value);
-@@ -304,6 +327,8 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
+@@ -304,6 +333,8 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
          export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
          export.put(TopHttpErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpError"));
          export.put(TopRenderProcessGoneEvent.EVENT_NAME, MapBuilder.of("registrationName", "onRenderProcessGone"));
@@ -1198,7 +1344,7 @@ index ae60768..572ce6c 100644
  declare const _default: Spec;
  export default _default;
 diff --git a/node_modules/react-native-webview/lib/WebViewTypes.d.ts b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
-index f666e81..f028bf5 100644
+index f666e81..3a6ad1c 100644
 --- a/node_modules/react-native-webview/lib/WebViewTypes.d.ts
 +++ b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
 @@ -97,6 +97,13 @@ export type WebViewErrorEvent = NativeSyntheticEvent<WebViewError>;
@@ -1230,7 +1376,7 @@ index f666e81..f028bf5 100644
      /**
       * A Boolean value which, when set to `true`, WebView will be rendered with Apple Pay support.
       *  Once set, websites will be able to invoke apple pay from React Native Webview.
-@@ -779,6 +794,14 @@ export interface MacOSWebViewProps extends WebViewSharedProps {
+@@ -779,6 +794,21 @@ export interface MacOSWebViewProps extends WebViewSharedProps {
  export interface AndroidWebViewProps extends WebViewSharedProps {
      onNavigationStateChange?: (event: WebViewNavigation) => void;
      onContentSizeChange?: (event: WebViewEvent) => void;
@@ -1242,10 +1388,17 @@ index f666e81..f028bf5 100644
 +     * whose WebView lacks profile support (see RNCWebViewModule.isMultiProfileSupported).
 +     */
 +    webviewProfile?: string;
++    /**
++     * Qutai patch. Android: "<key>" or "<key> private". Messages the page posts that start with
++     * {"__qutaiPlayback":"<key>", (the app's playback script) are also handed to RNCWebViewPlayback's listener on the
++     * main thread, so the app's background playback service sees them even while React Native is paused; the listener
++     * can run playback commands in the page. "private" marks an incognito tab (no title or site in media controls).
++     */
++    mediaPlayback?: string;
      /**
       * Function that is invoked when the `WebView` process crashes or is killed by the OS.
       * Works only on Android (minimum API level 26).
-@@ -974,6 +997,26 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -974,6 +1004,26 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
      onLoadSubResourceError?: (event: WebViewErrorEvent) => void;
  }
  export interface WebViewSharedProps extends ViewProps {
@@ -1300,7 +1453,7 @@ index 146bdf3..04964d0 100644
  
  export default TurboModuleRegistry.getEnforcing<Spec>('RNCWebViewModule');
 diff --git a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
-index ca3af15..5eb085f 100644
+index ca3af15..484fc0b 100644
 --- a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
 +++ b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
 @@ -124,6 +124,11 @@ type WebViewRenderProcessGoneEvent = Readonly<{
@@ -1315,12 +1468,14 @@ index ca3af15..5eb085f 100644
  type WebViewDownloadEvent = Readonly<{
    downloadUrl: string;
  }>;
-@@ -136,6 +141,13 @@ export interface NativeProps extends ViewProps {
+@@ -136,6 +141,15 @@ export interface NativeProps extends ViewProps {
    allowsProtectedMedia?: boolean;
    allowsFullscreenVideo?: boolean;
    androidLayerType?: WithDefault<'none' | 'software' | 'hardware', 'none'>;
 +  // Qutai patch: see webviewProfile in WebViewTypes.ts. Android; iOS ignores it.
 +  webviewProfile?: string;
++  // Qutai patch: see mediaPlayback in WebViewTypes.ts. Android; iOS ignores it.
++  mediaPlayback?: string;
 +  // Qutai patch: network ad and tracker blocking, see contentBlocking in WebViewTypes.ts.
 +  contentBlocking?: WithDefault<boolean, false>;
 +  contentBlockingOffSites?: string;
@@ -1329,7 +1484,7 @@ index ca3af15..5eb085f 100644
    cacheMode?: WithDefault<
      'LOAD_DEFAULT' | 'LOAD_CACHE_ELSE_NETWORK' | 'LOAD_NO_CACHE' | 'LOAD_CACHE_ONLY',
      'LOAD_DEFAULT'
-@@ -208,6 +220,8 @@ export interface NativeProps extends ViewProps {
+@@ -208,6 +222,8 @@ export interface NativeProps extends ViewProps {
      'prompt' | 'grant' | 'deny' | 'grantIfSameHostElsePrompt' | 'grantIfSameHostElseDeny',
      'prompt'
    >;
@@ -1339,7 +1494,7 @@ index ca3af15..5eb085f 100644
    pullToRefreshEnabled?: boolean;
    refreshControlLightMode?: boolean;
 diff --git a/node_modules/react-native-webview/src/WebViewTypes.ts b/node_modules/react-native-webview/src/WebViewTypes.ts
-index 4e7247f..5345839 100644
+index 4e7247f..fc591d1 100644
 --- a/node_modules/react-native-webview/src/WebViewTypes.ts
 +++ b/node_modules/react-native-webview/src/WebViewTypes.ts
 @@ -149,6 +149,13 @@ export type WebViewHttpErrorEvent = NativeSyntheticEvent<WebViewHttpError>;
@@ -1371,7 +1526,7 @@ index 4e7247f..5345839 100644
    /**
     * A Boolean value which, when set to `true`, WebView will be rendered with Apple Pay support.
     *  Once set, websites will be able to invoke apple pay from React Native Webview.
-@@ -950,6 +965,14 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -950,6 +965,22 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
    onNavigationStateChange?: (event: WebViewNavigation) => void;
    onContentSizeChange?: (event: WebViewEvent) => void;
  
@@ -1383,10 +1538,18 @@ index 4e7247f..5345839 100644
 +   */
 +  webviewProfile?: string;
 +
++  /**
++   * Qutai patch. Android: "<key>" or "<key> private". Messages the page posts that start with
++   * {"__qutaiPlayback":"<key>", (the app's playback script) are also handed to RNCWebViewPlayback's listener on the
++   * main thread, so the app's background playback service sees them even while React Native is paused; the listener
++   * can run playback commands in the page. "private" marks an incognito tab (no title or site in media controls).
++   */
++  mediaPlayback?: string;
++
    /**
     * Function that is invoked when the `WebView` process crashes or is killed by the OS.
     * Works only on Android (minimum API level 26).
-@@ -1172,6 +1195,26 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -1172,6 +1203,26 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
  }
  
  export interface WebViewSharedProps extends ViewProps {
