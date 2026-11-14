@@ -96,6 +96,21 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
 - [ ] Before submitting to the stores: review the legacy storage permissions (`READ_EXTERNAL_STORAGE`, `READ_MEDIA_VISUAL_USER_SELECTED`) that the `expo-media-library` plugin adds on Android
 - [ ] Later: location, camera and QR, calendar, email and SMS drafts, biometric authentication, haptics
 - [ ] Security: tools that send data out (location, etc.) ask for user confirmation every time; clipboard reading and contacts are not given as tools. An iOS usage description string in `app.json` for each permission
+- [ ] Calendar, reminders and notifications: the assistant can put things on the user's calendar and set reminders
+  - Example: after buying a cinema ticket or booking anything with a time, the assistant offers "Shall I remind you?" (via `ask_user`) and, if yes, adds a calendar event and/or a reminder with an alert before it
+  - Tools: `add_calendar_event` (title, start, end, location, notes, alert), `add_reminder` (iOS Reminders; on Android a calendar event with an alarm), `schedule_notification` (a local notification from Qutai itself)
+  - Packages: `expo-calendar` (events and iOS reminders) and `expo-notifications` (local notifications); both work in Expo Go (remote push does not)
+  - Every write asks for confirmation and shows exactly what will be added; permissions are requested only on first use, with usage strings in `app.json` (`NSCalendarsFullAccessUsageDescription` / write-only access where enough, `NSRemindersFullAccessUsageDescription`, Android `READ_CALENDAR`/`WRITE_CALENDAR`, notification permission on Android 13+)
+  - Reading the calendar (e.g. "am I free on Friday?") only with explicit consent; never from incognito tabs; not kept in memory unless the user asks
+
+## Assistant
+
+- [ ] The Qutai panel's conversation should belong to the tab group, not to a single tab. Windows a task opens already gather in the tab's group; the chat should follow, so the assistant keeps one context for the whole job whichever of the group's tabs is shown
+  - Ungrouped tabs keep their own conversation, as today
+  - Decide what happens when a tab leaves or joins a group, a group is dissolved or its last tab closes (keep the chat with the group; offer to move it)
+  - Saved chats are keyed by tab `uid` today (`src/storage/chat.ts`): add group keys and migrate
+  - Incognito groups still never write to disk
+- [ ] "Look at the source code": the assistant tries to open `view-source:` URLs, which the WebView in Expo Go can't show. Read the source from the DOM instead (e.g. a `read_source` tool returning `document.documentElement.outerHTML`, split into chunks like `read_page`; or scripts and styles on request), and make `navigate` refuse `view-source:` with a hint to use it. Mention it in the system prompt
 
 ## Other
 
