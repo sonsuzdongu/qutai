@@ -69,8 +69,8 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
   const submit = () => {
     if (text.trim()) onNavigate(toUrl(text, searchEngine));
   };
+  // With nothing typed, it opens the assistant to type there.
   const ask = () => {
-    if (!text.trim()) return;
     onAsk(text.trim());
     setText('');
   };
@@ -124,8 +124,7 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
           />
           <Pressable
             onPress={ask}
-            disabled={!text.trim()}
-            style={[styles.askButton, !text.trim() && styles.dimmed]}
+            style={({ pressed }) => [styles.askButton, pressed && styles.dimmed]}
             accessibilityLabel={t('newTab.ask')}
           >
             <View style={styles.askInner}>
@@ -258,7 +257,7 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
   },
   askText: { color: c.onTint, fontWeight: '600', fontSize: 14 },
-  dimmed: { opacity: 0.45 },
+  dimmed: { opacity: 0.8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 16 },
   tile: { width: '25%', alignItems: 'center', gap: 6 },
   tileIcon: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },

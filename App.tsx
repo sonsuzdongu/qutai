@@ -837,7 +837,8 @@ function BrowserApp({
                     searchEngine: settings.searchEngine,
                     onAsk: (text) => {
                       setPanelOpen(true);
-                      send(text);
+                      if (text) send(text);
+                      else setFocusRequest((n) => n + 1);
                     },
                     onOpenLibrary: setLibrary,
                   }}
