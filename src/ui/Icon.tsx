@@ -71,6 +71,14 @@ const ICONS = {
   play: { ios: 'play.fill', android: 'play_arrow' },
   pause: { ios: 'pause.fill', android: 'pause' },
   tasks: { ios: 'list.bullet.rectangle', android: 'checklist' },
+  // Memory categories.
+  person: { ios: 'person.crop.circle', android: 'person' },
+  home: { ios: 'house', android: 'home' },
+  delivery: { ios: 'shippingbox', android: 'local_shipping' },
+  travel: { ios: 'airplane', android: 'flight' },
+  food: { ios: 'fork.knife', android: 'restaurant' },
+  wallet: { ios: 'wallet.pass', android: 'account_balance_wallet' },
+  preferences: { ios: 'slider.horizontal.3', android: 'tune' },
 } satisfies Record<string, SymbolName>;
 
 export type IconName = keyof typeof ICONS;

@@ -192,6 +192,9 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
    - ✅ **Memory** (in place of the form profile): the agent stores lasting information the user tells it on the phone and
      uses it in tasks; it can be viewed, edited, deleted and turned off in settings. Passwords/cards/one-time codes
      are not stored, nothing is recorded from private chats
+   - ✅ **Categorised memory**: identity, addresses, shopping and delivery (payment preference, delivery notes,
+     courier and time window, sizes), travel, food, budget, general; grouped in the prompt and on the Memory screen,
+     "Organise for me" proposes categories with one AI request; shopping preferences are applied at checkout
 10. ✅ **Deep research** (in the foreground, with the existing agent; 80 steps, markdown report with sources, share as PDF)
 
 ### Phase 3 – Modern browser (mostly Expo Go)

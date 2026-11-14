@@ -141,6 +141,9 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
    ALTER TABLE saved_tasks ADD COLUMN schedule_paused INTEGER NOT NULL DEFAULT 0;
    ALTER TABLE saved_tasks ADD COLUMN private INTEGER NOT NULL DEFAULT 0;
    ALTER TABLE saved_tasks ADD COLUMN auto_run INTEGER NOT NULL DEFAULT 0;`,
+  // Each memory's category (agent/memory.ts MEMORY_CATEGORIES); memories saved before categories are 'general'.
+  `ALTER TABLE memories ADD COLUMN category TEXT NOT NULL DEFAULT 'general';
+   CREATE INDEX memories_category ON memories (category);`,
 ];
 
 /**

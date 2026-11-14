@@ -20,7 +20,7 @@ import type { ToolImage } from '../ai/types';
 import { sleep } from '../utils/sleep';
 import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch, SiteVisits } from '../storage/history';
-import type { MemoryStore } from './memory';
+import { isMemoryCategory, MemoryStore } from './memory';
 import { decide, SitePolicy, siteKey } from './sitePolicy';
 import {
   describeCalendarRead,
@@ -763,8 +763,10 @@ async function memoryTool(
           isError: true,
         };
       }
-      const memory = await ctx.memory.add(String(input.text ?? ''));
-      return { content: `Remembered [${memory.id}]: ${memory.text}`, isError: false };
+      // Required in the schema, but a provider may still leave it out: such a fact goes to general.
+      const category = isMemoryCategory(input.category) ? input.category : 'general';
+      const memory = await ctx.memory.add(String(input.text ?? ''), category);
+      return { content: `Remembered [${memory.id}] (${memory.category}): ${memory.text}`, isError: false };
     }
     const removed = await ctx.memory.remove(String(input.id ?? ''));
     return removed

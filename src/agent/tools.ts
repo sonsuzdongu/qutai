@@ -1,3 +1,4 @@
+import { MEMORY_CATEGORIES } from './memory';
 import type { ToolDefinition } from './types';
 
 /** Offered only while memory is turned on in settings. */
@@ -6,13 +7,18 @@ export const MEMORY_TOOLS: ToolDefinition[] = [
     name: 'remember',
     description:
       'Save one lasting fact about the user for future conversations (stored on their phone; they can see and delete it in settings). ' +
-      'Only facts the user told you themselves. Never passwords, one-time codes or payment card details.',
+      'Only facts the user told you themselves. Never passwords, one-time codes, payment card details or bank account numbers.',
     input_schema: {
       type: 'object',
       properties: {
         text: { type: 'string', description: 'One short, self-contained fact, e.g. "Phone: +90 555 123 45 67"' },
+        category: {
+          type: 'string',
+          enum: MEMORY_CATEGORIES,
+          description: 'Where the fact belongs (see the categories in the Memory section of your instructions)',
+        },
       },
-      required: ['text'],
+      required: ['text', 'category'],
     },
   },
   {

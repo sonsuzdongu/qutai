@@ -15,7 +15,7 @@ same format, so bookmarks can always be taken to another browser.
 
 There is no account and no sync, so Settings › Backup exports everything to one password-protected file
 (`qutai-backup-YYYY-MM-DD.qutai`, saved through the share sheet to Files, Drive…) and imports it on this or another
-phone. Always in a backup: bookmarks and folders, history, the assistant's memory, site permissions (assistant level and
+phone. Always in a backup: bookmarks and folders, history, the assistant's memory (with its categories), site permissions (assistant level and
 location) and preferences (including reader mode and appearance). Optional: open tabs and tab groups (on by default),
 the assistant's conversations (off) and its activity history (off), and the AI provider keys (off; only with an explicit
 "Include my AI provider keys"). Never in a backup: incognito data (it is never stored), downloads and saved pages,
@@ -209,6 +209,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |
+| `src/agent/memory.ts` | The assistant's memory: categories, what is never stored (`sensitiveReason`) and the memory part of the prompt |
 | `src/utils/foreground.ts` | Pauses the agent when the app goes to the background, resumes it when it comes back to the foreground |
 | `src/device/backgroundTask.ts`, `modules/qutai-agent` | "Keep working in the background" (Android): the `specialUse` foreground service and its notifications, the headless JS task that keeps timers running, and page commands sent natively to the tab's WebView while React Native is paused; also the assistant's downloads through the system download manager |
 

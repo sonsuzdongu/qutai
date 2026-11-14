@@ -475,7 +475,20 @@ function SettingsPages({
         )}
       </ScrollView>
       <LegalScreen kind={legal} onClose={() => setLegal(null)} />
-      <MemoryScreen visible={memoryVisible} onClose={() => setMemoryVisible(false)} />
+      <MemoryScreen
+        visible={memoryVisible}
+        onClose={() => setMemoryVisible(false)}
+        ai={
+          settings.apiKeys[settings.provider]
+            ? {
+                provider: settings.provider,
+                apiKey: settings.apiKeys[settings.provider]!,
+                model: settings.models[settings.provider],
+                label: getProvider(settings.provider).label,
+              }
+            : null
+        }
+      />
       <TasksScreen
         visible={tasksVisible}
         onClose={() => setTasksVisible(false)}

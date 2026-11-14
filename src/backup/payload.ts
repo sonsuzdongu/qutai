@@ -1,5 +1,5 @@
 import { isSiteLevel, SiteLevel } from '../agent/sitePolicy';
-import { cleanMemoryText, MAX_MEMORIES, sensitiveReason } from '../agent/memory';
+import { cleanMemoryText, isMemoryCategory, MAX_MEMORIES, MemoryCategory, sensitiveReason } from '../agent/memory';
 import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES } from '../browser/reader';
 import { isSearchEngine } from '../browser/search';
@@ -14,7 +14,7 @@ import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } fr
  *   app: "qutai", payloadVersion: 1, createdAt: ms, appVersion: "1.2.0", schemaVersion: 9,
  *   bookmarks?: { folders: [{ id, parentId, title, createdAt }], items: [{ url, title, createdAt, folderId }] },
  *   history?: [{ url, title, visitedAt }],
- *   memories?: [{ text, createdAt, updatedAt }],
+ *   memories?: [{ text, category?, createdAt, updatedAt }],   // category: absent before categories (= general)
  *   tasks?: [{ name, prompt, target, url, research, createdAt, lastUsedAt, schedule, paused, private, autoRun }],
  *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }],
  *            blockingOff?: [host] },
@@ -35,7 +35,7 @@ export const PAYLOAD_VERSION = 1;
 export type BackupFolder = { id: number; parentId: number | null; title: string; createdAt: number };
 export type BackupBookmark = { url: string; title: string; createdAt: number; folderId: number | null };
 export type BackupVisit = { url: string; title: string; visitedAt: number };
-export type BackupMemory = { text: string; createdAt: number; updatedAt: number };
+export type BackupMemory = { text: string; category: MemoryCategory; createdAt: number; updatedAt: number };
 export type BackupTask = {
   name: string;
   prompt: string;
@@ -242,10 +242,12 @@ function parseMemories(v: unknown): BackupMemory[] | undefined {
   for (const m of list(v, MAX_MEMORIES * 2)) {
     if (!isObj(m) || typeof m.text !== 'string') continue;
     const text = cleanMemoryText(m.text);
+    // Backups made before categories have none: those memories are general, as after the database migration.
+    const category = isMemoryCategory(m.category) ? m.category : 'general';
     // The same rules as saving a memory in the app: no passwords, codes or card numbers, no duplicates.
-    if (!text || sensitiveReason(text) || seen.has(text.toLowerCase())) continue;
+    if (!text || sensitiveReason(text, category) || seen.has(text.toLowerCase())) continue;
     seen.add(text.toLowerCase());
-    out.push({ text, createdAt: time(m.createdAt), updatedAt: time(m.updatedAt) });
+    out.push({ text, category, createdAt: time(m.createdAt), updatedAt: time(m.updatedAt) });
     if (out.length >= MAX_MEMORIES) break;
   }
   return out;
