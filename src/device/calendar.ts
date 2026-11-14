@@ -1,5 +1,5 @@
 import { Platform } from 'react-native';
-import type { CalendarEventPlan, ReminderPlan } from '../agent/scheduling';
+import type { CalendarEntry, CalendarEventPlan, CalendarReadPlan, ReminderPlan } from '../agent/scheduling';
 
 type CalendarModule = typeof import('expo-calendar');
 type PermissionResponse = Awaited<ReturnType<CalendarModule['getCalendarPermissions']>>;
@@ -22,6 +22,14 @@ async function load(): Promise<CalendarModule> {
   }
 }
 
+function denied(what: string): DeviceToolError {
+  return new DeviceToolError(
+    `Permission denied: the user has not allowed Qutai to access ${what}. Explain this to the user and offer ` +
+      "(with ask_user) to open Qutai's page in the phone's settings with open_settings (target system), where they can allow it. " +
+      'Do not call this tool again unless they say they have allowed it.',
+  );
+}
+
 /** Asks for the permission only if it was never decided; a denial is final until the user changes it in Settings. */
 async function ensure(
   get: () => Promise<PermissionResponse>,
@@ -30,13 +38,7 @@ async function ensure(
 ): Promise<void> {
   let status = await get();
   if (!status.granted && status.canAskAgain) status = await request();
-  if (!status.granted) {
-    throw new DeviceToolError(
-      `Permission denied: the user has not allowed Qutai to access ${what}. Explain this to the user and offer ` +
-        "(with ask_user) to open Qutai's page in the phone's settings with open_settings (target system), where they can allow it. " +
-        'Do not call this tool again unless they say they have allowed it.',
-    );
-  }
+  if (!status.granted) throw denied(what);
 }
 
 /** iOS: write-only access is enough to add events (iOS 17+); Android needs read and write to find a calendar. */
@@ -120,4 +122,80 @@ export async function addReminder(plan: ReminderPlan): Promise<string> {
     alarms: plan.due ? [{ absoluteDate: plan.due.toISOString() }] : [],
   });
   return 'the default Reminders list';
+}
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * Reading needs full calendar access. Android: the same read and write request as adding events.
+ * iOS 17+: full access is a separate grant. An app that holds write-only access reports full access as
+ * denied and not askable, but iOS still shows the prompt to upgrade once, so it is requested then too.
+ */
+async function ensureReadAccess(Calendar: CalendarModule) {
+  if (Platform.OS !== 'ios') return ensureCalendarAccess(Calendar);
+  let status = await Calendar.getCalendarPermissions(false);
+  if (!status.granted) {
+    const writeOnly = await Calendar.getCalendarPermissions(true);
+    if (status.canAskAgain || writeOnly.granted) status = await Calendar.requestCalendarPermissions(false);
+  }
+  if (!status.granted) throw denied('read the calendar (full access; adding events alone is not enough)');
+}
+
+/** A date of an all-day event: Android stores those at UTC midnight, iOS at local midnight. */
+function dayOf(date: Date): string {
+  if (Platform.OS === 'android')
+    return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/**
+ * Events in the range, from every event calendar the user can see (hidden Android calendars are left out;
+ * on iOS Reminders lists are not event calendars, so they are never read). Both platforms return each
+ * occurrence of a recurring event separately. Sorted by start; notes only when asked for.
+ */
+export async function readCalendarEvents(plan: CalendarReadPlan): Promise<CalendarEntry[]> {
+  const Calendar = await load();
+  await ensureReadAccess(Calendar);
+  const calendars = (
+    Platform.OS === 'ios' ? await Calendar.getCalendars(Calendar.EntityTypes.EVENT) : await Calendar.getCalendars()
+  ).filter((c) => c.isVisible !== false && (!c.entityType || c.entityType === Calendar.EntityTypes.EVENT));
+  if (calendars.length === 0) return [];
+  const names = new Map(calendars.map((c) => [c.id, c.title]));
+  const events = await Calendar.listEvents(calendars.map((c) => c.id), plan.start, plan.end);
+  const firstDay = `${plan.start.getFullYear()}-${pad(plan.start.getMonth() + 1)}-${pad(plan.start.getDate())}`;
+  const lastMoment = new Date(plan.end.getTime() - 1);
+  const lastDay = `${lastMoment.getFullYear()}-${pad(lastMoment.getMonth() + 1)}-${pad(lastMoment.getDate())}`;
+  const entries: CalendarEntry[] = [];
+  for (const e of events) {
+    const start = new Date(e.startDate);
+    const end = new Date(e.endDate);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) continue;
+    let allDay: CalendarEntry['allDay'] = null;
+    if (e.allDay) {
+      // The end is exclusive midnight on Android and 23:59:59 of the last day on iOS.
+      allDay = { first: dayOf(start), last: dayOf(new Date(Math.max(start.getTime(), end.getTime() - 1000))) };
+      // Android matches all-day events in UTC, so a neighbouring day can come back; keep only the asked days.
+      if (allDay.last < firstDay || allDay.first > lastDay) continue;
+    } else if (end.getTime() <= plan.start.getTime() || start.getTime() >= plan.end.getTime()) {
+      continue;
+    }
+    const availability = String(e.availability ?? '');
+    entries.push({
+      title: (e.title ?? '').trim(),
+      start,
+      end,
+      allDay,
+      location: e.location?.trim() || null,
+      calendar: names.get(e.calendarId) ?? '',
+      availability: ['busy', 'free', 'tentative', 'unavailable'].includes(availability) ? availability : null,
+      ...(plan.details && e.notes?.trim() ? { notes: e.notes.trim() } : {}),
+    });
+  }
+  // All-day events first on their day (on Android their start is UTC midnight, not local).
+  const key = (e: CalendarEntry) => {
+    if (!e.allDay) return e.start.getTime();
+    const [y, m, d] = e.allDay.first.split('-').map(Number);
+    return new Date(y, m - 1, d).getTime() - 1;
+  };
+  return entries.sort((a, b) => key(a) - key(b));
 }

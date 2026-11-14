@@ -1,7 +1,7 @@
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { Platform } from 'react-native';
-import { addCalendarEvent, addReminder, DeviceToolError } from '../device/calendar';
+import { addCalendarEvent, addReminder, DeviceToolError, readCalendarEvents } from '../device/calendar';
 import { openDefaultBrowserSettings } from '../device/defaultBrowser';
 import { scheduleNotification } from '../device/notifications';
 import { savePagePdf, savePdfFromScreenshots } from '../device/pdf';
@@ -18,7 +18,16 @@ import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch } from '../storage/history';
 import type { MemoryStore } from './memory';
 import { decide, SitePolicy, siteKey } from './sitePolicy';
-import { describePlan, planSchedule, SCHEDULING_TOOLS, SchedulingTool } from './scheduling';
+import {
+  describeCalendarRead,
+  describePlan,
+  formatCalendarRead,
+  localIso,
+  planCalendarRead,
+  planSchedule,
+  SCHEDULING_TOOLS,
+  SchedulingTool,
+} from './scheduling';
 
 type PageSnapshot = {
   url: string;
@@ -155,6 +164,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.scheduleNotification', { title: str(input.title).slice(0, 60) });
     case 'get_location':
       return t('action.getLocation');
+    case 'read_calendar':
+      return t('action.readCalendar');
     case 'open_settings':
       return t(
         input.target === 'app'
@@ -411,6 +422,52 @@ async function schedulingTool(name: SchedulingTool, input: Record<string, unknow
   }
 }
 
+/** What the action history says about read_calendar: that it was read and the range, never the events. */
+function readCalendarLog(input: Record<string, unknown>): string {
+  const plan = planCalendarRead(input);
+  if (typeof plan === 'string') return t('action.readCalendar');
+  const when = (date: Date) => localIso(date).replace('T', ' ');
+  return t('action.readCalendarLogged', { from: when(plan.start), to: when(plan.end) });
+}
+
+/**
+ * The user's calendar for the assistant. Same rules as the write tools: never in incognito conversations, and the
+ * user confirms every read with the range and where it goes, whatever the "ask before actions" setting.
+ */
+async function readCalendarTool(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  const tab = ctx.browser.getTab(ctx.agentTab.id);
+  if (ctx.privacy?.touchedIncognito || tab?.incognito) {
+    return {
+      content:
+        "Not allowed: this conversation involves incognito tabs, so Qutai doesn't read the calendar from it. Tell the " +
+        'user they can ask again from a normal tab. Do not guess their availability.',
+      isError: true,
+    };
+  }
+  const plan = planCalendarRead(input);
+  if (typeof plan === 'string') return { content: plan, isError: true };
+  if (!ctx.confirm) return { content: "This needs the user's confirmation, which is not available here.", isError: true };
+  const provider = ctx.providerLabel || t('location.aiProvider');
+  if (!(await ctx.confirm(describeCalendarRead(plan, provider), null))) {
+    return {
+      content:
+        "The user declined to share their calendar. Don't guess their schedule or availability: ask them directly.",
+      isError: true,
+    };
+  }
+  try {
+    const entries = await readCalendarEvents(plan);
+    return { content: formatCalendarRead(plan, entries), isError: false };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (e instanceof DeviceToolError) return { content: message, isError: true };
+    return {
+      content: `Could not read the calendar: ${message}. Don't guess the user's availability.`,
+      isError: true,
+    };
+  }
+}
+
 /**
  * The user's location for the assistant. Never in incognito conversations (same rule as the calendar), the user
  * confirms every read, and the result goes only to the model: the action history just says it was read.
@@ -480,6 +537,8 @@ async function locationTool(input: Record<string, unknown>, ctx: ToolContext): P
 
 /** Two decimal coordinates, e.g. "41.0082, 28.9784": a location is not something to remember. */
 const COORDINATES = /-?\d{1,3}\.\d{3,}\s*[,;/ ]\s*-?\d{1,3}\.\d{3,}/;
+/** A date and time as read_calendar returns them ("2026-11-15T19:30"); two or more look like a copied schedule. */
+const CALENDAR_TIMES = /\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/g;
 
 async function memoryTool(
   name: 'remember' | 'forget',
@@ -499,6 +558,14 @@ async function memoryTool(
       if (COORDINATES.test(String(input.text ?? ''))) {
         return {
           content: "Not saved: coordinates (the user's location) are never kept in memory. Use them for this task only.",
+          isError: true,
+        };
+      }
+      if ((String(input.text ?? '').match(CALENDAR_TIMES) ?? []).length >= 2) {
+        return {
+          content:
+            "Not saved: the user's schedule (calendar events) is never kept in memory. If the user asked you to " +
+            'remember one particular event, save that one alone.',
           isError: true,
         };
       }
@@ -600,6 +667,8 @@ const LOGGED_TOOLS = new Set([
   'open_settings',
   // Only that the location was read: the coordinates are never written to the history.
   'get_location',
+  // Only that the calendar was read and the range: the events are never written to the history.
+  'read_calendar',
 ]);
 
 /** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
@@ -624,6 +693,7 @@ function actionTarget(
       'draft_sms',
       'open_settings',
       'get_location',
+      'read_calendar',
       ...SCHEDULING_TOOLS,
     ].includes(name)
   )
@@ -667,6 +737,8 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
               ? offerCallLog(input)
               : name === 'draft_sms'
               ? draftSmsLog(input)
+              : name === 'read_calendar'
+              ? readCalendarLog(input)
               : name in SCHEDULING_LOG_KEYS
               ? t(SCHEDULING_LOG_KEYS[name as SchedulingTool])
               : describeToolCall(name, input),
@@ -682,6 +754,7 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
   if (SCHEDULING_TOOLS.has(name)) return record(await schedulingTool(name as SchedulingTool, input, ctx));
   // Asks every time, whatever the "ask before actions" setting.
   if (name === 'get_location') return record(await locationTool(input, ctx));
+  if (name === 'read_calendar') return record(await readCalendarTool(input, ctx));
   if (decision.kind === 'confirm' && ctx.confirm) {
     const allowed = await ctx.confirm(describeToolCall(name, input), host);
     if (!allowed) return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true });

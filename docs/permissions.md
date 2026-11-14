@@ -22,7 +22,8 @@ is asked for at launch: each permission is asked the first time the feature need
 | `NSMicrophoneUsageDescription` | Sites the user allows to use the microphone (`getUserMedia`, per-site setting: video calls, voice input on sites); the sound of a video recorded with the system camera for a web page's upload field. Qutai itself has no voice input | First time the user allows a site, or such a video is recorded (iOS asks) | `expo-camera` plugin, `microphonePermission` |
 | `NSPhotoLibraryAddUsageDescription` | Saving screenshots (visible area or full page) and images from pages to Photos. Add-only: Qutai can't see the library | First save | `expo-media-library` plugin, `savePhotosPermission` (`photosPermission: false`, so no read key) |
 | `NSFaceIDUsageDescription` | Locking the app and incognito tabs with Face ID | When the lock is turned on or first used | `expo-local-authentication` plugin, `faceIDPermission` |
-| `NSCalendarsWriteOnlyAccessUsageDescription` (iOS 17+), `NSCalendarsUsageDescription` (iOS 16 and older) | The assistant adds an event the user confirmed (tickets, reservations). Write-only on iOS 17+: Qutai can't read the calendar | First event the user confirms | `expo-calendar` plugin, `writeOnlyAccess: true`, `writeOnlyCalendarPermission`, `calendarPermission` |
+| `NSCalendarsWriteOnlyAccessUsageDescription` (iOS 17+), `NSCalendarsUsageDescription` (iOS 16 and older) | The assistant adds an event the user confirmed (tickets, reservations). Write-only on iOS 17+: adding events never asks to read the calendar. On iOS 16 and older one grant covers adding and reading, so the old key mentions both | First event the user confirms | `expo-calendar` plugin, `writeOnlyAccess: true`, `writeOnlyCalendarPermission`, `calendarPermission` |
+| `NSCalendarsFullAccessUsageDescription` (iOS 17+) | The assistant's `read_calendar` ("am I free on Friday?"): reads the events of a range the user confirmed, each time, and sends their titles, times and places (notes only if the confirmation says so) to the AI provider. Not asked by the add tools. If write-only access was granted first, iOS asks once more to upgrade to full access; a "no" keeps write-only | First `read_calendar` the user confirms | `ios.infoPlist` in `app.json` (the `expo-calendar` plugin writes either the write-only or the full-access key, not both) |
 | `NSRemindersFullAccessUsageDescription` (iOS 17+), `NSRemindersUsageDescription` (iOS 16 and older) | The assistant adds a reminder the user confirmed. iOS has no write-only Reminders access; Qutai only writes | First reminder the user confirms | `expo-calendar` plugin, `remindersPermission` |
 | `NSLocationWhenInUseUsageDescription` | Position for sites the user allows (per-site setting) and for the assistant's `get_location` (confirmed every time). Foreground only, approximate accepted | First time a site or the assistant needs it | `expo-location` plugin, `locationWhenInUsePermission` (every "always"/background/motion option `false`) |
 | Notifications (no Info.plist key) | Local notifications the assistant schedules after the user confirms. No push: no `aps-environment` entitlement, no push token | First scheduled notification | `expo-notifications` plugin, `enableRemoteNotifications: false` |
@@ -49,7 +50,7 @@ Runtime permissions (the user is asked):
 | `CAMERA` | QR code scanner; the camera option in a web page's upload field (offered once Qutai holds the permission); sites the user allows to use the camera (`getUserMedia`) | First time the QR scanner opens, the user taps an upload field with `capture` (a "take a photo" button; `src/browser/fileCapture.ts`), or the user allows a site | `expo-camera` (plugin and library manifest) |
 | `RECORD_AUDIO` | Sites the user allows to use the microphone (`getUserMedia`) | First time the user allows a site | `expo-camera` plugin, `recordAudioAndroid: true` |
 | `WRITE_EXTERNAL_STORAGE` (Android 10 and older, `maxSdkVersion` 29) | Saving screenshots and images to the gallery (Android 10 and older); downloads to the Downloads folder (Android 9 and older). Android 11+ needs no storage permission for either | First save or download on those versions | `plugins/withLegacyStorageWrite.js` (the libraries declare it up to Android 12; this lowers it) |
-| `READ_CALENDAR`, `WRITE_CALENDAR` | Adding events and reminders (a reminder is a calendar event with an alarm on Android). Read is needed to find a writable calendar; Android has no write-only calendar access | First event or reminder the user confirms | `expo-calendar` plugin |
+| `READ_CALENDAR`, `WRITE_CALENDAR` | Adding events and reminders (a reminder is a calendar event with an alarm on Android); the assistant's `read_calendar`, confirmed each time. Read is needed to find a writable calendar; Android has no write-only calendar access, so one prompt covers both | First event or reminder the user confirms, or the first `read_calendar` | `expo-calendar` plugin |
 | `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` | Same as iOS location; approximate accepted. Foreground only | First time a site or the assistant needs it | `expo-location` (plugin and library manifest) |
 | `POST_NOTIFICATIONS` (Android 13+) | Local notifications the assistant schedules | First scheduled notification | `expo-notifications` library manifest |
 
@@ -99,8 +100,12 @@ to `openURL`.
 - Location goes only to sites the user allowed and, when the user confirms each time, to the AI provider.
 - Camera and microphone: a page gets the live stream only on a site the user allowed for that device; Qutai doesn't
   record or keep it, and the assistant can't grant it.
-- Photos: write-only; nothing is read from the library. Calendar on iOS 17+: write-only. Reminders and the Android
-  calendar: Qutai only writes, though the OS grants read access too.
+- Photos: write-only; nothing is read from the library. Reminders: Qutai only writes, though iOS grants read access
+  too.
+- Calendar: read only by the assistant's `read_calendar`, when the user asks about their schedule and confirms the
+  range each time (never in incognito conversations). The events of that range go to the AI provider; they are not
+  stored by Qutai (no memory, the action history records only the range, the "sent to the AI" log keeps the text in
+  memory only). On iOS 17+ adding events uses write-only access and reading asks for full access separately.
 - Camera: QR codes are decoded on the device; photos and videos for uploads go only to the page the user is
   uploading to.
 - No analytics, no advertising ID, no tracking (pro builds' planned analytics will change the forms; see TODO.md).

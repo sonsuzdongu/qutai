@@ -2,7 +2,7 @@
 
 An AI-powered mobile browser for iOS and Android: an agent that can read and use the page for you,
 tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models. Besides the page, the assistant
-can add calendar events, reminders and notifications, use the phone's location, offer a Call button and open the
+can add calendar events, reminders and notifications, read the calendar when asked about the user's schedule, use the phone's location, offer a Call button and open the
 phone's settings, each confirmed or tapped by the user.
 
 Open tabs, history, bookmarks, recently closed tabs and chats are stored on the device (`expo-sqlite`); private tabs
@@ -152,7 +152,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/browser/geolocation.ts` | Web pages' `navigator.geolocation`, answered by the app with a per-site location permission (ask / allow / block) |
 | `src/backup/` | The encrypted backup file: what goes in it, the encryption, and merging or replacing on import |
 | `src/ai/audit.ts`, `src/storage/sentLog.ts` | "What was sent to the AI": the entry recorded for each request and how long it is kept |
-| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`), memory, `ask_user`, `draft_email`, `search_history`, and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `get_location`, `offer_call`, `draft_sms`, `open_settings`) |
+| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`), memory, `ask_user`, `draft_email`, `search_history`, and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `open_settings`) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |
@@ -165,7 +165,7 @@ provider or model changes mid-chat, the history is rebuilt from the text and too
 ## Permissions
 
 Each permission is asked for the first time a feature needs it, never at launch: camera (QR codes, photos for
-upload fields), add-only Photos (saving screenshots and images), Face ID, write-only calendar and reminders, location
+upload fields), add-only Photos (saving screenshots and images), Face ID, write-only calendar and reminders (full calendar access only when the assistant first reads it), location
 while in use (per-site), local notifications, camera and microphone for sites you allow (per site, each asked separately). The full list per platform, with
 the feature, when the user is asked, the config line that declares it and what is blocked, is in
 [docs/permissions.md](docs/permissions.md); use it for the App Store privacy labels and the Play Data safety form.

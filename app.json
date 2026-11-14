@@ -12,7 +12,8 @@
         "usesNonExemptEncryption": false
       },
       "infoPlist": {
-        "CFBundleAllowMixedLocalizations": true
+        "CFBundleAllowMixedLocalizations": true,
+        "NSCalendarsFullAccessUsageDescription": "Qutai reads your calendar only when you ask the assistant about your schedule and confirm, and sends the events in the range you approved to your AI provider."
       },
       "buildNumber": "1",
       "bundleIdentifier": "com.sonsuzdongu.qutai",
@@ -152,7 +153,7 @@
         "expo-calendar",
         {
           "writeOnlyAccess": true,
-          "calendarPermission": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",
+          "calendarPermission": "Qutai adds events you confirm, such as tickets and reservations, to your calendar, and reads it only when you ask the assistant about your schedule and confirm.",
           "writeOnlyCalendarPermission": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",
           "remindersPermission": "Qutai adds reminders you confirm to your Reminders."
         }
