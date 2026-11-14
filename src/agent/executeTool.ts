@@ -23,7 +23,8 @@ import { editImageTool, uploadImageTool } from './imageTools';
 import { sleep } from '../utils/sleep';
 import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch, SiteVisits } from '../storage/history';
-import { isMemoryCategory, MemoryStore } from './memory';
+import { containsHidden, HiddenNeedle, hiddenNeedles, MEMORY_ID, redactHidden } from './hiddenValues';
+import { hiddenKindOf, hiddenLabel, hiddenValue, isMemoryCategory, looksLikeIdNumber, Memory, MemoryStore } from './memory';
 import { findPersonalData, PERSONAL_KINDS, PersonalKind, personalNeedles } from './personalData';
 import { decide, SitePolicy, siteKey } from './sitePolicy';
 import {
@@ -113,6 +114,11 @@ export type ToolContext = {
   ) => Promise<'deny' | 'once' | 'always' | null>;
   /** This task's answers to confirmPersonal, by site (set by runAgent for each task). */
   personalGrants?: { allowed: Set<string>; declined: Set<string> };
+  /**
+   * Asks before Qutai types a hidden memory (`what`: what it is, never the value) into `field` on `host`: the first
+   * time for each hidden value and site in a task, even where personal details are always allowed. True to type it.
+   */
+  confirmHidden?: (host: string, what: string, field: string, incognito: boolean) => Promise<boolean>;
   /** The files the user attached in this conversation (its manifest), for tools that take an attachment id. */
   attachments?: () => AttachmentInfo[];
   /** The model takes image input (false: tools that would return images say so instead). */
@@ -164,7 +170,9 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'click':
       return t('action.click', { ref: str(input.ref) });
     case 'type':
-      return t('action.type', { ref: str(input.ref), text: str(input.text).slice(0, 40) });
+      return input.memory !== undefined && input.memory !== null && input.memory !== ''
+        ? t('action.typeHidden', { ref: str(input.ref) })
+        : t('action.type', { ref: str(input.ref), text: str(input.text).slice(0, 40) });
     case 'select_option':
       return t('action.select', { ref: str(input.ref), value: str(input.value) });
     case 'scroll':
@@ -224,7 +232,10 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'wait':
       return t('action.wait', { seconds: str(input.seconds) });
     case 'remember':
-      return t('action.remember', { text: str(input.text).slice(0, 80) });
+      // An ID or passport number is saved hidden: the chat and the action history don't repeat it either.
+      return looksLikeIdNumber(str(input.text))
+        ? t('action.rememberHidden')
+        : t('action.remember', { text: str(input.text).slice(0, 80) });
     case 'forget':
       return t('action.forget');
     case 'add_calendar_event':
@@ -810,6 +821,15 @@ async function memoryTool(
       // Required in the schema, but a provider may still leave it out: such a fact goes to general.
       const category = isMemoryCategory(input.category) ? input.category : 'general';
       const memory = await ctx.memory.add(String(input.text ?? ''), category);
+      if (memory.sensitive) {
+        return {
+          content:
+            `Remembered [${memory.id}] (${memory.category}) as a hidden value: ${hiddenLabel(memory)}. From now on you ` +
+            "see only that it is saved; to enter it in a form, call type with memory set to its id. Don't repeat " +
+            'the value in your reply.',
+          isError: false,
+        };
+      }
       return { content: `Remembered [${memory.id}] (${memory.category}): ${memory.text}`, isError: false };
     }
     const removed = await ctx.memory.remove(String(input.id ?? ''));
@@ -1027,7 +1047,48 @@ export function backgroundBlocker(
   return null;
 }
 
+/**
+ * Runs one tool call. Every result passes through the hidden-value redaction (agent/hiddenValues.ts) before it is
+ * returned, so no hidden memory's value goes back to the model, into the conversation, the chat's error line or the
+ * "What was sent to the AI" log, whatever the tool read.
+ */
 export async function executeTool(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  const result = await executeUnredacted(name, input, ctx);
+  const needles = await hiddenNeedlesFor(ctx);
+  if (!needles.length) return result;
+  return { ...result, content: redactHidden(result.content, needles) };
+}
+
+/** The current hidden memories as search patterns; empty without memory or hidden memories (no scan then). */
+async function hiddenNeedlesFor(ctx: ToolContext): Promise<HiddenNeedle[]> {
+  if (!ctx.memory) return [];
+  const memories = await ctx.memory.list().catch(() => [] as Memory[]);
+  return memories.some((m) => m.sensitive) ? hiddenNeedles(memories) : [];
+}
+
+/**
+ * The hidden memory a type call asks for (`memory`: its id), or a tool error. Text and memory together, an id that
+ * isn't one, an unknown id or a memory that isn't hidden are refused.
+ */
+async function hiddenForType(
+  input: Record<string, unknown>,
+  ctx: ToolContext,
+): Promise<{ memory: Memory } | { error: string } | null> {
+  if (input.memory === undefined || input.memory === null || input.memory === '') return null;
+  if (typeof input.text === 'string' && input.text !== '')
+    return { error: 'Give either text or memory, not both. Nothing was typed.' };
+  const id = typeof input.memory === 'string' ? input.memory.trim() : '';
+  if (!MEMORY_ID.test(id))
+    return { error: 'memory must be the id of a hidden memory as listed in your instructions, without brackets.' };
+  if (!ctx.memory) return { error: 'Memory is turned off in settings, so no saved value can be entered.' };
+  const memory = await ctx.memory.get(id).catch(() => null);
+  if (!memory) return { error: `No memory with id ${id}. Nothing was typed.` };
+  if (!memory.sensitive)
+    return { error: `Memory ${id} is not hidden: type its text yourself with text instead. Nothing was typed.` };
+  return { memory };
+}
+
+async function executeUnredacted(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
   // Checked before the site permission, which would otherwise ask about a made-up host.
   if ((name === 'navigate' || name === 'open_tab') && isViewSource(input.url)) {
     return {
@@ -1080,9 +1141,18 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
   if (name === 'get_location') return record(await locationTool(input, ctx));
   if (name === 'read_calendar') return record(await readCalendarTool(input, ctx));
   if (name === 'download_file') return record(await downloadFileTool(input, ctx));
+  // A hidden memory is looked up here and its value only handed to the page-typing path (runTool).
+  const hidden = name === 'type' ? await hiddenForType(input, ctx) : null;
+  if (hidden && 'error' in hidden) return record({ content: hidden.error, isError: true });
+  if (name === 'type' && !hidden && typeof input.text !== 'string')
+    return record({ content: 'Give the text to type (or memory for a hidden saved value).', isError: true });
   // Remembered personal details need the site's permission, checked here in the app, not left to the prompt.
   let personalAsked = false;
-  if ((name === 'type' || name === 'select_option') && host) {
+  if (hidden && target) {
+    const gate = await hiddenGate(hidden.memory, input, target.url, host, ctx, target.tab);
+    if (gate.kind === 'refuse') return record({ content: gate.reason, isError: true });
+    personalAsked = true;
+  } else if ((name === 'type' || name === 'select_option') && host) {
     const gate = await personalGate(name, input, host, ctx, target?.tab);
     if (gate.kind === 'refuse') return record({ content: gate.reason, isError: true });
     personalAsked = gate.kind === 'asked';
@@ -1092,7 +1162,82 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
     const allowed = await ctx.confirm(describeToolCall(name, input), host);
     if (!allowed) return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true });
   }
-  return record(await runTool(name, input, ctx));
+  return record(await runTool(name, input, ctx, hidden?.memory));
+}
+
+/** What the confirmation calls a hidden memory: "ID or passport number" for those, else the user's label. */
+function hiddenWhat(memory: Memory): string {
+  return hiddenKindOf(memory.text) ? t('personal.kind.idNumber') : hiddenLabel(memory);
+}
+
+/**
+ * Whether a hidden memory may be typed on this page. Never on an http page, a blocked site (or one where personal
+ * details are blocked) or without a confirmation dialog. Otherwise the user is asked the first time each hidden value
+ * goes to a site in a task, even where personal details are always allowed; the dialog shows the site and the
+ * field's label, and the answer lasts until the task ends.
+ */
+async function hiddenGate(
+  memory: Memory,
+  input: Record<string, unknown>,
+  url: string,
+  host: string | null,
+  ctx: ToolContext,
+  tab: Tab | undefined,
+): Promise<{ kind: 'run' } | { kind: 'refuse'; reason: string }> {
+  if (!host || !/^https:\/\//i.test(url)) {
+    return {
+      kind: 'refuse',
+      reason: 'Hidden values are entered only on https pages. Nothing was typed; tell the user, who can enter it themselves.',
+    };
+  }
+  if ((ctx.sites?.personalFor(host) ?? 'ask') === 'block') {
+    return {
+      kind: 'refuse',
+      reason:
+        `The user has blocked Qutai from entering their saved personal information on ${host} (a setting for this ` +
+        'site). Nothing was typed. Tell the user: they can fill it in themselves, or change "Personal information" ' +
+        "in this site's permissions.",
+    };
+  }
+  const key = `hidden:${host}:${memory.id}`;
+  const declined = {
+    kind: 'refuse' as const,
+    reason:
+      `The user did not allow entering their saved ${hiddenLabel(memory)} on ${host}. Nothing was typed. Don't try ` +
+      "again on this site in this task and don't ask for the value; tell the user, who can fill it in themselves.",
+  };
+  if (ctx.personalGrants?.allowed.has(key)) return { kind: 'run' };
+  if (ctx.personalGrants?.declined.has(key) || !ctx.confirmHidden) return declined;
+  const field = tab ? await tab.run<string>('fieldLabel', [input.ref], 3000).catch(() => '') : '';
+  const incognito = !!(ctx.privacy?.touchedIncognito || tab?.incognito);
+  if (await ctx.confirmHidden(host, hiddenWhat(memory), field, incognito)) {
+    ctx.personalGrants?.allowed.add(key);
+    return { kind: 'run' };
+  }
+  ctx.personalGrants?.declined.add(key);
+  return declined;
+}
+
+/**
+ * For view_screenshot while hidden memories exist: fields showing a hidden value are made transparent for the capture
+ * (the returned function restores them), and a hidden value elsewhere in the page's text refuses the screenshot. The
+ * page only sends its field values and text to the app; no hidden value is sent into the page to look for.
+ */
+async function maskHiddenForCapture(tab: Tab, ctx: ToolContext): Promise<{ restore: () => Promise<void> } | string> {
+  const nothing = { restore: async () => {} };
+  const needles = await hiddenNeedlesFor(ctx);
+  if (!needles.length) return nothing;
+  const screen = await tab.run<{ fields: string[]; text: string }>('screenFields', [], 5000);
+  if (containsHidden(screen.text, needles)) {
+    return (
+      'Not captured: the page shows one of the user\'s hidden saved values as text, and a screenshot would show it ' +
+      'to you. Use read_page instead (hidden values appear there as [hidden: …]).'
+    );
+  }
+  const indices = screen.fields.flatMap((value, i) => (containsHidden(value, needles) ? [i] : []));
+  if (!indices.length) return nothing;
+  await tab.run('maskFields', [indices], 3000);
+  return { restore: () => tab.run('maskEnd', [], 3000).then(() => undefined, () => undefined) };
 }
 
 /**
@@ -1146,7 +1291,13 @@ async function personalGate(
   return declined;
 }
 
-async function runTool(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+/** `hidden`: the hidden memory type enters instead of `text` (already checked and confirmed by the caller). */
+async function runTool(
+  name: string,
+  input: Record<string, unknown>,
+  ctx: ToolContext,
+  hidden?: Memory,
+): Promise<ToolOutput> {
   const { browser } = ctx;
 
   if (name === 'remember' || name === 'forget') return memoryTool(name, input, ctx);
@@ -1231,9 +1382,10 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
       case 'type': {
         const submit = input.submit === true;
         const urlBefore = tab.url;
+        // A hidden value goes straight from memory to the page script, never into a result or a log.
         const result = await tab.run<string>('type', [
           input.ref,
-          String(input.text ?? ''),
+          hidden ? hiddenValue(hidden) : String(input.text ?? ''),
           input.clear !== false,
           submit,
         ]);
@@ -1241,6 +1393,14 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
         // Pages often validate a moment after input; a submit that left the page has nothing to report.
         else await sleep(150);
         const report = tab.url === urlBefore ? await formReport(tab, input.ref, submit) : '';
+        if (hidden) {
+          return {
+            content:
+              `Entered the saved ${hiddenLabel(hidden)} into ref=${String(input.ref)}${submit ? ' and submitted' : ''}; ` +
+              `the value stays hidden from you.${report}`,
+            isError: false,
+          };
+        }
         return { content: result + report, isError: false };
       }
       case 'select_option': {
@@ -1277,7 +1437,15 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
       }
       case 'view_screenshot': {
         await showTab(ctx, tab);
-        const { width, height, ...image } = await captureForModel(tab);
+        const mask = await maskHiddenForCapture(tab, ctx);
+        if (typeof mask === 'string') return { content: mask, isError: true };
+        let shot: Awaited<ReturnType<typeof captureForModel>>;
+        try {
+          shot = await captureForModel(tab);
+        } finally {
+          await mask.restore();
+        }
+        const { width, height, ...image } = shot;
         tab.modelScreenshotSize = { width, height };
         return {
           content:

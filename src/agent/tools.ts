@@ -87,16 +87,22 @@ export const TOOLS: ToolDefinition[] = [
   },
   {
     name: 'type',
-    description: 'Type text into an input, textarea or contenteditable element.',
+    description:
+      'Type text into an input, textarea or contenteditable element. For a saved memory whose value is hidden from ' +
+      'you, give memory (its id) instead of text: Qutai types the value itself after the user agrees.',
     input_schema: {
       type: 'object',
       properties: {
         ref: { type: 'integer', description: 'Element ref' },
-        text: { type: 'string', description: 'Text to type' },
+        text: { type: 'string', description: 'Text to type (leave out when you give memory)' },
+        memory: {
+          type: 'string',
+          description: 'Id of a hidden memory (listed as "value hidden"), without brackets; its value is typed instead of text',
+        },
         clear: { type: 'boolean', description: 'Replace existing content (default true)' },
         submit: { type: 'boolean', description: 'Press Enter / submit the form afterwards (default false)' },
       },
-      required: ['ref', 'text'],
+      required: ['ref'],
     },
   },
   {

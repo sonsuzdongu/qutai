@@ -1,4 +1,5 @@
 import { openDatabaseAsync } from 'expo-sqlite';
+import { looksLikeIdNumber } from '../agent/memory';
 
 export type SqlValue = string | number | null;
 
@@ -153,7 +154,22 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
    );`,
   // The custom endpoint's host for requests sent there ("What was sent to the AI"); null for the other providers.
   `ALTER TABLE ai_requests ADD COLUMN endpoint TEXT;`,
+  // Memories hidden from the AI provider (agent/hiddenValues.ts) and the user's short label for them.
+  `ALTER TABLE memories ADD COLUMN sensitive INTEGER NOT NULL DEFAULT 0;
+   ALTER TABLE memories ADD COLUMN label TEXT;`,
+  markIdNumbersHidden,
 ];
+
+/**
+ * National ID and passport numbers saved before hidden memories existed become hidden, as new ones are.
+ * Uses the same detector as saving a memory (agent/memory.ts looksLikeIdNumber).
+ */
+async function markIdNumbersHidden(db: Db): Promise<void> {
+  const rows = await db.getAllAsync<{ id: string; text: string }>('SELECT id, text FROM memories', []);
+  for (const row of rows) {
+    if (looksLikeIdNumber(row.text)) await db.runAsync('UPDATE memories SET sensitive = 1 WHERE id = ?', [row.id]);
+  }
+}
 
 /**
  * Version 6: the assistant's conversation belongs to the tab group. Chats were saved per tab

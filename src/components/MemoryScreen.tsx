@@ -11,18 +11,30 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MAX_MEMORY_CHARS, Memory, MEMORY_CATEGORIES, MemoryCategory } from '../agent/memory';
+import {
+  hiddenKindOf,
+  hiddenLabel,
+  MAX_HIDDEN_LABEL_CHARS,
+  MAX_MEMORY_CHARS,
+  Memory,
+  MEMORY_CATEGORIES,
+  MemoryCategory,
+  suggestsHiding,
+} from '../agent/memory';
 import { MAX_ORGANISE, proposeCategories } from '../agent/organiseMemory';
 import type { ProviderId } from '../ai/types';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
+import { authenticate } from '../device/biometric';
+import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { getDb } from '../storage/db';
 import {
   addMemory,
   clearMemories,
   deleteMemory,
   deleteMemoryCategory,
+  HiddenLabelError,
   listMemories,
   moveMemories,
   updateMemory,
@@ -39,6 +51,8 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   ai: MemoryAi;
+  /** The app lock is on: showing a hidden memory's value asks for Face ID / fingerprint / passcode first. */
+  appLock: boolean;
   /**
    * "Answer a few questions" (setup's questions again); absent with memory off. Not offered while the tab on screen
    * is incognito, so nothing typed there lands in memory from an incognito context.
@@ -51,26 +65,37 @@ type Props = {
 };
 
 /** Lists what Qutai remembers about the user by category; everything can be edited, moved or deleted. */
-export function MemoryScreen({ visible, onClose, ai, questions }: Props) {
+export function MemoryScreen({ visible, onClose, ai, appLock, questions }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      {visible && <MemoryList onClose={onClose} ai={ai} questions={questions} />}
+      {visible && <MemoryList onClose={onClose} ai={ai} appLock={appLock} questions={questions} />}
       <DialogHost />
     </Modal>
   );
 }
 
-const showError = (e: unknown) => dialog.alert(t('memory.saveFailed'), e instanceof Error ? e.message : String(e));
+const showError = (e: unknown) =>
+  dialog.alert(
+    t('memory.saveFailed'),
+    e instanceof HiddenLabelError ? t('memory.hiddenLabelNeeded') : e instanceof Error ? e.message : String(e),
+  );
+
+/** What the list, search and proposals show for a memory: a hidden one's label until the user reveals it. */
+const shownText = (m: Memory) => (m.sensitive ? hiddenLabel(m) : m.text);
+
+type Editing = { id: string; text: string; category: MemoryCategory; hidden: boolean; label: string };
 
 type Proposal = { memory: Memory; category: MemoryCategory; accepted: boolean }[];
 
-function MemoryList({ onClose, ai, questions }: Omit<Props, 'visible'>) {
+function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>) {
   const styles = useStyles();
   const palette = usePalette();
   const [memories, setMemories] = useState<Memory[] | null>(null);
   const [newText, setNewText] = useState('');
   const [newCategory, setNewCategory] = useState<MemoryCategory>('general');
-  const [editing, setEditing] = useState<{ id: string; text: string; category: MemoryCategory } | null>(null);
+  const [editing, setEditing] = useState<Editing | null>(null);
+  /** Hidden memories whose value the user chose to see (until the screen closes). */
+  const [revealed, setRevealed] = useState<ReadonlySet<string>>(new Set());
   const [query, setQuery] = useState('');
   const [organising, setOrganising] = useState(false);
   const [proposal, setProposal] = useState<Proposal | null>(null);
@@ -98,9 +123,30 @@ function MemoryList({ onClose, ai, questions }: Omit<Props, 'visible'>) {
 
   const saveEdit = () => {
     if (!editing) return;
-    const { id, text, category } = editing;
+    const { id, text, category, hidden, label } = editing;
+    if (hidden && !hiddenKindOf(text) && !label.trim()) return dialog.alert(t('memory.hiddenLabelNeeded'));
     setEditing(null);
-    run((db) => updateMemory(db, id, text, category));
+    run((db) => updateMemory(db, id, text, category, hidden ? { label: label.trim() || null } : null));
+  };
+
+  /** Shows a hidden memory's value, after the app lock's check when the lock is on. */
+  const reveal = async (id: string): Promise<boolean> => {
+    if (revealed.has(id)) return true;
+    if (appLock && !(await authenticate(t('memory.revealPrompt')))) return false;
+    setRevealed((current) => new Set(current).add(id));
+    return true;
+  };
+
+  const hide = (id: string) =>
+    setRevealed((current) => {
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+
+  const startEdit = async (m: Memory) => {
+    if (m.sensitive && !(await reveal(m.id))) return;
+    setEditing({ id: m.id, text: m.text, category: m.category, hidden: m.sensitive, label: m.label ?? '' });
   };
 
   const clearAll = () =>
@@ -156,7 +202,8 @@ function MemoryList({ onClose, ai, questions }: Omit<Props, 'visible'>) {
 
   const sections = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
-    const shown = (memories ?? []).filter((m) => !needle || m.text.toLocaleLowerCase().includes(needle));
+    // A hidden memory's value is not searched, only its label.
+    const shown = (memories ?? []).filter((m) => !needle || shownText(m).toLocaleLowerCase().includes(needle));
     return MEMORY_CATEGORIES.flatMap((category) => {
       const data = shown.filter((m) => m.category === category);
       const total = (memories ?? []).filter((m) => m.category === category).length;
@@ -167,6 +214,7 @@ function MemoryList({ onClose, ai, questions }: Omit<Props, 'visible'>) {
   const header = (
     <View style={styles.top}>
       <Text style={styles.hint}>{t('memory.hint')}</Text>
+      {memories?.some((m) => m.sensitive) && <Text style={styles.small}>{t('memory.hiddenExplain')}</Text>}
       {!!memories?.length && (
         <TextInput
           style={styles.search}
@@ -225,7 +273,7 @@ function MemoryList({ onClose, ai, questions }: Omit<Props, 'visible'>) {
                 {p.accepted && <Icon name="check" size={14} color={palette.onTint} />}
               </View>
               <Text style={styles.proposalText}>
-                {p.memory.text}
+                {shownText(p.memory)}
                 <Text style={styles.arrow}>{`  →  ${categoryName(p.category)}`}</Text>
               </Text>
             </Pressable>
@@ -298,6 +346,36 @@ function MemoryList({ onClose, ai, questions }: Omit<Props, 'visible'>) {
               />
               <CategoryPicker value={editing.category} onChange={(category) => setEditing({ ...editing, category })} />
               {warnsAboutIdNumbers(editing.category) && <Text style={styles.warning}>{t('memory.idWarning')}</Text>}
+              <View style={styles.lockRow}>
+                <Icon name="secure" size={16} color={palette.textSecondary} />
+                <View style={styles.lockText}>
+                  <Text style={styles.lockTitle}>{t('memory.hiddenToggle')}</Text>
+                  <Text style={styles.warning}>{t('memory.hiddenToggleHint')}</Text>
+                </View>
+                <ThemedSwitch
+                  value={editing.hidden}
+                  onValueChange={(hidden) => setEditing({ ...editing, hidden })}
+                  accessibilityLabel={t('memory.hiddenToggle')}
+                  accessibilityHint={t('memory.hiddenToggleHint')}
+                />
+              </View>
+              {editing.hidden && !hiddenKindOf(editing.text) && (
+                <TextInput
+                  style={styles.labelInput}
+                  value={editing.label}
+                  onChangeText={(label) => setEditing({ ...editing, label })}
+                  maxLength={MAX_HIDDEN_LABEL_CHARS}
+                  placeholder={t('memory.hiddenLabelPlaceholder')}
+                  placeholderTextColor={palette.textSecondary}
+                  accessibilityLabel={t('memory.hiddenLabel')}
+                />
+              )}
+              {editing.hidden && !hiddenKindOf(editing.text) && (
+                <Text style={styles.warning}>{t('memory.hiddenLabelHint')}</Text>
+              )}
+              {!editing.hidden && suggestsHiding(editing.text, editing.category) && (
+                <Text style={styles.warning}>{t('memory.hiddenSuggest')}</Text>
+              )}
               <View style={styles.proposalButtons}>
                 <Pressable onPress={() => setEditing(null)} hitSlop={8}>
                   <Text style={styles.cancelText}>{t('common.cancel')}</Text>
@@ -309,11 +387,26 @@ function MemoryList({ onClose, ai, questions }: Omit<Props, 'visible'>) {
             </View>
           ) : (
             <Pressable
-              onPress={() => setEditing({ id: item.id, text: item.text, category: item.category })}
+              onPress={() => startEdit(item)}
               style={({ pressed }) => [styles.row, pressed && styles.pressed]}
               accessibilityHint={t('memory.editHint')}
             >
-              <Text style={styles.rowText}>{item.text}</Text>
+              {item.sensitive && <Icon name="secure" size={14} color={palette.textSecondary} />}
+              <Text style={styles.rowText}>
+                {item.sensitive && !revealed.has(item.id)
+                  ? t('memory.hiddenRow', { label: hiddenLabel(item) })
+                  : item.text}
+              </Text>
+              {item.sensitive && (
+                <Pressable
+                  onPress={() => (revealed.has(item.id) ? hide(item.id) : reveal(item.id))}
+                  hitSlop={8}
+                  style={styles.revealButton}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.revealText}>{t(revealed.has(item.id) ? 'memory.hide' : 'memory.reveal')}</Text>
+                </Pressable>
+              )}
               <Pressable
                 onPress={() => run((db) => deleteMemory(db, item.id))}
                 hitSlop={10}
@@ -332,6 +425,9 @@ function MemoryList({ onClose, ai, questions }: Omit<Props, 'visible'>) {
           <>
             <CategoryPicker value={newCategory} onChange={setNewCategory} />
             {warnsAboutIdNumbers(newCategory) && <Text style={styles.warning}>{t('memory.idWarning')}</Text>}
+            {suggestsHiding(newText, newCategory) && !hiddenKindOf(newText) && (
+              <Text style={styles.warning}>{t('memory.hiddenSuggestAdd')}</Text>
+            )}
           </>
         )}
         <View style={styles.addRow}>
@@ -490,6 +586,19 @@ const useStyles = makeStyles((c) => ({
   rowText: { flex: 1, fontSize: 15, color: c.text, lineHeight: 20 },
   editInput: { paddingVertical: 0, flex: 0 },
   warning: { fontSize: 12, color: c.textSecondary, lineHeight: 17 },
+  lockRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  lockText: { flex: 1, gap: 2 },
+  lockTitle: { fontSize: 14, color: c.text, fontWeight: '600' },
+  labelInput: {
+    color: c.text,
+    height: 38,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    backgroundColor: c.sunken,
+    fontSize: 15,
+  },
+  revealButton: { paddingHorizontal: 8, height: 32, justifyContent: 'center' },
+  revealText: { fontSize: 14, color: c.tintText, fontWeight: '600' },
   delete: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   deleteText: { fontSize: 14, color: c.textSecondary },
   chips: { gap: 6, paddingVertical: 2 },

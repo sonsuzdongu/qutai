@@ -506,6 +506,7 @@ function SettingsPages({
       <MemoryScreen
         visible={memoryVisible}
         onClose={() => setMemoryVisible(false)}
+        appLock={settings.appLock}
         ai={
           configured ? { ...requestTarget(settings, settings.provider), label: getProvider(settings.provider).label } : null
         }

@@ -256,6 +256,32 @@ async function askPersonalData(
   return answer;
 }
 
+/**
+ * Before Qutai types a hidden memory (`what`: what it is, never the value) into a field on a site: the first time for
+ * each hidden value and site in a task, whatever the site's personal-information setting (blocked sites never get
+ * here). No "always": the dialog says the rule. Stopping the task dismisses it as declined.
+ */
+async function askHiddenValue(
+  host: string,
+  what: string,
+  field: string,
+  incognito: boolean,
+  signal: AbortSignal,
+): Promise<boolean> {
+  const lines = [
+    ...(field ? [t('hidden.field', { field })] : []),
+    t('hidden.body'),
+    ...(incognito ? [t('hidden.incognito')] : []),
+  ];
+  const result = await dialog.show({
+    title: t('hidden.title', { what, host }),
+    message: lines.join('\n\n'),
+    buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: t('hidden.enter'), primary: true }],
+    signal,
+  });
+  return result.button === 1;
+}
+
 export default function App() {
   // Re-renders the whole tree in the new language when the device language changes.
   useLanguage();
@@ -791,6 +817,7 @@ function BrowserApp({
         stream: provider !== 'gemini' || (settings.geminiStreaming && geminiStreamingAvailable()),
         confirm: (description, host) => askConfirmation(description, host, signal),
         confirmPersonal: (host, kinds, incognito) => askPersonalData(host, kinds, incognito, signal),
+        confirmHidden: (host, what, field, incognito) => askHiddenValue(host, what, field, incognito, signal),
         confirmImage: (options) => askImageConfirmation(options, signal),
         imageUsed: (id) => chat.markImageUsed(id),
         providerLabel: getProvider(provider).label,

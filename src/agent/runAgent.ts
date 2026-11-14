@@ -106,6 +106,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
   // while it is open pauses the background run with a notification. Never answered for the user.
   const confirm = opts.confirm;
   const confirmPersonal = opts.confirmPersonal;
+  const confirmHidden = opts.confirmHidden;
   const ctx: AgentOptions = {
     ...opts,
     confirm: confirm
@@ -119,6 +120,13 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       ? async (host, kinds, incognito) => {
           await pauseWhileBackgrounded('confirm');
           return whileWaitingForUser(() => confirmPersonal(host, kinds, incognito));
+        }
+      : undefined,
+    // So does the question before a hidden memory is typed.
+    confirmHidden: confirmHidden
+      ? async (host, what, field, incognito) => {
+          await pauseWhileBackgrounded('confirm');
+          return whileWaitingForUser(() => confirmHidden(host, what, field, incognito));
         }
       : undefined,
     // "Allow once" lasts until this task (this message) ends.

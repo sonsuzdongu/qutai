@@ -52,7 +52,14 @@ export async function collectBackup(
       items: bookmarks.bookmarks.map(({ url, title, createdAt, folderId }) => ({ url, title, createdAt, folderId })),
     },
     history: history.map((h) => ({ url: h.url, title: h.title, visitedAt: h.visited_at })),
-    memories: memories.map(({ text, category, createdAt, updatedAt }) => ({ text, category, createdAt, updatedAt })),
+    memories: memories.map(({ text, category, createdAt, updatedAt, sensitive, label }) => ({
+      text,
+      category,
+      createdAt,
+      updatedAt,
+      ...(sensitive ? { sensitive } : {}),
+      ...(sensitive && label ? { label } : {}),
+    })),
     tasks: tasks.map((task) => ({
       name: task.name,
       prompt: task.prompt,
@@ -225,14 +232,16 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
       const fresh = p.memories.filter((m) => !texts.has(m.text.toLowerCase())).slice(0, room);
       await insertRows(
         db,
-        'INSERT INTO memories (id, text, category, created_at, updated_at)',
-        5,
+        'INSERT INTO memories (id, text, category, created_at, updated_at, sensitive, label)',
+        7,
         fresh.map((m, i) => [
           `${Math.random().toString(36).slice(2, 8)}${(now + i).toString(36).slice(-4)}`,
           m.text,
           m.category,
           m.createdAt || now,
           m.updatedAt || now,
+          m.sensitive ? 1 : 0,
+          m.sensitive ? (m.label ?? null) : null,
         ]),
       );
     }

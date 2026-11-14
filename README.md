@@ -15,7 +15,7 @@ same format, so bookmarks can always be taken to another browser.
 
 There is no account and no sync, so Settings › Backup exports everything to one password-protected file
 (`qutai-backup-YYYY-MM-DD.qutai`, saved through the share sheet to Files, Drive…) and imports it on this or another
-phone. Always in a backup: bookmarks and folders, history, the assistant's memory (with its categories), site permissions (assistant level, personal information and
+phone. Always in a backup: bookmarks and folders, history, the assistant's memory (with its categories and which memories are hidden from the AI), site permissions (assistant level, personal information and
 location) and preferences (including reader mode, appearance and custom instructions). Optional: open tabs and tab groups (on by default),
 the assistant's conversations (off) and its activity history (off), and the AI provider keys (off; only with an explicit
 "Include my AI provider keys"). Never in a backup: incognito data (it is never stored), downloads and saved pages,
@@ -37,6 +37,16 @@ is kept only in memory until the app closes (the latest 60 requests, 2M characte
 copied to disk again, and location coordinates are never kept. Incognito conversations, and ones that touched an
 incognito tab, stay in memory only and their earlier entries are removed from disk. Clear browsing data has its own
 item for it.
+
+Hidden memories: national ID and passport numbers, and any memory the user locks on the Memory screen, are never
+sent to the AI provider by value. The prompt names them only ("[id] national ID number (saved; value hidden)"); the
+model asks for one with `type`'s `memory` parameter, the app asks the user the first time each hidden value goes to a
+site in a task (even where personal details are always allowed; never on blocked sites or http pages) and types the
+value itself. Tool results are scanned for hidden values (also spaced or dashed) and show "[hidden: …]" instead, and
+a screenshot for the model blanks fields that show one and is refused when one is in the page's text. Limits: the site
+receives the value (that is the point); a page that shows it reformatted, escaped or in an image is not recognised;
+it went to the provider once, in the message where the user told the assistant; and anything typed or pasted into
+the chat is sent like any message.
 
 The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
 
@@ -327,6 +337,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |
 | `src/agent/memory.ts` | The assistant's memory: categories, what is never stored (`sensitiveReason`) and the memory part of the prompt |
+| `src/agent/hiddenValues.ts` | Hidden memories: finds their values (and formatted variants) in tool results and replaces them with "[hidden: …]" before anything goes back to the model or a log |
 | `src/agent/personalData.ts` | Finds remembered personal details in what the assistant is about to type, so the app asks before they reach a site (per-site "Your personal information": ask / allow / block) |
 | `src/utils/foreground.ts` | Pauses the agent when the app goes to the background, resumes it when it comes back to the foreground |
 | `src/device/backgroundTask.ts`, `modules/qutai-agent` | "Keep working in the background" (Android): the `specialUse` foreground service and its notifications, the headless JS task that keeps timers running, and page commands sent natively to the tab's WebView while React Native is paused; also the assistant's downloads through the system download manager |

@@ -1815,6 +1815,78 @@ export const PAGE_SCRIPT = String.raw`
     });
   }
 
+  // ---------- Hidden values (view_screenshot) ----------
+
+  // The label of the field behind ref, for the "enter your saved ID number?" dialog.
+  function fieldLabel(ref) {
+    return labelOf(getEl(ref));
+  }
+
+  var MASK_STYLE_ID = '__qutai-mask-style';
+  var MASK_ATTR = 'data-qutai-mask';
+
+  // The page's documents: the top one and same-origin frames (the only ones the agent can type into).
+  function reachableDocs() {
+    var docs = [document];
+    for (var i = 0; i < docs.length; i++) {
+      var frames = docs[i].querySelectorAll('iframe, frame');
+      for (var j = 0; j < frames.length; j++) {
+        try { if (frames[j].contentDocument && frames[j].contentDocument.body) docs.push(frames[j].contentDocument); } catch (e) {}
+      }
+    }
+    return docs;
+  }
+
+  // Every text field in a fixed order (inputs that show text, textareas, contenteditable roots).
+  function textFields() {
+    var out = [];
+    reachableDocs().forEach(function (doc) {
+      var all = doc.querySelectorAll('input, textarea, [contenteditable]:not([contenteditable="false"])');
+      for (var i = 0; i < all.length; i++) {
+        var el = all[i];
+        if (el.tagName === 'INPUT' && /^(hidden|checkbox|radio|file|submit|button|reset|image|range|color)$/i.test(el.type || '')) continue;
+        if (el.isContentEditable && el.parentElement && el.parentElement.isContentEditable) continue;
+        out.push(el);
+      }
+    });
+    return out;
+  }
+
+  // What a screenshot could show as text: each field's value and the documents' text. The app looks for hidden values
+  // in it; nothing is sent here to look for.
+  function screenFields() {
+    var fields = textFields().map(function (el) {
+      return String((el.isContentEditable ? el.innerText : el.value) || '').slice(0, 2000);
+    });
+    var text = reachableDocs().map(function (doc) { return doc.body ? doc.body.innerText : ''; }).join('\n').slice(0, 500000);
+    return { fields: fields, text: text };
+  }
+
+  // Makes the fields at these positions (in screenFields' order) transparent until maskEnd, for one capture.
+  function maskFields(indices) {
+    var fields = textFields();
+    reachableDocs().forEach(function (doc) {
+      if (doc.getElementById(MASK_STYLE_ID)) return;
+      var style = doc.createElement('style');
+      style.id = MASK_STYLE_ID;
+      style.textContent = '[' + MASK_ATTR + '], [' + MASK_ATTR + '] * { color: transparent !important; ' +
+        '-webkit-text-fill-color: transparent !important; text-shadow: none !important; caret-color: transparent !important; }';
+      (doc.head || doc.documentElement).appendChild(style);
+    });
+    (indices || []).forEach(function (i) { if (fields[i]) fields[i].setAttribute(MASK_ATTR, ''); });
+    return nextFrame().then(function () { return true; });
+  }
+
+  function maskEnd() {
+    reachableDocs().forEach(function (doc) {
+      var style = doc.getElementById(MASK_STYLE_ID);
+      if (style) style.remove();
+      var masked = doc.querySelectorAll('[' + MASK_ATTR + ']');
+      for (var i = 0; i < masked.length; i++) masked[i].removeAttribute(MASK_ATTR);
+    });
+    return true;
+  }
+
   window.__qutaiAgent = {
     readPage: readPage,
     readSource: readSource,
@@ -1842,7 +1914,11 @@ export const PAGE_SCRIPT = String.raw`
     fileBegin: fileBegin,
     fileChunk: fileChunk,
     fileAbort: fileAbort,
-    fileAssign: fileAssign
+    fileAssign: fileAssign,
+    fieldLabel: fieldLabel,
+    screenFields: screenFields,
+    maskFields: maskFields,
+    maskEnd: maskEnd
   };
 })();
 `;

@@ -56,7 +56,11 @@ export type PageCommand =
   | 'fileBegin'
   | 'fileChunk'
   | 'fileAbort'
-  | 'fileAssign';
+  | 'fileAssign'
+  | 'fieldLabel'
+  | 'screenFields'
+  | 'maskFields'
+  | 'maskEnd';
 
 /** Commands that search the text on screen: in reader mode they run in the reader view. */
 const READER_COMMANDS = new Set<PageCommand>(['findInPage', 'findStep', 'clearFind']);
