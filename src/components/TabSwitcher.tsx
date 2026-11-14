@@ -4,7 +4,6 @@ import {
   Image,
   Modal,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -25,6 +24,7 @@ import { Icon } from '../ui/Icon';
 import { siteColor } from '../ui/siteColor';
 import { hostOf } from '../i18n/format';
 import { dialog, DialogHost } from './Dialog';
+import { KeyboardAwareScrollView } from './KeyboardAware';
 
 type Props = {
   visible: boolean;
@@ -272,9 +272,9 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
         <Text style={styles.warning}>{t('tabs.androidIncognitoWarning')}</Text>
       )}
 
-      <ScrollView
+      {/* A group's name is edited in place; it scrolls into view above the keyboard. */}
+      <KeyboardAwareScrollView
         contentContainerStyle={styles.grid}
-        keyboardShouldPersistTaps="handled"
         scrollEnabled={drag.id === null}
         {...drag.responder.panHandlers}
       >
@@ -333,7 +333,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
             }}
           />
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <ActionSheet
         title={menuTab ? menuTab.title || menuTab.url : null}

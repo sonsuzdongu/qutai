@@ -3,7 +3,6 @@ import {
   Animated,
   BackHandler,
   Keyboard,
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   ScrollView,
@@ -44,6 +43,7 @@ import { imageFormatLabel } from '../chat/imageEdit';
 import { formatNumber, formatSize, hostOf } from '../i18n/format';
 import { hasTable, MarkdownText } from './MarkdownText';
 import { SearchSuggestions } from './SearchSuggestions';
+import { KeyboardAvoidingContainer } from './KeyboardAware';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 import { useReduceMotion } from '../utils/useReduceMotion';
 
@@ -351,8 +351,8 @@ export function AssistantPanel({
           // VoiceOver stays inside the panel while it is open.
           accessibilityViewIsModal={open}
         >
-          {/* The panel spans the full screen height, so the keyboard offset needs no extra correction. */}
-          <KeyboardAvoidingView style={styles.flex} behavior="padding">
+          {/* The message field stays above the keyboard (the navigation bar inset gives way to it below). */}
+          <KeyboardAvoidingContainer style={styles.flex}>
             <View
               style={[
                 styles.flex,
@@ -574,7 +574,7 @@ export function AssistantPanel({
                 )}
               </View>
             </View>
-          </KeyboardAvoidingView>
+          </KeyboardAvoidingContainer>
         </Animated.View>
       </View>
     </PanelTheme.Provider>

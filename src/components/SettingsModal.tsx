@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cleanCustomInstructions, MAX_CUSTOM_INSTRUCTIONS } from '../agent/systemPrompt';
 import { getProvider, isConfigured, modelLabel, requestTarget } from '../ai/providers';
@@ -33,6 +33,7 @@ import type { SavedTask } from '../storage/savedTasks';
 import { SitePermissionsScreen } from './SitePermissionsScreen';
 import { FilterListsScreen } from './FilterListsScreen';
 import { dialog, DialogHost } from './Dialog';
+import { KeyboardAwareScrollView } from './KeyboardAware';
 
 type Props = {
   visible: boolean;
@@ -208,7 +209,7 @@ function SettingsPages({
         )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView contentContainerStyle={styles.content}>
         {page === 'main' && (
           <View style={styles.card}>
             <SectionRow
@@ -501,7 +502,7 @@ function SettingsPages({
             </Text>
           </>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
       <LegalScreen kind={legal} onClose={() => setLegal(null)} />
       <MemoryScreen
         visible={memoryVisible}

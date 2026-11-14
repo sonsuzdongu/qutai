@@ -2,7 +2,6 @@ import { ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  KeyboardAvoidingView,
   Modal,
   Pressable,
   SectionList,
@@ -46,6 +45,7 @@ import {
 import { Db, getDb } from '../storage/db';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { dialog, DialogHost } from './Dialog';
+import { KeyboardAvoidingContainer } from './KeyboardAware';
 import { clearHistory, deleteHistoryEntry, HistoryEntry, listHistory } from '../storage/history';
 
 export type LibraryTab = 'bookmarks' | 'history';
@@ -607,13 +607,13 @@ function ToolButton({
 function Overlay({ onCancel, children }: { onCancel: () => void; children: ReactNode }) {
   const styles = useStyles();
   return (
-    // Padding on Android too: the Modal is edge to edge there, so its window no longer resizes for the keyboard.
-    <KeyboardAvoidingView style={[StyleSheet.absoluteFill, styles.overlay]} behavior="padding">
+    // The dialog stays centered in the space above the keyboard (the Modal's window does not resize for it).
+    <KeyboardAvoidingContainer style={[StyleSheet.absoluteFill, styles.overlay]}>
       <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel={t('common.close')} />
       <View style={styles.dialog} accessibilityViewIsModal>
         {children}
       </View>
-    </KeyboardAvoidingView>
+    </KeyboardAvoidingContainer>
   );
 }
 

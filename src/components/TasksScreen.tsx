@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getLanguage, t } from '../i18n';
 import { formatDateTime, formatShortDate, formatTime, hostOf, weekdayShort } from '../i18n/format';
@@ -25,6 +25,7 @@ import { makeStyles, usePalette } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
+import { KeyboardAwareScrollView } from './KeyboardAware';
 
 /** A task to create, prefilled (e.g. from "Save as task" on a sent message); `incognito` when it came from one. */
 export type TaskDraft = TaskInput & { incognito?: boolean };
@@ -295,7 +296,7 @@ function TaskEditor({
     { value: 'none', label: t('tasks.targetNone') },
   ];
   return (
-    <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
+    <KeyboardAwareScrollView contentContainerStyle={styles.form}>
       <Text style={styles.label}>{t('tasks.name')}</Text>
       <TextInput
         style={styles.input}
@@ -364,7 +365,7 @@ function TaskEditor({
           <Text style={styles.deleteText}>{t('tasks.delete')}</Text>
         </Pressable>
       ) : null}
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

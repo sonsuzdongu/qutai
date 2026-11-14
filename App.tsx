@@ -6,7 +6,6 @@ import {
   AccessibilityInfo,
   Appearance,
   AppState,
-  KeyboardAvoidingView,
   Linking,
   Platform,
   StyleSheet,
@@ -51,6 +50,7 @@ import { BrowserView } from './src/components/BrowserView';
 import { ContextAction, ContextMenuSheet } from './src/components/ContextMenuSheet';
 import { AssistantPanel, QuickAction } from './src/components/AssistantPanel';
 import { FindBar } from './src/components/FindBar';
+import { KeyboardAvoidingContainer } from './src/components/KeyboardAware';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
 import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
 import { SettingsModal } from './src/components/SettingsModal';
@@ -1609,9 +1609,9 @@ function BrowserApp({
         <View style={[styles.container, (tab.incognito || darkMode) && styles.incognito]}>
           <StatusBar style={tab.incognito || tabsVisible || darkMode ? 'light' : 'dark'} />
           <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
-            {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard. */}
+            {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard: the page, and the address bar when it is at the bottom, stay above it. */}
             {barAtBottom ? null : topBar}
-            <KeyboardAvoidingView style={styles.flex} behavior="padding">
+            <KeyboardAvoidingContainer style={styles.flex}>
               <ErrorBoundary>
                 <BrowserView
                   browser={browser}
@@ -1671,7 +1671,7 @@ function BrowserApp({
                 />
               ) : null}
               {barAtBottom ? topBar : null}
-            </KeyboardAvoidingView>
+            </KeyboardAvoidingContainer>
           </SafeAreaView>
 
           <ErrorBoundary full>

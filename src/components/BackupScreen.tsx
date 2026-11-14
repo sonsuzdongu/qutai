@@ -21,6 +21,7 @@ import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
+import { KeyboardAwareScrollView } from './KeyboardAware';
 
 type Props = {
   /** 'export', or the bytes of a picked backup file to import; null: closed. */
@@ -204,7 +205,7 @@ function ExportForm({ appLock, busy, setBusy, onDone }: BusyProps & { appLock: b
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <KeyboardAwareScrollView contentContainerStyle={styles.content}>
       <Text style={styles.hint}>{t('backup.alwaysIncluded')}</Text>
       <SwitchRow title={t('backup.tabs')} hint={t('backup.tabsHint')} value={tabs} onChange={setTabs} disabled={busy} />
       <SwitchRow
@@ -258,7 +259,7 @@ function ExportForm({ appLock, busy, setBusy, onDone }: BusyProps & { appLock: b
           <Text style={styles.buttonText}>{t('backup.export')}</Text>
         </Pressable>
       )}
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -318,7 +319,7 @@ function ImportFlow({ file, busy, setBusy }: BusyProps & { file: Uint8Array }) {
 
   if (!payload) {
     return (
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardAwareScrollView contentContainerStyle={styles.content}>
         <Text style={styles.hint}>{t('backup.enterPassword')}</Text>
         <PasswordField
           value={password}
@@ -349,7 +350,7 @@ function ImportFlow({ file, busy, setBusy }: BusyProps & { file: Uint8Array }) {
             <Text style={styles.buttonText}>{t('backup.open')}</Text>
           </Pressable>
         )}
-      </ScrollView>
+      </KeyboardAwareScrollView>
     );
   }
 

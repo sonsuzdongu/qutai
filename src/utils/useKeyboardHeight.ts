@@ -1,19 +1,49 @@
 import { useEffect, useState } from 'react';
-import { Keyboard, Platform } from 'react-native';
+import { Dimensions, Keyboard, KeyboardEvent, KeyboardMetrics, LayoutAnimation, Platform } from 'react-native';
 
-/** The open keyboard's height, 0 when it is closed. */
+/**
+ * How far up from the bottom of the window the on-screen keyboard reaches.
+ *
+ * Measured from the keyboard's top edge (screenY) rather than its reported height: on Android the height
+ * leaves out the navigation bar under the keyboard (24 dp with gestures, 48 dp with buttons), so a view
+ * padded by the height alone stays partly covered. Expo apps are edge to edge there, so the window spans
+ * the whole screen and its height is the line the keyboard rises from. A hardware keyboard sends no
+ * event on Android, and on iOS reports only the small bar it really shows, so neither adds padding.
+ */
+function cover(metrics: KeyboardMetrics) {
+  return Math.max(0, Math.round(Dimensions.get('window').height - metrics.screenY));
+}
+
+/** The open keyboard's cover (see above), 0 when it is closed. */
 export function useKeyboardHeight() {
-  const [height, setHeight] = useState(0);
+  const [height, setHeight] = useState(() => {
+    const metrics = Keyboard.isVisible() ? Keyboard.metrics() : undefined;
+    return metrics ? cover(metrics) : 0;
+  });
   useEffect(() => {
-    // iOS has "will" events, which line up with the keyboard animation; Android only has "did".
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-    const onShow = Keyboard.addListener(showEvent, (e) => setHeight(e.endCoordinates.height));
-    const onHide = Keyboard.addListener(hideEvent, () => setHeight(0));
-    return () => {
-      onShow.remove();
-      onHide.remove();
+    // iOS has "will" events, which line up with the keyboard animation (the layout change animates
+    // along with it, as KeyboardAvoidingView does); Android only has "did", sent again when the height
+    // changes while open (emoji panel, suggestions bar).
+    const update = (e: KeyboardEvent, next: number) => {
+      if (Platform.OS === 'ios' && e.duration) {
+        LayoutAnimation.configureNext({
+          duration: Math.max(e.duration, 10),
+          update: { duration: Math.max(e.duration, 10), type: LayoutAnimation.Types.keyboard },
+        });
+      }
+      setHeight(next);
     };
+    const subscriptions =
+      Platform.OS === 'ios'
+        ? [
+            Keyboard.addListener('keyboardWillChangeFrame', (e) => update(e, cover(e.endCoordinates))),
+            Keyboard.addListener('keyboardWillHide', (e) => update(e, 0)),
+          ]
+        : [
+            Keyboard.addListener('keyboardDidShow', (e) => update(e, cover(e.endCoordinates))),
+            Keyboard.addListener('keyboardDidHide', (e) => update(e, 0)),
+          ];
+    return () => subscriptions.forEach((s) => s.remove());
   }, []);
   return height;
 }

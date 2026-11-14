@@ -43,6 +43,7 @@ import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { CATEGORY_ICONS, categoryName, warnsAboutIdNumbers } from './memoryCategories';
 import { ProfileQuestionsScreen } from './ProfileQuestions';
+import { KeyboardAvoidingContainer, KeyboardAwareScrollView } from './KeyboardAware';
 
 /** The AI the user chose in settings, for "Organise for me"; null without a key. */
 export type MemoryAi = { provider: ProviderId; apiKey: string; model: string; endpoint?: string; label: string } | null;
@@ -307,149 +308,153 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
         </Pressable>
       </View>
 
-      <SectionList
-        sections={sections}
-        keyExtractor={(m) => m.id}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.list}
-        stickySectionHeadersEnabled={false}
-        ListHeaderComponent={header}
-        ListEmptyComponent={
-          memories ? <Text style={styles.empty}>{t(query.trim() ? 'memory.noMatch' : 'memory.empty')}</Text> : undefined
-        }
-        renderSectionHeader={({ section }) => (
-          <View style={styles.sectionHeader}>
-            <Icon name={CATEGORY_ICONS[section.category]} size={18} color={palette.textSecondary} />
-            <Text style={styles.sectionTitle} accessibilityRole="header">
-              {t('memory.categoryCount', { category: categoryName(section.category), count: section.total })}
-            </Text>
+      {/* The list and the add field stay above the keyboard; an edited memory scrolls into view. */}
+      <KeyboardAvoidingContainer style={styles.flex}>
+        <SectionList
+          sections={sections}
+          keyExtractor={(m) => m.id}
+          renderScrollComponent={(props) => <KeyboardAwareScrollView {...props} />}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.list}
+          stickySectionHeadersEnabled={false}
+          ListHeaderComponent={header}
+          ListEmptyComponent={
+            memories ? <Text style={styles.empty}>{t(query.trim() ? 'memory.noMatch' : 'memory.empty')}</Text> : undefined
+          }
+          renderSectionHeader={({ section }) => (
+            <View style={styles.sectionHeader}>
+              <Icon name={CATEGORY_ICONS[section.category]} size={18} color={palette.textSecondary} />
+              <Text style={styles.sectionTitle} accessibilityRole="header">
+                {t('memory.categoryCount', { category: categoryName(section.category), count: section.total })}
+              </Text>
+              <Pressable
+                onPress={() => clearCategory(section.category, section.total)}
+                hitSlop={8}
+                accessibilityLabel={t('memory.deleteCategoryLabel', { category: categoryName(section.category) })}
+              >
+                <Text style={styles.sectionDelete}>{t('memory.deleteCategory')}</Text>
+              </Pressable>
+            </View>
+          )}
+          renderItem={({ item }) =>
+            editing?.id === item.id ? (
+              <View style={[styles.row, styles.editRow]}>
+                <TextInput
+                  style={[styles.rowText, styles.editInput]}
+                  value={editing.text}
+                  onChangeText={(text) => setEditing({ ...editing, text })}
+                  maxLength={MAX_MEMORY_CHARS}
+                  autoFocus
+                  multiline
+                  accessibilityLabel={t('memory.editHint')}
+                />
+                <CategoryPicker value={editing.category} onChange={(category) => setEditing({ ...editing, category })} />
+                {warnsAboutIdNumbers(editing.category) && <Text style={styles.warning}>{t('memory.idWarning')}</Text>}
+                <View style={styles.lockRow}>
+                  <Icon name="secure" size={16} color={palette.textSecondary} />
+                  <View style={styles.lockText}>
+                    <Text style={styles.lockTitle}>{t('memory.hiddenToggle')}</Text>
+                    <Text style={styles.warning}>{t('memory.hiddenToggleHint')}</Text>
+                  </View>
+                  <ThemedSwitch
+                    value={editing.hidden}
+                    onValueChange={(hidden) => setEditing({ ...editing, hidden })}
+                    accessibilityLabel={t('memory.hiddenToggle')}
+                    accessibilityHint={t('memory.hiddenToggleHint')}
+                  />
+                </View>
+                {editing.hidden && !hiddenKindOf(editing.text) && (
+                  <TextInput
+                    style={styles.labelInput}
+                    value={editing.label}
+                    onChangeText={(label) => setEditing({ ...editing, label })}
+                    maxLength={MAX_HIDDEN_LABEL_CHARS}
+                    placeholder={t('memory.hiddenLabelPlaceholder')}
+                    placeholderTextColor={palette.textSecondary}
+                    accessibilityLabel={t('memory.hiddenLabel')}
+                  />
+                )}
+                {editing.hidden && !hiddenKindOf(editing.text) && (
+                  <Text style={styles.warning}>{t('memory.hiddenLabelHint')}</Text>
+                )}
+                {!editing.hidden && suggestsHiding(editing.text, editing.category) && (
+                  <Text style={styles.warning}>{t('memory.hiddenSuggest')}</Text>
+                )}
+                <View style={styles.proposalButtons}>
+                  <Pressable onPress={() => setEditing(null)} hitSlop={8}>
+                    <Text style={styles.cancelText}>{t('common.cancel')}</Text>
+                  </Pressable>
+                  <Pressable onPress={saveEdit} style={styles.applyButton}>
+                    <Text style={styles.addText}>{t('common.save')}</Text>
+                  </Pressable>
+                </View>
+              </View>
+            ) : (
+              <Pressable
+                onPress={() => startEdit(item)}
+                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+                accessibilityHint={t('memory.editHint')}
+              >
+                {item.sensitive && <Icon name="secure" size={14} color={palette.textSecondary} />}
+                <Text style={styles.rowText}>
+                  {item.sensitive && !revealed.has(item.id)
+                    ? t('memory.hiddenRow', { label: hiddenLabel(item) })
+                    : item.text}
+                </Text>
+                {item.sensitive && (
+                  <Pressable
+                    onPress={() => (revealed.has(item.id) ? hide(item.id) : reveal(item.id))}
+                    hitSlop={8}
+                    style={styles.revealButton}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.revealText}>{t(revealed.has(item.id) ? 'memory.hide' : 'memory.reveal')}</Text>
+                  </Pressable>
+                )}
+                <Pressable
+                  onPress={() => run((db) => deleteMemory(db, item.id))}
+                  hitSlop={10}
+                  style={styles.delete}
+                  accessibilityLabel={t('memory.delete')}
+                >
+                  <Text style={styles.deleteText}>✕</Text>
+                </Pressable>
+              </Pressable>
+            )
+          }
+        />
+
+        <View style={styles.addArea}>
+          {!!newText.trim() && (
+            <>
+              <CategoryPicker value={newCategory} onChange={setNewCategory} />
+              {warnsAboutIdNumbers(newCategory) && <Text style={styles.warning}>{t('memory.idWarning')}</Text>}
+              {suggestsHiding(newText, newCategory) && !hiddenKindOf(newText) && (
+                <Text style={styles.warning}>{t('memory.hiddenSuggestAdd')}</Text>
+              )}
+            </>
+          )}
+          <View style={styles.addRow}>
+            <TextInput
+              placeholderTextColor={palette.textSecondary}
+              style={styles.addInput}
+              value={newText}
+              onChangeText={setNewText}
+              onSubmitEditing={add}
+              placeholder={t('memory.addPlaceholder')}
+              maxLength={MAX_MEMORY_CHARS}
+              returnKeyType="done"
+            />
             <Pressable
-              onPress={() => clearCategory(section.category, section.total)}
-              hitSlop={8}
-              accessibilityLabel={t('memory.deleteCategoryLabel', { category: categoryName(section.category) })}
+              onPress={add}
+              disabled={!newText.trim()}
+              style={[styles.addButton, !newText.trim() && styles.disabled]}
             >
-              <Text style={styles.sectionDelete}>{t('memory.deleteCategory')}</Text>
+              <Text style={styles.addText}>{t('memory.add')}</Text>
             </Pressable>
           </View>
-        )}
-        renderItem={({ item }) =>
-          editing?.id === item.id ? (
-            <View style={[styles.row, styles.editRow]}>
-              <TextInput
-                style={[styles.rowText, styles.editInput]}
-                value={editing.text}
-                onChangeText={(text) => setEditing({ ...editing, text })}
-                maxLength={MAX_MEMORY_CHARS}
-                autoFocus
-                multiline
-                accessibilityLabel={t('memory.editHint')}
-              />
-              <CategoryPicker value={editing.category} onChange={(category) => setEditing({ ...editing, category })} />
-              {warnsAboutIdNumbers(editing.category) && <Text style={styles.warning}>{t('memory.idWarning')}</Text>}
-              <View style={styles.lockRow}>
-                <Icon name="secure" size={16} color={palette.textSecondary} />
-                <View style={styles.lockText}>
-                  <Text style={styles.lockTitle}>{t('memory.hiddenToggle')}</Text>
-                  <Text style={styles.warning}>{t('memory.hiddenToggleHint')}</Text>
-                </View>
-                <ThemedSwitch
-                  value={editing.hidden}
-                  onValueChange={(hidden) => setEditing({ ...editing, hidden })}
-                  accessibilityLabel={t('memory.hiddenToggle')}
-                  accessibilityHint={t('memory.hiddenToggleHint')}
-                />
-              </View>
-              {editing.hidden && !hiddenKindOf(editing.text) && (
-                <TextInput
-                  style={styles.labelInput}
-                  value={editing.label}
-                  onChangeText={(label) => setEditing({ ...editing, label })}
-                  maxLength={MAX_HIDDEN_LABEL_CHARS}
-                  placeholder={t('memory.hiddenLabelPlaceholder')}
-                  placeholderTextColor={palette.textSecondary}
-                  accessibilityLabel={t('memory.hiddenLabel')}
-                />
-              )}
-              {editing.hidden && !hiddenKindOf(editing.text) && (
-                <Text style={styles.warning}>{t('memory.hiddenLabelHint')}</Text>
-              )}
-              {!editing.hidden && suggestsHiding(editing.text, editing.category) && (
-                <Text style={styles.warning}>{t('memory.hiddenSuggest')}</Text>
-              )}
-              <View style={styles.proposalButtons}>
-                <Pressable onPress={() => setEditing(null)} hitSlop={8}>
-                  <Text style={styles.cancelText}>{t('common.cancel')}</Text>
-                </Pressable>
-                <Pressable onPress={saveEdit} style={styles.applyButton}>
-                  <Text style={styles.addText}>{t('common.save')}</Text>
-                </Pressable>
-              </View>
-            </View>
-          ) : (
-            <Pressable
-              onPress={() => startEdit(item)}
-              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-              accessibilityHint={t('memory.editHint')}
-            >
-              {item.sensitive && <Icon name="secure" size={14} color={palette.textSecondary} />}
-              <Text style={styles.rowText}>
-                {item.sensitive && !revealed.has(item.id)
-                  ? t('memory.hiddenRow', { label: hiddenLabel(item) })
-                  : item.text}
-              </Text>
-              {item.sensitive && (
-                <Pressable
-                  onPress={() => (revealed.has(item.id) ? hide(item.id) : reveal(item.id))}
-                  hitSlop={8}
-                  style={styles.revealButton}
-                  accessibilityRole="button"
-                >
-                  <Text style={styles.revealText}>{t(revealed.has(item.id) ? 'memory.hide' : 'memory.reveal')}</Text>
-                </Pressable>
-              )}
-              <Pressable
-                onPress={() => run((db) => deleteMemory(db, item.id))}
-                hitSlop={10}
-                style={styles.delete}
-                accessibilityLabel={t('memory.delete')}
-              >
-                <Text style={styles.deleteText}>✕</Text>
-              </Pressable>
-            </Pressable>
-          )
-        }
-      />
-
-      <View style={styles.addArea}>
-        {!!newText.trim() && (
-          <>
-            <CategoryPicker value={newCategory} onChange={setNewCategory} />
-            {warnsAboutIdNumbers(newCategory) && <Text style={styles.warning}>{t('memory.idWarning')}</Text>}
-            {suggestsHiding(newText, newCategory) && !hiddenKindOf(newText) && (
-              <Text style={styles.warning}>{t('memory.hiddenSuggestAdd')}</Text>
-            )}
-          </>
-        )}
-        <View style={styles.addRow}>
-          <TextInput
-            placeholderTextColor={palette.textSecondary}
-            style={styles.addInput}
-            value={newText}
-            onChangeText={setNewText}
-            onSubmitEditing={add}
-            placeholder={t('memory.addPlaceholder')}
-            maxLength={MAX_MEMORY_CHARS}
-            returnKeyType="done"
-          />
-          <Pressable
-            onPress={add}
-            disabled={!newText.trim()}
-            style={[styles.addButton, !newText.trim() && styles.disabled]}
-          >
-            <Text style={styles.addText}>{t('memory.add')}</Text>
-          </Pressable>
         </View>
-      </View>
+      </KeyboardAvoidingContainer>
       {questions && (
         <ProfileQuestionsScreen
           visible={asking}
@@ -503,6 +508,7 @@ export function CategoryPicker({
 }
 
 const useStyles = makeStyles((c) => ({
+  flex: { flex: 1 },
   container: { flex: 1, backgroundColor: c.bg },
   header: {
     flexDirection: 'row',

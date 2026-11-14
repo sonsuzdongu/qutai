@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { attachmentLabel, AttachmentInfo } from '../chat/attachments';
 import { presetInput, ResizePreset } from '../chat/imageEdit';
@@ -8,6 +8,7 @@ import { t } from '../i18n';
 import { formatSize } from '../i18n/format';
 import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
+import { KeyboardAvoidingContainer, KeyboardAwareScrollView } from './KeyboardAware';
 
 /** A small square for an attachment: the image's model copy, or a document icon with the file name. */
 export function AttachmentThumb({
@@ -77,7 +78,8 @@ export function AttachmentPreview({
     : '';
   return (
     <Modal visible={!!info} animationType="fade" onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
-      <View style={[styles.preview, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      {/* The resize panel's size fields stay above the keyboard; the image shrinks to make room. */}
+      <KeyboardAvoidingContainer style={[styles.preview, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <View style={styles.bar}>
           <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('common.close')}>
             <Icon name="close" size={22} color="#ffffff" />
@@ -125,7 +127,7 @@ export function AttachmentPreview({
             ) : null}
           </View>
         ) : null}
-      </View>
+      </KeyboardAvoidingContainer>
     </Modal>
   );
 }
@@ -187,7 +189,7 @@ function ResizePanel({
   };
   const shapeLabel = (s: Shape) => (s === 'original' ? t('resize.original') : s === 'square' ? t('resize.square') : s);
   return (
-    <ScrollView style={styles.panel} contentContainerStyle={styles.panelContent} keyboardShouldPersistTaps="handled">
+    <KeyboardAwareScrollView containerStyle={styles.panel} contentContainerStyle={styles.panelContent}>
       <Text style={styles.panelLabel}>{t('resize.shape')}</Text>
       <View style={styles.chips} accessibilityRole="radiogroup">
         {SHAPES.map((s) => (
@@ -254,7 +256,7 @@ function ResizePanel({
           {busy ? <ActivityIndicator color="#ffffff" /> : <Text style={styles.actionText}>{t('resize.make')}</Text>}
         </Pressable>
       </View>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 

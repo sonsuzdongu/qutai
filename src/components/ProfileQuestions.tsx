@@ -1,14 +1,13 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ComponentRef, ReactNode, useEffect, useRef, useState } from 'react';
 import {
-  KeyboardAvoidingView,
+  Keyboard,
   Modal,
-  Platform,
   Pressable,
-  ScrollView,
   ScrollViewInstance,
   StyleSheet,
   Text,
   TextInput,
+  TextInputProps,
   View,
 } from 'react-native';
 import { getCalendars, getLocales } from 'expo-localization';
@@ -24,6 +23,7 @@ import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
+import { KeyboardAwareScrollView, useRevealFocused } from './KeyboardAware';
 import { CATEGORY_ICONS } from './memoryCategories';
 
 /**
@@ -151,6 +151,8 @@ export function ProfileQuestions({ providerLabel, transition, onInstructions, on
   const [instructionLine, setInstructionLine] = useState<string | null>(null);
 
   const go = (to: Page) => {
+    // Onboarding's transition closes the keyboard itself; the Memory screen's sheet has none.
+    Keyboard.dismiss();
     const change = () => {
       setPage(to);
       setEditing(null);
@@ -287,6 +289,29 @@ export function ProfileQuestions({ providerLabel, transition, onInstructions, on
   const toggle = (list: string[], value: string) =>
     list.includes(value) ? list.filter((x) => x !== value) : [...list, value];
 
+  // The keyboard's Next goes through the contact and address fields in order; Done on the last closes it.
+  const [fields] = useState(() => new Map<string, ComponentRef<typeof TextInput>>());
+  const addressKeys: (keyof Address)[] = ['line', 'district', 'city', 'postal', 'country'];
+  const fieldOrder = [
+    'fullName',
+    'phone',
+    'email',
+    ...addressKeys.map((k) => `shipTo.${k}`),
+    ...(billingDifferent ? addressKeys.map((k) => `billTo.${k}`) : []),
+  ];
+  const chain = (key: string): ChainProps => {
+    const next = fieldOrder[fieldOrder.indexOf(key) + 1];
+    return {
+      inputRef: (node) => {
+        if (node) fields.set(key, node);
+        else fields.delete(key);
+      },
+      returnKeyType: next ? 'next' : 'done',
+      // Kept open between fields, so the keyboard does not drop and come back.
+      submitBehavior: next ? 'submit' : 'blurAndSubmit',
+      onSubmitEditing: () => (next ? fields.get(next)?.focus() : Keyboard.dismiss()),
+    };
+  };
   const phoneHint = phone.trim() && !normalizePhone(phone).ok ? t('profile.phoneHint') : null;
   const emailHint = email.trim() && !EMAIL.test(email.trim()) ? t('profile.emailHint') : null;
 
@@ -309,243 +334,278 @@ export function ProfileQuestions({ providerLabel, transition, onInstructions, on
   };
 
   return (
-    <View style={styles.flex}>
-      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {page === 'intro' && (
-          <>
-            <Text style={styles.title} accessibilityRole="header">
-              {t('profile.introTitle')}
-            </Text>
-            <Text style={styles.lead}>{t('profile.introLead')}</Text>
-            <View style={styles.card}>
-              <Text style={styles.hint}>{privacy}</Text>
-            </View>
-          </>
-        )}
-
-        {QUESTIONS.includes(page) && (
-          <Text style={styles.counter}>
-            {t('profile.questionOf', {
-              n: QUESTIONS.indexOf(page) + 1,
-              total: QUESTIONS.length,
-            })}
-          </Text>
-        )}
-
-        {page === 'name' && (
-          <Question title={t('profile.nameTitle')} lead={t('profile.nameLead')}>
-            <Field
-              value={name}
-              onChange={setName}
-              placeholder={t('profile.namePlaceholder')}
-              autoComplete="given-name"
-            />
-          </Question>
-        )}
-
-        {page === 'city' && (
-          <Question title={t('profile.cityTitle')} lead={t('profile.cityLead')}>
-            <Chips options={cityChips()} selected={[city]} onPress={(c) => setCity(city === c ? '' : c)} />
-            <Field value={city} onChange={setCity} placeholder={t('profile.cityPlaceholder')} />
-          </Question>
-        )}
-
-        {page === 'shopping' && (
-          <Question title={t('profile.shoppingTitle')} lead={t('profile.shoppingLead')}>
-            <Text style={styles.label}>{t('profile.paymentLabel')}</Text>
-            <Chips
-              options={[t('profile.payment.cod'), t('profile.payment.card'), t('profile.payment.none')]}
-              selected={payment ? [t(`profile.payment.${payment}`)] : []}
-              onPress={(label) => {
-                const value = (['cod', 'card', 'none'] as Payment[]).find((p) => t(`profile.payment.${p}`) === label)!;
-                setPayment(payment === value ? null : value);
-              }}
-            />
-            <Text style={styles.label}>{t('profile.deliveryLabel')}</Text>
-            <Chips
-              options={DELIVERY_CHIPS.map((k) => t(k))}
-              selected={deliveryChips}
-              onPress={(c) => setDeliveryChips(toggle(deliveryChips, c))}
-            />
-            <Field
-              value={deliveryText}
-              onChange={setDeliveryText}
-              placeholder={t('profile.deliveryPlaceholder')}
-              multiline
-            />
-          </Question>
-        )}
-
-        {page === 'food' && (
-          <Question title={t('profile.foodTitle')} lead={t('profile.foodLead')}>
-            <Chips
-              options={FOOD_CHIPS.map((k) => t(k))}
-              selected={foodChips}
-              onPress={(c) => setFoodChips(toggle(foodChips, c))}
-            />
-            <Field value={foodText} onChange={setFoodText} placeholder={t('profile.foodPlaceholder')} />
-          </Question>
-        )}
-
-        {page === 'style' && (
-          <Question title={t('profile.styleTitle')} lead={t('profile.styleLead')}>
-            <Chips
-              options={[t('profile.style.short'), t('profile.style.detailed')]}
-              selected={style ? [t(`profile.style.${style}`)] : []}
-              onPress={(label) => {
-                const value: Style = label === t('profile.style.short') ? 'short' : 'detailed';
-                setStyle(style === value ? null : value);
-              }}
-            />
-          </Question>
-        )}
-
-        {page === 'offer' && (
-          <>
-            <Text style={styles.title} accessibilityRole="header">
-              {t('profile.offerTitle')}
-            </Text>
-            <Text style={styles.lead}>{t('profile.offerLead')}</Text>
-            <View style={styles.card}>
-              <Text style={styles.hint}>{privacy}</Text>
-            </View>
-          </>
-        )}
-
-        {page === 'address' && (
-          <>
-            <Text style={styles.title} accessibilityRole="header">
-              {t('profile.addressTitle')}
-            </Text>
-            <Text style={styles.hint}>{t('profile.addressLead')}</Text>
-            <Text style={styles.label}>{t('profile.contactLabel')}</Text>
-            <Field value={fullName} onChange={setFullName} placeholder={t('profile.fullName')} autoComplete="name" />
-            <Field
-              value={phone}
-              onChange={setPhone}
-              placeholder={t('profile.phone')}
-              autoComplete="tel"
-              keyboardType="phone-pad"
-            />
-            {phoneHint && <Text style={styles.warning}>{phoneHint}</Text>}
-            <Field
-              value={email}
-              onChange={setEmail}
-              placeholder={t('profile.email')}
-              autoComplete="email"
-              keyboardType="email-address"
-            />
-            {emailHint && <Text style={styles.warning}>{emailHint}</Text>}
-            <Text style={styles.label}>{t('profile.shipToLabel')}</Text>
-            <AddressFields value={shipTo} onChange={setShipTo} fallbackCity={city} />
-            <Pressable
-              onPress={() => setBillingDifferent(!billingDifferent)}
-              style={styles.checkRow}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: billingDifferent }}
-            >
-              <View style={[styles.checkbox, billingDifferent && styles.checkboxOn]}>
-                {billingDifferent && <Icon name="check" size={16} color="#ffffff" />}
-              </View>
-              <Text style={styles.checkText}>{t('profile.billingDifferent')}</Text>
+    <KeyboardAwareScrollView
+      ref={scrollRef}
+      contentContainerStyle={styles.content}
+      footer={
+        <View style={styles.bottom}>
+          <GradientButton label={primary} onPress={onPrimary} style={styles.primary} textStyle={styles.primaryText} />
+          {page === 'intro' && (
+            <Pressable onPress={onDone} style={styles.secondary} accessibilityRole="button" hitSlop={6}>
+              <Text style={styles.secondaryText}>{t('profile.skipAll')}</Text>
             </Pressable>
-            {billingDifferent && <AddressFields value={billTo} onChange={setBillTo} fallbackCity={city} />}
-            <Text style={styles.hint}>{t('profile.moreAddresses')}</Text>
-          </>
-        )}
+          )}
+          {page === 'offer' && (
+            <Pressable onPress={() => void toSummary()} style={styles.secondary} accessibilityRole="button" hitSlop={6}>
+              <Text style={styles.secondaryText}>{t('profile.skip')}</Text>
+            </Pressable>
+          )}
+          {QUESTIONS.includes(page) && (
+            <Pressable
+              onPress={async () => {
+                await commit();
+                await toSummary();
+              }}
+              style={styles.secondary}
+              accessibilityRole="button"
+              hitSlop={6}
+            >
+              <Text style={styles.secondaryText}>{t('profile.finishLater')}</Text>
+            </Pressable>
+          )}
+        </View>
+      }
+    >
+      {page === 'intro' && (
+        <>
+          <Text style={styles.title} accessibilityRole="header">
+            {t('profile.introTitle')}
+          </Text>
+          <Text style={styles.lead}>{t('profile.introLead')}</Text>
+          <View style={styles.card}>
+            <Text style={styles.hint}>{privacy}</Text>
+          </View>
+        </>
+      )}
 
-        {page === 'summary' && (
-          <>
-            <Text style={styles.title} accessibilityRole="header">
-              {t('profile.summaryTitle')}
-            </Text>
-            <Text style={styles.lead}>
-              {t(summary.length || instructionLine ? 'profile.summaryLead' : 'profile.summaryEmpty')}
-            </Text>
-            {summary.map((m) =>
-              editing?.id === m.id ? (
-                <View key={m.id} style={styles.savedRow}>
-                  <TextInput
-                    style={styles.savedInput}
-                    value={editing.text}
-                    onChangeText={(text) => setEditing({ id: m.id, text })}
-                    onBlur={saveSummaryEdit}
-                    autoFocus
-                    multiline
-                    submitBehavior="blurAndSubmit"
-                    returnKeyType="done"
-                    accessibilityLabel={t('memory.editHint')}
-                  />
-                </View>
-              ) : (
+      {QUESTIONS.includes(page) && (
+        <Text style={styles.counter}>
+          {t('profile.questionOf', {
+            n: QUESTIONS.indexOf(page) + 1,
+            total: QUESTIONS.length,
+          })}
+        </Text>
+      )}
+
+      {page === 'name' && (
+        <Question title={t('profile.nameTitle')} lead={t('profile.nameLead')}>
+          <Field
+            value={name}
+            onChange={setName}
+            placeholder={t('profile.namePlaceholder')}
+            autoComplete="given-name"
+            textContentType="givenName"
+            autoCapitalize="words"
+            returnKeyType="done"
+          />
+        </Question>
+      )}
+
+      {page === 'city' && (
+        <Question title={t('profile.cityTitle')} lead={t('profile.cityLead')}>
+          <Chips options={cityChips()} selected={[city]} onPress={(c) => setCity(city === c ? '' : c)} />
+          <Field
+            value={city}
+            onChange={setCity}
+            placeholder={t('profile.cityPlaceholder')}
+            autoCapitalize="words"
+            returnKeyType="done"
+          />
+        </Question>
+      )}
+
+      {page === 'shopping' && (
+        <Question title={t('profile.shoppingTitle')} lead={t('profile.shoppingLead')}>
+          <Text style={styles.label}>{t('profile.paymentLabel')}</Text>
+          <Chips
+            options={[t('profile.payment.cod'), t('profile.payment.card'), t('profile.payment.none')]}
+            selected={payment ? [t(`profile.payment.${payment}`)] : []}
+            onPress={(label) => {
+              const value = (['cod', 'card', 'none'] as Payment[]).find((p) => t(`profile.payment.${p}`) === label)!;
+              setPayment(payment === value ? null : value);
+            }}
+          />
+          <Text style={styles.label}>{t('profile.deliveryLabel')}</Text>
+          <Chips
+            options={DELIVERY_CHIPS.map((k) => t(k))}
+            selected={deliveryChips}
+            onPress={(c) => setDeliveryChips(toggle(deliveryChips, c))}
+          />
+          <Field
+            value={deliveryText}
+            onChange={setDeliveryText}
+            placeholder={t('profile.deliveryPlaceholder')}
+            multiline
+          />
+        </Question>
+      )}
+
+      {page === 'food' && (
+        <Question title={t('profile.foodTitle')} lead={t('profile.foodLead')}>
+          <Chips
+            options={FOOD_CHIPS.map((k) => t(k))}
+            selected={foodChips}
+            onPress={(c) => setFoodChips(toggle(foodChips, c))}
+          />
+          <Field
+            value={foodText}
+            onChange={setFoodText}
+            placeholder={t('profile.foodPlaceholder')}
+            returnKeyType="done"
+          />
+        </Question>
+      )}
+
+      {page === 'style' && (
+        <Question title={t('profile.styleTitle')} lead={t('profile.styleLead')}>
+          <Chips
+            options={[t('profile.style.short'), t('profile.style.detailed')]}
+            selected={style ? [t(`profile.style.${style}`)] : []}
+            onPress={(label) => {
+              const value: Style = label === t('profile.style.short') ? 'short' : 'detailed';
+              setStyle(style === value ? null : value);
+            }}
+          />
+        </Question>
+      )}
+
+      {page === 'offer' && (
+        <>
+          <Text style={styles.title} accessibilityRole="header">
+            {t('profile.offerTitle')}
+          </Text>
+          <Text style={styles.lead}>{t('profile.offerLead')}</Text>
+          <View style={styles.card}>
+            <Text style={styles.hint}>{privacy}</Text>
+          </View>
+        </>
+      )}
+
+      {page === 'address' && (
+        <>
+          <Text style={styles.title} accessibilityRole="header">
+            {t('profile.addressTitle')}
+          </Text>
+          <Text style={styles.hint}>{t('profile.addressLead')}</Text>
+          <Text style={styles.label}>{t('profile.contactLabel')}</Text>
+          <Field
+            value={fullName}
+            onChange={setFullName}
+            placeholder={t('profile.fullName')}
+            autoComplete="name"
+            textContentType="name"
+            autoCapitalize="words"
+            {...chain('fullName')}
+          />
+          <Field
+            value={phone}
+            onChange={setPhone}
+            placeholder={t('profile.phone')}
+            autoComplete="tel"
+            textContentType="telephoneNumber"
+            keyboardType="phone-pad"
+            {...chain('phone')}
+          />
+          {phoneHint && <Text style={styles.warning}>{phoneHint}</Text>}
+          <Field
+            value={email}
+            onChange={setEmail}
+            placeholder={t('profile.email')}
+            autoComplete="email"
+            textContentType="emailAddress"
+            keyboardType="email-address"
+            {...chain('email')}
+          />
+          {emailHint && <Text style={styles.warning}>{emailHint}</Text>}
+          <Text style={styles.label}>{t('profile.shipToLabel')}</Text>
+          <AddressFields value={shipTo} onChange={setShipTo} fallbackCity={city} chain={(k) => chain(`shipTo.${k}`)} />
+          <Pressable
+            onPress={() => setBillingDifferent(!billingDifferent)}
+            style={styles.checkRow}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: billingDifferent }}
+          >
+            <View style={[styles.checkbox, billingDifferent && styles.checkboxOn]}>
+              {billingDifferent && <Icon name="check" size={16} color="#ffffff" />}
+            </View>
+            <Text style={styles.checkText}>{t('profile.billingDifferent')}</Text>
+          </Pressable>
+          {billingDifferent && (
+            <AddressFields
+              value={billTo}
+              onChange={setBillTo}
+              fallbackCity={city}
+              chain={(k) => chain(`billTo.${k}`)}
+            />
+          )}
+          <Text style={styles.hint}>{t('profile.moreAddresses')}</Text>
+        </>
+      )}
+
+      {page === 'summary' && (
+        <>
+          <Text style={styles.title} accessibilityRole="header">
+            {t('profile.summaryTitle')}
+          </Text>
+          <Text style={styles.lead}>
+            {t(summary.length || instructionLine ? 'profile.summaryLead' : 'profile.summaryEmpty')}
+          </Text>
+          {summary.map((m) =>
+            editing?.id === m.id ? (
+              <View key={m.id} style={styles.savedRow}>
+                <TextInput
+                  style={styles.savedInput}
+                  value={editing.text}
+                  onChangeText={(text) => setEditing({ id: m.id, text })}
+                  onBlur={saveSummaryEdit}
+                  autoFocus
+                  multiline
+                  submitBehavior="blurAndSubmit"
+                  returnKeyType="done"
+                  accessibilityLabel={t('memory.editHint')}
+                />
+              </View>
+            ) : (
+              <Pressable
+                key={m.id}
+                onPress={() => setEditing({ id: m.id, text: m.text })}
+                style={({ pressed }) => [styles.savedRow, pressed && styles.pressed]}
+                accessibilityHint={t('memory.editHint')}
+              >
+                <Icon name={CATEGORY_ICONS[m.category]} size={18} color={palette.textSecondary} />
+                <Text style={styles.savedText}>{m.text}</Text>
                 <Pressable
-                  key={m.id}
-                  onPress={() => setEditing({ id: m.id, text: m.text })}
-                  style={({ pressed }) => [styles.savedRow, pressed && styles.pressed]}
-                  accessibilityHint={t('memory.editHint')}
-                >
-                  <Icon name={CATEGORY_ICONS[m.category]} size={18} color={palette.textSecondary} />
-                  <Text style={styles.savedText}>{m.text}</Text>
-                  <Pressable
-                    onPress={() => removeSummary(m.id)}
-                    hitSlop={10}
-                    style={styles.remove}
-                    accessibilityLabel={t('memory.delete')}
-                  >
-                    <Text style={styles.removeText}>✕</Text>
-                  </Pressable>
-                </Pressable>
-              ),
-            )}
-            {instructionLine && (
-              <View style={styles.savedRow}>
-                <Icon name="preferences" size={18} color={palette.textSecondary} />
-                <Text style={styles.savedText}>{t('profile.summaryInstruction', { line: instructionLine })}</Text>
-                <Pressable
-                  onPress={() => {
-                    setStyle(null);
-                    saveStyle(null);
-                  }}
+                  onPress={() => removeSummary(m.id)}
                   hitSlop={10}
                   style={styles.remove}
-                  accessibilityLabel={t('profile.removeInstruction')}
+                  accessibilityLabel={t('memory.delete')}
                 >
                   <Text style={styles.removeText}>✕</Text>
                 </Pressable>
-              </View>
-            )}
-            <Text style={styles.hint}>{t('profile.summaryHint')}</Text>
-          </>
-        )}
-      </ScrollView>
-
-      <View style={styles.bottom}>
-        <GradientButton label={primary} onPress={onPrimary} style={styles.primary} textStyle={styles.primaryText} />
-        {page === 'intro' && (
-          <Pressable onPress={onDone} style={styles.secondary} accessibilityRole="button" hitSlop={6}>
-            <Text style={styles.secondaryText}>{t('profile.skipAll')}</Text>
-          </Pressable>
-        )}
-        {page === 'offer' && (
-          <Pressable onPress={() => void toSummary()} style={styles.secondary} accessibilityRole="button" hitSlop={6}>
-            <Text style={styles.secondaryText}>{t('profile.skip')}</Text>
-          </Pressable>
-        )}
-        {QUESTIONS.includes(page) && (
-          <Pressable
-            onPress={async () => {
-              await commit();
-              await toSummary();
-            }}
-            style={styles.secondary}
-            accessibilityRole="button"
-            hitSlop={6}
-          >
-            <Text style={styles.secondaryText}>{t('profile.finishLater')}</Text>
-          </Pressable>
-        )}
-      </View>
-    </View>
+              </Pressable>
+            ),
+          )}
+          {instructionLine && (
+            <View style={styles.savedRow}>
+              <Icon name="preferences" size={18} color={palette.textSecondary} />
+              <Text style={styles.savedText}>{t('profile.summaryInstruction', { line: instructionLine })}</Text>
+              <Pressable
+                onPress={() => {
+                  setStyle(null);
+                  saveStyle(null);
+                }}
+                hitSlop={10}
+                style={styles.remove}
+                accessibilityLabel={t('profile.removeInstruction')}
+              >
+                <Text style={styles.removeText}>✕</Text>
+              </Pressable>
+            </View>
+          )}
+          <Text style={styles.hint}>{t('profile.summaryHint')}</Text>
+        </>
+      )}
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -592,37 +652,60 @@ function Chips({
   );
 }
 
+/** What moves the keyboard's Next from one field to the following one. */
+type ChainProps = {
+  inputRef?: (node: ComponentRef<typeof TextInput> | null) => void;
+  returnKeyType?: TextInputProps['returnKeyType'];
+  submitBehavior?: TextInputProps['submitBehavior'];
+  onSubmitEditing?: () => void;
+};
+
 function Field({
   value,
   onChange,
   placeholder,
   multiline,
   autoComplete,
+  textContentType,
   keyboardType,
-}: {
+  autoCapitalize,
+  inputRef,
+  returnKeyType,
+  submitBehavior,
+  onSubmitEditing,
+}: ChainProps & {
   value: string;
   onChange: (text: string) => void;
   placeholder: string;
   multiline?: boolean;
-  autoComplete?: 'name' | 'given-name' | 'tel' | 'email' | 'street-address' | 'postal-code' | 'country';
+  autoComplete?: TextInputProps['autoComplete'];
+  textContentType?: TextInputProps['textContentType'];
   keyboardType?: 'phone-pad' | 'email-address';
+  autoCapitalize?: TextInputProps['autoCapitalize'];
 }) {
   const styles = useStyles();
   const palette = usePalette();
+  const reveal = useRevealFocused();
   return (
     <TextInput
+      ref={inputRef}
       style={[styles.input, multiline && styles.inputMulti]}
       value={value}
       onChangeText={onChange}
+      onFocus={() => reveal?.()}
       placeholder={placeholder}
       placeholderTextColor={palette.textSecondary}
       accessibilityLabel={placeholder}
       autoComplete={autoComplete}
+      textContentType={textContentType}
       keyboardType={keyboardType}
-      autoCapitalize={keyboardType === 'email-address' ? 'none' : 'sentences'}
-      autoCorrect={!keyboardType}
+      autoCapitalize={autoCapitalize ?? (keyboardType === 'email-address' ? 'none' : 'sentences')}
+      autoCorrect={!keyboardType && !autoComplete}
       maxLength={200}
       multiline={multiline}
+      returnKeyType={returnKeyType}
+      submitBehavior={submitBehavior}
+      onSubmitEditing={onSubmitEditing}
       textAlignVertical={multiline ? 'top' : 'center'}
     />
   );
@@ -632,10 +715,12 @@ function AddressFields({
   value,
   onChange,
   fallbackCity,
+  chain,
 }: {
   value: Address;
   onChange: (a: Address) => void;
   fallbackCity: string;
+  chain: (field: keyof Address) => ChainProps;
 }) {
   const styles = useStyles();
   const set = (patch: Partial<Address>) => onChange({ ...value, ...patch });
@@ -651,7 +736,10 @@ function AddressFields({
         onChange={(line) => set({ line })}
         placeholder={t('profile.addressLine')}
         autoComplete="street-address"
+        textContentType="fullStreetAddress"
+        autoCapitalize="words"
         multiline
+        {...chain('line')}
       />
       <View style={styles.pair}>
         <View style={styles.flex}>
@@ -659,6 +747,8 @@ function AddressFields({
             value={value.district}
             onChange={(district) => set({ district })}
             placeholder={t('profile.district')}
+            autoCapitalize="words"
+            {...chain('district')}
           />
         </View>
         <View style={styles.flex}>
@@ -669,6 +759,10 @@ function AddressFields({
               set({ city: c });
             }}
             placeholder={t('profile.city')}
+            autoComplete="postal-address-locality"
+            textContentType="addressCity"
+            autoCapitalize="words"
+            {...chain('city')}
           />
         </View>
       </View>
@@ -679,6 +773,9 @@ function AddressFields({
             onChange={(postal) => set({ postal })}
             placeholder={t('profile.postal')}
             autoComplete="postal-code"
+            textContentType="postalCode"
+            autoCapitalize="characters"
+            {...chain('postal')}
           />
         </View>
         <View style={styles.flex}>
@@ -687,6 +784,9 @@ function AddressFields({
             onChange={(country) => set({ country })}
             placeholder={t('profile.country')}
             autoComplete="country"
+            textContentType="countryName"
+            autoCapitalize="words"
+            {...chain('country')}
           />
         </View>
       </View>
@@ -724,16 +824,14 @@ export function ProfileQuestionsScreen({
               <Text style={styles.close}>{t('common.close')}</Text>
             </Pressable>
           </View>
-          <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <ProfileQuestions
-              providerLabel={providerLabel}
-              onInstructions={onInstructions}
-              onDone={onClose}
-              registerBack={(handler) => {
-                backHandler.current = handler;
-              }}
-            />
-          </KeyboardAvoidingView>
+          <ProfileQuestions
+            providerLabel={providerLabel}
+            onInstructions={onInstructions}
+            onDone={onClose}
+            registerBack={(handler) => {
+              backHandler.current = handler;
+            }}
+          />
         </SafeAreaView>
       )}
       <DialogHost />
