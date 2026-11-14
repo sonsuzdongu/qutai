@@ -3,7 +3,7 @@ import { cleanMemoryText, MAX_MEMORIES, sensitiveReason } from '../agent/memory'
 import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES } from '../browser/reader';
 import { isSearchEngine } from '../browser/search';
-import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskTarget } from '../storage/savedTasks';
+import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } from '../storage/savedTasks';
 
 /**
  * What goes inside a backup: versioned JSON by kind of data, independent of the SQLite schema, so a
@@ -15,7 +15,7 @@ import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskTarget } from '../storage
  *   bookmarks?: { folders: [{ id, parentId, title, createdAt }], items: [{ url, title, createdAt, folderId }] },
  *   history?: [{ url, title, visitedAt }],
  *   memories?: [{ text, createdAt, updatedAt }],
- *   tasks?: [{ name, prompt, target, url, research, createdAt, lastUsedAt }],   // saved tasks
+ *   tasks?: [{ name, prompt, target, url, research, createdAt, lastUsedAt, schedule, paused, private, autoRun }],
  *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }],
  *            blockingOff?: [host] },
  *   settings?: { theme: "dark", textZoom: 120, models: { anthropic: "…" }, … },
@@ -44,6 +44,10 @@ export type BackupTask = {
   research: boolean;
   createdAt: number;
   lastUsedAt: number | null;
+  schedule: TaskSchedule | null;
+  paused: boolean;
+  private: boolean;
+  autoRun: boolean;
 };
 export type BackupSitePermission = { host: string; level: Exclude<SiteLevel, 'default'> };
 export type BackupLocation = { host: string; setting: 'allow' | 'block' };
@@ -260,6 +264,11 @@ function parseTasks(v: unknown): BackupTask[] | undefined {
         target,
         url: typeof x.url === 'string' ? x.url : null,
         research: x.research === true,
+        // Checked like a schedule read from the database; reminders are scheduled after the app restarts.
+        schedule: x.schedule as TaskSchedule | null,
+        paused: x.paused === true,
+        private: x.private === true,
+        autoRun: x.autoRun === true,
       });
       return [{ ...task, createdAt: time(x.createdAt), lastUsedAt: Number.isFinite(x.lastUsedAt) ? time(x.lastUsedAt) : null }];
     } catch {

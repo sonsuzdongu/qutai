@@ -36,8 +36,16 @@ import { TabSwitcher } from './src/components/TabSwitcher';
 import { TextSizeSheet } from './src/components/TextSizeSheet';
 import { ReaderSettingsSheet } from './src/components/ReaderSettingsSheet';
 import { sleep } from './src/utils/sleep';
-import { TaskDraft, TasksScreen } from './src/components/TasksScreen';
-import { fillTaskPrompt, markSavedTaskUsed, recentSavedTasks, SavedTask } from './src/storage/savedTasks';
+import { emptyTask, TaskDraft, TasksScreen } from './src/components/TasksScreen';
+import {
+  fillTaskPrompt,
+  getSavedTask,
+  listSavedTasks,
+  markSavedTaskUsed,
+  recentSavedTasks,
+  SavedTask,
+} from './src/storage/savedTasks';
+import { syncTaskReminders } from './src/device/taskSchedule';
 import { formatDate } from './src/i18n/format';
 import { Toast, useToast } from './src/components/Toast';
 import { DownloadIndicator } from './src/components/DownloadIndicator';
@@ -488,6 +496,9 @@ function BrowserApp({
         setPanelOpen(false);
         setScannerVisible(true);
         return;
+      case 'task':
+        openRemindedTask(entry.id);
+        return;
     }
   };
   useEntryPoints(!appLocked, handleEntry);
@@ -539,6 +550,7 @@ function BrowserApp({
     const chat = browser.conversationOf(current);
     // Marked before anything is shown, so a message typed in an incognito tab is never saved.
     if (current.incognito) chat.privacy.touchedIncognito = true;
+    if (prepared?.chat === chat) setPrepared(null);
     chat.add(newItem('user', text));
 
     const provider = settings.provider;
@@ -726,6 +738,60 @@ function BrowserApp({
       setPanelOpen(true);
       send(prompt, { tab: target, noPage: task.target === 'none' });
     });
+  };
+
+  // Saved task reminders follow the database: scheduled again at start and on every return to the foreground (which
+  // also moves Android's next alarm after a time zone change, and fills iOS's limited queue again).
+  useEffect(() => {
+    const sync = () =>
+      getDb()
+        .then(listSavedTasks)
+        .then(syncTaskReminders)
+        .catch(() => {});
+    sync();
+    const sub = AppState.addEventListener('change', (state) => state === 'active' && sync());
+    return () => sub.remove();
+  }, []);
+
+  /** A task opened from its reminder, ready in the panel with "Run now" until it is sent. */
+  const [prepared, setPrepared] = useState<{ chat: Conversation; task: SavedTask } | null>(null);
+
+  /**
+   * The user tapped a task's reminder (after the app lock; never into an incognito tab). The tap is their own action
+   * on their own saved task, so it runs at once if they chose that for the task; otherwise its page opens and the
+   * prompt waits in the input with "Run now". Nothing runs without the tap.
+   */
+  const openRemindedTask = async (id: string) => {
+    const task = await getDb()
+      .then((db) => getSavedTask(db, id))
+      .catch(() => null);
+    if (!task) return toast.show(t('tasks.gone'));
+    toNormalTab();
+    if (task.autoRun && !runningRef.current.chat) return runSavedTask(task);
+    if (task.target === 'url' && task.url) browser.openTab(upgradeToHttps(task.url, settings.httpsOnly));
+    const chat = browser.conversationOf(browser.active);
+    chat.whenLoaded(() => {
+      chat.setDraft(fillTaskPrompt(task.prompt, () => formatDate(new Date())));
+      chat.setResearch(task.research);
+      persistDraftSoon(chat);
+      setPrepared({ chat, task });
+      setPanelOpen(true);
+    });
+  };
+
+  const runPrepared = () => {
+    if (!prepared) return;
+    const { chat, task } = prepared;
+    const text = chat.draft.trim();
+    setPrepared(null);
+    if (!text) return;
+    chat.setDraft('');
+    persistDraftSoon(chat);
+    getDb()
+      .then((db) => markSavedTaskUsed(db, task.id))
+      .then(refreshRecentTasks)
+      .catch(() => {});
+    send(text, { noPage: task.target === 'none' });
   };
 
   const newChat = () => {
@@ -1289,6 +1355,10 @@ function BrowserApp({
               onRunTask={(task) => runSavedTask(task)}
               onOpenTasks={() => setTasksScreen({ draft: null })}
               onUserMessageMenu={setMessageMenu}
+              preparedTask={
+                prepared && prepared.chat === conversation && conversation.draft.trim() ? prepared.task.name : null
+              }
+              onRunPrepared={runPrepared}
               voice={{
                 incognito: tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
                 online: settings.voiceOnline,
@@ -1532,11 +1602,9 @@ function BrowserApp({
                       onPress: () =>
                         setTasksScreen({
                           draft: {
-                            name: '',
+                            ...emptyTask(),
                             prompt: messageMenu,
                             target: tab.isNewTab ? 'none' : 'page',
-                            url: null,
-                            research: false,
                             incognito: conversation.incognito || conversation.privacy.touchedIncognito,
                           },
                         }),

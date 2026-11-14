@@ -135,6 +135,9 @@ type Props = {
   onOpenTasks: () => void;
   /** Long press on a message the user sent: Copy, Save as task. */
   onUserMessageMenu: (text: string) => void;
+  /** A saved task opened from its reminder waits in the input: its name, for the "Run now" row. */
+  preparedTask: string | null;
+  onRunPrepared: () => void;
 };
 
 const MAX_WIDTH = 420;
@@ -183,6 +186,8 @@ export function AssistantPanel({
   onRunTask,
   onOpenTasks,
   onUserMessageMenu,
+  preparedTask,
+  onRunPrepared,
 }: Props) {
   const styles = useStyles();
   const palette = usePalette();
@@ -388,6 +393,14 @@ export function AssistantPanel({
                 <Pressable onPress={onShowRunningTab} style={[styles.busy, d?.busy]} accessibilityRole="button">
                   <Text style={styles.busyText}>{t('chat.busyElsewhere')}</Text>
                   <Text style={styles.busyAction}>{t('chat.showTab')}</Text>
+                </Pressable>
+              )}
+              {preparedTask && !running && !busyElsewhere && (
+                <Pressable onPress={onRunPrepared} style={[styles.busy, d?.busy]} accessibilityRole="button">
+                  <Text style={styles.busyText} numberOfLines={2}>
+                    {t('tasks.ready', { name: preparedTask })}
+                  </Text>
+                  <Text style={styles.busyAction}>{t('tasks.runNow')}</Text>
                 </Pressable>
               )}
               {!busyElsewhere && finishedElsewhere && (

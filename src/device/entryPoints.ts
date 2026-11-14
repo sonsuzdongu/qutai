@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState, Linking, Platform } from 'react-native';
 import { siteColor } from '../ui/siteColor';
 import { isIncomingWebLink } from './defaultBrowser';
+import { onTaskReminderTapped } from './taskSchedule';
 
 /**
  * Ways into Qutai from outside the app: links handed to it as the default browser; qutai:// links (launcher shortcuts
@@ -22,6 +23,8 @@ import { isIncomingWebLink } from './defaultBrowser';
  *   qutai://new-tab                  a new tab with the address field ready
  *   qutai://new-private-tab          a new incognito tab (behind the incognito lock if that is on)
  *   qutai://scan                     the QR code scanner
+ *
+ * Also a tap on a saved task's reminder (src/device/taskSchedule.ts): only the task's id, read from the database.
  */
 export type Entry =
   /** An http(s) page to open in a normal tab. */
@@ -32,7 +35,9 @@ export type Entry =
   | { kind: 'newTab'; incognito: boolean; query: string }
   /** The assistant panel of a normal tab with `text` in its input, unsent. */
   | { kind: 'ask'; text: string }
-  | { kind: 'scan' };
+  | { kind: 'scan' }
+  /** The user tapped the reminder of the saved task with this id. */
+  | { kind: 'task'; id: string };
 
 /** From the native module: shared text (Android) or a quick action's qutai:// link (iOS). */
 type RawEntry = { source?: string; text?: string; subject?: string | null; url?: string };
@@ -224,6 +229,7 @@ export function useEntryPoints(ready: boolean, handle: (entry: Entry) => void) {
     const subs = [
       Linking.addEventListener('url', ({ url }) => push([entryFromLink(url)])),
       native?.addListener('onEntry', takeNative),
+      { remove: onTaskReminderTapped((id) => push([{ kind: 'task', id }])) },
       // Belt and braces for an event sent while JavaScript was not listening.
       AppState.addEventListener('change', (state) => state === 'active' && takeNative()),
     ];

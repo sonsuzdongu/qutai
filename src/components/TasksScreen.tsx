@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FlatList, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { t } from '../i18n';
-import { formatDateTime, hostOf } from '../i18n/format';
+import { getLanguage, t } from '../i18n';
+import { formatDateTime, formatShortDate, formatTime, hostOf, weekdayShort } from '../i18n/format';
+import { ensureNotificationPermission } from '../device/notifications';
+import { offerSettings } from '../device/settings';
+import { MAX_PENDING, pendingCount, syncTaskReminders } from '../device/taskSchedule';
 import { getDb } from '../storage/db';
 import {
   addSavedTask,
@@ -10,7 +13,10 @@ import {
   listSavedTasks,
   MAX_TASK_NAME,
   MAX_TASK_PROMPT,
+  nextRun,
   SavedTask,
+  setSavedTaskPaused,
+  TaskSchedule,
   TaskInput,
   TaskTarget,
   updateSavedTask,
@@ -42,7 +48,32 @@ export function TasksScreen({ visible, onClose, onRun, draft }: Props) {
   );
 }
 
-export const emptyTask = (): TaskInput => ({ name: '', prompt: '', target: 'page', url: null, research: false });
+export const emptyTask = (): TaskInput => ({
+  name: '',
+  prompt: '',
+  target: 'page',
+  url: null,
+  research: false,
+  schedule: null,
+  paused: false,
+  private: false,
+  autoRun: false,
+});
+
+/** "Daily at 09:00", "Mon, Wed at 18:30", "Once, Saturday 14 November 2026, 09:00". */
+export function describeSchedule(schedule: TaskSchedule): string {
+  if (schedule.kind === 'once') return t('tasks.scheduleOnce', { when: formatDateTime(new Date(schedule.at)) });
+  const time = formatTime(schedule.hour, schedule.minute);
+  if (schedule.kind === 'daily') return t('tasks.scheduleDaily', { time });
+  const days = weekOrder()
+    .filter((d) => schedule.days.includes(d))
+    .map(weekdayShort)
+    .join(', ');
+  return t('tasks.scheduleWeekly', { days, time });
+}
+
+/** Weekdays in the order of the user's language: Monday first in Turkish, Sunday first in English. */
+const weekOrder = () => (getLanguage() === 'tr' ? [2, 3, 4, 5, 6, 7, 1] : [1, 2, 3, 4, 5, 6, 7]);
 
 /** "On the page on screen", "Opens example.com first", "No particular page", plus deep research. */
 export function describeTarget(task: Pick<SavedTask, 'target' | 'url' | 'research'>): string {
@@ -62,7 +93,11 @@ const saveError = (e: unknown) => {
         ? t('tasks.errorUrl')
         : code === 'full'
           ? t('tasks.errorFull')
-          : code || String(e);
+          : code === 'past'
+            ? t('tasks.errorPast')
+            : code === 'too-many'
+              ? t('tasks.errorTooMany', { max: MAX_PENDING })
+              : code || String(e);
   dialog.alert(t('tasks.saveFailed'), message);
 };
 
@@ -82,10 +117,14 @@ function TaskList({
     draft ? { input: draft, incognito: draft.incognito } : null,
   );
 
+  // Every change to the list schedules the reminders again (a deleted or paused task's are cancelled).
   const reload = useCallback(() => {
     getDb()
       .then(listSavedTasks)
-      .then(setTasks)
+      .then((list) => {
+        setTasks(list);
+        syncTaskReminders(list);
+      })
       .catch(() => setTasks([]));
   }, []);
   useEffect(reload, [reload]);
@@ -104,6 +143,16 @@ function TaskList({
     )
       return;
     try {
+      const { schedule, paused } = editing.input;
+      if (schedule && !paused) {
+        if (schedule.kind === 'once' && schedule.at <= Date.now()) throw new Error('past');
+        const others = (tasks ?? []).filter((x) => x.id !== editing.id).reduce((n, x) => n + pendingCount(x), 0);
+        if (others + pendingCount(editing.input) > MAX_PENDING) throw new Error('too-many');
+        // Asked when a reminder is set, not before; the task is saved either way.
+        const permission = await ensureNotificationPermission().catch(() => 'denied' as const);
+        if (permission === 'blocked') offerSettings(t('tasks.notifyBlocked'));
+        else if (permission === 'denied') dialog.alert(t('tasks.notifyDenied'));
+      }
       const db = await getDb();
       if (editing.id) await updateSavedTask(db, editing.id, editing.input);
       else await addSavedTask(db, editing.input);
@@ -182,6 +231,26 @@ function TaskList({
                 {describeTarget(item)}
                 {item.lastUsedAt ? ` · ${t('tasks.lastUsed', { date: formatDateTime(new Date(item.lastUsedAt)) })}` : ''}
               </Text>
+              {item.schedule ? (
+                <View style={styles.scheduleRow}>
+                  <Text style={styles.meta} numberOfLines={2}>
+                    {`⏰ ${describeSchedule(item.schedule)} · ${scheduleState(item)}`}
+                  </Text>
+                  {nextRun(item.schedule) ? (
+                    <Pressable
+                      onPress={() =>
+                        getDb()
+                          .then((db) => setSavedTaskPaused(db, item.id, !item.paused))
+                          .then(reload, saveError)
+                      }
+                      hitSlop={8}
+                      accessibilityRole="button"
+                    >
+                      <Text style={styles.pause}>{t(item.paused ? 'tasks.resume' : 'tasks.pause')}</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
             </View>
             <Pressable
               onPress={() => onRun(item)}
@@ -278,6 +347,7 @@ function TaskEditor({
       <Text style={styles.small}>
         {t(input.target === 'url' ? 'tasks.targetUrlHint' : input.target === 'none' ? 'tasks.targetNoneHint' : 'tasks.targetPageHint')}
       </Text>
+      <ScheduleFields input={input} set={set} />
       <View style={styles.switchRow}>
         <View style={styles.flex}>
           <Text style={styles.switchLabel}>{t('chat.research')}</Text>
@@ -295,6 +365,198 @@ function TaskEditor({
         </Pressable>
       ) : null}
     </ScrollView>
+  );
+}
+
+/** "next: Sat, 14 Nov 09:00", "paused", or "done" for a one-off reminder that has passed. */
+function scheduleState(task: SavedTask): string {
+  const next = nextRun(task.schedule);
+  if (!next) return t('tasks.scheduleDone');
+  if (task.paused) return t('tasks.schedulePaused');
+  const d = new Date(next);
+  return t('tasks.scheduleNext', { when: `${formatShortDate(d)} ${formatTime(d.getHours(), d.getMinutes())}` });
+}
+
+type ScheduleKind = 'off' | TaskSchedule['kind'];
+
+/** `h:m` on `day`; without a day, the next time it comes round (today if still ahead, else tomorrow). */
+function onceAt(h: number, m: number, day?: Date): number {
+  const d = day ? new Date(day) : new Date();
+  d.setHours(h, m, 0, 0);
+  if (!day && d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+
+/** The reminder: off, once (a day and a time), daily or weekly (days and a time), and what tapping it does. */
+function ScheduleFields({ input, set }: { input: TaskInput; set: (patch: Partial<TaskInput>) => void }) {
+  const styles = useStyles();
+  const schedule = input.schedule;
+  const kind: ScheduleKind = schedule?.kind ?? 'off';
+  // The time and day the fields show; kept when switching between kinds.
+  const at = schedule?.kind === 'once' ? new Date(schedule.at) : null;
+  const hour = schedule ? (schedule.kind === 'once' ? at!.getHours() : schedule.hour) : 9;
+  const minute = schedule ? (schedule.kind === 'once' ? at!.getMinutes() : schedule.minute) : 0;
+  const days = schedule?.kind === 'weekly' ? schedule.days : [new Date().getDay() + 1];
+
+  const choose = (next: ScheduleKind) => {
+    if (next === 'off') return set({ schedule: null });
+    if (next === 'once') return set({ schedule: { kind: 'once', at: onceAt(hour, minute) } });
+    if (next === 'daily') return set({ schedule: { kind: 'daily', hour, minute } });
+    set({ schedule: { kind: 'weekly', hour, minute, days } });
+  };
+  const setTime = (h: number, m: number) => {
+    if (!schedule) return;
+    if (schedule.kind === 'once') set({ schedule: { kind: 'once', at: onceAt(h, m, at!) } });
+    else set({ schedule: { ...schedule, hour: h, minute: m } });
+  };
+  const shiftDay = (by: number) => {
+    if (schedule?.kind !== 'once') return;
+    const d = new Date(schedule.at);
+    d.setDate(d.getDate() + by);
+    set({ schedule: { kind: 'once', at: d.getTime() } });
+  };
+  const toggleDay = (day: number) => {
+    if (schedule?.kind !== 'weekly') return;
+    const next = schedule.days.includes(day) ? schedule.days.filter((d) => d !== day) : [...schedule.days, day];
+    if (next.length) set({ schedule: { ...schedule, days: next.sort() } });
+  };
+  const kinds: { value: ScheduleKind; label: string }[] = [
+    { value: 'off', label: t('tasks.scheduleOff') },
+    { value: 'once', label: t('tasks.scheduleKindOnce') },
+    { value: 'daily', label: t('tasks.scheduleKindDaily') },
+    { value: 'weekly', label: t('tasks.scheduleKindWeekly') },
+  ];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return (
+    <>
+      <Text style={styles.label}>{t('tasks.schedule')}</Text>
+      <View style={styles.segment}>
+        {kinds.map((o) => (
+          <Pressable
+            key={o.value}
+            onPress={() => choose(o.value)}
+            style={[styles.segmentButton, kind === o.value && styles.segmentSelected]}
+            accessibilityRole="radio"
+            accessibilityState={{ selected: kind === o.value }}
+          >
+            <Text style={[styles.segmentText, kind === o.value && styles.segmentTextSelected]}>{o.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+      {schedule ? (
+        <>
+          {schedule.kind === 'once' && at ? (
+            <View style={styles.stepRow}>
+              <Stepper
+                label="‹"
+                accessibilityLabel={t('tasks.dayEarlier')}
+                disabled={at.getTime() - 86_400_000 < today.getTime()}
+                onPress={() => shiftDay(-1)}
+              />
+              <Text style={styles.stepValue}>{formatShortDate(at)}</Text>
+              <Stepper label="›" accessibilityLabel={t('tasks.dayLater')} onPress={() => shiftDay(1)} />
+            </View>
+          ) : null}
+          {schedule.kind === 'weekly' ? (
+            <View style={styles.days}>
+              {weekOrder().map((day) => {
+                const on = schedule.days.includes(day);
+                return (
+                  <Pressable
+                    key={day}
+                    onPress={() => toggleDay(day)}
+                    style={[styles.day, on && styles.dayOn]}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: on }}
+                  >
+                    <Text style={[styles.dayText, on && styles.dayTextOn]}>{weekdayShort(day)}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
+          <View style={styles.stepRow}>
+            <Stepper
+              label="−"
+              accessibilityLabel={t('tasks.hourEarlier')}
+              onPress={() => setTime((hour + 23) % 24, minute)}
+            />
+            <Stepper
+              label="−5"
+              accessibilityLabel={t('tasks.minutesEarlier')}
+              onPress={() => (minute >= 5 ? setTime(hour, minute - 5) : setTime((hour + 23) % 24, 55))}
+            />
+            <Text style={styles.stepValue} accessibilityLiveRegion="polite">
+              {formatTime(hour, minute)}
+            </Text>
+            <Stepper
+              label="+5"
+              accessibilityLabel={t('tasks.minutesLater')}
+              onPress={() => (minute < 55 ? setTime(hour, minute + 5) : setTime((hour + 1) % 24, 0))}
+            />
+            <Stepper label="+" accessibilityLabel={t('tasks.hourLater')} onPress={() => setTime((hour + 1) % 24, minute)} />
+          </View>
+          <View style={styles.switchRow}>
+            <View style={styles.flex}>
+              <Text style={styles.switchLabel}>{t('tasks.autoRun')}</Text>
+              <Text style={styles.small}>{t('tasks.autoRunHint')}</Text>
+            </View>
+            <ThemedSwitch
+              value={input.autoRun}
+              onValueChange={(autoRun) => set({ autoRun })}
+              accessibilityLabel={t('tasks.autoRun')}
+            />
+          </View>
+          <View style={styles.switchRow}>
+            <View style={styles.flex}>
+              <Text style={styles.switchLabel}>{t('tasks.private')}</Text>
+              <Text style={styles.small}>{t('tasks.privateHint')}</Text>
+            </View>
+            <ThemedSwitch
+              value={input.private}
+              onValueChange={(isPrivate) => set({ private: isPrivate })}
+              accessibilityLabel={t('tasks.private')}
+            />
+          </View>
+          {input.paused ? (
+            <View style={styles.switchRow}>
+              <Text style={[styles.switchLabel, styles.flex]}>{t('tasks.schedulePausedLong')}</Text>
+              <Pressable onPress={() => set({ paused: false })} hitSlop={8} accessibilityRole="button">
+                <Text style={styles.pause}>{t('tasks.resume')}</Text>
+              </Pressable>
+            </View>
+          ) : null}
+        </>
+      ) : null}
+      <Text style={styles.small}>{t('tasks.scheduleLimit')}</Text>
+    </>
+  );
+}
+
+function Stepper({
+  label,
+  accessibilityLabel,
+  onPress,
+  disabled,
+}: {
+  label: string;
+  accessibilityLabel: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  const styles = useStyles();
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => [styles.stepper, pressed && styles.pressed, disabled && styles.disabled]}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled: !!disabled }}
+    >
+      <Text style={styles.stepperText}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -360,6 +622,26 @@ const useStyles = makeStyles((c) => ({
   segmentTextSelected: { color: c.text, fontWeight: '600' },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 },
   switchLabel: { fontSize: 15, color: c.text },
+  scheduleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  pause: { fontSize: 13, color: c.tintText, fontWeight: '600' },
+  stepRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8 },
+  stepValue: { minWidth: 96, textAlign: 'center', fontSize: 17, fontWeight: '600', color: c.text },
+  stepper: {
+    minWidth: 40,
+    height: 36,
+    paddingHorizontal: 8,
+    borderRadius: 18,
+    backgroundColor: c.sunken,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepperText: { fontSize: 15, fontWeight: '600', color: c.text },
+  disabled: { opacity: 0.35 },
+  days: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  day: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: 14, backgroundColor: c.sunken },
+  dayOn: { backgroundColor: c.tint },
+  dayText: { fontSize: 13, color: c.text },
+  dayTextOn: { color: c.onTint, fontWeight: '600' },
   deleteButton: { marginTop: 24, alignSelf: 'center', padding: 10 },
   deleteText: { fontSize: 15, color: c.danger },
 }));

@@ -50,14 +50,18 @@ export async function collectBackup(
     },
     history: history.map((h) => ({ url: h.url, title: h.title, visitedAt: h.visited_at })),
     memories: memories.map(({ text, createdAt, updatedAt }) => ({ text, createdAt, updatedAt })),
-    tasks: tasks.map(({ name, prompt, target, url, research, createdAt, lastUsedAt }) => ({
-      name,
-      prompt,
-      target,
-      url,
-      research,
-      createdAt,
-      lastUsedAt,
+    tasks: tasks.map((task) => ({
+      name: task.name,
+      prompt: task.prompt,
+      target: task.target,
+      url: task.url,
+      research: task.research,
+      createdAt: task.createdAt,
+      lastUsedAt: task.lastUsedAt,
+      schedule: task.schedule,
+      paused: task.paused,
+      private: task.private,
+      autoRun: task.autoRun,
     })),
     sites: {
       permissions: permissions.flatMap((p) => (p.level === 'default' ? [] : [{ host: p.host, level: p.level }])),
@@ -236,8 +240,9 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
       const fresh = p.tasks.filter((x) => !prompts.has(x.prompt)).slice(0, room);
       await insertRows(
         db,
-        'INSERT INTO saved_tasks (id, name, prompt, target, url, research, created_at, updated_at, last_used_at)',
-        9,
+        'INSERT INTO saved_tasks (id, name, prompt, target, url, research, created_at, updated_at, last_used_at, ' +
+          'schedule, schedule_paused, private, auto_run)',
+        13,
         fresh.map((x, i) => [
           `${Math.random().toString(36).slice(2, 8)}${(now + i).toString(36).slice(-4)}`,
           x.name,
@@ -248,6 +253,10 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
           x.createdAt || now,
           now,
           x.lastUsedAt,
+          x.schedule ? JSON.stringify(x.schedule) : null,
+          x.paused ? 1 : 0,
+          x.private ? 1 : 0,
+          x.autoRun ? 1 : 0,
         ]),
       );
     }

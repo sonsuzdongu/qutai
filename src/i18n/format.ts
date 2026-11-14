@@ -39,6 +39,23 @@ export function formatDateTime(date: Date): string {
   }).format(date);
 }
 
+/** A localized time of day, e.g. "09:30" or "9:30 AM". */
+export function formatTime(hour: number, minute: number): string {
+  const d = new Date(2000, 0, 1, hour, minute);
+  return new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit' }).format(d);
+}
+
+/** A short localized weekday name; `day` is 1 (Sunday) to 7 (Saturday). */
+export function weekdayShort(day: number): string {
+  // 2 January 2000 was a Sunday.
+  return new Intl.DateTimeFormat(locale(), { weekday: 'short' }).format(new Date(2000, 0, 1 + day));
+}
+
+/** A short localized date with weekday, e.g. "Sat, 14 Nov". */
+export function formatShortDate(date: Date): string {
+  return new Intl.DateTimeFormat(locale(), { weekday: 'short', day: 'numeric', month: 'short' }).format(date);
+}
+
 /** A localized number with at most one decimal, e.g. "12.5" or "12,5". */
 export function formatNumber(n: number): string {
   return new Intl.NumberFormat(locale(), { maximumFractionDigits: 1 }).format(n);

@@ -269,6 +269,9 @@ the feature, when the user is asked, the config line that declares it and what i
   left off when the app comes back; nothing is announced for a paused task. A task that ends while the user is in
   Qutai but looking elsewhere shows a toast with Show and a dot on the Qutai button. Needs a new development build (local module `modules/qutai-agent`). Not tested on
   a phone yet.
+- **Scheduled tasks are reminders.** There is no server and nothing runs while Qutai is closed, so a saved task's
+  schedule (once, daily, weekly) is a local notification at that time; tapping it opens the task ready to run (or runs
+  it, if the user chose that for the task). Never without the tap. Reminders are rescheduled each time Qutai opens.
 - **Tabs sleep.** At most five tabs keep a live WebView; the others sleep as a URL and thumbnail and reload
   when opened. Private tabs, tabs using the camera or microphone, tabs playing sound, and the tabs a running task works in
   or reads are never put to sleep.

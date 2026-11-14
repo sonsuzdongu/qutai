@@ -135,6 +135,12 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
      updated_at INTEGER NOT NULL,
      last_used_at INTEGER
    );`,
+  // A saved task's reminder (JSON, see storage/savedTasks.ts: once / daily / weekly), paused or not, whether its
+  // notification hides the prompt, and whether tapping it runs the task instead of only showing it ready.
+  `ALTER TABLE saved_tasks ADD COLUMN schedule TEXT;
+   ALTER TABLE saved_tasks ADD COLUMN schedule_paused INTEGER NOT NULL DEFAULT 0;
+   ALTER TABLE saved_tasks ADD COLUMN private INTEGER NOT NULL DEFAULT 0;
+   ALTER TABLE saved_tasks ADD COLUMN auto_run INTEGER NOT NULL DEFAULT 0;`,
 ];
 
 /**

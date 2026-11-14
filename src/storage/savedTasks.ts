@@ -8,6 +8,51 @@ export const MAX_TASK_NAME = 80;
 export const MAX_TASK_PROMPT = 4000;
 export const MAX_SAVED_TASKS = 200;
 
+/**
+ * When Qutai reminds the user of a saved task, in local wall-clock time. Weekdays are 1 (Sunday) to 7 (Saturday),
+ * as expo-notifications' weekly trigger counts them.
+ */
+export type TaskSchedule =
+  | { kind: 'once'; at: number }
+  | { kind: 'daily'; hour: number; minute: number }
+  | { kind: 'weekly'; hour: number; minute: number; days: number[] };
+
+const isHour = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 23;
+const isMinute = (v: unknown): v is number => Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 59;
+
+/** A schedule read from storage or a backup, or null when it isn't a valid one. */
+export function parseSchedule(v: unknown): TaskSchedule | null {
+  if (typeof v === 'string') {
+    try {
+      return parseSchedule(JSON.parse(v));
+    } catch {
+      return null;
+    }
+  }
+  if (!v || typeof v !== 'object') return null;
+  const o = v as Record<string, unknown>;
+  if (o.kind === 'once') return Number.isFinite(o.at) && (o.at as number) > 0 ? { kind: 'once', at: o.at as number } : null;
+  if (!isHour(o.hour) || !isMinute(o.minute)) return null;
+  if (o.kind === 'daily') return { kind: 'daily', hour: o.hour, minute: o.minute };
+  if (o.kind !== 'weekly' || !Array.isArray(o.days)) return null;
+  const days = [...new Set(o.days.filter((d): d is number => Number.isInteger(d) && d >= 1 && d <= 7))].sort();
+  return days.length ? { kind: 'weekly', hour: o.hour, minute: o.minute, days } : null;
+}
+
+/** The next time the reminder is due after `now` (local time, so it follows time zone and DST changes), or null. */
+export function nextRun(schedule: TaskSchedule | null, now = Date.now()): number | null {
+  if (!schedule) return null;
+  if (schedule.kind === 'once') return schedule.at > now ? schedule.at : null;
+  for (let ahead = 0; ahead <= 7; ahead++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() + ahead);
+    d.setHours(schedule.hour, schedule.minute, 0, 0);
+    if (d.getTime() <= now) continue;
+    if (schedule.kind === 'daily' || schedule.days.includes(d.getDay() + 1)) return d.getTime();
+  }
+  return null;
+}
+
 /** A message the user saved to run again (Settings › Tasks, or "Save as task" on a message they sent). */
 export type SavedTask = {
   id: string;
@@ -21,9 +66,20 @@ export type SavedTask = {
   createdAt: number;
   updatedAt: number;
   lastUsedAt: number | null;
+  /** The reminder, if any. */
+  schedule: TaskSchedule | null;
+  /** The reminder is paused (nothing scheduled) until resumed. */
+  paused: boolean;
+  /** Its notification shows only the name, never the prompt. */
+  private: boolean;
+  /** Tapping its notification runs the task; otherwise the task is shown ready with "Run now". */
+  autoRun: boolean;
 };
 
-export type TaskInput = Pick<SavedTask, 'name' | 'prompt' | 'target' | 'url' | 'research'>;
+export type TaskInput = Pick<
+  SavedTask,
+  'name' | 'prompt' | 'target' | 'url' | 'research' | 'schedule' | 'paused' | 'private' | 'autoRun'
+>;
 
 type Row = {
   id: string;
@@ -35,6 +91,10 @@ type Row = {
   created_at: number;
   updated_at: number;
   last_used_at: number | null;
+  schedule: string | null;
+  schedule_paused: number;
+  private: number;
+  auto_run: number;
 };
 
 const toTask = (row: Row): SavedTask => ({
@@ -47,6 +107,10 @@ const toTask = (row: Row): SavedTask => ({
   createdAt: row.created_at,
   updatedAt: row.updated_at,
   lastUsedAt: row.last_used_at,
+  schedule: parseSchedule(row.schedule),
+  paused: row.schedule_paused === 1,
+  private: row.private === 1,
+  autoRun: row.auto_run === 1,
 });
 
 const newId = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
@@ -67,7 +131,17 @@ export function cleanTask(input: TaskInput): TaskInput {
   const target = TASK_TARGETS.includes(input.target) ? input.target : 'page';
   const url = target === 'url' ? cleanTaskUrl(input.url ?? '') : null;
   if (target === 'url' && !url) throw new Error('bad-url');
-  return { name: name || prompt.replace(/\s+/g, ' ').slice(0, 40), prompt, target, url, research: input.research };
+  return {
+    name: name || prompt.replace(/\s+/g, ' ').slice(0, 40),
+    prompt,
+    target,
+    url,
+    research: input.research,
+    schedule: parseSchedule(input.schedule),
+    paused: input.paused,
+    private: input.private,
+    autoRun: input.autoRun,
+  };
 }
 
 /** Most recently used first; tasks never run follow, newest first. */
@@ -100,8 +174,9 @@ export async function addSavedTask(db: Db, input: TaskInput): Promise<SavedTask>
   const now = Date.now();
   const id = newId();
   await db.runAsync(
-    'INSERT INTO saved_tasks (id, name, prompt, target, url, research, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [id, task.name, task.prompt, task.target, task.url, task.research ? 1 : 0, now, now],
+    'INSERT INTO saved_tasks (id, name, prompt, target, url, research, created_at, updated_at, schedule, ' +
+      'schedule_paused, private, auto_run) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [id, task.name, task.prompt, task.target, task.url, task.research ? 1 : 0, now, now, ...scheduleColumns(task)],
   );
   return { id, ...task, createdAt: now, updatedAt: now, lastUsedAt: null };
 }
@@ -109,9 +184,24 @@ export async function addSavedTask(db: Db, input: TaskInput): Promise<SavedTask>
 export async function updateSavedTask(db: Db, id: string, input: TaskInput): Promise<void> {
   const task = cleanTask(input);
   await db.runAsync(
-    'UPDATE saved_tasks SET name = ?, prompt = ?, target = ?, url = ?, research = ?, updated_at = ? WHERE id = ?',
-    [task.name, task.prompt, task.target, task.url, task.research ? 1 : 0, Date.now(), id],
+    'UPDATE saved_tasks SET name = ?, prompt = ?, target = ?, url = ?, research = ?, updated_at = ?, schedule = ?, ' +
+      'schedule_paused = ?, private = ?, auto_run = ? WHERE id = ?',
+    [task.name, task.prompt, task.target, task.url, task.research ? 1 : 0, Date.now(), ...scheduleColumns(task), id],
   );
+}
+
+/** Pauses or resumes a task's reminder. */
+export async function setSavedTaskPaused(db: Db, id: string, paused: boolean): Promise<void> {
+  await db.runAsync('UPDATE saved_tasks SET schedule_paused = ? WHERE id = ?', [paused ? 1 : 0, id]);
+}
+
+function scheduleColumns(task: TaskInput): (string | number | null)[] {
+  return [
+    task.schedule ? JSON.stringify(task.schedule) : null,
+    task.paused ? 1 : 0,
+    task.private ? 1 : 0,
+    task.autoRun ? 1 : 0,
+  ];
 }
 
 export async function deleteSavedTask(db: Db, id: string): Promise<void> {
