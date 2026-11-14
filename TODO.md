@@ -108,12 +108,15 @@ App ──(session token)──► Qutai server ──(our key)──► Anthrop
 - [ ] Privacy policy (bump `LEGAL_VERSION`), App Store privacy labels and Google Play Data safety form
   updated to describe analytics in pro builds
 
-## Once we move to our own build (development build)
+## Our own build (development build)
 
-Expo Go can only run the native modules bundled with it. The items below require an app we build
-ourselves; they will all be handled together during the switch.
+Qutai now runs as a development build: Expo Go can only run the native modules bundled with it, and several
+features use modules it doesn't have. The items below need native work beyond what the current build has.
 
-- [ ] Development build setup (EAS); an Apple Developer account is required for iOS
+- [x] Development build setup, the repository side: app IDs (`com.sonsuzdongu.qutai`), the `qutai` URL scheme,
+  `expo-dev-client`, `expo-system-ui`, and `npm run android` / `npm run ios` build natively (`expo run:*`)
+  - [ ] EAS: there is no `eas.json` yet (development, preview and production profiles; `EXPO_PUBLIC_PRO_MODE` per
+    profile); an Apple Developer account is required for iOS device builds
 - [ ] Voice commands (speech-to-text): the device's own speech recognition engine; free, works offline on most devices. Microphone button in the panel
   - Needs `NSSpeechRecognitionUsageDescription`, a new `NSMicrophoneUsageDescription` text (today it only covers videos for upload fields) and `RECORD_AUDIO` unblocked on Android (`app.json`, `locales/`, `docs/permissions.md`)
   - Decision: The paid "audio recording + AI transcription" route will not be used; until then the keyboard's microphone key is enough
@@ -121,7 +124,7 @@ ourselves; they will all be handled together during the switch.
 - [ ] App attestation (App Attest, Play Integrity; `expo-app-integrity`), see Qutai Credits / Abuse protection
 - [ ] "Share to Qutai" from other apps, Siri / Shortcuts (`expo-app-intents`), home screen widget (`expo-widgets`)
 
-## Device integrations (work in Expo Go)
+## Device integrations
 
 Both as a tool the agent can use and as a button the user can tap in the panel.
 
@@ -137,7 +140,10 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
   - Decision: The agent was not given a clipboard-writing tool (attack that swaps a copied IBAN or wallet address)
 - [x] Keep the screen on while the app is open (`expo-keep-awake`)
 - [x] Block screenshots and the app switcher preview in private tabs (`expo-screen-capture`)
-- [ ] File download support
+- [x] File download support: iOS saves into the app's own Downloads folder (the page fetches the file with the site's
+  cookies, so downloads behind a login work) with a Downloads screen (tap to share or save to Files, delete); Android hands them to
+  the system download manager with the site's cookies (`src/device/download.ts`, `src/components/DownloadsScreen.tsx`)
+  - [ ] iOS: progress and cancel while a file downloads (today it appears in the list when it is finished)
 - [x] Before submitting to the stores: review the legacy storage permissions (`READ_EXTERNAL_STORAGE`, `READ_MEDIA_VISUAL_USER_SELECTED`) that the `expo-media-library` plugin adds on Android
   - Saving is add-only: on Android 11+ it goes through MediaStore with no permission; on Android 10 and older it needs `WRITE_EXTERNAL_STORAGE`, now declared only up to API 29 (`plugins/withLegacyStorageWrite.js`; it also covers WebView downloads on Android 9 and older). `READ_EXTERNAL_STORAGE`, `READ_MEDIA_IMAGES` and `READ_MEDIA_VISUAL_USER_SELECTED` are blocked. Full list: `docs/permissions.md`
 - [x] Permission audit: every usage key and Android permission matches a feature (`docs/permissions.md`); microphone key only for videos recorded for upload fields; unused push, badge, install referrer and overlay permissions blocked; privacy manifest with the libraries' required-reason APIs
@@ -145,8 +151,9 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
 - [ ] Android upload fields with `capture` (e.g. "take a photo" buttons) do nothing until Qutai holds `CAMERA`: react-native-webview leaves the camera out while the declared permission isn't granted. Ask for the camera there (or fall back to the file picker)
 - [ ] Not verified on a device yet: saving a screenshot on Android 10 (asks for storage) and 11+ (asks nothing); a download on Android 9; recording a video with sound in an upload field on iOS (microphone prompt, no crash); `getUserMedia` refused on both platforms; Face ID / calendar / location prompts show the Turkish strings on a Turkish device
 - [ ] Before the first Play upload: check the release merged manifest (`android/app/build/intermediates/merged_manifest/release/`) against `docs/permissions.md`; libraries' permissions are only merged by Gradle
-- [ ] Later: camera and QR, calendar, email and SMS drafts, biometric authentication, haptics (location: done, below)
-- [ ] Security: tools that send data out (location, etc.) ask for user confirmation every time; clipboard reading and contacts are not given as tools. An iOS usage description string in `app.json` for each permission
+- [x] Camera and QR (`src/components/QrScanner.tsx`, `QrCodeSheet.tsx`), calendar (below), email drafts (`draft_email`), biometric authentication (`src/device/biometric.ts`), haptics (`src/device/haptics.ts`), location (below)
+  - [ ] SMS drafts (not started)
+- [x] Security: tools that send data out or write to the phone ask for confirmation every time (`get_location`, the calendar, reminder and notification tools, whatever the "ask before actions" setting; `src/agent/executeTool.ts`); clipboard reading and contacts are not given as tools. Every iOS usage description is set in `app.json` through the config plugins and translated in `locales/` (`docs/permissions.md`)
 - [x] Calendar, reminders and notifications: the assistant can put things on the user's calendar and set reminders
   - [x] Example: after buying a cinema ticket or booking anything with a time, the assistant offers "Shall I remind you?" (via `ask_user`) and, if yes, adds a calendar event and/or a reminder with an alert before it (system prompt)
   - [x] Tools: `add_calendar_event` (title, start, end, location, notes, alert), `add_reminder` (iOS Reminders; on Android a calendar event with an alarm), `schedule_notification` (a local notification from Qutai itself) (`src/agent/scheduling.ts`, `src/device/calendar.ts`, `src/device/notifications.ts`)
@@ -170,21 +177,88 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
   - [x] Decide what happens when a tab leaves or joins a group, a group is dissolved or its last tab closes: joining, the group's chat wins (a new group takes over its first tab's chat); leaving, the chat stays with the group and the tab gets its own back; dissolving, the chat moves to the active (or first) tab; the last tab closing keeps it like a closed tab's chat, so reopening the tab brings it back
   - [x] Saved chats are keyed by tab `uid` today (`src/storage/chat.ts`): add group keys and migrate (`chat:group:<id>`; on upgrade a group takes the chat of one of its tabs, the one with the newest messages)
   - [x] Incognito groups still never write to disk
-- [x] "Look at the source code": the assistant tries to open `view-source:` URLs, which the WebView in Expo Go can't show. Read the source from the DOM instead (e.g. a `read_source` tool returning `document.documentElement.outerHTML`, split into chunks like `read_page`; or scripts and styles on request), and make `navigate` refuse `view-source:` with a hint to use it. Mention it in the system prompt
+  - [ ] Known limitation: when a group is founded on a tab that hasn't been shown since the app started (its
+    conversation not loaded yet) and a tab with a conversation then joins, the joining tab's conversation is hidden
+    behind the group's empty one until it leaves the group (`Browser.joinGroupChat` treats a conversation that isn't
+    loaded as not blank)
+- [x] "Look at the source code": the assistant tries to open `view-source:` URLs, which the WebView can't show. Read the source from the DOM instead (e.g. a `read_source` tool returning `document.documentElement.outerHTML`, split into chunks like `read_page`; or scripts and styles on request), and make `navigate` refuse `view-source:` with a hint to use it. Mention it in the system prompt
 
 ## Other
 
 - [ ] Before release: legal review of the Privacy Policy and Terms of Use (`src/legal/documents.ts`; if the text changes, `LEGAL_VERSION` must be bumped), add a contact address
 - [ ] After release: `ios.appStoreUrl` and `android.playStoreUrl` in `app.json` (so 'Rate Qutai' can open the store page)
 - [ ] App icon: a 1024 px PNG should be generated from `src/ui/markGeometry.ts` (the script that draws it with CanvasKit is ready; see design notes)
-- [ ] To try on the phone (added in this round): first-launch onboarding (every step, back, opening the terms, the default apps screen on Android), aurora (light/dark), logo animation and with 'Animate the logo' off, 'Ask Qutai' in the menu when the Qutai button is hidden, pull to refresh (pages with inner scroll areas, maps), 'Open in another app?' not appearing on its own on pages like Google Play, tables in chat, undo clear in the address bar, chat draft after closing and reopening the app, force zoom, Google sign-in and verification pages on Android (new user agent), tab groups (windows opened by the page, the assistant's close_tabs), crash screen, screen not dimming
-- [ ] The Expo server must be restarted with `npx expo start -c` after installing new packages with native/Babel plugins (Reanimated, Worklets) (otherwise a 'bytecode of undefined' error)
+- [ ] The development server must be restarted with `npx expo start -c` after installing new packages with native/Babel plugins (Reanimated, Worklets) (otherwise a 'bytecode of undefined' error)
 
 - [ ] Before submitting to the stores, AI search terms: Gemini's search suggestions box is now shown below the response (check on a device that it follows Google's display rules); Anthropic and OpenAI require citations to be shown to the user in a clickable way (done with source cards, should be confirmed legally)
-- [ ] Test on a real device: keyboard behavior (especially Android), tab thumbnails, private mode, Android back button and back gesture, PDF, saving to the gallery (especially Android in Expo Go), read aloud (on iOS there is no sound in silent mode), screenshot blocking in private tabs, session restore (by force-closing and reopening the app), date formats on the history/bookmarks screen (Hermes Intl), external app links (tel:, mailto:, WhatsApp, Android intent://), error page (airplane mode), tapping the address bar suggestion list (with the keyboard open), iOS paste button, find in page bar, desktop site (iOS contentMode, Android viewport), text size on iOS (-webkit-text-size-adjust), printing, long-press menu (not opening while scrolling, a short tap opening the link, the system menu not appearing on Android), saving images (on sites that require sign-in), tab sleeping and tabs reloading after a memory warning, selected text bar (not clashing with the system copy menu, disappearing when the selection is cleared), quick action chips, markdown responses (tables, code blocks, opening links), per-tab and per-group chat (when switching tabs, when closing and reopening the app, when reopening a closed tab, a tab joining or leaving a group, ungrouping, closing a group's last tab, upgrading with existing grouped chats), memory (use in form filling, editing/deleting from Settings), option buttons (fading after selection), source cards (switching to an open tab), AI search (real keys with all three providers; search rows and citation sources), read_tab (reading background and sleeping tabs, especially off-screen WebViews on iOS), tab comparison mode, streaming responses (scrolling on long responses), site permissions and 'always allow' in the confirmation dialog, activity history, history search, email draft (phones with and without an account set up), deep research and report PDF, click_at (map/canvas), Gemini search suggestions box, file downloads (iOS list, Android notification; on sites that require sign-in), cookie banner hiding and ad blocking (on real sites, are any sites broken), dark theme (app, inverted sites on iOS, Android force-dark), bottom address bar (with the keyboard, suggestion list), switching tabs by swiping on the address bar, haptics, tab groups and dragging (especially long-press-drag on Android), clear data, HTTPS-only downgrade warning, app and private tab lock (returning from the background), QR scanning and sharing, offline pages, full-screen video, reader mode (news sites, blogs, Wikipedia; lazy images; the address bar icon on SPA navigations; links leaving it; find in page and the selection bar in it; Android back; read aloud highlighting and pause/resume on both platforms, TalkBack headings; large system font), full-page screenshot and PDF from screenshots (seams between screens, fixed and sticky headers, scrollbars, cancel, endless feeds, very long pages split into several images), bookmark folders (create, rename, move, delete with contents; dialogs with the keyboard open; Android back while a dialog is open) and importing/exporting bookmark files (a real Chrome export with thousands of entries, picking from Files/Drive/email attachments, the share sheet for export, the new development build), "What was sent to the AI" (every kind of item appears with the right site and size, screenshots' thumbnails, "Show all" on a long page text, incognito entries gone after restarting, the per-conversation filter after a tab joins a group, clearing it from Clear browsing data), encrypted backup (how long "Encrypting…" takes on a mid-range Android phone and whether the screen stays responsive, a backup with years of history, exporting on iOS and importing on Android and back, wrong password, merge twice, replace, the app reloading afterwards with the app lock on, an older build saying export needs a newer version), VoiceOver/TalkBack and large text
 - [ ] End-to-end test with real API keys on all three providers
-- [ ] Clicking by coordinates (for canvas, maps and image-heavy sites; together with the screenshot tool)
+- [x] Clicking by coordinates (for canvas, maps and image-heavy sites; together with the screenshot tool): `click_at` on a point of the latest `view_screenshot`
 - [ ] Running in the background: a foreground service for Android or a server-side browser (decision pending)
 - [x] Streaming responses (Anthropic and OpenAI)
 - [ ] Streaming for Gemini: once it is verified that thought signatures are rebuilt exactly from the stream chunks
-- [x] Storing chat history (per tab, persistent)
+- [x] Storing chat history (per tab, or per tab group; persistent)
+
+## To try on the phone
+
+Nothing here has been run on a device yet. The "Not verified on a device yet" items above list the
+platform-specific details for downloads, permissions, the calendar tools and location.
+
+- [ ] First, a new development build (`npx expo run:ios|android` or `npx eas-cli build --profile development`):
+  `expo-calendar`, `expo-notifications`, `expo-document-picker`, `expo-location` and `expo-crypto` were added after
+  the last one. Without it the calendar, reminder and notification tools, location (for sites and `get_location`),
+  bookmark import, and backup export and import report that a newer build is needed instead of working
+
+### Browsing
+- [ ] Keyboard behavior (especially Android); tapping the address bar suggestion list with the keyboard open; iOS paste button; undo clear in the address bar
+- [ ] Bottom address bar (with the keyboard, suggestion list); switching tabs by swiping on the address bar
+- [ ] Android back button and back gesture; session restore (by force-closing and reopening the app)
+- [ ] External app links (tel:, mailto:, WhatsApp, Android intent://); 'Open in another app?' not appearing on its own on pages like Google Play
+- [ ] Error page (airplane mode); HTTPS-only downgrade warning; Google sign-in and verification pages on Android (new user agent)
+- [ ] Pull to refresh (pages with inner scroll areas, maps); force zoom; full-screen video
+- [ ] Find in page bar; desktop site (iOS contentMode, Android viewport); text size on iOS (-webkit-text-size-adjust)
+- [ ] Long-press menu (not opening while scrolling, a short tap opening the link, the system menu not appearing on Android); saving images (on sites that require sign-in); selected text bar (not clashing with the system copy menu, disappearing when the selection is cleared)
+- [ ] Cookie banner hiding and ad blocking on real sites (are any sites broken)
+- [ ] File downloads (iOS list, Android notification; on sites that require sign-in)
+- [ ] PDF and printing; full-page screenshot and PDF from screenshots (long pages, seams between screens, fixed and sticky headers, scrollbars, cancel, endless feeds, very long pages split into several images)
+- [ ] Reader mode on several kinds of article (news sites, blogs, Wikipedia; lazy images; the address bar icon on SPA navigations; links leaving it; find in page and the selection bar in it; Android back; large system font) and its read-aloud highlight (pause/resume on both platforms)
+- [ ] Offline pages; history search; date formats on the history/bookmarks screen (Hermes Intl)
+- [ ] Bookmark folders (create, rename, move, delete with contents; dialogs with the keyboard open; Android back while a dialog is open) and importing/exporting bookmark files (a real Chrome export with thousands of entries, picking from Files/Drive/email attachments, the share sheet for export)
+- [ ] QR scanning and sharing
+
+### Tabs and groups
+- [ ] Tab thumbnails; tab sleeping (more than five tabs) and tabs reloading after a memory warning
+- [ ] Tab groups and dragging (especially long-press-drag on Android); windows opened by the page; the assistant's close_tabs
+- [ ] A group's close icon: "Remove group, keep tabs open" and "Close all tabs in the group", then undo from the undo bar (name, colour, tabs and conversation come back)
+- [ ] Tab comparison mode
+
+### Assistant and tools
+- [ ] Per-tab chat: switching tabs, closing and reopening the app, reopening a closed tab
+- [ ] Group conversations: a tab joining a group and leaving it, ungrouping, closing a group's last tab and reopening it, the conversation coming back after restarting the app, and the database migration on an existing install with grouped tabs that already have chats
+- [ ] Quick action chips; streaming responses (scrolling on long responses); markdown responses (tables, code blocks, opening links); tables in chat; option buttons (fading after selection); chat draft after closing and reopening the app; 'Ask Qutai' in the menu when the Qutai button is hidden
+- [ ] Source cards (switching to an open tab); AI search with real keys on all three providers (search rows and citation sources); Gemini search suggestions box
+- [ ] Memory (use in form filling, editing/deleting from Settings); activity history; site permissions and 'always allow' in the confirmation dialog
+- [ ] read_tab (reading background and sleeping tabs, especially off-screen WebViews on iOS); click_at (map, canvas); deep research and report PDF; email draft (phones with and without an account set up)
+- [ ] `read_source` on a large page (chunks, a CSS selector for scripts or styles); `navigate` refusing `view-source:`
+- [ ] `add_calendar_event`, `add_reminder`, `schedule_notification`: the confirmation shows exactly what will be added, permissions asked on first use, refused after an incognito tab, the notification arriving with the app closed
+- [ ] `open_settings` and "Open settings" after a denied permission (Qutai's own page, notifications, the default browser on iPhone), and the task carrying on after coming back
+- [ ] `offer_call`: the Call card, the dialer opening on both platforms (iOS asks first), a tablet that can't place calls
+- [ ] `get_location`: the confirmation naming the provider and the site, refused in incognito conversations, "near me" questions
+
+### Device features
+- [ ] Saving screenshots and images to the gallery (Android 10 asks for storage, 11+ asks nothing)
+- [ ] Read aloud (on iOS there is no sound in silent mode); haptics; screen not dimming
+- [ ] Encrypted backup: export on one phone and import on another (iOS to Android and back); how long "Encrypting…" (the scrypt key derivation) takes on a mid-range Android phone and whether the screen stays responsive; a backup with years of history; wrong password; merge twice; replace; the app reloading afterwards with the app lock on; an older build saying export needs a newer version
+
+### Privacy and permissions
+- [ ] Private mode; screenshot blocking in private tabs; app and private tab lock (returning from the background); clear data
+- [ ] Geolocation on a maps site (Google Maps, OpenStreetMap): deny, allow once, always allow, block from the site's permissions, an incognito tab, `watchPosition` while walking, approximate location, pages that ask on load on Android (early-script timing), the pin in the address bar
+- [ ] Camera and microphone refused for web pages (`getUserMedia`) on both platforms; recording a video with sound in an upload field on iOS (microphone prompt, no crash)
+- [ ] "What was sent to the AI": every kind of item appears with the right site and size, screenshots' thumbnails, "Show all" on a long page text, incognito entries gone after restarting, the per-conversation filter after a tab joins a group, clearing it from Clear browsing data
+- [ ] Face ID, calendar and location prompts show the Turkish strings on a Turkish device
+
+### Appearance and accessibility
+- [ ] First-launch onboarding (every step, back, opening the terms, the default apps screen on Android); aurora (light/dark); logo animation and with 'Animate the logo' off; crash screen
+- [ ] Dark theme (app, inverted sites on iOS, Android force-dark)
+- [ ] Themed dialogs over every modal screen and sheet (Settings, Library, Downloads, the lock screen…), with the keyboard open, and the iOS retry when another sheet is still sliding away
+- [ ] Sheets and modal screens inside the safe areas on Android: portrait, landscape, with the keyboard open, large text
+- [ ] VoiceOver/TalkBack (TalkBack headings in reader mode) and large text

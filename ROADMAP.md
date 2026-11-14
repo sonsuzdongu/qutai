@@ -3,18 +3,21 @@
 Source: the "Mobile Web Browser – Feature Inventory" document. Each item was compared with Qutai's current state
 and classified by the infrastructure it can be built with. For task-level tracking see `TODO.md`.
 
-**Status:** ✅ done · 🟡 partial · ⬜ missing
-**Infrastructure:** **Go** = can be done in Expo Go · **Build** = requires our own build (development build) ·
-**Server** = requires a backend · **✕** = not possible or not recommended with the WebView architecture
+**Status:** ✅ done (implemented in code; device testing is tracked in `TODO.md`, "To try on the phone") · 🟡 partial ·
+⬜ missing
+**Infrastructure:** **Go** = JavaScript only, with the native modules the app already has (the name comes from the
+Expo Go days) · **Build** = needs a new native module or native code in our build · **Server** = requires a backend ·
+**✕** = not possible or not recommended with the WebView architecture
 **Size:** S = a few hours · M = 1–2 days · L = several days or more
+Infrastructure and size are given only for what is still missing or partial; done rows leave them empty.
 
 ## Key finding
 
-The document suggests the classic order: browser first, then modern features, AI last. Qutai came the opposite
-way; the AI agent (the core of Phase 3) is ready, but **some basic browser expectations are missing**.
-The biggest gap is **persistence**: when the app closes, tabs, chat and browsing data are lost. History,
-bookmarks and autocomplete depend on this too. So the plan is built on completing this foundation first and then
-putting the AI experience front and center.
+The browser foundation and the AI experience are both in place: data is stored on the device, the everyday browser
+features are built, and the assistant reads, clicks (also by coordinates), uses other tabs and can add to the
+calendar, share a location or offer a call. What is left is mostly what needs a server (accounts, sync, Qutai
+credits, background tasks), native work in our own build (voice commands, network-level blocking, Android private
+tab isolation, per-site camera and microphone), and testing on real devices: most of it has never run on a phone.
 
 ---
 
@@ -34,44 +37,44 @@ putting the AI experience front and center.
 | Live suggestions from the search engine | ✅ | | On by default, can be turned off in settings; off in private mode. Bing has no suggestion service |
 | Search engine choice | ✅ | | Google, DuckDuckGo, Bing, Yandex |
 | Start page and speed dial | ✅ | | New tab screen: most visited, bookmarks, recent visits, Ask Qutai |
-| Paste and go, clearing the field | ✅ | | System paste button on iOS |
+| Paste and go, clearing the field | ✅ | | System paste button on iOS; clearing can be undone |
 | HTTPS indicator, domain info | ✅ | | 🔒 / ⚠︎ Not secure; WebView cannot access certificate details |
-| Find in page | ⬜ | Go · M | No WebView API; highlighting via page script |
-| Desktop site | ⬜ | Go · S | Per-tab `userAgent` + reload |
+| Find in page | ✅ | | Highlighting via page script (`FindBar`) |
+| Desktop site | ✅ | | Per tab, from the page menu (`src/browser/desktopMode.ts`) |
 | Reader mode | ✅ | | Readability-style extraction in the page script, shown in a script-free WebView over the page; light/dark/sepia, serif/sans, easier-reading spacing; read aloud with the paragraph highlighted |
-| QR code scanning / generation | ⬜ | Go · S | `expo-camera`; pure JS library for generation |
+| QR code scanning / generation | ✅ | | `expo-camera` scanner; generation with `qrcode-generator` |
 | Voice search | ⬜ | Build | Decision: the device's speech recognition engine |
-| Download manager | ⬜ | Go/Build · L | See section 6 |
-| Detecting natural-language AI commands | 🟡 | Go · M | "Ask Qutai" is at the top of the suggestion list; automatic detection is Phase 2 |
+| Download manager | 🟡 | Go · S | See section 6: no progress or cancel on iOS |
+| Detecting natural-language AI commands | 🟡 | – | "Ask Qutai" is at the top of the suggestion list; automatic detection will not be done (smart address bar decision) |
 
 ### Tab management (section 3)
 
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
 | Grid view, close, close all, private tabs | ✅ | | |
-| Reopening a closed tab | ✅ | | Undo bar + recently closed list |
-| Search across tabs | ⬜ | Go · S | |
-| Tab groups, naming, moving | ⬜ | Go · M | |
-| Drag to reorder | ⬜ | Go · M | `react-native-gesture-handler` + `reanimated` |
-| Putting unused tabs to sleep | ⬜ | Go · M | **Important:** every tab is currently an open WebView, a memory problem. A sleeping tab is kept as a URL and thumbnail |
-| Cross-device sync | ⬜ | Server · L | Together with the account system |
+| Reopening a closed tab | ✅ | | Undo bar + recently closed list; closing a whole group can be undone |
+| Search across tabs | ✅ | | `src/browser/tabSearch.ts` |
+| Tab groups, naming, moving | ✅ | | Coloured, nameable, collapsible, saved with the session; a group shares one assistant conversation; its close icon offers "ungroup" or "close all" |
+| Drag to reorder | ✅ | | Also drag into a group (`src/components/tabDrag.ts`) |
+| Putting unused tabs to sleep | ✅ | | At most 5 open WebViews (`MAX_AWAKE_TABS`); a sleeping tab is kept as a URL and thumbnail; private tabs are not put to sleep |
+| Cross-device sync | ⬜ | Server · L | Together with the account system; the encrypted backup file covers moving to a new phone until then |
 
 ### Privacy and security (section 4)
 
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
-| Private browsing | 🟡 | | Full on iOS; Build needed for cookie isolation on Android |
+| Private browsing | 🟡 | Build · M | Full on iOS; cookie isolation on Android needs the WebView profile API |
 | Screenshot restriction in private mode | ✅ | | |
-| Hiding cookie banners and ad slots (visual) | ⬜ | Go · M | CSS injection into the page (EasyList cosmetic rules) |
-| Network-level ad / tracker blocking | ⬜ | Build · L | iOS: WKContentRuleList; Android: request interception. WebView does not expose this |
-| Clearing history and data | ⬜ | Go/Build · M | History and cache in Go; clearing cookies requires a native module |
-| Cookie management, third-party cookies | ⬜ | Go/Build · S–M | Android has `thirdPartyCookiesEnabled`; iOS WebKit already blocks them |
+| Hiding cookie banners and ad slots (visual) | ✅ | | CSS injection into the page (`src/content/`) |
+| Network-level ad / tracker blocking | 🟡 | Build · L | URL-based blocking from a short built-in list: navigations, iframes, pop-ups and requests added by scripts. Resources hard-coded in the HTML and full filter lists need native blocking (iOS WKContentRuleList, Android request interception) |
+| Clearing history and data | 🟡 | Build · S | By time range: history, cache, recently closed, chats, activity, "sent to the AI", downloads, saved pages. Clearing cookies needs a native module |
+| Cookie management, third-party cookies | 🟡 | Build · M | Third-party cookies blocked by default (Android setting; iOS WebKit blocks them anyway). No per-site cookie list or deletion |
 | HTTPS indicator | ✅ | | |
-| HTTPS-only | ⬜ | Go · S | `http` → `https` upgrade on main-frame navigations; subresources out of scope |
+| HTTPS-only | ✅ | | `http` → `https` upgrade on main-frame navigations, with a warning when a site falls back; subresources out of scope |
 | Malicious site warning | 🟡 | Server · M | Android System WebView has its own Safe Browsing protection; Safe Browsing API for a full solution |
-| Site permissions (camera, microphone, location) | 🟡 | Build · M | Location done: per-site ask / allow / block, answered by the app (`src/browser/geolocation.ts`), frames refused. Camera and microphone not handled yet |
-| Password manager, form filling | ⬜ | ✕ / Go | **I do not recommend writing our own password manager.** Relying on iOS and Android system autofill is safer; an AI-powered form assistant only for info like address and name |
-| Biometric lock | ⬜ | Go · S | `expo-local-authentication`; also for locking private tabs |
+| Site permissions (camera, microphone, location) | 🟡 | Build · M | Location done: per-site ask / allow / block, answered by the app (`src/browser/geolocation.ts`), frames refused. Camera and microphone are refused for every web page; a per-site prompt needs a native per-origin hook |
+| Password manager, form filling | ⬜ | ✕ / Go | **I do not recommend writing our own password manager.** Relying on iOS and Android system autofill is safer; the assistant fills forms from its memory (name, address) |
+| Biometric lock | ✅ | | `expo-local-authentication`; app and private tabs; Face ID on iOS |
 | DNS over HTTPS | ⬜ | ✕ | WebView uses the system DNS; the user can turn on the OS "Private DNS" setting |
 
 ### Content and media (section 5)
@@ -79,75 +82,80 @@ putting the AI experience front and center.
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
 | Save as PDF | ✅ | | From the page's HTML, or from full-page screenshots for very dynamic pages |
-| Printing | ⬜ | Go · S | `Print.printAsync` with the same page copy |
-| Offline saving | ⬜ | Go · M | The page copy written for PDF is saved to a file |
-| Reader mode | ✅ | | Page menu and an address bar icon on article pages; see Phase 2 item 7 |
-| Text size, zoom | ⬜ | Go · S | Android `textZoom`; via CSS on iOS |
-| Translation | ⬜ | Go · M | With AI, in place without breaking the layout |
-| Select text to share, ask | ⬜ | Go · M | Native menu on iOS (`menuItems`); page script + on-screen button on Android |
-| Open link in new tab, save image | ⬜ | Go · M | Long-press menu via page script |
+| Printing | ✅ | | `Print.printAsync` with the same page copy |
+| Offline saving | ✅ | | Saved pages screen (`src/device/offline.ts`) |
+| Reader mode | ✅ | | Page menu and an address bar icon on article pages; see Phase 4 |
+| Text size, zoom | ✅ | | Text size sheet (Android `textZoom`, CSS on iOS); force zoom |
+| Translation | ⬜ | Go · M | In place without breaking the layout: postponed (decision). The Translate chip translates in the chat |
+| Select text to share, ask | ✅ | | Page script and a strip at the bottom of the page on both platforms |
+| Open link in new tab, save image | ✅ | | Long-press menu via page script |
 | Open in external app (tel:, mailto:, app links) | ✅ | | By asking the user; iframes cannot open apps; Android `intent://` and web fallback supported |
 | Error page (no connection, site not found) | ✅ | | Explanation by error type and "Try again"; in two languages |
-| Fullscreen video | 🟡 | Go · S | Default on iOS; `allowsFullscreenVideo` must be enabled on Android |
+| Fullscreen video | ✅ | | Default on iOS; `allowsFullscreenVideo` on Android |
 | Picture-in-Picture | ⬜ | Go/Build | Feature exists on iOS; native for Android |
 | Background audio | ⬜ | Build | iOS background audio mode setting |
-| File and image download | ⬜ | See section 6 | |
+| File and image download | ✅ | | See section 6; images are saved to Photos from the long-press menu |
 
 ### Download manager (section 6)
 
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
-| Download, list, open, share | ⬜ | Go · L | iOS: `onFileDownload` + `expo-file-system` download tasks (progress, cancel). Android: system download manager |
-| Progress, pause / resume, cancel | ⬜ | Go/Build | Possible on iOS; not under the app's control on Android |
-| Downloads requiring login | ⬜ | Build | Needs native access to session cookies |
-| Choosing download location | ⬜ | Go · S | Share menu / Android storage access |
+| Download, list, open, share | ✅ | | iOS: the app's own Downloads folder and a Downloads screen (share, save to Files, delete). Android: the system download manager |
+| Progress, pause / resume, cancel | 🟡 | Go · S | Android: the system download manager's notification. iOS: a file appears when it is finished; no progress or cancel |
+| Downloads requiring login | ✅ | | iOS: the page fetches the file with the site's cookies; Android's download manager gets the cookies |
+| Choosing download location | ✅ | | iOS: share sheet / Save to Files; Android: the system Downloads folder |
 
 ### User experience (section 7)
 
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
-| Dark / light / system theme | ⬜ | Go · M | App UI + dark mode for sites on Android (`forceDarkOn`) |
-| Bottom / top toolbar choice | ⬜ | Go · M | Bottom bar for one-handed use |
-| Gestures | 🟡 | Go · M | iOS edge swipe and Android back exist; no swiping on the address bar to switch tabs |
-| Haptic feedback | ⬜ | Go · S | |
+| Dark / light / system theme | ✅ | | App UI + dark mode for sites (Android `forceDarkOn`, inverted pages on iOS) |
+| Bottom / top toolbar choice | ✅ | | Address bar at the top or bottom (Settings) |
+| Gestures | ✅ | | iOS edge swipe, Android back, swiping on the address bar to switch tabs, pull to refresh |
+| Haptic feedback | ✅ | | `expo-haptics` |
 | Language selection | ✅ | | Turkish and English, matches the device language; iOS and Android per-app language settings supported |
-| Accessibility | 🟡 | Go · M | Labels partly present; no screen reader testing done |
-| Being the default browser | ⬜ | Build · M | Android: intent filters. iOS: requires a special entitlement from Apple |
+| Accessibility | 🟡 | Go · M | Reviewed in code (labels, announcements, reduce motion, text scaling, 44pt targets); no screen reader testing on a device yet |
+| Being the default browser | 🟡 | Build · M | Android: intent filters for http/https, and a shortcut to the default apps settings. iOS: requires a special entitlement from Apple |
 | Home screen widgets | ⬜ | Build | `expo-widgets` |
 
 ### Account and sync (section 8)
 
 All **Server · L**. Should be handled together with the account infrastructure to be built for the credit system. Suggestion: history,
 tabs and bookmarks should sync **end-to-end encrypted**; the server should not be able to see the content. Password sync
-should not be done; leave it to the system password manager.
+should not be done; leave it to the system password manager. Until then, an encrypted backup file (Settings › Backup)
+moves everything to another phone.
 
 ### AI features (sections 9–10)
 
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
-| Asking about the page, summarizing, open tab context | ✅ | | |
-| Web agent, multi-step tasks, information gathering | ✅ | | |
+| Asking about the page, summarizing, open tab context | ✅ | | Also the page's source (`read_source`) |
+| Web agent, multi-step tasks, information gathering | ✅ | | Clicks by `ref`, or by coordinates on a screenshot (`click_at`) |
 | Confirmation and cancel for agent actions | ✅ | | Confirmation for sensitive actions + "confirm every action" mode + stop |
-| Follow-up questions | ✅ | | Chat history is kept |
+| Follow-up questions | ✅ | | Chat history is kept, per tab or per tab group |
 | Voice assistant | 🟡 | Build | Read-aloud exists; voice commands in Build |
-| Multi-tab analysis | 🟡 | Go · M | The agent can switch between tabs; missing: reading without switching to the tab (`read_tab`) and a "compare these tabs" selection |
-| Citing sources, tabs used | ⬜ | Go · M | Clickable source links in the answer + list of tabs used; needs link support in chat |
-| AI search (answers with sources) | ⬜ | Go · M | Providers' own web search tools (Anthropic web search, OpenAI web search, Gemini Google Search grounding). No need for our own search infrastructure; there is an extra charge per search |
-| Deep research | ⬜ | Go · L | Existing agent + multiple sources + synthesis; Server later because of the background problem with long tasks |
+| Multi-tab analysis | ✅ | | `read_tab` reads other tabs without switching; "compare selected tabs" in the tab switcher |
+| Citing sources, tabs used | ✅ | | Source cards below the answer (switch to the tab if open) |
+| AI search (answers with sources) | ✅ | | Providers' own web search tools; can be turned off in settings. There is an extra charge per search |
+| Deep research | ✅ | | In the foreground with the existing agent; markdown report with sources, PDF. In the background: Server |
 | Smart address bar | ✖️ | – | Will not be done, per user decision |
-| Shopping and travel assistant | 🟡 | Go · M | The agent can do this; missing: ready-made flows and a comparison table |
-| Form assistant | 🟡 | Go · M | The agent can fill forms; no profile (name, address) stored on the device |
-| Email assistant | ⬜ | Go · S | Draft with `expo-mail-composer`; the user presses the send button |
-| Searching history in natural language | ⬜ | Go · M | Depends on history; search is done on the device, only matching results go to the model |
+| Shopping and travel assistant | 🟡 | Go · M | The agent can do this and adds bookings to the calendar; missing: ready-made flows and a comparison table |
+| Form assistant | ✅ | | The agent fills forms, using what it keeps in memory (name, address); no passwords, cards or codes |
+| Email assistant | ✅ | | Draft with `expo-mail-composer` (`draft_email`); the user presses the send button |
+| Searching history in natural language | ✅ | | `search_history`: searched on the device, only matching results go to the model |
 | Action preview and undo | 🟡 | | Preview and cancel exist. **Actions on the web generally cannot be undone** (a submitted form, a completed payment). The right approach is confirming the action beforehand; undo is only possible for browser actions (closing tabs, navigation) |
-| Action history | ⬜ | Go · S | A log of what the agent did on which site |
-| Per-site agent permissions | ⬜ | Go · M | Not in the list, but the most effective protection against prompt injection: "May click on this site", "do nothing on banking sites" |
+| Action history | ✅ | | What the agent did on which site, 30 days; plus "What was sent to the AI" |
+| Per-site agent permissions | ✅ | | Default, always allow, ask on every action, read only, blocked |
+| Device actions | ✅ | | Calendar events, reminders, local notifications, location (`get_location`), a Call button (`offer_call`), opening the phone's settings (`open_settings`); each confirmed or tapped by the user |
 
 ---
 
 ## 2. Phases
 
 Ordering criteria: the gap the user will notice most → least effort → infrastructure dependency.
+
+The app has since moved from Expo Go to a development build (several features use native modules Expo Go doesn't
+have); "Expo Go" in the phase titles below is historical.
 
 ### Phase 1 – Browser foundation (Expo Go)
 
@@ -189,7 +197,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 3. ✅ Tab groups (colored, nameable, collapsible; saved with the session), drag to reorder and add to group
 4. ✅ Download manager (iOS: downloading with cookies and a Downloads screen; Android: the system download manager)
 5. ✅ Clearing browsing data (by time range; cookies in Phase 4), HTTPS-only, third-party cookie setting
-6. ✅ Biometric lock (app and private tabs; device passcode instead of iOS Face ID in Expo Go), QR scanning/generation
+6. ✅ Biometric lock (app and private tabs; Face ID on iOS in our own build, the device passcode as a fallback), QR scanning/generation
 7. ✅ Offline saving and a Saved pages screen, fullscreen video (Android)
 8. ✅ Accessibility review (screen reader announcements, reduce motion, text scaling limits, VoiceOver focus)
 
@@ -205,11 +213,12 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 
 ### Phase 4 – Things that require our own build
 
-Merged with the "Once we switch to our own build" section in `TODO.md`:
+Merged with the "Our own build (development build)" section in `TODO.md`:
 voice commands, Android private tab isolation, network-level ad and tracker blocking (with URL lists; iOS
-WKContentRuleList, Android request interception), cookie management and cookie deletion, Face ID on iOS, downloads
-requiring login, Android PiP, background audio, being the default browser, widgets, "Share with Qutai",
-app verification.
+WKContentRuleList, Android request interception), cookie management and cookie deletion, per-site camera and
+microphone for web pages, Android PiP, background audio, being the default browser on iOS, widgets, "Share with
+Qutai", app verification. Done since: Face ID on iOS, downloads requiring login (the page's own cookies on iOS, the
+system download manager on Android), Android default browser (intent filters).
 
 Added from Comet reviews:
 - Ready-made filter lists for ad blocking (EasyList etc.) and letting the user add lists
@@ -265,13 +274,13 @@ deep research, price and page tracking, Safe Browsing checks.
 
 | Question | Qutai today |
 |---|---|
-| How many taps to reach the AI? | 1 (✦). With the Phase 2 chips and the selected text menu, contextual access also comes down to 1 tap |
-| Single tab or multiple tabs? | Multiple tabs (opening, switching, listing tabs); reading without switching to the tab is Phase 2 |
-| What can the agent complete? | Clicking, typing, selecting, navigating via the DOM, PDF, screenshots, read-aloud. It cannot click inside canvas and maps |
-| How is permission obtained? | Mandatory confirmation for sensitive actions + optional confirmation for every action. Per-site permissions are Phase 2 |
-| Are sources transparent? | Yes: pages read and AI search citations below the answer |
+| How many taps to reach the AI? | 1 (the Q in the address bar). Quick action chips and the selected text bar give contextual access in 1 tap too |
+| Single tab or multiple tabs? | Multiple tabs (opening, switching, listing, closing); `read_tab` reads other tabs without switching; a tab group shares one conversation |
+| What can the agent complete? | Clicking, typing, selecting, navigating via the DOM, clicking by coordinates on a screenshot (canvas, maps), reading the page source, PDF, screenshots (also full page), read-aloud, email drafts; on the phone: calendar events, reminders and notifications, the user's location, a Call button, opening the phone's settings |
+| How is permission obtained? | Mandatory confirmation for sensitive actions + optional confirmation for every action + per-site agent permissions. Calendar, reminder, notification and location tools are confirmed every time; a call needs the user's tap. Sites get location only per site (ask / allow / block) |
+| Are sources transparent? | Yes: pages read and AI search citations below the answer, and "What was sent to the AI" for every request |
 | Free / paid limits | Unlimited with your own key; Qutai credits are planned |
-| iOS / Android differences | Private mode isolation, text selection menu, download and PiP behaviors differ |
+| iOS / Android differences | Private mode isolation, downloads (the app's own folder on iOS, the system download manager on Android), reminders (iOS Reminders, a calendar event with an alarm on Android) and PiP behaviors differ |
 
 ## 5. Decisions
 
