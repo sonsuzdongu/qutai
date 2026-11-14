@@ -56,7 +56,8 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
       .then(async (db) => {
         const [sites, bookmarks, recent] = await Promise.all([
           topSites(db),
-          listBookmarks(db),
+          // Top-level bookmarks only (where the page menu adds them), so a big import doesn't take over.
+          listBookmarks(db, { folderId: null }),
           listHistory(db, { limit: 5 }),
         ]);
         return { sites: sites.length ? sites : defaultSites(), bookmarks: bookmarks.slice(0, 5), recent };

@@ -33,6 +33,8 @@ const ICONS = {
   stopReading: { ios: 'stop.circle', android: 'stop_circle' },
   library: { ios: 'books.vertical', android: 'library_books' },
   bookmarks: { ios: 'book', android: 'bookmarks' },
+  folder: { ios: 'folder', android: 'folder' },
+  newFolder: { ios: 'folder.badge.plus', android: 'create_new_folder' },
   history: { ios: 'clock.arrow.circlepath', android: 'history' },
   savedPages: { ios: 'tray.full', android: 'inventory_2' },
   downloads: { ios: 'arrow.down.circle', android: 'download' },

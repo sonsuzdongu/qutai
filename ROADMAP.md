@@ -28,7 +28,7 @@ putting the AI experience front and center.
 | Multiple tabs, tab switching, private mode | ✅ | | No cookie isolation on Android (see Build) |
 | Back, reload, share, copy URL | ✅ | | |
 | Forward, stop loading | ✅ | | In the icon row at the top of the menu |
-| History, bookmarks, recently closed tabs | ✅ | | `expo-sqlite`; private tabs are not saved |
+| History, bookmarks, recently closed tabs | ✅ | | `expo-sqlite`; private tabs are not saved; bookmark folders, HTML import/export |
 | Session restore (tabs when the app opens) | ✅ | | Restored tabs start asleep and load when opened |
 | Autocomplete from history / bookmarks / most visited | ✅ | | Suggestion list; domain matches first |
 | Live suggestions from the search engine | ✅ | | On by default, can be turned off in settings; off in private mode. Bing has no suggestion service |
@@ -216,7 +216,6 @@ Added from Comet reviews:
 - Voice commands, with the assistant going quiet when the user starts speaking (barge-in)
 - Passwords: instead of our own manager, verify and fix that the system's (Google, iCloud Keychain) autofill works in the WebView
 - Background audio and headphone media keys, site shortcut on the home screen
-- Bookmark folders and importing from Chrome (HTML bookmark file; does not require a build, can also be done in Expo Go)
 - Reader mode (was postponed; should be brought back together with read-aloud for accessibility)
 - iOS default browser: applying for Apple's `com.apple.developer.web-browser` entitlement
 
@@ -225,6 +224,10 @@ Done in the development build:
   (`add_calendar_event`), set a reminder (`add_reminder`: iOS Reminders, on Android a calendar event with an alarm) or
   schedule a local notification (`schedule_notification`). Every write is confirmed with its details; permissions are
   asked on first use; never from incognito conversations. Reading the calendar is not done
+- ✅ Bookmark folders (nested) and importing the HTML bookmark file that Chrome, Firefox, Safari and Edge export, into
+  its own dated folder (duplicates and non-web addresses skipped and counted); exporting in the same format through
+  the share sheet. Uses `expo-document-picker`, which Expo Go includes but an existing development build does not:
+  **a new development build is needed** (an older build says import needs a newer version instead of crashing)
 
 ### Phase 5 – Things that require a server
 

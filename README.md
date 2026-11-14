@@ -6,6 +6,11 @@ tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini m
 Open tabs, history, bookmarks, recently closed tabs and chats are stored on the device (`expo-sqlite`); private tabs
 and chats that touch a private tab save nothing. Each tab has its own chat with Qutai; the tabs of a group share one.
 
+Bookmarks can be sorted into folders (Library › Bookmarks: long-press or ⋯ to rename, move or delete) and imported
+from the HTML file that Chrome, Firefox, Safari and Edge export (on a computer, Chrome's Bookmark manager › ⋮ › Export
+bookmarks); an import lands in its own dated folder and skips addresses that are already bookmarked. Export writes the
+same format, so bookmarks can always be taken to another browser.
+
 The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
 
 From the page menu (⋮) and by asking the agent: save the page as PDF (from its HTML, or from screenshots for pages

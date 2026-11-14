@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   SectionList,
   StyleSheet,
@@ -12,11 +14,39 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { pickBookmarkFile, PickerUnavailableError, shareBookmarkFile } from '../device/bookmarksFile';
+import { bump, success, tick } from '../device/haptics';
 import { t } from '../i18n';
+import { Icon, IconName } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
-import { groupByDay, hostOf, timeLabel } from '../i18n/format';
-import { Bookmark, listBookmarks, removeBookmark } from '../storage/bookmarks';
-import { getDb } from '../storage/db';
+import { formatDate, groupByDay, hostOf, timeLabel } from '../i18n/format';
+import {
+  BookmarkFileError,
+  ParsedFolder,
+  parseBookmarkFile,
+  planImport,
+  serializeBookmarkFile,
+} from '../storage/bookmarkHtml';
+import {
+  allFolders,
+  Bookmark,
+  BookmarkFolder,
+  bookmarkedUrls,
+  createFolder,
+  deleteFolder,
+  exportData,
+  folderContents,
+  FolderEntry,
+  importBookmarks,
+  listBookmarks,
+  listFolders,
+  moveFolder,
+  removeBookmark,
+  renameFolder,
+  updateBookmark,
+} from '../storage/bookmarks';
+import { Db, getDb } from '../storage/db';
+import { ActionSheet, SheetAction } from './ActionSheet';
 import { clearHistory, deleteHistoryEntry, HistoryEntry, listHistory } from '../storage/history';
 
 export type LibraryTab = 'bookmarks' | 'history';
@@ -178,43 +208,651 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
   );
 }
 
+type Dialog =
+  | { kind: 'name'; title: string; initial: string; onSubmit: (name: string) => void }
+  | { kind: 'edit'; bookmark: Bookmark }
+  | {
+      kind: 'move';
+      title: string;
+      current: number | null;
+      /** A folder being moved can't go into itself or its own subfolders. */
+      exclude?: number;
+      onPick: (folderId: number | null) => void;
+    };
+
+type ListItem = { kind: 'folder'; folder: FolderEntry } | { kind: 'bookmark'; bookmark: Bookmark };
+
+// Alerts can't be presented while the action sheet's modal is still sliding away (iOS).
+const afterSheet = (fn: () => void) => setTimeout(fn, 350);
+
 function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) => void }) {
   const styles = useStyles();
-  const [bookmarks, setBookmarks] = useState<Bookmark[] | null>(null);
+  const palette = usePalette();
+  const [folderId, setFolderId] = useState<number | null>(null);
+  const [data, setData] = useState<{ all: BookmarkFolder[]; folders: FolderEntry[]; bookmarks: Bookmark[] } | null>(
+    null,
+  );
+  const [reload, setReload] = useState(0);
+  const [menu, setMenu] = useState<{ title: string; actions: SheetAction[] } | null>(null);
+  const [dialog, setDialog] = useState<Dialog | null>(null);
+  const [busy, setBusy] = useState(false);
+  const searching = query.trim().length > 0;
+  const refresh = () => setReload((n) => n + 1);
 
   useEffect(() => {
     let cancelled = false;
     getDb()
-      .then((db) => listBookmarks(db, { query }))
-      .then((list) => !cancelled && setBookmarks(list))
-      .catch(() => !cancelled && setBookmarks([]));
+      .then(async (db) => {
+        const [all, folders, bookmarks] = await Promise.all([
+          allFolders(db),
+          searching ? Promise.resolve([]) : listFolders(db, folderId),
+          // A search looks through every folder.
+          listBookmarks(db, searching ? { query } : { folderId }),
+        ]);
+        return { all, folders, bookmarks };
+      })
+      .catch(() => ({ all: [], folders: [], bookmarks: [] }))
+      .then((loaded) => {
+        if (cancelled) return;
+        setData(loaded);
+        // The open folder was deleted: back to the top level.
+        if (folderId !== null && !loaded.all.some((f) => f.id === folderId)) setFolderId(null);
+      });
     return () => {
       cancelled = true;
     };
-  }, [query]);
+  }, [query, searching, folderId, reload]);
 
-  const remove = async (bookmark: Bookmark) => {
-    await removeBookmark(await getDb(), bookmark.url);
-    setBookmarks((prev) => prev?.filter((b) => b.url !== bookmark.url) ?? null);
+  const byId = useMemo(() => new Map((data?.all ?? []).map((f) => [f.id, f])), [data]);
+  // The open folder and its parents, outermost first.
+  const path: BookmarkFolder[] = [];
+  for (let id = folderId; id !== null; ) {
+    const folder = byId.get(id);
+    if (!folder || path.includes(folder)) break;
+    path.unshift(folder);
+    id = folder.parentId;
+  }
+  const current = path[path.length - 1];
+  const folderName = (id: number | null) => (id === null ? t('library.bookmarks') : (byId.get(id)?.title ?? ''));
+
+  const run = async (task: (db: Db) => Promise<unknown>) => {
+    try {
+      await task(await getDb());
+    } catch (e) {
+      Alert.alert(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
+    } finally {
+      refresh();
+    }
   };
 
-  if (!bookmarks) return <ActivityIndicator style={styles.footer} />;
-  return (
-    <FlatList
-      data={bookmarks}
-      keyExtractor={(b) => b.url}
-      keyboardShouldPersistTaps="handled"
-      renderItem={({ item }) => (
-        <Row title={item.title} url={item.url} onPress={() => onOpen(item.url)} onRemove={() => remove(item)} />
-      )}
-      ListEmptyComponent={
-        query ? (
-          <Empty title={t('library.noResults')} />
-        ) : (
-          <Empty title={t('library.emptyBookmarks')} hint={t('library.emptyBookmarksHint')} />
-        )
+  const openFolder = (id: number | null) => {
+    tick();
+    setFolderId(id);
+  };
+
+  const newFolder = () =>
+    setDialog({
+      kind: 'name',
+      title: t('library.newFolder'),
+      initial: '',
+      onSubmit: (name) => run((db) => createFolder(db, name, folderId)),
+    });
+
+  const deleteFolderAsking = async (folder: BookmarkFolder) => {
+    const db = await getDb();
+    const contents = await folderContents(db, folder.id);
+    if (!contents.bookmarks && !contents.folders) {
+      await run(() => deleteFolder(db, folder.id));
+      return;
+    }
+    afterSheet(() =>
+      Alert.alert(
+        t('library.deleteFolderConfirm', { name: folder.title }),
+        t('library.deleteFolderContents', contents),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('library.delete'), style: 'destructive', onPress: () => run(() => deleteFolder(db, folder.id)) },
+        ],
+      ),
+    );
+  };
+
+  const folderMenu = (folder: FolderEntry) => {
+    bump();
+    setMenu({
+      title: folder.title,
+      actions: [
+        {
+          label: t('library.rename'),
+          onPress: () =>
+            setDialog({
+              kind: 'name',
+              title: t('library.renameFolder'),
+              initial: folder.title,
+              onSubmit: (name) => run((db) => renameFolder(db, folder.id, name)),
+            }),
+        },
+        {
+          label: t('library.moveTo'),
+          onPress: () =>
+            setDialog({
+              kind: 'move',
+              title: folder.title,
+              current: folder.parentId,
+              exclude: folder.id,
+              onPick: (parentId) => run((db) => moveFolder(db, folder.id, parentId)),
+            }),
+        },
+        { label: t('library.delete'), destructive: true, onPress: () => void deleteFolderAsking(folder) },
+      ],
+    });
+  };
+
+  const bookmarkMenu = (bookmark: Bookmark) => {
+    bump();
+    setMenu({
+      title: bookmark.title || hostOf(bookmark.url),
+      actions: [
+        { label: t('library.open'), onPress: () => onOpen(bookmark.url) },
+        { label: t('library.edit'), onPress: () => setDialog({ kind: 'edit', bookmark }) },
+        {
+          label: t('library.moveTo'),
+          onPress: () =>
+            setDialog({
+              kind: 'move',
+              title: bookmark.title || hostOf(bookmark.url),
+              current: bookmark.folderId,
+              onPick: (id) => run((db) => updateBookmark(db, bookmark.url, { folderId: id })),
+            }),
+        },
+        {
+          label: t('library.delete'),
+          destructive: true,
+          onPress: () => run((db) => removeBookmark(db, bookmark.url)),
+        },
+      ],
+    });
+  };
+
+  const importFile = async () => {
+    let text: string | null;
+    try {
+      text = await pickBookmarkFile();
+    } catch (e) {
+      Alert.alert(
+        t('library.importFailed'),
+        t(e instanceof PickerUnavailableError ? 'library.importNeedsBuild' : 'library.importUnreadable'),
+      );
+      return;
+    }
+    if (text === null) return;
+    setBusy(true);
+    try {
+      let tree: ParsedFolder;
+      try {
+        tree = parseBookmarkFile(text);
+      } catch (e) {
+        if (!(e instanceof BookmarkFileError)) throw e;
+        Alert.alert(
+          t('library.importFailed'),
+          t(e.reason === 'empty' ? 'library.importEmpty' : 'library.importNotBookmarkFile'),
+        );
+        return;
       }
-    />
+      const db = await getDb();
+      const plan = planImport(tree, await bookmarkedUrls(db), { untitledFolder: t('library.untitledFolder') });
+      const skipped = [
+        plan.duplicates ? t('library.importDuplicates', { count: plan.duplicates }) : '',
+        plan.unsupported ? t('library.importUnsupported', { count: plan.unsupported }) : '',
+      ].filter(Boolean);
+      if (!plan.bookmarks.length) {
+        Alert.alert(t('library.importNothing'), skipped.join('\n'));
+        return;
+      }
+      const id = await importBookmarks(db, plan, t('library.importedFolder', { date: formatDate(new Date()) }));
+      success();
+      setFolderId(id);
+      refresh();
+      Alert.alert(
+        t('library.importDone'),
+        [
+          t('library.importSummary', { bookmarks: plan.bookmarks.length, folders: plan.folders.length + 1 }),
+          ...skipped,
+        ].join('\n'),
+      );
+    } catch (e) {
+      Alert.alert(t('library.importFailed'), e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const exportFile = async () => {
+    setBusy(true);
+    try {
+      const { folders, bookmarks } = await exportData(await getDb());
+      if (!bookmarks.length) {
+        Alert.alert(t('library.exportEmpty'));
+        return;
+      }
+      const date = new Date().toISOString().slice(0, 10);
+      await shareBookmarkFile(serializeBookmarkFile(folders, bookmarks), `qutai-bookmarks-${date}.html`);
+    } catch (e) {
+      Alert.alert(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!data) return <ActivityIndicator style={styles.footer} />;
+  const items: ListItem[] = [
+    ...data.folders.map((folder) => ({ kind: 'folder' as const, folder })),
+    ...data.bookmarks.map((bookmark) => ({ kind: 'bookmark' as const, bookmark })),
+  ];
+  const optionsAction = [{ name: 'longpress', label: t('library.options') }];
+
+  return (
+    <View style={styles.flex}>
+      <FlatList
+        data={items}
+        keyExtractor={(item) => (item.kind === 'folder' ? `f${item.folder.id}` : item.bookmark.url)}
+        keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={
+          searching ? undefined : (
+            <View>
+              {current && (
+                <Pressable
+                  onPress={() => openFolder(current.parentId)}
+                  style={({ pressed }) => [styles.pathBar, pressed && styles.pressed]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('library.backTo', { name: folderName(current.parentId) })}
+                >
+                  <Icon name="back" size={20} color={palette.tintText} />
+                  <View style={styles.rowText}>
+                    <Text style={styles.pathParents} numberOfLines={1}>
+                      {[t('library.bookmarks'), ...path.slice(0, -1).map((f) => f.title)].join(' › ')}
+                    </Text>
+                    <Text style={styles.pathTitle} numberOfLines={1} accessibilityRole="header">
+                      {current.title}
+                    </Text>
+                  </View>
+                </Pressable>
+              )}
+              <View style={styles.toolbar}>
+                <ToolButton icon="newFolder" label={t('library.newFolder')} onPress={newFolder} />
+                {folderId === null && (
+                  <>
+                    <ToolButton
+                      icon="download"
+                      label={t('library.import')}
+                      accessibilityLabel={t('library.importBookmarks')}
+                      disabled={busy}
+                      onPress={() => void importFile()}
+                    />
+                    <ToolButton
+                      icon="share"
+                      label={t('library.export')}
+                      accessibilityLabel={t('library.exportBookmarks')}
+                      disabled={busy}
+                      onPress={() => void exportFile()}
+                    />
+                  </>
+                )}
+                {busy && <ActivityIndicator />}
+              </View>
+            </View>
+          )
+        }
+        renderItem={({ item }) =>
+          item.kind === 'folder' ? (
+            <Pressable
+              onPress={() => openFolder(item.folder.id)}
+              onLongPress={() => folderMenu(item.folder)}
+              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.folder.title}, ${t('library.folderItems', { count: item.folder.items })}`}
+              accessibilityActions={optionsAction}
+              onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && folderMenu(item.folder)}
+            >
+              <View style={styles.badge}>
+                <Icon name="folder" size={18} color={palette.textSecondary} />
+              </View>
+              <View style={styles.rowText}>
+                <Text style={styles.rowTitle} numberOfLines={1}>
+                  {item.folder.title}
+                </Text>
+                <Text style={styles.rowUrl} numberOfLines={1}>
+                  {t('library.folderItems', { count: item.folder.items })}
+                </Text>
+              </View>
+              <Icon name="chevronRight" size={16} color={palette.textSecondary} />
+            </Pressable>
+          ) : (
+            <Row
+              title={item.bookmark.title}
+              url={item.bookmark.url}
+              // In search results, which folder each match is in.
+              meta={searching && item.bookmark.folderId !== null ? folderName(item.bookmark.folderId) : undefined}
+              onPress={() => onOpen(item.bookmark.url)}
+              onMore={() => bookmarkMenu(item.bookmark)}
+            />
+          )
+        }
+        ListEmptyComponent={
+          searching ? (
+            <Empty title={t('library.noResults')} />
+          ) : folderId !== null ? (
+            <Empty title={t('library.emptyFolder')} />
+          ) : (
+            <Empty title={t('library.emptyBookmarks')} hint={t('library.emptyBookmarksHint')} />
+          )
+        }
+        ListFooterComponent={
+          !searching && folderId === null ? <Text style={styles.importHint}>{t('library.importHint')}</Text> : undefined
+        }
+      />
+
+      <ActionSheet title={menu?.title ?? null} actions={menu?.actions ?? []} onClose={() => setMenu(null)} />
+
+      {dialog?.kind === 'name' && (
+        <NameDialog
+          title={dialog.title}
+          initial={dialog.initial}
+          onCancel={() => setDialog(null)}
+          onSubmit={(name) => {
+            setDialog(null);
+            dialog.onSubmit(name);
+          }}
+        />
+      )}
+      {dialog?.kind === 'move' && (
+        <FolderPicker
+          title={t('library.moveItem', { name: dialog.title })}
+          folders={data.all}
+          current={dialog.current}
+          exclude={dialog.exclude}
+          onCancel={() => setDialog(null)}
+          onPick={(id) => {
+            setDialog(null);
+            if (id !== dialog.current) dialog.onPick(id);
+          }}
+        />
+      )}
+      {dialog?.kind === 'edit' && (
+        <EditBookmarkDialog
+          bookmark={dialog.bookmark}
+          folders={data.all}
+          folderName={folderName}
+          onCancel={() => setDialog(null)}
+          onSave={(changes) => {
+            setDialog(null);
+            void run((db) => updateBookmark(db, dialog.bookmark.url, changes));
+          }}
+        />
+      )}
+    </View>
+  );
+}
+
+function ToolButton({
+  icon,
+  label,
+  accessibilityLabel,
+  disabled,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  accessibilityLabel?: string;
+  disabled?: boolean;
+  onPress: () => void;
+}) {
+  const styles = useStyles();
+  const palette = usePalette();
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={({ pressed }) => [styles.toolButton, pressed && styles.pressed, disabled && styles.dimmed]}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityState={{ disabled }}
+    >
+      <Icon name={icon} size={16} color={palette.tintText} />
+      <Text style={styles.toolText}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/** A dialog drawn inside the library's own modal (a second modal over a closing action sheet is unreliable on iOS). */
+function Overlay({ onCancel, children }: { onCancel: () => void; children: ReactNode }) {
+  const styles = useStyles();
+  return (
+    <KeyboardAvoidingView
+      style={[StyleSheet.absoluteFill, styles.overlay]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel={t('common.close')} />
+      <View style={styles.dialog} accessibilityViewIsModal>
+        {children}
+      </View>
+    </KeyboardAvoidingView>
+  );
+}
+
+function DialogButtons({
+  onCancel,
+  onSave,
+  disabled,
+}: {
+  onCancel: () => void;
+  onSave: () => void;
+  disabled: boolean;
+}) {
+  const styles = useStyles();
+  return (
+    <View style={styles.dialogButtons}>
+      <Pressable onPress={onCancel} hitSlop={8} accessibilityRole="button">
+        <Text style={styles.action}>{t('common.cancel')}</Text>
+      </Pressable>
+      <Pressable
+        onPress={onSave}
+        disabled={disabled}
+        hitSlop={8}
+        accessibilityRole="button"
+        accessibilityState={{ disabled }}
+      >
+        <Text style={[styles.action, styles.bold, disabled && styles.dimmed]}>{t('common.save')}</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function NameDialog({
+  title,
+  initial,
+  onCancel,
+  onSubmit,
+}: {
+  title: string;
+  initial: string;
+  onCancel: () => void;
+  onSubmit: (name: string) => void;
+}) {
+  const styles = useStyles();
+  const palette = usePalette();
+  const [name, setName] = useState(initial);
+  const valid = name.trim().length > 0;
+  const submit = () => valid && onSubmit(name.trim());
+  return (
+    <Overlay onCancel={onCancel}>
+      <Text style={styles.dialogTitle} accessibilityRole="header">
+        {title}
+      </Text>
+      <TextInput
+        style={styles.dialogInput}
+        placeholderTextColor={palette.textSecondary}
+        value={name}
+        onChangeText={setName}
+        placeholder={t('library.folderName')}
+        accessibilityLabel={t('library.folderName')}
+        autoFocus
+        selectTextOnFocus
+        returnKeyType="done"
+        onSubmitEditing={submit}
+        maxLength={200}
+      />
+      <DialogButtons onCancel={onCancel} onSave={submit} disabled={!valid} />
+    </Overlay>
+  );
+}
+
+function EditBookmarkDialog({
+  bookmark,
+  folders,
+  folderName,
+  onCancel,
+  onSave,
+}: {
+  bookmark: Bookmark;
+  folders: BookmarkFolder[];
+  folderName: (id: number | null) => string;
+  onCancel: () => void;
+  onSave: (changes: { title: string; folderId: number | null }) => void;
+}) {
+  const styles = useStyles();
+  const palette = usePalette();
+  const [title, setTitle] = useState(bookmark.title);
+  const [folderId, setFolderId] = useState(bookmark.folderId);
+  const [picking, setPicking] = useState(false);
+
+  if (picking) {
+    return (
+      <FolderPicker
+        title={t('library.folder')}
+        folders={folders}
+        current={folderId}
+        onCancel={() => setPicking(false)}
+        onPick={(id) => {
+          setFolderId(id);
+          setPicking(false);
+        }}
+      />
+    );
+  }
+  const save = () => onSave({ title: title.trim(), folderId });
+  return (
+    <Overlay onCancel={onCancel}>
+      <Text style={styles.dialogTitle} accessibilityRole="header">
+        {t('library.editBookmark')}
+      </Text>
+      <Text style={styles.fieldLabel}>{t('library.bookmarkTitle')}</Text>
+      <TextInput
+        style={styles.dialogInput}
+        placeholderTextColor={palette.textSecondary}
+        value={title}
+        onChangeText={setTitle}
+        placeholder={hostOf(bookmark.url)}
+        accessibilityLabel={t('library.bookmarkTitle')}
+        returnKeyType="done"
+        onSubmitEditing={save}
+        maxLength={500}
+      />
+      <Text style={styles.dialogUrl} numberOfLines={1}>
+        {bookmark.url}
+      </Text>
+      <Text style={styles.fieldLabel}>{t('library.folder')}</Text>
+      <Pressable
+        onPress={() => setPicking(true)}
+        style={({ pressed }) => [styles.folderField, pressed && styles.pressed]}
+        accessibilityRole="button"
+        accessibilityLabel={`${t('library.folder')}: ${folderName(folderId)}`}
+      >
+        <Icon name={folderId === null ? 'bookmarks' : 'folder'} size={18} color={palette.textSecondary} />
+        <Text style={[styles.rowTitle, styles.flex]} numberOfLines={1}>
+          {folderName(folderId)}
+        </Text>
+        <Icon name="chevronRight" size={16} color={palette.textSecondary} />
+      </Pressable>
+      <DialogButtons onCancel={onCancel} onSave={save} disabled={false} />
+    </Overlay>
+  );
+}
+
+/** Folders as an indented tree, alphabetical at each level; `exclude` leaves out a folder and its subfolders. */
+function folderTree(folders: BookmarkFolder[], exclude?: number) {
+  const ids = new Set(folders.map((f) => f.id));
+  const children = new Map<number | null, BookmarkFolder[]>();
+  for (const folder of folders) {
+    const parent = folder.parentId !== null && ids.has(folder.parentId) ? folder.parentId : null;
+    children.set(parent, [...(children.get(parent) ?? []), folder]);
+  }
+  const rows: { id: number | null; title: string; depth: number }[] = [];
+  const walk = (parent: number | null, depth: number) => {
+    for (const folder of children.get(parent) ?? []) {
+      if (folder.id === exclude) continue;
+      rows.push({ id: folder.id, title: folder.title, depth });
+      walk(folder.id, depth + 1);
+    }
+  };
+  walk(null, 1);
+  return rows;
+}
+
+function FolderPicker({
+  title,
+  folders,
+  current,
+  exclude,
+  onPick,
+  onCancel,
+}: {
+  title: string;
+  folders: BookmarkFolder[];
+  current: number | null;
+  exclude?: number;
+  onPick: (id: number | null) => void;
+  onCancel: () => void;
+}) {
+  const styles = useStyles();
+  const palette = usePalette();
+  const rows = useMemo(
+    () => [{ id: null, title: t('library.bookmarks'), depth: 0 }, ...folderTree(folders, exclude)],
+    [folders, exclude],
+  );
+  return (
+    <Overlay onCancel={onCancel}>
+      <Text style={styles.dialogTitle} numberOfLines={1} accessibilityRole="header">
+        {title}
+      </Text>
+      <FlatList
+        style={styles.pickerList}
+        data={rows}
+        keyExtractor={(row) => String(row.id)}
+        renderItem={({ item }) => (
+          <Pressable
+            onPress={() => {
+              tick();
+              onPick(item.id);
+            }}
+            style={({ pressed }) => [styles.pickerRow, { paddingLeft: 8 + item.depth * 18 }, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityState={{ selected: item.id === current }}
+          >
+            <Icon name={item.id === null ? 'bookmarks' : 'folder'} size={18} color={palette.textSecondary} />
+            <Text style={[styles.rowTitle, styles.flex]} numberOfLines={1}>
+              {item.title}
+            </Text>
+            {item.id === current && <Icon name="check" size={18} color={palette.tintText} />}
+          </Pressable>
+        )}
+      />
+      <View style={styles.dialogButtons}>
+        <Pressable onPress={onCancel} hitSlop={8} accessibilityRole="button">
+          <Text style={styles.action}>{t('common.cancel')}</Text>
+        </Pressable>
+      </View>
+    </Overlay>
   );
 }
 
@@ -224,17 +862,27 @@ function Row({
   meta,
   onPress,
   onRemove,
+  onMore,
 }: {
   title: string;
   url: string;
   meta?: string;
   onPress: () => void;
-  onRemove: () => void;
+  onRemove?: () => void;
+  /** Options sheet: a ⋯ button and long press instead of the ✕ button. */
+  onMore?: () => void;
 }) {
   const styles = useStyles();
+  const palette = usePalette();
   const host = hostOf(url);
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+    <Pressable
+      onPress={onPress}
+      onLongPress={onMore}
+      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      accessibilityActions={onMore ? [{ name: 'longpress', label: t('library.options') }] : undefined}
+      onAccessibilityAction={onMore ? (e) => e.nativeEvent.actionName === 'longpress' && onMore() : undefined}
+    >
       <View style={styles.badge}>
         <Text style={styles.badgeText}>{(host[0] || '?').toUpperCase()}</Text>
       </View>
@@ -246,9 +894,15 @@ function Row({
           {meta ? `${meta} · ${host}` : host}
         </Text>
       </View>
-      <Pressable onPress={onRemove} hitSlop={10} style={styles.remove} accessibilityLabel={t('library.delete')}>
-        <Text style={styles.removeText}>✕</Text>
-      </Pressable>
+      {onMore ? (
+        <Pressable onPress={onMore} hitSlop={10} style={styles.remove} accessibilityLabel={t('library.options')}>
+          <Icon name="more" size={16} color={palette.textSecondary} />
+        </Pressable>
+      ) : onRemove ? (
+        <Pressable onPress={onRemove} hitSlop={10} style={styles.remove} accessibilityLabel={t('library.delete')}>
+          <Text style={styles.removeText}>✕</Text>
+        </Pressable>
+      ) : null}
     </Pressable>
   );
 }
@@ -313,4 +967,66 @@ const useStyles = makeStyles((c) => ({
   empty: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32, gap: 6 },
   emptyTitle: { fontSize: 16, fontWeight: '600', color: c.textSecondary },
   emptyHint: { fontSize: 14, color: c.textSecondary, textAlign: 'center' },
+  flex: { flex: 1 },
+  dimmed: { opacity: 0.4 },
+  pathBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 12, paddingVertical: 8 },
+  pathParents: { fontSize: 12, color: c.textSecondary },
+  pathTitle: { fontSize: 17, fontWeight: '700', color: c.text },
+  toolbar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingBottom: 8,
+  },
+  toolButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 16,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+  },
+  toolText: { fontSize: 14, color: c.tintText, fontWeight: '600' },
+  importHint: { fontSize: 13, color: c.textSecondary, paddingHorizontal: 16, paddingVertical: 20, lineHeight: 18 },
+  overlay: { backgroundColor: c.backdrop, justifyContent: 'center', padding: 24 },
+  dialog: { backgroundColor: c.bg, borderRadius: 16, padding: 16, gap: 10, maxHeight: '80%' },
+  dialogTitle: { fontSize: 17, fontWeight: '700', color: c.text },
+  dialogInput: {
+    color: c.text,
+    height: 42,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    fontSize: 16,
+  },
+  dialogUrl: { fontSize: 12, color: c.textSecondary },
+  dialogButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 24, paddingTop: 6 },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: c.textSecondary, marginTop: 4 },
+  folderField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 12,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+  },
+  pickerList: { flexGrow: 0 },
+  pickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingRight: 8,
+    paddingVertical: 11,
+    borderRadius: 8,
+  },
 }));

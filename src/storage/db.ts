@@ -5,9 +5,11 @@ export type SqlValue = string | number | null;
 /** The subset of expo-sqlite used by the app; kept small so storage code can be tested against other SQLite drivers. */
 export interface Db {
   execAsync(sql: string): Promise<void>;
-  runAsync(sql: string, params: SqlValue[]): Promise<unknown>;
+  runAsync(sql: string, params: SqlValue[]): Promise<{ lastInsertRowId: number; changes: number }>;
   getAllAsync<T>(sql: string, params: SqlValue[]): Promise<T[]>;
   getFirstAsync<T>(sql: string, params: SqlValue[]): Promise<T | null>;
+  /** Commits if `task` resolves, rolls back if it throws. Not exclusive: queries started meanwhile join it. */
+  withTransactionAsync(task: () => Promise<void>): Promise<void>;
 }
 
 /**
@@ -71,6 +73,17 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
      saved_at INTEGER NOT NULL
    );`,
   moveGroupedTabChatsToGroups,
+  // Bookmark folders, nested through parent_id (NULL: top level). A URL is still bookmarked at most once
+  // (bookmarks.url stays the key), so it lives in exactly one folder; existing bookmarks stay at the top.
+  `CREATE TABLE bookmark_folders (
+     id INTEGER PRIMARY KEY AUTOINCREMENT,
+     parent_id INTEGER,
+     title TEXT NOT NULL,
+     created_at INTEGER NOT NULL
+   );
+   CREATE INDEX bookmark_folders_parent ON bookmark_folders (parent_id);
+   ALTER TABLE bookmarks ADD COLUMN folder_id INTEGER;
+   CREATE INDEX bookmarks_folder ON bookmarks (folder_id);`,
 ];
 
 /**
