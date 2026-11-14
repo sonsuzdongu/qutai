@@ -467,4 +467,5 @@ export const en = {
   'chat.exampleWeb2': 'Find a vegetarian lasagna recipe and save it as a PDF',
   'chat.exampleWeb3': 'What are today’s top tech news?',
   'chat.exampleHint': 'Puts this in the message box',
+  'settings.version': 'Version {version} (build {build})',
 } as const;

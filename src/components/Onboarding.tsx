@@ -1,5 +1,23 @@
-import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  ScrollViewInstance,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { BlurView } from 'expo-blur';
+import Animated, {
+  EntryAnimationsValues,
+  ExitAnimationsValues,
+  useAnimatedProps,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { openDefaultBrowserSettings } from '../device/defaultBrowser';
@@ -7,9 +25,11 @@ import { t } from '../i18n';
 import { LEGAL_VERSION, LegalKind } from '../legal/documents';
 import type { Settings } from '../storage/settings';
 import { Aurora } from '../ui/Aurora';
+import { GradientButton, GradientText } from '../ui/BrandGradient';
 import { Icon, IconName } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles, usePalette } from '../ui/theme';
+import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { LegalScreen } from './LegalScreen';
@@ -33,6 +53,22 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   const palette = usePalette();
   const steps = legalOnly ? (['legal'] as Step[]) : ALL_STEPS;
   const [index, setIndex] = useState(0);
+  // +1 going forward, -1 going back: the steps slide in from that side.
+  const [direction, setDirection] = useState(1);
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  // iOS: the new step comes into focus out of a blur (Android's BlurView needs a target view; motion only there).
+  const blur = useSharedValue(0);
+  const blurProps = useAnimatedProps(() => ({ intensity: blur.value }));
+  const go = (to: number) => {
+    setDirection(to > index ? 1 : -1);
+    setIndex(to);
+    // Each step starts at its top.
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
+    if (Platform.OS === 'ios') {
+      blur.set(28);
+      blur.set(withTiming(0, { duration: 520 }));
+    }
+  };
   const [draft, setDraft] = useState(settings);
   const [accepted, setAccepted] = useState(false);
   const [reading, setReading] = useState<LegalKind | null>(null);
@@ -41,7 +77,7 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   const hasKey = !!draft.apiKeys[draft.provider].trim();
 
   const next = () => {
-    if (!last) return setIndex(index + 1);
+    if (!last) return go(index + 1);
     onDone({ ...cleanAiChoice(draft), onboarded: true, legalAcceptedVersion: LEGAL_VERSION });
   };
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => setDraft((d) => ({ ...d, [key]: value }));
@@ -65,7 +101,7 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
         <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
           <View style={styles.top}>
             {index > 0 ? (
-              <Pressable onPress={() => setIndex(index - 1)} hitSlop={10} accessibilityLabel={t('address.back')}>
+              <Pressable onPress={() => go(index - 1)} hitSlop={10} accessibilityLabel={t('address.back')}>
                 <Icon name="back" size={22} color={palette.text} />
               </Pressable>
             ) : (
@@ -85,158 +121,219 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
             <View style={styles.topSpacer} />
           </View>
 
-          <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-            {step === 'welcome' && (
-              <>
-                <View style={styles.hero}>
-                  <QutaiMark size={72} alwaysSparkle />
-                  <Text style={styles.wordmark} accessibilityRole="header">
-                    Qutai
-                  </Text>
-                  <Text style={styles.lead}>{t('onboarding.tagline')}</Text>
-                </View>
-                <Feature icon="summarize" title={t('onboarding.f1Title')} body={t('onboarding.f1Body')} />
-                <Feature icon="assistant" title={t('onboarding.f2Title')} body={t('onboarding.f2Body')} />
-                <Feature icon="shield" title={t('onboarding.f3Title')} body={t('onboarding.f3Body')} />
-              </>
-            )}
-
-            {step === 'legal' && (
-              <>
-                <Text style={styles.title} accessibilityRole="header">
-                  {t(legalOnly ? 'onboarding.legalUpdatedTitle' : 'onboarding.legalTitle')}
-                </Text>
-                <Text style={styles.lead}>{t('onboarding.legalLead')}</Text>
-                <View style={styles.card}>
-                  <Bullet text={t('onboarding.legal1')} />
-                  <Bullet text={t('onboarding.legal2')} />
-                  <Bullet text={t('onboarding.legal3')} />
-                  <Bullet text={t('onboarding.legal4')} />
-                </View>
-                <View style={styles.linkRow}>
-                  <Pressable onPress={() => setReading('privacy')} accessibilityRole="link" hitSlop={6}>
-                    <Text style={styles.link}>{t('settings.privacyPolicy')}</Text>
-                  </Pressable>
-                  <Pressable onPress={() => setReading('terms')} accessibilityRole="link" hitSlop={6}>
-                    <Text style={styles.link}>{t('settings.terms')}</Text>
-                  </Pressable>
-                </View>
-                <Pressable
-                  onPress={() => setAccepted(!accepted)}
-                  style={styles.checkRow}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: accepted }}
-                >
-                  <View style={[styles.checkbox, accepted && styles.checkboxOn]}>
-                    {accepted && <Icon name="check" size={16} color="#ffffff" />}
+          <ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+            <Animated.View key={step} entering={stepEnter(direction)} exiting={stepExit(direction)} style={styles.step}>
+              {step === 'welcome' && (
+                <>
+                  <View style={styles.hero}>
+                    <QutaiMark size={72} alwaysSparkle />
+                    <GradientText style={styles.wordmark}>Qutai</GradientText>
+                    <Text style={styles.lead}>{t('onboarding.tagline')}</Text>
                   </View>
-                  <Text style={styles.checkText}>{t('onboarding.acceptCheck')}</Text>
-                </Pressable>
-              </>
-            )}
+                  <Feature icon="summarize" title={t('onboarding.f1Title')} body={t('onboarding.f1Body')} />
+                  <Feature icon="assistant" title={t('onboarding.f2Title')} body={t('onboarding.f2Body')} />
+                  <Feature icon="shield" title={t('onboarding.f3Title')} body={t('onboarding.f3Body')} />
+                </>
+              )}
 
-            {step === 'ai' && (
-              <>
-                <Text style={styles.title} accessibilityRole="header">
-                  {t('onboarding.aiTitle')}
-                </Text>
-                <Text style={styles.lead}>{t('onboarding.aiLead')}</Text>
-                <AiProviderFields
-                  value={draft}
-                  onChange={(ai) =>
-                    setDraft((d) => ({ ...d, provider: ai.provider, apiKeys: ai.apiKeys, models: ai.models }))
-                  }
-                />
-              </>
-            )}
-
-            {step === 'protection' && (
-              <>
-                <Text style={styles.title} accessibilityRole="header">
-                  {t('onboarding.protectionTitle')}
-                </Text>
-                <Text style={styles.lead}>{t('onboarding.protectionLead')}</Text>
-                <View style={styles.card}>
-                  <Toggle
-                    title={t('settings.blockAds')}
-                    body={t('onboarding.blockAdsHint')}
-                    value={draft.blockAds}
-                    onChange={(v) => set('blockAds', v)}
-                  />
-                  <Toggle
-                    title={t('settings.thirdPartyCookies')}
-                    body={t('onboarding.trackersHint')}
-                    value={draft.blockThirdPartyCookies}
-                    onChange={(v) => set('blockThirdPartyCookies', v)}
-                  />
-                  <Toggle
-                    title={t('settings.hideCookieBanners')}
-                    body={t('onboarding.cookieBannersHint')}
-                    value={draft.hideCookieBanners}
-                    onChange={(v) => set('hideCookieBanners', v)}
-                  />
-                  <Toggle
-                    title={t('settings.httpsOnly')}
-                    body={t('onboarding.httpsOnlyHint')}
-                    value={draft.httpsOnly}
-                    onChange={(v) => set('httpsOnly', v)}
-                  />
-                </View>
-                <Text style={styles.label}>{t('settings.search')}</Text>
-                <View style={styles.card}>
-                  {SEARCH_ENGINE_ORDER.map((id) => (
+              {step === 'legal' && (
+                <>
+                  <Text style={styles.title} accessibilityRole="header">
+                    {t(legalOnly ? 'onboarding.legalUpdatedTitle' : 'onboarding.legalTitle')}
+                  </Text>
+                  <Text style={styles.lead}>{t('onboarding.legalLead')}</Text>
+                  <View style={styles.card}>
+                    <Bullet text={t('onboarding.legal1')} />
+                    <Bullet text={t('onboarding.legal2')} />
+                    <Bullet text={t('onboarding.legal3')} />
+                    <Bullet text={t('onboarding.legal4')} />
+                  </View>
+                  <View style={styles.linkRow}>
                     <Pressable
-                      key={id}
-                      style={styles.option}
-                      onPress={() => set('searchEngine', id)}
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: draft.searchEngine === id }}
+                      onPress={() => setReading('privacy')}
+                      style={styles.linkUnderline}
+                      accessibilityRole="link"
+                      hitSlop={6}
                     >
-                      <Text style={styles.radio}>{draft.searchEngine === id ? '◉' : '○'}</Text>
-                      <Text style={styles.optionText}>{SEARCH_ENGINES[id].name}</Text>
+                      <Text style={styles.link}>{t('settings.privacyPolicy')}</Text>
                     </Pressable>
-                  ))}
-                </View>
-              </>
-            )}
+                    <Pressable
+                      onPress={() => setReading('terms')}
+                      style={styles.linkUnderline}
+                      accessibilityRole="link"
+                      hitSlop={6}
+                    >
+                      <Text style={styles.link}>{t('settings.terms')}</Text>
+                    </Pressable>
+                  </View>
+                  <Pressable
+                    onPress={() => setAccepted(!accepted)}
+                    style={styles.checkRow}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: accepted }}
+                  >
+                    <View style={[styles.checkbox, accepted && styles.checkboxOn]}>
+                      {accepted && <Icon name="check" size={16} color="#ffffff" />}
+                    </View>
+                    <Text style={styles.checkText}>{t('onboarding.acceptCheck')}</Text>
+                  </Pressable>
+                </>
+              )}
 
-            {step === 'browser' && (
-              <>
-                <Text style={styles.title} accessibilityRole="header">
-                  {t('onboarding.browserTitle')}
-                </Text>
-                <Text style={styles.lead}>{t('onboarding.browserLead')}</Text>
-                <Pressable
-                  onPress={() => openDefaultBrowserSettings().catch(() => {})}
-                  style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
-                  accessibilityRole="button"
-                >
-                  <Icon name="openInNew" size={18} color={palette.tintText} />
-                  <Text style={styles.secondaryText}>{t('onboarding.setDefault')}</Text>
-                </Pressable>
-                <Text style={styles.hint}>
-                  {t(Platform.OS === 'ios' ? 'onboarding.browserHintIos' : 'onboarding.browserHintAndroid')}
-                </Text>
-              </>
-            )}
+              {step === 'ai' && (
+                <>
+                  <Text style={styles.title} accessibilityRole="header">
+                    {t('onboarding.aiTitle')}
+                  </Text>
+                  <Text style={styles.lead}>{t('onboarding.aiLead')}</Text>
+                  <AiProviderFields
+                    value={draft}
+                    onChange={(ai) =>
+                      setDraft((d) => ({ ...d, provider: ai.provider, apiKeys: ai.apiKeys, models: ai.models }))
+                    }
+                  />
+                </>
+              )}
+
+              {step === 'protection' && (
+                <>
+                  <Text style={styles.title} accessibilityRole="header">
+                    {t('onboarding.protectionTitle')}
+                  </Text>
+                  <Text style={styles.lead}>{t('onboarding.protectionLead')}</Text>
+                  <View style={styles.card}>
+                    <Toggle
+                      title={t('settings.blockAds')}
+                      body={t('onboarding.blockAdsHint')}
+                      value={draft.blockAds}
+                      onChange={(v) => set('blockAds', v)}
+                    />
+                    <Toggle
+                      title={t('settings.thirdPartyCookies')}
+                      body={t('onboarding.trackersHint')}
+                      value={draft.blockThirdPartyCookies}
+                      onChange={(v) => set('blockThirdPartyCookies', v)}
+                    />
+                    <Toggle
+                      title={t('settings.hideCookieBanners')}
+                      body={t('onboarding.cookieBannersHint')}
+                      value={draft.hideCookieBanners}
+                      onChange={(v) => set('hideCookieBanners', v)}
+                    />
+                    <Toggle
+                      title={t('settings.httpsOnly')}
+                      body={t('onboarding.httpsOnlyHint')}
+                      value={draft.httpsOnly}
+                      onChange={(v) => set('httpsOnly', v)}
+                    />
+                  </View>
+                  <Text style={styles.label}>{t('settings.search')}</Text>
+                  <View style={styles.card}>
+                    {SEARCH_ENGINE_ORDER.map((id) => (
+                      <Pressable
+                        key={id}
+                        style={styles.option}
+                        onPress={() => set('searchEngine', id)}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: draft.searchEngine === id }}
+                      >
+                        <Radio selected={draft.searchEngine === id} />
+                        <Text style={styles.optionText}>{SEARCH_ENGINES[id].name}</Text>
+                      </Pressable>
+                    ))}
+                  </View>
+                </>
+              )}
+
+              {step === 'browser' && (
+                <>
+                  <Text style={styles.title} accessibilityRole="header">
+                    {t('onboarding.browserTitle')}
+                  </Text>
+                  <Text style={styles.lead}>{t('onboarding.browserLead')}</Text>
+                  <Pressable
+                    onPress={() => openDefaultBrowserSettings().catch(() => {})}
+                    style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+                    accessibilityRole="button"
+                  >
+                    <Icon name="openInNew" size={18} color={palette.tintText} />
+                    <Text style={styles.secondaryText}>{t('onboarding.setDefault')}</Text>
+                  </Pressable>
+                  <Text style={styles.hint}>
+                    {t(Platform.OS === 'ios' ? 'onboarding.browserHintIos' : 'onboarding.browserHintAndroid')}
+                  </Text>
+                </>
+              )}
+            </Animated.View>
           </ScrollView>
+          {Platform.OS === 'ios' && (
+            <AnimatedBlur
+              animatedProps={blurProps}
+              tint="default"
+              style={[StyleSheet.absoluteFill, styles.blur]}
+              pointerEvents="none"
+            />
+          )}
 
           <View style={styles.bottom}>
-            <Pressable
+            <GradientButton
+              label={primary}
               onPress={next}
               disabled={primaryDisabled}
-              style={({ pressed }) => [styles.primary, primaryDisabled && styles.disabled, pressed && styles.pressed]}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: primaryDisabled }}
-            >
-              <Text style={styles.primaryText}>{primary}</Text>
-            </Pressable>
+              style={styles.primary}
+              textStyle={styles.primaryText}
+            />
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
       <LegalScreen kind={reading} onClose={() => setReading(null)} />
     </View>
   );
+}
+
+const AnimatedBlur = Animated.createAnimatedComponent(BlurView);
+
+/** The next step glides in from its side with a soft spring and a slight zoom, fading up. */
+function stepEnter(direction: number) {
+  return (_values: EntryAnimationsValues) => {
+    'worklet';
+    return {
+      initialValues: {
+        opacity: 0,
+        transform: [{ translateX: 36 * direction }, { scale: 0.96 }],
+      },
+      animations: {
+        opacity: withTiming(1, { duration: 360 }),
+        transform: [
+          { translateX: withSpring(0, { damping: 20, stiffness: 170 }) },
+          { scale: withSpring(1, { damping: 20, stiffness: 170 }) },
+        ],
+      },
+    };
+  };
+}
+
+/** The current step recedes the other way, zooming slightly past the viewer as it fades. */
+function stepExit(direction: number) {
+  return (values: ExitAnimationsValues) => {
+    'worklet';
+    return {
+      initialValues: {
+        opacity: 1,
+        transform: [{ translateX: 0 }, { scale: 1 }],
+        originX: values.currentOriginX,
+        originY: values.currentOriginY,
+        width: values.currentWidth,
+      },
+      animations: {
+        opacity: withTiming(0, { duration: 220 }),
+        transform: [
+          { translateX: withTiming(-28 * direction, { duration: 260 }) },
+          { scale: withTiming(1.03, { duration: 260 }) },
+        ],
+      },
+    };
+  };
 }
 
 function Feature({ icon, title, body }: { icon: IconName; title: string; body: string }) {
@@ -303,6 +400,8 @@ const useStyles = makeStyles((c) => ({
   dots: { flexDirection: 'row', gap: 6 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: c.border },
   dotActive: { width: 18, backgroundColor: c.tint },
+  step: { gap: 14 },
+  blur: { top: 48 },
   content: {
     paddingHorizontal: 24,
     paddingTop: 8,
@@ -313,7 +412,7 @@ const useStyles = makeStyles((c) => ({
     alignSelf: 'center',
   },
   hero: { alignItems: 'center', gap: 10, marginTop: 24, marginBottom: 18 },
-  wordmark: { color: c.text, fontSize: 34, fontWeight: '700', letterSpacing: -0.6 },
+  wordmark: { fontSize: 34, fontWeight: '700', letterSpacing: -0.6 },
   title: { color: c.text, fontSize: 26, fontWeight: '700', letterSpacing: -0.4, marginTop: 12 },
   lead: { color: c.textSecondary, fontSize: 16, lineHeight: 23, textAlign: 'left' },
   label: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 8 },
@@ -331,8 +430,10 @@ const useStyles = makeStyles((c) => ({
   card: { backgroundColor: c.surface, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 6 },
   bullet: { flexDirection: 'row', gap: 10, paddingVertical: 8 },
   bulletText: { color: c.text, fontSize: 15, lineHeight: 21 },
-  linkRow: { flexDirection: 'row', gap: 20, flexWrap: 'wrap' },
-  link: { color: c.tintText, fontSize: 15, fontWeight: '600', textDecorationLine: 'underline' },
+  linkRow: { flexDirection: 'row', justifyContent: 'center', gap: 24, flexWrap: 'wrap', marginVertical: 4 },
+  // A drawn underline: the text's own underline sits too close and its offset can't be set.
+  linkUnderline: { paddingBottom: 3, borderBottomWidth: 1.5, borderBottomColor: c.tintText },
+  link: { color: c.tintText, fontSize: 15, fontWeight: '600' },
   checkRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8 },
   checkbox: {
     width: 24,
@@ -346,8 +447,7 @@ const useStyles = makeStyles((c) => ({
   checkboxOn: { backgroundColor: c.tint, borderColor: c.tint },
   checkText: { flex: 1, color: c.text, fontSize: 15, lineHeight: 21 },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
-  option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, gap: 10 },
-  radio: { fontSize: 18, color: c.tintText },
+  option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, gap: 12 },
   optionText: { color: c.text, fontSize: 15 },
   secondaryButton: {
     flexDirection: 'row',
@@ -370,8 +470,8 @@ const useStyles = makeStyles((c) => ({
     width: '100%',
     alignSelf: 'center',
   },
-  primary: { height: 52, borderRadius: 26, backgroundColor: c.tint, alignItems: 'center', justifyContent: 'center' },
-  primaryText: { color: c.onTint, fontSize: 17, fontWeight: '700' },
+  primary: { height: 52, borderRadius: 26 },
+  primaryText: { fontSize: 17 },
   disabled: { opacity: 0.4 },
   pressed: { opacity: 0.8 },
 }));

@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Aurora } from '../ui/Aurora';
+import { GradientButton, GradientText } from '../ui/BrandGradient';
 import { siteColor } from '../ui/siteColor';
 import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
@@ -107,7 +108,9 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
         ) : (
           <View style={styles.logoRow} accessible accessibilityRole="header" accessibilityLabel="Qutai">
             <QutaiMark size={34} sweepWhenIdle animate={active} />
-            <Text style={[styles.logo, theme.logo]}>Qutai</Text>
+            <GradientText style={styles.logo} dark={darkUI}>
+              Qutai
+            </GradientText>
           </View>
         )}
 
@@ -123,16 +126,13 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
             autoCorrect={false}
             returnKeyType="search"
           />
-          <Pressable
+          <GradientButton
+            label={t('newTab.ask')}
             onPress={ask}
-            style={({ pressed }) => [styles.askButton, pressed && styles.dimmed]}
-            accessibilityLabel={t('newTab.ask')}
-          >
-            <View style={styles.askInner}>
-              <Icon name="assistant" size={15} color="#ffffff" />
-              <Text style={styles.askText}>{t('newTab.ask')}</Text>
-            </View>
-          </Pressable>
+            style={styles.askButton}
+            textStyle={styles.askText}
+            icon={<Icon name="assistant" size={15} color="#ffffff" />}
+          />
         </View>
 
         {incognito ? (
@@ -246,7 +246,6 @@ const useStyles = makeStyles((c) => ({
   },
   searchInput: { flex: 1, fontSize: 16, paddingVertical: 0 },
   askButton: {
-    backgroundColor: c.tint,
     borderRadius: 19,
     paddingHorizontal: 12,
     height: 38,

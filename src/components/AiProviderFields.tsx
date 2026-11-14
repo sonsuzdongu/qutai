@@ -4,6 +4,7 @@ import type { ProviderId } from '../ai/types';
 import { t } from '../i18n';
 import type { Settings } from '../storage/settings';
 import { makeStyles, usePalette } from '../ui/theme';
+import { Radio } from '../ui/Radio';
 
 export type AiChoice = Pick<Settings, 'provider' | 'apiKeys' | 'models'>;
 
@@ -73,12 +74,12 @@ export function AiProviderFields({ value, onChange }: { value: AiChoice; onChang
       <Text style={styles.label}>{t('settings.model')}</Text>
       {provider.models.map((m) => (
         <Pressable key={m.id} style={styles.option} onPress={() => setModel(m.id)} accessibilityRole="radio">
-          <Text style={styles.radio}>{model === m.id ? '◉' : '○'}</Text>
+          <Radio selected={model === m.id} />
           <Text style={styles.optionText}>{m.tag ? `${m.name} (${t(`model.${m.tag}`)})` : m.name}</Text>
         </Pressable>
       ))}
       <Pressable style={styles.option} onPress={() => !isCustomModel && setModel('')} accessibilityRole="radio">
-        <Text style={styles.radio}>{isCustomModel ? '◉' : '○'}</Text>
+        <Radio selected={isCustomModel} />
         <Text style={styles.optionText}>{t('settings.customModel')}</Text>
       </Pressable>
       {isCustomModel && (
@@ -127,7 +128,6 @@ const useStyles = makeStyles((c) => ({
     borderColor: c.border,
     fontSize: 15,
   },
-  option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 10 },
-  radio: { fontSize: 18, color: c.tintText },
+  option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, gap: 12 },
   optionText: { color: c.text, fontSize: 15 },
 }));

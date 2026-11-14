@@ -19,6 +19,7 @@ import { useIsSpeaking } from '../device/speech';
 import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
+import { GradientText } from '../ui/BrandGradient';
 import { QutaiMark } from '../ui/QutaiMark';
 import type { Source } from '../agent/types';
 import { hostOf } from '../i18n/format';
@@ -199,7 +200,9 @@ export function AssistantPanel({
               <View style={[styles.header, d?.header]}>
                 <QutaiMark size={24} working={running} sweepWhenIdle animate={open} />
                 <View style={styles.headerTitle}>
-                  <Text style={styles.title}>{t('chat.title')}</Text>
+                  <GradientText style={styles.title} dark={dark}>
+                    {t('chat.title')}
+                  </GradientText>
                   <Pressable
                     onPress={onOpenSettings}
                     hitSlop={4}
@@ -554,7 +557,7 @@ const useStyles = makeStyles((c) => ({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: c.separator,
   },
-  title: { fontWeight: '700', color: c.tintText, fontSize: 17 },
+  title: { fontWeight: '700', fontSize: 17 },
   status: { color: c.textSecondary, fontSize: 12, marginTop: 1 },
   headerTitle: { flex: 1, marginLeft: 10, marginRight: 8 },
   headerButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },

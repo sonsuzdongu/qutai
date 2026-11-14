@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProvider } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { authenticate, canAuthenticate } from '../device/biometric';
+import { appVersion } from '../device/appVersion';
 import { rateApp } from '../device/rateApp';
 import { t } from '../i18n';
 import type { LegalKind } from '../legal/documents';
@@ -11,6 +12,7 @@ import type { Settings } from '../storage/settings';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { Icon, IconName } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
+import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { ActionLogScreen } from './ActionLogScreen';
 import { AiChoice, AiProviderFields, cleanAiChoice } from './AiProviderFields';
@@ -317,7 +319,7 @@ function SettingsPages({
                 accessibilityRole="radio"
                 accessibilityState={{ checked: settings.searchEngine === id }}
               >
-                <Text style={styles.radio}>{settings.searchEngine === id ? '◉' : '○'}</Text>
+                <Radio selected={settings.searchEngine === id} />
                 <Text style={styles.optionText}>{SEARCH_ENGINES[id].name}</Text>
               </Pressable>
             ))}
@@ -342,6 +344,9 @@ function SettingsPages({
             />
             <LinkRow label={t('settings.privacyPolicy')} onPress={() => setLegal('privacy')} />
             <LinkRow label={t('settings.terms')} onPress={() => setLegal('terms')} />
+            <Text style={styles.version} selectable>
+              {t('settings.version', appVersion())}
+            </Text>
           </>
         )}
       </ScrollView>
@@ -496,8 +501,7 @@ const useStyles = makeStyles((c) => ({
   segmentSelected: { backgroundColor: c.surface },
   segmentText: { fontSize: 14, color: c.textSecondary },
   segmentTextSelected: { color: c.text, fontWeight: '700' },
-  option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 10 },
-  radio: { fontSize: 18, color: c.tintText },
+  option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, gap: 12 },
   optionText: { color: c.text, fontSize: 15 },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
   saveButton: {
@@ -509,4 +513,5 @@ const useStyles = makeStyles((c) => ({
     marginTop: 4,
   },
   saveButtonText: { color: c.onTint, fontSize: 16, fontWeight: '700' },
+  version: { color: c.textSecondary, fontSize: 13, textAlign: 'center', marginTop: 28 },
 }));

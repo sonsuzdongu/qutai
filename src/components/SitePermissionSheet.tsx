@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SITE_LEVELS, SiteLevel } from '../agent/sitePolicy';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
+import { Radio } from '../ui/Radio';
 
 type Props = {
   /** The site being set; null hides the sheet. */
@@ -37,7 +38,7 @@ export function SitePermissionSheet({ host, level, onSelect, onClose }: Props) {
               accessibilityRole="radio"
               accessibilityState={{ selected }}
             >
-              <Text style={[styles.radio, selected && styles.radioOn]}>{selected ? '◉' : '○'}</Text>
+              <Radio selected={selected} />
               <View style={styles.texts}>
                 <Text style={[styles.label, option === 'blocked' && styles.danger]}>{t(`site.level.${option}`)}</Text>
                 <Text style={styles.hint}>{t(`site.hint.${option}`)}</Text>
@@ -57,8 +58,6 @@ const useStyles = makeStyles((c) => ({
   host: { fontSize: 13, color: c.textSecondary, paddingHorizontal: 20, marginTop: 2, marginBottom: 6 },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingHorizontal: 20, paddingVertical: 10 },
   pressed: { backgroundColor: c.pressed },
-  radio: { fontSize: 18, color: c.textSecondary, marginTop: 1 },
-  radioOn: { color: c.tintText },
   texts: { flex: 1, gap: 2 },
   label: { fontSize: 15, fontWeight: '600', color: c.text },
   danger: { color: c.danger },

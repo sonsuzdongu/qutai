@@ -474,4 +474,5 @@ export const tr: Record<keyof typeof en, string> = {
   'chat.exampleWeb2': 'Vejetaryen lazanya tarifi bul ve PDF olarak kaydet',
   'chat.exampleWeb3': 'Bugünün öne çıkan teknoloji haberleri neler?',
   'chat.exampleHint': 'Bunu mesaj kutusuna yazar',
+  'settings.version': 'Sürüm {version} (derleme {build})',
 };
