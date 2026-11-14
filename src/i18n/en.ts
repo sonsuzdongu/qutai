@@ -394,4 +394,8 @@ export const en = {
   'error.nothingToRead': 'No readable text found on this page.',
 
   'pdf.fallbackName': 'page',
+  'legal.updated': 'Last updated: {date}',
+  'settings.about': 'About',
+  'settings.privacyPolicy': 'Privacy Policy',
+  'settings.terms': 'Terms of Use',
 } as const;

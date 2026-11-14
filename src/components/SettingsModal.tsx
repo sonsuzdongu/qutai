@@ -10,6 +10,8 @@ import type { SitePermissionStore } from '../storage/sitePermissions';
 import { ActionLogScreen } from './ActionLogScreen';
 import { AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
+import { LegalScreen } from './LegalScreen';
+import type { LegalKind } from '../legal/documents';
 import { authenticate, canAuthenticate } from '../device/biometric';
 import { MemoryScreen } from './MemoryScreen';
 import { SitePermissionsScreen } from './SitePermissionsScreen';
@@ -48,6 +50,7 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
   const [sitesVisible, setSitesVisible] = useState(false);
   const [actionLogVisible, setActionLogVisible] = useState(false);
   const [clearDataVisible, setClearDataVisible] = useState(false);
+  const [legal, setLegal] = useState<LegalKind | null>(null);
 
   /** Turning a lock on needs a phone with a screen lock, and the user proving it's them once. */
   const setLock = async (key: 'appLock' | 'incognitoLock', on: boolean) => {
@@ -240,7 +243,16 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
         <Pressable onPress={() => setMemoryVisible(true)} style={styles.option} accessibilityRole="button">
           <Text style={[styles.optionText, styles.link]}>{t('settings.manageMemory')} ›</Text>
         </Pressable>
+
+        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.about')}</Text>
+        <Pressable onPress={() => setLegal('privacy')} style={styles.option} accessibilityRole="button">
+          <Text style={[styles.optionText, styles.link]}>{t('settings.privacyPolicy')} ›</Text>
+        </Pressable>
+        <Pressable onPress={() => setLegal('terms')} style={styles.option} accessibilityRole="button">
+          <Text style={[styles.optionText, styles.link]}>{t('settings.terms')} ›</Text>
+        </Pressable>
       </ScrollView>
+      <LegalScreen kind={legal} onClose={() => setLegal(null)} />
       <MemoryScreen visible={memoryVisible} onClose={() => setMemoryVisible(false)} />
       <SitePermissionsScreen visible={sitesVisible} store={sitePermissions} onClose={() => setSitesVisible(false)} />
       <ActionLogScreen visible={actionLogVisible} onClose={() => setActionLogVisible(false)} />

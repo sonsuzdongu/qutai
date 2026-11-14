@@ -397,4 +397,8 @@ export const tr: Record<keyof typeof en, string> = {
   'error.nothingToRead': 'Sayfada okunacak metin bulunamadı.',
 
   'pdf.fallbackName': 'sayfa',
+  'legal.updated': 'Son güncelleme: {date}',
+  'settings.about': 'Hakkında',
+  'settings.privacyPolicy': 'Gizlilik Politikası',
+  'settings.terms': 'Kullanım Koşulları',
 };

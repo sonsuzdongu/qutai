@@ -22,6 +22,11 @@ export function dayLabel(ts: number, now = Date.now()): string {
   }).format(ts);
 }
 
+/** A full localized date, e.g. "14 November 2026". */
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+}
+
 export function timeLabel(ts: number): string {
   return new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit' }).format(ts);
 }
