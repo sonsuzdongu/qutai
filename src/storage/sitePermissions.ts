@@ -1,4 +1,4 @@
-import { isSiteLevel, SiteLevel, SitePolicy } from '../agent/sitePolicy';
+import { isSiteLevel, PersonalSetting, SiteLevel, SitePolicy } from '../agent/sitePolicy';
 import { Db } from './db';
 
 export type SitePermission = { host: string; level: SiteLevel; updatedAt: number };
@@ -53,6 +53,24 @@ export async function setMediaSetting(db: Db, host: string, kind: MediaKind, set
     'INSERT INTO site_media (host, kind, setting, updated_at) VALUES (?, ?, ?, ?) ' +
       'ON CONFLICT(host, kind) DO UPDATE SET setting = excluded.setting, updated_at = excluded.updated_at',
     [host, kind, setting, Date.now()],
+  );
+}
+
+export async function listPersonalSettings(db: Db): Promise<{ host: string; setting: PersonalSetting }[]> {
+  const rows = await db.getAllAsync<{ host: string; setting: string }>('SELECT host, setting FROM site_personal', []);
+  return rows.flatMap((r) => (isPermissionSetting(r.setting) ? [{ host: r.host, setting: r.setting }] : []));
+}
+
+/** Saves whether the assistant may enter personal details on a site; 'ask' removes the entry. */
+export async function setPersonalSetting(db: Db, host: string, setting: PersonalSetting): Promise<void> {
+  if (setting === 'ask') {
+    await db.runAsync('DELETE FROM site_personal WHERE host = ?', [host]);
+    return;
+  }
+  await db.runAsync(
+    'INSERT INTO site_personal (host, setting, updated_at) VALUES (?, ?, ?) ' +
+      'ON CONFLICT(host) DO UPDATE SET setting = excluded.setting, updated_at = excluded.updated_at',
+    [host, setting, Date.now()],
   );
 }
 
@@ -117,6 +135,8 @@ export type SiteEntry = {
   microphone: PermissionSetting;
   /** Ad and tracker blocking is on for this site (the default). */
   blocking: boolean;
+  /** Whether the assistant may enter the user's remembered personal details here. */
+  personal: PersonalSetting;
 };
 
 /**
@@ -129,6 +149,7 @@ export class SitePermissionStore implements SitePolicy {
   private locations = new Map<string, LocationSetting>();
   /** Keyed `${kind} ${host}`. */
   private media = new Map<string, PermissionSetting>();
+  private personal = new Map<string, PersonalSetting>();
   /** Sites where ad and tracker blocking is off ("Don't block on this site"). */
   private blockingOff = new Set<string>();
   /** Changes made before loading finished: they win over what was on disk. */
@@ -143,12 +164,19 @@ export class SitePermissionStore implements SitePolicy {
   load(): Promise<void> {
     this.loading ??= this.getDb()
       .then((db) =>
-        Promise.all([listSitePermissions(db), listLocationSettings(db), listMediaSettings(db), listBlockingOff(db)]),
+        Promise.all([
+          listSitePermissions(db),
+          listLocationSettings(db),
+          listMediaSettings(db),
+          listBlockingOff(db),
+          listPersonalSettings(db),
+        ]),
       )
-      .then(([list, locations, media, blockingOff]) => {
+      .then(([list, locations, media, blockingOff, personal]) => {
         // Changes made while loading win over what was on disk.
         for (const p of list) if (!this.levels.has(p.host)) this.levels.set(p.host, p.level);
         for (const l of locations) if (!this.locations.has(l.host)) this.locations.set(l.host, l.setting);
+        for (const p of personal) if (!this.personal.has(p.host)) this.personal.set(p.host, p.setting);
         for (const m of media) {
           const key = `${m.kind} ${m.host}`;
           if (!this.media.has(key)) this.media.set(key, m.setting);
@@ -167,6 +195,17 @@ export class SitePermissionStore implements SitePolicy {
 
   locationFor(host: string): LocationSetting {
     return this.locations.get(host) ?? 'ask';
+  }
+
+  personalFor(host: string): PersonalSetting {
+    return this.personal.get(host) ?? 'ask';
+  }
+
+  async setPersonal(host: string, setting: PersonalSetting): Promise<void> {
+    if (setting === 'ask') this.personal.delete(host);
+    else this.personal.set(host, setting);
+    this.emit();
+    await setPersonalSetting(await this.getDb(), host, setting);
   }
 
   mediaFor(host: string, kind: MediaKind): PermissionSetting {
@@ -192,13 +231,14 @@ export class SitePermissionStore implements SitePolicy {
     await setBlockingOff(await this.getDb(), host, !on);
   }
 
-  /** Every site with an assistant level or a location, camera or microphone setting of its own. */
+  /** Every site with an assistant level, a personal-information, location, camera or microphone setting of its own. */
   list(): SiteEntry[] {
     const hosts = new Set([
       ...this.levels.keys(),
       ...this.locations.keys(),
       ...[...this.media.keys()].map((key) => key.slice(key.indexOf(' ') + 1)),
       ...this.blockingOff,
+      ...this.personal.keys(),
     ]);
     return [...hosts]
       .map((host) => ({
@@ -208,6 +248,7 @@ export class SitePermissionStore implements SitePolicy {
         camera: this.mediaFor(host, 'camera'),
         microphone: this.mediaFor(host, 'microphone'),
         blocking: this.blockingFor(host),
+        personal: this.personalFor(host),
       }))
       .sort((a, b) => a.host.localeCompare(b.host));
   }
@@ -233,6 +274,7 @@ export class SitePermissionStore implements SitePolicy {
       this.setLocation(host, 'ask'),
       ...MEDIA_KINDS.map((kind) => this.setMedia(host, kind, 'ask')),
       this.setBlocking(host, true),
+      this.setPersonal(host, 'ask'),
     ]);
   }
 

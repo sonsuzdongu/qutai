@@ -18,7 +18,7 @@ import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } fr
  *   memories?: [{ text, category?, createdAt, updatedAt }],   // category: absent before categories (= general)
  *   tasks?: [{ name, prompt, target, url, research, createdAt, lastUsedAt, schedule, paused, private, autoRun }],
  *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }],
- *            blockingOff?: [host] },
+ *            blockingOff?: [host], personal?: [{ host, setting }] },
  *   settings?: { theme: "dark", textZoom: 120, models: { anthropic: "…" }, … },
  *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…" },   // only when the user opted in
  *   tabs?: { tabs: [{ url, title, uid, groupId? }], activeIndex, groups: [{ id, name, color, collapsed? }] },
@@ -113,6 +113,8 @@ export type BackupPayload = {
     media?: BackupMedia[];
     /** Sites where ad and tracker blocking is off. */
     blockingOff?: string[];
+    /** Whether the assistant may enter personal details there (not in backups made before it existed). */
+    personal?: BackupLocation[];
   };
   settings?: BackupSettings;
   apiKeys?: Partial<Record<ProviderId, string>>;
@@ -310,11 +312,19 @@ function parseSites(v: unknown): BackupPayload['sites'] {
     const host = siteHost(h);
     if (host) blockingOff.add(host);
   }
+  const personal = new Map<string, BackupLocation>();
+  for (const l of list(v.personal, LIMITS.sites)) {
+    if (!isObj(l)) continue;
+    const host = siteHost(l.host);
+    const setting = oneOf(l.setting, ['allow', 'block'] as const);
+    if (host && setting) personal.set(host, { host, setting });
+  }
   return {
     permissions: [...permissions.values()],
     location: [...location.values()],
     media: [...media.values()],
     blockingOff: [...blockingOff],
+    personal: [...personal.values()],
   };
 }
 
@@ -626,7 +636,9 @@ export function summarize(p: BackupPayload): BackupSummary {
     ...(p.sites
       ? {
           sites: new Set([
-            ...[...p.sites.permissions, ...p.sites.location, ...(p.sites.media ?? [])].map((s) => s.host),
+            ...[...p.sites.permissions, ...p.sites.location, ...(p.sites.media ?? []), ...(p.sites.personal ?? [])].map(
+              (s) => s.host,
+            ),
             ...(p.sites.blockingOff ?? []),
           ]).size,
         }

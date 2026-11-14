@@ -87,6 +87,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
   // A confirmation shown while the app is away would wait unseen: it waits for the user to come back, and leaving
   // while it is open pauses the background run with a notification. Never answered for the user.
   const confirm = opts.confirm;
+  const confirmPersonal = opts.confirmPersonal;
   const ctx: AgentOptions = {
     ...opts,
     confirm: confirm
@@ -95,6 +96,15 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
           return whileWaitingForUser(() => confirm(description, host));
         }
       : undefined,
+    // The personal-information question pauses a background run the same way.
+    confirmPersonal: confirmPersonal
+      ? async (host, kinds, incognito) => {
+          await pauseWhileBackgrounded('confirm');
+          return whileWaitingForUser(() => confirmPersonal(host, kinds, incognito));
+        }
+      : undefined,
+    // "Allow once" lasts until this task (this message) ends.
+    personalGrants: { allowed: new Set(), declined: new Set() },
   };
 
   const sources: Source[] = [];

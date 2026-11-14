@@ -21,6 +21,7 @@ import { sleep } from '../utils/sleep';
 import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch, SiteVisits } from '../storage/history';
 import { isMemoryCategory, MemoryStore } from './memory';
+import { findPersonalData, PERSONAL_KINDS, PersonalKind, personalNeedles } from './personalData';
 import { decide, SitePolicy, siteKey } from './sitePolicy';
 import {
   describeCalendarRead,
@@ -98,6 +99,17 @@ export type ToolContext = {
   privacy?: { touchedIncognito: boolean };
   /** Long-term memory about the user; absent when memory is turned off. */
   memory?: MemoryStore;
+  /**
+   * Asks before the assistant enters remembered personal details (`kinds`) on `host` for the first time in a task.
+   * 'once' covers the site until the task ends; 'always' is saved by the caller; 'deny' or null (dismissed) refuses.
+   */
+  confirmPersonal?: (
+    host: string,
+    kinds: PersonalKind[],
+    incognito: boolean,
+  ) => Promise<'deny' | 'once' | 'always' | null>;
+  /** This task's answers to confirmPersonal, by site (set by runAgent for each task). */
+  personalGrants?: { allowed: Set<string>; declined: Set<string> };
 };
 
 /** Tools that need a loaded web page. */
@@ -1025,11 +1037,70 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
   if (name === 'get_location') return record(await locationTool(input, ctx));
   if (name === 'read_calendar') return record(await readCalendarTool(input, ctx));
   if (name === 'download_file') return record(await downloadFileTool(input, ctx));
-  if (decision.kind === 'confirm' && ctx.confirm) {
+  // Remembered personal details need the site's permission, checked here in the app, not left to the prompt.
+  let personalAsked = false;
+  if ((name === 'type' || name === 'select_option') && host) {
+    const gate = await personalGate(name, input, host, ctx, target?.tab);
+    if (gate.kind === 'refuse') return record({ content: gate.reason, isError: true });
+    personalAsked = gate.kind === 'asked';
+  }
+  // The personal-information question already named this entry; asking "may I type?" right after would be twice.
+  if (decision.kind === 'confirm' && ctx.confirm && !personalAsked) {
     const allowed = await ctx.confirm(describeToolCall(name, input), host);
     if (!allowed) return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true });
   }
   return record(await runTool(name, input, ctx));
+}
+
+/**
+ * Whether `type` / `select_option` may enter its text on `host`: text holding none of the remembered personal details
+ * (agent/personalData.ts) runs; otherwise the site's "Personal information" setting decides, and 'ask' asks once per
+ * site and task. Nothing about the text is logged or returned.
+ */
+async function personalGate(
+  name: string,
+  input: Record<string, unknown>,
+  host: string,
+  ctx: ToolContext,
+  tab: Tab | undefined,
+): Promise<{ kind: 'run' | 'asked' } | { kind: 'refuse'; reason: string }> {
+  if (!ctx.memory) return { kind: 'run' };
+  const text = String((name === 'type' ? input.text : input.value) ?? '');
+  if (!text.trim()) return { kind: 'run' };
+  const memories = await ctx.memory.list().catch(() => []);
+  const kinds = findPersonalData(text, personalNeedles(memories));
+  if (!kinds.size) return { kind: 'run' };
+  const setting = ctx.sites?.personalFor(host) ?? 'ask';
+  if (setting === 'allow') return { kind: 'run' };
+  const declined = {
+    kind: 'refuse' as const,
+    reason:
+      `The user did not allow entering their saved personal information on ${host}. Don't enter it on this site in ` +
+      'this task and don\'t ask again; tell the user, who can fill it in themselves.',
+  };
+  if (setting === 'block') {
+    return {
+      kind: 'refuse',
+      reason:
+        `The user has blocked Qutai from entering their saved personal information on ${host} (a setting for this ` +
+        'site). Don\'t enter it here. Tell the user: they can fill it in themselves, or change "Personal information" ' +
+        "in this site's permissions.",
+    };
+  }
+  if (ctx.personalGrants?.allowed.has(host)) return { kind: 'run' };
+  if (ctx.personalGrants?.declined.has(host) || !ctx.confirmPersonal) return declined;
+  const incognito = !!(ctx.privacy?.touchedIncognito || tab?.incognito);
+  const answer = await ctx.confirmPersonal(
+    host,
+    PERSONAL_KINDS.filter((k) => kinds.has(k)),
+    incognito,
+  );
+  if (answer === 'once' || answer === 'always') {
+    ctx.personalGrants?.allowed.add(host);
+    return { kind: 'asked' };
+  }
+  ctx.personalGrants?.declined.add(host);
+  return declined;
 }
 
 async function runTool(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {

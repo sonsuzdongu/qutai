@@ -7,6 +7,7 @@ import { loadSession } from '../storage/session';
 import {
   listBlockingOff,
   listLocationSettings,
+  listPersonalSettings,
   listMediaSettings,
   listSitePermissions,
 } from '../storage/sitePermissions';
@@ -28,7 +29,8 @@ export async function collectBackup(
   db: Db,
   choice: ExportChoice,
 ): Promise<Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'>> {
-  const [version, bookmarks, history, memories, permissions, location, media, blockingOff, tasks] = await Promise.all([
+  const [version, bookmarks, history, memories, permissions, location, media, blockingOff, tasks, personal] =
+    await Promise.all([
     db.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []),
     exportBookmarks(db),
     db.getAllAsync<{ url: string; title: string; visited_at: number }>(
@@ -41,6 +43,7 @@ export async function collectBackup(
     listMediaSettings(db),
     listBlockingOff(db),
     listSavedTasks(db),
+    listPersonalSettings(db),
   ]);
   const payload: Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'> = {
     schemaVersion: version?.user_version ?? 0,
@@ -68,6 +71,7 @@ export async function collectBackup(
       location: location.flatMap((l) => (l.setting === 'ask' ? [] : [{ host: l.host, setting: l.setting }])),
       media: media.flatMap((m) => (m.setting === 'ask' ? [] : [{ host: m.host, kind: m.kind, setting: m.setting }])),
       blockingOff,
+      personal: personal.flatMap((p) => (p.setting === 'ask' ? [] : [{ host: p.host, setting: p.setting }])),
     },
   };
   if (choice.tabs) {
@@ -133,7 +137,8 @@ async function insertRows(db: Db, sql: string, columns: number, rows: SqlValue[]
  * - history: each visit is added unless the same URL at the same time is already there.
  * - memories: added unless the same text (any case) is remembered, up to the limit of 100.
  * - saved tasks: added unless a task with the same prompt is saved, up to the limit of 200.
- * - site permissions, location, camera and microphone: the backup's setting applies only to sites with none on the phone.
+ * - site permissions, personal information, location, camera and microphone: the backup's setting applies only to
+ *   sites with none on the phone.
  * - tabs: the backup's tabs are added after the open ones (a tab or group already here is skipped).
  * - chats: added for the tabs and groups that don't have one.
  * - activity: entries are added unless the same one is already there.
@@ -268,6 +273,7 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
         await db.runAsync('DELETE FROM site_location', []);
         await db.runAsync('DELETE FROM site_media', []);
         await db.runAsync('DELETE FROM site_blocking', []);
+        await db.runAsync('DELETE FROM site_personal', []);
       }
       await insertRows(
         db,
@@ -292,6 +298,12 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
         'INSERT OR IGNORE INTO site_blocking (host, updated_at)',
         2,
         (p.sites.blockingOff ?? []).map((host) => [host, now]),
+      );
+      await insertRows(
+        db,
+        'INSERT OR IGNORE INTO site_personal (host, setting, updated_at)',
+        3,
+        (p.sites.personal ?? []).map((s) => [s.host, s.setting, now]),
       );
     }
 

@@ -14,7 +14,10 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
+import type { PersonalKind } from './src/agent/personalData';
 import { runAgent } from './src/agent/runAgent';
+import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
+import { personalKindsLabel } from './src/components/memoryCategories';
 import { Conversation, callItem, fileItem, newItem, smsItem, sourcesItem, whatsAppItem } from './src/chat/Conversation';
 import { geminiStreamingAvailable } from './src/ai/gemini';
 import { getProvider, modelLabel } from './src/ai/providers';
@@ -170,6 +173,27 @@ async function askConfirmation(description: string, host: string | null, signal:
   const allowed = result.button === 1;
   if (allowed && host && result.checked) sitePermissions.set(host, 'allow').catch(() => {});
   return allowed;
+}
+
+/**
+ * Before the assistant first enters remembered personal details on a site in a task: which kinds, on which site.
+ * "Allow once" (emphasised) covers the site until the task ends; "Always allow on this site" is saved (not offered in
+ * incognito). Stopping the task dismisses it as declined.
+ */
+async function askPersonalData(
+  host: string,
+  kinds: PersonalKind[],
+  incognito: boolean,
+  signal: AbortSignal,
+): Promise<SitePromptAnswer> {
+  const answer = await askSitePermission({
+    title: t('personal.title', { host }),
+    message: t('personal.body', { what: personalKindsLabel(kinds) }),
+    incognito,
+    signal,
+  });
+  if (answer === 'always') sitePermissions.setPersonal(host, 'allow').catch(() => {});
+  return answer;
 }
 
 export default function App() {
@@ -600,6 +624,7 @@ function BrowserApp({
         // Gemini streams only with its experimental setting, and not after the API rejected a streamed reply.
         stream: provider !== 'gemini' || (settings.geminiStreaming && geminiStreamingAvailable()),
         confirm: (description, host) => askConfirmation(description, host, signal),
+        confirmPersonal: (host, kinds, incognito) => askPersonalData(host, kinds, incognito, signal),
         providerLabel: getProvider(provider).label,
         confirmByDefault: settings.confirmActions,
         sites: sitePermissions,
@@ -1518,6 +1543,10 @@ function BrowserApp({
             microphone={permissionHost ? sitePermissions.mediaFor(permissionHost, 'microphone') : 'ask'}
             onSelectMedia={(kind, setting) =>
               permissionHost && sitePermissions.setMedia(permissionHost, kind, setting).catch(() => {})
+            }
+            personal={permissionHost ? sitePermissions.personalFor(permissionHost) : 'ask'}
+            onSelectPersonal={(setting) =>
+              permissionHost && sitePermissions.setPersonal(permissionHost, setting).catch(() => {})
             }
             // The page on screen is capturing on this site: offer to stop it right here.
             capturing={!!permissionHost && siteKey(tab.url) === permissionHost && tab.media.capturing}

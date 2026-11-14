@@ -1,4 +1,5 @@
 import { ID_NUMBER_CATEGORIES, MemoryCategory } from '../agent/memory';
+import type { PersonalKind } from '../agent/personalData';
 import { t } from '../i18n';
 import type { IconName } from '../ui/Icon';
 
@@ -17,3 +18,10 @@ export const categoryName = (category: MemoryCategory) => t(`memory.category.${c
 
 /** Whether the warning about ID and passport numbers belongs under this category. */
 export const warnsAboutIdNumbers = (category: MemoryCategory) => ID_NUMBER_CATEGORIES.has(category);
+
+/** "your name, phone number and address", for the personal-information question. */
+export function personalKindsLabel(kinds: PersonalKind[]): string {
+  const names = kinds.map((kind) => t(`personal.kind.${kind}`));
+  if (names.length <= 1) return names[0] ?? t('personal.kind.other');
+  return `${names.slice(0, -1).join(', ')}${t('personal.and')}${names[names.length - 1]}`;
+}

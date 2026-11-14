@@ -197,6 +197,8 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
      "Organise for me" proposes categories with one AI request; shopping preferences are applied at checkout
    - ✅ **"Let me get to know you"** in setup (optional, no AI request): name, city, shopping and delivery
      preferences, food, answer style, then optionally address and contact details; again from the Memory screen
+   - ✅ **Personal information per site**: the app asks before the assistant first enters saved personal details on
+     a site (ask / allow / block per site), checked in the tool path, not only in the prompt
    - ✅ **Custom instructions** (Settings › Assistant): the user's standing preferences in every request, below the
      safety rules in precedence
 10. ✅ **Deep research** (in the foreground, with the existing agent; 80 steps, markdown report with sources, share as PDF)

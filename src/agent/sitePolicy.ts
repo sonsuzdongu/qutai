@@ -18,9 +18,13 @@ export function siteKey(url: string): string | null {
   return host.replace(/^www\./, '') || null;
 }
 
+/** Whether the assistant may enter the user's remembered personal details on a site; 'ask' is the default. */
+export type PersonalSetting = 'ask' | 'allow' | 'block';
+
 /** Looks up a site's level synchronously (backed by an in-memory copy of the stored permissions). */
 export interface SitePolicy {
   levelFor(host: string): SiteLevel;
+  personalFor(host: string): PersonalSetting;
 }
 
 /** Actions that change something; they need the user's confirmation when the site asks for it. */

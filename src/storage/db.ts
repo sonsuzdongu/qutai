@@ -144,6 +144,13 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
   // Each memory's category (agent/memory.ts MEMORY_CATEGORIES); memories saved before categories are 'general'.
   `ALTER TABLE memories ADD COLUMN category TEXT NOT NULL DEFAULT 'general';
    CREATE INDEX memories_category ON memories (category);`,
+  // Whether the assistant may type the user's remembered personal details on a site ('allow' or 'block'; no row
+  // means ask first). Unlike site_location and site_media this is about the assistant, not the site itself.
+  `CREATE TABLE site_personal (
+     host TEXT PRIMARY KEY NOT NULL,
+     setting TEXT NOT NULL,
+     updated_at INTEGER NOT NULL
+   );`,
 ];
 
 /**

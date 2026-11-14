@@ -22,7 +22,7 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
   const version = useSyncExternalStore(store.subscribe, () =>
     store
       .list()
-      .map((p) => p.host + p.level + p.location + p.camera + p.microphone + p.blocking)
+      .map((p) => p.host + p.level + p.personal + p.location + p.camera + p.microphone + p.blocking)
       .join(),
   );
   const sites = store.list();
@@ -57,6 +57,11 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
                 <Text style={[styles.level, item.level === 'blocked' && styles.danger]}>
                   {t(`site.level.${item.level}`)}
                 </Text>
+                {item.personal !== 'ask' && (
+                  <Text style={[styles.level, item.personal === 'block' && styles.danger]}>
+                    {t(`site.personalSummary.${item.personal}`)}
+                  </Text>
+                )}
                 {item.location !== 'ask' && (
                   <Text style={[styles.level, item.location === 'block' && styles.danger]}>
                     {t(`site.locationSummary.${item.location}`)}
@@ -94,6 +99,8 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
           camera={editing ? store.mediaFor(editing, 'camera') : 'ask'}
           microphone={editing ? store.mediaFor(editing, 'microphone') : 'ask'}
           onSelectMedia={(kind, setting) => editing && store.setMedia(editing, kind, setting)}
+          personal={editing ? store.personalFor(editing) : 'ask'}
+          onSelectPersonal={(setting) => editing && store.setPersonal(editing, setting)}
           blocking={editing ? store.blockingFor(editing) : true}
           onSetBlocking={(on) => editing && store.setBlocking(editing, on)}
           blockingEnabled={blockingEnabled}

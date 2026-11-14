@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { SITE_LEVELS, SiteLevel } from '../agent/sitePolicy';
+import { PersonalSetting, SITE_LEVELS, SiteLevel } from '../agent/sitePolicy';
 import { t } from '../i18n';
 import { LocationSetting, MediaKind, PERMISSION_SETTINGS, PermissionSetting } from '../storage/sitePermissions';
 import { makeStyles } from '../ui/theme';
@@ -13,6 +13,9 @@ type Props = {
   host: string | null;
   level: SiteLevel;
   onSelect: (level: SiteLevel) => void;
+  /** Whether the assistant may enter the user's remembered personal details on this site. */
+  personal: PersonalSetting;
+  onSelectPersonal: (setting: PersonalSetting) => void;
   /** Whether the site itself may use the location. */
   location: LocationSetting;
   onSelectLocation: (setting: LocationSetting) => void;
@@ -38,11 +41,16 @@ type Props = {
   onClose: () => void;
 };
 
-/** Picks what Qutai may do on one site, and whether the site may use the location, camera and microphone. */
+/**
+ * Picks what Qutai may do on one site (actions, and entering the user's personal details), and whether the site may
+ * use the location, camera and microphone.
+ */
 export function SitePermissionSheet({
   host,
   level,
   onSelect,
+  personal,
+  onSelectPersonal,
   location,
   onSelectLocation,
   camera,
@@ -141,6 +149,12 @@ export function SitePermissionSheet({
           </Pressable>
         );
       })}
+      <SettingSegment
+        title={t('site.personalTitle')}
+        value={personal}
+        hint={t(`site.personalHint.${personal}`)}
+        onSelect={onSelectPersonal}
+      />
       <SettingSegment
         title={t('site.locationTitle')}
         value={location}
