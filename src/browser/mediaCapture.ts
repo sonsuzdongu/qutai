@@ -40,6 +40,19 @@ let settings: MediaSettings | null = null;
 /** Pages with live camera or microphone tracks. */
 const livePages = new Set<PageMediaCapture>();
 
+/** Told when a page is about to get, or has, a live microphone (voice input gives the microphone up). */
+const microphoneListeners = new Set<() => void>();
+
+export function onPageMicrophone(listener: () => void): () => void {
+  microphoneListeners.add(listener);
+  return () => microphoneListeners.delete(listener);
+}
+
+/** A page in some tab is capturing the microphone. */
+export function pageMicrophoneLive(): boolean {
+  return [...livePages].some((page) => page.microphone);
+}
+
 /** Connects page capture to the stored site settings; until then every request is refused. */
 export function configurePageMedia(store: MediaSettings) {
   settings = store;
@@ -429,6 +442,7 @@ export class PageMediaCapture {
     if (!(await this.authorize(generation, origin, kinds))) return deny();
     if (!(await this.systemPermission(kinds))) return deny();
     if (generation !== this.generation) return;
+    if (kinds.includes('microphone')) microphoneListeners.forEach((l) => l());
 
     const grant = `${origin.toLowerCase()} ${kinds.join(' ')}`;
     const applied = new Promise<void>((resolve) => {
@@ -504,8 +518,10 @@ export class PageMediaCapture {
 
   private setActive(camera: boolean, microphone: boolean) {
     if (camera === this.camera && microphone === this.microphone) return;
+    const microphoneStarted = microphone && !this.microphone;
     this.camera = camera;
     this.microphone = microphone;
+    if (microphoneStarted) microphoneListeners.forEach((l) => l());
     if (this.capturing) livePages.add(this);
     else {
       livePages.delete(this);

@@ -3,6 +3,7 @@ import { PROVIDER_ORDER, PROVIDERS } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES, ReaderFont, ReaderTheme } from '../browser/reader';
 import { isSearchEngine, SearchEngineId } from '../browser/search';
+import type { VoiceOnline } from '../device/voiceInput';
 
 export type Settings = {
   provider: ProviderId;
@@ -49,6 +50,13 @@ export type Settings = {
   readerFont: ReaderFont;
   /** Reader mode: wider letter, word and line spacing, for dyslexic readers. */
   readerEasyReading: boolean;
+  /** Voice input: send the message as soon as the user stops speaking (off: they review and tap send). */
+  voiceAutoSend: boolean;
+  /**
+   * Voice input where on-device recognition isn't available: whether the phone's online speech
+   * service (Apple's or Google's) may receive the audio. Asked once, before first use.
+   */
+  voiceOnline: VoiceOnline;
   /** The first-run setup was completed (or skipped through). */
   onboarded: boolean;
   /** Version of the privacy policy and terms the user accepted (0: none yet). */
@@ -88,6 +96,8 @@ export const DEFAULT_SETTINGS: Settings = {
   readerTheme: 'auto',
   readerFont: 'serif',
   readerEasyReading: false,
+  voiceAutoSend: false,
+  voiceOnline: 'ask',
   onboarded: false,
   legalAcceptedVersion: 0,
 };
@@ -116,6 +126,8 @@ const KEYS = {
   readerTheme: 'reader_theme',
   readerFont: 'reader_font',
   readerEasyReading: 'reader_easy_reading',
+  voiceAutoSend: 'voice_auto_send',
+  voiceOnline: 'voice_online',
   onboarded: 'onboarded',
   legalAcceptedVersion: 'legal_accepted_version',
   apiKey: (id: ProviderId) => `api_key_${id}`,
@@ -162,6 +174,8 @@ export async function loadSettings(): Promise<Settings> {
     readerTheme,
     readerFont,
     readerEasyReading,
+    voiceAutoSend,
+    voiceOnline,
     onboarded,
     legalAcceptedVersion,
     legacyApiKey,
@@ -191,6 +205,8 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.readerTheme),
     get(KEYS.readerFont),
     get(KEYS.readerEasyReading),
+    get(KEYS.voiceAutoSend),
+    get(KEYS.voiceOnline),
     get(KEYS.onboarded),
     get(KEYS.legalAcceptedVersion),
     get(KEYS.legacyApiKey),
@@ -224,6 +240,8 @@ export async function loadSettings(): Promise<Settings> {
     readerTheme: READER_THEMES.includes(readerTheme as ReaderTheme) ? (readerTheme as ReaderTheme) : 'auto',
     readerFont: READER_FONTS.includes(readerFont as ReaderFont) ? (readerFont as ReaderFont) : 'serif',
     readerEasyReading: readerEasyReading === 'true',
+    voiceAutoSend: voiceAutoSend === 'true',
+    voiceOnline: voiceOnline === 'allowed' || voiceOnline === 'declined' ? voiceOnline : 'ask',
     onboarded: onboarded === 'true',
     legalAcceptedVersion: Math.max(0, Math.floor(Number(legalAcceptedVersion) || 0)),
   };
@@ -265,6 +283,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.readerTheme, settings.readerTheme),
     set(KEYS.readerFont, settings.readerFont),
     set(KEYS.readerEasyReading, String(settings.readerEasyReading)),
+    set(KEYS.voiceAutoSend, String(settings.voiceAutoSend)),
+    set(KEYS.voiceOnline, settings.voiceOnline),
     set(KEYS.onboarded, String(settings.onboarded)),
     set(KEYS.legalAcceptedVersion, String(settings.legalAcceptedVersion)),
     ...PROVIDER_ORDER.flatMap((id) => [

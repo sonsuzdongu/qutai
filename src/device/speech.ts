@@ -18,6 +18,13 @@ export type ReaderReading = { tabId: string; index: number; paused: boolean };
 let reading: ReaderReading | null = null;
 const readingListeners = new Set<() => void>();
 
+/** Turns the microphone off (voice input) before anything is read aloud: the two never overlap. */
+let microphoneGuard: () => void = () => {};
+
+export function setMicrophoneGuard(guard: () => void) {
+  microphoneGuard = guard;
+}
+
 function setSpeaking(value: boolean) {
   if (speaking === value) return;
   speaking = value;
@@ -54,6 +61,7 @@ export function splitForSpeech(text: string, maxChars = CHUNK_CHARS): string[] {
 
 /** Reads text aloud, replacing anything currently being read. */
 export async function speak(text: string, language?: string): Promise<void> {
+  microphoneGuard();
   setReading(null);
   await Speech.stop();
   const chunks = splitForSpeech(text);
@@ -84,6 +92,7 @@ export async function speak(text: string, language?: string): Promise<void> {
 export async function speakReader(tab: Tab, from = 0): Promise<{ chars: number; truncated: boolean }> {
   const article = tab.reader?.article;
   if (!article) throw new Error(t('error.nothingToRead'));
+  microphoneGuard();
   await Speech.stop();
   const blocks = article.speech;
   const start = Math.max(0, Math.min(from, blocks.length - 1));

@@ -16,8 +16,7 @@ Infrastructure and size are given only for what is still missing or partial; don
 The browser foundation and the AI experience are both in place: data is stored on the device, the everyday browser
 features are built, and the assistant reads, clicks (also by coordinates), uses other tabs and can add to the
 calendar, share a location or offer a call. What is left is mostly what needs a server (accounts, sync, Qutai
-credits, background tasks), native work in our own build (voice commands, network-level blocking, Android private
-tab isolation), and testing on real devices: most of it has never run on a phone.
+credits, background tasks), native work in our own build (network-level blocking, Android private tab isolation), and testing on real devices: most of it has never run on a phone.
 
 ---
 
@@ -43,7 +42,7 @@ tab isolation), and testing on real devices: most of it has never run on a phone
 | Desktop site | ✅ | | Per tab, from the page menu (`src/browser/desktopMode.ts`) |
 | Reader mode | ✅ | | Readability-style extraction in the page script, shown in a script-free WebView over the page; light/dark/sepia, serif/sans, easier-reading spacing; read aloud with the paragraph highlighted |
 | QR code scanning / generation | ✅ | | `expo-camera` scanner; generation with `qrcode-generator` |
-| Voice search | ⬜ | Build | Decision: the device's speech recognition engine |
+| Voice search | 🟡 | Build | Voice input in the assistant panel with the device's speech recognition (on-device where possible, `expo-speech-recognition`); address-bar voice search not built. Needs testing on phones |
 | Download manager | 🟡 | Go · S | See section 6: no progress or cancel on iOS |
 | Detecting natural-language AI commands | 🟡 | – | "Ask Qutai" is at the top of the suggestion list; automatic detection will not be done (smart address bar decision) |
 
@@ -133,7 +132,7 @@ moves everything to another phone.
 | Web agent, multi-step tasks, information gathering | ✅ | | Clicks by `ref`, or by coordinates on a screenshot (`click_at`) |
 | Confirmation and cancel for agent actions | ✅ | | Confirmation for sensitive actions + "confirm every action" mode + stop |
 | Follow-up questions | ✅ | | Chat history is kept, per tab or per tab group |
-| Voice assistant | 🟡 | Build | Read-aloud exists; voice commands in Build |
+| Voice assistant | 🟡 | Build | Read-aloud and voice input in the panel (barge-in: talking stops read-aloud); no wake word or continuous conversation |
 | Multi-tab analysis | ✅ | | `read_tab` reads other tabs without switching; "compare selected tabs" in the tab switcher |
 | Citing sources, tabs used | ✅ | | Source cards below the answer (switch to the tab if open) |
 | AI search (answers with sources) | ✅ | | Providers' own web search tools; can be turned off in settings. There is an extra charge per search |
@@ -214,14 +213,14 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 ### Phase 4 – Things that require our own build
 
 Merged with the "Our own build (development build)" section in `TODO.md`:
-voice commands, Android private tab isolation, network-level ad and tracker blocking (with URL lists; iOS
+Android private tab isolation, network-level ad and tracker blocking (with URL lists; iOS
 WKContentRuleList, Android request interception), cookie management and cookie deletion, Android PiP, background audio, being the default browser on iOS, widgets, "Share with
-Qutai", app verification. Done since: Face ID on iOS, per-site camera and microphone for web pages, downloads requiring login (the page's own cookies on iOS, the
+Qutai", app verification. Done since: Face ID on iOS, per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the
 system download manager on Android), Android default browser (intent filters).
 
 Added from Comet reviews:
 - Ready-made filter lists for ad blocking (EasyList etc.) and letting the user add lists
-- Voice commands, with the assistant going quiet when the user starts speaking (barge-in)
+- ✅ Voice input in the assistant panel, with the assistant going quiet when the user starts speaking (barge-in): the phone's own speech recognition, on-device where the phone and language allow it, otherwise the phone's speech service only after the user agreed once (never in incognito). Not tested on a phone yet; needs a new development build
 - Passwords: instead of our own manager, verify and fix that the system's (Google, iCloud Keychain) autofill works in the WebView
 - Background audio and headphone media keys, site shortcut on the home screen
 - ✅ Reader mode, together with read-aloud: the article only, in a themed view (light, dark, sepia; serif or sans; easier-reading spacing for dyslexic readers; the shared text size and the system font size); read aloud reads exactly what is shown, paragraph by paragraph, with play/pause/stop and the paragraph highlighted. Offered only on pages with enough article text (600 characters and 3 paragraphs)

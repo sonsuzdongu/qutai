@@ -46,6 +46,7 @@ import { CaptureCancelled } from './src/device/fullPage';
 import { offerSettings, PermissionDeniedError } from './src/device/settings';
 import { saveFullPageScreenshot, saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
+import { stopVoiceInput } from './src/device/voiceInput';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { t, useLanguage } from './src/i18n';
 import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmarks';
@@ -278,6 +279,8 @@ function BrowserApp({
   const [findFor, setFindFor] = useState<{ tabId: string; url: string; reader: boolean } | null>(null);
   const toast = useToast();
   const speaking = useIsSpeaking();
+  // Switching tabs (another conversation on screen) turns the microphone off; the words stay in the old draft.
+  useEffect(() => stopVoiceInput(), [conversation]);
   useIncognitoProtection(tab.incognito || (tabsVisible && browser.tabsOf(true).length > 0));
 
   // On low memory, everything but the tab on screen (and the agent's tab) gives up its WebView.
@@ -998,6 +1001,13 @@ function BrowserApp({
               dark={darkMode}
               hasPage={!tab.isNewTab}
               open={panelOpen}
+              voice={{
+                incognito: tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
+                online: settings.voiceOnline,
+                onOnlineChange: (voiceOnline) => onChangeSettings({ ...settings, voiceOnline }),
+                autoSend: settings.voiceAutoSend,
+                notify: toast.show,
+              }}
               quickActions={quickActions}
               draft={conversation.draft}
               onDraftChange={(text) => {

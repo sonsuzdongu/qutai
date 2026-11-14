@@ -1,5 +1,5 @@
-import { ReactNode, useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ReactNode, useEffect, useState } from 'react';
+import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProvider } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
@@ -7,7 +7,8 @@ import { authenticate, canAuthenticate } from '../device/biometric';
 import { appVersion } from '../device/appVersion';
 import { BackupTooLargeError, pickBackupFile, PickerUnavailableError } from '../device/backupFile';
 import { rateApp } from '../device/rateApp';
-import { t } from '../i18n';
+import { voiceModeSummary, VoiceModeSummary } from '../device/voiceInput';
+import { getLanguage, t } from '../i18n';
 import type { LegalKind } from '../legal/documents';
 import type { Settings } from '../storage/settings';
 import type { SitePermissionStore } from '../storage/sitePermissions';
@@ -238,6 +239,20 @@ function SettingsPages({
               value={settings.memoryEnabled}
               onChange={(memoryEnabled) => set({ memoryEnabled })}
             />
+            <Text style={[styles.label, styles.sectionLabel]}>{t('settings.voiceSection')}</Text>
+            <SwitchRow
+              title={t('settings.voiceAutoSend')}
+              hint={t('settings.voiceAutoSendHint')}
+              value={settings.voiceAutoSend}
+              onChange={(voiceAutoSend) => set({ voiceAutoSend })}
+            />
+            <SwitchRow
+              title={t('settings.voiceOnline')}
+              hint={t('settings.voiceOnlineHint', { service: speechService() })}
+              value={settings.voiceOnline === 'allowed'}
+              onChange={(on) => set({ voiceOnline: on ? 'allowed' : 'declined' })}
+            />
+            <VoiceModeLine online={settings.voiceOnline} />
             <LinkRow label={t('settings.manageMemory')} onPress={() => setMemoryVisible(true)} />
             <LinkRow label={t('settings.sitePermissions')} onPress={() => setSitesVisible(true)} />
             <LinkRow label={t('settings.actionLog')} onPress={() => setActionLogVisible(true)} />
@@ -400,6 +415,28 @@ function SettingsPages({
   );
 }
 
+const speechService = () => t(Platform.OS === 'ios' ? 'voice.serviceApple' : 'voice.serviceGoogle');
+
+/** How voice input runs on this phone for the app's language right now (on the device, or online). */
+function VoiceModeLine({ online }: { online: Settings['voiceOnline'] }) {
+  const styles = useStyles();
+  const [mode, setMode] = useState<VoiceModeSummary | null>(null);
+  useEffect(() => {
+    let alive = true;
+    voiceModeSummary(getLanguage(), online)
+      .then((next) => alive && setMode(next))
+      .catch(() => alive && setMode('unavailable'));
+    return () => {
+      alive = false;
+    };
+  }, [online]);
+  return (
+    <Text style={[styles.hint, styles.voiceMode]}>
+      {t(`settings.voiceMode.${mode ?? 'checking'}`, { service: speechService() })}
+    </Text>
+  );
+}
+
 function SectionRow({
   icon,
   title,
@@ -528,6 +565,7 @@ const useStyles = makeStyles((c) => ({
   label: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 12 },
   sectionLabel: { fontSize: 13, color: c.textSecondary, textTransform: 'uppercase', marginTop: 24 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  voiceMode: { marginTop: 8 },
   link: { color: c.tintText, fontWeight: '600' },
   segment: { flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
   segmentButton: {

@@ -55,6 +55,8 @@ function backupSettings(s: Settings): BackupSettings {
     readerTheme: s.readerTheme,
     readerFont: s.readerFont,
     readerEasyReading: s.readerEasyReading,
+    // The answer about the phone's online speech service stays on this phone: each phone asks again.
+    voiceAutoSend: s.voiceAutoSend,
   };
 }
 
@@ -128,6 +130,7 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
     take('readerTheme', s.readerTheme as ReaderTheme | undefined);
     take('readerFont', s.readerFont as ReaderFont | undefined);
     take('readerEasyReading', s.readerEasyReading);
+    take('voiceAutoSend', s.voiceAutoSend);
     for (const id of PROVIDER_ORDER) {
       const model = s.models?.[id];
       if (model && (mode === 'replace' || current.models[id] === DEFAULT_SETTINGS.models[id])) next.models[id] = model;

@@ -142,6 +142,12 @@ function show(options: DialogOptions): Promise<DialogResult> {
   });
 }
 
+/** Whether a dialog is showing or waiting; voice input stops listening as soon as one opens. */
+export const dialogState = {
+  subscribe,
+  isOpen: () => queue.length > 0,
+};
+
 export const dialog = {
   show,
 

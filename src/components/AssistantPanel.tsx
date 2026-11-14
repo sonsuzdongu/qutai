@@ -16,7 +16,16 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsSpeaking } from '../device/speech';
-import { t } from '../i18n';
+import {
+  abortVoiceInput,
+  startVoiceInput,
+  stopVoiceInput,
+  useVoiceLevel,
+  useVoiceState,
+  VoiceOnline,
+  VoiceState,
+} from '../device/voiceInput';
+import { getLanguage, t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
 import { GradientText } from '../ui/BrandGradient';
@@ -48,6 +57,18 @@ export type ChatItem = {
   call?: CallOffer;
   /** For 'sms': the prepared text message behind the "Open in Messages" button. */
   sms?: SmsOffer;
+};
+
+/** Voice input: the settings it follows and where its messages go. */
+export type VoiceProps = {
+  /** The conversation is incognito: on-device recognition only. */
+  incognito: boolean;
+  online: VoiceOnline;
+  onOnlineChange: (online: VoiceOnline) => void;
+  /** Send as soon as the user stops speaking. */
+  autoSend: boolean;
+  /** A short message for a toast. */
+  notify: (message: string) => void;
 };
 
 /** A one-tap task shown above the input, e.g. "Summarize". */
@@ -92,6 +113,7 @@ type Props = {
   dark?: boolean;
   /** A web page is open in the tab (not the new tab page); picks the examples in the empty chat. */
   hasPage?: boolean;
+  voice: VoiceProps;
 };
 
 const MAX_WIDTH = 420;
@@ -131,6 +153,7 @@ export function AssistantPanel({
   onOpenSource,
   dark = false,
   hasPage = false,
+  voice,
 }: Props) {
   const styles = useStyles();
   const palette = usePalette();
@@ -145,6 +168,56 @@ export function AssistantPanel({
   const [progress] = useState(() => new Animated.Value(0));
   const scrollRef = useRef<ScrollViewInstance>(null);
   const inputRef = useRef<TextInputInstance>(null);
+  const voiceState = useVoiceState();
+  const listening = voiceState !== 'idle';
+  // Read when a voice session ends, which may be renders later.
+  const latest = useRef({ running, busyElsewhere, onSend });
+  useEffect(() => {
+    latest.current = { running, busyElsewhere, onSend };
+  });
+
+  // The microphone is only on while the panel is on screen.
+  useEffect(() => {
+    if (!open) stopVoiceInput();
+  }, [open]);
+  useEffect(() => () => stopVoiceInput(), []);
+
+  const toggleVoice = () => {
+    if (listening) return stopVoiceInput(false);
+    // Bound to this conversation: if the user switches tabs, the words still land in this draft.
+    const write = setText;
+    void startVoiceInput({
+      language: getLanguage(),
+      incognito: voice.incognito,
+      online: voice.online,
+      onOnlineChange: voice.onOnlineChange,
+      draft: text,
+      write,
+      onFinal: voice.autoSend
+        ? (final) => {
+            const message = final.trim();
+            const now = latest.current;
+            // A task still running: the text stays in the field to send later.
+            if (!message || now.running || now.busyElsewhere) return;
+            write('');
+            now.onSend(message);
+          }
+        : undefined,
+      notify: voice.notify,
+    });
+  };
+
+  /** Typing while listening takes over: the microphone stops and the field is the user's again. */
+  const changeText = (value: string) => {
+    if (listening) abortVoiceInput();
+    setText(value);
+  };
+
+  /** Screens over the panel hide the listening state, so the microphone stops first. */
+  const leavePanel = (go: () => void) => () => {
+    stopVoiceInput();
+    go();
+  };
 
   useEffect(() => {
     if (!focusRequest) return;
@@ -219,7 +292,7 @@ export function AssistantPanel({
                     {t('chat.title')}
                   </GradientText>
                   <Pressable
-                    onPress={onOpenSettings}
+                    onPress={leavePanel(onOpenSettings)}
                     hitSlop={4}
                     accessibilityLabel={t('chat.modelA11y', { model: modelInfo })}
                   >
@@ -231,7 +304,11 @@ export function AssistantPanel({
                 {items.length > 0 && !running && (
                   <HeaderButton icon="newTab" accessibilityLabel={t('chat.newChat')} onPress={onNewChat} />
                 )}
-                <HeaderButton icon="settings" accessibilityLabel={t('chat.settings')} onPress={onOpenSettings} />
+                <HeaderButton
+                  icon="settings"
+                  accessibilityLabel={t('chat.settings')}
+                  onPress={leavePanel(onOpenSettings)}
+                />
                 <HeaderButton icon="close" accessibilityLabel={t('chat.closePanel')} onPress={onClose} />
               </View>
 
@@ -265,7 +342,7 @@ export function AssistantPanel({
                     onCall={onCall}
                     onSms={onSms}
                     onOpenSource={onOpenSource}
-                    onShowSent={onShowSent}
+                    onShowSent={leavePanel(onShowSent)}
                     onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
                   />
                 ))}
@@ -321,11 +398,14 @@ export function AssistantPanel({
                   style={[styles.input, d?.input]}
                   placeholderTextColor={dark ? '#a9a8b3' : '#6b6862'}
                   value={text}
-                  onChangeText={setText}
-                  placeholder={t(research ? 'chat.researchPlaceholder' : 'chat.placeholder')}
+                  onChangeText={changeText}
+                  placeholder={t(
+                    listening ? 'voice.listening' : research ? 'chat.researchPlaceholder' : 'chat.placeholder',
+                  )}
                   multiline
                   editable={!running}
                 />
+                <MicButton state={voiceState} onPress={toggleVoice} reduceMotion={reduceMotion} />
                 {running ? (
                   <Pressable
                     style={[styles.sendButton, styles.stopButton]}
@@ -389,6 +469,52 @@ function EmptyState({
         ))}
       </View>
     </View>
+  );
+}
+
+/**
+ * The microphone: tap to talk, tap again to stop (a pause also stops it). While listening it is
+ * filled, and a ring grows with the voice's loudness (still, without the ring moving, under Reduce motion).
+ */
+function MicButton({
+  state,
+  onPress,
+  reduceMotion,
+}: {
+  state: VoiceState;
+  onPress: () => void;
+  reduceMotion: boolean;
+}) {
+  const styles = useStyles();
+  const d = useContext(PanelTheme);
+  const palette = usePalette();
+  const level = useVoiceLevel();
+  const [scale] = useState(() => new Animated.Value(1));
+  const on = state === 'listening';
+  useEffect(() => {
+    Animated.timing(scale, {
+      toValue: on && !reduceMotion ? 1 + level * 0.45 : 1,
+      duration: reduceMotion ? 0 : 110,
+      useNativeDriver: true,
+    }).start();
+  }, [on, level, reduceMotion, scale]);
+  const active = state !== 'idle';
+  return (
+    <Pressable
+      onPress={onPress}
+      // 40pt drawn, 44pt to touch.
+      hitSlop={2}
+      style={styles.micWrap}
+      accessibilityRole="button"
+      accessibilityLabel={t(active ? 'voice.stop' : 'voice.start')}
+      accessibilityHint={active ? undefined : t('voice.startHint')}
+      accessibilityState={{ busy: state === 'preparing' || state === 'stopping', selected: active }}
+    >
+      {on ? <Animated.View style={[styles.micRing, { transform: [{ scale }] }]} /> : null}
+      <View style={[styles.micButton, d?.micButton, active && styles.micOn, !on && active && styles.micPending]}>
+        <Icon name="microphone" size={19} color={active ? '#ffffff' : palette.textSecondary} />
+      </View>
+    </Pressable>
   );
 }
 
@@ -832,6 +958,27 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
   },
   sendDisabled: { opacity: 0.4 },
+  micWrap: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  micButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+  },
+  micOn: { backgroundColor: c.danger, borderColor: c.danger },
+  micPending: { opacity: 0.6 },
+  micRing: {
+    position: 'absolute',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: c.danger,
+    opacity: 0.25,
+  },
   stopButton: { backgroundColor: '#444' },
   sendText: { color: c.onTint, fontSize: 18, fontWeight: '700' },
 }));
@@ -841,6 +988,7 @@ const darkStyles = StyleSheet.create({
   header: { borderBottomColor: '#3a3944' },
   inputRow: { borderTopColor: '#3a3944' },
   input: { backgroundColor: '#2b2a33', borderColor: '#42414d', color: '#f2f1f5' },
+  micButton: { backgroundColor: '#2b2a33', borderColor: '#42414d' },
   chip: { backgroundColor: '#2b2a33', borderColor: '#42414d' },
   choice: { backgroundColor: '#2b2a33' },
   text: { color: '#f2f1f5' },

@@ -73,6 +73,7 @@ export type BackupSettings = Partial<{
   readerTheme: string;
   readerFont: string;
   readerEasyReading: boolean;
+  voiceAutoSend: boolean;
 }>;
 
 export type BackupPayload = {
@@ -266,6 +267,7 @@ const BOOLEAN_SETTINGS = [
   'animateLogo',
   'forceZoom',
   'readerEasyReading',
+  'voiceAutoSend',
 ] as const;
 
 function parseSettings(v: unknown): BackupSettings | undefined {

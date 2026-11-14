@@ -40,6 +40,18 @@ item for it.
 
 The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
 
+Voice input: the microphone button next to the message field turns speech into text with the phone's own speech
+recognition (`expo-speech-recognition`: iOS `SFSpeechRecognizer`, Android `SpeechRecognizer`), in the app's language
+(the device's regional variant when it has one). Words appear as they are recognised, are added to what is already
+typed and stay editable; nothing is sent until the user taps send (Settings › Assistant › "Send automatically after
+speaking" changes that). Tap again or pause to stop. Starting to talk stops read-aloud, and read-aloud never starts
+while the microphone is on. Recognition runs on the phone when it can (iOS on-device dictation for the language;
+Android 13+ with the language downloaded); otherwise the phone's speech service (Apple's or Google's) receives the
+audio, which Qutai explains and asks about once, before first use. Incognito conversations use on-device recognition
+only. Nothing is recorded to disk, and no audio goes to Qutai or the AI provider. The microphone turns off when the
+panel closes, another tab or a dialog comes up, the app leaves the screen, a call comes in or a site starts using the
+microphone; what was heard stays in the field.
+
 From the page menu (⋮) and by asking the agent: save the page as PDF (from its HTML, or from screenshots for pages
 that come out wrong), save a screenshot of the visible area or the whole page (scrolled and stitched) to Photos,
 read the page aloud, share/copy the link. When needed, the agent can also look at a screenshot of the page.
@@ -148,7 +160,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters |
 | `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, settings |
 | `src/i18n/` | Turkish and English UI strings, date formats |
-| `src/device/` | Device features: PDF, screenshots (also full page), read aloud, share/copy, downloads, private mode protection, calendar and reminders, notifications, location, opening system settings, the phone dialer |
+| `src/device/` | Device features: PDF, screenshots (also full page), read aloud, voice input (`voiceInput.ts`), share/copy, downloads, private mode protection, calendar and reminders, notifications, location, opening system settings, the phone dialer |
 | `src/browser/geolocation.ts` | Web pages' `navigator.geolocation`, answered by the app with a per-site location permission (ask / allow / block) |
 | `src/backup/` | The encrypted backup file: what goes in it, the encryption, and merging or replacing on import |
 | `src/ai/audit.ts`, `src/storage/sentLog.ts` | "What was sent to the AI": the entry recorded for each request and how long it is kept |
@@ -166,7 +178,8 @@ provider or model changes mid-chat, the history is rebuilt from the text and too
 
 Each permission is asked for the first time a feature needs it, never at launch: camera (QR codes, photos for
 upload fields), add-only Photos (saving screenshots and images), Face ID, write-only calendar and reminders (full calendar access only when the assistant first reads it), location
-while in use (per-site), local notifications, camera and microphone for sites you allow (per site, each asked separately). The full list per platform, with
+while in use (per-site), local notifications, camera and microphone for sites you allow (per site, each asked separately), microphone and (iOS)
+speech recognition on the first tap of the panel's microphone button. The full list per platform, with
 the feature, when the user is asked, the config line that declares it and what is blocked, is in
 [docs/permissions.md](docs/permissions.md); use it for the App Store privacy labels and the Play Data safety form.
 
@@ -205,6 +218,11 @@ the feature, when the user is asked, the config line that declares it and what i
   are refused). This relies on a small patch to react-native-webview (`patches/`, applied by `postinstall`) that lets
   the WebView grant only the origin and kinds the user allowed: **a new development build is needed**. Capture is
   paused while another tab is shown or Qutai is in the background, and screen sharing (`getDisplayMedia`) is refused.
+- **Voice input needs a new development build** (`expo-speech-recognition` is a native module; older builds start
+  and the button says a newer build is needed). On iOS, on-device support can only be read for the phone's own
+  language, so dictating in the other UI language counts as online (asked first, refused in incognito). On Android
+  12 and older there is no enforced on-device mode, so recognition there is always online. On Android, another app
+  taking the microphone isn't reported as such; the recogniser's error ends listening.
 - **Backups leave things out.** Downloads, saved pages, the "What was sent to the AI" list, caches and the lock
   settings are never in a backup file.
 - **Reader mode is a heuristic.** It is offered only on pages with enough article text (600 characters, 3 paragraphs)

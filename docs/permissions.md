@@ -19,7 +19,8 @@ is asked for at launch: each permission is asked the first time the feature need
 | Key | Feature | When the user is asked | Declared by |
 | --- | --- | --- | --- |
 | `NSCameraUsageDescription` | QR code scanner; taking a photo or video for a web page's upload field (`<input type="file">`); sites the user allows to use the camera (`getUserMedia`, per-site setting) | First time the QR scanner opens, "Take Photo or Video" is chosen in an upload field, or the user allows a site | `expo-camera` plugin, `cameraPermission` |
-| `NSMicrophoneUsageDescription` | Sites the user allows to use the microphone (`getUserMedia`, per-site setting: video calls, voice input on sites); the sound of a video recorded with the system camera for a web page's upload field. Qutai itself has no voice input | First time the user allows a site, or such a video is recorded (iOS asks) | `expo-camera` plugin, `microphonePermission` |
+| `NSMicrophoneUsageDescription` | Voice input in the assistant panel (the microphone button; speech becomes text in the message field, `src/device/voiceInput.ts`); sites the user allows to use the microphone (`getUserMedia`, per-site setting: video calls, voice input on sites); the sound of a video recorded with the system camera for a web page's upload field | First tap on the panel's microphone button, the first time the user allows a site, or such a video is recorded (iOS asks) | `expo-camera` plugin, `microphonePermission`, and the same text in the `expo-speech-recognition` plugin's `microphonePermission` (both write this key, so they must match) |
+| `NSSpeechRecognitionUsageDescription` | Voice input in the assistant panel (`SFSpeechRecognizer`). On-device recognition is used whenever the phone supports it for the language; otherwise Apple's speech service receives the audio, only after the user agreed once in Qutai (never in incognito conversations). Qutai and the AI provider get only the recognised text | First tap on the panel's microphone button (asked together with the microphone) | `expo-speech-recognition` plugin, `speechRecognitionPermission` |
 | `NSPhotoLibraryAddUsageDescription` | Saving screenshots (visible area or full page) and images from pages to Photos. Add-only: Qutai can't see the library | First save | `expo-media-library` plugin, `savePhotosPermission` (`photosPermission: false`, so no read key) |
 | `NSFaceIDUsageDescription` | Locking the app and incognito tabs with Face ID | When the lock is turned on or first used | `expo-local-authentication` plugin, `faceIDPermission` |
 | `NSCalendarsWriteOnlyAccessUsageDescription` (iOS 17+), `NSCalendarsUsageDescription` (iOS 16 and older) | The assistant adds an event the user confirmed (tickets, reservations). Write-only on iOS 17+: adding events never asks to read the calendar. On iOS 16 and older one grant covers adding and reading, so the old key mentions both | First event the user confirms | `expo-calendar` plugin, `writeOnlyAccess: true`, `writeOnlyCalendarPermission`, `calendarPermission` |
@@ -48,7 +49,7 @@ Runtime permissions (the user is asked):
 | Permission | Feature | When the user is asked | Declared by |
 | --- | --- | --- | --- |
 | `CAMERA` | QR code scanner; the camera option in a web page's upload field (offered once Qutai holds the permission); sites the user allows to use the camera (`getUserMedia`) | First time the QR scanner opens, the user taps an upload field with `capture` (a "take a photo" button; `src/browser/fileCapture.ts`), or the user allows a site | `expo-camera` (plugin and library manifest) |
-| `RECORD_AUDIO` | Sites the user allows to use the microphone (`getUserMedia`) | First time the user allows a site | `expo-camera` plugin, `recordAudioAndroid: true` |
+| `RECORD_AUDIO` | Voice input in the assistant panel (Android `SpeechRecognizer`, on-device on Android 13+ when the language's model is installed, otherwise Google's speech service after the user agreed once in Qutai); sites the user allows to use the microphone (`getUserMedia`) | First tap on the panel's microphone button, or the first time the user allows a site | `expo-camera` plugin, `recordAudioAndroid: true` (the `expo-speech-recognition` plugin declares it too) |
 | `WRITE_EXTERNAL_STORAGE` (Android 10 and older, `maxSdkVersion` 29) | Saving screenshots and images to the gallery (Android 10 and older); downloads to the Downloads folder (Android 9 and older). Android 11+ needs no storage permission for either | First save or download on those versions | `plugins/withLegacyStorageWrite.js` (the libraries declare it up to Android 12; this lowers it) |
 | `READ_CALENDAR`, `WRITE_CALENDAR` | Adding events and reminders (a reminder is a calendar event with an alarm on Android); the assistant's `read_calendar`, confirmed each time. Read is needed to find a writable calendar; Android has no write-only calendar access, so one prompt covers both | First event or reminder the user confirms, or the first `read_calendar` | `expo-calendar` plugin |
 | `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` | Same as iOS location; approximate accepted. Foreground only | First time a site or the assistant needs it | `expo-location` (plugin and library manifest) |
@@ -81,8 +82,11 @@ Debug builds also get `ACCESS_NETWORK_STATE`, `ACCESS_LOCAL_NETWORK` and `CHANGE
 client and React Native's debug manifest.
 
 Package visibility (`<queries>`): only what the libraries declare (sharing, mail composer, document picker, text to
-speech engines, WebView payment intents, calendar). Qutai doesn't call `canOpenURL`; links to other apps go straight
-to `openURL`.
+speech engines, WebView payment intents, calendar), plus the speech recognition services voice input may bind to:
+`com.google.android.googlequicksearchbox` (Android 12 and older), `com.google.android.tts` (Speech Recognition &
+Synthesis, Android 13+) and `com.google.android.as` (Android System Intelligence, the on-device recogniser), each with
+the `android.speech.RecognitionService` intent (`expo-speech-recognition` plugin, `androidSpeechServicePackages`).
+Qutai doesn't call `canOpenURL`; links to other apps go straight to `openURL`.
 
 ## Web pages
 
@@ -106,6 +110,12 @@ to `openURL`.
   range each time (never in incognito conversations). The events of that range go to the AI provider; they are not
   stored by Qutai (no memory, the action history records only the range, the "sent to the AI" log keeps the text in
   memory only). On iOS 17+ adding events uses write-only access and reading asks for full access separately.
+- Voice input (assistant panel): speech becomes text in the message field; nothing is recorded to disk and no audio
+  goes to Qutai or the AI provider (only the text, when the user sends it, like a typed message). The phone's own
+  recogniser runs on the device when it supports the language (iOS on-device dictation; Android 13+ with the language
+  downloaded). Otherwise the audio goes to Apple's or Google's speech service, only after the user agreed once in Qutai
+  (Settings › Assistant shows and changes the answer); incognito conversations never use it. For the store forms this
+  is processed by the platform's speech service, not collected by Qutai.
 - Camera: QR codes are decoded on the device; photos and videos for uploads go only to the page the user is
   uploading to.
 - No analytics, no advertising ID, no tracking (pro builds' planned analytics will change the forms; see TODO.md).
