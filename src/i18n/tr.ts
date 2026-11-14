@@ -78,6 +78,8 @@ export const tr: Record<keyof typeof en, string> = {
   'action.readTab': '📑 Sekme {id} okunuyor',
   'action.typeRedacted': '⌨️ [{ref}] alanına yazdı',
   'action.searchHistory': '🕘 Geçmişte aranıyor: {query}',
+  'action.topSites': '🕘 En sık ziyaret ettiğiniz sitelere bakılıyor',
+  'action.topSitesFor': '🕘 En sık ziyaret edilen siteler: {query}',
   'action.draftEmail': '✉️ E-posta taslağı: {subject}',
   'action.addCalendarEvent': '📅 Takvim etkinliği: {title}',
   'action.addReminder': '⏰ Anımsatıcı: {title}',

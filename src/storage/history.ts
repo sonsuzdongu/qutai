@@ -1,5 +1,7 @@
 import { foldForSearch } from '../browser/tabSearch';
+import { hostOf } from '../i18n/format';
 import type { Db } from './db';
+import { hiddenTopSites } from './topSites';
 
 export type HistoryEntry = { id: number; url: string; title: string; visitedAt: number };
 
@@ -83,6 +85,36 @@ export async function searchHistory(
     else byUrl.set(row.url, { url: row.url, title: row.title, lastVisit: row.visited_at, visits: 1 });
   }
   return [...byUrl.values()].slice(0, limit);
+}
+
+export type SiteVisits = { host: string; visits: number; lastVisit: number; url: string; title: string };
+
+/**
+ * Sites (hosts, without "www.") in a time range ranked by visits, with each site's latest page, counting only
+ * visits whose title or address contains every word of the query. Hosts the user removed from the new tab page's
+ * most visited sites are left out here too.
+ */
+export async function mostVisitedSites(
+  db: Db,
+  { query, from = 0, to = Number.MAX_SAFE_INTEGER, limit = 15 }: { query: string; from?: number; to?: number; limit?: number },
+): Promise<SiteVisits[]> {
+  const words = foldForSearch(query).split(/\s+/).filter(Boolean);
+  const hidden = new Set(await hiddenTopSites(db));
+  const rows = await db.getAllAsync<Row>(
+    'SELECT * FROM history WHERE visited_at >= ? AND visited_at <= ? ORDER BY visited_at DESC, id DESC LIMIT ?',
+    [from, to, SEARCH_SCAN_ROWS],
+  );
+  const byHost = new Map<string, SiteVisits>();
+  for (const row of rows) {
+    const host = hostOf(row.url);
+    if (!host || hidden.has(host)) continue;
+    if (words.length && !words.every((w) => foldForSearch(`${row.title} ${row.url}`).includes(w))) continue;
+    const site = byHost.get(host);
+    // Rows are newest first, so the first one seen for a host is its latest page.
+    if (site) site.visits++;
+    else byHost.set(host, { host, visits: 1, lastVisit: row.visited_at, url: row.url, title: row.title });
+  }
+  return [...byHost.values()].sort((a, b) => b.visits - a.visits || b.lastVisit - a.lastVisit).slice(0, limit);
 }
 
 /** Deletes visits from `from` on (0 deletes everything). */

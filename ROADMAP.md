@@ -144,7 +144,7 @@ moves everything to another phone.
 | Shopping and travel assistant | 🟡 | Go · M | The agent can do this and adds bookings to the calendar; missing: ready-made flows and a comparison table |
 | Form assistant | ✅ | | The agent fills forms, using what it keeps in memory (name, address); no passwords, cards or codes. It sees required fields, constraints and validation errors (`read_page`, and the results of `type`, `select_option` and submit clicks) |
 | Email assistant | ✅ | | Draft with `expo-mail-composer` (`draft_email`); the user presses the send button |
-| Searching history in natural language | ✅ | | `search_history`: searched on the device, only matching results go to the model |
+| Searching history in natural language | ✅ | | `search_history`: searched on the device, only matching results go to the model; `by_site` ranks the user's most visited sites ("my usual …") |
 | Action preview and undo | 🟡 | | Preview and cancel exist. **Actions on the web generally cannot be undone** (a submitted form, a completed payment). The right approach is confirming the action beforehand; undo is only possible for browser actions (closing tabs, navigation) |
 | Action history | ✅ | | What the agent did on which site, 30 days; plus "What was sent to the AI" |
 | Per-site agent permissions | ✅ | | Default, always allow, ask on every action, read only, blocked |

@@ -77,6 +77,8 @@ export const en = {
   'action.readTab': '📑 Reading tab {id}',
   'action.typeRedacted': '⌨️ Typed into [{ref}]',
   'action.searchHistory': '🕘 Searching history: {query}',
+  'action.topSites': '🕘 Looking at your most visited sites',
+  'action.topSitesFor': '🕘 Most visited sites for: {query}',
   'action.draftEmail': '✉️ Email draft: {subject}',
   'action.addCalendarEvent': '📅 Calendar event: {title}',
   'action.addReminder': '⏰ Reminder: {title}',

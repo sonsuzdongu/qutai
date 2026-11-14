@@ -55,7 +55,7 @@ import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmar
 import { getDb } from './src/storage/db';
 import { deviceMemoryStore } from './src/storage/memory';
 import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
-import { deleteHistorySince, searchHistory } from './src/storage/history';
+import { deleteHistorySince, mostVisitedSites, searchHistory } from './src/storage/history';
 import { composeEmail } from './src/device/email';
 import { placeCall } from './src/device/phone';
 import { SEARCH_ENGINES, searchResultsOf } from './src/browser/search';
@@ -122,6 +122,7 @@ const downloads = new DownloadStore(getDb);
 
 const historySearch = {
   search: async (query: string, from: number, to: number) => searchHistory(await getDb(), { query, from, to }),
+  sites: async (query: string, from: number, to: number) => mostVisitedSites(await getDb(), { query, from, to }),
 };
 
 /** Records an agent action for the activity screen. */

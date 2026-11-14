@@ -15,7 +15,7 @@ import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import { sleep } from '../utils/sleep';
 import type { ActionEntry } from '../storage/actionLog';
-import type { HistoryMatch } from '../storage/history';
+import type { HistoryMatch, SiteVisits } from '../storage/history';
 import type { MemoryStore } from './memory';
 import { decide, SitePolicy, siteKey } from './sitePolicy';
 import {
@@ -64,7 +64,11 @@ export type ToolContext = {
   /** Per-site permissions (allow, ask, read-only, blocked). */
   sites?: SitePolicy;
   /** Browsing history search (search_history); absent in tests or when unavailable. */
-  history?: { search(query: string, from: number, to: number): Promise<HistoryMatch[]> };
+  history?: {
+    search(query: string, from: number, to: number): Promise<HistoryMatch[]>;
+    /** Most visited sites (by_site), ranked by visits; hidden top sites left out. */
+    sites(query: string, from: number, to: number): Promise<SiteVisits[]>;
+  };
   /** Opens the email composer; resolves with what the user did (sent, saved, cancelled…). */
   composeEmail?: (draft: EmailDraft) => Promise<string>;
   /** Adds a Call button to the conversation (offer_call). It never dials: only the user's tap on it does. */
@@ -139,6 +143,10 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'read_tab':
       return t('action.readTab', { id: str(input.tab_id) });
     case 'search_history':
+      if (input.by_site === true)
+        return str(input.query).trim()
+          ? t('action.topSitesFor', { query: str(input.query) })
+          : t('action.topSites');
       return t('action.searchHistory', { query: str(input.query) });
     case 'draft_email':
       return t('action.draftEmail', { subject: str(input.subject).slice(0, 60) });
@@ -268,6 +276,19 @@ async function searchHistoryTool(input: Record<string, unknown>, ctx: ToolContex
   const since = Math.max(0, Number(input.since_days_ago ?? 90) || 0);
   const until = Math.max(0, Number(input.until_days_ago ?? 0) || 0);
   const query = String(input.query ?? '');
+  if (input.by_site === true) {
+    const sites = await ctx.history.sites(query, now - since * DAY_MS, now - until * DAY_MS);
+    const about = query.trim() ? ` for "${query}"` : '';
+    const head = `Today: ${formatVisit(now)}. Most visited sites${about} (${since}–${until} days ago), by visits:`;
+    if (sites.length === 0)
+      return { content: `${head}\nNo sites found. Try fewer or other keywords, or a longer time range.`, isError: false };
+    const rows = sites.map(
+      (s) =>
+        `- ${s.host}: ${s.visits} visit${s.visits === 1 ? '' : 's'}, last ${formatVisit(s.lastVisit)} · ` +
+        `${s.title || '(no title)'} — ${s.url}`,
+    );
+    return { content: `${head}\n${rows.join('\n')}`, isError: false };
+  }
   const matches = await ctx.history.search(query, now - since * DAY_MS, now - until * DAY_MS);
   const header = `Today: ${formatVisit(now)}. History matches for "${query}" (${since}–${until} days ago):`;
   if (matches.length === 0)

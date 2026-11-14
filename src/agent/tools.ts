@@ -227,11 +227,18 @@ export const TOOLS: ToolDefinition[] = [
     description:
       "Search the user's browsing history on this phone (normal tabs only) by words in page titles and addresses, " +
       'e.g. when they ask about a page they saw before. Turn their description into short keywords and an optional ' +
-      'time range in days ago. Returns matching pages with the time of the last visit.',
+      'time range in days ago. Returns matching pages with the time of the last visit. ' +
+      'With by_site, returns sites ranked by how often the user visits them instead (their usual sites).',
     input_schema: {
       type: 'object',
       properties: {
         query: { type: 'string', description: 'Keywords that should appear in the title or address; empty lists all' },
+        by_site: {
+          type: 'boolean',
+          description:
+            'Group by site and rank by visit count, e.g. "my usual train ticket site" (query "train") or the most ' +
+            'visited sites overall (empty query). Default false',
+        },
         since_days_ago: { type: 'integer', description: 'Search from this many days ago (default 90)' },
         until_days_ago: { type: 'integer', description: 'Up to this many days ago (default 0, now)' },
       },
