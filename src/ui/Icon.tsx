@@ -60,6 +60,7 @@ const ICONS = {
   download: { ios: 'square.and.arrow.down', android: 'download' },
   openInNew: { ios: 'plus.square.on.square', android: 'open_in_new' },
   check: { ios: 'checkmark', android: 'check' },
+  phone: { ios: 'phone.fill', android: 'call' },
 } satisfies Record<string, SymbolName>;
 
 export type IconName = keyof typeof ICONS;

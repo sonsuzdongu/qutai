@@ -22,6 +22,7 @@ import { Icon, IconName } from '../ui/Icon';
 import { GradientText } from '../ui/BrandGradient';
 import { QutaiMark } from '../ui/QutaiMark';
 import type { Source } from '../agent/types';
+import type { CallOffer } from '../device/phone';
 import { hostOf } from '../i18n/format';
 import { hasTable, MarkdownText } from './MarkdownText';
 import { SearchSuggestions } from './SearchSuggestions';
@@ -30,7 +31,7 @@ import { useReduceMotion } from '../utils/useReduceMotion';
 
 export type ChatItem = {
   id: string;
-  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices' | 'sources';
+  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices' | 'sources' | 'call';
   text: string;
   /** For 'choices': the buttons offered. */
   options?: string[];
@@ -42,6 +43,8 @@ export type ChatItem = {
   sources?: Source[];
   /** For 'sources': Google's search suggestions widget, shown with Gemini answers grounded in Google Search. */
   searchWidget?: string;
+  /** For 'call': the number behind the Call button (stays usable, unlike ask_user options). */
+  call?: CallOffer;
 };
 
 /** A one-tap task shown above the input, e.g. "Summarize". */
@@ -75,6 +78,8 @@ type Props = {
   onMessageAction: (action: MessageAction, text: string) => void;
   /** A link in an answer was tapped. */
   onOpenLink: (url: string) => void;
+  /** A Call button or a tel: link in an answer was tapped; number is already normalised. */
+  onCall: (number: string) => void;
   /** A source under an answer was tapped. */
   onOpenSource: (source: Source) => void;
   dark?: boolean;
@@ -113,6 +118,7 @@ export function AssistantPanel({
   onOpenSettings,
   onMessageAction,
   onOpenLink,
+  onCall,
   onOpenSource,
   dark = false,
   hasPage = false,
@@ -247,6 +253,7 @@ export function AssistantPanel({
                     speaking={speaking}
                     onAction={onMessageAction}
                     onOpenLink={onOpenLink}
+                    onCall={onCall}
                     onOpenSource={onOpenSource}
                     onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
                   />
@@ -399,6 +406,7 @@ function ChatRow({
   speaking,
   onAction,
   onOpenLink,
+  onCall,
   onOpenSource,
   onChoose,
 }: {
@@ -406,12 +414,14 @@ function ChatRow({
   speaking: boolean;
   onAction: (action: MessageAction, text: string) => void;
   onOpenLink: (url: string) => void;
+  onCall: (number: string) => void;
   onOpenSource: (source: Source) => void;
   /** Set while the question can still be answered. */
   onChoose?: (itemId: string, option: string) => void;
 }) {
   const styles = useStyles();
   const d = useContext(PanelTheme);
+  const palette = usePalette();
   const textStyle = styles.assistantText;
   const wide = item.kind === 'assistant' && hasTable(item.text);
   switch (item.kind) {
@@ -432,6 +442,7 @@ function ChatRow({
               text={item.streaming ? `${item.text} ▍` : item.text}
               style={textStyle}
               onOpenLink={onOpenLink}
+              onCall={onCall}
               dark={!!d}
             />
           </View>
@@ -452,7 +463,7 @@ function ChatRow({
       return (
         <View style={styles.choices}>
           <View style={[styles.bubble, styles.assistantBubble, d?.assistantBubble]}>
-            <MarkdownText text={item.text} style={textStyle} onOpenLink={onOpenLink} dark={!!d} />
+            <MarkdownText text={item.text} style={textStyle} onOpenLink={onOpenLink} onCall={onCall} dark={!!d} />
           </View>
           {(item.options ?? []).map((option) => {
             const chosen = item.chosen === option;
@@ -507,6 +518,37 @@ function ChatRow({
           {item.searchWidget ? <SearchSuggestions html={item.searchWidget} onOpenLink={onOpenLink} /> : null}
         </View>
       );
+    case 'call': {
+      const call = item.call;
+      if (!call) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      return (
+        <View style={[styles.callCard, d?.assistantBubble]}>
+          <View style={styles.callInfo}>
+            {call.name ? (
+              <Text style={[styles.callName, d?.text]} numberOfLines={2}>
+                {call.name}
+              </Text>
+            ) : null}
+            <Text style={[styles.callNumber, d?.dim]} selectable>
+              {call.number}
+            </Text>
+          </View>
+          <Pressable
+            onPress={() => onCall(call.number)}
+            style={({ pressed }) => [styles.callButton, pressed && styles.callButtonPressed]}
+            accessibilityRole="button"
+            accessibilityLabel={
+              call.name
+                ? t('chat.callLabel', { name: call.name, number: call.number })
+                : t('chat.callNumberLabel', { number: call.number })
+            }
+          >
+            <Icon name="phone" size={17} color={palette.onTint} />
+            <Text style={styles.callButtonText}>{t('chat.call')}</Text>
+          </Pressable>
+        </View>
+      );
+    }
     case 'error':
       return <Text style={styles.error}>⚠️ {item.text}</Text>;
     default:
@@ -622,6 +664,33 @@ const useStyles = makeStyles((c) => ({
   choiceClosed: { opacity: 0.4 },
   choiceText: { fontSize: 15, color: c.tintText, fontWeight: '600' },
   choiceTextChosen: { color: c.onTint },
+  callCard: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingLeft: 12,
+    paddingRight: 8,
+    paddingVertical: 8,
+    borderRadius: 14,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.separator,
+  },
+  callInfo: { flex: 1, gap: 2 },
+  callName: { fontSize: 15, fontWeight: '600', color: c.text },
+  callNumber: { fontSize: 14, color: c.textSecondary, fontVariant: ['tabular-nums'] },
+  callButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 44,
+    paddingHorizontal: 16,
+    borderRadius: 22,
+    backgroundColor: c.tint,
+  },
+  callButtonPressed: { opacity: 0.8 },
+  callButtonText: { color: c.onTint, fontSize: 15, fontWeight: '700' },
   busy: {
     flexDirection: 'row',
     alignItems: 'center',

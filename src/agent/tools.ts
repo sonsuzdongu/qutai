@@ -253,6 +253,21 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'offer_call',
+    description:
+      'Show a Call button in the chat for a phone number, e.g. when the user asks to call a place you found. It does ' +
+      'not call: the user taps the button and their phone opens the dialer. Take the number from the page or search ' +
+      'result, never invent one. One plain number only: no * or # codes, pauses or extensions.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        phone: { type: 'string', description: 'The phone number as found, in any formatting, e.g. "+90 (212) 555 12 34"' },
+        name: { type: 'string', description: 'Who the number belongs to, e.g. the pharmacy\'s name (optional)' },
+      },
+      required: ['phone'],
+    },
+  },
+  {
     name: 'add_calendar_event',
     description:
       "Add an event to the user's calendar (e.g. a booked ticket, reservation or appointment). The user sees exactly " +

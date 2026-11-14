@@ -15,7 +15,7 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
-import { Conversation, newItem, sourcesItem } from './src/chat/Conversation';
+import { Conversation, callItem, newItem, sourcesItem } from './src/chat/Conversation';
 import { getProvider, modelLabel } from './src/ai/providers';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import type { ContextTarget } from './src/browser/contextMenu';
@@ -51,6 +51,7 @@ import { deviceMemoryStore } from './src/storage/memory';
 import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
 import { deleteHistorySince, searchHistory } from './src/storage/history';
 import { composeEmail } from './src/device/email';
+import { placeCall } from './src/device/phone';
 import { initNotifications } from './src/device/notifications';
 import { nowContext } from './src/agent/scheduling';
 import { shareReportPdf } from './src/device/reportPdf';
@@ -373,6 +374,14 @@ function BrowserApp({
         log: logAction,
         history: historySearch,
         composeEmail,
+        offerCall: (offer) => {
+          AccessibilityInfo.announceForAccessibility(
+            offer.name
+              ? t('chat.callLabel', { name: offer.name, number: offer.number })
+              : t('chat.callNumberLabel', { number: offer.number }),
+          );
+          chat.add(callItem(offer));
+        },
         showAppSettings: () => setSettingsVisible(true),
         signal,
         onEvent: (event) => {
@@ -924,6 +933,10 @@ function BrowserApp({
               onOpenLink={(url) => {
                 browser.openTab(url, { incognito: browser.active.incognito });
                 closePanel();
+              }}
+              onCall={(number) => {
+                bump();
+                placeCall(number, () => toast.show(t('common.copied')));
               }}
               onMessageAction={(action, text) =>
                 runAction(async () => {

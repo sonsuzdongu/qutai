@@ -7,6 +7,7 @@ import { scheduleNotification } from '../device/notifications';
 import { savePagePdf, savePdfFromScreenshots } from '../device/pdf';
 import { t } from '../i18n';
 import { captureForModel, saveFullPageScreenshot, saveScreenshot } from '../device/screenshot';
+import { CallOffer, normalizePhone } from '../device/phone';
 import { openSystemSettings, PermissionDeniedError } from '../device/settings';
 import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
@@ -53,6 +54,8 @@ export type ToolContext = {
   history?: { search(query: string, from: number, to: number): Promise<HistoryMatch[]> };
   /** Opens the email composer; resolves with what the user did (sent, saved, cancelled…). */
   composeEmail?: (draft: EmailDraft) => Promise<string>;
+  /** Adds a Call button to the conversation (offer_call). It never dials: only the user's tap on it does. */
+  offerCall?: (offer: CallOffer) => void;
   /** Shows Qutai's own Settings screen (open_settings with target "app"). */
   showAppSettings?: () => void;
   /** Records what the agent did, for the action history. Not called for incognito tabs. */
@@ -122,6 +125,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.searchHistory', { query: str(input.query) });
     case 'draft_email':
       return t('action.draftEmail', { subject: str(input.subject).slice(0, 60) });
+    case 'offer_call':
+      return t('action.offerCall', { who: (str(input.name).trim() || str(input.phone)).slice(0, 60) });
     case 'close_tab':
       return t('action.closeTab', { id: str(input.tab_id) });
     case 'close_tabs':
@@ -254,6 +259,30 @@ async function draftEmail(input: Record<string, unknown>, ctx: ToolContext): Pro
       isError: true,
     };
   }
+}
+
+/** Who a call was offered to, for the action history: the name, never the number. */
+function offerCallLog(input: Record<string, unknown>): string {
+  const name = typeof input.name === 'string' ? input.name.trim().slice(0, 60) : '';
+  return name ? t('action.offerCallLogged', { name }) : t('action.offerCallLoggedNoName');
+}
+
+/**
+ * Shows a Call button in the chat. Nothing is dialled here: page content is untrusted, so the user's tap
+ * on the button is the only thing that opens the dialer, and the button shows the full number first.
+ */
+function offerCallTool(input: Record<string, unknown>, ctx: ToolContext): ToolOutput {
+  if (!ctx.offerCall) return { content: 'Call buttons are not available here.', isError: true };
+  const phone = normalizePhone(input.phone);
+  if (!phone.ok) return { content: `${phone.error} No button was shown.`, isError: true };
+  const name = typeof input.name === 'string' ? input.name.replace(/\s+/g, ' ').trim().slice(0, 80) : '';
+  ctx.offerCall({ number: phone.number, ...(name ? { name } : {}) });
+  return {
+    content:
+      `A Call button for ${name ? `${name}, ` : ''}${phone.number} is shown in the chat. No call has been made: ` +
+      'the user taps the button to call themselves. Do not say you called; tell them where the number came from.',
+    isError: false,
+  };
 }
 
 /**
@@ -448,6 +477,7 @@ const LOGGED_TOOLS = new Set([
   'remember',
   'forget',
   'draft_email',
+  'offer_call',
   'add_calendar_event',
   'add_reminder',
   'schedule_notification',
@@ -472,6 +502,7 @@ function actionTarget(
       'ask_user',
       'search_history',
       'draft_email',
+      'offer_call',
       'open_settings',
       ...SCHEDULING_TOOLS,
     ].includes(name)
@@ -512,7 +543,9 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
         description:
           name === 'type'
             ? t('action.typeRedacted', { ref: String(input.ref ?? '') })
-            : name in SCHEDULING_LOG_KEYS
+            : name === 'offer_call'
+              ? offerCallLog(input)
+              : name in SCHEDULING_LOG_KEYS
               ? t(SCHEDULING_LOG_KEYS[name as SchedulingTool])
               : describeToolCall(name, input),
         ok: !result.isError,
@@ -540,6 +573,7 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
   if (name === 'search_history') return searchHistoryTool(input, ctx);
   if (name === 'draft_email') return draftEmail(input, ctx);
   if (name === 'open_settings') return openSettingsTool(input, ctx);
+  if (name === 'offer_call') return offerCallTool(input, ctx);
 
   const tab = currentTab(ctx);
   if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;

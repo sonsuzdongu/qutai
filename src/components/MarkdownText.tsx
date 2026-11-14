@@ -1,6 +1,7 @@
 import { Lexer, Token, Tokens } from 'marked';
 import { memo, ReactNode, useMemo } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TextStyle, View } from 'react-native';
+import { normalizePhone } from '../device/phone';
 import { makeStyles } from '../ui/theme';
 
 type Props = {
@@ -9,6 +10,8 @@ type Props = {
   style: TextStyle;
   /** Called for http(s) links; other schemes are shown as plain text. */
   onOpenLink: (url: string) => void;
+  /** Called for tel: links holding a plain phone number (normalised); without it they are plain text. */
+  onCall?: (number: string) => void;
   dark?: boolean;
 };
 
@@ -28,6 +31,19 @@ export function decodeEntities(text: string): string {
 
 export const isWebUrl = (url: string) => /^https?:\/\//i.test(url);
 
+/** The number of a tel: link, normalised like offer_call's; null for anything that isn't one plain number. */
+function telNumber(href: string): string | null {
+  if (!/^tel:/i.test(href)) return null;
+  let raw: string;
+  try {
+    raw = decodeURIComponent(href.slice(4));
+  } catch {
+    return null;
+  }
+  const phone = normalizePhone(raw);
+  return phone.ok ? phone.number : null;
+}
+
 /** Whether the markdown has a table (a header row followed by a |---| separator row). */
 export function hasTable(text: string): boolean {
   return /^\s*\|?.*\|.*\n\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/m.test(text);
@@ -42,7 +58,7 @@ export function columnWidths(table: { header: { text: string }[]; rows: { text: 
 }
 
 /** Renders the assistant's markdown with native components: selectable text, tappable links. */
-export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink, dark }: Props) {
+export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink, onCall, dark }: Props) {
   const styles = useStyles();
   const d = dark ? darkStyles : null;
   const tokens = useMemo(() => Lexer.lex(text), [text]);
@@ -87,6 +103,13 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
       case 'image': {
         const link = token as Tokens.Link | Tokens.Image;
         const label = link.type === 'image' ? decodeEntities(link.text) || link.href : inline(link.tokens, key);
+        const phone = link.type === 'link' && onCall ? telNumber(link.href) : null;
+        if (phone && onCall)
+          return (
+            <Text key={key} style={styles.link} onPress={() => onCall(phone)} accessibilityRole="link">
+              {label}
+            </Text>
+          );
         if (!isWebUrl(link.href)) return <Text key={key}>{label}</Text>;
         return (
           <Text key={key} style={styles.link} onPress={() => onOpenLink(link.href)} accessibilityRole="link">

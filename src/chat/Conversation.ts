@@ -1,12 +1,19 @@
 import type { Turn } from '../ai/types';
 import type { Source } from '../agent/types';
 import type { ChatItem } from '../components/AssistantPanel';
+import type { CallOffer } from '../device/phone';
 
 let itemCounter = 0;
 const STREAM_FLUSH_MS = 50;
 
 export function sourcesItem(sources: Source[], searchWidget?: string): ChatItem {
   return { id: String(++itemCounter), kind: 'sources', text: '', sources, ...(searchWidget ? { searchWidget } : {}) };
+}
+
+/** A Call button offered by the assistant; the text is what versions without the card show instead. */
+export function callItem(call: CallOffer): ChatItem {
+  const text = `📞 ${call.name ? `${call.name} · ` : ''}${call.number}`;
+  return { id: String(++itemCounter), kind: 'call', text, call };
 }
 
 export function newItem(kind: ChatItem['kind'], text: string, options?: string[]): ChatItem {
