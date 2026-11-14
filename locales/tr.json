@@ -3,6 +3,10 @@
     "CFBundleDisplayName": "Qutai",
     "NSPhotoLibraryAddUsageDescription": "Qutai, kaydetmek istediğiniz ekran görüntülerini fotoğraflarınıza ekler.",
     "NSCameraUsageDescription": "Qutai, QR kodlarını okumak için kamerayı kullanır.",
-    "NSFaceIDUsageDescription": "Qutai, uygulamanın ve gizli sekmelerin kilidini açmak için Face ID'yi kullanır."
+    "NSFaceIDUsageDescription": "Qutai, uygulamanın ve gizli sekmelerin kilidini açmak için Face ID'yi kullanır.",
+    "NSCalendarsUsageDescription": "Qutai, onayladığınız bilet ve rezervasyon gibi etkinlikleri takviminize ekler.",
+    "NSCalendarsWriteOnlyAccessUsageDescription": "Qutai, onayladığınız bilet ve rezervasyon gibi etkinlikleri takviminize ekler.",
+    "NSRemindersUsageDescription": "Qutai, onayladığınız anımsatıcıları Anımsatıcılar'a ekler.",
+    "NSRemindersFullAccessUsageDescription": "Qutai, onayladığınız anımsatıcıları Anımsatıcılar'a ekler."
   }
 }

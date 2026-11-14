@@ -27,6 +27,18 @@ export function formatDate(date: Date): string {
   return new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
 }
 
+/** A full localized date and time, e.g. "Saturday, 14 November 2026, 19:30". */
+export function formatDateTime(date: Date): string {
+  return new Intl.DateTimeFormat(locale(), {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date);
+}
+
 export function timeLabel(ts: number): string {
   return new Intl.DateTimeFormat(locale(), { hour: '2-digit', minute: '2-digit' }).format(ts);
 }

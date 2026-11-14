@@ -3,6 +3,10 @@
     "CFBundleDisplayName": "Qutai",
     "NSPhotoLibraryAddUsageDescription": "Qutai adds the screenshots you choose to save to your photos.",
     "NSCameraUsageDescription": "Qutai uses the camera to scan QR codes.",
-    "NSFaceIDUsageDescription": "Qutai uses Face ID to unlock the app and incognito tabs."
+    "NSFaceIDUsageDescription": "Qutai uses Face ID to unlock the app and incognito tabs.",
+    "NSCalendarsUsageDescription": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",
+    "NSCalendarsWriteOnlyAccessUsageDescription": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",
+    "NSRemindersUsageDescription": "Qutai adds reminders you confirm to your Reminders.",
+    "NSRemindersFullAccessUsageDescription": "Qutai adds reminders you confirm to your Reminders."
   }
 }

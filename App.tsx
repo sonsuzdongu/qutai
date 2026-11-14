@@ -48,6 +48,8 @@ import { deviceMemoryStore } from './src/storage/memory';
 import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
 import { deleteHistorySince, searchHistory } from './src/storage/history';
 import { composeEmail } from './src/device/email';
+import { initNotifications } from './src/device/notifications';
+import { nowContext } from './src/agent/scheduling';
 import { shareReportPdf } from './src/device/reportPdf';
 import { authenticate } from './src/device/biometric';
 import { scannedTarget } from './src/device/qr';
@@ -262,6 +264,9 @@ function BrowserApp({
     return () => sub.remove();
   }, [browserInstance]);
 
+  // Lets reminders scheduled by the assistant show while Qutai is open; asks for no permission.
+  useEffect(() => initNotifications(), []);
+
   // The theme setting overrides the system appearance for the whole app, web pages included.
   useEffect(() => {
     Appearance.setColorScheme(settings.theme === 'system' ? 'unspecified' : settings.theme);
@@ -349,7 +354,7 @@ function BrowserApp({
     const where = current.isNewTab
       ? 'new tab page, no web page loaded'
       : `${current.title || '(no title)'} — ${current.url}`;
-    const pageInfo = `\n\n[Current tab ${current.id}: ${where}. Open tabs: ${browser.tabs.length}]`;
+    const pageInfo = `\n\n[Current tab ${current.id}: ${where}. Open tabs: ${browser.tabs.length}. ${nowContext()}]`;
     chat.turns.push({ role: 'user', text: text + pageInfo });
 
     // Research applies to this one message.

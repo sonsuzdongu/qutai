@@ -220,6 +220,12 @@ Added from Comet reviews:
 - Reader mode (was postponed; should be brought back together with read-aloud for accessibility)
 - iOS default browser: applying for Apple's `com.apple.developer.web-browser` entitlement
 
+Done in the development build:
+- ✅ Calendar, reminders and notifications: after a booking the assistant offers (via `ask_user`) to add it to the calendar
+  (`add_calendar_event`), set a reminder (`add_reminder`: iOS Reminders, on Android a calendar event with an alarm) or
+  schedule a local notification (`schedule_notification`). Every write is confirmed with its details; permissions are
+  asked on first use; never from incognito conversations. Reading the calendar is not done
+
 ### Phase 5 – Things that require a server
 
 Account system (shared with the credit system), end-to-end encrypted sync (including memory; deletion markers must be

@@ -233,6 +233,70 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'add_calendar_event',
+    description:
+      "Add an event to the user's calendar (e.g. a booked ticket, reservation or appointment). The user sees exactly " +
+      "what will be added and confirms it. Use the current date, time and time zone given with the user's message to " +
+      'work out dates like "tomorrow at 7". Only call this after the user has said they want it.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Short event title, e.g. "Cinema: Dune (Hall 3)"' },
+        start: {
+          type: 'string',
+          description: "ISO 8601 local date and time in the phone's time zone, e.g. 2026-11-15T19:30",
+        },
+        end: {
+          type: 'string',
+          description: "Same format as start; if unknown, estimate it (e.g. the film's length) or use start + 1 hour",
+        },
+        location: { type: 'string', description: 'Venue name and address (optional)' },
+        notes: { type: 'string', description: 'Booking reference, seats, links (optional)' },
+        alert_minutes_before: {
+          type: 'integer',
+          description: 'An alert this many minutes before the start (optional; 0 = at the start)',
+        },
+      },
+      required: ['title', 'start', 'end'],
+    },
+  },
+  {
+    name: 'add_reminder',
+    description:
+      'Add a reminder: on iPhone to the Reminders app, on Android as a calendar event with an alarm (Android needs a due ' +
+      'time). The user sees exactly what will be added and confirms it. Only call this after the user has said they want it.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'What to be reminded of' },
+        due: {
+          type: 'string',
+          description: 'When, as an ISO 8601 local date and time, e.g. 2026-11-15T09:00 (optional on iPhone)',
+        },
+        notes: { type: 'string', description: 'Extra details (optional)' },
+      },
+      required: ['title'],
+    },
+  },
+  {
+    name: 'schedule_notification',
+    description:
+      'Schedule a notification from Qutai itself on this phone at a future time (e.g. "leave for the cinema"). ' +
+      'The user sees it and confirms it. Only call this after the user has said they want it.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'Notification title' },
+        body: { type: 'string', description: 'Notification text' },
+        time: {
+          type: 'string',
+          description: "ISO 8601 local date and time in the phone's time zone, e.g. 2026-11-15T19:30",
+        },
+      },
+      required: ['title', 'body', 'time'],
+    },
+  },
+  {
     name: 'switch_tab',
     description: 'Switch to another open tab by id. Further page tools act on that tab.',
     input_schema: {

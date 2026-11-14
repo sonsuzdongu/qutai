@@ -90,6 +90,21 @@
           "faceIDPermission": "Qutai uses Face ID to unlock the app and incognito tabs."
         }
       ],
+      [
+        "expo-calendar",
+        {
+          "writeOnlyAccess": true,
+          "calendarPermission": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",
+          "writeOnlyCalendarPermission": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",
+          "remindersPermission": "Qutai adds reminders you confirm to your Reminders."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "enableRemoteNotifications": false
+        }
+      ],
       "expo-font"
     ],
     "locales": {

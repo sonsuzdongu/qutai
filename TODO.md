@@ -139,12 +139,13 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
 - [ ] Before submitting to the stores: review the legacy storage permissions (`READ_EXTERNAL_STORAGE`, `READ_MEDIA_VISUAL_USER_SELECTED`) that the `expo-media-library` plugin adds on Android
 - [ ] Later: location, camera and QR, calendar, email and SMS drafts, biometric authentication, haptics
 - [ ] Security: tools that send data out (location, etc.) ask for user confirmation every time; clipboard reading and contacts are not given as tools. An iOS usage description string in `app.json` for each permission
-- [ ] Calendar, reminders and notifications: the assistant can put things on the user's calendar and set reminders
-  - Example: after buying a cinema ticket or booking anything with a time, the assistant offers "Shall I remind you?" (via `ask_user`) and, if yes, adds a calendar event and/or a reminder with an alert before it
-  - Tools: `add_calendar_event` (title, start, end, location, notes, alert), `add_reminder` (iOS Reminders; on Android a calendar event with an alarm), `schedule_notification` (a local notification from Qutai itself)
-  - Packages: `expo-calendar` (events and iOS reminders) and `expo-notifications` (local notifications); both work in Expo Go (remote push does not)
-  - Every write asks for confirmation and shows exactly what will be added; permissions are requested only on first use, with usage strings in `app.json` (`NSCalendarsFullAccessUsageDescription` / write-only access where enough, `NSRemindersFullAccessUsageDescription`, Android `READ_CALENDAR`/`WRITE_CALENDAR`, notification permission on Android 13+)
-  - Reading the calendar (e.g. "am I free on Friday?") only with explicit consent; never from incognito tabs; not kept in memory unless the user asks
+- [x] Calendar, reminders and notifications: the assistant can put things on the user's calendar and set reminders
+  - [x] Example: after buying a cinema ticket or booking anything with a time, the assistant offers "Shall I remind you?" (via `ask_user`) and, if yes, adds a calendar event and/or a reminder with an alert before it (system prompt)
+  - [x] Tools: `add_calendar_event` (title, start, end, location, notes, alert), `add_reminder` (iOS Reminders; on Android a calendar event with an alarm), `schedule_notification` (a local notification from Qutai itself) (`src/agent/scheduling.ts`, `src/device/calendar.ts`, `src/device/notifications.ts`)
+  - [x] Packages: `expo-calendar` (events and iOS reminders) and `expo-notifications` (local notifications only: `enableRemoteNotifications: false`, no push token). Expo Go does not include `expo-calendar`: **a new development build is needed** for both native modules (`eas build --profile development` or `npx expo run:ios|android`); an older build reports the tools as unavailable instead of crashing
+  - [x] Every write asks for confirmation and shows exactly what will be added (whatever the "ask before actions" setting or a site's "always allow"); permissions are requested only on first use, with usage strings in `app.json` and `locales/` (iOS write-only calendar access, `NSRemindersFullAccessUsageDescription`; Android `READ_CALENDAR`/`WRITE_CALENDAR`, notification permission on Android 13+). Refused in conversations that touched an incognito tab; the action history only says what kind of thing was added
+  - [ ] Not verified on a device yet: adding an event with write-only access on iOS 17+, the Android calendar choice (primary writable calendar), notifications at the right time (without `SCHEDULE_EXACT_ALARM` Android may deliver them a little late)
+  - [ ] Reading the calendar (e.g. "am I free on Friday?") only with explicit consent; never from incognito tabs; not kept in memory unless the user asks
 
 ## Assistant
 

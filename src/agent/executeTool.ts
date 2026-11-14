@@ -1,5 +1,8 @@
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
+import { Platform } from 'react-native';
+import { addCalendarEvent, addReminder, DeviceToolError } from '../device/calendar';
+import { scheduleNotification } from '../device/notifications';
 import { savePagePdf } from '../device/pdf';
 import { t } from '../i18n';
 import { captureForModel, saveScreenshot } from '../device/screenshot';
@@ -10,6 +13,7 @@ import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch } from '../storage/history';
 import type { MemoryStore } from './memory';
 import { decide, SitePolicy, siteKey } from './sitePolicy';
+import { describePlan, planSchedule, SCHEDULING_TOOLS, SchedulingTool } from './scheduling';
 
 type PageSnapshot = {
   url: string;
@@ -126,6 +130,12 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.remember', { text: str(input.text).slice(0, 80) });
     case 'forget':
       return t('action.forget');
+    case 'add_calendar_event':
+      return t('action.addCalendarEvent', { title: str(input.title).slice(0, 60) });
+    case 'add_reminder':
+      return t('action.addReminder', { title: str(input.title).slice(0, 60) });
+    case 'schedule_notification':
+      return t('action.scheduleNotification', { title: str(input.title).slice(0, 60) });
     default:
       return `🔧 ${name}`;
   }
@@ -234,6 +244,58 @@ async function draftEmail(input: Record<string, unknown>, ctx: ToolContext): Pro
   }
 }
 
+/** What the action history says about a scheduling tool: what kind of thing was added, not its content. */
+const SCHEDULING_LOG_KEYS = {
+  add_calendar_event: 'action.addCalendarEventLogged',
+  add_reminder: 'action.addReminderLogged',
+  schedule_notification: 'action.scheduleNotificationLogged',
+} as const;
+
+/**
+ * Calendar events, reminders and notifications. Never from incognito conversations, and the user
+ * confirms every write with its details, whatever the "ask before actions" setting.
+ */
+async function schedulingTool(name: SchedulingTool, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  const tab = ctx.browser.getTab(ctx.agentTab.id);
+  if (ctx.privacy?.touchedIncognito || tab?.incognito) {
+    return {
+      content:
+        'Not allowed: this conversation involves incognito tabs, so nothing is added to the calendar, reminders ' +
+        'or notifications. Tell the user they can ask again from a normal tab.',
+      isError: true,
+    };
+  }
+  const plan = planSchedule(name, input);
+  if (typeof plan === 'string') return { content: plan, isError: true };
+  const android = Platform.OS === 'android';
+  if (plan.kind === 'reminder' && android && !plan.due) {
+    return {
+      content:
+        'On Android a reminder needs a due date and time (it becomes a calendar event with an alarm). ' +
+        'Ask the user when they want to be reminded.',
+      isError: true,
+    };
+  }
+  if (!ctx.confirm) return { content: 'This needs the user\'s confirmation, which is not available here.', isError: true };
+  if (!(await ctx.confirm(describePlan(plan, android), null)))
+    return { content: 'The user declined this. Ask them how to proceed.', isError: true };
+  try {
+    if (plan.kind === 'event') {
+      const calendar = await addCalendarEvent(plan);
+      return { content: `Added the event to the calendar "${calendar}".`, isError: false };
+    }
+    if (plan.kind === 'reminder') {
+      const where = await addReminder(plan);
+      return { content: `Added the reminder to ${where}.`, isError: false };
+    }
+    await scheduleNotification(plan);
+    return { content: 'Scheduled the notification. Qutai will show it at that time.', isError: false };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return { content: e instanceof DeviceToolError ? message : `Could not add it: ${message}`, isError: true };
+  }
+}
+
 async function memoryTool(
   name: 'remember' | 'forget',
   input: Record<string, unknown>,
@@ -339,6 +401,9 @@ const LOGGED_TOOLS = new Set([
   'remember',
   'forget',
   'draft_email',
+  'add_calendar_event',
+  'add_reminder',
+  'schedule_notification',
 ]);
 
 /** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
@@ -359,6 +424,7 @@ function actionTarget(
       'ask_user',
       'search_history',
       'draft_email',
+      ...SCHEDULING_TOOLS,
     ].includes(name)
   )
     return null;
@@ -395,7 +461,11 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
         tool: name,
         // Typed text can be personal, so the history only says where something was typed.
         description:
-          name === 'type' ? t('action.typeRedacted', { ref: String(input.ref ?? '') }) : describeToolCall(name, input),
+          name === 'type'
+            ? t('action.typeRedacted', { ref: String(input.ref ?? '') })
+            : name in SCHEDULING_LOG_KEYS
+              ? t(SCHEDULING_LOG_KEYS[name as SchedulingTool])
+              : describeToolCall(name, input),
         ok: !result.isError,
       });
     }
@@ -404,6 +474,8 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
 
   // Refused and declined actions are recorded too, so the history shows what was stopped.
   if (decision.kind === 'refuse') return record({ content: decision.reason, isError: true });
+  // These confirm on their own, with the details of what will be added.
+  if (SCHEDULING_TOOLS.has(name)) return record(await schedulingTool(name as SchedulingTool, input, ctx));
   if (decision.kind === 'confirm' && ctx.confirm) {
     const allowed = await ctx.confirm(describeToolCall(name, input), host);
     if (!allowed) return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true });
