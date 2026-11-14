@@ -81,12 +81,11 @@ export function Hero() {
         </div>
       </div>
       <div className="hero-art">
-        <div className="hero-art-frame" data-depth="0.04">
+        <div className="hero-art-frame">
           <Miniature name="hero" ratio="3x2" sizes="(min-width: 1200px) 1100px, 100vw" priority />
         </div>
-        {/* A caption plaque under the painting, like a museum label: what the scene is, and four points. */}
+        {/* A gilded band under the painting with the four points. */}
         <div className="hero-plaque">
-          <p className="hero-caption">{t('hero.caption')}</p>
           <ul className="hero-points">
             {points.map((c) => (
               <li key={c.key}>

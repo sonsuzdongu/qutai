@@ -35,7 +35,6 @@ export const en = {
   'hero.github': 'View on GitHub',
   'hero.status': 'In development. Coming to the App Store and Google Play; not released yet.',
 
-  'hero.caption': 'The robots of Qutai at work',
   'hero.chip1': 'Reads your tabs',
   'hero.chip2': 'Remembers you',
   'hero.chip3': 'Asks first',

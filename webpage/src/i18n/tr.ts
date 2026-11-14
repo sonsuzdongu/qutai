@@ -36,7 +36,6 @@ export const tr: Messages = {
   'hero.github': 'GitHub’da incele',
   'hero.status': 'Geliştirme aşamasında. App Store ve Google Play’e geliyor; henüz yayımlanmadı.',
 
-  'hero.caption': 'Qutai’nin robotları iş başında',
   'hero.chip1': 'Sekmeleri okur',
   'hero.chip2': 'Sizi hatırlar',
   'hero.chip3': 'Önce sorar',
