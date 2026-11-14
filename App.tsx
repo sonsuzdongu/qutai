@@ -1,6 +1,7 @@
 import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import * as SystemUI from 'expo-system-ui';
+import { ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import {
   AccessibilityInfo,
   Appearance,
@@ -102,10 +103,17 @@ import { authenticate } from './src/device/biometric';
 import { scannedTarget } from './src/device/qr';
 import { toUrl } from './src/browser/url';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
+import { IntroVariant, LaunchIntro } from './src/components/LaunchIntro';
 import { LockScreen } from './src/components/LockScreen';
 import { Onboarding } from './src/components/Onboarding';
 import { contentBlocking } from './src/content/blocking';
-import { canPinSiteShortcut, Entry, pinSiteShortcut, useEntryPoints } from './src/device/entryPoints';
+import {
+  canPinSiteShortcut,
+  Entry,
+  pinSiteShortcut,
+  setLaunchAppearance,
+  useEntryPoints,
+} from './src/device/entryPoints';
 import { ActionSheet, SheetAction } from './src/components/ActionSheet';
 import { LEGAL_VERSION } from './src/legal/documents';
 import { LogoMotion } from './src/ui/QutaiMark';
@@ -144,9 +152,21 @@ import {
 } from './src/device/backgroundTask';
 import { deleteOrphanChats, loadChat, savedAttachmentIds, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
-import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
+import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings, ThemeSetting } from './src/storage/settings';
+import { holdSplash } from './src/ui/launch';
+import { darkPalette, lightPalette } from './src/ui/theme';
 import { usePersistSession } from './src/storage/usePersistSession';
 import { useRecordHistory } from './src/storage/useRecordHistory';
+
+// The native splash stays until the first real frame is ready (src/ui/launch.ts).
+holdSplash();
+// The launch intro plays once per process: not again when Android recreates the activity with the app running.
+let introPlayed = false;
+
+/** The theme setting overrides the system appearance for the whole app, web pages included. */
+function applyTheme(theme: ThemeSetting) {
+  Appearance.setColorScheme(theme === 'system' ? 'unspecified' : theme);
+}
 
 const memoryStore = deviceMemoryStore(getDb);
 const sitePermissions = new SitePermissionStore(getDb);
@@ -242,45 +262,87 @@ export default function App() {
   // The screen stays on while the app is open: reading pages and watching a task run shouldn't
   // be interrupted by the screen dimming or locking (and a locked phone would freeze a task).
   useKeepAwake();
+  /** Settings are read first (a few milliseconds): they decide the theme, the intro and the app lock. */
+  const [boot, setBoot] = useState<{ settings: Settings; intro: IntroVariant } | null>(null);
   const [restored, setRestored] = useState<{
     session: Session | null;
     recentlyClosed: ClosedTab[];
     settings: Settings;
   } | null>(null);
+  const [introDone, setIntroDone] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
 
   useEffect(() => {
     // Settings come first too, so a locked app never shows its tabs before the lock screen.
     const settings = loadSettings().catch(() => DEFAULT_SETTINGS);
+    Promise.all([settings, AccessibilityInfo.isReduceMotionEnabled().catch(() => false)]).then(([s, reduceMotion]) => {
+      applyTheme(s.theme);
+      const intro: IntroVariant = s.appLock
+        ? 'plain'
+        : introPlayed || reduceMotion || !s.animateLogo
+          ? 'still'
+          : 'animate';
+      introPlayed = true;
+      setBoot({ settings: s, intro });
+    });
     getDb()
       .then((db) => Promise.all([loadSession(db), loadRecentlyClosed(db)]))
       .catch((): [null, ClosedTab[]] => [null, []])
       .then(async ([session, recentlyClosed]) => setRestored({ session, recentlyClosed, settings: await settings }));
   }, []);
 
-  // Reading the saved session takes a few milliseconds; tabs are created only after it.
-  if (!restored) return <View style={styles.container} />;
-  const { settings } = restored;
+  // The app's appearance: the system's until the settings are read, then the theme setting's (applyTheme updates
+  // it at once, before the first frame with the intro). Behind every view (and, on iOS, the window at the next
+  // launch): the screen background of that appearance.
+  const dark = useColorScheme() === 'dark';
+  useEffect(() => {
+    SystemUI.setBackgroundColorAsync((dark ? darkPalette : lightPalette).bg).catch(() => {});
+  }, [dark]);
+  const onIntroDone = useCallback(() => setIntroDone(true), []);
+  const onUnlocked = useCallback(() => setUnlocked(true), []);
+
+  // Before the settings are read: the splash's colour, under the native splash.
+  if (!boot) return <View style={[styles.flex, { backgroundColor: (dark ? darkPalette : lightPalette).bg }]} />;
   // First run, or the privacy policy / terms changed since the user accepted them.
-  if (!settings.onboarded || settings.legalAcceptedVersion < LEGAL_VERSION) {
-    return (
+  const onboarding = restored && (!restored.settings.onboarded || restored.settings.legalAcceptedVersion < LEGAL_VERSION);
+  let content: ReactNode = null;
+  if (restored && onboarding) {
+    content = (
       <Onboarding
-        settings={settings}
-        legalOnly={settings.onboarded}
+        settings={restored.settings}
+        legalOnly={restored.settings.onboarded}
         onDone={(next) => {
           saveSettings(next).catch(() => {});
           setRestored({ ...restored, settings: next });
         }}
       />
     );
+  } else if (restored) {
+    content = (
+      <ErrorBoundary full>
+        <BrowserApp
+          initialSession={restored.session}
+          recentlyClosed={restored.recentlyClosed}
+          initialSettings={restored.settings}
+          onUnlocked={onUnlocked}
+        />
+      </ErrorBoundary>
+    );
   }
   return (
-    <ErrorBoundary full>
-      <BrowserApp
-        initialSession={restored.session}
-        recentlyClosed={restored.recentlyClosed}
-        initialSettings={restored.settings}
-      />
-    </ErrorBoundary>
+    <View style={[styles.flex, { backgroundColor: (dark ? darkPalette : lightPalette).bg }]}>
+      {content}
+      {!introDone && (
+        <LaunchIntro
+          variant={boot.intro}
+          dark={dark}
+          ready={restored !== null}
+          // The app lock: the cover stays (under the lock screen) until the user unlocks; onboarding has no lock.
+          hold={boot.intro === 'plain' && !onboarding && !unlocked}
+          onDone={onIntroDone}
+        />
+      )}
+    </View>
   );
 }
 
@@ -288,10 +350,13 @@ function BrowserApp({
   initialSession,
   recentlyClosed,
   initialSettings,
+  onUnlocked,
 }: {
   initialSession: Session | null;
   recentlyClosed: ClosedTab[];
   initialSettings: Settings;
+  /** The app lock is open (right away when it is off). */
+  onUnlocked: () => void;
 }) {
   const [browserInstance] = useState(() => new Browser(initialSession, recentlyClosed));
   // Android: incognito profiles left from an earlier run (the app was killed with incognito tabs open; they are
@@ -349,6 +414,9 @@ function BrowserApp({
   // stay hidden after leaving the app until the user unlocks them again.
   const [appLocked, setAppLocked] = useState(initialSettings.appLock);
   const [incognitoUnlocked, setIncognitoUnlocked] = useState(false);
+  useEffect(() => {
+    if (!appLocked) onUnlocked();
+  }, [appLocked, onUnlocked]);
   const lock: 'app' | 'incognito' | null = appLocked
     ? 'app'
     : settings.incognitoLock && tab.incognito && !incognitoUnlocked
@@ -456,9 +524,10 @@ function BrowserApp({
     };
   }, [browserInstance]);
 
-  // The theme setting overrides the system appearance for the whole app, web pages included.
+  // The theme setting overrides the system appearance; Android 12+ also keeps it for the next launch's splash.
   useEffect(() => {
-    Appearance.setColorScheme(settings.theme === 'system' ? 'unspecified' : settings.theme);
+    applyTheme(settings.theme);
+    setLaunchAppearance(settings.theme);
   }, [settings.theme]);
   const darkMode = useColorScheme() === 'dark';
   useEffect(() => setHapticsEnabled(settings.haptics), [settings.haptics]);

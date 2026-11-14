@@ -206,7 +206,20 @@
             "com.google.android.as"
           ]
         }
-      ]
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#faf9f5",
+          "dark": {
+            "backgroundColor": "#1c1b22"
+          },
+          "ios": {
+            "image": "./assets/splash-transparent.png"
+          }
+        }
+      ],
+      "./plugins/withLaunchBackground"
     ],
     "locales": {
       "tr": "./locales/tr.json",

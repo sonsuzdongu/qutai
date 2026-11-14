@@ -1,7 +1,10 @@
 package expo.modules.qutaientry
 
 import android.app.SearchManager
+import android.app.UiModeManager
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -14,6 +17,7 @@ import expo.modules.kotlin.modules.ModuleDefinition
  *   JavaScript takes the queue (each item once) and asks the user what to do with it; nothing is sent anywhere
  *   by itself (src/device/entryPoints.ts).
  * - "Add to home screen": a pinned launcher shortcut for a page (SiteShortcut).
+ * - The launch appearance: the app's theme setting, kept by the system for the next cold start's splash screen.
  */
 class QutaiEntryModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -34,6 +38,29 @@ class QutaiEntryModule : Module() {
     Function("isPinShortcutSupported") {
       val context = appContext.reactContext ?: return@Function false
       SiteShortcut.isSupported(context)
+    }
+
+    /**
+     * Android 12+: the app's own light/dark setting ("system", "light" or "dark") is handed to the system, which keeps
+     * it across restarts and draws the next launch's splash screen in it (UiModeManager.setApplicationNightMode).
+     * Only called when it changed, as each call is a configuration change. Earlier Android: nothing to do, the
+     * splash follows the system appearance. Returns whether the system took it.
+     */
+    Function("setLaunchAppearance") { theme: String ->
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return@Function false
+      val context = appContext.reactContext ?: return@Function false
+      val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+      if (prefs.getString(LAUNCH_APPEARANCE, "system") == theme) return@Function true
+      val mode = when (theme) {
+        "dark" -> UiModeManager.MODE_NIGHT_YES
+        "light" -> UiModeManager.MODE_NIGHT_NO
+        // Anything else: no app-specific mode, the system's appearance applies.
+        else -> UiModeManager.MODE_NIGHT_AUTO
+      }
+      val uiModeManager = context.getSystemService(UiModeManager::class.java) ?: return@Function false
+      uiModeManager.setApplicationNightMode(mode)
+      prefs.edit().putString(LAUNCH_APPEARANCE, theme).apply()
+      true
     }
 
     /** Asks the launcher to pin a shortcut that opens `url` in Qutai; the launcher shows its own confirmation. */
@@ -73,6 +100,8 @@ class QutaiEntryModule : Module() {
     private const val HANDLED = "expo.modules.qutaientry.HANDLED"
     private const val MAX_TEXT = 20_000
     private const val MAX_SUBJECT = 500
+    private const val PREFS = "qutai_entry"
+    private const val LAUNCH_APPEARANCE = "launch_appearance"
   }
 }
 

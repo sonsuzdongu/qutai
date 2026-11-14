@@ -46,6 +46,7 @@ type QutaiEntryModule = {
   takePending(): RawEntry[];
   isPinShortcutSupported?(): boolean;
   pinSiteShortcut?(url: string, label: string, letter: string, color: string): boolean;
+  setLaunchAppearance?(theme: string): boolean;
   addListener(event: 'onEntry', listener: () => void): { remove(): void };
 };
 
@@ -175,6 +176,19 @@ export function pinSiteShortcut(url: string, title: string): boolean {
     return !!native?.pinSiteShortcut?.(url, title || host, host.charAt(0), hslToHex(siteColor(host)));
   } catch {
     return false;
+  }
+}
+
+/**
+ * Android 12+: hands the app's theme setting to the system so the next cold start's splash screen is drawn in it
+ * (otherwise it follows the system appearance, as on earlier Android and on iOS, where no such API exists).
+ */
+export function setLaunchAppearance(theme: 'system' | 'light' | 'dark'): void {
+  if (Platform.OS !== 'android') return;
+  try {
+    native?.setLaunchAppearance?.(theme);
+  } catch {
+    // A build without the function: the splash follows the system appearance.
   }
 }
 
