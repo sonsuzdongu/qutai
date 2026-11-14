@@ -10,6 +10,7 @@ import { DARK_SITE_SCRIPT } from '../content/darkSites';
 import { allowInsecure, upgradeToHttps } from '../browser/httpsOnly';
 import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
 import { classifyLoadError, linkTarget } from '../browser/navigation';
+import { mayOfferExternal, noteUserGesture } from '../browser/externalGuard';
 import { openExternal } from '../browser/openExternal';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
@@ -110,6 +111,8 @@ function TabWebView({
       pointerEvents={active ? 'auto' : 'none'}
       importantForAccessibility={active ? 'auto' : 'no-hide-descendants'}
       accessibilityElementsHidden={!active}
+      // Touches inside the page land here too; they let the page ask to open another app.
+      onTouchStart={() => noteUserGesture(tab)}
     >
       {tab.isNewTab ? (
         <NewTabPage
@@ -159,8 +162,12 @@ function TabWebView({
               }
             }
             if (linkTarget(request.url) !== 'external') return true;
-            // Only the page itself may hand off to another app; frames (often ads) can't.
-            if (request.isTopFrame !== false) openExternal(request.url, tab, newTabActions.onNotice);
+            // Only the page itself may hand off to another app, frames (often ads) can't, and only
+            // when the user just touched it: no prompts from redirects on load.
+            const clicked = request.navigationType === 'click';
+            if (request.isTopFrame !== false && mayOfferExternal(tab, request.url, clicked)) {
+              openExternal(request.url, tab, newTabActions.onNotice);
+            }
             return false;
           }}
           onError={(e) => {
