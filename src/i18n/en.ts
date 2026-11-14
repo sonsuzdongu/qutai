@@ -42,6 +42,7 @@ export const en = {
   'chat.share': '⤴ Share',
 
   'action.readPage': '📄 Reading the page',
+  'action.readSource': '🧾 Reading the page source',
   'action.navigate': '🌐 Opening: {url}',
   'action.goBack': '⬅️ Going back',
   'action.click': '👆 Clicking (ref {ref})',

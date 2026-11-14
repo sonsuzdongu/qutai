@@ -20,6 +20,19 @@ type PageSnapshot = {
   content: string;
 };
 
+type SourceSnapshot = {
+  url: string;
+  title: string;
+  /** Length of the whole source (or of the selected elements) in characters. */
+  total: number;
+  /** How many elements matched the selector; null when the whole page was read. */
+  matches: number | null;
+  offset: number;
+  truncated: boolean;
+  nextOffset: number | null;
+  content: string;
+};
+
 export type ToolContext = {
   browser: Browser;
   /** The tab the agent works in. It can differ from the tab the user is looking at. */
@@ -45,6 +58,7 @@ export type ToolContext = {
 /** Tools that need a loaded web page. */
 const PAGE_TOOLS = new Set([
   'read_page',
+  'read_source',
   'click',
   'click_at',
   'type',
@@ -62,6 +76,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
   switch (name) {
     case 'read_page':
       return t('action.readPage');
+    case 'read_source':
+      return t('action.readSource');
     case 'navigate':
       return t('action.navigate', { url: str(input.url) });
     case 'go_back':
@@ -126,6 +142,22 @@ function formatPage(tab: Tab, page: PageSnapshot, tool: 'read_page' | 'read_tab'
   const more = tool === 'read_tab' ? `read_tab with tab_id=${tab.id} and` : 'read_page with';
   const note = page.truncated ? `\n[Content truncated. Call ${more} offset=${page.nextOffset} to read the rest.]` : '';
   return `${header}\n\n${page.content}${note}`;
+}
+
+function formatSource(tab: Tab, source: SourceSnapshot, selector: string): string {
+  const end = source.offset + source.content.length;
+  const header = [
+    `Tab: ${tab.id}`,
+    `URL: ${source.url}`,
+    `Title: ${source.title}`,
+    selector ? `Selector: ${selector} (${source.matches ?? 0} element(s))` : 'HTML source from the DOM',
+    `Characters ${source.offset}–${end} of ${source.total}`,
+  ].join('\n');
+  const args = selector ? `selector=${JSON.stringify(selector)} and ` : '';
+  const note = source.truncated
+    ? `\n[Content truncated. Call read_source with ${args}offset=${source.nextOffset} to read the rest.]`
+    : '';
+  return `${header}\n\n${source.content}${note}`;
 }
 
 /** Reads another tab in the background, without bringing it to the front or moving the agent there. */
@@ -229,6 +261,11 @@ async function memoryTool(
   }
 }
 
+/** The WebView cannot show view-source: pages; the model is pointed to read_source instead. */
+function isViewSource(raw: unknown): boolean {
+  return /^\s*view-source:/i.test(String(raw ?? ''));
+}
+
 function normalizeUrl(raw: unknown): string {
   const url = String(raw || '').trim();
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
@@ -291,6 +328,7 @@ const LOGGED_TOOLS = new Set([
   'type',
   'select_option',
   'read_page',
+  'read_source',
   'read_tab',
   'view_screenshot',
   'save_pdf',
@@ -332,6 +370,15 @@ function actionTarget(
 }
 
 export async function executeTool(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  // Checked before the site permission, which would otherwise ask about a made-up host.
+  if ((name === 'navigate' || name === 'open_tab') && isViewSource(input.url)) {
+    return {
+      content:
+        'view-source: URLs cannot be opened in this browser. Call read_source to read the HTML source of the ' +
+        'current page instead (navigate to the page itself first if needed).',
+      isError: true,
+    };
+  }
   const target = actionTarget(name, input, ctx);
   const host = target ? siteKey(target.url) : null;
   const level = host && ctx.sites ? ctx.sites.levelFor(host) : 'default';
@@ -392,6 +439,11 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
       case 'read_page': {
         const page = await tab.run<PageSnapshot>('readPage', [input.offset ?? 0]);
         return { content: formatPage(tab, page, 'read_page'), isError: false };
+      }
+      case 'read_source': {
+        const selector = typeof input.selector === 'string' ? input.selector.trim() : '';
+        const source = await tab.run<SourceSnapshot>('readSource', [input.offset ?? 0, selector]);
+        return { content: formatSource(tab, source, selector), isError: false };
       }
       case 'navigate': {
         const url = normalizeUrl(input.url);

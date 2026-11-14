@@ -19,9 +19,18 @@ const KEEP_FULL_RESULTS = 2;
 const KEEP_IMAGES = 1;
 const COMPACT_THRESHOLD = 1500;
 /** Tools whose result shows the agent the page's content, which makes the page a source. */
-const READING_TOOLS = new Set(['read_page', 'view_screenshot']);
+const READING_TOOLS = new Set(['read_page', 'read_source', 'view_screenshot']);
 const MAX_SOURCES = 10;
-const SAFE_TO_RETRY = new Set(['read_page', 'read_tab', 'view_screenshot', 'list_tabs', 'scroll', 'scroll_to', 'wait']);
+const SAFE_TO_RETRY = new Set([
+  'read_page',
+  'read_source',
+  'read_tab',
+  'view_screenshot',
+  'list_tabs',
+  'scroll',
+  'scroll_to',
+  'wait',
+]);
 
 export type AgentOptions = ToolContext & {
   provider: ProviderId;

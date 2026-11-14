@@ -153,7 +153,7 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
   - Decide what happens when a tab leaves or joins a group, a group is dissolved or its last tab closes (keep the chat with the group; offer to move it)
   - Saved chats are keyed by tab `uid` today (`src/storage/chat.ts`): add group keys and migrate
   - Incognito groups still never write to disk
-- [ ] "Look at the source code": the assistant tries to open `view-source:` URLs, which the WebView in Expo Go can't show. Read the source from the DOM instead (e.g. a `read_source` tool returning `document.documentElement.outerHTML`, split into chunks like `read_page`; or scripts and styles on request), and make `navigate` refuse `view-source:` with a hint to use it. Mention it in the system prompt
+- [x] "Look at the source code": the assistant tries to open `view-source:` URLs, which the WebView in Expo Go can't show. Read the source from the DOM instead (e.g. a `read_source` tool returning `document.documentElement.outerHTML`, split into chunks like `read_page`; or scripts and styles on request), and make `navigate` refuse `view-source:` with a hint to use it. Mention it in the system prompt
 
 ## Other
 

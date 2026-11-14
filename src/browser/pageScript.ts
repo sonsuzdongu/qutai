@@ -3,7 +3,7 @@
  * source in a string: Hermes compiles functions to bytecode, so we cannot use
  * Function.prototype.toString() to ship code into the WebView.
  *
- * Exposes window.__qutaiAgent with: readPage, click, type, select, scroll, scrollTo.
+ * Exposes window.__qutaiAgent with: readPage, readSource, click, type, select, scroll, scrollTo.
  * Elements are addressed by numeric refs assigned during readPage.
  */
 export const PAGE_SCRIPT = String.raw`
@@ -199,6 +199,41 @@ export const PAGE_SCRIPT = String.raw`
       truncated: truncated,
       nextOffset: truncated ? lineIndex : null,
       content: lines.join('\n')
+    };
+  }
+
+  // The HTML source as it is now in the DOM (scripts may have changed it since it loaded),
+  // or the outerHTML of the elements matching a CSS selector. Paged by characters.
+  function readSource(offset, selector) {
+    offset = Math.max(0, Number(offset) || 0);
+    var source;
+    var matches = null;
+    if (selector) {
+      var els = document.querySelectorAll(String(selector));
+      matches = els.length;
+      var parts = [];
+      for (var i = 0; i < els.length; i++) parts.push(els[i].outerHTML);
+      source = parts.join('\n\n');
+    } else {
+      var dt = document.doctype;
+      var doctype = '';
+      if (dt) {
+        doctype = '<!DOCTYPE ' + dt.name +
+          (dt.publicId ? ' PUBLIC "' + dt.publicId + '"' : '') +
+          (dt.systemId ? (dt.publicId ? ' ' : ' SYSTEM ') + '"' + dt.systemId + '"' : '') + '>\n';
+      }
+      source = doctype + document.documentElement.outerHTML;
+    }
+    var end = Math.min(source.length, offset + MAX_CHARS);
+    return {
+      url: location.href,
+      title: document.title,
+      total: source.length,
+      matches: matches,
+      offset: offset,
+      truncated: end < source.length,
+      nextOffset: end < source.length ? end : null,
+      content: source.slice(offset, end)
     };
   }
 
@@ -611,6 +646,7 @@ export const PAGE_SCRIPT = String.raw`
 
   window.__qutaiAgent = {
     readPage: readPage,
+    readSource: readSource,
     click: click,
     clickAt: clickAt,
     type: type,

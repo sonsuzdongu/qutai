@@ -95,7 +95,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, settings |
 | `src/i18n/` | Turkish and English UI strings, date formats |
 | `src/device/` | Device features: PDF, screenshot, read aloud, share/copy, private mode protection |
-| `src/agent/tools.ts` | Tools exposed to the model (`read_page`, `click`, `type`, `navigate`, `open_tab`, `view_screenshot`, `save_pdf`, `read_aloud`…) |
+| `src/agent/tools.ts` | Tools exposed to the model (`read_page`, `read_source`, `click`, `type`, `navigate`, `open_tab`, `view_screenshot`, `save_pdf`, `read_aloud`…) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |

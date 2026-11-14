@@ -18,6 +18,7 @@ export const NEW_TAB_URL = 'qutai://newtab';
 
 export type PageCommand =
   | 'readPage'
+  | 'readSource'
   | 'click'
   | 'clickAt'
   | 'type'

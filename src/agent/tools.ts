@@ -41,6 +41,22 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'read_source',
+    description:
+      "Read the current page's HTML source (as it is now in the DOM, so changes made by scripts are included). " +
+      'Use this when the user asks about the source code; view-source: URLs cannot be opened. ' +
+      'Pass a CSS selector to get only matching elements, e.g. "script:not([src])" for inline scripts or ' +
+      '"style, link[rel=stylesheet]" for styles. ' +
+      'Long sources are split into chunks; pass the offset given at the end of the previous result to continue.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        offset: { type: 'integer', description: 'Character to start reading from (default 0)' },
+        selector: { type: 'string', description: 'CSS selector; omit for the whole page' },
+      },
+    },
+  },
+  {
     name: 'navigate',
     description: 'Open a URL in the browser. Use full URLs (https://...).',
     input_schema: {

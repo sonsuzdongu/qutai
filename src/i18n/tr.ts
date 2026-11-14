@@ -43,6 +43,7 @@ export const tr: Record<keyof typeof en, string> = {
   'chat.share': '⤴ Paylaş',
 
   'action.readPage': '📄 Sayfa okunuyor',
+  'action.readSource': '🧾 Sayfa kaynağı okunuyor',
   'action.navigate': '🌐 Açılıyor: {url}',
   'action.goBack': '⬅️ Geri gidiliyor',
   'action.click': '👆 Tıklanıyor (ref {ref})',
