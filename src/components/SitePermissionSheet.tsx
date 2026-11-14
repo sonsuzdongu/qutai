@@ -12,7 +12,7 @@ type Props = {
   onClose: () => void;
 };
 
-/** Picks what Kutai may do on one site. */
+/** Picks what Qutai may do on one site. */
 export function SitePermissionSheet({ host, level, onSelect, onClose }: Props) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();

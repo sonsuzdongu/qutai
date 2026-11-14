@@ -21,7 +21,7 @@ export function formatSize(bytes: number | null): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
-/** Files downloaded in Kutai (iOS; Android uses the system Downloads folder). Tap to share or save to Files. */
+/** Files downloaded in Qutai (iOS; Android uses the system Downloads folder). Tap to share or save to Files. */
 export function DownloadsScreen({ visible, store, onOpen, onDelete, onClose }: Props) {
   const styles = useStyles();
   useSyncExternalStore(store.subscribe, store.getVersion);

@@ -1,8 +1,8 @@
 {
   "ios": {
-    "CFBundleDisplayName": "Kutai",
-    "NSPhotoLibraryAddUsageDescription": "Kutai, kaydetmek istediğiniz ekran görüntülerini fotoğraflarınıza ekler.",
-    "NSCameraUsageDescription": "Kutai, QR kodlarını okumak için kamerayı kullanır.",
-    "NSFaceIDUsageDescription": "Kutai, uygulamanın ve gizli sekmelerin kilidini açmak için Face ID'yi kullanır."
+    "CFBundleDisplayName": "Qutai",
+    "NSPhotoLibraryAddUsageDescription": "Qutai, kaydetmek istediğiniz ekran görüntülerini fotoğraflarınıza ekler.",
+    "NSCameraUsageDescription": "Qutai, QR kodlarını okumak için kamerayı kullanır.",
+    "NSFaceIDUsageDescription": "Qutai, uygulamanın ve gizli sekmelerin kilidini açmak için Face ID'yi kullanır."
   }
 }

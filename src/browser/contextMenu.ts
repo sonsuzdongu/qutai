@@ -10,8 +10,8 @@ const MOVE_TOLERANCE_PX = 10;
  * callout is turned off for links and images; the click that follows a long press is swallowed.
  */
 export const CONTEXT_MENU_SCRIPT = `(function () {
-  if (window.__kutaiContextMenu) return;
-  window.__kutaiContextMenu = true;
+  if (window.__qutaiContextMenu) return;
+  window.__qutaiContextMenu = true;
 
   var style = document.createElement('style');
   style.textContent = 'a, img { -webkit-touch-callout: none; }';
@@ -43,7 +43,7 @@ export const CONTEXT_MENU_SCRIPT = `(function () {
     startY = e.touches[0].clientY;
     timer = setTimeout(function () {
       fired = true;
-      target.__kutaiContextMenu = true;
+      target.__qutaiContextMenu = true;
       window.ReactNativeWebView.postMessage(JSON.stringify(target));
     }, ${LONG_PRESS_MS});
   }, { capture: true, passive: true });
@@ -77,7 +77,7 @@ export function parseContextTarget(data: string): ContextTarget | null {
   } catch {
     return null;
   }
-  if (!msg || msg.__kutaiContextMenu !== true) return null;
+  if (!msg || msg.__qutaiContextMenu !== true) return null;
   const str = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, max) : '');
   const href = str(msg.href, 4000);
   const src = str(msg.src, 200000);

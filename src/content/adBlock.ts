@@ -60,8 +60,8 @@ export function isAdUrl(url: string, hosts: string[] = AD_HOSTS): boolean {
  */
 export function adBlockScript(hosts: string[] = AD_HOSTS): string {
   return `(function () {
-  if (window.__kutaiAdBlock) return;
-  window.__kutaiAdBlock = true;
+  if (window.__qutaiAdBlock) return;
+  window.__qutaiAdBlock = true;
   var HOSTS = ${JSON.stringify(hosts)};
   function blocked(url) {
     try {
@@ -89,17 +89,17 @@ export function adBlockScript(hosts: string[] = AD_HOSTS): string {
   var fetch0 = window.fetch;
   if (fetch0) window.fetch = function (input) {
     var url = typeof input === 'string' ? input : input && input.url;
-    if (blocked(url)) return Promise.reject(new TypeError('Blocked by Kutai'));
+    if (blocked(url)) return Promise.reject(new TypeError('Blocked by Qutai'));
     return fetch0.apply(this, arguments);
   };
   var open0 = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function (method, url) {
-    this.__kutaiBlocked = blocked(url);
+    this.__qutaiBlocked = blocked(url);
     return open0.apply(this, arguments);
   };
   var send0 = XMLHttpRequest.prototype.send;
   XMLHttpRequest.prototype.send = function () {
-    if (this.__kutaiBlocked) { this.abort(); return; }
+    if (this.__qutaiBlocked) { this.abort(); return; }
     return send0.apply(this, arguments);
   };
   if (navigator.sendBeacon) {

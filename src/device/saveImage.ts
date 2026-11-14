@@ -39,7 +39,7 @@ export async function saveImage(tab: Tab, src: string): Promise<void> {
   const permission = await requestPermissionsAsync(true, ['photo']);
   if (!permission.granted) throw new Error(t('error.photosPermission'));
 
-  const name = `kutai-${Date.now()}`;
+  const name = `qutai-${Date.now()}`;
   let file: File | null = null;
   try {
     const data = src.startsWith('data:') ? src : await tab.run<string>('imageData', [src], 30000).catch(() => null);

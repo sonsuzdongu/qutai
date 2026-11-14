@@ -10,7 +10,7 @@ import { getDb } from '../storage/db';
 type Entry = ActionEntry & { id: number };
 type Props = { visible: boolean; onClose: () => void };
 
-/** What Kutai did, newest first, grouped by day. Incognito tabs are never recorded. */
+/** What Qutai did, newest first, grouped by day. Incognito tabs are never recorded. */
 export function ActionLogScreen({ visible, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>

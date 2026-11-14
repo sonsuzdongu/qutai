@@ -14,7 +14,7 @@ type Pending = {
 };
 
 /** Internal address of the app's own new tab page; never handed to a WebView. */
-export const NEW_TAB_URL = 'kutai://newtab';
+export const NEW_TAB_URL = 'qutai://newtab';
 
 export type PageCommand =
   | 'readPage'
@@ -214,13 +214,13 @@ export class Tab {
   }
 
   handleMessage(data: string): boolean {
-    let msg: { __kutai?: string; id?: string; ok?: boolean; result?: unknown; error?: string };
+    let msg: { __qutai?: string; id?: string; ok?: boolean; result?: unknown; error?: string };
     try {
       msg = JSON.parse(data);
     } catch {
       return false;
     }
-    if (msg.__kutai !== this.nonce || !msg.id) return false;
+    if (msg.__qutai !== this.nonce || !msg.id) return false;
     const p = this.pending.get(msg.id);
     if (!p) return true;
     this.pending.delete(msg.id);
@@ -316,13 +316,13 @@ export class Tab {
 ${PAGE_SCRIPT}
 (function () {
   var send = function (payload) {
-    payload.__kutai = ${JSON.stringify(this.nonce)};
+    payload.__qutai = ${JSON.stringify(this.nonce)};
     payload.id = ${JSON.stringify(id)};
     window.ReactNativeWebView.postMessage(JSON.stringify(payload));
   };
   var fail = function (e) { send({ ok: false, error: String((e && e.message) || e) }); };
   try {
-    var result = window.__kutaiAgent[${JSON.stringify(command)}].apply(null, ${JSON.stringify(args)});
+    var result = window.__qutaiAgent[${JSON.stringify(command)}].apply(null, ${JSON.stringify(args)});
     // Commands may return a promise (e.g. snapshots that fetch images).
     Promise.resolve(result).then(function (value) { send({ ok: true, result: value }); }, fail);
   } catch (e) {

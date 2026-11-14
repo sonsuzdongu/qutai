@@ -1,4 +1,4 @@
-# Kutai
+# Qutai
 
 An AI-powered mobile browser for iOS and Android: an agent that can read and use the page for you,
 tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models.
@@ -36,7 +36,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
                                      ▼ tool call
                                 executeTool ──► Browser ► Tab ──injectJavaScript──► WebView
                                      ▲                                                  │
-                                     └────────── onMessage (result) ◄────────── pageScript (window.__kutaiAgent)
+                                     └────────── onMessage (result) ◄────────── pageScript (window.__qutaiAgent)
 ```
 
 | File | Role |

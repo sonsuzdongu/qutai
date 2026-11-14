@@ -1,6 +1,6 @@
-# Kutai Roadmap
+# Qutai Roadmap
 
-Source: the "Mobile Web Browser – Feature Inventory" document. Each item was compared with Kutai's current state
+Source: the "Mobile Web Browser – Feature Inventory" document. Each item was compared with Qutai's current state
 and classified by the infrastructure it can be built with. For task-level tracking see `TODO.md`.
 
 **Status:** ✅ done · 🟡 partial · ⬜ missing
@@ -10,7 +10,7 @@ and classified by the infrastructure it can be built with. For task-level tracki
 
 ## Key finding
 
-The document suggests the classic order: browser first, then modern features, AI last. Kutai came the opposite
+The document suggests the classic order: browser first, then modern features, AI last. Qutai came the opposite
 way; the AI agent (the core of Phase 3) is ready, but **some basic browser expectations are missing**.
 The biggest gap is **persistence**: when the app closes, tabs, chat and browsing data are lost. History,
 bookmarks and autocomplete depend on this too. So the plan is built on completing this foundation first and then
@@ -33,7 +33,7 @@ putting the AI experience front and center.
 | Autocomplete from history / bookmarks / most visited | ✅ | | Suggestion list; domain matches first |
 | Live suggestions from the search engine | ✅ | | On by default, can be turned off in settings; off in private mode. Bing has no suggestion service |
 | Search engine choice | ✅ | | Google, DuckDuckGo, Bing, Yandex |
-| Start page and speed dial | ✅ | | New tab screen: most visited, bookmarks, recent visits, Ask Kutai |
+| Start page and speed dial | ✅ | | New tab screen: most visited, bookmarks, recent visits, Ask Qutai |
 | Paste and go, clearing the field | ✅ | | System paste button on iOS |
 | HTTPS indicator, domain info | ✅ | | 🔒 / ⚠︎ Not secure; WebView cannot access certificate details |
 | Find in page | ⬜ | Go · M | No WebView API; highlighting via page script |
@@ -42,7 +42,7 @@ putting the AI experience front and center.
 | QR code scanning / generation | ⬜ | Go · S | `expo-camera`; pure JS library for generation |
 | Voice search | ⬜ | Build | Decision: the device's speech recognition engine |
 | Download manager | ⬜ | Go/Build · L | See section 6 |
-| Detecting natural-language AI commands | 🟡 | Go · M | "Ask Kutai" is at the top of the suggestion list; automatic detection is Phase 2 |
+| Detecting natural-language AI commands | 🟡 | Go · M | "Ask Qutai" is at the top of the suggestion list; automatic detection is Phase 2 |
 
 ### Tab management (section 3)
 
@@ -151,14 +151,14 @@ Ordering criteria: the gap the user will notice most → least effort → infras
 
 ### Phase 1 – Browser foundation (Expo Go)
 
-Goal: Kutai can be used as an everyday browser.
+Goal: Qutai can be used as an everyday browser.
 
 1. ✅ **Persistent data layer** (`expo-sqlite`): session restore, history, bookmarks and their screen, recently closed tabs, chat. Private tabs write nothing
 2. ✅ **New tab screen:** speed dial sites, bookmarks, recently visited
 3. ✅ **Address bar:** autocomplete from history and bookmarks, search suggestions (off in private mode), search engine choice, paste and go, clear, HTTPS indicator
 4. ✅ **Navigation:** forward, stop, reliable opening of external app links (tel:, mailto:, `intent://`), error page in Turkish
 5. ✅ **Page tools:** find in page, desktop site, text size, print
-6. ✅ **Long-press menu:** open link in new tab / private tab, copy/share link, summarize with Kutai, save image
+6. ✅ **Long-press menu:** open link in new tab / private tab, copy/share link, summarize with Qutai, save image
 7. ✅ **Tabs:** reopen closed tab, search in tabs, **putting unused tabs to sleep** (at most 5 open WebViews; private tabs are not put to sleep)
 
 ### Phase 2 – Putting AI front and center (Expo Go)
@@ -167,7 +167,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 
 1. ✅ **Quick action chips:** Summarize, Translate, Key points, Is this product good?, Compare
 2. ✅ **Ask about selected text:** Ask, Explain, Translate, Share (page script and a strip at the bottom of the page on both platforms)
-3. ~~**Smart address bar:** natural language commands go to Kutai~~ (will not be done)
+3. ~~**Smart address bar:** natural language commands go to Qutai~~ (will not be done)
 4. ✅ **Sources:** pages read, shown below answers (switches to its tab if open, otherwise opens in a new tab)
    - ✅ Intermediate step: answers are rendered as markdown, links are clickable
    - ✅ Each tab has its own chat (persistent; the chat comes back with a reopened tab; one task at a time)
@@ -198,13 +198,13 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 Merged with the "Once we switch to our own build" section in `TODO.md`:
 voice commands, Android private tab isolation, network-level ad and tracker blocking (with URL lists; iOS
 WKContentRuleList, Android request interception), cookie management and cookie deletion, Face ID on iOS, downloads
-requiring login, Android PiP, background audio, being the default browser, widgets, "Share with Kutai",
+requiring login, Android PiP, background audio, being the default browser, widgets, "Share with Qutai",
 app verification.
 
 ### Phase 5 – Things that require a server
 
 Account system (shared with the credit system), end-to-end encrypted sync (including memory; deletion markers must be
-kept for deletions), Kutai credits, background
+kept for deletions), Qutai credits, background
 deep research, price and page tracking, Safe Browsing checks.
 
 ---
@@ -220,14 +220,14 @@ deep research, price and page tracking, Safe Browsing checks.
 
 ## 4. Comet comparison: our answers today
 
-| Question | Kutai today |
+| Question | Qutai today |
 |---|---|
 | How many taps to reach the AI? | 1 (✦). With the Phase 2 chips and the selected text menu, contextual access also comes down to 1 tap |
 | Single tab or multiple tabs? | Multiple tabs (opening, switching, listing tabs); reading without switching to the tab is Phase 2 |
 | What can the agent complete? | Clicking, typing, selecting, navigating via the DOM, PDF, screenshots, read-aloud. It cannot click inside canvas and maps |
 | How is permission obtained? | Mandatory confirmation for sensitive actions + optional confirmation for every action. Per-site permissions are Phase 2 |
 | Are sources transparent? | Yes: pages read and AI search citations below the answer |
-| Free / paid limits | Unlimited with your own key; Kutai credits are planned |
+| Free / paid limits | Unlimited with your own key; Qutai credits are planned |
 | iOS / Android differences | Private mode isolation, text selection menu, download and PiP behaviors differ |
 
 ## 5. Decisions

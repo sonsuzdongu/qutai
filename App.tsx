@@ -75,7 +75,7 @@ import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/st
 import { usePersistSession } from './src/storage/usePersistSession';
 import { useRecordHistory } from './src/storage/useRecordHistory';
 
-const KEEP_AWAKE_TAG = 'kutai-agent';
+const KEEP_AWAKE_TAG = 'qutai-agent';
 const memoryStore = deviceMemoryStore(getDb);
 const sitePermissions = new SitePermissionStore(getDb);
 const downloads = new DownloadStore(getDb);

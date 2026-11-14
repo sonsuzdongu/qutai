@@ -4,8 +4,8 @@
  * Colours are inverted and rotated back; images, videos and frames are inverted again so they look normal.
  */
 export const DARK_SITE_SCRIPT = `(function () {
-  if (window.__kutaiDark) return;
-  window.__kutaiDark = true;
+  if (window.__qutaiDark) return;
+  window.__qutaiDark = true;
   function lightness(el) {
     if (!el) return null;
     var m = getComputedStyle(el).backgroundColor.match(/[\\d.]+/g);
@@ -16,9 +16,9 @@ export const DARK_SITE_SCRIPT = `(function () {
     var l = lightness(document.body);
     if (l === null) l = lightness(document.documentElement);
     if (l === null) l = 1;
-    if (l < 0.5 || document.getElementById('kutai-dark')) return;
+    if (l < 0.5 || document.getElementById('qutai-dark')) return;
     var style = document.createElement('style');
-    style.id = 'kutai-dark';
+    style.id = 'qutai-dark';
     style.textContent = 'html{filter:invert(0.9) hue-rotate(180deg);background:#fff}' +
       'img,video,picture,canvas,iframe,embed,object,[style*="background-image"]{filter:invert(1) hue-rotate(180deg)}';
     (document.head || document.documentElement).appendChild(style);

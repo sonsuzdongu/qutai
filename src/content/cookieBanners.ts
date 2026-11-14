@@ -42,15 +42,15 @@ export const COOKIE_BANNER_SELECTORS = [
 export function cookieBannerScript(selectors: string[] = COOKIE_BANNER_SELECTORS): string {
   const list = selectors.join(',');
   return `(function () {
-  if (window.__kutaiCookies) return;
-  window.__kutaiCookies = true;
+  if (window.__qutaiCookies) return;
+  window.__qutaiCookies = true;
   var SELECTOR = ${JSON.stringify(list)};
   var timer = null;
   function check() {
     timer = null;
     try {
       if (document.querySelector(SELECTOR)) {
-        document.documentElement.classList.add('kutai-cmp-hidden');
+        document.documentElement.classList.add('qutai-cmp-hidden');
         if (document.body) document.body.classList.remove('didomi-popup-open', 'sp-message-open');
       }
     } catch (e) {}
@@ -58,7 +58,7 @@ export function cookieBannerScript(selectors: string[] = COOKIE_BANNER_SELECTORS
   function start() {
     var style = document.createElement('style');
     style.textContent = SELECTOR + '{display:none!important;visibility:hidden!important}' +
-      'html.kutai-cmp-hidden,html.kutai-cmp-hidden body{overflow:auto!important;position:static!important}';
+      'html.qutai-cmp-hidden,html.qutai-cmp-hidden body{overflow:auto!important;position:static!important}';
     (document.head || document.documentElement).appendChild(style);
     check();
     new MutationObserver(function () { if (!timer) timer = setTimeout(check, 300); })

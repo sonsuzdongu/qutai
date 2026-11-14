@@ -12,7 +12,7 @@ const SIZE_SCRIPT = `(function () {
 
 /**
  * Google's "search suggestions" widget, which Google requires to be shown with answers grounded in
- * Google Search. It is Google's own HTML; tapping a suggestion opens the search in a Kutai tab.
+ * Google Search. It is Google's own HTML; tapping a suggestion opens the search in a Qutai tab.
  */
 export function SearchSuggestions({ html, onOpenLink }: Props) {
   const [height, setHeight] = useState(48);

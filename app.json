@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Kutai",
-    "slug": "kutai",
+    "name": "Qutai",
+    "slug": "qutai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -34,7 +34,7 @@
         "expo-media-library",
         {
           "photosPermission": false,
-          "savePhotosPermission": "Kutai adds the screenshots you choose to save to your photos.",
+          "savePhotosPermission": "Qutai adds the screenshots you choose to save to your photos.",
           "granularPermissions": []
         }
       ],
@@ -58,7 +58,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Kutai uses the camera to scan QR codes.",
+          "cameraPermission": "Qutai uses the camera to scan QR codes.",
           "microphonePermission": false,
           "recordAudioAndroid": false
         }
@@ -66,7 +66,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Kutai uses Face ID to unlock the app and incognito tabs."
+          "faceIDPermission": "Qutai uses Face ID to unlock the app and incognito tabs."
         }
       ],
       "expo-font"

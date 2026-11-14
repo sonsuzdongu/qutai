@@ -1,4 +1,4 @@
-/** What Kutai may do on a site. 'default' follows the global "ask before actions" setting. */
+/** What Qutai may do on a site. 'default' follows the global "ask before actions" setting. */
 export type SiteLevel = 'default' | 'allow' | 'ask' | 'readonly' | 'blocked';
 
 export const SITE_LEVELS: SiteLevel[] = ['default', 'allow', 'ask', 'readonly', 'blocked'];
@@ -47,13 +47,13 @@ export function decide(tool: string, host: string | null, level: SiteLevel, conf
   if (host && level === 'blocked') {
     return {
       kind: 'refuse',
-      reason: `The user has blocked Kutai on ${host}: don't read or use this site. Tell the user if the task needs it.`,
+      reason: `The user has blocked Qutai on ${host}: don't read or use this site. Tell the user if the task needs it.`,
     };
   }
   if (host && level === 'readonly' && WRITE_ACTIONS.has(tool)) {
     return {
       kind: 'refuse',
-      reason: `Kutai may only read ${host} (the user's setting): clicking, typing and selecting are not allowed there. Tell the user what to do themselves.`,
+      reason: `Qutai may only read ${host} (the user's setting): clicking, typing and selecting are not allowed there. Tell the user what to do themselves.`,
     };
   }
   if (!ACTIONS_NEEDING_CONFIRMATION.has(tool)) return { kind: 'run' };

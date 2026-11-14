@@ -3,12 +3,12 @@
  * source in a string: Hermes compiles functions to bytecode, so we cannot use
  * Function.prototype.toString() to ship code into the WebView.
  *
- * Exposes window.__kutaiAgent with: readPage, click, type, select, scroll, scrollTo.
+ * Exposes window.__qutaiAgent with: readPage, click, type, select, scroll, scrollTo.
  * Elements are addressed by numeric refs assigned during readPage.
  */
 export const PAGE_SCRIPT = String.raw`
 (function () {
-  if (window.__kutaiAgent) return;
+  if (window.__qutaiAgent) return;
 
   var MAX_CHARS = 20000;
   var INTERACTIVE = [
@@ -591,7 +591,7 @@ export const PAGE_SCRIPT = String.raw`
         node.splitText(starts[k] + needle.length);
         var match = node.splitText(starts[k]);
         var mark = document.createElement('mark');
-        mark.setAttribute('data-kutai-find', '');
+        mark.setAttribute('data-qutai-find', '');
         mark.textContent = match.data;
         match.parentNode.replaceChild(mark, match);
         nodeMarks.unshift(mark);
@@ -609,7 +609,7 @@ export const PAGE_SCRIPT = String.raw`
     return showMatch();
   }
 
-  window.__kutaiAgent = {
+  window.__qutaiAgent = {
     readPage: readPage,
     click: click,
     clickAt: clickAt,

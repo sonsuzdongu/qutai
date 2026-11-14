@@ -2,7 +2,7 @@
 
 For the feature inventory comparison and the phased plan, see `ROADMAP.md`.
 
-## Kutai Credits (paid usage)
+## Qutai Credits (paid usage)
 
 Besides their own API keys, users should also be able to pay to use our AI credits.
 
@@ -11,7 +11,7 @@ server. Requests the user makes with their own key go directly from the device t
 we do not store other people's keys on the server.
 
 ```
-App ──(session token)──► Kutai server ──(our key)──► Anthropic / OpenAI / Gemini
+App ──(session token)──► Qutai server ──(our key)──► Anthropic / OpenAI / Gemini
                                  ├─ identity and device verification
                                  ├─ credit check and reservation
                                  ├─ request rules (model, length, rate limit)
@@ -40,7 +40,7 @@ App ──(session token)──► Kutai server ──(our key)──► Anthrop
 
 ### 2. App
 - [ ] Sign-in screen; session tokens in `SecureStore`
-- [ ] "Kutai Credits" provider as a fourth option in Settings (an adapter that sends requests to the server)
+- [ ] "Qutai Credits" provider as a fourth option in Settings (an adapter that sends requests to the server)
 - [ ] Remaining credits indicator in the panel; a clear message and a prompt to buy when credits run out
 - [ ] A screen that clearly tells the user that in credit mode page content goes through our server
 
@@ -69,8 +69,8 @@ ourselves; they will all be handled together during the switch.
 - [ ] Voice commands (speech-to-text): the device's own speech recognition engine; free, works offline on most devices. Microphone button in the panel
   - Decision: The paid "audio recording + AI transcription" route will not be used; until then the keyboard's microphone key is enough
 - [ ] Real cookie isolation for private tabs on Android (WebView profile API)
-- [ ] App attestation (App Attest, Play Integrity; `expo-app-integrity`), see Kutai Credits / Abuse protection
-- [ ] "Share to Kutai" from other apps, Siri / Shortcuts (`expo-app-intents`), home screen widget (`expo-widgets`)
+- [ ] App attestation (App Attest, Play Integrity; `expo-app-integrity`), see Qutai Credits / Abuse protection
+- [ ] "Share to Qutai" from other apps, Siri / Shortcuts (`expo-app-intents`), home screen widget (`expo-widgets`)
 
 ## Device integrations (work in Expo Go)
 
