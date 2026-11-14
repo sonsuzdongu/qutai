@@ -931,4 +931,10 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.voiceMode.onlineDeclined': 'Bu telefonda: çevrim içi hizmet gerekiyor, o da kapalı',
   'settings.voiceMode.needsBuild': 'Uygulamanın daha yeni bir sürümü gerekiyor',
   'settings.voiceMode.unavailable': 'Bu telefonda bu dilde kullanılamıyor',
+
+  'incoming.title': 'Qutai ile paylaşılan: {text}',
+  'incoming.open': 'Sayfayı aç',
+  'incoming.search': '{engine} ile ara',
+  'incoming.ask': 'Qutai’ye bunu sor',
+  'incoming.summarize': 'Bu sayfayı özetle',
 };

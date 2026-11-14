@@ -104,6 +104,11 @@ Google Play Console, "Foreground service permissions" declaration (App content),
   qualify). Not recorded yet: it needs a device.
 - Picture-in-picture is a separate feature, not a foreground service; it needs no declaration.
 
+Intent filters without a permission (`plugins/withEntryPoints.js`): `SEND` `text/plain` (the share sheet),
+`PROCESS_TEXT` `text/plain` (other apps' text-selection menu) and `WEB_SEARCH`, on the main activity, besides the
+`http`/`https` and `qutai` links. What arrives is only text; it is handled as untrusted input (see README, "Opening
+Qutai from other apps").
+
 Debug builds also get `ACCESS_NETWORK_STATE`, `ACCESS_LOCAL_NETWORK` and `CHANGE_WIFI_MULTICAST_STATE` from the dev
 client and React Native's debug manifest.
 

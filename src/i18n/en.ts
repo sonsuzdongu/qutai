@@ -924,4 +924,10 @@ export const en = {
   'settings.voiceMode.onlineDeclined': 'On this phone: needs the online service, which is off',
   'settings.voiceMode.needsBuild': 'Needs a newer version of the app',
   'settings.voiceMode.unavailable': 'Not available in this language on this phone',
+
+  'incoming.title': 'Shared with Qutai: {text}',
+  'incoming.open': 'Open page',
+  'incoming.search': 'Search with {engine}',
+  'incoming.ask': 'Ask Qutai about this',
+  'incoming.summarize': 'Summarize this page',
 } as const;

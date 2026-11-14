@@ -61,6 +61,19 @@ text, headings, images and links, in light, dark or sepia, serif or sans, with a
 same text size as pages. Read aloud in reader mode reads exactly that article, highlighting the paragraph being read.
 The page stays loaded underneath, so closing reader mode (or Android back) returns to it as it was.
 
+## Opening Qutai from other apps
+
+Anything that reaches Qutai from outside the app is treated as untrusted: another app or a web page chose it. A web
+(http/https) link opens in a normal tab like any link; other text is never searched, submitted or sent to the AI
+provider by itself. With the app lock on, the lock screen comes first and the item is handled after unlocking; nothing
+from outside opens in an incognito tab. Each item is handled once (`src/device/entryPoints.ts`).
+
+- **Share to Qutai (Android):** Qutai appears in the share sheet for text and links, as "Qutai" in other apps'
+  text-selection menu, and for web searches handed to a browser. A small chooser then offers *Open page* (when the
+  text holds exactly one web link), *Search with* the engine from Settings, *Ask Qutai about this* (the text goes into
+  the assistant's message field, unsent) and *Summarize this page* (opens the page with the assistant ready; the user
+  taps Summarize). Images and files are not accepted. iOS has no share extension yet (see Known limitations).
+
 ## Running
 
 Qutai needs a **development build**: several native modules it uses (`expo-calendar` among them) are not in
@@ -251,6 +264,9 @@ the feature, when the user is asked, the config line that declares it and what i
   and can miss or include the wrong parts on unusual layouts.
 - **Group conversations have one known gap.** If a group is founded on a tab that hasn't been shown since the app
   started and a tab with a conversation then joins, that conversation stays hidden until the tab leaves the group.
+- **Ways in from other apps are partly Android-only** (needs **a new development build**). Sharing to Qutai works on
+  Android only: an iOS share extension is a separate target with an App Group that needs the owner's Apple account
+  (`TODO.md` has the next step). Only text and links are accepted, not images or files.
 - **Nothing recent has been tested on a device.** The features added since the move to a development build (and many
   before it) are implemented but not yet tried on a phone; `TODO.md` has the checklist.
 - **Prompt injection** is a risk. The system prompt marks page content as untrusted data and asks for confirmation

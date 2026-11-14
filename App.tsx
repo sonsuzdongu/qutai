@@ -69,7 +69,8 @@ import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { LockScreen } from './src/components/LockScreen';
 import { Onboarding } from './src/components/Onboarding';
 import { contentBlocking } from './src/content/blocking';
-import { isIncomingWebLink } from './src/device/defaultBrowser';
+import { Entry, useEntryPoints } from './src/device/entryPoints';
+import { ActionSheet, SheetAction } from './src/components/ActionSheet';
 import { LEGAL_VERSION } from './src/legal/documents';
 import { LogoMotion } from './src/ui/QutaiMark';
 import { OfflinePagesScreen } from './src/components/OfflinePagesScreen';
@@ -209,15 +210,6 @@ function BrowserApp({
   // Android: incognito profiles left from an earlier run (the app was killed with incognito tabs open; they are
   // never restored) are deleted before any incognito tab opens again.
   useEffect(() => deleteLeftoverIncognitoProfiles(), []);
-  // As the default browser, links from other apps open in a new tab (at launch and while running).
-  useEffect(() => {
-    const open = (url: string | null | undefined) => {
-      if (isIncomingWebLink(url)) browserInstance.openTab(url);
-    };
-    Linking.getInitialURL().then(open, () => {});
-    const sub = Linking.addEventListener('url', ({ url }) => open(url));
-    return () => sub.remove();
-  }, [browserInstance]);
   const browser = useBrowser(browserInstance);
   const tab = browser.active;
   useHardwareBack(browser);
@@ -385,6 +377,57 @@ function BrowserApp({
       .then((db) => storeChat(db, chat))
       .catch(() => {});
   };
+
+  // Ways in from outside the app (links handed to Qutai as the default browser, text shared to it): untrusted, so
+  // handled only after the app lock, never in an incognito tab, and never sent or searched without the user's
+  // choice (src/device/entryPoints.ts).
+  const [incoming, setIncoming] = useState<{ text: string; url: string | null } | null>(null);
+  /** Leaves incognito for the last normal tab (or a new one), so outside content never lands in incognito. */
+  const toNormalTab = () => {
+    if (!browser.active.incognito) return;
+    const normal = browser.tabsOf(false);
+    if (normal.length) browser.switchTab(normal[normal.length - 1].id);
+    else browser.openTab();
+  };
+  /** Puts text in the assistant's input of a normal tab, unsent, after anything the user was already typing. */
+  const askAbout = (text: string) => {
+    toNormalTab();
+    const chat = browser.conversationOf(browser.active);
+    chat.setDraft(chat.draft.trim() ? `${chat.draft.trimEnd()}\n\n${text}` : text);
+    persistDraftSoon(chat);
+    setPanelOpen(true);
+    setFocusRequest((n) => n + 1);
+  };
+  const handleEntry = (entry: Entry) => {
+    if (entry.kind === 'open') {
+      browser.openTab(entry.url);
+      return;
+    }
+    // The chooser is not shown over an incognito tab (or its lock screen).
+    toNormalTab();
+    setIncoming({ text: entry.text, url: entry.url });
+  };
+  useEntryPoints(!appLocked, handleEntry);
+  const incomingActions = (item: { text: string; url: string | null }): SheetAction[] => [
+    ...(item.url ? [{ label: t('incoming.open'), onPress: () => browser.openTab(item.url!) }] : []),
+    {
+      label: t('incoming.search', { engine: SEARCH_ENGINES[settings.searchEngine].name }),
+      onPress: () => browser.openTab(SEARCH_ENGINES[settings.searchEngine].searchUrl(item.text.slice(0, 500))),
+    },
+    { label: t('incoming.ask'), onPress: () => askAbout(item.text) },
+    // Opens the page with the assistant ready; its "Summarize" button still waits for the user's tap.
+    ...(item.url
+      ? [
+          {
+            label: t('incoming.summarize'),
+            onPress: () => {
+              browser.openTab(item.url!);
+              setPanelOpen(true);
+            },
+          },
+        ]
+      : []),
+  ];
 
   // A conversation that moved (to the group a tab founded, to a tab when its group dissolves or its last
   // tab closes) takes its saved copy along.
@@ -1250,6 +1293,13 @@ function BrowserApp({
             store={downloads}
             bottomOffset={barAtBottom ? 64 : 16}
             onOpen={() => setDownloadsVisible(true)}
+          />
+          <ActionSheet
+            // Hidden while the app lock shows (it reappears after unlocking).
+            title={incoming && !appLocked ? t('incoming.title', { text: incoming.text.replace(/\s+/g, ' ').slice(0, 120) }) : null}
+            actions={incoming ? incomingActions(incoming) : []}
+            dark={darkMode}
+            onClose={() => setIncoming(null)}
           />
           <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
           <CaptureOverlay />

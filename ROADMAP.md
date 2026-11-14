@@ -115,6 +115,7 @@ credits, background tasks), native work in our own build (network-level blocking
 | Language selection | ✅ | | Turkish and English, matches the device language; iOS and Android per-app language settings supported |
 | Accessibility | 🟡 | Go · M | Reviewed in code (labels, announcements, reduce motion, text scaling, 44pt targets); no screen reader testing on a device yet |
 | Being the default browser | 🟡 | Build · M | Android: intent filters for http/https, and a shortcut to the default apps settings. iOS: requires a special entitlement from Apple |
+| Share to Qutai | 🟡 | Build · M | Android: share sheet, text-selection menu and web searches, with a chooser (open, search, ask as an unsent draft, summarize). iOS share extension open (needs an App Group in the Apple account; `expo-share-intent`) |
 | Home screen widgets | ⬜ | Build | `expo-widgets` |
 
 ### Account and sync (section 8)
@@ -214,7 +215,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 
 Merged with the "Our own build (development build)" section in `TODO.md`:
 Cookie management and cookie deletion, being the default browser on iOS, widgets, "Share with
-Qutai", app verification. Done since: background audio and media controls, Android picture-in-picture, network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
+Qutai" on iOS, app verification. Done since: "Share to Qutai" on Android, background audio and media controls, Android picture-in-picture, network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
 Android request interception), Face ID on iOS, Android private tab isolation (WebView profiles), per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the
 system download manager on Android), Android default browser (intent filters).
 

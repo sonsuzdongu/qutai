@@ -120,6 +120,7 @@
       "./plugins/withLegacyStorageWrite",
       "./plugins/withBackgroundMedia",
       "./plugins/withPictureInPicture",
+      "./plugins/withEntryPoints",
       [
         "expo-localization",
         {
