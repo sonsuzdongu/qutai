@@ -3,6 +3,14 @@ import type { View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import type { WebView, WebViewNavigation } from 'react-native-webview';
 import { Conversation } from '../chat/Conversation';
+import {
+  backgroundGoBack,
+  backgroundPageState,
+  BackgroundPageState,
+  evaluateInPage,
+  isRunningInBackground,
+  NeedsForegroundError,
+} from '../device/backgroundTask';
 import { sleep } from '../utils/sleep';
 import { siteKey } from '../agent/sitePolicy';
 import { PageGeolocation } from './geolocation';
@@ -283,6 +291,14 @@ export class Tab {
       this.onChange();
       return;
     }
+    if (isRunningInBackground()) {
+      // Prop changes and view commands wait for the app to come back; the page itself can still be sent elsewhere.
+      if (!this.webview || this.asleep) throw new NeedsForegroundError();
+      evaluateInPage(this.playback.nonce, `window.location.href = ${JSON.stringify(url)}; void 0;`, null, 0).catch(
+        () => {},
+      );
+      return;
+    }
     if (url === this.source.uri && this.webview) {
       this.webview.injectJavaScript(`window.location.href = ${JSON.stringify(url)}; true;`);
     } else {
@@ -383,12 +399,19 @@ export class Tab {
 
   /** Gives a click or submit a moment to start navigating, then waits for it to finish. */
   async settle(): Promise<void> {
+    if (isRunningInBackground()) return this.settleInBackground();
     await sleep(600);
     if (this.loading) await this.waitForNextLoad();
     await sleep(300);
   }
 
   async navigate(url: string): Promise<void> {
+    if (isRunningInBackground()) {
+      if (this.isNewTab || !this.webview || this.asleep) throw new NeedsForegroundError();
+      this.loadError = null;
+      this.loadUrl(url);
+      return this.settleInBackground();
+    }
     const wait = this.waitForNextLoad();
     this.loadUrl(url);
     await wait;
@@ -396,8 +419,39 @@ export class Tab {
   }
 
   async goBack(): Promise<void> {
+    if (isRunningInBackground()) {
+      if (!this.webview || this.asleep) throw new NeedsForegroundError();
+      await backgroundGoBack(this.playback.nonce);
+      return this.settleInBackground();
+    }
     this.webview?.goBack();
     await this.settle();
+  }
+
+  /**
+   * In the background, page load events may not reach the app: waits until the WebView reports the page loaded
+   * (or 15 s), then takes the address and title from the WebView itself.
+   */
+  private async settleInBackground(): Promise<void> {
+    await sleep(600);
+    const deadline = Date.now() + 15000;
+    let state: BackgroundPageState | null = null;
+    while (Date.now() < deadline) {
+      state = await backgroundPageState(this.playback.nonce);
+      if (!state || state.progress >= 100) break;
+      await sleep(300);
+    }
+    if (state) {
+      this.loading = false;
+      this.handleNavigationStateChange({
+        url: state.url || this.url,
+        title: state.title,
+        loading: false,
+        canGoBack: state.canGoBack,
+        canGoForward: state.canGoForward,
+      } as WebViewNavigation);
+    }
+    await sleep(300);
   }
 
   /**
@@ -487,17 +541,60 @@ export class Tab {
 
   run<T = unknown>(command: PageCommand, args: unknown[] = [], timeoutMs = 10000): Promise<T> {
     if (PAGE_ACTIONS.has(command)) this.closeReader();
+    if (isRunningInBackground()) return this.runInBackground<T>(command, args, timeoutMs);
     const webview = this.reader && READER_COMMANDS.has(command) && this.readerWebview ? this.readerWebview : this.webview;
     if (!webview) return Promise.reject(new Error('The tab is not ready'));
 
     const id = `${this.nonce}-${++this.counter}`;
-    const code = `
+    const code = this.commandScript(command, args, id, 'window.ReactNativeWebView.postMessage(JSON.stringify(payload));');
+
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error('The page did not respond (it may still be loading).'));
+      }, timeoutMs);
+      this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject, timer });
+      webview.injectJavaScript(code);
+    });
+  }
+
+  /**
+   * The same command while the assistant works with the app in the background: view commands and WebView events
+   * wait for the app to come back, so the script goes to the WebView natively and leaves its reply in the page,
+   * where the native side picks it up (src/device/backgroundTask.ts). Throws NeedsForegroundError, before anything
+   * runs on the page, when the tab has no live WebView.
+   */
+  private async runInBackground<T>(command: PageCommand, args: unknown[], timeoutMs: number): Promise<T> {
+    if (!this.webview || this.asleep || this.isNewTab) throw new NeedsForegroundError();
+    const id = `${this.nonce}-${++this.counter}`;
+    const box = JSON.stringify(`__qutaiReplies_${this.nonce}`);
+    const code = this.commandScript(
+      command,
+      args,
+      id,
+      `(window[${box}] = window[${box}] || {})[${JSON.stringify(id)}] = payload;`,
+    );
+    const poll =
+      `(function () { var b = window[${box}]; var k = ${JSON.stringify(id)}; if (!b || !(k in b)) return null; ` +
+      'var r = b[k]; delete b[k]; return JSON.stringify(r); })()';
+    const raw = await evaluateInPage(this.playback.nonce, code, poll, timeoutMs);
+    if (raw == null) throw new Error('The page did not respond (it may still be loading).');
+    // The WebView returns the poll's value JSON-encoded: a string holding the reply's JSON.
+    const msg = JSON.parse(JSON.parse(raw)) as { __qutai?: string; ok?: boolean; result?: unknown; error?: string };
+    if (msg.__qutai !== this.nonce) throw new Error('Unknown page error');
+    if (msg.ok) return msg.result as T;
+    throw new Error(msg.error || 'Unknown page error');
+  }
+
+  /** The page script plus a call of one of its commands; `deliver` hands `payload` (the reply) back. */
+  private commandScript(command: PageCommand, args: unknown[], id: string, deliver: string): string {
+    return `
 ${PAGE_SCRIPT}
 (function () {
   var send = function (payload) {
     payload.__qutai = ${JSON.stringify(this.nonce)};
     payload.id = ${JSON.stringify(id)};
-    window.ReactNativeWebView.postMessage(JSON.stringify(payload));
+    ${deliver}
   };
   var fail = function (e) { send({ ok: false, error: String((e && e.message) || e) }); };
   try {
@@ -509,14 +606,5 @@ ${PAGE_SCRIPT}
   }
 })();
 true;`;
-
-    return new Promise<T>((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.pending.delete(id);
-        reject(new Error('The page did not respond (it may still be loading).'));
-      }, timeoutMs);
-      this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject, timer });
-      webview.injectJavaScript(code);
-    });
   }
 }

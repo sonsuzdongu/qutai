@@ -119,6 +119,7 @@
       ],
       "./plugins/withLegacyStorageWrite",
       "./plugins/withBackgroundMedia",
+      "./plugins/withBackgroundTasks",
       "./plugins/withPictureInPicture",
       "./plugins/withEntryPoints",
       [

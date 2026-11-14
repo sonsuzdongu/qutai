@@ -7,6 +7,9 @@ import { authenticate, canAuthenticate } from '../device/biometric';
 import { appVersion } from '../device/appVersion';
 import { BackupTooLargeError, pickBackupFile, PickerUnavailableError } from '../device/backupFile';
 import { rateApp } from '../device/rateApp';
+import { backgroundTasksSupported } from '../device/backgroundTask';
+import { ensureNotificationPermission } from '../device/notifications';
+import { offerSettings } from '../device/settings';
 import { voiceModeSummary, VoiceModeSummary } from '../device/voiceInput';
 import { incognitoIsolated } from '../device/webviewProfile';
 import { getLanguage, t } from '../i18n';
@@ -113,6 +116,19 @@ function SettingsPages({
     if (!on) return set({ [key]: false });
     if (!(await canAuthenticate())) return dialog.alert(t('settings.lockUnavailable'));
     if (await authenticate(t('lock.confirmPrompt'))) set({ [key]: true });
+  };
+
+  /**
+   * "Keep working in the background" (Android): the notification is the point, so turning it on asks for the
+   * notification permission; when the system no longer asks, the setting stays on and Settings is offered.
+   */
+  const setBackgroundTasks = async (on: boolean) => {
+    if (!on) return set({ backgroundTasks: false });
+    if (!backgroundTasksSupported()) return dialog.alert(t('settings.backgroundTasksNeedsBuild'));
+    set({ backgroundTasks: true });
+    const permission = await ensureNotificationPermission().catch(() => 'denied' as const);
+    if (permission === 'blocked') offerSettings(t('settings.backgroundTasksNoNotifications'));
+    else if (permission === 'denied') dialog.alert(t('settings.backgroundTasksNoNotifications'));
   };
 
   const importBackup = async () => {
@@ -236,6 +252,14 @@ function SettingsPages({
               value={settings.webSearch}
               onChange={(webSearch) => set({ webSearch })}
             />
+            {Platform.OS === 'android' && (
+              <SwitchRow
+                title={t('settings.backgroundTasks')}
+                hint={t('settings.backgroundTasksHint')}
+                value={settings.backgroundTasks}
+                onChange={setBackgroundTasks}
+              />
+            )}
             <SwitchRow
               title={t('settings.memoryEnabled')}
               hint={t('settings.memoryHint')}

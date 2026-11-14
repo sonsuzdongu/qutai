@@ -210,6 +210,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |
 | `src/utils/foreground.ts` | Pauses the agent when the app goes to the background, resumes it when it comes back to the foreground |
+| `src/device/backgroundTask.ts`, `modules/qutai-agent` | "Keep working in the background" (Android): the `specialUse` foreground service and its notifications, the headless JS task that keeps timers running, and page commands sent natively to the tab's WebView while React Native is paused |
 
 Along with each assistant response, the provider's raw output is also stored (Claude's thinking blocks, OpenAI's
 encrypted reasoning content, Gemini's thought signatures) and sent back unchanged to the same model. If the
@@ -248,10 +249,21 @@ the feature, when the user is asked, the config line that declares it and what i
 - **Model quality varies.** Browser tasks are multi-step; small models may click the wrong element.
 - **Old page outputs are trimmed.** This lowers cost, but on OpenAI previous reasoning items may not be reused
   because the history changes.
-- **Does not run in the background.** iOS and Android freeze the app in the background. The task pauses and resumes
-  where it left off when the app comes back to the foreground.
+- **Background tasks are Android only, opt-in, and partial.** With Settings › Assistant › "Keep working in the
+  background" on (Android, off by default), a task the user started goes on when they leave Qutai or lock the screen,
+  in a foreground service with an ongoing notification (title from the user's message, the current step, Stop and
+  Open). Reading and acting on the task's open pages (read, click, type, scroll, navigate, back, other tabs that are
+  awake) and the AI requests go on; steps that need the user or the screen pause the task with a notification saying
+  what is needed: confirmations (nothing is approved while the user is away), `ask_user` questions (and so CAPTCHAs),
+  screenshots and PDFs, opening a new tab, a sleeping tab, the email composer, settings. A stalled page (no reply twice,
+  or no progress for 4 minutes) and 30 minutes in the background also pause it. Incognito conversations never continue
+  in the background. iOS doesn't offer it: iOS gives an app only a short time to finish work after it leaves the screen
+  and suspends WebKit's pages with it, so tasks pause there, and on Android with the setting off, and resume where they
+  left off when the app comes back. Needs a new development build (local module `modules/qutai-agent`). Not tested on
+  a phone yet.
 - **Tabs sleep.** At most five tabs keep a live WebView; the others sleep as a URL and thumbnail and reload
-  when opened. Private tabs, tabs using the camera or microphone and tabs playing sound are never put to sleep.
+  when opened. Private tabs, tabs using the camera or microphone, tabs playing sound, and the tabs a running task works in
+  or reads are never put to sleep.
 - **Cross-origin iframes** (e.g. payment forms, some captchas) cannot be read.
 - **Location goes to the site in the address bar only.** Pages ask through Qutai's own prompt (per-site setting: ask,
   allow, block; https only). Frames, such as an embedded map on another site, are always refused, and nothing is

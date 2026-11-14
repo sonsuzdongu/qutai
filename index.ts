@@ -1,6 +1,10 @@
 import { registerRootComponent } from 'expo';
 
 import App from './App';
+import { registerBackgroundTaskRunner } from './src/device/backgroundTask';
+
+// Android: the headless task that keeps JS timers running while an assistant task goes on in the background.
+registerBackgroundTaskRunner();
 
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in Expo Go or in a native build,

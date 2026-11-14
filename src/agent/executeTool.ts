@@ -705,6 +705,66 @@ function actionTarget(
   return tab ? { url: tab.url, tab } : null;
 }
 
+/**
+ * Tools that can run while the app is in the background with "Keep working in the background" on (Android): they
+ * read or act on a page through the tab's existing WebView, or only touch the app's own state. Everything else
+ * needs the user or the screen: screenshots and PDFs (views that are not drawn), new tabs and waking tabs (their
+ * WebView is created by the paused UI), the email composer, settings, and every tool that asks for confirmation.
+ */
+const BACKGROUND_TOOLS = new Set([
+  'read_page',
+  'read_source',
+  'navigate',
+  'go_back',
+  'click',
+  'click_at',
+  'type',
+  'select_option',
+  'scroll',
+  'scroll_to',
+  'read_tab',
+  'list_tabs',
+  'switch_tab',
+  'close_tab',
+  'close_tabs',
+  'take_notes',
+  'wait',
+  'remember',
+  'forget',
+  'search_history',
+  // Only add a card to the conversation; the user acts on it later.
+  'offer_call',
+  'draft_sms',
+]);
+
+/**
+ * Why this call cannot run while the app is in the background, or null when it can. Checked before the call, so a
+ * step that needs the user pauses the task (with a notification) instead of waiting unseen; nothing is approved
+ * because the user is away.
+ */
+export function backgroundBlocker(
+  name: string,
+  input: Record<string, unknown>,
+  ctx: ToolContext,
+): 'confirm' | 'onScreen' | 'tab' | null {
+  if (!BACKGROUND_TOOLS.has(name)) return SCHEDULING_TOOLS.has(name) || name === 'get_location' || name === 'read_calendar' ? 'confirm' : 'onScreen';
+  const target = actionTarget(name, input, ctx);
+  const host = target ? siteKey(target.url) : null;
+  const level = host && ctx.sites ? ctx.sites.levelFor(host) : 'default';
+  const decision = decide(name, host, level, ctx.confirm ? (ctx.confirmByDefault ?? true) : false);
+  if (decision.kind === 'confirm' && ctx.confirm) return 'confirm';
+  // The tab the call works in needs a live WebView: a sleeping tab's (or a page opened from the new tab page) would
+  // have to be created. Page tools on the new tab page only answer that no page is loaded.
+  const tab =
+    name === 'read_tab'
+      ? ctx.browser.getTab(String(input.tab_id ?? ''))
+      : PAGE_TOOLS.has(name) || name === 'navigate' || name === 'go_back'
+        ? (ctx.browser.getTab(ctx.agentTab.id) ?? ctx.browser.active)
+        : undefined;
+  if (tab && (tab.asleep || (tab.isNewTab ? name === 'navigate' : !tab.webview))) return 'tab';
+  return null;
+}
+
 export async function executeTool(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
   // Checked before the site permission, which would otherwise ask about a made-up host.
   if ((name === 'navigate' || name === 'open_tab') && isViewSource(input.url)) {

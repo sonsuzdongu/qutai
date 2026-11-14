@@ -96,6 +96,14 @@ import { configurePageLocation } from './src/browser/geolocation';
 import { configurePageMedia } from './src/browser/mediaCapture';
 import { pauseAllPages } from './src/browser/playback';
 import { configureBackgroundMedia, setPictureInPictureAllowed } from './src/device/backgroundMedia';
+import {
+  beginBackgroundTask,
+  configureBackgroundTasks,
+  endBackgroundTask,
+  onBackgroundOpenRequested,
+  onBackgroundStopRequested,
+  TaskOutcome,
+} from './src/device/backgroundTask';
 import { deleteOrphanChats, loadChat, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
@@ -325,6 +333,27 @@ function BrowserApp({
   const pipAllowed = settings.pictureInPicture && !settings.appLock && !tab.incognito;
   useEffect(() => setPictureInPictureAllowed(pipAllowed), [pipAllowed]);
 
+  // "Keep working in the background" (Android): the notification's labels follow the app's language; its Stop
+  // button stops the running task, and tapping it (or Open) shows that task's conversation.
+  const backgroundChannel = t('background.channel');
+  useEffect(() => configureBackgroundTasks(), [backgroundChannel]);
+  const runningRef = useRef({ chat: runningChat, tab: runningTab });
+  runningRef.current = { chat: runningChat, tab: runningTab };
+  /** The tab whose conversation the last task belongs to (its result notification opens it). */
+  const lastTaskTab = useRef<string | null>(null);
+  useEffect(() => {
+    const stop = onBackgroundStopRequested(() => runningRef.current.chat?.stop());
+    const open = onBackgroundOpenRequested(() => {
+      const target = runningRef.current.tab?.id ?? lastTaskTab.current;
+      if (target && browserInstance.getTab(target)) browserInstance.switchTab(target);
+      setPanelOpen(true);
+    });
+    return () => {
+      stop?.remove();
+      open?.remove();
+    };
+  }, [browserInstance]);
+
   // The theme setting overrides the system appearance for the whole app, web pages included.
   useEffect(() => {
     Appearance.setColorScheme(settings.theme === 'system' ? 'unspecified' : settings.theme);
@@ -501,6 +530,14 @@ function BrowserApp({
     if (research) chat.setResearch(false);
     const signal = chat.start();
     browser.setAgentTab(agentTab);
+    // May go on in the background (Android, opt-in) unless the conversation is incognito; the notification's title
+    // is the user's own message.
+    const incognitoTask = () => chat.incognito || chat.privacy.touchedIncognito;
+    const mayContinue = settings.backgroundTasks && !incognitoTask();
+    beginBackgroundTask(mayContinue ? text : null);
+    if (mayContinue) lastTaskTab.current = current.id;
+    let outcome: TaskOutcome = { kind: 'done' };
+    let lastText = '';
     try {
       await runAgent({
         provider,
@@ -545,6 +582,12 @@ function BrowserApp({
           incognito: () => chat.incognito || chat.privacy.touchedIncognito,
         },
         onEvent: (event) => {
+          // How the task ends, for the notification when it ends in the background: its last reply, a final
+          // error, or a question for the user.
+          if (event.type === 'text') lastText = event.text || lastText;
+          if (event.type === 'error') outcome = { kind: 'failed', text: event.text };
+          else if (event.type === 'choices') outcome = { kind: 'needsAnswer' };
+          else if (event.type === 'text' || event.type === 'action') outcome = { kind: 'done' };
           if (event.type === 'text_delta') return chat.appendStreaming(event.text);
           if (event.type === 'text') return chat.finishStreaming(event.text);
           if (event.type === 'sources') return chat.add(sourcesItem(event.sources, event.searchWidget));
@@ -563,7 +606,12 @@ function BrowserApp({
     } catch (e) {
       if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
       else chat.add(newItem('error', e instanceof Error ? e.message : String(e)));
+      outcome = { kind: 'failed', text: e instanceof Error ? e.message : String(e) };
     } finally {
+      if (signal.aborted) outcome = { kind: 'stopped' };
+      else if (outcome.kind === 'done') outcome = { kind: 'done', text: lastText };
+      // Nothing from a conversation that touched an incognito tab goes in a notification.
+      endBackgroundTask(incognitoTask() ? { kind: 'stopped' } : outcome);
       chat.finishStreaming();
       chat.finish();
       browser.setAgentTab(null);

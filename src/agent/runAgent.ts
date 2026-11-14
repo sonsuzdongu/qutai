@@ -1,8 +1,19 @@
 import { getProvider } from '../ai/providers';
 import type { ProviderId, ToolResult, Turn } from '../ai/types';
 import { t } from '../i18n';
+import {
+  forbidBackground,
+  getBackgroundPauseCount,
+  isRunningInBackground,
+  noteBackgroundProgress,
+  pauseForUser,
+  PauseNeed,
+  setBackgroundStep,
+  takeNeedsForeground,
+  whileWaitingForUser,
+} from '../device/backgroundTask';
 import { getBackgroundCount, isForeground, waitForForeground } from '../utils/foreground';
-import { describeToolCall, executeTool, ToolContext } from './executeTool';
+import { backgroundBlocker, describeToolCall, executeTool, ToolContext } from './executeTool';
 import { SYSTEM_PROMPT } from './systemPrompt';
 import { memoryPrompt } from './memory';
 import { siteKey } from './sitePolicy';
@@ -55,11 +66,33 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
   const { turns, signal, onEvent } = opts;
   const provider = getProvider(opts.provider);
 
-  const pauseWhileBackgrounded = async () => {
+  /**
+   * Out of the foreground the task waits for the user to come back, unless it may go on in the background
+   * ("Keep working in the background", Android) and the next step (`need` says what it needs otherwise) can run
+   * there. A step that needs the user pauses the background run with a notification saying so.
+   */
+  const pauseWhileBackgrounded = async (need?: PauseNeed) => {
     if (isForeground()) return;
-    onEvent({ type: 'info', text: t('chat.paused') });
+    // Incognito conversations never go on in the background, and nothing from them goes in a notification.
+    if (opts.audit.incognito()) forbidBackground();
+    const background = isRunningInBackground();
+    if (background && !need) return;
+    if (background) await pauseForUser(need!);
+    onEvent({ type: 'info', text: t(background ? 'chat.pausedNeedsYou' : 'chat.paused') });
     await waitForForeground(signal);
     if (!signal.aborted) onEvent({ type: 'info', text: t('chat.resumed') });
+  };
+  // A confirmation shown while the app is away would wait unseen: it waits for the user to come back, and leaving
+  // while it is open pauses the background run with a notification. Never answered for the user.
+  const confirm = opts.confirm;
+  const ctx: AgentOptions = {
+    ...opts,
+    confirm: confirm
+      ? async (description, host) => {
+          await pauseWhileBackgrounded('confirm');
+          return whileWaitingForUser(() => confirm(description, host));
+        }
+      : undefined,
   };
 
   const sources: Source[] = [];
@@ -91,6 +124,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     if (signal.aborted) return;
 
     let streamed = false;
+    setBackgroundStep(t('background.thinking'));
     const prompt = await systemPrompt(opts);
     const reply = await provider.call({
       apiKey: opts.apiKey,
@@ -102,6 +136,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       onText: opts.stream
         ? (delta) => {
             streamed = true;
+            noteBackgroundProgress();
             onEvent({ type: 'text_delta', text: delta });
           }
         : undefined,
@@ -115,6 +150,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
         memory: prompt.memory,
       },
     });
+    noteBackgroundProgress();
     turns.push({
       role: 'assistant',
       text: reply.text,
@@ -191,17 +227,39 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
         results.push({ callId: call.id, name: call.name, content: 'Stopped by the user.', isError: true });
         continue;
       }
-      await pauseWhileBackgrounded();
-      onEvent({ type: 'action', text: describeToolCall(call.name, call.input) });
-      const backgroundsBefore = getBackgroundCount();
-      let result = await executeTool(call.name, call.input, opts);
-      // The WebView freezes in the background, so a failure there is retried once after resuming.
-      // Only read-only tools: a frozen click may still run on resume, and repeating it would act twice.
-      const backgrounded = getBackgroundCount() !== backgroundsBefore;
-      if (result.isError && backgrounded && SAFE_TO_RETRY.has(call.name) && !signal.aborted) {
-        await pauseWhileBackgrounded();
-        result = await executeTool(call.name, call.input, opts);
+      await pauseWhileBackgrounded(isForeground() ? undefined : (backgroundBlocker(call.name, call.input, ctx) ?? undefined));
+      if (signal.aborted) {
+        results.push({ callId: call.id, name: call.name, content: 'Stopped by the user.', isError: true });
+        continue;
       }
+      const action = describeToolCall(call.name, call.input);
+      onEvent({ type: 'action', text: action });
+      setBackgroundStep(action);
+      const backgroundsBefore = getBackgroundCount();
+      const pausesBefore = getBackgroundPauseCount();
+      takeNeedsForeground();
+      let result = await executeTool(call.name, call.input, ctx);
+      noteBackgroundProgress();
+      // Touched an incognito tab: from now on the task never goes on in the background.
+      if (opts.audit.incognito()) forbidBackground();
+      if (takeNeedsForeground() && !signal.aborted) {
+        // The app went to the background during the step and its tab had no live WebView: nothing ran on the page,
+        // so the step runs again once the user is back.
+        await pauseWhileBackgrounded('tab');
+        if (!signal.aborted) result = await executeTool(call.name, call.input, ctx);
+      } else {
+        // The WebView freezes in the background (or the background run paused), so a failure there is retried once
+        // after resuming. Only read-only tools: a frozen click may still run on resume, and repeating it would act
+        // twice.
+        const interrupted =
+          getBackgroundCount() !== backgroundsBefore || getBackgroundPauseCount() !== pausesBefore;
+        if (result.isError && interrupted && SAFE_TO_RETRY.has(call.name) && !signal.aborted) {
+          await pauseWhileBackgrounded();
+          result = await executeTool(call.name, call.input, ctx);
+        }
+      }
+      // A tab the task reads stays awake while it runs (tab sleeping, memory warnings).
+      if (call.name === 'read_tab') opts.browser.keepAwakeForTask(String(call.input.tab_id ?? ''));
       if (call.name === 'read_tab') noteResultHost(call.id, opts.browser.getTab(String(call.input.tab_id ?? ''))?.url);
       else noteResultHost(call.id, opts.browser.getTab(opts.agentTab.id)?.url);
       if (result.isError) onEvent({ type: 'error', text: result.content.slice(0, 200) });

@@ -1,0 +1,24 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.sonsuzdongu.qutai'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.qutaiagent"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  // The patched react-native-webview (RNCWebView and its per-tab key), to run the assistant's page commands natively.
+  implementation project(':react-native-webview')
+  // The notification channel helper shared with the media playback service (no shared state).
+  implementation project(':qutai-media')
+  // Headless JS task support, which keeps React Native's JS timers running while the activity is paused.
+  implementation 'com.facebook.react:react-android'
+}

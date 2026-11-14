@@ -63,7 +63,7 @@ Runtime permissions (the user is asked):
 | `WRITE_EXTERNAL_STORAGE` (Android 10 and older, `maxSdkVersion` 29) | Saving screenshots and images to the gallery (Android 10 and older); downloads to the Downloads folder (Android 9 and older). Android 11+ needs no storage permission for either | First save or download on those versions | `plugins/withLegacyStorageWrite.js` (the libraries declare it up to Android 12; this lowers it) |
 | `READ_CALENDAR`, `WRITE_CALENDAR` | Adding events and reminders (a reminder is a calendar event with an alarm on Android); the assistant's `read_calendar`, confirmed each time. Read is needed to find a writable calendar; Android has no write-only calendar access, so one prompt covers both | First event or reminder the user confirms, or the first `read_calendar` | `expo-calendar` plugin |
 | `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` | Same as iOS location; approximate accepted. Foreground only | First time a site or the assistant needs it | `expo-location` (plugin and library manifest) |
-| `POST_NOTIFICATIONS` (Android 13+) | Local notifications the assistant schedules | First scheduled notification | `expo-notifications` library manifest |
+| `POST_NOTIFICATIONS` (Android 13+) | Local notifications the assistant schedules; the notifications of "Keep working in the background" (the running task, what it needs from the user, how it ended) | First scheduled notification, or turning "Keep working in the background" on (if refused for good: an "Open settings" offer; the task still runs, without visible progress) | `expo-notifications` library manifest |
 
 Install-time permissions (no prompt):
 
@@ -73,9 +73,10 @@ Install-time permissions (no prompt):
 | `USE_BIOMETRIC`, `USE_FINGERPRINT` | App and incognito lock (fingerprint for Android 8 and older) | `expo-local-authentication` |
 | `VIBRATE` | Haptic feedback | `expo-haptics` |
 | `RECEIVE_BOOT_COMPLETED` | Scheduled notifications survive a restart | `expo-notifications` |
-| `WAKE_LOCK` | Required by the Firebase Messaging library that `expo-notifications` bundles. Qutai doesn't use push; kept so the library can't fail on a missing permission | `expo-notifications` (Firebase Messaging) |
+| `WAKE_LOCK` | "Keep working in the background": a partial wake lock while an assistant task runs in the background, so it goes on with the screen off. Held only while the task's service runs, with a 5-minute timeout that progress renews; released as soon as the task pauses or ends. Also required by the Firebase Messaging library that `expo-notifications` bundles (Qutai doesn't use push) | `plugins/withBackgroundTasks.js`, `expo-notifications` (Firebase Messaging) |
 | `DETECT_SCREEN_CAPTURE` (Android 14+) | `expo-screen-capture` registers a screen-capture callback as soon as it loads, which needs this permission. Qutai only blocks screenshots in incognito tabs (`FLAG_SECURE`) and doesn't listen for them | `expo-screen-capture` |
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | "Keep playing in the background": the `mediaPlayback` foreground service (`expo.modules.qutaimedia.MediaPlaybackService`, local module `modules/qutai-media`) runs only while a tab plays sound and up to two minutes after it pauses, with a media notification (play/pause, previous/next when the site offers them, lock screen, headphone buttons). Started only while Qutai is on screen, stopped when playback ends, the tab closes, the setting is turned off or Qutai is swiped away. Its notification needs no `POST_NOTIFICATIONS` prompt: media session notifications are exempt on Android 13+ | `plugins/withBackgroundMedia.js` (the service, `foregroundServiceType="mediaPlayback"`, `exported="false"`) |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE` | "Keep working in the background" (Settings › Assistant, off by default): the `specialUse` foreground service `expo.modules.qutaiagent.AgentTaskService` (local module `modules/qutai-agent`) keeps an assistant task the user started running when they leave Qutai, with an ongoing notification (task title from the user's own message, hidden on the lock screen; the current step; Stop and Open). Started only at the moment Qutai leaves the screen while a task runs, stopped when the user returns, the task ends, fails, is stopped, pauses because it needs the user, stalls, or after 30 minutes in the background; never for incognito conversations | `plugins/withBackgroundTasks.js` (the service, `foregroundServiceType="specialUse"`, `exported="false"`, and its `android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE` property) |
 | `<package>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | AndroidX's private permission for the app's own broadcast receivers | `androidx.core` |
 
 Blocked (`android.blockedPermissions` in `app.json`, removed from the merged manifest):
@@ -105,6 +106,28 @@ Google Play Console, "Foreground service permissions" declaration (App content),
   controls, and pausing (the policy says background audio the user didn't start, such as automatic sounds, doesn't
   qualify). Not recorded yet: it needs a device.
 - Picture-in-picture is a separate feature, not a foreground service; it needs no declaration.
+
+Same declaration, for `specialUse` ("Keep working in the background"):
+
+- Use case: "Other" (custom); description: "Qutai is a web browser with an AI assistant. When the user gives the
+  assistant a task (for example: compare these products, fill in this form, summarise these pages) and then leaves the
+  app or locks the screen, the task the user started continues in a foreground service: it reads and operates the web
+  pages the task opened in the app and sends the requests to the AI provider the user chose. The notification shows the
+  task and its current step and has a Stop button. The service runs only while that task runs; it stops when the task
+  finishes, fails or is stopped, when the user returns to the app, when a step needs the user (a confirmation, a
+  question: the task pauses and a notification says so), and after 30 minutes. It is off by default and turned on by
+  the user in Settings › Assistant › Keep working in the background."
+- Why a foreground service: the work happens in the app's own WebViews (the user's logged-in pages, cookies and tabs
+  live on the device), so it cannot move to a server or to WorkManager/JobScheduler; it is started by the user, visible
+  to them and stoppable at any time, and has no fixed end time. No other foreground service type covers operating web
+  pages for the user (`dataSync` is for transferring data; the task is mostly reading and acting on pages), so it is
+  declared as `specialUse` with the subtype text in the manifest (`plugins/withBackgroundTasks.js`).
+- Impact if deferred or interrupted: the user's task stops half-way as soon as they leave the app (as it does with the
+  setting off); it continues only when they come back.
+- Video: required; record turning the setting on (the notification permission prompt), starting a multi-step task,
+  pressing Home, the notification with its steps, a step that needs a confirmation (the "Qutai paused" notification,
+  opening the app shows the dialog), Stop from the notification, and the finish notification. Not recorded yet: it
+  needs a device.
 
 Intent filters without a permission (`plugins/withEntryPoints.js`): `SEND` `text/plain` (the share sheet),
 `PROCESS_TEXT` `text/plain` (other apps' text-selection menu) and `WEB_SEARCH`, on the main activity, besides the

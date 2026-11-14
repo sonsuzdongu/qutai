@@ -16,7 +16,7 @@ Infrastructure and size are given only for what is still missing or partial; don
 The browser foundation and the AI experience are both in place: data is stored on the device, the everyday browser
 features are built, and the assistant reads, clicks (also by coordinates), uses other tabs and can add to the
 calendar, share a location or offer a call. What is left is mostly what needs a server (accounts, sync, Qutai
-credits, background tasks), native work in our own build (network-level blocking), and testing on real devices: most of it has never run on a phone.
+credits, background tasks on iOS and with the phone off), native work in our own build (network-level blocking), and testing on real devices: most of it has never run on a phone.
 
 ---
 
@@ -138,7 +138,8 @@ moves everything to another phone.
 | Multi-tab analysis | ✅ | | `read_tab` reads other tabs without switching; "compare selected tabs" in the tab switcher |
 | Citing sources, tabs used | ✅ | | Source cards below the answer (switch to the tab if open) |
 | AI search (answers with sources) | ✅ | | Providers' own web search tools; can be turned off in settings. There is an extra charge per search |
-| Deep research | ✅ | | In the foreground with the existing agent; markdown report with sources, PDF. In the background: Server |
+| Deep research | ✅ | | In the foreground with the existing agent; markdown report with sources, PDF. In the background: Android with "Keep working in the background" (below); iOS or with the phone off: Server |
+| Tasks in the background | 🟡 | Build | Android, opt-in "Keep working in the background": a `specialUse` foreground service with an ongoing notification keeps a running task going when the user leaves; page reading and actions on the task's open tabs and the AI requests continue, steps that need the user or the screen (confirmations, questions, screenshots, new tabs) pause it with a notification; result notification at the end. iOS: not possible on the device (pauses as before); a server-side browser would be needed. Not tested on a phone |
 | Smart address bar | ✖️ | – | Will not be done, per user decision |
 | Shopping and travel assistant | 🟡 | Go · M | The agent can do this and adds bookings to the calendar; missing: ready-made flows and a comparison table |
 | Form assistant | ✅ | | The agent fills forms, using what it keeps in memory (name, address); no passwords, cards or codes |
@@ -216,7 +217,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 
 Merged with the "Our own build (development build)" section in `TODO.md`:
 Cookie management and cookie deletion, being the default browser on iOS, iOS widgets, "Share with
-Qutai" on iOS, app verification. Done since: "Share to Qutai" on Android, launcher shortcuts and the `qutai://` links, the Android home screen widget, background audio and media controls, Android picture-in-picture, network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
+Qutai" on iOS, app verification. Done since: assistant tasks that keep working in the background on Android, "Share to Qutai" on Android, launcher shortcuts and the `qutai://` links, the Android home screen widget, background audio and media controls, Android picture-in-picture, network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
 Android request interception), Face ID on iOS, Android private tab isolation (WebView profiles), per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the
 system download manager on Android), Android default browser (intent filters).
 
@@ -248,7 +249,7 @@ Done in the development build:
 
 Account system (shared with the credit system), end-to-end encrypted sync (including memory; deletion markers must be
 kept for deletions), Qutai credits, background
-deep research, price and page tracking, Safe Browsing checks.
+deep research on iOS (and tasks that go on with the phone off), price and page tracking, Safe Browsing checks.
 
 ---
 

@@ -73,3 +73,26 @@ export async function scheduleNotification(plan: NotificationPlan): Promise<void
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: plan.at, channelId: CHANNEL_ID },
   });
 }
+
+/**
+ * Asks for permission to show notifications when it is not granted yet (Android 13+ and iOS show the system prompt;
+ * older Android grants it at install). "blocked": refused and the system no longer asks, so only Settings helps.
+ */
+export async function ensureNotificationPermission(): Promise<'granted' | 'denied' | 'blocked'> {
+  const Notifications = await load();
+  // Android 13+ shows the permission prompt only once a channel exists.
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
+      name: t('notifications.channel'),
+      importance: Notifications.AndroidImportance.HIGH,
+    });
+  }
+  let status = await Notifications.getPermissionsAsync();
+  if (allowed(Notifications, status)) return 'granted';
+  if (!status.canAskAgain) return 'blocked';
+  status = await Notifications.requestPermissionsAsync({
+    ios: { allowAlert: true, allowSound: true, allowBadge: false },
+  });
+  if (allowed(Notifications, status)) return 'granted';
+  return status.canAskAgain ? 'denied' : 'blocked';
+}

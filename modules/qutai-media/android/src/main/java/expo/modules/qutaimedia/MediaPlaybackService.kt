@@ -1,7 +1,6 @@
 package expo.modules.qutaimedia
 
 import android.app.Notification
-import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
@@ -30,8 +29,9 @@ import java.util.concurrent.Executors
  * Audio focus is left to the WebView: Chromium requests it when a page becomes audible and pauses the page on a
  * loss (a phone call), so the service never requests it (two owners in one app would pause each other).
  *
- * Other foreground services (the assistant's background task, a later item) are separate services with their own
- * type, channel and notification id; nothing here is shared state, so both can run at once.
+ * Other foreground services (the assistant's background task, modules/qutai-agent) are separate services with their
+ * own type, channel and notification id; only the channel helper ([NotificationChannels]) is shared, no state, so
+ * both can run at once.
  */
 class MediaPlaybackService : Service() {
   companion object {
@@ -155,15 +155,7 @@ class MediaPlaybackService : Service() {
     playing: Boolean = true,
   ): Notification {
     val labels = PlaybackHub.labels
-    val manager = getSystemService(NotificationManager::class.java)
-    if (Build.VERSION.SDK_INT >= 26 && manager?.getNotificationChannel(CHANNEL_ID)?.name != labels.channel) {
-      manager?.createNotificationChannel(
-        NotificationChannel(CHANNEL_ID, labels.channel, NotificationManager.IMPORTANCE_LOW).apply {
-          setShowBadge(false)
-          lockscreenVisibility = Notification.VISIBILITY_PUBLIC
-        },
-      )
-    }
+    NotificationChannels.ensure(this, CHANNEL_ID, labels.channel, NotificationManager.IMPORTANCE_LOW)
     val builder = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, CHANNEL_ID) else
       @Suppress("DEPRECATION") Notification.Builder(this)
     val pageActions = page?.actions ?: emptySet()

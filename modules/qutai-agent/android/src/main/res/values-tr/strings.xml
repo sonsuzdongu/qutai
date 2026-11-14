@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="qutai_agent_channel">Asistan görevleri</string>
+  <string name="qutai_agent_alerts_channel">Asistan sizi bekliyor</string>
+  <string name="qutai_agent_working">Qutai şunun üzerinde çalışıyor: %1$s</string>
+  <string name="qutai_agent_working_public">Qutai bir görev üzerinde çalışıyor</string>
+  <string name="qutai_agent_stop">Durdur</string>
+  <string name="qutai_agent_open">Aç</string>
+  <string name="qutai_agent_paused">Qutai duraklatıldı: devam etmek için geri dönün</string>
+  <string name="qutai_agent_stalled">Sayfa arka planda yanıt vermeyi bıraktı.</string>
+  <string name="qutai_agent_time_limit">Görev uzun süre arka planda çalıştı.</string>
+  <string name="qutai_agent_public_alert">Qutai sizi bekliyor</string>
+</resources>

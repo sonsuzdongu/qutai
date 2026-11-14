@@ -62,6 +62,8 @@ export class Browser {
   private incognitoProfile: string | undefined;
   /** The tab the agent is working in, which must not fall asleep under it. */
   private agentTab: { id: string } | null = null;
+  /** Other tabs the running task reads (read_tab): they stay awake until it ends. */
+  private taskTabs = new Set<string>();
   private version = 0;
   private listeners = new Set<() => void>();
   private visitListeners = new Set<(tab: Tab) => void>();
@@ -387,6 +389,15 @@ export class Browser {
   /** Keeps the agent's tab (the object is updated as the agent moves between tabs) awake. */
   setAgentTab(agentTab: { id: string } | null) {
     this.agentTab = agentTab;
+    this.taskTabs.clear();
+  }
+
+  /**
+   * Keeps another tab the running task reads awake until the task ends (also when Qutai is in the background, where
+   * a sleeping tab cannot get its WebView back until the user returns).
+   */
+  keepAwakeForTask(id: string) {
+    if (this.agentTab && this.getTab(id)) this.taskTabs.add(id);
   }
 
   /**
@@ -395,7 +406,7 @@ export class Browser {
    * tabs playing sound always stay awake.
    */
   sleepInactive(maxAwake = MAX_AWAKE_TABS) {
-    const keep = new Set([this.activeId, this.agentTab?.id]);
+    const keep = new Set([this.activeId, this.agentTab?.id, ...this.taskTabs]);
     const awake = this.tabs.filter((t) => !t.asleep && !t.isNewTab);
     const sleepable = awake
       .filter((t) => !t.incognito && !t.media.capturing && !t.playback.audible && !keep.has(t.id))
