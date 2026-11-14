@@ -316,6 +316,9 @@ export const tr: Record<keyof typeof en, string> = {
   'media.promptIncognito': 'Gizli sekme: yanıtınız yalnızca bu istek için geçerlidir ve kaydedilmez. Başka bir sekme ekrandayken ya da Qutai arka plandayken duraklatılır.',
   'media.systemDenied.camera': 'Qutai’nin kamerayı kullanma izni yok. Telefonunuzun ayarlarından izin verebilirsiniz.',
   'media.systemDenied.microphone': 'Qutai’nin mikrofonu kullanma izni yok. Telefonunuzun ayarlarından izin verebilirsiniz.',
+  'upload.cameraDenied':
+    'Qutai’nin kamerayı kullanma izni olmadığı için bu alan fotoğraf çekemiyor. Telefonunuzun ayarlarından izin verebilir ya da var olan bir dosyayı seçebilirsiniz.',
+  'upload.chooseFile': 'Dosya seç',
   'actionLog.title': 'Qutai işlem geçmişi',
   'actionLog.hint': "Qutai'nin son 30 günde yaptıkları. Gizli sekmeler ve yazılan metinler asla kaydedilmez.",
   'actionLog.empty': 'Henüz bir şey yok.',

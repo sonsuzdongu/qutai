@@ -13,6 +13,7 @@ import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { mayOfferExternal, noteUserGesture } from '../browser/externalGuard';
 import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
 import { geolocationScript } from '../browser/geolocation';
+import { FILE_CAPTURE_SCRIPT, handleFileCaptureMessage } from '../browser/fileCapture';
 import { mediaCaptureScript } from '../browser/mediaCapture';
 import { openExternal } from '../browser/openExternal';
 import { parsePullState, PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
@@ -119,6 +120,7 @@ function TabWebView({
     // Android may run the early script too soon for the new page; installing again is a no-op otherwise.
     Platform.OS === 'android' ? geoScript : '',
     Platform.OS === 'android' ? mediaScript : '',
+    Platform.OS === 'android' ? FILE_CAPTURE_SCRIPT : '',
     CONTEXT_MENU_SCRIPT,
     SELECTION_SCRIPT,
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
@@ -195,6 +197,7 @@ function TabWebView({
               if (tab.handleMessage(e.nativeEvent.data)) return;
               if (tab.geolocation.handleMessage(e.nativeEvent.data)) return;
               if (tab.media.handleMessage(e.nativeEvent.data)) return;
+              if (handleFileCaptureMessage(tab, e.nativeEvent.data)) return;
               if (handleUserAgentMessage(e.nativeEvent.data)) return;
               const pull = parsePullState(e.nativeEvent.data);
               if (pull !== null) return setAtTop(pull);

@@ -10,6 +10,12 @@ export function noteUserGesture(tab: Tab, now = Date.now()) {
   lastTouch.set(tab, now);
 }
 
+/** The user touched this tab's page a moment ago (nothing is used up, unlike `mayOfferExternal`). */
+export function touchedRecently(tab: Tab, now = Date.now()): boolean {
+  const touched = lastTouch.get(tab);
+  return touched !== undefined && now - touched <= GESTURE_WINDOW_MS;
+}
+
 /**
  * Whether a page may ask to open another app: only right after the user touched it (or, on iOS,
  * tapped a link), and never again for a link they already declined in this tab. Pages that

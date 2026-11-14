@@ -314,6 +314,9 @@ export const en = {
   'media.promptIncognito': 'Incognito: your answer applies to this request only and is never saved. It’s paused while another tab is on screen or Qutai is in the background.',
   'media.systemDenied.camera': 'Qutai isn’t allowed to use the camera. You can allow it in your phone’s settings.',
   'media.systemDenied.microphone': 'Qutai isn’t allowed to use the microphone. You can allow it in your phone’s settings.',
+  'upload.cameraDenied':
+    'Qutai isn’t allowed to use the camera, so this field can’t take a photo. You can allow it in your phone’s settings, or choose an existing file.',
+  'upload.chooseFile': 'Choose a file',
   'actionLog.title': 'Qutai activity',
   'actionLog.hint': 'What Qutai did in the last 30 days. Incognito tabs and typed text are never recorded.',
   'actionLog.empty': 'Nothing yet.',

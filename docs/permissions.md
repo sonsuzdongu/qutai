@@ -46,7 +46,7 @@ Runtime permissions (the user is asked):
 
 | Permission | Feature | When the user is asked | Declared by |
 | --- | --- | --- | --- |
-| `CAMERA` | QR code scanner; the camera option in a web page's upload field (offered once Qutai holds the permission); sites the user allows to use the camera (`getUserMedia`) | First time the QR scanner opens or the user allows a site | `expo-camera` (plugin and library manifest) |
+| `CAMERA` | QR code scanner; the camera option in a web page's upload field (offered once Qutai holds the permission); sites the user allows to use the camera (`getUserMedia`) | First time the QR scanner opens, the user taps an upload field with `capture` (a "take a photo" button; `src/browser/fileCapture.ts`), or the user allows a site | `expo-camera` (plugin and library manifest) |
 | `RECORD_AUDIO` | Sites the user allows to use the microphone (`getUserMedia`) | First time the user allows a site | `expo-camera` plugin, `recordAudioAndroid: true` |
 | `WRITE_EXTERNAL_STORAGE` (Android 10 and older, `maxSdkVersion` 29) | Saving screenshots and images to the gallery (Android 10 and older); downloads to the Downloads folder (Android 9 and older). Android 11+ needs no storage permission for either | First save or download on those versions | `plugins/withLegacyStorageWrite.js` (the libraries declare it up to Android 12; this lowers it) |
 | `READ_CALENDAR`, `WRITE_CALENDAR` | Adding events and reminders (a reminder is a calendar event with an alarm on Android). Read is needed to find a writable calendar; Android has no write-only calendar access | First event or reminder the user confirms | `expo-calendar` plugin |
