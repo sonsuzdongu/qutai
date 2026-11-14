@@ -36,6 +36,7 @@ import { TextSizeSheet } from './src/components/TextSizeSheet';
 import { ReaderSettingsSheet } from './src/components/ReaderSettingsSheet';
 import { sleep } from './src/utils/sleep';
 import { Toast, useToast } from './src/components/Toast';
+import { DownloadIndicator } from './src/components/DownloadIndicator';
 import { CaptureOverlay } from './src/components/CaptureOverlay';
 import { dialog, DialogHost } from './src/components/Dialog';
 import { copyLink, copyText, shareLink, shareText } from './src/device/link';
@@ -78,7 +79,7 @@ import { deleteActionsSince } from './src/storage/actionLog';
 import { deleteSentSince, moveSentConversation, pruneSent } from './src/storage/sentLog';
 import { SentLogScreen } from './src/components/SentLogScreen';
 import { bump, setHapticsEnabled, success, tick } from './src/device/haptics';
-import { deleteDownloadedFile, downloadFile } from './src/device/download';
+import { DownloadCancelled, deleteDownloadedFile, downloadFile } from './src/device/download';
 import { DownloadStore } from './src/storage/downloads';
 import { DownloadsScreen } from './src/components/DownloadsScreen';
 import * as Sharing from 'expo-sharing';
@@ -925,8 +926,12 @@ function BrowserApp({
                     },
                     onDownload: (source, url) =>
                       runAction(async () => {
-                        toast.show(t('downloads.started'));
-                        const entry = await downloadFile(source, url);
+                        // The download indicator shows it meanwhile (progress, cancel).
+                        const entry = await downloadFile(source, url, downloads).catch((e) => {
+                          if (e instanceof DownloadCancelled) return null;
+                          throw e;
+                        });
+                        if (!entry) return t('downloads.cancelled');
                         await downloads.add(entry);
                         return t('downloads.done', { name: entry.name });
                       }),
@@ -1147,6 +1152,11 @@ function BrowserApp({
               else if (target.value) tab.loadUrl(toUrl(target.value, settings.searchEngine));
             }}
             onClose={() => setScannerVisible(false)}
+          />
+          <DownloadIndicator
+            store={downloads}
+            bottomOffset={barAtBottom ? 64 : 16}
+            onOpen={() => setDownloadsVisible(true)}
           />
           <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
           <CaptureOverlay />

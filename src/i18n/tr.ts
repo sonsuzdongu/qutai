@@ -388,6 +388,9 @@ export const tr: Record<keyof typeof en, string> = {
   'downloads.delete': 'Dosyayı sil',
   'downloads.started': 'İndiriliyor…',
   'downloads.done': 'İndirildi: {name}',
+  'downloads.cancel': 'İndirmeyi iptal et',
+  'downloads.cancelled': 'İndirme iptal edildi',
+  'downloads.inProgress': '{name} indiriliyor {progress}',
   'downloads.androidStarted': 'İndiriliyor; bildirimden takip edebilirsiniz',
   'downloads.androidNoPermission': 'Qutai depolama izni olmadan dosya kaydedemiyor.',
 

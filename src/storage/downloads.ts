@@ -12,6 +12,19 @@ export type DownloadEntry = {
   incognito?: boolean;
 };
 
+/** A file still downloading (iOS): listed with its progress until it finishes, fails or is cancelled. */
+export type ActiveDownload = {
+  id: string;
+  name: string;
+  bytesWritten: number;
+  /** null while the size isn't known (no Content-Length, or the page is still fetching it). */
+  totalBytes: number | null;
+  controller: AbortController;
+};
+
+/** Progress redraws at most this often. */
+const PROGRESS_EMIT_MS = 250;
+
 type Row = { id: string; url: string; name: string; uri: string; size: number | null; created_at: number };
 
 export async function listDownloads(db: Db): Promise<DownloadEntry[]> {
@@ -37,6 +50,8 @@ export async function removeDownload(db: Db, id: string): Promise<void> {
 /** Downloaded files, newest first; incognito ones only in memory. Listeners hear about changes. */
 export class DownloadStore {
   private entries: DownloadEntry[] = [];
+  private active: ActiveDownload[] = [];
+  private lastProgressEmit = 0;
   private listeners = new Set<() => void>();
   private loading: Promise<void> | null = null;
   private version = 0;
@@ -59,6 +74,45 @@ export class DownloadStore {
 
   list(): DownloadEntry[] {
     return this.entries;
+  }
+
+  /** Downloads in progress, oldest first. */
+  activeList(): ActiveDownload[] {
+    return this.active;
+  }
+
+  /** A download starts: it is listed with its progress until `end`. */
+  begin(name: string): ActiveDownload {
+    const entry: ActiveDownload = {
+      id: `a${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+      name,
+      bytesWritten: 0,
+      totalBytes: null,
+      controller: new AbortController(),
+    };
+    this.active = [...this.active, entry];
+    this.emit();
+    return entry;
+  }
+
+  progress(id: string, bytesWritten: number, totalBytes: number) {
+    const now = Date.now();
+    this.active = this.active.map((a) =>
+      a.id === id ? { ...a, bytesWritten, totalBytes: totalBytes > 0 ? totalBytes : null } : a,
+    );
+    if (now - this.lastProgressEmit < PROGRESS_EMIT_MS) return;
+    this.lastProgressEmit = now;
+    this.emit();
+  }
+
+  /** Stops a download in progress; its partial file is removed by whoever started it. */
+  cancel(id: string) {
+    this.active.find((a) => a.id === id)?.controller.abort();
+  }
+
+  end(id: string) {
+    this.active = this.active.filter((a) => a.id !== id);
+    this.emit();
   }
 
   async add(entry: DownloadEntry): Promise<void> {

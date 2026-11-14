@@ -386,6 +386,9 @@ export const en = {
   'downloads.delete': 'Delete file',
   'downloads.started': 'Downloading…',
   'downloads.done': 'Downloaded: {name}',
+  'downloads.cancel': 'Cancel download',
+  'downloads.cancelled': 'Download cancelled',
+  'downloads.inProgress': 'Downloading {name} {progress}',
   'downloads.androidStarted': 'Downloading — see the notification',
   'downloads.androidNoPermission': "Qutai can't save files without storage permission.",
 

@@ -1,6 +1,7 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import type { Tab } from '../browser/Tab';
-import type { DownloadEntry } from '../storage/downloads';
+import { t } from '../i18n';
+import type { DownloadEntry, DownloadStore } from '../storage/downloads';
 import { parseDataUrl } from './saveImage';
 
 /** Files larger than this are downloaded directly instead of through the page (which holds them in memory). */
@@ -40,20 +41,58 @@ function downloadsDir(): Directory {
   return dir;
 }
 
+/** The user cancelled a download; nothing was kept. */
+export class DownloadCancelled extends Error {
+  constructor() {
+    super(t('downloads.cancelled'));
+  }
+}
+
+/** Settles like promise, or rejects as soon as signal is aborted (the promise's result is then ignored). */
+function unlessAborted<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(new DownloadCancelled());
+    if (signal.aborted) return onAbort();
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
+  });
+}
+
 /**
  * Downloads a file the WebView couldn't show (iOS). The page fetches it first, with the
  * site's cookies, so downloads behind a login work; otherwise it is downloaded directly.
+ * Meanwhile it is listed in the store's downloads in progress (with its progress when downloaded
+ * directly) and can be cancelled from there: the partial file is then removed and
+ * DownloadCancelled is thrown.
  */
-export async function downloadFile(tab: Tab, url: string): Promise<DownloadEntry> {
+export async function downloadFile(tab: Tab, url: string, store: DownloadStore): Promise<DownloadEntry> {
   const dir = downloadsDir();
   const name = uniqueName(fileNameFromUrl(url), (n) => new File(dir, n).exists);
   const file = new File(dir, name);
-  const data = /^https?:/i.test(url) ? await tab.run<string>('fileData', [url], 60000).catch(() => null) : null;
-  const parsed = data ? parseDataUrl(data) : null;
-  if (parsed && parsed.base64.length * 0.75 <= PAGE_FETCH_MAX_BYTES) {
-    await file.write(parsed.base64, { encoding: 'base64' });
-  } else {
-    await File.downloadFileAsync(url, file);
+  const active = store.begin(name);
+  const { signal } = active.controller;
+  try {
+    const data = /^https?:/i.test(url)
+      ? await unlessAborted(tab.run<string>('fileData', [url], 60000), signal).catch((e) => {
+          if (e instanceof DownloadCancelled) throw e;
+          return null;
+        })
+      : null;
+    const parsed = data ? parseDataUrl(data) : null;
+    if (parsed && parsed.base64.length * 0.75 <= PAGE_FETCH_MAX_BYTES) {
+      await file.write(parsed.base64, { encoding: 'base64' });
+    } else {
+      await File.downloadFileAsync(url, file, {
+        signal,
+        onProgress: ({ bytesWritten, totalBytes }) => store.progress(active.id, bytesWritten, totalBytes),
+      });
+    }
+  } catch (e) {
+    // Whatever was written so far goes (the name was free when the download started).
+    if (file.exists) file.delete();
+    throw signal.aborted ? new DownloadCancelled() : e;
+  } finally {
+    store.end(active.id);
   }
   return {
     id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
