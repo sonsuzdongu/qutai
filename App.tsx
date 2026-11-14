@@ -16,7 +16,7 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
-import { newItem, sourcesItem } from './src/chat/Conversation';
+import { Conversation, newItem, sourcesItem } from './src/chat/Conversation';
 import { getProvider, modelLabel } from './src/ai/providers';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import type { ContextTarget } from './src/browser/contextMenu';
@@ -75,7 +75,7 @@ import * as Sharing from 'expo-sharing';
 import { SitePermissionStore } from './src/storage/sitePermissions';
 import { siteKey } from './src/agent/sitePolicy';
 import { SitePermissionSheet } from './src/components/SitePermissionSheet';
-import { clearChat, deleteOrphanChats, loadChat, saveChat } from './src/storage/chat';
+import { deleteOrphanChats, loadChat, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
 import { usePersistSession } from './src/storage/usePersistSession';
@@ -198,10 +198,11 @@ function BrowserApp({
   usePersistSession(browser);
   useRecordHistory(browser);
 
-  // Each tab has its own conversation; only one task runs at a time across all tabs.
-  const conversation = tab.conversation;
-  const runningTab = browser.tabs.find((x) => x.conversation.running);
-  const running = runningTab !== undefined;
+  // A tab group shares one conversation, an ungrouped tab has its own; only one task runs at a time.
+  const conversation = browser.conversationOf(tab);
+  const runningChat = browser.conversations.find((x) => x.running);
+  const running = runningChat !== undefined;
+  const runningTab = runningChat && browser.tabs.find((x) => browser.conversationOf(x) === runningChat);
   const [panelOpen, setPanelOpen] = useState(false);
   const [focusRequest, setFocusRequest] = useState(0);
   // Text selected on a page; like find in page, it only counts for the page it came from.
@@ -268,17 +269,16 @@ function BrowserApp({
   const darkMode = useColorScheme() === 'dark';
   useEffect(() => setHapticsEnabled(settings.haptics), [settings.haptics]);
 
-  // A tab's saved conversation is read from disk the first time the tab is shown.
+  // A tab's (or its group's) saved conversation is read from disk the first time it is shown.
   useEffect(() => {
-    const target = browser.active;
-    if (target.conversation.loaded) return;
+    if (conversation.loaded) return;
     const adoptLegacy = legacyChatPending;
     legacyChatPending = false;
     getDb()
-      .then((db) => loadChat(db, target.uid, { adoptLegacy }))
+      .then((db) => loadChat(db, conversation.key, { adoptLegacy }))
       .catch(() => null)
-      .then((saved) => target.conversation.restore(saved));
-  }, [browser, tab]);
+      .then((saved) => conversation.restore(saved));
+  }, [conversation]);
 
   // Once at start: load site permissions and trim the activity history.
   useEffect(() => {
@@ -294,37 +294,44 @@ function BrowserApp({
     getDb()
       .then((db) =>
         deleteOrphanChats(db, [
-          ...browserInstance.tabs.map((x) => x.uid),
+          ...browserInstance.conversations.map((x) => x.key),
           ...browserInstance.recentlyClosed.flatMap((c) => (c.uid ? [c.uid] : [])),
         ]),
       )
       .catch(() => {});
   }, [browserInstance]);
 
-  /** Writes a tab's conversation; incognito ones never touch the disk and private ones are removed. */
   // The chat input is saved shortly after typing stops, so closing the app doesn't lose it.
   const [draftSaver] = useState(() => ({ timer: null as ReturnType<typeof setTimeout> | null }));
-  const persistDraftSoon = (owner: Tab) => {
+  const persistDraftSoon = (chat: Conversation) => {
     if (draftSaver.timer) clearTimeout(draftSaver.timer);
-    draftSaver.timer = setTimeout(() => persistConversation(owner), 800);
+    draftSaver.timer = setTimeout(() => persistConversation(chat), 800);
   };
 
-  const persistConversation = (owner: Tab) => {
-    if (owner.incognito) return;
-    const chat = owner.conversation;
+  const persistConversation = (chat: Conversation) => {
     getDb()
-      .then((db) =>
-        chat.privacy.touchedIncognito ? clearChat(db, owner.uid) : saveChat(db, owner.uid, chat.toSaved()),
-      )
+      .then((db) => storeChat(db, chat))
       .catch(() => {});
   };
 
+  // A conversation that moved (to the group a tab founded, to a tab when its group dissolves or its last
+  // tab closes) takes its saved copy along.
+  useEffect(
+    () =>
+      browserInstance.onChatMoved((chat, fromKey) => {
+        getDb()
+          .then((db) => storeChat(db, chat, fromKey))
+          .catch(() => {});
+      }),
+    [browserInstance],
+  );
   const send = async (text: string) => {
     if (running) return;
     // The conversation belongs to the tab the user is looking at when they send the task,
     // and stays there even if the agent moves to other tabs.
+    // A grouped tab's conversation is the group's, so the task keeps one context whichever of its tabs is shown.
     const current = browser.active;
-    const chat = current.conversation;
+    const chat = browser.conversationOf(current);
     // Marked before anything is shown, so a message typed in an incognito tab is never saved.
     if (current.incognito) chat.privacy.touchedIncognito = true;
     chat.add(newItem('user', text));
@@ -333,7 +340,7 @@ function BrowserApp({
     const apiKey = settings.apiKeys[provider];
     if (!apiKey) {
       chat.add(newItem('error', t('chat.missingKey', { provider: getProvider(provider).label })));
-      persistConversation(current);
+      persistConversation(chat);
       setSettingsVisible(true);
       return;
     }
@@ -394,13 +401,14 @@ function BrowserApp({
       chat.finishStreaming();
       chat.finish();
       browser.setAgentTab(null);
-      persistConversation(current);
+      // Saved under the conversation's key now, which may have changed meanwhile (e.g. the tab founded a group).
+      persistConversation(chat);
     }
   };
 
   const newChat = () => {
     conversation.clear();
-    persistConversation(tab);
+    persistConversation(conversation);
   };
 
   /** Runs a menu action and reports the outcome in a toast instead of failing silently. */
@@ -711,12 +719,12 @@ function BrowserApp({
     if (options.activity) await deleteActionsSince(db, from);
     if (options.recentlyClosed) browser.clearRecentlyClosed();
     if (options.chats) {
-      browser.tabs.forEach((x) => {
-        if (!x.conversation.running) x.conversation.clear();
+      browser.conversations.forEach((x) => {
+        if (!x.running) x.clear();
       });
       await deleteOrphanChats(
         db,
-        browser.tabs.filter((x) => x.conversation.running).map((x) => x.uid),
+        browser.conversations.filter((x) => x.running).map((x) => x.key),
       );
     }
     if (options.downloads) {
@@ -864,7 +872,7 @@ function BrowserApp({
               draft={conversation.draft}
               onDraftChange={(text) => {
                 conversation.setDraft(text);
-                persistDraftSoon(tab);
+                persistDraftSoon(conversation);
               }}
               focusRequest={focusRequest}
               research={conversation.research}

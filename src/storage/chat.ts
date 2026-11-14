@@ -1,5 +1,6 @@
 import { compactHistory } from '../agent/runAgent';
 import type { Turn } from '../ai/types';
+import type { Conversation } from '../chat/Conversation';
 import type { ChatItem } from '../components/AssistantPanel';
 import { Db, deleteKey, getJson, setJson } from './db';
 
@@ -36,40 +37,68 @@ export function prepareForStorage(chat: SavedChat): SavedChat {
 }
 
 const LEGACY_KEY = 'chat';
-const keyFor = (uid: string) => `chat:${uid}`;
+/** key: a tab's uid or a group's `groupChatKey` (from `Conversation.key`). */
+const keyFor = (key: string) => `chat:${key}`;
 
 function isSavedChat(chat: SavedChat | null): chat is SavedChat {
   return !!chat && Array.isArray(chat.items) && Array.isArray(chat.turns);
 }
 
 /**
- * Loads a tab's conversation. With adoptLegacy, the single conversation saved by earlier
- * versions moves to this tab (once) when the tab has none of its own.
+ * Loads a tab's or a group's conversation. With adoptLegacy, the single conversation saved by
+ * earlier versions moves here (once) when there is none of its own.
  */
-export async function loadChat(db: Db, uid: string, { adoptLegacy = false } = {}): Promise<SavedChat | null> {
-  const chat = await getJson<SavedChat>(db, keyFor(uid));
+export async function loadChat(db: Db, key: string, { adoptLegacy = false } = {}): Promise<SavedChat | null> {
+  const chat = await getJson<SavedChat>(db, keyFor(key));
   if (isSavedChat(chat)) return chat;
   if (!adoptLegacy) return null;
   const legacy = await getJson<SavedChat>(db, LEGACY_KEY);
   await deleteKey(db, LEGACY_KEY);
   if (!isSavedChat(legacy)) return null;
-  await setJson(db, keyFor(uid), legacy);
+  await setJson(db, keyFor(key), legacy);
   return legacy;
 }
 
-export async function saveChat(db: Db, uid: string, chat: SavedChat): Promise<void> {
-  if (chat.items.length === 0 && chat.turns.length === 0 && !chat.draft) return deleteKey(db, keyFor(uid));
-  await setJson(db, keyFor(uid), prepareForStorage(chat));
+export async function saveChat(db: Db, key: string, chat: SavedChat): Promise<void> {
+  if (chat.items.length === 0 && chat.turns.length === 0 && !chat.draft) return deleteKey(db, keyFor(key));
+  await setJson(db, keyFor(key), prepareForStorage(chat));
 }
 
-export async function clearChat(db: Db, uid: string): Promise<void> {
-  await deleteKey(db, keyFor(uid));
+export async function clearChat(db: Db, key: string): Promise<void> {
+  await deleteKey(db, keyFor(key));
 }
 
-/** Deletes conversations of tabs that are neither open nor in recently closed. */
-export async function deleteOrphanChats(db: Db, keepUids: string[]): Promise<void> {
+/**
+ * Moves a saved conversation that hasn't been read yet to another key, replacing what is there.
+ * One statement, so a read of either key never sees it half moved. Nothing saved: nothing changes.
+ */
+export async function renameChat(db: Db, fromKey: string, toKey: string): Promise<void> {
+  await db.runAsync('UPDATE OR REPLACE kv SET key = ? WHERE key = ?', [keyFor(toKey), keyFor(fromKey)]);
+}
+
+/**
+ * Writes a conversation under its key. One that belongs to an incognito tab (or to a group that ever held
+ * one) or that touched a private tab leaves nothing: its saved copy is removed (deleting a key that was
+ * never written changes nothing on disk). With fromKey, the conversation has just moved from there; one
+ * not read from disk yet gets its saved copy renamed instead.
+ */
+export async function storeChat(db: Db, chat: Conversation, fromKey = chat.key): Promise<void> {
+  const moved = fromKey !== chat.key;
+  if (chat.incognito || chat.privacy.touchedIncognito) {
+    await clearChat(db, chat.key);
+    if (moved) await clearChat(db, fromKey);
+  } else if (!chat.loaded) {
+    if (moved) await renameChat(db, fromKey, chat.key);
+  } else {
+    await saveChat(db, chat.key, chat.toSaved());
+    if (moved) await clearChat(db, fromKey);
+  }
+}
+
+/** Deletes conversations of tabs and groups that are gone (keys of open tabs, groups and recently closed tabs are kept). */
+export async function deleteOrphanChats(db: Db, keepKeys: string[]): Promise<void> {
   const rows = await db.getAllAsync<{ key: string }>("SELECT key FROM kv WHERE key LIKE 'chat:%'", []);
-  const keep = new Set(keepUids.map(keyFor));
+  const keep = new Set(keepKeys.map(keyFor));
   for (const { key } of rows) {
     if (!keep.has(key)) await deleteKey(db, key);
   }

@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react';
+import { Conversation, groupChatKey } from '../chat/Conversation';
 import type { Session } from '../storage/session';
 import { NEW_TAB_URL, Tab } from './Tab';
 
@@ -15,7 +16,7 @@ export function groupNameFor(url: string, n: number): string {
   return host || `Group ${n}`;
 }
 
-/** uid lets a reopened tab get its conversation back. */
+/** uid lets a reopened tab get its conversation back (a group's too, when it was the group's last tab). */
 export type ClosedTab = { url: string; title: string; closedAt: number; uid?: string };
 
 const MAX_RECENTLY_CLOSED = 25;
@@ -30,6 +31,9 @@ export class Browser {
   recentlyClosed: ClosedTab[] = [];
   /** Tab groups; a group's tabs are kept next to each other in `tabs`. */
   groups: TabGroup[] = [];
+  /** Each group's conversation, shared by its tabs (by group id). */
+  private groupChats = new Map<string, Conversation>();
+  private chatMoveListeners = new Set<(chat: Conversation, fromKey: string) => void>();
 
   private counter = 0;
   /** The tab the agent is working in, which must not fall asleep under it. */
@@ -42,6 +46,8 @@ export class Browser {
     this.recentlyClosed = recentlyClosed.slice(0, MAX_RECENTLY_CLOSED);
     if (session?.tabs.length) {
       this.groups = (session.groups ?? []).filter((g) => session.tabs.some((t) => t.groupId === g.id));
+      // Group ids are saved with the session, so a restored group finds its saved conversation.
+      this.groups.forEach((g) => this.groupChats.set(g.id, new Conversation(this.emit, groupChatKey(g.id))));
       session.tabs.forEach((saved, i) => {
         const tab = this.openTab(saved.url, {
           activate: i === session.activeIndex,
@@ -71,6 +77,33 @@ export class Browser {
     return () => {
       this.visitListeners.delete(listener);
     };
+  }
+
+  /**
+   * Called when a conversation moves to another storage key (from a tab to the group it founded, from a
+   * dissolved group to one of its tabs…), so its saved copy can follow. fromKey is the old key; it equals
+   * the current key when only the saved copy must be redone (a group took in an incognito tab).
+   */
+  onChatMoved(listener: (chat: Conversation, fromKey: string) => void) {
+    this.chatMoveListeners.add(listener);
+    return () => {
+      this.chatMoveListeners.delete(listener);
+    };
+  }
+
+  /**
+   * The conversation shown and used for a tab: its group's if it is in one, otherwise its own.
+   * A task running in the tab's own conversation stays with the tab until it ends, even if the
+   * tab joined a group meanwhile, so it is never hidden or run twice.
+   */
+  conversationOf(tab: Tab): Conversation {
+    const shared = tab.groupId ? this.groupChats.get(tab.groupId) : undefined;
+    return shared && !tab.conversation.running ? shared : tab.conversation;
+  }
+
+  /** Every live conversation: each open tab's own and each group's. */
+  get conversations(): Conversation[] {
+    return [...this.tabs.map((t) => t.conversation), ...this.groupChats.values()];
   }
 
   notifyVisit(tab: Tab) {
@@ -147,6 +180,7 @@ export class Browser {
     const indexInMode = sameMode.indexOf(tab);
 
     this.tabs.splice(this.tabs.indexOf(tab), 1);
+    const lastOfGroup = !!tab.groupId && !this.tabs.some((t) => t.groupId === tab.groupId);
     const remembered = !tab.incognito && /^https?:\/\//i.test(tab.url);
     if (remembered) {
       this.recentlyClosed = [
@@ -155,6 +189,16 @@ export class Browser {
       ].slice(0, MAX_RECENTLY_CLOSED);
     }
     tab.conversation.stop();
+    if (lastOfGroup) {
+      // The group goes with its last tab; its conversation is kept under the tab, like a closed
+      // tab's own, so reopening it from recently closed brings the conversation back.
+      const chat = this.groupChats.get(tab.groupId!);
+      this.groupChats.delete(tab.groupId!);
+      if (chat) {
+        chat.stop();
+        if (!chat.isBlank) this.moveChat(chat, tab.uid);
+      }
+    }
     tab.dispose();
     this.dropEmptyGroups();
 
@@ -213,6 +257,10 @@ export class Browser {
       color: GROUP_COLORS[this.groups.length % GROUP_COLORS.length],
     };
     this.groups.push(group);
+    // A new group has nothing to read from disk; its first tab with a conversation hands it over.
+    const chat = new Conversation(this.emit, groupChatKey(group.id));
+    chat.loaded = true;
+    this.groupChats.set(group.id, chat);
     tabIds.forEach((id) => this.setGroup(id, group.id));
     this.emit();
     return group;
@@ -223,7 +271,15 @@ export class Browser {
     const tab = this.getTab(tabId);
     if (!tab) return;
     if (groupId && !this.getGroup(groupId)) return;
+    const previous = tab.groupId;
     tab.groupId = groupId ?? undefined;
+    if (previous && previous !== groupId) {
+      // Leaving: the conversation stays with the group and the tab shows its own again. If this was
+      // the group's last tab, the group dissolves and its conversation comes along.
+      const remaining = this.tabs.filter((t) => t.groupId === previous);
+      if (remaining.length === 0) this.dissolveGroupChat(previous, [tab]);
+    }
+    if (groupId && previous !== groupId) this.joinGroupChat(tab, groupId);
     if (groupId) {
       const members = this.tabs.filter((t) => t.groupId === groupId && t !== tab);
       const last = members[members.length - 1];
@@ -249,11 +305,63 @@ export class Browser {
 
   /** Dissolves a group; its tabs stay open. */
   ungroup(id: string) {
-    this.tabs.forEach((t) => {
-      if (t.groupId === id) t.groupId = undefined;
+    const members = this.tabs.filter((t) => t.groupId === id);
+    members.forEach((t) => {
+      t.groupId = undefined;
     });
+    this.dissolveGroupChat(id, members);
     this.groups = this.groups.filter((g) => g.id !== id);
     this.emit();
+  }
+
+  /**
+   * A tab joined a group: the group's conversation wins. A group that has none yet (just created)
+   * takes over the tab's, and the tab starts a new one of its own. Otherwise the tab's own
+   * conversation is left as it is (saved under the tab) and comes back if the tab leaves.
+   */
+  private joinGroupChat(tab: Tab, groupId: string) {
+    const shared = this.groupChats.get(groupId);
+    if (!shared) return;
+    if (shared.isBlank && !tab.conversation.isBlank) {
+      const own = tab.conversation;
+      const fresh = new Conversation(this.emit, tab.uid, tab.incognito);
+      fresh.loaded = true;
+      tab.conversation = fresh;
+      own.incognito ||= shared.incognito;
+      this.groupChats.set(groupId, own);
+      this.moveChat(own, groupChatKey(groupId));
+    } else if (tab.incognito && !shared.incognito) {
+      // A group that ever held an incognito tab never writes its conversation to disk; the
+      // listener removes what was saved before.
+      shared.incognito = true;
+      this.chatMoveListeners.forEach((l) => l(shared, shared.key));
+    }
+  }
+
+  /**
+   * A group goes away while some of its tabs stay open: its conversation moves to the active one
+   * (else the first) so it isn't lost, replacing that tab's own. A tab whose own conversation is
+   * still running a task is skipped, so the task is never cut off.
+   */
+  private dissolveGroupChat(groupId: string, members: Tab[]) {
+    const chat = this.groupChats.get(groupId);
+    this.groupChats.delete(groupId);
+    if (!chat || chat.isBlank) return;
+    const heir = [...members]
+      .sort((a, b) => Number(b.id === this.activeId) - Number(a.id === this.activeId))
+      .find((t) => !t.conversation.running);
+    if (!heir) return;
+    heir.conversation = chat;
+    chat.incognito ||= heir.incognito;
+    this.moveChat(chat, heir.uid);
+  }
+
+  /** Gives a conversation a new storage key and lets the listeners move its saved copy. */
+  private moveChat(chat: Conversation, key: string) {
+    const from = chat.key;
+    if (from === key) return;
+    chat.key = key;
+    this.chatMoveListeners.forEach((l) => l(chat, from));
   }
 
   /** Moves a tab right before (or after) another one. */
@@ -268,6 +376,9 @@ export class Browser {
 
   private dropEmptyGroups() {
     this.groups = this.groups.filter((g) => this.tabs.some((t) => t.groupId === g.id));
+    for (const id of this.groupChats.keys()) {
+      if (!this.groups.some((g) => g.id === id)) this.groupChats.delete(id);
+    }
   }
 
   clearRecentlyClosed() {

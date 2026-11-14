@@ -46,8 +46,11 @@ export class Tab {
   readonly id: string;
   /** Stable across restarts and reopening (unlike id); the tab's conversation is saved under it. */
   readonly uid: string;
-  /** This tab's own conversation with the assistant. */
-  readonly conversation: Conversation;
+  /**
+   * This tab's own conversation with the assistant. While the tab is in a group, the group's
+   * conversation is shown instead (use `Browser.conversationOf`); this one waits for the tab to leave.
+   */
+  conversation: Conversation;
   readonly incognito: boolean;
   /** The tab whose link opened this one; back returns there once this tab has no history. */
   readonly openerId: string | undefined;
@@ -102,7 +105,7 @@ export class Tab {
   ) {
     this.id = id;
     this.uid = uid;
-    this.conversation = new Conversation(onChange);
+    this.conversation = new Conversation(onChange, uid, incognito);
     // Incognito conversations are never saved, so there is nothing to load.
     this.conversation.loaded = incognito;
     this.url = url;

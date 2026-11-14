@@ -170,7 +170,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 3. ~~**Smart address bar:** natural language commands go to Qutai~~ (will not be done)
 4. ✅ **Sources:** pages read, shown below answers (switches to its tab if open, otherwise opens in a new tab)
    - ✅ Intermediate step: answers are rendered as markdown, links are clickable
-   - ✅ Each tab has its own chat (persistent; the chat comes back with a reopened tab; one task at a time)
+   - ✅ Each tab has its own chat, and a tab group shares one, so a task keeps one context across the windows it opens (persistent; the chat comes back with a reopened tab; one task at a time)
    - ✅ **Clickable options:** when a choice is needed, the agent presents options as buttons via the `ask_user` tool
 5. ✅ **AI search:** answers with sources using the providers' web search tools (searches are visible in chat, citations in source cards; can be turned off in settings)
 6. ✅ **Multi-tab:** `read_tab` tool (reads other tabs without bringing them to the front), "compare selected tabs" in the tab switcher

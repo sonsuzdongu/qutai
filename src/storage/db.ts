@@ -10,8 +10,11 @@ export interface Db {
   getFirstAsync<T>(sql: string, params: SqlValue[]): Promise<T | null>;
 }
 
-/** Each entry upgrades the schema by one version. Never edit a shipped migration; append a new one. */
-const MIGRATIONS: string[] = [
+/**
+ * Each entry upgrades the schema (or the data) by one version: SQL, or a function for changes SQL can't
+ * express safely. Never edit a shipped migration; append a new one.
+ */
+const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
   `CREATE TABLE history (
      id INTEGER PRIMARY KEY AUTOINCREMENT,
      url TEXT NOT NULL,
@@ -67,12 +70,44 @@ const MIGRATIONS: string[] = [
      size INTEGER,
      saved_at INTEGER NOT NULL
    );`,
+  moveGroupedTabChatsToGroups,
 ];
+
+/**
+ * Version 6: the assistant's conversation belongs to the tab group. Chats were saved per tab
+ * (`chat:<uid>`); for each group in the saved session, the chat of one of its tabs becomes the
+ * group's (`chat:group:<id>`). Chats have no timestamp, so "most recently updated" is the one with
+ * the highest message id (ids only grow while the app runs). The other tabs keep their own chats,
+ * which come back if they leave the group. Keys are spelled out here on purpose: this must not
+ * change if the storage code does.
+ */
+async function moveGroupedTabChatsToGroups(db: Db): Promise<void> {
+  const session = await getJson<{ tabs?: { uid?: unknown; groupId?: unknown }[] }>(db, 'session');
+  const members = new Map<string, string[]>();
+  for (const tab of Array.isArray(session?.tabs) ? session.tabs : []) {
+    if (typeof tab?.uid !== 'string' || typeof tab.groupId !== 'string') continue;
+    members.set(tab.groupId, [...(members.get(tab.groupId) ?? []), tab.uid]);
+  }
+  for (const [groupId, uids] of members) {
+    let best: { uid: string; lastId: number } | null = null;
+    for (const uid of uids) {
+      const chat = await getJson<{ items?: unknown; turns?: unknown }>(db, `chat:${uid}`);
+      if (!chat || !Array.isArray(chat.items) || !Array.isArray(chat.turns)) continue;
+      const lastId = chat.items.reduce<number>((max, item) => Math.max(max, Number(item?.id) || 0), 0);
+      if (!best || lastId > best.lastId) best = { uid, lastId };
+    }
+    if (best) {
+      await db.runAsync('UPDATE OR REPLACE kv SET key = ? WHERE key = ?', [`chat:group:${groupId}`, `chat:${best.uid}`]);
+    }
+  }
+}
 
 export async function migrate(db: Db): Promise<void> {
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []);
   for (let version = row?.user_version ?? 0; version < MIGRATIONS.length; version++) {
-    await db.execAsync(MIGRATIONS[version]);
+    const migration = MIGRATIONS[version];
+    if (typeof migration === 'string') await db.execAsync(migration);
+    else await migration(db);
     await db.execAsync(`PRAGMA user_version = ${version + 1}`);
   }
 }

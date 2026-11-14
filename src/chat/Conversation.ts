@@ -21,7 +21,13 @@ function continueItemIds(items: ChatItem[]) {
 /** draft: what the user was typing, so it survives the app being closed. */
 export type SavedConversation = { items: ChatItem[]; turns: Turn[]; draft?: string };
 
-/** One tab's conversation with the assistant: what is shown, what the model sees, and the message being typed. */
+/** Storage key of a tab group's conversation (a tab's own conversation is stored under the tab's uid). */
+export const groupChatKey = (groupId: string) => `group:${groupId}`;
+
+/**
+ * A conversation with the assistant: what is shown, what the model sees, and the message being typed.
+ * Each tab has its own, and each tab group has one shared by its tabs (see `Browser.conversationOf`).
+ */
 export class Conversation {
   items: ChatItem[] = [];
   /** History sent to the model; the agent appends to this array in place while it runs. */
@@ -40,10 +46,24 @@ export class Conversation {
   private pendingText = '';
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(private onChange: () => void) {}
+  /**
+   * @param key Where it is saved: the owning tab's uid or `groupChatKey(groupId)`. Changes when it moves
+   *   (e.g. from a tab to the group it founded).
+   * @param incognito It belongs to an incognito tab, or to a group that ever held one: never written to disk.
+   */
+  constructor(
+    private onChange: () => void,
+    public key: string,
+    public incognito = false,
+  ) {}
 
   get isEmpty(): boolean {
     return this.items.length === 0 && this.turns.length === 0;
+  }
+
+  /** Nothing said, nothing typed, nothing running, and nothing left unread on disk. */
+  get isBlank(): boolean {
+    return this.loaded && this.isEmpty && !this.draft && !this.running;
   }
 
   add(item: ChatItem) {

@@ -4,7 +4,7 @@ An AI-powered mobile browser for iOS and Android: an agent that can read and use
 tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models.
 
 Open tabs, history, bookmarks, recently closed tabs and chats are stored on the device (`expo-sqlite`); private tabs
-and chats that touch a private tab save nothing.
+and chats that touch a private tab save nothing. Each tab has its own chat with Qutai; the tabs of a group share one.
 
 The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
 
