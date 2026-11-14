@@ -444,4 +444,5 @@ export const en = {
   'settings.animateLogoHint': 'The orbit circles the Q now and then. While Qutai works it shows either way.',
   'settings.forceZoom': 'Force zoom',
   'settings.forceZoomHint': 'Pinch to zoom on every page, even where the site turns zooming off.',
+  'action.takeNotes': '📝 Taking notes',
 } as const;

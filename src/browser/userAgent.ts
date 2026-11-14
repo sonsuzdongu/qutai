@@ -8,13 +8,15 @@ import { useSyncExternalStore } from 'react';
  * from the WebView itself (so the engine version is true) and kept current from userAgentData.
  */
 export function chromeUserAgent(webViewUserAgent: string): string {
-  return webViewUserAgent
-    // Chrome's reduced platform part; the WebView adds the model and "Build/…", another tell.
-    .replace(/\(Linux; Android [^)]*\)/, '(Linux; Android 10; K)')
-    .replace(/; wv\)/, ')')
-    .replace(/ Version\/[\d.]+/, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return (
+    webViewUserAgent
+      // Chrome's reduced platform part; the WebView adds the model and "Build/…", another tell.
+      .replace(/\(Linux; Android [^)]*\)/, '(Linux; Android 10; K)')
+      .replace(/; wv\)/, ')')
+      .replace(/ Version\/[\d.]+/, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 }
 
 /** Puts the engine's real major version into a learned user agent (Chrome's reduced form: N.0.0.0). */

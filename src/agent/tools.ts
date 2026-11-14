@@ -235,6 +235,17 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'take_notes',
+    description:
+      'Write down what you found so far (prices, names, links, decisions) on tasks that span several pages. ' +
+      'Older page content is removed from your context as you go; your notes are kept.',
+    input_schema: {
+      type: 'object',
+      properties: { notes: { type: 'string', description: 'Short notes, e.g. "Shop A: 2,499 TL, ships tomorrow"' } },
+      required: ['notes'],
+    },
+  },
+  {
     name: 'close_tabs',
     description:
       'Close several tabs at once: the given tabs, and/or every tab of a group (group_id from list_tabs). ' +

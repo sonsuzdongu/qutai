@@ -102,6 +102,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.closeTab', { id: str(input.tab_id) });
     case 'close_tabs':
       return t('action.closeTabs');
+    case 'take_notes':
+      return t('action.takeNotes');
     case 'wait':
       return t('action.wait', { seconds: str(input.seconds) });
     case 'remember':
@@ -533,6 +535,9 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
         if (ctx.agentTab.id === id) ctx.agentTab.id = browser.active.id;
         return { content: `Closed tab ${id}. Open tabs:\n${tabList(ctx)}`, isError: false };
       }
+      case 'take_notes':
+        // The notes live in the call itself, which is never compacted; nothing to store here.
+        return { content: 'Noted. These notes stay in your context.', isError: false };
       case 'close_tabs': {
         const ids = new Set((Array.isArray(input.tab_ids) ? input.tab_ids : []).map(String));
         const groupId = input.group_id ? String(input.group_id) : null;

@@ -451,4 +451,5 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.animateLogoHint': 'Yörünge ara sıra Q’nun çevresinde döner. Qutai çalışırken her durumda görünür.',
   'settings.forceZoom': 'Yakınlaştırmaya zorla',
   'settings.forceZoomHint': 'Site kapatmış olsa bile her sayfada iki parmakla yakınlaştırın.',
+  'action.takeNotes': '📝 Not alınıyor',
 };

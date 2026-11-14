@@ -9,6 +9,10 @@ import { MEMORY_TOOLS, TOOLS } from './tools';
 import type { AgentEvent, Source } from './types';
 
 const MAX_STEPS = 40;
+/** On the final step: leave the user with where things stand instead of stopping mid-task. */
+const LAST_STEP_PROMPT =
+  '\n\nThis is your last step for this message. Do not call tools. Reply with what you did, what you found ' +
+  '(from your notes), and what is left, so the user can tell you to continue.';
 /** Research reads many pages, so it may take more steps. */
 const MAX_RESEARCH_STEPS = 80;
 const KEEP_FULL_RESULTS = 2;
@@ -71,7 +75,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     const reply = await provider.call({
       apiKey: opts.apiKey,
       model: opts.model,
-      system: await systemPrompt(opts),
+      system: (await systemPrompt(opts)) + (step === maxSteps - 1 ? LAST_STEP_PROMPT : ''),
       tools: opts.memory ? [...TOOLS, ...MEMORY_TOOLS] : TOOLS,
       webSearch: !!opts.webSearch,
       research: opts.research,
