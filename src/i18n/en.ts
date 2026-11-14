@@ -437,4 +437,9 @@ export const en = {
   'settings.rateUnavailable': 'Rating will be available once Qutai is in the App Store and Google Play.',
   'address.undo': 'Undo',
   'address.undoClear': 'Undo clear: bring back what you typed',
+  'menu.askQutai': 'Ask Qutai',
+  'settings.showAssistantButton': 'Qutai button',
+  'settings.showAssistantButtonHint': 'In the address bar. When off, open Qutai from the page menu.',
+  'settings.animateLogo': 'Animate the logo',
+  'settings.animateLogoHint': 'The orbit circles the Q now and then. While Qutai works it shows either way.',
 } as const;

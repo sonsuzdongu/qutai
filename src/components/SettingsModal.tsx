@@ -144,6 +144,26 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
           </View>
           <ThemedSwitch value={draft.haptics} onValueChange={(haptics) => setDraft({ ...draft, haptics })} />
         </View>
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.showAssistantButton')}</Text>
+            <Text style={styles.hint}>{t('settings.showAssistantButtonHint')}</Text>
+          </View>
+          <ThemedSwitch
+            value={draft.showAssistantButton}
+            onValueChange={(showAssistantButton) => setDraft({ ...draft, showAssistantButton })}
+          />
+        </View>
+        <View style={styles.switchRow}>
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('settings.animateLogo')}</Text>
+            <Text style={styles.hint}>{t('settings.animateLogoHint')}</Text>
+          </View>
+          <ThemedSwitch
+            value={draft.animateLogo}
+            onValueChange={(animateLogo) => setDraft({ ...draft, animateLogo })}
+          />
+        </View>
 
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.content')}</Text>
         <View style={styles.switchRow}>

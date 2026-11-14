@@ -35,6 +35,8 @@ type Props = {
   onSwipe?: (direction: -1 | 1) => void;
   assistantOpen: boolean;
   assistantRunning: boolean;
+  /** Off: no Qutai button (the page menu has "Ask Qutai" instead). */
+  showAssistant?: boolean;
   searchEngine: SearchEngineId;
   searchSuggestions: boolean;
   onSubmit: (url: string) => void;
@@ -64,6 +66,7 @@ export function AddressBar({
   onSwipe,
   assistantOpen,
   assistantRunning,
+  showAssistant = true,
   searchEngine,
   searchSuggestions,
   onSubmit,
@@ -216,15 +219,17 @@ export function AddressBar({
         </View>
       </Pressable>
       <IconButton icon="more" onPress={onOpenMenu} incognito={darkUI} accessibilityLabel={t('address.menu')} />
-      <Pressable
-        onPress={onToggleAssistant}
-        hitSlop={6}
-        style={[styles.assistantButton, assistantOpen && styles.assistantButtonActive]}
-        accessibilityLabel={t(assistantOpen ? 'address.closeAssistant' : 'address.openAssistant')}
-      >
-        {/* The orbit circles while a task runs. */}
-        <QutaiMark size={34} working={assistantRunning} />
-      </Pressable>
+      {showAssistant && (
+        <Pressable
+          onPress={onToggleAssistant}
+          hitSlop={6}
+          style={[styles.assistantButton, assistantOpen && styles.assistantButtonActive]}
+          accessibilityLabel={t(assistantOpen ? 'address.closeAssistant' : 'address.openAssistant')}
+        >
+          {/* The orbit circles while a task runs. */}
+          <QutaiMark size={34} working={assistantRunning} />
+        </Pressable>
+      )}
       {loading && <LoadingBar top={bottom} />}
       {editing && (
         <Pressable

@@ -56,6 +56,7 @@ import { LockScreen } from './src/components/LockScreen';
 import { Onboarding } from './src/components/Onboarding';
 import { isIncomingWebLink } from './src/device/defaultBrowser';
 import { LEGAL_VERSION } from './src/legal/documents';
+import { LogoMotion } from './src/ui/QutaiMark';
 import { OfflinePagesScreen } from './src/components/OfflinePagesScreen';
 import { deleteOfflineFile, savePageOffline } from './src/device/offline';
 import { addOfflinePage, listOfflinePages, removeOfflinePage } from './src/storage/offlinePages';
@@ -435,6 +436,10 @@ function BrowserApp({
   ];
 
   const menuItems: MenuItem[] = [
+    // Without the Qutai button in the address bar, the assistant opens from here.
+    ...(settings.showAssistantButton
+      ? []
+      : [{ icon: 'assistant' as const, label: t('menu.askQutai'), onPress: () => setPanelOpen(true) }]),
     {
       icon: 'share',
       label: t('menu.shareLink'),
@@ -736,6 +741,7 @@ function BrowserApp({
       tabCount={browser.tabs.length}
       assistantOpen={panelOpen}
       assistantRunning={running}
+      showAssistant={settings.showAssistantButton}
       onSubmit={(url) => tab.loadUrl(upgradeToHttps(url, settings.httpsOnly))}
       onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
       onOpenMenu={() => {
@@ -767,207 +773,209 @@ function BrowserApp({
   const barAtBottom = settings.addressBarPosition === 'bottom';
 
   return (
-    <SafeAreaProvider>
-      <View style={[styles.container, (tab.incognito || darkMode) && styles.incognito]}>
-        <StatusBar style={tab.incognito || tabsVisible || darkMode ? 'light' : 'dark'} />
-        <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
-          {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard. */}
-          {barAtBottom ? null : topBar}
-          <KeyboardAvoidingView style={styles.flex} behavior="padding">
-            <BrowserView
-              browser={browser}
-              newTabActions={{
-                darkMode,
-                darkSites: settings.darkSites,
-                blockAds: settings.blockAds,
-                httpsOnly: settings.httpsOnly,
-                blockThirdPartyCookies: settings.blockThirdPartyCookies,
-                hideCookieBanners: settings.hideCookieBanners,
-                onContextMenu: (source, target) => {
-                  bump();
-                  setContext({ tab: source, target });
-                },
-                onDownload: (source, url) =>
-                  runAction(async () => {
-                    toast.show(t('downloads.started'));
-                    const entry = await downloadFile(source, url);
-                    await downloads.add(entry);
-                    return t('downloads.done', { name: entry.name });
-                  }),
-                onSelection: (source, text) =>
-                  setSelection((prev) =>
-                    text ? { tabId: source.id, url: source.url, text } : prev?.tabId === source.id ? null : prev,
-                  ),
-                textZoom: settings.textZoom,
-                onNotice: toast.show,
-                searchEngine: settings.searchEngine,
-                onAsk: (text) => {
-                  setPanelOpen(true);
-                  send(text);
-                },
-                onOpenLibrary: setLibrary,
-              }}
-            />
-            {selectedText ? (
-              <SelectionBar
-                actions={selectionActions(selectedText)}
-                dark={tab.incognito || darkMode}
-                bottomOffset={barAtBottom ? 52 : 0}
+    <LogoMotion.Provider value={settings.animateLogo}>
+      <SafeAreaProvider>
+        <View style={[styles.container, (tab.incognito || darkMode) && styles.incognito]}>
+          <StatusBar style={tab.incognito || tabsVisible || darkMode ? 'light' : 'dark'} />
+          <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
+            {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard. */}
+            {barAtBottom ? null : topBar}
+            <KeyboardAvoidingView style={styles.flex} behavior="padding">
+              <BrowserView
+                browser={browser}
+                newTabActions={{
+                  darkMode,
+                  darkSites: settings.darkSites,
+                  blockAds: settings.blockAds,
+                  httpsOnly: settings.httpsOnly,
+                  blockThirdPartyCookies: settings.blockThirdPartyCookies,
+                  hideCookieBanners: settings.hideCookieBanners,
+                  onContextMenu: (source, target) => {
+                    bump();
+                    setContext({ tab: source, target });
+                  },
+                  onDownload: (source, url) =>
+                    runAction(async () => {
+                      toast.show(t('downloads.started'));
+                      const entry = await downloadFile(source, url);
+                      await downloads.add(entry);
+                      return t('downloads.done', { name: entry.name });
+                    }),
+                  onSelection: (source, text) =>
+                    setSelection((prev) =>
+                      text ? { tabId: source.id, url: source.url, text } : prev?.tabId === source.id ? null : prev,
+                    ),
+                  textZoom: settings.textZoom,
+                  onNotice: toast.show,
+                  searchEngine: settings.searchEngine,
+                  onAsk: (text) => {
+                    setPanelOpen(true);
+                    send(text);
+                  },
+                  onOpenLibrary: setLibrary,
+                }}
               />
-            ) : null}
-            {barAtBottom ? topBar : null}
-          </KeyboardAvoidingView>
-        </SafeAreaView>
+              {selectedText ? (
+                <SelectionBar
+                  actions={selectionActions(selectedText)}
+                  dark={tab.incognito || darkMode}
+                  bottomOffset={barAtBottom ? 52 : 0}
+                />
+              ) : null}
+              {barAtBottom ? topBar : null}
+            </KeyboardAvoidingView>
+          </SafeAreaView>
 
-        <AssistantPanel
-          dark={darkMode}
-          open={panelOpen}
-          quickActions={quickActions}
-          draft={conversation.draft}
-          onDraftChange={(text) => conversation.setDraft(text)}
-          focusRequest={focusRequest}
-          research={conversation.research}
-          onResearchChange={(on) => conversation.setResearch(on)}
-          modelInfo={`${getProvider(settings.provider).label} · ${modelLabel(settings.provider, settings.models[settings.provider])}`}
-          items={conversation.items}
-          running={conversation.running}
-          busyElsewhere={running && !conversation.running}
-          onShowRunningTab={() => runningTab && browser.switchTab(runningTab.id)}
-          onClose={closePanel}
-          onSend={send}
-          onStop={() => conversation.stop()}
-          onChoose={(itemId, option) => {
-            tick();
-            conversation.choose(itemId, option);
-            send(option);
-          }}
-          onNewChat={newChat}
-          onOpenSettings={() => setSettingsVisible(true)}
-          onOpenSource={(source) => {
-            // A page that is still open is shown in its tab; otherwise it opens again in the same mode.
-            const open = browser.tabs.find((x) => x.incognito === source.incognito && x.url === source.url);
-            if (open) browser.switchTab(open.id);
-            else browser.openTab(source.url, { incognito: source.incognito });
-            closePanel();
-          }}
-          onOpenLink={(url) => {
-            browser.openTab(url, { incognito: browser.active.incognito });
-            closePanel();
-          }}
-          onMessageAction={(action, text) =>
-            runAction(async () => {
-              if (action === 'copy') {
-                await copyText(text);
-                return t('common.copied');
-              }
-              if (action === 'share') return shareText(text);
-              if (action === 'pdf') return shareReportPdf(text);
-              if (speaking) return stopSpeaking();
-              await speak(text);
-            })
-          }
-        />
-        <PageMenu
-          visible={menuVisible}
-          iconRow={iconRow}
-          items={menuItems}
-          incognito={tab.incognito}
-          darkMode={darkMode}
-          onClose={() => setMenuVisible(false)}
-        />
-        <LibraryScreen
-          visible={library !== null}
-          initialTab={library ?? 'bookmarks'}
-          onOpen={(url) => {
-            setLibrary(null);
-            tab.loadUrl(url);
-          }}
-          onClose={() => setLibrary(null)}
-        />
-        <TabSwitcher
-          darkMode={darkMode}
-          visible={tabsVisible}
-          browser={browser}
-          onClose={() => setTabsVisible(false)}
-          onCompare={(picked) => {
-            setTabsVisible(false);
-            setPanelOpen(true);
-            const list = picked.map((x) => `- tab ${x.id}: ${x.title || x.url} (${x.url})`).join('\n');
-            send(t('tabs.comparePrompt', { tabs: list }));
-          }}
-        />
-        <SettingsModal
-          sitePermissions={sitePermissions}
-          onClearData={clearData}
-          visible={settingsVisible}
-          settings={settings}
-          onSave={onSaveSettings}
-          onClose={() => setSettingsVisible(false)}
-        />
-        <ContextMenuSheet
-          target={context?.target ?? null}
-          actions={context ? contextActions(context.tab, context.target) : []}
-          onClose={() => setContext(null)}
-        />
-        <DownloadsScreen
-          visible={downloadsVisible}
-          store={downloads}
-          onOpen={(entry) =>
-            runAction(() => Sharing.shareAsync(entry.uri, { dialogTitle: entry.name }).then(() => undefined))
-          }
-          onDelete={(entry) =>
-            runAction(async () => {
-              deleteDownloadedFile(entry.uri);
-              await downloads.remove(entry.id);
-            })
-          }
-          onClose={() => setDownloadsVisible(false)}
-        />
-        <SitePermissionSheet
-          host={permissionHost}
-          level={permissionHost ? sitePermissions.levelFor(permissionHost) : 'default'}
-          onSelect={(level) => permissionHost && sitePermissions.set(permissionHost, level).catch(() => {})}
-          onClose={() => setPermissionHost(null)}
-        />
-        <TextSizeSheet
-          visible={textSizeVisible}
-          zoom={settings.textZoom}
-          onChange={(textZoom) => onSaveSettings({ ...settings, textZoom })}
-          onClose={() => setTextSizeVisible(false)}
-        />
-        <OfflinePagesScreen
-          visible={offlineVisible}
-          onOpenLive={(url) => {
-            setOfflineVisible(false);
-            browser.openTab(url, { incognito: tab.incognito });
-          }}
-          onClose={() => setOfflineVisible(false)}
-        />
-        <QrCodeSheet
-          url={qrUrl}
-          onShareLink={(url) => runAction(() => shareText(url))}
-          onShareImage={(view) =>
-            runAction(async () => {
-              const uri = await captureRef(view, { format: 'png', result: 'tmpfile' });
-              await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
-            })
-          }
-          onClose={() => setQrUrl(null)}
-        />
-        <QrScanner
-          visible={scannerVisible}
-          onScan={(data) => {
-            setScannerVisible(false);
-            const target = scannedTarget(data);
-            if (target.kind === 'url') browser.openTab(target.value, { incognito: tab.incognito });
-            else if (target.value) tab.loadUrl(toUrl(target.value, settings.searchEngine));
-          }}
-          onClose={() => setScannerVisible(false)}
-        />
-        <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
-        <Toast key={toast.key} message={toast.message} onHidden={toast.hide} />
-      </View>
-    </SafeAreaProvider>
+          <AssistantPanel
+            dark={darkMode}
+            open={panelOpen}
+            quickActions={quickActions}
+            draft={conversation.draft}
+            onDraftChange={(text) => conversation.setDraft(text)}
+            focusRequest={focusRequest}
+            research={conversation.research}
+            onResearchChange={(on) => conversation.setResearch(on)}
+            modelInfo={`${getProvider(settings.provider).label} · ${modelLabel(settings.provider, settings.models[settings.provider])}`}
+            items={conversation.items}
+            running={conversation.running}
+            busyElsewhere={running && !conversation.running}
+            onShowRunningTab={() => runningTab && browser.switchTab(runningTab.id)}
+            onClose={closePanel}
+            onSend={send}
+            onStop={() => conversation.stop()}
+            onChoose={(itemId, option) => {
+              tick();
+              conversation.choose(itemId, option);
+              send(option);
+            }}
+            onNewChat={newChat}
+            onOpenSettings={() => setSettingsVisible(true)}
+            onOpenSource={(source) => {
+              // A page that is still open is shown in its tab; otherwise it opens again in the same mode.
+              const open = browser.tabs.find((x) => x.incognito === source.incognito && x.url === source.url);
+              if (open) browser.switchTab(open.id);
+              else browser.openTab(source.url, { incognito: source.incognito });
+              closePanel();
+            }}
+            onOpenLink={(url) => {
+              browser.openTab(url, { incognito: browser.active.incognito });
+              closePanel();
+            }}
+            onMessageAction={(action, text) =>
+              runAction(async () => {
+                if (action === 'copy') {
+                  await copyText(text);
+                  return t('common.copied');
+                }
+                if (action === 'share') return shareText(text);
+                if (action === 'pdf') return shareReportPdf(text);
+                if (speaking) return stopSpeaking();
+                await speak(text);
+              })
+            }
+          />
+          <PageMenu
+            visible={menuVisible}
+            iconRow={iconRow}
+            items={menuItems}
+            incognito={tab.incognito}
+            darkMode={darkMode}
+            onClose={() => setMenuVisible(false)}
+          />
+          <LibraryScreen
+            visible={library !== null}
+            initialTab={library ?? 'bookmarks'}
+            onOpen={(url) => {
+              setLibrary(null);
+              tab.loadUrl(url);
+            }}
+            onClose={() => setLibrary(null)}
+          />
+          <TabSwitcher
+            darkMode={darkMode}
+            visible={tabsVisible}
+            browser={browser}
+            onClose={() => setTabsVisible(false)}
+            onCompare={(picked) => {
+              setTabsVisible(false);
+              setPanelOpen(true);
+              const list = picked.map((x) => `- tab ${x.id}: ${x.title || x.url} (${x.url})`).join('\n');
+              send(t('tabs.comparePrompt', { tabs: list }));
+            }}
+          />
+          <SettingsModal
+            sitePermissions={sitePermissions}
+            onClearData={clearData}
+            visible={settingsVisible}
+            settings={settings}
+            onSave={onSaveSettings}
+            onClose={() => setSettingsVisible(false)}
+          />
+          <ContextMenuSheet
+            target={context?.target ?? null}
+            actions={context ? contextActions(context.tab, context.target) : []}
+            onClose={() => setContext(null)}
+          />
+          <DownloadsScreen
+            visible={downloadsVisible}
+            store={downloads}
+            onOpen={(entry) =>
+              runAction(() => Sharing.shareAsync(entry.uri, { dialogTitle: entry.name }).then(() => undefined))
+            }
+            onDelete={(entry) =>
+              runAction(async () => {
+                deleteDownloadedFile(entry.uri);
+                await downloads.remove(entry.id);
+              })
+            }
+            onClose={() => setDownloadsVisible(false)}
+          />
+          <SitePermissionSheet
+            host={permissionHost}
+            level={permissionHost ? sitePermissions.levelFor(permissionHost) : 'default'}
+            onSelect={(level) => permissionHost && sitePermissions.set(permissionHost, level).catch(() => {})}
+            onClose={() => setPermissionHost(null)}
+          />
+          <TextSizeSheet
+            visible={textSizeVisible}
+            zoom={settings.textZoom}
+            onChange={(textZoom) => onSaveSettings({ ...settings, textZoom })}
+            onClose={() => setTextSizeVisible(false)}
+          />
+          <OfflinePagesScreen
+            visible={offlineVisible}
+            onOpenLive={(url) => {
+              setOfflineVisible(false);
+              browser.openTab(url, { incognito: tab.incognito });
+            }}
+            onClose={() => setOfflineVisible(false)}
+          />
+          <QrCodeSheet
+            url={qrUrl}
+            onShareLink={(url) => runAction(() => shareText(url))}
+            onShareImage={(view) =>
+              runAction(async () => {
+                const uri = await captureRef(view, { format: 'png', result: 'tmpfile' });
+                await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
+              })
+            }
+            onClose={() => setQrUrl(null)}
+          />
+          <QrScanner
+            visible={scannerVisible}
+            onScan={(data) => {
+              setScannerVisible(false);
+              const target = scannedTarget(data);
+              if (target.kind === 'url') browser.openTab(target.value, { incognito: tab.incognito });
+              else if (target.value) tab.loadUrl(toUrl(target.value, settings.searchEngine));
+            }}
+            onClose={() => setScannerVisible(false)}
+          />
+          <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
+          <Toast key={toast.key} message={toast.message} onHidden={toast.hide} />
+        </View>
+      </SafeAreaProvider>
+    </LogoMotion.Provider>
   );
 }
 

@@ -11,7 +11,7 @@ import {
   Skia,
   vec,
 } from '@shopify/react-native-skia';
-import { useEffect } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import {
   cancelAnimation,
   Easing,
@@ -34,6 +34,9 @@ type Props = {
   /** Off-screen marks (inactive tabs, a closed panel) don't animate. */
   animate?: boolean;
 };
+
+/** The app's "Animate the logo" setting; off behaves like the system's reduce motion. */
+export const LogoMotion = createContext(true);
 
 const SWEEP_MS = 2000;
 const IDLE_PAUSE_MS = 10000;
@@ -63,7 +66,9 @@ const SPARKLE = Skia.Path.MakeFromSVGString('M 0 -4 Q 0.6 -0.6 4 0 Q 0.6 0.6 0 4
 
 /** The Qutai logo, drawn in code: gradient tile, gradient Q, and an orange orbit that comes and goes. */
 export function QutaiMark({ size, working = false, sweepWhenIdle = false, animate = true }: Props) {
-  const reduceMotion = useReducedMotion();
+  const systemReduceMotion = useReducedMotion();
+  const motionAllowed = useContext(LogoMotion);
+  const reduceMotion = systemReduceMotion || !motionAllowed;
   const phase = useSharedValue(0);
   const shown = useSharedValue(0);
 

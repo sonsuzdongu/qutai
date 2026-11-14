@@ -444,4 +444,9 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.rateUnavailable': 'Değerlendirme, Qutai App Store ve Google Play’de yayımlandığında açılacak.',
   'address.undo': 'Geri al',
   'address.undoClear': 'Temizlemeyi geri al: yazdığınızı geri getir',
+  'menu.askQutai': 'Qutai’ye sor',
+  'settings.showAssistantButton': 'Qutai düğmesi',
+  'settings.showAssistantButtonHint': 'Adres çubuğunda. Kapalıyken Qutai’yi sayfa menüsünden açın.',
+  'settings.animateLogo': 'Logoyu canlandır',
+  'settings.animateLogoHint': 'Yörünge ara sıra Q’nun çevresinde döner. Qutai çalışırken her durumda görünür.',
 };
