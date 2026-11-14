@@ -34,6 +34,7 @@ import { QutaiMark } from '../ui/QutaiMark';
 import type { Source } from '../agent/types';
 import type { CallOffer } from '../device/phone';
 import type { SmsOffer } from '../device/sms';
+import type { WhatsAppOffer } from '../device/whatsapp';
 import { composedFileAvailable, FileOffer } from '../device/composedFile';
 import { formatNumber, formatSize, hostOf } from '../i18n/format';
 import { hasTable, MarkdownText } from './MarkdownText';
@@ -43,7 +44,7 @@ import { useReduceMotion } from '../utils/useReduceMotion';
 
 export type ChatItem = {
   id: string;
-  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices' | 'sources' | 'call' | 'sms' | 'file';
+  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices' | 'sources' | 'call' | 'sms' | 'whatsapp' | 'file';
   text: string;
   /** For 'choices': the buttons offered. */
   options?: string[];
@@ -59,6 +60,8 @@ export type ChatItem = {
   call?: CallOffer;
   /** For 'sms': the prepared text message behind the "Open in Messages" button. */
   sms?: SmsOffer;
+  /** For 'whatsapp': the prepared message behind the "Open in WhatsApp" button. */
+  whatsapp?: WhatsAppOffer;
   /** For 'file': the composed file behind the Share / Save buttons (only its name and size; the content is not saved). */
   file?: FileOffer;
 };
@@ -112,6 +115,8 @@ type Props = {
   onCall: (number: string) => void;
   /** The "Open in Messages" button of a prepared text message was tapped. */
   onSms: (offer: SmsOffer) => void;
+  /** The "Open in WhatsApp" button of a prepared WhatsApp message was tapped. */
+  onWhatsApp: (offer: WhatsAppOffer) => void;
   /** Share or Save on a file the assistant composed. */
   onFile: (action: 'share' | 'save', file: FileOffer) => void;
   /** A source under an answer was tapped. */
@@ -156,6 +161,7 @@ export function AssistantPanel({
   onOpenLink,
   onCall,
   onSms,
+  onWhatsApp,
   onFile,
   onOpenSource,
   dark = false,
@@ -348,6 +354,7 @@ export function AssistantPanel({
                     onOpenLink={onOpenLink}
                     onCall={onCall}
                     onSms={onSms}
+                    onWhatsApp={onWhatsApp}
                     onFile={onFile}
                     onOpenSource={onOpenSource}
                     onShowSent={leavePanel(onShowSent)}
@@ -553,6 +560,7 @@ function ChatRow({
   onOpenLink,
   onCall,
   onSms,
+  onWhatsApp,
   onFile,
   onOpenSource,
   onShowSent,
@@ -564,6 +572,7 @@ function ChatRow({
   onOpenLink: (url: string) => void;
   onCall: (number: string) => void;
   onSms: (offer: SmsOffer) => void;
+  onWhatsApp: (offer: WhatsAppOffer) => void;
   onFile: (action: 'share' | 'save', file: FileOffer) => void;
   onOpenSource: (source: Source) => void;
   onShowSent: () => void;
@@ -730,6 +739,39 @@ function ChatRow({
           >
             <Icon name="message" size={17} color={palette.onTint} />
             <Text style={styles.callButtonText}>{t('chat.openInMessages')}</Text>
+          </Pressable>
+        </View>
+      );
+    }
+    case 'whatsapp': {
+      const wa = item.whatsapp;
+      if (!wa) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      const label = wa.number
+        ? t('chat.whatsAppLabel', { who: wa.name ? `${wa.name}, ${wa.number}` : wa.number })
+        : t('chat.whatsAppNoNumberLabel');
+      return (
+        <View style={[styles.smsCard, d?.assistantBubble]}>
+          <View style={styles.callInfo}>
+            {wa.name ? (
+              <Text style={[styles.callName, d?.text]} numberOfLines={2}>
+                {wa.name}
+              </Text>
+            ) : null}
+            <Text style={[styles.callNumber, d?.dim]} selectable>
+              {wa.number ?? t('chat.whatsAppPickChat')}
+            </Text>
+          </View>
+          <Text style={[styles.smsBody, d?.text]} selectable>
+            {wa.body}
+          </Text>
+          <Pressable
+            onPress={() => onWhatsApp(wa)}
+            style={({ pressed }) => [styles.callButton, styles.smsButton, pressed && styles.callButtonPressed]}
+            accessibilityRole="button"
+            accessibilityLabel={label}
+          >
+            <Icon name="message" size={17} color={palette.onTint} />
+            <Text style={styles.callButtonText}>{t('chat.openInWhatsApp')}</Text>
           </Pressable>
         </View>
       );

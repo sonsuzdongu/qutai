@@ -5,6 +5,7 @@ import type { FileOffer } from '../device/composedFile';
 import type { CallOffer } from '../device/phone';
 import { formatSize } from '../i18n/format';
 import type { SmsOffer } from '../device/sms';
+import type { WhatsAppOffer } from '../device/whatsapp';
 
 let itemCounter = 0;
 const STREAM_FLUSH_MS = 50;
@@ -23,6 +24,12 @@ export function callItem(call: CallOffer): ChatItem {
 export function smsItem(sms: SmsOffer): ChatItem {
   const text = `💬 ${sms.name ? `${sms.name} · ` : ''}${sms.number}`;
   return { id: String(++itemCounter), kind: 'sms', text, sms };
+}
+
+/** An "Open in WhatsApp" card offered by the assistant; the text is what versions without the card show instead. */
+export function whatsAppItem(whatsapp: WhatsAppOffer): ChatItem {
+  const who = [whatsapp.name, whatsapp.number].filter(Boolean).join(' · ');
+  return { id: String(++itemCounter), kind: 'whatsapp', text: `🟢 WhatsApp${who ? ` · ${who}` : ''}`, whatsapp };
 }
 
 /** A file the assistant composed (save_file), with Share and Save buttons; the text is what older versions show. */

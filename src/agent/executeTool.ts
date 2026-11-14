@@ -12,6 +12,7 @@ import { composedFileName, composeFile, FileOffer, isFileFormat, keepComposedFil
 import { formatSize } from '../i18n/format';
 import { CallOffer, normalizePhone } from '../device/phone';
 import { MAX_SMS_BODY, SmsOffer } from '../device/sms';
+import { MAX_WHATSAPP_BODY, normalizeWhatsAppNumber, WhatsAppOffer } from '../device/whatsapp';
 import { ensureLocationPermission, LocationUnavailableError, readPosition } from '../device/location';
 import { openSystemSettings, PermissionDeniedError } from '../device/settings';
 import { speak, speakPage } from '../device/speech';
@@ -80,6 +81,8 @@ export type ToolContext = {
   offerFile?: (file: FileOffer) => void;
   /** Adds an "Open in Messages" card to the conversation (draft_sms). It never sends: the user does, in Messages. */
   offerSms?: (offer: SmsOffer) => void;
+  /** Adds an "Open in WhatsApp" card (draft_whatsapp). It never sends: the user does, in WhatsApp. */
+  offerWhatsApp?: (offer: WhatsAppOffer) => void;
   /** The AI provider's name (e.g. "Anthropic"), for confirmations that send something to it. */
   providerLabel?: string;
   /**
@@ -164,6 +167,10 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.offerCall', { who: (str(input.name).trim() || str(input.phone)).slice(0, 60) });
     case 'draft_sms':
       return t('action.draftSms', { who: (str(input.name).trim() || str(input.phone)).slice(0, 60) });
+    case 'draft_whatsapp':
+      return str(input.name).trim() || str(input.phone).trim()
+        ? t('action.draftWhatsApp', { who: (str(input.name).trim() || str(input.phone)).slice(0, 60) })
+        : t('action.draftWhatsAppNoNumber');
     case 'close_tab':
       return t('action.closeTab', { id: str(input.tab_id) });
     case 'close_tabs':
@@ -386,6 +393,44 @@ function draftSmsTool(input: Record<string, unknown>, ctx: ToolContext): ToolOut
     content:
       `A text message to ${name ? `${name}, ` : ''}${phone.number} is shown in the chat with an "Open in Messages" ` +
       'button. Nothing has been sent: the user opens it in Messages and sends it themselves. Do not say it was sent.',
+    isError: false,
+  };
+}
+
+/** Who a WhatsApp message was prepared for, for the action history: the name, never the number or the text. */
+function draftWhatsAppLog(input: Record<string, unknown>): string {
+  const name = typeof input.name === 'string' ? input.name.trim().slice(0, 60) : '';
+  return name ? t('action.draftWhatsAppLogged', { name }) : t('action.draftWhatsAppLoggedNoName');
+}
+
+/**
+ * Shows a prepared WhatsApp message in the chat, like draft_sms: the card shows the full number (international, as
+ * WhatsApp will use it) and text, the user's tap opens WhatsApp, and the user sends it there. Without a number the
+ * user picks the chat in WhatsApp.
+ */
+function draftWhatsAppTool(input: Record<string, unknown>, ctx: ToolContext): ToolOutput {
+  if (!ctx.offerWhatsApp) return { content: 'WhatsApp drafts are not available here.', isError: true };
+  const rawPhone = typeof input.phone === 'string' ? input.phone.trim() : '';
+  let number: string | undefined;
+  if (rawPhone) {
+    const phone = normalizeWhatsAppNumber(rawPhone);
+    if (!phone.ok) return { content: `${phone.error} No message was prepared.`, isError: true };
+    number = phone.number;
+  }
+  const body = typeof input.body === 'string' ? input.body.trim() : '';
+  if (!body) return { content: 'The message text is empty. No message was prepared.', isError: true };
+  if (body.length > MAX_WHATSAPP_BODY)
+    return {
+      content: `The text is longer than ${MAX_WHATSAPP_BODY} characters; shorten it. No message was prepared.`,
+      isError: true,
+    };
+  const name = typeof input.name === 'string' ? input.name.replace(/\s+/g, ' ').trim().slice(0, 80) : '';
+  ctx.offerWhatsApp({ body, ...(number ? { number } : {}), ...(name ? { name } : {}) });
+  const to = number ? `to ${name ? `${name}, ` : ''}${number} ` : '(the user picks the chat in WhatsApp) ';
+  return {
+    content:
+      `A WhatsApp message ${to}is shown in the chat with an "Open in WhatsApp" button. Nothing has been sent: the ` +
+      'user opens it in WhatsApp and sends it themselves. Do not say it was sent.',
     isError: false,
   };
 }
@@ -810,6 +855,7 @@ const LOGGED_TOOLS = new Set([
   'draft_email',
   'offer_call',
   'draft_sms',
+  'draft_whatsapp',
   'add_calendar_event',
   'add_reminder',
   'schedule_notification',
@@ -842,6 +888,7 @@ function actionTarget(
       'draft_email',
       'offer_call',
       'draft_sms',
+      'draft_whatsapp',
       'save_file',
       'open_settings',
       'get_location',
@@ -890,6 +937,7 @@ const BACKGROUND_TOOLS = new Set([
   // Only add a card to the conversation; the user acts on it later.
   'offer_call',
   'draft_sms',
+  'draft_whatsapp',
   'save_file',
 ]);
 
@@ -954,6 +1002,8 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
               ? offerCallLog(input)
               : name === 'draft_sms'
               ? draftSmsLog(input)
+              : name === 'draft_whatsapp'
+              ? draftWhatsAppLog(input)
               : name === 'read_calendar'
               ? readCalendarLog(input)
               : name in SCHEDULING_LOG_KEYS
@@ -990,6 +1040,7 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
   if (name === 'open_settings') return openSettingsTool(input, ctx);
   if (name === 'offer_call') return offerCallTool(input, ctx);
   if (name === 'draft_sms') return draftSmsTool(input, ctx);
+  if (name === 'draft_whatsapp') return draftWhatsAppTool(input, ctx);
   if (name === 'save_file') return saveFileTool(input, ctx);
 
   const tab = currentTab(ctx);

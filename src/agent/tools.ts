@@ -339,6 +339,26 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'draft_whatsapp',
+    description:
+      'Prepare a WhatsApp message and show it in the chat with an "Open in WhatsApp" button. It does not send: the ' +
+      'user sees the number and text, taps the button, and sends it themselves in WhatsApp. The number must be in ' +
+      'international format with the country code; if the user gave a local number, ask them for the country code ' +
+      'instead of guessing. Leave phone out to let the user pick the chat in WhatsApp. Never invent a number.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        phone: {
+          type: 'string',
+          description: 'The recipient\'s number in international format, e.g. "+90 532 123 45 67" (optional)',
+        },
+        body: { type: 'string', description: 'The message text, plain text, at most 2000 characters' },
+        name: { type: 'string', description: 'Who the number belongs to (optional)' },
+      },
+      required: ['body'],
+    },
+  },
+  {
     name: 'add_calendar_event',
     description:
       "Add an event to the user's calendar (e.g. a booked ticket, reservation or appointment). The user sees exactly " +

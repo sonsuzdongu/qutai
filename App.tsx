@@ -15,7 +15,7 @@ import {
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
-import { Conversation, callItem, fileItem, newItem, smsItem, sourcesItem } from './src/chat/Conversation';
+import { Conversation, callItem, fileItem, newItem, smsItem, sourcesItem, whatsAppItem } from './src/chat/Conversation';
 import { geminiStreamingAvailable } from './src/ai/gemini';
 import { getProvider, modelLabel } from './src/ai/providers';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
@@ -60,6 +60,7 @@ import { composeEmail } from './src/device/email';
 import { placeCall } from './src/device/phone';
 import { SEARCH_ENGINES, searchResultsOf } from './src/browser/search';
 import { openSmsComposer } from './src/device/sms';
+import { openWhatsApp } from './src/device/whatsapp';
 import { initNotifications } from './src/device/notifications';
 import { nowContext } from './src/agent/scheduling';
 import { shareReportPdf } from './src/device/reportPdf';
@@ -578,6 +579,14 @@ function BrowserApp({
               : t('chat.smsNumberLabel', { number: offer.number }),
           );
           chat.add(smsItem(offer));
+        },
+        offerWhatsApp: (offer) => {
+          AccessibilityInfo.announceForAccessibility(
+            offer.number
+              ? t('chat.whatsAppLabel', { who: offer.name ? `${offer.name}, ${offer.number}` : offer.number })
+              : t('chat.whatsAppNoNumberLabel'),
+          );
+          chat.add(whatsAppItem(offer));
         },
         startDownload: (tab, url, name, type) => startAgentDownload(tab, url, name, type, downloads, toast.show),
         offerFile: (file) => {
@@ -1235,6 +1244,10 @@ function BrowserApp({
               onSms={(offer) => {
                 bump();
                 openSmsComposer(offer, () => toast.show(t('common.copied')));
+              }}
+              onWhatsApp={(offer) => {
+                bump();
+                openWhatsApp(offer, () => toast.show(t('common.copied')));
               }}
               onFile={(action, file) =>
                 runAction(async () => {

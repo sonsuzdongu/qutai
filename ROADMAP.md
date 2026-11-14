@@ -148,7 +148,7 @@ moves everything to another phone.
 | Action preview and undo | 🟡 | | Preview and cancel exist. **Actions on the web generally cannot be undone** (a submitted form, a completed payment). The right approach is confirming the action beforehand; undo is only possible for browser actions (closing tabs, navigation) |
 | Action history | ✅ | | What the agent did on which site, 30 days; plus "What was sent to the AI" |
 | Per-site agent permissions | ✅ | | Default, always allow, ask on every action, read only, blocked |
-| Device actions | ✅ | | Calendar events, reminders, local notifications, location (`get_location`), a Call button (`offer_call`), a text message to open in Messages (`draft_sms`), opening the phone's settings (`open_settings`); each confirmed or tapped by the user |
+| Device actions | ✅ | | Calendar events, reminders, local notifications, location (`get_location`), a Call button (`offer_call`), a text message to open in Messages (`draft_sms`), a WhatsApp message to open in WhatsApp (`draft_whatsapp`; the user sends it there), opening the phone's settings (`open_settings`); each confirmed or tapped by the user |
 
 ---
 

@@ -367,7 +367,7 @@ function parseTabs(v: unknown): BackupPayload['tabs'] {
   return { tabs, activeIndex, groups: [...groups.values()].filter((g) => used.has(g.id)) };
 }
 
-const ITEM_KINDS = ['user', 'assistant', 'action', 'error', 'info', 'choices', 'sources', 'call', 'sms', 'file'] as const;
+const ITEM_KINDS = ['user', 'assistant', 'action', 'error', 'info', 'choices', 'sources', 'call', 'sms', 'whatsapp', 'file'] as const;
 const FILE_FORMATS = ['csv', 'md', 'txt', 'json'] as const;
 
 function parseChatItem(v: unknown): Record<string, unknown> | undefined {
@@ -401,6 +401,17 @@ function parseChatItem(v: unknown): Record<string, unknown> | undefined {
       number: v.sms.number,
       body: v.sms.body.slice(0, 1000),
       ...(typeof v.sms.name === 'string' ? { name: v.sms.name.slice(0, 200) } : {}),
+    };
+  }
+  if (
+    isObj(v.whatsapp) &&
+    typeof v.whatsapp.body === 'string' &&
+    (v.whatsapp.number === undefined || (typeof v.whatsapp.number === 'string' && /^\+\d{8,15}$/.test(v.whatsapp.number)))
+  ) {
+    item.whatsapp = {
+      body: v.whatsapp.body.slice(0, 2000),
+      ...(typeof v.whatsapp.number === 'string' ? { number: v.whatsapp.number } : {}),
+      ...(typeof v.whatsapp.name === 'string' ? { name: v.whatsapp.name.slice(0, 200) } : {}),
     };
   }
   // A composed file's card: only its name and size (the content is never stored, so it shows as expired).
