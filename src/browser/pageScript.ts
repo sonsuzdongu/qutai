@@ -80,6 +80,197 @@ export const PAGE_SCRIPT = String.raw`
     return clean(t).slice(0, 80);
   }
 
+  // ---------- Form state (required, constraints, validation errors) ----------
+
+  // Fields the agent typed into or selected, and forms with a submit attempt: like browsers, an empty required
+  // field is only an error after one of those (or the user's own interaction, :user-invalid).
+  var touched = new WeakSet();
+  var attempted = new WeakSet();
+  document.addEventListener('invalid', function (e) {
+    var t = e.target;
+    if (t && t.nodeType === 1) { touched.add(t); if (t.form) attempted.add(t.form); }
+  }, true);
+  document.addEventListener('submit', function (e) { if (e.target) attempted.add(e.target); }, true);
+
+  var FIELDS = 'input:not([type=hidden]),select,textarea';
+  var ERROR_CLASS = /(^|[\s_-])(errors?|invalid|danger)([\s_-]|$)/i;
+
+  function classOf(el) { return el.getAttribute('class') || ''; }
+
+  function rendered(el) {
+    return el.getClientRects().length > 0 && window.getComputedStyle(el).visibility !== 'hidden';
+  }
+
+  function textOfIds(ids, errorOnly) {
+    if (!ids) return '';
+    var out = [];
+    ids.split(/\s+/).forEach(function (id) {
+      var n = id && document.getElementById(id);
+      if (!n || !rendered(n)) return;
+      if (errorOnly && !(n.getAttribute('role') === 'alert' || n.getAttribute('aria-live') === 'assertive' ||
+        ERROR_CLASS.test(classOf(n)))) return;
+      var t = clean(n.innerText);
+      if (t) out.push(t);
+    });
+    return out.join(' ');
+  }
+
+  // A visible error message next to the field (role=alert or an error-like class), within the field's own wrapper.
+  function errorTextNear(el) {
+    var scope = el.parentElement;
+    for (var depth = 0; scope && depth < 3; depth++, scope = scope.parentElement) {
+      if (scope === document.body || scope.tagName === 'FORM') break;
+      var fields = scope.querySelectorAll(FIELDS);
+      var others = 0;
+      for (var i = 0; i < fields.length; i++) {
+        if (fields[i] !== el && !(el.name && fields[i].name === el.name)) others++;
+      }
+      if (others > 0) break;
+      var cands = scope.querySelectorAll('[role=alert],[aria-live=assertive],[class]');
+      for (var j = 0; j < cands.length; j++) {
+        var c = cands[j];
+        if (c.contains(el) || c.querySelector(FIELDS)) continue;
+        if (!(c.getAttribute('role') === 'alert' || c.getAttribute('aria-live') === 'assertive' ||
+          ERROR_CLASS.test(classOf(c)))) continue;
+        var t = clean(c.innerText);
+        if (t && t.length <= 200 && rendered(c)) return t;
+      }
+    }
+    return '';
+  }
+
+  function userInvalid(el) {
+    try { return el.matches(':user-invalid'); } catch (e) { return false; }
+  }
+
+  // Null when the field shows no error; otherwise the reason (may be empty).
+  function fieldError(el) {
+    if (el.disabled || (el.type || '').toLowerCase() === 'hidden') return null;
+    var aria = el.getAttribute('aria-invalid');
+    var native = !!(el.willValidate && el.validity && !el.validity.valid &&
+      (touched.has(el) || (el.form && attempted.has(el.form)) || userInvalid(el)));
+    var flagged = aria === 'true' || native;
+    var near = '';
+    if (aria !== 'false') {
+      if (!flagged) flagged = ERROR_CLASS.test(classOf(el));
+      near = errorTextNear(el);
+      if (near) flagged = true;
+    }
+    if (!flagged) return null;
+    var reason = textOfIds(el.getAttribute('aria-errormessage'), false) ||
+      textOfIds(el.getAttribute('aria-describedby'), true) || near ||
+      (el.validity && !el.validity.valid ? el.validationMessage : '');
+    return clean(reason).slice(0, 120);
+  }
+
+  var SIZE_HINT = /(\d+([.,]\d+)?\s*(kb|mb|gb|bytes?|px|pixels?|piksel)\b|\d+\s*[x×]\s*\d+)/i;
+
+  // What a file input's help text says about allowed sizes or dimensions (the label is shown already).
+  function fileHint(el) {
+    var label = labelOf(el);
+    if (SIZE_HINT.test(label)) return '';
+    var texts = [textOfIds(el.getAttribute('aria-describedby'), false)];
+    if (el.parentElement) texts.push(clean(el.parentElement.innerText).slice(0, 300));
+    for (var i = 0; i < texts.length; i++) {
+      var m = SIZE_HINT.exec(texts[i] || '');
+      if (!m) continue;
+      var start = Math.max(0, texts[i].lastIndexOf('.', m.index) + 1);
+      var hint = clean(texts[i].slice(start, m.index + m[0].length + 30).split(/[.;]\s/)[0]).slice(0, 80);
+      if (hint && label.indexOf(hint) < 0) return hint;
+    }
+    return '';
+  }
+
+  // Compact form state for a field; empty for elements that are not form fields.
+  function formNotes(el, tag) {
+    var notes = [];
+    var isField = tag === 'input' || tag === 'textarea' || tag === 'select';
+    if (!isField && !el.hasAttribute('aria-invalid') && !el.hasAttribute('aria-required')) return notes;
+    if (el.required || el.getAttribute('aria-required') === 'true') notes.push('(required)');
+    if (isField && tag !== 'select') {
+      var type = (el.type || '').toLowerCase();
+      var min = el.getAttribute('minlength');
+      var max = Number(el.getAttribute('maxlength')) > 0 ? el.getAttribute('maxlength') : '';
+      if ((min || max) && /^(text|search|url|tel|email|password|)$/.test(tag === 'textarea' ? '' : type)) {
+        notes.push('(length ' + String(el.value || '').length + (min ? ', min ' + min : '') + (max ? ', max ' + max : '') + ')');
+      }
+      var pattern = el.getAttribute('pattern');
+      if (pattern) {
+        notes.push('pattern=/' + pattern.slice(0, 60) + '/');
+        if (el.title) notes.push('format="' + clean(el.title).slice(0, 60).replace(/"/g, "'") + '"');
+      }
+      ['min', 'max', 'step'].forEach(function (a) {
+        var v = el.getAttribute(a);
+        if (v && tag === 'input') notes.push(a + '=' + v.slice(0, 30));
+      });
+      if (type === 'file') {
+        if (el.accept) notes.push('accept="' + el.accept.slice(0, 80) + '"');
+        if (el.multiple) notes.push('multiple');
+        var hint = fileHint(el);
+        if (hint) notes.push('hint="' + hint.replace(/"/g, "'") + '"');
+      }
+      var mode = el.getAttribute('inputmode');
+      if (mode) notes.push('inputmode=' + mode.slice(0, 20));
+    }
+    var ac = clean(el.getAttribute('autocomplete')).toLowerCase();
+    if (isField && ac && ac !== 'on' && ac !== 'off') notes.push('autocomplete=' + ac.slice(0, 40));
+    var err = fieldError(el);
+    if (err !== null) notes.push(err ? '(invalid: "' + err.replace(/"/g, "'") + '")' : '(invalid)');
+    return notes;
+  }
+
+  // Invalid fields in a part of the page (a form, or the whole document), one line each: ref, label, reason.
+  function formErrorsIn(root, limit) {
+    var out = [];
+    var seen = {};
+    var els = root.querySelectorAll(FIELDS + ',[aria-invalid=true]');
+    for (var i = 0; i < els.length && out.length < limit; i++) {
+      var el = els[i];
+      if (el.name && (el.type === 'radio' || el.type === 'checkbox')) {
+        if (seen[el.name]) continue;
+      }
+      if (!rendered(el) && el.type !== 'checkbox' && el.type !== 'radio') continue;
+      var err = fieldError(el);
+      if (err === null) continue;
+      if (el.name) seen[el.name] = 1;
+      var label = labelOf(el);
+      out.push('ref=' + getRef(el) + (label ? ' "' + label.replace(/"/g, "'") + '"' : '') + ': ' + (err || 'invalid'));
+    }
+    return out;
+  }
+
+  // The part of the page a field or button belongs to: its form, or the nearest wrapper holding fields.
+  function formScope(el) {
+    if (el.form) return el.form;
+    var f = el.closest('form');
+    if (f) return f;
+    var scope = el.parentElement;
+    for (var depth = 0; scope && depth < 6 && scope !== document.body; depth++, scope = scope.parentElement) {
+      if (scope.querySelector(FIELDS)) return scope;
+    }
+    return null;
+  }
+
+  function isSubmitter(el) {
+    var tag = el.tagName;
+    if (tag === 'BUTTON') return (el.type || 'submit') !== 'reset';
+    if (tag === 'INPUT') return /^(submit|image|button)$/.test(el.type);
+    return el.getAttribute('role') === 'button';
+  }
+
+  // Errors to report after an action: on the field itself (type, select), or on its form after a submit.
+  function formReport(ref, submitted) {
+    var el = refToEl.get(Number(ref));
+    if (!el || !el.isConnected) return [];
+    if (!submitted) {
+      var err = fieldError(el);
+      return err === null ? [] : ['ref=' + ref + ': ' + (err || 'invalid')];
+    }
+    if (!isSubmitter(el) && !el.matches(FIELDS)) return [];
+    var scope = formScope(el);
+    return scope ? formErrorsIn(scope, 8) : [];
+  }
+
   function describe(el) {
     var tag = el.tagName.toLowerCase();
     var kind = el.getAttribute('role') || tag;
@@ -93,14 +284,18 @@ export const PAGE_SCRIPT = String.raw`
       if (type === 'checkbox' || type === 'radio') parts.push(el.checked ? '(checked)' : '(unchecked)');
       else if (type === 'password') { if (el.value) parts.push('(filled)'); }
       else if (el.value) parts.push('value="' + clean(el.value).slice(0, 60) + '"');
+      parts = parts.concat(formNotes(el, tag));
     } else if (tag === 'select') {
       var opts = [];
       for (var i = 0; i < el.options.length && i < 25; i++) opts.push(clean(el.options[i].text));
       parts.push('selected="' + clean(el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : '') + '"');
       parts.push('options=[' + opts.join(' | ') + (el.options.length > 25 ? ' | ...' : '') + ']');
+      parts = parts.concat(formNotes(el, tag));
     } else if (tag === 'a') {
       var href = el.getAttribute('href') || '';
       if (href && href.indexOf('javascript:') !== 0) parts.push('href=' + href.slice(0, 100));
+    } else {
+      parts = parts.concat(formNotes(el, tag));
     }
     var expanded = el.getAttribute('aria-expanded');
     if (expanded) parts.push('(expanded=' + expanded + ')');
@@ -199,7 +394,9 @@ export const PAGE_SCRIPT = String.raw`
       },
       truncated: truncated,
       nextOffset: truncated ? lineIndex : null,
-      content: lines.join('\n')
+      content: lines.join('\n'),
+      // Invalid fields anywhere on the page, so the model sees them without scanning the text.
+      formErrors: document.body ? formErrorsIn(document.body, 8) : []
     };
   }
 
@@ -296,7 +493,9 @@ export const PAGE_SCRIPT = String.raw`
       el.dispatchEvent(new Event('input', { bubbles: true }));
       el.dispatchEvent(new Event('change', { bubbles: true }));
     }
+    touched.add(el);
     if (submit) {
+      if (el.form) attempted.add(el.form);
       var kopts = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true };
       var down = new KeyboardEvent('keydown', kopts);
       var notCancelled = el.dispatchEvent(down);
@@ -318,6 +517,7 @@ export const PAGE_SCRIPT = String.raw`
       var o = el.options[i];
       if (o.value === value || clean(o.text).toLowerCase() === wanted) {
         el.selectedIndex = i;
+        touched.add(el);
         el.dispatchEvent(new Event('input', { bubbles: true }));
         el.dispatchEvent(new Event('change', { bubbles: true }));
         return 'Selected "' + clean(o.text) + '"';
@@ -1334,6 +1534,7 @@ export const PAGE_SCRIPT = String.raw`
     select: select,
     scroll: scroll,
     scrollTo: scrollTo,
+    formReport: formReport,
     snapshotHtml: snapshotHtml,
     readableText: readableText,
     readerArticle: readerArticle,

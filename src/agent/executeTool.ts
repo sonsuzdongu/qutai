@@ -36,6 +36,8 @@ type PageSnapshot = {
   truncated: boolean;
   nextOffset: number | null;
   content: string;
+  /** Invalid form fields on the page ("ref=N "label": reason"); empty without errors. */
+  formErrors?: string[];
 };
 
 type SourceSnapshot = {
@@ -189,7 +191,23 @@ function formatPage(tab: Tab, page: PageSnapshot, tool: 'read_page' | 'read_tab'
   ].join('\n');
   const more = tool === 'read_tab' ? `read_tab with tab_id=${tab.id} and` : 'read_page with';
   const note = page.truncated ? `\n[Content truncated. Call ${more} offset=${page.nextOffset} to read the rest.]` : '';
-  return `${header}\n\n${page.content}${note}`;
+  const errors = page.formErrors?.length ? `\nForm errors:\n${page.formErrors.map((e) => `- ${e}`).join('\n')}` : '';
+  return `${header}${errors}\n\n${page.content}${note}`;
+}
+
+/**
+ * Validation errors after type, select_option or a submitting click: on the field itself, or on its form after a
+ * submit, so the model sees them without another read_page. Empty when there are none or the page has changed.
+ */
+async function formReport(tab: Tab, ref: unknown, submitted: boolean): Promise<string> {
+  try {
+    const errors = await tab.run<string[]>('formReport', [ref, submitted], 3000);
+    if (!errors.length) return '';
+    const what = submitted ? 'The form reports errors' : 'The field reports an error';
+    return `\n${what}:\n${errors.map((e) => `- ${e}`).join('\n')}\nFix these before submitting again.`;
+  } catch {
+    return '';
+  }
 }
 
 function formatSource(tab: Tab, source: SourceSnapshot, selector: string): string {
@@ -894,11 +912,12 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
             isError: false,
           };
         }
-        const nav = tab.url !== urlBefore ? ` Page changed to ${tab.url}.` : '';
-        return { content: result + nav, isError: false };
+        if (tab.url !== urlBefore) return { content: `${result} Page changed to ${tab.url}.`, isError: false };
+        return { content: result + (await formReport(tab, input.ref, true)), isError: false };
       }
       case 'type': {
         const submit = input.submit === true;
+        const urlBefore = tab.url;
         const result = await tab.run<string>('type', [
           input.ref,
           String(input.text ?? ''),
@@ -906,12 +925,15 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
           submit,
         ]);
         if (submit) await tab.settle();
-        return { content: result, isError: false };
+        // Pages often validate a moment after input; a submit that left the page has nothing to report.
+        else await sleep(150);
+        const report = tab.url === urlBefore ? await formReport(tab, input.ref, submit) : '';
+        return { content: result + report, isError: false };
       }
       case 'select_option': {
         const result = await tab.run<string>('select', [input.ref, String(input.value ?? '')]);
         await sleep(300);
-        return { content: result, isError: false };
+        return { content: result + (await formReport(tab, input.ref, false)), isError: false };
       }
       case 'scroll': {
         const result = await tab.run<string>('scroll', [input.direction, input.amount ?? 1]);
