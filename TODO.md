@@ -2,7 +2,28 @@
 
 For the feature inventory comparison and the phased plan, see `ROADMAP.md`.
 
-## Qutai Credits (paid usage)
+## Pro mode (official builds: `EXPO_PUBLIC_PRO_MODE=on`)
+
+Everything in this section exists only when `features.pro` is on (`src/config/features.ts`): the
+official App Store and Google Play builds. Builds from this repository keep it off and must work exactly
+as today: the user's own AI key, no account, nothing sent to our servers. Each item below is shown,
+requested and initialised only in pro mode, and the code path is excluded from the bundle when it's off.
+
+### Accounts and OAuth sign-in
+- [ ] Sign-in screen with OAuth providers: Sign in with Apple and Google first (others such as Microsoft or
+  GitHub later if needed); an email magic link as a fallback is optional
+  - [ ] iOS: when any third-party sign-in is offered, Sign in with Apple must be offered too (App Store
+    guideline 4.8); `expo-apple-authentication`
+  - [ ] Google and other providers: `expo-auth-session` with PKCE (system browser via `expo-web-browser`),
+    never an embedded WebView; Android may use Credential Manager in a development build
+  - [ ] The server verifies the provider's identity token and issues our own short-lived access token and
+    a refresh token; tokens live in `SecureStore`; no provider tokens are kept on the device
+- [ ] Account screen in Settings: who is signed in, sign out, and **delete account** inside the app
+  (required by the App Store when accounts can be created in the app; also deletes server-side data)
+- [ ] Signing out leaves the app usable with the user's own key; nothing local is lost
+- [ ] Onboarding in pro mode: an optional "Sign in" step (skippable); the open-source build never shows it
+
+### Qutai Credits (paid usage)
 
 Besides their own API keys, users should also be able to pay to use our AI credits.
 
@@ -18,13 +39,13 @@ App ──(session token)──► Qutai server ──(our key)──► Anthrop
                                  └─ measure actual usage and deduct from credits
 ```
 
-### Pending decisions
+#### Pending decisions
 - [ ] Server platform: Cloudflare Workers + Durable Objects / Supabase / our own Node.js server
 - [ ] Payments: RevenueCat, or the App Store and Play Billing APIs directly?
-- [ ] Sign-in methods: Apple / Google / email (on iOS, "Sign in with Apple" is usually required if there is another social sign-in)
+- [ ] Sign-in providers beyond Apple and Google (see Accounts and OAuth sign-in above)
 - [ ] Credit pricing: profit margin on top of token cost, pack sizes, will trial credits be given?
 
-### 1. Server
+#### 1. Server
 - [ ] User account and sign-in; short-lived access token and refresh token
 - [ ] Split the provider adapters (`src/ai/`) so they can be shared between the app and the server
 - [ ] Relay endpoint: the app sends only the conversation history; the system prompt, tool list and model are set on the server
@@ -38,24 +59,24 @@ App ──(session token)──► Qutai server ──(our key)──► Anthrop
 - [ ] Page contents and conversations are not stored; logs keep only usage and cost
 - [ ] Separate provider keys per environment (test, production) and a key rotation procedure
 
-### 2. App
-- [ ] Sign-in screen; session tokens in `SecureStore`
+#### 2. App
+- [ ] Credits need an account (see Accounts and OAuth sign-in above)
 - [ ] "Qutai Credits" provider as a fourth option in Settings (an adapter that sends requests to the server)
 - [ ] Remaining credits indicator in the panel; a clear message and a prompt to buy when credits run out
 - [ ] A screen that clearly tells the user that in credit mode page content goes through our server
 
-### 3. Purchases
+#### 3. Purchases
 - [ ] Credit packs as consumable in-app products (App Store IAP, Google Play Billing)
 - [ ] Credits are added to the account after the purchase is verified with Apple's or Google's servers; the app's report is not trusted
 - [ ] Listen for refund notifications (App Store Server Notifications, Play Real-time Developer Notifications) and take back refunded credits
 - [ ] Before release, check the current version of the stores' rules on digital goods and external payments
 
-### 4. Abuse protection
+#### 4. Abuse protection
 - [ ] Device verification: Apple App Attest and Google Play Integrity (requires a development build, does not work with Expo Go)
 - [ ] If trial credits are given, limits against creating multiple accounts
 - [ ] Monthly spending limit and alerts on provider accounts
 
-### 5. Legal
+#### 5. Legal
 - [ ] Privacy policy (KVKK / GDPR): in credit mode the content of visited pages, including private tabs, goes through the server
 - [ ] Terms of use
 - [ ] Check the commercial terms of use of Anthropic, OpenAI and Google; we are responsible for end-user usage
@@ -64,6 +85,28 @@ App ──(session token)──► Qutai server ──(our key)──► Anthrop
   - Onboarding legal summary: `onboarding.legal1` ("we have no servers") and `onboarding.legal2`
   - `src/legal/documents.ts` (EN and TR): the privacy intro ("Qutai has no servers of its own") and "What leaves your phone, and to whom"; what our server receives, keeps (and how long), and who processes it
   - Store listings and the README if they repeat the claim
+
+### Sync
+- [ ] End-to-end encrypted sync of bookmarks, history, open tabs and the assistant's memory across the
+  user's devices (keys derived on the device; the server stores only ciphertext); deletions kept as
+  tombstones. Incognito data is never synced. See ROADMAP Phase 5
+
+### Analytics (Firebase), with consent
+- [ ] Firebase Analytics only in pro mode, and only after the user agrees
+  - [ ] New onboarding step in pro mode only: "Help improve Qutai: may we collect anonymous usage data?"
+    with Allow / Don't allow (equal weight, no pre-ticked choice) and a short list of what is and isn't
+    collected; the choice can be changed later in Settings › Privacy
+  - [ ] Collection off by default: start with analytics collection disabled and enable it only after
+    consent (`setAnalyticsCollectionEnabled`); Firebase consent mode set accordingly
+  - [ ] Anonymous app usage only: which features are used, setup completion, errors and performance.
+    Never URLs, page content, search terms, chat text, memory or anything from incognito tabs
+  - [ ] No advertising ID (no IDFA, so no App Tracking Transparency prompt; disable ad ID collection on
+    Android too)
+- [ ] Needs a development build: `@react-native-firebase/app` and `/analytics` are not in Expo Go. Keep
+  `GoogleService-Info.plist` and `google-services.json` out of the public repository (EAS file
+  environment variables)
+- [ ] Privacy policy (bump `LEGAL_VERSION`), App Store privacy labels and Google Play Data safety form
+  updated to describe analytics in pro builds
 
 ## Once we move to our own build (development build)
 
