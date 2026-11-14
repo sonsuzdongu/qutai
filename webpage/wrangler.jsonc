@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // The Worker's name in your Cloudflare account. Change it if you like before the first deploy.
+  "name": "qutai-website",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-14",
+  // Add your domain here once it is on Cloudflare, e.g.
+  // "routes": [{ "pattern": "qutai.example", "custom_domain": true }],
+  "assets": {
+    // Built by `npm run build`: prerendered /en/ and /tr/ pages, scripts, images, robots.txt, sitemap.xml.
+    "directory": "./dist/client",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page",
+    // Only the bare root needs code (the language redirect); everything else is served as a static file
+    // without running the Worker.
+    "run_worker_first": ["/"]
+  },
+  "observability": { "enabled": false }
+}
