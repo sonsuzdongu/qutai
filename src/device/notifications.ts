@@ -63,8 +63,9 @@ export async function scheduleNotification(plan: NotificationPlan): Promise<void
   }
   if (!allowed(Notifications, status)) {
     throw new DeviceToolError(
-      'Permission denied: the user has not allowed Qutai to show notifications. Explain this to the user; ' +
-        "they can allow it for Qutai in the phone's Settings. Do not call this tool again unless they say they have allowed it.",
+      'Permission denied: the user has not allowed Qutai to show notifications. Explain this to the user and offer ' +
+        "(with ask_user) to open Qutai's page in the phone's settings with open_settings (target system), where they can allow it. " +
+        'Do not call this tool again unless they say they have allowed it.',
     );
   }
   await Notifications.scheduleNotificationAsync({

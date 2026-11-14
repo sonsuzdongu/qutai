@@ -317,6 +317,21 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'open_settings',
+    description:
+      'Open a settings screen for the user. "system": Qutai\'s page in the phone\'s settings (permissions such as ' +
+      'calendar, photos, camera and notifications; on iPhone also the default browser). "default_browser": the screen ' +
+      'where the user picks their default browser app. "app": Qutai\'s own settings (AI provider and key, privacy, ' +
+      'memory, site permissions). The user changes the setting themselves; you cannot change it for them.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        target: { type: 'string', enum: ['system', 'default_browser', 'app'], description: 'Which screen to open' },
+      },
+      required: ['target'],
+    },
+  },
+  {
     name: 'switch_tab',
     description: 'Switch to another open tab by id. Further page tools act on that tab.',
     input_schema: {

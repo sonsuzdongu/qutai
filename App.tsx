@@ -40,6 +40,7 @@ import { copyLink, copyText, shareLink, shareText } from './src/device/link';
 import { printPage, savePagePdf, savePdfFromScreenshots } from './src/device/pdf';
 import { saveImage } from './src/device/saveImage';
 import { CaptureCancelled } from './src/device/fullPage';
+import { offerSettings, PermissionDeniedError } from './src/device/settings';
 import { saveFullPageScreenshot, saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
@@ -372,6 +373,7 @@ function BrowserApp({
         log: logAction,
         history: historySearch,
         composeEmail,
+        showAppSettings: () => setSettingsVisible(true),
         signal,
         onEvent: (event) => {
           if (event.type === 'text_delta') return chat.appendStreaming(event.text);
@@ -413,6 +415,8 @@ function BrowserApp({
       if (message) toast.show(message);
     } catch (e) {
       if (e instanceof CaptureCancelled) return toast.show(e.message);
+      // The system won't ask for the permission again, so the way out is its settings page.
+      if (e instanceof PermissionDeniedError && !e.canAskAgain) return offerSettings(e.message);
       toast.show(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
     }
   };

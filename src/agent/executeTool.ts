@@ -2,10 +2,12 @@ import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { Platform } from 'react-native';
 import { addCalendarEvent, addReminder, DeviceToolError } from '../device/calendar';
+import { openDefaultBrowserSettings } from '../device/defaultBrowser';
 import { scheduleNotification } from '../device/notifications';
 import { savePagePdf, savePdfFromScreenshots } from '../device/pdf';
 import { t } from '../i18n';
 import { captureForModel, saveFullPageScreenshot, saveScreenshot } from '../device/screenshot';
+import { openSystemSettings, PermissionDeniedError } from '../device/settings';
 import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import { sleep } from '../utils/sleep';
@@ -51,6 +53,8 @@ export type ToolContext = {
   history?: { search(query: string, from: number, to: number): Promise<HistoryMatch[]> };
   /** Opens the email composer; resolves with what the user did (sent, saved, cancelled…). */
   composeEmail?: (draft: EmailDraft) => Promise<string>;
+  /** Shows Qutai's own Settings screen (open_settings with target "app"). */
+  showAppSettings?: () => void;
   /** Records what the agent did, for the action history. Not called for incognito tabs. */
   log?: (entry: ActionEntry) => void;
   /** Set when the agent works in an incognito tab, so the conversation is never saved to disk. */
@@ -136,6 +140,14 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.addReminder', { title: str(input.title).slice(0, 60) });
     case 'schedule_notification':
       return t('action.scheduleNotification', { title: str(input.title).slice(0, 60) });
+    case 'open_settings':
+      return t(
+        input.target === 'app'
+          ? 'action.openAppSettings'
+          : input.target === 'default_browser'
+            ? 'action.openDefaultBrowserSettings'
+            : 'action.openSystemSettings',
+      );
     default:
       return `🔧 ${name}`;
   }
@@ -242,6 +254,41 @@ async function draftEmail(input: Record<string, unknown>, ctx: ToolContext): Pro
       isError: true,
     };
   }
+}
+
+/**
+ * Opens a settings screen. The phone's settings send Qutai to the background, so this returns as
+ * soon as they are open: the run pauses until the user comes back, and the model is told to wait for them.
+ */
+async function openSettingsTool(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  const target = String(input.target ?? 'system');
+  if (target === 'app') {
+    if (!ctx.showAppSettings) return { content: "Qutai's settings screen is not available here.", isError: true };
+    ctx.showAppSettings();
+    return {
+      content: "Opened Qutai's own Settings screen. Tell the user briefly what to change there; they close it when done.",
+      isError: false,
+    };
+  }
+  if (target !== 'system' && target !== 'default_browser')
+    return { content: 'target must be "system", "default_browser" or "app".', isError: true };
+  try {
+    if (target === 'default_browser') await openDefaultBrowserSettings();
+    else await openSystemSettings();
+  } catch (e) {
+    return {
+      content:
+        `The phone refused to open its settings (${e instanceof Error ? e.message : String(e)}). ` +
+        "Tell the user where to find it themselves: the phone's Settings app, then Apps, then Qutai.",
+      isError: true,
+    };
+  }
+  return {
+    content:
+      "Opened the phone's settings; the user has left Qutai to change the setting there. Don't call more tools now: " +
+      'tell them in one short sentence what to change, and wait for them to say they are done.',
+    isError: false,
+  };
 }
 
 /** What the action history says about a scheduling tool: what kind of thing was added, not its content. */
@@ -404,6 +451,7 @@ const LOGGED_TOOLS = new Set([
   'add_calendar_event',
   'add_reminder',
   'schedule_notification',
+  'open_settings',
 ]);
 
 /** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
@@ -424,6 +472,7 @@ function actionTarget(
       'ask_user',
       'search_history',
       'draft_email',
+      'open_settings',
       ...SCHEDULING_TOOLS,
     ].includes(name)
   )
@@ -490,6 +539,7 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
   if (name === 'read_tab') return readTab(input, ctx);
   if (name === 'search_history') return searchHistoryTool(input, ctx);
   if (name === 'draft_email') return draftEmail(input, ctx);
+  if (name === 'open_settings') return openSettingsTool(input, ctx);
 
   const tab = currentTab(ctx);
   if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
@@ -702,6 +752,14 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
         return { content: `Unknown tool: ${name}`, isError: true };
     }
   } catch (e) {
+    if (e instanceof PermissionDeniedError) {
+      return {
+        content:
+          `Permission denied: ${e.message} Offer the user (with ask_user) to open Qutai's page in the phone's ` +
+          'settings with open_settings (target system), where they can allow it.',
+        isError: true,
+      };
+    }
     return { content: `Error: ${e instanceof Error ? e.message : String(e)}`, isError: true };
   }
 }

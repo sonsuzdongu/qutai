@@ -77,6 +77,9 @@ export const tr: Record<keyof typeof en, string> = {
   'action.addCalendarEventLogged': '📅 Takvime etkinlik eklendi',
   'action.addReminderLogged': '⏰ Anımsatıcı eklendi',
   'action.scheduleNotificationLogged': '🔔 Bildirim planlandı',
+  'action.openSystemSettings': '⚙️ Telefon ayarlarında Qutai açılıyor',
+  'action.openDefaultBrowserSettings': '⚙️ Varsayılan tarayıcı ayarları açılıyor',
+  'action.openAppSettings': '⚙️ Qutai ayarları açılıyor',
 
   'schedule.confirmEvent': '📅 Takvimine ekle',
   'schedule.confirmReminder': '⏰ Anımsatıcı ekle',
@@ -346,6 +349,10 @@ export const tr: Record<keyof typeof en, string> = {
   'a11y.taskDone': 'Qutai görevi bitirdi',
 
   'settings.title': 'Ayarlar',
+  'settings.openSystem': 'Ayarları aç',
+  'settings.permissionTitle': 'İzin gerekiyor',
+  'settings.openFailedTitle': 'Ayarlar açılamadı',
+  'settings.openFailed': 'Telefonunuzda Ayarlar uygulamasını açın, ardından Uygulamalar › Qutai bölümünden değiştirin.',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',
   'settings.provider': 'Yapay zekâ sağlayıcısı',
   'settings.apiKey': '{provider} API anahtarı',

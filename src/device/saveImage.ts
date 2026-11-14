@@ -2,6 +2,7 @@ import { File, Paths } from 'expo-file-system';
 import { Asset, requestPermissionsAsync } from 'expo-media-library';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
+import { PermissionDeniedError } from './settings';
 
 const EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -37,7 +38,7 @@ export function extensionFromUrl(url: string): string {
  */
 export async function saveImage(tab: Tab, src: string): Promise<void> {
   const permission = await requestPermissionsAsync(true, ['photo']);
-  if (!permission.granted) throw new Error(t('error.photosPermission'));
+  if (!permission.granted) throw new PermissionDeniedError(t('error.photosPermission'), permission.canAskAgain);
 
   const name = `qutai-${Date.now()}`;
   let file: File | null = null;

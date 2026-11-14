@@ -5,6 +5,7 @@ import { captureRef } from 'react-native-view-shot';
 import type { ToolImage } from '../ai/types';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
+import { PermissionDeniedError } from './settings';
 import { stitchCapture, withFullPage } from './fullPage';
 
 /** Longest side of screenshots sent to the model, in pixels: readable text without huge token costs. */
@@ -45,7 +46,7 @@ export async function saveScreenshot(tab: Tab): Promise<void> {
   if (!tab.container) throw new Error(t('error.tabNotReady'));
 
   const permission = await requestPermissionsAsync(true, ['photo']);
-  if (!permission.granted) throw new Error(t('error.photosPermission'));
+  if (!permission.granted) throw new PermissionDeniedError(t('error.photosPermission'), permission.canAskAgain);
 
   const uri = await captureRef(tab.container, { format: 'png', quality: 1, result: 'tmpfile' });
   try {
@@ -67,7 +68,7 @@ export async function saveFullPageScreenshot(tab: Tab): Promise<FullPageResult> 
 
   // Asked before capturing, so a refusal doesn't waste a long capture.
   const permission = await requestPermissionsAsync(true, ['photo']);
-  if (!permission.granted) throw new Error(t('error.photosPermission'));
+  if (!permission.granted) throw new PermissionDeniedError(t('error.photosPermission'), permission.canAskAgain);
 
   return withFullPage(tab, async (capture) => {
     const { files, truncated } = await stitchCapture(capture);

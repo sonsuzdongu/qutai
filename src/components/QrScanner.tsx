@@ -1,7 +1,8 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useState } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { openSettingsOrExplain } from '../device/settings';
 import { t } from '../i18n';
 import { DialogHost } from './Dialog';
 
@@ -18,7 +19,14 @@ export function QrScanner({ visible, onScan, onClose }: Props) {
 }
 
 function Scanner({ onScan, onClose }: Omit<Props, 'visible'>) {
-  const [permission, requestPermission] = useCameraPermissions();
+  const [permission, requestPermission, getPermission] = useCameraPermissions();
+  // Coming back from the phone's settings, where the user may have allowed the camera.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') getPermission();
+    });
+    return () => sub.remove();
+  }, [getPermission]);
   // The camera reports a code many times a second; only the first one counts.
   const [done, setDone] = useState(false);
 
@@ -42,8 +50,15 @@ function Scanner({ onScan, onClose }: Omit<Props, 'visible'>) {
         <View style={styles.center}>
           <Text style={styles.message}>{t('qr.permission')}</Text>
           {permission && !permission.granted && (
-            <Pressable onPress={requestPermission} style={styles.allow} accessibilityRole="button">
-              <Text style={styles.allowText}>{t('qr.allowCamera')}</Text>
+            // Once refused for good, the system shows no prompt; only its settings page can allow the camera.
+            <Pressable
+              onPress={permission.canAskAgain ? requestPermission : openSettingsOrExplain}
+              style={styles.allow}
+              accessibilityRole="button"
+            >
+              <Text style={styles.allowText}>
+                {permission.canAskAgain ? t('qr.allowCamera') : t('settings.openSystem')}
+              </Text>
             </Pressable>
           )}
         </View>

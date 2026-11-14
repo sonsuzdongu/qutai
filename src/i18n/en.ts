@@ -76,6 +76,9 @@ export const en = {
   'action.addCalendarEventLogged': '📅 Added a calendar event',
   'action.addReminderLogged': '⏰ Added a reminder',
   'action.scheduleNotificationLogged': '🔔 Scheduled a notification',
+  'action.openSystemSettings': '⚙️ Opening phone settings for Qutai',
+  'action.openDefaultBrowserSettings': '⚙️ Opening default browser settings',
+  'action.openAppSettings': '⚙️ Opening Qutai settings',
 
   'schedule.confirmEvent': '📅 Add to your calendar',
   'schedule.confirmReminder': '⏰ Add a reminder',
@@ -343,6 +346,10 @@ export const en = {
   'a11y.taskDone': 'Qutai finished the task',
 
   'settings.title': 'Settings',
+  'settings.openSystem': 'Open settings',
+  'settings.permissionTitle': 'Permission needed',
+  'settings.openFailedTitle': 'Couldn’t open settings',
+  'settings.openFailed': 'Open the Settings app on your phone, then go to Apps › Qutai to change it.',
   'settings.saveFailed': "Couldn't save settings",
   'settings.provider': 'AI provider',
   'settings.apiKey': '{provider} API key',

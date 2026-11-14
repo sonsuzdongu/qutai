@@ -32,8 +32,9 @@ async function ensure(
   if (!status.granted && status.canAskAgain) status = await request();
   if (!status.granted) {
     throw new DeviceToolError(
-      `Permission denied: the user has not allowed Qutai to access ${what}. Explain this to the user; ` +
-        "they can allow it for Qutai in the phone's Settings. Do not call this tool again unless they say they have allowed it.",
+      `Permission denied: the user has not allowed Qutai to access ${what}. Explain this to the user and offer ` +
+        "(with ask_user) to open Qutai's page in the phone's settings with open_settings (target system), where they can allow it. " +
+        'Do not call this tool again unless they say they have allowed it.',
     );
   }
 }
