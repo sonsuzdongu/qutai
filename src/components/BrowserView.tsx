@@ -237,8 +237,8 @@ function TabWebView({
               const target = parseContextTarget(e.nativeEvent.data);
               if (target && active) newTabActions.onContextMenu(tab, target);
             }}
-            onLoadStart={() => {
-              tab.handleLoadStart();
+            onLoadStart={(e) => {
+              tab.handleLoadStart(e.nativeEvent.url);
               setAtTop(true);
             }}
             onLoadEnd={() => {

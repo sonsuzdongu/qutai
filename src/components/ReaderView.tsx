@@ -163,7 +163,8 @@ export function ReaderView({ tab, prefs, dark, onOpenSettings, onSelection, onNo
         allowsLinkPreview={false}
         allowsBackForwardNavigationGestures={false}
         allowFileAccess={false}
-        dataDetectorTypes="none"
+        // A list: Android's native side aborts the app on a plain string.
+        dataDetectorTypes={['none']}
         mediaCapturePermissionGrantType="deny"
         geolocationEnabled={false}
         showsHorizontalScrollIndicator={false}

@@ -354,13 +354,18 @@ export class Tab {
     return true;
   }
 
-  handleLoadStart() {
-    // A new document: its watches, capture and "allow once" answers start over, and reader mode ends.
+  handleLoadStart(url?: string) {
+    // A new document: its watches, capture and "allow once" answers start over.
     this.geolocation.reset();
     this.media.reset();
     this.playback.reset();
-    this.reader = null;
-    this.readerAvailable = false;
+    // Reader mode and the article check end only when another page starts. Android reports every history update
+    // (a page's own replaceState / pushState) as a load start, and iOS a jump to a #fragment, with no load end
+    // after them; those would otherwise turn reader mode off and hide it on almost every page.
+    if (!url || pageKey(url) !== pageKey(this.url)) {
+      this.reader = null;
+      this.readerAvailable = false;
+    }
     this.loading = true;
     this.loadError = null;
     this.onChange();
