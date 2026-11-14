@@ -184,19 +184,20 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 
 ### Phase 3 – Modern browser (mostly Expo Go)
 
-1. Visually hiding cookie banners and ad areas · M
-2. Dark theme (app + sites), bottom toolbar option, gestures, haptics · M
-3. Tab groups, drag to reorder · M
-4. Download manager (full on iOS, system manager on Android) · L
-5. Clearing browsing data, HTTPS-only, third-party cookie setting · M
-6. Biometric lock (app and private tabs), QR scanning/generation · S
-7. Offline saving, fullscreen video (Android) · S
-8. Accessibility review · M
+1. ✅ Cookie banner hiding and URL-based ad/tracker blocking (the part doable in Expo Go: navigations, iframes, pop-ups, resources and requests added later by scripts; resources hard-coded in the HTML are in Phase 4)
+2. ✅ Dark theme (app + sites), bottom address bar option, swiping on the address bar to switch tabs, haptics
+3. ✅ Tab groups (colored, nameable, collapsible; saved with the session), drag to reorder and add to group
+4. ✅ Download manager (iOS: downloading with cookies and a Downloads screen; Android: the system download manager)
+5. ✅ Clearing browsing data (by time range; cookies in Phase 4), HTTPS-only, third-party cookie setting
+6. ✅ Biometric lock (app and private tabs; device passcode instead of iOS Face ID in Expo Go), QR scanning/generation
+7. ✅ Offline saving and a Saved pages screen, fullscreen video (Android)
+8. ✅ Accessibility review (screen reader announcements, reduce motion, text scaling limits, VoiceOver focus)
 
 ### Phase 4 – Things that require our own build
 
 Merged with the "Once we switch to our own build" section in `TODO.md`:
-voice commands, Android private tab isolation, network-level ad and tracker blocking, cookie management, downloads
+voice commands, Android private tab isolation, network-level ad and tracker blocking (with URL lists; iOS
+WKContentRuleList, Android request interception), cookie management and cookie deletion, Face ID on iOS, downloads
 requiring login, Android PiP, background audio, being the default browser, widgets, "Share with Kutai",
 app verification.
 
