@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 
 /**
- * Soft aurora light in the logo's colours (indigo, violet, a little orange) over the app's own
+ * Soft aurora light in the logo's colours (blues and cyan) over the app's own
  * background colour. Drawn once (no animation), so it costs nothing after the first frame.
  *
  * `fade` is how far down the screen the light reaches (0–1); below that it is the plain
@@ -28,13 +28,13 @@ half4 main(float2 p) {
   float b3 = blob(uv, float2(0.55, 0.02), 0.07) * reach;
   float3 c = base;
   if (dark > 0.5) {
-    c = mixTo(c, float3(0.30, 0.27, 0.88), 0.30 * b1);
-    c = mixTo(c, float3(0.49, 0.23, 0.93), 0.26 * b2);
-    c = mixTo(c, float3(0.85, 0.38, 0.17), 0.16 * b3);
+    c = mixTo(c, float3(0.12, 0.40, 0.80), 0.30 * b1);
+    c = mixTo(c, float3(0.16, 0.72, 0.85), 0.22 * b2);
+    c = mixTo(c, float3(0.06, 0.30, 0.62), 0.24 * b3);
   } else {
-    c = mixTo(c, float3(0.80, 0.82, 1.00), 0.34 * b1);
-    c = mixTo(c, float3(0.89, 0.83, 1.00), 0.32 * b2);
-    c = mixTo(c, float3(1.00, 0.88, 0.80), 0.24 * b3);
+    c = mixTo(c, float3(0.80, 0.88, 1.00), 0.34 * b1);
+    c = mixTo(c, float3(0.80, 0.96, 0.98), 0.32 * b2);
+    c = mixTo(c, float3(0.86, 0.91, 1.00), 0.24 * b3);
   }
   return half4(half3(c), 1.0);
 }
