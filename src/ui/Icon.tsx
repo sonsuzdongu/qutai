@@ -70,6 +70,7 @@ const ICONS = {
   document: { ios: 'doc.text', android: 'description' },
   play: { ios: 'play.fill', android: 'play_arrow' },
   pause: { ios: 'pause.fill', android: 'pause' },
+  tasks: { ios: 'list.bullet.rectangle', android: 'checklist' },
 } satisfies Record<string, SymbolName>;
 
 export type IconName = keyof typeof ICONS;

@@ -3,6 +3,7 @@ import { cleanMemoryText, MAX_MEMORIES, sensitiveReason } from '../agent/memory'
 import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES } from '../browser/reader';
 import { isSearchEngine } from '../browser/search';
+import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskTarget } from '../storage/savedTasks';
 
 /**
  * What goes inside a backup: versioned JSON by kind of data, independent of the SQLite schema, so a
@@ -14,6 +15,7 @@ import { isSearchEngine } from '../browser/search';
  *   bookmarks?: { folders: [{ id, parentId, title, createdAt }], items: [{ url, title, createdAt, folderId }] },
  *   history?: [{ url, title, visitedAt }],
  *   memories?: [{ text, createdAt, updatedAt }],
+ *   tasks?: [{ name, prompt, target, url, research, createdAt, lastUsedAt }],   // saved tasks
  *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }],
  *            blockingOff?: [host] },
  *   settings?: { theme: "dark", textZoom: 120, models: { anthropic: "…" }, … },
@@ -34,6 +36,15 @@ export type BackupFolder = { id: number; parentId: number | null; title: string;
 export type BackupBookmark = { url: string; title: string; createdAt: number; folderId: number | null };
 export type BackupVisit = { url: string; title: string; visitedAt: number };
 export type BackupMemory = { text: string; createdAt: number; updatedAt: number };
+export type BackupTask = {
+  name: string;
+  prompt: string;
+  target: TaskTarget;
+  url: string | null;
+  research: boolean;
+  createdAt: number;
+  lastUsedAt: number | null;
+};
 export type BackupSitePermission = { host: string; level: Exclude<SiteLevel, 'default'> };
 export type BackupLocation = { host: string; setting: 'allow' | 'block' };
 /** A site's camera or microphone setting (not in backups made before it existed). */
@@ -88,6 +99,7 @@ export type BackupPayload = {
   bookmarks?: { folders: BackupFolder[]; items: BackupBookmark[] };
   history?: BackupVisit[];
   memories?: BackupMemory[];
+  tasks?: BackupTask[];
   sites?: {
     permissions: BackupSitePermission[];
     location: BackupLocation[];
@@ -233,6 +245,27 @@ function parseMemories(v: unknown): BackupMemory[] | undefined {
     if (out.length >= MAX_MEMORIES) break;
   }
   return out;
+}
+
+function parseTasks(v: unknown): BackupTask[] | undefined {
+  if (!Array.isArray(v)) return undefined;
+  return list(v, MAX_SAVED_TASKS).flatMap((x) => {
+    if (!isObj(x) || typeof x.prompt !== 'string') return [];
+    const target = oneOf(x.target, TASK_TARGETS) ?? 'page';
+    try {
+      // The same rules as saving a task in the app (an address only for "open a page first", http(s) only).
+      const task = cleanTask({
+        name: typeof x.name === 'string' ? x.name : '',
+        prompt: x.prompt,
+        target,
+        url: typeof x.url === 'string' ? x.url : null,
+        research: x.research === true,
+      });
+      return [{ ...task, createdAt: time(x.createdAt), lastUsedAt: Number.isFinite(x.lastUsedAt) ? time(x.lastUsedAt) : null }];
+    } catch {
+      return [];
+    }
+  });
 }
 
 function parseSites(v: unknown): BackupPayload['sites'] {
@@ -535,6 +568,7 @@ export function parseBackup(json: string): BackupPayload {
     bookmarks: parseBookmarks(raw.bookmarks),
     history: parseHistory(raw.history),
     memories: parseMemories(raw.memories),
+    tasks: parseTasks(raw.tasks),
     sites: parseSites(raw.sites),
     settings: parseSettings(raw.settings),
     apiKeys: parseApiKeys(raw.apiKeys),
@@ -556,6 +590,7 @@ export type BackupSummary = {
   folders?: number;
   history?: number;
   memories?: number;
+  tasks?: number;
   sites?: number;
   settings?: boolean;
   tabs?: number;
@@ -572,6 +607,7 @@ export function summarize(p: BackupPayload): BackupSummary {
     ...(p.bookmarks ? { bookmarks: p.bookmarks.items.length, folders: p.bookmarks.folders.length } : {}),
     ...(p.history ? { history: p.history.length } : {}),
     ...(p.memories ? { memories: p.memories.length } : {}),
+    ...(p.tasks ? { tasks: p.tasks.length } : {}),
     ...(p.sites
       ? {
           sites: new Set([

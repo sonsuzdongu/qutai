@@ -27,6 +27,8 @@ import { AiChoice, AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { LegalScreen } from './LegalScreen';
 import { MemoryScreen } from './MemoryScreen';
+import { TasksScreen } from './TasksScreen';
+import type { SavedTask } from '../storage/savedTasks';
 import { SitePermissionsScreen } from './SitePermissionsScreen';
 import { FilterListsScreen } from './FilterListsScreen';
 import { dialog, DialogHost } from './Dialog';
@@ -39,6 +41,8 @@ type Props = {
   onClose: () => void;
   sitePermissions: SitePermissionStore;
   onClearData: (options: ClearOptions) => Promise<void>;
+  /** Run on a saved task: Settings closes and the app runs it. */
+  onRunTask: (task: SavedTask) => void;
 };
 
 type Page = 'main' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'backup' | 'about';
@@ -74,6 +78,7 @@ function SettingsPages({
   onClose,
   sitePermissions,
   onClearData,
+  onRunTask,
   back,
 }: Omit<Props, 'visible'> & { back: BackRoute }) {
   const styles = useStyles();
@@ -83,6 +88,7 @@ function SettingsPages({
   const [ai, setAi] = useState<AiChoice>(() => pickAi(settings));
   const aiDirty = !sameAi(ai, pickAi(settings));
   const [memoryVisible, setMemoryVisible] = useState(false);
+  const [tasksVisible, setTasksVisible] = useState(false);
   const [sitesVisible, setSitesVisible] = useState(false);
   const [listsVisible, setListsVisible] = useState(false);
   const [actionLogVisible, setActionLogVisible] = useState(false);
@@ -297,6 +303,7 @@ function SettingsPages({
             />
             <VoiceModeLine online={settings.voiceOnline} />
             <LinkRow label={t('settings.manageMemory')} onPress={() => setMemoryVisible(true)} />
+            <LinkRow label={t('settings.savedTasks')} onPress={() => setTasksVisible(true)} />
             <LinkRow label={t('settings.sitePermissions')} onPress={() => setSitesVisible(true)} />
             <LinkRow label={t('settings.actionLog')} onPress={() => setActionLogVisible(true)} />
             <LinkRow label={t('settings.sentLog')} onPress={() => setSentLogVisible(true)} />
@@ -469,6 +476,15 @@ function SettingsPages({
       </ScrollView>
       <LegalScreen kind={legal} onClose={() => setLegal(null)} />
       <MemoryScreen visible={memoryVisible} onClose={() => setMemoryVisible(false)} />
+      <TasksScreen
+        visible={tasksVisible}
+        onClose={() => setTasksVisible(false)}
+        onRun={(task) => {
+          setTasksVisible(false);
+          onClose();
+          onRunTask(task);
+        }}
+      />
       <SitePermissionsScreen
         visible={sitesVisible}
         store={sitePermissions}

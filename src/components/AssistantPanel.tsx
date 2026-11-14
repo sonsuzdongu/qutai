@@ -35,6 +35,7 @@ import type { Source } from '../agent/types';
 import type { CallOffer } from '../device/phone';
 import type { SmsOffer } from '../device/sms';
 import type { WhatsAppOffer } from '../device/whatsapp';
+import type { SavedTask } from '../storage/savedTasks';
 import { composedFileAvailable, FileOffer } from '../device/composedFile';
 import { formatNumber, formatSize, hostOf } from '../i18n/format';
 import { hasTable, MarkdownText } from './MarkdownText';
@@ -128,6 +129,12 @@ type Props = {
   /** A web page is open in the tab (not the new tab page); picks the examples in the empty chat. */
   hasPage?: boolean;
   voice: VoiceProps;
+  /** Saved tasks run most recently, shown as chips in the empty chat. */
+  recentTasks: SavedTask[];
+  onRunTask: (task: SavedTask) => void;
+  onOpenTasks: () => void;
+  /** Long press on a message the user sent: Copy, Save as task. */
+  onUserMessageMenu: (text: string) => void;
 };
 
 const MAX_WIDTH = 420;
@@ -172,6 +179,10 @@ export function AssistantPanel({
   dark = false,
   hasPage = false,
   voice,
+  recentTasks,
+  onRunTask,
+  onOpenTasks,
+  onUserMessageMenu,
 }: Props) {
   const styles = useStyles();
   const palette = usePalette();
@@ -322,6 +333,7 @@ export function AssistantPanel({
                 {items.length > 0 && !running && (
                   <HeaderButton icon="newTab" accessibilityLabel={t('chat.newChat')} onPress={onNewChat} />
                 )}
+                <HeaderButton icon="tasks" accessibilityLabel={t('tasks.title')} onPress={leavePanel(onOpenTasks)} />
                 <HeaderButton
                   icon="settings"
                   accessibilityLabel={t('chat.settings')}
@@ -344,6 +356,8 @@ export function AssistantPanel({
                   <EmptyState
                     hasPage={hasPage}
                     animate={open}
+                    recentTasks={running || busyElsewhere ? [] : recentTasks}
+                    onRunTask={onRunTask}
                     onPick={(example) => {
                       setText(example);
                       inputRef.current?.focus();
@@ -355,7 +369,9 @@ export function AssistantPanel({
                     key={item.id}
                     item={item}
                     speaking={speaking}
-                    onAction={onMessageAction}
+                    onAction={(action, message) =>
+                      action === 'userMenu' ? onUserMessageMenu(message) : onMessageAction(action, message)
+                    }
                     onOpenLink={onOpenLink}
                     onCall={onCall}
                     onSms={onSms}
@@ -471,10 +487,14 @@ function EmptyState({
   hasPage,
   animate,
   onPick,
+  recentTasks,
+  onRunTask,
 }: {
   hasPage: boolean;
   animate: boolean;
   onPick: (example: string) => void;
+  recentTasks: SavedTask[];
+  onRunTask: (task: SavedTask) => void;
 }) {
   const styles = useStyles();
   const palette = usePalette();
@@ -488,6 +508,24 @@ function EmptyState({
         {t('chat.emptyTitle')}
       </Text>
       <Text style={styles.emptyLead}>{t(hasPage ? 'chat.emptyLeadPage' : 'chat.emptyLeadWeb')}</Text>
+      {recentTasks.length > 0 ? (
+        <View style={styles.taskChips}>
+          {recentTasks.map((task) => (
+            <Pressable
+              key={task.id}
+              onPress={() => onRunTask(task)}
+              style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel={t('tasks.runLabel', { name: task.name })}
+            >
+              <Icon name="tasks" size={15} color={palette.textSecondary} />
+              <Text style={styles.chipText} numberOfLines={1}>
+                {task.name}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
       <View style={styles.examples}>
         {examples.map((example) => (
           <Pressable
@@ -571,6 +609,8 @@ function HeaderButton({
 }
 
 export type MessageAction = 'copy' | 'speak' | 'share' | 'pdf';
+/** What a message can ask for: its actions, or the menu of a message the user sent. */
+type ItemAction = MessageAction | 'userMenu';
 
 function ChatRow({
   item,
@@ -587,7 +627,7 @@ function ChatRow({
 }: {
   item: ChatItem;
   speaking: boolean;
-  onAction: (action: MessageAction, text: string) => void;
+  onAction: (action: ItemAction, text: string) => void;
   onOpenLink: (url: string) => void;
   onCall: (number: string) => void;
   onSms: (offer: SmsOffer) => void;
@@ -606,11 +646,16 @@ function ChatRow({
   switch (item.kind) {
     case 'user':
       return (
-        <View style={[styles.bubble, styles.userBubble]}>
-          <Text style={styles.userText} selectable>
-            {item.text}
-          </Text>
-        </View>
+        // Long press: Copy, Save as task.
+        <Pressable
+          onLongPress={() => onAction('userMenu', item.text)}
+          style={[styles.bubble, styles.userBubble]}
+          accessibilityHint={t('chat.userMessageHint')}
+          accessibilityActions={[{ name: 'longpress', label: t('tasks.saveAsTask') }]}
+          onAccessibilityAction={() => onAction('userMenu', item.text)}
+        >
+          <Text style={styles.userText}>{item.text}</Text>
+        </Pressable>
       );
     case 'assistant':
       return (
@@ -920,6 +965,7 @@ const useStyles = makeStyles((c) => ({
   emptyTitle: { color: c.text, fontSize: 19, fontWeight: '700', marginTop: 6 },
   emptyLead: { color: c.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center', maxWidth: 300 },
   examples: { alignSelf: 'stretch', gap: 8, marginTop: 10 },
+  taskChips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 12 },
   example: {
     flexDirection: 'row',
     alignItems: 'center',

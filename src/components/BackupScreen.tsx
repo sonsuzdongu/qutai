@@ -283,6 +283,7 @@ function kindNames(s: BackupSummary): string[] {
   if (s.bookmarks !== undefined) names.push(t('backup.kind.bookmarks'));
   if (s.history !== undefined) names.push(t('backup.kind.history'));
   if (s.memories !== undefined) names.push(t('backup.kind.memories'));
+  if (s.tasks !== undefined) names.push(t('backup.kind.tasks'));
   if (s.sites !== undefined) names.push(t('backup.kind.sites'));
   if (s.tabs !== undefined) names.push(t('backup.kind.tabs'));
   if (s.chats !== undefined) names.push(t('backup.kind.chats'));
@@ -360,6 +361,7 @@ function ImportFlow({ file, busy, setBusy }: BusyProps & { file: Uint8Array }) {
   }
   if (summary.history !== undefined) lines.push(t('backup.summary.history', { count: summary.history }));
   if (summary.memories !== undefined) lines.push(t('backup.summary.memories', { count: summary.memories }));
+  if (summary.tasks !== undefined) lines.push(t('backup.summary.tasks', { count: summary.tasks }));
   if (summary.sites !== undefined) lines.push(t('backup.summary.sites', { count: summary.sites }));
   if (summary.settings) lines.push(t('backup.summary.settings'));
   if (summary.tabs !== undefined) lines.push(t('backup.summary.tabs', { count: summary.tabs }));

@@ -2,6 +2,7 @@ import { exportData as exportBookmarks } from '../storage/bookmarks';
 import { Db, getJson, SqlValue } from '../storage/db';
 import { listActions } from '../storage/actionLog';
 import { listMemories } from '../storage/memory';
+import { listSavedTasks, MAX_SAVED_TASKS } from '../storage/savedTasks';
 import { loadSession } from '../storage/session';
 import {
   listBlockingOff,
@@ -27,7 +28,7 @@ export async function collectBackup(
   db: Db,
   choice: ExportChoice,
 ): Promise<Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'>> {
-  const [version, bookmarks, history, memories, permissions, location, media, blockingOff] = await Promise.all([
+  const [version, bookmarks, history, memories, permissions, location, media, blockingOff, tasks] = await Promise.all([
     db.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []),
     exportBookmarks(db),
     db.getAllAsync<{ url: string; title: string; visited_at: number }>(
@@ -39,6 +40,7 @@ export async function collectBackup(
     listLocationSettings(db),
     listMediaSettings(db),
     listBlockingOff(db),
+    listSavedTasks(db),
   ]);
   const payload: Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'> = {
     schemaVersion: version?.user_version ?? 0,
@@ -48,6 +50,15 @@ export async function collectBackup(
     },
     history: history.map((h) => ({ url: h.url, title: h.title, visitedAt: h.visited_at })),
     memories: memories.map(({ text, createdAt, updatedAt }) => ({ text, createdAt, updatedAt })),
+    tasks: tasks.map(({ name, prompt, target, url, research, createdAt, lastUsedAt }) => ({
+      name,
+      prompt,
+      target,
+      url,
+      research,
+      createdAt,
+      lastUsedAt,
+    })),
     sites: {
       permissions: permissions.flatMap((p) => (p.level === 'default' ? [] : [{ host: p.host, level: p.level }])),
       location: location.flatMap((l) => (l.setting === 'ask' ? [] : [{ host: l.host, setting: l.setting }])),
@@ -117,6 +128,7 @@ async function insertRows(db: Db, sql: string, columns: number, rows: SqlValue[]
  *   already bookmarked keeps its title and folder.
  * - history: each visit is added unless the same URL at the same time is already there.
  * - memories: added unless the same text (any case) is remembered, up to the limit of 100.
+ * - saved tasks: added unless a task with the same prompt is saved, up to the limit of 200.
  * - site permissions, location, camera and microphone: the backup's setting applies only to sites with none on the phone.
  * - tabs: the backup's tabs are added after the open ones (a tab or group already here is skipped).
  * - chats: added for the tabs and groups that don't have one.
@@ -211,6 +223,31 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
           m.text,
           m.createdAt || now,
           m.updatedAt || now,
+        ]),
+      );
+    }
+
+    if (p.tasks) {
+      if (replace) await db.runAsync('DELETE FROM saved_tasks', []);
+      const prompts = new Set(
+        (await db.getAllAsync<{ prompt: string }>('SELECT prompt FROM saved_tasks', [])).map((x) => x.prompt),
+      );
+      const room = Math.max(0, MAX_SAVED_TASKS - prompts.size);
+      const fresh = p.tasks.filter((x) => !prompts.has(x.prompt)).slice(0, room);
+      await insertRows(
+        db,
+        'INSERT INTO saved_tasks (id, name, prompt, target, url, research, created_at, updated_at, last_used_at)',
+        9,
+        fresh.map((x, i) => [
+          `${Math.random().toString(36).slice(2, 8)}${(now + i).toString(36).slice(-4)}`,
+          x.name,
+          x.prompt,
+          x.target,
+          x.url,
+          x.research ? 1 : 0,
+          x.createdAt || now,
+          now,
+          x.lastUsedAt,
         ]),
       );
     }

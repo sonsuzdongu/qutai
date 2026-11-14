@@ -198,7 +198,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/chat/Conversation.ts` | A conversation with the assistant: one per tab, or one shared by a tab group |
 | `src/components/Dialog.tsx`, `src/components/BottomSheet.tsx` | Themed dialogs (instead of native alerts) and the bottom sheet the menus use, kept inside the safe area |
 | `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters |
-| `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, settings |
+| `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, saved tasks, settings |
 | `src/i18n/` | Turkish and English UI strings, date formats |
 | `src/device/` | Device features: PDF, screenshots (also full page), read aloud, voice input (`voiceInput.ts`), share/copy, downloads, private mode protection, calendar and reminders, notifications, location, opening system settings, the phone dialer |
 | `src/browser/geolocation.ts` | Web pages' `navigator.geolocation`, answered by the app with a per-site location permission (ask / allow / block) |

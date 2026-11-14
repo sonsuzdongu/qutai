@@ -227,6 +227,7 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
     non-empty one and a group conversation that turns out to be empty yields to a joining tab's
     (`Browser.joinGroupChat` / `settleGroupChat`)
 - [x] "Look at the source code": the assistant tries to open `view-source:` URLs, which the WebView can't show. Read the source from the DOM instead (e.g. a `read_source` tool returning `document.documentElement.outerHTML`, split into chunks like `read_page`; or scripts and styles on request), and make `navigate` refuse `view-source:` with a hint to use it. Mention it in the system prompt
+- [x] Saved tasks (reusable prompts; `src/storage/savedTasks.ts`, `src/components/TasksScreen.tsx`, table `saved_tasks`): long-press a message you sent › "Save as task" (or New task in the Tasks screen, from the panel header or Settings › Assistant › Saved tasks). Name, prompt, where it runs (the page on screen; a page opened first in a new tab, the task starting once it has loaded; no particular page, which tells the model not to start from the page on screen) and deep research. Run sends it in the current conversation (the user's own saved text and tap); `{date}` / `{today}` become today's date. Editable and deletable, listed by last run; the three run last are chips in the empty panel. Included in the encrypted backup (merged by prompt, at most 200). Never saved by itself from an incognito conversation: saving one explicitly asks first that it will be stored. No assistant tool to save tasks
 
 ## Other
 
@@ -339,6 +340,9 @@ platform-specific details for downloads, permissions, the calendar tools and loc
 - [ ] Android PiP: a video site full screen, playing, press Home: PiP with only the video (Android 12+ automatically, Android 8-11 too via the leave hint); play/pause in the PiP window; expanding returns to the full-screen video and then the browser where it was; closing the window pauses it; back in full screen leaves full screen, no PiP; no PiP for a paused video, an inline video, an incognito tab, with the app lock on or the setting off; the page leaving full screen while in PiP (what does the window show?)
 - [ ] iOS PiP: the full-screen player's PiP button and going home from full screen (Settings › General › Picture in Picture › Start PiP Automatically); none in incognito tabs
 - [ ] An older development build: nothing breaks (no notification on Android)
+
+### Saved tasks
+- [ ] Long-press a sent message › Save as task, edit the name, run it from the Tasks screen and from the chip in the empty panel; a task with "A page" target opens the page in a new tab and starts after it loads; "No page" with a page on screen; deep research on; `{date}` in the prompt; saving from an incognito conversation asks first; backup export and import with tasks (merge and replace)
 
 ### Tasks in the background (Android)
 - [ ] A task finishing while another tab is on screen, and with the panel closed: toast with Show, haptic, dot on the Qutai button until the conversation is opened; looking at it: no toast

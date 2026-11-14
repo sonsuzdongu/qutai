@@ -36,6 +36,9 @@ import { TabSwitcher } from './src/components/TabSwitcher';
 import { TextSizeSheet } from './src/components/TextSizeSheet';
 import { ReaderSettingsSheet } from './src/components/ReaderSettingsSheet';
 import { sleep } from './src/utils/sleep';
+import { TaskDraft, TasksScreen } from './src/components/TasksScreen';
+import { fillTaskPrompt, markSavedTaskUsed, recentSavedTasks, SavedTask } from './src/storage/savedTasks';
+import { formatDate } from './src/i18n/format';
 import { Toast, useToast } from './src/components/Toast';
 import { DownloadIndicator } from './src/components/DownloadIndicator';
 import { CaptureOverlay } from './src/components/CaptureOverlay';
@@ -523,12 +526,16 @@ function BrowserApp({
       }),
     [browserInstance],
   );
-  const send = async (text: string) => {
+  /**
+   * `tab`: the tab the task is for (a saved task's page, opened just before); otherwise the tab on screen.
+   * `noPage`: a saved task meant for no particular page, so the model is told not to start from the one on screen.
+   */
+  const send = async (text: string, options: { tab?: Tab; noPage?: boolean } = {}) => {
     if (running) return;
     // The conversation belongs to the tab the user is looking at when they send the task,
     // and stays there even if the agent moves to other tabs.
     // A grouped tab's conversation is the group's, so the task keeps one context whichever of its tabs is shown.
-    const current = browser.active;
+    const current = options.tab && browser.getTab(options.tab.id) ? options.tab : browser.active;
     const chat = browser.conversationOf(current);
     // Marked before anything is shown, so a message typed in an incognito tab is never saved.
     if (current.incognito) chat.privacy.touchedIncognito = true;
@@ -547,7 +554,8 @@ function BrowserApp({
     const where = current.isNewTab
       ? 'new tab page, no web page loaded'
       : `${current.title || '(no title)'} — ${current.url}`;
-    const pageInfo = `\n\n[Current tab ${current.id}: ${where}. Open tabs: ${browser.tabs.length}. ${nowContext()}]`;
+    const pageNote = options.noPage && !current.isNewTab ? " This task isn't about this page; don't read it unless needed." : '';
+    const pageInfo = `\n\n[Current tab ${current.id}: ${where}.${pageNote} Open tabs: ${browser.tabs.length}. ${nowContext()}]`;
     chat.turns.push({ role: 'user', text: text + pageInfo });
 
     // Research applies to this one message.
@@ -677,6 +685,46 @@ function BrowserApp({
     toast.show(t(kind === 'done' ? 'taskDone.done' : kind === 'failed' ? 'taskDone.failed' : 'taskDone.needsAnswer'), {
       label: t('chat.showTab'),
       onPress: () => showConversation(chat),
+    });
+  };
+
+  // Saved tasks: the screen (from the panel or Settings), and the three run last as chips in the empty panel.
+  const [tasksScreen, setTasksScreen] = useState<{ draft: TaskDraft | null } | null>(null);
+  const [recentTasks, setRecentTasks] = useState<SavedTask[]>([]);
+  const refreshRecentTasks = useCallback(() => {
+    getDb()
+      .then((db) => recentSavedTasks(db))
+      .then(setRecentTasks)
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
+    if (panelOpen && !tasksScreen) refreshRecentTasks();
+  }, [panelOpen, tasksScreen, refreshRecentTasks]);
+  const [messageMenu, setMessageMenu] = useState<string | null>(null);
+
+  /**
+   * Runs a saved task: the user's own text and their tap, so it is sent. With a page to open first, it opens in a new
+   * tab and the task starts once the page has loaded (or after 15 s); otherwise it goes in the current conversation.
+   */
+  const runSavedTask = async (task: SavedTask) => {
+    setTasksScreen(null);
+    if (running) return toast.show(t('chat.busyElsewhere'));
+    getDb()
+      .then((db) => markSavedTaskUsed(db, task.id))
+      .then(refreshRecentTasks)
+      .catch(() => {});
+    const prompt = fillTaskPrompt(task.prompt, () => formatDate(new Date()));
+    let target: Tab = browser.active;
+    if (task.target === 'url' && task.url) {
+      target = browser.openTab(upgradeToHttps(task.url, settings.httpsOnly));
+      setPanelOpen(true);
+      await target.waitForNextLoad();
+    }
+    const chat = browser.conversationOf(target);
+    chat.whenLoaded(() => {
+      if (task.research) chat.setResearch(true);
+      setPanelOpen(true);
+      send(prompt, { tab: target, noPage: task.target === 'none' });
     });
   };
 
@@ -1237,6 +1285,10 @@ function BrowserApp({
               dark={darkMode}
               hasPage={!tab.isNewTab}
               open={panelOpen}
+              recentTasks={recentTasks}
+              onRunTask={(task) => runSavedTask(task)}
+              onOpenTasks={() => setTasksScreen({ draft: null })}
+              onUserMessageMenu={setMessageMenu}
               voice={{
                 incognito: tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
                 online: settings.voiceOnline,
@@ -1360,6 +1412,7 @@ function BrowserApp({
             settings={settings}
             onChange={onChangeSettings}
             onClose={() => setSettingsVisible(false)}
+            onRunTask={runSavedTask}
           />
           <ContextMenuSheet
             target={context?.target ?? null}
@@ -1460,6 +1513,45 @@ function BrowserApp({
             store={downloads}
             bottomOffset={barAtBottom ? 64 : 16}
             onOpen={() => setDownloadsVisible(true)}
+          />
+          <ActionSheet
+            title={messageMenu !== null ? messageMenu.replace(/\s+/g, ' ').slice(0, 120) : null}
+            actions={
+              messageMenu !== null
+                ? [
+                    {
+                      label: t('chat.copy'),
+                      onPress: () =>
+                        runAction(async () => {
+                          await copyText(messageMenu);
+                          return t('common.copied');
+                        }),
+                    },
+                    {
+                      label: t('tasks.saveAsTask'),
+                      onPress: () =>
+                        setTasksScreen({
+                          draft: {
+                            name: '',
+                            prompt: messageMenu,
+                            target: tab.isNewTab ? 'none' : 'page',
+                            url: null,
+                            research: false,
+                            incognito: conversation.incognito || conversation.privacy.touchedIncognito,
+                          },
+                        }),
+                    },
+                  ]
+                : []
+            }
+            dark={darkMode}
+            onClose={() => setMessageMenu(null)}
+          />
+          <TasksScreen
+            visible={tasksScreen !== null}
+            draft={tasksScreen?.draft}
+            onClose={() => setTasksScreen(null)}
+            onRun={runSavedTask}
           />
           <ActionSheet
             // Hidden while the app lock shows (it reappears after unlocking).
