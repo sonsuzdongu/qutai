@@ -69,7 +69,7 @@ import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { LockScreen } from './src/components/LockScreen';
 import { Onboarding } from './src/components/Onboarding';
 import { contentBlocking } from './src/content/blocking';
-import { Entry, useEntryPoints } from './src/device/entryPoints';
+import { canPinSiteShortcut, Entry, pinSiteShortcut, useEntryPoints } from './src/device/entryPoints';
 import { ActionSheet, SheetAction } from './src/components/ActionSheet';
 import { LEGAL_VERSION } from './src/legal/documents';
 import { LogoMotion } from './src/ui/QutaiMark';
@@ -228,6 +228,7 @@ function BrowserApp({
   const closePanel = useCallback(() => setPanelOpen(false), []);
 
   const [settings, setSettings] = useState<Settings>(initialSettings);
+  const [pinShortcuts] = useState(canPinSiteShortcut);
 
   // Network ad and tracker blocking: the master switch, and list downloads only once the terms are accepted (the
   // browser shows only after that) and while blocking is on: at start and when the app comes back, rate-limited.
@@ -392,20 +393,45 @@ function BrowserApp({
   /** Puts text in the assistant's input of a normal tab, unsent, after anything the user was already typing. */
   const askAbout = (text: string) => {
     toNormalTab();
-    const chat = browser.conversationOf(browser.active);
-    chat.setDraft(chat.draft.trim() ? `${chat.draft.trimEnd()}\n\n${text}` : text);
-    persistDraftSoon(chat);
+    if (text) {
+      const chat = browser.conversationOf(browser.active);
+      chat.setDraft(chat.draft.trim() ? `${chat.draft.trimEnd()}\n\n${text}` : text);
+      persistDraftSoon(chat);
+    }
     setPanelOpen(true);
     setFocusRequest((n) => n + 1);
   };
+  /** Opens the address field of the tab on screen with `text` in it (not submitted). */
+  const [addressEdit, setAddressEdit] = useState<{ id: number; text: string } | null>(null);
+  const clearAddressEdit = useCallback(() => setAddressEdit(null), []);
   const handleEntry = (entry: Entry) => {
-    if (entry.kind === 'open') {
-      browser.openTab(entry.url);
-      return;
+    switch (entry.kind) {
+      case 'open':
+        browser.openTab(entry.url);
+        return;
+      case 'shared':
+        // The chooser is not shown over an incognito tab (or its lock screen).
+        toNormalTab();
+        setIncoming({ text: entry.text, url: entry.url });
+        return;
+      case 'newTab': {
+        browser.openTab(undefined, { incognito: entry.incognito });
+        setPanelOpen(false);
+        // Not behind the incognito lock: the keyboard would come up over the lock screen.
+        if (!entry.incognito || !settings.incognitoLock || incognitoUnlocked) {
+          setAddressEdit({ id: Date.now(), text: entry.query });
+        }
+        return;
+      }
+      case 'ask':
+        askAbout(entry.text);
+        return;
+      case 'scan':
+        toNormalTab();
+        setPanelOpen(false);
+        setScannerVisible(true);
+        return;
     }
-    // The chooser is not shown over an incognito tab (or its lock screen).
-    toNormalTab();
-    setIncoming({ text: entry.text, url: entry.url });
   };
   useEntryPoints(!appLocked, handleEntry);
   const incomingActions = (item: { text: string; url: string | null }): SheetAction[] => [
@@ -634,6 +660,19 @@ function BrowserApp({
           return t('menu.linkCopied');
         }),
     },
+    // Android: a launcher shortcut for this page (iOS gives apps no way to add one; Safari's is its own).
+    ...(pinShortcuts && !tab.incognito
+      ? [
+          {
+            icon: 'addToHome' as const,
+            label: t('menu.addToHomeScreen'),
+            disabled: !/^https?:\/\//i.test(tab.url) || onNewTab,
+            onPress: () => {
+              if (!pinSiteShortcut(tab.url, tab.title)) toast.show(t('menu.addToHomeScreenFailed'));
+            },
+          },
+        ]
+      : []),
     {
       icon: 'find',
       label: t('menu.find'),
@@ -962,6 +1001,8 @@ function BrowserApp({
   ) : (
     <AddressBar
       url={onNewTab ? '' : tab.url}
+      editRequest={addressEdit}
+      onEditRequestApplied={clearAddressEdit}
       searchEngine={settings.searchEngine}
       searchSuggestions={settings.searchSuggestions}
       onAsk={(text) => {

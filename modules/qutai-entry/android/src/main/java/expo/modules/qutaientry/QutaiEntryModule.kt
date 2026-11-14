@@ -6,13 +6,14 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
 /**
- * Ways into Qutai from outside the app that are not plain links (those reach React Native's Linking, e.g. http(s) links
- * handed to Qutai as the default browser).
+ * Ways into Qutai from outside the app that are not plain links (those reach React Native's Linking: http(s) links
+ * handed to Qutai as the default browser, and qutai:// links from the launcher shortcuts and automation).
  *
  * - Text and links shared to Qutai (ACTION_SEND text/plain), "Qutai" in other apps' text-selection menu
  *   (ACTION_PROCESS_TEXT) and web searches handed to Qutai (ACTION_WEB_SEARCH) are queued here as untrusted text.
  *   JavaScript takes the queue (each item once) and asks the user what to do with it; nothing is sent anywhere
  *   by itself (src/device/entryPoints.ts).
+ * - "Add to home screen": a pinned launcher shortcut for a page (SiteShortcut).
  */
 class QutaiEntryModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -28,6 +29,17 @@ class QutaiEntryModule : Module() {
 
     OnNewIntent { intent ->
       if (collect(intent)) sendEvent("onEntry", emptyMap<String, Any>())
+    }
+
+    Function("isPinShortcutSupported") {
+      val context = appContext.reactContext ?: return@Function false
+      SiteShortcut.isSupported(context)
+    }
+
+    /** Asks the launcher to pin a shortcut that opens `url` in Qutai; the launcher shows its own confirmation. */
+    Function("pinSiteShortcut") { url: String, label: String, letter: String, color: String ->
+      val context = appContext.reactContext ?: return@Function false
+      SiteShortcut.request(context, url, label, letter, color)
     }
   }
 

@@ -40,6 +40,8 @@ Other store-facing iOS declarations:
   foreground) and doesn't keep a silent audio session. Review notes: "Qutai is a web browser; audio a user plays on a
   website (e.g. a podcast or music site) continues in the background, like Safari."
 
+- `UIApplicationShortcutItems`: the Home Screen quick actions (New tab, New incognito tab, Ask Qutai, Scan QR code;
+  `plugins/withEntryPoints.js`). No permission; each is a `qutai://` link handled like any other.
 - `ITSAppUsesNonExemptEncryption` is `false` (`ios.config.usesNonExemptEncryption`): Qutai only uses HTTPS and the
   operating system's own encryption (Keychain via `expo-secure-store`).
 - Privacy manifest (`ios.privacyManifests`): the required-reason APIs that the bundled libraries declare in their own
@@ -107,7 +109,8 @@ Google Play Console, "Foreground service permissions" declaration (App content),
 Intent filters without a permission (`plugins/withEntryPoints.js`): `SEND` `text/plain` (the share sheet),
 `PROCESS_TEXT` `text/plain` (other apps' text-selection menu) and `WEB_SEARCH`, on the main activity, besides the
 `http`/`https` and `qutai` links. What arrives is only text; it is handled as untrusted input (see README, "Opening
-Qutai from other apps").
+Qutai from other apps"). The main activity also carries the launcher shortcuts (`android.app.shortcuts` meta-data,
+`res/xml/qutai_shortcuts.xml`); pinning a page with "Add to home screen" needs no permission (the launcher asks).
 
 Debug builds also get `ACCESS_NETWORK_STATE`, `ACCESS_LOCAL_NETWORK` and `CHANGE_WIFI_MULTICAST_STATE` from the dev
 client and React Native's debug manifest.

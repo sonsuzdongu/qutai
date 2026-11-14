@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="qutai_shortcut_new_tab">Yeni sekme</string>
+  <string name="qutai_shortcut_private_tab_short">Gizli sekme</string>
+  <string name="qutai_shortcut_private_tab">Yeni gizli sekme</string>
+  <string name="qutai_shortcut_ask">Qutai’ye sor</string>
+  <string name="qutai_shortcut_scan_short">QR tara</string>
+  <string name="qutai_shortcut_scan">QR kodu tara</string>
+</resources>

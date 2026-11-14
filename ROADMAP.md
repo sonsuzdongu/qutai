@@ -116,6 +116,7 @@ credits, background tasks), native work in our own build (network-level blocking
 | Accessibility | 🟡 | Go · M | Reviewed in code (labels, announcements, reduce motion, text scaling, 44pt targets); no screen reader testing on a device yet |
 | Being the default browser | 🟡 | Build · M | Android: intent filters for http/https, and a shortcut to the default apps settings. iOS: requires a special entitlement from Apple |
 | Share to Qutai | 🟡 | Build · M | Android: share sheet, text-selection menu and web searches, with a chooser (open, search, ask as an unsent draft, summarize). iOS share extension open (needs an App Group in the Apple account; `expo-share-intent`) |
+| Launcher shortcuts, `qutai://` links | ✅ | Build · S | Long-press the icon: New tab, New incognito tab, Ask Qutai, Scan QR (both platforms); `qutai://open`, `search`, `ask`, `new-tab`, `new-private-tab`, `scan` for automation (Shortcuts app). Siri / App Intents open (`expo-app-intents` is alpha) |
 | Home screen widgets | ⬜ | Build | `expo-widgets` |
 
 ### Account and sync (section 8)
@@ -215,7 +216,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 
 Merged with the "Our own build (development build)" section in `TODO.md`:
 Cookie management and cookie deletion, being the default browser on iOS, widgets, "Share with
-Qutai" on iOS, app verification. Done since: "Share to Qutai" on Android, background audio and media controls, Android picture-in-picture, network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
+Qutai" on iOS, app verification. Done since: "Share to Qutai" on Android, launcher shortcuts and the `qutai://` links, background audio and media controls, Android picture-in-picture, network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
 Android request interception), Face ID on iOS, Android private tab isolation (WebView profiles), per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the
 system download manager on Android), Android default browser (intent filters).
 
@@ -224,7 +225,7 @@ Added from Comet reviews:
 - ✅ Voice input in the assistant panel, with the assistant going quiet when the user starts speaking (barge-in): the phone's own speech recognition, on-device where the phone and language allow it, otherwise the phone's speech service only after the user agreed once (never in incognito). Not tested on a phone yet; needs a new development build
 - Passwords: instead of our own manager, verify and fix that the system's (Google, iCloud Keychain) autofill works in the WebView
 - ✅ Background audio and headphone media keys: "Keep playing in the background", the lock screen, notification (Android) and headphone buttons control the page's media through its Media Session (Android gets a small Media Session of its own, the WebView has none); a speaker in the tab switcher pauses a playing tab. Not tested on a phone yet; needs a new development build
-- Site shortcut on the home screen
+- ✅ Site shortcut on the home screen: Android "Add to home screen" in the page menu (pinned launcher shortcut). iOS has no API for apps. Needs a new development build
 - ✅ Reader mode, together with read-aloud: the article only, in a themed view (light, dark, sepia; serif or sans; easier-reading spacing for dyslexic readers; the shared text size and the system font size); read aloud reads exactly what is shown, paragraph by paragraph, with play/pause/stop and the paragraph highlighted. Offered only on pages with enough article text (600 characters and 3 paragraphs)
 - iOS default browser: applying for Apple's `com.apple.developer.web-browser` entitlement
 

@@ -73,6 +73,28 @@ from outside opens in an incognito tab. Each item is handled once (`src/device/e
   text holds exactly one web link), *Search with* the engine from Settings, *Ask Qutai about this* (the text goes into
   the assistant's message field, unsent) and *Summarize this page* (opens the page with the assistant ready; the user
   taps Summarize). Images and files are not accepted. iOS has no share extension yet (see Known limitations).
+- **Launcher shortcuts:** long-press the app icon for *New tab*, *New incognito tab*, *Ask Qutai* and *Scan QR code*
+  (Android static shortcuts, iOS Home Screen quick actions; English and Turkish).
+- **Add to home screen (Android):** page menu (⋮) › *Add to home screen* pins a launcher shortcut for the page, with
+  the site's letter badge; it opens the page in Qutai like any link. Not offered in incognito tabs. iOS gives apps no
+  way to add a page to the Home Screen (Safari's "Add to Home Screen" is its own), so there is none there.
+
+### The `qutai://` URL scheme
+
+For automation, for example the Shortcuts app's *Open URL* action on iPhone or any app that can open a link on
+Android. Parsed strictly (exact names, no unknown or repeated parameters, percent-encoded values); anything else is
+ignored. Nothing is ever submitted or sent by these links:
+
+| Link | What happens |
+|---|---|
+| `qutai://open?url=https%3A%2F%2Fexample.com` | Opens the page in a normal tab. Only `http`/`https`; any other scheme (`javascript:`, `file:`, …) is shown as text in the share chooser |
+| `qutai://search?q=weather%20istanbul` | A new tab with the text in the address field, not submitted: the user taps Go |
+| `qutai://ask?text=what%20is%20this` | The assistant panel with the text in the message field, not sent (`qutai://ask` alone just opens it) |
+| `qutai://new-tab` | A new tab with the address field ready |
+| `qutai://new-private-tab` | A new incognito tab (the incognito lock asks first if it is on) |
+| `qutai://scan` | The QR code scanner |
+
+Any app or web page can open these links, which is why none of them acts by itself.
 
 ## Running
 
@@ -266,7 +288,8 @@ the feature, when the user is asked, the config line that declares it and what i
   started and a tab with a conversation then joins, that conversation stays hidden until the tab leaves the group.
 - **Ways in from other apps are partly Android-only** (needs **a new development build**). Sharing to Qutai works on
   Android only: an iOS share extension is a separate target with an App Group that needs the owner's Apple account
-  (`TODO.md` has the next step). Only text and links are accepted, not images or files.
+  (`TODO.md` has the next step). Only text and links are accepted, not images or files. There are no Siri / App
+  Intents actions yet; the Shortcuts app can use the `qutai://` links. "Add to home screen" is Android-only.
 - **Nothing recent has been tested on a device.** The features added since the move to a development build (and many
   before it) are implemented but not yet tried on a phone; `TODO.md` has the checklist.
 - **Prompt injection** is a risk. The system prompt marks page content as untrusted data and asks for confirmation

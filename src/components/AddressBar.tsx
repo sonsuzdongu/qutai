@@ -23,6 +23,10 @@ import { OmniboxSuggestions } from './OmniboxSuggestions';
 
 type Props = {
   url: string;
+  /** A new id opens the field for typing with `text` in it (a new tab, or a search from outside); never submits. */
+  editRequest?: { id: number; text: string } | null;
+  /** Called once the request is applied, so the owner can drop it (a remounted bar must not apply it again). */
+  onEditRequestApplied?: () => void;
   loading: boolean;
   /** The page has used the location (shown as a small pin; tapping it opens the site's permissions). */
   usingLocation?: boolean;
@@ -66,6 +70,8 @@ function displayUrl(url: string): string {
 
 export function AddressBar({
   url,
+  editRequest,
+  onEditRequestApplied,
   loading,
   usingLocation,
   usingCamera,
@@ -100,6 +106,16 @@ export function AddressBar({
     setCleared(null);
   };
   const [editing, setEditing] = useState(false);
+  const [handledEdit, setHandledEdit] = useState<number | null>(null);
+  if (editRequest && editRequest.id !== handledEdit) {
+    setHandledEdit(editRequest.id);
+    setText(editRequest.text);
+    setCleared(null);
+    setEditing(true);
+  }
+  useEffect(() => {
+    if (editRequest && editRequest.id === handledEdit) onEditRequestApplied?.();
+  }, [editRequest, handledEdit, onEditRequestApplied]);
   const darkUI = incognito || !!darkMode;
   const palette = usePalette();
   const dark = darkUI ? darkStyles : null;

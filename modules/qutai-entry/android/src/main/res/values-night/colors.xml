@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark. -->
+<resources>
+  <color name="qutai_shortcut_bg">#3A3944</color>
+  <color name="qutai_shortcut_fg">#D6D3E0</color>
+</resources>

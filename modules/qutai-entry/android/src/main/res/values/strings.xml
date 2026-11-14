@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Native strings for the launcher shortcuts (Turkish in values-tr). -->
+<resources>
+  <string name="qutai_shortcut_new_tab">New tab</string>
+  <string name="qutai_shortcut_private_tab_short">Incognito tab</string>
+  <string name="qutai_shortcut_private_tab">New incognito tab</string>
+  <string name="qutai_shortcut_ask">Ask Qutai</string>
+  <string name="qutai_shortcut_scan_short">Scan QR</string>
+  <string name="qutai_shortcut_scan">Scan QR code</string>
+</resources>

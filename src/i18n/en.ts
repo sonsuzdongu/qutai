@@ -925,6 +925,8 @@ export const en = {
   'settings.voiceMode.needsBuild': 'Needs a newer version of the app',
   'settings.voiceMode.unavailable': 'Not available in this language on this phone',
 
+  'menu.addToHomeScreen': 'Add to home screen',
+  'menu.addToHomeScreenFailed': 'Your home screen app doesn’t let Qutai add shortcuts.',
   'incoming.title': 'Shared with Qutai: {text}',
   'incoming.open': 'Open page',
   'incoming.search': 'Search with {engine}',

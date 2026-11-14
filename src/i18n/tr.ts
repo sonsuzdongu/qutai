@@ -932,6 +932,8 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.voiceMode.needsBuild': 'Uygulamanın daha yeni bir sürümü gerekiyor',
   'settings.voiceMode.unavailable': 'Bu telefonda bu dilde kullanılamıyor',
 
+  'menu.addToHomeScreen': 'Ana ekrana ekle',
+  'menu.addToHomeScreenFailed': 'Ana ekran uygulamanız Qutai’nin kısayol eklemesine izin vermiyor.',
   'incoming.title': 'Qutai ile paylaşılan: {text}',
   'incoming.open': 'Sayfayı aç',
   'incoming.search': '{engine} ile ara',

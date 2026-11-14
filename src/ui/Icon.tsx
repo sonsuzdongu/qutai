@@ -59,6 +59,7 @@ const ICONS = {
   link: { ios: 'link', android: 'link' },
   download: { ios: 'square.and.arrow.down', android: 'download' },
   openInNew: { ios: 'plus.square.on.square', android: 'open_in_new' },
+  addToHome: { ios: 'plus.app', android: 'add_to_home_screen' },
   check: { ios: 'checkmark', android: 'check' },
   phone: { ios: 'phone.fill', android: 'call' },
   message: { ios: 'message.fill', android: 'sms' },
