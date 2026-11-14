@@ -59,6 +59,11 @@ App ──(session token)──► Qutai server ──(our key)──► Anthrop
 - [ ] Privacy policy (KVKK / GDPR): in credit mode the content of visited pages, including private tabs, goes through the server
 - [ ] Terms of use
 - [ ] Check the commercial terms of use of Anthropic, OpenAI and Google; we are responsible for end-user usage
+- [ ] Before the server goes live, rewrite every "no servers of ours" promise. It is true today, but not once requests can go through our server. Update the onboarding together with the privacy policy and terms (bump `LEGAL_VERSION` so everyone accepts again):
+  - Onboarding welcome: "Private by design" (`onboarding.f3Title`, `onboarding.f3Body`: "no servers of ours"). Say what stays on the phone and when data goes through our server (credit mode only; own key: still direct to the provider)
+  - Onboarding legal summary: `onboarding.legal1` ("we have no servers") and `onboarding.legal2`
+  - `src/legal/documents.ts` (EN and TR): the privacy intro ("Qutai has no servers of its own") and "What leaves your phone, and to whom"; what our server receives, keeps (and how long), and who processes it
+  - Store listings and the README if they repeat the claim
 
 ## Once we move to our own build (development build)
 
