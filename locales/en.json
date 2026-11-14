@@ -7,6 +7,7 @@
     "NSCalendarsUsageDescription": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",
     "NSCalendarsWriteOnlyAccessUsageDescription": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",
     "NSRemindersUsageDescription": "Qutai adds reminders you confirm to your Reminders.",
-    "NSRemindersFullAccessUsageDescription": "Qutai adds reminders you confirm to your Reminders."
+    "NSRemindersFullAccessUsageDescription": "Qutai adds reminders you confirm to your Reminders.",
+    "NSLocationWhenInUseUsageDescription": "Qutai shows your position to the sites you allow, such as maps, and to the assistant when you ask it to use your location."
   }
 }

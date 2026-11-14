@@ -12,6 +12,7 @@ import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../
 import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { mayOfferExternal, noteUserGesture } from '../browser/externalGuard';
 import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
+import { geolocationScript } from '../browser/geolocation';
 import { openExternal } from '../browser/openExternal';
 import { parsePullState, PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
 import { handleUserAgentMessage, USER_AGENT_SCRIPT, useChromeUserAgent } from '../browser/userAgent';
@@ -91,13 +92,23 @@ function TabWebView({
   const iosIncognito = tab.incognito && Platform.OS === 'ios';
   const androidIncognito = tab.incognito && Platform.OS === 'android';
   const { textZoom } = newTabActions;
-  // Runs before the page's own scripts: request blocking and banner hiding (no flash of the banner).
-  const earlyScript =
-    [newTabActions.blockAds ? AD_BLOCK_SCRIPT : '', newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : ''].join(
-      '\n',
-    ) || undefined;
+  // The page's navigator.geolocation goes through the app (per-site permission); installed in every frame
+  // (frames are always refused). Android runs it in the main frame only and leaves native geolocation off.
+  const geoScript = geolocationScript(tab.geolocation.nonce);
+  // Runs before the page's own scripts: request blocking and banner hiding (no flash of the banner), main frame
+  // only, and the geolocation bridge.
+  const mainFrameEarly = [
+    newTabActions.blockAds ? AD_BLOCK_SCRIPT : '',
+    newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : '',
+  ].join('\n');
+  const earlyScript = [
+    geoScript,
+    mainFrameEarly.trim() ? `if (window.top === window) (function () {\n${mainFrameEarly}\n})();` : '',
+  ].join('\n');
   // Runs after every page load: long-press menu, text selection, desktop viewport (Android) and text size (iOS).
   const pageSetupScript = [
+    // Android may run the early script too soon for the new page; installing again is a no-op otherwise.
+    Platform.OS === 'android' ? geoScript : '',
     CONTEXT_MENU_SCRIPT,
     SELECTION_SCRIPT,
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
@@ -161,6 +172,7 @@ function TabWebView({
             style={styles.flex}
             onMessage={(e) => {
               if (tab.handleMessage(e.nativeEvent.data)) return;
+              if (tab.geolocation.handleMessage(e.nativeEvent.data)) return;
               if (handleUserAgentMessage(e.nativeEvent.data)) return;
               const pull = parsePullState(e.nativeEvent.data);
               if (pull !== null) return setAtTop(pull);
@@ -248,6 +260,10 @@ function TabWebView({
             forceDarkOn={newTabActions.darkMode && newTabActions.darkSites}
             injectedJavaScript={pageSetupScript}
             injectedJavaScriptBeforeContentLoaded={earlyScript}
+            // iOS: the geolocation script must reach frames too, so they can't use WebKit's own location prompt.
+            injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
+            // Android: native geolocation would grant every site once Qutai has the permission; the script handles it.
+            geolocationEnabled={false}
             textZoom={newTabActions.textZoom}
             // The app shows its own long-press menu for links and images.
             allowsLinkPreview={false}

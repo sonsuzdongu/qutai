@@ -332,10 +332,32 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'get_location',
+    description:
+      "Get the user's current location from the phone: latitude, longitude, accuracy in metres and when it was " +
+      'measured. The user is asked every time and may refuse. Call it when the user refers to their own location ' +
+      '("near me", "from where I am", "my location", "directions from here") instead of guessing a place. Use the ' +
+      'coordinates for this task only (e.g. in a maps directions URL or search); never save them with remember.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        purpose: {
+          type: 'string',
+          description: 'Short reason shown to the user, in their language, e.g. "to plan a route from where you are"',
+        },
+        precise: {
+          type: 'boolean',
+          description: 'Ask for GPS-level accuracy (slower); otherwise about 100 m is fine',
+        },
+      },
+      required: ['purpose'],
+    },
+  },
+  {
     name: 'open_settings',
     description:
       'Open a settings screen for the user. "system": Qutai\'s page in the phone\'s settings (permissions such as ' +
-      'calendar, photos, camera and notifications; on iPhone also the default browser). "default_browser": the screen ' +
+      'calendar, photos, camera, location and notifications; on iPhone also the default browser). "default_browser": the screen ' +
       'where the user picks their default browser app. "app": Qutai\'s own settings (AI provider and key, privacy, ' +
       'memory, site permissions). The user changes the setting themselves; you cannot change it for them.',
     input_schema: {

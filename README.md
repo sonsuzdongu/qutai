@@ -100,8 +100,9 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters |
 | `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, settings |
 | `src/i18n/` | Turkish and English UI strings, date formats |
-| `src/device/` | Device features: PDF, screenshot, read aloud, share/copy, private mode protection, opening system settings |
-| `src/agent/tools.ts` | Tools exposed to the model (`read_page`, `read_source`, `click`, `type`, `navigate`, `open_tab`, `view_screenshot`, `save_pdf`, `read_aloud`, `open_settings`, `offer_call`…) |
+| `src/device/` | Device features: PDF, screenshot, read aloud, share/copy, private mode protection, opening system settings, location |
+| `src/browser/geolocation.ts` | Web pages' `navigator.geolocation`, answered by the app with a per-site location permission (ask / allow / block) |
+| `src/agent/tools.ts` | Tools exposed to the model (`read_page`, `read_source`, `click`, `type`, `navigate`, `open_tab`, `view_screenshot`, `save_pdf`, `read_aloud`, `open_settings`, `offer_call`, `get_location`…) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |
@@ -134,6 +135,10 @@ provider or model changes mid-chat, the history is rebuilt from the text and too
   where it left off when the app comes back to the foreground.
 - **Tabs consume memory.** Each tab stays open as a separate WebView.
 - **Cross-origin iframes** (e.g. payment forms, some captchas) cannot be read.
+- **Location goes to the site in the address bar only.** Pages ask through Qutai's own prompt (per-site setting: ask,
+  allow, block; https only). Frames, such as an embedded map on another site, are always refused, and nothing is
+  shared in the background (watches stop when the app or tab goes away). Location needs `expo-location`, which is not
+  in older development builds: **a new development build is needed**.
 - **Prompt injection** is a risk. The system prompt marks page content as untrusted data and asks for confirmation
   for sensitive actions. The "Ask before every action" option in Settings provides extra protection.
 

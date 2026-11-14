@@ -24,6 +24,9 @@ import { OmniboxSuggestions } from './OmniboxSuggestions';
 type Props = {
   url: string;
   loading: boolean;
+  /** The page has used the location (shown as a small pin; tapping it opens the site's permissions). */
+  usingLocation?: boolean;
+  onLocationPress?: () => void;
   canGoBack: boolean;
   tabCount: number;
   incognito: boolean;
@@ -58,6 +61,8 @@ function displayUrl(url: string): string {
 export function AddressBar({
   url,
   loading,
+  usingLocation,
+  onLocationPress,
   canGoBack,
   tabCount,
   incognito,
@@ -203,6 +208,16 @@ export function AddressBar({
           >
             {url ? displayUrl(url) : t('address.placeholder')}
           </Text>
+          {usingLocation && (
+            <Pressable
+              onPress={onLocationPress}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t('address.usingLocation')}
+            >
+              <Icon name="location" size={13} color={darkUI ? darkPalette.tintText : palette.tintText} />
+            </Pressable>
+          )}
         </Pressable>
       )}
 

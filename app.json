@@ -43,7 +43,11 @@
         }
       ],
       "versionCode": 1,
-      "package": "com.sonsuzdongu.qutai"
+      "package": "com.sonsuzdongu.qutai",
+      "blockedPermissions": [
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -103,6 +107,19 @@
         "expo-notifications",
         {
           "enableRemoteNotifications": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Qutai shows your position to the sites you allow, such as maps, and to the assistant when you ask it to use your location.",
+          "locationAlwaysAndWhenInUsePermission": false,
+          "locationAlwaysPermission": false,
+          "locationFullAccuracyPermission": false,
+          "motionUsagePermission": false,
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
         }
       ],
       "expo-font"

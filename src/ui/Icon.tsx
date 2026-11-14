@@ -61,6 +61,7 @@ const ICONS = {
   openInNew: { ios: 'plus.square.on.square', android: 'open_in_new' },
   check: { ios: 'checkmark', android: 'check' },
   phone: { ios: 'phone.fill', android: 'call' },
+  location: { ios: 'location.fill', android: 'location_on' },
 } satisfies Record<string, SymbolName>;
 
 export type IconName = keyof typeof ICONS;

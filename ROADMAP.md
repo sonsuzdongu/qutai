@@ -69,7 +69,7 @@ putting the AI experience front and center.
 | HTTPS indicator | ✅ | | |
 | HTTPS-only | ⬜ | Go · S | `http` → `https` upgrade on main-frame navigations; subresources out of scope |
 | Malicious site warning | 🟡 | Server · M | Android System WebView has its own Safe Browsing protection; Safe Browsing API for a full solution |
-| Site permissions (camera, microphone, location) | ⬜ | Go/Build · M | Sites' permission requests are not handled yet; the app's own permissions must be added too |
+| Site permissions (camera, microphone, location) | 🟡 | Build · M | Location done: per-site ask / allow / block, answered by the app (`src/browser/geolocation.ts`), frames refused. Camera and microphone not handled yet |
 | Password manager, form filling | ⬜ | ✕ / Go | **I do not recommend writing our own password manager.** Relying on iOS and Android system autofill is safer; an AI-powered form assistant only for info like address and name |
 | Biometric lock | ⬜ | Go · S | `expo-local-authentication`; also for locking private tabs |
 | DNS over HTTPS | ⬜ | ✕ | WebView uses the system DNS; the user can turn on the OS "Private DNS" setting |
@@ -228,6 +228,11 @@ Done in the development build:
   its own dated folder (duplicates and non-web addresses skipped and counted); exporting in the same format through
   the share sheet. Uses `expo-document-picker`, which Expo Go includes but an existing development build does not:
   **a new development build is needed** (an older build says import needs a newer version instead of crashing)
+- ✅ Geolocation: web pages' `navigator.geolocation` (current position, watching, `permissions.query`) goes through
+  Qutai, which asks per site ("Allow once", "Always allow on this site", "Don't allow"; block from the site's
+  permissions), https only, forgotten with incognito tabs; and the assistant's `get_location` tool, confirmed every
+  time and refused in incognito conversations. Foreground location only (`expo-location`, no background or
+  foreground-service permissions): **a new development build is needed**
 
 ### Phase 5 – Things that require a server
 

@@ -7,6 +7,7 @@
     "NSCalendarsUsageDescription": "Qutai, onayladığınız bilet ve rezervasyon gibi etkinlikleri takviminize ekler.",
     "NSCalendarsWriteOnlyAccessUsageDescription": "Qutai, onayladığınız bilet ve rezervasyon gibi etkinlikleri takviminize ekler.",
     "NSRemindersUsageDescription": "Qutai, onayladığınız anımsatıcıları Anımsatıcılar'a ekler.",
-    "NSRemindersFullAccessUsageDescription": "Qutai, onayladığınız anımsatıcıları Anımsatıcılar'a ekler."
+    "NSRemindersFullAccessUsageDescription": "Qutai, onayladığınız anımsatıcıları Anımsatıcılar'a ekler.",
+    "NSLocationWhenInUseUsageDescription": "Qutai, konumunuzu harita gibi izin verdiğiniz sitelere ve konumunuzu kullanmasını istediğinizde asistana gösterir."
   }
 }

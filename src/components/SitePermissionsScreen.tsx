@@ -16,7 +16,7 @@ export function SitePermissionsScreen({ visible, store, onClose }: Props) {
   const version = useSyncExternalStore(store.subscribe, () =>
     store
       .list()
-      .map((p) => p.host + p.level)
+      .map((p) => p.host + p.level + p.location)
       .join(),
   );
   const sites = store.list();
@@ -51,9 +51,14 @@ export function SitePermissionsScreen({ visible, store, onClose }: Props) {
                 <Text style={[styles.level, item.level === 'blocked' && styles.danger]}>
                   {t(`site.level.${item.level}`)}
                 </Text>
+                {item.location !== 'ask' && (
+                  <Text style={[styles.level, item.location === 'block' && styles.danger]}>
+                    {t(`site.locationSummary.${item.location}`)}
+                  </Text>
+                )}
               </View>
               <Pressable
-                onPress={() => store.set(item.host, 'default')}
+                onPress={() => store.reset(item.host)}
                 hitSlop={10}
                 style={styles.remove}
                 accessibilityLabel={t('site.reset')}
@@ -67,6 +72,8 @@ export function SitePermissionsScreen({ visible, store, onClose }: Props) {
           host={editing}
           level={editing ? store.levelFor(editing) : 'default'}
           onSelect={(level) => editing && store.set(editing, level)}
+          location={editing ? store.locationFor(editing) : 'ask'}
+          onSelectLocation={(setting) => editing && store.setLocation(editing, setting)}
           onClose={() => setEditing(null)}
         />
       </SafeAreaView>

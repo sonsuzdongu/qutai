@@ -8,6 +8,7 @@ import { savePagePdf, savePdfFromScreenshots } from '../device/pdf';
 import { t } from '../i18n';
 import { captureForModel, saveFullPageScreenshot, saveScreenshot } from '../device/screenshot';
 import { CallOffer, normalizePhone } from '../device/phone';
+import { ensureLocationPermission, LocationUnavailableError, readPosition } from '../device/location';
 import { openSystemSettings, PermissionDeniedError } from '../device/settings';
 import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
@@ -56,6 +57,8 @@ export type ToolContext = {
   composeEmail?: (draft: EmailDraft) => Promise<string>;
   /** Adds a Call button to the conversation (offer_call). It never dials: only the user's tap on it does. */
   offerCall?: (offer: CallOffer) => void;
+  /** The AI provider's name (e.g. "Anthropic"), for confirmations that send something to it. */
+  providerLabel?: string;
   /** Shows Qutai's own Settings screen (open_settings with target "app"). */
   showAppSettings?: () => void;
   /** Records what the agent did, for the action history. Not called for incognito tabs. */
@@ -145,6 +148,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.addReminder', { title: str(input.title).slice(0, 60) });
     case 'schedule_notification':
       return t('action.scheduleNotification', { title: str(input.title).slice(0, 60) });
+    case 'get_location':
+      return t('action.getLocation');
     case 'open_settings':
       return t(
         input.target === 'app'
@@ -372,6 +377,76 @@ async function schedulingTool(name: SchedulingTool, input: Record<string, unknow
   }
 }
 
+/**
+ * The user's location for the assistant. Never in incognito conversations (same rule as the calendar), the user
+ * confirms every read, and the result goes only to the model: the action history just says it was read.
+ */
+async function locationTool(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  const tab = ctx.browser.getTab(ctx.agentTab.id);
+  if (ctx.privacy?.touchedIncognito || tab?.incognito) {
+    return {
+      content:
+        "Not allowed: this conversation involves incognito tabs, so Qutai doesn't share the location from it. Tell " +
+        'the user they can ask again from a normal tab, or ask them for a starting point.',
+      isError: true,
+    };
+  }
+  if (!ctx.confirm) return { content: "This needs the user's confirmation, which is not available here.", isError: true };
+  const purpose = typeof input.purpose === 'string' ? input.purpose.trim().slice(0, 200) : '';
+  const site = tab && !tab.isNewTab ? siteKey(tab.url) : null;
+  const lines = [t('location.agentConfirm', { provider: ctx.providerLabel || t('location.aiProvider') })];
+  if (purpose) lines.push(`“${purpose}”`);
+  if (site) lines.push(t('location.agentSite', { host: site }));
+  if (!(await ctx.confirm(lines.join('\n\n'), null))) {
+    return {
+      content: "The user declined to share their location. Don't guess it: ask them where to start from.",
+      isError: true,
+    };
+  }
+  try {
+    await ensureLocationPermission();
+    const position = await readPosition({ highAccuracy: input.precise === true });
+    const round = (n: number) => Math.round(n * 1e6) / 1e6;
+    return {
+      content:
+        `Latitude: ${round(position.latitude)}\nLongitude: ${round(position.longitude)}\n` +
+        `Accuracy: about ${Math.round(position.accuracy)} m\n` +
+        `Measured: ${new Date(position.timestamp).toISOString()}\n` +
+        'Use these coordinates for this task only (e.g. "lat,lng" in a maps directions URL). Never save them with ' +
+        'remember. If the accuracy is large (approximate location), mention that the start point is approximate.',
+      isError: false,
+    };
+  } catch (e) {
+    if (e instanceof PermissionDeniedError) {
+      return {
+        content:
+          'Permission denied: the user has not allowed Qutai to use their location. Offer them (with ask_user) to ' +
+          "open Qutai's page in the phone's settings with open_settings (target system), where they can allow it, " +
+          'or ask them for a starting point. Do not call get_location again unless they say they allowed it.',
+        isError: true,
+      };
+    }
+    if (e instanceof LocationUnavailableError && e.reason === 'servicesOff') {
+      return {
+        content:
+          "Location services are turned off on the phone. Tell the user to turn them on in the phone's settings " +
+          '(Privacy / Location), or ask them for a starting point.',
+        isError: true,
+      };
+    }
+    if (e instanceof LocationUnavailableError && e.reason === 'needsBuild') {
+      return { content: `${e.message} Tell the user it is not available yet and ask for a starting point.`, isError: true };
+    }
+    return {
+      content: `Could not read the location (${e instanceof Error ? e.message : String(e)}). Ask the user for a starting point.`,
+      isError: true,
+    };
+  }
+}
+
+/** Two decimal coordinates, e.g. "41.0082, 28.9784": a location is not something to remember. */
+const COORDINATES = /-?\d{1,3}\.\d{3,}\s*[,;/ ]\s*-?\d{1,3}\.\d{3,}/;
+
 async function memoryTool(
   name: 'remember' | 'forget',
   input: Record<string, unknown>,
@@ -387,6 +462,12 @@ async function memoryTool(
   }
   try {
     if (name === 'remember') {
+      if (COORDINATES.test(String(input.text ?? ''))) {
+        return {
+          content: "Not saved: coordinates (the user's location) are never kept in memory. Use them for this task only.",
+          isError: true,
+        };
+      }
       const memory = await ctx.memory.add(String(input.text ?? ''));
       return { content: `Remembered [${memory.id}]: ${memory.text}`, isError: false };
     }
@@ -482,6 +563,8 @@ const LOGGED_TOOLS = new Set([
   'add_reminder',
   'schedule_notification',
   'open_settings',
+  // Only that the location was read: the coordinates are never written to the history.
+  'get_location',
 ]);
 
 /** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
@@ -504,6 +587,7 @@ function actionTarget(
       'draft_email',
       'offer_call',
       'open_settings',
+      'get_location',
       ...SCHEDULING_TOOLS,
     ].includes(name)
   )
@@ -558,6 +642,8 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
   if (decision.kind === 'refuse') return record({ content: decision.reason, isError: true });
   // These confirm on their own, with the details of what will be added.
   if (SCHEDULING_TOOLS.has(name)) return record(await schedulingTool(name as SchedulingTool, input, ctx));
+  // Asks every time, whatever the "ask before actions" setting.
+  if (name === 'get_location') return record(await locationTool(input, ctx));
   if (decision.kind === 'confirm' && ctx.confirm) {
     const allowed = await ctx.confirm(describeToolCall(name, input), host);
     if (!allowed) return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true });

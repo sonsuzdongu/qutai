@@ -1,6 +1,6 @@
 import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import {
   AccessibilityInfo,
   Appearance,
@@ -81,6 +81,7 @@ import * as Sharing from 'expo-sharing';
 import { SitePermissionStore } from './src/storage/sitePermissions';
 import { siteKey } from './src/agent/sitePolicy';
 import { SitePermissionSheet } from './src/components/SitePermissionSheet';
+import { configurePageLocation } from './src/browser/geolocation';
 import { deleteOrphanChats, loadChat, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from './src/storage/settings';
@@ -89,6 +90,9 @@ import { useRecordHistory } from './src/storage/useRecordHistory';
 
 const memoryStore = deviceMemoryStore(getDb);
 const sitePermissions = new SitePermissionStore(getDb);
+// Web pages' location requests check (and "Always allow" saves) the per-site location setting.
+configurePageLocation(sitePermissions);
+const getSitePermissionsVersion = () => sitePermissions.version;
 const downloads = new DownloadStore(getDb);
 
 const historySearch = {
@@ -239,6 +243,8 @@ function BrowserApp({
   const [library, setLibrary] = useState<LibraryTab | null>(null);
   const [textSizeVisible, setTextSizeVisible] = useState(false);
   const [permissionHost, setPermissionHost] = useState<string | null>(null);
+  // The permission sheet stays open while the location setting changes, so it must see the update.
+  useSyncExternalStore(sitePermissions.subscribe, getSitePermissionsVersion);
   const [downloadsVisible, setDownloadsVisible] = useState(false);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [offlineVisible, setOfflineVisible] = useState(false);
@@ -369,6 +375,7 @@ function BrowserApp({
         research,
         stream: true,
         confirm: (description, host) => askConfirmation(description, host, signal),
+        providerLabel: getProvider(provider).label,
         confirmByDefault: settings.confirmActions,
         sites: sitePermissions,
         log: logAction,
@@ -801,6 +808,8 @@ function BrowserApp({
         send(text);
       }}
       loading={tab.loading}
+      usingLocation={!onNewTab && tab.geolocation.inUse}
+      onLocationPress={() => setPermissionHost(siteKey(tab.url))}
       canGoBack={tab.canGoBack || tab.openedFromNewTab}
       tabCount={browser.tabs.length}
       assistantOpen={panelOpen}
@@ -1012,6 +1021,10 @@ function BrowserApp({
             host={permissionHost}
             level={permissionHost ? sitePermissions.levelFor(permissionHost) : 'default'}
             onSelect={(level) => permissionHost && sitePermissions.set(permissionHost, level).catch(() => {})}
+            location={permissionHost ? sitePermissions.locationFor(permissionHost) : 'ask'}
+            onSelectLocation={(setting) =>
+              permissionHost && sitePermissions.setLocation(permissionHost, setting).catch(() => {})
+            }
             onClose={() => setPermissionHost(null)}
           />
           <TextSizeSheet

@@ -84,6 +84,13 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
    CREATE INDEX bookmark_folders_parent ON bookmark_folders (parent_id);
    ALTER TABLE bookmarks ADD COLUMN folder_id INTEGER;
    CREATE INDEX bookmarks_folder ON bookmarks (folder_id);`,
+  // Whether a site itself may use the user's location ('allow' or 'block'; no row means ask).
+  // Kept apart from site_permissions, which say what the assistant may do on a site.
+  `CREATE TABLE site_location (
+     host TEXT PRIMARY KEY NOT NULL,
+     setting TEXT NOT NULL,
+     updated_at INTEGER NOT NULL
+   );`,
 ];
 
 /**

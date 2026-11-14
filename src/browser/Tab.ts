@@ -4,6 +4,8 @@ import { captureRef } from 'react-native-view-shot';
 import type { WebView, WebViewNavigation } from 'react-native-webview';
 import { Conversation } from '../chat/Conversation';
 import { sleep } from '../utils/sleep';
+import { siteKey } from '../agent/sitePolicy';
+import { PageGeolocation } from './geolocation';
 import { classifyLoadError, LoadError } from './navigation';
 import { PAGE_SCRIPT } from './pageScript';
 
@@ -94,6 +96,9 @@ export class Tab {
   /** Width / height of the captured view, so cards can show the top of the page. */
   thumbnailAspect = 0.6;
 
+  /** The page's navigator.geolocation, answered by the app with the user's per-site permission. */
+  readonly geolocation: PageGeolocation = new PageGeolocation(this);
+
   private pending = new Map<string, Pending>();
   private loadWaiters: (() => void)[] = [];
   // A random prefix makes it hard for page scripts to forge command replies.
@@ -138,6 +143,11 @@ export class Tab {
     this.thumbnail = thumbnail;
     this.webview = null;
     this.asleep = true;
+    this.onChange();
+  }
+
+  /** The page started or stopped using the location (address bar indicator). */
+  notifyLocationUse() {
     this.onChange();
   }
 
@@ -220,6 +230,8 @@ export class Tab {
   }
 
   handleNavigationStateChange(nav: WebViewNavigation) {
+    // Location given to one site never carries over to the next (same-document changes stay).
+    if (siteKey(nav.url) !== siteKey(this.url)) this.geolocation.reset();
     this.url = nav.url;
     this.title = nav.title;
     this.canGoBack = nav.canGoBack;
@@ -245,6 +257,8 @@ export class Tab {
   }
 
   handleLoadStart() {
+    // A new document: its watches and "allow once" answers start over.
+    this.geolocation.reset();
     this.loading = true;
     this.loadError = null;
     this.onChange();
@@ -312,6 +326,7 @@ export class Tab {
   }
 
   dispose() {
+    this.geolocation.reset();
     this.thumbnail = null;
     this.pending.forEach((p) => {
       clearTimeout(p.timer);
