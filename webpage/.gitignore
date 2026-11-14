@@ -4,3 +4,7 @@ dist/
 .preview/
 .dev.vars*
 *.tsbuildinfo
+
+# Original paintings (large); the sized WebP files in src/art/ are what gets committed
+art-src/*
+!art-src/.gitkeep

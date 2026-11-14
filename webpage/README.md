@@ -20,6 +20,7 @@ npm run check      # after a build: the pages' head tags, JSON-LD, no third-part
 npm run lint
 npm run typecheck  # site and Worker
 npm run assets     # regenerate the images in public/ from ../assets (logo, icons, social previews)
+npm run art        # size the miniatures in art-src/ into src/art/ (see ART.md)
 npm run deploy     # build, then `wrangler deploy` (asks you to log in to Cloudflare the first time)
 ```
 
@@ -35,7 +36,8 @@ npm run deploy     # build, then `wrangler deploy` (asks you to log in to Cloudf
 
 | Path | What it is |
 |---|---|
-| `src/App.tsx`, `src/components/` | The page: header, hero with the phone mock, scenarios, privacy, browser, comparison, open source, status, footer |
+| `src/App.tsx`, `src/components/` | The page: header, hero with the main miniature, the statement with the phone mock, scenarios, memory, privacy, browser, comparison, getting started, open source, status, footer |
+| `ART.md`, `art-src/`, `src/art/` | The robot miniatures: prompts and how to add them; originals (not committed) and the sized WebP files the page uses. A missing painting shows a placeholder |
 | `src/i18n/en.ts`, `src/i18n/tr.ts` | All copy. Same keys in both (TypeScript fails the build otherwise). Lines marked `app:` are the app's own UI strings |
 | `src/data/comparison.ts` | The comparison table: rows, Qutai's column, every competitor cell with its source and date |
 | `src/lib/motion.ts` | Parallax and reveals: transform/opacity only, off under `prefers-reduced-motion` |

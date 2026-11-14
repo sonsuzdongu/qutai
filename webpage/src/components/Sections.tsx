@@ -2,6 +2,7 @@ import type { MessageKey } from '../i18n/en';
 import { useI18n } from '../lib/i18n';
 import { APP_PRIVACY_URL, ISSUES_URL, LICENSE_URL, REPO_URL, TRADEMARKS_URL } from '../lib/site';
 import { Icon, type IconName } from './Icon';
+import { Miniature, type ArtName } from './Miniature';
 import { PhoneMock } from './PhoneMock';
 
 const LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
@@ -56,36 +57,67 @@ export function Header() {
 
 export function Hero() {
   const { t } = useI18n();
+  const chips: { key: MessageKey; icon: IconName; depth: string }[] = [
+    { key: 'hero.chip1', icon: 'tabs', depth: '-0.10' },
+    { key: 'hero.chip2', icon: 'bookmark', depth: '-0.18' },
+    { key: 'hero.chip3', icon: 'hand', depth: '-0.06' },
+    { key: 'hero.chip4', icon: 'key', depth: '-0.14' },
+  ];
   return (
     <section className="hero" aria-labelledby="hero-title">
-      <div className="hero-sky" aria-hidden="true">
-        <div className="aurora a1" data-depth="0.35" />
-        <div className="aurora a2" data-depth="0.2" />
-        <div className="aurora a3" data-depth="0.5" />
-        <picture className="hero-mark" data-depth="0.6">
-          <source srcSet="/img/q-640.avif" type="image/avif" />
-          <img src="/img/q-640.webp" width="640" height="640" alt="" fetchPriority="low" />
-        </picture>
-      </div>
-      <div className="hero-inner">
-        <div className="hero-copy">
-          <p className="eyebrow">
-            <span className="eyebrow-pill">{t('hero.eyebrow')}</span>
+      <div className="hero-copy">
+        <p className="eyebrow">{t('hero.eyebrow')}</p>
+        <h1 id="hero-title">{t('hero.title')}</h1>
+        <p className="lede">{t('hero.lede')}</p>
+        <div className="hero-actions">
+          <a className="button primary" href={REPO_URL}>
+            <Icon name="github" size={20} />
+            {t('hero.github')}
+          </a>
+          <p className="status-pill">
+            <span className="dot" aria-hidden="true" />
+            {t('hero.status')}
           </p>
-          <h1 id="hero-title">{t('hero.title')}</h1>
-          <p className="lede">{t('hero.lede')}</p>
-          <div className="hero-actions">
-            <a className="button primary" href={REPO_URL}>
-              <Icon name="github" size={20} />
-              {t('hero.github')}
-            </a>
-            <p className="status-pill">
-              <span className="dot" aria-hidden="true" />
-              {t('hero.status')}
-            </p>
-          </div>
         </div>
-        <div className="hero-phone" data-depth="-0.12">
+      </div>
+      <div className="hero-art">
+        <div className="hero-art-frame" data-depth="0.04">
+          <Miniature name="hero" ratio="3x2" sizes="(min-width: 1200px) 1100px, 100vw" priority />
+        </div>
+        <ul className="hero-chips">
+          {chips.map((c, i) => (
+            <li key={c.key} className={`chip-${i + 1}`} data-depth={c.depth}>
+              <Icon name={c.icon} size={16} />
+              {t(c.key)}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+/** One long sentence about Qutai that fills in as it scrolls by, next to the app as it really looks. */
+export function Statement() {
+  const { t } = useI18n();
+  return (
+    <section className="band dark statement" aria-labelledby="statement-title">
+      <div className="statement-inner">
+        <div>
+          <p className="kicker" id="statement-title">
+            {t('statement.kicker')}
+          </p>
+          <p className="statement-text">
+            {t('statement.text')
+              .split(' ')
+              .map((word, i) => (
+                <span key={i} className="w">
+                  {word}{' '}
+                </span>
+              ))}
+          </p>
+        </div>
+        <div className="statement-phone" data-depth="-0.08">
           <PhoneMock />
         </div>
       </div>
@@ -120,89 +152,105 @@ function Trail({ steps }: { steps: Step[] }) {
   );
 }
 
+type Scenario = {
+  id: 'compare' | 'checkout' | 'booking' | 'research';
+  art: ArtName;
+  steps: Step[];
+  call?: boolean;
+};
+
+const SCENARIOS: Scenario[] = [
+  {
+    id: 'compare',
+    art: 'compare',
+    steps: [
+      { icon: 'tabs', text: 'agent.compare.step1' },
+      { icon: 'tabs', text: 'agent.compare.step2' },
+      { icon: 'list', text: 'agent.compare.step3' },
+    ],
+  },
+  {
+    id: 'checkout',
+    art: 'checkout',
+    steps: [
+      { icon: 'hand', text: 'agent.checkout.step1', tone: 'ask' },
+      { icon: 'code', text: 'agent.checkout.step2' },
+      { icon: 'key', text: 'agent.checkout.step3', tone: 'stop' },
+    ],
+  },
+  { id: 'booking', art: 'booking', steps: [{ icon: 'calendar', text: 'agent.booking.step1', tone: 'ask' }], call: true },
+  {
+    id: 'research',
+    art: 'research',
+    steps: [
+      { icon: 'research', text: 'agent.research.step1' },
+      { icon: 'reader', text: 'agent.research.step2' },
+      { icon: 'list', text: 'agent.research.step3' },
+    ],
+  },
+];
+
 export function Agent() {
   const { t } = useI18n();
   return (
     <section id="agent" className="section agent" aria-labelledby="agent-title">
       <SectionHead id="agent-title" kicker="agent.kicker" title="agent.title" lede="agent.lede" />
       <div className="scenarios">
-        <article className="scenario reveal">
-          <div className="scenario-icon">
-            <Icon name="compare" size={28} />
-          </div>
-          <h3>{t('agent.compare.title')}</h3>
-          <p>{t('agent.compare.body')}</p>
-          <Trail
-            steps={[
-              { icon: 'tabs', text: 'agent.compare.step1' },
-              { icon: 'tabs', text: 'agent.compare.step2' },
-              { icon: 'list', text: 'agent.compare.step3' },
-            ]}
-          />
-        </article>
-        <article className="scenario reveal">
-          <div className="scenario-icon">
-            <Icon name="cart" size={28} />
-          </div>
-          <h3>{t('agent.checkout.title')}</h3>
-          <p>{t('agent.checkout.body')}</p>
-          <Trail
-            steps={[
-              { icon: 'hand', text: 'agent.checkout.step1', tone: 'ask' },
-              { icon: 'code', text: 'agent.checkout.step2' },
-              { icon: 'key', text: 'agent.checkout.step3', tone: 'stop' },
-            ]}
-          />
-        </article>
-        <article className="scenario reveal">
-          <div className="scenario-icon">
-            <Icon name="calendar" size={28} />
-          </div>
-          <h3>{t('agent.booking.title')}</h3>
-          <p>{t('agent.booking.body')}</p>
-          <Trail steps={[{ icon: 'calendar', text: 'agent.booking.step1', tone: 'ask' }]} />
-          <div className="call-card" aria-hidden="true">
-            <div>
-              <p className="call-name">{t('agent.booking.callName')}</p>
-              <p className="call-number">{t('agent.booking.callNumber')}</p>
+        {SCENARIOS.map((sc) => (
+          <article key={sc.id} className="scenario" aria-labelledby={`sc-${sc.id}`}>
+            <div className="scenario-art reveal">
+              <div data-depth="0.05">
+                <Miniature name={sc.art} />
+              </div>
             </div>
-            <span className="call-button">
-              <Icon name="call" size={16} />
-              {t('agent.booking.call')}
-            </span>
-          </div>
-        </article>
-        <article className="scenario reveal">
-          <div className="scenario-icon">
-            <Icon name="research" size={28} />
-          </div>
-          <h3>{t('agent.research.title')}</h3>
-          <p>{t('agent.research.body')}</p>
-          <Trail
-            steps={[
-              { icon: 'research', text: 'agent.research.step1' },
-              { icon: 'reader', text: 'agent.research.step2' },
-              { icon: 'list', text: 'agent.research.step3' },
-            ]}
-          />
-        </article>
-      </div>
-      <div className="memory reveal">
-        <div>
-          <p className="kicker">{t('agent.memory.kicker')}</p>
-          <h3 id="memory-title">{t('agent.memory.title')}</h3>
-          <p>{t('agent.memory.body')}</p>
-        </div>
-        <ul>
-          {(['agent.memory.point1', 'agent.memory.point2', 'agent.memory.point3', 'agent.memory.point4'] as const).map((k, i) => (
-            <li key={k}>
-              <Icon name={(['list', 'phone', 'globe', 'key'] as const)[i]} size={20} />
-              <span>{t(k)}</span>
-            </li>
-          ))}
-        </ul>
+            <div className="scenario-copy reveal">
+              <p className="kicker">{t(`agent.${sc.id}.kicker`)}</p>
+              <h3 id={`sc-${sc.id}`}>{t(`agent.${sc.id}.title`)}</h3>
+              <p>{t(`agent.${sc.id}.body`)}</p>
+              <Trail steps={sc.steps} />
+              {sc.call && (
+                <div className="call-card" aria-hidden="true">
+                  <div>
+                    <p className="call-name">{t('agent.booking.callName')}</p>
+                    <p className="call-number">{t('agent.booking.callNumber')}</p>
+                  </div>
+                  <span className="call-button">
+                    <Icon name="call" size={16} />
+                    {t('agent.booking.call')}
+                  </span>
+                </div>
+              )}
+            </div>
+          </article>
+        ))}
       </div>
       <p className="footnote reveal">{t('agent.footnote')}</p>
+    </section>
+  );
+}
+
+export function Memory() {
+  const { t } = useI18n();
+  return (
+    <section className="band alt memory-band" aria-labelledby="memory-title">
+      <div className="memory">
+        <div className="memory-art reveal">
+          <Miniature name="memory" />
+        </div>
+        <div className="reveal">
+          <p className="kicker">{t('agent.memory.kicker')}</p>
+          <h2 id="memory-title">{t('agent.memory.title')}</h2>
+          <p className="memory-body">{t('agent.memory.body')}</p>
+          <ul>
+            {(['agent.memory.point1', 'agent.memory.point2', 'agent.memory.point3', 'agent.memory.point4'] as const).map((k, i) => (
+              <li key={k}>
+                <Icon name={(['list', 'phone', 'globe', 'key'] as const)[i]} size={20} />
+                <span>{t(k)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </section>
   );
 }
@@ -268,10 +316,8 @@ function DataPath() {
 export function Privacy() {
   const { t } = useI18n();
   return (
-    <section id="privacy" className="section privacy" aria-labelledby="privacy-title">
-      <div className="section-sky" aria-hidden="true" data-depth="0.25">
-        <div className="aurora a4" />
-      </div>
+    <section id="privacy" className="band dark privacy" aria-labelledby="privacy-title">
+      <div className="section">
       <SectionHead id="privacy-title" kicker="privacy.kicker" title="privacy.title" lede="privacy.lede" />
       <DataPath />
       <ul className="privacy-grid">
@@ -284,6 +330,7 @@ export function Privacy() {
         ))}
       </ul>
       <p className="footnote reveal">{t('privacy.note')}</p>
+      </div>
     </section>
   );
 }
@@ -316,6 +363,34 @@ export function BrowserFeatures() {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+export function GetStarted() {
+  const { t } = useI18n();
+  const steps: { n: 1 | 2 | 3; icon: IconName }[] = [
+    { n: 1, icon: 'phone' },
+    { n: 2, icon: 'key' },
+    { n: 3, icon: 'hand' },
+  ];
+  return (
+    <section className="band dark start" aria-labelledby="start-title">
+      <div className="section">
+        <SectionHead id="start-title" kicker="start.kicker" title="start.title" />
+        <ol className="start-steps">
+          {steps.map(({ n, icon }) => (
+            <li key={n} className="reveal">
+              <span className="start-num" aria-hidden="true">
+                0{n}
+              </span>
+              <Icon name={icon} size={22} />
+              <h3>{t(`start.step${n}.title`)}</h3>
+              <p>{t(`start.step${n}.body`)}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
     </section>
   );
 }

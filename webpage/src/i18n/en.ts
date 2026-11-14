@@ -31,9 +31,40 @@ export const en = {
   'hero.eyebrow': 'AI-first browser',
   'hero.title': 'Built with AI. Built for AI.',
   'hero.lede':
-    'A browser for iPhone and Android whose assistant reads the page and uses it for you. Ask it to compare, fill in, book or look something up: it works in your own tabs, remembers what you tell it on your phone, and asks before anything that matters.',
+    'A browser for iPhone and Android whose assistant reads the page and uses it for you.',
   'hero.github': 'View on GitHub',
   'hero.status': 'In development. Coming to the App Store and Google Play; not released yet.',
+
+  'hero.chip1': 'Reads your tabs',
+  'hero.chip2': 'Remembers you',
+  'hero.chip3': 'Asks first',
+  'hero.chip4': 'Your own AI key',
+
+  'statement.kicker': 'About Qutai',
+  'statement.text':
+    'Qutai is a browser with an assistant at its core. It reads the page, compares your tabs, fills in forms, books and researches, remembers what you tell it on your phone, and stops to ask before anything that matters.',
+
+  'art.placeholder': 'Miniature in preparation',
+  'art.hero.alt': 'Ottoman miniature: robot scribes in colourful kaftans read web pages on tablets in a palace library, with the domes of Istanbul through the window.',
+  'art.compare.alt': 'Ottoman miniature: a robot in a bazaar shop weighs two pairs of slippers while two tablets show the shops’ pages.',
+  'art.checkout.alt': 'Ottoman miniature: a robot fills in an order form at a counter and waits, while the patron holds the purse.',
+  'art.booking.alt': 'Ottoman miniature: a robot writes a dinner booking into a calendar scroll in a caravanserai courtyard.',
+  'art.research.alt': 'Ottoman miniature: a robot scholar among open books links passages with gold threads into one report.',
+  'art.memory.alt': 'Ottoman miniature: a robot sorts keepsakes into an inlaid chest while its owner holds the key.',
+
+  'agent.compare.kicker': 'Read, compare, decide',
+  'agent.checkout.kicker': 'Fill, check, stop',
+  'agent.booking.kicker': 'Book, note, remind',
+  'agent.research.kicker': 'Search, read, cite',
+
+  'start.kicker': 'Getting started',
+  'start.title': 'Three steps, once it is out.',
+  'start.step1.title': 'Install Qutai',
+  'start.step1.body': 'Not in the stores yet: build it from the repository today, or follow the project on GitHub.',
+  'start.step2.title': 'Add your AI key',
+  'start.step2.body': 'Anthropic, OpenAI, Gemini, OpenRouter or your own server. A paid Qutai service is planned as an option.',
+  'start.step3.title': 'Give it a task',
+  'start.step3.body': 'Tap the Q in the address bar and say what you need, in your own words.',
 
   'mock.label':
     'Illustration of the Qutai app: a shop page with the assistant panel open. The user asks Qutai to compare the shoe with the one in another tab and add the cheaper one to the cart. Qutai reads both tabs, answers, and a dialog asks the user to allow the click on Add to cart.',

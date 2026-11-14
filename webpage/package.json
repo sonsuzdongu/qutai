@@ -15,7 +15,8 @@
     "assets": "node scripts/make-assets.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p worker/tsconfig.json",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "art": "node scripts/make-art.mjs"
   },
   "dependencies": {
     "react": "^19.3.1",

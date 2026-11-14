@@ -32,9 +32,40 @@ export const tr: Messages = {
   'hero.eyebrow': 'Yapay zekâ odaklı tarayıcı',
   'hero.title': 'Yapay zekâ için, yapay zekâ ile üretildi.',
   'hero.lede':
-    'Asistanı sayfayı okuyan ve sizin yerinize kullanan bir iPhone ve Android tarayıcısı. Karşılaştırmayı, form doldurmayı, rezervasyonu ya da bir şeyi araştırmayı ona bırakın: kendi sekmelerinizde çalışır, ona anlattıklarınızı telefonunuzda hatırlar, önemli bir adımdan önce size sorar.',
+    'Asistanı sayfayı okuyan ve sizin yerinize kullanan bir iPhone ve Android tarayıcısı.',
   'hero.github': 'GitHub’da incele',
   'hero.status': 'Geliştirme aşamasında. App Store ve Google Play’e geliyor; henüz yayımlanmadı.',
+
+  'hero.chip1': 'Sekmeleri okur',
+  'hero.chip2': 'Sizi hatırlar',
+  'hero.chip3': 'Önce sorar',
+  'hero.chip4': 'Kendi AI anahtarınız',
+
+  'statement.kicker': 'Qutai hakkında',
+  'statement.text':
+    'Qutai, merkezinde bir asistan olan bir tarayıcı. Sayfayı okur, sekmelerinizi karşılaştırır, form doldurur, rezervasyon yapar, araştırır; ona anlattıklarınızı telefonunuzda hatırlar ve önemli bir adımdan önce durup size sorar.',
+
+  'art.placeholder': 'Minyatür hazırlanıyor',
+  'art.hero.alt': 'Osmanlı minyatürü: renkli kaftanlı robot kâtipler bir saray kütüphanesinde tabletlerde web sayfaları okuyor; pencereden İstanbul’un kubbeleri görünüyor.',
+  'art.compare.alt': 'Osmanlı minyatürü: çarşıdaki bir dükkânda robot iki çift pabucu tartıyor; iki tablette dükkânların sayfaları açık.',
+  'art.checkout.alt': 'Osmanlı minyatürü: robot tezgâhta sipariş formunu dolduruyor ve bekliyor; kese sahibinin elinde.',
+  'art.booking.alt': 'Osmanlı minyatürü: bir kervansaray avlusunda robot akşam yemeği rezervasyonunu takvim tomarına yazıyor.',
+  'art.research.alt': 'Osmanlı minyatürü: açık kitaplar arasında bir robot âlim, pasajları altın iplerle tek bir rapora bağlıyor.',
+  'art.memory.alt': 'Osmanlı minyatürü: robot hatıraları sedefli bir sandığa yerleştiriyor; anahtar sahibinin elinde.',
+
+  'agent.compare.kicker': 'Oku, karşılaştır, karar ver',
+  'agent.checkout.kicker': 'Doldur, kontrol et, dur',
+  'agent.booking.kicker': 'Ayırt, yaz, hatırlat',
+  'agent.research.kicker': 'Ara, oku, kaynak göster',
+
+  'start.kicker': 'Başlarken',
+  'start.title': 'Yayımlandığında üç adım.',
+  'start.step1.title': 'Qutai’yi kurun',
+  'start.step1.body': 'Henüz mağazalarda değil: bugün depodan derleyin ya da projeyi GitHub’da takip edin.',
+  'start.step2.title': 'AI anahtarınızı ekleyin',
+  'start.step2.body': 'Anthropic, OpenAI, Gemini, OpenRouter ya da kendi sunucunuz. Ücretli Qutai hizmeti seçenek olarak planlanıyor.',
+  'start.step3.title': 'Bir görev verin',
+  'start.step3.body': 'Adres çubuğundaki Q’ya dokunun ve ne istediğinizi kendi sözlerinizle söyleyin.',
 
   'mock.label':
     'Qutai uygulamasının bir çizimi: asistan paneli açık bir mağaza sayfası. Kullanıcı Qutai’den bu ayakkabıyı diğer sekmedekiyle karşılaştırıp ucuz olanı sepete eklemesini istiyor. Qutai iki sekmeyi okuyup yanıt veriyor; bir pencere Sepete ekle tıklaması için kullanıcıdan izin istiyor.',
