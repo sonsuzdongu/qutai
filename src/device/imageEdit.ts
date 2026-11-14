@@ -227,6 +227,9 @@ export async function editImage(source: AttachmentInfo, req: EditRequest, incogn
       );
     const out = tempFile(format === 'jpeg' ? 'jpg' : format);
     out.writeSync(budget.result.data);
+    // storeEditedImage moves the file into the attachment's folder, and moving updates `out` to point there: the
+    // cleanup looks at the temporary path itself, so it never deletes the stored image.
+    const temporary = out.uri;
     const name = editedName(source.name, budget.size, format);
     const info = await storeEditedImage(
       out,
@@ -240,7 +243,8 @@ export async function editImage(source: AttachmentInfo, req: EditRequest, incogn
       },
       incognito,
     ).finally(() => {
-      if (out.exists) out.delete();
+      const left = new File(temporary);
+      if (left.exists) left.delete();
     });
     return { info, format, steps, notes };
   } finally {
