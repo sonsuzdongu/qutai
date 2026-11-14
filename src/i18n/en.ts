@@ -543,7 +543,7 @@ export const en = {
   'site.hint.blocked': "Qutai doesn't read or use this site at all.",
   'site.listTitle': 'Site permissions',
   'site.listHint': 'Sites with their own setting. Tap one to change it; ✕ goes back to the default.',
-  'site.listEmpty': 'No site has its own setting yet. Use "Qutai on this site" in the page menu.',
+  'site.listEmpty': 'No site has its own setting yet. Use "Qutai’s permission on this site" in the page menu.',
   'site.reset': 'Back to default',
   'site.locationTitle': 'Location for this site',
   'site.setting.ask': 'Ask',

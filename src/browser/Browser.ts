@@ -6,6 +6,7 @@ import { closePdf } from '../pdf/reader';
 import { endIncognitoProfile, newIncognitoProfile } from '../device/webviewProfile';
 import type { Session } from '../storage/session';
 import { NEW_TAB_URL, Tab } from './Tab';
+import { t } from '../i18n';
 
 /** New tabs open the app's own new tab page. */
 export const HOME_URL = NEW_TAB_URL;
@@ -14,10 +15,10 @@ export type TabGroup = { id: string; name: string; color: string; collapsed?: bo
 
 export const GROUP_COLORS = ['#c96442', '#3a86ff', '#2a9d8f', '#d4a72c', '#9b5de5', '#e05780'];
 
-/** A new group's name: the opener's site ("trendyol.com"), or "Group n" for pages without one. */
+/** A new group's name: the opener's site ("trendyol.com"), or "Group n" (in the UI language) for pages without one. */
 export function groupNameFor(url: string, n: number): string {
   const host = /^https?:\/\/([^/:?#]+)/i.exec(url)?.[1]?.replace(/^www\./i, '');
-  return host || `Group ${n}`;
+  return host || t('tabs.groupName', { number: n });
 }
 
 /** uid lets a reopened tab get its conversation back (a group's too, when it was the group's last tab). */
