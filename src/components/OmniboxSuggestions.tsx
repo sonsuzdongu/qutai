@@ -17,6 +17,8 @@ type Props = {
   dark?: boolean;
   /** The address bar is at the bottom, so the list opens upwards. */
   above?: boolean;
+  /** Height of the address bar; the list sits right against its edge. */
+  barHeight: number;
   searchEngine: SearchEngineId;
   suggestionsEnabled: boolean;
   onNavigate: (url: string) => void;
@@ -31,6 +33,7 @@ export function OmniboxSuggestions({
   incognito,
   dark,
   above,
+  barHeight,
   searchEngine,
   suggestionsEnabled,
   onNavigate,
@@ -86,7 +89,13 @@ export function OmniboxSuggestions({
   const remoteItems = remoteAllowed && remote.query === query ? remote.items : [];
 
   return (
-    <View style={[styles.panel, above && styles.panelAbove, darkUI && styles.panelDark]}>
+    <View
+      style={[
+        styles.panel,
+        above ? [styles.panelAbove, { bottom: barHeight }] : { top: barHeight },
+        darkUI && styles.panelDark,
+      ]}
+    >
       <ScrollView keyboardShouldPersistTaps="always" style={styles.scroll}>
         {!query && <PasteRow android={canPaste} incognito={darkUI} onPaste={go} />}
 
@@ -211,7 +220,6 @@ function Row({
 const useStyles = makeStyles((c) => ({
   panel: {
     position: 'absolute',
-    top: '100%',
     left: 0,
     right: 0,
     maxHeight: 360,
@@ -226,8 +234,6 @@ const useStyles = makeStyles((c) => ({
     overflow: 'hidden',
   },
   panelAbove: {
-    top: 'auto',
-    bottom: '100%',
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
     borderTopLeftRadius: 14,

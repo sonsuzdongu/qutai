@@ -81,6 +81,8 @@ export function AddressBar({
   const dark = darkUI ? darkStyles : null;
 
   const bottom = position === 'bottom';
+  // Suggestions and the dimmed backdrop start exactly at the bar's edge (percent offsets drift on Android).
+  const [barHeight, setBarHeight] = useState(48);
   // Swiping sideways on the bar switches tabs; taps and vertical moves are left alone.
   const swipe = useMemo(
     () =>
@@ -99,7 +101,11 @@ export function AddressBar({
   };
 
   return (
-    <View style={[styles.bar, bottom && styles.barBottom, dark?.bar]} {...(editing ? {} : swipe.panHandlers)}>
+    <View
+      style={[styles.bar, bottom && styles.barBottom, dark?.bar]}
+      onLayout={(e) => setBarHeight(e.nativeEvent.layout.height)}
+      {...(editing ? {} : swipe.panHandlers)}
+    >
       <IconButton
         icon="back"
         onPress={onBack}
@@ -202,7 +208,7 @@ export function AddressBar({
       {loading && <LoadingBar top={bottom} />}
       {editing && (
         <Pressable
-          style={[styles.backdrop, bottom && styles.backdropAbove]}
+          style={[styles.backdrop, bottom ? { bottom: barHeight } : { top: barHeight }]}
           onPress={finishEditing}
           accessibilityLabel={t('common.close')}
           accessibilityRole="button"
@@ -214,6 +220,7 @@ export function AddressBar({
           incognito={incognito}
           dark={darkUI}
           above={bottom}
+          barHeight={barHeight}
           searchEngine={searchEngine}
           suggestionsEnabled={searchSuggestions}
           onNavigate={(next) => {
@@ -326,8 +333,7 @@ const useStyles = makeStyles((c) => ({
   fieldRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 6 },
   fieldTextFlex: { flex: 1 },
   input: { paddingVertical: 0, height: '100%' },
-  backdrop: { position: 'absolute', top: '100%', left: 0, right: 0, height: 4000, backgroundColor: c.backdrop },
-  backdropAbove: { top: 'auto', bottom: '100%' },
+  backdrop: { position: 'absolute', left: 0, right: 0, height: 4000, backgroundColor: c.backdrop },
   barBottom: {
     borderBottomWidth: 0,
     borderTopWidth: StyleSheet.hairlineWidth,
