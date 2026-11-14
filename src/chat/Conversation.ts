@@ -47,7 +47,10 @@ export class Conversation {
   research = false;
   /** Saved messages have been read from disk (or there was nothing to read). */
   loaded = false;
+  /** Reading the saved messages has started (so they are read only once). */
+  loading = false;
 
+  private loadedCallbacks: (() => void)[] = [];
   private abortController: AbortController | null = null;
   private streamingId: string | null = null;
   private pendingText = '';
@@ -63,6 +66,12 @@ export class Conversation {
     public key: string,
     public incognito = false,
   ) {}
+
+  /** Runs fn once the saved messages have been read: right away if they have. */
+  whenLoaded(fn: () => void) {
+    if (this.loaded) fn();
+    else this.loadedCallbacks.push(fn);
+  }
 
   get isEmpty(): boolean {
     return this.items.length === 0 && this.turns.length === 0;
@@ -148,6 +157,9 @@ export class Conversation {
     // Something typed since the tab opened wins over the saved draft.
     if (saved?.draft && !this.draft) this.draft = saved.draft;
     this.onChange();
+    const callbacks = this.loadedCallbacks;
+    this.loadedCallbacks = [];
+    callbacks.forEach((fn) => fn());
   }
 
   clear() {

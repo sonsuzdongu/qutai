@@ -185,10 +185,10 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
   - [x] Decide what happens when a tab leaves or joins a group, a group is dissolved or its last tab closes: joining, the group's chat wins (a new group takes over its first tab's chat); leaving, the chat stays with the group and the tab gets its own back; dissolving, the chat moves to the active (or first) tab; the last tab closing keeps it like a closed tab's chat, so reopening the tab brings it back
   - [x] Saved chats are keyed by tab `uid` today (`src/storage/chat.ts`): add group keys and migrate (`chat:group:<id>`; on upgrade a group takes the chat of one of its tabs, the one with the newest messages)
   - [x] Incognito groups still never write to disk
-  - [ ] Known limitation: when a group is founded on a tab that hasn't been shown since the app started (its
-    conversation not loaded yet) and a tab with a conversation then joins, the joining tab's conversation is hidden
-    behind the group's empty one until it leaves the group (`Browser.joinGroupChat` treats a conversation that isn't
-    loaded as not blank)
+  - [x] Conversations not read from disk yet (a tab or group not shown since the app started): a join waits until the
+    group's and the tab's conversations are read, and joins are decided in order, so the group keeps the first
+    non-empty one and a group conversation that turns out to be empty yields to a joining tab's
+    (`Browser.joinGroupChat` / `settleGroupChat`)
 - [x] "Look at the source code": the assistant tries to open `view-source:` URLs, which the WebView can't show. Read the source from the DOM instead (e.g. a `read_source` tool returning `document.documentElement.outerHTML`, split into chunks like `read_page`; or scripts and styles on request), and make `navigate` refuse `view-source:` with a hint to use it. Mention it in the system prompt
 
 ## Other

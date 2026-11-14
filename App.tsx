@@ -116,6 +116,16 @@ function logAction(entry: ActionEntry) {
 // Conversations saved by earlier versions belong to the tab that is active on the first start.
 let legacyChatPending = true;
 
+/** Reads a conversation's saved messages from disk, once (the key is read when the database is ready). */
+function readConversation(chat: Conversation, adoptLegacy = false) {
+  if (chat.loaded || chat.loading) return;
+  chat.loading = true;
+  getDb()
+    .then((db) => loadChat(db, chat.key, { adoptLegacy }))
+    .catch(() => null)
+    .then((saved) => chat.restore(saved));
+}
+
 /** The agent's "may I?" before an action. Stopping the task (signal) dismisses it as declined. */
 async function askConfirmation(description: string, host: string | null, signal: AbortSignal): Promise<boolean> {
   const result = await dialog.show({
@@ -283,16 +293,15 @@ function BrowserApp({
   const darkMode = useColorScheme() === 'dark';
   useEffect(() => setHapticsEnabled(settings.haptics), [settings.haptics]);
 
-  // A tab's (or its group's) saved conversation is read from disk the first time it is shown.
+  // A tab's (or its group's) saved conversation is read from disk the first time it is shown, or when
+  // a group must decide which conversation it keeps.
   useEffect(() => {
     if (conversation.loaded) return;
     const adoptLegacy = legacyChatPending;
     legacyChatPending = false;
-    getDb()
-      .then((db) => loadChat(db, conversation.key, { adoptLegacy }))
-      .catch(() => null)
-      .then((saved) => conversation.restore(saved));
+    readConversation(conversation, adoptLegacy);
   }, [conversation]);
+  useEffect(() => browserInstance.onChatLoadNeeded((chat) => readConversation(chat)), [browserInstance]);
 
   // Once at start: load site permissions and trim the activity history and the log of what was sent to the AI.
   useEffect(() => {

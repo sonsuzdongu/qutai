@@ -49,6 +49,9 @@ export class Browser {
   /** Each group's conversation, shared by its tabs (by group id). */
   private groupChats = new Map<string, Conversation>();
   private chatMoveListeners = new Set<(chat: Conversation, fromKey: string) => void>();
+  private chatLoadListeners = new Set<(chat: Conversation) => void>();
+  /** Tabs that joined a group, in order, whose conversation the group hasn't decided on yet (by group id). */
+  private pendingJoins = new Map<string, Tab[]>();
 
   private counter = 0;
   /** The tab the agent is working in, which must not fall asleep under it. */
@@ -103,6 +106,17 @@ export class Browser {
     this.chatMoveListeners.add(listener);
     return () => {
       this.chatMoveListeners.delete(listener);
+    };
+  }
+
+  /**
+   * Called when a conversation that may not be on screen must be read from disk now (to decide which
+   * conversation a group keeps). The listener reads it once and calls `restore`.
+   */
+  onChatLoadNeeded(listener: (chat: Conversation) => void) {
+    this.chatLoadListeners.add(listener);
+    return () => {
+      this.chatLoadListeners.delete(listener);
     };
   }
 
@@ -451,13 +465,49 @@ export class Browser {
   }
 
   /**
-   * A tab joined a group: the group's conversation wins. A group that has none yet (just created)
-   * takes over the tab's, and the tab starts a new one of its own. Otherwise the tab's own
-   * conversation is left as it is (saved under the tab) and comes back if the tab leaves.
+   * A tab joined a group: the group's conversation wins. A group that has none yet (just created, or
+   * its saved one turned out to be empty) takes over the tab's, and the tab starts a new one of its own.
+   * Otherwise the tab's own conversation is left as it is (saved under the tab) and comes back if the tab
+   * leaves. Joins are decided in the order the tabs joined, each once the group's and the tab's
+   * conversations have been read from disk, so the outcome is the same as if both had been loaded.
    */
   private joinGroupChat(tab: Tab, groupId: string) {
-    const shared = this.groupChats.get(groupId);
-    if (!shared) return;
+    if (!this.groupChats.has(groupId)) return;
+    const queue = this.pendingJoins.get(groupId) ?? [];
+    queue.push(tab);
+    this.pendingJoins.set(groupId, queue);
+    this.settleGroupChat(groupId);
+  }
+
+  /** Decides the pending joins of a group in order, reading conversations from disk first where needed. */
+  private settleGroupChat(groupId: string) {
+    const queue = this.pendingJoins.get(groupId) ?? [];
+    while (queue.length) {
+      const shared = this.groupChats.get(groupId);
+      if (!shared) break;
+      const tab = queue[0];
+      if (tab.groupId !== groupId || !this.tabs.includes(tab)) {
+        // It left the group (or closed) before its join was decided: nothing to decide.
+        queue.shift();
+        continue;
+      }
+      const unread = [shared, tab.conversation].filter((c) => !c.loaded);
+      if (unread.length) {
+        unread.forEach((chat) => {
+          chat.whenLoaded(() => this.settleGroupChat(groupId));
+          this.chatLoadListeners.forEach((l) => l(chat));
+        });
+        return;
+      }
+      queue.shift();
+      this.decideJoin(tab, groupId, shared);
+      this.emit();
+    }
+    this.pendingJoins.delete(groupId);
+  }
+
+  /** `joinGroupChat`'s rule, once both conversations have been read from disk. */
+  private decideJoin(tab: Tab, groupId: string, shared: Conversation) {
     if (shared.isBlank && !tab.conversation.isBlank) {
       const own = tab.conversation;
       const fresh = new Conversation(this.emit, tab.uid, tab.incognito);
@@ -468,7 +518,7 @@ export class Browser {
       this.moveChat(own, groupChatKey(groupId));
     } else if (tab.incognito && !shared.incognito) {
       // A group that ever held an incognito tab never writes its conversation to disk; the
-      // listener removes what was saved before.
+      // listener removes what was saved before (after it was read, so it is still shown).
       shared.incognito = true;
       this.chatMoveListeners.forEach((l) => l(shared, shared.key));
     }
@@ -514,6 +564,9 @@ export class Browser {
     this.groups = this.groups.filter((g) => this.tabs.some((t) => t.groupId === g.id));
     for (const id of this.groupChats.keys()) {
       if (!this.groups.some((g) => g.id === id)) this.groupChats.delete(id);
+    }
+    for (const id of this.pendingJoins.keys()) {
+      if (!this.groupChats.has(id)) this.pendingJoins.delete(id);
     }
   }
 
