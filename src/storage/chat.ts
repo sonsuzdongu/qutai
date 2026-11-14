@@ -3,10 +3,11 @@ import type { Turn } from '../ai/types';
 import type { ChatItem } from '../components/AssistantPanel';
 import { Db, deleteKey, getJson, setJson } from './db';
 
-export type SavedChat = { items: ChatItem[]; turns: Turn[] };
+export type SavedChat = { items: ChatItem[]; turns: Turn[]; draft?: string };
 
 const MAX_ITEMS = 300;
 const MAX_TURNS_JSON = 1_000_000;
+const MAX_DRAFT = 20_000;
 
 /**
  * Shrinks a conversation for storage: page snapshots are compacted the same way as when
@@ -27,7 +28,11 @@ export function prepareForStorage(chat: SavedChat): SavedChat {
     }
     turns = turns.slice(nextUser);
   }
-  return { items: chat.items.slice(-MAX_ITEMS), turns };
+  return {
+    items: chat.items.slice(-MAX_ITEMS),
+    turns,
+    ...(chat.draft ? { draft: chat.draft.slice(0, MAX_DRAFT) } : {}),
+  };
 }
 
 const LEGACY_KEY = 'chat';
@@ -53,7 +58,7 @@ export async function loadChat(db: Db, uid: string, { adoptLegacy = false } = {}
 }
 
 export async function saveChat(db: Db, uid: string, chat: SavedChat): Promise<void> {
-  if (chat.items.length === 0 && chat.turns.length === 0) return deleteKey(db, keyFor(uid));
+  if (chat.items.length === 0 && chat.turns.length === 0 && !chat.draft) return deleteKey(db, keyFor(uid));
   await setJson(db, keyFor(uid), prepareForStorage(chat));
 }
 

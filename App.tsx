@@ -299,6 +299,13 @@ function BrowserApp({
   }, [browserInstance]);
 
   /** Writes a tab's conversation; incognito ones never touch the disk and private ones are removed. */
+  // The chat input is saved shortly after typing stops, so closing the app doesn't lose it.
+  const [draftSaver] = useState(() => ({ timer: null as ReturnType<typeof setTimeout> | null }));
+  const persistDraftSoon = (owner: Tab) => {
+    if (draftSaver.timer) clearTimeout(draftSaver.timer);
+    draftSaver.timer = setTimeout(() => persistConversation(owner), 800);
+  };
+
   const persistConversation = (owner: Tab) => {
     if (owner.incognito) return;
     const chat = owner.conversation;
@@ -831,7 +838,10 @@ function BrowserApp({
             open={panelOpen}
             quickActions={quickActions}
             draft={conversation.draft}
-            onDraftChange={(text) => conversation.setDraft(text)}
+            onDraftChange={(text) => {
+              conversation.setDraft(text);
+              persistDraftSoon(tab);
+            }}
             focusRequest={focusRequest}
             research={conversation.research}
             onResearchChange={(on) => conversation.setResearch(on)}

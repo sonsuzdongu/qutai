@@ -18,7 +18,8 @@ function continueItemIds(items: ChatItem[]) {
   itemCounter = Math.max(itemCounter, ...items.map((item) => Number(item.id) || 0));
 }
 
-export type SavedConversation = { items: ChatItem[]; turns: Turn[] };
+/** draft: what the user was typing, so it survives the app being closed. */
+export type SavedConversation = { items: ChatItem[]; turns: Turn[]; draft?: string };
 
 /** One tab's conversation with the assistant: what is shown, what the model sees, and the message being typed. */
 export class Conversation {
@@ -117,6 +118,8 @@ export class Conversation {
       this.items = [...saved.items, ...this.items];
       this.turns.unshift(...saved.turns);
     }
+    // Something typed since the tab opened wins over the saved draft.
+    if (saved?.draft && !this.draft) this.draft = saved.draft;
     this.onChange();
   }
 
@@ -145,6 +148,6 @@ export class Conversation {
   }
 
   toSaved(): SavedConversation {
-    return { items: this.items, turns: this.turns };
+    return { items: this.items, turns: this.turns, draft: this.draft };
   }
 }
