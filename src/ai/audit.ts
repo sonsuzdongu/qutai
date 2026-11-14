@@ -8,6 +8,7 @@ const TOOL_KINDS: Record<string, SentKind> = {
   read_source: 'source',
   view_screenshot: 'screenshot',
   view_attachment: 'attachment',
+  read_pdf: 'pdf',
   read_tab: 'tab',
   search_history: 'history',
   get_location: 'location',

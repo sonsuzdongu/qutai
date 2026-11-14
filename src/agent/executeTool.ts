@@ -18,7 +18,7 @@ import { openSystemSettings, PermissionDeniedError } from '../device/settings';
 import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import type { AttachmentInfo } from '../chat/attachments';
-import { modelImageData } from '../device/attachments';
+import { readPdfTool, viewAttachmentTool } from './fileTools';
 import { sleep } from '../utils/sleep';
 import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch, SiteVisits } from '../storage/history';
@@ -114,6 +114,8 @@ export type ToolContext = {
   personalGrants?: { allowed: Set<string>; declined: Set<string> };
   /** The files the user attached in this conversation (its manifest), for tools that take an attachment id. */
   attachments?: () => AttachmentInfo[];
+  /** The model takes image input (false: tools that would return images say so instead). */
+  imageInput?: boolean;
 };
 
 /** Tools that need a loaded web page. */
@@ -161,6 +163,10 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.viewScreenshot');
     case 'view_attachment':
       return t('action.viewAttachment');
+    case 'read_pdf':
+      return input.view_pages !== undefined && input.view_pages !== null
+        ? t('action.viewPdfPages')
+        : t('action.readPdf');
     case 'click_at':
       return t('action.clickAt', { x: str(input.x), y: str(input.y) });
     case 'read_aloud':
@@ -747,37 +753,6 @@ function saveFileTool(input: Record<string, unknown>, ctx: ToolContext): ToolOut
   };
 }
 
-/** An attachment of this conversation by the id the model gives, or an error result listing the ids there are. */
-export function findAttachment(
-  input: Record<string, unknown>,
-  ctx: ToolContext,
-  kind: AttachmentInfo['kind'],
-): AttachmentInfo | ToolOutput {
-  const id = String(input.id ?? input.attachment_id ?? '').trim();
-  const all = ctx.attachments?.() ?? [];
-  const found = all.find((a) => a.id === id);
-  const listed = all.filter((a) => a.kind === kind).map((a) => `${a.id} "${a.name}"`);
-  const known = listed.length ? `Attachments of that kind in this conversation: ${listed.join(', ')}.` : 'There are none.';
-  if (!found) return { content: `No attachment with id=${id || '(none)'} in this conversation. ${known}`, isError: true };
-  if (found.kind !== kind) return { content: `${id} is not ${kind === 'pdf' ? 'a PDF' : 'an image'}. ${known}`, isError: true };
-  return found;
-}
-
-/** Sends an image the user attached earlier again (its model copy), for one no longer in the history. */
-async function viewAttachmentTool(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
-  const found = findAttachment(input, ctx, 'image');
-  if ('content' in found) return found;
-  const data = found.model ? await modelImageData(found.id).catch(() => null) : null;
-  if (!data || !found.model)
-    return { content: `The image ${found.id} "${found.name}" is no longer on this phone.`, isError: true };
-  const size = found.width && found.height ? `${found.width}×${found.height}, ` : '';
-  return {
-    content: `Image ${found.id} "${found.name}" (${size}shown at ${found.model.width}×${found.model.height}), attached by the user.`,
-    isError: false,
-    images: [{ mediaType: found.model.mimeType, data }],
-  };
-}
-
 /** Two decimal coordinates, e.g. "41.0082, 28.9784": a location is not something to remember. */
 const COORDINATES = /-?\d{1,3}\.\d{3,}\s*[,;/ ]\s*-?\d{1,3}\.\d{3,}/;
 /** A date and time as read_calendar returns them ("2026-11-15T19:30"); two or more look like a copied schedule. */
@@ -880,7 +855,7 @@ function tabList(ctx: ToolContext): string {
     .join('\n');
 }
 
-type ToolOutput = { content: string; isError: boolean; images?: ToolImage[] };
+export type ToolOutput = { content: string; isError: boolean; images?: ToolImage[] };
 
 export type EmailDraft = { to: string[]; subject: string; body: string };
 
@@ -917,6 +892,7 @@ const LOGGED_TOOLS = new Set([
   'read_calendar',
   'download_file',
   'save_file',
+  'read_pdf',
 ]);
 
 /** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
@@ -926,6 +902,8 @@ function actionTarget(
   ctx: ToolContext,
 ): { url: string; tab?: Tab } | null {
   if (name === 'navigate' || name === 'open_tab') return { url: normalizeUrl(input.url) };
+  // A PDF the user attached comes from no site.
+  if (name === 'read_pdf' && input.attachment_id !== undefined && input.attachment_id !== '') return null;
   if (
     [
       'list_tabs',
@@ -1156,6 +1134,7 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
   if (name === 'draft_whatsapp') return draftWhatsAppTool(input, ctx);
   if (name === 'save_file') return saveFileTool(input, ctx);
   if (name === 'view_attachment') return viewAttachmentTool(input, ctx);
+  if (name === 'read_pdf') return readPdfTool(input, ctx);
 
   const tab = currentTab(ctx);
   if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;

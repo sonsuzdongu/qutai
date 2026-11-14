@@ -1,4 +1,4 @@
-import { Directory, File, Paths } from 'expo-file-system';
+import { Directory, File, FileMode, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { t } from '../i18n';
 import {
@@ -249,6 +249,59 @@ export async function takePhoto(incognito: boolean): Promise<AttachmentInfo | nu
     incognito,
     `photo-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}`,
   );
+}
+
+/** PDFs larger than this are not attached (or read): the reader holds the whole file in memory. */
+export const MAX_PDF_BYTES = 30_000_000;
+
+/**
+ * Lets the user choose a PDF from Files (iOS) or the system document picker (Android); other kinds of document
+ * are not offered. The file is copied into its attachment folder. Resolves null when cancelled.
+ */
+export async function pickPdf(incognito: boolean): Promise<AttachmentInfo | null> {
+  let DocumentPicker: typeof import('expo-document-picker');
+  try {
+    DocumentPicker = await import('expo-document-picker');
+  } catch {
+    throw new AttachmentError(t('attach.needsBuild'));
+  }
+  const result = await DocumentPicker.getDocumentAsync({ type: 'application/pdf', copyToCacheDirectory: true, multiple: false });
+  if (result.canceled || !result.assets?.length) return null;
+  const asset = result.assets[0];
+  const picked = new File(asset.uri);
+  try {
+    const size = asset.size ?? picked.size ?? 0;
+    if (size > MAX_PDF_BYTES) throw new AttachmentError(t('attach.pdfTooLarge', { max: '30 MB' }));
+    // Some providers of files report no type or a generic one; the file's first bytes decide.
+    const head = picked.open(FileMode.ReadOnly);
+    let isPdf = false;
+    try {
+      isPdf = String.fromCharCode(...head.readBytesSync(Math.min(1024, size || 1024))).includes('%PDF-');
+    } finally {
+      head.close();
+    }
+    if (!isPdf) throw new AttachmentError(t('attach.onlyPdf'));
+    return importFile(picked, asset.name || 'document.pdf', 'application/pdf', size, incognito);
+  } finally {
+    // The picker's cache copy goes once ours is made.
+    if (picked.exists && picked.uri.startsWith(Paths.cache.uri)) picked.delete();
+  }
+}
+
+/** Copies a file the user chose (a PDF, or a downloaded file) into a new attachment folder, untouched. */
+export function importFile(source: File, name: string, mimeType: string, size: number, incognito: boolean): AttachmentInfo {
+  const id = newAttachmentId(incognito);
+  const dir = folderOf(id);
+  dir.create({ intermediates: true, idempotent: true });
+  try {
+    const safe = safeFileName(name, 'document');
+    const original = new File(dir, `original.${extensionOf(safe, mimeType)}`);
+    source.copySync(original);
+    return { id, kind: mimeType === 'application/pdf' ? 'pdf' : 'image', name: safe, mimeType, size: original.size || size };
+  } catch (e) {
+    if (dir.exists) dir.delete();
+    throw e;
+  }
 }
 
 /** Removes an attachment's files right away (a thumbnail removed before sending). */

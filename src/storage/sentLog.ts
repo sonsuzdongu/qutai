@@ -18,6 +18,7 @@ export type SentKind =
   | 'source'
   | 'screenshot'
   | 'attachment'
+  | 'pdf'
   | 'tab'
   | 'history'
   | 'memory'

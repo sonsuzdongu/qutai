@@ -89,3 +89,15 @@ export function parseContextTarget(data: string): ContextTarget | null {
   };
   return target.href || target.src ? target : null;
 }
+
+/** A link that most likely leads to a PDF: its path ends in .pdf, or its text says PDF. */
+export function looksLikePdfLink(href: string, linkText = ''): boolean {
+  if (!isWeb(href)) return false;
+  let path = '';
+  try {
+    path = decodeURIComponent(new URL(href).pathname);
+  } catch {
+    path = href.split(/[?#]/)[0];
+  }
+  return /\.pdf$/i.test(path) || /\bpdf\b/i.test(linkText);
+}

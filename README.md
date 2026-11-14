@@ -71,6 +71,25 @@ when the incognito session ends and at every start. The encrypted backup leaves 
 shows "Not available"). "What was sent to the AI" shows attached images with the message like screenshots. Pasting an
 image into the field is not supported (React Native's text input doesn't expose pasted images).
 
+Reading PDFs: the assistant's `read_pdf` reads a PDF as text, page by page with page markers, from the PDF open in the
+tab, a PDF link on the page (by ref) or an address, or a PDF the user attached (attach sheet › "PDF from Files", or
+"Ask Qutai" on a PDF in Qutai's Downloads on iOS). It returns the page count, the title and other metadata when the
+file has them, and up to 20,000 characters of text per call, cut at a page boundary with a note saying which pages to
+ask for next. Pages without a text layer (scanned) are said to be so, and `view_pages` draws up to 3 pages as images
+for models that take images. The PDF is read on the phone for every provider by Mozilla PDF.js (`pdfjs-dist`,
+Apache-2.0, the same licence as Qutai), bundled with the app rather than loaded from a CDN: `postinstall`
+(`scripts/build-pdf-reader.js`) writes its legacy build (the one that supports Safari 18+ / iOS 18+ and Chrome 125+)
+and its JBIG2 and JPEG 2000 decoders (BSD-licensed, from PDFium and OpenJPEG) into `src/pdf/pdfjs.generated.json`
+(about 2.3 MB added to the app; not committed). It runs in a hidden WebView created only while PDFs are read
+(`src/components/PdfReaderHost.tsx`, `src/pdf/reader.ts`), whose page allows no network request at all. PDFs are
+fetched like downloads but into memory only: through the tab's page first (with the site's cookies), otherwise directly
+(on Android with the WebView's cookies, on iOS without); at most 30 MB; never saved to Downloads; a blocked site is
+refused, a read-only one may be read. Native PDF input of the providers (Anthropic `document` blocks, OpenAI
+`input_file`, Gemini `document` parts, OpenRouter `file` parts) is not used: text extraction works the same for all
+five, costs far less per page, and scanned pages go through `view_pages`. A long-pressed PDF link offers "Read with
+Qutai" (Android's WebView can't show PDFs, so opening one still downloads it). PDF text is untrusted page content (the
+system prompt's safety rules name it), and "What was sent to the AI" lists it as "PDF text".
+
 From the page menu (⋮) and by asking the agent: save the page as PDF (from its HTML, or from screenshots for pages
 that come out wrong), save a screenshot of the visible area or the whole page (scrolled and stitched) to Photos,
 read the page aloud, share/copy the link. When needed, the agent can also look at a screenshot of the page.
@@ -264,7 +283,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/content/filterLists.ts`, `src/content/blocking.ts` | Ad and tracker blocking: filter lists reduced to domains (pure parser and matcher), their download, updates and per-platform compilation; `src/content/adBlock.ts` is the built-in script blocker |
 | `src/backup/` | The encrypted backup file: what goes in it, the encryption, and merging or replacing on import |
 | `src/ai/audit.ts`, `src/storage/sentLog.ts` | "What was sent to the AI": the entry recorded for each request and how long it is kept |
-| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`, `view_attachment`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
+| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`, `view_attachment`, `read_pdf`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |

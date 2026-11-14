@@ -14,11 +14,15 @@ type Props = {
   store: DownloadStore;
   onOpen: (entry: DownloadEntry) => void;
   onDelete: (entry: DownloadEntry) => void;
+  /** "Ask Qutai" on a downloaded PDF: attaches it to the conversation on screen. */
+  onAsk?: (entry: DownloadEntry) => void;
   onClose: () => void;
 };
 
+const isPdf = (entry: DownloadEntry) => /\.pdf$/i.test(entry.name);
+
 /** Files downloaded in Qutai (iOS; Android uses the system Downloads folder). Tap to share or save to Files. */
-export function DownloadsScreen({ visible, store, onOpen, onDelete, onClose }: Props) {
+export function DownloadsScreen({ visible, store, onOpen, onDelete, onAsk, onClose }: Props) {
   const styles = useStyles();
   useSyncExternalStore(store.subscribe, store.getVersion);
   const entries = store.list();
@@ -82,6 +86,17 @@ export function DownloadsScreen({ visible, store, onOpen, onDelete, onClose }: P
                   {[formatSize(item.size), dayLabel(item.createdAt)].filter(Boolean).join(' · ')}
                 </Text>
               </View>
+              {onAsk && isPdf(item) ? (
+                <Pressable
+                  onPress={() => onAsk(item)}
+                  hitSlop={8}
+                  style={styles.ask}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('downloads.askLabel', { name: item.name })}
+                >
+                  <Text style={styles.askText}>{t('downloads.ask')}</Text>
+                </Pressable>
+              ) : null}
               <Pressable
                 onPress={() => onDelete(item)}
                 hitSlop={10}
@@ -127,6 +142,8 @@ const useStyles = makeStyles((c) => ({
     borderColor: c.separator,
   },
   pressed: { backgroundColor: c.pressed },
+  ask: { paddingHorizontal: 8, paddingVertical: 6 },
+  askText: { fontSize: 14, color: c.tintText, fontWeight: '600' },
   icon: { fontSize: 22 },
   texts: { flex: 1, gap: 2 },
   name: { fontSize: 15, color: c.text },

@@ -49,6 +49,7 @@ const SAFE_TO_RETRY = new Set([
   'read_tab',
   'view_screenshot',
   'view_attachment',
+  'read_pdf',
   'list_tabs',
   'scroll',
   'scroll_to',

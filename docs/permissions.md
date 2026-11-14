@@ -193,6 +193,9 @@ Qutai doesn't call `canOpenURL`; links to other apps go straight to `openURL`.
   is processed by the platform's speech service, not collected by Qutai.
 - Camera: QR codes are decoded on the device; photos and videos for uploads go only to the page the user is
   uploading to.
+- PDFs (assistant): a PDF the user attaches comes from the system document picker (no permission). `read_pdf` reads PDFs
+  on the phone (PDF.js in a hidden WebView that can make no network request); only the extracted text (or, for scanned
+  pages the assistant asks to see, page images) goes to the AI provider. Fetched PDFs are kept in memory only.
 - Attachments (assistant panel): images the user picks (system photo picker, no library access) or photos they take
   go to the AI provider with the message they are attached to (the attach sheet says so). The copy sent is resized and
   re-encoded, which strips EXIF data such as the location; the original stays on the phone with the conversation and is

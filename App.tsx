@@ -24,18 +24,22 @@ import {
   AttachmentError,
   deleteAttachment,
   forgetIncognitoAttachments,
+  importFile,
+  MAX_PDF_BYTES,
   pickImages,
+  pickPdf,
   pruneAttachments,
   saveAttachmentToPhotos,
   shareAttachment,
   takePhoto,
 } from './src/device/attachments';
 import { AttachmentPreview } from './src/components/AttachmentViews';
+import { PdfReaderHost } from './src/components/PdfReaderHost';
 import { geminiStreamingAvailable } from './src/ai/gemini';
 import { getProvider, isConfigured, modelLabel, requestTarget } from './src/ai/providers';
 import { loadCatalog } from './src/ai/openrouterModels';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
-import type { ContextTarget } from './src/browser/contextMenu';
+import { ContextTarget, looksLikePdfLink } from './src/browser/contextMenu';
 import { quoteSelection } from './src/browser/selection';
 import type { Tab } from './src/browser/Tab';
 import { useHardwareBack } from './src/browser/useHardwareBack';
@@ -117,7 +121,8 @@ import { SentLogScreen } from './src/components/SentLogScreen';
 import { bump, setHapticsEnabled, success, tick } from './src/device/haptics';
 import { DownloadCancelled, deleteDownloadedFile, downloadFile, startAgentDownload } from './src/device/download';
 import { FileExpiredError, saveComposedFileToFolder, shareComposedFile } from './src/device/composedFile';
-import { DownloadStore } from './src/storage/downloads';
+import { DownloadEntry, DownloadStore } from './src/storage/downloads';
+import { File } from 'expo-file-system';
 import { DownloadsScreen } from './src/components/DownloadsScreen';
 import * as Sharing from 'expo-sharing';
 import { SitePermissionStore } from './src/storage/sitePermissions';
@@ -795,14 +800,16 @@ function BrowserApp({
   const [previewAttachment, setPreviewAttachment] = useState<AttachmentInfo | null>(null);
   const attachmentIncognito = (chat: Conversation) => chat.incognito || chat.privacy.touchedIncognito;
 
-  const attach = async (how: 'photos' | 'camera') => {
+  const attach = async (how: 'photos' | 'camera' | 'file') => {
     const chat = conversation;
     const room = MAX_ATTACHMENTS - chat.pending.length;
     if (room <= 0) return toast.show(t('attach.full', { max: MAX_ATTACHMENTS }));
     try {
       const incognito = attachmentIncognito(chat);
       const added =
-        how === 'photos' ? await pickImages(room, incognito) : [await takePhoto(incognito)].filter((a) => a !== null);
+        how === 'photos'
+          ? await pickImages(room, incognito)
+          : [await (how === 'camera' ? takePhoto(incognito) : pickPdf(incognito))].filter((a) => a !== null);
       // Anything over the limit (several picked while another was added) goes again.
       chat.addPending(added).forEach((a) => deleteAttachment(a.id));
     } catch (e) {
@@ -812,6 +819,25 @@ function BrowserApp({
         return;
       }
       toast.show(e instanceof AttachmentError ? e.message : t('attach.failed'));
+    }
+  };
+
+  /** "Ask Qutai" on a downloaded PDF (iOS Downloads): attached to the conversation on screen, ready to ask about. */
+  const askAboutDownload = (entry: DownloadEntry) => {
+    const chat = conversation;
+    if (chat.pending.length >= MAX_ATTACHMENTS) return toast.show(t('attach.full', { max: MAX_ATTACHMENTS }));
+    try {
+      const file = new File(entry.uri);
+      if (!file.exists) return toast.show(t('attach.gone'));
+      if (file.size > MAX_PDF_BYTES) return toast.show(t('attach.pdfTooLarge', { max: '30 MB' }));
+      const info = importFile(file, entry.name, 'application/pdf', file.size, attachmentIncognito(chat) || !!entry.incognito);
+      chat.addPending([info]);
+      if (!chat.draft.trim()) chat.setDraft(t('downloads.askDraft'));
+      setDownloadsVisible(false);
+      setPanelOpen(true);
+      setFocusRequest((n) => n + 1);
+    } catch {
+      toast.show(t('attach.failed'));
     }
   };
 
@@ -1230,6 +1256,17 @@ function BrowserApp({
           },
         },
       );
+      // A PDF link: read it in the chat instead of downloading it (Android's WebView can't show PDFs).
+      if (looksLikePdfLink(href, target.linkText)) {
+        actions.push({
+          icon: 'pdf',
+          label: t('contextMenu.readPdf'),
+          onPress: () => {
+            setPanelOpen(true);
+            send(t('contextMenu.readPdfPrompt', { url: href }));
+          },
+        });
+      }
     }
     if (target.src) {
       const src = target.src;
@@ -1650,6 +1687,7 @@ function BrowserApp({
             onOpen={(entry) =>
               runAction(() => Sharing.shareAsync(entry.uri, { dialogTitle: entry.name }).then(() => undefined))
             }
+            onAsk={askAboutDownload}
             onDelete={(entry) =>
               runAction(async () => {
                 deleteDownloadedFile(entry.uri);
@@ -1799,6 +1837,7 @@ function BrowserApp({
             actions={[
               { label: t('attach.photos'), onPress: () => attach('photos') },
               { label: t('attach.camera'), onPress: () => attach('camera') },
+              { label: t('attach.file'), onPress: () => attach('file') },
             ]}
             dark={darkMode}
             onClose={() => setAttachSheet(false)}
@@ -1829,6 +1868,7 @@ function BrowserApp({
           />
           <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
           <CaptureOverlay />
+          <PdfReaderHost />
           <Toast key={toast.key} message={toast.message} action={toast.action} onHidden={toast.hide} />
           <DialogHost root />
         </View>
