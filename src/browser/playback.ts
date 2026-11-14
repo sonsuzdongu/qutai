@@ -58,12 +58,14 @@ type Report = {
 
 /**
  * `resumeVideo` (iOS, "Keep playing in the background" on, never incognito): WebKit pauses <video> elements when
- * the app leaves the foreground (audio-only media and picture-in-picture go on). The page sees that pause and then,
- * at once, visibilitychange to hidden; a video that was paused that way (within a second before the page became
- * hidden, unmuted, not ended) is played again once, which the audio background mode allows: its sound goes on, the
- * picture doesn't. A pause while the page is visible for longer (the user's own) is never undone, nor one that
- * comes after the page is hidden (a site that pauses itself on hidden keeps doing so), and each video is resumed at
- * most once per time the app leaves.
+ * the app leaves the foreground (audio-only media and picture-in-picture go on), and some sites pause their own
+ * player when the page becomes hidden (YouTube's mobile site). When the page becomes hidden while audible media
+ * plays (or such media was paused within 1.5 s before), the page is kept from seeing it: document.hidden and
+ * visibilityState stay "visible" and the visibilitychange events of leaving and coming back are stopped before the
+ * page's own listeners. Media paused just before that, or within 4 s after, is played again (at most 3 times per
+ * element), which the audio background mode allows: the sound goes on, the picture doesn't. Pages that don't play
+ * anything when the app leaves see visibility as usual. Development builds print each step in the Metro terminal
+ * ("[Qutai playback]").
  */
 export function playbackScript(nonce: string, incognito: boolean, privateLabel: string, resumeVideo = false): string {
   return `(function () {
@@ -74,6 +76,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
   var PRIVATE_LABEL = ${JSON.stringify(privateLabel)};
   var POLYFILL = ${Platform.OS === 'android' ? 'true' : 'false'};
   var RESUME_VIDEO = ${resumeVideo && !incognito ? 'true' : 'false'};
+  var DEBUG = ${__DEV__ ? 'true' : 'false'};
   var HEARTBEAT = ${HEARTBEAT_MS};
   var ME = window.HTMLMediaElement;
   if (!ME) return;
@@ -128,29 +131,88 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     }, true);
   });
 
-  // iOS: a video WebKit paused because the app left the foreground plays on (sound only); see resumeVideo above.
-  var gVisibility = window.Document && getter(Document.prototype, 'visibilityState');
-  if (RESUME_VIDEO && VE && gVisibility) {
-    var systemPaused = [];
-    var resumed = [];
+  // iOS: media keeps playing when the app leaves the foreground; see resumeVideo above.
+  var docProto = window.Document && Document.prototype;
+  var gVisibility = getter(docProto, 'visibilityState');
+  var gHidden = getter(docProto, 'hidden');
+  if (RESUME_VIDEO && gVisibility && gHidden) {
+    var masking = false;
+    var hiddenAt = 0;
+    var recentPauses = [];
+    var attempts = [];
+    var audibleNow = function () {
+      for (var i = 0; i < elements.length; i++) {
+        var el = elements[i];
+        if (!gPaused.call(el) && !gEnded.call(el) && !gMuted.call(el) && gVolume.call(el) > 0) return true;
+      }
+      return false;
+    };
+    var log = function (text) {
+      if (!DEBUG) return;
+      try { post.call(bridge, stringify({ __qutaiPlaybackLog: NONCE, at: now(), text: text, frame: !mainFrame })); } catch (e) {}
+    };
+    var resume = function (el, why) {
+      var count = 0;
+      for (var i = 0; i < attempts.length; i++) if (attempts[i] === el) count++;
+      if (count >= 3 || !gPaused.call(el) || gEnded.call(el)) return;
+      attempts[attempts.length] = el;
+      log('resume (' + why + ', try ' + (count + 1) + ')');
+      try {
+        var p = realPlay.call(el);
+        if (p && p.then) p.then(function () { log('play() resolved'); }, function (err) { log('play() rejected: ' + (err && err.name)); });
+      } catch (err) { log('play() threw: ' + (err && err.name)); }
+    };
+    // Real visibility, for the app's own logic; the page sees "visible" while masking.
+    var reallyHidden = function () { return gVisibility.call(document) !== 'visible'; };
+    try {
+      Object.defineProperty(docProto, 'visibilityState', {
+        get: function () { return masking ? 'visible' : gVisibility.call(this); }, configurable: true,
+      });
+      Object.defineProperty(docProto, 'hidden', {
+        get: function () { return masking ? false : gHidden.call(this); }, configurable: true,
+      });
+      var gWebkitHidden = getter(docProto, 'webkitHidden');
+      if (gWebkitHidden) {
+        Object.defineProperty(docProto, 'webkitHidden', {
+          get: function () { return masking ? false : gWebkitHidden.call(this); }, configurable: true,
+        });
+      }
+    } catch (e) {}
+    // A pause of audible media: WebKit's own at backgrounding (just before or after the page is hidden), or a site
+    // reacting to it. Pauses within a few seconds of leaving are undone (each element at most 3 times).
     document.addEventListener('pause', function (e) {
       var el = e.target;
-      if (!(el instanceof VE) || gVisibility.call(document) !== 'visible') return;
-      if (gEnded.call(el) || gMuted.call(el) || !(gVolume.call(el) > 0)) return;
-      systemPaused[systemPaused.length] = { el: el, at: now() };
-    }, true);
-    document.addEventListener('visibilitychange', function () {
-      var candidates = systemPaused;
-      systemPaused = [];
-      if (gVisibility.call(document) === 'visible') { resumed = []; return; }
+      if (!(el instanceof ME) || gEnded.call(el) || gMuted.call(el) || !(gVolume.call(el) > 0)) return;
       var t = now();
-      for (var i = 0; i < candidates.length; i++) {
-        var el = candidates[i].el;
-        if (t - candidates[i].at > 1000 || resumed.indexOf(el) >= 0 || !gPaused.call(el)) continue;
-        resumed[resumed.length] = el;
-        try { var p = realPlay.call(el); if (p && p.catch) p.catch(function () {}); } catch (err) {}
-      }
+      log('pause, hidden=' + reallyHidden() + ', ' + (hiddenAt ? t - hiddenAt : -1) + ' ms after hide');
+      if (!reallyHidden()) { recentPauses[recentPauses.length] = { el: el, at: t }; return; }
+      if (masking && t - hiddenAt < 4000) setTimer(function () { resume(el, 'paused in background'); }, 50);
     }, true);
+    // Runs before every other listener (window, capture): the page doesn't see leaving and coming back while audio
+    // plays, so players that pause themselves on hidden (YouTube's mobile site) go on.
+    var onVisibility = function (e) {
+      var t = now();
+      if (!reallyHidden()) {
+        log('visible again, masking was ' + masking);
+        hiddenAt = 0;
+        attempts = [];
+        recentPauses = [];
+        if (masking) { masking = false; e.stopImmediatePropagation(); }
+        return;
+      }
+      if (e.type !== 'visibilitychange') { if (masking) e.stopImmediatePropagation(); return; }
+      hiddenAt = t;
+      var candidates = [];
+      for (var i = 0; i < recentPauses.length; i++) if (t - recentPauses[i].at < 1500) candidates[candidates.length] = recentPauses[i].el;
+      recentPauses = [];
+      log('hidden, audible=' + audibleNow() + ', paused just before=' + candidates.length);
+      if (!audibleNow() && !candidates.length) return;
+      masking = true;
+      e.stopImmediatePropagation();
+      for (var j = 0; j < candidates.length; j++) resume(candidates[j], 'paused just before hide');
+    };
+    window.addEventListener('visibilitychange', onVisibility, true);
+    window.addEventListener('webkitvisibilitychange', onVisibility, true);
   }
 
   // Android: the WebView has no Media Session API; a small one lets sites describe what plays and handle buttons.
@@ -397,6 +459,16 @@ export class PagePlayback {
 
   /** Handles a message from the injected script; false for other messages. */
   handleMessage(data: string): boolean {
+    if (data.startsWith('{"__qutaiPlaybackLog":')) {
+      // Development builds: the background playback steps, printed in the Metro terminal.
+      try {
+        const log = JSON.parse(data) as { __qutaiPlaybackLog?: string; at?: number; text?: string; frame?: boolean };
+        if (__DEV__ && log.__qutaiPlaybackLog === this.nonce) {
+          console.log(`[Qutai playback] ${new Date(log.at ?? 0).toISOString().slice(11, 23)}${log.frame ? ' (frame)' : ''} ${log.text}`);
+        }
+      } catch {}
+      return true;
+    }
     if (!data.startsWith('{"__qutaiPlayback":')) return false;
     let msg: Report;
     try {
