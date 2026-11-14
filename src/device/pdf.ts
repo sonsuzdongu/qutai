@@ -87,11 +87,11 @@ function escapeHtml(text: string) {
  * Images are inlined as data URIs, which expo-print supports on both platforms (iOS can't
  * load local files from print HTML). Shared like the ordinary PDF; temporary files are removed.
  */
-export async function savePdfFromScreenshots(tab: Tab): Promise<PdfResult & { truncated: boolean }> {
+export async function savePdfFromScreenshots(tab: Tab): Promise<PdfResult & { truncated: boolean; screens: number }> {
   const title = tab.title;
   const url = tab.url;
   // The capture overlay stays up while the PDF is made, and goes before the share sheet opens.
-  const { printed, truncated } = await withFullPage(tab, async (capture) => {
+  const { printed, truncated, screens } = await withFullPage(tab, async (capture) => {
     const pageHeight = Math.round((PAGE_WIDTH * capture.height) / capture.width);
     const pages: string[] = [];
     for (const piece of capture.pieces) {
@@ -115,7 +115,7 @@ export async function savePdfFromScreenshots(tab: Tab): Promise<PdfResult & { tr
       height: pageHeight,
       margins: { top: 0, bottom: 0, left: 0, right: 0 },
     });
-    return { printed, truncated: capture.truncated };
+    return { printed, truncated: capture.truncated, screens: capture.pieces.length };
   });
 
   const fileName = pdfFileName(title, url);
@@ -132,5 +132,5 @@ export async function savePdfFromScreenshots(tab: Tab): Promise<PdfResult & { tr
     const original = new File(printed.uri);
     if (original.exists) original.delete();
   }
-  return { pages: printed.numberOfPages, fileName, imagesMissing: 0, truncated };
+  return { pages: printed.numberOfPages, fileName, imagesMissing: 0, truncated, screens };
 }

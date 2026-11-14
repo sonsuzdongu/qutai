@@ -57,11 +57,18 @@ export async function saveScreenshot(tab: Tab): Promise<void> {
   }
 }
 
-export type FullPageResult = { images: number; truncated: boolean };
+export type FullPageResult = {
+  /** How many images were saved: 1, unless the page was too long for one image on this device. */
+  images: number;
+  /** How many screens were captured; with `truncated`, the end of the page after them is missing. */
+  screens: number;
+  truncated: boolean;
+};
 
 /**
- * Saves the whole page (scrolled and stitched) to the photo library. Very long pages become
- * several images, cut between screens; the result says how many and whether the end is missing.
+ * Saves the whole page (scrolled and stitched) to the photo library as one image, made narrower
+ * if needed to fit in memory. Only when the page is too long for one image on this device is it
+ * split into several, cut between screens; the result says how many and whether the end is missing.
  */
 export async function saveFullPageScreenshot(tab: Tab): Promise<FullPageResult> {
   if (!tab.container) throw new Error(t('error.tabNotReady'));
@@ -70,13 +77,17 @@ export async function saveFullPageScreenshot(tab: Tab): Promise<FullPageResult> 
   const permission = await requestPermissionsAsync(true, ['photo']);
   if (!permission.granted) throw new PermissionDeniedError(t('error.photosPermission'), permission.canAskAgain);
 
-  return withFullPage(tab, async (capture) => {
-    const { files, truncated } = await stitchCapture(capture);
-    try {
-      for (const file of files) await Asset.create(file.uri);
-    } finally {
-      files.forEach((file) => file.exists && file.delete());
-    }
-    return { images: files.length, truncated };
-  });
+  return withFullPage(
+    tab,
+    async (capture) => {
+      const { files, truncated } = await stitchCapture(capture);
+      try {
+        for (const file of files) await Asset.create(file.uri);
+      } finally {
+        files.forEach((file) => file.exists && file.delete());
+      }
+      return { images: files.length, screens: capture.pieces.length, truncated };
+    },
+    { oneImage: true },
+  );
 }

@@ -1454,7 +1454,9 @@ async function runTool(
           // Screens are captured from the view, so the tab has to be on screen.
           await showTab(ctx, tab);
           const pdf = await savePdfFromScreenshots(tab);
-          const cut = pdf.truncated ? ' The page was very long, so only its first part is in the PDF.' : '';
+          const cut = pdf.truncated
+            ? ` The page was very long, so only its first ${pdf.screens} screens are in the PDF (the limit for endless pages).`
+            : '';
           return {
             content: `Created "${pdf.fileName}" from screenshots (${pdf.pages} page(s)) and showed the share sheet to the user.${cut}`,
             isError: false,
@@ -1520,10 +1522,15 @@ async function runTool(
         await showTab(ctx, tab);
         if (input.full_page === true) {
           const shot = await saveFullPageScreenshot(tab);
-          const parts =
-            shot.images > 1 ? ` The page was too long for one image, so it was saved as ${shot.images} images.` : '';
-          const cut = shot.truncated ? ' The page was very long; only its first part was captured.' : '';
-          return { content: `Saved a full-page screenshot to the user's photo library.${parts}${cut}`, isError: false };
+          const saved =
+            shot.images > 1
+              ? `Saved a full-page screenshot to the user's photo library as ${shot.images} images, because the page ` +
+                'is too long for one image on this phone; they are cut between screens.'
+              : "Saved a full-page screenshot to the user's photo library as one image.";
+          const cut = shot.truncated
+            ? ` The page was very long; only its first ${shot.screens} screens were captured (the limit for endless pages).`
+            : '';
+          return { content: `${saved}${cut}`, isError: false };
         }
         await saveScreenshot(tab);
         return { content: "Saved a screenshot of the visible area to the user's photo library.", isError: false };

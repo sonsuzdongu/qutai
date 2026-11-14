@@ -309,9 +309,10 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.screenshotSaved': "Ekran görüntüsü Fotoğraflar’a kaydedildi",
   'menu.saveFullScreenshot': 'Tam sayfa ekran görüntüsü',
   'menu.fullScreenshotSaved': "Tam sayfa ekran görüntüsü Fotoğraflar’a kaydedildi",
-  'menu.fullScreenshotParts': "Sayfa tek görsel için fazla uzundu: Fotoğraflar’a {count} görsel olarak kaydedildi",
+  'menu.fullScreenshotParts':
+    'Sayfa bu telefonda tek görsel için fazla uzun; bu yüzden ekranlar arasından bölünerek Fotoğraflar’a {count} görsel olarak kaydedildi',
   'menu.pdfFromScreenshots': 'Ekran görüntülerinden PDF (PDF bozuk görünürse)',
-  'menu.captureTruncated': 'Sayfa çok uzun; yalnızca ilk kısmı alındı.',
+  'menu.captureTruncated': 'Sayfa çok uzun; yalnızca ilk {count} ekranı alındı.',
   'capture.progress': 'Sayfa yakalanıyor… {done}/{total}',
   'capture.stitching': 'Sayfa birleştiriliyor…',
   'capture.cancelled': 'Yakalama iptal edildi',

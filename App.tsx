@@ -1291,7 +1291,7 @@ function BrowserApp({
           onPress: () =>
             runAction(async () => {
               const pdf = await savePdfFromScreenshots(tab);
-              if (pdf.truncated) return t('menu.captureTruncated');
+              if (pdf.truncated) return t('menu.captureTruncated', { count: pdf.screens });
             }),
         },
         {
@@ -1333,7 +1333,7 @@ function BrowserApp({
               const shot = await saveFullPageScreenshot(tab);
               const saved =
                 shot.images > 1 ? t('menu.fullScreenshotParts', { count: shot.images }) : t('menu.fullScreenshotSaved');
-              return shot.truncated ? `${saved} ${t('menu.captureTruncated')}` : saved;
+              return shot.truncated ? `${saved} ${t('menu.captureTruncated', { count: shot.screens })}` : saved;
             }),
         },
         {

@@ -326,7 +326,7 @@ export const TOOLS: ToolDefinition[] = [
         full_page: {
           type: 'boolean',
           description:
-            'Scroll through the whole page and save it as one tall image (very long pages are split into several images or cut off). ' +
+            'Scroll through the whole page and save it as one tall image (endless pages stop after 25 screens; a page too long for one image on the phone is split into several). ' +
             'Only when the user asks for the whole or full page.',
         },
       },

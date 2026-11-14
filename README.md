@@ -384,9 +384,11 @@ the feature, when the user is asked, the config line that declares it and what i
 - **The PDF is generated from a snapshot.** On very dynamic pages (content drawn by scripts) the PDF may look different
   from what is on screen; "PDF from screenshots" (page menu, or `save_pdf` with `from_screenshots`) is the fallback
   (images only, text not selectable).
-- **Full-page captures have limits.** At most 25 screens / 20,000 CSS pixels (endless feeds are cut off, with a
-  notice); images taller than 8192 px are split into several. Pages that scroll an inner element instead of the
-  window come out as a single screen.
+- **Full-page captures have limits.** At most the first 25 screens (endless feeds are cut off, with a notice). The
+  page is saved as one JPEG, captured narrower (down to 720 px) when a 1080 px wide image would take more than the
+  stitching memory budget (192 MB on Android, 256 MB on iOS) or exceed JPEG's 65,535 px limit; only if that is not
+  enough, or the bitmap can't be allocated, is it split between screens into several images, with a notice. Pages
+  that scroll an inner element instead of the window come out as a single screen.
 - **The agent is deliberately not given a tool for writing to the clipboard.** Only the user copies.
 - **API keys are on the device.** Fine for personal use. Distribution requires a backend proxy that holds the keys.
 - **Model quality varies.** Browser tasks are multi-step; small models may click the wrong element.

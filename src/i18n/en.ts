@@ -308,9 +308,10 @@ export const en = {
   'menu.screenshotSaved': 'Screenshot saved to Photos',
   'menu.saveFullScreenshot': 'Full-page screenshot',
   'menu.fullScreenshotSaved': 'Full-page screenshot saved to Photos',
-  'menu.fullScreenshotParts': 'The page was too long for one image: saved to Photos as {count} images',
+  'menu.fullScreenshotParts':
+    'The page is too long for one image on this phone, so it was saved to Photos as {count} images, cut between screens',
   'menu.pdfFromScreenshots': 'PDF from screenshots (if the PDF looks wrong)',
-  'menu.captureTruncated': 'The page is very long; only its first part was captured.',
+  'menu.captureTruncated': 'The page is very long; only its first {count} screens were captured.',
   'capture.progress': 'Capturing the page… {done}/{total}',
   'capture.stitching': 'Putting the page together…',
   'capture.cancelled': 'Capture cancelled',
