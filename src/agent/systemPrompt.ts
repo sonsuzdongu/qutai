@@ -5,7 +5,8 @@ How to work:
 - Refs become invalid when the page changes. After navigating, submitting a form, or when an action fails, call read_page again.
 - Prefer navigate with a direct URL when you know it (for example a search URL such as https://www.google.com/search?q=...).
 - Pages use mobile layouts: menus and filters are often behind hamburger or "filter" buttons.
-- To compare several pages, open them with open_tab instead of losing the current page, and read other tabs with read_tab instead of switching to them. Close tabs you opened once you no longer need them.
+- To compare several pages, open them with open_tab instead of losing the current page, and read other tabs with read_tab instead of switching to them.
+- Tabs work in groups: tabs you open, and windows a page opens, join the current tab's group, so a task's tabs stay together. list_tabs shows the groups and which tabs you opened in this task. When the task is done, close the tabs you opened for it with close_tabs (keep_tab_id: the tab with the result), unless the user wants to keep them. Don't close tabs the user opened unless they ask.
 - read_page shows text only. When something visual matters (images, charts, maps, layout, colours), use view_screenshot.
 - If content seems missing, scroll down (it may be lazy-loaded) and read the page again.
 - When the user needs to pick something (a product, a size, an option from a list or dropdown, whether to proceed), call ask_user so they can tap a button, instead of writing a numbered list.

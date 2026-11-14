@@ -100,6 +100,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.draftEmail', { subject: str(input.subject).slice(0, 60) });
     case 'close_tab':
       return t('action.closeTab', { id: str(input.tab_id) });
+    case 'close_tabs':
+      return t('action.closeTabs');
     case 'wait':
       return t('action.wait', { seconds: str(input.seconds) });
     case 'remember':
@@ -245,12 +247,24 @@ async function showTab(ctx: ToolContext, tab: Tab) {
   await sleep(400);
 }
 
+/** Tabs the agent opened during a task, keyed by that task's agentTab object. */
+const openedByTask = new WeakMap<object, Set<string>>();
+
+function noteOpened(ctx: ToolContext, tabId: string) {
+  const opened = openedByTask.get(ctx.agentTab) ?? new Set<string>();
+  opened.add(tabId);
+  openedByTask.set(ctx.agentTab, opened);
+}
+
 function tabList(ctx: ToolContext): string {
+  const opened = openedByTask.get(ctx.agentTab);
   return ctx.browser.tabs
     .map((t) => {
+      const group = ctx.browser.getGroup(t.groupId);
       const marks = [
         t.incognito && 'incognito',
-        ctx.browser.getGroup(t.groupId) && `group "${ctx.browser.getGroup(t.groupId)!.name}"`,
+        group && `group "${group.name}" group_id=${group.id}`,
+        opened?.has(t.id) && 'opened by you in this task',
         t.id === ctx.agentTab.id && 'you are here',
         t.id === ctx.browser.activeId && 'visible to user',
       ]
@@ -493,7 +507,13 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
       case 'open_tab': {
         await tab.captureThumbnail();
         // Tabs opened from an incognito tab stay incognito, like in regular browsers.
-        const opened = browser.openTab(normalizeUrl(input.url), { incognito: tab.incognito, openerId: tab.id });
+        // It joins the current tab's group, so the task's tabs stay together and can be closed together.
+        const opened = browser.openTab(normalizeUrl(input.url), {
+          incognito: tab.incognito,
+          openerId: tab.id,
+          group: true,
+        });
+        noteOpened(ctx, opened.id);
         ctx.agentTab.id = opened.id;
         await opened.waitForNextLoad();
         return { content: `Opened tab id=${opened.id} at ${opened.url}. Call read_page to see it.`, isError: false };
@@ -512,6 +532,20 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
         browser.closeTab(id);
         if (ctx.agentTab.id === id) ctx.agentTab.id = browser.active.id;
         return { content: `Closed tab ${id}. Open tabs:\n${tabList(ctx)}`, isError: false };
+      }
+      case 'close_tabs': {
+        const ids = new Set((Array.isArray(input.tab_ids) ? input.tab_ids : []).map(String));
+        const groupId = input.group_id ? String(input.group_id) : null;
+        if (groupId && !browser.getGroup(groupId)) return { content: `No group with id=${groupId}.`, isError: true };
+        if (groupId) browser.tabs.filter((x) => x.groupId === groupId).forEach((x) => ids.add(x.id));
+        const keep = input.keep_tab_id ? String(input.keep_tab_id) : null;
+        if (keep) ids.delete(keep);
+        const closing = [...ids].filter((id) => browser.getTab(id));
+        if (!closing.length) return { content: `Nothing to close.\n${tabList(ctx)}`, isError: true };
+        closing.forEach((id) => browser.closeTab(id));
+        if (keep && browser.getTab(keep)) browser.switchTab(keep);
+        if (!browser.getTab(ctx.agentTab.id)) ctx.agentTab.id = browser.active.id;
+        return { content: `Closed ${closing.length} tab(s). Open tabs:\n${tabList(ctx)}`, isError: false };
       }
       case 'wait': {
         const seconds = Math.min(Math.max(Number(input.seconds) || 1, 0), 10);

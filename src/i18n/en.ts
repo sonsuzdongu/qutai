@@ -59,6 +59,7 @@ export const en = {
   'action.listTabs': '🗂 Listing tabs',
   'action.openTab': '➕ New tab: {url}',
   'action.switchTab': '🔀 Switching to tab ({id})',
+  'action.closeTabs': '🗂 Closing tabs',
   'action.closeTab': '✖️ Closing tab ({id})',
   'action.remember': '🧠 Remembering: {text}',
   'action.forget': '🧠 Forgetting a memory',

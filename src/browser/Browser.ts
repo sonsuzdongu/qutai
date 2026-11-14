@@ -9,6 +9,12 @@ export type TabGroup = { id: string; name: string; color: string; collapsed?: bo
 
 export const GROUP_COLORS = ['#c96442', '#3a86ff', '#2a9d8f', '#d4a72c', '#9b5de5', '#e05780'];
 
+/** A new group's name: the opener's site ("trendyol.com"), or "Group n" for pages without one. */
+export function groupNameFor(url: string, n: number): string {
+  const host = /^https?:\/\/([^/:?#]+)/i.exec(url)?.[1]?.replace(/^www\./i, '');
+  return host || `Group ${n}`;
+}
+
 /** uid lets a reopened tab get its conversation back. */
 export type ClosedTab = { url: string; title: string; closedAt: number; uid?: string };
 
@@ -97,12 +103,27 @@ export class Browser {
       openerId,
       asleep = false,
       uid,
-    }: { activate?: boolean; incognito?: boolean; openerId?: string; asleep?: boolean; uid?: string } = {},
+      group = false,
+    }: {
+      activate?: boolean;
+      incognito?: boolean;
+      openerId?: string;
+      asleep?: boolean;
+      uid?: string;
+      /** Join the opener's tab group, starting one named after the opener's site if it has none. */
+      group?: boolean;
+    } = {},
   ): Tab {
     const tab = new Tab(String(++this.counter), url, incognito, openerId, this.emit, uid);
     tab.asleep = asleep && !activate;
     if (tab.asleep) tab.lastActiveAt = 0;
     this.tabs.push(tab);
+    const opener = group && openerId ? this.getTab(openerId) : undefined;
+    if (opener) {
+      const groupId =
+        opener.groupId ?? this.createGroup([opener.id], groupNameFor(opener.url, this.groups.length + 1)).id;
+      this.setGroup(tab.id, groupId);
+    }
     if (activate || !this.activeId) this.setActive(tab);
     this.sleepInactive();
     this.emit();

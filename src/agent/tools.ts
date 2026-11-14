@@ -235,6 +235,20 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'close_tabs',
+    description:
+      'Close several tabs at once: the given tabs, and/or every tab of a group (group_id from list_tabs). ' +
+      'Use it when a task is done to close the tabs that were opened for it; keep_tab_id stays open and is shown to the user.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        tab_ids: { type: 'array', items: { type: 'string' }, description: 'Tab ids from list_tabs' },
+        group_id: { type: 'string', description: 'Close all tabs of this group' },
+        keep_tab_id: { type: 'string', description: 'A tab to keep open and switch to, e.g. the one with the result' },
+      },
+    },
+  },
+  {
     name: 'wait',
     description: 'Wait for the page to update (e.g. after an action that loads content).',
     input_schema: {

@@ -174,7 +174,9 @@ function TabWebView({
             // Links opened from an incognito tab stay incognito.
             onOpenWindow={(e) => {
               if (newTabActions.blockAds && isAdUrl(e.nativeEvent.targetUrl)) return;
-              browser.openTab(e.nativeEvent.targetUrl, { incognito: tab.incognito, openerId: tab.id });
+              // A window the page opens joins the page's tab group (pages that open several windows
+              // stay together, and the assistant can manage and close them as one).
+              browser.openTab(e.nativeEvent.targetUrl, { incognito: tab.incognito, openerId: tab.id, group: true });
             }}
             // Every URL reaches onShouldStartLoadWithRequest; the default allowlist would hand other
             // schemes to canOpenURL, which silently drops links to apps the OS doesn't let us see.

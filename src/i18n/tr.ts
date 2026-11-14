@@ -60,6 +60,7 @@ export const tr: Record<keyof typeof en, string> = {
   'action.listTabs': '🗂 Sekmeler listeleniyor',
   'action.openTab': '➕ Yeni sekme: {url}',
   'action.switchTab': '🔀 Sekmeye geçiliyor ({id})',
+  'action.closeTabs': '🗂 Sekmeler kapatılıyor',
   'action.closeTab': '✖️ Sekme kapatılıyor ({id})',
   'action.remember': '🧠 Hatırlanıyor: {text}',
   'action.forget': '🧠 Bir anı siliniyor',
