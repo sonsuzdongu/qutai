@@ -193,6 +193,16 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 7. ✅ Offline saving and a Saved pages screen, fullscreen video (Android)
 8. ✅ Accessibility review (screen reader announcements, reduce motion, text scaling limits, VoiceOver focus)
 
+### Phase 3.5 – UI review and Comet reviews (Expo Go)
+
+1. ✅ Name: Kutai → Qutai. Shared theme layer (dark theme on every screen, measured contrast), consistent icons (SF/Material Symbols), fixed address suggestions overlapping the bar
+2. ✅ Logo drawn in code (Skia): gradient Q and an orbit that spins now and then; spins continuously while working. Aurora background (new tab, first launch)
+3. ✅ First-launch setup: introduction, Privacy Policy and Terms of Use (acceptance required, versioned), AI key, protection settings, default browser
+4. ✅ Tab groups with tasks: windows opened by the page and the assistant's tabs are grouped; the assistant can close a group at once (close_tabs)
+5. ✅ Pull to refresh, screen does not dim while the app is open, full-width tables in chat, 'Rate Qutai'
+6. ✅ From Comet reviews: undo clearing in the address bar, hiding the Qutai button and turning off the logo animation, persistent chat draft, force zoom, Chrome's user agent on Android (verification loops) and leaving verification to the user, note-taking in long tasks and a status summary at the last step, crash protection
+7. ✅ Sites cannot ask 'Open in another app?' on their own (only after a tap; does not ask again after Cancel)
+
 ### Phase 4 – Things that require our own build
 
 Merged with the "Once we switch to our own build" section in `TODO.md`:
@@ -201,6 +211,15 @@ WKContentRuleList, Android request interception), cookie management and cookie d
 requiring login, Android PiP, background audio, being the default browser, widgets, "Share with Qutai",
 app verification.
 
+Added from Comet reviews:
+- Ready-made filter lists for ad blocking (EasyList etc.) and letting the user add lists
+- Voice commands, with the assistant going quiet when the user starts speaking (barge-in)
+- Passwords: instead of our own manager, verify and fix that the system's (Google, iCloud Keychain) autofill works in the WebView
+- Background audio and headphone media keys, site shortcut on the home screen
+- Bookmark folders and importing from Chrome (HTML bookmark file; does not require a build, can also be done in Expo Go)
+- Reader mode (was postponed; should be brought back together with read-aloud for accessibility)
+- iOS default browser: applying for Apple's `com.apple.developer.web-browser` entitlement
+
 ### Phase 5 – Things that require a server
 
 Account system (shared with the credit system), end-to-end encrypted sync (including memory; deletion markers must be
@@ -208,6 +227,12 @@ kept for deletions), Qutai credits, background
 deep research, price and page tracking, Safe Browsing checks.
 
 ---
+
+### Ideas from Comet reviews (not yet scheduled)
+
+- Serverless backup: while there is no sync, exporting/importing an encrypted backup file
+- "What was sent to the AI" log: showing the user the page content sent with each request (a direct answer to privacy concerns)
+- An optional 'Summarize results' chip on search results pages, keeping the results list intact
 
 ## 3. Things we recommend not doing
 
