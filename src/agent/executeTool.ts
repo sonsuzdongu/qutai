@@ -250,6 +250,7 @@ function tabList(ctx: ToolContext): string {
     .map((t) => {
       const marks = [
         t.incognito && 'incognito',
+        ctx.browser.getGroup(t.groupId) && `group "${ctx.browser.getGroup(t.groupId)!.name}"`,
         t.id === ctx.agentTab.id && 'you are here',
         t.id === ctx.browser.activeId && 'visible to user',
       ]
