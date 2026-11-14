@@ -41,7 +41,8 @@ async function picker(): Promise<PickerModule> {
   }
 }
 
-async function manipulator(): Promise<ManipulatorModule> {
+/** expo-image-manipulator, loaded on first use (also for image edits, src/device/imageEdit.ts). */
+export async function manipulator(): Promise<ManipulatorModule> {
   try {
     return await import('expo-image-manipulator');
   } catch {
@@ -165,7 +166,7 @@ async function importImage(picked: Picked, incognito: boolean, fallbackName: str
  * applied by the decoder, scaled to fit MODEL_LONG_EDGE and re-encoded, which leaves out EXIF and other metadata.
  * A PNG stays PNG while it fits (screenshots stay sharp); otherwise JPEG at falling quality until it fits.
  */
-async function makeModelCopy(
+export async function makeModelCopy(
   uri: string,
   png: boolean,
   dir: Directory,
@@ -304,6 +305,41 @@ export function importFile(source: File, name: string, mimeType: string, size: n
   }
 }
 
+/**
+ * Keeps the result of an image edit (a temporary file already free of metadata) as an attachment of its own: the
+ * file becomes its `original.<ext>` and the model's copy is made from it, as for an attached image. Same folders,
+ * same pruning, same incognito rules as attachments; `derivedFrom` names the image it was made from.
+ */
+export async function storeEditedImage(
+  file: File,
+  meta: { name: string; mimeType: string; width: number; height: number; derivedFrom: string; edits: string },
+  incognito: boolean,
+): Promise<AttachmentInfo> {
+  const id = newAttachmentId(incognito);
+  const dir = folderOf(id);
+  dir.create({ intermediates: true, idempotent: true });
+  try {
+    const original = new File(dir, `original.${extensionOf(meta.name, meta.mimeType)}`);
+    file.moveSync(original);
+    const model = await makeModelCopy(original.uri, meta.mimeType !== 'image/jpeg', dir);
+    return {
+      id,
+      kind: 'image',
+      name: meta.name,
+      mimeType: meta.mimeType,
+      size: original.size,
+      width: meta.width,
+      height: meta.height,
+      model: { width: model.width, height: model.height, mimeType: model.mimeType, size: model.size },
+      derivedFrom: meta.derivedFrom,
+      edits: meta.edits,
+    };
+  } catch (e) {
+    if (dir.exists) dir.delete();
+    throw e;
+  }
+}
+
 /** Removes an attachment's files right away (a thumbnail removed before sending). */
 export function deleteAttachment(id: string) {
   dataCache.delete(id);
@@ -341,12 +377,26 @@ export async function shareAttachment(info: AttachmentInfo): Promise<void> {
   await Sharing.shareAsync(file.uri, { mimeType: info.mimeType, dialogTitle: info.name });
 }
 
-/** Adds the original image to the photo library (add-only permission, as for saved screenshots). */
-export async function saveAttachmentToPhotos(info: AttachmentInfo): Promise<void> {
+/**
+ * Adds the original image to the photo library (add-only permission, as for saved screenshots), under the
+ * attachment's name (a copy named so is what the library gets, so the user finds "photo-1024x1024.jpg", not
+ * "original.jpg"). Resolves with that name.
+ */
+export async function saveAttachmentToPhotos(info: AttachmentInfo): Promise<string> {
   const file = originalFile(info.id);
   if (!file) throw new AttachmentError(t('attach.gone'));
   const { Asset, requestPermissionsAsync } = await import('expo-media-library');
   const permission = await requestPermissionsAsync(true, ['photo']);
   if (!permission.granted) throw new PermissionDeniedError(t('error.photosPermission'), permission.canAskAgain);
-  await Asset.create(file.uri);
+  const name = safeFileName(info.name, `image.${extensionOf('', info.mimeType)}`);
+  const dir = new Directory(Paths.cache, `qutai-photo-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`);
+  dir.create({ intermediates: true, idempotent: true });
+  try {
+    const named = new File(dir, name);
+    file.copySync(named);
+    await Asset.create(named.uri);
+    return name;
+  } finally {
+    if (dir.exists) dir.delete();
+  }
 }

@@ -19,7 +19,9 @@ import { runAgent } from './src/agent/runAgent';
 import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
 import { personalKindsLabel } from './src/components/memoryCategories';
 import { Conversation, callItem, fileItem, newItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
-import { AttachmentInfo, describeAttachments, MAX_ATTACHMENTS } from './src/chat/attachments';
+import { AttachmentInfo, describeAttachments, isIncognitoAttachment, MAX_ATTACHMENTS } from './src/chat/attachments';
+import { parseEditRequest } from './src/chat/imageEdit';
+import { editImage } from './src/device/imageEdit';
 import {
   AttachmentError,
   deleteAttachment,
@@ -67,7 +69,7 @@ import {
   SavedTask,
 } from './src/storage/savedTasks';
 import { syncTaskReminders } from './src/device/taskSchedule';
-import { formatDate } from './src/i18n/format';
+import { formatDate, formatSize } from './src/i18n/format';
 import { Toast, useToast } from './src/components/Toast';
 import { DownloadIndicator } from './src/components/DownloadIndicator';
 import { CaptureOverlay } from './src/components/CaptureOverlay';
@@ -738,6 +740,11 @@ function BrowserApp({
         },
         showAppSettings: () => setSettingsVisible(true),
         attachments: () => chat.attachments,
+        offerImage: (info) => {
+          AccessibilityInfo.announceForAccessibility(t('chat.imageMade', { name: info.name }));
+          // The oldest edited images over the limit lose their files.
+          chat.addEditedImage(info).forEach((id) => deleteAttachment(id));
+        },
         signal,
         audit: {
           conversation: () => chat.key,
@@ -838,6 +845,25 @@ function BrowserApp({
       setFocusRequest((n) => n + 1);
     } catch {
       toast.show(t('attach.failed'));
+    }
+  };
+
+  /**
+   * "Resize or crop" in the full-screen preview: the copy is made on the phone and attached to the message being
+   * written (where the user can send it, or ask the assistant to upload it), then shown in the preview.
+   */
+  const resizeAttachment = async (info: AttachmentInfo, input: Record<string, unknown>) => {
+    const chat = conversation;
+    if (chat.pending.length >= MAX_ATTACHMENTS) return toast.show(t('attach.full', { max: MAX_ATTACHMENTS }));
+    const req = parseEditRequest(input);
+    if (typeof req === 'string') return toast.show(t('resize.failed'));
+    try {
+      const made = await editImage(info, req, attachmentIncognito(chat) || isIncognitoAttachment(info.id));
+      chat.addPending([made.info]).forEach((a) => deleteAttachment(a.id));
+      setPreviewAttachment(made.info);
+      toast.show(t('resize.added', { size: `${made.info.width}×${made.info.height}`, bytes: formatSize(made.info.size) }));
+    } catch {
+      toast.show(t('resize.failed'));
     }
   };
 
@@ -1547,6 +1573,13 @@ function BrowserApp({
               onAttach={() => setAttachSheet(true)}
               onRemovePending={removePending}
               onOpenAttachment={setPreviewAttachment}
+              onImage={(action, info) =>
+                runAction(async () => {
+                  if (action === 'share') return void (await shareAttachment(info));
+                  await saveAttachmentToPhotos(info);
+                  return t('contextMenu.imageSaved');
+                })
+              }
               voice={{
                 incognito: tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
                 online: settings.voiceOnline,
@@ -1852,6 +1885,7 @@ function BrowserApp({
                 return t('contextMenu.imageSaved');
               })
             }
+            onResize={resizeAttachment}
           />
           <TasksScreen
             visible={tasksScreen !== null}

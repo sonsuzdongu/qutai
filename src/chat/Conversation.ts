@@ -6,7 +6,7 @@ import type { CallOffer } from '../device/phone';
 import { formatSize } from '../i18n/format';
 import type { SmsOffer } from '../device/sms';
 import type { WhatsAppOffer } from '../device/whatsapp';
-import { AttachmentInfo, MAX_ATTACHMENTS } from './attachments';
+import { AttachmentInfo, MAX_ATTACHMENTS, MAX_EDITED_IMAGES } from './attachments';
 
 let itemCounter = 0;
 const STREAM_FLUSH_MS = 50;
@@ -36,6 +36,12 @@ export function whatsAppItem(whatsapp: WhatsAppOffer): ChatItem {
 /** A file the assistant composed (save_file), with Share and Save buttons; the text is what older versions show. */
 export function fileItem(file: FileOffer): ChatItem {
   return { id: String(++itemCounter), kind: 'file', text: `📄 ${file.name} · ${formatSize(file.size)}`, file };
+}
+
+/** An image the assistant made (edit_image), as a card; its manifest makes it one of the conversation's attachments. */
+export function imageItem(info: AttachmentInfo): ChatItem {
+  const size = info.width && info.height ? ` · ${info.width}×${info.height}` : '';
+  return { id: String(++itemCounter), kind: 'image', text: `🖼 ${info.name}${size} · ${formatSize(info.size)}`, attachments: [info] };
 }
 
 /** A message the user sent, with the files attached to it. */
@@ -232,6 +238,40 @@ export class Conversation {
       for (const a of turn.attachments) if (!out.some((b) => b.id === a.id)) out.push(a);
     }
     return out;
+  }
+
+  /** Edited images given to a page in this run (upload_image): kept when old edited images are dropped. */
+  private usedImages = new Set<string>();
+
+  markImageUsed(id: string) {
+    this.usedImages.add(id);
+  }
+
+  /**
+   * Adds an edited image's card, then marks the oldest edited images over MAX_EDITED_IMAGES as expired and returns
+   * their ids, for the caller to delete their files. Never the new one, one a kept image was made from, or one used.
+   */
+  addEditedImage(info: AttachmentInfo): string[] {
+    this.add(imageItem(info));
+    const live = this.items.filter((item) => item.kind === 'image' && !item.expired && item.attachments?.[0]);
+    let excess = live.length - MAX_EDITED_IMAGES;
+    if (excess <= 0) return [];
+    const parents = new Set(live.map((item) => item.attachments![0].derivedFrom).filter(Boolean));
+    const dropped: string[] = [];
+    for (const item of live) {
+      if (excess <= 0) break;
+      const id = item.attachments![0].id;
+      if (id === info.id || parents.has(id) || this.usedImages.has(id)) continue;
+      dropped.push(id);
+      excess--;
+    }
+    if (dropped.length) {
+      this.items = this.items.map((item) =>
+        item.kind === 'image' && dropped.includes(item.attachments?.[0]?.id ?? '') ? { ...item, expired: true } : item,
+      );
+      this.onChange();
+    }
+    return dropped;
   }
 
   /** Ids of every file this conversation refers to (sent or about to be), so pruning keeps them. */

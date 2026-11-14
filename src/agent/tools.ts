@@ -175,6 +175,58 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'edit_image',
+    description:
+      'Make an edited copy of an image the user attached (or of an earlier edit) on the phone: crop, rotate, flip, ' +
+      'resize, change the format and quality, or bring it under a file size. Nothing is sent anywhere and the ' +
+      'original is unchanged; the result is a new image with its own id, shown to the user as a card, and you get ' +
+      'its id, size, format and bytes as text (no image). Steps always apply in this order: crop (crop_x/crop_y/' +
+      'crop_width/crop_height in source pixels, or aspect with gravity or focus), rotate, flip, resize (width/height ' +
+      'with fit), flatten transparency for JPEG, encode, then max_bytes (lowers quality, then makes it smaller). ' +
+      'For a form that wants exact dimensions such as 1024×1024 use width, height and fit "cover". Never enlarges ' +
+      'unless allow_upscale is true.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'The image id: "att-…"/"inc-…" of an attachment or of an earlier edit' },
+        crop_x: { type: 'integer', description: 'Explicit crop: left edge in source pixels (as the image is displayed, before rotation)' },
+        crop_y: { type: 'integer', description: 'Explicit crop: top edge in source pixels' },
+        crop_width: { type: 'integer', description: 'Explicit crop: width in source pixels' },
+        crop_height: { type: 'integer', description: 'Explicit crop: height in source pixels' },
+        aspect: {
+          type: 'string',
+          description: 'Crop to the largest area of this ratio of the result, e.g. "1:1", "4:3", "16:9", "3:2" (instead of an explicit crop)',
+        },
+        gravity: {
+          type: 'string',
+          enum: ['center', 'top', 'bottom', 'left', 'right'],
+          description: 'Which part an aspect or cover crop keeps (default center)',
+        },
+        focus_x: {
+          type: 'number',
+          description: 'Keep this point centred in an aspect or cover crop: 0–1 across the image (0.5 = middle); with focus_y. Use after looking at the image',
+        },
+        focus_y: { type: 'number', description: '0–1 down the image; with focus_x' },
+        rotate: { type: 'integer', description: 'Degrees clockwise: 90, 180 or 270' },
+        flip: { type: 'string', enum: ['none', 'horizontal', 'vertical', 'both'] },
+        width: { type: 'integer', description: 'Result width in pixels (after rotation); alone keeps the aspect ratio' },
+        height: { type: 'integer', description: 'Result height in pixels; alone keeps the aspect ratio' },
+        fit: {
+          type: 'string',
+          enum: ['fit', 'cover', 'exact'],
+          description:
+            'With width and height: fit = within the box keeping the ratio (default); cover = exactly width×height, cropping the overflow by gravity/focus; exact = stretched to width×height',
+        },
+        allow_upscale: { type: 'boolean', description: 'Allow enlarging a smaller picture (it looks softer). Default false' },
+        format: { type: 'string', enum: ['jpeg', 'png', 'webp'], description: "Default: the source's format (JPEG for HEIC and others)" },
+        quality: { type: 'integer', description: 'JPEG/WebP quality 1–100 (default 90)' },
+        background: { type: 'string', description: 'Hex colour under transparent areas when saving as JPEG (default "#ffffff")' },
+        max_bytes: { type: 'integer', description: 'Largest file size in bytes (1 MB = 1000000), e.g. from the form\'s limit' },
+      },
+      required: ['id'],
+    },
+  },
+  {
     name: 'save_pdf',
     description:
       'Turn the current page into a PDF and open the system share sheet, where the user can save it (e.g. to Files) or send it. ' +

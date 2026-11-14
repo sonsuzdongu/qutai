@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   BackHandler,
@@ -39,6 +39,8 @@ import type { SavedTask } from '../storage/savedTasks';
 import { composedFileAvailable, FileOffer } from '../device/composedFile';
 import type { AttachmentInfo } from '../chat/attachments';
 import { AttachmentThumb } from './AttachmentViews';
+import { attachmentAvailable } from '../device/attachments';
+import { imageFormatLabel } from '../chat/imageEdit';
 import { formatNumber, formatSize, hostOf } from '../i18n/format';
 import { hasTable, MarkdownText } from './MarkdownText';
 import { SearchSuggestions } from './SearchSuggestions';
@@ -47,7 +49,19 @@ import { useReduceMotion } from '../utils/useReduceMotion';
 
 export type ChatItem = {
   id: string;
-  kind: 'user' | 'assistant' | 'action' | 'error' | 'info' | 'choices' | 'sources' | 'call' | 'sms' | 'whatsapp' | 'file';
+  kind:
+    | 'user'
+    | 'assistant'
+    | 'action'
+    | 'error'
+    | 'info'
+    | 'choices'
+    | 'sources'
+    | 'call'
+    | 'sms'
+    | 'whatsapp'
+    | 'file'
+    | 'image';
   text: string;
   /** For 'choices': the buttons offered. */
   options?: string[];
@@ -67,8 +81,13 @@ export type ChatItem = {
   whatsapp?: WhatsAppOffer;
   /** For 'file': the composed file behind the Share / Save buttons (only its name and size; the content is not saved). */
   file?: FileOffer;
-  /** For 'user': the files attached to the message (their manifest; the files are on the phone). */
+  /**
+   * For 'user': the files attached to the message (their manifest; the files are on the phone). For 'image': the one
+   * image the assistant made with edit_image.
+   */
   attachments?: AttachmentInfo[];
+  /** For 'image': its file was removed to keep the conversation's edited images under the limit. */
+  expired?: boolean;
 };
 
 /** Voice input: the settings it follows and where its messages go. */
@@ -153,6 +172,8 @@ type Props = {
   onRemovePending: (id: string) => void;
   /** A thumbnail (pending or sent) was tapped: full-screen preview. */
   onOpenAttachment: (info: AttachmentInfo) => void;
+  /** Share or Save on the card of an edited image. */
+  onImage: (action: 'share' | 'save', info: AttachmentInfo) => void;
 };
 
 const MAX_WIDTH = 420;
@@ -209,6 +230,7 @@ export function AssistantPanel({
   onAttach,
   onRemovePending,
   onOpenAttachment,
+  onImage,
 }: Props) {
   const styles = useStyles();
   const palette = usePalette();
@@ -409,6 +431,7 @@ export function AssistantPanel({
                     onSms={onSms}
                     onWhatsApp={onWhatsApp}
                     onFile={onFile}
+                    onImage={onImage}
                     onOpenSource={onOpenSource}
                     onShowSent={leavePanel(onShowSent)}
                     onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
@@ -697,6 +720,7 @@ function ChatRow({
   onSms,
   onWhatsApp,
   onFile,
+  onImage,
   onOpenSource,
   onShowSent,
   onChoose,
@@ -704,6 +728,7 @@ function ChatRow({
 }: {
   item: ChatItem;
   onOpenAttachment: (info: AttachmentInfo) => void;
+  onImage: (action: 'share' | 'save', info: AttachmentInfo) => void;
   speaking: boolean;
   onAction: (action: ItemAction, text: string) => void;
   onOpenLink: (url: string) => void;
@@ -980,11 +1005,78 @@ function ChatRow({
         </View>
       );
     }
+    case 'image': {
+      const image = item.attachments?.[0];
+      if (!image) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      return <ImageCard info={image} expired={!!item.expired} onOpen={onOpenAttachment} onImage={onImage} />;
+    }
     case 'error':
       return <Text style={styles.error}>⚠️ {item.text}</Text>;
     default:
       return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
   }
+}
+
+/** An image the assistant made (edit_image): preview, size, format and bytes, Save to Photos and Share. */
+function ImageCard({
+  info,
+  expired,
+  onOpen,
+  onImage,
+}: {
+  info: AttachmentInfo;
+  expired: boolean;
+  onOpen: (info: AttachmentInfo) => void;
+  onImage: (action: 'share' | 'save', info: AttachmentInfo) => void;
+}) {
+  const styles = useStyles();
+  const d = useContext(PanelTheme);
+  const palette = usePalette();
+  const available = useMemo(() => !expired && attachmentAvailable(info.id), [expired, info.id]);
+  const details = [
+    info.width && info.height ? `${info.width}×${info.height}` : '',
+    imageFormatLabel(info.mimeType),
+    formatSize(info.size),
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <View style={[styles.smsCard, d?.assistantBubble]}>
+      <View style={styles.fileHeader}>
+        <AttachmentThumb info={info} index={0} size={64} onPress={() => onOpen(info)} />
+        <View style={styles.callInfo}>
+          <Text style={[styles.callName, d?.text]} numberOfLines={2}>
+            {info.name}
+          </Text>
+          <Text style={[styles.callNumber, d?.dim]}>{details}</Text>
+        </View>
+      </View>
+      {available ? (
+        <View style={styles.fileButtons}>
+          <Pressable
+            onPress={() => onImage('save', info)}
+            style={({ pressed }) => [styles.fileButton, d?.chip, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel={t('chat.imageSaveLabel', { name: info.name })}
+          >
+            <Icon name="download" size={17} color={palette.tintText} />
+            <Text style={styles.fileButtonText}>{t('chat.imageSave')}</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => onImage('share', info)}
+            style={({ pressed }) => [styles.callButton, pressed && styles.callButtonPressed]}
+            accessibilityRole="button"
+            accessibilityLabel={t('chat.fileShareLabel', { name: info.name })}
+          >
+            <Icon name="share" size={17} color={palette.onTint} />
+            <Text style={styles.callButtonText}>{t('chat.fileShare')}</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Text style={[styles.callNumber, d?.dim]}>{t(expired ? 'chat.imageExpired' : 'attach.gone')}</Text>
+      )}
+    </View>
+  );
 }
 
 function MessageButton({

@@ -26,6 +26,10 @@ export type AttachmentInfo = {
   height?: number;
   /** Images: the copy the model gets. */
   model?: { width: number; height: number; mimeType: 'image/jpeg' | 'image/png'; size: number };
+  /** Edited images (edit_image, "Resize or crop"): the id of the image this one was made from. */
+  derivedFrom?: string;
+  /** Edited images: what was done, in a short line ("cropped to 1:1 …; resized to 1024×1024; JPEG quality 90"). */
+  edits?: string;
 };
 
 /** At most this many files per message. */
@@ -48,6 +52,11 @@ export const MODEL_JPEG_QUALITY = [0.82, 0.7, 0.55];
  * model knows they exist and can look again with view_attachment.
  */
 export const KEEP_IMAGE_MESSAGES = 3;
+/**
+ * Edited images (edit_image) a conversation keeps on the phone; beyond this the oldest ones nothing depends on (no
+ * later edit was made from them, none was given to a page in this run) lose their files, and their cards say so.
+ */
+export const MAX_EDITED_IMAGES = 12;
 export const MAX_SENT_IMAGES = 8;
 
 /** The longest side scaled down to `edge`, keeping the aspect ratio; never enlarged. */

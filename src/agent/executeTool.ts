@@ -19,6 +19,7 @@ import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import type { AttachmentInfo } from '../chat/attachments';
 import { readPdfTool, viewAttachmentTool } from './fileTools';
+import { editImageTool } from './imageTools';
 import { sleep } from '../utils/sleep';
 import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch, SiteVisits } from '../storage/history';
@@ -116,6 +117,8 @@ export type ToolContext = {
   attachments?: () => AttachmentInfo[];
   /** The model takes image input (false: tools that would return images say so instead). */
   imageInput?: boolean;
+  /** Adds an edited image (edit_image) to the conversation as a card, which also puts it in its attachments. */
+  offerImage?: (info: AttachmentInfo) => void;
 };
 
 /** Tools that need a loaded web page. */
@@ -163,6 +166,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.viewScreenshot');
     case 'view_attachment':
       return t('action.viewAttachment');
+    case 'edit_image':
+      return t('action.editImage');
     case 'read_pdf':
       return input.view_pages !== undefined && input.view_pages !== null
         ? t('action.viewPdfPages')
@@ -920,6 +925,7 @@ function actionTarget(
       'draft_whatsapp',
       'save_file',
       'view_attachment',
+      'edit_image',
       'open_settings',
       'get_location',
       'read_calendar',
@@ -966,6 +972,8 @@ const BACKGROUND_TOOLS = new Set([
   'search_history',
   // Only reads a file the user attached.
   'view_attachment',
+  // Works on the phone only and adds a card.
+  'edit_image',
   // Only add a card to the conversation; the user acts on it later.
   'offer_call',
   'draft_sms',
@@ -1134,6 +1142,7 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
   if (name === 'draft_whatsapp') return draftWhatsAppTool(input, ctx);
   if (name === 'save_file') return saveFileTool(input, ctx);
   if (name === 'view_attachment') return viewAttachmentTool(input, ctx);
+  if (name === 'edit_image') return editImageTool(input, ctx);
   if (name === 'read_pdf') return readPdfTool(input, ctx);
 
   const tab = currentTab(ctx);

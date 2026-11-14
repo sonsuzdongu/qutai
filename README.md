@@ -90,6 +90,24 @@ five, costs far less per page, and scanned pages go through `view_pages`. A long
 Qutai" (Android's WebView can't show PDFs, so opening one still downloads it). PDF text is untrusted page content (the
 system prompt's safety rules name it), and "What was sent to the AI" lists it as "PDF text".
 
+Editing images (`edit_image`): the assistant makes edited copies of an attached image (or of an earlier edit) on
+the phone, with no AI request and nothing sent anywhere: crop (a rectangle in source pixels, or an aspect ratio
+placed by gravity or centred on a focus point), rotate by quarter turns and flip, resize (fit within a box, cover a box
+exactly by cropping the overflow, stretch to exact dimensions, or one side keeping the ratio; never enlarged unless
+asked), JPEG/PNG/WebP at a quality with a background colour under transparency for JPEG, and a largest file size met by
+lowering quality and then scaling down. Steps always run in that order; the rounding rules are in
+`src/chat/imageEdit.ts` (pure geometry and size-budget search). `src/device/imageEdit.ts` decodes with
+expo-image-manipulator (orientation applied, decoded smaller when the result needs less detail, 50 MP at most, a clear
+error above it), crops, rotates and flips there, and resamples with Skia on a CPU surface: halving steps (exact 2×2
+averages) down to within 2× of the output, then one bicubic draw (Mitchell; Catmull-Rom when enlarging), so a 4000 px
+photo made 256 px is not aliased. Skia's encoders write no EXIF or GPS. Results are 16 MP at most. Each result is an
+attachment of its own (new id, `derivedFrom` its source, the same folders, pruning, incognito and backup rules) shown in
+the chat as a card with a preview, size, format and bytes, Save to Photos and Share; the model gets text only and can
+look with `view_attachment`. A conversation keeps its 12 newest edited images; older ones nothing depends on lose their
+files and their cards say so. Without the assistant, the full-screen preview of an image has "Resize or crop": shape
+(original, square, 4:3, 16:9, following the photo's orientation), longest side (2048, 1024, 512) or an exact size
+(cropped to fill), and a largest file size; the copy is attached to the message being written.
+
 From the page menu (⋮) and by asking the agent: save the page as PDF (from its HTML, or from screenshots for pages
 that come out wrong), save a screenshot of the visible area or the whole page (scrolled and stitched) to Photos,
 read the page aloud, share/copy the link. When needed, the agent can also look at a screenshot of the page.
@@ -283,7 +301,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/content/filterLists.ts`, `src/content/blocking.ts` | Ad and tracker blocking: filter lists reduced to domains (pure parser and matcher), their download, updates and per-platform compilation; `src/content/adBlock.ts` is the built-in script blocker |
 | `src/backup/` | The encrypted backup file: what goes in it, the encryption, and merging or replacing on import |
 | `src/ai/audit.ts`, `src/storage/sentLog.ts` | "What was sent to the AI": the entry recorded for each request and how long it is kept |
-| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`, `view_attachment`, `read_pdf`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
+| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`, `view_attachment`, `read_pdf`), images (`edit_image`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |
