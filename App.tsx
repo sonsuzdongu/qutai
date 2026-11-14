@@ -1022,7 +1022,6 @@ function BrowserApp({
   useEffect(() => {
     if (panelOpen && !tasksScreen) refreshRecentTasks();
   }, [panelOpen, tasksScreen, refreshRecentTasks]);
-  const [messageMenu, setMessageMenu] = useState<string | null>(null);
 
   /**
    * Runs a saved task: the user's own text and their tap, so it is sent. With a page to open first, it opens in a new
@@ -1682,7 +1681,16 @@ function BrowserApp({
               recentTasks={recentTasks}
               onRunTask={(task) => runSavedTask(task)}
               onOpenTasks={() => setTasksScreen({ draft: null })}
-              onUserMessageMenu={setMessageMenu}
+              onSaveAsTask={(prompt) =>
+                setTasksScreen({
+                  draft: {
+                    ...emptyTask(),
+                    prompt,
+                    target: tab.isNewTab ? 'none' : 'page',
+                    incognito: conversation.incognito || conversation.privacy.touchedIncognito,
+                  },
+                })
+              }
               preparedTask={
                 prepared && prepared.chat === conversation && conversation.draft.trim() ? prepared.task.name : null
               }
@@ -1776,7 +1784,7 @@ function BrowserApp({
                   }
                   if (action === 'share') return shareText(text);
                   if (action === 'pdf') return shareReportPdf(text);
-                  if (speaking) return stopSpeaking();
+                  if (action === 'stopSpeaking') return stopSpeaking();
                   await speak(text);
                 })
               }
@@ -1947,37 +1955,6 @@ function BrowserApp({
             store={downloads}
             bottomOffset={barAtBottom ? 64 : 16}
             onOpen={() => setDownloadsVisible(true)}
-          />
-          <ActionSheet
-            title={messageMenu !== null ? messageMenu.replace(/\s+/g, ' ').slice(0, 120) : null}
-            actions={
-              messageMenu !== null
-                ? [
-                    {
-                      label: t('chat.copy'),
-                      onPress: () =>
-                        runAction(async () => {
-                          await copyText(messageMenu);
-                          return t('common.copied');
-                        }),
-                    },
-                    {
-                      label: t('tasks.saveAsTask'),
-                      onPress: () =>
-                        setTasksScreen({
-                          draft: {
-                            ...emptyTask(),
-                            prompt: messageMenu,
-                            target: tab.isNewTab ? 'none' : 'page',
-                            incognito: conversation.incognito || conversation.privacy.touchedIncognito,
-                          },
-                        }),
-                    },
-                  ]
-                : []
-            }
-            dark={darkMode}
-            onClose={() => setMessageMenu(null)}
           />
           <ActionSheet
             title={

@@ -1,5 +1,5 @@
 import { SymbolView, SymbolViewProps } from 'expo-symbols';
-import { ColorValue, StyleProp, Text, ViewStyle } from 'react-native';
+import { ColorValue, Platform, StyleProp, Text, useWindowDimensions, ViewStyle } from 'react-native';
 
 type SymbolName = SymbolViewProps['name'];
 
@@ -12,6 +12,9 @@ const ICONS = {
   forward: { ios: 'chevron.right', android: 'arrow_forward' },
   more: { ios: 'ellipsis', android: 'more_vert' },
   moreHorizontal: { ios: 'ellipsis.circle', android: 'more_horiz' },
+  ellipsis: { ios: 'ellipsis', android: 'more_horiz' },
+  info: { ios: 'info.circle', android: 'info' },
+  selectText: { ios: 'character.cursor.ibeam', android: 'select_all' },
   assistant: { ios: 'sparkles', android: 'auto_awesome' },
   reload: { ios: 'arrow.clockwise', android: 'refresh' },
   close: { ios: 'xmark', android: 'close' },
@@ -93,10 +96,14 @@ type Props = {
 };
 
 export function Icon({ name, size = 20, color, style }: Props) {
+  // On Android the symbol is a glyph of the Material Symbols font in a size×size box, and text follows the
+  // system font size: at large text it would outgrow the box and be cut off. Icons keep their size instead.
+  const { fontScale } = useWindowDimensions();
+  const glyph = Platform.OS === 'android' && fontScale > 0 ? size / fontScale : size;
   return (
     <SymbolView
       name={ICONS[name]}
-      size={size}
+      size={glyph}
       tintColor={color}
       style={[{ width: size, height: size }, style]}
       // Shown only where neither symbol set is available (e.g. tests, very old systems).

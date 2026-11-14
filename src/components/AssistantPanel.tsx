@@ -46,6 +46,8 @@ import { SearchSuggestions } from './SearchSuggestions';
 import { KeyboardAvoidingContainer } from './KeyboardAware';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 import { useReduceMotion } from '../utils/useReduceMotion';
+import { bump, tick } from '../device/haptics';
+import { ActionSheet, SheetAction } from './ActionSheet';
 
 export type ChatItem = {
   id: string;
@@ -160,8 +162,8 @@ type Props = {
   recentTasks: SavedTask[];
   onRunTask: (task: SavedTask) => void;
   onOpenTasks: () => void;
-  /** Long press on a message the user sent: Copy, Save as task. */
-  onUserMessageMenu: (text: string) => void;
+  /** "Save as task" in the menu of a message the user sent. */
+  onSaveAsTask: (text: string) => void;
   /** A saved task opened from its reminder waits in the input: its name, for the "Run now" row. */
   preparedTask: string | null;
   onRunPrepared: () => void;
@@ -223,7 +225,7 @@ export function AssistantPanel({
   recentTasks,
   onRunTask,
   onOpenTasks,
-  onUserMessageMenu,
+  onSaveAsTask,
   preparedTask,
   onRunPrepared,
   pending,
@@ -243,6 +245,12 @@ export function AssistantPanel({
   const reduceMotion = useReduceMotion();
 
   const [progress] = useState(() => new Animated.Value(0));
+  /** The message whose menu is open; full: opened by long press, so it lists the row's icons too. */
+  const [menu, setMenu] = useState<{ item: ChatItem; full: boolean } | null>(null);
+  /** The answer being read aloud (Read aloud turns into Stop on that one only). */
+  const [readingId, setReadingId] = useState<string | null>(null);
+  /** The answer whose text was made selectable from its menu (selecting would otherwise fight the long press). */
+  const [selectableId, setSelectableId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const inputRef = useRef<TextInputInstance>(null);
   const voiceState = useVoiceState();
@@ -337,6 +345,46 @@ export function AssistantPanel({
   const lastUserIndex = items.findLastIndex((item) => item.kind === 'user');
   const canChoose = (index: number) => !running && !busyElsewhere && index > lastUserIndex && !items[index].chosen;
 
+  const messageAction = (action: MessageAction, item: ChatItem) => {
+    if (action === 'speak') setReadingId(item.id);
+    onMessageAction(action, item.text);
+  };
+
+  const menuActions = (open: { item: ChatItem; full: boolean }): SheetAction[] => {
+    const { item, full } = open;
+    const copy: SheetAction = { icon: 'copy', label: t('chat.actionCopy'), onPress: () => messageAction('copy', item) };
+    if (item.kind === 'user')
+      return [
+        copy,
+        { icon: 'tasks', label: t('tasks.saveAsTask'), onPress: leavePanel(() => onSaveAsTask(item.text)) },
+      ];
+    const reading = speaking && readingId === item.id;
+    return [
+      ...(full
+        ? [
+            copy,
+            reading
+              ? {
+                  icon: 'stopReading' as const,
+                  label: t('chat.actionStopReading'),
+                  onPress: () => messageAction('stopSpeaking', item),
+                }
+              : {
+                  icon: 'readAloud' as const,
+                  label: t('chat.actionRead'),
+                  onPress: () => messageAction('speak', item),
+                },
+            { icon: 'share' as const, label: t('chat.actionShare'), onPress: () => messageAction('share', item) },
+          ]
+        : []),
+      ...(selectableId === item.id
+        ? []
+        : [{ icon: 'selectText' as const, label: t('chat.actionSelect'), onPress: () => setSelectableId(item.id) }]),
+      { icon: 'pdf', label: t('chat.actionPdf'), onPress: () => messageAction('pdf', item) },
+      { icon: 'info', label: t('chat.actionSent'), onPress: leavePanel(onShowSent) },
+    ];
+  };
+
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [width, 0] });
 
   return (
@@ -378,7 +426,14 @@ export function AssistantPanel({
                     accessibilityLabel={t('chat.modelA11y', { model: modelInfo })}
                     accessibilityState={{ disabled: running }}
                   >
-                    <Text style={[styles.status, modelChosen && !running && styles.statusChosen]} numberOfLines={1}>
+                    {/* Beside four buttons on a narrow phone: shortened in the middle, so the end of the model
+                        name and the ▾ stay in view, and very large text sizes capped. */}
+                    <Text
+                      style={[styles.status, modelChosen && !running && styles.statusChosen]}
+                      numberOfLines={1}
+                      ellipsizeMode="middle"
+                      maxFontSizeMultiplier={1.4}
+                    >
                       {running ? t('chat.working') : `${modelInfo} ▾`}
                     </Text>
                   </Pressable>
@@ -422,10 +477,10 @@ export function AssistantPanel({
                     key={item.id}
                     item={item}
                     onOpenAttachment={onOpenAttachment}
-                    speaking={speaking}
-                    onAction={(action, message) =>
-                      action === 'userMenu' ? onUserMessageMenu(message) : onMessageAction(action, message)
-                    }
+                    reading={speaking && readingId === item.id}
+                    selectable={selectableId === item.id}
+                    onAction={(action) => messageAction(action, item)}
+                    onMenu={(full) => setMenu({ item, full })}
                     onOpenLink={onOpenLink}
                     onCall={onCall}
                     onSms={onSms}
@@ -433,7 +488,6 @@ export function AssistantPanel({
                     onFile={onFile}
                     onImage={onImage}
                     onOpenSource={onOpenSource}
-                    onShowSent={leavePanel(onShowSent)}
                     onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
                   />
                 ))}
@@ -577,6 +631,12 @@ export function AssistantPanel({
           </KeyboardAvoidingContainer>
         </Animated.View>
       </View>
+      <ActionSheet
+        title={menu ? menuTitle(menu.item.text) : null}
+        actions={menu ? menuActions(menu) : []}
+        dark={dark}
+        onClose={() => setMenu(null)}
+      />
     </PanelTheme.Provider>
   );
 }
@@ -613,12 +673,12 @@ function EmptyState({
             <Pressable
               key={task.id}
               onPress={() => onRunTask(task)}
-              style={({ pressed }) => [styles.chip, pressed && styles.pressed]}
+              style={({ pressed }) => [styles.chip, styles.taskChip, pressed && styles.pressed]}
               accessibilityRole="button"
               accessibilityLabel={t('tasks.runLabel', { name: task.name })}
             >
               <Icon name="tasks" size={15} color={palette.textSecondary} />
-              <Text style={styles.chipText} numberOfLines={1}>
+              <Text style={[styles.chipText, styles.shrink]} numberOfLines={1}>
                 {task.name}
               </Text>
             </Pressable>
@@ -707,14 +767,24 @@ function HeaderButton({
   );
 }
 
-export type MessageAction = 'copy' | 'speak' | 'share' | 'pdf';
-/** What a message can ask for: its actions, or the menu of a message the user sent. */
-type ItemAction = MessageAction | 'userMenu';
+export type MessageAction = 'copy' | 'speak' | 'stopSpeaking' | 'share' | 'pdf';
+
+/** A message's first words as the title of its menu, without Markdown marks. */
+function menuTitle(text: string): string {
+  return text
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#*_`>|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 120);
+}
 
 function ChatRow({
   item,
-  speaking,
+  reading,
+  selectable,
   onAction,
+  onMenu,
   onOpenLink,
   onCall,
   onSms,
@@ -722,22 +792,25 @@ function ChatRow({
   onFile,
   onImage,
   onOpenSource,
-  onShowSent,
   onChoose,
   onOpenAttachment,
 }: {
   item: ChatItem;
   onOpenAttachment: (info: AttachmentInfo) => void;
   onImage: (action: 'share' | 'save', info: AttachmentInfo) => void;
-  speaking: boolean;
-  onAction: (action: ItemAction, text: string) => void;
+  /** This answer is being read aloud. */
+  reading: boolean;
+  /** This answer's text can be selected (chosen from its menu). */
+  selectable: boolean;
+  onAction: (action: MessageAction) => void;
+  /** Opens the message's menu; full when opened by long press (it then lists the row's actions too). */
+  onMenu: (full: boolean) => void;
   onOpenLink: (url: string) => void;
   onCall: (number: string) => void;
   onSms: (offer: SmsOffer) => void;
   onWhatsApp: (offer: WhatsAppOffer) => void;
   onFile: (action: 'share' | 'save', file: FileOffer) => void;
   onOpenSource: (source: Source) => void;
-  onShowSent: () => void;
   /** Set while the question can still be answered. */
   onChoose?: (itemId: string, option: string) => void;
 }) {
@@ -758,46 +831,69 @@ function ChatRow({
             </View>
           ) : null}
           {item.text ? (
-            // Long press: Copy, Save as task.
+            // Long press: Copy, Save as task (no row under the user's own messages: it would repeat under every one).
             <Pressable
-              onLongPress={() => onAction('userMenu', item.text)}
+              onLongPress={() => {
+                bump();
+                onMenu(true);
+              }}
               style={[styles.bubble, styles.userBubble]}
               accessibilityHint={t('chat.userMessageHint')}
-              accessibilityActions={[{ name: 'longpress', label: t('tasks.saveAsTask') }]}
-              onAccessibilityAction={() => onAction('userMenu', item.text)}
+              accessibilityActions={[{ name: 'longpress', label: t('chat.moreActions') }]}
+              onAccessibilityAction={() => onMenu(true)}
             >
               <Text style={styles.userText}>{item.text}</Text>
             </Pressable>
           ) : null}
         </View>
       );
-    case 'assistant':
+    case 'assistant': {
+      const bubbleStyle = [styles.bubble, styles.assistantBubble, d?.assistantBubble, wide && styles.wideBubble];
+      const markdown = (
+        <MarkdownText
+          text={item.streaming ? `${item.text} ▍` : item.text}
+          style={textStyle}
+          onOpenLink={onOpenLink}
+          onCall={onCall}
+          dark={!!d}
+          selectable={selectable}
+        />
+      );
       return (
         // Tables need the room: the message spans the panel instead of shrink-wrapping at 90%.
         <View style={[styles.assistantRow, wide && styles.wideRow]}>
-          <View style={[styles.bubble, styles.assistantBubble, d?.assistantBubble, wide && styles.wideBubble]}>
-            <MarkdownText
-              text={item.streaming ? `${item.text} ▍` : item.text}
-              style={textStyle}
-              onOpenLink={onOpenLink}
-              onCall={onCall}
-              dark={!!d}
-            />
-          </View>
+          {/* Long press: every action by name. Once "Select text" is chosen, a long press selects instead
+              (a Pressable around the text would keep it from being selected). */}
+          {item.streaming || selectable ? (
+            <View style={bubbleStyle}>{markdown}</View>
+          ) : (
+            <Pressable
+              onLongPress={() => {
+                bump();
+                onMenu(true);
+              }}
+              style={bubbleStyle}
+              // Not one element for screen readers: its links stay reachable, and the row below has every action.
+              accessible={false}
+            >
+              {markdown}
+            </Pressable>
+          )}
           {item.streaming ? null : (
             <View style={styles.messageActions}>
-              <MessageButton label={t('chat.copy')} onPress={() => onAction('copy', item.text)} />
-              <MessageButton
-                label={t(speaking ? 'chat.stopReading' : 'chat.read')}
-                onPress={() => onAction('speak', item.text)}
+              <ActionIcon icon="copy" label={t('chat.actionCopy')} onPress={() => onAction('copy')} />
+              <ActionIcon
+                icon={reading ? 'stopReading' : 'readAloud'}
+                label={t(reading ? 'chat.actionStopReading' : 'chat.actionRead')}
+                onPress={() => onAction(reading ? 'stopSpeaking' : 'speak')}
               />
-              <MessageButton label={t('chat.share')} onPress={() => onAction('share', item.text)} />
-              <MessageButton label={t('chat.pdf')} onPress={() => onAction('pdf', item.text)} />
-              <MessageButton label={t('chat.sent')} accessibilityLabel={t('chat.sentA11y')} onPress={onShowSent} />
+              <ActionIcon icon="share" label={t('chat.actionShare')} onPress={() => onAction('share')} />
+              <ActionIcon icon="ellipsis" label={t('chat.moreActions')} onPress={() => onMenu(false)} />
             </View>
           )}
         </View>
       );
+    }
     case 'choices':
       return (
         <View style={styles.choices}>
@@ -1079,25 +1175,26 @@ function ImageCard({
   );
 }
 
-function MessageButton({
-  label,
-  accessibilityLabel,
-  onPress,
-}: {
-  label: string;
-  accessibilityLabel?: string;
-  onPress: () => void;
-}) {
+/**
+ * An icon under an answer: quiet (secondary colour), 44pt wide and 36pt tall plus 4pt of slop above and
+ * below, so it is a 44pt target. Icons are drawn in points, so the row keeps its width at any font size.
+ */
+function ActionIcon({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
   const styles = useStyles();
+  const d = useContext(PanelTheme);
+  const palette = usePalette();
   return (
     <Pressable
-      onPress={onPress}
-      hitSlop={6}
-      style={({ pressed }) => [styles.messageButton, pressed && styles.pressed]}
+      onPress={() => {
+        tick();
+        onPress();
+      }}
+      hitSlop={{ top: 4, bottom: 4 }}
+      style={({ pressed }) => [styles.actionIcon, pressed && (d ? d.pressed : styles.pressed)]}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel}
+      accessibilityLabel={label}
     >
-      <Text style={styles.messageButtonText}>{label}</Text>
+      <Icon name={icon} size={18} color={d ? '#a9a8b3' : palette.textSecondary} />
     </Pressable>
   );
 }
@@ -1107,9 +1204,9 @@ const useStyles = makeStyles((c) => ({
   assistantRow: { alignSelf: 'flex-start', maxWidth: '90%', gap: 4 },
   wideRow: { alignSelf: 'stretch', maxWidth: '100%' },
   wideBubble: { alignSelf: 'stretch' },
-  messageActions: { flexDirection: 'row', gap: 4, marginLeft: 4 },
-  messageButton: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
-  messageButtonText: { fontSize: 12, color: c.textSecondary },
+  // The first icon (18pt in a 44pt button) starts about where the answer's text does (12pt in the bubble).
+  messageActions: { flexDirection: 'row', marginLeft: -1 },
+  actionIcon: { width: 44, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   pressed: { backgroundColor: '#ebe8e0' },
   backdrop: { backgroundColor: 'rgba(0,0,0,0.35)' },
   panel: {
@@ -1132,7 +1229,8 @@ const useStyles = makeStyles((c) => ({
     alignItems: 'center',
     paddingLeft: 16,
     paddingRight: 8,
-    height: 56,
+    minHeight: 56,
+    paddingVertical: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: c.separator,
   },
@@ -1240,6 +1338,7 @@ const useStyles = makeStyles((c) => ({
     alignItems: 'center',
     gap: 6,
     minHeight: 44,
+    maxWidth: '100%',
     paddingHorizontal: 16,
     borderRadius: 22,
     backgroundColor: c.tint,
@@ -1263,20 +1362,21 @@ const useStyles = makeStyles((c) => ({
   },
   smsButton: { alignSelf: 'flex-end', justifyContent: 'center' },
   fileHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  fileButtons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 8 },
+  fileButtons: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8 },
   fileButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     minHeight: 44,
+    maxWidth: '100%',
     paddingHorizontal: 16,
     borderRadius: 22,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.separator,
     backgroundColor: c.surface,
   },
-  fileButtonText: { color: c.tintText, fontSize: 15, fontWeight: '700' },
-  callButtonText: { color: c.onTint, fontSize: 15, fontWeight: '700' },
+  fileButtonText: { flexShrink: 1, color: c.tintText, fontSize: 15, fontWeight: '700' },
+  callButtonText: { flexShrink: 1, color: c.onTint, fontSize: 15, fontWeight: '700' },
   busy: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1305,6 +1405,8 @@ const useStyles = makeStyles((c) => ({
     borderColor: c.border,
   },
   chipText: { fontSize: 13, color: c.text },
+  taskChip: { maxWidth: '100%' },
+  shrink: { flexShrink: 1 },
   chipOn: { backgroundColor: c.tint, borderColor: c.tint },
   chipTextOn: { color: c.onTint, fontWeight: '600' },
   modeHint: { fontSize: 12, lineHeight: 17, color: c.textSecondary, paddingHorizontal: 12, paddingTop: 6 },
@@ -1375,4 +1477,5 @@ const darkStyles = StyleSheet.create({
   dim: { color: '#9a99a3' },
   assistantBubble: { backgroundColor: '#2b2a33', borderColor: '#3a3944' },
   busy: { backgroundColor: '#1c2b3d' },
+  pressed: { backgroundColor: '#3a3944' },
 });

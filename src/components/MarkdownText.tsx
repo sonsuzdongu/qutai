@@ -13,6 +13,8 @@ type Props = {
   /** Called for tel: links holding a plain phone number (normalised); without it they are plain text. */
   onCall?: (number: string) => void;
   dark?: boolean;
+  /** Text can be selected (the default); the chat turns it on per answer from its long-press menu. */
+  selectable?: boolean;
 };
 
 const MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });
@@ -58,7 +60,14 @@ export function columnWidths(table: { header: { text: string }[]; rows: { text: 
 }
 
 /** Renders the assistant's markdown with native components: selectable text, tappable links. */
-export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink, onCall, dark }: Props) {
+export const MarkdownText = memo(function MarkdownText({
+  text,
+  style,
+  onOpenLink,
+  onCall,
+  dark,
+  selectable = true,
+}: Props) {
   const styles = useStyles();
   const d = dark ? darkStyles : null;
   const tokens = useMemo(() => Lexer.lex(text), [text]);
@@ -135,7 +144,7 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
       case 'text': {
         const t = token as Tokens.Paragraph | Tokens.Text;
         return (
-          <Text key={key} style={style} selectable>
+          <Text key={key} style={style} selectable={selectable}>
             {t.tokens ? inline(t.tokens, key) : decodeEntities(t.text)}
           </Text>
         );
@@ -143,7 +152,7 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
       case 'heading': {
         const h = token as Tokens.Heading;
         return (
-          <Text key={key} style={[style, styles.heading, h.depth <= 2 && styles.headingLarge]} selectable>
+          <Text key={key} style={[style, styles.heading, h.depth <= 2 && styles.headingLarge]} selectable={selectable}>
             {inline(h.tokens, key)}
           </Text>
         );
@@ -172,7 +181,7 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
             style={[styles.codeBlock, d?.code]}
             contentContainerStyle={styles.codeContent}
           >
-            <Text style={[styles.codeText, d?.codeText]} selectable>
+            <Text style={[styles.codeText, d?.codeText]} selectable={selectable}>
               {(token as Tokens.Code).text}
             </Text>
           </ScrollView>
@@ -200,7 +209,7 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
                   { minWidth: widths[col], flexGrow: widths[col], flexBasis: widths[col] },
                   header && styles.bold,
                 ]}
-                selectable
+                selectable={selectable}
               >
                 {inline(cell.tokens, `${rowKey}.${col}`)}
               </Text>
@@ -226,7 +235,7 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
         return null;
       default:
         return 'text' in token && typeof token.text === 'string' ? (
-          <Text key={key} style={style} selectable>
+          <Text key={key} style={style} selectable={selectable}>
             {decodeEntities(token.text)}
           </Text>
         ) : null;
