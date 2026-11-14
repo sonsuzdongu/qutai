@@ -445,4 +445,7 @@ export const en = {
   'settings.forceZoom': 'Force zoom',
   'settings.forceZoomHint': 'Pinch to zoom on every page, even where the site turns zooming off.',
   'action.takeNotes': '📝 Taking notes',
+  'error.crashTitle': 'Something went wrong here',
+  'error.crashBody': 'This part of Qutai stopped working. Your tabs and conversations are safe.',
+  'error.crashRetry': 'Try again',
 } as const;

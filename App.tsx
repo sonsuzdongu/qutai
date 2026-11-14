@@ -52,6 +52,7 @@ import { shareReportPdf } from './src/device/reportPdf';
 import { authenticate } from './src/device/biometric';
 import { scannedTarget } from './src/device/qr';
 import { toUrl } from './src/browser/url';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { LockScreen } from './src/components/LockScreen';
 import { Onboarding } from './src/components/Onboarding';
 import { isIncomingWebLink } from './src/device/defaultBrowser';
@@ -162,11 +163,13 @@ export default function App() {
     );
   }
   return (
-    <BrowserApp
-      initialSession={restored.session}
-      recentlyClosed={restored.recentlyClosed}
-      initialSettings={restored.settings}
-    />
+    <ErrorBoundary full>
+      <BrowserApp
+        initialSession={restored.session}
+        recentlyClosed={restored.recentlyClosed}
+        initialSettings={restored.settings}
+      />
+    </ErrorBoundary>
   );
 }
 
@@ -788,41 +791,43 @@ function BrowserApp({
             {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard. */}
             {barAtBottom ? null : topBar}
             <KeyboardAvoidingView style={styles.flex} behavior="padding">
-              <BrowserView
-                browser={browser}
-                newTabActions={{
-                  darkMode,
-                  darkSites: settings.darkSites,
-                  blockAds: settings.blockAds,
-                  httpsOnly: settings.httpsOnly,
-                  blockThirdPartyCookies: settings.blockThirdPartyCookies,
-                  hideCookieBanners: settings.hideCookieBanners,
-                  onContextMenu: (source, target) => {
-                    bump();
-                    setContext({ tab: source, target });
-                  },
-                  onDownload: (source, url) =>
-                    runAction(async () => {
-                      toast.show(t('downloads.started'));
-                      const entry = await downloadFile(source, url);
-                      await downloads.add(entry);
-                      return t('downloads.done', { name: entry.name });
-                    }),
-                  onSelection: (source, text) =>
-                    setSelection((prev) =>
-                      text ? { tabId: source.id, url: source.url, text } : prev?.tabId === source.id ? null : prev,
-                    ),
-                  textZoom: settings.textZoom,
-                  forceZoom: settings.forceZoom,
-                  onNotice: toast.show,
-                  searchEngine: settings.searchEngine,
-                  onAsk: (text) => {
-                    setPanelOpen(true);
-                    send(text);
-                  },
-                  onOpenLibrary: setLibrary,
-                }}
-              />
+              <ErrorBoundary>
+                <BrowserView
+                  browser={browser}
+                  newTabActions={{
+                    darkMode,
+                    darkSites: settings.darkSites,
+                    blockAds: settings.blockAds,
+                    httpsOnly: settings.httpsOnly,
+                    blockThirdPartyCookies: settings.blockThirdPartyCookies,
+                    hideCookieBanners: settings.hideCookieBanners,
+                    onContextMenu: (source, target) => {
+                      bump();
+                      setContext({ tab: source, target });
+                    },
+                    onDownload: (source, url) =>
+                      runAction(async () => {
+                        toast.show(t('downloads.started'));
+                        const entry = await downloadFile(source, url);
+                        await downloads.add(entry);
+                        return t('downloads.done', { name: entry.name });
+                      }),
+                    onSelection: (source, text) =>
+                      setSelection((prev) =>
+                        text ? { tabId: source.id, url: source.url, text } : prev?.tabId === source.id ? null : prev,
+                      ),
+                    textZoom: settings.textZoom,
+                    forceZoom: settings.forceZoom,
+                    onNotice: toast.show,
+                    searchEngine: settings.searchEngine,
+                    onAsk: (text) => {
+                      setPanelOpen(true);
+                      send(text);
+                    },
+                    onOpenLibrary: setLibrary,
+                  }}
+                />
+              </ErrorBoundary>
               {selectedText ? (
                 <SelectionBar
                   actions={selectionActions(selectedText)}
@@ -834,57 +839,59 @@ function BrowserApp({
             </KeyboardAvoidingView>
           </SafeAreaView>
 
-          <AssistantPanel
-            dark={darkMode}
-            open={panelOpen}
-            quickActions={quickActions}
-            draft={conversation.draft}
-            onDraftChange={(text) => {
-              conversation.setDraft(text);
-              persistDraftSoon(tab);
-            }}
-            focusRequest={focusRequest}
-            research={conversation.research}
-            onResearchChange={(on) => conversation.setResearch(on)}
-            modelInfo={`${getProvider(settings.provider).label} · ${modelLabel(settings.provider, settings.models[settings.provider])}`}
-            items={conversation.items}
-            running={conversation.running}
-            busyElsewhere={running && !conversation.running}
-            onShowRunningTab={() => runningTab && browser.switchTab(runningTab.id)}
-            onClose={closePanel}
-            onSend={send}
-            onStop={() => conversation.stop()}
-            onChoose={(itemId, option) => {
-              tick();
-              conversation.choose(itemId, option);
-              send(option);
-            }}
-            onNewChat={newChat}
-            onOpenSettings={() => setSettingsVisible(true)}
-            onOpenSource={(source) => {
-              // A page that is still open is shown in its tab; otherwise it opens again in the same mode.
-              const open = browser.tabs.find((x) => x.incognito === source.incognito && x.url === source.url);
-              if (open) browser.switchTab(open.id);
-              else browser.openTab(source.url, { incognito: source.incognito });
-              closePanel();
-            }}
-            onOpenLink={(url) => {
-              browser.openTab(url, { incognito: browser.active.incognito });
-              closePanel();
-            }}
-            onMessageAction={(action, text) =>
-              runAction(async () => {
-                if (action === 'copy') {
-                  await copyText(text);
-                  return t('common.copied');
-                }
-                if (action === 'share') return shareText(text);
-                if (action === 'pdf') return shareReportPdf(text);
-                if (speaking) return stopSpeaking();
-                await speak(text);
-              })
-            }
-          />
+          <ErrorBoundary full>
+            <AssistantPanel
+              dark={darkMode}
+              open={panelOpen}
+              quickActions={quickActions}
+              draft={conversation.draft}
+              onDraftChange={(text) => {
+                conversation.setDraft(text);
+                persistDraftSoon(tab);
+              }}
+              focusRequest={focusRequest}
+              research={conversation.research}
+              onResearchChange={(on) => conversation.setResearch(on)}
+              modelInfo={`${getProvider(settings.provider).label} · ${modelLabel(settings.provider, settings.models[settings.provider])}`}
+              items={conversation.items}
+              running={conversation.running}
+              busyElsewhere={running && !conversation.running}
+              onShowRunningTab={() => runningTab && browser.switchTab(runningTab.id)}
+              onClose={closePanel}
+              onSend={send}
+              onStop={() => conversation.stop()}
+              onChoose={(itemId, option) => {
+                tick();
+                conversation.choose(itemId, option);
+                send(option);
+              }}
+              onNewChat={newChat}
+              onOpenSettings={() => setSettingsVisible(true)}
+              onOpenSource={(source) => {
+                // A page that is still open is shown in its tab; otherwise it opens again in the same mode.
+                const open = browser.tabs.find((x) => x.incognito === source.incognito && x.url === source.url);
+                if (open) browser.switchTab(open.id);
+                else browser.openTab(source.url, { incognito: source.incognito });
+                closePanel();
+              }}
+              onOpenLink={(url) => {
+                browser.openTab(url, { incognito: browser.active.incognito });
+                closePanel();
+              }}
+              onMessageAction={(action, text) =>
+                runAction(async () => {
+                  if (action === 'copy') {
+                    await copyText(text);
+                    return t('common.copied');
+                  }
+                  if (action === 'share') return shareText(text);
+                  if (action === 'pdf') return shareReportPdf(text);
+                  if (speaking) return stopSpeaking();
+                  await speak(text);
+                })
+              }
+            />
+          </ErrorBoundary>
           <PageMenu
             visible={menuVisible}
             iconRow={iconRow}

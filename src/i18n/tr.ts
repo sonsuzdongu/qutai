@@ -452,4 +452,7 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.forceZoom': 'Yakınlaştırmaya zorla',
   'settings.forceZoomHint': 'Site kapatmış olsa bile her sayfada iki parmakla yakınlaştırın.',
   'action.takeNotes': '📝 Not alınıyor',
+  'error.crashTitle': 'Burada bir şeyler ters gitti',
+  'error.crashBody': 'Qutai’nin bu bölümü çalışmayı durdurdu. Sekmeleriniz ve sohbetleriniz güvende.',
+  'error.crashRetry': 'Tekrar dene',
 };
