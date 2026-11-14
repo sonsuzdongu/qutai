@@ -1,6 +1,7 @@
 import { Lexer, Token, Tokens } from 'marked';
 import { memo, ReactNode, useMemo } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TextStyle, View } from 'react-native';
+import { makeStyles } from '../ui/theme';
 
 type Props = {
   text: string;
@@ -37,6 +38,7 @@ export function columnWidths(table: { header: { text: string }[]; rows: { text: 
 
 /** Renders the assistant's markdown with native components: selectable text, tappable links. */
 export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink, dark }: Props) {
+  const styles = useStyles();
   const d = dark ? darkStyles : null;
   const tokens = useMemo(() => Lexer.lex(text), [text]);
   const inline = (items: Token[] | undefined, key: string): ReactNode[] =>
@@ -199,29 +201,29 @@ export const MarkdownText = memo(function MarkdownText({ text, style, onOpenLink
   return <View style={styles.root}>{blocks(tokens, 'b')}</View>;
 });
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   root: { gap: 6 },
   bold: { fontWeight: '700' },
   italic: { fontStyle: 'italic' },
   strike: { textDecorationLine: 'line-through' },
-  codespan: { fontFamily: MONO, fontSize: 13, backgroundColor: '#f1efe8' },
-  link: { color: '#c96442', textDecorationLine: 'underline' },
+  codespan: { fontFamily: MONO, fontSize: 13, backgroundColor: c.pressed },
+  link: { color: c.tintText, textDecorationLine: 'underline' },
   heading: { fontWeight: '700', marginTop: 4 },
   headingLarge: { fontSize: 17 },
   list: { gap: 3 },
   listItem: { flexDirection: 'row', gap: 6 },
   marker: { minWidth: 16 },
   listBody: { flex: 1, gap: 4 },
-  codeBlock: { backgroundColor: '#f1efe8', borderRadius: 8 },
+  codeBlock: { backgroundColor: c.pressed, borderRadius: 8 },
   codeContent: { padding: 10 },
-  codeText: { fontFamily: MONO, fontSize: 12.5, color: '#333' },
-  quote: { borderLeftWidth: 3, borderLeftColor: '#e0ddd4', paddingLeft: 10, gap: 4 },
+  codeText: { fontFamily: MONO, fontSize: 12.5, color: c.text },
+  quote: { borderLeftWidth: 3, borderLeftColor: c.separator, paddingLeft: 10, gap: 4 },
   hr: { height: StyleSheet.hairlineWidth, backgroundColor: '#d6d3c9', marginVertical: 4 },
-  table: { borderRadius: 8, borderWidth: StyleSheet.hairlineWidth, borderColor: '#d6d3c9' },
-  tableRow: { flexDirection: 'row', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#e0ddd4' },
-  tableHeader: { backgroundColor: '#f5f4ef' },
+  table: { borderRadius: 8, borderWidth: StyleSheet.hairlineWidth, borderColor: c.border },
+  tableRow: { flexDirection: 'row', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.separator },
+  tableHeader: { backgroundColor: c.chrome },
   cell: { paddingHorizontal: 8, paddingVertical: 6, fontSize: 13, lineHeight: 18 },
-});
+}));
 
 const darkStyles = StyleSheet.create({
   code: { backgroundColor: '#35343e' },

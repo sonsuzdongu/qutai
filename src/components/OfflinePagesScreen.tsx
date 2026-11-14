@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { deleteOfflineFile, readOfflinePage } from '../device/offline';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 import { dayLabel, hostOf } from '../i18n/format';
 import { getDb } from '../storage/db';
 import { listOfflinePages, OfflinePage, removeOfflinePage } from '../storage/offlinePages';
@@ -21,6 +22,7 @@ export function OfflinePagesScreen({ visible, onOpenLive, onClose }: Props) {
 }
 
 function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
+  const styles = useStyles();
   const [pages, setPages] = useState<OfflinePage[] | null>(null);
   const [reading, setReading] = useState<{ page: OfflinePage; html: string } | null>(null);
   const reload = useCallback(() => {
@@ -111,22 +113,22 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf9f5' },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.bg },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#d6d3c9',
+    borderBottomColor: c.border,
   },
   side: { flex: 1 },
   right: { alignItems: 'flex-end' },
   title: { fontSize: 17, fontWeight: '600' },
-  back: { fontSize: 16, color: '#c96442' },
-  done: { fontSize: 16, color: '#c96442', fontWeight: '600' },
+  back: { fontSize: 16, color: c.tintText },
+  done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   list: { padding: 16, gap: 8 },
-  empty: { fontSize: 15, color: '#999', textAlign: 'center', marginTop: 32, lineHeight: 21 },
+  empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32, lineHeight: 21 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -135,14 +137,14 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e0ddd4',
+    borderColor: c.separator,
   },
-  pressed: { backgroundColor: '#f1efe8' },
+  pressed: { backgroundColor: c.pressed },
   texts: { flex: 1, gap: 2 },
-  name: { fontSize: 15, color: '#222' },
-  meta: { fontSize: 12, color: '#999' },
+  name: { fontSize: 15, color: c.text },
+  meta: { fontSize: 12, color: c.textSecondary },
   remove: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  removeText: { fontSize: 14, color: '#999' },
-});
+  removeText: { fontSize: 14, color: c.textSecondary },
+}));

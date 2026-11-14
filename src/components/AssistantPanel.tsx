@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsSpeaking } from '../device/speech';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 import type { Source } from '../agent/types';
 import { hostOf } from '../i18n/format';
 import { MarkdownText } from './MarkdownText';
@@ -110,6 +111,7 @@ export function AssistantPanel({
   onOpenSource,
   dark = false,
 }: Props) {
+  const styles = useStyles();
   const d = dark ? darkStyles : null;
   const speaking = useIsSpeaking();
   const { width: screenWidth } = useWindowDimensions();
@@ -278,7 +280,7 @@ export function AssistantPanel({
                 <TextInput
                   ref={inputRef}
                   style={[styles.input, d?.input]}
-                  placeholderTextColor={dark ? '#8f8e99' : '#999'}
+                  placeholderTextColor={dark ? '#a9a8b3' : '#6b6862'}
                   value={text}
                   onChangeText={setText}
                   placeholder={t(research ? 'chat.researchPlaceholder' : 'chat.placeholder')}
@@ -320,6 +322,7 @@ function HeaderButton({
   accessibilityLabel: string;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable onPress={onPress} hitSlop={6} style={styles.headerButton} accessibilityLabel={accessibilityLabel}>
       <Text style={[styles.headerButtonText, useContext(PanelTheme)?.text]}>{label}</Text>
@@ -345,8 +348,9 @@ function ChatRow({
   /** Set while the question can still be answered. */
   onChoose?: (itemId: string, option: string) => void;
 }) {
+  const styles = useStyles();
   const d = useContext(PanelTheme);
-  const textStyle = d ? DARK_ASSISTANT_TEXT : styles.assistantText;
+  const textStyle = styles.assistantText;
   switch (item.kind) {
     case 'user':
       return (
@@ -447,6 +451,7 @@ function ChatRow({
 }
 
 function MessageButton({ label, onPress }: { label: string; onPress: () => void }) {
+  const styles = useStyles();
   return (
     <Pressable onPress={onPress} hitSlop={6} style={({ pressed }) => [styles.messageButton, pressed && styles.pressed]}>
       <Text style={styles.messageButtonText}>{label}</Text>
@@ -454,12 +459,12 @@ function MessageButton({ label, onPress }: { label: string; onPress: () => void 
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
   assistantRow: { alignSelf: 'flex-start', maxWidth: '90%', gap: 4 },
   messageActions: { flexDirection: 'row', gap: 4, marginLeft: 4 },
   messageButton: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10 },
-  messageButtonText: { fontSize: 12, color: '#8a8780' },
+  messageButtonText: { fontSize: 12, color: c.textSecondary },
   pressed: { backgroundColor: '#ebe8e0' },
   backdrop: { backgroundColor: 'rgba(0,0,0,0.35)' },
   panel: {
@@ -467,7 +472,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     right: 0,
-    backgroundColor: '#faf9f5',
+    backgroundColor: c.bg,
     borderTopLeftRadius: 16,
     borderBottomLeftRadius: 16,
     shadowColor: '#000',
@@ -484,43 +489,43 @@ const styles = StyleSheet.create({
     paddingRight: 8,
     height: 56,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e0ddd4',
+    borderBottomColor: c.separator,
   },
-  title: { fontWeight: '700', color: '#c96442', fontSize: 17 },
-  status: { color: '#999', fontSize: 12, marginTop: 1 },
+  title: { fontWeight: '700', color: c.tintText, fontSize: 17 },
+  status: { color: c.textSecondary, fontSize: 12, marginTop: 1 },
   headerTitle: { flex: 1, marginRight: 8 },
   headerButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerButtonText: { fontSize: 18, color: '#555' },
+  headerButtonText: { fontSize: 18, color: c.textSecondary },
   messagesContent: { padding: 12, gap: 8 },
-  empty: { color: '#888', fontSize: 14, lineHeight: 20, marginTop: 8 },
+  empty: { color: c.textSecondary, fontSize: 14, lineHeight: 20, marginTop: 8 },
   bubble: { borderRadius: 14, paddingHorizontal: 12, paddingVertical: 8, maxWidth: '90%' },
-  userBubble: { alignSelf: 'flex-end', backgroundColor: '#c96442' },
+  userBubble: { alignSelf: 'flex-end', backgroundColor: c.tint },
   assistantBubble: {
     alignSelf: 'flex-start',
     maxWidth: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e0ddd4',
+    borderColor: c.separator,
   },
-  userText: { color: '#fff', fontSize: 15 },
-  assistantText: { color: '#222', fontSize: 15, lineHeight: 21 },
-  action: { color: '#777', fontSize: 12, marginLeft: 4 },
-  error: { color: '#b3261e', fontSize: 13, marginLeft: 4 },
+  userText: { color: c.onTint, fontSize: 15 },
+  assistantText: { color: c.text, fontSize: 15, lineHeight: 21 },
+  action: { color: c.textSecondary, fontSize: 12, marginLeft: 4 },
+  error: { color: c.danger, fontSize: 13, marginLeft: 4 },
   sources: { alignSelf: 'stretch', gap: 4 },
-  sourcesTitle: { fontSize: 12, color: '#8a8780', marginLeft: 4 },
+  sourcesTitle: { fontSize: 12, color: c.textSecondary, marginLeft: 4 },
   sourcesRow: { gap: 6, paddingRight: 8 },
   source: {
     width: 150,
     padding: 8,
     gap: 2,
     borderRadius: 10,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e0ddd4',
+    borderColor: c.separator,
   },
-  sourceIndex: { color: '#c96442', fontWeight: '700' },
-  sourceTitle: { fontSize: 12.5, color: '#333', lineHeight: 16 },
-  sourceHost: { fontSize: 11, color: '#999' },
+  sourceIndex: { color: c.tintText, fontWeight: '700' },
+  sourceTitle: { fontSize: 12.5, color: c.text, lineHeight: 16 },
+  sourceHost: { fontSize: 11, color: c.textSecondary },
   choices: { alignSelf: 'stretch', gap: 6 },
   choice: {
     alignSelf: 'flex-start',
@@ -529,13 +534,13 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#c96442',
-    backgroundColor: '#fff',
+    borderColor: c.tint,
+    backgroundColor: c.surface,
   },
-  choiceChosen: { backgroundColor: '#c96442' },
+  choiceChosen: { backgroundColor: c.tint },
   choiceClosed: { opacity: 0.4 },
-  choiceText: { fontSize: 15, color: '#c96442', fontWeight: '600' },
-  choiceTextChosen: { color: '#fff' },
+  choiceText: { fontSize: 15, color: c.tintText, fontWeight: '600' },
+  choiceTextChosen: { color: c.onTint },
   busy: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -549,29 +554,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1e4dc',
   },
   busyText: { flex: 1, fontSize: 13, color: '#6b4a3a' },
-  busyAction: { fontSize: 13, fontWeight: '700', color: '#c96442' },
+  busyAction: { fontSize: 13, fontWeight: '700', color: c.tintText },
   chips: { flexGrow: 0 },
   chipsContent: { paddingHorizontal: 8, paddingTop: 8, gap: 6 },
   chip: {
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 16,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#d6d3c9',
+    borderColor: c.border,
   },
-  chipText: { fontSize: 13, color: '#444' },
-  chipOn: { backgroundColor: '#c96442', borderColor: '#c96442' },
-  chipTextOn: { color: '#fff', fontWeight: '600' },
+  chipText: { fontSize: 13, color: c.text },
+  chipOn: { backgroundColor: c.tint, borderColor: c.tint },
+  chipTextOn: { color: c.onTint, fontWeight: '600' },
   modeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 8, paddingTop: 8 },
-  modeHint: { flex: 1, fontSize: 12, color: '#8a8780' },
+  modeHint: { flex: 1, fontSize: 12, color: c.textSecondary },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     padding: 8,
     gap: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#e0ddd4',
+    borderTopColor: c.separator,
   },
   input: {
     flex: 1,
@@ -581,23 +586,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 10,
     paddingBottom: 10,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#d6d3c9',
+    borderColor: c.border,
     fontSize: 15,
   },
   sendButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#c96442',
+    backgroundColor: c.tint,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sendDisabled: { opacity: 0.4 },
   stopButton: { backgroundColor: '#444' },
-  sendText: { color: '#fff', fontSize: 18, fontWeight: '700' },
-});
+  sendText: { color: c.onTint, fontSize: 18, fontWeight: '700' },
+}));
 
 const darkStyles = StyleSheet.create({
   panel: { backgroundColor: '#1f1e24' },
@@ -611,5 +616,3 @@ const darkStyles = StyleSheet.create({
   assistantBubble: { backgroundColor: '#2b2a33', borderColor: '#3a3944' },
   busy: { backgroundColor: '#3a2c26' },
 });
-
-const DARK_ASSISTANT_TEXT = { ...styles.assistantText, color: '#f2f1f5' };

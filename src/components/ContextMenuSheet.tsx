@@ -2,6 +2,7 @@ import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ContextTarget } from '../browser/contextMenu';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 
 export type ContextAction = { icon: string; label: string; onPress: () => void };
 
@@ -13,6 +14,7 @@ type Props = {
 
 /** Bottom sheet for a long-pressed link or image. */
 export function ContextMenuSheet({ target, actions, onClose }: Props) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={target !== null} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
@@ -52,9 +54,9 @@ export function ContextMenuSheet({ target, actions, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
-  sheet: { backgroundColor: '#faf9f5', borderTopLeftRadius: 18, borderTopRightRadius: 18, paddingTop: 8 },
+const useStyles = makeStyles((c) => ({
+  backdrop: { flex: 1, backgroundColor: c.backdrop },
+  sheet: { backgroundColor: c.bg, borderTopLeftRadius: 18, borderTopRightRadius: 18, paddingTop: 8 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -62,14 +64,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e0ddd4',
+    borderBottomColor: c.separator,
   },
-  preview: { width: 48, height: 48, borderRadius: 8, backgroundColor: '#e8e6df' },
+  preview: { width: 48, height: 48, borderRadius: 8, backgroundColor: c.sunken },
   headerText: { flex: 1, gap: 2 },
-  title: { fontSize: 15, fontWeight: '600', color: '#222' },
-  url: { fontSize: 12, color: '#888' },
+  title: { fontSize: 15, fontWeight: '600', color: c.text },
+  url: { fontSize: 12, color: c.textSecondary },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 13 },
-  pressed: { backgroundColor: '#f1efe8' },
+  pressed: { backgroundColor: c.pressed },
   icon: { width: 22, fontSize: 17, textAlign: 'center' },
-  label: { fontSize: 16, color: '#222' },
-});
+  label: { fontSize: 16, color: c.text },
+}));

@@ -1,12 +1,13 @@
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { fetchSuggestions, SearchEngineId } from '../browser/search';
 import { looksLikeUrl, toUrl } from '../browser/url';
 import { getLanguage, t } from '../i18n';
 import { hostOf } from '../i18n/format';
 import { getDb } from '../storage/db';
 import { LocalSuggestion, localSuggestions } from '../storage/omnibox';
+import { makeStyles } from '../ui/theme';
 
 type Props = {
   text: string;
@@ -34,6 +35,7 @@ export function OmniboxSuggestions({
   onNavigate,
   onAsk,
 }: Props) {
+  const styles = useStyles();
   const darkUI = incognito || !!dark;
   const query = text.trim();
   const [local, setLocal] = useState<{ query: string; items: LocalSuggestion[] }>({ query: '', items: [] });
@@ -129,6 +131,7 @@ function PasteRow({
   incognito: boolean;
   onPaste: (text: string) => void;
 }) {
+  const styles = useStyles();
   // iOS's own paste button reads the clipboard without the "Allow Paste" prompt.
   if (Platform.OS === 'ios') {
     if (!Clipboard.isPasteButtonAvailable) return null;
@@ -176,6 +179,7 @@ function Row({
   accent?: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       onPress={onPress}
@@ -197,14 +201,14 @@ function Row({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   panel: {
     position: 'absolute',
     top: '100%',
     left: 0,
     right: 0,
     maxHeight: 360,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderBottomLeftRadius: 14,
     borderBottomRightRadius: 14,
     shadowColor: '#000',
@@ -225,14 +229,14 @@ const styles = StyleSheet.create({
   panelDark: { backgroundColor: '#2b2a33' },
   scroll: { flexGrow: 0 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 11 },
-  pressed: { backgroundColor: '#f1efe8' },
+  pressed: { backgroundColor: c.pressed },
   pressedDark: { backgroundColor: '#3a3944' },
-  icon: { width: 20, fontSize: 15, textAlign: 'center', color: '#888' },
+  icon: { width: 20, fontSize: 15, textAlign: 'center', color: c.textSecondary },
   rowText: { flex: 1 },
-  title: { fontSize: 15, color: '#222' },
+  title: { fontSize: 15, color: c.text },
   textDark: { color: '#f2f1f5' },
-  subtitle: { fontSize: 12, color: '#888', marginTop: 1 },
-  accent: { color: '#c96442', fontWeight: '600' },
+  subtitle: { fontSize: 12, color: c.textSecondary, marginTop: 1 },
+  accent: { color: c.tintText, fontWeight: '600' },
   pasteButtonRow: { paddingHorizontal: 16, paddingVertical: 10 },
   pasteButton: { height: 36, width: 150 },
-});
+}));

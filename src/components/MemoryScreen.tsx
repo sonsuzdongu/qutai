@@ -3,6 +3,7 @@ import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MAX_MEMORY_CHARS, Memory } from '../agent/memory';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 import { getDb } from '../storage/db';
 import { addMemory, clearMemories, deleteMemory, listMemories, updateMemory } from '../storage/memory';
 
@@ -20,6 +21,7 @@ export function MemoryScreen({ visible, onClose }: Props) {
 const showError = (e: unknown) => Alert.alert(t('memory.saveFailed'), e instanceof Error ? e.message : String(e));
 
 function MemoryList({ onClose }: { onClose: () => void }) {
+  const styles = useStyles();
   const [memories, setMemories] = useState<Memory[] | null>(null);
   const [newText, setNewText] = useState('');
   const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
@@ -132,24 +134,24 @@ function MemoryList({ onClose }: { onClose: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf9f5' },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.bg },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#d6d3c9',
+    borderBottomColor: c.border,
   },
   side: { flex: 1 },
   right: { alignItems: 'flex-end' },
   title: { fontSize: 17, fontWeight: '600' },
-  clear: { fontSize: 15, color: '#b3261e' },
-  done: { fontSize: 16, color: '#c96442', fontWeight: '600' },
+  clear: { fontSize: 15, color: c.danger },
+  done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   disabled: { opacity: 0.35 },
   list: { padding: 16, gap: 8 },
-  hint: { fontSize: 13, color: '#888', lineHeight: 18, marginBottom: 8 },
-  empty: { fontSize: 15, color: '#999', textAlign: 'center', marginTop: 32 },
+  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
+  empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -158,37 +160,37 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e0ddd4',
+    borderColor: c.separator,
   },
-  pressed: { backgroundColor: '#f1efe8' },
-  rowText: { flex: 1, fontSize: 15, color: '#222', lineHeight: 20 },
+  pressed: { backgroundColor: c.pressed },
+  rowText: { flex: 1, fontSize: 15, color: c.text, lineHeight: 20 },
   editInput: { paddingVertical: 0, marginRight: 8 },
   delete: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  deleteText: { fontSize: 14, color: '#999' },
+  deleteText: { fontSize: 14, color: c.textSecondary },
   addRow: {
     flexDirection: 'row',
     gap: 8,
     padding: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#d6d3c9',
+    borderTopColor: c.border,
   },
   addInput: {
     flex: 1,
     height: 42,
     borderRadius: 21,
     paddingHorizontal: 14,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#d6d3c9',
+    borderColor: c.border,
     fontSize: 15,
   },
   addButton: {
     paddingHorizontal: 16,
     borderRadius: 21,
-    backgroundColor: '#c96442',
+    backgroundColor: c.tint,
     justifyContent: 'center',
   },
-  addText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-});
+  addText: { color: c.onTint, fontWeight: '700', fontSize: 15 },
+}));

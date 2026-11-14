@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProvider, PROVIDER_ORDER } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
+import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { ActionLogScreen } from './ActionLogScreen';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
@@ -40,6 +42,7 @@ export function SettingsModal({ visible, settings, onSave, onClose, sitePermissi
 }
 
 function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData }: Omit<Props, 'visible'>) {
+  const styles = useStyles();
   const [draft, setDraft] = useState(settings);
   const [memoryVisible, setMemoryVisible] = useState(false);
   const [sitesVisible, setSitesVisible] = useState(false);
@@ -157,7 +160,7 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
             <Text style={styles.label}>{t('settings.searchSuggestions')}</Text>
             <Text style={styles.hint}>{t('settings.searchSuggestionsHint')}</Text>
           </View>
-          <Switch
+          <ThemedSwitch
             value={draft.searchSuggestions}
             onValueChange={(searchSuggestions) => setDraft({ ...draft, searchSuggestions })}
           />
@@ -184,7 +187,7 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
             <Text style={styles.label}>{t('settings.darkSites')}</Text>
             <Text style={styles.hint}>{t('settings.darkSitesHint')}</Text>
           </View>
-          <Switch value={draft.darkSites} onValueChange={(darkSites) => setDraft({ ...draft, darkSites })} />
+          <ThemedSwitch value={draft.darkSites} onValueChange={(darkSites) => setDraft({ ...draft, darkSites })} />
         </View>
         <Text style={styles.label}>{t('settings.addressBarPosition')}</Text>
         <View style={styles.segment}>
@@ -207,7 +210,7 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
             <Text style={styles.label}>{t('settings.haptics')}</Text>
             <Text style={styles.hint}>{t('settings.hapticsHint')}</Text>
           </View>
-          <Switch value={draft.haptics} onValueChange={(haptics) => setDraft({ ...draft, haptics })} />
+          <ThemedSwitch value={draft.haptics} onValueChange={(haptics) => setDraft({ ...draft, haptics })} />
         </View>
 
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.content')}</Text>
@@ -216,14 +219,14 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
             <Text style={styles.label}>{t('settings.blockAds')}</Text>
             <Text style={styles.hint}>{t('settings.blockAdsHint')}</Text>
           </View>
-          <Switch value={draft.blockAds} onValueChange={(blockAds) => setDraft({ ...draft, blockAds })} />
+          <ThemedSwitch value={draft.blockAds} onValueChange={(blockAds) => setDraft({ ...draft, blockAds })} />
         </View>
         <View style={styles.switchRow}>
           <View style={styles.flex}>
             <Text style={styles.label}>{t('settings.hideCookieBanners')}</Text>
             <Text style={styles.hint}>{t('settings.hideCookieBannersHint')}</Text>
           </View>
-          <Switch
+          <ThemedSwitch
             value={draft.hideCookieBanners}
             onValueChange={(hideCookieBanners) => setDraft({ ...draft, hideCookieBanners })}
           />
@@ -234,14 +237,14 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
             <Text style={styles.label}>{t('settings.httpsOnly')}</Text>
             <Text style={styles.hint}>{t('settings.httpsOnlyHint')}</Text>
           </View>
-          <Switch value={draft.httpsOnly} onValueChange={(httpsOnly) => setDraft({ ...draft, httpsOnly })} />
+          <ThemedSwitch value={draft.httpsOnly} onValueChange={(httpsOnly) => setDraft({ ...draft, httpsOnly })} />
         </View>
         <View style={styles.switchRow}>
           <View style={styles.flex}>
             <Text style={styles.label}>{t('settings.thirdPartyCookies')}</Text>
             <Text style={styles.hint}>{t('settings.thirdPartyCookiesHint')}</Text>
           </View>
-          <Switch
+          <ThemedSwitch
             value={draft.blockThirdPartyCookies}
             onValueChange={(blockThirdPartyCookies) => setDraft({ ...draft, blockThirdPartyCookies })}
           />
@@ -256,14 +259,14 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
             <Text style={styles.label}>{t('settings.appLock')}</Text>
             <Text style={styles.hint}>{t('settings.appLockHint')}</Text>
           </View>
-          <Switch value={draft.appLock} onValueChange={(on) => setLock('appLock', on)} />
+          <ThemedSwitch value={draft.appLock} onValueChange={(on) => setLock('appLock', on)} />
         </View>
         <View style={styles.switchRow}>
           <View style={styles.flex}>
             <Text style={styles.label}>{t('settings.incognitoLock')}</Text>
             <Text style={styles.hint}>{t('settings.incognitoLockHint')}</Text>
           </View>
-          <Switch value={draft.incognitoLock} onValueChange={(on) => setLock('incognitoLock', on)} />
+          <ThemedSwitch value={draft.incognitoLock} onValueChange={(on) => setLock('incognitoLock', on)} />
         </View>
 
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.assistant')}</Text>
@@ -272,7 +275,7 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
             <Text style={styles.label}>{t('settings.confirmActions')}</Text>
             <Text style={styles.hint}>{t('settings.confirmActionsHint')}</Text>
           </View>
-          <Switch
+          <ThemedSwitch
             value={draft.confirmActions}
             onValueChange={(confirmActions) => setDraft({ ...draft, confirmActions })}
           />
@@ -283,7 +286,7 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
             <Text style={styles.label}>{t('settings.webSearch')}</Text>
             <Text style={styles.hint}>{t('settings.webSearchHint', { provider: provider.label })}</Text>
           </View>
-          <Switch value={draft.webSearch} onValueChange={(webSearch) => setDraft({ ...draft, webSearch })} />
+          <ThemedSwitch value={draft.webSearch} onValueChange={(webSearch) => setDraft({ ...draft, webSearch })} />
         </View>
 
         <Pressable onPress={() => setSitesVisible(true)} style={styles.option} accessibilityRole="button">
@@ -299,7 +302,7 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
             <Text style={styles.label}>{t('settings.memoryEnabled')}</Text>
             <Text style={styles.hint}>{t('settings.memoryHint')}</Text>
           </View>
-          <Switch
+          <ThemedSwitch
             value={draft.memoryEnabled}
             onValueChange={(memoryEnabled) => setDraft({ ...draft, memoryEnabled })}
           />
@@ -316,8 +319,8 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf9f5' },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.bg },
   flex: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -325,17 +328,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#d6d3c9',
+    borderBottomColor: c.border,
   },
   title: { fontSize: 17, fontWeight: '600' },
-  cancel: { fontSize: 16, color: '#666' },
-  save: { fontSize: 16, color: '#c96442', fontWeight: '600' },
+  cancel: { fontSize: 16, color: c.textSecondary },
+  save: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   content: { padding: 16, gap: 8 },
   label: { fontSize: 15, fontWeight: '600', marginTop: 12 },
-  sectionLabel: { fontSize: 13, color: '#888', textTransform: 'uppercase', marginTop: 24 },
-  hint: { fontSize: 13, color: '#888', lineHeight: 18 },
-  link: { color: '#c96442', fontWeight: '600' },
-  segment: { flexDirection: 'row', backgroundColor: '#e8e6df', borderRadius: 10, padding: 3 },
+  sectionLabel: { fontSize: 13, color: c.textSecondary, textTransform: 'uppercase', marginTop: 24 },
+  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  link: { color: c.tintText, fontWeight: '600' },
+  segment: { flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
   segmentButton: {
     flex: 1,
     flexDirection: 'row',
@@ -345,21 +348,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
   },
-  segmentSelected: { backgroundColor: '#fff' },
-  segmentText: { fontSize: 14, color: '#555' },
-  segmentTextSelected: { color: '#222', fontWeight: '700' },
+  segmentSelected: { backgroundColor: c.surface },
+  segmentText: { fontSize: 14, color: c.textSecondary },
+  segmentTextSelected: { color: c.text, fontWeight: '700' },
   keyDot: { fontSize: 8, color: '#3a9b5c' },
   input: {
     height: 44,
     borderRadius: 10,
     paddingHorizontal: 12,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#d6d3c9',
+    borderColor: c.border,
     fontSize: 15,
   },
   option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 10 },
-  radio: { fontSize: 18, color: '#c96442' },
+  radio: { fontSize: 18, color: c.tintText },
   optionText: { fontSize: 15 },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
-});
+}));

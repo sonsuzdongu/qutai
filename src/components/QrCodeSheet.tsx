@@ -1,8 +1,9 @@
 import type { ComponentRef } from 'react';
 import { memo, useMemo, useRef } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 import { qrMatrix } from '../device/qr';
 
 type Props = {
@@ -17,6 +18,7 @@ const SIZE = 232;
 
 /** Draws the code with plain views, so it needs no SVG library. */
 const QrGrid = memo(function QrGrid({ text }: { text: string }) {
+  const styles = useStyles();
   const rows = useMemo(() => qrMatrix(text), [text]);
   const cell = SIZE / rows.length;
   return (
@@ -34,6 +36,7 @@ const QrGrid = memo(function QrGrid({ text }: { text: string }) {
 
 /** Shows the page's address as a QR code, to open it on another device. */
 export function QrCodeSheet({ url, onShareLink, onShareImage, onClose }: Props) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const codeRef = useRef<ComponentRef<typeof View>>(null);
   return (
@@ -66,20 +69,20 @@ export function QrCodeSheet({ url, onShareLink, onShareImage, onClose }: Props) 
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
+const useStyles = makeStyles((c) => ({
+  backdrop: { flex: 1, backgroundColor: c.backdrop },
   sheet: {
-    backgroundColor: '#faf9f5',
+    backgroundColor: c.bg,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     padding: 20,
     alignItems: 'center',
     gap: 14,
   },
-  title: { fontSize: 17, fontWeight: '700', color: '#222' },
-  code: { padding: 16, backgroundColor: '#fff', borderRadius: 12 },
+  title: { fontSize: 17, fontWeight: '700', color: c.text },
+  code: { padding: 16, backgroundColor: c.surface, borderRadius: 12 },
   row: { flexDirection: 'row' },
-  url: { fontSize: 13, color: '#888', textAlign: 'center' },
+  url: { fontSize: 13, color: c.textSecondary, textAlign: 'center' },
   buttons: { flexDirection: 'row', gap: 10, alignSelf: 'stretch' },
   button: {
     flex: 1,
@@ -88,9 +91,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#c96442',
+    borderColor: c.tint,
   },
-  buttonText: { fontSize: 15, fontWeight: '600', color: '#c96442' },
-  primary: { backgroundColor: '#c96442' },
-  primaryText: { color: '#fff' },
-});
+  buttonText: { fontSize: 15, fontWeight: '600', color: c.tintText },
+  primary: { backgroundColor: c.tint },
+  primaryText: { color: c.onTint },
+}));

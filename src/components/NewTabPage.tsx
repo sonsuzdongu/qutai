@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
+import { makeStyles } from '../ui/theme';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
@@ -36,6 +37,8 @@ function defaultSites(): TopSite[] {
 type Data = { sites: TopSite[]; bookmarks: Bookmark[]; recent: HistoryEntry[] };
 
 export function NewTabPage({ incognito, darkMode, searchEngine, active, onNavigate, onAsk, onOpenLibrary }: Props) {
+  // Incognito is always dark, whatever the app's appearance.
+  const styles = useStyles(incognito);
   const [text, setText] = useState('');
   const [data, setData] = useState<Data | null>(null);
   const [reload, setReload] = useState(0);
@@ -103,7 +106,7 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
           onChangeText={setText}
           onSubmitEditing={submit}
           placeholder={t('address.placeholder')}
-          placeholderTextColor={darkUI ? '#8f8e99' : '#999'}
+          placeholderTextColor={darkUI ? '#a9a8b3' : '#6b6862'}
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"
@@ -170,6 +173,7 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
 }
 
 function Section({ title, onSeeAll, children }: { title: string; onSeeAll: () => void; children: ReactNode }) {
+  const styles = useStyles();
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
@@ -184,6 +188,7 @@ function Section({ title, onSeeAll, children }: { title: string; onSeeAll: () =>
 }
 
 function LinkRow({ title, url, onPress }: { title: string; url: string; onPress: () => void }) {
+  const styles = useStyles();
   const host = hostOf(url);
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}>
@@ -209,7 +214,7 @@ function colorFor(host: string): string {
   return `hsl(${Math.abs(hash) % 360}, 45%, 52%)`;
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
   content: { paddingHorizontal: 20, paddingTop: 40, paddingBottom: 40, gap: 20 },
   logo: { fontSize: 28, fontWeight: '700', textAlign: 'center' },
@@ -228,20 +233,20 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 16, paddingVertical: 0 },
   askButton: {
-    backgroundColor: '#c96442',
+    backgroundColor: c.tint,
     borderRadius: 19,
     paddingHorizontal: 12,
     height: 38,
     justifyContent: 'center',
   },
-  askText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  askText: { color: c.onTint, fontWeight: '600', fontSize: 14 },
   dimmed: { opacity: 0.45 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 16 },
   tile: { width: '25%', alignItems: 'center', gap: 6 },
   tileIcon: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  tileLetter: { color: '#fff', fontSize: 22, fontWeight: '700' },
-  tileTitle: { fontSize: 12, color: '#444', maxWidth: '90%' },
-  section: { backgroundColor: '#fff', borderRadius: 16, paddingVertical: 6 },
+  tileLetter: { color: c.onTint, fontSize: 22, fontWeight: '700' },
+  tileTitle: { fontSize: 12, color: c.text, maxWidth: '90%' },
+  section: { backgroundColor: c.surface, borderRadius: 16, paddingVertical: 6 },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -249,25 +254,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
   },
-  sectionTitle: { fontSize: 13, fontWeight: '600', color: '#777' },
-  seeAll: { fontSize: 13, color: '#c96442', fontWeight: '600' },
+  sectionTitle: { fontSize: 13, fontWeight: '600', color: c.textSecondary },
+  seeAll: { fontSize: 13, color: c.tintText, fontWeight: '600' },
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8 },
-  pressed: { backgroundColor: '#f1efe8' },
+  pressed: { backgroundColor: c.pressed },
   linkIcon: { width: 28, height: 28, borderRadius: 7, alignItems: 'center', justifyContent: 'center' },
-  linkLetter: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  linkTitle: { fontSize: 14, color: '#222' },
-  linkHost: { fontSize: 12, color: '#888' },
+  linkLetter: { color: c.onTint, fontSize: 13, fontWeight: '700' },
+  linkTitle: { fontSize: 14, color: c.text },
+  linkHost: { fontSize: 12, color: c.textSecondary },
   card: { borderRadius: 16, padding: 16, gap: 8 },
   cardTitle: { fontSize: 17, fontWeight: '700' },
   cardBody: { fontSize: 14, lineHeight: 20 },
-});
+}));
 
 const light = StyleSheet.create({
   page: { backgroundColor: '#f5f4ef' },
-  logo: { color: '#c96442' },
+  logo: { color: '#a8502f' },
   search: { backgroundColor: '#fff' },
   text: { color: '#222' },
-  dim: { color: '#777' },
+  dim: { color: '#6b6862' },
   card: { backgroundColor: '#fff' },
 });
 

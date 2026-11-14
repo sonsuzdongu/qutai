@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, Modal, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 import { groupByDay, timeLabel } from '../i18n/format';
 import { ActionEntry, clearActions, listActions } from '../storage/actionLog';
 import { getDb } from '../storage/db';
@@ -19,6 +20,7 @@ export function ActionLogScreen({ visible, onClose }: Props) {
 }
 
 function ActionLog({ onClose }: { onClose: () => void }) {
+  const styles = useStyles();
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const reload = useCallback(() => {
     getDb()
@@ -82,29 +84,29 @@ function ActionLog({ onClose }: { onClose: () => void }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf9f5' },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.bg },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#d6d3c9',
+    borderBottomColor: c.border,
   },
   side: { flex: 1 },
   right: { alignItems: 'flex-end' },
   title: { fontSize: 17, fontWeight: '600' },
-  clear: { fontSize: 15, color: '#b3261e' },
-  done: { fontSize: 16, color: '#c96442', fontWeight: '600' },
+  clear: { fontSize: 15, color: c.danger },
+  done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   disabled: { opacity: 0.35 },
   list: { padding: 16, gap: 2 },
-  hint: { fontSize: 13, color: '#888', lineHeight: 18, marginBottom: 8 },
-  empty: { fontSize: 15, color: '#999', textAlign: 'center', marginTop: 32 },
-  day: { fontSize: 13, fontWeight: '700', color: '#888', marginTop: 14, marginBottom: 4 },
+  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
+  empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
+  day: { fontSize: 13, fontWeight: '700', color: c.textSecondary, marginTop: 14, marginBottom: 4 },
   row: { flexDirection: 'row', gap: 10, paddingVertical: 6 },
-  time: { width: 44, fontSize: 12, color: '#999', marginTop: 2 },
+  time: { width: 44, fontSize: 12, color: c.textSecondary, marginTop: 2 },
   texts: { flex: 1, gap: 1 },
-  description: { fontSize: 14, color: '#222' },
-  failed: { color: '#b3261e' },
-  host: { fontSize: 12, color: '#999' },
-});
+  description: { fontSize: 14, color: c.text },
+  failed: { color: c.danger },
+  host: { fontSize: 12, color: c.textSecondary },
+}));

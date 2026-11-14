@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 
 type Props = {
   /** What is locked; null hides the screen. */
@@ -12,6 +13,7 @@ type Props = {
 
 /** Covers the app until the user proves it's them; asks right away when it appears. */
 export function LockScreen({ locked, onUnlock, onLeave }: Props) {
+  const styles = useStyles();
   useEffect(() => {
     if (locked) onUnlock();
     // Ask once when the lock appears; the button asks again.
@@ -36,19 +38,19 @@ export function LockScreen({ locked, onUnlock, onLeave }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 18,
-    backgroundColor: '#f5f4ef',
+    backgroundColor: c.chrome,
     padding: 32,
   },
   incognito: { backgroundColor: '#1c1b22' },
   icon: { fontSize: 52 },
-  title: { fontSize: 18, fontWeight: '700', color: '#888', textAlign: 'center' },
-  button: { paddingHorizontal: 28, height: 48, borderRadius: 24, backgroundColor: '#c96442', justifyContent: 'center' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  title: { fontSize: 18, fontWeight: '700', color: c.textSecondary, textAlign: 'center' },
+  button: { paddingHorizontal: 28, height: 48, borderRadius: 24, backgroundColor: c.tint, justifyContent: 'center' },
+  buttonText: { color: c.onTint, fontSize: 16, fontWeight: '700' },
   leave: { color: '#a9a8b3', fontSize: 15 },
-});
+}));

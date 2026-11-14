@@ -1,6 +1,7 @@
 import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 
 export type MenuItem = {
   icon: string;
@@ -27,6 +28,7 @@ type Props = {
 
 /** Overflow menu anchored under the ⋮ button, like the Chrome page menu. */
 export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose }: Props) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const top = insets.top + 48;
@@ -95,7 +97,7 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   menu: {
     position: 'absolute',
     minWidth: 230,
@@ -111,7 +113,7 @@ const styles = StyleSheet.create({
   icon: { width: 22, fontSize: 17, textAlign: 'center' },
   label: { fontSize: 15 },
   labelFlex: { flex: 1 },
-  check: { fontSize: 16, color: '#c96442', fontWeight: '700' },
+  check: { fontSize: 16, color: c.tintText, fontWeight: '700' },
   disabled: { opacity: 0.35 },
   separator: { height: StyleSheet.hairlineWidth, marginVertical: 4 },
   iconRow: {
@@ -120,12 +122,12 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     marginBottom: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#e0ddd4',
+    borderBottomColor: c.separator,
   },
   iconButton: { width: 48, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 10 },
   iconRowText: { fontSize: 20 },
-  active: { color: '#c96442' },
-});
+  active: { color: c.tintText },
+}));
 
 const light = StyleSheet.create({
   menu: { backgroundColor: '#fff' },

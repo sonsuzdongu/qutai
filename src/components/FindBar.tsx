@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 
 type Result = { index: number; count: number };
 
@@ -9,6 +10,7 @@ const SEARCH_DELAY_MS = 200;
 
 /** Replaces the address bar while searching the page; matches are highlighted by the page script. */
 export function FindBar({ tab, darkMode, onClose }: { tab: Tab; darkMode?: boolean; onClose: () => void }) {
+  const styles = useStyles();
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<Result & { query: string }>({ query: '', index: -1, count: 0 });
   const dark = tab.incognito || !!darkMode;
@@ -47,7 +49,7 @@ export function FindBar({ tab, darkMode, onClose }: { tab: Tab; darkMode?: boole
           onChangeText={setQuery}
           onSubmitEditing={() => step(1)}
           placeholder={t('find.placeholder')}
-          placeholderTextColor={dark ? '#8f8e99' : '#999'}
+          placeholderTextColor={dark ? '#a9a8b3' : '#6b6862'}
           autoFocus
           autoCapitalize="none"
           autoCorrect={false}
@@ -76,6 +78,7 @@ function Button({
   dark: boolean;
   a11y: string;
 }) {
+  const styles = useStyles();
   return (
     <Pressable onPress={onPress} disabled={disabled} hitSlop={6} style={styles.button} accessibilityLabel={a11y}>
       <Text style={[styles.buttonText, dark && styles.textDark, disabled && styles.disabled]}>{label}</Text>
@@ -83,16 +86,16 @@ function Button({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 8,
     paddingVertical: 6,
     gap: 2,
-    backgroundColor: '#f5f4ef',
+    backgroundColor: c.chrome,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#d6d3c9',
+    borderBottomColor: c.border,
   },
   barDark: { backgroundColor: '#24232b', borderBottomColor: '#3a3944' },
   field: {
@@ -100,17 +103,17 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     paddingHorizontal: 14,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
   fieldDark: { backgroundColor: '#3a3944' },
-  input: { flex: 1, fontSize: 15, color: '#222', paddingVertical: 0, height: '100%' },
+  input: { flex: 1, fontSize: 15, color: c.text, paddingVertical: 0, height: '100%' },
   textDark: { color: '#f2f1f5' },
-  count: { fontSize: 13, color: '#888' },
-  none: { color: '#b3261e' },
+  count: { fontSize: 13, color: c.textSecondary },
+  none: { color: c.danger },
   button: { width: 34, height: 36, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { fontSize: 16, color: '#333' },
+  buttonText: { fontSize: 16, color: c.text },
   disabled: { opacity: 0.3 },
-});
+}));

@@ -2,6 +2,7 @@ import { useState, useSyncExternalStore } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { SitePermissionSheet } from './SitePermissionSheet';
 
@@ -9,6 +10,7 @@ type Props = { visible: boolean; store: SitePermissionStore; onClose: () => void
 
 /** Sites with their own permission; tap to change, ✕ to go back to the default. */
 export function SitePermissionsScreen({ visible, store, onClose }: Props) {
+  const styles = useStyles();
   const version = useSyncExternalStore(store.subscribe, () =>
     store
       .list()
@@ -70,22 +72,22 @@ export function SitePermissionsScreen({ visible, store, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf9f5' },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.bg },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#d6d3c9',
+    borderBottomColor: c.border,
   },
   side: { flex: 1 },
   right: { alignItems: 'flex-end' },
   title: { fontSize: 17, fontWeight: '600' },
-  done: { fontSize: 16, color: '#c96442', fontWeight: '600' },
+  done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   list: { padding: 16, gap: 8 },
-  hint: { fontSize: 13, color: '#888', lineHeight: 18, marginBottom: 8 },
-  empty: { fontSize: 15, color: '#999', textAlign: 'center', marginTop: 32 },
+  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
+  empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -93,15 +95,15 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#e0ddd4',
+    borderColor: c.separator,
   },
-  pressed: { backgroundColor: '#f1efe8' },
+  pressed: { backgroundColor: c.pressed },
   texts: { flex: 1, gap: 2 },
-  host: { fontSize: 15, color: '#222' },
-  level: { fontSize: 13, color: '#888' },
-  danger: { color: '#b3261e' },
+  host: { fontSize: 15, color: c.text },
+  level: { fontSize: 13, color: c.textSecondary },
+  danger: { color: c.danger },
   remove: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  removeText: { fontSize: 14, color: '#999' },
-});
+  removeText: { fontSize: 14, color: c.textSecondary },
+}));

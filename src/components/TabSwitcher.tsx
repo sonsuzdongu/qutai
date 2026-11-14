@@ -21,6 +21,7 @@ import { bump } from '../device/haptics';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { dropTab, Measurable, sectionsOf, TabDrag } from './tabDrag';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 import { hostOf } from '../i18n/format';
 
 type Props = {
@@ -56,6 +57,7 @@ export function TabSwitcher({ visible, darkMode = false, browser, onClose, onCom
 }
 
 function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visible' | 'darkMode'>) {
+  const styles = useStyles();
   // Redraws on its own when tabs or groups change, not only when the app does.
   useBrowser(browser);
   const [incognito, setIncognito] = useState(browser.active.incognito);
@@ -196,7 +198,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
             value={query}
             onChangeText={setQuery}
             placeholder={t('tabs.search')}
-            placeholderTextColor={incognito ? '#8f8e99' : '#999'}
+            placeholderTextColor={incognito ? '#a9a8b3' : '#6b6862'}
             autoCapitalize="none"
             autoCorrect={false}
             returnKeyType="search"
@@ -332,6 +334,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
 const RECENT_SHOWN = 8;
 
 function RecentlyClosed({ browser, onReopen }: { browser: Browser; onReopen: (index: number) => void }) {
+  const styles = useStyles();
   const closed = browser.recentlyClosed.slice(0, RECENT_SHOWN);
   if (closed.length === 0) return null;
   return (
@@ -370,6 +373,7 @@ function SegmentButton({
   incognito: boolean;
   onPress: () => void;
 }) {
+  const styles = useStyles();
   const theme = useTheme(incognito);
   return (
     <Pressable
@@ -400,6 +404,7 @@ function GroupHeader({
   onRename: (name: string) => void;
   onUngroup: () => void;
 }) {
+  const styles = useStyles();
   const theme = useTheme(incognito);
   const [name, setName] = useState(group.name);
   return (
@@ -457,6 +462,7 @@ function TabCard({
   onPress: () => void;
   onCloseTab: () => void;
 }) {
+  const styles = useStyles();
   const theme = useTheme(incognito);
   const previewHeight = width * 1.25;
   // The new tab page has no host; the card falls back to its "New tab" title.
@@ -520,6 +526,7 @@ function TabCard({
 }
 
 function EmptyState({ incognito }: { incognito: boolean }) {
+  const styles = useStyles();
   const theme = useTheme(incognito);
   return (
     <View style={styles.empty}>
@@ -534,14 +541,14 @@ function EmptyState({ incognito }: { incognito: boolean }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   container: { flex: 1 },
   header: { paddingHorizontal: PADDING, paddingVertical: 10, alignItems: 'center' },
   compare: { position: 'absolute', right: PADDING, top: 0, bottom: 0, justifyContent: 'center' },
   compareText: { fontSize: 15, fontWeight: '600' },
   compareButton: { flex: 2, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  compareButtonText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  check: { fontSize: 16, color: '#999' },
+  compareButtonText: { color: c.onTint, fontSize: 15, fontWeight: '700' },
+  check: { fontSize: 16, color: c.textSecondary },
   segment: { flexDirection: 'row', borderRadius: 10, padding: 3 },
   segmentButton: { paddingVertical: 7, paddingHorizontal: 16, borderRadius: 8 },
   segmentText: { fontSize: 14 },
@@ -605,16 +612,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: 'rgba(30,30,30,0.94)',
   },
-  undoText: { color: '#fff', fontSize: 14 },
+  undoText: { color: c.onTint, fontSize: 14 },
   undoAction: { color: '#f0a07f', fontSize: 14, fontWeight: '700' },
-  recent: { marginTop: 8, borderRadius: 14, backgroundColor: '#fff', paddingVertical: 6 },
-  recentTitle: { fontSize: 13, fontWeight: '600', color: '#777', paddingHorizontal: 14, paddingVertical: 6 },
+  recent: { marginTop: 8, borderRadius: 14, backgroundColor: c.surface, paddingVertical: 6 },
+  recentTitle: { fontSize: 13, fontWeight: '600', color: c.textSecondary, paddingHorizontal: 14, paddingVertical: 6 },
   recentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8 },
-  recentPressed: { backgroundColor: '#f1efe8' },
-  recentIcon: { fontSize: 16, color: '#999', width: 18, textAlign: 'center' },
+  recentPressed: { backgroundColor: c.pressed },
+  recentIcon: { fontSize: 16, color: c.textSecondary, width: 18, textAlign: 'center' },
   recentText: { flex: 1 },
-  recentRowTitle: { fontSize: 14, color: '#222' },
-  recentHost: { fontSize: 12, color: '#888' },
+  recentRowTitle: { fontSize: 14, color: c.text },
+  recentHost: { fontSize: 12, color: c.textSecondary },
   toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -627,22 +634,22 @@ const styles = StyleSheet.create({
   toolbarText: { fontSize: 15 },
   dimmed: { opacity: 0.35 },
   newTab: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-  newTabText: { color: '#fff', fontSize: 26, fontWeight: '500', marginTop: -2 },
-});
+  newTabText: { color: c.onTint, fontSize: 26, fontWeight: '500', marginTop: -2 },
+}));
 
 const light = StyleSheet.create({
   container: { backgroundColor: '#efede6' },
   segment: { backgroundColor: '#dedbd1' },
   segmentSelected: { backgroundColor: '#fff' },
   text: { color: '#222' },
-  dimText: { color: '#999' },
-  accent: { color: '#c96442' },
+  dimText: { color: '#6b6862' },
+  accent: { color: '#a8502f' },
   card: { backgroundColor: '#fff' },
   activeCard: { borderColor: '#c96442' },
   preview: { backgroundColor: '#f5f4ef' },
   search: { backgroundColor: '#fff' },
   toolbar: { backgroundColor: '#f5f4ef', borderTopColor: '#d6d3c9' },
-  newTab: { backgroundColor: '#c96442' },
+  newTab: { backgroundColor: '#b4532f' },
 });
 
 const dark = StyleSheet.create({
@@ -650,7 +657,7 @@ const dark = StyleSheet.create({
   segment: { backgroundColor: '#2b2a33' },
   segmentSelected: { backgroundColor: '#42414d' },
   text: { color: '#f2f1f5' },
-  dimText: { color: '#8f8e99' },
+  dimText: { color: '#a9a8b3' },
   accent: { color: '#c9a7ff' },
   card: { backgroundColor: '#2b2a33' },
   activeCard: { borderColor: '#a77bff' },
@@ -664,5 +671,5 @@ const darkNormal = StyleSheet.create({
   ...dark,
   accent: { color: '#e08a66' },
   activeCard: { borderColor: '#c96442' },
-  newTab: { backgroundColor: '#c96442' },
+  newTab: { backgroundColor: '#b4532f' },
 });

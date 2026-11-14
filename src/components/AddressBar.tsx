@@ -16,6 +16,7 @@ import {
 import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { OmniboxSuggestions } from './OmniboxSuggestions';
 
@@ -71,6 +72,7 @@ export function AddressBar({
   onOpenTabs,
   onToggleAssistant,
 }: Props) {
+  const styles = useStyles();
   const [text, setText] = useState(url);
   const [editing, setEditing] = useState(false);
   const darkUI = incognito || !!darkMode;
@@ -104,7 +106,7 @@ export function AddressBar({
           <TextInput
             style={[styles.fieldText, styles.fieldTextFlex, styles.input, dark?.text]}
             maxFontSizeMultiplier={MAX_FONT_SCALE}
-            placeholderTextColor={darkUI ? '#8f8e99' : '#999'}
+            placeholderTextColor={darkUI ? '#a9a8b3' : '#6b6862'}
             value={text}
             onChangeText={setText}
             onBlur={() => setEditing(false)}
@@ -222,6 +224,7 @@ export function AddressBar({
 
 /** Thin indeterminate progress line along the bottom edge while a page loads. */
 function LoadingBar({ top }: { top: boolean }) {
+  const styles = useStyles();
   const { width } = useWindowDimensions();
   const [progress] = useState(() => new Animated.Value(0));
   const reduceMotion = useReduceMotion();
@@ -262,6 +265,7 @@ function IconButton({
   incognito?: boolean;
   accessibilityLabel?: string;
 }) {
+  const styles = useStyles();
   return (
     <Pressable
       onPress={onPress}
@@ -280,7 +284,7 @@ function IconButton({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   bar: {
     // Above the page, so the suggestion dropdown can overlap it.
     zIndex: 10,
@@ -289,9 +293,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 6,
     gap: 2,
-    backgroundColor: '#f5f4ef',
+    backgroundColor: c.chrome,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#d6d3c9',
+    borderBottomColor: c.border,
   },
   field: {
     flex: 1,
@@ -299,12 +303,12 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 14,
     paddingVertical: 0,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     justifyContent: 'center',
   },
   fieldText: {
     fontSize: 15,
-    color: '#222',
+    color: c.text,
     textAlign: 'left',
     textAlignVertical: 'center',
     // Android adds extra font padding that pushes single-line text off-center.
@@ -313,12 +317,12 @@ const styles = StyleSheet.create({
   fieldRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 6 },
   fieldTextFlex: { flex: 1 },
   input: { paddingVertical: 0, height: '100%' },
-  backdrop: { position: 'absolute', top: '100%', left: 0, right: 0, height: 4000, backgroundColor: 'rgba(0,0,0,0.25)' },
+  backdrop: { position: 'absolute', top: '100%', left: 0, right: 0, height: 4000, backgroundColor: c.backdrop },
   backdropAbove: { top: 'auto', bottom: '100%' },
   barBottom: {
     borderBottomWidth: 0,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#d6d3c9',
+    borderTopColor: c.border,
   },
   clear: {
     width: 20,
@@ -328,17 +332,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  clearText: { fontSize: 11, color: '#555', fontWeight: '700' },
-  security: { fontSize: 12, color: '#888' },
-  insecure: { color: '#b3261e', fontSize: 14 },
+  clearText: { fontSize: 11, color: c.textSecondary, fontWeight: '700' },
+  security: { fontSize: 12, color: c.textSecondary },
+  insecure: { color: c.danger, fontSize: 14 },
   incognitoBadge: { fontSize: 14 },
-  placeholder: { color: '#999' },
+  placeholder: { color: c.textSecondary },
   icon: { width: 32, height: 36, alignItems: 'center', justifyContent: 'center' },
-  iconText: { fontSize: 22, color: '#333' },
+  iconText: { fontSize: 22, color: c.text },
   disabled: { color: '#bbb' },
   loadingTrack: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, overflow: 'hidden' },
   loadingTrackTop: { bottom: 'auto', top: 0 },
-  loadingBar: { height: 2, backgroundColor: '#c96442', borderRadius: 1 },
+  loadingBar: { height: 2, backgroundColor: c.tint, borderRadius: 1 },
   tabCount: {
     minWidth: 22,
     height: 22,
@@ -349,7 +353,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 3,
   },
-  tabCountText: { fontSize: 12, fontWeight: '700', color: '#333' },
+  tabCountText: { fontSize: 12, fontWeight: '700', color: c.text },
   assistantButton: {
     width: 34,
     height: 34,
@@ -357,11 +361,11 @@ const styles = StyleSheet.create({
     marginLeft: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#c96442',
+    backgroundColor: c.tint,
   },
   assistantButtonActive: { backgroundColor: '#8f4026' },
-  assistantIcon: { fontSize: 18, color: '#fff', fontWeight: '700' },
-});
+  assistantIcon: { fontSize: 18, color: c.onTint, fontWeight: '700' },
+}));
 
 /** The bar has a fixed height, so very large text sizes are capped there. */
 const MAX_FONT_SCALE = 1.4;

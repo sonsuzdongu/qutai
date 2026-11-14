@@ -1,6 +1,7 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 
 export type SheetAction = { label: string; onPress: () => void; destructive?: boolean };
 
@@ -8,6 +9,7 @@ type Props = { title: string | null; actions: SheetAction[]; dark?: boolean; onC
 
 /** A simple bottom sheet with a title and a list of actions (Android alerts only fit three buttons). */
 export function ActionSheet({ title, actions, dark, onClose }: Props) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={title !== null} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
@@ -36,16 +38,16 @@ export function ActionSheet({ title, actions, dark, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
-  sheet: { backgroundColor: '#faf9f5', borderTopLeftRadius: 18, borderTopRightRadius: 18, paddingTop: 14 },
+const useStyles = makeStyles((c) => ({
+  backdrop: { flex: 1, backgroundColor: c.backdrop },
+  sheet: { backgroundColor: c.bg, borderTopLeftRadius: 18, borderTopRightRadius: 18, paddingTop: 14 },
   sheetDark: { backgroundColor: '#2b2a33' },
-  title: { fontSize: 13, color: '#888', paddingHorizontal: 20, paddingBottom: 6 },
+  title: { fontSize: 13, color: c.textSecondary, paddingHorizontal: 20, paddingBottom: 6 },
   row: { paddingHorizontal: 20, paddingVertical: 13 },
-  pressed: { backgroundColor: '#f1efe8' },
+  pressed: { backgroundColor: c.pressed },
   pressedDark: { backgroundColor: '#3a3944' },
-  label: { fontSize: 16, color: '#222' },
+  label: { fontSize: 16, color: c.text },
   text: { color: '#f2f1f5' },
   dim: { color: '#a9a8b3' },
   destructive: { color: '#d64545' },
-});
+}));

@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
+import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { ClearOptions } from '../storage/clearData';
 
 type Props = { visible: boolean; onClear: (options: ClearOptions) => Promise<void>; onClose: () => void };
@@ -12,6 +14,7 @@ const ITEMS = ['history', 'cache', 'recentlyClosed', 'chats', 'activity', 'downl
 
 /** Clears browsing data: history and activity for a time range, the rest entirely. */
 export function ClearDataScreen({ visible, onClear, onClose }: Props) {
+  const styles = useStyles();
   const [options, setOptions] = useState<ClearOptions>({
     range: 'hour',
     history: true,
@@ -69,7 +72,7 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
                 <Text style={styles.label}>{t(`clearData.${key}`)}</Text>
                 <Text style={styles.hint}>{t(`clearData.${key}Hint`)}</Text>
               </View>
-              <Switch value={options[key]} onValueChange={(on) => setOptions({ ...options, [key]: on })} />
+              <ThemedSwitch value={options[key]} onValueChange={(on) => setOptions({ ...options, [key]: on })} />
             </View>
           ))}
           <Pressable
@@ -86,36 +89,36 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf9f5' },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.bg },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#d6d3c9',
+    borderBottomColor: c.border,
   },
   side: { flex: 1 },
   title: { fontSize: 17, fontWeight: '600' },
-  cancel: { fontSize: 16, color: '#666' },
+  cancel: { fontSize: 16, color: c.textSecondary },
   content: { padding: 16, gap: 12 },
-  label: { fontSize: 15, fontWeight: '600', color: '#222' },
-  hint: { fontSize: 13, color: '#888', lineHeight: 18 },
-  segment: { flexDirection: 'row', backgroundColor: '#e8e6df', borderRadius: 10, padding: 3 },
+  label: { fontSize: 15, fontWeight: '600', color: c.text },
+  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  segment: { flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
   segmentButton: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
-  segmentSelected: { backgroundColor: '#fff' },
-  segmentText: { fontSize: 13, color: '#555' },
-  segmentTextSelected: { color: '#222', fontWeight: '700' },
+  segmentSelected: { backgroundColor: c.surface },
+  segmentText: { fontSize: 13, color: c.textSecondary },
+  segmentTextSelected: { color: c.text, fontWeight: '700' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   texts: { flex: 1, gap: 2 },
   button: {
     marginTop: 12,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#d64545',
+    backgroundColor: c.dangerFill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  buttonText: { color: c.onTint, fontSize: 16, fontWeight: '700' },
   disabled: { opacity: 0.4 },
-});
+}));

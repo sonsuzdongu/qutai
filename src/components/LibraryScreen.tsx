@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 import { groupByDay, hostOf, timeLabel } from '../i18n/format';
 import { Bookmark, listBookmarks, removeBookmark } from '../storage/bookmarks';
 import { getDb } from '../storage/db';
@@ -40,6 +41,7 @@ export function LibraryScreen({ visible, initialTab, onOpen, onClose }: Props) {
 }
 
 function LibraryContent({ initialTab, onOpen, onClose }: Omit<Props, 'visible'>) {
+  const styles = useStyles();
   const [tab, setTab] = useState<LibraryTab>(initialTab);
   const [query, setQuery] = useState('');
 
@@ -83,6 +85,7 @@ function LibraryContent({ initialTab, onOpen, onClose }: Omit<Props, 'visible'>)
 }
 
 function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) => void }) {
+  const styles = useStyles();
   // `loadedQuery` tells which search the entries belong to; while it differs from `query`, a load is running.
   const [result, setResult] = useState<{ loadedQuery: string | null; entries: HistoryEntry[]; done: boolean }>({
     loadedQuery: null,
@@ -174,6 +177,7 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
 }
 
 function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) => void }) {
+  const styles = useStyles();
   const [bookmarks, setBookmarks] = useState<Bookmark[] | null>(null);
 
   useEffect(() => {
@@ -225,6 +229,7 @@ function Row({
   onPress: () => void;
   onRemove: () => void;
 }) {
+  const styles = useStyles();
   const host = hostOf(url);
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
@@ -247,6 +252,7 @@ function Row({
 }
 
 function Empty({ title, hint }: { title: string; hint?: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.empty}>
       <Text style={styles.emptyTitle}>{title}</Text>
@@ -255,24 +261,24 @@ function Empty({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#faf9f5' },
+const useStyles = makeStyles((c) => ({
+  container: { flex: 1, backgroundColor: c.bg },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, gap: 12 },
-  segment: { flex: 1, flexDirection: 'row', backgroundColor: '#e8e6df', borderRadius: 10, padding: 3 },
+  segment: { flex: 1, flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
   segmentButton: { flex: 1, alignItems: 'center', paddingVertical: 7, borderRadius: 8 },
-  segmentSelected: { backgroundColor: '#fff' },
-  segmentText: { fontSize: 14, color: '#333' },
+  segmentSelected: { backgroundColor: c.surface },
+  segmentText: { fontSize: 14, color: c.text },
   bold: { fontWeight: '700' },
-  action: { fontSize: 16, color: '#c96442' },
+  action: { fontSize: 16, color: c.tintText },
   search: {
     marginHorizontal: 12,
     marginBottom: 8,
     height: 38,
     borderRadius: 10,
     paddingHorizontal: 12,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#d6d3c9',
+    borderColor: c.border,
     fontSize: 15,
   },
   sectionHeader: {
@@ -280,28 +286,28 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     fontSize: 13,
     fontWeight: '600',
-    color: '#777',
-    backgroundColor: '#f1efe8',
+    color: c.textSecondary,
+    backgroundColor: c.pressed,
   },
   row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, gap: 12 },
-  pressed: { backgroundColor: '#f1efe8' },
+  pressed: { backgroundColor: c.pressed },
   badge: {
     width: 32,
     height: 32,
     borderRadius: 8,
-    backgroundColor: '#e8e6df',
+    backgroundColor: c.sunken,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { fontSize: 15, fontWeight: '700', color: '#666' },
+  badgeText: { fontSize: 15, fontWeight: '700', color: c.textSecondary },
   rowText: { flex: 1, gap: 2 },
-  rowTitle: { fontSize: 15, color: '#222' },
-  rowUrl: { fontSize: 12, color: '#888' },
+  rowTitle: { fontSize: 15, color: c.text },
+  rowUrl: { fontSize: 12, color: c.textSecondary },
   remove: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
-  removeText: { fontSize: 14, color: '#999' },
+  removeText: { fontSize: 14, color: c.textSecondary },
   footer: { paddingVertical: 20, alignItems: 'center' },
-  danger: { color: '#b3261e', fontSize: 15, fontWeight: '600' },
+  danger: { color: c.danger, fontSize: 15, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32, gap: 6 },
-  emptyTitle: { fontSize: 16, fontWeight: '600', color: '#555' },
-  emptyHint: { fontSize: 14, color: '#888', textAlign: 'center' },
-});
+  emptyTitle: { fontSize: 16, fontWeight: '600', color: c.textSecondary },
+  emptyHint: { fontSize: 14, color: c.textSecondary, textAlign: 'center' },
+}));

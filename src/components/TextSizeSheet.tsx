@@ -1,6 +1,7 @@
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
+import { makeStyles } from '../ui/theme';
 import { clampTextZoom, TEXT_ZOOM_MAX, TEXT_ZOOM_MIN } from '../storage/settings';
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 
 /** Bottom sheet for page text size; changes apply to every tab immediately. */
 export function TextSizeSheet({ visible, zoom, onChange, onClose }: Props) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const set = (value: number) => onChange(clampTextZoom(value));
 
@@ -57,10 +59,10 @@ export function TextSizeSheet({ visible, zoom, onChange, onClose }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' },
+const useStyles = makeStyles((c) => ({
+  backdrop: { flex: 1, backgroundColor: c.backdrop },
   sheet: {
-    backgroundColor: '#faf9f5',
+    backgroundColor: c.bg,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
     paddingHorizontal: 20,
@@ -68,24 +70,24 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 17, fontWeight: '700', color: '#222' },
-  done: { fontSize: 16, fontWeight: '600', color: '#c96442' },
-  sample: { color: '#333', minHeight: 44 },
+  title: { fontSize: 17, fontWeight: '700', color: c.text },
+  done: { fontSize: 16, fontWeight: '600', color: c.tintText },
+  sample: { color: c.text, minHeight: 44 },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   step: {
     width: 56,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: '#d6d3c9',
+    borderColor: c.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepSmall: { fontSize: 14, fontWeight: '600', color: '#333' },
-  stepLarge: { fontSize: 22, fontWeight: '600', color: '#333' },
-  value: { fontSize: 18, fontWeight: '600', color: '#222' },
+  stepSmall: { fontSize: 14, fontWeight: '600', color: c.text },
+  stepLarge: { fontSize: 22, fontWeight: '600', color: c.text },
+  value: { fontSize: 18, fontWeight: '600', color: c.text },
   reset: { alignSelf: 'center', paddingVertical: 6 },
-  resetText: { fontSize: 15, color: '#c96442', fontWeight: '600' },
+  resetText: { fontSize: 15, color: c.tintText, fontWeight: '600' },
   disabled: { opacity: 0.35 },
-});
+}));
