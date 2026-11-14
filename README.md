@@ -81,3 +81,7 @@ provider or model changes mid-chat, the history is rebuilt from the text and too
 - **Cross-origin iframes** (e.g. payment forms, some captchas) cannot be read.
 - **Prompt injection** is a risk. The system prompt marks page content as untrusted data and asks for confirmation
   for sensitive actions. The "Ask before every action" option in Settings provides extra protection.
+
+## License
+
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
