@@ -136,27 +136,30 @@ export const QUTAI: Product = {
   cells: {
     agent: {
       state: 'yes',
-      note: t('Taps, types, selects and navigates; payment is always left to you.', 'Dokunur, yazar, seçer, gezinir; ödeme her zaman size kalır.'),
+      note: t(
+        'Taps, types, selects, navigates and fixes form errors; payment is always left to you.',
+        'Dokunur, yazar, seçer, gezinir, form hatalarını düzeltir; ödeme her zaman size kalır.',
+      ),
       source: src('src/agent/tools.ts'),
     },
     research: {
       state: 'yes',
-      note: t('Deep research with sources; reads other tabs without switching.', 'Kaynaklı derin araştırma; diğer sekmeleri geçmeden okur.'),
+      note: t('Deep research with sources; reads other tabs and PDFs without switching.', 'Kaynaklı derin araştırma; diğer sekmeleri ve PDF’leri geçmeden okur.'),
       source: src('README.md'),
     },
     phoneHandoffs: {
-      state: 'yes',
+      state: 'partial',
       note: t(
-        'Calendar and reminders with your approval; a Call button and message drafts that you send.',
-        'Onayınızla takvim ve hatırlatıcı; Ara düğmesi ve sizin gönderdiğiniz mesaj taslakları.',
+        'Reads and writes your calendar with your approval; calls, texts, WhatsApp and email are a button or a draft that you send.',
+        'Onayınızla takvimi okur ve yazar; arama, SMS, WhatsApp ve e-posta sizin gönderdiğiniz bir düğme ya da taslaktır.',
       ),
       source: src('src/agent/tools.ts'),
     },
     memoryForms: {
       state: 'yes',
       note: t(
-        'Kept on the phone; asks per site before entering your details; never passwords or card numbers.',
-        'Telefonda saklanır; bilgilerinizi girmeden önce site bazında sorar; şifre ve kart numarası asla.',
+        'Kept on the phone; asks per site before entering your details; ID numbers reach the AI only as a label; never passwords or cards.',
+        'Telefonda saklanır; bilgilerinizi girmeden önce site bazında sorar; kimlik numaraları yapay zekâya yalnızca etiket olarak gider; şifre ve kart asla.',
       ),
       source: src('src/agent/personalData.ts'),
     },
@@ -198,7 +201,10 @@ export const QUTAI: Product = {
     reader: { state: 'yes', note: t('Both.', 'İkisi de.'), source: src('README.md') },
     backgroundAudio: {
       state: 'partial',
-      note: t('On iPhone, video pauses unless in picture-in-picture.', 'iPhone’da video, resim içinde resimde değilse durur.'),
+      note: t(
+        'On iPhone a video goes on as sound only, and some sites such as YouTube still stop it.',
+        'iPhone’da video yalnızca ses olarak sürer; YouTube gibi bazı siteler yine de durdurur.',
+      ),
       source: src('README.md'),
     },
     sync: {

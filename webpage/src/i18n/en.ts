@@ -97,11 +97,11 @@ export const en = {
     'Tell Qutai your addresses, sizes, diet or budget, or answer a few optional questions when you set it up. It files what it learns under categories, uses it in later tasks without asking again, and follows your custom instructions in every request. The more you use it, the less you have to explain.',
   'agent.memory.point1': 'Sorted into categories: identity and contact, addresses, shopping and delivery, travel, food and diet, budget, general preferences',
   'agent.memory.point2': 'Stored on the phone; yours to see, edit and delete in Settings, and included in your encrypted backup',
-  'agent.memory.point3': 'Sent only to the AI provider you chose, with your requests, and listed in “What was sent to the AI”',
+  'agent.memory.point3': 'Sent only to the AI provider you chose, with your requests, and listed in “What was sent to the AI”; ID numbers and memories you lock go only as a label',
   'agent.memory.point4': 'Never passwords, card numbers or one-time codes; it asks per site before entering your details',
   'agent.compare.title': 'Compare products across tabs',
   'agent.compare.body':
-    'Open two or three product pages and ask which one fits. Qutai reads each tab without switching away, notes prices, delivery times and specs, and answers with a table.',
+    'Open two or three product pages and ask which one fits. Qutai reads each tab without switching away, notes prices, delivery times and specs, and answers with a table it can also hand you as a CSV file.',
   'agent.compare.step1': 'Reading tab 2',
   'agent.compare.step2': 'Reading tab 3',
   'agent.compare.step3': 'Price, delivery, warranty side by side',
@@ -120,7 +120,7 @@ export const en = {
   'agent.booking.call': 'Call', // app: chat.call
   'agent.research.title': 'Research with sources',
   'agent.research.body':
-    'Deep research searches and reads many pages, takes notes and writes a report with its sources listed under the answer. Share it as a PDF. It takes a few minutes and uses more of your API credit.',
+    'Deep research searches and reads many pages and PDFs, takes notes and writes a report with its sources listed under the answer. Share it as a PDF. It takes a few minutes and uses more of your API credit.',
   'agent.research.step1': 'Searched: e-bike rules in Istanbul', // app: action.webSearch
   'agent.research.step2': 'Reading the page',
   'agent.research.step3': 'Sources',
@@ -151,7 +151,7 @@ export const en = {
     'Use a key from Anthropic, OpenAI, Google Gemini or OpenRouter, or your own OpenAI-compatible server (Ollama, LM Studio, vLLM). Choose the model, even per conversation. This route stays, whatever comes later.',
   'privacy.device.title': 'Stays on the phone',
   'privacy.device.body':
-    'Tabs, history, bookmarks, chats and the assistant’s memory are stored on the device. Passwords, card numbers and one-time codes are never put in memory.',
+    'Tabs, history, bookmarks, chats and the assistant’s memory are stored on the device. Passwords, card numbers and one-time codes are never put in memory; ID numbers and memories you lock reach the AI only as a label.',
   'privacy.sites.title': 'Permissions per site',
   'privacy.sites.body':
     'For each site, the assistant may act freely, ask before every action, only read, or stay out. Separately, you decide whether it may enter your remembered details there.',
@@ -163,7 +163,7 @@ export const en = {
     'Incognito tabs keep no history, and conversations that touch them stay in memory only. Memory, location and calendar are off there, and the incognito tabs can be locked.',
   'privacy.confirm.title': 'Asks before it matters',
   'privacy.confirm.body':
-    'Sensitive actions need your yes. Calendar writes, location and notifications are confirmed every time; calls, texts and emails are only drafts that you send.',
+    'Sensitive actions need your yes. Calendar, location, notifications, downloads and image uploads are confirmed every time; calls, texts, WhatsApp messages and emails are only drafts that you send.',
   'privacy.note':
     'The paid Qutai service (an account, sync and Qutai credits instead of your own key) is planned for the store builds, not built yet. It will be optional: your own key keeps working, and the open-source build never needs a Qutai server.',
 
@@ -179,7 +179,7 @@ export const en = {
     'Pick EasyList, EasyPrivacy or AdGuard Turkish, or add any list by its address. Lists are downloaded on the phone; rules that block whole domains are used.',
   'browser.audio.title': 'Plays in the background',
   'browser.audio.body':
-    'Audio keeps playing with the screen locked. On iPhone, video pauses unless it is in picture-in-picture.',
+    'Audio keeps playing with the screen locked. On iPhone a video goes on as sound only, and some sites such as YouTube still stop it.',
   'browser.private.title': 'Incognito tabs',
   'browser.private.body': 'Their own cookies and site data, gone when you close them, with an optional biometric lock.',
   'browser.backup.title': 'Encrypted backup',
@@ -239,17 +239,17 @@ export const en = {
   'status.body':
     'Qutai is in development. It is not in the App Store or Google Play yet, and most of what this page describes is implemented in the code but has not yet been tested on a real phone.',
   'status.today': 'In the code today',
-  'status.today.1': 'The assistant: reading, tapping, typing, tabs, deep research with sources',
+  'status.today.1': 'The assistant: reading, tapping, typing, fixing form errors, tabs, deep research with sources',
   'status.today.2': 'Five provider options with your own key, and a model per conversation',
-  'status.today.3': 'Memory with categories, per-site permissions, the “sent to the AI” log',
-  'status.today.4': 'Calendar, reminders, Call button, text, WhatsApp and email drafts',
-  'status.today.5': 'Saved tasks and reminders that open them at a set time',
-  'status.today.6': 'Reader mode, read aloud, ad and tracker blocking, encrypted backup',
+  'status.today.3': 'Memory with categories and hidden entries, per-site permissions, the “sent to the AI” log',
+  'status.today.4': 'Calendar reading and writing, reminders, a Call button, text, WhatsApp and email drafts',
+  'status.today.5': 'Saved tasks with reminders, PDF reading, image attachments, downloads and CSV export',
+  'status.today.6': 'Reader mode, read aloud, voice input, ad and tracker blocking, encrypted backup',
   'status.limits': 'Limits to know',
   'status.limits.1': 'Background tasks are Android-only and opt-in; on iPhone a task pauses when you leave the app',
   'status.limits.2': 'Scheduled tasks are reminders: nothing runs while Qutai is closed',
   'status.limits.3': 'Payments are always completed by you',
-  'status.limits.4': 'Sharing to Qutai, the widget and home screen shortcuts are Android-only for now',
+  'status.limits.4': 'Sharing to Qutai and the home screen widget are Android-only for now',
   'status.planned': 'Planned',
   'status.planned.1': 'Release in the App Store and Google Play',
   'status.planned.2': 'Optional account with end-to-end encrypted sync',
