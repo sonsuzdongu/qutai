@@ -10,7 +10,11 @@ own manifests and the translated iOS strings in `locales/en.json` and `locales/t
 patch (`patches/`, applied by `postinstall`) that decides camera and microphone requests from web pages. To see what a build will
 declare, run `npx expo config --type introspect` (or `npx expo prebuild --no-install` in a copy of the project). The
 Android libraries' own permissions are only merged in by Gradle: check
-`android/app/build/intermediates/merged_manifest/release/` after a release build.
+`android/app/build/intermediates/merged_manifests/release/` and the merger report
+`android/app/build/outputs/logs/manifest-merger-release-report.txt` (which library added what) after
+`./gradlew :app:processReleaseMainManifest`. `aapt2 dump badging` of an APK also prints permissions Android implies
+without a manifest entry (see `READ_EXTERNAL_STORAGE` below); `aapt2 dump xmltree --file AndroidManifest.xml` shows the
+manifest itself.
 
 Every iOS usage description is in `app.json` (English) and in both `locales/*.json` files with the same keys. Nothing
 is asked for at launch: each permission is asked the first time the feature needs it.
@@ -67,7 +71,7 @@ Runtime permissions (the user is asked):
 | --- | --- | --- | --- |
 | `CAMERA` | QR code scanner; the camera option in a web page's upload field (offered once Qutai holds the permission); "Take photo" in the assistant's attach sheet (the system camera app, which Android lets an app open only while it holds `CAMERA` when it declares it); sites the user allows to use the camera (`getUserMedia`) | First time the QR scanner opens, the user taps an upload field with `capture` (a "take a photo" button; `src/browser/fileCapture.ts`), chooses "Take photo" in the attach sheet, or the user allows a site | `expo-camera` (plugin and library manifest), `expo-image-picker` library manifest |
 | `RECORD_AUDIO` | Voice input in the assistant panel (Android `SpeechRecognizer`, on-device on Android 13+ when the language's model is installed, otherwise Google's speech service after the user agreed once in Qutai); sites the user allows to use the microphone (`getUserMedia`) | First tap on the panel's microphone button, or the first time the user allows a site | `expo-camera` plugin, `recordAudioAndroid: true` (the `expo-speech-recognition` and `expo-image-picker` plugins declare it too; the image picker's `microphonePermission` must stay a string, since `false` would block it for voice input) |
-| (none) storage read permissions | Attaching images to the assistant uses the system photo picker (Android 11+ or the Google Play services backport), which needs no permission. `expo-image-picker` declares `READ_EXTERNAL_STORAGE` up to Android 12; it stays blocked with the others in `android.blockedPermissions` | Never | – |
+| (none) storage read permissions | Attaching images to the assistant uses the system photo picker (Android 11+ or the Google Play services backport), which needs no permission. `expo-image-picker` and `expo-file-system` declare `READ_EXTERNAL_STORAGE` up to Android 12; it stays blocked with the others in `android.blockedPermissions` and is not in the merged manifest (the merger report lists both as REJECTED). `aapt2 dump badging` still prints `READ_EXTERNAL_STORAGE` with `maxSdkVersion='29'`, as a `uses-implied-permission` with "reason='requested WRITE_EXTERNAL_STORAGE'": Android treats read access as part of `WRITE_EXTERNAL_STORAGE` (below), so on Android 10 and older a user who allows saving also allows reading shared storage. Qutai never reads it; this can't be removed without dropping saving on those versions | Never asked for on its own | – |
 | `WRITE_EXTERNAL_STORAGE` (Android 10 and older, `maxSdkVersion` 29) | Saving screenshots and images to the gallery (Android 10 and older); downloads to the Downloads folder (Android 9 and older). Android 11+ needs no storage permission for either | First save or download on those versions | `plugins/withLegacyStorageWrite.js` (the libraries, `expo-image-picker` among them, declare it up to Android 12; this lowers it) |
 | `READ_CALENDAR`, `WRITE_CALENDAR` | Adding events and reminders (a reminder is a calendar event with an alarm on Android); the assistant's `read_calendar`, confirmed each time. Read is needed to find a writable calendar; Android has no write-only calendar access, so one prompt covers both | First event or reminder the user confirms, or the first `read_calendar` | `expo-calendar` plugin |
 | `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` | Same as iOS location; approximate accepted. Foreground only | First time a site or the assistant needs it | `expo-location` (plugin and library manifest) |
@@ -78,6 +82,7 @@ Install-time permissions (no prompt):
 | Permission | Why | Declared by |
 | --- | --- | --- |
 | `INTERNET` | Loading pages, talking to the AI provider the user chose | Expo template, `expo-file-system` |
+| `ACCESS_NETWORK_STATE` | Whether the phone is online, for the libraries that need it: media playback (`androidx.media3`, used by the `modules/qutai-media` service) and the Firebase libraries `expo-notifications` bundles (Qutai doesn't use push). Qutai's own code doesn't read it | `androidx.media3:media3-common`, `firebase-messaging`, `firebase-installations` |
 | `USE_BIOMETRIC`, `USE_FINGERPRINT` | App and incognito lock (fingerprint for Android 8 and older) | `expo-local-authentication` |
 | `VIBRATE` | Haptic feedback | `expo-haptics` |
 | `RECEIVE_BOOT_COMPLETED` | Scheduled notifications survive a restart | `expo-notifications` |
@@ -92,7 +97,7 @@ Blocked (`android.blockedPermissions` in `app.json`, removed from the merged man
 | Permission | Added by | Why it's blocked |
 | --- | --- | --- |
 | `ACCESS_BACKGROUND_LOCATION`, `FOREGROUND_SERVICE_LOCATION` | `expo-location` | Location is foreground only |
-| `READ_EXTERNAL_STORAGE`, `READ_MEDIA_IMAGES`, `READ_MEDIA_VISUAL_USER_SELECTED` | Expo template, `expo-media-library`, `expo-file-system`, `expo-screen-capture` | Qutai only adds to the gallery (write-only requests ask for none of these) and doesn't listen for screenshots. File imports use the system picker, which needs no permission |
+| `READ_EXTERNAL_STORAGE`, `READ_MEDIA_IMAGES`, `READ_MEDIA_VISUAL_USER_SELECTED` | `READ_EXTERNAL_STORAGE`: `expo-file-system`, `expo-image-picker`, `expo-media-library`; `READ_MEDIA_IMAGES`: `expo-screen-capture`; `READ_MEDIA_VISUAL_USER_SELECTED`: `expo-media-library` | Qutai only adds to the gallery (write-only requests ask for none of these) and doesn't listen for screenshots. File imports use the system picker, which needs no permission |
 | `SYSTEM_ALERT_WINDOW` | Expo template | Only for the development overlay; debug builds keep it from their own manifest |
 | `com.google.android.c2dm.permission.RECEIVE` | Firebase Messaging (`expo-notifications`) | No push notifications |
 | `com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE` | Install Referrer (`expo-application`) | Qutai doesn't read the install referrer |
@@ -150,8 +155,8 @@ Qutai from other apps"). The main activity also carries the launcher shortcuts (
 `res/xml/qutai_shortcuts.xml`); pinning a page with "Add to home screen" needs no permission (the launcher asks). The home screen widget is a
 non-exported receiver (`expo.modules.qutaientry.QutaiWidgetProvider`, `APPWIDGET_UPDATE`); no permission.
 
-Debug builds also get `ACCESS_NETWORK_STATE`, `ACCESS_LOCAL_NETWORK` and `CHANGE_WIFI_MULTICAST_STATE` from the dev
-client and React Native's debug manifest.
+Debug builds also get `SYSTEM_ALERT_WINDOW`, `ACCESS_LOCAL_NETWORK` and `CHANGE_WIFI_MULTICAST_STATE` from the dev
+client and React Native's debug manifest (the release manifest has none of them).
 
 Package visibility (`<queries>`): only what the libraries declare (sharing, mail composer, document picker, text to
 speech engines, WebView payment intents, calendar), plus the speech recognition services voice input may bind to:

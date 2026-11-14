@@ -11,7 +11,9 @@ const WRITE_EXTERNAL_STORAGE = 'android.permission.WRITE_EXTERNAL_STORAGE';
  * asks for it before a download on Android 9 and older). From Android 11 on, expo-media-library adds
  * through MediaStore and the download manager needs nothing, so no storage permission is declared or
  * asked for there. The libraries declare it up to Android 12 (maxSdkVersion 32); this lowers that.
- * The read permissions the libraries add are blocked in app.json (android.blockedPermissions).
+ * The read permissions the libraries add are blocked in app.json (android.blockedPermissions). Android still
+ * implies READ_EXTERNAL_STORAGE (same maxSdkVersion) from this permission, which `aapt2 dump badging` prints as a
+ * uses-implied-permission; there is no manifest entry to remove.
  */
 module.exports = function withLegacyStorageWrite(config) {
   return withAndroidManifest(config, (config) => {
