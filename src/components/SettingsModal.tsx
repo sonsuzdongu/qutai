@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { Alert, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getProvider, PROVIDER_ORDER } from '../ai/providers';
-import type { ProviderId } from '../ai/types';
+import { getProvider } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { t } from '../i18n';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { ActionLogScreen } from './ActionLogScreen';
+import { AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { authenticate, canAuthenticate } from '../device/biometric';
 import { MemoryScreen } from './MemoryScreen';
@@ -43,18 +43,11 @@ export function SettingsModal({ visible, settings, onSave, onClose, sitePermissi
 
 function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData }: Omit<Props, 'visible'>) {
   const styles = useStyles();
-  const palette = usePalette();
   const [draft, setDraft] = useState(settings);
   const [memoryVisible, setMemoryVisible] = useState(false);
   const [sitesVisible, setSitesVisible] = useState(false);
   const [actionLogVisible, setActionLogVisible] = useState(false);
   const [clearDataVisible, setClearDataVisible] = useState(false);
-  const provider = getProvider(draft.provider);
-  const model = draft.models[draft.provider];
-  const isCustomModel = !provider.models.some((m) => m.id === model);
-
-  const setApiKey = (value: string) => setDraft({ ...draft, apiKeys: { ...draft.apiKeys, [draft.provider]: value } });
-  const setModel = (value: string) => setDraft({ ...draft, models: { ...draft.models, [draft.provider]: value } });
 
   /** Turning a lock on needs a phone with a screen lock, and the user proving it's them once. */
   const setLock = async (key: 'appLock' | 'incognitoLock', on: boolean) => {
@@ -63,15 +56,7 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
     if (await authenticate(t('lock.confirmPrompt'))) setDraft((d) => ({ ...d, [key]: true }));
   };
 
-  const save = () => {
-    const apiKeys = { ...draft.apiKeys };
-    const models = { ...draft.models };
-    PROVIDER_ORDER.forEach((id) => {
-      apiKeys[id] = apiKeys[id].trim();
-      models[id] = models[id].trim() || getProvider(id).defaultModel;
-    });
-    onSave({ ...draft, apiKeys, models });
-  };
+  const save = () => onSave(cleanAiChoice(draft));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -86,70 +71,10 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
       </View>
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.label}>{t('settings.provider')}</Text>
-        <View style={styles.segment}>
-          {PROVIDER_ORDER.map((id: ProviderId) => {
-            const selected = id === draft.provider;
-            return (
-              <Pressable
-                key={id}
-                onPress={() => setDraft({ ...draft, provider: id })}
-                style={[styles.segmentButton, selected && styles.segmentSelected]}
-                accessibilityRole="tab"
-                accessibilityState={{ selected }}
-              >
-                <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>
-                  {getProvider(id).label.replace('Google ', '')}
-                </Text>
-                {!!draft.apiKeys[id] && <Text style={styles.keyDot}>●</Text>}
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Text style={styles.label}>{t('settings.apiKey', { provider: provider.label })}</Text>
-        <TextInput
-          placeholderTextColor={palette.textSecondary}
-          key={draft.provider}
-          style={styles.input}
-          value={draft.apiKeys[draft.provider]}
-          onChangeText={setApiKey}
-          placeholder={provider.keyPlaceholder}
-          autoCapitalize="none"
-          autoCorrect={false}
-          secureTextEntry
+        <AiProviderFields
+          value={draft}
+          onChange={(ai) => setDraft((d) => ({ ...d, provider: ai.provider, apiKeys: ai.apiKeys, models: ai.models }))}
         />
-        <Text style={styles.hint}>
-          {t('settings.keyHint')}{' '}
-          <Text style={styles.link} onPress={() => Linking.openURL(provider.keyUrl)}>
-            {t('settings.getKey')}
-          </Text>
-        </Text>
-
-        <Text style={styles.label}>{t('settings.model')}</Text>
-        {provider.models.map((m) => (
-          <Pressable key={m.id} style={styles.option} onPress={() => setModel(m.id)}>
-            <Text style={styles.radio}>{model === m.id ? '◉' : '○'}</Text>
-            <Text style={styles.optionText}>{m.tag ? `${m.name} (${t(`model.${m.tag}`)})` : m.name}</Text>
-          </Pressable>
-        ))}
-        <Pressable style={styles.option} onPress={() => !isCustomModel && setModel('')}>
-          <Text style={styles.radio}>{isCustomModel ? '◉' : '○'}</Text>
-          <Text style={styles.optionText}>{t('settings.customModel')}</Text>
-        </Pressable>
-        {isCustomModel && (
-          <TextInput
-            placeholderTextColor={palette.textSecondary}
-            style={styles.input}
-            value={model}
-            onChangeText={setModel}
-            placeholder={t('settings.customModelPlaceholder', { model: provider.defaultModel })}
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoFocus
-          />
-        )}
-        <Text style={styles.hint}>{t('settings.modelHint')}</Text>
 
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.search')}</Text>
         {SEARCH_ENGINE_ORDER.map((id) => (
@@ -287,7 +212,9 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
         <View style={styles.switchRow}>
           <View style={styles.flex}>
             <Text style={styles.label}>{t('settings.webSearch')}</Text>
-            <Text style={styles.hint}>{t('settings.webSearchHint', { provider: provider.label })}</Text>
+            <Text style={styles.hint}>
+              {t('settings.webSearchHint', { provider: getProvider(draft.provider).label })}
+            </Text>
           </View>
           <ThemedSwitch value={draft.webSearch} onValueChange={(webSearch) => setDraft({ ...draft, webSearch })} />
         </View>
