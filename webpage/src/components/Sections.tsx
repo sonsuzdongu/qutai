@@ -71,7 +71,6 @@ export function Hero() {
         <div className="hero-copy">
           <p className="eyebrow">
             <span className="eyebrow-pill">{t('hero.eyebrow')}</span>
-            <span className="tagline">{t('hero.tagline')}</span>
           </p>
           <h1 id="hero-title">{t('hero.title')}</h1>
           <p className="lede">{t('hero.lede')}</p>

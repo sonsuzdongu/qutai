@@ -29,11 +29,10 @@ export const tr: Messages = {
   'lang.otherShort': 'EN',
   'lang.switchTo': 'Switch to English',
 
-  'hero.eyebrow': 'Önce yapay zekâ',
-  'hero.tagline': 'Yapay zekâyla yapıldı. Yapay zekâ için yapıldı.',
-  'hero.title': 'Asistanı sayfayı okuyan ve sizin yerinize kullanan bir tarayıcı.',
+  'hero.eyebrow': 'Yapay zekâ odaklı tarayıcı',
+  'hero.title': 'Yapay zekâ için, yapay zekâ ile üretildi.',
   'hero.lede':
-    'Merkezinde bir asistan olan iPhone ve Android tarayıcısı. Karşılaştırmayı, form doldurmayı, rezervasyonu ya da bir şeyi araştırmayı ona bırakın: kendi sekmelerinizde çalışır, ona anlattıklarınızı telefonunuzda hatırlar, önemli bir adımdan önce size sorar.',
+    'Asistanı sayfayı okuyan ve sizin yerinize kullanan bir iPhone ve Android tarayıcısı. Karşılaştırmayı, form doldurmayı, rezervasyonu ya da bir şeyi araştırmayı ona bırakın: kendi sekmelerinizde çalışır, ona anlattıklarınızı telefonunuzda hatırlar, önemli bir adımdan önce size sorar.',
   'hero.github': 'GitHub’da incele',
   'hero.status': 'Geliştirme aşamasında. App Store ve Google Play’e geliyor; henüz yayımlanmadı.',
 

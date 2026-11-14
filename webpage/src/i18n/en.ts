@@ -29,10 +29,9 @@ export const en = {
   'lang.switchTo': 'Türkçe sürüme geç',
 
   'hero.eyebrow': 'AI-first browser',
-  'hero.tagline': 'Built with AI. Built for AI.',
-  'hero.title': 'A browser whose assistant reads the page and uses it for you.',
+  'hero.title': 'Built with AI. Built for AI.',
   'hero.lede':
-    'An iPhone and Android browser with an assistant at its core. Ask it to compare, fill in, book or look something up: it works in your own tabs, remembers what you tell it on your phone, and asks before anything that matters.',
+    'A browser for iPhone and Android whose assistant reads the page and uses it for you. Ask it to compare, fill in, book or look something up: it works in your own tabs, remembers what you tell it on your phone, and asks before anything that matters.',
   'hero.github': 'View on GitHub',
   'hero.status': 'In development. Coming to the App Store and Google Play; not released yet.',
 
