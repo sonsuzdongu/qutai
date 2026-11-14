@@ -3,7 +3,7 @@ import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
-import { dayLabel } from '../i18n/format';
+import { dayLabel, formatSize } from '../i18n/format';
 import type { DownloadEntry, DownloadStore } from '../storage/downloads';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
@@ -16,13 +16,6 @@ type Props = {
   onDelete: (entry: DownloadEntry) => void;
   onClose: () => void;
 };
-
-export function formatSize(bytes: number | null): string {
-  if (bytes == null) return '';
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
 
 /** Files downloaded in Qutai (iOS; Android uses the system Downloads folder). Tap to share or save to Files. */
 export function DownloadsScreen({ visible, store, onOpen, onDelete, onClose }: Props) {

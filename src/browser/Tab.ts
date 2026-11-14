@@ -39,6 +39,7 @@ export type PageCommand =
   | 'scroll'
   | 'scrollTo'
   | 'formReport'
+  | 'linkHref'
   | 'snapshotHtml'
   | 'readableText'
   | 'readerArticle'

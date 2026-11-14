@@ -7,6 +7,8 @@ import { scheduleNotification } from '../device/notifications';
 import { savePagePdf, savePdfFromScreenshots } from '../device/pdf';
 import { t } from '../i18n';
 import { captureForModel, saveFullPageScreenshot, saveScreenshot } from '../device/screenshot';
+import { fileNameFromUrl, isRiskyDownload, probeDownload } from '../device/download';
+import { formatSize } from '../i18n/format';
 import { CallOffer, normalizePhone } from '../device/phone';
 import { MAX_SMS_BODY, SmsOffer } from '../device/sms';
 import { ensureLocationPermission, LocationUnavailableError, readPosition } from '../device/location';
@@ -77,6 +79,11 @@ export type ToolContext = {
   offerSms?: (offer: SmsOffer) => void;
   /** The AI provider's name (e.g. "Anthropic"), for confirmations that send something to it. */
   providerLabel?: string;
+  /**
+   * Starts a download the user confirmed (download_file), like the tab's own downloads, without waiting for it;
+   * "permission" when Android 9 and older asks for storage first.
+   */
+  startDownload?: (tab: Tab, url: string, name: string, type: string | null) => Promise<'started' | 'permission'>;
   /** Shows Qutai's own Settings screen (open_settings with target "app"). */
   showAppSettings?: () => void;
   /** Records what the agent did, for the action history. Not called for incognito tabs. */
@@ -174,6 +181,10 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.scheduleNotification', { title: str(input.title).slice(0, 60) });
     case 'get_location':
       return t('action.getLocation');
+    case 'download_file':
+      return typeof input.url === 'string' && input.url.trim()
+        ? t('action.downloadFile', { name: fileNameFromUrl(input.url.trim()) })
+        : t('action.downloadFileRef', { ref: str(input.ref) });
     case 'read_calendar':
       return t('action.readCalendar');
     case 'open_settings':
@@ -574,6 +585,79 @@ async function locationTool(input: Record<string, unknown>, ctx: ToolContext): P
   }
 }
 
+/**
+ * Downloads a file for the user through the download manager. The user confirms every download with its name, site
+ * and, when a HEAD request tells, type and size, with a warning for files that install or run code and archives. The
+ * file is never opened, and the model only hears that it started and where the user finds it.
+ */
+async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  if (!ctx.startDownload) return { content: 'Downloads are not available here.', isError: true };
+  const tab = currentTab(ctx);
+  if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
+  const hasRef = input.ref !== undefined && input.ref !== null && input.ref !== '';
+  let url = typeof input.url === 'string' ? input.url.trim() : '';
+  if (hasRef) {
+    if (tab.isNewTab) return { content: 'No web page is loaded in this tab, so there is no link to download.', isError: true };
+    try {
+      url = await tab.run<string>('linkHref', [input.ref]);
+    } catch (e) {
+      return { content: e instanceof Error ? e.message : String(e), isError: true };
+    }
+  }
+  if (!url) return { content: 'Give the ref of the link to the file, or its address as url.', isError: true };
+  if (!/^https?:\/\//i.test(url))
+    return { content: `Only http(s) addresses can be downloaded (got ${url.slice(0, 40)}).`, isError: true };
+  // The page's own site was checked like any action; the file's site has to allow it as well.
+  const fileHost = siteKey(url);
+  const level = fileHost && ctx.sites ? ctx.sites.levelFor(fileHost) : 'default';
+  if (fileHost && (level === 'blocked' || level === 'readonly')) {
+    return {
+      content: `The file is on ${fileHost}, where the user doesn't allow Qutai to act. Tell them to download it themselves.`,
+      isError: true,
+    };
+  }
+  if (!ctx.confirm) return { content: "This needs the user's confirmation, which is not available here.", isError: true };
+  const probe = await probeDownload(url);
+  const name = probe.name || fileNameFromUrl(url);
+  const host = fileHost ?? url;
+  const details = [
+    name,
+    t('downloads.agentFrom', { host }),
+    ...(probe.type ? [t('downloads.agentType', { type: probe.type })] : []),
+    ...(probe.size ? [t('downloads.agentSize', { size: formatSize(probe.size) })] : []),
+  ].join('\n');
+  const android = Platform.OS === 'android';
+  const lines = [
+    t('downloads.agentConfirm'),
+    details,
+    ...(isRiskyDownload(name, probe.type) ? [t('downloads.agentRisky', { host })] : []),
+    t(android ? 'downloads.agentWhereAndroid' : 'downloads.agentWhereIos'),
+  ];
+  if (!(await ctx.confirm(lines.join('\n\n'), null)))
+    return { content: 'The user declined the download. Ask them how to proceed.', isError: true };
+  try {
+    const status = await ctx.startDownload(tab, url, name, probe.type);
+    if (status === 'permission') {
+      return {
+        content:
+          `The phone asked the user for storage permission; "${name}" downloads if they allow it, into the phone's ` +
+          'Downloads folder. You cannot open or read it.',
+        isError: false,
+      };
+    }
+    return {
+      content: android
+        ? `Started downloading "${name}" with the phone's download manager (a notification shows progress); it goes ` +
+          "to the phone's Downloads folder, where the user opens it. You cannot open or read it."
+        : `Started downloading "${name}"; it appears in Qutai's Downloads (menu › Library › Downloads) with its ` +
+          'progress, where the user opens or shares it. You cannot open or read it.',
+      isError: false,
+    };
+  } catch (e) {
+    return { content: `Could not start the download: ${e instanceof Error ? e.message : String(e)}`, isError: true };
+  }
+}
+
 /** Two decimal coordinates, e.g. "41.0082, 28.9784": a location is not something to remember. */
 const COORDINATES = /-?\d{1,3}\.\d{3,}\s*[,;/ ]\s*-?\d{1,3}\.\d{3,}/;
 /** A date and time as read_calendar returns them ("2026-11-15T19:30"); two or more look like a copied schedule. */
@@ -708,6 +792,7 @@ const LOGGED_TOOLS = new Set([
   'get_location',
   // Only that the calendar was read and the range: the events are never written to the history.
   'read_calendar',
+  'download_file',
 ]);
 
 /** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
@@ -743,6 +828,9 @@ function actionTarget(
       : (ctx.browser.getTab(ctx.agentTab.id) ?? ctx.browser.active);
   return tab ? { url: tab.url, tab } : null;
 }
+
+/** Tools that confirm on their own every time, whatever the "ask before actions" setting. */
+const ALWAYS_CONFIRMED = new Set(['get_location', 'read_calendar', 'download_file']);
 
 /**
  * Tools that can run while the app is in the background with "Keep working in the background" on (Android): they
@@ -786,7 +874,8 @@ export function backgroundBlocker(
   input: Record<string, unknown>,
   ctx: ToolContext,
 ): 'confirm' | 'onScreen' | 'tab' | null {
-  if (!BACKGROUND_TOOLS.has(name)) return SCHEDULING_TOOLS.has(name) || name === 'get_location' || name === 'read_calendar' ? 'confirm' : 'onScreen';
+  if (!BACKGROUND_TOOLS.has(name))
+    return SCHEDULING_TOOLS.has(name) || ALWAYS_CONFIRMED.has(name) ? 'confirm' : 'onScreen';
   const target = actionTarget(name, input, ctx);
   const host = target ? siteKey(target.url) : null;
   const level = host && ctx.sites ? ctx.sites.levelFor(host) : 'default';
@@ -854,6 +943,7 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
   // Asks every time, whatever the "ask before actions" setting.
   if (name === 'get_location') return record(await locationTool(input, ctx));
   if (name === 'read_calendar') return record(await readCalendarTool(input, ctx));
+  if (name === 'download_file') return record(await downloadFileTool(input, ctx));
   if (decision.kind === 'confirm' && ctx.confirm) {
     const allowed = await ctx.confirm(describeToolCall(name, input), host);
     if (!allowed) return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true });

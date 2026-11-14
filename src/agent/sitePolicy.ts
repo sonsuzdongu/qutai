@@ -35,7 +35,7 @@ export const ACTIONS_NEEDING_CONFIRMATION = new Set([
 ]);
 
 /** Actions that interact with the page; not allowed on read-only sites. */
-const WRITE_ACTIONS = new Set(['click', 'click_at', 'type', 'select_option']);
+const WRITE_ACTIONS = new Set(['click', 'click_at', 'type', 'select_option', 'download_file']);
 
 export type Decision = { kind: 'run' } | { kind: 'confirm' } | { kind: 'refuse'; reason: string };
 
@@ -53,7 +53,7 @@ export function decide(tool: string, host: string | null, level: SiteLevel, conf
   if (host && level === 'readonly' && WRITE_ACTIONS.has(tool)) {
     return {
       kind: 'refuse',
-      reason: `Qutai may only read ${host} (the user's setting): clicking, typing and selecting are not allowed there. Tell the user what to do themselves.`,
+      reason: `Qutai may only read ${host} (the user's setting): clicking, typing, selecting and downloading are not allowed there. Tell the user what to do themselves.`,
     };
   }
   if (!ACTIONS_NEEDING_CONFIRMATION.has(tool)) return { kind: 'run' };

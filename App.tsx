@@ -86,7 +86,7 @@ import { deleteActionsSince } from './src/storage/actionLog';
 import { deleteSentSince, moveSentConversation, pruneSent } from './src/storage/sentLog';
 import { SentLogScreen } from './src/components/SentLogScreen';
 import { bump, setHapticsEnabled, success, tick } from './src/device/haptics';
-import { DownloadCancelled, deleteDownloadedFile, downloadFile } from './src/device/download';
+import { DownloadCancelled, deleteDownloadedFile, downloadFile, startAgentDownload } from './src/device/download';
 import { DownloadStore } from './src/storage/downloads';
 import { DownloadsScreen } from './src/components/DownloadsScreen';
 import * as Sharing from 'expo-sharing';
@@ -578,6 +578,7 @@ function BrowserApp({
           );
           chat.add(smsItem(offer));
         },
+        startDownload: (tab, url, name, type) => startAgentDownload(tab, url, name, type, downloads, toast.show),
         showAppSettings: () => setSettingsVisible(true),
         signal,
         audit: {

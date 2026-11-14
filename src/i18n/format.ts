@@ -60,6 +60,14 @@ export function groupByDay<T>(items: T[], timeOf: (item: T) => number, now = Dat
   return sections;
 }
 
+/** A file size for people: "512 B", "14 KB", "3.2 MB"; empty when unknown. */
+export function formatSize(bytes: number | null): string {
+  if (bytes == null) return '';
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export function hostOf(url: string): string {
   return url
     .replace(/^https?:\/\//i, '')

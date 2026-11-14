@@ -151,6 +151,21 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'download_file',
+    description:
+      "Download a file for the user into the phone's downloads, e.g. a PDF, ticket, invoice or document linked on " +
+      'the page. Give the link\'s ref from read_page, or its http(s) address when it is on the current site or the ' +
+      'user named it. The user confirms every download (name, site, type, size). The file is not opened and you ' +
+      'cannot read it; tell the user where to find it.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        ref: { type: 'integer', description: 'Ref of the link to the file' },
+        url: { type: 'string', description: 'The file address, when there is no ref' },
+      },
+    },
+  },
+  {
     name: 'save_screenshot',
     description:
       "Save a screenshot of the current page to the user's photo library: the visible part, or the whole page with full_page. " +

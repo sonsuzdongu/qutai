@@ -8,7 +8,7 @@ import { getProvider, modelLabel } from '../ai/providers';
 import type { ToolImage } from '../ai/types';
 import { features } from '../config/features';
 import { MessageKey, t } from '../i18n';
-import { formatDateTime, formatNumber, groupByDay, timeLabel } from '../i18n/format';
+import { formatDateTime, formatNumber, formatSize, groupByDay, timeLabel } from '../i18n/format';
 import { getDb } from '../storage/db';
 import {
   deleteSentSince,
@@ -22,7 +22,6 @@ import {
 import { makeStyles } from '../ui/theme';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
-import { formatSize } from './DownloadsScreen';
 
 type Props = {
   visible: boolean;

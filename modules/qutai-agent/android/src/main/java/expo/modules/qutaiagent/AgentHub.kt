@@ -2,12 +2,15 @@ package expo.modules.qutaiagent
 
 import android.app.Activity
 import android.app.Application
+import android.app.DownloadManager
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
@@ -23,8 +26,12 @@ import com.facebook.react.bridge.ReactContext
 import com.facebook.react.jstasks.HeadlessJsTaskConfig
 import com.facebook.react.jstasks.HeadlessJsTaskContext
 import com.reactnativecommunity.webview.RNCWebView
+import com.reactnativecommunity.webview.RNCWebViewModule
+import com.reactnativecommunity.webview.RNCWebViewProfiles
 import expo.modules.kotlin.Promise
 import expo.modules.qutaimedia.NotificationChannels
+import java.net.MalformedURLException
+import java.net.URL
 
 /**
  * Lets an assistant task that is already running go on while Qutai is in the background (Android, opt-in).
@@ -359,6 +366,49 @@ object AgentHub {
   // Page commands (main thread)
 
   /** The tab's WebView, found by the key the app gives each tab's WebView (the patched mediaPlayback prop). */
+  /**
+   * A download the assistant started, built like react-native-webview's own download listener (patched for
+   * profiles): the tab's profile cookies and user agent, the public Downloads folder, a notification when done.
+   */
+  fun download(
+    activity: Activity?,
+    key: String,
+    url: String,
+    fileName: String,
+    mimeType: String,
+    downloading: String,
+    noPermission: String,
+  ): String {
+    val view = findWebView(activity, key) ?: return "noWebView"
+    val module = view.reactApplicationContext.getNativeModule(RNCWebViewModule::class.java) ?: return "noWebView"
+    val request = try {
+      DownloadManager.Request(Uri.parse(url))
+    } catch (e: IllegalArgumentException) {
+      throw IllegalArgumentException("Unsupported address", e)
+    }
+    try {
+      val parsed = URL(url)
+      RNCWebViewProfiles.cookieManagerFor(view)?.getCookie(parsed.protocol + "://" + parsed.host)?.let {
+        request.addRequestHeader("Cookie", it)
+      }
+    } catch (e: MalformedURLException) {
+      Log.w(TAG, "No cookies for the download", e)
+    }
+    val name = fileName.replace(Regex("[/\\\\:*?\"<>|\\u0000-\\u001f]"), "_").ifBlank { "download" }
+    request.addRequestHeader("User-Agent", view.settings.userAgentString)
+    if (mimeType.isNotBlank()) request.setMimeType(mimeType)
+    request.setTitle(name)
+    request.setDescription(downloading)
+    @Suppress("DEPRECATION")
+    request.allowScanningByMediaScanner()
+    request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+    request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, name)
+    module.setDownloadRequest(request)
+    if (!module.grantFileDownloaderPermissions(downloading, noPermission)) return "permission"
+    module.downloadFile(downloading)
+    return "started"
+  }
+
   private fun findWebView(activity: Activity?, key: String): RNCWebView? {
     val root = activity?.window?.decorView ?: return null
     return find(root, key)

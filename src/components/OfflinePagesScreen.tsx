@@ -5,10 +5,9 @@ import { WebView } from 'react-native-webview';
 import { deleteOfflineFile, readOfflinePage } from '../device/offline';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
-import { dayLabel, hostOf } from '../i18n/format';
+import { dayLabel, formatSize, hostOf } from '../i18n/format';
 import { getDb } from '../storage/db';
 import { listOfflinePages, OfflinePage, removeOfflinePage } from '../storage/offlinePages';
-import { formatSize } from './DownloadsScreen';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
 

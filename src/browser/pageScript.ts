@@ -536,6 +536,17 @@ export const PAGE_SCRIPT = String.raw`
     return 'Scrolled. y=' + Math.round(se.scrollTop) + ' / pageHeight=' + se.scrollHeight;
   }
 
+  // The absolute address of a link (or of the link inside or around the element), for download_file.
+  function linkHref(ref) {
+    var el = getEl(ref);
+    var a = el.closest('a[href],area[href]') || (el.querySelector && el.querySelector('a[href]'));
+    var href = a ? a.href : '';
+    if (!href || /^javascript:/i.test(href)) {
+      throw new Error('ref=' + ref + ' is not a link with an address. Pass the file address as url instead.');
+    }
+    return href;
+  }
+
   function scrollTo(ref) {
     var el = getEl(ref);
     el.scrollIntoView({ block: 'center' });
@@ -1535,6 +1546,7 @@ export const PAGE_SCRIPT = String.raw`
     scroll: scroll,
     scrollTo: scrollTo,
     formReport: formReport,
+    linkHref: linkHref,
     snapshotHtml: snapshotHtml,
     readableText: readableText,
     readerArticle: readerArticle,
