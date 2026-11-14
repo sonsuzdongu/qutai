@@ -37,6 +37,10 @@ export type Settings = {
   appLock: boolean;
   /** Ask before showing incognito tabs again after leaving the app. */
   incognitoLock: boolean;
+  /** The first-run setup was completed (or skipped through). */
+  onboarded: boolean;
+  /** Version of the privacy policy and terms the user accepted (0: none yet). */
+  legalAcceptedVersion: number;
 };
 
 export type ThemeSetting = 'system' | 'light' | 'dark';
@@ -66,6 +70,8 @@ export const DEFAULT_SETTINGS: Settings = {
   blockThirdPartyCookies: true,
   appLock: false,
   incognitoLock: false,
+  onboarded: false,
+  legalAcceptedVersion: 0,
 };
 
 const KEYS = {
@@ -86,6 +92,8 @@ const KEYS = {
   blockThirdPartyCookies: 'block_third_party_cookies',
   appLock: 'app_lock',
   incognitoLock: 'incognito_lock',
+  onboarded: 'onboarded',
+  legalAcceptedVersion: 'legal_accepted_version',
   apiKey: (id: ProviderId) => `api_key_${id}`,
   model: (id: ProviderId) => `model_${id}`,
   // Written by the first, Claude-only version of the app.
@@ -124,6 +132,8 @@ export async function loadSettings(): Promise<Settings> {
     blockThirdPartyCookies,
     appLock,
     incognitoLock,
+    onboarded,
+    legalAcceptedVersion,
     legacyApiKey,
     legacyModel,
     ...perProvider
@@ -145,6 +155,8 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.blockThirdPartyCookies),
     get(KEYS.appLock),
     get(KEYS.incognitoLock),
+    get(KEYS.onboarded),
+    get(KEYS.legalAcceptedVersion),
     get(KEYS.legacyApiKey),
     get(KEYS.legacyModel),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
@@ -170,6 +182,8 @@ export async function loadSettings(): Promise<Settings> {
     blockThirdPartyCookies: blockThirdPartyCookies !== 'false',
     appLock: appLock === 'true',
     incognitoLock: incognitoLock === 'true',
+    onboarded: onboarded === 'true',
+    legalAcceptedVersion: Math.max(0, Math.floor(Number(legalAcceptedVersion) || 0)),
   };
   PROVIDER_ORDER.forEach((id, i) => {
     settings.apiKeys[id] = perProvider[i * 2] ?? '';
@@ -203,6 +217,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.blockThirdPartyCookies, String(settings.blockThirdPartyCookies)),
     set(KEYS.appLock, String(settings.appLock)),
     set(KEYS.incognitoLock, String(settings.incognitoLock)),
+    set(KEYS.onboarded, String(settings.onboarded)),
+    set(KEYS.legalAcceptedVersion, String(settings.legalAcceptedVersion)),
     ...PROVIDER_ORDER.flatMap((id) => [
       set(KEYS.apiKey(id), settings.apiKeys[id]),
       set(KEYS.model(id), settings.models[id]),

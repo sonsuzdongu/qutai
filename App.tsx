@@ -7,6 +7,7 @@ import {
   Appearance,
   AppState,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   StyleSheet,
   useColorScheme,
@@ -52,6 +53,9 @@ import { authenticate } from './src/device/biometric';
 import { scannedTarget } from './src/device/qr';
 import { toUrl } from './src/browser/url';
 import { LockScreen } from './src/components/LockScreen';
+import { Onboarding } from './src/components/Onboarding';
+import { isIncomingWebLink } from './src/device/defaultBrowser';
+import { LEGAL_VERSION } from './src/legal/documents';
 import { OfflinePagesScreen } from './src/components/OfflinePagesScreen';
 import { deleteOfflineFile, savePageOffline } from './src/device/offline';
 import { addOfflinePage, listOfflinePages, removeOfflinePage } from './src/storage/offlinePages';
@@ -142,6 +146,20 @@ export default function App() {
 
   // Reading the saved session takes a few milliseconds; tabs are created only after it.
   if (!restored) return <View style={styles.container} />;
+  const { settings } = restored;
+  // First run, or the privacy policy / terms changed since the user accepted them.
+  if (!settings.onboarded || settings.legalAcceptedVersion < LEGAL_VERSION) {
+    return (
+      <Onboarding
+        settings={settings}
+        legalOnly={settings.onboarded}
+        onDone={(next) => {
+          saveSettings(next).catch(() => {});
+          setRestored({ ...restored, settings: next });
+        }}
+      />
+    );
+  }
   return (
     <BrowserApp
       initialSession={restored.session}
@@ -161,6 +179,15 @@ function BrowserApp({
   initialSettings: Settings;
 }) {
   const [browserInstance] = useState(() => new Browser(initialSession, recentlyClosed));
+  // As the default browser, links from other apps open in a new tab (at launch and while running).
+  useEffect(() => {
+    const open = (url: string | null | undefined) => {
+      if (isIncomingWebLink(url)) browserInstance.openTab(url);
+    };
+    Linking.getInitialURL().then(open, () => {});
+    const sub = Linking.addEventListener('url', ({ url }) => open(url));
+    return () => sub.remove();
+  }, [browserInstance]);
   const browser = useBrowser(browserInstance);
   const tab = browser.active;
   useHardwareBack(browser);

@@ -20,7 +20,7 @@ npx expo start
 
 Scan the QR code with **Expo Go** on your phone. All the native modules used come bundled with Expo Go.
 
-Open the panel with the ✦ button in the top bar, then pick a provider via the ⚙︎ icon and enter your API key:
+On first launch the setup asks for a provider and API key; later, change them in Settings › Assistant (or the gear in the Qutai panel, opened with the Q logo in the address bar):
 
 | Provider | API | Key |
 |---|---|---|
