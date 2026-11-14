@@ -16,7 +16,8 @@ import {
 import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { darkPalette, makeStyles, usePalette } from '../ui/theme';
+import { Icon, IconName } from '../ui/Icon';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { OmniboxSuggestions } from './OmniboxSuggestions';
 
@@ -76,6 +77,7 @@ export function AddressBar({
   const [text, setText] = useState(url);
   const [editing, setEditing] = useState(false);
   const darkUI = incognito || !!darkMode;
+  const palette = usePalette();
   const dark = darkUI ? darkStyles : null;
 
   const bottom = position === 'bottom';
@@ -98,7 +100,13 @@ export function AddressBar({
 
   return (
     <View style={[styles.bar, bottom && styles.barBottom, dark?.bar]} {...(editing ? {} : swipe.panHandlers)}>
-      <IconButton label="‹" onPress={onBack} disabled={!canGoBack} incognito={darkUI} />
+      <IconButton
+        icon="back"
+        onPress={onBack}
+        disabled={!canGoBack}
+        incognito={darkUI}
+        accessibilityLabel={t('address.back')}
+      />
 
       {/* A TextInput scrolls long URLs to the cursor, so a plain Text is shown until the user taps to edit. */}
       {editing ? (
@@ -130,7 +138,7 @@ export function AddressBar({
               style={[styles.clear, dark?.clear]}
               accessibilityLabel={t('address.clear')}
             >
-              <Text style={[styles.clearText, dark?.text]}>✕</Text>
+              <Icon name="close" size={12} color={darkUI ? darkPalette.text : palette.text} />
             </Pressable>
           )}
         </View>
@@ -144,16 +152,16 @@ export function AddressBar({
           accessibilityRole="button"
           accessibilityLabel={t('address.a11y', { url })}
         >
-          {incognito && <Text style={styles.incognitoBadge}>🕶</Text>}
+          {incognito && <Icon name="incognito" size={15} color={darkPalette.text} />}
           {/^https:\/\//i.test(url) && (
-            <Text style={[styles.security, dark?.dim]} accessibilityLabel={t('address.secure')}>
-              🔒
-            </Text>
+            <View accessibilityLabel={t('address.secure')} accessible>
+              <Icon name="secure" size={13} color={darkUI ? darkPalette.textSecondary : palette.textSecondary} />
+            </View>
           )}
           {/^http:\/\//i.test(url) && (
-            <Text style={[styles.security, styles.insecure]} accessibilityLabel={t('address.notSecure')}>
-              ⚠︎
-            </Text>
+            <View accessibilityLabel={t('address.notSecure')} accessible>
+              <Icon name="insecure" size={13} color={palette.danger} />
+            </View>
           )}
           <Text
             style={[styles.fieldText, styles.fieldTextFlex, dark?.text, !url && styles.placeholder]}
@@ -178,7 +186,7 @@ export function AddressBar({
           </Text>
         </View>
       </Pressable>
-      <IconButton label="⋮" onPress={onOpenMenu} incognito={darkUI} accessibilityLabel={t('address.menu')} />
+      <IconButton icon="more" onPress={onOpenMenu} incognito={darkUI} accessibilityLabel={t('address.menu')} />
       <Pressable
         onPress={onToggleAssistant}
         hitSlop={6}
@@ -188,7 +196,7 @@ export function AddressBar({
         {assistantRunning && !assistantOpen ? (
           <ActivityIndicator size="small" color="#fff" />
         ) : (
-          <Text style={styles.assistantIcon}>✦</Text>
+          <Icon name="assistant" size={20} color="#ffffff" />
         )}
       </Pressable>
       {loading && <LoadingBar top={bottom} />}
@@ -253,19 +261,20 @@ function LoadingBar({ top }: { top: boolean }) {
 }
 
 function IconButton({
-  label,
+  icon,
   onPress,
   disabled,
   incognito,
   accessibilityLabel,
 }: {
-  label: string;
+  icon: IconName;
   onPress: () => void;
   disabled?: boolean;
   incognito?: boolean;
   accessibilityLabel?: string;
 }) {
   const styles = useStyles();
+  const palette = usePalette();
   return (
     <Pressable
       onPress={onPress}
@@ -274,12 +283,12 @@ function IconButton({
       style={styles.icon}
       accessibilityLabel={accessibilityLabel}
     >
-      <Text
-        style={[styles.iconText, incognito && darkStyles.text, disabled && styles.disabled]}
-        maxFontSizeMultiplier={MAX_FONT_SCALE}
-      >
-        {label}
-      </Text>
+      <Icon
+        name={icon}
+        size={22}
+        color={incognito ? darkPalette.text : palette.text}
+        style={disabled ? styles.disabled : undefined}
+      />
     </Pressable>
   );
 }
@@ -339,7 +348,7 @@ const useStyles = makeStyles((c) => ({
   placeholder: { color: c.textSecondary },
   icon: { width: 32, height: 36, alignItems: 'center', justifyContent: 'center' },
   iconText: { fontSize: 22, color: c.text },
-  disabled: { color: '#bbb' },
+  disabled: { opacity: 0.35 },
   loadingTrack: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, overflow: 'hidden' },
   loadingTrackTop: { bottom: 'auto', top: 0 },
   loadingBar: { height: 2, backgroundColor: c.tint, borderRadius: 1 },

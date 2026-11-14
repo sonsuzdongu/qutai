@@ -68,7 +68,8 @@
         {
           "faceIDPermission": "Kutai uses Face ID to unlock the app and incognito tabs."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "locales": {
       "tr": "./locales/tr.json",

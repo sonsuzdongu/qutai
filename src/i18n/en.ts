@@ -86,6 +86,7 @@ export const en = {
   'address.placeholder': 'Search or type address',
   'address.a11y': 'Address: {url}. Tap to edit',
   'address.tabs': '{count} tabs',
+  'address.back': 'Back',
   'address.menu': 'Page menu',
   'address.openAssistant': 'Open Kutai panel',
   'address.closeAssistant': 'Close Kutai panel',

@@ -17,7 +17,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsSpeaking } from '../device/speech';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, usePalette } from '../ui/theme';
+import { Icon, IconName } from '../ui/Icon';
 import type { Source } from '../agent/types';
 import { hostOf } from '../i18n/format';
 import { MarkdownText } from './MarkdownText';
@@ -204,10 +205,10 @@ export function AssistantPanel({
                   </Pressable>
                 </View>
                 {items.length > 0 && !running && (
-                  <HeaderButton label="＋" accessibilityLabel={t('chat.newChat')} onPress={onNewChat} />
+                  <HeaderButton icon="newTab" accessibilityLabel={t('chat.newChat')} onPress={onNewChat} />
                 )}
-                <HeaderButton label="⚙︎" accessibilityLabel={t('chat.settings')} onPress={onOpenSettings} />
-                <HeaderButton label="✕" accessibilityLabel={t('chat.closePanel')} onPress={onClose} />
+                <HeaderButton icon="settings" accessibilityLabel={t('chat.settings')} onPress={onOpenSettings} />
+                <HeaderButton icon="close" accessibilityLabel={t('chat.closePanel')} onPress={onClose} />
               </View>
 
               <ScrollView
@@ -293,7 +294,7 @@ export function AssistantPanel({
                     onPress={onStop}
                     accessibilityLabel={t('common.stop')}
                   >
-                    <Text style={styles.sendText}>■</Text>
+                    <Icon name="stop" size={16} color="#ffffff" />
                   </Pressable>
                 ) : (
                   <Pressable
@@ -301,7 +302,7 @@ export function AssistantPanel({
                     onPress={send}
                     accessibilityLabel={t('common.send')}
                   >
-                    <Text style={styles.sendText}>↑</Text>
+                    <Icon name="send" size={20} color="#ffffff" />
                   </Pressable>
                 )}
               </View>
@@ -314,18 +315,19 @@ export function AssistantPanel({
 }
 
 function HeaderButton({
-  label,
+  icon,
   accessibilityLabel,
   onPress,
 }: {
-  label: string;
+  icon: IconName;
   accessibilityLabel: string;
   onPress: () => void;
 }) {
   const styles = useStyles();
+  const palette = usePalette();
   return (
     <Pressable onPress={onPress} hitSlop={6} style={styles.headerButton} accessibilityLabel={accessibilityLabel}>
-      <Text style={[styles.headerButtonText, useContext(PanelTheme)?.text]}>{label}</Text>
+      <Icon name={icon} size={20} color={palette.textSecondary} />
     </Pressable>
   );
 }

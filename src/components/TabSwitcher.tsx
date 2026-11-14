@@ -21,7 +21,8 @@ import { bump } from '../device/haptics';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { dropTab, Measurable, sectionsOf, TabDrag } from './tabDrag';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, usePalette } from '../ui/theme';
+import { Icon } from '../ui/Icon';
 import { hostOf } from '../i18n/format';
 
 type Props = {
@@ -37,6 +38,11 @@ type Props = {
 const PADDING = 12;
 
 const DarkMode = createContext(false);
+
+/** Icon colours that match a theme's text styles. */
+function iconColors(theme: object) {
+  return theme === light ? { text: '#222222', dim: '#6b6862' } : { text: '#f2f1f5', dim: '#a9a8b3' };
+}
 
 /** Incognito keeps its own purple look; the dark theme keeps the normal orange accent. */
 function useTheme(incognito: boolean) {
@@ -192,7 +198,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
 
       {allTabs.length > 1 && (
         <View style={[styles.search, theme.search]}>
-          <Text style={[styles.searchIcon, theme.dimText]}>⌕</Text>
+          <Icon name="find" size={17} color={iconColors(theme).dim} />
           <TextInput
             style={[styles.searchInput, theme.text]}
             value={query}
@@ -320,7 +326,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
             style={[styles.newTab, theme.newTab]}
             accessibilityLabel={t(incognito ? 'menu.newIncognitoTab' : 'menu.newTab')}
           >
-            <Text style={styles.newTabText}>＋</Text>
+            <Icon name="newTab" size={26} color="#ffffff" />
           </Pressable>
           <Pressable onPress={onClose} hitSlop={8} style={[styles.toolbarSide, styles.alignRight]}>
             <Text style={[styles.toolbarText, styles.bold, theme.accent]}>{t('common.done')}</Text>
@@ -335,6 +341,7 @@ const RECENT_SHOWN = 8;
 
 function RecentlyClosed({ browser, onReopen }: { browser: Browser; onReopen: (index: number) => void }) {
   const styles = useStyles();
+  const palette = usePalette();
   const closed = browser.recentlyClosed.slice(0, RECENT_SHOWN);
   if (closed.length === 0) return null;
   return (
@@ -347,7 +354,7 @@ function RecentlyClosed({ browser, onReopen }: { browser: Browser; onReopen: (in
           style={({ pressed }) => [styles.recentRow, pressed && styles.recentPressed]}
           accessibilityRole="button"
         >
-          <Text style={styles.recentIcon}>↺</Text>
+          <Icon name="reopen" size={16} color={palette.textSecondary} />
           <View style={styles.recentText}>
             <Text style={styles.recentRowTitle} numberOfLines={1}>
               {item.title || hostOf(item.url)}
@@ -429,7 +436,7 @@ function GroupHeader({
       />
       <Text style={[styles.groupCount, theme.dimText]}>{count}</Text>
       <Pressable onPress={onUngroup} hitSlop={8} accessibilityLabel={t('tabs.ungroup')} accessibilityRole="button">
-        <Text style={[styles.groupUngroup, theme.dimText]}>✕</Text>
+        <Icon name="close" size={14} color={iconColors(theme).dim} />
       </Pressable>
     </View>
   );
@@ -503,7 +510,7 @@ function TabCard({
               style={styles.cardClose}
               accessibilityLabel={t('tabs.closeTab')}
             >
-              <Text style={[styles.cardCloseText, theme.text]}>✕</Text>
+              <Icon name="close" size={14} color={iconColors(theme).text} />
             </Pressable>
           )}
         </View>

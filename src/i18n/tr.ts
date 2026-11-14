@@ -87,6 +87,7 @@ export const tr: Record<keyof typeof en, string> = {
   'address.placeholder': 'Adres veya arama',
   'address.a11y': 'Adres: {url}. Düzenlemek için dokunun',
   'address.tabs': '{count} sekme',
+  'address.back': 'Geri',
   'address.menu': 'Sayfa menüsü',
   'address.openAssistant': 'Kutai panelini aç',
   'address.closeAssistant': 'Kutai panelini kapat',

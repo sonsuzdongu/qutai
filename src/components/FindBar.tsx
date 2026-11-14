@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { darkPalette, makeStyles, usePalette } from '../ui/theme';
+import { Icon, IconName } from '../ui/Icon';
 
 type Result = { index: number; count: number };
 
@@ -58,30 +59,42 @@ export function FindBar({ tab, darkMode, onClose }: { tab: Tab; darkMode?: boole
         />
         <Text style={[styles.count, searched && result.count === 0 && styles.none]}>{label}</Text>
       </View>
-      <Button label="▲" onPress={() => step(-1)} disabled={!result.count} dark={dark} a11y={t('find.previous')} />
-      <Button label="▼" onPress={() => step(1)} disabled={!result.count} dark={dark} a11y={t('find.next')} />
-      <Button label="✕" onPress={close} dark={dark} a11y={t('common.close')} />
+      <Button
+        icon="chevronUp"
+        onPress={() => step(-1)}
+        disabled={!result.count}
+        dark={dark}
+        a11y={t('find.previous')}
+      />
+      <Button icon="chevronDown" onPress={() => step(1)} disabled={!result.count} dark={dark} a11y={t('find.next')} />
+      <Button icon="close" onPress={close} dark={dark} a11y={t('common.close')} />
     </View>
   );
 }
 
 function Button({
-  label,
+  icon,
   onPress,
   disabled,
   dark,
   a11y,
 }: {
-  label: string;
+  icon: IconName;
   onPress: () => void;
   disabled?: boolean;
   dark: boolean;
   a11y: string;
 }) {
   const styles = useStyles();
+  const palette = usePalette();
   return (
     <Pressable onPress={onPress} disabled={disabled} hitSlop={6} style={styles.button} accessibilityLabel={a11y}>
-      <Text style={[styles.buttonText, dark && styles.textDark, disabled && styles.disabled]}>{label}</Text>
+      <Icon
+        name={icon}
+        size={20}
+        color={dark ? darkPalette.text : palette.text}
+        style={disabled ? styles.disabled : undefined}
+      />
     </Pressable>
   );
 }

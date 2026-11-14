@@ -7,7 +7,8 @@ import { getLanguage, t } from '../i18n';
 import { hostOf } from '../i18n/format';
 import { getDb } from '../storage/db';
 import { LocalSuggestion, localSuggestions } from '../storage/omnibox';
-import { makeStyles } from '../ui/theme';
+import { darkPalette, makeStyles, usePalette } from '../ui/theme';
+import { Icon, IconName } from '../ui/Icon';
 
 type Props = {
   text: string;
@@ -91,7 +92,7 @@ export function OmniboxSuggestions({
 
         {query.length > 0 && (
           <Row
-            icon="✦"
+            icon="assistant"
             title={t('omnibox.ask', { text: query })}
             incognito={darkUI}
             accent
@@ -99,12 +100,12 @@ export function OmniboxSuggestions({
           />
         )}
         {query.length > 0 && looksLikeUrl(query) && (
-          <Row icon="🌐" title={query} incognito={darkUI} onPress={() => go(query)} />
+          <Row icon="link" title={query} incognito={darkUI} onPress={() => go(query)} />
         )}
         {localItems.map((item) => (
           <Row
             key={item.url}
-            icon={item.bookmarked ? '★' : '🕘'}
+            icon={item.bookmarked ? 'bookmarked' : 'history'}
             title={item.title || hostOf(item.url)}
             subtitle={item.url.replace(/^https?:\/\/(www\.)?/i, '')}
             incognito={darkUI}
@@ -112,10 +113,10 @@ export function OmniboxSuggestions({
           />
         ))}
         {remoteItems.map((suggestion) => (
-          <Row key={suggestion} icon="🔍" title={suggestion} incognito={darkUI} onPress={() => go(suggestion)} />
+          <Row key={suggestion} icon="find" title={suggestion} incognito={darkUI} onPress={() => go(suggestion)} />
         ))}
         {query.length > 0 && !looksLikeUrl(query) && !remoteItems.includes(query) && (
-          <Row icon="🔍" title={query} incognito={darkUI} onPress={() => go(query)} />
+          <Row icon="find" title={query} incognito={darkUI} onPress={() => go(query)} />
         )}
       </ScrollView>
     </View>
@@ -152,7 +153,7 @@ function PasteRow({
   if (!android) return null;
   return (
     <Row
-      icon="📋"
+      icon="copy"
       title={t('omnibox.pasteAndGo')}
       incognito={incognito}
       onPress={() => {
@@ -172,7 +173,7 @@ function Row({
   accent,
   onPress,
 }: {
-  icon: string;
+  icon: IconName;
   title: string;
   subtitle?: string;
   incognito: boolean;
@@ -180,13 +181,19 @@ function Row({
   onPress: () => void;
 }) {
   const styles = useStyles();
+  const palette = usePalette();
   return (
     <Pressable
       onPress={onPress}
       style={({ pressed }) => [styles.row, pressed && (incognito ? styles.pressedDark : styles.pressed)]}
       accessibilityRole="button"
     >
-      <Text style={[styles.icon, accent && styles.accent]}>{icon}</Text>
+      <Icon
+        name={icon}
+        size={17}
+        color={accent ? palette.tintText : incognito ? darkPalette.textSecondary : palette.textSecondary}
+        style={styles.icon}
+      />
       <View style={styles.rowText}>
         <Text style={[styles.title, incognito && styles.textDark, accent && styles.accent]} numberOfLines={1}>
           {title}
@@ -231,7 +238,7 @@ const useStyles = makeStyles((c) => ({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 11 },
   pressed: { backgroundColor: c.pressed },
   pressedDark: { backgroundColor: '#3a3944' },
-  icon: { width: 20, fontSize: 15, textAlign: 'center', color: c.textSecondary },
+  icon: { width: 20 },
   rowText: { flex: 1 },
   title: { fontSize: 15, color: c.text },
   textDark: { color: '#f2f1f5' },
