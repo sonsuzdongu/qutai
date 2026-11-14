@@ -382,13 +382,13 @@ function BrowserApp({
   const currentSite = siteKey(tab.url);
   const iconRow: IconItem[] = [
     {
-      icon: '→',
+      icon: 'forward',
       label: t('menu.forward'),
       disabled: !tab.canGoForward,
       onPress: () => tab.webview?.goForward(),
     },
     {
-      icon: bookmarked ? '★' : '☆',
+      icon: bookmarked ? 'bookmarked' : 'bookmark',
       label: t(bookmarked ? 'menu.removeBookmark' : 'menu.addBookmark'),
       active: bookmarked,
       disabled: !/^https?:\/\//i.test(tab.url),
@@ -404,20 +404,20 @@ function BrowserApp({
         }),
     },
     tab.loading
-      ? { icon: '✕', label: t('menu.stop'), onPress: () => tab.webview?.stopLoading() }
-      : { icon: '↻', label: t('menu.reload'), disabled: onNewTab, onPress: () => tab.webview?.reload() },
+      ? { icon: 'close', label: t('menu.stop'), onPress: () => tab.webview?.stopLoading() }
+      : { icon: 'reload', label: t('menu.reload'), disabled: onNewTab, onPress: () => tab.webview?.reload() },
   ];
 
   const menuItems: MenuItem[] = [
     {
-      icon: '⤴',
+      icon: 'share',
       label: t('menu.shareLink'),
       disabled: onNewTab,
       section: true,
       onPress: () => runAction(() => shareLink(tab)),
     },
     {
-      icon: '⧉',
+      icon: 'copy',
       label: t('menu.copyLink'),
       disabled: onNewTab,
       onPress: () =>
@@ -427,14 +427,14 @@ function BrowserApp({
         }),
     },
     {
-      icon: '🔍',
+      icon: 'find',
       label: t('menu.find'),
       section: true,
       disabled: onNewTab,
       onPress: () => setFindFor({ tabId: tab.id, url: tab.url }),
     },
     {
-      icon: '🛡',
+      icon: 'shield',
       label: t('menu.sitePermission', {
         level: t(`site.level.${currentSite ? sitePermissions.levelFor(currentSite) : 'default'}`),
       }),
@@ -443,30 +443,30 @@ function BrowserApp({
       onPress: () => setPermissionHost(currentSite),
     },
     {
-      icon: 'Aa',
+      icon: 'textSize',
       label: t('menu.textSize'),
       onPress: () => setTextSizeVisible(true),
     },
     {
-      icon: '🖥',
+      icon: 'desktop',
       label: t('menu.desktopSite'),
       checked: tab.desktop,
       disabled: onNewTab,
       onPress: () => tab.toggleDesktop(),
     },
     {
-      icon: '🔳',
+      icon: 'qrCode',
       label: t('menu.qrCode'),
       disabled: onNewTab,
       onPress: () => setQrUrl(tab.url),
     },
     {
-      icon: '📷',
+      icon: 'scanQr',
       label: t('menu.scanQr'),
       onPress: () => setScannerVisible(true),
     },
     {
-      icon: '📄',
+      icon: 'pdf',
       label: t('menu.savePdf'),
       disabled: onNewTab,
       onPress: () =>
@@ -477,7 +477,7 @@ function BrowserApp({
         }),
     },
     {
-      icon: '📥',
+      icon: 'saveOffline',
       label: t('menu.saveOffline'),
       disabled: onNewTab,
       onPress: () =>
@@ -491,13 +491,13 @@ function BrowserApp({
         }),
     },
     {
-      icon: '🖨',
+      icon: 'print',
       label: t('menu.print'),
       disabled: onNewTab,
       onPress: () => runAction(() => printPage(tab)),
     },
     {
-      icon: '📸',
+      icon: 'screenshot',
       label: t('menu.saveScreenshot'),
       disabled: onNewTab,
       onPress: () =>
@@ -507,9 +507,9 @@ function BrowserApp({
         }),
     },
     speaking
-      ? { icon: '⏹', label: t('menu.stopReading'), onPress: () => runAction(stopSpeaking) }
+      ? { icon: 'stopReading', label: t('menu.stopReading'), onPress: () => runAction(stopSpeaking) }
       : {
-          icon: '🔊',
+          icon: 'readAloud',
           label: t('menu.readAloud'),
           disabled: onNewTab,
           onPress: () =>
@@ -517,14 +517,18 @@ function BrowserApp({
               await speakPage(tab);
             }),
         },
-    { icon: '🔖', label: t('menu.bookmarks'), section: true, onPress: () => setLibrary('bookmarks') },
-    { icon: '🕘', label: t('menu.history'), onPress: () => setLibrary('history') },
-    { icon: '📚', label: t('menu.offlinePages'), onPress: () => setOfflineVisible(true) },
+    { icon: 'bookmarks', label: t('menu.bookmarks'), section: true, onPress: () => setLibrary('bookmarks') },
+    { icon: 'history', label: t('menu.history'), onPress: () => setLibrary('history') },
+    { icon: 'savedPages', label: t('menu.offlinePages'), onPress: () => setOfflineVisible(true) },
     ...(Platform.OS === 'ios'
-      ? [{ icon: '⬇︎', label: t('menu.downloads'), onPress: () => setDownloadsVisible(true) }]
+      ? [{ icon: 'downloads' as const, label: t('menu.downloads'), onPress: () => setDownloadsVisible(true) }]
       : []),
-    { icon: '＋', label: t('menu.newTab'), section: true, onPress: () => browser.openTab() },
-    { icon: '🕶', label: t('menu.newIncognitoTab'), onPress: () => browser.openTab(undefined, { incognito: true }) },
+    { icon: 'newTab', label: t('menu.newTab'), section: true, onPress: () => browser.openTab() },
+    {
+      icon: 'incognito',
+      label: t('menu.newIncognitoTab'),
+      onPress: () => browser.openTab(undefined, { incognito: true }),
+    },
   ];
 
   /** Actions for a long-pressed link and/or image. Links from incognito tabs stay incognito. */
@@ -538,15 +542,15 @@ function BrowserApp({
       const href = target.href;
       if (source.incognito) {
         actions.push({
-          icon: '🕶',
+          icon: 'incognito',
           label: t('contextMenu.openInNewIncognito'),
           onPress: () => browser.openTab(href, { incognito: true, openerId: source.id }),
         });
       } else {
         actions.push(
-          { icon: '＋', label: t('contextMenu.openInNewTab'), onPress: () => openBehind(href) },
+          { icon: 'newTab', label: t('contextMenu.openInNewTab'), onPress: () => openBehind(href) },
           {
-            icon: '🕶',
+            icon: 'incognito',
             label: t('contextMenu.openInIncognito'),
             onPress: () => browser.openTab(href, { incognito: true }),
           },
@@ -554,7 +558,7 @@ function BrowserApp({
       }
       actions.push(
         {
-          icon: '⧉',
+          icon: 'copy',
           label: t('menu.copyLink'),
           onPress: () =>
             runAction(async () => {
@@ -562,9 +566,9 @@ function BrowserApp({
               return t('menu.linkCopied');
             }),
         },
-        { icon: '⤴', label: t('menu.shareLink'), onPress: () => runAction(() => shareText(href)) },
+        { icon: 'share', label: t('menu.shareLink'), onPress: () => runAction(() => shareText(href)) },
         {
-          icon: '✦',
+          icon: 'assistant',
           label: t('contextMenu.ask'),
           onPress: () => {
             setPanelOpen(true);
@@ -576,7 +580,7 @@ function BrowserApp({
     if (target.src) {
       const src = target.src;
       actions.push({
-        icon: '⬇︎',
+        icon: 'download',
         label: t('contextMenu.saveImage'),
         onPress: () =>
           runAction(async () => {
@@ -586,9 +590,9 @@ function BrowserApp({
       });
       if (!src.startsWith('data:')) {
         actions.push(
-          { icon: '🖼', label: t('contextMenu.openImage'), onPress: () => openBehind(src) },
+          { icon: 'image', label: t('contextMenu.openImage'), onPress: () => openBehind(src) },
           {
-            icon: '⧉',
+            icon: 'copy',
             label: t('contextMenu.copyImageLink'),
             onPress: () =>
               runAction(async () => {

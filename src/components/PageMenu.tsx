@@ -1,10 +1,11 @@
 import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { Icon, IconName } from '../ui/Icon';
+import { darkPalette, lightPalette, makeStyles } from '../ui/theme';
 
 export type MenuItem = {
-  icon: string;
+  icon: IconName;
   label: string;
   onPress: () => void;
   disabled?: boolean;
@@ -14,7 +15,7 @@ export type MenuItem = {
   checked?: boolean;
 };
 
-export type IconItem = { icon: string; label: string; onPress: () => void; disabled?: boolean; active?: boolean };
+export type IconItem = { icon: IconName; label: string; onPress: () => void; disabled?: boolean; active?: boolean };
 
 type Props = {
   visible: boolean;
@@ -35,6 +36,7 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose
   // Long menus scroll instead of running off small screens; the icon row stays on top.
   const listMaxHeight = height - top - insets.bottom - (iconRow?.length ? 70 : 20);
   const theme = incognito || darkMode ? dark : light;
+  const palette = incognito || darkMode ? darkPalette : lightPalette;
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
@@ -55,16 +57,12 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose
                 accessibilityLabel={item.label}
                 accessibilityState={{ disabled: item.disabled }}
               >
-                <Text
-                  style={[
-                    styles.iconRowText,
-                    theme.text,
-                    item.active && styles.active,
-                    item.disabled && styles.disabled,
-                  ]}
-                >
-                  {item.icon}
-                </Text>
+                <Icon
+                  name={item.icon}
+                  size={22}
+                  color={item.active ? palette.tintText : palette.text}
+                  style={item.disabled ? styles.disabled : undefined}
+                />
               </Pressable>
             ))}
           </View>
@@ -83,11 +81,16 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose
                 accessibilityRole="menuitem"
                 accessibilityState={{ disabled: item.disabled }}
               >
-                <Text style={[styles.icon, item.disabled && styles.disabled]}>{item.icon}</Text>
+                <Icon
+                  name={item.icon}
+                  size={20}
+                  color={palette.textSecondary}
+                  style={item.disabled ? styles.disabled : undefined}
+                />
                 <Text style={[styles.label, styles.labelFlex, theme.text, item.disabled && styles.disabled]}>
                   {item.label}
                 </Text>
-                {item.checked && <Text style={styles.check}>✓</Text>}
+                {item.checked && <Icon name="check" size={20} color={palette.tintText} />}
               </Pressable>
             </View>
           ))}
@@ -110,10 +113,8 @@ const useStyles = makeStyles((c) => ({
     elevation: 12,
   },
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 11 },
-  icon: { width: 22, fontSize: 17, textAlign: 'center' },
   label: { fontSize: 15 },
   labelFlex: { flex: 1 },
-  check: { fontSize: 16, color: c.tintText, fontWeight: '700' },
   disabled: { opacity: 0.35 },
   separator: { height: StyleSheet.hairlineWidth, marginVertical: 4 },
   iconRow: {
@@ -125,8 +126,6 @@ const useStyles = makeStyles((c) => ({
     borderBottomColor: c.separator,
   },
   iconButton: { width: 48, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 10 },
-  iconRowText: { fontSize: 20 },
-  active: { color: c.tintText },
 }));
 
 const light = StyleSheet.create({

@@ -2,9 +2,10 @@ import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { ContextTarget } from '../browser/contextMenu';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { Icon, IconName } from '../ui/Icon';
+import { makeStyles, usePalette } from '../ui/theme';
 
-export type ContextAction = { icon: string; label: string; onPress: () => void };
+export type ContextAction = { icon: IconName; label: string; onPress: () => void };
 
 type Props = {
   target: ContextTarget | null;
@@ -15,6 +16,7 @@ type Props = {
 /** Bottom sheet for a long-pressed link or image. */
 export function ContextMenuSheet({ target, actions, onClose }: Props) {
   const styles = useStyles();
+  const palette = usePalette();
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={target !== null} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
@@ -44,7 +46,7 @@ export function ContextMenuSheet({ target, actions, onClose }: Props) {
               style={({ pressed }) => [styles.row, pressed && styles.pressed]}
               accessibilityRole="button"
             >
-              <Text style={styles.icon}>{action.icon}</Text>
+              <Icon name={action.icon} size={20} color={palette.textSecondary} />
               <Text style={styles.label}>{action.label}</Text>
             </Pressable>
           ))}
@@ -72,6 +74,5 @@ const useStyles = makeStyles((c) => ({
   url: { fontSize: 12, color: c.textSecondary },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 13 },
   pressed: { backgroundColor: c.pressed },
-  icon: { width: 22, fontSize: 17, textAlign: 'center' },
   label: { fontSize: 16, color: c.text },
 }));
