@@ -51,6 +51,9 @@ import { authenticate } from './src/device/biometric';
 import { scannedTarget } from './src/device/qr';
 import { toUrl } from './src/browser/url';
 import { LockScreen } from './src/components/LockScreen';
+import { OfflinePagesScreen } from './src/components/OfflinePagesScreen';
+import { savePageOffline } from './src/device/offline';
+import { addOfflinePage } from './src/storage/offlinePages';
 import { QrCodeSheet } from './src/components/QrCodeSheet';
 import { QrScanner } from './src/components/QrScanner';
 import { captureRef } from 'react-native-view-shot';
@@ -209,6 +212,7 @@ function BrowserApp({
   const [permissionHost, setPermissionHost] = useState<string | null>(null);
   const [downloadsVisible, setDownloadsVisible] = useState(false);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
+  const [offlineVisible, setOfflineVisible] = useState(false);
   const [scannerVisible, setScannerVisible] = useState(false);
   const [context, setContext] = useState<{ tab: Tab; target: ContextTarget } | null>(null);
   // Find in page belongs to one page: it closes by itself when the tab or the URL changes.
@@ -466,6 +470,20 @@ function BrowserApp({
         }),
     },
     {
+      icon: '📥',
+      label: t('menu.saveOffline'),
+      disabled: onNewTab,
+      onPress: () =>
+        runAction(async () => {
+          // Saving writes the page to disk, which incognito tabs never do.
+          if (tab.incognito) return t('offline.incognito');
+          toast.show(t('menu.pdfPreparing'));
+          const page = await savePageOffline(tab);
+          await addOfflinePage(await getDb(), page);
+          return t('offline.saved');
+        }),
+    },
+    {
       icon: '🖨',
       label: t('menu.print'),
       disabled: onNewTab,
@@ -494,6 +512,7 @@ function BrowserApp({
         },
     { icon: '🔖', label: t('menu.bookmarks'), section: true, onPress: () => setLibrary('bookmarks') },
     { icon: '🕘', label: t('menu.history'), onPress: () => setLibrary('history') },
+    { icon: '📚', label: t('menu.offlinePages'), onPress: () => setOfflineVisible(true) },
     ...(Platform.OS === 'ios'
       ? [{ icon: '⬇︎', label: t('menu.downloads'), onPress: () => setDownloadsVisible(true) }]
       : []),
@@ -871,6 +890,14 @@ function BrowserApp({
           zoom={settings.textZoom}
           onChange={(textZoom) => onSaveSettings({ ...settings, textZoom })}
           onClose={() => setTextSizeVisible(false)}
+        />
+        <OfflinePagesScreen
+          visible={offlineVisible}
+          onOpenLive={(url) => {
+            setOfflineVisible(false);
+            browser.openTab(url, { incognito: tab.incognito });
+          }}
+          onClose={() => setOfflineVisible(false)}
         />
         <QrCodeSheet
           url={qrUrl}

@@ -292,6 +292,15 @@ export const en = {
   'settings.incognitoLockHint': 'Unlock again to see incognito tabs after leaving Kutai.',
   'settings.lockUnavailable': 'Set up a screen lock on your phone first.',
 
+  'menu.saveOffline': 'Save for offline',
+  'menu.offlinePages': 'Saved pages',
+  'offline.title': 'Saved pages',
+  'offline.empty': 'No saved pages. Use "Save for offline" in the page menu to read a page without a connection.',
+  'offline.openLive': 'Open live page',
+  'offline.delete': 'Delete saved page',
+  'offline.saved': 'Saved for offline reading',
+  'offline.incognito': "Pages from incognito tabs aren't saved.",
+
   'settings.title': 'Settings',
   'settings.saveFailed': "Couldn't save settings",
   'settings.provider': 'AI provider',

@@ -1,0 +1,148 @@
+import { useCallback, useEffect, useState } from 'react';
+import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { WebView } from 'react-native-webview';
+import { deleteOfflineFile, readOfflinePage } from '../device/offline';
+import { t } from '../i18n';
+import { dayLabel, hostOf } from '../i18n/format';
+import { getDb } from '../storage/db';
+import { listOfflinePages, OfflinePage, removeOfflinePage } from '../storage/offlinePages';
+import { formatSize } from './DownloadsScreen';
+
+type Props = { visible: boolean; onOpenLive: (url: string) => void; onClose: () => void };
+
+/** Pages saved for reading without a connection. */
+export function OfflinePagesScreen({ visible, onOpenLive, onClose }: Props) {
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      {visible && <OfflineList onOpenLive={onOpenLive} onClose={onClose} />}
+    </Modal>
+  );
+}
+
+function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
+  const [pages, setPages] = useState<OfflinePage[] | null>(null);
+  const [reading, setReading] = useState<{ page: OfflinePage; html: string } | null>(null);
+  const reload = useCallback(() => {
+    getDb()
+      .then(listOfflinePages)
+      .then(setPages)
+      .catch(() => setPages([]));
+  }, []);
+  useEffect(reload, [reload]);
+
+  const open = (page: OfflinePage) => {
+    readOfflinePage(page)
+      .then((html) => setReading({ page, html }))
+      .catch(() => {});
+  };
+  const remove = (page: OfflinePage) => {
+    deleteOfflineFile(page);
+    getDb()
+      .then((db) => removeOfflinePage(db, page.id))
+      .then(reload)
+      .catch(() => {});
+  };
+
+  if (reading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
+        <View style={styles.header}>
+          <Pressable onPress={() => setReading(null)} hitSlop={8} style={styles.side}>
+            <Text style={styles.back}>‹ {t('offline.title')}</Text>
+          </Pressable>
+          <Pressable onPress={() => onOpenLive(reading.page.url)} hitSlop={8} style={[styles.side, styles.right]}>
+            <Text style={styles.done}>{t('offline.openLive')}</Text>
+          </Pressable>
+        </View>
+        <WebView
+          source={{ html: reading.html, baseUrl: reading.page.url }}
+          originWhitelist={['*']}
+          // Links lead to the live web: they open in a tab.
+          onShouldStartLoadWithRequest={(req) => {
+            if (/^https?:\/\//i.test(req.url) && req.url !== reading.page.url && req.navigationType === 'click') {
+              onOpenLive(req.url);
+              return false;
+            }
+            return true;
+          }}
+          javaScriptEnabled={false}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <View style={styles.header}>
+        <View style={styles.side} />
+        <Text style={styles.title}>{t('offline.title')}</Text>
+        <Pressable onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
+          <Text style={styles.done}>{t('common.done')}</Text>
+        </Pressable>
+      </View>
+      <FlatList
+        data={pages ?? []}
+        keyExtractor={(p) => p.id}
+        contentContainerStyle={styles.list}
+        ListEmptyComponent={pages ? <Text style={styles.empty}>{t('offline.empty')}</Text> : undefined}
+        renderItem={({ item }) => (
+          <Pressable onPress={() => open(item)} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+            <View style={styles.texts}>
+              <Text style={styles.name} numberOfLines={2}>
+                {item.title}
+              </Text>
+              <Text style={styles.meta} numberOfLines={1}>
+                {[hostOf(item.url), formatSize(item.size), dayLabel(item.savedAt)].filter(Boolean).join(' · ')}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => remove(item)}
+              hitSlop={10}
+              style={styles.remove}
+              accessibilityLabel={t('offline.delete')}
+            >
+              <Text style={styles.removeText}>✕</Text>
+            </Pressable>
+          </Pressable>
+        )}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#faf9f5' },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#d6d3c9',
+  },
+  side: { flex: 1 },
+  right: { alignItems: 'flex-end' },
+  title: { fontSize: 17, fontWeight: '600' },
+  back: { fontSize: 16, color: '#c96442' },
+  done: { fontSize: 16, color: '#c96442', fontWeight: '600' },
+  list: { padding: 16, gap: 8 },
+  empty: { fontSize: 15, color: '#999', textAlign: 'center', marginTop: 32, lineHeight: 21 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingLeft: 14,
+    paddingRight: 6,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#e0ddd4',
+  },
+  pressed: { backgroundColor: '#f1efe8' },
+  texts: { flex: 1, gap: 2 },
+  name: { fontSize: 15, color: '#222' },
+  meta: { fontSize: 12, color: '#999' },
+  remove: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  removeText: { fontSize: 14, color: '#999' },
+});

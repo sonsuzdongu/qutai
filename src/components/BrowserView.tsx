@@ -190,6 +190,9 @@ function TabWebView({
           userAgent={tab.desktop ? DESKTOP_USER_AGENT : undefined}
           contentMode={tab.desktop ? 'desktop' : 'recommended'}
           thirdPartyCookiesEnabled={!newTabActions.blockThirdPartyCookies}
+          // Videos can go full screen (Android) and play in the page (iOS).
+          allowsFullscreenVideo
+          allowsInlineMediaPlayback
           forceDarkOn={newTabActions.darkMode && newTabActions.darkSites}
           injectedJavaScript={pageSetupScript}
           injectedJavaScriptBeforeContentLoaded={earlyScript}

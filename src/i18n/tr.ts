@@ -294,6 +294,16 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.incognitoLockHint': "Kutai'den çıktıktan sonra gizli sekmeleri görmek için yeniden kilit açılır.",
   'settings.lockUnavailable': 'Önce telefonunuzda ekran kilidi ayarlayın.',
 
+  'menu.saveOffline': 'Çevrimdışı kaydet',
+  'menu.offlinePages': 'Kaydedilen sayfalar',
+  'offline.title': 'Kaydedilen sayfalar',
+  'offline.empty':
+    'Kaydedilmiş sayfa yok. Bir sayfayı internetsiz okumak için sayfa menüsündeki "Çevrimdışı kaydet"i kullanın.',
+  'offline.openLive': 'Canlı sayfayı aç',
+  'offline.delete': 'Kaydı sil',
+  'offline.saved': 'Çevrimdışı okumak için kaydedildi',
+  'offline.incognito': 'Gizli sekmelerdeki sayfalar kaydedilmez.',
+
   'settings.title': 'Ayarlar',
   'settings.saveFailed': 'Ayarlar kaydedilemedi',
   'settings.provider': 'Yapay zekâ sağlayıcısı',

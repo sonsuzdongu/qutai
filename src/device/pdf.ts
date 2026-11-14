@@ -4,7 +4,7 @@ import * as Sharing from 'expo-sharing';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
 
-type Snapshot = {
+export type Snapshot = {
   title: string;
   url: string;
   images: number;

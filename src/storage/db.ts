@@ -59,6 +59,14 @@ const MIGRATIONS: string[] = [
      size INTEGER,
      created_at INTEGER NOT NULL
    );`,
+  `CREATE TABLE offline_pages (
+     id TEXT PRIMARY KEY NOT NULL,
+     url TEXT NOT NULL,
+     title TEXT NOT NULL,
+     uri TEXT NOT NULL,
+     size INTEGER,
+     saved_at INTEGER NOT NULL
+   );`,
 ];
 
 export async function migrate(db: Db): Promise<void> {
