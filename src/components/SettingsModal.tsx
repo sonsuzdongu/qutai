@@ -268,6 +268,14 @@ function SettingsPages({
                 onChange={setBackgroundTasks}
               />
             )}
+            {Platform.OS === 'android' && settings.backgroundTasks && (
+              <SwitchRow
+                title={t('settings.notifyTaskDone')}
+                hint={t('settings.notifyTaskDoneHint')}
+                value={settings.notifyTaskDone}
+                onChange={(notifyTaskDone) => set({ notifyTaskDone })}
+              />
+            )}
             <SwitchRow
               title={t('settings.memoryEnabled')}
               hint={t('settings.memoryHint')}

@@ -48,6 +48,8 @@ type Props = {
   onSwipe?: (direction: -1 | 1) => void;
   assistantOpen: boolean;
   assistantRunning: boolean;
+  /** A task ended in a conversation the user has not looked at since: a dot on the Qutai button. */
+  assistantUnseen?: boolean;
   /** Off: no Qutai button (the page menu has "Ask Qutai" instead). */
   showAssistant?: boolean;
   searchEngine: SearchEngineId;
@@ -87,6 +89,7 @@ export function AddressBar({
   onSwipe,
   assistantOpen,
   assistantRunning,
+  assistantUnseen = false,
   showAssistant = true,
   searchEngine,
   searchSuggestions,
@@ -308,10 +311,14 @@ export function AddressBar({
           onPress={onToggleAssistant}
           hitSlop={6}
           style={[styles.assistantButton, assistantOpen && styles.assistantButtonActive]}
-          accessibilityLabel={t(assistantOpen ? 'address.closeAssistant' : 'address.openAssistant')}
+          accessibilityLabel={
+            t(assistantOpen ? 'address.closeAssistant' : 'address.openAssistant') +
+            (assistantUnseen ? `, ${t('address.assistantUnseen')}` : '')
+          }
         >
           {/* The orbit circles while a task runs. */}
           <QutaiMark size={24} working={assistantRunning} />
+          {assistantUnseen && !assistantRunning ? <View style={styles.unseenDot} /> : null}
         </Pressable>
       )}
       {loading && <LoadingBar top={bottom} />}
@@ -483,6 +490,17 @@ const useStyles = makeStyles((c) => ({
   // A 34pt touch target around a 24pt logo, in line with the bar's 22pt icons.
   assistantButton: { width: 34, height: 34, marginLeft: 2, alignItems: 'center', justifyContent: 'center' },
   assistantButtonActive: { opacity: 0.7 },
+  unseenDot: {
+    position: 'absolute',
+    top: 3,
+    right: 3,
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+    backgroundColor: c.danger,
+    borderWidth: 1.5,
+    borderColor: c.chrome,
+  },
 }));
 
 /** The bar has a fixed height, so very large text sizes are capped there. */

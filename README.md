@@ -266,7 +266,8 @@ the feature, when the user is asked, the config line that declares it and what i
   or no progress for 4 minutes) and 30 minutes in the background also pause it. Incognito conversations never continue
   in the background. iOS doesn't offer it: iOS gives an app only a short time to finish work after it leaves the screen
   and suspends WebKit's pages with it, so tasks pause there, and on Android with the setting off, and resume where they
-  left off when the app comes back. Needs a new development build (local module `modules/qutai-agent`). Not tested on
+  left off when the app comes back; nothing is announced for a paused task. A task that ends while the user is in
+  Qutai but looking elsewhere shows a toast with Show and a dot on the Qutai button. Needs a new development build (local module `modules/qutai-agent`). Not tested on
   a phone yet.
 - **Tabs sleep.** At most five tabs keep a live WebView; the others sleep as a URL and thumbnail and reload
   when opened. Private tabs, tabs using the camera or microphone, tabs playing sound, and the tabs a running task works in

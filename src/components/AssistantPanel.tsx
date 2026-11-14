@@ -97,6 +97,9 @@ type Props = {
   /** Another tab's conversation is running a task (only one runs at a time). */
   busyElsewhere: boolean;
   onShowRunningTab: () => void;
+  /** How a task ended in another tab's or group's conversation that the user has not looked at since. */
+  finishedElsewhere: 'done' | 'failed' | 'needsAnswer' | null;
+  onShowFinished: () => void;
   /** Provider and model shown under the title, e.g. "OpenAI · GPT-5.6 Terra". */
   modelInfo: string;
   onClose: () => void;
@@ -149,6 +152,8 @@ export function AssistantPanel({
   running,
   busyElsewhere,
   onShowRunningTab,
+  finishedElsewhere,
+  onShowFinished,
   modelInfo,
   onClose,
   onSend,
@@ -366,6 +371,20 @@ export function AssistantPanel({
               {busyElsewhere && (
                 <Pressable onPress={onShowRunningTab} style={[styles.busy, d?.busy]} accessibilityRole="button">
                   <Text style={styles.busyText}>{t('chat.busyElsewhere')}</Text>
+                  <Text style={styles.busyAction}>{t('chat.showTab')}</Text>
+                </Pressable>
+              )}
+              {!busyElsewhere && finishedElsewhere && (
+                <Pressable onPress={onShowFinished} style={[styles.busy, d?.busy]} accessibilityRole="button">
+                  <Text style={styles.busyText}>
+                    {t(
+                      finishedElsewhere === 'done'
+                        ? 'chat.finishedElsewhere'
+                        : finishedElsewhere === 'failed'
+                          ? 'chat.failedElsewhere'
+                          : 'chat.answerElsewhere',
+                    )}
+                  </Text>
                   <Text style={styles.busyAction}>{t('chat.showTab')}</Text>
                 </Pressable>
               )}

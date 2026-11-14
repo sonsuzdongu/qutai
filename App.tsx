@@ -238,8 +238,20 @@ function BrowserApp({
   // Text selected on a page; like find in page, it only counts for the page it came from.
   const [selection, setSelection] = useState<{ tabId: string; url: string; text: string } | null>(null);
   const closePanel = useCallback(() => setPanelOpen(false), []);
+  // Read when a task ends, which can be long after the render that started it.
+  const panelOpenRef = useRef(panelOpen);
+  panelOpenRef.current = panelOpen;
+  /** A task ended in a conversation the user has not seen since: the Qutai button shows a dot until they do. */
+  const unseenChat = browser.conversations.find((x) => x.unseen);
+  // Showing a conversation is seeing it.
+  useEffect(() => {
+    if (panelOpen && conversation.unseen) conversation.setUnseen(null);
+  }, [panelOpen, conversation, conversation.unseen]);
 
   const [settings, setSettings] = useState<Settings>(initialSettings);
+  // Read when a task ends, which can be long after the render that started it.
+  const notifyTaskDoneRef = useRef(settings.notifyTaskDone);
+  notifyTaskDoneRef.current = settings.notifyTaskDone;
   const [pinShortcuts] = useState(canPinSiteShortcut);
 
   // Network ad and tracker blocking: the master switch, and list downloads only once the terms are accepted (the
@@ -345,6 +357,15 @@ function BrowserApp({
   runningRef.current = { chat: runningChat, tab: runningTab };
   /** The tab whose conversation the last task belongs to (its result notification opens it). */
   const lastTaskTab = useRef<string | null>(null);
+  /** Shows a conversation: its tab (the first of its group) and the panel. */
+  const showConversation = useCallback(
+    (chat: Conversation) => {
+      const target = browserInstance.tabs.find((x) => browserInstance.conversationOf(x) === chat);
+      if (target) browserInstance.switchTab(target.id);
+      setPanelOpen(true);
+    },
+    [browserInstance],
+  );
   useEffect(() => {
     const stop = onBackgroundStopRequested(() => runningRef.current.chat?.stop());
     const open = onBackgroundOpenRequested(() => {
@@ -617,10 +638,7 @@ function BrowserApp({
         },
       });
       if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
-      else {
-        success();
-        AccessibilityInfo.announceForAccessibility(t('a11y.taskDone'));
-      }
+      else AccessibilityInfo.announceForAccessibility(t('a11y.taskDone'));
     } catch (e) {
       if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
       else chat.add(newItem('error', e instanceof Error ? e.message : String(e)));
@@ -628,14 +646,38 @@ function BrowserApp({
     } finally {
       if (signal.aborted) outcome = { kind: 'stopped' };
       else if (outcome.kind === 'done') outcome = { kind: 'done', text: lastText };
-      // Nothing from a conversation that touched an incognito tab goes in a notification.
-      endBackgroundTask(incognitoTask() ? { kind: 'stopped' } : outcome);
+      // Nothing from a conversation that touched an incognito tab goes in a notification, and with "Notify me when a
+      // task finishes" off only a question for the user does.
+      const quiet = !notifyTaskDoneRef.current && outcome.kind !== 'needsAnswer';
+      endBackgroundTask(incognitoTask() || quiet ? { kind: 'stopped' } : outcome);
       chat.finishStreaming();
       chat.finish();
       browser.setAgentTab(null);
+      if (outcome.kind !== 'stopped') taskEnded(chat, outcome.kind);
       // Saved under the conversation's key now, which may have changed meanwhile (e.g. the tab founded a group).
       persistConversation(chat);
     }
+  };
+
+  /**
+   * A task ended (not stopped by the user). Looking at its conversation, the user sees it and feels it; otherwise the
+   * conversation is marked unseen (a dot on the Qutai button), and with Qutai on screen a toast says so with Show.
+   * Away from Qutai, Android's background run has already posted its notification; a task that paused because Qutai
+   * left the screen cannot end there, and nothing is ever announced for one that did not end.
+   */
+  const taskEnded = (chat: Conversation, kind: 'done' | 'failed' | 'needsAnswer') => {
+    const onScreen = AppState.currentState === 'active';
+    if (onScreen && panelOpenRef.current && browserInstance.conversationOf(browserInstance.active) === chat) {
+      if (kind === 'done') success();
+      return;
+    }
+    chat.setUnseen(kind);
+    if (!onScreen) return;
+    bump();
+    toast.show(t(kind === 'done' ? 'taskDone.done' : kind === 'failed' ? 'taskDone.failed' : 'taskDone.needsAnswer'), {
+      label: t('chat.showTab'),
+      onPress: () => showConversation(chat),
+    });
   };
 
   const newChat = () => {
@@ -1084,6 +1126,7 @@ function BrowserApp({
       tabCount={browser.tabs.length}
       assistantOpen={panelOpen}
       assistantRunning={running}
+      assistantUnseen={!panelOpen && unseenChat !== undefined}
       showAssistant={settings.showAssistantButton}
       onSubmit={(url) => tab.loadUrl(upgradeToHttps(url, settings.httpsOnly))}
       onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
@@ -1215,6 +1258,8 @@ function BrowserApp({
               running={conversation.running}
               busyElsewhere={running && !conversation.running}
               onShowRunningTab={() => runningTab && browser.switchTab(runningTab.id)}
+              finishedElsewhere={unseenChat && unseenChat !== conversation ? unseenChat.unseen : null}
+              onShowFinished={() => unseenChat && showConversation(unseenChat)}
               onClose={closePanel}
               onSend={send}
               onStop={() => conversation.stop()}
@@ -1425,7 +1470,7 @@ function BrowserApp({
           />
           <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
           <CaptureOverlay />
-          <Toast key={toast.key} message={toast.message} onHidden={toast.hide} />
+          <Toast key={toast.key} message={toast.message} action={toast.action} onHidden={toast.hide} />
           <DialogHost root />
         </View>
       </SafeAreaProvider>

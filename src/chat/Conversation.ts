@@ -66,6 +66,11 @@ export class Conversation {
   privacy = { touchedIncognito: false };
   /** The next message starts a deep research task (switched off again once it is sent). */
   research = false;
+  /**
+   * How the last task ended, while the user has not looked at the conversation since (it ended in another tab or
+   * group, with the panel closed, or with Qutai in the background). Cleared once the conversation is shown.
+   */
+  unseen: 'done' | 'failed' | 'needsAnswer' | null = null;
   /** Saved messages have been read from disk (or there was nothing to read). */
   loaded = false;
   /** Reading the saved messages has started (so they are read only once). */
@@ -154,6 +159,12 @@ export class Conversation {
       text === ''
         ? this.items.filter((item) => item.id !== id)
         : this.items.map((item) => (item.id === id ? { id, kind: 'assistant', text: text ?? item.text } : item));
+    this.onChange();
+  }
+
+  setUnseen(outcome: 'done' | 'failed' | 'needsAnswer' | null) {
+    if (this.unseen === outcome) return;
+    this.unseen = outcome;
     this.onChange();
   }
 

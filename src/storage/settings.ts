@@ -54,6 +54,8 @@ export type Settings = {
    * (src/device/backgroundTask.ts). Off by default.
    */
   backgroundTasks: boolean;
+  /** Android, with backgroundTasks: a notification says how a task ended when it ended while Qutai was away. */
+  notifyTaskDone: boolean;
   /**
    * Experimental: stream Gemini replies as they are written. Off by default until checked with a real key;
    * the other providers always stream.
@@ -110,6 +112,7 @@ export const DEFAULT_SETTINGS: Settings = {
   backgroundPlayback: true,
   pictureInPicture: true,
   backgroundTasks: false,
+  notifyTaskDone: true,
   geminiStreaming: false,
   readerTheme: 'auto',
   readerFont: 'serif',
@@ -144,6 +147,7 @@ const KEYS = {
   backgroundPlayback: 'background_playback',
   pictureInPicture: 'picture_in_picture',
   backgroundTasks: 'background_tasks',
+  notifyTaskDone: 'notify_task_done',
   geminiStreaming: 'gemini_streaming',
   readerTheme: 'reader_theme',
   readerFont: 'reader_font',
@@ -196,6 +200,7 @@ export async function loadSettings(): Promise<Settings> {
     backgroundPlayback,
     pictureInPicture,
     backgroundTasks,
+    notifyTaskDone,
     geminiStreaming,
     readerTheme,
     readerFont,
@@ -231,6 +236,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.backgroundPlayback),
     get(KEYS.pictureInPicture),
     get(KEYS.backgroundTasks),
+    get(KEYS.notifyTaskDone),
     get(KEYS.geminiStreaming),
     get(KEYS.readerTheme),
     get(KEYS.readerFont),
@@ -270,6 +276,7 @@ export async function loadSettings(): Promise<Settings> {
     backgroundPlayback: backgroundPlayback !== 'false',
     pictureInPicture: pictureInPicture !== 'false',
     backgroundTasks: backgroundTasks === 'true',
+    notifyTaskDone: notifyTaskDone !== 'false',
     geminiStreaming: geminiStreaming === 'true',
     readerTheme: READER_THEMES.includes(readerTheme as ReaderTheme) ? (readerTheme as ReaderTheme) : 'auto',
     readerFont: READER_FONTS.includes(readerFont as ReaderFont) ? (readerFont as ReaderFont) : 'serif',
@@ -317,6 +324,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.backgroundPlayback, String(settings.backgroundPlayback)),
     set(KEYS.pictureInPicture, String(settings.pictureInPicture)),
     set(KEYS.backgroundTasks, String(settings.backgroundTasks)),
+    set(KEYS.notifyTaskDone, String(settings.notifyTaskDone)),
     set(KEYS.geminiStreaming, String(settings.geminiStreaming)),
     set(KEYS.readerTheme, settings.readerTheme),
     set(KEYS.readerFont, settings.readerFont),
