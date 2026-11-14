@@ -1,0 +1,403 @@
+import type { MessageKey } from '../i18n/en';
+import { useI18n } from '../lib/i18n';
+import { APP_PRIVACY_URL, ISSUES_URL, LICENSE_URL, REPO_URL, TRADEMARKS_URL } from '../lib/site';
+import { Icon, type IconName } from './Icon';
+import { PhoneMock } from './PhoneMock';
+
+const LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+/** Remembers the visitor's choice so `/` sends them here next time (the only cookie the site sets). */
+function rememberLanguage(lang: string) {
+  const secure = location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `lang=${lang}; Path=/; Max-Age=${LANG_COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
+}
+
+export function Header() {
+  const { t, lang } = useI18n();
+  const other = lang === 'en' ? 'tr' : 'en';
+  return (
+    <header className="site-header">
+      <a className="skip" href="#main">
+        {t('nav.skip')}
+      </a>
+      <div className="header-inner">
+        <a className="brand" href={`/${lang}/`} aria-label={t('nav.home')}>
+          <img src="/img/q-64.webp" width="32" height="32" alt="" />
+          <span>Qutai</span>
+        </a>
+        <nav aria-label={t('nav.label')} className="main-nav">
+          <a href="#agent">{t('nav.agent')}</a>
+          <a href="#privacy">{t('nav.privacy')}</a>
+          <a href="#compare">{t('nav.compare')}</a>
+          <a href="#open-source">{t('nav.openSource')}</a>
+          <a href="#status">{t('nav.status')}</a>
+        </nav>
+        <div className="header-actions">
+          <a
+            className="lang-switch"
+            href={`/${other}/`}
+            hrefLang={other}
+            lang={other}
+            aria-label={t('lang.switchTo')}
+            onClick={() => rememberLanguage(other)}
+          >
+            <Icon name="globe" size={18} />
+            <span className="lang-long">{t('lang.other')}</span>
+            <span className="lang-short">{t('lang.otherShort')}</span>
+          </a>
+          <a className="header-github" href={REPO_URL} aria-label={t('nav.github')}>
+            <Icon name="github" size={20} />
+          </a>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+export function Hero() {
+  const { t } = useI18n();
+  return (
+    <section className="hero" aria-labelledby="hero-title">
+      <div className="hero-sky" aria-hidden="true">
+        <div className="aurora a1" data-depth="0.35" />
+        <div className="aurora a2" data-depth="0.2" />
+        <div className="aurora a3" data-depth="0.5" />
+        <picture className="hero-mark" data-depth="0.6">
+          <source srcSet="/img/q-640.avif" type="image/avif" />
+          <img src="/img/q-640.webp" width="640" height="640" alt="" fetchPriority="low" />
+        </picture>
+      </div>
+      <div className="hero-inner">
+        <div className="hero-copy">
+          <p className="eyebrow">{t('hero.eyebrow')}</p>
+          <h1 id="hero-title">{t('hero.title')}</h1>
+          <p className="lede">{t('hero.lede')}</p>
+          <div className="hero-actions">
+            <a className="button primary" href={REPO_URL}>
+              <Icon name="github" size={20} />
+              {t('hero.github')}
+            </a>
+            <p className="status-pill">
+              <span className="dot" aria-hidden="true" />
+              {t('hero.status')}
+            </p>
+          </div>
+        </div>
+        <div className="hero-phone" data-depth="-0.12">
+          <PhoneMock />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SectionHead({ kicker, title, lede, id }: { kicker: MessageKey; title: MessageKey; lede?: MessageKey; id: string }) {
+  const { t } = useI18n();
+  return (
+    <div className="section-head reveal">
+      <p className="kicker">{t(kicker)}</p>
+      <h2 id={id}>{t(title)}</h2>
+      {lede && <p className="lede">{t(lede)}</p>}
+    </div>
+  );
+}
+
+type Step = { icon: IconName; text: MessageKey; tone?: 'ask' | 'stop' };
+
+function Trail({ steps }: { steps: Step[] }) {
+  const { t } = useI18n();
+  return (
+    <ol className="trail">
+      {steps.map((s) => (
+        <li key={s.text} className={s.tone ? `trail-${s.tone}` : undefined}>
+          <Icon name={s.icon} size={16} />
+          <span>{t(s.text)}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+export function Agent() {
+  const { t } = useI18n();
+  return (
+    <section id="agent" className="section agent" aria-labelledby="agent-title">
+      <SectionHead id="agent-title" kicker="agent.kicker" title="agent.title" lede="agent.lede" />
+      <div className="scenarios">
+        <article className="scenario reveal">
+          <div className="scenario-icon">
+            <Icon name="compare" size={28} />
+          </div>
+          <h3>{t('agent.compare.title')}</h3>
+          <p>{t('agent.compare.body')}</p>
+          <Trail
+            steps={[
+              { icon: 'tabs', text: 'agent.compare.step1' },
+              { icon: 'tabs', text: 'agent.compare.step2' },
+              { icon: 'list', text: 'agent.compare.step3' },
+            ]}
+          />
+        </article>
+        <article className="scenario reveal">
+          <div className="scenario-icon">
+            <Icon name="cart" size={28} />
+          </div>
+          <h3>{t('agent.checkout.title')}</h3>
+          <p>{t('agent.checkout.body')}</p>
+          <Trail
+            steps={[
+              { icon: 'hand', text: 'agent.checkout.step1', tone: 'ask' },
+              { icon: 'code', text: 'agent.checkout.step2' },
+              { icon: 'key', text: 'agent.checkout.step3', tone: 'stop' },
+            ]}
+          />
+        </article>
+        <article className="scenario reveal">
+          <div className="scenario-icon">
+            <Icon name="calendar" size={28} />
+          </div>
+          <h3>{t('agent.booking.title')}</h3>
+          <p>{t('agent.booking.body')}</p>
+          <Trail steps={[{ icon: 'calendar', text: 'agent.booking.step1', tone: 'ask' }]} />
+          <div className="call-card" aria-hidden="true">
+            <div>
+              <p className="call-name">{t('agent.booking.callName')}</p>
+              <p className="call-number">{t('agent.booking.callNumber')}</p>
+            </div>
+            <span className="call-button">
+              <Icon name="call" size={16} />
+              {t('agent.booking.call')}
+            </span>
+          </div>
+        </article>
+        <article className="scenario reveal">
+          <div className="scenario-icon">
+            <Icon name="research" size={28} />
+          </div>
+          <h3>{t('agent.research.title')}</h3>
+          <p>{t('agent.research.body')}</p>
+          <Trail
+            steps={[
+              { icon: 'research', text: 'agent.research.step1' },
+              { icon: 'reader', text: 'agent.research.step2' },
+              { icon: 'list', text: 'agent.research.step3' },
+            ]}
+          />
+        </article>
+      </div>
+      <p className="footnote reveal">{t('agent.footnote')}</p>
+    </section>
+  );
+}
+
+const PRIVACY: { icon: IconName; key: 'key' | 'device' | 'sites' | 'log' | 'incognito' | 'confirm' }[] = [
+  { icon: 'key', key: 'key' },
+  { icon: 'phone', key: 'device' },
+  { icon: 'sliders', key: 'sites' },
+  { icon: 'list', key: 'log' },
+  { icon: 'incognito', key: 'incognito' },
+  { icon: 'hand', key: 'confirm' },
+];
+
+function DataPath() {
+  const { t } = useI18n();
+  return (
+    <figure className="datapath reveal" role="img" aria-label={t('privacy.diagramLabel')}>
+      <div className="dp-node">
+        <Icon name="phone" size={30} />
+        <strong>{t('privacy.diagramPhone')}</strong>
+        <span>{t('privacy.diagramPhoneSub')}</span>
+      </div>
+      <div className="dp-link" aria-hidden="true">
+        <span className="dp-line" />
+        <span className="dp-none">
+          <Icon name="server" size={18} />
+          <span>{t('privacy.diagramNone')}</span>
+        </span>
+      </div>
+      <div className="dp-node">
+        <Icon name="globe" size={30} />
+        <strong>{t('privacy.diagramProvider')}</strong>
+        <span>{t('privacy.diagramProviderSub')}</span>
+      </div>
+    </figure>
+  );
+}
+
+export function Privacy() {
+  const { t } = useI18n();
+  return (
+    <section id="privacy" className="section privacy" aria-labelledby="privacy-title">
+      <div className="section-sky" aria-hidden="true" data-depth="0.25">
+        <div className="aurora a4" />
+      </div>
+      <SectionHead id="privacy-title" kicker="privacy.kicker" title="privacy.title" lede="privacy.lede" />
+      <DataPath />
+      <ul className="privacy-grid">
+        {PRIVACY.map(({ icon, key }) => (
+          <li key={key} className="reveal">
+            <Icon name={icon} size={26} />
+            <h3>{t(`privacy.${key}.title`)}</h3>
+            <p>{t(`privacy.${key}.body`)}</p>
+          </li>
+        ))}
+      </ul>
+      <p className="footnote reveal">{t('privacy.note')}</p>
+    </section>
+  );
+}
+
+const BROWSER: { icon: IconName; key: 'tabs' | 'reader' | 'blocking' | 'audio' | 'private' | 'backup' | 'bookmarks' | 'voice' | 'save' }[] = [
+  { icon: 'tabs', key: 'tabs' },
+  { icon: 'reader', key: 'reader' },
+  { icon: 'shield', key: 'blocking' },
+  { icon: 'audio', key: 'audio' },
+  { icon: 'incognito', key: 'private' },
+  { icon: 'backup', key: 'backup' },
+  { icon: 'bookmark', key: 'bookmarks' },
+  { icon: 'mic', key: 'voice' },
+  { icon: 'pdf', key: 'save' },
+];
+
+export function BrowserFeatures() {
+  const { t } = useI18n();
+  return (
+    <section id="browser" className="section browser" aria-labelledby="browser-title">
+      <SectionHead id="browser-title" kicker="browser.kicker" title="browser.title" />
+      <ul className="browser-list">
+        {BROWSER.map(({ icon, key }) => (
+          <li key={key} className="reveal">
+            <Icon name={icon} size={22} />
+            <div>
+              <h3>{t(`browser.${key}.title`)}</h3>
+              <p>{t(`browser.${key}.body`)}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export function OpenSource() {
+  const { t } = useI18n();
+  return (
+    <section id="open-source" className="section oss" aria-labelledby="oss-title">
+      <div className="oss-grid">
+        <div>
+          <SectionHead id="oss-title" kicker="oss.kicker" title="oss.title" />
+          <p className="reveal">{t('oss.body')}</p>
+          <ul className="link-row reveal">
+            <li>
+              <a href={REPO_URL}>
+                <Icon name="github" size={18} />
+                {t('oss.repo')}
+              </a>
+            </li>
+            <li>
+              <a href={LICENSE_URL}>{t('oss.license')}: Apache-2.0</a>
+            </li>
+            <li>
+              <a href={TRADEMARKS_URL}>{t('oss.trademarks')}</a>
+            </li>
+          </ul>
+          <p className="footnote reveal">{t('oss.trademark')}</p>
+        </div>
+        <div className="terminal reveal">
+          <p className="terminal-label" id="build-label">
+            {t('oss.buildLabel')}
+          </p>
+          <pre aria-labelledby="build-label" tabIndex={0}>
+            <code>
+              {`git clone ${REPO_URL}.git
+cd qutai
+npm install
+cp .env.example .env
+npx expo run:android   # or run:ios`}
+            </code>
+          </pre>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function Status() {
+  const { t } = useI18n();
+  const list = (prefix: 'status.today' | 'status.limits' | 'status.planned', n: number) => (
+    <ul>
+      {Array.from({ length: n }, (_, i) => (
+        <li key={i}>{t(`${prefix}.${i + 1}` as MessageKey)}</li>
+      ))}
+    </ul>
+  );
+  return (
+    <section id="status" className="section status" aria-labelledby="status-title">
+      <SectionHead id="status-title" kicker="status.kicker" title="status.title" lede="status.body" />
+      <div className="status-grid">
+        <div className="status-col today reveal">
+          <h3>
+            <Icon name="check" size={20} />
+            {t('status.today')}
+          </h3>
+          {list('status.today', 6)}
+        </div>
+        <div className="status-col limits reveal">
+          <h3>
+            <Icon name="hand" size={20} />
+            {t('status.limits')}
+          </h3>
+          {list('status.limits', 4)}
+        </div>
+        <div className="status-col planned reveal">
+          <h3>
+            <Icon name="arrow" size={20} />
+            {t('status.planned')}
+          </h3>
+          {list('status.planned', 4)}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function Footer() {
+  const { t, lang } = useI18n();
+  const other = lang === 'en' ? 'tr' : 'en';
+  return (
+    <footer className="site-footer">
+      <div className="footer-inner">
+        <div className="footer-brand">
+          <img src="/img/q-64.webp" width="28" height="28" alt="" />
+          <p>
+            <strong>Qutai</strong> · {t('footer.tagline')}
+          </p>
+        </div>
+        <ul className="footer-links">
+          <li>
+            <a href={REPO_URL}>{t('footer.github')}</a>
+          </li>
+          <li>
+            <a href={ISSUES_URL}>{t('footer.issues')}</a>
+          </li>
+          <li>
+            <a href={LICENSE_URL}>{t('footer.license')}</a>
+          </li>
+          <li>
+            <a href={TRADEMARKS_URL}>{t('footer.trademarks')}</a>
+          </li>
+          <li>
+            <a href={APP_PRIVACY_URL}>{t('footer.appPrivacy')}</a>
+          </li>
+          <li>
+            <a href={`/${other}/`} hrefLang={other} lang={other} onClick={() => rememberLanguage(other)}>
+              {t('lang.other')}
+            </a>
+          </li>
+        </ul>
+        <p className="footer-note">{t('footer.privacy')}</p>
+        <p className="footer-note">{t('footer.trademark')}</p>
+      </div>
+    </footer>
+  );
+}
