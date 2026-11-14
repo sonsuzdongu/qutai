@@ -5,7 +5,7 @@ import type { Messages } from './en';
  * "app:" ile işaretlenenler uygulamanın kendi arayüz metinleri (uygulamada src/i18n/tr.ts).
  */
 export const tr: Messages = {
-  'meta.title': 'Qutai: sayfayı sizin yerinize kullanan yapay zekâ tarayıcısı',
+  'meta.title': 'Qutai: Yapay zekâ odaklı tarayıcı',
   'meta.description':
     'Qutai, iPhone ve Android için açık kaynak bir yapay zekâ tarayıcısı. Asistanı kendi AI anahtarınızla sayfaları sizin için okur ve kullanır, verilerinizi telefonunuzda tutar, hassas işlemlerden önce sorar. Geliştirme aşamasında.',
   'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: sayfayı sizin yerinize kullanan yapay zekâ tarayıcısı.',
