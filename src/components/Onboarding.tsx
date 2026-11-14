@@ -21,7 +21,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
 import { getProvider, isConfigured } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
+import { backgroundTasksSupported } from '../device/backgroundTask';
 import { openDefaultBrowserSettings } from '../device/defaultBrowser';
+import { ensureNotificationPermission } from '../device/notifications';
+import { openSettingsOrExplain } from '../device/settings';
 import { t } from '../i18n';
 import { LEGAL_VERSION, LegalKind } from '../legal/documents';
 import type { Settings } from '../storage/settings';
@@ -36,8 +39,8 @@ import { AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ProfileQuestions } from './ProfileQuestions';
 import { LegalScreen } from './LegalScreen';
 
-type Step = 'welcome' | 'legal' | 'ai' | 'profile' | 'protection' | 'browser';
-const ALL_STEPS: Step[] = ['welcome', 'legal', 'ai', 'profile', 'protection', 'browser'];
+type Step = 'welcome' | 'legal' | 'ai' | 'profile' | 'background' | 'protection' | 'browser';
+const ALL_STEPS: Step[] = ['welcome', 'legal', 'ai', 'profile', 'background', 'protection', 'browser'];
 
 type Props = {
   settings: Settings;
@@ -49,13 +52,18 @@ type Props = {
 /**
  * First-run setup: what Qutai is, privacy policy and terms (must be accepted), the AI provider and
  * key (can be skipped), "Let me get to know you" (optional, only with memory on; ProfileQuestions),
- * protection against ads and trackers, and making Qutai the default browser.
+ * whether tasks keep working in the background (Android, with a build that has it; turning it on asks for
+ * notifications), protection against ads and trackers, and making Qutai the default browser.
  */
 export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   const styles = useStyles();
   const palette = usePalette();
   // Memory is on unless turned off; the questions only fill memory, so without it they are left out.
-  const steps = legalOnly ? (['legal'] as Step[]) : ALL_STEPS.filter((s) => s !== 'profile' || settings.memoryEnabled);
+  const steps = legalOnly
+    ? (['legal'] as Step[])
+    : ALL_STEPS.filter(
+        (s) => (s !== 'profile' || settings.memoryEnabled) && (s !== 'background' || backgroundTasksSupported()),
+      );
   const profileBack = useRef<(() => boolean) | null>(null);
   const [index, setIndex] = useState(0);
   const scrollRef = useRef<ScrollViewInstance>(null);
@@ -104,6 +112,13 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
     });
   };
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => setDraft((d) => ({ ...d, [key]: value }));
+  /** The notification permission, asked when background tasks are turned on (their progress shows there). */
+  const [notifications, setNotifications] = useState<'granted' | 'denied' | 'blocked' | null>(null);
+  const setBackgroundTasks = async (on: boolean) => {
+    set('backgroundTasks', on);
+    if (!on) return;
+    setNotifications(await ensureNotificationPermission().catch(() => 'denied' as const));
+  };
 
   const primary =
     step === 'welcome'
@@ -252,6 +267,39 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                             }))
                           }
                         />
+                      </>
+                    )}
+
+                    {step === 'background' && (
+                      <>
+                        <Text style={styles.title} accessibilityRole="header">
+                          {t('onboarding.backgroundTitle')}
+                        </Text>
+                        <Text style={styles.lead}>{t('onboarding.backgroundLead')}</Text>
+                        <View style={styles.card}>
+                          <Toggle
+                            title={t('settings.backgroundTasks')}
+                            body={t('onboarding.backgroundHint')}
+                            value={draft.backgroundTasks}
+                            onChange={setBackgroundTasks}
+                          />
+                        </View>
+                        {draft.backgroundTasks && notifications !== null && notifications !== 'granted' && (
+                          <>
+                            <Text style={styles.hint}>{t('settings.backgroundTasksNoNotifications')}</Text>
+                            {notifications === 'blocked' && (
+                              <Pressable
+                                onPress={openSettingsOrExplain}
+                                style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
+                                accessibilityRole="button"
+                              >
+                                <Icon name="openInNew" size={18} color={palette.tintText} />
+                                <Text style={styles.secondaryText}>{t('settings.openSystem')}</Text>
+                              </Pressable>
+                            )}
+                          </>
+                        )}
+                        <Text style={styles.hint}>{t('onboarding.backgroundLater')}</Text>
                       </>
                     )}
 

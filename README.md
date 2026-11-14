@@ -402,8 +402,8 @@ the feature, when the user is asked, the config line that declares it and what i
   a string. Android connects to custom endpoints over https only.
 - **Old page outputs are trimmed.** This lowers cost, but on OpenAI previous reasoning items may not be reused
   because the history changes.
-- **Background tasks are Android only, opt-in, and partial.** With Settings › Assistant › "Keep working in the
-  background" on (Android, off by default), a task the user started goes on when they leave Qutai or lock the screen,
+- **Background tasks are Android only, opt-in, and partial.** With "Keep working in the background" on (Android, off by
+  default; chosen in the first-run setup or Settings › Assistant), a task the user started goes on when they leave Qutai or lock the screen,
   in a foreground service with an ongoing notification (title from the user's message, the current step, Stop and
   Open). Reading and acting on the task's open pages (read, click, type, scroll, navigate, back, other tabs that are
   awake) and the AI requests go on; steps that need the user or the screen pause the task with a notification saying

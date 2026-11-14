@@ -397,7 +397,8 @@ platform-specific details for downloads, permissions, the calendar tools and loc
 ### Tasks in the background (Android)
 - [ ] A task finishing while another tab is on screen, and with the panel closed: toast with Show, haptic, dot on the Qutai button until the conversation is opened; looking at it: no toast
 - [ ] "Notify me when a task finishes" off: no "Done"/"Failed" notification, a question still notifies
-- [ ] Turning "Keep working in the background" on: Android 13+ asks for notifications; refused for good → "Open settings"; an older build says it needs a newer version; the setting is absent on iOS
+- [ ] First-run setup (Android): the "When you leave Qutai" step, off unless chosen; turning it on there asks for notifications (refused: a note; refused for good: "Open settings"); the choice is kept after Finish. Not shown on iOS or in an older build
+- [ ] Turning "Keep working in the background" on in Settings: Android 13+ asks for notifications; refused for good → "Open settings"; an older build says it needs a newer version; the setting is absent on iOS
 - [ ] A multi-step task (e.g. "compare the prices on these three pages"), press Home: notification "Qutai is working on: …" with the step changing (reading, clicking, Thinking…), the task goes on (the conversation shows the steps on return); lock screen shows only "Qutai is working on a task"
 - [ ] A step that needs confirmation (Ask before actions on, or a site set to "ask"), and `add_calendar_event`: the ongoing notification goes, "Qutai paused: come back to continue" / "needs your confirmation" appears; opening the app shows the dialog; nothing happened before answering. Leaving while a confirmation dialog is already open: paused notification at once
 - [ ] Steps that need the screen (`view_screenshot`, `open_tab`, a sleeping tab, `draft_email`): paused with a notification, the step runs on return
