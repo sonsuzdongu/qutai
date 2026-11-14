@@ -28,6 +28,52 @@ On first launch the setup asks for a provider and API key; later, change them in
 | OpenAI | Responses API | https://platform.openai.com/api-keys |
 | Google Gemini | Interactions API | https://aistudio.google.com/apikey |
 
+## Official builds and building it yourself
+
+Qutai is open source, and the code here is the whole app. The official builds in the App Store and
+Google Play are made from this same code with one build-time switch turned on:
+
+| | Built from this repository (default) | Official store builds |
+|---|---|---|
+| `EXPO_PUBLIC_PRO_MODE` | `off` | `on` |
+| AI | Your own Anthropic, OpenAI or Gemini key | Your own key, or Qutai credits (planned) |
+| Account and sync | None | Through Qutai's servers (planned) |
+| Where your data goes | Your device, and the AI provider you choose | Also Qutai's servers, for the pro features you use |
+
+The pro features (accounts, sync, Qutai credits) are not in the code yet. The switch is there so they
+can be added to this same codebase, shown only when it is on (`src/config/features.ts`). Qutai's server
+is not part of this repository.
+
+### Build it yourself
+
+You need Node.js (LTS) and npm, and either the **Expo Go** app on your phone or, for a native build,
+Android Studio with the Android SDK or Xcode on a Mac.
+
+```bash
+git clone https://github.com/sonsuzdongu/qutai.git
+cd qutai
+npm install
+cp .env.example .env      # leave EXPO_PUBLIC_PRO_MODE=off
+npx expo start            # scan the QR code with Expo Go
+```
+
+For a native build on a connected phone or emulator (needed for things Expo Go can't do, such as showing
+up in the list of default browsers):
+
+```bash
+npx expo run:android      # or: npx expo run:ios
+```
+
+You can also build in the cloud with your own Expo account: `npx eas-cli build --profile development`.
+Values in `.env` are read when the app is bundled: after changing them, restart with `npx expo start -c`.
+
+### Forking
+
+The Apache License lets you fork, change and publish the code. Please give your fork its own name, logo,
+icons and bundle identifier, as described in [TRADEMARKS.md](TRADEMARKS.md). If you want pro features in
+your fork, run your own server and set `EXPO_PUBLIC_QUTAI_API_URL` to it; do not point forks at Qutai's
+servers.
+
 ## How does it work?
 
 ```
