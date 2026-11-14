@@ -14,6 +14,7 @@ import { mayOfferExternal, noteUserGesture } from '../browser/externalGuard';
 import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
 import { openExternal } from '../browser/openExternal';
 import { parsePullState, PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
+import { handleUserAgentMessage, USER_AGENT_SCRIPT, useChromeUserAgent } from '../browser/userAgent';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
 import { usePalette } from '../ui/theme';
@@ -100,12 +101,15 @@ function TabWebView({
     SELECTION_SCRIPT,
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
     Platform.OS === 'android' ? PULL_STATE_SCRIPT : '',
+    Platform.OS === 'android' ? USER_AGENT_SCRIPT : '',
     Platform.OS === 'ios' && textZoom !== 100 ? textZoomScript(textZoom) : '',
     Platform.OS === 'ios' && newTabActions.darkMode && newTabActions.darkSites ? DARK_SITE_SCRIPT : '',
     newTabActions.forceZoom ? FORCE_ZOOM_SCRIPT : '',
   ].join('\n');
 
   const palette = usePalette();
+  // Android: Chrome's own user agent instead of the WebView's "embedded browser" one (fewer bot checks).
+  const chromeUserAgent = useChromeUserAgent();
   // Android pull to refresh: allowed only while the page says a downward drag can't scroll it.
   const [atTop, setAtTop] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -155,6 +159,7 @@ function TabWebView({
             style={styles.flex}
             onMessage={(e) => {
               if (tab.handleMessage(e.nativeEvent.data)) return;
+              if (handleUserAgentMessage(e.nativeEvent.data)) return;
               const pull = parsePullState(e.nativeEvent.data);
               if (pull !== null) return setAtTop(pull);
               const selection = parseSelection(e.nativeEvent.data);
@@ -229,7 +234,7 @@ function TabWebView({
                 onRetry={() => tab.webview?.reload()}
               />
             )}
-            userAgent={tab.desktop ? DESKTOP_USER_AGENT : undefined}
+            userAgent={tab.desktop ? DESKTOP_USER_AGENT : Platform.OS === 'android' ? chromeUserAgent : undefined}
             contentMode={tab.desktop ? 'desktop' : 'recommended'}
             thirdPartyCookiesEnabled={!newTabActions.blockThirdPartyCookies}
             // Videos can go full screen (Android) and play in the page (iOS).
