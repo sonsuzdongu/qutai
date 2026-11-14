@@ -83,7 +83,7 @@ const useStyles = makeStyles((c) => ({
   },
   side: { flex: 1 },
   right: { alignItems: 'flex-end' },
-  title: { fontSize: 17, fontWeight: '600' },
+  title: { color: c.text, fontSize: 17, fontWeight: '600' },
   done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   list: { padding: 16, gap: 8 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },

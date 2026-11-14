@@ -99,7 +99,7 @@ const useStyles = makeStyles((c) => ({
     borderBottomColor: c.border,
   },
   side: { flex: 1 },
-  title: { fontSize: 17, fontWeight: '600' },
+  title: { color: c.text, fontSize: 17, fontWeight: '600' },
   cancel: { fontSize: 16, color: c.textSecondary },
   content: { padding: 16, gap: 12 },
   label: { fontSize: 15, fontWeight: '600', color: c.text },

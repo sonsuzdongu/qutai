@@ -271,6 +271,7 @@ const useStyles = makeStyles((c) => ({
   bold: { fontWeight: '700' },
   action: { fontSize: 16, color: c.tintText },
   search: {
+    color: c.text,
     marginHorizontal: 12,
     marginBottom: 8,
     height: 38,

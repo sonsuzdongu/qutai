@@ -95,7 +95,7 @@ const useStyles = makeStyles((c) => ({
   },
   side: { flex: 1 },
   right: { alignItems: 'flex-end' },
-  title: { fontSize: 17, fontWeight: '600' },
+  title: { color: c.text, fontSize: 17, fontWeight: '600' },
   clear: { fontSize: 15, color: c.danger },
   done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   disabled: { opacity: 0.35 },
