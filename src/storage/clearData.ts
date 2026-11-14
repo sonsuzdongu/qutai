@@ -9,6 +9,7 @@ export type ClearOptions = {
   chats: boolean;
   activity: boolean;
   downloads: boolean;
+  offlinePages: boolean;
 };
 
 const RANGE_MS: Record<ClearRange, number> = { hour: 3_600_000, day: 86_400_000, week: 7 * 86_400_000, all: Infinity };

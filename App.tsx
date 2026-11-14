@@ -53,8 +53,8 @@ import { scannedTarget } from './src/device/qr';
 import { toUrl } from './src/browser/url';
 import { LockScreen } from './src/components/LockScreen';
 import { OfflinePagesScreen } from './src/components/OfflinePagesScreen';
-import { savePageOffline } from './src/device/offline';
-import { addOfflinePage } from './src/storage/offlinePages';
+import { deleteOfflineFile, savePageOffline } from './src/device/offline';
+import { addOfflinePage, listOfflinePages, removeOfflinePage } from './src/storage/offlinePages';
 import { QrCodeSheet } from './src/components/QrCodeSheet';
 import { QrScanner } from './src/components/QrScanner';
 import { captureRef } from 'react-native-view-shot';
@@ -662,6 +662,12 @@ function BrowserApp({
       for (const entry of downloads.list()) {
         deleteDownloadedFile(entry.uri);
         await downloads.remove(entry.id);
+      }
+    }
+    if (options.offlinePages) {
+      for (const page of await listOfflinePages(db)) {
+        deleteOfflineFile(page);
+        await removeOfflinePage(db, page.id);
       }
     }
     if (options.cache) {

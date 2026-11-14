@@ -265,6 +265,8 @@ export const en = {
   'clearData.activityHint': 'What Kutai did on sites.',
   'clearData.downloads': 'Downloads',
   'clearData.downloadsHint': 'Downloaded files in Kutai and the list.',
+  'clearData.offlinePages': 'Saved pages',
+  'clearData.offlinePagesHint': 'Pages saved for offline reading.',
   'clearData.confirm': 'Clear the selected data?',
   'clearData.clear': 'Clear data',
   'clearData.done': 'Browsing data cleared',

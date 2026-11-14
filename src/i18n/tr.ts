@@ -267,6 +267,8 @@ export const tr: Record<keyof typeof en, string> = {
   'clearData.activityHint': "Kutai'nin sitelerde yaptıkları.",
   'clearData.downloads': 'İndirilenler',
   'clearData.downloadsHint': "Kutai'de indirilen dosyalar ve liste.",
+  'clearData.offlinePages': 'Kaydedilen sayfalar',
+  'clearData.offlinePagesHint': 'Çevrimdışı okumak için kaydedilen sayfalar.',
   'clearData.confirm': 'Seçilen veriler temizlensin mi?',
   'clearData.clear': 'Verileri temizle',
   'clearData.done': 'Gezinme verileri temizlendi',
