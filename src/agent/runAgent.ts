@@ -21,6 +21,10 @@ import { MEMORY_TOOLS, TOOLS } from './tools';
 import type { AgentEvent, Source } from './types';
 
 const MAX_STEPS = 40;
+/** view_screenshot's result for a model without image input. */
+export const NO_IMAGE_INPUT =
+  "This model can't take images, so no screenshot was taken. Use read_page to see the page's text, links and " +
+  'form fields instead, and do not call view_screenshot again in this task.';
 /** On the final step: leave the user with where things stand instead of stopping mid-task. */
 export const LAST_STEP_PROMPT =
   '\n\nThis is your last step for this message. Do not call tools. Reply with what you did, what you found ' +
@@ -48,6 +52,10 @@ export type AgentOptions = ToolContext & {
   provider: ProviderId;
   apiKey: string;
   model: string;
+  /** The model takes image input; when false, view_screenshot returns a tool error instead of a screenshot. */
+  imageInput?: boolean;
+  /** The model's output limit, when the provider's catalogue gives it. */
+  maxOutputTokens?: number;
   /** Conversation history; new turns are appended in place. */
   turns: Turn[];
   /** Deep research: a thorough, sourced report with more steps and searches. */
@@ -153,6 +161,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
           }
         : undefined,
       turns: compactHistory(turns),
+      maxOutputTokens: opts.maxOutputTokens,
       signal,
       audit: {
         conversation: opts.audit.conversation(),
@@ -252,7 +261,11 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       const backgroundsBefore = getBackgroundCount();
       const pausesBefore = getBackgroundPauseCount();
       takeNeedsForeground();
-      let result = await executeTool(call.name, call.input, ctx);
+      const run = (): ReturnType<typeof executeTool> =>
+        call.name === 'view_screenshot' && opts.imageInput === false
+          ? Promise.resolve({ content: NO_IMAGE_INPUT, isError: true })
+          : executeTool(call.name, call.input, ctx);
+      let result = await run();
       noteBackgroundProgress();
       // Touched an incognito tab: from now on the task never goes on in the background.
       if (opts.audit.incognito()) forbidBackground();
@@ -260,7 +273,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
         // The app went to the background during the step and its tab had no live WebView: nothing ran on the page,
         // so the step runs again once the user is back.
         await pauseWhileBackgrounded('tab');
-        if (!signal.aborted) result = await executeTool(call.name, call.input, ctx);
+        if (!signal.aborted) result = await run();
       } else {
         // The WebView freezes in the background (or the background run paused), so a failure there is retried once
         // after resuming. Only read-only tools: a frozen click may still run on resume, and repeating it would act
@@ -269,7 +282,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
           getBackgroundCount() !== backgroundsBefore || getBackgroundPauseCount() !== pausesBefore;
         if (result.isError && interrupted && SAFE_TO_RETRY.has(call.name) && !signal.aborted) {
           await pauseWhileBackgrounded();
-          result = await executeTool(call.name, call.input, ctx);
+          result = await run();
         }
       }
       // A tab the task reads stays awake while it runs (tab sleeping, memory warnings).

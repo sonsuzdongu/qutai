@@ -163,5 +163,6 @@ export const openai: Provider = {
     { id: 'gpt-6-astra', name: 'GPT-6 Astra', tag: 'strongest' },
   ],
   defaultModel: 'gpt-5.6-terra',
+  webSearch: true,
   call,
 };

@@ -20,7 +20,7 @@ import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } fr
  *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }],
  *            blockingOff?: [host], personal?: [{ host, setting }] },
  *   settings?: { theme: "dark", textZoom: 120, models: { anthropic: "…" }, … },
- *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…" },   // only when the user opted in
+ *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…", openrouter?: "…" },   // only when the user opted in
  *   tabs?: { tabs: [{ url, title, uid, groupId? }], activeIndex, groups: [{ id, name, color, collapsed? }] },
  *   chats?: [{ key, items: [...], turns: [...] }],   // key: a tab's uid or "group:<id>"
  *   activity?: [{ at, host, url, tool, description, ok }]
@@ -132,7 +132,7 @@ export class PayloadError extends Error {
 }
 
 /** Every provider, checked by the compiler, so a new one can't be forgotten here. */
-const PROVIDER_IDS = Object.keys({ anthropic: true, openai: true, gemini: true } satisfies Record<
+const PROVIDER_IDS = Object.keys({ anthropic: true, openai: true, gemini: true, openrouter: true } satisfies Record<
   ProviderId,
   true
 >) as ProviderId[];

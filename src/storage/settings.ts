@@ -90,12 +90,8 @@ const THEMES: ThemeSetting[] = ['system', 'light', 'dark'];
 
 export const DEFAULT_SETTINGS: Settings = {
   provider: 'anthropic',
-  apiKeys: { anthropic: '', openai: '', gemini: '' },
-  models: {
-    anthropic: PROVIDERS.anthropic.defaultModel,
-    openai: PROVIDERS.openai.defaultModel,
-    gemini: PROVIDERS.gemini.defaultModel,
-  },
+  apiKeys: Object.fromEntries(PROVIDER_ORDER.map((id) => [id, ''])) as Record<ProviderId, string>,
+  models: Object.fromEntries(PROVIDER_ORDER.map((id) => [id, PROVIDERS[id].defaultModel])) as Record<ProviderId, string>,
   confirmActions: false,
   searchEngine: 'google',
   searchSuggestions: true,

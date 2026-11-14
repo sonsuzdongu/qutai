@@ -202,5 +202,6 @@ export const gemini: Provider = {
     { id: 'gemini-4-carbon', name: 'Gemini 4 Carbon', tag: 'strongest' },
   ],
   defaultModel: 'gemini-4-hydrogen',
+  webSearch: true,
   call,
 };

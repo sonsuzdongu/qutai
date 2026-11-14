@@ -195,5 +195,6 @@ export const anthropic: Provider = {
     { id: 'claude-opus-5-5', name: 'Claude Opus 5.5', tag: 'strongest' },
   ],
   defaultModel: 'claude-sonnet-5-5',
+  webSearch: true,
   call,
 };

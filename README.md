@@ -1,7 +1,7 @@
 # Qutai
 
 An AI-powered mobile browser for iOS and Android: an agent that can read and use the page for you,
-tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models. Besides the page, the assistant
+tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models, and with the models on OpenRouter. Besides the page, the assistant
 can add calendar events, reminders and notifications, read the calendar when asked about the user's schedule, use the phone's location, offer a Call button and open the
 phone's settings, each confirmed or tapped by the user.
 
@@ -138,6 +138,18 @@ On first launch the setup asks for a provider and API key; later, change them in
 | Anthropic | Messages API | https://platform.claude.com/settings/keys |
 | OpenAI | Responses API | https://platform.openai.com/api-keys |
 | Google Gemini | Interactions API | https://aistudio.google.com/apikey |
+| OpenRouter | Chat Completions API | https://openrouter.ai/settings/keys |
+
+OpenRouter's models are picked from its own catalogue (`GET /api/v1/models?supported_parameters=tools`, fetched with
+the user's key, cached on the phone, Refresh to update): only models that accept tools are listed, searchable, with
+their context window, and those without image input are marked (with one, `view_screenshot` returns a tool error
+that tells the model to use `read_page`). A short "Recommended" list sits on top (plain data in
+`src/ai/openrouterCatalog.ts`, no prices), and any model ID can be typed in. Requests carry OpenRouter's app
+attribution headers with the app's public name and repository URL only (`HTTP-Referer:
+https://github.com/sonsuzdongu/qutai`, `X-OpenRouter-Title: Qutai`). AI search (the provider's own web search) is
+off with OpenRouter: its web plugin searches on every request, so on every agent step, and its newer search tool is
+documented for the Responses API only; the assistant searches by opening a search engine in a tab instead, and
+Settings says so.
 
 ## Official builds and building it yourself
 
@@ -147,7 +159,7 @@ Google Play are made from this same code with one build-time switch turned on:
 | | Built from this repository (default) | Official store builds |
 |---|---|---|
 | `EXPO_PUBLIC_PRO_MODE` | `off` | `on` |
-| AI | Your own Anthropic, OpenAI or Gemini key | Your own key, or Qutai credits (planned) |
+| AI | Your own Anthropic, OpenAI, Gemini or OpenRouter key | Your own key, or Qutai credits (planned) |
 | Account and sync | None | Through Qutai's servers (planned) |
 | Where your data goes | Your device, and the AI provider you choose | Also Qutai's servers, for the pro features you use |
 
@@ -180,7 +192,7 @@ servers.
 ## How does it work?
 
 ```
-User ──► AssistantPanel ──► runAgent ──► provider adapter ──► Anthropic / OpenAI / Gemini
+User ──► AssistantPanel ──► runAgent ──► provider adapter ──► Anthropic / OpenAI / Gemini / OpenRouter
                                      │
                                      ▼ tool call
                                 executeTool ──► Browser ► Tab ──injectJavaScript──► WebView
@@ -197,7 +209,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/components/BrowserView.tsx` | Draws the WebViews of the awake tabs stacked on top of each other; at most five stay awake, the rest sleep as a URL and thumbnail |
 | `src/chat/Conversation.ts` | A conversation with the assistant: one per tab, or one shared by a tab group |
 | `src/components/Dialog.tsx`, `src/components/BottomSheet.tsx` | Themed dialogs (instead of native alerts) and the bottom sheet the menus use, kept inside the safe area |
-| `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters |
+| `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters; `chatWire.ts` / `chatCompletions.ts` speak the OpenAI Chat Completions format (OpenRouter), `openrouterCatalog.ts` / `openrouterModels.ts` the model catalogue |
 | `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, saved tasks, settings |
 | `src/i18n/` | Turkish and English UI strings, date formats |
 | `src/device/` | Device features: PDF, screenshots (also full page), read aloud, voice input (`voiceInput.ts`), share/copy, downloads, private mode protection, calendar and reminders, notifications, location, opening system settings, the phone dialer |
@@ -215,10 +227,14 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/device/backgroundTask.ts`, `modules/qutai-agent` | "Keep working in the background" (Android): the `specialUse` foreground service and its notifications, the headless JS task that keeps timers running, and page commands sent natively to the tab's WebView while React Native is paused; also the assistant's downloads through the system download manager |
 
 Along with each assistant response, the provider's raw output is also stored (Claude's thinking blocks, OpenAI's
-encrypted reasoning content, Gemini's thought signatures) and sent back unchanged to the same model. If the
-provider or model changes mid-chat, the history is rebuilt from the text and tool calls.
+encrypted reasoning content, Gemini's thought signatures, OpenRouter's `reasoning_details`) and sent back unchanged to
+the same model. If the provider or model changes mid-chat, the history is rebuilt from the text and tool calls. With
+OpenRouter, a request rejected (400) while it replays reasoning details is repeated once with those turns rebuilt
+from text and tool calls. In the Chat Completions format a `tool` message carries text only, so a screenshot a tool
+returned follows the tool messages as one user message with `image_url` parts.
 
-Anthropic and OpenAI replies are streamed. Gemini replies are streamed only with "Stream Gemini responses
+Anthropic, OpenAI and OpenRouter replies are streamed (OpenRouter: a stream that fails for any reason but a lost
+connection or an HTTP error is repeated once without streaming). Gemini replies are streamed only with "Stream Gemini responses
 (experimental)" in Settings › Assistant (off by default, not yet verified against the live API): `src/ai/geminiStream.ts`
 rebuilds the same interaction a non-streamed request returns from the stream's step events, thought signatures
 included. A stream that fails is repeated once without streaming; if Gemini rejects a request over a thought
@@ -256,6 +272,11 @@ the feature, when the user is asked, the config line that declares it and what i
 - **The agent is deliberately not given a tool for writing to the clipboard.** Only the user copies.
 - **API keys are on the device.** Fine for personal use. Distribution requires a backend proxy that holds the keys.
 - **Model quality varies.** Browser tasks are multi-step; small models may click the wrong element.
+- **OpenRouter models differ.** Whether a model takes tools and images comes from OpenRouter's catalogue; a model
+  that rejects tools anyway gets "This model can't use Qutai's tools; pick another". Passing reasoning details back
+  follows OpenRouter's docs but has not been checked against every model family behind it. No per-model history
+  budget exists in the app (old page outputs are trimmed by count, the same for every model), so the catalogue's
+  context length is only shown in the picker.
 - **Old page outputs are trimmed.** This lowers cost, but on OpenAI previous reasoning items may not be reused
   because the history changes.
 - **Background tasks are Android only, opt-in, and partial.** With Settings › Assistant › "Keep working in the

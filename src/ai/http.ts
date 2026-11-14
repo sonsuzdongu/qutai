@@ -53,17 +53,29 @@ async function postWithRetry(
       continue;
     }
 
-    let detail = '';
-    let code: string | undefined;
-    try {
-      const err = await res.json();
-      // Anthropic and OpenAI use { error: { message } }; Gemini may also return an array.
-      const e = Array.isArray(err) ? err[0]?.error : err?.error;
-      detail = e?.message ?? '';
-      if (typeof e?.code === 'string') code = e.code;
-    } catch {}
-    throw new ApiError(`${t('error.api', { status: res.status })}${detail ? `: ${detail}` : ''}`, res.status, code);
+    throw await toApiError(res);
   }
+}
+
+/** An error response to an ApiError with the provider's own message, when it gave one. */
+async function toApiError(res: Response): Promise<ApiError> {
+  let detail = '';
+  let code: string | undefined;
+  try {
+    const err = await res.json();
+    // Anthropic, OpenAI and OpenRouter use { error: { message } }; Gemini may also return an array.
+    const e = Array.isArray(err) ? err[0]?.error : err?.error;
+    detail = typeof e === 'string' ? e : (e?.message ?? '');
+    if (typeof e?.code === 'string') code = e.code;
+  } catch {}
+  return new ApiError(`${t('error.api', { status: res.status })}${detail ? `: ${detail}` : ''}`, res.status, code);
+}
+
+/** A GET for JSON (model lists), without retries: the user asked for it and can ask again. */
+export async function getJson<T>(url: string, headers: Record<string, string>, signal?: AbortSignal): Promise<T> {
+  const res = await fetch(url, { headers: { accept: 'application/json', ...headers }, signal });
+  if (!res.ok) throw await toApiError(res);
+  return (await res.json()) as T;
 }
 
 export async function postJson<T>(

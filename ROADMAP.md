@@ -137,7 +137,8 @@ moves everything to another phone.
 | Voice assistant | 🟡 | Build | Read-aloud and voice input in the panel (barge-in: talking stops read-aloud); no wake word or continuous conversation |
 | Multi-tab analysis | ✅ | | `read_tab` reads other tabs without switching; "compare selected tabs" in the tab switcher |
 | Citing sources, tabs used | ✅ | | Source cards below the answer (switch to the tab if open) |
-| AI search (answers with sources) | ✅ | | Providers' own web search tools; can be turned off in settings. There is an extra charge per search |
+| AI search (answers with sources) | ✅ | | Providers' own web search tools; can be turned off in settings. There is an extra charge per search. Not with OpenRouter (the assistant searches in a tab) |
+| AI providers and models | ✅ | | Own key with Anthropic, OpenAI, Google Gemini or OpenRouter (any tool-calling model from its catalogue, searchable, models without image input marked) |
 | Deep research | ✅ | | In the foreground with the existing agent; markdown report with sources, PDF. In the background: Android with "Keep working in the background" (below); iOS or with the phone off: Server |
 | Tasks in the background | 🟡 | Build | Android, opt-in "Keep working in the background": a `specialUse` foreground service with an ongoing notification keeps a running task going when the user leaves; page reading and actions on the task's open tabs and the AI requests continue, steps that need the user or the screen (confirmations, questions, screenshots, new tabs) pause it with a notification; result notification at the end ("Notify me when a task finishes"); in the app, a toast with Show and a dot on the Qutai button when the task ends while the user looks elsewhere. iOS: not possible on the device (pauses as before); a server-side browser would be needed. Not tested on a phone |
 | Smart address bar | ✖️ | – | Will not be done, per user decision |

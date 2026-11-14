@@ -1,6 +1,6 @@
 import type { ToolDefinition } from '../agent/types';
 
-export type ProviderId = 'anthropic' | 'openai' | 'gemini';
+export type ProviderId = 'anthropic' | 'openai' | 'gemini' | 'openrouter';
 
 export type ToolCall = { id: string; name: string; input: Record<string, unknown> };
 
@@ -72,6 +72,8 @@ export type ModelRequest = {
   onText?: (delta: string) => void;
   /** Context for the "What was sent to the AI" log; every request is recorded (see providers.ts). */
   audit: RequestAudit;
+  /** The model's output limit when known (OpenRouter's catalogue); providers with a fixed list set their own. */
+  maxOutputTokens?: number;
 };
 
 export type RequestAudit = {
@@ -94,8 +96,13 @@ export type Provider = {
   label: string;
   keyPlaceholder: string;
   keyUrl: string;
+  /** The curated choices; with `catalog`, the full list comes from the provider (see openrouterModels.ts). */
   models: { id: string; name: string; tag?: ModelTag }[];
   defaultModel: string;
+  /** Models are picked from the provider's own catalogue, fetched with the user's key. */
+  catalog?: boolean;
+  /** The `webSearch` option uses the provider's built-in web search; without it, searches go through the browser. */
+  webSearch: boolean;
   call: (req: ModelRequest) => Promise<ModelReply>;
 };
 

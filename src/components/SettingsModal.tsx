@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cleanCustomInstructions, MAX_CUSTOM_INSTRUCTIONS } from '../agent/systemPrompt';
-import { getProvider } from '../ai/providers';
+import { getProvider, modelLabel } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { authenticate, canAuthenticate } from '../device/biometric';
 import { appVersion } from '../device/appVersion';
@@ -158,7 +158,7 @@ function SettingsPages({
   };
 
   const provider = getProvider(settings.provider);
-  const modelName = provider.models.find((m) => m.id === settings.models[settings.provider])?.name;
+  const modelName = modelLabel(settings.provider, settings.models[settings.provider]);
   const titles: Record<Page, string> = {
     main: t('settings.title'),
     assistant: t('settings.assistant'),
@@ -203,7 +203,7 @@ function SettingsPages({
               title={t('settings.assistant')}
               summary={
                 settings.apiKeys[settings.provider]
-                  ? `${provider.label} · ${modelName ?? settings.models[settings.provider]}`
+                  ? `${provider.label} · ${modelName}`
                   : t('settings.noKeySummary')
               }
               onPress={() => setPage('assistant')}
@@ -256,12 +256,19 @@ function SettingsPages({
               value={settings.confirmActions}
               onChange={(confirmActions) => set({ confirmActions })}
             />
-            <SwitchRow
-              title={t('settings.webSearch')}
-              hint={t('settings.webSearchHint', { provider: provider.label })}
-              value={settings.webSearch}
-              onChange={(webSearch) => set({ webSearch })}
-            />
+            {provider.webSearch ? (
+              <SwitchRow
+                title={t('settings.webSearch')}
+                hint={t('settings.webSearchHint', { provider: provider.label })}
+                value={settings.webSearch}
+                onChange={(webSearch) => set({ webSearch })}
+              />
+            ) : (
+              <View>
+                <Text style={styles.label}>{t('settings.webSearch')}</Text>
+                <Text style={styles.hint}>{t('settings.webSearchUnavailable', { provider: provider.label })}</Text>
+              </View>
+            )}
             {settings.provider === 'gemini' && (
               <SwitchRow
                 title={t('settings.geminiStreaming')}

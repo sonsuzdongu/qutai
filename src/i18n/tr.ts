@@ -916,6 +916,23 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.customModel': 'Özel model kimliği',
   'settings.customModelPlaceholder': 'örn. {model}',
   'settings.modelHint': 'Tarayıcı görevleri çok adımlıdır; küçük modeller yanlış öğeye tıklayabilir veya takılabilir.',
+  'settings.recommendedModels': 'Önerilenler',
+  'settings.allModels': 'Araç kullanabilen tüm modeller',
+  'settings.hideAllModels': 'Tam listeyi gizle',
+  'settings.searchModels': 'Ada veya kimliğe göre ara',
+  'settings.refreshModels': 'Yenile',
+  'settings.modelsUpdated': '{date} tarihli liste',
+  'settings.modelsLoading': 'Model listesi yükleniyor…',
+  'settings.modelsNeedKey': 'Model listesini yüklemek için önce anahtarınızı girin.',
+  'settings.modelsFailed': 'Model listesi yüklenemedi. {error}',
+  'settings.modelsMore': '{count} model daha: listeyi daraltmak için arayın.',
+  'settings.noModels': 'Eşleşen model yok. Kimliğini yine de "Özel model kimliği" alanına girebilirsiniz.',
+  'settings.noImageInput': 'görsel girişi yok',
+  'settings.contextTokens': '{count} token bağlam',
+  'settings.noImagesHint':
+    'Bu model ekran görüntülerini göremez: asistan sayfaları metin olarak okur; bu çoğu görev için yeterlidir ama görseller veya görsel düzen için yetmez.',
+  'settings.webSearchUnavailable':
+    '{provider} için Qutai’de yerleşik web araması yok: asistan bir sekmede arama motorunu açarak arar.',
   'settings.search': 'Arama',
   'settings.searchSuggestions': 'Arama önerileri',
   'settings.searchSuggestionsHint':
@@ -1046,6 +1063,8 @@ export const tr: Record<keyof typeof en, string> = {
 
   'error.api': 'API hatası {status}',
   'error.geminiFailed': 'Gemini isteği başarısız oldu.',
+  'error.noToolSupport': 'Bu model Qutai’nin araçlarını kullanamıyor; Ayarlar › Asistan’dan başka bir model seçin.',
+  'error.noImageSupport': 'Bu model görsel (ekran görüntüsü) kabul etmiyor; görsel girişi olan bir model seçin.',
   'error.tabNotReady': 'Sekme henüz hazır değil.',
   'error.tabNotVisible': 'Sekme görünür değil.',
   'error.photosPermission': "Fotoğraflara kaydetme izni verilmedi. Ayarlar'dan izin verebilirsiniz.",
@@ -1083,7 +1102,7 @@ export const tr: Record<keyof typeof en, string> = {
   'onboarding.acceptCheck': 'Gizlilik Politikası’nı ve Kullanım Koşulları’nı okudum, kabul ediyorum',
   'onboarding.aiTitle': 'Yapay zekânızı bağlayın',
   'onboarding.aiLead':
-    'Qutai, Anthropic, OpenAI veya Google’dan alacağınız kendi anahtarınızla çalışır. Şimdi ya da daha sonra Ayarlar’dan ekleyebilirsiniz.',
+    'Qutai, Anthropic, OpenAI, Google veya OpenRouter’dan alacağınız kendi anahtarınızla çalışır. Şimdi ya da daha sonra Ayarlar’dan ekleyebilirsiniz.',
   'onboarding.protectionTitle': 'Kalabalıktan arınmış gezinme',
   'onboarding.protectionLead':
     'Qutai’nin sizi nasıl koruyacağını seçin. Bunları istediğiniz zaman Ayarlar’dan değiştirebilirsiniz.',

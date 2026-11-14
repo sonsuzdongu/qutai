@@ -913,6 +913,23 @@ export const en = {
   'settings.customModel': 'Custom model ID',
   'settings.customModelPlaceholder': 'e.g. {model}',
   'settings.modelHint': 'Browsing tasks take many steps; small models may click the wrong thing or get stuck.',
+  'settings.recommendedModels': 'Recommended',
+  'settings.allModels': 'All models that can use tools',
+  'settings.hideAllModels': 'Hide the full list',
+  'settings.searchModels': 'Search by name or ID',
+  'settings.refreshModels': 'Refresh',
+  'settings.modelsUpdated': 'List from {date}',
+  'settings.modelsLoading': 'Loading the model list…',
+  'settings.modelsNeedKey': 'Enter your key first to load the model list.',
+  'settings.modelsFailed': "The model list couldn't be loaded. {error}",
+  'settings.modelsMore': '{count} more: search to narrow the list.',
+  'settings.noModels': 'No model matches. You can still enter its ID under "Custom model ID".',
+  'settings.noImageInput': 'no image input',
+  'settings.contextTokens': '{count} tokens of context',
+  'settings.noImagesHint':
+    "This model can't see screenshots: the assistant reads pages as text, which is enough for most tasks but not for images or visual layouts.",
+  'settings.webSearchUnavailable':
+    "{provider} has no built-in web search in Qutai: the assistant searches by opening a search engine in a tab.",
   'settings.search': 'Search',
   'settings.searchSuggestions': 'Search suggestions',
   'settings.searchSuggestionsHint':
@@ -1043,6 +1060,8 @@ export const en = {
 
   'error.api': 'API error {status}',
   'error.geminiFailed': 'The Gemini request failed.',
+  'error.noToolSupport': "This model can't use Qutai's tools; pick another model in Settings › Assistant.",
+  'error.noImageSupport': "This model doesn't accept images (screenshots); pick a model with image input.",
   'error.tabNotReady': 'The tab is not ready yet.',
   'error.tabNotVisible': 'The tab is not visible.',
   'error.photosPermission': 'Permission to save to Photos was denied. You can allow it in Settings.',
@@ -1077,7 +1096,7 @@ export const en = {
   'onboarding.acceptCheck': 'I have read and accept the Privacy Policy and the Terms of Use',
   'onboarding.aiTitle': 'Connect your AI',
   'onboarding.aiLead':
-    'Qutai works with your own key from Anthropic, OpenAI or Google. Add it now, or later in Settings.',
+    'Qutai works with your own key from Anthropic, OpenAI, Google or OpenRouter. Add it now, or later in Settings.',
   'onboarding.protectionTitle': 'Browse without the clutter',
   'onboarding.protectionLead': 'Choose how Qutai protects you. You can change these any time in Settings.',
   'onboarding.blockAdsHint':

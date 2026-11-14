@@ -20,7 +20,8 @@ import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
 import { personalKindsLabel } from './src/components/memoryCategories';
 import { Conversation, callItem, fileItem, newItem, smsItem, sourcesItem, whatsAppItem } from './src/chat/Conversation';
 import { geminiStreamingAvailable } from './src/ai/gemini';
-import { getProvider, modelLabel } from './src/ai/providers';
+import { getProvider, modelCapabilities, modelLabel } from './src/ai/providers';
+import { loadCatalog } from './src/ai/openrouterModels';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import type { ContextTarget } from './src/browser/contextMenu';
 import { quoteSelection } from './src/browser/selection';
@@ -607,11 +608,17 @@ function BrowserApp({
     if (mayContinue) lastTaskTab.current = current.id;
     let outcome: TaskOutcome = { kind: 'done' };
     let lastText = '';
+    const model = settings.models[provider];
+    // Catalogue providers: what the cached catalogue says about the model (images, output limit).
+    if (getProvider(provider).catalog) await loadCatalog();
+    const capabilities = modelCapabilities(provider, model);
     try {
       await runAgent({
         provider,
         apiKey,
-        model: settings.models[provider],
+        model,
+        imageInput: capabilities.images,
+        maxOutputTokens: capabilities.maxOutputTokens,
         turns: chat.turns,
         browser,
         agentTab,
@@ -619,7 +626,8 @@ function BrowserApp({
         memory: settings.memoryEnabled ? memoryStore : undefined,
         customInstructions: settings.customInstructions,
         // Research without web search would be guesswork, so it always searches.
-        webSearch: settings.webSearch || research,
+        // Only where the provider has its own web search; elsewhere the assistant searches in the browser.
+        webSearch: getProvider(provider).webSearch && (settings.webSearch || research),
         research,
         // Gemini streams only with its experimental setting, and not after the API rejected a streamed reply.
         stream: provider !== 'gemini' || (settings.geminiStreaming && geminiStreamingAvailable()),
