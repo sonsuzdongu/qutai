@@ -1,3 +1,4 @@
+import { Comparison } from './components/Comparison';
 import { Agent, BrowserFeatures, Footer, Header, Hero, OpenSource, Privacy, Status } from './components/Sections';
 
 export function App() {
@@ -9,6 +10,7 @@ export function App() {
         <Agent />
         <Privacy />
         <BrowserFeatures />
+        <Comparison />
         <OpenSource />
         <Status />
       </main>
