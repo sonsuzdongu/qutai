@@ -13,6 +13,7 @@ import { classifyLoadError, linkTarget } from '../browser/navigation';
 import { mayOfferExternal, noteUserGesture } from '../browser/externalGuard';
 import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
 import { geolocationScript } from '../browser/geolocation';
+import { MEDIA_CAPTURE_BLOCK_SCRIPT } from '../browser/mediaCapture';
 import { openExternal } from '../browser/openExternal';
 import { parsePullState, PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
 import { handleUserAgentMessage, USER_AGENT_SCRIPT, useChromeUserAgent } from '../browser/userAgent';
@@ -101,14 +102,18 @@ function TabWebView({
     newTabActions.blockAds ? AD_BLOCK_SCRIPT : '',
     newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : '',
   ].join('\n');
+  // Android: pages get no camera or microphone (iOS refuses natively: mediaCapturePermissionGrantType).
+  const mediaBlock = Platform.OS === 'android' ? MEDIA_CAPTURE_BLOCK_SCRIPT : '';
   const earlyScript = [
     geoScript,
+    mediaBlock,
     mainFrameEarly.trim() ? `if (window.top === window) (function () {\n${mainFrameEarly}\n})();` : '',
   ].join('\n');
   // Runs after every page load: long-press menu, text selection, desktop viewport (Android) and text size (iOS).
   const pageSetupScript = [
     // Android may run the early script too soon for the new page; installing again is a no-op otherwise.
     Platform.OS === 'android' ? geoScript : '',
+    mediaBlock,
     CONTEXT_MENU_SCRIPT,
     SELECTION_SCRIPT,
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
@@ -264,6 +269,9 @@ function TabWebView({
             injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
             // Android: native geolocation would grant every site once Qutai has the permission; the script handles it.
             geolocationEnabled={false}
+            // iOS: no camera or microphone for pages until there is a per-site prompt (WebKit would ask per
+            // origin, then share Qutai's camera permission). Android: see MEDIA_CAPTURE_BLOCK_SCRIPT.
+            mediaCapturePermissionGrantType="deny"
             textZoom={newTabActions.textZoom}
             // The app shows its own long-press menu for links and images.
             allowsLinkPreview={false}

@@ -1,8 +1,9 @@
 {
   "ios": {
     "CFBundleDisplayName": "Qutai",
-    "NSPhotoLibraryAddUsageDescription": "Qutai, kaydetmek istediğiniz ekran görüntülerini fotoğraflarınıza ekler.",
-    "NSCameraUsageDescription": "Qutai, QR kodlarını okumak için kamerayı kullanır.",
+    "NSPhotoLibraryAddUsageDescription": "Qutai, kaydetmek istediğiniz ekran görüntülerini ve görselleri fotoğraflarınıza ekler.",
+    "NSCameraUsageDescription": "Qutai, kamerayı QR kodlarını okumak ve bir web sayfasına yüklemek için fotoğraf ya da video çektiğinizde kullanır.",
+    "NSMicrophoneUsageDescription": "Qutai, mikrofonu yalnızca bir web sayfasına yüklemek için video çektiğinizde sesi kaydetmek için kullanır.",
     "NSFaceIDUsageDescription": "Qutai, uygulamanın ve gizli sekmelerin kilidini açmak için Face ID'yi kullanır.",
     "NSCalendarsUsageDescription": "Qutai, onayladığınız bilet ve rezervasyon gibi etkinlikleri takviminize ekler.",
     "NSCalendarsWriteOnlyAccessUsageDescription": "Qutai, onayladığınız bilet ve rezervasyon gibi etkinlikleri takviminize ekler.",

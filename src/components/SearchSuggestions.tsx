@@ -37,6 +37,7 @@ export function SearchSuggestions({ html, onOpenLink }: Props) {
         return true;
       }}
       cacheEnabled={false}
+      mediaCapturePermissionGrantType="deny"
     />
   );
 }

@@ -115,6 +115,7 @@ ourselves; they will all be handled together during the switch.
 
 - [ ] Development build setup (EAS); an Apple Developer account is required for iOS
 - [ ] Voice commands (speech-to-text): the device's own speech recognition engine; free, works offline on most devices. Microphone button in the panel
+  - Needs `NSSpeechRecognitionUsageDescription`, a new `NSMicrophoneUsageDescription` text (today it only covers videos for upload fields) and `RECORD_AUDIO` unblocked on Android (`app.json`, `locales/`, `docs/permissions.md`)
   - Decision: The paid "audio recording + AI transcription" route will not be used; until then the keyboard's microphone key is enough
 - [ ] Real cookie isolation for private tabs on Android (WebView profile API)
 - [ ] App attestation (App Attest, Play Integrity; `expo-app-integrity`), see Qutai Credits / Abuse protection
@@ -136,7 +137,13 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
 - [x] Keep the screen on while the app is open (`expo-keep-awake`)
 - [x] Block screenshots and the app switcher preview in private tabs (`expo-screen-capture`)
 - [ ] File download support
-- [ ] Before submitting to the stores: review the legacy storage permissions (`READ_EXTERNAL_STORAGE`, `READ_MEDIA_VISUAL_USER_SELECTED`) that the `expo-media-library` plugin adds on Android
+- [x] Before submitting to the stores: review the legacy storage permissions (`READ_EXTERNAL_STORAGE`, `READ_MEDIA_VISUAL_USER_SELECTED`) that the `expo-media-library` plugin adds on Android
+  - Saving is add-only: on Android 11+ it goes through MediaStore with no permission; on Android 10 and older it needs `WRITE_EXTERNAL_STORAGE`, now declared only up to API 29 (`plugins/withLegacyStorageWrite.js`; it also covers WebView downloads on Android 9 and older). `READ_EXTERNAL_STORAGE`, `READ_MEDIA_IMAGES` and `READ_MEDIA_VISUAL_USER_SELECTED` are blocked. Full list: `docs/permissions.md`
+- [x] Permission audit: every usage key and Android permission matches a feature (`docs/permissions.md`); microphone key only for videos recorded for upload fields; unused push, badge, install referrer and overlay permissions blocked; privacy manifest with the libraries' required-reason APIs
+- [ ] Camera and microphone for web pages (`getUserMedia`) with a per-site prompt, like location. Today they are off: iOS `mediaCapturePermissionGrantType="deny"`, Android a main-frame script (`src/browser/mediaCapture.ts`). Android gap until then: a frame from another site still reaches react-native-webview's `onPermissionRequest`, which asks the OS for `CAMERA` and grants it to any origin once Qutai holds it (it does after QR scanning). Needs a native per-origin hook (patch or upstream change); `RECORD_AUDIO` is blocked so the microphone is always refused
+- [ ] Android upload fields with `capture` (e.g. "take a photo" buttons) do nothing until Qutai holds `CAMERA`: react-native-webview leaves the camera out while the declared permission isn't granted. Ask for the camera there (or fall back to the file picker)
+- [ ] Not verified on a device yet: saving a screenshot on Android 10 (asks for storage) and 11+ (asks nothing); a download on Android 9; recording a video with sound in an upload field on iOS (microphone prompt, no crash); `getUserMedia` refused on both platforms; Face ID / calendar / location prompts show the Turkish strings on a Turkish device
+- [ ] Before the first Play upload: check the release merged manifest (`android/app/build/intermediates/merged_manifest/release/`) against `docs/permissions.md`; libraries' permissions are only merged by Gradle
 - [ ] Later: camera and QR, calendar, email and SMS drafts, biometric authentication, haptics (location: done, below)
 - [ ] Security: tools that send data out (location, etc.) ask for user confirmation every time; clipboard reading and contacts are not given as tools. An iOS usage description string in `app.json` for each permission
 - [x] Calendar, reminders and notifications: the assistant can put things on the user's calendar and set reminders

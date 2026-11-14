@@ -1,8 +1,9 @@
 {
   "ios": {
     "CFBundleDisplayName": "Qutai",
-    "NSPhotoLibraryAddUsageDescription": "Qutai adds the screenshots you choose to save to your photos.",
-    "NSCameraUsageDescription": "Qutai uses the camera to scan QR codes.",
+    "NSPhotoLibraryAddUsageDescription": "Qutai adds the screenshots and images you choose to save to your photos.",
+    "NSCameraUsageDescription": "Qutai uses the camera to scan QR codes, and to take a photo or video when you upload one to a web page.",
+    "NSMicrophoneUsageDescription": "Qutai uses the microphone only to record sound when you take a video to upload to a web page.",
     "NSFaceIDUsageDescription": "Qutai uses Face ID to unlock the app and incognito tabs.",
     "NSCalendarsUsageDescription": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",
     "NSCalendarsWriteOnlyAccessUsageDescription": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",

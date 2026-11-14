@@ -112,6 +112,14 @@ Along with each assistant response, the provider's raw output is also stored (Cl
 encrypted reasoning content, Gemini's thought signatures) and sent back unchanged to the same model. If the
 provider or model changes mid-chat, the history is rebuilt from the text and tool calls.
 
+## Permissions
+
+Each permission is asked for the first time a feature needs it, never at launch: camera (QR codes, photos for
+upload fields), add-only Photos (saving screenshots and images), Face ID, write-only calendar and reminders, location
+while in use (per-site), local notifications. Web pages get no camera or microphone. The full list per platform, with
+the feature, when the user is asked, the config line that declares it and what is blocked, is in
+[docs/permissions.md](docs/permissions.md); use it for the App Store privacy labels and the Play Data safety form.
+
 ## Known limitations / next steps
 
 - **Private mode is not fully isolated on Android.** The `incognito` prop of `react-native-webview` is not used because
