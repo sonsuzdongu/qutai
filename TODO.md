@@ -198,7 +198,7 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
 
 - [ ] Before release: legal review of the Privacy Policy and Terms of Use (`src/legal/documents.ts`; if the text changes, `LEGAL_VERSION` must be bumped), add a contact address
 - [ ] After release: `ios.appStoreUrl` and `android.playStoreUrl` in `app.json` (so 'Rate Qutai' can open the store page)
-- [ ] App icon: a 1024 px PNG should be generated from `src/ui/markGeometry.ts` (the script that draws it with CanvasKit is ready; see design notes)
+- [ ] App icon: the icons in `assets/` (iOS 1024 px, Android adaptive foreground/background/monochrome within the safe zone, splash, favicon) were made from the raster logo `assets/logo.png` (384 px) when the drawn mark and `src/ui/markGeometry.ts` were removed (1ff8ba1); there is no CanvasKit script or vector source in the repository. Missing: a vector or ≥1024 px master of the logo, to redo the 1024 px icon and splash without upscaling
 - [ ] The development server must be restarted with `npx expo start -c` after installing new packages with native/Babel plugins (Reanimated, Worklets) (otherwise a 'bytecode of undefined' error)
 
 - [ ] Before submitting to the stores, AI search terms: Gemini's search suggestions box is now shown below the response (check on a device that it follows Google's display rules); Anthropic and OpenAI require citations to be shown to the user in a clickable way (done with source cards, should be confirmed legally)
