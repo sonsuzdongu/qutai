@@ -60,8 +60,21 @@ npx expo run:android      # or: npx expo run:ios (builds natively and installs o
 npx expo start            # later: the installed build connects to this server
 ```
 
-Or build in the cloud with your own Expo account: `npx eas-cli build --profile development` (there is no `eas.json`
-in the repository yet; `npx eas-cli build:configure` creates one). Install a new build whenever a native module is
+Or build in the cloud with your own Expo account (`eas.json`; the first build links the project to your account):
+
+| Profile | What it builds |
+|---|---|
+| `development` | The development build (`expo-dev-client`), installed directly on your devices (internal distribution) |
+| `preview` | A release build to install directly on test devices (internal distribution) |
+| `production` | The build for the stores; the build number (iOS) and version code (Android) are kept by EAS and go up by one on each build |
+
+```bash
+npx eas-cli build --profile development --platform android   # or ios, or all
+```
+
+All three keep `EXPO_PUBLIC_PRO_MODE=off`. `submit.production` is a skeleton (`npx eas-cli submit`): Android goes
+to the internal testing track; the store accounts and app ids are not in the repository and are asked for (or set
+in your own copy). iOS device builds need an Apple Developer account. Install a new build whenever a native module is
 added: `expo-calendar`, `expo-notifications`, `expo-document-picker`, `expo-location` and `expo-crypto` came after the
 first development builds. An older build still starts: the calendar, reminder and notification tools, location (for
 sites and the assistant), bookmark import and backup export and import say that a newer build is needed.

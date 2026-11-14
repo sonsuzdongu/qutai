@@ -40,7 +40,7 @@ App ──(session token)──► Qutai server ──(our key)──► Anthrop
 ```
 
 #### Pending decisions
-- [ ] Server platform: Cloudflare Workers + Durable Objects / Supabase / our own Node.js server
+- [x] Server platform: Cloudflare Workers + Durable Objects + D1 (R2 for sync blobs if needed). The server lives in its own repository; plan in `docs/server-plan.md`
 - [ ] Payments: RevenueCat, or the App Store and Play Billing APIs directly?
 - [ ] Sign-in providers beyond Apple and Google (see Accounts and OAuth sign-in above)
 - [ ] Credit pricing: profit margin on top of token cost, pack sizes, will trial credits be given?
@@ -115,8 +115,11 @@ features use modules it doesn't have. The items below need native work beyond wh
 
 - [x] Development build setup, the repository side: app IDs (`com.sonsuzdongu.qutai`), the `qutai` URL scheme,
   `expo-dev-client`, `expo-system-ui`, and `npm run android` / `npm run ios` build natively (`expo run:*`)
-  - [ ] EAS: there is no `eas.json` yet (development, preview and production profiles; `EXPO_PUBLIC_PRO_MODE` per
-    profile); an Apple Developer account is required for iOS device builds
+  - [x] EAS: `eas.json` with development (dev client), preview (internal) and production profiles, all with
+    `EXPO_PUBLIC_PRO_MODE=off`; versions kept remotely by EAS (`appVersionSource: remote`, production auto-increments
+    from `buildNumber` 1 / `versionCode` 1); a `submit.production` skeleton without account ids. Not run yet: the
+    first build links the project to an Expo account (adds `extra.eas.projectId` to `app.json`); an Apple Developer
+    account is required for iOS device builds
 - [ ] Voice commands (speech-to-text): the device's own speech recognition engine; free, works offline on most devices. Microphone button in the panel
   - Needs `NSSpeechRecognitionUsageDescription` and a `NSMicrophoneUsageDescription` text that also names voice commands (today it covers sites the user allows and videos for upload fields); `RECORD_AUDIO` is already declared for web pages (`app.json`, `locales/`, `docs/permissions.md`)
   - Decision: The paid "audio recording + AI transcription" route will not be used; until then the keyboard's microphone key is enough
