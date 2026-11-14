@@ -68,8 +68,8 @@ shared; row labels and notes have `en` and `tr`.
   honest: features that are missing stay `no` (sync, desktop, store release today).
 - **Competitor cells** must come from the vendor's own current pages about the mobile app (feature pages, help
   centre, pricing, App Store / Google Play listing). Put the URL in `source` and the day you read it in
-  `checked`. Use `desktop` when a feature exists only on desktop. If no such page settles it, use `unknown`: it is
-  shown as "Not confirmed", never as "No". Notes are your own words, never copied text.
+  `checked`. Only the mobile app counts: a feature that exists only on desktop is `no`, with a note. If no such
+  page settles it, use `unknown`: it is shown as "Not confirmed", never as "No". Notes are your own words, never copied text.
 - When you re-check the table, update `CHECKED` (the "Last checked" date on the page).
 - A competitor that has no mobile browser or is shutting down goes in `EXCLUDED` with the reason, not in the table.
 - Rows: keep the table to about 16. Add a row in `GROUPS` and a cell for it in every product (TypeScript checks

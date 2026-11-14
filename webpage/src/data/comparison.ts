@@ -8,11 +8,11 @@
  * - A competitor cell must come from the vendor's own current page (feature page, help centre, pricing page or
  *   the app's store listing) about the MOBILE app. Put the URL in `source` and the day you read it in `checked`.
  *   If no such page settles it, use `unknown` (shown as a neutral dash, never as "no").
- * - `desktop` means the feature exists only in the desktop version.
+ * - Only the mobile app counts: a feature that exists only in the desktop version is `no` for that row.
  * - Write notes in your own words; never copy a vendor's text.
  * - Change `CHECKED` (the date shown above the table) when you re-check the table.
  */
-export type State = 'yes' | 'partial' | 'no' | 'desktop' | 'unknown';
+export type State = 'yes' | 'partial' | 'no' | 'unknown';
 export type Lang = 'en' | 'tr';
 type Text = { en: string; tr: string };
 
@@ -168,10 +168,17 @@ export const QUTAI: Product = {
       ),
       source: src('README.md'),
     },
-    noAccount: { state: 'yes', note: t('There is no Qutai account.', 'Qutai hesabı yok.'), source: src('README.md') },
+    noAccount: {
+      state: 'yes',
+      note: t('No Qutai account with your own key; the planned paid service would use one.', 'Kendi anahtarınızla Qutai hesabı yok; planlanan ücretli hizmet hesap kullanacak.'),
+      source: src('README.md'),
+    },
     directToProvider: {
       state: 'yes',
-      note: t('No Qutai server; every request is listed in the app.', 'Qutai sunucusu yok; her istek uygulamada listelenir.'),
+      note: t(
+        'With your own key, no Qutai server in between; an optional paid Qutai service is planned.',
+        'Kendi anahtarınızla arada Qutai sunucusu yok; isteğe bağlı ücretli Qutai hizmeti planlanıyor.',
+      ),
       source: src('src/ai/providers.ts'),
     },
     confirmations: {
@@ -181,10 +188,10 @@ export const QUTAI: Product = {
     },
     openSource: { state: 'yes', note: t('Apache License 2.0.', 'Apache Lisansı 2.0.'), source: src('LICENSE') },
     adblock: {
-      state: 'partial',
+      state: 'yes',
       note: t(
-        'Lists you choose, including your own; only rules that block whole domains.',
-        'Seçtiğiniz listeler, kendi listeleriniz dahil; yalnızca tüm alan adını engelleyen kurallar.',
+        'Filter lists you pick (EasyList, EasyPrivacy, AdGuard Turkish) or add by address; blocks whole domains.',
+        'Seçtiğiniz (EasyList, EasyPrivacy, AdGuard Turkish) ya da adresiyle eklediğiniz filtre listeleri; tüm alan adını engeller.',
       ),
       source: src('README.md'),
     },
@@ -250,7 +257,7 @@ export const COMPETITORS: Product[] = [
       openSource: U,
       adblock: {
         state: 'yes',
-        note: t('Two blocking levels and per-site exceptions.', 'İki engelleme düzeyi ve site bazında istisnalar.'),
+        note: t('Standard and Aggressive levels; also hides leftover ad slots and cookie banners.', 'Standart ve Agresif düzeyler; boş kalan reklam alanlarını ve çerez uyarılarını da gizliyor.'),
         source: 'https://apps.apple.com/us/app/id6748622471',
         checked: D,
       },
@@ -343,7 +350,7 @@ export const COMPETITORS: Product[] = [
       memoryForms: U,
       byok: {
         state: 'partial',
-        note: t('A choice of Leo models on mobile; bring your own model is desktop-only.', 'Mobilde Leo modelleri arasında seçim; kendi modelini getirme yalnızca masaüstünde.'),
+        note: t('A choice of Leo models; using your own model is not in the mobile app.', 'Leo modelleri arasında seçim; kendi modelinizi kullanmak mobil uygulamada yok.'),
         source: 'https://brave.com/whats-new/android/',
         checked: D,
       },
@@ -407,8 +414,8 @@ export const COMPETITORS: Product[] = [
     platforms: t('iOS and Android', 'iOS ve Android'),
     cells: {
       agent: {
-        state: 'desktop',
-        note: t('Browse with Copilot is on desktop only.', 'Browse with Copilot yalnızca masaüstünde.'),
+        state: 'no',
+        note: t('Browse with Copilot is not in the mobile app.', 'Browse with Copilot mobil uygulamada yok.'),
         source: 'https://blogs.windows.com/msedgedev/2026/05/13/new-updates-to-edge-across-desktop-and-mobile/',
         checked: D,
       },

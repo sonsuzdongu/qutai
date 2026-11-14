@@ -29,10 +29,11 @@ export const tr: Messages = {
   'lang.otherShort': 'EN',
   'lang.switchTo': 'Switch to English',
 
-  'hero.eyebrow': 'iPhone ve Android için yapay zekâ tarayıcısı',
+  'hero.eyebrow': 'Önce yapay zekâ',
+  'hero.tagline': 'Yapay zekâyla yapıldı. Yapay zekâ için yapıldı.',
   'hero.title': 'Asistanı sayfayı okuyan ve sizin yerinize kullanan bir tarayıcı.',
   'hero.lede':
-    'Karşılaştırmayı, form doldurmayı, rezervasyonu ya da bir şeyi araştırmayı Qutai’ye bırakın. Kendi sekmelerinizde, kendi AI anahtarınızla çalışır; verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar.',
+    'Merkezinde bir asistan olan iPhone ve Android tarayıcısı. Karşılaştırmayı, form doldurmayı, rezervasyonu ya da bir şeyi araştırmayı ona bırakın: kendi sekmelerinizde çalışır, ona anlattıklarınızı telefonunuzda hatırlar, önemli bir adımdan önce size sorar.',
   'hero.github': 'GitHub’da incele',
   'hero.status': 'Geliştirme aşamasında. App Store ve Google Play’e geliyor; henüz yayımlanmadı.',
 
@@ -60,7 +61,15 @@ export const tr: Messages = {
   'agent.kicker': 'Asistan',
   'agent.title': 'Sıkıcı kısmı ona bırakın.',
   'agent.lede':
-    'Qutai’nin asistanı sekmelerinizde çalışır: sayfaları okur, dokunur, yazar, sekme açıp karşılaştırır; adım adım. Her adımı anında görürsünüz ve istediğiniz an durdurabilirsiniz.',
+    'Qutai’nin asistanı sekmelerinizde çalışır: sayfaları okur, dokunur, yazar, sekme açıp karşılaştırır; adım adım. Her adımı anında görürsünüz ve istediğiniz an durdurabilirsiniz. Üstelik ona anlattıklarınızı hatırlar; her görevde bir öncekinden daha az açıklama yaparsınız.',
+  'agent.memory.kicker': 'Hafıza, telefonunuzda',
+  'agent.memory.title': 'Sizi tanır; öğrendiklerini telefonunuzda saklar.',
+  'agent.memory.body':
+    'Adreslerinizi, bedeninizi, beslenme tercihlerinizi ya da bütçenizi Qutai’ye söyleyin veya kurulumda birkaç isteğe bağlı soruyu yanıtlayın. Öğrendiklerini kategorilere ayırır, sonraki görevlerde size yeniden sormadan kullanır ve özel talimatlarınıza her istekte uyar. Kullandıkça daha az anlatmanız gerekir.',
+  'agent.memory.point1': 'Kategorilere ayrılır: kimlik ve iletişim, adresler, alışveriş ve teslimat, seyahat, yemek ve beslenme, bütçe, genel tercihler',
+  'agent.memory.point2': 'Telefonda saklanır; Ayarlar’dan görebilir, değiştirebilir, silebilirsiniz; şifreli yedeğinize de girer',
+  'agent.memory.point3': 'Yalnızca isteklerinizle birlikte seçtiğiniz AI sağlayıcısına gider ve “Yapay zekâya gönderilenler”de listelenir',
+  'agent.memory.point4': 'Şifre, kart numarası ve tek kullanımlık kod asla; bilgilerinizi bir siteye girmeden önce site bazında sorar',
   'agent.compare.title': 'Sekmeler arasında ürün karşılaştırma',
   'agent.compare.body':
     'İki üç ürün sayfası açın, hangisinin size uygun olduğunu sorun. Qutai sekmeleri değiştirmeden her birini okur; fiyatı, teslimat süresini ve özellikleri not edip bir tabloyla yanıt verir.',
@@ -92,17 +101,25 @@ export const tr: Messages = {
   'privacy.kicker': 'Tasarımdan gelen gizlilik',
   'privacy.title': 'Anahtar sizin. Telefon sizin. Karar sizin.',
   'privacy.lede':
-    'Qutai hesabı yok; sizinle yapay zekâ arasında Qutai sunucusu da yok. İstekler telefonunuzdan doğrudan seçtiğiniz sağlayıcıya gider.',
+    'Qutai’nin yapay zekâya nasıl ulaşacağını siz seçersiniz. Bugün kendi anahtarınızı kullanır: istekler telefonunuzdan doğrudan sağlayıcınıza gider; arada ne Qutai hesabı ne Qutai sunucusu vardır. İleride, anahtarla uğraşmak istemeyenler için ücretli bir Qutai hizmeti de seçenek olacak.',
   'privacy.diagramLabel':
-    'Şema: telefonunuz istekleri doğrudan seçtiğiniz yapay zekâ sağlayıcısına gönderir. Arada Qutai sunucusu yoktur.',
+    'Yapay zekâya ulaşmanın iki yolunu gösteren şema. Şimdi, kendi anahtarınızla: telefonunuz istekleri doğrudan seçtiğiniz sağlayıcıya gönderir, arada Qutai sunucusu yoktur. Planlanan ve isteğe bağlı: ücretli Qutai hizmeti; istekler telefonunuzdan Qutai sunucusu üzerinden yapay zekâya gider.',
+  'privacy.routeOwn': 'Kendi anahtarınızla',
+  'privacy.routeOwnTag': 'Şimdi kullanılabilir',
+  'privacy.routeService': 'Qutai hizmetiyle',
+  'privacy.routeServiceTag': 'Planlanıyor · isteğe bağlı · ücretli',
   'privacy.diagramPhone': 'Telefonunuz',
   'privacy.diagramPhoneSub': 'sekmeler, geçmiş, hafıza, sohbetler',
-  'privacy.diagramProvider': 'Seçtiğiniz AI sağlayıcısı',
+  'privacy.diagramProvider': 'AI sağlayıcınız',
   'privacy.diagramProviderSub': 'kendi anahtarınızla',
   'privacy.diagramNone': 'Qutai sunucusu yok',
+  'privacy.diagramQutai': 'Qutai sunucusu',
+  'privacy.diagramQutaiSub': 'hesap ve kredi',
+  'privacy.diagramAi': 'Yapay zekâ',
+  'privacy.diagramAiSub': 'kendi anahtarınız olmadan',
   'privacy.key.title': 'Kendi AI anahtarınız',
   'privacy.key.body':
-    'Anthropic, OpenAI, Google Gemini ya da OpenRouter anahtarınızı veya kendi OpenAI uyumlu sunucunuzu (Ollama, LM Studio, vLLM) kullanın. Modeli siz seçersiniz, isterseniz sohbet başına.',
+    'Anthropic, OpenAI, Google Gemini ya da OpenRouter anahtarınızı veya kendi OpenAI uyumlu sunucunuzu (Ollama, LM Studio, vLLM) kullanın. Modeli siz seçersiniz, isterseniz sohbet başına. Sonra ne gelirse gelsin bu yol kalır.',
   'privacy.device.title': 'Telefonda kalır',
   'privacy.device.body':
     'Sekmeler, geçmiş, yer imleri, sohbetler ve asistanın hafızası cihazda saklanır. Şifreler, kart numaraları ve tek kullanımlık kodlar hafızaya hiç alınmaz.',
@@ -119,7 +136,7 @@ export const tr: Messages = {
   'privacy.confirm.body':
     'Hassas işlemler onayınızı bekler. Takvime yazma, konum ve bildirimler her seferinde onaylanır; arama, SMS ve e-posta yalnızca taslaktır, gönderen sizsiniz.',
   'privacy.note':
-    'Açık kaynak sürüm hiçbir zaman Qutai sunucusu kullanmayacak. Mağaza sürümleri için isteğe bağlı ücretli özellikler (hesap, eşitleme, Qutai kredisi) planlanıyor; sunucu yalnızca bu özellikler için kullanılacak.',
+    'Ücretli Qutai hizmeti (hesap, eşitleme ve kendi anahtarınız yerine Qutai kredisi) mağaza sürümleri için planlanıyor, henüz yapılmadı. İsteğe bağlı olacak: kendi anahtarınız çalışmaya devam eder, açık kaynak sürüm hiçbir zaman Qutai sunucusuna ihtiyaç duymaz.',
 
   'browser.kicker': 'Bir de tarayıcı',
   'browser.title': 'Bir tarayıcıdan beklediğiniz her şey, izlenmeden.',
@@ -160,7 +177,6 @@ export const tr: Messages = {
   'compare.yes': 'Var',
   'compare.partial': 'Kısmen',
   'compare.no': 'Yok',
-  'compare.desktop': 'Yalnızca masaüstü',
   'compare.unknown': 'Doğrulanmadı',
   'compare.legend': 'Açıklama',
   'compare.source': 'Kaynak',
@@ -171,7 +187,7 @@ export const tr: Messages = {
   'compare.methodologyLink': 'Nasıl karşılaştırdık',
   'compare.methodology.title': 'Nasıl karşılaştırdık',
   'compare.methodology.1':
-    'Her tarayıcının masaüstü sürümüne değil, iPhone ve Android uygulamasına baktık. Yalnızca masaüstünde olan bir özellik “Yalnızca masaüstü” olarak işaretli.',
+    'Her tarayıcının masaüstü sürümüne değil, iPhone ve Android uygulamasına baktık: yalnızca masaüstünde olan bir özellik burada yok sayılır.',
   'compare.methodology.2':
     'Rakiplerle ilgili her hücre, üreticinin kendi sayfalarına dayanıyor: özellik sayfaları, yardım merkezleri, fiyat sayfaları ve mağaza sayfaları. Her hücre kaynağına ve kontrol tarihine bağlanıyor. Bir özelliği böyle bir sayfadan doğrulayamadıysak hücrede “Doğrulanmadı” yazıyor; bu, özelliğin olmadığı anlamına gelmez.',
   'compare.methodology.3':

@@ -69,7 +69,10 @@ export function Hero() {
       </div>
       <div className="hero-inner">
         <div className="hero-copy">
-          <p className="eyebrow">{t('hero.eyebrow')}</p>
+          <p className="eyebrow">
+            <span className="eyebrow-pill">{t('hero.eyebrow')}</span>
+            <span className="tagline">{t('hero.tagline')}</span>
+          </p>
           <h1 id="hero-title">{t('hero.title')}</h1>
           <p className="lede">{t('hero.lede')}</p>
           <div className="hero-actions">
@@ -185,6 +188,21 @@ export function Agent() {
           />
         </article>
       </div>
+      <div className="memory reveal">
+        <div>
+          <p className="kicker">{t('agent.memory.kicker')}</p>
+          <h3 id="memory-title">{t('agent.memory.title')}</h3>
+          <p>{t('agent.memory.body')}</p>
+        </div>
+        <ul>
+          {(['agent.memory.point1', 'agent.memory.point2', 'agent.memory.point3', 'agent.memory.point4'] as const).map((k, i) => (
+            <li key={k}>
+              <Icon name={(['list', 'phone', 'globe', 'key'] as const)[i]} size={20} />
+              <span>{t(k)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
       <p className="footnote reveal">{t('agent.footnote')}</p>
     </section>
   );
@@ -199,26 +217,50 @@ const PRIVACY: { icon: IconName; key: 'key' | 'device' | 'sites' | 'log' | 'inco
   { icon: 'hand', key: 'confirm' },
 ];
 
+function Node({ icon, title, sub, dashed }: { icon: IconName; title: MessageKey; sub: MessageKey; dashed?: boolean }) {
+  const { t } = useI18n();
+  return (
+    <div className={dashed ? 'dp-node dashed' : 'dp-node'}>
+      <Icon name={icon} size={26} />
+      <strong>{t(title)}</strong>
+      <span>{t(sub)}</span>
+    </div>
+  );
+}
+
+/** The two ways to the AI: today with the user's own key (no Qutai server), later optionally through Qutai's. */
 function DataPath() {
   const { t } = useI18n();
   return (
     <figure className="datapath reveal" role="img" aria-label={t('privacy.diagramLabel')}>
-      <div className="dp-node">
-        <Icon name="phone" size={30} />
-        <strong>{t('privacy.diagramPhone')}</strong>
-        <span>{t('privacy.diagramPhoneSub')}</span>
+      <div className="dp-lane">
+        <p className="dp-lane-head">
+          <strong>{t('privacy.routeOwn')}</strong>
+          <span className="dp-tag now">{t('privacy.routeOwnTag')}</span>
+        </p>
+        <div className="dp-route">
+          <Node icon="phone" title="privacy.diagramPhone" sub="privacy.diagramPhoneSub" />
+          <span className="dp-arrow" />
+          <span className="dp-none">
+            <Icon name="server" size={16} />
+            <span>{t('privacy.diagramNone')}</span>
+          </span>
+          <span className="dp-arrow" />
+          <Node icon="key" title="privacy.diagramProvider" sub="privacy.diagramProviderSub" />
+        </div>
       </div>
-      <div className="dp-link" aria-hidden="true">
-        <span className="dp-line" />
-        <span className="dp-none">
-          <Icon name="server" size={18} />
-          <span>{t('privacy.diagramNone')}</span>
-        </span>
-      </div>
-      <div className="dp-node">
-        <Icon name="globe" size={30} />
-        <strong>{t('privacy.diagramProvider')}</strong>
-        <span>{t('privacy.diagramProviderSub')}</span>
+      <div className="dp-lane planned">
+        <p className="dp-lane-head">
+          <strong>{t('privacy.routeService')}</strong>
+          <span className="dp-tag">{t('privacy.routeServiceTag')}</span>
+        </p>
+        <div className="dp-route">
+          <Node icon="phone" title="privacy.diagramPhone" sub="privacy.diagramPhoneSub" dashed />
+          <span className="dp-arrow dashed" />
+          <Node icon="server" title="privacy.diagramQutai" sub="privacy.diagramQutaiSub" dashed />
+          <span className="dp-arrow dashed" />
+          <Node icon="globe" title="privacy.diagramAi" sub="privacy.diagramAiSub" dashed />
+        </div>
       </div>
     </figure>
   );

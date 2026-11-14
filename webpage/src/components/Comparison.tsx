@@ -9,7 +9,6 @@ const STATE_LABEL: Record<State, MessageKey> = {
   yes: 'compare.yes',
   partial: 'compare.partial',
   no: 'compare.no',
-  desktop: 'compare.desktop',
   unknown: 'compare.unknown',
 };
 
@@ -21,7 +20,7 @@ function StateMark({ state }: { state: State }) {
         <path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" />
       </svg>
     );
-  const icon = state === 'yes' ? 'check' : state === 'no' ? 'no' : state === 'desktop' ? 'desktop' : 'dash';
+  const icon = state === 'yes' ? 'check' : state === 'no' ? 'no' : 'dash';
   return <Icon name={icon} size={18} className={`mark mark-${state}`} />;
 }
 
@@ -87,7 +86,7 @@ export function Comparison() {
       </div>
 
       <ul className="legend reveal" aria-label={t('compare.legend')}>
-        {(['yes', 'partial', 'no', 'desktop', 'unknown'] as State[]).map((s) => (
+        {(['yes', 'partial', 'no', 'unknown'] as State[]).map((s) => (
           <li key={s} className={`state state-${s}`}>
             <StateMark state={s} />
             <span>{t(STATE_LABEL[s])}</span>

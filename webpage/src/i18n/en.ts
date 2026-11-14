@@ -28,10 +28,11 @@ export const en = {
   'lang.otherShort': 'TR',
   'lang.switchTo': 'Türkçe sürüme geç',
 
-  'hero.eyebrow': 'AI browser for iPhone and Android',
+  'hero.eyebrow': 'AI-first browser',
+  'hero.tagline': 'Built with AI. Built for AI.',
   'hero.title': 'A browser whose assistant reads the page and uses it for you.',
   'hero.lede':
-    'Ask Qutai to compare, fill in, book or look something up. It works in your own tabs with your own AI key, keeps your data on your phone, and asks before anything that matters.',
+    'An iPhone and Android browser with an assistant at its core. Ask it to compare, fill in, book or look something up: it works in your own tabs, remembers what you tell it on your phone, and asks before anything that matters.',
   'hero.github': 'View on GitHub',
   'hero.status': 'In development. Coming to the App Store and Google Play; not released yet.',
 
@@ -59,7 +60,15 @@ export const en = {
   'agent.kicker': 'The assistant',
   'agent.title': 'Hand it the tedious part.',
   'agent.lede':
-    'Qutai’s assistant works in your tabs: it reads pages, taps, types, opens and compares tabs, step by step. Every step is shown as it happens, and you can stop it at any time.',
+    'Qutai’s assistant works in your tabs: it reads pages, taps, types, opens and compares tabs, step by step. Every step is shown as it happens, and you can stop it at any time. And it remembers what you tell it, so each task needs less explaining than the last.',
+  'agent.memory.kicker': 'Memory, on your phone',
+  'agent.memory.title': 'It gets to know you, and keeps it on your phone.',
+  'agent.memory.body':
+    'Tell Qutai your addresses, sizes, diet or budget, or answer a few optional questions when you set it up. It files what it learns under categories, uses it in later tasks without asking again, and follows your custom instructions in every request. The more you use it, the less you have to explain.',
+  'agent.memory.point1': 'Sorted into categories: identity and contact, addresses, shopping and delivery, travel, food and diet, budget, general preferences',
+  'agent.memory.point2': 'Stored on the phone; yours to see, edit and delete in Settings, and included in your encrypted backup',
+  'agent.memory.point3': 'Sent only to the AI provider you chose, with your requests, and listed in “What was sent to the AI”',
+  'agent.memory.point4': 'Never passwords, card numbers or one-time codes; it asks per site before entering your details',
   'agent.compare.title': 'Compare products across tabs',
   'agent.compare.body':
     'Open two or three product pages and ask which one fits. Qutai reads each tab without switching away, notes prices, delivery times and specs, and answers with a table.',
@@ -91,17 +100,25 @@ export const en = {
   'privacy.kicker': 'Privacy by design',
   'privacy.title': 'Your key. Your phone. Your say.',
   'privacy.lede':
-    'There is no Qutai account and no Qutai server between you and the AI. Requests go from your phone straight to the provider you picked.',
+    'You choose how Qutai reaches the AI. Today it uses your own key: requests go from your phone straight to your provider, with no Qutai account and no Qutai server in between. Later, a paid Qutai service will be an option for those who would rather not manage a key.',
   'privacy.diagramLabel':
-    'Diagram: your phone sends requests directly to the AI provider you chose. There is no Qutai server in between.',
+    'Diagram of the two ways to reach the AI. Available now, with your own key: your phone sends requests directly to the AI provider you chose, with no Qutai server in between. Planned and optional: a paid Qutai service, where requests go from your phone through Qutai’s server to the AI.',
+  'privacy.routeOwn': 'With your own key',
+  'privacy.routeOwnTag': 'Available now',
+  'privacy.routeService': 'With the Qutai service',
+  'privacy.routeServiceTag': 'Planned · optional · paid',
   'privacy.diagramPhone': 'Your phone',
   'privacy.diagramPhoneSub': 'tabs, history, memory, chats',
-  'privacy.diagramProvider': 'The AI provider you chose',
+  'privacy.diagramProvider': 'Your AI provider',
   'privacy.diagramProviderSub': 'with your own key',
   'privacy.diagramNone': 'No Qutai server',
+  'privacy.diagramQutai': 'Qutai’s server',
+  'privacy.diagramQutaiSub': 'account and credits',
+  'privacy.diagramAi': 'The AI',
+  'privacy.diagramAiSub': 'no key of your own',
   'privacy.key.title': 'Bring your own AI key',
   'privacy.key.body':
-    'Use a key from Anthropic, OpenAI, Google Gemini or OpenRouter, or your own OpenAI-compatible server (Ollama, LM Studio, vLLM). Choose the model, even per conversation.',
+    'Use a key from Anthropic, OpenAI, Google Gemini or OpenRouter, or your own OpenAI-compatible server (Ollama, LM Studio, vLLM). Choose the model, even per conversation. This route stays, whatever comes later.',
   'privacy.device.title': 'Stays on the phone',
   'privacy.device.body':
     'Tabs, history, bookmarks, chats and the assistant’s memory are stored on the device. Passwords, card numbers and one-time codes are never put in memory.',
@@ -118,7 +135,7 @@ export const en = {
   'privacy.confirm.body':
     'Sensitive actions need your yes. Calendar writes, location and notifications are confirmed every time; calls, texts and emails are only drafts that you send.',
   'privacy.note':
-    'The open-source build will never use a Qutai server. Optional paid features (an account, sync, Qutai credits) are planned for the store builds and would use one only for those features.',
+    'The paid Qutai service (an account, sync and Qutai credits instead of your own key) is planned for the store builds, not built yet. It will be optional: your own key keeps working, and the open-source build never needs a Qutai server.',
 
   'browser.kicker': 'And a browser too',
   'browser.title': 'Everything you expect from a browser, minus the tracking.',
@@ -156,7 +173,6 @@ export const en = {
   'compare.yes': 'Yes',
   'compare.partial': 'Partly',
   'compare.no': 'No',
-  'compare.desktop': 'Desktop only',
   'compare.unknown': 'Not confirmed',
   'compare.legend': 'Key',
   'compare.source': 'Source',
@@ -167,7 +183,7 @@ export const en = {
   'compare.methodologyLink': 'How we compared',
   'compare.methodology.title': 'How we compared',
   'compare.methodology.1':
-    'We looked at each browser’s iPhone and Android app, not its desktop version. A feature that exists only on desktop is marked “Desktop only”.',
+    'We looked at each browser’s iPhone and Android app, not its desktop version: a feature that exists only on desktop counts as not available here.',
   'compare.methodology.2':
     'Every competitor cell is based on the vendor’s own pages: feature pages, help centres, pricing pages and store listings. Each cell links its source and the date we checked it. If we could not confirm a feature from such a page, the cell says “Not confirmed”, which does not mean the feature is missing.',
   'compare.methodology.3':
