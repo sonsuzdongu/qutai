@@ -458,4 +458,11 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.library': 'Kütüphane',
   'menu.more': 'Diğer',
   'menu.backTo': 'Menüye dön',
+  'settings.privacySection': 'Gizlilik ve güvenlik',
+  'settings.privacySummary': 'Reklamlar, izleyiciler, çerezler, kilit',
+  'settings.aboutSummary': 'Değerlendirme, gizlilik politikası, koşullar',
+  'settings.noKeySummary': 'Başlamak için yapay zekâ anahtarınızı ekleyin',
+  'settings.unsavedTitle': 'Değişiklikler silinsin mi?',
+  'settings.unsavedBody': 'Yapay zekâ sağlayıcısı, anahtar veya model değişiklikleriniz henüz kaydedilmedi.',
+  'settings.discard': 'Sil',
 };

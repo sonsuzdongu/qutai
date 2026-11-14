@@ -739,9 +739,9 @@ function BrowserApp({
     toast.show(t('clearData.done'));
   };
 
-  const onSaveSettings = async (next: Settings) => {
+  // Settings apply as they are changed; the screen stays open.
+  const onChangeSettings = async (next: Settings) => {
     setSettings(next);
-    setSettingsVisible(false);
     try {
       await saveSettings(next);
     } catch (e) {
@@ -941,7 +941,7 @@ function BrowserApp({
             onClearData={clearData}
             visible={settingsVisible}
             settings={settings}
-            onSave={onSaveSettings}
+            onChange={onChangeSettings}
             onClose={() => setSettingsVisible(false)}
           />
           <ContextMenuSheet
@@ -972,7 +972,7 @@ function BrowserApp({
           <TextSizeSheet
             visible={textSizeVisible}
             zoom={settings.textZoom}
-            onChange={(textZoom) => onSaveSettings({ ...settings, textZoom })}
+            onChange={(textZoom) => onChangeSettings({ ...settings, textZoom })}
             onClose={() => setTextSizeVisible(false)}
           />
           <OfflinePagesScreen

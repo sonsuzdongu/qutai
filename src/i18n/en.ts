@@ -451,4 +451,11 @@ export const en = {
   'menu.library': 'Library',
   'menu.more': 'More',
   'menu.backTo': 'Back to the menu',
+  'settings.privacySection': 'Privacy and security',
+  'settings.privacySummary': 'Ads, trackers, cookies, locks',
+  'settings.aboutSummary': 'Rate Qutai, privacy policy, terms',
+  'settings.noKeySummary': 'Add your AI key to start',
+  'settings.unsavedTitle': 'Discard changes?',
+  'settings.unsavedBody': 'Your AI provider, key or model changes are not saved yet.',
+  'settings.discard': 'Discard',
 } as const;

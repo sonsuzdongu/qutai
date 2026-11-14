@@ -1,295 +1,349 @@
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProvider } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
+import { authenticate, canAuthenticate } from '../device/biometric';
+import { rateApp } from '../device/rateApp';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
-import { ThemedSwitch } from '../ui/ThemedSwitch';
+import type { LegalKind } from '../legal/documents';
+import type { Settings } from '../storage/settings';
 import type { SitePermissionStore } from '../storage/sitePermissions';
+import { Icon, IconName } from '../ui/Icon';
+import { makeStyles, usePalette } from '../ui/theme';
+import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { ActionLogScreen } from './ActionLogScreen';
-import { AiProviderFields, cleanAiChoice } from './AiProviderFields';
+import { AiChoice, AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { LegalScreen } from './LegalScreen';
-import { rateApp } from '../device/rateApp';
-import type { LegalKind } from '../legal/documents';
-import { authenticate, canAuthenticate } from '../device/biometric';
 import { MemoryScreen } from './MemoryScreen';
 import { SitePermissionsScreen } from './SitePermissionsScreen';
-import type { Settings } from '../storage/settings';
 
 type Props = {
   visible: boolean;
   settings: Settings;
-  onSave: (settings: Settings) => void;
+  /** Called for every change; switches and choices apply (and are saved) immediately. */
+  onChange: (settings: Settings) => void;
   onClose: () => void;
   sitePermissions: SitePermissionStore;
   onClearData: (options: ClearOptions) => Promise<void>;
 };
 
-export function SettingsModal({ visible, settings, onSave, onClose, sitePermissions, onClearData }: Props) {
+type Page = 'main' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'about';
+
+/** Where the Android back button goes; the open page sets it (the modal receives the button). */
+class BackRoute {
+  private handler: () => void = () => {};
+  set(handler: () => void) {
+    this.handler = handler;
+  }
+  run() {
+    this.handler();
+  }
+}
+
+export function SettingsModal({ visible, onClose, ...rest }: Props) {
+  const [back] = useState(() => new BackRoute());
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      {/* Mounted only while visible, so the draft always starts from the saved settings. */}
-      {visible && (
-        <SettingsForm
-          settings={settings}
-          onSave={onSave}
-          onClose={onClose}
-          sitePermissions={sitePermissions}
-          onClearData={onClearData}
-        />
-      )}
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => back.run()}>
+      {/* Mounted only while visible, so it always opens on the main page with fresh fields. */}
+      {visible && <SettingsPages {...rest} onClose={onClose} back={back} />}
     </Modal>
   );
 }
 
-function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData }: Omit<Props, 'visible'>) {
+const pickAi = (s: Settings): AiChoice => ({ provider: s.provider, apiKeys: s.apiKeys, models: s.models });
+const sameAi = (a: AiChoice, b: AiChoice) => JSON.stringify(cleanAiChoice(a)) === JSON.stringify(cleanAiChoice(b));
+
+function SettingsPages({
+  settings,
+  onChange,
+  onClose,
+  sitePermissions,
+  onClearData,
+  back,
+}: Omit<Props, 'visible'> & { back: BackRoute }) {
   const styles = useStyles();
-  const [draft, setDraft] = useState(settings);
+  const palette = usePalette();
+  const [page, setPage] = useState<Page>('main');
+  // The API key, provider and model are typed, so they wait for Save; everything else applies at once.
+  const [ai, setAi] = useState<AiChoice>(() => pickAi(settings));
+  const aiDirty = !sameAi(ai, pickAi(settings));
   const [memoryVisible, setMemoryVisible] = useState(false);
   const [sitesVisible, setSitesVisible] = useState(false);
   const [actionLogVisible, setActionLogVisible] = useState(false);
   const [clearDataVisible, setClearDataVisible] = useState(false);
   const [legal, setLegal] = useState<LegalKind | null>(null);
 
+  const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch });
+  const saveAi = () => onChange({ ...settings, ...cleanAiChoice(ai) });
+
+  const goBack = () => {
+    if (page === 'main') return onClose();
+    if (page !== 'assistant' || !aiDirty) return setPage('main');
+    Alert.alert(t('settings.unsavedTitle'), t('settings.unsavedBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('settings.discard'),
+        style: 'destructive',
+        onPress: () => {
+          setAi(pickAi(settings));
+          setPage('main');
+        },
+      },
+    ]);
+  };
+  back.set(goBack);
+
   /** Turning a lock on needs a phone with a screen lock, and the user proving it's them once. */
   const setLock = async (key: 'appLock' | 'incognitoLock', on: boolean) => {
-    if (!on) return setDraft((d) => ({ ...d, [key]: false }));
+    if (!on) return set({ [key]: false });
     if (!(await canAuthenticate())) return Alert.alert(t('settings.lockUnavailable'));
-    if (await authenticate(t('lock.confirmPrompt'))) setDraft((d) => ({ ...d, [key]: true }));
+    if (await authenticate(t('lock.confirmPrompt'))) set({ [key]: true });
   };
 
-  const save = () => onSave(cleanAiChoice(draft));
+  const provider = getProvider(settings.provider);
+  const modelName = provider.models.find((m) => m.id === settings.models[settings.provider])?.name;
+  const titles: Record<Page, string> = {
+    main: t('settings.title'),
+    assistant: t('settings.assistant'),
+    privacy: t('settings.privacySection'),
+    appearance: t('settings.appearance'),
+    search: t('settings.search'),
+    about: t('settings.about'),
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={onClose} hitSlop={8}>
-          <Text style={styles.cancel}>{t('common.cancel')}</Text>
-        </Pressable>
-        <Text style={styles.title}>{t('settings.title')}</Text>
-        <Pressable onPress={save} hitSlop={8}>
-          <Text style={styles.save}>{t('common.save')}</Text>
-        </Pressable>
+        {page === 'main' ? (
+          <View style={styles.headerSide} />
+        ) : (
+          <Pressable onPress={goBack} hitSlop={8} style={styles.headerSide} accessibilityLabel={t('address.back')}>
+            <Icon name="back" size={22} color={palette.text} />
+          </Pressable>
+        )}
+        <Text style={styles.title} accessibilityRole="header" numberOfLines={1}>
+          {titles[page]}
+        </Text>
+        {page === 'main' ? (
+          <Pressable onPress={onClose} hitSlop={8} style={[styles.headerSide, styles.headerRight]}>
+            <Text style={styles.save}>{t('common.done')}</Text>
+          </Pressable>
+        ) : page === 'assistant' && aiDirty ? (
+          <Pressable onPress={saveAi} hitSlop={8} style={[styles.headerSide, styles.headerRight]}>
+            <Text style={styles.save}>{t('common.save')}</Text>
+          </Pressable>
+        ) : (
+          <View style={styles.headerSide} />
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <AiProviderFields
-          value={draft}
-          onChange={(ai) => setDraft((d) => ({ ...d, provider: ai.provider, apiKeys: ai.apiKeys, models: ai.models }))}
-        />
+        {page === 'main' && (
+          <View style={styles.card}>
+            <SectionRow
+              icon="assistant"
+              title={t('settings.assistant')}
+              summary={
+                settings.apiKeys[settings.provider]
+                  ? `${provider.label} · ${modelName ?? settings.models[settings.provider]}`
+                  : t('settings.noKeySummary')
+              }
+              onPress={() => setPage('assistant')}
+            />
+            <SectionRow
+              icon="shield"
+              title={t('settings.privacySection')}
+              summary={t('settings.privacySummary')}
+              onPress={() => setPage('privacy')}
+            />
+            <SectionRow
+              icon="textSize"
+              title={t('settings.appearance')}
+              summary={`${t(`settings.theme.${settings.theme}`)} · ${t(`settings.addressBar.${settings.addressBarPosition}`)}`}
+              onPress={() => setPage('appearance')}
+            />
+            <SectionRow
+              icon="find"
+              title={t('settings.search')}
+              summary={SEARCH_ENGINES[settings.searchEngine].name}
+              onPress={() => setPage('search')}
+            />
+            <SectionRow
+              icon="moreHorizontal"
+              title={t('settings.about')}
+              summary={t('settings.aboutSummary')}
+              onPress={() => setPage('about')}
+              last
+            />
+          </View>
+        )}
 
-        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.search')}</Text>
-        {SEARCH_ENGINE_ORDER.map((id) => (
-          <Pressable key={id} style={styles.option} onPress={() => setDraft({ ...draft, searchEngine: id })}>
-            <Text style={styles.radio}>{draft.searchEngine === id ? '◉' : '○'}</Text>
-            <Text style={styles.optionText}>{SEARCH_ENGINES[id].name}</Text>
-          </Pressable>
-        ))}
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.searchSuggestions')}</Text>
-            <Text style={styles.hint}>{t('settings.searchSuggestionsHint')}</Text>
-          </View>
-          <ThemedSwitch
-            value={draft.searchSuggestions}
-            onValueChange={(searchSuggestions) => setDraft({ ...draft, searchSuggestions })}
-          />
-        </View>
+        {page === 'assistant' && (
+          <>
+            <AiProviderFields value={ai} onChange={setAi} />
+            {aiDirty && (
+              <Pressable onPress={saveAi} style={styles.saveButton} accessibilityRole="button">
+                <Text style={styles.saveButtonText}>{t('common.save')}</Text>
+              </Pressable>
+            )}
+            <SwitchRow
+              title={t('settings.confirmActions')}
+              hint={t('settings.confirmActionsHint')}
+              value={settings.confirmActions}
+              onChange={(confirmActions) => set({ confirmActions })}
+            />
+            <SwitchRow
+              title={t('settings.webSearch')}
+              hint={t('settings.webSearchHint', { provider: provider.label })}
+              value={settings.webSearch}
+              onChange={(webSearch) => set({ webSearch })}
+            />
+            <SwitchRow
+              title={t('settings.memoryEnabled')}
+              hint={t('settings.memoryHint')}
+              value={settings.memoryEnabled}
+              onChange={(memoryEnabled) => set({ memoryEnabled })}
+            />
+            <LinkRow label={t('settings.manageMemory')} onPress={() => setMemoryVisible(true)} />
+            <LinkRow label={t('settings.sitePermissions')} onPress={() => setSitesVisible(true)} />
+            <LinkRow label={t('settings.actionLog')} onPress={() => setActionLogVisible(true)} />
+          </>
+        )}
 
-        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.appearance')}</Text>
-        <View style={styles.segment}>
-          {(['system', 'light', 'dark'] as const).map((theme) => (
-            <Pressable
-              key={theme}
-              onPress={() => setDraft({ ...draft, theme })}
-              style={[styles.segmentButton, draft.theme === theme && styles.segmentSelected]}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: draft.theme === theme }}
-            >
-              <Text style={[styles.segmentText, draft.theme === theme && styles.segmentTextSelected]}>
-                {t(`settings.theme.${theme}`)}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.darkSites')}</Text>
-            <Text style={styles.hint}>{t('settings.darkSitesHint')}</Text>
-          </View>
-          <ThemedSwitch value={draft.darkSites} onValueChange={(darkSites) => setDraft({ ...draft, darkSites })} />
-        </View>
-        <Text style={styles.label}>{t('settings.addressBarPosition')}</Text>
-        <View style={styles.segment}>
-          {(['top', 'bottom'] as const).map((position) => (
-            <Pressable
-              key={position}
-              onPress={() => setDraft({ ...draft, addressBarPosition: position })}
-              style={[styles.segmentButton, draft.addressBarPosition === position && styles.segmentSelected]}
-              accessibilityRole="radio"
-              accessibilityState={{ selected: draft.addressBarPosition === position }}
-            >
-              <Text style={[styles.segmentText, draft.addressBarPosition === position && styles.segmentTextSelected]}>
-                {t(`settings.addressBar.${position}`)}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.haptics')}</Text>
-            <Text style={styles.hint}>{t('settings.hapticsHint')}</Text>
-          </View>
-          <ThemedSwitch value={draft.haptics} onValueChange={(haptics) => setDraft({ ...draft, haptics })} />
-        </View>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.forceZoom')}</Text>
-            <Text style={styles.hint}>{t('settings.forceZoomHint')}</Text>
-          </View>
-          <ThemedSwitch value={draft.forceZoom} onValueChange={(forceZoom) => setDraft({ ...draft, forceZoom })} />
-        </View>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.showAssistantButton')}</Text>
-            <Text style={styles.hint}>{t('settings.showAssistantButtonHint')}</Text>
-          </View>
-          <ThemedSwitch
-            value={draft.showAssistantButton}
-            onValueChange={(showAssistantButton) => setDraft({ ...draft, showAssistantButton })}
-          />
-        </View>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.animateLogo')}</Text>
-            <Text style={styles.hint}>{t('settings.animateLogoHint')}</Text>
-          </View>
-          <ThemedSwitch
-            value={draft.animateLogo}
-            onValueChange={(animateLogo) => setDraft({ ...draft, animateLogo })}
-          />
-        </View>
+        {page === 'privacy' && (
+          <>
+            <SwitchRow
+              title={t('settings.blockAds')}
+              hint={t('settings.blockAdsHint')}
+              value={settings.blockAds}
+              onChange={(blockAds) => set({ blockAds })}
+            />
+            <SwitchRow
+              title={t('settings.thirdPartyCookies')}
+              hint={t('settings.thirdPartyCookiesHint')}
+              value={settings.blockThirdPartyCookies}
+              onChange={(blockThirdPartyCookies) => set({ blockThirdPartyCookies })}
+            />
+            <SwitchRow
+              title={t('settings.hideCookieBanners')}
+              hint={t('settings.hideCookieBannersHint')}
+              value={settings.hideCookieBanners}
+              onChange={(hideCookieBanners) => set({ hideCookieBanners })}
+            />
+            <SwitchRow
+              title={t('settings.httpsOnly')}
+              hint={t('settings.httpsOnlyHint')}
+              value={settings.httpsOnly}
+              onChange={(httpsOnly) => set({ httpsOnly })}
+            />
+            <LinkRow label={t('settings.clearData')} onPress={() => setClearDataVisible(true)} />
+            <Text style={[styles.label, styles.sectionLabel]}>{t('settings.security')}</Text>
+            <SwitchRow
+              title={t('settings.appLock')}
+              hint={t('settings.appLockHint')}
+              value={settings.appLock}
+              onChange={(on) => setLock('appLock', on)}
+            />
+            <SwitchRow
+              title={t('settings.incognitoLock')}
+              hint={t('settings.incognitoLockHint')}
+              value={settings.incognitoLock}
+              onChange={(on) => setLock('incognitoLock', on)}
+            />
+          </>
+        )}
 
-        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.content')}</Text>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.blockAds')}</Text>
-            <Text style={styles.hint}>{t('settings.blockAdsHint')}</Text>
-          </View>
-          <ThemedSwitch value={draft.blockAds} onValueChange={(blockAds) => setDraft({ ...draft, blockAds })} />
-        </View>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.hideCookieBanners')}</Text>
-            <Text style={styles.hint}>{t('settings.hideCookieBannersHint')}</Text>
-          </View>
-          <ThemedSwitch
-            value={draft.hideCookieBanners}
-            onValueChange={(hideCookieBanners) => setDraft({ ...draft, hideCookieBanners })}
-          />
-        </View>
+        {page === 'appearance' && (
+          <>
+            <Segment
+              options={(['system', 'light', 'dark'] as const).map((theme) => ({
+                value: theme,
+                label: t(`settings.theme.${theme}`),
+              }))}
+              value={settings.theme}
+              onChange={(theme) => set({ theme })}
+            />
+            <SwitchRow
+              title={t('settings.darkSites')}
+              hint={t('settings.darkSitesHint')}
+              value={settings.darkSites}
+              onChange={(darkSites) => set({ darkSites })}
+            />
+            <Text style={styles.label}>{t('settings.addressBarPosition')}</Text>
+            <Segment
+              options={(['top', 'bottom'] as const).map((position) => ({
+                value: position,
+                label: t(`settings.addressBar.${position}`),
+              }))}
+              value={settings.addressBarPosition}
+              onChange={(addressBarPosition) => set({ addressBarPosition })}
+            />
+            <SwitchRow
+              title={t('settings.showAssistantButton')}
+              hint={t('settings.showAssistantButtonHint')}
+              value={settings.showAssistantButton}
+              onChange={(showAssistantButton) => set({ showAssistantButton })}
+            />
+            <SwitchRow
+              title={t('settings.animateLogo')}
+              hint={t('settings.animateLogoHint')}
+              value={settings.animateLogo}
+              onChange={(animateLogo) => set({ animateLogo })}
+            />
+            <SwitchRow
+              title={t('settings.forceZoom')}
+              hint={t('settings.forceZoomHint')}
+              value={settings.forceZoom}
+              onChange={(forceZoom) => set({ forceZoom })}
+            />
+            <SwitchRow
+              title={t('settings.haptics')}
+              hint={t('settings.hapticsHint')}
+              value={settings.haptics}
+              onChange={(haptics) => set({ haptics })}
+            />
+          </>
+        )}
 
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.httpsOnly')}</Text>
-            <Text style={styles.hint}>{t('settings.httpsOnlyHint')}</Text>
-          </View>
-          <ThemedSwitch value={draft.httpsOnly} onValueChange={(httpsOnly) => setDraft({ ...draft, httpsOnly })} />
-        </View>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.thirdPartyCookies')}</Text>
-            <Text style={styles.hint}>{t('settings.thirdPartyCookiesHint')}</Text>
-          </View>
-          <ThemedSwitch
-            value={draft.blockThirdPartyCookies}
-            onValueChange={(blockThirdPartyCookies) => setDraft({ ...draft, blockThirdPartyCookies })}
-          />
-        </View>
-        <Pressable onPress={() => setClearDataVisible(true)} style={styles.option} accessibilityRole="button">
-          <Text style={[styles.optionText, styles.link]}>{t('settings.clearData')} ›</Text>
-        </Pressable>
+        {page === 'search' && (
+          <>
+            {SEARCH_ENGINE_ORDER.map((id) => (
+              <Pressable
+                key={id}
+                style={styles.option}
+                onPress={() => set({ searchEngine: id })}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: settings.searchEngine === id }}
+              >
+                <Text style={styles.radio}>{settings.searchEngine === id ? '◉' : '○'}</Text>
+                <Text style={styles.optionText}>{SEARCH_ENGINES[id].name}</Text>
+              </Pressable>
+            ))}
+            <SwitchRow
+              title={t('settings.searchSuggestions')}
+              hint={t('settings.searchSuggestionsHint')}
+              value={settings.searchSuggestions}
+              onChange={(searchSuggestions) => set({ searchSuggestions })}
+            />
+          </>
+        )}
 
-        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.security')}</Text>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.appLock')}</Text>
-            <Text style={styles.hint}>{t('settings.appLockHint')}</Text>
-          </View>
-          <ThemedSwitch value={draft.appLock} onValueChange={(on) => setLock('appLock', on)} />
-        </View>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.incognitoLock')}</Text>
-            <Text style={styles.hint}>{t('settings.incognitoLockHint')}</Text>
-          </View>
-          <ThemedSwitch value={draft.incognitoLock} onValueChange={(on) => setLock('incognitoLock', on)} />
-        </View>
-
-        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.assistant')}</Text>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.confirmActions')}</Text>
-            <Text style={styles.hint}>{t('settings.confirmActionsHint')}</Text>
-          </View>
-          <ThemedSwitch
-            value={draft.confirmActions}
-            onValueChange={(confirmActions) => setDraft({ ...draft, confirmActions })}
-          />
-        </View>
-
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.webSearch')}</Text>
-            <Text style={styles.hint}>
-              {t('settings.webSearchHint', { provider: getProvider(draft.provider).label })}
-            </Text>
-          </View>
-          <ThemedSwitch value={draft.webSearch} onValueChange={(webSearch) => setDraft({ ...draft, webSearch })} />
-        </View>
-
-        <Pressable onPress={() => setSitesVisible(true)} style={styles.option} accessibilityRole="button">
-          <Text style={[styles.optionText, styles.link]}>{t('settings.sitePermissions')} ›</Text>
-        </Pressable>
-        <Pressable onPress={() => setActionLogVisible(true)} style={styles.option} accessibilityRole="button">
-          <Text style={[styles.optionText, styles.link]}>{t('settings.actionLog')} ›</Text>
-        </Pressable>
-
-        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.memory')}</Text>
-        <View style={styles.switchRow}>
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('settings.memoryEnabled')}</Text>
-            <Text style={styles.hint}>{t('settings.memoryHint')}</Text>
-          </View>
-          <ThemedSwitch
-            value={draft.memoryEnabled}
-            onValueChange={(memoryEnabled) => setDraft({ ...draft, memoryEnabled })}
-          />
-        </View>
-        <Pressable onPress={() => setMemoryVisible(true)} style={styles.option} accessibilityRole="button">
-          <Text style={[styles.optionText, styles.link]}>{t('settings.manageMemory')} ›</Text>
-        </Pressable>
-
-        <Text style={[styles.label, styles.sectionLabel]}>{t('settings.about')}</Text>
-        <Pressable
-          onPress={() =>
-            rateApp()
-              .then((ok) => ok || Alert.alert(t('settings.rateUnavailable')))
-              .catch(() => Alert.alert(t('settings.rateUnavailable')))
-          }
-          style={styles.option}
-          accessibilityRole="button"
-        >
-          <Text style={[styles.optionText, styles.link]}>{t('settings.rate')} ›</Text>
-        </Pressable>
-        <Pressable onPress={() => setLegal('privacy')} style={styles.option} accessibilityRole="button">
-          <Text style={[styles.optionText, styles.link]}>{t('settings.privacyPolicy')} ›</Text>
-        </Pressable>
-        <Pressable onPress={() => setLegal('terms')} style={styles.option} accessibilityRole="button">
-          <Text style={[styles.optionText, styles.link]}>{t('settings.terms')} ›</Text>
-        </Pressable>
+        {page === 'about' && (
+          <>
+            <LinkRow
+              label={t('settings.rate')}
+              onPress={() =>
+                rateApp()
+                  .then((ok) => ok || Alert.alert(t('settings.rateUnavailable')))
+                  .catch(() => Alert.alert(t('settings.rateUnavailable')))
+              }
+            />
+            <LinkRow label={t('settings.privacyPolicy')} onPress={() => setLegal('privacy')} />
+            <LinkRow label={t('settings.terms')} onPress={() => setLegal('terms')} />
+          </>
+        )}
       </ScrollView>
       <LegalScreen kind={legal} onClose={() => setLegal(null)} />
       <MemoryScreen visible={memoryVisible} onClose={() => setMemoryVisible(false)} />
@@ -300,6 +354,101 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
   );
 }
 
+function SectionRow({
+  icon,
+  title,
+  summary,
+  onPress,
+  last,
+}: {
+  icon: IconName;
+  title: string;
+  summary: string;
+  onPress: () => void;
+  last?: boolean;
+}) {
+  const styles = useStyles();
+  const palette = usePalette();
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.sectionRow, !last && styles.sectionRowLine, pressed && styles.pressed]}
+      accessibilityRole="button"
+      accessibilityHint={summary}
+    >
+      <View style={styles.sectionIcon}>
+        <Icon name={icon} size={20} color={palette.tintText} />
+      </View>
+      <View style={styles.flex}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <Text style={styles.hint} numberOfLines={1}>
+          {summary}
+        </Text>
+      </View>
+      <Icon name="chevronRight" size={20} color={palette.textSecondary} />
+    </Pressable>
+  );
+}
+
+function SwitchRow({
+  title,
+  hint,
+  value,
+  onChange,
+}: {
+  title: string;
+  hint: string;
+  value: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  const styles = useStyles();
+  return (
+    <View style={styles.switchRow}>
+      <View style={styles.flex}>
+        <Text style={styles.label}>{title}</Text>
+        <Text style={styles.hint}>{hint}</Text>
+      </View>
+      <ThemedSwitch value={value} onValueChange={onChange} accessibilityLabel={title} />
+    </View>
+  );
+}
+
+function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
+  const styles = useStyles();
+  return (
+    <Pressable onPress={onPress} style={styles.option} accessibilityRole="button">
+      <Text style={[styles.optionText, styles.link]}>{label} ›</Text>
+    </Pressable>
+  );
+}
+
+function Segment<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
+}): ReactNode {
+  const styles = useStyles();
+  return (
+    <View style={styles.segment}>
+      {options.map((o) => (
+        <Pressable
+          key={o.value}
+          onPress={() => onChange(o.value)}
+          style={[styles.segmentButton, value === o.value && styles.segmentSelected]}
+          accessibilityRole="radio"
+          accessibilityState={{ selected: value === o.value }}
+        >
+          <Text style={[styles.segmentText, value === o.value && styles.segmentTextSelected]}>{o.label}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   flex: { flex: 1 },
@@ -307,14 +456,29 @@ const useStyles = makeStyles((c) => ({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
+    paddingHorizontal: 16,
+    height: 56,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: c.border,
   },
-  title: { color: c.text, fontSize: 17, fontWeight: '600' },
-  cancel: { fontSize: 16, color: c.textSecondary },
+  headerSide: { minWidth: 64 },
+  headerRight: { alignItems: 'flex-end' },
+  title: { color: c.text, fontSize: 17, fontWeight: '600', flexShrink: 1, textAlign: 'center' },
   save: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   content: { padding: 16, gap: 8 },
+  card: { backgroundColor: c.surface, borderRadius: 14, overflow: 'hidden' },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 12 },
+  sectionRowLine: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.separator },
+  sectionIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: c.sunken,
+  },
+  sectionTitle: { color: c.text, fontSize: 16, fontWeight: '600' },
+  pressed: { backgroundColor: c.pressed },
   label: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 12 },
   sectionLabel: { fontSize: 13, color: c.textSecondary, textTransform: 'uppercase', marginTop: 24 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
@@ -332,19 +496,17 @@ const useStyles = makeStyles((c) => ({
   segmentSelected: { backgroundColor: c.surface },
   segmentText: { fontSize: 14, color: c.textSecondary },
   segmentTextSelected: { color: c.text, fontWeight: '700' },
-  keyDot: { fontSize: 8, color: '#3a9b5c' },
-  input: {
-    color: c.text,
-    height: 44,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    fontSize: 15,
-  },
   option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 10 },
   radio: { fontSize: 18, color: c.tintText },
   optionText: { color: c.text, fontSize: 15 },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
+  saveButton: {
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: c.tint,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  saveButtonText: { color: c.onTint, fontSize: 16, fontWeight: '700' },
 }));
