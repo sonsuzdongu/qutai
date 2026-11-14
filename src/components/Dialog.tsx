@@ -38,6 +38,11 @@ export type DialogButtonStyle = 'default' | 'cancel' | 'destructive';
 export type DialogButton = {
   text: string;
   style?: DialogButtonStyle;
+  /**
+   * The emphasised action (filled, rightmost in a row, on top when stacked). Without it, the last
+   * button that isn't cancel is the primary one.
+   */
+  primary?: boolean;
   onPress?: () => void;
 };
 
@@ -243,10 +248,12 @@ function DialogView({ entry }: { entry: Entry }) {
   }, [attempt]);
 
   const cancelIndex = buttons.findIndex((b) => b.style === 'cancel');
-  let primaryIndex = -1;
-  buttons.forEach((b, i) => {
-    if (b.style !== 'cancel') primaryIndex = i;
-  });
+  let primaryIndex = buttons.findIndex((b) => b.primary && b.style !== 'cancel');
+  if (primaryIndex < 0) {
+    buttons.forEach((b, i) => {
+      if (b.style !== 'cancel') primaryIndex = i;
+    });
+  }
   const missingText = input !== undefined && !text.trim();
 
   const onShow = () => {
@@ -283,7 +290,11 @@ function DialogView({ entry }: { entry: Entry }) {
 
   // Row: cancel on the left, the main action on the right. Stacked: main action on top.
   const order = buttons.map((_, i) => i);
-  const row = [...order.filter((i) => i === cancelIndex), ...order.filter((i) => i !== cancelIndex)];
+  const row = [
+    ...order.filter((i) => i === cancelIndex),
+    ...order.filter((i) => i !== cancelIndex && i !== primaryIndex),
+    ...order.filter((i) => i === primaryIndex),
+  ];
   const ordered = stacked ? [...row].reverse() : row;
 
   const scale = reduceMotion ? 1 : progress.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] });

@@ -328,7 +328,8 @@ export class PageGeolocation {
     const incognito = this.tab.incognito;
     const buttons = [
       { text: t('location.deny'), style: 'cancel' as const },
-      { text: t('location.allowOnce') },
+      // The easiest choice is the narrowest one; "Always allow" stays a plain secondary action.
+      { text: t('location.allowOnce'), primary: true },
       ...(incognito ? [] : [{ text: t('location.allowAlways') }]),
     ];
     const generation = this.generation;
