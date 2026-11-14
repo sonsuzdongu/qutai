@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, usePalette } from '../ui/theme';
 import { groupByDay, hostOf, timeLabel } from '../i18n/format';
 import { Bookmark, listBookmarks, removeBookmark } from '../storage/bookmarks';
 import { getDb } from '../storage/db';
@@ -42,6 +42,7 @@ export function LibraryScreen({ visible, initialTab, onOpen, onClose }: Props) {
 
 function LibraryContent({ initialTab, onOpen, onClose }: Omit<Props, 'visible'>) {
   const styles = useStyles();
+  const palette = usePalette();
   const [tab, setTab] = useState<LibraryTab>(initialTab);
   const [query, setQuery] = useState('');
 
@@ -66,6 +67,7 @@ function LibraryContent({ initialTab, onOpen, onClose }: Omit<Props, 'visible'>)
         </Pressable>
       </View>
       <TextInput
+        placeholderTextColor={palette.textSecondary}
         style={styles.search}
         value={query}
         onChangeText={setQuery}

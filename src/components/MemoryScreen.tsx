@@ -3,7 +3,7 @@ import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MAX_MEMORY_CHARS, Memory } from '../agent/memory';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, usePalette } from '../ui/theme';
 import { getDb } from '../storage/db';
 import { addMemory, clearMemories, deleteMemory, listMemories, updateMemory } from '../storage/memory';
 
@@ -22,6 +22,7 @@ const showError = (e: unknown) => Alert.alert(t('memory.saveFailed'), e instance
 
 function MemoryList({ onClose }: { onClose: () => void }) {
   const styles = useStyles();
+  const palette = usePalette();
   const [memories, setMemories] = useState<Memory[] | null>(null);
   const [newText, setNewText] = useState('');
   const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
@@ -114,6 +115,7 @@ function MemoryList({ onClose }: { onClose: () => void }) {
 
       <View style={styles.addRow}>
         <TextInput
+          placeholderTextColor={palette.textSecondary}
           style={styles.addInput}
           value={newText}
           onChangeText={setNewText}

@@ -5,7 +5,7 @@ import { getProvider, PROVIDER_ORDER } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, usePalette } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { ActionLogScreen } from './ActionLogScreen';
@@ -43,6 +43,7 @@ export function SettingsModal({ visible, settings, onSave, onClose, sitePermissi
 
 function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData }: Omit<Props, 'visible'>) {
   const styles = useStyles();
+  const palette = usePalette();
   const [draft, setDraft] = useState(settings);
   const [memoryVisible, setMemoryVisible] = useState(false);
   const [sitesVisible, setSitesVisible] = useState(false);
@@ -108,6 +109,7 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
 
         <Text style={styles.label}>{t('settings.apiKey', { provider: provider.label })}</Text>
         <TextInput
+          placeholderTextColor={palette.textSecondary}
           key={draft.provider}
           style={styles.input}
           value={draft.apiKeys[draft.provider]}
@@ -137,6 +139,7 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
         </Pressable>
         {isCustomModel && (
           <TextInput
+            placeholderTextColor={palette.textSecondary}
             style={styles.input}
             value={model}
             onChangeText={setModel}
