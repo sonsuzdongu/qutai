@@ -184,7 +184,7 @@ export const en = {
   'memory.saveFailed': "Couldn't save",
 
   'confirm.always': 'Always allow on {host}',
-  'menu.sitePermission': 'Qutai on this site: {level}',
+  'menu.sitePermission': 'Qutai’s permission on this site: {level}',
   'site.title': 'What Qutai may do on this site',
   'site.level.default': 'Default',
   'site.level.allow': 'Always allow',
@@ -448,4 +448,7 @@ export const en = {
   'error.crashTitle': 'Something went wrong here',
   'error.crashBody': 'This part of Qutai stopped working. Your tabs and conversations are safe.',
   'error.crashRetry': 'Try again',
+  'menu.library': 'Library',
+  'menu.more': 'More',
+  'menu.backTo': 'Back to the menu',
 } as const;

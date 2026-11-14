@@ -186,7 +186,7 @@ export const tr: Record<keyof typeof en, string> = {
   'memory.saveFailed': 'Kaydedilemedi',
 
   'confirm.always': '{host} için hep izin ver',
-  'menu.sitePermission': 'Qutai bu sitede: {level}',
+  'menu.sitePermission': 'Qutai’nin bu sitedeki izni: {level}',
   'site.title': "Qutai'nin bu sitedeki izni",
   'site.level.default': 'Varsayılan',
   'site.level.allow': 'Her zaman izin ver',
@@ -455,4 +455,7 @@ export const tr: Record<keyof typeof en, string> = {
   'error.crashTitle': 'Burada bir şeyler ters gitti',
   'error.crashBody': 'Qutai’nin bu bölümü çalışmayı durdurdu. Sekmeleriniz ve sohbetleriniz güvende.',
   'error.crashRetry': 'Tekrar dene',
+  'menu.library': 'Kütüphane',
+  'menu.more': 'Diğer',
+  'menu.backTo': 'Menüye dön',
 };

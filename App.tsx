@@ -450,11 +450,17 @@ function BrowserApp({
     ...(settings.showAssistantButton
       ? []
       : [{ icon: 'assistant' as const, label: t('menu.askQutai'), onPress: () => setPanelOpen(true) }]),
+    { icon: 'newTab', label: t('menu.newTab'), onPress: () => browser.openTab() },
+    {
+      icon: 'incognito',
+      label: t('menu.newIncognitoTab'),
+      onPress: () => browser.openTab(undefined, { incognito: true }),
+    },
     {
       icon: 'share',
+      section: true,
       label: t('menu.shareLink'),
       disabled: onNewTab,
-      section: true,
       onPress: () => runAction(() => shareLink(tab)),
     },
     {
@@ -470,23 +476,8 @@ function BrowserApp({
     {
       icon: 'find',
       label: t('menu.find'),
-      section: true,
       disabled: onNewTab,
       onPress: () => setFindFor({ tabId: tab.id, url: tab.url }),
-    },
-    {
-      icon: 'shield',
-      label: t('menu.sitePermission', {
-        level: t(`site.level.${currentSite ? sitePermissions.levelFor(currentSite) : 'default'}`),
-      }),
-      section: true,
-      disabled: !currentSite,
-      onPress: () => setPermissionHost(currentSite),
-    },
-    {
-      icon: 'textSize',
-      label: t('menu.textSize'),
-      onPress: () => setTextSizeVisible(true),
     },
     {
       icon: 'desktop',
@@ -494,58 +485,6 @@ function BrowserApp({
       checked: tab.desktop,
       disabled: onNewTab,
       onPress: () => tab.toggleDesktop(),
-    },
-    {
-      icon: 'qrCode',
-      label: t('menu.qrCode'),
-      disabled: onNewTab,
-      onPress: () => setQrUrl(tab.url),
-    },
-    {
-      icon: 'scanQr',
-      label: t('menu.scanQr'),
-      onPress: () => setScannerVisible(true),
-    },
-    {
-      icon: 'pdf',
-      label: t('menu.savePdf'),
-      disabled: onNewTab,
-      onPress: () =>
-        runAction(async () => {
-          toast.show(t('menu.pdfPreparing'));
-          const pdf = await savePagePdf(tab);
-          if (pdf.imagesMissing > 0) return t('menu.pdfImagesMissing', { count: pdf.imagesMissing });
-        }),
-    },
-    {
-      icon: 'saveOffline',
-      label: t('menu.saveOffline'),
-      disabled: onNewTab,
-      onPress: () =>
-        runAction(async () => {
-          // Saving writes the page to disk, which incognito tabs never do.
-          if (tab.incognito) return t('offline.incognito');
-          toast.show(t('menu.pdfPreparing'));
-          const page = await savePageOffline(tab);
-          await addOfflinePage(await getDb(), page);
-          return t('offline.saved');
-        }),
-    },
-    {
-      icon: 'print',
-      label: t('menu.print'),
-      disabled: onNewTab,
-      onPress: () => runAction(() => printPage(tab)),
-    },
-    {
-      icon: 'screenshot',
-      label: t('menu.saveScreenshot'),
-      disabled: onNewTab,
-      onPress: () =>
-        runAction(async () => {
-          await saveScreenshot(tab);
-          return t('menu.screenshotSaved');
-        }),
     },
     speaking
       ? { icon: 'stopReading', label: t('menu.stopReading'), onPress: () => runAction(stopSpeaking) }
@@ -558,17 +497,93 @@ function BrowserApp({
               await speakPage(tab);
             }),
         },
-    { icon: 'bookmarks', label: t('menu.bookmarks'), section: true, onPress: () => setLibrary('bookmarks') },
-    { icon: 'history', label: t('menu.history'), onPress: () => setLibrary('history') },
-    { icon: 'savedPages', label: t('menu.offlinePages'), onPress: () => setOfflineVisible(true) },
-    ...(Platform.OS === 'ios'
-      ? [{ icon: 'downloads' as const, label: t('menu.downloads'), onPress: () => setDownloadsVisible(true) }]
-      : []),
-    { icon: 'newTab', label: t('menu.newTab'), section: true, onPress: () => browser.openTab() },
+    // Less frequent things live one level down, so the menu fits without scrolling.
     {
-      icon: 'incognito',
-      label: t('menu.newIncognitoTab'),
-      onPress: () => browser.openTab(undefined, { incognito: true }),
+      icon: 'library',
+      label: t('menu.library'),
+      section: true,
+      onPress: () => {},
+      submenu: [
+        { icon: 'bookmarks', label: t('menu.bookmarks'), onPress: () => setLibrary('bookmarks') },
+        { icon: 'history', label: t('menu.history'), onPress: () => setLibrary('history') },
+        { icon: 'savedPages', label: t('menu.offlinePages'), onPress: () => setOfflineVisible(true) },
+        ...(Platform.OS === 'ios'
+          ? [{ icon: 'downloads' as const, label: t('menu.downloads'), onPress: () => setDownloadsVisible(true) }]
+          : []),
+      ],
+    },
+    {
+      icon: 'moreHorizontal',
+      label: t('menu.more'),
+      onPress: () => {},
+      submenu: [
+        {
+          icon: 'qrCode',
+          label: t('menu.qrCode'),
+          disabled: onNewTab,
+          onPress: () => setQrUrl(tab.url),
+        },
+        {
+          icon: 'scanQr',
+          label: t('menu.scanQr'),
+          onPress: () => setScannerVisible(true),
+        },
+        {
+          icon: 'pdf',
+          label: t('menu.savePdf'),
+          disabled: onNewTab,
+          onPress: () =>
+            runAction(async () => {
+              toast.show(t('menu.pdfPreparing'));
+              const pdf = await savePagePdf(tab);
+              if (pdf.imagesMissing > 0) return t('menu.pdfImagesMissing', { count: pdf.imagesMissing });
+            }),
+        },
+        {
+          icon: 'saveOffline',
+          label: t('menu.saveOffline'),
+          disabled: onNewTab,
+          onPress: () =>
+            runAction(async () => {
+              // Saving writes the page to disk, which incognito tabs never do.
+              if (tab.incognito) return t('offline.incognito');
+              toast.show(t('menu.pdfPreparing'));
+              const page = await savePageOffline(tab);
+              await addOfflinePage(await getDb(), page);
+              return t('offline.saved');
+            }),
+        },
+        {
+          icon: 'print',
+          label: t('menu.print'),
+          disabled: onNewTab,
+          onPress: () => runAction(() => printPage(tab)),
+        },
+        {
+          icon: 'screenshot',
+          label: t('menu.saveScreenshot'),
+          disabled: onNewTab,
+          onPress: () =>
+            runAction(async () => {
+              await saveScreenshot(tab);
+              return t('menu.screenshotSaved');
+            }),
+        },
+        {
+          icon: 'textSize',
+          section: true,
+          label: t('menu.textSize'),
+          onPress: () => setTextSizeVisible(true),
+        },
+        {
+          icon: 'shield',
+          label: t('menu.sitePermission', {
+            level: t(`site.level.${currentSite ? sitePermissions.levelFor(currentSite) : 'default'}`),
+          }),
+          disabled: !currentSite,
+          onPress: () => setPermissionHost(currentSite),
+        },
+      ],
     },
   ];
 
