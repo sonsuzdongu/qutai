@@ -197,7 +197,7 @@ export function AssistantPanel({
               ]}
             >
               <View style={[styles.header, d?.header]}>
-                <QutaiMark size={30} working={running} sweepWhenIdle animate={open} />
+                <QutaiMark size={24} working={running} sweepWhenIdle animate={open} />
                 <View style={styles.headerTitle}>
                   <Text style={styles.title}>{t('chat.title')}</Text>
                   <Pressable
@@ -348,7 +348,7 @@ function EmptyState({
     : [t('chat.exampleWeb1'), t('chat.exampleWeb2'), t('chat.exampleWeb3')];
   return (
     <View style={styles.emptyBox}>
-      <QutaiMark size={52} sweepWhenIdle animate={animate} />
+      <QutaiMark size={44} sweepWhenIdle animate={animate} />
       <Text style={styles.emptyTitle} accessibilityRole="header">
         {t('chat.emptyTitle')}
       </Text>

@@ -106,7 +106,7 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
           </View>
         ) : (
           <View style={styles.logoRow} accessible accessibilityRole="header" accessibilityLabel="Qutai">
-            <QutaiMark size={44} sweepWhenIdle animate={active} />
+            <QutaiMark size={34} sweepWhenIdle animate={active} />
             <Text style={[styles.logo, theme.logo]}>Qutai</Text>
           </View>
         )}

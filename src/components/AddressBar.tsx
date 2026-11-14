@@ -227,7 +227,7 @@ export function AddressBar({
           accessibilityLabel={t(assistantOpen ? 'address.closeAssistant' : 'address.openAssistant')}
         >
           {/* The orbit circles while a task runs. */}
-          <QutaiMark size={34} working={assistantRunning} />
+          <QutaiMark size={24} working={assistantRunning} />
         </Pressable>
       )}
       {loading && <LoadingBar top={bottom} />}
@@ -396,7 +396,8 @@ const useStyles = makeStyles((c) => ({
     paddingHorizontal: 3,
   },
   tabCountText: { fontSize: 12, fontWeight: '700', color: c.text },
-  assistantButton: { width: 34, height: 34, marginLeft: 2 },
+  // A 34pt touch target around a 24pt logo, in line with the bar's 22pt icons.
+  assistantButton: { width: 34, height: 34, marginLeft: 2, alignItems: 'center', justifyContent: 'center' },
   assistantButtonActive: { opacity: 0.7 },
 }));
 
