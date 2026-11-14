@@ -629,9 +629,9 @@ const useStyles = makeStyles((c) => ({
     paddingHorizontal: 12,
     paddingVertical: 9,
     borderRadius: 12,
-    backgroundColor: '#f1e4dc',
+    backgroundColor: c.dark ? '#1c2b3d' : '#e3eefb',
   },
-  busyText: { flex: 1, fontSize: 13, color: '#6b4a3a' },
+  busyText: { flex: 1, fontSize: 13, color: c.text },
   busyAction: { fontSize: 13, fontWeight: '700', color: c.tintText },
   chips: { flexGrow: 0 },
   chipsContent: { paddingHorizontal: 8, paddingTop: 8, gap: 6 },
@@ -694,5 +694,5 @@ const darkStyles = StyleSheet.create({
   text: { color: '#f2f1f5' },
   dim: { color: '#9a99a3' },
   assistantBubble: { backgroundColor: '#2b2a33', borderColor: '#3a3944' },
-  busy: { backgroundColor: '#3a2c26' },
+  busy: { backgroundColor: '#1c2b3d' },
 });

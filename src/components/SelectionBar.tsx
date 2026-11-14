@@ -49,5 +49,5 @@ const styles = StyleSheet.create({
   divider: { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: 'rgba(255,255,255,0.2)' },
   pressed: { backgroundColor: 'rgba(255,255,255,0.12)' },
   label: { color: '#fff', fontSize: 14 },
-  primary: { color: '#f0a07f', fontWeight: '700' },
+  primary: { color: '#7cc8f2', fontWeight: '700' },
 });

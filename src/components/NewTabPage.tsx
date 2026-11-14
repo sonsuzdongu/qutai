@@ -282,7 +282,7 @@ const useStyles = makeStyles((c) => ({
 
 const light = StyleSheet.create({
   page: { backgroundColor: '#f5f4ef' },
-  logo: { color: '#a8502f' },
+  logo: { color: '#1460b4' },
   search: { backgroundColor: '#fff' },
   text: { color: '#222' },
   dim: { color: '#6b6862' },

@@ -8,7 +8,7 @@ import { pdfFileName } from './pdf';
 const STYLE = `
   body { font-family: -apple-system, Roboto, Helvetica, Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #222; }
   h1, h2, h3 { line-height: 1.25; } h1 { font-size: 18pt; } h2 { font-size: 14pt; margin-top: 18pt; } h3 { font-size: 12pt; }
-  a { color: #c96442; } code { font-family: Menlo, monospace; background: #f1efe8; padding: 0 2pt; }
+  a { color: #1460b4; } code { font-family: Menlo, monospace; background: #f1efe8; padding: 0 2pt; }
   pre { background: #f1efe8; padding: 8pt; white-space: pre-wrap; }
   table { border-collapse: collapse; width: 100%; margin: 8pt 0; } th, td { border: 0.5pt solid #ccc; padding: 4pt 6pt; text-align: left; vertical-align: top; }
   th { background: #f5f4ef; } blockquote { border-left: 3pt solid #e0ddd4; margin: 0; padding-left: 10pt; color: #555; }

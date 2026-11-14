@@ -22,7 +22,7 @@ export type Palette = {
   textSecondary: string;
   separator: string;
   border: string;
-  /** Brand colour as a fill (buttons, selected states); white text on it is 5:1. */
+  /** Brand colour (the logo's blue) as a fill: buttons, selected states; white text on it is 5.75:1. */
   tint: string;
   /** Brand colour as text and links on bg and surface. */
   tintText: string;
@@ -44,8 +44,8 @@ export const lightPalette: Palette = {
   textSecondary: '#6b6862',
   separator: '#e0ddd4',
   border: '#d6d3c9',
-  tint: '#b4532f',
-  tintText: '#a8502f',
+  tint: '#1565c0',
+  tintText: '#1460b4',
   onTint: '#ffffff',
   danger: '#b3261e',
   dangerFill: '#b3261e',
@@ -63,8 +63,8 @@ export const darkPalette: Palette = {
   textSecondary: '#a9a8b3',
   separator: '#3a3944',
   border: '#42414d',
-  tint: '#b4532f',
-  tintText: '#e08a66',
+  tint: '#1565c0',
+  tintText: '#5cb8f0',
   onTint: '#ffffff',
   danger: '#ff8a80',
   dangerFill: '#b3261e',

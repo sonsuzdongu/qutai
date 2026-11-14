@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 16 },
   message: { color: '#fff', fontSize: 15, textAlign: 'center', lineHeight: 21 },
-  allow: { paddingHorizontal: 20, height: 44, borderRadius: 22, backgroundColor: '#b4532f', justifyContent: 'center' },
+  allow: { paddingHorizontal: 20, height: 44, borderRadius: 22, backgroundColor: '#1565c0', justifyContent: 'center' },
   allowText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', gap: 20 },
   frame: { width: 240, height: 240, borderRadius: 18, borderWidth: 3, borderColor: 'rgba(255,255,255,0.9)' },

@@ -48,9 +48,9 @@ function pathOf(url: string): string {
 /** Icon colours that match a theme's text styles. */
 function iconColors(theme: object) {
   return theme === light
-    ? { text: '#222222', dim: '#6b6862', accent: '#a8502f' }
+    ? { text: '#222222', dim: '#6b6862', accent: '#1460b4' }
     : theme === darkNormal
-      ? { text: '#f2f1f5', dim: '#a9a8b3', accent: '#e08a66' }
+      ? { text: '#f2f1f5', dim: '#a9a8b3', accent: '#5cb8f0' }
       : { text: '#f2f1f5', dim: '#a9a8b3', accent: '#c9a7ff' };
 }
 
@@ -652,7 +652,7 @@ const useStyles = makeStyles((c) => ({
     backgroundColor: 'rgba(30,30,30,0.94)',
   },
   undoText: { color: c.onTint, fontSize: 14 },
-  undoAction: { color: '#f0a07f', fontSize: 14, fontWeight: '700' },
+  undoAction: { color: '#7cc8f2', fontSize: 14, fontWeight: '700' },
   recent: { marginTop: 8, borderRadius: 14, backgroundColor: c.surface, paddingVertical: 6 },
   recentTitle: { fontSize: 13, fontWeight: '600', color: c.textSecondary, paddingHorizontal: 14, paddingVertical: 6 },
   recentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8 },
@@ -682,13 +682,13 @@ const light = StyleSheet.create({
   segmentSelected: { backgroundColor: '#fff' },
   text: { color: '#222' },
   dimText: { color: '#6b6862' },
-  accent: { color: '#a8502f' },
+  accent: { color: '#1460b4' },
   card: { backgroundColor: '#fff' },
-  activeCard: { borderColor: '#c96442' },
+  activeCard: { borderColor: '#1565c0' },
   preview: { backgroundColor: '#f5f4ef' },
   search: { backgroundColor: '#fff' },
   toolbar: { backgroundColor: '#f5f4ef', borderTopColor: '#d6d3c9' },
-  newTab: { backgroundColor: '#b4532f' },
+  newTab: { backgroundColor: '#1565c0' },
 });
 
 const dark = StyleSheet.create({
@@ -708,7 +708,7 @@ const dark = StyleSheet.create({
 
 const darkNormal = StyleSheet.create({
   ...dark,
-  accent: { color: '#e08a66' },
-  activeCard: { borderColor: '#c96442' },
-  newTab: { backgroundColor: '#b4532f' },
+  accent: { color: '#5cb8f0' },
+  activeCard: { borderColor: '#1565c0' },
+  newTab: { backgroundColor: '#1565c0' },
 });
