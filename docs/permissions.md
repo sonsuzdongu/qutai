@@ -30,7 +30,8 @@ is asked for at launch: each permission is asked the first time the feature need
 | `NSLocationWhenInUseUsageDescription` | Position for sites the user allows (per-site setting) and for the assistant's `get_location` (confirmed every time). Foreground only, approximate accepted | First time a site or the assistant needs it | `expo-location` plugin, `locationWhenInUsePermission` (every "always"/background/motion option `false`) |
 | Notifications (no Info.plist key) | Local notifications the assistant schedules after the user confirms, and reminders for saved tasks the user schedules. No push: no `aps-environment` entitlement, no push token | First scheduled notification | `expo-notifications` plugin, `enableRemoteNotifications: false` |
 | `UIBackgroundModes`: `audio` (no prompt) | "Keep playing in the background": music, podcasts and other sound the user starts in a web page go on when Qutai is in the background or the screen locks, with WebKit's lock screen and headphone controls. Also what the system player's picture-in-picture needs to go on outside the app. WebKit switches the audio session to playback only while a page plays audible media and leaves it after the sound stops, so a silent app is suspended as usual | Never (no permission) | `plugins/withBackgroundMedia.js` |
-| `NSLocalNetworkUsageDescription`, `NSBonjourServices` | Development builds only: the dev client finding the Metro server. `expo-dev-client` removes both from release builds in a build phase, so they are not translated | Development builds only | `expo-dev-client` plugin |
+| `NSLocalNetworkUsageDescription` | A custom AI endpoint (Settings › Assistant › Custom, OpenAI-compatible) on the local network, such as Ollama or LM Studio on a computer at home. iOS 14+ asks before the app's first connection to a local address. Translated in `locales/` (not the dev client's text, so its release build phase keeps it). Development builds also use it for the dev client finding the Metro server | First request to a local-network address (a custom endpoint's "Test connection", "Fetch models" or a task) | `ios.infoPlist` in `app.json` |
+| `NSBonjourServices` | Development builds only: the dev client finding the Metro server. `expo-dev-client` removes it from release builds in a build phase | Development builds only | `expo-dev-client` plugin |
 
 Other store-facing iOS declarations:
 
@@ -42,6 +43,11 @@ Other store-facing iOS declarations:
 
 - `UIApplicationShortcutItems`: the Home Screen quick actions (New tab, New incognito tab, Ask Qutai, Scan QR code;
   `plugins/withEntryPoints.js`). No permission; each is a `qutai://` link handled like any other.
+- App Transport Security (`ios.infoPlist.NSAppTransportSecurity` in `app.json`, the values the Expo template
+  already generated, now explicit): `NSAllowsArbitraryLoads` `false`, `NSAllowsLocalNetworking` `true`. The local
+  networking exception is what lets a custom AI endpoint on the local network be reached over plain http (`.local`
+  and unqualified names; ATS does not apply to IP address literals). The app itself allows http for a custom endpoint
+  only to loopback and private addresses (`src/ai/customEndpoint.ts`) and says "not encrypted, local network only".
 - `ITSAppUsesNonExemptEncryption` is `false` (`ios.config.usesNonExemptEncryption`): Qutai only uses HTTPS and the
   operating system's own encryption (Keychain via `expo-secure-store`).
 - Privacy manifest (`ios.privacyManifests`): the required-reason APIs that the bundled libraries declare in their own
@@ -89,6 +95,12 @@ Blocked (`android.blockedPermissions` in `app.json`, removed from the merged man
 | `com.google.android.c2dm.permission.RECEIVE` | Firebase Messaging (`expo-notifications`) | No push notifications |
 | `com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE` | Install Referrer (`expo-application`) | Qutai doesn't read the install referrer |
 | `READ_APP_BADGE` and the launcher badge permissions (Samsung, HTC, Sony, Huawei, OPPO, …) | ShortcutBadger (`expo-notifications`) | Qutai never sets a badge count |
+
+Cleartext (plain http) for a custom AI endpoint: not enabled. Release builds target an API level where cleartext is
+off by default (only the debug manifests set `usesCleartextTraffic`, for the Metro server), and a network security
+config can only allow it per named domain or exact IP, not for private address ranges; allowing it everywhere would
+cover every host the app talks to. So on Android a custom endpoint must use https (the settings say so, and an http
+address is refused before saving); iOS allows http to local addresses (above).
 
 Main activity: `android:supportsPictureInPicture="true"` and `configChanges` including
 `screenSize|smallestScreenSize|screenLayout|orientation` (`plugins/withPictureInPicture.js`), for picture-in-picture of

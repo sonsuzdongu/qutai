@@ -20,7 +20,7 @@ import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
 import { personalKindsLabel } from './src/components/memoryCategories';
 import { Conversation, callItem, fileItem, newItem, smsItem, sourcesItem, whatsAppItem } from './src/chat/Conversation';
 import { geminiStreamingAvailable } from './src/ai/gemini';
-import { getProvider, modelCapabilities, modelLabel } from './src/ai/providers';
+import { getProvider, isConfigured, modelLabel, requestTarget } from './src/ai/providers';
 import { loadCatalog } from './src/ai/openrouterModels';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import type { ContextTarget } from './src/browser/contextMenu';
@@ -579,9 +579,15 @@ function BrowserApp({
     chat.add(newItem('user', text));
 
     const provider = settings.provider;
-    const apiKey = settings.apiKeys[provider];
-    if (!apiKey) {
-      chat.add(newItem('error', t('chat.missingKey', { provider: getProvider(provider).label })));
+    if (!isConfigured(settings, provider)) {
+      chat.add(
+        newItem(
+          'error',
+          getProvider(provider).needsEndpoint
+            ? t('chat.missingEndpoint')
+            : t('chat.missingKey', { provider: getProvider(provider).label }),
+        ),
+      );
       persistConversation(chat);
       setSettingsVisible(true);
       return;
@@ -608,17 +614,17 @@ function BrowserApp({
     if (mayContinue) lastTaskTab.current = current.id;
     let outcome: TaskOutcome = { kind: 'done' };
     let lastText = '';
-    const model = settings.models[provider];
     // Catalogue providers: what the cached catalogue says about the model (images, output limit).
     if (getProvider(provider).catalog) await loadCatalog();
-    const capabilities = modelCapabilities(provider, model);
+    const target = requestTarget(settings, provider);
     try {
       await runAgent({
         provider,
-        apiKey,
-        model,
-        imageInput: capabilities.images,
-        maxOutputTokens: capabilities.maxOutputTokens,
+        apiKey: target.apiKey,
+        model: target.model,
+        endpoint: target.endpoint,
+        imageInput: target.images,
+        maxOutputTokens: target.maxOutputTokens,
         turns: chat.turns,
         browser,
         agentTab,

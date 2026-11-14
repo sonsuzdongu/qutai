@@ -1,4 +1,6 @@
 import { reloadAppAsync } from 'expo';
+import { ALLOW_CLEARTEXT } from '../ai/custom';
+import { normalizeBaseUrl } from '../ai/customEndpoint';
 import { PROVIDER_ORDER } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
 import type { ReaderFont, ReaderTheme } from '../browser/reader';
@@ -35,6 +37,7 @@ function backupSettings(s: Settings): BackupSettings {
   return {
     provider: s.provider,
     models: { ...s.models },
+    ...(s.customBaseUrl ? { customBaseUrl: s.customBaseUrl } : {}),
     confirmActions: s.confirmActions,
     searchEngine: s.searchEngine,
     searchSuggestions: s.searchSuggestions,
@@ -137,6 +140,8 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
     take('readerFont', s.readerFont as ReaderFont | undefined);
     take('readerEasyReading', s.readerEasyReading);
     take('voiceAutoSend', s.voiceAutoSend);
+    if (s.customBaseUrl && normalizeBaseUrl(s.customBaseUrl, { allowCleartext: ALLOW_CLEARTEXT }).ok)
+      take('customBaseUrl', s.customBaseUrl);
     for (const id of PROVIDER_ORDER) {
       const model = s.models?.[id];
       if (model && (mode === 'replace' || current.models[id] === DEFAULT_SETTINGS.models[id])) next.models[id] = model;

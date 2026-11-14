@@ -15,6 +15,7 @@
     "New tab": "Yeni sekme",
     "New incognito tab": "Yeni gizli sekme",
     "Ask Qutai": "Qutai’ye sor",
-    "Scan QR code": "QR kodu tara"
+    "Scan QR code": "QR kodu tara",
+    "NSLocalNetworkUsageDescription": "Qutai, yerel ağınızdaki bir yapay zekâ sunucusuna yalnızca onu özel yapay zekâ sunucunuz olarak ayarladığınızda bağlanır."
   }
 }

@@ -1,16 +1,22 @@
 import { useState } from 'react';
 import { Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { getProvider, PROVIDER_ORDER } from '../ai/providers';
+import { normalizeBaseUrl } from '../ai/customEndpoint';
+import { getProvider, isConfigured, PROVIDER_ORDER } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
 import { t } from '../i18n';
 import type { Settings } from '../storage/settings';
 import { makeStyles, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
+import { ALLOW_CLEARTEXT } from '../ai/custom';
+import { baseUrlProblem, CustomEndpointFields } from './CustomEndpointFields';
 import { ModelCatalogPicker, modelDetail, useCatalog } from './ModelCatalogPicker';
 
-export type AiChoice = Pick<Settings, 'provider' | 'apiKeys' | 'models'>;
+export type AiChoice = Pick<Settings, 'provider' | 'apiKeys' | 'models' | 'customBaseUrl' | 'customImages'>;
 
-/** Trims keys and fills empty model ids with the provider's default, before saving. */
+/**
+ * Trims keys, fills empty model ids with the provider's default and normalises the custom endpoint's address,
+ * before saving. An address that isn't valid is dropped (the fields show why; Settings won't save it).
+ */
 export function cleanAiChoice<T extends AiChoice>(value: T): T {
   const apiKeys = { ...value.apiKeys };
   const models = { ...value.models };
@@ -18,7 +24,13 @@ export function cleanAiChoice<T extends AiChoice>(value: T): T {
     apiKeys[id] = apiKeys[id].trim();
     models[id] = models[id].trim() || getProvider(id).defaultModel;
   });
-  return { ...value, apiKeys, models };
+  const url = normalizeBaseUrl(value.customBaseUrl, { allowCleartext: ALLOW_CLEARTEXT });
+  return { ...value, apiKeys, models, customBaseUrl: url.ok ? url.url : '' };
+}
+
+/** Why the choice can't be saved as typed (an address for the custom endpoint that isn't valid), or null. */
+export function aiChoiceProblem(value: AiChoice): string | null {
+  return value.customBaseUrl.trim() ? baseUrlProblem(value.customBaseUrl) : null;
 }
 
 /** AI provider, its API key and the model: shared by Settings and the first-run setup. */
@@ -49,88 +61,94 @@ export function AiProviderFields({ value, onChange }: { value: AiChoice; onChang
               accessibilityState={{ selected }}
             >
               <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>
-                {getProvider(id).label.replace('Google ', '')}
+                {getProvider(id).shortLabel ?? getProvider(id).label.replace('Google ', '')}
               </Text>
-              {!!value.apiKeys[id] && <Text style={styles.keyDot}>●</Text>}
+              {isConfigured(cleanAiChoice(value), id) && <Text style={styles.keyDot}>●</Text>}
             </Pressable>
           );
         })}
       </View>
 
-      <Text style={styles.label}>{t('settings.apiKey', { provider: provider.label })}</Text>
-      <TextInput
-        placeholderTextColor={palette.textSecondary}
-        key={value.provider}
-        style={styles.input}
-        value={value.apiKeys[value.provider]}
-        onChangeText={setApiKey}
-        placeholder={provider.keyPlaceholder}
-        autoCapitalize="none"
-        autoCorrect={false}
-        secureTextEntry
-      />
-      <Text style={styles.hint}>
-        {t('settings.keyHint')}{' '}
-        <Text style={styles.link} onPress={() => Linking.openURL(provider.keyUrl)}>
-          {t('settings.getKey')}
-        </Text>
-      </Text>
+      {provider.needsEndpoint ? (
+        <CustomEndpointFields value={value} onChange={(next) => onChange({ ...value, ...next })} />
+      ) : (
+        <>
+          <Text style={styles.label}>{t('settings.apiKey', { provider: provider.label })}</Text>
+          <TextInput
+            placeholderTextColor={palette.textSecondary}
+            key={value.provider}
+            style={styles.input}
+            value={value.apiKeys[value.provider]}
+            onChangeText={setApiKey}
+            placeholder={provider.keyPlaceholder}
+            autoCapitalize="none"
+            autoCorrect={false}
+            secureTextEntry
+          />
+          <Text style={styles.hint}>
+            {t('settings.keyHint')}{' '}
+            <Text style={styles.link} onPress={() => Linking.openURL(provider.keyUrl)}>
+              {t('settings.getKey')}
+            </Text>
+          </Text>
 
-      <Text style={styles.label}>{t('settings.model')}</Text>
-      {provider.catalog && <Text style={styles.subLabel}>{t('settings.recommendedModels')}</Text>}
-      {provider.models.map((m) => {
-        const info = provider.catalog ? catalog?.models.find((c) => c.id === m.id) : undefined;
-        return (
-          <Pressable
-            key={m.id}
-            style={styles.option}
-            onPress={() => setModel(m.id)}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: model === m.id }}
-          >
-            <Radio selected={model === m.id} />
-            <View style={styles.optionBody}>
-              <Text style={styles.optionText}>{m.tag ? `${m.name} (${t(`model.${m.tag}`)})` : m.name}</Text>
-              {info && <Text style={styles.detail}>{modelDetail(info)}</Text>}
-            </View>
+          <Text style={styles.label}>{t('settings.model')}</Text>
+          {provider.catalog && <Text style={styles.subLabel}>{t('settings.recommendedModels')}</Text>}
+          {provider.models.map((m) => {
+            const info = provider.catalog ? catalog?.models.find((c) => c.id === m.id) : undefined;
+            return (
+              <Pressable
+                key={m.id}
+                style={styles.option}
+                onPress={() => setModel(m.id)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: model === m.id }}
+              >
+                <Radio selected={model === m.id} />
+                <View style={styles.optionBody}>
+                  <Text style={styles.optionText}>{m.tag ? `${m.name} (${t(`model.${m.tag}`)})` : m.name}</Text>
+                  {info && <Text style={styles.detail}>{modelDetail(info)}</Text>}
+                </View>
+              </Pressable>
+            );
+          })}
+          {provider.catalog && inCatalog && !provider.models.some((m) => m.id === model) && !browsing && (
+            <Pressable style={styles.option} accessibilityRole="radio" accessibilityState={{ selected: true }}>
+              <Radio selected />
+              <View style={styles.optionBody}>
+                <Text style={styles.optionText}>{inCatalog.name}</Text>
+                <Text style={styles.detail}>{modelDetail(inCatalog)}</Text>
+              </View>
+            </Pressable>
+          )}
+          {provider.catalog && (
+            <Pressable onPress={() => setBrowsing((b) => !b)} style={styles.browse} accessibilityRole="button">
+              <Text style={styles.link}>{browsing ? t('settings.hideAllModels') : t('settings.allModels')}</Text>
+            </Pressable>
+          )}
+          {provider.catalog && browsing && (
+            <ModelCatalogPicker apiKey={value.apiKeys[value.provider]} selected={model} onSelect={setModel} />
+          )}
+          <Pressable style={styles.option} onPress={() => !isCustomModel && setModel('')} accessibilityRole="radio">
+            <Radio selected={isCustomModel} />
+            <Text style={styles.optionText}>{t('settings.customModel')}</Text>
           </Pressable>
-        );
-      })}
-      {provider.catalog && inCatalog && !provider.models.some((m) => m.id === model) && !browsing && (
-        <Pressable style={styles.option} accessibilityRole="radio" accessibilityState={{ selected: true }}>
-          <Radio selected />
-          <View style={styles.optionBody}>
-            <Text style={styles.optionText}>{inCatalog.name}</Text>
-            <Text style={styles.detail}>{modelDetail(inCatalog)}</Text>
-          </View>
-        </Pressable>
+          {isCustomModel && (
+            <TextInput
+              placeholderTextColor={palette.textSecondary}
+              style={styles.input}
+              value={model}
+              onChangeText={setModel}
+              placeholder={t('settings.customModelPlaceholder', { model: provider.defaultModel })}
+              autoCapitalize="none"
+              autoCorrect={false}
+              autoFocus
+            />
+          )}
+          {inCatalog && !inCatalog.images && <Text style={styles.hint}>{t('settings.noImagesHint')}</Text>}
+          <Text style={styles.hint}>{t('settings.modelHint')}</Text>
+        </>
       )}
-      {provider.catalog && (
-        <Pressable onPress={() => setBrowsing((b) => !b)} style={styles.browse} accessibilityRole="button">
-          <Text style={styles.link}>{browsing ? t('settings.hideAllModels') : t('settings.allModels')}</Text>
-        </Pressable>
-      )}
-      {provider.catalog && browsing && (
-        <ModelCatalogPicker apiKey={value.apiKeys[value.provider]} selected={model} onSelect={setModel} />
-      )}
-      <Pressable style={styles.option} onPress={() => !isCustomModel && setModel('')} accessibilityRole="radio">
-        <Radio selected={isCustomModel} />
-        <Text style={styles.optionText}>{t('settings.customModel')}</Text>
-      </Pressable>
-      {isCustomModel && (
-        <TextInput
-          placeholderTextColor={palette.textSecondary}
-          style={styles.input}
-          value={model}
-          onChangeText={setModel}
-          placeholder={t('settings.customModelPlaceholder', { model: provider.defaultModel })}
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoFocus
-        />
-      )}
-      {inCatalog && !inCatalog.images && <Text style={styles.hint}>{t('settings.noImagesHint')}</Text>}
-      <Text style={styles.hint}>{t('settings.modelHint')}</Text>
     </View>
   );
 }

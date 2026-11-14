@@ -33,7 +33,7 @@ import { CATEGORY_ICONS, categoryName, warnsAboutIdNumbers } from './memoryCateg
 import { ProfileQuestionsScreen } from './ProfileQuestions';
 
 /** The AI the user chose in settings, for "Organise for me"; null without a key. */
-export type MemoryAi = { provider: ProviderId; apiKey: string; model: string; label: string } | null;
+export type MemoryAi = { provider: ProviderId; apiKey: string; model: string; endpoint?: string; label: string } | null;
 
 type Props = {
   visible: boolean;

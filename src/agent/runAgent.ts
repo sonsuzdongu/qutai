@@ -52,6 +52,8 @@ export type AgentOptions = ToolContext & {
   provider: ProviderId;
   apiKey: string;
   model: string;
+  /** Base URL for the custom endpoint. */
+  endpoint?: string;
   /** The model takes image input; when false, view_screenshot returns a tool error instead of a screenshot. */
   imageInput?: boolean;
   /** The model's output limit, when the provider's catalogue gives it. */
@@ -162,6 +164,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
         : undefined,
       turns: compactHistory(turns),
       maxOutputTokens: opts.maxOutputTokens,
+      endpoint: opts.endpoint,
       signal,
       audit: {
         conversation: opts.audit.conversation(),

@@ -15,6 +15,7 @@
     "New tab": "New tab",
     "New incognito tab": "New incognito tab",
     "Ask Qutai": "Ask Qutai",
-    "Scan QR code": "Scan QR code"
+    "Scan QR code": "Scan QR code",
+    "NSLocalNetworkUsageDescription": "Qutai connects to an AI server on your local network only when you set one up as your custom AI endpoint."
   }
 }

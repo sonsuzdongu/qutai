@@ -81,7 +81,8 @@ function chipsOf(entry: SentRequest): string[] {
   return chips;
 }
 
-const providerLine = (e: SentRequest) => `${getProvider(e.provider).label} · ${modelLabel(e.provider, e.model)}`;
+const providerLine = (e: SentRequest) =>
+  [getProvider(e.provider).label, modelLabel(e.provider, e.model), e.endpoint].filter(Boolean).join(' · ');
 
 function SentLog({
   conversation,

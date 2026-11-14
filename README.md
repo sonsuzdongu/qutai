@@ -1,7 +1,7 @@
 # Qutai
 
 An AI-powered mobile browser for iOS and Android: an agent that can read and use the page for you,
-tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models, and with the models on OpenRouter. Besides the page, the assistant
+tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models, with the models on OpenRouter, and with a self-hosted OpenAI-compatible server. Besides the page, the assistant
 can add calendar events, reminders and notifications, read the calendar when asked about the user's schedule, use the phone's location, offer a Call button and open the
 phone's settings, each confirmed or tapped by the user.
 
@@ -139,6 +139,7 @@ On first launch the setup asks for a provider and API key; later, change them in
 | OpenAI | Responses API | https://platform.openai.com/api-keys |
 | Google Gemini | Interactions API | https://aistudio.google.com/apikey |
 | OpenRouter | Chat Completions API | https://openrouter.ai/settings/keys |
+| Custom (OpenAI-compatible) | Chat Completions API at the address the user enters | The server's own key, or none |
 
 OpenRouter's models are picked from its own catalogue (`GET /api/v1/models?supported_parameters=tools`, fetched with
 the user's key, cached on the phone, Refresh to update): only models that accept tools are listed, searchable, with
@@ -151,6 +152,23 @@ off with OpenRouter: its web plugin searches on every request, so on every agent
 documented for the Responses API only; the assistant searches by opening a search engine in a tab instead, and
 Settings says so.
 
+"Custom (OpenAI-compatible)" is for self-hosted servers and gateways (Ollama, LM Studio, vLLM, a company gateway): a
+base URL, an optional API key (sent as `Authorization: Bearer` only when set) and a model ID, typed or picked with
+"Fetch models" (`GET /models`, when the server has it). The address is checked and normalised before it is saved
+(`src/ai/customEndpoint.ts`): https, or plain http only to loopback and private-network addresses (10/8, 172.16/12,
+192.168/16, link-local, `localhost`, `.local`), shown with "not encrypted, local network only"; no user name or
+password in it, no query; trailing slashes and a pasted `/chat/completions` removed; a hint when there is no `/v1`.
+Plain http works on iOS only (App Transport Security's local-networking exception); Android connects over https only,
+see [docs/permissions.md](docs/permissions.md). "Test connection" sends four tiny fixed requests (nothing of the
+user's, not logged) and reports each: server reachable, key accepted, model found (against `/models` when listed),
+tool calling (a `ping` tool the model is asked to call), streaming, images (a 1×1 PNG; the result sets "Model accepts
+images", which the user can change: off, `view_screenshot` returns a tool error telling the model to use `read_page`).
+The assistant needs tool calling, so there is no chat-only mode. The settings say in one sentence that the user's
+messages, pages, screenshots and memory go to the server they entered; "What was sent to the AI" shows the endpoint's
+host for each request. The key is kept in SecureStore like the others; the base URL is a setting and goes into
+backups (the key only with "Include my AI provider keys"). No web search with a custom endpoint, and no output limit
+is sent (servers differ in which field they read).
+
 ## Official builds and building it yourself
 
 Qutai is open source, and the code here is the whole app. The official builds in the App Store and
@@ -159,7 +177,7 @@ Google Play are made from this same code with one build-time switch turned on:
 | | Built from this repository (default) | Official store builds |
 |---|---|---|
 | `EXPO_PUBLIC_PRO_MODE` | `off` | `on` |
-| AI | Your own Anthropic, OpenAI, Gemini or OpenRouter key | Your own key, or Qutai credits (planned) |
+| AI | Your own Anthropic, OpenAI, Gemini or OpenRouter key, or your own OpenAI-compatible server | Your own key, or Qutai credits (planned) |
 | Account and sync | None | Through Qutai's servers (planned) |
 | Where your data goes | Your device, and the AI provider you choose | Also Qutai's servers, for the pro features you use |
 
@@ -192,7 +210,7 @@ servers.
 ## How does it work?
 
 ```
-User ──► AssistantPanel ──► runAgent ──► provider adapter ──► Anthropic / OpenAI / Gemini / OpenRouter
+User ──► AssistantPanel ──► runAgent ──► provider adapter ──► Anthropic / OpenAI / Gemini / OpenRouter / custom
                                      │
                                      ▼ tool call
                                 executeTool ──► Browser ► Tab ──injectJavaScript──► WebView
@@ -209,7 +227,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/components/BrowserView.tsx` | Draws the WebViews of the awake tabs stacked on top of each other; at most five stay awake, the rest sleep as a URL and thumbnail |
 | `src/chat/Conversation.ts` | A conversation with the assistant: one per tab, or one shared by a tab group |
 | `src/components/Dialog.tsx`, `src/components/BottomSheet.tsx` | Themed dialogs (instead of native alerts) and the bottom sheet the menus use, kept inside the safe area |
-| `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters; `chatWire.ts` / `chatCompletions.ts` speak the OpenAI Chat Completions format (OpenRouter), `openrouterCatalog.ts` / `openrouterModels.ts` the model catalogue |
+| `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters; `chatWire.ts` / `chatCompletions.ts` speak the OpenAI Chat Completions format (OpenRouter and the custom endpoint), `openrouterCatalog.ts` / `openrouterModels.ts` the model catalogue, `customEndpoint.ts` / `customTest.ts` the custom endpoint's address rules and "Test connection" |
 | `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, saved tasks, settings |
 | `src/i18n/` | Turkish and English UI strings, date formats |
 | `src/device/` | Device features: PDF, screenshots (also full page), read aloud, voice input (`voiceInput.ts`), share/copy, downloads, private mode protection, calendar and reminders, notifications, location, opening system settings, the phone dialer |
@@ -277,6 +295,11 @@ the feature, when the user is asked, the config line that declares it and what i
   follows OpenRouter's docs but has not been checked against every model family behind it. No per-model history
   budget exists in the app (old page outputs are trimmed by count, the same for every model), so the catalogue's
   context length is only shown in the picker.
+- **Custom endpoints vary.** Compatible servers implement different parts of Chat Completions: tool calling depends on
+  the model and how the server parses its tool calls (Ollama and LM Studio need a model with tool support; vLLM needs
+  its tool-call flags), some ignore streaming or `stream_options`, and some reject `tool_choice` (never sent). An
+  assistant turn with tool calls is sent with `content: null`, as the specification allows; a strict server may want
+  a string. Android connects to custom endpoints over https only.
 - **Old page outputs are trimmed.** This lowers cost, but on OpenAI previous reasoning items may not be reused
   because the history changes.
 - **Background tasks are Android only, opt-in, and partial.** With Settings › Assistant › "Keep working in the

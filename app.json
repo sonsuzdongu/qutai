@@ -13,7 +13,12 @@
       },
       "infoPlist": {
         "CFBundleAllowMixedLocalizations": true,
-        "NSCalendarsFullAccessUsageDescription": "Qutai reads your calendar only when you ask the assistant about your schedule and confirm, and sends the events in the range you approved to your AI provider."
+        "NSCalendarsFullAccessUsageDescription": "Qutai reads your calendar only when you ask the assistant about your schedule and confirm, and sends the events in the range you approved to your AI provider.",
+        "NSLocalNetworkUsageDescription": "Qutai connects to an AI server on your local network only when you set one up as your custom AI endpoint.",
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSAllowsLocalNetworking": true
+        }
       },
       "buildNumber": "1",
       "bundleIdentifier": "com.sonsuzdongu.qutai",

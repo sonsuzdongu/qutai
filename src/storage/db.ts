@@ -151,6 +151,8 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
      setting TEXT NOT NULL,
      updated_at INTEGER NOT NULL
    );`,
+  // The custom endpoint's host for requests sent there ("What was sent to the AI"); null for the other providers.
+  `ALTER TABLE ai_requests ADD COLUMN endpoint TEXT;`,
 ];
 
 /**

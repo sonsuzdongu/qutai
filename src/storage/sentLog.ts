@@ -38,6 +38,8 @@ export type SentRequest = {
   at: number;
   provider: ProviderId;
   model: string;
+  /** The custom endpoint's host the request went to (custom provider only). */
+  endpoint?: string;
   /** Site of the tab the assistant was working in (host only). */
   host: string | null;
   /** Key of the conversation it belongs to (a tab uid or a group key). */
@@ -141,8 +143,8 @@ export function recordSent(entry: SentRequest): void {
 async function insertSent(db: Db, e: SentRequest): Promise<void> {
   await db.runAsync(
     `INSERT OR REPLACE INTO ai_requests
-       (id, at, provider, model, host, conversation, items, total_chars, images, resent_turns, resent_chars, web_search, research)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (id, at, provider, model, host, conversation, items, total_chars, images, resent_turns, resent_chars, web_search, research, endpoint)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       e.id,
       e.at,
@@ -157,6 +159,7 @@ async function insertSent(db: Db, e: SentRequest): Promise<void> {
       e.resentChars,
       e.webSearch ? 1 : 0,
       e.research ? 1 : 0,
+      e.endpoint ?? null,
     ],
   );
 }
@@ -175,6 +178,7 @@ type Row = {
   resent_chars: number;
   web_search: number;
   research: number;
+  endpoint: string | null;
 };
 
 function fromRow(r: Row): SentRequest {
@@ -188,6 +192,7 @@ function fromRow(r: Row): SentRequest {
     at: r.at,
     provider: r.provider,
     model: r.model,
+    ...(r.endpoint ? { endpoint: r.endpoint } : {}),
     host: r.host,
     conversation: r.conversation,
     items,

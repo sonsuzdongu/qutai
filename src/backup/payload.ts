@@ -1,6 +1,7 @@
 import { isSiteLevel, SiteLevel } from '../agent/sitePolicy';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
 import { cleanMemoryText, isMemoryCategory, MAX_MEMORIES, MemoryCategory, sensitiveReason } from '../agent/memory';
+import { normalizeBaseUrl } from '../ai/customEndpoint';
 import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES } from '../browser/reader';
 import { isSearchEngine } from '../browser/search';
@@ -20,7 +21,7 @@ import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } fr
  *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }],
  *            blockingOff?: [host], personal?: [{ host, setting }] },
  *   settings?: { theme: "dark", textZoom: 120, models: { anthropic: "…" }, … },
- *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…", openrouter?: "…" },   // only when the user opted in
+ *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…", openrouter?: "…", custom?: "…" },   // only when the user opted in
  *   tabs?: { tabs: [{ url, title, uid, groupId? }], activeIndex, groups: [{ id, name, color, collapsed? }] },
  *   chats?: [{ key, items: [...], turns: [...] }],   // key: a tab's uid or "group:<id>"
  *   activity?: [{ at, host, url, tool, description, ok }]
@@ -70,6 +71,8 @@ export type BackupAction = {
 export type BackupSettings = Partial<{
   provider: ProviderId;
   models: Partial<Record<ProviderId, string>>;
+  /** The custom endpoint's base URL (not in backups made before it existed). */
+  customBaseUrl: string;
   confirmActions: boolean;
   searchEngine: string;
   searchSuggestions: boolean;
@@ -132,7 +135,7 @@ export class PayloadError extends Error {
 }
 
 /** Every provider, checked by the compiler, so a new one can't be forgotten here. */
-const PROVIDER_IDS = Object.keys({ anthropic: true, openai: true, gemini: true, openrouter: true } satisfies Record<
+const PROVIDER_IDS = Object.keys({ anthropic: true, openai: true, gemini: true, openrouter: true, custom: true } satisfies Record<
   ProviderId,
   true
 >) as ProviderId[];
@@ -364,6 +367,11 @@ function parseSettings(v: unknown): BackupSettings | undefined {
       if (typeof model === 'string' && /^[\w.:/@-]{1,100}$/.test(model)) models[p] = model;
     }
     out.models = models;
+  }
+  if (typeof v.customBaseUrl === 'string' && v.customBaseUrl.length <= 500) {
+    // Checked again for this phone's platform when applied (an iPhone's http address can't be used on Android).
+    const url = normalizeBaseUrl(v.customBaseUrl, { allowCleartext: true });
+    if (url.ok) out.customBaseUrl = url.url;
   }
   if (isSearchEngine(v.searchEngine)) out.searchEngine = v.searchEngine;
   if (typeof v.textZoom === 'number' && Number.isFinite(v.textZoom)) out.textZoom = v.textZoom;

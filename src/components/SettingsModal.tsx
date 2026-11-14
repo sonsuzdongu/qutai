@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cleanCustomInstructions, MAX_CUSTOM_INSTRUCTIONS } from '../agent/systemPrompt';
-import { getProvider, modelLabel } from '../ai/providers';
+import { getProvider, isConfigured, modelLabel, requestTarget } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { authenticate, canAuthenticate } from '../device/biometric';
 import { appVersion } from '../device/appVersion';
@@ -24,7 +24,7 @@ import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { ActionLogScreen } from './ActionLogScreen';
 import { SentLogScreen } from './SentLogScreen';
 import { BackupScreen } from './BackupScreen';
-import { AiChoice, AiProviderFields, cleanAiChoice } from './AiProviderFields';
+import { AiChoice, aiChoiceProblem, AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { LegalScreen } from './LegalScreen';
 import { MemoryScreen } from './MemoryScreen';
@@ -72,8 +72,16 @@ export function SettingsModal({ visible, onClose, ...rest }: Props) {
   );
 }
 
-const pickAi = (s: Settings): AiChoice => ({ provider: s.provider, apiKeys: s.apiKeys, models: s.models });
-const sameAi = (a: AiChoice, b: AiChoice) => JSON.stringify(cleanAiChoice(a)) === JSON.stringify(cleanAiChoice(b));
+const pickAi = (s: Settings): AiChoice => ({
+  provider: s.provider,
+  apiKeys: s.apiKeys,
+  models: s.models,
+  customBaseUrl: s.customBaseUrl,
+  customImages: s.customImages,
+});
+// An address that isn't valid counts as typed (cleaning would drop it), so it still asks to be saved or discarded.
+const aiKey = (c: AiChoice) => JSON.stringify({ ...cleanAiChoice(c), typed: aiChoiceProblem(c) ? c.customBaseUrl : '' });
+const sameAi = (a: AiChoice, b: AiChoice) => aiKey(a) === aiKey(b);
 
 function SettingsPages({
   settings,
@@ -102,7 +110,12 @@ function SettingsPages({
   const [backupJob, setBackupJob] = useState<'export' | Uint8Array | null>(null);
 
   const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch });
-  const saveAi = () => onChange({ ...settings, ...cleanAiChoice(ai) });
+  const saveAi = () => {
+    const problem = aiChoiceProblem(ai);
+    if (problem) return dialog.alert(t('settings.saveFailed'), problem);
+    onChange({ ...settings, ...cleanAiChoice(ai) });
+  };
+  const configured = isConfigured(settings, settings.provider);
 
   const goBack = () => {
     if (page === 'main') return onClose();
@@ -202,7 +215,7 @@ function SettingsPages({
               icon="assistant"
               title={t('settings.assistant')}
               summary={
-                settings.apiKeys[settings.provider]
+                configured
                   ? `${provider.label} · ${modelName}`
                   : t('settings.noKeySummary')
               }
@@ -494,20 +507,13 @@ function SettingsPages({
         visible={memoryVisible}
         onClose={() => setMemoryVisible(false)}
         ai={
-          settings.apiKeys[settings.provider]
-            ? {
-                provider: settings.provider,
-                apiKey: settings.apiKeys[settings.provider]!,
-                model: settings.models[settings.provider],
-                label: getProvider(settings.provider).label,
-              }
-            : null
+          configured ? { ...requestTarget(settings, settings.provider), label: getProvider(settings.provider).label } : null
         }
         questions={
           settings.memoryEnabled
             ? {
                 incognito: incognitoActive,
-                providerLabel: settings.apiKeys[settings.provider] ? getProvider(settings.provider).label : null,
+                providerLabel: configured ? getProvider(settings.provider).label : null,
                 onInstructions: (update) =>
                   set({ customInstructions: cleanCustomInstructions(update(settings.customInstructions)) }),
               }

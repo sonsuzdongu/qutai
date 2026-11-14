@@ -1,6 +1,6 @@
 import type { ToolDefinition } from '../agent/types';
 
-export type ProviderId = 'anthropic' | 'openai' | 'gemini' | 'openrouter';
+export type ProviderId = 'anthropic' | 'openai' | 'gemini' | 'openrouter' | 'custom';
 
 export type ToolCall = { id: string; name: string; input: Record<string, unknown> };
 
@@ -74,6 +74,8 @@ export type ModelRequest = {
   audit: RequestAudit;
   /** The model's output limit when known (OpenRouter's catalogue); providers with a fixed list set their own. */
   maxOutputTokens?: number;
+  /** Base URL of a provider whose address the user sets (the custom endpoint), already checked. */
+  endpoint?: string;
 };
 
 export type RequestAudit = {
@@ -94,11 +96,15 @@ export type ModelTag = 'recommended' | 'fastest' | 'strongest';
 export type Provider = {
   id: ProviderId;
   label: string;
+  /** For the provider switch, where space is short. */
+  shortLabel?: string;
   keyPlaceholder: string;
   keyUrl: string;
   /** The curated choices; with `catalog`, the full list comes from the provider (see openrouterModels.ts). */
   models: { id: string; name: string; tag?: ModelTag }[];
   defaultModel: string;
+  /** The user sets the server's address (and the key is optional). */
+  needsEndpoint?: boolean;
   /** Models are picked from the provider's own catalogue, fetched with the user's key. */
   catalog?: boolean;
   /** The `webSearch` option uses the provider's built-in web search; without it, searches go through the browser. */

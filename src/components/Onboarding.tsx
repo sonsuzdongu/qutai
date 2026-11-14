@@ -19,7 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
-import { getProvider } from '../ai/providers';
+import { getProvider, isConfigured } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { openDefaultBrowserSettings } from '../device/defaultBrowser';
 import { t } from '../i18n';
@@ -93,7 +93,7 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   const [reading, setReading] = useState<LegalKind | null>(null);
   const step = steps[index];
   const last = index === steps.length - 1;
-  const hasKey = !!draft.apiKeys[draft.provider].trim();
+  const hasKey = isConfigured(cleanAiChoice(draft), draft.provider);
 
   const next = () => {
     if (!last) return go(index + 1);
@@ -159,7 +159,7 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
             {step === 'profile' ? (
               // Its own pages and buttons; no AI request, every page skippable.
               <ProfileQuestions
-                providerLabel={draft.apiKeys[draft.provider].trim() ? getProvider(draft.provider).label : null}
+                providerLabel={hasKey ? getProvider(draft.provider).label : null}
                 transition={transition}
                 onInstructions={(update) =>
                   setDraft((d) => ({
@@ -247,6 +247,8 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                               provider: ai.provider,
                               apiKeys: ai.apiKeys,
                               models: ai.models,
+                              customBaseUrl: ai.customBaseUrl,
+                              customImages: ai.customImages,
                             }))
                           }
                         />

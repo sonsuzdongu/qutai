@@ -10,6 +10,13 @@ export type Settings = {
   provider: ProviderId;
   apiKeys: Record<ProviderId, string>;
   models: Record<ProviderId, string>;
+  /**
+   * Base URL of the custom OpenAI-compatible endpoint ('' when not set up), normalised by ai/customEndpoint.ts
+   * when saved. A setting, not a secret: it goes in backups (its key only with the explicit opt-in).
+   */
+  customBaseUrl: string;
+  /** The custom endpoint's model takes images (set by "Test connection"; the user can change it). */
+  customImages: boolean;
   confirmActions: boolean;
   searchEngine: SearchEngineId;
   /** Live suggestions from the search engine while typing; always off in incognito tabs. */
@@ -92,6 +99,8 @@ export const DEFAULT_SETTINGS: Settings = {
   provider: 'anthropic',
   apiKeys: Object.fromEntries(PROVIDER_ORDER.map((id) => [id, ''])) as Record<ProviderId, string>,
   models: Object.fromEntries(PROVIDER_ORDER.map((id) => [id, PROVIDERS[id].defaultModel])) as Record<ProviderId, string>,
+  customBaseUrl: '',
+  customImages: true,
   confirmActions: false,
   searchEngine: 'google',
   searchSuggestions: true,
@@ -128,6 +137,8 @@ export const DEFAULT_SETTINGS: Settings = {
 
 const KEYS = {
   provider: 'provider',
+  customBaseUrl: 'custom_base_url',
+  customImages: 'custom_images',
   confirmActions: 'confirm_actions',
   searchEngine: 'search_engine',
   searchSuggestions: 'search_suggestions',
@@ -216,6 +227,8 @@ export async function loadSettings(): Promise<Settings> {
     legalAcceptedVersion,
     legacyApiKey,
     legacyModel,
+    customBaseUrl,
+    customImages,
     ...perProvider
   ] = await Promise.all([
     get(KEYS.provider),
@@ -253,6 +266,8 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.legalAcceptedVersion),
     get(KEYS.legacyApiKey),
     get(KEYS.legacyModel),
+    get(KEYS.customBaseUrl),
+    get(KEYS.customImages),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
   ]);
 
@@ -260,6 +275,8 @@ export async function loadSettings(): Promise<Settings> {
     provider: isProvider(provider) ? provider : DEFAULT_SETTINGS.provider,
     apiKeys: { ...DEFAULT_SETTINGS.apiKeys },
     models: { ...DEFAULT_SETTINGS.models },
+    customBaseUrl: customBaseUrl ?? '',
+    customImages: customImages !== 'false',
     confirmActions: confirmActions === 'true',
     searchEngine: isSearchEngine(searchEngine) ? searchEngine : DEFAULT_SETTINGS.searchEngine,
     searchSuggestions: searchSuggestions !== 'false',
@@ -309,6 +326,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
     value ? SecureStore.setItemAsync(key, value) : SecureStore.deleteItemAsync(key);
   await Promise.all([
     set(KEYS.provider, settings.provider),
+    set(KEYS.customBaseUrl, settings.customBaseUrl),
+    set(KEYS.customImages, String(settings.customImages)),
     set(KEYS.confirmActions, String(settings.confirmActions)),
     set(KEYS.searchEngine, settings.searchEngine),
     set(KEYS.searchSuggestions, String(settings.searchSuggestions)),

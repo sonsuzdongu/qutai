@@ -1,4 +1,5 @@
 import { newSentId, recordSent, SentContent, SentItem, SentKind } from '../storage/sentLog';
+import { endpointHost } from './customEndpoint';
 import type { ModelRequest, ProviderId, ToolImage, Turn } from './types';
 
 /** Which kind of content a tool's result is, for the log. Anything else is a plain tool result. */
@@ -102,6 +103,8 @@ function build(providerId: ProviderId, req: ModelRequest) {
     at,
     provider: providerId,
     model: req.model,
+    // Where a custom endpoint's requests went (host only).
+    ...(req.endpoint ? { endpoint: endpointHost(req.endpoint) } : {}),
     host: audit.host,
     conversation: audit.conversation,
     items,
