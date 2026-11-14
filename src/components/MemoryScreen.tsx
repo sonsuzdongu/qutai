@@ -30,6 +30,7 @@ import {
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { CATEGORY_ICONS, categoryName, warnsAboutIdNumbers } from './memoryCategories';
+import { ProfileQuestionsScreen } from './ProfileQuestions';
 
 /** The AI the user chose in settings, for "Organise for me"; null without a key. */
 export type MemoryAi = { provider: ProviderId; apiKey: string; model: string; label: string } | null;
@@ -38,13 +39,22 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   ai: MemoryAi;
+  /**
+   * "Answer a few questions" (setup's questions again); absent with memory off. Not offered while the tab on screen
+   * is incognito, so nothing typed there lands in memory from an incognito context.
+   */
+  questions?: {
+    incognito: boolean;
+    providerLabel: string | null;
+    onInstructions: (update: (current: string) => string) => void;
+  };
 };
 
 /** Lists what Qutai remembers about the user by category; everything can be edited, moved or deleted. */
-export function MemoryScreen({ visible, onClose, ai }: Props) {
+export function MemoryScreen({ visible, onClose, ai, questions }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      {visible && <MemoryList onClose={onClose} ai={ai} />}
+      {visible && <MemoryList onClose={onClose} ai={ai} questions={questions} />}
       <DialogHost />
     </Modal>
   );
@@ -54,7 +64,7 @@ const showError = (e: unknown) => dialog.alert(t('memory.saveFailed'), e instanc
 
 type Proposal = { memory: Memory; category: MemoryCategory; accepted: boolean }[];
 
-function MemoryList({ onClose, ai }: Omit<Props, 'visible'>) {
+function MemoryList({ onClose, ai, questions }: Omit<Props, 'visible'>) {
   const styles = useStyles();
   const palette = usePalette();
   const [memories, setMemories] = useState<Memory[] | null>(null);
@@ -64,6 +74,7 @@ function MemoryList({ onClose, ai }: Omit<Props, 'visible'>) {
   const [query, setQuery] = useState('');
   const [organising, setOrganising] = useState(false);
   const [proposal, setProposal] = useState<Proposal | null>(null);
+  const [asking, setAsking] = useState(false);
   const abort = useRef<AbortController | null>(null);
   useEffect(() => () => abort.current?.abort(), []);
 
@@ -169,6 +180,18 @@ function MemoryList({ onClose, ai }: Omit<Props, 'visible'>) {
         />
       )}
       <View style={styles.actions}>
+        {questions && (
+          <Pressable
+            onPress={() => setAsking(true)}
+            disabled={questions.incognito}
+            style={({ pressed }) => [styles.action, pressed && styles.pressed, questions.incognito && styles.disabled]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: questions.incognito }}
+            accessibilityHint={questions.incognito ? t('memory.askQuestionsIncognito') : undefined}
+          >
+            <Text style={styles.actionText}>{t('memory.askQuestions')}</Text>
+          </Pressable>
+        )}
         {general.length > 0 && (
           <Pressable
             onPress={organise}
@@ -185,6 +208,7 @@ function MemoryList({ onClose, ai }: Omit<Props, 'visible'>) {
           </Pressable>
         )}
       </View>
+      {questions?.incognito && <Text style={styles.small}>{t('memory.askQuestionsIncognito')}</Text>}
       {proposal && (
         <View style={styles.proposal}>
           <Text style={styles.proposalTitle}>{t('memory.proposalTitle')}</Text>
@@ -330,6 +354,17 @@ function MemoryList({ onClose, ai }: Omit<Props, 'visible'>) {
           </Pressable>
         </View>
       </View>
+      {questions && (
+        <ProfileQuestionsScreen
+          visible={asking}
+          onClose={() => {
+            setAsking(false);
+            reload();
+          }}
+          providerLabel={questions.providerLabel}
+          onInstructions={questions.onInstructions}
+        />
+      )}
     </SafeAreaView>
   );
 }

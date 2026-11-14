@@ -1485,6 +1485,7 @@ function BrowserApp({
             onChange={onChangeSettings}
             onClose={() => setSettingsVisible(false)}
             onRunTask={runSavedTask}
+            incognitoActive={browser.active.incognito}
           />
           <ContextMenuSheet
             target={context?.target ?? null}

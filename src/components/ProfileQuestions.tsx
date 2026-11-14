@@ -1,0 +1,881 @@
+import { ReactNode, useEffect, useRef, useState } from 'react';
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  ScrollViewInstance,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import { getCalendars, getLocales } from 'expo-localization';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import type { MemoryCategory } from '../agent/memory';
+import { features } from '../config/features';
+import { normalizePhone } from '../device/phone';
+import { getLanguage, MessageKey, t } from '../i18n';
+import { getDb } from '../storage/db';
+import { addMemory, deleteMemory, listMemories, updateMemory } from '../storage/memory';
+import { GradientButton } from '../ui/BrandGradient';
+import { Icon } from '../ui/Icon';
+import { makeStyles, usePalette } from '../ui/theme';
+import { MODAL_SCREEN_EDGES } from './BottomSheet';
+import { dialog, DialogHost } from './Dialog';
+import { CATEGORY_ICONS } from './memoryCategories';
+
+/**
+ * "Let me get to know you a little": a fixed form (no AI request) that saves a few facts into memory, in the same
+ * one-fact-per-line form `remember` writes. Shown once in setup, after the AI step, when memory is on; the Memory
+ * screen offers it again ("Answer a few questions"). Every page can be skipped, and so can the whole thing.
+ *
+ * The answer-style question writes a line to the custom instructions (Settings › Assistant), not to memory: it is a
+ * standing instruction about replies, which is what that setting is for.
+ */
+
+type Page = 'intro' | 'name' | 'city' | 'shopping' | 'food' | 'style' | 'offer' | 'address' | 'summary';
+const PAGES: Page[] = ['intro', 'name', 'city', 'shopping', 'food', 'style', 'offer', 'address', 'summary'];
+const QUESTIONS: Page[] = ['name', 'city', 'shopping', 'food', 'style'];
+
+/** Each saved fact has a slot, so answering again replaces it instead of adding another. */
+type Slot = 'name' | 'city' | 'payment' | 'delivery' | 'food' | 'fullName' | 'phone' | 'email' | 'shipTo' | 'billTo';
+
+type Payment = 'cod' | 'card' | 'none';
+type Style = 'short' | 'detailed';
+type Address = {
+  line: string;
+  district: string;
+  city: string;
+  postal: string;
+  country: string;
+};
+
+const DELIVERY_CHIPS: MessageKey[] = [
+  'profile.chip.noBell',
+  'profile.chip.callFirst',
+  'profile.chip.leaveDoor',
+  'profile.chip.doorman',
+];
+const FOOD_CHIPS: MessageKey[] = [
+  'profile.chip.vegetarian',
+  'profile.chip.vegan',
+  'profile.chip.halal',
+  'profile.chip.glutenFree',
+  'profile.chip.lactoseFree',
+  'profile.chip.nutAllergy',
+];
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Cities to tap: Turkey's largest in Turkish, else the one in the phone's time zone. */
+function cityChips(): string[] {
+  if (getLanguage() === 'tr') return ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya'];
+  const zone = getCalendars()[0]?.timeZone ?? '';
+  const city = zone.includes('/') ? zone.slice(zone.lastIndexOf('/') + 1).replace(/_/g, ' ') : '';
+  return city && !/^(UTC|GMT)/.test(city) ? [city] : [];
+}
+
+/** The device region's country name, in the app's language where the engine knows it. */
+function defaultCountry(): string {
+  const region = getLocales()[0]?.regionCode;
+  if (!region) return '';
+  if (region === 'TR') return 'Türkiye';
+  try {
+    return new Intl.DisplayNames([getLanguage()], { type: 'region' }).of(region) ?? region;
+  } catch {
+    return region;
+  }
+}
+
+const emptyAddress = (city = '', country = ''): Address => ({
+  line: '',
+  district: '',
+  city,
+  postal: '',
+  country,
+});
+
+/** "Atatürk Cad. 12/3, Kadıköy, 34710 İstanbul, Türkiye". */
+function addressText(a: Address): string {
+  return [a.line, a.district, `${a.postal} ${a.city}`.trim(), a.country]
+    .map((part) => part.replace(/\s+/g, ' ').trim())
+    .filter(Boolean)
+    .join(', ');
+}
+
+/** Only the country (filled in for the user) is not an address. */
+const hasAddress = (a: Address) => !!(a.line.trim() || a.district.trim() || a.postal.trim() || a.city.trim());
+
+type Props = {
+  /** The AI provider chosen in setup, for the privacy wording; null when none yet. */
+  providerLabel: string | null;
+  /** Changes the page; setup blurs out and in like its own steps. */
+  transition?: (change: () => void) => void;
+  /** Updates the custom instructions (the answer-style question). */
+  onInstructions: (update: (current: string) => string) => void;
+  /** Finished or skipped. */
+  onDone: () => void;
+  /**
+   * Gives the screen around it this flow's back step while it is shown (false: already at the start), for that
+   * screen's back button; null when it goes away.
+   */
+  registerBack: (handler: (() => boolean) | null) => void;
+};
+
+export function ProfileQuestions({ providerLabel, transition, onInstructions, onDone, registerBack }: Props) {
+  const styles = useStyles();
+  const palette = usePalette();
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const [page, setPage] = useState<Page>('intro');
+  const [name, setName] = useState('');
+  const [city, setCity] = useState('');
+  const [payment, setPayment] = useState<Payment | null>(null);
+  const [deliveryChips, setDeliveryChips] = useState<string[]>([]);
+  const [deliveryText, setDeliveryText] = useState('');
+  const [foodChips, setFoodChips] = useState<string[]>([]);
+  const [foodText, setFoodText] = useState('');
+  const [style, setStyle] = useState<Style | null>(null);
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [shipTo, setShipTo] = useState<Address>(() => emptyAddress('', defaultCountry()));
+  const [billingDifferent, setBillingDifferent] = useState(false);
+  const [billTo, setBillTo] = useState<Address>(() => emptyAddress('', defaultCountry()));
+  /** Memory ids of what this flow saved, by slot. */
+  const saved = useRef<Partial<Record<Slot, string>>>({});
+  /** The custom-instructions line this flow added, replaced if the answer changes. */
+  const styleLine = useRef<string | null>(null);
+  const [summary, setSummary] = useState<{ id: string; text: string; category: MemoryCategory }[]>([]);
+  const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
+  const [instructionLine, setInstructionLine] = useState<string | null>(null);
+
+  const go = (to: Page) => {
+    const change = () => {
+      setPage(to);
+      setEditing(null);
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    };
+    if (transition) transition(change);
+    else change();
+  };
+  const at = PAGES.indexOf(page);
+
+  useEffect(() => {
+    registerBack(() => {
+      if (page === 'intro') return false;
+      // The summary comes after the address offer whichever way it was reached.
+      go(page === 'summary' ? 'offer' : PAGES[at - 1]);
+      return true;
+    });
+    return () => registerBack(null);
+  });
+
+  /** Saves, replaces or (empty text) removes the fact in a slot. A refused fact is said, never blocks. */
+  const saveSlot = async (slot: Slot, text: string | null, category: MemoryCategory) => {
+    const db = await getDb();
+    const id = saved.current[slot];
+    try {
+      if (!text?.trim()) {
+        if (id) await deleteMemory(db, id);
+        delete saved.current[slot];
+        return;
+      }
+      if (id && (await listMemories(db)).some((m) => m.id === id)) await updateMemory(db, id, text, category);
+      else saved.current[slot] = (await addMemory(db, text, category)).id;
+    } catch (e) {
+      dialog.alert(t('memory.saveFailed'), e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  const fact = (key: MessageKey, value: string) => t(key, { value: value.replace(/\s+/g, ' ').trim() });
+
+  const saveStyle = (next: Style | null) => {
+    const line = next ? t(next === 'short' ? 'profile.style.shortLine' : 'profile.style.detailedLine') : null;
+    const previous = styleLine.current;
+    styleLine.current = line;
+    setInstructionLine(line);
+    onInstructions((current) => {
+      const lines = current.split('\n').filter((l) => l.trim() && l.trim() !== previous);
+      if (line && !lines.includes(line)) lines.push(line);
+      return lines.join('\n');
+    });
+  };
+
+  const loadSummary = async () => {
+    const ids = new Set(Object.values(saved.current));
+    const memories = await listMemories(await getDb()).catch(() => []);
+    setSummary(memories.filter((m) => ids.has(m.id)).reverse());
+  };
+
+  /** Saves the answer of the page being left (an empty answer removes what was saved for it). */
+  const commit = async () => {
+    if (page === 'name') await saveSlot('name', name.trim() ? fact('profile.fact.name', name) : null, 'identity');
+    if (page === 'city') await saveSlot('city', city.trim() ? fact('profile.fact.city', city) : null, 'addresses');
+    if (page === 'shopping') {
+      await saveSlot(
+        'payment',
+        payment === 'cod' ? t('profile.fact.paymentCod') : payment === 'card' ? t('profile.fact.paymentCard') : null,
+        'shopping',
+      );
+      const note = [...deliveryChips, deliveryText.trim()].filter(Boolean).join('. ');
+      await saveSlot('delivery', note ? fact('profile.fact.delivery', note) : null, 'shopping');
+    }
+    if (page === 'food') {
+      const food = [...foodChips, foodText.trim()].filter(Boolean).join(', ');
+      await saveSlot('food', food ? fact('profile.fact.food', food) : null, 'food');
+    }
+    if (page === 'style') saveStyle(style);
+    if (page === 'address') {
+      await saveSlot('fullName', fullName.trim() ? fact('profile.fact.fullName', fullName) : null, 'identity');
+      await saveSlot('phone', phone.trim() ? fact('profile.fact.phone', phone) : null, 'identity');
+      await saveSlot('email', email.trim() ? fact('profile.fact.email', email.trim()) : null, 'identity');
+      await saveSlot(
+        'shipTo',
+        hasAddress(shipTo) ? fact('profile.fact.shipTo', addressText(shipTo)) : null,
+        'addresses',
+      );
+      await saveSlot(
+        'billTo',
+        billingDifferent && hasAddress(billTo) ? fact('profile.fact.billTo', addressText(billTo)) : null,
+        'addresses',
+      );
+    }
+  };
+
+  const toSummary = async () => {
+    await loadSummary();
+    go('summary');
+  };
+
+  const next = async () => {
+    if (page === 'intro') return go('name');
+    await commit();
+    if (page === 'style') return go('offer');
+    if (page === 'offer' || page === 'address') return toSummary();
+    if (page === 'summary') return onDone();
+    go(PAGES[at + 1]);
+  };
+
+  /** A question left with nothing filled in moves on as "Skip". */
+  const answered =
+    (page === 'name' && !!name.trim()) ||
+    (page === 'city' && !!city.trim()) ||
+    (page === 'shopping' && (!!payment || deliveryChips.length > 0 || !!deliveryText.trim())) ||
+    (page === 'food' && (foodChips.length > 0 || !!foodText.trim())) ||
+    (page === 'style' && !!style) ||
+    (page === 'address' &&
+      (!!fullName.trim() || !!phone.trim() || !!email.trim() || hasAddress(shipTo) || hasAddress(billTo)));
+
+  const primary =
+    page === 'intro'
+      ? t('profile.start')
+      : page === 'offer'
+        ? t('profile.offerYes')
+        : page === 'summary'
+          ? t('common.done')
+          : page === 'address'
+            ? t(answered ? 'common.save' : 'profile.skip')
+            : t(answered ? 'onboarding.continue' : 'profile.skip');
+
+  const onPrimary = () => (page === 'offer' ? go('address') : void next());
+
+  const privacy = t(features.pro ? 'profile.privacyPro' : 'profile.privacy', {
+    provider: providerLabel ?? t('profile.yourProvider'),
+  });
+
+  const toggle = (list: string[], value: string) =>
+    list.includes(value) ? list.filter((x) => x !== value) : [...list, value];
+
+  const phoneHint = phone.trim() && !normalizePhone(phone).ok ? t('profile.phoneHint') : null;
+  const emailHint = email.trim() && !EMAIL.test(email.trim()) ? t('profile.emailHint') : null;
+
+  const removeSummary = async (id: string) => {
+    await deleteMemory(await getDb(), id).catch(() => false);
+    for (const [slot, value] of Object.entries(saved.current)) if (value === id) delete saved.current[slot as Slot];
+    setSummary((list) => list.filter((m) => m.id !== id));
+  };
+  const saveSummaryEdit = async () => {
+    if (!editing) return;
+    const { id, text } = editing;
+    setEditing(null);
+    try {
+      await updateMemory(await getDb(), id, text);
+    } catch (e) {
+      dialog.alert(t('memory.saveFailed'), e instanceof Error ? e.message : String(e));
+    }
+    if (!text.trim()) return removeSummary(id);
+    await loadSummary();
+  };
+
+  return (
+    <View style={styles.flex}>
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {page === 'intro' && (
+          <>
+            <Text style={styles.title} accessibilityRole="header">
+              {t('profile.introTitle')}
+            </Text>
+            <Text style={styles.lead}>{t('profile.introLead')}</Text>
+            <View style={styles.card}>
+              <Text style={styles.hint}>{privacy}</Text>
+            </View>
+          </>
+        )}
+
+        {QUESTIONS.includes(page) && (
+          <Text style={styles.counter}>
+            {t('profile.questionOf', {
+              n: QUESTIONS.indexOf(page) + 1,
+              total: QUESTIONS.length,
+            })}
+          </Text>
+        )}
+
+        {page === 'name' && (
+          <Question title={t('profile.nameTitle')} lead={t('profile.nameLead')}>
+            <Field
+              value={name}
+              onChange={setName}
+              placeholder={t('profile.namePlaceholder')}
+              autoComplete="given-name"
+            />
+          </Question>
+        )}
+
+        {page === 'city' && (
+          <Question title={t('profile.cityTitle')} lead={t('profile.cityLead')}>
+            <Chips options={cityChips()} selected={[city]} onPress={(c) => setCity(city === c ? '' : c)} />
+            <Field value={city} onChange={setCity} placeholder={t('profile.cityPlaceholder')} />
+          </Question>
+        )}
+
+        {page === 'shopping' && (
+          <Question title={t('profile.shoppingTitle')} lead={t('profile.shoppingLead')}>
+            <Text style={styles.label}>{t('profile.paymentLabel')}</Text>
+            <Chips
+              options={[t('profile.payment.cod'), t('profile.payment.card'), t('profile.payment.none')]}
+              selected={payment ? [t(`profile.payment.${payment}`)] : []}
+              onPress={(label) => {
+                const value = (['cod', 'card', 'none'] as Payment[]).find((p) => t(`profile.payment.${p}`) === label)!;
+                setPayment(payment === value ? null : value);
+              }}
+            />
+            <Text style={styles.label}>{t('profile.deliveryLabel')}</Text>
+            <Chips
+              options={DELIVERY_CHIPS.map((k) => t(k))}
+              selected={deliveryChips}
+              onPress={(c) => setDeliveryChips(toggle(deliveryChips, c))}
+            />
+            <Field
+              value={deliveryText}
+              onChange={setDeliveryText}
+              placeholder={t('profile.deliveryPlaceholder')}
+              multiline
+            />
+          </Question>
+        )}
+
+        {page === 'food' && (
+          <Question title={t('profile.foodTitle')} lead={t('profile.foodLead')}>
+            <Chips
+              options={FOOD_CHIPS.map((k) => t(k))}
+              selected={foodChips}
+              onPress={(c) => setFoodChips(toggle(foodChips, c))}
+            />
+            <Field value={foodText} onChange={setFoodText} placeholder={t('profile.foodPlaceholder')} />
+          </Question>
+        )}
+
+        {page === 'style' && (
+          <Question title={t('profile.styleTitle')} lead={t('profile.styleLead')}>
+            <Chips
+              options={[t('profile.style.short'), t('profile.style.detailed')]}
+              selected={style ? [t(`profile.style.${style}`)] : []}
+              onPress={(label) => {
+                const value: Style = label === t('profile.style.short') ? 'short' : 'detailed';
+                setStyle(style === value ? null : value);
+              }}
+            />
+          </Question>
+        )}
+
+        {page === 'offer' && (
+          <>
+            <Text style={styles.title} accessibilityRole="header">
+              {t('profile.offerTitle')}
+            </Text>
+            <Text style={styles.lead}>{t('profile.offerLead')}</Text>
+            <View style={styles.card}>
+              <Text style={styles.hint}>{privacy}</Text>
+            </View>
+          </>
+        )}
+
+        {page === 'address' && (
+          <>
+            <Text style={styles.title} accessibilityRole="header">
+              {t('profile.addressTitle')}
+            </Text>
+            <Text style={styles.hint}>{t('profile.addressLead')}</Text>
+            <Text style={styles.label}>{t('profile.contactLabel')}</Text>
+            <Field value={fullName} onChange={setFullName} placeholder={t('profile.fullName')} autoComplete="name" />
+            <Field
+              value={phone}
+              onChange={setPhone}
+              placeholder={t('profile.phone')}
+              autoComplete="tel"
+              keyboardType="phone-pad"
+            />
+            {phoneHint && <Text style={styles.warning}>{phoneHint}</Text>}
+            <Field
+              value={email}
+              onChange={setEmail}
+              placeholder={t('profile.email')}
+              autoComplete="email"
+              keyboardType="email-address"
+            />
+            {emailHint && <Text style={styles.warning}>{emailHint}</Text>}
+            <Text style={styles.label}>{t('profile.shipToLabel')}</Text>
+            <AddressFields value={shipTo} onChange={setShipTo} fallbackCity={city} />
+            <Pressable
+              onPress={() => setBillingDifferent(!billingDifferent)}
+              style={styles.checkRow}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: billingDifferent }}
+            >
+              <View style={[styles.checkbox, billingDifferent && styles.checkboxOn]}>
+                {billingDifferent && <Icon name="check" size={16} color="#ffffff" />}
+              </View>
+              <Text style={styles.checkText}>{t('profile.billingDifferent')}</Text>
+            </Pressable>
+            {billingDifferent && <AddressFields value={billTo} onChange={setBillTo} fallbackCity={city} />}
+            <Text style={styles.hint}>{t('profile.moreAddresses')}</Text>
+          </>
+        )}
+
+        {page === 'summary' && (
+          <>
+            <Text style={styles.title} accessibilityRole="header">
+              {t('profile.summaryTitle')}
+            </Text>
+            <Text style={styles.lead}>
+              {t(summary.length || instructionLine ? 'profile.summaryLead' : 'profile.summaryEmpty')}
+            </Text>
+            {summary.map((m) =>
+              editing?.id === m.id ? (
+                <View key={m.id} style={styles.savedRow}>
+                  <TextInput
+                    style={styles.savedInput}
+                    value={editing.text}
+                    onChangeText={(text) => setEditing({ id: m.id, text })}
+                    onBlur={saveSummaryEdit}
+                    autoFocus
+                    multiline
+                    submitBehavior="blurAndSubmit"
+                    returnKeyType="done"
+                    accessibilityLabel={t('memory.editHint')}
+                  />
+                </View>
+              ) : (
+                <Pressable
+                  key={m.id}
+                  onPress={() => setEditing({ id: m.id, text: m.text })}
+                  style={({ pressed }) => [styles.savedRow, pressed && styles.pressed]}
+                  accessibilityHint={t('memory.editHint')}
+                >
+                  <Icon name={CATEGORY_ICONS[m.category]} size={18} color={palette.textSecondary} />
+                  <Text style={styles.savedText}>{m.text}</Text>
+                  <Pressable
+                    onPress={() => removeSummary(m.id)}
+                    hitSlop={10}
+                    style={styles.remove}
+                    accessibilityLabel={t('memory.delete')}
+                  >
+                    <Text style={styles.removeText}>✕</Text>
+                  </Pressable>
+                </Pressable>
+              ),
+            )}
+            {instructionLine && (
+              <View style={styles.savedRow}>
+                <Icon name="preferences" size={18} color={palette.textSecondary} />
+                <Text style={styles.savedText}>{t('profile.summaryInstruction', { line: instructionLine })}</Text>
+                <Pressable
+                  onPress={() => {
+                    setStyle(null);
+                    saveStyle(null);
+                  }}
+                  hitSlop={10}
+                  style={styles.remove}
+                  accessibilityLabel={t('profile.removeInstruction')}
+                >
+                  <Text style={styles.removeText}>✕</Text>
+                </Pressable>
+              </View>
+            )}
+            <Text style={styles.hint}>{t('profile.summaryHint')}</Text>
+          </>
+        )}
+      </ScrollView>
+
+      <View style={styles.bottom}>
+        <GradientButton label={primary} onPress={onPrimary} style={styles.primary} textStyle={styles.primaryText} />
+        {page === 'intro' && (
+          <Pressable onPress={onDone} style={styles.secondary} accessibilityRole="button" hitSlop={6}>
+            <Text style={styles.secondaryText}>{t('profile.skipAll')}</Text>
+          </Pressable>
+        )}
+        {page === 'offer' && (
+          <Pressable onPress={() => void toSummary()} style={styles.secondary} accessibilityRole="button" hitSlop={6}>
+            <Text style={styles.secondaryText}>{t('profile.skip')}</Text>
+          </Pressable>
+        )}
+        {QUESTIONS.includes(page) && (
+          <Pressable
+            onPress={async () => {
+              await commit();
+              await toSummary();
+            }}
+            style={styles.secondary}
+            accessibilityRole="button"
+            hitSlop={6}
+          >
+            <Text style={styles.secondaryText}>{t('profile.finishLater')}</Text>
+          </Pressable>
+        )}
+      </View>
+    </View>
+  );
+}
+
+function Question({ title, lead, children }: { title: string; lead: string; children: ReactNode }) {
+  const styles = useStyles();
+  return (
+    <>
+      <Text style={styles.title} accessibilityRole="header">
+        {title}
+      </Text>
+      <Text style={styles.lead}>{lead}</Text>
+      {children}
+    </>
+  );
+}
+
+function Chips({
+  options,
+  selected,
+  onPress,
+}: {
+  options: string[];
+  selected: string[];
+  onPress: (o: string) => void;
+}) {
+  const styles = useStyles();
+  return (
+    <View style={styles.chips}>
+      {options.map((o) => {
+        const on = selected.includes(o);
+        return (
+          <Pressable
+            key={o}
+            onPress={() => onPress(o)}
+            style={[styles.chip, on && styles.chipOn]}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: on }}
+          >
+            <Text style={[styles.chipText, on && styles.chipTextOn]}>{o}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function Field({
+  value,
+  onChange,
+  placeholder,
+  multiline,
+  autoComplete,
+  keyboardType,
+}: {
+  value: string;
+  onChange: (text: string) => void;
+  placeholder: string;
+  multiline?: boolean;
+  autoComplete?: 'name' | 'given-name' | 'tel' | 'email' | 'street-address' | 'postal-code' | 'country';
+  keyboardType?: 'phone-pad' | 'email-address';
+}) {
+  const styles = useStyles();
+  const palette = usePalette();
+  return (
+    <TextInput
+      style={[styles.input, multiline && styles.inputMulti]}
+      value={value}
+      onChangeText={onChange}
+      placeholder={placeholder}
+      placeholderTextColor={palette.textSecondary}
+      accessibilityLabel={placeholder}
+      autoComplete={autoComplete}
+      keyboardType={keyboardType}
+      autoCapitalize={keyboardType === 'email-address' ? 'none' : 'sentences'}
+      autoCorrect={!keyboardType}
+      maxLength={200}
+      multiline={multiline}
+      textAlignVertical={multiline ? 'top' : 'center'}
+    />
+  );
+}
+
+function AddressFields({
+  value,
+  onChange,
+  fallbackCity,
+}: {
+  value: Address;
+  onChange: (a: Address) => void;
+  fallbackCity: string;
+}) {
+  const styles = useStyles();
+  const set = (patch: Partial<Address>) => onChange({ ...value, ...patch });
+  // The city answered earlier fills in the city field until the user types their own.
+  const [cityTouched, setCityTouched] = useState(!!value.city);
+  useEffect(() => {
+    if (!cityTouched && fallbackCity && !value.city) onChange({ ...value, city: fallbackCity });
+  }, [cityTouched, fallbackCity, value, onChange]);
+  return (
+    <>
+      <Field
+        value={value.line}
+        onChange={(line) => set({ line })}
+        placeholder={t('profile.addressLine')}
+        autoComplete="street-address"
+        multiline
+      />
+      <View style={styles.pair}>
+        <View style={styles.flex}>
+          <Field
+            value={value.district}
+            onChange={(district) => set({ district })}
+            placeholder={t('profile.district')}
+          />
+        </View>
+        <View style={styles.flex}>
+          <Field
+            value={value.city}
+            onChange={(c) => {
+              setCityTouched(true);
+              set({ city: c });
+            }}
+            placeholder={t('profile.city')}
+          />
+        </View>
+      </View>
+      <View style={styles.pair}>
+        <View style={styles.flex}>
+          <Field
+            value={value.postal}
+            onChange={(postal) => set({ postal })}
+            placeholder={t('profile.postal')}
+            autoComplete="postal-code"
+          />
+        </View>
+        <View style={styles.flex}>
+          <Field
+            value={value.country}
+            onChange={(country) => set({ country })}
+            placeholder={t('profile.country')}
+            autoComplete="country"
+          />
+        </View>
+      </View>
+    </>
+  );
+}
+
+/** The same questions from the Memory screen, in a sheet of their own. */
+export function ProfileQuestionsScreen({
+  visible,
+  onClose,
+  providerLabel,
+  onInstructions,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  providerLabel: string | null;
+  onInstructions: (update: (current: string) => string) => void;
+}) {
+  const styles = useStyles();
+  const palette = usePalette();
+  const backHandler = useRef<(() => boolean) | null>(null);
+  const back = () => {
+    if (!backHandler.current?.()) onClose();
+  };
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={back}>
+      {visible && (
+        <SafeAreaView style={styles.screen} edges={MODAL_SCREEN_EDGES}>
+          <View style={styles.header}>
+            <Pressable onPress={back} hitSlop={10} accessibilityLabel={t('address.back')} style={styles.headerSide}>
+              <Icon name="back" size={22} color={palette.text} />
+            </Pressable>
+            <Pressable onPress={onClose} hitSlop={8} style={[styles.headerSide, styles.headerRight]}>
+              <Text style={styles.close}>{t('common.close')}</Text>
+            </Pressable>
+          </View>
+          <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <ProfileQuestions
+              providerLabel={providerLabel}
+              onInstructions={onInstructions}
+              onDone={onClose}
+              registerBack={(handler) => {
+                backHandler.current = handler;
+              }}
+            />
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      )}
+      <DialogHost />
+    </Modal>
+  );
+}
+
+const useStyles = makeStyles((c) => ({
+  flex: { flex: 1 },
+  screen: { flex: 1, backgroundColor: c.bg },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    height: 52,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: c.border,
+  },
+  headerSide: { minWidth: 64 },
+  headerRight: { alignItems: 'flex-end' },
+  close: { fontSize: 16, color: c.tintText, fontWeight: '600' },
+  content: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 24,
+    gap: 12,
+    maxWidth: 560,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  counter: {
+    color: c.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  title: {
+    color: c.text,
+    fontSize: 26,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+    marginTop: 8,
+  },
+  lead: { color: c.textSecondary, fontSize: 16, lineHeight: 23 },
+  label: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 8 },
+  hint: { color: c.textSecondary, fontSize: 13.5, lineHeight: 19 },
+  warning: {
+    color: c.textSecondary,
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: -6,
+  },
+  card: {
+    backgroundColor: c.surface,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    paddingHorizontal: 14,
+    minHeight: 38,
+    justifyContent: 'center',
+    borderRadius: 19,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    backgroundColor: c.surface,
+  },
+  chipOn: { backgroundColor: c.tint, borderColor: c.tint },
+  chipText: { color: c.text, fontSize: 15 },
+  chipTextOn: { color: c.onTint, fontWeight: '600' },
+  input: {
+    color: c.text,
+    minHeight: 46,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    fontSize: 16,
+  },
+  inputMulti: { minHeight: 72 },
+  pair: { flexDirection: 'row', gap: 10 },
+  checkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: c.textSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxOn: { backgroundColor: c.tint, borderColor: c.tint },
+  checkText: { flex: 1, color: c.text, fontSize: 15, lineHeight: 21 },
+  savedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingLeft: 14,
+    paddingRight: 6,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.separator,
+  },
+  pressed: { backgroundColor: c.pressed },
+  savedText: { flex: 1, color: c.text, fontSize: 15, lineHeight: 20 },
+  savedInput: {
+    flex: 1,
+    color: c.text,
+    fontSize: 15,
+    lineHeight: 20,
+    paddingVertical: 0,
+    marginRight: 8,
+  },
+  remove: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  removeText: { fontSize: 14, color: c.textSecondary },
+  bottom: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+    paddingBottom: 12,
+    gap: 4,
+    maxWidth: 560,
+    width: '100%',
+    alignSelf: 'center',
+  },
+  primary: { height: 52, borderRadius: 26 },
+  primaryText: { fontSize: 17 },
+  secondary: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
+  secondaryText: { color: c.tintText, fontSize: 16, fontWeight: '600' },
+}));

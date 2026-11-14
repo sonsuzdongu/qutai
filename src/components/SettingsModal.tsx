@@ -44,6 +44,8 @@ type Props = {
   onClearData: (options: ClearOptions) => Promise<void>;
   /** Run on a saved task: Settings closes and the app runs it. */
   onRunTask: (task: SavedTask) => void;
+  /** The tab on screen is incognito: the memory questions are not offered from there. */
+  incognitoActive: boolean;
 };
 
 type Page = 'main' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'backup' | 'about';
@@ -80,6 +82,7 @@ function SettingsPages({
   sitePermissions,
   onClearData,
   onRunTask,
+  incognitoActive,
   back,
 }: Omit<Props, 'visible'> & { back: BackRoute }) {
   const styles = useStyles();
@@ -492,6 +495,16 @@ function SettingsPages({
                 label: getProvider(settings.provider).label,
               }
             : null
+        }
+        questions={
+          settings.memoryEnabled
+            ? {
+                incognito: incognitoActive,
+                providerLabel: settings.apiKeys[settings.provider] ? getProvider(settings.provider).label : null,
+                onInstructions: (update) =>
+                  set({ customInstructions: cleanCustomInstructions(update(settings.customInstructions)) }),
+              }
+            : undefined
         }
       />
       <TasksScreen
