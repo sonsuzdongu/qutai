@@ -61,6 +61,8 @@ export type TabActions = {
   textZoom: number;
   /** Pinch-zoom pages that turn zooming off. */
   forceZoom: boolean;
+  /** "Keep playing in the background" (iOS: videos paused by WebKit on leaving the app play on as sound). */
+  backgroundPlayback: boolean;
   /** Short notice for the user, e.g. when no app can open a link. */
   onNotice: (message: string) => void;
   searchEngine: SearchEngineId;
@@ -129,7 +131,13 @@ function TabWebView({
   const mediaScript = mediaCaptureScript(tab.media.nonce);
   // Watches the page's media (audible tab, background playback, media controls); every frame on iOS, main frame on
   // Android. See playback.ts.
-  const playScript = playbackScript(tab.playback.nonce, tab.incognito, t('playback.privateTab'));
+  // iOS: with "Keep playing in the background" on, a video WebKit pauses when the app leaves plays on as sound.
+  const playScript = playbackScript(
+    tab.playback.nonce,
+    tab.incognito,
+    t('playback.privateTab'),
+    Platform.OS === 'ios' && newTabActions.backgroundPlayback,
+  );
   const earlyScript = [
     geoScript,
     mediaScript,

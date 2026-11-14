@@ -1618,6 +1618,7 @@ function BrowserApp({
                       ),
                     textZoom: settings.textZoom,
                     forceZoom: settings.forceZoom,
+                    backgroundPlayback: settings.backgroundPlayback,
                     onNotice: toast.show,
                     searchEngine: settings.searchEngine,
                     onAsk: (text) => {

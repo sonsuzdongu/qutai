@@ -56,7 +56,16 @@ type Report = {
   artist?: string;
 };
 
-export function playbackScript(nonce: string, incognito: boolean, privateLabel: string): string {
+/**
+ * `resumeVideo` (iOS, "Keep playing in the background" on, never incognito): WebKit pauses <video> elements when
+ * the app leaves the foreground (audio-only media and picture-in-picture go on). The page sees that pause and then,
+ * at once, visibilitychange to hidden; a video that was paused that way (within a second before the page became
+ * hidden, unmuted, not ended) is played again once, which the audio background mode allows: its sound goes on, the
+ * picture doesn't. A pause while the page is visible for longer (the user's own) is never undone, nor one that
+ * comes after the page is hidden (a site that pauses itself on hidden keeps doing so), and each video is resumed at
+ * most once per time the app leaves.
+ */
+export function playbackScript(nonce: string, incognito: boolean, privateLabel: string, resumeVideo = false): string {
   return `(function () {
   if (window.__qutaiPlaybackInstalled) return;
   Object.defineProperty(window, '__qutaiPlaybackInstalled', { value: true });
@@ -64,6 +73,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
   var PRIVATE = ${incognito ? 'true' : 'false'};
   var PRIVATE_LABEL = ${JSON.stringify(privateLabel)};
   var POLYFILL = ${Platform.OS === 'android' ? 'true' : 'false'};
+  var RESUME_VIDEO = ${resumeVideo && !incognito ? 'true' : 'false'};
   var HEARTBEAT = ${HEARTBEAT_MS};
   var ME = window.HTMLMediaElement;
   if (!ME) return;
@@ -117,6 +127,31 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
       schedule();
     }, true);
   });
+
+  // iOS: a video WebKit paused because the app left the foreground plays on (sound only); see resumeVideo above.
+  var gVisibility = window.Document && getter(Document.prototype, 'visibilityState');
+  if (RESUME_VIDEO && VE && gVisibility) {
+    var systemPaused = [];
+    var resumed = [];
+    document.addEventListener('pause', function (e) {
+      var el = e.target;
+      if (!(el instanceof VE) || gVisibility.call(document) !== 'visible') return;
+      if (gEnded.call(el) || gMuted.call(el) || !(gVolume.call(el) > 0)) return;
+      systemPaused[systemPaused.length] = { el: el, at: now() };
+    }, true);
+    document.addEventListener('visibilitychange', function () {
+      var candidates = systemPaused;
+      systemPaused = [];
+      if (gVisibility.call(document) === 'visible') { resumed = []; return; }
+      var t = now();
+      for (var i = 0; i < candidates.length; i++) {
+        var el = candidates[i].el;
+        if (t - candidates[i].at > 1000 || resumed.indexOf(el) >= 0 || !gPaused.call(el)) continue;
+        resumed[resumed.length] = el;
+        try { var p = realPlay.call(el); if (p && p.catch) p.catch(function () {}); } catch (err) {}
+      }
+    }, true);
+  }
 
   // Android: the WebView has no Media Session API; a small one lets sites describe what plays and handle buttons.
   if (POLYFILL && !('mediaSession' in navigator)) {

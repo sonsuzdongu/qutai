@@ -438,8 +438,10 @@ the feature, when the user is asked, the config line that declares it and what i
   taking the microphone isn't reported as such; the recogniser's error ends listening.
 - **Background playback differs per platform** ("Keep playing in the background", on by default; needs **a new
   development build**). iOS: sound from `<audio>` and audio-only players goes on with the lock screen and headphone
-  controls WebKit provides, but WebKit pauses `<video>` elements (e.g. YouTube) when the app leaves the foreground,
-  unless they are in picture-in-picture. Android: a `mediaPlayback` foreground service with a media notification runs
+  controls WebKit provides. WebKit pauses `<video>` elements when the app leaves the foreground (unless they are in
+  picture-in-picture); the page script plays such a video once more right away, so its sound goes on without the
+  picture. Sites that pause their own video when the page is hidden (YouTube's mobile site is reported to) still
+  stop, and incognito tabs don't resume videos. Android: a `mediaPlayback` foreground service with a media notification runs
   while a tab plays sound (local module `modules/qutai-media`); media inside frames isn't seen, and whether
   headphone buttons reach it is untested. Picture-in-picture on Android works for a playing full-screen video only.
   Incognito tabs show "Private tab" in the notification and on the lock screen.

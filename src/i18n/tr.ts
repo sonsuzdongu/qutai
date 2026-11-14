@@ -1240,7 +1240,7 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.forceZoomHint': 'Site kapatmış olsa bile her sayfada iki parmakla yakınlaştırın.',
   'settings.mediaSection': 'Ses ve video',
   'settings.backgroundPlayback': 'Arka planda çalmaya devam et',
-  'settings.backgroundPlaybackHint': 'Bir sayfada başlattığınız müzik ve podcast’ler Qutai’den çıkınca veya ekranı kilitleyince sürer; kilit ekranında denetimleri olur. iOS, resim içinde resimde olmayan videoları siz çıkınca duraklatır. Kapalıyken Qutai’den çıkınca çalma duraklar.',
+  'settings.backgroundPlaybackHint': 'Bir sayfada başlattığınız müzik ve podcast’ler Qutai’den çıkınca veya ekranı kilitleyince sürer; kilit ekranında denetimleri olur. Videolar yalnızca ses olarak sürer (resim içinde resim görüntüyü de korur); YouTube gibi bazı siteler yine de durdurur, gizli sekmelerde videolar duraklar. Kapalıyken Qutai’den çıkınca çalma duraklar.',
   'settings.backgroundPlaybackHintAndroid': 'Bir sayfada başlattığınız ses Qutai’den çıkınca veya ekranı kilitleyince sürer; bildirimden, kilit ekranından ve kulaklıktan denetlenir. Kapalıyken Qutai’den çıkınca çalma duraklar.',
   'settings.pictureInPicture': 'Resim içinde resim',
   'settings.pictureInPictureHint': 'Tam ekran oynayan bir video, ana ekrana geçtiğinizde küçük bir pencereye dönüşür. Gizli sekmelerde ve uygulama kilidi açıkken olmaz.',

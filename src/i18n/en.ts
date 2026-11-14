@@ -1233,7 +1233,7 @@ export const en = {
   'settings.forceZoomHint': 'Pinch to zoom on every page, even where the site turns zooming off.',
   'settings.mediaSection': 'Sound and video',
   'settings.backgroundPlayback': 'Keep playing in the background',
-  'settings.backgroundPlaybackHint': 'Music and podcasts you start on a page go on when you leave Qutai or lock the screen, with controls on the lock screen. iOS pauses videos when you leave, unless they are in picture-in-picture. When off, playback pauses when you leave Qutai.',
+  'settings.backgroundPlaybackHint': 'Music and podcasts you start on a page go on when you leave Qutai or lock the screen, with controls on the lock screen. A video goes on as sound only (picture-in-picture keeps the picture); some sites, such as YouTube, still stop it, and incognito tabs pause videos. When off, playback pauses when you leave Qutai.',
   'settings.backgroundPlaybackHintAndroid': 'Sound you start on a page goes on when you leave Qutai or lock the screen, with a notification, lock screen and headphone controls. When off, playback pauses when you leave Qutai.',
   'settings.pictureInPicture': 'Picture-in-picture',
   'settings.pictureInPictureHint': 'A playing full-screen video shrinks into a small window when you go to the home screen. Not for incognito tabs or while the app lock is on.',
