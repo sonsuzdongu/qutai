@@ -24,6 +24,7 @@ import { dialog } from './Dialog';
 import { ErrorPage } from './ErrorPage';
 import type { LibraryTab } from './LibraryScreen';
 import { NewTabPage } from './NewTabPage';
+import { ReaderPrefs, ReaderView } from './ReaderView';
 
 /**
  * Renders every tab's WebView stacked on top of each other. Hidden tabs stay
@@ -55,6 +56,9 @@ export type TabActions = {
   searchEngine: SearchEngineId;
   onAsk: (text: string) => void;
   onOpenLibrary: (tab: LibraryTab) => void;
+  /** Reader mode look (the text size is textZoom). */
+  reader: Omit<ReaderPrefs, 'textZoom'>;
+  onOpenReaderSettings: () => void;
 };
 
 export function BrowserView({ browser, newTabActions }: { browser: Browser; newTabActions: TabActions }) {
@@ -193,6 +197,8 @@ function TabWebView({
             onLoadEnd={() => {
               tab.handleLoadEnd();
               setRefreshing(false);
+              // Is this page an article? (reader mode indicator)
+              tab.probeReaderSoon();
             }}
             pullToRefreshEnabled={!tab.capturing}
             // Scrollbars would be drawn on every piece of a full-page capture.
@@ -287,6 +293,17 @@ function TabWebView({
             saveFormDataDisabled={androidIncognito}
           />
         </PullToRefresh>
+      )}
+      {tab.reader && !tab.isNewTab && (
+        <ReaderView
+          key={tab.reader.pageKey}
+          tab={tab}
+          prefs={{ ...newTabActions.reader, textZoom }}
+          dark={newTabActions.darkMode || tab.incognito}
+          onOpenSettings={newTabActions.onOpenReaderSettings}
+          onSelection={newTabActions.onSelection}
+          onNotice={newTabActions.onNotice}
+        />
       )}
     </View>
   );

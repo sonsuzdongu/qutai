@@ -3,7 +3,8 @@
  * source in a string: Hermes compiles functions to bytecode, so we cannot use
  * Function.prototype.toString() to ship code into the WebView.
  *
- * Exposes window.__qutaiAgent with: readPage, readSource, click, type, select, scroll, scrollTo.
+ * Exposes window.__qutaiAgent with: readPage, readSource, click, type, select, scroll, scrollTo, and the
+ * snapshot, read-aloud, reader mode, find in page and capture helpers listed at the end.
  * Elements are addressed by numeric refs assigned during readPage.
  */
 export const PAGE_SCRIPT = String.raw`
@@ -550,6 +551,589 @@ export const PAGE_SCRIPT = String.raw`
     };
   }
 
+  // ---------- Reader mode ----------
+  // A readability-style extraction: paragraphs score their ancestors (commas, length), class and id
+  // names add or remove points, link-heavy blocks lose them; the best block and its similar siblings
+  // are copied, through an allowlist of tags and attributes, into an inert document (nothing in it
+  // loads or runs) and returned as HTML. It reads the live page so hidden elements can be left out.
+
+  var READER_POSITIVE = /article|body|content|entry|hentry|h-entry|main|page|post|text|blog|story|prose/i;
+  var READER_NEGATIVE = /hidden|^hid$|banner|combx|comment|com-|contact|foot|gdpr|masthead|media|meta|outbrain|promo|related|scroll|share|shoutbox|sidebar|skyscraper|sponsor|shopping|tags|tool|widget/i;
+  var READER_UNLIKELY = /-ad-|\bads?\b|advert|agegate|banner|breadcrumb|combx|comment|community|consent|cookie|disqus|footer|gdpr|header|legends|menu|modal|navbar|newsletter|outbrain|pagination|pager|paywall|popup|promo|recirc|recommend|related|remark|replies|rss|share|sharing|shoutbox|sidebar|skyscraper|social|sponsor|subscribe|supplemental|taboola|toolbar|tooltip/i;
+  var READER_MAYBE = /and|article|body|column|content|main|shadow|story|post/i;
+  var READER_DROP = {
+    SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEMPLATE: 1, IFRAME: 1, FRAME: 1, FRAMESET: 1, OBJECT: 1, EMBED: 1,
+    APPLET: 1, FORM: 1, INPUT: 1, BUTTON: 1, SELECT: 1, TEXTAREA: 1, OPTION: 1, LABEL: 1, FIELDSET: 1,
+    NAV: 1, ASIDE: 1, FOOTER: 1, HEADER: 1, SVG: 1, CANVAS: 1, VIDEO: 1, AUDIO: 1, SOURCE: 1, TRACK: 1,
+    MAP: 1, AREA: 1, DIALOG: 1, MENU: 1, LINK: 1, META: 1, BASE: 1, HEAD: 1, TITLE: 1, SLOT: 1
+  };
+  var READER_DROP_ROLES = /^(navigation|banner|contentinfo|complementary|dialog|alertdialog|menu|menubar|toolbar|search|form|tablist|tooltip)$/;
+  // Tags kept (by output name); everything else is unwrapped, keeping its text.
+  var READER_KEEP = {
+    P: 'p', H1: 'h2', H2: 'h2', H3: 'h3', H4: 'h4', H5: 'h5', H6: 'h6', UL: 'ul', OL: 'ol', LI: 'li',
+    BLOCKQUOTE: 'blockquote', FIGURE: 'figure', FIGCAPTION: 'figcaption', TABLE: 'table', CAPTION: 'caption',
+    THEAD: 'thead', TBODY: 'tbody', TFOOT: 'tfoot', TR: 'tr', TH: 'th', TD: 'td', DL: 'dl', DT: 'dt', DD: 'dd',
+    A: 'a', EM: 'em', I: 'em', STRONG: 'strong', B: 'strong', U: 'u', S: 's', DEL: 'del', INS: 'ins', SUB: 'sub',
+    SUP: 'sup', CODE: 'code', KBD: 'kbd', SAMP: 'samp', VAR: 'var', MARK: 'mark', SMALL: 'small', ABBR: 'abbr',
+    Q: 'q', CITE: 'cite', TIME: 'time'
+  };
+  // Unwrapped elements whose contents are blocks of their own (loose text in them becomes a paragraph).
+  var READER_CONTAINER = /^(DIV|SECTION|ARTICLE|MAIN|DETAILS|SUMMARY|CENTER|HGROUP|ADDRESS)$/;
+  var READER_INLINE = /^(a|em|strong|u|s|del|ins|sub|sup|code|kbd|samp|var|mark|small|abbr|q|cite|time|br|img)$/;
+  var READER_SPEAK = 'p, h1, h2, h3, h4, h5, h6, li, pre, blockquote, figcaption, dt, dd, caption, th, td';
+  var READER_MAX_NODES = 20000;
+  var READER_MAX_HTML = 600000;
+
+  function readerClass(el) {
+    return (typeof el.className === 'string' ? el.className : '') + ' ' + (el.id || '');
+  }
+
+  function textLen(el) { return clean(el.textContent).length; }
+
+  // Share of an element's text that is link text (in-page links count less).
+  function linkDensity(el) {
+    var total = textLen(el);
+    if (!total) return 0;
+    var links = el.getElementsByTagName('a');
+    var linked = 0;
+    for (var i = 0; i < links.length; i++) {
+      var coef = /^#/.test(links[i].getAttribute('href') || '') ? 0.3 : 1;
+      linked += textLen(links[i]) * coef;
+    }
+    return Math.min(1, linked / total);
+  }
+
+  function readerHidden(el) {
+    // Collapsed sections that find in page can open (hidden="until-found") still count as content.
+    var hidden = el.getAttribute('hidden');
+    if ((hidden !== null && hidden !== 'until-found') || el.getAttribute('aria-hidden') === 'true') return true;
+    var st = window.getComputedStyle(el);
+    return st.display === 'none' || st.visibility === 'hidden';
+  }
+
+  // Class or id says navigation, ads, comments, sharing...; a wrapper holding most of the page's text is spared.
+  function readerUnlikely(el, bodyLen) {
+    var s = readerClass(el);
+    if (s.length < 3 || !READER_UNLIKELY.test(s) || READER_MAYBE.test(s)) return false;
+    return !(bodyLen && textLen(el) > bodyLen * 0.5);
+  }
+
+  function readerJunk(el, flags, bodyLen) {
+    var tag = el.nodeName.toUpperCase();
+    if (READER_DROP[tag]) return true;
+    var role = el.getAttribute('role');
+    if (role && READER_DROP_ROLES.test(role)) return true;
+    if (flags.strip && tag !== 'BODY' && tag !== 'ARTICLE' && tag !== 'MAIN' && tag !== 'A' && readerUnlikely(el, bodyLen)) return true;
+    return readerHidden(el);
+  }
+
+  function readerUrl(value, image) {
+    if (!value) return '';
+    var u;
+    try { u = new URL(String(value).trim(), document.baseURI); } catch (e) { return ''; }
+    var p = u.protocol;
+    if (p === 'https:' || p === 'http:') {
+      // A link to a place in this same page stays inside the reader view.
+      if (!image && u.hash.length > 1 && u.href.split('#')[0] === location.href.split('#')[0]) {
+        return '#qr-' + readerId(u.hash.slice(1));
+      }
+      return u.href;
+    }
+    if (!image && (p === 'mailto:' || p === 'tel:')) return u.href;
+    return '';
+  }
+
+  function readerId(id) {
+    try { id = decodeURIComponent(id); } catch (e) {}
+    return String(id).replace(/[^\w-]/g, '_').slice(0, 80);
+  }
+
+  // The largest candidate of a srcset (by width or density).
+  function bestFromSrcset(set) {
+    var best = '';
+    var bestSize = -1;
+    var parts = String(set).split(/,\s+/);
+    for (var i = 0; i < parts.length; i++) {
+      var bits = parts[i].trim().split(/\s+/);
+      if (!bits[0]) continue;
+      var size = 1;
+      var d = bits[1] || '';
+      if (/w$/.test(d)) size = parseFloat(d);
+      else if (/x$/.test(d)) size = parseFloat(d) * 1000;
+      if (size > 2400 && best) continue;
+      if (size > bestSize) { bestSize = size; best = bits[0].replace(/,$/, ''); }
+    }
+    return best;
+  }
+
+  // The image's real address: what the browser loaded, or what a lazy-loading script keeps aside.
+  function readerImageSrc(img, picture) {
+    var current = img.currentSrc && !/^data:/i.test(img.currentSrc) && img.naturalWidth > 0 ? img.currentSrc : '';
+    if (current) return current;
+    var lazy = img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || img.getAttribute('data-original') ||
+      img.getAttribute('data-url') || img.getAttribute('data-hi-res-src') || '';
+    if (lazy) return lazy;
+    var lazySet = img.getAttribute('data-srcset') || img.getAttribute('data-lazy-srcset');
+    if (lazySet) return bestFromSrcset(lazySet);
+    if (picture) {
+      var sources = picture.querySelectorAll('source');
+      for (var i = 0; i < sources.length; i++) {
+        var set = sources[i].getAttribute('srcset') || sources[i].getAttribute('data-srcset');
+        if (set) return bestFromSrcset(set);
+      }
+    }
+    if (img.getAttribute('srcset')) return bestFromSrcset(img.getAttribute('srcset'));
+    return img.getAttribute('src') || '';
+  }
+
+  function readerImage(img, parent, st, picture) {
+    var alt = clean(img.getAttribute('alt')).slice(0, 300);
+    var raw = readerImageSrc(img, picture);
+    // Sizes of a lazy image's placeholder (often a 1x1 GIF) say nothing about the real picture.
+    var loaded = img.naturalWidth > 0 && raw === img.currentSrc;
+    var w = (loaded ? img.naturalWidth : 0) || parseInt(img.getAttribute('width'), 10) || 0;
+    var h = (loaded ? img.naturalHeight : 0) || parseInt(img.getAttribute('height'), 10) || 0;
+    // Tracking pixels and spacers.
+    if (w && h && w <= 3 && h <= 3) return;
+    var box = img.getBoundingClientRect();
+    // Small inline pictures (emoji, icons) become their alt text.
+    if (loaded && box.width > 0 && box.width <= 32 && box.height <= 32) {
+      if (alt) parent.appendChild(st.doc.createTextNode(alt));
+      return;
+    }
+    var src = '';
+    if (/^data:image\/(png|jpe?g|gif|webp);/i.test(raw) && raw.length > 400 && raw.length < 300000) src = raw;
+    else src = readerUrl(raw, true);
+    if (!src || st.images >= 150) return;
+    var out = st.doc.createElement('img');
+    out.setAttribute('src', src);
+    out.setAttribute('alt', alt);
+    if (w > 3 && h > 3) {
+      out.setAttribute('width', String(w));
+      out.setAttribute('height', String(h));
+    }
+    out.setAttribute('loading', 'lazy');
+    out.setAttribute('decoding', 'async');
+    st.images++;
+    parent.appendChild(out);
+  }
+
+  // A table used for page layout rather than data.
+  function layoutTable(table) {
+    if (table.getAttribute('role') === 'presentation') return true;
+    if (table.querySelector('table')) return true;
+    if (table.querySelector('th, caption, thead')) return false;
+    var rows = table.rows ? table.rows.length : 0;
+    var cols = rows ? table.rows[0].cells.length : 0;
+    return rows < 2 || cols < 2;
+  }
+
+  function hasContent(el) {
+    return clean(el.textContent) !== '' || !!el.querySelector('img');
+  }
+
+  // Moves loose inline content of 'frag' into paragraphs, appending everything to 'parent'.
+  function groupInline(frag, parent, st) {
+    var run = null;
+    var flush = function () {
+      if (run && hasContent(run)) parent.appendChild(run);
+      run = null;
+    };
+    while (frag.firstChild) {
+      var c = frag.firstChild;
+      var inline = c.nodeType === 3 || READER_INLINE.test(c.nodeName.toLowerCase());
+      if (inline) {
+        if (!run) run = st.doc.createElement('p');
+        run.appendChild(c);
+      } else {
+        flush();
+        parent.appendChild(c);
+      }
+    }
+    flush();
+  }
+
+  function readerCopyChildren(el, parent, st, flow) {
+    for (var c = el.firstChild; c; c = c.nextSibling) readerCopy(c, parent, st, flow);
+    if (el.shadowRoot) for (var s = el.shadowRoot.firstChild; s; s = s.nextSibling) readerCopy(s, parent, st, flow);
+  }
+
+  // Copies one node of the article into the inert document, allowlisted.
+  // 'flow': the destination takes blocks (loose text there is wrapped in paragraphs).
+  function readerCopy(node, parent, st, flow) {
+    if (++st.nodes > READER_MAX_NODES) return;
+    if (node.nodeType === 3) {
+      parent.appendChild(st.doc.createTextNode(node.data));
+      return;
+    }
+    if (node.nodeType !== 1) return;
+    var el = node;
+    var tag = el.nodeName.toUpperCase();
+    if (st.skip.indexOf(el) !== -1) return;
+    if (tag === 'PICTURE') {
+      var pic = el.querySelector('img');
+      if (pic && !readerHidden(el)) readerImage(pic, parent, st, el);
+      return;
+    }
+    if (readerJunk(el, st.flags, st.bodyLen)) return;
+    if (tag === 'IMG') return readerImage(el, parent, st, null);
+    if (tag === 'BR') { parent.appendChild(st.doc.createElement('br')); return; }
+    if (tag === 'HR') { if (flow) parent.appendChild(st.doc.createElement('hr')); return; }
+    if (tag === 'PRE') {
+      var pre = st.doc.createElement('pre');
+      pre.textContent = el.textContent;
+      if (pre.textContent.trim()) parent.appendChild(pre);
+      return;
+    }
+    // Navigation lists, "related" blocks and the like: mostly links, little text.
+    if (st.flags.conditional && /^(UL|OL|DL|DIV|SECTION|TABLE)$/.test(tag) && !el.querySelector('pre')) {
+      var len = textLen(el);
+      var density = linkDensity(el);
+      if ((density > 0.5 && len < 2000) || (density > 0.3 && len < 200 && !el.querySelector('img'))) return;
+    }
+    var name = READER_KEEP[tag];
+    if (tag === 'TABLE' && layoutTable(el)) name = null;
+    if (!name) {
+      var container = READER_CONTAINER.test(tag) || /^(TABLE|TBODY|THEAD|TFOOT|TR|TD|TH)$/.test(tag);
+      if (container && flow) {
+        var frag = st.doc.createDocumentFragment();
+        readerCopyChildren(el, frag, st, true);
+        groupInline(frag, parent, st);
+      } else {
+        readerCopyChildren(el, parent, st, flow);
+      }
+      return;
+    }
+    var out = st.doc.createElement(name);
+    if (el.id && /^[\w-]{1,80}$/.test(el.id)) out.setAttribute('id', 'qr-' + el.id);
+    if (name === 'a') {
+      var href = readerUrl(el.getAttribute('href'), false);
+      if (!href) {
+        readerCopyChildren(el, parent, st, flow);
+        return;
+      }
+      out.setAttribute('href', href);
+    } else if (name === 'td' || name === 'th') {
+      var cs = parseInt(el.getAttribute('colspan'), 10);
+      var rs = parseInt(el.getAttribute('rowspan'), 10);
+      if (cs > 1 && cs < 50) out.setAttribute('colspan', String(cs));
+      if (rs > 1 && rs < 50) out.setAttribute('rowspan', String(rs));
+    } else if (name === 'abbr' && el.getAttribute('title')) {
+      out.setAttribute('title', clean(el.getAttribute('title')).slice(0, 200));
+    } else if (name === 'ol' && parseInt(el.getAttribute('start'), 10) > 1) {
+      out.setAttribute('start', String(parseInt(el.getAttribute('start'), 10)));
+    }
+    var childFlow = name === 'blockquote' || name === 'figure' || name === 'li' || name === 'dd' || name === 'td' || name === 'th';
+    if (childFlow) {
+      var inner = st.doc.createDocumentFragment();
+      readerCopyChildren(el, inner, st, true);
+      // Lists and cells keep loose text as is unless they also hold blocks.
+      var blocks = false;
+      for (var k = inner.firstChild; k; k = k.nextSibling) {
+        if (k.nodeType === 1 && !READER_INLINE.test(k.nodeName.toLowerCase())) { blocks = true; break; }
+      }
+      if ((blocks && name !== 'figure') || name === 'blockquote') groupInline(inner, out, st);
+      else out.appendChild(inner);
+    } else {
+      readerCopyChildren(el, out, st, false);
+    }
+    if (!hasContent(out) && name !== 'td' && name !== 'th') return;
+    parent.appendChild(out);
+  }
+
+  // Scores blocks by the paragraphs inside them and returns the best one with its score map.
+  function readerCandidates(flags, bodyLen) {
+    var own = new Map();
+    var junkSelf = function (n) {
+      var v = own.get(n);
+      if (v === undefined) { v = readerJunk(n, flags, bodyLen); own.set(n, v); }
+      return v;
+    };
+    var inJunk = function (el) {
+      for (var n = el; n && n.nodeType === 1 && n !== document.body; n = n.parentElement) {
+        if (junkSelf(n)) return true;
+      }
+      return false;
+    };
+    var scores = new Map();
+    var init = function (n) {
+      if (scores.has(n)) return;
+      var tag = n.nodeName.toUpperCase();
+      var s = 0;
+      if (tag === 'DIV') s = 5;
+      else if (tag === 'ARTICLE') s = 10;
+      else if (tag === 'MAIN' || tag === 'SECTION' || tag === 'PRE' || tag === 'TD' || tag === 'BLOCKQUOTE') s = 3;
+      else if (/^(ADDRESS|OL|UL|DL|DD|DT|LI|FORM)$/.test(tag)) s = -3;
+      else if (/^(H[1-6]|TH)$/.test(tag)) s = -5;
+      if (flags.weight) {
+        var cls = readerClass(n);
+        if (READER_NEGATIVE.test(cls)) s -= 25;
+        if (READER_POSITIVE.test(cls)) s += 25;
+        if (n.getAttribute('itemprop') === 'articleBody') s += 30;
+      }
+      scores.set(n, s);
+    };
+    var paras = document.body.querySelectorAll('p, pre, td, blockquote, div, section, article');
+    for (var i = 0; i < paras.length && i < 8000; i++) {
+      var el = paras[i];
+      var tag = el.nodeName;
+      var text;
+      if (tag === 'DIV' || tag === 'SECTION' || tag === 'ARTICLE') {
+        // Only text sitting directly in it (as in <div>text<br>text</div>) makes it a paragraph.
+        text = '';
+        for (var c = el.firstChild; c; c = c.nextSibling) {
+          if (c.nodeType === 3) text += c.data;
+          else if (c.nodeType === 1 && READER_INLINE.test(c.nodeName.toLowerCase())) text += c.textContent;
+        }
+        text = clean(text);
+      } else {
+        text = clean(el.textContent);
+      }
+      if (text.length < 25 || inJunk(el)) continue;
+      var score = 1 + (text.split(/[,，、]/).length - 1) + Math.min(Math.floor(text.length / 100), 3);
+      var anc = el.parentElement;
+      for (var level = 0; anc && anc !== document.documentElement && level < 5; level++, anc = anc.parentElement) {
+        init(anc);
+        var divider = level === 0 ? 1 : level === 1 ? 2 : level * 3;
+        scores.set(anc, scores.get(anc) + score / divider);
+      }
+    }
+    var best = null;
+    var bestScore = 0;
+    var adjusted = new Map();
+    scores.forEach(function (s, n) {
+      if (s <= 0) return;
+      var a = s * (1 - linkDensity(n));
+      adjusted.set(n, a);
+      if (a > bestScore) { bestScore = a; best = n; }
+    });
+    return { best: best, bestScore: bestScore, adjusted: adjusted, junkSelf: junkSelf };
+  }
+
+  function readerMeta(name) {
+    var el = document.querySelector('meta[property="' + name + '"], meta[name="' + name + '"], meta[itemprop="' + name + '"]');
+    return el ? clean(el.getAttribute('content')) : '';
+  }
+
+  function readerTitle(parts) {
+    var docTitle = clean(document.title);
+    var og = readerMeta('og:title') || readerMeta('twitter:title');
+    var h1 = null;
+    for (var i = 0; i < parts.length && !h1; i++) h1 = parts[i].querySelector('h1');
+    if (!h1) {
+      var article = parts[0] && parts[0].closest ? parts[0].closest('article') : null;
+      h1 = (article && article.querySelector('h1')) || document.querySelector('article h1, main h1, h1');
+    }
+    var h1Text = h1 && !readerHidden(h1) ? clean(h1.textContent) : '';
+    if (h1Text && h1Text.length <= 300 &&
+        (docTitle.indexOf(h1Text) !== -1 || og.indexOf(h1Text) !== -1 || (h1Text.length >= 8 && parts[0].contains(h1)))) {
+      return h1Text;
+    }
+    if (og) return og;
+    var bits = docTitle.split(/\s+[|\-–—»·:]\s+/);
+    if (bits.length > 1 && bits[0].length >= 15) return bits[0];
+    return docTitle || h1Text;
+  }
+
+  function readerByline(st) {
+    var author = readerMeta('author') || readerMeta('article:author');
+    if (author && !/^https?:/i.test(author) && author.length <= 100) return author;
+    var el = document.querySelector('[rel="author"], [itemprop="author"], .byline, .author, [class*="byline"]');
+    if (!el || readerHidden(el)) return '';
+    var name = el.querySelector('[itemprop="name"]');
+    var text = clean((name || el).textContent);
+    if (text.length < 2 || text.length > 100) return '';
+    st.skip.push(el);
+    return text;
+  }
+
+  function readerPublished() {
+    var value = readerMeta('article:published_time') || readerMeta('datePublished') || readerMeta('date') ||
+      readerMeta('dc.date');
+    if (!value) {
+      var time = document.querySelector('article time[datetime], main time[datetime], time[datetime]');
+      if (time) value = time.getAttribute('datetime') || '';
+    }
+    return isNaN(Date.parse(value)) ? '' : value;
+  }
+
+  function readerBuild(flags, bodyLen) {
+    var found = readerCandidates(flags, bodyLen);
+    var best = found.best || document.body;
+    // An article split into sections (each scoring on its own): when at least three other blocks
+    // outside this one score close to it, the nearest ancestor holding three of them is the article.
+    var rivals = [];
+    found.adjusted.forEach(function (score, n) {
+      if (score >= found.bestScore * 0.4 && !n.contains(best) && !best.contains(n)) rivals.push([score, n]);
+    });
+    rivals.sort(function (a, b) { return b[0] - a[0]; });
+    rivals = rivals.slice(0, 10);
+    if (rivals.length >= 3) {
+      for (var anc = best.parentElement; anc && anc !== document.body; anc = anc.parentElement) {
+        var held = 0;
+        for (var r = 0; r < rivals.length; r++) if (anc.contains(rivals[r][1])) held++;
+        if (held >= 3) { best = anc; break; }
+      }
+    }
+    // Then walk up while the parents keep a good share of the score, taking each parent that scores
+    // higher than the block below it.
+    var last = found.bestScore;
+    var floor = found.bestScore / 3;
+    for (var up = best.parentElement; best !== document.body && up && up !== document.body; up = up.parentElement) {
+      var upScore = found.adjusted.get(up);
+      if (upScore === undefined) continue;
+      if (upScore < floor) break;
+      if (upScore > last) {
+        best = up;
+        found.bestScore = Math.max(found.bestScore, upScore);
+      }
+      last = upScore;
+    }
+    var parts = [best];
+    var parent = best.parentElement;
+    if (parent && best !== document.body) {
+      // Siblings that score like the best block (an article split into several divs) come along.
+      parts = [];
+      var threshold = Math.max(10, found.bestScore * 0.2);
+      var bestClass = typeof best.className === 'string' ? best.className : '';
+      for (var sib = parent.firstElementChild; sib; sib = sib.nextElementSibling) {
+        if (sib === best) { parts.push(sib); continue; }
+        if (found.junkSelf(sib)) continue;
+        var bonus = bestClass && sib.className === bestClass ? found.bestScore * 0.2 : 0;
+        var score = found.adjusted.get(sib);
+        if (score !== undefined && score + bonus >= threshold) { parts.push(sib); continue; }
+        if (sib.nodeName === 'P') {
+          var len = textLen(sib);
+          var density = linkDensity(sib);
+          if ((len > 80 && density < 0.25) || (len > 0 && len <= 80 && density === 0 && /\.( |$)/.test(clean(sib.textContent)))) {
+            parts.push(sib);
+          }
+        }
+      }
+    }
+
+    var doc = document.implementation.createHTMLDocument('');
+    var root = doc.createElement('div');
+    var st = { doc: doc, flags: flags, bodyLen: bodyLen, skip: [], nodes: 0, images: 0 };
+    var title = readerTitle(parts);
+    var byline = readerByline(st);
+    var frag = doc.createDocumentFragment();
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i] === document.body) readerCopyChildren(parts[i], frag, st, true);
+      else readerCopy(parts[i], frag, st, true);
+    }
+    groupInline(frag, root, st);
+
+    // The title is shown above the article; the same heading at the top of the body would repeat it.
+    var heading = root.querySelector('h2, h3');
+    var titleKey = clean(title).toLowerCase();
+    if (heading && clean(heading.textContent).toLowerCase() === titleKey) {
+      var before = '';
+      for (var n = root.firstChild; n && n !== heading && !n.contains(heading); n = n.nextSibling) before += n.textContent;
+      if (clean(before).length < 200) heading.remove();
+    }
+
+    // Blocks read aloud one by one, numbered for highlighting; block 0 is the title.
+    var speech = [clean(title)];
+    var chars = 0;
+    var paragraphs = 0;
+    var blocks = root.querySelectorAll(READER_SPEAK);
+    for (var b = 0; b < blocks.length; b++) {
+      var block = blocks[b];
+      var text;
+      if (block.querySelector(READER_SPEAK)) {
+        // Only its own text (as in a list item holding a nested list).
+        text = '';
+        for (var ch = block.firstChild; ch; ch = ch.nextSibling) {
+          if (ch.nodeType === 3) text += ch.data;
+          else if (ch.nodeType === 1 && !ch.matches(READER_SPEAK) && !ch.querySelector(READER_SPEAK)) text += ch.textContent;
+        }
+        text = clean(text);
+      } else {
+        text = clean(block.textContent);
+      }
+      if (!text) continue;
+      block.setAttribute('data-s', String(speech.length));
+      speech.push(text);
+      chars += text.length;
+      if (text.length >= 80 && block.nodeName !== 'TD' && block.nodeName !== 'TH') paragraphs++;
+    }
+
+    // Ids are kept only where a link in the article points to them.
+    var withId = root.querySelectorAll('[id]');
+    for (var d = 0; d < withId.length; d++) {
+      if (!root.querySelector('a[href="#' + withId[d].id + '"]')) withId[d].removeAttribute('id');
+    }
+
+    var html = root.innerHTML;
+    while (html.length > READER_MAX_HTML && root.lastChild) {
+      root.lastChild.remove();
+      html = root.innerHTML;
+    }
+    var dir = (document.documentElement.getAttribute('dir') || (document.body && document.body.getAttribute('dir')) || '').toLowerCase();
+    return {
+      ok: false,
+      title: title,
+      byline: byline,
+      published: readerPublished(),
+      siteName: readerMeta('og:site_name') || location.hostname.replace(/^www\./, ''),
+      lang: document.documentElement.lang || '',
+      dir: dir === 'rtl' ? 'rtl' : 'ltr',
+      url: location.href,
+      html: html,
+      speech: speech,
+      chars: chars,
+      paragraphs: paragraphs,
+      images: st.images
+    };
+  }
+
+  // The article for reader mode. Strict first, then (like Readability) with fewer rules when that
+  // leaves too little: class names misjudged as "unlikely", then also link-density pruning.
+  function readerArticle(minChars, minParagraphs) {
+    minChars = Number(minChars) || 600;
+    minParagraphs = Number(minParagraphs) || 3;
+    if (!document.body) return null;
+    var bodyLen = textLen(document.body);
+    var attempts = [
+      { strip: true, weight: true, conditional: true },
+      { strip: false, weight: true, conditional: true },
+      { strip: false, weight: false, conditional: false }
+    ];
+    var best = null;
+    for (var i = 0; i < attempts.length; i++) {
+      var article = readerBuild(attempts[i], bodyLen);
+      if (article.chars >= minChars && article.paragraphs >= minParagraphs) {
+        article.ok = true;
+        return article;
+      }
+      if (!best || article.chars > best.chars) best = article;
+    }
+    return best;
+  }
+
+  // Quick check for the address bar indicator (after Firefox's isProbablyReaderable):
+  // enough visible paragraphs of real length outside navigation-like blocks.
+  function readerProbe() {
+    if (!document.body) return false;
+    var nodes = Array.prototype.slice.call(document.body.querySelectorAll('p, pre, article'));
+    var brs = document.body.querySelectorAll('div > br');
+    for (var b = 0; b < brs.length && b < 500; b++) {
+      if (nodes.indexOf(brs[b].parentNode) === -1) nodes.push(brs[b].parentNode);
+    }
+    var score = 0;
+    for (var i = 0; i < nodes.length && i < 3000; i++) {
+      var n = nodes[i];
+      if (readerUnlikely(n, 0) || n.closest('li, nav, aside, footer, form')) continue;
+      var len = textLen(n);
+      if (len < 140) continue;
+      if (n.getClientRects().length === 0) continue;
+      score += Math.sqrt(len - 140);
+      if (score > 20) return true;
+    }
+    return false;
+  }
+
   // ---------- Find in page ----------
 
   var MAX_MATCHES = 1000;
@@ -752,6 +1336,8 @@ export const PAGE_SCRIPT = String.raw`
     scrollTo: scrollTo,
     snapshotHtml: snapshotHtml,
     readableText: readableText,
+    readerArticle: readerArticle,
+    readerProbe: readerProbe,
     findInPage: findInPage,
     findStep: findStep,
     clearFind: clearFind,

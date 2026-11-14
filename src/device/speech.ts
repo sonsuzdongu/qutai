@@ -10,10 +10,24 @@ let speaking = false;
 let session = 0;
 const listeners = new Set<() => void>();
 
+/**
+ * Reading a reader mode article block by block: which tab, which block is being read (for the
+ * highlight), and whether it is paused there. null when reading anything else, or nothing.
+ */
+export type ReaderReading = { tabId: string; index: number; paused: boolean };
+let reading: ReaderReading | null = null;
+const readingListeners = new Set<() => void>();
+
 function setSpeaking(value: boolean) {
   if (speaking === value) return;
   speaking = value;
   listeners.forEach((l) => l());
+}
+
+function setReading(value: ReaderReading | null) {
+  if (reading === value) return;
+  reading = value;
+  readingListeners.forEach((l) => l());
 }
 
 /** Splits text at sentence or line boundaries into chunks the speech engine accepts. */
@@ -40,6 +54,7 @@ export function splitForSpeech(text: string, maxChars = CHUNK_CHARS): string[] {
 
 /** Reads text aloud, replacing anything currently being read. */
 export async function speak(text: string, language?: string): Promise<void> {
+  setReading(null);
   await Speech.stop();
   const chunks = splitForSpeech(text);
   if (chunks.length === 0) return;
@@ -61,8 +76,74 @@ export async function speak(text: string, language?: string): Promise<void> {
   });
 }
 
-/** Reads the main content of the page (article or main area, without menus and footers). */
+/**
+ * Reads a reader mode article aloud from block `from` (0 is the title), one utterance per block
+ * (long blocks in several), so the block being read can be highlighted: both platforms report
+ * when each utterance starts, while word boundaries depend on the Android speech engine.
+ */
+export async function speakReader(tab: Tab, from = 0): Promise<{ chars: number; truncated: boolean }> {
+  const article = tab.reader?.article;
+  if (!article) throw new Error(t('error.nothingToRead'));
+  await Speech.stop();
+  const blocks = article.speech;
+  const start = Math.max(0, Math.min(from, blocks.length - 1));
+  const current = ++session;
+  const owned = () => current === session;
+  const finish = () => {
+    if (!owned()) return;
+    setSpeaking(false);
+    setReading(null);
+  };
+  // Pausing stops the engine (Android has no pause), keeping the place to start again from.
+  const stopped = () => {
+    if (owned()) setSpeaking(false);
+  };
+  const queue: { index: number; chunk: string; first: boolean }[] = [];
+  for (let i = start; i < blocks.length; i++) {
+    splitForSpeech(blocks[i]).forEach((chunk, j) => queue.push({ index: i, chunk, first: j === 0 }));
+  }
+  if (queue.length === 0) throw new Error(t('error.nothingToRead'));
+  setSpeaking(true);
+  setReading({ tabId: tab.id, index: start, paused: false });
+  const language = article.lang || undefined;
+  queue.forEach((item, k) => {
+    Speech.speak(item.chunk, {
+      language,
+      onStart: item.first
+        ? () => {
+            if (owned()) setReading({ tabId: tab.id, index: item.index, paused: false });
+          }
+        : undefined,
+      onDone: k === queue.length - 1 ? finish : undefined,
+      onStopped: stopped,
+      onError: finish,
+    });
+  });
+  const chars = blocks.slice(start).reduce((sum, block) => sum + block.length, 0);
+  return { chars, truncated: false };
+}
+
+/** Pauses reading a reader mode article where it is; `resumeReader` goes on from that block. */
+export async function pauseReader(): Promise<void> {
+  if (!reading || reading.paused) return;
+  const at = reading;
+  session++;
+  setSpeaking(false);
+  setReading({ ...at, paused: true });
+  await Speech.stop();
+}
+
+export async function resumeReader(tab: Tab): Promise<void> {
+  const from = reading?.tabId === tab.id ? reading.index : 0;
+  await speakReader(tab, from);
+}
+
+/**
+ * Reads the main content of the page (article or main area, without menus and footers);
+ * in reader mode, exactly the article shown.
+ */
 export async function speakPage(tab: Tab): Promise<{ chars: number; truncated: boolean }> {
+  if (tab.reader) return speakReader(tab);
   const page = await tab.run<{ lang: string; truncated: boolean; text: string }>('readableText', [20000]);
   if (!page.text.trim()) throw new Error(t('error.nothingToRead'));
   await speak(page.text, page.lang || undefined);
@@ -72,6 +153,7 @@ export async function speakPage(tab: Tab): Promise<{ chars: number; truncated: b
 export async function stopSpeaking(): Promise<void> {
   session++;
   setSpeaking(false);
+  setReading(null);
   await Speech.stop();
 }
 
@@ -87,4 +169,19 @@ export function useIsSpeaking(): boolean {
     },
     () => speaking,
   );
+}
+
+/** Where reading a reader mode article is (or is paused), or null. */
+export function useReaderReading(): ReaderReading | null {
+  return useSyncExternalStore(
+    (listener) => {
+      readingListeners.add(listener);
+      return () => readingListeners.delete(listener);
+    },
+    () => reading,
+  );
+}
+
+export function readerReading(): ReaderReading | null {
+  return reading;
 }

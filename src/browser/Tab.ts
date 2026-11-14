@@ -8,6 +8,7 @@ import { siteKey } from '../agent/sitePolicy';
 import { PageGeolocation } from './geolocation';
 import { classifyLoadError, LoadError } from './navigation';
 import { PAGE_SCRIPT } from './pageScript';
+import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, ReaderArticle } from './reader';
 
 type Pending = {
   resolve: (value: unknown) => void;
@@ -29,6 +30,8 @@ export type PageCommand =
   | 'scrollTo'
   | 'snapshotHtml'
   | 'readableText'
+  | 'readerArticle'
+  | 'readerProbe'
   | 'findInPage'
   | 'findStep'
   | 'clearFind'
@@ -37,6 +40,14 @@ export type PageCommand =
   | 'captureBegin'
   | 'captureStep'
   | 'captureEnd';
+
+/** Commands that search the text on screen: in reader mode they run in the reader view. */
+const READER_COMMANDS = new Set<PageCommand>(['findInPage', 'findStep', 'clearFind']);
+/** Commands that act on the page itself: reader mode closes first, so the user sees what happens. */
+const PAGE_ACTIONS = new Set<PageCommand>(['click', 'clickAt', 'type', 'select', 'scroll', 'scrollTo', 'captureBegin']);
+
+/** Reader mode for the page on screen: its extracted article, shown over the (untouched) page. */
+export type ReaderState = { article: ReaderArticle; pageKey: string };
 
 /**
  * One browser tab: owns its WebView, injects the page script, sends commands,
@@ -60,6 +71,12 @@ export class Tab {
   /** The tab whose link opened this one; back returns there once this tab has no history. */
   readonly openerId: string | undefined;
   webview: ComponentRef<typeof WebView> | null = null;
+  /** The reader mode WebView, while reader mode is on. */
+  readerWebview: ComponentRef<typeof WebView> | null = null;
+  /** Reader mode for the current page (per tab and page, never saved). */
+  reader: ReaderState | null = null;
+  /** The page looks like an article (quick check after it loads), for the address bar indicator. */
+  readerAvailable = false;
   /** The view wrapping the WebView, used for tab switcher thumbnails. */
   container: ComponentRef<typeof View> | null = null;
   /** The source prop given to the WebView. Changing it loads a new page. */
@@ -100,6 +117,7 @@ export class Tab {
   readonly geolocation: PageGeolocation = new PageGeolocation(this);
 
   private pending = new Map<string, Pending>();
+  private probeTimer: ReturnType<typeof setTimeout> | null = null;
   private loadWaiters: (() => void)[] = [];
   // A random prefix makes it hard for page scripts to forge command replies.
   private nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
@@ -138,6 +156,7 @@ export class Tab {
    */
   sleep() {
     if (this.asleep || this.incognito || this.isNewTab) return;
+    this.reader = null;
     const thumbnail = this.thumbnail;
     this.dispose();
     this.thumbnail = thumbnail;
@@ -154,6 +173,10 @@ export class Tab {
   /** Stable ref callback for the tab's WebView. */
   setWebView = (ref: ComponentRef<typeof WebView> | null) => {
     this.webview = ref;
+  };
+
+  setReaderWebView = (ref: ComponentRef<typeof WebView> | null) => {
+    this.readerWebview = ref;
   };
 
   setContainer = (ref: ComponentRef<typeof View> | null) => {
@@ -199,6 +222,8 @@ export class Tab {
 
   /** Shows the new tab page again (back from the first page opened from it). */
   showNewTab() {
+    this.reader = null;
+    this.readerAvailable = false;
     this.dispose();
     this.webview = null;
     this.url = NEW_TAB_URL;
@@ -232,6 +257,12 @@ export class Tab {
   handleNavigationStateChange(nav: WebViewNavigation) {
     // Location given to one site never carries over to the next (same-document changes stay).
     if (siteKey(nav.url) !== siteKey(this.url)) this.geolocation.reset();
+    // Another page (also one a script switched to without loading): reader mode belongs to the old one.
+    if (pageKey(nav.url) !== pageKey(this.url)) {
+      if (this.reader && pageKey(nav.url) !== this.reader.pageKey) this.reader = null;
+      this.readerAvailable = false;
+      if (!nav.loading) this.probeReaderSoon();
+    }
     this.url = nav.url;
     this.title = nav.title;
     this.canGoBack = nav.canGoBack;
@@ -257,8 +288,10 @@ export class Tab {
   }
 
   handleLoadStart() {
-    // A new document: its watches and "allow once" answers start over.
+    // A new document: its watches and "allow once" answers start over, and reader mode ends.
     this.geolocation.reset();
+    this.reader = null;
+    this.readerAvailable = false;
     this.loading = true;
     this.loadError = null;
     this.onChange();
@@ -325,7 +358,79 @@ export class Tab {
     await this.settle();
   }
 
+  /**
+   * Checks (shortly, once the page has settled) whether the page looks like an article. Pages that
+   * fill in their content later are checked again a little after.
+   */
+  probeReaderSoon(delayMs = 600) {
+    if (this.probeTimer) clearTimeout(this.probeTimer);
+    this.probeTimer = setTimeout(() => {
+      this.probeTimer = null;
+      this.probeReader().then((found) => {
+        if (!found && delayMs < 2000) this.probeReaderSoon(2500);
+      });
+    }, delayMs);
+  }
+
+  /** Quick article check; resolves with the result (false when the page doesn't answer). */
+  async probeReader(): Promise<boolean> {
+    if (this.isNewTab || !this.webview) return false;
+    const url = this.url;
+    const found = await this.run<boolean>('readerProbe', [], 3000).catch(() => false);
+    if (this.url !== url) return false;
+    if (found !== this.readerAvailable) {
+      this.readerAvailable = found;
+      this.onChange();
+    }
+    return found;
+  }
+
+  /**
+   * Extracts the page's article and shows reader mode. Resolves false (and leaves the page as it is)
+   * when the page has too little article-like content.
+   */
+  async openReader(): Promise<boolean> {
+    if (this.reader) return true;
+    if (this.isNewTab) return false;
+    const url = this.url;
+    const article = await this.run<ReaderArticle | null>(
+      'readerArticle',
+      [READER_MIN_CHARS, READER_MIN_PARAGRAPHS],
+      15000,
+    );
+    if (!article || !article.ok || this.url !== url) {
+      if (this.url === url && this.readerAvailable) {
+        this.readerAvailable = false;
+        this.onChange();
+      }
+      return false;
+    }
+    // Find in page highlights in the page itself would be left behind under the reader.
+    this.run('clearFind').catch(() => {});
+    this.reader = { article, pageKey: pageKey(url) };
+    this.readerAvailable = true;
+    this.onChange();
+    return true;
+  }
+
+  closeReader() {
+    if (!this.reader) return;
+    this.reader = null;
+    this.readerWebview = null;
+    this.onChange();
+  }
+
+  /** Leaves reader mode and gives the page a moment to be on screen again (before screenshots). */
+  async leaveReader(): Promise<void> {
+    if (!this.reader) return;
+    this.closeReader();
+    await sleep(150);
+  }
+
   dispose() {
+    if (this.probeTimer) clearTimeout(this.probeTimer);
+    this.probeTimer = null;
+    this.reader = null;
     this.geolocation.reset();
     this.thumbnail = null;
     this.pending.forEach((p) => {
@@ -337,7 +442,8 @@ export class Tab {
   }
 
   run<T = unknown>(command: PageCommand, args: unknown[] = [], timeoutMs = 10000): Promise<T> {
-    const webview = this.webview;
+    if (PAGE_ACTIONS.has(command)) this.closeReader();
+    const webview = this.reader && READER_COMMANDS.has(command) && this.readerWebview ? this.readerWebview : this.webview;
     if (!webview) return Promise.reject(new Error('The tab is not ready'));
 
     const id = `${this.nonce}-${++this.counter}`;

@@ -27,6 +27,9 @@ type Props = {
   /** The page has used the location (shown as a small pin; tapping it opens the site's permissions). */
   usingLocation?: boolean;
   onLocationPress?: () => void;
+  /** Reader mode: shown as a small icon when the page looks like an article ('available') or reader mode is on. */
+  readerState?: 'none' | 'available' | 'on';
+  onToggleReader?: () => void;
   canGoBack: boolean;
   tabCount: number;
   incognito: boolean;
@@ -63,6 +66,8 @@ export function AddressBar({
   loading,
   usingLocation,
   onLocationPress,
+  readerState = 'none',
+  onToggleReader,
   canGoBack,
   tabCount,
   incognito,
@@ -216,6 +221,29 @@ export function AddressBar({
               accessibilityLabel={t('address.usingLocation')}
             >
               <Icon name="location" size={13} color={darkUI ? darkPalette.tintText : palette.tintText} />
+            </Pressable>
+          )}
+          {readerState !== 'none' && (
+            <Pressable
+              onPress={onToggleReader}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t(readerState === 'on' ? 'reader.exit' : 'reader.open')}
+              accessibilityState={{ selected: readerState === 'on' }}
+            >
+              <Icon
+                name="reader"
+                size={15}
+                color={
+                  readerState === 'on'
+                    ? darkUI
+                      ? darkPalette.tintText
+                      : palette.tintText
+                    : darkUI
+                      ? darkPalette.textSecondary
+                      : palette.textSecondary
+                }
+              />
             </Pressable>
           )}
         </Pressable>

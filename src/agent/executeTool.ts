@@ -669,6 +669,12 @@ async function runTool(name: string, input: Record<string, unknown>, ctx: ToolCo
     await loaded;
   }
 
+  // Reader mode lies over the page: read_page and read_source still read the page itself, while
+  // anything that looks at or acts on it shows the page again, so the user sees what happens.
+  if (tab.reader && PAGE_TOOLS.has(name) && name !== 'read_page' && name !== 'read_source') {
+    await tab.leaveReader();
+  }
+
   if (tab.isNewTab && PAGE_TOOLS.has(name)) {
     return {
       content: 'This tab shows the new tab page; no web page is loaded. Use navigate to open one.',

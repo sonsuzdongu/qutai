@@ -33,6 +33,8 @@ import { SettingsModal } from './src/components/SettingsModal';
 import { SelectionAction, SelectionBar } from './src/components/SelectionBar';
 import { TabSwitcher } from './src/components/TabSwitcher';
 import { TextSizeSheet } from './src/components/TextSizeSheet';
+import { ReaderSettingsSheet } from './src/components/ReaderSettingsSheet';
+import { sleep } from './src/utils/sleep';
 import { Toast, useToast } from './src/components/Toast';
 import { CaptureOverlay } from './src/components/CaptureOverlay';
 import { dialog, DialogHost } from './src/components/Dialog';
@@ -242,6 +244,7 @@ function BrowserApp({
   const [bookmarked, setBookmarked] = useState(false);
   const [library, setLibrary] = useState<LibraryTab | null>(null);
   const [textSizeVisible, setTextSizeVisible] = useState(false);
+  const [readerSettingsVisible, setReaderSettingsVisible] = useState(false);
   const [permissionHost, setPermissionHost] = useState<string | null>(null);
   // The permission sheet stays open while the location setting changes, so it must see the update.
   useSyncExternalStore(sitePermissions.subscribe, getSitePermissionsVersion);
@@ -250,8 +253,9 @@ function BrowserApp({
   const [offlineVisible, setOfflineVisible] = useState(false);
   const [scannerVisible, setScannerVisible] = useState(false);
   const [context, setContext] = useState<{ tab: Tab; target: ContextTarget } | null>(null);
-  // Find in page belongs to one page: it closes by itself when the tab or the URL changes.
-  const [findFor, setFindFor] = useState<{ tabId: string; url: string } | null>(null);
+  // Find in page belongs to one page: it closes by itself when the tab or the URL changes, or when
+  // reader mode is turned on or off (it searches the text on screen).
+  const [findFor, setFindFor] = useState<{ tabId: string; url: string; reader: boolean } | null>(null);
   const toast = useToast();
   const speaking = useIsSpeaking();
   useIncognitoProtection(tab.incognito || (tabsVisible && browser.tabsOf(true).length > 0));
@@ -439,7 +443,17 @@ function BrowserApp({
 
   // Page actions make no sense on the app's own new tab page.
   const onNewTab = tab.isNewTab;
-  const findOpen = findFor?.tabId === tab.id && findFor.url === tab.url;
+  const findOpen = findFor?.tabId === tab.id && findFor.url === tab.url && findFor.reader === !!tab.reader;
+
+  /** Turns reader mode on (when the page has an article to show) or off. */
+  const toggleReader = () => {
+    if (tab.reader) return tab.closeReader();
+    const target = tab;
+    runAction(async () => {
+      if (!(await target.openReader())) return t('reader.noArticle');
+      AccessibilityInfo.announceForAccessibility(t('reader.opened'));
+    });
+  };
   const currentSite = siteKey(tab.url);
   const iconRow: IconItem[] = [
     {
@@ -501,7 +515,15 @@ function BrowserApp({
       icon: 'find',
       label: t('menu.find'),
       disabled: onNewTab,
-      onPress: () => setFindFor({ tabId: tab.id, url: tab.url }),
+      onPress: () => setFindFor({ tabId: tab.id, url: tab.url, reader: !!tab.reader }),
+    },
+    {
+      icon: 'reader',
+      label: t(tab.reader || tab.readerAvailable || onNewTab ? 'menu.reader' : 'menu.readerNone'),
+      checked: !!tab.reader,
+      // Offered only when the page looks like an article; the full check runs when it opens.
+      disabled: onNewTab || (!tab.reader && !tab.readerAvailable),
+      onPress: toggleReader,
     },
     {
       icon: 'desktop',
@@ -817,13 +839,17 @@ function BrowserApp({
       showAssistant={settings.showAssistantButton}
       onSubmit={(url) => tab.loadUrl(upgradeToHttps(url, settings.httpsOnly))}
       onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
+      readerState={onNewTab ? 'none' : tab.reader ? 'on' : tab.readerAvailable ? 'available' : 'none'}
+      onToggleReader={toggleReader}
       onOpenMenu={() => {
-        // The menu shows "add" or "remove" depending on whether this page is already saved.
-        getDb()
+        // The menu shows "add" or "remove" depending on whether this page is already saved, and
+        // offers reader mode by a fresh look at the page (pages that filled in their content late).
+        const bookmark = getDb()
           .then((db) => isBookmarked(db, tab.url))
           .then(setBookmarked)
-          .catch(() => setBookmarked(false))
-          .finally(() => setMenuVisible(true));
+          .catch(() => setBookmarked(false));
+        const article = tab.reader || onNewTab ? null : Promise.race([tab.probeReader(), sleep(700)]);
+        Promise.all([bookmark, article]).finally(() => setMenuVisible(true));
       }}
       incognito={tab.incognito}
       darkMode={darkMode}
@@ -889,6 +915,12 @@ function BrowserApp({
                       else setFocusRequest((n) => n + 1);
                     },
                     onOpenLibrary: setLibrary,
+                    reader: {
+                      theme: settings.readerTheme,
+                      font: settings.readerFont,
+                      easyReading: settings.readerEasyReading,
+                    },
+                    onOpenReaderSettings: () => setReaderSettingsVisible(true),
                   }}
                 />
               </ErrorBoundary>
@@ -1032,6 +1064,17 @@ function BrowserApp({
             zoom={settings.textZoom}
             onChange={(textZoom) => onChangeSettings({ ...settings, textZoom })}
             onClose={() => setTextSizeVisible(false)}
+          />
+          <ReaderSettingsSheet
+            visible={readerSettingsVisible}
+            value={{
+              readerTheme: settings.readerTheme,
+              readerFont: settings.readerFont,
+              readerEasyReading: settings.readerEasyReading,
+              textZoom: settings.textZoom,
+            }}
+            onChange={(value) => onChangeSettings({ ...settings, ...value })}
+            onClose={() => setReaderSettingsVisible(false)}
           />
           <OfflinePagesScreen
             visible={offlineVisible}

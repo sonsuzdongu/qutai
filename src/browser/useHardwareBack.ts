@@ -3,7 +3,7 @@ import { BackHandler, TextInput, ToastAndroid } from 'react-native';
 import type { Browser } from './Browser';
 import { t } from '../i18n';
 
-export type BackAction = 'blur-input' | 'page-back' | 'back-to-new-tab' | 'close-to-opener' | 'exit';
+export type BackAction = 'blur-input' | 'exit-reader' | 'page-back' | 'back-to-new-tab' | 'close-to-opener' | 'exit';
 
 /** How long after the warning a second back press closes the app. Matches the short toast duration. */
 export const EXIT_CONFIRM_MS = 2000;
@@ -17,6 +17,8 @@ export function confirmsExit(now: number, lastExitPress: number | null): boolean
 export function backAction(browser: Browser, inputFocused: boolean): BackAction {
   if (inputFocused) return 'blur-input';
   const tab = browser.active;
+  // Reader mode lies over the page: back returns to the page first.
+  if (tab.reader) return 'exit-reader';
   if (tab.canGoBack) return 'page-back';
   if (tab.openedFromNewTab) return 'back-to-new-tab';
   if (tab.openerId && browser.getTab(tab.openerId)) return 'close-to-opener';
@@ -41,6 +43,9 @@ export function useHardwareBack(browser: Browser) {
       switch (action) {
         case 'blur-input':
           TextInput.State.blurTextInput(focused);
+          return true;
+        case 'exit-reader':
+          tab.closeReader();
           return true;
         case 'page-back':
           tab.webview?.goBack();

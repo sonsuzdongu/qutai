@@ -38,7 +38,7 @@ putting the AI experience front and center.
 | HTTPS indicator, domain info | ✅ | | 🔒 / ⚠︎ Not secure; WebView cannot access certificate details |
 | Find in page | ⬜ | Go · M | No WebView API; highlighting via page script |
 | Desktop site | ⬜ | Go · S | Per-tab `userAgent` + reload |
-| Reader mode | ⬜ | Go · M | Reuses the content extraction code written for read-aloud |
+| Reader mode | ✅ | | Readability-style extraction in the page script, shown in a script-free WebView over the page; light/dark/sepia, serif/sans, easier-reading spacing; read aloud with the paragraph highlighted |
 | QR code scanning / generation | ⬜ | Go · S | `expo-camera`; pure JS library for generation |
 | Voice search | ⬜ | Build | Decision: the device's speech recognition engine |
 | Download manager | ⬜ | Go/Build · L | See section 6 |
@@ -81,7 +81,7 @@ putting the AI experience front and center.
 | Save as PDF | ✅ | | From the page's HTML, or from full-page screenshots for very dynamic pages |
 | Printing | ⬜ | Go · S | `Print.printAsync` with the same page copy |
 | Offline saving | ⬜ | Go · M | The page copy written for PDF is saved to a file |
-| Reader mode | ⬜ | Go · M | |
+| Reader mode | ✅ | | Page menu and an address bar icon on article pages; see Phase 2 item 7 |
 | Text size, zoom | ⬜ | Go · S | Android `textZoom`; via CSS on iOS |
 | Translation | ⬜ | Go · M | With AI, in place without breaking the layout |
 | Select text to share, ask | ⬜ | Go · M | Native menu on iOS (`menuItems`); page script + on-screen button on Android |
@@ -174,7 +174,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
    - ✅ **Clickable options:** when a choice is needed, the agent presents options as buttons via the `ask_user` tool
 5. ✅ **AI search:** answers with sources using the providers' web search tools (searches are visible in chat, citations in source cards; can be turned off in settings)
 6. ✅ **Multi-tab:** `read_tab` tool (reads other tabs without bringing them to the front), "compare selected tabs" in the tab switcher
-7. ⏸ **Page translation** (in place) and **reader mode** · M (postponed per user decision)
+7. ⏸ **Page translation** (in place) · M (postponed per user decision); ✅ **reader mode** (brought back with read-aloud, see Phase 4 notes)
 8. ✅ **Per-site agent permissions** (default, always allow, ask on every action, read only, blocked) and **action history** (30 days; private tabs and typed text are not logged)
 9. ✅ **Searching history in natural language** (`search_history`), **email draft** (`draft_email`), **form profile** (via memory)
    - ✅ **Memory** (in place of the form profile): the agent stores lasting information the user tells it on the phone and
@@ -216,7 +216,7 @@ Added from Comet reviews:
 - Voice commands, with the assistant going quiet when the user starts speaking (barge-in)
 - Passwords: instead of our own manager, verify and fix that the system's (Google, iCloud Keychain) autofill works in the WebView
 - Background audio and headphone media keys, site shortcut on the home screen
-- Reader mode (was postponed; should be brought back together with read-aloud for accessibility)
+- ✅ Reader mode, together with read-aloud: the article only, in a themed view (light, dark, sepia; serif or sans; easier-reading spacing for dyslexic readers; the shared text size and the system font size); read aloud reads exactly what is shown, paragraph by paragraph, with play/pause/stop and the paragraph highlighted. Offered only on pages with enough article text (600 characters and 3 paragraphs)
 - iOS default browser: applying for Apple's `com.apple.developer.web-browser` entitlement
 
 Done in the development build:

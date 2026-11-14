@@ -17,6 +17,11 @@ From the page menu (⋮) and by asking the agent: save the page as PDF (from its
 that come out wrong), save a screenshot of the visible area or the whole page (scrolled and stitched) to Photos,
 read the page aloud, share/copy the link. When needed, the agent can also look at a screenshot of the page.
 
+Reader mode (page menu, or the page icon in the address bar on article pages) shows just the article: title, byline,
+text, headings, images and links, in light, dark or sepia, serif or sans, with an easier-reading spacing option and the
+same text size as pages. Read aloud in reader mode reads exactly that article, highlighting the paragraph being read.
+The page stays loaded underneath, so closing reader mode (or Android back) returns to it as it was.
+
 ## Running
 
 ```bash
@@ -93,7 +98,8 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 
 | File | Role |
 |---|---|
-| `src/browser/pageScript.ts` | JS injected into the page: converts the DOM to text, gives elements a `ref` number, clicks and types |
+| `src/browser/pageScript.ts` | JS injected into the page: converts the DOM to text, gives elements a `ref` number, clicks and types, extracts the article for reader mode |
+| `src/browser/reader.ts`, `src/components/ReaderView.tsx` | Reader mode: thresholds, colours, the script-free reader document and its view over the tab |
 | `src/browser/Tab.ts` | A single tab: sends commands to the WebView, matches responses, waits for page loads |
 | `src/browser/Browser.ts` | Tab manager (open, close, switch, private tabs) and change notifications to React |
 | `src/components/BrowserView.tsx` | Draws the WebViews of all tabs stacked on top of each other; hidden tabs keep running |

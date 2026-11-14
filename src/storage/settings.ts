@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { PROVIDER_ORDER, PROVIDERS } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
+import { READER_FONTS, READER_THEMES, ReaderFont, ReaderTheme } from '../browser/reader';
 import { isSearchEngine, SearchEngineId } from '../browser/search';
 
 export type Settings = {
@@ -43,6 +44,11 @@ export type Settings = {
   animateLogo: boolean;
   /** Pinch-zoom every page, even those that turn zooming off. */
   forceZoom: boolean;
+  /** Reader mode colours: following the app's appearance, light, dark or sepia. */
+  readerTheme: ReaderTheme;
+  readerFont: ReaderFont;
+  /** Reader mode: wider letter, word and line spacing, for dyslexic readers. */
+  readerEasyReading: boolean;
   /** The first-run setup was completed (or skipped through). */
   onboarded: boolean;
   /** Version of the privacy policy and terms the user accepted (0: none yet). */
@@ -79,6 +85,9 @@ export const DEFAULT_SETTINGS: Settings = {
   showAssistantButton: true,
   animateLogo: true,
   forceZoom: false,
+  readerTheme: 'auto',
+  readerFont: 'serif',
+  readerEasyReading: false,
   onboarded: false,
   legalAcceptedVersion: 0,
 };
@@ -104,6 +113,9 @@ const KEYS = {
   showAssistantButton: 'show_assistant_button',
   animateLogo: 'animate_logo',
   forceZoom: 'force_zoom',
+  readerTheme: 'reader_theme',
+  readerFont: 'reader_font',
+  readerEasyReading: 'reader_easy_reading',
   onboarded: 'onboarded',
   legalAcceptedVersion: 'legal_accepted_version',
   apiKey: (id: ProviderId) => `api_key_${id}`,
@@ -147,6 +159,9 @@ export async function loadSettings(): Promise<Settings> {
     showAssistantButton,
     animateLogo,
     forceZoom,
+    readerTheme,
+    readerFont,
+    readerEasyReading,
     onboarded,
     legalAcceptedVersion,
     legacyApiKey,
@@ -173,6 +188,9 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.showAssistantButton),
     get(KEYS.animateLogo),
     get(KEYS.forceZoom),
+    get(KEYS.readerTheme),
+    get(KEYS.readerFont),
+    get(KEYS.readerEasyReading),
     get(KEYS.onboarded),
     get(KEYS.legalAcceptedVersion),
     get(KEYS.legacyApiKey),
@@ -203,6 +221,9 @@ export async function loadSettings(): Promise<Settings> {
     showAssistantButton: showAssistantButton !== 'false',
     animateLogo: animateLogo !== 'false',
     forceZoom: forceZoom === 'true',
+    readerTheme: READER_THEMES.includes(readerTheme as ReaderTheme) ? (readerTheme as ReaderTheme) : 'auto',
+    readerFont: READER_FONTS.includes(readerFont as ReaderFont) ? (readerFont as ReaderFont) : 'serif',
+    readerEasyReading: readerEasyReading === 'true',
     onboarded: onboarded === 'true',
     legalAcceptedVersion: Math.max(0, Math.floor(Number(legalAcceptedVersion) || 0)),
   };
@@ -241,6 +262,9 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.showAssistantButton, String(settings.showAssistantButton)),
     set(KEYS.animateLogo, String(settings.animateLogo)),
     set(KEYS.forceZoom, String(settings.forceZoom)),
+    set(KEYS.readerTheme, settings.readerTheme),
+    set(KEYS.readerFont, settings.readerFont),
+    set(KEYS.readerEasyReading, String(settings.readerEasyReading)),
     set(KEYS.onboarded, String(settings.onboarded)),
     set(KEYS.legalAcceptedVersion, String(settings.legalAcceptedVersion)),
     ...PROVIDER_ORDER.flatMap((id) => [
