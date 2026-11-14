@@ -158,7 +158,9 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       raw: reply.raw,
       rawProvider: provider.id,
       rawModel: opts.model,
+      ...(reply.streamed ? { streamed: true } : {}),
     });
+    if (reply.notice) onEvent({ type: 'info', text: reply.notice });
     if (reply.searchWidget) searchWidget = reply.searchWidget;
     reply.searches.forEach((query) => onEvent({ type: 'action', text: t('action.webSearch', { query }) }));
     // Pages found by web search open in the conversation's own mode.

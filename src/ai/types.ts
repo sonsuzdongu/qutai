@@ -29,6 +29,8 @@ export type Turn =
       raw: unknown;
       rawProvider: ProviderId;
       rawModel: string;
+      /** Rebuilt from a stream (Gemini): if the provider rejects its raw output, it is resent as text and tool calls. */
+      streamed?: boolean;
     }
   | { role: 'tool_results'; results: ToolResult[] };
 
@@ -49,6 +51,10 @@ export type ModelReply = {
   searches: string[];
   /** Google's search suggestions widget (HTML), which must be shown with answers grounded in Google Search. */
   searchWidget?: string;
+  /** The reply came from a stream whose raw output was rebuilt from its events. */
+  streamed?: boolean;
+  /** A one-line note for the user about how the request went (e.g. streaming was switched off). */
+  notice?: string;
 };
 
 export type ModelRequest = {

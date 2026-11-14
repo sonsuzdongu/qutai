@@ -216,6 +216,13 @@ Along with each assistant response, the provider's raw output is also stored (Cl
 encrypted reasoning content, Gemini's thought signatures) and sent back unchanged to the same model. If the
 provider or model changes mid-chat, the history is rebuilt from the text and tool calls.
 
+Anthropic and OpenAI replies are streamed. Gemini replies are streamed only with "Stream Gemini responses
+(experimental)" in Settings › Assistant (off by default, not yet verified against the live API): `src/ai/geminiStream.ts`
+rebuilds the same interaction a non-streamed request returns from the stream's step events, thought signatures
+included. A stream that fails is repeated once without streaming; if Gemini rejects a request over a thought
+signature after a streamed reply, the request is repeated once with the streamed replies sent as text and tool calls,
+and streaming stays off until the app restarts.
+
 ## Permissions
 
 Each permission is asked for the first time a feature needs it, never at launch: camera (QR codes, photos for

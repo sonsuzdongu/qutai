@@ -1,8 +1,21 @@
 import { waitForForeground } from '../utils/foreground';
 import { t } from '../i18n';
 import { sleep } from '../utils/sleep';
+import { createSseDecoder, SseEvent } from './sse';
 
 const MAX_RETRIES = 3;
+
+/** The provider answered with an error status; `code` is its machine-readable error code, when it gave one. */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly code?: string,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
 /**
  * POSTs JSON with retries for rate limits, overloads and requests cut off
@@ -41,13 +54,15 @@ async function postWithRetry(
     }
 
     let detail = '';
+    let code: string | undefined;
     try {
       const err = await res.json();
       // Anthropic and OpenAI use { error: { message } }; Gemini may also return an array.
       const e = Array.isArray(err) ? err[0]?.error : err?.error;
       detail = e?.message ?? '';
+      if (typeof e?.code === 'string') code = e.code;
     } catch {}
-    throw new Error(`${t('error.api', { status: res.status })}${detail ? `: ${detail}` : ''}`);
+    throw new ApiError(`${t('error.api', { status: res.status })}${detail ? `: ${detail}` : ''}`, res.status, code);
   }
 }
 
@@ -59,31 +74,6 @@ export async function postJson<T>(
 ): Promise<T> {
   const res = await postWithRetry(url, headers, body, signal);
   return (await res.json()) as T;
-}
-
-export type SseEvent = { event: string; data: unknown };
-
-/** Splits server-sent events out of a text buffer; returns the parsed events and the unfinished rest. */
-export function parseSse(buffer: string): { events: SseEvent[]; rest: string } {
-  const blocks = buffer.split(/\r?\n\r?\n/);
-  const rest = blocks.pop() ?? '';
-  const events: SseEvent[] = [];
-  for (const block of blocks) {
-    let event = 'message';
-    const data: string[] = [];
-    for (const line of block.split(/\r?\n/)) {
-      if (line.startsWith('event:')) event = line.slice(6).trim();
-      else if (line.startsWith('data:')) data.push(line.slice(5).replace(/^ /, ''));
-    }
-    const text = data.join('\n');
-    if (!text || text === '[DONE]') continue;
-    try {
-      events.push({ event, data: JSON.parse(text) });
-    } catch {
-      // Not JSON (comments, keep-alives): ignored.
-    }
-  }
-  return { events, rest };
 }
 
 /**
@@ -102,23 +92,18 @@ export async function postSse(
     const res = await postWithRetry(url, { accept: 'text/event-stream', ...headers }, body, signal);
     if (!res.body) throw new Error('Streaming is not supported here');
     const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
+    const decoder = createSseDecoder();
     let received = false;
     try {
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const parsed = parseSse(buffer);
-        buffer = parsed.rest;
-        for (const event of parsed.events) {
+        for (const event of decoder.push(value)) {
           received = true;
           onEvent(event);
         }
       }
-      buffer += decoder.decode();
-      parseSse(buffer + '\n\n').events.forEach(onEvent);
+      decoder.end().forEach(onEvent);
       return;
     } catch (e) {
       if (signal.aborted || received || attempt >= MAX_RETRIES) throw e;

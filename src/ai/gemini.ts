@@ -1,13 +1,22 @@
-import { postJson } from './http';
+import { ApiError, postJson, postSse } from './http';
 import { t } from '../i18n';
+import { createGeminiAccumulator, GeminiInteraction, GeminiStep, GeminiStreamError } from './geminiStream';
 import { Citation, canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
 
-type Step = { type?: string; [key: string]: unknown };
+const INTERACTIONS_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions';
 
-type Interaction = {
-  status: string;
-  steps?: Step[];
-};
+type Step = GeminiStep;
+type Interaction = GeminiInteraction;
+
+/**
+ * Streaming is experimental for Gemini (Settings › Assistant, off by default). Once the API has rejected
+ * a request because of a streamed reply in its history, it stays off until the app restarts.
+ */
+let streamingRejected = false;
+
+export function geminiStreamingAvailable(): boolean {
+  return !streamingRejected;
+}
 
 function toSteps(turns: Turn[], model: string): Step[] {
   const steps: Step[] = [];
@@ -43,29 +52,105 @@ function hasParameters(schema: Record<string, unknown>) {
   return !!props && Object.keys(props).length > 0;
 }
 
-async function call(req: ModelRequest): Promise<ModelReply> {
-  const res = await postJson<Interaction>(
-    'https://generativelanguage.googleapis.com/v1beta/interactions',
-    { 'x-goog-api-key': req.apiKey },
-    {
-      model: req.model,
-      system_instruction: req.system,
-      input: toSteps(req.turns, req.model),
-      tools: [
-        ...req.tools.map((t) => ({
-          type: 'function',
-          name: t.name,
-          description: t.description,
-          ...(hasParameters(t.input_schema) ? { parameters: t.input_schema } : {}),
-        })),
-        ...(req.webSearch ? [{ type: 'google_search' }] : []),
-      ],
-      generation_config: { max_output_tokens: 32000 },
-      store: false,
-    },
-    req.signal,
-  );
+function requestBody(req: ModelRequest) {
+  return {
+    model: req.model,
+    system_instruction: req.system,
+    input: toSteps(req.turns, req.model),
+    tools: [
+      ...req.tools.map((t) => ({
+        type: 'function',
+        name: t.name,
+        description: t.description,
+        ...(hasParameters(t.input_schema) ? { parameters: t.input_schema } : {}),
+      })),
+      ...(req.webSearch ? [{ type: 'google_search' }] : []),
+    ],
+    generation_config: { max_output_tokens: 32000 },
+    store: false,
+  };
+}
 
+/** One request, streamed or not; both end in the same interaction shape and the same reply. */
+async function request(req: ModelRequest, stream: boolean): Promise<ModelReply> {
+  const headers = { 'x-goog-api-key': req.apiKey };
+  const onText = req.onText;
+  if (!stream || !onText) {
+    return toReply(await postJson<Interaction>(INTERACTIONS_URL, headers, requestBody(req), req.signal));
+  }
+
+  const acc = createGeminiAccumulator();
+  let interaction: Interaction;
+  try {
+    await postSse(INTERACTIONS_URL, headers, { ...requestBody(req), stream: true }, req.signal, ({ event, data }) => {
+      // Each event names its type in its data; the SSE event line says the same.
+      const named = data && typeof data === 'object' && !('event_type' in data) ? { ...data, event_type: event } : data;
+      let text: string;
+      try {
+        text = acc.push(named);
+      } catch (e) {
+        if (e instanceof GeminiStreamError) throw e;
+        throw new GeminiStreamError(e instanceof Error ? e.message : String(e), 'malformed');
+      }
+      if (text) onText(text);
+    });
+    interaction = acc.finish();
+  } catch (e) {
+    // Stopping, lost connections, the API's own errors and verdicts stay what they are; anything else
+    // that went wrong while reading the stream is a problem with the stream.
+    if (req.signal.aborted || e instanceof TypeError) throw e;
+    if (e instanceof ApiError || e instanceof GeminiStreamError) throw e;
+    throw new GeminiStreamError(e instanceof Error ? e.message : String(e), 'malformed');
+  }
+  return { ...toReply(interaction), streamed: true };
+}
+
+/** The stream failed in a way that a request without streaming may not: worth one repeat. */
+function streamFailed(e: unknown): boolean {
+  if (e instanceof GeminiStreamError) return e.problem !== 'blocked';
+  return e instanceof ApiError;
+}
+
+/**
+ * The API rejected the history because of a thought signature: the documented
+ * `missing_thought_signature` code, or a 400 whose message names a thought signature.
+ */
+function rejectsHistory(e: unknown): boolean {
+  if ((e instanceof ApiError || e instanceof GeminiStreamError) && e.code === 'missing_thought_signature') return true;
+  return e instanceof ApiError && e.status === 400 && /thought[\s_-]?signature/i.test(e.message);
+}
+
+/**
+ * Streams when asked to (the experimental setting), with two fallbacks so a mistake in rebuilding the
+ * stream can't break a conversation, each tried once per request: a stream that fails is repeated
+ * without streaming, and a request the API rejects over a streamed reply in its history is repeated
+ * with those replies sent as text and tool calls, after which streaming stays off.
+ */
+async function call(req: ModelRequest): Promise<ModelReply> {
+  const streamedTurns = req.turns.filter(
+    (turn): turn is Extract<Turn, { role: 'assistant' }> =>
+      turn.role === 'assistant' && !!turn.streamed && canReplay(turn, 'gemini', req.model),
+  );
+  try {
+    return await request(req, !!req.onText);
+  } catch (e) {
+    if (req.signal.aborted) throw e;
+    if (streamedTurns.length > 0 && rejectsHistory(e)) {
+      // Dropped for good, as when the provider or model changes mid-chat: these turns are rebuilt
+      // from their text and tool calls in this request and every later one.
+      streamedTurns.forEach((turn) => {
+        turn.raw = null;
+      });
+      streamingRejected = true;
+      const reply = await request(req, false);
+      return { ...reply, notice: t('chat.geminiStreamingOff') };
+    }
+    if (req.onText && streamFailed(e)) return await request(req, false);
+    throw e;
+  }
+}
+
+function toReply(res: Interaction): ModelReply {
   const steps = res.steps ?? [];
   const texts: string[] = [];
   const toolCalls: ToolCall[] = [];

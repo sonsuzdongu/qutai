@@ -252,6 +252,14 @@ function SettingsPages({
               value={settings.webSearch}
               onChange={(webSearch) => set({ webSearch })}
             />
+            {settings.provider === 'gemini' && (
+              <SwitchRow
+                title={t('settings.geminiStreaming')}
+                hint={t('settings.geminiStreamingHint')}
+                value={settings.geminiStreaming}
+                onChange={(geminiStreaming) => set({ geminiStreaming })}
+              />
+            )}
             {Platform.OS === 'android' && (
               <SwitchRow
                 title={t('settings.backgroundTasks')}

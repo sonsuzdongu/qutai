@@ -16,6 +16,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { runAgent } from './src/agent/runAgent';
 import { Conversation, callItem, newItem, smsItem, sourcesItem } from './src/chat/Conversation';
+import { geminiStreamingAvailable } from './src/ai/gemini';
 import { getProvider, modelLabel } from './src/ai/providers';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import type { ContextTarget } from './src/browser/contextMenu';
@@ -551,7 +552,8 @@ function BrowserApp({
         // Research without web search would be guesswork, so it always searches.
         webSearch: settings.webSearch || research,
         research,
-        stream: true,
+        // Gemini streams only with its experimental setting, and not after the API rejected a streamed reply.
+        stream: provider !== 'gemini' || (settings.geminiStreaming && geminiStreamingAvailable()),
         confirm: (description, host) => askConfirmation(description, host, signal),
         providerLabel: getProvider(provider).label,
         confirmByDefault: settings.confirmActions,

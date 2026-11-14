@@ -22,6 +22,7 @@ export const en = {
   'chat.resumed': '▶️ Resuming',
   'chat.maxTokens': 'The response reached the length limit.',
   'chat.refusal': 'The model declined this request.',
+  'chat.geminiStreamingOff': 'Streaming is off for now: Gemini rejected a streamed reply.',
   'chat.stepLimit': 'Reached the step limit ({max}). Send another message to continue.',
   'chat.placeholder': 'Give Qutai a task…',
   'chat.working': 'working…',
@@ -257,6 +258,8 @@ export const en = {
   'settings.memoryEnabled': 'Remember things about me',
   'settings.memoryHint':
     'Qutai saves facts you tell it (name, phone, address, preferences) on this phone and uses them in later conversations, e.g. to fill in forms. Never passwords or card details; nothing from incognito.',
+  'settings.geminiStreaming': 'Stream Gemini responses (experimental)',
+  'settings.geminiStreamingHint': 'Answers appear as they are written. Turn this off if replies fail.',
   'settings.backgroundTasks': 'Keep working in the background',
   'settings.backgroundTasksHint': 'A task you started goes on when you leave Qutai or lock the screen, with a notification that stays visible while it runs and a Stop button. Reading and using the task\'s open pages, and the requests to your AI provider, go on; steps that need you (confirmations, questions, screenshots, opening new tabs) pause the task and notify you. Not for incognito conversations.',
   'settings.backgroundTasksNeedsBuild': 'This needs a newer build of Qutai.',

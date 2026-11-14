@@ -54,6 +54,11 @@ export type Settings = {
    * (src/device/backgroundTask.ts). Off by default.
    */
   backgroundTasks: boolean;
+  /**
+   * Experimental: stream Gemini replies as they are written. Off by default until checked with a real key;
+   * the other providers always stream.
+   */
+  geminiStreaming: boolean;
   /** Reader mode colours: following the app's appearance, light, dark or sepia. */
   readerTheme: ReaderTheme;
   readerFont: ReaderFont;
@@ -105,6 +110,7 @@ export const DEFAULT_SETTINGS: Settings = {
   backgroundPlayback: true,
   pictureInPicture: true,
   backgroundTasks: false,
+  geminiStreaming: false,
   readerTheme: 'auto',
   readerFont: 'serif',
   readerEasyReading: false,
@@ -138,6 +144,7 @@ const KEYS = {
   backgroundPlayback: 'background_playback',
   pictureInPicture: 'picture_in_picture',
   backgroundTasks: 'background_tasks',
+  geminiStreaming: 'gemini_streaming',
   readerTheme: 'reader_theme',
   readerFont: 'reader_font',
   readerEasyReading: 'reader_easy_reading',
@@ -189,6 +196,7 @@ export async function loadSettings(): Promise<Settings> {
     backgroundPlayback,
     pictureInPicture,
     backgroundTasks,
+    geminiStreaming,
     readerTheme,
     readerFont,
     readerEasyReading,
@@ -223,6 +231,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.backgroundPlayback),
     get(KEYS.pictureInPicture),
     get(KEYS.backgroundTasks),
+    get(KEYS.geminiStreaming),
     get(KEYS.readerTheme),
     get(KEYS.readerFont),
     get(KEYS.readerEasyReading),
@@ -261,6 +270,7 @@ export async function loadSettings(): Promise<Settings> {
     backgroundPlayback: backgroundPlayback !== 'false',
     pictureInPicture: pictureInPicture !== 'false',
     backgroundTasks: backgroundTasks === 'true',
+    geminiStreaming: geminiStreaming === 'true',
     readerTheme: READER_THEMES.includes(readerTheme as ReaderTheme) ? (readerTheme as ReaderTheme) : 'auto',
     readerFont: READER_FONTS.includes(readerFont as ReaderFont) ? (readerFont as ReaderFont) : 'serif',
     readerEasyReading: readerEasyReading === 'true',
@@ -307,6 +317,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.backgroundPlayback, String(settings.backgroundPlayback)),
     set(KEYS.pictureInPicture, String(settings.pictureInPicture)),
     set(KEYS.backgroundTasks, String(settings.backgroundTasks)),
+    set(KEYS.geminiStreaming, String(settings.geminiStreaming)),
     set(KEYS.readerTheme, settings.readerTheme),
     set(KEYS.readerFont, settings.readerFont),
     set(KEYS.readerEasyReading, String(settings.readerEasyReading)),

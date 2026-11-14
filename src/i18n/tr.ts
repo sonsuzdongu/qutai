@@ -23,6 +23,7 @@ export const tr: Record<keyof typeof en, string> = {
   'chat.resumed': '▶️ Devam ediliyor',
   'chat.maxTokens': 'Yanıt uzunluk sınırına ulaştı.',
   'chat.refusal': 'Model bu isteği yerine getirmeyi reddetti.',
+  'chat.geminiStreamingOff': 'Akış şimdilik kapatıldı: Gemini akışla alınan bir yanıtı reddetti.',
   'chat.stepLimit': 'Adım sınırına ({max}) ulaşıldı. Devam etmek için tekrar yazabilirsiniz.',
   'chat.placeholder': "Qutai'ye bir görev verin…",
   'chat.working': 'çalışıyor…',
@@ -258,6 +259,8 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.memoryEnabled': 'Benimle ilgili bilgileri hatırla',
   'settings.memoryHint':
     'Qutai ona söylediğiniz bilgileri (ad, telefon, adres, tercihler) bu telefonda saklar ve sonraki sohbetlerde, örneğin form doldururken kullanır. Şifre ve kart bilgisi asla saklanmaz; gizli sekmelerden hiçbir şey kaydedilmez.',
+  'settings.geminiStreaming': 'Gemini yanıtlarını akış olarak göster (deneysel)',
+  'settings.geminiStreamingHint': 'Yanıtlar yazıldıkça görünür. Yanıtlar başarısız olursa bunu kapatın.',
   'settings.backgroundTasks': 'Arka planda çalışmaya devam et',
   'settings.backgroundTasksHint': 'Başlattığınız bir görev, Qutai\'den çıktığınızda veya ekranı kilitlediğinizde sürer; çalıştığı sürece görünür kalan bir bildirim ve Durdur düğmesi olur. Görevin açık sayfalarını okumak ve kullanmak ile yapay zekâ sağlayıcınıza gönderilen istekler sürer; size ihtiyaç duyan adımlar (onaylar, sorular, ekran görüntüleri, yeni sekme açma) görevi duraklatır ve sizi bildirimle haberdar eder. Gizli sohbetlerde çalışmaz.',
   'settings.backgroundTasksNeedsBuild': 'Bunun için Qutai\'nin daha yeni bir sürümü gerekiyor.',
