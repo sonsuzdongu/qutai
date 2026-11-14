@@ -39,6 +39,7 @@ import { SelectionAction, SelectionBar } from './src/components/SelectionBar';
 import { TabSwitcher } from './src/components/TabSwitcher';
 import { TextSizeSheet } from './src/components/TextSizeSheet';
 import { ReaderSettingsSheet } from './src/components/ReaderSettingsSheet';
+import { conversationModelInfo, ModelSheet } from './src/components/ModelSheet';
 import { sleep } from './src/utils/sleep';
 import { emptyTask, TaskDraft, TasksScreen } from './src/components/TasksScreen';
 import {
@@ -336,6 +337,8 @@ function BrowserApp({
   const [settingsVisible, setSettingsVisible] = useState(false);
   /** "What was sent to the AI" opened from the assistant panel, for this conversation key. */
   const [sentFor, setSentFor] = useState<string | null>(null);
+  /** The conversation whose model is being chosen (the sheet under the panel's title). */
+  const [modelSheetFor, setModelSheetFor] = useState<Conversation | null>(null);
   const [tabsVisible, setTabsVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
@@ -578,7 +581,15 @@ function BrowserApp({
     if (prepared?.chat === chat) setPrepared(null);
     chat.add(newItem('user', text));
 
-    const provider = settings.provider;
+    // The conversation's own model choice, if its provider is still set up; otherwise the default in Settings.
+    // Read once here: a running task keeps the model it started with.
+    const choice = chat.model;
+    const useChoice = !!choice && isConfigured(settings, choice.provider);
+    if (choice && !useChoice) {
+      chat.add(newItem('info', t('chat.modelChoiceUnavailable', { provider: getProvider(choice.provider).label })));
+      chat.setModel(null);
+    }
+    const provider = useChoice ? choice.provider : settings.provider;
     if (!isConfigured(settings, provider)) {
       chat.add(
         newItem(
@@ -616,7 +627,7 @@ function BrowserApp({
     let lastText = '';
     // Catalogue providers: what the cached catalogue says about the model (images, output limit).
     if (getProvider(provider).catalog) await loadCatalog();
-    const target = requestTarget(settings, provider);
+    const target = requestTarget(settings, provider, useChoice ? choice.model : undefined);
     try {
       await runAgent({
         provider,
@@ -1415,7 +1426,9 @@ function BrowserApp({
               focusRequest={focusRequest}
               research={conversation.research}
               onResearchChange={(on) => conversation.setResearch(on)}
-              modelInfo={`${getProvider(settings.provider).label} · ${modelLabel(settings.provider, settings.models[settings.provider])}`}
+              modelInfo={conversationModelInfo(settings, conversation.model)}
+              modelChosen={!!conversation.model && isConfigured(settings, conversation.model.provider)}
+              onModelPress={() => setModelSheetFor(conversation)}
               items={conversation.items}
               running={conversation.running}
               busyElsewhere={running && !conversation.running}
@@ -1584,6 +1597,22 @@ function BrowserApp({
             zoom={settings.textZoom}
             onChange={(textZoom) => onChangeSettings({ ...settings, textZoom })}
             onClose={() => setTextSizeVisible(false)}
+          />
+          <ModelSheet
+            visible={!!modelSheetFor}
+            settings={settings}
+            current={modelSheetFor?.model ?? null}
+            onChoose={(choice) => {
+              if (!modelSheetFor || modelSheetFor.running) return;
+              modelSheetFor.setModel(choice);
+              // Kept with the conversation (never for an incognito one: storeChat writes nothing for those).
+              persistConversation(modelSheetFor);
+            }}
+            onOpenSettings={() => {
+              setPanelOpen(false);
+              setSettingsVisible(true);
+            }}
+            onClose={() => setModelSheetFor(null)}
           />
           <ReaderSettingsSheet
             visible={readerSettingsVisible}

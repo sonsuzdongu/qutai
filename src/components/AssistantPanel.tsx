@@ -103,6 +103,10 @@ type Props = {
   onShowFinished: () => void;
   /** Provider and model shown under the title, e.g. "OpenAI · GPT-5.6 Terra". */
   modelInfo: string;
+  /** The conversation has its own model choice (modelInfo then says so). */
+  modelChosen?: boolean;
+  /** Opens the sheet to choose this conversation's provider and model. */
+  onModelPress: () => void;
   onClose: () => void;
   onSend: (text: string) => void;
   onStop: () => void;
@@ -165,6 +169,8 @@ export function AssistantPanel({
   finishedElsewhere,
   onShowFinished,
   modelInfo,
+  modelChosen,
+  onModelPress,
   onClose,
   onSend,
   onStop,
@@ -325,13 +331,17 @@ export function AssistantPanel({
                   <GradientText style={styles.title} dark={dark}>
                     {t('chat.title')}
                   </GradientText>
+                  {/* The running task keeps its model, so the choice opens only between tasks. */}
                   <Pressable
-                    onPress={leavePanel(onOpenSettings)}
+                    onPress={onModelPress}
+                    disabled={running}
                     hitSlop={4}
+                    accessibilityRole="button"
                     accessibilityLabel={t('chat.modelA11y', { model: modelInfo })}
+                    accessibilityState={{ disabled: running }}
                   >
-                    <Text style={styles.status} numberOfLines={1}>
-                      {running ? t('chat.working') : modelInfo}
+                    <Text style={[styles.status, modelChosen && !running && styles.statusChosen]} numberOfLines={1}>
+                      {running ? t('chat.working') : `${modelInfo} ▾`}
                     </Text>
                   </Pressable>
                 </View>
@@ -970,6 +980,7 @@ const useStyles = makeStyles((c) => ({
   },
   title: { fontWeight: '700', fontSize: 17 },
   status: { color: c.textSecondary, fontSize: 12, marginTop: 1 },
+  statusChosen: { color: c.tintText },
   headerTitle: { flex: 1, marginLeft: 10, marginRight: 8 },
   headerButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerButtonText: { fontSize: 18, color: c.textSecondary },

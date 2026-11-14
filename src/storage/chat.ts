@@ -1,10 +1,11 @@
 import { compactHistory } from '../agent/runAgent';
+import { PROVIDER_ORDER } from '../ai/providers';
 import type { Turn } from '../ai/types';
-import type { Conversation } from '../chat/Conversation';
+import type { Conversation, ModelChoice } from '../chat/Conversation';
 import type { ChatItem } from '../components/AssistantPanel';
 import { Db, deleteKey, getJson, setJson } from './db';
 
-export type SavedChat = { items: ChatItem[]; turns: Turn[]; draft?: string };
+export type SavedChat = { items: ChatItem[]; turns: Turn[]; draft?: string; model?: ModelChoice };
 
 const MAX_ITEMS = 300;
 const MAX_TURNS_JSON = 1_000_000;
@@ -33,7 +34,16 @@ export function prepareForStorage(chat: SavedChat): SavedChat {
     items: chat.items.slice(-MAX_ITEMS),
     turns,
     ...(chat.draft ? { draft: chat.draft.slice(0, MAX_DRAFT) } : {}),
+    ...(validModel(chat.model) ? { model: chat.model } : {}),
   };
+}
+
+/** A saved model choice is used only if it names a provider this version knows and a model id. */
+function validModel(model: unknown): model is ModelChoice {
+  const m = model as ModelChoice | undefined;
+  return (
+    !!m && (PROVIDER_ORDER as string[]).includes(m.provider) && typeof m.model === 'string' && m.model.trim().length > 0
+  );
 }
 
 const LEGACY_KEY = 'chat';
@@ -50,7 +60,10 @@ function isSavedChat(chat: SavedChat | null): chat is SavedChat {
  */
 export async function loadChat(db: Db, key: string, { adoptLegacy = false } = {}): Promise<SavedChat | null> {
   const chat = await getJson<SavedChat>(db, keyFor(key));
-  if (isSavedChat(chat)) return chat;
+  if (isSavedChat(chat)) {
+    if (chat.model !== undefined && !validModel(chat.model)) delete chat.model;
+    return chat;
+  }
   if (!adoptLegacy) return null;
   const legacy = await getJson<SavedChat>(db, LEGACY_KEY);
   await deleteKey(db, LEGACY_KEY);
@@ -60,7 +73,7 @@ export async function loadChat(db: Db, key: string, { adoptLegacy = false } = {}
 }
 
 export async function saveChat(db: Db, key: string, chat: SavedChat): Promise<void> {
-  if (chat.items.length === 0 && chat.turns.length === 0 && !chat.draft) return deleteKey(db, keyFor(key));
+  if (chat.items.length === 0 && chat.turns.length === 0 && !chat.draft && !chat.model) return deleteKey(db, keyFor(key));
   await setJson(db, keyFor(key), prepareForStorage(chat));
 }
 

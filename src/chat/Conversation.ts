@@ -1,4 +1,4 @@
-import type { Turn } from '../ai/types';
+import type { ProviderId, Turn } from '../ai/types';
 import type { Source } from '../agent/types';
 import type { ChatItem } from '../components/AssistantPanel';
 import type { FileOffer } from '../device/composedFile';
@@ -46,8 +46,14 @@ function continueItemIds(items: ChatItem[]) {
   itemCounter = Math.max(itemCounter, ...items.map((item) => Number(item.id) || 0));
 }
 
-/** draft: what the user was typing, so it survives the app being closed. */
-export type SavedConversation = { items: ChatItem[]; turns: Turn[]; draft?: string };
+/** A provider and model chosen for one conversation, instead of the default in Settings. */
+export type ModelChoice = { provider: ProviderId; model: string };
+
+/**
+ * draft: what the user was typing, so it survives the app being closed. model: the conversation's own model
+ * choice (absent: the default in Settings; not in conversations saved before it existed).
+ */
+export type SavedConversation = { items: ChatItem[]; turns: Turn[]; draft?: string; model?: ModelChoice };
 
 /** Storage key of a tab group's conversation (a tab's own conversation is stored under the tab's uid). */
 export const groupChatKey = (groupId: string) => `group:${groupId}`;
@@ -66,6 +72,11 @@ export class Conversation {
   privacy = { touchedIncognito: false };
   /** The next message starts a deep research task (switched off again once it is sent). */
   research = false;
+  /**
+   * The provider and model for this conversation's next messages, chosen under the panel's title; null uses the
+   * default in Settings (which this never changes). Read when a message is sent, so a running task keeps its model.
+   */
+  model: ModelChoice | null = null;
   /**
    * How the last task ended, while the user has not looked at the conversation since (it ended in another tab or
    * group, with the panel closed, or with Qutai in the background). Cleared once the conversation is shown.
@@ -173,6 +184,11 @@ export class Conversation {
     this.onChange();
   }
 
+  setModel(choice: ModelChoice | null) {
+    this.model = choice;
+    this.onChange();
+  }
+
   setDraft(text: string) {
     this.draft = text;
     this.onChange();
@@ -186,17 +202,20 @@ export class Conversation {
       this.items = [...saved.items, ...this.items];
       this.turns.unshift(...saved.turns);
     }
-    // Something typed since the tab opened wins over the saved draft.
+    // Something typed since the tab opened wins over the saved draft, and a model chosen since over the saved one.
     if (saved?.draft && !this.draft) this.draft = saved.draft;
+    if (saved?.model && !this.model) this.model = saved.model;
     this.onChange();
     const callbacks = this.loadedCallbacks;
     this.loadedCallbacks = [];
     callbacks.forEach((fn) => fn());
   }
 
+  /** A new chat: messages, history and the conversation's model choice go. */
   clear() {
     this.items = [];
     this.turns = [];
+    this.model = null;
     this.privacy = { touchedIncognito: false };
     this.onChange();
   }
@@ -219,6 +238,6 @@ export class Conversation {
   }
 
   toSaved(): SavedConversation {
-    return { items: this.items, turns: this.turns, draft: this.draft };
+    return { items: this.items, turns: this.turns, draft: this.draft, ...(this.model ? { model: this.model } : {}) };
   }
 }

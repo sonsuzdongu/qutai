@@ -169,6 +169,16 @@ host for each request. The key is kept in SecureStore like the others; the base 
 backups (the key only with "Include my AI provider keys"). No web search with a custom endpoint, and no output limit
 is sent (servers differ in which field they read).
 
+Each conversation can use another model than the default: the model shown under the panel's title opens a sheet
+with the providers that are set up (a key, or the custom endpoint) and their models (OpenRouter's full catalogue
+too), and "Use my default". The choice belongs to the conversation (a tab's, or a tab group's), is saved with it
+(never for an incognito one, which saves nothing) and goes when the chat is cleared; it applies to the next message,
+and a task that is running keeps the model it started with (the control is disabled meanwhile). The default in
+Settings never changes from here. Switching mid-conversation rebuilds the earlier turns from their text and tool calls
+for the new model, as any switch does, and "What was sent to the AI" records the provider and model each request
+really used. If the chosen provider is no longer set up, the default is used and the chat says so. Saved tasks don't
+carry a model.
+
 ## Official builds and building it yourself
 
 Qutai is open source, and the code here is the whole app. The official builds in the App Store and
@@ -225,7 +235,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/browser/Tab.ts` | A single tab: sends commands to the WebView, matches responses, waits for page loads |
 | `src/browser/Browser.ts` | Tab manager (open, close, switch, private tabs) and change notifications to React |
 | `src/components/BrowserView.tsx` | Draws the WebViews of the awake tabs stacked on top of each other; at most five stay awake, the rest sleep as a URL and thumbnail |
-| `src/chat/Conversation.ts` | A conversation with the assistant: one per tab, or one shared by a tab group |
+| `src/chat/Conversation.ts` | A conversation with the assistant: one per tab, or one shared by a tab group, with its own model choice (`src/components/ModelSheet.tsx`) |
 | `src/components/Dialog.tsx`, `src/components/BottomSheet.tsx` | Themed dialogs (instead of native alerts) and the bottom sheet the menus use, kept inside the safe area |
 | `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters; `chatWire.ts` / `chatCompletions.ts` speak the OpenAI Chat Completions format (OpenRouter and the custom endpoint), `openrouterCatalog.ts` / `openrouterModels.ts` the model catalogue, `customEndpoint.ts` / `customTest.ts` the custom endpoint's address rules and "Test connection" |
 | `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, saved tasks, settings |
