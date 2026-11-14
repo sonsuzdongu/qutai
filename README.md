@@ -11,6 +11,17 @@ from the HTML file that Chrome, Firefox, Safari and Edge export (on a computer, 
 bookmarks); an import lands in its own dated folder and skips addresses that are already bookmarked. Export writes the
 same format, so bookmarks can always be taken to another browser.
 
+There is no account and no sync, so Settings › Backup exports everything to one password-protected file
+(`qutai-backup-YYYY-MM-DD.qutai`, saved through the share sheet to Files, Drive…) and imports it on this or another
+phone. Always in a backup: bookmarks and folders, history, the assistant's memory, site permissions (assistant level and
+location) and preferences (including reader mode and appearance). Optional: open tabs and tab groups (on by default),
+the assistant's conversations (off) and its activity history (off), and the AI provider keys (off; only with an explicit
+"Include my AI provider keys"). Never in a backup: incognito data (it is never stored), downloads and saved pages,
+caches and thumbnails, and the app/incognito lock settings. Importing checks the password and the whole file first,
+shows what it contains, then merges it with the phone's data (keeping what is there) or replaces each kind it contains,
+in one database transaction, and restarts the app. The file is encrypted with XChaCha20-Poly1305 under a key derived
+from the password with scrypt (`src/backup/crypto.ts` documents the format); the password cannot be recovered.
+
 The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
 
 From the page menu (⋮) and by asking the agent: save the page as PDF (from its HTML, or from screenshots for pages

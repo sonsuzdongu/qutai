@@ -133,8 +133,26 @@ export async function migrate(db: Db): Promise<void> {
 }
 
 let opening: Promise<Db> | null = null;
+let held: Promise<void> | null = null;
+
+/**
+ * Makes everyone else's getDb() wait, so nothing in the running app writes while a backup is restored
+ * (an old session saved over the restored one, say). Take the database first, then hold it. Returns
+ * the release; after a successful restore the app reloads instead.
+ */
+export function holdDb(): () => void {
+  let release = () => {};
+  held = new Promise<void>((resolve) => {
+    release = () => {
+      held = null;
+      resolve();
+    };
+  });
+  return release;
+}
 
 export function getDb(): Promise<Db> {
+  if (held) return held.then(getDb);
   opening ??= (async () => {
     const db = await openDatabaseAsync('qutai.db');
     await db.execAsync('PRAGMA journal_mode = WAL');

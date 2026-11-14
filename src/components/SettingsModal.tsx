@@ -5,6 +5,7 @@ import { getProvider } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { authenticate, canAuthenticate } from '../device/biometric';
 import { appVersion } from '../device/appVersion';
+import { BackupTooLargeError, pickBackupFile, PickerUnavailableError } from '../device/backupFile';
 import { rateApp } from '../device/rateApp';
 import { t } from '../i18n';
 import type { LegalKind } from '../legal/documents';
@@ -15,6 +16,7 @@ import { makeStyles, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { ActionLogScreen } from './ActionLogScreen';
+import { BackupScreen } from './BackupScreen';
 import { AiChoice, AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { LegalScreen } from './LegalScreen';
@@ -32,7 +34,7 @@ type Props = {
   onClearData: (options: ClearOptions) => Promise<void>;
 };
 
-type Page = 'main' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'about';
+type Page = 'main' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'backup' | 'about';
 
 /** Where the Android back button goes; the open page sets it (the modal receives the button). */
 class BackRoute {
@@ -78,6 +80,7 @@ function SettingsPages({
   const [actionLogVisible, setActionLogVisible] = useState(false);
   const [clearDataVisible, setClearDataVisible] = useState(false);
   const [legal, setLegal] = useState<LegalKind | null>(null);
+  const [backupJob, setBackupJob] = useState<'export' | Uint8Array | null>(null);
 
   const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch });
   const saveAi = () => onChange({ ...settings, ...cleanAiChoice(ai) });
@@ -106,6 +109,22 @@ function SettingsPages({
     if (await authenticate(t('lock.confirmPrompt'))) set({ [key]: true });
   };
 
+  const importBackup = async () => {
+    try {
+      const file = await pickBackupFile();
+      if (file) setBackupJob(file);
+    } catch (e) {
+      dialog.alert(
+        t('backup.importFailed'),
+        e instanceof PickerUnavailableError
+          ? t('library.importNeedsBuild')
+          : e instanceof BackupTooLargeError
+            ? t('backup.error.tooLarge')
+            : t('backup.error.unreadableFile'),
+      );
+    }
+  };
+
   const provider = getProvider(settings.provider);
   const modelName = provider.models.find((m) => m.id === settings.models[settings.provider])?.name;
   const titles: Record<Page, string> = {
@@ -114,6 +133,7 @@ function SettingsPages({
     privacy: t('settings.privacySection'),
     appearance: t('settings.appearance'),
     search: t('settings.search'),
+    backup: t('backup.section'),
     about: t('settings.about'),
   };
 
@@ -173,6 +193,12 @@ function SettingsPages({
               title={t('settings.search')}
               summary={SEARCH_ENGINES[settings.searchEngine].name}
               onPress={() => setPage('search')}
+            />
+            <SectionRow
+              icon="secure"
+              title={t('backup.section')}
+              summary={t('backup.sectionSummary')}
+              onPress={() => setPage('backup')}
             />
             <SectionRow
               icon="moreHorizontal"
@@ -334,6 +360,14 @@ function SettingsPages({
           </>
         )}
 
+        {page === 'backup' && (
+          <>
+            <Text style={styles.hint}>{t('backup.intro')}</Text>
+            <LinkRow label={t('backup.exportTitle')} onPress={() => setBackupJob('export')} />
+            <LinkRow label={t('backup.importTitle')} onPress={importBackup} />
+          </>
+        )}
+
         {page === 'about' && (
           <>
             <LinkRow
@@ -356,6 +390,7 @@ function SettingsPages({
       <MemoryScreen visible={memoryVisible} onClose={() => setMemoryVisible(false)} />
       <SitePermissionsScreen visible={sitesVisible} store={sitePermissions} onClose={() => setSitesVisible(false)} />
       <ActionLogScreen visible={actionLogVisible} onClose={() => setActionLogVisible(false)} />
+      <BackupScreen job={backupJob} appLock={settings.appLock} onClose={() => setBackupJob(null)} />
       <ClearDataScreen visible={clearDataVisible} onClear={onClearData} onClose={() => setClearDataVisible(false)} />
     </SafeAreaView>
   );

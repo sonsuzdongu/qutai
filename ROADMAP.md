@@ -244,7 +244,9 @@ deep research, price and page tracking, Safe Browsing checks.
 
 ### Ideas from Comet reviews (not yet scheduled)
 
-- Serverless backup: while there is no sync, exporting/importing an encrypted backup file
+- ✅ Serverless backup: while there is no sync, exporting/importing an encrypted backup file (Settings › Backup;
+  scrypt + XChaCha20-Poly1305 from `@noble`, randomness from `expo-crypto`, which needs **a new development build**
+  for exporting; merge or replace on import, then the app reloads)
 - "What was sent to the AI" log: showing the user the page content sent with each request (a direct answer to privacy concerns)
 - An optional 'Summarize results' chip on search results pages, keeping the results list intact
 
