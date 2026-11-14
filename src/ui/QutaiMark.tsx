@@ -18,6 +18,8 @@ type Props = {
   working?: boolean;
   /** When idle, sparkle once on appearing and then every ~10 s. */
   sweepWhenIdle?: boolean;
+  /** Sparkle continuously, e.g. as the centrepiece of the welcome screen. */
+  alwaysSparkle?: boolean;
   /** Off-screen marks (inactive tabs, a closed panel) don't animate. */
   animate?: boolean;
 };
@@ -47,7 +49,13 @@ const SPARKS = [
 ];
 
 /** The Qutai logo; sparks twinkle over it now and then, and continuously while a task runs. */
-export function QutaiMark({ size, working = false, sweepWhenIdle = false, animate = true }: Props) {
+export function QutaiMark({
+  size,
+  working = false,
+  sweepWhenIdle = false,
+  alwaysSparkle = false,
+  animate = true,
+}: Props) {
   const systemReduceMotion = useReducedMotion();
   const motionAllowed = useContext(LogoMotion);
   const still = !animate || systemReduceMotion || !motionAllowed;
@@ -57,11 +65,11 @@ export function QutaiMark({ size, working = false, sweepWhenIdle = false, animat
   useEffect(() => {
     cancelAnimation(phase);
     if (still) {
-      // Still: a working mark keeps a few sparks lit as the "busy" sign, without motion.
-      phase.value = working ? 0.2 : -1;
+      // Still: a working (or always sparkling) mark keeps a few sparks lit, without motion.
+      phase.value = working || alwaysSparkle ? 0.2 : -1;
       return;
     }
-    if (working) {
+    if (working || alwaysSparkle) {
       phase.value = 0;
       phase.value = withRepeat(withTiming(1, { duration: BURST_MS, easing: Easing.linear }), -1);
       return;
@@ -81,7 +89,7 @@ export function QutaiMark({ size, working = false, sweepWhenIdle = false, animat
       clearTimeout(first);
       clearInterval(every);
     };
-  }, [still, working, sweepWhenIdle, phase]);
+  }, [still, working, alwaysSparkle, sweepWhenIdle, phase]);
 
   return (
     <View style={{ width: size, height: size }} accessible={false}>

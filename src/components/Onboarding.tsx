@@ -89,7 +89,7 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
             {step === 'welcome' && (
               <>
                 <View style={styles.hero}>
-                  <QutaiMark size={72} sweepWhenIdle />
+                  <QutaiMark size={72} alwaysSparkle />
                   <Text style={styles.wordmark} accessibilityRole="header">
                     Qutai
                   </Text>
