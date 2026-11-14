@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProvider } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
@@ -20,6 +20,7 @@ import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { LegalScreen } from './LegalScreen';
 import { MemoryScreen } from './MemoryScreen';
 import { SitePermissionsScreen } from './SitePermissionsScreen';
+import { dialog, DialogHost } from './Dialog';
 
 type Props = {
   visible: boolean;
@@ -50,6 +51,7 @@ export function SettingsModal({ visible, onClose, ...rest }: Props) {
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => back.run()}>
       {/* Mounted only while visible, so it always opens on the main page with fresh fields. */}
       {visible && <SettingsPages {...rest} onClose={onClose} back={back} />}
+      <DialogHost />
     </Modal>
   );
 }
@@ -83,7 +85,7 @@ function SettingsPages({
   const goBack = () => {
     if (page === 'main') return onClose();
     if (page !== 'assistant' || !aiDirty) return setPage('main');
-    Alert.alert(t('settings.unsavedTitle'), t('settings.unsavedBody'), [
+    dialog.alert(t('settings.unsavedTitle'), t('settings.unsavedBody'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('settings.discard'),
@@ -100,7 +102,7 @@ function SettingsPages({
   /** Turning a lock on needs a phone with a screen lock, and the user proving it's them once. */
   const setLock = async (key: 'appLock' | 'incognitoLock', on: boolean) => {
     if (!on) return set({ [key]: false });
-    if (!(await canAuthenticate())) return Alert.alert(t('settings.lockUnavailable'));
+    if (!(await canAuthenticate())) return dialog.alert(t('settings.lockUnavailable'));
     if (await authenticate(t('lock.confirmPrompt'))) set({ [key]: true });
   };
 
@@ -338,8 +340,8 @@ function SettingsPages({
               label={t('settings.rate')}
               onPress={() =>
                 rateApp()
-                  .then((ok) => ok || Alert.alert(t('settings.rateUnavailable')))
-                  .catch(() => Alert.alert(t('settings.rateUnavailable')))
+                  .then((ok) => ok || dialog.alert(t('settings.rateUnavailable')))
+                  .catch(() => dialog.alert(t('settings.rateUnavailable')))
               }
             />
             <LinkRow label={t('settings.privacyPolicy')} onPress={() => setLegal('privacy')} />

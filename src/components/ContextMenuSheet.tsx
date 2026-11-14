@@ -4,6 +4,7 @@ import type { ContextTarget } from '../browser/contextMenu';
 import { t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
+import { DialogHost } from './Dialog';
 
 export type ContextAction = { icon: IconName; label: string; onPress: () => void };
 
@@ -52,6 +53,7 @@ export function ContextMenuSheet({ target, actions, onClose }: Props) {
           ))}
         </View>
       )}
+      <DialogHost />
     </Modal>
   );
 }

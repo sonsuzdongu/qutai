@@ -1,7 +1,6 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   KeyboardAvoidingView,
   Modal,
@@ -47,6 +46,7 @@ import {
 } from '../storage/bookmarks';
 import { Db, getDb } from '../storage/db';
 import { ActionSheet, SheetAction } from './ActionSheet';
+import { dialog, DialogHost } from './Dialog';
 import { clearHistory, deleteHistoryEntry, HistoryEntry, listHistory } from '../storage/history';
 
 export type LibraryTab = 'bookmarks' | 'history';
@@ -66,6 +66,7 @@ export function LibraryScreen({ visible, initialTab, onOpen, onClose }: Props) {
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {/* Mounted only while visible, so it always opens fresh on the requested tab. */}
       {visible && <LibraryContent initialTab={initialTab} onOpen={onOpen} onClose={onClose} />}
+      <DialogHost />
     </Modal>
   );
 }
@@ -159,7 +160,7 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
   };
 
   const clearAll = () => {
-    Alert.alert(t('library.clearHistoryConfirm'), t('library.cannotUndo'), [
+    dialog.alert(t('library.clearHistoryConfirm'), t('library.cannotUndo'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('library.clearHistory'),
@@ -208,8 +209,8 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
   );
 }
 
-type Dialog =
-  | { kind: 'name'; title: string; initial: string; onSubmit: (name: string) => void }
+/** The edit and move dialogs, drawn inside the library's own modal. */
+type Editor =
   | { kind: 'edit'; bookmark: Bookmark }
   | {
       kind: 'move';
@@ -222,9 +223,6 @@ type Dialog =
 
 type ListItem = { kind: 'folder'; folder: FolderEntry } | { kind: 'bookmark'; bookmark: Bookmark };
 
-// Alerts can't be presented while the action sheet's modal is still sliding away (iOS).
-const afterSheet = (fn: () => void) => setTimeout(fn, 350);
-
 function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) => void }) {
   const styles = useStyles();
   const palette = usePalette();
@@ -234,7 +232,7 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
   );
   const [reload, setReload] = useState(0);
   const [menu, setMenu] = useState<{ title: string; actions: SheetAction[] } | null>(null);
-  const [dialog, setDialog] = useState<Dialog | null>(null);
+  const [editor, setEditor] = useState<Editor | null>(null);
   const [busy, setBusy] = useState(false);
   const searching = query.trim().length > 0;
   const refresh = () => setReload((n) => n + 1);
@@ -279,7 +277,7 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
     try {
       await task(await getDb());
     } catch (e) {
-      Alert.alert(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
+      dialog.alert(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
     } finally {
       refresh();
     }
@@ -290,13 +288,13 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
     setFolderId(id);
   };
 
-  const newFolder = () =>
-    setDialog({
-      kind: 'name',
-      title: t('library.newFolder'),
-      initial: '',
-      onSubmit: (name) => run((db) => createFolder(db, name, folderId)),
-    });
+  /** Asks for a folder name; nothing happens when cancelled. */
+  const askName = async (title: string, initial: string, save: (name: string) => (db: Db) => Promise<unknown>) => {
+    const name = await dialog.prompt({ title, label: t('library.folderName'), initial, maxLength: 200 });
+    if (name) await run(save(name));
+  };
+
+  const newFolder = () => void askName(t('library.newFolder'), '', (name) => (db) => createFolder(db, name, folderId));
 
   const deleteFolderAsking = async (folder: BookmarkFolder) => {
     const db = await getDb();
@@ -305,15 +303,13 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
       await run(() => deleteFolder(db, folder.id));
       return;
     }
-    afterSheet(() =>
-      Alert.alert(
-        t('library.deleteFolderConfirm', { name: folder.title }),
-        t('library.deleteFolderContents', contents),
-        [
-          { text: t('common.cancel'), style: 'cancel' },
-          { text: t('library.delete'), style: 'destructive', onPress: () => run(() => deleteFolder(db, folder.id)) },
-        ],
-      ),
+    dialog.alert(
+      t('library.deleteFolderConfirm', { name: folder.title }),
+      t('library.deleteFolderContents', contents),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('library.delete'), style: 'destructive', onPress: () => run(() => deleteFolder(db, folder.id)) },
+      ],
     );
   };
 
@@ -325,17 +321,12 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
         {
           label: t('library.rename'),
           onPress: () =>
-            setDialog({
-              kind: 'name',
-              title: t('library.renameFolder'),
-              initial: folder.title,
-              onSubmit: (name) => run((db) => renameFolder(db, folder.id, name)),
-            }),
+            void askName(t('library.renameFolder'), folder.title, (name) => (db) => renameFolder(db, folder.id, name)),
         },
         {
           label: t('library.moveTo'),
           onPress: () =>
-            setDialog({
+            setEditor({
               kind: 'move',
               title: folder.title,
               current: folder.parentId,
@@ -354,11 +345,11 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
       title: bookmark.title || hostOf(bookmark.url),
       actions: [
         { label: t('library.open'), onPress: () => onOpen(bookmark.url) },
-        { label: t('library.edit'), onPress: () => setDialog({ kind: 'edit', bookmark }) },
+        { label: t('library.edit'), onPress: () => setEditor({ kind: 'edit', bookmark }) },
         {
           label: t('library.moveTo'),
           onPress: () =>
-            setDialog({
+            setEditor({
               kind: 'move',
               title: bookmark.title || hostOf(bookmark.url),
               current: bookmark.folderId,
@@ -379,7 +370,7 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
     try {
       text = await pickBookmarkFile();
     } catch (e) {
-      Alert.alert(
+      dialog.alert(
         t('library.importFailed'),
         t(e instanceof PickerUnavailableError ? 'library.importNeedsBuild' : 'library.importUnreadable'),
       );
@@ -393,7 +384,7 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
         tree = parseBookmarkFile(text);
       } catch (e) {
         if (!(e instanceof BookmarkFileError)) throw e;
-        Alert.alert(
+        dialog.alert(
           t('library.importFailed'),
           t(e.reason === 'empty' ? 'library.importEmpty' : 'library.importNotBookmarkFile'),
         );
@@ -406,14 +397,14 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
         plan.unsupported ? t('library.importUnsupported', { count: plan.unsupported }) : '',
       ].filter(Boolean);
       if (!plan.bookmarks.length) {
-        Alert.alert(t('library.importNothing'), skipped.join('\n'));
+        dialog.alert(t('library.importNothing'), skipped.join('\n'));
         return;
       }
       const id = await importBookmarks(db, plan, t('library.importedFolder', { date: formatDate(new Date()) }));
       success();
       setFolderId(id);
       refresh();
-      Alert.alert(
+      dialog.alert(
         t('library.importDone'),
         [
           t('library.importSummary', { bookmarks: plan.bookmarks.length, folders: plan.folders.length + 1 }),
@@ -421,7 +412,7 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
         ].join('\n'),
       );
     } catch (e) {
-      Alert.alert(t('library.importFailed'), e instanceof Error ? e.message : String(e));
+      dialog.alert(t('library.importFailed'), e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
@@ -432,13 +423,13 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
     try {
       const { folders, bookmarks } = await exportData(await getDb());
       if (!bookmarks.length) {
-        Alert.alert(t('library.exportEmpty'));
+        dialog.alert(t('library.exportEmpty'));
         return;
       }
       const date = new Date().toISOString().slice(0, 10);
       await shareBookmarkFile(serializeBookmarkFile(folders, bookmarks), `qutai-bookmarks-${date}.html`);
     } catch (e) {
-      Alert.alert(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
+      dialog.alert(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
     } finally {
       setBusy(false);
     }
@@ -554,39 +545,28 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
 
       <ActionSheet title={menu?.title ?? null} actions={menu?.actions ?? []} onClose={() => setMenu(null)} />
 
-      {dialog?.kind === 'name' && (
-        <NameDialog
-          title={dialog.title}
-          initial={dialog.initial}
-          onCancel={() => setDialog(null)}
-          onSubmit={(name) => {
-            setDialog(null);
-            dialog.onSubmit(name);
-          }}
-        />
-      )}
-      {dialog?.kind === 'move' && (
+      {editor?.kind === 'move' && (
         <FolderPicker
-          title={t('library.moveItem', { name: dialog.title })}
+          title={t('library.moveItem', { name: editor.title })}
           folders={data.all}
-          current={dialog.current}
-          exclude={dialog.exclude}
-          onCancel={() => setDialog(null)}
+          current={editor.current}
+          exclude={editor.exclude}
+          onCancel={() => setEditor(null)}
           onPick={(id) => {
-            setDialog(null);
-            if (id !== dialog.current) dialog.onPick(id);
+            setEditor(null);
+            if (id !== editor.current) editor.onPick(id);
           }}
         />
       )}
-      {dialog?.kind === 'edit' && (
+      {editor?.kind === 'edit' && (
         <EditBookmarkDialog
-          bookmark={dialog.bookmark}
+          bookmark={editor.bookmark}
           folders={data.all}
           folderName={folderName}
-          onCancel={() => setDialog(null)}
+          onCancel={() => setEditor(null)}
           onSave={(changes) => {
-            setDialog(null);
-            void run((db) => updateBookmark(db, dialog.bookmark.url, changes));
+            setEditor(null);
+            void run((db) => updateBookmark(db, editor.bookmark.url, changes));
           }}
         />
       )}
@@ -665,45 +645,6 @@ function DialogButtons({
         <Text style={[styles.action, styles.bold, disabled && styles.dimmed]}>{t('common.save')}</Text>
       </Pressable>
     </View>
-  );
-}
-
-function NameDialog({
-  title,
-  initial,
-  onCancel,
-  onSubmit,
-}: {
-  title: string;
-  initial: string;
-  onCancel: () => void;
-  onSubmit: (name: string) => void;
-}) {
-  const styles = useStyles();
-  const palette = usePalette();
-  const [name, setName] = useState(initial);
-  const valid = name.trim().length > 0;
-  const submit = () => valid && onSubmit(name.trim());
-  return (
-    <Overlay onCancel={onCancel}>
-      <Text style={styles.dialogTitle} accessibilityRole="header">
-        {title}
-      </Text>
-      <TextInput
-        style={styles.dialogInput}
-        placeholderTextColor={palette.textSecondary}
-        value={name}
-        onChangeText={setName}
-        placeholder={t('library.folderName')}
-        accessibilityLabel={t('library.folderName')}
-        autoFocus
-        selectTextOnFocus
-        returnKeyType="done"
-        onSubmitEditing={submit}
-        maxLength={200}
-      />
-      <DialogButtons onCancel={onCancel} onSave={submit} disabled={!valid} />
-    </Overlay>
   );
 }
 

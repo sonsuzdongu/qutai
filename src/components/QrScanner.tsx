@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
+import { DialogHost } from './Dialog';
 
 type Props = { visible: boolean; onScan: (data: string) => void; onClose: () => void };
 
@@ -11,6 +12,7 @@ export function QrScanner({ visible, onScan, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       {visible && <Scanner onScan={onScan} onClose={onClose} />}
+      <DialogHost />
     </Modal>
   );
 }

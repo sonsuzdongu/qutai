@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 import { dayLabel } from '../i18n/format';
 import type { DownloadEntry, DownloadStore } from '../storage/downloads';
+import { DialogHost } from './Dialog';
 
 type Props = {
   visible: boolean;
@@ -64,6 +65,7 @@ export function DownloadsScreen({ visible, store, onOpen, onDelete, onClose }: P
           )}
         />
       </SafeAreaView>
+      <DialogHost />
     </Modal>
   );
 }

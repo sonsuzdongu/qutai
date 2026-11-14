@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
+import { DialogHost } from './Dialog';
 
 type Props = {
   /** What is locked; null hides the screen. */
@@ -34,6 +35,7 @@ export function LockScreen({ locked, onUnlock, onLeave }: Props) {
           </Pressable>
         )}
       </View>
+      <DialogHost hold />
     </Modal>
   );
 }

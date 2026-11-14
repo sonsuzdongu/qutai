@@ -9,6 +9,7 @@ import { dayLabel, hostOf } from '../i18n/format';
 import { getDb } from '../storage/db';
 import { listOfflinePages, OfflinePage, removeOfflinePage } from '../storage/offlinePages';
 import { formatSize } from './DownloadsScreen';
+import { DialogHost } from './Dialog';
 
 type Props = { visible: boolean; onOpenLive: (url: string) => void; onClose: () => void };
 
@@ -17,6 +18,7 @@ export function OfflinePagesScreen({ visible, onOpenLive, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {visible && <OfflineList onOpenLive={onOpenLive} onClose={onClose} />}
+      <DialogHost />
     </Modal>
   );
 }

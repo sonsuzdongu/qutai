@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { Alert, Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
 import type { SearchEngineId } from '../browser/search';
@@ -18,6 +18,7 @@ import { handleUserAgentMessage, USER_AGENT_SCRIPT, useChromeUserAgent } from '.
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
 import { usePalette } from '../ui/theme';
+import { dialog } from './Dialog';
 import { ErrorPage } from './ErrorPage';
 import type { LibraryTab } from './LibraryScreen';
 import { NewTabPage } from './NewTabPage';
@@ -218,7 +219,7 @@ function TabWebView({
               tab.handleError(e.nativeEvent);
               const insecure = tab.takeHttpsUpgrade();
               if (!insecure) return;
-              Alert.alert(t('https.failedTitle'), t('https.failedBody', { url: insecure }), [
+              dialog.alert(t('https.failedTitle'), t('https.failedBody', { url: insecure }), [
                 { text: t('common.cancel'), style: 'cancel' },
                 {
                   text: t('https.continue'),

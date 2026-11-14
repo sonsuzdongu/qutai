@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import {
-  Alert,
   Animated,
   Image,
   Modal,
@@ -25,6 +24,7 @@ import { makeStyles, usePalette } from '../ui/theme';
 import { Icon } from '../ui/Icon';
 import { siteColor } from '../ui/siteColor';
 import { hostOf } from '../i18n/format';
+import { dialog, DialogHost } from './Dialog';
 
 type Props = {
   visible: boolean;
@@ -68,6 +68,7 @@ export function TabSwitcher({ visible, darkMode = false, browser, onClose, onCom
       <DarkMode.Provider value={darkMode}>
         {visible && <TabSwitcherContent browser={browser} onClose={onClose} onCompare={onCompare} />}
       </DarkMode.Provider>
+      <DialogHost />
     </Modal>
   );
 }
@@ -161,7 +162,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
   };
 
   const closeAll = () => {
-    Alert.alert(t(incognito ? 'tabs.closeAllIncognitoConfirm' : 'tabs.closeAllConfirm'), undefined, [
+    dialog.alert(t(incognito ? 'tabs.closeAllIncognitoConfirm' : 'tabs.closeAllConfirm'), undefined, [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('common.close'),

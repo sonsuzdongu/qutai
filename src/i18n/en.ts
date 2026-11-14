@@ -1,5 +1,6 @@
 /** Source of truth for UI strings. Every other language must provide exactly these keys. */
 export const en = {
+  'common.ok': 'OK',
   'common.cancel': 'Cancel',
   'common.save': 'Save',
   'common.done': 'Done',

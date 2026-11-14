@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 import { qrMatrix } from '../device/qr';
+import { DialogHost } from './Dialog';
 
 type Props = {
   /** The address to encode; null hides the sheet. */
@@ -65,6 +66,7 @@ export function QrCodeSheet({ url, onShareLink, onShareImage, onClose }: Props) 
           </View>
         </View>
       )}
+      <DialogHost />
     </Modal>
   );
 }

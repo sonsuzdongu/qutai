@@ -5,7 +5,7 @@ import { siteColor } from '../ui/siteColor';
 import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles } from '../ui/theme';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
 import { getLanguage, t } from '../i18n';
@@ -14,6 +14,7 @@ import { Bookmark, listBookmarks } from '../storage/bookmarks';
 import { getDb } from '../storage/db';
 import { HistoryEntry, listHistory } from '../storage/history';
 import { hideTopSite, TopSite, topSites } from '../storage/topSites';
+import { dialog } from './Dialog';
 import type { LibraryTab } from './LibraryScreen';
 
 type Props = {
@@ -80,7 +81,7 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
 
   const removeSite = (site: TopSite) => {
     if (site.visits === 0) return;
-    Alert.alert(t('newTab.removeSite', { title: site.title || site.host }), undefined, [
+    dialog.alert(t('newTab.removeSite', { title: site.title || site.host }), undefined, [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('newTab.remove'),

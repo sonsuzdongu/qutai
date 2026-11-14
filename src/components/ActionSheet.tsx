@@ -2,6 +2,7 @@ import { Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
+import { DialogHost } from './Dialog';
 
 export type SheetAction = { label: string; onPress: () => void; destructive?: boolean };
 
@@ -34,6 +35,7 @@ export function ActionSheet({ title, actions, dark, onClose }: Props) {
           </Pressable>
         ))}
       </View>
+      <DialogHost />
     </Modal>
   );
 }

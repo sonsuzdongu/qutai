@@ -4,12 +4,14 @@ import { getLanguage, t } from '../i18n';
 import { formatDate } from '../i18n/format';
 import { LEGAL_UPDATED, legalDocument, LegalKind } from '../legal/documents';
 import { makeStyles } from '../ui/theme';
+import { DialogHost } from './Dialog';
 
 /** The full privacy policy or terms of use, from onboarding and Settings. */
 export function LegalScreen({ kind, onClose }: { kind: LegalKind | null; onClose: () => void }) {
   return (
     <Modal visible={kind !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {kind && <LegalContent kind={kind} onClose={onClose} />}
+      <DialogHost />
     </Modal>
   );
 }

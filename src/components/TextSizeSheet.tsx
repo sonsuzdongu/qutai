@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 import { clampTextZoom, TEXT_ZOOM_MAX, TEXT_ZOOM_MIN } from '../storage/settings';
+import { DialogHost } from './Dialog';
 
 type Props = {
   visible: boolean;
@@ -55,6 +56,7 @@ export function TextSizeSheet({ visible, zoom, onChange, onClose }: Props) {
           <Text style={[styles.resetText, zoom === 100 && styles.disabled]}>{t('textSize.reset')}</Text>
         </Pressable>
       </View>
+      <DialogHost />
     </Modal>
   );
 }

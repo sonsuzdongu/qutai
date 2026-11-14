@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 import { groupByDay, timeLabel } from '../i18n/format';
 import { ActionEntry, clearActions, listActions } from '../storage/actionLog';
 import { getDb } from '../storage/db';
+import { dialog, DialogHost } from './Dialog';
 
 type Entry = ActionEntry & { id: number };
 type Props = { visible: boolean; onClose: () => void };
@@ -15,6 +16,7 @@ export function ActionLogScreen({ visible, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {visible && <ActionLog onClose={onClose} />}
+      <DialogHost />
     </Modal>
   );
 }
@@ -31,7 +33,7 @@ function ActionLog({ onClose }: { onClose: () => void }) {
   useEffect(reload, [reload]);
 
   const clearAll = () =>
-    Alert.alert(t('actionLog.clearConfirm'), undefined, [
+    dialog.alert(t('actionLog.clearConfirm'), undefined, [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('actionLog.clear'),

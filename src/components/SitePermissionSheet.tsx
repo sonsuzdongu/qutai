@@ -4,6 +4,7 @@ import { SITE_LEVELS, SiteLevel } from '../agent/sitePolicy';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 import { Radio } from '../ui/Radio';
+import { DialogHost } from './Dialog';
 
 type Props = {
   /** The site being set; null hides the sheet. */
@@ -47,6 +48,7 @@ export function SitePermissionSheet({ host, level, onSelect, onClose }: Props) {
           );
         })}
       </View>
+      <DialogHost />
     </Modal>
   );
 }

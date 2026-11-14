@@ -1,4 +1,5 @@
-import { Alert, Linking } from 'react-native';
+import { Linking } from 'react-native';
+import { dialog } from '../components/Dialog';
 import { t } from '../i18n';
 import { declineExternal } from './externalGuard';
 import { describeExternalUrl, parseIntentUrl } from './navigation';
@@ -11,7 +12,7 @@ import type { Tab } from './Tab';
  */
 export function openExternal(url: string, tab: Tab, onNoApp: (message: string) => void) {
   const { appUrl, fallbackUrl } = parseIntentUrl(url);
-  Alert.alert(t('external.title'), describeExternalUrl(url), [
+  dialog.alert(t('external.title'), describeExternalUrl(url), [
     { text: t('common.cancel'), style: 'cancel', onPress: () => declineExternal(tab, url) },
     {
       text: t('external.open'),

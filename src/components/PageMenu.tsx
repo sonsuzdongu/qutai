@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
 import { darkPalette, lightPalette, makeStyles } from '../ui/theme';
+import { DialogHost } from './Dialog';
 
 export type MenuItem = {
   icon: IconName;
@@ -130,6 +131,7 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose
           ))}
         </ScrollView>
       </View>
+      <DialogHost />
     </Modal>
   );
 }

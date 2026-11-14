@@ -1,6 +1,7 @@
 import type { en } from './en';
 
 export const tr: Record<keyof typeof en, string> = {
+  'common.ok': 'Tamam',
   'common.cancel': 'Vazgeç',
   'common.save': 'Kaydet',
   'common.done': 'Bitti',

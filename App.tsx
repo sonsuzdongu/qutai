@@ -3,7 +3,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
-  Alert,
   Appearance,
   AppState,
   KeyboardAvoidingView,
@@ -36,6 +35,7 @@ import { TabSwitcher } from './src/components/TabSwitcher';
 import { TextSizeSheet } from './src/components/TextSizeSheet';
 import { Toast, useToast } from './src/components/Toast';
 import { CaptureOverlay } from './src/components/CaptureOverlay';
+import { dialog, DialogHost } from './src/components/Dialog';
 import { copyLink, copyText, shareLink, shareText } from './src/device/link';
 import { printPage, savePagePdf, savePdfFromScreenshots } from './src/device/pdf';
 import { saveImage } from './src/device/saveImage';
@@ -103,30 +103,18 @@ function logAction(entry: ActionEntry) {
 // Conversations saved by earlier versions belong to the tab that is active on the first start.
 let legacyChatPending = true;
 
-function askConfirmation(description: string, host: string | null): Promise<boolean> {
-  return new Promise((resolve) => {
-    Alert.alert(
-      t('confirm.title'),
-      host ? `${description}\n\n${host}` : description,
-      [
-        { text: t('confirm.deny'), style: 'cancel', onPress: () => resolve(false) },
-        ...(host
-          ? [
-              {
-                text: t('confirm.always', { host }),
-                onPress: () => {
-                  sitePermissions.set(host, 'allow').catch(() => {});
-                  resolve(true);
-                },
-              },
-            ]
-          : []),
-        { text: t('confirm.allow'), onPress: () => resolve(true) },
-      ],
-      // Android: back button or a tap outside counts as declining.
-      { cancelable: true, onDismiss: () => resolve(false) },
-    );
+/** The agent's "may I?" before an action. Stopping the task (signal) dismisses it as declined. */
+async function askConfirmation(description: string, host: string | null, signal: AbortSignal): Promise<boolean> {
+  const result = await dialog.show({
+    title: t('confirm.title'),
+    message: host ? `${description}\n\n${host}` : description,
+    buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: t('confirm.allow') }],
+    checkbox: host ? { label: t('confirm.always', { host }) } : undefined,
+    signal,
   });
+  const allowed = result.button === 1;
+  if (allowed && host && result.checked) sitePermissions.set(host, 'allow').catch(() => {});
+  return allowed;
 }
 
 export default function App() {
@@ -378,7 +366,7 @@ function BrowserApp({
         webSearch: settings.webSearch || research,
         research,
         stream: true,
-        confirm: askConfirmation,
+        confirm: (description, host) => askConfirmation(description, host, signal),
         confirmByDefault: settings.confirmActions,
         sites: sitePermissions,
         log: logAction,
@@ -783,7 +771,7 @@ function BrowserApp({
     try {
       await saveSettings(next);
     } catch (e) {
-      Alert.alert(t('settings.saveFailed'), e instanceof Error ? e.message : String(e));
+      dialog.alert(t('settings.saveFailed'), e instanceof Error ? e.message : String(e));
     }
   };
 
@@ -1047,6 +1035,7 @@ function BrowserApp({
           <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
           <CaptureOverlay />
           <Toast key={toast.key} message={toast.message} onHidden={toast.hide} />
+          <DialogHost root />
         </View>
       </SafeAreaProvider>
     </LogoMotion.Provider>

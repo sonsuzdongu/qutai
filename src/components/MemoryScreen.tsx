@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Alert, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MAX_MEMORY_CHARS, Memory } from '../agent/memory';
 import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
 import { getDb } from '../storage/db';
 import { addMemory, clearMemories, deleteMemory, listMemories, updateMemory } from '../storage/memory';
+import { dialog, DialogHost } from './Dialog';
 
 type Props = { visible: boolean; onClose: () => void };
 
@@ -14,11 +15,12 @@ export function MemoryScreen({ visible, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {visible && <MemoryList onClose={onClose} />}
+      <DialogHost />
     </Modal>
   );
 }
 
-const showError = (e: unknown) => Alert.alert(t('memory.saveFailed'), e instanceof Error ? e.message : String(e));
+const showError = (e: unknown) => dialog.alert(t('memory.saveFailed'), e instanceof Error ? e.message : String(e));
 
 function MemoryList({ onClose }: { onClose: () => void }) {
   const styles = useStyles();
@@ -53,7 +55,7 @@ function MemoryList({ onClose }: { onClose: () => void }) {
   };
 
   const clearAll = () =>
-    Alert.alert(t('memory.clearConfirm'), t('memory.clearConfirmBody'), [
+    dialog.alert(t('memory.clearConfirm'), t('memory.clearConfirmBody'), [
       { text: t('common.cancel'), style: 'cancel' },
       { text: t('memory.clearAll'), style: 'destructive', onPress: () => run(clearMemories) },
     ]);

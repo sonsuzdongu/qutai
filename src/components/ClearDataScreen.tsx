@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { ClearOptions } from '../storage/clearData';
+import { dialog, DialogHost } from './Dialog';
 
 type Props = { visible: boolean; onClear: (options: ClearOptions) => Promise<void>; onClose: () => void };
 
@@ -28,7 +29,7 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
   const anything = ITEMS.some((key) => options[key]);
 
   const clear = () =>
-    Alert.alert(t('clearData.confirm'), undefined, [
+    dialog.alert(t('clearData.confirm'), undefined, [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('clearData.clear'),
@@ -85,6 +86,7 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
           </Pressable>
         </ScrollView>
       </SafeAreaView>
+      <DialogHost />
     </Modal>
   );
 }

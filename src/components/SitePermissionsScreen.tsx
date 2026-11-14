@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { SitePermissionSheet } from './SitePermissionSheet';
+import { DialogHost } from './Dialog';
 
 type Props = { visible: boolean; store: SitePermissionStore; onClose: () => void };
 
@@ -68,6 +69,7 @@ export function SitePermissionsScreen({ visible, store, onClose }: Props) {
           onClose={() => setEditing(null)}
         />
       </SafeAreaView>
+      <DialogHost />
     </Modal>
   );
 }
