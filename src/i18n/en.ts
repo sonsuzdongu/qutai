@@ -433,4 +433,6 @@ export const en = {
   'onboarding.setDefault': 'Set as default browser',
   'onboarding.browserHintAndroid': 'In the screen that opens, choose Browser app › Qutai, then come back.',
   'onboarding.browserHintIos': 'In Settings, open Default Browser App and choose Qutai, then come back.',
+  'settings.rate': 'Rate Qutai',
+  'settings.rateUnavailable': 'Rating will be available once Qutai is in the App Store and Google Play.',
 } as const;

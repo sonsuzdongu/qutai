@@ -11,6 +11,7 @@ import { ActionLogScreen } from './ActionLogScreen';
 import { AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { LegalScreen } from './LegalScreen';
+import { rateApp } from '../device/rateApp';
 import type { LegalKind } from '../legal/documents';
 import { authenticate, canAuthenticate } from '../device/biometric';
 import { MemoryScreen } from './MemoryScreen';
@@ -245,6 +246,17 @@ function SettingsForm({ settings, onSave, onClose, sitePermissions, onClearData 
         </Pressable>
 
         <Text style={[styles.label, styles.sectionLabel]}>{t('settings.about')}</Text>
+        <Pressable
+          onPress={() =>
+            rateApp()
+              .then((ok) => ok || Alert.alert(t('settings.rateUnavailable')))
+              .catch(() => Alert.alert(t('settings.rateUnavailable')))
+          }
+          style={styles.option}
+          accessibilityRole="button"
+        >
+          <Text style={[styles.optionText, styles.link]}>{t('settings.rate')} ›</Text>
+        </Pressable>
         <Pressable onPress={() => setLegal('privacy')} style={styles.option} accessibilityRole="button">
           <Text style={[styles.optionText, styles.link]}>{t('settings.privacyPolicy')} ›</Text>
         </Pressable>
