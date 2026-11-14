@@ -41,7 +41,11 @@ const DarkMode = createContext(false);
 
 /** Icon colours that match a theme's text styles. */
 function iconColors(theme: object) {
-  return theme === light ? { text: '#222222', dim: '#6b6862' } : { text: '#f2f1f5', dim: '#a9a8b3' };
+  return theme === light
+    ? { text: '#222222', dim: '#6b6862', accent: '#a8502f' }
+    : theme === darkNormal
+      ? { text: '#f2f1f5', dim: '#a9a8b3', accent: '#e08a66' }
+      : { text: '#f2f1f5', dim: '#a9a8b3', accent: '#c9a7ff' };
 }
 
 /** Incognito keeps its own purple look; the dark theme keeps the normal orange accent. */
@@ -167,11 +171,6 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
   return (
     <SafeAreaView style={[styles.container, theme.container]}>
       <View style={styles.header}>
-        {comparable && !comparing ? (
-          <Pressable onPress={() => setComparing([])} hitSlop={8} style={styles.compare} accessibilityRole="button">
-            <Text style={[styles.compareText, theme.accent]}>{t('tabs.compare')}</Text>
-          </Pressable>
-        ) : null}
         <View style={[styles.segment, theme.segment]}>
           <SegmentButton
             label={t('tabs.normal', { count: browser.tabsOf(false).length })}
@@ -197,20 +196,31 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
       </View>
 
       {allTabs.length > 1 && (
-        <View style={[styles.search, theme.search]}>
-          <Icon name="find" size={17} color={iconColors(theme).dim} />
-          <TextInput
-            style={[styles.searchInput, theme.text]}
-            value={query}
-            onChangeText={setQuery}
-            placeholder={t('tabs.search')}
-            placeholderTextColor={incognito ? '#a9a8b3' : '#6b6862'}
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="search"
-            clearButtonMode="while-editing"
-            accessibilityLabel={t('tabs.search')}
-          />
+        <View style={styles.searchRow}>
+          <View style={[styles.search, theme.search]}>
+            <Icon name="find" size={17} color={iconColors(theme).dim} />
+            <TextInput
+              style={[styles.searchInput, theme.text]}
+              value={query}
+              onChangeText={setQuery}
+              placeholder={t('tabs.search')}
+              placeholderTextColor={incognito ? '#a9a8b3' : '#6b6862'}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="search"
+              clearButtonMode="while-editing"
+              accessibilityLabel={t('tabs.search')}
+            />
+          </View>
+          {/* Next to search rather than over the Tabs/Incognito switch, so it never collides or gets cut. */}
+          {comparable && !comparing ? (
+            <Pressable onPress={() => setComparing([])} hitSlop={6} style={styles.compare} accessibilityRole="button">
+              <Icon name="compare" size={17} color={iconColors(theme).accent} />
+              <Text style={[styles.compareText, theme.accent]} numberOfLines={1}>
+                {t('tabs.compare')}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
       )}
 
@@ -551,7 +561,8 @@ function EmptyState({ incognito }: { incognito: boolean }) {
 const useStyles = makeStyles((c) => ({
   container: { flex: 1 },
   header: { paddingHorizontal: PADDING, paddingVertical: 10, alignItems: 'center' },
-  compare: { position: 'absolute', right: PADDING, top: 0, bottom: 0, justifyContent: 'center' },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginHorizontal: PADDING, marginBottom: 4 },
+  compare: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 38, paddingHorizontal: 8 },
   compareText: { fontSize: 15, fontWeight: '600' },
   compareButton: { flex: 2, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   compareButtonText: { color: c.onTint, fontSize: 15, fontWeight: '700' },
@@ -574,10 +585,9 @@ const useStyles = makeStyles((c) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginHorizontal: PADDING,
-    marginBottom: 4,
+    flex: 1,
     paddingHorizontal: 12,
-    height: 38,
+    minHeight: 38,
     borderRadius: 10,
   },
   searchIcon: { fontSize: 17 },
