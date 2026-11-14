@@ -19,6 +19,7 @@ import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import type { AttachmentInfo } from '../chat/attachments';
 import { readPdfTool, viewAttachmentTool } from './fileTools';
+import { uiLabel, uiPath } from './uiLabels';
 import { editImageTool, uploadImageTool } from './imageTools';
 import { sleep } from '../utils/sleep';
 import type { ActionEntry } from '../storage/actionLog';
@@ -417,8 +418,9 @@ function offerCallTool(input: Record<string, unknown>, ctx: ToolContext): ToolOu
   ctx.offerCall({ number: phone.number, ...(name ? { name } : {}) });
   return {
     content:
-      `A Call button for ${name ? `${name}, ` : ''}${phone.number} is shown in the chat. No call has been made: ` +
-      'the user taps the button to call themselves. Do not say you called; tell them where the number came from.',
+      `A call button labelled ${uiLabel('chat.call')} for ${name ? `${name}, ` : ''}${phone.number} is shown in the ` +
+      'chat. No call has been made: the user taps the button to call themselves. Do not say you called; tell them ' +
+      'where the number came from.',
     isError: false,
   };
 }
@@ -446,8 +448,9 @@ function draftSmsTool(input: Record<string, unknown>, ctx: ToolContext): ToolOut
   ctx.offerSms({ number: phone.number, body, ...(name ? { name } : {}) });
   return {
     content:
-      `A text message to ${name ? `${name}, ` : ''}${phone.number} is shown in the chat with an "Open in Messages" ` +
-      'button. Nothing has been sent: the user opens it in Messages and sends it themselves. Do not say it was sent.',
+      `A text message to ${name ? `${name}, ` : ''}${phone.number} is shown in the chat with a ` +
+      `${uiLabel('chat.openInMessages')} button. Nothing has been sent: the user opens it in their messaging app and ` +
+      'sends it themselves. Do not say it was sent.',
     isError: false,
   };
 }
@@ -484,8 +487,8 @@ function draftWhatsAppTool(input: Record<string, unknown>, ctx: ToolContext): To
   const to = number ? `to ${name ? `${name}, ` : ''}${number} ` : '(the user picks the chat in WhatsApp) ';
   return {
     content:
-      `A WhatsApp message ${to}is shown in the chat with an "Open in WhatsApp" button. Nothing has been sent: the ` +
-      'user opens it in WhatsApp and sends it themselves. Do not say it was sent.',
+      `A WhatsApp message ${to}is shown in the chat with a ${uiLabel('chat.openInWhatsApp')} button. Nothing has ` +
+      'been sent: the user opens it in WhatsApp and sends it themselves. Do not say it was sent.',
     isError: false,
   };
 }
@@ -500,7 +503,12 @@ async function openSettingsTool(input: Record<string, unknown>, ctx: ToolContext
     if (!ctx.showAppSettings) return { content: "Qutai's settings screen is not available here.", isError: true };
     ctx.showAppSettings();
     return {
-      content: "Opened Qutai's own Settings screen. Tell the user briefly what to change there; they close it when done.",
+      content:
+        `Opened Qutai's own settings screen, ${uiLabel('settings.title')}. Its sections: ` +
+        `${uiPath('settings.assistant')} (AI provider, model and key, memory, site permissions, saved tasks), ` +
+        `${uiPath('settings.privacySection')}, ${uiPath('settings.appearance')}, ${uiPath('settings.search')}, ` +
+        `${uiPath('backup.section')}, ${uiPath('settings.about')}. Tell the user briefly what to change there, ` +
+        'naming the section as written here; they close it when done.',
       isError: false,
     };
   }
@@ -513,7 +521,7 @@ async function openSettingsTool(input: Record<string, unknown>, ctx: ToolContext
     return {
       content:
         `The phone refused to open its settings (${e instanceof Error ? e.message : String(e)}). ` +
-        "Tell the user where to find it themselves: the phone's Settings app, then Apps, then Qutai.",
+        "Tell the user where to find it themselves: Qutai's page in the phone's settings app, under its apps.",
       isError: true,
     };
   }
@@ -675,8 +683,8 @@ async function locationTool(input: Record<string, unknown>, ctx: ToolContext): P
     if (e instanceof LocationUnavailableError && e.reason === 'servicesOff') {
       return {
         content:
-          "Location services are turned off on the phone. Tell the user to turn them on in the phone's settings " +
-          '(Privacy / Location), or ask them for a starting point.',
+          "Location services are turned off on the phone. Tell the user to turn on location in the phone's " +
+          'settings, or ask them for a starting point.',
         isError: true,
       };
     }
@@ -746,16 +754,17 @@ async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext
       return {
         content:
           `The phone asked the user for storage permission; "${name}" downloads if they allow it, into the phone's ` +
-          'Downloads folder. You cannot open or read it.',
+          'downloads folder. You cannot open or read it.',
         isError: false,
       };
     }
     return {
       content: android
         ? `Started downloading "${name}" with the phone's download manager (a notification shows progress); it goes ` +
-          "to the phone's Downloads folder, where the user opens it. You cannot open or read it."
-        : `Started downloading "${name}"; it appears in Qutai's Downloads (menu › Library › Downloads) with its ` +
-          'progress, where the user opens or shares it. You cannot open or read it.',
+          "to the phone's downloads folder, where the user opens it. You cannot open or read it."
+        : `Started downloading "${name}"; it appears in Qutai's ${uiLabel('downloads.title')} screen ` +
+          `(${uiPath('address.menu', 'menu.library', 'menu.downloads')}) with its progress, where the user opens ` +
+          'or shares it. You cannot open or read it.',
       isError: false,
     };
   } catch (e) {
@@ -767,6 +776,13 @@ async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext
  * A file composed from what the assistant gathered, offered as a chat card. Nothing is written to shared storage
  * here: the user's tap shares or saves it. Kept in memory only (incognito ones until the incognito session ends).
  */
+/** The buttons on a save_file card, as the card shows them on this platform (AssistantPanel FileCard). */
+function fileButtons(): string {
+  return Platform.OS === 'ios'
+    ? `a ${uiLabel('chat.fileShareIos')} button`
+    : `${uiLabel('chat.fileSave')} and ${uiLabel('chat.fileShare')} buttons`;
+}
+
 function saveFileTool(input: Record<string, unknown>, ctx: ToolContext): ToolOutput {
   if (!ctx.offerFile) return { content: 'Files are not available here.', isError: true };
   const file = composeFile(input);
@@ -777,8 +793,8 @@ function saveFileTool(input: Record<string, unknown>, ctx: ToolContext): ToolOut
   const rows = file.rows !== undefined ? `, ${file.rows} data row${file.rows === 1 ? '' : 's'}` : '';
   return {
     content:
-      `A card for "${file.name}" (${formatSize(file.size)}${rows}) is shown in the chat. Nothing is saved yet: the ` +
-      'user taps it to share it or save it (e.g. to Files). It is kept only while the app runs' +
+      `A card for "${file.name}" (${formatSize(file.size)}${rows}) is shown in the chat with ${fileButtons()}. ` +
+      'Nothing is saved yet: the user taps a button to share or save it. It is kept only while the app runs' +
       `${incognito ? ' and this incognito session lasts' : ''}. Do not repeat the whole content in your reply.`,
     isError: false,
   };
@@ -789,12 +805,20 @@ const COORDINATES = /-?\d{1,3}\.\d{3,}\s*[,;/ ]\s*-?\d{1,3}\.\d{3,}/;
 /** A date and time as read_calendar returns them ("2026-11-15T19:30"); two or more look like a copied schedule. */
 const CALENDAR_TIMES = /\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/g;
 
+/** Memory is off: the setting by its on-screen name and where it is. */
+function memoryOff(rest: string): string {
+  return (
+    `Memory is turned off (${uiLabel('settings.memoryEnabled')} in ${uiPath('settings.title', 'settings.assistant')})` +
+    rest
+  );
+}
+
 async function memoryTool(
   name: 'remember' | 'forget',
   input: Record<string, unknown>,
   ctx: ToolContext,
 ): Promise<{ content: string; isError: boolean }> {
-  if (!ctx.memory) return { content: 'Memory is turned off in settings.', isError: true };
+  if (!ctx.memory) return { content: memoryOff('.'), isError: true };
   // Incognito conversations leave nothing behind, memories included.
   if (ctx.privacy?.touchedIncognito) {
     return {
@@ -1080,7 +1104,7 @@ async function hiddenForType(
   const id = typeof input.memory === 'string' ? input.memory.trim() : '';
   if (!MEMORY_ID.test(id))
     return { error: 'memory must be the id of a hidden memory as listed in your instructions, without brackets.' };
-  if (!ctx.memory) return { error: 'Memory is turned off in settings, so no saved value can be entered.' };
+  if (!ctx.memory) return { error: memoryOff(', so no saved value can be entered.') };
   const memory = await ctx.memory.get(id).catch(() => null);
   if (!memory) return { error: `No memory with id ${id}. Nothing was typed.` };
   if (!memory.sensitive)
@@ -1195,8 +1219,8 @@ async function hiddenGate(
       kind: 'refuse',
       reason:
         `The user has blocked Qutai from entering their saved personal information on ${host} (a setting for this ` +
-        'site). Nothing was typed. Tell the user: they can fill it in themselves, or change "Personal information" ' +
-        "in this site's permissions.",
+        'site). Nothing was typed. Tell the user: they can fill it in themselves, or change ' +
+        personalSettingPlace(),
     };
   }
   const key = `hidden:${host}:${memory.id}`;
@@ -1271,8 +1295,8 @@ async function personalGate(
       kind: 'refuse',
       reason:
         `The user has blocked Qutai from entering their saved personal information on ${host} (a setting for this ` +
-        'site). Don\'t enter it here. Tell the user: they can fill it in themselves, or change "Personal information" ' +
-        "in this site's permissions.",
+        'site). Don\'t enter it here. Tell the user: they can fill it in themselves, or change ' +
+        personalSettingPlace(),
     };
   }
   if (ctx.personalGrants?.allowed.has(host)) return { kind: 'run' };
@@ -1289,6 +1313,14 @@ async function personalGate(
   }
   ctx.personalGrants?.declined.add(host);
   return declined;
+}
+
+/** Where the per-site personal-information setting is, by its on-screen names. */
+function personalSettingPlace(): string {
+  return (
+    `${uiLabel('site.personalTitle')} in this site's sheet ${uiLabel('site.title')} (from the ` +
+    `${uiLabel('address.menu')}) or in ${uiPath('settings.title', 'settings.assistant', 'settings.sitePermissions')}.`
+  );
 }
 
 /** `hidden`: the hidden memory type enters instead of `text` (already checked and confirmed by the caller). */

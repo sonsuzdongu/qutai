@@ -11,6 +11,7 @@ import {
 import { modelFile, saveImageFileToPhotos } from '../device/attachments';
 import { editImage, ImageEditError, UploadableImage, uploadableImage } from '../device/imageEdit';
 import { PermissionDeniedError } from '../device/settings';
+import { uiLabel } from './uiLabels';
 import { t } from '../i18n';
 import type { ToolContext, ToolOutput } from './executeTool';
 import { findAttachment } from './fileTools';
@@ -128,8 +129,8 @@ async function photosFallback(
   if (!ok) {
     return {
       content:
-        `${why} The user chose not to save it to Photos. Tell them they can save it with Save to Photos on the ` +
-        "image's card and choose it with the site's own upload button.",
+        `${why} The user chose not to save it to their photo library. Tell them they can save it with the ` +
+        `${uiLabel('chat.imageSave')} button on the image's card and choose it with the site's own upload button.`,
       isError: true,
     };
   }
@@ -137,7 +138,8 @@ async function photosFallback(
     const saved = await saveImageFileToPhotos(image.file, image.name);
     return {
       content:
-        `${why} With the user's OK the prepared image was saved to their Photos as "${saved}" (the newest photo). ` +
+        `${why} With the user's OK the prepared image was saved to their photo library as "${saved}" (the newest ` +
+        'photo). ' +
         `Tell the user to tap the site's own upload button and choose "${saved}", and to tell you when it is done.`,
       isError: true,
     };
@@ -145,12 +147,13 @@ async function photosFallback(
     if (e instanceof PermissionDeniedError) {
       return {
         content:
-          `${why} Saving to Photos was refused: the user has not allowed Qutai to add photos. Offer them (with ` +
-          "ask_user) to open Qutai's page in the phone's settings with open_settings, or to use Save to Photos on the card.",
+          `${why} Saving to the photo library was refused: the user has not allowed Qutai to add photos. Offer them ` +
+          "(with ask_user) to open Qutai's page in the phone's settings with open_settings, or to use the " +
+          `${uiLabel('chat.imageSave')} button on the image's card.`,
         isError: true,
       };
     }
-    return { content: `${why} Saving to Photos failed too: ${e instanceof Error ? e.message : String(e)}.`, isError: true };
+    return { content: `${why} Saving to the photo library failed too: ${e instanceof Error ? e.message : String(e)}.`, isError: true };
   }
 }
 

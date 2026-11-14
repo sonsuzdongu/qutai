@@ -98,6 +98,7 @@ import { openSmsComposer } from './src/device/sms';
 import { openWhatsApp } from './src/device/whatsapp';
 import { initNotifications } from './src/device/notifications';
 import { nowContext } from './src/agent/scheduling';
+import { interfaceLanguageNote } from './src/agent/uiLabels';
 import { shareReportPdf } from './src/device/reportPdf';
 import { authenticate } from './src/device/biometric';
 import { scannedTarget } from './src/device/qr';
@@ -770,7 +771,7 @@ function BrowserApp({
       ? 'new tab page, no web page loaded'
       : `${current.title || '(no title)'} — ${current.url}`;
     const pageNote = options.noPage && !current.isNewTab ? " This task isn't about this page; don't read it unless needed." : '';
-    const pageInfo = `\n\n[Current tab ${current.id}: ${where}.${pageNote} Open tabs: ${browser.tabs.length}. ${nowContext()}]`;
+    const pageInfo = `\n\n[Current tab ${current.id}: ${where}.${pageNote} Open tabs: ${browser.tabs.length}. ${nowContext()}. ${interfaceLanguageNote()}]`;
     const message = text || (attachments.length ? 'See the attached files.' : '');
     const attached = attachments.length ? `\n\n${describeAttachments(attachments)}` : '';
     chat.turns.push({

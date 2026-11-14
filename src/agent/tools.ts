@@ -240,7 +240,7 @@ export const TOOLS: ToolDefinition[] = [
       'Give the ref of the file field, or of the label, button or drop zone the site uses to upload (read_page lists ' +
       'hidden file fields as "(hidden)"). Prepare the image with edit_image first so it meets the field\'s accept and ' +
       'stated size or dimensions. The result says what the page did (preview, errors). It never submits the form. ' +
-      'When the site cannot take it, it offers the user to save the image to Photos to pick it themselves.',
+      'When the site cannot take it, it offers the user to save the image to their photo library to pick it themselves.',
     input_schema: {
       type: 'object',
       properties: {
@@ -253,7 +253,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'save_pdf',
     description:
-      'Turn the current page into a PDF and open the system share sheet, where the user can save it (e.g. to Files) or send it. ' +
+      'Turn the current page into a PDF and open the system share sheet, where the user can save it as a file or send it. ' +
       'Use when the user asks for a PDF, a printable copy, or to save the page as a document.',
     input_schema: {
       type: 'object',
@@ -427,7 +427,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'offer_call',
     description:
-      'Show a Call button in the chat for a phone number, e.g. when the user asks to call a place you found. It does ' +
+      'Show a call button in the chat for a phone number, e.g. when the user asks to call a place you found. It does ' +
       'not call: the user taps the button and their phone opens the dialer. Take the number from the page or search ' +
       'result, never invent one. One plain number only: no * or # codes, pauses or extensions.',
     input_schema: {
@@ -442,9 +442,9 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'draft_sms',
     description:
-      'Prepare a text message (SMS) and show it in the chat with an "Open in Messages" button. It does not send: ' +
-      "the user sees the full number and text, taps the button, and sends it themselves from the phone's Messages " +
-      'app. Take the number from the user or a page they asked about, never invent one. One plain number only.',
+      "Prepare a text message (SMS) and show it in the chat with a button that opens it in the phone's messaging " +
+      'app. It does not send: the user sees the full number and text, taps the button, and sends it themselves from ' +
+      'that app. Take the number from the user or a page they asked about, never invent one. One plain number only.',
     input_schema: {
       type: 'object',
       properties: {
@@ -458,7 +458,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'draft_whatsapp',
     description:
-      'Prepare a WhatsApp message and show it in the chat with an "Open in WhatsApp" button. It does not send: the ' +
+      'Prepare a WhatsApp message and show it in the chat with a button that opens it in WhatsApp. It does not send: the ' +
       'user sees the number and text, taps the button, and sends it themselves in WhatsApp. The number must be in ' +
       'international format with the country code; if the user gave a local number, ask them for the country code ' +
       'instead of guessing. Leave phone out to let the user pick the chat in WhatsApp. Never invent a number.',
