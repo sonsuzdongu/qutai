@@ -1,13 +1,4 @@
-import { requireOptionalNativeModule } from 'expo';
-import { Directory, File, Paths } from 'expo-file-system';
-import { Platform } from 'react-native';
-import type { Tab } from '../browser/Tab';
-import { t } from '../i18n';
-import type { DownloadEntry, DownloadStore } from '../storage/downloads';
-import { parseDataUrl } from './saveImage';
-
-/** Files larger than this are downloaded directly instead of through the page (which holds them in memory). */
-const PAGE_FETCH_MAX_BYTES = 25e6;
+/** File names, types and safety checks for downloads (both platforms). The downloads themselves: src/storage/downloads.ts. */
 
 /** A file name safe on both platforms: no path separators or reserved characters, at most 120 characters. */
 export function safeFileName(raw: string, fallback = 'download'): string {
@@ -105,133 +96,74 @@ export function uniqueName(name: string, taken: (candidate: string) => boolean):
   }
 }
 
-function downloadsDir(): Directory {
-  const dir = new Directory(Paths.document, 'Downloads');
-  if (!dir.exists) dir.create({ idempotent: true });
-  return dir;
-}
-
-/** The user cancelled a download; nothing was kept. */
-export class DownloadCancelled extends Error {
-  constructor() {
-    super(t('downloads.cancelled'));
-  }
-}
-
-/** Settles like promise, or rejects as soon as signal is aborted (the promise's result is then ignored). */
-function unlessAborted<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const onAbort = () => reject(new DownloadCancelled());
-    if (signal.aborted) return onAbort();
-    signal.addEventListener('abort', onAbort, { once: true });
-    promise.then(resolve, reject).finally(() => signal.removeEventListener('abort', onAbort));
-  });
-}
-
-/**
- * Downloads a file the WebView couldn't show (iOS). The page fetches it first, with the
- * site's cookies, so downloads behind a login work; otherwise it is downloaded directly.
- * Meanwhile it is listed in the store's downloads in progress (with its progress when downloaded
- * directly) and can be cancelled from there: the partial file is then removed and
- * DownloadCancelled is thrown.
- */
-export async function downloadFile(
-  tab: Tab,
-  url: string,
-  store: DownloadStore,
-  suggestedName?: string,
-): Promise<DownloadEntry> {
-  const dir = downloadsDir();
-  const name = uniqueName(suggestedName || fileNameFromUrl(url), (n) => new File(dir, n).exists);
-  const file = new File(dir, name);
-  const active = store.begin(name);
-  const { signal } = active.controller;
-  try {
-    const data = /^https?:/i.test(url)
-      ? await unlessAborted(tab.run<string>('fileData', [url], 60000), signal).catch((e) => {
-          if (e instanceof DownloadCancelled) throw e;
-          return null;
-        })
-      : null;
-    const parsed = data ? parseDataUrl(data) : null;
-    if (parsed && parsed.base64.length * 0.75 <= PAGE_FETCH_MAX_BYTES) {
-      await file.write(parsed.base64, { encoding: 'base64' });
-    } else {
-      await File.downloadFileAsync(url, file, {
-        signal,
-        onProgress: ({ bytesWritten, totalBytes }) => store.progress(active.id, bytesWritten, totalBytes),
-      });
-    }
-  } catch (e) {
-    // Whatever was written so far goes (the name was free when the download started).
-    if (file.exists) file.delete();
-    throw signal.aborted ? new DownloadCancelled() : e;
-  } finally {
-    store.end(active.id);
-  }
-  return {
-    id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-    url,
-    name,
-    uri: file.uri,
-    size: file.size ?? null,
-    createdAt: Date.now(),
-    incognito: tab.incognito || undefined,
-  };
-}
-
-/** Removes a downloaded file from the device. */
-export function deleteDownloadedFile(uri: string) {
-  const file = new File(uri);
-  if (file.exists) file.delete();
-}
-
-type AgentDownloadModule = {
-  download?: (
-    key: string,
-    url: string,
-    fileName: string,
-    mimeType: string,
-    downloading: string,
-    noPermission: string,
-  ) => Promise<'started' | 'permission' | 'noWebView'>;
+const TYPES: Record<string, string> = {
+  pdf: 'application/pdf',
+  zip: 'application/zip',
+  apk: 'application/vnd.android.package-archive',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  gif: 'image/gif',
+  webp: 'image/webp',
+  heic: 'image/heic',
+  svg: 'image/svg+xml',
+  mp4: 'video/mp4',
+  mov: 'video/quicktime',
+  webm: 'video/webm',
+  mp3: 'audio/mpeg',
+  m4a: 'audio/mp4',
+  wav: 'audio/wav',
+  txt: 'text/plain',
+  csv: 'text/csv',
+  json: 'application/json',
+  html: 'text/html',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ppt: 'application/vnd.ms-powerpoint',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  epub: 'application/epub+zip',
+  ics: 'text/calendar',
 };
 
-const agentNative = Platform.OS === 'android' ? requireOptionalNativeModule<AgentDownloadModule>('QutaiAgent') : null;
+/** The common type of a file name's extension, or null. */
+export function mimeForName(name: string): string | null {
+  const ext = /\.([a-z0-9]+)$/i.exec(name)?.[1]?.toLowerCase();
+  return (ext && TYPES[ext]) || null;
+}
+
+/** An extension for a type when the name has none ("report" + application/pdf → "pdf"), or null. */
+export function extensionForMime(mime: string | null): string | null {
+  if (!mime) return null;
+  const type = mime.split(';')[0].trim().toLowerCase();
+  return Object.keys(TYPES).find((ext) => TYPES[ext] === type && ext !== 'jpeg') ?? null;
+}
+
+/** "example.com" for the list ("" when the address has no host). */
+export function siteOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
 
 /**
- * Starts a download the assistant asked for and the user confirmed, the way the tab's own downloads go and without
- * waiting for it: iOS into Qutai's Downloads (with progress and cancel; `notify` reports how it ended), Android
- * through the system download manager with the tab's cookies. The file is never opened. Resolves "permission" when
- * Android 9 and older asks for storage first (the download starts if the user allows it).
+ * The name to save a page's download under: Content-Disposition first, then the URL's last segment, with the type's
+ * extension when the name has none. `nameFixed` says the server chose it (response headers don't rename it later).
  */
-export async function startAgentDownload(
-  tab: Tab,
+export function guessDownloadName(
   url: string,
-  name: string,
-  type: string | null,
-  store: DownloadStore,
-  notify: (message: string) => void,
-): Promise<'started' | 'permission'> {
-  if (Platform.OS === 'android') {
-    if (!agentNative?.download) throw new Error('Downloads by the assistant need a newer build of Qutai on Android.');
-    const status = await agentNative.download(
-      tab.playback.nonce,
-      url,
-      name,
-      type ?? '',
-      t('downloads.androidStarted'),
-      t('downloads.androidNoPermission'),
-    );
-    if (status === 'noWebView') throw new Error('The tab is not ready; open the page and try again.');
-    return status;
+  disposition: string | null | undefined,
+  mime: string | null | undefined,
+): { name: string; nameFixed: boolean } {
+  const fromHeader = fileNameFromDisposition(disposition ?? null);
+  if (fromHeader) return { name: fromHeader, nameFixed: true };
+  let name = /^https?:/i.test(url) ? fileNameFromUrl(url) : 'download';
+  if (!/\.[a-z0-9]{1,8}$/i.test(name)) {
+    const ext = extensionForMime(mime ?? null);
+    if (ext) name = `${name}.${ext}`;
   }
-  downloadFile(tab, url, store, name).then(
-    async (entry) => {
-      await store.add(entry);
-      notify(t('downloads.done', { name: entry.name }));
-    },
-    (e) => notify(e instanceof DownloadCancelled ? e.message : t('downloads.failed', { name })),
-  );
-  return 'started';
+  return { name, nameFixed: false };
 }

@@ -50,6 +50,10 @@ export type PageCommand =
   | 'clearFind'
   | 'imageData'
   | 'fileData'
+  | 'blobInfo'
+  | 'blobChunk'
+  | 'blobRelease'
+  | 'downloadName'
   | 'captureBegin'
   | 'captureStep'
   | 'captureEnd'
@@ -95,6 +99,12 @@ export class Tab {
    * tabs; set when the tab opens, before its WebView exists. Undefined: the default profile.
    */
   profile: string | undefined;
+  /** The user agent the tab's WebView sends (set by BrowserView), for Qutai's own downloads from this tab. */
+  userAgent: string | undefined;
+
+  setUserAgent(userAgent: string | undefined) {
+    this.userAgent = userAgent;
+  }
   /** The tab whose link opened this one; back returns there once this tab has no history. */
   readonly openerId: string | undefined;
   webview: ComponentRef<typeof WebView> | null = null;

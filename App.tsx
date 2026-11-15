@@ -146,9 +146,11 @@ import { deleteActionsSince } from './src/storage/actionLog';
 import { deleteSentSince, moveSentConversation, pruneSent } from './src/storage/sentLog';
 import { SentLogScreen } from './src/components/SentLogScreen';
 import { bump, setHapticsEnabled, success, tick } from './src/device/haptics';
-import { DownloadCancelled, deleteDownloadedFile, downloadFile, startAgentDownload } from './src/device/download';
 import { FileExpiredError, saveComposedFileToFolder, shareComposedFile } from './src/device/composedFile';
-import { DownloadEntry, DownloadStore } from './src/storage/downloads';
+import { DownloadItem, DownloadStore } from './src/storage/downloads';
+import { AndroidDownloads, nativeDownloads } from './src/storage/androidDownloads';
+import { IosDownloads } from './src/storage/iosDownloads';
+import { DownloadRequests } from './src/browser/downloadRequests';
 import { File } from 'expo-file-system';
 import { DownloadsScreen } from './src/components/DownloadsScreen';
 import * as Sharing from 'expo-sharing';
@@ -192,7 +194,9 @@ configurePageLocation(sitePermissions);
 // Their camera and microphone requests check (and "Always allow" saves) the per-site camera and microphone settings.
 configurePageMedia(sitePermissions);
 const getSitePermissionsVersion = () => sitePermissions.version;
-const downloads = new DownloadStore(getDb);
+// Downloads: Qutai's own on both platforms (Android: modules/qutai-downloads; iOS: in the app), one list and screen.
+const downloads = new DownloadStore(Platform.OS === 'android' ? new AndroidDownloads() : new IosDownloads(getDb));
+const downloadRequests = new DownloadRequests(downloads);
 
 const historySearch = {
   search: async (query: string, from: number, to: number) => searchHistory(await getDb(), { query, from, to }),
@@ -301,7 +305,9 @@ async function askHiddenValue(
 
 export default function App() {
   // Re-renders the whole tree in the new language when the device language changes.
-  useLanguage();
+  const language = useLanguage();
+  // Android: the download notifications follow the app's language.
+  useEffect(() => nativeDownloads?.setLanguage(language), [language]);
   // The screen stays on while the app is open: reading pages and watching a task run shouldn't
   // be interrupted by the screen dimming or locking (and a locked phone would freeze a task).
   useKeepAwake();
@@ -521,6 +527,23 @@ function BrowserApp({
   // reader mode is turned on or off (it searches the text on screen).
   const [findFor, setFindFor] = useState<{ tabId: string; url: string; reader: boolean } | null>(null);
   const toast = useToast();
+  // Downloads: notices from the request flow, a toast when one finishes while Qutai is on screen, the
+  // notifications' "open Downloads" (Android), and incognito entries leave the list with the session.
+  useEffect(() => {
+    downloadRequests.notify = toast.show;
+    const offFinished = downloads.onFinished((item) => {
+      if (AppState.currentState !== 'active') return;
+      toast.show(t(item.state === 'done' ? 'downloads.done' : 'downloads.failed', { name: item.name }));
+    });
+    const offOpen = nativeDownloads?.addListener('onOpenRequested', () => setDownloadsVisible(true));
+    if (nativeDownloads?.consumeOpenRequest()) setDownloadsVisible(true);
+    const offIncognito = browserInstance.onIncognitoEnd(() => downloads.forgetIncognito());
+    return () => {
+      offFinished();
+      offOpen?.remove();
+      offIncognito();
+    };
+  }, [toast.show]);
   const speaking = useIsSpeaking();
   // Switching tabs (another conversation on screen) turns the microphone off; the words stay in the old draft.
   useEffect(() => stopVoiceInput(), [conversation]);
@@ -902,7 +925,7 @@ function BrowserApp({
           );
           chat.add(whatsAppItem(offer));
         },
-        startDownload: (tab, url, name, type) => startAgentDownload(tab, url, name, type, downloads, toast.show),
+        startDownload: (tab, url, name, type) => downloadRequests.fromAssistant(tab, url, name, type),
         offerFile: (file) => {
           AccessibilityInfo.announceForAccessibility(file.name);
           chat.add(fileItem(file));
@@ -1012,9 +1035,10 @@ function BrowserApp({
   };
 
   /** "Ask Qutai" on a downloaded PDF (iOS Downloads): attached to the conversation on screen, ready to ask about. */
-  const askAboutDownload = (entry: DownloadEntry) => {
+  const askAboutDownload = (entry: DownloadItem) => {
     const chat = conversation;
     if (chat.pending.length >= MAX_ATTACHMENTS) return toast.show(t('attach.full', { max: MAX_ATTACHMENTS }));
+    if (!entry.uri) return toast.show(t('attach.gone'));
     try {
       const file = new File(entry.uri);
       if (!file.exists) return toast.show(t('attach.gone'));
@@ -1356,9 +1380,7 @@ function BrowserApp({
         { icon: 'bookmarks', label: t('menu.bookmarks'), onPress: () => setLibrary('bookmarks') },
         { icon: 'history', label: t('menu.history'), onPress: () => setLibrary('history') },
         { icon: 'savedPages', label: t('menu.offlinePages'), onPress: () => setOfflineVisible(true) },
-        ...(Platform.OS === 'ios'
-          ? [{ icon: 'downloads' as const, label: t('menu.downloads'), onPress: () => setDownloadsVisible(true) }]
-          : []),
+        { icon: 'downloads', label: t('menu.downloads'), onPress: () => setDownloadsVisible(true) },
       ],
     },
     {
@@ -1494,6 +1516,15 @@ function BrowserApp({
             }),
         },
         { icon: 'share', label: t('menu.shareLink'), onPress: () => runAction(() => shareText(href)) },
+        ...(/^(https?|blob|data):/i.test(href)
+          ? [
+              {
+                icon: 'download' as const,
+                label: t('contextMenu.downloadLink'),
+                onPress: () => runAction(() => downloadRequests.fromUser(source, href)),
+              },
+            ]
+          : []),
         {
           icon: 'assistant',
           label: t('contextMenu.ask'),
@@ -1520,8 +1551,11 @@ function BrowserApp({
       actions.push({
         icon: 'download',
         label: t('contextMenu.saveImage'),
+        // Android: into the Downloads folder and list, like a browser's "Download image" (the gallery shows it there);
+        // iOS: to Photos.
         onPress: () =>
           runAction(async () => {
+            if (Platform.OS === 'android') return downloadRequests.fromUser(source, src);
             await saveImage(source, src);
             return t('contextMenu.imageSaved');
           }),
@@ -1617,12 +1651,8 @@ function BrowserApp({
       );
       await pruneAttachmentFiles();
     }
-    if (options.downloads) {
-      for (const entry of downloads.list()) {
-        deleteDownloadedFile(entry.uri);
-        await downloads.remove(entry.id);
-      }
-    }
+    // iOS: Qutai's own files and the list; Android: the list (running downloads stop), the files stay in Downloads.
+    if (options.downloads) await downloads.clearAll();
     if (options.offlinePages) {
       for (const page of await listOfflinePages(db)) {
         deleteOfflineFile(page);
@@ -1787,17 +1817,8 @@ function BrowserApp({
                       bump();
                       setContext({ tab: source, target });
                     },
-                    onDownload: (source, url) =>
-                      runAction(async () => {
-                        // The download indicator shows it meanwhile (progress, cancel).
-                        const entry = await downloadFile(source, url, downloads).catch((e) => {
-                          if (e instanceof DownloadCancelled) return null;
-                          throw e;
-                        });
-                        if (!entry) return t('downloads.cancelled');
-                        await downloads.add(entry);
-                        return t('downloads.done', { name: entry.name });
-                      }),
+                    // The download indicator and the Downloads screen show it meanwhile.
+                    onDownload: (source, download) => runAction(() => downloadRequests.fromPage(source, download)),
                     onSelection: (source, text) =>
                       setSelection((prev) =>
                         text ? { tabId: source.id, url: source.url, text } : prev?.tabId === source.id ? null : prev,
@@ -2034,16 +2055,9 @@ function BrowserApp({
           <DownloadsScreen
             visible={downloadsVisible}
             store={downloads}
-            onOpen={(entry) =>
-              runAction(() => Sharing.shareAsync(entry.uri, { dialogTitle: entry.name }).then(() => undefined))
-            }
+            run={(action) => void runAction(action)}
+            copyText={copyText}
             onAsk={askAboutDownload}
-            onDelete={(entry) =>
-              runAction(async () => {
-                deleteDownloadedFile(entry.uri);
-                await downloads.remove(entry.id);
-              })
-            }
             onClose={() => setDownloadsVisible(false)}
           />
           <SitePermissionSheet

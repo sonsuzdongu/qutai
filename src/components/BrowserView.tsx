@@ -1,3 +1,5 @@
+import { BLOB_KEEP_SCRIPT } from '../browser/pageScript';
+import { PageDownload, pageDownloadFrom } from '../browser/downloadRequests';
 import { ReactNode, useEffect, useMemo, useState } from 'react';
 import { Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
@@ -57,8 +59,8 @@ export type TabActions = {
   onContextMenu: (tab: Tab, target: ContextTarget) => void;
   /** The text selection in this tab changed ("" when cleared). */
   onSelection: (tab: Tab, text: string) => void;
-  /** iOS: the page offered a file the WebView can't show. */
-  onDownload: (tab: Tab, url: string) => void;
+  /** The page offered a file the WebView can't show (a download; on Android with what the WebView knows). */
+  onDownload: (tab: Tab, download: PageDownload) => void;
   /** Page text size in percent. */
   textZoom: number;
   /** Pinch-zoom pages that turn zooming off. */
@@ -127,7 +129,10 @@ function TabWebView({
   const geoScript = geolocationScript(tab.geolocation.nonce);
   // Runs before the page's own scripts: request blocking and banner hiding (no flash of the banner), main frame
   // only, and the geolocation bridge.
-  const mainFrameEarly = [adScript, newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : ''].join('\n');
+  // Also keeps blobs a page creates readable for its downloads (BLOB_KEEP_SCRIPT).
+  const mainFrameEarly = [adScript, newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : '', BLOB_KEEP_SCRIPT].join(
+    '\n',
+  );
   // getUserMedia asks the app (per-site permission) before the WebView's own capture may run; the native
   // mediaCaptureGrant prop below is what enforces it. Every frame on iOS (frames are refused), main frame on Android.
   const mediaScript = mediaCaptureScript(tab.media.nonce);
@@ -153,6 +158,7 @@ function TabWebView({
     Platform.OS === 'android' ? mediaScript : '',
     Platform.OS === 'android' ? playScript : '',
     Platform.OS === 'android' ? FILE_CAPTURE_SCRIPT : '',
+    Platform.OS === 'android' ? BLOB_KEEP_SCRIPT : '',
     CONTEXT_MENU_SCRIPT,
     SELECTION_SCRIPT,
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
@@ -166,6 +172,11 @@ function TabWebView({
   const palette = usePalette();
   // Android: Chrome's own user agent instead of the WebView's "embedded browser" one (fewer bot checks).
   const chromeUserAgent = useChromeUserAgent();
+  const userAgent = tab.desktop ? DESKTOP_USER_AGENT : Platform.OS === 'android' ? chromeUserAgent : undefined;
+  // Downloads started outside the WebView's listener (long-press menu, the assistant) send the same user agent.
+  useEffect(() => {
+    tab.setUserAgent(userAgent);
+  }, [tab, userAgent]);
   // Android pull to refresh: allowed only while the page says a downward drag can't scroll it.
   const [atTop, setAtTop] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -344,7 +355,7 @@ function TabWebView({
                 />
               );
             }}
-            userAgent={tab.desktop ? DESKTOP_USER_AGENT : Platform.OS === 'android' ? chromeUserAgent : undefined}
+            userAgent={userAgent}
             contentMode={tab.desktop ? 'desktop' : 'recommended'}
             thirdPartyCookiesEnabled={!newTabActions.blockThirdPartyCookies}
             // Videos can go full screen (Android) and play in the page (iOS; also a page's camera preview).
@@ -377,10 +388,8 @@ function TabWebView({
             textZoom={newTabActions.textZoom}
             // The app shows its own long-press menu for links and images.
             allowsLinkPreview={false}
-            onFileDownload={(e) => newTabActions.onDownload(tab, e.nativeEvent.downloadUrl)}
-            // Android hands downloads to the system download manager (with the site's cookies).
-            downloadingMessage={t('downloads.androidStarted')}
-            lackPermissionToDownloadMessage={t('downloads.androidNoPermission')}
+            // Both platforms (patched react-native-webview on Android): Qutai downloads the file itself.
+            onFileDownload={(e) => newTabActions.onDownload(tab, pageDownloadFrom(e.nativeEvent))}
             allowsBackForwardNavigationGestures
             javaScriptEnabled
             domStorageEnabled

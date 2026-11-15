@@ -756,6 +756,45 @@ export const PAGE_SCRIPT = String.raw`
     return fetchAsDataUrl(src, 25e6, 55000);
   }
 
+  // ---------- blob: downloads ----------
+  // The app can't fetch a blob: address natively, so the page hands the bytes over in base64 slices (the early
+  // script BLOB_KEEP_SCRIPT keeps blobs readable for a while after the page revokes their address).
+  var blobCache = {};
+
+  function blobFor(url) {
+    if (blobCache[url]) return Promise.resolve(blobCache[url]);
+    var kept = window.__qutaiBlobs && window.__qutaiBlobs[url];
+    var found = kept ? Promise.resolve(kept) : fetch(url).then(function (res) { return res.blob(); });
+    return found.then(function (blob) { blobCache[url] = blob; return blob; });
+  }
+
+  // Size, type and the name the link's download attribute gave (if any).
+  function blobInfo(url) {
+    return blobFor(url).then(function (blob) {
+      var names = window.__qutaiDlNames || {};
+      return { size: blob.size, type: blob.type || '', name: names[url] || '' };
+    });
+  }
+
+  function blobChunk(url, offset, length) {
+    return blobFor(url).then(function (blob) {
+      return blobToDataUrl(blob.slice(offset, offset + length)).then(function (dataUrl) {
+        return String(dataUrl).slice(String(dataUrl).indexOf(',') + 1);
+      });
+    });
+  }
+
+  // The name a link's download attribute gave this address (data: links), or ''.
+  function downloadName(url) {
+    var names = window.__qutaiDlNames || {};
+    return names[url] || '';
+  }
+
+  function blobRelease(url) {
+    delete blobCache[url];
+    return true;
+  }
+
   // ---------- Readable text (for reading aloud) ----------
 
   var NOT_CONTENT = 'nav, header, footer, aside, form, button, script, style, noscript, svg, ' +
@@ -1907,6 +1946,10 @@ export const PAGE_SCRIPT = String.raw`
     clearFind: clearFind,
     imageData: imageData,
     fileData: fileData,
+    blobInfo: blobInfo,
+    blobChunk: blobChunk,
+    blobRelease: blobRelease,
+    downloadName: downloadName,
     captureBegin: captureBegin,
     captureStep: captureStep,
     captureEnd: captureEnd,
@@ -1919,6 +1962,47 @@ export const PAGE_SCRIPT = String.raw`
     screenFields: screenFields,
     maskFields: maskFields,
     maskEnd: maskEnd
+  };
+})();
+`;
+
+/**
+ * Early script (main frame): keeps the Blob behind every blob: address the page creates, for two minutes after the page
+ * revokes it, and notes the name a link's download attribute gives. Pages that generate a file often click a hidden
+ * link and revoke its address at once, before the app could read it (the WebView only reports the address).
+ */
+export const BLOB_KEEP_SCRIPT = String.raw`
+(function () {
+  if (window.__qutaiBlobs) return;
+  var keep = (window.__qutaiBlobs = {});
+  var names = (window.__qutaiDlNames = {});
+  var create = URL.createObjectURL;
+  var revoke = URL.revokeObjectURL;
+  URL.createObjectURL = function (obj) {
+    var url = create.apply(URL, arguments);
+    try { if (obj instanceof Blob) keep[url] = obj; } catch (e) {}
+    return url;
+  };
+  URL.revokeObjectURL = function (url) {
+    setTimeout(function () {
+      delete keep[url];
+      delete names[url];
+      try { revoke.call(URL, url); } catch (e) {}
+    }, 120000);
+  };
+  function note(a) {
+    try {
+      if (a && a.href && a.hasAttribute('download')) names[a.href] = a.getAttribute('download') || '';
+    } catch (e) {}
+  }
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[download]') : null;
+    note(a);
+  }, true);
+  var click = HTMLAnchorElement.prototype.click;
+  HTMLAnchorElement.prototype.click = function () {
+    note(this);
+    return click.apply(this, arguments);
   };
 })();
 `;

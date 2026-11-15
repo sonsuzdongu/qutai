@@ -132,7 +132,7 @@ export type ToolContext = {
    * Starts a download the user confirmed (download_file), like the tab's own downloads, without waiting for it;
    * "permission" when Android 9 and older asks for storage first.
    */
-  startDownload?: (tab: Tab, url: string, name: string, type: string | null) => Promise<'started' | 'permission'>;
+  startDownload?: (tab: Tab, url: string, name: string, type: string | null) => Promise<void>;
   /** Shows Qutai's own Settings screen (open_settings with target "app"). */
   showAppSettings?: () => void;
   /** Records what the agent did, for the action history. Not called for incognito tabs. */
@@ -728,7 +728,7 @@ async function locationTool(input: Record<string, unknown>, ctx: ToolContext): P
 }
 
 /**
- * Downloads a file for the user through the download manager. The user confirms every download with its name, site
+ * Downloads a file for the user through Qutai's downloads (src/browser/downloadRequests.ts). The user confirms every download with its name, site
  * and, when a HEAD request tells, type and size, with a warning for files that install or run code and archives. The
  * file is never opened, and the model only hears that it started and where the user finds it.
  */
@@ -778,22 +778,14 @@ async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext
   if (!(await ctx.confirm(lines.join('\n\n'), null)))
     return { content: 'The user declined the download. Ask them how to proceed.', isError: true };
   try {
-    const status = await ctx.startDownload(tab, url, name, probe.type);
-    if (status === 'permission') {
-      return {
-        content:
-          `The phone asked the user for storage permission; "${name}" downloads if they allow it, into the phone's ` +
-          'downloads folder. You cannot open or read it.',
-        isError: false,
-      };
-    }
+    await ctx.startDownload(tab, url, name, probe.type);
     return {
-      content: android
-        ? `Started downloading "${name}" with the phone's download manager (a notification shows progress); it goes ` +
-          "to the phone's downloads folder, where the user opens it. You cannot open or read it."
-        : `Started downloading "${name}"; it appears in Qutai's ${uiLabel('downloads.title')} screen ` +
-          `(${uiPath('address.menu', 'menu.library', 'menu.downloads')}) with its progress, where the user opens ` +
-          'or shares it. You cannot open or read it.',
+      content:
+        `Started downloading "${name}"; it appears in Qutai's ${uiLabel('downloads.title')} screen ` +
+        `(${uiPath('address.menu', 'menu.library', 'menu.downloads')}) with its progress, where the user opens ` +
+        'or shares it' +
+        (android ? " (the file is saved in the phone's Downloads folder)" : '') +
+        '. You cannot open or read it.',
       isError: false,
     };
   } catch (e) {

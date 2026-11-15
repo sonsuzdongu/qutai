@@ -2,18 +2,18 @@ import { useSyncExternalStore } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import type { ActiveDownload, DownloadStore } from '../storage/downloads';
+import type { DownloadItem, DownloadStore } from '../storage/downloads';
 import { makeStyles } from '../ui/theme';
 
 /** "42%" when the size is known, else the bytes so far ("3.1 MB"), or "" before anything arrived. */
-export function downloadProgressLabel(a: ActiveDownload): string {
-  if (a.totalBytes) return `${Math.min(100, Math.floor((a.bytesWritten / a.totalBytes) * 100))}%`;
-  return a.bytesWritten > 0 ? formatBytes(a.bytesWritten) : '';
+export function downloadProgressLabel(a: DownloadItem): string {
+  if (a.total) return `${Math.min(100, Math.floor((a.received / a.total) * 100))}%`;
+  return a.received > 0 ? formatBytes(a.received) : '';
 }
 
 /** 0…1 when the size is known, else null (an indeterminate bar). */
-export function downloadFraction(a: ActiveDownload): number | null {
-  return a.totalBytes ? Math.min(1, a.bytesWritten / a.totalBytes) : null;
+export function downloadFraction(a: DownloadItem): number | null {
+  return a.total ? Math.min(1, a.received / a.total) : null;
 }
 
 type Props = {
@@ -24,14 +24,16 @@ type Props = {
 };
 
 /**
- * A small pill over the page while files download (iOS): the newest download's name and progress,
- * a cancel button, and a tap opens the Downloads screen.
+ * A small pill over the page while files download (both platforms): the newest download's name and progress, how many
+ * more are running, a cancel button, and a tap opens the Downloads screen. Paused ones don't show it.
  */
 export function DownloadIndicator({ store, bottomOffset, onOpen }: Props) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   useSyncExternalStore(store.subscribe, store.getVersion);
-  const active = store.activeList();
+  const active = store
+    .activeList()
+    .filter((a) => a.state === 'downloading' || a.state === 'queued' || a.state === 'waiting');
   const current = active[active.length - 1];
   if (!current) return null;
   const fraction = downloadFraction(current);

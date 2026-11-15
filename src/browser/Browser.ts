@@ -127,6 +127,16 @@ export class Browser {
    * Called when a conversation that may not be on screen must be read from disk now (to decide which
    * conversation a group keeps). The listener reads it once and calls `restore`.
    */
+  /** The incognito session ended (its last tab closed): downloads forget its entries. */
+  onIncognitoEnd(listener: () => void) {
+    this.incognitoEndListeners.add(listener);
+    return () => {
+      this.incognitoEndListeners.delete(listener);
+    };
+  }
+
+  private incognitoEndListeners = new Set<() => void>();
+
   onChatLoadNeeded(listener: (chat: Conversation) => void) {
     this.chatLoadListeners.add(listener);
     return () => {
@@ -649,6 +659,7 @@ export class Browser {
       // Nothing to remove.
     }
     closePdf();
+    this.incognitoEndListeners.forEach((l) => l());
     if (!this.incognitoProfile) return;
     endIncognitoProfile(this.incognitoProfile);
     this.incognitoProfile = undefined;

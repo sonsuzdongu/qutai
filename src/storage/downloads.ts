@@ -1,131 +1,179 @@
-import { Db } from './db';
+import type { Tab } from '../browser/Tab';
 
-export type DownloadEntry = {
+/**
+ * Downloads, one model for both platforms. Two back ends do the work: iOS downloads in the app
+ * (src/storage/iosDownloads.ts, files in Qutai's own storage, cancel only), Android in the native module
+ * modules/qutai-downloads (src/storage/androidDownloads.ts, files in the public Downloads folder, pause / resume /
+ * retry, background with a notification). The Downloads screen, the download indicator, the assistant's
+ * download_file and "Clear browsing data" only talk to {@link DownloadStore}.
+ *
+ * Incognito (both platforms): a download from an incognito tab is listed only while the incognito session lasts and
+ * never written to the database or the native list file; when the session ends (the last incognito tab closes) its
+ * finished downloads leave the list and unfinished ones are cancelled. The finished files themselves stay: the user
+ * asked for them.
+ */
+
+export type DownloadState = 'queued' | 'downloading' | 'paused' | 'waiting' | 'failed' | 'done' | 'interrupted';
+
+export type DownloadItem = {
   id: string;
+  /** Where it came from (http(s); "blob:"/"data:" ones show their page's site). */
   url: string;
   name: string;
-  /** Local file. */
-  uri: string;
-  size: number | null;
+  mime: string | null;
+  /** Site shown in the list. */
+  site: string;
+  state: DownloadState;
+  received: number;
+  /** null while the size isn't known. */
+  total: number | null;
+  /** Bytes per second while downloading, when known. */
+  speed: number | null;
+  /** Why it failed: "network", "http:404", "space", "file", "size", "interrupted", "unsupported", "redirects". */
+  error: string | null;
+  /** It started again from zero: the server can't resume ("noRange") or the file changed ("changed"). */
+  restarted: 'noRange' | 'changed' | null;
+  /** The finished file (iOS: file://, Android: content://). */
+  uri: string | null;
   createdAt: number;
-  /** Downloaded from an incognito tab: listed for this session only, never written to the database. */
-  incognito?: boolean;
+  finishedAt: number | null;
+  incognito: boolean;
+  /** Pause / resume / retry work (Android http downloads). */
+  resumable: boolean;
+  /** Finished, but the file was deleted elsewhere (Android file managers). */
+  missing: boolean;
 };
 
-/** A file still downloading (iOS): listed with its progress until it finishes, fails or is cancelled. */
-export type ActiveDownload = {
-  id: string;
+export const ACTIVE_STATES: ReadonlySet<DownloadState> = new Set(['queued', 'downloading', 'paused', 'waiting']);
+
+export const isActive = (item: DownloadItem) => ACTIVE_STATES.has(item.state);
+
+/** What a download starts from: the tab (cookies, profile, incognito) and what the page or the user said. */
+export type StartRequest = {
+  tab: Tab;
+  url: string;
+  /** The suggested name (Content-Disposition or the URL's last segment, made safe). */
   name: string;
-  bytesWritten: number;
-  /** null while the size isn't known (no Content-Length, or the page is still fetching it). */
-  totalBytes: number | null;
-  controller: AbortController;
+  /** The name came from the server's Content-Disposition: response headers don't rename it. */
+  nameFixed?: boolean;
+  mime?: string | null;
+  length?: number | null;
+  userAgent?: string | null;
 };
 
-/** Progress redraws at most this often. */
-const PROGRESS_EMIT_MS = 250;
+/** A blob: / data: download the app writes itself, chunk by chunk (the page holds the bytes). */
+export type PageWriter = {
+  id: string;
+  /** False when the download was cancelled meanwhile: stop sending. */
+  write(base64: string): Promise<boolean>;
+  end(): Promise<boolean>;
+  fail(code: string): Promise<void>;
+};
 
-type Row = { id: string; url: string; name: string; uri: string; size: number | null; created_at: number };
+export type OpenResult = 'opened' | 'noApp' | 'gone';
 
-export async function listDownloads(db: Db): Promise<DownloadEntry[]> {
-  const rows = await db.getAllAsync<Row>('SELECT * FROM downloads ORDER BY created_at DESC', []);
-  return rows.map((r) => ({ id: r.id, url: r.url, name: r.name, uri: r.uri, size: r.size, createdAt: r.created_at }));
+export interface DownloadBackend {
+  /** Pause / resume / retry exist. */
+  readonly canPause: boolean;
+  /** "Show in folder" exists (Android: the system's Downloads view). */
+  readonly canShowFolder: boolean;
+  load(): Promise<void>;
+  list(): DownloadItem[];
+  start(request: StartRequest): Promise<string>;
+  beginPage(meta: { tab: Tab; name: string; mime: string | null; total: number | null }): Promise<PageWriter>;
+  pause(id: string): void;
+  resume(id: string): void;
+  retry(id: string): void;
+  cancel(id: string): void;
+  pauseAll(): void;
+  resumeAll(): void;
+  /** Off the list; the file stays. */
+  remove(id: string): Promise<void>;
+  /** The file and its entry. */
+  deleteFile(id: string): Promise<boolean>;
+  clearFinished(): Promise<void>;
+  /** Clear browsing data › Downloads. */
+  clearAll(): Promise<void>;
+  forgetIncognito(): void;
+  open(id: string): Promise<OpenResult>;
+  share(id: string, title: string): Promise<OpenResult>;
+  showFolder(): Promise<boolean>;
+  /** The screen is open (Android: the finished-download notifications go). */
+  seen(): void;
+  subscribe(listener: () => void): () => void;
 }
 
-export async function addDownload(db: Db, d: DownloadEntry): Promise<void> {
-  await db.runAsync('INSERT INTO downloads (id, url, name, uri, size, created_at) VALUES (?, ?, ?, ?, ?, ?)', [
-    d.id,
-    d.url,
-    d.name,
-    d.uri,
-    d.size,
-    d.createdAt,
-  ]);
-}
+/** A download's state changed to done or failed (for the app's toast). */
+export type Finished = { item: DownloadItem };
 
-export async function removeDownload(db: Db, id: string): Promise<void> {
-  await db.runAsync('DELETE FROM downloads WHERE id = ?', [id]);
-}
-
-/** Downloaded files, newest first; incognito ones only in memory. Listeners hear about changes. */
+/** The app's downloads: a thin layer over the platform's back end, with change listeners for React. */
 export class DownloadStore {
-  private entries: DownloadEntry[] = [];
-  private active: ActiveDownload[] = [];
-  private lastProgressEmit = 0;
   private listeners = new Set<() => void>();
-  private loading: Promise<void> | null = null;
+  private finishedListeners = new Set<(item: DownloadItem) => void>();
   private version = 0;
+  private items: DownloadItem[] = [];
+  private states = new Map<string, DownloadState>();
 
-  constructor(private getDb: () => Promise<Db>) {}
+  constructor(readonly backend: DownloadBackend) {
+    backend.subscribe(() => this.refresh());
+  }
+
+  get canPause() {
+    return this.backend.canPause;
+  }
+
+  get canShowFolder() {
+    return this.backend.canShowFolder;
+  }
 
   load(): Promise<void> {
-    this.loading ??= this.getDb()
-      .then(listDownloads)
-      .then((saved) => {
-        const known = new Set(this.entries.map((e) => e.id));
-        this.entries = [...this.entries, ...saved.filter((e) => !known.has(e.id))].sort(
-          (a, b) => b.createdAt - a.createdAt,
-        );
-        this.emit();
-      })
-      .catch(() => {});
-    return this.loading;
+    return this.backend.load().then(() => this.refresh());
   }
 
-  list(): DownloadEntry[] {
-    return this.entries;
+  /** Newest first. */
+  list(): DownloadItem[] {
+    return this.items;
   }
 
-  /** Downloads in progress, oldest first. */
-  activeList(): ActiveDownload[] {
-    return this.active;
+  /** Still going (or paused), oldest first. */
+  activeList(): DownloadItem[] {
+    return this.items.filter(isActive).reverse();
   }
 
-  /** A download starts: it is listed with its progress until `end`. */
-  begin(name: string): ActiveDownload {
-    const entry: ActiveDownload = {
-      id: `a${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
-      name,
-      bytesWritten: 0,
-      totalBytes: null,
-      controller: new AbortController(),
+  get(id: string) {
+    return this.items.find((i) => i.id === id);
+  }
+
+  start(request: StartRequest) {
+    return this.backend.start(request);
+  }
+
+  beginPage(meta: { tab: Tab; name: string; mime: string | null; total: number | null }) {
+    return this.backend.beginPage(meta);
+  }
+
+  pause = (id: string) => this.backend.pause(id);
+  resume = (id: string) => this.backend.resume(id);
+  retry = (id: string) => this.backend.retry(id);
+  cancel = (id: string) => this.backend.cancel(id);
+  pauseAll = () => this.backend.pauseAll();
+  resumeAll = () => this.backend.resumeAll();
+  remove = (id: string) => this.backend.remove(id);
+  deleteFile = (id: string) => this.backend.deleteFile(id);
+  clearFinished = () => this.backend.clearFinished();
+  clearAll = () => this.backend.clearAll();
+  forgetIncognito = () => this.backend.forgetIncognito();
+  open = (id: string) => this.backend.open(id);
+  share = (id: string, title: string) => this.backend.share(id, title);
+  showFolder = () => this.backend.showFolder();
+  seen = () => this.backend.seen();
+
+  /** Hears about every download that finishes or fails from now on. */
+  onFinished(listener: (item: DownloadItem) => void) {
+    this.finishedListeners.add(listener);
+    return () => {
+      this.finishedListeners.delete(listener);
     };
-    this.active = [...this.active, entry];
-    this.emit();
-    return entry;
-  }
-
-  progress(id: string, bytesWritten: number, totalBytes: number) {
-    const now = Date.now();
-    this.active = this.active.map((a) =>
-      a.id === id ? { ...a, bytesWritten, totalBytes: totalBytes > 0 ? totalBytes : null } : a,
-    );
-    if (now - this.lastProgressEmit < PROGRESS_EMIT_MS) return;
-    this.lastProgressEmit = now;
-    this.emit();
-  }
-
-  /** Stops a download in progress; its partial file is removed by whoever started it. */
-  cancel(id: string) {
-    this.active.find((a) => a.id === id)?.controller.abort();
-  }
-
-  end(id: string) {
-    this.active = this.active.filter((a) => a.id !== id);
-    this.emit();
-  }
-
-  async add(entry: DownloadEntry): Promise<void> {
-    this.entries = [entry, ...this.entries];
-    this.emit();
-    if (!entry.incognito) await addDownload(await this.getDb(), entry);
-  }
-
-  async remove(id: string): Promise<void> {
-    const entry = this.entries.find((e) => e.id === id);
-    this.entries = this.entries.filter((e) => e.id !== id);
-    this.emit();
-    if (entry && !entry.incognito) await removeDownload(await this.getDb(), id);
   }
 
   subscribe = (listener: () => void) => {
@@ -137,7 +185,17 @@ export class DownloadStore {
 
   getVersion = () => this.version;
 
-  private emit() {
+  private refresh() {
+    this.items = this.backend.list();
+    const next = new Map<string, DownloadState>();
+    for (const item of this.items) {
+      const before = this.states.get(item.id);
+      if (before && before !== item.state && (item.state === 'done' || item.state === 'failed')) {
+        this.finishedListeners.forEach((l) => l(item));
+      }
+      next.set(item.id, item.state);
+    }
+    this.states = next;
     this.version++;
     this.listeners.forEach((l) => l());
   }
