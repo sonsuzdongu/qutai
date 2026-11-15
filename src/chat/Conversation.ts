@@ -7,6 +7,7 @@ import { formatSize } from '../i18n/format';
 import type { SmsOffer } from '../device/sms';
 import type { WhatsAppOffer } from '../device/whatsapp';
 import { AttachmentInfo, MAX_ATTACHMENTS, MAX_EDITED_IMAGES } from './attachments';
+import type { ComposedRef, ShareOffer } from './shareable';
 
 let itemCounter = 0;
 const STREAM_FLUSH_MS = 50;
@@ -42,6 +43,21 @@ export function fileItem(file: FileOffer): ChatItem {
 export function imageItem(info: AttachmentInfo): ChatItem {
   const size = info.width && info.height ? ` · ${info.width}×${info.height}` : '';
   return { id: String(++itemCounter), kind: 'image', text: `🖼 ${info.name}${size} · ${formatSize(info.size)}`, attachments: [info] };
+}
+
+/** A PDF Qutai made (save_pdf, or an answer saved as a PDF), as a card; its manifest makes it a file of the conversation. */
+export function pdfItem(info: AttachmentInfo): ChatItem {
+  return { id: String(++itemCounter), kind: 'pdf', text: `📄 ${info.name} · ${formatSize(info.size)}`, attachments: [info] };
+}
+
+/**
+ * A share prepared by the assistant (share), or the card of an email draft that took files. The text is what
+ * versions without the card show: where it goes and the file names, never the message text.
+ */
+export function shareItem(share: ShareOffer): ChatItem {
+  const where = share.app === 'whatsapp' ? '🟢 WhatsApp' : share.app === 'email' ? '✉️' : '📤';
+  const files = share.files.map((f) => f.name).join(', ');
+  return { id: String(++itemCounter), kind: 'share', text: `${where} ${files}`.trim(), share };
 }
 
 /** A message the user sent, with the files attached to it. */
@@ -251,12 +267,38 @@ export class Conversation {
   /** Every attachment the user sent in this conversation, oldest first: the manifest tools look ids up in. */
   get attachments(): AttachmentInfo[] {
     const out: AttachmentInfo[] = [];
-    for (const item of this.items) if (item.attachments) out.push(...item.attachments);
+    for (const item of this.items)
+      for (const a of item.attachments ?? []) if (!out.some((b) => b.id === a.id)) out.push(a);
     for (const turn of this.turns) {
       if (turn.role !== 'user' || !turn.attachments) continue;
       for (const a of turn.attachments) if (!out.some((b) => b.id === a.id)) out.push(a);
     }
     return out;
+  }
+
+  /** The files composed with save_file in this conversation (from their cards), for tools that hand files out. */
+  get composedFiles(): ComposedRef[] {
+    return this.items.filter((item) => item.kind === 'file' && item.file).map((item) => item.file!);
+  }
+
+  /**
+   * PDFs made outside the assistant's tools (an answer saved as a PDF from its menu) since the last message: the
+   * next message tells the model their ids, so it can attach or share them when asked.
+   */
+  private unannounced: AttachmentInfo[] = [];
+
+  /** Adds the card of a PDF Qutai made; `announce`: made by the user's tap, so the model hears of it with the next message. */
+  addMadePdf(info: AttachmentInfo, announce: boolean) {
+    this.add(pdfItem(info));
+    if (announce) this.unannounced.push(info);
+  }
+
+  /** The note for the next message about PDFs made since the last one (and forgets them), or "". */
+  takeMadeNote(): string {
+    const list = this.unannounced;
+    this.unannounced = [];
+    if (!list.length) return '';
+    return `[Since your last answer the user saved ${list.map((a) => `"${a.name}" (id=${a.id})`).join(', ')} as a PDF from an answer; it can be attached or shared by its id.]`;
   }
 
   /** Edited images given to a page in this run (upload_image): kept when old edited images are dropped. */
@@ -324,6 +366,7 @@ export class Conversation {
   /** A new chat: messages, history and the conversation's model and voice-language choices go. */
   clear() {
     this.items = [];
+    this.unannounced = [];
     this.turns = [];
     this.model = null;
     this.voiceLanguage = null;

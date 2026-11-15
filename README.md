@@ -159,6 +159,29 @@ from another site, or an uploader that ignores the file: the user may save the p
 and pick it with the site's button. Attached images are re-encoded for the upload (no EXIF); edits are clean already.
 On Android in the background, the confirmation pauses the task with a notification like other confirmations.
 
+Sending files to other apps (`src/chat/shareable.ts`, `src/device/outgoing.ts`, `src/agent/shareTools.ts`): one
+place decides what may leave a conversation: images and PDFs the user attached, `edit_image` results, PDFs Qutai made
+(`save_pdf` and an answer saved as a PDF now stay with the conversation as attachments with ids and cards, Save on
+Android and Share) and `save_file` files (`file-…` ids). Screenshots, downloads and anything else on the phone have no
+id, so page content can't make the assistant hand them out. Each hand-out is a fresh folder of copies under readable
+names in the cache; images the user attached go out re-encoded without EXIF (the original only when the user asks),
+at most 10 files and 20 MB. Copies stay 30 minutes for the receiving app, all go at the next start, incognito ones when
+the incognito session ends. The routes, the user always sending:
+- `draft_email` with `attachments`: the system composer with the files (iOS reads them in at once; Android's
+  mail-composer module turns them into content URIs). Without a mail account it never falls back to `mailto:` with
+  files: the share sheet opens with the files, subject and body, and the result tells the model so. A card lists the
+  files that went.
+- `share` (app `whatsapp` or `any`): a card with thumbnails or file names, the text and a "Share to WhatsApp" /
+  "Share…" button. The tap prepares the files and calls `QutaiEntry.shareFiles`: on Android `ACTION_SEND` /
+  `ACTION_SEND_MULTIPLE` with content URIs from the module's own FileProvider (`${applicationId}.qutai.share`, only
+  the hand-out folders), `EXTRA_TEXT` (WhatsApp's caption), sent to `com.whatsapp`, then `com.whatsapp.w4b`, else the
+  chooser; on iOS the share sheet with the text (and subject) and every file. Where text may not travel with files
+  (iOS, and Android to an app the user picks) the tap also copies it and the card says so. No chat can be preselected
+  with files: there is no documented way, so the card shows the number the user gave and says they pick the chat.
+  `draft_whatsapp` stays text-only (click-to-chat with the number).
+- `upload_file`: a PDF or composed file into a page's file field (webmail attach controls), same page-side transfer as
+  `upload_image`, confirmed every time with the file name and the site; on failure the result points at the file's card.
+
 From the page menu (⋮) and by asking the agent: save the page as PDF (from its HTML, or from screenshots for pages
 that come out wrong), save a screenshot of the visible area or the whole page (scrolled and stitched) to Photos,
 read the page aloud, share/copy the link. When needed, the agent can also look at a screenshot of the page.

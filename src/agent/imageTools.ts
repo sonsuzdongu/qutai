@@ -56,7 +56,7 @@ export async function editImageTool(input: Record<string, unknown>, ctx: ToolCon
 }
 
 /** What the page script says about the element upload_image was given (fileTarget). */
-type FileTarget =
+export type FileTarget =
   | { kind: 'frame'; origin: string }
   | { kind: 'probe'; element: string }
   | {
@@ -71,7 +71,7 @@ type FileTarget =
     };
 
 /** What the page did with the file (fileAssign). */
-type AssignResult =
+export type AssignResult =
   | { ok: false; reason: 'accept'; accept: string }
   | { ok: false; reason: 'disabled' }
   | {
@@ -162,8 +162,15 @@ function token(): string {
   return Array.from({ length: 4 }, () => Math.random().toString(36).slice(2, 8)).join('');
 }
 
-/** Sends the file to the page script in pieces and has it put into the field; aborts the transfer on failure. */
-async function transfer(tab: Tab, image: UploadableImage, ref: unknown): Promise<AssignResult> {
+/**
+ * Sends the file to the page script in pieces and has it put into the field; aborts the transfer on failure. Shared
+ * by upload_image and upload_file (src/agent/shareTools.ts).
+ */
+export async function transfer(
+  tab: Tab,
+  image: { file: { base64(): Promise<string>; size: number }; name: string; mimeType: string },
+  ref: unknown,
+): Promise<AssignResult> {
   const id = token();
   const data = await image.file.base64();
   try {

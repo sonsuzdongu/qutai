@@ -251,10 +251,27 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'upload_file',
+    description:
+      "Put a PDF or file of this conversation (one the user attached, a save_pdf PDF, a save_file file) into a web " +
+      "page's file field, e.g. webmail's attach control, as if the user had chosen it. The user confirms every time, " +
+      'seeing the file name and the site. Give the ref of the file field, or of the attach button or drop zone ' +
+      '(read_page lists hidden file fields as "(hidden)"). For images use upload_image. Nothing is submitted or sent.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', description: 'The file id ("att-…"/"inc-…" for PDFs, "file-…" for save_file files)' },
+        ref: { type: 'integer', description: 'Ref of the file field, or of its label, attach button or drop zone' },
+      },
+      required: ['id', 'ref'],
+    },
+  },
+  {
     name: 'save_pdf',
     description:
-      'Turn the current page into a PDF and open the system share sheet, where the user can save it as a file or send it. ' +
-      'Use when the user asks for a PDF, a printable copy, or to save the page as a document.',
+      'Turn the current page into a PDF, shown in the chat as a card the user can share or save, and kept with this ' +
+      'conversation under an id (so it can be attached to an email, shared or uploaded). Use when the user asks for ' +
+      'a PDF, a printable copy, or to save the page as a document.',
     input_schema: {
       type: 'object',
       properties: {
@@ -450,13 +467,30 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'draft_email',
     description:
-      "Open the phone's email composer with a draft. The user reviews it and decides whether to send; you cannot send email yourself.",
+      "Open the phone's email composer with a draft, optionally with files of this conversation attached. The user " +
+      'reviews it and decides whether to send; you cannot send email yourself. Without a mail account in the system ' +
+      'composer, a draft with files opens the share sheet instead (the user picks their mail app); the result says ' +
+      'which happened. If the user is writing the email in webmail in the current tab, attach there with ' +
+      'upload_image / upload_file instead.',
     input_schema: {
       type: 'object',
       properties: {
         to: { type: 'array', items: { type: 'string' }, description: 'Recipient email addresses (optional)' },
         subject: { type: 'string' },
         body: { type: 'string', description: 'Plain text body' },
+        attachments: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Ids of files of this conversation: images the user attached ("att-…"/"inc-…") or edited, PDFs the user ' +
+            'attached or save_pdf made, files from save_file ("file-…"). Nothing else can be sent.',
+        },
+        original: {
+          type: 'boolean',
+          description:
+            'Send images the user attached as the original files, with their metadata such as location (default: a ' +
+            'copy without metadata). Only when the user explicitly asks for the original.',
+        },
       },
       required: ['subject', 'body'],
     },
@@ -498,7 +532,8 @@ export const TOOLS: ToolDefinition[] = [
       'Prepare a WhatsApp message and show it in the chat with a button that opens it in WhatsApp. It does not send: the ' +
       'user sees the number and text, taps the button, and sends it themselves in WhatsApp. The number must be in ' +
       'international format with the country code; if the user gave a local number, ask them for the country code ' +
-      'instead of guessing. Leave phone out to let the user pick the chat in WhatsApp. Never invent a number.',
+      'instead of guessing. Leave phone out to let the user pick the chat in WhatsApp. Never invent a number. Text ' +
+      'only: to send an image or file to WhatsApp, use share with app "whatsapp".',
     input_schema: {
       type: 'object',
       properties: {
@@ -510,6 +545,40 @@ export const TOOLS: ToolDefinition[] = [
         name: { type: 'string', description: 'Who the number belongs to (optional)' },
       },
       required: ['body'],
+    },
+  },
+  {
+    name: 'share',
+    description:
+      'Prepare images or files of this conversation, with optional text, for sending to another app: a card in the ' +
+      'chat shows them with a button; the user taps it, WhatsApp opens (app "whatsapp") or the share sheet does ' +
+      '(app "any"), and the user picks the chat or recipient there and sends. Nothing is sent by you, and no chat or ' +
+      'contact can be chosen in advance: if the user named one, say they pick it in the app. For a text-only ' +
+      'WhatsApp message use draft_whatsapp; for email use draft_email.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string', enum: ['whatsapp', 'any'], description: 'Where it goes (default "any": the share sheet)' },
+        attachments: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Ids of files of this conversation: images the user attached ("att-…"/"inc-…") or edited, PDFs the user ' +
+            'attached or save_pdf made, files from save_file ("file-…"). Nothing else can be sent.',
+        },
+        original: {
+          type: 'boolean',
+          description:
+            'Send images the user attached as the original files, with their metadata such as location (default: a ' +
+            'copy without metadata). Only when the user explicitly asks for the original.',
+        },
+        text: { type: 'string', description: 'Text to go with the files (a caption), at most 2000 characters (optional)' },
+        phone: {
+          type: 'string',
+          description: 'WhatsApp: the number the user gave, international format, shown on the card so they can find the chat (optional)',
+        },
+        name: { type: 'string', description: 'Who it is for, shown on the card (optional)' },
+      },
     },
   },
   {

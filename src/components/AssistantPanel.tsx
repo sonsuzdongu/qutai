@@ -40,6 +40,7 @@ import type { WhatsAppOffer } from '../device/whatsapp';
 import type { SavedTask } from '../storage/savedTasks';
 import { composedFileAvailable, FileOffer } from '../device/composedFile';
 import type { AttachmentInfo } from '../chat/attachments';
+import type { ShareOffer } from '../chat/shareable';
 import { AttachmentThumb } from './AttachmentViews';
 import { attachmentAvailable } from '../device/attachments';
 import { imageFormatLabel } from '../chat/imageEdit';
@@ -66,7 +67,9 @@ export type ChatItem = {
     | 'sms'
     | 'whatsapp'
     | 'file'
-    | 'image';
+    | 'image'
+    | 'pdf'
+    | 'share';
   text: string;
   /** For 'choices': the buttons offered. */
   options?: string[];
@@ -88,9 +91,11 @@ export type ChatItem = {
   file?: FileOffer;
   /**
    * For 'user': the files attached to the message (their manifest; the files are on the phone). For 'image': the one
-   * image the assistant made with edit_image.
+   * image the assistant made with edit_image. For 'pdf': the one PDF Qutai made.
    */
   attachments?: AttachmentInfo[];
+  /** For 'share': the prepared share (or the files an email draft took), described without content. */
+  share?: ShareOffer;
   /** For 'image': its file was removed to keep the conversation's edited images under the limit. */
   expired?: boolean;
 };
@@ -187,8 +192,10 @@ type Props = {
   onRemovePending: (id: string) => void;
   /** A thumbnail (pending or sent) was tapped: full-screen preview. */
   onOpenAttachment: (info: AttachmentInfo) => void;
-  /** Share or Save on the card of an edited image. */
+  /** Share or Save on the card of an edited image or of a PDF Qutai made. */
   onImage: (action: 'share' | 'save', info: AttachmentInfo) => void;
+  /** The button of a share card ("Share to WhatsApp" / "Share…") was tapped. */
+  onShare: (offer: ShareOffer) => void;
 };
 
 const MAX_WIDTH = 420;
@@ -246,6 +253,7 @@ export function AssistantPanel({
   onRemovePending,
   onOpenAttachment,
   onImage,
+  onShare,
 }: Props) {
   const styles = useStyles();
   const palette = usePalette();
@@ -525,6 +533,7 @@ export function AssistantPanel({
                     onWhatsApp={onWhatsApp}
                     onFile={onFile}
                     onImage={onImage}
+                    onShare={onShare}
                     onOpenSource={onOpenSource}
                     onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
                   />
@@ -865,6 +874,7 @@ function ChatRow({
   onWhatsApp,
   onFile,
   onImage,
+  onShare,
   onOpenSource,
   onChoose,
   onOpenAttachment,
@@ -884,6 +894,7 @@ function ChatRow({
   onSms: (offer: SmsOffer) => void;
   onWhatsApp: (offer: WhatsAppOffer) => void;
   onFile: (action: 'share' | 'save', file: FileOffer) => void;
+  onShare: (offer: ShareOffer) => void;
   onOpenSource: (source: Source) => void;
   /** Set while the question can still be answered. */
   onChoose?: (itemId: string, option: string) => void;
@@ -1180,6 +1191,16 @@ function ChatRow({
       if (!image) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
       return <ImageCard info={image} expired={!!item.expired} onOpen={onOpenAttachment} onImage={onImage} />;
     }
+    case 'pdf': {
+      const pdf = item.attachments?.[0];
+      if (!pdf) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      return <PdfCard info={pdf} onOpen={onOpenAttachment} onPdf={onImage} />;
+    }
+    case 'share': {
+      const share = item.share;
+      if (!share) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      return <ShareCard share={share} onOpen={onOpenAttachment} onShare={onShare} />;
+    }
     case 'error':
       return <Text style={styles.error}>⚠️ {item.text}</Text>;
     default:
@@ -1245,6 +1266,155 @@ function ImageCard({
       ) : (
         <Text style={[styles.callNumber, d?.dim]}>{t(expired ? 'chat.imageExpired' : 'attach.gone')}</Text>
       )}
+    </View>
+  );
+}
+
+/** A PDF Qutai made (save_pdf, or an answer saved as a PDF): name and size, Save (Android) and Share. */
+function PdfCard({
+  info,
+  onOpen,
+  onPdf,
+}: {
+  info: AttachmentInfo;
+  onOpen: (info: AttachmentInfo) => void;
+  onPdf: (action: 'share' | 'save', info: AttachmentInfo) => void;
+}) {
+  const styles = useStyles();
+  const d = useContext(PanelTheme);
+  const palette = usePalette();
+  const available = useMemo(() => attachmentAvailable(info.id), [info.id]);
+  return (
+    <View style={[styles.smsCard, d?.assistantBubble]}>
+      <View style={styles.fileHeader}>
+        <AttachmentThumb info={info} index={0} size={56} onPress={() => onOpen(info)} />
+        <View style={styles.callInfo}>
+          <Text style={[styles.callName, d?.text]} numberOfLines={2}>
+            {info.name}
+          </Text>
+          <Text style={[styles.callNumber, d?.dim]}>{`${t('chat.pdfPages')} · ${formatSize(info.size)}`}</Text>
+        </View>
+      </View>
+      {available ? (
+        <View style={styles.fileButtons}>
+          {Platform.OS === 'android' ? (
+            <Pressable
+              onPress={() => onPdf('save', info)}
+              style={({ pressed }) => [styles.fileButton, d?.chip, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel={t('chat.fileSaveLabel', { name: info.name })}
+            >
+              <Icon name="download" size={17} color={palette.tintText} />
+              <Text style={styles.fileButtonText}>{t('chat.fileSave')}</Text>
+            </Pressable>
+          ) : null}
+          <Pressable
+            onPress={() => onPdf('share', info)}
+            style={({ pressed }) => [styles.callButton, pressed && styles.callButtonPressed]}
+            accessibilityRole="button"
+            accessibilityLabel={t('chat.fileShareLabel', { name: info.name })}
+          >
+            <Icon name="share" size={17} color={palette.onTint} />
+            <Text style={styles.callButtonText}>{t(Platform.OS === 'ios' ? 'chat.fileShareIos' : 'chat.fileShare')}</Text>
+          </Pressable>
+        </View>
+      ) : (
+        <Text style={[styles.callNumber, d?.dim]}>{t('attach.gone')}</Text>
+      )}
+    </View>
+  );
+}
+
+/**
+ * A share the assistant prepared (share), or the files an email draft took: who it is for, the files (thumbnails of
+ * images, names of other files), the text, what the user does next, and for a share the button that opens WhatsApp
+ * or the share sheet. Nothing is sent from here: the user picks the chat or app and sends.
+ */
+function ShareCard({
+  share,
+  onOpen,
+  onShare,
+}: {
+  share: ShareOffer;
+  onOpen: (info: AttachmentInfo) => void;
+  onShare: (offer: ShareOffer) => void;
+}) {
+  const styles = useStyles();
+  const d = useContext(PanelTheme);
+  const palette = usePalette();
+  const fileNames = share.files.map((f) => f.name).join(', ');
+  const who = [share.name, share.number].filter(Boolean).join(', ');
+  const email = share.app === 'email';
+  return (
+    <View style={[styles.smsCard, d?.assistantBubble]}>
+      {email ? (
+        <View style={styles.callInfo}>
+          <Text style={[styles.callName, d?.text]} numberOfLines={2}>
+            {share.subject ? t('chat.emailDraftTitle', { subject: share.subject }) : t('chat.emailNoSubject')}
+          </Text>
+          {share.to?.length ? (
+            <Text style={[styles.callNumber, d?.dim]} selectable>
+              {t('chat.emailTo', { to: share.to.join(', ') })}
+            </Text>
+          ) : null}
+        </View>
+      ) : who ? (
+        <View style={styles.callInfo}>
+          <Text style={[styles.callName, d?.text]} numberOfLines={2} selectable>
+            {share.app === 'whatsapp' ? t('chat.shareLookFor', { who }) : who}
+          </Text>
+        </View>
+      ) : null}
+      {share.files.length ? (
+        <View style={styles.shareFiles}>
+          {share.files.map((f, i) =>
+            f.attachment ? (
+              <AttachmentThumb key={f.id} info={f.attachment} index={i} size={64} onPress={() => onOpen(f.attachment!)} />
+            ) : (
+              <View key={f.id} style={styles.shareFileChip} accessible accessibilityLabel={`${f.name}, ${formatSize(f.size)}`}>
+                <Icon name="document" size={18} color={palette.textSecondary} />
+                <Text style={[styles.callNumber, d?.text]} numberOfLines={2}>
+                  {f.name}
+                </Text>
+              </View>
+            ),
+          )}
+        </View>
+      ) : null}
+      {share.files.some((f) => f.attachment) ? (
+        <Text style={[styles.callNumber, d?.dim]} numberOfLines={3}>
+          {fileNames}
+        </Text>
+      ) : null}
+      {share.original ? <Text style={[styles.callNumber, d?.dim]}>{t('chat.shareOriginal')}</Text> : null}
+      {share.text ? (
+        <Text style={[styles.smsBody, d?.text]} selectable>
+          {share.text}
+        </Text>
+      ) : null}
+      <Text style={[styles.callNumber, d?.dim]}>
+        {email
+          ? t(share.delivered === 'share' ? 'chat.emailFilesShared' : 'chat.emailFilesComposer')
+          : t(share.app === 'whatsapp' ? 'chat.sharePickChat' : 'chat.sharePickApp')}
+      </Text>
+      {!email && share.copiesText ? (
+        <Text style={[styles.callNumber, d?.dim]}>
+          {t(share.app === 'whatsapp' ? 'chat.shareCopiesTextWhatsApp' : 'chat.shareCopiesText')}
+        </Text>
+      ) : null}
+      {!email ? (
+        <Pressable
+          onPress={() => onShare(share)}
+          style={({ pressed }) => [styles.callButton, styles.smsButton, pressed && styles.callButtonPressed]}
+          accessibilityRole="button"
+          accessibilityLabel={t(share.app === 'whatsapp' ? 'chat.shareToWhatsAppLabel' : 'chat.shareToLabel', {
+            files: fileNames || t('chat.shareTo'),
+          })}
+        >
+          <Icon name={share.app === 'whatsapp' ? 'message' : 'share'} size={17} color={palette.onTint} />
+          <Text style={styles.callButtonText}>{t(share.app === 'whatsapp' ? 'chat.shareToWhatsApp' : 'chat.shareTo')}</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
@@ -1436,6 +1606,18 @@ const useStyles = makeStyles((c) => ({
   },
   smsButton: { alignSelf: 'flex-end', justifyContent: 'center' },
   fileHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  shareFiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  shareFileChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    maxWidth: '100%',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.separator,
+  },
   fileButtons: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8 },
   fileButton: {
     flexDirection: 'row',

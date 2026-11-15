@@ -18,7 +18,10 @@ import type { PersonalKind } from './src/agent/personalData';
 import { runAgent } from './src/agent/runAgent';
 import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
 import { personalKindsLabel } from './src/components/memoryCategories';
-import { Conversation, callItem, fileItem, newItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
+import { Conversation, callItem, fileItem, newItem, shareItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
+import { listShareables, type ShareApp, type ShareOffer } from './src/chat/shareable';
+import { clearOutgoing, OutgoingError, prepareOutgoing } from './src/device/outgoing';
+import { shareToApp } from './src/device/share';
 import { AttachmentInfo, describeAttachments, isIncognitoAttachment, MAX_ATTACHMENTS } from './src/chat/attachments';
 import { parseEditRequest } from './src/chat/imageEdit';
 import { editImage } from './src/device/imageEdit';
@@ -31,8 +34,10 @@ import {
   pickImages,
   pickPdf,
   pruneAttachments,
+  saveAttachmentToFolder,
   saveAttachmentToPhotos,
   shareAttachment,
+  storeMadePdf,
   takePhoto,
 } from './src/device/attachments';
 import { AttachmentPreview } from './src/components/AttachmentViews';
@@ -109,7 +114,7 @@ import { openWhatsApp } from './src/device/whatsapp';
 import { initNotifications } from './src/device/notifications';
 import { nowContext } from './src/agent/scheduling';
 import { interfaceLanguageNote } from './src/agent/uiLabels';
-import { shareReportPdf } from './src/device/reportPdf';
+import { renderReportPdf } from './src/device/reportPdf';
 import { authenticate } from './src/device/biometric';
 import { scannedTarget } from './src/device/qr';
 import { toUrl } from './src/browser/url';
@@ -234,13 +239,13 @@ async function askConfirmation(description: string, host: string | null, signal:
  * task dismisses it as declined.
  */
 async function askImageConfirmation(
-  options: { title: string; message: string; image: { uri: string; aspectRatio: number }; confirmText: string },
+  options: { title: string; message: string; image?: { uri: string; aspectRatio: number }; confirmText: string },
   signal: AbortSignal,
 ): Promise<boolean> {
   const result = await dialog.show({
     title: options.title,
     message: options.message,
-    image: { ...options.image, label: options.title },
+    ...(options.image ? { image: { ...options.image, label: options.title } } : {}),
     buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: options.confirmText, primary: true }],
     signal,
   });
@@ -615,6 +620,12 @@ function BrowserApp({
     } catch {
       // Nothing to remove.
     }
+    try {
+      // Copies handed to other apps in an earlier run are not needed any more.
+      clearOutgoing();
+    } catch {
+      // Nothing to remove.
+    }
     getDb()
       .then(async (db) => {
         await deleteOrphanChats(db, [
@@ -802,9 +813,11 @@ function BrowserApp({
     const pageInfo = `\n\n[Current tab ${current.id}: ${where}.${pageNote} Open tabs: ${browser.tabs.length}. ${nowContext()}. ${interfaceLanguageNote()}]`;
     const message = text || (attachments.length ? 'See the attached files.' : '');
     const attached = attachments.length ? `\n\n${describeAttachments(attachments)}` : '';
+    const madeNote = chat.takeMadeNote();
+    const made = madeNote ? `\n\n${madeNote}` : '';
     chat.turns.push({
       role: 'user',
-      text: message + attached + pageInfo,
+      text: message + attached + made + pageInfo,
       ...(attachments.length ? { attachments } : {}),
     });
 
@@ -893,6 +906,19 @@ function BrowserApp({
         offerFile: (file) => {
           AccessibilityInfo.announceForAccessibility(file.name);
           chat.add(fileItem(file));
+        },
+        composedFiles: () => chat.composedFiles,
+        offerShare: (offer) => {
+          AccessibilityInfo.announceForAccessibility(
+            offer.files.length ? offer.files.map((f) => f.name).join(', ') : t('chat.shareTo'),
+          );
+          chat.add(shareItem(offer));
+        },
+        offerPdf: (pdf) => {
+          const info = storeMadePdf(pdf.file, pdf.fileName, 'page', incognitoTask());
+          AccessibilityInfo.announceForAccessibility(t('chat.pdfMade', { name: info.name }));
+          chat.addMadePdf(info, false);
+          return info;
         },
         showAppSettings: () => setSettingsVisible(true),
         attachments: () => chat.attachments,
@@ -1164,6 +1190,46 @@ function BrowserApp({
       toast.show(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
     }
   };
+
+  /**
+   * The button of a share card: the files are looked up again in the conversation (so a card only sends what the
+   * conversation still holds), prepared, and handed to WhatsApp or the share sheet, where the user picks the chat or
+   * app and sends.
+   */
+  const runShare = (offer: ShareOffer, chat: Conversation) =>
+    runAction(async () => {
+      if (offer.app === 'email') return;
+      const all = listShareables(chat.attachments, chat.composedFiles);
+      const items = [];
+      for (const f of offer.files) {
+        const found = all.find((s) => s.id === f.id);
+        if (!found) return t('chat.shareGone', { name: f.name });
+        items.push(found);
+      }
+      const incognito = chat.incognito || chat.privacy.touchedIncognito;
+      let prepared: Awaited<ReturnType<typeof prepareOutgoing>> | null = null;
+      try {
+        if (items.length) prepared = await prepareOutgoing(items, { incognito, original: offer.original });
+      } catch (e) {
+        if (e instanceof OutgoingError)
+          return e.code === 'gone'
+            ? t('chat.shareGone', { name: e.fileName })
+            : e.code === 'tooLarge'
+              ? t('chat.shareTooLarge')
+              : t('chat.shareFailed', { name: e.fileName });
+        throw e;
+      }
+      try {
+        const app: ShareApp = offer.app === 'whatsapp' ? 'whatsapp' : 'any';
+        const result = await shareToApp({ files: prepared?.files ?? [], text: offer.text, app });
+        if (app === 'whatsapp' && Platform.OS === 'android' && result.via === 'chooser') return t('chat.shareNoWhatsApp');
+        if (result.textCopied) return t('chat.shareTextCopied');
+      } finally {
+        // iOS: the share sheet has finished with the files when it reports back. Android apps read them later; the
+        // copies go at the next hand-out, at the next start, or when the incognito session ends.
+        if (Platform.OS === 'ios') prepared?.dispose();
+      }
+    });
 
   // Page actions make no sense on the app's own new tab page.
   const onNewTab = tab.isNewTab;
@@ -1793,9 +1859,14 @@ function BrowserApp({
               onAttach={() => setAttachSheet(true)}
               onRemovePending={removePending}
               onOpenAttachment={setPreviewAttachment}
+              onShare={(offer) => runShare(offer, conversation)}
               onImage={(action, info) =>
                 runAction(async () => {
                   if (action === 'share') return void (await shareAttachment(info));
+                  if (info.kind === 'pdf') {
+                    if (await saveAttachmentToFolder(info)) return t('chat.fileSaved', { name: info.name });
+                    return;
+                  }
                   await saveAttachmentToPhotos(info);
                   return t('contextMenu.imageSaved');
                 })
@@ -1896,7 +1967,14 @@ function BrowserApp({
                     return t('common.copied');
                   }
                   if (action === 'share') return shareText(text);
-                  if (action === 'pdf') return shareReportPdf(text);
+                  if (action === 'pdf') {
+                    // Kept with the conversation (so it can be attached or shared later), then the share sheet.
+                    const chat = conversation;
+                    const pdf = await renderReportPdf(text);
+                    const info = storeMadePdf(pdf.file, pdf.fileName, 'report', chat.incognito || chat.privacy.touchedIncognito);
+                    chat.addMadePdf(info, true);
+                    return void (await shareAttachment(info));
+                  }
                   if (action === 'stopSpeaking') return stopSpeaking();
                   await speak(text);
                 })

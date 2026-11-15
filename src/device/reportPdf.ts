@@ -1,9 +1,8 @@
 import { File, Paths } from 'expo-file-system';
 import { marked } from 'marked';
 import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
 import { t } from '../i18n';
-import { pdfFileName } from './pdf';
+import { pdfFileName, type RenderedPdf } from './pdf';
 
 const STYLE = `
   body { font-family: -apple-system, Roboto, Helvetica, Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #222; }
@@ -34,8 +33,8 @@ export function reportHtml(markdown: string, date = new Date()): string {
   return `<!doctype html><html><head><meta charset="utf-8"><style>${STYLE}</style></head><body>${body}<footer>${t('report.footer', { date: stamp })}</footer></body></html>`;
 }
 
-/** Saves an answer as a PDF and opens the share sheet; the temporary file is removed afterwards. */
-export async function shareReportPdf(markdown: string): Promise<void> {
+/** Prints an answer to a PDF in a temporary file under the report's title. */
+export async function renderReportPdf(markdown: string): Promise<RenderedPdf> {
   const printed = await Print.printToFileAsync({
     html: reportHtml(markdown),
     width: 595,
@@ -44,10 +43,6 @@ export async function shareReportPdf(markdown: string): Promise<void> {
   });
   const fileName = pdfFileName(reportTitle(markdown), '');
   const file = new File(Paths.cache, fileName);
-  try {
-    await new File(printed.uri).move(file, { overwrite: true });
-    await Sharing.shareAsync(file.uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: fileName });
-  } finally {
-    if (file.exists) file.delete();
-  }
+  await new File(printed.uri).move(file, { overwrite: true });
+  return { file, fileName, pages: printed.numberOfPages, imagesMissing: 0 };
 }

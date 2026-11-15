@@ -43,12 +43,20 @@ export async function printPage(tab: Tab): Promise<void> {
   await Print.printAsync({ html: snapshot.html, width: PAGE_WIDTH, height: PAGE_HEIGHT });
 }
 
-/**
- * Renders the current page to an A4 PDF and opens the share sheet, from which the
- * user can save it to Files or send it. The temporary file is removed afterwards,
- * so nothing from incognito tabs stays on the device.
- */
-export async function savePagePdf(tab: Tab): Promise<PdfResult> {
+/** A PDF printed to a temporary file in the cache, under its readable name. The caller shares, keeps or deletes it. */
+export type RenderedPdf = PdfResult & { file: File };
+
+/** Opens the share sheet with a rendered PDF, then removes the temporary file. */
+export async function shareRenderedPdf(pdf: RenderedPdf): Promise<void> {
+  try {
+    await Sharing.shareAsync(pdf.file.uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: pdf.fileName });
+  } finally {
+    if (pdf.file.exists) pdf.file.delete();
+  }
+}
+
+/** Renders the current page to an A4 PDF in a temporary file. */
+export async function renderPagePdf(tab: Tab): Promise<RenderedPdf> {
   // Snapshotting fetches images, so it gets more time than ordinary page commands.
   const snapshot = await tab.run<Snapshot>('snapshotHtml', [], 60000);
 
@@ -61,18 +69,19 @@ export async function savePagePdf(tab: Tab): Promise<PdfResult> {
 
   const fileName = pdfFileName(snapshot.title, snapshot.url);
   const file = new File(Paths.cache, fileName);
-  try {
-    await new File(printed.uri).move(file, { overwrite: true });
-    await Sharing.shareAsync(file.uri, {
-      mimeType: 'application/pdf',
-      UTI: 'com.adobe.pdf',
-      dialogTitle: fileName,
-    });
-  } finally {
-    if (file.exists) file.delete();
-  }
+  await new File(printed.uri).move(file, { overwrite: true });
+  return { file, pages: printed.numberOfPages, fileName, imagesMissing: snapshot.failed };
+}
 
-  return { pages: printed.numberOfPages, fileName, imagesMissing: snapshot.failed };
+/**
+ * Renders the current page to an A4 PDF and opens the share sheet, from which the user can save it to Files or
+ * send it (the page menu's "Save as PDF"). The temporary file is removed afterwards, so nothing from incognito tabs
+ * stays on the device.
+ */
+export async function savePagePdf(tab: Tab): Promise<PdfResult> {
+  const pdf = await renderPagePdf(tab);
+  await shareRenderedPdf(pdf);
+  return { pages: pdf.pages, fileName: pdf.fileName, imagesMissing: pdf.imagesMissing };
 }
 
 /** Escapes text for an HTML attribute or element. */
@@ -87,7 +96,7 @@ function escapeHtml(text: string) {
  * Images are inlined as data URIs, which expo-print supports on both platforms (iOS can't
  * load local files from print HTML). Shared like the ordinary PDF; temporary files are removed.
  */
-export async function savePdfFromScreenshots(tab: Tab): Promise<PdfResult & { truncated: boolean; screens: number }> {
+export async function renderPdfFromScreenshots(tab: Tab): Promise<RenderedPdf & { truncated: boolean; screens: number }> {
   const title = tab.title;
   const url = tab.url;
   // The capture overlay stays up while the PDF is made, and goes before the share sheet opens.
@@ -122,15 +131,16 @@ export async function savePdfFromScreenshots(tab: Tab): Promise<PdfResult & { tr
   const file = new File(Paths.cache, fileName);
   try {
     await new File(printed.uri).move(file, { overwrite: true });
-    await Sharing.shareAsync(file.uri, {
-      mimeType: 'application/pdf',
-      UTI: 'com.adobe.pdf',
-      dialogTitle: fileName,
-    });
   } finally {
-    if (file.exists) file.delete();
     const original = new File(printed.uri);
     if (original.exists) original.delete();
   }
-  return { pages: printed.numberOfPages, fileName, imagesMissing: 0, truncated, screens };
+  return { file, pages: printed.numberOfPages, fileName, imagesMissing: 0, truncated, screens };
+}
+
+/** The screenshot PDF, shared like the ordinary one (the page menu). */
+export async function savePdfFromScreenshots(tab: Tab): Promise<PdfResult & { truncated: boolean; screens: number }> {
+  const { file, ...pdf } = await renderPdfFromScreenshots(tab);
+  await shareRenderedPdf({ file, ...pdf });
+  return pdf;
 }

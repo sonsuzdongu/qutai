@@ -4,7 +4,10 @@ import { Platform } from 'react-native';
 import { addCalendarEvent, addReminder, DeviceToolError, readCalendarEvents } from '../device/calendar';
 import { openDefaultBrowserSettings } from '../device/defaultBrowser';
 import { scheduleNotification } from '../device/notifications';
-import { savePagePdf, savePdfFromScreenshots } from '../device/pdf';
+import { renderPagePdf, renderPdfFromScreenshots, shareRenderedPdf, type RenderedPdf } from '../device/pdf';
+import type { EmailOutcome } from '../device/email';
+import type { ComposedRef, Shareable, ShareOffer } from '../chat/shareable';
+import { draftEmailTool, shareLog, shareTool, uploadFileTool } from './shareTools';
 import { t } from '../i18n';
 import { captureForModel, saveFullPageScreenshot, saveScreenshot } from '../device/screenshot';
 import { fileNameFromUrl, isRiskyDownload, probeDownload } from '../device/download';
@@ -98,8 +101,23 @@ export type ToolContext = {
     get(): Settings;
     change(patch: Partial<Settings>): Promise<void>;
   };
-  /** Opens the email composer; resolves with what the user did (sent, saved, cancelled…). */
-  composeEmail?: (draft: EmailDraft) => Promise<string>;
+  /**
+   * Opens the email composer with the draft and its files; resolves with how it reached the user (the composer and
+   * what they did there, a mailto: link, or the share sheet when files go and no composer is available).
+   */
+  composeEmail?: (draft: EmailDraft) => Promise<EmailOutcome>;
+  /**
+   * Adds a share card (share), or the card of an email draft that took files: the files and text, and for a share a
+   * button the user taps to open WhatsApp or the share sheet. It never sends.
+   */
+  offerShare?: (offer: ShareOffer) => void;
+  /** The files composed with save_file in this conversation (its cards), for tools that hand files out. */
+  composedFiles?: () => ComposedRef[];
+  /**
+   * Keeps a PDF made by save_pdf as a file of the conversation (a card with Share, and Save on Android) and resolves
+   * with its manifest; absent: the PDF goes to the share sheet as before.
+   */
+  offerPdf?: (pdf: RenderedPdf) => AttachmentInfo;
   /** Adds a Call button to the conversation (offer_call). It never dials: only the user's tap on it does. */
   offerCall?: (offer: CallOffer) => void;
   /** Adds a card with Share / Save buttons for a composed file (save_file). Nothing is written until the user taps. */
@@ -152,7 +170,8 @@ export type ToolContext = {
   confirmImage?: (options: {
     title: string;
     message: string;
-    image: { uri: string; aspectRatio: number };
+    /** upload_image shows the image; upload_file has none (the message names the file). */
+    image?: { uri: string; aspectRatio: number };
     confirmText: string;
   }) => Promise<boolean>;
   /** An image was given to a page (kept when old edited images are pruned). */
@@ -173,6 +192,7 @@ const PAGE_TOOLS = new Set([
   'save_screenshot',
   'view_screenshot',
   'upload_image',
+  'upload_file',
 ]);
 
 /** Short label shown in the chat for each tool call. */
@@ -211,6 +231,10 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.editImage');
     case 'upload_image':
       return t('action.uploadImage', { ref: str(input.ref) });
+    case 'upload_file':
+      return t('action.uploadFile', { ref: str(input.ref) });
+    case 'share':
+      return t(input.app === 'whatsapp' ? 'action.shareWhatsApp' : 'action.share');
     case 'read_pdf':
       return input.view_pages !== undefined && input.view_pages !== null
         ? t('action.viewPdfPages')
@@ -403,24 +427,6 @@ async function searchHistoryTool(input: Record<string, unknown>, ctx: ToolContex
       `- ${formatVisit(m.lastVisit)} · ${m.title || '(no title)'} — ${m.url}${m.visits > 1 ? ` (${m.visits} visits)` : ''}`,
   );
   return { content: `${header}\n${lines.join('\n')}`, isError: false };
-}
-
-async function draftEmail(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
-  if (!ctx.composeEmail) return { content: 'Email drafts are not available.', isError: true };
-  const raw = Array.isArray(input.to) ? input.to : typeof input.to === 'string' ? [input.to] : [];
-  const to = raw.map((a) => String(a).trim()).filter((a) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a));
-  try {
-    const status = await ctx.composeEmail({ to, subject: String(input.subject ?? ''), body: String(input.body ?? '') });
-    return {
-      content: `The email composer was shown; the user's choice: ${status}. You cannot send it yourself.`,
-      isError: false,
-    };
-  } catch (e) {
-    return {
-      content: `Could not open the email composer: ${e instanceof Error ? e.message : String(e)}`,
-      isError: true,
-    };
-  }
 }
 
 /** Who a call was offered to, for the action history: the name, never the number. */
@@ -806,17 +812,24 @@ function fileButtons(): string {
     : `${uiLabel('chat.fileSave')} and ${uiLabel('chat.fileShare')} buttons`;
 }
 
+/** The buttons on a PDF card (AssistantPanel PdfCard), as the card shows them on this platform. */
+function pdfButtons(): string {
+  return Platform.OS === 'ios' ? `a ${uiLabel('chat.fileShareIos')} button` : `${uiLabel('chat.fileSave')} and ${uiLabel('chat.fileShare')} buttons`;
+}
+
 function saveFileTool(input: Record<string, unknown>, ctx: ToolContext): ToolOutput {
   if (!ctx.offerFile) return { content: 'Files are not available here.', isError: true };
   const file = composeFile(input);
   if (typeof file === 'string') return { content: `${file} No file was made.`, isError: true };
   const tab = ctx.browser.getTab(ctx.agentTab.id);
   const incognito = !!(ctx.privacy?.touchedIncognito || tab?.incognito);
-  ctx.offerFile(keepComposedFile(file, incognito));
+  const offer = keepComposedFile(file, incognito);
+  ctx.offerFile(offer);
   const rows = file.rows !== undefined ? `, ${file.rows} data row${file.rows === 1 ? '' : 's'}` : '';
   return {
     content:
-      `A card for "${file.name}" (${formatSize(file.size)}${rows}) is shown in the chat with ${fileButtons()}. ` +
+      `A card for "${file.name}" (${formatSize(file.size)}${rows}), id=${offer.id}, is shown in the chat with ${fileButtons()}. ` +
+      'To attach it to an email, share it to an app or put it into a web page, use this id with draft_email, share or upload_file. ' +
       'Nothing is saved yet: the user taps a button to share or save it. It is kept only while the app runs' +
       `${incognito ? ' and this incognito session lasts' : ''}. Do not repeat the whole content in your reply.`,
     isError: false,
@@ -944,7 +957,17 @@ function tabList(ctx: ToolContext): string {
 
 export type ToolOutput = { content: string; isError: boolean; images?: ToolImage[] };
 
-export type EmailDraft = { to: string[]; subject: string; body: string };
+export type EmailDraft = {
+  to: string[];
+  subject: string;
+  body: string;
+  /** Files of the conversation to attach (src/chat/shareable.ts); empty for none. */
+  attachments: Shareable[];
+  /** Their copies go to the session-only folder. */
+  incognito: boolean;
+  /** Images the user attached go as picked, metadata included (only when the user asked for the original). */
+  original?: boolean;
+};
 
 /** Actions kept in the action history; bookkeeping (listing tabs, waiting, scrolling) is left out. */
 const LOGGED_TOOLS = new Set([
@@ -986,6 +1009,10 @@ const LOGGED_TOOLS = new Set([
   'read_pdf',
   // Only that an image was given to the site and where: never the image.
   'upload_image',
+  // Only that a file was given to the site and where: never the file.
+  'upload_file',
+  // Only that a share was prepared and to which app: never the files, text or number.
+  'share',
 ]);
 
 /** Whether a call goes in the action history: tools in LOGGED_TOOLS, but not the ones that only read. */
@@ -1021,6 +1048,7 @@ function actionTarget(
       'offer_call',
       'draft_sms',
       'draft_whatsapp',
+      'share',
       'save_file',
       'view_attachment',
       'edit_image',
@@ -1039,7 +1067,7 @@ function actionTarget(
 }
 
 /** Tools that confirm on their own every time, whatever the "ask before actions" setting. */
-const ALWAYS_CONFIRMED = new Set(['get_location', 'read_calendar', 'download_file', 'upload_image']);
+const ALWAYS_CONFIRMED = new Set(['get_location', 'read_calendar', 'download_file', 'upload_image', 'upload_file']);
 
 /**
  * Tools that can run while the app is in the background with "Keep working in the background" on (Android): they
@@ -1080,6 +1108,8 @@ const BACKGROUND_TOOLS = new Set([
   'offer_call',
   'draft_sms',
   'draft_whatsapp',
+  // Adds a card; the user's tap on it opens WhatsApp or the share sheet later.
+  'share',
   'save_file',
 ]);
 
@@ -1189,6 +1219,8 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
               ? draftSmsLog(input)
               : name === 'draft_whatsapp'
               ? draftWhatsAppLog(input)
+              : name === 'share'
+              ? shareLog(input)
               : name === 'read_calendar'
               ? readCalendarLog(input)
               : name in SCHEDULING_LOG_KEYS
@@ -1380,7 +1412,8 @@ async function runTool(
   if (name === 'search_history') return searchHistoryTool(input, ctx);
   if (name === 'bookmarks') return bookmarksTool(input, ctx);
   if (name === 'settings') return settingsTool(input, ctx);
-  if (name === 'draft_email') return draftEmail(input, ctx);
+  if (name === 'draft_email') return draftEmailTool(input, ctx);
+  if (name === 'share') return shareTool(input, ctx);
   if (name === 'open_settings') return openSettingsTool(input, ctx);
   if (name === 'offer_call') return offerCallTool(input, ctx);
   if (name === 'draft_sms') return draftSmsTool(input, ctx);
@@ -1412,6 +1445,7 @@ async function runTool(
   }
   // Confirms on its own with the image, every time.
   if (name === 'upload_image') return uploadImageTool(input, ctx, tab);
+  if (name === 'upload_file') return uploadFileTool(input, ctx, tab);
 
   try {
     switch (name) {
@@ -1495,22 +1529,31 @@ async function runTool(
         return { content: result, isError: false };
       }
       case 'save_pdf': {
+        let pdf: RenderedPdf;
+        let cut = '';
         if (input.from_screenshots === true) {
           // Screens are captured from the view, so the tab has to be on screen.
           await showTab(ctx, tab);
-          const pdf = await savePdfFromScreenshots(tab);
-          const cut = pdf.truncated
-            ? ` The page was very long, so only its first ${pdf.screens} screens are in the PDF (the limit for endless pages).`
-            : '';
-          return {
-            content: `Created "${pdf.fileName}" from screenshots (${pdf.pages} page(s)) and showed the share sheet to the user.${cut}`,
-            isError: false,
-          };
+          const shot = await renderPdfFromScreenshots(tab);
+          pdf = shot;
+          if (shot.truncated)
+            cut = ` The page was very long, so only its first ${shot.screens} screens are in the PDF (the limit for endless pages).`;
+        } else {
+          pdf = await renderPagePdf(tab);
+          if (pdf.imagesMissing > 0) cut = ` ${pdf.imagesMissing} image(s) could not be embedded.`;
         }
-        const pdf = await savePagePdf(tab);
-        const missing = pdf.imagesMissing > 0 ? ` ${pdf.imagesMissing} image(s) could not be embedded.` : '';
+        const how = input.from_screenshots === true ? ' from screenshots' : '';
+        if (!ctx.offerPdf) {
+          await shareRenderedPdf(pdf);
+          return { content: `Created "${pdf.fileName}"${how} (${pdf.pages} page(s)) and showed the share sheet to the user.${cut}`, isError: false };
+        }
+        const info = ctx.offerPdf(pdf);
         return {
-          content: `Created "${pdf.fileName}" (${pdf.pages} page(s)) and showed the share sheet to the user.${missing}`,
+          content:
+            `Created "${info.name}"${how} (${pdf.pages} page(s), ${formatSize(info.size)}), id=${info.id}. It is shown in ` +
+            `the chat as a card with ${pdfButtons()}; nothing was sent. It stays with this conversation: attach it ` +
+            'to an email with draft_email, send it with share, or put it into a web page with upload_file, using ' +
+            `this id.${cut}`,
           isError: false,
         };
       }
