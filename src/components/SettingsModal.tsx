@@ -29,6 +29,7 @@ import { BackupScreen } from './BackupScreen';
 import { AiChoice, aiChoiceProblem, AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { LegalScreen } from './LegalScreen';
+import { LicencesScreen } from './LicencesScreen';
 import { MemoryScreen } from './MemoryScreen';
 import { TasksScreen } from './TasksScreen';
 import type { SavedTask } from '../storage/savedTasks';
@@ -110,6 +111,7 @@ function SettingsPages({
   const [sentLogVisible, setSentLogVisible] = useState(false);
   const [clearDataVisible, setClearDataVisible] = useState(false);
   const [legal, setLegal] = useState<LegalKind | null>(null);
+  const [licencesVisible, setLicencesVisible] = useState(false);
   const [backupJob, setBackupJob] = useState<'export' | Uint8Array | null>(null);
 
   const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch });
@@ -508,6 +510,7 @@ function SettingsPages({
             />
             <LinkRow label={t('settings.privacyPolicy')} onPress={() => setLegal('privacy')} />
             <LinkRow label={t('settings.terms')} onPress={() => setLegal('terms')} />
+            <LinkRow label={t('settings.licences')} onPress={() => setLicencesVisible(true)} />
             <Text style={styles.version} selectable>
               {t('settings.version', appVersion())}
             </Text>
@@ -515,6 +518,7 @@ function SettingsPages({
         )}
       </KeyboardAwareScrollView>
       <LegalScreen kind={legal} onClose={() => setLegal(null)} />
+      <LicencesScreen visible={licencesVisible} onClose={() => setLicencesVisible(false)} />
       <MemoryScreen
         visible={memoryVisible}
         onClose={() => setMemoryVisible(false)}

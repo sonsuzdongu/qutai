@@ -224,7 +224,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 
 1. ✅ Name: Kutai → Qutai. Shared theme layer (dark theme on every screen, measured contrast), consistent icons (SF/Material Symbols), fixed address suggestions overlapping the bar
 2. ✅ Logo drawn in code (Skia): gradient Q and an orbit that spins now and then; spins continuously while working. Aurora background (new tab, first launch)
-3. ✅ First-launch setup: introduction, Privacy Policy and Terms of Use (acceptance required, versioned), AI key, protection settings, default browser
+3. ✅ First-launch setup: introduction, Privacy Policy and Terms of Use (acceptance required, versioned), AI key, protection settings, default browser. Settings › About: Open source licences (every third-party component with its licence text, from `scripts/generate-licences.js`)
 4. ✅ Tab groups with tasks: windows opened by the page and the assistant's tabs are grouped; the assistant can close a group at once (close_tabs)
 5. ✅ Pull to refresh, screen does not dim while the app is open, full-width tables in chat, 'Rate Qutai'
 6. ✅ From Comet reviews: undo clearing in the address bar, hiding the Qutai button and turning off the logo animation, persistent chat draft, force zoom, Chrome's user agent on Android (verification loops) and leaving verification to the user, note-taking in long tasks and a status summary at the last step, crash protection

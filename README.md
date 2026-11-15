@@ -559,4 +559,19 @@ the feature, when the user is asked, the config line that declares it and what i
 
 Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
 
+Third-party software in the app is listed, with each licence's full text, in Settings › About › Open source licences.
+The data is `src/legal/licences.json`, committed and written by a script you run by hand after adding, removing or
+upgrading a dependency:
+
+```bash
+node scripts/generate-licences.js
+```
+
+It bundles the app (`expo export`, Android and iOS) and takes every npm package whose code or assets end up in the
+bundle, every autolinked native module, `pdfjs-dist` and the prebuilt Skia binaries, with the licence files from
+`node_modules`. What the bundle can't show is in `scripts/licences-manual.js`: the decoders and polyfills inside
+PDF.js's build, SQLite, Skia's own third-party code, and the Gradle and CocoaPods libraries of React Native and the
+Expo modules; their upstream licence files are copied verbatim into `scripts/licences/`. Identical texts are stored
+once. The script warns about a package without a licence file, a copyleft licence or one it doesn't recognise.
+
 The license covers the code, not the Qutai name, logo or icons. See [TRADEMARKS.md](TRADEMARKS.md) before publishing a fork.
