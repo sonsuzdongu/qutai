@@ -452,7 +452,7 @@ class ContentBlockingStore {
     if (domains === 0) throw new BlockingError('noRules');
     try {
       if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
-      listFile(list.id).write(
+      await listFile(list.id).write(
         JSON.stringify({ block: parsed.block, blockThirdParty: parsed.blockThirdParty, allow: parsed.allow }),
       );
     } catch {
@@ -503,7 +503,7 @@ class ContentBlockingStore {
         const target = androidFile();
         const temp = new File(dir, 'blocker.tmp');
         if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
-        temp.write(androidBlockerFile(merged));
+        await temp.write(androidBlockerFile(merged));
         temp.move(target, { overwrite: true });
       } else if (Platform.OS === 'ios') {
         ruleLists = await this.compileIos(merged);
@@ -532,7 +532,7 @@ class ContentBlockingStore {
       ids.push(id);
       if (!(await hasIosRuleList(id))) {
         const file = new File(Paths.cache, `${id}.json`);
-        file.write(chunks[i]);
+        await file.write(chunks[i]);
         try {
           await compileIosRuleList(id, file.uri);
         } finally {
@@ -575,7 +575,7 @@ class ContentBlockingStore {
     try {
       if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
       const data: Persisted = { version: 1, lists: this.lists, compiled: this.compiled ?? undefined };
-      stateFile().write(JSON.stringify(data));
+      await stateFile().write(JSON.stringify(data));
     } catch {}
   }
 }

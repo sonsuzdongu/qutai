@@ -1656,7 +1656,7 @@ index 3890426..a88672c 100644
    [wkWebViewConfig.userContentController removeAllUserScripts];
    [wkWebViewConfig.userContentController removeScriptMessageHandlerForName:MessageHandlerName];
 diff --git a/node_modules/react-native-webview/apple/RNCWebViewModule.mm b/node_modules/react-native-webview/apple/RNCWebViewModule.mm
-index 547b95f..79c7d4b 100644
+index 547b95f..7e2713f 100644
 --- a/node_modules/react-native-webview/apple/RNCWebViewModule.mm
 +++ b/node_modules/react-native-webview/apple/RNCWebViewModule.mm
 @@ -1,6 +1,7 @@
@@ -1667,7 +1667,7 @@ index 547b95f..79c7d4b 100644
  
  #ifdef RCT_NEW_ARCH_ENABLED
  #import <React/RCTFabricComponentsPlugins.h>
-@@ -21,6 +22,69 @@ @implementation RNCWebViewModule
+@@ -21,6 +22,82 @@ @implementation RNCWebViewModule
      [[RNCWebViewDecisionManager getInstance] setResult:shouldStart forLockIdentifier:(int)lockIdentifier];
  }
  
@@ -1687,6 +1687,13 @@ index 547b95f..79c7d4b 100644
 +    resolve(@0);
 +}
 +
++/*
++ * WKContentRuleListStore is main-thread only (WK_SWIFT_UI_ACTOR); the methods below run on the TurboModule queue
++ * (this module has no methodQueue), so every store call is sent to the main queue. Touching the store first from
++ * that queue initialises WebKit off the main thread, which crashed at launch before the first WKWebView existed.
++ * The store calls its completion handlers once, on the main thread, so each promise settles exactly once.
++ */
++
 +/** Compiles a list from a JSON file (read here, off the main thread; WebKit compiles on its own queue). */
 +RCT_EXPORT_METHOD(compileContentRuleList:(NSString *)identifier path:(NSString *)path resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 +{
@@ -1696,42 +1703,48 @@ index 547b95f..79c7d4b 100644
 +        reject(@"E_CONTENT_RULES", readError.localizedDescription ?: @"Unreadable rule list", readError);
 +        return;
 +    }
-+    [[WKContentRuleListStore defaultStore] compileContentRuleListForIdentifier:identifier
-+                                                        encodedContentRuleList:json
-+                                                             completionHandler:^(WKContentRuleList *list, NSError *error) {
-+        if (list == nil) {
-+            reject(@"E_CONTENT_RULES", error.localizedDescription ?: @"Could not compile the rule list", error);
-+        } else {
-+            resolve(nil);
-+        }
-+    }];
++    dispatch_async(dispatch_get_main_queue(), ^{
++        [[WKContentRuleListStore defaultStore] compileContentRuleListForIdentifier:identifier
++                                                            encodedContentRuleList:json
++                                                                 completionHandler:^(WKContentRuleList *list, NSError *error) {
++            if (list == nil) {
++                reject(@"E_CONTENT_RULES", error.localizedDescription ?: @"Could not compile the rule list", error);
++            } else {
++                resolve(nil);
++            }
++        }];
++    });
 +}
 +
 +RCT_EXPORT_METHOD(hasContentRuleList:(NSString *)identifier resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 +{
-+    [[WKContentRuleListStore defaultStore] lookUpContentRuleListForIdentifier:identifier completionHandler:^(WKContentRuleList *list, NSError *error) {
-+        resolve(@(list != nil));
-+    }];
++    dispatch_async(dispatch_get_main_queue(), ^{
++        [[WKContentRuleListStore defaultStore] lookUpContentRuleListForIdentifier:identifier completionHandler:^(WKContentRuleList *list, NSError *error) {
++            resolve(@(list != nil));
++        }];
++    });
 +}
 +
 +/** Removes the compiled lists whose identifier starts with prefix, except those in keep (one per line). */
 +RCT_EXPORT_METHOD(removeContentRuleLists:(NSString *)prefix keep:(NSString *)keep resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject)
 +{
-+    WKContentRuleListStore *store = [WKContentRuleListStore defaultStore];
 +    NSSet<NSString *> *kept = [NSSet setWithArray:[keep componentsSeparatedByString:@"\n"]];
-+    [store getAvailableContentRuleListIdentifiers:^(NSArray<NSString *> *identifiers) {
-+        dispatch_group_t group = dispatch_group_create();
-+        for (NSString *identifier in identifiers) {
-+            if (prefix.length == 0 || ![identifier hasPrefix:prefix] || [kept containsObject:identifier]) continue;
-+            dispatch_group_enter(group);
-+            [store removeContentRuleListForIdentifier:identifier completionHandler:^(NSError *error) {
-+                dispatch_group_leave(group);
-+            }];
-+        }
-+        dispatch_group_notify(group, dispatch_get_main_queue(), ^{
-+            resolve(nil);
-+        });
-+    }];
++    dispatch_async(dispatch_get_main_queue(), ^{
++        WKContentRuleListStore *store = [WKContentRuleListStore defaultStore];
++        [store getAvailableContentRuleListIdentifiers:^(NSArray<NSString *> *identifiers) {
++            dispatch_group_t group = dispatch_group_create();
++            for (NSString *identifier in identifiers) {
++                if (prefix.length == 0 || ![identifier hasPrefix:prefix] || [kept containsObject:identifier]) continue;
++                dispatch_group_enter(group);
++                [store removeContentRuleListForIdentifier:identifier completionHandler:^(NSError *error) {
++                    dispatch_group_leave(group);
++                }];
++            }
++            dispatch_group_notify(group, dispatch_get_main_queue(), ^{
++                resolve(nil);
++            });
++        }];
++    });
 +}
 +
  #ifdef RCT_NEW_ARCH_ENABLED
