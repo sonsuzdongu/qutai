@@ -263,7 +263,7 @@ export const tr: Messages = {
   'footer.tagline': 'Sayfayı sizin yerinize kullanan yapay zekâ tarayıcısı.',
   'footer.privacy':
     'Bu site başka sunuculara istek göndermez ve çerez kullanmaz; yalnızca dili değiştirirseniz seçiminizi hatırlayan bir çerez bırakır.',
-  'footer.trademark': 'Qutai ve Qutai logosu ticari markalardır. Kod Apache-2.0 ile lisanslıdır.',
+  'footer.licenseNote': 'Kod Apache-2.0 ile lisanslıdır.',
   'footer.github': 'GitHub',
   'footer.issues': 'Sorun bildir',
   'footer.license': 'Lisans',

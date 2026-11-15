@@ -515,7 +515,7 @@ export function Footer() {
           </li>
         </ul>
         <p className="footer-note">{t('footer.privacy')}</p>
-        <p className="footer-note">{t('footer.trademark')}</p>
+        <p className="footer-note">{t('footer.licenseNote')}</p>
       </div>
     </footer>
   );
