@@ -349,6 +349,21 @@ Cloudflare AI Gateway (not yet tried against a real account): base URL
 as the API key, and for an authenticated gateway an extra header `cf-aig-authorization` with the value
 `Bearer <gateway token>`. Model IDs take the form `provider/model` (for example `openai/gpt-5-mini`).
 
+Optional extra headers (`src/ai/customHeaders.ts`, up to 5 name/value rows under the API key) go with every request
+to the custom endpoint: chat (streaming or not), "Fetch models" and every step of "Test connection"; no other provider
+gets them. Values can be tokens, so they are treated like the keys: one SecureStore entry per row, shown masked, never
+in "What was sent to the AI", logs or error messages, and in a backup only with "Include my AI provider keys" (inside
+the encrypted file). Names must be HTTP tokens (letters, digits, ``!#$%&'*+-.^_`|~``), unique ignoring case; values
+plain ASCII without line breaks. Names the app or the network layer sets are refused (`content-type`, `accept`,
+`host`, `content-length`, `cookie`, `user-agent`, `proxy-*`, `sec-*` and similar). `authorization` is refused while
+the API key is set (the key is sent as `Authorization: Bearer`); with the key empty it may be set here, for a server
+that wants another scheme.
+
+Cloudflare AI Gateway (not yet tried against a real account): base URL
+`https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/compat`, the provider's own key (OpenAI, Anthropic, …)
+as the API key, and for an authenticated gateway an extra header `cf-aig-authorization` with the value
+`Bearer <gateway token>`. Model IDs take the form `provider/model` (for example `openai/gpt-5-mini`).
+
 Each conversation can use another model than the default: the model shown under the panel's title opens a sheet
 with the providers that are set up (a key, or the custom endpoint) and their models (OpenRouter's full catalogue
 too), and "Use my default". The choice belongs to the conversation (a tab's, or a tab group's), is saved with it

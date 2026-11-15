@@ -1,3 +1,4 @@
+import type { CustomHeader } from './customHeaders';
 import type { ToolDefinition } from '../agent/types';
 import type { AttachmentInfo } from '../chat/attachments';
 
@@ -87,6 +88,8 @@ export type ModelRequest = {
   maxOutputTokens?: number;
   /** Base URL of a provider whose address the user sets (the custom endpoint), already checked. */
   endpoint?: string;
+  /** The custom endpoint's extra headers (values may be secrets: never logged or recorded). */
+  extraHeaders?: CustomHeader[];
 };
 
 export type RequestAudit = {

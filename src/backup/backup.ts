@@ -86,6 +86,8 @@ export async function exportBackup(options: ExportOptions, password: string, onP
     const keys: Partial<Record<ProviderId, string>> = {};
     for (const id of PROVIDER_ORDER) if (settings.apiKeys[id]) keys[id] = settings.apiKeys[id];
     if (Object.keys(keys).length) payload.apiKeys = keys;
+    // The custom endpoint's extra headers can hold tokens, so they go only where the keys go.
+    if (settings.customHeaders.length) payload.customHeaders = settings.customHeaders;
   }
   const file = await encryptBackup(
     new TextEncoder().encode(serializeBackup(payload)),
@@ -106,7 +108,8 @@ export async function openBackup(file: Uint8Array, password: string, onProgress?
  * Applies the backup's preferences. Merge: a preference from the backup is used only where this phone
  * still has the default (what was changed here stays). Replace: the backup's preferences win.
  * Keys: merge fills in providers without a key here; replace overwrites the ones the backup has.
- * Keys are never removed.
+ * Keys are never removed. The custom endpoint's extra headers go with the keys: merge takes them only when this
+ * phone has none, replace takes the backup's list.
  */
 export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMode, withKeys: boolean): Settings {
   const next: Settings = { ...current, apiKeys: { ...current.apiKeys }, models: { ...current.models } };
@@ -155,6 +158,8 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
       if (key && (mode === 'replace' || !current.apiKeys[id])) next.apiKeys[id] = key;
     }
   }
+  if (withKeys && p.customHeaders && (mode === 'replace' || !current.customHeaders.length))
+    next.customHeaders = p.customHeaders;
   return next;
 }
 
@@ -173,7 +178,7 @@ export async function restoreBackup(p: BackupPayload, mode: ApplyMode, withKeys:
     release();
     throw e;
   }
-  if (!p.settings && !(withKeys && p.apiKeys)) return true;
+  if (!p.settings && !(withKeys && (p.apiKeys || p.customHeaders))) return true;
   try {
     await saveSettings(mergeSettings(await loadSettings(), p, mode, withKeys));
     return true;

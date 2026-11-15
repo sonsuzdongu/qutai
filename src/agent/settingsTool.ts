@@ -181,7 +181,7 @@ const PROTECTED: { names: string[]; label: () => string; why: string; place: () 
     place: inSettings('settings.assistant'),
   },
   {
-    names: ['provider', 'ai_provider', 'model', 'api_key', 'api_keys', 'key', 'custom_endpoint', 'endpoint', 'base_url', 'custom_images', 'gemini_streaming'],
+    names: ['provider', 'ai_provider', 'model', 'api_key', 'api_keys', 'key', 'custom_endpoint', 'endpoint', 'base_url', 'custom_images', 'custom_headers', 'extra_headers', 'headers', 'gemini_streaming'],
     label: () => `${uiLabel('settings.provider')}, ${uiLabel('settings.model')}, ${uiLabel('custom.baseUrl')}`,
     why: 'they handle the user\'s secrets and where their conversations are sent',
     place: inSettings('settings.assistant'),

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ALLOW_CLEARTEXT } from '../ai/custom';
 import { BaseUrlError, normalizeBaseUrl } from '../ai/customEndpoint';
+import { cleanCustomHeaders, CustomHeader, HeaderError, headerProblems, MAX_CUSTOM_HEADERS } from '../ai/customHeaders';
 import { Check, fetchCustomModels, testCustomEndpoint } from '../ai/customTest';
 import type { MessageKey } from '../i18n';
 import { t } from '../i18n';
@@ -10,7 +11,7 @@ import { makeStyles, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 
-type Value = Pick<Settings, 'apiKeys' | 'models' | 'customBaseUrl' | 'customImages'>;
+type Value = Pick<Settings, 'apiKeys' | 'models' | 'customBaseUrl' | 'customImages' | 'customHeaders'>;
 
 const ERRORS: Record<BaseUrlError, MessageKey> = {
   empty: 'custom.urlEmpty',
@@ -26,6 +27,26 @@ const ERRORS: Record<BaseUrlError, MessageKey> = {
 export function baseUrlProblem(url: string): string | null {
   const result = normalizeBaseUrl(url, { allowCleartext: ALLOW_CLEARTEXT });
   return result.ok ? null : t(ERRORS[result.error]);
+}
+
+const HEADER_ERRORS: Record<HeaderError, MessageKey> = {
+  nameEmpty: 'custom.headerNameEmpty',
+  nameChars: 'custom.headerNameChars',
+  nameLong: 'custom.headerNameLong',
+  reserved: 'custom.headerReserved',
+  authWithKey: 'custom.headerAuthWithKey',
+  duplicate: 'custom.headerDuplicate',
+  valueEmpty: 'custom.headerValueEmpty',
+  valueLineBreak: 'custom.headerValueLineBreak',
+  valueChars: 'custom.headerValueChars',
+  valueLong: 'custom.headerValueLong',
+};
+
+/** The first problem with the extra headers, as a message naming the header (never its value), or null. */
+export function customHeadersProblem(headers: CustomHeader[], apiKey: string): string | null {
+  const problems = headerProblems(headers, apiKey);
+  const i = problems.findIndex(Boolean);
+  return i < 0 ? null : t(HEADER_ERRORS[problems[i]!], { name: headers[i].name.trim() });
 }
 
 const MAX_LISTED = 50;
@@ -46,6 +67,12 @@ export function CustomEndpointFields({ value, onChange }: { value: Value; onChan
   useEffect(() => () => controller.current?.abort(), []);
 
   const set = (patch: Partial<Value>) => onChange({ ...value, ...patch });
+  const headers = value.customHeaders;
+  const headerErrors = headerProblems(headers, apiKey);
+  // Blank rows dropped; a row with a problem is left out when sending (customHeaders.ts).
+  const sentHeaders = cleanCustomHeaders(headers);
+  const setHeader = (i: number, patch: Partial<CustomHeader>) =>
+    set({ customHeaders: headers.map((h, j) => (j === i ? { ...h, ...patch } : h)) });
 
   const fetchModels = async () => {
     if (!url.ok || busy) return;
@@ -53,7 +80,7 @@ export function CustomEndpointFields({ value, onChange }: { value: Value; onChan
     setBusy('models');
     setModelsError('');
     try {
-      const result = await fetchCustomModels(url.url, apiKey, controller.current.signal);
+      const result = await fetchCustomModels(url.url, apiKey, sentHeaders, controller.current.signal);
       if (Array.isArray(result)) setModels(result);
       else setModelsError(result.error);
     } catch {
@@ -69,7 +96,14 @@ export function CustomEndpointFields({ value, onChange }: { value: Value; onChan
     setBusy('test');
     setChecks([]);
     try {
-      const result = await testCustomEndpoint(url.url, apiKey, model.trim(), controller.current.signal, setChecks);
+      const result = await testCustomEndpoint(
+        url.url,
+        apiKey,
+        sentHeaders,
+        model.trim(),
+        controller.current.signal,
+        setChecks,
+      );
       const images = result.find((c) => c.key === 'images');
       if (images) set({ customImages: images.state === 'ok' });
     } catch {
@@ -115,6 +149,56 @@ export function CustomEndpointFields({ value, onChange }: { value: Value; onChan
         secureTextEntry
       />
       <Text style={styles.hint}>{t('settings.keyHint')}</Text>
+
+      <Text style={styles.label}>{t('custom.headers')}</Text>
+      <Text style={styles.hint}>{t('custom.headersHint')}</Text>
+      {headers.map((h, i) => (
+        <View key={i} style={styles.headerRow}>
+          <View style={styles.row}>
+            <TextInput
+              placeholderTextColor={palette.textSecondary}
+              style={[styles.input, styles.flex]}
+              value={h.name}
+              onChangeText={(name) => setHeader(i, { name })}
+              placeholder={t('custom.headerName')}
+              accessibilityLabel={t('custom.headerName')}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Pressable
+              onPress={() => set({ customHeaders: headers.filter((_, j) => j !== i) })}
+              style={styles.textButton}
+              accessibilityRole="button"
+              accessibilityLabel={t('custom.headerRemove', { name: h.name.trim() })}
+            >
+              <Text style={styles.link}>{t('custom.headerRemoveShort')}</Text>
+            </Pressable>
+          </View>
+          <TextInput
+            placeholderTextColor={palette.textSecondary}
+            style={styles.input}
+            value={h.value}
+            onChangeText={(v) => setHeader(i, { value: v })}
+            placeholder={t('custom.headerValue')}
+            accessibilityLabel={t('custom.headerValue')}
+            autoCapitalize="none"
+            autoCorrect={false}
+            secureTextEntry
+          />
+          {!!headerErrors[i] && (
+            <Text style={styles.error}>{t(HEADER_ERRORS[headerErrors[i]!], { name: h.name.trim() })}</Text>
+          )}
+        </View>
+      ))}
+      {headers.length < MAX_CUSTOM_HEADERS && (
+        <Pressable
+          onPress={() => set({ customHeaders: [...headers, { name: '', value: '' }] })}
+          style={styles.textButton}
+          accessibilityRole="button"
+        >
+          <Text style={styles.link}>{t('custom.headerAdd')}</Text>
+        </Pressable>
+      )}
 
       <Text style={styles.label}>{t('settings.model')}</Text>
       <View style={styles.row}>
@@ -206,6 +290,7 @@ const useStyles = makeStyles((c) => ({
   root: { gap: 8 },
   flex: { flex: 1 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerRow: { gap: 6, marginTop: 4 },
   label: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 12 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   privacy: { fontSize: 13, color: c.text, lineHeight: 18, marginTop: 8 },

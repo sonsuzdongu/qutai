@@ -1,3 +1,4 @@
+import type { CustomHeader } from '../ai/customHeaders';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -46,7 +47,14 @@ import { ProfileQuestionsScreen } from './ProfileQuestions';
 import { KeyboardAvoidingContainer, KeyboardAwareScrollView } from './KeyboardAware';
 
 /** The AI the user chose in settings, for "Organise for me"; null without a key. */
-export type MemoryAi = { provider: ProviderId; apiKey: string; model: string; endpoint?: string; label: string } | null;
+export type MemoryAi = {
+  provider: ProviderId;
+  apiKey: string;
+  model: string;
+  endpoint?: string;
+  extraHeaders?: CustomHeader[];
+  label: string;
+} | null;
 
 type Props = {
   visible: boolean;

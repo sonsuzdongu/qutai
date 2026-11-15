@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { cleanCustomHeaders, CustomHeader, MAX_CUSTOM_HEADERS } from '../ai/customHeaders';
 import { PROVIDER_ORDER, PROVIDERS } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES, ReaderFont, ReaderTheme } from '../browser/reader';
@@ -17,6 +18,11 @@ export type Settings = {
   customBaseUrl: string;
   /** The custom endpoint's model takes images (set by "Test connection"; the user can change it). */
   customImages: boolean;
+  /**
+   * Extra HTTP headers for the custom endpoint (ai/customHeaders.ts). Values can be tokens, so they are treated like
+   * the API keys: one secure-storage entry per row, in backups only with the keys' opt-in, never logged.
+   */
+  customHeaders: CustomHeader[];
   confirmActions: boolean;
   searchEngine: SearchEngineId;
   /** Live suggestions from the search engine while typing; always off in incognito tabs. */
@@ -110,6 +116,7 @@ export const DEFAULT_SETTINGS: Settings = {
   models: Object.fromEntries(PROVIDER_ORDER.map((id) => [id, PROVIDERS[id].defaultModel])) as Record<ProviderId, string>,
   customBaseUrl: '',
   customImages: true,
+  customHeaders: [],
   confirmActions: false,
   searchEngine: 'google',
   searchSuggestions: true,
@@ -187,6 +194,7 @@ const KEYS = {
   onboarded: 'onboarded',
   legalAcceptedVersion: 'legal_accepted_version',
   apiKey: (id: ProviderId) => `api_key_${id}`,
+  customHeader: (i: number) => `custom_header_${i}`,
   model: (id: ProviderId) => `model_${id}`,
   // Written by the first, Claude-only version of the app.
   legacyApiKey: 'anthropic_api_key',
@@ -207,6 +215,19 @@ function isLanguageTag(value: string | null): value is string {
 
 function isProvider(value: string | null): value is ProviderId {
   return !!value && (PROVIDER_ORDER as string[]).includes(value);
+}
+
+/** One stored extra-header row (JSON { name, value }); anything else is dropped. */
+function parseHeaderRow(raw: string | null): CustomHeader[] {
+  if (!raw) return [];
+  try {
+    const v = JSON.parse(raw) as unknown;
+    if (v && typeof v === 'object') {
+      const { name, value } = v as { name?: unknown; value?: unknown };
+      if (typeof name === 'string' && typeof value === 'string') return [{ name, value }];
+    }
+  } catch {}
+  return [];
 }
 
 export async function loadSettings(): Promise<Settings> {
@@ -252,6 +273,7 @@ export async function loadSettings(): Promise<Settings> {
     legacyModel,
     customBaseUrl,
     customImages,
+    customHeaderRows,
     ...perProvider
   ] = await Promise.all([
     get(KEYS.provider),
@@ -294,6 +316,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.legacyModel),
     get(KEYS.customBaseUrl),
     get(KEYS.customImages),
+    Promise.all(Array.from({ length: MAX_CUSTOM_HEADERS }, (_, i) => get(KEYS.customHeader(i)))),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
   ]);
 
@@ -303,6 +326,7 @@ export async function loadSettings(): Promise<Settings> {
     models: { ...DEFAULT_SETTINGS.models },
     customBaseUrl: customBaseUrl ?? '',
     customImages: customImages !== 'false',
+    customHeaders: (customHeaderRows as (string | null)[]).flatMap(parseHeaderRow),
     confirmActions: confirmActions === 'true',
     searchEngine: isSearchEngine(searchEngine) ? searchEngine : DEFAULT_SETTINGS.searchEngine,
     searchSuggestions: searchSuggestions !== 'false',
@@ -340,8 +364,8 @@ export async function loadSettings(): Promise<Settings> {
     legalAcceptedVersion: Math.max(0, Math.floor(Number(legalAcceptedVersion) || 0)),
   };
   PROVIDER_ORDER.forEach((id, i) => {
-    settings.apiKeys[id] = perProvider[i * 2] ?? '';
-    settings.models[id] = perProvider[i * 2 + 1] || DEFAULT_SETTINGS.models[id];
+    settings.apiKeys[id] = (perProvider[i * 2] as string | null) ?? '';
+    settings.models[id] = (perProvider[i * 2 + 1] as string | null) || DEFAULT_SETTINGS.models[id];
   });
 
   if (!settings.apiKeys.anthropic && legacyApiKey) settings.apiKeys.anthropic = legacyApiKey;
@@ -357,6 +381,10 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.provider, settings.provider),
     set(KEYS.customBaseUrl, settings.customBaseUrl),
     set(KEYS.customImages, String(settings.customImages)),
+    ...Array.from({ length: MAX_CUSTOM_HEADERS }, (_, i) => {
+      const h = cleanCustomHeaders(settings.customHeaders)[i];
+      return set(KEYS.customHeader(i), h ? JSON.stringify({ name: h.name, value: h.value }) : '');
+    }),
     set(KEYS.confirmActions, String(settings.confirmActions)),
     set(KEYS.searchEngine, settings.searchEngine),
     set(KEYS.searchSuggestions, String(settings.searchSuggestions)),

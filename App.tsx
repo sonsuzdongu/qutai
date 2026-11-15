@@ -867,6 +867,7 @@ function BrowserApp({
         apiKey: target.apiKey,
         model: target.model,
         endpoint: target.endpoint,
+        extraHeaders: target.extraHeaders,
         imageInput: target.images,
         maxOutputTokens: target.maxOutputTokens,
         turns: chat.turns,

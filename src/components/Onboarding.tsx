@@ -271,6 +271,7 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                             models: ai.models,
                             customBaseUrl: ai.customBaseUrl,
                             customImages: ai.customImages,
+                            customHeaders: ai.customHeaders,
                           }))
                         }
                       />

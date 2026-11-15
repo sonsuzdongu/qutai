@@ -1,3 +1,4 @@
+import type { CustomHeader } from './customHeaders';
 import { recordRequest } from './audit';
 import { anthropic } from './anthropic';
 import { custom } from './custom';
@@ -51,6 +52,8 @@ export type AiConfig = {
   customBaseUrl: string;
   /** The custom endpoint's model takes images (set by "Test connection", changeable by the user). */
   customImages: boolean;
+  /** The custom endpoint's extra headers (customHeaders.ts); values are secrets like the keys. */
+  customHeaders: CustomHeader[];
 };
 
 /** The provider can be used: a key, or for the custom endpoint an address and a model (the key is optional there). */
@@ -64,6 +67,7 @@ export type RequestTarget = {
   model: string;
   apiKey: string;
   endpoint?: string;
+  extraHeaders?: CustomHeader[];
   /** The model takes images; when false, view_screenshot returns a tool error. */
   images: boolean;
   maxOutputTokens?: number;
@@ -77,7 +81,7 @@ export type RequestTarget = {
 export function requestTarget(cfg: AiConfig, id: ProviderId, model = cfg.models[id]): RequestTarget {
   const provider = getProvider(id);
   const base: RequestTarget = { provider: id, model, apiKey: cfg.apiKeys[id] ?? '', images: true };
-  if (provider.needsEndpoint) return { ...base, endpoint: cfg.customBaseUrl, images: cfg.customImages };
+  if (provider.needsEndpoint) return { ...base, endpoint: cfg.customBaseUrl, extraHeaders: cfg.customHeaders, images: cfg.customImages };
   if (!provider.catalog) return base;
   const info = catalogModel(model);
   return { ...base, images: info?.images ?? true, ...(info?.maxOutput ? { maxOutputTokens: info.maxOutput } : {}) };

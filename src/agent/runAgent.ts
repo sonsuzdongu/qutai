@@ -1,3 +1,4 @@
+import type { CustomHeader } from '../ai/customHeaders';
 import { getProvider } from '../ai/providers';
 import { droppedImageNote, KEEP_IMAGE_MESSAGES, MAX_SENT_IMAGES } from '../chat/attachments';
 import type { ProviderId, ToolResult, Turn } from '../ai/types';
@@ -62,6 +63,8 @@ export type AgentOptions = ToolContext & {
   model: string;
   /** Base URL for the custom endpoint. */
   endpoint?: string;
+  /** The custom endpoint's extra headers. */
+  extraHeaders?: CustomHeader[];
   /** The model takes image input; when false, view_screenshot returns a tool error instead of a screenshot. */
   imageInput?: boolean;
   /** The model's output limit, when the provider's catalogue gives it. */
@@ -181,6 +184,7 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
       turns: await withAttachedImages(compactHistory(turns)),
       maxOutputTokens: opts.maxOutputTokens,
       endpoint: opts.endpoint,
+      extraHeaders: opts.extraHeaders,
       signal,
       audit: {
         conversation: opts.audit.conversation(),

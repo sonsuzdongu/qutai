@@ -1,4 +1,5 @@
 import { isSiteLevel, SiteLevel } from '../agent/sitePolicy';
+import { cleanCustomHeaders, CustomHeader, headerProblems, MAX_CUSTOM_HEADERS } from '../ai/customHeaders';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
 import {
   cleanMemoryText,
@@ -31,6 +32,7 @@ import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } fr
  *            blockingOff?: [host], personal?: [{ host, setting }] },
  *   settings?: { theme: "dark", textZoom: 120, models: { anthropic: "…" }, … },
  *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…", openrouter?: "…", custom?: "…" },   // only when the user opted in
+ *   customHeaders?: [{ name, value }],   // the custom endpoint's extra headers: secrets, so only with apiKeys' opt-in
  *   tabs?: { tabs: [{ url, title, uid, groupId? }], activeIndex, groups: [{ id, name, color, collapsed? }] },
  *   chats?: [{ key, items: [...], turns: [...] }],   // key: a tab's uid or "group:<id>"
  *   activity?: [{ at, host, url, tool, description, ok }]
@@ -139,6 +141,7 @@ export type BackupPayload = {
   };
   settings?: BackupSettings;
   apiKeys?: Partial<Record<ProviderId, string>>;
+  customHeaders?: CustomHeader[];
   tabs?: { tabs: BackupTab[]; activeIndex: number; groups: BackupGroup[] };
   chats?: BackupChat[];
   activity?: BackupAction[];
@@ -428,6 +431,17 @@ function parseApiKeys(v: unknown): BackupPayload['apiKeys'] {
   return Object.keys(out).length ? out : undefined;
 }
 
+/** The custom endpoint's extra headers; rows that break the rules (customHeaders.ts) are dropped. */
+function parseCustomHeaders(v: unknown): BackupPayload['customHeaders'] {
+  const rows = list(v, MAX_CUSTOM_HEADERS).flatMap((h) =>
+    isObj(h) && typeof h.name === 'string' && typeof h.value === 'string' ? [{ name: h.name, value: h.value }] : [],
+  );
+  // Checked without a key, so that an `authorization` row survives; it is checked again when used.
+  const problems = headerProblems(rows, '');
+  const out = cleanCustomHeaders(rows.filter((_, i) => !problems[i]));
+  return out.length ? out : undefined;
+}
+
 function parseTabs(v: unknown): BackupPayload['tabs'] {
   if (!isObj(v)) return undefined;
   const groups = new Map<string, BackupGroup>();
@@ -635,6 +649,7 @@ export function parseBackup(json: string): BackupPayload {
     sites: parseSites(raw.sites),
     settings: parseSettings(raw.settings),
     apiKeys: parseApiKeys(raw.apiKeys),
+    customHeaders: parseCustomHeaders(raw.customHeaders),
     tabs: parseTabs(raw.tabs),
     chats: parseChats(raw.chats),
     activity: parseActivity(raw.activity),
@@ -659,7 +674,7 @@ export type BackupSummary = {
   tabs?: number;
   chats?: number;
   activity?: number;
-  /** Providers whose API key is in the backup. */
+  /** Providers whose API key is in the backup (custom also when only its extra headers are). */
   apiKeys: ProviderId[];
 };
 
@@ -685,6 +700,11 @@ export function summarize(p: BackupPayload): BackupSummary {
     ...(p.tabs ? { tabs: p.tabs.tabs.length } : {}),
     ...(p.chats ? { chats: p.chats.length } : {}),
     ...(p.activity ? { activity: p.activity.length } : {}),
-    apiKeys: p.apiKeys ? (Object.keys(p.apiKeys) as ProviderId[]) : [],
+    apiKeys: [
+      ...new Set([
+        ...(p.apiKeys ? (Object.keys(p.apiKeys) as ProviderId[]) : []),
+        ...(p.customHeaders ? (['custom'] as const) : []),
+      ]),
+    ],
   };
 }

@@ -85,6 +85,7 @@ const pickAi = (s: Settings): AiChoice => ({
   models: s.models,
   customBaseUrl: s.customBaseUrl,
   customImages: s.customImages,
+  customHeaders: s.customHeaders,
 });
 // An address that isn't valid counts as typed (cleaning would drop it), so it still asks to be saved or discarded.
 const aiKey = (c: AiChoice) => JSON.stringify({ ...cleanAiChoice(c), typed: aiChoiceProblem(c) ? c.customBaseUrl : '' });

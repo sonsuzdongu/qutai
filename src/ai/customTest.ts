@@ -1,6 +1,7 @@
 import { t } from '../i18n';
 import { createChatAccumulator, fromChatResponse } from './chatWire';
 import { customHeaders } from './custom';
+import type { CustomHeader } from './customHeaders';
 import { createSseDecoder } from './sse';
 
 const TIMEOUT_MS = 30000;
@@ -80,9 +81,10 @@ function errorText(a: Answer): string {
 export async function fetchCustomModels(
   baseUrl: string,
   apiKey: string,
+  extraHeaders: CustomHeader[],
   signal: AbortSignal,
 ): Promise<string[] | { error: string }> {
-  const a = await send(`${baseUrl}/models`, { method: 'GET', headers: customHeaders(apiKey) }, signal);
+  const a = await send(`${baseUrl}/models`, { method: 'GET', headers: customHeaders(apiKey, extraHeaders) }, signal);
   if (a.status !== 200) return { error: errorText(a) };
   const data = (a.json as { data?: unknown } | undefined)?.data;
   if (!Array.isArray(data)) return { error: t('custom.noModelList') };
@@ -97,6 +99,7 @@ export async function fetchCustomModels(
 export async function testCustomEndpoint(
   baseUrl: string,
   apiKey: string,
+  extraHeaders: CustomHeader[],
   model: string,
   signal: AbortSignal,
   onProgress: (checks: Check[]) => void,
@@ -106,7 +109,7 @@ export async function testCustomEndpoint(
     checks.push(c);
     onProgress([...checks]);
   };
-  const headers = customHeaders(apiKey);
+  const headers = customHeaders(apiKey, extraHeaders);
   const chatUrl = `${baseUrl}/chat/completions`;
 
   // 1. Reachable and authenticated, and the model listed (when /models exists).

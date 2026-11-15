@@ -8,10 +8,14 @@ import type { Settings } from '../storage/settings';
 import { makeStyles, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ALLOW_CLEARTEXT } from '../ai/custom';
-import { baseUrlProblem, CustomEndpointFields } from './CustomEndpointFields';
+import { cleanCustomHeaders } from '../ai/customHeaders';
+import { baseUrlProblem, CustomEndpointFields, customHeadersProblem } from './CustomEndpointFields';
 import { ModelCatalogPicker, modelDetail, useCatalog } from './ModelCatalogPicker';
 
-export type AiChoice = Pick<Settings, 'provider' | 'apiKeys' | 'models' | 'customBaseUrl' | 'customImages'>;
+export type AiChoice = Pick<
+  Settings,
+  'provider' | 'apiKeys' | 'models' | 'customBaseUrl' | 'customImages' | 'customHeaders'
+>;
 
 /**
  * Trims keys, fills empty model ids with the provider's default and normalises the custom endpoint's address,
@@ -25,12 +29,24 @@ export function cleanAiChoice<T extends AiChoice>(value: T): T {
     models[id] = models[id].trim() || getProvider(id).defaultModel;
   });
   const url = normalizeBaseUrl(value.customBaseUrl, { allowCleartext: ALLOW_CLEARTEXT });
-  return { ...value, apiKeys, models, customBaseUrl: url.ok ? url.url : '' };
+  return {
+    ...value,
+    apiKeys,
+    models,
+    customBaseUrl: url.ok ? url.url : '',
+    customHeaders: cleanCustomHeaders(value.customHeaders),
+  };
 }
 
-/** Why the choice can't be saved as typed (an address for the custom endpoint that isn't valid), or null. */
+/**
+ * Why the choice can't be saved as typed (an address for the custom endpoint that isn't valid, or an extra header
+ * that breaks the rules), or null.
+ */
 export function aiChoiceProblem(value: AiChoice): string | null {
-  return value.customBaseUrl.trim() ? baseUrlProblem(value.customBaseUrl) : null;
+  return (
+    (value.customBaseUrl.trim() ? baseUrlProblem(value.customBaseUrl) : null) ??
+    customHeadersProblem(value.customHeaders, value.apiKeys.custom)
+  );
 }
 
 /** AI provider, its API key and the model: shared by Settings and the first-run setup. */

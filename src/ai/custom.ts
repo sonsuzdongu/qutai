@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import { t } from '../i18n';
 import { createChatCompletionsCall } from './chatCompletions';
+import { buildCustomHeaders, CustomHeader } from './customHeaders';
 import type { Provider } from './types';
 
 /**
@@ -12,9 +13,12 @@ import type { Provider } from './types';
  */
 export const ALLOW_CLEARTEXT = Platform.OS === 'ios';
 
-/** The key is optional (local servers often need none); only sent when there is one. */
-export const customHeaders = (apiKey: string): Record<string, string> =>
-  apiKey.trim() ? { authorization: `Bearer ${apiKey.trim()}` } : {};
+/**
+ * The key is optional (local servers often need none); only sent when there is one. Extra headers the user added
+ * (customHeaders.ts) go on every request to the endpoint: chat, model list and "Test connection".
+ */
+export const customHeaders = (apiKey: string, extra?: CustomHeader[]): Record<string, string> =>
+  buildCustomHeaders(apiKey, extra);
 
 /**
  * A self-hosted or company server that speaks OpenAI's Chat Completions (Ollama, LM Studio, vLLM, a gateway).
@@ -40,7 +44,7 @@ export const custom: Provider = {
     id: 'custom',
     endpoint: (req) => {
       if (!req.endpoint) throw new Error(t('error.noEndpoint'));
-      return { url: `${req.endpoint}/chat/completions`, headers: customHeaders(req.apiKey) };
+      return { url: `${req.endpoint}/chat/completions`, headers: customHeaders(req.apiKey, req.extraHeaders) };
     },
     maxTokens: () => undefined,
   }),
