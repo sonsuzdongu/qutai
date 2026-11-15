@@ -10,22 +10,38 @@ as today: the user's own AI key, no account, nothing sent to our servers. Each i
 requested and initialised only in pro mode, and the code path is excluded from the bundle when it's off.
 
 - [ ] Server (its own repository, checked out at `backend/`): design and order of work in its `DESIGN.md`,
-  setup in its `README.md`. Step 1 (scaffold: workspaces, API and admin Workers, D1 migrations, environments,
-  tests, deploy scripts) is done; nothing is deployed yet (needs the Cloudflare account). Next: step 2, auth
+  setup in its `README.md`. Steps 1 (scaffold) and 2 (auth) are done; nothing is deployed yet (needs the
+  Cloudflare account)
+- [x] Making a pro build: `EXPO_PUBLIC_PRO_MODE=on`, `EXPO_PUBLIC_QUTAI_API_URL`, the Google client ids
+  (`.env.example`, README › Accounts (pro mode)); local server `http://10.0.2.2:8790` (Android emulator),
+  `http://localhost:8790` (iOS simulator), the computer's LAN address on a phone
 
 ### Accounts and OAuth sign-in
-- [ ] Sign-in screen with OAuth providers: Sign in with Apple and Google first (others such as Microsoft or
-  GitHub later if needed); an email magic link as a fallback is optional
-  - [ ] iOS: when any third-party sign-in is offered, Sign in with Apple must be offered too (App Store
-    guideline 4.8); `expo-apple-authentication`
-  - [ ] Google and other providers: `expo-auth-session` with PKCE (system browser via `expo-web-browser`),
-    never an embedded WebView; Android may use Credential Manager in a development build
-  - [ ] The server verifies the provider's identity token and issues our own short-lived access token and
-    a refresh token; tokens live in `SecureStore`; no provider tokens are kept on the device
-- [ ] Account screen in Settings: who is signed in, sign out, and **delete account** inside the app
-  (required by the App Store when accounts can be created in the app; also deletes server-side data)
-- [ ] Signing out leaves the app usable with the user's own key; nothing local is lost
+- [x] Sign-in with Apple and Google (server step 8, sign-in and account only), in Settings › Account
+  (`src/account/`, `src/components/AccountScreen.tsx`); only when `features.pro` is on and `features.apiUrl` is set
+  - [x] iOS: Sign in with Apple, offered whenever Google is (App Store guideline 4.8): `expo-apple-authentication`,
+    the entitlement only in pro builds (`plugins/withProAccounts.js`)
+  - [x] Google, Android: Credential Manager ("Sign in with Google" button flow) in the local module
+    `modules/qutai-auth`, with the nonce; Google, iOS: `expo-auth-session` (system sign-in browser, PKCE, nonce),
+    never an embedded WebView
+  - [x] Nonce protocol: SHA-256 hex to the provider, raw nonce to the server; a random device id per install
+  - [x] Our access and refresh tokens in SecureStore ("this device only"); refresh before expiry, one refresh at a
+    time; signed out when the server refuses the refresh token (reuse detection, revoked, deleted); no provider
+    tokens kept on the device
+  - [ ] Not verified with real Apple / Google sign-in (needs the owner's developer accounts and client ids; see
+    README › Accounts (pro mode)): the Apple token's `nonce` claim (hash or raw), the `aud` of an iOS Google token,
+    Credential Manager on a phone with Play services, the iOS Google redirect. Refresh, rotation, reuse detection,
+    `GET /me`, sign-out, sign-out everywhere, `DELETE /account` and suspended accounts are tested against the local
+    server (`npm run test:account:server`)
+- [x] Account screen in Settings: account (from `GET /me`), sign out, sign out of all devices, **delete account**
+  with a confirmation saying what is deleted (Apple accounts confirm with Apple first, so the server can revoke
+  Apple's authorization); messages for suspended accounts and an unreachable server
+- [x] Signing out leaves the app usable with the user's own key; nothing local is lost
 - [ ] Onboarding in pro mode: an optional "Sign in" step (skippable); the open-source build never shows it
+- [ ] Sign in with Apple on Android (a Services ID and a web flow; the server's code exchange needs a
+  `redirect_uri` for it), if wanted
+- [ ] Apple's server-to-server notifications (consent revoked, account deleted at Apple) and Google's Cross-Account
+  Protection: not handled (backend)
 
 ### Qutai Credits (paid usage)
 
@@ -90,6 +106,12 @@ App ──(session token)──► Qutai server ──(our key)──► Anthrop
   - "Let me get to know you": `profile.privacy` ("Nothing goes to Qutai") is already replaced by `profile.privacyPro` in pro mode; check that text once the server's role is known
   - `src/legal/documents.ts` (EN and TR): the privacy intro ("Qutai has no servers of its own") and "What leaves your phone, and to whom"; what our server receives, keeps (and how long), and who processes it
   - Store listings and the README if they repeat the claim
+  - Accounts (step 8) already make some of these untrue for a signed-in pro user: the server keeps an account
+    (id, Apple/Google identity, the email the provider shares, last use; for Apple an encrypted Apple token for
+    revocation). Places: `onboarding.f3Body`, `onboarding.legal1`, `onboarding.legal2`, `profile.privacyPro`,
+    `sentLog.hintPro`, `src/legal/documents.ts` (privacy intro and "What leaves your phone"), README › Official builds
+    table ("Where your data goes" says it), the App Store privacy labels and Play Data safety form (now: identifiers
+    and email linked to the user, in pro builds)
 
 ### Sync
 - [ ] End-to-end encrypted sync of bookmarks, history, open tabs and the assistant's memory across the
@@ -379,6 +401,7 @@ platform-specific details for downloads, permissions, the calendar tools and loc
 - [ ] Group conversations: a tab joining a group and leaving it, ungrouping, closing a group's last tab and reopening it, the conversation coming back after restarting the app, and the database migration on an existing install with grouped tabs that already have chats
 - [ ] Quick action chips; streaming responses (scrolling on long responses); markdown responses (tables, code blocks, opening links); tables in chat; option buttons (fading after selection); chat draft after closing and reopening the app; 'Ask Qutai' in the menu when the Qutai button is hidden
 - [ ] OpenRouter: a key, the model list loading (search, Refresh, the date line, models without image input marked), a recommended model on a multi-step task with a `view_screenshot` step; a thinking model (Claude or Gemini through OpenRouter) on several tool calls in a row, so the reasoning details sent back are accepted (no silent rebuild: watch for repeated 400s in "What was sent to the AI"); a model without image input (the screenshot step answers with the tool error and the task goes on with `read_page`); a model ID typed in by hand; a model that rejects tools (the message); Settings saying AI search is off with OpenRouter; stopping mid-stream
+- [ ] Custom endpoint extra headers against a real Cloudflare AI Gateway (authenticated, `/compat` base URL, provider key as the API key, `cf-aig-authorization: Bearer <token>` as an extra header, a `provider/model` ID): "Test connection" all green, "Fetch models", a multi-step task; without the header a 401 on "Key accepted". Checked so far only against a local stub that echoes headers (model list, every test step, chat streaming and not; nothing of the value in the sent log or console). Also on the phone: adding, editing and removing rows, the masked value, each validation message in English and Turkish, a backup with and without the keys opt-in
 - [ ] Custom endpoint: Ollama or LM Studio on a computer on the same Wi-Fi, over http on an iPhone (the Local Network prompt with its text, in Turkish too; "Test connection" all green with a tool-calling model; "Fetch models"; a multi-step task; "What was sent to the AI" showing the host), the same address refused on Android with the https note, an https gateway on both; a wrong URL (typo in the host: "not reachable"; wrong port; missing `/v1`: the hint, and what the test says), a wrong key (401), a model without tool calling (the test's red line), a text-only model (images off after the test; the screenshot step answers with the tool error); a backup made on an iPhone with an http address restored on Android (the address is left out)
 - [ ] Model per conversation: choose another provider's model under the panel title mid-conversation and continue (the history rebuilt; "What was sent to the AI" shows the new provider and model for the next request), "Use my default", the choice surviving an app restart and a tab joining a group (it is the group's conversation then), cleared by New chat, not saved for an incognito tab, the control disabled while a task runs, removing the chosen provider's key in Settings (the chat says the default is used)
 - ~~Optional model per saved task~~: will not be done (owner's decision, 15 Nov 2026); a saved task runs with the conversation's model

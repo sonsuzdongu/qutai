@@ -49,7 +49,7 @@ const SKIA = [
 
 // Gradle dependencies the Expo modules declare in node_modules/<module>/android/build.gradle (direct ones only).
 const EXPO_ANDROID = [
-  { name: 'AndroidX (Jetpack) libraries, incl. CameraX 1.6.0, WebKit, Biometric', version: 'various', licence: 'Apache-2.0', url: 'https://developer.android.com/jetpack/androidx', files: [APACHE] },
+  { name: 'AndroidX (Jetpack) libraries, incl. CameraX 1.6.0, WebKit, Biometric, Credentials 1.6.0', version: 'various', licence: 'Apache-2.0', url: 'https://developer.android.com/jetpack/androidx', files: [APACHE] },
   { name: 'Kotlin standard library and kotlinx.coroutines', version: '2.2.10, 1.10.2', licence: 'Apache-2.0', url: 'https://kotlinlang.org', files: [L('kotlin-notice.txt'), APACHE], source: 'JetBrains/kotlin license/NOTICE.txt' },
   { name: 'Glide', version: '5.0.5', licence: 'BSD-2-Clause AND MIT AND Apache-2.0', url: 'https://github.com/bumptech/glide', files: [L('glide.txt')], source: 'bumptech/glide v5.0.5 LICENSE' },
   { name: 'Android Image Cropper', version: '4.7.0', licence: 'Apache-2.0', url: 'https://github.com/CanHub/Android-Image-Cropper', files: [APACHE] },
@@ -75,6 +75,7 @@ const GOOGLE_SDKS = [
   { name: 'Firebase Cloud Messaging', version: '25.0.1' },
   { name: 'Google Play In-App Review', version: '2.0.1' },
   { name: 'Play Install Referrer', version: '2.2' },
+  { name: 'Sign in with Google (googleid) and Google Play services auth', version: '1.1.1, 21.1.1' },
 ].map((e) => ({ ...e, licence: 'Proprietary (Google terms)', platform: 'android', url: GOOGLE_TERMS, note: 'proprietary' }));
 
 const IOS = [

@@ -334,6 +334,21 @@ host for each request. The key is kept in SecureStore like the others; the base 
 backups (the key only with "Include my AI provider keys"). No web search with a custom endpoint, and no output limit
 is sent (servers differ in which field they read).
 
+Optional extra headers (`src/ai/customHeaders.ts`, up to 5 name/value rows under the API key) go with every request
+to the custom endpoint: chat (streaming or not), "Fetch models" and every step of "Test connection"; no other provider
+gets them. Values can be tokens, so they are treated like the keys: one SecureStore entry per row, shown masked, never
+in "What was sent to the AI", logs or error messages, and in a backup only with "Include my AI provider keys" (inside
+the encrypted file). Names must be HTTP tokens (letters, digits, ``!#$%&'*+-.^_`|~``), unique ignoring case; values
+plain ASCII without line breaks. Names the app or the network layer sets are refused (`content-type`, `accept`,
+`host`, `content-length`, `cookie`, `user-agent`, `proxy-*`, `sec-*` and similar). `authorization` is refused while
+the API key is set (the key is sent as `Authorization: Bearer`); with the key empty it may be set here, for a server
+that wants another scheme.
+
+Cloudflare AI Gateway (not yet tried against a real account): base URL
+`https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/compat`, the provider's own key (OpenAI, Anthropic, …)
+as the API key, and for an authenticated gateway an extra header `cf-aig-authorization` with the value
+`Bearer <gateway token>`. Model IDs take the form `provider/model` (for example `openai/gpt-5-mini`).
+
 Each conversation can use another model than the default: the model shown under the panel's title opens a sheet
 with the providers that are set up (a key, or the custom endpoint) and their models (OpenRouter's full catalogue
 too), and "Use my default". The choice belongs to the conversation (a tab's, or a tab group's), is saved with it
@@ -353,12 +368,63 @@ Google Play are made from this same code with one build-time switch turned on:
 |---|---|---|
 | `EXPO_PUBLIC_PRO_MODE` | `off` | `on` |
 | AI | Your own Anthropic, OpenAI, Gemini or OpenRouter key, or your own OpenAI-compatible server | Your own key, or Qutai credits (planned) |
-| Account and sync | None | Through Qutai's servers (planned) |
+| Account and sync | None | An optional Qutai account (Sign in with Apple or Google); sync planned |
 | Where your data goes | Your device, and the AI provider you choose | Also Qutai's servers, for the pro features you use |
 
-The pro features (accounts, sync, Qutai credits) are not in the code yet. The switch is there so they
-can be added to this same codebase, shown only when it is on (`src/config/features.ts`). Qutai's server
-is not part of this repository.
+Pro features are shown only when the switch is on (`src/config/features.ts`). So far that is the account:
+Settings › Account (sign in, sign out, sign out of all devices, delete the account), when
+`EXPO_PUBLIC_QUTAI_API_URL` is also set; credits and sync are not in the code yet. A build without the switch
+has no Account section and never contacts Qutai's server. Qutai's server is a separate repository, checked
+out as a submodule at `backend/` (its `README.md` has the setup).
+
+### Accounts (pro mode)
+
+| Piece | Where |
+|---|---|
+| API client (typed requests, the server's error codes mapped to messages, 15 s timeout, nothing logged) | `src/account/api.ts`, `types.ts` (the server's shapes, copied from `backend/packages/shared/src/auth.ts` so the app builds without the submodule) |
+| Session: tokens in SecureStore ("this device only"), refresh before expiry with one refresh at a time, signed out when the server refuses the refresh token (reuse detection, revoked, deleted), suspended accounts kept with a notice, a random device id per install | `src/account/session.ts`, `storage.ts` |
+| Sign in with Apple (iOS): `expo-apple-authentication`; the nonce's SHA-256 goes to Apple, the raw nonce to the server | `src/account/providers.ts` |
+| Sign in with Google, Android: Credential Manager's "Sign in with Google" flow with the nonce, in the local module `modules/qutai-auth` (the legacy Google Sign-In SDK is deprecated, and the free `@react-native-google-signin` module can't pass a nonce on Android) | `modules/qutai-auth`, `src/account/providers.ts` |
+| Sign in with Google, iOS: `expo-auth-session` in the system's sign-in browser with the iOS OAuth client, PKCE and the nonce; the code is exchanged for the ID token at Google | `src/account/providers.ts` |
+| Native setup only in pro builds: the Sign in with Apple entitlement and the Google iOS URL scheme | `plugins/withProAccounts.js` |
+| Settings › Account | `src/components/AccountScreen.tsx` |
+
+**Making a pro build.** Set the variables in `.env` (local builds) or in an EAS build profile's `env`
+(`eas.json` keeps all three profiles `off`; add your own profile or override with EAS environment variables):
+
+| Variable | Value |
+|---|---|
+| `EXPO_PUBLIC_PRO_MODE` | `on` |
+| `EXPO_PUBLIC_QUTAI_API_URL` | The server: Android emulator `http://10.0.2.2:8790`, iOS simulator `http://localhost:8790`, a phone on the same Wi-Fi `http://<the computer's LAN address>:8790`, or the deployed API's https address |
+| `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Google OAuth **Web** client id (Android sends it to Credential Manager; it is the ID token's audience) |
+| `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Google OAuth **iOS** client id |
+
+Then regenerate the native projects, because the entitlement and URL scheme are written there:
+`npx expo prebuild --clean` (or `npx expo run:android|ios`, which does it), and restart Metro with
+`npx expo start -c`. Plain http to the local server works on Android (Qutai allows cleartext for browsing) and
+on iOS to local-network addresses (App Transport Security's local-networking exception).
+
+To run the server locally: `cd backend && npm install && npm run migrate:local`, create
+`backend/apps/api/.dev.vars` from its example with at least `ACCESS_TOKEN_SIGNING_KEY` and `REFRESH_TOKEN_PEPPER`
+(`node scripts/generate-secret.mjs access-token-key` / `pepper`), then `npm run dev`. Real sign-in also needs the
+Apple and Google client ids in the server's `APPLE_CLIENT_IDS` / `GOOGLE_CLIENT_IDS` (see `backend/README.md` ›
+Auth); without them the sign-in routes answer "unavailable", which the app shows as such.
+
+Tests: `npm run test:account` (the client and session against a fake server) and, with the local server running,
+`npm run test:account:server` (refresh and rotation, reuse detection, `GET /me`, sign-out, sign-out everywhere,
+`DELETE /account`, suspended accounts). Both use Node's built-in test runner; see
+`scripts/account-tests/README.md`.
+
+**What the owner sets up for real sign-in** (none of it is in the repository):
+- Apple Developer: the App ID `com.sonsuzdongu.qutai` with the *Sign in with Apple* capability (the provisioning
+  profile must include it; EAS regenerates profiles when capabilities change), plus the server-side key described
+  in `backend/README.md` › Auth.
+- Google Cloud console (the app's project): the OAuth consent screen; a **Web** client (→
+  `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` and the server's `GOOGLE_CLIENT_IDS`); an **Android** client per signing
+  certificate with package `com.sonsuzdongu.qutai` and that certificate's SHA-1 (the debug keystore for development
+  builds, the EAS or upload key, and Play App Signing's key for store installs: `npx eas-cli credentials` or Play
+  Console › App integrity show them); an **iOS** client with bundle id `com.sonsuzdongu.qutai` (→
+  `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` and also `GOOGLE_CLIENT_IDS`).
 
 ### Build it yourself
 

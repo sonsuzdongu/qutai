@@ -1,0 +1,25 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.sonsuzdongu.qutai'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.qutaiauth"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  // Sign in with Google through Credential Manager (pro mode accounts, src/account/providers.ts). The legacy
+  // Google Sign-In SDK is deprecated; Credential Manager's GetSignInWithGoogleOption takes the nonce the
+  // server requires. googleid 1.2.x is compiled with Kotlin 2.4, newer than the compiler of this React Native
+  // version (2.2), so 1.1.1 (which has GetSignInWithGoogleOption and setNonce).
+  implementation 'androidx.credentials:credentials:1.6.0'
+  implementation 'androidx.credentials:credentials-play-services-auth:1.6.0'
+  implementation 'com.google.android.libraries.identity.googleid:googleid:1.1.1'
+}

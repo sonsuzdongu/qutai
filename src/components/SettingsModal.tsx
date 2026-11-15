@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { cleanCustomInstructions, MAX_CUSTOM_INSTRUCTIONS } from '../agent/systemPrompt';
 import { getProvider, isConfigured, modelLabel, requestTarget } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
+import { useAccountState } from '../account';
+import { accountsEnabled } from '../config/features';
 import { authenticate, canAuthenticate } from '../device/biometric';
 import { appVersion } from '../device/appVersion';
 import { BackupTooLargeError, pickBackupFile, PickerUnavailableError } from '../device/backupFile';
@@ -23,6 +25,7 @@ import { Icon, IconName } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
+import { AccountScreen } from './AccountScreen';
 import { ActionLogScreen } from './ActionLogScreen';
 import { SentLogScreen } from './SentLogScreen';
 import { BackupScreen } from './BackupScreen';
@@ -52,7 +55,7 @@ type Props = {
   incognitoActive: boolean;
 };
 
-type Page = 'main' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'backup' | 'about';
+type Page = 'main' | 'account' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'backup' | 'about';
 
 /** Where the Android back button goes; the open page sets it (the modal receives the button). */
 class BackRoute {
@@ -113,6 +116,7 @@ function SettingsPages({
   const [legal, setLegal] = useState<LegalKind | null>(null);
   const [licencesVisible, setLicencesVisible] = useState(false);
   const [backupJob, setBackupJob] = useState<'export' | Uint8Array | null>(null);
+  const account = useAccountState();
 
   const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch });
   const saveAi = () => {
@@ -179,6 +183,7 @@ function SettingsPages({
   const modelName = modelLabel(settings.provider, settings.models[settings.provider]);
   const titles: Record<Page, string> = {
     main: t('settings.title'),
+    account: t('account.title'),
     assistant: t('settings.assistant'),
     privacy: t('settings.privacySection'),
     appearance: t('settings.appearance'),
@@ -214,6 +219,23 @@ function SettingsPages({
       </View>
 
       <KeyboardAwareScrollView contentContainerStyle={styles.content}>
+        {page === 'main' && accountsEnabled && (
+          <View style={styles.card}>
+            <SectionRow
+              icon="person"
+              title={t('account.title')}
+              summary={
+                account.status === 'loading'
+                  ? ''
+                  : account.status === 'signedIn'
+                    ? t('account.summarySignedIn')
+                    : t('account.summarySignedOut')
+              }
+              onPress={() => setPage('account')}
+              last
+            />
+          </View>
+        )}
         {page === 'main' && (
           <View style={styles.card}>
             <SectionRow
@@ -499,6 +521,8 @@ function SettingsPages({
             />
           </>
         )}
+
+        {page === 'account' && accountsEnabled && <AccountScreen />}
 
         {page === 'backup' && (
           <>
