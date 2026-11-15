@@ -602,6 +602,7 @@ export function AssistantPanel({
                     style={[styles.chip, d?.chip, research && styles.chipOn]}
                     accessibilityRole="switch"
                     accessibilityState={{ checked: research }}
+                    accessibilityHint={t('chat.researchHint')}
                   >
                     <Icon name="research" size={15} color={research ? '#ffffff' : palette.textSecondary} />
                     <Text style={[styles.chipText, d?.text, research && styles.chipTextOn]}>{t('chat.research')}</Text>
@@ -622,7 +623,7 @@ export function AssistantPanel({
                 </ScrollView>
               )}
               {research && !running && !busyElsewhere ? (
-                <Text style={styles.modeHint}>{t('chat.researchHint')}</Text>
+                <Text style={styles.modeHint}>{`${t('chat.researchHint')} ${t('chat.researchNext')}`}</Text>
               ) : null}
 
               {pending.length > 0 && (
@@ -668,10 +669,10 @@ export function AssistantPanel({
                   placeholderTextColor={dark ? '#a9a8b3' : '#6b6862'}
                   value={text}
                   onChangeText={changeText}
+                  // Short texts that fit beside the buttons on a narrow phone; while listening, the TR/EN tag next
+                  // to the field names the language. At large text sizes the multiline field wraps it.
                   placeholder={
-                    listening && voiceInfo.lang
-                      ? t('voice.listeningIn', { language: spokenLanguageName(voiceInfo.lang) })
-                      : t(listening ? 'voice.listening' : research ? 'chat.researchPlaceholder' : 'chat.placeholder')
+                    t(listening ? 'voice.listening' : research ? 'chat.researchPlaceholder' : 'chat.placeholder')
                   }
                   multiline
                   editable={!running}
@@ -1714,7 +1715,8 @@ const useStyles = makeStyles((c) => ({
   busyText: { flex: 1, fontSize: 13, color: c.text },
   busyAction: { fontSize: 13, fontWeight: '700', color: c.tintText },
   chips: { flexGrow: 0 },
-  chipsContent: { paddingHorizontal: 8, paddingTop: 8, gap: 6 },
+  // Room under the chips too, so they don't sit on the message row's top line.
+  chipsContent: { paddingHorizontal: 8, paddingTop: 8, paddingBottom: 8, gap: 6 },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1731,7 +1733,7 @@ const useStyles = makeStyles((c) => ({
   shrink: { flexShrink: 1 },
   chipOn: { backgroundColor: c.tint, borderColor: c.tint },
   chipTextOn: { color: c.onTint, fontWeight: '600' },
-  modeHint: { fontSize: 12, lineHeight: 17, color: c.textSecondary, paddingHorizontal: 12, paddingTop: 6 },
+  modeHint: { fontSize: 12, lineHeight: 17, color: c.textSecondary, paddingHorizontal: 12, paddingBottom: 8 },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
