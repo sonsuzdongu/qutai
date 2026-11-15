@@ -340,6 +340,25 @@ export async function storeEditedImage(
   }
 }
 
+/**
+ * Keeps a PDF Qutai made (save_pdf, or an answer saved as a PDF) as an attachment of the conversation, so it can be
+ * shared, attached to an email or uploaded later: same folders, pruning and incognito rules as attachments. The
+ * temporary file is moved in.
+ */
+export function storeMadePdf(file: File, name: string, made: 'page' | 'report', incognito: boolean): AttachmentInfo {
+  const id = newAttachmentId(incognito);
+  const dir = folderOf(id);
+  dir.create({ intermediates: true, idempotent: true });
+  try {
+    const original = new File(dir, 'original.pdf');
+    file.moveSync(original);
+    return { id, kind: 'pdf', name: safeFileName(name, 'document.pdf'), mimeType: 'application/pdf', size: original.size, made };
+  } catch (e) {
+    if (dir.exists) dir.delete();
+    throw e;
+  }
+}
+
 /** Removes an attachment's files right away (a thumbnail removed before sending). */
 export function deleteAttachment(id: string) {
   dataCache.delete(id);
@@ -375,6 +394,25 @@ export async function shareAttachment(info: AttachmentInfo): Promise<void> {
   const file = originalFile(info.id);
   if (!file) throw new AttachmentError(t('attach.gone'));
   await Sharing.shareAsync(file.uri, { mimeType: info.mimeType, dialogTitle: info.name });
+}
+
+/**
+ * Android: copies an attachment's file (a PDF Qutai made) into a folder the user picks through the system picker.
+ * Resolves false when they cancel.
+ */
+export async function saveAttachmentToFolder(info: AttachmentInfo): Promise<boolean> {
+  const file = originalFile(info.id);
+  if (!file) throw new AttachmentError(t('attach.gone'));
+  let dir: Directory;
+  try {
+    dir = await Directory.pickDirectoryAsync();
+  } catch {
+    return false;
+  }
+  if (!dir) return false;
+  const target = dir.createFile(info.name, info.mimeType);
+  target.write(await file.bytes());
+  return true;
 }
 
 /**

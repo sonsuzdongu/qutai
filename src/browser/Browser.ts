@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react';
 import { Conversation, groupChatKey } from '../chat/Conversation';
+import { forgetIncognitoOutgoing } from '../device/outgoing';
 import { forgetIncognitoFiles } from '../device/composedFile';
 import { forgetIncognitoAttachments } from '../device/attachments';
 import { closePdf } from '../pdf/reader';
@@ -635,6 +636,12 @@ export class Browser {
     if (this.tabs.some((t) => t.incognito)) return;
     // Files the assistant made in incognito conversations go with the session.
     forgetIncognitoFiles();
+    // And the copies of files handed from incognito conversations to other apps.
+    try {
+      forgetIncognitoOutgoing();
+    } catch {
+      // Nothing to remove.
+    }
     // So do the files attached in incognito conversations, and a PDF still open in the reader.
     try {
       forgetIncognitoAttachments();

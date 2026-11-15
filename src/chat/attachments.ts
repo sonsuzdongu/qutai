@@ -30,6 +30,11 @@ export type AttachmentInfo = {
   derivedFrom?: string;
   /** Edited images: what was done, in a short line ("cropped to 1:1 …; resized to 1024×1024; JPEG quality 90"). */
   edits?: string;
+  /**
+   * PDFs Qutai made in this conversation (not attached by the user): "page" from save_pdf, "report" from an answer
+   * saved as a PDF. Kept like attachments so they can be shared, attached to an email or uploaded later.
+   */
+  made?: 'page' | 'report';
 };
 
 /** At most this many files per message. */

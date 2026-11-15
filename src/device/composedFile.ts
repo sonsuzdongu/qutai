@@ -154,7 +154,8 @@ const kept = new Map<string, Kept>();
 
 /** Keeps a composed file in memory for its card; the oldest ones expire past the limits. */
 export function keepComposedFile(file: Composed, incognito: boolean): FileOffer {
-  const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  // "file-" marks the id as one tools may name (src/chat/shareable.ts); older cards had bare ids.
+  const id = `file-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   const offer: FileOffer = { id, name: file.name, format: file.format, size: file.size, ...(file.rows !== undefined ? { rows: file.rows } : {}) };
   kept.set(id, { offer, text: file.text, incognito });
   let total = 0;
@@ -185,6 +186,11 @@ function keptFile(id: string): Kept {
   const k = kept.get(id);
   if (!k) throw new FileExpiredError();
   return k;
+}
+
+/** The text of a composed file, to hand it out (src/device/outgoing.ts); throws FileExpiredError when it is gone. */
+export function composedFileContent(id: string): { offer: FileOffer; text: string; incognito: boolean } {
+  return keptFile(id);
 }
 
 /** Opens the share sheet (Save to Files, AirDrop, mail…) with a temporary copy, removed afterwards. */
