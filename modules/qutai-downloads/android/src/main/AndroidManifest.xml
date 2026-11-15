@@ -1,0 +1,4 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- The job service, the foreground service, the action receiver and their permissions are declared by the app's
+       config plugin (plugins/withDownloads.js), so they show in the introspected config and in docs/permissions.md. -->
+</manifest>

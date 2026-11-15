@@ -126,6 +126,7 @@
       "./plugins/withCleartextBrowsing",
       "./plugins/withBackgroundMedia",
       "./plugins/withBackgroundTasks",
+      "./plugins/withDownloads",
       "./plugins/withPictureInPicture",
       "./plugins/withEntryPoints",
       [

@@ -1,0 +1,24 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.sonsuzdongu.qutai'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.qutaidownloads"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  // The patched react-native-webview's RNCWebViewProfiles: the cookies of a tab's own WebView profile.
+  implementation project(':react-native-webview')
+  // The notification channel helper shared with the media and assistant services (no shared state).
+  implementation project(':qutai-media')
+  // OkHttp, which React Native already ships (no new dependency).
+  implementation 'com.facebook.react:react-android'
+}
