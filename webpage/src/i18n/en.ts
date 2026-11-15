@@ -259,7 +259,7 @@ export const en = {
   'footer.tagline': 'An AI browser that uses the page for you.',
   'footer.privacy':
     'This website makes no requests to other servers and sets no cookies, except one that remembers your language if you switch it.',
-  'footer.trademark': 'Qutai and the Qutai logo are trademarks of Osman Yuksel. The code is licensed under Apache-2.0.',
+  'footer.trademark': 'Qutai and the Qutai logo are trademarks. The code is licensed under Apache-2.0.',
   'footer.github': 'GitHub',
   'footer.issues': 'Issues',
   'footer.license': 'Licence',

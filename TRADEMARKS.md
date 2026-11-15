@@ -4,7 +4,7 @@ The source code of Qutai is licensed under the [Apache License, Version 2.0](LIC
 the code only. As section 6 of the license states, it does not grant permission to use the trade names,
 trademarks, service marks or product names of the licensor.
 
-"Qutai", the Qutai logo and the Qutai app icon (the "Qutai Marks") are trademarks of Osman Yuksel. This
+"Qutai", the Qutai logo and the Qutai app icon (the "Qutai Marks") are trademarks. This
 document explains how you may and may not use them.
 
 ## What the Qutai Marks are
