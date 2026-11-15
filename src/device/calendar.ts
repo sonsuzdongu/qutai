@@ -1,5 +1,6 @@
 import { Platform } from 'react-native';
 import type { CalendarEntry, CalendarEventPlan, CalendarReadPlan, ReminderPlan } from '../agent/scheduling';
+import { getCalendarChoice, isWritable, offerCalendarChoice, setCalendarChoice } from './calendarChoice';
 
 type CalendarModule = typeof import('expo-calendar');
 type PermissionResponse = Awaited<ReturnType<CalendarModule['getCalendarPermissions']>>;
@@ -30,42 +31,70 @@ function denied(what: string): DeviceToolError {
   );
 }
 
-/** Asks for the permission only if it was never decided; a denial is final until the user changes it in Settings. */
+/**
+ * Asks for the permission only if it was never decided; a denial is final until the user changes it in Settings.
+ * Resolves true when this call is what granted it (the system prompt was shown and the user allowed it).
+ */
 async function ensure(
   get: () => Promise<PermissionResponse>,
   request: () => Promise<PermissionResponse>,
   what: string,
-): Promise<void> {
+): Promise<boolean> {
   let status = await get();
-  if (!status.granted && status.canAskAgain) status = await request();
+  if (status.granted) return false;
+  if (status.canAskAgain) status = await request();
   if (!status.granted) throw denied(what);
+  return true;
 }
 
-/** iOS: write-only access is enough to add events (iOS 17+); Android needs read and write to find a calendar. */
+/**
+ * iOS: write-only access is enough to add events (iOS 17+); Android needs read and write to find a calendar.
+ * Granted just now: the user is offered to choose the calendar before the event is added (offerCalendarChoice only
+ * shows it when calendars can be listed, so not with iOS write-only access, and when there are two or more).
+ */
 async function ensureCalendarAccess(Calendar: CalendarModule) {
   const writeOnly = Platform.OS === 'ios';
-  await ensure(
+  const granted = await ensure(
     () => Calendar.getCalendarPermissions(writeOnly),
     () => Calendar.requestCalendarPermissions(writeOnly),
     'the calendar',
   );
+  if (granted) await offerCalendarChoice();
 }
 
-const WRITABLE_LEVELS = new Set<string>(['owner', 'editor', 'contributor', 'root']);
+/** The calendar used, and what the model should tell the user when it isn't the one they chose. */
+type Target = { calendar: Awaited<ReturnType<CalendarModule['getCalendars']>>[number]; note: string };
+
+const MISSING_NOTE =
+  ' The calendar the user chose in Settings is no longer on this phone (or can no longer be written to), so this one ' +
+  'was used instead; tell the user, and that they can choose another in Settings › Assistant › Calendar for the assistant.';
+const NO_FULL_ACCESS_NOTE =
+  ' The calendar the user chose in Settings can only be used with full calendar access, which Qutai does not have ' +
+  'now, so the default calendar was used instead; tell the user.';
 
 /**
- * The calendar new events go to: the default one on iOS; on Android, where there is no default,
- * the primary calendar of an account (or else the first writable one). No calendar is created.
+ * The calendar new events go to: the one the user chose (Settings › Assistant › Calendar for the assistant) while it still exists and
+ * can be written; otherwise the default one on iOS and, on Android, where there is no default, the primary calendar of
+ * an account (or else the first writable one). No calendar is created. A chosen calendar that is gone is forgotten.
  */
-async function targetCalendar(Calendar: CalendarModule) {
-  if (Platform.OS === 'ios') return Calendar.getDefaultCalendarSync();
-  const writable = (await Calendar.getCalendars()).filter(
-    (c) =>
-      c.allowsModifications &&
-      c.isVisible !== false &&
-      c.isSynced !== false &&
-      (!c.accessLevel || WRITABLE_LEVELS.has(c.accessLevel)),
-  );
+async function targetCalendar(Calendar: CalendarModule): Promise<Target> {
+  const { calendarId } = await getCalendarChoice();
+  let note = '';
+  if (calendarId) {
+    const full = Platform.OS !== 'ios' || (await Calendar.getCalendarPermissions(false)).granted;
+    if (full) {
+      const all =
+        Platform.OS === 'ios' ? await Calendar.getCalendars(Calendar.EntityTypes.EVENT) : await Calendar.getCalendars();
+      const chosen = all.find((c) => c.id === calendarId);
+      if (chosen && isWritable(chosen)) return { calendar: chosen, note };
+      await setCalendarChoice({ calendarId: null }).catch(() => {});
+      note = MISSING_NOTE;
+    } else {
+      note = NO_FULL_ACCESS_NOTE;
+    }
+  }
+  if (Platform.OS === 'ios') return { calendar: Calendar.getDefaultCalendarSync(), note };
+  const writable = (await Calendar.getCalendars()).filter(isWritable);
   const calendar = writable.find((c) => c.isPrimary) ?? writable[0];
   if (!calendar) {
     throw new DeviceToolError(
@@ -73,14 +102,14 @@ async function targetCalendar(Calendar: CalendarModule) {
         '(for example their Google account) in the phone settings, or offer schedule_notification instead.',
     );
   }
-  return calendar;
+  return { calendar, note };
 }
 
-/** Adds an event to the user's calendar; resolves with the calendar's name. */
-export async function addCalendarEvent(plan: CalendarEventPlan): Promise<string> {
+/** Adds an event to the user's calendar; resolves with the calendar's name and a note for the model ('' or a sentence). */
+export async function addCalendarEvent(plan: CalendarEventPlan): Promise<{ calendar: string; note: string }> {
   const Calendar = await load();
   await ensureCalendarAccess(Calendar);
-  const calendar = await targetCalendar(Calendar);
+  const { calendar, note } = await targetCalendar(Calendar);
   const method = Platform.OS === 'android' ? Calendar.AlarmMethod.ALERT : undefined;
   await calendar.createEvent({
     title: plan.title,
@@ -90,11 +119,12 @@ export async function addCalendarEvent(plan: CalendarEventPlan): Promise<string>
     notes: plan.notes,
     alarms: plan.alertMinutes === undefined ? [] : [{ relativeOffset: -plan.alertMinutes, method }],
   });
-  return calendar.title;
+  return { calendar: calendar.title, note };
 }
 
 /**
- * iOS: a reminder in the user's default Reminders list, with an alert at the due time.
+ * iOS: a reminder in the Reminders list the user chose (Settings › Assistant › Calendar for the assistant) or else the default list,
+ * with an alert at the due time.
  * Android: a calendar event with an alarm at the due time (a due time is required there).
  */
 export async function addReminder(plan: ReminderPlan): Promise<string> {
@@ -102,7 +132,7 @@ export async function addReminder(plan: ReminderPlan): Promise<string> {
   if (Platform.OS === 'android') {
     if (!plan.due) throw new DeviceToolError('A due time is required on Android.');
     await ensureCalendarAccess(Calendar);
-    const calendar = await targetCalendar(Calendar);
+    const { calendar, note } = await targetCalendar(Calendar);
     await calendar.createEvent({
       title: plan.title,
       startDate: plan.due,
@@ -110,18 +140,33 @@ export async function addReminder(plan: ReminderPlan): Promise<string> {
       notes: plan.notes,
       alarms: [{ relativeOffset: 0, method: Calendar.AlarmMethod.ALERT }],
     });
-    return `a calendar event with an alarm in "${calendar.title}" (Android has no reminders app)`;
+    return `a calendar event with an alarm in "${calendar.title}" (Android has no reminders app).${note}`;
   }
   await ensure(Calendar.getRemindersPermissions, Calendar.requestRemindersPermissions, 'reminders');
-  // The object API has no way to find the default Reminders list; the legacy call uses it when no list is given.
-  const { createReminderAsync } = await import('expo-calendar/legacy');
-  await createReminderAsync(null, {
+  const details = {
     title: plan.title,
     notes: plan.notes,
     dueDate: plan.due,
     alarms: plan.due ? [{ absoluteDate: plan.due.toISOString() }] : [],
-  });
-  return 'the default Reminders list';
+  };
+  const { reminderListId } = await getCalendarChoice();
+  let note = '';
+  if (reminderListId) {
+    const list = (await Calendar.getCalendars(Calendar.EntityTypes.REMINDER)).find((c) => c.id === reminderListId);
+    if (list?.allowsModifications) {
+      const { createReminderAsync } = await import('expo-calendar/legacy');
+      await createReminderAsync(list.id, details);
+      return `the Reminders list "${list.title}".`;
+    }
+    await setCalendarChoice({ reminderListId: null }).catch(() => {});
+    note =
+      ' The Reminders list the user chose in Settings is no longer on this phone, so the default list was used; tell ' +
+      'the user, and that they can choose another in Settings › Assistant › Calendar for the assistant.';
+  }
+  // The object API has no way to find the default Reminders list; the legacy call uses it when no list is given.
+  const { createReminderAsync } = await import('expo-calendar/legacy');
+  await createReminderAsync(null, details);
+  return `the default Reminders list.${note}`;
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');

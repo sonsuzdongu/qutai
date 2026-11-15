@@ -2,6 +2,7 @@ import { ComponentRef, ReactNode, useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
   Modal,
+  Platform,
   Pressable,
   ScrollViewInstance,
   StyleSheet,
@@ -10,11 +11,13 @@ import {
   TextInputProps,
   View,
 } from 'react-native';
-import { getCalendars, getLocales } from 'expo-localization';
+import { getLocales } from 'expo-localization';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { MemoryCategory } from '../agent/memory';
 import { features } from '../config/features';
+import { ensureLocationPermission, LocationUnavailableError, readPlaceName } from '../device/location';
 import { normalizePhone } from '../device/phone';
+import { openSettingsOrExplain, PermissionDeniedError } from '../device/settings';
 import { getLanguage, MessageKey, t } from '../i18n';
 import { getDb } from '../storage/db';
 import { addMemory, deleteMemory, listMemories, updateMemory } from '../storage/memory';
@@ -67,14 +70,6 @@ const FOOD_CHIPS: MessageKey[] = [
   'profile.chip.nutAllergy',
 ];
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** Cities to tap: Turkey's largest in Turkish, else the one in the phone's time zone. */
-function cityChips(): string[] {
-  if (getLanguage() === 'tr') return ['İstanbul', 'Ankara', 'İzmir', 'Bursa', 'Antalya'];
-  const zone = getCalendars()[0]?.timeZone ?? '';
-  const city = zone.includes('/') ? zone.slice(zone.lastIndexOf('/') + 1).replace(/_/g, ' ') : '';
-  return city && !/^(UTC|GMT)/.test(city) ? [city] : [];
-}
 
 /** The device region's country name, in the app's language where the engine knows it. */
 function defaultCountry(): string {
@@ -399,7 +394,6 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
 
       {page === 'city' && (
         <Question title={t('profile.cityTitle')} lead={t('profile.cityLead')}>
-          <Chips options={cityChips()} selected={[city]} onPress={(c) => setCity(city === c ? '' : c)} />
           <Field
             value={city}
             onChange={setCity}
@@ -407,6 +401,7 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
             autoCapitalize="words"
             returnKeyType="done"
           />
+          <FillFromLocation onFill={setCity} />
         </Question>
       )}
 
@@ -648,6 +643,69 @@ function Chips({
   );
 }
 
+/**
+ * "Use my location" under the city field: reads the position (about 100 m) and fills in the neighbourhood, district,
+ * province or state and country as the address service names them (device/location.ts readPlaceName). Uses the
+ * location permission the setup step may already have; asks for it here only if it was never decided. The user can
+ * edit or clear the text; typing works without any of this.
+ */
+function FillFromLocation({ onFill }: { onFill: (text: string) => void }) {
+  const styles = useStyles();
+  const palette = usePalette();
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<{ text: string; settings: boolean } | null>(null);
+  const fill = async () => {
+    setBusy(true);
+    setProblem(null);
+    try {
+      await ensureLocationPermission();
+      const place = await readPlaceName();
+      onFill(place.parts.join(', '));
+    } catch (e) {
+      if (e instanceof PermissionDeniedError) {
+        setProblem({ text: t('profile.locationDenied'), settings: !e.canAskAgain });
+      } else if (e instanceof LocationUnavailableError && e.reason === 'servicesOff') {
+        setProblem({ text: t('profile.locationOff'), settings: false });
+      } else if (e instanceof LocationUnavailableError && e.reason === 'timeout') {
+        setProblem({ text: t('profile.locationTimeout'), settings: false });
+      } else if (e instanceof LocationUnavailableError && e.reason === 'needsBuild') {
+        setProblem({ text: t('profile.locationUnavailable'), settings: false });
+      } else {
+        setProblem({ text: t('profile.locationFailed'), settings: false });
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <View style={styles.locationBox}>
+      <Pressable
+        onPress={() => void fill()}
+        disabled={busy}
+        style={({ pressed }) => [styles.locationButton, (pressed || busy) && styles.pressed]}
+        accessibilityRole="button"
+        accessibilityState={{ busy }}
+      >
+        <Icon name="location" size={18} color={palette.tintText} />
+        <Text style={styles.locationText}>{t(busy ? 'profile.locationBusy' : 'profile.useLocation')}</Text>
+      </Pressable>
+      {problem && (
+        <Text style={styles.warning} accessibilityLiveRegion="polite">
+          {problem.text}
+        </Text>
+      )}
+      {problem?.settings && (
+        <Pressable onPress={openSettingsOrExplain} accessibilityRole="button" hitSlop={6}>
+          <Text style={styles.locationText}>{t('settings.openSystem')}</Text>
+        </Pressable>
+      )}
+      <Text style={styles.hint}>
+        {t(Platform.OS === 'ios' ? 'profile.locationPrivacyIos' : 'profile.locationPrivacyAndroid')}
+      </Text>
+    </View>
+  );
+}
+
 /** What moves the keyboard's Next from one field to the following one. */
 type ChainProps = {
   inputRef?: (node: ComponentRef<typeof TextInput> | null) => void;
@@ -682,12 +740,24 @@ function Field({
   const styles = useStyles();
   const palette = usePalette();
   const reveal = useRevealFocused();
+  const own = useRef<ComponentRef<typeof TextInput> | null>(null);
   return (
     <TextInput
-      ref={inputRef}
+      ref={(node) => {
+        own.current = node;
+        inputRef?.(node);
+      }}
       style={[styles.input, multiline && styles.inputMulti]}
       value={value}
-      onChangeText={onChange}
+      onChangeText={(text) => {
+        // Autofill (Android's autofill service, an iOS contact suggestion) can fill a whole set of fields from the one
+        // the user picked in: choosing a saved email also replaced the phone number typed above it. A field takes
+        // text only while it is the one being edited (or when none is); otherwise the change is ignored and
+        // TextInput puts the field's own value back.
+        const focused = TextInput.State.currentlyFocusedInput();
+        if (focused && focused !== own.current) return;
+        onChange(text);
+      }}
       onFocus={() => reveal?.()}
       placeholder={placeholder}
       placeholderTextColor={palette.textSecondary}
@@ -834,6 +904,19 @@ export function ProfileQuestionsScreen({
 
 const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
+  locationBox: { gap: 8 },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 8,
+    paddingHorizontal: 14,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: c.tint,
+  },
+  locationText: { color: c.tintText, fontSize: 15, fontWeight: '600' },
   screen: { flex: 1, backgroundColor: c.bg },
   header: {
     flexDirection: 'row',

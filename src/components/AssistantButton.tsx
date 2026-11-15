@@ -1,8 +1,9 @@
-import { ComponentRef, useRef } from 'react';
+import { ComponentRef, useEffect, useRef } from 'react';
 import { Pressable, View } from 'react-native';
 import { t } from '../i18n';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles } from '../ui/theme';
+import { registerAssistantButton } from './AssistantIntro';
 import { HoldHandlers } from './PushToTalk';
 import { useHoldGesture, useScreenReader } from './useHoldGesture';
 
@@ -33,6 +34,15 @@ export function AssistantButton({ open, running, unseen, onPress, hold, holdActi
 
   const measure = (then: (anchor: { x: number; y: number; width: number; height: number }) => void) =>
     ref.current?.measureInWindow((x, y, width, height) => then({ x, y, width, height }));
+
+  // The first-run introduction (AssistantIntro) highlights this button where it is.
+  useEffect(
+    () =>
+      registerAssistantButton((then) =>
+        ref.current?.measureInWindow((x, y, width, height) => then({ x, y, width, height })),
+      ),
+    [],
+  );
 
   const gesture = useHoldGesture(canHold, {
     pressIn: () => hold?.pressIn(),

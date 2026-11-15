@@ -13,7 +13,7 @@
       },
       "infoPlist": {
         "CFBundleAllowMixedLocalizations": true,
-        "NSCalendarsFullAccessUsageDescription": "Qutai reads your calendar only when you ask the assistant about your schedule and confirm, and sends the events in the range you approved to your AI provider.",
+        "NSCalendarsFullAccessUsageDescription": "Qutai lists your calendars so you can choose where new events go, and reads your events only when you ask the assistant about your schedule and confirm; it sends the events in the range you approved to your AI provider.",
         "NSLocalNetworkUsageDescription": "Qutai connects to an AI server on your local network only when you set one up as your custom AI endpoint.",
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false,
@@ -173,9 +173,9 @@
         "expo-calendar",
         {
           "writeOnlyAccess": true,
-          "calendarPermission": "Qutai adds events you confirm, such as tickets and reservations, to your calendar, and reads it only when you ask the assistant about your schedule and confirm.",
+          "calendarPermission": "Qutai adds events you confirm, such as tickets and reservations, to the calendar you choose, and reads your events only when you ask the assistant about your schedule and confirm.",
           "writeOnlyCalendarPermission": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",
-          "remindersPermission": "Qutai adds reminders you confirm to your Reminders."
+          "remindersPermission": "Qutai adds reminders you confirm to the Reminders list you choose."
         }
       ],
       [
@@ -187,7 +187,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Qutai shows your position to the sites you allow, such as maps, and to the assistant when you ask it to use your location.",
+          "locationWhenInUsePermission": "Qutai shows your position to the sites you allow, such as maps, and to the assistant when you ask it to use your location. In setup it can fill in where you live when you tap to do so.",
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,
           "locationFullAccuracyPermission": false,

@@ -1688,4 +1688,64 @@ export const tr: Record<keyof typeof en, string> = {
   'account.error.noGoogleAccount': 'Bu telefonda Google hesabı bulunamadı. Telefonun ayarlarından bir hesap ekleyip yeniden deneyin.',
   'account.error.providerFailed': 'Oturum açma tamamlanamadı. Lütfen yeniden deneyin.',
   'account.error.unexpected': 'Bir sorun oluştu. Lütfen yeniden deneyin.',
+  'permissions.title': 'Qutai’nin kullanabilecekleri',
+  'permissions.lead':
+    'Asistan telefonunuzun bu bölümleriyle çalışabilir. Hepsi isteğe bağlıdır: şimdi istediklerinizi açın, telefon onaylamanızı ister. Kapalı bıraktıklarınız yalnızca ilk gerektiğinde sorulur.',
+  'permissions.later': 'Bunları istediğiniz zaman telefonun ayarlarında Qutai’den değiştirebilirsiniz.',
+  'permissions.location': 'Konum',
+  'permissions.locationBody':
+    'Bulunduğunuz yerle ilgili şeyleri göstermek için. Asistan siz istediğinizde, bir site de yalnızca o siteye izin verdiğinizde kullanır.',
+  'permissions.calendar': 'Takvim',
+  'permissions.calendarBody':
+    'Takviminizi yönetmek ve randevularınızla çalışmak için: onayladığınız etkinlikler seçtiğiniz takvime eklenir, etkinlikleriniz yalnızca programınızı sorduğunuzda okunur.',
+  'permissions.reminders': 'Anımsatıcılar',
+  'permissions.remindersBody': 'Onayladığınız anımsatıcıları seçtiğiniz Anımsatıcılar listesine eklemek için.',
+  'permissions.notifications': 'Bildirimler',
+  'permissions.notificationsBody':
+    'İstediğiniz saatte size hatırlatmak için: asistanın kurduğu hatırlatmalar ve zamanladığınız görevler.',
+  'permissions.notificationsBodyAndroid':
+    'İstediğiniz saatte size hatırlatmak, indirmeleri ve arka planda çalışan görevleri göstermek için.',
+  'permissions.allowed': 'İzin verildi',
+  'permissions.calendarLimited': 'Etkinlikler yalnızca varsayılan takvime eklenebilir. Tam erişim için açın.',
+  'permissions.denied': 'İzin verilmedi. Qutai ilk gerektiğinde yeniden sorar.',
+  'permissions.blocked': 'İzin verilmedi. Bunu artık yalnızca telefonun ayarları değiştirebilir.',
+  'permissions.unavailable': 'Qutai’nin bu sürümünde yok.',
+  'permissions.chooseCalendar': 'Takvimi seçin',
+  'calendarChoice.title': 'Asistanın takvimi',
+  'calendarChoice.eventsLabel': 'Yeni etkinliklerin ekleneceği yer',
+  'calendarChoice.remindersLabel': 'Yeni anımsatıcıların ekleneceği yer',
+  'calendarChoice.automatic': 'Otomatik',
+  'calendarChoice.automaticIos': 'Telefonun ayarlarındaki varsayılan takvim',
+  'calendarChoice.automaticAndroid': 'Hesabınızın ana takvimi',
+  'calendarChoice.automaticReminders': 'Telefonun ayarlarındaki varsayılan liste',
+  'calendarChoice.none':
+    'Bu telefonda yeni etkinlik eklenebilecek bir takvim bulunamadı. Telefonun ayarlarından takvimi olan bir hesap (örneğin Google hesabınızı) ekleyin.',
+  'calendarChoice.noLists': 'Bu telefonda yeni anımsatıcı eklenebilecek bir Anımsatıcılar listesi bulunamadı.',
+  'calendarChoice.needsAccess': 'Takvimlerinizi burada göstermek için Qutai’nin takviminize erişmesi gerekiyor.',
+  'calendarChoice.writeOnly':
+    'Qutai etkinlikleri varsayılan takviminize ekleyebilir. Başka bir takvim seçmek için tam takvim erişimine izin verin.',
+  'calendarChoice.remindersNeedAccess':
+    'Anımsatıcılar listelerinizi burada göstermek için Qutai’nin anımsatıcılarınıza erişmesi gerekiyor.',
+  'calendarChoice.unavailable': 'Qutai’nin bu sürümünde takvim yok.',
+  'calendarChoice.allow': 'Erişime izin ver',
+  'calendarChoice.footer':
+    'Yalnızca bu telefonda geçerlidir. Seçilen takvim kaldırılırsa etkinlikler otomatik olana eklenir ve asistan size söyler.',
+  'settings.calendarChoice': 'Asistanın takvimi',
+  'settings.assistantIntro': 'Qutai düğmesi tanıtımını göster',
+  'intro.title': 'Asistanınız burada',
+  'intro.tap': 'Asistanı açmak için Qutai düğmesine dokunun: sayfayı sorun, bir görev verin ya da sohbet edin.',
+  'intro.hold': 'Hemen konuşmaya başlamak için basılı tutun. Göndermek için parmağınızı kaldırın, iptal için kaydırın.',
+  'intro.holdScreenReader': 'Konuşmak için düğmenin “Sesli mesaj başlat” eylemini kullanın.',
+  'intro.gotIt': 'Anladım',
+  'profile.useLocation': 'Konumumu kullan',
+  'profile.locationBusy': 'Bulunduğunuz yer aranıyor…',
+  'profile.locationDenied': 'Konuma izin verilmedi. Bunun yerine yazabilirsiniz.',
+  'profile.locationOff': 'Telefonda konum kapalı. Bunun yerine yazabilirsiniz.',
+  'profile.locationTimeout': 'Konumunuz zamanında alınamadı. Açık havada yeniden deneyin ya da yazın.',
+  'profile.locationFailed': 'Burası için bir yer adı bulunamadı. Bunun yerine yazabilirsiniz.',
+  'profile.locationUnavailable': 'Qutai’nin bu sürümünde konum yok. Bunun yerine yazabilirsiniz.',
+  'profile.locationPrivacyAndroid':
+    'Yer adını bulmak için yaklaşık konumunuz telefonun adres hizmetine (çoğu Android telefonda Google’ınkine) gönderilir. Yalnızca alandaki metin, siz devam ettiğinizde saklanır.',
+  'profile.locationPrivacyIos':
+    'Yer adını bulmak için yaklaşık konumunuz Apple’ın adres hizmetine gönderilir. Yalnızca alandaki metin, siz devam ettiğinizde saklanır.',
 };

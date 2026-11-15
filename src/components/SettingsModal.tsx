@@ -28,6 +28,7 @@ import { AccountScreen } from './AccountScreen';
 import { ActionLogScreen } from './ActionLogScreen';
 import { SentLogScreen } from './SentLogScreen';
 import { BackupScreen } from './BackupScreen';
+import { CalendarChoiceScreen } from './CalendarChoiceScreen';
 import { AiChoice, aiChoiceProblem, AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { LegalScreen } from './LegalScreen';
@@ -50,6 +51,8 @@ type Props = {
   onRunTask: (task: SavedTask) => void;
   /** The tab on screen is incognito: the memory questions are not offered from there. */
   incognitoActive: boolean;
+  /** "Show the Qutai button tour": Settings closes and the first-run introduction shows again. */
+  onShowAssistantIntro: () => void;
 };
 
 type Page = 'main' | 'account' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'backup' | 'about';
@@ -95,6 +98,7 @@ function SettingsPages({
   onClearData,
   onRunTask,
   incognitoActive,
+  onShowAssistantIntro,
   back,
 }: Omit<Props, 'visible'> & { back: BackRoute }) {
   const styles = useStyles();
@@ -111,6 +115,7 @@ function SettingsPages({
   const [clearDataVisible, setClearDataVisible] = useState(false);
   const [legal, setLegal] = useState<LegalKind | null>(null);
   const [licencesVisible, setLicencesVisible] = useState(false);
+  const [calendarVisible, setCalendarVisible] = useState(false);
   const [backupJob, setBackupJob] = useState<'export' | Uint8Array | null>(null);
   const account = useAccountState();
 
@@ -362,6 +367,10 @@ function SettingsPages({
                 onChange={(voiceHoldToTalk) => set({ voiceHoldToTalk })}
               />
             ) : null}
+            {settings.showAssistantButton && (
+              <LinkRow label={t('settings.assistantIntro')} onPress={onShowAssistantIntro} />
+            )}
+            <LinkRow label={t('settings.calendarChoice')} onPress={() => setCalendarVisible(true)} />
             <LinkRow label={t('settings.manageMemory')} onPress={() => setMemoryVisible(true)} />
             <LinkRow label={t('settings.savedTasks')} onPress={() => setTasksVisible(true)} />
             <LinkRow label={t('settings.actionLog')} onPress={() => setActionLogVisible(true)} />
@@ -548,6 +557,7 @@ function SettingsPages({
       </KeyboardAwareScrollView>
       <LegalScreen kind={legal} onClose={() => setLegal(null)} />
       <LicencesScreen visible={licencesVisible} onClose={() => setLicencesVisible(false)} />
+      <CalendarChoiceScreen visible={calendarVisible} onClose={() => setCalendarVisible(false)} />
       <MemoryScreen
         visible={memoryVisible}
         onClose={() => setMemoryVisible(false)}

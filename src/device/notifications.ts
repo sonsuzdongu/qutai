@@ -96,3 +96,15 @@ export async function ensureNotificationPermission(): Promise<'granted' | 'denie
   if (allowed(Notifications, status)) return 'granted';
   return status.canAskAgain ? 'denied' : 'blocked';
 }
+
+/**
+ * The notification permission without asking. 'undetermined': iOS has not asked yet. Android 13+ reports a permission
+ * it has not asked for as denied but askable, so 'denied' there can also mean "not asked yet".
+ */
+export async function notificationPermissionState(): Promise<'granted' | 'undetermined' | 'denied' | 'blocked'> {
+  const Notifications = await load();
+  const status = await Notifications.getPermissionsAsync();
+  if (allowed(Notifications, status)) return 'granted';
+  if (status.status === 'undetermined') return 'undetermined';
+  return status.canAskAgain ? 'denied' : 'blocked';
+}

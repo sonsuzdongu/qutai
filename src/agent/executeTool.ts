@@ -597,12 +597,12 @@ async function schedulingTool(name: SchedulingTool, input: Record<string, unknow
     return { content: 'The user declined this. Ask them how to proceed.', isError: true };
   try {
     if (plan.kind === 'event') {
-      const calendar = await addCalendarEvent(plan);
-      return { content: `Added the event to the calendar "${calendar}".`, isError: false };
+      const { calendar, note } = await addCalendarEvent(plan);
+      return { content: `Added the event to the calendar "${calendar}".${note}`, isError: false };
     }
     if (plan.kind === 'reminder') {
       const where = await addReminder(plan);
-      return { content: `Added the reminder to ${where}.`, isError: false };
+      return { content: `Added the reminder to ${where}`, isError: false };
     }
     await scheduleNotification(plan);
     return { content: 'Scheduled the notification. Qutai will show it at that time.', isError: false };

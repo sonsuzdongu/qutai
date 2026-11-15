@@ -59,6 +59,8 @@ import { KeyboardAvoidingContainer } from './src/components/KeyboardAware';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
 import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
 import { SettingsModal } from './src/components/SettingsModal';
+import { AssistantIntro, assistantIntroSeen, setAssistantIntroSeen } from './src/components/AssistantIntro';
+import { CalendarChoiceHost } from './src/components/CalendarChoiceScreen';
 import { SelectionAction, SelectionBar } from './src/components/SelectionBar';
 import { TabSwitcher } from './src/components/TabSwitcher';
 import { TextSizeSheet } from './src/components/TextSizeSheet';
@@ -495,6 +497,20 @@ function BrowserApp({
     else browser.openTab();
   };
   const [settingsVisible, setSettingsVisible] = useState(false);
+  // The first-run introduction to the Qutai button (once; Settings › Assistant shows it again).
+  const [introPending, setIntroPending] = useState(false);
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    assistantIntroSeen().then((seen) => {
+      // A moment after the browser appears, so the address bar is laid out.
+      if (!seen) timer = setTimeout(() => setIntroPending(true), 700);
+    });
+    return () => clearTimeout(timer);
+  }, []);
+  const dismissIntro = useCallback(() => {
+    setIntroPending(false);
+    setAssistantIntroSeen(true).catch(() => {});
+  }, []);
   /** "What was sent to the AI" opened from the assistant panel, for this conversation key. */
   const [sentFor, setSentFor] = useState<string | null>(null);
   /** The conversation whose model is being chosen (the sheet under the panel's title). */
@@ -2084,6 +2100,11 @@ function BrowserApp({
             onClose={() => setSettingsVisible(false)}
             onRunTask={runSavedTask}
             incognitoActive={browser.active.incognito}
+            onShowAssistantIntro={() => {
+              setSettingsVisible(false);
+              setAssistantIntroSeen(false).catch(() => {});
+              setIntroPending(true);
+            }}
           />
           <ContextMenuSheet
             target={context?.target ?? null}
@@ -2258,6 +2279,15 @@ function BrowserApp({
             onSend={ptt.handlers.release}
             onCancel={ptt.handlers.cancel}
             onDismiss={ptt.dismiss}
+          />
+          <CalendarChoiceHost />
+          <AssistantIntro
+            // Waits while something else is in front: the panel, Settings, the tab switcher, the app lock.
+            visible={introPending && settings.showAssistantButton && !panelOpen && !settingsVisible && !tabsVisible && !lock}
+            holdToTalk={settings.voiceHoldToTalk}
+            barAtBottom={barAtBottom}
+            onOpenAssistant={() => setPanelOpen(true)}
+            onDismiss={dismissIntro}
           />
           <Toast key={toast.key} message={toast.message} action={toast.action} onHidden={toast.hide} />
           <DialogHost root />

@@ -300,7 +300,7 @@ added: `expo-calendar`, `expo-notifications`, `expo-document-picker`, `expo-loca
 first development builds. An older build still starts: the calendar, reminder and notification tools, location (for
 sites and the assistant), bookmark import and backup export and import say that a newer build is needed.
 
-On first launch the setup asks for a provider and API key; later, change them in Settings › Assistant (or the gear in the Qutai panel, opened with the Q logo in the address bar):
+On first launch the setup asks for a provider and API key; later, change them in Settings › Assistant (or the gear in the Qutai panel, opened with the Q logo in the address bar). After setup, a one-time tour dims the browser around the Qutai button and says that a tap opens the assistant and holding it talks (`src/components/AssistantIntro.tsx`; Settings › Assistant › "Show the Qutai button tour" shows it again). Settings › Assistant › "Calendar for the assistant" chooses which calendar the assistant adds events to (and on iOS the Reminders list); see [docs/permissions.md](docs/permissions.md).
 
 | Provider | API | Key |
 |---|---|---|
@@ -510,8 +510,11 @@ and streaming stays off until the app restarts.
 
 ## Permissions
 
-Each permission is asked for the first time a feature needs it, never at launch: camera (QR codes, photos for
-upload fields), add-only Photos (saving screenshots and images), Face ID, write-only calendar and reminders (full calendar access only when the assistant first reads it), location
+Nothing is asked at launch. The first-run setup has an optional step, "What Qutai may use", with a switch per
+permission the assistant can use (location, calendar, Reminders on iOS, notifications) and what each is for; a switch
+asks the system only when the user turns it on and then shows the real state (with "Open settings" when refused for
+good). Whatever is left off is asked the first time a feature needs it: camera (QR codes, photos for
+upload fields), add-only Photos (saving screenshots and images), Face ID, write-only calendar and reminders (full calendar access when the assistant first reads it, or from setup or the calendar chooser to choose a calendar), location
 while in use (per-site), local notifications, camera and microphone for sites you allow (per site, each asked separately), microphone and (iOS)
 speech recognition on the first tap of the panel's microphone button. The full list per platform, with
 the feature, when the user is asked, the config line that declares it and what is blocked, is in

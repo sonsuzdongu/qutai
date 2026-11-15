@@ -28,11 +28,13 @@ import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { KeyboardAwareScrollView } from './KeyboardAware';
+import { DialogHost } from './Dialog';
+import { PermissionsStep } from './PermissionsStep';
 import { ProfileQuestions } from './ProfileQuestions';
 import { LegalScreen } from './LegalScreen';
 
-type Step = 'welcome' | 'legal' | 'ai' | 'profile' | 'background' | 'protection' | 'browser';
-const ALL_STEPS: Step[] = ['welcome', 'legal', 'ai', 'profile', 'background', 'protection', 'browser'];
+type Step = 'welcome' | 'legal' | 'ai' | 'permissions' | 'profile' | 'background' | 'protection' | 'browser';
+const ALL_STEPS: Step[] = ['welcome', 'legal', 'ai', 'permissions', 'profile', 'background', 'protection', 'browser'];
 
 type Props = {
   settings: Settings;
@@ -43,7 +45,8 @@ type Props = {
 
 /**
  * First-run setup: what Qutai is, privacy policy and terms (must be accepted), the AI provider and
- * key (can be skipped), "Let me get to know you" (optional, only with memory on; ProfileQuestions),
+ * key (can be skipped), the phone permissions the assistant can use (each optional, asked only when its switch is
+ * turned on; PermissionsStep), "Let me get to know you" (optional, only with memory on; ProfileQuestions),
  * whether tasks keep working in the background (Android, with a build that has it; turning it on asks for
  * notifications), protection against ads and trackers, and making Qutai the default browser.
  */
@@ -277,6 +280,17 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                     </>
                   )}
 
+                  {step === 'permissions' && (
+                    <>
+                      <Text style={styles.title} accessibilityRole="header">
+                        {t('permissions.title')}
+                      </Text>
+                      <Text style={styles.lead}>{t('permissions.lead')}</Text>
+                      <PermissionsStep />
+                      <Text style={styles.hint}>{t('permissions.later')}</Text>
+                    </>
+                  )}
+
                   {step === 'background' && (
                     <>
                       <Text style={styles.title} accessibilityRole="header">
@@ -396,6 +410,8 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
         style={[StyleSheet.absoluteFill, blurStyle]}
       />
       <LegalScreen kind={reading} onClose={() => setReading(null)} />
+      {/* The browser's root host isn't mounted during setup; the questions' and settings' dialogs show here. */}
+      <DialogHost root />
     </View>
   );
 }
