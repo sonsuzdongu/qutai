@@ -5,10 +5,10 @@ import { getLanguage, t } from '../i18n';
 /**
  * Which language voice input listens in. In this order, the first the phone's recogniser offers wins
  * (voiceInput.ts skips the others and says so):
- * 1. a language picked by hand for this conversation (the panel's language tag, or a long press on its microphone);
+ * 1. a language picked by hand for this conversation (the panel's language tag while listening);
  * 2. the "Listening language" setting, when it isn't Automatic;
- * 3. the language the user has been writing in this conversation (their own messages, never the assistant's), from
- *    messageLanguage.ts: a guess made on the phone, which keeps its previous answer unless the messages clearly differ;
+ * 3. the language of the user's latest message in this conversation that clearly has one (their own messages, never
+ *    the assistant's), from messageLanguage.ts: a guess made on the phone, so each message sets the next listening;
  * 4. the language voice input was last used in;
  * 5. the app's language.
  */
@@ -95,11 +95,9 @@ export function userTexts(chat: Conversation): string[] {
   return chat.draft.trim() ? [...texts, chat.draft] : texts;
 }
 
-/** The language the user writes in this conversation (updates the conversation's memory of it), or null. */
+/** The language the user writes in now in this conversation, or null. */
 export function writingLanguage(chat: Conversation): string | null {
-  const { language } = detectWritingLanguage(userTexts(chat), chat.heardLanguage);
-  chat.heardLanguage = language;
-  return language;
+  return detectWritingLanguage(userTexts(chat));
 }
 
 /** The languages to try, best first, one per language (see the order above). */
@@ -129,7 +127,5 @@ export function automaticLanguage(
   settings: { voiceLanguage: string; voiceLastLanguage: string },
 ): string {
   if (settings.voiceLanguage !== AUTO_LANGUAGE) return settings.voiceLanguage;
-  return (
-    detectWritingLanguage(userTexts(chat), chat.heardLanguage).language || settings.voiceLastLanguage || getLanguage()
-  );
+  return writingLanguage(chat) || settings.voiceLastLanguage || getLanguage();
 }

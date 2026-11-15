@@ -1556,6 +1556,7 @@ export const en = {
   'settings.version': 'Version {version} (build {build})',
   'voice.title': 'Voice input',
   'voice.start': 'Speak your message',
+  'voice.holdHint': 'Hold to talk and lift your finger to stop, or tap to start and tap again to stop.',
   'voice.startHint': 'Turns what you say into text in the message box. Nothing is sent until you tap send.',
   'voice.stop': 'Stop listening',
   'voice.listening': 'Listening…',
@@ -1563,7 +1564,7 @@ export const en = {
   'voice.language.en': 'English',
   'voice.language.tr': 'Turkish',
   'voice.languageUnavailable':
-    'Speech recognition in {language} isn’t available on this phone. You can add it in your phone’s keyboard or speech settings, or pick another listening language with a long press on the microphone.',
+    'Speech recognition in {language} isn’t available on this phone. You can add it in your phone’s keyboard or speech settings, or pick another listening language with the language tag next to the microphone while listening.',
   'voice.unavailableIos': 'Speech recognition is off on this iPhone. Turn on Dictation in Settings › General › Keyboard, then try again.',
   'voice.unavailableAndroid':
     'This phone has no speech recognition service turned on. Install or turn on Google’s “Speech Recognition & Synthesis” app, then try again.',
@@ -1623,7 +1624,7 @@ export const en = {
     'Hold the Q button in the address bar, speak, and lift your finger: the message goes to this tab’s conversation without opening the panel. What is heard shows next to the button; slide away to cancel.',
   'settings.voiceLanguageAuto': 'Automatic (follows the conversation)',
   'settings.voiceLanguageHint':
-    'Automatic listens in the language you have been writing in that conversation, so an English phone hears Turkish when you chat in Turkish. A language picked in a conversation (long-press its microphone) wins there.',
+    'Automatic listens in the language of your last message in that conversation, typed or spoken, so an English phone hears Turkish when you chat in Turkish. A language picked in a conversation (the language tag next to the microphone while listening) wins there.',
   'settings.voiceAutoSend': 'Send automatically after speaking',
   'settings.voiceAutoSendHint': 'Off: what you say waits in the message box so you can check it and tap send.',
   'settings.voiceOnline': 'Use the phone’s online speech service',

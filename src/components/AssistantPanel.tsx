@@ -53,6 +53,8 @@ import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { bump, tick } from '../device/haptics';
 import { ActionSheet, SheetAction } from './ActionSheet';
+import { FINAL_WAIT_MS } from './PushToTalk';
+import { useHoldGesture, useScreenReader } from './useHoldGesture';
 
 export type ChatItem = {
   id: string;
@@ -306,12 +308,14 @@ export function AssistantPanel({
       );
   }, [fellBackFrom, voiceInfo.lang, notifyVoice]);
 
-  const startListening = (draft: string) => {
+  /** `hold`: the microphone is held down, so listening goes on through pauses until the finger is lifted. */
+  const startListening = (draft: string, hold = false) => {
     // Bound to this conversation: if the user switches tabs, the words still land in this draft.
     const write = setText;
     void startVoiceInput({
       languages: voice.languages(),
       owner: 'panel',
+      hold,
       onStarted: voice.onStarted,
       incognito: voice.incognito,
       online: voice.online,
@@ -332,6 +336,19 @@ export function AssistantPanel({
     });
   };
   const toggleVoice = () => (listening ? stopVoiceInput(false) : startListening(text));
+  /**
+   * Holding the microphone: listens while it is held, like holding the Qutai button in the address bar, and lifting
+   * the finger stops (sent when "Send automatically after speaking" is on). Sliding away before lifting stops without
+   * sending; the words stay in the field. A hold on a microphone already listening (after a tap) stops it on release.
+   */
+  const holdVoice = {
+    start: () => {
+      bump();
+      if (!listening) startListening(text, true);
+    },
+    release: (away: boolean) => stopVoiceInput(away, FINAL_WAIT_MS),
+    cancel: () => stopVoiceInput(),
+  };
 
   /** A language picked while listening: listening starts again in it, after the words heard so far. */
   const pickLanguage = (language: string | null) => {
@@ -674,7 +691,8 @@ export function AssistantPanel({
                 <MicButton
                   state={voiceState}
                   onPress={toggleVoice}
-                  onLongPress={() => setLanguageSheet(true)}
+                  hold={holdVoice}
+                  onLanguage={() => setLanguageSheet(true)}
                   reduceMotion={reduceMotion}
                 />
                 {running ? (
@@ -800,26 +818,44 @@ function EmptyState({
 }
 
 /**
- * The microphone: tap to talk, tap again to stop (a pause also stops it). While listening it is
- * filled, and a ring grows with the voice's loudness (still, without the ring moving, under Reduce motion).
+ * The microphone: hold to talk and lift to stop, or tap to talk and tap again to stop (a pause also stops it). The
+ * hold is the address bar's gesture (useHoldGesture.ts); with a screen reader on there is only the tap. While
+ * listening it is filled, and a ring grows with the voice's loudness (still, without the ring moving, under Reduce
+ * motion).
  */
 function MicButton({
   state,
   onPress,
-  onLongPress,
+  hold,
+  onLanguage,
   reduceMotion,
 }: {
   state: VoiceState;
   onPress: () => void;
-  /** Opens the listening-language picker. */
-  onLongPress: () => void;
+  hold: { start: () => void; release: (away: boolean) => void; cancel: () => void };
+  /** Opens the listening-language picker (a screen reader's action; the TR/EN tag while listening). */
+  onLanguage: () => void;
   reduceMotion: boolean;
 }) {
   const styles = useStyles();
   const d = useContext(PanelTheme);
   const palette = usePalette();
   const level = useVoiceLevel();
+  const screenReader = useScreenReader();
   const [scale] = useState(() => new Animated.Value(1));
+  const away = useRef(false);
+  const gesture = useHoldGesture(!screenReader, {
+    start: () => {
+      away.current = false;
+      hold.start();
+    },
+    move: (far) => {
+      away.current = far;
+      tick();
+    },
+    release: () => hold.release(away.current),
+    cancel: hold.cancel,
+  });
   const on = state === 'listening';
   useEffect(() => {
     Animated.timing(scale, {
@@ -830,26 +866,34 @@ function MicButton({
   }, [on, level, reduceMotion, scale]);
   const active = state !== 'idle';
   return (
-    <Pressable
-      onPress={onPress}
-      onLongPress={onLongPress}
-      // 40pt drawn, 44pt to touch.
-      hitSlop={2}
-      style={styles.micWrap}
-      accessibilityRole="button"
-      accessibilityLabel={t(active ? 'voice.stop' : 'voice.start')}
-      accessibilityHint={active ? undefined : t('voice.startHint')}
-      accessibilityState={{ busy: state === 'preparing' || state === 'stopping', selected: active }}
-      accessibilityActions={[{ name: 'longpress', label: t('voice.languageTitle') }]}
-      onAccessibilityAction={(e) => {
-        if (e.nativeEvent.actionName === 'longpress') onLongPress();
-      }}
-    >
-      {on ? <Animated.View style={[styles.micRing, { transform: [{ scale }] }]} /> : null}
-      <View style={[styles.micButton, d?.micButton, active && styles.micOn, !on && active && styles.micPending]}>
-        <Icon name="microphone" size={19} color={active ? '#ffffff' : palette.textSecondary} />
-      </View>
-    </Pressable>
+    <View {...gesture.touch}>
+      <Pressable
+        onPress={() => {
+          // The lift that ends a hold is not a tap.
+          if (gesture.held()) return;
+          gesture.clear();
+          onPress();
+        }}
+        // Once holding, nothing else can take the touch away.
+        cancelable={!gesture.holding}
+        // 40pt drawn, 44pt to touch.
+        hitSlop={2}
+        style={styles.micWrap}
+        accessibilityRole="button"
+        accessibilityLabel={t(active ? 'voice.stop' : 'voice.start')}
+        accessibilityHint={active ? undefined : t(screenReader ? 'voice.startHint' : 'voice.holdHint')}
+        accessibilityState={{ busy: state === 'preparing' || state === 'stopping', selected: active }}
+        accessibilityActions={[{ name: 'longpress', label: t('voice.languageTitle') }]}
+        onAccessibilityAction={(e) => {
+          if (e.nativeEvent.actionName === 'longpress') onLanguage();
+        }}
+      >
+        {on ? <Animated.View style={[styles.micRing, { transform: [{ scale }] }]} /> : null}
+        <View style={[styles.micButton, d?.micButton, active && styles.micOn, !on && active && styles.micPending]}>
+          <Icon name="microphone" size={19} color={active ? '#ffffff' : palette.textSecondary} />
+        </View>
+      </Pressable>
+    </View>
   );
 }
 

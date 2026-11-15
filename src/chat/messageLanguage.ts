@@ -1,6 +1,6 @@
 /**
- * Which language the user has been writing in, from their own recent messages: a small, conservative guess made on
- * the phone (no AI request), used to pick the voice-input language. Pure: no React Native imports.
+ * Which language the user is writing in, from their own messages: a small guess made on the phone (no AI request),
+ * used to pick the voice-input language. Pure: no React Native imports.
  *
  * Signals, per language (see PROFILES; adding a language is adding a profile):
  * - letters only that language uses (Turkish ç ğ ı İ ş ö ü): the strongest signal, 1.5 points per word that has them;
@@ -10,9 +10,9 @@
  * What says nothing about the writer's language is removed first: URLs, e-mail addresses, numbers, code, text in
  * quotation marks (usually copied from a page), and names (capitalised words inside a sentence, CamelCase, ACRONYMS).
  *
- * The last few messages count, the newest most; each message's weight is capped so one long paste can't decide alone.
- * Switching away from the current guess needs a clear margin (hysteresis): one English product name in a Turkish
- * conversation changes nothing, and a message without any signal changes nothing.
+ * Each message is judged on its own and the latest one with a clear language decides, so the language follows the
+ * conversation message by message. A message needs some evidence and a clear lead to count: one English product name
+ * in a Turkish message changes nothing, and a message without any signal ("ok", a link) keeps the previous answer.
  */
 
 export type LanguageProfile = {
@@ -67,17 +67,12 @@ export const PROFILES: LanguageProfile[] = [
   },
 ];
 
-/** How many of the user's latest messages count, and how much less each older one weighs. */
-const RECENT = 5;
-const DECAY = 0.6;
-/** One message adds at most this much to a language (a long paste can't decide alone). */
+/** One message adds at most this much to a language (a long paste weighs no more than a few sentences). */
 const MESSAGE_CAP = 5;
-/** Below this, there is no signal at all. */
+/** Below this, a message has no signal at all. */
 const MIN_EVIDENCE = 1.5;
-/** Lead needed when there is no current choice yet. */
-const FIRST_MARGIN = 1.5;
-/** Lead over the current choice needed to switch away from it (hysteresis). */
-const SWITCH_MARGIN = 2.5;
+/** Lead over the second language a message needs to count as written in the first. */
+const MIN_LEAD = 1.5;
 
 const URL = /\b(?:https?:\/\/|www\.)\S+|\b[\w.-]+@[\w-]+\.[\w.]+|\b[\w-]+(?:\.[\w-]+)*\.(?:com|net|org|io|dev|app|ai|co|tr|uk|de|edu|gov|info|me|tv)(?:\/\S*)?\b/gi;
 const CODE = /```[\s\S]*?```|`[^`]*`/g;
@@ -165,33 +160,26 @@ export function scoreMessage(text: string): Record<string, number> {
   return scores;
 }
 
-export type Detection = {
-  /** The language to use: the current one unless the messages clearly say otherwise; null when nothing is known. */
-  language: string | null;
-  /** The weighted points behind it, for testing. */
-  scores: Record<string, number>;
-};
+/** The language one message is clearly written in, or null (too short, mixed, or only names, links and numbers). */
+export function messageLanguage(text: string): string | null {
+  const ranked = Object.entries(scoreMessage(text))
+    .map(([code, points]) => [code, Math.min(points, MESSAGE_CAP)] as const)
+    .sort((a, b) => b[1] - a[1]);
+  const [top, second] = ranked;
+  if (!top || top[1] < MIN_EVIDENCE) return null;
+  return top[1] - (second?.[1] ?? 0) >= MIN_LEAD ? top[0] : null;
+}
 
 /**
- * The language the user writes in, from their messages (oldest first, as in the conversation) and the current
- * choice (the last result for this conversation, or null). Conservative: keeps `current` unless another language
- * leads it by a clear margin.
+ * The language the user writes in now, from their messages (oldest first, as in the conversation): the language of
+ * the latest message that clearly has one, so each message the user sends (typed or spoken) sets the language for
+ * the next listening. Messages without a clear language ("ok", a link, a product name) keep the one before. Null
+ * when no message says.
  */
-export function detectWritingLanguage(messages: string[], current: string | null): Detection {
-  const recent = messages.slice(-RECENT).reverse();
-  const totals: Record<string, number> = {};
-  recent.forEach((text, i) => {
-    const weight = DECAY ** i;
-    for (const [code, points] of Object.entries(scoreMessage(text))) {
-      totals[code] = (totals[code] ?? 0) + weight * Math.min(points, MESSAGE_CAP);
-    }
-  });
-  const ranked = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-  const [top, second] = ranked;
-  if (!top || top[1] < MIN_EVIDENCE) return { language: current, scores: totals };
-  const [code, points] = top;
-  if (code === current) return { language: current, scores: totals };
-  const rival = current ? (totals[current] ?? 0) : (second?.[1] ?? 0);
-  const margin = current ? SWITCH_MARGIN : FIRST_MARGIN;
-  return { language: points - rival >= margin ? code : current, scores: totals };
+export function detectWritingLanguage(messages: string[]): string | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const language = messageLanguage(messages[i]);
+    if (language) return language;
+  }
+  return null;
 }

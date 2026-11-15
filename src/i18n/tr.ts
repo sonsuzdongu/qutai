@@ -1562,6 +1562,7 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.version': 'Sürüm {version} (derleme {build})',
   'voice.title': 'Sesle yazma',
   'voice.start': 'Mesajınızı söyleyin',
+  'voice.holdHint': 'Konuşmak için basılı tutun, bitince parmağınızı kaldırın; ya da dokunarak başlatıp yeniden dokunarak durdurun.',
   'voice.startHint': 'Söylediklerinizi mesaj kutusuna yazıya döker. Siz gönder’e dokunana kadar hiçbir şey gönderilmez.',
   'voice.stop': 'Dinlemeyi durdur',
   'voice.listening': 'Dinliyor…',
@@ -1569,7 +1570,7 @@ export const tr: Record<keyof typeof en, string> = {
   'voice.language.en': 'İngilizce',
   'voice.language.tr': 'Türkçe',
   'voice.languageUnavailable':
-    'Bu telefonda {language} konuşma tanıma yok. Dili telefonunuzun klavye ya da konuşma ayarlarından ekleyebilir ya da mikrofona uzun basarak başka bir dinleme dili seçebilirsiniz.',
+    'Bu telefonda {language} konuşma tanıma yok. Dili telefonunuzun klavye ya da konuşma ayarlarından ekleyebilir ya da dinlerken mikrofonun yanındaki dil etiketinden başka bir dinleme dili seçebilirsiniz.',
   'voice.unavailableIos': 'Bu iPhone’da konuşma tanıma kapalı. Ayarlar › Genel › Klavye’den Dikte’yi açıp yeniden deneyin.',
   'voice.unavailableAndroid':
     'Bu telefonda açık bir konuşma tanıma hizmeti yok. Google’ın “Konuşma Tanıma ve Sentezleme” uygulamasını yükleyip açın, sonra yeniden deneyin.',
@@ -1629,7 +1630,7 @@ export const tr: Record<keyof typeof en, string> = {
     'Adres çubuğundaki Q düğmesini basılı tutup konuşun ve parmağınızı kaldırın: mesaj paneli açmadan bu sekmenin sohbetine gider. Duyulanlar düğmenin yanında görünür; iptal etmek için parmağınızı uzağa kaydırın.',
   'settings.voiceLanguageAuto': 'Otomatik (sohbeti izler)',
   'settings.voiceLanguageHint':
-    'Otomatik, o sohbette yazdığınız dilde dinler; telefon İngilizce olsa da Türkçe yazışıyorsanız Türkçe duyar. Bir sohbette seçilen dil (mikrofonuna uzun basın) orada önceliklidir.',
+    'Otomatik, o sohbetteki son mesajınızın (yazılı ya da sesli) dilinde dinler; telefon İngilizce olsa da Türkçe yazışıyorsanız Türkçe duyar. Bir sohbette seçilen dil (dinlerken mikrofonun yanındaki dil etiketi) orada önceliklidir.',
   'settings.voiceAutoSend': 'Konuşma bitince otomatik gönder',
   'settings.voiceAutoSendHint': 'Kapalıyken söyledikleriniz mesaj kutusunda bekler; kontrol edip gönder’e dokunursunuz.',
   'settings.voiceOnline': 'Telefonun çevrim içi konuşma hizmetini kullan',

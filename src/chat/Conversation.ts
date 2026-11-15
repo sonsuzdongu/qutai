@@ -117,11 +117,6 @@ export class Conversation {
   /** Voice input listens in this language in this conversation (picked by hand); null: chosen automatically. */
   voiceLanguage: string | null = null;
   /**
-   * The language the user's messages were last found to be in (voiceLanguage.ts), kept so one message in another
-   * language doesn't flip it. In memory only: worked out again from the messages after a restart.
-   */
-  heardLanguage: string | null = null;
-  /**
    * How the last task ended, while the user has not looked at the conversation since (it ended in another tab or
    * group, with the panel closed, or with Qutai in the background). Cleared once the conversation is shown.
    */
@@ -370,7 +365,6 @@ export class Conversation {
     this.turns = [];
     this.model = null;
     this.voiceLanguage = null;
-    this.heardLanguage = null;
     this.privacy = { touchedIncognito: false };
     this.onChange();
   }

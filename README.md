@@ -60,17 +60,21 @@ the chat is sent like any message.
 The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
 
 Voice input: the microphone button next to the message field turns speech into text with the phone's own speech
-recognition (`expo-speech-recognition`: iOS `SFSpeechRecognizer`, Android `SpeechRecognizer`). It listens in the
-language the user has been writing in that conversation, so an English phone hears Turkish in a Turkish chat
-(`src/chat/messageLanguage.ts`: a small on-phone guess from the user's own recent messages, never the assistant's,
-from Turkish letters, frequent words and endings, ignoring URLs, numbers, code, quotes and names, and slow to change
-its mind). The order is: a language picked in that conversation (the TR/EN tag next to the microphone while listening,
-or a long press on the microphone), the Settings › Assistant › "Listening language" default when it isn't Automatic,
+recognition (`expo-speech-recognition`: iOS `SFSpeechRecognizer`, Android `SpeechRecognizer`). Hold it to talk and
+lift the finger to stop (the same gesture as holding the Qutai button, `src/components/useHoldGesture.ts`; sliding
+away before lifting stops without sending), or tap it to start and tap again or pause to stop. It listens in the
+language of the user's last message in that conversation, typed or spoken, so an English phone hears Turkish in a
+Turkish chat (`src/chat/messageLanguage.ts`: a small on-phone guess per message from the user's own messages, never
+the assistant's, from Turkish letters, frequent words and endings, ignoring URLs, numbers, code, quotes and names; a
+message without a clear language keeps the one before). The recogniser needs the language before it starts, so the
+first sentence spoken in a new language may still be heard in the old one. The order is: a language picked in that
+conversation (the TR/EN tag next to the microphone while listening), the Settings › Assistant › "Listening language"
+default when it isn't Automatic,
 the conversation's language, the language last used, then the app's language, each mapped to the device's regional
 variant when it has one (`tr-TR`, `en-GB`); a language the phone's recogniser lacks is skipped and the user is told
 which one is used instead (`src/device/voiceLanguage.ts`). Words appear as they are recognised, are added to what is already
 typed and stay editable; nothing is sent until the user taps send (Settings › Assistant › "Send automatically after
-speaking" changes that). Tap again or pause to stop. Starting to talk stops read-aloud, and read-aloud never starts
+speaking" changes that; with it on, lifting the finger after a hold sends). Starting to talk stops read-aloud, and read-aloud never starts
 while the microphone is on. Recognition runs on the phone when it can (iOS on-device dictation for the language;
 Android 13+ with the language downloaded); otherwise the phone's speech service (Apple's or Google's) receives the
 audio, which Qutai explains and asks about once, before first use. Incognito conversations use on-device recognition
