@@ -382,6 +382,85 @@ export const tr: Record<keyof typeof en, string> = {
   'quick.compare': 'Sekmeleri karşılaştır',
   'quick.comparePrompt': 'Açık sekmelerimdeki sayfaları karşılaştır ve temel farkları kısa bir tabloda göster.',
 
+  // Boş asistan panelindeki öneriler; sayfanın türüne göre telefonda seçilir (agent/pageSuggestions.ts).
+  'suggest.title': 'Bu sayfa için',
+  'suggest.titleWeb': 'Şunları sorabilirsiniz',
+  'suggest.hint': 'Bunu asistana gönderir',
+  'suggest.explainSelection': 'Seçili metni açıkla',
+  'suggest.translateSelection': 'Seçili metni çevir',
+  'suggest.pageElsewhere': 'Bu sayfayı başka yoldan bul',
+  'suggest.pageElsewherePrompt':
+    '{url} adresindeki sayfa açılmadı. Aynı içeriği ya da onun için başka iyi bir kaynağı web’de ara ve aç.',
+  'suggest.bestResult': 'Hangi sonuç en uygun?',
+  'suggest.bestResultPrompt':
+    'Bu sayfadaki “{query}” için {engine} sonuçlarına bak ve hangi bir ya da iki sonucun en iyi yanıt verdiğini nedeniyle söyle. Sonuçları bu sayfadan oku; aramayı değiştirme.',
+  'suggest.searchDeeper': 'Bunu iyice araştır',
+  'suggest.searchDeeperPrompt':
+    '“{query}” konusunu benim için araştır: en yararlı kaynakları aç, ne dediklerini karşılaştır ve bağlantılarıyla kısa bir yanıt ver.',
+  'suggest.summarizePdf': 'Bu PDF’i özetle',
+  'suggest.summarizePdfPrompt': 'Bu sekmedeki PDF’i birkaç kısa paragrafta özetle.',
+  'suggest.keyPointsPdf': 'Bu PDF’in önemli noktaları',
+  'suggest.keyPointsPdfPrompt': 'Bu sekmedeki PDF’in önemli noktalarını sayfa numaralarıyla kısa maddeler halinde listele.',
+  'suggest.askPdf': 'Tarihleri, tutarları ve son günleri bul',
+  'suggest.askPdfPrompt':
+    'Bu sekmedeki PDF’i incele; önemli tarihleri, tutarları, son günleri ve yapmam gerekenleri sayfa numaralarıyla listele.',
+  'suggest.checkCart': 'Ödemeden önce sepetimi kontrol et',
+  'suggest.checkCartPrompt':
+    'Bu sayfadaki sepete ya da ödeme adımına bak: ürünleri, adetleri ve toplamı listele; ek ücretleri, eklenmiş ürünleri, abonelikleri ya da yanlış görünen her şeyi belirt. Hiçbir şeyi değiştirme ve siparişi verme.',
+  'suggest.goodBuy': 'Almaya değer mi?',
+  'suggest.cheaper': 'Daha ucuzunu bul',
+  'suggest.cheaperPrompt':
+    'Bu sayfadaki ürünü başka mağazalarda daha ucuza bul. Fiyatı, kargoyu ve satıcıyı karşılaştır, bağlantılarını ver. Hiçbir şey satın alma.',
+  'suggest.compareProducts': 'Diğer sekmelerimle karşılaştır',
+  'suggest.compareProductsPrompt':
+    'Bu sayfadaki ürünü diğer açık sekmelerimdeki ürünlerle karşılaştır: fiyat, temel özellikler, yorumlar. Kısa bir tablo göster ve hangisini neden seçeceğini söyle.',
+  'suggest.ingredients': 'Malzemeleri listele',
+  'suggest.ingredientsPrompt': 'Bu sayfadaki tarifin malzemelerini miktarlarıyla alışveriş listesi olarak yaz.',
+  'suggest.scaleRecipe': '2 kişilik yap',
+  'suggest.scaleRecipePrompt':
+    'Bu sayfadaki tarifi 2 kişiye göre yeniden yaz: malzemeleri yeni miktarlarıyla ve adımlarda değişen her şeyi.',
+  'suggest.aboutVideo': 'Bu video ne anlatıyor?',
+  'suggest.aboutVideoPrompt':
+    'Bu sayfadaki video ne anlatıyor? Sayfada varsa başlığına, açıklamasına, bölümlerine ve dökümüne ya da altyazısına bakarak birkaç cümleyle anlat.',
+  'suggest.addEvent': 'Bu etkinliği takvimime ekle',
+  'suggest.addEventPrompt':
+    'Bu sayfadaki etkinliği tarihi, saati ve yeriyle takvimime ekle. Eklemeden önce ayrıntıları bana göster.',
+  'suggest.jobRequirements': 'Bu iş ne istiyor?',
+  'suggest.jobRequirementsPrompt':
+    'Bu sayfadaki işi özetle: pozisyon, aranan şartlar, tercih sebepleri, varsa yer ve ücret, nasıl başvurulacağı.',
+  'suggest.jobFit': 'Bu iş bana uygun mu?',
+  'suggest.jobFitPrompt':
+    'Bu sayfadaki iş bana uygun mu? Şartlarını benim hakkımda bildiklerinle karşılaştır; neyin uyduğunu, neyin eksik olduğunu söyle.',
+  'suggest.call': 'Ara',
+  'suggest.callPrompt': 'Bu sayfadaki yerin telefon numarasını bul ve aramam için bir düğme ver.',
+  'suggest.directions': 'Buradan yol tarifi',
+  'suggest.directionsPrompt': 'Şu an bulunduğum yerden bu sayfadaki yere nasıl giderim? Yol tarifinin bağlantısını ver.',
+  'suggest.openingHours': 'Çalışma saatleri ve adres',
+  'suggest.openingHoursPrompt':
+    'Bu sayfadaki yerin çalışma saatleri ve adresi ne? Şu an açık mı, söyle.',
+  'suggest.fillForm': 'Bunu doldurmama yardım et',
+  'suggest.fillFormPrompt':
+    'Bu sayfadaki formu doldurmama yardım et. Bilmediğin her şeyi bana sor ve ben söyleyene kadar gönderme.',
+  'suggest.readAloud': 'Sesli oku',
+  'suggest.readAloudPrompt': 'Bu sayfadaki makaleyi sesli oku.',
+  'suggest.tableCsv': 'Bu tabloyu CSV olarak kaydet',
+  'suggest.tableCsvPrompt': 'Bu sayfadaki ana tabloyu CSV dosyası olarak kaydet. Birden çok tablo varsa en büyüğünü al.',
+  'suggest.compareGroup': 'Bu gruptaki sekmeleri karşılaştır',
+  'suggest.compareGroupPrompt': 'Bu sekme grubundaki sayfaları karşılaştır ve temel farkları kısa bir tabloda göster.',
+  'suggest.findImportant': 'Bu sayfada önemli olan ne?',
+  'suggest.findImportantPrompt':
+    'Bu sayfa uzun. Sayfadaki en önemli birkaç şeyi ve sayfanın neresinde olduklarını söyle.',
+  'suggest.whatCanIDo': 'Burada ne yapabilirim?',
+  'suggest.whatCanIDoPrompt': 'Bu sayfa ne için ve burada neler yapabilirim? Kısaca yanıtla.',
+  'suggest.webFlights': 'Bir yolculuk için uçuşları karşılaştır',
+  'suggest.webFlightsPrompt': 'Gelecek cuma İstanbul–Ankara uçuşlarını karşılaştır.',
+  'suggest.webRecipe': 'Tarif bul ve PDF olarak kaydet',
+  'suggest.webRecipePrompt': 'Vejetaryen lazanya tarifi bul ve PDF olarak kaydet.',
+  'suggest.webNews': 'Bugünün öne çıkan teknoloji haberleri',
+  'suggest.webNewsPrompt': 'Bugünün öne çıkan teknoloji haberleri neler? Bağlantılarıyla kısa bir liste ver.',
+  'suggest.webNearby': 'Yakında yemek için iyi bir yer bul',
+  'suggest.webNearbyPrompt': 'Yakınımda, şu an açık ve yorumları iyi bir yemek yeri bul.',
+
   'selection.ask': '✦ Sor',
   'selection.explain': 'Açıkla',
   'selection.translate': 'Çevir',
@@ -1460,13 +1539,6 @@ export const tr: Record<keyof typeof en, string> = {
   'chat.emptyLeadPage':
     'Bu sayfayla ilgili sorun ya da bir görev verin. Okuyabilir, tıklayabilir, form doldurabilir ve başka sekmeler açabilirim.',
   'chat.emptyLeadWeb': 'Web’de bir görev verin. Sizin için arar, karşılaştırır ve tıklamaları yaparım.',
-  'chat.examplePage1': 'Bu sayfa ne anlatıyor, üç cümleyle?',
-  'chat.examplePage2': 'Bu sayfadaki en ucuz seçeneği bul',
-  'chat.examplePage3': 'Bu formu benim bilgilerimle doldur',
-  'chat.exampleWeb1': 'Gelecek cuma İstanbul–Ankara uçuşlarını karşılaştır',
-  'chat.exampleWeb2': 'Vejetaryen lazanya tarifi bul ve PDF olarak kaydet',
-  'chat.exampleWeb3': 'Bugünün öne çıkan teknoloji haberleri neler?',
-  'chat.exampleHint': 'Bunu mesaj kutusuna yazar',
   'settings.version': 'Sürüm {version} (derleme {build})',
   'voice.title': 'Sesle yazma',
   'voice.start': 'Mesajınızı söyleyin',

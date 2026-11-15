@@ -34,6 +34,7 @@ import { Icon, IconName } from '../ui/Icon';
 import { GradientText } from '../ui/BrandGradient';
 import { QutaiMark } from '../ui/QutaiMark';
 import type { Source } from '../agent/types';
+import type { Suggestion } from '../agent/pageSuggestions';
 import type { CallOffer } from '../device/phone';
 import type { SmsOffer } from '../device/sms';
 import type { WhatsAppOffer } from '../device/whatsapp';
@@ -122,8 +123,8 @@ export type VoiceProps = {
   onStarted: (lang: string) => void;
 };
 
-/** A one-tap task shown above the input, e.g. "Summarize". */
-export type QuickAction = { icon: IconName; label: string; prompt: string };
+/** A one-tap task shown above the input, e.g. "Summarize"; id matches a page suggestion that offers the same. */
+export type QuickAction = { id: string; icon: IconName; label: string; prompt: string };
 
 type Props = {
   open: boolean;
@@ -173,8 +174,10 @@ type Props = {
   /** A source under an answer was tapped. */
   onOpenSource: (source: Source) => void;
   dark?: boolean;
-  /** A web page is open in the tab (not the new tab page); picks the examples in the empty chat. */
+  /** A web page is open in the tab (not the new tab page); picks the lead text in the empty chat. */
   hasPage?: boolean;
+  /** Suggestions for the page on screen, shown in the empty chat (agent/pageSuggestions.ts). */
+  suggestions: Suggestion[];
   voice: VoiceProps;
   /** Saved tasks run most recently, shown as chips in the empty chat. */
   recentTasks: SavedTask[];
@@ -241,6 +244,7 @@ export function AssistantPanel({
   onOpenSource,
   dark = false,
   hasPage = false,
+  suggestions,
   voice,
   recentTasks,
   onRunTask,
@@ -510,12 +514,10 @@ export function AssistantPanel({
                   <EmptyState
                     hasPage={hasPage}
                     animate={open}
+                    suggestions={suggestions}
+                    onSuggestion={running || busyElsewhere ? null : (suggestion) => onSend(suggestion.prompt)}
                     recentTasks={running || busyElsewhere ? [] : recentTasks}
                     onRunTask={onRunTask}
-                    onPick={(example) => {
-                      setText(example);
-                      inputRef.current?.focus();
-                    }}
                   />
                 )}
                 {items.map((item, index) => (
@@ -716,28 +718,32 @@ export function AssistantPanel({
   );
 }
 
-/** The empty chat: what Qutai can do, with examples that fill the input (nothing is sent until the user does). */
+/**
+ * The empty chat: what Qutai can do, with suggestions that fit the page on screen (agent/pageSuggestions.ts, picked
+ * on the phone). A tap sends one, like the quick chips.
+ */
 function EmptyState({
   hasPage,
   animate,
-  onPick,
+  suggestions,
+  onSuggestion,
   recentTasks,
   onRunTask,
 }: {
   hasPage: boolean;
   animate: boolean;
-  onPick: (example: string) => void;
+  suggestions: Suggestion[];
+  /** Null while a task runs (here or in another tab): the rows are shown but can't be tapped. */
+  onSuggestion: ((suggestion: Suggestion) => void) | null;
   recentTasks: SavedTask[];
   onRunTask: (task: SavedTask) => void;
 }) {
   const styles = useStyles();
   const palette = usePalette();
-  const examples = hasPage
-    ? [t('chat.examplePage1'), t('chat.examplePage2'), t('chat.examplePage3')]
-    : [t('chat.exampleWeb1'), t('chat.exampleWeb2'), t('chat.exampleWeb3')];
+  const d = useContext(PanelTheme);
   return (
     <View style={styles.emptyBox}>
-      <QutaiMark size={44} sweepWhenIdle animate={animate} />
+      <QutaiMark size={40} sweepWhenIdle animate={animate} />
       <Text style={styles.emptyTitle} accessibilityRole="header">
         {t('chat.emptyTitle')}
       </Text>
@@ -760,20 +766,35 @@ function EmptyState({
           ))}
         </View>
       ) : null}
-      <View style={styles.examples}>
-        {examples.map((example) => (
-          <Pressable
-            key={example}
-            onPress={() => onPick(example)}
-            style={({ pressed }) => [styles.example, pressed && styles.pressed]}
-            accessibilityRole="button"
-            accessibilityHint={t('chat.exampleHint')}
-          >
-            <Text style={styles.exampleText}>{example}</Text>
-            <Icon name="chevronRight" size={18} color={palette.textSecondary} />
-          </Pressable>
-        ))}
-      </View>
+      {suggestions.length > 0 ? (
+        <View style={styles.examples}>
+          <Text style={[styles.suggestTitle, d?.dim]} accessibilityRole="header">
+            {t(suggestions.every((x) => x.general) ? 'suggest.titleWeb' : 'suggest.title')}
+          </Text>
+          {suggestions.map((suggestion) => (
+            <Pressable
+              key={suggestion.id}
+              onPress={onSuggestion ? () => onSuggestion(suggestion) : undefined}
+              disabled={!onSuggestion}
+              style={({ pressed }) => [
+                styles.example,
+                d?.chip,
+                pressed && (d?.pressed ?? styles.pressed),
+                !onSuggestion && styles.sendDisabled,
+              ]}
+              accessibilityRole="button"
+              accessibilityHint={t('suggest.hint')}
+              accessibilityState={{ disabled: !onSuggestion }}
+            >
+              <Icon name={suggestion.icon} size={18} color={palette.tintText} />
+              <Text style={[styles.exampleText, d?.text]} numberOfLines={2} maxFontSizeMultiplier={1.6}>
+                {suggestion.label}
+              </Text>
+              <Icon name="send" size={16} color={palette.textSecondary} />
+            </Pressable>
+          ))}
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -1485,10 +1506,11 @@ const useStyles = makeStyles((c) => ({
   headerButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerButtonText: { fontSize: 18, color: c.textSecondary },
   messagesContent: { padding: 12, gap: 8 },
-  emptyBox: { alignItems: 'center', gap: 8, paddingTop: 24, paddingHorizontal: 4 },
+  emptyBox: { alignItems: 'center', gap: 8, paddingTop: 16, paddingHorizontal: 4 },
   emptyTitle: { color: c.text, fontSize: 19, fontWeight: '700', marginTop: 6 },
   emptyLead: { color: c.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center', maxWidth: 300 },
   examples: { alignSelf: 'stretch', gap: 8, marginTop: 10 },
+  suggestTitle: { color: c.textSecondary, fontSize: 13, fontWeight: '600', marginLeft: 4 },
   taskChips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 12 },
   example: {
     flexDirection: 'row',

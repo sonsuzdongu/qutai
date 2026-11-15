@@ -156,6 +156,7 @@ import { DownloadsScreen } from './src/components/DownloadsScreen';
 import * as Sharing from 'expo-sharing';
 import { SitePermissionStore } from './src/storage/sitePermissions';
 import { siteKey } from './src/agent/sitePolicy';
+import { pageSuggestions } from './src/agent/pageSuggestions';
 import { SitePermissionSheet } from './src/components/SitePermissionSheet';
 import { configurePageLocation } from './src/browser/geolocation';
 import { configurePageMedia } from './src/browser/mediaCapture';
@@ -1605,13 +1606,46 @@ function BrowserApp({
     ];
   };
 
-  // One-tap tasks in the panel; page tasks need a web page, comparing needs several tabs. On a search
-  // engine's results page, summarising the results comes first (the page itself is left as it is).
+  // Suggestions in the empty panel for the page on screen, picked here on the phone from what the tab already knows
+  // (agent/pageSuggestions.ts); nothing is sent or logged until the user taps one.
+  const siteLevel = currentSite ? sitePermissions.levelFor(currentSite) : 'default';
+  const sameModeTabs = browser.tabsOf(tab.incognito).filter((x) => x !== tab && !x.isNewTab);
+  const suggestions =
+    conversation.items.length > 0
+      ? []
+      : pageSuggestions({
+          url: onNewTab ? null : tab.url,
+          loadError: !!tab.loadError,
+          signals: tab.pageSignals,
+          readerAvailable: tab.readerAvailable,
+          selectedText: selection && selection.tabId === tab.id && selection.url === tab.url ? selection.text : '',
+          otherProductTabs: sameModeTabs.filter((x) => x.pageSignals?.kinds.includes('product')).length,
+          otherTabs: tab.groupId
+            ? sameModeTabs.filter((x) => x.groupId === tab.groupId).length
+            : sameModeTabs.length,
+          inGroup: !!tab.groupId,
+          incognito: tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
+          siteLevel,
+        });
+
+  // One-tap tasks in the panel; page tasks need a web page Qutai may read, comparing needs several tabs. On a search
+  // engine's results page, summarising the results comes first (the page itself is left as it is). "Is this product
+  // good?" is for pages that aren't clearly something else; a chip the empty panel already suggests is left out.
   const results = onNewTab ? null : searchResultsOf(tab.url);
+  const signals = tab.pageSignals;
+  const otherKind =
+    !!results ||
+    !!signals?.pdf ||
+    !!signals?.article ||
+    tab.readerAvailable ||
+    !!signals?.kinds.some((kind) => kind !== 'product');
+  const pageChips =
+    onNewTab || siteLevel === 'blocked' ? [] : (['summarize', 'keyPoints', 'translate', 'review'] as const);
   const quickActions: QuickAction[] = [
-    ...(results
+    ...(results && siteLevel !== 'blocked'
       ? [
           {
+            id: 'summarizeResults',
             icon: 'summarize' as const,
             label: t('quick.summarizeResults'),
             prompt: t('quick.summarizeResultsPrompt', {
@@ -1621,17 +1655,18 @@ function BrowserApp({
           },
         ]
       : []),
-    ...(onNewTab
-      ? []
-      : (['summarize', 'keyPoints', 'translate', 'review'] as const).map((id) => ({
-          icon: id,
-          label: t(`quick.${id}`),
-          prompt: t(`quick.${id}Prompt`),
-        }))),
-    ...(browser.tabsOf(tab.incognito).filter((x) => !x.isNewTab).length > 1
-      ? [{ icon: 'compare' as const, label: t('quick.compare'), prompt: t('quick.comparePrompt') }]
+    ...pageChips
+      .filter((id) => id !== 'review' || !otherKind || signals?.kinds.includes('product'))
+      .map((id) => ({
+        id,
+        icon: id,
+        label: t(`quick.${id}`),
+        prompt: t(`quick.${id}Prompt`),
+      })),
+    ...(sameModeTabs.length + (onNewTab ? 0 : 1) > 1
+      ? [{ id: 'compare', icon: 'compare' as const, label: t('quick.compare'), prompt: t('quick.comparePrompt') }]
       : []),
-  ];
+  ].filter((action) => !suggestions.some((s) => s.id === action.id));
 
   /** Settings > Clear browsing data. History, activity and the AI request log follow the time range; the rest is cleared entirely. */
   const clearData = async (options: ClearOptions) => {
@@ -1858,6 +1893,7 @@ function BrowserApp({
             <AssistantPanel
               dark={darkMode}
               hasPage={!tab.isNewTab}
+              suggestions={suggestions}
               open={panelOpen}
               recentTasks={recentTasks}
               onRunTask={(task) => runSavedTask(task)}

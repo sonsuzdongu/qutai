@@ -19,6 +19,7 @@ import { PagePlayback } from './playback';
 import { LoadError, toLoadError } from './navigation';
 import { addCertificateException } from './certificateExceptions';
 import { PAGE_SCRIPT } from './pageScript';
+import { PageSignals, parsePageSignals, samePageSignals } from './pageKind';
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, ReaderArticle } from './reader';
 
 type Pending = {
@@ -45,6 +46,7 @@ export type PageCommand =
   | 'readableText'
   | 'readerArticle'
   | 'readerProbe'
+  | 'pageSignals'
   | 'findInPage'
   | 'findStep'
   | 'clearFind'
@@ -114,6 +116,11 @@ export class Tab {
   reader: ReaderState | null = null;
   /** The page looks like an article (quick check after it loads), for the address bar indicator. */
   readerAvailable = false;
+  /**
+   * What kind of page this is (markup flags from the page script, see pageKind.ts), for the suggestions in the empty
+   * assistant panel. Memory only, never logged or saved; null until the page has been looked at.
+   */
+  pageSignals: PageSignals | null = null;
   /** The view wrapping the WebView, used for tab switcher thumbnails. */
   container: ComponentRef<typeof View> | null = null;
   /** The source prop given to the WebView. Changing it loads a new page. */
@@ -294,6 +301,7 @@ export class Tab {
   showNewTab() {
     this.reader = null;
     this.readerAvailable = false;
+    this.pageSignals = null;
     this.dispose();
     this.webview = null;
     this.url = NEW_TAB_URL;
@@ -342,7 +350,10 @@ export class Tab {
     if (pageKey(nav.url) !== pageKey(this.url)) {
       if (this.reader && pageKey(nav.url) !== this.reader.pageKey) this.reader = null;
       this.readerAvailable = false;
-      if (!nav.loading) this.probeReaderSoon();
+      this.pageSignals = null;
+      // Also while "loading": Android reports a page's own pushState as a load with no load end after it. A real
+      // load's end probes again (and the debounce drops this one).
+      this.probeReaderSoon();
     }
     this.url = nav.url;
     this.title = nav.title;
@@ -382,6 +393,7 @@ export class Tab {
     if (!url || pageKey(url) !== pageKey(this.url)) {
       this.reader = null;
       this.readerAvailable = false;
+      this.pageSignals = null;
     }
     this.loading = true;
     this.loadError = null;
@@ -500,17 +512,31 @@ export class Tab {
   }
 
   /**
-   * Checks (shortly, once the page has settled) whether the page looks like an article. Pages that
-   * fill in their content later are checked again a little after.
+   * Checks (shortly, once the page has settled) whether the page looks like an article, and what kind of page it is.
+   * Repeated calls within the delay run once (a load end and a script's own address change come together). Pages
+   * that fill in their content later are checked again a little after.
    */
   probeReaderSoon(delayMs = 600) {
     if (this.probeTimer) clearTimeout(this.probeTimer);
     this.probeTimer = setTimeout(() => {
       this.probeTimer = null;
+      void this.probeSignals();
       this.probeReader().then((found) => {
-        if (!found && delayMs < 2000) this.probeReaderSoon(2500);
+        if (delayMs < 2000 && (!found || !this.pageSignals?.kinds.length)) this.probeReaderSoon(2500);
       });
     }, delayMs);
+  }
+
+  /** Reads the page-kind flags (pageKind.ts); stays null when the page doesn't answer. */
+  async probeSignals(): Promise<void> {
+    if (this.isNewTab || !this.webview || this.asleep || isRunningInBackground()) return;
+    const url = this.url;
+    const raw = await this.run<unknown>('pageSignals', [], 3000).catch(() => null);
+    if (this.url !== url) return;
+    const signals = parsePageSignals(raw);
+    if (!signals || samePageSignals(signals, this.pageSignals)) return;
+    this.pageSignals = signals;
+    this.onChange();
   }
 
   /** Quick article check; resolves with the result (false when the page doesn't answer). */

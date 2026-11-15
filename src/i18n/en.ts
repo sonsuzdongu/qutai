@@ -381,6 +381,86 @@ export const en = {
   'quick.compare': 'Compare tabs',
   'quick.comparePrompt': 'Compare the pages in my open tabs and show the main differences in a short table.',
 
+  // Suggestions in the empty assistant panel, picked on the phone from the kind of page (agent/pageSuggestions.ts).
+  'suggest.title': 'For this page',
+  'suggest.titleWeb': 'Try asking',
+  'suggest.hint': 'Sends this to the assistant',
+  'suggest.explainSelection': 'Explain the selected text',
+  'suggest.translateSelection': 'Translate the selected text',
+  'suggest.pageElsewhere': 'Find this page another way',
+  'suggest.pageElsewherePrompt':
+    'The page at {url} didn’t load. Search the web for the same content or another good source for it, and open it.',
+  'suggest.bestResult': 'Which result fits best?',
+  'suggest.bestResultPrompt':
+    'Look at the {engine} results on this page for “{query}” and tell me which one or two best answer it, and why. Read the results from this page; don’t change the search.',
+  'suggest.searchDeeper': 'Research this properly',
+  'suggest.searchDeeperPrompt':
+    'Research “{query}” for me: open the most useful sources, compare what they say and give me a short answer with links.',
+  'suggest.summarizePdf': 'Summarize this PDF',
+  'suggest.summarizePdfPrompt': 'Summarize the PDF in this tab in a few short paragraphs.',
+  'suggest.keyPointsPdf': 'Key points of this PDF',
+  'suggest.keyPointsPdfPrompt': 'List the key points of the PDF in this tab as short bullets, with page numbers.',
+  'suggest.askPdf': 'Find dates, amounts and deadlines',
+  'suggest.askPdfPrompt':
+    'Go through the PDF in this tab and list the important dates, amounts, deadlines and things I have to do, with page numbers.',
+  'suggest.checkCart': 'Check my cart before I pay',
+  'suggest.checkCartPrompt':
+    'Look over the cart or checkout on this page: list the items, quantities and the total, and point out extra fees, add-ons, subscriptions or anything that looks wrong. Don’t change anything and don’t place the order.',
+  'suggest.goodBuy': 'Is this a good buy?',
+  'suggest.cheaper': 'Find it cheaper',
+  'suggest.cheaperPrompt':
+    'Find the product on this page cheaper at other shops. Compare price, shipping and seller, and give me the links. Don’t buy anything.',
+  'suggest.compareProducts': 'Compare with my other tabs',
+  'suggest.compareProductsPrompt':
+    'Compare the product on this page with the products in my other open tabs: price, main specs, reviews. Show a short table and say which you would pick and why.',
+  'suggest.ingredients': 'List the ingredients',
+  'suggest.ingredientsPrompt': 'List the ingredients of the recipe on this page as a shopping list, with amounts.',
+  'suggest.scaleRecipe': 'Scale it for 2 people',
+  'suggest.scaleRecipePrompt':
+    'Rewrite the recipe on this page for 2 people: the ingredients with the new amounts, and anything in the steps that changes.',
+  'suggest.aboutVideo': 'What is this video about?',
+  'suggest.aboutVideoPrompt':
+    'What is the video on this page about? Use its title, description, chapters and transcript or captions if the page shows them, and tell me in a few sentences.',
+  'suggest.addEvent': 'Add this event to my calendar',
+  'suggest.addEventPrompt':
+    'Add the event on this page to my calendar with its date, time and place. Show me the details before you add it.',
+  'suggest.jobRequirements': 'What does this job need?',
+  'suggest.jobRequirementsPrompt':
+    'Sum up the job on this page: the role, the requirements, the nice-to-haves, the location and pay if given, and how to apply.',
+  'suggest.jobFit': 'Does this job fit me?',
+  'suggest.jobFitPrompt':
+    'Does the job on this page fit me? Compare its requirements with what you know about me, and say what fits and what is missing.',
+  'suggest.call': 'Call them',
+  'suggest.callPrompt': 'Find the phone number of the place on this page and give me a button to call it.',
+  'suggest.directions': 'Directions from here',
+  'suggest.directionsPrompt': 'How do I get to the place on this page from where I am now? Give me a link to the directions.',
+  'suggest.openingHours': 'Opening hours and address',
+  'suggest.openingHoursPrompt':
+    'What are the opening hours and the address of the place on this page? Tell me if it is open now.',
+  'suggest.fillForm': 'Help me fill this in',
+  'suggest.fillFormPrompt':
+    'Help me fill in the form on this page. Ask me for anything you don’t know, and don’t submit it until I say so.',
+  'suggest.readAloud': 'Read it aloud',
+  'suggest.readAloudPrompt': 'Read the article on this page aloud.',
+  'suggest.tableCsv': 'Save this table as CSV',
+  'suggest.tableCsvPrompt': 'Save the main table on this page as a CSV file. If there are several tables, take the largest one.',
+  'suggest.compareGroup': 'Compare the tabs in this group',
+  'suggest.compareGroupPrompt':
+    'Compare the pages in this tab group and show the main differences in a short table.',
+  'suggest.findImportant': 'What matters on this page?',
+  'suggest.findImportantPrompt':
+    'This page is long. Tell me the few things on it that matter most, and where on the page they are.',
+  'suggest.whatCanIDo': 'What can I do here?',
+  'suggest.whatCanIDoPrompt': 'What is this page for, and what can I do on it? Answer briefly.',
+  'suggest.webFlights': 'Compare flights for a trip',
+  'suggest.webFlightsPrompt': 'Compare flights from Istanbul to Ankara next Friday.',
+  'suggest.webRecipe': 'Find a recipe and save it as PDF',
+  'suggest.webRecipePrompt': 'Find a vegetarian lasagna recipe and save it as a PDF.',
+  'suggest.webNews': 'Today’s top tech news',
+  'suggest.webNewsPrompt': 'What are today’s top tech news? Give me a short list with links.',
+  'suggest.webNearby': 'Find a good place to eat nearby',
+  'suggest.webNearbyPrompt': 'Find a well-reviewed place to eat near me that is open now.',
+
   'selection.ask': '✦ Ask',
   'selection.explain': 'Explain',
   'selection.translate': 'Translate',
@@ -1453,13 +1533,6 @@ export const en = {
   'chat.emptyLeadPage':
     'Ask about this page or give me a task. I can read it, click, fill in forms and open other tabs.',
   'chat.emptyLeadWeb': 'Give me a task on the web. I search, compare and do the clicking for you.',
-  'chat.examplePage1': 'What is this page about, in three sentences?',
-  'chat.examplePage2': 'Find the cheapest option on this page',
-  'chat.examplePage3': 'Fill in this form with my details',
-  'chat.exampleWeb1': 'Compare flights from Istanbul to Ankara next Friday',
-  'chat.exampleWeb2': 'Find a vegetarian lasagna recipe and save it as a PDF',
-  'chat.exampleWeb3': 'What are today’s top tech news?',
-  'chat.exampleHint': 'Puts this in the message box',
   'settings.version': 'Version {version} (build {build})',
   'voice.title': 'Voice input',
   'voice.start': 'Speak your message',

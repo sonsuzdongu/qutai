@@ -1926,7 +1926,139 @@ export const PAGE_SCRIPT = String.raw`
     return true;
   }
 
+  // ---------- Page kind (suggestions in the empty assistant panel) ----------
+  // A few yes/no signals about what kind of page this is, from markup only (structured data, meta tags, elements and
+  // attributes). No page text, field values or addresses leave the page: the app turns the flags into suggestions.
+
+  var SCHEMA_KINDS = {
+    product: 'product', productgroup: 'product', individualproduct: 'product', productmodel: 'product',
+    article: 'article', newsarticle: 'article', blogposting: 'article', reportagenewsarticle: 'article',
+    techarticle: 'article', scholarlyarticle: 'article',
+    recipe: 'recipe',
+    videoobject: 'video', movie: 'video', episode: 'video', tvepisode: 'video',
+    event: 'event', musicevent: 'event', sportsevent: 'event', businessevent: 'event', theaterevent: 'event',
+    educationevent: 'event', festival: 'event',
+    localbusiness: 'localBusiness', restaurant: 'localBusiness', cafeorcoffeeshop: 'localBusiness',
+    foodestablishment: 'localBusiness', hotel: 'localBusiness', lodgingbusiness: 'localBusiness',
+    medicalbusiness: 'localBusiness', dentist: 'localBusiness', autorepair: 'localBusiness', barorpub: 'localBusiness',
+    professionalservice: 'localBusiness', healthandbeautybusiness: 'localBusiness', bakery: 'localBusiness',
+    jobposting: 'jobPosting'
+  };
+
+  function noteSchemaType(value, kinds) {
+    var list = Array.isArray(value) ? value : [value];
+    for (var i = 0; i < list.length; i++) {
+      if (typeof list[i] !== 'string') continue;
+      var name = list[i].replace(/^.*[\/#:]/, '').toLowerCase();
+      if (SCHEMA_KINDS[name]) kinds[SCHEMA_KINDS[name]] = true;
+    }
+  }
+
+  // The @type of JSON-LD items (also inside @graph and one level of mainEntity), capped so huge blocks stay cheap.
+  function walkJsonLd(node, kinds, depth) {
+    if (!node || typeof node !== 'object' || depth > 3) return;
+    if (Array.isArray(node)) {
+      for (var i = 0; i < node.length && i < 50; i++) walkJsonLd(node[i], kinds, depth + 1);
+      return;
+    }
+    if (node['@type']) noteSchemaType(node['@type'], kinds);
+    if (node['@graph']) walkJsonLd(node['@graph'], kinds, depth + 1);
+    if (node.mainEntity) walkJsonLd(node.mainEntity, kinds, depth + 1);
+  }
+
+  function visible(el) {
+    if (!el.getClientRects().length) return false;
+    var st = getComputedStyle(el);
+    return st.visibility !== 'hidden' && st.display !== 'none';
+  }
+
+  // The form with the most visible fields (3 or more), and what it seems to be for.
+  function formKind() {
+    var best = null, bestCount = 0;
+    var forms = document.querySelectorAll('form');
+    for (var i = 0; i < forms.length && i < 30; i++) {
+      var fields = forms[i].querySelectorAll('input, select, textarea');
+      var count = 0;
+      for (var j = 0; j < fields.length && j < 80; j++) {
+        var f = fields[j];
+        if (f.tagName === 'INPUT' && /^(hidden|submit|button|reset|image)$/i.test(f.type || '')) continue;
+        if (visible(f)) count++;
+      }
+      if (count > bestCount) { best = forms[i]; bestCount = count; }
+    }
+    if (!best || bestCount < 3) return null;
+    if (best.querySelector('[autocomplete^="cc-"], [autocomplete~="cc-number"], [name*="card" i]')) return 'checkout';
+    if (best.querySelector('[autocomplete="new-password"]') || best.querySelectorAll('input[type=password]').length > 1) return 'signup';
+    if (best.querySelector('textarea') && best.querySelector('input[type=email], [autocomplete=email]')) return 'contact';
+    if (best.querySelector('[autocomplete*="address-line"], [autocomplete="postal-code"], [autocomplete="shipping"]')) return 'checkout';
+    return 'other';
+  }
+
+  // A data table: several rows of several cells (not a layout table).
+  function hasDataTable() {
+    var tables = document.querySelectorAll('table');
+    for (var i = 0; i < tables.length && i < 40; i++) {
+      var tb = tables[i];
+      if (layoutTable(tb) || !visible(tb)) continue;
+      var rows = tb.rows ? tb.rows.length : 0;
+      if (rows < 4) continue;
+      var cells = tb.rows[1] ? tb.rows[1].cells.length : 0;
+      if (cells >= 2 && cells <= 30) return true;
+    }
+    return false;
+  }
+
+  function hasVideo() {
+    var videos = document.querySelectorAll('video');
+    for (var i = 0; i < videos.length && i < 20; i++) {
+      var v = videos[i];
+      // A muted, looping clip without controls is decoration (a hero background), not a video to ask about.
+      if (v.loop && v.muted && !v.controls) continue;
+      var r = v.getBoundingClientRect();
+      if (r.width >= 200 && r.height >= 110) return true;
+    }
+    var frames = document.querySelectorAll('iframe[src*="youtube.com/embed"], iframe[src*="player.vimeo.com"], iframe[src*="dailymotion.com/embed"]');
+    for (var k = 0; k < frames.length; k++) {
+      var fr = frames[k].getBoundingClientRect();
+      if (fr.width >= 280 && fr.height >= 150) return true;
+    }
+    return false;
+  }
+
+  function pageSignals() {
+    var kinds = {};
+    var blocks = document.querySelectorAll('script[type="application/ld+json"]');
+    for (var i = 0; i < blocks.length && i < 20; i++) {
+      var raw = blocks[i].textContent || '';
+      if (raw.length > 200000) continue;
+      try { walkJsonLd(JSON.parse(raw), kinds, 0); } catch (e) {}
+    }
+    var micro = document.querySelectorAll('[itemscope][itemtype]');
+    for (var m = 0; m < micro.length && m < 50; m++) noteSchemaType(String(micro[m].getAttribute('itemtype')).split(/\s+/), kinds);
+    var og = (readerMeta('og:type') || '').toLowerCase();
+    if (/^(product|og:product)/.test(og)) kinds.product = true;
+    else if (og === 'article') kinds.article = true;
+    else if (/^video/.test(og)) kinds.video = true;
+    else if (/^(restaurant|business)/.test(og)) kinds.localBusiness = true;
+    var body = document.body;
+    var doc = document.documentElement;
+    var height = Math.max(body ? body.scrollHeight : 0, doc ? doc.scrollHeight : 0);
+    return {
+      kinds: Object.keys(kinds),
+      article: body ? readerProbe() : false,
+      form: body ? formKind() : null,
+      video: body ? hasVideo() : false,
+      pdf: /^application\/pdf/i.test(document.contentType || ''),
+      payment: !!document.querySelector('input[autocomplete^="cc-"]'),
+      phone: !!document.querySelector('a[href^="tel:"], [itemprop=telephone]'),
+      address: !!document.querySelector('address, [itemprop=address], [itemprop=streetAddress]'),
+      table: body ? hasDataTable() : false,
+      long: height > (window.innerHeight || 700) * 8
+    };
+  }
+
   window.__qutaiAgent = {
+    pageSignals: pageSignals,
     readPage: readPage,
     readSource: readSource,
     click: click,

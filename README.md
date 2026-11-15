@@ -8,6 +8,13 @@ phone's settings, each confirmed or tapped by the user.
 Open tabs, history, bookmarks, recently closed tabs and chats are stored on the device (`expo-sqlite`); private tabs
 and chats that touch a private tab save nothing. Each tab has its own chat with Qutai; the tabs of a group share one.
 
+The empty Qutai panel suggests a few things that fit the page on screen: "Is this a good buy?" and "Find it cheaper"
+on a product, the ingredients of a recipe, "Help me fill this in" on a form, "Which result fits best?" on a search
+results page, "Save this table as CSV", and so on, with general examples on the new tab page. They are picked on the
+phone from a few flags in the page's markup (structured data, forms, video, tables; never its text), with no AI
+request; nothing is sent until one is tapped. A blocked site gets no page suggestions, a read-only site no form
+filling, and incognito tabs nothing that needs the location or the calendar (`src/agent/pageSuggestions.ts`).
+
 Bookmarks can be sorted into folders (Library › Bookmarks: long-press or ⋯ to rename, move or delete) and imported
 from the HTML file that Chrome, Firefox, Safari and Edge export (on a computer, Chrome's Bookmark manager › ⋮ › Export
 bookmarks); an import lands in its own dated folder and skips addresses that are already bookmarked. Export writes the

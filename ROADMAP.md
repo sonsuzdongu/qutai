@@ -85,7 +85,7 @@ credits, background tasks on iOS and with the phone off), native work in our own
 | Offline saving | ✅ | | Saved pages screen (`src/device/offline.ts`) |
 | Reader mode | ✅ | | Page menu and an address bar icon on article pages; see Phase 4 |
 | Text size, zoom | ✅ | | Text size sheet (Android `textZoom`, CSS on iOS); force zoom |
-| Translation | ⬜ | Go · M | In place without breaking the layout: postponed (decision). The Translate chip translates in the chat |
+| Translation | ✖️ | – | In-place page translation will not be done (owner's decision, 15 Nov 2026). The Translate chip translates in the chat |
 | Select text to share, ask | ✅ | | Page script and a strip at the bottom of the page on both platforms |
 | Open link in new tab, save image | ✅ | | Long-press menu via page script |
 | Open in external app (tel:, mailto:, app links) | ✅ | | By asking the user; iframes cannot open apps; Android `intent://` and web fallback supported |
@@ -144,6 +144,8 @@ moves everything to another phone.
 | Deep research | ✅ | | In the foreground with the existing agent; markdown report with sources, PDF. In the background: Android with "Keep working in the background" (below); iOS or with the phone off: Server |
 | Tasks in the background | 🟡 | Build | Android, opt-in "Keep working in the background": a `specialUse` foreground service with an ongoing notification keeps a running task going when the user leaves; page reading and actions on the task's open tabs and the AI requests continue, steps that need the user or the screen (confirmations, questions, screenshots, new tabs) pause it with a notification; result notification at the end ("Notify me when a task finishes"); in the app, a toast with Show and a dot on the Qutai button when the task ends while the user looks elsewhere. iOS: not possible on the device (pauses as before); a server-side browser would be needed. Not tested on a phone |
 | Smart address bar | ✖️ | – | Will not be done, per user decision |
+| Model per saved task | ✖️ | – | Will not be done (owner's decision, 15 Nov 2026): a saved task runs with the conversation's model |
+| Suggestions for the page | ✅ | | The empty panel suggests 3 to 5 things that fit the page, worked out on the phone from markup flags (no AI request, nothing sent until tapped) |
 | Shopping and travel assistant | 🟡 | Go · M | The agent can do this and adds bookings to the calendar; it points out subscriptions, auto-renewal, pre-ticked add-ons and coupon fields, and can hand over a comparison as a CSV (`save_file`); missing: ready-made flows |
 | Image attachments | ✅ | Build | Up to 4 images per message from Photos (no library permission) or the camera; sent to all five providers with the message, resized and without EXIF; older ones named by id and shown again on request (`view_attachment`). Not tested on a phone |
 | Image editing and upload | ✅ | Go | The assistant crops, rotates, resizes, converts and shrinks an attached image to a form's requirements (`edit_image`) without any AI request, then puts it into the page's file field after the user confirms with the image (`upload_image`; drop zones and hidden inputs too; Save to Photos when a site can't take it); "Resize or crop" presets in the preview for the user. Not tested on a phone |
@@ -184,6 +186,9 @@ Goal: Qutai can be used as an everyday browser.
 Goal: a Comet-like experience; easy access to AI and reliable answers.
 
 1. ✅ **Quick action chips:** Summarize, Translate, Key points, Is this product good?, Compare
+   - ✅ **Suggestions for the page** in the empty panel, picked on the phone from the kind of page (product, article,
+     recipe, video, event, local business, job, form, cart, search results, PDF, table, long page, error, new tab)
+     with no AI request; nothing is sent until one is tapped
 2. ✅ **Ask about selected text:** Ask, Explain, Translate, Share (page script and a strip at the bottom of the page on both platforms)
 3. ~~**Smart address bar:** natural language commands go to Qutai~~ (will not be done)
 4. ✅ **Sources:** pages read, shown below answers (switches to its tab if open, otherwise opens in a new tab)
@@ -192,7 +197,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
    - ✅ **Clickable options:** when a choice is needed, the agent presents options as buttons via the `ask_user` tool
 5. ✅ **AI search:** answers with sources using the providers' web search tools (searches are visible in chat, citations in source cards; can be turned off in settings)
 6. ✅ **Multi-tab:** `read_tab` tool (reads other tabs without bringing them to the front), "compare selected tabs" in the tab switcher
-7. ⏸ **Page translation** (in place) · M (postponed per user decision); ✅ **reader mode** (brought back with read-aloud, see Phase 4 notes)
+7. ~~**Page translation** (in place)~~ (will not be done, owner's decision, 15 Nov 2026); ✅ **reader mode** (brought back with read-aloud, see Phase 4 notes)
 8. ✅ **Per-site agent permissions** (default, always allow, ask on every action, read only, blocked) and **action history** (30 days; private tabs and typed text are not logged)
 9. ✅ **Searching history in natural language** (`search_history`), **email draft** (`draft_email`), **form profile** (via memory)
    - ✅ **Memory** (in place of the form profile): the agent stores lasting information the user tells it on the phone and
