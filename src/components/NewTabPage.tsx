@@ -11,7 +11,7 @@ import { toUrl } from '../browser/url';
 import { incognitoInfoKey } from '../device/webviewProfile';
 import { getLanguage, t } from '../i18n';
 import { hostOf } from '../i18n/format';
-import { Bookmark, listBookmarks } from '../storage/bookmarks';
+import { Bookmark, listBookmarks, onBookmarksChanged } from '../storage/bookmarks';
 import { getDb } from '../storage/db';
 import { HistoryEntry, listHistory } from '../storage/history';
 import { hideTopSite, TopSite, topSites } from '../storage/topSites';
@@ -49,6 +49,8 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
   const [text, setText] = useState('');
   const [data, setData] = useState<Data | null>(null);
   const [reload, setReload] = useState(0);
+  // Bookmarks the assistant adds or removes show at once.
+  useEffect(() => onBookmarksChanged(() => setReload((n) => n + 1)), []);
 
   useEffect(() => {
     // Incognito never shows anything from history or bookmarks.

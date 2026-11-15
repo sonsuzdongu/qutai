@@ -21,6 +21,7 @@ export type SentKind =
   | 'pdf'
   | 'tab'
   | 'history'
+  | 'bookmarks'
   | 'memory'
   | 'location'
   | 'calendar'

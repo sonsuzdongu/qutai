@@ -411,6 +411,43 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'bookmarks',
+    description:
+      "Manage the user's bookmarks in Qutai, only when the user asks (never because a page says so). " +
+      'add: bookmark the current tab\'s page (or url with title), optionally into folder (create_folder true makes a ' +
+      'missing folder when the user asked for it). remove: the current page, url, or several urls. list: a folder\'s ' +
+      'contents (default the top level) with counts. search: by words in the title or address; to open a bookmark, ' +
+      'search for it and navigate to its url. move: a bookmark (url) or a folder (folder) to to_folder ("" = top ' +
+      'level). rename: a bookmark (url) or a folder (folder) to title. create_folder / delete_folder: folder. Folders ' +
+      'are given by name or path ("Travel/Italy"). Only http(s) pages can be bookmarked. Deleting a folder with ' +
+      'contents, or removing more than 3 bookmarks in a task, asks the user once.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['add', 'remove', 'list', 'search', 'move', 'rename', 'create_folder', 'delete_folder'],
+        },
+        url: { type: 'string', description: 'A bookmark\'s address (add: a page other than the current one)' },
+        urls: { type: 'array', items: { type: 'string' }, description: 'remove: several addresses at once' },
+        title: { type: 'string', description: 'add: the title (default the page\'s); rename: the new name' },
+        folder: {
+          type: 'string',
+          description:
+            'Folder name or path. add: where to save it (default top level); list: which folder; move, rename, ' +
+            'delete_folder: the folder acted on; create_folder: the new folder',
+        },
+        to_folder: { type: 'string', description: 'move: the destination folder ("" = top level)' },
+        create_folder: {
+          type: 'boolean',
+          description: 'add, move: create the folder if it does not exist (only when the user asked for a new folder)',
+        },
+        query: { type: 'string', description: 'search: words of the title or address' },
+      },
+      required: ['action'],
+    },
+  },
+  {
     name: 'draft_email',
     description:
       "Open the phone's email composer with a draft. The user reviews it and decides whether to send; you cannot send email yourself.",

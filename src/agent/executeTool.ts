@@ -21,9 +21,12 @@ import type { AttachmentInfo } from '../chat/attachments';
 import { readPdfTool, viewAttachmentTool } from './fileTools';
 import { uiLabel, uiPath } from './uiLabels';
 import { editImageTool, uploadImageTool } from './imageTools';
+import { BOOKMARK_READS, bookmarkNeedsUser, bookmarksTool, describeBookmarkCall } from './bookmarkTool';
 import { sleep } from '../utils/sleep';
 import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch, SiteVisits } from '../storage/history';
+import type { Bookmark } from '../storage/bookmarks';
+import type { Db } from '../storage/db';
 import { containsHidden, HiddenNeedle, hiddenNeedles, MEMORY_ID, redactHidden } from './hiddenValues';
 import { hiddenKindOf, hiddenLabel, hiddenValue, isMemoryCategory, looksLikeIdNumber, Memory, MemoryStore } from './memory';
 import { findPersonalData, PERSONAL_KINDS, PersonalKind, personalNeedles } from './personalData';
@@ -78,6 +81,12 @@ export type ToolContext = {
     search(query: string, from: number, to: number): Promise<HistoryMatch[]>;
     /** Most visited sites (by_site), ranked by visits; hidden top sites left out. */
     sites(query: string, from: number, to: number): Promise<SiteVisits[]>;
+  };
+  /** The user's bookmarks (bookmarks tool); absent in tests or when unavailable. */
+  bookmarks?: {
+    db(): Promise<Db>;
+    /** Bookmarks the tool removed: the screen offers to put them back ("Undo" in a toast). */
+    removed(bookmarks: Bookmark[]): void;
   };
   /** Opens the email composer; resolves with what the user did (sent, saved, cancelled…). */
   composeEmail?: (draft: EmailDraft) => Promise<string>;
@@ -214,6 +223,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
           ? t('action.topSitesFor', { query: str(input.query) })
           : t('action.topSites');
       return t('action.searchHistory', { query: str(input.query) });
+    case 'bookmarks':
+      return describeBookmarkCall(input);
     case 'draft_email':
       return t('action.draftEmail', { subject: str(input.subject).slice(0, 60) });
     case 'offer_call':
@@ -950,6 +961,8 @@ const LOGGED_TOOLS = new Set([
   'add_reminder',
   'schedule_notification',
   'open_settings',
+  // Changes only: list and search are left out (see isLogged).
+  'bookmarks',
   // Only that the location was read: the coordinates are never written to the history.
   'get_location',
   // Only that the calendar was read and the range: the events are never written to the history.
@@ -960,6 +973,13 @@ const LOGGED_TOOLS = new Set([
   // Only that an image was given to the site and where: never the image.
   'upload_image',
 ]);
+
+/** Whether a call goes in the action history: tools in LOGGED_TOOLS, but not the ones that only read. */
+function isLogged(name: string, input: Record<string, unknown>): boolean {
+  if (!LOGGED_TOOLS.has(name)) return false;
+  if (name === 'bookmarks') return !BOOKMARK_READS.has(String(input.action));
+  return true;
+}
 
 /** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
 function actionTarget(
@@ -980,6 +1000,7 @@ function actionTarget(
       'forget',
       'ask_user',
       'search_history',
+      'bookmarks',
       'draft_email',
       'offer_call',
       'draft_sms',
@@ -1031,6 +1052,8 @@ const BACKGROUND_TOOLS = new Set([
   'remember',
   'forget',
   'search_history',
+  // Only the app's own data; asking calls (deleting a folder, many removals) wait for the user, see backgroundBlocker.
+  'bookmarks',
   // Only reads a file the user attached.
   'view_attachment',
   // Works on the phone only and adds a card.
@@ -1054,6 +1077,7 @@ export function backgroundBlocker(
 ): 'confirm' | 'onScreen' | 'tab' | null {
   if (!BACKGROUND_TOOLS.has(name))
     return SCHEDULING_TOOLS.has(name) || ALWAYS_CONFIRMED.has(name) ? 'confirm' : 'onScreen';
+  if (name === 'bookmarks' && bookmarkNeedsUser(input, ctx.agentTab)) return 'confirm';
   const target = actionTarget(name, input, ctx);
   const host = target ? siteKey(target.url) : null;
   const level = host && ctx.sites ? ctx.sites.levelFor(host) : 'default';
@@ -1130,7 +1154,7 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
 
   const record = (result: ToolOutput): ToolOutput => {
     const incognito = !!(ctx.privacy?.touchedIncognito || target?.tab?.incognito || fromTab?.incognito);
-    if (ctx.log && LOGGED_TOOLS.has(name) && !incognito) {
+    if (ctx.log && isLogged(name, input) && !incognito) {
       ctx.log({
         at: Date.now(),
         host,
@@ -1335,6 +1359,7 @@ async function runTool(
   if (name === 'remember' || name === 'forget') return memoryTool(name, input, ctx);
   if (name === 'read_tab') return readTab(input, ctx);
   if (name === 'search_history') return searchHistoryTool(input, ctx);
+  if (name === 'bookmarks') return bookmarksTool(input, ctx);
   if (name === 'draft_email') return draftEmail(input, ctx);
   if (name === 'open_settings') return openSettingsTool(input, ctx);
   if (name === 'offer_call') return offerCallTool(input, ctx);

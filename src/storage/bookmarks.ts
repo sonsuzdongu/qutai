@@ -36,6 +36,48 @@ export async function addBookmark(db: Db, url: string, title: string, now = Date
   );
 }
 
+/** One bookmark by its exact URL, or null. */
+export async function getBookmark(db: Db, url: string): Promise<Bookmark | null> {
+  const row = await db.getFirstAsync<Row>('SELECT * FROM bookmarks WHERE url = ?', [url]);
+  return row ? toBookmark(row) : null;
+}
+
+/**
+ * Puts removed bookmarks back as they were (title, date and folder; the top level when their folder is gone since).
+ * A URL bookmarked again in the meantime is left as it is.
+ */
+export async function restoreBookmarks(db: Db, bookmarks: Bookmark[]): Promise<void> {
+  const folders = new Set((await allFolders(db)).map((f) => f.id));
+  for (const b of bookmarks) {
+    const folderId = b.folderId !== null && folders.has(b.folderId) ? b.folderId : null;
+    await db.runAsync('INSERT OR IGNORE INTO bookmarks (url, title, created_at, folder_id) VALUES (?, ?, ?, ?)', [
+      b.url,
+      b.title,
+      b.createdAt,
+      folderId,
+    ]);
+  }
+}
+
+// ---------- Change notices ----------
+
+const listeners = new Set<() => void>();
+
+/**
+ * Called after bookmarks change outside the screen that shows them (the assistant's bookmarks tool), so the Library,
+ * the new tab page and the page menu show the change at once. Returns the unsubscribe function.
+ */
+export function onBookmarksChanged(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+export function notifyBookmarksChanged(): void {
+  listeners.forEach((listener) => listener());
+}
+
 export async function removeBookmark(db: Db, url: string): Promise<void> {
   await db.runAsync('DELETE FROM bookmarks WHERE url = ?', [url]);
 }

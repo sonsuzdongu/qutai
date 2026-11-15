@@ -86,7 +86,15 @@ import { stopVoiceInput } from './src/device/voiceInput';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { deleteLeftoverIncognitoProfiles } from './src/device/webviewProfile';
 import { t, useLanguage } from './src/i18n';
-import { addBookmark, isBookmarked, removeBookmark } from './src/storage/bookmarks';
+import {
+  addBookmark,
+  Bookmark,
+  isBookmarked,
+  notifyBookmarksChanged,
+  onBookmarksChanged,
+  removeBookmark,
+  restoreBookmarks,
+} from './src/storage/bookmarks';
 import { getDb } from './src/storage/db';
 import { deviceMemoryStore } from './src/storage/memory';
 import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
@@ -476,6 +484,18 @@ function BrowserApp({
   const [tabsVisible, setTabsVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  // The assistant's bookmarks tool changed something: the page menu's bookmark button follows at once.
+  const tabUrl = tab.url;
+  useEffect(
+    () =>
+      onBookmarksChanged(() => {
+        getDb()
+          .then((db) => isBookmarked(db, tabUrl))
+          .then(setBookmarked)
+          .catch(() => {});
+      }),
+    [tabUrl],
+  );
   const [library, setLibrary] = useState<LibraryTab | null>(null);
   const [textSizeVisible, setTextSizeVisible] = useState(false);
   const [readerSettingsVisible, setReaderSettingsVisible] = useState(false);
@@ -827,6 +847,7 @@ function BrowserApp({
         sites: sitePermissions,
         log: logAction,
         history: historySearch,
+        bookmarks: { db: getDb, removed: offerBookmarkUndo },
         composeEmail,
         offerCall: (offer) => {
           AccessibilityInfo.announceForAccessibility(
@@ -1534,6 +1555,21 @@ function BrowserApp({
       browser.clearCertificateExceptions();
     }
     toast.show(t('clearData.done'));
+  };
+
+  /** The assistant removed bookmarks: a toast with "Undo" puts them back where they were. */
+  const offerBookmarkUndo = (removed: Bookmark[]) => {
+    const message =
+      removed.length === 1 ? t('menu.bookmarkRemoved') : t('bookmarksTool.removedMany', { count: removed.length });
+    toast.show(message, {
+      label: t('common.undo'),
+      onPress: () => {
+        getDb()
+          .then((db) => restoreBookmarks(db, removed))
+          .then(notifyBookmarksChanged)
+          .catch(() => {});
+      },
+    });
   };
 
   // Settings apply as they are changed; the screen stays open.

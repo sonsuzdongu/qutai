@@ -37,6 +37,7 @@ import {
   importBookmarks,
   listBookmarks,
   listFolders,
+  onBookmarksChanged,
   moveFolder,
   removeBookmark,
   renameFolder,
@@ -235,6 +236,8 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
   const [busy, setBusy] = useState(false);
   const searching = query.trim().length > 0;
   const refresh = () => setReload((n) => n + 1);
+  // Changes the assistant makes show at once.
+  useEffect(() => onBookmarksChanged(() => setReload((n) => n + 1)), []);
 
   useEffect(() => {
     let cancelled = false;
