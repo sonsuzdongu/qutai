@@ -8,7 +8,7 @@ export const tr: Messages = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
     'Qutai, iPhone ve Android için açık kaynak bir yapay zekâ tarayıcısı. Asistanı kendi AI anahtarınızla sayfaları sizin için okur ve kullanır, verilerinizi telefonunuzda tutar, hassas işlemlerden önce sorar. Geliştirme aşamasında.',
-  'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: sayfayı sizin yerinize kullanan yapay zekâ tarayıcısı.',
+  'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: Qutai, Agentic Browser.',
   'meta.appDescription':
     'iOS ve Android için açık kaynak bir yapay zekâ tarayıcısı: asistanı, kendi AI sağlayıcı anahtarınızla web sayfalarını sizin için okur ve kullanır.',
 
@@ -260,7 +260,7 @@ export const tr: Messages = {
   'status.planned.3': 'Kendi anahtarınıza seçenek olarak Qutai kredisi',
   'status.planned.4': 'iPhone’da paylaşım uzantısı ve widget',
 
-  'footer.tagline': 'Sayfayı sizin yerinize kullanan yapay zekâ tarayıcısı.',
+  'footer.tagline': 'Agentic Browser',
   'footer.privacy':
     'Bu site başka sunuculara istek göndermez ve çerez kullanmaz; yalnızca dili değiştirirseniz seçiminizi hatırlayan bir çerez bırakır.',
   'footer.licenseNote': 'Kod Apache-2.0 ile lisanslıdır.',

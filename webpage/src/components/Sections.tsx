@@ -489,7 +489,7 @@ export function Footer() {
         <div className="footer-brand">
           <img src="/img/q-64.webp" width="28" height="28" alt="" />
           <p>
-            <strong>Qutai</strong> · {t('footer.tagline')}
+            <strong>Qutai</strong>: {t('footer.tagline')}
           </p>
         </div>
         <ul className="footer-links">

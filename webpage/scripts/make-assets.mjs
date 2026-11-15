@@ -22,13 +22,14 @@ await sharp(brand('icon.png')).resize(180, 180).png().toFile(out('apple-touch-ic
 await sharp(brand('icon.png')).resize(192, 192).png().toFile(out('icon-192.png'));
 await sharp(brand('icon.png')).resize(512, 512).png().toFile(out('icon-512.png'));
 
-// Social preview images (1200×630), one per language. Keep the lines in step with meta.title in src/i18n.
+// Social preview images (1200×630), one per language. Keep the headline in step with meta.title and
+// footer.tagline in src/i18n.
 const og = {
-  en: ['An AI browser that', 'uses the page for you.', 'Open source · iPhone and Android · in development'],
-  tr: ['Sayfayı sizin yerinize', 'kullanan yapay zekâ tarayıcısı.', 'Açık kaynak · iPhone ve Android · geliştirme aşamasında'],
+  en: ['Agentic Browser', 'Open source · iPhone and Android · in development'],
+  tr: ['Agentic Browser', 'Açık kaynak · iPhone ve Android · geliştirme aşamasında'],
 };
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
-for (const [lang, [l1, l2, small]] of Object.entries(og)) {
+for (const [lang, [headline, small]] of Object.entries(og)) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -46,8 +47,7 @@ for (const [lang, [l1, l2, small]] of Object.entries(og)) {
   <rect width="1200" height="630" fill="url(#glow2)"/>
   <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif" fill="#ffffff">
     <text x="80" y="150" font-size="44" font-weight="700" letter-spacing="1">Qutai</text>
-    <text x="80" y="330" font-size="68" font-weight="700" letter-spacing="-1.5">${esc(l1)}</text>
-    <text x="80" y="410" font-size="68" font-weight="700" letter-spacing="-1.5">${esc(l2)}</text>
+    <text x="80" y="370" font-size="76" font-weight="700" letter-spacing="-1.5">${esc(headline)}</text>
     <text x="80" y="520" font-size="30" fill="#bfe3f7">${esc(small)}</text>
   </g>
 </svg>`;
