@@ -20,7 +20,6 @@ import { incognitoIsolated } from '../device/webviewProfile';
 import { getLanguage, t } from '../i18n';
 import type { LegalKind } from '../legal/documents';
 import type { Settings } from '../storage/settings';
-import type { SitePermissionStore } from '../storage/sitePermissions';
 import { Icon, IconName } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
@@ -36,7 +35,6 @@ import { LicencesScreen } from './LicencesScreen';
 import { MemoryScreen } from './MemoryScreen';
 import { TasksScreen } from './TasksScreen';
 import type { SavedTask } from '../storage/savedTasks';
-import { SitePermissionsScreen } from './SitePermissionsScreen';
 import { FilterListsScreen } from './FilterListsScreen';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
@@ -47,7 +45,6 @@ type Props = {
   /** Called for every change; switches and choices apply (and are saved) immediately. */
   onChange: (settings: Settings) => void;
   onClose: () => void;
-  sitePermissions: SitePermissionStore;
   onClearData: (options: ClearOptions) => Promise<void>;
   /** Run on a saved task: Settings closes and the app runs it. */
   onRunTask: (task: SavedTask) => void;
@@ -95,7 +92,6 @@ function SettingsPages({
   settings,
   onChange,
   onClose,
-  sitePermissions,
   onClearData,
   onRunTask,
   incognitoActive,
@@ -109,7 +105,6 @@ function SettingsPages({
   const aiDirty = !sameAi(ai, pickAi(settings));
   const [memoryVisible, setMemoryVisible] = useState(false);
   const [tasksVisible, setTasksVisible] = useState(false);
-  const [sitesVisible, setSitesVisible] = useState(false);
   const [listsVisible, setListsVisible] = useState(false);
   const [actionLogVisible, setActionLogVisible] = useState(false);
   const [sentLogVisible, setSentLogVisible] = useState(false);
@@ -369,7 +364,6 @@ function SettingsPages({
             ) : null}
             <LinkRow label={t('settings.manageMemory')} onPress={() => setMemoryVisible(true)} />
             <LinkRow label={t('settings.savedTasks')} onPress={() => setTasksVisible(true)} />
-            <LinkRow label={t('settings.sitePermissions')} onPress={() => setSitesVisible(true)} />
             <LinkRow label={t('settings.actionLog')} onPress={() => setActionLogVisible(true)} />
             <LinkRow label={t('settings.sentLog')} onPress={() => setSentLogVisible(true)} />
           </>
@@ -558,14 +552,11 @@ function SettingsPages({
         visible={memoryVisible}
         onClose={() => setMemoryVisible(false)}
         appLock={settings.appLock}
-        ai={
-          configured ? { ...requestTarget(settings, settings.provider), label: getProvider(settings.provider).label } : null
-        }
+        ai={configured ? requestTarget(settings, settings.provider) : null}
         questions={
           settings.memoryEnabled
             ? {
                 incognito: incognitoActive,
-                providerLabel: configured ? getProvider(settings.provider).label : null,
                 onInstructions: (update) =>
                   set({ customInstructions: cleanCustomInstructions(update(settings.customInstructions)) }),
               }
@@ -580,12 +571,6 @@ function SettingsPages({
           onClose();
           onRunTask(task);
         }}
-      />
-      <SitePermissionsScreen
-        visible={sitesVisible}
-        store={sitePermissions}
-        blockingEnabled={settings.blockAds}
-        onClose={() => setSitesVisible(false)}
       />
       <FilterListsScreen
         visible={listsVisible}
@@ -720,7 +705,7 @@ function SwitchRow({
   );
 }
 
-const INSTRUCTION_EXAMPLES = ['settings.customExample1', 'settings.customExample2', 'settings.customExample3'] as const;
+const INSTRUCTION_EXAMPLES = ['settings.customExample1', 'settings.customExample2'] as const;
 
 /**
  * Settings › Assistant › Custom instructions: saved when the field loses focus (and when the page closes), so

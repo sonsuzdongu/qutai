@@ -9,7 +9,7 @@ export function uiLabel(key: MessageKey): string {
   return `"${t(key)}"`;
 }
 
-/** A path through the interface, e.g. "Settings" › "Assistant" › "Site permissions". */
+/** A path through the interface, e.g. "Settings" › "Assistant" › "Memory". */
 export function uiPath(...keys: MessageKey[]): string {
   return keys.map(uiLabel).join(' › ');
 }

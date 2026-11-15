@@ -108,8 +108,6 @@ function addressText(a: Address): string {
 const hasAddress = (a: Address) => !!(a.line.trim() || a.district.trim() || a.postal.trim() || a.city.trim());
 
 type Props = {
-  /** The AI provider chosen in setup, for the privacy wording; null when none yet. */
-  providerLabel: string | null;
   /** Changes the page; setup blurs out and in like its own steps. */
   transition?: (change: () => void) => void;
   /** Updates the custom instructions (the answer-style question). */
@@ -123,7 +121,7 @@ type Props = {
   registerBack: (handler: (() => boolean) | null) => void;
 };
 
-export function ProfileQuestions({ providerLabel, transition, onInstructions, onDone, registerBack }: Props) {
+export function ProfileQuestions({ transition, onInstructions, onDone, registerBack }: Props) {
   const styles = useStyles();
   const palette = usePalette();
   const scrollRef = useRef<ScrollViewInstance>(null);
@@ -282,9 +280,7 @@ export function ProfileQuestions({ providerLabel, transition, onInstructions, on
 
   const onPrimary = () => (page === 'offer' ? go('address') : void next());
 
-  const privacy = t(features.pro ? 'profile.privacyPro' : 'profile.privacy', {
-    provider: providerLabel ?? t('profile.yourProvider'),
-  });
+  const privacy = t(features.pro ? 'profile.privacyPro' : 'profile.privacy');
 
   const toggle = (list: string[], value: string) =>
     list.includes(value) ? list.filter((x) => x !== value) : [...list, value];
@@ -798,12 +794,10 @@ function AddressFields({
 export function ProfileQuestionsScreen({
   visible,
   onClose,
-  providerLabel,
   onInstructions,
 }: {
   visible: boolean;
   onClose: () => void;
-  providerLabel: string | null;
   onInstructions: (update: (current: string) => string) => void;
 }) {
   const styles = useStyles();
@@ -825,7 +819,6 @@ export function ProfileQuestionsScreen({
             </Pressable>
           </View>
           <ProfileQuestions
-            providerLabel={providerLabel}
             onInstructions={onInstructions}
             onDone={onClose}
             registerBack={(handler) => {

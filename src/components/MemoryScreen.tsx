@@ -53,7 +53,6 @@ export type MemoryAi = {
   model: string;
   endpoint?: string;
   extraHeaders?: CustomHeader[];
-  label: string;
 } | null;
 
 type Props = {
@@ -68,7 +67,6 @@ type Props = {
    */
   questions?: {
     incognito: boolean;
-    providerLabel: string | null;
     onInstructions: (update: (current: string) => string) => void;
   };
 };
@@ -182,7 +180,7 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
     const count = Math.min(general.length, MAX_ORGANISE);
     const ok = await dialog.confirm({
       title: t('memory.organiseConfirm'),
-      message: t('memory.organiseConfirmBody', { count, provider: ai.label }),
+      message: t('memory.organiseConfirmBody', { count }),
       confirmText: t('memory.organiseSend'),
     });
     if (!ok) return;
@@ -470,7 +468,6 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
             setAsking(false);
             reload();
           }}
-          providerLabel={questions.providerLabel}
           onInstructions={questions.onInstructions}
         />
       )}

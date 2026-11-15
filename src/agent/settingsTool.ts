@@ -164,9 +164,11 @@ const PROTECTED: { names: string[]; label: () => string; why: string; place: () 
   },
   {
     names: ['site_permissions', 'site_permission', 'permissions', 'location', 'camera', 'microphone', 'personal_information', 'blocking_exceptions'],
-    label: () => uiLabel('settings.sitePermissions'),
+    label: () => uiLabel('site.listTitle'),
     why: "site permissions set what the assistant and sites may do (assistant level, location, camera, microphone, personal information, blocking exceptions)",
-    place: inSettings('settings.assistant', 'settings.sitePermissions'),
+    place: () =>
+      `the ${uiLabel('address.menu')}: its item for the site on screen opens ${uiLabel('site.title')}, which has ` +
+      `${uiLabel('site.allSites')} for every site (on a new tab the item is ${uiLabel('site.listTitle')})`,
   },
   {
     names: ['memory', 'memory_enabled', 'memories', 'hidden_memories'],

@@ -126,8 +126,6 @@ export type ToolContext = {
   offerSms?: (offer: SmsOffer) => void;
   /** Adds an "Open in WhatsApp" card (draft_whatsapp). It never sends: the user does, in WhatsApp. */
   offerWhatsApp?: (offer: WhatsAppOffer) => void;
-  /** The AI provider's name (e.g. "Anthropic"), for confirmations that send something to it. */
-  providerLabel?: string;
   /**
    * Starts a download the user confirmed (download_file), like the tab's own downloads, without waiting for it;
    * "permission" when Android 9 and older asks for storage first.
@@ -534,7 +532,7 @@ async function openSettingsTool(input: Record<string, unknown>, ctx: ToolContext
     return {
       content:
         `Opened Qutai's own settings screen, ${uiLabel('settings.title')}. Its sections: ` +
-        `${uiPath('settings.assistant')} (AI provider, model and key, memory, site permissions, saved tasks), ` +
+        `${uiPath('settings.assistant')} (AI provider, model and key, memory, saved tasks; site permissions are in the page menu, not here), ` +
         `${uiPath('settings.privacySection')}, ${uiPath('settings.appearance')}, ${uiPath('settings.search')}, ` +
         `${uiPath('backup.section')}, ${uiPath('settings.about')}. Tell the user briefly what to change there, ` +
         'naming the section as written here; they close it when done.',
@@ -639,8 +637,7 @@ async function readCalendarTool(input: Record<string, unknown>, ctx: ToolContext
   const plan = planCalendarRead(input);
   if (typeof plan === 'string') return { content: plan, isError: true };
   if (!ctx.confirm) return { content: "This needs the user's confirmation, which is not available here.", isError: true };
-  const provider = ctx.providerLabel || t('location.aiProvider');
-  if (!(await ctx.confirm(describeCalendarRead(plan, provider), null))) {
+  if (!(await ctx.confirm(describeCalendarRead(plan), null))) {
     return {
       content:
         "The user declined to share their calendar. Don't guess their schedule or availability: ask them directly.",
@@ -677,7 +674,7 @@ async function locationTool(input: Record<string, unknown>, ctx: ToolContext): P
   if (!ctx.confirm) return { content: "This needs the user's confirmation, which is not available here.", isError: true };
   const purpose = typeof input.purpose === 'string' ? input.purpose.trim().slice(0, 200) : '';
   const site = tab && !tab.isNewTab ? siteKey(tab.url) : null;
-  const lines = [t('location.agentConfirm', { provider: ctx.providerLabel || t('location.aiProvider') })];
+  const lines = [t('location.agentConfirm')];
   if (purpose) lines.push(`“${purpose}”`);
   if (site) lines.push(t('location.agentSite', { host: site }));
   if (!(await ctx.confirm(lines.join('\n\n'), null))) {
@@ -1386,7 +1383,7 @@ async function personalGate(
 function personalSettingPlace(): string {
   return (
     `${uiLabel('site.personalTitle')} in this site's sheet ${uiLabel('site.title')} (from the ` +
-    `${uiLabel('address.menu')}) or in ${uiPath('settings.title', 'settings.assistant', 'settings.sitePermissions')}.`
+    `${uiLabel('address.menu')}), where ${uiLabel('site.allSites')} lists every site.`
   );
 }
 

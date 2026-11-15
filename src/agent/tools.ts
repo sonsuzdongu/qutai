@@ -736,8 +736,8 @@ export const TOOLS: ToolDefinition[] = [
       'Open a settings screen for the user. "system": Qutai\'s page in the phone\'s settings (permissions such as ' +
       'calendar, photos, camera, location and notifications; on iPhone also the default browser). "default_browser": the screen ' +
       'where the user picks their default browser app. "app": Qutai\'s own settings (AI provider and key, privacy, ' +
-      'memory, site permissions). The user changes the setting themselves there (the settings tool changes only ' +
-      'appearance and browsing preferences).',
+      'memory; site permissions are in the page menu instead). The user changes the setting themselves there (the ' +
+      'settings tool changes only appearance and browsing preferences).',
     input_schema: {
       type: 'object',
       properties: {

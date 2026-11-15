@@ -10,7 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
-import { getProvider, isConfigured } from '../ai/providers';
+import { isConfigured } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { backgroundTasksSupported } from '../device/backgroundTask';
 import { openDefaultBrowserSettings } from '../device/defaultBrowser';
@@ -168,7 +168,6 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
             {step === 'profile' ? (
               // Its own pages and buttons; no AI request, every page skippable.
               <ProfileQuestions
-                providerLabel={hasKey ? getProvider(draft.provider).label : null}
                 transition={transition}
                 onInstructions={(update) =>
                   setDraft((d) => ({

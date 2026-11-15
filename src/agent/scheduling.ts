@@ -189,13 +189,13 @@ export function planCalendarRead(input: Record<string, unknown>): CalendarReadPl
 }
 
 /** What will be read and where it goes, in the user's language, for the confirmation. */
-export function describeCalendarRead(plan: CalendarReadPlan, provider: string): string {
+export function describeCalendarRead(plan: CalendarReadPlan): string {
   const end = sameDay(plan.start, plan.end) ? timeLabel(plan.end.getTime()) : formatDateTime(plan.end);
   return [
     t('schedule.confirmRead'),
     `${formatDateTime(plan.start)} – ${end}`,
     t('schedule.timeZone', { zone: deviceTimeZone() }),
-    t('schedule.readSends', { provider }),
+    t('schedule.readSends'),
     t(plan.details ? 'schedule.readWithNotes' : 'schedule.readNoNotes'),
   ].join('\n');
 }

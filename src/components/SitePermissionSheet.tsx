@@ -38,6 +38,8 @@ type Props = {
   blockedCount?: number | 'unavailable';
   /** Reloads the page on screen, for a changed blocking switch to take effect (only for the page's own site). */
   onReload?: () => void;
+  /** Opens the list of every site with its own setting (absent when the sheet is opened from that list). */
+  onShowAll?: () => void;
   onClose: () => void;
 };
 
@@ -63,6 +65,7 @@ export function SitePermissionSheet({
   blockingEnabled,
   blockedCount,
   onReload,
+  onShowAll,
   onClose,
 }: Props) {
   const styles = useStyles();
@@ -173,6 +176,15 @@ export function SitePermissionSheet({
         hint={t(`site.microphoneHint.${microphone}`)}
         onSelect={(setting) => onSelectMedia('microphone', setting)}
       />
+      {onShowAll && (
+        <Pressable
+          onPress={onShowAll}
+          style={({ pressed }) => [styles.allSites, pressed && styles.pressed]}
+          accessibilityRole="button"
+        >
+          <Text style={styles.link}>{t('site.allSites')} ›</Text>
+        </Pressable>
+      )}
     </BottomSheet>
   );
 }
@@ -234,6 +246,7 @@ const useStyles = makeStyles((c) => ({
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   blockRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 10 },
   link: { fontSize: 14, fontWeight: '700', color: c.tintText, marginTop: 4 },
+  allSites: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
   stop: { paddingHorizontal: 20, paddingVertical: 10, gap: 2 },
   stopText: { fontSize: 15, fontWeight: '700', color: c.danger },
   section: { fontSize: 15, fontWeight: '700', color: c.text, paddingHorizontal: 20, marginTop: 12, marginBottom: 8 },

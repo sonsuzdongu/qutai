@@ -158,6 +158,7 @@ import { SitePermissionStore } from './src/storage/sitePermissions';
 import { siteKey } from './src/agent/sitePolicy';
 import { pageSuggestions } from './src/agent/pageSuggestions';
 import { SitePermissionSheet } from './src/components/SitePermissionSheet';
+import { SitePermissionsScreen } from './src/components/SitePermissionsScreen';
 import { configurePageLocation } from './src/browser/geolocation';
 import { configurePageMedia } from './src/browser/mediaCapture';
 import { pauseAllPages } from './src/browser/playback';
@@ -517,6 +518,8 @@ function BrowserApp({
   const [textSizeVisible, setTextSizeVisible] = useState(false);
   const [readerSettingsVisible, setReaderSettingsVisible] = useState(false);
   const [permissionHost, setPermissionHost] = useState<string | null>(null);
+  /** The list of every site with its own permission (page menu, or "All sites" in a site's sheet). */
+  const [sitesListVisible, setSitesListVisible] = useState(false);
   // The permission sheet stays open while the location setting changes, so it must see the update.
   useSyncExternalStore(sitePermissions.subscribe, getSitePermissionsVersion);
   const [downloadsVisible, setDownloadsVisible] = useState(false);
@@ -887,7 +890,6 @@ function BrowserApp({
         confirmHidden: (host, what, field, incognito) => askHiddenValue(host, what, field, incognito, signal),
         confirmImage: (options) => askImageConfirmation(options, signal),
         imageUsed: (id) => chat.markImageUsed(id),
-        providerLabel: getProvider(provider).label,
         confirmByDefault: settings.confirmActions,
         sites: sitePermissions,
         log: logAction,
@@ -1471,12 +1473,12 @@ function BrowserApp({
           onPress: () => setTextSizeVisible(true),
         },
         {
+          // This site's sheet (with a link to every site); without a site (new tab, Qutai's own pages), the list.
           icon: 'shield',
-          label: t('menu.sitePermission', {
-            level: t(`site.level.${currentSite ? sitePermissions.levelFor(currentSite) : 'default'}`),
-          }),
-          disabled: !currentSite,
-          onPress: () => setPermissionHost(currentSite),
+          label: currentSite
+            ? t('menu.sitePermission', { level: t(`site.level.${sitePermissions.levelFor(currentSite)}`) })
+            : t('site.listTitle'),
+          onPress: () => (currentSite ? setPermissionHost(currentSite) : setSitesListVisible(true)),
         },
       ],
     },
@@ -2075,7 +2077,6 @@ function BrowserApp({
             onClose={() => setSentFor(null)}
           />
           <SettingsModal
-            sitePermissions={sitePermissions}
             onClearData={clearData}
             visible={settingsVisible}
             settings={settings}
@@ -2129,7 +2130,17 @@ function BrowserApp({
                 : undefined
             }
             onReload={!!permissionHost && siteKey(tab.url) === permissionHost ? () => tab.webview?.reload() : undefined}
+            onShowAll={() => {
+              setPermissionHost(null);
+              setSitesListVisible(true);
+            }}
             onClose={() => setPermissionHost(null)}
+          />
+          <SitePermissionsScreen
+            visible={sitesListVisible}
+            store={sitePermissions}
+            blockingEnabled={settings.blockAds}
+            onClose={() => setSitesListVisible(false)}
           />
           <TextSizeSheet
             visible={textSizeVisible}
