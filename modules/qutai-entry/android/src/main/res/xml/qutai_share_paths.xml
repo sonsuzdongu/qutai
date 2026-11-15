@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only the hand-out folders of src/device/outgoing.ts. -->
+<paths>
+  <cache-path name="outgoing" path="outgoing/" />
+  <cache-path name="outgoing_incognito" path="outgoing-incognito/" />
+</paths>

@@ -2,4 +2,15 @@
   <!-- The text intent filters, the launcher shortcuts and the widget receiver are declared by the app's config plugin
        (plugins/withEntryPoints.js), so they show in the introspected config (`npx expo config`, type introspect)
        and in docs/permissions.md. This module only brings the code and the resources they point to. -->
+  <application>
+    <!-- Content URIs for files the user shares from the assistant's cards to another app (OutgoingShare.kt): only
+         the hand-out folders in the cache, read-only grants per share, not exported. -->
+    <provider
+      android:name="expo.modules.qutaientry.QutaiShareFileProvider"
+      android:authorities="${applicationId}.qutai.share"
+      android:exported="false"
+      android:grantUriPermissions="true">
+      <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/qutai_share_paths" />
+    </provider>
+  </application>
 </manifest>

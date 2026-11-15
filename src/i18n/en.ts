@@ -729,6 +729,8 @@ export const en = {
   'upload.fallbackIncognito': 'It stays in Photos after the incognito session ends.',
   'upload.fallbackSave': 'Save to Photos',
   'action.editImage': '🖼 Editing an image on the phone',
+  'share.chooserTitle': 'Send with',
+  'share.needsBuild': 'Sharing several files, or text with a file, needs a newer build of Qutai.',
   'chat.imageMade': 'Image ready: {name}',
   'chat.imageSave': 'Save to Photos',
   'chat.imageSaveLabel': 'Save {name} to Photos',

@@ -183,6 +183,11 @@ Qutai from other apps"). The main activity also carries the launcher shortcuts (
 `res/xml/qutai_shortcuts.xml`); pinning a page with "Add to home screen" needs no permission (the launcher asks). The home screen widget is a
 non-exported receiver (`expo.modules.qutaientry.QutaiWidgetProvider`, `APPWIDGET_UPDATE`); no permission.
 
+Files the user shares from the assistant's cards to another app go through a non-exported FileProvider of the
+`qutai-entry` module (`expo.modules.qutaientry.QutaiShareFileProvider`, authority `${applicationId}.qutai.share`),
+limited to the hand-out folders in the cache, with a read grant per share; no permission and no `<queries>` entry
+(WhatsApp is targeted by trying its package and falling back to the chooser).
+
 Debug builds also get `SYSTEM_ALERT_WINDOW`, `ACCESS_LOCAL_NETWORK` and `CHANGE_WIFI_MULTICAST_STATE` from the dev
 client and React Native's debug manifest (the release manifest has none of them).
 

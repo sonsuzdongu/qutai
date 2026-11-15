@@ -5,6 +5,7 @@ import android.app.UiModeManager
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import expo.modules.kotlin.functions.Queues
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -62,6 +63,25 @@ class QutaiEntryModule : Module() {
       prefs.edit().putString(LAUNCH_APPEARANCE, theme).apply()
       true
     }
+
+    /**
+     * Shares prepared files and/or text to another app after the user's tap on a card (OutgoingShare). Resolves with
+     * the package it went to, or "chooser" when the system chooser opened.
+     */
+    AsyncFunction("shareFiles") { options: Map<String, Any?> ->
+      val activity = appContext.currentActivity ?: throw IllegalStateException("No activity")
+      @Suppress("UNCHECKED_CAST")
+      OutgoingShare.share(
+        activity,
+        (options["paths"] as? List<String>) ?: emptyList(),
+        (options["mimeType"] as? String) ?: "*/*",
+        options["text"] as? String,
+        options["subject"] as? String,
+        options["emails"] as? List<String>,
+        (options["targets"] as? List<String>) ?: emptyList(),
+        options["chooserTitle"] as? String,
+      )
+    }.runOnQueue(Queues.MAIN)
 
     /** Asks the launcher to pin a shortcut that opens `url` in Qutai; the launcher shows its own confirmation. */
     Function("pinSiteShortcut") { url: String, label: String, letter: String, color: String ->

@@ -14,6 +14,50 @@ public class QutaiEntryModule: Module {
       EntryQueue.shared.take()
     }
 
+    /// Shares prepared files and/or text to another app after the user's tap on a card: the system share sheet
+    /// (UIActivityViewController) with the text and every file, where the user picks the app (and in it the chat).
+    /// Whether an app keeps the text next to a file is up to that app's share extension; the JavaScript side copies
+    /// the text as well where it may not travel. Resolves with the chosen activity type, or "cancelled".
+    AsyncFunction("shareFiles") { (options: [String: Any], promise: Promise) in
+      let paths = options["paths"] as? [String] ?? []
+      let text = options["text"] as? String
+      let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].standardizedFileURL.path
+      let subject = options["subject"] as? String ?? ""
+      var items: [Any] = []
+      if let text = text, !text.isEmpty {
+        items.append(SharedText(text: text, subject: subject))
+      }
+      for path in paths {
+        guard let url = URL(string: path), url.isFileURL else {
+          promise.reject("ERR_SHARE_FILE", "Not a file URL")
+          return
+        }
+        let standard = url.standardizedFileURL
+        let parent = standard.deletingLastPathComponent().deletingLastPathComponent().lastPathComponent
+        guard standard.path.hasPrefix(caches + "/"), parent == "outgoing" || parent == "outgoing-incognito",
+              FileManager.default.fileExists(atPath: standard.path) else {
+          promise.reject("ERR_SHARE_FILE", "Only prepared hand-out files can be shared")
+          return
+        }
+        items.append(standard)
+      }
+      guard !items.isEmpty, let presenter = self.appContext?.utilities?.currentViewController() else {
+        promise.reject("ERR_SHARE_UNAVAILABLE", "Nothing to share, or no screen to show the share sheet on")
+        return
+      }
+      let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+      if let popover = controller.popoverPresentationController {
+        popover.sourceView = presenter.view
+        popover.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.maxY - 80, width: 0, height: 0)
+        popover.permittedArrowDirections = []
+      }
+      controller.completionWithItemsHandler = { activityType, completed, _, _ in
+        promise.resolve(completed ? (activityType?.rawValue ?? "completed") : "cancelled")
+      }
+      presenter.present(controller, animated: true)
+    }
+    .runOnQueue(.main)
+
     OnStartObserving {
       EntryQueue.shared.setListener { [weak self] in
         self?.sendEvent("onEntry", [:])
@@ -23,6 +67,29 @@ public class QutaiEntryModule: Module {
     OnStopObserving {
       EntryQueue.shared.setListener(nil)
     }
+  }
+}
+
+/// The shared text, with an email subject for apps that ask for one (UIActivityItemSource).
+final class SharedText: NSObject, UIActivityItemSource {
+  let text: String
+  let subject: String
+
+  init(text: String, subject: String) {
+    self.text = text
+    self.subject = subject
+  }
+
+  func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any {
+    text
+  }
+
+  func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? {
+    text
+  }
+
+  func activityViewController(_ activityViewController: UIActivityViewController, subjectForActivityType activityType: UIActivity.ActivityType?) -> String {
+    subject
   }
 }
 

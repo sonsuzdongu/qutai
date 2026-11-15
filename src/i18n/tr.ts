@@ -731,6 +731,8 @@ export const tr: Record<keyof typeof en, string> = {
   'upload.fallbackIncognito': "Gizli oturum bittikten sonra da Fotoğraflar’da kalır.",
   'upload.fallbackSave': "Fotoğraflar’a kaydet",
   'action.editImage': '🖼 Görsel telefonda düzenleniyor',
+  'share.chooserTitle': 'Şununla gönder',
+  'share.needsBuild': 'Birden fazla dosyayı ya da dosyayla birlikte metni paylaşmak için Qutai’nin daha yeni bir sürümü gerekiyor.',
   'chat.imageMade': 'Görsel hazır: {name}',
   'chat.imageSave': "Fotoğraflar’a kaydet",
   'chat.imageSaveLabel': "{name} dosyasını Fotoğraflar’a kaydet",
