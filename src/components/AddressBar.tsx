@@ -17,9 +17,10 @@ import { toUrl } from '../browser/url';
 import { t } from '../i18n';
 import { darkPalette, makeStyles, usePalette } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
-import { QutaiMark } from '../ui/QutaiMark';
+import { AssistantButton } from './AssistantButton';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { OmniboxSuggestions } from './OmniboxSuggestions';
+import type { HoldHandlers } from './PushToTalk';
 
 type Props = {
   url: string;
@@ -54,6 +55,9 @@ type Props = {
   assistantUnseen?: boolean;
   /** Off: no Qutai button (the page menu has "Ask Qutai" instead). */
   showAssistant?: boolean;
+  /** Holding the Qutai button to talk (absent when that setting is off). */
+  assistantHold?: HoldHandlers;
+  assistantHoldActive?: boolean;
   searchEngine: SearchEngineId;
   searchSuggestions: boolean;
   onSubmit: (url: string) => void;
@@ -94,6 +98,8 @@ export function AddressBar({
   assistantRunning,
   assistantUnseen = false,
   showAssistant = true,
+  assistantHold,
+  assistantHoldActive,
   searchEngine,
   searchSuggestions,
   onSubmit,
@@ -310,19 +316,14 @@ export function AddressBar({
       </Pressable>
       <IconButton icon="more" onPress={onOpenMenu} incognito={darkUI} accessibilityLabel={t('address.menu')} />
       {showAssistant && (
-        <Pressable
+        <AssistantButton
+          open={assistantOpen}
+          running={assistantRunning}
+          unseen={assistantUnseen}
           onPress={onToggleAssistant}
-          hitSlop={6}
-          style={[styles.assistantButton, assistantOpen && styles.assistantButtonActive]}
-          accessibilityLabel={
-            t(assistantOpen ? 'address.closeAssistant' : 'address.openAssistant') +
-            (assistantUnseen ? `, ${t('address.assistantUnseen')}` : '')
-          }
-        >
-          {/* The orbit circles while a task runs. */}
-          <QutaiMark size={24} working={assistantRunning} />
-          {assistantUnseen && !assistantRunning ? <View style={styles.unseenDot} /> : null}
-        </Pressable>
+          hold={assistantHold}
+          holdActive={assistantHoldActive}
+        />
       )}
       {loading && <LoadingBar top={bottom} />}
       {editing && (
@@ -490,20 +491,6 @@ const useStyles = makeStyles((c) => ({
     paddingHorizontal: 3,
   },
   tabCountText: { fontSize: 12, fontWeight: '700', color: c.text },
-  // A 34pt touch target around a 24pt logo, in line with the bar's 22pt icons.
-  assistantButton: { width: 34, height: 34, marginLeft: 2, alignItems: 'center', justifyContent: 'center' },
-  assistantButtonActive: { opacity: 0.7 },
-  unseenDot: {
-    position: 'absolute',
-    top: 3,
-    right: 3,
-    width: 9,
-    height: 9,
-    borderRadius: 4.5,
-    backgroundColor: c.danger,
-    borderWidth: 1.5,
-    borderColor: c.chrome,
-  },
 }));
 
 /** The bar has a fixed height, so very large text sizes are capped there. */

@@ -63,6 +63,7 @@ function backupSettings(s: Settings): BackupSettings {
     readerEasyReading: s.readerEasyReading,
     // The answer about the phone's online speech service stays on this phone: each phone asks again.
     voiceAutoSend: s.voiceAutoSend,
+    voiceHoldToTalk: s.voiceHoldToTalk,
   };
 }
 
@@ -140,6 +141,7 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
     take('readerFont', s.readerFont as ReaderFont | undefined);
     take('readerEasyReading', s.readerEasyReading);
     take('voiceAutoSend', s.voiceAutoSend);
+    take('voiceHoldToTalk', s.voiceHoldToTalk);
     if (s.customBaseUrl && normalizeBaseUrl(s.customBaseUrl, { allowCleartext: ALLOW_CLEARTEXT }).ok)
       take('customBaseUrl', s.customBaseUrl);
     for (const id of PROVIDER_ORDER) {

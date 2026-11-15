@@ -83,6 +83,7 @@ import { offerSettings, PermissionDeniedError } from './src/device/settings';
 import { saveFullPageScreenshot, saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { stopVoiceInput } from './src/device/voiceInput';
+import { PushToTalkBubble, usePushToTalk } from './src/components/PushToTalk';
 import { AUTO_LANGUAGE, automaticLanguage, languageName, listeningOrder } from './src/device/voiceLanguage';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { deleteLeftoverIncognitoProfiles } from './src/device/webviewProfile';
@@ -745,8 +746,10 @@ function BrowserApp({
   /**
    * `tab`: the tab the task is for (a saved task's page, opened just before); otherwise the tab on screen.
    * `noPage`: a saved task meant for no particular page, so the model is told not to start from the one on screen.
+   * `voice`: a voice message from holding the Qutai button, sent with the panel closed: it leaves the files attached to
+   * the message being written, and a saved task waiting in the input, where they are.
    */
-  const send = async (text: string, options: { tab?: Tab; noPage?: boolean } = {}) => {
+  const send = async (text: string, options: { tab?: Tab; noPage?: boolean; voice?: boolean } = {}) => {
     if (running) return;
     // The conversation belongs to the tab the user is looking at when they send the task,
     // and stays there even if the agent moves to other tabs.
@@ -756,7 +759,7 @@ function BrowserApp({
     // Marked before anything is shown, so a message typed in an incognito tab is never saved.
     if (current.incognito) chat.privacy.touchedIncognito = true;
     // Images go only to a model that takes them: said before anything is sent, with the message kept in the input.
-    if (chat.pending.some((a) => a.kind === 'image')) {
+    if (!options.voice && chat.pending.some((a) => a.kind === 'image')) {
       const blocked = await imagesBlockedFor(chat);
       if (blocked) {
         chat.setDraft(text);
@@ -764,8 +767,8 @@ function BrowserApp({
         return;
       }
     }
-    if (prepared?.chat === chat) setPrepared(null);
-    const attachments = chat.takePending();
+    if (prepared?.chat === chat && !options.voice) setPrepared(null);
+    const attachments = options.voice ? [] : chat.takePending();
     chat.add(userItem(text, attachments));
 
     // The conversation's own model choice, if its provider is still set up; otherwise the default in Settings.
@@ -1595,6 +1598,29 @@ function BrowserApp({
     }
   };
 
+  // Holding the Qutai button: a voice message to the conversation on screen, with the panel closed.
+  const sendRef = useRef(send);
+  sendRef.current = send;
+  const ptt = usePushToTalk({
+    busy: () => browserInstance.conversations.some((x) => x.running),
+    send: (text) => void sendRef.current(text, { voice: true }),
+    languages: () => listeningOrder(browserInstance.conversationOf(browserInstance.active), settingsRef.current),
+    incognito: () => {
+      const active = browserInstance.active;
+      const chat = browserInstance.conversationOf(active);
+      return active.incognito || chat.incognito || chat.privacy.touchedIncognito;
+    },
+    online: settings.voiceOnline,
+    onOnlineChange: (voiceOnline) => onChangeSettings({ ...settingsRef.current, voiceOnline }),
+    onStarted: (lang) => {
+      const active = browserInstance.active;
+      const chat = browserInstance.conversationOf(active);
+      rememberVoiceLanguage(lang, active.incognito || chat.incognito || chat.privacy.touchedIncognito);
+    },
+    openPanel: () => setPanelOpen(true),
+    toast: toast.show,
+  });
+
   /** The language voice input last listened in: a fallback for conversations that say nothing yet. Not incognito. */
   const rememberVoiceLanguage = (lang: string, incognito: boolean) => {
     if (incognito || settingsRef.current.voiceLastLanguage === lang) return;
@@ -1634,6 +1660,8 @@ function BrowserApp({
       assistantRunning={running}
       assistantUnseen={!panelOpen && unseenChat !== undefined}
       showAssistant={settings.showAssistantButton}
+      assistantHold={settings.voiceHoldToTalk ? ptt.handlers : undefined}
+      assistantHoldActive={ptt.bubble.phase !== 'idle'}
       onSubmit={(url) => tab.loadUrl(upgradeToHttps(url, settings.httpsOnly))}
       onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
       readerState={onNewTab ? 'none' : tab.reader ? 'on' : tab.readerAvailable ? 'available' : 'none'}
@@ -2083,6 +2111,14 @@ function BrowserApp({
           <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
           <CaptureOverlay />
           <PdfReaderHost />
+          <PushToTalkBubble
+            bubble={ptt.bubble}
+            barAtBottom={barAtBottom}
+            onOpenPanel={() => setPanelOpen(true)}
+            onSend={ptt.handlers.release}
+            onCancel={ptt.handlers.cancel}
+            onDismiss={ptt.dismiss}
+          />
           <Toast key={toast.key} message={toast.message} action={toast.action} onHidden={toast.hide} />
           <DialogHost root />
         </View>

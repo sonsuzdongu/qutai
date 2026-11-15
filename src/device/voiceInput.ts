@@ -143,6 +143,11 @@ export function isListening() {
   return state !== 'idle';
 }
 
+/** The recogniser has been started (until its end); false while still preparing (questions, permission). */
+export function hasVoiceSession() {
+  return session !== null;
+}
+
 // ---- Language and on-device support -------------------------------------------------------------
 
 const norm = (tag: string) => tag.replace(/_/g, '-').toLowerCase();
@@ -409,7 +414,8 @@ function handleError(s: Session, code: ExpoSpeechRecognitionErrorCode) {
   if (code === 'not-allowed') {
     offerSettings(t('voice.permissionDenied'));
   } else if (code === 'language-not-supported') {
-    dialog.alert(t('voice.title'), t('voice.languageUnavailable', { language: languageName(s.plan.lang) }));
+    const language = languageName(languageOf(s.plan.lang));
+    dialog.alert(t('voice.title'), t('voice.languageUnavailable', { language }));
   } else if (code === 'network' && s.options.incognito) {
     s.options.notify(t('voice.error.unavailable'));
   } else {

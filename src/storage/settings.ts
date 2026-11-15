@@ -93,6 +93,8 @@ export type Settings = {
   voiceLanguage: string;
   /** The recogniser language voice input was last used in (a fallback when a conversation says nothing yet). */
   voiceLastLanguage: string;
+  /** Holding the Qutai button records a voice message and sends it on release (push-to-talk). */
+  voiceHoldToTalk: boolean;
   /** The first-run setup was completed (or skipped through). */
   onboarded: boolean;
   /** Version of the privacy policy and terms the user accepted (0: none yet). */
@@ -140,6 +142,7 @@ export const DEFAULT_SETTINGS: Settings = {
   voiceOnline: 'ask',
   voiceLanguage: 'auto',
   voiceLastLanguage: '',
+  voiceHoldToTalk: true,
   onboarded: false,
   legalAcceptedVersion: 0,
 };
@@ -180,6 +183,7 @@ const KEYS = {
   voiceOnline: 'voice_online',
   voiceLanguage: 'voice_language',
   voiceLastLanguage: 'voice_last_language',
+  voiceHoldToTalk: 'voice_hold_to_talk',
   onboarded: 'onboarded',
   legalAcceptedVersion: 'legal_accepted_version',
   apiKey: (id: ProviderId) => `api_key_${id}`,
@@ -241,6 +245,7 @@ export async function loadSettings(): Promise<Settings> {
     voiceOnline,
     voiceLanguage,
     voiceLastLanguage,
+    voiceHoldToTalk,
     onboarded,
     legalAcceptedVersion,
     legacyApiKey,
@@ -282,6 +287,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.voiceOnline),
     get(KEYS.voiceLanguage),
     get(KEYS.voiceLastLanguage),
+    get(KEYS.voiceHoldToTalk),
     get(KEYS.onboarded),
     get(KEYS.legalAcceptedVersion),
     get(KEYS.legacyApiKey),
@@ -329,6 +335,7 @@ export async function loadSettings(): Promise<Settings> {
     voiceOnline: voiceOnline === 'allowed' || voiceOnline === 'declined' ? voiceOnline : 'ask',
     voiceLanguage: isLanguageTag(voiceLanguage) ? voiceLanguage : 'auto',
     voiceLastLanguage: isLanguageTag(voiceLastLanguage) ? voiceLastLanguage : '',
+    voiceHoldToTalk: voiceHoldToTalk !== 'false',
     onboarded: onboarded === 'true',
     legalAcceptedVersion: Math.max(0, Math.floor(Number(legalAcceptedVersion) || 0)),
   };
@@ -382,6 +389,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.voiceOnline, settings.voiceOnline),
     set(KEYS.voiceLanguage, settings.voiceLanguage),
     set(KEYS.voiceLastLanguage, settings.voiceLastLanguage),
+    set(KEYS.voiceHoldToTalk, String(settings.voiceHoldToTalk)),
     set(KEYS.onboarded, String(settings.onboarded)),
     set(KEYS.legalAcceptedVersion, String(settings.legalAcceptedVersion)),
     ...PROVIDER_ORDER.flatMap((id) => [

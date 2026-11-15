@@ -334,6 +334,14 @@ function SettingsPages({
               onChange={(on) => set({ voiceOnline: on ? 'allowed' : 'declined' })}
             />
             <VoiceModeLine online={settings.voiceOnline} language={settings.voiceLanguage} />
+            {settings.showAssistantButton ? (
+              <SwitchRow
+                title={t('settings.voiceHoldToTalk')}
+                hint={t('settings.voiceHoldToTalkHint')}
+                value={settings.voiceHoldToTalk}
+                onChange={(voiceHoldToTalk) => set({ voiceHoldToTalk })}
+              />
+            ) : null}
             <LinkRow label={t('settings.manageMemory')} onPress={() => setMemoryVisible(true)} />
             <LinkRow label={t('settings.savedTasks')} onPress={() => setTasksVisible(true)} />
             <LinkRow label={t('settings.sitePermissions')} onPress={() => setSitesVisible(true)} />

@@ -199,8 +199,9 @@ const PROTECTED: { names: string[]; label: () => string; why: string; place: () 
     place: inSettings('settings.assistant'),
   },
   {
-    names: ['voice_online', 'voice_recognition', 'voice_consent', 'voice_auto_send'],
-    label: () => `${uiLabel('settings.voiceOnline')}, ${uiLabel('settings.voiceAutoSend')}`,
+    names: ['voice_online', 'voice_recognition', 'voice_consent', 'voice_auto_send', 'voice_hold_to_talk', 'hold_to_talk'],
+    label: () =>
+      `${uiLabel('settings.voiceOnline')}, ${uiLabel('settings.voiceAutoSend')}, ${uiLabel('settings.voiceHoldToTalk')}`,
     why: "they decide where the user's voice goes and when their words are sent",
     place: inSettings('settings.assistant'),
   },

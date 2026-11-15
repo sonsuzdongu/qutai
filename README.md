@@ -71,6 +71,17 @@ only. Nothing is recorded to disk, and no audio goes to Qutai or the AI provider
 panel closes, another tab or a dialog comes up, the app leaves the screen, a call comes in or a site starts using the
 microphone; what was heard stays in the field.
 
+Push-to-talk: holding the Qutai button in the address bar for half a second (a haptic bump) starts listening without
+opening the panel. A bubble next to the button (above it when the bar is at the bottom, below and to its left when at
+the top) shows the listening dot, the TR/EN tag and the live transcript; lifting the finger waits up to a second for the
+final words and sends them to the conversation of the tab on screen through the same path as a typed message (a lighter
+haptic and a "Sent: …" toast with Open). Sliding the finger away turns the bubble red ("Release to cancel"); an
+interruption (app left, a call, a dialog, a system prompt) also sends nothing, as does silence. While a task is running
+nothing is recorded: the bubble says Qutai is busy and offers Open. The first hold asks for the microphone (or the
+online speech service) instead of listening. With a screen reader, the button has "Start voice message", then "Send"
+and "Cancel" actions instead of the hold. Settings › Assistant › "Hold the Qutai button to talk" (on by default) turns
+it off (`src/components/AssistantButton.tsx`, `src/components/PushToTalk.tsx`).
+
 Attachments: the paperclip next to the message field attaches up to 4 images per message, from Photos (the system
 photo picker, no photo library permission) or the camera; they show as removable thumbnails above the field, then in
 the sent message, and a tap opens them full screen with Share and Save (to Photos). The attach sheet says that

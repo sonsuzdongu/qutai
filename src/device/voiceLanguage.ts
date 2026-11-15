@@ -22,18 +22,67 @@ export const languageOf = (tag: string) => tag.replace(/_/g, '-').toLowerCase().
 /** The short tag shown while listening: "TR", "EN". */
 export const languageLabel = (tag: string) => languageOf(tag).toUpperCase();
 
-/** A language's name in the app's language: "Turkish", "English (United Kingdom)", or the tag itself. */
+/**
+ * Languages' own names, for "More languages…" where the JS engine has no Intl.DisplayNames (Hermes on Android):
+ * a language picker shows each language in itself, so these need no translation.
+ */
+const ENDONYMS: Record<string, string> = {
+  ar: 'العربية',
+  bg: 'Български',
+  bn: 'বাংলা',
+  ca: 'Català',
+  cmn: '中文',
+  cs: 'Čeština',
+  da: 'Dansk',
+  de: 'Deutsch',
+  el: 'Ελληνικά',
+  es: 'Español',
+  fa: 'فارسی',
+  fi: 'Suomi',
+  fr: 'Français',
+  he: 'עברית',
+  hi: 'हिन्दी',
+  hr: 'Hrvatski',
+  hu: 'Magyar',
+  id: 'Bahasa Indonesia',
+  it: 'Italiano',
+  ja: '日本語',
+  ko: '한국어',
+  ms: 'Bahasa Melayu',
+  nb: 'Norsk bokmål',
+  nl: 'Nederlands',
+  pl: 'Polski',
+  pt: 'Português',
+  ro: 'Română',
+  ru: 'Русский',
+  sk: 'Slovenčina',
+  sv: 'Svenska',
+  th: 'ไทย',
+  uk: 'Українська',
+  ur: 'اردو',
+  vi: 'Tiếng Việt',
+  yue: '粵語',
+  zh: '中文',
+};
+
+/** The language alone, for what is said while listening: "Listening in English…" (not "English (en-US)"). */
+export const spokenLanguageName = (tag: string) => languageName(languageOf(tag));
+
+/** A language's name: "Turkish", "English (United Kingdom)", "Deutsch (de-DE)", or the tag itself. */
 export function languageName(tag: string): string {
   const language = languageOf(tag);
   const own = language === 'tr' ? t('voice.language.tr') : language === 'en' ? t('voice.language.en') : null;
-  const regional = tag.includes('-') || tag.includes('_');
+  const clean = tag.replace(/_/g, '-');
+  const regional = clean.includes('-');
   if (own && !regional) return own;
   try {
     const names = new Intl.DisplayNames([getLanguage()], { type: 'language' });
-    const name = names.of(tag.replace(/_/g, '-'));
-    if (name && name.toLowerCase() !== tag.toLowerCase()) return name.charAt(0).toLocaleUpperCase() + name.slice(1);
+    const name = names.of(clean);
+    if (name && name.toLowerCase() !== clean.toLowerCase()) return name.charAt(0).toLocaleUpperCase() + name.slice(1);
   } catch {}
-  return own ? `${own} (${tag})` : tag;
+  const known = own ?? ENDONYMS[language];
+  if (!known) return clean;
+  return regional ? `${known} (${clean})` : known;
 }
 
 /**

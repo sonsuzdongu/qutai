@@ -26,7 +26,7 @@ import {
   VoiceOnline,
   VoiceState,
 } from '../device/voiceInput';
-import { languageLabel, languageName } from '../device/voiceLanguage';
+import { languageLabel, spokenLanguageName } from '../device/voiceLanguage';
 import { VoiceLanguageSheet } from './VoiceLanguageSheet';
 import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
@@ -290,7 +290,7 @@ export function AssistantPanel({
   useEffect(() => {
     if (fellBackFrom && voiceInfo.lang)
       notifyVoice(
-        t('voice.fellBack', { wanted: languageName(fellBackFrom), language: languageName(voiceInfo.lang) }),
+        t('voice.fellBack', { wanted: spokenLanguageName(fellBackFrom), language: spokenLanguageName(voiceInfo.lang) }),
       );
   }, [fellBackFrom, voiceInfo.lang, notifyVoice]);
 
@@ -642,7 +642,7 @@ export function AssistantPanel({
                   onChangeText={changeText}
                   placeholder={
                     listening && voiceInfo.lang
-                      ? t('voice.listeningIn', { language: languageName(voiceInfo.lang) })
+                      ? t('voice.listeningIn', { language: spokenLanguageName(voiceInfo.lang) })
                       : t(listening ? 'voice.listening' : research ? 'chat.researchPlaceholder' : 'chat.placeholder')
                   }
                   multiline
@@ -654,7 +654,7 @@ export function AssistantPanel({
                     hitSlop={8}
                     style={[styles.langTag, d?.langTag]}
                     accessibilityRole="button"
-                    accessibilityLabel={t('voice.languageTagLabel', { language: languageName(voiceInfo.lang) })}
+                    accessibilityLabel={t('voice.languageTagLabel', { language: spokenLanguageName(voiceInfo.lang) })}
                     accessibilityHint={t('voice.languageTagHint')}
                   >
                     <Text style={[styles.langTagText, d?.langTagText]}>{languageLabel(voiceInfo.lang)}</Text>
