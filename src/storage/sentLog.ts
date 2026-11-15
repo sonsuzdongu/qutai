@@ -22,6 +22,7 @@ export type SentKind =
   | 'tab'
   | 'history'
   | 'bookmarks'
+  | 'settings'
   | 'memory'
   | 'location'
   | 'calendar'

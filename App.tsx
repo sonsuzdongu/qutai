@@ -425,6 +425,9 @@ function BrowserApp({
   }, [panelOpen, conversation, conversation.unseen]);
 
   const [settings, setSettings] = useState<Settings>(initialSettings);
+  // The latest settings for code that runs later than a render (the assistant's settings tool).
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
   // Read when a task ends, which can be long after the render that started it.
   const notifyTaskDoneRef = useRef(settings.notifyTaskDone);
   notifyTaskDoneRef.current = settings.notifyTaskDone;
@@ -848,6 +851,15 @@ function BrowserApp({
         log: logAction,
         history: historySearch,
         bookmarks: { db: getDb, removed: offerBookmarkUndo },
+        // The same path as the Settings screen; the tool only passes allowlisted fields (agent/settingsTool.ts).
+        appSettings: {
+          get: () => settingsRef.current,
+          change: (patch) => {
+            const next = { ...settingsRef.current, ...patch };
+            settingsRef.current = next;
+            return onChangeSettings(next);
+          },
+        },
         composeEmail,
         offerCall: (offer) => {
           AccessibilityInfo.announceForAccessibility(

@@ -12,6 +12,7 @@ const TOOL_KINDS: Record<string, SentKind> = {
   read_tab: 'tab',
   search_history: 'history',
   bookmarks: 'bookmarks',
+  settings: 'settings',
   get_location: 'location',
   read_calendar: 'calendar',
   add_calendar_event: 'calendar',

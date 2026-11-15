@@ -226,6 +226,12 @@ export const en = {
   'bookmarksTool.removedMany': '{count} bookmarks removed',
   'sentLog.kind.bookmarks': 'Bookmarks',
   'common.undo': 'Undo',
+  'action.settingsGet': '⚙️ Looking at Qutai settings',
+  'action.settingsSet': '⚙️ Setting: {changes}',
+  'action.settingsChange': '⚙️ Changing Qutai settings',
+  'settingsTool.on': 'On',
+  'settingsTool.off': 'Off',
+  'sentLog.kind.settings': 'Qutai settings',
 
   'schedule.confirmEvent': '📅 Add to your calendar',
   'schedule.confirmReminder': '⏰ Add a reminder',

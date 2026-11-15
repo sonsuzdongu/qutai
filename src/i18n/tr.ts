@@ -227,6 +227,12 @@ export const tr: Record<keyof typeof en, string> = {
   'bookmarksTool.removedMany': '{count} yer imi kaldırıldı',
   'sentLog.kind.bookmarks': 'Yer imleri',
   'common.undo': 'Geri al',
+  'action.settingsGet': '⚙️ Qutai ayarlarına bakılıyor',
+  'action.settingsSet': '⚙️ Ayar: {changes}',
+  'action.settingsChange': '⚙️ Qutai ayarları değiştiriliyor',
+  'settingsTool.on': 'Açık',
+  'settingsTool.off': 'Kapalı',
+  'sentLog.kind.settings': 'Qutai ayarları',
 
   'schedule.confirmEvent': '📅 Takviminize ekle',
   'schedule.confirmReminder': '⏰ Anımsatıcı ekle',

@@ -22,6 +22,8 @@ import { readPdfTool, viewAttachmentTool } from './fileTools';
 import { uiLabel, uiPath } from './uiLabels';
 import { editImageTool, uploadImageTool } from './imageTools';
 import { BOOKMARK_READS, bookmarkNeedsUser, bookmarksTool, describeBookmarkCall } from './bookmarkTool';
+import { describeSettingsCall, settingsTool } from './settingsTool';
+import type { Settings } from '../storage/settings';
 import { sleep } from '../utils/sleep';
 import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch, SiteVisits } from '../storage/history';
@@ -87,6 +89,14 @@ export type ToolContext = {
     db(): Promise<Db>;
     /** Bookmarks the tool removed: the screen offers to put them back ("Undo" in a toast). */
     removed(bookmarks: Bookmark[]): void;
+  };
+  /**
+   * Qutai's own settings (settings tool): the current values, and changes applied through the same path as the
+   * Settings screen. Only the allowlist in agent/settingsTool.ts is ever changed.
+   */
+  appSettings?: {
+    get(): Settings;
+    change(patch: Partial<Settings>): Promise<void>;
   };
   /** Opens the email composer; resolves with what the user did (sent, saved, cancelled…). */
   composeEmail?: (draft: EmailDraft) => Promise<string>;
@@ -225,6 +235,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.searchHistory', { query: str(input.query) });
     case 'bookmarks':
       return describeBookmarkCall(input);
+    case 'settings':
+      return describeSettingsCall(input);
     case 'draft_email':
       return t('action.draftEmail', { subject: str(input.subject).slice(0, 60) });
     case 'offer_call':
@@ -963,6 +975,8 @@ const LOGGED_TOOLS = new Set([
   'open_settings',
   // Changes only: list and search are left out (see isLogged).
   'bookmarks',
+  // Changes only, each with the setting's name and new value.
+  'settings',
   // Only that the location was read: the coordinates are never written to the history.
   'get_location',
   // Only that the calendar was read and the range: the events are never written to the history.
@@ -978,6 +992,7 @@ const LOGGED_TOOLS = new Set([
 function isLogged(name: string, input: Record<string, unknown>): boolean {
   if (!LOGGED_TOOLS.has(name)) return false;
   if (name === 'bookmarks') return !BOOKMARK_READS.has(String(input.action));
+  if (name === 'settings') return input.action === 'set';
   return true;
 }
 
@@ -1001,6 +1016,7 @@ function actionTarget(
       'ask_user',
       'search_history',
       'bookmarks',
+      'settings',
       'draft_email',
       'offer_call',
       'draft_sms',
@@ -1054,6 +1070,8 @@ const BACKGROUND_TOOLS = new Set([
   'search_history',
   // Only the app's own data; asking calls (deleting a folder, many removals) wait for the user, see backgroundBlocker.
   'bookmarks',
+  // Reading only: a change waits until the user is back, so they see it happen (backgroundBlocker).
+  'settings',
   // Only reads a file the user attached.
   'view_attachment',
   // Works on the phone only and adds a card.
@@ -1078,6 +1096,7 @@ export function backgroundBlocker(
   if (!BACKGROUND_TOOLS.has(name))
     return SCHEDULING_TOOLS.has(name) || ALWAYS_CONFIRMED.has(name) ? 'confirm' : 'onScreen';
   if (name === 'bookmarks' && bookmarkNeedsUser(input, ctx.agentTab)) return 'confirm';
+  if (name === 'settings' && input.action !== 'get') return 'onScreen';
   const target = actionTarget(name, input, ctx);
   const host = target ? siteKey(target.url) : null;
   const level = host && ctx.sites ? ctx.sites.levelFor(host) : 'default';
@@ -1360,6 +1379,7 @@ async function runTool(
   if (name === 'read_tab') return readTab(input, ctx);
   if (name === 'search_history') return searchHistoryTool(input, ctx);
   if (name === 'bookmarks') return bookmarksTool(input, ctx);
+  if (name === 'settings') return settingsTool(input, ctx);
   if (name === 'draft_email') return draftEmail(input, ctx);
   if (name === 'open_settings') return openSettingsTool(input, ctx);
   if (name === 'offer_call') return offerCallTool(input, ctx);
