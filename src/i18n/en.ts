@@ -1682,6 +1682,12 @@ export const en = {
   'account.error.noGoogleAccount': 'No Google account was found on this phone. Add one in the phone’s settings and try again.',
   'account.error.providerFailed': 'Signing in didn’t complete. Please try again.',
   'account.error.unexpected': 'Something went wrong. Please try again.',
+  'account.providerTest': 'the test sign-in',
+  'account.test.title': 'Test sign-in',
+  'account.test.hint': 'Only in builds made for a local test server. Signs in as one of the server’s test users, without Apple or Google.',
+  'account.test.signInAs': 'Sign in as test user {user}',
+  'account.test.signedIn': 'Test account. This account comes from the test sign-in of a local test server; it isn’t a real Apple or Google account.',
+  'account.test.notAvailable': 'The test sign-in isn’t switched on at this server, or this build’s test secret doesn’t match the server’s.',
   'permissions.title': 'What Qutai may use',
   'permissions.lead':
     'The assistant can work with these parts of your phone. Each is optional: turn on what you want now, and the phone asks you to confirm. Anything you leave off is asked only when you first need it.',

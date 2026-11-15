@@ -1688,6 +1688,12 @@ export const tr: Record<keyof typeof en, string> = {
   'account.error.noGoogleAccount': 'Bu telefonda Google hesabı bulunamadı. Telefonun ayarlarından bir hesap ekleyip yeniden deneyin.',
   'account.error.providerFailed': 'Oturum açma tamamlanamadı. Lütfen yeniden deneyin.',
   'account.error.unexpected': 'Bir sorun oluştu. Lütfen yeniden deneyin.',
+  'account.providerTest': 'test girişi',
+  'account.test.title': 'Test girişi',
+  'account.test.hint': 'Yalnızca yerel bir test sunucusu için yapılan sürümlerde bulunur. Apple ya da Google olmadan sunucunun test kullanıcılarından biri olarak oturum açarsınız.',
+  'account.test.signInAs': '{user} test kullanıcısı olarak oturum açın',
+  'account.test.signedIn': 'Test hesabı. Bu hesap yerel bir test sunucusunun test girişinden geliyor; gerçek bir Apple ya da Google hesabı değil.',
+  'account.test.notAvailable': 'Bu sunucuda test girişi açık değil ya da bu sürümün test parolası sunucununkiyle eşleşmiyor.',
   'permissions.title': 'Qutai’nin kullanabilecekleri',
   'permissions.lead':
     'Asistan telefonunuzun bu bölümleriyle çalışabilir. Hepsi isteğe bağlıdır: şimdi istediklerinizi açın, telefon onaylamanızı ister. Kapalı bıraktıklarınız yalnızca ilk gerektiğinde sorulur.',

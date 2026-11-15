@@ -30,6 +30,8 @@ export type ApiRequest = {
   path: string;
   body?: unknown;
   accessToken?: string;
+  /** Extra request headers (the test sign-in's secret). */
+  headers?: Record<string, string>;
   timeoutMs?: number;
 };
 
@@ -64,14 +66,14 @@ export function createApi(baseUrl: string, fetchImpl: Fetch = fetch) {
   const base = baseUrl.replace(/\/+$/, '');
 
   /** Sends one request; resolves with the parsed JSON (or null for 204), rejects with AccountApiError. */
-  async function request<T>({ method, path, body, accessToken, timeoutMs = DEFAULT_TIMEOUT_MS }: ApiRequest): Promise<T> {
+  async function request<T>({ method, path, body, accessToken, headers: extra, timeoutMs = DEFAULT_TIMEOUT_MS }: ApiRequest): Promise<T> {
     const controller = new AbortController();
     let timedOut = false;
     const timer = setTimeout(() => {
       timedOut = true;
       controller.abort();
     }, timeoutMs);
-    const headers: Record<string, string> = { Accept: 'application/json' };
+    const headers: Record<string, string> = { ...extra, Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 

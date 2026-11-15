@@ -414,9 +414,59 @@ To run the server locally: `cd backend && npm install && npm run migrate:local`,
 Apple and Google client ids in the server's `APPLE_CLIENT_IDS` / `GOOGLE_CLIENT_IDS` (see `backend/README.md` ›
 Auth); without them the sign-in routes answer "unavailable", which the app shows as such.
 
+#### Test sign-in (a local test server, before real sign-in exists)
+
+For trying pro mode on a phone before the Apple and Google client ids exist: the server's test sign-in
+(`POST /auth/dev`, `backend/README.md` › Test sign-in) signs in as one of three fixed test users, and everything
+after that (account details, sign out, sign out of all devices, delete account) is the real code. The Account
+screen then shows the account as a test account. It is off unless both sides switch it on: the server in its
+uncommitted `.dev.vars` (never in production), the app with two build-time variables. With
+`EXPO_PUBLIC_DEV_LOGIN` off (the default, and every `eas.json` profile) the control isn't shown and the secret isn't
+read into the bundle.
+
+**Warning:** `EXPO_PUBLIC_` values are readable inside the app, the test secret included. A build made this way is
+for your own local test server only: don't share, upload or ship it; make a new server secret if one leaves your
+hands.
+
+The server runs on your computer on port 8000 and a tunnel gives it a public `https` address (written
+`https://api.example.test` here; use your own). Nothing in the app or the API refuses a non-local `https` address
+behind a tunnel or reverse proxy: the API has no host, origin or CORS check, and `https` needs no cleartext
+exception (plain `http` is only allowed to local addresses on iOS).
+
+1. Server (from `backend/`; details and what protects it in `backend/README.md` › Test sign-in):
+
+   ```bash
+   npm install && npm run migrate:local
+   node scripts/generate-secret.mjs dev-sign-in        # the shared test secret, used on both sides
+   # apps/api/.dev.vars: ACCESS_TOKEN_SIGNING_KEY, REFRESH_TOKEN_PEPPER, DEV_SIGN_IN=true, DEV_SIGN_IN_SECRET=<secret>
+   API_PORT=8000 npm run dev -w @qutai/api
+   ```
+
+2. App: in `.env` (git-ignored), or exported in the shell for one build:
+
+   ```bash
+   EXPO_PUBLIC_PRO_MODE=on
+   EXPO_PUBLIC_QUTAI_API_URL=https://api.example.test
+   EXPO_PUBLIC_DEV_LOGIN=on
+   EXPO_PUBLIC_DEV_LOGIN_SECRET=<the same secret>
+   ```
+
+   Then build as for any pro build (above): `npx expo run:android` / `npx expo run:ios` for a development build,
+   or a local release build. Metro inlines the values when it bundles: restart it with `npx expo start -c` after
+   changing them. Check the address first: `curl https://api.example.test/health` answers
+   `{"ok":true,"environment":"dev"}`.
+3. On the phone: Settings › Account › Test sign-in › `test-1`, `test-2` or `test-3`. "The test sign-in isn't
+   switched on at this server, or this build's test secret doesn't match" means the server answered 404: check
+   `DEV_SIGN_IN=true`, that both secrets match, and restart the server after editing `.dev.vars`.
+
+Through a tunnel every caller may share one address, so the server's per-address limit on its auth routes (about
+20 calls a minute) and the test sign-in's own limit (10 a minute) are shared: "Too many attempts" clears after a
+minute.
+
 Tests: `npm run test:account` (the client and session against a fake server) and, with the local server running,
 `npm run test:account:server` (refresh and rotation, reuse detection, `GET /me`, sign-out, sign-out everywhere,
-`DELETE /account`, suspended accounts). Both use Node's built-in test runner; see
+`DELETE /account`, suspended accounts; with `QUTAI_TEST_DEV_LOGIN_SECRET` set and the server's test sign-in on, also
+the test sign-in and everything after it). Both use Node's built-in test runner; see
 `scripts/account-tests/README.md`.
 
 **What the owner sets up for real sign-in** (none of it is in the repository):

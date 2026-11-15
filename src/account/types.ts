@@ -8,7 +8,8 @@
  * server's shapes change, change them here too (`scripts/account-tests/` exercises them against a local server).
  */
 
-export type AuthProvider = 'apple' | 'google';
+/** `test`: a test user from the test sign-in (`POST /auth/dev`, local test servers only). */
+export type AuthProvider = 'apple' | 'google' | 'test';
 
 export type UserStatus = 'active' | 'suspended';
 
@@ -27,6 +28,15 @@ export interface GoogleSignInRequest {
   nonce: string;
   deviceId: string;
 }
+
+/** `POST /auth/dev` (header `X-Dev-Sign-In-Secret`): local test servers only; off everywhere else. */
+export interface DevSignInRequest {
+  user: DevSignInUser;
+  deviceId: string;
+}
+
+export const DEV_SIGN_IN_USERS = ['test-1', 'test-2', 'test-3'] as const;
+export type DevSignInUser = (typeof DEV_SIGN_IN_USERS)[number];
 
 export interface RefreshRequest {
   refreshToken: string;

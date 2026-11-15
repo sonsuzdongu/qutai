@@ -213,6 +213,43 @@ describe('session', () => {
     assert.deepEqual(session.getState(), { status: 'signedIn', user: USER });
   });
 
+  it('test sign-in sends the secret header and the device id, and stores an ordinary session', async () => {
+    const now = 1_000_000;
+    const mem = memoryStorage();
+    const testUser = { id: 'u-test', providers: ['test' as const], status: 'active' as const };
+    let secretSeen: string | undefined;
+    const { fetchImpl, calls } = fakeServer({
+      'POST /auth/dev': (_body, headers) => {
+        secretSeen = headers['X-Dev-Sign-In-Secret'];
+        return {
+          status: 200,
+          body: { accessToken: 'a', accessTokenExpiresIn: 900, refreshToken: 'r', refreshTokenExpiresAt: now + 1e9, user: testUser, created: true },
+        };
+      },
+      'POST /auth/signout': () => ({ status: 204 }),
+    });
+    const session = new AccountSession(createApi('https://api.test', fetchImpl), mem.storage, () => now);
+    await session.load();
+    await session.signInAsTestUser('test-2', 'the-test-secret');
+    assert.equal(secretSeen, 'the-test-secret');
+    assert.deepEqual(calls[0].body, { user: 'test-2', deviceId: 'device_12345678' });
+    assert.deepEqual(session.getState(), { status: 'signedIn', user: testUser });
+    assert.equal(mem.get()?.refreshToken, 'r');
+    await session.signOut();
+    assert.deepEqual(calls[1], { path: 'POST /auth/signout', body: { refreshToken: 'r' }, auth: undefined });
+    assert.equal(mem.get(), null);
+  });
+
+  it('test sign-in that the server refuses (off, wrong secret) stays signed out with not_found', async () => {
+    const mem = memoryStorage();
+    const { fetchImpl } = fakeServer({}); // every path answers 404, like a server with the test sign-in off
+    const session = new AccountSession(createApi('https://api.test', fetchImpl), mem.storage);
+    await session.load();
+    await assert.rejects(session.signInAsTestUser('test-1', 'wrong'), { code: 'not_found', status: 404 });
+    assert.deepEqual(session.getState(), { status: 'signedOut' });
+    assert.equal(mem.get(), null);
+  });
+
   it('drops a refresh answer that arrives after signing out', async () => {
     const now = 1_000_000;
     const mem = memoryStorage(stored(now, now));

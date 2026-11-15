@@ -7,18 +7,24 @@
  * hashed with the local REFRESH_TOKEN_PEPPER from backend/apps/api/.dev.vars, as the server does). Everything after
  * that goes through the server's real routes: refresh and rotation, reuse detection, GET /me, sign-out, sign-out
  * everywhere, DELETE /account. The sign-in routes are only checked for how they refuse a bad token.
+ *
+ * The test sign-in (POST /auth/dev) is exercised for real when QUTAI_TEST_DEV_LOGIN_SECRET is set to the server's
+ * DEV_SIGN_IN_SECRET (and the server has DEV_SIGN_IN=true): sign in as a test user, then the same routes as above.
  */
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { describe, it } from 'node:test';
+import { before, describe, it } from 'node:test';
 import { AccountApiError, createApi } from '../../src/account/api.ts';
 import { AccountSession, type SessionStorage, type StoredSession } from '../../src/account/session.ts';
 
 const API_URL = process.env.QUTAI_TEST_API_URL;
+const DEV_SECRET = process.env.QUTAI_TEST_DEV_LOGIN_SECRET;
 const BACKEND = join(import.meta.dirname, '../../backend');
+/** The local server's D1 state (the API's `dev` script uses this one; override when running it elsewhere). */
+const D1_STATE = process.env.QUTAI_TEST_D1_STATE ?? '.wrangler/state/api';
 
 function pepper(): string {
   const vars = readFileSync(join(BACKEND, 'apps/api/.dev.vars'), 'utf8');
@@ -30,7 +36,7 @@ function pepper(): string {
 function d1(sql: string) {
   execFileSync(
     'npx',
-    ['wrangler', 'd1', 'execute', 'DB', '-c', 'apps/api/wrangler.jsonc', '--env', 'dev', '--local', '--persist-to', '.wrangler/state/api', '--command', sql],
+    ['wrangler', 'd1', 'execute', 'DB', '-c', 'apps/api/wrangler.jsonc', '--env', 'dev', '--local', '--persist-to', D1_STATE, '--command', sql],
     { cwd: BACKEND, stdio: 'pipe' },
   );
 }
@@ -175,3 +181,63 @@ function seedSessionFor(userId: string, deviceId: string): string {
   );
   return refreshToken;
 }
+
+describe('test sign-in against the local server', { skip: (!API_URL || !DEV_SECRET) && 'QUTAI_TEST_API_URL or QUTAI_TEST_DEV_LOGIN_SECRET not set' }, () => {
+  // The server allows about 20 calls a minute to its auth routes per address (backend/README.md › Auth), and the
+  // tests above use most of that: let the window pass first.
+  before(() => new Promise((resolve) => setTimeout(resolve, 61_000)));
+
+  const fresh = async () => {
+    const mem = memoryStorage(null);
+    const device = `devtest_${randomBytes(6).toString('hex')}`;
+    const session = new AccountSession(createApi(API_URL!), { ...mem.storage, deviceId: async () => device });
+    await session.load();
+    return { session, mem };
+  };
+
+  it('signs in as a test user, and the session works like any other', async () => {
+    const { session, mem } = await fresh();
+    const signIn = await session.signInAsTestUser('test-1', DEV_SECRET!);
+    assert.deepEqual(signIn.user.providers, ['test']);
+    assert.equal(session.getState().status, 'signedIn');
+
+    // GET /me, then a refresh (the access token made to look expired) and GET /me again.
+    assert.deepEqual(await session.refreshUser(), signIn.user);
+    const before = mem.get()!.refreshToken;
+    (session as unknown as { session: StoredSession }).session.accessExpiresAt = 0;
+    assert.equal((await session.refreshUser()).id, signIn.user.id);
+    assert.notEqual(mem.get()!.refreshToken, before, 'the refresh token was rotated');
+
+    const current = mem.get()!.refreshToken;
+    await session.signOut();
+    assert.deepEqual(session.getState(), { status: 'signedOut' });
+    // The current (unspent) refresh token no longer works: the server ended the session.
+    await assert.rejects(
+      createApi(API_URL!).request({ method: 'POST', path: '/auth/refresh', body: { refreshToken: current } }),
+      { code: 'unauthorized' },
+    );
+  });
+
+  it('signs out of all devices and deletes a test account', async () => {
+    const a = await fresh();
+    const b = await fresh();
+    const first = await a.session.signInAsTestUser('test-2', DEV_SECRET!);
+    await b.session.signInAsTestUser('test-2', DEV_SECRET!);
+    await a.session.signOutEverywhere();
+    await assert.rejects(b.session.refreshUser(), { code: 'unauthorized' });
+
+    const c = await fresh();
+    await c.session.signInAsTestUser('test-2', DEV_SECRET!);
+    await c.session.deleteAccount();
+    assert.deepEqual(c.session.getState(), { status: 'signedOut' });
+    const again = await (await fresh()).session.signInAsTestUser('test-2', DEV_SECRET!);
+    assert.equal(again.created, true, 'a new account after deletion');
+    assert.notEqual(again.user.id, first.user.id);
+  });
+
+  it('a wrong secret is answered as if the route did not exist', async () => {
+    const { session } = await fresh();
+    await assert.rejects(session.signInAsTestUser('test-3', `${DEV_SECRET}-wrong`), { code: 'not_found', status: 404 });
+    assert.deepEqual(session.getState(), { status: 'signedOut' });
+  });
+});

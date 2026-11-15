@@ -10,7 +10,8 @@ import {
   signInWithApple,
   signInWithGoogle,
 } from '../account/providers';
-import type { AuthProvider } from '../account/types';
+import { DEV_SIGN_IN_USERS, type AuthProvider, type DevSignInUser } from '../account/types';
+import { devLoginEnabled, devLoginSecret } from '../config/features';
 import { t } from '../i18n';
 import { darkPalette, makeStyles, usePalette } from '../ui/theme';
 import { dialog } from './Dialog';
@@ -19,13 +20,15 @@ import { dialog } from './Dialog';
  * Settings › Account (pro mode only; SettingsModal shows the row only when `accountsEnabled`).
  * Signed out: what the account is for and the sign-in buttons. Signed in: the account from `GET /me`, sign out,
  * sign out of all devices, delete account. Sign-in isn't part of onboarding.
+ * Builds made against a local test server (`devLoginEnabled`) also show a test sign-in under the buttons, and
+ * mark a test user's account as such.
  */
 export function AccountScreen() {
   const styles = useStyles();
   const palette = usePalette();
   const state = useAccountState();
   const session = accountSession();
-  const [busy, setBusy] = useState<null | 'apple' | 'google' | 'signOut' | 'signOutAll' | 'delete'>(null);
+  const [busy, setBusy] = useState<null | 'apple' | 'google' | DevSignInUser | 'signOut' | 'signOutAll' | 'delete'>(null);
   const [apple, setApple] = useState(false);
   /** A note under the account after `GET /me`: the server can't be reached, or the account is suspended. */
   const [notice, setNotice] = useState<string | null>(null);
@@ -69,10 +72,26 @@ export function AccountScreen() {
     }
   };
 
-  const signIn = (provider: AuthProvider) =>
+  const signIn = (provider: 'apple' | 'google') =>
     run(provider, async () => {
       if (provider === 'apple') await session.signInWithApple(await signInWithApple());
       else await session.signInWithGoogle(await signInWithGoogle());
+      setNotice(null);
+    });
+
+  const signInAsTestUser = (user: DevSignInUser) =>
+    run(user, async () => {
+      if (!devLoginSecret) return;
+      try {
+        await session.signInAsTestUser(user, devLoginSecret);
+      } catch (e) {
+        // The server answers 404 when its test sign-in is off or the secret doesn't match.
+        if (e instanceof AccountApiError && e.code === 'not_found') {
+          dialog.alert(t('account.failedTitle'), t('account.test.notAvailable'));
+          return;
+        }
+        throw e;
+      }
       setNotice(null);
     });
 
@@ -155,18 +174,44 @@ export function AccountScreen() {
             </Pressable>
           )}
           {busy === 'apple' && <ActivityIndicator color={palette.textSecondary} />}
-          {!apple && !google && <Text style={styles.hint}>{t('account.noProviders')}</Text>}
+          {!apple && !google && !devLoginEnabled && <Text style={styles.hint}>{t('account.noProviders')}</Text>}
         </View>
+        {devLoginEnabled && (
+          <View style={styles.testBox}>
+            <Text style={styles.label}>{t('account.test.title')}</Text>
+            <Text style={styles.hint}>{t('account.test.hint')}</Text>
+            <View style={styles.testUsers}>
+              {DEV_SIGN_IN_USERS.map((u) => (
+                <Pressable
+                  key={u}
+                  onPress={() => signInAsTestUser(u)}
+                  disabled={!!busy}
+                  style={({ pressed }) => [styles.button, styles.testUser, pressed && styles.pressed, busy && styles.dimmed]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('account.test.signInAs', { user: u })}
+                >
+                  {busy === u ? (
+                    <ActivityIndicator color={palette.text} />
+                  ) : (
+                    <Text style={styles.buttonText}>{u}</Text>
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
       </>
     );
   }
 
   const { user } = state;
-  const providers = user.providers.map((p) => t(p === 'apple' ? 'account.providerApple' : 'account.providerGoogle')).join(', ');
+  const providers = user.providers.map((p) => t(PROVIDER_LABEL[p])).join(', ');
+  const testUser = user.providers.includes('test');
   return (
     <>
       {user.status === 'suspended' && <Text style={[styles.notice, styles.noticeWarn]}>{t('account.suspended')}</Text>}
       {notice && <Text style={styles.notice}>{notice}</Text>}
+      {testUser && <Text style={[styles.notice, styles.noticeWarn]}>{t('account.test.signedIn')}</Text>}
       <View style={styles.card}>
         <Text style={styles.label}>{t('account.signedInWith', { providers })}</Text>
         <Text style={styles.hint} selectable>
@@ -194,6 +239,12 @@ export function AccountScreen() {
     </>
   );
 }
+
+const PROVIDER_LABEL = {
+  apple: 'account.providerApple',
+  google: 'account.providerGoogle',
+  test: 'account.providerTest',
+} as const satisfies Record<AuthProvider, string>;
 
 function ActionButton({
   label,
@@ -257,5 +308,16 @@ const useStyles = makeStyles((c) => ({
   danger: { color: c.danger },
   pressed: { backgroundColor: c.pressed },
   dimmed: { opacity: 0.5 },
+  testBox: {
+    gap: 6,
+    marginTop: 8,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: c.danger,
+  },
+  testUsers: { flexDirection: 'row', gap: 8, marginTop: 6 },
+  testUser: { flex: 1 },
 }));
 

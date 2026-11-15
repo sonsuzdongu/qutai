@@ -1,5 +1,13 @@
 import { AccountApiError, type Api } from './api';
-import type { AppleSignInRequest, GoogleSignInRequest, Me, SignInResponse, TokenPair } from './types';
+import type {
+  AppleSignInRequest,
+  DevSignInRequest,
+  DevSignInUser,
+  GoogleSignInRequest,
+  Me,
+  SignInResponse,
+  TokenPair,
+} from './types';
 
 /**
  * The signed-in session with Qutai's server (pro mode only). Pure code, no React Native imports: storage and the
@@ -92,6 +100,24 @@ export class AccountSession {
     const deviceId = await this.storage.deviceId();
     const body: GoogleSignInRequest = { ...request, deviceId };
     return this.start(await this.api.request<SignInResponse>({ method: 'POST', path: '/auth/google', body }));
+  }
+
+  /**
+   * Test sign-in as one of the server's fixed test users (`POST /auth/dev`), for builds made against a local test
+   * server only: the UI offers it only when `devLoginEnabled` (src/config/features.ts). The session that comes
+   * back is an ordinary one: refresh, sign-out and deletion run exactly as for Apple and Google.
+   */
+  async signInAsTestUser(user: DevSignInUser, secret: string): Promise<SignInResponse> {
+    const deviceId = await this.storage.deviceId();
+    const body: DevSignInRequest = { user, deviceId };
+    return this.start(
+      await this.api.request<SignInResponse>({
+        method: 'POST',
+        path: '/auth/dev',
+        body,
+        headers: { 'X-Dev-Sign-In-Secret': secret },
+      }),
+    );
   }
 
   /** The account as the server sees it now (`GET /me`); also updates the stored copy. */

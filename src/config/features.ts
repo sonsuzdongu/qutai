@@ -23,3 +23,13 @@ export const features = {
 
 /** Accounts (sign-in, Settings › Account) exist only in pro mode with a server address. */
 export const accountsEnabled = features.pro && !!features.apiUrl;
+
+/**
+ * Test sign-in (Settings › Account › Test sign-in, `POST /auth/dev`): only for builds made against a local test
+ * server (backend/README.md › Test sign-in). Needs accounts, EXPO_PUBLIC_DEV_LOGIN=on and the server's test
+ * secret in EXPO_PUBLIC_DEV_LOGIN_SECRET. That secret is readable by anyone who has the build, so such a build
+ * must never be shared or shipped; no EAS profile sets these. Off, the secret isn't read, so it isn't bundled.
+ */
+const devLoginOn = accountsEnabled && flag(process.env.EXPO_PUBLIC_DEV_LOGIN);
+export const devLoginSecret: string | null = devLoginOn ? text(process.env.EXPO_PUBLIC_DEV_LOGIN_SECRET) : null;
+export const devLoginEnabled = devLoginSecret !== null;
