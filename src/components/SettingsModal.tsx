@@ -10,7 +10,7 @@ import { BackupTooLargeError, pickBackupFile, PickerUnavailableError } from '../
 import { rateApp } from '../device/rateApp';
 import { backgroundTasksSupported } from '../device/backgroundTask';
 import { ensureNotificationPermission } from '../device/notifications';
-import { offerSettings } from '../device/settings';
+import { offerSettings, openSettingsOrExplain } from '../device/settings';
 import { voiceModeSummary, VoiceModeSummary } from '../device/voiceInput';
 import { AUTO_LANGUAGE, languageName } from '../device/voiceLanguage';
 import { VoiceLanguageSheet } from './VoiceLanguageSheet';
@@ -450,6 +450,16 @@ function SettingsPages({
               value={settings.backgroundPlayback}
               onChange={(backgroundPlayback) => set({ backgroundPlayback })}
             />
+            {/* Vendor battery managers may stop even a foreground service; Qutai never asks to be exempted itself
+                (no REQUEST_IGNORE_BATTERY_OPTIMIZATIONS), the user decides in the system's own settings. */}
+            {Platform.OS === 'android' && settings.backgroundPlayback && (
+              <Pressable onPress={openSettingsOrExplain} style={styles.switchRow} accessibilityRole="button">
+                <View style={styles.flex}>
+                  <Text style={styles.hint}>{t('settings.backgroundPlaybackBattery')}</Text>
+                  <Text style={[styles.optionText, styles.link]}>{t('settings.backgroundPlaybackBatteryButton')} ›</Text>
+                </View>
+              </Pressable>
+            )}
             {Platform.OS === 'android' && (
               <SwitchRow
                 title={t('settings.pictureInPicture')}

@@ -111,25 +111,28 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     if (!i) { i = { time: -1, startedAt: 0 }; infos.set(el, i); }
     return i;
   }
+  var EVENTS = ['play', 'playing', 'pause', 'ended', 'volumechange', 'emptied', 'seeked', 'loadeddata'];
+  function onMediaEvent(e) {
+    var el = e.target;
+    if (!(el instanceof ME)) return;
+    track(el);
+    if (e.type === 'playing') { info(el).startedAt = now(); current = el; }
+    schedule();
+  }
   function track(el) {
     for (var i = 0; i < elements.length; i++) if (elements[i] === el) return;
     elements[elements.length] = el;
+    // An element never added to the document (new Audio(), common in music players) fires its events on itself
+    // only; the document listeners below never see them.
+    for (var j = 0; j < EVENTS.length; j++) el.addEventListener(EVENTS[j], onMediaEvent);
   }
   try {
     Object.defineProperty(proto, 'play', {
-      value: function play() { track(this); return realPlay.apply(this, arguments); },
+      value: function play() { track(this); schedule(); return realPlay.apply(this, arguments); },
       writable: true, configurable: true,
     });
   } catch (e) {}
-  ['play', 'playing', 'pause', 'ended', 'volumechange', 'emptied', 'seeked', 'loadeddata'].forEach(function (type) {
-    document.addEventListener(type, function (e) {
-      var el = e.target;
-      if (!(el instanceof ME)) return;
-      track(el);
-      if (type === 'playing') { info(el).startedAt = now(); current = el; }
-      schedule();
-    }, true);
-  });
+  EVENTS.forEach(function (type) { document.addEventListener(type, onMediaEvent, true); });
 
   // iOS: media keeps playing when the app leaves the foreground; see resumeVideo above.
   var docProto = window.Document && Document.prototype;

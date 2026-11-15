@@ -1492,6 +1492,9 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.backgroundPlayback': 'Arka planda çalmaya devam et',
   'settings.backgroundPlaybackHint': 'Bir sayfada başlattığınız müzik ve podcast’ler Qutai’den çıkınca veya ekranı kilitleyince sürer; kilit ekranında denetimleri olur. Videolar yalnızca ses olarak sürer (resim içinde resim görüntüyü de korur); gizli sekmelerde videolar duraklar. Kapalıyken Qutai’den çıkınca çalma duraklar.',
   'settings.backgroundPlaybackHintAndroid': 'Bir sayfada başlattığınız ses Qutai’den çıkınca veya ekranı kilitleyince sürer; bildirimden, kilit ekranından ve kulaklıktan denetlenir. Kapalıyken Qutai’den çıkınca çalma duraklar.',
+  'settings.backgroundPlaybackBattery':
+    'Bazı telefonlar (Honor, Huawei, Xiaomi, Samsung ve başkaları) pil tasarrufu için arka plandaki uygulamaları durdurur; bu da çalmayı keser. Ses bir süre sonra kesiliyorsa pil ayarlarından Qutai’nin arka planda çalışmasına izin verin.',
+  'settings.backgroundPlaybackBatteryButton': 'Qutai’nin uygulama ayarlarını aç',
   'settings.pictureInPicture': 'Resim içinde resim',
   'settings.pictureInPictureHint': 'Tam ekran oynayan bir video, ana ekrana geçtiğinizde küçük bir pencereye dönüşür. Gizli sekmelerde ve uygulama kilidi açıkken olmaz.',
   'playback.privateTab': 'Gizli sekme',

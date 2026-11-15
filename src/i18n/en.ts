@@ -1486,6 +1486,9 @@ export const en = {
   'settings.backgroundPlayback': 'Keep playing in the background',
   'settings.backgroundPlaybackHint': 'Music and podcasts you start on a page go on when you leave Qutai or lock the screen, with controls on the lock screen. A video goes on as sound only (picture-in-picture keeps the picture); incognito tabs pause videos. When off, playback pauses when you leave Qutai.',
   'settings.backgroundPlaybackHintAndroid': 'Sound you start on a page goes on when you leave Qutai or lock the screen, with a notification, lock screen and headphone controls. When off, playback pauses when you leave Qutai.',
+  'settings.backgroundPlaybackBattery':
+    'Some phones (Honor, Huawei, Xiaomi, Samsung and others) stop apps in the background to save battery, which cuts playback off. If sound stops after a while, allow Qutai to run in the background in its battery settings.',
+  'settings.backgroundPlaybackBatteryButton': 'Open Qutai’s app settings',
   'settings.pictureInPicture': 'Picture-in-picture',
   'settings.pictureInPictureHint': 'A playing full-screen video shrinks into a small window when you go to the home screen. Not for incognito tabs or while the app lock is on.',
   'playback.privateTab': 'Private tab',

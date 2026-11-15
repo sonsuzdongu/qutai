@@ -543,9 +543,13 @@ the feature, when the user is asked, the config line that declares it and what i
   visibilitychange events are stopped), so sites that pause their own player when hidden (YouTube's mobile site)
   go on too. Incognito tabs don't do this. Note: background play is a paid feature on YouTube; whether this is
   acceptable for YouTube's terms and App Review is an open question. Android: a `mediaPlayback` foreground service with a media notification runs
-  while a tab plays sound (local module `modules/qutai-media`); media inside frames isn't seen, and whether
-  headphone buttons reach it is untested. Picture-in-picture on Android works for a playing full-screen video only.
-  Incognito tabs show "Private tab" in the notification and on the lock screen.
+  while a tab plays sound (local module `modules/qutai-media`), and that tab's WebView keeps being told its window is
+  visible while the app is in the background (Chromium would otherwise pause its `<video>`, sound included, and pages
+  that pause themselves on visibilitychange would stop); other tabs, and this one once playback has ended, see the
+  real state. Media inside frames isn't seen, and whether headphone buttons reach it is untested. Phone makers'
+  battery managers (Honor, Huawei, Xiaomi, Samsung) may still stop it; Settings › Appearance › Media says so and
+  opens Qutai's app settings, Qutai never asks for a battery exemption itself. Picture-in-picture on Android works
+  for a playing full-screen video only. Incognito tabs show "Private tab" in the notification and on the lock screen.
 - **Backups leave things out.** Downloads, saved pages, the "What was sent to the AI" list, caches and the lock
   settings are never in a backup file.
 - **Reader mode is a heuristic.** It is offered only on pages with enough article text (600 characters, 3 paragraphs)

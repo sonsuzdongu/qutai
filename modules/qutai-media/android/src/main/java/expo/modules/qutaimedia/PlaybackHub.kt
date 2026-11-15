@@ -189,6 +189,11 @@ object PlaybackHub : RNCWebViewPlayback.Listener {
     val keep = backgroundPlayback && current != null &&
       (current.audible || now - silentSince < PAUSED_GRACE_MS)
     if (keep) startService() else stopService()
+    // Only the owning page, only while background playback is kept for it: it doesn't see itself hidden when the
+    // app leaves the foreground (Chromium would pause its <video>, and players that pause on visibilitychange would
+    // stop). Every other page, and this one once playback ends, sees the real visibility.
+    val visibleView = if (keep) current?.view?.get() else null
+    pages.forEach { page -> page.view.get()?.let { RNCWebViewPlayback.setKeepVisible(it, it === visibleView) } }
     service?.render(current)
     PictureInPicture.update()
     if (pages.any { it.audible || it.playing } || service != null) main.postDelayed(watchdog, WATCHDOG_MS)

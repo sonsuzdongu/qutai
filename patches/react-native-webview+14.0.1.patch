@@ -52,7 +52,7 @@ index 1b5c4c9..c86cb6d 100644
      public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
  
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
-index 80c6803..0a85aac 100644
+index 80c6803..78c8b30 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 @@ -38,15 +38,19 @@ import com.facebook.react.uimanager.events.Event;
@@ -87,7 +87,7 @@ index 80c6803..0a85aac 100644
          if (this.nestedScrollEnabled) {
              requestDisallowInterceptTouchEvent(true);
          }
-@@ -224,6 +233,83 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -224,6 +233,105 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -105,6 +105,28 @@ index 80c6803..0a85aac 100644
 +    public @Nullable String mediaPlaybackKey = null;
 +    public boolean mediaPlaybackPrivate = false;
 +    boolean profileReleased = false;
++
++    // Qutai patch: background playback. When the app leaves the foreground, Android reports the window as no longer
++    // visible and Chromium hides the page: it pauses <video> elements (even with sound) and fires visibilitychange,
++    // on which many players pause themselves. While this view's tab owns background playback
++    // (RNCWebViewPlayback.setKeepVisible, set by the app's media service only while the tab plays sound or was
++    // paused from the media controls a moment ago), Chromium keeps being told the window is visible. Nothing else
++    // changes: the view isn't drawn while the app is in the background either way.
++    private int windowVisibility = View.VISIBLE;
++    private boolean playbackKeepVisible = false;
++
++    @Override
++    protected void onWindowVisibilityChanged(int visibility) {
++        windowVisibility = visibility;
++        super.onWindowVisibilityChanged(playbackKeepVisible ? View.VISIBLE : visibility);
++    }
++
++    void setPlaybackKeepVisible(boolean keep) {
++        if (playbackKeepVisible == keep) return;
++        playbackKeepVisible = keep;
++        // Only matters while the window is really hidden; then the page learns the real state now.
++        if (windowVisibility != View.VISIBLE) super.onWindowVisibilityChanged(keep ? View.VISIBLE : windowVisibility);
++    }
 +
 +    // Qutai patch: network ad and tracker blocking (RNCWebViewContentBlocker). Read on WebView's request threads.
 +    public volatile boolean contentBlocking = false;
@@ -171,7 +193,18 @@ index 80c6803..0a85aac 100644
      WebChromeClient mWebChromeClient;
      @Override
      public void setWebChromeClient(WebChromeClient client) {
-@@ -403,6 +489,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -253,6 +361,10 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+             this.bridgeListener = new WebViewCompat.WebMessageListener() {
+               @Override
+               public void onPostMessage(@NonNull WebView view, @NonNull WebMessageCompat message, @NonNull Uri sourceOrigin, boolean isMainFrame, @NonNull JavaScriptReplyProxy replyProxy) {
++                // Qutai patch: playback state also goes straight to the app's media service (works in the background).
++                // This is the bridge on every WebView that supports WEB_MESSAGE_LISTENER (UI thread), so the report
++                // must be here too, not only in the addJavascriptInterface fallback below.
++                if (isMainFrame) RNCWebViewPlayback.report(RNCWebView.this, message.getData());
+                 RNCWebView.this.onMessage(message.getData(), sourceOrigin.toString());
+               }
+             };
+@@ -403,6 +515,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -183,7 +216,7 @@ index 80c6803..0a85aac 100644
      protected void dispatchEvent(WebView webView, Event event) {
          ThemedReactContext reactContext = getThemedReactContext();
          int reactTag = RNCWebViewWrapper.getReactTagFromWebView(webView);
-@@ -419,7 +510,14 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -419,7 +536,14 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          if (mWebChromeClient != null) {
              mWebChromeClient.onHideCustomView();
          }
@@ -198,7 +231,7 @@ index 80c6803..0a85aac 100644
      }
  
    public ThemedReactContext getThemedReactContext() {
-@@ -446,7 +544,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -446,7 +570,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          public void postMessage(String message) {
              if (mWebView.getMessagingEnabled()) {
                  // Post to main thread because `mWebView.getUrl()` requires to be executed on main.
@@ -727,10 +760,10 @@ index f83033b..f78507e 100644
              webChromeClient.setAllowsProtectedMedia(mAllowsProtectedMedia);
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPlayback.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPlayback.java
 new file mode 100644
-index 0000000..392b475
+index 0000000..dd76255
 --- /dev/null
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPlayback.java
-@@ -0,0 +1,90 @@
+@@ -0,0 +1,98 @@
 +package com.reactnativecommunity.webview;
 +
 +import android.webkit.WebView;
@@ -804,6 +837,14 @@ index 0000000..392b475
 +        if (!(view instanceof RNCWebView)) return true;
 +        RNCWebView web = (RNCWebView) view;
 +        return web.mediaPlaybackKey == null || web.mediaPlaybackPrivate;
++    }
++
++    /**
++     * Keeps the page seeing itself as visible while the app is in the background (true), or lets it see the real
++     * state (false, the default). For the tab that owns background playback only; see RNCWebView. Main thread.
++     */
++    public static void setKeepVisible(WebView view, boolean keep) {
++        if (view instanceof RNCWebView) ((RNCWebView) view).setPlaybackKeepVisible(keep);
 +    }
 +
 +    /**
