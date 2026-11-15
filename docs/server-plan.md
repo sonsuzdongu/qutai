@@ -1,9 +1,9 @@
 # Qutai server plan
 
 The server exists only for pro mode (`EXPO_PUBLIC_PRO_MODE=on`, see `src/config/features.ts`). Builds from
-the public repository never talk to it. It lives in `backend/` in this repository (owner's decision, 15 Nov
-2026; no secrets are committed); the app reaches it through `EXPO_PUBLIC_QUTAI_API_URL`. The full design,
-including the admin panel and analytics, is in `backend/DESIGN.md`. Task-level tracking stays in `TODO.md` ›
+the public repository never talk to it. It lives in its own repository, checked out at `backend/` as a git
+submodule (owner's decision, 15 Nov 2026); the app reaches it through `EXPO_PUBLIC_QUTAI_API_URL`. The full
+design, including the admin panel and analytics, is in that repository's `DESIGN.md`. Task-level tracking stays in `TODO.md` ›
 Pro mode.
 
 Decided: **Cloudflare Workers + Durable Objects + D1**, with R2 for sync blobs if they outgrow D1.
