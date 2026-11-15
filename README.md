@@ -191,6 +191,34 @@ text, headings, images and links, in light, dark or sepia, serif or sans, with a
 same text size as pages. Read aloud in reader mode reads exactly that article, highlighting the paragraph being read.
 The page stays loaded underneath, so closing reader mode (or Android back) returns to it as it was.
 
+Downloads are Qutai's own on both platforms, with one Downloads screen (menu › Library › Downloads): in progress and
+finished sections, search, an icon by type, the site, size, progress with speed and time left, and per item Pause /
+Resume / Cancel / Retry, Open, Share, Show in Downloads folder (Android), Copy link, Remove from list and Delete file
+(confirmed); "Clear finished" only empties the list. A small indicator over the page shows running downloads. A file
+a page starts without a recent tap on the page asks first ("<site> wants to download <file>"), a second one from the
+same site also offers to block that site's downloads for the session; apps, installers, scripts and archives get a
+warning before they start; `content:` and `file:` addresses are refused. Files a page generates (`blob:` and `data:`
+addresses, such as an exported CSV) are read from the page in 512 KB slices and saved the same way.
+
+- **Android** (`modules/qutai-downloads`, `src/storage/androidDownloads.ts`): Qutai fetches the file itself (OkHttp,
+  which React Native already ships) with the tab's user agent, referrer and the cookies of the tab's own WebView
+  profile (an incognito tab's own), read again for every host a redirect leads to, and writes it to the public
+  Downloads folder: a pending `MediaStore.Downloads` row on Android 10+ (published only once every byte arrived and
+  the size matched `Content-Length`), a hidden partial file renamed when done on Android 9 and older (storage
+  permission asked at the first download). Names come from `Content-Disposition` or the address, made safe, unique
+  ("name (1).ext") and fixed from the response's type when the WebView guessed wrong. Three at a time, the rest queue;
+  pause and resume with a range request guarded by `If-Range` (without range support or when the file changed it
+  starts again and says so); network errors retry with backoff and wait for a network while offline; a free-space
+  check before large files. In the background a user-initiated data transfer job (Android 14+) or a `dataSync`
+  foreground service (Android 8 to 13, and the fallback) keeps it going, with one notification (progress, speed or
+  time left, Pause / Resume, Cancel; tap: Downloads) and one per finished file (tap: open it). After the app is
+  killed or the phone restarts, unfinished downloads show as interrupted and resumable. The system `DownloadManager`
+  is no longer used.
+- **iOS** (`src/storage/iosDownloads.ts`): into Qutai's own Downloads folder; the page fetches the file first (with
+  the site's cookies), larger ones download directly with progress. Cancel only (no resume in `expo-file-system`).
+- **Incognito** (both): listed only while the incognito session lasts and never written down; when it ends,
+  unfinished ones are cancelled and finished ones leave the list. The files stay: the user asked for them.
+
 ## Opening Qutai from other apps
 
 Anything that reaches Qutai from outside the app is treated as untrusted: another app or a web page chose it. A web
@@ -383,7 +411,8 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/agent/hiddenValues.ts` | Hidden memories: finds their values (and formatted variants) in tool results and replaces them with "[hidden: …]" before anything goes back to the model or a log |
 | `src/agent/personalData.ts` | Finds remembered personal details in what the assistant is about to type, so the app asks before they reach a site (per-site "Your personal information": ask / allow / block) |
 | `src/utils/foreground.ts` | Pauses the agent when the app goes to the background, resumes it when it comes back to the foreground |
-| `src/device/backgroundTask.ts`, `modules/qutai-agent` | "Keep working in the background" (Android): the `specialUse` foreground service and its notifications, the headless JS task that keeps timers running, and page commands sent natively to the tab's WebView while React Native is paused; also the assistant's downloads through the system download manager |
+| `src/device/backgroundTask.ts`, `modules/qutai-agent` | "Keep working in the background" (Android): the `specialUse` foreground service and its notifications, the headless JS task that keeps timers running, and page commands sent natively to the tab's WebView while React Native is paused |
+| `src/storage/downloads.ts`, `src/browser/downloadRequests.ts`, `modules/qutai-downloads` | Downloads: one model and screen over two back ends (iOS in the app, Android a native engine with MediaStore, pause/resume, the background job and notifications); the decisions before a download starts (asking, warnings, blob:/data:) |
 
 Along with each assistant response, the provider's raw output is also stored (Claude's thinking blocks, OpenAI's
 encrypted reasoning content, Gemini's thought signatures, OpenRouter's `reasoning_details`) and sent back unchanged to
@@ -412,6 +441,13 @@ the feature, when the user is asked, the config line that declares it and what i
 [docs/permissions.md](docs/permissions.md); use it for the App Store privacy labels and the Play Data safety form.
 
 ## Known limitations / next steps
+
+- **Downloads a WebView can't describe.** Android's download listener gives the address, user agent,
+  `Content-Disposition`, type and length, never the request method or body: a file a form `POST` produced is fetched
+  again with `GET`, which many servers answer differently (an error page or another file). Servers that don't support
+  ranges (or send no `ETag` / `Last-Modified`) can't resume: the download starts again from zero and the list says so.
+  A `blob:` address made inside a frame can't be read from the main page. Whether a page download followed a tap is
+  judged by a touch on the page in the 10 seconds before. iOS has no pause/resume.
 
 - **Private mode isolation differs per platform.** iOS: each private tab has its own non-persistent data store
   (cookies and site data), gone when the tab closes. Android: the private tabs open at the same time share one private

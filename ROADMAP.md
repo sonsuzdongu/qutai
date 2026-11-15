@@ -43,7 +43,7 @@ credits, background tasks on iOS and with the phone off), native work in our own
 | Reader mode | ✅ | | Readability-style extraction in the page script, shown in a script-free WebView over the page; light/dark/sepia, serif/sans, easier-reading spacing; read aloud with the paragraph highlighted |
 | QR code scanning / generation | ✅ | | `expo-camera` scanner; generation with `qrcode-generator` |
 | Voice search | 🟡 | Build | Voice input in the assistant panel with the device's speech recognition (on-device where possible, `expo-speech-recognition`); address-bar voice search not built. Needs testing on phones |
-| Download manager | 🟡 | Go · S | See section 6: no progress or cancel on iOS |
+| Download manager | ✅ | Build | See section 6: Qutai's own downloads and one Downloads screen on both platforms. Not tested on a phone |
 | Detecting natural-language AI commands | 🟡 | – | "Ask Qutai" is at the top of the suggestion list; automatic detection will not be done (smart address bar decision) |
 
 ### Tab management (section 3)
@@ -93,16 +93,18 @@ credits, background tasks on iOS and with the phone off), native work in our own
 | Fullscreen video | ✅ | | Default on iOS; `allowsFullscreenVideo` on Android |
 | Picture-in-Picture | ✅ | Build | iOS: the system player's PiP (not for incognito tabs). Android: a playing full-screen video when the user goes home (local module `modules/qutai-media`); setting; not for incognito tabs or with the app lock on. Not tested on a phone |
 | Background audio | ✅ | Build | "Keep playing in the background" (on by default). iOS: audio background mode, WebKit handles the audio session and lock screen (videos pause when leaving, as WebKit does). Android: `mediaPlayback` foreground service with a media notification while a tab plays sound. Not tested on a phone |
-| File and image download | ✅ | | See section 6; images are saved to Photos from the long-press menu |
+| File and image download | ✅ | | See section 6; the long-press menu's "Save image" saves to Photos on iOS and to Downloads on Android; "Download link" on both |
 
 ### Download manager (section 6)
 
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
-| Download, list, open, share | ✅ | | iOS: the app's own Downloads folder and a Downloads screen (share, save to Files, delete). Android: the system download manager |
-| Progress, pause / resume, cancel | 🟡 | Go · S | Android: the system download manager's notification. iOS: a file appears when it is finished; no progress or cancel |
-| Downloads requiring login | ✅ | | iOS: the page fetches the file with the site's cookies; Android's download manager gets the cookies |
-| Choosing download location | ✅ | | iOS: share sheet / Save to Files; Android: the system Downloads folder |
+| Download, list, open, share | ✅ | | One Downloads screen: sections, search, open / share / show in folder / copy link / remove / delete, "Clear finished". iOS: the app's own Downloads folder. Android: the public Downloads folder (MediaStore), Qutai's own engine (`modules/qutai-downloads`) |
+| Progress, pause / resume, cancel | ✅ | Build | Android: progress, speed, time left, pause / resume (range requests with `If-Range`), retry with backoff, waiting for a network, a queue of three, background job (UIDT on 14+, `dataSync` before) with a notification; interrupted downloads resumable after a restart. iOS: progress and cancel (no resume) |
+| Downloads requiring login | ✅ | | iOS: the page fetches the file with the site's cookies; Android: the tab's WebView profile's cookies, per host through redirects |
+| Generated files (blob:, data:) | ✅ | | Read from the page in slices into the same list (both platforms) |
+| Choosing download location | ⬜ | | Always the Downloads folder (Android) / Qutai's Downloads (iOS, then Save to Files). "Ask where to save" left out |
+| POST downloads | ⬜ | | The WebView doesn't hand over a request's method or body: a GET is sent instead |
 
 ### User experience (section 7)
 

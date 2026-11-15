@@ -194,9 +194,29 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
 - [x] Keep the screen on while the app is open (`expo-keep-awake`)
 - [x] Block screenshots and the app switcher preview in private tabs (`expo-screen-capture`)
 - [x] File download support: iOS saves into the app's own Downloads folder (the page fetches the file with the site's
-  cookies, so downloads behind a login work) with a Downloads screen (tap to share or save to Files, delete); Android hands them to
-  the system download manager with the site's cookies (`src/device/download.ts`, `src/components/DownloadsScreen.tsx`)
-  - [x] The assistant can download a file for the user (`download_file`): a link's ref (its resolved `href`) or an http(s) address; confirmed every time (whatever "ask before actions" says) with the file name (from `Content-Disposition` or the address), the site and, when a 4-second cookie-less HEAD request tells, the type and size; a warning line for apps, installers, scripts, disk images, archives and extensionless binaries (not blocked). Refused when the page's or the file's site is read-only or blocked. Same path as the user's own downloads: iOS into Qutai's Downloads with progress and cancel (incognito tabs: listed for the session only), Android the system download manager with the tab's profile cookies through a new `download` function of `modules/qutai-agent` (**a new development build is needed**; an older build says so). Never opened; the model hears only that it started and where the user finds it. Pauses a background task (needs the user)
+  cookies, so downloads behind a login work); Android downloads with Qutai's own engine into the public Downloads folder
+  (below). One Downloads screen for both (`src/storage/downloads.ts`, `src/components/DownloadsScreen.tsx`)
+  - [x] Android in-app download manager (`modules/qutai-downloads`, `src/storage/androidDownloads.ts`,
+    `src/browser/downloadRequests.ts`, `plugins/withDownloads.js`, patched WebView download listener → `onFileDownload`):
+    OkHttp with the tab's user agent, referrer and WebView profile cookies (per host through redirects, Set-Cookie
+    stored back); `MediaStore.Downloads` pending row on 10+, hidden partial file + rename + media scan on 9 and older
+    (storage asked then); unique names, names/types fixed from the response; queue of 3; pause/resume with
+    `Range` + `If-Range` (strong ETag, else Last-Modified; none → start over and say so); retry with backoff, waiting
+    for a network; free-space check; byte count against `Content-Length`; cancel removes the partial file; nothing opened
+    automatically. Background: user-initiated data transfer job on Android 14+ (`RUN_USER_INITIATED_JOBS`), `dataSync`
+    foreground service on 8–13 and as the fallback when the job can't be scheduled; one ongoing notification (Pause /
+    Resume, Cancel, tap: Downloads), one per finished file (tap: open, grouped). List in a JSON file (incognito in
+    memory only; their partial files removed at the next start after a kill); running ones become "interrupted" after a
+    kill or restart. Page downloads without a tap in the last 10 s ask; a second one offers "block downloads from this
+    site" for the session; risky types warned; `content:`/`file:` refused; `blob:`/`data:` read from the page in
+    512 KB slices (an early script keeps revoked blobs for 2 minutes and notes the `download` attribute's name).
+    Long-press "Download link" (both) and Android "Save image" go through it; `read_pdf` doesn't. The system
+    `DownloadManager` is no longer used (the old `QutaiAgent.download` is removed). **Needs a new development build.**
+    Verified on the Android 16 emulator (see the fix notes); not yet on a phone
+  - [ ] Not done: "Download over mobile data: ask for large files" (left out to keep this change smaller), "Ask where
+    to save", pause/resume on iOS (`expo-file-system` has no resumable download), a PDF viewer on Android (PDFs still
+    download), POST downloads (the WebView doesn't give the method or body; a GET is sent)
+  - [x] The assistant can download a file for the user (`download_file`): a link's ref (its resolved `href`) or an http(s) address; confirmed every time (whatever "ask before actions" says) with the file name (from `Content-Disposition` or the address), the site and, when a 4-second cookie-less HEAD request tells, the type and size; a warning line for apps, installers, scripts, disk images, archives and extensionless binaries (not blocked). Refused when the page's or the file's site is read-only or blocked. Same path as the user's own downloads (`DownloadRequests.fromAssistant`): it appears in the Downloads screen with its progress on both platforms (Android: Qutai's engine with the tab's profile cookies). Never opened; the model hears only that it started and where the user finds it. Pauses a background task (needs the user)
   - [x] iOS: progress and cancel while a file downloads: a small indicator over the page (tap: Downloads) and rows at the top of the Downloads screen, with a cancel button that removes the partial file (`File.downloadFileAsync` `onProgress` and `signal`). A file the page fetches itself (with the site's cookies) shows no percentage. Pause/resume left out: its resume state lasts only while the app runs
 - [x] Before submitting to the stores: review the legacy storage permissions (`READ_EXTERNAL_STORAGE`, `READ_MEDIA_VISUAL_USER_SELECTED`) that the `expo-media-library` plugin adds on Android
   - Saving is add-only: on Android 11+ it goes through MediaStore with no permission; on Android 10 and older it needs `WRITE_EXTERNAL_STORAGE`, now declared only up to API 29 (`plugins/withLegacyStorageWrite.js`; it also covers WebView downloads on Android 9 and older). `READ_EXTERNAL_STORAGE`, `READ_MEDIA_IMAGES` and `READ_MEDIA_VISUAL_USER_SELECTED` are blocked. Full list: `docs/permissions.md`
@@ -317,6 +337,15 @@ platform-specific details for downloads, permissions, the calendar tools and loc
 - [ ] Cookie banner hiding and ad blocking on real sites (are any sites broken)
 - [ ] Filter lists: after onboarding, Settings › Privacy › Filter lists shows EasyList and EasyPrivacy downloading and then "Blocking N domains" (nothing downloaded before the terms were accepted, nothing with "Block ads and trackers" off); a news site (e.g. hurriyet.com.tr, theguardian.com) with fewer ads than before; on Android the site permissions sheet shows a count that grows on the page and starts at 0 on the next page; on iOS it says counts aren't available and "Preparing the lists (1 of 3)" appears once after a download; "Block ads and trackers here" off + reload brings the ads back, on + reload removes them; an incognito tab blocks too; turning a list off and on (no new download), "Update now" (no new download when unchanged), adding a custom list (e.g. a hosts file on GitHub) shows its size and rule counts, an http:// URL and a web page are refused, removing it; "Reset blocking"; a page whose own address is on a list still opens; airplane mode during an update keeps the old lists
 - [ ] File downloads (iOS list, Android notification; on sites that require sign-in)
+- [ ] Android downloads on a phone: a large file with the app in the background and the screen off (the job's
+  notification keeps going; Android 14+ shows it in the Task Manager); pause and resume across a Wi-Fi ↔ mobile data
+  change (waiting for network, then resuming with a range request); a download behind a login (a bank statement, a
+  ticket); an APK (the warning, then the file in Downloads, never opened); a generated CSV (blob) from a web app
+  ("Export"); an incognito download (logged-in incognito cookies used; the entry gone after closing the incognito
+  tabs, the file still in Downloads); several at once (three run, the rest queued); storage nearly full (the clear
+  error before starting); the notification's Pause / Resume / Cancel with the app in the background; opening a
+  finished file from its notification; Android 9 or older (storage prompt at the first download); force-stop during a
+  download, then the entry shows "Interrupted" and resumes
 - [ ] PDF and printing; full-page screenshot and PDF from screenshots (long pages, seams between screens, fixed and sticky headers, scrollbars, cancel, endless feeds, a 25-screen page saved as one image and opened in the gallery, the split fallback)
 - [ ] Reader mode on several kinds of article (news sites, blogs, Wikipedia; lazy images; the address bar icon on SPA navigations; links leaving it; find in page and the selection bar in it; Android back; large system font) and its read-aloud highlight (pause/resume on both platforms)
 - [ ] Offline pages; history search; date formats on the history/bookmarks screen (Hermes Intl)
