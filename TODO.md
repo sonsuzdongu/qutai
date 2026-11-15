@@ -9,6 +9,10 @@ official App Store and Google Play builds. Builds from this repository keep it o
 as today: the user's own AI key, no account, nothing sent to our servers. Each item below is shown,
 requested and initialised only in pro mode, and the code path is excluded from the bundle when it's off.
 
+- [ ] Server (its own repository, checked out at `backend/`): design and order of work in its `DESIGN.md`,
+  setup in its `README.md`. Step 1 (scaffold: workspaces, API and admin Workers, D1 migrations, environments,
+  tests, deploy scripts) is done; nothing is deployed yet (needs the Cloudflare account). Next: step 2, auth
+
 ### Accounts and OAuth sign-in
 - [ ] Sign-in screen with OAuth providers: Sign in with Apple and Google first (others such as Microsoft or
   GitHub later if needed); an email magic link as a fallback is optional
