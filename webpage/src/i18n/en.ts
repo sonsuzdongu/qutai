@@ -4,7 +4,7 @@
  * so it shows the product as it is.
  */
 export const en = {
-  'meta.title': 'Qutai: AI-first browser',
+  'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
     'Qutai is an open-source AI browser for iPhone and Android. Its assistant reads and uses pages for you with your own AI key, keeps your data on your phone and asks before sensitive actions. In development.',
   'meta.ogAlt': 'The Qutai logo, a blue Q, next to the words: an AI browser that uses the page for you.',
