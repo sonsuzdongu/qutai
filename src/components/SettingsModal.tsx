@@ -12,6 +12,8 @@ import { backgroundTasksSupported } from '../device/backgroundTask';
 import { ensureNotificationPermission } from '../device/notifications';
 import { offerSettings } from '../device/settings';
 import { voiceModeSummary, VoiceModeSummary } from '../device/voiceInput';
+import { AUTO_LANGUAGE, languageName } from '../device/voiceLanguage';
+import { VoiceLanguageSheet } from './VoiceLanguageSheet';
 import { incognitoIsolated } from '../device/webviewProfile';
 import { getLanguage, t } from '../i18n';
 import type { LegalKind } from '../legal/documents';
@@ -318,6 +320,7 @@ function SettingsPages({
               onSave={(customInstructions) => set({ customInstructions })}
             />
             <Text style={[styles.label, styles.sectionLabel]}>{t('settings.voiceSection')}</Text>
+            <VoiceLanguageRow value={settings.voiceLanguage} onChange={(voiceLanguage) => set({ voiceLanguage })} />
             <SwitchRow
               title={t('settings.voiceAutoSend')}
               hint={t('settings.voiceAutoSendHint')}
@@ -330,7 +333,7 @@ function SettingsPages({
               value={settings.voiceOnline === 'allowed'}
               onChange={(on) => set({ voiceOnline: on ? 'allowed' : 'declined' })}
             />
-            <VoiceModeLine online={settings.voiceOnline} />
+            <VoiceModeLine online={settings.voiceOnline} language={settings.voiceLanguage} />
             <LinkRow label={t('settings.manageMemory')} onPress={() => setMemoryVisible(true)} />
             <LinkRow label={t('settings.savedTasks')} onPress={() => setTasksVisible(true)} />
             <LinkRow label={t('settings.sitePermissions')} onPress={() => setSitesVisible(true)} />
@@ -557,19 +560,53 @@ function SettingsPages({
 
 const speechService = () => t(Platform.OS === 'ios' ? 'voice.serviceApple' : 'voice.serviceGoogle');
 
-/** How voice input runs on this phone for the app's language right now (on the device, or online). */
-function VoiceModeLine({ online }: { online: Settings['voiceOnline'] }) {
+/**
+ * Settings › Assistant › Listening language: Automatic (follows each conversation) or a fixed language, chosen in the
+ * same sheet as the panel's (Turkish, English, More languages…).
+ */
+function VoiceLanguageRow({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const styles = useStyles();
+  const [open, setOpen] = useState(false);
+  const auto = value === AUTO_LANGUAGE;
+  const current = auto ? t('settings.voiceLanguageAuto') : languageName(value);
+  return (
+    <>
+      <Pressable
+        onPress={() => setOpen(true)}
+        style={styles.switchRow}
+        accessibilityRole="button"
+        accessibilityLabel={`${t('settings.voiceLanguage')}: ${current}`}
+      >
+        <View style={styles.flex}>
+          <Text style={styles.label}>{t('settings.voiceLanguage')}</Text>
+          <Text style={[styles.optionText, styles.link]}>{current} ›</Text>
+          <Text style={styles.hint}>{t('settings.voiceLanguageHint')}</Text>
+        </View>
+      </Pressable>
+      <VoiceLanguageSheet
+        visible={open}
+        value={auto ? null : value}
+        autoLabel={t('settings.voiceLanguageAuto')}
+        onPick={(next) => onChange(next ?? AUTO_LANGUAGE)}
+        onClose={() => setOpen(false)}
+      />
+    </>
+  );
+}
+
+/** How voice input runs on this phone for the chosen (or the app's) language right now (on the device, or online). */
+function VoiceModeLine({ online, language }: { online: Settings['voiceOnline']; language: string }) {
   const styles = useStyles();
   const [mode, setMode] = useState<VoiceModeSummary | null>(null);
   useEffect(() => {
     let alive = true;
-    voiceModeSummary(getLanguage(), online)
+    voiceModeSummary(language === AUTO_LANGUAGE ? getLanguage() : language, online)
       .then((next) => alive && setMode(next))
       .catch(() => alive && setMode('unavailable'));
     return () => {
       alive = false;
     };
-  }, [online]);
+  }, [online, language]);
   return (
     <Text style={[styles.hint, styles.voiceMode]}>
       {t(`settings.voiceMode.${mode ?? 'checking'}`, { service: speechService() })}

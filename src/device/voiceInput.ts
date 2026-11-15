@@ -4,7 +4,8 @@ import { AppState, Platform } from 'react-native';
 import type { ExpoSpeechRecognitionErrorCode } from 'expo-speech-recognition';
 import { onPageMicrophone, pageMicrophoneLive } from '../browser/mediaCapture';
 import { dialog, dialogState } from '../components/Dialog';
-import { Language, t } from '../i18n';
+import { t } from '../i18n';
+import { languageName, languageOf } from './voiceLanguage';
 import { offerSettings } from './settings';
 import { isSpeaking, setMicrophoneGuard, stopSpeaking } from './speech';
 
@@ -28,7 +29,10 @@ export type VoiceOnline = 'ask' | 'allowed' | 'declined';
 
 export type VoiceState = 'idle' | 'preparing' | 'listening' | 'stopping';
 
-/** How recognition will run for a language on this phone. */
+/** Who started listening: the panel's microphone, or holding the Qutai button (push-to-talk). */
+export type VoiceOwner = 'panel' | 'hold';
+
+/** How recognition will run on this phone. */
 export type VoicePlan = {
   /** The BCP 47 tag handed to the recogniser, e.g. "tr-TR" or "en-GB". */
   lang: string;
@@ -36,18 +40,29 @@ export type VoicePlan = {
   onDevice: boolean;
   /** Android 13+: the on-device model for this language can be downloaded (then onDevice works). */
   downloadable: string | null;
+  /** The language wanted first, when it isn't available on this phone and a later one in the order is used. */
+  fellBackFrom: string | null;
+  /** The languages after the one used, to try if the recogniser turns it down when it starts (Android). */
+  rest: string[];
 };
 
-/** The language isn't offered by the recogniser on this phone at all. */
-class LanguageUnavailable extends Error {}
+/** None of the languages is offered by the recogniser on this phone. */
+class LanguageUnavailable extends Error {
+  constructor(readonly language: string) {
+    super(language);
+  }
+}
 
 /** A build made before voice input was added: the native module isn't there. */
 export class VoiceNeedsBuildError extends Error {}
 
-const DEFAULT_TAGS: Record<Language, string> = { en: 'en-US', tr: 'tr-TR' };
+/** The tag used for a language when the phone has no regional variant of it among its own languages. */
+const DEFAULT_TAGS: Record<string, string> = { en: 'en-US', tr: 'tr-TR' };
 /** If stop() gets no "end" from the recogniser in time, the session is aborted. */
 const STOP_TIMEOUT_MS = 2500;
 const LOCALES_TIMEOUT_MS = 3000;
+/** The recogniser's language lists are read once and kept this long (a downloaded language clears them). */
+const LOCALES_CACHE_MS = 10 * 60 * 1000;
 
 let module: SpeechModule | null = null;
 
@@ -70,10 +85,21 @@ let level = 0;
 const listeners = new Set<() => void>();
 const levelListeners = new Set<() => void>();
 
+/** What the listening UI shows besides the state: who listens, in which language, and a fallback. */
+export type VoiceInfo = { owner: VoiceOwner | null; lang: string | null; fellBackFrom: string | null };
+const NO_INFO: VoiceInfo = { owner: null, lang: null, fellBackFrom: null };
+let info: VoiceInfo = NO_INFO;
+
 function setState(next: VoiceState) {
   if (state === next) return;
   state = next;
   if (next !== 'listening') setLevel(0);
+  if (next === 'idle') info = NO_INFO;
+  listeners.forEach((l) => l());
+}
+
+function setInfo(next: VoiceInfo) {
+  info = next;
   listeners.forEach((l) => l());
 }
 
@@ -103,6 +129,16 @@ export function useVoiceLevel(): number {
   );
 }
 
+export function useVoiceInfo(): VoiceInfo {
+  return useSyncExternalStore(
+    (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    () => info,
+  );
+}
+
 export function isListening() {
   return state !== 'idle';
 }
@@ -110,18 +146,22 @@ export function isListening() {
 // ---- Language and on-device support -------------------------------------------------------------
 
 const norm = (tag: string) => tag.replace(/_/g, '-').toLowerCase();
-const languageOf = (tag: string) => norm(tag).split('-')[0];
 
-/** The tags to try for a UI language: the device's own regional variants first, then a default. */
-function preferredTags(language: Language): string[] {
+/**
+ * The tags to try for a language ("tr") or a tag picked by hand ("en-GB"): that tag, the phone's own regional
+ * variants of the language (so an English phone set to the UK gets en-GB), then a default.
+ */
+function preferredTags(code: string): string[] {
+  const language = languageOf(code);
+  const exact = code.includes('-') || code.includes('_') ? [code.replace(/_/g, '-')] : [];
   const own = getLocales()
     .filter((locale) => locale.languageCode?.toLowerCase() === language && locale.languageTag)
     .map((locale) => locale.languageTag);
-  return [...new Set([...own, DEFAULT_TAGS[language]])];
+  return [...new Set([...exact, ...own, DEFAULT_TAGS[language] ?? language])];
 }
 
 /** The best entry of `available` for these preferences: an exact tag, else the same language. */
-function pick(preferred: string[], available: string[], language: Language): string | null {
+function pick(preferred: string[], available: string[], language: string): string | null {
   for (const tag of preferred) {
     const exact = available.find((x) => norm(x) === norm(tag));
     if (exact) return exact;
@@ -131,60 +171,111 @@ function pick(preferred: string[], available: string[], language: Language): str
   return sameLanguage.find((x) => regional.includes(norm(x).split('-')[1])) ?? sameLanguage[0] ?? null;
 }
 
+type Locales = { locales: string[]; installedLocales: string[] };
+let localesCache: { at: number; value: Promise<Locales> } | null = null;
+
 /**
- * Works out the recogniser language and whether recognition stays on the phone.
+ * The recogniser's languages (iOS: all it supports; Android 13+: those of the on-device recogniser, installed or
+ * downloadable). Kept for a while, so pressing the Qutai button doesn't wait for the recogniser service each time.
+ */
+function supportedLocales(M: SpeechModule['ExpoSpeechRecognitionModule']): Promise<Locales> {
+  if (localesCache && Date.now() - localesCache.at < LOCALES_CACHE_MS) return localesCache.value;
+  const none: Locales = { locales: [], installedLocales: [] };
+  // Android asks the recogniser service, which may never answer: then nothing counts as on-device.
+  const value = Promise.race([
+    M.getSupportedLocales({}).catch(() => none),
+    new Promise<Locales>((resolve) => setTimeout(() => resolve(none), LOCALES_TIMEOUT_MS)),
+  ]);
+  const entry = { at: Date.now(), value };
+  localesCache = entry;
+  // An empty answer (timeout, no service) is asked again next time.
+  value.then((v) => {
+    if (!v.locales.length && !v.installedLocales.length && localesCache === entry) localesCache = null;
+  });
+  return value;
+}
+
+/** Reads the recogniser's languages ahead of time (a press on the Qutai button that may become a hold). */
+export function prefetchVoiceLocales(): void {
+  load()
+    .then((lib) => supportedLocales(lib.ExpoSpeechRecognitionModule))
+    .catch(() => {});
+}
+
+/** The languages the phone's recogniser lists, for "More languages…" (empty when it lists none). */
+export async function voiceLanguages(): Promise<string[]> {
+  try {
+    const M = (await load()).ExpoSpeechRecognitionModule;
+    const { locales, installedLocales } = await supportedLocales(M);
+    return [...new Set([...installedLocales, ...locales].map((x) => x.replace(/_/g, '-')))];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Works out the recogniser language and whether recognition stays on the phone, trying `languages` in order
+ * (see voiceLanguage.ts for the order): a language the phone doesn't offer is skipped, and the plan says so.
  *
  * iOS: the supported list is the recogniser's own, so a missing language is known up front. On-device
  * support can only be read for the phone's own language (the module asks a recogniser made for the
  * current locale), so another language counts as online: Qutai never claims on-device without knowing.
  * Android: the lists cover only the on-device recogniser (Android 13+); the online recogniser's
- * languages can't be listed, so a missing language shows up as an error when listening starts.
+ * languages can't be listed, so a missing language shows up as an error when listening starts (and the
+ * next language in the order is tried then).
  */
-export async function voicePlan(language: Language): Promise<VoicePlan> {
+export async function voicePlan(languages: string[]): Promise<VoicePlan> {
   const M = (await load()).ExpoSpeechRecognitionModule;
-  const preferred = preferredTags(language);
-  const none = { locales: [] as string[], installedLocales: [] as string[] };
-  // Android asks the recogniser service, which may never answer: then nothing counts as on-device.
-  const supported = await Promise.race([
-    M.getSupportedLocales({}).catch(() => none),
-    new Promise<typeof none>((resolve) => setTimeout(() => resolve(none), LOCALES_TIMEOUT_MS)),
-  ]);
+  const supported = await supportedLocales(M);
+  let skipped: string | null = null;
 
-  if (Platform.OS === 'ios') {
-    const lang = supported.locales.length ? pick(preferred, supported.locales, language) : preferred[0];
-    if (!lang) throw new LanguageUnavailable();
-    const phoneLanguage = getLocales()[0]?.languageCode?.toLowerCase();
-    let onDevice = false;
+  for (let i = 0; i < languages.length; i++) {
+    const code = languages[i];
+    const language = languageOf(code);
+    const preferred = preferredTags(code);
+    const rest = languages.slice(i + 1);
+
+    if (Platform.OS === 'ios') {
+      const lang = supported.locales.length ? pick(preferred, supported.locales, language) : preferred[0];
+      if (!lang) {
+        skipped ??= code;
+        continue;
+      }
+      const phoneLanguage = getLocales()[0]?.languageCode?.toLowerCase();
+      let onDevice = false;
+      try {
+        onDevice = phoneLanguage === language && M.supportsOnDeviceRecognition();
+      } catch {}
+      return { lang, onDevice, downloadable: null, fellBackFrom: skipped, rest };
+    }
+
+    const apiLevel = typeof Platform.Version === 'number' ? Platform.Version : Number(Platform.Version);
+    let canOnDevice = false;
     try {
-      onDevice = phoneLanguage === language && M.supportsOnDeviceRecognition();
+      // Before Android 13 the module can only hint "prefer offline", which doesn't keep audio on the phone.
+      canOnDevice = apiLevel >= 33 && M.supportsOnDeviceRecognition();
     } catch {}
-    return { lang, onDevice, downloadable: null };
+    const installed = canOnDevice ? pick(preferred, supported.installedLocales, language) : null;
+    if (installed) return { lang: installed, onDevice: true, downloadable: null, fellBackFrom: skipped, rest };
+    const downloadable = canOnDevice ? pick(preferred, supported.locales, language) : null;
+    return { lang: preferred[0], onDevice: false, downloadable, fellBackFrom: skipped, rest };
   }
-
-  const apiLevel = typeof Platform.Version === 'number' ? Platform.Version : Number(Platform.Version);
-  let canOnDevice = false;
-  try {
-    // Before Android 13 the module can only hint "prefer offline", which doesn't keep audio on the phone.
-    canOnDevice = apiLevel >= 33 && M.supportsOnDeviceRecognition();
-  } catch {}
-  const installed = canOnDevice ? pick(preferred, supported.installedLocales, language) : null;
-  if (installed) return { lang: installed, onDevice: true, downloadable: null };
-  const downloadable = canOnDevice ? pick(preferred, supported.locales, language) : null;
-  return { lang: preferred[0], onDevice: false, downloadable };
+  throw new LanguageUnavailable(skipped ?? languages[0] ?? '');
 }
 
 /** Android 13+: asks the system to download the on-device model (it shows its own dialog or progress). */
 export async function downloadVoiceModel(lang: string): Promise<void> {
   const M = (await load()).ExpoSpeechRecognitionModule;
+  localesCache = null;
   await M.androidTriggerOfflineModelDownload({ locale: lang });
 }
 
 /** For Settings: how voice input would run now, or why it can't. */
 export type VoiceModeSummary = 'onDevice' | 'online' | 'onlineDeclined' | 'onlineAsk' | 'needsBuild' | 'unavailable';
 
-export async function voiceModeSummary(language: Language, online: VoiceOnline): Promise<VoiceModeSummary> {
+export async function voiceModeSummary(language: string, online: VoiceOnline): Promise<VoiceModeSummary> {
   try {
-    const plan = await voicePlan(language);
+    const plan = await voicePlan([language]);
     if (plan.onDevice) return 'onDevice';
     return online === 'allowed' ? 'online' : online === 'declined' ? 'onlineDeclined' : 'onlineAsk';
   } catch (e) {
@@ -195,7 +286,9 @@ export async function voiceModeSummary(language: Language, online: VoiceOnline):
 // ---- A listening session ------------------------------------------------------------------------
 
 export type VoiceOptions = {
-  language: Language;
+  /** The languages to listen in, best first (voiceLanguage.ts `listeningOrder`); the first available one is used. */
+  languages: string[];
+  owner: VoiceOwner;
   /** The conversation is incognito: on-device recognition only. */
   incognito: boolean;
   online: VoiceOnline;
@@ -208,15 +301,42 @@ export type VoiceOptions = {
   onFinal?: (text: string) => void;
   /** A short message for a toast. */
   notify: (message: string) => void;
+  /**
+   * Push-to-talk (holding the Qutai button): listening goes on through pauses until stopped, and a question that
+   * has to be asked first (microphone permission, the online speech service) is asked instead of listening.
+   */
+  hold?: boolean;
+  /** Listening has started, in this recogniser language (e.g. "tr-TR"). */
+  onStarted?: (lang: string) => void;
+  /** The session is over, however it ended; `text` is what was recognised in it (without the draft). */
+  onEnd?: (result: VoiceResult) => void;
+};
+
+export type VoiceResult = {
+  text: string;
+  /** Stopped by something other than the user (background, a call, a dialog…). */
+  interrupted: boolean;
+  /** The recogniser reported an error (no speech, network…). */
+  failed: boolean;
+  /** No final result came in time after stopping: `text` is the last interim result. */
+  timedOut: boolean;
 };
 
 type Session = {
   options: VoiceOptions;
+  plan: VoicePlan;
   base: string;
+  /** Final results so far (several in continuous mode: one per stretch of speech). */
+  committed: string;
+  /** The latest interim result after them. */
+  interim: string;
   final: string | null;
   /** Stopped by something other than the user (panel closed, background, a call…): nothing is sent. */
   interrupted: boolean;
   failed: boolean;
+  timedOut: boolean;
+  /** The recogniser turned the language down at the start: listening starts again with the next one. */
+  retry: boolean;
   subscriptions: { remove(): void }[];
   stopTimer: ReturnType<typeof setTimeout> | null;
 };
@@ -242,10 +362,6 @@ const ERROR_KEYS: Partial<Record<ExpoSpeechRecognitionErrorCode, Parameters<type
   interrupted: 'voice.error.interrupted',
 };
 
-function languageName(language: Language) {
-  return t(language === 'tr' ? 'voice.language.tr' : 'voice.language.en');
-}
-
 function finish() {
   const s = session;
   if (!s) return;
@@ -259,21 +375,41 @@ function finish() {
       module.ExpoSpeechRecognitionModule.setAudioSessionActiveIOS(false, { notifyOthersOnDeactivation: true });
     } catch {}
   }
-  if (s.final && !s.interrupted && !s.failed && s.options.onFinal) s.options.onFinal(s.final);
+  if (s.retry && !cancelled) {
+    // The next language in the order, saying which one wasn't available.
+    const fellBackFrom = s.plan.fellBackFrom ?? s.options.languages[0];
+    void startVoiceInput({ ...s.options, languages: s.plan.rest, draft: s.base }, fellBackFrom).then((started) => {
+      if (!started) s.options.onEnd?.({ text: '', interrupted: false, failed: true, timedOut: false });
+    });
+    return;
+  }
+  const ok = !s.interrupted && !s.failed && !s.timedOut;
+  if (s.final && ok && s.options.onFinal) s.options.onFinal(s.final);
+  s.options.onEnd?.({
+    text: join(s.committed, s.interim).trim(),
+    interrupted: s.interrupted,
+    failed: s.failed,
+    timedOut: s.timedOut,
+  });
 }
 
 function handleError(s: Session, code: ExpoSpeechRecognitionErrorCode) {
   if (code === 'aborted') return;
+  // Android only finds out when listening starts that the online recogniser lacks the language: the next one.
+  const fresh = !s.committed && !s.interim && !s.interrupted && state !== 'stopping';
+  if (code === 'language-not-supported' && fresh && s.plan.rest.length) {
+    s.retry = true;
+    return;
+  }
   // Qutai stopped it itself (panel closed, app left…): no message about what followed.
   const quiet = s.interrupted;
   if (code === 'interrupted') s.interrupted = true;
   else s.failed = true;
   if (quiet) return;
-  const { language } = s.options;
   if (code === 'not-allowed') {
     offerSettings(t('voice.permissionDenied'));
   } else if (code === 'language-not-supported') {
-    dialog.alert(t('voice.title'), t('voice.languageUnavailable', { language: languageName(language) }));
+    dialog.alert(t('voice.title'), t('voice.languageUnavailable', { language: languageName(s.plan.lang) }));
   } else if (code === 'network' && s.options.incognito) {
     s.options.notify(t('voice.error.unavailable'));
   } else {
@@ -282,14 +418,22 @@ function handleError(s: Session, code: ExpoSpeechRecognitionErrorCode) {
   }
 }
 
-/** Asks for the microphone (and on iOS speech recognition) the first time; false if not allowed. */
-async function ensurePermission(M: SpeechModule['ExpoSpeechRecognitionModule'], onDevice: boolean): Promise<boolean> {
+/**
+ * Asks for the microphone (and on iOS speech recognition) the first time; false if not allowed. With `askOnly`
+ * (push-to-talk: the finger is up by the time the question is answered) a question asked means false this time.
+ */
+async function ensurePermission(
+  M: SpeechModule['ExpoSpeechRecognitionModule'],
+  onDevice: boolean,
+  askOnly = false,
+): Promise<boolean> {
   // On-device recognition needs only the microphone; online recognition on iOS also needs speech recognition.
   const get = () => (onDevice ? M.getMicrophonePermissionsAsync() : M.getPermissionsAsync());
   let status = await get();
   if (!status.granted && status.canAskAgain) {
     // The first time, both are asked on iOS, so switching to online later doesn't prompt mid-sentence.
     await M.requestPermissionsAsync().catch(() => null);
+    if (askOnly) return false;
     status = await get();
   }
   if (status.granted) return true;
@@ -334,24 +478,27 @@ async function startDownload(options: VoiceOptions, lang: string) {
 /**
  * Starts listening: works out the language and where the audio goes, asks what needs asking,
  * stops read-aloud (barge-in) and starts the recogniser. Errors are shown to the user here.
+ * Resolves true when the recogniser was started (its "end" then always follows, with `onEnd`).
  */
-export async function startVoiceInput(options: VoiceOptions): Promise<void> {
-  if (state !== 'idle') return;
+export async function startVoiceInput(options: VoiceOptions, fellBackFrom: string | null = null): Promise<boolean> {
+  if (state !== 'idle') return false;
   cancelled = false;
   setState('preparing');
+  setInfo({ owner: options.owner, lang: null, fellBackFrom: null });
   try {
-    await begin(options);
+    await begin(options, fellBackFrom);
   } catch (e) {
     if (e instanceof VoiceNeedsBuildError) dialog.alert(t('voice.title'), e.message);
     else if (e instanceof LanguageUnavailable)
-      dialog.alert(t('voice.title'), t('voice.languageUnavailable', { language: languageName(options.language) }));
+      dialog.alert(t('voice.title'), t('voice.languageUnavailable', { language: languageName(e.language) }));
     else options.notify(t('voice.error.generic'));
   } finally {
     if (!session) setState('idle');
   }
+  return !!session;
 }
 
-async function begin(options: VoiceOptions) {
+async function begin(options: VoiceOptions, fellBackFrom: string | null) {
   const lib = await load();
   const M = lib.ExpoSpeechRecognitionModule;
   if (pageMicrophoneLive()) {
@@ -367,7 +514,8 @@ async function begin(options: VoiceOptions) {
     return;
   }
 
-  const plan = await voicePlan(options.language);
+  const found = await voicePlan(options.languages);
+  const plan = { ...found, fellBackFrom: found.fellBackFrom ?? fellBackFrom };
   if (!plan.onDevice) {
     if (options.incognito) {
       const buttons = plan.downloadable
@@ -381,10 +529,11 @@ async function begin(options: VoiceOptions) {
       dialog.alert(t('voice.title'), t('voice.onlineDeclined'));
       return;
     }
-    if (options.online === 'ask' && !(await askOnline(options, plan))) return;
+    // Push-to-talk: the question comes up instead of listening (the finger is up by the time it's answered).
+    if (options.online === 'ask' && (!(await askOnline(options, plan)) || options.hold)) return;
   }
 
-  if (!(await ensurePermission(M, plan.onDevice))) return;
+  if (!(await ensurePermission(M, plan.onDevice, options.hold))) return;
   // Something may have changed while a prompt was up (a site took the microphone, the app was left).
   // ("inactive" is normal right after an iOS permission prompt, so only "background" counts here.)
   if (pageMicrophoneLive() || AppState.currentState === 'background') return;
@@ -398,27 +547,43 @@ async function begin(options: VoiceOptions) {
 
   const s: Session = {
     options,
+    plan,
     base: options.draft,
+    committed: '',
+    interim: '',
     final: null,
     interrupted: false,
     failed: false,
+    timedOut: false,
+    retry: false,
     subscriptions: [],
     stopTimer: null,
   };
   session = s;
+  setInfo({ owner: options.owner, lang: plan.lang, fellBackFrom: plan.fellBackFrom });
   s.subscriptions.push(
     M.addListener('start', () => {
-      if (session === s) setState('listening');
+      if (session !== s) return;
+      setState('listening');
+      options.onStarted?.(plan.lang);
     }),
     M.addListener('result', (event) => {
       if (session !== s) return;
       const words = event.results[0]?.transcript?.trim() ?? '';
-      const text = join(s.base, words);
+      // Continuous listening gives one final result per stretch of speech: they add up.
+      if (event.isFinal) {
+        s.committed = join(s.committed, words);
+        s.interim = '';
+      } else {
+        s.interim = words;
+      }
+      const text = join(s.base, join(s.committed, s.interim));
       s.options.write(text);
-      if (event.isFinal && words) s.final = text;
+      if (event.isFinal && s.committed) s.final = join(s.base, s.committed);
     }),
     M.addListener('nomatch', () => {
-      if (session === s && !s.final) s.options.notify(t('voice.error.noSpeech'));
+      // A silent stretch between two in continuous listening is nothing to report.
+      if (session === s && !s.final && !options.hold) s.options.notify(t('voice.error.noSpeech'));
     }),
     M.addListener('error', (event) => {
       if (session === s) handleError(s, event.error);
@@ -439,8 +604,9 @@ async function begin(options: VoiceOptions) {
     lang: plan.lang,
     interimResults: true,
     maxAlternatives: 1,
-    // A pause ends it (iOS 18+ and Android at the first final result; iOS 17 after a short silence).
-    continuous: false,
+    // Tap to talk: a pause ends it (iOS 18+ and Android at the first final result; iOS 17 after a short silence).
+    // Push-to-talk: it goes on until the finger is lifted (Android 12 and older: until a long silence).
+    continuous: !!options.hold,
     requiresOnDeviceRecognition: plan.onDevice,
     addsPunctuation: true,
     iosTaskHint: 'dictation',
@@ -452,9 +618,10 @@ async function begin(options: VoiceOptions) {
 
 /**
  * Stops listening and keeps what was recognised. With `interrupted` (anything but the user's own tap)
- * the text is never sent automatically.
+ * the text is never sent automatically. `waitMs`: how long to wait for the final result before giving up on it
+ * (then `onEnd` gets the last interim result, marked timedOut).
  */
-export function stopVoiceInput(interrupted = true): void {
+export function stopVoiceInput(interrupted = true, waitMs = STOP_TIMEOUT_MS): void {
   if (state === 'preparing') cancelled = true;
   const s = session;
   if (!s) return;
@@ -464,7 +631,14 @@ export function stopVoiceInput(interrupted = true): void {
   try {
     module?.ExpoSpeechRecognitionModule.stop();
   } catch {}
-  s.stopTimer = setTimeout(() => abortVoiceInput(), STOP_TIMEOUT_MS);
+  s.stopTimer = setTimeout(() => {
+    if (session !== s) return;
+    s.timedOut = true;
+    try {
+      module?.ExpoSpeechRecognitionModule.abort();
+    } catch {}
+    finish();
+  }, waitMs);
 }
 
 /** Stops at once without waiting for a final result (the words so far are already in the field). */

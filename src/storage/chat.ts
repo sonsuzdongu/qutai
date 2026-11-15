@@ -6,7 +6,7 @@ import type { Conversation, ModelChoice } from '../chat/Conversation';
 import type { ChatItem } from '../components/AssistantPanel';
 import { Db, deleteKey, getJson, setJson } from './db';
 
-export type SavedChat = { items: ChatItem[]; turns: Turn[]; draft?: string; model?: ModelChoice };
+export type SavedChat = { items: ChatItem[]; turns: Turn[]; draft?: string; model?: ModelChoice; voiceLanguage?: string };
 
 const MAX_ITEMS = 300;
 const MAX_TURNS_JSON = 1_000_000;
@@ -38,7 +38,13 @@ export function prepareForStorage(chat: SavedChat): SavedChat {
     turns,
     ...(chat.draft ? { draft: chat.draft.slice(0, MAX_DRAFT) } : {}),
     ...(validModel(chat.model) ? { model: chat.model } : {}),
+    ...(validLanguageTag(chat.voiceLanguage) ? { voiceLanguage: chat.voiceLanguage } : {}),
   };
+}
+
+/** A BCP 47-like language tag ("tr", "en-GB", "zh-Hant-TW"). */
+function validLanguageTag(tag: unknown): tag is string {
+  return typeof tag === 'string' && /^[a-zA-Z]{2,3}(?:[-_][a-zA-Z0-9]{2,8}){0,3}$/.test(tag);
 }
 
 /** A saved model choice is used only if it names a provider this version knows and a model id. */
@@ -65,6 +71,7 @@ export async function loadChat(db: Db, key: string, { adoptLegacy = false } = {}
   const chat = await getJson<SavedChat>(db, keyFor(key));
   if (isSavedChat(chat)) {
     if (chat.model !== undefined && !validModel(chat.model)) delete chat.model;
+    if (chat.voiceLanguage !== undefined && !validLanguageTag(chat.voiceLanguage)) delete chat.voiceLanguage;
     return chat;
   }
   if (!adoptLegacy) return null;
@@ -76,7 +83,8 @@ export async function loadChat(db: Db, key: string, { adoptLegacy = false } = {}
 }
 
 export async function saveChat(db: Db, key: string, chat: SavedChat): Promise<void> {
-  if (chat.items.length === 0 && chat.turns.length === 0 && !chat.draft && !chat.model) return deleteKey(db, keyFor(key));
+  if (chat.items.length === 0 && chat.turns.length === 0 && !chat.draft && !chat.model && !chat.voiceLanguage)
+    return deleteKey(db, keyFor(key));
   await setJson(db, keyFor(key), prepareForStorage(chat));
 }
 

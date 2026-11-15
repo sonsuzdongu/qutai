@@ -86,6 +86,13 @@ export type Settings = {
    * service (Apple's or Google's) may receive the audio. Asked once, before first use.
    */
   voiceOnline: VoiceOnline;
+  /**
+   * Voice input's language: 'auto' follows the conversation (what the user writes in it, see device/voiceLanguage.ts),
+   * otherwise a language or tag ("tr", "en-GB"). A language picked in a conversation's panel wins over it.
+   */
+  voiceLanguage: string;
+  /** The recogniser language voice input was last used in (a fallback when a conversation says nothing yet). */
+  voiceLastLanguage: string;
   /** The first-run setup was completed (or skipped through). */
   onboarded: boolean;
   /** Version of the privacy policy and terms the user accepted (0: none yet). */
@@ -131,6 +138,8 @@ export const DEFAULT_SETTINGS: Settings = {
   readerEasyReading: false,
   voiceAutoSend: false,
   voiceOnline: 'ask',
+  voiceLanguage: 'auto',
+  voiceLastLanguage: '',
   onboarded: false,
   legalAcceptedVersion: 0,
 };
@@ -169,6 +178,8 @@ const KEYS = {
   readerEasyReading: 'reader_easy_reading',
   voiceAutoSend: 'voice_auto_send',
   voiceOnline: 'voice_online',
+  voiceLanguage: 'voice_language',
+  voiceLastLanguage: 'voice_last_language',
   onboarded: 'onboarded',
   legalAcceptedVersion: 'legal_accepted_version',
   apiKey: (id: ProviderId) => `api_key_${id}`,
@@ -183,6 +194,11 @@ export const TEXT_ZOOM_MAX = 200;
 
 export function clampTextZoom(value: number): number {
   return Math.min(TEXT_ZOOM_MAX, Math.max(TEXT_ZOOM_MIN, Math.round(value / 10) * 10));
+}
+
+/** A language or tag for voice input ("tr", "en-GB"). */
+function isLanguageTag(value: string | null): value is string {
+  return !!value && /^[a-zA-Z]{2,3}(?:[-_][a-zA-Z0-9]{2,8}){0,3}$/.test(value);
 }
 
 function isProvider(value: string | null): value is ProviderId {
@@ -223,6 +239,8 @@ export async function loadSettings(): Promise<Settings> {
     readerEasyReading,
     voiceAutoSend,
     voiceOnline,
+    voiceLanguage,
+    voiceLastLanguage,
     onboarded,
     legalAcceptedVersion,
     legacyApiKey,
@@ -262,6 +280,8 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.readerEasyReading),
     get(KEYS.voiceAutoSend),
     get(KEYS.voiceOnline),
+    get(KEYS.voiceLanguage),
+    get(KEYS.voiceLastLanguage),
     get(KEYS.onboarded),
     get(KEYS.legalAcceptedVersion),
     get(KEYS.legacyApiKey),
@@ -307,6 +327,8 @@ export async function loadSettings(): Promise<Settings> {
     readerEasyReading: readerEasyReading === 'true',
     voiceAutoSend: voiceAutoSend === 'true',
     voiceOnline: voiceOnline === 'allowed' || voiceOnline === 'declined' ? voiceOnline : 'ask',
+    voiceLanguage: isLanguageTag(voiceLanguage) ? voiceLanguage : 'auto',
+    voiceLastLanguage: isLanguageTag(voiceLastLanguage) ? voiceLastLanguage : '',
     onboarded: onboarded === 'true',
     legalAcceptedVersion: Math.max(0, Math.floor(Number(legalAcceptedVersion) || 0)),
   };
@@ -358,6 +380,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.readerEasyReading, String(settings.readerEasyReading)),
     set(KEYS.voiceAutoSend, String(settings.voiceAutoSend)),
     set(KEYS.voiceOnline, settings.voiceOnline),
+    set(KEYS.voiceLanguage, settings.voiceLanguage),
+    set(KEYS.voiceLastLanguage, settings.voiceLastLanguage),
     set(KEYS.onboarded, String(settings.onboarded)),
     set(KEYS.legalAcceptedVersion, String(settings.legalAcceptedVersion)),
     ...PROVIDER_ORDER.flatMap((id) => [

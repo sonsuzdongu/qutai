@@ -20,12 +20,15 @@ import {
   abortVoiceInput,
   startVoiceInput,
   stopVoiceInput,
+  useVoiceInfo,
   useVoiceLevel,
   useVoiceState,
   VoiceOnline,
   VoiceState,
 } from '../device/voiceInput';
-import { getLanguage, t } from '../i18n';
+import { languageLabel, languageName } from '../device/voiceLanguage';
+import { VoiceLanguageSheet } from './VoiceLanguageSheet';
+import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
 import { GradientText } from '../ui/BrandGradient';
@@ -102,6 +105,16 @@ export type VoiceProps = {
   autoSend: boolean;
   /** A short message for a toast. */
   notify: (message: string) => void;
+  /** The languages to listen in, best first, worked out when listening starts (device/voiceLanguage.ts). */
+  languages: () => string[];
+  /** The language picked by hand for this conversation, or null (automatic). */
+  picked: string | null;
+  onPick: (language: string | null) => void;
+  /** The automatic row's text and what it would choose now (the Settings default when that isn't Automatic). */
+  autoLabel: string;
+  autoHint?: string;
+  /** Listening started in this recogniser language (remembered as the last one used). */
+  onStarted: (lang: string) => void;
 };
 
 /** A one-tap task shown above the input, e.g. "Summarize". */
@@ -253,8 +266,12 @@ export function AssistantPanel({
   const [selectableId, setSelectableId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const inputRef = useRef<TextInputInstance>(null);
-  const voiceState = useVoiceState();
+  const voiceStateAny = useVoiceState();
+  const voiceInfo = useVoiceInfo();
+  // Holding the Qutai button listens too; that shows in its own bubble, not here.
+  const voiceState: VoiceState = voiceInfo.owner === 'panel' ? voiceStateAny : 'idle';
   const listening = voiceState !== 'idle';
+  const [languageSheet, setLanguageSheet] = useState(false);
   // Read when a voice session ends, which may be renders later.
   const latest = useRef({ running, busyElsewhere, onSend });
   useEffect(() => {
@@ -267,16 +284,27 @@ export function AssistantPanel({
   }, [open]);
   useEffect(() => () => stopVoiceInput(), []);
 
-  const toggleVoice = () => {
-    if (listening) return stopVoiceInput(false);
+  // A language that isn't available here: said once when listening starts in the next one.
+  const fellBackFrom = listening ? voiceInfo.fellBackFrom : null;
+  const notifyVoice = voice.notify;
+  useEffect(() => {
+    if (fellBackFrom && voiceInfo.lang)
+      notifyVoice(
+        t('voice.fellBack', { wanted: languageName(fellBackFrom), language: languageName(voiceInfo.lang) }),
+      );
+  }, [fellBackFrom, voiceInfo.lang, notifyVoice]);
+
+  const startListening = (draft: string) => {
     // Bound to this conversation: if the user switches tabs, the words still land in this draft.
     const write = setText;
     void startVoiceInput({
-      language: getLanguage(),
+      languages: voice.languages(),
+      owner: 'panel',
+      onStarted: voice.onStarted,
       incognito: voice.incognito,
       online: voice.online,
       onOnlineChange: voice.onOnlineChange,
-      draft: text,
+      draft,
       write,
       onFinal: voice.autoSend
         ? (final) => {
@@ -290,6 +318,16 @@ export function AssistantPanel({
         : undefined,
       notify: voice.notify,
     });
+  };
+  const toggleVoice = () => (listening ? stopVoiceInput(false) : startListening(text));
+
+  /** A language picked while listening: listening starts again in it, after the words heard so far. */
+  const pickLanguage = (language: string | null) => {
+    voice.onPick(language);
+    if (!listening) return;
+    abortVoiceInput();
+    // The field already holds the words heard so far.
+    startListening(text);
   };
 
   /** Typing while listening takes over: the microphone stops and the field is the user's again. */
@@ -602,13 +640,32 @@ export function AssistantPanel({
                   placeholderTextColor={dark ? '#a9a8b3' : '#6b6862'}
                   value={text}
                   onChangeText={changeText}
-                  placeholder={t(
-                    listening ? 'voice.listening' : research ? 'chat.researchPlaceholder' : 'chat.placeholder',
-                  )}
+                  placeholder={
+                    listening && voiceInfo.lang
+                      ? t('voice.listeningIn', { language: languageName(voiceInfo.lang) })
+                      : t(listening ? 'voice.listening' : research ? 'chat.researchPlaceholder' : 'chat.placeholder')
+                  }
                   multiline
                   editable={!running}
                 />
-                <MicButton state={voiceState} onPress={toggleVoice} reduceMotion={reduceMotion} />
+                {listening && voiceInfo.lang ? (
+                  <Pressable
+                    onPress={() => setLanguageSheet(true)}
+                    hitSlop={8}
+                    style={[styles.langTag, d?.langTag]}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('voice.languageTagLabel', { language: languageName(voiceInfo.lang) })}
+                    accessibilityHint={t('voice.languageTagHint')}
+                  >
+                    <Text style={[styles.langTagText, d?.langTagText]}>{languageLabel(voiceInfo.lang)}</Text>
+                  </Pressable>
+                ) : null}
+                <MicButton
+                  state={voiceState}
+                  onPress={toggleVoice}
+                  onLongPress={() => setLanguageSheet(true)}
+                  reduceMotion={reduceMotion}
+                />
                 {running ? (
                   <Pressable
                     style={[styles.sendButton, styles.stopButton]}
@@ -631,6 +688,15 @@ export function AssistantPanel({
           </KeyboardAvoidingContainer>
         </Animated.View>
       </View>
+      <VoiceLanguageSheet
+        visible={languageSheet}
+        value={voice.picked}
+        autoLabel={voice.autoLabel}
+        autoHint={voice.autoHint}
+        onPick={pickLanguage}
+        onClose={() => setLanguageSheet(false)}
+        dark={dark}
+      />
       <ActionSheet
         title={menu ? menuTitle(menu.item.text) : null}
         actions={menu ? menuActions(menu) : []}
@@ -710,10 +776,13 @@ function EmptyState({
 function MicButton({
   state,
   onPress,
+  onLongPress,
   reduceMotion,
 }: {
   state: VoiceState;
   onPress: () => void;
+  /** Opens the listening-language picker. */
+  onLongPress: () => void;
   reduceMotion: boolean;
 }) {
   const styles = useStyles();
@@ -733,6 +802,7 @@ function MicButton({
   return (
     <Pressable
       onPress={onPress}
+      onLongPress={onLongPress}
       // 40pt drawn, 44pt to touch.
       hitSlop={2}
       style={styles.micWrap}
@@ -740,6 +810,10 @@ function MicButton({
       accessibilityLabel={t(active ? 'voice.stop' : 'voice.start')}
       accessibilityHint={active ? undefined : t('voice.startHint')}
       accessibilityState={{ busy: state === 'preparing' || state === 'stopping', selected: active }}
+      accessibilityActions={[{ name: 'longpress', label: t('voice.languageTitle') }]}
+      onAccessibilityAction={(e) => {
+        if (e.nativeEvent.actionName === 'longpress') onLongPress();
+      }}
     >
       {on ? <Animated.View style={[styles.micRing, { transform: [{ scale }] }]} /> : null}
       <View style={[styles.micButton, d?.micButton, active && styles.micOn, !on && active && styles.micPending]}>
@@ -1441,6 +1515,18 @@ const useStyles = makeStyles((c) => ({
   },
   sendDisabled: { opacity: 0.4 },
   micWrap: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  langTag: {
+    minWidth: 30,
+    height: 22,
+    paddingHorizontal: 6,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    backgroundColor: c.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  langTagText: { fontSize: 11, fontWeight: '700', color: c.textSecondary, letterSpacing: 0.5 },
   micButton: {
     width: 40,
     height: 40,
@@ -1471,6 +1557,8 @@ const darkStyles = StyleSheet.create({
   inputRow: { borderTopColor: '#3a3944' },
   input: { backgroundColor: '#2b2a33', borderColor: '#42414d', color: '#f2f1f5' },
   micButton: { backgroundColor: '#2b2a33', borderColor: '#42414d' },
+  langTag: { backgroundColor: '#2b2a33', borderColor: '#42414d' },
+  langTagText: { color: '#a9a8b3' },
   chip: { backgroundColor: '#2b2a33', borderColor: '#42414d' },
   choice: { backgroundColor: '#2b2a33' },
   text: { color: '#f2f1f5' },

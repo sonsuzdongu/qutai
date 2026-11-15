@@ -67,7 +67,14 @@ export type ModelChoice = { provider: ProviderId; model: string };
  * draft: what the user was typing, so it survives the app being closed. model: the conversation's own model
  * choice (absent: the default in Settings; not in conversations saved before it existed).
  */
-export type SavedConversation = { items: ChatItem[]; turns: Turn[]; draft?: string; model?: ModelChoice };
+export type SavedConversation = {
+  items: ChatItem[];
+  turns: Turn[];
+  draft?: string;
+  model?: ModelChoice;
+  /** The voice-input language picked by hand for this conversation (a language or a tag, e.g. "tr", "en-GB"). */
+  voiceLanguage?: string;
+};
 
 /** Storage key of a tab group's conversation (a tab's own conversation is stored under the tab's uid). */
 export const groupChatKey = (groupId: string) => `group:${groupId}`;
@@ -91,6 +98,13 @@ export class Conversation {
    * default in Settings (which this never changes). Read when a message is sent, so a running task keeps its model.
    */
   model: ModelChoice | null = null;
+  /** Voice input listens in this language in this conversation (picked by hand); null: chosen automatically. */
+  voiceLanguage: string | null = null;
+  /**
+   * The language the user's messages were last found to be in (voiceLanguage.ts), kept so one message in another
+   * language doesn't flip it. In memory only: worked out again from the messages after a restart.
+   */
+  heardLanguage: string | null = null;
   /**
    * How the last task ended, while the user has not looked at the conversation since (it ended in another tab or
    * group, with the panel closed, or with Qutai in the background). Cleared once the conversation is shown.
@@ -208,6 +222,11 @@ export class Conversation {
     this.onChange();
   }
 
+  setVoiceLanguage(language: string | null) {
+    this.voiceLanguage = language;
+    this.onChange();
+  }
+
   /** Adds attachments to the message being written, up to MAX_ATTACHMENTS; returns those that didn't fit. */
   addPending(list: AttachmentInfo[]): AttachmentInfo[] {
     const room = Math.max(0, MAX_ATTACHMENTS - this.pending.length);
@@ -295,17 +314,20 @@ export class Conversation {
     // Something typed since the tab opened wins over the saved draft, and a model chosen since over the saved one.
     if (saved?.draft && !this.draft) this.draft = saved.draft;
     if (saved?.model && !this.model) this.model = saved.model;
+    if (saved?.voiceLanguage && !this.voiceLanguage) this.voiceLanguage = saved.voiceLanguage;
     this.onChange();
     const callbacks = this.loadedCallbacks;
     this.loadedCallbacks = [];
     callbacks.forEach((fn) => fn());
   }
 
-  /** A new chat: messages, history and the conversation's model choice go. */
+  /** A new chat: messages, history and the conversation's model and voice-language choices go. */
   clear() {
     this.items = [];
     this.turns = [];
     this.model = null;
+    this.voiceLanguage = null;
+    this.heardLanguage = null;
     this.privacy = { touchedIncognito: false };
     this.onChange();
   }
@@ -328,6 +350,12 @@ export class Conversation {
   }
 
   toSaved(): SavedConversation {
-    return { items: this.items, turns: this.turns, draft: this.draft, ...(this.model ? { model: this.model } : {}) };
+    return {
+      items: this.items,
+      turns: this.turns,
+      draft: this.draft,
+      ...(this.model ? { model: this.model } : {}),
+      ...(this.voiceLanguage ? { voiceLanguage: this.voiceLanguage } : {}),
+    };
   }
 }

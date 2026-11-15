@@ -53,8 +53,15 @@ the chat is sent like any message.
 The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
 
 Voice input: the microphone button next to the message field turns speech into text with the phone's own speech
-recognition (`expo-speech-recognition`: iOS `SFSpeechRecognizer`, Android `SpeechRecognizer`), in the app's language
-(the device's regional variant when it has one). Words appear as they are recognised, are added to what is already
+recognition (`expo-speech-recognition`: iOS `SFSpeechRecognizer`, Android `SpeechRecognizer`). It listens in the
+language the user has been writing in that conversation, so an English phone hears Turkish in a Turkish chat
+(`src/chat/messageLanguage.ts`: a small on-phone guess from the user's own recent messages, never the assistant's,
+from Turkish letters, frequent words and endings, ignoring URLs, numbers, code, quotes and names, and slow to change
+its mind). The order is: a language picked in that conversation (the TR/EN tag next to the microphone while listening,
+or a long press on the microphone), the Settings › Assistant › "Listening language" default when it isn't Automatic,
+the conversation's language, the language last used, then the app's language, each mapped to the device's regional
+variant when it has one (`tr-TR`, `en-GB`); a language the phone's recogniser lacks is skipped and the user is told
+which one is used instead (`src/device/voiceLanguage.ts`). Words appear as they are recognised, are added to what is already
 typed and stay editable; nothing is sent until the user taps send (Settings › Assistant › "Send automatically after
 speaking" changes that). Tap again or pause to stop. Starting to talk stops read-aloud, and read-aloud never starts
 while the microphone is on. Recognition runs on the phone when it can (iOS on-device dictation for the language;

@@ -83,6 +83,7 @@ import { offerSettings, PermissionDeniedError } from './src/device/settings';
 import { saveFullPageScreenshot, saveScreenshot } from './src/device/screenshot';
 import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { stopVoiceInput } from './src/device/voiceInput';
+import { AUTO_LANGUAGE, automaticLanguage, languageName, listeningOrder } from './src/device/voiceLanguage';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { deleteLeftoverIncognitoProfiles } from './src/device/webviewProfile';
 import { t, useLanguage } from './src/i18n';
@@ -1594,6 +1595,14 @@ function BrowserApp({
     }
   };
 
+  /** The language voice input last listened in: a fallback for conversations that say nothing yet. Not incognito. */
+  const rememberVoiceLanguage = (lang: string, incognito: boolean) => {
+    if (incognito || settingsRef.current.voiceLastLanguage === lang) return;
+    const next = { ...settingsRef.current, voiceLastLanguage: lang };
+    settingsRef.current = next;
+    onChangeSettings(next);
+  };
+
   // The address bar (or the find bar in its place), at the top or the bottom of the screen.
   const topBar = findOpen ? (
     <FindBar tab={tab} darkMode={darkMode} onClose={() => setFindFor(null)} />
@@ -1769,6 +1778,25 @@ function BrowserApp({
                 onOnlineChange: (voiceOnline) => onChangeSettings({ ...settings, voiceOnline }),
                 autoSend: settings.voiceAutoSend,
                 notify: toast.show,
+                languages: () => listeningOrder(conversation, settingsRef.current),
+                picked: conversation.voiceLanguage,
+                onPick: (language) => {
+                  conversation.setVoiceLanguage(language);
+                  persistConversation(conversation);
+                },
+                autoLabel:
+                  settings.voiceLanguage === AUTO_LANGUAGE
+                    ? t('voice.auto')
+                    : t('voice.defaultLanguage', { language: languageName(settings.voiceLanguage) }),
+                autoHint:
+                  settings.voiceLanguage === AUTO_LANGUAGE
+                    ? t('voice.autoNow', { language: languageName(automaticLanguage(conversation, settings)) })
+                    : undefined,
+                onStarted: (lang) =>
+                  rememberVoiceLanguage(
+                    lang,
+                    tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
+                  ),
               }}
               quickActions={quickActions}
               draft={conversation.draft}
