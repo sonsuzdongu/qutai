@@ -36,7 +36,7 @@ export function configureBackgroundMedia(backgroundPlayback: boolean) {
   });
 }
 
-/** Whether a full-screen video may go into picture-in-picture when the user leaves the app. */
+/** Whether a playing video may go into picture-in-picture when the user leaves the app (modules/qutai-media). */
 export function setPictureInPictureAllowed(allowed: boolean) {
   native?.setPictureInPictureAllowed(allowed);
 }

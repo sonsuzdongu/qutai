@@ -52,7 +52,7 @@ index 1b5c4c9..c86cb6d 100644
      public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
  
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
-index 80c6803..78c8b30 100644
+index 80c6803..cc37372 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 @@ -38,15 +38,19 @@ import com.facebook.react.uimanager.events.Event;
@@ -87,7 +87,7 @@ index 80c6803..78c8b30 100644
          if (this.nestedScrollEnabled) {
              requestDisallowInterceptTouchEvent(true);
          }
-@@ -224,6 +233,105 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -224,6 +233,140 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -126,6 +126,41 @@ index 80c6803..78c8b30 100644
 +        playbackKeepVisible = keep;
 +        // Only matters while the window is really hidden; then the page learns the real state now.
 +        if (windowVisibility != View.VISIBLE) super.onWindowVisibilityChanged(keep ? View.VISIBLE : windowVisibility);
++        FullscreenFrame frame = fullscreenFrame;
++        if (frame != null) frame.keepVisibleChanged();
++    }
++
++    boolean isPlaybackKeepVisible() {
++        return playbackKeepVisible;
++    }
++
++    // Qutai patch: a video shown full screen is drawn by Chromium's own full-screen view (the custom view of
++    // onShowCustomView), and the page's visibility then follows that view's window visibility, not this view's. The
++    // custom view is put in this frame, which passes the same "visible" on to it while background playback is kept.
++    @Nullable FullscreenFrame fullscreenFrame = null;
++
++    static final class FullscreenFrame extends android.widget.FrameLayout {
++        private final RNCWebView web;
++        private int realVisibility = View.VISIBLE;
++
++        FullscreenFrame(RNCWebView web, View content) {
++            super(content.getContext());
++            this.web = web;
++            addView(content, new android.widget.FrameLayout.LayoutParams(
++                android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.MATCH_PARENT));
++        }
++
++        @Override
++        public void dispatchWindowVisibilityChanged(int visibility) {
++            realVisibility = visibility;
++            super.dispatchWindowVisibilityChanged(web.isPlaybackKeepVisible() ? View.VISIBLE : visibility);
++        }
++
++        void keepVisibleChanged() {
++            if (realVisibility != View.VISIBLE) {
++                super.dispatchWindowVisibilityChanged(web.isPlaybackKeepVisible() ? View.VISIBLE : realVisibility);
++            }
++        }
 +    }
 +
 +    // Qutai patch: network ad and tracker blocking (RNCWebViewContentBlocker). Read on WebView's request threads.
@@ -193,7 +228,7 @@ index 80c6803..78c8b30 100644
      WebChromeClient mWebChromeClient;
      @Override
      public void setWebChromeClient(WebChromeClient client) {
-@@ -253,6 +361,10 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -253,6 +396,10 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
              this.bridgeListener = new WebViewCompat.WebMessageListener() {
                @Override
                public void onPostMessage(@NonNull WebView view, @NonNull WebMessageCompat message, @NonNull Uri sourceOrigin, boolean isMainFrame, @NonNull JavaScriptReplyProxy replyProxy) {
@@ -204,7 +239,7 @@ index 80c6803..78c8b30 100644
                  RNCWebView.this.onMessage(message.getData(), sourceOrigin.toString());
                }
              };
-@@ -403,6 +515,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -403,6 +550,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -216,7 +251,7 @@ index 80c6803..78c8b30 100644
      protected void dispatchEvent(WebView webView, Event event) {
          ThemedReactContext reactContext = getThemedReactContext();
          int reactTag = RNCWebViewWrapper.getReactTagFromWebView(webView);
-@@ -419,7 +536,14 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -419,7 +571,14 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          if (mWebChromeClient != null) {
              mWebChromeClient.onHideCustomView();
          }
@@ -231,7 +266,7 @@ index 80c6803..78c8b30 100644
      }
  
    public ThemedReactContext getThemedReactContext() {
-@@ -446,7 +570,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -446,7 +605,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          public void postMessage(String message) {
              if (mWebView.getMessagingEnabled()) {
                  // Post to main thread because `mWebView.getUrl()` requires to be executed on main.
@@ -666,7 +701,7 @@ index 0000000..e535e45
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
-index f83033b..f78507e 100644
+index f83033b..de057e2 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
 @@ -1,6 +1,5 @@
@@ -741,7 +776,17 @@ index f83033b..f78507e 100644
          })
          return RNCWebViewWrapper(context, webView)
      }
-@@ -182,6 +154,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+@@ -155,7 +127,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+                             callback.onCustomViewHidden()
+                             return
+                         }
+-                        mVideoView = view
++                        // Qutai patch: the custom view in a frame that keeps background playback's visibility.
++                        mVideoView = RNCWebViewPlayback.fullscreenView(mWebView, view)
+                         mCustomViewCallback = callback
+                         activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+                         mVideoView.systemUiVisibility = FULLSCREEN_SYSTEM_UI_VISIBILITY
+@@ -182,6 +155,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
                              mWebView.visibility = View.GONE
                          }
                          mWebView.themedReactContext.addLifecycleEventListener(this)
@@ -750,7 +795,7 @@ index f83033b..f78507e 100644
                      }
  
                      override fun onHideCustomView() {
-@@ -204,6 +178,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+@@ -204,6 +179,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
                          mCustomViewCallback = null
                          activity.requestedOrientation = initialRequestedOrientation
                          mWebView.themedReactContext.removeLifecycleEventListener(this)
@@ -760,12 +805,13 @@ index f83033b..f78507e 100644
              webChromeClient.setAllowsProtectedMedia(mAllowsProtectedMedia);
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPlayback.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPlayback.java
 new file mode 100644
-index 0000000..dd76255
+index 0000000..30920d3
 --- /dev/null
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPlayback.java
-@@ -0,0 +1,98 @@
+@@ -0,0 +1,112 @@
 +package com.reactnativecommunity.webview;
 +
++import android.webkit.ValueCallback;
 +import android.webkit.WebView;
 +
 +import androidx.annotation.Nullable;
@@ -822,7 +868,15 @@ index 0000000..dd76255
 +        current.onPlaybackState(view, view.mediaPlaybackPrivate, message);
 +    }
 +
++    /** The view to show for a page's full-screen video (keeps background playback's visibility, see RNCWebView). */
++    static android.view.View fullscreenView(RNCWebView view, android.view.View content) {
++        RNCWebView.FullscreenFrame frame = new RNCWebView.FullscreenFrame(view, content);
++        view.fullscreenFrame = frame;
++        return frame;
++    }
++
 +    static void fullscreen(RNCWebView view, boolean on) {
++        if (!on) view.fullscreenFrame = null;
 +        Listener current = listener;
 +        if (current != null) current.onFullscreenChanged(view, on);
 +    }
@@ -852,6 +906,11 @@ index 0000000..dd76255
 +     * seekforward, seekbackward. Main thread.
 +     */
 +    public static void command(WebView view, String action, double seconds) {
++        command(view, action, seconds, null);
++    }
++
++    /** As above; done (if any) runs on the main thread once the page's script has run the command. */
++    public static void command(WebView view, String action, double seconds, @Nullable ValueCallback<String> done) {
 +        if (!(view instanceof RNCWebView)) return;
 +        String key = ((RNCWebView) view).mediaPlaybackKey;
 +        if (key == null) return;
@@ -859,7 +918,7 @@ index 0000000..dd76255
 +        view.evaluateJavascript(
 +            "window.__qutaiPlayback && window.__qutaiPlayback(" + JSONObject.quote(key) + ", " + JSONObject.quote(action)
 +                + ", " + arg + "); void 0;",
-+            null);
++            done);
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewProfiles.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewProfiles.java

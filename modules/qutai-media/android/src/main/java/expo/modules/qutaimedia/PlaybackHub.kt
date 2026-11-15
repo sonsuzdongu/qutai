@@ -19,6 +19,7 @@ class PageState(view: WebView, val isPrivate: Boolean) {
   var audible = false
   var playing = false
   var paused = true
+  var ended = false
   var title = ""
   var artist = ""
   var album = ""
@@ -30,6 +31,10 @@ class PageState(view: WebView, val isPrivate: Boolean) {
   var rate = 1.0
   var videoWidth = 0
   var videoHeight = 0
+  /** Where the playing video is in the page's view, device pixels (left, top, width, height); null off screen. */
+  var videoRect: IntArray? = null
+  /** The site refuses picture-in-picture for this video (see pipRefused in src/browser/playback.ts). */
+  var noPip = false
   /** elapsedRealtime of the last report and of the moment the page became audible. */
   var reportedAt = 0L
   var audibleSince = 0L
@@ -106,6 +111,7 @@ object PlaybackHub : RNCWebViewPlayback.Listener {
     state.audible = audible
     state.playing = msg.optBoolean("playing")
     state.paused = msg.optBoolean("paused", true)
+    state.ended = msg.optBoolean("ended")
     state.title = msg.optString("title").take(200)
     state.artist = msg.optString("artist").take(200)
     state.album = msg.optString("album").take(200)
@@ -119,6 +125,9 @@ object PlaybackHub : RNCWebViewPlayback.Listener {
     val video = msg.optJSONArray("video")
     state.videoWidth = video?.optInt(0) ?: 0
     state.videoHeight = video?.optInt(1) ?: 0
+    val rect = msg.optJSONArray("rect")
+    state.noPip = msg.optBoolean("noPip")
+    state.videoRect = if (rect != null && rect.length() == 4) IntArray(4) { rect.optInt(it) } else null
     state.reportedAt = now
     update()
   }

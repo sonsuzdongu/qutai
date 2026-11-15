@@ -66,7 +66,7 @@ export type Settings = {
   forceZoom: boolean;
   /** Sound a page plays keeps playing when Qutai is in the background or the screen locks. */
   backgroundPlayback: boolean;
-  /** Android: a full-screen video goes into picture-in-picture when the user leaves Qutai. */
+  /** Android: a playing video goes into picture-in-picture when the user leaves Qutai (modules/qutai-media). */
   pictureInPicture: boolean;
   /**
    * Android: an assistant task the user started goes on when they leave Qutai, behind an ongoing notification

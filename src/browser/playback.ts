@@ -116,9 +116,15 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     var el = e.target;
     if (!(el instanceof ME)) return;
     track(el);
-    if (e.type === 'playing') { info(el).startedAt = now(); current = el; }
+    if (e.type === 'playing') {
+      info(el).startedAt = now();
+      // A muted video (autoplay, a looping preview: 'playing' again on every loop) doesn't take over from one with
+      // sound; the controls, the reported position and picture-in-picture stay with the media the user hears.
+      if (loud(el) || !current || gPaused.call(current) || !loud(current)) current = el;
+    }
     schedule();
   }
+  function loud(el) { return !gMuted.call(el) && gVolume.call(el) > 0; }
   function track(el) {
     for (var i = 0; i < elements.length; i++) if (elements[i] === el) return;
     elements[elements.length] = el;
@@ -271,7 +277,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
   }
 
   function check() {
-    var t = now(), audible = false, playing = false, video = null, keep = [];
+    var t = now(), audible = false, playing = false, video = null, loudVideo = null, loudest = null, keep = [];
     for (var i = 0; i < elements.length; i++) {
       var el = elements[i];
       var paused = gPaused.call(el);
@@ -284,12 +290,19 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
       data.time = time;
       if (!advancing) continue;
       playing = true;
-      if (VE && el instanceof VE && gWidth.call(el) > 0 && (!video || el === current)) video = el;
-      if (!gMuted.call(el) && gVolume.call(el) > 0) {
+      var isLoud = loud(el);
+      if (isLoud) {
         audible = true;
-        if (!current || gPaused.call(current)) current = el;
+        if (!loudest || el === current) loudest = el;
+      }
+      if (VE && el instanceof VE && gWidth.call(el) > 0) {
+        if (!video || el === current) video = el;
+        if (isLoud && (!loudVideo || el === current)) loudVideo = el;
       }
     }
+    if (loudest && (!current || gPaused.call(current) || !loud(current))) current = loudest;
+    // The video reported (its size and place, for picture-in-picture): the one with sound before a muted one.
+    if (loudVideo) video = loudVideo;
     elements = keep;
     var live = [];
     for (var j = 0; j < frames.length; j++) {
@@ -300,6 +313,86 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     }
     frames = live;
     return { audible: audible, playing: playing, video: video };
+  }
+
+  // Android picture-in-picture for a video that plays inline (modules/qutai-media, PictureInPicture.kt): the part
+  // of the page's view the video covers now, in device pixels ([left, top, width, height], clipped to the visible
+  // viewport; null when it is scrolled out of view), for the PiP window's enter animation and to tell whether the
+  // video is on screen at all.
+  function rectOf(el) {
+    try {
+      var r = el.getBoundingClientRect();
+      var vv = window.visualViewport;
+      var ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0;
+      var vw = vv ? vv.width : window.innerWidth, vh = vv ? vv.height : window.innerHeight;
+      var k = (window.devicePixelRatio || 1) * (vv ? vv.scale : 1);
+      var l = Math.max(r.left - ox, 0), t = Math.max(r.top - oy, 0);
+      var w = Math.min(r.right - ox, vw) - l, h = Math.min(r.bottom - oy, vh) - t;
+      if (!(w >= 1 && h >= 1)) return null;
+      return [Math.round(l * k), Math.round(t * k), Math.round(w * k), Math.round(h * k)];
+    } catch (e) { return null; }
+  }
+  var lastVideo = null;
+  // Sites that refuse picture-in-picture themselves. YouTube's mobile site allows it only for "backgroundable" videos
+  // (YouTube Premium): otherwise it treats a small window as PiP, leaves full screen and pauses, and keeps pausing
+  // until the window is big again, which would also stop the sound that background playback keeps going. Its
+  // player's own API says which it is; without the API, no PiP there.
+  function pipRefused() {
+    if (!/(^|\\.)youtube\\.com$/.test(location.hostname)) return false;
+    try {
+      var player = document.getElementById('movie_player');
+      var data = player && typeof player.getVideoData === 'function' ? player.getVideoData() : null;
+      return !(data && data.backgroundable === true);
+    } catch (e) { return true; }
+  }
+  // While a video plays, scrolling moves it: reported again (at most every 150 ms, only when the rect changed).
+  var onMove = function () { if (repeat && lastVideo) schedule(); };
+  window.addEventListener('scroll', onMove, { capture: true, passive: true });
+  window.addEventListener('resize', onMove, { capture: true, passive: true });
+  // Going into PiP with an inline video: the video must be full screen first, so the PiP window shows only the
+  // video, and the Fullscreen API needs a user activation. The app arms this ("pipEnter") and then sends one tap to
+  // the page's view itself (a real input event, so the browser gives it the activation): the tap is swallowed here,
+  // before any of the page's listeners, and makes the video full screen. Only trusted events, only within 1.5 s of
+  // arming, only the app's own command (nonce).
+  var pipArmedUntil = 0, pipTarget = null, pipFullscreen = null;
+  // The element made full screen: the outermost ancestor with the video's own box (the site's player, which keeps
+  // its controls and its own idea of full screen: YouTube's mobile site exits a full screen on anything but its
+  // player container, then pauses), else the video itself.
+  function playerOf(video) {
+    var el = video, box = video.getBoundingClientRect();
+    for (var p = el.parentElement; p && p !== document.body && p !== document.documentElement; p = p.parentElement) {
+      var r = p.getBoundingClientRect();
+      if (Math.abs(r.left - box.left) <= 2 && Math.abs(r.top - box.top) <= 2 &&
+        Math.abs(r.width - box.width) <= 2 && Math.abs(r.height - box.height) <= 2) el = p;
+      // A bigger ancestor is the page around the player; a smaller one (a zero-height wrapper) is skipped.
+      else if (r.width > box.width + 2 || r.height > box.height + 2) break;
+    }
+    return el;
+  }
+  function pipGo() {
+    var video = pipTarget;
+    pipTarget = null;
+    if (!video || !video.isConnected || document.fullscreenElement || document.webkitFullscreenElement) return;
+    var el = playerOf(video);
+    var request = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!request) return;
+    try {
+      var p = request.call(el, { navigationUI: 'hide' });
+      pipFullscreen = el;
+      if (p && p.catch) p.catch(function () { if (pipFullscreen === el) pipFullscreen = null; });
+    } catch (e) { pipFullscreen = null; }
+  }
+  function pipSwallow(e) {
+    if (!e.isTrusted || now() > pipArmedUntil) return;
+    e.stopImmediatePropagation();
+    if (e.cancelable) e.preventDefault();
+    if (e.type === 'pointerup' || e.type === 'touchend') pipGo();
+    else if (e.type === 'click') pipArmedUntil = 0;
+  }
+  if (mainFrame) {
+    ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'mouseup', 'click'].forEach(function (type) {
+      window.addEventListener(type, pipSwallow, { capture: true, passive: false });
+    });
   }
 
   function metadataOf() {
@@ -331,12 +424,16 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     for (var name in handlers) if (handlers[name]) actions[actions.length] = name;
     var el = current;
     var duration = el ? gDuration.call(el) : 0;
+    lastVideo = s.video;
     var msg = {
       __qutaiPlayback: NONCE,
       audible: s.audible,
       playing: s.playing,
       paused: el ? gPaused.call(el) : true,
+      ended: el ? gEnded.call(el) : false,
       video: s.video ? [gWidth.call(s.video), gHeight.call(s.video)] : null,
+      rect: s.video ? rectOf(s.video) : null,
+      noPip: s.video ? pipRefused() : false,
       title: meta.title || document.title || '',
       artist: meta.artist,
       album: meta.album,
@@ -373,6 +470,20 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
         try { realPause.call(item); } catch (e) {}
       }
       broadcast(action);
+      return;
+    }
+    if (action === 'pipEnter') {
+      pipTarget = lastVideo;
+      pipArmedUntil = pipTarget ? now() + 1500 : 0;
+      return;
+    }
+    if (action === 'pipExit') {
+      // Leaves the full screen that pipEnter started (PiP expanded back into the app, or closed).
+      var fs = document.fullscreenElement || document.webkitFullscreenElement;
+      if (pipFullscreen && fs === pipFullscreen) {
+        try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {}
+      }
+      pipFullscreen = null;
       return;
     }
     var handler = handlers[action];

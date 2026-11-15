@@ -1506,7 +1506,7 @@ export const en = {
     'Some phones (Honor, Huawei, Xiaomi, Samsung and others) stop apps in the background to save battery, which cuts playback off. If sound stops after a while, allow Qutai to run in the background in its battery settings.',
   'settings.backgroundPlaybackBatteryButton': 'Open Qutai’s app settings',
   'settings.pictureInPicture': 'Picture-in-picture',
-  'settings.pictureInPictureHint': 'A playing full-screen video shrinks into a small window when you go to the home screen. Not for incognito tabs or while the app lock is on.',
+  'settings.pictureInPictureHint': 'A playing video shrinks into a small window when you go to the home screen, also one that isn’t full screen. Not for incognito tabs or while the app lock is on. YouTube allows it only with Premium; otherwise its sound goes on.',
   'playback.privateTab': 'Private tab',
   'playback.channel': 'Playing media',
   'background.channel': 'Assistant tasks',

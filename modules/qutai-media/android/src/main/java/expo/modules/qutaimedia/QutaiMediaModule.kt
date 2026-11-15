@@ -37,7 +37,10 @@ class QutaiMediaModule : Module() {
 
     OnActivityEntersForeground {
       appContext.currentActivity?.let { activity ->
-        activity.runOnUiThread { PictureInPicture.attach(activity) }
+        activity.runOnUiThread {
+          PictureInPicture.attach(activity)
+          PictureInPicture.onForeground()
+        }
       }
       PlaybackHub.setForeground(true)
     }

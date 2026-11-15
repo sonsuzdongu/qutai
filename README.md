@@ -619,7 +619,12 @@ the feature, when the user is asked, the config line that declares it and what i
   real state. Media inside frames isn't seen, and whether headphone buttons reach it is untested. Phone makers'
   battery managers (Honor, Huawei, Xiaomi, Samsung) may still stop it; Settings › Appearance › Media says so and
   opens Qutai's app settings, Qutai never asks for a battery exemption itself. Picture-in-picture on Android works
-  for a playing full-screen video only. Incognito tabs show "Private tab" in the notification and on the lock screen.
+  for a playing full-screen video and for a video playing inline with sound: the inline video is made full screen
+  as PiP starts (one tap sent to the page natively gives the Fullscreen API its user activation), and that full
+  screen is left again when the window is expanded or closed. A page that leaves full screen or pauses itself in PiP
+  ends PiP and its sound goes on. YouTube's mobile site refuses PiP without Premium (it leaves full screen and pauses
+  in a small window), so on YouTube PiP is offered only when its player says the video may play in the background,
+  otherwise Home keeps the sound only. Videos inside frames don't go into PiP. Incognito tabs show "Private tab" in the notification and on the lock screen.
 - **Backups leave things out.** Downloads, saved pages, the "What was sent to the AI" list, caches and the lock
   settings are never in a backup file.
 - **Reader mode is a heuristic.** It is offered only on pages with enough article text (600 characters, 3 paragraphs)
