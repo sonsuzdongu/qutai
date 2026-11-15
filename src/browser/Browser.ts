@@ -6,6 +6,7 @@ import { closePdf } from '../pdf/reader';
 import { endIncognitoProfile, newIncognitoProfile } from '../device/webviewProfile';
 import type { Session } from '../storage/session';
 import { NEW_TAB_URL, Tab } from './Tab';
+import { clearCertificateExceptions, removeTabCertificateExceptions } from './certificateExceptions';
 import { t } from '../i18n';
 
 /** New tabs open the app's own new tab page. */
@@ -152,6 +153,12 @@ export class Browser {
     this.visitListeners.forEach((l) => l(tab));
   }
 
+  /** "Continue anyway" exceptions are forgotten (clearing the cache); the WebViews get the empty list. */
+  clearCertificateExceptions() {
+    clearCertificateExceptions();
+    this.emit();
+  }
+
   private emit = () => {
     this.version++;
     this.listeners.forEach((l) => l());
@@ -258,7 +265,11 @@ export class Browser {
       this.moveChat(chat, heir.uid);
       chats.set(groupId, { chat, uid: heir.uid });
     }
-    closing.forEach((t) => t.dispose());
+    closing.forEach((t) => {
+      t.dispose();
+      // An incognito tab's "Continue anyway" exceptions go with it.
+      if (t.incognito) removeTabCertificateExceptions(t.id);
+    });
     this.dropEmptyGroups();
     this.endIncognitoSessionIfOver();
 

@@ -16,7 +16,8 @@ import { siteKey } from '../agent/sitePolicy';
 import { PageGeolocation } from './geolocation';
 import { PageMediaCapture } from './mediaCapture';
 import { PagePlayback } from './playback';
-import { classifyLoadError, LoadError } from './navigation';
+import { LoadError, toLoadError } from './navigation';
+import { addCertificateException } from './certificateExceptions';
 import { PAGE_SCRIPT } from './pageScript';
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, ReaderArticle } from './reader';
 
@@ -130,6 +131,9 @@ export class Tab {
   httpsUpgradedFrom: string | null = null;
   /** Why the last page failed to load; cleared when the next load starts. */
   loadError: LoadError | null = null;
+  /** The address and time of that failure. */
+  private loadErrorUrl: string | null = null;
+  private loadErrorAt = 0;
   /** Data URI kept in memory only, so nothing from incognito tabs touches the disk. */
   thumbnail: string | null = null;
   /** Pixel size of the last screenshot shown to the model, so click_at can map its coordinates. */
@@ -355,6 +359,9 @@ export class Tab {
   }
 
   handleLoadStart(url?: string) {
+    // Android starts its own error document for the address that just failed (a load start with no load end): the
+    // error stays, and the tab isn't loading.
+    if (this.loadError && url && url === this.loadErrorUrl && Date.now() - this.loadErrorAt < 2000) return;
     // A new document: its watches, capture and "allow once" answers start over.
     this.geolocation.reset();
     this.media.reset();
@@ -371,8 +378,20 @@ export class Tab {
     this.onChange();
   }
 
-  handleError(error: { code: number; description: string }) {
-    this.loadError = { kind: classifyLoadError(error.code, error.description), ...error };
+  handleError(error: { code: number; description: string; url?: string }) {
+    this.loadError = toLoadError(error.code, error.description);
+    this.loadErrorUrl = error.url ?? null;
+    this.loadErrorAt = Date.now();
+    this.onChange();
+  }
+
+  /**
+   * The user chose "Continue anyway" on this tab's certificate error page (Android): this certificate is allowed on
+   * this host for the session (certificateExceptions.ts), and the WebView loads the page again.
+   */
+  continuePastCertificate(url: string, fingerprint: string) {
+    addCertificateException(url, fingerprint, this);
+    // The WebView loads the refused page again itself once it receives the new list (patched react-native-webview).
     this.onChange();
   }
 

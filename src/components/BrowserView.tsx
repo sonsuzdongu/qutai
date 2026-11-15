@@ -10,7 +10,9 @@ import { siteKey } from '../agent/sitePolicy';
 import { DARK_SITE_SCRIPT } from '../content/darkSites';
 import { allowInsecure, upgradeToHttps } from '../browser/httpsOnly';
 import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
-import { classifyLoadError, linkTarget } from '../browser/navigation';
+import { linkTarget, toLoadError } from '../browser/navigation';
+import { certificateExceptionsFor, mayBypassCertificate, noteValidCertificate } from '../browser/certificateExceptions';
+import { isLocalUrl } from '../browser/localNetwork';
 import { mayOfferExternal, noteUserGesture } from '../browser/externalGuard';
 import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
 import { geolocationScript } from '../browser/geolocation';
@@ -241,8 +243,16 @@ function TabWebView({
               tab.handleLoadStart(e.nativeEvent.url);
               setAtTop(true);
             }}
-            onLoadEnd={() => {
+            onLoadEnd={(e) => {
               tab.handleLoadEnd();
+              // An https page that is still on screen without an error a moment later had a valid certificate
+              // (Android reports a load end before the error of a failed load).
+              const loaded = e.nativeEvent.url;
+              if (/^https:/i.test(loaded)) {
+                setTimeout(() => {
+                  if (!tab.loadError && !tab.loading && tab.url === loaded) noteValidCertificate(loaded, tab.incognito);
+                }, 1500);
+              }
               setRefreshing(false);
               // Is this page an article? (reader mode indicator)
               tab.probeReaderSoon();
@@ -301,14 +311,39 @@ function TabWebView({
                 },
               ]);
             }}
-            renderError={(_domain, code, description) => (
-              <ErrorPage
-                kind={classifyLoadError(code, description)}
-                url={tab.url}
-                incognito={tab.incognito}
-                onRetry={() => tab.webview?.reload()}
-              />
-            )}
+            renderError={(_domain, code, description) => {
+              const error = toLoadError(code, description);
+              const url = tab.url;
+              const local = isLocalUrl(url);
+              const fingerprint = error.fingerprint;
+              return (
+                <ErrorPage
+                  error={error}
+                  url={url}
+                  local={local}
+                  incognito={tab.incognito}
+                  onRetry={() => tab.webview?.reload()}
+                  onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
+                  // Android only (the patch reports the certificate); never for a host whose certificate was
+                  // valid earlier this session.
+                  onContinue={
+                    Platform.OS === 'android' && error.kind === 'cert' && fingerprint && mayBypassCertificate(url, fingerprint)
+                      ? () => tab.continuePastCertificate(url, fingerprint)
+                      : undefined
+                  }
+                  // A local server that doesn't speak https (most development servers): offer http, not secure.
+                  onOpenHttp={
+                    error.kind === 'ssl' && local && /^https:/i.test(url)
+                      ? () => {
+                          const insecure = url.replace(/^https:/i, 'http:');
+                          allowInsecure(insecure);
+                          tab.loadUrl(insecure);
+                        }
+                      : undefined
+                  }
+                />
+              );
+            }}
             userAgent={tab.desktop ? DESKTOP_USER_AGENT : Platform.OS === 'android' ? chromeUserAgent : undefined}
             contentMode={tab.desktop ? 'desktop' : 'recommended'}
             thirdPartyCookiesEnabled={!newTabActions.blockThirdPartyCookies}
@@ -334,6 +369,9 @@ function TabWebView({
             // Camera and microphone (patched react-native-webview): refused unless this names the requesting
             // origin and kind, which it does only while a request the user allowed is answered. See mediaCapture.ts.
             mediaCaptureGrant={mediaGrant}
+            // Android (patched react-native-webview): "host:port sha256" certificates the user chose to continue past
+            // on the error page this session; the WebView proceeds past a certificate error only for these.
+            certificateExceptions={Platform.OS === 'android' ? certificateExceptionsFor(tab) : undefined}
             // iOS until the grant is first set (and if the patch were missing): WebKit refuses without a prompt.
             mediaCapturePermissionGrantType="deny"
             textZoom={newTabActions.textZoom}

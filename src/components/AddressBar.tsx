@@ -30,6 +30,8 @@ type Props = {
   loading: boolean;
   /** The page has used the location (shown as a small pin; tapping it opens the site's permissions). */
   usingLocation?: boolean;
+  /** An https page that must not look secure: a certificate error, or one the user chose to continue past. */
+  notSecure?: boolean;
   /** The page is capturing from the camera / microphone (small icons; tapping one opens the site's permissions). */
   usingCamera?: boolean;
   usingMicrophone?: boolean;
@@ -76,6 +78,7 @@ export function AddressBar({
   onEditRequestApplied,
   loading,
   usingLocation,
+  notSecure,
   usingCamera,
   usingMicrophone,
   onSitePermissionsPress,
@@ -219,12 +222,12 @@ export function AddressBar({
           accessibilityLabel={t('address.a11y', { url })}
         >
           {incognito && <Icon name="incognito" size={15} color={darkPalette.text} />}
-          {/^https:\/\//i.test(url) && (
+          {/^https:\/\//i.test(url) && !notSecure && (
             <View accessibilityLabel={t('address.secure')} accessible>
               <Icon name="secure" size={13} color={darkUI ? darkPalette.textSecondary : palette.textSecondary} />
             </View>
           )}
-          {/^http:\/\//i.test(url) && (
+          {(/^http:\/\//i.test(url) || (notSecure && /^https:\/\//i.test(url))) && (
             <View accessibilityLabel={t('address.notSecure')} accessible>
               <Icon name="insecure" size={13} color={palette.danger} />
             </View>

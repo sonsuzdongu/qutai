@@ -7,7 +7,7 @@ App Store privacy labels and the Google Play Data safety form.
 plugins, `ios.infoPlist`, `android.blockedPermissions`), `plugins/withLegacyStorageWrite.js`, `plugins/withBackgroundMedia.js`,
 `plugins/withPictureInPicture.js`, the native libraries'
 own manifests and the translated iOS strings in `locales/en.json` and `locales/tr.json`. react-native-webview carries a small
-patch (`patches/`, applied by `postinstall`) that decides camera and microphone requests from web pages. To see what a build will
+patch (`patches/`, applied by `postinstall`) that decides camera and microphone requests from web pages and lets the user continue past a certificate error (below). To see what a build will
 declare, run `npx expo config --type introspect` (or `npx expo prebuild --no-install` in a copy of the project). The
 Android libraries' own permissions are only merged in by Gradle: check
 `android/app/build/intermediates/merged_manifests/release/` and the merger report
@@ -103,11 +103,39 @@ Blocked (`android.blockedPermissions` in `app.json`, removed from the merged man
 | `com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE` | Install Referrer (`expo-application`) | Qutai doesn't read the install referrer |
 | `READ_APP_BADGE` and the launcher badge permissions (Samsung, HTC, Sony, Huawei, OPPO, …) | ShortcutBadger (`expo-notifications`) | Qutai never sets a badge count |
 
-Cleartext (plain http) for a custom AI endpoint: not enabled. Release builds target an API level where cleartext is
-off by default (only the debug manifests set `usesCleartextTraffic`, for the Metro server), and a network security
-config can only allow it per named domain or exact IP, not for private address ranges; allowing it everywhere would
-cover every host the app talks to. So on Android a custom endpoint must use https (the settings say so, and an http
-address is refused before saving); iOS allows http to local addresses (above).
+Cleartext (plain http): allowed for the app (`android:usesCleartextTraffic="true"`, `plugins/withCleartextBrowsing.js`),
+because Qutai is a browser. Apps targeting API 28+ get no cleartext by default and the WebView honours that, so before
+this release builds failed every http page with `net::ERR_CLEARTEXT_NOT_PERMITTED`, local ones (a development server at
+`http://192.168.1.2:3000`, a router, a NAS) included, even after the user accepted the "open the insecure version?"
+prompt; debug builds worked only because their manifest allows cleartext for the Metro server. The options were: (1) a
+network security config allowing cleartext per domain: it matches named domains and exact IP addresses only, not
+private address ranges or "whatever the user typed", so it can't cover local addresses in general; (2) cleartext for the
+app, the only setting that lets a browser open the http pages the user chooses. Qutai uses (2) and keeps http in check
+in the app instead: the HTTPS-only setting (on by default) opens http addresses over https and asks before falling
+back (per site and port, for the session), and the address bar marks http pages "Not secure". The app's own requests
+stay https-only in code: the AI providers' addresses are fixed https URLs, a custom endpoint is refused unless it is
+https on Android (`src/ai/custom.ts`, and `src/ai/http.ts` refuses http again before every request), and filter lists
+are refused unless https (`src/content/blocking.ts`). iOS still allows http only to local addresses
+(`NSAllowsLocalNetworking`, above); public http pages remain blocked there by App Transport Security.
+
+Local network access: no permission. Android's local network protection (`ACCESS_LOCAL_NETWORK`, a runtime permission
+in the Nearby devices group, which also covers WebView traffic) is enforced only for apps targeting Android 17 (API 37)
+or higher; below that, apps with `INTERNET` keep local network access and Android's documentation says not to declare
+or request the permission. Debug builds carry it only from the dev tooling (below). When the app moves to target API
+37, it must declare `ACCESS_LOCAL_NETWORK` and ask for it the first time the user opens a local address (and before a
+custom endpoint on the local network is used). iOS asks for no local network permission for WebKit content
+(`NSLocalNetworkUsageDescription` is for the custom AI endpoint).
+
+Certificate errors (patched react-native-webview, Android): the WebView refuses an invalid certificate as before and the
+app shows its own page saying what is wrong (not issued by a trusted authority, for example self-signed; expired or not
+yet valid; for another address) with "Go back". "Continue anyway (not secure)" is offered under it unless the same host
+and port served a valid certificate earlier in the session (a certificate that turned bad may mean interception). It
+allows that one certificate (SHA-256) on that host and port, in memory only: gone when the app restarts or the cache is
+cleared, and in an incognito tab only for that tab. `onReceivedSslError` proceeds only for a certificate on that list,
+so proceeding is always the user's decision (Google Play's policy on `onReceivedSslError`), and while an exception is in
+use the address bar shows "Not secure". The error page is a native view, outside the web page, and has no tool: the
+assistant's actions click and type inside web pages and can't press it. iOS shows the same error page without
+"Continue anyway" (the server-trust bypass is not implemented there).
 
 Main activity: `android:supportsPictureInPicture="true"` and `configChanges` including
 `screenSize|smallestScreenSize|screenLayout|orientation` (`plugins/withPictureInPicture.js`), for picture-in-picture of

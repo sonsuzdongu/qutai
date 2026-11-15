@@ -123,6 +123,7 @@
         }
       ],
       "./plugins/withLegacyStorageWrite",
+      "./plugins/withCleartextBrowsing",
       "./plugins/withBackgroundMedia",
       "./plugins/withBackgroundTasks",
       "./plugins/withPictureInPicture",

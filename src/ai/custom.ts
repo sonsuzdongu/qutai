@@ -4,9 +4,11 @@ import { createChatCompletionsCall } from './chatCompletions';
 import type { Provider } from './types';
 
 /**
- * Plain http is possible only where the platform lets the app make cleartext requests to a local address: iOS,
- * through App Transport Security's local-networking exception. Android release builds allow no cleartext, and its
- * network security config can't name private address ranges, so Android is https-only (docs/permissions.md).
+ * Plain http for the custom endpoint only where the platform limits cleartext to local addresses: iOS, through App
+ * Transport Security's local-networking exception. Android allows cleartext for the whole app (the browser has to open
+ * the http pages the user chooses, plugins/withCleartextBrowsing.js, and a network security config can't name private
+ * address ranges), so the app's own requests stay https-only there by this rule and src/ai/http.ts
+ * (docs/permissions.md).
  */
 export const ALLOW_CLEARTEXT = Platform.OS === 'ios';
 

@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { waitForForeground } from '../utils/foreground';
 import { t } from '../i18n';
 import { sleep } from '../utils/sleep';
@@ -18,6 +19,16 @@ export class ApiError extends Error {
 }
 
 /**
+ * The app's own requests to AI providers are https-only. Android release builds allow cleartext for the pages the user
+ * opens over http (plugins/withCleartextBrowsing.js), so this is where http is refused for them; iOS allows http to a
+ * local custom endpoint (App Transport Security's local-networking exception, src/ai/custom.ts).
+ */
+function assertSecure(url: string) {
+  if (/^https:\/\//i.test(url) || (Platform.OS === 'ios' && /^http:\/\//i.test(url))) return;
+  throw new Error(t('custom.httpsOnlyAndroid'));
+}
+
+/**
  * POSTs JSON with retries for rate limits, overloads and requests cut off
  * when the OS suspended the app. Resolves with a successful response.
  */
@@ -27,6 +38,7 @@ async function postWithRetry(
   body: unknown,
   signal: AbortSignal,
 ): Promise<Response> {
+  assertSecure(url);
   const payload = JSON.stringify(body);
 
   for (let attempt = 0; ; attempt++) {
@@ -73,6 +85,7 @@ async function toApiError(res: Response): Promise<ApiError> {
 
 /** A GET for JSON (model lists), without retries: the user asked for it and can ask again. */
 export async function getJson<T>(url: string, headers: Record<string, string>, signal?: AbortSignal): Promise<T> {
+  assertSecure(url);
   const res = await fetch(url, { headers: { accept: 'application/json', ...headers }, signal });
   if (!res.ok) throw await toApiError(res);
   return (await res.json()) as T;

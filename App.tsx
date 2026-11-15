@@ -125,6 +125,7 @@ import { QrCodeSheet } from './src/components/QrCodeSheet';
 import { QrScanner } from './src/components/QrScanner';
 import { captureRef } from 'react-native-view-shot';
 import { clearInsecureExceptions, upgradeToHttps } from './src/browser/httpsOnly';
+import { usesCertificateException } from './src/browser/certificateExceptions';
 import { ClearOptions, rangeStart } from './src/storage/clearData';
 import { deleteActionsSince } from './src/storage/actionLog';
 import { deleteSentSince, moveSentConversation, pruneSent } from './src/storage/sentLog';
@@ -1530,6 +1531,7 @@ function BrowserApp({
       // tab's: on Android it has its own profile (deleted with the incognito session), so it would clear only that.
       browser.tabs.find((x) => x.webview && !x.incognito)?.webview?.clearCache?.(true);
       clearInsecureExceptions();
+      browser.clearCertificateExceptions();
     }
     toast.show(t('clearData.done'));
   };
@@ -1560,6 +1562,12 @@ function BrowserApp({
       }}
       loading={tab.loading}
       usingLocation={!onNewTab && tab.geolocation.inUse}
+      notSecure={
+        !onNewTab &&
+        (tab.loadError?.kind === 'cert' ||
+          tab.loadError?.kind === 'ssl' ||
+          usesCertificateException(tab.url, tab.incognito))
+      }
       usingCamera={!onNewTab && tab.media.camera}
       usingMicrophone={!onNewTab && tab.media.microphone}
       onSitePermissionsPress={() => setPermissionHost(siteKey(tab.url))}
