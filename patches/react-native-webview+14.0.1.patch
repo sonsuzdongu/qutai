@@ -52,7 +52,7 @@ index 1b5c4c9..c86cb6d 100644
      public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
  
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
-index 80c6803..0409b97 100644
+index 80c6803..0a85aac 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 @@ -38,15 +38,19 @@ import com.facebook.react.uimanager.events.Event;
@@ -75,7 +75,19 @@ index 80c6803..0409b97 100644
  
  public class RNCWebView extends WebView implements LifecycleEventListener {
      protected @Nullable
-@@ -224,6 +228,80 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -124,6 +128,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+ 
+     @Override
+     public boolean onTouchEvent(MotionEvent event) {
++        // Qutai patch: when the user last touched the page, so a download that follows a tap counts as theirs.
++        int action = event.getActionMasked();
++        if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_UP) {
++            lastTouchUptimeMs = android.os.SystemClock.uptimeMillis();
++        }
+         if (this.nestedScrollEnabled) {
+             requestDisallowInterceptTouchEvent(true);
+         }
+@@ -224,6 +233,83 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -84,6 +96,9 @@ index 80c6803..0409b97 100644
 +
 +    // Qutai patch: the WebView profile this view uses (null: the default one); see RNCWebViewProfiles.
 +    public @Nullable String profileName = null;
++
++    /** Qutai patch: uptime of the last touch down / up on the page (0: never). */
++    public volatile long lastTouchUptimeMs = 0;
 +
 +    // Qutai patch: the key of the app's playback script messages, and whether this is an incognito tab; see
 +    // RNCWebViewPlayback.
@@ -156,7 +171,19 @@ index 80c6803..0409b97 100644
      WebChromeClient mWebChromeClient;
      @Override
      public void setWebChromeClient(WebChromeClient client) {
-@@ -419,7 +497,14 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -403,6 +489,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+         }
+     }
+ 
++    /** Qutai patch: onFileDownload on Android (see the download listener in RNCWebViewManagerImpl). */
++    public void dispatchFileDownload(WritableMap data) {
++        dispatchEvent(this, new com.reactnativecommunity.webview.events.TopFileDownloadEvent(RNCWebViewWrapper.getReactTagFromWebView(this), data));
++    }
++
+     protected void dispatchEvent(WebView webView, Event event) {
+         ThemedReactContext reactContext = getThemedReactContext();
+         int reactTag = RNCWebViewWrapper.getReactTagFromWebView(webView);
+@@ -419,7 +510,14 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          if (mWebChromeClient != null) {
              mWebChromeClient.onHideCustomView();
          }
@@ -171,7 +198,7 @@ index 80c6803..0409b97 100644
      }
  
    public ThemedReactContext getThemedReactContext() {
-@@ -446,7 +531,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -446,7 +544,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          public void postMessage(String message) {
              if (mWebView.getMessagingEnabled()) {
                  // Post to main thread because `mWebView.getUrl()` requires to be executed on main.
@@ -606,22 +633,82 @@ index 0000000..e535e45
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
-index f83033b..f3a7fd2 100644
+index f83033b..f78507e 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
-@@ -111,8 +111,9 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
-             try {
-                 urlObj = URL(url)
-                 val baseUrl = urlObj.protocol + "://" + urlObj.host
+@@ -1,6 +1,5 @@
+ package com.reactnativecommunity.webview
+ 
+-import android.app.DownloadManager
+ import android.content.pm.ActivityInfo
+ import android.graphics.Bitmap
+ import android.graphics.Color
+@@ -91,49 +90,22 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+         if (ReactBuildConfig.DEBUG) {
+             WebView.setWebContentsDebuggingEnabled(true)
+         }
++        // Qutai patch: downloads are Qutai's own (modules/qutai-downloads), not the system DownloadManager's. The
++        // request goes to JavaScript (onFileDownload, like iOS) with what the WebView knows, and the app decides:
++        // whether to ask first (no recent tap on the page), the dangerous-type warning, and the download itself with
++        // the cookies of this WebView's profile. The WebView gives no request method or body: a download that needed
++        // a POST is fetched again with GET.
+         webView.setDownloadListener(DownloadListener { url, userAgent, contentDisposition, mimetype, contentLength ->
+-            val module = webView.reactApplicationContext.getNativeModule(RNCWebViewModule::class.java) ?: return@DownloadListener
+-            val request: DownloadManager.Request = try {
+-                DownloadManager.Request(Uri.parse(url))
+-            } catch (e: IllegalArgumentException) {
+-                Log.w(TAG, "Unsupported URI, aborting download", e)
+-                return@DownloadListener
+-            }
+-            var fileName = URLUtil.guessFileName(url, contentDisposition, mimetype)
+-
+-            // Sanitize filename by replacing invalid characters with "_"
+-            fileName = fileName.replace(invalidCharRegex, "_")
+-
+-            val downloadMessage = "Downloading $fileName"
+-
+-            //Attempt to add cookie, if it exists
+-            var urlObj: URL? = null
+-            try {
+-                urlObj = URL(url)
+-                val baseUrl = urlObj.protocol + "://" + urlObj.host
 -                val cookie = CookieManager.getInstance().getCookie(baseUrl)
 -                request.addRequestHeader("Cookie", cookie)
-+                // Qutai patch: the cookies of this WebView's profile (an incognito tab's own, never the normal ones).
-+                val cookie = RNCWebViewProfiles.cookieManagerFor(webView)?.getCookie(baseUrl)
-+                if (cookie != null) request.addRequestHeader("Cookie", cookie)
-             } catch (e: MalformedURLException) {
-                 Log.w(TAG, "Error getting cookie for DownloadManager", e)
-             }
-@@ -182,6 +183,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+-            } catch (e: MalformedURLException) {
+-                Log.w(TAG, "Error getting cookie for DownloadManager", e)
+-            }
+-
+-            //Finish setting up request
+-            request.addRequestHeader("User-Agent", userAgent)
+-            request.setTitle(fileName)
+-            request.setDescription(downloadMessage)
+-            request.allowScanningByMediaScanner()
+-            request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+-            module.setDownloadRequest(request)
+-            if (module.grantFileDownloaderPermissions(
+-                    getDownloadingMessageOrDefault(),
+-                    getLackPermissionToDownloadMessageOrDefault()
+-                )
+-            ) {
+-                module.downloadFile(
+-                    getDownloadingMessageOrDefault()
+-                )
+-            }
++            val data = com.facebook.react.bridge.Arguments.createMap()
++            data.putString("downloadUrl", url)
++            data.putString("userAgent", userAgent ?: "")
++            data.putString("contentDisposition", contentDisposition ?: "")
++            data.putString("mimeType", mimetype ?: "")
++            data.putDouble("contentLength", contentLength.toDouble())
++            data.putString("pageUrl", webView.url ?: "")
++            val sinceTouch = android.os.SystemClock.uptimeMillis() - webView.lastTouchUptimeMs
++            data.putBoolean("userGesture", webView.lastTouchUptimeMs > 0 && sinceTouch < 10_000)
++            webView.dispatchFileDownload(data)
+         })
+         return RNCWebViewWrapper(context, webView)
+     }
+@@ -182,6 +154,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
                              mWebView.visibility = View.GONE
                          }
                          mWebView.themedReactContext.addLifecycleEventListener(this)
@@ -630,7 +717,7 @@ index f83033b..f3a7fd2 100644
                      }
  
                      override fun onHideCustomView() {
-@@ -204,6 +207,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+@@ -204,6 +178,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
                          mCustomViewCallback = null
                          activity.requestedOrientation = initialRequestedOrientation
                          mWebView.themedReactContext.removeLifecycleEventListener(this)
@@ -736,10 +823,10 @@ index 0000000..392b475
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewProfiles.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewProfiles.java
 new file mode 100644
-index 0000000..a229911
+index 0000000..694636a
 --- /dev/null
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewProfiles.java
-@@ -0,0 +1,160 @@
+@@ -0,0 +1,172 @@
 +package com.reactnativecommunity.webview;
 +
 +import android.os.Handler;
@@ -889,6 +976,18 @@ index 0000000..a229911
 +    }
 +
 +    /**
++     * The cookie manager of a profile by name (null or "": the default profile), for Qutai's own downloads, which
++     * send a tab's cookies without a WebView at hand. Null when the profile doesn't exist (any more).
++     */
++    @UiThread
++    public static @Nullable CookieManager cookieManagerForProfile(@Nullable String name) {
++        if (name == null || name.isEmpty()) return CookieManager.getInstance();
++        if (!isSupported()) return null;
++        Profile profile = ProfileStore.getInstance().getProfile(name);
++        return profile != null ? profile.getCookieManager() : null;
++    }
++
++    /**
 +     * The cookie store of this WebView's profile (the default one for WebViews without a profile), or null when its
 +     * profile can't be found: never another profile's cookies.
 +     */
@@ -931,19 +1030,51 @@ index 0000000..ecb67ea
 +    rctEventEmitter.receiveEvent(viewTag, eventName, mEventData)
 +
 +}
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopFileDownloadEvent.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopFileDownloadEvent.kt
+new file mode 100644
+index 0000000..f387e88
+--- /dev/null
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopFileDownloadEvent.kt
+@@ -0,0 +1,25 @@
++package com.reactnativecommunity.webview.events
++
++import com.facebook.react.bridge.WritableMap
++import com.facebook.react.uimanager.events.Event
++import com.facebook.react.uimanager.events.RCTEventEmitter
++
++/**
++ * Qutai patch: a download the page started (onFileDownload; on iOS the library sends it too). Carries the URL, user
++ * agent, Content-Disposition, MIME type, length, the page's address and whether the user touched the page just before.
++ */
++class TopFileDownloadEvent(viewId: Int, private val mEventData: WritableMap) :
++  Event<TopFileDownloadEvent>(viewId) {
++  companion object {
++    const val EVENT_NAME = "topFileDownload"
++  }
++
++  override fun getEventName(): String = EVENT_NAME
++
++  override fun canCoalesce(): Boolean = false
++
++  override fun getCoalescingKey(): Short = 0
++
++  override fun dispatch(rctEventEmitter: RCTEventEmitter) =
++    rctEventEmitter.receiveEvent(viewTag, eventName, mEventData)
++}
 diff --git a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index fa8efb8..ef143d4 100644
+index fa8efb8..20b0f65 100644
 --- a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-@@ -23,6 +23,7 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
+@@ -23,6 +23,8 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
  import com.reactnativecommunity.webview.events.TopLoadingStartEvent;
  import com.reactnativecommunity.webview.events.TopMessageEvent;
  import com.reactnativecommunity.webview.events.TopOpenWindowEvent;
 +import com.reactnativecommunity.webview.events.TopContentBlockedEvent;
++import com.reactnativecommunity.webview.events.TopFileDownloadEvent;
  import com.reactnativecommunity.webview.events.TopRenderProcessGoneEvent;
  import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEvent;
  
-@@ -160,6 +161,46 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -160,6 +162,46 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
          mRNCWebViewManagerImpl.setIncognito(view, value);
      }
  
@@ -990,7 +1121,7 @@ index fa8efb8..ef143d4 100644
      @Override
      @ReactProp(name = "injectedJavaScript")
      public void setInjectedJavaScript(RNCWebViewWrapper view, @Nullable String value) {
-@@ -429,6 +470,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -429,6 +471,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
      @Override
      public void setMediaCapturePermissionGrantType(RNCWebViewWrapper view, @Nullable String value) {}
  
@@ -1004,12 +1135,13 @@ index fa8efb8..ef143d4 100644
      @Override
      public void setFraudulentWebsiteWarningEnabled(RNCWebViewWrapper view, boolean value) {}
      /* !iOS PROPS - no implemented here */
-@@ -537,6 +585,8 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -537,6 +586,9 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
          export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
          export.put(TopHttpErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpError"));
          export.put(TopRenderProcessGoneEvent.EVENT_NAME, MapBuilder.of("registrationName", "onRenderProcessGone"));
 +        // Qutai patch
 +        export.put(TopContentBlockedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onContentBlocked"));
++        export.put(TopFileDownloadEvent.EVENT_NAME, MapBuilder.of("registrationName", "onFileDownload"));
          export.put(TopCustomMenuSelectionEvent.EVENT_NAME, MapBuilder.of("registrationName", "onCustomMenuSelection"));
          export.put(TopOpenWindowEvent.EVENT_NAME, MapBuilder.of("registrationName", "onOpenWindow"));
          return export;
@@ -1072,18 +1204,19 @@ index ca9ff96..e439db4 100644
          return mRNCWebViewModuleImpl.startPhotoPickerIntent(acceptTypes, allowMultiple, callback, isCaptureEnabled);
      }
 diff --git a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index 974337f..c3cb132 100644
+index 974337f..e74046b 100644
 --- a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-@@ -19,6 +19,7 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
+@@ -19,6 +19,8 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
  import com.reactnativecommunity.webview.events.TopLoadingStartEvent;
  import com.reactnativecommunity.webview.events.TopMessageEvent;
  import com.reactnativecommunity.webview.events.TopOpenWindowEvent;
 +import com.reactnativecommunity.webview.events.TopContentBlockedEvent;
++import com.reactnativecommunity.webview.events.TopFileDownloadEvent;
  import com.reactnativecommunity.webview.events.TopRenderProcessGoneEvent;
  import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEvent;
  
-@@ -127,6 +128,40 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
+@@ -127,6 +129,40 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
          mRNCWebViewManagerImpl.setIncognito(view, value);
      }
  
@@ -1124,12 +1257,13 @@ index 974337f..c3cb132 100644
      @ReactProp(name = "injectedJavaScript")
      public void setInjectedJavaScript(RNCWebViewWrapper view, @Nullable String value) {
          mRNCWebViewManagerImpl.setInjectedJavaScript(view, value);
-@@ -304,6 +339,8 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
+@@ -304,6 +340,9 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
          export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
          export.put(TopHttpErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpError"));
          export.put(TopRenderProcessGoneEvent.EVENT_NAME, MapBuilder.of("registrationName", "onRenderProcessGone"));
 +        // Qutai patch
 +        export.put(TopContentBlockedEvent.EVENT_NAME, MapBuilder.of("registrationName", "onContentBlocked"));
++        export.put(TopFileDownloadEvent.EVENT_NAME, MapBuilder.of("registrationName", "onFileDownload"));
          export.put(TopCustomMenuSelectionEvent.EVENT_NAME, MapBuilder.of("registrationName", "onCustomMenuSelection"));
          export.put(TopOpenWindowEvent.EVENT_NAME, MapBuilder.of("registrationName", "onOpenWindow"));
          return export;

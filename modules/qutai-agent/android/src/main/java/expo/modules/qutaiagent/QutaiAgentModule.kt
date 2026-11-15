@@ -80,15 +80,6 @@ class QutaiAgentModule : Module() {
       AgentHub.pageState(appContext.currentActivity, key)
     }.runOnQueue(Queues.MAIN)
 
-    /**
-     * Starts a download the assistant asked for (the user confirmed it) the way the tab's own downloads go: the
-     * system download manager with the cookies of the tab's profile. "started", "permission" (Android 9 and older
-     * asks for storage first and starts it if allowed) or "noWebView".
-     */
-    AsyncFunction("download") { key: String, url: String, fileName: String, mimeType: String, downloading: String, noPermission: String ->
-      AgentHub.download(appContext.currentActivity, key, url, fileName, mimeType, downloading, noPermission)
-    }.runOnQueue(Queues.MAIN)
-
     AsyncFunction("goBack") { key: String ->
       AgentHub.goBack(appContext.currentActivity, key)
     }.runOnQueue(Queues.MAIN)
