@@ -244,8 +244,24 @@ export const COMPETITORS: Product[] = [
         source: 'https://www.perplexity.ai/hub/blog/meet-comet-for-ios',
         checked: D,
       },
-      phoneHandoffs: U,
-      memoryForms: U,
+      phoneHandoffs: {
+        state: 'partial',
+        note: t(
+          'On iPhone it can read calendar events and share a summary by email; adding events, calls and texts are not documented.',
+          'iPhone’da takvim etkinliklerini okuyup özeti e-postayla paylaşabiliyor; etkinlik ekleme, arama ve SMS belgelenmemiş.',
+        ),
+        source: 'https://www.perplexity.ai/hub/blog/meet-comet-for-ios',
+        checked: '2026-11-15',
+      },
+      memoryForms: {
+        state: 'partial',
+        note: t(
+          'Uses your Perplexity account memory across devices; filling forms from it is not documented.',
+          'Perplexity hesabındaki hafızayı cihazlar arasında kullanıyor; bununla form doldurma belgelenmemiş.',
+        ),
+        source: 'https://www.perplexity.ai/help-center/comet/en/articles/12658438-comet-memory',
+        checked: '2026-11-15',
+      },
       byok: U,
       noAccount: {
         state: 'partial',
@@ -259,8 +275,24 @@ export const COMPETITORS: Product[] = [
         source: 'https://www.perplexity.ai/comet/resources/articles/comet-data-privacy-security-faq-s',
         checked: D,
       },
-      confirmations: U,
-      openSource: U,
+      confirmations: {
+        state: 'yes',
+        note: t(
+          'Asks before an agent first runs, and the assistant can be blocked on chosen sites.',
+          'Bir ajan ilk kez çalışmadan önce soruyor; asistan seçilen sitelerde engellenebiliyor.',
+        ),
+        source: 'https://www.perplexity.ai/help-center/comet/en/articles/12867415-comet-assistant-privacy-data-use',
+        checked: '2026-11-15',
+      },
+      openSource: {
+        state: 'no',
+        note: t(
+          'Proprietary licence; only bundled third-party parts are open source.',
+          'Tescilli lisans; yalnızca içindeki üçüncü taraf parçalar açık kaynak.',
+        ),
+        source: 'https://www.perplexity.ai/hub/legal/comet-terms-of-service',
+        checked: '2026-11-15',
+      },
       adblock: {
         state: 'yes',
         note: t('Standard and Aggressive levels; also hides leftover ad slots and cookie banners.', 'Standart ve Agresif düzeyler; boş kalan reklam alanlarını ve çerez uyarılarını da gizliyor.'),
@@ -314,12 +346,36 @@ export const COMPETITORS: Product[] = [
       },
       phoneHandoffs: U,
       memoryForms: U,
-      byok: U,
+      byok: {
+        state: 'yes',
+        note: t(
+          'Local models on the phone, or your own model by API key.',
+          'Telefonda yerel modeller ya da API anahtarıyla kendi modeliniz.',
+        ),
+        source: 'https://sigmabrowser.com/local-ai',
+        checked: '2026-11-15',
+      },
       noAccount: U,
-      directToProvider: U,
+      directToProvider: {
+        state: 'partial',
+        note: t(
+          'The default AI is Sigma’s own service; only local models stay on the phone.',
+          'Varsayılan yapay zekâ Sigma’nın kendi hizmeti; yalnızca yerel modeller telefonda kalıyor.',
+        ),
+        source: 'https://sigmabrowser.com/plans',
+        checked: '2026-11-15',
+      },
       confirmations: U,
       openSource: U,
-      adblock: U,
+      adblock: {
+        state: 'yes',
+        note: t(
+          'Built-in ad and tracker blocker on iPhone.',
+          'iPhone’da yerleşik reklam ve izleyici engelleyici.',
+        ),
+        source: 'https://sigmabrowser.com/browser-for-iphone',
+        checked: '2026-11-15',
+      },
       reader: U,
       backgroundAudio: U,
       sync: {
@@ -349,9 +405,25 @@ export const COMPETITORS: Product[] = [
     platforms: t('iOS and Android', 'iOS ve Android'),
     cells: {
       agent: U,
-      research: U,
+      research: {
+        state: 'yes',
+        note: t(
+          'Leo answers can link Brave Search results, and on Android it can use tabs you mention.',
+          'Leo yanıtları Brave Search sonuçlarına bağlantı verebiliyor; Android’de andığınız sekmeleri kullanabiliyor.',
+        ),
+        source: 'https://brave.com/blog/leo-real-time-results/',
+        checked: '2026-11-15',
+      },
       phoneHandoffs: U,
-      memoryForms: U,
+      memoryForms: {
+        state: 'partial',
+        note: t(
+          'On Android, Leo can keep your name and interests to tailor answers; form filling is not documented.',
+          'Android’de Leo yanıtları kişiselleştirmek için adınızı ve ilgi alanlarınızı tutabiliyor; form doldurma belgelenmemiş.',
+        ),
+        source: 'https://brave.com/whats-new/android/',
+        checked: '2026-11-15',
+      },
       byok: {
         state: 'partial',
         note: t('A choice of Leo models; using your own model is not in the mobile app.', 'Leo modelleri arasında seçim; kendi modelinizi kullanmak mobil uygulamada yok.'),
@@ -370,7 +442,15 @@ export const COMPETITORS: Product[] = [
         source: 'https://brave.com/leo/',
         checked: D,
       },
-      confirmations: U,
+      confirmations: {
+        state: 'partial',
+        note: t(
+          'Release notes show Leo’s tool requests need your approval on Android; details are not documented.',
+          'Sürüm notları Android’de Leo’nun araç isteklerinin onayınızı gerektirdiğini gösteriyor; ayrıntılar belgelenmemiş.',
+        ),
+        source: 'https://brave.com/latest/',
+        checked: '2026-11-15',
+      },
       openSource: {
         state: 'yes',
         note: t('MPL-2.0.', 'MPL-2.0.'),
@@ -383,7 +463,15 @@ export const COMPETITORS: Product[] = [
         source: 'https://apps.apple.com/us/app/brave-private-web-browser-vpn/id1052879175',
         checked: D,
       },
-      reader: U,
+      reader: {
+        state: 'partial',
+        note: t(
+          'Reader Mode is documented for iOS.',
+          'Okuma modu iOS için belgelenmiş.',
+        ),
+        source: 'https://brave.com/latest/',
+        checked: '2026-11-15',
+      },
       backgroundAudio: {
         state: 'yes',
         note: t('Background and lock-screen playback; Playlist on iOS.', 'Arka planda ve kilit ekranında çalma; iOS’ta Playlist.'),
@@ -442,9 +530,25 @@ export const COMPETITORS: Product[] = [
         source: 'https://www.microsoft.com/en-us/edge/learning-center/how-to-use-copilot-in-edge-on-your-phone',
         checked: D,
       },
-      directToProvider: U,
+      directToProvider: {
+        state: 'no',
+        note: t(
+          'Copilot in the app is Microsoft’s own AI service.',
+          'Uygulamadaki Copilot Microsoft’un kendi yapay zekâ hizmeti.',
+        ),
+        source: 'https://explore.microsoft.com/en-us/edge/terms',
+        checked: '2026-11-15',
+      },
       confirmations: U,
-      openSource: U,
+      openSource: {
+        state: 'no',
+        note: t(
+          'Proprietary licence terms cover the iOS and Android apps.',
+          'iOS ve Android uygulamaları tescilli lisans koşullarıyla dağıtılıyor.',
+        ),
+        source: 'https://explore.microsoft.com/en-us/edge/terms',
+        checked: '2026-11-15',
+      },
       adblock: {
         state: 'yes',
         note: t('Adblock Plus and tracking prevention.', 'Adblock Plus ve izleme önleme.'),
@@ -505,7 +609,15 @@ export const COMPETITORS: Product[] = [
         source: 'https://blog.google/products-and-platforms/products/chrome/bringing-chrome-ai-to-android/',
         checked: D,
       },
-      memoryForms: U,
+      memoryForms: {
+        state: 'partial',
+        note: t(
+          'Gemini-powered autofill suggests details from Gmail in forms; US only, with Personal Intelligence on.',
+          'Gemini destekli otomatik doldurma formlarda Gmail’deki bilgileri öneriyor; yalnızca ABD’de, Personal Intelligence açıkken.',
+        ),
+        source: 'https://blog.google/products-and-platforms/products/chrome/enhanced-autofill-gmail/',
+        checked: '2026-11-15',
+      },
       byok: U,
       noAccount: {
         state: 'no',
@@ -583,8 +695,24 @@ export const COMPETITORS: Product[] = [
         checked: D,
       },
       phoneHandoffs: U,
-      memoryForms: U,
-      byok: U,
+      memoryForms: {
+        state: 'partial',
+        note: t(
+          'The browser’s own autofill for addresses and cards; no AI memory is documented.',
+          'Tarayıcının kendi adres ve kart otomatik doldurması; yapay zekâ hafızası belgelenmemiş.',
+        ),
+        source: 'https://help.opera.com/en/mobile/android/',
+        checked: '2026-11-15',
+      },
+      byok: {
+        state: 'no',
+        note: t(
+          'Opera’s service picks the model for each request.',
+          'Her istek için modeli Opera’nın hizmeti seçiyor.',
+        ),
+        source: 'https://blogs.opera.com/news/2025/12/opera-upgrades-ai-experience-for-android/',
+        checked: '2026-11-15',
+      },
       noAccount: {
         state: 'yes',
         note: t('No account or sign-up needed.', 'Hesap ya da kayıt gerekmiyor.'),
@@ -642,7 +770,15 @@ export const COMPETITORS: Product[] = [
     name: 'DuckDuckGo (Duck.ai)',
     platforms: t('iOS and Android', 'iOS ve Android'),
     cells: {
-      agent: U,
+      agent: {
+        state: 'no',
+        note: t(
+          'Its AI features are the Duck.ai chat and Search Assist answers.',
+          'Yapay zekâ özellikleri Duck.ai sohbeti ve Search Assist yanıtlarından ibaret.',
+        ),
+        source: 'https://duckduckgo.com/duckduckgo-help-pages/duckai/approach-to-ai',
+        checked: '2026-11-15',
+      },
       research: {
         state: 'partial',
         note: t('Search answers link one or two sources.', 'Arama yanıtları bir iki kaynağa bağlantı veriyor.'),
@@ -650,7 +786,15 @@ export const COMPETITORS: Product[] = [
         checked: D,
       },
       phoneHandoffs: U,
-      memoryForms: U,
+      memoryForms: {
+        state: 'partial',
+        note: t(
+          'The browser’s own on-device autofill; Duck.ai does not fill forms.',
+          'Tarayıcının cihazdaki kendi otomatik doldurması; Duck.ai form doldurmuyor.',
+        ),
+        source: 'https://duckduckgo.com/duckduckgo-help-pages/passwords-autofill',
+        checked: '2026-11-15',
+      },
       byok: {
         state: 'partial',
         note: t('A choice of models from several providers; no own key.', 'Birkaç sağlayıcının modelleri arasında seçim; kendi anahtar yok.'),
@@ -725,8 +869,24 @@ export const COMPETITORS: Product[] = [
         source: 'https://news.samsung.com/global/samsung-takes-its-browser-beyond-mobile-extending-agentic-ai-across-devices',
         checked: D,
       },
-      phoneHandoffs: U,
-      memoryForms: U,
+      phoneHandoffs: {
+        state: 'no',
+        note: t(
+          'Browsing assist summarises, translates and reads highlights aloud only.',
+          'Browsing assist yalnızca özetliyor, çeviriyor ve öne çıkanları sesli okuyor.',
+        ),
+        source: 'https://www.samsung.com/us/support/answer/ANS10012964/',
+        checked: '2026-11-15',
+      },
+      memoryForms: {
+        state: 'partial',
+        note: t(
+          'The browser’s own autofill; Browsing assist does not keep personal details.',
+          'Tarayıcının kendi otomatik doldurması; Browsing assist kişisel bilgi tutmuyor.',
+        ),
+        source: 'https://www.samsung.com/us/support/answer/ANS00076953',
+        checked: '2026-11-15',
+      },
       byok: U,
       noAccount: {
         state: 'no',
@@ -734,9 +894,25 @@ export const COMPETITORS: Product[] = [
         source: 'https://news.samsung.com/global/samsung-takes-its-browser-beyond-mobile-extending-agentic-ai-across-devices',
         checked: D,
       },
-      directToProvider: U,
+      directToProvider: {
+        state: 'no',
+        note: t(
+          'Browsing assist is Samsung’s Galaxy AI service and needs a Samsung account.',
+          'Browsing assist Samsung’un Galaxy AI hizmeti ve Samsung Hesabı istiyor.',
+        ),
+        source: 'https://www.samsung.com/au/support/mobile-devices/how-to-set-up-and-use-the-browsing-assist-features-on-the-galaxy-s24',
+        checked: '2026-11-15',
+      },
       confirmations: U,
-      openSource: U,
+      openSource: {
+        state: 'no',
+        note: t(
+          'Samsung’s terms describe the browser as proprietary.',
+          'Samsung’un koşulları tarayıcıyı tescilli yazılım olarak tanımlıyor.',
+        ),
+        source: 'https://www.internet.apps.samsung.com/tos/us/index.html',
+        checked: '2026-11-15',
+      },
       adblock: {
         state: 'partial',
         note: t('Anti-tracking built in; ad blocking through separate blocker apps.', 'İzleme önleme yerleşik; reklam engelleme ayrı engelleyici uygulamalarla.'),
@@ -749,7 +925,15 @@ export const COMPETITORS: Product[] = [
         source: 'https://www.samsung.com/us/support/answer/ANS10012964/',
         checked: D,
       },
-      backgroundAudio: U,
+      backgroundAudio: {
+        state: 'yes',
+        note: t(
+          'A Background play setting; some sites, such as YouTube, may not support it.',
+          'Arka planda oynatma ayarı var; YouTube gibi bazı siteler desteklemeyebiliyor.',
+        ),
+        source: 'https://www.samsung.com/us/support/troubleshoot/TSG10010305/',
+        checked: '2026-11-15',
+      },
       sync: {
         state: 'yes',
         note: t('Bookmarks and history, with a Samsung Account.', 'Samsung Hesabıyla yer imleri ve geçmiş.'),
@@ -762,7 +946,16 @@ export const COMPETITORS: Product[] = [
         source: 'https://play.google.com/store/apps/details?id=com.sec.android.app.sbrowser',
         checked: D,
       },
-      price: U,
+      price: {
+        state: 'yes',
+        value: t('Free (basic Galaxy AI)', 'Ücretsiz (temel Galaxy AI)'),
+        note: t(
+          'Samsung says basic Galaxy AI features are free; enhanced ones may cost extra.',
+          'Samsung temel Galaxy AI özelliklerinin ücretsiz olduğunu, gelişmiş olanların ücretli olabileceğini söylüyor.',
+        ),
+        source: 'https://www.samsung.com/us/support/answer/ANS10012964/',
+        checked: '2026-11-15',
+      },
     },
   },
 ];
