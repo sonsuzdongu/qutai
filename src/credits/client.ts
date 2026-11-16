@@ -1,0 +1,449 @@
+import { createSseDecoder, type SseEvent } from '../ai/sse';
+import { RelayError, type RelayErrorKind } from './errors';
+import type {
+  CreditsResponse,
+  PublicConfig,
+  RelayRequest,
+  RelaySettlementEvent,
+  RelayStreamErrorEvent,
+  UpstreamError,
+} from './types';
+
+/**
+ * The HTTP client for Qutai Credits (pro mode only): `GET /config`, `GET /credits` and `POST /relay`
+ * (backend/README.md › Relay). No React Native imports, so `scripts/credits-tests/` runs it in Node against a fake
+ * server and the local one. Nothing here logs: requests carry the conversation and the access token.
+ *
+ * What the relay answers with, and what this client makes of it:
+ * - a stream: the provider's own events, handed on unchanged, then `qutai.error` (the provider's stream was cut)
+ *   and always last `qutai.settlement` (what was charged, the new balance); both are kept from the adapters;
+ * - not streamed: the provider's JSON, with the charge and balance in `X-Qutai-Charged` / `X-Qutai-Balance`;
+ * - an error: `{ error: { code, message, requestId, upstream? } }` (refusals are never charged).
+ */
+
+/** The account's tokens, from the signed-in session (src/account/session.ts). */
+export interface TokenSource {
+  /** A valid access token; rejects when signed out. */
+  get(): Promise<string>;
+  /** A new access token after the server refused `stale` (one refresh at a time); rejects when the session is over. */
+  renew(stale: string): Promise<string>;
+  /** The server said the account is suspended. */
+  suspended(): void;
+  /** The server refused a renewed token too: the session is over. */
+  ended(): void;
+}
+
+export type Fetch = (input: string, init?: RequestInit) => Promise<Response>;
+
+export interface CreditsClientOptions {
+  baseUrl: string;
+  tokens: TokenSource;
+  /** The app's version, sent as `X-Qutai-App-Version` (the server refuses versions below its minimum). */
+  appVersion: string;
+  fetch?: Fetch;
+  /** A new balance from a settlement (micro-credits). */
+  onBalance?: (balance: number) => void;
+  /** Waits before a retry; abortable. Tests pass a fast one. */
+  sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
+  /** Before retrying a request cut off by the network: waits until the app is in the foreground again. */
+  beforeRetry?: (signal: AbortSignal) => Promise<void>;
+}
+
+/** What one relay request cost, from its settlement. */
+export interface Charge {
+  /** Micro-credits charged (0 when the request was refused or the settlement didn't say). */
+  charged: number;
+  balance: number | null;
+}
+
+export const APP_VERSION_HEADER = 'X-Qutai-App-Version';
+const CONFIG_TIMEOUT_MS = 10_000;
+const CREDITS_TIMEOUT_MS = 15_000;
+/** Refusals worth waiting for (our own previous step still settling, a short rate limit, a busy provider). */
+const WAITABLE: ReadonlySet<RelayErrorKind> = new Set(['task_active', 'rate_limited', 'upstream_unavailable']);
+const MAX_WAIT_SECONDS = 20;
+const MAX_WAITS = 2;
+const MAX_NETWORK_RETRIES = 2;
+
+const defaultSleep = (ms: number, signal?: AbortSignal) =>
+  new Promise<void>((resolve) => {
+    const timer = setTimeout(done, ms);
+    function done() {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', done);
+      resolve();
+    }
+    signal?.addEventListener('abort', done);
+  });
+
+export function createCreditsClient(options: CreditsClientOptions) {
+  const base = options.baseUrl.replace(/\/+$/, '');
+  const fetchImpl: Fetch = options.fetch ?? ((input, init) => fetch(input, init));
+  const sleep = options.sleep ?? defaultSleep;
+
+  async function withTimeout<T>(ms: number, run: (signal: AbortSignal) => Promise<T>): Promise<T> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    try {
+      return await run(controller.signal);
+    } catch (e) {
+      if (e instanceof RelayError) throw e;
+      throw new RelayError(controller.signal.aborted ? 'timeout' : 'network', 0);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  /** `GET /config` (no account needed). */
+  async function config(): Promise<PublicConfig> {
+    return withTimeout(CONFIG_TIMEOUT_MS, async (signal) => {
+      const res = await fetchImpl(`${base}/config`, { headers: { Accept: 'application/json' }, signal });
+      if (!res.ok) throw await errorFrom(res);
+      return parseConfig(await readJson(res));
+    });
+  }
+
+  /**
+   * An authenticated request: the access token, one renewal and retry when the server refuses it, the session
+   * ended when it refuses the renewed one too.
+   */
+  async function authorized(send: (token: string) => Promise<Response>): Promise<Response> {
+    let token: string;
+    try {
+      token = await options.tokens.get();
+    } catch {
+      throw new RelayError('not_signed_in', 0);
+    }
+    let res = await send(token);
+    if (res.status === 401) {
+      try {
+        token = await options.tokens.renew(token);
+      } catch {
+        throw new RelayError('not_signed_in', 401);
+      }
+      res = await send(token);
+      if (res.status === 401) {
+        options.tokens.ended();
+        throw new RelayError('not_signed_in', 401);
+      }
+    }
+    if (res.status === 403) {
+      const error = await errorFrom(res);
+      if (error.kind === 'account_suspended') options.tokens.suspended();
+      throw error;
+    }
+    return res;
+  }
+
+  /** `GET /credits`: balance, a running task, the latest ledger entries (newest first). */
+  async function credits(limit = 50): Promise<CreditsResponse> {
+    return withTimeout(CREDITS_TIMEOUT_MS, async (signal) => {
+      const res = await authorized((token) =>
+        fetchImpl(`${base}/credits?limit=${limit}`, {
+          headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+          signal,
+        }),
+      );
+      if (!res.ok) throw await errorFrom(res);
+      const parsed = parseCredits(await readJson(res));
+      options.onBalance?.(parsed.balance);
+      return parsed;
+    });
+  }
+
+  /** Sends the relay request until an answer that isn't worth waiting out: an OK response or a final error. */
+  async function post(body: RelayRequest, signal: AbortSignal): Promise<Response> {
+    const payload = JSON.stringify(body);
+    let waits = 0;
+    let networkRetries = 0;
+    for (;;) {
+      if (signal.aborted) throw abortError();
+      let res: Response;
+      try {
+        res = await authorized((token) =>
+          fetchImpl(`${base}/relay`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: body.stream ? 'text/event-stream' : 'application/json',
+              Authorization: `Bearer ${token}`,
+              [APP_VERSION_HEADER]: options.appVersion,
+            },
+            body: payload,
+            signal,
+          }),
+        );
+      } catch (e) {
+        if (e instanceof RelayError) throw e;
+        if (signal.aborted) throw e;
+        // No answer at all: nothing was reserved or charged, so trying again is safe.
+        if (networkRetries++ >= MAX_NETWORK_RETRIES) throw new RelayError('network', 0);
+        await options.beforeRetry?.(signal);
+        await sleep(1000 * 2 ** networkRetries, signal);
+        if (signal.aborted) throw abortError();
+        continue;
+      }
+      if (res.ok) return res;
+      const error = await errorFrom(res);
+      if (WAITABLE.has(error.kind) && waits < MAX_WAITS && (error.retryAfter ?? 5) <= MAX_WAIT_SECONDS) {
+        waits++;
+        await sleep((error.retryAfter ?? 5) * 1000, signal);
+        if (signal.aborted) throw abortError();
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * A streamed relay request: the provider's events go to `onEvent` as they arrive; resolves with the charge once
+   * the server's settlement came. A stream the server reports as cut (`qutai.error`) or that ends without its
+   * settlement rejects with a RelayError carrying whatever was charged.
+   */
+  async function relayStream(body: RelayRequest, signal: AbortSignal, onEvent: (event: SseEvent) => void): Promise<Charge> {
+    const res = await post({ ...body, stream: true }, signal);
+    if (!res.body) throw new RelayError('bad_response', res.status);
+    const reader = res.body.getReader();
+    const decoder = createSseDecoder();
+    let settlement: RelaySettlementEvent | null = null;
+    let cut: RelayStreamErrorEvent | null = null;
+    // An adapter that gives up on the provider's events (its own `error` event, a malformed stream) throws from
+    // onEvent: nothing more is handed to it, but the stream is read to its end for the settlement, which follows
+    // at once, so the charge is known.
+    let adapterError: { error: unknown } | null = null;
+    const handle = (event: SseEvent) => {
+      const kind = event.event.startsWith('qutai.') ? event.event : qutaiType(event.data);
+      if (kind === 'qutai.settlement') settlement = parseSettlement(event.data);
+      else if (kind === 'qutai.error') cut = parseStreamError(event.data);
+      else if (!kind && !adapterError) {
+        try {
+          onEvent(event);
+        } catch (error) {
+          adapterError = { error };
+        }
+      }
+    };
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        for (const event of decoder.push(value)) handle(event);
+      }
+      decoder.end().forEach(handle);
+    } catch (e) {
+      if (signal.aborted) throw e;
+      // The connection to the server broke: what was charged is settled on the server; the balance is re-read.
+      throw new RelayError('stream_lost', 0);
+    }
+    const s = settlement as RelaySettlementEvent | null;
+    const charge: Charge = { charged: s?.charged ?? 0, balance: s?.balance ?? null };
+    if (charge.balance !== null) options.onBalance?.(charge.balance);
+    const failed = adapterError as { error: unknown } | null;
+    if (failed) throw attachCharge(failed.error, charge.charged);
+    const brokenOff = cut as RelayStreamErrorEvent | null;
+    if (brokenOff) throw new RelayError(brokenOff.code, 200, { charged: charge.charged });
+    if (!s) throw new RelayError('stream_lost', 200);
+    return charge;
+  }
+
+  /** A relay request answered with the provider's JSON (no streaming). */
+  async function relayJson<T>(body: RelayRequest, signal: AbortSignal): Promise<{ json: T; charge: Charge }> {
+    const res = await post({ ...body, stream: false }, signal);
+    const charged = wholeHeader(res.headers.get('X-Qutai-Charged')) ?? 0;
+    const balance = wholeHeader(res.headers.get('X-Qutai-Balance'));
+    if (balance !== null) options.onBalance?.(balance);
+    let json: T;
+    try {
+      json = (await res.json()) as T;
+    } catch {
+      throw new RelayError('bad_response', res.status, { charged });
+    }
+    return { json, charge: { charged, balance } };
+  }
+
+  return { config, credits, relayStream, relayJson };
+}
+
+export type CreditsClient = ReturnType<typeof createCreditsClient>;
+
+/** Marks an error (one an adapter threw) with what its request was charged; read back by provider.ts chargedBy. */
+function attachCharge(e: unknown, charged: number): unknown {
+  if (e && typeof e === 'object' && !(e instanceof RelayError)) {
+    try {
+      Object.defineProperty(e, 'qutaiCharged', { value: charged, configurable: true });
+    } catch {}
+  }
+  return e;
+}
+
+function abortError(): Error {
+  const e = new Error('Aborted');
+  e.name = 'AbortError';
+  return e;
+}
+
+function qutaiType(data: unknown): string | null {
+  const type = isRecord(data) ? data.type : undefined;
+  return typeof type === 'string' && type.startsWith('qutai.') ? type : null;
+}
+
+/** The error answer as a RelayError (a server code it doesn't know, or no readable body: by status). */
+export async function errorFrom(res: Response): Promise<RelayError> {
+  const retry = res.headers.get('Retry-After');
+  const retryAfter = retry && /^\d{1,5}$/.test(retry) ? Number(retry) : undefined;
+  let body: unknown = null;
+  try {
+    body = await res.json();
+  } catch {}
+  const error = isRecord(body) && isRecord(body.error) ? body.error : {};
+  const code = typeof error.code === 'string' ? error.code : '';
+  const upstream = isRecord(error.upstream) ? parseUpstream(error.upstream) : undefined;
+  return new RelayError(RelayError.kindFor(code, res.status), res.status, {
+    retryAfter,
+    upstream,
+    requestId: typeof error.requestId === 'string' ? error.requestId : (res.headers.get('X-Request-Id') ?? undefined),
+  });
+}
+
+async function readJson(res: Response): Promise<unknown> {
+  try {
+    return await res.json();
+  } catch {
+    throw new RelayError('bad_response', res.status);
+  }
+}
+
+function parseUpstream(u: Record<string, unknown>): UpstreamError {
+  const text = (v: unknown) => (typeof v === 'string' ? v.slice(0, 500) : undefined);
+  return {
+    status: typeof u.status === 'number' ? u.status : 0,
+    ...(text(u.type) ? { type: text(u.type) } : {}),
+    ...(text(u.code) ? { code: text(u.code) } : {}),
+    ...(text(u.message) ? { message: text(u.message) } : {}),
+  };
+}
+
+function wholeHeader(value: string | null): number | null {
+  if (value === null || !/^-?\d{1,16}$/.test(value)) return null;
+  const n = Number(value);
+  return Number.isSafeInteger(n) ? n : null;
+}
+
+const whole = (v: unknown): number | null => (typeof v === 'number' && Number.isSafeInteger(v) ? v : null);
+
+export function parseSettlement(data: unknown): RelaySettlementEvent | null {
+  if (!isRecord(data)) return null;
+  const charged = whole(data.charged);
+  if (charged === null || charged < 0) return null;
+  const outcome = ['completed', 'upstream_error', 'upstream_timeout', 'client_closed'].includes(String(data.outcome))
+    ? (data.outcome as RelaySettlementEvent['outcome'])
+    : 'completed';
+  return { type: 'qutai.settlement', charged, balance: whole(data.balance), outcome };
+}
+
+function parseStreamError(data: unknown): RelayStreamErrorEvent {
+  const code = isRecord(data) && data.code === 'upstream_timeout' ? 'upstream_timeout' : 'upstream_error';
+  return { type: 'qutai.error', code };
+}
+
+/** `GET /config`, keeping only what is well formed (a model without a provider or id is dropped). */
+export function parseConfig(value: unknown): PublicConfig {
+  if (!isRecord(value)) throw new RelayError('bad_response', 200);
+  const models = Array.isArray(value.models)
+    ? value.models.flatMap((m) => {
+        if (!isRecord(m) || typeof m.provider !== 'string' || typeof m.model !== 'string' || !m.model) return [];
+        const prices = Array.isArray(m.prices)
+          ? m.prices.flatMap((p) => {
+              if (!isRecord(p)) return [];
+              const n = (k: string) => whole(p[k]) ?? 0;
+              return [
+                {
+                  aboveInputTokens: n('aboveInputTokens'),
+                  inputPerMTok: n('inputPerMTok'),
+                  outputPerMTok: n('outputPerMTok'),
+                  cacheReadPerMTok: n('cacheReadPerMTok'),
+                  cacheWritePerMTok: n('cacheWritePerMTok'),
+                  thinkingPerMTok: n('thinkingPerMTok'),
+                  perSearch: n('perSearch'),
+                },
+              ];
+            })
+          : [];
+        return [
+          {
+            provider: m.provider,
+            model: m.model,
+            maxOutputTokens: whole(m.maxOutputTokens) ?? 0,
+            webSearch: m.webSearch === true,
+            prices,
+          },
+        ];
+      })
+    : [];
+  const limits: Record<string, number> = {};
+  if (isRecord(value.limits)) {
+    for (const [k, v] of Object.entries(value.limits)) {
+      const n = whole(v);
+      if (n !== null && n > 0) limits[k] = n;
+    }
+  }
+  const maintenance = isRecord(value.maintenance) ? value.maintenance : {};
+  const packs = Array.isArray(value.packs)
+    ? value.packs.flatMap((p) =>
+        isRecord(p) && (p.store === 'apple' || p.store === 'google') && typeof p.productId === 'string' && whole(p.credits) !== null
+          ? [{ store: p.store as 'apple' | 'google', productId: p.productId, credits: whole(p.credits) as number }]
+          : [],
+      )
+    : [];
+  return {
+    packs,
+    models,
+    limits,
+    minAppVersion: typeof value.minAppVersion === 'string' ? value.minAppVersion : null,
+    maintenance: {
+      enabled: maintenance.enabled === true,
+      message: typeof maintenance.message === 'string' && maintenance.message.trim() ? maintenance.message.slice(0, 300) : null,
+    },
+  };
+}
+
+const KINDS = ['purchase', 'grant', 'reserve', 'settle', 'refund', 'revoke'] as const;
+
+export function parseCredits(value: unknown): CreditsResponse {
+  if (!isRecord(value) || whole(value.balance) === null) throw new RelayError('bad_response', 200);
+  const task = isRecord(value.activeTask) ? value.activeTask : null;
+  return {
+    balance: whole(value.balance) as number,
+    activeTask:
+      task && typeof task.reservationId === 'string'
+        ? {
+            reservationId: task.reservationId,
+            reserved: whole(task.reserved) ?? 0,
+            startedAt: whole(task.startedAt) ?? 0,
+            expiresAt: whole(task.expiresAt) ?? 0,
+          }
+        : null,
+    entries: Array.isArray(value.entries)
+      ? value.entries.flatMap((e) =>
+          isRecord(e) && typeof e.id === 'string' && KINDS.includes(e.kind as never) && whole(e.amount) !== null && whole(e.at) !== null
+            ? [{ id: e.id, kind: e.kind as (typeof KINDS)[number], amount: whole(e.amount) as number, at: whole(e.at) as number }]
+            : [],
+        )
+      : [],
+  };
+}
+
+/** Compares dotted versions ("1.4.0" < "1.10"); missing parts count as 0, anything not a number as 0. */
+export function compareVersions(a: string, b: string): number {
+  const pa = a.split('.').map((p) => parseInt(p, 10) || 0);
+  const pb = b.split('.').map((p) => parseInt(p, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d < 0 ? -1 : 1;
+  }
+  return 0;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}

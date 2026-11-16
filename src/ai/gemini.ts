@@ -1,8 +1,9 @@
-import { ApiError, postJson, postSse } from './http';
+import { ApiError } from './http';
+import { directWire, type Wire } from './wire';
 import { t } from '../i18n';
-import { createGeminiAccumulator, GeminiInteraction, GeminiStep, GeminiStreamError } from './geminiStream';
+import { createGeminiAccumulator, type GeminiInteraction, type GeminiStep, GeminiStreamError } from './geminiStream';
 import { geminiUsage } from './usage';
-import { Citation, canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
+import { canReplay, type Citation, type ModelReply, type ModelRequest, type Provider, type StopReason, type ToolCall, type Turn } from './types';
 
 const INTERACTIONS_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions';
 
@@ -19,7 +20,7 @@ export function geminiStreamingAvailable(): boolean {
   return !streamingRejected;
 }
 
-function toSteps(turns: Turn[], model: string): Step[] {
+function toSteps(turns: Turn[], model: string, replayAs: Wire['replayAs']): Step[] {
   const steps: Step[] = [];
   for (const turn of turns) {
     if (turn.role === 'user') {
@@ -43,7 +44,7 @@ function toSteps(turns: Turn[], model: string): Step[] {
           ...(r.isError ? { is_error: true } : {}),
         }),
       );
-    } else if (canReplay(turn, 'gemini', model)) {
+    } else if (canReplay(turn, replayAs, model)) {
       // In stateless mode, model steps (thoughts and their signatures) are sent back exactly as received.
       steps.push(...(turn.raw as Step[]));
     } else {
@@ -59,11 +60,11 @@ function hasParameters(schema: Record<string, unknown>) {
   return !!props && Object.keys(props).length > 0;
 }
 
-function requestBody(req: ModelRequest) {
+function requestBody(req: ModelRequest, wire: Wire) {
   return {
     model: req.model,
     system_instruction: req.system,
-    input: toSteps(req.turns, req.model),
+    input: toSteps(req.turns, req.model, wire.replayAs),
     tools: [
       ...req.tools.map((t) => ({
         type: 'function',
@@ -79,17 +80,17 @@ function requestBody(req: ModelRequest) {
 }
 
 /** One request, streamed or not; both end in the same interaction shape and the same reply. */
-async function request(req: ModelRequest, stream: boolean): Promise<ModelReply> {
+async function request(req: ModelRequest, wire: Wire, stream: boolean): Promise<ModelReply> {
   const headers = { 'x-goog-api-key': req.apiKey };
   const onText = req.onText;
   if (!stream || !onText) {
-    return toReply(await postJson<Interaction>(INTERACTIONS_URL, headers, requestBody(req), req.signal));
+    return toReply(await wire.json<Interaction>(INTERACTIONS_URL, headers, requestBody(req, wire), req.signal));
   }
 
   const acc = createGeminiAccumulator();
   let interaction: Interaction;
   try {
-    await postSse(INTERACTIONS_URL, headers, { ...requestBody(req), stream: true }, req.signal, ({ event, data }) => {
+    await wire.sse(INTERACTIONS_URL, headers, { ...requestBody(req, wire), stream: true }, req.signal, ({ event, data }) => {
       // Each event names its type in its data; the SSE event line says the same.
       const named = data && typeof data === 'object' && !('event_type' in data) ? { ...data, event_type: event } : data;
       let text: string;
@@ -105,11 +106,17 @@ async function request(req: ModelRequest, stream: boolean): Promise<ModelReply> 
   } catch (e) {
     // Stopping, lost connections, the API's own errors and verdicts stay what they are; anything else
     // that went wrong while reading the stream is a problem with the stream.
-    if (req.signal.aborted || e instanceof TypeError) throw e;
+    // Errors marked final (Qutai's relay refusing the request) aren't stream problems either.
+    if (req.signal.aborted || e instanceof TypeError || isFinal(e)) throw e;
     if (e instanceof ApiError || e instanceof GeminiStreamError) throw e;
     throw new GeminiStreamError(e instanceof Error ? e.message : String(e), 'malformed');
   }
   return { ...toReply(interaction), streamed: true };
+}
+
+/** An error that no fallback should repeat the request for (`final: true`, set by Qutai's relay wire). */
+function isFinal(e: unknown): boolean {
+  return !!e && typeof e === 'object' && (e as { final?: unknown }).final === true;
 }
 
 /** The stream failed in a way that a request without streaming may not: worth one repeat. */
@@ -133,13 +140,14 @@ function rejectsHistory(e: unknown): boolean {
  * without streaming, and a request the API rejects over a streamed reply in its history is repeated
  * with those replies sent as text and tool calls, after which streaming stays off.
  */
-async function call(req: ModelRequest): Promise<ModelReply> {
+/** One request over the given wire (direct with the user's key, or through Qutai's relay), with the fallbacks. */
+export async function callGemini(req: ModelRequest, wire: Wire): Promise<ModelReply> {
   const streamedTurns = req.turns.filter(
     (turn): turn is Extract<Turn, { role: 'assistant' }> =>
-      turn.role === 'assistant' && !!turn.streamed && canReplay(turn, 'gemini', req.model),
+      turn.role === 'assistant' && !!turn.streamed && canReplay(turn, wire.replayAs, req.model),
   );
   try {
-    return await request(req, !!req.onText);
+    return await request(req, wire, !!req.onText);
   } catch (e) {
     if (req.signal.aborted) throw e;
     if (streamedTurns.length > 0 && rejectsHistory(e)) {
@@ -149,10 +157,10 @@ async function call(req: ModelRequest): Promise<ModelReply> {
         turn.raw = null;
       });
       streamingRejected = true;
-      const reply = await request(req, false);
+      const reply = await request(req, wire, false);
       return { ...reply, notice: t('chat.geminiStreamingOff') };
     }
-    if (req.onText && streamFailed(e)) return await request(req, false);
+    if (req.onText && streamFailed(e)) return await request(req, wire, false);
     throw e;
   }
 }
@@ -200,6 +208,8 @@ function toReply(res: Interaction): ModelReply {
   return { text: texts.join('\n\n'), toolCalls, stop, raw: steps, citations, searches, searchWidget, ...(usage ? { usage } : {}) };
 }
 
+const DIRECT = directWire('gemini');
+
 export const gemini: Provider = {
   id: 'gemini',
   label: 'Google Gemini',
@@ -212,5 +222,5 @@ export const gemini: Provider = {
   ],
   defaultModel: 'gemini-4-hydrogen',
   webSearch: true,
-  call,
+  call: (req) => callGemini(req, DIRECT),
 };

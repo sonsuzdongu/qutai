@@ -1,4 +1,4 @@
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, type AppStateStatus } from 'react-native';
 
 /**
  * Mobile OSes suspend the JS thread and the WebView shortly after the app is

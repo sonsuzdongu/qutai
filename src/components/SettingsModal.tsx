@@ -6,7 +6,7 @@ import { PRICES_AS_OF } from '../ai/prices';
 import { getProvider, isConfigured, modelLabel, requestTarget } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { useAccountState } from '../account';
-import { accountsEnabled } from '../config/features';
+import { accountsEnabled, creditsEnabled } from '../config/features';
 import { authenticate, canAuthenticate } from '../device/biometric';
 import { appVersion } from '../device/appVersion';
 import { BackupTooLargeError, pickBackupFile, PickerUnavailableError } from '../device/backupFile';
@@ -26,6 +26,7 @@ import { makeStyles, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { AccountScreen } from './AccountScreen';
+import { CreditsScreen } from './CreditsScreen';
 import { ActionLogScreen } from './ActionLogScreen';
 import { pricesDate } from './AnswerCost';
 import { SentLogScreen } from './SentLogScreen';
@@ -57,7 +58,7 @@ type Props = {
   onShowAssistantIntro: () => void;
 };
 
-type Page = 'main' | 'account' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'backup' | 'about';
+type Page = 'main' | 'account' | 'credits' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'backup' | 'about';
 
 /** Where the Android back button goes; the open page sets it (the modal receives the button). */
 class BackRoute {
@@ -131,6 +132,7 @@ function SettingsPages({
 
   const goBack = () => {
     if (page === 'main') return onClose();
+    if (page === 'credits') return setPage('account');
     if (page !== 'assistant' || !aiDirty) return setPage('main');
     dialog.alert(t('settings.unsavedTitle'), t('settings.unsavedBody'), [
       { text: t('common.cancel'), style: 'cancel' },
@@ -187,6 +189,7 @@ function SettingsPages({
   const titles: Record<Page, string> = {
     main: t('settings.title'),
     account: t('account.title'),
+    credits: t('credits.provider'),
     assistant: t('settings.assistant'),
     privacy: t('settings.privacySection'),
     appearance: t('settings.appearance'),
@@ -302,7 +305,11 @@ function SettingsPages({
             {provider.webSearch ? (
               <SwitchRow
                 title={t('settings.webSearch')}
-                hint={t('settings.webSearchHint', { provider: provider.label })}
+                hint={
+                  settings.provider === 'qutai'
+                    ? t('credits.webSearchHint')
+                    : t('settings.webSearchHint', { provider: provider.label })
+                }
                 value={settings.webSearch}
                 onChange={(webSearch) => set({ webSearch })}
               />
@@ -534,7 +541,8 @@ function SettingsPages({
           </>
         )}
 
-        {page === 'account' && accountsEnabled && <AccountScreen />}
+        {page === 'account' && accountsEnabled && <AccountScreen onOpenCredits={() => setPage('credits')} />}
+        {page === 'credits' && creditsEnabled && account.status === 'signedIn' && <CreditsScreen />}
 
         {page === 'backup' && (
           <>
@@ -601,6 +609,7 @@ function SettingsPages({
         visible={sentLogVisible}
         customInstructions={settings.customInstructions}
         showCost={settings.showCost}
+        viaQutai={settings.provider === 'qutai'}
         onClose={() => setSentLogVisible(false)}
       />
       <BackupScreen job={backupJob} appLock={settings.appLock} onClose={() => setBackupJob(null)} />

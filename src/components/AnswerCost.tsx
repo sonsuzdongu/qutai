@@ -6,6 +6,7 @@ import { getLanguage, t } from '../i18n';
 import { formatDate, formatNumber } from '../i18n/format';
 import { makeStyles } from '../ui/theme';
 import { dialog } from './Dialog';
+import { creditsText } from '../credits';
 
 /**
  * The approximate cost of an answer or a request (ai/cost.ts) as people read it: "≈ $0.012 · 3.4k tokens", or the
@@ -20,9 +21,16 @@ export function tokensLabel(n: number): string {
   return n < 1000 ? t('cost.tokens', { n: formatNumber(n) }) : t('cost.kTokens', { n: formatNumber(Math.round(n / 100) / 10) });
 }
 
-/** "≈ $0.012 · 3.4k tokens" or "3.4k tokens". */
-export function costLine(c: { nanos?: number; usage: Usage }): string {
+/** Qutai Credits charged, as text ("0.42 credits"). */
+export const creditsLabel = (micro: number) => t('credits.amount', { credits: creditsText(micro) });
+
+/**
+ * "≈ $0.012 · 3.4k tokens" or "3.4k tokens"; with Qutai Credits what the server charged, "0.42 credits · 3.4k tokens"
+ * (exact, so without "≈", and never in dollars).
+ */
+export function costLine(c: { nanos?: number; credits?: number; usage: Usage }): string {
   const tokens = tokensLabel(totalTokens(c.usage));
+  if (c.credits !== undefined) return t('cost.creditsLine', { credits: creditsLabel(c.credits), tokens });
   return c.nanos !== undefined ? t('cost.line', { cost: usd(c.nanos), tokens }) : tokens;
 }
 
@@ -47,7 +55,8 @@ function usageLines(u: Usage): string[] {
 }
 
 /** Where the figure comes from, and what it leaves out. */
-function sourceNote(c: { nanos?: number; source?: string; pricesAsOf?: string }): string {
+function sourceNote(c: { nanos?: number; credits?: number; source?: string; pricesAsOf?: string }): string {
+  if (c.credits !== undefined) return t('cost.server');
   if (c.nanos === undefined) return t('cost.noPrice');
   if (c.source === 'provider') return t('cost.reported');
   if (c.source === 'server') return t('cost.server');
@@ -70,10 +79,26 @@ export function showAnswerBreakdown(c: AnswerCost, conversation: AnswerCost[]) {
     '',
     sourceNote(c),
     ...(conversation.length > 1
-      ? ['', t('cost.conversation', { figure: total.nanos !== undefined ? `≈ ${usd(total.nanos)}` : tokensLabel(total.tokens) })]
+      ? [
+          '',
+          t('cost.conversation', {
+            figure:
+              total.credits !== undefined
+                ? creditsLabel(total.credits)
+                : total.nanos !== undefined
+                  ? `≈ ${usd(total.nanos)}`
+                  : tokensLabel(total.tokens),
+          }),
+        ]
       : []),
   ];
-  dialog.alert(c.nanos !== undefined ? `${t('cost.title')} ≈ ${usd(c.nanos)}` : t('cost.titleTokens'), lines.join('\n'));
+  const title =
+    c.credits !== undefined
+      ? t('cost.titleCredits', { credits: creditsLabel(c.credits) })
+      : c.nanos !== undefined
+        ? `${t('cost.title')} ≈ ${usd(c.nanos)}`
+        : t('cost.titleTokens');
+  dialog.alert(title, lines.join('\n'));
 }
 
 /** The small line under an answer; a tap shows the breakdown. */
@@ -87,7 +112,13 @@ export function AnswerCostLine({ cost, conversation }: { cost: AnswerCost; conve
       hitSlop={6}
       style={styles.row}
       accessibilityRole="button"
-      accessibilityLabel={cost.nanos !== undefined ? t('cost.a11y', { cost: usd(cost.nanos), tokens }) : tokens}
+      accessibilityLabel={
+        cost.credits !== undefined
+          ? t('cost.a11yCredits', { credits: creditsLabel(cost.credits), tokens })
+          : cost.nanos !== undefined
+            ? t('cost.a11y', { cost: usd(cost.nanos), tokens })
+            : tokens
+      }
       accessibilityHint={t('cost.a11yHint')}
     >
       <Text style={styles.text}>{line}</Text>

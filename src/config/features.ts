@@ -25,6 +25,12 @@ export const features = {
 export const accountsEnabled = features.pro && !!features.apiUrl;
 
 /**
+ * Qutai Credits (the "Qutai Credits" AI provider, src/credits/): with accounts, so only in pro mode with a server
+ * address. Off, the provider isn't offered and nothing about credits ever contacts the server.
+ */
+export const creditsEnabled = accountsEnabled;
+
+/**
  * Test sign-in (Settings › Account › Test sign-in, `POST /auth/dev`): only for builds made against a local test
  * server (backend/README.md › Test sign-in). Needs accounts, EXPO_PUBLIC_DEV_LOGIN=on and the server's test
  * secret in EXPO_PUBLIC_DEV_LOGIN_SECRET. That secret is readable by anyone who has the build, so such a build

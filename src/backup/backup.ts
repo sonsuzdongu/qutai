@@ -119,7 +119,8 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
   };
   const s = p.settings;
   if (s) {
-    take('provider', s.provider);
+    // A provider this build doesn't offer (Qutai Credits outside pro mode) is left as it is here.
+    if (s.provider && PROVIDER_ORDER.includes(s.provider)) take('provider', s.provider);
     take('confirmActions', s.confirmActions);
     take('searchEngine', s.searchEngine as SearchEngineId | undefined);
     take('searchSuggestions', s.searchSuggestions);

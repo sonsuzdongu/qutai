@@ -43,6 +43,13 @@ import {
 import { AttachmentPreview } from './src/components/AttachmentViews';
 import { PdfReaderHost } from './src/components/PdfReaderHost';
 import { geminiStreamingAvailable } from './src/ai/gemini';
+import { creditsStore, creditsReady, refreshCredits, useCreditsState } from './src/credits';
+import { creditsLabel } from './src/components/AnswerCost';
+import { nothingSent, RelayError } from './src/credits/errors';
+import { offeredModels } from './src/credits/rules';
+import type { PublicConfig } from './src/credits/types';
+import { accountSession } from './src/account';
+import { askCreditsDisclosure } from './src/components/CreditsDisclosure';
 import type { AnswerCost } from './src/ai/cost';
 import { getProvider, isConfigured, modelLabel, requestTarget } from './src/ai/providers';
 import { loadCatalog } from './src/ai/openrouterModels';
@@ -522,6 +529,12 @@ function BrowserApp({
   }, []);
   /** "What was sent to the AI" opened from the assistant panel, for this conversation key. */
   const [sentFor, setSentFor] = useState<string | null>(null);
+  // Qutai Credits (pro mode): the balance shown under the panel's title while it is the provider in use; the server's
+  // configuration and the balance are read once at start (nothing at all without pro mode).
+  const creditsState = useCreditsState();
+  useEffect(() => {
+    refreshCredits();
+  }, []);
   /** The conversation whose model is being chosen (the sheet under the panel's title). */
   const [modelSheetFor, setModelSheetFor] = useState<Conversation | null>(null);
   const [tabsVisible, setTabsVisible] = useState(false);
@@ -880,6 +893,17 @@ function BrowserApp({
       chat.setModel(null);
     }
     const provider = useChoice ? choice.provider : settings.provider;
+    // Qutai Credits: signed in, and the disclosure answered before the first use (asked here if it never was).
+    if (provider === 'qutai' && !creditsReady()) {
+      const signedIn = accountSession()?.getState().status === 'signedIn';
+      if (signedIn && (await askCreditsDisclosure())) {
+        // Accepted: carry on with this message.
+      } else {
+        chat.add(newItem('error', t(signedIn ? 'credits.error.notAccepted' : 'credits.error.notSignedIn')));
+        persistConversation(chat);
+        return;
+      }
+    }
     if (!isConfigured(settings, provider)) {
       chat.add(
         newItem(
@@ -928,7 +952,18 @@ function BrowserApp({
     // Catalogue providers: what the cached catalogue says about the model (images, output limit).
     if (getProvider(provider).catalog) await loadCatalog();
     const target = requestTarget(settings, provider, useChoice ? choice.model : undefined);
+    // Qutai Credits: the server's configuration (limits, and which provider's format the model takes).
+    let credits: PublicConfig | null = null;
+    // The message as typed, to hand back to the input if Qutai Credits refuses it before anything was sent.
+    const userTurn = chat.turns[chat.turns.length - 1];
     try {
+      if (provider === 'qutai') {
+        credits = await creditsStore.config();
+        // The model saved earlier is no longer offered: the server's first one (the relay refuses others).
+        const offered = offeredModels(credits);
+        if (!offered.some((m) => m.model === target.model) && offered[0]) target.model = offered[0].model;
+      }
+      const underlying = credits?.models.find((m) => m.model === target.model)?.provider ?? provider;
       await runAgent({
         provider,
         apiKey: target.apiKey,
@@ -949,7 +984,17 @@ function BrowserApp({
         webSearch: getProvider(provider).webSearch && (settings.webSearch || research),
         research,
         // Gemini streams only with its experimental setting, and not after the API rejected a streamed reply.
-        stream: provider !== 'gemini' || (settings.geminiStreaming && geminiStreamingAvailable()),
+        stream: underlying !== 'gemini' || (settings.geminiStreaming && geminiStreamingAvailable()),
+        ...(credits
+          ? {
+              serverLimits: {
+                maxSteps: credits.limits.maxSteps,
+                maxResearchSteps: credits.limits.maxResearchSteps,
+                maxMemoryChars: credits.limits.maxMemoryChars,
+                maxImages: credits.limits.maxImages,
+              },
+            }
+          : {}),
         confirm: (description, host) => askConfirmation(description, host, signal),
         confirmPersonal: (host, kinds, incognito) => askPersonalData(host, kinds, incognito, signal),
         confirmHidden: (host, what, field, incognito) => askHiddenValue(host, what, field, incognito, signal),
@@ -1048,9 +1093,19 @@ function BrowserApp({
       if (signal.aborted) chat.add({ ...newItem('info', t('chat.stopped')), icon: 'stop' });
       else AccessibilityInfo.announceForAccessibility(t('a11y.taskDone'));
     } catch (e) {
+      // Qutai Credits refused the first request (no credits, maintenance, signed out…): nothing reached the AI and
+      // nothing was charged, so the message goes back into the input instead of staying unanswered.
+      const kept =
+        !signal.aborted &&
+        provider === 'qutai' &&
+        nothingSent(e) &&
+        chat.withdraw(sent.id, userTurn, text, attachments);
       if (signal.aborted) chat.add({ ...newItem('info', t('chat.stopped')), icon: 'stop' });
       else chat.add(newItem('error', e instanceof Error ? e.message : String(e)));
+      if (kept) chat.add(newItem('info', t('credits.messageKept')));
       outcome = { kind: 'failed', text: e instanceof Error ? e.message : String(e) };
+      // What the server says now (a stream cut short was still charged; a refusal may mean the balance moved).
+      if (provider === 'qutai' && e instanceof RelayError) refreshCredits();
     } finally {
       if (signal.aborted) outcome = { kind: 'stopped' };
       else if (outcome.kind === 'done') outcome = { kind: 'done', text: lastText };
@@ -1060,6 +1115,8 @@ function BrowserApp({
       endBackgroundTask(incognitoTask() || quiet ? { kind: 'stopped' } : outcome);
       chat.finishStreaming();
       if (answerCost) chat.addCost(answerCost, sent.id);
+      // The ledger's latest entries (a stopped request is settled on the server a little later).
+      if (provider === 'qutai') refreshCredits();
       chat.finish();
       browser.setAgentTab(null);
       if (outcome.kind !== 'stopped') taskEnded(chat, outcome.kind);
@@ -2037,7 +2094,13 @@ function BrowserApp({
               focusRequest={focusRequest}
               research={conversation.research}
               onResearchChange={(on) => conversation.setResearch(on)}
-              modelInfo={conversationModelInfo(settings, conversation.model)}
+              modelInfo={
+                conversationModelInfo(settings, conversation.model) +
+                ((conversation.model && isConfigured(settings, conversation.model.provider) ? conversation.model.provider : settings.provider) ===
+                  'qutai' && creditsState.balance !== null
+                  ? ` · ${creditsLabel(creditsState.balance)}`
+                  : '')
+              }
               modelChosen={!!conversation.model && isConfigured(settings, conversation.model.provider)}
               onModelPress={() => setModelSheetFor(conversation)}
               items={conversation.items}
@@ -2147,6 +2210,7 @@ function BrowserApp({
             conversation={sentFor ?? undefined}
             customInstructions={settings.customInstructions}
             showCost={settings.showCost}
+            viaQutai={(conversation.model?.provider ?? settings.provider) === 'qutai'}
             onClose={() => setSentFor(null)}
           />
           <SettingsModal

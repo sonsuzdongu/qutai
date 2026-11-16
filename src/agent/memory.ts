@@ -245,9 +245,23 @@ export function memoriesForPrompt(memories: Memory[], budget = PROMPT_BUDGET_CHA
   return kept;
 }
 
-/** System prompt section listing the memories by category (within a size budget). */
-export function memoryPrompt(memories: Memory[], canWrite: boolean): string {
-  const kept = memoriesForPrompt(memories);
+/**
+ * System prompt section listing the memories by category (within a size budget). `maxChars`: the whole section's
+ * limit where a server sets one (Qutai Credits' `maxMemoryChars`); fewer memories are listed then, the oldest first
+ * left out, as when they don't fit the usual budget.
+ */
+export function memoryPrompt(memories: Memory[], canWrite: boolean, maxChars?: number): string {
+  let section = memorySection(memories, canWrite, PROMPT_BUDGET_CHARS);
+  if (maxChars === undefined) return section;
+  for (let budget = PROMPT_BUDGET_CHARS; section.length > maxChars && budget > 0; ) {
+    budget = Math.max(0, budget - (section.length - maxChars) - 50);
+    section = memorySection(memories, canWrite, budget);
+  }
+  return section;
+}
+
+function memorySection(memories: Memory[], canWrite: boolean, budget: number): string {
+  const kept = memoriesForPrompt(memories, budget);
   const groups = MEMORY_CATEGORIES.flatMap((category) => {
     const lines = kept
       .filter((m) => m.category === category)

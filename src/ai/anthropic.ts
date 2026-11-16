@@ -1,6 +1,8 @@
-import { postJson, postSse } from './http';
+import { directWire, type Wire } from './wire';
 import { anthropicUsage, mergeAnthropicStreamUsage } from './usage';
-import { Citation, canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
+import { canReplay, type Citation, type ModelReply, type ModelRequest, type Provider, type StopReason, type ToolCall, type Turn } from './types';
+
+const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 
 type Block = { type: string; [key: string]: unknown };
 type Message = { role: 'user' | 'assistant'; content: Block[] };
@@ -11,7 +13,7 @@ type Response = {
   usage?: Record<string, unknown>;
 };
 
-function toMessages(turns: Turn[], model: string): Message[] {
+function toMessages(turns: Turn[], model: string, replayAs: Wire['replayAs']): Message[] {
   const messages: Message[] = [];
   const push = (role: Message['role'], blocks: Block[]) => {
     const last = messages[messages.length - 1];
@@ -48,7 +50,7 @@ function toMessages(turns: Turn[], model: string): Message[] {
           ...(r.isError ? { is_error: true } : {}),
         })),
       );
-    } else if (canReplay(turn, 'anthropic', model)) {
+    } else if (canReplay(turn, replayAs, model)) {
       // Thinking blocks must be sent back exactly as received.
       push('assistant', turn.raw as Block[]);
     } else {
@@ -83,20 +85,21 @@ const webSearchTool = (research?: boolean) => ({
   max_uses: research ? 20 : 5,
 });
 
-async function call(req: ModelRequest): Promise<ModelReply> {
+/** One request over the given wire (direct with the user's key, or through Qutai's relay). */
+export async function callAnthropic(req: ModelRequest, wire: Wire): Promise<ModelReply> {
   const body = {
     model: req.model,
     max_tokens: 8192,
     system: [{ type: 'text', text: req.system, cache_control: { type: 'ephemeral' } }],
     tools: req.webSearch ? [...req.tools, webSearchTool(req.research)] : req.tools,
-    messages: toMessages(req.turns, req.model),
+    messages: toMessages(req.turns, req.model, wire.replayAs),
   };
   const headers = { 'x-api-key': req.apiKey, 'anthropic-version': '2023-06-01' };
   if (!req.onText) {
-    const res = await postJson<Response>('https://api.anthropic.com/v1/messages', headers, body, req.signal);
+    const res = await wire.json<Response>(ANTHROPIC_URL, headers, body, req.signal);
     return withUsage(toReply(res.content, res.stop_reason), res.usage);
   }
-  const streamed = await streamMessage(headers, body, req.signal, req.onText);
+  const streamed = await streamMessage(wire, headers, body, req.signal, req.onText);
   return withUsage(toReply(streamed.content, streamed.stop_reason), streamed.usage);
 }
 
@@ -110,6 +113,7 @@ function withUsage(reply: ModelReply, raw: unknown): ModelReply {
  * non-streamed one (tool inputs arrive as JSON text, thinking signatures and citations as deltas).
  */
 async function streamMessage(
+  wire: Wire,
   headers: Record<string, string>,
   body: Record<string, unknown>,
   signal: AbortSignal,
@@ -120,7 +124,7 @@ async function streamMessage(
   let stopReason = '';
   // message_start's usage, updated by message_delta's (cumulative counts).
   let usage: Record<string, unknown> | undefined;
-  await postSse('https://api.anthropic.com/v1/messages', headers, { ...body, stream: true }, signal, ({ data }) => {
+  await wire.sse(ANTHROPIC_URL, headers, { ...body, stream: true }, signal, ({ data }) => {
     const e = data as {
       type: string;
       index: number;
@@ -206,6 +210,8 @@ function toReply(content: Block[], stopReason: string): ModelReply {
   return { text, toolCalls, stop: toStop(stopReason), raw: content, citations, searches };
 }
 
+const DIRECT = directWire('anthropic');
+
 export const anthropic: Provider = {
   id: 'anthropic',
   label: 'Anthropic',
@@ -218,5 +224,5 @@ export const anthropic: Provider = {
   ],
   defaultModel: 'claude-sonnet-5-5',
   webSearch: true,
-  call,
+  call: (req) => callAnthropic(req, DIRECT),
 };

@@ -1,6 +1,8 @@
 import type { CustomHeader } from './customHeaders';
 import { recordRequest, recordRequestCost } from './audit';
-import { priceRequest } from './cost';
+import { failedRequestCost, priceRequest } from './cost';
+import { creditsEnabled } from '../config/features';
+import { creditsModelName, creditsProvider, creditsReady } from '../credits';
 import { anthropic } from './anthropic';
 import { custom } from './custom';
 import { gemini } from './gemini';
@@ -20,7 +22,15 @@ function recorded(provider: Provider): Provider {
   wrapped.call = async (req) => {
     const at = Date.now();
     const id = recordRequest(provider.id, req);
-    const reply = await provider.call(req);
+    let reply;
+    try {
+      reply = await provider.call(req);
+    } catch (e) {
+      // Qutai Credits: a request that failed part-way may still have been charged.
+      const charged = failedRequestCost(e);
+      if (charged && id) recordRequestCost(id, charged);
+      throw e;
+    }
     const cost = reply.cost ?? (reply.usage ? priceRequest(provider.id, req.model, reply.usage, at) : undefined);
     if (!cost) return reply;
     if (id) recordRequestCost(id, cost);
@@ -35,10 +45,21 @@ export const PROVIDERS: Record<ProviderId, Provider> = {
   gemini: recorded(gemini),
   openrouter: recorded(openrouter),
   custom: recorded(custom),
+  qutai: recorded(creditsProvider),
 };
 
-/** Every provider, in the order the settings list them. Nothing else may assume how many there are. */
-export const PROVIDER_ORDER: ProviderId[] = ['anthropic', 'openai', 'gemini', 'openrouter', 'custom'];
+/**
+ * Every provider this build offers, in the order the settings list them. Nothing else may assume how many there are.
+ * Qutai Credits only in pro mode with a server address (`creditsEnabled`).
+ */
+export const PROVIDER_ORDER: ProviderId[] = [
+  'anthropic',
+  'openai',
+  'gemini',
+  'openrouter',
+  'custom',
+  ...(creditsEnabled ? (['qutai'] as const) : []),
+];
 
 export function getProvider(id: ProviderId): Provider {
   return PROVIDERS[id];
@@ -48,6 +69,7 @@ export function modelLabel(id: ProviderId, model: string): string {
   const provider = getProvider(id);
   const listed = provider.models.find((m) => m.id === model)?.name;
   if (listed) return listed;
+  if (id === 'qutai') return creditsModelName(model);
   return (provider.catalog && catalogModel(model)?.name) || model;
 }
 
@@ -63,8 +85,12 @@ export type AiConfig = {
   customHeaders: CustomHeader[];
 };
 
-/** The provider can be used: a key, or for the custom endpoint an address and a model (the key is optional there). */
+/**
+ * The provider can be used: a key, or for the custom endpoint an address and a model (the key is optional there).
+ * Qutai Credits: signed in and the disclosure accepted (it has no key; the account pays).
+ */
 export function isConfigured(cfg: AiConfig, id: ProviderId): boolean {
+  if (id === 'qutai') return creditsReady();
   if (getProvider(id).needsEndpoint) return !!cfg.customBaseUrl.trim() && !!cfg.models[id]?.trim();
   return !!cfg.apiKeys[id]?.trim();
 }
@@ -87,7 +113,8 @@ export type RequestTarget = {
  */
 export function requestTarget(cfg: AiConfig, id: ProviderId, model = cfg.models[id]): RequestTarget {
   const provider = getProvider(id);
-  const base: RequestTarget = { provider: id, model, apiKey: cfg.apiKeys[id] ?? '', images: true };
+  // Qutai Credits never gets a key: the server's own is used, on the server.
+  const base: RequestTarget = { provider: id, model, apiKey: id === 'qutai' ? '' : (cfg.apiKeys[id] ?? ''), images: true };
   if (provider.needsEndpoint) return { ...base, endpoint: cfg.customBaseUrl, extraHeaders: cfg.customHeaders, images: cfg.customImages };
   if (!provider.catalog) return base;
   const info = catalogModel(model);

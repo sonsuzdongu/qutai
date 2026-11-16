@@ -11,7 +11,9 @@ import {
   signInWithGoogle,
 } from '../account/providers';
 import { DEV_SIGN_IN_USERS, type AuthProvider, type DevSignInUser } from '../account/types';
-import { devLoginEnabled, devLoginSecret } from '../config/features';
+import { creditsEnabled, devLoginEnabled, devLoginSecret } from '../config/features';
+import { creditsText, refreshCredits, useCreditsState } from '../credits';
+import { Icon } from '../ui/Icon';
 import { t } from '../i18n';
 import { darkPalette, makeStyles, usePalette } from '../ui/theme';
 import { dialog } from './Dialog';
@@ -23,10 +25,11 @@ import { dialog } from './Dialog';
  * Builds made against a local test server (`devLoginEnabled`) also show a test sign-in under the buttons, and
  * mark a test user's account as such.
  */
-export function AccountScreen() {
+export function AccountScreen({ onOpenCredits }: { onOpenCredits?: () => void }) {
   const styles = useStyles();
   const palette = usePalette();
   const state = useAccountState();
+  const credits = useCreditsState();
   const session = accountSession();
   const [busy, setBusy] = useState<null | 'apple' | 'google' | DevSignInUser | 'signOut' | 'signOutAll' | 'delete'>(null);
   const [apple, setApple] = useState(false);
@@ -39,9 +42,10 @@ export function AccountScreen() {
     appleSignInAvailable().then(setApple);
   }, []);
 
-  // Fresh account details each time the page opens while signed in.
+  // Fresh account details (and the credit balance) each time the page opens while signed in.
   useEffect(() => {
     if (!signedIn || !session) return;
+    refreshCredits();
     let live = true;
     session
       .refreshUser()
@@ -218,6 +222,22 @@ export function AccountScreen() {
           {t('account.id', { id: user.id })}
         </Text>
       </View>
+      {creditsEnabled && onOpenCredits && (
+        <Pressable
+          onPress={onOpenCredits}
+          style={({ pressed }) => [styles.card, styles.creditsRow, pressed && styles.pressed]}
+          accessibilityRole="button"
+        >
+          <Icon name="wallet" size={20} color={palette.tintText} />
+          <View style={styles.flex}>
+            <Text style={styles.label}>{t('credits.provider')}</Text>
+            <Text style={styles.hint}>
+              {credits.balance === null ? t('credits.balanceUnknown') : t('credits.balance', { credits: creditsText(credits.balance) })}
+            </Text>
+          </View>
+          <Icon name="chevronRight" size={18} color={palette.textSecondary} />
+        </Pressable>
+      )}
       <Text style={styles.hint}>{t('account.introLocal')}</Text>
       <View style={styles.buttons}>
         <ActionButton label={t('account.signOut')} busy={busy === 'signOut'} disabled={!!busy} onPress={signOut} />
@@ -284,6 +304,8 @@ const useStyles = makeStyles((c) => ({
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   label: { color: c.text, fontSize: 15, fontWeight: '600' },
   card: { backgroundColor: c.surface, borderRadius: 14, padding: 14, gap: 4 },
+  creditsRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  flex: { flex: 1 },
   notice: {
     fontSize: 14,
     lineHeight: 19,

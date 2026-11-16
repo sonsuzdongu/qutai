@@ -36,6 +36,8 @@ export function conversationModelInfo(
 function modelsFor(settings: AiConfig, id: ProviderId): string[] {
   const provider = getProvider(id);
   const ids = provider.models.map((m) => m.id);
+  // Qutai Credits: only what the server offers now.
+  if (id === 'qutai') return ids;
   const configured = settings.models[id]?.trim();
   if (configured && !ids.includes(configured)) ids.push(configured);
   return ids;

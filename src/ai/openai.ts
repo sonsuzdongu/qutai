@@ -1,6 +1,6 @@
-import { postJson, postSse } from './http';
+import { directWire, type Wire } from './wire';
 import { openaiUsage } from './usage';
-import { Citation, canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
+import { canReplay, type Citation, type ModelReply, type ModelRequest, type Provider, type StopReason, type ToolCall, type Turn } from './types';
 
 const RESPONSES_URL = 'https://api.openai.com/v1/responses';
 
@@ -13,7 +13,7 @@ type Response = {
   usage?: unknown;
 };
 
-function toInput(turns: Turn[], model: string): Item[] {
+function toInput(turns: Turn[], model: string, replayAs: Wire['replayAs']): Item[] {
   const input: Item[] = [];
   for (const turn of turns) {
     if (turn.role === 'user') {
@@ -47,7 +47,7 @@ function toInput(turns: Turn[], model: string): Item[] {
             : text,
         });
       });
-    } else if (canReplay(turn, 'openai', model)) {
+    } else if (canReplay(turn, replayAs, model)) {
       // With store: false, every output item (encrypted reasoning, message phase, calls) is replayed unchanged.
       input.push(...(turn.raw as Item[]));
     } else {
@@ -70,11 +70,12 @@ function parseArguments(raw: unknown): Record<string, unknown> {
   }
 }
 
-async function call(req: ModelRequest): Promise<ModelReply> {
+/** One request over the given wire (direct with the user's key, or through Qutai's relay). */
+export async function callOpenAI(req: ModelRequest, wire: Wire): Promise<ModelReply> {
   const body = {
     model: req.model,
     instructions: req.system,
-    input: toInput(req.turns, req.model),
+    input: toInput(req.turns, req.model, wire.replayAs),
     tools: [
       ...req.tools.map((t) => ({
         type: 'function',
@@ -93,13 +94,14 @@ async function call(req: ModelRequest): Promise<ModelReply> {
   };
   const headers = { authorization: `Bearer ${req.apiKey}` };
   const res = req.onText
-    ? await streamResponse(headers, body, req.signal, req.onText)
-    : await postJson<Response>(RESPONSES_URL, headers, body, req.signal);
+    ? await streamResponse(wire, headers, body, req.signal, req.onText)
+    : await wire.json<Response>(RESPONSES_URL, headers, body, req.signal);
   return toReply(res);
 }
 
 /** Streams text deltas; the final event carries the complete response, so nothing has to be rebuilt. */
 async function streamResponse(
+  wire: Wire,
   headers: Record<string, string>,
   body: Record<string, unknown>,
   signal: AbortSignal,
@@ -107,7 +109,7 @@ async function streamResponse(
 ): Promise<Response> {
   let final: Response | null = null;
   let lastItem = -1;
-  await postSse(RESPONSES_URL, headers, { ...body, stream: true }, signal, ({ data }) => {
+  await wire.sse(RESPONSES_URL, headers, { ...body, stream: true }, signal, ({ data }) => {
     const e = data as Item & { response?: Response & { error?: { message?: string } }; message?: string };
     if (e.type === 'response.output_text.delta' && typeof e.delta === 'string') {
       // Separate the texts of different output messages like the final reply does.
@@ -175,6 +177,8 @@ function toReply(res: Response): ModelReply {
   };
 }
 
+const DIRECT = directWire('openai');
+
 export const openai: Provider = {
   id: 'openai',
   label: 'OpenAI',
@@ -187,5 +191,5 @@ export const openai: Provider = {
   ],
   defaultModel: 'gpt-5.6-terra',
   webSearch: true,
-  call,
+  call: (req) => callOpenAI(req, DIRECT),
 };

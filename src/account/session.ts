@@ -154,6 +154,33 @@ export class AccountSession {
     });
   }
 
+  // --- for Qutai Credits' client (src/credits/client.ts), which talks to the same server with this session ---
+
+  /** A valid access token (refreshed first when about to run out); rejects when signed out. */
+  currentAccessToken(): Promise<string> {
+    return this.accessToken();
+  }
+
+  /**
+   * A new access token after the server refused `stale`: the one someone else already got, or a refresh (one at a
+   * time, as everywhere). Rejects when the session is over.
+   */
+  async renewAccessToken(stale: string): Promise<string> {
+    const session = this.requireSession();
+    if (session.accessToken !== stale) return session.accessToken;
+    return (await this.refresh()).accessToken;
+  }
+
+  /** The server refused this session's account as suspended. */
+  noteSuspended(): void {
+    this.markSuspended();
+  }
+
+  /** The server refused a freshly renewed token: the session is over on the server. */
+  noteSessionEnded(): void {
+    if (this.session) this.end('expired');
+  }
+
   /** For tests and diagnostics only: whether a refresh is running. */
   get refreshInFlight(): boolean {
     return this.refreshing !== null;

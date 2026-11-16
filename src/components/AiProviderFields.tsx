@@ -11,6 +11,10 @@ import { ALLOW_CLEARTEXT } from '../ai/custom';
 import { cleanCustomHeaders } from '../ai/customHeaders';
 import { baseUrlProblem, CustomEndpointFields, customHeadersProblem } from './CustomEndpointFields';
 import { ModelCatalogPicker, modelDetail, useCatalog } from './ModelCatalogPicker';
+import { creditsConsented, useCreditsConsent } from '../credits';
+import { useAccountState } from '../account';
+import { askCreditsDisclosure } from './CreditsDisclosure';
+import { CreditsFields } from './CreditsFields';
 
 export type AiChoice = Pick<
   Settings,
@@ -61,6 +65,14 @@ export function AiProviderFields({ value, onChange }: { value: AiChoice; onChang
   const isCustomModel = !provider.models.some((m) => m.id === model) && !inCatalog;
   const setApiKey = (key: string) => onChange({ ...value, apiKeys: { ...value.apiKeys, [value.provider]: key } });
   const setModel = (id: string) => onChange({ ...value, models: { ...value.models, [value.provider]: id } });
+  // Followed so the dot on "Qutai Credits" appears as soon as it can be used.
+  useCreditsConsent();
+  useAccountState();
+  /** Qutai Credits is picked only after the disclosure was accepted (asked the first time). */
+  const pick = async (id: ProviderId) => {
+    if (id === 'qutai' && !creditsConsented() && !(await askCreditsDisclosure())) return;
+    onChange({ ...value, provider: id });
+  };
 
   return (
     <View style={styles.root}>
@@ -71,7 +83,7 @@ export function AiProviderFields({ value, onChange }: { value: AiChoice; onChang
           return (
             <Pressable
               key={id}
-              onPress={() => onChange({ ...value, provider: id })}
+              onPress={() => void pick(id)}
               style={[styles.segmentButton, selected && styles.segmentSelected]}
               accessibilityRole="tab"
               accessibilityState={{ selected }}
@@ -85,7 +97,9 @@ export function AiProviderFields({ value, onChange }: { value: AiChoice; onChang
         })}
       </View>
 
-      {provider.needsEndpoint ? (
+      {value.provider === 'qutai' ? (
+        <CreditsFields model={model} onModel={setModel} />
+      ) : provider.needsEndpoint ? (
         <CustomEndpointFields value={value} onChange={(next) => onChange({ ...value, ...next })} />
       ) : (
         <>

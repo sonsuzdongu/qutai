@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 import { waitForForeground } from '../utils/foreground';
 import { t } from '../i18n';
 import { sleep } from '../utils/sleep';
-import { createSseDecoder, SseEvent } from './sse';
+import { createSseDecoder, type SseEvent } from './sse';
 
 const MAX_RETRIES = 3;
 

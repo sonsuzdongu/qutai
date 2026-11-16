@@ -157,7 +157,7 @@ export class PayloadError extends Error {
 }
 
 /** Every provider, checked by the compiler, so a new one can't be forgotten here. */
-const PROVIDER_IDS = Object.keys({ anthropic: true, openai: true, gemini: true, openrouter: true, custom: true } satisfies Record<
+const PROVIDER_IDS = Object.keys({ anthropic: true, openai: true, gemini: true, openrouter: true, custom: true, qutai: true } satisfies Record<
   ProviderId,
   true
 >) as ProviderId[];

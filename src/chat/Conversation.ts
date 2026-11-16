@@ -357,6 +357,21 @@ export class Conversation {
     this.onChange();
   }
 
+  /**
+   * Takes back a message that never reached the AI (Qutai Credits refused the request before anything was sent, e.g.
+   * not enough credits): it leaves the chat and the history and goes back into the input with its attachments, so
+   * nothing is lost and no unanswered message is left behind. Only while it is still the last turn.
+   */
+  withdraw(itemId: string, turn: Turn, text: string, attachments: AttachmentInfo[]): boolean {
+    if (this.turns[this.turns.length - 1] !== turn) return false;
+    this.turns.pop();
+    this.items = this.items.filter((item) => item.id !== itemId);
+    this.draft = this.draft ? `${text}\n${this.draft}` : text;
+    if (attachments.length) this.pending = [...attachments, ...this.pending].slice(0, MAX_ATTACHMENTS);
+    this.onChange();
+    return true;
+  }
+
   /** Puts saved messages before anything said since the tab was opened (e.g. a task sent before loading finished). */
   restore(saved: SavedConversation | null) {
     this.loaded = true;

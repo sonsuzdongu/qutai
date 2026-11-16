@@ -1,4 +1,4 @@
-import { AnswerCost, createAnswerMeter } from '../ai/cost';
+import { AnswerCost, createAnswerMeter, failedRequestCost } from '../ai/cost';
 import type { CustomHeader } from '../ai/customHeaders';
 import { getProvider } from '../ai/providers';
 import { droppedImageNote, KEEP_IMAGE_MESSAGES, MAX_SENT_IMAGES } from '../chat/attachments';
@@ -19,13 +19,22 @@ import { getBackgroundCount, isForeground, waitForForeground } from '../utils/fo
 import { withAttachedImages } from './attachedImages';
 import { backgroundBlocker, describeToolCall, executeTool, ToolContext } from './executeTool';
 import { toolIcon, WEB_SEARCH_ICON } from './toolIcons';
-import { customInstructionsPrompt, SYSTEM_PROMPT } from './systemPrompt';
+import {
+  customInstructionsPrompt,
+  LAST_STEP_PROMPT,
+  RESEARCH_PROMPT,
+  SYSTEM_PROMPT,
+  WEB_SEARCH_PROMPT,
+} from './systemPrompt';
 import { memoryPrompt } from './memory';
 import { siteKey } from './sitePolicy';
 import { MEMORY_TOOLS, TOOLS } from './tools';
 import type { AgentEvent, Source } from './types';
 
 const MAX_STEPS = 40;
+// The prompt parts live in systemPrompt.ts (exported to the agent profile for Qutai Credits); re-exported here for
+// the screens that show them.
+export { LAST_STEP_PROMPT, RESEARCH_PROMPT, WEB_SEARCH_PROMPT };
 /** view_screenshot's result for a model without image input. */
 export const NO_IMAGE_INPUT =
   "This model can't take images, so no screenshot was taken. Use read_page to see the page's text, links and " +
@@ -34,10 +43,6 @@ export const NO_IMAGE_INPUT =
 export const NO_IMAGE_INPUT_ATTACHMENT =
   "This model can't take images, so the attachment can't be shown. Tell the user to switch to a model that takes " +
   'images (the model under the panel title) if they want you to look at it.';
-/** On the final step: leave the user with where things stand instead of stopping mid-task. */
-export const LAST_STEP_PROMPT =
-  '\n\nThis is your last step for this message. Do not call tools. Reply with what you did, what you found ' +
-  '(from your notes), and what is left, so the user can tell you to continue.';
 /** Research reads many pages, so it may take more steps. */
 const MAX_RESEARCH_STEPS = 80;
 const KEEP_FULL_RESULTS = 2;
@@ -83,6 +88,11 @@ export type AgentOptions = ToolContext & {
   onEvent: (event: AgentEvent) => void;
   /** The user's custom instructions from settings; '' or absent for none. */
   customInstructions?: string;
+  /**
+   * Qutai Credits: the server's limits for one message (steps; research steps) and for the memory section. The
+   * server adds the last-step note on its own last step, so the loop must end exactly there.
+   */
+  serverLimits?: { maxSteps?: number; maxResearchSteps?: number; maxMemoryChars?: number; maxImages?: number };
   /** For the "What was sent to the AI" log; read before each request, since both can change during a task. */
   audit: { conversation: () => string; incognito: () => boolean };
   /**
@@ -176,7 +186,8 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     if (host) resultHosts.set(callId, host);
   };
 
-  const maxSteps = opts.research ? MAX_RESEARCH_STEPS : MAX_STEPS;
+  const serverSteps = opts.research ? opts.serverLimits?.maxResearchSteps : opts.serverLimits?.maxSteps;
+  const maxSteps = serverSteps ?? (opts.research ? MAX_RESEARCH_STEPS : MAX_STEPS);
   for (let step = 0; step < maxSteps; step++) {
     await pauseWhileBackgrounded();
     if (signal.aborted) return;
@@ -184,7 +195,7 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     let streamed = false;
     setBackgroundStep(t('background.thinking'));
     const prompt = await systemPrompt(opts);
-    const sendTurns = await withAttachedImages(compactHistory(turns));
+    const sendTurns = await withAttachedImages(compactHistory(turns, opts.serverLimits?.maxImages));
     let reply: Awaited<ReturnType<typeof provider.call>>;
     try {
       reply = await provider.call({
@@ -202,6 +213,12 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
             }
           : undefined,
         turns: sendTurns,
+        agent: {
+          step,
+          ...(prompt.memory ? { memory: prompt.memory.text } : {}),
+          ...(opts.customInstructions?.trim() ? { customInstructions: opts.customInstructions } : {}),
+          memoryTools: !!opts.memory,
+        },
         maxOutputTokens: opts.maxOutputTokens,
         endpoint: opts.endpoint,
         extraHeaders: opts.extraHeaders,
@@ -215,8 +232,8 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
         },
       });
     } catch (e) {
-      // A failed request may still have been billed; its usage is unknown.
-      meter.add(undefined);
+      // A failed request may still have been billed; its usage is unknown (Qutai Credits says what it charged).
+      meter.add(failedRequestCost(e));
       throw e;
     }
     meter.add(reply.cost);
@@ -241,7 +258,13 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     );
     // After streaming, the final text replaces what was shown (an empty one removes it).
     if (reply.text || streamed) onEvent({ type: 'text', text: reply.text });
-    // A long web search was paused by the provider; sending the reply back continues it.
+    // A long web search was paused by the provider; sending the reply back continues it. Qutai's relay doesn't take a
+    // request that ends with the model's own turn, so with Qutai Credits the task stops here and says how to go on.
+    if (reply.stop === 'pause' && opts.provider === 'qutai') {
+      flushSources();
+      onEvent({ type: 'info', icon: 'pause', text: t('credits.pauseStopped') });
+      return;
+    }
     if (reply.stop === 'pause') continue;
 
     if (reply.stop !== 'tool_use') {
@@ -376,21 +399,7 @@ export function parseChoices(input: Record<string, unknown>): { question: string
   return { question: question.slice(0, 500), options: options.slice(0, MAX_CHOICES) };
 }
 
-export const WEB_SEARCH_PROMPT = `
 
-Web search:
-- You can search the web with your built-in web search. Use it for facts, news, prices and other current information, or to find which site to open. It is faster than navigating to a search engine page.
-- Use the browser tools instead when the user asks about the page they are on, or when you need to act on a site (log in, fill in, click, buy).
-- Cite the pages you used; they are shown to the user as sources.`;
-
-export const RESEARCH_PROMPT = `
-
-Deep research mode: the user wants a thorough, well-sourced report. Work like a careful researcher:
-1. Break the question into 3 to 6 sub-questions and mention them briefly.
-2. Search with several different queries (other languages too when useful). Open the most relevant primary sources with open_tab and read them with read_page or read_tab instead of relying on search snippets. Close the tabs you opened when you are done.
-3. Check important facts in at least two independent sources; point out disagreements and how recent each source is.
-4. Write the report in Markdown: a short summary first, then a section per sub-question, a comparison table when it helps, and caveats or open questions. Cite sources inline as [1], [2] and list them at the end as numbered links.
-Take as many steps as you need, but stop searching once new sources add nothing. Write in the user's language; this report may be long.`;
 
 /**
  * The base prompt plus what is remembered about the user, re-read every step since the agent may change it.
@@ -402,7 +411,7 @@ async function systemPrompt(opts: AgentOptions): Promise<{ text: string; memory?
   const custom = customInstructionsPrompt(opts.customInstructions ?? '');
   if (!opts.memory) return { text: SYSTEM_PROMPT + search + custom };
   const memories = await opts.memory.list().catch(() => []);
-  const section = memoryPrompt(memories, !opts.privacy?.touchedIncognito);
+  const section = memoryPrompt(memories, !opts.privacy?.touchedIncognito, opts.serverLimits?.maxMemoryChars);
   const count = section.split('\n- [').length - 1;
   return { text: SYSTEM_PROMPT + search + section + custom, memory: { text: section, count } };
 }
@@ -415,7 +424,9 @@ async function systemPrompt(opts: AgentOptions): Promise<{ text: string; memory?
  * Images the user attached stay with the KEEP_IMAGE_MESSAGES most recent user messages (MAX_SENT_IMAGES at most);
  * older ones are taken off the turn and named in its text instead, so the model can still refer to them by id.
  */
-export function compactHistory(turns: Turn[]): Turn[] {
+export function compactHistory(turns: Turn[], maxImages?: number): Turn[] {
+  // A server's limit on images per request (Qutai Credits' maxImages) leaves room for the latest screenshot.
+  const userImageCap = maxImages ? Math.max(0, Math.min(MAX_SENT_IMAGES, maxImages - KEEP_IMAGES)) : MAX_SENT_IMAGES;
   let kept = 0;
   let keptImages = 0;
   let userMessages = 0;
@@ -426,7 +437,7 @@ export function compactHistory(turns: Turn[]): Turn[] {
     if (turn.role === 'user') {
       const images = turn.attachments?.filter((a) => a.kind === 'image') ?? [];
       const recent = userMessages++ < KEEP_IMAGE_MESSAGES;
-      if (images.length && recent && userImages + images.length <= MAX_SENT_IMAGES) {
+      if (images.length && recent && userImages + images.length <= userImageCap) {
         userImages += images.length;
         out.unshift(turn);
       } else if (images.length) {

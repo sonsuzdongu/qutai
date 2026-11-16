@@ -26,6 +26,11 @@ export type RequestCost = {
   source?: CostSource;
   /** The date of the price table used (list prices only). */
   pricesAsOf?: string;
+  /**
+   * Qutai Credits: the micro-credits Qutai's server charged for the request (its settlement), with `source: 'server'`.
+   * Such a request never has a dollar figure.
+   */
+  credits?: number;
 };
 
 /**
@@ -43,6 +48,8 @@ export type AnswerCost = {
   nanos?: number;
   source?: CostSource;
   pricesAsOf?: string;
+  /** Qutai Credits: micro-credits charged for all the task's requests (never shown as dollars). */
+  credits?: number;
 };
 
 /** Pico-dollars of `tokens` at `microsPerMTok` (exact). */
@@ -91,6 +98,7 @@ export function createAnswerMeter(provider: ProviderId, model: string) {
   let nanos: number | null = 0;
   const sources = new Set<CostSource>();
   let asOf: string | undefined;
+  let credits: number | undefined;
   return {
     /** A request went out; `cost` is undefined when it didn't report usage (or failed). */
     add(cost: RequestCost | undefined) {
@@ -102,6 +110,7 @@ export function createAnswerMeter(provider: ProviderId, model: string) {
       else nanos += cost.nanos;
       if (cost.source) sources.add(cost.source);
       asOf ??= cost.pricesAsOf;
+      if (cost.credits !== undefined) credits = (credits ?? 0) + cost.credits;
     },
     get requests() {
       return requests;
@@ -119,20 +128,36 @@ export function createAnswerMeter(provider: ProviderId, model: string) {
         reported,
         usage: counts,
         ...(priced ? { nanos: nanos as number, ...(source ? { source } : {}), ...(asOf ? { pricesAsOf: asOf } : {}) } : {}),
+        ...(credits !== undefined && !priced ? { credits, source: 'server' as const } : {}),
       };
     },
   };
 }
 
-/** Adds answers up (a conversation's or a day's total); priced only when every one of them is. */
-export function sumCosts(list: { nanos?: number; usage: Usage }[]): { nanos?: number; tokens: number } {
+/**
+ * Adds answers up (a conversation's or a day's total); priced only when every one of them is, in dollars or in
+ * Qutai Credits (never a mix: a total of both would be neither).
+ */
+export function sumCosts(list: { nanos?: number; credits?: number; usage: Usage }[]): { nanos?: number; credits?: number; tokens: number } {
   let nanos: number | undefined = 0;
+  let credits: number | undefined = 0;
   let tokens = 0;
   for (const c of list) {
     tokens += promptTokens(c.usage) + c.usage.output;
     nanos = nanos === undefined || c.nanos === undefined ? undefined : nanos + c.nanos;
+    credits = credits === undefined || c.credits === undefined ? undefined : credits + c.credits;
   }
-  return { ...(list.length && nanos !== undefined ? { nanos } : {}), tokens };
+  return {
+    ...(list.length && nanos !== undefined ? { nanos } : {}),
+    ...(list.length && credits !== undefined ? { credits } : {}),
+    tokens,
+  };
+}
+
+/** What a request that failed was still charged (Qutai Credits: a stream cut short), or undefined. */
+export function failedRequestCost(e: unknown): RequestCost | undefined {
+  const cost = e && typeof e === 'object' ? (e as { requestCost?: unknown }).requestCost : undefined;
+  return cost && typeof cost === 'object' ? (cost as RequestCost) : undefined;
 }
 
 /**
@@ -158,7 +183,7 @@ const isObj = (v: unknown): v is Obj => !!v && typeof v === 'object' && !Array.i
 const whole = (v: unknown): number | undefined =>
   typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? v : undefined;
 const SOURCES: CostSource[] = ['list', 'provider', 'server'];
-const PROVIDERS: ProviderId[] = ['anthropic', 'openai', 'gemini', 'openrouter', 'custom'];
+const PROVIDERS: ProviderId[] = ['anthropic', 'openai', 'gemini', 'openrouter', 'custom', 'qutai'];
 
 export function parseUsage(v: unknown): Usage | undefined {
   if (!isObj(v)) return undefined;
@@ -167,11 +192,13 @@ export function parseUsage(v: unknown): Usage | undefined {
   return out;
 }
 
-/** The cost fields shared by a request and an answer. */
+/** The cost fields shared by a request and an answer: dollars, or Qutai's credits (never both). */
 function parseFigure(v: Obj) {
   const nanos = whole(v.nanos);
   const source = SOURCES.find((s) => s === v.source);
   const asOf = typeof v.pricesAsOf === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v.pricesAsOf) ? v.pricesAsOf : undefined;
+  const credits = nanos === undefined && source === 'server' ? whole(v.credits) : undefined;
+  if (credits !== undefined) return { credits, source };
   return {
     ...(nanos !== undefined ? { nanos } : {}),
     ...(nanos !== undefined && source ? { source } : {}),

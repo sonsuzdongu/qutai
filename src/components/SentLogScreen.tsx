@@ -22,7 +22,7 @@ import {
 } from '../storage/sentLog';
 import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
-import { costLine, requestBreakdown, usd } from './AnswerCost';
+import { costLine, creditsLabel, requestBreakdown, usd } from './AnswerCost';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 
@@ -34,6 +34,8 @@ type Props = {
   customInstructions?: string;
   /** Show each request's tokens and approximate cost (Settings › Assistant). */
   showCost?: boolean;
+  /** Qutai Credits is the provider in use: the hint says the requests pass through Qutai's server. */
+  viaQutai?: boolean;
   onClose: () => void;
 };
 
@@ -42,11 +44,17 @@ const MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });
 const PREVIEW_CHARS = 3000;
 
 /** "What was sent to the AI": each request to the provider, newest first, and what left the phone with it. */
-export function SentLogScreen({ visible, conversation, customInstructions, showCost = true, onClose }: Props) {
+export function SentLogScreen({ visible, conversation, customInstructions, showCost = true, viaQutai = false, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {visible && (
-        <SentLog conversation={conversation} customInstructions={customInstructions} showCost={showCost} onClose={onClose} />
+        <SentLog
+          conversation={conversation}
+          customInstructions={customInstructions}
+          showCost={showCost}
+          viaQutai={viaQutai}
+          onClose={onClose}
+        />
       )}
       <DialogHost />
     </Modal>
@@ -93,6 +101,7 @@ function chipsOf(entry: SentRequest, showCost: boolean): string[] {
 function dayTotal(entries: SentRequest[]): string | null {
   if (!entries.every((e) => e.cost)) return null;
   const total = sumCosts(entries.map((e) => e.cost!));
+  if (total.credits !== undefined) return t('cost.dayTotalCredits', { credits: creditsLabel(total.credits) });
   return total.nanos !== undefined ? t('cost.dayTotal', { cost: usd(total.nanos) }) : null;
 }
 
@@ -103,11 +112,13 @@ function SentLog({
   conversation,
   customInstructions,
   showCost,
+  viaQutai,
   onClose,
 }: {
   conversation?: string;
   customInstructions?: string;
   showCost: boolean;
+  viaQutai: boolean;
   onClose: () => void;
 }) {
   const styles = useStyles();
@@ -192,7 +203,7 @@ function SentLog({
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={
           <View style={styles.top}>
-            <Text style={styles.hint}>{t(features.pro ? 'sentLog.hintPro' : 'sentLog.hint')}</Text>
+            <Text style={styles.hint}>{t(viaQutai ? 'sentLog.hintCredits' : features.pro ? 'sentLog.hintPro' : 'sentLog.hint')}</Text>
             {conversation ? (
               <Pressable onPress={() => setOnlyThis(!onlyThis)} hitSlop={6} accessibilityRole="button">
                 <Text style={styles.link}>{t(onlyThis ? 'sentLog.showAll' : 'sentLog.showThis')}</Text>
@@ -279,6 +290,7 @@ function RequestDetail({ entry, showCost }: { entry: SentRequest; showCost: bool
         {entry.webSearch ? (
           <Text style={styles.host}>{t(entry.research ? 'sentLog.researchHint' : 'sentLog.webSearchHint')}</Text>
         ) : null}
+        {entry.provider === 'qutai' ? <Text style={styles.host}>{t('sentLog.viaQutai')}</Text> : null}
       </View>
       <View style={styles.note}>
         <Text style={styles.cardText}>

@@ -4,7 +4,8 @@ import type { AttachmentInfo } from '../chat/attachments';
 import type { RequestCost } from './cost';
 import type { Usage } from './usage';
 
-export type ProviderId = 'anthropic' | 'openai' | 'gemini' | 'openrouter' | 'custom';
+/** `qutai`: Qutai Credits (pro mode only, src/credits/): the requests go through Qutai's relay, paid with credits. */
+export type ProviderId = 'anthropic' | 'openai' | 'gemini' | 'openrouter' | 'custom' | 'qutai';
 
 export type ToolCall = { id: string; name: string; input: Record<string, unknown> };
 
@@ -99,6 +100,20 @@ export type ModelRequest = {
   endpoint?: string;
   /** The custom endpoint's extra headers (values may be secrets: never logged or recorded). */
   extraHeaders?: CustomHeader[];
+  /**
+   * The parts of this step that Qutai Credits sends apart from the conversation (the relay builds the system prompt
+   * and tool list itself, from the agent profile). Set by runAgent; the own-key providers ignore it.
+   */
+  agent?: {
+    /** 0-based step of the task (the relay adds the last-step note on its last allowed step). */
+    step: number;
+    /** The memory section of the system prompt, when memory is on. */
+    memory?: string;
+    /** The user's custom instructions as written (the relay wraps them). */
+    customInstructions?: string;
+    /** The memory tools (remember, forget) are offered. */
+    memoryTools: boolean;
+  };
 };
 
 export type RequestAudit = {
