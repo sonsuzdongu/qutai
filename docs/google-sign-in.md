@@ -1,7 +1,7 @@
 # Sign in with Google on Android: owner checklist
 
-For the first real test of Sign in with Google (pro mode) on an Android phone, against a local server.
-iOS is not covered here. No real ids belong in this file or in any commit.
+For the first real test of Sign in with Google (pro mode) on an Android phone, against a local server; iOS
+(simulator or phone) is in section 6. No real ids belong in this file or in any commit.
 
 How it works, in one line: the app asks Credential Manager for a Google ID token for the **web** client id
 (with a nonce), and Qutai's server accepts the token only if its `aud` is in `GOOGLE_CLIENT_IDS`. The Android
@@ -10,7 +10,7 @@ client id never appears in the token; Google uses it only to check that the app 
 
 ## 1. Google Cloud console (test project)
 
-1. Create a project for testing (keep production separate, see section 5).
+1. Create the Qutai project (one project serves testing and production; what production adds is in section 7).
 2. **Google Auth Platform › Branding** (older consoles: *OAuth consent screen*): app name, support email.
    Audience: **External**, publishing status **Testing**. Under **Audience › Test users** add every Google
    account that will try signing in. In Testing, only those accounts can sign in.
@@ -98,14 +98,35 @@ Only the **web client id** is used, in two uncommitted files:
 | `HTTP 503 unavailable (keys_unavailable)` | the server couldn't fetch Google's signing keys (computer offline?) |
 | `no answer (network)` / `(timeout)` | the phone can't reach `EXPO_PUBLIC_QUTAI_API_URL` (same Wi-Fi? server running?) |
 
-## 5. Production later
+## 6. iOS (simulator or iPhone)
 
-- A **separate Google Cloud project** for production, with its own consent screen; publishing it beyond
-  Testing needs Google's brand verification.
+iOS doesn't use Credential Manager: the app opens Google's sign-in page in the system's authentication window
+(`expo-auth-session`, PKCE, the nonce) with the **iOS** OAuth client and exchanges the code for the ID token
+itself. That token's `aud` is the iOS client id.
+
+1. Google Cloud › Clients › Create client › **iOS**, bundle ID `com.sonsuzdongu.qutai` (App Store ID and Team ID
+   can stay empty). No secret.
+2. Root `.env`: `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=<iOS client id>`.
+3. `backend/apps/api/.dev.vars`: add the iOS client id to the list, `GOOGLE_CLIENT_IDS=<web client id>,<iOS client id>`,
+   and restart the local server. Without it the server answers 401 `wrong_audience`.
+4. Rebuild the iOS app in pro mode (`EXPO_PUBLIC_PRO_MODE=on`, `EXPO_PUBLIC_QUTAI_API_URL`): `plugins/withProAccounts.js`
+   adds the reversed iOS client id as a URL scheme (Google's redirect back to the app), which only a native build
+   picks up; reloading JavaScript isn't enough.
+5. Settings › Account › Sign in with Google: Google's page opens in a sheet; sign in with a test user.
+
+Details lines on iOS start with `Google:` (`cancel`/`dismiss` = the sheet was closed, `error (…)` = Google's
+OAuth error, e.g. `invalid_client` or `redirect_uri_mismatch` for a wrong client id or URL scheme) or
+`Google token exchange:` (the code exchange failed), or `Qutai server:` as on Android.
+
+## 7. Production later
+
+- Publishing the consent screen beyond Testing (Audience › Publish app) after Google's brand verification;
+  until then only the listed test users can sign in.
+- Delete any Android client made for the template debug keystore's SHA-1 (it is public).
 - The Play Store build is re-signed by **Play App Signing**: its Android client needs the **app signing key
   certificate** SHA-1 from Play Console (Test and release › App integrity), and one for the upload key if
   sideloaded upload-key builds should work too. The template debug keystore must never sign a production build.
 - The production web client id goes into the production build's `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` and the
   production Worker's `GOOGLE_CLIENT_IDS` (replacing the `PLACEHOLDER` in `backend/apps/api/wrangler.jsonc`
   locally or in CI before a deploy, see `backend/README.md` › What to set up at Apple and Google), together with
-  the iOS client id once iOS is done.
+  the iOS client id.
