@@ -1051,6 +1051,15 @@ function BrowserApp({
         ? tierTarget(tier, chat.turns).format
         : (credits?.models.find((m) => m.model === target.model)?.provider ?? provider);
       const limits = credits ? limitsFor(credits, tier) : null;
+      // Which AI it is, for "which model are you?": Qutai on its tier with credits, else the provider and model.
+      if (userTurn.role === 'user') {
+        userTurn.text = withIdentity(
+          userTurn.text,
+          provider === 'qutai'
+            ? { mode: 'credits', ...(tier ? { tier: { id: tier.id, name: tierName(tier.id) } } : {}) }
+            : { mode: 'own', provider: getProvider(provider).label, model: target.model },
+        );
+      }
       await runAgent({
         provider,
         apiKey: target.apiKey,
@@ -1063,15 +1072,6 @@ function BrowserApp({
         browser,
         agentTab,
         askedFrom: { id: current.id },
-      // Which AI it is, for "which model are you?": Qutai on its tier with credits, else the provider and model.
-      if (userTurn.role === 'user') {
-        userTurn.text = withIdentity(
-          userTurn.text,
-          provider === 'qutai'
-            ? { mode: 'credits', ...(tier ? { tier: { id: tier.id, name: tierName(tier.id) } } : {}) }
-            : { mode: 'own', provider: getProvider(provider).label, model: target.model },
-        );
-      }
         privacy: chat.privacy,
         memory: settings.memoryEnabled ? memoryStore : undefined,
         customInstructions: settings.customInstructions,
