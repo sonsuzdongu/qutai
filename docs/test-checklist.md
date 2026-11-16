@@ -239,5 +239,6 @@ Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.
 - [ ] Adres çubuğundaki üç nokta menüsü ekrana tam sığmıyor. Ekran yüksekliğine göre boyutlanmalı; sığmazsa kaydırılabilir olmalı. (16 Kas; "düzelt" bekleniyor)
 - [ ] Kayıtlı görev ("Deneme") asistana "Deneme adlı görevi çalıştır" denince çalışmıyor; asistan kayıtlı görevlere erişimi olmadığını söylüyor. Asistanın kayıtlı görevleri adıyla bulup çalıştırabilmesi gerekiyor (bugün böyle bir aracı yok; talimatı da "yapamazsın" diyor). (16 Kas; "düzelt" bekleniyor)
 - [ ] Gözlem (aynı ekran görüntüsü): panel başlığındaki satır "Qutai K…02 kredi" diye ortadan kesiliyor; bakiye okunmuyor.
+- [ ] İstek: "Qutai bu işlemi yapmak istiyor" türündeki bütün cihaz izni pencerelerinde "bir daha sorma" kutusu olsun: takvim okuma, takvim etkinliği, bildirim, hatırlatıcı, konum, dosya indirme vb. Kutu işaretli "İzin ver" denirse o tür için bir daha sorulmaz; "Reddet" hatırlanmaz, sonraki sefer yine sorulur. Bugün yalnızca bildirim, takvim etkinliği ve hatırlatıcıda var; takvim okumada yok. (16 Kas; "düzelt" bekleniyor)
 - Açık kalanlar: yatay ekran (yön dikeye kilitli, karar bekliyor); arka plan görevi kapalıyken uygulamadan çıkınca bekleyen istek dönüşte yeniden gönderiliyor (iki kez ücret); yazı boyutu sayfasında İngilizce "%120" yerine "120%" olmalı.
 - …
