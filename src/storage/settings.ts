@@ -5,6 +5,7 @@ import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES, ReaderFont, ReaderTheme } from '../browser/reader';
 import { isSearchEngine, SearchEngineId } from '../browser/search';
 import type { VoiceOnline } from '../device/voiceInput';
+import { removeRetiredInstructionLines } from '../agent/retiredInstructions';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
 
 export type Settings = {
@@ -197,7 +198,9 @@ const KEYS = {
   voiceHoldToTalk: 'voice_hold_to_talk',
   onboarded: 'onboarded',
   legalAcceptedVersion: 'legal_accepted_version',
-  apiKey: (id: ProviderId) => `api_key_${id}`,
+  /** '1' once the retired example lines were taken out of the custom instructions (agent/retiredInstructions.ts). */
+  retiredInstructionsRemoved: 'retired_instructions_removed',
+  apiKey:(id: ProviderId) => `api_key_${id}`,
   customHeader: (i: number) => `custom_header_${i}`,
   model: (id: ProviderId) => `model_${id}`,
   // Written by the first, Claude-only version of the app.
@@ -377,6 +380,21 @@ export async function loadSettings(): Promise<Settings> {
 
   if (!settings.apiKeys.anthropic && legacyApiKey) settings.apiKeys.anthropic = legacyApiKey;
   if (legacyModel?.startsWith('claude-') && !perProvider[1]) settings.models.anthropic = legacyModel;
+
+  // Once per install: the "Always reply in Turkish" line older builds added (agent/retiredInstructions.ts). If
+  // saving fails, the line is still left out of this session's settings and the next launch tries again.
+  if ((await get(KEYS.retiredInstructionsRemoved)) !== '1') {
+    try {
+      const cleaned = removeRetiredInstructionLines(settings.customInstructions);
+      if (cleaned !== settings.customInstructions) {
+        settings.customInstructions = cleaned;
+        await (cleaned
+          ? SecureStore.setItemAsync(KEYS.customInstructions, cleaned)
+          : SecureStore.deleteItemAsync(KEYS.customInstructions));
+      }
+      await SecureStore.setItemAsync(KEYS.retiredInstructionsRemoved, '1');
+    } catch {}
+  }
 
   return settings;
 }

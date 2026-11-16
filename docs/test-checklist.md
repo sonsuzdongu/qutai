@@ -67,7 +67,8 @@ Cloudflare'e yayın ve Access.
 - [ ] Türkçe yer tutucu metin giriş kutusuna sığıyor
 - [ ] "Araştırma raporu" (eski "deep search") açıklaması anlaşılır, alt boşluk düzgün
 - [ ] Site izinleri hamburger menüden açılıyor
-- [ ] "Her zaman Türkçe yanıt ver" ayarı kalkmış; Özel talimatlar'da eski satır kalmış mı
+- [ ] "Her zaman Türkçe yanıt ver" seçeneği yok; eski sürümde bu seçeneğe dokunulduysa güncellemeden sonra Özel talimatlar'da o satır kalmamış, elle yazdığınız diğer satırlar duruyor
+- [ ] Eski bir yedekten geri yükleme: "Her zaman Türkçe yanıt ver" satırı gelmiyor; yeni bir yedekte elle yazdığınız aynı cümle korunuyor
 - [ ] Sağlayıcı metinleri "AI sağlayıcısı" diyor ("Anthropic'e gönderildi" değil)
 
 ## 6. Onay pencereleri ve ikonlar

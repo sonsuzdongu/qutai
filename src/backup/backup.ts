@@ -44,6 +44,8 @@ function backupSettings(s: Settings): BackupSettings {
     textZoom: s.textZoom,
     memoryEnabled: s.memoryEnabled,
     customInstructions: s.customInstructions,
+    // This phone already took out the retired example lines (settings.ts), so a restore leaves the text as it is.
+    retiredInstructionsRemoved: true,
     webSearch: s.webSearch,
     blockAds: s.blockAds,
     hideCookieBanners: s.hideCookieBanners,

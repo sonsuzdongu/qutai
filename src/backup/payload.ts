@@ -1,6 +1,6 @@
 import { isSiteLevel, SiteLevel } from '../agent/sitePolicy';
 import { cleanCustomHeaders, CustomHeader, headerProblems, MAX_CUSTOM_HEADERS } from '../ai/customHeaders';
-import { cleanCustomInstructions } from '../agent/systemPrompt';
+import { restoredCustomInstructions } from '../agent/retiredInstructions';
 import {
   cleanMemoryText,
   hiddenKindOf,
@@ -100,6 +100,11 @@ export type BackupSettings = Partial<{
   memoryEnabled: boolean;
   /** Not in backups made before custom instructions existed. */
   customInstructions: string;
+  /**
+   * True in backups made after the retired example lines were taken out on the phone (agent/retiredInstructions.ts);
+   * without it, restoring removes them from customInstructions as the phone did.
+   */
+  retiredInstructionsRemoved: boolean;
   webSearch: boolean;
   blockAds: boolean;
   hideCookieBanners: boolean;
@@ -417,7 +422,8 @@ function parseSettings(v: unknown): BackupSettings | undefined {
   if (readerTheme) out.readerTheme = readerTheme;
   const readerFont = oneOf(v.readerFont, READER_FONTS);
   if (readerFont) out.readerFont = readerFont;
-  if (typeof v.customInstructions === 'string') out.customInstructions = cleanCustomInstructions(v.customInstructions);
+  if (typeof v.customInstructions === 'string')
+    out.customInstructions = restoredCustomInstructions(v.customInstructions, v.retiredInstructionsRemoved);
   return out;
 }
 
