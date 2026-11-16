@@ -32,6 +32,7 @@ import {
 } from './systemPrompt';
 import { memoryPrompt } from './memory';
 import { siteKey } from './sitePolicy';
+import { stepLine } from './stepLine';
 import { MEMORY_TOOLS, TOOLS } from './tools';
 import type { AgentEvent, Source } from './types';
 import { cutText } from '../utils/wellFormed';
@@ -396,9 +397,11 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
       if (call.name === 'read_tab') opts.browser.keepAwakeForTask(String(call.input.tab_id ?? ''));
       if (call.name === 'read_tab') noteResultHost(call.id, opts.browser.getTab(String(call.input.tab_id ?? ''))?.url);
       else noteResultHost(call.id, opts.browser.getTab(opts.agentTab.id)?.url);
-      if (result.isError) onEvent({ type: 'error', text: cutText(result.content, 200) });
-      else if (READING_TOOLS.has(call.name)) noteSource();
-      else if (call.name === 'read_tab') {
+      // The model reads result.content; the user sees a line in the app's language (agent/stepLine.ts).
+      const line = stepLine(result);
+      if (line) onEvent(line);
+      if (!result.isError && READING_TOOLS.has(call.name)) noteSource();
+      else if (!result.isError && call.name === 'read_tab') {
         const read = opts.browser.getTab(String(call.input.tab_id ?? ''));
         if (read) addSource({ url: read.url, title: read.title, incognito: read.incognito });
       }

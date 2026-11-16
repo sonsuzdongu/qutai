@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { t } from '../i18n';
+import { formatPercent } from '../i18n/format';
 import { makeStyles } from '../ui/theme';
 import { clampTextZoom, TEXT_ZOOM_MAX, TEXT_ZOOM_MIN } from '../storage/settings';
 import { BottomSheet } from './BottomSheet';
@@ -44,7 +45,7 @@ export function TextSizeSheet({ visible, zoom, onChange, onClose }: Props) {
           <Text style={styles.stepSmall}>A</Text>
         </Pressable>
         <Text style={styles.value} accessibilityLiveRegion="polite">
-          %{zoom}
+          {formatPercent(zoom)}
         </Text>
         <Pressable
           accessibilityRole="button"

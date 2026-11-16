@@ -14,6 +14,7 @@ import { PermissionDeniedError } from '../device/settings';
 import { uiLabel } from './uiLabels';
 import { t } from '../i18n';
 import type { ToolContext, ToolOutput } from './executeTool';
+import { declinedNotice, settingNotice } from './stepLine';
 import { findAttachment } from './fileTools';
 import { siteKey } from './sitePolicy';
 
@@ -205,6 +206,7 @@ export async function uploadImageTool(input: Record<string, unknown>, ctx: ToolC
         : `Not allowed: ${found.id} was attached in incognito and this tab is not incognito; Qutai doesn't move ` +
           'images out of incognito. Tell the user to upload it in an incognito tab, or attach it again here.',
       isError: true,
+      notice: settingNotice(t('step.incognitoFiles')),
     };
   }
 
@@ -251,7 +253,7 @@ export async function uploadImageTool(input: Record<string, unknown>, ctx: ToolC
       image: { uri: preview, aspectRatio: image.width / image.height },
       confirmText: t('upload.confirmGive'),
     });
-    if (!allowed) return { content: `The user declined giving ${what} to ${host}. Ask them how to proceed.`, isError: true };
+    if (!allowed) return { content: `The user declined giving ${what} to ${host}. Ask them how to proceed.`, isError: true, notice: declinedNotice() };
 
     const result = await transfer(tab, image, ref);
     if (!result.ok) {

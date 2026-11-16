@@ -25,6 +25,7 @@ import {
 import { MAX_ORGANISE, proposeCategories } from '../agent/organiseMemory';
 import type { ProviderId } from '../ai/types';
 import { t } from '../i18n';
+import { plainError } from '../ai/plainError';
 import { Icon } from '../ui/Icon';
 import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { authenticate } from '../device/biometric';
@@ -194,7 +195,7 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
       if (!moves.length) dialog.alert(t('memory.organiseNothing'));
       else setProposal(moves.map((m) => ({ ...m, accepted: true })));
     } catch (e) {
-      if (!controller.signal.aborted) dialog.alert(t('memory.organiseFailed'), e instanceof Error ? e.message : String(e));
+      if (!controller.signal.aborted) dialog.alert(t('memory.organiseFailed'), plainError(e).message);
     } finally {
       if (abort.current === controller) setOrganising(false);
     }

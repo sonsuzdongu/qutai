@@ -77,12 +77,19 @@ export function groupByDay<T>(items: T[], timeOf: (item: T) => number, now = Dat
   return sections;
 }
 
-/** A file size for people: "512 B", "14 KB", "3.2 MB"; empty when unknown. */
+/** A file size for people: "512 B", "14 KB", "3.2 MB" ("3,2 MB" in Turkish); empty when unknown. */
 export function formatSize(bytes: number | null): string {
   if (bytes == null) return '';
   if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  const mb = new Intl.NumberFormat(locale(), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return `${mb.format(bytes / 1024 / 1024)} MB`;
+}
+
+/** A whole percentage: "120%" in English, "%120" in Turkish (the sign comes first there). */
+export function formatPercent(n: number): string {
+  const value = formatNumber(Math.round(n));
+  return getLanguage() === 'tr' ? `%${value}` : `${value}%`;
 }
 
 export function hostOf(url: string): string {

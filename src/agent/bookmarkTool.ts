@@ -19,6 +19,7 @@ import {
 } from '../storage/bookmarks';
 import type { Db } from '../storage/db';
 import type { ToolContext, ToolOutput } from './executeTool';
+import { declinedNotice, incognitoNotice } from './stepLine';
 import { uiLabel, uiPath } from './uiLabels';
 import { cutText } from '../utils/wellFormed';
 
@@ -224,6 +225,7 @@ export async function bookmarksTool(input: Record<string, unknown>, ctx: ToolCon
         'reorganised here. From an incognito tab you can only bookmark a page (at the top level) or remove one by ' +
         'its address, as the page menu allows. Tell the user they can ask again from a normal tab.',
       isError: true,
+      notice: incognitoNotice(),
     };
   }
   const db = await ctx.bookmarks.db();
@@ -332,7 +334,11 @@ async function run(
           null,
         );
         if (!allowed)
-          return { content: 'The user declined removing these bookmarks. Nothing was removed; ask them how to proceed.', isError: true };
+          return {
+            content: 'The user declined removing these bookmarks. Nothing was removed; ask them how to proceed.',
+            isError: true,
+            notice: declinedNotice(),
+          };
         state.approved = true;
       }
       for (const b of found) await removeBookmark(db, b.url);
@@ -478,7 +484,11 @@ async function run(
           null,
         );
         if (!allowed)
-          return { content: 'The user declined deleting the folder. Nothing was deleted; ask them how to proceed.', isError: true };
+          return {
+            content: 'The user declined deleting the folder. Nothing was deleted; ask them how to proceed.',
+            isError: true,
+            notice: declinedNotice(),
+          };
       }
       await deleteFolder(db, found.id);
       return {

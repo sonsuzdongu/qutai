@@ -1312,6 +1312,7 @@ function BrowserApp({
             ...item,
             ...('icon' in event && event.icon ? { icon: event.icon } : {}),
             ...(event.type === 'action' && event.tool ? { tool: event.tool } : {}),
+            ...(event.type === 'error' && event.details ? { details: event.details } : {}),
           });
         },
       });

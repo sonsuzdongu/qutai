@@ -1555,7 +1555,10 @@ function StepGroup({ items, expanded, onToggle }: { items: ChatItem[]; expanded:
       {expanded
         ? items.map((item) =>
             item.kind === 'error' ? (
-              <StepLine key={item.id} icon="insecure" text={item.text} error />
+              <View key={item.id}>
+                <StepLine icon="insecure" text={item.text} error />
+                {item.details ? <ErrorDetails details={item.details} /> : null}
+              </View>
             ) : (
               <StepLine key={item.id} icon={item.icon} text={item.text} />
             ),

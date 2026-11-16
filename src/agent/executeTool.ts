@@ -24,6 +24,7 @@ import type { ToolImage } from '../ai/types';
 import type { AttachmentInfo } from '../chat/attachments';
 import { readPdfTool, viewAttachmentTool } from './fileTools';
 import { uiLabel, uiPath } from './uiLabels';
+import { declinedNotice, errorNotice, incognitoNotice, pageErrorNotice, settingNotice, type StepNotice } from './stepLine';
 import type { IconLine, IconLines } from '../ui/Icon';
 import { toolIcon } from './toolIcons';
 import { editImageTool, uploadImageTool } from './imageTools';
@@ -397,12 +398,16 @@ function formatSource(tab: Tab, source: SourceSnapshot, selector: string): strin
 async function readTab(
   input: Record<string, unknown>,
   ctx: ToolContext,
-): Promise<{ content: string; isError: boolean }> {
+): Promise<ToolOutput> {
   const target = ctx.browser.getTab(String(input.tab_id ?? ''));
   if (!target) return { content: `No tab with id=${String(input.tab_id)}.\n${tabList(ctx)}`, isError: true };
   if (target.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
   if (target.isNewTab)
-    return { content: `Tab ${target.id} shows the new tab page; no web page is loaded.`, isError: true };
+    return {
+      content: `Tab ${target.id} shows the new tab page; no web page is loaded.`,
+      isError: true,
+      notice: errorNotice(t('step.noPage')),
+    };
   try {
     if (target.asleep) {
       // A sleeping tab gets its WebView back off screen; the page loads from its saved address.
@@ -417,7 +422,7 @@ async function readTab(
         : '\n[Read only. To click or type here, call switch_tab first, then read_page.]';
     return { content: formatPage(target, page, 'read_tab') + hint, isError: false };
   } catch (e) {
-    return { content: `Error: ${e instanceof Error ? e.message : String(e)}`, isError: true };
+    return { content: `Error: ${e instanceof Error ? e.message : String(e)}`, isError: true, notice: pageErrorNotice(e) };
   }
 }
 
@@ -614,6 +619,7 @@ async function schedulingTool(name: SchedulingTool, input: Record<string, unknow
         'Not allowed: this conversation involves incognito tabs, so nothing is added to the calendar, reminders ' +
         'or notifications. Tell the user they can ask again from a normal tab.',
       isError: true,
+      notice: incognitoNotice(),
     };
   }
   const plan = planSchedule(name, input);
@@ -629,7 +635,7 @@ async function schedulingTool(name: SchedulingTool, input: Record<string, unknow
   }
   if (!ctx.confirm) return { content: 'This needs the user\'s confirmation, which is not available here.', isError: true };
   if (!(await ctx.confirm(describePlan(plan, android), null, kindForSchedule(plan.kind))))
-    return { content: 'The user declined this. Ask them how to proceed.', isError: true };
+    return { content: 'The user declined this. Ask them how to proceed.', isError: true, notice: declinedNotice() };
   try {
     if (plan.kind === 'event') {
       const { calendar, note } = await addCalendarEvent(plan);
@@ -674,6 +680,7 @@ async function readCalendarTool(input: Record<string, unknown>, ctx: ToolContext
         "Not allowed: this conversation involves incognito tabs, so Qutai doesn't read the calendar from it. Tell the " +
         'user they can ask again from a normal tab. Do not guess their availability.',
       isError: true,
+      notice: incognitoNotice(),
     };
   }
   const plan = planCalendarRead(input);
@@ -684,6 +691,7 @@ async function readCalendarTool(input: Record<string, unknown>, ctx: ToolContext
       content:
         "The user declined to share their calendar. Don't guess their schedule or availability: ask them directly.",
       isError: true,
+      notice: declinedNotice(),
     };
   }
   try {
@@ -711,6 +719,7 @@ async function locationTool(input: Record<string, unknown>, ctx: ToolContext): P
         "Not allowed: this conversation involves incognito tabs, so Qutai doesn't share the location from it. Tell " +
         'the user they can ask again from a normal tab, or ask them for a starting point.',
       isError: true,
+      notice: incognitoNotice(),
     };
   }
   if (!ctx.confirm) return { content: "This needs the user's confirmation, which is not available here.", isError: true };
@@ -723,6 +732,7 @@ async function locationTool(input: Record<string, unknown>, ctx: ToolContext): P
     return {
       content: "The user declined to share their location. Don't guess it: ask them where to start from.",
       isError: true,
+      notice: declinedNotice(),
     };
   }
   try {
@@ -778,7 +788,12 @@ async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext
   const hasRef = input.ref !== undefined && input.ref !== null && input.ref !== '';
   let url = typeof input.url === 'string' ? input.url.trim() : '';
   if (hasRef) {
-    if (tab.isNewTab) return { content: 'No web page is loaded in this tab, so there is no link to download.', isError: true };
+    if (tab.isNewTab)
+      return {
+        content: 'No web page is loaded in this tab, so there is no link to download.',
+        isError: true,
+        notice: errorNotice(t('step.noPage')),
+      };
     try {
       url = await tab.run<string>('linkHref', [input.ref]);
     } catch (e) {
@@ -818,7 +833,7 @@ async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext
   // "Don't ask again" covers ordinary files only: never a risky one, never from an incognito conversation.
   const kind = kindForDownload({ risky, incognito: !!(ctx.privacy?.touchedIncognito || tab.incognito) });
   if (!(await ctx.confirm({ lines, spaced: true }, null, kind)))
-    return { content: 'The user declined the download. Ask them how to proceed.', isError: true };
+    return { content: 'The user declined the download. Ask them how to proceed.', isError: true, notice: declinedNotice() };
   try {
     await ctx.startDownload(tab, url, name, probe.type);
     return {
@@ -887,13 +902,14 @@ async function memoryTool(
   name: 'remember' | 'forget',
   input: Record<string, unknown>,
   ctx: ToolContext,
-): Promise<{ content: string; isError: boolean }> {
+): Promise<ToolOutput> {
   if (!ctx.memory) return { content: memoryOff('.'), isError: true };
   // Incognito conversations leave nothing behind, memories included.
   if (ctx.privacy?.touchedIncognito) {
     return {
       content: 'Not saved: this conversation involves incognito tabs, so nothing is remembered.',
       isError: true,
+      notice: incognitoNotice(),
     };
   }
   try {
@@ -989,7 +1005,8 @@ function tabList(ctx: ToolContext): string {
     .join('\n');
 }
 
-export type ToolOutput = { content: string; isError: boolean; images?: ToolImage[] };
+/** content: what the model reads (English). notice: what the chat shows the user instead (agent/stepLine.ts). */
+export type ToolOutput = { content: string; isError: boolean; images?: ToolImage[]; notice?: StepNotice };
 
 export type EmailDraft = {
   to: string[];
@@ -1275,7 +1292,10 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
   };
 
   // Refused and declined actions are recorded too, so the history shows what was stopped.
-  if (decision.kind === 'refuse') return record({ content: decision.reason, isError: true });
+  if (decision.kind === 'refuse') {
+    const shown = t(level === 'blocked' ? 'step.siteBlocked' : 'step.siteReadOnly', { host: host ?? '' });
+    return record({ content: decision.reason, isError: true, notice: settingNotice(shown) });
+  }
   // These confirm on their own, with the details of what will be added.
   if (SCHEDULING_TOOLS.has(name)) return record(await schedulingTool(name as SchedulingTool, input, ctx));
   // Asks every time, whatever the "ask before actions" setting.
@@ -1291,17 +1311,18 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
   let personalAsked = false;
   if (hidden && target) {
     const gate = await hiddenGate(hidden.memory, input, target.url, host, ctx, target.tab);
-    if (gate.kind === 'refuse') return record({ content: gate.reason, isError: true });
+    if (gate.kind === 'refuse') return record({ content: gate.reason, isError: true, notice: gate.notice });
     personalAsked = true;
   } else if ((name === 'type' || name === 'select_option') && host) {
     const gate = await personalGate(name, input, host, ctx, target?.tab);
-    if (gate.kind === 'refuse') return record({ content: gate.reason, isError: true });
+    if (gate.kind === 'refuse') return record({ content: gate.reason, isError: true, notice: gate.notice });
     personalAsked = gate.kind === 'asked';
   }
   // The personal-information question already named this entry; asking "may I type?" right after would be twice.
   if (decision.kind === 'confirm' && ctx.confirm && !personalAsked) {
     const allowed = await ctx.confirm({ lines: [{ icon: toolIcon(name, input), text: describeToolCall(name, input) }] }, host);
-    if (!allowed) return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true });
+    if (!allowed)
+      return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true, notice: declinedNotice() });
   }
   return record(await runTool(name, input, ctx, hidden?.memory));
 }
@@ -1324,11 +1345,12 @@ async function hiddenGate(
   host: string | null,
   ctx: ToolContext,
   tab: Tab | undefined,
-): Promise<{ kind: 'run' } | { kind: 'refuse'; reason: string }> {
+): Promise<{ kind: 'run' } | { kind: 'refuse'; reason: string; notice: StepNotice }> {
   if (!host || !/^https:\/\//i.test(url)) {
     return {
       kind: 'refuse',
       reason: 'Hidden values are entered only on https pages. Nothing was typed; tell the user, who can enter it themselves.',
+      notice: settingNotice(t('step.httpsOnly')),
     };
   }
   if ((ctx.sites?.personalFor(host) ?? 'ask') === 'block') {
@@ -1338,6 +1360,7 @@ async function hiddenGate(
         `The user has blocked Qutai from entering their saved personal information on ${host} (a setting for this ` +
         'site). Nothing was typed. Tell the user: they can fill it in themselves, or change ' +
         personalSettingPlace(),
+      notice: settingNotice(t('step.personalBlocked', { host })),
     };
   }
   const key = `hidden:${host}:${memory.id}`;
@@ -1346,6 +1369,7 @@ async function hiddenGate(
     reason:
       `The user did not allow entering their saved ${hiddenLabel(memory)} on ${host}. Nothing was typed. Don't try ` +
       "again on this site in this task and don't ask for the value; tell the user, who can fill it in themselves.",
+    notice: { ...declinedNotice(), text: t('step.personalDeclined', { host }) },
   };
   if (ctx.personalGrants?.allowed.has(key)) return { kind: 'run' };
   if (ctx.personalGrants?.declined.has(key) || !ctx.confirmHidden) return declined;
@@ -1392,7 +1416,7 @@ async function personalGate(
   host: string,
   ctx: ToolContext,
   tab: Tab | undefined,
-): Promise<{ kind: 'run' | 'asked' } | { kind: 'refuse'; reason: string }> {
+): Promise<{ kind: 'run' | 'asked' } | { kind: 'refuse'; reason: string; notice: StepNotice }> {
   if (!ctx.memory) return { kind: 'run' };
   const text = String((name === 'type' ? input.text : input.value) ?? '');
   if (!text.trim()) return { kind: 'run' };
@@ -1406,6 +1430,7 @@ async function personalGate(
     reason:
       `The user did not allow entering their saved personal information on ${host}. Don't enter it on this site in ` +
       'this task and don\'t ask again; tell the user, who can fill it in themselves.',
+    notice: { ...declinedNotice(), text: t('step.personalDeclined', { host }) },
   };
   if (setting === 'block') {
     return {
@@ -1414,6 +1439,7 @@ async function personalGate(
         `The user has blocked Qutai from entering their saved personal information on ${host} (a setting for this ` +
         'site). Don\'t enter it here. Tell the user: they can fill it in themselves, or change ' +
         personalSettingPlace(),
+      notice: settingNotice(t('step.personalBlocked', { host })),
     };
   }
   if (ctx.personalGrants?.allowed.has(host)) return { kind: 'run' };
@@ -1488,11 +1514,20 @@ async function runTool(
     };
   }
   if (SITE_RULE_TOOL_NAMES.has(name)) {
-    if (tab.isNewTab) return { content: 'This tab shows the new tab page; open a web page first.', isError: true };
+    if (tab.isNewTab)
+      return {
+        content: 'This tab shows the new tab page; open a web page first.',
+        isError: true,
+        notice: errorNotice(t('step.noPage')),
+      };
     try {
       return await siteRulesTool(name, input, ctx, tab);
     } catch (e) {
-      return { content: `The page did not answer: ${e instanceof Error ? e.message : String(e)}`, isError: true };
+      return {
+        content: `The page did not answer: ${e instanceof Error ? e.message : String(e)}`,
+        isError: true,
+        notice: errorNotice(t('step.pageNoAnswer')),
+      };
     }
   }
   // Confirms on its own with the image, every time.
@@ -1653,7 +1688,8 @@ async function runTool(
           await speak(text, typeof input.language === 'string' ? input.language : undefined);
           return { content: `Started reading ${text.length} characters aloud.`, isError: false };
         }
-        if (tab.isNewTab) return { content: 'No web page is loaded in this tab.', isError: true };
+        if (tab.isNewTab)
+          return { content: 'No web page is loaded in this tab.', isError: true, notice: errorNotice(t('step.noPage')) };
         const page = await speakPage(tab);
         const note = page.truncated ? ' The page is long; only the beginning is read.' : '';
         return { content: `Started reading the page aloud (${page.chars} characters).${note}`, isError: false };
@@ -1740,6 +1776,6 @@ async function runTool(
         isError: true,
       };
     }
-    return { content: `Error: ${e instanceof Error ? e.message : String(e)}`, isError: true };
+    return { content: `Error: ${e instanceof Error ? e.message : String(e)}`, isError: true, notice: pageErrorNotice(e) };
   }
 }

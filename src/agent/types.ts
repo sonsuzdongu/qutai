@@ -17,7 +17,8 @@ export type AgentEvent =
   /** tool: the tool's name (or 'web_search'), for the finished task's step summary (chat/stepSummary.ts). */
   | { type: 'action'; text: string; icon: IconName; tool?: string }
   | { type: 'info'; text: string; icon?: IconName }
-  | { type: 'error'; text: string }
+  /** details: the raw text behind the plain sentence, shown on demand. */
+  | { type: 'error'; text: string; details?: string }
   /** The agent asks the user to pick one of these options; the run ends until they answer. */
   | { type: 'choices'; text: string; options: string[] }
   /** Pages read during this task, sent once before the run ends. */

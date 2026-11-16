@@ -16,6 +16,7 @@ import { MAX_WHATSAPP_BODY, normalizeWhatsAppNumber } from '../device/whatsapp';
 import { t } from '../i18n';
 import { formatSize } from '../i18n/format';
 import type { ToolContext, ToolOutput } from './executeTool';
+import { declinedNotice, settingNotice } from './stepLine';
 import { transfer, type FileTarget } from './imageTools';
 import { siteKey } from './sitePolicy';
 import { uiLabel } from './uiLabels';
@@ -225,6 +226,7 @@ export async function uploadFileTool(input: Record<string, unknown>, ctx: ToolCo
         ? `Not allowed: ${item.id} belongs to a normal conversation and this tab is incognito; Qutai doesn't move files across the incognito boundary.`
         : `Not allowed: ${item.id} was made or attached in incognito and this tab is not incognito; Qutai doesn't move files out of incognito.`,
       isError: true,
+      notice: settingNotice(t('step.incognitoFiles')),
     };
   }
   const save = saveHint(item);
@@ -254,7 +256,7 @@ export async function uploadFileTool(input: Record<string, unknown>, ctx: ToolCo
     confirmText: t('uploadFile.confirmGive'),
   });
   const what = `"${item.name}" (${formatSize(item.size)})`;
-  if (!allowed) return { content: `The user declined giving ${what} to ${host}. Ask them how to proceed.`, isError: true };
+  if (!allowed) return { content: `The user declined giving ${what} to ${host}. Ask them how to proceed.`, isError: true, notice: declinedNotice() };
 
   let prepared: Awaited<ReturnType<typeof prepareOutgoing>> | null = null;
   try {

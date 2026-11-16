@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
+import { formatSize } from '../i18n/format';
 import type { DownloadItem, DownloadStore } from '../storage/downloads';
 import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
@@ -19,7 +20,7 @@ import { useScreenReader } from './useHoldGesture';
 /** "42%" when the size is known, else the bytes so far ("3.1 MB"), or "" before anything arrived. */
 export function downloadProgressLabel(a: DownloadItem): string {
   if (a.total) return `${Math.min(100, Math.floor((a.received / a.total) * 100))}%`;
-  return a.received > 0 ? formatBytes(a.received) : '';
+  return a.received > 0 ? formatSize(a.received) : '';
 }
 
 /** 0…1 when the size is known, else null (an indeterminate bar). */
@@ -230,11 +231,6 @@ export function DownloadIndicator({ store, bottomOffset, onOpen, onOpenFile }: P
       </Animated.View>
     </View>
   );
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 const useStyles = makeStyles((c) => ({
