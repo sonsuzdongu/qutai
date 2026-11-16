@@ -1,6 +1,7 @@
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { READER_COLORS, READER_FONTS, READER_THEMES, ReaderFont, ReaderTheme } from '../browser/reader';
 import { t } from '../i18n';
+import { formatPercent } from '../i18n/format';
 import { clampTextZoom, TEXT_ZOOM_MAX, TEXT_ZOOM_MIN } from '../storage/settings';
 import { makeStyles } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
@@ -103,7 +104,7 @@ export function ReaderSettingsSheet({ visible, value, onChange, onClose }: Props
           <Text style={styles.stepSmall}>A</Text>
         </Pressable>
         <Text style={styles.value} accessibilityLiveRegion="polite">
-          %{zoom}
+          {formatPercent(zoom)}
         </Text>
         <Pressable
           onPress={() => setZoom(zoom + 10)}

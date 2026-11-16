@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { attachmentLabel, AttachmentInfo } from '../chat/attachments';
+import { AttachmentInfo } from '../chat/attachments';
 import { presetInput, ResizePreset } from '../chat/imageEdit';
 import { modelFile, originalFile } from '../device/attachments';
 import { t } from '../i18n';
@@ -26,7 +26,7 @@ export function AttachmentThumb({
   const palette = usePalette();
   // Read once per attachment; a missing file (cleared, or restored from a backup) shows a placeholder.
   const uri = useMemo(() => (info.kind === 'image' ? (modelFile(info.id)?.uri ?? null) : null), [info.id, info.kind]);
-  const label = `${attachmentLabel(info, index)}: ${info.name}`;
+  const label = t(info.kind === 'pdf' ? 'attach.a11yPdf' : 'attach.a11yImage', { n: index + 1, name: info.name });
   return (
     <Pressable
       onPress={onPress}

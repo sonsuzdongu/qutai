@@ -15,7 +15,7 @@ import type { ApplyMode } from '../backup/database';
 import { BackupPayload, BackupSummary, PayloadError, summarize } from '../backup/payload';
 import { authenticate } from '../device/biometric';
 import { MessageKey, t } from '../i18n';
-import { formatDateTime } from '../i18n/format';
+import { formatDateTime, formatPercent } from '../i18n/format';
 import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
@@ -166,7 +166,7 @@ function Progress({ percent, label }: { percent: number | null; label: string })
   return (
     <View style={styles.progress} accessibilityLiveRegion="polite">
       <ActivityIndicator color={palette.tintText} />
-      <Text style={styles.hint}>{percent === null ? label : `${label} ${percent}%`}</Text>
+      <Text style={styles.hint}>{percent === null ? label : `${label} ${formatPercent(percent)}`}</Text>
     </View>
   );
 }

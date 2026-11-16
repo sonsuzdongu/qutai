@@ -48,6 +48,16 @@ export function pageErrorNotice(e: unknown): StepNotice | undefined {
   return message.startsWith(PAGE_TIMEOUT) ? errorNotice(t('step.pageNoAnswer')) : undefined;
 }
 
+/**
+ * An error from a user's own action (page menu, reader, downloads) as a toast line. An error whose English message
+ * is also read by the model carries the user's sentence as `userMessage`.
+ */
+export function actionErrorText(e: unknown): string {
+  const userMessage = (e as { userMessage?: unknown } | null)?.userMessage;
+  if (typeof userMessage === 'string' && userMessage) return userMessage;
+  return pageErrorNotice(e)?.text ?? t('common.error', { message: e instanceof Error ? e.message : String(e) });
+}
+
 /** The tool result shown to the user: its notice, or for an unannotated failure the plain line with details. */
 export function stepLine(result: { content: string; isError: boolean; notice?: StepNotice }): StepLine | null {
   const notice = result.notice;

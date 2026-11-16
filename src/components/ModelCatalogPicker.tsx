@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 import { CatalogModel, searchCatalog } from '../ai/openrouterCatalog';
 import { Catalog, getCatalog, loadCatalog, onCatalogChange, refreshCatalog } from '../ai/openrouterModels';
 import { t } from '../i18n';
+import { plainError } from '../ai/plainError';
 import { formatDateTime, formatNumber } from '../i18n/format';
 import { makeStyles, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
@@ -58,7 +59,7 @@ export function ModelCatalogPicker({
     setLoading(true);
     setError('');
     refreshCatalog(key)
-      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .catch((e) => setError(plainError(e).message))
       .finally(() => setLoading(false));
   };
 

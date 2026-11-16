@@ -1,7 +1,7 @@
 import { File, Paths } from 'expo-file-system';
 import { marked } from 'marked';
 import * as Print from 'expo-print';
-import { t } from '../i18n';
+import { getLanguage, t } from '../i18n';
 import { pdfFileName, type RenderedPdf } from './pdf';
 
 const STYLE = `
@@ -29,7 +29,7 @@ export function reportTitle(markdown: string): string {
 export function reportHtml(markdown: string, date = new Date()): string {
   const escaped = markdown.replace(/</g, '&lt;');
   const body = marked.parse(escaped, { async: false, gfm: true }) as string;
-  const stamp = new Intl.DateTimeFormat(undefined, { dateStyle: 'long', timeStyle: 'short' }).format(date);
+  const stamp = new Intl.DateTimeFormat(getLanguage() === 'tr' ? 'tr-TR' : 'en-US', { dateStyle: 'long', timeStyle: 'short' }).format(date);
   return `<!doctype html><html><head><meta charset="utf-8"><style>${STYLE}</style></head><body>${body}<footer>${t('report.footer', { date: stamp })}</footer></body></html>`;
 }
 

@@ -1,5 +1,6 @@
 import { requireOptionalNativeModule } from 'expo';
 import type { Tab } from '../browser/Tab';
+import { t } from '../i18n';
 import { siteOf } from '../device/download';
 import type { DownloadBackend, DownloadItem, OpenResult, PageWriter, StartRequest } from './downloads';
 
@@ -76,7 +77,9 @@ export class AndroidDownloads implements DownloadBackend {
   }
 
   private get native(): NativeDownloads {
-    if (!nativeDownloads) throw new Error('Downloads need a newer build of Qutai on Android.');
+    if (!nativeDownloads) throw Object.assign(new Error('Downloads need a newer build of Qutai on Android.'), {
+        userMessage: t('downloads.needsBuild'),
+      });
     return nativeDownloads;
   }
 

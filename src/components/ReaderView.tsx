@@ -27,6 +27,7 @@ import {
   useReaderReading,
 } from '../device/speech';
 import { t } from '../i18n';
+import { actionErrorText } from '../agent/stepLine';
 import { formatDate } from '../i18n/format';
 import { Icon, IconName } from '../ui/Icon';
 import { useReduceMotion } from '../utils/useReduceMotion';
@@ -95,7 +96,7 @@ export function ReaderView({ tab, prefs, dark, onOpenSettings, onSelection, onNo
   );
 
   const run = (action: () => Promise<unknown>) => {
-    action().catch((e) => onNotice(e instanceof Error ? e.message : String(e)));
+    action().catch((e) => onNotice(actionErrorText(e)));
   };
   const togglePlay = () => {
     if (playing) return run(pauseReader);

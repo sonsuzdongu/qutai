@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { voiceLanguages } from '../device/voiceInput';
 import { languageName } from '../device/voiceLanguage';
-import { t } from '../i18n';
+import { getLanguage, t } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { Radio } from '../ui/Radio';
 import { makeStyles, usePalette } from '../ui/theme';
@@ -40,7 +40,7 @@ export function VoiceLanguageSheet({ visible, value, autoLabel, autoHint, onPick
         list
           .filter((tag) => !MAIN.includes(tag.toLowerCase()))
           .map((tag) => ({ tag, name: languageName(tag) }))
-          .sort((a, b) => a.name.localeCompare(b.name))
+          .sort((a, b) => a.name.localeCompare(b.name, getLanguage()))
           .map((x) => x.tag),
       ),
     );

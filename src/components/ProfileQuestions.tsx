@@ -21,6 +21,7 @@ import { openSettingsOrExplain, PermissionDeniedError } from '../device/settings
 import { getLanguage, MessageKey, t } from '../i18n';
 import { getDb } from '../storage/db';
 import { addMemory, deleteMemory, listMemories, updateMemory } from '../storage/memory';
+import { memoryErrorText } from './memoryError';
 import { GradientButton } from '../ui/BrandGradient';
 import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
@@ -179,7 +180,7 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
       if (id && (await listMemories(db)).some((m) => m.id === id)) await updateMemory(db, id, text, category);
       else saved.current[slot] = (await addMemory(db, text, category)).id;
     } catch (e) {
-      dialog.alert(t('memory.saveFailed'), e instanceof Error ? e.message : String(e));
+      dialog.alert(t('memory.saveFailed'), memoryErrorText(e));
     }
   };
 
@@ -318,7 +319,7 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
     try {
       await updateMemory(await getDb(), id, text);
     } catch (e) {
-      dialog.alert(t('memory.saveFailed'), e instanceof Error ? e.message : String(e));
+      dialog.alert(t('memory.saveFailed'), memoryErrorText(e));
     }
     if (!text.trim()) return removeSummary(id);
     await loadSummary();

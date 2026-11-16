@@ -20,6 +20,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import type { PersonalKind } from './src/agent/personalData';
 import { afterAnswer, AlwaysAllowKind, isAlwaysAllowed } from './src/agent/alwaysAllow';
 import { runAgent } from './src/agent/runAgent';
+import { actionErrorText } from './src/agent/stepLine';
 import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
 import { personalKindsLabel } from './src/components/memoryCategories';
 import { Conversation, callItem, fileItem, newItem, shareItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
@@ -1614,7 +1615,7 @@ function BrowserApp({
       if (e instanceof CaptureCancelled) return toast.show(e.message);
       // The system won't ask for the permission again, so the way out is its settings page.
       if (e instanceof PermissionDeniedError && !e.canAskAgain) return offerSettings(e.message);
-      toast.show(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
+      toast.show(actionErrorText(e));
     }
   };
 

@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { getLanguage } from '../i18n';
 import { deleteKey, getDb, getJson, setJson } from '../storage/db';
 
 type CalendarModule = typeof import('expo-calendar');
@@ -163,7 +164,7 @@ export async function listReminderLists(): Promise<CalendarOption[]> {
 function sortOptions(list: CalendarOption[]): CalendarOption[] {
   return list.sort(
     (a, b) =>
-      Number(b.primary) - Number(a.primary) || a.account.localeCompare(b.account) || a.title.localeCompare(b.title),
+      Number(b.primary) - Number(a.primary) || a.account.localeCompare(b.account, getLanguage()) || a.title.localeCompare(b.title, getLanguage()),
   );
 }
 

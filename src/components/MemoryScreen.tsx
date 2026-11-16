@@ -25,6 +25,7 @@ import {
 import { MAX_ORGANISE, proposeCategories } from '../agent/organiseMemory';
 import type { ProviderId } from '../ai/types';
 import { t } from '../i18n';
+import { memoryErrorText } from './memoryError';
 import { plainError } from '../ai/plainError';
 import { Icon } from '../ui/Icon';
 import { makeStyles, readableColumn, usePalette } from '../ui/theme';
@@ -36,7 +37,6 @@ import {
   clearMemories,
   deleteMemory,
   deleteMemoryCategory,
-  HiddenLabelError,
   listMemories,
   moveMemories,
   updateMemory,
@@ -85,7 +85,7 @@ export function MemoryScreen({ visible, onClose, ai, appLock, questions }: Props
 const showError = (e: unknown) =>
   dialog.alert(
     t('memory.saveFailed'),
-    e instanceof HiddenLabelError ? t('memory.hiddenLabelNeeded') : e instanceof Error ? e.message : String(e),
+    memoryErrorText(e),
   );
 
 /** What the list, search and proposals show for a memory: a hidden one's label until the user reveals it. */

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 import { setLanguage } from '../../src/i18n/index.ts';
 import { formatPercent, formatSize } from '../../src/i18n/format.ts';
-import { declinedNotice, errorNotice, pageErrorNotice, settingNotice, stepLine } from '../../src/agent/stepLine.ts';
+import { actionErrorText, declinedNotice, errorNotice, pageErrorNotice, settingNotice, stepLine } from '../../src/agent/stepLine.ts';
 
 afterEach(() => setLanguage('en'));
 
@@ -61,4 +61,12 @@ test('percentages and sizes follow the language', () => {
   setLanguage('tr');
   assert.equal(formatPercent(120), '%120');
   assert.equal(formatSize(3.25 * 1024 * 1024), '3,3 MB');
+});
+
+test("a toast for the user's own action prefers the error's own sentence for the user", () => {
+  setLanguage('tr');
+  const e = Object.assign(new Error('Downloads need a newer build of Qutai on Android.'), { userMessage: 'Yeni sürüm gerekiyor' });
+  assert.equal(actionErrorText(e), 'Yeni sürüm gerekiyor');
+  assert.equal(actionErrorText(new Error('The page did not respond (it may still be loading).')), 'Sayfa yanıt vermedi');
+  assert.equal(actionErrorText(new Error('disk full')), 'Hata: disk full');
 });

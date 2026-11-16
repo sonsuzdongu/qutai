@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { formatSize } from '../i18n/format';
+import { formatPercent, formatSize } from '../i18n/format';
 import type { DownloadItem, DownloadStore } from '../storage/downloads';
 import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
@@ -19,7 +19,7 @@ import { useScreenReader } from './useHoldGesture';
 
 /** "42%" when the size is known, else the bytes so far ("3.1 MB"), or "" before anything arrived. */
 export function downloadProgressLabel(a: DownloadItem): string {
-  if (a.total) return `${Math.min(100, Math.floor((a.received / a.total) * 100))}%`;
+  if (a.total) return formatPercent(Math.min(100, Math.floor((a.received / a.total) * 100)));
   return a.received > 0 ? formatSize(a.received) : '';
 }
 

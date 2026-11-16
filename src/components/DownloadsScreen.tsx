@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Modal, Platform, Pressable, SectionList, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { dayLabel, formatSize } from '../i18n/format';
+import { actionErrorText } from '../agent/stepLine';
+import { dayLabel, formatPercent, formatSize } from '../i18n/format';
 import type { DownloadItem, DownloadStore } from '../storage/downloads';
 import { isActive } from '../storage/downloads';
 import { Icon, IconName } from '../ui/Icon';
@@ -51,7 +52,7 @@ export function downloadStatus(item: DownloadItem): string {
       : '';
   switch (item.state) {
     case 'downloading': {
-      const parts = [item.total ? `${Math.min(100, Math.floor((item.received / item.total) * 100))}%` : '', sizes];
+      const parts = [item.total ? formatPercent(Math.min(100, Math.floor((item.received / item.total) * 100))) : '', sizes];
       if (item.speed) {
         parts.push(t('downloads.perSecond', { size: formatSize(Math.round(item.speed)) }));
         if (item.total && item.total > item.received) {
@@ -119,7 +120,7 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
   const run = (action: () => Promise<string | void>) => {
     action().then(
       (message) => message && toast.show(message),
-      (e: unknown) => toast.show(t('common.error', { message: e instanceof Error ? e.message : String(e) })),
+      (e: unknown) => toast.show(actionErrorText(e)),
     );
   };
 

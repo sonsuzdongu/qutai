@@ -34,6 +34,19 @@ const toMemory = (row: Row): Memory => ({
 /** Thrown when a hidden memory needs a short label first (the Memory screen asks for one). */
 export class HiddenLabelError extends Error {}
 
+/**
+ * Why a memory wasn't saved. The message is English, for the model; the screens show the user a sentence in the
+ * app's language chosen by `code` (components/memoryError.ts).
+ */
+export class MemorySaveError extends Error {
+  constructor(
+    readonly code: 'empty' | 'sensitive' | 'idOutsideCategory' | 'full',
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
 /** Throws unless a hidden memory can be described without its value: a detected kind, or a label that is fine. */
 function checkHidden(text: string, label: string | null): string | null {
   const clean = label?.replace(/\s+/g, ' ').trim() || null;
@@ -56,9 +69,12 @@ export async function listMemories(db: Db): Promise<Memory[]> {
 /** Throws (with a message the model and the user can read) when the text must not be kept in this category. */
 function checkText(text: string, category: MemoryCategory): string {
   const clean = cleanMemoryText(text);
-  if (!clean) throw new Error('Empty memory');
+  if (!clean) throw new MemorySaveError('empty', 'Empty memory');
   const reason = sensitiveReason(clean, category);
-  if (reason) throw new Error(`Not saved: looks like a ${reason}`);
+  if (reason) {
+    const code = reason.startsWith('national ID') ? 'idOutsideCategory' : 'sensitive';
+    throw new MemorySaveError(code, `Not saved: looks like a ${reason}`);
+  }
   return clean;
 }
 
@@ -92,7 +108,7 @@ export async function addMemory(
     return toMemory({ ...existing, category, updated_at: now, sensitive: keep ? 1 : 0, label: keptLabel });
   }
   const count = await db.getFirstAsync<{ n: number }>('SELECT COUNT(*) AS n FROM memories', []);
-  if ((count?.n ?? 0) >= MAX_MEMORIES) throw new Error(`Memory is full (${MAX_MEMORIES}); forget something first`);
+  if ((count?.n ?? 0) >= MAX_MEMORIES) throw new MemorySaveError('full', `Memory is full (${MAX_MEMORIES}); forget something first`);
   const row: Row = {
     id: newId(),
     text: clean,
