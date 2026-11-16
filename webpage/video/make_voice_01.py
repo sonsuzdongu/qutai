@@ -4,7 +4,7 @@
 import json, os, subprocess, sys
 KEY=os.environ['ELEVENLABS_API_KEY']; VOICE='5RqXmIU9ikjifeWoXHMG'
 LINES={
- 'tr':[("1","0:00–0:09",9,"Qutai’ye bir kez söyleyin. Hatırlar."),
+ 'tr':[("1","0:00–0:09",9,"Bir kez söyleyin, yeter. Qutai hatırlar."),
        ("2","0:09–0:14",5,"Telefonunuzda saklanır; görebilir, silebilirsiniz."),
        ("3","0:15–0:23",8,"Ertesi akşam yemek isteyin. Söylemenize gerek yok: glutensiz arar."),
        ("4","0:26–0:33",7,"Bilgileriniz sorulmadan girilmez. Ödemeyi siz yaparsınız."),
@@ -14,16 +14,19 @@ LINES={
        ("3","0:15–0:23",8,"The next evening, ask for dinner. No need to say it again: it looks for gluten-free."),
        ("4","0:26–0:33",7,"Your details go in only when you say so. You make the payment."),
        ("5","0:33–0:37",4,"Qutai. It knows you, on your phone.")]}
+# The brand is written "Qutai" but said "Kutay" (the owner's choice); only the text sent for speech changes.
+def spoken(text): return text.replace("Qutai", "Kutay")
+
 only=sys.argv[1:]  # optional "tr-2" style filters
 os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), "audio", "01"))
 for lang, lines in LINES.items():
     for i,(n,win,maxs,text) in enumerate(lines):
         name=f"{lang}-{n}"
         if only and name not in only: continue
-        body={"text":text,"model_id":"eleven_multilingual_v2","language_code":lang,
+        body={"text":spoken(text),"model_id":"eleven_multilingual_v2","language_code":lang,
               "voice_settings":{"stability":0.55,"similarity_boost":0.8,"style":0.15,"use_speaker_boost":True}}
-        if i>0: body["previous_text"]=lines[i-1][3]
-        if i<len(lines)-1: body["next_text"]=lines[i+1][3]
+        if i>0: body["previous_text"]=spoken(lines[i-1][3])
+        if i<len(lines)-1: body["next_text"]=spoken(lines[i+1][3])
         code=subprocess.check_output(["curl","-s","-o",f"{name}.mp3","-w","%{http_code}","-X","POST",
             f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE}?output_format=mp3_44100_128",
             "-H",f"xi-api-key: {KEY}","-H","Content-Type: application/json","-d",json.dumps(body)]).decode()

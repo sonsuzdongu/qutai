@@ -59,7 +59,7 @@ Sakin, sıcak, kısa cümleler; altyazıyla aynı sözler, sahnelerin üstüne:
 
 | Sahne | Türkçe | English |
 |---|---|---|
-| 1–3 | Qutai'ye bir kez söyleyin. Hatırlar. | Tell Qutai once. It remembers. |
+| 1–3 | Bir kez söyleyin, yeter. Qutai hatırlar. | Tell Qutai once. It remembers. |
 | 4 | Telefonunuzda saklanır; görebilir, silebilirsiniz. | It stays on your phone, where you can see it and delete it. |
 | 5–6 | Ertesi akşam yemek isteyin. Söylemenize gerek yok: glutensiz arar. | The next evening, ask for dinner. No need to say it again: it looks for gluten-free. |
 | 8–9 | Bilgileriniz sorulmadan girilmez. Ödemeyi siz yaparsınız. | Your details go in only when you say so. You make the payment. |
@@ -78,8 +78,9 @@ Bütün bölümlerde aynı müzik, değişen tek şey motifin varyasyonu.
   `localhost` görünmesin diye, kayıttan önce siteyi sitenin alan adı altında (örneğin `lokanta.<alan-adı>`)
   yayımlamak daha temiz olur.
 - **Seslendirme:** Türkçe ve İngilizce hazır (`audio/01/tr-1…5.mp3`, `en-1…5.mp3`, ses: "Ayça D."), her satır
-  sahnesine sığıyor. ElevenLabs'in yazıya çevirisiyle kontrol edildi: bütün kelimeler doğru, yalnızca "Qutai"nin
-  okunuşu belirsiz ("Kutay" gibi duyuluyor; Türkçe 5. satırda tek başınayken bozuk duyulabilir).
+  sahnesine sığıyor. "Qutai" seslendirmede "Kutay" diye okunuyor (sahibinin kararı; yazıda ve altyazıda "Qutai"
+  kalıyor, okunuşu `make_voice_01.py` içindeki `spoken()` belirliyor). ElevenLabs'in yazıya çevirisiyle kontrol
+  edildi: bütün satırlar doğru duyuluyor.
 - **Müzik:** `audio/01/music.mp3` (37 sn, sözsüz). Yeniden üretmek için `python3 make_music_01.py`.
 - **Ses önizlemesi:** `audio/01/preview-tr.mp3` ve `preview-en.mp3`. Müziğin üstüne seslendirme satırları
   storyboard'daki zamanlarda (0:02, 0:09, 0:15, 0:26, 0:33) yerleştirildi; konuşurken müzik kısılıyor.
