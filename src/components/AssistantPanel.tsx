@@ -17,7 +17,6 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsSpeaking } from '../device/speech';
-import { useWaitingForUser } from '../device/backgroundTask';
 import {
   abortVoiceInput,
   startVoiceInput,
@@ -301,12 +300,11 @@ export function AssistantPanel({
   const [listWidth, setListWidth] = useState<number | null>(null);
   const costConversation = () => items.flatMap((i) => (i.cost ? [i.cost] : []));
   const inputRef = useRef<TextInputInstance>(null);
-  // While the task works on its own the input is closed (not editable, dimmed, "Qutai is working…") with only Stop
-  // left; it opens again the moment the task needs the user (a confirmation) and when the task ends (finished, a
-  // question with choices or free text, stopped, failed, a message handed back to the input). Text already in the
-  // field stays there, dimmed, to send later.
-  const waiting = useWaitingForUser();
-  const busy = running && !waiting;
+  // While a task runs the input is closed (not editable, dimmed, "Qutai is working…") with only Stop left, also while
+  // a confirmation waits: the dialog is answered with its own buttons, and a message can't be sent before the task
+  // ends anyway. It opens again when the task ends (finished, a question with choices or free text, stopped, failed,
+  // a message handed back to the input). Text already in the field stays there, dimmed, to send later.
+  const busy = running;
   const voiceStateAny = useVoiceState();
   const voiceInfo = useVoiceInfo();
   // Holding the Qutai button listens too; that shows in its own bubble, not here.
@@ -651,9 +649,8 @@ export function AssistantPanel({
               )}
 
               {/* One row: the research switch first, then the one-tap tasks (hidden while typing or researching). */}
-              {/* While the task works the row stays (disabled) so the input doesn't move; while it waits for an
-                  answer it is hidden as before. */}
-              {(busy || !running) && !busyElsewhere && (
+              {/* While a task runs the row stays (disabled) so the input doesn't move. */}
+              {!busyElsewhere && (
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}

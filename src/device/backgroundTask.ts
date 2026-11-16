@@ -100,7 +100,7 @@ const asking = (delta: number) => {
 
 /**
  * Runs `ask` (a dialog waiting for the user's answer); leaving the app meanwhile pauses the background run. While it
- * waits, the panel's input is the user's again and the page's working glow is off (useWaitingForUser).
+ * waits, the page's working glow is off (useWaitingForUser); the panel's input stays closed until the task ends.
  */
 export async function whileWaitingForUser<T>(ask: () => Promise<T>): Promise<T> {
   waitingForUser++;
