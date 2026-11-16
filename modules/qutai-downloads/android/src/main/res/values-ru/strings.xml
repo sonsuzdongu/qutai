@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Notification texts of Qutai's downloads. The language follows the app's own setting (QutaiDownloads.setLanguage). -->
+  <string name="qutai_dl_channel">Текущие загрузки</string>
+  <string name="qutai_dl_done_channel">Завершённые загрузки</string>
+  <plurals name="qutai_dl_downloading_many">
+    <item quantity="one">Загружается %1$d файл</item>
+    <item quantity="few">Загружается %1$d файла</item>
+    <item quantity="many">Загружается %1$d файлов</item>
+    <item quantity="other">Загружается %1$d файла</item>
+  </plurals>
+  <string name="qutai_dl_starting">Запуск…</string>
+  <string name="qutai_dl_of">%1$s из %2$s</string>
+  <string name="qutai_dl_speed">%1$s/с</string>
+  <string name="qutai_dl_left_min">осталось %1$d мин</string>
+  <string name="qutai_dl_left_sec">осталось %1$d с</string>
+  <string name="qutai_dl_paused">Приостановлено</string>
+  <plurals name="qutai_dl_paused_many">
+    <item quantity="one">%1$d загрузка приостановлена</item>
+    <item quantity="few">%1$d загрузки приостановлены</item>
+    <item quantity="many">%1$d загрузок приостановлено</item>
+    <item quantity="other">%1$d загрузки приостановлено</item>
+  </plurals>
+  <string name="qutai_dl_waiting">Ожидание сети</string>
+  <plurals name="qutai_dl_queued">
+    <item quantity="one">%1$d в очереди</item>
+    <item quantity="few">%1$d в очереди</item>
+    <item quantity="many">%1$d в очереди</item>
+    <item quantity="other">%1$d в очереди</item>
+  </plurals>
+  <string name="qutai_dl_pause">Пауза</string>
+  <string name="qutai_dl_resume">Продолжить</string>
+  <string name="qutai_dl_cancel">Отмена</string>
+  <string name="qutai_dl_done">Загрузка завершена</string>
+  <plurals name="qutai_dl_done_many">
+    <item quantity="one">%1$d загрузка завершена</item>
+    <item quantity="few">%1$d загрузки завершены</item>
+    <item quantity="many">%1$d загрузок завершено</item>
+    <item quantity="other">%1$d загрузки завершено</item>
+  </plurals>
+  <string name="qutai_dl_failed">Ошибка загрузки</string>
+  <string name="qutai_dl_tap_open">Нажмите, чтобы открыть</string>
+</resources>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Native strings for the widget and the launcher shortcuts (Russian). -->
+<resources>
+  <string name="qutai_widget_name">Поиск Qutai</string>
+  <string name="qutai_widget_description">Поиск, вопрос Qutai, новая вкладка или сканирование QR-кода</string>
+  <string name="qutai_widget_hint">Введите запрос или адрес</string>
+  <string name="qutai_widget_ask">Спросить Qutai</string>
+  <string name="qutai_widget_new_tab">Новая вкладка</string>
+  <string name="qutai_widget_private_tab">Инкогнито</string>
+  <string name="qutai_widget_scan">Сканировать QR</string>
+  <string name="qutai_shortcut_new_tab">Новая вкладка</string>
+  <string name="qutai_shortcut_private_tab_short">Инкогнито</string>
+  <string name="qutai_shortcut_private_tab">Новая вкладка инкогнито</string>
+  <string name="qutai_shortcut_ask">Спросить Qutai</string>
+  <string name="qutai_shortcut_scan_short">QR-код</string>
+  <string name="qutai_shortcut_scan">Сканировать QR-код</string>
+</resources>
