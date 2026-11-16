@@ -182,6 +182,14 @@ Uygulama kademe gönderdikten sonra (yeni APK gerekir):
 - [ ] Duraklayan aramada görevi durdurunca normal "durduruldu" notu çıkıyor, kredi bir kez düşüyor
 - [ ] Türkçe ve İngilizce, açık ve koyu temada kademe listesi ve ayrıntılar düzgün görünüyor; ekran okuyucu her seçeneği adı, açıklaması ve maliyetiyle okuyor
 
+## 11. Sayfa metninde emoji: "The request body is not valid JSON"
+
+- [ ] Qutai Kredileri ile (Anthropic kademesi) "Trendyol'da terlik bul…" görevini yeniden verin: arama sayfası okunduktan sonra görev "API hatası 400: The request body is not valid JSON" olmadan sürüyor
+- [ ] Aynı görev kendi Anthropic, OpenAI ve Gemini anahtarınızla: hata yok
+- [ ] Bu sürümden önce bu hatayı vermiş eski konuşmada "Tekrar dene"ye dokunun: istek gidiyor ve cevap geliyor, yeni sohbet açmanız gerekmiyor
+- [ ] Ürün adlarında emoji olan başka bir sayfada (bir pazar yeri, emoji dolu bir sosyal medya sayfası) "Bu sayfada ne var?" diye sorun: cevap geliyor, emojiler yarım "�" olarak değil doğru görünüyor (yalnızca kesilen yerde en fazla bir eksik karakter olabilir)
+- [ ] Emojili uzun bir metni seçip "Qutai'ye sor" deyin: soru gidiyor, hata yok
+
 ## Bulunan sorunlar
 
 Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.

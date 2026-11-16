@@ -16,6 +16,7 @@ import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES } from '../browser/reader';
 import { isSearchEngine } from '../browser/search';
 import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } from '../storage/savedTasks';
+import { cutText, wellFormed } from '../utils/wellFormed';
 
 /**
  * What goes inside a backup: versioned JSON by kind of data, independent of the SQLite schema, so a
@@ -189,7 +190,8 @@ const LIMITS = {
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v);
 const list = (v: unknown, max: number): unknown[] => (Array.isArray(v) ? v.slice(0, max) : []);
-const str = (v: unknown, max: number): string | undefined => (typeof v === 'string' ? v.slice(0, max) : undefined);
+// Well-formed: a backup from an older version may hold half an emoji, which a provider refuses once it is sent.
+const str = (v: unknown, max: number): string | undefined => (typeof v === 'string' ? wellFormed(cutText(v, max)) : undefined);
 const time = (v: unknown): number =>
   typeof v === 'number' && Number.isFinite(v) && v >= 0 && v < 8.64e15 ? Math.floor(v) : 0;
 const bool = (v: unknown): boolean | undefined => (typeof v === 'boolean' ? v : undefined);
@@ -495,7 +497,7 @@ function parseChatItem(v: unknown): Record<string, unknown> | undefined {
   if (!itemId || !kind || text === undefined) return undefined;
   const item: Record<string, unknown> = { id: itemId, kind, text };
   if (Array.isArray(v.options)) item.options = v.options.filter((o) => typeof o === 'string').slice(0, 10);
-  if (typeof v.chosen === 'string') item.chosen = v.chosen.slice(0, 1000);
+  if (typeof v.chosen === 'string') item.chosen = cutText(v.chosen, 1000);
   if (Array.isArray(v.sources)) {
     item.sources = v.sources.slice(0, 50).flatMap((s) => {
       const url = isObj(s) ? webUrl(s.url) : undefined;
@@ -516,8 +518,8 @@ function parseChatItem(v: unknown): Record<string, unknown> | undefined {
   ) {
     item.sms = {
       number: v.sms.number,
-      body: v.sms.body.slice(0, 1000),
-      ...(typeof v.sms.name === 'string' ? { name: v.sms.name.slice(0, 200) } : {}),
+      body: cutText(v.sms.body, 1000),
+      ...(typeof v.sms.name === 'string' ? { name: cutText(v.sms.name, 200) } : {}),
     };
   }
   if (
@@ -526,9 +528,9 @@ function parseChatItem(v: unknown): Record<string, unknown> | undefined {
     (v.whatsapp.number === undefined || (typeof v.whatsapp.number === 'string' && /^\+\d{8,15}$/.test(v.whatsapp.number)))
   ) {
     item.whatsapp = {
-      body: v.whatsapp.body.slice(0, 2000),
+      body: cutText(v.whatsapp.body, 2000),
       ...(typeof v.whatsapp.number === 'string' ? { number: v.whatsapp.number } : {}),
-      ...(typeof v.whatsapp.name === 'string' ? { name: v.whatsapp.name.slice(0, 200) } : {}),
+      ...(typeof v.whatsapp.name === 'string' ? { name: cutText(v.whatsapp.name, 200) } : {}),
     };
   }
   // A composed file's card: only its name and size (the content is never stored, so it shows as expired).
@@ -563,7 +565,7 @@ function parseTurn(v: unknown): Record<string, unknown> | undefined {
     const text = str(v.text, LIMITS.chatText) ?? '';
     const toolCalls = list(v.toolCalls, 50).flatMap((c) =>
       isObj(c) && callId(c.id) && typeof c.name === 'string' && isObj(c.input)
-        ? [{ id: c.id, name: c.name.slice(0, 100), input: c.input }]
+        ? [{ id: c.id, name: cutText(c.name, 100), input: c.input }]
         : [],
     );
     return { role: 'assistant', text, toolCalls, raw: null, rawProvider: 'none', rawModel: '' };
@@ -574,8 +576,8 @@ function parseTurn(v: unknown): Record<string, unknown> | undefined {
         ? [
             {
               callId: r.callId,
-              name: r.name.slice(0, 100),
-              content: r.content.slice(0, LIMITS.chatText),
+              name: cutText(r.name, 100),
+              content: cutText(r.content, LIMITS.chatText),
               isError: r.isError === true,
             },
           ]

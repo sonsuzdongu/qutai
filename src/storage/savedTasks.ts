@@ -1,4 +1,5 @@
 import { Db } from './db';
+import { cutText } from '../utils/wellFormed';
 
 /** Where a saved task runs: the page on screen, a page opened first in a new tab, or no particular page. */
 export type TaskTarget = 'page' | 'url' | 'none';
@@ -125,14 +126,14 @@ export function cleanTaskUrl(raw: string): string | null {
 
 /** Trims and checks a task before it is stored; throws with a message for the user. */
 export function cleanTask(input: TaskInput): TaskInput {
-  const name = input.name.replace(/\s+/g, ' ').trim().slice(0, MAX_TASK_NAME);
-  const prompt = input.prompt.trim().slice(0, MAX_TASK_PROMPT);
+  const name = cutText(input.name.replace(/\s+/g, ' ').trim(), MAX_TASK_NAME);
+  const prompt = cutText(input.prompt.trim(), MAX_TASK_PROMPT);
   if (!prompt) throw new Error('empty-prompt');
   const target = TASK_TARGETS.includes(input.target) ? input.target : 'page';
   const url = target === 'url' ? cleanTaskUrl(input.url ?? '') : null;
   if (target === 'url' && !url) throw new Error('bad-url');
   return {
-    name: name || prompt.replace(/\s+/g, ' ').slice(0, 40),
+    name: name || cutText(prompt.replace(/\s+/g, ' '), 40),
     prompt,
     target,
     url,

@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import { t } from '../i18n';
 import { nextRun, SavedTask } from '../storage/savedTasks';
+import { cutText } from '../utils/wellFormed';
 
 /**
  * Reminders for saved tasks. There is no server and nothing runs while Qutai is closed, so a scheduled task is a
@@ -90,7 +91,7 @@ async function sync(tasks: SavedTask[]) {
     used += count;
     const content = {
       title: t('tasks.notifyTitle', { name: task.name }),
-      body: task.private ? t('tasks.notifyBodyPrivate') : task.prompt.replace(/\s+/g, ' ').slice(0, MAX_BODY),
+      body: task.private ? t('tasks.notifyBodyPrivate') : cutText(task.prompt.replace(/\s+/g, ' '), MAX_BODY),
       data: { qutaiTask: task.id },
       sound: 'default',
     };

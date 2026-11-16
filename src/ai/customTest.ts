@@ -4,6 +4,7 @@ import { customHeaders } from './custom';
 import type { CustomHeader } from './customHeaders';
 import { classifyFailure, type FailureKind, isHtml, serverMessage } from './serverError';
 import { createSseDecoder } from './sse';
+import { wellFormedJson } from '../utils/wellFormed';
 
 const TIMEOUT_MS = 30000;
 /** A 1×1 PNG, for asking whether the server takes images. */
@@ -40,7 +41,7 @@ async function send(
     const res = await fetch(url, {
       method: init.method,
       headers: { ...(init.body ? { 'content-type': 'application/json' } : {}), ...init.headers },
-      body: init.body ? JSON.stringify(init.body) : undefined,
+      body: init.body ? wellFormedJson(init.body) : undefined,
       signal: timeout.signal,
     });
     if (readStream && res.ok && res.body) {

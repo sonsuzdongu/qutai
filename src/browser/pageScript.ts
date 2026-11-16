@@ -24,7 +24,27 @@ export const PAGE_SCRIPT = String.raw`
   var refToEl = new Map();
   var elToRef = new WeakMap();
 
-  function clean(s) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); }
+  // Text for the model must be well-formed UTF-16 (src/utils/wellFormed.ts, which this page can't import): a lone
+  // half of a surrogate pair becomes U+FFFD, and a cut never splits a pair (an emoji in a product title at the cut
+  // made the provider refuse the whole conversation). Plain regexes without the u flag: old WebViews too.
+  var PAIR_OR_LONE = /[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g;
+  function wf(s) {
+    s = String(s == null ? '' : s);
+    return /[\uD800-\uDFFF]/.test(s) ? s.replace(PAIR_OR_LONE, function (m) { return m.length === 2 ? m : '\uFFFD'; }) : s;
+  }
+  // The index moved back off the middle of a surrogate pair.
+  function pairBoundary(s, at) {
+    var hi = s.charCodeAt(at - 1), lo = s.charCodeAt(at);
+    return at > 0 && at < s.length && hi >= 0xD800 && hi <= 0xDBFF && lo >= 0xDC00 && lo <= 0xDFFF ? at - 1 : at;
+  }
+  function cut(s, n) {
+    s = String(s == null ? '' : s);
+    return s.length <= n ? s : s.slice(0, pairBoundary(s, n));
+  }
+  // Control characters (NUL and the like) carry nothing the model can read: dropped.
+  function clean(s) {
+    return wf(String(s == null ? '' : s).replace(/[\u0000-\u0008\u000E-\u001F\u007F]/g, '').replace(/\s+/g, ' ').trim());
+  }
 
   function getRef(el) {
     var r = elToRef.get(el);
@@ -79,7 +99,7 @@ export const PAGE_SCRIPT = String.raw`
       var img = el.querySelector('img[alt],[aria-label]');
       if (img) t = img.getAttribute('alt') || img.getAttribute('aria-label') || '';
     }
-    return clean(t).slice(0, 80);
+    return cut(clean(t), 80);
   }
 
   // ---------- Form state (required, constraints, validation errors) ----------
@@ -162,7 +182,7 @@ export const PAGE_SCRIPT = String.raw`
     var reason = textOfIds(el.getAttribute('aria-errormessage'), false) ||
       textOfIds(el.getAttribute('aria-describedby'), true) || near ||
       (el.validity && !el.validity.valid ? el.validationMessage : '');
-    return clean(reason).slice(0, 120);
+    return cut(clean(reason), 120);
   }
 
   var SIZE_HINT = /(\d+([.,]\d+)?\s*(kb|mb|gb|bytes?|px|pixels?|piksel)\b|\d+\s*[x×]\s*\d+)/i;
@@ -172,12 +192,12 @@ export const PAGE_SCRIPT = String.raw`
     var label = labelOf(el);
     if (SIZE_HINT.test(label)) return '';
     var texts = [textOfIds(el.getAttribute('aria-describedby'), false)];
-    if (el.parentElement) texts.push(clean(el.parentElement.innerText).slice(0, 300));
+    if (el.parentElement) texts.push(cut(clean(el.parentElement.innerText), 300));
     for (var i = 0; i < texts.length; i++) {
       var m = SIZE_HINT.exec(texts[i] || '');
       if (!m) continue;
       var start = Math.max(0, texts[i].lastIndexOf('.', m.index) + 1);
-      var hint = clean(texts[i].slice(start, m.index + m[0].length + 30).split(/[.;]\s/)[0]).slice(0, 80);
+      var hint = cut(clean(texts[i].slice(start, m.index + m[0].length + 30).split(/[.;]\s/)[0]), 80);
       if (hint && label.indexOf(hint) < 0) return hint;
     }
     return '';
@@ -198,24 +218,24 @@ export const PAGE_SCRIPT = String.raw`
       }
       var pattern = el.getAttribute('pattern');
       if (pattern) {
-        notes.push('pattern=/' + pattern.slice(0, 60) + '/');
-        if (el.title) notes.push('format="' + clean(el.title).slice(0, 60).replace(/"/g, "'") + '"');
+        notes.push('pattern=/' + cut(pattern, 60) + '/');
+        if (el.title) notes.push('format="' + cut(clean(el.title), 60).replace(/"/g, "'") + '"');
       }
       ['min', 'max', 'step'].forEach(function (a) {
         var v = el.getAttribute(a);
-        if (v && tag === 'input') notes.push(a + '=' + v.slice(0, 30));
+        if (v && tag === 'input') notes.push(a + '=' + cut(v, 30));
       });
       if (type === 'file') {
-        if (el.accept) notes.push('accept="' + el.accept.slice(0, 80) + '"');
+        if (el.accept) notes.push('accept="' + cut(el.accept, 80) + '"');
         if (el.multiple) notes.push('multiple');
         var hint = fileHint(el);
         if (hint) notes.push('hint="' + hint.replace(/"/g, "'") + '"');
       }
       var mode = el.getAttribute('inputmode');
-      if (mode) notes.push('inputmode=' + mode.slice(0, 20));
+      if (mode) notes.push('inputmode=' + cut(mode, 20));
     }
     var ac = clean(el.getAttribute('autocomplete')).toLowerCase();
-    if (isField && ac && ac !== 'on' && ac !== 'off') notes.push('autocomplete=' + ac.slice(0, 40));
+    if (isField && ac && ac !== 'on' && ac !== 'off') notes.push('autocomplete=' + cut(ac, 40));
     var err = fieldError(el);
     if (err !== null) notes.push(err ? '(invalid: "' + err.replace(/"/g, "'") + '")' : '(invalid)');
     return notes;
@@ -304,7 +324,7 @@ export const PAGE_SCRIPT = String.raw`
       var type = (el.type || '').toLowerCase();
       if (type === 'checkbox' || type === 'radio') parts.push(checkState(el, el.checked, el.defaultChecked));
       else if (type === 'password') { if (el.value) parts.push('(filled)'); }
-      else if (el.value) parts.push('value="' + clean(el.value).slice(0, 60) + '"');
+      else if (el.value) parts.push('value="' + cut(clean(el.value), 60) + '"');
       parts = parts.concat(formNotes(el, tag));
     } else if (tag === 'select') {
       var opts = [];
@@ -314,7 +334,7 @@ export const PAGE_SCRIPT = String.raw`
       parts = parts.concat(formNotes(el, tag));
     } else if (tag === 'a') {
       var href = el.getAttribute('href') || '';
-      if (href && href.indexOf('javascript:') !== 0) parts.push('href=' + href.slice(0, 100));
+      if (href && href.indexOf('javascript:') !== 0) parts.push('href=' + cut(href, 100));
     } else {
       if (CHECK_ROLES.test(el.getAttribute('role') || '')) {
         var ariaChecked = el.getAttribute('aria-checked');
@@ -347,7 +367,7 @@ export const PAGE_SCRIPT = String.raw`
       if (total + line.length > MAX_CHARS) {
         truncated = true;
         // A single oversized line is cut instead of stalling pagination forever.
-        if (lines.length === 0) lines.push(line.slice(0, MAX_CHARS));
+        if (lines.length === 0) lines.push(cut(line, MAX_CHARS));
         else lineIndex--;
         return;
       }
@@ -415,7 +435,7 @@ export const PAGE_SCRIPT = String.raw`
     var se = document.scrollingElement || document.documentElement;
     return {
       url: location.href,
-      title: document.title,
+      title: wf(document.title),
       scroll: {
         y: Math.round(se.scrollTop),
         viewportHeight: window.innerHeight,
@@ -451,16 +471,17 @@ export const PAGE_SCRIPT = String.raw`
       }
       source = doctype + document.documentElement.outerHTML;
     }
-    var end = Math.min(source.length, offset + MAX_CHARS);
+    offset = pairBoundary(source, Math.min(offset, source.length));
+    var end = pairBoundary(source, Math.min(source.length, offset + MAX_CHARS));
     return {
       url: location.href,
-      title: document.title,
+      title: wf(document.title),
       total: source.length,
       matches: matches,
       offset: offset,
       truncated: end < source.length,
       nextOffset: end < source.length ? end : null,
-      content: source.slice(offset, end)
+      content: wf(source.slice(offset, end))
     };
   }
 
@@ -821,7 +842,7 @@ export const PAGE_SCRIPT = String.raw`
     holder.style.cssText = 'position:fixed;left:-99999px;top:0;width:800px;';
     holder.appendChild(clone);
     document.body.appendChild(holder);
-    var text = (clone.innerText || '').replace(/\n{3,}/g, '\n\n').replace(/[ \t]+/g, ' ').trim();
+    var text = wf(clone.innerText || '').replace(/\n{3,}/g, '\n\n').replace(/[ \t]+/g, ' ').trim();
     holder.remove();
 
     var title = clean(document.title);
@@ -829,7 +850,7 @@ export const PAGE_SCRIPT = String.raw`
     return {
       lang: document.documentElement.lang || '',
       truncated: text.length > maxChars,
-      text: text.slice(0, maxChars)
+      text: cut(text, maxChars)
     };
   }
 
@@ -969,7 +990,7 @@ export const PAGE_SCRIPT = String.raw`
   }
 
   function readerImage(img, parent, st, picture) {
-    var alt = clean(img.getAttribute('alt')).slice(0, 300);
+    var alt = cut(clean(img.getAttribute('alt')), 300);
     var raw = readerImageSrc(img, picture);
     // Sizes of a lazy image's placeholder (often a 1x1 GIF) say nothing about the real picture.
     var loaded = img.naturalWidth > 0 && raw === img.currentSrc;
@@ -1101,7 +1122,7 @@ export const PAGE_SCRIPT = String.raw`
       if (cs > 1 && cs < 50) out.setAttribute('colspan', String(cs));
       if (rs > 1 && rs < 50) out.setAttribute('rowspan', String(rs));
     } else if (name === 'abbr' && el.getAttribute('title')) {
-      out.setAttribute('title', clean(el.getAttribute('title')).slice(0, 200));
+      out.setAttribute('title', cut(clean(el.getAttribute('title')), 200));
     } else if (name === 'ol' && parseInt(el.getAttribute('start'), 10) > 1) {
       out.setAttribute('start', String(parseInt(el.getAttribute('start'), 10)));
     }
@@ -1649,7 +1670,7 @@ export const PAGE_SCRIPT = String.raw`
       var reachable = false;
       try { reachable = !!(el.contentDocument && el.contentDocument.body); } catch (e) {}
       var src = el.getAttribute('src') || '';
-      if (!reachable) return { kind: 'frame', origin: src.slice(0, 120) };
+      if (!reachable) return { kind: 'frame', origin: cut(src, 120) };
     }
     var found = fileInputOf(el);
     if (!found) return { kind: 'probe', element: describe(el) };
@@ -1895,9 +1916,9 @@ export const PAGE_SCRIPT = String.raw`
   // in it; nothing is sent here to look for.
   function screenFields() {
     var fields = textFields().map(function (el) {
-      return String((el.isContentEditable ? el.innerText : el.value) || '').slice(0, 2000);
+      return cut(String((el.isContentEditable ? el.innerText : el.value) || ''), 2000);
     });
-    var text = reachableDocs().map(function (doc) { return doc.body ? doc.body.innerText : ''; }).join('\n').slice(0, 500000);
+    var text = cut(reachableDocs().map(function (doc) { return doc.body ? doc.body.innerText : ''; }).join('\n'), 500000);
     return { fields: fields, text: text };
   }
 

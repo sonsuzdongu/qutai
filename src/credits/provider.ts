@@ -13,6 +13,7 @@ import { RelayError } from './errors';
 import { checkServer, preflight } from './rules';
 import { expectedModel, resolveTier, tierTarget } from './tiers';
 import type { PublicConfig, RelayPause, RelayProvider, RelayRequest, RelayServed, Tier } from './types';
+import { cutText } from '../utils/wellFormed';
 
 /**
  * "Qutai Credits" (pro mode only): the assistant's requests go to Qutai's relay (`POST /relay`) instead of to the
@@ -169,7 +170,7 @@ export function createCreditsProvider(deps: CreditsDeps): Omit<Provider, 'label'
           context: {
             ...(agent.memory ? { memory: agent.memory } : {}),
             ...(agent.customInstructions
-              ? { customInstructions: agent.customInstructions.slice(0, limits.maxCustomInstructionsChars ?? Infinity) }
+              ? { customInstructions: cutText(agent.customInstructions, limits.maxCustomInstructionsChars ?? Infinity) }
               : {}),
           },
           ...(agent.continuation ? { continuation: agent.continuation } : {}),

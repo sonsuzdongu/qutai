@@ -3,6 +3,8 @@
  * markers, and how to go on. Pure, so it can be exercised outside the app.
  */
 
+import { cutText } from '../utils/wellFormed';
+
 export type PageText = { page: number; text: string };
 
 /** Characters of page text in one result (about read_page's size); the rest comes with from_page. */
@@ -66,7 +68,7 @@ export function formatPdfText(r: PdfTextResult, budget = PDF_CHAR_BUDGET): strin
       empty.push(p.page);
       text = '[No text on this page: probably a scanned image or a picture.]';
     } else if (text.length > budget) {
-      text = `${text.slice(0, budget)}\n[The rest of page ${p.page} is cut: it is longer than one read allows.]`;
+      text = `${cutText(text, budget)}\n[The rest of page ${p.page} is cut: it is longer than one read allows.]`;
       cutInside = true;
     }
     shown.push(`--- Page ${p.page} ---\n${text}`);

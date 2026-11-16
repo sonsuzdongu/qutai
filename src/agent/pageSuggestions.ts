@@ -4,6 +4,7 @@ import { quoteSelection } from '../browser/selection';
 import { t } from '../i18n';
 import type { IconName } from '../ui/Icon';
 import type { SiteLevel } from './sitePolicy';
+import { cutText } from '../utils/wellFormed';
 
 /**
  * Suggestions for the empty assistant panel that fit the page on screen, worked out on the phone from what the app
@@ -72,7 +73,7 @@ export function pageSuggestions(ctx: SuggestionContext): Suggestion[] {
   }
 
   if (ctx.loadError) {
-    add(s('pageElsewhere', 'find', 'pageElsewhere', { url: ctx.url.slice(0, 500) }));
+    add(s('pageElsewhere', 'find', 'pageElsewhere', { url: cutText(ctx.url, 500) }));
     general(add, s, ctx);
     return out;
   }
@@ -100,7 +101,7 @@ export function pageSuggestions(ctx: SuggestionContext): Suggestion[] {
 
   const results = searchResultsOf(ctx.url);
   if (results) {
-    const params = { query: results.query.slice(0, 200), engine: SEARCH_ENGINES[results.engine].name };
+    const params = { query: cutText(results.query, 200), engine: SEARCH_ENGINES[results.engine].name };
     add(s('bestResult', 'review', 'bestResult', params));
     add({
       id: 'summarizeResults',

@@ -1,13 +1,11 @@
+import { cutText } from '../utils/wellFormed';
+
 /** A few hundred characters: enough for several preferences, small in every request and in secure storage. */
 export const MAX_CUSTOM_INSTRUCTIONS = 500;
 
 /** Trimmed, at most MAX_CUSTOM_INSTRUCTIONS characters, runs of blank lines reduced to one. */
 export function cleanCustomInstructions(text: string): string {
-  return text
-    .replace(/\r\n?/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-    .slice(0, MAX_CUSTOM_INSTRUCTIONS);
+  return cutText(text.replace(/\r\n?/g, '\n').replace(/\n{3,}/g, '\n\n').trim(), MAX_CUSTOM_INSTRUCTIONS);
 }
 
 /**

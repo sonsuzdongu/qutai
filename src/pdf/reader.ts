@@ -1,4 +1,5 @@
 import { readerHtml } from './readerHtml';
+import { wellFormedJsonText } from '../utils/wellFormed';
 
 /**
  * Talks to the hidden PDF reader page (src/pdf/readerHtml.ts, shown by src/components/PdfReaderHost.tsx). The
@@ -78,7 +79,7 @@ export function attachReaderWebView(view: WebViewLike | null) {
 export function handleReaderMessage(data: string): boolean {
   let msg: { qutaiPdf?: boolean; ready?: boolean; id?: string; ok?: boolean; result?: unknown; error?: string };
   try {
-    msg = JSON.parse(data);
+    msg = JSON.parse(wellFormedJsonText(data));
   } catch {
     return false;
   }

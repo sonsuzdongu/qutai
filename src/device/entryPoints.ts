@@ -5,6 +5,7 @@ import { siteColor } from '../ui/siteColor';
 import { isIncomingWebLink } from './defaultBrowser';
 import { NotificationOrigin, onAssistantNotificationTapped } from './notifications';
 import { onTaskReminderTapped } from './taskSchedule';
+import { cutText } from '../utils/wellFormed';
 
 /**
  * Ways into Qutai from outside the app: links handed to it as the default browser; qutai:// links (launcher shortcuts
@@ -65,10 +66,7 @@ const MAX_APP_LINK = 16_384;
  * bidirectional overrides that could disguise it are dropped, and it is cut to a sane length.
  */
 export function cleanText(text: string): string {
-  return text
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F‪-‮⁦-⁩]/g, '')
-    .trim()
-    .slice(0, MAX_TEXT);
+  return cutText(text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F‪-‮⁦-⁩]/g, '').trim(), MAX_TEXT);
 }
 
 /** The single http(s) link in a shared text ("Title https://…" from many apps), or null if none or several. */

@@ -48,6 +48,7 @@ import {
   SCHEDULING_TOOLS,
   SchedulingTool,
 } from './scheduling';
+import { cutText } from '../utils/wellFormed';
 
 type PageSnapshot = {
   url: string;
@@ -217,7 +218,7 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'type':
       return input.memory !== undefined && input.memory !== null && input.memory !== ''
         ? t('action.typeHidden', { ref: str(input.ref) })
-        : t('action.type', { ref: str(input.ref), text: str(input.text).slice(0, 40) });
+        : t('action.type', { ref: str(input.ref), text: cutText(str(input.text), 40) });
     case 'select_option':
       return t('action.select', { ref: str(input.ref), value: str(input.value) });
     case 'scroll':
@@ -267,14 +268,14 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'settings':
       return describeSettingsCall(input);
     case 'draft_email':
-      return t('action.draftEmail', { subject: str(input.subject).slice(0, 60) });
+      return t('action.draftEmail', { subject: cutText(str(input.subject), 60) });
     case 'offer_call':
-      return t('action.offerCall', { who: (str(input.name).trim() || str(input.phone)).slice(0, 60) });
+      return t('action.offerCall', { who: cutText(str(input.name).trim() || str(input.phone), 60) });
     case 'draft_sms':
-      return t('action.draftSms', { who: (str(input.name).trim() || str(input.phone)).slice(0, 60) });
+      return t('action.draftSms', { who: cutText(str(input.name).trim() || str(input.phone), 60) });
     case 'draft_whatsapp':
       return str(input.name).trim() || str(input.phone).trim()
-        ? t('action.draftWhatsApp', { who: (str(input.name).trim() || str(input.phone)).slice(0, 60) })
+        ? t('action.draftWhatsApp', { who: cutText(str(input.name).trim() || str(input.phone), 60) })
         : t('action.draftWhatsAppNoNumber');
     case 'close_tab':
       return t('action.closeTab', { id: str(input.tab_id) });
@@ -288,15 +289,15 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       // An ID or passport number is saved hidden: the chat and the action history don't repeat it either.
       return looksLikeIdNumber(str(input.text))
         ? t('action.rememberHidden')
-        : t('action.remember', { text: str(input.text).slice(0, 80) });
+        : t('action.remember', { text: cutText(str(input.text), 80) });
     case 'forget':
       return t('action.forget');
     case 'add_calendar_event':
-      return t('action.addCalendarEvent', { title: str(input.title).slice(0, 60) });
+      return t('action.addCalendarEvent', { title: cutText(str(input.title), 60) });
     case 'add_reminder':
-      return t('action.addReminder', { title: str(input.title).slice(0, 60) });
+      return t('action.addReminder', { title: cutText(str(input.title), 60) });
     case 'schedule_notification':
-      return t('action.scheduleNotification', { title: str(input.title).slice(0, 60) });
+      return t('action.scheduleNotification', { title: cutText(str(input.title), 60) });
     case 'get_location':
       return t('action.getLocation');
     case 'save_file':
@@ -436,7 +437,7 @@ async function searchHistoryTool(input: Record<string, unknown>, ctx: ToolContex
 
 /** Who a call was offered to, for the action history: the name, never the number. */
 function offerCallLog(input: Record<string, unknown>): string {
-  const name = typeof input.name === 'string' ? input.name.trim().slice(0, 60) : '';
+  const name = typeof input.name === 'string' ? cutText(input.name.trim(), 60) : '';
   return name ? t('action.offerCallLogged', { name }) : t('action.offerCallLoggedNoName');
 }
 
@@ -448,7 +449,7 @@ function offerCallTool(input: Record<string, unknown>, ctx: ToolContext): ToolOu
   if (!ctx.offerCall) return { content: 'Call buttons are not available here.', isError: true };
   const phone = normalizePhone(input.phone);
   if (!phone.ok) return { content: `${phone.error} No button was shown.`, isError: true };
-  const name = typeof input.name === 'string' ? input.name.replace(/\s+/g, ' ').trim().slice(0, 80) : '';
+  const name = typeof input.name === 'string' ? cutText(input.name.replace(/\s+/g, ' ').trim(), 80) : '';
   ctx.offerCall({ number: phone.number, ...(name ? { name } : {}) });
   return {
     content:
@@ -461,7 +462,7 @@ function offerCallTool(input: Record<string, unknown>, ctx: ToolContext): ToolOu
 
 /** Who a text message was prepared for, for the action history: the name, never the number or the text. */
 function draftSmsLog(input: Record<string, unknown>): string {
-  const name = typeof input.name === 'string' ? input.name.trim().slice(0, 60) : '';
+  const name = typeof input.name === 'string' ? cutText(input.name.trim(), 60) : '';
   return name ? t('action.draftSmsLogged', { name }) : t('action.draftSmsLoggedNoName');
 }
 
@@ -478,7 +479,7 @@ function draftSmsTool(input: Record<string, unknown>, ctx: ToolContext): ToolOut
   if (!body) return { content: 'The message text is empty. No message was prepared.', isError: true };
   if (body.length > MAX_SMS_BODY)
     return { content: `The text is longer than ${MAX_SMS_BODY} characters; shorten it. No message was prepared.`, isError: true };
-  const name = typeof input.name === 'string' ? input.name.replace(/\s+/g, ' ').trim().slice(0, 80) : '';
+  const name = typeof input.name === 'string' ? cutText(input.name.replace(/\s+/g, ' ').trim(), 80) : '';
   ctx.offerSms({ number: phone.number, body, ...(name ? { name } : {}) });
   return {
     content:
@@ -491,7 +492,7 @@ function draftSmsTool(input: Record<string, unknown>, ctx: ToolContext): ToolOut
 
 /** Who a WhatsApp message was prepared for, for the action history: the name, never the number or the text. */
 function draftWhatsAppLog(input: Record<string, unknown>): string {
-  const name = typeof input.name === 'string' ? input.name.trim().slice(0, 60) : '';
+  const name = typeof input.name === 'string' ? cutText(input.name.trim(), 60) : '';
   return name ? t('action.draftWhatsAppLogged', { name }) : t('action.draftWhatsAppLoggedNoName');
 }
 
@@ -516,7 +517,7 @@ function draftWhatsAppTool(input: Record<string, unknown>, ctx: ToolContext): To
       content: `The text is longer than ${MAX_WHATSAPP_BODY} characters; shorten it. No message was prepared.`,
       isError: true,
     };
-  const name = typeof input.name === 'string' ? input.name.replace(/\s+/g, ' ').trim().slice(0, 80) : '';
+  const name = typeof input.name === 'string' ? cutText(input.name.replace(/\s+/g, ' ').trim(), 80) : '';
   ctx.offerWhatsApp({ body, ...(number ? { number } : {}), ...(name ? { name } : {}) });
   const to = number ? `to ${name ? `${name}, ` : ''}${number} ` : '(the user picks the chat in WhatsApp) ';
   return {
@@ -680,7 +681,7 @@ async function locationTool(input: Record<string, unknown>, ctx: ToolContext): P
     };
   }
   if (!ctx.confirm) return { content: "This needs the user's confirmation, which is not available here.", isError: true };
-  const purpose = typeof input.purpose === 'string' ? input.purpose.trim().slice(0, 200) : '';
+  const purpose = typeof input.purpose === 'string' ? cutText(input.purpose.trim(), 200) : '';
   const site = tab && !tab.isNewTab ? siteKey(tab.url) : null;
   const lines = [t('location.agentConfirm')];
   if (purpose) lines.push(`“${purpose}”`);

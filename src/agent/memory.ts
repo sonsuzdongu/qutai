@@ -1,3 +1,5 @@
+import { cutText } from '../utils/wellFormed';
+
 /**
  * Where a memory belongs. Stable ids (stored in the database and in backups); the names shown to the user are
  * `memory.category.<id>` strings. The order is the one shown on the Memory screen and in the prompt.
@@ -202,7 +204,7 @@ export function sensitiveReason(text: string, category: MemoryCategory = 'genera
 
 /** Normalizes a memory before saving: one line, trimmed, limited length. */
 export function cleanMemoryText(text: string): string {
-  return text.replace(/\s+/g, ' ').trim().slice(0, MAX_MEMORY_CHARS);
+  return cutText(text.replace(/\s+/g, ' ').trim(), MAX_MEMORY_CHARS);
 }
 
 /** What belongs in each category, for the model (one compact block of the memory prompt). */

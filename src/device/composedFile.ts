@@ -1,6 +1,7 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { safeFileName } from './download';
+import { cutText } from '../utils/wellFormed';
 
 /**
  * Files the assistant composes for the user (save_file): CSV, Markdown, plain text or JSON. The content stays in
@@ -48,10 +49,12 @@ export function utf8Length(text: string): number {
 /** "Price list.csv" from whatever name the model gave: safe characters, the format's own extension. */
 export function composedFileName(raw: unknown, format: FileFormat): string {
   const ext = FORMATS[format].ext;
-  const base = safeFileName(String(raw ?? ''), 'qutai')
-    .replace(/\.(csv|md|markdown|txt|text|json)$/i, '')
-    .trim()
-    .slice(0, 100);
+  const base = cutText(
+    safeFileName(String(raw ?? ''), 'qutai')
+      .replace(/\.(csv|md|markdown|txt|text|json)$/i, '')
+      .trim(),
+    100,
+  );
   return `${base || 'qutai'}.${ext}`;
 }
 

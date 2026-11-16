@@ -5,6 +5,7 @@ import { attachmentIdsIn } from '../chat/attachments';
 import type { Conversation, ModelChoice } from '../chat/Conversation';
 import type { ChatItem } from '../components/AssistantPanel';
 import { Db, deleteKey, getJson, setJson } from './db';
+import { cutText } from '../utils/wellFormed';
 
 export type SavedChat = { items: ChatItem[]; turns: Turn[]; draft?: string; model?: ModelChoice; voiceLanguage?: string };
 
@@ -36,7 +37,7 @@ export function prepareForStorage(chat: SavedChat): SavedChat {
   return {
     items: chat.items.slice(-MAX_ITEMS),
     turns,
-    ...(chat.draft ? { draft: chat.draft.slice(0, MAX_DRAFT) } : {}),
+    ...(chat.draft ? { draft: cutText(chat.draft, MAX_DRAFT) } : {}),
     ...(validModel(chat.model) ? { model: chat.model } : {}),
     ...(validLanguageTag(chat.voiceLanguage) ? { voiceLanguage: chat.voiceLanguage } : {}),
   };

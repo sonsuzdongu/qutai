@@ -1,15 +1,16 @@
 /** File names, types and safety checks for downloads (both platforms). The downloads themselves: src/storage/downloads.ts. */
 
+import { cutText, wellFormed } from '../utils/wellFormed';
+
 /** A file name safe on both platforms: no path separators or reserved characters, at most 120 characters. */
 export function safeFileName(raw: string, fallback = 'download'): string {
-  const clean = raw
+  const clean = wellFormed(raw)
     .replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
-    .replace(/^\.+/, '')
-    .slice(0, 120)
-    .trim();
-  return clean || fallback;
+    .replace(/^\.+/, '');
+  const cut = cutText(clean, 120).trim();
+  return cut || fallback;
 }
 
 /** A safe file name from the URL's last path segment (decoded), or a fallback. */

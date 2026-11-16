@@ -1,6 +1,7 @@
 import { createSseDecoder, type SseEvent } from '../ai/sse';
 import { RelayError, type RelayErrorKind } from './errors';
 import { TIER_ID } from './tiers';
+import { wellFormedJson } from '../utils/wellFormed';
 import {
   isRelayProvider,
   type CreditsResponse,
@@ -178,7 +179,9 @@ export function createCreditsClient(options: CreditsClientOptions) {
 
   /** Sends the relay request until an answer that isn't worth waiting out: an OK response or a final error. */
   async function post(body: RelayRequest, signal: AbortSignal): Promise<Response> {
-    const payload = JSON.stringify(body);
+    // The relay parses this and serialises it again for the provider, so a lone surrogate would come out as an escape
+    // the provider refuses (400, "unexpected end of hex escape"): replaced here (utils/wellFormed.ts).
+    const payload = wellFormedJson(body);
     let waits = 0;
     let networkRetries = 0;
     for (;;) {

@@ -363,6 +363,17 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
   - [ ] On a phone in Turkish: the setup questions read naturally in "siz" and their titles still fit on small screens ("Alışverişte daha hızlı olabilmem için adres ve iletişim bilgilerinizi şimdi doldurmak ister misiniz?" is the longest)
 - [x] Assistant panel and settings, from the owner's Android test (November 2026): texts about what is sent (calendar and location confirmations, attachments note, "Organise for me", the setup questions' privacy note) say "your AI provider" whatever the provider, in both languages; the provider's name stays only where it identifies something (its API key, its web search billing, a backup's keys, the sent log's rows). Settings › Assistant › custom instructions no longer offer "Always reply in Turkish". The listening language follows the user's last message (see Voice input). The panel's microphone listens while held. "Site permissions" moved from Settings › Assistant to the page menu: the item for the site on screen opens its sheet, which ends with "All sites with their own permissions" (the list screen); on a new tab the item opens the list. Shorter placeholders ("Give a task…" / "Bir görev verin…", "What to research?" / "Ne araştırılsın?"; "Listening…" while listening, the TR/EN tag names the language). "Deep research" is now "Research report" / "Araştırma raporu" (also in the sent log and saved tasks) with what it does (searches, reads many sources, checks facts in more than one, writes a report with numbered sources; slower and more requests; next message only) under the chip while it is on and as its screen-reader hint; the chip row has room under it
 
+- [x] "The request body is not valid JSON: unexpected end of hex escape" (owner's phone, 16 Nov 2026, Qutai Credits,
+  Anthropic, a Trendyol search page): a product link's label was cut at 80 UTF-16 units between the two halves of an
+  emoji; `JSON.stringify` writes the lone half as `\udXXX`, the relay serialises it again, and the provider's strict
+  parser refuses the whole body, so every later request of that conversation failed the same way. Fixed in
+  `src/utils/wellFormed.ts`: text is cut on code point boundaries (`cutText`, and `cut` / `wf` inside the page script,
+  which also drops control characters from page text), replies from the page, the selection, the context menu and the
+  PDF reader are made well-formed when parsed, backups restore well-formed, and every request body (`src/ai/http.ts`
+  for own keys, `src/credits/client.ts` for the relay) is serialised by `wellFormedJson`, so a conversation stored with
+  a broken string recovers on its next send. Tests: `npm run test:text`.
+  - [ ] On the phone: the Trendyol task again, and "Try again" on the old broken conversation (docs/test-checklist.md)
+
 ## Other
 
 - [x] Open-source build's privacy policy and terms corrected (`src/legal/documents.ts`, English and Turkish; `LEGAL_VERSION` 2 there, dated 16 Nov 2026, so an existing install shows "We've updated our privacy policy and terms" once and asks to accept again; pro builds keep their own version 2). Checked against the code:

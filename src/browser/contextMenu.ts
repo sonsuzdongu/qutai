@@ -1,3 +1,5 @@
+import { cutText, wellFormedJsonText } from '../utils/wellFormed';
+
 /** What was long-pressed on the page. */
 export type ContextTarget = { href: string; linkText: string; src: string; alt: string };
 
@@ -73,12 +75,12 @@ const isWeb = (url: string) => /^https?:\/\//i.test(url);
 export function parseContextTarget(data: string): ContextTarget | null {
   let msg: Record<string, unknown>;
   try {
-    msg = JSON.parse(data);
+    msg = JSON.parse(wellFormedJsonText(data));
   } catch {
     return null;
   }
   if (!msg || msg.__qutaiContextMenu !== true) return null;
-  const str = (v: unknown, max: number) => (typeof v === 'string' ? v.slice(0, max) : '');
+  const str = (v: unknown, max: number) => (typeof v === 'string' ? cutText(v, max) : '');
   const href = str(msg.href, 4000);
   const src = str(msg.src, 200000);
   const target = {

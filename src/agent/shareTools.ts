@@ -19,6 +19,7 @@ import type { ToolContext, ToolOutput } from './executeTool';
 import { transfer, type FileTarget } from './imageTools';
 import { siteKey } from './sitePolicy';
 import { uiLabel } from './uiLabels';
+import { cutText } from '../utils/wellFormed';
 
 /**
  * Tools that hand the conversation's files to someone else, always through a step the user completes:
@@ -155,7 +156,7 @@ export function shareTool(input: Record<string, unknown>, ctx: ToolContext): Too
     if (!phone.ok) return { content: `${phone.error} Nothing was prepared.`, isError: true };
     number = phone.number;
   }
-  const name = typeof input.name === 'string' ? input.name.replace(/\s+/g, ' ').trim().slice(0, 80) : '';
+  const name = typeof input.name === 'string' ? cutText(input.name.replace(/\s+/g, ' ').trim(), 80) : '';
   const original = wantsOriginal(input, items);
   const copiesText = !!text && items.length > 0 && !textTravelsWithFiles(Platform.OS, app);
   ctx.offerShare({

@@ -2,6 +2,7 @@ import { getCalendars } from 'expo-localization';
 import { t } from '../i18n';
 import { formatDateTime, timeLabel } from '../i18n/format';
 import type { IconLine, IconLines } from '../ui/Icon';
+import { cutText } from '../utils/wellFormed';
 
 /** The tools that put something on the user's calendar or schedule a notification. */
 export const SCHEDULING_TOOLS = new Set(['add_calendar_event', 'add_reminder', 'schedule_notification']);
@@ -87,7 +88,7 @@ export function parseDateTime(raw: unknown): Date | null {
   return date.getDate() === day && date.getMonth() === month - 1 ? date : null;
 }
 
-const text = (value: unknown, max: number) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
+const text = (value: unknown, max: number) => (typeof value === 'string' ? cutText(value.trim(), max) : '');
 
 function dateError(field: string, raw: unknown): string {
   return (
@@ -172,7 +173,7 @@ export function describePlan(plan: SchedulePlan, android: boolean): IconLines {
     add(`“${plan.title}”`, plan.body, formatDateTime(plan.at), zone);
   }
   if (plan.kind !== 'notification' && plan.notes) {
-    const notes = plan.notes.length > 300 ? `${plan.notes.slice(0, 300)}…` : plan.notes;
+    const notes = plan.notes.length > 300 ? `${cutText(plan.notes, 300)}…` : plan.notes;
     lines.push({ icon: 'notes', text: t('schedule.notes', { notes }) });
   }
   return { lines };
@@ -225,7 +226,7 @@ export type CalendarEntry = {
 
 const oneLine = (value: string, max: number) => {
   const flat = value.replace(/\s+/g, ' ').trim();
-  return flat.length > max ? `${flat.slice(0, max)}…` : flat;
+  return flat.length > max ? `${cutText(flat, max)}…` : flat;
 };
 
 /** The tool result: local times in the same format as nowContext, all-day events without times. */

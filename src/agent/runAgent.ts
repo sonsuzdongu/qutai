@@ -33,6 +33,7 @@ import { memoryPrompt } from './memory';
 import { siteKey } from './sitePolicy';
 import { MEMORY_TOOLS, TOOLS } from './tools';
 import type { AgentEvent, Source } from './types';
+import { cutText } from '../utils/wellFormed';
 
 const MAX_STEPS = 40;
 // The prompt parts live in systemPrompt.ts (exported to the agent profile for Qutai Credits); re-exported here for
@@ -388,7 +389,7 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
       if (call.name === 'read_tab') opts.browser.keepAwakeForTask(String(call.input.tab_id ?? ''));
       if (call.name === 'read_tab') noteResultHost(call.id, opts.browser.getTab(String(call.input.tab_id ?? ''))?.url);
       else noteResultHost(call.id, opts.browser.getTab(opts.agentTab.id)?.url);
-      if (result.isError) onEvent({ type: 'error', text: result.content.slice(0, 200) });
+      if (result.isError) onEvent({ type: 'error', text: cutText(result.content, 200) });
       else if (READING_TOOLS.has(call.name)) noteSource();
       else if (call.name === 'read_tab') {
         const read = opts.browser.getTab(String(call.input.tab_id ?? ''));
@@ -416,9 +417,9 @@ const MAX_CHOICES = 8;
 export function parseChoices(input: Record<string, unknown>): { question: string; options: string[] } | null {
   const question = typeof input.question === 'string' ? input.question.trim() : '';
   const raw = Array.isArray(input.options) ? input.options : [];
-  const options = [...new Set(raw.map((o) => (typeof o === 'string' ? o.trim().slice(0, 120) : '')).filter(Boolean))];
+  const options = [...new Set(raw.map((o) => (typeof o === 'string' ? cutText(o.trim(), 120) : '')).filter(Boolean))];
   if (!question || options.length < 2) return null;
-  return { question: question.slice(0, 500), options: options.slice(0, MAX_CHOICES) };
+  return { question: cutText(question, 500), options: options.slice(0, MAX_CHOICES) };
 }
 
 
@@ -490,7 +491,7 @@ export function compactHistory(turns: Turn[], maxImages?: number): Turn[] {
         kept++;
         return r;
       }
-      return { ...r, content: `${r.content.slice(0, 300)}\n[Older page snapshot removed]` };
+      return { ...r, content: `${cutText(r.content, 300)}\n[Older page snapshot removed]` };
     });
     out.unshift({ role: 'tool_results', results: results.reverse() });
   }

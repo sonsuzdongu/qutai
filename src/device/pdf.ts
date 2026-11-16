@@ -4,6 +4,7 @@ import * as Sharing from 'expo-sharing';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
 import { pieceBase64, withFullPage } from './fullPage';
+import { cutText } from '../utils/wellFormed';
 
 export type Snapshot = {
   title: string;
@@ -32,9 +33,8 @@ export function pdfFileName(title: string, url: string): string {
   const base = (title || fallback)
     .replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ')
     .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 80);
-  return `${base || t('pdf.fallbackName')}.pdf`;
+    .trim();
+  return `${cutText(base, 80) || t('pdf.fallbackName')}.pdf`;
 }
 
 /** Opens the system print dialog (AirPrint on iOS) for the current page. */

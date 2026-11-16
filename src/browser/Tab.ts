@@ -12,6 +12,7 @@ import {
   NeedsForegroundError,
 } from '../device/backgroundTask';
 import { sleep } from '../utils/sleep';
+import { wellFormedJsonText } from '../utils/wellFormed';
 import { siteKey } from '../agent/sitePolicy';
 import { PageGeolocation } from './geolocation';
 import { PageMediaCapture } from './mediaCapture';
@@ -365,7 +366,9 @@ export class Tab {
   handleMessage(data: string): boolean {
     let msg: { __qutai?: string; id?: string; ok?: boolean; result?: unknown; error?: string };
     try {
-      msg = JSON.parse(data);
+      // Page text may hold half an emoji (a site's own cut, or ours in an older page script): made well-formed here,
+      // before it can reach a model (utils/wellFormed.ts).
+      msg = JSON.parse(wellFormedJsonText(data));
     } catch {
       return false;
     }
@@ -651,7 +654,7 @@ export class Tab {
     const raw = await evaluateInPage(this.playback.nonce, code, poll, timeoutMs);
     if (raw == null) throw new Error('The page did not respond (it may still be loading).');
     // The WebView returns the poll's value JSON-encoded: a string holding the reply's JSON.
-    const msg = JSON.parse(JSON.parse(raw)) as { __qutai?: string; ok?: boolean; result?: unknown; error?: string };
+    const msg = JSON.parse(wellFormedJsonText(JSON.parse(raw))) as { __qutai?: string; ok?: boolean; result?: unknown; error?: string };
     if (msg.__qutai !== this.nonce) throw new Error('Unknown page error');
     if (msg.ok) return msg.result as T;
     throw new Error(msg.error || 'Unknown page error');

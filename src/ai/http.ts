@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import { waitForForeground } from '../utils/foreground';
 import { t } from '../i18n';
 import { sleep } from '../utils/sleep';
+import { wellFormedJson } from '../utils/wellFormed';
 import { classifyFailure, type FailureKind, serverMessage } from './serverError';
 import { createSseDecoder, type SseEvent } from './sse';
 
@@ -44,7 +45,9 @@ async function postWithRetry(
   signal: AbortSignal,
 ): Promise<Response> {
   assertSecure(url);
-  const payload = JSON.stringify(body);
+  // Every own-key request goes through here: no lone surrogate reaches the provider's strict JSON parser, even from a
+  // conversation stored with one by an older version (utils/wellFormed.ts).
+  const payload = wellFormedJson(body);
 
   for (let attempt = 0; ; attempt++) {
     let res: Response;

@@ -20,6 +20,7 @@ import {
 import type { Db } from '../storage/db';
 import type { ToolContext, ToolOutput } from './executeTool';
 import { uiLabel, uiPath } from './uiLabels';
+import { cutText } from '../utils/wellFormed';
 
 /**
  * The assistant's bookmarks tool. Adding, renaming, moving and new folders are visible in the Library and easily
@@ -66,8 +67,8 @@ export function bookmarkNeedsUser(input: Record<string, unknown>, agentTab: obje
 
 /** The chat's action line for a call. */
 export function describeBookmarkCall(input: Record<string, unknown>): string {
-  const what = (str(input.title) || str(input.url) || t('action.bookmarkThisPage')).slice(0, 60);
-  const folder = str(input.folder).slice(0, 60);
+  const what = cutText(str(input.title) || str(input.url) || t('action.bookmarkThisPage'), 60);
+  const folder = cutText(str(input.folder), 60);
   switch (input.action) {
     case 'add':
       return folder ? t('action.bookmarkAddTo', { what, folder }) : t('action.bookmarkAdd', { what });
@@ -75,19 +76,19 @@ export function describeBookmarkCall(input: Record<string, unknown>): string {
       const urls: unknown[] = Array.isArray(input.urls) ? input.urls : [];
       if (urls.length > 1) return t('action.bookmarkRemoveMany', { count: urls.length });
       const which = str(input.url) || str(urls[0]) || t('action.bookmarkThisPage');
-      return t('action.bookmarkRemove', { what: which.slice(0, 60) });
+      return t('action.bookmarkRemove', { what: cutText(which, 60) });
     }
     case 'list':
       return folder ? t('action.bookmarkListFolder', { folder }) : t('action.bookmarkList');
     case 'search':
-      return t('action.bookmarkSearch', { query: str(input.query).slice(0, 60) });
+      return t('action.bookmarkSearch', { query: cutText(str(input.query), 60) });
     case 'move':
       return t('action.bookmarkMove', {
-        what: (str(input.url) || folder).slice(0, 60),
-        folder: str(input.to_folder).slice(0, 60) || t('library.bookmarks'),
+        what: cutText(str(input.url) || folder, 60),
+        folder: cutText(str(input.to_folder), 60) || t('library.bookmarks'),
       });
     case 'rename':
-      return t('action.bookmarkRename', { what: (str(input.url) || folder).slice(0, 60), title: str(input.title).slice(0, 60) });
+      return t('action.bookmarkRename', { what: cutText(str(input.url) || folder, 60), title: cutText(str(input.title), 60) });
     case 'create_folder':
       return t('action.bookmarkCreateFolder', { folder });
     case 'delete_folder':
@@ -185,7 +186,7 @@ function folderOverview(tree: Tree): string {
 /** Creates the missing folders of a path under `parentId`; returns the last one's id. */
 async function createPath(db: Db, parentId: number | null, rest: string[]): Promise<number> {
   let id = parentId;
-  for (const name of rest) id = await createFolder(db, name.slice(0, 200), id);
+  for (const name of rest) id = await createFolder(db, cutText(name, 200), id);
   return id as number;
 }
 
@@ -261,7 +262,7 @@ async function run(
       if (!isWebUrl(url))
         return { content: 'Only http and https addresses can be bookmarked. Nothing was saved.', isError: true };
       if (!title) title = tab && tab.url === url && tab.title ? tab.title : url;
-      title = title.replace(/\s+/g, ' ').slice(0, 300);
+      title = cutText(title.replace(/\s+/g, ' '), 300);
       if (incognito && folderSpec && !findIsTop(tree, folderSpec))
         return {
           content:
@@ -433,7 +434,7 @@ async function run(
     }
 
     case 'rename': {
-      const title = str(input.title).replace(/\s+/g, ' ').slice(0, 300);
+      const title = cutText(str(input.title).replace(/\s+/g, ' '), 300);
       if (!title) return { content: 'Give title: the new name.', isError: true };
       if (str(input.url)) {
         const b = await findBookmark(db, str(input.url));
@@ -446,7 +447,7 @@ async function run(
       if (found.kind !== 'found') return { content: folderProblem(tree, folderSpec, found), isError: true };
       if (found.id === null) return { content: 'The top level cannot be renamed.', isError: true };
       const from = pathOf(tree, found.id);
-      await renameFolder(db, found.id, title.slice(0, 200));
+      await renameFolder(db, found.id, cutText(title, 200));
       return { content: `Renamed the folder ${from} to "${title}": now ${pathOf(await loadTree(db), found.id)}.`, isError: false };
     }
 
