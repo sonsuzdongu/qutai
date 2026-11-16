@@ -13,6 +13,15 @@ export const en = {
   'confirm.title': 'Qutai wants to do this',
   'confirm.deny': 'Deny',
   'confirm.allow': 'Allow',
+  'confirm.dontAskAgain.notification': "Don't ask again for notifications",
+  'confirm.dontAskAgain.calendarEvent': "Don't ask again for calendar events",
+  'confirm.dontAskAgain.reminder': "Don't ask again for reminders",
+  'settings.alwaysAllowTitle': 'Allowed without asking',
+  'settings.alwaysAllowHint':
+    'Qutai does these on your phone without asking first. Anything on a web page, and anything that leaves your phone, is always asked.',
+  'settings.alwaysAllow.notification': 'Scheduling notifications',
+  'settings.alwaysAllow.calendarEvent': 'Adding calendar events',
+  'settings.alwaysAllow.reminder': 'Adding reminders',
 
   'chat.title': 'Qutai',
   'chat.missingKey': 'Enter your {provider} API key in settings first.',

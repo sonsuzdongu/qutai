@@ -19,6 +19,7 @@ import {
   whileWaitingForUser,
 } from '../device/backgroundTask';
 import { getBackgroundCount, isForeground, waitForForeground } from '../utils/foreground';
+import type { AlwaysAllowKind } from './alwaysAllow';
 import { withAttachedImages } from './attachedImages';
 import { backgroundBlocker, describeToolCall, executeTool, ToolContext } from './executeTool';
 import { toolIcon, WEB_SEARCH_ICON } from './toolIcons';
@@ -93,6 +94,11 @@ export type AgentOptions = ToolContext & {
   /** The user's custom instructions from settings; '' or absent for none. */
   customInstructions?: string;
   /**
+   * Whether the user allowed a kind of confirmation for good ("Don't ask again", agent/alwaysAllow.ts); read at each
+   * confirmation, since Settings can change it during a task. Such a confirmation is skipped, without pausing.
+   */
+  alwaysAllowed?: (kind: AlwaysAllowKind) => boolean;
+  /**
    * Qutai Credits: the server's limits for one message (steps; research steps) and for the memory section. The
    * server adds the last-step note on its own last step, so the loop must end exactly there.
    */
@@ -144,9 +150,10 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
   const ctx: AgentOptions = {
     ...opts,
     confirm: confirm
-      ? async (description, host) => {
+      ? async (description, host, kind) => {
+          if (kind && opts.alwaysAllowed?.(kind)) return true;
           await pauseWhileBackgrounded('confirm');
-          return whileWaitingForUser(() => confirm(description, host));
+          return whileWaitingForUser(() => confirm(description, host, kind));
         }
       : undefined,
     // The personal-information question pauses a background run the same way.

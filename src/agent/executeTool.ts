@@ -7,6 +7,7 @@ import { notificationOrigin, scheduleNotification } from '../device/notification
 import { renderPagePdf, renderPdfFromScreenshots, shareRenderedPdf, type RenderedPdf } from '../device/pdf';
 import type { EmailOutcome } from '../device/email';
 import type { ComposedRef, Shareable, ShareOffer } from '../chat/shareable';
+import { AlwaysAllowKind, kindForSchedule } from './alwaysAllow';
 import { draftEmailTool, shareLog, shareTool, uploadFileTool } from './shareTools';
 import { t } from '../i18n';
 import { captureForModel, saveFullPageScreenshot, saveScreenshot } from '../device/screenshot';
@@ -83,8 +84,11 @@ export type ToolContext = {
    * schedules leads back to it when tapped.
    */
   askedFrom?: { id: string };
-  /** Asks the user before an action that changes the page (host: the site it acts on). Resolve false to block it. */
-  confirm?: (description: string | IconLines, host: string | null) => Promise<boolean>;
+  /**
+   * Asks the user before an action that changes the page (host: the site it acts on). Resolve false to block it.
+   * `kind`: a low-risk phone action the user may allow for good ("Don't ask again", agent/alwaysAllow.ts).
+   */
+  confirm?: (description: string | IconLines, host: string | null, kind?: AlwaysAllowKind) => Promise<boolean>;
   /** The global "ask before actions" setting, for sites without their own permission. Defaults to true when confirm is set. */
   confirmByDefault?: boolean;
   /** Per-site permissions (allow, ask, read-only, blocked). */
@@ -601,7 +605,7 @@ async function schedulingTool(name: SchedulingTool, input: Record<string, unknow
     };
   }
   if (!ctx.confirm) return { content: 'This needs the user\'s confirmation, which is not available here.', isError: true };
-  if (!(await ctx.confirm(describePlan(plan, android), null)))
+  if (!(await ctx.confirm(describePlan(plan, android), null, kindForSchedule(plan.kind))))
     return { content: 'The user declined this. Ask them how to proceed.', isError: true };
   try {
     if (plan.kind === 'event') {

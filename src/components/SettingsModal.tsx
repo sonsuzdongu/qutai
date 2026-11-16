@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ALWAYS_ALLOW_KINDS, withKind } from '../agent/alwaysAllow';
 import { cleanCustomInstructions, MAX_CUSTOM_INSTRUCTIONS } from '../agent/systemPrompt';
 import { PRICES_AS_OF } from '../ai/prices';
 import { getProvider, isConfigured, modelLabel, requestTarget } from '../ai/providers';
@@ -306,6 +307,16 @@ function SettingsPages({
               value={settings.confirmActions}
               onChange={(confirmActions) => set({ confirmActions })}
             />
+            <Text style={[styles.label, styles.sectionLabel]}>{t('settings.alwaysAllowTitle')}</Text>
+            <Text style={styles.hint}>{t('settings.alwaysAllowHint')}</Text>
+            {ALWAYS_ALLOW_KINDS.map((kind) => (
+              <SwitchRow
+                key={kind}
+                title={t(`settings.alwaysAllow.${kind}`)}
+                value={settings.alwaysAllow.includes(kind)}
+                onChange={(on) => set({ alwaysAllow: withKind(settings.alwaysAllow, kind, on) })}
+              />
+            ))}
             {provider.webSearch ? (
               <SwitchRow
                 title={t('settings.webSearch')}
@@ -721,7 +732,7 @@ function SwitchRow({
   onChange,
 }: {
   title: string;
-  hint: string;
+  hint?: string;
   value: boolean;
   onChange: (value: boolean) => void;
 }) {
@@ -730,7 +741,7 @@ function SwitchRow({
     <View style={styles.switchRow}>
       <View style={styles.flex}>
         <Text style={styles.label}>{title}</Text>
-        <Text style={styles.hint}>{hint}</Text>
+        {hint ? <Text style={styles.hint}>{hint}</Text> : null}
       </View>
       <ThemedSwitch value={value} onValueChange={onChange} accessibilityLabel={title} />
     </View>

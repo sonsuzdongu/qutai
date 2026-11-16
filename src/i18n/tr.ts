@@ -14,6 +14,15 @@ export const tr: Record<keyof typeof en, string> = {
   'confirm.title': 'Qutai bu işlemi yapmak istiyor',
   'confirm.deny': 'Reddet',
   'confirm.allow': 'İzin ver',
+  'confirm.dontAskAgain.notification': 'Bildirimler için bir daha sorma',
+  'confirm.dontAskAgain.calendarEvent': 'Takvim etkinlikleri için bir daha sorma',
+  'confirm.dontAskAgain.reminder': 'Hatırlatıcılar için bir daha sorma',
+  'settings.alwaysAllowTitle': 'Sormadan izin verilenler',
+  'settings.alwaysAllowHint':
+    'Qutai bunları telefonunuzda size sormadan yapar. Web sayfasındaki işlemler ve telefonunuzun dışına çıkan her şey için her zaman sorulur.',
+  'settings.alwaysAllow.notification': 'Bildirim zamanlama',
+  'settings.alwaysAllow.calendarEvent': 'Takvime etkinlik ekleme',
+  'settings.alwaysAllow.reminder': 'Hatırlatıcı ekleme',
 
   'chat.title': 'Qutai',
   'chat.missingKey': 'Önce ayarlardan {provider} API anahtarınızı girin.',

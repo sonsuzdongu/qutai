@@ -5,6 +5,7 @@ import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES, ReaderFont, ReaderTheme } from '../browser/reader';
 import { isSearchEngine, SearchEngineId } from '../browser/search';
 import type { VoiceOnline } from '../device/voiceInput';
+import { AlwaysAllowKind, parseAlwaysAllow, serializeAlwaysAllow } from '../agent/alwaysAllow';
 import { removeRetiredInstructionLines } from '../agent/retiredInstructions';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
 
@@ -25,6 +26,11 @@ export type Settings = {
    */
   customHeaders: CustomHeader[];
   confirmActions: boolean;
+  /**
+   * Low-risk phone actions the user allowed for good with "Don't ask again" (agent/alwaysAllow.ts): their
+   * confirmation is skipped. Turned off one by one in Settings › Assistant. Never set by the assistant itself.
+   */
+  alwaysAllow: AlwaysAllowKind[];
   searchEngine: SearchEngineId;
   /** Live suggestions from the search engine while typing; always off in incognito tabs. */
   searchSuggestions: boolean;
@@ -121,6 +127,7 @@ export const DEFAULT_SETTINGS: Settings = {
   customImages: true,
   customHeaders: [],
   confirmActions: false,
+  alwaysAllow: [],
   searchEngine: 'google',
   searchSuggestions: true,
   textZoom: 100,
@@ -163,6 +170,7 @@ const KEYS = {
   customBaseUrl: 'custom_base_url',
   customImages: 'custom_images',
   confirmActions: 'confirm_actions',
+  alwaysAllow: 'always_allow',
   searchEngine: 'search_engine',
   searchSuggestions: 'search_suggestions',
   textZoom: 'text_zoom',
@@ -282,6 +290,7 @@ export async function loadSettings(): Promise<Settings> {
     customBaseUrl,
     customImages,
     customHeaderRows,
+    alwaysAllow,
     ...perProvider
   ] = await Promise.all([
     get(KEYS.provider),
@@ -326,6 +335,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.customBaseUrl),
     get(KEYS.customImages),
     Promise.all(Array.from({ length: MAX_CUSTOM_HEADERS }, (_, i) => get(KEYS.customHeader(i)))),
+    get(KEYS.alwaysAllow),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
   ]);
 
@@ -337,6 +347,7 @@ export async function loadSettings(): Promise<Settings> {
     customImages: customImages !== 'false',
     customHeaders: (customHeaderRows as (string | null)[]).flatMap(parseHeaderRow),
     confirmActions: confirmActions === 'true',
+    alwaysAllow: parseAlwaysAllow(alwaysAllow as string | null),
     searchEngine: isSearchEngine(searchEngine) ? searchEngine : DEFAULT_SETTINGS.searchEngine,
     searchSuggestions: searchSuggestions !== 'false',
     textZoom: clampTextZoom(Number(textZoom) || DEFAULT_SETTINGS.textZoom),
@@ -411,6 +422,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
       return set(KEYS.customHeader(i), h ? JSON.stringify({ name: h.name, value: h.value }) : '');
     }),
     set(KEYS.confirmActions, String(settings.confirmActions)),
+    set(KEYS.alwaysAllow, serializeAlwaysAllow(settings.alwaysAllow)),
     set(KEYS.searchEngine, settings.searchEngine),
     set(KEYS.searchSuggestions, String(settings.searchSuggestions)),
     set(KEYS.textZoom, String(settings.textZoom)),
