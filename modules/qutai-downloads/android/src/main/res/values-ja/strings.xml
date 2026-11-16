@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Notification texts of Qutai's downloads. The language follows the app's own setting (QutaiDownloads.setLanguage). -->
+  <string name="qutai_dl_channel">進行中のダウンロード</string>
+  <string name="qutai_dl_done_channel">完了したダウンロード</string>
+  <plurals name="qutai_dl_downloading_many">
+    <item quantity="other">%1$d 件のファイルをダウンロード中</item>
+  </plurals>
+  <string name="qutai_dl_starting">開始しています…</string>
+  <string name="qutai_dl_of">%1$s/%2$s</string>
+  <string name="qutai_dl_speed">%1$s/秒</string>
+  <string name="qutai_dl_left_min">残り %1$d 分</string>
+  <string name="qutai_dl_left_sec">残り %1$d 秒</string>
+  <string name="qutai_dl_paused">一時停止中</string>
+  <plurals name="qutai_dl_paused_many">
+    <item quantity="other">%1$d 件のダウンロードを一時停止中</item>
+  </plurals>
+  <string name="qutai_dl_waiting">ネットワークを待機中</string>
+  <plurals name="qutai_dl_queued">
+    <item quantity="other">%1$d 件が待機中</item>
+  </plurals>
+  <string name="qutai_dl_pause">一時停止</string>
+  <string name="qutai_dl_resume">再開</string>
+  <string name="qutai_dl_cancel">キャンセル</string>
+  <string name="qutai_dl_done">ダウンロード完了</string>
+  <plurals name="qutai_dl_done_many">
+    <item quantity="other">%1$d 件のダウンロードが完了</item>
+  </plurals>
+  <string name="qutai_dl_failed">ダウンロードに失敗しました</string>
+  <string name="qutai_dl_tap_open">タップして開く</string>
+</resources>

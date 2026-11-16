@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Defaults until the app passes its own labels (src/i18n), e.g. right after an update. -->
+  <string name="qutai_agent_channel">アシスタントのタスク</string>
+  <string name="qutai_agent_alerts_channel">アシスタントからの確認</string>
+  <string name="qutai_agent_working">Qutai が作業中: %1$s</string>
+  <string name="qutai_agent_working_public">Qutai がタスクを実行中です</string>
+  <string name="qutai_agent_stop">停止</string>
+  <string name="qutai_agent_open">開く</string>
+  <string name="qutai_agent_paused">Qutai が一時停止しました: 続けるにはアプリに戻ってください</string>
+  <string name="qutai_agent_stalled">バックグラウンドでページが応答しなくなりました。</string>
+  <string name="qutai_agent_time_limit">タスクがバックグラウンドで長時間実行されました。</string>
+  <string name="qutai_agent_public_alert">Qutai が操作を待っています</string>
+</resources>
