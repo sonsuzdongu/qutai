@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Korean strings for the widget and the launcher shortcuts. -->
+<resources>
+  <string name="qutai_widget_name">Qutai 검색</string>
+  <string name="qutai_widget_description">검색, Qutai에게 묻기, 탭 열기, QR 코드 스캔</string>
+  <string name="qutai_widget_hint">검색어 또는 주소 입력</string>
+  <string name="qutai_widget_ask">Qutai에게 묻기</string>
+  <string name="qutai_widget_new_tab">새 탭</string>
+  <string name="qutai_widget_private_tab">시크릿</string>
+  <string name="qutai_widget_scan">QR 스캔</string>
+  <string name="qutai_shortcut_new_tab">새 탭</string>
+  <string name="qutai_shortcut_private_tab_short">시크릿 탭</string>
+  <string name="qutai_shortcut_private_tab">새 시크릿 탭</string>
+  <string name="qutai_shortcut_ask">Qutai에게 묻기</string>
+  <string name="qutai_shortcut_scan_short">QR 스캔</string>
+  <string name="qutai_shortcut_scan">QR 코드 스캔</string>
+</resources>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Notification texts of Qutai's downloads. The language follows the app's own setting (QutaiDownloads.setLanguage). -->
+  <string name="qutai_dl_channel">진행 중인 다운로드</string>
+  <string name="qutai_dl_done_channel">완료된 다운로드</string>
+  <plurals name="qutai_dl_downloading_many">
+    <item quantity="other">파일 %1$d개 다운로드 중</item>
+  </plurals>
+  <string name="qutai_dl_starting">시작하는 중…</string>
+  <string name="qutai_dl_of">%1$s/%2$s</string>
+  <string name="qutai_dl_speed">%1$s/s</string>
+  <string name="qutai_dl_left_min">%1$d분 남음</string>
+  <string name="qutai_dl_left_sec">%1$d초 남음</string>
+  <string name="qutai_dl_paused">일시중지됨</string>
+  <plurals name="qutai_dl_paused_many">
+    <item quantity="other">다운로드 %1$d개 일시중지됨</item>
+  </plurals>
+  <string name="qutai_dl_waiting">네트워크 대기 중</string>
+  <plurals name="qutai_dl_queued">
+    <item quantity="other">%1$d개 대기 중</item>
+  </plurals>
+  <string name="qutai_dl_pause">일시중지</string>
+  <string name="qutai_dl_resume">재개</string>
+  <string name="qutai_dl_cancel">취소</string>
+  <string name="qutai_dl_done">다운로드 완료</string>
+  <plurals name="qutai_dl_done_many">
+    <item quantity="other">다운로드 %1$d개 완료</item>
+  </plurals>
+  <string name="qutai_dl_failed">다운로드 실패</string>
+  <string name="qutai_dl_tap_open">탭하여 열기</string>
+</resources>
