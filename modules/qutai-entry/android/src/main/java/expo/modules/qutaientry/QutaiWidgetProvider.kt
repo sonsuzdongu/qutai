@@ -39,9 +39,18 @@ class QutaiWidgetProvider : AppWidgetProvider() {
   }
 
   private fun build(context: Context, layout: Int) = RemoteViews(context.packageName, layout).apply {
+    // Texts set here, not left to the layout: the launcher would read the layout's strings in the phone's language,
+    // while `context` resolves them in Qutai's own (per-app) language (AppLanguage).
+    val hint = context.getString(R.string.qutai_widget_hint)
+    setTextViewText(R.id.qutai_widget_hint_text, hint)
+    setContentDescription(R.id.qutai_widget_search, hint)
+    setContentDescription(R.id.qutai_widget_ask, context.getString(R.string.qutai_widget_ask))
     setOnClickPendingIntent(R.id.qutai_widget_search, link(context, "qutai://new-tab", 1))
     setOnClickPendingIntent(R.id.qutai_widget_ask, link(context, "qutai://ask", 2))
     if (layout == R.layout.qutai_widget) {
+      setTextViewText(R.id.qutai_widget_new_tab_text, context.getString(R.string.qutai_widget_new_tab))
+      setTextViewText(R.id.qutai_widget_private_tab_text, context.getString(R.string.qutai_widget_private_tab))
+      setTextViewText(R.id.qutai_widget_scan_text, context.getString(R.string.qutai_widget_scan))
       setOnClickPendingIntent(R.id.qutai_widget_new_tab, link(context, "qutai://new-tab", 3))
       setOnClickPendingIntent(R.id.qutai_widget_private_tab, link(context, "qutai://new-private-tab", 4))
       setOnClickPendingIntent(R.id.qutai_widget_scan, link(context, "qutai://scan", 5))

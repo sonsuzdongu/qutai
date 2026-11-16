@@ -211,9 +211,11 @@ Same declaration, for `specialUse` ("Keep working in the background"):
 Intent filters without a permission (`plugins/withEntryPoints.js`): `SEND` `text/plain` (the share sheet),
 `PROCESS_TEXT` `text/plain` (other apps' text-selection menu) and `WEB_SEARCH`, on the main activity, besides the
 `http`/`https` and `qutai` links. What arrives is only text; it is handled as untrusted input (see README, "Opening
-Qutai from other apps"). The main activity also carries the launcher shortcuts (`android.app.shortcuts` meta-data,
-`res/xml/qutai_shortcuts.xml`); pinning a page with "Add to home screen" needs no permission (the launcher asks). The home screen widget is a
-non-exported receiver (`expo.modules.qutaientry.QutaiWidgetProvider`, `APPWIDGET_UPDATE`); no permission.
+Qutai from other apps"). The launcher shortcuts are dynamic shortcuts the app publishes (ShortcutManager, no
+permission); pinning a page with "Add to home screen" needs no permission (the launcher asks). The home screen widget is a
+non-exported receiver (`expo.modules.qutaientry.QutaiWidgetProvider`, `APPWIDGET_UPDATE`); no permission. A second
+non-exported receiver (`expo.modules.qutaientry.QutaiLocaleReceiver`, `LOCALE_CHANGED`, sent by the system) redoes the
+shortcuts' and the widget's texts when the phone's or Qutai's own language changes; no permission.
 
 Files the user shares from the assistant's cards to another app go through a non-exported FileProvider of the
 `qutai-entry` module (`expo.modules.qutaientry.QutaiShareFileProvider`, authority `${applicationId}.qutai.share`),

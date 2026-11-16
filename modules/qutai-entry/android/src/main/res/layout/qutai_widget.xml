@@ -23,6 +23,7 @@
         android:importantForAccessibility="no"
         android:src="@drawable/qutai_widget_ic_search" />
     <TextView
+        android:id="@+id/qutai_widget_hint_text"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
@@ -61,6 +62,7 @@
           android:importantForAccessibility="no"
           android:src="@drawable/qutai_widget_ic_add" />
       <TextView
+          android:id="@+id/qutai_widget_new_tab_text"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:layout_marginTop="2dp"
@@ -85,6 +87,7 @@
           android:importantForAccessibility="no"
           android:src="@drawable/qutai_widget_ic_private" />
       <TextView
+          android:id="@+id/qutai_widget_private_tab_text"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:layout_marginTop="2dp"
@@ -109,6 +112,7 @@
           android:importantForAccessibility="no"
           android:src="@drawable/qutai_widget_ic_scan" />
       <TextView
+          android:id="@+id/qutai_widget_scan_text"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
           android:layout_marginTop="2dp"

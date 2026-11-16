@@ -305,7 +305,8 @@ from outside opens in an incognito tab. Each item is handled once (`src/device/e
   the assistant's message field, unsent) and *Summarize this page* (opens the page with the assistant ready; the user
   taps Summarize). Images and files are not accepted. iOS has no share extension yet (see Known limitations).
 - **Launcher shortcuts:** long-press the app icon for *New tab*, *New incognito tab*, *Ask Qutai* and *Scan QR code*
-  (Android static shortcuts, iOS Home Screen quick actions; English and Turkish).
+  (Android: published by the app, so they appear after the first launch and follow Qutai's own language from
+  Android 13 on, as the widget does; iOS Home Screen quick actions; English and Turkish).
 - **Add to home screen (Android):** page menu (⋮) › *Add to home screen* pins a launcher shortcut for the page, with
   the site's letter badge; it opens the page in Qutai like any link. Not offered in incognito tabs. iOS gives apps no
   way to add a page to the Home Screen (Safari's "Add to Home Screen" is its own), so there is none there.

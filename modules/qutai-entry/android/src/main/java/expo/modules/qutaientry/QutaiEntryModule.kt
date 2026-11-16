@@ -25,6 +25,13 @@ class QutaiEntryModule : Module() {
     Name("QutaiEntry")
     Events("onEntry")
 
+    // Launcher shortcuts and widget in the app's current language (also kept in step by QutaiLocaleReceiver).
+    OnCreate {
+      appContext.reactContext?.applicationContext?.let { context ->
+        Thread { AppLanguage.apply(context) }.start()
+      }
+    }
+
     /** Everything that arrived since the last call, oldest first; each item is returned once. */
     Function("takePending") {
       // The launch intent: read here because the activity may not exist yet when the module is created.
