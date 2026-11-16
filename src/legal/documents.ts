@@ -1,11 +1,17 @@
+import { accountsEnabled } from '../config/features';
 import type { Language } from '../i18n';
+import { PRO_DOCUMENTS, PRO_LEGAL_UPDATED } from './proDocuments';
 
 /**
  * Bump when the privacy policy or the terms change in substance: everyone is asked to accept
- * again on the next launch.
+ * again on the next launch. Pro-mode builds (accounts, Qutai Credits) have their own documents (proDocuments.ts) and
+ * version, so a change there never asks users of the open-source build again, and the reverse.
  */
-export const LEGAL_VERSION = 1;
-export const LEGAL_UPDATED = '2026-11-14';
+const OPEN_SOURCE_LEGAL_VERSION = 1;
+/** 2: the pro-mode documents describe the account, Qutai Credits and buying credits (16 Nov 2026). */
+const PRO_LEGAL_VERSION = 2;
+export const LEGAL_VERSION = accountsEnabled ? PRO_LEGAL_VERSION : OPEN_SOURCE_LEGAL_VERSION;
+export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-14';
 
 export type LegalKind = 'privacy' | 'terms';
 export type LegalDocument = { title: string; intro: string; sections: { heading: string; body: string }[] };
@@ -190,5 +196,5 @@ const DOCUMENTS: Record<Language, Record<LegalKind, LegalDocument>> = {
 };
 
 export function legalDocument(kind: LegalKind, language: Language): LegalDocument {
-  return DOCUMENTS[language][kind];
+  return (accountsEnabled ? PRO_DOCUMENTS : DOCUMENTS)[language][kind];
 }

@@ -544,6 +544,7 @@ contacts the server for it.
 | Disclosure before first use (an explicit choice, remembered per phone), settings, balance and history | `src/components/CreditsDisclosure.ts`, `CreditsFields.tsx`, `CreditsScreen.tsx` |
 | Setup's AI step in pro mode (Qutai first, sign-in, account and balance), as a tested state machine | `src/components/QutaiSetup.tsx`, `src/credits/setupFlow.ts` |
 | Only while signed in: the rules, the prompt to sign in or choose another provider | `src/credits/gate.ts`, `App.tsx` (send, account changes), `AiProviderFields.tsx` |
+| The pro-mode privacy policy and terms (own legal version; the open-source build keeps its own), and setup's legal summary | `src/legal/proDocuments.ts`, `documents.ts` |
 | Buying credits: the screen, the flow (store, `POST /purchases/verify`, retries, purchases kept until credited), the store interface | `src/components/BuyCredits.tsx`, `src/purchases/` |
 
 What the user sees: picking Qutai Credits first shows what changes about where data goes (conversation, page
@@ -617,9 +618,14 @@ account id as the App User ID**, `logIn` on another account, `logOut` on sign-ou
 products, bought with `purchaseStoreProduct`, every SDK error mapped to an outcome). To switch it on:
 
 1. `npx expo install react-native-purchases` (11.x today; Expo SDK 54 or later, no config plugin needed for SDK 58;
-   needs a development build, Expo Go only runs its preview mode). Decide how builds without pro mode leave it out
-   (an autolinking exclusion in `react-native.config.js` read from `EXPO_PUBLIC_PRO_MODE`, or accept the SDK unused in
-   them and say so in the privacy texts).
+   needs a development build, Expo Go only runs its preview mode). **Builds without pro mode must not contain it at
+   all** (owner's decision, 16 Nov 2026): no native code, no billing permission, no JavaScript. So, read from
+   `EXPO_PUBLIC_PRO_MODE` at build time: exclude it from autolinking when off (`react-native.config.js`
+   `dependencies['react-native-purchases'].platforms` set to `null` for both platforms, or Expo's autolinking
+   `exclude`), and in `metro.config.js` resolve `react-native-purchases` to an empty stub when off, so the bundle has
+   none of it either. Check both APKs: the open-source one must have no `com.revenuecat` classes and no
+   `com.android.vending.BILLING` permission (`aapt dump permissions`, `apkanalyzer dex packages`), and the iOS build
+   no RevenueCat pod.
 2. In `src/purchases/index.ts` `purchaseStore()`: when `revenueCatKey()` gives a key,
    `createRevenueCatStore(Purchases, key)` (import `Purchases` from `react-native-purchases`).
 3. Set `EXPO_PUBLIC_REVENUECAT_IOS_KEY` / `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` (RevenueCat's public SDK keys, per build;
@@ -634,10 +640,13 @@ products, bought with `purchaseStoreProduct`, every SDK error mapped to an outco
    reachable from the screen. Declare the in-app products in the store listings, and update the privacy texts and
    Google Play's Data safety form for purchase history (RevenueCat as a processor).
 
-**Open:** RevenueCat's hybrid SDKs have been reported to give their own id rather than the Play order id
-(`GPA.…`) as `transactionIdentifier` for one-time purchases on Android, while the server searches by the store's id;
-the Android purchase's `purchaseToken` is also available. Check with the first sandbox purchase; if needed the server
-should accept the token (or RevenueCat's id) as well.
+**The transaction id on Android:** an old forum answer said the hybrid SDKs give RevenueCat's own id, but the
+current mapping in RevenueCat's `purchases-hybrid-common` (`StoreTransactionMapper.kt`) sets `transactionIdentifier`
+to the purchase's Google Play **order id** (`GPA.…`), the id RevenueCat's v2 purchase search
+(`GET /v2/projects/{id}/purchases?store_purchase_identifier=`) takes; `purchaseToken` comes separately. So the app
+reports `transaction.transactionIdentifier` as it does now and the server needs no change. If a purchase has no
+order id (the mapping then gives null), the app says the credits will come shortly and the server's webhook credits
+it. Still confirm with the first sandbox purchase on Play (README › Qutai Credits, TODO).
 
 #### Agent profile
 

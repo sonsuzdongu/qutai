@@ -131,8 +131,14 @@ Pro mod + test girişi açık APK (`EXPO_PUBLIC_PRO_MODE=on`, API adresi, `EXPO_
 - [ ] Kredi 0 iken mesaj gönderince "yeterli krediniz yok… kredi satın alın" hatası ve altında "Kredi satın al" butonu (sağlayıcı anahtarları olan sunucuda)
 - [ ] Koyu temada ve Türkçe dilde ekranlar düzgün; TalkBack butonları ve paketleri okuyor
 
+### Gizlilik ve koşullar (pro mod)
+- [ ] Daha önce kurulumu bitirmiş pro APK güncellenince "Gizlilik ve koşullar güncellendi" ekranı geliyor
+- [ ] Özet maddeleri Qutai sunucusunu, hesabı ve kredileri anlatıyor ("sunucumuz yok" yazmıyor)
+- [ ] Gizlilik Politikası ve Kullanım Koşulları hesap, Qutai Kredileri, satın alma ve hesap silme bölümlerini içeriyor (Türkçe ve İngilizce)
+
 ### Pro olmayan APK
 - [ ] Normal APK'da kurulumun yapay zekâ adımı eskisi gibi (sağlayıcı sekmeleri, Qutai yok, oturum açma yok)
+- [ ] Normal APK'da gizlilik ve koşullar eskisi gibi; güncelleme sonrası yeniden kabul istenmiyor
 
 ## Bulunan sorunlar
 

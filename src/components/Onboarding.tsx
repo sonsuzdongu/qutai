@@ -273,9 +273,10 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                       </Text>
                       <Text style={styles.lead}>{t('onboarding.legalLead')}</Text>
                       <View style={styles.card}>
-                        <Bullet text={t('onboarding.legal1')} />
-                        <Bullet text={t('onboarding.legal2')} />
-                        <Bullet text={t('onboarding.legal3')} />
+                        {/* Pro mode: the summary of its own documents (src/legal/proDocuments.ts). */}
+                        <Bullet text={t(creditsEnabled ? 'onboarding.legal1Pro' : 'onboarding.legal1')} />
+                        <Bullet text={t(creditsEnabled ? 'onboarding.legal2Pro' : 'onboarding.legal2')} />
+                        <Bullet text={t(creditsEnabled ? 'onboarding.legal3Pro' : 'onboarding.legal3')} />
                         <Bullet text={t('onboarding.legal4')} />
                       </View>
                       <View style={styles.linkRow}>
