@@ -1,4 +1,5 @@
 [
   "downloads.perSecond",
-  "tier.fast"
+  "tier.fast",
+  "account.email.addressPlaceholder"
 ]

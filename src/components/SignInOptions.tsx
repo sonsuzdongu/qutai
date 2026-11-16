@@ -1,14 +1,17 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { accountErrorDetails, accountErrorMessage, accountSession } from '../account';
+import { accountErrorDetails, accountErrorMessage, accountSession, emailSignIn } from '../account';
 import { AccountApiError } from '../account/api';
 import { appleSignInAvailable, googleSignInConfigured, SignInCancelled, signInWithApple, signInWithGoogle } from '../account/providers';
 import { DEV_SIGN_IN_USERS, type DevSignInUser } from '../account/types';
 import { devLoginEnabled, devLoginSecret } from '../config/features';
 import { t } from '../i18n';
+import { Icon } from '../ui/Icon';
 import { darkPalette, makeStyles, usePalette } from '../ui/theme';
 import { dialog } from './Dialog';
+import { EmailSignIn } from './EmailSignIn';
+import { WholeWordsText } from './WholeWordsText';
 
 export type SignInResult =
   | { kind: 'signedIn' }
@@ -17,7 +20,8 @@ export type SignInResult =
   | { kind: 'failed'; message: string; details?: string };
 
 /**
- * The sign-in buttons (pro mode): Apple where the phone offers it, Google when this build has its client id, and the
+ * The sign-in buttons (pro mode): Apple where the phone offers it, Google when this build has its client id,
+ * "Continue with email" (EmailSignIn: a code and a link by mail; it opens by itself while a code is waiting), and the
  * test sign-in in builds made for a local test server. Only what works is shown; with none, a sentence says sign-in
  * isn't set up in this build. Used by Settings › Account and setup's Qutai step.
  *
@@ -31,12 +35,28 @@ export function SignInOptions({ onResult }: { onResult?: (result: SignInResult) 
   const [busy, setBusy] = useState<null | 'apple' | 'google' | DevSignInUser>(null);
   const [apple, setApple] = useState(false);
   const google = googleSignInConfigured();
+  const flow = emailSignIn();
+  const [email, setEmail] = useState(() => flow?.getState().status === 'pending');
 
   useEffect(() => {
     appleSignInAvailable().then(setApple);
   }, []);
 
+  // A code still waiting (the app was closed while the user read the mail): straight back to it.
+  useEffect(() => {
+    if (!flow) return;
+    let live = true;
+    flow.load().then(() => live && flow.getState().status === 'pending' && setEmail(true));
+    return () => {
+      live = false;
+    };
+  }, [flow]);
+
   if (!session) return null;
+
+  if (email) {
+    return <EmailSignIn onSignedIn={() => onResult?.({ kind: 'signedIn' })} onBack={() => setEmail(false)} />;
+  }
 
   const run = async (kind: NonNullable<typeof busy>, action: () => Promise<void>) => {
     if (busy) return;
@@ -101,8 +121,18 @@ export function SignInOptions({ onResult }: { onResult?: (result: SignInResult) 
             )}
           </Pressable>
         )}
+        <Pressable
+          onPress={() => setEmail(true)}
+          disabled={!!busy}
+          style={({ pressed }) => [styles.button, styles.iconButton, pressed && styles.pressed, busy && styles.dimmed]}
+          accessibilityRole="button"
+          accessibilityHint={t('account.email.buttonHint')}
+          accessibilityState={{ disabled: !!busy }}
+        >
+          <Icon name="email" size={20} color={palette.text} />
+          <WholeWordsText style={[styles.buttonText, styles.shrink]}>{t('account.email.continue')}</WholeWordsText>
+        </Pressable>
         {busy === 'apple' && <ActivityIndicator color={palette.textSecondary} />}
-        {!apple && !google && <Text style={styles.hint}>{t(devLoginEnabled ? 'account.onlyTestSignIn' : 'account.noProviders')}</Text>}
       </View>
       {devLoginEnabled && (
         <View style={styles.testBox}>
@@ -150,6 +180,8 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
   },
   buttonText: { color: c.text, fontSize: 16, fontWeight: '600' },
+  iconButton: { flexDirection: 'row', gap: 10, minHeight: 46, height: undefined, paddingHorizontal: 16, paddingVertical: 8 },
+  shrink: { flexShrink: 1, textAlign: 'center' },
   pressed: { backgroundColor: c.pressed },
   dimmed: { opacity: 0.5 },
   testBox: {

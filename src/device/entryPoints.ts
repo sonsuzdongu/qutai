@@ -1,6 +1,7 @@
 import { requireOptionalNativeModule } from 'expo';
 import { useEffect, useRef, useState } from 'react';
 import { AppState, Linking, Platform } from 'react-native';
+import { isSignInLink } from '../account/emailSignIn';
 import { siteColor } from '../ui/siteColor';
 import { isIncomingWebLink } from './defaultBrowser';
 import { NotificationOrigin, onAssistantNotificationTapped } from './notifications';
@@ -83,6 +84,9 @@ export function webLinkIn(text: string): string | null {
 /** A link opened in Qutai from outside: an http(s) page, or one of the qutai:// actions. */
 export function entryFromLink(url: string | null | undefined): Entry | null {
   if (!url) return null;
+  // Sign-in links (qutai://sign-in/email?token=…) belong to the account (src/components/AccountLinks.tsx): never a
+  // page, a search or text, so their token can't reach a tab, the history or the AI.
+  if (isSignInLink(url)) return null;
   if (isIncomingWebLink(url)) return url.length <= MAX_URL && !/\s/.test(url) ? { kind: 'open', url } : null;
   return entryFromAppLink(url);
 }
@@ -98,7 +102,7 @@ const APP_LINK_PARAMS: Record<string, string[]> = {
 
 /** A qutai:// link, or null for anything else (including the development client's own links). */
 export function entryFromAppLink(url: string): Entry | null {
-  if (url.length > MAX_APP_LINK) return null;
+  if (url.length > MAX_APP_LINK || isSignInLink(url)) return null;
   const match = /^qutai:\/\/([a-z-]+)\/?(?:\?([^#]*))?$/i.exec(url);
   if (!match) return null;
   const action = match[1].toLowerCase();

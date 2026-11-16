@@ -153,6 +153,7 @@ import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { IntroVariant, LaunchIntro } from './src/components/LaunchIntro';
 import { LockScreen } from './src/components/LockScreen';
 import { Onboarding } from './src/components/Onboarding';
+import { useAccountLinks } from './src/components/AccountLinks';
 import { contentBlocking } from './src/content/blocking';
 import {
   canPinSiteShortcut,
@@ -394,6 +395,8 @@ async function askHiddenValue(
 export default function App() {
   // Re-renders the whole tree in the new language when the device language changes.
   const language = useLanguage();
+  // Pro mode: sign-in links from the mail (qutai://sign-in/email?token=…), in setup as well as in the browser.
+  useAccountLinks();
   // Android: the download notifications follow the app's language.
   useEffect(() => nativeDownloads?.setLanguage(language), [language]);
   // The screen stays on while the app is open: reading pages and watching a task run shouldn't

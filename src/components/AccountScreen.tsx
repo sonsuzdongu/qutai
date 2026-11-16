@@ -3,13 +3,12 @@ import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { accountErrorDetails, accountErrorMessage, accountSession, isServerUnreachable, useAccountState } from '../account';
 import { AccountApiError } from '../account/api';
 import { appleSignInAvailable, SignInCancelled, signInWithApple } from '../account/providers';
-import type { AuthProvider } from '../account/types';
 import { creditsEnabled } from '../config/features';
 import { creditsText, refreshCredits, useCreditsState } from '../credits';
 import { Icon } from '../ui/Icon';
 import { t } from '../i18n';
-import { formatList } from '../i18n/format';
 import { makeStyles, usePalette } from '../ui/theme';
+import { methodLine, methodsOf, signedInWithText } from './accountLabels';
 import { dialog } from './Dialog';
 import { SignInOptions } from './SignInOptions';
 
@@ -134,7 +133,7 @@ export function AccountScreen({
   }
 
   const { user } = state;
-  const providers = formatList(user.providers.map((p) => t(PROVIDER_LABEL[p])));
+  const methods = methodsOf(user);
   const testUser = user.providers.includes('test');
   return (
     <>
@@ -142,7 +141,20 @@ export function AccountScreen({
       {notice && <Text style={styles.notice}>{notice}</Text>}
       {testUser && <Text style={[styles.notice, styles.noticeWarn]}>{t('account.test.signedIn')}</Text>}
       <View style={styles.card}>
-        <Text style={styles.label}>{t('account.signedInWith', { providers })}</Text>
+        <Text style={styles.label}>{signedInWithText(user)}</Text>
+        {methods.length > 0 && (
+          <View style={styles.methods} accessible accessibilityLabel={`${t('account.methodsTitle')}: ${methods.map(methodLine).join(', ')}`}>
+            <Text style={styles.hint}>{t('account.methodsTitle')}</Text>
+            {methods.map((m, i) => (
+              <View key={`${m.provider}-${m.email ?? ''}-${i}`} style={styles.method}>
+                <Icon name={m.provider === 'email' ? 'email' : 'person'} size={16} color={palette.textSecondary} />
+                <Text style={[styles.methodText, styles.flex]} selectable>
+                  {methodLine(m)}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
         <Text style={styles.hint} selectable>
           {t('account.id', { id: user.id })}
         </Text>
@@ -185,12 +197,6 @@ export function AccountScreen({
   );
 }
 
-const PROVIDER_LABEL = {
-  apple: 'account.providerApple',
-  google: 'account.providerGoogle',
-  test: 'account.providerTest',
-} as const satisfies Record<AuthProvider, string>;
-
 function ActionButton({
   label,
   busy,
@@ -229,6 +235,9 @@ const useStyles = makeStyles((c) => ({
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   label: { color: c.text, fontSize: 15, fontWeight: '600' },
   card: { backgroundColor: c.surface, borderRadius: 14, padding: 14, gap: 4 },
+  methods: { gap: 4, marginTop: 4, marginBottom: 2 },
+  method: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  methodText: { color: c.text, fontSize: 14, lineHeight: 19 },
   creditsRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   flex: { flex: 1 },
   notice: {

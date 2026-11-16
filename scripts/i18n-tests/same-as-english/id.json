@@ -27,5 +27,7 @@
   "cost.input",
   "cost.output",
   "tier.fast",
-  "siteRules.domainLabel"
+  "siteRules.domainLabel",
+  "account.providerEmail",
+  "account.methodEmail"
 ]

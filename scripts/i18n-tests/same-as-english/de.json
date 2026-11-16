@@ -22,5 +22,6 @@
   "licences.version",
   "playback.pause",
   "tier.fast",
-  "siteRules.domainLabel"
+  "siteRules.domainLabel",
+  "account.email.addressPlaceholder"
 ]

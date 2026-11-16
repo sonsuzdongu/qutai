@@ -4,19 +4,13 @@ import { useAccountState } from '../account';
 import { creditsText, refreshCredits, useCreditsState } from '../credits';
 import type { SetupEvent, SetupState } from '../credits/setupFlow';
 import { t, type MessageKey } from '../i18n';
-import { formatList } from '../i18n/format';
 import { Icon, type IconName } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles, usePalette } from '../ui/theme';
 import { openBuyCredits } from './BuyCredits';
+import { signedInWithText } from './accountLabels';
 import { ErrorDetails } from './ErrorDetails';
 import { SignInOptions } from './SignInOptions';
-
-const PROVIDER_LABEL = {
-  apple: 'account.providerApple',
-  google: 'account.providerGoogle',
-  test: 'account.providerTest',
-} as const;
 
 const NOTICE: Record<NonNullable<Extract<SetupState, { screen: 'choose' }>['notice']>, MessageKey> = {
   declined: 'setup.notice.declined',
@@ -54,6 +48,10 @@ export function QutaiSetup({
   useEffect(() => {
     if (state.screen === 'account' && signedIn) refreshCredits();
   }, [state.screen, signedIn]);
+  // Signed in while the sign-in step shows, whichever way (a code, or the mail's link opened from another app).
+  useEffect(() => {
+    if (state.screen === 'signIn' && signedIn) dispatch({ type: 'signedIn' });
+  }, [state.screen, signedIn, dispatch]);
 
   if (state.screen === 'signIn') {
     return (
@@ -83,7 +81,6 @@ export function QutaiSetup({
 
   if (state.screen === 'account') {
     const user = account.status === 'signedIn' ? account.user : null;
-    const providers = user ? formatList(user.providers.map((p) => t(PROVIDER_LABEL[p]))) : undefined;
     return (
       <>
         <Text style={styles.title} accessibilityRole="header">
@@ -94,7 +91,7 @@ export function QutaiSetup({
           <View style={styles.row}>
             <Icon name="person" size={20} color={palette.tintText} />
             <View style={styles.flex}>
-              <Text style={styles.cardTitle}>{providers ? t('account.signedInWith', { providers }) : '–'}</Text>
+              <Text style={styles.cardTitle}>{user ? signedInWithText(user) : '–'}</Text>
               {user && (
                 <Text style={styles.hint} selectable>
                   {t('account.id', { id: user.id })}
