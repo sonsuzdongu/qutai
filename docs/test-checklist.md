@@ -235,5 +235,6 @@ Genel
 Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.
 
 - 16 Kasım'da telefonda bulunanlar ve cila listesi düzeltildi (kısayol dili, "bir daha sorma", göreli zaman, giriş kutusu yazısı, mikrofon satırı, onay penceresi, seçenekler, adım özeti, görev bildirimi, kredi uyarısı, titreşim, yüklenme göstergesi, erişilebilirlik, tablet genişliği). Denenecekler 12. bölümde.
+- [ ] Asistan panelinde sesle yazarken "Sesle yazma çalışmadı. Yeniden deneyin." uyarısı çıkıyor ama metin aslında yazılıyor (16 Kas, Honor / Android 15; "düzelt" bekleniyor). Olası neden: tanıyıcı metni verdikten sonra geç gelen, eşlenmemiş bir hata kodu (`src/device/voiceInput.ts` › `handleError`).
 - Açık kalanlar: yatay ekran (yön dikeye kilitli, karar bekliyor); arka plan görevi kapalıyken uygulamadan çıkınca bekleyen istek dönüşte yeniden gönderiliyor (iki kez ücret); yazı boyutu sayfasında İngilizce "%120" yerine "120%" olmalı.
 - …
