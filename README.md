@@ -13,7 +13,11 @@ attach, microphone and one-tap task buttons disabled and Stop in place of Send (
 or sending during a task was never possible (the field was already read-only and a message is not queued or passed to
 the running task); text already in the field stays there, dimmed, to send afterwards. The input opens again as soon as
 the task needs the user (a confirmation), and when it ends: finished, a question with choices or free text, paused
-answers, stopped, failed, or a message handed back to the input. A screen reader hears "Qutai is working…" once.
+answers, stopped, failed, or a message handed back to the input. A screen reader hears "Qutai is working…" once. The
+page the task works on shows a soft brand-blue glow fading in from its edges, pulsing slowly (static with Reduce
+motion), only on that tab and only while it is on screen and the task works; off while a confirmation waits and when
+Qutai leaves the screen (picture-in-picture). It is drawn over the tabs, not inside the tab's view, so the assistant's
+screenshots and saved page images never contain it, and it takes no touches (`src/components/WorkingGlow.tsx`).
 
 The empty Qutai panel suggests a few things that fit the page on screen: "Is this a good buy?" and "Find it cheaper"
 on a product, the ingredients of a recipe, "Help me fill this in" on a form, "Which result fits best?" on a search

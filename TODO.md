@@ -411,6 +411,7 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
   - [ ] Then decide whether streaming becomes the default for Gemini
 - [x] Storing chat history (per tab, or per tab group; persistent)
 - [x] The panel's input while a task works (16 Nov 2026): dimmed, not editable, "Qutai is working…", attach / microphone / one-tap chips disabled (chips stay in place), Stop instead of Send; open again while a confirmation waits (`useWaitingForUser`, `whileAskingUser` in `src/device/backgroundTask.ts`) and when the task ends. Before this, sending during a task was already impossible (`send()` returned at once, the field was read-only); nothing is queued or steered. Text already in the field stays (dimmed). Announced once to screen readers. Seen on the Android emulator (release build)
+- [x] Working glow on the page (16 Nov 2026, `src/components/WorkingGlow.tsx`): brand-blue edges fading inward, slow pulse on the native driver, static with Reduce motion; only on the task's tab while on screen; off while a confirmation waits, after the task, and when Qutai isn't in the foreground (PiP). Drawn as a sibling over the tabs (zIndex above the visible tab), so `view_screenshot`, saved page images and tab thumbnails don't contain it (checked on the emulator: the model's image had plain edges). Not checked: fullscreen video, PiP, iOS
 
 ## To try on the phone
 

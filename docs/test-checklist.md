@@ -83,6 +83,10 @@ Cloudflare'e yayın ve Access.
 - [ ] Görev başlamadan yazılmış metin görev boyunca kutuda soluk duruyor, görev bitince düzenlenip gönderilebiliyor
 - [ ] Giriş kutusu şu anlarda hemen açılıyor: onay penceresi çıkınca, asistan seçenekli ya da serbest soru sorunca, görev bitince, durdurulunca, hata verince, Qutai Kredileri reddedip mesajı kutuya geri koyunca
 - [ ] Ekran okuyucu (TalkBack / VoiceOver) görev başlayınca bir kez "Qutai çalışıyor…" diyor
+- [ ] Görev çalışırken üzerinde çalıştığı sekmenin sayfa kenarlarında içe doğru solan mavi bir parıltı yavaşça nabız gibi atıyor; "Hareketi azalt" açıkken sabit
+- [ ] Parıltı yalnızca görevin çalıştığı sekmede; başka sekmeye geçince, sekme listesinde, onay beklerken, görev bitince / durdurulunca yok
+- [ ] Parıltı varken sayfa kaydırılıyor ve dokunulabiliyor; adres çubuğu altta ve üstte, klavye açıkken, panel açıkken, gizli sekmede, açık ve koyu temada düzgün
+- [ ] Tam ekran videoda ve PiP'te parıltı görünmüyor; asistanın aldığı ekran görüntüsünde ve kaydedilen sayfa görüntüsünde parıltı yok
 
 ## 6. Onay pencereleri ve ikonlar
 

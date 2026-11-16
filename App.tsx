@@ -2066,6 +2066,7 @@ function BrowserApp({
             <ErrorBoundary>
               <BrowserView
                 browser={browser}
+                working={running}
                 newTabActions={{
                   darkMode,
                   darkSites: settings.darkSites,

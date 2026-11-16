@@ -412,6 +412,11 @@ export class Browser {
     this.activeId = tab.id;
   }
 
+  /** The tab the running task works in, or null between tasks. */
+  get agentTabId(): string | null {
+    return this.agentTab?.id ?? null;
+  }
+
   /** Keeps the agent's tab (the object is updated as the agent moves between tabs) awake. */
   setAgentTab(agentTab: { id: string } | null) {
     this.agentTab = agentTab;
