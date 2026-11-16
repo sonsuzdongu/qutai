@@ -8,6 +8,7 @@ import type { VoiceOnline } from '../device/voiceInput';
 import { AlwaysAllowKind, parseAlwaysAllow, serializeAlwaysAllow } from '../agent/alwaysAllow';
 import { removeRetiredInstructionLines } from '../agent/retiredInstructions';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
+import { secureStoreReady } from './secureStoreGate';
 
 export type Settings = {
   provider: ProviderId;
@@ -214,6 +215,17 @@ const KEYS = {
   retiredAnimateLogo: 'animate_logo',
 };
 
+/** Every secure-storage key settings.ts writes or once wrote (cleared on a reinstall, storage/installCheck.ts). */
+export function secureSettingKeys(): string[] {
+  return Object.values(KEYS).flatMap((k) =>
+    typeof k === 'string'
+      ? [k]
+      : k === KEYS.customHeader
+        ? Array.from({ length: MAX_CUSTOM_HEADERS }, (_, i) => KEYS.customHeader(i))
+        : PROVIDER_ORDER.map((id) => (k as (id: ProviderId) => string)(id)),
+  );
+}
+
 export const TEXT_ZOOM_MIN = 50;
 export const TEXT_ZOOM_MAX = 200;
 
@@ -244,6 +256,7 @@ function parseHeaderRow(raw: string | null): CustomHeader[] {
 }
 
 export async function loadSettings(): Promise<Settings> {
+  await secureStoreReady();
   const get = (key: string) => SecureStore.getItemAsync(key);
   const [
     provider,

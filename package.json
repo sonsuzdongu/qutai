@@ -79,6 +79,7 @@
     "test:text": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/text-tests/*.test.ts",
     "test:assistant": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/assistant-tests/*.test.ts",
     "test:i18n": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/i18n-tests/*.test.ts",
+    "test:install": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/install-tests/*.test.ts",
     "test:siterules": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/site-rules-tests/*.test.ts",
     "test:credits": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/credits-tests/*.test.ts",
     "test:credits:server": "QUTAI_TEST_API_URL=${QUTAI_TEST_API_URL:-http://localhost:8790} node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/credits-tests/server/relay-server.test.ts",

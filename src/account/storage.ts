@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { getRandomBytes } from 'expo-crypto';
+import { secureStoreReady } from '../storage/secureStoreGate';
 import { isDeviceId, makeDeviceId } from './nonce';
 import type { SessionStorage, StoredSession } from './session';
 
@@ -32,6 +33,7 @@ let deviceId: Promise<string> | null = null;
 
 export const secureSessionStorage: SessionStorage = {
   async load() {
+    await secureStoreReady();
     const raw = await SecureStore.getItemAsync(SESSION_KEY, OPTIONS);
     if (!raw) return null;
     try {
@@ -45,6 +47,7 @@ export const secureSessionStorage: SessionStorage = {
   clear: () => SecureStore.deleteItemAsync(SESSION_KEY, OPTIONS),
   deviceId() {
     deviceId ??= (async () => {
+      await secureStoreReady();
       const stored = await SecureStore.getItemAsync(DEVICE_KEY, OPTIONS).catch(() => null);
       if (isDeviceId(stored)) return stored;
       const created = makeDeviceId(getRandomBytes);

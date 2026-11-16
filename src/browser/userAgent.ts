@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import { useSyncExternalStore } from 'react';
+import { secureStoreReady } from '../storage/secureStoreGate';
 
 /**
  * Android: the system WebView announces itself as embedded ("; wv" and "Version/4.0"), which
@@ -40,7 +41,8 @@ const KEY = 'webview_user_agent';
 let learned: string | null = null;
 const listeners = new Set<() => void>();
 
-SecureStore.getItemAsync(KEY)
+secureStoreReady()
+  .then(() => SecureStore.getItemAsync(KEY))
   .then((saved) => {
     if (saved && !learned) set(saved);
   })

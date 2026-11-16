@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { secureStoreReady } from '../storage/secureStoreGate';
 import { Platform } from 'react-native';
 import { accountSession } from '../account';
 import { creditsEnabled, features } from '../config/features';
@@ -40,6 +41,7 @@ const PENDING_KEY = 'credits_pending_purchases';
 
 const pendingStorage = {
   async load(): Promise<PendingPurchase[]> {
+    await secureStoreReady();
     const raw = await SecureStore.getItemAsync(PENDING_KEY);
     if (!raw) return [];
     const list: unknown = JSON.parse(raw);

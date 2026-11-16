@@ -1,4 +1,5 @@
 import * as SecureStore from 'expo-secure-store';
+import { secureStoreReady } from '../storage/secureStoreGate';
 import { useSyncExternalStore } from 'react';
 import { accountSession } from '../account';
 import { anthropic } from '../ai/anthropic';
@@ -84,7 +85,8 @@ let consent: boolean | null = null;
 const consentListeners = new Set<() => void>();
 
 if (creditsEnabled) {
-  SecureStore.getItemAsync(CONSENT_KEY)
+  secureStoreReady()
+    .then(() => SecureStore.getItemAsync(CONSENT_KEY))
     .then((v) => setConsentState(v === CONSENT_VERSION))
     .catch(() => setConsentState(false));
 }
