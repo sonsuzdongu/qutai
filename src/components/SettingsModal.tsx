@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ALWAYS_ALLOW_KINDS, withKind } from '../agent/alwaysAllow';
+import { ALWAYS_ALLOW_KINDS, AlwaysAllowKind, withKind } from '../agent/alwaysAllow';
 import { cleanCustomInstructions, MAX_CUSTOM_INSTRUCTIONS } from '../agent/systemPrompt';
 import { PRICES_AS_OF } from '../ai/prices';
 import { getProvider, isConfigured, modelLabel, requestTarget } from '../ai/providers';
@@ -43,6 +43,13 @@ import type { SavedTask } from '../storage/savedTasks';
 import { FilterListsScreen } from './FilterListsScreen';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
+
+/** What Settings says beside a "Don't ask again" switch: where the data goes, or what is still asked. */
+const ALWAYS_ALLOW_NOTES: Partial<Record<AlwaysAllowKind, Parameters<typeof t>[0]>> = {
+  calendarRead: 'settings.alwaysAllowNote.calendarRead',
+  location: 'settings.alwaysAllowNote.location',
+  download: 'settings.alwaysAllowNote.download',
+};
 
 type Props = {
   visible: boolean;
@@ -313,6 +320,7 @@ function SettingsPages({
               <SwitchRow
                 key={kind}
                 title={t(`settings.alwaysAllow.${kind}`)}
+                hint={ALWAYS_ALLOW_NOTES[kind] ? t(ALWAYS_ALLOW_NOTES[kind]) : undefined}
                 value={settings.alwaysAllow.includes(kind)}
                 onChange={(on) => set({ alwaysAllow: withKind(settings.alwaysAllow, kind, on) })}
               />

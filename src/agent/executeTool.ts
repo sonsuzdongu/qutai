@@ -7,7 +7,7 @@ import { notificationOrigin, scheduleNotification } from '../device/notification
 import { renderPagePdf, renderPdfFromScreenshots, shareRenderedPdf, type RenderedPdf } from '../device/pdf';
 import type { EmailOutcome } from '../device/email';
 import type { ComposedRef, Shareable, ShareOffer } from '../chat/shareable';
-import { AlwaysAllowKind, kindForSchedule } from './alwaysAllow';
+import { AlwaysAllowKind, kindForDownload, kindForSchedule } from './alwaysAllow';
 import { draftEmailTool, shareLog, shareTool, uploadFileTool } from './shareTools';
 import { t } from '../i18n';
 import { captureForModel, saveFullPageScreenshot, saveScreenshot } from '../device/screenshot';
@@ -663,7 +663,7 @@ async function readCalendarTool(input: Record<string, unknown>, ctx: ToolContext
   const plan = planCalendarRead(input);
   if (typeof plan === 'string') return { content: plan, isError: true };
   if (!ctx.confirm) return { content: "This needs the user's confirmation, which is not available here.", isError: true };
-  if (!(await ctx.confirm(describeCalendarRead(plan), null))) {
+  if (!(await ctx.confirm(describeCalendarRead(plan), null, 'calendarRead'))) {
     return {
       content:
         "The user declined to share their calendar. Don't guess their schedule or availability: ask them directly.",
@@ -703,7 +703,7 @@ async function locationTool(input: Record<string, unknown>, ctx: ToolContext): P
   const lines = [t('location.agentConfirm')];
   if (purpose) lines.push(`“${purpose}”`);
   if (site) lines.push(t('location.agentSite', { host: site }));
-  if (!(await ctx.confirm(lines.join('\n\n'), null))) {
+  if (!(await ctx.confirm(lines.join('\n\n'), null, 'location'))) {
     return {
       content: "The user declined to share their location. Don't guess it: ask them where to start from.",
       isError: true,
@@ -792,13 +792,16 @@ async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext
     ...(probe.size ? [t('downloads.agentSize', { size: formatSize(probe.size) })] : []),
   ].join('\n');
   const android = Platform.OS === 'android';
+  const risky = isRiskyDownload(name, probe.type);
   const lines: IconLine[] = [
     { text: t('downloads.agentConfirm') },
     { text: details },
-    ...(isRiskyDownload(name, probe.type) ? [{ icon: 'insecure' as const, text: t('downloads.agentRisky', { host }) }] : []),
+    ...(risky ? [{ icon: 'insecure' as const, text: t('downloads.agentRisky', { host }) }] : []),
     { text: t(android ? 'downloads.agentWhereAndroid' : 'downloads.agentWhereIos') },
   ];
-  if (!(await ctx.confirm({ lines, spaced: true }, null)))
+  // "Don't ask again" covers ordinary files only: never a risky one, never from an incognito conversation.
+  const kind = kindForDownload({ risky, incognito: !!(ctx.privacy?.touchedIncognito || tab.incognito) });
+  if (!(await ctx.confirm({ lines, spaced: true }, null, kind)))
     return { content: 'The user declined the download. Ask them how to proceed.', isError: true };
   try {
     await ctx.startDownload(tab, url, name, probe.type);

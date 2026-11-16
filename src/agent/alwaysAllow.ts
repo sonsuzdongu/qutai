@@ -1,19 +1,39 @@
 /**
- * "Don't ask again" for the assistant's confirmations: a short list of low-risk kinds of action that stay on the
- * phone, which the user may allow for good from the confirmation itself (Settings › Assistant lists them with a
- * switch each, to take it back).
+ * "Don't ask again" for the assistant's confirmations of the device-permission kind (the phone's notifications,
+ * calendar, reminders, location, downloads), which the user may allow for good from the confirmation itself
+ * (Settings › Assistant lists them with a switch each, to take it back; reading the calendar and the location say
+ * there that the data then goes to the AI provider without asking).
  *
- * Only these kinds are ever offered. Everything that acts on a web page or leaves the phone (clicks, typing, form
- * submits, purchases, messages, downloads, sign-in, sharing, uploads) and everything that sends the user's data to
- * the AI provider (reading the calendar, the location) or deletes it (removing bookmarks) asks every time, and a
- * denial is never remembered.
+ * Only these kinds are ever offered. Everything that acts on a web page or leaves the phone on the user's behalf
+ * (clicks, typing, form submits, purchases, messages, sign-in, sharing, uploads, entering personal details) asks every
+ * time; so do deleting the user's data (removing bookmarks or folders), a download of a risky file, and a download in
+ * an incognito conversation. A denial is never remembered. Incognito: the calendar, location and scheduling tools are
+ * refused there before any confirmation, so a remembered kind never applies there either.
  */
 
-/** What can be allowed for good: a scheduled notification, a calendar event, a reminder. */
-export type AlwaysAllowKind = 'notification' | 'calendarEvent' | 'reminder';
+/**
+ * What can be allowed for good: a scheduled notification, a calendar event, a reminder, reading the calendar, the
+ * location, a download.
+ */
+export type AlwaysAllowKind = 'notification' | 'calendarEvent' | 'reminder' | 'calendarRead' | 'location' | 'download';
 
 /** In the order Settings lists them. */
-export const ALWAYS_ALLOW_KINDS: readonly AlwaysAllowKind[] = ['notification', 'calendarEvent', 'reminder'];
+export const ALWAYS_ALLOW_KINDS: readonly AlwaysAllowKind[] = [
+  'notification',
+  'calendarEvent',
+  'reminder',
+  'calendarRead',
+  'location',
+  'download',
+];
+
+/**
+ * The kind behind a download's confirmation, or none (asked every time, no "Don't ask again"): a risky file (one that
+ * installs or runs code, an archive), or a conversation that involves incognito tabs.
+ */
+export function kindForDownload(d: { risky: boolean; incognito: boolean }): AlwaysAllowKind | undefined {
+  return d.risky || d.incognito ? undefined : 'download';
+}
 
 export function isAlwaysAllowKind(value: unknown): value is AlwaysAllowKind {
   return typeof value === 'string' && (ALWAYS_ALLOW_KINDS as readonly string[]).includes(value);

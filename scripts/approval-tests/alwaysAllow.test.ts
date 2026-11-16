@@ -9,16 +9,61 @@ import {
   cleanAlwaysAllow,
   isAlwaysAllowed,
   isAlwaysAllowKind,
+  kindForDownload,
   kindForSchedule,
   parseAlwaysAllow,
   serializeAlwaysAllow,
   withKind,
 } from '../../src/agent/alwaysAllow.ts';
 
-test('only low-risk phone actions can be allowed for good', () => {
-  assert.deepEqual([...ALWAYS_ALLOW_KINDS], ['notification', 'calendarEvent', 'reminder']);
-  for (const kind of ['click', 'type', 'download', 'upload', 'share', 'email', 'purchase', 'signIn', 'location', 'readCalendar'])
+test('every device-permission kind can be allowed for good, nothing done on a page or on the user\'s behalf', () => {
+  assert.deepEqual([...ALWAYS_ALLOW_KINDS], ['notification', 'calendarEvent', 'reminder', 'calendarRead', 'location', 'download']);
+  for (const kind of ALWAYS_ALLOW_KINDS) assert.equal(isAlwaysAllowKind(kind), true, kind);
+  for (const kind of [
+    'click',
+    'type',
+    'submit',
+    'upload',
+    'share',
+    'email',
+    'sms',
+    'purchase',
+    'payment',
+    'signIn',
+    'personalData',
+    'removeBookmarks',
+    'readCalendar',
+  ])
     assert.equal(isAlwaysAllowKind(kind), false, kind);
+});
+
+test('a download offers "Don\'t ask again" only for an ordinary file outside incognito', () => {
+  assert.equal(kindForDownload({ risky: false, incognito: false }), 'download');
+  assert.equal(kindForDownload({ risky: true, incognito: false }), undefined);
+  assert.equal(kindForDownload({ risky: false, incognito: true }), undefined);
+  assert.equal(kindForDownload({ risky: true, incognito: true }), undefined);
+  // So a remembered "download" never skips a risky file's or an incognito conversation's confirmation.
+  assert.equal(isAlwaysAllowed(['download'], kindForDownload({ risky: true, incognito: false })), false);
+  assert.equal(isAlwaysAllowed(['download'], kindForDownload({ risky: false, incognito: true })), false);
+  assert.equal(isAlwaysAllowed(['download'], kindForDownload({ risky: false, incognito: false })), true);
+});
+
+test('"Deny" is never remembered for any kind, even with the box ticked: the next one asks again', () => {
+  for (const kind of ALWAYS_ALLOW_KINDS) {
+    const after = afterAnswer([], kind, { allowed: false, dontAskAgain: true });
+    assert.deepEqual(after, [], kind);
+    assert.equal(isAlwaysAllowed(after, kind), false, kind);
+  }
+});
+
+test('"Allow" with the box ticked remembers each new kind, and Settings can take it back', () => {
+  for (const kind of ['calendarRead', 'location', 'download'] as const) {
+    const after = afterAnswer([], kind, { allowed: true, dontAskAgain: true });
+    assert.deepEqual(after, [kind]);
+    assert.equal(isAlwaysAllowed(after, kind), true);
+    assert.deepEqual(afterAnswer([], kind, { allowed: true, dontAskAgain: false }), []);
+    assert.deepEqual(withKind(after, kind, false), []);
+  }
 });
 
 test('scheduling plans map to their kind', () => {
@@ -63,6 +108,8 @@ test('stored as a list of known kinds; anything else is dropped', () => {
   assert.deepEqual(parseAlwaysAllow(null), []);
   assert.deepEqual(parseAlwaysAllow(''), []);
   assert.deepEqual(cleanAlwaysAllow(['purchase', 'calendarEvent', 42]), ['calendarEvent']);
+  assert.equal(serializeAlwaysAllow(['download', 'location', 'notification', 'calendarRead']), 'notification,calendarRead,location,download');
+  assert.deepEqual(parseAlwaysAllow('download,submit,location'), ['location', 'download']);
   for (const list of [[], ['notification'], [...ALWAYS_ALLOW_KINDS]] as const)
     assert.deepEqual(parseAlwaysAllow(serializeAlwaysAllow([...list])), [...list]);
 });
