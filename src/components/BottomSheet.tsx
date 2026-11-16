@@ -61,6 +61,7 @@ export function BottomSheet({ visible, onClose, style, contentStyle, bottomPaddi
     >
       {/* Never shorter than the status bar plus a gap; the sheet below shrinks and scrolls instead. */}
       <Pressable
+        accessibilityRole="button"
         style={[styles.backdrop, { minHeight: insets.top + TOP_GAP }]}
         onPress={onClose}
         accessibilityLabel={t('common.close')}

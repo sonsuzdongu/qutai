@@ -93,7 +93,7 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
         <View style={styles.header}>
           <View style={styles.side} />
           <Text style={styles.title}>{t('blocking.title')}</Text>
-          <Pressable onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
+          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
             <Text style={styles.done}>{t('common.done')}</Text>
           </Pressable>
         </View>
@@ -187,7 +187,7 @@ function ListRow({
           <Text style={styles.hint}>{t(`blocking.kind.${list.kind}`)}</Text>
         </View>
         {onRemove && (
-          <Pressable onPress={onRemove} hitSlop={10} accessibilityLabel={t('blocking.remove')} style={styles.remove}>
+          <Pressable onPress={onRemove} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('blocking.remove')} style={styles.remove}>
             <Icon name="close" size={16} color={palette.textSecondary} />
           </Pressable>
         )}

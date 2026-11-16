@@ -93,7 +93,7 @@ function LibraryContent({ initialTab, onOpen, onClose }: Omit<Props, 'visible'>)
             </Pressable>
           ))}
         </View>
-        <Pressable onPress={onClose} hitSlop={8}>
+        <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8}>
           <Text style={[styles.action, styles.bold]}>{t('common.done')}</Text>
         </Pressable>
       </View>
@@ -612,7 +612,7 @@ function Overlay({ onCancel, children }: { onCancel: () => void; children: React
   return (
     // The dialog stays centered in the space above the keyboard (the Modal's window does not resize for it).
     <KeyboardAvoidingContainer style={[StyleSheet.absoluteFill, styles.overlay]}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel={t('common.close')} />
+      <Pressable accessibilityRole="button" style={StyleSheet.absoluteFill} onPress={onCancel} accessibilityLabel={t('common.close')} />
       <View style={styles.dialog} accessibilityViewIsModal>
         {children}
       </View>
@@ -818,6 +818,7 @@ function Row({
   const host = hostOf(url);
   return (
     <Pressable
+      accessibilityRole="button"
       onPress={onPress}
       onLongPress={onMore}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
@@ -836,11 +837,11 @@ function Row({
         </Text>
       </View>
       {onMore ? (
-        <Pressable onPress={onMore} hitSlop={10} style={styles.remove} accessibilityLabel={t('library.options')}>
+        <Pressable onPress={onMore} hitSlop={10} style={styles.remove} accessibilityRole="button" accessibilityLabel={t('library.options')}>
           <Icon name="more" size={16} color={palette.textSecondary} />
         </Pressable>
       ) : onRemove ? (
-        <Pressable onPress={onRemove} hitSlop={10} style={styles.remove} accessibilityLabel={t('library.delete')}>
+        <Pressable onPress={onRemove} hitSlop={10} style={styles.remove} accessibilityRole="button" accessibilityLabel={t('library.delete')}>
           <Icon name="close" size={14} color={palette.textSecondary} />
         </Pressable>
       ) : null}

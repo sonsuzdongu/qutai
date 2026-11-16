@@ -241,7 +241,7 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
           <Text style={styles.title} accessibilityRole="header">
             {t('downloads.title')}
           </Text>
-          <Pressable onPress={close} hitSlop={8} style={[styles.side, styles.right]}>
+          <Pressable accessibilityRole="button" onPress={close} hitSlop={8} style={[styles.side, styles.right]}>
             <Text style={styles.done}>{t('common.done')}</Text>
           </Pressable>
         </View>
@@ -305,6 +305,7 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
             const note = item.restarted && active ? t(`downloads.restarted.${item.restarted}`) : null;
             return (
               <Pressable
+                accessibilityRole="button"
                 onPress={() => (item.state === 'done' && !item.missing ? open(item) : setMenu(item))}
                 onLongPress={() => setMenu(item)}
                 style={({ pressed }) => [styles.row, pressed && styles.pressed]}

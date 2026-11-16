@@ -88,7 +88,7 @@ function Button({
   const styles = useStyles();
   const palette = usePalette();
   return (
-    <Pressable onPress={onPress} disabled={disabled} hitSlop={6} style={styles.button} accessibilityLabel={a11y}>
+    <Pressable onPress={onPress} disabled={disabled} hitSlop={6} style={styles.button} accessibilityRole="button" accessibilityLabel={a11y}>
       <Icon
         name={icon}
         size={20}

@@ -46,7 +46,7 @@ export function BackupScreen({ job, appLock, onClose }: Props) {
     <Modal visible={job !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <View style={styles.header}>
-          <Pressable onPress={close} hitSlop={8} style={styles.side} disabled={busy}>
+          <Pressable accessibilityRole="button" onPress={close} hitSlop={8} style={styles.side} disabled={busy}>
             <Text style={[styles.cancel, busy && styles.disabled]}>{t('common.cancel')}</Text>
           </Pressable>
           <Text style={styles.title}>{t(current === 'export' ? 'backup.exportTitle' : 'backup.importTitle')}</Text>

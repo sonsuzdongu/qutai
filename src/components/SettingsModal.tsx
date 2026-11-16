@@ -209,7 +209,7 @@ function SettingsPages({
         {page === 'main' ? (
           <View style={styles.headerSide} />
         ) : (
-          <Pressable onPress={goBack} hitSlop={8} style={styles.headerSide} accessibilityLabel={t('address.back')}>
+          <Pressable onPress={goBack} hitSlop={8} style={styles.headerSide} accessibilityRole="button" accessibilityLabel={t('address.back')}>
             <Icon name="back" size={22} color={palette.text} />
           </Pressable>
         )}
@@ -217,11 +217,11 @@ function SettingsPages({
           {titles[page]}
         </Text>
         {page === 'main' ? (
-          <Pressable onPress={onClose} hitSlop={8} style={[styles.headerSide, styles.headerRight]}>
+          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.headerSide, styles.headerRight]}>
             <Text style={styles.save}>{t('common.done')}</Text>
           </Pressable>
         ) : page === 'assistant' && aiDirty ? (
-          <Pressable onPress={saveAi} hitSlop={8} style={[styles.headerSide, styles.headerRight]}>
+          <Pressable accessibilityRole="button" onPress={saveAi} hitSlop={8} style={[styles.headerSide, styles.headerRight]}>
             <Text style={styles.save}>{t('common.save')}</Text>
           </Pressable>
         ) : (

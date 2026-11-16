@@ -510,7 +510,7 @@ export function AssistantPanel({
     <PanelTheme.Provider value={d}>
       <View style={StyleSheet.absoluteFill} pointerEvents={open ? 'auto' : 'none'}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: progress }]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('chat.closePanel')} />
+          <Pressable accessibilityRole="button" style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('chat.closePanel')} />
         </Animated.View>
 
         <Animated.View
@@ -845,6 +845,7 @@ export function AssistantPanel({
                   <Pressable
                     style={[styles.sendButton, !canSend && styles.sendDisabled]}
                     onPress={send}
+                    accessibilityRole="button"
                     accessibilityLabel={t('common.send')}
                   >
                     <Icon name="send" size={20} color="#ffffff" />
@@ -1059,7 +1060,7 @@ function HeaderButton({
   const styles = useStyles();
   const palette = usePalette();
   return (
-    <Pressable onPress={onPress} hitSlop={6} style={styles.headerButton} accessibilityLabel={accessibilityLabel}>
+    <Pressable onPress={onPress} hitSlop={6} style={styles.headerButton} accessibilityRole="button" accessibilityLabel={accessibilityLabel}>
       <Icon name={icon} size={20} color={palette.textSecondary} />
     </Pressable>
   );

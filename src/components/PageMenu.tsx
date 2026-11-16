@@ -58,7 +58,7 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose
       statusBarTranslucent
       navigationBarTranslucent
     >
-      <Pressable style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel={t('menu.close')} />
+      <Pressable accessibilityRole="button" style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel={t('menu.close')} />
       <View style={[styles.menu, theme.menu, { top, right: insets.right + 8 }]}>
         {iconRow && iconRow.length > 0 && (
           <View style={[styles.iconRow, theme.separator]}>

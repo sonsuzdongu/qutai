@@ -55,7 +55,7 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <View style={styles.header}>
-          <Pressable onPress={onClose} hitSlop={8} style={styles.side}>
+          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={styles.side}>
             <Text style={styles.cancel}>{t('common.cancel')}</Text>
           </Pressable>
           <Text style={styles.title}>{t('clearData.title')}</Text>

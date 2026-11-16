@@ -26,7 +26,7 @@ export function TextSizeSheet({ visible, zoom, onChange, onClose }: Props) {
     >
       <View style={styles.header}>
         <Text style={styles.title}>{t('textSize.title')}</Text>
-        <Pressable onPress={onClose} hitSlop={8}>
+        <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8}>
           <Text style={styles.done}>{t('common.done')}</Text>
         </Pressable>
       </View>
@@ -35,6 +35,7 @@ export function TextSizeSheet({ visible, zoom, onChange, onClose }: Props) {
       </Text>
       <View style={styles.controls}>
         <Pressable
+          accessibilityRole="button"
           onPress={() => set(zoom - 10)}
           disabled={zoom <= TEXT_ZOOM_MIN}
           style={[styles.step, zoom <= TEXT_ZOOM_MIN && styles.disabled]}
@@ -46,6 +47,7 @@ export function TextSizeSheet({ visible, zoom, onChange, onClose }: Props) {
           %{zoom}
         </Text>
         <Pressable
+          accessibilityRole="button"
           onPress={() => set(zoom + 10)}
           disabled={zoom >= TEXT_ZOOM_MAX}
           style={[styles.step, zoom >= TEXT_ZOOM_MAX && styles.disabled]}

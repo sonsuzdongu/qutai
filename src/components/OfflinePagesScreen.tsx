@@ -54,13 +54,13 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
         <View style={styles.header}>
-          <Pressable onPress={() => setReading(null)} hitSlop={8} style={styles.side}>
+          <Pressable accessibilityRole="button" onPress={() => setReading(null)} hitSlop={8} style={styles.side}>
             <View style={styles.backRow}>
               <Icon name="chevronLeft" size={18} color={palette.tintText} />
               <Text style={styles.back}>{t('offline.title')}</Text>
             </View>
           </Pressable>
-          <Pressable onPress={() => onOpenLive(reading.page.url)} hitSlop={8} style={[styles.side, styles.right]}>
+          <Pressable accessibilityRole="button" onPress={() => onOpenLive(reading.page.url)} hitSlop={8} style={[styles.side, styles.right]}>
             <Text style={styles.done}>{t('offline.openLive')}</Text>
           </Pressable>
         </View>
@@ -86,7 +86,7 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
       <View style={styles.header}>
         <View style={styles.side} />
         <Text style={styles.title}>{t('offline.title')}</Text>
-        <Pressable onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
+        <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
           <Text style={styles.done}>{t('common.done')}</Text>
         </Pressable>
       </View>
@@ -96,7 +96,7 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
         contentContainerStyle={styles.list}
         ListEmptyComponent={pages ? <Text style={styles.empty}>{t('offline.empty')}</Text> : <ActivityIndicator style={styles.loading} />}
         renderItem={({ item }) => (
-          <Pressable onPress={() => open(item)} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+          <Pressable accessibilityRole="button" onPress={() => open(item)} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
             <View style={styles.texts}>
               <Text style={styles.name} numberOfLines={2}>
                 {item.title}
@@ -109,6 +109,7 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
               onPress={() => remove(item)}
               hitSlop={10}
               style={styles.remove}
+              accessibilityRole="button"
               accessibilityLabel={t('offline.delete')}
             >
               <Icon name="close" size={14} color={palette.textSecondary} />

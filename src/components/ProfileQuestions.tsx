@@ -558,6 +558,7 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
               </View>
             ) : (
               <Pressable
+                accessibilityRole="button"
                 key={m.id}
                 onPress={() => setEditing({ id: m.id, text: m.text })}
                 style={({ pressed }) => [styles.savedRow, pressed && styles.pressed]}
@@ -569,6 +570,7 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
                   onPress={() => removeSummary(m.id)}
                   hitSlop={10}
                   style={styles.remove}
+                  accessibilityRole="button"
                   accessibilityLabel={t('memory.delete')}
                 >
                   <Icon name="close" size={14} color={palette.textSecondary} />
@@ -587,6 +589,7 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
                 }}
                 hitSlop={10}
                 style={styles.remove}
+                accessibilityRole="button"
                 accessibilityLabel={t('profile.removeInstruction')}
               >
                 <Icon name="close" size={14} color={palette.textSecondary} />
@@ -881,10 +884,10 @@ export function ProfileQuestionsScreen({
       {visible && (
         <SafeAreaView style={styles.screen} edges={MODAL_SCREEN_EDGES}>
           <View style={styles.header}>
-            <Pressable onPress={back} hitSlop={10} accessibilityLabel={t('address.back')} style={styles.headerSide}>
+            <Pressable onPress={back} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('address.back')} style={styles.headerSide}>
               <Icon name="back" size={22} color={palette.text} />
             </Pressable>
-            <Pressable onPress={onClose} hitSlop={8} style={[styles.headerSide, styles.headerRight]}>
+            <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.headerSide, styles.headerRight]}>
               <Text style={styles.close}>{t('common.close')}</Text>
             </Pressable>
           </View>

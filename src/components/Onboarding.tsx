@@ -191,6 +191,7 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                     go(index - 1);
                   }}
                   hitSlop={10}
+                  accessibilityRole="button"
                   accessibilityLabel={t('address.back')}
                 >
                   <Icon name="back" size={22} color={palette.text} />

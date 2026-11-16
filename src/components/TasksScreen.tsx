@@ -185,11 +185,11 @@ function TaskList({
     return (
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <View style={styles.header}>
-          <Pressable onPress={() => setEditing(null)} hitSlop={8} style={styles.side}>
+          <Pressable accessibilityRole="button" onPress={() => setEditing(null)} hitSlop={8} style={styles.side}>
             <Text style={styles.cancel}>{t('common.cancel')}</Text>
           </Pressable>
           <Text style={styles.title}>{t(editing.id ? 'tasks.editTitle' : 'tasks.newTitle')}</Text>
-          <Pressable onPress={save} hitSlop={8} style={[styles.side, styles.right]}>
+          <Pressable accessibilityRole="button" onPress={save} hitSlop={8} style={[styles.side, styles.right]}>
             <Text style={styles.done}>{t('common.save')}</Text>
           </Pressable>
         </View>
@@ -207,7 +207,7 @@ function TaskList({
       <View style={styles.header}>
         <View style={styles.side} />
         <Text style={styles.title}>{t('tasks.title')}</Text>
-        <Pressable onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
+        <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
           <Text style={styles.done}>{t('common.done')}</Text>
         </Pressable>
       </View>
@@ -219,6 +219,7 @@ function TaskList({
         ListEmptyComponent={tasks ? <Text style={styles.empty}>{t('tasks.empty')}</Text> : <ActivityIndicator style={styles.loading} />}
         renderItem={({ item }) => (
           <Pressable
+            accessibilityRole="button"
             onPress={() => setEditing({ id: item.id, input: item })}
             style={({ pressed }) => [styles.row, pressed && styles.pressed]}
             accessibilityHint={t('tasks.editHint')}

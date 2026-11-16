@@ -37,7 +37,7 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
         <View style={styles.header}>
           <View style={styles.side} />
           <Text style={styles.title}>{t('site.listTitle')}</Text>
-          <Pressable onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
+          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
             <Text style={styles.done}>{t('common.done')}</Text>
           </Pressable>
         </View>
@@ -49,6 +49,7 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
           ListEmptyComponent={<Text style={styles.empty}>{t('site.listEmpty')}</Text>}
           renderItem={({ item }) => (
             <Pressable
+              accessibilityRole="button"
               onPress={() => setEditing(item.host)}
               style={({ pressed }) => [styles.row, pressed && styles.pressed]}
             >
@@ -85,6 +86,7 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
                 onPress={() => store.reset(item.host)}
                 hitSlop={10}
                 style={styles.remove}
+                accessibilityRole="button"
                 accessibilityLabel={t('site.reset')}
               >
                 <Icon name="close" size={14} color={palette.textSecondary} />

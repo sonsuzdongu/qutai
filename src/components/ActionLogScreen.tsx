@@ -54,11 +54,11 @@ function ActionLog({ onClose }: { onClose: () => void }) {
   return (
     <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
       <View style={styles.header}>
-        <Pressable onPress={clearAll} disabled={!entries?.length} hitSlop={8} style={styles.side}>
+        <Pressable accessibilityRole="button" onPress={clearAll} disabled={!entries?.length} hitSlop={8} style={styles.side}>
           <Text style={[styles.clear, !entries?.length && styles.disabled]}>{t('actionLog.clear')}</Text>
         </Pressable>
         <Text style={styles.title}>{t('actionLog.title')}</Text>
-        <Pressable onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
+        <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
           <Text style={styles.done}>{t('common.done')}</Text>
         </Pressable>
       </View>

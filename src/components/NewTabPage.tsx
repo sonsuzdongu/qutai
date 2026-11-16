@@ -154,6 +154,7 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
               <View style={styles.grid}>
                 {data.sites.map((site) => (
                   <Pressable
+                    accessibilityRole="button"
                     key={site.host}
                     style={styles.tile}
                     onPress={() => onNavigate(site.url)}
@@ -212,7 +213,7 @@ function LinkRow({ title, url, onPress }: { title: string; url: string; onPress:
   const styles = useStyles();
   const host = hostOf(url);
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}>
+    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}>
       <View style={[styles.linkIcon, { backgroundColor: siteColor(host) }]}>
         <Text style={styles.linkLetter}>{(host[0] || '?').toUpperCase()}</Text>
       </View>

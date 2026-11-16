@@ -375,7 +375,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
 
       {comparing ? (
         <View style={[styles.toolbar, theme.toolbar]}>
-          <Pressable onPress={() => setComparing(null)} hitSlop={8} style={styles.toolbarSide}>
+          <Pressable accessibilityRole="button" onPress={() => setComparing(null)} hitSlop={8} style={styles.toolbarSide}>
             <Text style={[styles.toolbarText, theme.text]}>{t('common.cancel')}</Text>
           </Pressable>
           <Pressable
@@ -392,7 +392,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
         </View>
       ) : (
         <View style={[styles.toolbar, theme.toolbar]}>
-          <Pressable onPress={closeAll} disabled={allTabs.length === 0} hitSlop={8} style={styles.toolbarSide}>
+          <Pressable accessibilityRole="button" onPress={closeAll} disabled={allTabs.length === 0} hitSlop={8} style={styles.toolbarSide}>
             <Text style={[styles.toolbarText, theme.text, allTabs.length === 0 && styles.dimmed]}>
               {t('tabs.closeAll')}
             </Text>
@@ -400,11 +400,12 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
           <Pressable
             onPress={newTab}
             style={[styles.newTab, theme.newTab]}
+            accessibilityRole="button"
             accessibilityLabel={t(incognito ? 'menu.newIncognitoTab' : 'menu.newTab')}
           >
             <Icon name="newTab" size={26} color="#ffffff" />
           </Pressable>
-          <Pressable onPress={onClose} hitSlop={8} style={[styles.toolbarSide, styles.alignRight]}>
+          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.toolbarSide, styles.alignRight]}>
             <Text style={[styles.toolbarText, styles.bold, theme.accent]}>{t('common.done')}</Text>
           </Pressable>
         </View>
@@ -566,6 +567,7 @@ function TabCard({
       style={dragging && [styles.dragging, { transform: dragging.getTranslateTransform() }]}
     >
       <Pressable
+        accessibilityRole="button"
         onPress={onPress}
         onLongPress={onLongPress}
         onPressOut={onPressOut}
@@ -609,6 +611,7 @@ function TabCard({
               onPress={onCloseTab}
               hitSlop={10}
               style={styles.cardClose}
+              accessibilityRole="button"
               accessibilityLabel={t('tabs.closeTab')}
             >
               <Icon name="close" size={14} color={iconColors(theme).text} />

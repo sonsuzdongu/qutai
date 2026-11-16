@@ -291,10 +291,11 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
             </Pressable>
           ))}
           <View style={styles.proposalButtons}>
-            <Pressable onPress={() => setProposal(null)} hitSlop={8}>
+            <Pressable accessibilityRole="button" onPress={() => setProposal(null)} hitSlop={8}>
               <Text style={styles.cancelText}>{t('common.cancel')}</Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
               onPress={applyProposal}
               disabled={!proposal.some((p) => p.accepted)}
               style={[styles.applyButton, !proposal.some((p) => p.accepted) && styles.disabled]}
@@ -310,11 +311,11 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
   return (
     <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
       <View style={styles.header}>
-        <Pressable onPress={clearAll} disabled={!memories?.length} hitSlop={8} style={styles.side}>
+        <Pressable accessibilityRole="button" onPress={clearAll} disabled={!memories?.length} hitSlop={8} style={styles.side}>
           <Text style={[styles.clear, !memories?.length && styles.disabled]}>{t('memory.clearAll')}</Text>
         </Pressable>
         <Text style={styles.title}>{t('memory.title')}</Text>
-        <Pressable onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
+        <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
           <Text style={styles.done}>{t('common.done')}</Text>
         </Pressable>
       </View>
@@ -343,6 +344,7 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
                 {t('memory.categoryCount', { category: categoryName(section.category), count: section.total })}
               </Text>
               <Pressable
+                accessibilityRole="button"
                 onPress={() => clearCategory(section.category, section.total)}
                 hitSlop={8}
                 accessibilityLabel={t('memory.deleteCategoryLabel', { category: categoryName(section.category) })}
@@ -396,16 +398,17 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
                   <Text style={styles.warning}>{t('memory.hiddenSuggest')}</Text>
                 )}
                 <View style={styles.proposalButtons}>
-                  <Pressable onPress={() => setEditing(null)} hitSlop={8}>
+                  <Pressable accessibilityRole="button" onPress={() => setEditing(null)} hitSlop={8}>
                     <Text style={styles.cancelText}>{t('common.cancel')}</Text>
                   </Pressable>
-                  <Pressable onPress={saveEdit} style={styles.applyButton}>
+                  <Pressable accessibilityRole="button" onPress={saveEdit} style={styles.applyButton}>
                     <Text style={styles.addText}>{t('common.save')}</Text>
                   </Pressable>
                 </View>
               </View>
             ) : (
               <Pressable
+                accessibilityRole="button"
                 onPress={() => startEdit(item)}
                 style={({ pressed }) => [styles.row, pressed && styles.pressed]}
                 accessibilityHint={t('memory.editHint')}
@@ -430,6 +433,7 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
                   onPress={() => run((db) => deleteMemory(db, item.id))}
                   hitSlop={10}
                   style={styles.delete}
+                  accessibilityRole="button"
                   accessibilityLabel={t('memory.delete')}
                 >
                   <Icon name="close" size={14} color={palette.textSecondary} />
@@ -461,6 +465,7 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
               returnKeyType="done"
             />
             <Pressable
+              accessibilityRole="button"
               onPress={add}
               disabled={!newText.trim()}
               style={[styles.addButton, !newText.trim() && styles.disabled]}

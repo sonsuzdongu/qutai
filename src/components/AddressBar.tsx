@@ -200,6 +200,7 @@ export function AddressBar({
               }}
               hitSlop={8}
               style={[styles.clear, dark?.clear]}
+              accessibilityRole="button"
               accessibilityLabel={t('address.clear')}
             >
               <Icon name="close" size={12} color={darkUI ? darkPalette.text : palette.text} />
@@ -303,6 +304,7 @@ export function AddressBar({
       )}
 
       <Pressable
+        accessibilityRole="button"
         onPress={onOpenTabs}
         hitSlop={6}
         style={styles.icon}
@@ -408,6 +410,7 @@ function IconButton({
       disabled={disabled}
       hitSlop={6}
       style={styles.icon}
+      accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
     >
       <Icon
