@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Modal, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { Icon } from '../ui/Icon';
 import { toolIcon } from '../agent/toolIcons';
 import { withoutLeadingSymbol } from '../utils/leadingSymbol';
@@ -121,7 +121,7 @@ const useStyles = makeStyles((c) => ({
   clear: { fontSize: 15, color: c.danger },
   done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   disabled: { opacity: 0.35 },
-  list: { padding: 16, gap: 2 },
+  list: { ...readableColumn, padding: 16, gap: 2 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
   loading: { marginTop: 32 },

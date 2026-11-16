@@ -4,7 +4,7 @@ import { GradientButton, GradientText } from '../ui/BrandGradient';
 import { siteColor } from '../ui/siteColor';
 import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, readableColumn } from '../ui/theme';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
@@ -233,7 +233,7 @@ function LinkRow({ title, url, onPress }: { title: string; url: string; onPress:
 
 const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingTop: 40, paddingBottom: 40, gap: 20 },
+  content: { ...readableColumn, paddingHorizontal: 20, paddingTop: 40, paddingBottom: 40, gap: 20 },
   logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   logo: { fontSize: 30, fontWeight: '700', letterSpacing: -0.5 },
   askInner: { flexDirection: 'row', alignItems: 'center', gap: 5 },

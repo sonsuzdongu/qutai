@@ -26,7 +26,7 @@ import { MAX_ORGANISE, proposeCategories } from '../agent/organiseMemory';
 import type { ProviderId } from '../ai/types';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { authenticate } from '../device/biometric';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { getDb } from '../storage/db';
@@ -542,7 +542,7 @@ const useStyles = makeStyles((c) => ({
   clear: { fontSize: 15, color: c.danger },
   done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   disabled: { opacity: 0.35 },
-  list: { padding: 16, gap: 8 },
+  list: { ...readableColumn, padding: 16, gap: 8 },
   top: { gap: 10, marginBottom: 4 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   small: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },

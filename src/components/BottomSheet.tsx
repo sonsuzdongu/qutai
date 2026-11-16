@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleProp, View, ViewStyle } from 'react-native';
+import { Modal, Platform, Pressable, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
@@ -59,13 +59,14 @@ export function BottomSheet({ visible, onClose, style, contentStyle, bottomPaddi
       statusBarTranslucent
       navigationBarTranslucent
     >
-      {/* Never shorter than the status bar plus a gap; the sheet below shrinks and scrolls instead. */}
       <Pressable
         accessibilityRole="button"
-        style={[styles.backdrop, { minHeight: insets.top + TOP_GAP }]}
+        style={[StyleSheet.absoluteFill, styles.backdrop]}
         onPress={onClose}
         accessibilityLabel={t('common.close')}
       />
+      {/* Never closer to the top than the status bar plus a gap; the sheet below shrinks and scrolls instead. */}
+      <View style={[styles.gap, { minHeight: insets.top + TOP_GAP }]} pointerEvents="none" />
       <View
         style={[
           styles.sheet,
@@ -92,9 +93,14 @@ export function BottomSheet({ visible, onClose, style, contentStyle, bottomPaddi
 }
 
 const useStyles = makeStyles((c) => ({
-  backdrop: { flex: 1, backgroundColor: c.backdrop },
+  backdrop: { backgroundColor: c.backdrop },
+  gap: { flex: 1 },
   sheet: {
     flexShrink: 1,
+    // On a tablet the sheet stays phone-sized in the middle, over the dimmed page.
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
     backgroundColor: c.bg,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,

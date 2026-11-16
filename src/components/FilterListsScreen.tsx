@@ -6,7 +6,7 @@ import { hasNativeBlocking } from '../device/contentBlocker';
 import { t } from '../i18n';
 import { formatDateTime, formatNumber } from '../i18n/format';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
@@ -263,7 +263,7 @@ const useStyles = makeStyles((c) => ({
   right: { alignItems: 'flex-end' },
   title: { color: c.text, fontSize: 17, fontWeight: '600' },
   done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
-  content: { padding: 16, gap: 10 },
+  content: { ...readableColumn, padding: 16, gap: 10 },
   flex: { flex: 1 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   status: { fontSize: 14, color: c.text, fontWeight: '600' },

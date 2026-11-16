@@ -3,7 +3,7 @@ import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { SitePermissionSheet } from './SitePermissionSheet';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -129,7 +129,7 @@ const useStyles = makeStyles((c) => ({
   right: { alignItems: 'flex-end' },
   title: { color: c.text, fontSize: 17, fontWeight: '600' },
   done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
-  list: { padding: 16, gap: 8 },
+  list: { ...readableColumn, padding: 16, gap: 8 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
   row: {

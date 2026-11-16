@@ -23,7 +23,7 @@ import { getLanguage, t } from '../i18n';
 import type { LegalKind } from '../legal/documents';
 import type { Settings } from '../storage/settings';
 import { Icon, IconName } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { AccountScreen } from './AccountScreen';
@@ -868,7 +868,7 @@ const useStyles = makeStyles((c) => ({
   headerRight: { alignItems: 'flex-end' },
   title: { color: c.text, fontSize: 17, fontWeight: '600', flexShrink: 1, textAlign: 'center' },
   save: { fontSize: 16, color: c.tintText, fontWeight: '600' },
-  content: { padding: 16, gap: 8 },
+  content: { ...readableColumn, padding: 16, gap: 8 },
   card: { backgroundColor: c.surface, borderRadius: 14, overflow: 'hidden' },
   sectionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 12 },
   sectionRowLine: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.separator },

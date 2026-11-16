@@ -6,7 +6,7 @@ import { dayLabel, formatSize } from '../i18n/format';
 import type { DownloadItem, DownloadStore } from '../storage/downloads';
 import { isActive } from '../storage/downloads';
 import { Icon, IconName } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost, dialog } from './Dialog';
@@ -398,7 +398,7 @@ const useStyles = makeStyles((c) => ({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  list: { padding: 16, gap: 8 },
+  list: { ...readableColumn, padding: 16, gap: 8 },
   where: { fontSize: 13, color: c.textSecondary, marginBottom: 4 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
   sectionHeader: {

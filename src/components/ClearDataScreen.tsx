@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, readableColumn } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { ClearOptions } from '../storage/clearData';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -114,7 +114,7 @@ const useStyles = makeStyles((c) => ({
   side: { flex: 1 },
   title: { color: c.text, fontSize: 17, fontWeight: '600' },
   cancel: { fontSize: 16, color: c.textSecondary },
-  content: { padding: 16, gap: 12 },
+  content: { ...readableColumn, padding: 16, gap: 12 },
   label: { fontSize: 15, fontWeight: '600', color: c.text },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   segment: { flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },

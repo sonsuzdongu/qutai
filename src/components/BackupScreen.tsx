@@ -16,7 +16,7 @@ import { BackupPayload, BackupSummary, PayloadError, summarize } from '../backup
 import { authenticate } from '../device/biometric';
 import { MessageKey, t } from '../i18n';
 import { formatDateTime } from '../i18n/format';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -472,7 +472,7 @@ const useStyles = makeStyles((c) => ({
   side: { flex: 1 },
   title: { color: c.text, fontSize: 17, fontWeight: '600' },
   cancel: { fontSize: 16, color: c.textSecondary },
-  content: { padding: 16, gap: 12, paddingBottom: 40 },
+  content: { ...readableColumn, padding: 16, gap: 12, paddingBottom: 40 },
   label: { fontSize: 15, fontWeight: '600', color: c.text },
   section: { marginTop: 12 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },

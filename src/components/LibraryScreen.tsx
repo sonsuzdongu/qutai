@@ -15,7 +15,7 @@ import { pickBookmarkFile, PickerUnavailableError, shareBookmarkFile } from '../
 import { bump, success, tick } from '../device/haptics';
 import { t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { formatDate, groupByDay, hostOf, timeLabel } from '../i18n/format';
 import {
   BookmarkFileError,
@@ -175,6 +175,7 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
 
   return (
     <SectionList
+      contentContainerStyle={readableColumn}
       sections={groupByDay(entries, (e) => e.visitedAt)}
       keyExtractor={(e) => String(e.id)}
       stickySectionHeadersEnabled
@@ -447,6 +448,7 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
   return (
     <View style={styles.flex}>
       <FlatList
+        contentContainerStyle={readableColumn}
         data={items}
         keyExtractor={(item) => (item.kind === 'folder' ? `f${item.folder.id}` : item.bookmark.url)}
         keyboardShouldPersistTaps="handled"

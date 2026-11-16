@@ -95,3 +95,9 @@ export function makeStyles<S extends StyleObject>(build: (c: Palette) => S & Sty
     }, [palette]);
   };
 }
+
+/**
+ * A full-screen page's content on a tablet or a phone on its side: a readable column in the middle (680 pt, as the
+ * legal and licence pages) instead of rows stretched across the screen. No effect on a phone held upright.
+ */
+export const readableColumn = { width: '100%', maxWidth: 680, alignSelf: 'center' } as const;

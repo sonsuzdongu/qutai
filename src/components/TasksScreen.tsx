@@ -22,7 +22,7 @@ import {
   updateSavedTask,
 } from '../storage/savedTasks';
 import { Icon, IconName } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
@@ -586,7 +586,7 @@ const useStyles = makeStyles((c) => ({
   title: { color: c.text, fontSize: 17, fontWeight: '600' },
   cancel: { fontSize: 16, color: c.tintText },
   done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
-  list: { padding: 16, gap: 8 },
+  list: { ...readableColumn, padding: 16, gap: 8 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
   loading: { marginTop: 32 },
@@ -612,7 +612,7 @@ const useStyles = makeStyles((c) => ({
   footer: { padding: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border },
   addButton: { height: 44, borderRadius: 22, backgroundColor: c.tint, alignItems: 'center', justifyContent: 'center' },
   addText: { color: c.onTint, fontWeight: '700', fontSize: 15 },
-  form: { padding: 16, gap: 8 },
+  form: { ...readableColumn, padding: 16, gap: 8 },
   label: { fontSize: 13, fontWeight: '600', color: c.textSecondary, marginTop: 8 },
   small: { fontSize: 12, color: c.textSecondary, lineHeight: 17 },
   input: {

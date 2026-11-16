@@ -5,7 +5,7 @@ import { WebView } from 'react-native-webview';
 import { deleteOfflineFile, readOfflinePage } from '../device/offline';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { dayLabel, formatSize, hostOf } from '../i18n/format';
 import { getDb } from '../storage/db';
 import { listOfflinePages, OfflinePage, removeOfflinePage } from '../storage/offlinePages';
@@ -136,7 +136,7 @@ const useStyles = makeStyles((c) => ({
   title: { color: c.text, fontSize: 17, fontWeight: '600' },
   back: { fontSize: 16, color: c.tintText },
   done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
-  list: { padding: 16, gap: 8 },
+  list: { ...readableColumn, padding: 16, gap: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32, lineHeight: 21 },
   loading: { marginTop: 32 },
   row: {
