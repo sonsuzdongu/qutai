@@ -241,5 +241,7 @@ Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.
 - [ ] Gözlem (aynı ekran görüntüsü): panel başlığındaki satır "Qutai K…02 kredi" diye ortadan kesiliyor; bakiye okunmuyor.
 - [ ] İstek: "Qutai bu işlemi yapmak istiyor" türündeki bütün cihaz izni pencerelerinde "bir daha sorma" kutusu olsun: takvim okuma, takvim etkinliği, bildirim, hatırlatıcı, konum, dosya indirme vb. Kutu işaretli "İzin ver" denirse o tür için bir daha sorulmaz; "Reddet" hatırlanmaz, sonraki sefer yine sorulur. Bugün yalnızca bildirim, takvim etkinliği ve hatırlatıcıda var; takvim okumada yok. (16 Kas; "düzelt" bekleniyor)
 - [ ] Onay reddedilince sohbette kırmızı satırda İngilizce "The user declined this. Ask them how to proceed." yazıyor (uygulama dili Türkçe). Bu, modele giden araç sonucu metni; kullanıcıya ham gösteriliyor. Kullanıcıya uygulama dilinde kısa bir satır ("Reddettiniz") gösterilmeli, hata rengi de olmamalı. (16 Kas; "düzelt" bekleniyor)
+- [ ] Asistan cevap balonu bazen dar kalıyor (ekranın yarısı kadar; madde işaretli liste içeren cevapta metin dar bir sütuna sıkışıyor). Cevap balonu her zaman kullanılabilir genişliğe yayılmalı. (16 Kas, Honor / Android 15; "düzelt" bekleniyor)
+- [ ] Gözlem (aynı ekran görüntüsü): kendi anahtarla panel başlığında sağlayıcı ve model adı "Anthropi…net 5.5" diye ortadan kesiliyor.
 - Açık kalanlar: yatay ekran (yön dikeye kilitli, karar bekliyor); arka plan görevi kapalıyken uygulamadan çıkınca bekleyen istek dönüşte yeniden gönderiliyor (iki kez ücret); yazı boyutu sayfasında İngilizce "%120" yerine "120%" olmalı.
 - …
