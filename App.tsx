@@ -1,3 +1,4 @@
+import { siteRules } from './src/storage/siteRules';
 import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -509,6 +510,14 @@ function BrowserApp({
   useEffect(() => {
     contentBlocking.setMaster(settings.blockAds).catch(() => {});
   }, [settings.blockAds]);
+  // The user's own site rules: hiding rules go to the tabs, blocked domains to the network blocker.
+  useSyncExternalStore(siteRules.subscribe, siteRules.getVersion);
+  useEffect(() => {
+    void siteRules.load();
+  }, []);
+  useEffect(() => {
+    contentBlocking.setUserDomains(siteRules.domains).catch(() => {});
+  }, [siteRules.domains]);
   const blockingAllowed = settings.blockAds && settings.legalAcceptedVersion > 0;
   useEffect(() => {
     if (!blockingAllowed) return;
@@ -2194,6 +2203,8 @@ function BrowserApp({
                   blockAds: settings.blockAds,
                   blockingOffSites: sitePermissions.blockingOffSites(),
                   contentRuleLists: contentBlocking.ruleLists,
+                  siteRules: siteRules.page,
+                  userBlockedHosts: siteRules.domains,
                   httpsOnly: settings.httpsOnly,
                   blockThirdPartyCookies: settings.blockThirdPartyCookies,
                   hideCookieBanners: settings.hideCookieBanners,

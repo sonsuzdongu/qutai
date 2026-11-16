@@ -188,6 +188,8 @@ class ContentBlockingStore {
   /** One download / compile at a time. */
   private queue: Promise<unknown> = Promise.resolve();
   private master = false;
+  /** Domains the user blocks with their own rules (content/siteRules.ts), merged with the lists' domains. */
+  private userDomains: string[] = [];
 
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -269,6 +271,15 @@ class ContentBlockingStore {
     if (due.length) await this.update(due.map((l) => l.id)).catch(() => {});
     // A compile that didn't happen (e.g. the app was closed) or a lost iOS rule list.
     else if (this.needsCompile()) await this.recompile().catch(() => {});
+  }
+
+  /** The user's own blocked domains changed: compiled in with the lists (the same domains: nothing to do). */
+  async setUserDomains(domains: string[]): Promise<void> {
+    await this.load();
+    const next = [...new Set(domains)].sort();
+    if (next.join('\n') === this.userDomains.join('\n')) return;
+    this.userDomains = next;
+    if (this.needsCompile()) await this.recompile();
   }
 
   /** "Update now": every enabled list, unless unchanged on the server. */
@@ -364,10 +375,11 @@ class ContentBlockingStore {
   }
 
   private compileKey() {
-    return this.enabledLists()
+    const lists = this.enabledLists()
       .map((l) => `${l.id}@${l.fetchedAt}`)
       .sort()
       .join(',');
+    return this.userDomains.length ? `${lists}|user@${hashText(this.userDomains.join('\n'))}` : lists;
   }
 
   private needsCompile() {
@@ -495,6 +507,7 @@ class ContentBlockingStore {
         }
         await pause();
       }
+      if (this.userDomains.length) parsed.push({ block: this.userDomains, blockThirdParty: [], allow: [] });
       const merged: CompiledBlocker = mergeLists(parsed);
       const domains = merged.block.length + merged.blockThirdParty.length + merged.allow.length;
       if (domains > MAX_TOTAL_DOMAINS) throw new BlockingError('tooManyDomains');

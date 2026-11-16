@@ -1,6 +1,6 @@
 import { BLOB_KEEP_SCRIPT } from '../browser/pageScript';
 import { PageDownload, pageDownloadFrom } from '../browser/downloadRequests';
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
@@ -9,6 +9,8 @@ import type { SearchEngineId } from '../browser/search';
 import { CONTEXT_MENU_SCRIPT, ContextTarget, parseContextTarget } from '../browser/contextMenu';
 import { parseSelection, SELECTION_SCRIPT } from '../browser/selection';
 import { adBlockScript, COOKIE_BANNER_SCRIPT, isAdUrl, isHostIn } from '../content';
+import { AD_HOSTS } from '../content/adBlock';
+import { PageRule, siteRulesScript } from '../content/siteRules';
 import { siteKey } from '../agent/sitePolicy';
 import { DARK_SITE_SCRIPT } from '../content/darkSites';
 import { allowInsecure, upgradeToHttps } from '../browser/httpsOnly';
@@ -56,6 +58,13 @@ export type TabActions = {
   /** iOS: the compiled WebKit content rule lists to attach (see blocking.ts); empty until lists are compiled. */
   contentRuleLists: string[];
   hideCookieBanners: boolean;
+  /**
+   * The user's own hiding rules (content/siteRules.ts), enabled ones only; each page applies those that match its
+   * address. Not on "Don't block on this site" sites, and none while blockAds is off.
+   */
+  siteRules: PageRule[];
+  /** Domains the user blocks with their own rules, also caught by the page script blocker. */
+  userBlockedHosts: string[];
   /** A link or image was long-pressed in this tab. */
   onContextMenu: (tab: Tab, target: ContextTarget) => void;
   /** The text selection in this tab changed ("" when cleared). */
@@ -128,9 +137,15 @@ function TabWebView({
   const androidIncognito = tab.incognito && Platform.OS === 'android';
   const { textZoom, blockAds, blockingOffSites } = newTabActions;
   // The page script blocker (complements the native one: it catches what scripts add later) skips off sites itself.
+  const { siteRules, userBlockedHosts } = newTabActions;
   const adScript = useMemo(
-    () => (blockAds ? adBlockScript(undefined, blockingOffSites) : ''),
-    [blockAds, blockingOffSites],
+    () => (blockAds ? adBlockScript([...AD_HOSTS, ...userBlockedHosts], blockingOffSites) : ''),
+    [blockAds, blockingOffSites, userBlockedHosts],
+  );
+  // The user's own hiding rules; installed (empty) even while blocking is off, so turning rules off reaches open pages.
+  const rulesScript = useMemo(
+    () => siteRulesScript(blockAds ? siteRules : [], blockingOffSites),
+    [blockAds, siteRules, blockingOffSites],
   );
   const offSitesProp = useMemo(() => blockingOffSites.join('\n'), [blockingOffSites]);
   const ruleListsProp = useMemo(() => newTabActions.contentRuleLists.join('\n'), [newTabActions.contentRuleLists]);
@@ -142,9 +157,12 @@ function TabWebView({
   // Runs before the page's own scripts: request blocking and banner hiding (no flash of the banner), main frame
   // only, and the geolocation bridge.
   // Also keeps blobs a page creates readable for its downloads (BLOB_KEEP_SCRIPT).
-  const mainFrameEarly = [adScript, newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : '', BLOB_KEEP_SCRIPT].join(
-    '\n',
-  );
+  const mainFrameEarly = [
+    adScript,
+    rulesScript,
+    newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : '',
+    BLOB_KEEP_SCRIPT,
+  ].join('\n');
   // getUserMedia asks the app (per-site permission) before the WebView's own capture may run; the native
   // mediaCaptureGrant prop below is what enforces it. Every frame on iOS (frames are refused), main frame on Android.
   const mediaScript = mediaCaptureScript(tab.media.nonce);
@@ -171,6 +189,8 @@ function TabWebView({
     Platform.OS === 'android' ? playScript : '',
     Platform.OS === 'android' ? FILE_CAPTURE_SCRIPT : '',
     Platform.OS === 'android' ? BLOB_KEEP_SCRIPT : '',
+    // Again after load (main frame): Android may have run the early script for the previous page.
+    `if (window.top === window) (function () {\n${rulesScript}\n})();`,
     CONTEXT_MENU_SCRIPT,
     SELECTION_SCRIPT,
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
@@ -192,6 +212,16 @@ function TabWebView({
   // Android pull to refresh: allowed only while the page says a downward drag can't scroll it.
   const [atTop, setAtTop] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Changed rules (saved, switched, removed, an "off" site) reach the page already open at once.
+  const firstRules = useRef(true);
+  useEffect(() => {
+    if (firstRules.current) {
+      firstRules.current = false;
+      return;
+    }
+    tab.webview?.injectJavaScript(`if (window.top === window) (function () {\n${rulesScript}\n})(); true;`);
+  }, [tab, rulesScript]);
 
   // iOS: apply a new text size to the page already on screen too.
   useEffect(() => {
