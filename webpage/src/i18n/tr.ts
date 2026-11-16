@@ -249,7 +249,7 @@ export const tr: Messages = {
   'status.today.4': 'Takvim okuma ve yazma, hatırlatıcı, Ara düğmesi; SMS, WhatsApp ve e-posta taslakları',
   'status.today.5': 'Adıyla çalıştırabileceğiniz kayıtlı görevler, hatırlatıcılar, PDF okuma, görsel ekleme, indirme ve CSV dışa aktarma',
   'status.today.6': 'Okuma modu, sesli okuma, sesle yazma, kendi kurallarınızla reklam ve izleyici engelleme, şifreli yedek',
-  'status.today.7': 'Telefonun diline uyan Türkçe ve İngilizce arayüz; ekran okuyucu etiketleri ve büyük yazı desteği',
+  'status.today.7': 'On arayüz dili (Türkçe, İngilizce, Almanca, İspanyolca, Brezilya Portekizcesi, Fransızca, Japonca, Korece, Rusça, Endonezce); telefonun diline uyar ya da Ayarlar’dan seçilir; ekran okuyucu etiketleri ve büyük yazı desteği',
   'status.limits': 'Bilmeniz gereken sınırlar',
   'status.limits.1': 'Arka planda görevler yalnızca Android’de ve isteğe bağlı; görev bitince ya da size ihtiyaç duyunca bildirim gelir; iPhone’da uygulamadan çıkınca görev duraklar',
   'status.limits.2': 'Zamanlanmış görevler birer hatırlatmadır: Qutai kapalıyken hiçbir şey çalışmaz',

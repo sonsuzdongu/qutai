@@ -245,7 +245,7 @@ export const en = {
   'status.today.4': 'Calendar reading and writing, reminders, a Call button, text, WhatsApp and email drafts',
   'status.today.5': 'Saved tasks you can run by name, reminders, PDF reading, image attachments, downloads and CSV export',
   'status.today.6': 'Reader mode, read aloud, voice input, ad and tracker blocking with your own rules, encrypted backup',
-  'status.today.7': 'English and Turkish, following the phone’s language; labels for screen readers and room for large text',
+  'status.today.7': 'Ten interface languages (English, Turkish, German, Spanish, Brazilian Portuguese, French, Japanese, Korean, Russian, Indonesian), following the phone or chosen in Settings; labels for screen readers and room for large text',
   'status.limits': 'Limits to know',
   'status.limits.1': 'Background tasks are Android-only and opt-in, with a notification when a task ends or needs you; on iPhone a task pauses when you leave the app',
   'status.limits.2': 'Scheduled tasks are reminders: nothing runs while Qutai is closed',
