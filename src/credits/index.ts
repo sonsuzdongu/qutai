@@ -57,6 +57,11 @@ function signedInClient(): CreditsClient | null {
   return session?.getState().status === 'signedIn' ? getClient() : null;
 }
 
+/** The signed-in client (purchases report through it); null while signed out or without credits. */
+export function creditsClient(): CreditsClient | null {
+  return signedInClient();
+}
+
 export const creditsStore = createCreditsStore({ client: signedInClient, publicClient: getClient });
 
 export function useCreditsState(): CreditsState {

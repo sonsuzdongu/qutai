@@ -19,6 +19,13 @@ export const features = {
    */
   googleWebClientId: text(process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID),
   googleIosClientId: text(process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID),
+  /**
+   * RevenueCat's public SDK keys for buying credits (pro mode; src/purchases/). Public by design (they go into every
+   * app RevenueCat serves), but kept out of the repository with the other per-build values. Not used until the SDK is
+   * added (README.md › Qutai Credits › Buying credits).
+   */
+  revenueCatIosKey: text(process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY),
+  revenueCatAndroidKey: text(process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY),
 } as const;
 
 /** Accounts (sign-in, Settings › Account) exist only in pro mode with a server address. */

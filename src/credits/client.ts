@@ -8,6 +8,7 @@ import type {
   RelayStreamErrorEvent,
   UpstreamError,
 } from './types';
+import type { VerifyAnswer, VerifyPurchaseRequest, VerifyPurchaseResponse } from '../purchases/types';
 
 /**
  * The HTTP client for Qutai Credits (pro mode only): `GET /config`, `GET /credits` and `POST /relay`
@@ -59,6 +60,8 @@ export interface Charge {
 export const APP_VERSION_HEADER = 'X-Qutai-App-Version';
 const CONFIG_TIMEOUT_MS = 10_000;
 const CREDITS_TIMEOUT_MS = 15_000;
+/** The server waits up to 10 s for RevenueCat. */
+const VERIFY_TIMEOUT_MS = 20_000;
 /** Refusals worth waiting for (our own previous step still settling, a short rate limit, a busy provider). */
 const WAITABLE: ReadonlySet<RelayErrorKind> = new Set(['task_active', 'rate_limited', 'upstream_unavailable']);
 const MAX_WAIT_SECONDS = 20;
@@ -261,7 +264,77 @@ export function createCreditsClient(options: CreditsClientOptions) {
     return { json, charge: { charged, balance } };
   }
 
-  return { config, credits, relayStream, relayJson };
+  /**
+   * `POST /purchases/verify` (backend/README.md › Purchases): reports a store purchase. Never throws for the server's
+   * answers: the purchase flow (src/purchases/flow.ts) decides what each one means; no answer at all is `network`.
+   */
+  async function verifyPurchase(request: VerifyPurchaseRequest): Promise<VerifyAnswer> {
+    try {
+      return await withTimeout(VERIFY_TIMEOUT_MS, async (signal) => {
+        const res = await authorized((token) =>
+          fetchImpl(`${base}/purchases/verify`, {
+            method: 'POST',
+            headers: {
+              Accept: 'application/json',
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+              [APP_VERSION_HEADER]: options.appVersion,
+            },
+            body: JSON.stringify({ store: request.store, transactionId: request.transactionId }),
+            signal,
+          }),
+        );
+        if (!res.ok) return verifyError(res);
+        const response = parseVerify(await readJson(res));
+        if (response.balance !== null) options.onBalance?.(response.balance);
+        return { ok: true, response } as const;
+      });
+    } catch (e) {
+      if (e instanceof RelayError) {
+        const code = e.kind === 'not_signed_in' ? 'not_signed_in' : e.kind === 'account_suspended' ? 'account_suspended' : e.kind;
+        return { ok: false, status: e.status, code, ...(e.retryAfter ? { retryAfter: e.retryAfter } : {}) };
+      }
+      return { ok: false, status: 0, code: 'network' };
+    }
+  }
+
+  return { config, credits, relayStream, relayJson, verifyPurchase };
+}
+
+/** A refusal of `POST /purchases/verify`, with the server's own code (`purchase_not_found`, `purchase_rejected`…). */
+async function verifyError(res: Response): Promise<VerifyAnswer> {
+  const retry = res.headers.get('Retry-After');
+  const retryAfter = retry && /^\d{1,5}$/.test(retry) ? Number(retry) : undefined;
+  let body: unknown = null;
+  try {
+    body = await res.json();
+  } catch {}
+  const error = isRecord(body) && isRecord(body.error) ? body.error : {};
+  const code = typeof error.code === 'string' ? error.code : 'unknown';
+  return { ok: false, status: res.status, code, ...(retryAfter ? { retryAfter } : {}) };
+}
+
+export function parseVerify(value: unknown): VerifyPurchaseResponse {
+  const statuses = ['credited', 'refunded', 'revoked', 'held'];
+  if (
+    !isRecord(value) ||
+    (value.store !== 'apple' && value.store !== 'google') ||
+    typeof value.transactionId !== 'string' ||
+    typeof value.status !== 'string' ||
+    !statuses.includes(value.status) ||
+    whole(value.credits) === null
+  ) {
+    throw new RelayError('bad_response', 200);
+  }
+  return {
+    store: value.store,
+    transactionId: value.transactionId,
+    productId: typeof value.productId === 'string' ? value.productId : '',
+    status: value.status as VerifyPurchaseResponse['status'],
+    credits: whole(value.credits) as number,
+    balance: whole(value.balance),
+    replayed: value.replayed === true,
+  };
 }
 
 export type CreditsClient = ReturnType<typeof createCreditsClient>;

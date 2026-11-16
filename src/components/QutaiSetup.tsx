@@ -7,7 +7,7 @@ import { t, type MessageKey } from '../i18n';
 import { Icon, type IconName } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles, usePalette } from '../ui/theme';
-import { showGetCredits } from './CreditsFields';
+import { openBuyCredits } from './BuyCredits';
 import { SignInOptions } from './SignInOptions';
 
 const PROVIDER_LABEL = {
@@ -112,7 +112,7 @@ export function QutaiSetup({
           </View>
           {credits.balance !== null && credits.balance <= 0 && <Text style={styles.hint}>{t('setup.noCredits')}</Text>}
           <Pressable
-            onPress={showGetCredits}
+            onPress={openBuyCredits}
             style={({ pressed }) => [styles.buyButton, pressed && styles.pressed]}
             accessibilityRole="button"
           >

@@ -7,7 +7,7 @@ import { t, type MessageKey } from '../i18n';
 import { formatDate } from '../i18n/format';
 import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
-import { showGetCredits } from './CreditsFields';
+import { openBuyCredits } from './BuyCredits';
 
 const KIND_LABEL: Record<LedgerKind, MessageKey> = {
   purchase: 'credits.kind.purchase',
@@ -60,9 +60,9 @@ export function CreditsScreen() {
         <Text style={styles.balance} accessibilityRole="header">
           {state.balance === null ? '–' : t('credits.amount', { credits: creditsText(state.balance) })}
         </Text>
-        <Pressable onPress={showGetCredits} style={styles.button} accessibilityRole="button">
+        <Pressable onPress={openBuyCredits} style={styles.button} accessibilityRole="button">
           <Icon name="wallet" size={18} color={palette.text} />
-          <Text style={styles.buttonText}>{t('credits.get')}</Text>
+          <Text style={styles.buttonText}>{t('buy.open')}</Text>
         </Pressable>
       </View>
       {state.balance !== null && state.balance < 0 && <Text style={styles.notice}>{t('credits.negative')}</Text>}

@@ -10,13 +10,9 @@ import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { Radio } from '../ui/Radio';
 import { makeStyles, usePalette } from '../ui/theme';
+import { openBuyCredits } from './BuyCredits';
 import { askCreditsDisclosure } from './CreditsDisclosure';
 import { dialog } from './Dialog';
-
-/** "Get credits": the purchase screen comes later; until then the app says so. */
-export function showGetCredits() {
-  dialog.alert(t('credits.get'), t('credits.getUnavailable'));
-}
 
 /** The base price of a model as "input / output credits per million tokens". */
 function priceLine(m: AllowedModel): string | null {
@@ -74,8 +70,8 @@ export function CreditsFields({
           <Text style={styles.balance}>
             {state.balance === null ? t('credits.balanceUnknown') : t('credits.balance', { credits: creditsText(state.balance) })}
           </Text>
-          <Pressable onPress={showGetCredits} hitSlop={8} accessibilityRole="button">
-            <Text style={styles.link}>{t('credits.get')}</Text>
+          <Pressable onPress={openBuyCredits} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.link}>{t('buy.open')}</Text>
           </Pressable>
         </View>
       )}

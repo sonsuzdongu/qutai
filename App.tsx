@@ -51,6 +51,8 @@ import type { PublicConfig } from './src/credits/types';
 import { accountSession, useAccountState } from './src/account';
 import { lostQutaiAccount } from './src/credits/gate';
 import type { ProviderId } from './src/ai/types';
+import { reportPendingPurchases } from './src/purchases';
+import { BuyCreditsHost, openBuyCredits } from './src/components/BuyCredits';
 import { askCreditsDisclosure } from './src/components/CreditsDisclosure';
 import type { AnswerCost } from './src/ai/cost';
 import { getProvider, isConfigured, modelLabel, requestTarget } from './src/ai/providers';
@@ -407,6 +409,8 @@ export default function App() {
     <SafeAreaProvider>
       <View style={[styles.flex, { backgroundColor: (dark ? darkPalette : lightPalette).bg }]}>
         {content}
+        {/* Buying Qutai Credits (pro mode only): from setup, Settings and the "not enough credits" message. */}
+        <BuyCreditsHost />
         {!introDone && (
           <LaunchIntro
             variant={boot.intro}
@@ -549,7 +553,8 @@ function BrowserApp({
       });
   };
   const onItemAction = (action: ChatItemAction) => {
-    if (action === 'signIn') promptQutaiSignIn();
+    if (action === 'buyCredits') openBuyCredits();
+    else promptQutaiSignIn();
   };
   // The first-run introduction to the Qutai button (once; Settings › Assistant shows it again).
   const [introPending, setIntroPending] = useState(false);
@@ -573,12 +578,14 @@ function BrowserApp({
   useEffect(() => {
     refreshCredits();
   }, []);
-  // Losing the account while Qutai Credits is in use is said once, with the ways on.
+  // A purchase the server hadn't credited yet (app closed, connection lost) is reported again at start and after
+  // signing in; and losing the account while Qutai Credits is in use is said once, with the ways on.
   const accountState = useAccountState();
   const accountStatusRef = useRef(accountState.status);
   useEffect(() => {
     const previous = accountStatusRef.current;
     accountStatusRef.current = accountState.status;
+    if (accountState.status === 'signedIn') void reportPendingPurchases();
     const providers = [settingsRef.current.provider, browser.conversationOf(browser.active).model?.provider].filter(
       (p): p is ProviderId => !!p,
     );
@@ -1163,9 +1170,11 @@ function BrowserApp({
         // Qutai Credits: the way on under the error (buy credits; sign in again or choose another provider).
         const action: ChatItemAction | undefined =
           provider === 'qutai' && e instanceof RelayError
-            ? e.kind === 'not_signed_in'
-              ? 'signIn'
-              : undefined
+            ? e.kind === 'insufficient_credits'
+              ? 'buyCredits'
+              : e.kind === 'not_signed_in'
+                ? 'signIn'
+                : undefined
             : undefined;
         chat.add({ ...newItem('error', e instanceof Error ? e.message : String(e)), ...(action ? { action } : {}) });
       }

@@ -136,7 +136,7 @@ test('every kind has its own message, in English and Turkish', () => {
       assert.match(relayErrorMessage('maintenance', { detail: 'Back at 10' }), /Back at 10/);
     }
     setLanguage('en');
-    assert.match(new RelayError('insufficient_credits', 402).message, /isn’t available in the app yet/);
+    assert.match(new RelayError('insufficient_credits', 402).message, /Buy credits/);
   } finally {
     setLanguage('en');
   }

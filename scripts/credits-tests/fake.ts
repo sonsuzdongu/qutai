@@ -1,4 +1,4 @@
-// A fake of Qutai's server for the credits tests: `GET /config`, `GET /credits` and `POST /relay`, with answers the
+// A fake of Qutai's server for the credits tests: `GET /config`, `GET /credits`, `POST /relay` and `POST /purchases/verify`, with answers the
 // test sets (shapes as in backend/README.md › Relay). Every request is recorded with its headers and body.
 import { createCreditsClient, type CreditsClientOptions } from '../../src/credits/client.ts';
 import type { PublicConfig } from '../../src/credits/types.ts';
@@ -47,9 +47,10 @@ export const settlement = (charged: number, balance: number | null = 9_000_000, 
   ['qutai.settlement', { type: 'qutai.settlement', charged, balance, outcome }] as [string, unknown];
 
 /** A fake server; `relay` answers are taken in order (the last one repeats). */
-export function fakeServer(opts: { relay?: Answer[]; config?: PublicConfig; credits?: Answer } = {}) {
+export function fakeServer(opts: { relay?: Answer[]; config?: PublicConfig; credits?: Answer; verify?: Answer[] } = {}) {
   const requests: Recorded[] = [];
   const relay = [...(opts.relay ?? [])];
+  const verify = [...(opts.verify ?? [])];
   let tokenNo = 1;
   const valid = new Set(['token-1']);
   const events = { renewed: 0, suspended: 0, ended: 0, balances: [] as number[] };
@@ -69,6 +70,11 @@ export function fakeServer(opts: { relay?: Answer[]; config?: PublicConfig; cred
     }
     if (url.pathname === '/relay') {
       const a = relay.length > 1 ? relay.shift()! : relay[0];
+      if (!a) return error('unavailable', 503);
+      return typeof a === 'function' ? a(rec) : a;
+    }
+    if (url.pathname === '/purchases/verify') {
+      const a = verify.length > 1 ? verify.shift()! : verify[0];
       if (!a) return error('unavailable', 503);
       return typeof a === 'function' ? a(rec) : a;
     }
