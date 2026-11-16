@@ -14,9 +14,12 @@ Infrastructure and size are given only for what is still missing or partial; don
 ## Key finding
 
 The browser foundation and the AI experience are both in place: data is stored on the device, the everyday browser
-features are built, and the assistant reads, clicks (also by coordinates), uses other tabs and can add to the
-calendar, share a location or offer a call. What is left is mostly what needs a server (accounts, sync, Qutai
-credits, background tasks on iOS and with the phone off), native work in our own build (network-level blocking), and testing on real devices: most of it has never run on a phone.
+features are built (network-level blocking, downloads, background media and tasks on Android among them), and the
+assistant reads, clicks (also by coordinates), uses other tabs, works with PDFs, images and files, and can add to the
+calendar, share a location, prepare messages or offer a call. Accounts and Qutai Credits are built in the app (pro
+mode) and on the server, but not deployed or offered yet. What is left is mostly what needs a server (deploying it,
+sync, background tasks on iOS and with the phone off), iOS-only native work (share extension, widget, Siri, the
+default-browser entitlement), and testing on real devices: most of it has never run on a phone.
 
 ---
 
@@ -43,7 +46,7 @@ credits, background tasks on iOS and with the phone off), native work in our own
 | Reader mode | ✅ | | Readability-style extraction in the page script, shown in a script-free WebView over the page; light/dark/sepia, serif/sans, easier-reading spacing; read aloud with the paragraph highlighted |
 | QR code scanning / generation | ✅ | | `expo-camera` scanner; generation with `qrcode-generator` |
 | Voice search | 🟡 | Build | Voice input in the assistant panel with the device's speech recognition (on-device where possible, `expo-speech-recognition`); address-bar voice search not built. Needs testing on phones |
-| Download manager | ✅ | Build | See section 6: Qutai's own downloads and one Downloads screen on both platforms. Not tested on a phone |
+| Download manager | ✅ | | See section 6: Qutai's own downloads and one Downloads screen on both platforms. Not tested on a phone |
 | Detecting natural-language AI commands | 🟡 | – | "Ask Qutai" is at the top of the suggestion list; automatic detection will not be done (smart address bar decision) |
 
 ### Tab management (section 3)
@@ -65,7 +68,7 @@ credits, background tasks on iOS and with the phone off), native work in our own
 | Private browsing | ✅ | | iOS: a data store per private tab. Android: one WebView profile per private session, emptied when the last private tab closes and deleted at the next start; WebViews without profile support share cookies with normal tabs (said in the app) |
 | Screenshot restriction in private mode | ✅ | | |
 | Hiding cookie banners and ad slots (visual) | ✅ | | CSS injection into the page (`src/content/`) |
-| Network-level ad / tracker blocking | ✅ | Build · L | Domain-based, from filter lists the user picks (EasyList, EasyPrivacy, AdGuard Turkish; optional regional lists for German, Spanish/Portuguese, French, Japanese, Russian and Indonesian; custom lists by URL), downloaded on the phone from their publishers and updated every few days. Android: native request interception (`shouldInterceptRequest`) with a blocked-request count per page; iOS: compiled WebKit content rule lists (no counts). Per-site off switch. Path, element-hiding and script rules of the lists are skipped. The built-in script blocker still catches what scripts add later. Not tested on a device; needs a new development build |
+| Network-level ad / tracker blocking | ✅ | | Domain-based, from filter lists the user picks (EasyList, EasyPrivacy, AdGuard Turkish; optional regional lists for German, Spanish/Portuguese, French, Japanese, Russian and Indonesian; custom lists by URL), downloaded on the phone from their publishers and updated every few days. Android: native request interception (`shouldInterceptRequest`) with a blocked-request count per page; iOS: compiled WebKit content rule lists (no counts). Per-site off switch. Path, element-hiding and script rules of the lists are skipped. The built-in script blocker still catches what scripts add later. Not tested on a device; needs a new development build |
 | Clearing history and data | 🟡 | Build · S | By time range: history, cache, recently closed, chats, activity, "sent to the AI", downloads, saved pages. Clearing cookies needs a native module |
 | Cookie management, third-party cookies | 🟡 | Build · M | Third-party cookies blocked by default (Android setting; iOS WebKit blocks them anyway). No per-site cookie list or deletion |
 | HTTPS indicator | ✅ | | |
@@ -89,10 +92,10 @@ credits, background tasks on iOS and with the phone off), native work in our own
 | Select text to share, ask | ✅ | | Page script and a strip at the bottom of the page on both platforms |
 | Open link in new tab, save image | ✅ | | Long-press menu via page script |
 | Open in external app (tel:, mailto:, app links) | ✅ | | By asking the user; iframes cannot open apps; Android `intent://` and web fallback supported |
-| Error page (no connection, site not found) | ✅ | | Explanation by error type and "Try again"; in two languages |
+| Error page (no connection, site not found) | ✅ | | Explanation by error type and "Try again"; in every interface language |
 | Fullscreen video | ✅ | | Default on iOS; `allowsFullscreenVideo` on Android |
-| Picture-in-Picture | ✅ | Build | iOS: the system player's PiP (not for incognito tabs). Android: a playing full-screen video when the user goes home (local module `modules/qutai-media`); setting; not for incognito tabs or with the app lock on. Not tested on a phone |
-| Background audio | ✅ | Build | "Keep playing in the background" (on by default). iOS: audio background mode, WebKit handles the audio session and lock screen (videos pause when leaving, as WebKit does). Android: `mediaPlayback` foreground service with a media notification while a tab plays sound. Not tested on a phone |
+| Picture-in-Picture | ✅ | | iOS: the system player's PiP (not for incognito tabs). Android: a playing full-screen video, or an inline video playing with sound, when the user goes home (local module `modules/qutai-media`; YouTube only when its player allows background play); setting; not for incognito tabs or with the app lock on. Not tested on a phone |
+| Background audio | ✅ | | "Keep playing in the background" (on by default). iOS: audio background mode, WebKit handles the audio session and lock screen; in normal tabs the page keeps seeing "visible" and a video WebKit pauses on leaving is played again, so its sound goes on (YouTube included). Android: `mediaPlayback` foreground service with a media notification while a tab plays sound. Not tested on a phone |
 | File and image download | ✅ | | See section 6; the long-press menu's "Save image" saves to Photos on iOS and to Downloads on Android; "Download link" on both |
 
 ### Download manager (section 6)
@@ -100,7 +103,7 @@ credits, background tasks on iOS and with the phone off), native work in our own
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
 | Download, list, open, share | ✅ | | One Downloads screen: sections, search, open / share / show in folder / copy link / remove / delete, "Clear finished". iOS: the app's own Downloads folder. Android: the public Downloads folder (MediaStore), Qutai's own engine (`modules/qutai-downloads`) |
-| Progress, pause / resume, cancel | ✅ | Build | Android: progress, speed, time left, pause / resume (range requests with `If-Range`), retry with backoff, waiting for a network, a queue of three, background job (UIDT on 14+, `dataSync` before) with a notification; interrupted downloads resumable after a restart. iOS: progress and cancel (no resume) |
+| Progress, pause / resume, cancel | ✅ | | Android: progress, speed, time left, pause / resume (range requests with `If-Range`), retry with backoff, waiting for a network, a queue of three, background job (UIDT on 14+, `dataSync` before) with a notification; interrupted downloads resumable after a restart. iOS: progress and cancel (no resume) |
 | Downloads requiring login | ✅ | | iOS: the page fetches the file with the site's cookies; Android: the tab's WebView profile's cookies, per host through redirects |
 | Generated files (blob:, data:) | ✅ | | Read from the page in slices into the same list (both platforms) |
 | Choosing download location | ⬜ | | Always the Downloads folder (Android) / Qutai's Downloads (iOS, then Save to Files). "Ask where to save" left out |
@@ -118,7 +121,7 @@ credits, background tasks on iOS and with the phone off), native work in our own
 | Accessibility | 🟡 | Go · M | Reviewed in code (labels, announcements, reduce motion, text scaling, 44pt targets); no screen reader testing on a device yet |
 | Being the default browser | 🟡 | Build · M | Android: intent filters for http/https, and a shortcut to the default apps settings. iOS: requires a special entitlement from Apple |
 | Share to Qutai | 🟡 | Build · M | Android: share sheet, text-selection menu and web searches, with a chooser (open, search, ask as an unsent draft, summarize). iOS share extension open (needs an App Group in the Apple account; `expo-share-intent`) |
-| Launcher shortcuts, `qutai://` links | ✅ | Build · S | Long-press the icon: New tab, New incognito tab, Ask Qutai, Scan QR (both platforms); `qutai://open`, `search`, `ask`, `new-tab`, `new-private-tab`, `scan` for automation (Shortcuts app). Siri / App Intents open (`expo-app-intents` is alpha) |
+| Launcher shortcuts, `qutai://` links | ✅ | | Long-press the icon: New tab, New incognito tab, Ask Qutai, Scan QR (both platforms); `qutai://open`, `search`, `ask`, `new-tab`, `new-private-tab`, `scan` for automation (Shortcuts app). Siri / App Intents open (`expo-app-intents` is alpha) |
 | Home screen widgets | 🟡 | Build · M | Android: a search/ask bar with New tab, Incognito and Scan QR, no personal data, Material You. iOS open (WidgetKit extension + App Group; `expo-widgets`) |
 
 ### Account and sync (section 8)
@@ -147,8 +150,8 @@ moves everything to another phone.
 | Model per saved task | ✖️ | – | Will not be done (owner's decision, 15 Nov 2026): a saved task runs with the conversation's model |
 | Suggestions for the page | ✅ | | The empty panel suggests 3 to 5 things that fit the page, worked out on the phone from markup flags (no AI request, nothing sent until tapped) |
 | Shopping and travel assistant | 🟡 | Go · M | The agent can do this and adds bookings to the calendar; it points out subscriptions, auto-renewal, pre-ticked add-ons and coupon fields, and can hand over a comparison as a CSV (`save_file`); missing: ready-made flows |
-| Image attachments | ✅ | Build | Up to 4 images per message from Photos (no library permission) or the camera; sent to all five providers with the message, resized and without EXIF; older ones named by id and shown again on request (`view_attachment`). Not tested on a phone |
-| Image editing and upload | ✅ | Go | The assistant crops, rotates, resizes, converts and shrinks an attached image to a form's requirements (`edit_image`) without any AI request, then puts it into the page's file field after the user confirms with the image (`upload_image`; drop zones and hidden inputs too; Save to Photos when a site can't take it); "Resize or crop" presets in the preview for the user. Not tested on a phone |
+| Image attachments | ✅ | | Up to 4 images per message from Photos (no library permission) or the camera; sent to all five providers with the message, resized and without EXIF; older ones named by id and shown again on request (`view_attachment`). Not tested on a phone |
+| Image editing and upload | ✅ | | The assistant crops, rotates, resizes, converts and shrinks an attached image to a form's requirements (`edit_image`) without any AI request, then puts it into the page's file field after the user confirms with the image (`upload_image`; drop zones and hidden inputs too; Save to Photos when a site can't take it); "Resize or crop" presets in the preview for the user. Not tested on a phone |
 | Reading PDFs | ✅ | | `read_pdf`: the PDF in the tab, a link, or an attached PDF, as text with page markers (PDF.js on the phone, for all providers); scanned pages as images (`view_pages`); "Read with Qutai" on PDF links. Not tested on a phone |
 | Form assistant | ✅ | | The agent fills forms, using what it keeps in memory (name, address); no passwords, cards or codes. It sees required fields, constraints and validation errors (`read_page`, and the results of `type`, `select_option` and submit clicks) |
 | Saved tasks | ✅ | | Save a message you sent as a named task and run it again (on the page on screen, on a page opened first, or with no page; deep research optional); the last three as chips in the empty panel; in the encrypted backup |
@@ -158,7 +161,8 @@ moves everything to another phone.
 | Action preview and undo | 🟡 | | Preview and cancel exist. **Actions on the web generally cannot be undone** (a submitted form, a completed payment). The right approach is confirming the action beforehand; undo is only possible for browser actions (closing tabs, navigation) |
 | Action history | ✅ | | What the agent did on which site, 30 days; plus "What was sent to the AI" |
 | Per-site agent permissions | ✅ | | Default, always allow, ask on every action, read only, blocked |
-| Device actions | ✅ | | Calendar events, reminders, local notifications, location (`get_location`), a Call button (`offer_call`), a text message to open in Messages (`draft_sms`), a WhatsApp message to open in WhatsApp (`draft_whatsapp`; the user sends it there), opening the phone's settings (`open_settings`); each confirmed or tapped by the user |
+| Site rules | ✅ | | The user's own hiding and blocking rules per site ("My rules"), and the assistant finding, trying and saving them with the user's approval |
+| Device actions | ✅ | | Calendar events, reminders, local notifications, reading the calendar (`read_calendar`), location (`get_location`), a Call button (`offer_call`), a text message to open in Messages (`draft_sms`), a WhatsApp message to open in WhatsApp (`draft_whatsapp`; the user sends it there), opening the phone's settings (`open_settings`); each confirmed or tapped by the user (device kinds can be allowed for good with "Don't ask again", listed in Settings) |
 
 ---
 
@@ -176,7 +180,7 @@ Goal: Qutai can be used as an everyday browser.
 1. ✅ **Persistent data layer** (`expo-sqlite`): session restore, history, bookmarks and their screen, recently closed tabs, chat. Private tabs write nothing
 2. ✅ **New tab screen:** speed dial sites, bookmarks, recently visited
 3. ✅ **Address bar:** autocomplete from history and bookmarks, search suggestions (off in private mode), search engine choice, paste and go, clear, HTTPS indicator
-4. ✅ **Navigation:** forward, stop, reliable opening of external app links (tel:, mailto:, `intent://`), error page in Turkish
+4. ✅ **Navigation:** forward, stop, reliable opening of external app links (tel:, mailto:, `intent://`), error page in Turkish (now in every interface language)
 5. ✅ **Page tools:** find in page, desktop site, text size, print
 6. ✅ **Long-press menu:** open link in new tab / private tab, copy/share link, summarize with Qutai, save image
 7. ✅ **Tabs:** reopen closed tab, search in tabs, **putting unused tabs to sleep** (at most 5 open WebViews; private tabs are not put to sleep)
@@ -219,7 +223,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 1. ✅ Cookie banner hiding and URL-based ad/tracker blocking (the part doable in Expo Go: navigations, iframes, pop-ups, resources and requests added later by scripts; resources hard-coded in the HTML are in Phase 4)
 2. ✅ Dark theme (app + sites), bottom address bar option, swiping on the address bar to switch tabs, haptics
 3. ✅ Tab groups (colored, nameable, collapsible; saved with the session), drag to reorder and add to group
-4. ✅ Download manager (iOS: downloading with cookies and a Downloads screen; Android: the system download manager)
+4. ✅ Download manager (iOS: downloading with cookies and a Downloads screen; Android: first the system download manager, now Qutai's own engine and the same Downloads screen, see section 6)
 5. ✅ Clearing browsing data (by time range; cookies in Phase 4), HTTPS-only, third-party cookie setting
 6. ✅ Biometric lock (app and private tabs; Face ID on iOS in our own build, the device passcode as a fallback), QR scanning/generation
 7. ✅ Offline saving and a Saved pages screen, fullscreen video (Android)
@@ -228,7 +232,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 ### Phase 3.5 – UI review and Comet reviews (Expo Go)
 
 1. ✅ Name: Kutai → Qutai. Shared theme layer (dark theme on every screen, measured contrast), consistent icons (SF/Material Symbols), fixed address suggestions overlapping the bar
-2. ✅ Logo drawn in code (Skia): gradient Q and an orbit that spins now and then; spins continuously while working. Aurora background (new tab, first launch)
+2. ✅ Logo: first drawn in code (Skia) with an orbit, now `assets/logo.png` (the ribbon Q) with sparks now and then and while working. Aurora background (new tab, first launch)
 3. ✅ First-launch setup: introduction, Privacy Policy and Terms of Use (acceptance required, versioned), AI key, protection settings, default browser. Settings › About: Open source licences (every third-party component with its licence text, from `scripts/generate-licences.js`)
 4. ✅ Tab groups with tasks: windows opened by the page and the assistant's tabs are grouped; the assistant can close a group at once (close_tabs)
 5. ✅ Pull to refresh, screen does not dim while the app is open, full-width tables in chat, 'Rate Qutai'
@@ -240,8 +244,8 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 Merged with the "Our own build (development build)" section in `TODO.md`:
 Cookie management and cookie deletion, being the default browser on iOS, iOS widgets, "Share with
 Qutai" on iOS, app verification. Done since: assistant tasks that keep working in the background on Android, "Share to Qutai" on Android, launcher shortcuts and the `qutai://` links, the Android home screen widget, background audio and media controls, Android picture-in-picture, network-level ad and tracker blocking from filter lists (iOS WKContentRuleList,
-Android request interception), Face ID on iOS, Android private tab isolation (WebView profiles), per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the
-system download manager on Android), Android default browser (intent filters).
+Android request interception), Face ID on iOS, Android private tab isolation (WebView profiles), per-site camera and microphone for web pages, voice input in the assistant panel, downloads requiring login (the page's own cookies on iOS, the tab's
+WebView profile cookies in Qutai's own Android downloader), Android default browser (intent filters).
 
 Added from Comet reviews:
 - ✅ Ready-made filter lists for ad blocking (EasyList, EasyPrivacy, AdGuard Turkish, and off-by-default regional lists for the newer interface languages) and letting the user add lists by URL, with each list's home page and licence shown; domain rules only (the share each list contributes is shown per list). Not tested on a phone yet; needs a new development build
@@ -255,22 +259,24 @@ Added from Comet reviews:
 Done in the development build:
 - ✅ Calendar, reminders and notifications: after a booking the assistant offers (via `ask_user`) to add it to the calendar
   (`add_calendar_event`), set a reminder (`add_reminder`: iOS Reminders, on Android a calendar event with an alarm) or
-  schedule a local notification (`schedule_notification`). Every write is confirmed with its details; permissions are
-  asked on first use; never from incognito conversations. Reading the calendar is not done
+  schedule a local notification (`schedule_notification`). Every write is confirmed with its details ("Don't ask again"
+  per kind); permissions are asked on first use; never from incognito conversations. Reading the calendar
+  (`read_calendar`, "am I free on Friday?") was added later, confirmed the same way
 - ✅ Bookmark folders (nested) and importing the HTML bookmark file that Chrome, Firefox, Safari and Edge export, into
   its own dated folder (duplicates and non-web addresses skipped and counted); exporting in the same format through
   the share sheet. Uses `expo-document-picker`, which Expo Go includes but an existing development build does not:
   **a new development build is needed** (an older build says import needs a newer version instead of crashing)
 - ✅ Geolocation: web pages' `navigator.geolocation` (current position, watching, `permissions.query`) goes through
   Qutai, which asks per site ("Allow once", "Always allow on this site", "Don't allow"; block from the site's
-  permissions), https only, forgotten with incognito tabs; and the assistant's `get_location` tool, confirmed every
-  time and refused in incognito conversations. Foreground location only (`expo-location`, no background or
+  permissions), https only, forgotten with incognito tabs; and the assistant's `get_location` tool, confirmed (or
+  allowed for good with "Don't ask again") and refused in incognito conversations. Foreground location only (`expo-location`, no background or
   foreground-service permissions): **a new development build is needed**
 
 ### Phase 5 – Things that require a server
 
-Account system (shared with the credit system), end-to-end encrypted sync (including memory; deletion markers must be
-kept for deletions), Qutai credits, background
+Account system and Qutai credits: built (app in pro mode; `backend/` steps 1–6: auth, ledger, relay with tiers,
+purchases through RevenueCat, admin panel), not deployed; analytics events (`POST /events`) and abuse protection open.
+Still to build: end-to-end encrypted sync (including memory; deletion markers must be kept for deletions), background
 deep research on iOS (and tasks that go on with the phone off), price and page tracking, Safe Browsing checks.
 
 ---
@@ -300,11 +306,11 @@ deep research on iOS (and tasks that go on with the phone off), price and page t
 |---|---|
 | How many taps to reach the AI? | 1 (the Q in the address bar). Quick action chips and the selected text bar give contextual access in 1 tap too |
 | Single tab or multiple tabs? | Multiple tabs (opening, switching, listing, closing); `read_tab` reads other tabs without switching; a tab group shares one conversation |
-| What can the agent complete? | Clicking, typing, selecting, navigating via the DOM, clicking by coordinates on a screenshot (canvas, maps), reading the page source, PDF, screenshots (also full page), read-aloud, email drafts; on the phone: calendar events, reminders and notifications, the user's location, a Call button, opening the phone's settings |
-| How is permission obtained? | Mandatory confirmation for sensitive actions + optional confirmation for every action + per-site agent permissions. Calendar, reminder, notification and location tools are confirmed every time; a call needs the user's tap. Sites get location only per site (ask / allow / block) |
+| What can the agent complete? | Clicking, typing, selecting, navigating via the DOM, clicking by coordinates on a screenshot (canvas, maps), reading the page source and PDFs, PDF, screenshots (also full page), read-aloud, downloading and creating files, attaching and editing images and uploading them to pages, email, SMS and WhatsApp drafts the user sends, bookmarks, appearance settings, site rules, saved tasks by name; on the phone: calendar events, reminders and notifications, reading the calendar, the user's location, a Call button, opening the phone's settings |
+| How is permission obtained? | Mandatory confirmation for sensitive actions + optional confirmation for every action + per-site agent permissions. Device actions (calendar, reminders, notifications, location, downloads) are confirmed, or allowed for good per kind with "Don't ask again" (listed in Settings); messages, uploads and calls always need the user. Sites get location, camera and microphone only per site (ask / allow / block) |
 | Are sources transparent? | Yes: pages read and AI search citations below the answer, and "What was sent to the AI" for every request |
-| Free / paid limits | Unlimited with your own key; Qutai credits are planned |
-| iOS / Android differences | Private mode isolation, downloads (the app's own folder on iOS, the system download manager on Android), reminders (iOS Reminders, a calendar event with an alarm on Android) and PiP behaviors differ |
+| Free / paid limits | Unlimited with your own key (Anthropic, OpenAI, Gemini, OpenRouter or a custom endpoint), with an approximate cost per answer; Qutai Credits are built for the official builds but not offered yet |
+| iOS / Android differences | Private mode (per-tab data stores on iOS, one WebView profile on Android), downloads (the app's own folder on iOS, the public Downloads folder with pause/resume on Android), reminders (iOS Reminders, a calendar event with an alarm on Android), PiP, tasks in the background, share to Qutai and the home screen widget (Android only so far) |
 
 ## 5. Decisions
 
