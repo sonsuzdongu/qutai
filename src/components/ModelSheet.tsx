@@ -27,11 +27,14 @@ type Props = {
 export function conversationModelInfo(
   settings: AiConfig & { provider: ProviderId },
   choice: ModelChoice | null,
+  /** Without the provider's name (Qutai Credits beside the balance, which already says "credits"). */
+  short = false,
 ): string {
   const use = choice && isConfigured(settings, choice.provider) ? choice : null;
   const provider = use?.provider ?? settings.provider;
   const model = use?.model ?? settings.models[provider];
-  const line = `${getProvider(provider).label} · ${choiceLabel(provider, model)}`;
+  const name = choiceLabel(provider, model);
+  const line = short ? name : `${getProvider(provider).label} · ${name}`;
   return use ? `${line} · ${t('chat.modelThisChat')}` : line;
 }
 

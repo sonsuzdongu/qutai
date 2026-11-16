@@ -60,6 +60,7 @@ import { ActionSheet, SheetAction } from './ActionSheet';
 import { FINAL_WAIT_MS } from './PushToTalk';
 import { useHoldGesture, useScreenReader } from './useHoldGesture';
 import { ErrorDetails } from './ErrorDetails';
+import { statusLabelFits } from './statusFit';
 import { segmentChat, stepSummaryText, summarizeSteps } from '../chat/stepSummary';
 
 export type ChatItemAction = 'buyCredits' | 'signIn';
@@ -169,6 +170,8 @@ type Props = {
   modelInfo: string;
   /** The conversation has its own model choice (modelInfo then says so). */
   modelChosen?: boolean;
+  /** Qutai Credits: the balance ("12.34 credits"), shown after modelInfo and never shortened. */
+  balance?: string | null;
   /** Opens the sheet to choose this conversation's provider and model. */
   onModelPress: () => void;
   onClose: () => void;
@@ -252,6 +255,7 @@ export function AssistantPanel({
   finishedElsewhere,
   onShowFinished,
   modelInfo,
+  balance = null,
   modelChosen,
   onModelPress,
   onClose,
@@ -292,7 +296,7 @@ export function AssistantPanel({
   const palette = usePalette();
   const d = dark ? darkStyles : null;
   const speaking = useIsSpeaking();
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, fontScale } = useWindowDimensions();
   const width = Math.min(Math.round(screenWidth * 0.88), MAX_WIDTH);
   const insets = useSafeAreaInsets();
   const keyboardVisible = useKeyboardVisible();
@@ -504,6 +508,12 @@ export function AssistantPanel({
     ];
   };
 
+  // The width under the title and the balance's, for whether the model's name still fits beside the balance.
+  const [statusRoom, setStatusRoom] = useState(0);
+  const [balanceWidth, setBalanceWidth] = useState(0);
+  const [labelWidth, setLabelWidth] = useState(0);
+  const statusFits = statusLabelFits(statusRoom, balanceWidth, labelWidth, fontScale);
+
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [width, 0] });
 
   return (
@@ -532,7 +542,25 @@ export function AssistantPanel({
             >
               <View style={[styles.header, d?.header]}>
                 <QutaiMark size={24} working={running} sweepWhenIdle animate={open} />
-                <View style={styles.headerTitle}>
+                <View style={styles.headerTitle} onLayout={(e) => setStatusRoom(e.nativeEvent.layout.width)}>
+                  {balance ? (
+                    // The model's name at its natural width, unseen: whether it fits whole beside the balance.
+                    <View
+                      style={styles.measure}
+                      pointerEvents="none"
+                      importantForAccessibility="no-hide-descendants"
+                      accessibilityElementsHidden
+                    >
+                      <Text
+                        style={styles.status}
+                        numberOfLines={1}
+                        maxFontSizeMultiplier={1.4}
+                        onLayout={(e) => setLabelWidth(e.nativeEvent.layout.width)}
+                      >
+                        {modelInfo}
+                      </Text>
+                    </View>
+                  ) : null}
                   <GradientText style={styles.title} dark={dark}>
                     {t('chat.title')}
                   </GradientText>
@@ -543,19 +571,42 @@ export function AssistantPanel({
                     hitSlop={4}
                     style={styles.statusRow}
                     accessibilityRole="button"
-                    accessibilityLabel={t('chat.modelA11y', { model: modelInfo })}
+                    accessibilityLabel={t('chat.modelA11y', { model: balance ? `${modelInfo} · ${balance}` : modelInfo })}
                     accessibilityState={{ disabled: running }}
                   >
                     {/* Beside four buttons on a narrow phone: shortened in the middle, so the end of the model
-                        name and the arrow stay in view, and very large text sizes capped. */}
-                    <Text
-                      style={[styles.status, modelChosen && !running && styles.statusChosen]}
-                      numberOfLines={1}
-                      ellipsizeMode="middle"
-                      maxFontSizeMultiplier={1.4}
-                    >
-                      {running ? t('chat.working') : modelInfo}
-                    </Text>
+                        name and the arrow stay in view, and very large text sizes capped. The balance is never
+                        shortened: the model's name gives way to it, and goes when too little of it would show. */}
+                    {running || !balance || statusFits ? (
+                      <Text
+                        style={[styles.status, modelChosen && !running && styles.statusChosen]}
+                        numberOfLines={1}
+                        ellipsizeMode="middle"
+                        maxFontSizeMultiplier={1.4}
+                      >
+                        {running ? t('chat.working') : modelInfo}
+                      </Text>
+                    ) : null}
+                    {!running && balance ? (
+                      <>
+                        {statusFits ? (
+                          <Text
+                            style={[styles.status, styles.statusFixed, modelChosen && styles.statusChosen]}
+                            maxFontSizeMultiplier={1.4}
+                          >
+                            {' · '}
+                          </Text>
+                        ) : null}
+                        <Text
+                          style={[styles.status, styles.statusFixed, modelChosen && styles.statusChosen]}
+                          numberOfLines={1}
+                          maxFontSizeMultiplier={1.4}
+                          onLayout={(e) => setBalanceWidth(e.nativeEvent.layout.width)}
+                        >
+                          {balance}
+                        </Text>
+                      </>
+                    ) : null}
                     {running ? null : (
                       <Icon
                         name="chevronDown"
@@ -1809,6 +1860,8 @@ const useStyles = makeStyles((c) => ({
   statusChosen: { color: c.tintText },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   statusIcon: { marginTop: 1 },
+  statusFixed: { flexShrink: 0 },
+  measure: { position: 'absolute', left: 0, top: 0, width: 2000, opacity: 0, alignItems: 'flex-start' },
   headerTitle: { flex: 1, marginLeft: 10, marginRight: 8 },
   headerButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerButtonText: { fontSize: 18, color: c.textSecondary },

@@ -2167,6 +2167,13 @@ function BrowserApp({
       onToggleAssistant={() => setPanelOpen((v) => !v)}
     />
   );
+  // Qutai Credits: the balance under the panel's title, always in full (the model's name gives way to it).
+  const panelBalance =
+    (conversation.model && isConfigured(settings, conversation.model.provider)
+      ? conversation.model.provider
+      : settings.provider) === 'qutai' && creditsState.balance !== null
+      ? creditsLabel(creditsState.balance)
+      : null;
   const barAtBottom = settings.addressBarPosition === 'bottom';
 
   return (
@@ -2305,13 +2312,8 @@ function BrowserApp({
             focusRequest={focusRequest}
             research={conversation.research}
             onResearchChange={(on) => conversation.setResearch(on)}
-            modelInfo={
-              conversationModelInfo(settings, conversation.model) +
-              ((conversation.model && isConfigured(settings, conversation.model.provider) ? conversation.model.provider : settings.provider) ===
-                'qutai' && creditsState.balance !== null
-                ? ` · ${creditsLabel(creditsState.balance)}`
-                : '')
-            }
+            modelInfo={conversationModelInfo(settings, conversation.model, panelBalance !== null)}
+            balance={panelBalance}
             modelChosen={!!conversation.model && isConfigured(settings, conversation.model.provider)}
             onModelPress={() => setModelSheetFor(conversation)}
             lowCredits={
