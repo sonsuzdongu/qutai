@@ -171,14 +171,14 @@ export const QUTAI: Product = {
     },
     noAccount: {
       state: 'yes',
-      note: t('No Qutai account with your own key; the planned paid service would use one.', 'Kendi anahtarınızla Qutai hesabı yok; planlanan ücretli hizmet hesap kullanacak.'),
+      note: t('No Qutai account with your own key; the optional paid service, in the code but not offered yet, uses one.', 'Kendi anahtarınızla Qutai hesabı yok; kodda olan ama henüz sunulmayan isteğe bağlı ücretli hizmet hesap kullanır.'),
       source: src('README.md'),
     },
     directToProvider: {
       state: 'yes',
       note: t(
-        'With your own key, no Qutai server in between; an optional paid Qutai service is planned.',
-        'Kendi anahtarınızla arada Qutai sunucusu yok; isteğe bağlı ücretli Qutai hizmeti planlanıyor.',
+        'With your own key, no Qutai server in between; an optional paid Qutai service through its server is in the code, not offered yet.',
+        'Kendi anahtarınızla arada Qutai sunucusu yok; Qutai sunucusu üzerinden çalışan isteğe bağlı ücretli hizmet kodda var, henüz sunulmuyor.',
       ),
       source: src('src/ai/providers.ts'),
     },
@@ -191,8 +191,8 @@ export const QUTAI: Product = {
     adblock: {
       state: 'yes',
       note: t(
-        'Filter lists you pick (EasyList, EasyPrivacy, AdGuard Turkish) or add by address; blocks whole domains.',
-        'Seçtiğiniz (EasyList, EasyPrivacy, AdGuard Turkish) ya da adresiyle eklediğiniz filtre listeleri; tüm alan adını engeller.',
+        'Filter lists you pick (EasyList, EasyPrivacy, AdGuard Turkish) or add by address; blocks whole domains, plus your own rules.',
+        'Seçtiğiniz (EasyList, EasyPrivacy, AdGuard Turkish) ya da adresiyle eklediğiniz filtre listeleri; tüm alan adını engeller; kendi kurallarınız da eklenir.',
       ),
       source: src('README.md'),
     },
@@ -215,8 +215,8 @@ export const QUTAI: Product = {
       state: 'yes',
       value: t('Free, open source', 'Ücretsiz, açık kaynak'),
       note: t(
-        'You pay your AI provider for what you use; later you will also be able to get the AI from Qutai as a paid service (planned).',
-        'Kullandığınız kadarını AI sağlayıcınıza ödersiniz; dilerseniz ileride bu hizmeti ücretli olarak Qutai’den de alabileceksiniz (planlanıyor).',
+        'You pay your AI provider for what you use; getting the AI from Qutai as a paid service is in the code but not offered yet.',
+        'Kullandığınız kadarını AI sağlayıcınıza ödersiniz; yapay zekâyı ücretli bir hizmet olarak Qutai’den almak kodda var ama henüz sunulmuyor.',
       ),
       source: src('README.md'),
     },

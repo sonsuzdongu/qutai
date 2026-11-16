@@ -62,7 +62,7 @@ export const en = {
   'start.step1.title': 'Install Qutai',
   'start.step1.body': 'Not in the stores yet: build it from the repository today, or follow the project on GitHub.',
   'start.step2.title': 'Add your AI key',
-  'start.step2.body': 'Anthropic, OpenAI, Gemini, OpenRouter or your own server. A paid Qutai service is planned as an option.',
+  'start.step2.body': 'Anthropic, OpenAI, Gemini, OpenRouter or your own server. An optional paid Qutai service is in the code but not offered yet.',
   'start.step3.title': 'Give it a task',
   'start.step3.body': 'Tap the Q in the address bar and say what you need, in your own words.',
 
@@ -90,7 +90,7 @@ export const en = {
   'agent.kicker': 'The assistant',
   'agent.title': 'Hand it the tedious part.',
   'agent.lede':
-    'Qutai’s assistant works in your tabs: it reads pages, taps, types, opens and compares tabs, step by step. Every step is shown as it happens, and you can stop it at any time. And it remembers what you tell it, so each task needs less explaining than the last.',
+    'Qutai’s assistant works in your tabs: it reads pages, taps, types, opens and compares tabs, step by step. Every step is shown as it happens, the page it works on glows softly, and you can stop it at any time; when it is done, the steps fold into one line. And it remembers what you tell it, so each task needs less explaining than the last.',
   'agent.memory.kicker': 'Memory, on your phone',
   'agent.memory.title': 'It gets to know you, and keeps it on your phone.',
   'agent.memory.body':
@@ -130,13 +130,13 @@ export const en = {
   'privacy.kicker': 'Privacy by design',
   'privacy.title': 'Your key. Your phone. Your say.',
   'privacy.lede':
-    'You choose how Qutai reaches the AI. Today it uses your own key: requests go from your phone straight to your provider, with no Qutai account and no Qutai server in between. Later, a paid Qutai service will be an option for those who would rather not manage a key.',
+    'You choose how Qutai reaches the AI. Today it uses your own key: requests go from your phone straight to your provider, with no Qutai account and no Qutai server in between. A paid Qutai service, for those who would rather not manage a key, is in the code but not offered yet, and it will stay optional.',
   'privacy.diagramLabel':
-    'Diagram of the two ways to reach the AI. Available now, with your own key: your phone sends requests directly to the AI provider you chose, with no Qutai server in between. Planned and optional: a paid Qutai service, where requests go from your phone through Qutai’s server to the AI.',
+    'Diagram of the two ways to reach the AI. Available now, with your own key: your phone sends requests directly to the AI provider you chose, with no Qutai server in between. In the code but not offered yet, and optional: a paid Qutai service, where requests go from your phone through Qutai’s server to the AI.',
   'privacy.routeOwn': 'With your own key',
   'privacy.routeOwnTag': 'Available now',
   'privacy.routeService': 'With the Qutai service',
-  'privacy.routeServiceTag': 'Planned · optional · paid',
+  'privacy.routeServiceTag': 'Not offered yet · optional · paid',
   'privacy.diagramPhone': 'Your phone',
   'privacy.diagramPhoneSub': 'tabs, history, memory, chats',
   'privacy.diagramProvider': 'Your AI provider',
@@ -148,24 +148,24 @@ export const en = {
   'privacy.diagramAiSub': 'no key of your own',
   'privacy.key.title': 'Bring your own AI key',
   'privacy.key.body':
-    'Use a key from Anthropic, OpenAI, Google Gemini or OpenRouter, or your own OpenAI-compatible server (Ollama, LM Studio, vLLM). Choose the model, even per conversation. This route stays, whatever comes later.',
+    'Use a key from Anthropic, OpenAI, Google Gemini or OpenRouter, or your own OpenAI-compatible server (Ollama, LM Studio, vLLM), with a button to test the connection. Choose the model, even per conversation. This route stays, whatever comes later.',
   'privacy.device.title': 'Stays on the phone',
   'privacy.device.body':
     'Tabs, history, bookmarks, chats and the assistant’s memory are stored on the device. Passwords, card numbers and one-time codes are never put in memory; ID numbers and memories you lock reach the AI only as a label.',
   'privacy.sites.title': 'Permissions per site',
   'privacy.sites.body':
-    'For each site, the assistant may act freely, ask before every action, only read, or stay out. Separately, you decide whether it may enter your remembered details there.',
+    'For each site, the assistant may act freely, ask before every action, only read, or stay out. Separately, you decide whether it may enter your remembered details there, and whether the page may use your camera, microphone or location.',
   'privacy.log.title': 'What was sent to the AI',
   'privacy.log.body':
-    'A list of every request: when, which provider and model, which site, and what went with it. The content itself is kept only in memory until the app closes.',
+    'A list of every request: when, which provider and model, which site, and what went with it. The content itself is kept only in memory until the app closes. Each answer also shows the tokens it used and, where the price is known, roughly what it cost.',
   'privacy.incognito.title': 'Incognito means nothing saved',
   'privacy.incognito.body':
     'Incognito tabs keep no history, and conversations that touch them stay in memory only. Memory, location and calendar are off there, and the incognito tabs can be locked.',
   'privacy.confirm.title': 'Asks before it matters',
   'privacy.confirm.body':
-    'Sensitive actions need your yes. Calendar, location, notifications, downloads and image uploads are confirmed every time; calls, texts, WhatsApp messages and emails are only drafts that you send.',
+    'Sensitive steps wait for your yes, and calls, texts, WhatsApp messages and emails are only drafts that you send. A notification, a calendar entry, a reminder, reading your calendar or location, and an ordinary download can be allowed with “Don’t ask again”, which you can take back in Settings; a no is never remembered. Uploads and risky files are asked about every time.',
   'privacy.note':
-    'The paid Qutai service (an account, sync and Qutai credits instead of your own key) is planned for the store builds, not built yet. It will be optional: your own key keeps working, and the open-source build never needs a Qutai server.',
+    'The paid Qutai service is in the code behind a build switch, off in builds from the repository: sign-in with Apple or Google, Qutai credits instead of your own key, a choice of Qutai Fast, Qutai or Qutai Pro instead of a model, and a balance. It is not offered to anyone yet, buying credits is not connected to a store, and sync is not built. It will stay optional: your own key keeps working, and the open-source build never needs a Qutai server.',
 
   'browser.kicker': 'And a browser too',
   'browser.title': 'Everything you expect from a browser, minus the tracking.',
@@ -176,15 +176,15 @@ export const en = {
     'Light, dark or sepia, serif or sans, easier-reading spacing. Read aloud follows the article paragraph by paragraph.',
   'browser.blocking.title': 'Ad and tracker blocking',
   'browser.blocking.body':
-    'Pick EasyList, EasyPrivacy or AdGuard Turkish, or add any list by its address. Lists are downloaded on the phone; rules that block whole domains are used.',
+    'Pick EasyList, EasyPrivacy or AdGuard Turkish, or add any list by its address; lists are downloaded on the phone and their rules that block whole domains are used. Ask the assistant to hide an empty ad box or block a domain: once you approve and choose where it applies, the rule goes to My rules, where you can switch it off, export or import it.',
   'browser.audio.title': 'Plays in the background',
   'browser.audio.body':
-    'Audio keeps playing with the screen locked. On iPhone a video goes on as sound only, and some sites such as YouTube still stop it.',
+    'Audio keeps playing with the screen locked. On iPhone a video goes on as sound only; on Android it can shrink to picture-in-picture. Some sites such as YouTube still stop it.',
   'browser.private.title': 'Incognito tabs',
   'browser.private.body': 'Their own cookies and site data, gone when you close them, with an optional biometric lock.',
   'browser.backup.title': 'Encrypted backup',
   'browser.backup.body':
-    'No account, no sync: export everything to one password-protected file and import it on another phone.',
+    'No account needed and no sync: export everything to one password-protected file and import it on another phone.',
   'browser.bookmarks.title': 'Bookmarks in folders',
   'browser.bookmarks.body': 'Import the file Chrome, Firefox, Safari or Edge exports, and export the same format.',
   'browser.voice.title': 'Voice input',
@@ -243,17 +243,18 @@ export const en = {
   'status.today.2': 'Five provider options with your own key, and a model per conversation',
   'status.today.3': 'Memory with categories and hidden entries, per-site permissions, the “sent to the AI” log',
   'status.today.4': 'Calendar reading and writing, reminders, a Call button, text, WhatsApp and email drafts',
-  'status.today.5': 'Saved tasks with reminders, PDF reading, image attachments, downloads and CSV export',
-  'status.today.6': 'Reader mode, read aloud, voice input, ad and tracker blocking, encrypted backup',
+  'status.today.5': 'Saved tasks you can run by name, reminders, PDF reading, image attachments, downloads and CSV export',
+  'status.today.6': 'Reader mode, read aloud, voice input, ad and tracker blocking with your own rules, encrypted backup',
+  'status.today.7': 'English and Turkish, following the phone’s language; labels for screen readers and room for large text',
   'status.limits': 'Limits to know',
-  'status.limits.1': 'Background tasks are Android-only and opt-in; on iPhone a task pauses when you leave the app',
+  'status.limits.1': 'Background tasks are Android-only and opt-in, with a notification when a task ends or needs you; on iPhone a task pauses when you leave the app',
   'status.limits.2': 'Scheduled tasks are reminders: nothing runs while Qutai is closed',
   'status.limits.3': 'Payments are always completed by you',
   'status.limits.4': 'Sharing to Qutai and the home screen widget are Android-only for now',
   'status.planned': 'Planned',
   'status.planned.1': 'Release in the App Store and Google Play',
-  'status.planned.2': 'Optional account with end-to-end encrypted sync',
-  'status.planned.3': 'Qutai credits as an alternative to your own key',
+  'status.planned.2': 'End-to-end encrypted sync for those who choose an account',
+  'status.planned.3': 'Qutai credits in the store builds: in the code, not offered yet',
   'status.planned.4': 'Share extension and widget on iPhone',
 
   'footer.tagline': 'Agentic Browser',

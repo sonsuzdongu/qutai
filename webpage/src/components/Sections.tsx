@@ -459,7 +459,7 @@ export function Status() {
             <Icon name="check" size={20} />
             {t('status.today')}
           </h3>
-          {list('status.today', 6)}
+          {list('status.today', 7)}
         </div>
         <div className="status-col limits reveal">
           <h3>
