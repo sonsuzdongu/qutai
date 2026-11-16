@@ -2554,6 +2554,7 @@ function BrowserApp({
           blocking={permissionHost ? sitePermissions.blockingFor(permissionHost) : true}
           onSetBlocking={(on) => permissionHost && sitePermissions.setBlocking(permissionHost, on).catch(() => {})}
           blockingEnabled={settings.blockAds}
+          ownRules={permissionHost ? siteRules.forSite(permissionHost).length : 0}
           // The count belongs to the page on screen (Android); WebKit doesn't report one (iOS).
           blockedCount={
             !!permissionHost && siteKey(tab.url) === permissionHost && contentBlocking.active

@@ -36,6 +36,8 @@ type Props = {
    * or undefined when the sheet isn't about the page on screen.
    */
   blockedCount?: number | 'unavailable';
+  /** How many of the user's own rules (content/siteRules.ts) this site has; none: nothing is shown. */
+  ownRules?: number;
   /** Reloads the page on screen, for a changed blocking switch to take effect (only for the page's own site). */
   onReload?: () => void;
   /** Opens the list of every site with its own setting (absent when the sheet is opened from that list). */
@@ -64,6 +66,7 @@ export function SitePermissionSheet({
   onSetBlocking,
   blockingEnabled,
   blockedCount,
+  ownRules,
   onReload,
   onShowAll,
   onClose,
@@ -108,6 +111,7 @@ export function SitePermissionSheet({
                 : t('site.blockedCount', { count: blockedCount })}
             </Text>
           )}
+          {!!ownRules && <Text style={styles.hint}>{t('siteRules.siteCount', { count: ownRules })}</Text>}
           {changed && onReload && (
             <Pressable
               onPress={() => {

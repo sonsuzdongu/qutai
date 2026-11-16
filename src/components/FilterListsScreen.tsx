@@ -10,6 +10,7 @@ import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
+import { SiteRulesSection } from './SiteRulesSection';
 
 type Props = {
   visible: boolean;
@@ -148,6 +149,7 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
           </View>
           <Text style={styles.hint}>{t('blocking.updatesHint')}</Text>
           <Text style={styles.hint}>{t('blocking.boundaryHint')}</Text>
+          <SiteRulesSection disabled={!blockingEnabled} />
         </ScrollView>
       </SafeAreaView>
       <DialogHost />

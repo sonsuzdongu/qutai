@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ALWAYS_ALLOW_KINDS, AlwaysAllowKind, withKind } from '../agent/alwaysAllow';
@@ -41,6 +41,7 @@ import { MemoryScreen } from './MemoryScreen';
 import { TasksScreen } from './TasksScreen';
 import type { SavedTask } from '../storage/savedTasks';
 import { FilterListsScreen } from './FilterListsScreen';
+import { siteRules } from '../storage/siteRules';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 
@@ -125,6 +126,7 @@ function SettingsPages({
   const [memoryVisible, setMemoryVisible] = useState(false);
   const [tasksVisible, setTasksVisible] = useState(false);
   const [listsVisible, setListsVisible] = useState(false);
+  useSyncExternalStore(siteRules.subscribe, siteRules.getVersion);
   const [actionLogVisible, setActionLogVisible] = useState(false);
   const [sentLogVisible, setSentLogVisible] = useState(false);
   const [clearDataVisible, setClearDataVisible] = useState(false);
@@ -424,7 +426,14 @@ function SettingsPages({
               value={settings.blockAds}
               onChange={(blockAds) => set({ blockAds })}
             />
-            <LinkRow label={t('settings.filterLists')} onPress={() => setListsVisible(true)} />
+            <LinkRow
+              label={
+                siteRules.rules.length
+                  ? t('settings.filterListsRules', { count: siteRules.rules.length })
+                  : t('settings.filterLists')
+              }
+              onPress={() => setListsVisible(true)}
+            />
             <SwitchRow
               title={t('settings.thirdPartyCookies')}
               hint={t('settings.thirdPartyCookiesHint')}
