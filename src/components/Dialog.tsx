@@ -16,6 +16,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { confirm as confirmHaptic, tick } from '../device/haptics';
 import { t } from '../i18n';
 import { Icon, IconLines } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
@@ -285,6 +286,8 @@ function DialogView({ entry }: { entry: Entry }) {
     if (closing.current) return;
     closing.current = true;
     if (input) Keyboard.dismiss();
+    // A light confirmation for the dialog's action (Allow, Save…); none for Cancel / Deny or a destructive one.
+    if (index !== cancelIndex && buttons[index]?.style !== 'destructive') confirmHaptic();
     const result = { button: index, checked, text };
     if (reduceMotion) return settle(entry, result);
     Animated.timing(progress, {
@@ -408,7 +411,10 @@ function DialogView({ entry }: { entry: Entry }) {
 
             {checkbox && (
               <Pressable
-                onPress={() => setChecked((v) => !v)}
+                onPress={() => {
+                  tick();
+                  setChecked((v) => !v);
+                }}
                 style={({ pressed }) => [styles.checkRow, pressed && styles.pressed]}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked }}

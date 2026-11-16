@@ -55,7 +55,7 @@ import { KeyboardAvoidingContainer } from './KeyboardAware';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { withoutLeadingSymbol } from '../utils/leadingSymbol';
-import { bump, tick } from '../device/haptics';
+import { bump, tick, toggle } from '../device/haptics';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { FINAL_WAIT_MS } from './PushToTalk';
 import { useHoldGesture, useScreenReader } from './useHoldGesture';
@@ -716,7 +716,10 @@ export function AssistantPanel({
                   contentContainerStyle={styles.chipsContent}
                 >
                   <Pressable
-                    onPress={() => onResearchChange(!research)}
+                    onPress={() => {
+                      toggle(!research);
+                      onResearchChange(!research);
+                    }}
                     disabled={busy}
                     style={[styles.chip, d?.chip, research && styles.chipOn, busy && styles.sendDisabled]}
                     accessibilityRole="switch"
