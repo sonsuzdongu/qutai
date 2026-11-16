@@ -407,22 +407,25 @@ plain ASCII without line breaks. Names the app or the network layer sets are ref
 the API key is set (the key is sent as `Authorization: Bearer`); with the key empty it may be set here, for a server
 that wants another scheme.
 
-Cloudflare AI Gateway (not yet tried against a real account): base URL
-`https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/compat`, the provider's own key (OpenAI, Anthropic, …)
-as the API key, and for an authenticated gateway an extra header `cf-aig-authorization` with the value
-`Bearer <gateway token>`. Model IDs take the form `provider/model` (for example `openai/gpt-5-mini`). The gateway
-`default` is created by Cloudflare on the first authenticated request
-([get started](https://developers.cloudflare.com/ai-gateway/get-started/),
-[chat completion](https://developers.cloudflare.com/ai-gateway/usage/chat-completion/)). When the address field holds a
-Cloudflare API address (`https://api.cloudflare.com/client/v4/accounts/<32-hex account id>/…`, Workers AI's REST API;
-`src/ai/cloudflare.ts`, matched exactly on host and path after the normaliser, never for `gateway.ai.cloudflare.com`),
-a notice offers to convert it to `https://gateway.ai.cloudflare.com/v1/<account id>/default/compat` ("Convert") or to
-keep it ("Keep as is", until the address changes or the screen is reopened). Workers AI's own OpenAI-compatible
-address (`…/ai/v1`, a Cloudflare API token as the key,
-[docs](https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/)) gets a notice that says so
-rather than calling it incompatible; any other path is named as not the OpenAI-compatible one. Converting changes only
-the address: a hint then says the key (the provider's key, or empty with stored keys plus `cf-aig-authorization`) and
-the model (`anthropic/…`) are the user's to change.
+Cloudflare (not yet tried against a real account): the OpenAI-compatible chat address is
+`https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/v1`, with a Cloudflare API token that has the Workers AI
+Read permission as the API key. Models are named as Cloudflare documents them for that address: Workers AI models as
+`@cf/author/model` (these also need an extra header `cf-aig-gateway-id`, for example `default`), other providers'
+models as `author/model` such as `anthropic/…`, billed by Cloudflare (Unified Billing or a key stored in AI Gateway)
+([REST API](https://developers.cloudflare.com/ai-gateway/usage/rest-api/),
+[Unified Billing](https://developers.cloudflare.com/ai-gateway/features/unified-billing/)). Tool calling on that address
+is not documented by Cloudflare; "Test connection" shows whether it works. When the address field holds another path
+under `https://api.cloudflare.com/client/v4/accounts/<32-hex account id>/` (`/ai/run`, `/ai/run/@cf/<model>`,
+`/ai/v1/run`, `/ai`, `/ai/v1/responses`, `/ai/v1/embeddings`, `/ai/v1/messages` and the like; `src/ai/cloudflare.ts`,
+matched exactly on host and path after the normaliser), a warning says it isn't the chat address Qutai needs, with
+"Use the chat address" (changes it to `…/accounts/<account id>/ai/v1`) and "Keep as is" (until the address changes or
+the screen is reopened; not saved). A model named in a `/ai/run/<model>` path is shown in the hint for the user to put
+in the model field, never filled in by itself; key and model are left alone, with a hint on what they must be. The
+`…/ai/v1` address itself gets one informational line. An existing AI Gateway address
+(`https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/compat`, the provider's key as the API key,
+`cf-aig-authorization: Bearer <gateway token>` as an extra header for an authenticated gateway, `provider/model` IDs)
+keeps working and triggers no notice; Cloudflare calls `/compat` deprecated for single-model chat
+([chat completion](https://developers.cloudflare.com/ai-gateway/usage/chat-completion/)).
 
 Each conversation can use another model than the default: the model shown under the panel's title opens a sheet
 with the providers that are set up (a key, or the custom endpoint) and their models (OpenRouter's full catalogue
@@ -764,7 +767,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/components/BrowserView.tsx` | Draws the WebViews of the awake tabs stacked on top of each other; at most five stay awake, the rest sleep as a URL and thumbnail |
 | `src/chat/Conversation.ts` | A conversation with the assistant: one per tab, or one shared by a tab group, with its own model choice (`src/components/ModelSheet.tsx`) |
 | `src/components/Dialog.tsx`, `src/components/BottomSheet.tsx` | Themed dialogs (instead of native alerts) and the bottom sheet the menus use, kept inside the safe area |
-| `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters; `chatWire.ts` / `chatCompletions.ts` speak the OpenAI Chat Completions format (OpenRouter and the custom endpoint), `openrouterCatalog.ts` / `openrouterModels.ts` the model catalogue, `customEndpoint.ts` / `customTest.ts` / `serverError.ts` / `cloudflare.ts` the custom endpoint's address rules, "Test connection", reading error answers and the Cloudflare address notice (tests: `npm run test:custom`) |
+| `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters; `chatWire.ts` / `chatCompletions.ts` speak the OpenAI Chat Completions format (OpenRouter and the custom endpoint), `openrouterCatalog.ts` / `openrouterModels.ts` the model catalogue, `customEndpoint.ts` / `customTest.ts` / `serverError.ts` / `cloudflare.ts` the custom endpoint's address rules, "Test connection", reading error answers and the Cloudflare address warning (tests: `npm run test:custom`) |
 | `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, saved tasks, settings |
 | `src/i18n/` | Turkish and English UI strings, date formats |
 | `src/device/` | Device features: PDF, screenshots (also full page), read aloud, voice input (`voiceInput.ts`), share/copy, downloads, private mode protection, calendar and reminders, notifications, location, opening system settings, the phone dialer |

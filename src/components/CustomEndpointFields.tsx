@@ -84,11 +84,13 @@ export function CustomEndpointFields({ value, onChange }: { value: Value; onChan
   const [modelsError, setModelsError] = useState('');
   const [busy, setBusy] = useState<'models' | 'test' | null>(null);
   const [checks, setChecks] = useState<Check[] | null>(null);
-  // The Cloudflare notice: the address the user chose to keep, and the one converted to (for the follow-up hint).
+  // The Cloudflare notice: the address the user chose to keep, and the address changed to with the model the old
+  // one named (for the follow-up hint).
   const [keptCloudflare, setKeptCloudflare] = useState('');
-  const [convertedTo, setConvertedTo] = useState('');
+  const [fixedCloudflare, setFixedCloudflare] = useState<{ url: string; model?: string } | null>(null);
   const cloudflare = detectCloudflareApi(value.customBaseUrl);
-  const showCloudflare = !!cloudflare && url.ok && keptCloudflare !== url.url;
+  const warnCloudflare = !!cloudflare && !cloudflare.chatReady && url.ok && keptCloudflare !== url.url;
+  const fixedShown = !!fixedCloudflare && value.customBaseUrl.trim() === fixedCloudflare.url;
   const controller = useRef<AbortController | null>(null);
   useEffect(() => () => controller.current?.abort(), []);
 
@@ -161,32 +163,35 @@ export function CustomEndpointFields({ value, onChange }: { value: Value; onChan
       )}
       {url.ok && url.cleartext && <Text style={styles.warn}>{t('custom.cleartextNote')}</Text>}
       {url.ok && url.missingV1 && <Text style={styles.hint}>{t('custom.v1Hint')}</Text>}
-      {showCloudflare && cloudflare && (
-        <View style={styles.notice} accessibilityRole="summary">
+      {!!cloudflare && cloudflare.chatReady && !fixedShown && (
+        <Text style={styles.hint}>{t('custom.cfChatInfo')}</Text>
+      )}
+      {warnCloudflare && cloudflare && (
+        <View style={styles.notice}>
           <View style={styles.noticeRow}>
-            <Icon name="info" size={18} color={palette.textSecondary} style={styles.checkMark} />
+            <Icon name="insecure" size={18} color={MARK_WARN} style={styles.checkMark} />
             <View style={styles.flex}>
-              <Text style={styles.optionText}>
-                {t(cloudflare.openAiCompatible ? 'custom.cfNoticeV1' : 'custom.cfNotice')}
-              </Text>
-              <Text style={styles.hint}>{t('custom.cfNoticeChanges')}</Text>
+              <Text style={styles.optionText}>{t('custom.cfWrongPath')}</Text>
               <Text style={styles.hint} selectable>
-                {cloudflare.gatewayUrl}
+                {cloudflare.chatUrl}
               </Text>
+              {!!cloudflare.model && (
+                <Text style={styles.hint}>{t('custom.cfWrongPathModel', { model: cloudflare.model })}</Text>
+              )}
             </View>
           </View>
           <View style={styles.noticeActions}>
             <Pressable
               onPress={() => {
-                setConvertedTo(cloudflare.gatewayUrl);
+                setFixedCloudflare({ url: cloudflare.chatUrl, model: cloudflare.model });
                 setChecks(null);
-                set({ customBaseUrl: cloudflare.gatewayUrl });
+                set({ customBaseUrl: cloudflare.chatUrl });
               }}
               style={styles.textButton}
               accessibilityRole="button"
-              accessibilityLabel={t('custom.cfConvertA11y', { url: cloudflare.gatewayUrl })}
+              accessibilityLabel={t('custom.cfFixA11y', { url: cloudflare.chatUrl })}
             >
-              <Text style={styles.link}>{t('custom.cfConvert')}</Text>
+              <Text style={styles.link}>{t('custom.cfFix')}</Text>
             </Pressable>
             <Pressable
               onPress={() => url.ok && setKeptCloudflare(url.url)}
@@ -199,8 +204,13 @@ export function CustomEndpointFields({ value, onChange }: { value: Value; onChan
           </View>
         </View>
       )}
-      {!!convertedTo && value.customBaseUrl.trim() === convertedTo && (
-        <Text style={styles.warn}>{t('custom.cfConverted')}</Text>
+      {fixedShown && fixedCloudflare && (
+        <View style={styles.notice}>
+          <Text style={styles.optionText}>{t('custom.cfFixed')}</Text>
+          {!!fixedCloudflare.model && (
+            <Text style={styles.hint}>{t('custom.cfFixedModel', { model: fixedCloudflare.model })}</Text>
+          )}
+        </View>
       )}
       {!ALLOW_CLEARTEXT && <Text style={styles.hint}>{t('custom.httpsOnlyAndroid')}</Text>}
 

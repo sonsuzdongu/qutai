@@ -92,11 +92,12 @@ Cloudflare'e yayın ve Access.
 
 - [ ] Adres çubuğu varsayılan olarak altta
 - [ ] Özel adres (OpenAI uyumlu) için ek başlıklar çalışıyor
-- [ ] Özel adres: Cloudflare `api.cloudflare.com/client/v4/accounts/<hesap kimliği>/ai/run` adresi yapıştırınca not çıkıyor; "Dönüştür" adresi `gateway.ai.cloudflare.com/v1/<hesap kimliği>/default/compat` yapıyor, anahtar ve model değişmiyor, altında anahtar/model ipucu görünüyor; "Olduğu gibi bırak" notu gizliyor
-- [ ] Özel adres: `…/ai/v1` ile biten Cloudflare adresinde not "OpenAI uyumlu adres" diyor (uyumsuz demiyor); `gateway.ai.cloudflare.com` adresinde not hiç çıkmıyor
+- [ ] Özel adres: Cloudflare `api.cloudflare.com/client/v4/accounts/<hesap kimliği>/ai/run` adresi yapıştırınca uyarı çıkıyor; "Sohbet adresini kullan" adresi `…/accounts/<hesap kimliği>/ai/v1` yapıyor, anahtar ve model değişmiyor, altında anahtar (Workers AI Read izinli Cloudflare token'ı) ve model ipucu görünüyor; "Olduğu gibi bırak" uyarıyı gizliyor
+- [ ] Özel adres: `…/ai/run/@cf/meta/llama-3.1-8b-instruct` yapıştırınca uyarıda bu model adı geçiyor; model alanı kendiliğinden dolmuyor
+- [ ] Özel adres: `…/ai/v1` (ya da `…/ai/v1/chat/completions`) adresinde uyarı yok, yalnızca kısa bilgi satırı; `gateway.ai.cloudflare.com/…/compat` adresinde hiçbir not çıkmıyor
 - [ ] Bağlantıyı test et, yanlış yollu Cloudflare adresiyle: "Sunucuya ulaşıldı", "Anahtar kontrol edilmedi", "Model kontrol edilmedi", ardından kırmızı "Bu adreste /chat/completions yok" ve sunucunun yanıtı (400: No route for that URI); "Araç çağırma yok" çıkmıyor
 - [ ] Aynı adresle sohbette hata "API hatası 400: No route for that URI. Özel uç noktanın adresinde…" diye görünüyor (yalnızca "API hatası 400" değil); hata metninde anahtar yok
-- [ ] Dönüştürülmüş AI Gateway adresiyle (sağlayıcı anahtarı, `anthropic/…` model, gerekirse `cf-aig-authorization` başlığı) Bağlantıyı test et ve çok adımlı bir görev çalışıyor
+- [ ] `…/ai/v1` adresiyle (Cloudflare API token'ı, `@cf/…` model ve `cf-aig-gateway-id: default` başlığı; ayrıca `anthropic/…` model) Bağlantıyı test et: araç çağırma çalışıyor mu (Cloudflare belgelemiyor), çok adımlı bir görev
 - [ ] Test satırları ekran okuyucuda durumuyla okunuyor (Geçti / Uyarı / Başarısız / Kontrol edilmedi)
 - [ ] iOS: uygulama açılışta çökmüyor (WebKit düzeltmesi); kurulum, indirmeler ve bildirimler iOS'ta da denenmeli
 - [ ] Otomatik doldurma: adresin tamamını doldurma engellendi mi, bu kabul edilebilir mi (karar bekliyor)
