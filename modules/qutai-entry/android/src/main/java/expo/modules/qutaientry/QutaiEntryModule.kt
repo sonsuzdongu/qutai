@@ -54,7 +54,7 @@ class QutaiEntryModule : Module() {
     Function("setAppLanguage") { tag: String ->
       val context = appContext.reactContext?.applicationContext ?: return@Function false
       AppLanguage.set(context, tag)
-    }.runOnQueue(Queues.MAIN)
+    }
 
     /** Everything that arrived since the last call, oldest first; each item is returned once. */
     Function("takePending") {
