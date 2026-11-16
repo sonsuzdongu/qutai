@@ -1741,7 +1741,7 @@ export const ja: Record<keyof typeof en, string> = {
   'ptt.sent': '送信しました:「{text}」',
   'ptt.sentA11y': '音声メッセージを送信しました',
   'ptt.open': '開く',
-  'voice.noLanguageList': 'このスマートフォンは音声認識の言語一覧を提供していません。トルコ語と英語は上にあります。',
+  'voice.noLanguageList': 'このスマートフォンは音声認識の言語一覧を提供していません。上の言語から選べます。',
   'settings.voiceSection': '音声入力',
   'settings.voiceLanguage': '聞き取る言語',
   'settings.voiceHoldToTalk': 'Qutai ボタンを長押しして話す',

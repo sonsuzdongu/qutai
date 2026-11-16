@@ -1740,7 +1740,7 @@ export const ru: Record<keyof typeof en, string> = {
   'ptt.sent': 'Отправлено: «{text}»',
   'ptt.sentA11y': 'Голосовое сообщение отправлено',
   'ptt.open': 'Открыть',
-  'voice.noLanguageList': 'Этот телефон не сообщает список языков распознавания. Турецкий и английский указаны выше.',
+  'voice.noLanguageList': 'Этот телефон не сообщает список языков распознавания. Можно выбрать один из языков выше.',
   'settings.voiceSection': 'Голосовой ввод',
   'settings.voiceLanguage': 'Язык распознавания',
   'settings.voiceHoldToTalk': 'Удерживать кнопку Qutai для диктовки',

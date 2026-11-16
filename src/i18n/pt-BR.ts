@@ -1741,7 +1741,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'ptt.sent': 'Enviado: “{text}”',
   'ptt.sentA11y': 'Mensagem de voz enviada',
   'ptt.open': 'Abrir',
-  'voice.noLanguageList': 'Este celular não lista os idiomas de fala dele. Turco e inglês estão acima.',
+  'voice.noLanguageList': 'Este celular não lista os idiomas de fala dele. Você pode escolher entre os idiomas acima.',
   'settings.voiceSection': 'Entrada de voz',
   'settings.voiceLanguage': 'Idioma de escuta',
   'settings.voiceHoldToTalk': 'Segurar o botão do Qutai para falar',

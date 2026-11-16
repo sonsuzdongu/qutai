@@ -1735,7 +1735,7 @@ export const tr: Record<keyof typeof en, string> = {
   'ptt.sent': 'Gönderildi: “{text}”',
   'ptt.sentA11y': 'Sesli mesaj gönderildi',
   'ptt.open': 'Aç',
-  'voice.noLanguageList': 'Bu telefon konuşma dillerini listelemiyor. Türkçe ve İngilizce yukarıda.',
+  'voice.noLanguageList': 'Bu telefon konuşma dillerini listelemiyor. Yukarıdaki dillerden seçebilirsiniz.',
   'settings.voiceSection': 'Sesle yazma',
   'settings.voiceLanguage': 'Dinleme dili',
   'settings.voiceHoldToTalk': 'Konuşmak için Qutai düğmesini basılı tutun',

@@ -1736,7 +1736,7 @@ export const es: Record<keyof typeof en, string> = {
   'ptt.sent': 'Enviado: «{text}»',
   'ptt.sentA11y': 'Mensaje de voz enviado',
   'ptt.open': 'Abrir',
-  'voice.noLanguageList': 'Este teléfono no indica sus idiomas de voz. El turco y el inglés están arriba.',
+  'voice.noLanguageList': 'Este teléfono no indica sus idiomas de voz. Puedes elegir entre los idiomas de arriba.',
   'settings.voiceSection': 'Entrada de voz',
   'settings.voiceLanguage': 'Idioma de escucha',
   'settings.voiceHoldToTalk': 'Mantener presionado el botón de Qutai para hablar',

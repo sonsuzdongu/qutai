@@ -1729,7 +1729,7 @@ export const de: Record<keyof typeof en, string> = {
   'ptt.sent': 'Gesendet: „{text}“',
   'ptt.sentA11y': 'Sprachnachricht gesendet',
   'ptt.open': 'Öffnen',
-  'voice.noLanguageList': 'Dieses Telefon listet seine Sprachen für die Spracherkennung nicht auf. Türkisch und Englisch stehen oben.',
+  'voice.noLanguageList': 'Dieses Telefon listet seine Sprachen für die Spracherkennung nicht auf. Sie können eine der Sprachen oben wählen.',
   'settings.voiceSection': 'Spracheingabe',
   'settings.voiceLanguage': 'Sprache für Spracheingabe',
   'settings.voiceHoldToTalk': 'Qutai-Taste zum Sprechen halten',

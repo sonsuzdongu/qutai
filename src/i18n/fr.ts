@@ -1740,7 +1740,7 @@ export const fr: Record<keyof typeof en, string> = {
   'ptt.sent': 'Envoyé : « {text} »',
   'ptt.sentA11y': 'Message vocal envoyé',
   'ptt.open': 'Ouvrir',
-  'voice.noLanguageList': 'Ce téléphone n’indique pas ses langues de reconnaissance vocale. Le turc et l’anglais figurent ci-dessus.',
+  'voice.noLanguageList': 'Ce téléphone n’indique pas ses langues de reconnaissance vocale. Vous pouvez choisir parmi les langues ci-dessus.',
   'settings.voiceSection': 'Saisie vocale',
   'settings.voiceLanguage': 'Langue d’écoute',
   'settings.voiceHoldToTalk': 'Maintenir le bouton Qutai pour parler',

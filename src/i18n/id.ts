@@ -1740,7 +1740,7 @@ export const id: Record<keyof typeof en, string> = {
   'ptt.sent': 'Terkirim: “{text}”',
   'ptt.sentA11y': 'Pesan suara terkirim',
   'ptt.open': 'Buka',
-  'voice.noLanguageList': 'Ponsel ini tidak mencantumkan bahasa ucapannya. Bahasa Turki dan Inggris ada di atas.',
+  'voice.noLanguageList': 'Ponsel ini tidak mencantumkan bahasa ucapannya. Anda dapat memilih dari bahasa di atas.',
   'settings.voiceSection': 'Input suara',
   'settings.voiceLanguage': 'Bahasa yang didengarkan',
   'settings.voiceHoldToTalk': 'Tahan tombol Qutai untuk berbicara',

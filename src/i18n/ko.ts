@@ -1739,7 +1739,7 @@ export const ko: Record<keyof typeof en, string> = {
   'ptt.sent': '전송됨: “{text}”',
   'ptt.sentA11y': '음성 메시지가 전송되었습니다',
   'ptt.open': '열기',
-  'voice.noLanguageList': '이 휴대전화는 음성 언어 목록을 제공하지 않습니다. 튀르키예어와 영어는 위에 있습니다.',
+  'voice.noLanguageList': '이 휴대전화는 음성 언어 목록을 제공하지 않습니다. 위의 언어 중에서 선택할 수 있습니다.',
   'settings.voiceSection': '음성 입력',
   'settings.voiceLanguage': '듣기 언어',
   'settings.voiceHoldToTalk': 'Qutai 버튼을 길게 눌러 말하기',

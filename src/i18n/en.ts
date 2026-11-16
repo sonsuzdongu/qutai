@@ -1729,7 +1729,7 @@ export const en = {
   'ptt.sent': 'Sent: “{text}”',
   'ptt.sentA11y': 'Voice message sent',
   'ptt.open': 'Open',
-  'voice.noLanguageList': 'This phone doesn’t list its speech languages. Turkish and English are above.',
+  'voice.noLanguageList': 'This phone doesn’t list its speech languages. You can choose from the languages above.',
   'settings.voiceSection': 'Voice input',
   'settings.voiceLanguage': 'Listening language',
   'settings.voiceHoldToTalk': 'Hold the Qutai button to talk',
