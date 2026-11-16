@@ -17,7 +17,10 @@ const OTHER_KEYS = [
   'account_session', // account/storage.ts
   'account_device_id', // account/storage.ts
   'credits_disclosure_accepted', // credits/index.ts
-  'credits_pending_purchases', // purchases/index.ts
+  // purchases/index.ts: only the app's retry queue for reporting purchases. Credits live in the server's ledger with
+  // the account, and the server's store webhook credits a purchase even if the app never reports it, so clearing
+  // this loses nothing.
+  'credits_pending_purchases',
   'webview_user_agent', // browser/userAgent.ts (Android only, listed for completeness)
 ];
 
