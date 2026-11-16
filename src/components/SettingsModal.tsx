@@ -56,8 +56,11 @@ type Props = {
   incognitoActive: boolean;
   /** "Show the Qutai button tour": Settings closes and the first-run introduction shows again. */
   onShowAssistantIntro: () => void;
+  /** The page Settings opens on (the main page unless the app sends the user somewhere: sign in, choose a provider). */
+  initialPage?: SettingsPage;
 };
 
+export type SettingsPage = Page;
 type Page = 'main' | 'account' | 'credits' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'backup' | 'about';
 
 /** Where the Android back button goes; the open page sets it (the modal receives the button). */
@@ -102,11 +105,12 @@ function SettingsPages({
   onRunTask,
   incognitoActive,
   onShowAssistantIntro,
+  initialPage = 'main',
   back,
 }: Omit<Props, 'visible'> & { back: BackRoute }) {
   const styles = useStyles();
   const palette = usePalette();
-  const [page, setPage] = useState<Page>('main');
+  const [page, setPage] = useState<Page>(initialPage);
   // The API key, provider and model are typed, so they wait for Save; everything else applies at once.
   const [ai, setAi] = useState<AiChoice>(() => pickAi(settings));
   const aiDirty = !sameAi(ai, pickAi(settings));
@@ -290,7 +294,7 @@ function SettingsPages({
 
         {page === 'assistant' && (
           <>
-            <AiProviderFields value={ai} onChange={setAi} />
+            <AiProviderFields value={ai} onChange={setAi} onSignIn={accountsEnabled ? () => setPage('account') : undefined} />
             {aiDirty && (
               <Pressable onPress={saveAi} style={styles.saveButton} accessibilityRole="button">
                 <Text style={styles.saveButtonText}>{t('common.save')}</Text>
@@ -541,7 +545,7 @@ function SettingsPages({
           </>
         )}
 
-        {page === 'account' && accountsEnabled && <AccountScreen onOpenCredits={() => setPage('credits')} />}
+        {page === 'account' && accountsEnabled && <AccountScreen onOpenCredits={() => setPage('credits')} usesCredits={settings.provider === 'qutai'} />}
         {page === 'credits' && creditsEnabled && account.status === 'signedIn' && <CreditsScreen />}
 
         {page === 'backup' && (

@@ -59,6 +59,8 @@ import { ActionSheet, SheetAction } from './ActionSheet';
 import { FINAL_WAIT_MS } from './PushToTalk';
 import { useHoldGesture, useScreenReader } from './useHoldGesture';
 
+export type ChatItemAction = 'buyCredits' | 'signIn';
+
 export type ChatItem = {
   id: string;
   kind:
@@ -108,6 +110,8 @@ export type ChatItem = {
   expired?: boolean;
   /** The last item of a task: the tokens and approximate cost of all the task's requests (numbers only). */
   cost?: AnswerCost;
+  /** For 'error': a way out offered under it (Qutai Credits: buy credits, or sign in / choose another provider). */
+  action?: ChatItemAction;
 };
 
 /** Voice input: the settings it follows and where its messages go. */
@@ -167,6 +171,8 @@ type Props = {
   onChoose: (itemId: string, option: string) => void;
   onNewChat: () => void;
   onOpenSettings: () => void;
+  /** An error's way out (Qutai Credits: buy credits, sign in or choose another provider). */
+  onItemAction?: (action: ChatItemAction) => void;
   /** Opens "What was sent to the AI" for this conversation. */
   onShowSent: () => void;
   /** Show the approximate cost under answers (Settings › Assistant). */
@@ -245,6 +251,7 @@ export function AssistantPanel({
   onChoose,
   onNewChat,
   onOpenSettings,
+  onItemAction,
   onShowSent,
   showCost,
   onMessageAction,
@@ -561,6 +568,7 @@ export function AssistantPanel({
                     <ChatRow
                       item={item}
                       onOpenAttachment={onOpenAttachment}
+                      onItemAction={onItemAction}
                       reading={speaking && readingId === item.id}
                       selectable={selectableId === item.id}
                       onAction={(action) => messageAction(action, item)}
@@ -970,9 +978,12 @@ function ChatRow({
   onOpenSource,
   onChoose,
   onOpenAttachment,
+  onItemAction,
 }: {
   item: ChatItem;
   onOpenAttachment: (info: AttachmentInfo) => void;
+  /** An error's way out (`item.action`). */
+  onItemAction?: (action: ChatItemAction) => void;
   onImage: (action: 'share' | 'save', info: AttachmentInfo) => void;
   /** This answer is being read aloud. */
   reading: boolean;
@@ -1299,6 +1310,23 @@ function ChatRow({
       return <ShareCard share={share} onOpen={onOpenAttachment} onShare={onShare} />;
     }
     case 'error':
+      if (item.action && onItemAction) {
+        const action = item.action;
+        return (
+          <View>
+            <StepLine icon="insecure" text={item.text} error />
+            <Pressable
+              onPress={() => onItemAction(action)}
+              style={({ pressed }) => [styles.itemAction, pressed && styles.itemActionPressed]}
+              accessibilityRole="button"
+              hitSlop={6}
+            >
+              <Icon name={action === 'buyCredits' ? 'wallet' : 'person'} size={16} color={palette.tintText} />
+              <Text style={styles.itemActionText}>{t(action === 'buyCredits' ? 'buy.open' : 'credits.signInOrChoose')}</Text>
+            </Pressable>
+          </View>
+        );
+      }
       return <StepLine icon="insecure" text={item.text} error />;
     default:
       return <StepLine icon={item.icon} text={item.text} />;
@@ -1646,6 +1674,21 @@ const useStyles = makeStyles((c) => ({
   action: { color: c.textSecondary, fontSize: 12, marginLeft: 4 },
   error: { color: c.danger, fontSize: 13, marginLeft: 4 },
   stepLine: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginLeft: 4 },
+  itemAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: 6,
+    marginTop: 6,
+    marginLeft: 24,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: c.tint,
+  },
+  itemActionPressed: { opacity: 0.7 },
+  itemActionText: { color: c.tintText, fontSize: 14, fontWeight: '600' },
   stepIcon: { marginTop: 1 },
   stepText: { marginLeft: 0, flexShrink: 1 },
   sources: { alignSelf: 'stretch', gap: 4 },

@@ -89,6 +89,7 @@ const ICONS = {
   travel: { ios: 'airplane', android: 'flight' },
   food: { ios: 'fork.knife', android: 'restaurant' },
   wallet: { ios: 'wallet.pass', android: 'account_balance_wallet' },
+  key: { ios: 'key', android: 'key' },
   preferences: { ios: 'slider.horizontal.3', android: 'tune' },
   // Assistant steps.
   globe: { ios: 'globe', android: 'language' },

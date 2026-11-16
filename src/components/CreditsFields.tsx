@@ -30,7 +30,16 @@ function priceLine(m: AllowedModel): string | null {
  * can be used (signed in, the disclosure accepted), the balance, where the data goes, and the models the server offers
  * with their credit price.
  */
-export function CreditsFields({ model, onModel }: { model: string; onModel: (id: string) => void }) {
+export function CreditsFields({
+  model,
+  onModel,
+  onSignIn,
+}: {
+  model: string;
+  onModel: (id: string) => void;
+  /** Opens Settings › Account (shown signed out). */
+  onSignIn?: () => void;
+}) {
   const styles = useStyles();
   const palette = usePalette();
   const account = useAccountState();
@@ -50,7 +59,15 @@ export function CreditsFields({ model, onModel }: { model: string; onModel: (id:
   return (
     <View style={styles.root}>
       {!signedIn ? (
-        <Text style={styles.notice}>{t('credits.fields.signIn')}</Text>
+        <>
+          <Text style={styles.notice}>{t('credits.fields.signIn')}</Text>
+          {onSignIn && (
+            <Pressable onPress={onSignIn} style={({ pressed }) => [styles.signIn, pressed && styles.pressed]} accessibilityRole="button">
+              <Icon name="person" size={18} color={palette.tintText} />
+              <Text style={styles.link}>{t('credits.signIn')}</Text>
+            </Pressable>
+          )}
+        </>
       ) : (
         <View style={styles.balanceRow}>
           <Icon name="wallet" size={18} color={palette.textSecondary} />
@@ -138,4 +155,15 @@ const useStyles = makeStyles((c) => ({
   optionBody: { flex: 1 },
   detail: { color: c.textSecondary, fontSize: 12, marginTop: 2 },
   loading: { alignSelf: 'flex-start', marginVertical: 8 },
+  signIn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 42,
+    borderRadius: 21,
+    borderWidth: 1.5,
+    borderColor: c.tint,
+  },
+  pressed: { opacity: 0.8 },
 }));

@@ -48,7 +48,9 @@ import { creditsLabel } from './src/components/AnswerCost';
 import { nothingSent, RelayError } from './src/credits/errors';
 import { offeredModels } from './src/credits/rules';
 import type { PublicConfig } from './src/credits/types';
-import { accountSession } from './src/account';
+import { accountSession, useAccountState } from './src/account';
+import { lostQutaiAccount } from './src/credits/gate';
+import type { ProviderId } from './src/ai/types';
 import { askCreditsDisclosure } from './src/components/CreditsDisclosure';
 import type { AnswerCost } from './src/ai/cost';
 import { getProvider, isConfigured, modelLabel, requestTarget } from './src/ai/providers';
@@ -61,12 +63,12 @@ import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
 import { ContextAction, ContextMenuSheet } from './src/components/ContextMenuSheet';
-import { AssistantPanel, QuickAction } from './src/components/AssistantPanel';
+import { AssistantPanel, QuickAction, type ChatItemAction } from './src/components/AssistantPanel';
 import { FindBar } from './src/components/FindBar';
 import { KeyboardAvoidingContainer } from './src/components/KeyboardAware';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
 import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
-import { SettingsModal } from './src/components/SettingsModal';
+import { SettingsModal, type SettingsPage } from './src/components/SettingsModal';
 import { AssistantIntro, assistantIntroSeen, setAssistantIntroSeen } from './src/components/AssistantIntro';
 import { CalendarChoiceHost } from './src/components/CalendarChoiceScreen';
 import { SelectionAction, SelectionBar } from './src/components/SelectionBar';
@@ -518,6 +520,37 @@ function BrowserApp({
     else browser.openTab();
   };
   const [settingsVisible, setSettingsVisible] = useState(false);
+  /** The page Settings opens on next (reset to the main page when it closes). */
+  const [settingsPage, setSettingsPage] = useState<SettingsPage>('main');
+  const settingsVisibleRef = useRef(false);
+  settingsVisibleRef.current = settingsVisible;
+  const openSettings = (page: SettingsPage = 'main') => {
+    setSettingsPage(page);
+    setSettingsVisible(true);
+  };
+  /**
+   * Qutai Credits is the provider but there is no account (signed out, deleted, session ended, a restored backup):
+   * sign in, or choose another provider. Nothing is lost: a message being sent is back in the input.
+   */
+  const promptQutaiSignIn = () => {
+    void dialog
+      .show({
+        title: t('credits.signInPromptTitle'),
+        message: t('credits.signInPromptBody'),
+        buttons: [
+          { text: t('credits.notNow'), style: 'cancel' },
+          { text: t('credits.useOwnKey') },
+          { text: t('credits.signIn'), primary: true },
+        ],
+      })
+      .then((r) => {
+        if (r.button === 1) openSettings('assistant');
+        if (r.button === 2) openSettings('account');
+      });
+  };
+  const onItemAction = (action: ChatItemAction) => {
+    if (action === 'signIn') promptQutaiSignIn();
+  };
   // The first-run introduction to the Qutai button (once; Settings › Assistant shows it again).
   const [introPending, setIntroPending] = useState(false);
   useEffect(() => {
@@ -540,6 +573,19 @@ function BrowserApp({
   useEffect(() => {
     refreshCredits();
   }, []);
+  // Losing the account while Qutai Credits is in use is said once, with the ways on.
+  const accountState = useAccountState();
+  const accountStatusRef = useRef(accountState.status);
+  useEffect(() => {
+    const previous = accountStatusRef.current;
+    accountStatusRef.current = accountState.status;
+    const providers = [settingsRef.current.provider, browser.conversationOf(browser.active).model?.provider].filter(
+      (p): p is ProviderId => !!p,
+    );
+    // In Settings the account page itself says so (and shows the sign-in buttons).
+    if (lostQutaiAccount(previous, accountState.status, providers) && !settingsVisibleRef.current) promptQutaiSignIn();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountState.status]);
   /** The conversation whose model is being chosen (the sheet under the panel's title). */
   const [modelSheetFor, setModelSheetFor] = useState<Conversation | null>(null);
   const [tabsVisible, setTabsVisible] = useState(false);
@@ -884,6 +930,24 @@ function BrowserApp({
         return;
       }
     }
+    // Qutai Credits: signed in, and the disclosure answered before the first use (asked here if it never was). Checked
+    // before the message is taken, so a refusal leaves it in the input with its files (nothing is lost).
+    const intended = chat.model && isConfigured(settings, chat.model.provider) ? chat.model.provider : settings.provider;
+    if (intended === 'qutai' && !creditsReady()) {
+      const signedIn = accountSession()?.getState().status === 'signedIn';
+      if (signedIn && (await askCreditsDisclosure())) {
+        // Accepted: carry on with this message.
+      } else {
+        chat.setDraft(chat.draft.trim() && chat.draft.trim() !== text.trim() ? `${chat.draft.trimEnd()}\n\n${text}` : text);
+        chat.add({
+          ...newItem('error', t(signedIn ? 'credits.error.notAccepted' : 'credits.error.notSignedInKept')),
+          ...(signedIn ? {} : { action: 'signIn' as const }),
+        });
+        persistConversation(chat);
+        if (!signedIn) promptQutaiSignIn();
+        return;
+      }
+    }
     if (prepared?.chat === chat && !options.voice) setPrepared(null);
     const attachments = options.voice ? [] : chat.takePending();
     const sent = userItem(text, attachments);
@@ -898,17 +962,6 @@ function BrowserApp({
       chat.setModel(null);
     }
     const provider = useChoice ? choice.provider : settings.provider;
-    // Qutai Credits: signed in, and the disclosure answered before the first use (asked here if it never was).
-    if (provider === 'qutai' && !creditsReady()) {
-      const signedIn = accountSession()?.getState().status === 'signedIn';
-      if (signedIn && (await askCreditsDisclosure())) {
-        // Accepted: carry on with this message.
-      } else {
-        chat.add(newItem('error', t(signedIn ? 'credits.error.notAccepted' : 'credits.error.notSignedIn')));
-        persistConversation(chat);
-        return;
-      }
-    }
     if (!isConfigured(settings, provider)) {
       chat.add(
         newItem(
@@ -1106,7 +1159,16 @@ function BrowserApp({
         nothingSent(e) &&
         chat.withdraw(sent.id, userTurn, text, attachments);
       if (signal.aborted) chat.add({ ...newItem('info', t('chat.stopped')), icon: 'stop' });
-      else chat.add(newItem('error', e instanceof Error ? e.message : String(e)));
+      else {
+        // Qutai Credits: the way on under the error (buy credits; sign in again or choose another provider).
+        const action: ChatItemAction | undefined =
+          provider === 'qutai' && e instanceof RelayError
+            ? e.kind === 'not_signed_in'
+              ? 'signIn'
+              : undefined
+            : undefined;
+        chat.add({ ...newItem('error', e instanceof Error ? e.message : String(e)), ...(action ? { action } : {}) });
+      }
       if (kept) chat.add(newItem('info', t('credits.messageKept')));
       outcome = { kind: 'failed', text: e instanceof Error ? e.message : String(e) };
       // What the server says now (a stream cut short was still charged; a refusal may mean the balance moved).
@@ -2123,6 +2185,7 @@ function BrowserApp({
             }}
             onNewChat={newChat}
             onOpenSettings={() => setSettingsVisible(true)}
+            onItemAction={onItemAction}
             onShowSent={() => setSentFor(conversation.key)}
             showCost={settings.showCost}
             onOpenSource={(source) => {
@@ -2220,9 +2283,13 @@ function BrowserApp({
         <SettingsModal
           onClearData={clearData}
           visible={settingsVisible}
+          initialPage={settingsPage}
           settings={settings}
           onChange={onChangeSettings}
-          onClose={() => setSettingsVisible(false)}
+          onClose={() => {
+            setSettingsVisible(false);
+            setSettingsPage('main');
+          }}
           onRunTask={runSavedTask}
           incognitoActive={browser.active.incognito}
           onShowAssistantIntro={() => {

@@ -1,4 +1,4 @@
-import { ComponentRef, useRef, useState } from 'react';
+import { ComponentRef, useCallback, useReducer, useRef, useState } from 'react';
 import { Keyboard, Platform, Pressable, ScrollViewInstance, StyleSheet, Text, View } from 'react-native';
 import { BlurTargetView, BlurView } from 'expo-blur';
 import Animated, {
@@ -10,7 +10,12 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
+import { accountSession } from '../account';
 import { isConfigured } from '../ai/providers';
+import { creditsEnabled } from '../config/features';
+import { creditsConsented } from '../credits';
+import { providerToSave } from '../credits/gate';
+import { SETUP_START, setupReducer, type SetupEvent } from '../credits/setupFlow';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { backgroundTasksSupported } from '../device/backgroundTask';
 import { openDefaultBrowserSettings } from '../device/defaultBrowser';
@@ -27,6 +32,8 @@ import { makeStyles, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { AiProviderFields, cleanAiChoice } from './AiProviderFields';
+import { askCreditsDisclosure } from './CreditsDisclosure';
+import { QutaiSetup } from './QutaiSetup';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 import { DialogHost } from './Dialog';
 import { PermissionsStep } from './PermissionsStep';
@@ -45,7 +52,8 @@ type Props = {
 
 /**
  * First-run setup: what Qutai is, privacy policy and terms (must be accepted), the AI provider and
- * key (can be skipped), the phone permissions the assistant can use (each optional, asked only when its switch is
+ * key (can be skipped; in pro mode Qutai Credits leads, with sign-in, the balance and buying credits, and the own key
+ * is a separate path: QutaiSetup), the phone permissions the assistant can use (each optional, asked only when its switch is
  * turned on; PermissionsStep), "Let me get to know you" (optional, only with memory on; ProfileQuestions),
  * whether tasks keep working in the background (Android, with a build that has it; turning it on asks for
  * notifications), protection against ads and trackers, and making Qutai the default browser.
@@ -99,11 +107,42 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   const step = steps[index];
   const last = index === steps.length - 1;
   const hasKey = isConfigured(cleanAiChoice(draft), draft.provider);
+  // Pro mode: the AI step's own screens (src/credits/setupFlow.ts). Without pro mode it is never used.
+  const [setup, dispatchSetupRaw] = useReducer(setupReducer, SETUP_START);
+  const dispatchSetup = useCallback(
+    (event: SetupEvent) => transition(() => {
+      dispatchSetupRaw(event);
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [switching, reduceMotion],
+  );
+  const proAi = creditsEnabled && step === 'ai';
+  const signedIn = () => accountSession()?.getState().status === 'signedIn';
+
+  /** "Continue with Qutai": the disclosure (unless accepted before), then sign-in (unless signed in). */
+  const startQutai = async () => {
+    const consented = creditsConsented();
+    // Accepted before: straight to the next screen. Otherwise the choice stays on screen under the disclosure.
+    if (consented) return dispatchSetup({ type: 'chooseQutai', consented, signedIn: signedIn() });
+    dispatchSetupRaw({ type: 'chooseQutai', consented, signedIn: signedIn() });
+    const accepted = await askCreditsDisclosure();
+    dispatchSetup({ type: 'disclosureAnswered', accepted, signedIn: signedIn() });
+  };
 
   const next = () => {
+    if (proAi && (setup.screen === 'choose' || setup.screen === 'disclosure')) return void startQutai();
+    if (proAi && setup.screen === 'account') {
+      // Qutai Credits is picked only here, signed in.
+      setDraft((d) => ({ ...d, provider: 'qutai' }));
+      return go(index + 1);
+    }
     if (!last) return go(index + 1);
+    const ai = cleanAiChoice(draft);
     onDone({
-      ...cleanAiChoice(draft),
+      ...ai,
+      // Never Qutai Credits without an account (signed out again before the end of setup).
+      provider: providerToSave(ai.provider, signedIn(), settings.provider),
       onboarded: true,
       legalAcceptedVersion: LEGAL_VERSION,
     });
@@ -122,12 +161,18 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
       ? t('onboarding.start')
       : step === 'legal'
         ? t('onboarding.accept')
-        : step === 'ai' && !hasKey
+        : proAi && (setup.screen === 'choose' || setup.screen === 'disclosure')
+          ? t('setup.continueQutai')
+          : proAi && setup.screen === 'account'
+            ? t('onboarding.continue')
+            : step === 'ai' && !hasKey
           ? t('onboarding.skipForNow')
           : last
             ? t('onboarding.finish')
             : t('onboarding.continue');
-  const primaryDisabled = step === 'legal' && !accepted;
+  const primaryDisabled = (step === 'legal' && !accepted) || (proAi && setup.screen === 'disclosure');
+  // While signing in, the sign-in buttons are the way on (or back to the choice).
+  const primaryHidden = proAi && setup.screen === 'signIn';
 
   return (
     <View style={styles.root}>
@@ -141,6 +186,8 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                   onPress={() => {
                     // Inside the questions, back goes to the previous question first.
                     if (step === 'profile' && profileBack.current?.()) return;
+                    // Inside the AI step's own screens (pro mode), back goes to its choice first.
+                    if (proAi && setup.screen !== 'choose') return dispatchSetup({ type: 'back' });
                     go(index - 1);
                   }}
                   hitSlop={10}
@@ -188,15 +235,17 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                 ref={scrollRef}
                 contentContainerStyle={styles.content}
                 footer={
-                  <View style={styles.bottom}>
-                    <GradientButton
-                      label={primary}
-                      onPress={next}
-                      disabled={primaryDisabled || switching}
-                      style={styles.primary}
-                      textStyle={styles.primaryText}
-                    />
-                  </View>
+                  primaryHidden ? null : (
+                    <View style={styles.bottom}>
+                      <GradientButton
+                        label={primary}
+                        onPress={next}
+                        disabled={primaryDisabled || switching}
+                        style={styles.primary}
+                        textStyle={styles.primaryText}
+                      />
+                    </View>
+                  )
                 }
               >
                 <View style={styles.step}>
@@ -209,7 +258,11 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                       </View>
                       <Feature icon="summarize" title={t('onboarding.f1Title')} body={t('onboarding.f1Body')} />
                       <Feature icon="assistant" title={t('onboarding.f2Title')} body={t('onboarding.f2Body')} />
-                      <Feature icon="shield" title={t('onboarding.f3Title')} body={t('onboarding.f3Body')} />
+                      <Feature
+                        icon="shield"
+                        title={t('onboarding.f3Title')}
+                        body={t(creditsEnabled ? 'onboarding.f3BodyPro' : 'onboarding.f3Body')}
+                      />
                     </>
                   )}
 
@@ -257,13 +310,28 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                     </>
                   )}
 
-                  {step === 'ai' && (
+                  {proAi && setup.screen !== 'ownKey' && (
+                    <QutaiSetup
+                      state={setup}
+                      dispatch={(event) => {
+                        // The own key path starts from an own-key provider, never from Qutai Credits.
+                        if (event.type === 'ownKey' && draft.provider === 'qutai') {
+                          set('provider', providerToSave('qutai', false, settings.provider));
+                        }
+                        dispatchSetup(event);
+                      }}
+                      onSkip={() => go(index + 1)}
+                    />
+                  )}
+
+                  {step === 'ai' && (!creditsEnabled || setup.screen === 'ownKey') && (
                     <>
                       <Text style={styles.title} accessibilityRole="header">
                         {t('onboarding.aiTitle')}
                       </Text>
                       <Text style={styles.lead}>{t('onboarding.aiLead')}</Text>
                       <AiProviderFields
+                        hideCredits={creditsEnabled}
                         value={draft}
                         onChange={(ai) =>
                           setDraft((d) => ({
@@ -277,6 +345,16 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                           }))
                         }
                       />
+                      {creditsEnabled && (
+                        <Pressable
+                          onPress={() => dispatchSetup({ type: 'back' })}
+                          style={styles.textButton}
+                          accessibilityRole="button"
+                          hitSlop={6}
+                        >
+                          <Text style={styles.link}>{t('setup.backToQutai')}</Text>
+                        </Pressable>
+                      )}
                     </>
                   )}
 
@@ -554,6 +632,7 @@ const useStyles = makeStyles((c) => ({
     borderBottomColor: c.tintText,
   },
   link: { color: c.tintText, fontSize: 15, fontWeight: '600' },
+  textButton: { alignSelf: 'center', paddingVertical: 8 },
   checkRow: {
     flexDirection: 'row',
     alignItems: 'center',

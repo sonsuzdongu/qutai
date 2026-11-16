@@ -1,41 +1,41 @@
-import * as AppleAuthentication from 'expo-apple-authentication';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { accountErrorMessage, accountSession, isServerUnreachable, useAccountState } from '../account';
 import { AccountApiError } from '../account/api';
-import {
-  appleSignInAvailable,
-  googleSignInConfigured,
-  SignInCancelled,
-  signInWithApple,
-  signInWithGoogle,
-} from '../account/providers';
-import { DEV_SIGN_IN_USERS, type AuthProvider, type DevSignInUser } from '../account/types';
-import { creditsEnabled, devLoginEnabled, devLoginSecret } from '../config/features';
+import { appleSignInAvailable, SignInCancelled, signInWithApple } from '../account/providers';
+import type { AuthProvider } from '../account/types';
+import { creditsEnabled } from '../config/features';
 import { creditsText, refreshCredits, useCreditsState } from '../credits';
 import { Icon } from '../ui/Icon';
 import { t } from '../i18n';
-import { darkPalette, makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette } from '../ui/theme';
 import { dialog } from './Dialog';
+import { SignInOptions } from './SignInOptions';
 
 /**
  * Settings › Account (pro mode only; SettingsModal shows the row only when `accountsEnabled`).
  * Signed out: what the account is for and the sign-in buttons. Signed in: the account from `GET /me`, sign out,
- * sign out of all devices, delete account. Sign-in isn't part of onboarding.
+ * sign out of all devices, delete account. The sign-in buttons are SignInOptions (also in setup's Qutai step).
  * Builds made against a local test server (`devLoginEnabled`) also show a test sign-in under the buttons, and
  * mark a test user's account as such.
  */
-export function AccountScreen({ onOpenCredits }: { onOpenCredits?: () => void }) {
+export function AccountScreen({
+  onOpenCredits,
+  usesCredits = false,
+}: {
+  onOpenCredits?: () => void;
+  /** Qutai Credits is the provider in Settings: signed out, the page says it needs the account. */
+  usesCredits?: boolean;
+}) {
   const styles = useStyles();
   const palette = usePalette();
   const state = useAccountState();
   const credits = useCreditsState();
   const session = accountSession();
-  const [busy, setBusy] = useState<null | 'apple' | 'google' | DevSignInUser | 'signOut' | 'signOutAll' | 'delete'>(null);
+  const [busy, setBusy] = useState<null | 'signOut' | 'signOutAll' | 'delete'>(null);
   const [apple, setApple] = useState(false);
   /** A note under the account after `GET /me`: the server can't be reached, or the account is suspended. */
   const [notice, setNotice] = useState<string | null>(null);
-  const google = googleSignInConfigured();
   const signedIn = state.status === 'signedIn';
 
   useEffect(() => {
@@ -75,29 +75,6 @@ export function AccountScreen({ onOpenCredits }: { onOpenCredits?: () => void })
       setBusy(null);
     }
   };
-
-  const signIn = (provider: 'apple' | 'google') =>
-    run(provider, async () => {
-      if (provider === 'apple') await session.signInWithApple(await signInWithApple());
-      else await session.signInWithGoogle(await signInWithGoogle());
-      setNotice(null);
-    });
-
-  const signInAsTestUser = (user: DevSignInUser) =>
-    run(user, async () => {
-      if (!devLoginSecret) return;
-      try {
-        await session.signInAsTestUser(user, devLoginSecret);
-      } catch (e) {
-        // The server answers 404 when its test sign-in is off or the secret doesn't match.
-        if (e instanceof AccountApiError && e.code === 'not_found') {
-          dialog.alert(t('account.failedTitle'), t('account.test.notAvailable'));
-          return;
-        }
-        throw e;
-      }
-      setNotice(null);
-    });
 
   const signOut = async () => {
     const ok = await dialog.confirm({
@@ -145,65 +122,10 @@ export function AccountScreen({ onOpenCredits }: { onOpenCredits?: () => void })
     return (
       <>
         {state.reason === 'expired' && <Text style={[styles.notice, styles.noticeWarn]}>{t('account.expired')}</Text>}
+        {creditsEnabled && usesCredits && <Text style={styles.notice}>{t('credits.signedOutNotice')}</Text>}
         <Text style={styles.intro}>{t('account.intro')}</Text>
         <Text style={styles.hint}>{t('account.introLocal')}</Text>
-        <View style={styles.buttons}>
-          {apple && (
-            <View style={busy && styles.dimmed} pointerEvents={busy ? 'none' : 'auto'}>
-              <AppleAuthentication.AppleAuthenticationButton
-                buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-                buttonStyle={
-                  palette === darkPalette
-                    ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
-                    : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
-                }
-                cornerRadius={23}
-                style={styles.appleButton}
-                onPress={() => signIn('apple')}
-              />
-            </View>
-          )}
-          {google && (
-            <Pressable
-              onPress={() => signIn('google')}
-              disabled={!!busy}
-              style={({ pressed }) => [styles.button, pressed && styles.pressed, busy && styles.dimmed]}
-              accessibilityRole="button"
-            >
-              {busy === 'google' ? (
-                <ActivityIndicator color={palette.text} />
-              ) : (
-                <Text style={styles.buttonText}>{t('account.signInGoogle')}</Text>
-              )}
-            </Pressable>
-          )}
-          {busy === 'apple' && <ActivityIndicator color={palette.textSecondary} />}
-          {!apple && !google && !devLoginEnabled && <Text style={styles.hint}>{t('account.noProviders')}</Text>}
-        </View>
-        {devLoginEnabled && (
-          <View style={styles.testBox}>
-            <Text style={styles.label}>{t('account.test.title')}</Text>
-            <Text style={styles.hint}>{t('account.test.hint')}</Text>
-            <View style={styles.testUsers}>
-              {DEV_SIGN_IN_USERS.map((u) => (
-                <Pressable
-                  key={u}
-                  onPress={() => signInAsTestUser(u)}
-                  disabled={!!busy}
-                  style={({ pressed }) => [styles.button, styles.testUser, pressed && styles.pressed, busy && styles.dimmed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('account.test.signInAs', { user: u })}
-                >
-                  {busy === u ? (
-                    <ActivityIndicator color={palette.text} />
-                  ) : (
-                    <Text style={styles.buttonText}>{u}</Text>
-                  )}
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        )}
+        <SignInOptions />
       </>
     );
   }
@@ -316,7 +238,6 @@ const useStyles = makeStyles((c) => ({
   },
   noticeWarn: { color: c.danger },
   buttons: { gap: 10, marginTop: 12, marginBottom: 8 },
-  appleButton: { height: 46, width: '100%' },
   button: {
     height: 46,
     borderRadius: 23,
@@ -330,16 +251,5 @@ const useStyles = makeStyles((c) => ({
   danger: { color: c.danger },
   pressed: { backgroundColor: c.pressed },
   dimmed: { opacity: 0.5 },
-  testBox: {
-    gap: 6,
-    marginTop: 8,
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: c.danger,
-  },
-  testUsers: { flexDirection: 'row', gap: 8, marginTop: 6 },
-  testUser: { flex: 1 },
 }));
 

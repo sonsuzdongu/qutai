@@ -1,0 +1,159 @@
+import * as AppleAuthentication from 'expo-apple-authentication';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { accountErrorMessage, accountSession } from '../account';
+import { AccountApiError } from '../account/api';
+import { appleSignInAvailable, googleSignInConfigured, SignInCancelled, signInWithApple, signInWithGoogle } from '../account/providers';
+import { DEV_SIGN_IN_USERS, type DevSignInUser } from '../account/types';
+import { devLoginEnabled, devLoginSecret } from '../config/features';
+import { t } from '../i18n';
+import { darkPalette, makeStyles, usePalette } from '../ui/theme';
+import { dialog } from './Dialog';
+
+export type SignInResult = { kind: 'signedIn' } | { kind: 'cancelled' } | { kind: 'failed'; message: string };
+
+/**
+ * The sign-in buttons (pro mode): Apple where the phone offers it, Google when this build has its client id, and the
+ * test sign-in in builds made for a local test server. Only what works is shown; with none, a sentence says sign-in
+ * isn't set up in this build. Used by Settings › Account and setup's Qutai step.
+ *
+ * `onResult` gets every ending (setup goes back to its choice on a cancel or a failure); without it a failure shows a
+ * dialog and a cancel does nothing, as in Settings.
+ */
+export function SignInOptions({ onResult }: { onResult?: (result: SignInResult) => void }) {
+  const styles = useStyles();
+  const palette = usePalette();
+  const session = accountSession();
+  const [busy, setBusy] = useState<null | 'apple' | 'google' | DevSignInUser>(null);
+  const [apple, setApple] = useState(false);
+  const google = googleSignInConfigured();
+
+  useEffect(() => {
+    appleSignInAvailable().then(setApple);
+  }, []);
+
+  if (!session) return null;
+
+  const run = async (kind: NonNullable<typeof busy>, action: () => Promise<void>) => {
+    if (busy) return;
+    setBusy(kind);
+    let result: SignInResult = { kind: 'signedIn' };
+    try {
+      await action();
+    } catch (e) {
+      result = e instanceof SignInCancelled ? { kind: 'cancelled' } : { kind: 'failed', message: messageFor(e) };
+    } finally {
+      setBusy(null);
+    }
+    if (onResult) onResult(result);
+    else if (result.kind === 'failed') dialog.alert(t('account.failedTitle'), result.message);
+  };
+
+  const signIn = (provider: 'apple' | 'google') =>
+    run(provider, async () => {
+      if (provider === 'apple') await session.signInWithApple(await signInWithApple());
+      else await session.signInWithGoogle(await signInWithGoogle());
+    });
+
+  const signInAsTestUser = (user: DevSignInUser) =>
+    run(user, async () => {
+      if (!devLoginSecret) return;
+      await session.signInAsTestUser(user, devLoginSecret);
+    });
+
+  return (
+    <>
+      <View style={styles.buttons}>
+        {apple && (
+          <View style={busy && styles.dimmed} pointerEvents={busy ? 'none' : 'auto'}>
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={
+                palette === darkPalette
+                  ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
+                  : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+              }
+              cornerRadius={23}
+              style={styles.appleButton}
+              onPress={() => signIn('apple')}
+            />
+          </View>
+        )}
+        {google && (
+          <Pressable
+            onPress={() => signIn('google')}
+            disabled={!!busy}
+            style={({ pressed }) => [styles.button, pressed && styles.pressed, busy && styles.dimmed]}
+            accessibilityRole="button"
+            accessibilityState={{ busy: busy === 'google', disabled: !!busy }}
+          >
+            {busy === 'google' ? (
+              <ActivityIndicator color={palette.text} />
+            ) : (
+              <Text style={styles.buttonText}>{t('account.signInGoogle')}</Text>
+            )}
+          </Pressable>
+        )}
+        {busy === 'apple' && <ActivityIndicator color={palette.textSecondary} />}
+        {!apple && !google && <Text style={styles.hint}>{t(devLoginEnabled ? 'account.onlyTestSignIn' : 'account.noProviders')}</Text>}
+      </View>
+      {devLoginEnabled && (
+        <View style={styles.testBox}>
+          <Text style={styles.label}>{t('account.test.title')}</Text>
+          <Text style={styles.hint}>{t('account.test.hint')}</Text>
+          <View style={styles.testUsers}>
+            {DEV_SIGN_IN_USERS.map((u) => (
+              <Pressable
+                key={u}
+                onPress={() => signInAsTestUser(u)}
+                disabled={!!busy}
+                style={({ pressed }) => [styles.button, styles.testUser, pressed && styles.pressed, busy && styles.dimmed]}
+                accessibilityRole="button"
+                accessibilityLabel={t('account.test.signInAs', { user: u })}
+                accessibilityState={{ busy: busy === u, disabled: !!busy }}
+              >
+                {busy === u ? <ActivityIndicator color={palette.text} /> : <Text style={styles.buttonText}>{u}</Text>}
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      )}
+    </>
+  );
+}
+
+/** The server answers 404 when its test sign-in is off or the secret doesn't match. */
+function messageFor(e: unknown): string {
+  if (e instanceof AccountApiError && e.code === 'not_found') return t('account.test.notAvailable');
+  return accountErrorMessage(e);
+}
+
+const useStyles = makeStyles((c) => ({
+  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  label: { color: c.text, fontSize: 15, fontWeight: '600' },
+  buttons: { gap: 10, marginTop: 12, marginBottom: 8 },
+  appleButton: { height: 46, width: '100%' },
+  button: {
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: c.surface,
+    borderWidth: 1,
+    borderColor: c.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buttonText: { color: c.text, fontSize: 16, fontWeight: '600' },
+  pressed: { backgroundColor: c.pressed },
+  dimmed: { opacity: 0.5 },
+  testBox: {
+    gap: 6,
+    marginTop: 8,
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: c.danger,
+  },
+  testUsers: { flexDirection: 'row', gap: 8, marginTop: 6 },
+  testUser: { flex: 1 },
+}));

@@ -15,6 +15,7 @@ import { creditsConsented, useCreditsConsent } from '../credits';
 import { useAccountState } from '../account';
 import { askCreditsDisclosure } from './CreditsDisclosure';
 import { CreditsFields } from './CreditsFields';
+import { dialog } from './Dialog';
 
 export type AiChoice = Pick<
   Settings,
@@ -53,8 +54,22 @@ export function aiChoiceProblem(value: AiChoice): string | null {
   );
 }
 
-/** AI provider, its API key and the model: shared by Settings and the first-run setup. */
-export function AiProviderFields({ value, onChange }: { value: AiChoice; onChange: (next: AiChoice) => void }) {
+/**
+ * AI provider, its API key and the model: shared by Settings and the first-run setup. Pro mode: Qutai Credits can be
+ * picked only while signed in (`onSignIn` opens the account page; without it the user is told where to sign in), and
+ * setup's own-key path leaves it out (`hideCredits`: setup has its own Qutai path).
+ */
+export function AiProviderFields({
+  value,
+  onChange,
+  hideCredits = false,
+  onSignIn,
+}: {
+  value: AiChoice;
+  onChange: (next: AiChoice) => void;
+  hideCredits?: boolean;
+  onSignIn?: () => void;
+}) {
   const styles = useStyles();
   const palette = usePalette();
   const provider = getProvider(value.provider);
@@ -67,9 +82,20 @@ export function AiProviderFields({ value, onChange }: { value: AiChoice; onChang
   const setModel = (id: string) => onChange({ ...value, models: { ...value.models, [value.provider]: id } });
   // Followed so the dot on "Qutai Credits" appears as soon as it can be used.
   useCreditsConsent();
-  useAccountState();
-  /** Qutai Credits is picked only after the disclosure was accepted (asked the first time). */
+  const account = useAccountState();
+  /** Qutai Credits is picked only signed in, and after the disclosure was accepted (asked the first time). */
   const pick = async (id: ProviderId) => {
+    if (id === 'qutai' && id !== value.provider && account.status !== 'signedIn') {
+      const answer = await dialog.show({
+        title: t('credits.signInFirstTitle'),
+        message: t(onSignIn ? 'credits.signInFirstBody' : 'credits.error.notSignedIn'),
+        buttons: onSignIn
+          ? [{ text: t('common.cancel'), style: 'cancel' }, { text: t('credits.signIn'), primary: true }]
+          : [{ text: t('common.ok'), primary: true }],
+      });
+      if (onSignIn && answer.button === 1) onSignIn();
+      return;
+    }
     if (id === 'qutai' && !creditsConsented() && !(await askCreditsDisclosure())) return;
     onChange({ ...value, provider: id });
   };
@@ -78,7 +104,7 @@ export function AiProviderFields({ value, onChange }: { value: AiChoice; onChang
     <View style={styles.root}>
       <Text style={styles.label}>{t('settings.provider')}</Text>
       <View style={styles.segment}>
-        {PROVIDER_ORDER.map((id: ProviderId) => {
+        {PROVIDER_ORDER.filter((id) => !(hideCredits && id === 'qutai')).map((id: ProviderId) => {
           const selected = id === value.provider;
           return (
             <Pressable
@@ -98,7 +124,7 @@ export function AiProviderFields({ value, onChange }: { value: AiChoice; onChang
       </View>
 
       {value.provider === 'qutai' ? (
-        <CreditsFields model={model} onModel={setModel} />
+        <CreditsFields model={model} onModel={setModel} onSignIn={onSignIn} />
       ) : provider.needsEndpoint ? (
         <CustomEndpointFields value={value} onChange={(next) => onChange({ ...value, ...next })} />
       ) : (
