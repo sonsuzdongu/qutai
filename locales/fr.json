@@ -1,0 +1,21 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Qutai",
+    "NSPhotoLibraryAddUsageDescription": "Qutai ajoute à vos photos les captures d’écran et les images que vous choisissez d’enregistrer.",
+    "NSCameraUsageDescription": "Qutai utilise l’appareil photo pour scanner des codes QR, pour prendre une photo ou une vidéo destinée au champ d’envoi d’une page web ou une photo à joindre à un message pour l’assistant, et pour les sites que vous autorisez à l’utiliser, comme les appels vidéo.",
+    "NSMicrophoneUsageDescription": "Qutai utilise le micro quand vous dictez un message à l’assistant, pour les sites que vous autorisez à l’utiliser, comme les appels vidéo, et pour enregistrer le son quand vous filmez une vidéo à envoyer sur une page web.",
+    "NSSpeechRecognitionUsageDescription": "Qutai transforme en texte ce que vous dites à l’assistant. Lorsque votre parole ne peut pas être reconnue sur l’appareil lui-même, le service vocal d’Apple reçoit l’audio pour le faire ; Qutai et votre fournisseur d’IA ne reçoivent que le texte.",
+    "NSFaceIDUsageDescription": "Qutai utilise Face ID pour déverrouiller l’app et les onglets privés.",
+    "NSCalendarsUsageDescription": "Qutai ajoute les événements que vous confirmez, comme des billets et des réservations, à l’agenda de votre choix, et ne lit vos événements que lorsque vous interrogez l’assistant sur votre emploi du temps et que vous confirmez.",
+    "NSCalendarsFullAccessUsageDescription": "Qutai affiche la liste de vos agendas pour que vous choisissiez où vont les nouveaux événements, et ne lit vos événements que lorsque vous interrogez l’assistant sur votre emploi du temps et que vous confirmez ; il envoie à votre fournisseur d’IA les événements de la période que vous avez approuvée.",
+    "NSCalendarsWriteOnlyAccessUsageDescription": "Qutai ajoute à votre agenda les événements que vous confirmez, comme des billets et des réservations.",
+    "NSRemindersUsageDescription": "Qutai ajoute les rappels que vous confirmez à la liste de Rappels de votre choix.",
+    "NSRemindersFullAccessUsageDescription": "Qutai ajoute les rappels que vous confirmez à la liste de Rappels de votre choix.",
+    "NSLocationWhenInUseUsageDescription": "Qutai communique votre position aux sites que vous autorisez, comme les cartes, et à l’assistant quand vous lui demandez de l’utiliser. Lors de la configuration, il peut indiquer où vous habitez si vous appuyez pour le faire ; le service d’adresses d’Apple trouve le nom du lieu correspondant à votre position.",
+    "New tab": "Nouvel onglet",
+    "New incognito tab": "Nouvel onglet privé",
+    "Ask Qutai": "Demander à Qutai",
+    "Scan QR code": "Scanner un code QR",
+    "NSLocalNetworkUsageDescription": "Qutai se connecte à un serveur d’IA de votre réseau local uniquement si vous l’avez configuré comme serveur d’IA personnalisé."
+  }
+}

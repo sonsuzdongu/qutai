@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Chaînes natives du widget et des raccourcis du lanceur (français). -->
+<resources>
+  <string name="qutai_widget_name">Recherche Qutai</string>
+  <string name="qutai_widget_description">Rechercher, demander à Qutai, ouvrir un onglet ou scanner un code QR</string>
+  <string name="qutai_widget_hint">Rechercher ou saisir une adresse</string>
+  <string name="qutai_widget_ask">Demander à Qutai</string>
+  <string name="qutai_widget_new_tab">Nouvel onglet</string>
+  <string name="qutai_widget_private_tab">Privé</string>
+  <string name="qutai_widget_scan">Scanner QR</string>
+  <string name="qutai_shortcut_new_tab">Nouvel onglet</string>
+  <string name="qutai_shortcut_private_tab_short">Onglet privé</string>
+  <string name="qutai_shortcut_private_tab">Nouvel onglet privé</string>
+  <string name="qutai_shortcut_ask">Demander à Qutai</string>
+  <string name="qutai_shortcut_scan_short">Scanner QR</string>
+  <string name="qutai_shortcut_scan">Scanner un code QR</string>
+</resources>
