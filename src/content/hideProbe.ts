@@ -5,7 +5,7 @@
  * - hideFind(): boxes that take room on the page but show nothing (no text, image, video or canvas of their own
  *   size) or hold an ad frame, with a suggested selector each: what an empty gap left by blocked ads looks like.
  * - hideMeasure(selectors): for each selector, whether the page can parse it, how many elements it matches and what
- *   share of the page's area and visible text they cover; nothing changes on the page.
+ *   share of the page's area (boxes with text only) and of its visible text they cover; nothing changes on the page.
  * - hideTry(selectors): measures, then hides the parseable ones with a stylesheet of its own (replacing an earlier
  *   try) and reports the page height before and after.
  * - hideUndo(): removes the tried stylesheet.
@@ -136,8 +136,10 @@ export const HIDE_PROBE_SCRIPT = String.raw`
         if (!shown(top[m])) continue;
         visible++;
         var r = top[m].getBoundingClientRect();
-        area += Math.max(0, Math.min(r.width, size.w)) * Math.max(0, r.height);
-        text += (top[m].innerText || '').replace(/\s+/g, '').length;
+        var chars = (top[m].innerText || '').replace(/\s+/g, '').length;
+        text += chars;
+        // Only boxes with text in them count: an empty box (the gap an ad leaves) takes nothing from the page.
+        if (chars > 2) area += Math.max(0, Math.min(r.width, size.w)) * Math.max(0, r.height);
       }
       results.push({
         selector: sel,
@@ -161,18 +163,21 @@ export const HIDE_PROBE_SCRIPT = String.raw`
     }
     return el;
   }
+  // The content's own height (the page size is at least the window, so a short page would not show the change).
+  function contentHeight() {
+    return document.body ? Math.round(document.body.getBoundingClientRect().height) : 0;
+  }
   function hideTry(selectors) {
     // An earlier try is shown again first, so it neither hides these matches nor the page height before.
     tryStyle().textContent = '';
-    var before = pageSize();
+    var before = contentHeight();
     var results = measure(selectors || []);
     var css = '';
     for (var i = 0; i < results.length; i++) {
       if (!results[i].invalid) css += results[i].selector + '{display:none!important}\n';
     }
     tryStyle().textContent = css;
-    var after = pageSize();
-    return { heightBefore: before.h, heightAfter: after.h, results: results };
+    return { heightBefore: before, heightAfter: contentHeight(), results: results };
   }
   function hideUndo() {
     var el = document.getElementById('__qutai-hide-try');

@@ -429,7 +429,7 @@ export type TryMeasure = {
   count: number;
   /** Matched elements that were visible. */
   visible: number;
-  /** Share of the page's area (document width × height) the visible matches covered, 0–1. */
+  /** Share of the page's area (document width × height) covered by visible matches that hold text, 0–1 (empty boxes, the gaps ads leave, don't count). */
   area: number;
   /** Share of the page's visible text inside the matches, 0–1. */
   text: number;

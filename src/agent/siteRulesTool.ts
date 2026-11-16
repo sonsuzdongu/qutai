@@ -73,7 +73,7 @@ const VERDICT_TEXT: Record<Exclude<TryVerdict, { ok: true }>['reason'], string> 
   invalid: 'the page cannot parse this selector',
   noMatch: 'it matches nothing on this page',
   count: `it matches more than ${MAX_MATCHES} elements`,
-  area: `it would hide more than ${Math.round(MAX_AREA_SHARE * 100)}% of the page's area`,
+  area: `it would hide boxes with text covering more than ${Math.round(MAX_AREA_SHARE * 100)}% of the page's area`,
   text: `it would hide more than ${Math.round(MAX_TEXT_SHARE * 100)}% of the page's text`,
 };
 
@@ -94,7 +94,7 @@ function checkSelectors(selectors: string[]): { ok: string[]; refused: string[] 
 }
 
 function measureLine(m: TryMeasure, verdict: TryVerdict): string {
-  const what = `${m.count} match${m.count === 1 ? '' : 'es'} (${m.visible} visible), ${pct(m.area)} of the page area, ${pct(m.text)} of its text`;
+  const what = `${m.count} match${m.count === 1 ? '' : 'es'} (${m.visible} visible), ${pct(m.area)} of the page area with text, ${pct(m.text)} of its text`;
   return verdict.ok
     ? `- ${JSON.stringify(m.selector)}: ${what}.`
     : `- ${JSON.stringify(m.selector)}: refused, ${VERDICT_TEXT[verdict.reason]} (${what}).`;
