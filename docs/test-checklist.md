@@ -58,7 +58,8 @@ Cloudflare'e yayın ve Access.
 - [ ] Şehir alanı: yazarken öneri yok; "Konumumu kullan" mahalle, ilçe, il, ülke dolduruyor (gelen adları not et)
 - [ ] Kayıtlı e-posta otomatik doldurulunca telefon alanı ezilmiyor
 - [ ] Kurulum bitince Qutai düğmesi tanıtımı çıkıyor
-- [ ] Türkçe metinlerde "sen" / "siz" karışıklığı (karar bekliyor)
+- [ ] Kurulumdaki "Sizi biraz tanıyayım" soruları artık "siz" diyor ("Size nasıl hitap edeyim?", "Hangi şehirde yaşıyorsunuz?"); uygulamanın başka bir yerinde "sen" kalmamış (gördüğünüz yeri not edin)
+- [ ] Uzun soru başlıkları küçük ekranda sığıyor ("…bilgilerinizi şimdi doldurmak ister misiniz?"); özet ekranında "Değiştirmek için birine, silmek için ✕’e dokunun."
 
 ## 5. Asistan paneli
 

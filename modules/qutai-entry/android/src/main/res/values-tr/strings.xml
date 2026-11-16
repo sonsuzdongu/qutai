@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="qutai_widget_name">Qutai arama</string>
-  <string name="qutai_widget_description">Ara, Qutai’ye sor, sekme aç ya da QR kodu tara</string>
+  <string name="qutai_widget_description">Arayın, Qutai’ye sorun, sekme açın ya da QR kodu tarayın</string>
   <string name="qutai_widget_hint">Adres veya arama</string>
   <string name="qutai_widget_ask">Qutai’ye sor</string>
   <string name="qutai_widget_new_tab">Yeni sekme</string>
