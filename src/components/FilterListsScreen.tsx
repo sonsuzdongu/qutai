@@ -1,7 +1,7 @@
 import { useState, useSyncExternalStore } from 'react';
 import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BlockingError, contentBlocking, ListState, MAX_LIST_BYTES } from '../content/blocking';
+import { BlockingError, contentBlocking, ListKind, ListState, MAX_LIST_BYTES } from '../content/blocking';
 import { hasNativeBlocking } from '../device/contentBlocker';
 import { t } from '../i18n';
 import { formatDateTime, formatNumber } from '../i18n/format';
@@ -186,7 +186,7 @@ function ListRow({
       <View style={styles.row}>
         <View style={styles.flex}>
           <Text style={styles.name}>{list.name}</Text>
-          <Text style={styles.hint}>{t(`blocking.kind.${list.kind}`)}</Text>
+          <Text style={styles.hint}>{kindLabel(list)}</Text>
         </View>
         {onRemove && (
           <Pressable onPress={onRemove} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('blocking.remove')} style={styles.remove}>
@@ -284,3 +284,21 @@ const useStyles = makeStyles((c) => ({
   pressed: { backgroundColor: c.pressed },
   disabled: { opacity: 0.5 },
 }));
+
+/**
+ * What a list blocks. The Turkish list keeps its own wording; the other regional lists read "Ads · Deutsch" (the
+ * sites' language in itself, which needs no translation).
+ */
+function kindLabel(list: { id: string; kind: ListKind }): string {
+  const region = REGIONAL_LANGUAGE[list.id];
+  return region ? `${t('blocking.kind.ads')} · ${region}` : t(`blocking.kind.${list.kind}`);
+}
+
+const REGIONAL_LANGUAGE: Record<string, string> = {
+  'adguard-german': 'Deutsch',
+  'adguard-spanish-portuguese': 'Español · Português',
+  'adguard-french': 'Français',
+  'adguard-japanese': '日本語',
+  'adguard-russian': 'Русский',
+  abpindo: 'Bahasa Indonesia',
+};
