@@ -1,5 +1,6 @@
 import {
   blockedDomains,
+  ImportedRule,
   MAX_RULES,
   MAX_RULES_PER_SITE,
   PageRule,
@@ -125,6 +126,36 @@ export class SiteRuleStore {
     }
     this.set([...this.rules, ...added]);
     return added;
+  }
+
+  /**
+   * Adds rules read from an export file (already checked, duplicates removed) as the user's own, each with its switch.
+   * Rules past the limits (MAX_RULES in all, MAX_RULES_PER_SITE per site) are left out; returns how many were added.
+   */
+  async addImported(entries: ImportedRule[]): Promise<number> {
+    await this.load();
+    const have = new Set(this.rules.map((r) => r.line));
+    const perSite = new Map<string, number>();
+    for (const r of this.rules) perSite.set(r.site, (perSite.get(r.site) ?? 0) + 1);
+    const now = Date.now();
+    const added: SiteRule[] = [];
+    for (const [i, e] of entries.entries()) {
+      if (have.has(e.line) || !parseRuleLine(e.line)) continue;
+      const count = perSite.get(e.site) ?? 0;
+      if (this.rules.length + added.length >= MAX_RULES || count >= MAX_RULES_PER_SITE) continue;
+      have.add(e.line);
+      perSite.set(e.site, count + 1);
+      added.push({ id: newId() + i, line: e.line, enabled: e.enabled, source: 'manual', site: e.site, createdAt: now });
+    }
+    const db = await this.getDb();
+    for (const r of added) {
+      await db.runAsync(
+        'INSERT INTO site_rules (id, line, enabled, source, site, url, created_at) VALUES (?, ?, ?, ?, ?, NULL, ?)',
+        [r.id, r.line, r.enabled ? 1 : 0, r.source, r.site, r.createdAt],
+      );
+    }
+    if (added.length) this.set([...this.rules, ...added]);
+    return added.length;
   }
 
   async setEnabled(id: string, enabled: boolean): Promise<void> {

@@ -2122,4 +2122,13 @@ export const tr: Record<keyof typeof en, string> = {
   'siteRules.saveOff': 'Bu sitede engelleme şu an kapalı; kurallar ancak yeniden açıldığında uygulanır.',
   'siteRules.save': 'Kuralları kaydet',
   'siteRules.siteCount': 'Bu sitede kendi kurallarınız: {count}. Bunları Ayarlar › Gizlilik ve güvenlik › Filtre listeleri bölümünden yönetebilirsiniz.',
+  'siteRules.export': "Dışa aktar",
+  'siteRules.import': "İçe aktar",
+  'siteRules.exportHint': "Dışa aktar, kurallarınızı paylaşmak ya da saklamak için metin dosyası olarak kaydeder (her satırda bir filtre kuralı); İçe aktar, böyle bir dosyadaki kuralları ekler. Zaten olan, geçersiz ya da çok fazlasını gizleyecek kurallar atlanır. Kurallarınız şifreli yedekte de bulunur.",
+  'siteRules.exportFailed': "Kurallar dışa aktarılamadı.",
+  'siteRules.importFailed': "Kurallar içe aktarılamadı.",
+  'siteRules.importTooLarge': "Bu dosya bir kural dosyası için çok büyük.",
+  'siteRules.importNone': "Bu dosyada Qutai’nin kullanabileceği bir kural yok.",
+  'siteRules.importedTitle': "Kurallar içe aktarıldı",
+  'siteRules.importedBody': "Eklenen: {added}. Atlanan (zaten var, geçersiz ya da çok geniş): {skipped}.",
 };

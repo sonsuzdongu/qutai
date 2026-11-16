@@ -2114,4 +2114,13 @@ export const en = {
   'siteRules.saveOff': 'Blocking is off for this site now, so the rules will apply only once it is on again.',
   'siteRules.save': 'Save rules',
   'siteRules.siteCount': 'Your own rules on this site: {count}. Manage them in Settings › Privacy and security › Filter lists.',
+  'siteRules.export': "Export",
+  'siteRules.import': "Import",
+  'siteRules.exportHint': "Export saves your rules as a text file (one filter line each) to share or keep; Import adds the rules of such a file. Rules you already have, invalid ones and ones that would hide too much are skipped. Your rules are also in the encrypted backup.",
+  'siteRules.exportFailed': "The rules couldn't be exported.",
+  'siteRules.importFailed': "The rules couldn't be imported.",
+  'siteRules.importTooLarge': "This file is too large for a rules file.",
+  'siteRules.importNone': "There are no rules in this file that Qutai can use.",
+  'siteRules.importedTitle': "Rules imported",
+  'siteRules.importedBody': "Added: {added}. Skipped (already there, invalid or too broad): {skipped}.",
 } as const;

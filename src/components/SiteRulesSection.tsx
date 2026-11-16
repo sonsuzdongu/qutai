@@ -4,7 +4,9 @@ import {
   blockLine,
   checkBlockDomain,
   DEFAULT_SCOPE,
+  exportRules,
   hideLine,
+  importRules,
   parseRuleLine,
   parseScope,
   Scope,
@@ -15,6 +17,7 @@ import {
   siteHost,
 } from '../content/siteRules';
 import { siteRules, SiteRuleError } from '../storage/siteRules';
+import { pickRulesFile, RulesFileTooLargeError, shareRulesFile } from '../device/siteRulesFile';
 import { t, type MessageKey } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
@@ -147,6 +150,33 @@ export function SiteRulesSection({ disabled }: { disabled: boolean }) {
     await siteRules.add(checked.domain, [blockLine(checked.domain)], 'manual').catch(failed);
   };
 
+  const exportAll = async () => {
+    const day = new Date().toISOString().slice(0, 10);
+    await shareRulesFile(exportRules(siteRules.rules), `qutai-rules-${day}.txt`).catch(() =>
+      dialog.alert(t('siteRules.exportFailed')),
+    );
+  };
+
+  const importFile = async () => {
+    let text: string | null;
+    try {
+      text = await pickRulesFile();
+    } catch (e) {
+      return dialog.alert(t('siteRules.importFailed'), e instanceof RulesFileTooLargeError ? t('siteRules.importTooLarge') : undefined);
+    }
+    if (text === null) return;
+    const read = importRules(text, siteRules.rules.map((r) => r.line));
+    if (!read.rules.length && !read.duplicates) return dialog.alert(t('siteRules.importFailed'), t('siteRules.importNone'));
+    let added = 0;
+    try {
+      added = await siteRules.addImported(read.rules);
+    } catch {
+      return dialog.alert(t('siteRules.importFailed'));
+    }
+    const skipped = read.duplicates + read.invalid + (read.rules.length - added);
+    dialog.alert(t('siteRules.importedTitle'), t('siteRules.importedBody', { added, skipped }));
+  };
+
   return (
     <View style={styles.section}>
       <Text style={styles.heading} accessibilityRole="header">
@@ -212,6 +242,25 @@ export function SiteRulesSection({ disabled }: { disabled: boolean }) {
       >
         <Text style={styles.buttonText}>{t('siteRules.add')}</Text>
       </Pressable>
+      <View style={styles.pair}>
+        <Pressable
+          onPress={exportAll}
+          disabled={!siteRules.rules.length}
+          style={({ pressed }) => [styles.button, styles.half, pressed && styles.pressed, !siteRules.rules.length && styles.disabled]}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !siteRules.rules.length }}
+        >
+          <Text style={styles.buttonText}>{t('siteRules.export')}</Text>
+        </Pressable>
+        <Pressable
+          onPress={importFile}
+          style={({ pressed }) => [styles.button, styles.half, pressed && styles.pressed]}
+          accessibilityRole="button"
+        >
+          <Text style={styles.buttonText}>{t('siteRules.import')}</Text>
+        </Pressable>
+      </View>
+      <Text style={styles.hint}>{t('siteRules.exportHint')}</Text>
     </View>
   );
 }
@@ -250,4 +299,7 @@ const useStyles = makeStyles((c) => ({
   button: { backgroundColor: c.surface, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   buttonText: { fontSize: 15, fontWeight: '600', color: c.tintText },
   pressed: { backgroundColor: c.pressed },
+  pair: { flexDirection: 'row', gap: 8 },
+  half: { flex: 1 },
+  disabled: { opacity: 0.5 },
 }));

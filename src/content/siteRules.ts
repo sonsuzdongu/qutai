@@ -451,3 +451,68 @@ export function judgeMeasure(m: TryMeasure): TryVerdict {
   if (m.text > MAX_TEXT_SHARE) return { ok: false, reason: 'text' };
   return { ok: true };
 }
+
+/** A rule read from an export file: its line, whether it was on, and the site it is listed under. */
+export type ImportedRule = { line: string; enabled: boolean; site: string };
+
+export type ImportResult = {
+  rules: ImportedRule[];
+  /** Lines already present (on the phone or earlier in the file). */
+  duplicates: number;
+  /** Lines that are not valid rules, or over-broad ones (the same checks as the assistant's rules). */
+  invalid: number;
+};
+
+/** Larger files are refused before reading; lines past MAX_RULES are counted as invalid. */
+export const MAX_EXPORT_BYTES = 512 * 1024;
+const OFF_PREFIX = '! off: ';
+
+/**
+ * The user's rules as a text file: one filter line each (see the top of this file), switched-off rules as
+ * "! off: <line>", "!" comments for the header. Domain lines (||ads.example.com^) are what other blockers use too;
+ * hiding lines name their scope Qutai's way ("*.example.com##…" for a site and its subdomains, "example.com##…" for
+ * the site only, "example.com/path/*##…" and page addresses), which other blockers read differently or not at all.
+ */
+export function exportRules(rules: readonly SiteRule[], now: Date = new Date()): string {
+  const header = [
+    '! Title: Qutai site rules',
+    `! Exported: ${now.toISOString()}`,
+    '! Hiding: <scope>##<css selector>. Scope: *.example.com = the site and its subdomains, example.com = the site only,',
+    '!   example.com/path/* = pages under a path, https://example.com/page = one page.',
+    '! Blocking: ||domain^ blocks the domain and its subdomains on every site.',
+    `! Lines starting with "${OFF_PREFIX.trim()}" are rules that were switched off.`,
+  ];
+  const lines = rules.map((r) => (r.enabled ? r.line : `${OFF_PREFIX}${r.line}`));
+  return `${[...header, ...lines].join('\n')}\n`;
+}
+
+/**
+ * Reads an export file (or any list of such lines): every line is checked like a rule the assistant saves; comments
+ * and blank lines are ignored; a line the phone already has (`have`) or that came earlier in the file is a duplicate.
+ */
+export function importRules(text: string, have: readonly string[] = []): ImportResult {
+  const seen = new Set(have.map((l) => l.trim()));
+  const rules: ImportedRule[] = [];
+  let duplicates = 0;
+  let invalid = 0;
+  for (const raw of text.replace(/^﻿/, '').split(/\r?\n/)) {
+    let line = raw.trim();
+    let enabled = true;
+    if (line.startsWith(OFF_PREFIX.trim())) {
+      line = line.slice(OFF_PREFIX.trim().length).trim();
+      enabled = false;
+    } else if (!line || line.startsWith('!') || line.startsWith('[')) continue;
+    const parsed = parseRuleLine(line);
+    if (!parsed || rules.length >= MAX_RULES) {
+      invalid++;
+      continue;
+    }
+    if (seen.has(line)) {
+      duplicates++;
+      continue;
+    }
+    seen.add(line);
+    rules.push({ line, enabled, site: parsed.kind === 'hide' ? parsed.scope.host : parsed.domain });
+  }
+  return { rules, duplicates, invalid };
+}
