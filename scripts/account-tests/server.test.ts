@@ -26,8 +26,16 @@ const BACKEND = join(import.meta.dirname, '../../backend');
 /** The local server's D1 state (the API's `dev` script uses this one; override when running it elsewhere). */
 const D1_STATE = process.env.QUTAI_TEST_D1_STATE ?? '.wrangler/state/api';
 
+/** The server's .dev.vars (for the pepper only); another file when the server under test runs with its own. */
+const DEV_VARS = process.env.QUTAI_TEST_DEV_VARS ?? join(BACKEND, 'apps/api/.dev.vars');
+/**
+ * Sign-in by email: the file the server's output goes to, when it runs with EMAIL_SENDER=log, so the tests can read
+ * the code and link it "sent" (backend/README.md › Sign-in by email › Trying it locally).
+ */
+const EMAIL_LOG = process.env.QUTAI_TEST_EMAIL_LOG;
+
 function pepper(): string {
-  const vars = readFileSync(join(BACKEND, 'apps/api/.dev.vars'), 'utf8');
+  const vars = readFileSync(DEV_VARS, 'utf8');
   const line = vars.split('\n').find((l) => l.startsWith('REFRESH_TOKEN_PEPPER='));
   if (!line) throw new Error('REFRESH_TOKEN_PEPPER missing in backend/apps/api/.dev.vars');
   return line.slice('REFRESH_TOKEN_PEPPER='.length).trim();
@@ -86,7 +94,9 @@ describe('account client against the local server', { skip: !API_URL && 'QUTAI_T
     const { session, mem } = await restoredSession(refreshToken, userId);
     const [a, b] = await Promise.all([session.refreshUser(), session.refreshUser()]);
     assert.equal(a.id, userId);
-    assert.deepEqual(b, { id: userId, providers: ['google'], status: 'active' });
+    assert.deepEqual({ id: b.id, providers: b.providers, status: b.status }, { id: userId, providers: ['google'], status: 'active' });
+    // Since sign-in by email, GET /me also lists the methods (a seeded identity has no address).
+    assert.deepEqual(b.methods?.map((m) => m.provider), ['google']);
     const rotated = mem.get()!.refreshToken;
     assert.notEqual(rotated, refreshToken, 'the refresh token was rotated');
     assert.ok(mem.get()!.accessExpiresAt > Date.now() + 800_000, 'a 15-minute access token');
@@ -239,5 +249,100 @@ describe('test sign-in against the local server', { skip: (!API_URL || !DEV_SECR
     const { session } = await fresh();
     await assert.rejects(session.signInAsTestUser('test-3', `${DEV_SECRET}-wrong`), { code: 'not_found', status: 404 });
     assert.deepEqual(session.getState(), { status: 'signedOut' });
+  });
+});
+
+/** The newest message the log sender printed for `address`: its code and its link's token. */
+async function mailFor(address: string, after: number): Promise<{ code: string; token: string }> {
+  for (let i = 0; i < 50; i++) {
+    const text = readFileSync(EMAIL_LOG!, 'utf8').slice(after);
+    const blocks = text.split('[dev email sender: nothing was sent]').filter((b) => b.includes(`To: ${address}\n`));
+    const last = blocks.at(-1);
+    // The code stands alone on an indented line (the subject's wording depends on the language).
+    const code = last?.match(/^\s{2,}(\d{6})\s*$/m)?.[1];
+    const token = last?.match(/qutai:\/\/sign-in\/email\?token=([A-Za-z0-9_-]+)/)?.[1];
+    if (code && token) return { code, token };
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  throw new Error('no message for the address in the server output');
+}
+
+const logSize = () => readFileSync(EMAIL_LOG!, 'utf8').length;
+
+function emailSession(deviceId: string) {
+  let stored: StoredSession | null = null;
+  const storage: SessionStorage = {
+    load: async () => stored,
+    save: async (s) => void (stored = s),
+    clear: async () => void (stored = null),
+    deviceId: async () => deviceId,
+  };
+  return new AccountSession(createApi(API_URL!), storage, Date.now, () => 'tr-TR');
+}
+
+describe('sign-in by email against the local server', { skip: (!API_URL || !EMAIL_LOG) && 'QUTAI_TEST_API_URL or QUTAI_TEST_EMAIL_LOG not set' }, () => {
+  // Like the test sign-in above: the earlier tests use most of the ~20 auth calls a minute per address. These use
+  // about 12, four of them `start` (its own limit is ~5 a minute per address).
+  before(() => new Promise((resolve) => setTimeout(resolve, 61_000)));
+
+  // Addresses on the reserved .test domain: the log sender sends nothing anyway.
+  const address = `qt-${randomBytes(4).toString('hex')}@example.test`;
+  const device = `email_${randomBytes(6).toString('hex')}`;
+
+  it('code: a wrong one is refused, the right one creates the account with an email method', async () => {
+    const session = emailSession(device);
+    const from = logSize();
+    const started = await session.startEmailSignIn(address);
+    assert.deepEqual(started, { expiresIn: 600, resendAfter: 30, codeLength: 6 });
+    const { code } = await mailFor(address, from);
+    const wrong = code === '000000' ? '111111' : '000000';
+    await assert.rejects(session.verifyEmailSignIn(address, { code: wrong }), { code: 'unauthorized', reason: 'invalid_code' });
+    const answer = await session.verifyEmailSignIn(address, { code });
+    assert.equal(answer.created, true);
+    assert.deepEqual(answer.user.providers, ['email']);
+    assert.equal(answer.user.methods?.[0]?.email, address);
+    const me = await session.refreshUser();
+    assert.equal(me.methods?.[0]?.provider, 'email');
+    // The code works once.
+    await assert.rejects(session.verifyEmailSignIn(address, { code }), { reason: 'expired' });
+  });
+
+  it('asking again at once is refused with a wait; after it, the old code is replaced', async () => {
+    const session = emailSession(device);
+    let from = logSize();
+    // The previous test asked for this address moments ago: wait out its resend time first.
+    await session.startEmailSignIn(address).catch(async (e: unknown) => {
+      if (!(e instanceof AccountApiError && e.reason === 'too_soon')) throw e;
+      await new Promise((r) => setTimeout(r, ((e.retryAfter ?? 30) + 1) * 1000));
+      from = logSize();
+      await session.startEmailSignIn(address);
+    });
+    const first = await mailFor(address, from);
+    const soon = await session.startEmailSignIn(address).catch((e: unknown) => e);
+    assert.ok(soon instanceof AccountApiError && soon.reason === 'too_soon' && soon.retryAfter && soon.retryAfter <= 30, String(soon));
+    await new Promise((r) => setTimeout(r, (soon.retryAfter! + 1) * 1000));
+    from = logSize();
+    await session.startEmailSignIn(address);
+    const second = await mailFor(address, from);
+    // The replaced message's code is checked against the newer one: a wrong code ("check the newest email").
+    if (first.code !== second.code) await assert.rejects(session.verifyEmailSignIn(address, { code: first.code }), { reason: 'invalid_code' });
+
+    // The link on another device: refused, and still usable on the right one.
+    await assert.rejects(emailSession(`other_${randomBytes(6).toString('hex')}`).verifyEmailSignIn(address, { linkToken: second.token }), {
+      code: 'forbidden',
+      reason: 'wrong_device',
+    });
+    // Second sign-in to the same address, by the link: the same account.
+    const answer = await session.verifyEmailSignIn(address, { linkToken: second.token });
+    assert.equal(answer.created, false);
+    assert.deepEqual(answer.user.providers, ['email']);
+  });
+
+  it('refuses an address it cannot use', async () => {
+    // On verify, so it doesn't spend one of the few `start` calls a minute.
+    await assert.rejects(emailSession(device).verifyEmailSignIn('not-an-address', { code: '123456' }), {
+      code: 'bad_request',
+      reason: 'invalid_email',
+    });
   });
 });

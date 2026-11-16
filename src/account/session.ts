@@ -3,6 +3,9 @@ import type {
   AppleSignInRequest,
   DevSignInRequest,
   DevSignInUser,
+  EmailStartRequest,
+  EmailStartResponse,
+  EmailVerifyRequest,
   GoogleSignInRequest,
   Me,
   SignInResponse,
@@ -61,12 +64,24 @@ export class AccountSession {
   private generation = 0;
   private listeners = new Set<(state: AccountState) => void>();
   private loaded: Promise<void> | null = null;
+  private signInListeners = new Set<(response: SignInResponse) => void>();
 
   constructor(
     private readonly api: Api,
     private readonly storage: SessionStorage,
     private readonly now: () => number = Date.now,
+    /**
+     * The app's interface language (BCP 47), sent as `locale` on every sign-in: the server writes the sign-in
+     * email and the notice mail ("a sign-in method was added") in it.
+     */
+    private readonly locale: () => string | undefined = () => undefined,
   ) {}
+
+  /** Called after every successful sign-in (any method) with the server's answer (`created`, `emailLink`). */
+  onSignIn(listener: (response: SignInResponse) => void): () => void {
+    this.signInListeners.add(listener);
+    return () => this.signInListeners.delete(listener);
+  }
 
   getState(): AccountState {
     return this.state;
@@ -92,13 +107,13 @@ export class AccountSession {
 
   async signInWithApple(request: Omit<AppleSignInRequest, 'deviceId'>): Promise<SignInResponse> {
     const deviceId = await this.storage.deviceId();
-    const body: AppleSignInRequest = { ...request, deviceId };
+    const body: AppleSignInRequest = { ...request, deviceId, ...this.localeField() };
     return this.start(await this.api.request<SignInResponse>({ method: 'POST', path: '/auth/apple', body }));
   }
 
   async signInWithGoogle(request: Omit<GoogleSignInRequest, 'deviceId'>): Promise<SignInResponse> {
     const deviceId = await this.storage.deviceId();
-    const body: GoogleSignInRequest = { ...request, deviceId };
+    const body: GoogleSignInRequest = { ...request, deviceId, ...this.localeField() };
     return this.start(await this.api.request<SignInResponse>({ method: 'POST', path: '/auth/google', body }));
   }
 
@@ -118,6 +133,27 @@ export class AccountSession {
         headers: { 'X-Dev-Sign-In-Secret': secret },
       }),
     );
+  }
+
+  /**
+   * Sign-in by email, first half: the server mails a 6-digit code and a link to `email` (backend/README.md › Auth ›
+   * Sign-in by email). The same answer for every valid address. The caller keeps the address (the code alone isn't
+   * enough to finish) — src/account/emailSignIn.ts does that.
+   */
+  async startEmailSignIn(email: string): Promise<EmailStartResponse> {
+    const deviceId = await this.storage.deviceId();
+    const body: EmailStartRequest = { email, deviceId, ...this.localeField() };
+    return this.api.request<EmailStartResponse>({ method: 'POST', path: '/auth/email/start', body });
+  }
+
+  /** Sign-in by email, second half: the code the user typed, or the token from the mail's link. */
+  async verifyEmailSignIn(email: string, proof: { code: string } | { linkToken: string }): Promise<SignInResponse> {
+    const deviceId = await this.storage.deviceId();
+    const body: EmailVerifyRequest =
+      'code' in proof
+        ? { email, deviceId, code: proof.code, ...this.localeField() }
+        : { email, deviceId, linkToken: proof.linkToken, ...this.localeField() };
+    return this.start(await this.api.request<SignInResponse>({ method: 'POST', path: '/auth/email/verify', body }));
   }
 
   /** The account as the server sees it now (`GET /me`); also updates the stored copy. */
@@ -193,6 +229,16 @@ export class AccountSession {
     for (const listener of this.listeners) listener(state);
   }
 
+  private localeField(): { locale?: string } {
+    let locale: string | undefined;
+    try {
+      locale = this.locale();
+    } catch {
+      locale = undefined;
+    }
+    return locale && /^[A-Za-z]{2,3}(-[A-Za-z0-9]{1,8})*$/.test(locale) && locale.length <= 35 ? { locale } : {};
+  }
+
   private async start(response: SignInResponse): Promise<SignInResponse> {
     const session = toStored(response, response.user, this.now());
     this.generation++;
@@ -200,6 +246,13 @@ export class AccountSession {
     this.session = session;
     await this.storage.save(session).catch(() => {});
     this.setState({ status: 'signedIn', user: session.user });
+    for (const listener of this.signInListeners) {
+      try {
+        listener(response);
+      } catch {
+        // A listener's mistake must not undo the sign-in.
+      }
+    }
     return response;
   }
 

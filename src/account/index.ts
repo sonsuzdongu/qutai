@@ -1,10 +1,11 @@
 import { useSyncExternalStore } from 'react';
 import { accountsEnabled, features } from '../config/features';
-import { t } from '../i18n';
+import { getLocale, t } from '../i18n';
 import { AccountApiError, createApi } from './api';
+import { EmailSignInFlow, emailErrorMessage, waitSpan, type EmailSignInState } from './emailSignIn';
 import { SignInFailed } from './providers';
 import { AccountSession, type AccountState } from './session';
-import { secureSessionStorage } from './storage';
+import { securePendingEmailStorage, secureSessionStorage } from './storage';
 
 export { accountErrorDetails } from './errorDetails';
 
@@ -15,14 +16,50 @@ export { accountErrorDetails } from './errorDetails';
  */
 
 let instance: AccountSession | null = null;
+let emailFlow: EmailSignInFlow | null = null;
 
 export function accountSession(): AccountSession | null {
   if (!accountsEnabled || !features.apiUrl) return null;
   if (!instance) {
-    instance = new AccountSession(createApi(features.apiUrl), secureSessionStorage);
+    // The interface language goes with every sign-in: the server writes its mails in it.
+    instance = new AccountSession(createApi(features.apiUrl), secureSessionStorage, Date.now, getLocale);
     instance.load();
   }
   return instance;
+}
+
+/** Sign-in by email's state (pending address, code screen); null when accounts are off. */
+export function emailSignIn(): EmailSignInFlow | null {
+  const session = accountSession();
+  if (!session) return null;
+  if (!emailFlow) {
+    const flow = new EmailSignInFlow(session, securePendingEmailStorage);
+    emailFlow = flow;
+    flow.load();
+    // Signed in another way (Apple, Google) while a code was waiting: that address is no longer needed.
+    session.onSignIn(() => {
+      const state = flow.getState();
+      if (state.status === 'pending' && !state.verifying) flow.cancel();
+    });
+  }
+  return emailFlow;
+}
+
+const IDLE: EmailSignInState = { status: 'idle' };
+
+export function useEmailSignInState(): EmailSignInState {
+  const flow = emailSignIn();
+  return useSyncExternalStore(
+    (onChange) => flow?.subscribe(onChange) ?? (() => {}),
+    () => flow?.getState() ?? IDLE,
+  );
+}
+
+/** "45 seconds", "2 minutes", "1 hour", in the interface language. */
+export function waitText(seconds: number): string {
+  const { unit, count } = waitSpan(seconds);
+  if (count === 1) return t(unit === 'second' ? 'when.second' : unit === 'minute' ? 'when.minute' : 'when.hour');
+  return t(unit === 'second' ? 'when.seconds' : unit === 'minute' ? 'when.minutes' : 'when.hours', { count });
 }
 
 const SIGNED_OUT: AccountState = { status: 'signedOut' };
@@ -46,6 +83,11 @@ export function accountErrorMessage(error: unknown): string {
     if (error.reason === 'needsBuild') return t('account.error.needsBuild');
     if (error.reason === 'noAccount') return t('account.error.noGoogleAccount');
     return t('account.error.providerFailed');
+  }
+  const email = emailErrorMessage(error);
+  if (email) {
+    const sentence = t(email.key);
+    return email.waitSeconds ? `${sentence} ${t('account.email.error.waitFor', { wait: waitText(email.waitSeconds) })}` : sentence;
   }
   if (!(error instanceof AccountApiError)) return t('account.error.unexpected');
   switch (error.code) {

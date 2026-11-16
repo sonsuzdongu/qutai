@@ -19,6 +19,8 @@ export class AccountApiError extends Error {
     readonly requestId: string | null = null,
     /** Sign-in routes: the server's short reason code (`wrong_audience`, `not_configured`, ...), when it sent one. */
     readonly reason: string | null = null,
+    /** `429`: the server's `Retry-After` in seconds (bounded to a day), when it sent one. */
+    readonly retryAfter: number | null = null,
   ) {
     super(code);
     this.name = 'AccountApiError';
@@ -46,6 +48,7 @@ const KNOWN_CODES: ReadonlySet<string> = new Set<ApiErrorCode>([
   'account_suspended',
   'not_found',
   'method_not_allowed',
+  'conflict',
   'rate_limited',
   'not_implemented',
   'unavailable',
@@ -59,11 +62,19 @@ function codeForStatus(status: number): ApiErrorCode {
   if (status === 401) return 'unauthorized';
   if (status === 403) return 'forbidden';
   if (status === 404) return 'not_found';
+  if (status === 409) return 'conflict';
   if (status === 429) return 'rate_limited';
   if (status === 501) return 'not_implemented';
   if (status === 503 || status === 502 || status === 504) return 'unavailable';
   if (status >= 500) return 'internal';
   return 'bad_request';
+}
+
+/** `Retry-After` as whole seconds (the server sends seconds; an HTTP date is not used by it), or null. */
+export function parseRetryAfter(value: string | null): number | null {
+  if (!value || !/^\s*\d{1,9}\s*$/.test(value)) return null;
+  const seconds = Number(value);
+  return seconds > 0 ? Math.min(seconds, 86_400) : null;
 }
 
 export function createApi(baseUrl: string, fetchImpl: Fetch = fetch) {
@@ -96,19 +107,32 @@ export function createApi(baseUrl: string, fetchImpl: Fetch = fetch) {
     }
 
     const requestId = response.headers.get('X-Request-Id');
+    const retryAfter = parseRetryAfter(response.headers.get('Retry-After'));
     if (response.status === 204) return null as T;
     let data: unknown;
     try {
       data = await response.json();
     } catch {
-      throw new AccountApiError(response.ok ? 'bad_response' : codeForStatus(response.status), response.status, requestId);
+      throw new AccountApiError(
+        response.ok ? 'bad_response' : codeForStatus(response.status),
+        response.status,
+        requestId,
+        null,
+        response.ok ? null : retryAfter,
+      );
     }
     if (response.ok) return data as T;
     const error = (data as { error?: { code?: unknown; requestId?: unknown; reason?: unknown } } | null)?.error;
     const code = typeof error?.code === 'string' && KNOWN_CODES.has(error.code) ? (error.code as ApiErrorCode) : codeForStatus(response.status);
     // Only a short code word is kept: it is shown to the user under "Details".
     const reason = typeof error?.reason === 'string' && REASON.test(error.reason) ? error.reason : null;
-    throw new AccountApiError(code, response.status, typeof error?.requestId === 'string' ? error.requestId : requestId, reason);
+    throw new AccountApiError(
+      code,
+      response.status,
+      typeof error?.requestId === 'string' ? error.requestId : requestId,
+      reason,
+      retryAfter,
+    );
   }
 
   return { request };

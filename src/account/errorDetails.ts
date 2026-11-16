@@ -20,6 +20,7 @@ export function scrubDetail(text: string): string {
     .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '[email]')
     .replace(/[\w-]+\.apps\.googleusercontent\.com/gi, '[client id]')
     .replace(/eyJ[\w-]*\.[\w-]+\.[\w-]*/g, '[token]')
+    .replace(/qel_[\w-]+/g, '[token]')
     .replace(/[A-Za-z0-9_+/=-]{32,}/g, '[redacted]')
     .replace(/\s+/g, ' ')
     .trim()
@@ -39,6 +40,7 @@ export function accountErrorDetails(error: unknown): string | undefined {
     const head =
       error.status > 0 ? `Qutai server: HTTP ${error.status} ${error.code}` : `Qutai server: no answer (${error.code})`;
     const parts = [error.reason ? `${head} (${error.reason})` : head];
+    if (error.retryAfter) parts.push(`Retry-After ${error.retryAfter} s`);
     if (error.requestId && /^[\w-]{1,64}$/.test(error.requestId)) parts.push(`request ${error.requestId}`);
     return parts.join('; ');
   }
