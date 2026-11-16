@@ -128,7 +128,14 @@ import { placeCall } from './src/device/phone';
 import { SEARCH_ENGINES, searchResultsOf } from './src/browser/search';
 import { openSmsComposer } from './src/device/sms';
 import { openWhatsApp } from './src/device/whatsapp';
-import { NotificationOrigin, incognitoOriginTab, initNotifications } from './src/device/notifications';
+import {
+  NotificationOrigin,
+  incognitoOriginTab,
+  initNotifications,
+  notificationOrigin,
+  postTaskNotice,
+} from './src/device/notifications';
+import { taskNoticeFor, type TaskNoticeEvent } from './src/agent/taskNotice';
 import { nowContext } from './src/agent/scheduling';
 import { interfaceLanguageNote } from './src/agent/uiLabels';
 import { withIdentity } from './src/agent/identity';
@@ -183,9 +190,11 @@ import { configurePageMedia } from './src/browser/mediaCapture';
 import { pauseAllPages } from './src/browser/playback';
 import { configureBackgroundMedia, setPictureInPictureAllowed } from './src/device/backgroundMedia';
 import {
+  backgroundRunNotifies,
   beginBackgroundTask,
   configureBackgroundTasks,
   endBackgroundTask,
+  onApprovalWaitingInBackground,
   onBackgroundOpenRequested,
   onBackgroundStopRequested,
   TaskOutcome,
@@ -862,7 +871,8 @@ function BrowserApp({
         openRemindedTask(entry.id);
         return;
       case 'notification':
-        returnToNotificationTab(entry.from);
+        // A task's notification opens its conversation, when its tab is still there.
+        if (returnToNotificationTab(entry.from) && entry.assistant) setPanelOpen(true);
         return;
     }
   };
@@ -871,7 +881,7 @@ function BrowserApp({
    * its group; else the first normal tab (a new one if there is none). Says so in a toast when it isn't the same tab.
    * An incognito tab is found only while this incognito session lasts; it is never reopened.
    */
-  const returnToNotificationTab = (from: NotificationOrigin) => {
+  const returnToNotificationTab = (from: NotificationOrigin): boolean => {
     const firstNormal = () => {
       const normal = browser.tabsOf(false);
       if (normal.length) browser.switchTab(normal[0].id);
@@ -879,19 +889,29 @@ function BrowserApp({
     };
     if ('incognito' in from) {
       const id = incognitoOriginTab(from.incognito);
-      if (id && browser.getTab(id)) return browser.switchTab(id);
+      if (id && browser.getTab(id)) {
+        browser.switchTab(id);
+        return true;
+      }
       firstNormal();
-      return toast.show(t('notifications.incognitoGone'));
+      toast.show(t('notifications.incognitoGone'));
+      return false;
     }
     const tab = browser.tabs.find((x) => !x.incognito && x.uid === from.tab);
-    if (tab) return browser.switchTab(tab.id);
+    if (tab) {
+      browser.switchTab(tab.id);
+      return true;
+    }
     const inGroup = from.group ? browser.tabs.find((x) => !x.incognito && x.groupId === from.group) : undefined;
     if (inGroup) {
       browser.switchTab(inGroup.id);
-      return toast.show(t('notifications.tabGoneGroup'));
+      toast.show(t('notifications.tabGoneGroup'));
+      // The group's conversation is the one the task ran in.
+      return true;
     }
     firstNormal();
     toast.show(t('notifications.tabGone'));
+    return false;
   };
   useEntryPoints(!appLocked, handleEntry);
   const incomingActions = (item: { text: string; url: string | null }): SheetAction[] => [
@@ -1249,7 +1269,11 @@ function BrowserApp({
       // Nothing from a conversation that touched an incognito tab goes in a notification, and with "Notify me when a
       // task finishes" off only a question for the user does.
       const quiet = !notifyTaskDoneRef.current && outcome.kind !== 'needsAnswer';
+      const backgroundRunNotified = backgroundRunNotifies() && !incognitoTask() && !quiet && outcome.kind !== 'stopped';
       endBackgroundTask(incognitoTask() || quiet ? { kind: 'stopped' } : outcome);
+      // Without that background run (iOS, or the setting off), Qutai's own notification when the task ended while
+      // the user was away (e.g. the answer arrived after they left).
+      noticeTask(chat, outcome.kind, backgroundRunNotified);
       chat.finishStreaming();
       if (answerCost) chat.addCost(answerCost, sent.id);
       // The ledger's latest entries (a stopped request is settled on the server a little later).
@@ -1352,6 +1376,31 @@ function BrowserApp({
    * Away from Qutai, Android's background run has already posted its notification; a task that paused because Qutai
    * left the screen cannot end there, and nothing is ever announced for one that did not end.
    */
+  /** "Task finished" notification (agent/taskNotice.ts decides; nothing without the permission, never asked here). */
+  const noticeTask = (chat: Conversation, event: TaskNoticeEvent, backgroundRunNotified: boolean) => {
+    const kind = taskNoticeFor({
+      event,
+      foreground: AppState.currentState === 'active',
+      incognito: chat.incognito || chat.privacy.touchedIncognito,
+      backgroundRunNotifies: backgroundRunNotified,
+      notifyWhenDone: notifyTaskDoneRef.current,
+    });
+    const tab = browserInstance.tabs.find((x) => browserInstance.conversationOf(x) === chat);
+    if (!kind || !tab || tab.incognito) return;
+    void postTaskNotice(t(`taskDone.${kind}`), notificationOrigin(tab));
+  };
+  const noticeTaskRef = useRef(noticeTask);
+  noticeTaskRef.current = noticeTask;
+  // A confirmation waits while the user is away (not with "Keep working in the background", which says so itself).
+  useEffect(
+    () =>
+      onApprovalWaitingInBackground(() => {
+        const chat = runningRef.current.chat;
+        if (chat) noticeTaskRef.current(chat, 'needsApproval', false);
+      }),
+    [],
+  );
+
   const taskEnded = (chat: Conversation, kind: 'done' | 'failed' | 'needsAnswer') => {
     const onScreen = AppState.currentState === 'active';
     if (onScreen && panelOpenRef.current && browserInstance.conversationOf(browserInstance.active) === chat) {

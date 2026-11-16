@@ -90,7 +90,9 @@ const handled = new Set<string>();
  * from before origins were stored carry none and are left alone (Qutai just opens, as it did). Returns the
  * unsubscribe.
  */
-export function onAssistantNotificationTapped(listener: (origin: NotificationOrigin) => void): () => void {
+export function onAssistantNotificationTapped(
+  listener: (origin: NotificationOrigin, opens: { assistant: boolean }) => void,
+): () => void {
   let subscription: { remove(): void } | null = null;
   let stopped = false;
   load()
@@ -105,7 +107,8 @@ export function onAssistantNotificationTapped(listener: (origin: NotificationOri
         if (!origin || handled.has(key)) return;
         handled.add(key);
         Notifications.clearLastNotificationResponse();
-        listener(origin);
+        const data = request.content.data as { qutaiOpen?: unknown } | undefined;
+        listener(origin, { assistant: data?.qutaiOpen === 'assistant' });
       };
       subscription = Notifications.addNotificationResponseReceivedListener(take);
       take(Notifications.getLastNotificationResponse());
@@ -152,6 +155,34 @@ export async function scheduleNotification(plan: NotificationPlan, from: Notific
         ? { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: plan.delaySeconds, channelId: CHANNEL_ID }
         : { type: Notifications.SchedulableTriggerInputTypes.DATE, date: plan.at, channelId: CHANNEL_ID },
   });
+}
+
+/** Android channel of the "task finished" notifications (own channel, so it can be turned off apart from reminders). */
+const TASK_CHANNEL_ID = 'task-results';
+
+/**
+ * Posts a "task finished" notification now: "Qutai" and one line saying how the task ended (never what it found, so
+ * nothing of the answer shows on the lock screen). A tap opens Qutai on the assistant panel of the task's tab. Never
+ * asks for the permission: without it nothing happens. Errors are swallowed (a missing native module, a refusal).
+ */
+export async function postTaskNotice(line: string, from: NotificationOrigin): Promise<void> {
+  try {
+    const Notifications = await load();
+    if (!allowed(Notifications, await Notifications.getPermissionsAsync())) return;
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync(TASK_CHANNEL_ID, {
+        name: t('notifications.tasksChannel'),
+        importance: Notifications.AndroidImportance.HIGH,
+      });
+    }
+    await Notifications.scheduleNotificationAsync({
+      identifier: `${ID_PREFIX}task-${Date.now().toString(36)}`,
+      content: { title: 'Qutai', body: line, sound: 'default', data: { qutaiFrom: from, qutaiOpen: 'assistant' } },
+      trigger: Platform.OS === 'android' ? { channelId: TASK_CHANNEL_ID } : null,
+    });
+  } catch {
+    // Nothing to tell: the task's result is in the panel.
+  }
 }
 
 /**

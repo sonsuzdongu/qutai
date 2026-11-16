@@ -42,7 +42,8 @@ export type Entry =
   /** The user tapped the reminder of the saved task with this id. */
   | { kind: 'task'; id: string }
   /** The user tapped a notification the assistant scheduled: back to the tab it was asked from. */
-  | { kind: 'notification'; from: NotificationOrigin };
+  /** assistant: the notification says how a task ended, so its conversation opens in the panel. */
+  | { kind: 'notification'; from: NotificationOrigin; assistant?: boolean };
 
 /** From the native module: shared text (Android) or a quick action's qutai:// link (iOS). */
 type RawEntry = { source?: string; text?: string; subject?: string | null; url?: string };
@@ -246,7 +247,7 @@ export function useEntryPoints(ready: boolean, handle: (entry: Entry) => void) {
       Linking.addEventListener('url', ({ url }) => push([entryFromLink(url)])),
       native?.addListener('onEntry', takeNative),
       { remove: onTaskReminderTapped((id) => push([{ kind: 'task', id }])) },
-      { remove: onAssistantNotificationTapped((from) => push([{ kind: 'notification', from }])) },
+      { remove: onAssistantNotificationTapped((from, opens) => push([{ kind: 'notification', from, assistant: opens.assistant }])) },
       // Belt and braces for an event sent while JavaScript was not listening.
       AppState.addEventListener('change', (state) => state === 'active' && takeNative()),
     ];

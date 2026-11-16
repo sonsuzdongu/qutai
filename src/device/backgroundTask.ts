@@ -85,9 +85,34 @@ native?.addListener('onStateChange', ({ state }) => {
   }
 });
 
-// Leaving the app while a confirmation is open: the background run pauses at once and says what it waits for.
+/** Called when a confirmation waits while Qutai is in the background and no background run says so (App.tsx). */
+let approvalWaitingListener: (() => void) | null = null;
+/** The confirmation already reported (one notification per confirmation, however often the user leaves). */
+let approvalNoticed = false;
+
+function noticeApprovalWaiting() {
+  if (approvalNoticed || waitingForUser === 0) return;
+  approvalNoticed = true;
+  approvalWaitingListener?.();
+}
+
+/**
+ * `listener` runs when a confirmation is open while Qutai is in the background, once per confirmation, unless
+ * "Keep working in the background" owns the task (its own notification says it paused for a confirmation).
+ */
+export function onApprovalWaitingInBackground(listener: () => void): () => void {
+  approvalWaitingListener = listener;
+  return () => {
+    if (approvalWaitingListener === listener) approvalWaitingListener = null;
+  };
+}
+
+// Leaving the app while a confirmation is open: the background run pauses at once and says what it waits for;
+// without one, the app's own notification says so.
 AppState.addEventListener('change', (next) => {
-  if (next !== 'active' && waitingForUser > 0 && isRunningInBackground()) pauseForUser('confirm');
+  if (next === 'active' || waitingForUser === 0) return;
+  if (isRunningInBackground()) pauseForUser('confirm');
+  else if (next === 'background' && !backgroundRunNotifies()) noticeApprovalWaiting();
 });
 
 const waitingListeners = new Set<() => void>();
@@ -103,8 +128,11 @@ const asking = (delta: number) => {
  * waits, the page's working glow is off (useWaitingForUser); the panel's input stays closed until the task ends.
  */
 export async function whileWaitingForUser<T>(ask: () => Promise<T>): Promise<T> {
+  if (waitingForUser === 0) approvalNoticed = false;
   waitingForUser++;
   asking(1);
+  // Asked while Qutai is already in the background (the step started before the user left).
+  if (AppState.currentState === 'background' && !backgroundRunNotifies()) noticeApprovalWaiting();
   try {
     return await ask();
   } finally {
@@ -185,6 +213,15 @@ export function forbidBackground() {
 }
 
 export type TaskOutcome = { kind: 'done' | 'failed' | 'needsAnswer' | 'stopped'; text?: string };
+
+/**
+ * Whether "Keep working in the background" owns the running task's notifications (Android, the setting on, not
+ * incognito): its native side says itself how the task ended or what it waits for, whether or not the service had
+ * started.
+ */
+export function backgroundRunNotifies(): boolean {
+  return !!native && taskSet;
+}
 
 /** The task ended: stops the service; in the background, a notification says how it ended. */
 export function endBackgroundTask(outcome: TaskOutcome) {
