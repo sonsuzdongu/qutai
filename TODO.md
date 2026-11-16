@@ -39,6 +39,20 @@ requested and initialised only in pro mode, and the code path is excluded from t
   with a confirmation saying what is deleted (Apple accounts confirm with Apple first, so the server can revoke
   Apple's authorization); messages for suspended accounts and an unreachable server
 - [x] Signing out leaves the app usable with the user's own key; nothing local is lost
+- [x] Sign-in by email (the server's phase 1 plus the app, 17 Nov 2026): "Continue with email" in Settings › Account
+  and setup's sign-in step; the address, then the 6-digit code (number pad, one-time-code hints, paste, sent at the
+  last digit, send again with a countdown, another address); the mail's link `qutai://sign-in/email?token=…` at a
+  cold start and while running, never opened as a page; the pending address survives the app being closed; every
+  server reason as a sentence with Details; `locale` on every sign-in; the account's methods in Settings › Account;
+  a note when a sign-in joined an existing account (README › Accounts (pro mode) › Sign-in by email)
+  - [x] Checked on the Android emulator against a local server with the log sender: code, wrong code, send again,
+    link while running and at a cold start (development launcher first), a second sign-in to the same address, the
+    pending sign-in after a force-stop, a link with nothing waiting, a broken link, Turkish at 360dp, German at
+    360dp with 1.5× text
+  - [ ] Not checked: iOS (simulator or phone), real mail through Mailjet (does the mail app make `qutai://` tappable;
+    Gmail on Android usually doesn't), iOS offering the code from Mail, setup's sign-in step on screen
+  - [ ] Adding or removing a sign-in method while signed in (needs server routes); merging two existing accounts;
+    https App Links / Universal Links for the mail's link (needs a domain); the mail in the other eight languages
 - [x] Onboarding in pro mode: sign-in is a step of the Qutai Credits path (choose → disclosure → sign in → account;
   `src/credits/setupFlow.ts`); the open-source build never shows it
   - [ ] Owner: whether own-key users should also get an optional "Sign in" step in setup
@@ -71,7 +85,7 @@ App ──(session token)──► Qutai server ──(our key)──► Anthrop
 
 #### 1. Server
 Done in `backend/` (see its `DESIGN.md` › Order of work and `README.md`):
-- [x] User account and sign-in; short-lived access token and refresh token (Apple, Google, a test sign-in for local servers)
+- [x] User account and sign-in; short-lived access token and refresh token (Apple, Google, sign-in by email, a test sign-in for local servers)
 - [x] Provider adapters: not split out of the app. The app's `src/ai/` adapters build the request (relay wire), the server has its own adapters around it
 - [x] Relay endpoint: the system prompt and tool list come from a registered agent profile (`npm run profile:export`), the model from the tier
 - [x] Request rules: allowed models, output limit, context and image limits, step limits (`relay_rules`, per-tier overrides)
@@ -131,8 +145,8 @@ Done in `backend/` (see its `DESIGN.md` › Order of work and `README.md`):
   - `src/legal/documents.ts` (EN and TR): the privacy intro ("Qutai has no servers of its own") and "What leaves your phone, and to whom"; what our server receives, keeps (and how long), and who processes it
   - Store listings and the README if they repeat the claim
   - Accounts (step 8) already make some of these untrue for a signed-in pro user: the server keeps an account
-    (id, Apple/Google identity, the email the provider shares, last use; for Apple an encrypted Apple token for
-    revocation). Places: `onboarding.f3Body`, `onboarding.legal1`, `onboarding.legal2`, `profile.privacyPro`,
+    (id, Apple/Google identity, the email the provider shares, the address used for sign-in by email, last use; for
+    Apple an encrypted Apple token for revocation). Places: `onboarding.f3Body`, `onboarding.legal1`, `onboarding.legal2`, `profile.privacyPro`,
     `sentLog.hintPro`, `src/legal/documents.ts` (privacy intro and "What leaves your phone"), README › Official builds
     table ("Where your data goes" says it), the App Store privacy labels and Play Data safety form (now: identifiers
     and email linked to the user, in pro builds)

@@ -489,7 +489,9 @@ out as a submodule at `backend/` (its `README.md` has the setup).
 | Sign in with Google, Android: Credential Manager's "Sign in with Google" flow with the nonce, in the local module `modules/qutai-auth` (the legacy Google Sign-In SDK is deprecated, and the free `@react-native-google-signin` module can't pass a nonce on Android) | `modules/qutai-auth`, `src/account/providers.ts` |
 | Sign in with Google, iOS: `expo-auth-session` in the system's sign-in browser with the iOS OAuth client, PKCE and the nonce; the code is exchanged for the ID token at Google | `src/account/providers.ts` |
 | Native setup only in pro builds: the Sign in with Apple entitlement and the Google iOS URL scheme | `plugins/withProAccounts.js` |
-| Settings › Account | `src/components/AccountScreen.tsx` |
+| Sign-in by email: a 6-digit code and a link in one message (`POST /auth/email/start` / `verify`); the pending address in memory and SecureStore (never the code or link), every server reason as a sentence | `src/account/emailSignIn.ts`, `session.ts`, `src/components/EmailSignIn.tsx` |
+| The mail's link `qutai://sign-in/email?token=…`, at a cold start and while running; never opened as a page | `src/components/AccountLinks.tsx`, `src/device/entryPoints.ts` |
+| Settings › Account (the account's sign-in methods from `GET /me`) | `src/components/AccountScreen.tsx`, `accountLabels.ts` |
 
 **Making a pro build.** Set the variables in `.env` (local builds) or in an EAS build profile's `env`
 (`eas.json` keeps all three profiles `off`; add your own profile or override with EAS environment variables):
@@ -511,6 +513,52 @@ To run the server locally: `cd backend && npm install && npm run migrate:local`,
 (`node scripts/generate-secret.mjs access-token-key` / `pepper`), then `npm run dev`. Real sign-in also needs the
 Apple and Google client ids in the server's `APPLE_CLIENT_IDS` / `GOOGLE_CLIENT_IDS` (see `backend/README.md` ›
 Auth); without them the sign-in routes answer "unavailable", which the app shows as such.
+
+#### Sign-in by email
+
+The third button, "Continue with email" (Settings › Account and setup's sign-in step), works in every pro build: no
+client id or native code is involved. The user types an address; the server (`backend/README.md` › Auth ›
+Sign-in by email) mails one message with a 6-digit code and a link, in the app's language (English and Turkish so
+far; the others get English). Either one finishes the sign-in, **only on the phone that asked**:
+
+- **Code:** typed or pasted (only the digits count), sent by itself at the last digit. iOS offers a code from Mail
+  above the keyboard (`textContentType="oneTimeCode"`); Android gets the one-time-code autofill hint, which
+  autofill services use for SMS codes and may not fill from mail.
+- **Link:** `qutai://sign-in/email?token=…` opens the app, which sends the token with the address it is waiting
+  for. The app keeps that address (not the code) in memory and SecureStore, so the link and the code screen still
+  work after the system closed the app while the user read the mail; it is forgotten on success, "Use another
+  address", "Other ways to sign in", a sign-in by Apple or Google, and when the code has expired (10 minutes).
+  The link is handled before the browser sees it: it never becomes a tab, a history entry, a search or text for
+  the assistant, and nothing logs it. A link opened on a phone with no sign-in waiting says to enter the code on the
+  phone that asked or ask for a new code here. Mail apps may not make a `qutai://` link tappable (Gmail on
+  Android usually doesn't); the code always works. An https link needs a domain (see "Not built yet" below).
+- "Send again" is offered after the server's `resendAfter` (30 s), with a countdown; only the newest code works.
+  Refusals (wrong code, expired, too many tries, the rate limits with their wait, the address belonging to two
+  accounts, no mail sender on the server) show a plain sentence with the server's code under "Details".
+- After a sign-in that joined an existing account (`emailLink: "linked"`, also after Apple or Google), the app says
+  once which ways to sign in the account now has. `untrusted` and `conflict` sign in quietly; Settings › Account
+  lists the real methods (`GET /me` `methods`, the address for email).
+- The app sends its interface language as `locale` on the email routes and on the Apple and Google sign-ins (the
+  server writes the sign-in mail and the "sign-in method added" notice in it).
+
+Trying it locally: run the server with `EMAIL_SENDER=log` (it prints each message, code and link, to its terminal
+instead of sending it; `backend/README.md` › Trying it locally) and point a pro build at it. To open a link by hand:
+
+```bash
+adb shell am start -a android.intent.action.VIEW -d 'qutai://sign-in/email?token=<token from the server output>'
+xcrun simctl openurl booted 'qutai://sign-in/email?token=<token from the server output>'
+```
+
+A development build started with a link at a cold start shows the development launcher first; opening the app
+from it passes the link on.
+
+**Not built yet** (each needs work outside the app): adding or removing a sign-in method while signed in (server
+routes to link a method to the signed-in account and to remove one, plus a screen); merging two existing accounts
+(a server merge of ledgers, purchases and identities, with proof of both; the server records the conflicts for it);
+https App Links / Universal Links (a domain with `assetlinks.json` and `apple-app-site-association`, a page that
+hands the token to the app and never signs in on GET, the template change on the server, and the app's intent
+filter and associated domain, which is a native change); the message in the other eight languages
+(`backend/apps/api/src/auth/email/message.ts`).
 
 #### Test sign-in (a local test server, before real sign-in exists)
 
@@ -561,10 +609,12 @@ Through a tunnel every caller may share one address, so the server's per-address
 20 calls a minute) and the test sign-in's own limit (10 a minute) are shared: "Too many attempts" clears after a
 minute.
 
-Tests: `npm run test:account` (the client and session against a fake server) and, with the local server running,
+Tests: `npm run test:account` (the client, the session and sign-in by email against a fake server) and, with the local server running,
 `npm run test:account:server` (refresh and rotation, reuse detection, `GET /me`, sign-out, sign-out everywhere,
 `DELETE /account`, suspended accounts; with `QUTAI_TEST_DEV_LOGIN_SECRET` set and the server's test sign-in on, also
-the test sign-in and everything after it). Both use Node's built-in test runner; see
+the test sign-in and everything after it; with `QUTAI_TEST_EMAIL_LOG` pointing at the output of a server running with
+`EMAIL_SENDER=log`, a sign-in by email: wrong code, code, resend wait, replaced code, link on another device, link).
+Both use Node's built-in test runner; see
 `scripts/account-tests/README.md`.
 
 **What the owner sets up for real sign-in** (none of it is in the repository):

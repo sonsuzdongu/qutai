@@ -26,3 +26,13 @@ QUTAI_TEST_DEV_LOGIN_SECRET=<the server's DEV_SIGN_IN_SECRET> npm run test:accou
 Those tests wait a minute before they start, because the tests before them use most of the server's per-address
 limit on auth routes. `QUTAI_TEST_D1_STATE` points the database writes at another local state folder when the
 server runs with a different `--persist-to` (default `.wrangler/state/api`).
+
+Sign-in by email is tested for real when the server runs with `EMAIL_SENDER=log` and its output goes to a file the
+tests can read (they take the code and link from it). Those tests also wait a minute first, and one of them waits out
+the 30-second resend time. A server of your own on another port, with its own state and keys, keeps your usual
+server and its database untouched (`QUTAI_TEST_DEV_VARS` names that server's `.dev.vars`, for the pepper):
+
+```bash
+QUTAI_TEST_API_URL=http://localhost:8795 QUTAI_TEST_EMAIL_LOG=<server output file> \
+QUTAI_TEST_DEV_VARS=<that server's .dev.vars> QUTAI_TEST_D1_STATE=<its --persist-to folder> npm run test:account:server
+```

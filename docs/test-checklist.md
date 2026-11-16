@@ -13,6 +13,11 @@ Sunucu: `cd backend && API_PORT=8000 npm run dev -w @qutai/api` (tünel 8000 por
 
 - [x] Test girişi tünel üzerinden çalışıyor (Ayarlar › Hesap › Test girişi)
 - [x] Yönetim panelinden test kullanıcısına kredi verilebiliyor
+- [ ] E-posta ile giriş (Ayarlar › Hesap › E-posta ile devam et): kod e-postayla geliyor, kodu girince oturum
+      açılıyor; e-postadaki bağlantıya telefonda dokununca da açılıyor (Gmail `qutai://` bağlantısını tıklanabilir
+      yapmayabilir; o zaman kod yeterli). Yanlış kod, "Tekrar gönder" geri sayımı, uygulama kapatılıp açılınca kod
+      ekranına dönüş, Ayarlar › Hesap'ta "Giriş yöntemleri" altında adresin görünmesi
+- [ ] iPhone'da Mail'den gelen kod klavyenin üstünde öneriliyor
 - [x] Gerçek sağlayıcı anahtarıyla relay çalışıyor (hangi sağlayıcı: … )
 - [ ] Diğer sağlayıcılar da çalışıyor: Anthropic / OpenAI / Gemini (üçünün relay yolu ayrı)
 - [ ] Rakamlar tutuyor: yanıtın altındaki kredi satırı = paneldeki defter düşüşü; token sayıları sağlayıcı

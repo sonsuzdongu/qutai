@@ -274,7 +274,7 @@ Done in the development build:
 
 ### Phase 5 – Things that require a server
 
-Account system and Qutai credits: built (app in pro mode; `backend/` steps 1–6: auth, ledger, relay with tiers,
+Account system and Qutai credits: built (app in pro mode; `backend/` steps 1–6: auth (Apple, Google, sign-in by email with a code or link), ledger, relay with tiers,
 purchases through RevenueCat, admin panel), not deployed; analytics events (`POST /events`) and abuse protection open.
 Still to build: end-to-end encrypted sync (including memory; deletion markers must be kept for deletions), background
 deep research on iOS (and tasks that go on with the phone off), price and page tracking, Safe Browsing checks.
