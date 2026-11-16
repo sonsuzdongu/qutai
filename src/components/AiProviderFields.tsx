@@ -232,7 +232,8 @@ const useStyles = makeStyles((c) => ({
   keyDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#3a9b5c' },
   input: {
     color: c.text,
-    height: 44,
+    // Grows with large text sizes instead of clipping the text.
+    minHeight: 44,
     borderRadius: 10,
     paddingHorizontal: 12,
     backgroundColor: c.surface,

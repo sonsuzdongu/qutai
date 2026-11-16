@@ -390,7 +390,8 @@ const useStyles = makeStyles((c) => ({
   spinner: { alignSelf: 'flex-start' },
   input: {
     color: c.text,
-    height: 44,
+    // Grows with large text sizes instead of clipping the text.
+    minHeight: 44,
     borderRadius: 10,
     paddingHorizontal: 12,
     backgroundColor: c.surface,

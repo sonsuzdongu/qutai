@@ -146,7 +146,8 @@ const useStyles = makeStyles((c) => ({
   error: { fontSize: 13, color: c.danger, lineHeight: 18 },
   input: {
     color: c.text,
-    height: 44,
+    // Grows with large text sizes instead of clipping the text.
+    minHeight: 44,
     borderRadius: 10,
     paddingHorizontal: 12,
     backgroundColor: c.surface,

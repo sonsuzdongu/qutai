@@ -874,7 +874,8 @@ const useStyles = makeStyles((c) => ({
     color: c.text,
     marginHorizontal: 12,
     marginBottom: 8,
-    height: 38,
+    // Grows with large text sizes instead of clipping the text.
+    minHeight: 38,
     borderRadius: 10,
     paddingHorizontal: 12,
     backgroundColor: c.surface,

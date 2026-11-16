@@ -551,7 +551,8 @@ const useStyles = makeStyles((c) => ({
   smallText: { flex: 1 },
   search: {
     color: c.text,
-    height: 40,
+    // Grows with large text sizes instead of clipping the text.
+    minHeight: 40,
     borderRadius: 10,
     paddingHorizontal: 12,
     backgroundColor: c.sunken,
@@ -620,7 +621,8 @@ const useStyles = makeStyles((c) => ({
   lockTitle: { fontSize: 14, color: c.text, fontWeight: '600' },
   labelInput: {
     color: c.text,
-    height: 38,
+    // Grows with large text sizes instead of clipping the text.
+    minHeight: 38,
     borderRadius: 10,
     paddingHorizontal: 12,
     backgroundColor: c.sunken,
