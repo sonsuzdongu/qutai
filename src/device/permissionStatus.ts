@@ -31,11 +31,14 @@ export type PermissionKind = 'location' | 'microphone' | 'calendar' | 'reminders
  */
 export type PermissionState = 'granted' | 'limited' | 'undetermined' | 'denied' | 'blocked' | 'unavailable';
 
-/** Reminders lists exist on iOS only; Android's reminders are calendar events (the calendar row covers them). */
+/**
+ * The setup step's rows, in order: the microphone first. Reminders lists exist on iOS only; Android's reminders are
+ * calendar events (the calendar row covers them).
+ */
 export function setupPermissions(): PermissionKind[] {
   return Platform.OS === 'ios'
-    ? ['location', 'microphone', 'calendar', 'reminders', 'notifications']
-    : ['location', 'microphone', 'calendar', 'notifications'];
+    ? ['microphone', 'location', 'calendar', 'reminders', 'notifications']
+    : ['microphone', 'location', 'calendar', 'notifications'];
 }
 
 const fromList = (s: ListAccess): PermissionState => (s === 'writeOnly' ? 'limited' : s);
