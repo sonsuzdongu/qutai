@@ -279,7 +279,7 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     if (reply.notice) onEvent({ type: 'info', text: reply.notice });
     if (reply.searchWidget) searchWidget = reply.searchWidget;
     reply.searches.forEach((query) =>
-      onEvent({ type: 'action', icon: WEB_SEARCH_ICON, text: t('action.webSearch', { query }) }),
+      onEvent({ type: 'action', icon: WEB_SEARCH_ICON, text: t('action.webSearch', { query }), tool: 'web_search' }),
     );
     // Pages found by web search open in the conversation's own mode.
     reply.citations.forEach((c) =>
@@ -360,7 +360,7 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
         continue;
       }
       const action = describeToolCall(call.name, call.input);
-      onEvent({ type: 'action', icon: toolIcon(call.name, call.input), text: action });
+      onEvent({ type: 'action', icon: toolIcon(call.name, call.input), text: action, tool: call.name });
       setBackgroundStep(action);
       const backgroundsBefore = getBackgroundCount();
       const pausesBefore = getBackgroundPauseCount();

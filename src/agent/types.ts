@@ -14,7 +14,8 @@ export type AgentEvent =
   /** A piece of the reply being streamed; the complete text follows as a 'text' event. */
   | { type: 'text_delta'; text: string }
   /** icon: shown before the text in the chat (decorative; the text says the same). */
-  | { type: 'action'; text: string; icon: IconName }
+  /** tool: the tool's name (or 'web_search'), for the finished task's step summary (chat/stepSummary.ts). */
+  | { type: 'action'; text: string; icon: IconName; tool?: string }
   | { type: 'info'; text: string; icon?: IconName }
   | { type: 'error'; text: string }
   /** The agent asks the user to pick one of these options; the run ends until they answer. */

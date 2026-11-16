@@ -1203,7 +1203,11 @@ function BrowserApp({
             return chat.add(newItem('choices', event.text, event.options));
           }
           const item = newItem(event.type, event.text);
-          chat.add('icon' in event && event.icon ? { ...item, icon: event.icon } : item);
+          chat.add({
+            ...item,
+            ...('icon' in event && event.icon ? { icon: event.icon } : {}),
+            ...(event.type === 'action' && event.tool ? { tool: event.tool } : {}),
+          });
         },
       });
       if (signal.aborted) chat.add({ ...newItem('info', t('chat.stopped')), icon: 'stop' });

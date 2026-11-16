@@ -60,6 +60,7 @@ import { ActionSheet, SheetAction } from './ActionSheet';
 import { FINAL_WAIT_MS } from './PushToTalk';
 import { useHoldGesture, useScreenReader } from './useHoldGesture';
 import { ErrorDetails } from './ErrorDetails';
+import { segmentChat, stepSummaryText, summarizeSteps } from '../chat/stepSummary';
 
 export type ChatItemAction = 'buyCredits' | 'signIn';
 
@@ -83,6 +84,8 @@ export type ChatItem = {
   text: string;
   /** For 'action' and 'info': the icon before the text (absent in conversations saved before icons). */
   icon?: IconName;
+  /** For 'action': the tool's name, for the step summary (absent in conversations saved before it was kept). */
+  tool?: string;
   /** For 'choices': the buttons offered. */
   options?: string[];
   /** For 'choices': the option the user tapped. */
@@ -302,6 +305,16 @@ export function AssistantPanel({
   const scrollRef = useRef<ScrollViewInstance>(null);
   const [listWidth, setListWidth] = useState<number | null>(null);
   const costConversation = () => items.flatMap((i) => (i.cost ? [i.cost] : []));
+  /** Folded step runs the user opened (by their first item's id). */
+  const [expandedSteps, setExpandedSteps] = useState<ReadonlySet<string>>(() => new Set());
+  const toggleSteps = (id: string) => {
+    tick();
+    setExpandedSteps((open) => {
+      const next = new Set(open);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  };
   const inputRef = useRef<TextInputInstance>(null);
   // While a task runs the input is closed (not editable, dimmed, "Qutai is working…") with only Stop left, also while
   // a confirmation waits: the dialog is answered with its own buttons, and a message can't be sent before the task
@@ -587,40 +600,56 @@ export function AssistantPanel({
                     onRunTask={onRunTask}
                   />
                 )}
-                {items.map((item, index) => (
-                  <Fragment key={item.id}>
-                    <ChatRow
-                      item={item}
-                      onOpenAttachment={onOpenAttachment}
-                      onItemAction={onItemAction}
-                      reading={speaking && readingId === item.id}
-                      selectable={selectableId === item.id}
-                      onAction={(action) => messageAction(action, item)}
-                      onMenu={(full) => setMenu({ item, full })}
-                      onOpenLink={onOpenLink}
-                      onCall={onCall}
-                      onSms={onSms}
-                      onWhatsApp={onWhatsApp}
-                      onFile={onFile}
-                      onImage={onImage}
-                      onShare={onShare}
-                      onOpenSource={onOpenSource}
-                      onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
-                      answered={item.kind === 'choices' && (!!item.chosen || index < lastUserIndex)}
-                      cost={showCost ? item.cost : undefined}
-                      costConversation={costConversation}
-                      listWidth={listWidth}
-                    />
-                    {/* An answer shows its figure in its row of icons; items without that row (an error, a stopped
-                        task, a question) keep it on a small line of its own. */}
-                    {showCost && item.cost && item.kind !== 'assistant' ? (
-                      <AnswerCostLine
-                        cost={item.cost}
-                        conversation={costConversation}
+                {segmentChat(items, running).map((segment) => {
+                  if (segment.type === 'steps') {
+                    const first = items[segment.start];
+                    const shown = expandedSteps.has(first.id);
+                    return (
+                      <StepGroup
+                        key={`steps-${first.id}`}
+                        items={items.slice(segment.start, segment.end)}
+                        expanded={shown}
+                        onToggle={() => toggleSteps(first.id)}
                       />
-                    ) : null}
-                  </Fragment>
-                ))}
+                    );
+                  }
+                  const index = segment.index;
+                  const item = items[index];
+                  return (
+                      <Fragment key={item.id}>
+                        <ChatRow
+                          item={item}
+                          onOpenAttachment={onOpenAttachment}
+                          onItemAction={onItemAction}
+                          reading={speaking && readingId === item.id}
+                          selectable={selectableId === item.id}
+                          onAction={(action) => messageAction(action, item)}
+                          onMenu={(full) => setMenu({ item, full })}
+                          onOpenLink={onOpenLink}
+                          onCall={onCall}
+                          onSms={onSms}
+                          onWhatsApp={onWhatsApp}
+                          onFile={onFile}
+                          onImage={onImage}
+                          onShare={onShare}
+                          onOpenSource={onOpenSource}
+                          onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
+                          answered={item.kind === 'choices' && (!!item.chosen || index < lastUserIndex)}
+                          cost={showCost ? item.cost : undefined}
+                          costConversation={costConversation}
+                          listWidth={listWidth}
+                        />
+                        {/* An answer shows its figure in its row of icons; items without that row (an error, a stopped
+                            task, a question) keep it on a small line of its own. */}
+                        {showCost && item.cost && item.kind !== 'assistant' ? (
+                          <AnswerCostLine
+                            cost={item.cost}
+                            conversation={costConversation}
+                          />
+                        ) : null}
+                      </Fragment>
+                  );
+                })}
               </ScrollView>
 
               {busyElsewhere && (
@@ -1421,6 +1450,42 @@ function ChatRow({
   }
 }
 
+/**
+ * A finished task's steps folded into one line ("7 steps · opened 2 pages · filled 1 form"); a tap shows the step
+ * lines as they were recorded, and hides them again.
+ */
+function StepGroup({ items, expanded, onToggle }: { items: ChatItem[]; expanded: boolean; onToggle: () => void }) {
+  const styles = useStyles();
+  const d = useContext(PanelTheme);
+  const palette = usePalette();
+  const summary = stepSummaryText(summarizeSteps(items));
+  const color = d?.dim.color ?? palette.textSecondary;
+  return (
+    <View style={styles.stepGroup}>
+      <Pressable
+        onPress={onToggle}
+        style={({ pressed }) => [styles.stepSummary, pressed && styles.pressed]}
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        accessibilityLabel={t(expanded ? 'steps.hideA11y' : 'steps.showA11y', { summary })}
+      >
+        <Icon name="tool" size={14} color={color} style={styles.stepIcon} />
+        <Text style={[styles.action, d?.dim, styles.stepText]}>{summary}</Text>
+        <Icon name={expanded ? 'chevronUp' : 'chevronDown'} size={13} color={color} style={styles.stepIcon} />
+      </Pressable>
+      {expanded
+        ? items.map((item) =>
+            item.kind === 'error' ? (
+              <StepLine key={item.id} icon="insecure" text={item.text} error />
+            ) : (
+              <StepLine key={item.id} icon={item.icon} text={item.text} />
+            ),
+          )
+        : null}
+    </View>
+  );
+}
+
 /** An assistant step, a status line, an error or an older card's text: a small icon, then the text. */
 function StepLine({ icon, text, error }: { icon?: IconName; text: string; error?: boolean }) {
   const styles = useStyles();
@@ -1784,6 +1849,9 @@ const useStyles = makeStyles((c) => ({
   itemActionPressed: { opacity: 0.7 },
   itemActionText: { color: c.tintText, fontSize: 14, fontWeight: '600' },
   stepIcon: { marginTop: 1 },
+  stepGroup: { gap: 6 },
+  // A full-height touch target around the small line.
+  stepSummary: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 4, minHeight: 44, alignSelf: 'flex-start' },
   stepText: { marginLeft: 0, flexShrink: 1 },
   sources: { alignSelf: 'stretch', gap: 4 },
   sourcesTitle: { fontSize: 12, color: c.textSecondary, marginLeft: 4 },
