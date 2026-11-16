@@ -1,4 +1,4 @@
-import { getLanguage, t, type MessageKey } from '../i18n';
+import { getLanguage, LANGUAGE_INFO, t, type MessageKey } from '../i18n';
 
 /**
  * Names of things on screen, for tool results. Results are built when the tool runs, so they use the labels the user
@@ -16,5 +16,5 @@ export function uiPath(...keys: MessageKey[]): string {
 
 /** Added to each user message: the language of the labels the user sees and of the names in tool results. */
 export function interfaceLanguageNote(): string {
-  return `Qutai's interface language: ${getLanguage() === 'tr' ? 'Turkish' : 'English'}.`;
+  return `Qutai's interface language: ${LANGUAGE_INFO[getLanguage()].englishName}.`;
 }

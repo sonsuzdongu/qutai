@@ -1,6 +1,9 @@
-import { getLanguage, t } from './index';
+import { getLanguage, getLocale, t } from './index';
+import { LANGUAGE_INFO } from './languages';
 
-const locale = () => (getLanguage() === 'tr' ? 'tr-TR' : 'en-US');
+/** Dates and numbers go through the app's language (in the phone's region when it speaks the same language). */
+const locale = () => getLocale();
+const info = () => LANGUAGE_INFO[getLanguage()];
 
 function startOfDay(ts: number): number {
   const d = new Date(ts);
@@ -77,7 +80,7 @@ export function groupByDay<T>(items: T[], timeOf: (item: T) => number, now = Dat
   return sections;
 }
 
-/** A file size for people: "512 B", "14 KB", "3.2 MB" ("3,2 MB" in Turkish); empty when unknown. */
+/** A file size for people: "512 B", "14 KB", "3.2 MB" ("3,2 MB" where the decimal is a comma); empty when unknown. */
 export function formatSize(bytes: number | null): string {
   if (bytes == null) return '';
   if (bytes < 1024) return `${bytes} B`;
@@ -86,10 +89,30 @@ export function formatSize(bytes: number | null): string {
   return `${mb.format(bytes / 1024 / 1024)} MB`;
 }
 
-/** A whole percentage: "120%" in English, "%120" in Turkish (the sign comes first there). */
+/** A whole percentage: "120%" in English, "%120" in Turkish, "120 %" in German and French. */
 export function formatPercent(n: number): string {
-  const value = formatNumber(Math.round(n));
-  return getLanguage() === 'tr' ? `%${value}` : `${value}%`;
+  return info().percent.replace('#', formatNumber(Math.round(n)));
+}
+
+/** The decimal and thousands separators of the app's language (Turkish and German write 1.234,56). */
+export function numberSeparators(): { decimal: string; group: string } {
+  const { decimal, group } = info();
+  return { decimal, group };
+}
+
+/** A dollar amount already written with the language's decimal separator, placed as the language writes it. */
+export function formatUsdAmount(amount: string): string {
+  return info().usd.replace('#', amount);
+}
+
+/** "a, b, c" with the language's separator (Japanese 、). Hermes has no Intl.ListFormat. */
+export function formatList(items: readonly string[]): string {
+  return items.join(info().listSeparator);
+}
+
+/** The first day of the week in the app's language, 1 = Sunday, 2 = Monday. */
+export function firstDayOfWeek(): 1 | 2 {
+  return info().firstDay;
 }
 
 export function hostOf(url: string): string {

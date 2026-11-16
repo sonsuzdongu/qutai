@@ -15,7 +15,7 @@ import type { ApplyMode } from '../backup/database';
 import { BackupPayload, BackupSummary, PayloadError, summarize } from '../backup/payload';
 import { authenticate } from '../device/biometric';
 import { MessageKey, t } from '../i18n';
-import { formatDateTime, formatPercent } from '../i18n/format';
+import { formatDateTime, formatList, formatPercent } from '../i18n/format';
 import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
@@ -373,7 +373,7 @@ function ImportFlow({ file, busy, setBusy }: BusyProps & { file: Uint8Array }) {
     if (mode === 'replace') {
       const confirmed = await dialog.confirm({
         title: t('backup.replaceConfirmTitle'),
-        message: t('backup.replaceConfirmBody', { kinds: kindNames(summary).join(', ') }),
+        message: t('backup.replaceConfirmBody', { kinds: formatList(kindNames(summary)) }),
         confirmText: t('backup.replaceConfirm'),
         destructive: true,
       });
@@ -420,7 +420,7 @@ function ImportFlow({ file, busy, setBusy }: BusyProps & { file: Uint8Array }) {
         <SwitchRow
           title={t('backup.restoreKeys')}
           hint={t('backup.restoreKeysHint', {
-            providers: summary.apiKeys.map((id) => getProvider(id).label).join(', '),
+            providers: formatList(summary.apiKeys.map((id) => getProvider(id).label)),
           })}
           value={withKeys}
           onChange={setWithKeys}

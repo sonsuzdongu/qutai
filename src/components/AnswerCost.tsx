@@ -3,8 +3,8 @@ import { Pressable, Text, View } from 'react-native';
 import { AnswerCost, formatUsd, RequestCost, sumCosts } from '../ai/cost';
 import { modelLabel } from '../ai/providers';
 import { totalTokens, type Usage } from '../ai/usage';
-import { getLanguage, t } from '../i18n';
-import { formatDate, formatNumber } from '../i18n/format';
+import { getLocale, t } from '../i18n';
+import { formatDate, formatNumber, formatUsdAmount, numberSeparators } from '../i18n/format';
 import { makeStyles } from '../ui/theme';
 import { costFit } from './costFit';
 import { dialog } from './Dialog';
@@ -15,9 +15,12 @@ import { creditsText, providerModelName } from '../credits';
  * tokens alone when no price is known. Never a price the app doesn't have.
  */
 
-const decimal = () => (getLanguage() === 'tr' ? ',' : '.');
-
-export const usd = (nanos: number) => formatUsd(nanos, decimal());
+/** "$0.012" written as the app's language writes dollars: "0,012 $" in German, "US$ 0,012" in Brazil. */
+export const usd = (nanos: number) => {
+  const text = formatUsd(nanos, numberSeparators().decimal);
+  const parts = /^(< )?\$(.+)$/.exec(text);
+  return parts ? `${parts[1] ?? ''}${formatUsdAmount(parts[2])}` : text;
+};
 
 export function tokensLabel(n: number): string {
   return n < 1000 ? t('cost.tokens', { n: formatNumber(n) }) : t('cost.kTokens', { n: formatNumber(Math.round(n / 100) / 10) });
@@ -42,7 +45,7 @@ export function pricesDate(date: string): string {
   return formatDate(new Date(y, m - 1, d));
 }
 
-const count = (n: number) => new Intl.NumberFormat(getLanguage() === 'tr' ? 'tr-TR' : 'en-US').format(n);
+const count = (n: number) => new Intl.NumberFormat(getLocale()).format(n);
 
 /** Token kinds, searches and requests, one per line (kinds that are zero are left out). */
 function usageLines(u: Usage): string[] {

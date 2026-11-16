@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getLanguage, t } from '../i18n';
-import { formatDateTime, formatShortDate, formatTime, hostOf, weekdayShort } from '../i18n/format';
+import { t } from '../i18n';
+import { firstDayOfWeek, formatDateTime, formatList, formatShortDate, formatTime, hostOf, weekdayShort } from '../i18n/format';
 import { ensureNotificationPermission } from '../device/notifications';
 import { offerSettings } from '../device/settings';
 import { MAX_PENDING, pendingCount, syncTaskReminders } from '../device/taskSchedule';
@@ -69,13 +69,12 @@ export function describeSchedule(schedule: TaskSchedule): string {
   if (schedule.kind === 'daily') return t('tasks.scheduleDaily', { time });
   const days = weekOrder()
     .filter((d) => schedule.days.includes(d))
-    .map(weekdayShort)
-    .join(', ');
-  return t('tasks.scheduleWeekly', { days, time });
+    .map(weekdayShort);
+  return t('tasks.scheduleWeekly', { days: formatList(days), time });
 }
 
-/** Weekdays in the order of the user's language: Monday first in Turkish, Sunday first in English. */
-const weekOrder = () => (getLanguage() === 'tr' ? [2, 3, 4, 5, 6, 7, 1] : [1, 2, 3, 4, 5, 6, 7]);
+/** Weekdays in the order of the user's language: Monday first in Turkish or German, Sunday first in English. */
+const weekOrder = () => (firstDayOfWeek() === 2 ? [2, 3, 4, 5, 6, 7, 1] : [1, 2, 3, 4, 5, 6, 7]);
 
 /** "On the page on screen", "Opens example.com first", "No particular page", plus deep research. */
 export function describeTarget(task: Pick<SavedTask, 'target' | 'url' | 'research'>): string {

@@ -4,7 +4,13 @@
 // gemini.ts) can run outside the app:
 // - react-native: Platform.OS (https checks) and AppState (the foreground tracker), always "active";
 // - expo-localization: the language, English unless QUTAI_TEST_LANG says otherwise; the calendar's time zone, UTC.
-import { register } from 'node:module';
+// It also gives src/i18n/index.ts a `require` for its per-language dictionaries (below).
+import { createRequire, register } from 'node:module';
+
+// src/i18n/index.ts loads each language's dictionary with Metro's lazy `require('./de')`. Node's ES modules have no
+// `require`, so the same lazy loading gets one here that resolves those dictionary files.
+const i18nRequire = createRequire(new URL('../../src/i18n/index.ts', import.meta.url));
+globalThis.require ??= (path) => i18nRequire(/\.[cm]?[jt]s$/.test(path) ? path : `${path}.ts`);
 
 const stubs = {
   'react-native': `

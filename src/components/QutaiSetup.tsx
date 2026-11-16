@@ -4,6 +4,7 @@ import { useAccountState } from '../account';
 import { creditsText, refreshCredits, useCreditsState } from '../credits';
 import type { SetupEvent, SetupState } from '../credits/setupFlow';
 import { t, type MessageKey } from '../i18n';
+import { formatList } from '../i18n/format';
 import { Icon, type IconName } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles, usePalette } from '../ui/theme';
@@ -81,7 +82,7 @@ export function QutaiSetup({
 
   if (state.screen === 'account') {
     const user = account.status === 'signedIn' ? account.user : null;
-    const providers = user?.providers.map((p) => t(PROVIDER_LABEL[p])).join(', ');
+    const providers = user ? formatList(user.providers.map((p) => t(PROVIDER_LABEL[p]))) : undefined;
     return (
       <>
         <Text style={styles.title} accessibilityRole="header">

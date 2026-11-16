@@ -8,6 +8,7 @@ import { creditsEnabled } from '../config/features';
 import { creditsText, refreshCredits, useCreditsState } from '../credits';
 import { Icon } from '../ui/Icon';
 import { t } from '../i18n';
+import { formatList } from '../i18n/format';
 import { makeStyles, usePalette } from '../ui/theme';
 import { dialog } from './Dialog';
 import { SignInOptions } from './SignInOptions';
@@ -131,7 +132,7 @@ export function AccountScreen({
   }
 
   const { user } = state;
-  const providers = user.providers.map((p) => t(PROVIDER_LABEL[p])).join(', ');
+  const providers = formatList(user.providers.map((p) => t(PROVIDER_LABEL[p])));
   const testUser = user.providers.includes('test');
   return (
     <>

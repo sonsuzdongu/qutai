@@ -1,3 +1,5 @@
+import { isLanguage, LANGUAGE_INFO } from '../i18n/languages';
+
 /**
  * Credits as text. The server counts in micro-credits (1 credit = 1 000 000); people read credits with a few
  * decimals. Built from whole numbers (no floating point), like the dollar figures in ai/cost.ts.
@@ -31,7 +33,8 @@ export function formatCredits(micro: number, opts: { decimal?: string; group?: s
   return `${sign}${grouped(whole, group)}${fraction}`;
 }
 
-/** Separators for the app's language: Turkish writes 1.234,56. */
+/** Separators for a language (one of src/i18n/languages.ts): Turkish writes 1.234,56, English 1,234.56. */
 export function separators(language: string): { decimal: string; group: string } {
-  return language === 'tr' ? { decimal: ',', group: '.' } : { decimal: '.', group: ',' };
+  const info = isLanguage(language) ? LANGUAGE_INFO[language] : LANGUAGE_INFO.en;
+  return { decimal: info.decimal, group: info.group };
 }
