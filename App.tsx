@@ -186,6 +186,7 @@ import {
   onBackgroundOpenRequested,
   onBackgroundStopRequested,
   TaskOutcome,
+  whileAskingUser,
 } from './src/device/backgroundTask';
 import { deleteOrphanChats, loadChat, savedAttachmentIds, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
@@ -1083,7 +1084,7 @@ function BrowserApp({
         confirm: (description, host) => askConfirmation(description, host, signal),
         confirmPersonal: (host, kinds, incognito) => askPersonalData(host, kinds, incognito, signal),
         confirmHidden: (host, what, field, incognito) => askHiddenValue(host, what, field, incognito, signal),
-        confirmImage: (options) => askImageConfirmation(options, signal),
+        confirmImage: (options) => whileAskingUser(() => askImageConfirmation(options, signal)),
         imageUsed: (id) => chat.markImageUsed(id),
         confirmByDefault: settings.confirmActions,
         sites: sitePermissions,

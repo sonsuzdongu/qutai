@@ -25,6 +25,7 @@ export const en = {
   'chat.geminiStreamingOff': 'Streaming is off for now: Gemini rejected a streamed reply.',
   'chat.stepLimit': 'Reached the step limit ({max}). Send another message to continue.',
   'chat.placeholder': 'Give a task…',
+  'chat.inputBusy': 'Qutai is working…',
   'chat.working': 'working…',
   'chat.busyElsewhere': 'Qutai is working in another tab',
   'tasks.title': 'Tasks',

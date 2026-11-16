@@ -1,5 +1,6 @@
 import { createContext, Fragment, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AccessibilityInfo,
   Animated,
   BackHandler,
   Keyboard,
@@ -16,6 +17,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIsSpeaking } from '../device/speech';
+import { useWaitingForUser } from '../device/backgroundTask';
 import {
   abortVoiceInput,
   startVoiceInput,
@@ -299,6 +301,12 @@ export function AssistantPanel({
   const [listWidth, setListWidth] = useState<number | null>(null);
   const costConversation = () => items.flatMap((i) => (i.cost ? [i.cost] : []));
   const inputRef = useRef<TextInputInstance>(null);
+  // While the task works on its own the input is closed (not editable, dimmed, "Qutai is working…") with only Stop
+  // left; it opens again the moment the task needs the user (a confirmation) and when the task ends (finished, a
+  // question with choices or free text, stopped, failed, a message handed back to the input). Text already in the
+  // field stays there, dimmed, to send later.
+  const waiting = useWaitingForUser();
+  const busy = running && !waiting;
   const voiceStateAny = useVoiceState();
   const voiceInfo = useVoiceInfo();
   // Holding the Qutai button listens too; that shows in its own bubble, not here.
@@ -316,6 +324,14 @@ export function AssistantPanel({
     if (!open) stopVoiceInput();
   }, [open]);
   useEffect(() => () => stopVoiceInput(), []);
+  // The microphone closes with the input (the words heard so far stay in the field). Said once to a screen reader.
+  useEffect(() => {
+    if (!busy) return;
+    if (voiceInfo.owner === 'panel') stopVoiceInput(false);
+    if (open) AccessibilityInfo.announceForAccessibility(t('chat.inputBusy'));
+    // Only on the change to busy, not when the panel opens later.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [busy]);
 
   // A language that isn't available here: said once when listening starts in the next one.
   const fellBackFrom = listening ? voiceInfo.fellBackFrom : null;
@@ -635,7 +651,9 @@ export function AssistantPanel({
               )}
 
               {/* One row: the research switch first, then the one-tap tasks (hidden while typing or researching). */}
-              {!running && !busyElsewhere && (
+              {/* While the task works the row stays (disabled) so the input doesn't move; while it waits for an
+                  answer it is hidden as before. */}
+              {(busy || !running) && !busyElsewhere && (
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
@@ -645,9 +663,10 @@ export function AssistantPanel({
                 >
                   <Pressable
                     onPress={() => onResearchChange(!research)}
-                    style={[styles.chip, d?.chip, research && styles.chipOn]}
+                    disabled={busy}
+                    style={[styles.chip, d?.chip, research && styles.chipOn, busy && styles.sendDisabled]}
                     accessibilityRole="switch"
-                    accessibilityState={{ checked: research }}
+                    accessibilityState={{ checked: research, disabled: busy }}
                     accessibilityHint={t('chat.researchHint')}
                   >
                     <Icon name="research" size={15} color={research ? '#ffffff' : palette.textSecondary} />
@@ -659,8 +678,10 @@ export function AssistantPanel({
                       <Pressable
                         key={action.label}
                         onPress={() => onSend(action.prompt)}
-                        style={({ pressed }) => [styles.chip, d?.chip, pressed && styles.pressed]}
+                        disabled={busy}
+                        style={({ pressed }) => [styles.chip, d?.chip, pressed && styles.pressed, busy && styles.sendDisabled]}
                         accessibilityRole="button"
+                        accessibilityState={{ disabled: busy }}
                       >
                         <Icon name={action.icon} size={15} color={palette.textSecondary} />
                         <Text style={[styles.chipText, d?.text]}>{action.label}</Text>
@@ -706,22 +727,32 @@ export function AssistantPanel({
                   hitSlop={6}
                   accessibilityRole="button"
                   accessibilityLabel={t('attach.button')}
+                  accessibilityState={{ disabled: running }}
                 >
                   <Icon name="attach" size={20} color={palette.textSecondary} />
                 </Pressable>
                 <TextInput
                   ref={inputRef}
-                  style={[styles.input, d?.input]}
+                  style={[styles.input, d?.input, busy && styles.inputBusy]}
                   placeholderTextColor={dark ? '#a9a8b3' : '#6b6862'}
                   value={text}
                   onChangeText={changeText}
                   // Short texts that fit beside the buttons on a narrow phone; while listening, the TR/EN tag next
                   // to the field names the language. At large text sizes the multiline field wraps it.
-                  placeholder={
-                    t(listening ? 'voice.listening' : research ? 'chat.researchPlaceholder' : 'chat.placeholder')
-                  }
+                  placeholder={t(
+                    busy
+                      ? 'chat.inputBusy'
+                      : listening
+                        ? 'voice.listening'
+                        : research
+                          ? 'chat.researchPlaceholder'
+                          : 'chat.placeholder',
+                  )}
                   multiline
-                  editable={!running}
+                  editable={!busy}
+                  accessibilityState={{ disabled: busy }}
+                  // With text kept in the field the placeholder doesn't show, so a screen reader hears why it is closed.
+                  accessibilityHint={busy && text ? t('chat.inputBusy') : undefined}
                 />
                 {listening && voiceInfo.lang ? (
                   <Pressable
@@ -736,6 +767,7 @@ export function AssistantPanel({
                   </Pressable>
                 ) : null}
                 <MicButton
+                  disabled={busy}
                   state={voiceState}
                   onPress={toggleVoice}
                   hold={holdVoice}
@@ -743,9 +775,11 @@ export function AssistantPanel({
                   reduceMotion={reduceMotion}
                 />
                 {running ? (
+                  // Stopping is always possible, also while a confirmation waits.
                   <Pressable
                     style={[styles.sendButton, styles.stopButton]}
                     onPress={onStop}
+                    accessibilityRole="button"
                     accessibilityLabel={t('common.stop')}
                   >
                     <Icon name="stop" size={16} color="#ffffff" />
@@ -876,7 +910,10 @@ function MicButton({
   hold,
   onLanguage,
   reduceMotion,
+  disabled,
 }: {
+  /** While the task works: no listening (and no hold). */
+  disabled: boolean;
   state: VoiceState;
   onPress: () => void;
   hold: { start: () => void; release: (away: boolean) => void; cancel: () => void };
@@ -891,7 +928,7 @@ function MicButton({
   const screenReader = useScreenReader();
   const [scale] = useState(() => new Animated.Value(1));
   const away = useRef(false);
-  const gesture = useHoldGesture(!screenReader, {
+  const gesture = useHoldGesture(!screenReader && !disabled, {
     start: () => {
       away.current = false;
       hold.start();
@@ -921,6 +958,7 @@ function MicButton({
           gesture.clear();
           onPress();
         }}
+        disabled={disabled}
         // Once holding, nothing else can take the touch away.
         cancelable={!gesture.holding}
         // 40pt drawn, 44pt to touch.
@@ -929,14 +967,22 @@ function MicButton({
         accessibilityRole="button"
         accessibilityLabel={t(active ? 'voice.stop' : 'voice.start')}
         accessibilityHint={active ? undefined : t(screenReader ? 'voice.startHint' : 'voice.holdHint')}
-        accessibilityState={{ busy: state === 'preparing' || state === 'stopping', selected: active }}
+        accessibilityState={{ busy: state === 'preparing' || state === 'stopping', selected: active, disabled }}
         accessibilityActions={[{ name: 'longpress', label: t('voice.languageTitle') }]}
         onAccessibilityAction={(e) => {
           if (e.nativeEvent.actionName === 'longpress') onLanguage();
         }}
       >
         {on ? <Animated.View style={[styles.micRing, { transform: [{ scale }] }]} /> : null}
-        <View style={[styles.micButton, d?.micButton, active && styles.micOn, !on && active && styles.micPending]}>
+        <View
+          style={[
+            styles.micButton,
+            d?.micButton,
+            active && styles.micOn,
+            !on && active && styles.micPending,
+            disabled && styles.sendDisabled,
+          ]}
+        >
           <Icon name="microphone" size={19} color={active ? '#ffffff' : palette.textSecondary} />
         </View>
       </Pressable>
@@ -1899,6 +1945,8 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
   },
   sendDisabled: { opacity: 0.4 },
+  // The input while the task works: dimmed, and its text (kept to send later) too.
+  inputBusy: { opacity: 0.55 },
   micWrap: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   langTag: {
     minWidth: 30,

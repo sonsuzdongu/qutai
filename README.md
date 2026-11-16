@@ -8,6 +8,13 @@ phone's settings, each confirmed or tapped by the user.
 Open tabs, history, bookmarks, recently closed tabs and chats are stored on the device (`expo-sqlite`); private tabs
 and chats that touch a private tab save nothing. Each tab has its own chat with Qutai; the tabs of a group share one.
 
+While a task works on its own, the panel's input is closed: dimmed, not editable, "Qutai is working…", with the
+attach, microphone and one-tap task buttons disabled and Stop in place of Send (stopping is always possible). Typing
+or sending during a task was never possible (the field was already read-only and a message is not queued or passed to
+the running task); text already in the field stays there, dimmed, to send afterwards. The input opens again as soon as
+the task needs the user (a confirmation), and when it ends: finished, a question with choices or free text, paused
+answers, stopped, failed, or a message handed back to the input. A screen reader hears "Qutai is working…" once.
+
 The empty Qutai panel suggests a few things that fit the page on screen: "Is this a good buy?" and "Find it cheaper"
 on a product, the ingredients of a recipe, "Help me fill this in" on a form, "Which result fits best?" on a search
 results page, "Save this table as CSV", and so on, with general examples on the new tab page. They are picked on the

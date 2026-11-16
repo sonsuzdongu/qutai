@@ -79,6 +79,10 @@ Cloudflare'e yayın ve Access.
 - [ ] "Her zaman Türkçe yanıt ver" seçeneği yok; eski sürümde bu seçeneğe dokunulduysa güncellemeden sonra Özel talimatlar'da o satır kalmamış, elle yazdığınız diğer satırlar duruyor
 - [ ] Eski bir yedekten geri yükleme: "Her zaman Türkçe yanıt ver" satırı gelmiyor; yeni bir yedekte elle yazdığınız aynı cümle korunuyor
 - [ ] Sağlayıcı metinleri "AI sağlayıcısı" diyor ("Anthropic'e gönderildi" değil)
+- [ ] Görev çalışırken giriş kutusu soluk ve kilitli, içinde "Qutai çalışıyor…"; ek, mikrofon ve "Araştırma raporu", "Özetle" gibi düğmeler soluk ve dokunulmuyor; gönder yerine Durdur var ve her an çalışıyor
+- [ ] Görev başlamadan yazılmış metin görev boyunca kutuda soluk duruyor, görev bitince düzenlenip gönderilebiliyor
+- [ ] Giriş kutusu şu anlarda hemen açılıyor: onay penceresi çıkınca, asistan seçenekli ya da serbest soru sorunca, görev bitince, durdurulunca, hata verince, Qutai Kredileri reddedip mesajı kutuya geri koyunca
+- [ ] Ekran okuyucu (TalkBack / VoiceOver) görev başlayınca bir kez "Qutai çalışıyor…" diyor
 
 ## 6. Onay pencereleri ve ikonlar
 

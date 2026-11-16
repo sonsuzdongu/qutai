@@ -26,6 +26,7 @@ export const tr: Record<keyof typeof en, string> = {
   'chat.geminiStreamingOff': 'Akış şimdilik kapatıldı: Gemini akışla alınan bir yanıtı reddetti.',
   'chat.stepLimit': 'Adım sınırına ({max}) ulaşıldı. Devam etmek için tekrar yazabilirsiniz.',
   'chat.placeholder': 'Bir görev verin…',
+  'chat.inputBusy': 'Qutai çalışıyor…',
   'chat.working': 'çalışıyor…',
   'chat.busyElsewhere': 'Qutai başka bir sekmede çalışıyor',
   'tasks.title': 'Görevler',

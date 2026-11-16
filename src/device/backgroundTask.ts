@@ -1,4 +1,5 @@
 import { requireOptionalNativeModule } from 'expo';
+import { useSyncExternalStore } from 'react';
 import { AppRegistry, AppState, Platform } from 'react-native';
 import { t } from '../i18n';
 
@@ -89,14 +90,48 @@ AppState.addEventListener('change', (next) => {
   if (next !== 'active' && waitingForUser > 0 && isRunningInBackground()) pauseForUser('confirm');
 });
 
-/** Runs `ask` (a dialog waiting for the user's answer); leaving the app meanwhile pauses the background run. */
+const waitingListeners = new Set<() => void>();
+/** Questions open for the user (those above, and the ones that don't pause a background run: whileAskingUser). */
+let askingUser = 0;
+const asking = (delta: number) => {
+  askingUser += delta;
+  waitingListeners.forEach((l) => l());
+};
+
+/**
+ * Runs `ask` (a dialog waiting for the user's answer); leaving the app meanwhile pauses the background run. While it
+ * waits, the panel's input is the user's again and the page's working glow is off (useWaitingForUser).
+ */
 export async function whileWaitingForUser<T>(ask: () => Promise<T>): Promise<T> {
   waitingForUser++;
+  asking(1);
   try {
     return await ask();
   } finally {
     waitingForUser--;
+    asking(-1);
   }
+}
+
+/** Like whileWaitingForUser for what the panel and the page show, without pausing a background run. */
+export async function whileAskingUser<T>(ask: () => Promise<T>): Promise<T> {
+  asking(1);
+  try {
+    return await ask();
+  } finally {
+    asking(-1);
+  }
+}
+
+/** True while a running task waits for the user's answer to a question (a confirmation). */
+export function useWaitingForUser(): boolean {
+  return useSyncExternalStore(
+    (listener) => {
+      waitingListeners.add(listener);
+      return () => waitingListeners.delete(listener);
+    },
+    () => askingUser > 0,
+  );
 }
 
 /**

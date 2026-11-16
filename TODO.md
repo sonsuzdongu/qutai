@@ -410,6 +410,7 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
   - [ ] Switching provider mid-chat after a streamed turn, and back to Gemini: the history is rebuilt and the chat continues
   - [ ] Then decide whether streaming becomes the default for Gemini
 - [x] Storing chat history (per tab, or per tab group; persistent)
+- [x] The panel's input while a task works (16 Nov 2026): dimmed, not editable, "Qutai is working…", attach / microphone / one-tap chips disabled (chips stay in place), Stop instead of Send; open again while a confirmation waits (`useWaitingForUser`, `whileAskingUser` in `src/device/backgroundTask.ts`) and when the task ends. Before this, sending during a task was already impossible (`send()` returned at once, the field was read-only); nothing is queued or steered. Text already in the field stays (dimmed). Announced once to screen readers. Seen on the Android emulator (release build)
 
 ## To try on the phone
 
