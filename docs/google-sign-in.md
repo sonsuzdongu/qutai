@@ -23,15 +23,19 @@ client id never appears in the token; Google uses it only to check that the app 
 
 ### Which SHA-1
 
-Release APKs from this repository are currently signed with the project's own debug keystore,
-**`android/app/debug.keystore`**, not with `~/.android/debug.keystore` (the two are different files with
-different SHA-1s). Take the SHA-1 from the file that really signs the APK:
+The SHA-1 must be that of the key that signs the APK on the phone:
 
-```bash
-keytool -list -v -keystore android/app/debug.keystore -alias androiddebugkey -storepass android | grep SHA1
-```
+- **Qutai's upload key** when `~/.qutai/release-signing.properties` exists (docs/release-signing.md, the normal case):
 
-or, safest, from the APK itself:
+  ```bash
+  keytool -list -v -keystore ~/.qutai/qutai-upload.jks -alias qutai-upload | grep SHA1
+  ```
+
+- otherwise the template debug keystore **`android/app/debug.keystore`** (not `~/.android/debug.keystore`, a
+  different key). It is public: an Android client with its SHA-1 is for a quick local test only and must be
+  deleted before the app is public.
+
+Safest, from the APK itself:
 
 ```bash
 "$ANDROID_HOME"/build-tools/<version>/apksigner verify --print-certs builds/<the-apk>.apk | grep SHA-1
