@@ -1,0 +1,21 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Qutai",
+    "NSPhotoLibraryAddUsageDescription": "O Qutai adiciona às suas fotos as capturas de tela e as imagens que você escolher salvar.",
+    "NSCameraUsageDescription": "O Qutai usa a câmera para ler QR codes, para tirar uma foto ou gravar um vídeo para o campo de upload de uma página da web ou tirar uma foto para anexar a uma mensagem ao assistente, e para os sites que você permitir, como em chamadas de vídeo.",
+    "NSMicrophoneUsageDescription": "O Qutai usa o microfone quando você fala uma mensagem para o assistente, para os sites que você permitir, como em chamadas de vídeo, e para gravar o som quando você grava um vídeo para enviar a uma página da web.",
+    "NSSpeechRecognitionUsageDescription": "O Qutai transforma em texto o que você diz ao assistente. Quando sua fala não pode ser reconhecida no próprio dispositivo, o serviço de fala da Apple recebe o áudio para fazer isso; o Qutai e seu provedor de IA recebem só o texto.",
+    "NSFaceIDUsageDescription": "O Qutai usa o Face ID para desbloquear o app e as guias anônimas.",
+    "NSCalendarsUsageDescription": "O Qutai adiciona os eventos que você confirmar, como ingressos e reservas, à agenda que você escolher, e só lê seus eventos quando você pergunta ao assistente sobre sua programação e confirma.",
+    "NSCalendarsFullAccessUsageDescription": "O Qutai lista suas agendas para você escolher para onde vão os novos eventos, e só lê seus eventos quando você pergunta ao assistente sobre sua programação e confirma; ele envia ao seu provedor de IA os eventos do período que você aprovou.",
+    "NSCalendarsWriteOnlyAccessUsageDescription": "O Qutai adiciona à sua agenda os eventos que você confirmar, como ingressos e reservas.",
+    "NSRemindersUsageDescription": "O Qutai adiciona os lembretes que você confirmar à lista de Lembretes que você escolher.",
+    "NSRemindersFullAccessUsageDescription": "O Qutai adiciona os lembretes que você confirmar à lista de Lembretes que você escolher.",
+    "NSLocationWhenInUseUsageDescription": "O Qutai mostra sua posição aos sites que você permitir, como os de mapas, e ao assistente quando você pede que ele use sua localização. Na configuração inicial, ele pode preencher onde você mora quando você toca para isso; o serviço de endereços da Apple encontra o nome do lugar da sua posição.",
+    "New tab": "Nova guia",
+    "New incognito tab": "Nova guia anônima",
+    "Ask Qutai": "Perguntar ao Qutai",
+    "Scan QR code": "Ler QR code",
+    "NSLocalNetworkUsageDescription": "O Qutai só se conecta a um servidor de IA na sua rede local quando você configura um como seu endpoint de IA personalizado."
+  }
+}

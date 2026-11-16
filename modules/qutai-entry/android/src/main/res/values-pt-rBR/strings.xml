@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Native strings for the widget and the launcher shortcuts (Brazilian Portuguese). -->
+<resources>
+  <string name="qutai_widget_name">Pesquisa do Qutai</string>
+  <string name="qutai_widget_description">Pesquise, pergunte ao Qutai, abra uma guia ou leia um QR code</string>
+  <string name="qutai_widget_hint">Pesquise ou digite um endereço</string>
+  <string name="qutai_widget_ask">Perguntar ao Qutai</string>
+  <string name="qutai_widget_new_tab">Nova guia</string>
+  <string name="qutai_widget_private_tab">Anônima</string>
+  <string name="qutai_widget_scan">Ler QR</string>
+  <string name="qutai_shortcut_new_tab">Nova guia</string>
+  <string name="qutai_shortcut_private_tab_short">Guia anônima</string>
+  <string name="qutai_shortcut_private_tab">Nova guia anônima</string>
+  <string name="qutai_shortcut_ask">Perguntar ao Qutai</string>
+  <string name="qutai_shortcut_scan_short">Ler QR</string>
+  <string name="qutai_shortcut_scan">Ler QR code</string>
+</resources>
