@@ -49,8 +49,11 @@ item for it.
 
 ### Approximate cost
 
-Under each answer a small line shows what the task used and, when the price is known, about what it cost:
-"≈ $0.012 · 3.4k tokens". Tapping it shows the model, the requests the task made (an agent task makes one per step),
+The last answer of each task shows what the task used and, when the price is known, about what it cost:
+"≈ $0.012 · 3.4k tokens", in the answer's row of icons (copy, read aloud, share, more), beside them. It never wraps
+and never pushes the icons away: with less room (a narrow panel, a large text size) the tokens go first ("≈ $0.012"),
+then the amount is cut short with "…"; a screen reader always hears the full text. An error, a stopped task or a
+question with choices has no row of icons, so there the figure keeps its own small line under the item. Tapping it shows the model, the requests the task made (an agent task makes one per step),
 the tokens by kind (input, read from the cache, written to the cache, output with its thinking part), web searches,
 where the figure comes from and the conversation's total so far. "What was sent to the AI" shows the same per
 request, with a breakdown in the request's page and a total per day. Settings › Assistant › "Show approximate cost"

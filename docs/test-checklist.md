@@ -92,6 +92,9 @@ Cloudflare'e yayın ve Access.
 ## 7. Maliyet satırı (kendi anahtarınla, normal APK)
 
 - [ ] Her görevin son yanıtının altında "≈ $… · … token" satırı çıkıyor
+- [ ] Tutar ve token yazısı artık ayrı satırda değil, yanıtın kopyala / sesli oku / paylaş / daha fazla simgelerinin yanında; ikinci satıra geçmiyor, simgeleri ekrandan itmiyor
+- [ ] Dar ekranda ya da büyük yazı boyutunda önce token kısmı düşüyor ("≈ $0,012"), yine sığmazsa tutar "…" ile kısalıyor; ekran okuyucu tam metni okuyor; dokununca döküm açılıyor
+- [ ] Hata ya da durdurulan görevin altında tutar eskisi gibi kendi küçük satırında; görevin önceki yanıtlarında ve maliyet gösterimi kapalıyken simge satırı eskisi gibi
 - [ ] Dokununca model, istek sayısı, token dökümü ve sohbet toplamı görünüyor
 - [ ] Rakam sağlayıcının panelindeki tutarla yaklaşık tutuyor (Anthropic / OpenAI / Gemini)
 - [ ] OpenRouter ve özel adreste yalnızca token (ya da OpenRouter'ın bildirdiği tutar) görünüyor

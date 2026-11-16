@@ -333,6 +333,7 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
     non-empty one and a group conversation that turns out to be empty yields to a joining tab's
     (`Browser.joinGroupChat` / `settleGroupChat`)
 - [x] Approximate cost of each answer in own-key mode: real usage from every provider path, a dated price table, "≈ $0.012 · 3.4k tokens" under answers and in "What was sent to the AI" with a breakdown, a day total in the log, the conversation's total in the breakdown, Settings › Assistant › Show approximate cost (README › Approximate cost)
+  - [x] 16 Nov 2026: the figure moved into the answer's row of icons, beside them (no line of its own); it never wraps or pushes the icons away: tokens dropped first when the room is short, then the amount cut with "…" (measured off screen against the room beside the icons; `AnswerCostInline` in `src/components/AnswerCost.tsx`). Errors, stopped tasks and questions (no icon row) keep the small line. Screen readers hear the full text
   - [ ] Check the price table against the pricing pages when a provider changes prices, and at least monthly: `src/ai/prices.ts` (how: README › Approximate cost). Announced: Gemini 4 Carbon doubles on 1 Dec 2026, Gemini 3.8 Flash on 1 Jan 2027 (already in the table)
   - [x] Pro mode: the server's charge per answer from its settlement event (credits, `source: 'server'`; README › Qutai Credits)
   - [ ] Maybe: a running total for the conversation in the panel's header and a monthly total in Settings (the numbers are already stored per answer and per request)

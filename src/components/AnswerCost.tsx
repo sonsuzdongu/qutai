@@ -1,10 +1,12 @@
-import { Pressable, Text } from 'react-native';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { AnswerCost, formatUsd, RequestCost, sumCosts } from '../ai/cost';
 import { modelLabel } from '../ai/providers';
 import { totalTokens, type Usage } from '../ai/usage';
 import { getLanguage, t } from '../i18n';
 import { formatDate, formatNumber } from '../i18n/format';
 import { makeStyles } from '../ui/theme';
+import { costFit } from './costFit';
 import { dialog } from './Dialog';
 import { creditsText, providerModelName } from '../credits';
 
@@ -103,32 +105,109 @@ export function showAnswerBreakdown(c: AnswerCost, conversation: AnswerCost[]) {
   dialog.alert(title, lines.join('\n'));
 }
 
-/** The small line under an answer; a tap shows the breakdown. */
+/** The figure without the tokens ("≈ $0.012", "0.42 credits"); the tokens when no price is known. */
+export function costAmount(c: { nanos?: number; credits?: number; usage: Usage }): string {
+  if (c.credits !== undefined) return creditsLabel(c.credits);
+  return c.nanos !== undefined ? `≈ ${usd(c.nanos)}` : tokensLabel(totalTokens(c.usage));
+}
+
+/** What a screen reader says for the figure: always the full text, however much of it fits on screen. */
+function costA11yLabel(cost: AnswerCost): string {
+  const tokens = tokensLabel(totalTokens(cost.usage));
+  return cost.credits !== undefined
+    ? t('cost.a11yCredits', { credits: creditsLabel(cost.credits), tokens })
+    : cost.nanos !== undefined
+      ? t('cost.a11y', { cost: usd(cost.nanos), tokens })
+      : tokens;
+}
+
+/** The small line under an item that has no row of icons (an error, a stopped task); a tap shows the breakdown. */
 export function AnswerCostLine({ cost, conversation }: { cost: AnswerCost; conversation: () => AnswerCost[] }) {
   const styles = useStyles();
-  const line = costLine(cost);
-  const tokens = tokensLabel(totalTokens(cost.usage));
   return (
     <Pressable
       onPress={() => showAnswerBreakdown(cost, conversation())}
       hitSlop={6}
       style={styles.row}
       accessibilityRole="button"
-      accessibilityLabel={
-        cost.credits !== undefined
-          ? t('cost.a11yCredits', { credits: creditsLabel(cost.credits), tokens })
-          : cost.nanos !== undefined
-            ? t('cost.a11y', { cost: usd(cost.nanos), tokens })
-            : tokens
-      }
+      accessibilityLabel={costA11yLabel(cost)}
       accessibilityHint={t('cost.a11yHint')}
     >
-      <Text style={styles.text}>{line}</Text>
+      <Text style={styles.text}>{costLine(cost)}</Text>
     </Pressable>
   );
 }
 
+/**
+ * The figure in an answer's row of icons, beside them. It never wraps and never pushes the icons away: with less room
+ * (a narrow panel, a large text size) the tokens go first ("≈ $0.012"), then the amount is cut short with "…". Both
+ * texts are measured off screen at their natural width and compared with `room`, the width left beside the icons.
+ */
+export function AnswerCostInline({
+  cost,
+  conversation,
+  room,
+  color,
+}: {
+  cost: AnswerCost;
+  conversation: () => AnswerCost[];
+  /** Points available beside the icons; null until the panel has been measured. */
+  room: number | null;
+  color: string;
+}) {
+  const styles = useStyles();
+  const full = costLine(cost);
+  const amount = costAmount(cost);
+  const [widths, setWidths] = useState<{ full?: number; amount?: number }>({});
+  const measured = room !== null && widths.full !== undefined && widths.amount !== undefined;
+  // The padding (6pt each side) is part of the room the text needs.
+  const text = !measured || costFit(widths.full!, widths.amount!, room!, 2 * INLINE_PAD) === 'full' ? full : amount;
+  return (
+    <Pressable
+      onPress={() => showAnswerBreakdown(cost, conversation())}
+      style={[styles.inline, room !== null && { maxWidth: Math.max(0, room) }, !measured && styles.measuring]}
+      accessibilityRole="button"
+      accessibilityLabel={costA11yLabel(cost)}
+      accessibilityHint={t('cost.a11yHint')}
+    >
+      <Text style={[styles.inlineText, { color }]} numberOfLines={1} ellipsizeMode="tail">
+        {text}
+      </Text>
+      {/* Off-screen measuring: wide enough that neither text is ever cut short while it is measured. */}
+      <View style={styles.measure} pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        <Text
+          style={styles.inlineText}
+          numberOfLines={1}
+          onLayout={(e) => {
+            const w = Math.ceil(e.nativeEvent.layout.width);
+            setWidths((m) => (m.full === w ? m : { ...m, full: w }));
+          }}
+        >
+          {full}
+        </Text>
+        <Text
+          style={styles.inlineText}
+          numberOfLines={1}
+          onLayout={(e) => {
+            const w = Math.ceil(e.nativeEvent.layout.width);
+            setWidths((m) => (m.amount === w ? m : { ...m, amount: w }));
+          }}
+        >
+          {amount}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+const INLINE_PAD = 6;
+
 const useStyles = makeStyles((c) => ({
   row: { alignSelf: 'flex-start', marginLeft: 4, marginTop: -2, marginBottom: 4 },
   text: { fontSize: 11, color: c.textSecondary },
+  // As tall as the icons beside it (36pt plus 4pt of slop above and below makes a 44pt target).
+  inline: { height: 36, justifyContent: 'center', paddingHorizontal: INLINE_PAD, flexShrink: 1, minWidth: 0, overflow: 'hidden' },
+  inlineText: { fontSize: 12 },
+  measuring: { opacity: 0 },
+  measure: { position: 'absolute', left: 0, top: 0, width: 2000, opacity: 0, alignItems: 'flex-start' },
 }));

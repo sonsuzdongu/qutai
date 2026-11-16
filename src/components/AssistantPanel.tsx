@@ -35,7 +35,7 @@ import { GradientText } from '../ui/BrandGradient';
 import { QutaiMark } from '../ui/QutaiMark';
 import type { Source } from '../agent/types';
 import type { AnswerCost } from '../ai/cost';
-import { AnswerCostLine } from './AnswerCost';
+import { AnswerCostInline, AnswerCostLine } from './AnswerCost';
 import type { Suggestion } from '../agent/pageSuggestions';
 import type { CallOffer } from '../device/phone';
 import type { SmsOffer } from '../device/sms';
@@ -296,6 +296,8 @@ export function AssistantPanel({
   /** The answer whose text was made selectable from its menu (selecting would otherwise fight the long press). */
   const [selectableId, setSelectableId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollViewInstance>(null);
+  const [listWidth, setListWidth] = useState<number | null>(null);
+  const costConversation = () => items.flatMap((i) => (i.cost ? [i.cost] : []));
   const inputRef = useRef<TextInputInstance>(null);
   const voiceStateAny = useVoiceState();
   const voiceInfo = useVoiceInfo();
@@ -548,6 +550,11 @@ export function AssistantPanel({
                 style={styles.flex}
                 contentContainerStyle={styles.messagesContent}
                 keyboardShouldPersistTaps="handled"
+                // The answers' rows of icons fit their figure into what is left of this width.
+                onLayout={(e) => {
+                  const width = Math.round(e.nativeEvent.layout.width);
+                  setListWidth((w) => (w === width ? w : width));
+                }}
                 // Follow a reply while it is being written.
                 onContentSizeChange={() => {
                   if (open && running) scrollRef.current?.scrollToEnd({ animated: false });
@@ -582,11 +589,16 @@ export function AssistantPanel({
                       onShare={onShare}
                       onOpenSource={onOpenSource}
                       onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
+                      cost={showCost ? item.cost : undefined}
+                      costConversation={costConversation}
+                      listWidth={listWidth}
                     />
-                    {showCost && item.cost ? (
+                    {/* An answer shows its figure in its row of icons; items without that row (an error, a stopped
+                        task, a question) keep it on a small line of its own. */}
+                    {showCost && item.cost && item.kind !== 'assistant' ? (
                       <AnswerCostLine
                         cost={item.cost}
-                        conversation={() => items.flatMap((i) => (i.cost ? [i.cost] : []))}
+                        conversation={costConversation}
                       />
                     ) : null}
                   </Fragment>
@@ -979,8 +991,16 @@ function ChatRow({
   onChoose,
   onOpenAttachment,
   onItemAction,
+  cost,
+  costConversation,
+  listWidth,
 }: {
   item: ChatItem;
+  /** The answer's figure for its row of icons (only when the cost display is on). */
+  cost?: AnswerCost;
+  costConversation: () => AnswerCost[];
+  /** The message list's width (null until measured), for what fits beside the icons. */
+  listWidth: number | null;
   onOpenAttachment: (info: AttachmentInfo) => void;
   /** An error's way out (`item.action`). */
   onItemAction?: (action: ChatItemAction) => void;
@@ -1077,6 +1097,18 @@ function ChatRow({
               />
               <ActionIcon icon="share" label={t('chat.actionShare')} onPress={() => onAction('share')} />
               <ActionIcon icon="ellipsis" label={t('chat.moreActions')} onPress={() => onMenu(false)} />
+              {cost ? (
+                <AnswerCostInline
+                  cost={cost}
+                  conversation={costConversation}
+                  room={
+                    listWidth === null
+                      ? null
+                      : (listWidth - 2 * LIST_PADDING) * (wide ? 1 : ROW_MAX) - ACTION_ICONS * ACTION_ICON_WIDTH
+                  }
+                  color={d ? '#a9a8b3' : palette.textSecondary}
+                />
+              ) : null}
             </View>
           )}
         </View>
@@ -1582,14 +1614,20 @@ function ActionIcon({ icon, label, onPress }: { icon: IconName; label: string; o
   );
 }
 
+/** The message list's padding, an answer's widest share of it, and its icons (copy, read aloud, share, more). */
+const LIST_PADDING = 12;
+const ROW_MAX = 0.9;
+const ACTION_ICONS = 4;
+const ACTION_ICON_WIDTH = 44;
+
 const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
-  assistantRow: { alignSelf: 'flex-start', maxWidth: '90%', gap: 4 },
+  assistantRow: { alignSelf: 'flex-start', maxWidth: `${ROW_MAX * 100}%`, gap: 4 },
   wideRow: { alignSelf: 'stretch', maxWidth: '100%' },
   wideBubble: { alignSelf: 'stretch' },
   // The first icon (18pt in a 44pt button) starts about where the answer's text does (12pt in the bubble).
   messageActions: { flexDirection: 'row', marginLeft: -1 },
-  actionIcon: { width: 44, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  actionIcon: { width: ACTION_ICON_WIDTH, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   pressed: { backgroundColor: '#ebe8e0' },
   backdrop: { backgroundColor: 'rgba(0,0,0,0.35)' },
   panel: {
@@ -1625,7 +1663,7 @@ const useStyles = makeStyles((c) => ({
   headerTitle: { flex: 1, marginLeft: 10, marginRight: 8 },
   headerButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerButtonText: { fontSize: 18, color: c.textSecondary },
-  messagesContent: { padding: 12, gap: 8 },
+  messagesContent: { padding: LIST_PADDING, gap: 8 },
   emptyBox: { alignItems: 'center', gap: 8, paddingTop: 16, paddingHorizontal: 4 },
   emptyTitle: { color: c.text, fontSize: 19, fontWeight: '700', marginTop: 6 },
   emptyLead: { color: c.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center', maxWidth: 300 },
