@@ -1217,7 +1217,7 @@ function ChatRow({
         </View>
       );
     case 'assistant': {
-      const bubbleStyle = [styles.bubble, styles.assistantBubble, d?.assistantBubble, wide && styles.wideBubble];
+      const bubbleStyle = [styles.bubble, styles.assistantBubble, d?.assistantBubble];
       const markdown = (
         <MarkdownText
           text={item.streaming ? `${item.text} ▍` : item.text}
@@ -1229,7 +1229,10 @@ function ChatRow({
         />
       );
       return (
-        // Tables need the room: the message spans the panel instead of shrink-wrapping at 90%.
+        // Always the column's full width (90%, the whole panel for tables), never shrink-wrapped to the text: list
+        // items are a marker beside text that flexes, which reports almost no width of its own, so a shrink-wrapped
+        // bubble took the width of its widest paragraph and squeezed long items into a narrow column. A fixed width
+        // also keeps the bubble from changing width while the answer streams in.
         <View style={[styles.assistantRow, wide && styles.wideRow]}>
           {/* Long press: every action by name. Once "Select text" is chosen, a long press selects instead
               (a Pressable around the text would keep it from being selected). */}
@@ -1278,7 +1281,7 @@ function ChatRow({
     case 'choices':
       return (
         <View style={styles.choices}>
-          <View style={[styles.bubble, styles.assistantBubble, d?.assistantBubble]}>
+          <View style={[styles.bubble, styles.assistantBubble, styles.choicesBubble, d?.assistantBubble]}>
             <MarkdownText text={item.text} style={textStyle} onOpenLink={onOpenLink} onCall={onCall} dark={!!d} />
           </View>
           {answered
@@ -1825,9 +1828,8 @@ const ACTION_ICON_WIDTH = 44;
 
 const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
-  assistantRow: { alignSelf: 'flex-start', maxWidth: `${ROW_MAX * 100}%`, gap: 4 },
-  wideRow: { alignSelf: 'stretch', maxWidth: '100%' },
-  wideBubble: { alignSelf: 'stretch' },
+  assistantRow: { alignSelf: 'flex-start', width: `${ROW_MAX * 100}%`, gap: 4 },
+  wideRow: { width: '100%' },
   // The first icon (18pt in a 44pt button) starts about where the answer's text does (12pt in the bubble).
   messageActions: { flexDirection: 'row', marginLeft: -1 },
   actionIcon: { width: ACTION_ICON_WIDTH, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
@@ -1905,8 +1907,9 @@ const useStyles = makeStyles((c) => ({
   pendingRow: { flexGrow: 0, maxHeight: 76 },
   pendingContent: { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4, gap: 10 },
   attachButton: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
+  // Spans its row (an answer's or a question's), whatever the text inside reports as its width.
   assistantBubble: {
-    alignSelf: 'flex-start',
+    alignSelf: 'stretch',
     maxWidth: '100%',
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
@@ -1955,6 +1958,7 @@ const useStyles = makeStyles((c) => ({
   sourceHostRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   sourceHostText: { flexShrink: 1 },
   choices: { alignSelf: 'stretch', gap: 6 },
+  choicesBubble: { alignSelf: 'flex-start', width: `${ROW_MAX * 100}%` },
   choice: {
     alignSelf: 'flex-start',
     maxWidth: '100%',
