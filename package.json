@@ -73,6 +73,7 @@
     "test:account": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/account-tests/session.test.ts",
     "test:account:server": "QUTAI_TEST_API_URL=${QUTAI_TEST_API_URL:-http://localhost:8790} node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/account-tests/server.test.ts",
     "test:cost": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/cost-tests/cost.test.ts",
+    "test:custom": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/custom-endpoint-tests/*.test.ts",
     "test:credits": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/credits-tests/*.test.ts",
     "test:credits:server": "QUTAI_TEST_API_URL=${QUTAI_TEST_API_URL:-http://localhost:8790} node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/credits-tests/server/relay-server.test.ts",
     "profile:export": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs scripts/agent-profile/export.ts",

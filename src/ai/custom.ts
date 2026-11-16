@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import { t } from '../i18n';
 import { createChatCompletionsCall } from './chatCompletions';
-import { buildCustomHeaders, CustomHeader } from './customHeaders';
+import { buildCustomHeaders, type CustomHeader } from './customHeaders';
 import type { Provider } from './types';
 
 /**

@@ -2,16 +2,21 @@ import { Platform } from 'react-native';
 import { waitForForeground } from '../utils/foreground';
 import { t } from '../i18n';
 import { sleep } from '../utils/sleep';
+import { classifyFailure, type FailureKind, serverMessage } from './serverError';
 import { createSseDecoder, type SseEvent } from './sse';
 
 const MAX_RETRIES = 3;
 
-/** The provider answered with an error status; `code` is its machine-readable error code, when it gave one. */
+/**
+ * The provider answered with an error status; `code` is its machine-readable error code, when it gave one, and `kind`
+ * what the failure means (serverError.ts), e.g. 'path' when nothing at the address answers Chat Completions.
+ */
 export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
     readonly code?: string,
+    readonly kind?: FailureKind,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -69,18 +74,32 @@ async function postWithRetry(
   }
 }
 
-/** An error response to an ApiError with the provider's own message, when it gave one. */
+/**
+ * An error response to an ApiError with the provider's own short message, when it gave one (in any of the shapes
+ * serverError.ts reads, credentials removed), so the chat shows "API error 400: No route for that URI" rather than
+ * the status alone.
+ */
 async function toApiError(res: Response): Promise<ApiError> {
-  let detail = '';
-  let code: string | undefined;
+  let text = '';
   try {
-    const err = await res.json();
-    // Anthropic, OpenAI and OpenRouter use { error: { message } }; Gemini may also return an array.
-    const e = Array.isArray(err) ? err[0]?.error : err?.error;
-    detail = typeof e === 'string' ? e : (e?.message ?? '');
-    if (typeof e?.code === 'string') code = e.code;
+    text = await res.text();
   } catch {}
-  return new ApiError(`${t('error.api', { status: res.status })}${detail ? `: ${detail}` : ''}`, res.status, code);
+  let err: unknown;
+  try {
+    err = JSON.parse(text);
+  } catch {}
+  // Anthropic, OpenAI and OpenRouter use { error: { message, code } }; Gemini may also return an array.
+  const e = (Array.isArray(err) ? err[0]?.error : (err as { error?: unknown } | undefined)?.error) as
+    | { code?: unknown }
+    | undefined;
+  const code = typeof e?.code === 'string' ? e.code : undefined;
+  const detail = serverMessage(text, err);
+  return new ApiError(
+    `${t('error.api', { status: res.status })}${detail ? `: ${detail}` : ''}`,
+    res.status,
+    code,
+    classifyFailure(res.status, text, err),
+  );
 }
 
 /** A GET for JSON (model lists), without retries: the user asked for it and can ask again. */

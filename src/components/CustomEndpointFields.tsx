@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { ALLOW_CLEARTEXT } from '../ai/custom';
+import { detectCloudflareApi } from '../ai/cloudflare';
 import { BaseUrlError, normalizeBaseUrl } from '../ai/customEndpoint';
 import { cleanCustomHeaders, CustomHeader, HeaderError, headerProblems, MAX_CUSTOM_HEADERS } from '../ai/customHeaders';
 import { Check, fetchCustomModels, testCustomEndpoint } from '../ai/customTest';
@@ -56,6 +57,21 @@ export function customHeadersProblem(headers: CustomHeader[], apiKey: string): s
 
 const MAX_LISTED = 50;
 
+/** The text of a test line: its key and state, or for a failed chat request, why it failed. */
+function checkLabel(c: Check): MessageKey {
+  if (c.key === 'chat') return `custom.check.chat.${c.reason ?? 'badRequest'}`;
+  if (c.key === 'address') return 'custom.check.address.fail';
+  if (c.state === 'skip') return c.key === 'auth' || c.key === 'model' ? `custom.check.${c.key}.skip` : `custom.check.${c.key}.warn`;
+  return `custom.check.${c.key}.${c.state}`;
+}
+
+const CHECK_A11Y: Record<Check['state'], MessageKey> = {
+  ok: 'custom.checkPassed',
+  warn: 'custom.checkWarning',
+  fail: 'custom.checkFailed',
+  skip: 'custom.checkSkipped',
+};
+
 /** The custom OpenAI-compatible endpoint: address, optional key, model, images, and "Test connection". */
 export function CustomEndpointFields({ value, onChange }: { value: Value; onChange: (next: Value) => void }) {
   const styles = useStyles();
@@ -68,6 +84,11 @@ export function CustomEndpointFields({ value, onChange }: { value: Value; onChan
   const [modelsError, setModelsError] = useState('');
   const [busy, setBusy] = useState<'models' | 'test' | null>(null);
   const [checks, setChecks] = useState<Check[] | null>(null);
+  // The Cloudflare notice: the address the user chose to keep, and the one converted to (for the follow-up hint).
+  const [keptCloudflare, setKeptCloudflare] = useState('');
+  const [convertedTo, setConvertedTo] = useState('');
+  const cloudflare = detectCloudflareApi(value.customBaseUrl);
+  const showCloudflare = !!cloudflare && url.ok && keptCloudflare !== url.url;
   const controller = useRef<AbortController | null>(null);
   useEffect(() => () => controller.current?.abort(), []);
 
@@ -140,6 +161,47 @@ export function CustomEndpointFields({ value, onChange }: { value: Value; onChan
       )}
       {url.ok && url.cleartext && <Text style={styles.warn}>{t('custom.cleartextNote')}</Text>}
       {url.ok && url.missingV1 && <Text style={styles.hint}>{t('custom.v1Hint')}</Text>}
+      {showCloudflare && cloudflare && (
+        <View style={styles.notice} accessibilityRole="summary">
+          <View style={styles.noticeRow}>
+            <Icon name="info" size={18} color={palette.textSecondary} style={styles.checkMark} />
+            <View style={styles.flex}>
+              <Text style={styles.optionText}>
+                {t(cloudflare.openAiCompatible ? 'custom.cfNoticeV1' : 'custom.cfNotice')}
+              </Text>
+              <Text style={styles.hint}>{t('custom.cfNoticeChanges')}</Text>
+              <Text style={styles.hint} selectable>
+                {cloudflare.gatewayUrl}
+              </Text>
+            </View>
+          </View>
+          <View style={styles.noticeActions}>
+            <Pressable
+              onPress={() => {
+                setConvertedTo(cloudflare.gatewayUrl);
+                setChecks(null);
+                set({ customBaseUrl: cloudflare.gatewayUrl });
+              }}
+              style={styles.textButton}
+              accessibilityRole="button"
+              accessibilityLabel={t('custom.cfConvertA11y', { url: cloudflare.gatewayUrl })}
+            >
+              <Text style={styles.link}>{t('custom.cfConvert')}</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => url.ok && setKeptCloudflare(url.url)}
+              style={styles.textButton}
+              accessibilityRole="button"
+              accessibilityLabel={t('custom.cfKeepA11y')}
+            >
+              <Text style={styles.link}>{t('custom.cfKeep')}</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+      {!!convertedTo && value.customBaseUrl.trim() === convertedTo && (
+        <Text style={styles.warn}>{t('custom.cfConverted')}</Text>
+      )}
       {!ALLOW_CLEARTEXT && <Text style={styles.hint}>{t('custom.httpsOnlyAndroid')}</Text>}
 
       <Text style={styles.label}>{t('custom.apiKey')}</Text>
@@ -267,15 +329,28 @@ export function CustomEndpointFields({ value, onChange }: { value: Value; onChan
         <Text style={styles.buttonText}>{busy === 'test' ? t('common.stop') : t('custom.test')}</Text>
       </Pressable>
       {checks?.map((c) => (
-        <View key={c.key} style={styles.check}>
+        <View
+          key={c.key}
+          style={styles.check}
+          accessible
+          accessibilityLabel={`${t(CHECK_A11Y[c.state])}: ${t(checkLabel(c))}${c.detail ? `. ${c.detail}` : ''}`}
+        >
           <Icon
-            name={c.state === 'ok' ? 'check' : c.state === 'fail' ? 'close' : 'insecure'}
+            name={c.state === 'ok' ? 'check' : c.state === 'fail' ? 'close' : c.state === 'skip' ? 'info' : 'insecure'}
             size={18}
-            color={c.state === 'ok' ? MARK_OK : c.state === 'fail' ? palette.danger : MARK_WARN}
+            color={
+              c.state === 'ok'
+                ? MARK_OK
+                : c.state === 'fail'
+                  ? palette.danger
+                  : c.state === 'skip'
+                    ? palette.textSecondary
+                    : MARK_WARN
+            }
             style={styles.checkMark}
           />
           <View style={styles.flex}>
-            <Text style={styles.optionText}>{t(`custom.check.${c.key}.${c.state === 'skip' ? 'warn' : c.state}`)}</Text>
+            <Text style={styles.optionText}>{t(checkLabel(c))}</Text>
             {!!c.detail && (
               <Text style={styles.hint} selectable>
                 {c.detail}
@@ -328,5 +403,15 @@ const useStyles = makeStyles((c) => ({
   },
   buttonText: { color: c.tintText, fontSize: 15, fontWeight: '600' },
   check: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  notice: {
+    gap: 4,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+  },
+  noticeRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  noticeActions: { flexDirection: 'row', gap: 16, justifyContent: 'flex-end' },
   checkMark: { marginTop: 1 },
 }));

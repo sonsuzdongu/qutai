@@ -377,9 +377,20 @@ base URL, an optional API key (sent as `Authorization: Bearer` only when set) an
 password in it, no query; trailing slashes and a pasted `/chat/completions` removed; a hint when there is no `/v1`.
 Plain http works on iOS only (App Transport Security's local-networking exception); Android connects over https only,
 see [docs/permissions.md](docs/permissions.md). "Test connection" sends four tiny fixed requests (nothing of the
-user's, not logged) and reports each: server reachable, key accepted, model found (against `/models` when listed),
-tool calling (a `ping` tool the model is asked to call), streaming, images (a 1×1 PNG; the result sets "Model accepts
-images", which the user can change: off, `view_screenshot` returns a tool error telling the model to use `read_page`).
+user's, not logged) and reports one line each, green only for what a request showed (`src/ai/customTest.ts`, error
+bodies read by `src/ai/serverError.ts`): server reachable (any HTTP answer); key accepted (`/models` listed models,
+the chat request succeeded, or an OpenAI-style refusal of the request itself, which comes after authentication;
+otherwise "not checked"); model found (listed by `/models`, or answering; "not listed, but answering" otherwise;
+"not checked" when nothing got that far); tool calling (a `ping` tool the model is asked to call: red only when the
+server says it can't take tools, amber when a 200 answer has no tool call); streaming; images (a 1×1 PNG; the result
+sets "Model accepts images", which the user can change: off, `view_screenshot` returns a tool error telling the model
+to use `read_page`). A chat request that fails for another reason gets its own line with the server's short message:
+"This address has no /chat/completions here" for a wrong path (404, a 400/405 saying the URI has no route, an HTML
+page, or another API's error envelope such as Cloudflare's `{"success":false,"errors":[…]}`), with the URL tried and
+the `/v1` hint; rate limited (429); server error (5xx); the server refused the test request (other 4xx); an answer
+that isn't a chat reply. In a conversation the same failures show the server's short message (`API error 400: No route
+for that URI`, with a pointer to the address for a wrong path) instead of the status alone. Messages shown from a
+server are cut to 200 characters with the key, header values, bearer tokens and common key shapes removed.
 The assistant needs tool calling, so there is no chat-only mode. The settings say in one sentence that the user's
 messages, pages, screenshots and memory go to the server they entered; "What was sent to the AI" shows the endpoint's
 host for each request. The key is kept in SecureStore like the others; the base URL is a setting and goes into
@@ -399,7 +410,19 @@ that wants another scheme.
 Cloudflare AI Gateway (not yet tried against a real account): base URL
 `https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/compat`, the provider's own key (OpenAI, Anthropic, …)
 as the API key, and for an authenticated gateway an extra header `cf-aig-authorization` with the value
-`Bearer <gateway token>`. Model IDs take the form `provider/model` (for example `openai/gpt-5-mini`).
+`Bearer <gateway token>`. Model IDs take the form `provider/model` (for example `openai/gpt-5-mini`). The gateway
+`default` is created by Cloudflare on the first authenticated request
+([get started](https://developers.cloudflare.com/ai-gateway/get-started/),
+[chat completion](https://developers.cloudflare.com/ai-gateway/usage/chat-completion/)). When the address field holds a
+Cloudflare API address (`https://api.cloudflare.com/client/v4/accounts/<32-hex account id>/…`, Workers AI's REST API;
+`src/ai/cloudflare.ts`, matched exactly on host and path after the normaliser, never for `gateway.ai.cloudflare.com`),
+a notice offers to convert it to `https://gateway.ai.cloudflare.com/v1/<account id>/default/compat` ("Convert") or to
+keep it ("Keep as is", until the address changes or the screen is reopened). Workers AI's own OpenAI-compatible
+address (`…/ai/v1`, a Cloudflare API token as the key,
+[docs](https://developers.cloudflare.com/workers-ai/configuration/open-ai-compatibility/)) gets a notice that says so
+rather than calling it incompatible; any other path is named as not the OpenAI-compatible one. Converting changes only
+the address: a hint then says the key (the provider's key, or empty with stored keys plus `cf-aig-authorization`) and
+the model (`anthropic/…`) are the user's to change.
 
 Each conversation can use another model than the default: the model shown under the panel's title opens a sheet
 with the providers that are set up (a key, or the custom endpoint) and their models (OpenRouter's full catalogue
@@ -741,7 +764,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/components/BrowserView.tsx` | Draws the WebViews of the awake tabs stacked on top of each other; at most five stay awake, the rest sleep as a URL and thumbnail |
 | `src/chat/Conversation.ts` | A conversation with the assistant: one per tab, or one shared by a tab group, with its own model choice (`src/components/ModelSheet.tsx`) |
 | `src/components/Dialog.tsx`, `src/components/BottomSheet.tsx` | Themed dialogs (instead of native alerts) and the bottom sheet the menus use, kept inside the safe area |
-| `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters; `chatWire.ts` / `chatCompletions.ts` speak the OpenAI Chat Completions format (OpenRouter and the custom endpoint), `openrouterCatalog.ts` / `openrouterModels.ts` the model catalogue, `customEndpoint.ts` / `customTest.ts` the custom endpoint's address rules and "Test connection" |
+| `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters; `chatWire.ts` / `chatCompletions.ts` speak the OpenAI Chat Completions format (OpenRouter and the custom endpoint), `openrouterCatalog.ts` / `openrouterModels.ts` the model catalogue, `customEndpoint.ts` / `customTest.ts` / `serverError.ts` / `cloudflare.ts` the custom endpoint's address rules, "Test connection", reading error answers and the Cloudflare address notice (tests: `npm run test:custom`) |
 | `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, saved tasks, settings |
 | `src/i18n/` | Turkish and English UI strings, date formats |
 | `src/device/` | Device features: PDF, screenshots (also full page), read aloud, voice input (`voiceInput.ts`), share/copy, downloads, private mode protection, calendar and reminders, notifications, location, opening system settings, the phone dialer |

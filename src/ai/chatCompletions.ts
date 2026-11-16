@@ -2,14 +2,14 @@ import { t } from '../i18n';
 import { ApiError, postJson, postSse } from './http';
 import {
   buildChatBody,
-  ChatResult,
+  type ChatResult,
   ChatStreamError,
   createChatAccumulator,
   fromChatResponse,
   replaysReasoning,
   toChatReply,
 } from './chatWire';
-import { canReplay, ModelReply, ModelRequest, ProviderId, Turn } from './types';
+import { canReplay, type ModelReply, type ModelRequest, type ProviderId, type Turn } from './types';
 
 /** How one Chat Completions provider is reached; the messages, stream and reply are the same for all (chatWire.ts). */
 export type ChatProviderConfig = {
@@ -86,6 +86,11 @@ export function createChatCompletionsCall(config: ChatProviderConfig) {
       if (stream && streamUsage && rejectsStreamOptions(e)) {
         streamUsage = false;
         return reply(await request(req, stream));
+      }
+      // Nothing at the custom address answers Chat Completions: say so, with the server's answer, instead of
+      // "API error 400" (Test connection reports the same as an address problem).
+      if (config.id === 'custom' && e instanceof ApiError && e.kind === 'path') {
+        throw new ApiError(t('error.customPath', { error: e.message }), e.status, e.code, e.kind);
       }
       if (rejectsTools(e)) throw new ApiError(t('error.noToolSupport'), 400);
       if (rejectsImages(e, req)) throw new ApiError(t('error.noImageSupport'), 400);
