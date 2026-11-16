@@ -224,7 +224,7 @@ export async function siteRulesTool(
     await tab.run('hideUndo', [], 5000).catch(() => {});
     return {
       content:
-        `Saved ${added.length} rule${added.length === 1 ? '' : 's'} (scope chosen by the user: ${scope}). They apply ` +
+        `Saved ${added.length} rule${added.length === 1 ? '' : 's'}${ok.length ? ` (hiding applies to: ${scope}, chosen by the user)` : ''}${domains.length ? ' (blocked domains: on every site)' : ''}. They apply ` +
         `from now on; the user manages them in ${rulesPlace()}.` +
         (added.length < lines.length ? ' Rules the site already had were not added again.' : ''),
       isError: false,
