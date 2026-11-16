@@ -205,21 +205,35 @@ Uygulama kademe gönderdikten sonra (yeni APK gerekir):
 - [ ] Ürün adlarında emoji olan başka bir sayfada (bir pazar yeri, emoji dolu bir sosyal medya sayfası) "Bu sayfada ne var?" diye sorun: cevap geliyor, emojiler yarım "�" olarak değil doğru görünüyor (yalnızca kesilen yerde en fazla bir eksik karakter olabilir)
 - [ ] Emojili uzun bir metni seçip "Qutai'ye sor" deyin: soru gidiyor, hata yok
 
+## 12. 16 Kasım cila düzeltmeleri (telefonda denenmedi)
+
+Asistan
+- [ ] "10 saniye sonrasına bildirim kur": saat sormadan onay penceresi açılıyor, izin verince yaklaşık 10 saniyede bildirim geliyor.
+- [ ] Onay penceresi "3 dakika sonra (13:36)" biçiminde; saat dilimi satırı yok (telefonla aynıysa).
+- [ ] Onay penceresinde "Bildirimler için bir daha sorma": işaretleyince bir sonraki bildirim sormadan kuruluyor; ayarlardan geri alınabiliyor. Takvim etkinliği ve hatırlatıcıda da var; sayfadaki işlemlerde yok.
+- [ ] Seçenekli soruya cevap verince seçenekler kapanıyor.
+- [ ] Görev ve onay beklerken giriş kutusu kapalı, "Qutai çalışıyor…" yazıyor.
+- [ ] "Hangi modeli kullanıyorsun": kredili modda "Qutai" ve seviye adı (alttaki model yok); kendi anahtarla sağlayıcı ve model.
+- [ ] Hata olunca sade bir cümle; "ayrıntı" açılınca ham metin (denemek için: uçak modu, yanlış anahtar).
+- [ ] Biten görevde üç ve daha fazla adım tek satır özete katlanıyor; dokununca adımlar açılıyor.
+- [ ] Onay penceresi açıkken uygulamadan çıkınca bildirim geliyor; dokununca o sekmenin paneli açılıyor.
+- [ ] Kredili modda bakiye yaklaşık 5 adımlık tutarın altına inince bir kez "kredi azaldı" notu ve "Kredi satın al".
+
+Kurulum ve dil
+- [ ] Kurulumda izinler listesinde Mikrofon ilk satır.
+- [ ] Android ayarlarından Qutai'nin uygulama dili Türkçe yapılınca (telefon İngilizce) simgeye uzun basınca kısayollar Türkçe; widget yazıları da. Yaklaşık 10 saniye sürebilir.
+- [ ] Yeni kurulumda kısayollar uygulama bir kez açıldıktan sonra görünüyor (bilinen durum).
+
+Genel
+- [ ] Ayar anahtarlarında ve onay düğmelerinde hafif titreşim; telefonun dokunma geri bildirimi kapalıysa titreşim yok.
+- [ ] Kayıtlı görevler, anılar, çevrimdışı sayfalar ve kayıtlar yüklenirken dönen gösterge.
+- [ ] Yazı boyutu en büyükte: tek satırlık alanlarda (sunucu adresi, anahtar, arama) harfler kesilmiyor; panel ve onay penceresi taşmıyor.
+- [ ] TalkBack açıkken satır ve düğmeler "düğme" olarak okunuyor.
+
 ## Bulunan sorunlar
 
 Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.
 
-- [ ] Ana ekran kısayolları (uygulama simgesine uzun basınca: New tab, Incognito tab, Ask Qutai, Scan QR code) uygulama dili Türkçe yapılsa da İngilizce kalıyor. (16 Kas, Honor / Android 15; düzeltme için "düzelt" bekleniyor)
-- [ ] İstek: "Qutai bu işlemi yapmak istiyor" onay penceresinde, işlem türüne göre "bir daha sorma" seçeneği olsun (örnek: bildirim kurma için "Bildirimler için bir daha sorma" kutusu veya düğmesi). (16 Kas; "düzelt" bekleniyor)
-- [ ] Gözlem (aynı ekran görüntüsü): "10 saniye sonrasına bildirim" istenince asistan saat sordu (13:36 / 13:40) ve bildirimi 3 dakika sonrasına kurdu; saniye hassasiyeti yok gibi. Ayrıca görev sürerken giriş kutusunda "Bir görev verin…" yazıyor, "Qutai çalışıyor…" değil. İkisi de doğrulanmadı.
-- [ ] İstek: kurulumdaki izinler adımında Mikrofon satırı listenin üstüne alınsın. (16 Kas; "düzelt" bekleniyor)
-- Cila listesi (16 Kas; öneriler, "düzelt" bekleniyor):
-  - [ ] Onay penceresi sadeleşsin: göreli zaman ("3 dakika sonra (13:36)"), saat dilimi satırı yalnızca telefonunkinden farklıysa.
-  - [ ] Seçilen cevap seçenekleri seçimden sonra kapansın (13:36 / 13:40 ikisi de ekranda kalıyor).
-  - [ ] Uzun görevlerde adım özeti; uygulama arka plandayken "görev bitti" bildirimi.
-  - [ ] Kredi azalınca uyarı, bitince doğrudan satın alma ekranı.
-  - [ ] Uygulama dili sisteme bildirilsin (kısayollar, widget, paylaşım menüsü Türkçe olsun).
-  - [ ] Dokunma titreşimi, boş ekran metinleri, yüklenme iskeletleri.
-  - [ ] Erişilebilirlik: büyük yazı boyutunda taşmalar, TalkBack etiketleri, kontrast.
-  - [ ] Yatay ekran ve tablet düzeni.
+- 16 Kasım'da telefonda bulunanlar ve cila listesi düzeltildi (kısayol dili, "bir daha sorma", göreli zaman, giriş kutusu yazısı, mikrofon satırı, onay penceresi, seçenekler, adım özeti, görev bildirimi, kredi uyarısı, titreşim, yüklenme göstergesi, erişilebilirlik, tablet genişliği). Denenecekler 12. bölümde.
+- Açık kalanlar: yatay ekran (yön dikeye kilitli, karar bekliyor); arka plan görevi kapalıyken uygulamadan çıkınca bekleyen istek dönüşte yeniden gönderiliyor (iki kez ücret); yazı boyutu sayfasında İngilizce "%120" yerine "120%" olmalı.
 - …
