@@ -398,20 +398,25 @@ export default function App() {
       </ErrorBoundary>
     );
   }
+  // The safe-area provider is here, above setup as well as the browser: dialogs (DialogView), sheets and toasts read
+  // the insets from it, and without one they throw. Setup's first dialog (the Qutai Credits disclosure) crashed the
+  // app when the provider was only inside the browser.
   return (
-    <View style={[styles.flex, { backgroundColor: (dark ? darkPalette : lightPalette).bg }]}>
-      {content}
-      {!introDone && (
-        <LaunchIntro
-          variant={boot.intro}
-          dark={dark}
-          ready={restored !== null}
-          // The app lock: the cover stays (under the lock screen) until the user unlocks; onboarding has no lock.
-          hold={boot.intro === 'plain' && !onboarding && !unlocked}
-          onDone={onIntroDone}
-        />
-      )}
-    </View>
+    <SafeAreaProvider>
+      <View style={[styles.flex, { backgroundColor: (dark ? darkPalette : lightPalette).bg }]}>
+        {content}
+        {!introDone && (
+          <LaunchIntro
+            variant={boot.intro}
+            dark={dark}
+            ready={restored !== null}
+            // The app lock: the cover stays (under the lock screen) until the user unlocks; onboarding has no lock.
+            hold={boot.intro === 'plain' && !onboarding && !unlocked}
+            onDone={onIntroDone}
+          />
+        )}
+      </View>
+    </SafeAreaProvider>
   );
 }
 
@@ -1960,460 +1965,458 @@ function BrowserApp({
 
   return (
     <LogoMotion.Provider value={settings.animateLogo}>
-      <SafeAreaProvider>
-        <View style={[styles.container, (tab.incognito || darkMode) && styles.incognito]}>
-          <StatusBar style={tab.incognito || tabsVisible || darkMode ? 'light' : 'dark'} />
-          <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
-            {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard: the page, and the address bar when it is at the bottom, stay above it. */}
-            {barAtBottom ? null : topBar}
-            <KeyboardAvoidingContainer style={styles.flex}>
-              <ErrorBoundary>
-                <BrowserView
-                  browser={browser}
-                  newTabActions={{
-                    darkMode,
-                    darkSites: settings.darkSites,
-                    blockAds: settings.blockAds,
-                    blockingOffSites: sitePermissions.blockingOffSites(),
-                    contentRuleLists: contentBlocking.ruleLists,
-                    httpsOnly: settings.httpsOnly,
-                    blockThirdPartyCookies: settings.blockThirdPartyCookies,
-                    hideCookieBanners: settings.hideCookieBanners,
-                    onContextMenu: (source, target) => {
-                      bump();
-                      setContext({ tab: source, target });
-                    },
-                    // The download indicator and the Downloads screen show it meanwhile.
-                    onDownload: (source, download) => runAction(() => downloadRequests.fromPage(source, download)),
-                    onSelection: (source, text) =>
-                      setSelection((prev) =>
-                        text ? { tabId: source.id, url: source.url, text } : prev?.tabId === source.id ? null : prev,
-                      ),
-                    textZoom: settings.textZoom,
-                    forceZoom: settings.forceZoom,
-                    backgroundPlayback: settings.backgroundPlayback,
-                    onNotice: toast.show,
-                    searchEngine: settings.searchEngine,
-                    onAsk: (text) => {
-                      setPanelOpen(true);
-                      if (text) send(text);
-                      else setFocusRequest((n) => n + 1);
-                    },
-                    onOpenLibrary: setLibrary,
-                    reader: {
-                      theme: settings.readerTheme,
-                      font: settings.readerFont,
-                      easyReading: settings.readerEasyReading,
-                    },
-                    onOpenReaderSettings: () => setReaderSettingsVisible(true),
-                  }}
-                />
-              </ErrorBoundary>
-              {selectedText ? (
-                <SelectionBar
-                  actions={selectionActions(selectedText)}
-                  dark={tab.incognito || darkMode}
-                  bottomOffset={barAtBottom ? 52 : 0}
-                />
-              ) : null}
-              {barAtBottom ? topBar : null}
-            </KeyboardAvoidingContainer>
-          </SafeAreaView>
-
-          <ErrorBoundary full>
-            <AssistantPanel
-              dark={darkMode}
-              hasPage={!tab.isNewTab}
-              suggestions={suggestions}
-              open={panelOpen}
-              recentTasks={recentTasks}
-              onRunTask={(task) => runSavedTask(task)}
-              onOpenTasks={() => setTasksScreen({ draft: null })}
-              onSaveAsTask={(prompt) =>
-                setTasksScreen({
-                  draft: {
-                    ...emptyTask(),
-                    prompt,
-                    target: tab.isNewTab ? 'none' : 'page',
-                    incognito: conversation.incognito || conversation.privacy.touchedIncognito,
+      <View style={[styles.container, (tab.incognito || darkMode) && styles.incognito]}>
+        <StatusBar style={tab.incognito || tabsVisible || darkMode ? 'light' : 'dark'} />
+        <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
+          {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard: the page, and the address bar when it is at the bottom, stay above it. */}
+          {barAtBottom ? null : topBar}
+          <KeyboardAvoidingContainer style={styles.flex}>
+            <ErrorBoundary>
+              <BrowserView
+                browser={browser}
+                newTabActions={{
+                  darkMode,
+                  darkSites: settings.darkSites,
+                  blockAds: settings.blockAds,
+                  blockingOffSites: sitePermissions.blockingOffSites(),
+                  contentRuleLists: contentBlocking.ruleLists,
+                  httpsOnly: settings.httpsOnly,
+                  blockThirdPartyCookies: settings.blockThirdPartyCookies,
+                  hideCookieBanners: settings.hideCookieBanners,
+                  onContextMenu: (source, target) => {
+                    bump();
+                    setContext({ tab: source, target });
                   },
-                })
-              }
-              preparedTask={
-                prepared && prepared.chat === conversation && conversation.draft.trim() ? prepared.task.name : null
-              }
-              onRunPrepared={runPrepared}
-              pending={conversation.pending}
-              onAttach={() => setAttachSheet(true)}
-              onRemovePending={removePending}
-              onOpenAttachment={setPreviewAttachment}
-              onShare={(offer) => runShare(offer, conversation)}
-              onImage={(action, info) =>
-                runAction(async () => {
-                  if (action === 'share') return void (await shareAttachment(info));
-                  if (info.kind === 'pdf') {
-                    if (await saveAttachmentToFolder(info)) return t('chat.fileSaved', { name: info.name });
-                    return;
-                  }
-                  await saveAttachmentToPhotos(info);
-                  return t('contextMenu.imageSaved');
-                })
-              }
-              voice={{
-                incognito: tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
-                online: settings.voiceOnline,
-                onOnlineChange: (voiceOnline) => onChangeSettings({ ...settings, voiceOnline }),
-                autoSend: settings.voiceAutoSend,
-                notify: toast.show,
-                languages: () => listeningOrder(conversation, settingsRef.current),
-                picked: conversation.voiceLanguage,
-                onPick: (language) => {
-                  conversation.setVoiceLanguage(language);
-                  persistConversation(conversation);
+                  // The download indicator and the Downloads screen show it meanwhile.
+                  onDownload: (source, download) => runAction(() => downloadRequests.fromPage(source, download)),
+                  onSelection: (source, text) =>
+                    setSelection((prev) =>
+                      text ? { tabId: source.id, url: source.url, text } : prev?.tabId === source.id ? null : prev,
+                    ),
+                  textZoom: settings.textZoom,
+                  forceZoom: settings.forceZoom,
+                  backgroundPlayback: settings.backgroundPlayback,
+                  onNotice: toast.show,
+                  searchEngine: settings.searchEngine,
+                  onAsk: (text) => {
+                    setPanelOpen(true);
+                    if (text) send(text);
+                    else setFocusRequest((n) => n + 1);
+                  },
+                  onOpenLibrary: setLibrary,
+                  reader: {
+                    theme: settings.readerTheme,
+                    font: settings.readerFont,
+                    easyReading: settings.readerEasyReading,
+                  },
+                  onOpenReaderSettings: () => setReaderSettingsVisible(true),
+                }}
+              />
+            </ErrorBoundary>
+            {selectedText ? (
+              <SelectionBar
+                actions={selectionActions(selectedText)}
+                dark={tab.incognito || darkMode}
+                bottomOffset={barAtBottom ? 52 : 0}
+              />
+            ) : null}
+            {barAtBottom ? topBar : null}
+          </KeyboardAvoidingContainer>
+        </SafeAreaView>
+
+        <ErrorBoundary full>
+          <AssistantPanel
+            dark={darkMode}
+            hasPage={!tab.isNewTab}
+            suggestions={suggestions}
+            open={panelOpen}
+            recentTasks={recentTasks}
+            onRunTask={(task) => runSavedTask(task)}
+            onOpenTasks={() => setTasksScreen({ draft: null })}
+            onSaveAsTask={(prompt) =>
+              setTasksScreen({
+                draft: {
+                  ...emptyTask(),
+                  prompt,
+                  target: tab.isNewTab ? 'none' : 'page',
+                  incognito: conversation.incognito || conversation.privacy.touchedIncognito,
                 },
-                autoLabel:
-                  settings.voiceLanguage === AUTO_LANGUAGE
-                    ? t('voice.auto')
-                    : t('voice.defaultLanguage', { language: languageName(settings.voiceLanguage) }),
-                autoHint:
-                  settings.voiceLanguage === AUTO_LANGUAGE
-                    ? t('voice.autoNow', { language: languageName(automaticLanguage(conversation, settings)) })
-                    : undefined,
-                onStarted: (lang) =>
-                  rememberVoiceLanguage(
-                    lang,
-                    tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
-                  ),
-              }}
-              quickActions={quickActions}
-              draft={conversation.draft}
-              onDraftChange={(text) => {
-                conversation.setDraft(text);
-                persistDraftSoon(conversation);
-              }}
-              focusRequest={focusRequest}
-              research={conversation.research}
-              onResearchChange={(on) => conversation.setResearch(on)}
-              modelInfo={
-                conversationModelInfo(settings, conversation.model) +
-                ((conversation.model && isConfigured(settings, conversation.model.provider) ? conversation.model.provider : settings.provider) ===
-                  'qutai' && creditsState.balance !== null
-                  ? ` · ${creditsLabel(creditsState.balance)}`
-                  : '')
-              }
-              modelChosen={!!conversation.model && isConfigured(settings, conversation.model.provider)}
-              onModelPress={() => setModelSheetFor(conversation)}
-              items={conversation.items}
-              running={conversation.running}
-              busyElsewhere={running && !conversation.running}
-              onShowRunningTab={() => runningTab && browser.switchTab(runningTab.id)}
-              finishedElsewhere={unseenChat && unseenChat !== conversation ? unseenChat.unseen : null}
-              onShowFinished={() => unseenChat && showConversation(unseenChat)}
-              onClose={closePanel}
-              onSend={send}
-              onStop={() => conversation.stop()}
-              onChoose={(itemId, option) => {
-                tick();
-                conversation.choose(itemId, option);
-                send(option);
-              }}
-              onNewChat={newChat}
-              onOpenSettings={() => setSettingsVisible(true)}
-              onShowSent={() => setSentFor(conversation.key)}
-              showCost={settings.showCost}
-              onOpenSource={(source) => {
-                // A page that is still open is shown in its tab; otherwise it opens again in the same mode.
-                const open = browser.tabs.find((x) => x.incognito === source.incognito && x.url === source.url);
-                if (open) browser.switchTab(open.id);
-                else browser.openTab(source.url, { incognito: source.incognito });
-                closePanel();
-              }}
-              onOpenLink={(url) => {
-                browser.openTab(url, { incognito: browser.active.incognito });
-                closePanel();
-              }}
-              onCall={(number) => {
-                bump();
-                placeCall(number, () => toast.show(t('common.copied')));
-              }}
-              onSms={(offer) => {
-                bump();
-                openSmsComposer(offer, () => toast.show(t('common.copied')));
-              }}
-              onWhatsApp={(offer) => {
-                bump();
-                openWhatsApp(offer, () => toast.show(t('common.copied')));
-              }}
-              onFile={(action, file) =>
-                runAction(async () => {
-                  try {
-                    if (action === 'share') return void (await shareComposedFile(file.id));
-                    if (await saveComposedFileToFolder(file.id)) return t('chat.fileSaved', { name: file.name });
-                  } catch (e) {
-                    if (e instanceof FileExpiredError) return t('chat.fileExpired');
-                    throw e;
-                  }
-                })
-              }
-              onMessageAction={(action, text) =>
-                runAction(async () => {
-                  if (action === 'copy') {
-                    await copyText(text);
-                    return t('common.copied');
-                  }
-                  if (action === 'share') return shareText(text);
-                  if (action === 'pdf') {
-                    // Kept with the conversation (so it can be attached or shared later), then the share sheet.
-                    const chat = conversation;
-                    const pdf = await renderReportPdf(text);
-                    const info = storeMadePdf(pdf.file, pdf.fileName, 'report', chat.incognito || chat.privacy.touchedIncognito);
-                    chat.addMadePdf(info, true);
-                    return void (await shareAttachment(info));
-                  }
-                  if (action === 'stopSpeaking') return stopSpeaking();
-                  await speak(text);
-                })
-              }
-            />
-          </ErrorBoundary>
-          <PageMenu
-            visible={menuVisible}
-            iconRow={iconRow}
-            items={menuItems}
-            incognito={tab.incognito}
-            darkMode={darkMode}
-            onClose={() => setMenuVisible(false)}
-          />
-          <LibraryScreen
-            visible={library !== null}
-            initialTab={library ?? 'bookmarks'}
-            onOpen={(url) => {
-              setLibrary(null);
-              tab.loadUrl(url);
-            }}
-            onClose={() => setLibrary(null)}
-          />
-          <TabSwitcher
-            darkMode={darkMode}
-            visible={tabsVisible}
-            browser={browser}
-            onClose={() => setTabsVisible(false)}
-            onCompare={(picked) => {
-              setTabsVisible(false);
-              setPanelOpen(true);
-              const list = picked.map((x) => `- tab ${x.id}: ${x.title || x.url} (${x.url})`).join('\n');
-              send(t('tabs.comparePrompt', { tabs: list }));
-            }}
-          />
-          <SentLogScreen
-            visible={sentFor !== null}
-            conversation={sentFor ?? undefined}
-            customInstructions={settings.customInstructions}
-            showCost={settings.showCost}
-            viaQutai={(conversation.model?.provider ?? settings.provider) === 'qutai'}
-            onClose={() => setSentFor(null)}
-          />
-          <SettingsModal
-            onClearData={clearData}
-            visible={settingsVisible}
-            settings={settings}
-            onChange={onChangeSettings}
-            onClose={() => setSettingsVisible(false)}
-            onRunTask={runSavedTask}
-            incognitoActive={browser.active.incognito}
-            onShowAssistantIntro={() => {
-              setSettingsVisible(false);
-              setAssistantIntroSeen(false).catch(() => {});
-              setIntroPending(true);
-            }}
-          />
-          <ContextMenuSheet
-            target={context?.target ?? null}
-            actions={context ? contextActions(context.tab, context.target) : []}
-            onClose={() => setContext(null)}
-          />
-          <DownloadsScreen
-            visible={downloadsVisible}
-            store={downloads}
-            copyText={copyText}
-            onAsk={askAboutDownload}
-            onClose={() => setDownloadsVisible(false)}
-          />
-          <SitePermissionSheet
-            host={permissionHost}
-            level={permissionHost ? sitePermissions.levelFor(permissionHost) : 'default'}
-            onSelect={(level) => permissionHost && sitePermissions.set(permissionHost, level).catch(() => {})}
-            location={permissionHost ? sitePermissions.locationFor(permissionHost) : 'ask'}
-            onSelectLocation={(setting) =>
-              permissionHost && sitePermissions.setLocation(permissionHost, setting).catch(() => {})
-            }
-            camera={permissionHost ? sitePermissions.mediaFor(permissionHost, 'camera') : 'ask'}
-            microphone={permissionHost ? sitePermissions.mediaFor(permissionHost, 'microphone') : 'ask'}
-            onSelectMedia={(kind, setting) =>
-              permissionHost && sitePermissions.setMedia(permissionHost, kind, setting).catch(() => {})
-            }
-            personal={permissionHost ? sitePermissions.personalFor(permissionHost) : 'ask'}
-            onSelectPersonal={(setting) =>
-              permissionHost && sitePermissions.setPersonal(permissionHost, setting).catch(() => {})
-            }
-            // The page on screen is capturing on this site: offer to stop it right here.
-            capturing={!!permissionHost && siteKey(tab.url) === permissionHost && tab.media.capturing}
-            onStopCapture={() => tab.media.stop()}
-            blocking={permissionHost ? sitePermissions.blockingFor(permissionHost) : true}
-            onSetBlocking={(on) => permissionHost && sitePermissions.setBlocking(permissionHost, on).catch(() => {})}
-            blockingEnabled={settings.blockAds}
-            // The count belongs to the page on screen (Android); WebKit doesn't report one (iOS).
-            blockedCount={
-              !!permissionHost && siteKey(tab.url) === permissionHost && contentBlocking.active
-                ? Platform.OS === 'ios'
-                  ? 'unavailable'
-                  : tab.blockedCount
-                : undefined
-            }
-            onReload={!!permissionHost && siteKey(tab.url) === permissionHost ? () => tab.webview?.reload() : undefined}
-            onShowAll={() => {
-              setPermissionHost(null);
-              setSitesListVisible(true);
-            }}
-            onClose={() => setPermissionHost(null)}
-          />
-          <SitePermissionsScreen
-            visible={sitesListVisible}
-            store={sitePermissions}
-            blockingEnabled={settings.blockAds}
-            onClose={() => setSitesListVisible(false)}
-          />
-          <TextSizeSheet
-            visible={textSizeVisible}
-            zoom={settings.textZoom}
-            onChange={(textZoom) => onChangeSettings({ ...settings, textZoom })}
-            onClose={() => setTextSizeVisible(false)}
-          />
-          <ModelSheet
-            visible={!!modelSheetFor}
-            settings={settings}
-            current={modelSheetFor?.model ?? null}
-            onChoose={(choice) => {
-              if (!modelSheetFor || modelSheetFor.running) return;
-              modelSheetFor.setModel(choice);
-              // Kept with the conversation (never for an incognito one: storeChat writes nothing for those).
-              persistConversation(modelSheetFor);
-            }}
-            onOpenSettings={() => {
-              setPanelOpen(false);
-              setSettingsVisible(true);
-            }}
-            onClose={() => setModelSheetFor(null)}
-          />
-          <ReaderSettingsSheet
-            visible={readerSettingsVisible}
-            value={{
-              readerTheme: settings.readerTheme,
-              readerFont: settings.readerFont,
-              readerEasyReading: settings.readerEasyReading,
-              textZoom: settings.textZoom,
-            }}
-            onChange={(value) => onChangeSettings({ ...settings, ...value })}
-            onClose={() => setReaderSettingsVisible(false)}
-          />
-          <OfflinePagesScreen
-            visible={offlineVisible}
-            onOpenLive={(url) => {
-              setOfflineVisible(false);
-              browser.openTab(url, { incognito: tab.incognito });
-            }}
-            onClose={() => setOfflineVisible(false)}
-          />
-          <QrCodeSheet
-            url={qrUrl}
-            onShareLink={(url) => runAction(() => shareText(url))}
-            onShareImage={(view) =>
-              runAction(async () => {
-                const uri = await captureRef(view, { format: 'png', result: 'tmpfile' });
-                await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
               })
             }
-            onClose={() => setQrUrl(null)}
-          />
-          <QrScanner
-            visible={scannerVisible}
-            onScan={(data) => {
-              setScannerVisible(false);
-              const target = scannedTarget(data);
-              if (target.kind === 'url') browser.openTab(target.value, { incognito: tab.incognito });
-              else if (target.value) tab.loadUrl(toUrl(target.value, settings.searchEngine));
-            }}
-            onClose={() => setScannerVisible(false)}
-          />
-          <DownloadIndicator
-            store={downloads}
-            bottomOffset={barAtBottom ? 64 : 16}
-            onOpen={() => setDownloadsVisible(true)}
-            onOpenFile={(item) => void openDownload(downloads, item, toast.show)}
-          />
-          <ActionSheet
-            title={
-              attachSheet
-                ? t('attach.sheetNote', { provider: getProvider(conversation.model?.provider ?? settings.provider).label })
-                : null
+            preparedTask={
+              prepared && prepared.chat === conversation && conversation.draft.trim() ? prepared.task.name : null
             }
-            actions={[
-              { label: t('attach.photos'), onPress: () => attach('photos') },
-              { label: t('attach.camera'), onPress: () => attach('camera') },
-              { label: t('attach.file'), onPress: () => attach('file') },
-            ]}
-            dark={darkMode}
-            onClose={() => setAttachSheet(false)}
-          />
-          <AttachmentPreview
-            info={previewAttachment}
-            onClose={() => setPreviewAttachment(null)}
-            onShare={(info) => runAction(() => shareAttachment(info))}
-            onSave={(info) =>
+            onRunPrepared={runPrepared}
+            pending={conversation.pending}
+            onAttach={() => setAttachSheet(true)}
+            onRemovePending={removePending}
+            onOpenAttachment={setPreviewAttachment}
+            onShare={(offer) => runShare(offer, conversation)}
+            onImage={(action, info) =>
               runAction(async () => {
+                if (action === 'share') return void (await shareAttachment(info));
+                if (info.kind === 'pdf') {
+                  if (await saveAttachmentToFolder(info)) return t('chat.fileSaved', { name: info.name });
+                  return;
+                }
                 await saveAttachmentToPhotos(info);
                 return t('contextMenu.imageSaved');
               })
             }
-            onResize={resizeAttachment}
+            voice={{
+              incognito: tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
+              online: settings.voiceOnline,
+              onOnlineChange: (voiceOnline) => onChangeSettings({ ...settings, voiceOnline }),
+              autoSend: settings.voiceAutoSend,
+              notify: toast.show,
+              languages: () => listeningOrder(conversation, settingsRef.current),
+              picked: conversation.voiceLanguage,
+              onPick: (language) => {
+                conversation.setVoiceLanguage(language);
+                persistConversation(conversation);
+              },
+              autoLabel:
+                settings.voiceLanguage === AUTO_LANGUAGE
+                  ? t('voice.auto')
+                  : t('voice.defaultLanguage', { language: languageName(settings.voiceLanguage) }),
+              autoHint:
+                settings.voiceLanguage === AUTO_LANGUAGE
+                  ? t('voice.autoNow', { language: languageName(automaticLanguage(conversation, settings)) })
+                  : undefined,
+              onStarted: (lang) =>
+                rememberVoiceLanguage(
+                  lang,
+                  tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
+                ),
+            }}
+            quickActions={quickActions}
+            draft={conversation.draft}
+            onDraftChange={(text) => {
+              conversation.setDraft(text);
+              persistDraftSoon(conversation);
+            }}
+            focusRequest={focusRequest}
+            research={conversation.research}
+            onResearchChange={(on) => conversation.setResearch(on)}
+            modelInfo={
+              conversationModelInfo(settings, conversation.model) +
+              ((conversation.model && isConfigured(settings, conversation.model.provider) ? conversation.model.provider : settings.provider) ===
+                'qutai' && creditsState.balance !== null
+                ? ` · ${creditsLabel(creditsState.balance)}`
+                : '')
+            }
+            modelChosen={!!conversation.model && isConfigured(settings, conversation.model.provider)}
+            onModelPress={() => setModelSheetFor(conversation)}
+            items={conversation.items}
+            running={conversation.running}
+            busyElsewhere={running && !conversation.running}
+            onShowRunningTab={() => runningTab && browser.switchTab(runningTab.id)}
+            finishedElsewhere={unseenChat && unseenChat !== conversation ? unseenChat.unseen : null}
+            onShowFinished={() => unseenChat && showConversation(unseenChat)}
+            onClose={closePanel}
+            onSend={send}
+            onStop={() => conversation.stop()}
+            onChoose={(itemId, option) => {
+              tick();
+              conversation.choose(itemId, option);
+              send(option);
+            }}
+            onNewChat={newChat}
+            onOpenSettings={() => setSettingsVisible(true)}
+            onShowSent={() => setSentFor(conversation.key)}
+            showCost={settings.showCost}
+            onOpenSource={(source) => {
+              // A page that is still open is shown in its tab; otherwise it opens again in the same mode.
+              const open = browser.tabs.find((x) => x.incognito === source.incognito && x.url === source.url);
+              if (open) browser.switchTab(open.id);
+              else browser.openTab(source.url, { incognito: source.incognito });
+              closePanel();
+            }}
+            onOpenLink={(url) => {
+              browser.openTab(url, { incognito: browser.active.incognito });
+              closePanel();
+            }}
+            onCall={(number) => {
+              bump();
+              placeCall(number, () => toast.show(t('common.copied')));
+            }}
+            onSms={(offer) => {
+              bump();
+              openSmsComposer(offer, () => toast.show(t('common.copied')));
+            }}
+            onWhatsApp={(offer) => {
+              bump();
+              openWhatsApp(offer, () => toast.show(t('common.copied')));
+            }}
+            onFile={(action, file) =>
+              runAction(async () => {
+                try {
+                  if (action === 'share') return void (await shareComposedFile(file.id));
+                  if (await saveComposedFileToFolder(file.id)) return t('chat.fileSaved', { name: file.name });
+                } catch (e) {
+                  if (e instanceof FileExpiredError) return t('chat.fileExpired');
+                  throw e;
+                }
+              })
+            }
+            onMessageAction={(action, text) =>
+              runAction(async () => {
+                if (action === 'copy') {
+                  await copyText(text);
+                  return t('common.copied');
+                }
+                if (action === 'share') return shareText(text);
+                if (action === 'pdf') {
+                  // Kept with the conversation (so it can be attached or shared later), then the share sheet.
+                  const chat = conversation;
+                  const pdf = await renderReportPdf(text);
+                  const info = storeMadePdf(pdf.file, pdf.fileName, 'report', chat.incognito || chat.privacy.touchedIncognito);
+                  chat.addMadePdf(info, true);
+                  return void (await shareAttachment(info));
+                }
+                if (action === 'stopSpeaking') return stopSpeaking();
+                await speak(text);
+              })
+            }
           />
-          <TasksScreen
-            visible={tasksScreen !== null}
-            draft={tasksScreen?.draft}
-            onClose={() => setTasksScreen(null)}
-            onRun={runSavedTask}
-          />
-          <ActionSheet
-            // Hidden while the app lock shows (it reappears after unlocking).
-            title={incoming && !appLocked ? t('incoming.title', { text: incoming.text.replace(/\s+/g, ' ').slice(0, 120) }) : null}
-            actions={incoming ? incomingActions(incoming) : []}
-            dark={darkMode}
-            onClose={() => setIncoming(null)}
-          />
-          <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
-          <CaptureOverlay />
-          <PdfReaderHost />
-          <PushToTalkBubble
-            bubble={ptt.bubble}
-            barAtBottom={barAtBottom}
-            onOpenPanel={() => setPanelOpen(true)}
-            onSend={ptt.handlers.release}
-            onCancel={ptt.handlers.cancel}
-            onDismiss={ptt.dismiss}
-          />
-          <CalendarChoiceHost />
-          <AssistantIntro
-            // Waits while something else is in front: the panel, Settings, the tab switcher, the app lock.
-            visible={introPending && settings.showAssistantButton && !panelOpen && !settingsVisible && !tabsVisible && !lock}
-            holdToTalk={settings.voiceHoldToTalk}
-            barAtBottom={barAtBottom}
-            onOpenAssistant={() => setPanelOpen(true)}
-            onDismiss={dismissIntro}
-          />
-          <Toast key={toast.key} message={toast.message} action={toast.action} onHidden={toast.hide} />
-          <DialogHost root />
-        </View>
-      </SafeAreaProvider>
+        </ErrorBoundary>
+        <PageMenu
+          visible={menuVisible}
+          iconRow={iconRow}
+          items={menuItems}
+          incognito={tab.incognito}
+          darkMode={darkMode}
+          onClose={() => setMenuVisible(false)}
+        />
+        <LibraryScreen
+          visible={library !== null}
+          initialTab={library ?? 'bookmarks'}
+          onOpen={(url) => {
+            setLibrary(null);
+            tab.loadUrl(url);
+          }}
+          onClose={() => setLibrary(null)}
+        />
+        <TabSwitcher
+          darkMode={darkMode}
+          visible={tabsVisible}
+          browser={browser}
+          onClose={() => setTabsVisible(false)}
+          onCompare={(picked) => {
+            setTabsVisible(false);
+            setPanelOpen(true);
+            const list = picked.map((x) => `- tab ${x.id}: ${x.title || x.url} (${x.url})`).join('\n');
+            send(t('tabs.comparePrompt', { tabs: list }));
+          }}
+        />
+        <SentLogScreen
+          visible={sentFor !== null}
+          conversation={sentFor ?? undefined}
+          customInstructions={settings.customInstructions}
+          showCost={settings.showCost}
+          viaQutai={(conversation.model?.provider ?? settings.provider) === 'qutai'}
+          onClose={() => setSentFor(null)}
+        />
+        <SettingsModal
+          onClearData={clearData}
+          visible={settingsVisible}
+          settings={settings}
+          onChange={onChangeSettings}
+          onClose={() => setSettingsVisible(false)}
+          onRunTask={runSavedTask}
+          incognitoActive={browser.active.incognito}
+          onShowAssistantIntro={() => {
+            setSettingsVisible(false);
+            setAssistantIntroSeen(false).catch(() => {});
+            setIntroPending(true);
+          }}
+        />
+        <ContextMenuSheet
+          target={context?.target ?? null}
+          actions={context ? contextActions(context.tab, context.target) : []}
+          onClose={() => setContext(null)}
+        />
+        <DownloadsScreen
+          visible={downloadsVisible}
+          store={downloads}
+          copyText={copyText}
+          onAsk={askAboutDownload}
+          onClose={() => setDownloadsVisible(false)}
+        />
+        <SitePermissionSheet
+          host={permissionHost}
+          level={permissionHost ? sitePermissions.levelFor(permissionHost) : 'default'}
+          onSelect={(level) => permissionHost && sitePermissions.set(permissionHost, level).catch(() => {})}
+          location={permissionHost ? sitePermissions.locationFor(permissionHost) : 'ask'}
+          onSelectLocation={(setting) =>
+            permissionHost && sitePermissions.setLocation(permissionHost, setting).catch(() => {})
+          }
+          camera={permissionHost ? sitePermissions.mediaFor(permissionHost, 'camera') : 'ask'}
+          microphone={permissionHost ? sitePermissions.mediaFor(permissionHost, 'microphone') : 'ask'}
+          onSelectMedia={(kind, setting) =>
+            permissionHost && sitePermissions.setMedia(permissionHost, kind, setting).catch(() => {})
+          }
+          personal={permissionHost ? sitePermissions.personalFor(permissionHost) : 'ask'}
+          onSelectPersonal={(setting) =>
+            permissionHost && sitePermissions.setPersonal(permissionHost, setting).catch(() => {})
+          }
+          // The page on screen is capturing on this site: offer to stop it right here.
+          capturing={!!permissionHost && siteKey(tab.url) === permissionHost && tab.media.capturing}
+          onStopCapture={() => tab.media.stop()}
+          blocking={permissionHost ? sitePermissions.blockingFor(permissionHost) : true}
+          onSetBlocking={(on) => permissionHost && sitePermissions.setBlocking(permissionHost, on).catch(() => {})}
+          blockingEnabled={settings.blockAds}
+          // The count belongs to the page on screen (Android); WebKit doesn't report one (iOS).
+          blockedCount={
+            !!permissionHost && siteKey(tab.url) === permissionHost && contentBlocking.active
+              ? Platform.OS === 'ios'
+                ? 'unavailable'
+                : tab.blockedCount
+              : undefined
+          }
+          onReload={!!permissionHost && siteKey(tab.url) === permissionHost ? () => tab.webview?.reload() : undefined}
+          onShowAll={() => {
+            setPermissionHost(null);
+            setSitesListVisible(true);
+          }}
+          onClose={() => setPermissionHost(null)}
+        />
+        <SitePermissionsScreen
+          visible={sitesListVisible}
+          store={sitePermissions}
+          blockingEnabled={settings.blockAds}
+          onClose={() => setSitesListVisible(false)}
+        />
+        <TextSizeSheet
+          visible={textSizeVisible}
+          zoom={settings.textZoom}
+          onChange={(textZoom) => onChangeSettings({ ...settings, textZoom })}
+          onClose={() => setTextSizeVisible(false)}
+        />
+        <ModelSheet
+          visible={!!modelSheetFor}
+          settings={settings}
+          current={modelSheetFor?.model ?? null}
+          onChoose={(choice) => {
+            if (!modelSheetFor || modelSheetFor.running) return;
+            modelSheetFor.setModel(choice);
+            // Kept with the conversation (never for an incognito one: storeChat writes nothing for those).
+            persistConversation(modelSheetFor);
+          }}
+          onOpenSettings={() => {
+            setPanelOpen(false);
+            setSettingsVisible(true);
+          }}
+          onClose={() => setModelSheetFor(null)}
+        />
+        <ReaderSettingsSheet
+          visible={readerSettingsVisible}
+          value={{
+            readerTheme: settings.readerTheme,
+            readerFont: settings.readerFont,
+            readerEasyReading: settings.readerEasyReading,
+            textZoom: settings.textZoom,
+          }}
+          onChange={(value) => onChangeSettings({ ...settings, ...value })}
+          onClose={() => setReaderSettingsVisible(false)}
+        />
+        <OfflinePagesScreen
+          visible={offlineVisible}
+          onOpenLive={(url) => {
+            setOfflineVisible(false);
+            browser.openTab(url, { incognito: tab.incognito });
+          }}
+          onClose={() => setOfflineVisible(false)}
+        />
+        <QrCodeSheet
+          url={qrUrl}
+          onShareLink={(url) => runAction(() => shareText(url))}
+          onShareImage={(view) =>
+            runAction(async () => {
+              const uri = await captureRef(view, { format: 'png', result: 'tmpfile' });
+              await Sharing.shareAsync(uri, { mimeType: 'image/png', UTI: 'public.png' });
+            })
+          }
+          onClose={() => setQrUrl(null)}
+        />
+        <QrScanner
+          visible={scannerVisible}
+          onScan={(data) => {
+            setScannerVisible(false);
+            const target = scannedTarget(data);
+            if (target.kind === 'url') browser.openTab(target.value, { incognito: tab.incognito });
+            else if (target.value) tab.loadUrl(toUrl(target.value, settings.searchEngine));
+          }}
+          onClose={() => setScannerVisible(false)}
+        />
+        <DownloadIndicator
+          store={downloads}
+          bottomOffset={barAtBottom ? 64 : 16}
+          onOpen={() => setDownloadsVisible(true)}
+          onOpenFile={(item) => void openDownload(downloads, item, toast.show)}
+        />
+        <ActionSheet
+          title={
+            attachSheet
+              ? t('attach.sheetNote', { provider: getProvider(conversation.model?.provider ?? settings.provider).label })
+              : null
+          }
+          actions={[
+            { label: t('attach.photos'), onPress: () => attach('photos') },
+            { label: t('attach.camera'), onPress: () => attach('camera') },
+            { label: t('attach.file'), onPress: () => attach('file') },
+          ]}
+          dark={darkMode}
+          onClose={() => setAttachSheet(false)}
+        />
+        <AttachmentPreview
+          info={previewAttachment}
+          onClose={() => setPreviewAttachment(null)}
+          onShare={(info) => runAction(() => shareAttachment(info))}
+          onSave={(info) =>
+            runAction(async () => {
+              await saveAttachmentToPhotos(info);
+              return t('contextMenu.imageSaved');
+            })
+          }
+          onResize={resizeAttachment}
+        />
+        <TasksScreen
+          visible={tasksScreen !== null}
+          draft={tasksScreen?.draft}
+          onClose={() => setTasksScreen(null)}
+          onRun={runSavedTask}
+        />
+        <ActionSheet
+          // Hidden while the app lock shows (it reappears after unlocking).
+          title={incoming && !appLocked ? t('incoming.title', { text: incoming.text.replace(/\s+/g, ' ').slice(0, 120) }) : null}
+          actions={incoming ? incomingActions(incoming) : []}
+          dark={darkMode}
+          onClose={() => setIncoming(null)}
+        />
+        <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
+        <CaptureOverlay />
+        <PdfReaderHost />
+        <PushToTalkBubble
+          bubble={ptt.bubble}
+          barAtBottom={barAtBottom}
+          onOpenPanel={() => setPanelOpen(true)}
+          onSend={ptt.handlers.release}
+          onCancel={ptt.handlers.cancel}
+          onDismiss={ptt.dismiss}
+        />
+        <CalendarChoiceHost />
+        <AssistantIntro
+          // Waits while something else is in front: the panel, Settings, the tab switcher, the app lock.
+          visible={introPending && settings.showAssistantButton && !panelOpen && !settingsVisible && !tabsVisible && !lock}
+          holdToTalk={settings.voiceHoldToTalk}
+          barAtBottom={barAtBottom}
+          onOpenAssistant={() => setPanelOpen(true)}
+          onDismiss={dismissIntro}
+        />
+        <Toast key={toast.key} message={toast.message} action={toast.action} onHidden={toast.hide} />
+        <DialogHost root />
+      </View>
     </LogoMotion.Provider>
   );
 }
