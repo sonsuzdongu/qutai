@@ -64,6 +64,10 @@ Cloudflare'e yayın ve Access.
 - [ ] Gizlilik Politikası (Türkçe ve İngilizce): "Telefonunuzdan çıkanlar" OpenRouter'ı, kendi sunucunuzu, "Konumumu kullan"ı (Apple / Google adres hizmeti), sesle yazmayı ve filtre listelerini anlatıyor; "Şifreler ve ödeme bilgileri" yeni metin; tarih 16 Kasım 2026; uzun metin kayarak okunuyor
 - [ ] "Sizi biraz tanıyayım" girişindeki gizlilik notu "Hafıza açıkken asistana giden her istekle" diyor
 - [ ] iOS: konum izni penceresinde "konumunuzun yer adını Apple’ın adres hizmeti bulur" cümlesi görünüyor (yeni derleme gerekir)
+- [ ] İzinler adımında "Mikrofon" anahtarı var ("Sesli asistanı kullanabilmek için…"); açınca sistem izni soruluyor (iOS'ta mikrofon ve konuşma tanıma, Android'de mikrofon), durum doğru görünüyor
+- [ ] Kurulumda mikrofona izin verdikten sonra paneldeki mikrofona ilk dokunuşta ikinci bir sistem izni çıkmıyor; çevrim içi konuşma hizmeti sorusu (gerekiyorsa) yine ayrıca soruluyor
+- [ ] Mikrofon reddedilince "İzin verilmedi…" yazıyor; "bir daha sorma" sonrası "Telefonun ayarlarını açın" bağlantısı ayarları açıyor, ayarlardan izin verip dönünce anahtar açık görünüyor
+- [ ] iOS: konuşma tanıma reddedilip mikrofona izin verilince anahtar açık, altında "yalnızca telefonun kendisinin tanıdığı diller çalışır" notu
 
 ## 5. Asistan paneli
 

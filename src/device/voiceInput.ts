@@ -438,13 +438,52 @@ async function ensurePermission(
   let status = await get();
   if (!status.granted && status.canAskAgain) {
     // The first time, both are asked on iOS, so switching to online later doesn't prompt mid-sentence.
-    await M.requestPermissionsAsync().catch(() => null);
+    await requestAll(M);
     if (askOnly) return false;
     status = await get();
   }
   if (status.granted) return true;
   if (!status.canAskAgain) offerSettings(t('voice.permissionDenied'));
   return false;
+}
+
+/**
+ * Asks for everything voice input uses, in one go: the microphone (Android RECORD_AUDIO, iOS AVAudioSession record
+ * permission) and on iOS also speech recognition (SFSpeechRecognizer authorization, needed when Apple's speech service
+ * recognises the audio). iOS asks speech recognition first and skips the microphone when that is refused, so the
+ * microphone is then asked on its own: on-device recognition needs only the microphone.
+ */
+async function requestAll(M: SpeechModule['ExpoSpeechRecognitionModule']): Promise<void> {
+  await M.requestPermissionsAsync().catch(() => null);
+  if (Platform.OS !== 'ios') return;
+  const mic = await M.getMicrophonePermissionsAsync().catch(() => null);
+  if (mic && mic.status === 'undetermined') await M.requestMicrophonePermissionsAsync().catch(() => null);
+}
+
+/**
+ * Voice input's permissions for setup's "What Qutai may use" step (device/permissionStatus.ts): 'granted' when
+ * everything is allowed; on iOS 'limited' when the microphone is allowed but speech recognition isn't (only languages
+ * the phone recognises itself work); 'blocked' when only the phone's settings can change it.
+ */
+export async function voicePermissionState(): Promise<'granted' | 'limited' | 'undetermined' | 'denied' | 'blocked' | 'unavailable'> {
+  let M: SpeechModule['ExpoSpeechRecognitionModule'];
+  try {
+    M = (await load()).ExpoSpeechRecognitionModule;
+  } catch {
+    return 'unavailable';
+  }
+  const mic = await M.getMicrophonePermissionsAsync();
+  if (!mic.granted) return mic.status === 'undetermined' ? 'undetermined' : mic.canAskAgain ? 'denied' : 'blocked';
+  if (Platform.OS !== 'ios') return 'granted';
+  const speech = await M.getSpeechRecognizerPermissionsAsync();
+  if (speech.granted) return 'granted';
+  return speech.status === 'undetermined' ? 'undetermined' : 'limited';
+}
+
+/** Setup's microphone switch: the same requests voice input makes on first use, so it asks nothing more later. */
+export async function requestVoicePermissions(): Promise<void> {
+  const M = (await load()).ExpoSpeechRecognitionModule;
+  await requestAll(M);
 }
 
 /** The one-time question about the phone's online speech service; the answer is remembered. */

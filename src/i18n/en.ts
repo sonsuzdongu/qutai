@@ -1734,6 +1734,13 @@ export const en = {
   'permissions.location': 'Location',
   'permissions.locationBody':
     'To show things relevant to where you are. The assistant uses it when you ask, and a site only after you allow that site.',
+  'permissions.microphone': 'Microphone',
+  'permissions.microphoneBody':
+    'To talk to the assistant by voice. Before your phone’s online speech service is ever used, Qutai asks you separately.',
+  'permissions.microphoneBodyIos':
+    'To talk to the assistant by voice. The phone asks for the microphone and for speech recognition. Before Apple’s speech service is ever used, Qutai asks you separately.',
+  'permissions.microphoneLimited':
+    'Speech recognition isn’t allowed: only languages the phone recognises itself work. You can allow it in the phone’s settings.',
   'permissions.calendar': 'Calendar',
   'permissions.calendarBody':
     'To manage your calendar and work with your appointments: events you confirm go to the calendar you choose, and your events are read only when you ask about your schedule.',

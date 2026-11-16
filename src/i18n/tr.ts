@@ -1740,6 +1740,13 @@ export const tr: Record<keyof typeof en, string> = {
   'permissions.location': 'Konum',
   'permissions.locationBody':
     'Bulunduğunuz yerle ilgili şeyleri göstermek için. Asistan siz istediğinizde, bir site de yalnızca o siteye izin verdiğinizde kullanır.',
+  'permissions.microphone': 'Mikrofon',
+  'permissions.microphoneBody':
+    'Sesli asistanı kullanabilmek için. Telefonunuzun çevrim içi konuşma hizmeti kullanılmadan önce Qutai size ayrıca sorar.',
+  'permissions.microphoneBodyIos':
+    'Sesli asistanı kullanabilmek için. Telefon mikrofon ve konuşma tanıma için izin ister. Apple’ın konuşma hizmeti kullanılmadan önce Qutai size ayrıca sorar.',
+  'permissions.microphoneLimited':
+    'Konuşma tanımaya izin verilmedi: yalnızca telefonun kendisinin tanıdığı diller çalışır. Telefonun ayarlarından izin verebilirsiniz.',
   'permissions.calendar': 'Takvim',
   'permissions.calendarBody':
     'Takviminizi yönetmek ve randevularınızla çalışmak için: onayladığınız etkinlikler seçtiğiniz takvime eklenir, etkinlikleriniz yalnızca programınızı sorduğunuzda okunur.',

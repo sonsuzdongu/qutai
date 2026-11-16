@@ -7,19 +7,25 @@ import {
   requestRemindersAccess,
 } from './calendarChoice';
 import { ensureNotificationPermission, notificationPermissionState } from './notifications';
+import { requestVoicePermissions, voicePermissionState } from './voiceInput';
 
 /**
  * The phone permissions setup offers up front (Onboarding's "What Qutai may use" step), each asked only when the user
  * turns its switch on. The in-context requests (device/location.ts, calendar.ts, notifications.ts) stay as they are,
  * and none of them asks again once the system has an answer.
  *
- * Not offered here: the camera and the microphone (asked when the user scans a QR code, takes a photo or talks to the
- * assistant, where the reason is plain) and saving to Photos (asked on the first save).
+ * The microphone row asks what voice input asks on first use (device/voiceInput.ts): the microphone, and on iOS also
+ * speech recognition, so talking to the assistant later prompts nothing more. The separate one-time question about the
+ * phone's online speech service stays where it is (asked before that service is first used).
+ *
+ * Not offered here: the camera (asked when the user scans a QR code or takes a photo, where the reason is plain) and
+ * saving to Photos (asked on the first save).
  */
-export type PermissionKind = 'location' | 'calendar' | 'reminders' | 'notifications';
+export type PermissionKind = 'location' | 'microphone' | 'calendar' | 'reminders' | 'notifications';
 
 /**
- * 'limited': iOS write-only calendar access (events can be added to the default calendar, the calendars can't be
+ * 'limited': iOS write-only calendar access, or the microphone allowed without speech recognition (iOS; only languages
+ * the phone recognises on the device work) (events can be added to the default calendar, the calendars can't be
  * listed or read). 'denied': refused but the system can ask again (on Android also "not asked yet" for some).
  * 'blocked': only the phone's settings can change it. 'unavailable': not in this build.
  */
@@ -28,8 +34,8 @@ export type PermissionState = 'granted' | 'limited' | 'undetermined' | 'denied' 
 /** Reminders lists exist on iOS only; Android's reminders are calendar events (the calendar row covers them). */
 export function setupPermissions(): PermissionKind[] {
   return Platform.OS === 'ios'
-    ? ['location', 'calendar', 'reminders', 'notifications']
-    : ['location', 'calendar', 'notifications'];
+    ? ['location', 'microphone', 'calendar', 'reminders', 'notifications']
+    : ['location', 'microphone', 'calendar', 'notifications'];
 }
 
 const fromList = (s: ListAccess): PermissionState => (s === 'writeOnly' ? 'limited' : s);
@@ -49,6 +55,7 @@ async function locationState(): Promise<PermissionState> {
 export async function permissionState(kind: PermissionKind): Promise<PermissionState> {
   try {
     if (kind === 'location') return await locationState();
+    if (kind === 'microphone') return await voicePermissionState();
     if (kind === 'calendar') return fromList(await calendarListAccess());
     if (kind === 'reminders') return fromList(await remindersAccess());
     return await notificationPermissionState();
@@ -66,6 +73,12 @@ export async function requestPermission(kind: PermissionKind): Promise<Permissio
       const Location = await import('expo-location');
       await Location.requestForegroundPermissionsAsync();
       return await locationState();
+    }
+    if (kind === 'microphone') {
+      const before = await voicePermissionState();
+      if (before === 'granted' || before === 'blocked' || before === 'unavailable') return before;
+      await requestVoicePermissions();
+      return await voicePermissionState();
     }
     // The calendar row asks for full access on iOS: it is what lets the user choose the calendar and lets the
     // assistant read their appointments ("to manage your calendar"); adding alone keeps asking write-only in context.

@@ -17,6 +17,7 @@ import { CalendarChoiceScreen } from './CalendarChoiceScreen';
 
 const ICONS: Record<PermissionKind, IconName> = {
   location: 'location',
+  microphone: 'microphone',
   calendar: 'calendar',
   reminders: 'reminder',
   notifications: 'notifications',
@@ -24,6 +25,7 @@ const ICONS: Record<PermissionKind, IconName> = {
 
 const BODY: Record<PermissionKind, MessageKey> = {
   location: 'permissions.locationBody',
+  microphone: Platform.OS === 'ios' ? 'permissions.microphoneBodyIos' : 'permissions.microphoneBody',
   calendar: 'permissions.calendarBody',
   reminders: 'permissions.remindersBody',
   notifications: Platform.OS === 'android' ? 'permissions.notificationsBodyAndroid' : 'permissions.notificationsBody',
@@ -115,7 +117,8 @@ function Row({
   const on = state === 'granted' || state === 'limited';
   let status: string | null = null;
   if (state === 'granted') status = t('permissions.allowed');
-  else if (state === 'limited') status = t('permissions.calendarLimited');
+  else if (state === 'limited')
+    status = t(kind === 'microphone' ? 'permissions.microphoneLimited' : 'permissions.calendarLimited');
   else if (state === 'blocked') status = t('permissions.blocked');
   else if (state === 'denied' && asked) status = t('permissions.denied');
   else if (state === 'unavailable') status = t('permissions.unavailable');

@@ -847,9 +847,13 @@ and streaming stays off until the app restarts.
 ## Permissions
 
 Nothing is asked at launch. The first-run setup has an optional step, "What Qutai may use", with a switch per
-permission the assistant can use (location, calendar, Reminders on iOS, notifications) and what each is for; a switch
-asks the system only when the user turns it on and then shows the real state (with "Open settings" when refused for
-good). Whatever is left off is asked the first time a feature needs it: camera (QR codes, photos for
+permission the assistant can use (location, the microphone for talking to the assistant, calendar, Reminders on iOS,
+notifications) and what each is for; a switch asks the system only when the user turns it on and then shows the real
+state (with "Open settings" when refused for good). The microphone switch asks exactly what voice input asks on its
+first use (the microphone, and on iOS speech recognition too), so the panel's microphone asks nothing more later; the
+one-time question about the phone's online speech service is still asked separately, before that service is first
+used. On iOS, the microphone allowed without speech recognition shows as limited: only languages the phone recognises
+itself work. Whatever is left off is asked the first time a feature needs it: camera (QR codes, photos for
 upload fields), add-only Photos (saving screenshots and images), Face ID, write-only calendar and reminders (full calendar access when the assistant first reads it, or from setup or the calendar chooser to choose a calendar), location
 while in use (per-site), local notifications, camera and microphone for sites you allow (per site, each asked separately), microphone and (iOS)
 speech recognition on the first tap of the panel's microphone button. The full list per platform, with
