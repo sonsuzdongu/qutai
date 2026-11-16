@@ -32,6 +32,30 @@ class QutaiEntryModule : Module() {
       }
     }
 
+    /**
+     * Qutai's own language as a BCP 47 tag ("" = follow the system). Android 13+: the system's per-app language (also
+     * set in Settings › Apps › Qutai › Language); earlier: the choice stored by setAppLanguage.
+     */
+    Function("getAppLanguage") {
+      val context = appContext.reactContext?.applicationContext ?: return@Function ""
+      AppLanguage.get(context)
+    }
+
+    /** Whether the language is the system's per-app language (Android 13+) rather than one kept by Qutai. */
+    Function("hasSystemAppLanguage") {
+      AppLanguage.systemPerApp
+    }
+
+    /**
+     * Sets Qutai's language ("" = the system's). Android 13+ hands it to the system (the activity takes the change
+     * without restarting, so tabs and conversations stay); earlier Android stores it and re-labels the shortcuts and
+     * the widget.
+     */
+    Function("setAppLanguage") { tag: String ->
+      val context = appContext.reactContext?.applicationContext ?: return@Function false
+      AppLanguage.set(context, tag)
+    }.runOnQueue(Queues.MAIN)
+
     /** Everything that arrived since the last call, oldest first; each item is returned once. */
     Function("takePending") {
       // The launch intent: read here because the activity may not exist yet when the module is created.

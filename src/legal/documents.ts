@@ -19,8 +19,10 @@ export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-16';
 
 export type LegalKind = 'privacy' | 'terms';
 export type LegalDocument = { title: string; intro: string; sections: { heading: string; body: string }[] };
+/** The languages the documents are written in (by people, not machine-translated). */
+export type LegalLanguage = 'en' | 'tr';
 
-const DOCUMENTS: Record<Language, Record<LegalKind, LegalDocument>> = {
+const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
   en: {
     privacy: {
       title: 'Privacy Policy',
@@ -241,6 +243,12 @@ const DOCUMENTS: Record<Language, Record<LegalKind, LegalDocument>> = {
   },
 };
 
-export function legalDocument(kind: LegalKind, language: Language): LegalDocument {
-  return (accountsEnabled ? PRO_DOCUMENTS : DOCUMENTS)[language][kind];
+/**
+ * The privacy policy and terms exist in English and Turkish only: they are not machine-translated. In the other
+ * interface languages the English document is shown, with `englishOnly` set so the screen says so above it.
+ */
+export function legalDocument(kind: LegalKind, language: Language): LegalDocument & { englishOnly: boolean } {
+  const documents = accountsEnabled ? PRO_DOCUMENTS : DOCUMENTS;
+  const legalLanguage: LegalLanguage = language === 'tr' ? 'tr' : 'en';
+  return { ...documents[legalLanguage][kind], englishOnly: language !== legalLanguage };
 }

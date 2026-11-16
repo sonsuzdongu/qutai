@@ -1,5 +1,4 @@
-import type { Language } from '../i18n';
-import type { LegalDocument, LegalKind } from './documents';
+import type { LegalDocument, LegalKind, LegalLanguage } from './documents';
 
 /**
  * The privacy policy and terms of the pro-mode builds (accounts, Qutai Credits, buying credits: `accountsEnabled`).
@@ -9,7 +8,7 @@ import type { LegalDocument, LegalKind } from './documents';
  */
 export const PRO_LEGAL_UPDATED = '2026-11-16';
 
-export const PRO_DOCUMENTS: Record<Language, Record<LegalKind, LegalDocument>> = {
+export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
   en: {
     privacy: {
       title: 'Privacy Policy',

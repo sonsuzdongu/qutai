@@ -1,5 +1,7 @@
 import { registerRootComponent } from 'expo';
 
+// First: the interface language chosen in Qutai's settings, before any other module reads a string.
+import './src/i18n/startup';
 import App from './App';
 import { registerBackgroundTaskRunner } from './src/device/backgroundTask';
 

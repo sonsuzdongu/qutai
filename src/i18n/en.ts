@@ -2123,4 +2123,14 @@ export const en = {
   'siteRules.importNone': "There are no rules in this file that Qutai can use.",
   'siteRules.importedTitle': "Rules imported",
   'siteRules.importedBody': "Added: {added}. Skipped (already there, invalid or too broad): {skipped}.",
+  // Interface language (Settings › Language) and the legal documents in the other languages.
+  'settings.language': 'Language',
+  'settings.languageSystem': 'System default',
+  'settings.languageSummarySystem': 'System default ({language})',
+  'settings.languageHintAndroid': "This is the same setting as Qutai's language in your phone's settings (Apps › Qutai › Language): a change in either place applies to both, and to the launcher shortcuts and the widget.",
+  'settings.languageHintOld': "Qutai's screens, notifications, launcher shortcuts and widget use this language. Your phone's own screens, such as permission requests, stay in the phone's language.",
+  'settings.languageHintIos': "iOS keeps Qutai's language in the Settings app, where it also applies to permission requests and Home Screen quick actions. Qutai restarts when you change it there.",
+  'settings.languageOpenIos': 'Change in iOS Settings',
+  'settings.languageNeedsBuild': "Choosing a language needs a newer build of Qutai. Until then, Qutai follows your phone's language.",
+  'legal.englishOnly': 'This document is available in English and Turkish. The English version is shown below.',
 } as const;

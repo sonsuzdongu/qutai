@@ -19,7 +19,9 @@ import { voiceModeSummary, VoiceModeSummary } from '../device/voiceInput';
 import { AUTO_LANGUAGE, languageName } from '../device/voiceLanguage';
 import { VoiceLanguageSheet } from './VoiceLanguageSheet';
 import { incognitoIsolated } from '../device/webviewProfile';
-import { getLanguage, t } from '../i18n';
+import { useLocales } from 'expo-localization';
+import { getLanguage, LANGUAGE_INFO, LANGUAGES, t, type Language } from '../i18n';
+import { chooseLanguage, chosenLanguage, languageChoiceMode, openLanguageSettings } from '../i18n/appLanguage';
 import type { LegalKind } from '../legal/documents';
 import type { Settings } from '../storage/settings';
 import { Icon, IconName } from '../ui/Icon';
@@ -70,7 +72,7 @@ type Props = {
 };
 
 export type SettingsPage = Page;
-type Page = 'main' | 'account' | 'credits' | 'assistant' | 'privacy' | 'appearance' | 'search' | 'backup' | 'about';
+type Page = 'main' | 'account' | 'credits' | 'assistant' | 'privacy' | 'appearance' | 'language' | 'search' | 'backup' | 'about';
 
 /** Where the Android back button goes; the open page sets it (the modal receives the button). */
 class BackRoute {
@@ -207,6 +209,7 @@ function SettingsPages({
     assistant: t('settings.assistant'),
     privacy: t('settings.privacySection'),
     appearance: t('settings.appearance'),
+    language: t('settings.language'),
     search: t('settings.search'),
     backup: t('backup.section'),
     about: t('settings.about'),
@@ -279,6 +282,12 @@ function SettingsPages({
               title={t('settings.appearance')}
               summary={`${t(`settings.theme.${settings.theme}`)} · ${t(`settings.addressBar.${settings.addressBarPosition}`)}`}
               onPress={() => setPage('appearance')}
+            />
+            <SectionRow
+              icon="globe"
+              title={t('settings.language')}
+              summary={languageSummary()}
+              onPress={() => setPage('language')}
             />
             <SectionRow
               icon="find"
@@ -550,6 +559,8 @@ function SettingsPages({
           </>
         )}
 
+        {page === 'language' && <LanguagePage />}
+
         {page === 'search' && (
           <>
             {SEARCH_ENGINE_ORDER.map((id) => (
@@ -647,6 +658,62 @@ function SettingsPages({
       <BackupScreen job={backupJob} appLock={settings.appLock} onClose={() => setBackupJob(null)} />
       <ClearDataScreen visible={clearDataVisible} onClear={onClearData} onClose={() => setClearDataVisible(false)} />
     </SafeAreaView>
+  );
+}
+
+/** "Deutsch", or "System default (English)" when Qutai follows the system. */
+function languageSummary(): string {
+  const name = LANGUAGE_INFO[getLanguage()].name;
+  const mode = languageChoiceMode();
+  if ((mode === 'system' || mode === 'app') && chosenLanguage()) return name;
+  return t('settings.languageSummarySystem', { language: name });
+}
+
+/**
+ * Settings › Language: "System default" and the ten languages, each written in itself. Android: picking one switches
+ * the whole interface at once (src/i18n/appLanguage.ts says where the choice lives). iOS: the per-app language is in
+ * the Settings app, so this page explains that and opens it.
+ */
+function LanguagePage() {
+  const styles = useStyles();
+  // Re-reads the choice when the system's per-app language changes (Android's own language screen).
+  useLocales();
+  const mode = languageChoiceMode();
+  // Read from the platform on each render (a synchronous native call), so a change made elsewhere shows.
+  const [, rerender] = useState(0);
+  const chosen = mode === 'system' || mode === 'app' ? chosenLanguage() : null;
+  if (mode === 'settings') {
+    return (
+      <>
+        <Text style={styles.optionText}>{LANGUAGE_INFO[getLanguage()].name}</Text>
+        <Text style={styles.hint}>{t('settings.languageHintIos')}</Text>
+        <LinkRow label={t('settings.languageOpenIos')} onPress={() => openLanguageSettings().catch(() => {})} />
+      </>
+    );
+  }
+  if (mode === 'none') return <Text style={styles.hint}>{t('settings.languageNeedsBuild')}</Text>;
+  const pick = (language: Language | null) => {
+    if (language === chosen) return;
+    if (chooseLanguage(language)) rerender((n) => n + 1);
+  };
+  const option = (key: string, label: string, language: Language | null) => (
+    <Pressable
+      key={key}
+      style={styles.option}
+      onPress={() => pick(language)}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: chosen === language }}
+    >
+      <Radio selected={chosen === language} />
+      <Text style={styles.optionText}>{label}</Text>
+    </Pressable>
+  );
+  return (
+    <>
+      {option('system', t('settings.languageSystem'), null)}
+      {LANGUAGES.map((language) => option(language, LANGUAGE_INFO[language].name, language))}
+      <Text style={styles.hint}>{t(mode === 'system' ? 'settings.languageHintAndroid' : 'settings.languageHintOld')}</Text>
+    </>
   );
 }
 

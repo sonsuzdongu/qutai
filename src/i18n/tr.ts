@@ -2131,4 +2131,14 @@ export const tr: Record<keyof typeof en, string> = {
   'siteRules.importNone': "Bu dosyada Qutai’nin kullanabileceği bir kural yok.",
   'siteRules.importedTitle': "Kurallar içe aktarıldı",
   'siteRules.importedBody': "Eklenen: {added}. Atlanan (zaten var, geçersiz ya da çok geniş): {skipped}.",
+  // Arayüz dili (Ayarlar › Dil) ve diğer dillerde yasal belgeler.
+  'settings.language': 'Dil',
+  'settings.languageSystem': 'Sistem varsayılanı',
+  'settings.languageSummarySystem': 'Sistem varsayılanı ({language})',
+  'settings.languageHintAndroid': "Bu, telefonunuzun ayarlarındaki Qutai dili ile aynı ayardır (Uygulamalar › Qutai › Dil): birinde yaptığınız değişiklik ikisine de, başlatıcı kısayollarına ve widget'a da uygulanır.",
+  'settings.languageHintOld': "Qutai'nin ekranları, bildirimleri, başlatıcı kısayolları ve widget'ı bu dili kullanır. Telefonun kendi ekranları (örneğin izin istekleri) telefonun dilinde kalır.",
+  'settings.languageHintIos': "iOS, Qutai'nin dilini Ayarlar uygulamasında tutar; orada izin isteklerine ve Ana Ekran hızlı işlemlerine de uygulanır. Orada değiştirdiğinizde Qutai yeniden başlar.",
+  'settings.languageOpenIos': 'iOS Ayarlarında değiştir',
+  'settings.languageNeedsBuild': "Dil seçmek için Qutai'nin daha yeni bir sürümü gerekiyor. O zamana kadar Qutai telefonunuzun dilini kullanır.",
+  'legal.englishOnly': 'Bu belge İngilizce ve Türkçe olarak mevcuttur. Aşağıda İngilizce sürümü gösteriliyor.',
 };
