@@ -209,4 +209,17 @@ Uygulama kademe gönderdikten sonra (yeni APK gerekir):
 
 Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.
 
+- [ ] Ana ekran kısayolları (uygulama simgesine uzun basınca: New tab, Incognito tab, Ask Qutai, Scan QR code) uygulama dili Türkçe yapılsa da İngilizce kalıyor. (16 Kas, Honor / Android 15; düzeltme için "düzelt" bekleniyor)
+- [ ] İstek: "Qutai bu işlemi yapmak istiyor" onay penceresinde, işlem türüne göre "bir daha sorma" seçeneği olsun (örnek: bildirim kurma için "Bildirimler için bir daha sorma" kutusu veya düğmesi). (16 Kas; "düzelt" bekleniyor)
+- [ ] Gözlem (aynı ekran görüntüsü): "10 saniye sonrasına bildirim" istenince asistan saat sordu (13:36 / 13:40) ve bildirimi 3 dakika sonrasına kurdu; saniye hassasiyeti yok gibi. Ayrıca görev sürerken giriş kutusunda "Bir görev verin…" yazıyor, "Qutai çalışıyor…" değil. İkisi de doğrulanmadı.
+- [ ] İstek: kurulumdaki izinler adımında Mikrofon satırı listenin üstüne alınsın. (16 Kas; "düzelt" bekleniyor)
+- Cila listesi (16 Kas; öneriler, "düzelt" bekleniyor):
+  - [ ] Onay penceresi sadeleşsin: göreli zaman ("3 dakika sonra (13:36)"), saat dilimi satırı yalnızca telefonunkinden farklıysa.
+  - [ ] Seçilen cevap seçenekleri seçimden sonra kapansın (13:36 / 13:40 ikisi de ekranda kalıyor).
+  - [ ] Uzun görevlerde adım özeti; uygulama arka plandayken "görev bitti" bildirimi.
+  - [ ] Kredi azalınca uyarı, bitince doğrudan satın alma ekranı.
+  - [ ] Uygulama dili sisteme bildirilsin (kısayollar, widget, paylaşım menüsü Türkçe olsun).
+  - [ ] Dokunma titreşimi, boş ekran metinleri, yüklenme iskeletleri.
+  - [ ] Erişilebilirlik: büyük yazı boyutunda taşmalar, TalkBack etiketleri, kontrast.
+  - [ ] Yatay ekran ve tablet düzeni.
 - …
