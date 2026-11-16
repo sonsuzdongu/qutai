@@ -112,10 +112,17 @@ export function createCreditsClient(options: CreditsClientOptions) {
     }
   }
 
-  /** `GET /config` (no account needed). */
-  async function config(): Promise<PublicConfig> {
+  /**
+   * `GET /config` (no account needed). The server lets it be cached a minute, and the platform's HTTP cache honours
+   * that: `fresh` (the server said a tier is unknown or moved) asks past any cached copy.
+   */
+  async function config(fresh = false): Promise<PublicConfig> {
     return withTimeout(CONFIG_TIMEOUT_MS, async (signal) => {
-      const res = await fetchImpl(`${base}/config`, { headers: { Accept: 'application/json' }, signal });
+      const res = await fetchImpl(`${base}/config`, {
+        headers: { Accept: 'application/json', ...(fresh ? { 'Cache-Control': 'no-cache' } : {}) },
+        ...(fresh ? { cache: 'no-store' as const } : {}),
+        signal,
+      });
       if (!res.ok) throw await errorFrom(res);
       return parseConfig(await readJson(res));
     });

@@ -510,3 +510,22 @@ test('stopping during a continuation behaves like any stop: aborted, nothing mor
   );
   assert.equal(server.relayRequests().length, 2);
 });
+
+test('a forced /config refresh asks past the HTTP cache (the server allows a minute); ordinary reads don’t', async () => {
+  const { createCreditsStore } = await import('../../src/credits/store.ts');
+  const server = fakeServer({ config: TIERED });
+  const client = server.client();
+  await client.config();
+  await client.config(true);
+  const [plain, fresh] = server.requests.filter((r) => r.path === '/config');
+  assert.equal(plain.headers['cache-control'], undefined);
+  assert.equal(fresh.headers['cache-control'], 'no-cache');
+  const asked: boolean[] = [];
+  const store = createCreditsStore({
+    client: () => null,
+    publicClient: () => ({ ...client, config: (f?: boolean) => (asked.push(!!f), client.config(f)) }),
+  });
+  await store.config();
+  await store.config(0);
+  assert.deepEqual(asked, [false, true]);
+});

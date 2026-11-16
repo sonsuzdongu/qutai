@@ -46,7 +46,8 @@ export function createCreditsStore(deps: { client: () => CreditsClient | null; p
     if (!loadingConfig) {
       const client = deps.publicClient();
       if (!client) throw new RelayError('unavailable', 0);
-      const run = client.config();
+      // Asked for no older than 0 (a refresh the server's answer called for): past the HTTP cache too.
+      const run = client.config(maxAgeMs === 0);
       loadingConfig = run;
       run.then(
         (config) => set({ config, configAt: now(), configError: null }),
