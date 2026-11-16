@@ -1,6 +1,6 @@
 # Bölüm 1: Sizi tanır
 
-**Fikir:** Qutai'ye bir kez söylersiniz, hatırlar. Ertesi gün yemek siparişi verirken glutensiz yemek arar, siz tekrar
+**Fikir:** Qutai'a bir kez söylersiniz, hatırlar. Ertesi gün yemek siparişi verirken glutensiz yemek arar, siz tekrar
 söylemeden. Bilgi telefonunuzda durur, bir siteye yazılmadan önce size sorulur.
 
 **Süre:** ~37 sn (ana kayıt), 15 sn (kısa kesit) · **Biçim:** 9:16 ana, 16:9 site versiyonu ·

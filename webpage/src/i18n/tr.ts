@@ -60,7 +60,7 @@ export const tr: Messages = {
 
   'start.kicker': 'Başlarken',
   'start.title': 'Yayımlandığında üç adım.',
-  'start.step1.title': 'Qutai’yi kurun',
+  'start.step1.title': 'Qutai’ı kurun',
   'start.step1.body': 'Henüz mağazalarda değil: bugün depodan derleyin ya da projeyi GitHub’da takip edin.',
   'start.step2.title': 'AI anahtarınızı ekleyin',
   'start.step2.body': 'Anthropic, OpenAI, Gemini, OpenRouter ya da kendi sunucunuz. İsteğe bağlı, ücretli bir Qutai hizmeti kodda var ama henüz sunulmuyor.',
@@ -68,7 +68,7 @@ export const tr: Messages = {
   'start.step3.body': 'Adres çubuğundaki Q’ya dokunun ve ne istediğinizi kendi sözlerinizle söyleyin.',
 
   'mock.label':
-    'Qutai uygulamasının bir çizimi: asistan paneli açık bir mağaza sayfası. Kullanıcı Qutai’den bu ayakkabıyı diğer sekmedekiyle karşılaştırıp ucuz olanı sepete eklemesini istiyor. Qutai iki sekmeyi okuyup yanıt veriyor; bir pencere Sepete ekle tıklaması için kullanıcıdan izin istiyor.',
+    'Qutai uygulamasının bir çizimi: asistan paneli açık bir mağaza sayfası. Kullanıcı Qutai’dan bu ayakkabıyı diğer sekmedekiyle karşılaştırıp ucuz olanı sepete eklemesini istiyor. Qutai iki sekmeyi okuyup yanıt veriyor; bir pencere Sepete ekle tıklaması için kullanıcıdan izin istiyor.',
   'mock.caption': 'Çizim; uygulamanın arayüzünden ve metinlerinden sadeleştirildi.',
   'mock.url': 'magaza.example/trail-runner',
   'mock.pageKicker': 'Koşu',
@@ -86,16 +86,16 @@ export const tr: Messages = {
   'mock.confirmAlways': 'magaza.example için hep izin ver',
   'mock.deny': 'Reddet',
   'mock.allow': 'İzin ver',
-  'mock.placeholder': 'Qutai’ye bir görev verin…',
+  'mock.placeholder': 'Bir görev verin…',
 
   'agent.kicker': 'Asistan',
   'agent.title': 'Sıkıcı kısmı ona bırakın.',
   'agent.lede':
-    'Qutai’nin asistanı sekmelerinizde çalışır: sayfaları okur, dokunur, yazar, sekme açıp karşılaştırır; adım adım. Her adımı anında görürsünüz, üzerinde çalıştığı sayfa hafifçe parlar ve istediğiniz an durdurabilirsiniz; iş bitince adımlar tek satırda toplanır. Üstelik ona anlattıklarınızı hatırlar; her görevde bir öncekinden daha az açıklama yaparsınız.',
+    'Qutai’ın asistanı sekmelerinizde çalışır: sayfaları okur, dokunur, yazar, sekme açıp karşılaştırır; adım adım. Her adımı anında görürsünüz, üzerinde çalıştığı sayfa hafifçe parlar ve istediğiniz an durdurabilirsiniz; iş bitince adımlar tek satırda toplanır. Üstelik ona anlattıklarınızı hatırlar; her görevde bir öncekinden daha az açıklama yaparsınız.',
   'agent.memory.kicker': 'Hafıza, telefonunuzda',
   'agent.memory.title': 'Sizi tanır; öğrendiklerini telefonunuzda saklar.',
   'agent.memory.body':
-    'Adreslerinizi, bedeninizi, beslenme tercihlerinizi ya da bütçenizi Qutai’ye söyleyin veya kurulumda birkaç isteğe bağlı soruyu yanıtlayın. Öğrendiklerini kategorilere ayırır, sonraki görevlerde size yeniden sormadan kullanır ve özel talimatlarınıza her istekte uyar. Kullandıkça daha az anlatmanız gerekir.',
+    'Adreslerinizi, bedeninizi, beslenme tercihlerinizi ya da bütçenizi Qutai’a söyleyin veya kurulumda birkaç isteğe bağlı soruyu yanıtlayın. Öğrendiklerini kategorilere ayırır, sonraki görevlerde size yeniden sormadan kullanır ve özel talimatlarınıza her istekte uyar. Kullandıkça daha az anlatmanız gerekir.',
   'agent.memory.point1': 'Kategorilere ayrılır: kimlik ve iletişim, adresler, alışveriş ve teslimat, seyahat, yemek ve beslenme, bütçe, genel tercihler',
   'agent.memory.point2': 'Telefonda saklanır; Ayarlar’dan görebilir, değiştirebilir, silebilirsiniz; şifreli yedeğinize de girer',
   'agent.memory.point3': 'Yalnızca isteklerinizle birlikte seçtiğiniz AI sağlayıcısına gider ve “Yapay zekâya gönderilenler”de listelenir; kimlik numaraları ve kilitlediğiniz bilgiler yalnızca etiket olarak gider',
@@ -131,7 +131,7 @@ export const tr: Messages = {
   'privacy.kicker': 'Tasarımdan gelen gizlilik',
   'privacy.title': 'Anahtar sizin. Telefon sizin. Karar sizin.',
   'privacy.lede':
-    'Qutai’nin yapay zekâya nasıl ulaşacağını siz seçersiniz. Bugün kendi anahtarınızı kullanır: istekler telefonunuzdan doğrudan sağlayıcınıza gider; arada ne Qutai hesabı ne Qutai sunucusu vardır. Anahtarla uğraşmak istemeyenler için ücretli bir Qutai hizmeti kodda var ama henüz sunulmuyor; sunulduğunda da isteğe bağlı olacak.',
+    'Qutai’ın yapay zekâya nasıl ulaşacağını siz seçersiniz. Bugün kendi anahtarınızı kullanır: istekler telefonunuzdan doğrudan sağlayıcınıza gider; arada ne Qutai hesabı ne Qutai sunucusu vardır. Anahtarla uğraşmak istemeyenler için ücretli bir Qutai hizmeti kodda var ama henüz sunulmuyor; sunulduğunda da isteğe bağlı olacak.',
   'privacy.diagramLabel':
     'Yapay zekâya ulaşmanın iki yolunu gösteren şema. Şimdi, kendi anahtarınızla: telefonunuz istekleri doğrudan seçtiğiniz sağlayıcıya gönderir, arada Qutai sunucusu yoktur. Kodda var ama henüz sunulmuyor, isteğe bağlı: ücretli Qutai hizmeti; istekler telefonunuzdan Qutai sunucusu üzerinden yapay zekâya gider.',
   'privacy.routeOwn': 'Kendi anahtarınızla',

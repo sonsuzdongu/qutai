@@ -216,7 +216,7 @@ export const QUTAI: Product = {
       value: t('Free, open source', 'Ücretsiz, açık kaynak'),
       note: t(
         'You pay your AI provider for what you use; getting the AI from Qutai as a paid service is in the code but not offered yet.',
-        'Kullandığınız kadarını AI sağlayıcınıza ödersiniz; yapay zekâyı ücretli bir hizmet olarak Qutai’den almak kodda var ama henüz sunulmuyor.',
+        'Kullandığınız kadarını AI sağlayıcınıza ödersiniz; yapay zekâyı ücretli bir hizmet olarak Qutai’dan almak kodda var ama henüz sunulmuyor.',
       ),
       source: src('README.md'),
     },

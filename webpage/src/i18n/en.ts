@@ -85,7 +85,7 @@ export const en = {
   'mock.confirmAlways': 'Always allow on shop.example', // app: confirm.always
   'mock.deny': 'Deny', // app: confirm.deny
   'mock.allow': 'Allow', // app: confirm.allow
-  'mock.placeholder': 'Give Qutai a task…', // app: chat.placeholder
+  'mock.placeholder': 'Give a task…', // app: chat.placeholder
 
   'agent.kicker': 'The assistant',
   'agent.title': 'Hand it the tedious part.',

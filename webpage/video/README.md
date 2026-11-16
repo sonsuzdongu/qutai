@@ -10,7 +10,7 @@ bütün gibi durur. Sitede her bölüm kendi özelliğinin yanında oynar; sosya
 | 1. Açılış kartı | 2 sn | Bölümün minyatüründen bir kesit (yavaş yakınlaşma) ve tek cümlelik başlık: "Sizi tanır." |
 | 2. Görev | 10–20 sn | Uygulamanın gerçek ekran kaydı: kullanıcı bir şey ister, asistan adım adım yapar |
 | 3. Vurgu anı | 2–3 sn | Özelliğin kendisini gösteren tek an yakınlaştırılır, üstünde bir rozet: "Hatırlandı" |
-| 4. Kontrol anı | 2–4 sn | Qutai'nin önce sorduğu ya da durduğu an (onay, kişisel bilgi sorusu, ödemede durma) |
+| 4. Kontrol anı | 2–4 sn | Qutai'ın önce sorduğu ya da durduğu an (onay, kişisel bilgi sorusu, ödemede durma) |
 | 5. Kapanış kartı | 3 sn | Q logosu, bölümün sloganı, "Açık kaynak · Yakında App Store ve Google Play'de" |
 
 Toplam 25–35 sn. Her bölümden 15 sn'lik kısa bir kesit de çıkar (açılış, vurgu anı, kapanış).
