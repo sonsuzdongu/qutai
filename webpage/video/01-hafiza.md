@@ -77,9 +77,12 @@ Bütün bölümlerde aynı müzik, değişen tek şey motifin varyasyonu.
   (İngilizce için `?lang=en`). Simülatör bilgisayardaki `localhost`'a doğrudan ulaşır. Son filmde adres çubuğunda
   `localhost` görünmesin diye, kayıttan önce siteyi sitenin alan adı altında (örneğin `lokanta.<alan-adı>`)
   yayımlamak daha temiz olur.
-- **Seslendirme:** Türkçe hazır (`audio/01/tr-1…5.mp3`); İngilizce'den yalnızca 1. satır üretildi. ElevenLabs kotası
-  doldu; kalan satırlar `python3 make_voice_01.py en-2 en-3 en-4 en-5` ile kota yenilenince üretilir.
-- **Müzik:** Aynı nedenle henüz üretilmedi.
+- **Seslendirme:** Türkçe ve İngilizce hazır (`audio/01/tr-1…5.mp3`, `en-1…5.mp3`, ses: "Ayça D."), her satır
+  sahnesine sığıyor. ElevenLabs'in yazıya çevirisiyle kontrol edildi: bütün kelimeler doğru, yalnızca "Qutai"nin
+  okunuşu belirsiz ("Kutay" gibi duyuluyor; Türkçe 5. satırda tek başınayken bozuk duyulabilir).
+- **Müzik:** `audio/01/music.mp3` (37 sn, sözsüz). Yeniden üretmek için `python3 make_music_01.py`.
+- **Ses önizlemesi:** `audio/01/preview-tr.mp3` ve `preview-en.mp3`. Müziğin üstüne seslendirme satırları
+  storyboard'daki zamanlarda (0:02, 0:09, 0:15, 0:26, 0:33) yerleştirildi; konuşurken müzik kısılıyor.
 
 ## Teslim edilecekler
 
