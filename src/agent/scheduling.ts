@@ -179,30 +179,6 @@ export function planSchedule(
   return { kind: 'notification', title, body, at, ...(givenOffset === null ? {} : { givenOffset }) };
 }
 
-const DELAY_UNITS = [
-  [86_400, 'schedule.unitDays'],
-  [3_600, 'schedule.unitHours'],
-  [60, 'schedule.unitMinutes'],
-  [1, 'schedule.unitSeconds'],
-] as const;
-
-/**
- * A delay in words: the largest unit, and the next one when it isn't zero ("10 s", "1 h 30 min", "2 min"). Smaller
- * remainders are left out; the confirmation also shows the clock time.
- */
-export function delayLabel(seconds: number): string {
-  const first = DELAY_UNITS.findIndex(([size]) => seconds >= size);
-  if (first < 0) return t('schedule.unitSeconds', { count: 0 });
-  const [size, key] = DELAY_UNITS[first];
-  const parts = [t(key, { count: Math.floor(seconds / size) })];
-  const next = DELAY_UNITS[first + 1];
-  if (next) {
-    const count = Math.floor((seconds % size) / next[0]);
-    if (count > 0) parts.push(t(next[1], { count }));
-  }
-  return parts.join(' ');
-}
-
 function alertLine(minutes: number): string {
   if (minutes === 0) return t('schedule.alertAtStart');
   if (minutes % 1440 === 0) return t('schedule.alertDays', { count: minutes / 1440 });

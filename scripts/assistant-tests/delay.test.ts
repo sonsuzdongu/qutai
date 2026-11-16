@@ -3,10 +3,9 @@
 // counted from the user's confirmation, next to the absolute time (src/agent/scheduling.ts).
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { delayLabel, MAX_DELAY_SECONDS, parseDelaySeconds, planSchedule } from '../../src/agent/scheduling.ts';
+import { MAX_DELAY_SECONDS, parseDelaySeconds, planSchedule } from '../../src/agent/scheduling.ts';
 import { TOOLS } from '../../src/agent/tools.ts';
 import { SYSTEM_PROMPT } from '../../src/agent/systemPrompt.ts';
-import { setLanguage } from '../../src/i18n/index.ts';
 
 const NOW = new Date(2026, 10, 16, 13, 35, 0).getTime();
 const base = { title: 'Ping', body: 'Time is up' };
@@ -59,18 +58,4 @@ test('the tool and the prompt tell the model to use the delay for relative times
   assert.match(tool.description, /relative time.*delay_seconds/s);
   assert.match(tool.description, /never ask for a clock time/);
   assert.match(SYSTEM_PROMPT, /delay_seconds straight away/);
-});
-
-test('the delay in the confirmation, in both languages', () => {
-  setLanguage('en');
-  assert.equal(delayLabel(10), '10 s');
-  assert.equal(delayLabel(60), '1 min');
-  assert.equal(delayLabel(90), '1 min 30 s');
-  assert.equal(delayLabel(5400), '1 h 30 min');
-  assert.equal(delayLabel(3600 + 5), '1 h');
-  assert.equal(delayLabel(2 * 86400 + 3 * 3600), '2 day(s) 3 h');
-  setLanguage('tr');
-  assert.equal(delayLabel(10), '10 sn');
-  assert.equal(delayLabel(5400), '1 sa 30 dk');
-  setLanguage('en');
 });
