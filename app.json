@@ -136,11 +136,27 @@
           "supportedLocales": {
             "ios": [
               "en",
-              "tr"
+              "tr",
+              "de",
+              "es",
+              "pt-BR",
+              "fr",
+              "ja",
+              "ko",
+              "ru",
+              "id"
             ],
             "android": [
               "en",
-              "tr"
+              "tr",
+              "de",
+              "es",
+              "pt-BR",
+              "fr",
+              "ja",
+              "ko",
+              "ru",
+              "id"
             ]
           }
         }
@@ -226,7 +242,15 @@
     ],
     "locales": {
       "tr": "./locales/tr.json",
-      "en": "./locales/en.json"
+      "en": "./locales/en.json",
+      "de": "./locales/de.json",
+      "es": "./locales/es.json",
+      "pt-BR": "./locales/pt-BR.json",
+      "fr": "./locales/fr.json",
+      "ja": "./locales/ja.json",
+      "ko": "./locales/ko.json",
+      "ru": "./locales/ru.json",
+      "id": "./locales/id.json"
     },
     "scheme": "qutai"
   }
