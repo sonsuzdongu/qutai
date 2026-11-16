@@ -528,6 +528,91 @@ the test sign-in and everything after it). Both use Node's built-in test runner;
   Console › App integrity show them); an **iOS** client with bundle id `com.sonsuzdongu.qutai` (→
   `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` and also `GOOGLE_CLIENT_IDS`).
 
+### Qutai Credits (pro mode)
+
+With pro mode and a server address, Settings › Assistant offers a sixth provider, **Qutai Credits**: no API key; the
+assistant's requests go through Qutai's relay (`POST /relay`, `backend/README.md` › Relay) and are paid with the
+signed-in account's credits. Without pro mode nothing of it exists: the provider isn't listed and the app never
+contacts the server for it.
+
+| Piece | Where |
+|---|---|
+| Client: `GET /config`, `GET /credits`, `POST /relay` (streamed and not), the server's `qutai.settlement` / `qutai.error` events kept apart from the provider's, refusals mapped to messages, short waits (`task_active`, `rate_limited`, a busy provider) waited out, one token renewal on 401 | `src/credits/client.ts`, `errors.ts`, `types.ts` (the server's shapes, copied like the account's) |
+| The provider: the same adapters as own-key mode build the request and read the answer; only the wire differs (`src/ai/wire.ts`): the relay wire sends the conversation from the adapter's body, never its headers, so no own key reaches Qutai's server | `src/credits/provider.ts` |
+| The agent profile (system prompt parts and tools, as the server builds them) and its SHA-256 | `src/credits/profile.ts`, `agent-profile/profile.json`, `src/credits/agentProfileId.ts` |
+| Configuration cache (a minute; an hour-old copy when the server can't be reached), balance, ledger entries | `src/credits/store.ts`, `index.ts` |
+| Disclosure before first use (an explicit choice, remembered per phone), settings, balance and history | `src/components/CreditsDisclosure.ts`, `CreditsFields.tsx`, `CreditsScreen.tsx` |
+
+What the user sees: picking Qutai Credits first shows what changes about where data goes (conversation, page
+content, attachments, memory and custom instructions pass through Qutai's server, which doesn't store or log them)
+with "Use Qutai Credits" / "Not now". The provider's page shows the balance, the models the server offers
+(`GET /config`) with their credit prices, and "Get credits", which says buying isn't in the app yet. Under each
+answer: what the server charged ("0.42 credits · 1.5k tokens"), never a dollar figure; the same per request in
+"What was sent to the AI", whose hint then says requests pass through Qutai's server. The balance is under the
+panel's title while Qutai Credits is in use, and in Settings › Account › Qutai Credits with the ledger's latest
+entries. Each refusal (signed out, not enough credits, a task running elsewhere, rate limited, model no longer
+offered, too large, step limit, suspended, maintenance, unavailable, update needed, server unreachable) has its own
+message; when the first request of a message is refused before anything reached the AI, the message goes back into
+the input.
+
+**Rules from the server that change behaviour in credit mode:** the step limit is the server's
+(`limits.maxSteps` / `maxResearchSteps`; it adds the last-step note itself); the memory section is shortened to
+`limits.maxMemoryChars` (older memories left out first, as when they don't fit the usual budget) and attached images
+to `limits.maxImages` minus one screenshot; web search only for models the server allows it for; an Anthropic web
+search the provider pauses (`pause_turn`) ends the task with a note to send "continue", because the relay refuses a
+request that ends with the model's own turn.
+
+#### Agent profile
+
+The relay builds the system prompt and tool list from a registered **agent profile**, so the app's prompt and tools
+must be exported whenever they change:
+
+```bash
+npm run profile:export   # writes agent-profile/profile.json and src/credits/agentProfileId.ts, prints the id
+npm run profile:check    # fails when the prompt or tools changed without a new export (also run by npm run test:credits)
+```
+
+Commit both files. Register the profile on every server the release talks to **before** the release ships (an
+unknown profile answers "update Qutai"); keep the profiles of every app version still allowed by `min_app_version`:
+
+```bash
+cd backend
+node scripts/agent-profile-sql.mjs ../agent-profile/profile.json <app version> > /tmp/profile.sql   # prints the id
+npx wrangler d1 execute DB -c apps/api/wrangler.jsonc --env dev --local --persist-to .wrangler/state/api --file /tmp/profile.sql   # local
+npx wrangler d1 execute DB -c apps/api/wrangler.jsonc --env dev --remote --file /tmp/profile.sql   # deployed dev (owner)
+npx wrangler d1 execute DB -c apps/api/wrangler.jsonc --env production --remote --file /tmp/profile.sql   # production (owner)
+```
+
+#### Trying it end to end (local server, test sign-in, a phone)
+
+Follows the test sign-in steps above (server on port 8000 behind a tunnel, `https://api.example.test` standing for
+its address).
+
+1. Server, once (from `backend/`): `npm install && npm run migrate:local && npm run seed:local` (the seed sets
+   example `allowed_models`, `relay_rules`, `pricing`, `credit_limits` and the prices), then register the profile
+   locally (above). Put **your own** provider keys in `apps/api/.dev.vars` (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
+   `GEMINI_API_KEY`; never committed); without them every relay request answers "temporarily unavailable".
+2. Credits: the admin panel normally keeps its own local state, which the API on port 8000 doesn't see. Run the
+   panel on the **API's** state instead, grant, then stop it (two processes can't share the state at once):
+
+   ```bash
+   cd backend/apps/admin && npx vite build
+   npx wrangler dev -c wrangler.jsonc -c ../api/wrangler.jsonc --env dev --port 8791 --infer-origin-from-routes=false --persist-to ../../.wrangler/state/api
+   ```
+
+   With `ADMIN_DEV_BYPASS=true` in `apps/admin/.dev.vars`, open http://localhost:8791 › Users › the test user (it
+   exists once the phone has signed in as it) › Grant credits. Then stop it and start the API again:
+   `API_PORT=8000 npm run dev -w @qutai/api`. A request reserves its worst case (the model's whole output limit)
+   before it runs, so grant comfortably more than one answer costs: with the seed's example pricing one
+   GPT-5.6 Terra request held about 57 credits in the local test, a Claude Sonnet 5.5 one about 28, a Gemini 3.8 Flash one about 18.
+3. App: the test sign-in build from above (`EXPO_PUBLIC_PRO_MODE=on`, `EXPO_PUBLIC_QUTAI_API_URL`,
+   `EXPO_PUBLIC_DEV_LOGIN=on`, `EXPO_PUBLIC_DEV_LOGIN_SECRET`); no native change is needed for credits.
+4. Phone: Settings › Account › Test sign-in › `test-1`; Settings › Account › Qutai Credits shows the balance;
+   Settings › Assistant › Qutai › "Use Qutai Credits" › a model › Save; ask something in the panel.
+
+Tests: `npm run test:credits` (profile check, client, provider with the real adapters, against a fake server) and,
+with a local server, `npm run test:credits:server` (`scripts/credits-tests/README.md`).
+
 ### Build it yourself
 
 You need Node.js (LTS) and npm, and Android Studio with the Android SDK or Xcode on a Mac (or an Expo account to

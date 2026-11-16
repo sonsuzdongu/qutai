@@ -80,10 +80,15 @@ App ──(session token)──► Qutai server ──(our key)──► Anthrop
 - [ ] Separate provider keys per environment (test, production) and a key rotation procedure
 
 #### 2. App
-- [ ] Credits need an account (see Accounts and OAuth sign-in above)
-- [ ] "Qutai Credits" provider as a fourth option in Settings (an adapter that sends requests to the server)
-- [ ] Remaining credits indicator in the panel; a clear message and a prompt to buy when credits run out
-- [ ] A screen that clearly tells the user that in credit mode page content goes through our server
+- [x] Credits need an account (see Accounts and OAuth sign-in above)
+- [x] "Qutai Credits" provider in Settings: the relay wire for the existing adapters, the agent profile with its check, `GET /config` models and limits, every refusal with its own message (README › Qutai Credits)
+- [x] Balance under the panel's title and in Settings › Account › Qutai Credits with the ledger's latest entries; the server's charge under each answer and per request in "What was sent to the AI"
+- [x] A screen that clearly tells the user that in credit mode page content goes through our server (before first use, with a choice; repeated in the provider's settings and the sent log's hint)
+- [ ] Purchase screen ("Get credits" says it isn't available yet): RevenueCat with our user id, packs from `GET /config`, `POST /purchases/verify` (backend DESIGN › Purchases (step 5))
+- [ ] Try on a phone through a tunnel with real provider keys (only a fake provider was used locally): streams of all three providers, a long Anthropic search (`pause_turn`), a cut stream, stopping mid-answer and the balance after it
+- [ ] Server change to ask for: accept a final assistant turn when it is a paused server-tool turn (Anthropic `pause_turn`), so long searches can continue in credit mode as with an own key (now the task ends with a note)
+- [ ] Owner: `relay_rules.maxMemoryChars` at least about 10 000 and `maxImages` at least 9 to match own-key mode (the app shortens the memory section and older images to fit smaller values); the reservation holds the whole output limit, so small balances refuse requests that would cost far less
+- [ ] Release step: `npm run profile:export` after any prompt or tool change and register the profile on the servers before the build ships
 
 #### 3. Purchases
 - [ ] Credit packs as consumable in-app products (App Store IAP, Google Play Billing)
@@ -97,7 +102,7 @@ App ──(session token)──► Qutai server ──(our key)──► Anthrop
 - [ ] Monthly spending limit and alerts on provider accounts
 
 #### 5. Legal
-- [ ] Privacy policy (KVKK / GDPR): in credit mode the content of visited pages, including private tabs, goes through the server
+- [ ] Privacy policy (KVKK / GDPR): in credit mode the content of visited pages, including private tabs, goes through the server. Built (Qutai Credits): the conversation, page text and screenshots, attachments, the memory section and custom instructions pass through the relay to Anthropic, OpenAI or Google under Qutai's account; the server keeps the account, the ledger and per-request counts (model, tokens, cost), not the content. The in-app disclosure (`credits.disclosure.*`) and hints (`credits.fields.route`, `sentLog.hintCredits`, `sentLog.viaQutai`, `credits.webSearchHint`) say so; the documents and the texts below still need the owner's rewrite
 - [ ] Terms of use
 - [ ] Check the commercial terms of use of Anthropic, OpenAI and Google; we are responsible for end-user usage
 - [ ] Before the server goes live, rewrite every "no servers of ours" promise. It is true today, but not once requests can go through our server. Update the onboarding together with the privacy policy and terms (bump `LEGAL_VERSION` so everyone accepts again):
@@ -319,7 +324,7 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
     (`Browser.joinGroupChat` / `settleGroupChat`)
 - [x] Approximate cost of each answer in own-key mode: real usage from every provider path, a dated price table, "≈ $0.012 · 3.4k tokens" under answers and in "What was sent to the AI" with a breakdown, a day total in the log, the conversation's total in the breakdown, Settings › Assistant › Show approximate cost (README › Approximate cost)
   - [ ] Check the price table against the pricing pages when a provider changes prices, and at least monthly: `src/ai/prices.ts` (how: README › Approximate cost). Announced: Gemini 4 Carbon doubles on 1 Dec 2026, Gemini 3.8 Flash on 1 Jan 2027 (already in the table)
-  - [ ] Pro mode: show the server's charge per answer from its settlement event (`source: 'server'` on the reply's `cost`; the seam is in `src/ai/providers.ts` and `src/ai/cost.ts`)
+  - [x] Pro mode: the server's charge per answer from its settlement event (credits, `source: 'server'`; README › Qutai Credits)
   - [ ] Maybe: a running total for the conversation in the panel's header and a monthly total in Settings (the numbers are already stored per answer and per request)
   - [ ] Decide whether Gemini's `total_tool_use_tokens` are billed at the input price (counted so now; the docs say they are billed, not at which price) and whether `total_cached_tokens` is part of `total_input_tokens` (taken so now: "the cached part of the prompt")
 - [x] "Look at the source code": the assistant tries to open `view-source:` URLs, which the WebView can't show. Read the source from the DOM instead (e.g. a `read_source` tool returning `document.documentElement.outerHTML`, split into chunks like `read_page`; or scripts and styles on request), and make `navigate` refuse `view-source:` with a hint to use it. Mention it in the system prompt
