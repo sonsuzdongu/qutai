@@ -1889,6 +1889,8 @@ export const en = {
     'Qutai can search the web with the provider’s built-in search and show the sources. With Qutai Credits each search is charged in credits, on top of the tokens, where the model allows searching.',
   'credits.messageKept': 'Your message wasn’t sent: it’s back in the input.',
   'credits.pauseStopped': 'The AI paused a long web search, and it couldn’t be resumed automatically. Send “continue” to go on.',
+  'credits.low': 'Your Qutai Credits are running low.',
+  'credits.lowDismiss': 'Hide the low credits note',
   'credits.fields.signIn': 'Sign in under Settings › Account to use Qutai Credits. They need no API key: requests are paid with your account’s credits.',
   'credits.fields.route': 'With Qutai Credits, your messages and the page content the assistant reads pass through Qutai’s server on their way to the AI provider. They aren’t stored or logged there.',
   'credits.fields.review': 'Read how Qutai Credits handle your data',

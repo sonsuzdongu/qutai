@@ -49,6 +49,7 @@ import { creditsLabel } from './src/components/AnswerCost';
 import { nothingSent, RelayError } from './src/credits/errors';
 import { limitsFor, offeredModels } from './src/credits/rules';
 import { resolveTier, tierName, tierTarget, usesTiers } from './src/credits/tiers';
+import { dismissLowBalance, LOW_BALANCE_START, lowBalanceThreshold, nextLowBalance } from './src/credits/lowBalance';
 import type { PublicConfig, Tier } from './src/credits/types';
 import { accountSession, useAccountState } from './src/account';
 import { lostQutaiAccount } from './src/credits/gate';
@@ -603,6 +604,19 @@ function BrowserApp({
   useEffect(() => {
     refreshCredits();
   }, []);
+  // The low-credit hint (Qutai Credits only): once when the balance drops below a few steps' worth on the panel
+  // conversation's tier, again only after it has risen above that (credits/lowBalance.ts).
+  const panelChoice = conversation.model && isConfigured(settings, conversation.model.provider) ? conversation.model : null;
+  const panelOnCredits = (panelChoice?.provider ?? settings.provider) === 'qutai';
+  const panelTier =
+    panelOnCredits && usesTiers(creditsState.config)
+      ? resolveTier(creditsState.config, panelChoice?.provider === 'qutai' ? panelChoice.model : settings.models.qutai, modelTag)
+      : null;
+  const lowThreshold = lowBalanceThreshold(creditsState.config, panelTier);
+  const [lowBalance, setLowBalance] = useState(LOW_BALANCE_START);
+  useEffect(() => {
+    setLowBalance((state) => nextLowBalance(state, creditsState.balance, lowThreshold));
+  }, [creditsState.balance, lowThreshold]);
   // A purchase the server hadn't credited yet (app closed, connection lost) is reported again at start and after
   // signing in; and losing the account while Qutai Credits is in use is said once, with the ways on.
   const accountState = useAccountState();
@@ -2289,6 +2303,17 @@ function BrowserApp({
             }
             modelChosen={!!conversation.model && isConfigured(settings, conversation.model.provider)}
             onModelPress={() => setModelSheetFor(conversation)}
+            lowCredits={
+              lowBalance.visible && panelOnCredits
+                ? {
+                    onBuy: () => {
+                      setLowBalance(dismissLowBalance);
+                      openBuyCredits();
+                    },
+                    onDismiss: () => setLowBalance(dismissLowBalance),
+                  }
+                : null
+            }
             items={conversation.items}
             running={conversation.running}
             busyElsewhere={running && !conversation.running}

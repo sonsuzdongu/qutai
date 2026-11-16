@@ -180,6 +180,8 @@ type Props = {
   onOpenSettings: () => void;
   /** An error's way out (Qutai Credits: buy credits, sign in or choose another provider). */
   onItemAction?: (action: ChatItemAction) => void;
+  /** Qutai Credits: the balance dropped below a few steps' worth (credits/lowBalance.ts); null when not shown. */
+  lowCredits?: { onBuy: () => void; onDismiss: () => void } | null;
   /** Opens "What was sent to the AI" for this conversation. */
   onShowSent: () => void;
   /** Show the approximate cost under answers (Settings › Assistant). */
@@ -259,6 +261,7 @@ export function AssistantPanel({
   onNewChat,
   onOpenSettings,
   onItemAction,
+  lowCredits,
   onShowSent,
   showCost,
   onMessageAction,
@@ -652,6 +655,27 @@ export function AssistantPanel({
                 })}
               </ScrollView>
 
+              {lowCredits && (
+                <View style={[styles.busy, d?.busy, styles.lowCredits]}>
+                  <Icon name="wallet" size={16} color={palette.textSecondary} />
+                  <Text style={styles.busyText}>{t('credits.low')}</Text>
+                  <Pressable
+                    onPress={leavePanel(lowCredits.onBuy)}
+                    style={styles.lowCreditsAction}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.busyAction}>{t('buy.open')}</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={lowCredits.onDismiss}
+                    style={styles.lowCreditsClose}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('credits.lowDismiss')}
+                  >
+                    <Icon name="close" size={14} color={palette.textSecondary} />
+                  </Pressable>
+                </View>
+              )}
               {busyElsewhere && (
                 <Pressable onPress={onShowRunningTab} style={[styles.busy, d?.busy]} accessibilityRole="button">
                   <Text style={styles.busyText}>{t('chat.busyElsewhere')}</Text>
@@ -1970,6 +1994,10 @@ const useStyles = makeStyles((c) => ({
   },
   busyText: { flex: 1, fontSize: 13, color: c.text },
   busyAction: { fontSize: 13, fontWeight: '700', color: c.tintText },
+  // The buttons give the row its height; each keeps a 44 pt target.
+  lowCredits: { paddingVertical: 0, paddingRight: 0 },
+  lowCreditsAction: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
+  lowCreditsClose: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   chips: { flexGrow: 0 },
   // Room under the chips too, so they don't sit on the message row's top line.
   chipsContent: { paddingHorizontal: 8, paddingTop: 8, paddingBottom: 8, gap: 6 },

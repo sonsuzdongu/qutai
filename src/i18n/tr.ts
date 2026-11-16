@@ -1897,6 +1897,8 @@ export const tr: Record<keyof typeof en, string> = {
     'Qutai, sağlayıcının yerleşik aramasıyla web’de arama yapıp kaynakları gösterebilir. Qutai Kredileriyle her arama, modelin aramaya izin verdiği yerlerde, token’lara ek olarak krediden düşülür.',
   'credits.messageKept': 'Mesajınız gönderilmedi: yeniden giriş alanında.',
   'credits.pauseStopped': 'Yapay zekâ uzun bir web aramasını duraklattı ve arama kendiliğinden sürdürülemedi. Devam etmek için “devam” yazıp gönderin.',
+  'credits.low': 'Qutai Credits bakiyeniz azalıyor.',
+  'credits.lowDismiss': 'Düşük kredi notunu gizle',
   'credits.fields.signIn': 'Qutai Kredilerini kullanmak için Ayarlar › Hesap’tan giriş yapın. API anahtarı gerekmez: istekler hesabınızdaki kredilerle ödenir.',
   'credits.fields.route': 'Qutai Kredileriyle mesajlarınız ve asistanın okuduğu sayfa içeriği, yapay zekâ sağlayıcısına giderken Qutai’nin sunucusundan geçer. Orada saklanmaz ve kayda geçirilmez.',
   'credits.fields.review': 'Qutai Kredilerinin verilerinizi nasıl işlediğini okuyun',
