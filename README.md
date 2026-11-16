@@ -831,7 +831,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/backup/` | The encrypted backup file: what goes in it, the encryption, and merging or replacing on import |
 | `src/ai/audit.ts`, `src/storage/sentLog.ts` | "What was sent to the AI": the entry recorded for each request and how long it is kept |
 | `src/ai/usage.ts`, `src/ai/prices.ts`, `src/ai/cost.ts` | Approximate cost: each provider's usage, the dated price table, the cost maths (tests: `npm run test:cost`) |
-| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`, `view_attachment`, `read_pdf`), images (`edit_image`, `upload_image`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, `bookmarks`, `settings` (Qutai's appearance and browsing preferences), and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
+| `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`, `view_attachment`, `read_pdf`), images (`edit_image`, `upload_image`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, `bookmarks`, saved tasks (`list_saved_tasks`, `get_saved_task`, read only), `settings` (Qutai's appearance and browsing preferences), and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |
@@ -934,6 +934,11 @@ the feature, when the user is asked, the config line that declares it and what i
 - **Scheduled tasks are reminders.** There is no server and nothing runs while Qutai is closed, so a saved task's
   schedule (once, daily, weekly) is a local notification at that time; tapping it opens the task ready to run (or runs
   it, if the user chose that for the task). Never without the tap. Reminders are rescheduled each time Qutai opens.
+- **The assistant runs a saved task by name.** "Run the task called X" makes it read the task's text
+  (`get_saved_task`: name without regard to case or Turkish i/İ/ı/I, then without accents, then part of a name; several
+  matches are put to the user) and carry it out as if typed. `list_saved_tasks` gives names and a short preview.
+  Creating, editing, deleting and scheduling tasks stay with the user. Incognito conversations can use them too, as the
+  saved tasks list itself can be used there.
 - **A notification the assistant scheduled leads back to where it was asked.** Tapping it (also when Qutai was closed,
   after the app lock) opens the tab the user asked from; if that tab was closed, the first tab of its group; otherwise
   the first tab, with a short toast saying the page couldn't be found. The notification carries only internal ids (the

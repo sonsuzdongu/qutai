@@ -206,6 +206,8 @@ export const tr: Record<keyof typeof en, string> = {
   'action.readAloudText': 'Sesli okunuyor',
   'action.readAloudPage': 'Sayfa sesli okunuyor',
   'action.listTabs': 'Sekmeler listeleniyor',
+  'action.listSavedTasks': 'Kayıtlı görevlerinize bakılıyor',
+  'action.getSavedTask': 'Kayıtlı görev açılıyor: {name}',
   'action.openTab': 'Yeni sekme: {url}',
   'action.switchTab': 'Sekmeye geçiliyor ({id})',
   'action.closeTabs': 'Sekmeler kapatılıyor',

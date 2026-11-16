@@ -28,6 +28,7 @@ import type { IconLine, IconLines } from '../ui/Icon';
 import { toolIcon } from './toolIcons';
 import { editImageTool, uploadImageTool } from './imageTools';
 import { BOOKMARK_READS, bookmarkNeedsUser, bookmarksTool, describeBookmarkCall } from './bookmarkTool';
+import { getSavedTaskTool, listSavedTasksTool, type SavedTasksAccess } from './savedTaskTool';
 import { describeSettingsCall, settingsTool } from './settingsTool';
 import type { Settings } from '../storage/settings';
 import { sleep } from '../utils/sleep';
@@ -105,6 +106,8 @@ export type ToolContext = {
     /** Bookmarks the tool removed: the screen offers to put them back ("Undo" in a toast). */
     removed(bookmarks: Bookmark[]): void;
   };
+  /** The user's saved tasks (list_saved_tasks, get_saved_task), read only; absent in tests or when unavailable. */
+  savedTasks?: SavedTasksAccess;
   /**
    * Qutai's own settings (settings tool): the current values, and changes applied through the same path as the
    * Settings screen. Only the allowlist in agent/settingsTool.ts is ever changed.
@@ -269,6 +272,10 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.searchHistory', { query: str(input.query) });
     case 'bookmarks':
       return describeBookmarkCall(input);
+    case 'list_saved_tasks':
+      return t('action.listSavedTasks');
+    case 'get_saved_task':
+      return t('action.getSavedTask', { name: cutText(str(input.name).trim() || str(input.id), 60) });
     case 'settings':
       return describeSettingsCall(input);
     case 'draft_email':
@@ -1051,6 +1058,8 @@ function actionTarget(
       'ask_user',
       'search_history',
       'bookmarks',
+      'list_saved_tasks',
+      'get_saved_task',
       'settings',
       'draft_email',
       'offer_call',
@@ -1106,6 +1115,9 @@ const BACKGROUND_TOOLS = new Set([
   'search_history',
   // Only the app's own data; asking calls (deleting a folder, many removals) wait for the user, see backgroundBlocker.
   'bookmarks',
+  // Read the user's saved tasks only.
+  'list_saved_tasks',
+  'get_saved_task',
   // Reading only: a change waits until the user is back, so they see it happen (backgroundBlocker).
   'settings',
   // Only reads a file the user attached.
@@ -1419,6 +1431,8 @@ async function runTool(
   if (name === 'read_tab') return readTab(input, ctx);
   if (name === 'search_history') return searchHistoryTool(input, ctx);
   if (name === 'bookmarks') return bookmarksTool(input, ctx);
+  if (name === 'list_saved_tasks') return listSavedTasksTool(ctx.savedTasks);
+  if (name === 'get_saved_task') return getSavedTaskTool(input, ctx.savedTasks);
   if (name === 'settings') return settingsTool(input, ctx);
   if (name === 'draft_email') return draftEmailTool(input, ctx);
   if (name === 'share') return shareTool(input, ctx);

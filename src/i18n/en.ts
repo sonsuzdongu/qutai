@@ -205,6 +205,8 @@ export const en = {
   'action.readAloudText': 'Reading aloud',
   'action.readAloudPage': 'Reading the page aloud',
   'action.listTabs': 'Listing tabs',
+  'action.listSavedTasks': 'Looking at your saved tasks',
+  'action.getSavedTask': 'Opening the saved task: {name}',
   'action.openTab': 'New tab: {url}',
   'action.switchTab': 'Switching to tab ({id})',
   'action.closeTabs': 'Closing tabs',

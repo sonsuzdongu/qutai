@@ -30,6 +30,8 @@ const TOOL_ICONS: Record<string, IconName> = {
   close_tabs: 'close',
   search_history: 'history',
   bookmarks: 'bookmarks',
+  list_saved_tasks: 'tasks',
+  get_saved_task: 'tasks',
   settings: 'settings',
   open_settings: 'settings',
   draft_email: 'email',

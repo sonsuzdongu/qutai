@@ -1155,6 +1155,17 @@ function BrowserApp({
         log: logAction,
         history: historySearch,
         bookmarks: { db: getDb, removed: offerBookmarkUndo },
+        // Read only: the assistant runs a task the user names; saving, editing and reminders stay with the user.
+        savedTasks: {
+          list: () => getDb().then(listSavedTasks),
+          fill: (prompt) => fillTaskPrompt(prompt, () => formatDate(new Date())),
+          markUsed: (id) => {
+            getDb()
+              .then((db) => markSavedTaskUsed(db, id))
+              .then(refreshRecentTasks)
+              .catch(() => {});
+          },
+        },
         // The same path as the Settings screen; the tool only passes allowlisted fields (agent/settingsTool.ts).
         appSettings: {
           get: () => settingsRef.current,
