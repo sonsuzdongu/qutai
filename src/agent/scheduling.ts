@@ -21,7 +21,11 @@ export type CalendarEventPlan = {
   alertMinutes?: number;
 };
 export type ReminderPlan = { kind: 'reminder'; title: string; due?: Date; notes?: string };
-export type NotificationPlan = { kind: 'notification'; title: string; body: string; at: Date };
+/**
+ * `at`: when it is shown. With `delaySeconds` (the user gave a relative time, "in 10 seconds") it is scheduled that
+ * many seconds after the user confirms, and `at` is only the estimate for the confirmation.
+ */
+export type NotificationPlan = { kind: 'notification'; title: string; body: string; at: Date; delaySeconds?: number };
 export type SchedulePlan = CalendarEventPlan | ReminderPlan | NotificationPlan;
 /** A validated read_calendar request. */
 export type CalendarReadPlan = { start: Date; end: Date; details: boolean };
@@ -32,6 +36,22 @@ export const MAX_READ_EVENTS = 100;
 const MAX_NOTES_CHARS = 500;
 
 const MAX_ALERT_MINUTES = 7 * 24 * 60;
+/** schedule_notification's delay_seconds: 1 second to 30 days. */
+export const MAX_DELAY_SECONDS = 30 * 24 * 60 * 60;
+
+/**
+ * schedule_notification's delay_seconds: a whole number of seconds from 1 to MAX_DELAY_SECONDS. Numeric strings
+ * ("10") are taken; anything else is an error string for the model.
+ */
+export function parseDelaySeconds(raw: unknown): number | string {
+  const value = typeof raw === 'string' && /^\s*\d+\s*$/.test(raw) ? Number(raw) : raw;
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1 || value > MAX_DELAY_SECONDS)
+    return (
+      `delay_seconds must be a whole number of seconds from 1 to ${MAX_DELAY_SECONDS} (30 days), ` +
+      `e.g. 10 for "in 10 seconds" or 5400 for "in an hour and a half". Got ${JSON.stringify(raw ?? null)}.`
+    );
+  return value;
+}
 
 /** The device's IANA time zone, e.g. "Europe/Istanbul". */
 export function deviceTimeZone(): string {
@@ -131,11 +151,46 @@ export function planSchedule(
 
   const body = text(input.body, 500);
   if (!body) return 'A body is required.';
+  const hasTime = input.time !== undefined && input.time !== null && input.time !== '';
+  const hasDelay = input.delay_seconds !== undefined && input.delay_seconds !== null && input.delay_seconds !== '';
+  if (hasTime && hasDelay)
+    return 'Give either time (a clock time) or delay_seconds (a relative time), not both.';
+  if (!hasTime && !hasDelay)
+    return 'Give when: delay_seconds for a relative time ("in 10 minutes" = 600), or time for a clock time.';
+  if (hasDelay) {
+    const delay = parseDelaySeconds(input.delay_seconds);
+    if (typeof delay === 'string') return delay;
+    return { kind: 'notification', title, body, at: new Date(now + delay * 1000), delaySeconds: delay };
+  }
   const at = parseDateTime(input.time);
   if (!at) return dateError('time', input.time);
   if (at.getTime() <= now)
     return `That time is in the past (${nowContext(new Date(now))}). Ask the user for a time in the future.`;
   return { kind: 'notification', title, body, at };
+}
+
+const DELAY_UNITS = [
+  [86_400, 'schedule.unitDays'],
+  [3_600, 'schedule.unitHours'],
+  [60, 'schedule.unitMinutes'],
+  [1, 'schedule.unitSeconds'],
+] as const;
+
+/**
+ * A delay in words: the largest unit, and the next one when it isn't zero ("10 s", "1 h 30 min", "2 min"). Smaller
+ * remainders are left out; the confirmation also shows the clock time.
+ */
+export function delayLabel(seconds: number): string {
+  const first = DELAY_UNITS.findIndex(([size]) => seconds >= size);
+  if (first < 0) return t('schedule.unitSeconds', { count: 0 });
+  const [size, key] = DELAY_UNITS[first];
+  const parts = [t(key, { count: Math.floor(seconds / size) })];
+  const next = DELAY_UNITS[first + 1];
+  if (next) {
+    const count = Math.floor((seconds % size) / next[0]);
+    if (count > 0) parts.push(t(next[1], { count }));
+  }
+  return parts.join(' ');
 }
 
 function alertLine(minutes: number): string {
@@ -170,7 +225,14 @@ export function describePlan(plan: SchedulePlan, android: boolean): IconLines {
     if (plan.due) add(zone);
   } else {
     lines.push({ icon: 'notifications', text: t('schedule.confirmNotification') });
-    add(`“${plan.title}”`, plan.body, formatDateTime(plan.at), zone);
+    if (plan.delaySeconds !== undefined) {
+      add(
+        `“${plan.title}”`,
+        plan.body,
+        t('schedule.inDelay', { delay: delayLabel(plan.delaySeconds) }),
+        t('schedule.around', { when: plan.delaySeconds < 86_400 ? timeLabel(plan.at.getTime()) : formatDateTime(plan.at) }),
+      );
+    } else add(`“${plan.title}”`, plan.body, formatDateTime(plan.at), zone);
   }
   if (plan.kind !== 'notification' && plan.notes) {
     const notes = plan.notes.length > 300 ? `${cutText(plan.notes, 300)}…` : plan.notes;

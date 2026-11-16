@@ -59,6 +59,7 @@ import { bump, tick } from '../device/haptics';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { FINAL_WAIT_MS } from './PushToTalk';
 import { useHoldGesture, useScreenReader } from './useHoldGesture';
+import { ErrorDetails } from './ErrorDetails';
 
 export type ChatItemAction = 'buyCredits' | 'signIn';
 
@@ -113,6 +114,8 @@ export type ChatItem = {
   cost?: AnswerCost;
   /** For 'error': a way out offered under it (Qutai Credits: buy credits, or sign in / choose another provider). */
   action?: ChatItemAction;
+  /** For 'error': the raw error text behind the plain sentence, shown on demand (ai/plainError.ts). */
+  details?: string;
 };
 
 /** Voice input: the settings it follows and where its messages go. */
@@ -1391,6 +1394,7 @@ function ChatRow({
         return (
           <View>
             <StepLine icon="insecure" text={item.text} error />
+            {item.details ? <ErrorDetails details={item.details} /> : null}
             <Pressable
               onPress={() => onItemAction(action)}
               style={({ pressed }) => [styles.itemAction, pressed && styles.itemActionPressed]}
@@ -1400,6 +1404,14 @@ function ChatRow({
               <Icon name={action === 'buyCredits' ? 'wallet' : 'person'} size={16} color={palette.tintText} />
               <Text style={styles.itemActionText}>{t(action === 'buyCredits' ? 'buy.open' : 'credits.signInOrChoose')}</Text>
             </Pressable>
+          </View>
+        );
+      }
+      if (item.details) {
+        return (
+          <View>
+            <StepLine icon="insecure" text={item.text} error />
+            <ErrorDetails details={item.details} />
           </View>
         );
       }

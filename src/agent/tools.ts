@@ -631,18 +631,27 @@ export const TOOLS: ToolDefinition[] = [
     name: 'schedule_notification',
     description:
       'Schedule a notification from Qutai itself on this phone at a future time (e.g. "leave for the cinema"). ' +
-      'The user sees it and confirms it. Only call this after the user has said they want it.',
+      'Give exactly one of delay_seconds or time. When the user says a relative time ("in 10 seconds", "in 20 ' +
+      'minutes", "in an hour"), use delay_seconds directly; never ask for a clock time or convert it to one. Use ' +
+      'time only when the user names a clock time or date. The user sees it and confirms it. Only call this after ' +
+      'the user has said they want it (asking for a notification is saying so).',
     input_schema: {
       type: 'object',
       properties: {
         title: { type: 'string', description: 'Notification title' },
         body: { type: 'string', description: 'Notification text' },
+        delay_seconds: {
+          type: 'integer',
+          description:
+            'For a relative time: seconds from now, counted from when the user confirms (e.g. 10, 600 for 10 ' +
+            'minutes, 5400 for an hour and a half); 1 to 2592000 (30 days)',
+        },
         time: {
           type: 'string',
-          description: "ISO 8601 local date and time in the phone's time zone, e.g. 2026-11-15T19:30",
+          description: "For a clock time: ISO 8601 local date and time in the phone's time zone, e.g. 2026-11-15T19:30",
         },
       },
-      required: ['title', 'body', 'time'],
+      required: ['title', 'body'],
     },
   },
   {

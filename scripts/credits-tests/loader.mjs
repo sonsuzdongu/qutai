@@ -3,7 +3,7 @@
 // request code touches are replaced by small stand-ins, so the real adapters (src/ai/anthropic.ts, openai.ts,
 // gemini.ts) can run outside the app:
 // - react-native: Platform.OS (https checks) and AppState (the foreground tracker), always "active";
-// - expo-localization: the language, English unless QUTAI_TEST_LANG says otherwise.
+// - expo-localization: the language, English unless QUTAI_TEST_LANG says otherwise; the calendar's time zone, UTC.
 import { register } from 'node:module';
 
 const stubs = {
@@ -15,6 +15,7 @@ const stubs = {
     const code = (globalThis.process?.env?.QUTAI_TEST_LANG) || 'en';
     export function getLocales() { return [{ languageCode: code }]; }
     export function useLocales() { return getLocales(); }
+    export function getCalendars() { return [{ timeZone: 'UTC' }]; }
   `,
 };
 

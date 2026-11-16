@@ -146,7 +146,11 @@ export async function scheduleNotification(plan: NotificationPlan, from: Notific
   await Notifications.scheduleNotificationAsync({
     identifier: `${ID_PREFIX}${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     content: { title: plan.title, body: plan.body, sound: 'default', ...(from ? { data: { qutaiFrom: from } } : {}) },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: plan.at, channelId: CHANNEL_ID },
+    // A relative time counts from now (the user has just confirmed it); a clock time is that moment.
+    trigger:
+      plan.delaySeconds !== undefined
+        ? { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: plan.delaySeconds, channelId: CHANNEL_ID }
+        : { type: Notifications.SchedulableTriggerInputTypes.DATE, date: plan.at, channelId: CHANNEL_ID },
   });
 }
 

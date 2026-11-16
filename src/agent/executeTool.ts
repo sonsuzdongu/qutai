@@ -614,7 +614,13 @@ async function schedulingTool(name: SchedulingTool, input: Record<string, unknow
     }
     const from = ctx.browser.getTab(ctx.askedFrom?.id ?? ctx.agentTab.id);
     await scheduleNotification(plan, from ? notificationOrigin(from) : null);
-    return { content: 'Scheduled the notification. Qutai will show it at that time.', isError: false };
+    return {
+      content:
+        plan.delaySeconds !== undefined
+          ? `Scheduled the notification. Qutai will show it ${plan.delaySeconds} seconds from now.`
+          : 'Scheduled the notification. Qutai will show it at that time.',
+      isError: false,
+    };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     return { content: e instanceof DeviceToolError ? message : `Could not add it: ${message}`, isError: true };
