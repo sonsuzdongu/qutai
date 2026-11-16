@@ -8,7 +8,7 @@ imports (to `.ts` or a folder's `index.ts`) and stands in for the two native mod
 app's `tsc`.
 
 ```bash
-npm run test:credits          # profile check, client, provider: against a fake server (fake.ts)
+npm run test:credits          # profile check, client, provider, setup and purchases: against fakes (fake.ts)
 npm run test:credits:server   # against a local API Worker (QUTAI_TEST_API_URL, default http://localhost:8790)
 ```
 
@@ -22,6 +22,16 @@ npm run test:credits:server   # against a local API Worker (QUTAI_TEST_API_URL, 
   read, the charge as the cost), Gemini's non-streaming fallback and thought-signature fallback, raw output never
   replayed across own-key and credits, checks before sending, charges of failed requests, credits in the answer's
   figures, formatting.
+- `safe-area-root.test.ts`: regression for the crash when Qutai was picked during setup: App's tree starts with the
+  `SafeAreaProvider`, which holds setup and the browser (dialogs read the insets from it).
+- `gate.test.ts`: Qutai Credits only while signed in (`src/credits/gate.ts`) and setup's Qutai step
+  (`src/credits/setupFlow.ts`): disclosure, sign-in, account; declining, cancelling and failing go back to the choice
+  with a note; Qutai is never saved without an account.
+- `purchases.test.ts`: buying credits (`src/purchases/`) against a fake store and the fake server's
+  `POST /purchases/verify`: offers priced only by the store, credited, cancelled / pending / failed, retries after
+  `Retry-After`, purchases kept and reported later, held / rejected / refunded / suspended / signed out, the client's
+  request and answers; the RevenueCat adapter against a fake SDK (configured only signed in with the account id,
+  `logIn` / `logOut`, non-subscription products, every error code).
 - `server/relay-server.test.ts`: the account session (test sign-in), the client and the provider against the real
   Worker: `GET /config`, `GET /credits`, refusals before the provider; with no provider keys, "unavailable" and no
   charge. With `QUTAI_TEST_FAKE_PROVIDERS=1` (a server whose outgoing provider requests are answered by a fake

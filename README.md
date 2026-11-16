@@ -542,11 +542,14 @@ contacts the server for it.
 | The agent profile (system prompt parts and tools, as the server builds them) and its SHA-256 | `src/credits/profile.ts`, `agent-profile/profile.json`, `src/credits/agentProfileId.ts` |
 | Configuration cache (a minute; an hour-old copy when the server can't be reached), balance, ledger entries | `src/credits/store.ts`, `index.ts` |
 | Disclosure before first use (an explicit choice, remembered per phone), settings, balance and history | `src/components/CreditsDisclosure.ts`, `CreditsFields.tsx`, `CreditsScreen.tsx` |
+| Setup's AI step in pro mode (Qutai first, sign-in, account and balance), as a tested state machine | `src/components/QutaiSetup.tsx`, `src/credits/setupFlow.ts` |
+| Only while signed in: the rules, the prompt to sign in or choose another provider | `src/credits/gate.ts`, `App.tsx` (send, account changes), `AiProviderFields.tsx` |
+| Buying credits: the screen, the flow (store, `POST /purchases/verify`, retries, purchases kept until credited), the store interface | `src/components/BuyCredits.tsx`, `src/purchases/` |
 
 What the user sees: picking Qutai Credits first shows what changes about where data goes (conversation, page
 content, attachments, memory and custom instructions pass through Qutai's server, which doesn't store or log them)
 with "Use Qutai Credits" / "Not now". The provider's page shows the balance, the models the server offers
-(`GET /config`) with their credit prices, and "Get credits", which says buying isn't in the app yet. Under each
+(`GET /config`) with their credit prices, and "Buy credits" (below). Under each
 answer: what the server charged ("0.42 credits · 1.5k tokens"), never a dollar figure; the same per request in
 "What was sent to the AI", whose hint then says requests pass through Qutai's server. The balance is under the
 panel's title while Qutai Credits is in use, and in Settings › Account › Qutai Credits with the ledger's latest
@@ -561,6 +564,80 @@ the input.
 to `limits.maxImages` minus one screenshot; web search only for models the server allows it for; an Anthropic web
 search the provider pauses (`pause_turn`) ends the task with a note to send "continue", because the relay refuses a
 request that ends with the model's own turn.
+
+#### Setup in pro mode
+
+Setup's AI step leads with **Qutai Credits** (what it is, that it needs an account and uses credits, and that page
+content passes through Qutai's server, in the disclosure's words); **"Use my own AI provider key"** is a separate,
+quieter card that opens the same key fields as before (without the Qutai tab), and **"Decide later"** skips. "Continue
+with Qutai" goes: the disclosure (unless accepted before on this phone) → sign in (Apple where the phone offers it,
+Google when the build has its client id, the test sign-in in test builds; with none of Apple and Google the screen
+says so) → "You're signed in" with the account, the balance and **Buy credits** → the rest of setup. Declining,
+cancelling ("Choose another way", the back arrow) or a failed sign-in go back to the choice with a note saying why;
+Qutai Credits is chosen only on the account screen, and setup never saves it without an account
+(`providerToSave`). Builds without pro mode show the AI step exactly as before.
+
+#### Only while signed in
+
+Qutai Credits can only be the provider in use while signed in. Signing out, deleting the account, a session the
+server ended and a backup restored on a new phone (sessions aren't in backups) all leave the provider set to Qutai
+Credits with no account, and then:
+- sending a message keeps it in the input with its attachments, adds the error with a "Sign in or choose another AI"
+  button, and asks "Sign in / Use my own key / Not now" (Settings › Account or Settings › Assistant);
+- losing the account while it is in use (outside Settings) asks the same once;
+- Settings › Account says Qutai Credits need the account; Settings › Assistant doesn't let Qutai be picked signed out
+  (it offers to sign in first) and shows a Sign in button on the provider's page.
+
+#### Buying credits
+
+**Buy credits** (from setup's account screen, Settings › Account › Qutai Credits and the "not enough credits" error)
+shows the balance, what credits are, the packs the server offers for this phone's store (`GET /config` › `packs`)
+with their credits and **the store's own price** (never one of ours; a pack the store doesn't sell isn't shown, and
+store products without a pack never are), a store note, Terms and Privacy, and "Check for missing credits". States:
+loading, no packs, configuration unreachable (with Try again), store prices unavailable, purchases unavailable in this
+build, purchase in progress, pending (Ask to Buy, cash payments), cancelled, failed (not allowed, network, product
+unavailable, other), paid but not yet credited, held or refused (support), refunded, suspended, signed out, and
+credited with the new balance.
+
+The flow (`src/purchases/flow.ts`, tested in Node): the store is told the account id before anything is bought; after
+a purchase the store transaction id is kept on the phone **before** it's reported with `POST /purchases/verify`;
+`404 purchase_not_found` / `503` / no answer are asked again after `Retry-After` (at most 15 s, three tries), then the
+purchase stays saved and is reported again when the screen opens, on "Check for missing credits" and after signing in
+(the server's webhook credits it anyway). `held` and `422 purchase_rejected` point to support; refunds say so;
+`403 account_suspended` shows that buying isn't possible. Consumables can't be restored at the stores and credits
+live in Qutai's ledger, so there's no "Restore purchases" button; "Check for missing credits" is the way to recover a
+purchase that didn't arrive.
+
+**The store today: unavailable.** RevenueCat's `react-native-purchases` isn't a dependency yet: it adds native code
+and the billing permission to every build, including builds without pro mode, and no RevenueCat project, keys or store
+products exist to try it with. Every build uses the clearly marked unavailable store (`src/purchases/unavailable.ts`):
+the screen shows balance and packs and says buying isn't available in this build. The RevenueCat implementation is
+written and tested against a fake SDK (`src/purchases/revenuecat.ts`: configured only after sign-in with **Qutai's
+account id as the App User ID**, `logIn` on another account, `logOut` on sign-out, packs fetched as non-subscription
+products, bought with `purchaseStoreProduct`, every SDK error mapped to an outcome). To switch it on:
+
+1. `npx expo install react-native-purchases` (11.x today; Expo SDK 54 or later, no config plugin needed for SDK 58;
+   needs a development build, Expo Go only runs its preview mode). Decide how builds without pro mode leave it out
+   (an autolinking exclusion in `react-native.config.js` read from `EXPO_PUBLIC_PRO_MODE`, or accept the SDK unused in
+   them and say so in the privacy texts).
+2. In `src/purchases/index.ts` `purchaseStore()`: when `revenueCatKey()` gives a key,
+   `createRevenueCatStore(Purchases, key)` (import `Purchases` from `react-native-purchases`).
+3. Set `EXPO_PUBLIC_REVENUECAT_IOS_KEY` / `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` (RevenueCat's public SDK keys, per build;
+   `.env.example`), make a development build, buy a pack in the sandbox (TestFlight / a Play internal test track
+   with a licence tester) and check the transaction id the app reports (below).
+4. Owner setup (also `backend/README.md` › Purchases): the RevenueCat project with restore behaviour "Keep with
+   original App User ID"; **consumable** products in App Store Connect and Play Console, added in RevenueCat (not
+   attached to an entitlement, no In-App Currency) and as packs in the admin panel **before** they go on sale; App
+   Store Server Notifications V2 and Play real-time developer notifications to RevenueCat; the webhook to the API.
+   Store rules this follows: purchases of digital credits only through the store's in-app purchase (no link or
+   button to pay elsewhere), prices only as the store gives them, consumables need no restore, the purchase terms
+   reachable from the screen. Declare the in-app products in the store listings, and update the privacy texts and
+   Google Play's Data safety form for purchase history (RevenueCat as a processor).
+
+**Open:** RevenueCat's hybrid SDKs have been reported to give their own id rather than the Play order id
+(`GPA.…`) as `transactionIdentifier` for one-time purchases on Android, while the server searches by the store's id;
+the Android purchase's `purchaseToken` is also available. Check with the first sandbox purchase; if needed the server
+should accept the token (or RevenueCat's id) as well.
 
 #### Agent profile
 
