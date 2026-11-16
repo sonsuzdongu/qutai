@@ -11,6 +11,7 @@ import { ModelCatalogPicker, modelDetail, useCatalog } from './ModelCatalogPicke
 import { creditsChoiceName, currentTier, useCreditsState } from '../credits';
 import { tierAbout, tierCostLine } from '../credits/tiers';
 import { showTierDetails } from './CreditsFields';
+import { compactModelName } from './statusFit';
 
 type Props = {
   /** The conversation being changed; null: closed. */
@@ -29,11 +30,14 @@ export function conversationModelInfo(
   choice: ModelChoice | null,
   /** Without the provider's name (Qutai Credits beside the balance, which already says "credits"). */
   short = false,
+  /** With short: the model without its maker too ("Claude Sonnet 5.5", not "Anthropic: Claude Sonnet 5.5"). */
+  compact = false,
 ): string {
   const use = choice && isConfigured(settings, choice.provider) ? choice : null;
   const provider = use?.provider ?? settings.provider;
   const model = use?.model ?? settings.models[provider];
-  const name = choiceLabel(provider, model);
+  const label = choiceLabel(provider, model);
+  const name = short && compact ? compactModelName(label) : label;
   const line = short ? name : `${getProvider(provider).label} · ${name}`;
   return use ? `${line} · ${t('chat.modelThisChat')}` : line;
 }

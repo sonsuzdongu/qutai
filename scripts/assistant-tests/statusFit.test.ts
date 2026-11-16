@@ -2,7 +2,7 @@
 // gives way to it, and goes when only a few letters of it would be left.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { MIN_LABEL_WIDTH, statusLabelFits } from '../../src/components/statusFit.ts';
+import { compactModelName, MIN_LABEL_WIDTH, statusFullFits, statusLabelFits } from '../../src/components/statusFit.ts';
 
 test('the name stays while there is room beside the balance and the arrow', () => {
   assert.equal(statusLabelFits(220, 80, 200, 1), true);
@@ -30,4 +30,21 @@ test('a short name that fits whole stays, even with less room than for a long on
 test('before anything is measured the name shows', () => {
   assert.equal(statusLabelFits(0, 0, 0, 1), true);
   assert.equal(statusLabelFits(200, 0, 0, 1), true);
+});
+
+test('own key: the whole line shows only when it fits with the arrow', () => {
+  assert.equal(statusFullFits(200, 183, 1), true);
+  assert.equal(statusFullFits(200, 184, 1), false);
+  assert.equal(statusFullFits(200, 180, 1.3), false);
+  assert.equal(statusFullFits(200, 0, 1), false);
+  assert.equal(statusFullFits(0, 120, 1), false);
+});
+
+test("the short line drops the model's maker", () => {
+  assert.equal(compactModelName('Anthropic: Claude Sonnet 5.5'), 'Claude Sonnet 5.5');
+  assert.equal(compactModelName('meta-llama/llama-4-maverick'), 'llama-4-maverick');
+  assert.equal(compactModelName('Claude Sonnet 5.5'), 'Claude Sonnet 5.5');
+  assert.equal(compactModelName('gpt-5.5'), 'gpt-5.5');
+  assert.equal(compactModelName('model/'), 'model/');
+  assert.equal(compactModelName('qwen3:32b'), 'qwen3:32b');
 });

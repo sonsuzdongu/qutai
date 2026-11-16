@@ -60,7 +60,7 @@ import { ActionSheet, SheetAction } from './ActionSheet';
 import { FINAL_WAIT_MS } from './PushToTalk';
 import { useHoldGesture, useScreenReader } from './useHoldGesture';
 import { ErrorDetails } from './ErrorDetails';
-import { statusLabelFits } from './statusFit';
+import { statusFullFits, statusLabelFits } from './statusFit';
 import { segmentChat, stepSummaryText, summarizeSteps } from '../chat/stepSummary';
 
 export type ChatItemAction = 'buyCredits' | 'signIn';
@@ -170,6 +170,8 @@ type Props = {
   modelInfo: string;
   /** The conversation has its own model choice (modelInfo then says so). */
   modelChosen?: boolean;
+  /** The model alone, without the provider ("Claude Sonnet 5.5"): shown instead of modelInfo when that does not fit. */
+  modelName?: string;
   /** Qutai Credits: the balance ("12.34 credits"), shown after modelInfo and never shortened. */
   balance?: string | null;
   /** Opens the sheet to choose this conversation's provider and model. */
@@ -255,6 +257,7 @@ export function AssistantPanel({
   finishedElsewhere,
   onShowFinished,
   modelInfo,
+  modelName,
   balance = null,
   modelChosen,
   onModelPress,
@@ -513,6 +516,8 @@ export function AssistantPanel({
   const [balanceWidth, setBalanceWidth] = useState(0);
   const [labelWidth, setLabelWidth] = useState(0);
   const statusFits = statusLabelFits(statusRoom, balanceWidth, labelWidth, fontScale);
+  // Own key: the provider and the model when both fit, otherwise the model alone.
+  const statusLine = balance || !modelName || statusFullFits(statusRoom, labelWidth, fontScale) ? modelInfo : modelName;
 
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [width, 0] });
 
@@ -543,8 +548,8 @@ export function AssistantPanel({
               <View style={[styles.header, d?.header]}>
                 <QutaiMark size={24} working={running} sweepWhenIdle animate={open} />
                 <View style={styles.headerTitle} onLayout={(e) => setStatusRoom(e.nativeEvent.layout.width)}>
-                  {balance ? (
-                    // The model's name at its natural width, unseen: whether it fits whole beside the balance.
+                  {balance || modelName ? (
+                    // The line at its natural width, unseen: whether it fits whole (beside the balance, if any).
                     <View
                       style={styles.measure}
                       pointerEvents="none"
@@ -574,17 +579,18 @@ export function AssistantPanel({
                     accessibilityLabel={t('chat.modelA11y', { model: balance ? `${modelInfo} · ${balance}` : modelInfo })}
                     accessibilityState={{ disabled: running }}
                   >
-                    {/* Beside four buttons on a narrow phone: shortened in the middle, so the end of the model
-                        name and the arrow stay in view, and very large text sizes capped. The balance is never
-                        shortened: the model's name gives way to it, and goes when too little of it would show. */}
+                    {/* Beside four buttons on a narrow phone, very large text sizes capped. Own key: the provider
+                        goes first, then the model's name is shortened at its end (never cut in the middle of a
+                        word like "Anthropic"). Qutai Credits: the balance is never shortened; the tier's name
+                        beside it is shortened in the middle, and goes when too little of it would show. */}
                     {running || !balance || statusFits ? (
                       <Text
                         style={[styles.status, modelChosen && !running && styles.statusChosen]}
                         numberOfLines={1}
-                        ellipsizeMode="middle"
+                        ellipsizeMode={balance ? 'middle' : 'tail'}
                         maxFontSizeMultiplier={1.4}
                       >
-                        {running ? t('chat.working') : modelInfo}
+                        {running ? t('chat.working') : statusLine}
                       </Text>
                     ) : null}
                     {!running && balance ? (

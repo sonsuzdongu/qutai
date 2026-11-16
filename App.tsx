@@ -2377,6 +2377,7 @@ function BrowserApp({
             research={conversation.research}
             onResearchChange={(on) => conversation.setResearch(on)}
             modelInfo={conversationModelInfo(settings, conversation.model, panelBalance !== null)}
+            modelName={panelBalance === null ? conversationModelInfo(settings, conversation.model, true, true) : undefined}
             balance={panelBalance}
             modelChosen={!!conversation.model && isConfigured(settings, conversation.model.provider)}
             onModelPress={() => setModelSheetFor(conversation)}
