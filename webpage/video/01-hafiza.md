@@ -3,7 +3,7 @@
 **Fikir:** Qutai'ye bir kez söylersiniz, hatırlar. Ertesi gün yemek siparişi verirken glutensiz yemek arar, siz tekrar
 söylemeden. Bilgi telefonunuzda durur, bir siteye yazılmadan önce size sorulur.
 
-**Süre:** ~35 sn (ana kayıt), 15 sn (kısa kesit) · **Biçim:** 9:16 ana, 16:9 site versiyonu ·
+**Süre:** ~37 sn (ana kayıt), 15 sn (kısa kesit) · **Biçim:** 9:16 ana, 16:9 site versiyonu ·
 **Diller:** Türkçe ve İngilizce altyazı ve seslendirme
 
 **Sahnedeki kişi:** Osman (test hafızası; adres, telefon ve kart gerçek değil).
@@ -30,7 +30,7 @@ grafikleridir, arayüzün parçası değil.
 | 1 | 0:00–0:02 | **Açılış kartı:** `memory` minyatüründen kesit (robot sandığa hatıraları yerleştiriyor), yavaş yakınlaşma | Serif başlık | Sizi tanır. | It gets to know you. |
 | 2 | 0:02–0:06 | Qutai paneli açık; Osman yazıyor: "Adım Osman ve gluten intoleransım var." | Mesaj balonu belirince hafif yakınlaşma | Bir kez söyleyin. | Say it once. |
 | 3 | 0:06–0:09 | Panelde işlem satırları belirir: "Hatırlanıyor: Adı Osman", "Hatırlanıyor: Gluten intoleransı var" | **Vurgu anı:** satırlara yakınlaşma, teal çerçeve, rozet "Hatırlandı" (onay ikonu) | Hatırladı. | Remembered. |
-| 4 | 0:09–0:12 | Ayarlar › Asistan › Hafıza ekranı: "Kimlik ve iletişim" altında "Adı Osman", "Yemek ve beslenme" altında "Gluten intoleransı var" | İki satır sırayla parlar | Telefonunuzda durur. Görebilir, değiştirebilir, silebilirsiniz. | It stays on your phone. See it, edit it, delete it. |
+| 4 | 0:09–0:14 | Ayarlar › Asistan › Hafıza ekranı: "Kimlik ve iletişim" altında "Adı Osman", "Yemek ve beslenme" altında "Gluten intoleransı var" | İki satır sırayla parlar | Telefonunuzda durur. Görebilir, değiştirebilir, silebilirsiniz. | It stays on your phone. See it, edit it, delete it. |
 
 **Geçiş:** parşömen zemin üstünde kısa kart: "Ertesi akşam" / "The next evening" (1 sn).
 
@@ -38,12 +38,12 @@ grafikleridir, arayüzün parçası değil.
 
 | # | Süre | Görüntü | Vurgu / grafik | Altyazı TR | Altyazı EN |
 |---|---|---|---|---|---|
-| 5 | 0:13–0:16 | Yeni bir sekmede yeni sohbet. Osman yazıyor: "Akşam için iki kişilik yemek siparişi ver." (gluten sözü yok) | — | Gluten demedi. | No mention of gluten. |
-| 6 | 0:16–0:21 | İşlem satırları: "Açılıyor: lokanta…", "Sayfa okunuyor", "Yazılıyor (ref …): \"glutensiz\"". Sayfada arama kutusunda "glutensiz" yazar, sonuçlar süzülür | **Vurgu anı 2:** arama kutusuna yakınlaşma, rozet "Hafızadan". Köşede "Hızlandırıldı" | Ama Qutai hatırladı. | But Qutai remembered. |
-| 7 | 0:21–0:24 | Asistanın yanıtı glutensiz seçenekleri listeler ve seçim düğmeleriyle sorar; Osman birine dokunur, ürün sepete eklenir | — | Seçimi siz yaparsınız. | You choose. |
-| 8 | 0:24–0:28 | Teslimat formu. Uygulamanın penceresi: "Kişisel bilgileriniz lokanta… sitesine girilsin mi?" → Osman "Bir kez izin ver"e dokunur; ad ve adres alanları dolar | **Kontrol anı:** pencereye yakınlaşma | Bilgileriniz sorulmadan girilmez. | Your details go in only when you say so. |
-| 9 | 0:28–0:31 | Ödeme adımı: asistan durur ve ödemenin size kaldığını yazar | Ödeme düğmesine hafif vurgu | Ödemeyi siz yaparsınız. | You make the payment. |
-| 10 | 0:31–0:35 | **Kapanış kartı:** Q logosu, slogan, alt satır | Küçük not, altta | Qutai. Sizi tanır, telefonunuzda. · Açık kaynak · Yakında App Store ve Google Play'de | Qutai. It knows you, on your phone. · Open source · Coming to the App Store and Google Play |
+| 5 | 0:15–0:18 | Yeni bir sekmede yeni sohbet. Osman yazıyor: "Akşam için iki kişilik yemek siparişi ver." (gluten sözü yok) | — | Gluten demedi. | No mention of gluten. |
+| 6 | 0:18–0:23 | İşlem satırları: "Açılıyor: lokanta…", "Sayfa okunuyor", "Yazılıyor (ref …): \"glutensiz\"". Sayfada arama kutusunda "glutensiz" yazar, sonuçlar süzülür | **Vurgu anı 2:** arama kutusuna yakınlaşma, rozet "Hafızadan". Köşede "Hızlandırıldı" | Ama Qutai hatırladı. | But Qutai remembered. |
+| 7 | 0:23–0:26 | Asistanın yanıtı glutensiz seçenekleri listeler ve seçim düğmeleriyle sorar; Osman birine dokunur, ürün sepete eklenir | — | Seçimi siz yaparsınız. | You choose. |
+| 8 | 0:26–0:30 | Teslimat formu. Uygulamanın penceresi: "Kişisel bilgileriniz lokanta… sitesine girilsin mi?" → Osman "Bir kez izin ver"e dokunur; ad ve adres alanları dolar | **Kontrol anı:** pencereye yakınlaşma | Bilgileriniz sorulmadan girilmez. | Your details go in only when you say so. |
+| 9 | 0:30–0:33 | Ödeme adımı: asistan durur ve ödemenin size kaldığını yazar | Ödeme düğmesine hafif vurgu | Ödemeyi siz yaparsınız. | You make the payment. |
+| 10 | 0:33–0:37 | **Kapanış kartı:** Q logosu, slogan, alt satır | Küçük not, altta | Qutai. Sizi tanır, telefonunuzda. · Açık kaynak · Yakında App Store ve Google Play'de | Qutai. It knows you, on your phone. · Open source · Coming to the App Store and Google Play |
 
 Kapanıştaki küçük not: "Alerjen bilgisini her zaman restoranla doğrulayın." / "Always confirm allergens with the
 restaurant." Ayrıca köşede "Gerçek ekran kaydı. Hızlandırılan yerler belirtilmiştir." / "Real screen recording;
@@ -68,8 +68,18 @@ Sakin, sıcak, kısa cümleler; altyazıyla aynı sözler, sahnelerin üstüne:
 ## Müzik (ElevenLabs)
 
 Tarif: "Sakin, sıcak, hafif ritimli, sözsüz; ud ya da kanun benzeri telli bir motif üstünde yumuşak elektronik
-vuruşlar; 35 saniye; 31. saniyede kapanışa doğru yükselip sönen." Sahne 3 ve 6'daki rozetlerde hafif bir "tık" sesi.
+vuruşlar; 37 saniye; 33. saniyede kapanışa doğru yükselip sönen." Sahne 3 ve 6'daki rozetlerde hafif bir "tık" sesi.
 Bütün bölümlerde aynı müzik, değişen tek şey motifin varyasyonu.
+
+## Durum
+
+- **Demo site hazır:** `demo-sites/lokanta/`. Çalıştırmak için `python3 -m http.server 8090 -d webpage/video/demo-sites/lokanta`
+  (İngilizce için `?lang=en`). Simülatör bilgisayardaki `localhost`'a doğrudan ulaşır. Son filmde adres çubuğunda
+  `localhost` görünmesin diye, kayıttan önce siteyi sitenin alan adı altında (örneğin `lokanta.<alan-adı>`)
+  yayımlamak daha temiz olur.
+- **Seslendirme:** Türkçe hazır (`audio/01/tr-1…5.mp3`); İngilizce'den yalnızca 1. satır üretildi. ElevenLabs kotası
+  doldu; kalan satırlar `python3 make_voice_01.py en-2 en-3 en-4 en-5` ile kota yenilenince üretilir.
+- **Müzik:** Aynı nedenle henüz üretilmedi.
 
 ## Teslim edilecekler
 
