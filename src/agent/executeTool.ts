@@ -51,6 +51,9 @@ import {
   SchedulingTool,
 } from './scheduling';
 import { cutText } from '../utils/wellFormed';
+import type { ScopeKind } from '../content/siteRules';
+import { describeSiteRulesCall, siteRulesTool, type SiteRulesAccess, type SiteRulesApproval } from './siteRulesTool';
+import { SITE_RULE_TOOL_NAMES } from './siteRuleTools';
 
 type PageSnapshot = {
   url: string;
@@ -189,10 +192,19 @@ export type ToolContext = {
   }) => Promise<boolean>;
   /** An image was given to a page (kept when old edited images are pruned). */
   imageUsed?: (id: string) => void;
+  /** The user's own site rules (try_hide, save_site_rules, site_rules; agent/siteRulesTool.ts). */
+  siteRules?: SiteRulesAccess;
+  /**
+   * Asks before site rules are saved, every time (never "don't ask again"): shows the selectors and domains and lets
+   * the user pick where hiding applies. Resolves with the scope, or null when declined or dismissed.
+   */
+  confirmSiteRules?: (approval: SiteRulesApproval) => Promise<ScopeKind | null>;
 };
 
 /** Tools that need a loaded web page. */
 const PAGE_TOOLS = new Set([
+  'try_hide',
+  'save_site_rules',
   'read_page',
   'read_source',
   'click',
@@ -278,6 +290,10 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return t('action.getSavedTask', { name: cutText(str(input.name).trim() || str(input.id), 60) });
     case 'settings':
       return describeSettingsCall(input);
+    case 'try_hide':
+    case 'save_site_rules':
+    case 'site_rules':
+      return describeSiteRulesCall(name, input);
     case 'draft_email':
       return t('action.draftEmail', { subject: cutText(str(input.subject), 60) });
     case 'offer_call':
@@ -989,6 +1005,8 @@ export type EmailDraft = {
 
 /** Actions kept in the action history; bookkeeping (listing tabs, waiting, scrolling) is left out. */
 const LOGGED_TOOLS = new Set([
+  'save_site_rules',
+  'site_rules',
   'navigate',
   'go_back',
   'click',
@@ -1038,6 +1056,7 @@ function isLogged(name: string, input: Record<string, unknown>): boolean {
   if (!LOGGED_TOOLS.has(name)) return false;
   if (name === 'bookmarks') return !BOOKMARK_READS.has(String(input.action));
   if (name === 'settings') return input.action === 'set';
+  if (name === 'site_rules') return input.action === 'remove';
   return true;
 }
 
@@ -1467,6 +1486,14 @@ async function runTool(
       content: 'This tab shows the new tab page; no web page is loaded. Use navigate to open one.',
       isError: name !== 'read_page',
     };
+  }
+  if (SITE_RULE_TOOL_NAMES.has(name)) {
+    if (tab.isNewTab) return { content: 'This tab shows the new tab page; open a web page first.', isError: true };
+    try {
+      return await siteRulesTool(name, input, ctx, tab);
+    } catch (e) {
+      return { content: `The page did not answer: ${e instanceof Error ? e.message : String(e)}`, isError: true };
+    }
   }
   // Confirms on its own with the image, every time.
   if (name === 'upload_image') return uploadImageTool(input, ctx, tab);

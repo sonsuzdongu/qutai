@@ -1,4 +1,5 @@
 import { MEMORY_CATEGORIES } from './memory';
+import { SITE_RULE_TOOLS } from './siteRuleTools';
 import type { ToolDefinition } from './types';
 
 /** Offered only while memory is turned on in settings. */
@@ -832,6 +833,7 @@ export const TOOLS: ToolDefinition[] = [
       required: ['seconds'],
     },
   },
+  ...SITE_RULE_TOOLS,
   {
     name: 'ask_user',
     description:

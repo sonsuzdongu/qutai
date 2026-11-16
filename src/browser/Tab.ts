@@ -20,6 +20,7 @@ import { PagePlayback } from './playback';
 import { LoadError, toLoadError } from './navigation';
 import { addCertificateException } from './certificateExceptions';
 import { PAGE_SCRIPT } from './pageScript';
+import { HIDE_PROBE_SCRIPT } from '../content/hideProbe';
 import { PageSignals, parsePageSignals, samePageSignals } from './pageKind';
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, ReaderArticle } from './reader';
 
@@ -68,6 +69,10 @@ export type PageCommand =
   | 'fieldLabel'
   | 'screenFields'
   | 'maskFields'
+  | 'hideFind'
+  | 'hideMeasure'
+  | 'hideTry'
+  | 'hideUndo'
   | 'maskEnd';
 
 /** Commands that search the text on screen: in reader mode they run in the reader view. */
@@ -664,6 +669,7 @@ export class Tab {
   private commandScript(command: PageCommand, args: unknown[], id: string, deliver: string): string {
     return `
 ${PAGE_SCRIPT}
+${HIDE_PROBE_SCRIPT}
 (function () {
   var send = function (payload) {
     payload.__qutai = ${JSON.stringify(this.nonce)};

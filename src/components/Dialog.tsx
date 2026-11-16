@@ -57,6 +57,8 @@ export type DialogOptions = {
   buttons?: DialogButton[];
   /** A picture under the title (e.g. the image a page is about to get); width over height for its shape. */
   image?: { uri: string; aspectRatio: number; label: string };
+  /** One of a few options as a list of radio rows under the message (e.g. where a rule applies). */
+  choices?: { label: string; options: string[]; initial?: number };
   /** A checkbox line under the message, e.g. "Always allow on this site". */
   checkbox?: { label: string; initial?: boolean };
   /** A single-line text field; the other buttons stay disabled while it is empty. */
@@ -70,8 +72,8 @@ export type DialogOptions = {
   signal?: AbortSignal;
 };
 
-/** button: the index of the pressed button in `buttons`, null when dismissed by the signal. */
-export type DialogResult = { button: number | null; checked: boolean; text: string };
+/** button: the index of the pressed button in `buttons`, null when dismissed by the signal. choice: see `choices`. */
+export type DialogResult = { button: number | null; checked: boolean; text: string; choice: number };
 
 type Entry = {
   id: number;
@@ -132,7 +134,7 @@ function settle(entry: Entry, result: DialogResult) {
 function show(options: DialogOptions): Promise<DialogResult> {
   return new Promise((resolve) => {
     const { signal } = options;
-    const dismissed = { button: null, checked: false, text: '' };
+    const dismissed = { button: null, checked: false, text: '', choice: options.choices?.initial ?? 0 };
     if (signal?.aborted) return resolve(dismissed);
     const buttons = options.buttons?.length ? options.buttons.slice(0, 3) : [{ text: t('common.ok') }];
     const onAbort = () => settle(entry, dismissed);
@@ -237,9 +239,10 @@ function DialogView({ entry }: { entry: Entry }) {
   const reduceMotion = useReduceMotion();
   const keyboard = useKeyboardHeight();
   const { fontScale, height } = useWindowDimensions();
-  const { title, message, lines, buttons, checkbox, input, image } = entry.options;
+  const { title, message, lines, buttons, checkbox, input, image, choices } = entry.options;
 
   const [checked, setChecked] = useState(checkbox?.initial ?? false);
+  const [choice, setChoice] = useState(choices?.initial ?? 0);
   const [text, setText] = useState(input?.initial ?? '');
   // Side by side when they fit; three buttons, large text or a label that wraps stack them.
   const [stacked, setStacked] = useState(buttons.length > 2 || fontScale > 1.3);
@@ -288,7 +291,7 @@ function DialogView({ entry }: { entry: Entry }) {
     if (input) Keyboard.dismiss();
     // A light confirmation for the dialog's action (Allow, Save…); none for Cancel / Deny or a destructive one.
     if (index !== cancelIndex && buttons[index]?.style !== 'destructive') confirmHaptic();
-    const result = { button: index, checked, text };
+    const result = { button: index, checked, text, choice };
     if (reduceMotion) return settle(entry, result);
     Animated.timing(progress, {
       toValue: 0,
@@ -407,6 +410,32 @@ function DialogView({ entry }: { entry: Entry }) {
                 maxLength={input.maxLength}
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
               />
+            )}
+
+            {choices && (
+              <View accessibilityRole="radiogroup" accessibilityLabel={choices.label}>
+                {choices.options.map((option, i) => (
+                  <Pressable
+                    key={option}
+                    onPress={() => {
+                      tick();
+                      setChoice(i);
+                    }}
+                    style={({ pressed }) => [styles.checkRow, pressed && styles.pressed]}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: choice === i }}
+                  >
+                    <Icon
+                      name={choice === i ? 'selected' : 'unselected'}
+                      size={22}
+                      color={choice === i ? palette.tintText : palette.textSecondary}
+                    />
+                    <Text style={styles.checkLabel} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+                      {option}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             )}
 
             {checkbox && (

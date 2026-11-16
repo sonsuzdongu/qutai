@@ -1,4 +1,6 @@
 import { siteRules } from './src/storage/siteRules';
+import { DEFAULT_SCOPE, isOffSite, SCOPE_KINDS, type ScopeKind } from './src/content/siteRules';
+import type { SiteRulesApproval } from './src/agent/siteRulesTool';
 import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -205,7 +207,7 @@ import {
 import { deleteOrphanChats, loadChat, savedAttachmentIds, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings, ThemeSetting } from './src/storage/settings';
-import type { IconLines } from './src/ui/Icon';
+import type { IconLine, IconLines } from './src/ui/Icon';
 import { holdSplash } from './src/ui/launch';
 import { darkPalette, lightPalette } from './src/ui/theme';
 import { usePersistSession } from './src/storage/usePersistSession';
@@ -305,6 +307,41 @@ async function askImageConfirmation(
     signal,
   });
   return result.button === 1;
+}
+
+/**
+ * The assistant saving site rules (save_site_rules): the selectors and domains in plain words and where hiding
+ * applies (default: this site and its subdomains), every time; never "don't ask again". Stopping the task dismisses
+ * it as declined.
+ */
+async function askSiteRules(approval: SiteRulesApproval, active: boolean, signal: AbortSignal): Promise<ScopeKind | null> {
+  const lines: IconLine[] = [];
+  if (approval.hide.length) {
+    lines.push({ icon: 'shield', text: t('siteRules.saveHide') }, ...approval.hide.map((text) => ({ text })));
+  }
+  if (approval.block.length) {
+    lines.push({ icon: 'shield', text: t('siteRules.saveBlock') }, ...approval.block.map((text) => ({ text })));
+  }
+  const notes = [approval.incognito ? t('siteRules.saveIncognito') : '', active ? '' : t('siteRules.saveOff')].filter(Boolean);
+  const result = await dialog.show({
+    title: t('siteRules.saveTitle', { site: approval.site }),
+    lines: { lines },
+    ...(notes.length ? { message: notes.join('\n\n') } : {}),
+    // Only hiding has a scope; a blocked domain is blocked everywhere.
+    ...(approval.hide.length
+      ? {
+          choices: {
+            label: t('siteRules.scopeLabel'),
+            options: SCOPE_KINDS.map((k) => t(`siteRules.scope.${k}`)),
+            initial: SCOPE_KINDS.indexOf(DEFAULT_SCOPE),
+          },
+        }
+      : {}),
+    buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: t('siteRules.save'), primary: true }],
+    signal,
+  });
+  if (result.button !== 1) return null;
+  return approval.hide.length ? (SCOPE_KINDS[result.choice] ?? DEFAULT_SCOPE) : DEFAULT_SCOPE;
 }
 
 /**
@@ -1158,6 +1195,20 @@ function BrowserApp({
         confirmPersonal: (host, kinds, incognito) => askPersonalData(host, kinds, incognito, signal),
         confirmHidden: (host, what, field, incognito) => askHiddenValue(host, what, field, incognito, signal),
         confirmImage: (options) => whileAskingUser(() => askImageConfirmation(options, signal)),
+        siteRules: {
+          list: () => siteRules.rules,
+          add: (site, lines, url) => siteRules.add(site, lines, 'assistant', url),
+          remove: (ids) => siteRules.remove(ids),
+          activeOn: (site) => settingsRef.current.blockAds && !isOffSite(site, sitePermissions.blockingOffSites()),
+        },
+        confirmSiteRules: (approval) =>
+          whileAskingUser(() =>
+            askSiteRules(
+              approval,
+              settingsRef.current.blockAds && !isOffSite(approval.site, sitePermissions.blockingOffSites()),
+              signal,
+            ),
+          ),
         imageUsed: (id) => chat.markImageUsed(id),
         confirmByDefault: settings.confirmActions,
         sites: sitePermissions,
