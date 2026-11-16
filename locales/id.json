@@ -1,0 +1,21 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Qutai",
+    "NSPhotoLibraryAddUsageDescription": "Qutai menambahkan screenshot dan gambar yang Anda pilih untuk disimpan ke foto Anda.",
+    "NSCameraUsageDescription": "Qutai menggunakan kamera untuk memindai kode QR, mengambil foto atau video untuk kolom upload di halaman web atau foto untuk dilampirkan ke pesan kepada asisten, dan untuk situs yang Anda izinkan menggunakannya, seperti panggilan video.",
+    "NSMicrophoneUsageDescription": "Qutai menggunakan mikrofon saat Anda mengucapkan pesan kepada asisten, untuk situs yang Anda izinkan menggunakannya, seperti panggilan video, dan untuk merekam suara saat Anda mengambil video untuk diupload ke halaman web.",
+    "NSSpeechRecognitionUsageDescription": "Qutai mengubah ucapan Anda kepada asisten menjadi teks. Jika ucapan Anda tidak dapat dikenali di perangkat itu sendiri, layanan ucapan Apple menerima audionya untuk melakukannya; Qutai dan penyedia AI Anda hanya menerima teksnya.",
+    "NSFaceIDUsageDescription": "Qutai menggunakan Face ID untuk membuka kunci aplikasi dan tab Samaran.",
+    "NSCalendarsUsageDescription": "Qutai menambahkan acara yang Anda konfirmasi, seperti tiket dan reservasi, ke kalender yang Anda pilih, dan hanya membaca acara Anda saat Anda bertanya kepada asisten tentang jadwal Anda dan mengonfirmasinya.",
+    "NSCalendarsFullAccessUsageDescription": "Qutai menampilkan daftar kalender Anda agar Anda dapat memilih tujuan acara baru, dan hanya membaca acara Anda saat Anda bertanya kepada asisten tentang jadwal Anda dan mengonfirmasinya; Qutai mengirim acara dalam rentang yang Anda setujui ke penyedia AI Anda.",
+    "NSCalendarsWriteOnlyAccessUsageDescription": "Qutai menambahkan acara yang Anda konfirmasi, seperti tiket dan reservasi, ke kalender Anda.",
+    "NSRemindersUsageDescription": "Qutai menambahkan pengingat yang Anda konfirmasi ke daftar Pengingat yang Anda pilih.",
+    "NSRemindersFullAccessUsageDescription": "Qutai menambahkan pengingat yang Anda konfirmasi ke daftar Pengingat yang Anda pilih.",
+    "NSLocationWhenInUseUsageDescription": "Qutai menampilkan posisi Anda kepada situs yang Anda izinkan, seperti peta, dan kepada asisten saat Anda memintanya menggunakan lokasi Anda. Saat penyiapan, Qutai dapat mengisi tempat tinggal Anda jika Anda mengetuk untuk melakukannya; layanan alamat Apple mencari nama tempat untuk posisi Anda.",
+    "New tab": "Tab baru",
+    "New incognito tab": "Tab Samaran baru",
+    "Ask Qutai": "Tanya Qutai",
+    "Scan QR code": "Pindai kode QR",
+    "NSLocalNetworkUsageDescription": "Qutai terhubung ke server AI di jaringan lokal Anda hanya jika Anda menyiapkannya sebagai endpoint AI kustom."
+  }
+}

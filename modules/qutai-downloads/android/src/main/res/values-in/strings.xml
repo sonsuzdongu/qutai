@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Notification texts of Qutai's downloads. The language follows the app's own setting (QutaiDownloads.setLanguage). -->
+  <string name="qutai_dl_channel">Download yang sedang berlangsung</string>
+  <string name="qutai_dl_done_channel">Download yang selesai</string>
+  <plurals name="qutai_dl_downloading_many">
+    <item quantity="other">Mendownload %1$d file</item>
+  </plurals>
+  <string name="qutai_dl_starting">Memulai…</string>
+  <string name="qutai_dl_of">%1$s dari %2$s</string>
+  <string name="qutai_dl_speed">%1$s/dtk</string>
+  <string name="qutai_dl_left_min">%1$d mnt lagi</string>
+  <string name="qutai_dl_left_sec">%1$d dtk lagi</string>
+  <string name="qutai_dl_paused">Dijeda</string>
+  <plurals name="qutai_dl_paused_many">
+    <item quantity="other">%1$d download dijeda</item>
+  </plurals>
+  <string name="qutai_dl_waiting">Menunggu jaringan</string>
+  <plurals name="qutai_dl_queued">
+    <item quantity="other">%1$d menunggu</item>
+  </plurals>
+  <string name="qutai_dl_pause">Jeda</string>
+  <string name="qutai_dl_resume">Lanjutkan</string>
+  <string name="qutai_dl_cancel">Batal</string>
+  <string name="qutai_dl_done">Download selesai</string>
+  <plurals name="qutai_dl_done_many">
+    <item quantity="other">%1$d download selesai</item>
+  </plurals>
+  <string name="qutai_dl_failed">Download gagal</string>
+  <string name="qutai_dl_tap_open">Ketuk untuk membuka</string>
+</resources>

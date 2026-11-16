@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Native strings for the widget and the launcher shortcuts (Indonesian). -->
+<resources>
+  <string name="qutai_widget_name">Penelusuran Qutai</string>
+  <string name="qutai_widget_description">Telusuri, tanya Qutai, buka tab, atau pindai kode QR</string>
+  <string name="qutai_widget_hint">Telusuri atau ketik alamat</string>
+  <string name="qutai_widget_ask">Tanya Qutai</string>
+  <string name="qutai_widget_new_tab">Tab baru</string>
+  <string name="qutai_widget_private_tab">Samaran</string>
+  <string name="qutai_widget_scan">Pindai QR</string>
+  <string name="qutai_shortcut_new_tab">Tab baru</string>
+  <string name="qutai_shortcut_private_tab_short">Tab Samaran</string>
+  <string name="qutai_shortcut_private_tab">Tab Samaran baru</string>
+  <string name="qutai_shortcut_ask">Tanya Qutai</string>
+  <string name="qutai_shortcut_scan_short">Pindai QR</string>
+  <string name="qutai_shortcut_scan">Pindai kode QR</string>
+</resources>

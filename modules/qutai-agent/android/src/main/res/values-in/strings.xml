@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Defaults until the app passes its own labels (src/i18n), e.g. right after an update. -->
+  <string name="qutai_agent_channel">Tugas asisten</string>
+  <string name="qutai_agent_alerts_channel">Asisten memerlukan Anda</string>
+  <string name="qutai_agent_working">Qutai sedang mengerjakan: %1$s</string>
+  <string name="qutai_agent_working_public">Qutai sedang mengerjakan tugas</string>
+  <string name="qutai_agent_stop">Hentikan</string>
+  <string name="qutai_agent_open">Buka</string>
+  <string name="qutai_agent_paused">Qutai dijeda: kembali untuk melanjutkan</string>
+  <string name="qutai_agent_stalled">Halaman berhenti merespons di latar belakang.</string>
+  <string name="qutai_agent_time_limit">Tugas sudah lama berjalan di latar belakang.</string>
+  <string name="qutai_agent_public_alert">Qutai memerlukan Anda</string>
+</resources>
