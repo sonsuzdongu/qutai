@@ -1805,6 +1805,8 @@ export const fr: Record<keyof typeof en, string> = {
   'account.error.noGoogleAccount': 'Aucun compte Google n’a été trouvé sur ce téléphone. Ajoutez-en un dans les réglages du téléphone et réessayez.',
   'account.error.providerFailed': 'La connexion n’a pas abouti. Veuillez réessayer.',
   'account.error.unexpected': 'Un problème est survenu. Veuillez réessayer.',
+  'account.error.signInRejected': 'Le serveur de Qutai n’a pas pu confirmer cette connexion. Veuillez réessayer.',
+  'account.error.serverNotConfigured': 'Le serveur de Qutai n’est pas encore configuré pour ce mode de connexion.',
   'account.providerTest': 'la connexion de test',
   'account.test.title': 'Connexion de test',
   'account.test.hint': 'Uniquement dans les versions conçues pour un serveur de test local. Connecte en tant que l’un des utilisateurs de test du serveur, sans Apple ni Google.',

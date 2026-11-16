@@ -1805,6 +1805,8 @@ export const ru: Record<keyof typeof en, string> = {
   'account.error.noGoogleAccount': 'На этом телефоне не найден аккаунт Google. Добавьте его в настройках телефона и повторите попытку.',
   'account.error.providerFailed': 'Вход не завершён. Повторите попытку.',
   'account.error.unexpected': 'Что-то пошло не так. Повторите попытку.',
+  'account.error.signInRejected': 'Сервер Qutai не смог подтвердить этот вход. Повторите попытку.',
+  'account.error.serverNotConfigured': 'Сервер Qutai пока не настроен для этого способа входа.',
   'account.providerTest': 'тестовый вход',
   'account.test.title': 'Тестовый вход',
   'account.test.hint': 'Только в сборках для локального тестового сервера. Вход от имени одного из тестовых пользователей сервера, без Apple и Google.',

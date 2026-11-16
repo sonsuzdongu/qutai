@@ -1801,6 +1801,8 @@ export const es: Record<keyof typeof en, string> = {
   'account.error.noGoogleAccount': 'No se encontró ninguna cuenta de Google en este teléfono. Agrega una en la configuración del teléfono y vuelve a intentarlo.',
   'account.error.providerFailed': 'El inicio de sesión no se completó. Vuelve a intentarlo.',
   'account.error.unexpected': 'Algo salió mal. Vuelve a intentarlo.',
+  'account.error.signInRejected': 'El servidor de Qutai no pudo confirmar este inicio de sesión. Vuelve a intentarlo.',
+  'account.error.serverNotConfigured': 'El servidor de Qutai aún no está configurado para este inicio de sesión.',
   'account.providerTest': 'el inicio de sesión de prueba',
   'account.test.title': 'Inicio de sesión de prueba',
   'account.test.hint': 'Solo en versiones creadas para un servidor de prueba local. Inicia sesión como uno de los usuarios de prueba del servidor, sin Apple ni Google.',

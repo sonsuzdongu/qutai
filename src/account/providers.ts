@@ -3,6 +3,7 @@ import { requireOptionalNativeModule } from 'expo';
 import { getRandomBytes } from 'expo-crypto';
 import { Platform } from 'react-native';
 import { features } from '../config/features';
+import { providerFailureDetail } from './errorDetails';
 import { makeNonce } from './nonce';
 
 /**
@@ -27,7 +28,11 @@ export class SignInCancelled extends Error {
 
 /** The provider couldn't sign in: not set up in this build, unavailable on this phone, or failed. */
 export class SignInFailed extends Error {
-  constructor(readonly reason: 'notConfigured' | 'needsBuild' | 'noAccount' | 'failed') {
+  constructor(
+    readonly reason: 'notConfigured' | 'needsBuild' | 'noAccount' | 'failed',
+    /** Technical line for "Details" (errorDetails.ts): the native error's code and scrubbed message. */
+    readonly detail?: string,
+  ) {
     super(reason);
     this.name = 'SignInFailed';
   }
@@ -37,6 +42,7 @@ export type AppleResult = { identityToken: string; nonce: string; authorizationC
 export type GoogleResult = { idToken: string; nonce: string };
 
 const errorCode = (e: unknown) => (e as { code?: unknown } | null)?.code;
+const errorMessage = (e: unknown) => (e as { message?: unknown } | null)?.message;
 
 export function appleSignInAvailable(): Promise<boolean> {
   if (Platform.OS !== 'ios') return Promise.resolve(false);
@@ -57,9 +63,9 @@ export async function signInWithApple(): Promise<AppleResult> {
     credential = await AppleAuthentication.signInAsync({ nonce: nonce.hashed, requestedScopes: [] });
   } catch (e) {
     if (errorCode(e) === 'ERR_REQUEST_CANCELED') throw new SignInCancelled();
-    throw new SignInFailed('failed');
+    throw new SignInFailed('failed', providerFailureDetail('Apple', errorCode(e), errorMessage(e)));
   }
-  if (!credential.identityToken) throw new SignInFailed('failed');
+  if (!credential.identityToken) throw new SignInFailed('failed', 'Apple: no identity token');
   return {
     identityToken: credential.identityToken,
     nonce: nonce.raw,
@@ -82,10 +88,14 @@ async function googleAndroid(hashedNonce: string): Promise<string> {
   try {
     return (await native.googleSignIn(features.googleWebClientId!, hashedNonce)).idToken;
   } catch (e) {
+    // The native module's message names the Credential Manager exception and Google's own text, e.g.
+    // "GetCredentialUnknownException: During get sign-in intent, failure response from one tap: 10: ..."
+    // (10 = DEVELOPER_ERROR: package name / SHA-1 / client id mismatch; docs/google-sign-in.md).
     const code = errorCode(e);
+    const detail = providerFailureDetail('Google', code, errorMessage(e));
     if (code === 'ERR_CANCELED') throw new SignInCancelled();
-    if (code === 'ERR_NO_CREDENTIAL') throw new SignInFailed('noAccount');
-    throw new SignInFailed('failed');
+    if (code === 'ERR_NO_CREDENTIAL') throw new SignInFailed('noAccount', detail);
+    throw new SignInFailed('failed', detail);
   }
 }
 
@@ -119,11 +129,14 @@ async function googleIos(hashedNonce: string): Promise<string> {
   let result: Awaited<ReturnType<typeof request.promptAsync>>;
   try {
     result = await request.promptAsync(GOOGLE_DISCOVERY);
-  } catch {
-    throw new SignInFailed('failed');
+  } catch (e) {
+    throw new SignInFailed('failed', providerFailureDetail('Google', errorCode(e), errorMessage(e)));
   }
   if (result.type === 'cancel' || result.type === 'dismiss') throw new SignInCancelled();
-  if (result.type !== 'success' || !result.params.code) throw new SignInFailed('failed');
+  if (result.type !== 'success' || !result.params.code) {
+    const error = result.type === 'error' ? result.params.error : undefined;
+    throw new SignInFailed('failed', `Google: ${result.type}${error && /^[a-z_]{1,40}$/.test(error) ? ` (${error})` : ''}`);
+  }
   try {
     const tokens = await AuthSession.exchangeCodeAsync(
       { clientId, code: result.params.code, redirectUri, extraParams: { code_verifier: request.codeVerifier ?? '' } },
@@ -131,7 +144,7 @@ async function googleIos(hashedNonce: string): Promise<string> {
     );
     if (!tokens.idToken) throw new Error('no id token');
     return tokens.idToken;
-  } catch {
-    throw new SignInFailed('failed');
+  } catch (e) {
+    throw new SignInFailed('failed', providerFailureDetail('Google token exchange', errorCode(e), errorMessage(e)));
   }
 }

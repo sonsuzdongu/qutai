@@ -1806,6 +1806,8 @@ export const ja: Record<keyof typeof en, string> = {
   'account.error.noGoogleAccount': 'このスマートフォンに Google アカウントが見つかりませんでした。スマートフォンの設定で追加してから、もう一度お試しください。',
   'account.error.providerFailed': 'ログインが完了しませんでした。もう一度お試しください。',
   'account.error.unexpected': '問題が発生しました。もう一度お試しください。',
+  'account.error.signInRejected': 'Qutai のサーバーでこのログインを確認できませんでした。もう一度お試しください。',
+  'account.error.serverNotConfigured': 'Qutai のサーバーはこのログイン方法にまだ対応していません。',
   'account.providerTest': 'テスト ログイン',
   'account.test.title': 'テスト ログイン',
   'account.test.hint': 'ローカルのテスト サーバー用に作成されたビルドでのみ表示されます。Apple や Google を使わず、サーバーのテスト ユーザーとしてログインします。',

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { accountErrorMessage, accountSession, isServerUnreachable, useAccountState } from '../account';
+import { accountErrorDetails, accountErrorMessage, accountSession, isServerUnreachable, useAccountState } from '../account';
 import { AccountApiError } from '../account/api';
 import { appleSignInAvailable, SignInCancelled, signInWithApple } from '../account/providers';
 import type { AuthProvider } from '../account/types';
@@ -71,7 +71,9 @@ export function AccountScreen({
     try {
       await action();
     } catch (e) {
-      if (!(e instanceof SignInCancelled)) dialog.alert(t('account.failedTitle'), accountErrorMessage(e));
+      if (!(e instanceof SignInCancelled)) {
+        dialog.alert(t('account.failedTitle'), accountErrorMessage(e), undefined, accountErrorDetails(e));
+      }
     } finally {
       setBusy(null);
     }

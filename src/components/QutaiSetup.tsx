@@ -9,6 +9,7 @@ import { Icon, type IconName } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles, usePalette } from '../ui/theme';
 import { openBuyCredits } from './BuyCredits';
+import { ErrorDetails } from './ErrorDetails';
 import { SignInOptions } from './SignInOptions';
 
 const PROVIDER_LABEL = {
@@ -68,7 +69,7 @@ export function QutaiSetup({
                 ? { type: 'signedIn' }
                 : r.kind === 'cancelled'
                   ? { type: 'signInCancelled' }
-                  : { type: 'signInFailed', message: r.message },
+                  : { type: 'signInFailed', message: r.message, details: r.details },
             )
           }
         />
@@ -143,6 +144,9 @@ export function QutaiSetup({
           </Text>
         </View>
       )}
+      {state.screen === 'choose' && state.technical ? (
+        <ErrorDetails details={state.technical} style={styles.noticeDetails} />
+      ) : null}
       <View style={[styles.card, styles.main]}>
         <View style={styles.row}>
           <QutaiMark size={36} />
@@ -212,6 +216,7 @@ const useStyles = makeStyles((c) => ({
   link: { color: c.tintText, fontSize: 15, fontWeight: '600' },
   notice: { flexDirection: 'row', gap: 10, backgroundColor: c.sunken, borderRadius: 12, padding: 12 },
   noticeText: { flex: 1, color: c.text, fontSize: 14, lineHeight: 20 },
+  noticeDetails: { marginLeft: 12, marginTop: -4 },
   balance: { color: c.text, fontSize: 26, fontWeight: '700' },
   buyButton: {
     flexDirection: 'row',

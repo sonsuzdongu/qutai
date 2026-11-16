@@ -1806,6 +1806,8 @@ export const ptBR: Record<keyof typeof en, string> = {
   'account.error.noGoogleAccount': 'Nenhuma Conta do Google foi encontrada neste celular. Adicione uma nas configurações do celular e tente de novo.',
   'account.error.providerFailed': 'O login não foi concluído. Tente de novo.',
   'account.error.unexpected': 'Algo deu errado. Tente de novo.',
+  'account.error.signInRejected': 'O servidor do Qutai não conseguiu confirmar este login. Tente de novo.',
+  'account.error.serverNotConfigured': 'O servidor do Qutai ainda não está configurado para este login.',
   'account.providerTest': 'o login de teste',
   'account.test.title': 'Login de teste',
   'account.test.hint': 'Só em versões feitas para um servidor de teste local. Faz login como um dos usuários de teste do servidor, sem Apple nem Google.',

@@ -22,6 +22,7 @@ import { Icon, IconLines } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
 import { useKeyboardHeight } from '../utils/useKeyboardHeight';
 import { useReduceMotion } from '../utils/useReduceMotion';
+import { ErrorDetails } from './ErrorDetails';
 
 /**
  * The app's alerts and confirmations, drawn with the theme instead of the platform's Alert.
@@ -51,6 +52,8 @@ export type DialogButton = {
 export type DialogOptions = {
   title: string;
   message?: string;
+  /** Technical text behind a "Details" toggle under the message (e.g. why signing in failed). */
+  details?: string;
   /** Lines with icons, shown before the message (e.g. the step the assistant wants to take). */
   lines?: IconLines;
   /** One to three buttons; just "OK" when left out. A cancel button is also what the backdrop and back button do. */
@@ -159,9 +162,9 @@ export const dialogState = {
 export const dialog = {
   show,
 
-  /** Same shape as Alert.alert: the pressed button's onPress runs after the dialog closes. */
-  alert(title: string, message?: string, buttons?: DialogButton[]) {
-    void show({ title, message, buttons });
+  /** Same shape as Alert.alert: the pressed button's onPress runs after the dialog closes. `details`: see DialogOptions. */
+  alert(title: string, message?: string, buttons?: DialogButton[], details?: string) {
+    void show({ title, message, buttons, details });
   },
 
   /** Cancel and a confirming button; true when confirmed. */
@@ -239,7 +242,7 @@ function DialogView({ entry }: { entry: Entry }) {
   const reduceMotion = useReduceMotion();
   const keyboard = useKeyboardHeight();
   const { fontScale, height } = useWindowDimensions();
-  const { title, message, lines, buttons, checkbox, input, image, choices } = entry.options;
+  const { title, message, details, lines, buttons, checkbox, input, image, choices } = entry.options;
 
   const [checked, setChecked] = useState(checkbox?.initial ?? false);
   const [choice, setChoice] = useState(choices?.initial ?? 0);
@@ -393,6 +396,7 @@ function DialogView({ entry }: { entry: Entry }) {
                   {message}
                 </Text>
               ) : null}
+              {details ? <ErrorDetails details={details} style={styles.details} /> : null}
             </ScrollView>
 
             {input && (
@@ -521,6 +525,7 @@ const useStyles = makeStyles((c) => ({
   bodyContent: { gap: 8 },
   title: { fontSize: 18, fontWeight: '700', color: c.text },
   message: { fontSize: 15, lineHeight: 21, color: c.textSecondary },
+  details: { marginLeft: 0, marginTop: 10 },
   linesSpaced: { gap: 21 },
   line: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   // Lines without an icon start where the text of the lines with one does (not paragraphs, which stand alone).

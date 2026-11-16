@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { createHash, randomBytes } from 'node:crypto';
 import { describe, it } from 'node:test';
 import { AccountApiError, createApi, type Fetch } from '../../src/account/api.ts';
+import { accountErrorDetails, providerFailureDetail, scrubDetail } from '../../src/account/errorDetails.ts';
 import { isDeviceId, makeDeviceId, makeNonce } from '../../src/account/nonce.ts';
 import { AccountSession, type SessionStorage, type StoredSession } from '../../src/account/session.ts';
 
@@ -270,5 +271,55 @@ describe('session', () => {
     await assert.rejects(pending);
     assert.equal(mem.get(), null);
     assert.equal(session.getState().status, 'signedOut');
+  });
+});
+
+describe('sign-in error details', () => {
+  it('keeps the server reason when it is a short code word, and drops anything else', async () => {
+    const answer = (reason: unknown): Fetch => async () =>
+      new Response(JSON.stringify({ error: { code: 'unauthorized', message: 'x', requestId: 'req-1', reason } }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    for (const [sent, kept] of [
+      ['wrong_audience', 'wrong_audience'],
+      ['eyJhbGciOi.payload.sig', null],
+      [42, null],
+      [undefined, null],
+    ] as const) {
+      const api = createApi('https://api.example.test', answer(sent));
+      await assert.rejects(
+        api.request({ method: 'POST', path: '/auth/google', body: {} }),
+        (e: unknown) => e instanceof AccountApiError && e.status === 401 && e.reason === kept && e.requestId === 'req-1',
+      );
+    }
+  });
+
+  it('describes a server refusal by status, code, reason and request id', () => {
+    assert.equal(
+      accountErrorDetails(new AccountApiError('unauthorized', 401, 'req-1', 'nonce_reused')),
+      'Qutai server: HTTP 401 unauthorized (nonce_reused); request req-1',
+    );
+    assert.equal(
+      accountErrorDetails(new AccountApiError('unavailable', 503, null, 'not_configured')),
+      'Qutai server: HTTP 503 unavailable (not_configured)',
+    );
+    assert.equal(accountErrorDetails(new AccountApiError('network', 0)), 'Qutai server: no answer (network)');
+    assert.equal(accountErrorDetails(new Error('x')), undefined);
+    assert.equal(accountErrorDetails({ detail: 'Google: ERR_GOOGLE_SIGN_IN: TYPE_UNKNOWN: x' }), 'Google: ERR_GOOGLE_SIGN_IN: TYPE_UNKNOWN: x');
+  });
+
+  it('keeps the native error type and Google’s text but never an email, client id, token or nonce', () => {
+    const native =
+      "Call to function 'QutaiAuth.googleSignIn' has been rejected.\n→ Caused by: TYPE_UNKNOWN: During get sign-in intent, failure response from one tap: 10: [28444] Developer console is not set up correctly.";
+    assert.equal(
+      providerFailureDetail('Google', 'ERR_GOOGLE_SIGN_IN', native),
+      'Google: ERR_GOOGLE_SIGN_IN: TYPE_UNKNOWN: During get sign-in intent, failure response from one tap: 10: [28444] Developer console is not set up correctly.',
+    );
+    const leaky = `person@example.com 123-abc.apps.googleusercontent.com eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIxIn0.c2ln ${'a1b2'.repeat(16)}`;
+    const scrubbed = scrubDetail(leaky);
+    for (const secret of ['person@example.com', '123-abc', 'eyJ', 'a1b2a1b2']) assert.ok(!scrubbed.includes(secret), scrubbed);
+    assert.equal(providerFailureDetail('Google', 'not a code!', undefined), undefined);
+    assert.ok(scrubDetail('x'.repeat(1000)).length <= 300);
   });
 });

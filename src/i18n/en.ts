@@ -1794,6 +1794,8 @@ export const en = {
   'account.error.noGoogleAccount': 'No Google account was found on this phone. Add one in the phone’s settings and try again.',
   'account.error.providerFailed': 'Signing in didn’t complete. Please try again.',
   'account.error.unexpected': 'Something went wrong. Please try again.',
+  'account.error.signInRejected': 'Qutai’s server couldn’t confirm this sign-in. Please try again.',
+  'account.error.serverNotConfigured': 'Qutai’s server isn’t set up for this sign-in yet.',
   'account.providerTest': 'the test sign-in',
   'account.test.title': 'Test sign-in',
   'account.test.hint': 'Only in builds made for a local test server. Signs in as one of the server’s test users, without Apple or Google.',

@@ -60,6 +60,16 @@ test('setup: declining, cancelling or failing returns to the choice with a note'
   assert.equal(setupPicksQutai(cancelled), false);
   const failed = run([{ type: 'chooseQutai', consented: true, signedIn: false }, { type: 'signInFailed', message: 'offline' }]);
   assert.deepEqual(failed, { screen: 'choose', notice: 'signInFailed', detail: 'offline' });
+  const withDetails = run([
+    { type: 'chooseQutai', consented: true, signedIn: false },
+    { type: 'signInFailed', message: 'refused', details: 'Qutai server: HTTP 401 unauthorized (wrong_audience)' },
+  ]);
+  assert.deepEqual(withDetails, {
+    screen: 'choose',
+    notice: 'signInFailed',
+    detail: 'refused',
+    technical: 'Qutai server: HTTP 401 unauthorized (wrong_audience)',
+  });
   const back = run([{ type: 'chooseQutai', consented: true, signedIn: false }, { type: 'back' }]);
   assert.deepEqual(back, { screen: 'choose' });
 });

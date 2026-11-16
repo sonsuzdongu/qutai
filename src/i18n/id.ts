@@ -1805,6 +1805,8 @@ export const id: Record<keyof typeof en, string> = {
   'account.error.noGoogleAccount': 'Tidak ditemukan akun Google di ponsel ini. Tambahkan akun di setelan ponsel dan coba lagi.',
   'account.error.providerFailed': 'Login tidak selesai. Coba lagi.',
   'account.error.unexpected': 'Terjadi kesalahan. Coba lagi.',
+  'account.error.signInRejected': 'Server Qutai tidak dapat mengonfirmasi login ini. Coba lagi.',
+  'account.error.serverNotConfigured': 'Server Qutai belum disiapkan untuk login ini.',
   'account.providerTest': 'login uji',
   'account.test.title': 'Login uji',
   'account.test.hint': 'Hanya di build yang dibuat untuk server uji lokal. Login sebagai salah satu pengguna uji server, tanpa Apple atau Google.',

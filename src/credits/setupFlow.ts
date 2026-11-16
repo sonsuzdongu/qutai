@@ -14,7 +14,7 @@
 export type SetupNotice = 'declined' | 'signInCancelled' | 'signInFailed' | 'signedOut';
 
 export type SetupState =
-  | { screen: 'choose'; notice?: SetupNotice; detail?: string }
+  | { screen: 'choose'; notice?: SetupNotice; detail?: string; technical?: string }
   | { screen: 'disclosure' }
   | { screen: 'signIn' }
   | { screen: 'account' }
@@ -25,7 +25,7 @@ export type SetupEvent =
   | { type: 'disclosureAnswered'; accepted: boolean; signedIn: boolean }
   | { type: 'signedIn' }
   | { type: 'signInCancelled' }
-  | { type: 'signInFailed'; message: string }
+  | { type: 'signInFailed'; message: string; details?: string }
   | { type: 'accountLost' }
   | { type: 'ownKey' }
   | { type: 'back' };
@@ -47,7 +47,9 @@ export function setupReducer(state: SetupState, event: SetupEvent): SetupState {
     case 'signInCancelled':
       return state.screen === 'signIn' ? { screen: 'choose', notice: 'signInCancelled' } : state;
     case 'signInFailed':
-      return state.screen === 'signIn' ? { screen: 'choose', notice: 'signInFailed', detail: event.message } : state;
+      return state.screen === 'signIn'
+        ? { screen: 'choose', notice: 'signInFailed', detail: event.message, ...(event.details ? { technical: event.details } : {}) }
+        : state;
     case 'accountLost':
       return state.screen === 'account' ? { screen: 'choose', notice: 'signedOut' } : state;
     case 'ownKey':

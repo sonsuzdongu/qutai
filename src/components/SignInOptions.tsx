@@ -1,7 +1,7 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { accountErrorMessage, accountSession } from '../account';
+import { accountErrorDetails, accountErrorMessage, accountSession } from '../account';
 import { AccountApiError } from '../account/api';
 import { appleSignInAvailable, googleSignInConfigured, SignInCancelled, signInWithApple, signInWithGoogle } from '../account/providers';
 import { DEV_SIGN_IN_USERS, type DevSignInUser } from '../account/types';
@@ -10,7 +10,11 @@ import { t } from '../i18n';
 import { darkPalette, makeStyles, usePalette } from '../ui/theme';
 import { dialog } from './Dialog';
 
-export type SignInResult = { kind: 'signedIn' } | { kind: 'cancelled' } | { kind: 'failed'; message: string };
+export type SignInResult =
+  | { kind: 'signedIn' }
+  | { kind: 'cancelled' }
+  /** `details`: the technical line for "Details" (account/errorDetails.ts). */
+  | { kind: 'failed'; message: string; details?: string };
 
 /**
  * The sign-in buttons (pro mode): Apple where the phone offers it, Google when this build has its client id, and the
@@ -41,12 +45,15 @@ export function SignInOptions({ onResult }: { onResult?: (result: SignInResult) 
     try {
       await action();
     } catch (e) {
-      result = e instanceof SignInCancelled ? { kind: 'cancelled' } : { kind: 'failed', message: messageFor(e) };
+      result =
+        e instanceof SignInCancelled
+          ? { kind: 'cancelled' }
+          : { kind: 'failed', message: messageFor(e), details: accountErrorDetails(e) };
     } finally {
       setBusy(null);
     }
     if (onResult) onResult(result);
-    else if (result.kind === 'failed') dialog.alert(t('account.failedTitle'), result.message);
+    else if (result.kind === 'failed') dialog.alert(t('account.failedTitle'), result.message, undefined, result.details);
   };
 
   const signIn = (provider: 'apple' | 'google') =>

@@ -1804,6 +1804,8 @@ export const ko: Record<keyof typeof en, string> = {
   'account.error.noGoogleAccount': '이 휴대전화에서 Google 계정을 찾을 수 없습니다. 휴대전화 설정에서 계정을 추가한 다음 다시 시도하세요.',
   'account.error.providerFailed': '로그인이 완료되지 않았습니다. 다시 시도하세요.',
   'account.error.unexpected': '문제가 발생했습니다. 다시 시도하세요.',
+  'account.error.signInRejected': 'Qutai 서버에서 이 로그인을 확인하지 못했습니다. 다시 시도하세요.',
+  'account.error.serverNotConfigured': 'Qutai 서버에 아직 이 로그인 방식이 설정되어 있지 않습니다.',
   'account.providerTest': '테스트 로그인',
   'account.test.title': '테스트 로그인',
   'account.test.hint': '로컬 테스트 서버용으로 만든 빌드에서만 표시됩니다. Apple이나 Google 없이 서버의 테스트 사용자 중 하나로 로그인합니다.',

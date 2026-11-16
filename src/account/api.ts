@@ -17,6 +17,8 @@ export class AccountApiError extends Error {
     readonly status: number,
     /** The server's request id (for support), when it sent one. */
     readonly requestId: string | null = null,
+    /** Sign-in routes: the server's short reason code (`wrong_audience`, `not_configured`, ...), when it sent one. */
+    readonly reason: string | null = null,
   ) {
     super(code);
     this.name = 'AccountApiError';
@@ -49,6 +51,8 @@ const KNOWN_CODES: ReadonlySet<string> = new Set<ApiErrorCode>([
   'unavailable',
   'internal',
 ]);
+
+const REASON = /^[a-z_]{1,40}$/;
 
 /** Fallback when an error answer has no readable body (a proxy's page, an empty 502). */
 function codeForStatus(status: number): ApiErrorCode {
@@ -100,9 +104,11 @@ export function createApi(baseUrl: string, fetchImpl: Fetch = fetch) {
       throw new AccountApiError(response.ok ? 'bad_response' : codeForStatus(response.status), response.status, requestId);
     }
     if (response.ok) return data as T;
-    const error = (data as { error?: { code?: unknown; requestId?: unknown } } | null)?.error;
+    const error = (data as { error?: { code?: unknown; requestId?: unknown; reason?: unknown } } | null)?.error;
     const code = typeof error?.code === 'string' && KNOWN_CODES.has(error.code) ? (error.code as ApiErrorCode) : codeForStatus(response.status);
-    throw new AccountApiError(code, response.status, typeof error?.requestId === 'string' ? error.requestId : requestId);
+    // Only a short code word is kept: it is shown to the user under "Details".
+    const reason = typeof error?.reason === 'string' && REASON.test(error.reason) ? error.reason : null;
+    throw new AccountApiError(code, response.status, typeof error?.requestId === 'string' ? error.requestId : requestId, reason);
   }
 
   return { request };

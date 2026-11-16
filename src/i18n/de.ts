@@ -1792,6 +1792,8 @@ export const de: Record<keyof typeof en, string> = {
   'account.error.noGoogleAccount': 'Auf diesem Telefon wurde kein Google-Konto gefunden. Fügen Sie in den Einstellungen des Telefons eines hinzu und versuchen Sie es erneut.',
   'account.error.providerFailed': 'Die Anmeldung wurde nicht abgeschlossen. Bitte versuchen Sie es erneut.',
   'account.error.unexpected': 'Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.',
+  'account.error.signInRejected': 'Qutais Server konnte diese Anmeldung nicht bestätigen. Bitte versuchen Sie es erneut.',
+  'account.error.serverNotConfigured': 'Qutais Server ist für diese Anmeldung noch nicht eingerichtet.',
   'account.providerTest': 'der Test-Anmeldung',
   'account.test.title': 'Test-Anmeldung',
   'account.test.hint': 'Nur in Versionen für einen lokalen Testserver. Meldet Sie als einen der Testnutzer des Servers an, ohne Apple oder Google.',

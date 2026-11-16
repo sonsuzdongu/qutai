@@ -6,6 +6,8 @@ import { SignInFailed } from './providers';
 import { AccountSession, type AccountState } from './session';
 import { secureSessionStorage } from './storage';
 
+export { accountErrorDetails } from './errorDetails';
+
 /**
  * Accounts with Qutai's server: pro mode only (`accountsEnabled`: EXPO_PUBLIC_PRO_MODE=on and
  * EXPO_PUBLIC_QUTAI_API_URL set). Without it there is no session object at all, so nothing here can reach the
@@ -34,7 +36,10 @@ export function useAccountState(): AccountState {
   );
 }
 
-/** A user-facing sentence for anything an account action can throw (never the server's raw text or a token). */
+/**
+ * A user-facing sentence for anything an account action can throw (never the server's raw text or a token).
+ * The technical line for "Details" under it is accountErrorDetails().
+ */
 export function accountErrorMessage(error: unknown): string {
   if (error instanceof SignInFailed) {
     if (error.reason === 'notConfigured') return t('account.error.notConfigured');
@@ -48,6 +53,9 @@ export function accountErrorMessage(error: unknown): string {
     case 'timeout':
       return t('account.error.offline');
     case 'unavailable':
+      // The sign-in routes say why (backend/README.md › Auth › Sign-in error reasons).
+      if (error.reason === 'not_configured') return t('account.error.serverNotConfigured');
+      return t('account.error.unavailable');
     case 'not_implemented':
     case 'internal':
     case 'bad_response':
@@ -57,7 +65,8 @@ export function accountErrorMessage(error: unknown): string {
     case 'account_suspended':
       return t('account.error.suspended');
     case 'unauthorized':
-      return t('account.error.signInAgain');
+      // With a reason it's a refused sign-in, not an ended session.
+      return error.reason ? t('account.error.signInRejected') : t('account.error.signInAgain');
     default:
       return t('account.error.unexpected');
   }

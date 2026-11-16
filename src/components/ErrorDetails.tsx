@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
 
 /**
- * Under an error in the assistant panel: "Details" opens the raw error text (status, the provider's own message) the
+ * Under an error in the assistant panel (and under a failed sign-in, in a dialog or setup's notice): "Details" opens the raw error text (status, the provider's own message) the
  * plain sentence above was made from (ai/plainError.ts). Selectable, so it can be copied into a bug report.
  */
-export function ErrorDetails({ details }: { details: string }) {
+export function ErrorDetails({ details, style }: { details: string; style?: StyleProp<ViewStyle> }) {
   const styles = useStyles();
   const [open, setOpen] = useState(false);
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, style]}>
       <Pressable
         onPress={() => setOpen((v) => !v)}
         accessibilityRole="button"

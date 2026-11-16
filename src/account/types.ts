@@ -79,7 +79,28 @@ export type ApiErrorCode =
   | 'unavailable'
   | 'internal';
 
-/** Every error answer from the server: `{ error: { code, message, requestId } }`. */
+/** Every error answer from the server: `{ error: { code, message, requestId, reason? } }`. */
 export interface ApiErrorBody {
-  error: { code: ApiErrorCode; message: string; requestId: string };
+  error: {
+    code: ApiErrorCode;
+    message: string;
+    requestId: string;
+    /**
+     * Sign-in routes only: which check refused the sign-in (401: a SignInRejectReason; 503: `not_configured` or
+     * `keys_unavailable`). backend/README.md › Auth › Sign-in error reasons.
+     */
+    reason?: SignInRejectReason | 'not_configured' | 'keys_unavailable';
+  };
 }
+
+export type SignInRejectReason =
+  | 'malformed'
+  | 'bad_signature'
+  | 'unknown_key'
+  | 'wrong_issuer'
+  | 'wrong_audience'
+  | 'expired'
+  | 'missing_claim'
+  | 'nonce_mismatch'
+  | 'nonce_reused'
+  | 'invalid';
