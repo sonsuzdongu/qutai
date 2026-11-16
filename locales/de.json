@@ -1,0 +1,21 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Qutai",
+    "NSPhotoLibraryAddUsageDescription": "Qutai sichert die Screenshots und Bilder, die Sie speichern möchten, in Ihren Fotos.",
+    "NSCameraUsageDescription": "Qutai verwendet die Kamera, um QR-Codes zu scannen, um ein Foto oder Video für das Upload-Feld einer Webseite oder ein Foto als Anhang einer Nachricht an den Assistenten aufzunehmen, und für Websites, denen Sie dies erlauben, etwa für Videoanrufe.",
+    "NSMicrophoneUsageDescription": "Qutai verwendet das Mikrofon, wenn Sie dem Assistenten eine Nachricht diktieren, für Websites, denen Sie dies erlauben, etwa für Videoanrufe, und für den Ton, wenn Sie ein Video zum Hochladen auf eine Webseite aufnehmen.",
+    "NSSpeechRecognitionUsageDescription": "Qutai wandelt in Text um, was Sie dem Assistenten sagen. Wenn Ihre Sprache nicht auf dem Gerät selbst erkannt werden kann, erhält der Sprachdienst von Apple dafür das Audio; Qutai und Ihr KI-Anbieter erhalten nur den Text.",
+    "NSFaceIDUsageDescription": "Qutai verwendet Face ID, um die App und Inkognito-Tabs zu entsperren.",
+    "NSCalendarsUsageDescription": "Qutai trägt von Ihnen bestätigte Termine, etwa Tickets und Reservierungen, in den von Ihnen gewählten Kalender ein und liest Ihre Termine nur, wenn Sie den Assistenten nach Ihrem Zeitplan fragen und dies bestätigen.",
+    "NSCalendarsFullAccessUsageDescription": "Qutai listet Ihre Kalender auf, damit Sie wählen können, wohin neue Termine kommen, und liest Ihre Termine nur, wenn Sie den Assistenten nach Ihrem Zeitplan fragen und dies bestätigen; die Termine im von Ihnen freigegebenen Zeitraum werden an Ihren KI-Anbieter gesendet.",
+    "NSCalendarsWriteOnlyAccessUsageDescription": "Qutai trägt von Ihnen bestätigte Termine, etwa Tickets und Reservierungen, in Ihren Kalender ein.",
+    "NSRemindersUsageDescription": "Qutai fügt von Ihnen bestätigte Erinnerungen zu der von Ihnen gewählten Erinnerungsliste hinzu.",
+    "NSRemindersFullAccessUsageDescription": "Qutai fügt von Ihnen bestätigte Erinnerungen zu der von Ihnen gewählten Erinnerungsliste hinzu.",
+    "NSLocationWhenInUseUsageDescription": "Qutai gibt Ihre Position an Websites weiter, denen Sie dies erlauben, etwa Karten, und an den Assistenten, wenn Sie ihn bitten, Ihren Standort zu verwenden. Bei der Einrichtung kann Qutai auf Ihr Tippen hin eintragen, wo Sie wohnen; der Adressdienst von Apple ermittelt dazu den Ortsnamen zu Ihrer Position.",
+    "New tab": "Neuer Tab",
+    "New incognito tab": "Neuer Inkognito-Tab",
+    "Ask Qutai": "Qutai fragen",
+    "Scan QR code": "QR-Code scannen",
+    "NSLocalNetworkUsageDescription": "Qutai verbindet sich nur dann mit einem KI-Server in Ihrem lokalen Netzwerk, wenn Sie ihn als eigenen KI-Endpunkt eingerichtet haben."
+  }
+}

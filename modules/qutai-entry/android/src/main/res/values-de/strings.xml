@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Native strings for the widget and the launcher shortcuts (German). -->
+<resources>
+  <string name="qutai_widget_name">Qutai-Suche</string>
+  <string name="qutai_widget_description">Suchen, Qutai fragen, Tab öffnen oder QR-Code scannen</string>
+  <string name="qutai_widget_hint">Suchen oder Adresse eingeben</string>
+  <string name="qutai_widget_ask">Qutai fragen</string>
+  <string name="qutai_widget_new_tab">Neuer Tab</string>
+  <string name="qutai_widget_private_tab">Inkognito</string>
+  <string name="qutai_widget_scan">QR scannen</string>
+  <string name="qutai_shortcut_new_tab">Neuer Tab</string>
+  <string name="qutai_shortcut_private_tab_short">Inkognito</string>
+  <string name="qutai_shortcut_private_tab">Neuer Inkognito-Tab</string>
+  <string name="qutai_shortcut_ask">Qutai fragen</string>
+  <string name="qutai_shortcut_scan_short">QR scannen</string>
+  <string name="qutai_shortcut_scan">QR-Code scannen</string>
+</resources>
