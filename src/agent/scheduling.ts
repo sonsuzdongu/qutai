@@ -3,6 +3,7 @@ import { t } from '../i18n';
 import { formatDateTime, timeLabel } from '../i18n/format';
 import type { IconLine, IconLines } from '../ui/Icon';
 import { cutText } from '../utils/wellFormed';
+import { givenOffsetMinutes, showsTimeZone, whenLabel } from './whenLabel';
 
 /** The tools that put something on the user's calendar or schedule a notification. */
 export const SCHEDULING_TOOLS = new Set(['add_calendar_event', 'add_reminder', 'schedule_notification']);
@@ -25,7 +26,15 @@ export type ReminderPlan = { kind: 'reminder'; title: string; due?: Date; notes?
  * `at`: when it is shown. With `delaySeconds` (the user gave a relative time, "in 10 seconds") it is scheduled that
  * many seconds after the user confirms, and `at` is only the estimate for the confirmation.
  */
-export type NotificationPlan = { kind: 'notification'; title: string; body: string; at: Date; delaySeconds?: number };
+export type NotificationPlan = {
+  kind: 'notification';
+  title: string;
+  body: string;
+  at: Date;
+  delaySeconds?: number;
+  /** The offset `time` was given with (minutes east of UTC); absent for the phone's local time or a delay. */
+  givenOffset?: number;
+};
 export type SchedulePlan = CalendarEventPlan | ReminderPlan | NotificationPlan;
 /** A validated read_calendar request. */
 export type CalendarReadPlan = { start: Date; end: Date; details: boolean };
@@ -166,7 +175,8 @@ export function planSchedule(
   if (!at) return dateError('time', input.time);
   if (at.getTime() <= now)
     return `That time is in the past (${nowContext(new Date(now))}). Ask the user for a time in the future.`;
-  return { kind: 'notification', title, body, at };
+  const givenOffset = givenOffsetMinutes(input.time);
+  return { kind: 'notification', title, body, at, ...(givenOffset === null ? {} : { givenOffset }) };
 }
 
 const DELAY_UNITS = [
@@ -205,7 +215,7 @@ function sameDay(a: Date, b: Date): boolean {
 }
 
 /** Exactly what will be added, in the user's language, locale and time zone, for the confirmation. */
-export function describePlan(plan: SchedulePlan, android: boolean): IconLines {
+export function describePlan(plan: SchedulePlan, android: boolean, now = Date.now()): IconLines {
   const zone = t('schedule.timeZone', { zone: deviceTimeZone() });
   const lines: IconLine[] = [];
   const add = (...texts: string[]) => texts.forEach((text) => lines.push({ text }));
@@ -225,14 +235,9 @@ export function describePlan(plan: SchedulePlan, android: boolean): IconLines {
     if (plan.due) add(zone);
   } else {
     lines.push({ icon: 'notifications', text: t('schedule.confirmNotification') });
-    if (plan.delaySeconds !== undefined) {
-      add(
-        `“${plan.title}”`,
-        plan.body,
-        t('schedule.inDelay', { delay: delayLabel(plan.delaySeconds) }),
-        t('schedule.around', { when: plan.delaySeconds < 86_400 ? timeLabel(plan.at.getTime()) : formatDateTime(plan.at) }),
-      );
-    } else add(`“${plan.title}”`, plan.body, formatDateTime(plan.at), zone);
+    // "in 3 minutes (13:36)", the full date a day or more ahead; the time zone only when the time came in another one.
+    add(`“${plan.title}”`, plan.body, whenLabel(plan.at, now));
+    if (showsTimeZone(plan.at, plan.givenOffset)) add(zone);
   }
   if (plan.kind !== 'notification' && plan.notes) {
     const notes = plan.notes.length > 300 ? `${cutText(plan.notes, 300)}…` : plan.notes;
