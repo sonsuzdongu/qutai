@@ -205,7 +205,12 @@ The page stays loaded underneath, so closing reader mode (or Android back) retur
 Downloads are Qutai's own on both platforms, with one Downloads screen (menu › Library › Downloads): in progress and
 finished sections, search, an icon by type, the site, size, progress with speed and time left, and per item Pause /
 Resume / Cancel / Retry, Open, Share, Show in Downloads folder (Android), Copy link, Remove from list and Delete file
-(confirmed); "Clear finished" only empties the list. A small indicator over the page shows running downloads. A file
+(confirmed); "Clear finished" only empties the list. A small pill over the page shows running downloads (tap:
+Downloads) and, for a few seconds, one that just finished, with Open; its close button, a sideways swipe or the
+screen reader's "Hide" action hide it without stopping anything (the list keeps the download). "Open" never fails
+silently: a file deleted elsewhere, no app for its type, no access any more or a refusal each get a message saying what
+to do instead (share it, or open it from the Files app). On Android an APK goes to the system's installer, which asks
+"allow from this source" itself the first time (`REQUEST_INSTALL_PACKAGES`, see `docs/permissions.md`). A file
 a page starts without a recent tap on the page asks first ("<site> wants to download <file>"), a second one from the
 same site also offers to block that site's downloads for the session; apps, installers, scripts and archives get a
 warning before they start; `content:` and `file:` addresses are refused. Files a page generates (`blob:` and `data:`
@@ -629,6 +634,12 @@ the feature, when the user is asked, the config line that declares it and what i
 - **Scheduled tasks are reminders.** There is no server and nothing runs while Qutai is closed, so a saved task's
   schedule (once, daily, weekly) is a local notification at that time; tapping it opens the task ready to run (or runs
   it, if the user chose that for the task). Never without the tap. Reminders are rescheduled each time Qutai opens.
+- **A notification the assistant scheduled leads back to where it was asked.** Tapping it (also when Qutai was closed,
+  after the app lock) opens the tab the user asked from; if that tab was closed, the first tab of its group; otherwise
+  the first tab, with a short toast saying the page couldn't be found. The notification carries only internal ids (the
+  tab's random uid and its group's id), never a URL or title; for an incognito tab only a random key, matched in memory
+  while that incognito session lasts, so an incognito tab is never reopened. Notifications scheduled before this just
+  open Qutai.
 - **Tabs sleep.** At most five tabs keep a live WebView; the others sleep as a URL and thumbnail and reload
   when opened. Private tabs, tabs using the camera or microphone, tabs playing sound, and the tabs a running task works in
   or reads are never put to sleep.

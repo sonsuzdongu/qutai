@@ -80,6 +80,7 @@ import { syncTaskReminders } from './src/device/taskSchedule';
 import { formatDate, formatSize } from './src/i18n/format';
 import { Toast, useToast } from './src/components/Toast';
 import { DownloadIndicator } from './src/components/DownloadIndicator';
+import { openDownload } from './src/components/openDownload';
 import { CaptureOverlay } from './src/components/CaptureOverlay';
 import { dialog, DialogHost } from './src/components/Dialog';
 import { copyLink, copyText, shareLink, shareText } from './src/device/link';
@@ -113,7 +114,7 @@ import { placeCall } from './src/device/phone';
 import { SEARCH_ENGINES, searchResultsOf } from './src/browser/search';
 import { openSmsComposer } from './src/device/sms';
 import { openWhatsApp } from './src/device/whatsapp';
-import { initNotifications } from './src/device/notifications';
+import { NotificationOrigin, incognitoOriginTab, initNotifications } from './src/device/notifications';
 import { nowContext } from './src/agent/scheduling';
 import { interfaceLanguageNote } from './src/agent/uiLabels';
 import { renderReportPdf } from './src/device/reportPdf';
@@ -547,20 +548,26 @@ function BrowserApp({
   // reader mode is turned on or off (it searches the text on screen).
   const [findFor, setFindFor] = useState<{ tabId: string; url: string; reader: boolean } | null>(null);
   const toast = useToast();
-  // Downloads: notices from the request flow, a toast when one finishes while Qutai is on screen, the
-  // notifications' "open Downloads" (Android), and incognito entries leave the list with the session.
+  // Downloads: notices from the request flow (a finished download shows in the download pill, with Open), the
+  // notifications' "open Downloads" and "open this file" (Android: a finished file no app opened directly; Qutai
+  // says why), and incognito entries leave the list with the session.
   useEffect(() => {
     downloadRequests.notify = toast.show;
-    const offFinished = downloads.onFinished((item) => {
-      if (AppState.currentState !== 'active') return;
-      toast.show(t(item.state === 'done' ? 'downloads.done' : 'downloads.failed', { name: item.name }));
-    });
+    const openFile = (id: string) => {
+      const item = downloads.get(id);
+      if (item) void openDownload(downloads, item, toast.show);
+      else setDownloadsVisible(true);
+    };
     const offOpen = nativeDownloads?.addListener('onOpenRequested', () => setDownloadsVisible(true));
+    const offOpenFile = nativeDownloads?.addListener('onOpenFileRequested', ({ id }) => openFile(id));
     if (nativeDownloads?.consumeOpenRequest()) setDownloadsVisible(true);
+    const fileRequest = nativeDownloads?.consumeOpenFileRequest?.();
+    // At a cold start the list is read first.
+    if (fileRequest) downloads.load().then(() => openFile(fileRequest), () => {});
     const offIncognito = browserInstance.onIncognitoEnd(() => downloads.forgetIncognito());
     return () => {
-      offFinished();
       offOpen?.remove();
+      offOpenFile?.remove();
       offIncognito();
     };
   }, [toast.show]);
@@ -759,7 +766,37 @@ function BrowserApp({
       case 'task':
         openRemindedTask(entry.id);
         return;
+      case 'notification':
+        returnToNotificationTab(entry.from);
+        return;
     }
+  };
+  /**
+   * A tap on a notification the assistant scheduled: the tab it was asked from; if that tab is closed, the first tab of
+   * its group; else the first normal tab (a new one if there is none). Says so in a toast when it isn't the same tab.
+   * An incognito tab is found only while this incognito session lasts; it is never reopened.
+   */
+  const returnToNotificationTab = (from: NotificationOrigin) => {
+    const firstNormal = () => {
+      const normal = browser.tabsOf(false);
+      if (normal.length) browser.switchTab(normal[0].id);
+      else browser.openTab();
+    };
+    if ('incognito' in from) {
+      const id = incognitoOriginTab(from.incognito);
+      if (id && browser.getTab(id)) return browser.switchTab(id);
+      firstNormal();
+      return toast.show(t('notifications.incognitoGone'));
+    }
+    const tab = browser.tabs.find((x) => !x.incognito && x.uid === from.tab);
+    if (tab) return browser.switchTab(tab.id);
+    const inGroup = from.group ? browser.tabs.find((x) => !x.incognito && x.groupId === from.group) : undefined;
+    if (inGroup) {
+      browser.switchTab(inGroup.id);
+      return toast.show(t('notifications.tabGoneGroup'));
+    }
+    firstNormal();
+    toast.show(t('notifications.tabGone'));
   };
   useEntryPoints(!appLocked, handleEntry);
   const incomingActions = (item: { text: string; url: string | null }): SheetAction[] => [
@@ -892,6 +929,7 @@ function BrowserApp({
         turns: chat.turns,
         browser,
         agentTab,
+        askedFrom: { id: current.id },
         privacy: chat.privacy,
         memory: settings.memoryEnabled ? memoryStore : undefined,
         customInstructions: settings.customInstructions,
@@ -2114,7 +2152,6 @@ function BrowserApp({
           <DownloadsScreen
             visible={downloadsVisible}
             store={downloads}
-            run={(action) => void runAction(action)}
             copyText={copyText}
             onAsk={askAboutDownload}
             onClose={() => setDownloadsVisible(false)}
@@ -2229,6 +2266,7 @@ function BrowserApp({
             store={downloads}
             bottomOffset={barAtBottom ? 64 : 16}
             onOpen={() => setDownloadsVisible(true)}
+            onOpenFile={(item) => void openDownload(downloads, item, toast.show)}
           />
           <ActionSheet
             title={

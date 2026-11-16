@@ -24,7 +24,7 @@ class QutaiDownloadsModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("QutaiDownloads")
 
-    Events("onChange", "onOpenRequested")
+    Events("onChange", "onOpenRequested", "onOpenFileRequested")
 
     OnCreate {
       appContext.reactContext?.let { ctx ->
@@ -109,11 +109,17 @@ class QutaiDownloadsModule : Module() {
       DownloadEngine.deleteFile(id)
     }
 
-    /** "opened", "noApp" (nothing on the phone opens this type) or "gone" (the file was deleted elsewhere). */
+    /**
+     * "opened"; "noApp" (nothing on the phone opens this type); "gone" (the file was deleted elsewhere); "denied" (it is
+     * there, but Qutai may no longer read it); "failed" (anything else the system refused). An APK goes to the system's
+     * installer, which needs REQUEST_INSTALL_PACKAGES (plugins/withDownloads.js) and asks "allow from this source"
+     * itself the first time; without that permission it closed again at once and the tap did nothing.
+     */
     AsyncFunction("open") { id: String ->
       val rec = DownloadEngine.find(id) ?: return@AsyncFunction "gone"
       val uri = rec.uri ?: return@AsyncFunction "gone"
-      if (!DownloadSink(context).exists(rec)) return@AsyncFunction "gone"
+      val access = DownloadSink(context).access(rec)
+      if (access != "ok") return@AsyncFunction access
       val intent = Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(uri), rec.mime)
         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
       try {
@@ -122,6 +128,10 @@ class QutaiDownloadsModule : Module() {
         "opened"
       } catch (_: ActivityNotFoundException) {
         "noApp"
+      } catch (_: SecurityException) {
+        "denied"
+      } catch (_: Exception) {
+        "failed"
       }
     }.runOnQueue(Queues.MAIN)
 
@@ -153,6 +163,14 @@ class QutaiDownloadsModule : Module() {
         ContextCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
     }
 
+    /** The download whose notification opened the app to open that file (cold start), or null; clears the request. */
+    Function("consumeOpenFileRequest") {
+      val intent = appContext.currentActivity?.intent ?: return@Function null
+      val id = intent.getStringExtra(DownloadNotifications.EXTRA_OPEN_FILE)
+      if (id != null) intent.removeExtra(DownloadNotifications.EXTRA_OPEN_FILE)
+      id
+    }
+
     /** Whether the app was opened from a download notification (cold start); clears the request. */
     Function("consumeOpenRequest") {
       val intent = appContext.currentActivity?.intent ?: return@Function false
@@ -162,6 +180,10 @@ class QutaiDownloadsModule : Module() {
     }
 
     OnNewIntent { intent ->
+      intent.getStringExtra(DownloadNotifications.EXTRA_OPEN_FILE)?.let { id ->
+        intent.removeExtra(DownloadNotifications.EXTRA_OPEN_FILE)
+        sendEvent("onOpenFileRequested", mapOf("id" to id))
+      }
       if (intent.getBooleanExtra(DownloadNotifications.EXTRA_OPEN, false)) {
         intent.removeExtra(DownloadNotifications.EXTRA_OPEN)
         sendEvent("onOpenRequested", emptyMap<String, Any>())

@@ -3,7 +3,7 @@ import type { Tab } from '../browser/Tab';
 import { Platform } from 'react-native';
 import { addCalendarEvent, addReminder, DeviceToolError, readCalendarEvents } from '../device/calendar';
 import { openDefaultBrowserSettings } from '../device/defaultBrowser';
-import { scheduleNotification } from '../device/notifications';
+import { notificationOrigin, scheduleNotification } from '../device/notifications';
 import { renderPagePdf, renderPdfFromScreenshots, shareRenderedPdf, type RenderedPdf } from '../device/pdf';
 import type { EmailOutcome } from '../device/email';
 import type { ComposedRef, Shareable, ShareOffer } from '../chat/shareable';
@@ -75,6 +75,11 @@ export type ToolContext = {
   browser: Browser;
   /** The tab the agent works in. It can differ from the tab the user is looking at. */
   agentTab: { id: string };
+  /**
+   * The tab the user asked from (agentTab can move to other tabs during the task). A notification the assistant
+   * schedules leads back to it when tapped.
+   */
+  askedFrom?: { id: string };
   /** Asks the user before an action that changes the page (host: the site it acts on). Resolve false to block it. */
   confirm?: (description: string, host: string | null) => Promise<boolean>;
   /** The global "ask before actions" setting, for sites without their own permission. Defaults to true when confirm is set. */
@@ -604,7 +609,8 @@ async function schedulingTool(name: SchedulingTool, input: Record<string, unknow
       const where = await addReminder(plan);
       return { content: `Added the reminder to ${where}`, isError: false };
     }
-    await scheduleNotification(plan);
+    const from = ctx.browser.getTab(ctx.askedFrom?.id ?? ctx.agentTab.id);
+    await scheduleNotification(plan, from ? notificationOrigin(from) : null);
     return { content: 'Scheduled the notification. Qutai will show it at that time.', isError: false };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

@@ -27,6 +27,8 @@ object DownloadNotifications {
   private const val GROUP_SUMMARY_ID = 0x51B1
   private const val GROUP = "qutai.downloads.done"
   const val EXTRA_OPEN = "qutai.openDownloads"
+  /** The id of a finished download the app should open (a tap on its notification when no app resolved it). */
+  const val EXTRA_OPEN_FILE = "qutai.openDownloadFile"
   private const val PREFS = "qutai_downloads"
   private const val MIN_UPDATE_MS = 800L
 
@@ -180,12 +182,27 @@ object DownloadNotifications {
 
   private fun idFor(rec: DownloadRecord) = 0x52000 + (rec.id.hashCode() and 0xFFFF)
 
+  /**
+   * Opens the app, which opens this file through the Downloads screen's "Open" (its messages: no app for this type,
+   * file gone, no access).
+   */
+  private fun openFileInApp(context: Context, rec: DownloadRecord): PendingIntent? {
+    val launch = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return null
+    launch.putExtra(EXTRA_OPEN_FILE, rec.id)
+    launch.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+    return PendingIntent.getActivity(context, idFor(rec), launch, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+  }
+
   fun finished(context: Context, rec: DownloadRecord) {
     channels(context)
     val r = res(context)
+    // A tap opens the file directly when some app on the phone opens it (an APK: the system's installer, which asks
+    // "allow from this source" itself); otherwise the tap goes through Qutai, which says why it can't, instead of a
+    // tap that silently does nothing. The <queries> entry of plugins/withDownloads.js makes the viewers visible here.
     val open = rec.uri?.let { uri ->
       val view = Intent(Intent.ACTION_VIEW).setDataAndType(Uri.parse(uri), rec.mime)
         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
+      if (view.resolveActivity(context.packageManager) == null) return@let openFileInApp(context, rec)
       PendingIntent.getActivity(context, idFor(rec), view, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
     } ?: openDownloads(context, idFor(rec))
     post(context, rec, NotificationCompat.Builder(context, DONE_CHANNEL)

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState, Linking, Platform } from 'react-native';
 import { siteColor } from '../ui/siteColor';
 import { isIncomingWebLink } from './defaultBrowser';
+import { NotificationOrigin, onAssistantNotificationTapped } from './notifications';
 import { onTaskReminderTapped } from './taskSchedule';
 
 /**
@@ -24,7 +25,8 @@ import { onTaskReminderTapped } from './taskSchedule';
  *   qutai://new-private-tab          a new incognito tab (behind the incognito lock if that is on)
  *   qutai://scan                     the QR code scanner
  *
- * Also a tap on a saved task's reminder (src/device/taskSchedule.ts): only the task's id, read from the database.
+ * Also a tap on a saved task's reminder (src/device/taskSchedule.ts): only the task's id, read from the database; and
+ * a tap on a notification the assistant scheduled (src/device/notifications.ts): the tab it was asked from.
  */
 export type Entry =
   /** An http(s) page to open in a normal tab. */
@@ -37,7 +39,9 @@ export type Entry =
   | { kind: 'ask'; text: string }
   | { kind: 'scan' }
   /** The user tapped the reminder of the saved task with this id. */
-  | { kind: 'task'; id: string };
+  | { kind: 'task'; id: string }
+  /** The user tapped a notification the assistant scheduled: back to the tab it was asked from. */
+  | { kind: 'notification'; from: NotificationOrigin };
 
 /** From the native module: shared text (Android) or a quick action's qutai:// link (iOS). */
 type RawEntry = { source?: string; text?: string; subject?: string | null; url?: string };
@@ -244,6 +248,7 @@ export function useEntryPoints(ready: boolean, handle: (entry: Entry) => void) {
       Linking.addEventListener('url', ({ url }) => push([entryFromLink(url)])),
       native?.addListener('onEntry', takeNative),
       { remove: onTaskReminderTapped((id) => push([{ kind: 'task', id }])) },
+      { remove: onAssistantNotificationTapped((from) => push([{ kind: 'notification', from }])) },
       // Belt and braces for an event sent while JavaScript was not listening.
       AppState.addEventListener('change', (state) => state === 'active' && takeNative()),
     ];

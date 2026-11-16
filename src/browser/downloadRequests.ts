@@ -170,7 +170,7 @@ export class DownloadRequests {
         userAgent: file.userAgent ?? tab.userAgent ?? null,
       });
     }
-    if (origin !== 'assistant') this.notify(t('downloads.startedNamed', { name: file.name }));
+    // No "Downloading …" toast: the download pill (DownloadIndicator) shows it, and the two were drawn on top of each other.
     this.askNotifications();
     return true;
   }

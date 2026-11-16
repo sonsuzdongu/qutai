@@ -45,8 +45,83 @@ function allowed(Notifications: NotificationsModule, status: PermissionStatus): 
   );
 }
 
-/** Schedules a local notification from Qutai (no push, no push token). */
-export async function scheduleNotification(plan: NotificationPlan): Promise<void> {
+/**
+ * Where a notification the assistant scheduled was asked from, so a tap leads back there. Only internal ids: a normal
+ * tab's uid (random, saved with the session, kept when the tab is reopened from recently closed) and its group's id.
+ * Never a URL or a page title. An incognito tab is only a random key; which tab it stands for is kept in memory
+ * (below), so nothing about it reaches the notification store on disk and it is forgotten when Qutai closes.
+ */
+export type NotificationOrigin = { tab: string; group?: string } | { incognito: string };
+
+/** Incognito keys → tab ids, this run of Qutai only. */
+const incognitoOrigins = new Map<string, string>();
+
+/** The origin of a notification asked from this tab. */
+export function notificationOrigin(tab: { id: string; uid: string; groupId?: string; incognito: boolean }): NotificationOrigin {
+  if (tab.incognito) {
+    const key = Math.random().toString(36).slice(2, 12);
+    incognitoOrigins.set(key, tab.id);
+    return { incognito: key };
+  }
+  return tab.groupId ? { tab: tab.uid, group: tab.groupId } : { tab: tab.uid };
+}
+
+/** The incognito tab (its id in this run) a key stands for, or null once Qutai has restarted. */
+export function incognitoOriginTab(key: string): string | null {
+  return incognitoOrigins.get(key) ?? null;
+}
+
+/** Identifiers of the assistant's notifications; earlier builds left the identifier to expo-notifications. */
+const ID_PREFIX = 'qutai-notification-';
+
+function originFrom(data: unknown): NotificationOrigin | null {
+  const from = (data as { qutaiFrom?: unknown } | undefined)?.qutaiFrom as Record<string, unknown> | undefined;
+  if (!from || typeof from !== 'object') return null;
+  if (typeof from.incognito === 'string') return { incognito: from.incognito };
+  if (typeof from.tab !== 'string') return null;
+  return typeof from.group === 'string' ? { tab: from.tab, group: from.group } : { tab: from.tab };
+}
+
+const handled = new Set<string>();
+
+/**
+ * Calls `listener` with the origin when the user taps a notification the assistant scheduled: the tap that started
+ * Qutai (cold start) and taps while it runs or is in the background. Each tap is handed over once. Notifications
+ * from before origins were stored carry none and are left alone (Qutai just opens, as it did). Returns the
+ * unsubscribe.
+ */
+export function onAssistantNotificationTapped(listener: (origin: NotificationOrigin) => void): () => void {
+  let subscription: { remove(): void } | null = null;
+  let stopped = false;
+  load()
+    .then((Notifications) => {
+      if (stopped) return;
+      const take = (response: import('expo-notifications').NotificationResponse | null) => {
+        if (!response || response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
+        const { request, date } = response.notification;
+        if (!request.identifier.startsWith(ID_PREFIX)) return;
+        const key = `${request.identifier} ${date}`;
+        const origin = originFrom(request.content.data);
+        if (!origin || handled.has(key)) return;
+        handled.add(key);
+        Notifications.clearLastNotificationResponse();
+        listener(origin);
+      };
+      subscription = Notifications.addNotificationResponseReceivedListener(take);
+      take(Notifications.getLastNotificationResponse());
+    })
+    .catch(() => {});
+  return () => {
+    stopped = true;
+    subscription?.remove();
+  };
+}
+
+/**
+ * Schedules a local notification from Qutai (no push, no push token). `from`: where it was asked, for the tap (see
+ * NotificationOrigin); null when that tab is unknown.
+ */
+export async function scheduleNotification(plan: NotificationPlan, from: NotificationOrigin | null = null): Promise<void> {
   const Notifications = await load();
   // Android 13+ shows the permission prompt only once a channel exists.
   if (Platform.OS === 'android') {
@@ -69,7 +144,8 @@ export async function scheduleNotification(plan: NotificationPlan): Promise<void
     );
   }
   await Notifications.scheduleNotificationAsync({
-    content: { title: plan.title, body: plan.body, sound: 'default' },
+    identifier: `${ID_PREFIX}${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    content: { title: plan.title, body: plan.body, sound: 'default', ...(from ? { data: { qutaiFrom: from } } : {}) },
     trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: plan.at, channelId: CHANNEL_ID },
   });
 }

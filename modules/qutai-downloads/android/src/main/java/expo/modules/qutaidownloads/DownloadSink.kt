@@ -32,6 +32,25 @@ class DownloadSink(private val context: Context) {
 
   class SinkGone : IOException("The partial file is gone")
 
+  /**
+   * Before opening a finished file: "ok", "gone" (deleted elsewhere) or "denied" (it is there but Qutai may no longer
+   * read it, e.g. Android 9's storage permission was taken back, or the row now belongs to another app).
+   */
+  fun access(rec: DownloadRecord): String {
+    if (Build.VERSION.SDK_INT >= 29) {
+      val uri = rec.uri ?: return "gone"
+      return try {
+        val found = resolver.query(Uri.parse(uri), arrayOf(MediaStore.MediaColumns._ID), null, null, null)?.use { it.count > 0 } ?: false
+        if (found) "ok" else "gone"
+      } catch (_: SecurityException) {
+        "denied"
+      } catch (_: Exception) {
+        "gone"
+      }
+    }
+    return if (exists(rec)) "ok" else "gone"
+  }
+
   /** Whether the partial (or finished) file still exists. */
   fun exists(rec: DownloadRecord): Boolean {
     if (Build.VERSION.SDK_INT >= 29) {

@@ -100,6 +100,7 @@ Install-time permissions (no prompt):
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_SPECIAL_USE` | "Keep working in the background" (Settings › Assistant, off by default): the `specialUse` foreground service `expo.modules.qutaiagent.AgentTaskService` (local module `modules/qutai-agent`) keeps an assistant task the user started running when they leave Qutai, with an ongoing notification (task title from the user's own message, hidden on the lock screen; the current step; Stop and Open). Started only at the moment Qutai leaves the screen while a task runs, stopped when the user returns, the task ends, fails, is stopped, pauses because it needs the user, stalls, or after 30 minutes in the background; never for incognito conversations | `plugins/withBackgroundTasks.js` (the service, `foregroundServiceType="specialUse"`, `exported="false"`, and its `android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE` property) |
 | `RUN_USER_INITIATED_JOBS` (Android 14+) | Downloads keep going when the user leaves Qutai: one user-initiated data transfer job (`JobScheduler`, `setUserInitiated(true)`, `expo.modules.qutaidownloads.DownloadJobService`, `BIND_JOB_SERVICE`, not exported) runs while any download is active, with the downloads' notification, and ends when none is left. Scheduled only when the user starts or resumes a download while Qutai is on screen; it has a network constraint, so Android stops it while offline and runs it again when a network is back. Android's own guidance for user-initiated transfers. No Play Console declaration (it is not a foreground service type) | `plugins/withDownloads.js` |
 | `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC` | Downloads in the background on Android 8 to 13, and on Android 14+ only when the job above can't be scheduled (for example "Resume" pressed in a notification while Qutai is in the background): the `dataSync` foreground service `expo.modules.qutaidownloads.DownloadService` runs only while a download is active, with the same notification, and stops when none is left. On Android 15+ `dataSync` is limited to 6 hours a day; when that is reached, `onTimeout` pauses the downloads (resumable from the app) and the service stops | `plugins/withDownloads.js` (the service, `foregroundServiceType="dataSync"`, `exported="false"`, and the notification action receiver `DownloadActionReceiver`, not exported) |
+| `REQUEST_INSTALL_PACKAGES` | "Open" on a downloaded APK (the Downloads screen, the download pill, the finished download's notification) hands it to the system's package installer, which refuses a caller without this permission (it logged "needs to declare permission" and closed at once, so the tap did nothing). With it, the installer's own "allow from this source" step appears the first time (Settings › Install unknown apps › Qutai); Qutai never installs anything itself, never turns that setting on and never opens an APK without the user's tap. Google Play allows it for web browsers ("Web browsing or search"), with a Permissions Declaration Form in Play Console; Firefox for Android declares it too | The system's "Install unknown apps" page, shown by the installer when the user opens the first APK | `plugins/withDownloads.js` |
 | `<package>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` | AndroidX's private permission for the app's own broadcast receivers | `androidx.core` |
 
 Blocked (`android.blockedPermissions` in `app.json`, removed from the merged manifest):
@@ -147,10 +148,21 @@ use the address bar shows "Not secure". The error page is a native view, outside
 assistant's actions click and type inside web pages and can't press it. iOS shows the same error page without
 "Continue anyway" (the server-trust bypass is not implemented there).
 
+Package visibility (`<queries>`, `plugins/withDownloads.js`): `android.intent.action.VIEW` for `content://` files of
+any type, so the finished-download notification can tell whether some app opens the file (a tap then opens it
+directly) or must go through Qutai, which says why it can't instead of a tap that does nothing. No permission; it
+makes visible only the apps that open files.
+
 Main activity: `android:supportsPictureInPicture="true"` and `configChanges` including
 `screenSize|smallestScreenSize|screenLayout|orientation` (`plugins/withPictureInPicture.js`), for picture-in-picture of
 a playing full-screen video when the user goes home. No permission; it is not offered for incognito tabs or while the
 app lock is on, and Settings › Appearance › "Picture-in-picture" turns it off.
+
+Google Play Console, Permissions Declaration Form for `REQUEST_INSTALL_PACKAGES` (App content › Sensitive app
+permissions): core functionality "Web browsing or search"; description: "Qutai is a web browser with its own download
+manager. When the user taps Open on an APK file they downloaded, Qutai hands it to the Android package installer, which
+asks the user to allow Qutai as a source and to confirm the installation. Qutai never installs packages itself." The
+store listing should mention that downloaded files, including apps, can be opened from Qutai's Downloads.
 
 Google Play Console, "Foreground service permissions" declaration (App content), for `dataSync`:
 

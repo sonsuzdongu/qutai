@@ -70,7 +70,11 @@ export type PageWriter = {
   fail(code: string): Promise<void>;
 };
 
-export type OpenResult = 'opened' | 'noApp' | 'gone';
+/**
+ * How "Open" went: opened; noApp (nothing on the phone opens this type); gone (deleted elsewhere); denied (the file is
+ * there but Qutai may no longer read it); failed (the system refused for another reason).
+ */
+export type OpenResult = 'opened' | 'noApp' | 'gone' | 'denied' | 'failed';
 
 export interface DownloadBackend {
   /** Pause / resume / retry exist. */

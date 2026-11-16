@@ -11,12 +11,12 @@ import { ActionSheet, SheetAction } from './ActionSheet';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost, dialog } from './Dialog';
 import { downloadFraction } from './DownloadIndicator';
+import { openDownload, shareDownload } from './openDownload';
+import { Toast, useToast } from './Toast';
 
 type Props = {
   visible: boolean;
   store: DownloadStore;
-  /** Runs an action and shows its message or error as a toast. */
-  run: (action: () => Promise<string | void>) => void;
   copyText: (text: string) => Promise<void>;
   /** "Ask Qutai" on a downloaded PDF: attaches it to the conversation on screen (iOS, where the file is Qutai's). */
   onAsk?: (item: DownloadItem) => void;
@@ -106,13 +106,22 @@ function errorText(error: string | null): string {
  * notification) and finished (open, share, show in folder, copy link, remove from list, delete file), with search and
  * "Clear finished" (the list only). iOS keeps the files in Qutai; Android saves them in the public Downloads folder.
  */
-export function DownloadsScreen({ visible, store, run, copyText, onAsk, onClose }: Props) {
+export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Props) {
   const styles = useStyles();
   const palette = usePalette();
   useSyncExternalStore(store.subscribe, store.getVersion);
   const [query, setQuery] = useState('');
   const [menu, setMenu] = useState<DownloadItem | null>(null);
   const all = store.list();
+  // Its own toast: the app's is drawn under this sheet (a separate window on Android), where nobody sees it.
+  const toast = useToast();
+  /** Runs an action and shows its message or error as a toast. */
+  const run = (action: () => Promise<string | void>) => {
+    action().then(
+      (message) => message && toast.show(message),
+      (e: unknown) => toast.show(t('common.error', { message: e instanceof Error ? e.message : String(e) })),
+    );
+  };
 
   useEffect(() => {
     if (visible) store.seen();
@@ -134,22 +143,8 @@ export function DownloadsScreen({ visible, store, run, copyText, onAsk, onClose 
     // The store's version changes `all`.
   }, [all, query]);
 
-  const open = (item: DownloadItem) =>
-    run(async () => {
-      const result = await store.open(item.id);
-      if (result === 'gone') return t('downloads.gone');
-      if (result === 'noApp') {
-        dialog.alert(t('downloads.noApp'), undefined, [
-          { text: t('common.cancel'), style: 'cancel' },
-          { text: t('downloads.share'), onPress: () => share(item) },
-        ]);
-      }
-    });
-
-  const share = (item: DownloadItem) =>
-    run(async () => {
-      if ((await store.share(item.id, item.name)) === 'gone') return t('downloads.gone');
-    });
+  const open = (item: DownloadItem) => void openDownload(store, item, toast.show);
+  const share = (item: DownloadItem) => void shareDownload(store, item, toast.show);
 
   const deleteFile = async (item: DownloadItem) => {
     const ok = await dialog.confirm({
@@ -374,6 +369,7 @@ export function DownloadsScreen({ visible, store, run, copyText, onAsk, onClose 
         />
       </SafeAreaView>
       <ActionSheet title={menu ? menu.name : null} actions={menu ? actionsFor(menu) : []} onClose={() => setMenu(null)} />
+      <Toast key={toast.key} message={toast.message} action={toast.action} onHidden={toast.hide} />
       <DialogHost />
     </Modal>
   );

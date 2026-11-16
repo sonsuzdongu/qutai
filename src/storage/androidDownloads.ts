@@ -43,8 +43,11 @@ type NativeDownloads = {
   showFolder(): Promise<boolean>;
   needsStoragePermission(): boolean;
   consumeOpenRequest(): boolean;
+  /** Newer builds: the download whose "done" notification opened the app to open that file. */
+  consumeOpenFileRequest?(): string | null;
   addListener(event: 'onChange', listener: (e: { items: DownloadItem[] }) => void): Subscription;
   addListener(event: 'onOpenRequested', listener: () => void): Subscription;
+  addListener(event: 'onOpenFileRequested', listener: (e: { id: string }) => void): Subscription;
 };
 
 export const nativeDownloads = requireOptionalNativeModule<NativeDownloads>('QutaiDownloads');
