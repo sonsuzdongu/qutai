@@ -65,7 +65,7 @@ credits, background tasks on iOS and with the phone off), native work in our own
 | Private browsing | ✅ | | iOS: a data store per private tab. Android: one WebView profile per private session, emptied when the last private tab closes and deleted at the next start; WebViews without profile support share cookies with normal tabs (said in the app) |
 | Screenshot restriction in private mode | ✅ | | |
 | Hiding cookie banners and ad slots (visual) | ✅ | | CSS injection into the page (`src/content/`) |
-| Network-level ad / tracker blocking | ✅ | Build · L | Domain-based, from filter lists the user picks (EasyList, EasyPrivacy, AdGuard Turkish; custom lists by URL), downloaded on the phone from their publishers and updated every few days. Android: native request interception (`shouldInterceptRequest`) with a blocked-request count per page; iOS: compiled WebKit content rule lists (no counts). Per-site off switch. Path, element-hiding and script rules of the lists are skipped. The built-in script blocker still catches what scripts add later. Not tested on a device; needs a new development build |
+| Network-level ad / tracker blocking | ✅ | Build · L | Domain-based, from filter lists the user picks (EasyList, EasyPrivacy, AdGuard Turkish; optional regional lists for German, Spanish/Portuguese, French, Japanese, Russian and Indonesian; custom lists by URL), downloaded on the phone from their publishers and updated every few days. Android: native request interception (`shouldInterceptRequest`) with a blocked-request count per page; iOS: compiled WebKit content rule lists (no counts). Per-site off switch. Path, element-hiding and script rules of the lists are skipped. The built-in script blocker still catches what scripts add later. Not tested on a device; needs a new development build |
 | Clearing history and data | 🟡 | Build · S | By time range: history, cache, recently closed, chats, activity, "sent to the AI", downloads, saved pages. Clearing cookies needs a native module |
 | Cookie management, third-party cookies | 🟡 | Build · M | Third-party cookies blocked by default (Android setting; iOS WebKit blocks them anyway). No per-site cookie list or deletion |
 | HTTPS indicator | ✅ | | |
@@ -114,7 +114,7 @@ credits, background tasks on iOS and with the phone off), native work in our own
 | Bottom / top toolbar choice | ✅ | | Address bar at the top or bottom (Settings) |
 | Gestures | ✅ | | iOS edge swipe, Android back, swiping on the address bar to switch tabs, pull to refresh |
 | Haptic feedback | ✅ | | `expo-haptics` |
-| Language selection | ✅ | | Turkish and English, matches the device language; iOS and Android per-app language settings supported |
+| Language selection | ✅ | | Ten languages (English, Turkish, German, Spanish, Portuguese (Brazil), French, Japanese, Korean, Russian, Indonesian); follows the device by default; Settings › Language (Android 13+: the system's per-app language, both ways; older Android: kept by Qutai; iOS: opens the Settings app's per-app language). The eight newer translations await native-speaker review |
 | Accessibility | 🟡 | Go · M | Reviewed in code (labels, announcements, reduce motion, text scaling, 44pt targets); no screen reader testing on a device yet |
 | Being the default browser | 🟡 | Build · M | Android: intent filters for http/https, and a shortcut to the default apps settings. iOS: requires a special entitlement from Apple |
 | Share to Qutai | 🟡 | Build · M | Android: share sheet, text-selection menu and web searches, with a chooser (open, search, ask as an unsent draft, summarize). iOS share extension open (needs an App Group in the Apple account; `expo-share-intent`) |
@@ -244,7 +244,7 @@ Android request interception), Face ID on iOS, Android private tab isolation (We
 system download manager on Android), Android default browser (intent filters).
 
 Added from Comet reviews:
-- ✅ Ready-made filter lists for ad blocking (EasyList, EasyPrivacy, AdGuard Turkish) and letting the user add lists by URL, with each list's home page and licence shown; domain rules only (the share each list contributes is shown per list). Not tested on a phone yet; needs a new development build
+- ✅ Ready-made filter lists for ad blocking (EasyList, EasyPrivacy, AdGuard Turkish, and off-by-default regional lists for the newer interface languages) and letting the user add lists by URL, with each list's home page and licence shown; domain rules only (the share each list contributes is shown per list). Not tested on a phone yet; needs a new development build
 - ✅ Voice input in the assistant panel, with the assistant going quiet when the user starts speaking (barge-in): the phone's own speech recognition, on-device where the phone and language allow it, otherwise the phone's speech service only after the user agreed once (never in incognito). Not tested on a phone yet; needs a new development build
 - Passwords: instead of our own manager, verify and fix that the system's (Google, iCloud Keychain) autofill works in the WebView
 - ✅ Background audio and headphone media keys: "Keep playing in the background", the lock screen, notification (Android) and headphone buttons control the page's media through its Media Session (Android gets a small Media Session of its own, the WebView has none); a speaker in the tab switcher pauses a playing tab. Not tested on a phone yet; needs a new development build
@@ -310,6 +310,6 @@ deep research on iOS (and tasks that go on with the phone off), price and page t
 
 - [x] Start: Phase 1 (browser foundation)
 - [x] Search suggestions on by default; always off in private mode
-- [x] UI language: Turkish and English; matches the device language, English by default (done)
+- [x] UI language: ten languages, device language by default, choice in Settings › Language (done; native-speaker review of the eight newer languages pending)
 - [x] AI search: on by default, can be turned off in settings (the extra per-search charge goes to the user's own key)
 - [ ] Should sync be end-to-end encrypted? (Recommended: yes)

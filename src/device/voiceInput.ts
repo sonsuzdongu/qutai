@@ -58,7 +58,18 @@ class LanguageUnavailable extends Error {
 export class VoiceNeedsBuildError extends Error {}
 
 /** The tag used for a language when the phone has no regional variant of it among its own languages. */
-const DEFAULT_TAGS: Record<string, string> = { en: 'en-US', tr: 'tr-TR' };
+const DEFAULT_TAGS: Record<string, string> = {
+  en: 'en-US',
+  tr: 'tr-TR',
+  de: 'de-DE',
+  es: 'es-ES',
+  pt: 'pt-BR',
+  fr: 'fr-FR',
+  ja: 'ja-JP',
+  ko: 'ko-KR',
+  ru: 'ru-RU',
+  id: 'id-ID',
+};
 /** If stop() gets no "end" from the recogniser in time, the session is aborted. */
 const STOP_TIMEOUT_MS = 2500;
 const LOCALES_TIMEOUT_MS = 3000;

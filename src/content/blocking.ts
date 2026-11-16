@@ -44,7 +44,7 @@ export type CatalogueEntry = {
   license: string;
   licenseUrl: string;
   kind: ListKind;
-  /** On in a fresh install (regional lists: when the app's language matches). */
+  /** On in a fresh install (the Turkish list when the app is in Turkish; the other regional lists never). */
   defaultOn: () => boolean;
 };
 
@@ -82,6 +82,68 @@ export const CATALOGUE: CatalogueEntry[] = [
     licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
     kind: 'regional',
     defaultOn: () => getLanguage() === 'tr',
+  },
+  // Regional lists for the other interface languages: offered, off until the user switches them on. Korean has no
+  // list here: List-KR, the usual one, is built from !#include files this parser does not follow.
+  {
+    id: 'adguard-german',
+    name: 'AdGuard German filter',
+    url: 'https://filters.adtidy.org/extension/ublock/filters/6.txt',
+    homepage: 'https://github.com/AdguardTeam/AdguardFilters',
+    license: 'GPLv3',
+    licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
+    kind: 'regional',
+    defaultOn: () => false,
+  },
+  {
+    id: 'adguard-spanish-portuguese',
+    name: 'AdGuard Spanish/Portuguese filter',
+    url: 'https://filters.adtidy.org/extension/ublock/filters/9.txt',
+    homepage: 'https://github.com/AdguardTeam/AdguardFilters',
+    license: 'GPLv3',
+    licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
+    kind: 'regional',
+    defaultOn: () => false,
+  },
+  {
+    id: 'adguard-french',
+    name: 'AdGuard French filter',
+    url: 'https://filters.adtidy.org/extension/ublock/filters/16.txt',
+    homepage: 'https://github.com/AdguardTeam/AdguardFilters',
+    license: 'GPLv3',
+    licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
+    kind: 'regional',
+    defaultOn: () => false,
+  },
+  {
+    id: 'adguard-japanese',
+    name: 'AdGuard Japanese filter',
+    url: 'https://filters.adtidy.org/extension/ublock/filters/7.txt',
+    homepage: 'https://github.com/AdguardTeam/AdguardFilters',
+    license: 'GPLv3',
+    licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
+    kind: 'regional',
+    defaultOn: () => false,
+  },
+  {
+    id: 'adguard-russian',
+    name: 'AdGuard Russian filter',
+    url: 'https://filters.adtidy.org/extension/ublock/filters/1.txt',
+    homepage: 'https://github.com/AdguardTeam/AdguardFilters',
+    license: 'GPLv3',
+    licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
+    kind: 'regional',
+    defaultOn: () => false,
+  },
+  {
+    id: 'abpindo',
+    name: 'ABPindo (Indonesian)',
+    url: 'https://raw.githubusercontent.com/ABPindo/indonesianadblockrules/master/subscriptions/abpindo.txt',
+    homepage: 'https://github.com/ABPindo/indonesianadblockrules',
+    license: 'GPLv3 / CC BY-SA 3.0',
+    licenseUrl: 'https://raw.githubusercontent.com/ABPindo/indonesianadblockrules/master/LICENSE',
+    kind: 'regional',
+    defaultOn: () => false,
   },
 ];
 

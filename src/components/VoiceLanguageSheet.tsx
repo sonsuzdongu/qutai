@@ -8,8 +8,14 @@ import { Radio } from '../ui/Radio';
 import { makeStyles, usePalette } from '../ui/theme';
 import { BottomSheet } from './BottomSheet';
 
-/** The languages offered first; the rest come from the phone's recogniser under "More languages…". */
-const MAIN = ['tr', 'en'];
+/**
+ * The languages offered first; the rest come from the phone's recogniser under "More languages…". Turkish and English
+ * for a Turkish or English interface (as before), otherwise the interface's language and English.
+ */
+const mainLanguages = () => {
+  const app = getLanguage();
+  return app === 'en' || app === 'tr' ? ['tr', 'en'] : [app, 'en'];
+};
 
 type Props = {
   visible: boolean;
@@ -25,7 +31,7 @@ type Props = {
 };
 
 /**
- * Voice input's listening language: Automatic, Turkish, English, and "More languages…" listing what the phone's
+ * Voice input's listening language: Automatic, the main languages (above), and "More languages…" listing what the phone's
  * recogniser offers (on Android, the on-device recogniser's languages: others may still work online).
  */
 export function VoiceLanguageSheet({ visible, value, autoLabel, autoHint, onPick, onClose, dark }: Props) {
@@ -33,12 +39,13 @@ export function VoiceLanguageSheet({ visible, value, autoLabel, autoHint, onPick
   const palette = usePalette();
   const [more, setMore] = useState<string[] | null>(null);
   const [showMore, setShowMore] = useState(false);
+  const MAIN = mainLanguages();
   useEffect(() => {
     if (!showMore || more) return;
     voiceLanguages().then((list) =>
       setMore(
         list
-          .filter((tag) => !MAIN.includes(tag.toLowerCase()))
+          .filter((tag) => !mainLanguages().some((main) => main.toLowerCase() === tag.toLowerCase()))
           .map((tag) => ({ tag, name: languageName(tag) }))
           .sort((a, b) => a.name.localeCompare(b.name, getLanguage()))
           .map((x) => x.tag),

@@ -9,7 +9,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
 import { incognitoInfoKey } from '../device/webviewProfile';
-import { getLanguage, t } from '../i18n';
+import { getLanguage, t, type Language } from '../i18n';
 import { hostOf } from '../i18n/format';
 import { Bookmark, listBookmarks, onBookmarksChanged } from '../storage/bookmarks';
 import { getDb } from '../storage/db';
@@ -31,15 +31,29 @@ type Props = {
 
 /** Shown until the user has history of their own. */
 function defaultSites(): TopSite[] {
-  const tr = getLanguage() === 'tr';
+  const local = LOCAL_SITES[getLanguage()];
   const site = (url: string, title: string): TopSite => ({ host: hostOf(url), url, title, visits: 0 });
   return [
     site('https://www.google.com/', 'Google'),
     site('https://www.youtube.com/', 'YouTube'),
-    tr ? site('https://tr.wikipedia.org/', 'Vikipedi') : site('https://en.wikipedia.org/', 'Wikipedia'),
-    tr ? site('https://news.google.com/?hl=tr', 'Google Haberler') : site('https://news.google.com/', 'Google News'),
+    site(`https://${local.wiki}.wikipedia.org/`, local.wikipedia),
+    site(local.hl ? `https://news.google.com/?hl=${local.hl}` : 'https://news.google.com/', local.news),
   ];
 }
+
+/** Wikipedia and Google News in the app's language, under their own names there. */
+const LOCAL_SITES: Record<Language, { wiki: string; wikipedia: string; hl: string; news: string }> = {
+  en: { wiki: 'en', wikipedia: 'Wikipedia', hl: '', news: 'Google News' },
+  tr: { wiki: 'tr', wikipedia: 'Vikipedi', hl: 'tr', news: 'Google Haberler' },
+  de: { wiki: 'de', wikipedia: 'Wikipedia', hl: 'de', news: 'Google News' },
+  es: { wiki: 'es', wikipedia: 'Wikipedia', hl: 'es', news: 'Google Noticias' },
+  'pt-BR': { wiki: 'pt', wikipedia: 'Wikipédia', hl: 'pt-BR', news: 'Google Notícias' },
+  fr: { wiki: 'fr', wikipedia: 'Wikipédia', hl: 'fr', news: 'Google Actualités' },
+  ja: { wiki: 'ja', wikipedia: 'ウィキペディア', hl: 'ja', news: 'Google ニュース' },
+  ko: { wiki: 'ko', wikipedia: '위키백과', hl: 'ko', news: 'Google 뉴스' },
+  ru: { wiki: 'ru', wikipedia: 'Википедия', hl: 'ru', news: 'Google Новости' },
+  id: { wiki: 'id', wikipedia: 'Wikipedia', hl: 'id', news: 'Google Berita' },
+};
 
 type Data = { sites: TopSite[]; bookmarks: Bookmark[]; recent: HistoryEntry[] };
 

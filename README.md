@@ -114,7 +114,16 @@ receives the value (that is the point); a page that shows it reformatted, escape
 it went to the provider once, in the message where the user told the assistant; and anything typed or pasted into
 the chat is sent like any message.
 
-The UI is in Turkish and English; it matches the device language (English by default). Strings live under `src/i18n/`.
+The UI is in English, Turkish, German, Spanish, Portuguese (Brazil), French, Japanese, Korean, Russian and Indonesian
+(`src/i18n/`, one file per language with exactly the keys of `en.ts`; English is the fallback; only the active
+language is loaded). By default it follows the phone's language (region variants map to the language: es-MX → es,
+pt-PT → pt-BR); *Settings › Language* picks one: on Android 13+ that is the system's per-app language (the same setting
+as Settings › Apps › Qutai › Language, so the two stay in step, and the launcher shortcuts and widget follow); on
+older Android Qutai keeps the choice itself and applies it to its screens, notifications, shortcuts and widget; on iOS
+the row opens Qutai's page in the Settings app, where iOS keeps the per-app language (and restarts the app). The
+interface switches without restarting, so tabs and conversations stay. The privacy policy and terms exist in English
+and Turkish only; other languages show the English text with a translated note. Text sent to the model stays English.
+Translations into the eight newer languages have not been reviewed by native speakers yet.
 
 Voice input: the microphone button next to the message field turns speech into text with the phone's own speech
 recognition (`expo-speech-recognition`: iOS `SFSpeechRecognizer`, Android `SpeechRecognizer`). Hold it to talk and
@@ -306,7 +315,7 @@ from outside opens in an incognito tab. Each item is handled once (`src/device/e
   taps Summarize). Images and files are not accepted. iOS has no share extension yet (see Known limitations).
 - **Launcher shortcuts:** long-press the app icon for *New tab*, *New incognito tab*, *Ask Qutai* and *Scan QR code*
   (Android: published by the app, so they appear after the first launch and follow Qutai's own language from
-  Android 13 on, as the widget does; iOS Home Screen quick actions; English and Turkish).
+  Android 13 on, as the widget does; iOS Home Screen quick actions; in all ten interface languages).
 - **Add to home screen (Android):** page menu (⋮) › *Add to home screen* pins a launcher shortcut for the page, with
   the site's letter badge; it opens the page in Qutai like any link. Not offered in incognito tabs. iOS gives apps no
   way to add a page to the Home Screen (Safari's "Add to Home Screen" is its own), so there is none there.
@@ -824,7 +833,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/components/Dialog.tsx`, `src/components/BottomSheet.tsx` | Themed dialogs (instead of native alerts) and the bottom sheet the menus use, kept inside the safe area |
 | `src/ai/` | Provider-independent conversation model and the Anthropic, OpenAI, Gemini adapters; `chatWire.ts` / `chatCompletions.ts` speak the OpenAI Chat Completions format (OpenRouter and the custom endpoint), `openrouterCatalog.ts` / `openrouterModels.ts` the model catalogue, `customEndpoint.ts` / `customTest.ts` / `serverError.ts` / `cloudflare.ts` the custom endpoint's address rules, "Test connection", reading error answers and the Cloudflare address warning (tests: `npm run test:custom`) |
 | `src/storage/` | Persistent data: SQLite database and its migrations, session, history, bookmarks, chat, saved tasks, settings |
-| `src/i18n/` | Turkish and English UI strings, date formats |
+| `src/i18n/` | UI strings in ten languages (one file each, English fallback), plural rules, date and number formats, the language setting |
 | `src/device/` | Device features: PDF, screenshots (also full page), read aloud, voice input (`voiceInput.ts`), share/copy, downloads, private mode protection, calendar and reminders, notifications, location, opening system settings, the phone dialer |
 | `src/browser/geolocation.ts` | Web pages' `navigator.geolocation`, answered by the app with a per-site location permission (ask / allow / block) |
 | `src/content/filterLists.ts`, `src/content/blocking.ts` | Ad and tracker blocking: filter lists reduced to domains (pure parser and matcher), their download, updates and per-platform compilation; `src/content/adBlock.ts` is the built-in script blocker |
@@ -960,7 +969,8 @@ the feature, when the user is asked, the config line that declares it and what i
   are refused). This relies on a small patch to react-native-webview (`patches/`, applied by `postinstall`) that lets
   the WebView grant only the origin and kinds the user allowed: **a new development build is needed**. Capture is
   paused while another tab is shown or Qutai is in the background, and screen sharing (`getDisplayMedia`) is refused.
-- **Ad and tracker blocking is domain-based.** Filter lists the user picks (EasyList, EasyPrivacy, AdGuard Turkish,
+- **Ad and tracker blocking is domain-based.** Filter lists the user picks (EasyList, EasyPrivacy, regional lists — AdGuard Turkish, on in Turkish; AdGuard
+  German, Spanish/Portuguese, French, Japanese and Russian and ABPindo, off until switched on —
   or any list by https URL) are downloaded on the phone from their publishers, never bundled; only their rules that
   block a whole domain are used, so ads served from a site's own domain, path rules and element hiding are not
   covered. Resources hard-coded in a page's HTML are blocked too (Android: request interception; iOS: WebKit content
