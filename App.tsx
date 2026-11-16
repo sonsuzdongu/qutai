@@ -2394,6 +2394,7 @@ function BrowserApp({
           items={menuItems}
           incognito={tab.incognito}
           darkMode={darkMode}
+          anchor={barAtBottom ? 'bottom' : 'top'}
           onClose={() => setMenuVisible(false)}
         />
         <LibraryScreen

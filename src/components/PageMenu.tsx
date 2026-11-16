@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useKeyboardHeight } from '../utils/useKeyboardHeight';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
 import { darkPalette, lightPalette, makeStyles } from '../ui/theme';
 import { DialogHost } from './Dialog';
+import { menuFrame } from './menuFrame';
 
 export type MenuItem = {
   icon: IconName;
@@ -28,17 +30,22 @@ type Props = {
   items: MenuItem[];
   incognito: boolean;
   darkMode?: boolean;
+  /** Where the address bar with the ⋮ button is: the menu opens next to it, above it when it is at the bottom. */
+  anchor?: 'top' | 'bottom';
   onClose: () => void;
 };
 
-/** Overflow menu anchored under the ⋮ button, like the Chrome page menu. */
-export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose }: Props) {
+/** Overflow menu anchored at the ⋮ button, like the Chrome page menu. */
+export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor = 'top', onClose }: Props) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const top = insets.top + 48;
-  // Long menus scroll instead of running off small screens; the icon row stays on top.
-  const listMaxHeight = height - top - insets.bottom - (iconRow?.length ? 70 : 20);
+  const keyboard = useKeyboardHeight();
+  // The modal's real size (the window's until it is measured): with the system bars drawn over the app, some
+  // Android phones report a window height that does not match the screen the menu is drawn on.
+  const [area, setArea] = useState<number | null>(null);
+  // Long menus scroll instead of running off the screen (short screens, large text); the icon row stays on top.
+  const frame = menuFrame(area ?? height, insets.top, insets.bottom, keyboard, anchor);
   const theme = incognito || darkMode ? dark : light;
   const palette = incognito || darkMode ? darkPalette : lightPalette;
   // An open submenu ("Library", "More"); it starts over each time the menu opens.
@@ -58,8 +65,20 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose
       statusBarTranslucent
       navigationBarTranslucent
     >
-      <Pressable accessibilityRole="button" style={StyleSheet.absoluteFill} onPress={close} accessibilityLabel={t('menu.close')} />
-      <View style={[styles.menu, theme.menu, { top, right: insets.right + 8 }]}>
+      <Pressable
+        accessibilityRole="button"
+        style={StyleSheet.absoluteFill}
+        onPress={close}
+        accessibilityLabel={t('menu.close')}
+        onLayout={(e) => setArea(e.nativeEvent.layout.height)}
+      />
+      <View
+        style={[
+          styles.menu,
+          theme.menu,
+          { top: frame.top, bottom: frame.bottom, maxHeight: frame.maxHeight, right: insets.right + 8 },
+        ]}
+      >
         {iconRow && iconRow.length > 0 && (
           <View style={[styles.iconRow, theme.separator]}>
             {iconRow.map((item) => (
@@ -85,7 +104,7 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, onClose
             ))}
           </View>
         )}
-        <ScrollView style={{ maxHeight: listMaxHeight }} bounces={false}>
+        <ScrollView style={styles.list} bounces={false}>
           {sub && (
             <Pressable
               onPress={() => setSub(null)}
@@ -156,7 +175,9 @@ const useStyles = makeStyles((c) => ({
   subTitle: { fontWeight: '700' },
   disabled: { opacity: 0.35 },
   separator: { height: StyleSheet.hairlineWidth, marginVertical: 4 },
+  list: { flexGrow: 0, flexShrink: 1 },
   iconRow: {
+    flexShrink: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 2,
