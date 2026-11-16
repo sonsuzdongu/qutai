@@ -11,7 +11,7 @@
     "NSCalendarsWriteOnlyAccessUsageDescription": "Qutai adds events you confirm, such as tickets and reservations, to your calendar.",
     "NSRemindersUsageDescription": "Qutai adds reminders you confirm to the Reminders list you choose.",
     "NSRemindersFullAccessUsageDescription": "Qutai adds reminders you confirm to the Reminders list you choose.",
-    "NSLocationWhenInUseUsageDescription": "Qutai shows your position to the sites you allow, such as maps, and to the assistant when you ask it to use your location. In setup it can fill in where you live when you tap to do so.",
+    "NSLocationWhenInUseUsageDescription": "Qutai shows your position to the sites you allow, such as maps, and to the assistant when you ask it to use your location. In setup it can fill in where you live when you tap to do so; Apple’s address service finds the place name for your position.",
     "New tab": "New tab",
     "New incognito tab": "New incognito tab",
     "Ask Qutai": "Ask Qutai",

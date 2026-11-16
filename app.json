@@ -187,7 +187,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Qutai shows your position to the sites you allow, such as maps, and to the assistant when you ask it to use your location. In setup it can fill in where you live when you tap to do so.",
+          "locationWhenInUsePermission": "Qutai shows your position to the sites you allow, such as maps, and to the assistant when you ask it to use your location. In setup it can fill in where you live when you tap to do so; Apple’s address service finds the place name for your position.",
           "locationAlwaysAndWhenInUsePermission": false,
           "locationAlwaysPermission": false,
           "locationFullAccuracyPermission": false,

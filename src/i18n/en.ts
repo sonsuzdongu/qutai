@@ -554,9 +554,9 @@ export const en = {
   'profile.introLead':
     'A few short questions so I can help you faster: what to call you, your city, how you like deliveries, food and answers. Skip anything you like.',
   'profile.privacy':
-    'Your answers are stored on this phone. They are sent to your AI provider when the assistant uses them in a task, and to a site only when the assistant fills in a form there at your request. Nothing goes to Qutai. You can see, change or delete them any time in Settings › Assistant › Memory.',
+    'Your answers are stored on this phone. While memory is on, they go to your AI provider with every request to the assistant, and to a site only when the assistant fills in a form there at your request. Nothing goes to Qutai. You can see, change or delete them any time in Settings › Assistant › Memory.',
   'profile.privacyPro':
-    'Your answers are stored on this phone. They are sent to the AI service when the assistant uses them in a task, and to a site only when the assistant fills in a form there at your request. You can see, change or delete them any time in Settings › Assistant › Memory.',
+    'Your answers are stored on this phone. While memory is on, they go to the AI service with every request to the assistant, and to a site only when the assistant fills in a form there at your request. You can see, change or delete them any time in Settings › Assistant › Memory.',
   'profile.start': "Let's go",
   'profile.skip': 'Skip',
   'profile.skipAll': 'Not now',

@@ -555,9 +555,9 @@ export const tr: Record<keyof typeof en, string> = {
   'profile.introLead':
     'Size daha hızlı yardım edebilmem için birkaç kısa soru: size nasıl hitap edeyim, hangi şehirdesiniz, teslimatı, yemeği ve yanıtları nasıl seversiniz. İstediğinizi atlayabilirsiniz.',
   'profile.privacy':
-    'Yanıtlarınız bu telefonda saklanır. Asistan bir görevde kullandığında yapay zekâ sağlayıcınıza, yalnızca sizin isteğinizle bir sitede form doldurduğunda da o siteye gönderilir. Qutai’ye hiçbir şey gitmez. İstediğiniz zaman Ayarlar › Asistan › Hafıza’dan görebilir, değiştirebilir veya silebilirsiniz.',
+    'Yanıtlarınız bu telefonda saklanır. Hafıza açıkken asistana giden her istekle yapay zekâ sağlayıcınıza, yalnızca sizin isteğinizle bir sitede form doldurduğunda da o siteye gönderilir. Qutai’ye hiçbir şey gitmez. İstediğiniz zaman Ayarlar › Asistan › Hafıza’dan görebilir, değiştirebilir veya silebilirsiniz.',
   'profile.privacyPro':
-    'Yanıtlarınız bu telefonda saklanır. Asistan bir görevde kullandığında yapay zekâ hizmetinize, yalnızca sizin isteğinizle bir sitede form doldurduğunda da o siteye gönderilir. İstediğiniz zaman Ayarlar › Asistan › Hafıza’dan görebilir, değiştirebilir veya silebilirsiniz.',
+    'Yanıtlarınız bu telefonda saklanır. Hafıza açıkken asistana giden her istekle yapay zekâ hizmetinize, yalnızca sizin isteğinizle bir sitede form doldurduğunda da o siteye gönderilir. İstediğiniz zaman Ayarlar › Asistan › Hafıza’dan görebilir, değiştirebilir veya silebilirsiniz.',
   'profile.start': 'Başlayalım',
   'profile.skip': 'Atla',
   'profile.skipAll': 'Şimdi değil',

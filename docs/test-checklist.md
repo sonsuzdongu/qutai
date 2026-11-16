@@ -60,6 +60,10 @@ Cloudflare'e yayın ve Access.
 - [ ] Kurulum bitince Qutai düğmesi tanıtımı çıkıyor
 - [ ] Kurulumdaki "Sizi biraz tanıyayım" soruları artık "siz" diyor ("Size nasıl hitap edeyim?", "Hangi şehirde yaşıyorsunuz?"); uygulamanın başka bir yerinde "sen" kalmamış (gördüğünüz yeri not edin)
 - [ ] Uzun soru başlıkları küçük ekranda sığıyor ("…bilgilerinizi şimdi doldurmak ister misiniz?"); özet ekranında "Değiştirmek için birine, silmek için ✕’e dokunun."
+- [ ] Normal APK'yı eskisinin üstüne kurun: açılışta bir kez "Gizlilik politikamızı ve koşullarımızı güncelledik" çıkıyor, kabul edince bir daha çıkmıyor; yeni kurulumda yalnızca normal kurulum adımı var
+- [ ] Gizlilik Politikası (Türkçe ve İngilizce): "Telefonunuzdan çıkanlar" OpenRouter'ı, kendi sunucunuzu, "Konumumu kullan"ı (Apple / Google adres hizmeti), sesle yazmayı ve filtre listelerini anlatıyor; "Şifreler ve ödeme bilgileri" yeni metin; tarih 16 Kasım 2026; uzun metin kayarak okunuyor
+- [ ] "Sizi biraz tanıyayım" girişindeki gizlilik notu "Hafıza açıkken asistana giden her istekle" diyor
+- [ ] iOS: konum izni penceresinde "konumunuzun yer adını Apple’ın adres hizmeti bulur" cümlesi görünüyor (yeni derleme gerekir)
 
 ## 5. Asistan paneli
 
@@ -147,7 +151,7 @@ Pro mod + test girişi açık APK (`EXPO_PUBLIC_PRO_MODE=on`, API adresi, `EXPO_
 
 ### Pro olmayan APK
 - [ ] Normal APK'da kurulumun yapay zekâ adımı eskisi gibi (sağlayıcı sekmeleri, Qutai yok, oturum açma yok)
-- [ ] Normal APK'da gizlilik ve koşullar eskisi gibi; güncelleme sonrası yeniden kabul istenmiyor
+- [ ] Normal APK'da gizlilik ve koşullar açık kaynak sürümün metinleri (pro metinleri değil); güncelleme sonrası yalnızca bir kez yeniden kabul isteniyor (4. bölüm)
 
 ## Bulunan sorunlar
 

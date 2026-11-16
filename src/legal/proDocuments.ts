@@ -64,8 +64,12 @@ export const PRO_DOCUMENTS: Record<Language, Record<LegalKind, LegalDocument>> =
         {
           heading: 'Passwords and payment details',
           body:
-            'The assistant is told never to remember passwords or card numbers. Before it acts on a site you can ' +
-            'require your confirmation, and you can block it on sites of your choice.',
+            'Qutai doesn’t let the assistant’s memory keep passwords, card numbers, card security codes, card ' +
+            'expiry dates, one-time codes or bank account numbers (IBAN). ID and passport numbers can be kept only ' +
+            'under identity or travel; they are hidden from the AI service, which sees only a label, and Qutai types ' +
+            'the number into a site itself after you confirm. Before the assistant first enters your saved personal ' +
+            'details on a site, Qutai asks you (you can change this for each site). You can also require your ' +
+            'confirmation before every action, and block the assistant on sites of your choice.',
         },
         {
           heading: 'Your control',
@@ -203,8 +207,13 @@ export const PRO_DOCUMENTS: Record<Language, Record<LegalKind, LegalDocument>> =
         {
           heading: 'Şifreler ve ödeme bilgileri',
           body:
-            'Asistana şifreleri ve kart numaralarını asla hatırlamaması söylenir. Bir sitede işlem yapmadan önce ' +
-            'onayınızı isteyebilir, seçtiğiniz sitelerde asistanı engelleyebilirsiniz.',
+            'Qutai, asistanın hafızasına şifre, kart numarası, kart güvenlik kodu, kartın son kullanma tarihi, tek ' +
+            'kullanımlık kod ve banka hesap numarası (IBAN) kaydedilmesine izin vermez. Kimlik ve pasaport ' +
+            'numaraları yalnızca kimlik veya seyahat bilgisi olarak kaydedilebilir; yapay zekâ hizmetinden gizlenir, ' +
+            'hizmet yalnızca bir etiket görür ve numarayı siz onayladıktan sonra siteye Qutai kendisi yazar. Asistan ' +
+            'kayıtlı kişisel bilgilerinizi bir siteye ilk kez girmeden önce Qutai size sorar (bunu her site için ' +
+            'değiştirebilirsiniz). Ayrıca her işlemden önce onayınızın istenmesini seçebilir, seçtiğiniz sitelerde ' +
+            'asistanı engelleyebilirsiniz.',
         },
         {
           heading: 'Kontrol sizde',

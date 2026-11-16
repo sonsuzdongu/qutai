@@ -447,7 +447,7 @@ Google Play are made from this same code with one build-time switch turned on:
 | `EXPO_PUBLIC_PRO_MODE` | `off` | `on` |
 | AI | Your own Anthropic, OpenAI, Gemini or OpenRouter key, or your own OpenAI-compatible server | Your own key, or Qutai credits (planned) |
 | Account and sync | None | An optional Qutai account (Sign in with Apple or Google); sync planned |
-| Where your data goes | Your device, and the AI provider you choose | Also Qutai's servers, for the pro features you use |
+| Where your data goes | Your device and the AI service you set up; for the features you use, also your search engine (suggestions), Apple's or Google's address and speech services ("Use my location" in setup, voice input off the device) and the filter lists' publishers (list downloads) | Also Qutai's servers, for the pro features you use |
 
 Pro features are shown only when the switch is on (`src/config/features.ts`). So far that is the account:
 Settings › Account (sign in, sign out, sign out of all devices, delete the account), when

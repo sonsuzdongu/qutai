@@ -6,12 +6,16 @@ import { PRO_DOCUMENTS, PRO_LEGAL_UPDATED } from './proDocuments';
  * Bump when the privacy policy or the terms change in substance: everyone is asked to accept
  * again on the next launch. Pro-mode builds (accounts, Qutai Credits) have their own documents (proDocuments.ts) and
  * version, so a change there never asks users of the open-source build again, and the reverse.
+ *
+ * 2: what leaves the phone, completed (OpenRouter and the user's own server, memory and custom instructions with every
+ * request, the platform's geocoder and speech service, filter-list downloads, details typed into sites) and what the
+ * app now enforces about passwords, cards, IBANs and ID numbers (16 Nov 2026).
  */
-const OPEN_SOURCE_LEGAL_VERSION = 1;
+const OPEN_SOURCE_LEGAL_VERSION = 2;
 /** 2: the pro-mode documents describe the account, Qutai Credits and buying credits (16 Nov 2026). */
 const PRO_LEGAL_VERSION = 2;
 export const LEGAL_VERSION = accountsEnabled ? PRO_LEGAL_VERSION : OPEN_SOURCE_LEGAL_VERSION;
-export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-14';
+export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-16';
 
 export type LegalKind = 'privacy' | 'terms';
 export type LegalDocument = { title: string; intro: string; sections: { heading: string; body: string }[] };
@@ -27,27 +31,47 @@ const DOCUMENTS: Record<Language, Record<LegalKind, LegalDocument>> = {
         {
           heading: 'What stays on your phone',
           body:
-            'Your tabs, history, bookmarks, saved pages, downloads, site permissions, the assistant’s memory, ' +
-            'its action history and your conversations are stored only on this device. API keys are kept in the ' +
-            'phone’s encrypted storage. Incognito tabs write nothing to disk; their conversations are not saved.',
+            'Your tabs, history, bookmarks, saved pages, downloads, site permissions, the assistant’s memory ' +
+            '(including your answers to the optional setup questions and the address form), your custom ' +
+            'instructions, the assistant’s action history and your conversations are stored only on this device. API ' +
+            'keys are kept in the phone’s encrypted storage. Incognito tabs write nothing to disk; their ' +
+            'conversations are not saved.',
         },
         {
           heading: 'What leaves your phone, and to whom',
           body:
-            '• Websites you visit receive what any browser sends them.\n' +
-            '• When you use the assistant, your message and the content it needs (the page text, and screenshots ' +
-            'when it looks at a page) are sent directly to the AI provider you chose (Anthropic, OpenAI or Google) ' +
-            'with your own API key. If web search is on, the provider may run searches for you. Their privacy ' +
-            'policies and terms apply to that data.\n' +
+            '• Websites you visit receive what any browser sends them, and the details you ask the assistant to ' +
+            'type into them (such as your name or address in a form).\n' +
+            '• When you use the assistant, each request goes with your own API key to the AI service you set up: ' +
+            'directly to Anthropic, OpenAI or Google; to OpenRouter, which passes it on to the provider of the model ' +
+            'you picked; or to an OpenAI-compatible server whose address you entered. A request contains your ' +
+            'message, the conversation so far, the content the assistant needs (the page text, screenshots when it ' +
+            'looks at a page, files and images you attach), your custom instructions and, while memory is on, your ' +
+            'memories (hidden memories, such as ID numbers, only as a label). Your calendar events and your location ' +
+            'are sent only when you confirm, each time. If web search is on, the service may run searches for you. ' +
+            'That service’s privacy policy and terms apply to this data.\n' +
             '• If search suggestions are on, what you type in the address bar is sent to your search engine ' +
             '(never from incognito tabs).\n' +
+            '• If you tap “Use my location” in setup, your approximate position is sent to the phone’s address ' +
+            'service (Apple’s on an iPhone; on Android usually Google’s) to find the name of the place. Only the ' +
+            'place name is kept.\n' +
+            '• If you speak to the assistant and the phone can’t recognise that language on the device itself, the ' +
+            'audio goes to the phone’s speech service (Apple’s or Google’s), only after you have agreed once in ' +
+            'Qutai and never in incognito conversations. Qutai and the AI service receive only the text.\n' +
+            '• While “Block ads and trackers” is on, the filter lists you chose are downloaded from their publishers ' +
+            '(such as EasyList and AdGuard) and updated every few days. These requests contain nothing about your ' +
+            'browsing.\n' +
             'Nothing else is sent: Qutai has no analytics, tracking or advertising.',
         },
         {
           heading: 'Passwords and payment details',
           body:
-            'The assistant is told never to remember passwords or card numbers. Before it acts on a site you can ' +
-            'require your confirmation, and you can block it on sites of your choice.',
+            'Qutai doesn’t let the assistant’s memory keep passwords, card numbers, card security codes, card ' +
+            'expiry dates, one-time codes or bank account numbers (IBAN). ID and passport numbers can be kept only ' +
+            'under identity or travel; they are hidden from the AI service, which sees only a label, and Qutai types ' +
+            'the number into a site itself after you confirm. Before the assistant first enters your saved personal ' +
+            'details on a site, Qutai asks you (you can change this for each site). You can also require your ' +
+            'confirmation before every action, and block the assistant on sites of your choice.',
         },
         {
           heading: 'Your control',
@@ -72,8 +96,9 @@ const DOCUMENTS: Record<Language, Record<LegalKind, LegalDocument>> = {
         {
           heading: 'Your AI provider and costs',
           body:
-            'The assistant works with your own API key from Anthropic, OpenAI or Google. You are responsible for ' +
-            'your account with that provider, its terms and every cost billed to your key.',
+            'The assistant works with your own API key from Anthropic, OpenAI, Google or OpenRouter, or with an ' +
+            'OpenAI-compatible server you set up. You are responsible for your account with that service, its terms ' +
+            'and every cost billed to your key.',
         },
         {
           heading: 'The assistant acts on your behalf',
@@ -116,26 +141,46 @@ const DOCUMENTS: Record<Language, Record<LegalKind, LegalDocument>> = {
           heading: 'Telefonunuzda kalanlar',
           body:
             'Sekmeleriniz, geçmişiniz, yer imleriniz, kaydedilen sayfalar, indirilenler, site izinleri, ' +
-            'asistanın hafızası, işlem geçmişi ve sohbetleriniz yalnızca bu cihazda saklanır. API anahtarları ' +
+            'asistanın hafızası (kurulumdaki isteğe bağlı soruların ve adres formunun yanıtları dahil), özel ' +
+            'talimatlarınız, asistanın işlem geçmişi ve sohbetleriniz yalnızca bu cihazda saklanır. API anahtarları ' +
             'telefonun şifreli deposunda tutulur. Gizli sekmeler diske hiçbir şey yazmaz; sohbetleri kaydedilmez.',
         },
         {
           heading: 'Telefonunuzdan çıkanlar ve kime gittiği',
           body:
-            '• Ziyaret ettiğiniz siteler, her tarayıcının gönderdiği bilgileri alır.\n' +
-            '• Asistanı kullandığınızda mesajınız ve gereken içerik (sayfa metni, sayfaya baktığında ekran ' +
-            'görüntüleri) kendi API anahtarınızla doğrudan seçtiğiniz yapay zekâ sağlayıcısına (Anthropic, OpenAI ' +
-            'veya Google) gönderilir. Web araması açıksa sağlayıcı sizin için arama yapabilir. Bu veriler için ' +
-            'sağlayıcının gizlilik politikası ve koşulları geçerlidir.\n' +
+            '• Ziyaret ettiğiniz siteler, her tarayıcının gönderdiği bilgileri ve asistandan o siteye yazmasını ' +
+            'istediğiniz bilgileri (örneğin bir formdaki adınızı veya adresinizi) alır.\n' +
+            '• Asistanı kullandığınızda her istek, kendi API anahtarınızla kurduğunuz yapay zekâ hizmetine gider: ' +
+            'doğrudan Anthropic, OpenAI veya Google’a; isteği seçtiğiniz modelin sağlayıcısına ileten OpenRouter’a ' +
+            'ya da adresini girdiğiniz OpenAI uyumlu bir sunucuya. İstekte mesajınız, sohbetin önceki kısmı, ' +
+            'asistanın ihtiyaç duyduğu içerik (sayfa metni, sayfaya baktığında ekran görüntüleri, eklediğiniz dosya ' +
+            've görseller), özel talimatlarınız ve hafıza açıkken hafızanız (kimlik numarası gibi gizli bilgiler ' +
+            'yalnızca etiketleriyle) bulunur. Takvim etkinlikleriniz ve konumunuz yalnızca her seferinde ' +
+            'onayladığınızda gönderilir. Web araması açıksa hizmet sizin için arama yapabilir. Bu veriler için o ' +
+            'hizmetin gizlilik politikası ve koşulları geçerlidir.\n' +
             '• Arama önerileri açıksa adres çubuğuna yazdıklarınız arama motorunuza gönderilir (gizli sekmelerden ' +
             'asla).\n' +
+            '• Kurulumda “Konumumu kullan”a dokunursanız, yer adını bulmak için yaklaşık konumunuz telefonun adres ' +
+            'hizmetine (iPhone’da Apple’ınkine, Android’de genellikle Google’ınkine) gönderilir. Yalnızca yer adı ' +
+            'saklanır.\n' +
+            '• Asistana sesle yazdığınızda telefon o dili cihazın kendisinde tanıyamıyorsa ses, telefonun konuşma ' +
+            'hizmetine (Apple’ın ya da Google’ın) gider; bu yalnızca Qutai’de bir kez izin verdikten sonra olur, ' +
+            'gizli sohbetlerde asla. Qutai ve yapay zekâ hizmeti yalnızca metni alır.\n' +
+            '• “Reklam ve izleyicileri engelle” açıkken seçtiğiniz filtre listeleri yayıncılarından (örneğin EasyList ' +
+            've AdGuard) indirilir ve birkaç günde bir güncellenir. Bu isteklerde gezinmenizle ilgili hiçbir şey ' +
+            'yoktur.\n' +
             'Başka hiçbir şey gönderilmez: Qutai’de analitik, izleme veya reklam yoktur.',
         },
         {
           heading: 'Şifreler ve ödeme bilgileri',
           body:
-            'Asistana şifreleri ve kart numaralarını asla hatırlamaması söylenir. Bir sitede işlem yapmadan önce ' +
-            'onayınızı isteyebilir, seçtiğiniz sitelerde asistanı engelleyebilirsiniz.',
+            'Qutai, asistanın hafızasına şifre, kart numarası, kart güvenlik kodu, kartın son kullanma tarihi, tek ' +
+            'kullanımlık kod ve banka hesap numarası (IBAN) kaydedilmesine izin vermez. Kimlik ve pasaport ' +
+            'numaraları yalnızca kimlik veya seyahat bilgisi olarak kaydedilebilir; yapay zekâ hizmetinden gizlenir, ' +
+            'hizmet yalnızca bir etiket görür ve numarayı siz onayladıktan sonra siteye Qutai kendisi yazar. Asistan ' +
+            'kayıtlı kişisel bilgilerinizi bir siteye ilk kez girmeden önce Qutai size sorar (bunu her site için ' +
+            'değiştirebilirsiniz). Ayrıca her işlemden önce onayınızın istenmesini seçebilir, seçtiğiniz sitelerde ' +
+            'asistanı engelleyebilirsiniz.',
         },
         {
           heading: 'Kontrol sizde',
@@ -160,8 +205,9 @@ const DOCUMENTS: Record<Language, Record<LegalKind, LegalDocument>> = {
         {
           heading: 'Yapay zekâ sağlayıcınız ve maliyetler',
           body:
-            'Asistan, Anthropic, OpenAI veya Google’dan aldığınız kendi API anahtarınızla çalışır. O sağlayıcıdaki ' +
-            'hesabınızdan, koşullarından ve anahtarınıza yansıyan her ücretten siz sorumlusunuz.',
+            'Asistan, Anthropic, OpenAI, Google veya OpenRouter’dan aldığınız kendi API anahtarınızla ya da ' +
+            'kurduğunuz OpenAI uyumlu bir sunucuyla çalışır. O hizmetteki hesabınızdan, koşullarından ve ' +
+            'anahtarınıza yansıyan her ücretten siz sorumlusunuz.',
         },
         {
           heading: 'Asistan sizin adınıza işlem yapar',
