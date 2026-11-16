@@ -841,7 +841,7 @@ function Row({
         </Pressable>
       ) : onRemove ? (
         <Pressable onPress={onRemove} hitSlop={10} style={styles.remove} accessibilityLabel={t('library.delete')}>
-          <Text style={styles.removeText}>✕</Text>
+          <Icon name="close" size={14} color={palette.textSecondary} />
         </Pressable>
       ) : null}
     </Pressable>
@@ -902,7 +902,6 @@ const useStyles = makeStyles((c) => ({
   rowTitle: { fontSize: 15, color: c.text },
   rowUrl: { fontSize: 12, color: c.textSecondary },
   remove: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
-  removeText: { fontSize: 14, color: c.textSecondary },
   footer: { paddingVertical: 20, alignItems: 'center' },
   danger: { color: c.danger, fontSize: 15, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32, gap: 6 },

@@ -2,7 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { Modal, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, usePalette } from '../ui/theme';
+import { Icon } from '../ui/Icon';
+import { toolIcon } from '../agent/toolIcons';
+import { withoutLeadingSymbol } from '../utils/leadingSymbol';
 import { groupByDay, timeLabel } from '../i18n/format';
 import { ActionEntry, clearActions, listActions } from '../storage/actionLog';
 import { getDb } from '../storage/db';
@@ -24,6 +27,7 @@ export function ActionLogScreen({ visible, onClose }: Props) {
 
 function ActionLog({ onClose }: { onClose: () => void }) {
   const styles = useStyles();
+  const palette = usePalette();
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const reload = useCallback(() => {
     getDb()
@@ -69,10 +73,23 @@ function ActionLog({ onClose }: { onClose: () => void }) {
         renderItem={({ item }) => (
           <View style={styles.row}>
             <Text style={styles.time}>{timeLabel(item.at)}</Text>
+            <Icon
+              name={item.ok ? toolIcon(item.tool) : 'insecure'}
+              size={16}
+              color={item.ok ? palette.textSecondary : palette.danger}
+              style={styles.icon}
+            />
             <View style={styles.texts}>
-              <Text style={[styles.description, !item.ok && styles.failed]} numberOfLines={2}>
-                {item.ok ? '' : '⚠️ '}
-                {item.description}
+              <Text
+                style={[styles.description, !item.ok && styles.failed]}
+                numberOfLines={2}
+                accessibilityLabel={
+                  item.ok
+                    ? undefined
+                    : t('actionLog.failedLabel', { action: withoutLeadingSymbol(item.description) })
+                }
+              >
+                {withoutLeadingSymbol(item.description)}
               </Text>
               {item.host ? (
                 <Text style={styles.host} numberOfLines={1}>
@@ -108,6 +125,7 @@ const useStyles = makeStyles((c) => ({
   day: { fontSize: 13, fontWeight: '700', color: c.textSecondary, marginTop: 14, marginBottom: 4 },
   row: { flexDirection: 'row', gap: 10, paddingVertical: 6 },
   time: { width: 44, fontSize: 12, color: c.textSecondary, marginTop: 2 },
+  icon: { marginTop: 1 },
   texts: { flex: 1, gap: 1 },
   description: { fontSize: 14, color: c.text },
   failed: { color: c.danger },

@@ -221,7 +221,12 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
   const header = (
     <View style={styles.top}>
       <Text style={styles.hint}>{t('memory.hint')}</Text>
-      {memories?.some((m) => m.sensitive) && <Text style={styles.small}>{t('memory.hiddenExplain')}</Text>}
+      {memories?.some((m) => m.sensitive) && (
+        <View style={styles.smallRow}>
+          <Icon name="secure" size={14} color={palette.textSecondary} style={styles.smallIcon} />
+          <Text style={[styles.small, styles.smallText]}>{t('memory.hiddenExplain')}</Text>
+        </View>
+      )}
       {!!memories?.length && (
         <TextInput
           style={styles.search}
@@ -423,7 +428,7 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
                   style={styles.delete}
                   accessibilityLabel={t('memory.delete')}
                 >
-                  <Text style={styles.deleteText}>✕</Text>
+                  <Icon name="close" size={14} color={palette.textSecondary} />
                 </Pressable>
               </Pressable>
             )
@@ -532,6 +537,9 @@ const useStyles = makeStyles((c) => ({
   top: { gap: 10, marginBottom: 4 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   small: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  smallRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
+  smallIcon: { marginTop: 2 },
+  smallText: { flex: 1 },
   search: {
     color: c.text,
     height: 40,
@@ -611,7 +619,6 @@ const useStyles = makeStyles((c) => ({
   revealButton: { paddingHorizontal: 8, height: 32, justifyContent: 'center' },
   revealText: { fontSize: 14, color: c.tintText, fontWeight: '600' },
   delete: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  deleteText: { fontSize: 14, color: c.textSecondary },
   chips: { gap: 6, paddingVertical: 2 },
   chip: {
     flexDirection: 'row',

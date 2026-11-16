@@ -571,7 +571,7 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
                   style={styles.remove}
                   accessibilityLabel={t('memory.delete')}
                 >
-                  <Text style={styles.removeText}>✕</Text>
+                  <Icon name="close" size={14} color={palette.textSecondary} />
                 </Pressable>
               </Pressable>
             ),
@@ -589,7 +589,7 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
                 style={styles.remove}
                 accessibilityLabel={t('profile.removeInstruction')}
               >
-                <Text style={styles.removeText}>✕</Text>
+                <Icon name="close" size={14} color={palette.textSecondary} />
               </Pressable>
             </View>
           )}
@@ -1038,7 +1038,6 @@ const useStyles = makeStyles((c) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  removeText: { fontSize: 14, color: c.textSecondary },
   bottom: {
     paddingHorizontal: 24,
     paddingTop: 8,

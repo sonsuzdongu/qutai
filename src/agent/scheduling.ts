@@ -1,6 +1,7 @@
 import { getCalendars } from 'expo-localization';
 import { t } from '../i18n';
 import { formatDateTime, timeLabel } from '../i18n/format';
+import type { IconLine, IconLines } from '../ui/Icon';
 
 /** The tools that put something on the user's calendar or schedule a notification. */
 export const SCHEDULING_TOOLS = new Set(['add_calendar_event', 'add_reminder', 'schedule_notification']);
@@ -148,29 +149,33 @@ function sameDay(a: Date, b: Date): boolean {
 }
 
 /** Exactly what will be added, in the user's language, locale and time zone, for the confirmation. */
-export function describePlan(plan: SchedulePlan, android: boolean): string {
+export function describePlan(plan: SchedulePlan, android: boolean): IconLines {
   const zone = t('schedule.timeZone', { zone: deviceTimeZone() });
-  const lines: string[] = [];
+  const lines: IconLine[] = [];
+  const add = (...texts: string[]) => texts.forEach((text) => lines.push({ text }));
   if (plan.kind === 'event') {
     const end = sameDay(plan.start, plan.end) ? timeLabel(plan.end.getTime()) : formatDateTime(plan.end);
-    lines.push(t('schedule.confirmEvent'), `“${plan.title}”`, `${formatDateTime(plan.start)} – ${end}`, zone);
-    if (plan.location) lines.push(t('schedule.location', { location: plan.location }));
-    lines.push(plan.alertMinutes === undefined ? t('schedule.noAlert') : alertLine(plan.alertMinutes));
-  } else if (plan.kind === 'reminder') {
+    lines.push({ icon: 'calendar', text: t('schedule.confirmEvent') });
+    add(`“${plan.title}”`, `${formatDateTime(plan.start)} – ${end}`, zone);
+    if (plan.location) lines.push({ icon: 'location', text: t('schedule.location', { location: plan.location }) });
     lines.push(
-      t(android ? 'schedule.confirmReminderAndroid' : 'schedule.confirmReminder'),
-      `“${plan.title}”`,
-      plan.due ? t('schedule.due', { when: formatDateTime(plan.due) }) : t('schedule.noDue'),
+      plan.alertMinutes === undefined
+        ? { text: t('schedule.noAlert') }
+        : { icon: 'notifications', text: alertLine(plan.alertMinutes) },
     );
-    if (plan.due) lines.push(zone);
+  } else if (plan.kind === 'reminder') {
+    lines.push({ icon: 'alarm', text: t(android ? 'schedule.confirmReminderAndroid' : 'schedule.confirmReminder') });
+    add(`“${plan.title}”`, plan.due ? t('schedule.due', { when: formatDateTime(plan.due) }) : t('schedule.noDue'));
+    if (plan.due) add(zone);
   } else {
-    lines.push(t('schedule.confirmNotification'), `“${plan.title}”`, plan.body, formatDateTime(plan.at), zone);
+    lines.push({ icon: 'notifications', text: t('schedule.confirmNotification') });
+    add(`“${plan.title}”`, plan.body, formatDateTime(plan.at), zone);
   }
   if (plan.kind !== 'notification' && plan.notes) {
     const notes = plan.notes.length > 300 ? `${plan.notes.slice(0, 300)}…` : plan.notes;
-    lines.push(t('schedule.notes', { notes }));
+    lines.push({ icon: 'notes', text: t('schedule.notes', { notes }) });
   }
-  return lines.join('\n');
+  return { lines };
 }
 
 /** Validates read_calendar's input; an error string is returned to the model as is. */
@@ -189,15 +194,17 @@ export function planCalendarRead(input: Record<string, unknown>): CalendarReadPl
 }
 
 /** What will be read and where it goes, in the user's language, for the confirmation. */
-export function describeCalendarRead(plan: CalendarReadPlan): string {
+export function describeCalendarRead(plan: CalendarReadPlan): IconLines {
   const end = sameDay(plan.start, plan.end) ? timeLabel(plan.end.getTime()) : formatDateTime(plan.end);
-  return [
-    t('schedule.confirmRead'),
-    `${formatDateTime(plan.start)} – ${end}`,
-    t('schedule.timeZone', { zone: deviceTimeZone() }),
-    t('schedule.readSends'),
-    t(plan.details ? 'schedule.readWithNotes' : 'schedule.readNoNotes'),
-  ].join('\n');
+  return {
+    lines: [
+      { icon: 'calendar', text: t('schedule.confirmRead') },
+      { text: `${formatDateTime(plan.start)} – ${end}` },
+      { text: t('schedule.timeZone', { zone: deviceTimeZone() }) },
+      { text: t('schedule.readSends') },
+      plan.details ? { icon: 'notes', text: t('schedule.readWithNotes') } : { text: t('schedule.readNoNotes') },
+    ],
+  };
 }
 
 /** One event as the assistant gets it; times are the phone's local time. */

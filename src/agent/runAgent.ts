@@ -18,6 +18,7 @@ import {
 import { getBackgroundCount, isForeground, waitForForeground } from '../utils/foreground';
 import { withAttachedImages } from './attachedImages';
 import { backgroundBlocker, describeToolCall, executeTool, ToolContext } from './executeTool';
+import { toolIcon, WEB_SEARCH_ICON } from './toolIcons';
 import { customInstructionsPrompt, SYSTEM_PROMPT } from './systemPrompt';
 import { memoryPrompt } from './memory';
 import { siteKey } from './sitePolicy';
@@ -117,9 +118,9 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     const background = isRunningInBackground();
     if (background && !need) return;
     if (background) await pauseForUser(need!);
-    onEvent({ type: 'info', text: t(background ? 'chat.pausedNeedsYou' : 'chat.paused') });
+    onEvent({ type: 'info', icon: 'pause', text: t(background ? 'chat.pausedNeedsYou' : 'chat.paused') });
     await waitForForeground(signal);
-    if (!signal.aborted) onEvent({ type: 'info', text: t('chat.resumed') });
+    if (!signal.aborted) onEvent({ type: 'info', icon: 'play', text: t('chat.resumed') });
   };
   // A confirmation shown while the app is away would wait unseen: it waits for the user to come back, and leaving
   // while it is open pauses the background run with a notification. Never answered for the user.
@@ -231,7 +232,9 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     });
     if (reply.notice) onEvent({ type: 'info', text: reply.notice });
     if (reply.searchWidget) searchWidget = reply.searchWidget;
-    reply.searches.forEach((query) => onEvent({ type: 'action', text: t('action.webSearch', { query }) }));
+    reply.searches.forEach((query) =>
+      onEvent({ type: 'action', icon: WEB_SEARCH_ICON, text: t('action.webSearch', { query }) }),
+    );
     // Pages found by web search open in the conversation's own mode.
     reply.citations.forEach((c) =>
       addSource({ url: c.url, title: c.title, incognito: !!opts.privacy?.touchedIncognito }),
@@ -304,7 +307,7 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
         continue;
       }
       const action = describeToolCall(call.name, call.input);
-      onEvent({ type: 'action', text: action });
+      onEvent({ type: 'action', icon: toolIcon(call.name, call.input), text: action });
       setBackgroundStep(action);
       const backgroundsBefore = getBackgroundCount();
       const pausesBefore = getBackgroundPauseCount();

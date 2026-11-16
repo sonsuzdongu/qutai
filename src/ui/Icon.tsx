@@ -51,6 +51,7 @@ const ICONS = {
   chevronUp: { ios: 'chevron.up', android: 'keyboard_arrow_up' },
   chevronDown: { ios: 'chevron.down', android: 'keyboard_arrow_down' },
   chevronRight: { ios: 'chevron.right', android: 'chevron_right' },
+  chevronLeft: { ios: 'chevron.left', android: 'chevron_left' },
   reopen: { ios: 'arrow.uturn.backward', android: 'undo' },
   research: { ios: 'magnifyingglass.circle', android: 'travel_explore' },
   compare: { ios: 'rectangle.split.2x1', android: 'compare' },
@@ -64,6 +65,8 @@ const ICONS = {
   openInNew: { ios: 'plus.square.on.square', android: 'open_in_new' },
   addToHome: { ios: 'plus.app', android: 'add_to_home_screen' },
   check: { ios: 'checkmark', android: 'check' },
+  selected: { ios: 'checkmark.circle.fill', android: 'check_circle' },
+  unselected: { ios: 'circle', android: 'radio_button_unchecked' },
   phone: { ios: 'phone.fill', android: 'call' },
   message: { ios: 'message.fill', android: 'sms' },
   location: { ios: 'location.fill', android: 'location_on' },
@@ -87,9 +90,44 @@ const ICONS = {
   food: { ios: 'fork.knife', android: 'restaurant' },
   wallet: { ios: 'wallet.pass', android: 'account_balance_wallet' },
   preferences: { ios: 'slider.horizontal.3', android: 'tune' },
+  // Assistant steps.
+  globe: { ios: 'globe', android: 'language' },
+  source: { ios: 'chevron.left.forwardslash.chevron.right', android: 'code' },
+  tap: { ios: 'hand.tap', android: 'touch_app' },
+  keyboard: { ios: 'keyboard', android: 'keyboard' },
+  select: { ios: 'chevron.up.chevron.down', android: 'unfold_more' },
+  scroll: { ios: 'arrow.up.and.down', android: 'swap_vert' },
+  view: { ios: 'eye', android: 'visibility' },
+  upload: { ios: 'arrow.up.circle', android: 'upload' },
+  tabs: { ios: 'square.on.square', android: 'tab' },
+  switchTab: { ios: 'arrow.left.arrow.right', android: 'swap_horiz' },
+  email: { ios: 'envelope', android: 'mail' },
+  notes: { ios: 'square.and.pencil', android: 'edit_note' },
+  wait: { ios: 'hourglass', android: 'hourglass_empty' },
+  memory: { ios: 'brain', android: 'psychology' },
+  alarm: { ios: 'alarm', android: 'alarm' },
+  tool: { ios: 'wrench.and.screwdriver', android: 'build' },
+  // Page load errors.
+  offline: { ios: 'wifi.slash', android: 'wifi_off' },
+  unreachable: { ios: 'powerplug', android: 'power_off' },
+  unlocked: { ios: 'lock.open', android: 'lock_open' },
 } satisfies Record<string, SymbolName>;
 
 export type IconName = keyof typeof ICONS;
+
+/** A line of text with an optional icon before it; the icon is decorative (the text says the same thing). */
+export type IconLine = { icon?: IconName; text: string };
+
+/**
+ * A confirmation's message as lines with icons; spaced: a paragraph's space between the lines instead of none.
+ * The text alone (lines joined) must still read in full, e.g. for a screen reader.
+ */
+export type IconLines = { lines: IconLine[]; spaced?: boolean };
+
+/** The plain text of icon lines, as one string. */
+export function iconLinesText({ lines, spaced }: IconLines): string {
+  return lines.map((line) => line.text).join(spaced ? '\n\n' : '\n');
+}
 
 type Props = {
   name: IconName;
@@ -109,6 +147,10 @@ export function Icon({ name, size = 20, color, style }: Props) {
       size={glyph}
       tintColor={color}
       style={[{ width: size, height: size }, style]}
+      // Decorative: the label or text beside it says what it is.
+      accessible={false}
+      importantForAccessibility="no-hide-descendants"
+      accessibilityElementsHidden
       // Shown only where neither symbol set is available (e.g. tests, very old systems).
       fallback={<Text style={{ width: size, height: size, color, fontSize: size * 0.8 }}>•</Text>}
     />

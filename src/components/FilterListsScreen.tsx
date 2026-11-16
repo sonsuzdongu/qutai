@@ -5,7 +5,8 @@ import { BlockingError, contentBlocking, ListState, MAX_LIST_BYTES } from '../co
 import { hasNativeBlocking } from '../device/contentBlocker';
 import { t } from '../i18n';
 import { formatDateTime, formatNumber } from '../i18n/format';
-import { makeStyles } from '../ui/theme';
+import { Icon } from '../ui/Icon';
+import { makeStyles, usePalette } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
@@ -166,6 +167,7 @@ function ListRow({
   onRemove?: () => void;
 }) {
   const styles = useStyles();
+  const palette = usePalette();
   const details: string[] = [];
   if (list.fetchedAt && list.stats) {
     details.push(
@@ -186,7 +188,7 @@ function ListRow({
         </View>
         {onRemove && (
           <Pressable onPress={onRemove} hitSlop={10} accessibilityLabel={t('blocking.remove')} style={styles.remove}>
-            <Text style={styles.removeText}>✕</Text>
+            <Icon name="close" size={16} color={palette.textSecondary} />
           </Pressable>
         )}
         <ThemedSwitch
@@ -273,7 +275,6 @@ const useStyles = makeStyles((c) => ({
   links: { flexDirection: 'row', gap: 16, marginTop: 2 },
   link: { fontSize: 13, color: c.tintText, fontWeight: '600' },
   remove: { paddingHorizontal: 4 },
-  removeText: { fontSize: 16, color: c.textSecondary },
   buttons: { gap: 8, marginTop: 6 },
   button: { backgroundColor: c.surface, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   buttonText: { fontSize: 15, fontWeight: '600', color: c.tintText },

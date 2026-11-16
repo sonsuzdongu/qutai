@@ -7,9 +7,14 @@ import { Check, fetchCustomModels, testCustomEndpoint } from '../ai/customTest';
 import type { MessageKey } from '../i18n';
 import { t } from '../i18n';
 import type { Settings } from '../storage/settings';
+import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
+
+/** Colours of the connection test's marks: passed, and passed with a warning. */
+const MARK_OK = '#3a9b5c';
+const MARK_WARN = '#b26a00';
 
 type Value = Pick<Settings, 'apiKeys' | 'models' | 'customBaseUrl' | 'customImages' | 'customHeaders'>;
 
@@ -263,14 +268,12 @@ export function CustomEndpointFields({ value, onChange }: { value: Value; onChan
       </Pressable>
       {checks?.map((c) => (
         <View key={c.key} style={styles.check}>
-          <Text
-            style={[
-              styles.checkMark,
-              c.state === 'ok' ? styles.markOk : c.state === 'fail' ? styles.markFail : styles.markWarn,
-            ]}
-          >
-            {c.state === 'ok' ? '✓' : c.state === 'fail' ? '✕' : '!'}
-          </Text>
+          <Icon
+            name={c.state === 'ok' ? 'check' : c.state === 'fail' ? 'close' : 'insecure'}
+            size={18}
+            color={c.state === 'ok' ? MARK_OK : c.state === 'fail' ? palette.danger : MARK_WARN}
+            style={styles.checkMark}
+          />
           <View style={styles.flex}>
             <Text style={styles.optionText}>{t(`custom.check.${c.key}.${c.state === 'skip' ? 'warn' : c.state}`)}</Text>
             {!!c.detail && (
@@ -325,8 +328,5 @@ const useStyles = makeStyles((c) => ({
   },
   buttonText: { color: c.tintText, fontSize: 15, fontWeight: '600' },
   check: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
-  checkMark: { width: 18, fontSize: 15, fontWeight: '700', textAlign: 'center' },
-  markOk: { color: '#3a9b5c' },
-  markWarn: { color: '#b26a00' },
-  markFail: { color: c.danger },
+  checkMark: { marginTop: 1 },
 }));

@@ -79,7 +79,7 @@ export function AiProviderFields({ value, onChange }: { value: AiChoice; onChang
               <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>
                 {getProvider(id).shortLabel ?? getProvider(id).label.replace('Google ', '')}
               </Text>
-              {isConfigured(cleanAiChoice(value), id) && <Text style={styles.keyDot}>●</Text>}
+              {isConfigured(cleanAiChoice(value), id) && <View style={styles.keyDot} />}
             </Pressable>
           );
         })}
@@ -189,7 +189,7 @@ const useStyles = makeStyles((c) => ({
   segmentSelected: { backgroundColor: c.surface },
   segmentText: { fontSize: 14, color: c.textSecondary },
   segmentTextSelected: { color: c.text, fontWeight: '700' },
-  keyDot: { fontSize: 8, color: '#3a9b5c' },
+  keyDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#3a9b5c' },
   input: {
     color: c.text,
     height: 44,

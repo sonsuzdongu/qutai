@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { deleteOfflineFile, readOfflinePage } from '../device/offline';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { Icon } from '../ui/Icon';
+import { makeStyles, usePalette } from '../ui/theme';
 import { dayLabel, formatSize, hostOf } from '../i18n/format';
 import { getDb } from '../storage/db';
 import { listOfflinePages, OfflinePage, removeOfflinePage } from '../storage/offlinePages';
@@ -25,6 +26,7 @@ export function OfflinePagesScreen({ visible, onOpenLive, onClose }: Props) {
 
 function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
   const styles = useStyles();
+  const palette = usePalette();
   const [pages, setPages] = useState<OfflinePage[] | null>(null);
   const [reading, setReading] = useState<{ page: OfflinePage; html: string } | null>(null);
   const reload = useCallback(() => {
@@ -53,7 +55,10 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
       <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
         <View style={styles.header}>
           <Pressable onPress={() => setReading(null)} hitSlop={8} style={styles.side}>
-            <Text style={styles.back}>‹ {t('offline.title')}</Text>
+            <View style={styles.backRow}>
+              <Icon name="chevronLeft" size={18} color={palette.tintText} />
+              <Text style={styles.back}>{t('offline.title')}</Text>
+            </View>
           </Pressable>
           <Pressable onPress={() => onOpenLive(reading.page.url)} hitSlop={8} style={[styles.side, styles.right]}>
             <Text style={styles.done}>{t('offline.openLive')}</Text>
@@ -106,7 +111,7 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
               style={styles.remove}
               accessibilityLabel={t('offline.delete')}
             >
-              <Text style={styles.removeText}>✕</Text>
+              <Icon name="close" size={14} color={palette.textSecondary} />
             </Pressable>
           </Pressable>
         )}
@@ -125,6 +130,7 @@ const useStyles = makeStyles((c) => ({
     borderBottomColor: c.border,
   },
   side: { flex: 1 },
+  backRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   right: { alignItems: 'flex-end' },
   title: { color: c.text, fontSize: 17, fontWeight: '600' },
   back: { fontSize: 16, color: c.tintText },
@@ -148,5 +154,4 @@ const useStyles = makeStyles((c) => ({
   name: { fontSize: 15, color: c.text },
   meta: { fontSize: 12, color: c.textSecondary },
   remove: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  removeText: { fontSize: 14, color: c.textSecondary },
 }));

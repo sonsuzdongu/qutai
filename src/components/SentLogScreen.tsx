@@ -20,7 +20,8 @@ import {
   SentRequest,
   subscribeSentLog,
 } from '../storage/sentLog';
-import { makeStyles } from '../ui/theme';
+import { Icon } from '../ui/Icon';
+import { makeStyles, usePalette } from '../ui/theme';
 import { costLine, requestBreakdown, usd } from './AnswerCost';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
@@ -110,6 +111,7 @@ function SentLog({
   onClose: () => void;
 }) {
   const styles = useStyles();
+  const palette = usePalette();
   const [onlyThis, setOnlyThis] = useState(!!conversation);
   const [entries, setEntries] = useState<SentRequest[] | null>(null);
   const [open, setOpen] = useState<SentRequest | 'instructions' | null>(null);
@@ -143,7 +145,10 @@ function SentLog({
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <View style={styles.header}>
           <Pressable onPress={() => setOpen(null)} hitSlop={8} style={styles.side} accessibilityRole="button">
-            <Text style={styles.done}>‹ {t('sentLog.back')}</Text>
+            <View style={styles.backRow}>
+              <Icon name="chevronLeft" size={18} color={palette.tintText} />
+              <Text style={styles.done}>{t('sentLog.back')}</Text>
+            </View>
           </Pressable>
           <Text style={styles.title} accessibilityRole="header" numberOfLines={1}>
             {t(open === 'instructions' ? 'sentLog.instructions' : 'sentLog.request')}
@@ -232,10 +237,13 @@ function SentLog({
                 <Text style={styles.description} numberOfLines={1}>
                   {providerLine(item)}
                 </Text>
-                <Text style={styles.host} numberOfLines={1}>
-                  {item.incognito ? `🕶 ${t('sentLog.incognito')} · ` : ''}
-                  {item.host ?? t('sentLog.noSite')}
-                </Text>
+                <View style={styles.hostRow}>
+                  {item.incognito ? <Icon name="incognito" size={13} color={palette.textSecondary} /> : null}
+                  <Text style={[styles.host, styles.hostText]} numberOfLines={1}>
+                    {item.incognito ? `${t('sentLog.incognito')} · ` : ''}
+                    {item.host ?? t('sentLog.noSite')}
+                  </Text>
+                </View>
                 <View style={styles.chips}>
                   {chips.map((chip, i) => (
                     <Text key={i} style={styles.chip}>
@@ -254,16 +262,20 @@ function SentLog({
 
 function RequestDetail({ entry, showCost }: { entry: SentRequest; showCost: boolean }) {
   const styles = useStyles();
+  const palette = usePalette();
   const tokens = Math.round(entry.totalChars / 4);
   return (
     <ScrollView contentContainerStyle={styles.list}>
       <View style={styles.meta}>
         <Text style={styles.description}>{providerLine(entry)}</Text>
         <Text style={styles.host}>{formatDateTime(new Date(entry.at))}</Text>
-        <Text style={styles.host}>
-          {entry.incognito ? `🕶 ${t('sentLog.incognito')} · ` : ''}
-          {entry.host ?? t('sentLog.noSite')}
-        </Text>
+        <View style={styles.hostRow}>
+          {entry.incognito ? <Icon name="incognito" size={13} color={palette.textSecondary} /> : null}
+          <Text style={[styles.host, styles.hostText]}>
+            {entry.incognito ? `${t('sentLog.incognito')} · ` : ''}
+            {entry.host ?? t('sentLog.noSite')}
+          </Text>
+        </View>
         {entry.webSearch ? (
           <Text style={styles.host}>{t(entry.research ? 'sentLog.researchHint' : 'sentLog.webSearchHint')}</Text>
         ) : null}
@@ -294,6 +306,7 @@ function RequestDetail({ entry, showCost }: { entry: SentRequest; showCost: bool
 
 function ItemCard({ item, content, kept }: { item: SentItem; content?: SentContent; kept: boolean }) {
   const styles = useStyles();
+  const palette = usePalette();
   const [expanded, setExpanded] = useState(false);
   const title = [itemLabel(item), item.tool, item.host].filter(Boolean).join(' · ');
   return (
@@ -304,10 +317,10 @@ function ItemCard({ item, content, kept }: { item: SentItem; content?: SentConte
         accessibilityRole="button"
         accessibilityState={{ expanded }}
       >
-        <Text style={styles.cardTitle}>
-          {expanded ? '▾ ' : '▸ '}
-          {title}
-        </Text>
+        <View style={styles.cardTitleRow}>
+          <Icon name={expanded ? 'chevronDown' : 'chevronRight'} size={14} color={palette.text} style={styles.chevron} />
+          <Text style={[styles.cardTitle, styles.cardTitleText]}>{title}</Text>
+        </View>
       </Pressable>
       {expanded ? <ItemContent item={item} content={content} kept={kept} /> : null}
     </View>
@@ -386,6 +399,7 @@ function Instructions({ customInstructions }: { customInstructions: string }) {
 
 function Section({ title, text }: { title: string; text: string }) {
   const styles = useStyles();
+  const palette = usePalette();
   const [expanded, setExpanded] = useState(false);
   return (
     <View style={styles.card}>
@@ -395,10 +409,12 @@ function Section({ title, text }: { title: string; text: string }) {
         accessibilityRole="button"
         accessibilityState={{ expanded }}
       >
-        <Text style={styles.cardTitle}>
-          {expanded ? '▾ ' : '▸ '}
-          {title} · {charsLabel(text.length)}
-        </Text>
+        <View style={styles.cardTitleRow}>
+          <Icon name={expanded ? 'chevronDown' : 'chevronRight'} size={14} color={palette.text} style={styles.chevron} />
+          <Text style={[styles.cardTitle, styles.cardTitleText]}>
+            {title} · {charsLabel(text.length)}
+          </Text>
+        </View>
       </Pressable>
       {expanded ? <LongText text={text} /> : null}
     </View>
@@ -433,6 +449,9 @@ const useStyles = makeStyles((c) => ({
   texts: { flex: 1, gap: 2 },
   description: { fontSize: 14, color: c.text, fontWeight: '600' },
   host: { fontSize: 12, color: c.textSecondary },
+  hostRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  hostText: { flexShrink: 1 },
+  backRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 3 },
   chip: {
     fontSize: 12,
@@ -455,6 +474,9 @@ const useStyles = makeStyles((c) => ({
     marginTop: 8,
   },
   cardTitle: { fontSize: 14, fontWeight: '600', color: c.text },
+  cardTitleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 4 },
+  cardTitleText: { flex: 1 },
+  chevron: { marginTop: 2 },
   cardText: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   content: { gap: 8 },
   mono: { fontFamily: MONO, fontSize: 12, lineHeight: 17, color: c.text },

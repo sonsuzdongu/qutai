@@ -53,6 +53,7 @@ import { SearchSuggestions } from './SearchSuggestions';
 import { KeyboardAvoidingContainer } from './KeyboardAware';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 import { useReduceMotion } from '../utils/useReduceMotion';
+import { withoutLeadingSymbol } from '../utils/leadingSymbol';
 import { bump, tick } from '../device/haptics';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { FINAL_WAIT_MS } from './PushToTalk';
@@ -76,6 +77,8 @@ export type ChatItem = {
     | 'pdf'
     | 'share';
   text: string;
+  /** For 'action' and 'info': the icon before the text (absent in conversations saved before icons). */
+  icon?: IconName;
   /** For 'choices': the buttons offered. */
   options?: string[];
   /** For 'choices': the option the user tapped. */
@@ -496,20 +499,29 @@ export function AssistantPanel({
                     onPress={onModelPress}
                     disabled={running}
                     hitSlop={4}
+                    style={styles.statusRow}
                     accessibilityRole="button"
                     accessibilityLabel={t('chat.modelA11y', { model: modelInfo })}
                     accessibilityState={{ disabled: running }}
                   >
                     {/* Beside four buttons on a narrow phone: shortened in the middle, so the end of the model
-                        name and the ▾ stay in view, and very large text sizes capped. */}
+                        name and the arrow stay in view, and very large text sizes capped. */}
                     <Text
                       style={[styles.status, modelChosen && !running && styles.statusChosen]}
                       numberOfLines={1}
                       ellipsizeMode="middle"
                       maxFontSizeMultiplier={1.4}
                     >
-                      {running ? t('chat.working') : `${modelInfo} ▾`}
+                      {running ? t('chat.working') : modelInfo}
                     </Text>
+                    {running ? null : (
+                      <Icon
+                        name="chevronDown"
+                        size={13}
+                        color={modelChosen ? palette.tintText : palette.textSecondary}
+                        style={styles.statusIcon}
+                      />
+                    )}
                   </Pressable>
                 </View>
                 {items.length > 0 && !running && (
@@ -1076,14 +1088,15 @@ function ChatRow({
                   styles.choice,
                   d?.choice,
                   chosen && styles.choiceChosen,
+                  chosen && styles.choiceWithIcon,
                   !onChoose && !chosen && styles.choiceClosed,
                   pressed && styles.pressed,
                 ]}
                 accessibilityRole="button"
                 accessibilityState={{ disabled: !onChoose, selected: chosen }}
               >
-                <Text style={[styles.choiceText, chosen && styles.choiceTextChosen]}>
-                  {chosen ? '✓ ' : ''}
+                {chosen ? <Icon name="check" size={16} color={palette.onTint} /> : null}
+                <Text style={[styles.choiceText, chosen && styles.choiceTextChosen, styles.choiceLabel]}>
                   {option}
                 </Text>
               </Pressable>
@@ -1108,10 +1121,14 @@ function ChatRow({
                   <Text style={styles.sourceIndex}>{i + 1} </Text>
                   {source.title || hostOf(source.url)}
                 </Text>
-                <Text style={styles.sourceHost} numberOfLines={1}>
-                  {source.incognito ? '🕶 ' : ''}
-                  {hostOf(source.url)}
-                </Text>
+                <View style={styles.sourceHostRow}>
+                  {source.incognito ? (
+                    <Icon name="incognito" size={12} color={d?.dim.color ?? palette.textSecondary} />
+                  ) : null}
+                  <Text style={[styles.sourceHost, styles.sourceHostText]} numberOfLines={1}>
+                    {hostOf(source.url)}
+                  </Text>
+                </View>
               </Pressable>
             ))}
           </ScrollView>
@@ -1120,7 +1137,7 @@ function ChatRow({
       );
     case 'call': {
       const call = item.call;
-      if (!call) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      if (!call) return <StepLine icon="phone" text={item.text} />;
       return (
         <View style={[styles.callCard, d?.assistantBubble]}>
           <View style={styles.callInfo}>
@@ -1151,7 +1168,7 @@ function ChatRow({
     }
     case 'sms': {
       const sms = item.sms;
-      if (!sms) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      if (!sms) return <StepLine icon="message" text={item.text} />;
       const label = sms.name
         ? t('chat.smsLabel', { name: sms.name, number: sms.number })
         : t('chat.smsNumberLabel', { number: sms.number });
@@ -1184,7 +1201,7 @@ function ChatRow({
     }
     case 'whatsapp': {
       const wa = item.whatsapp;
-      if (!wa) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      if (!wa) return <StepLine icon="message" text={item.text} />;
       const label = wa.number
         ? t('chat.whatsAppLabel', { who: wa.name ? `${wa.name}, ${wa.number}` : wa.number })
         : t('chat.whatsAppNoNumberLabel');
@@ -1217,7 +1234,7 @@ function ChatRow({
     }
     case 'file': {
       const file = item.file;
-      if (!file) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      if (!file) return <StepLine icon="document" text={item.text} />;
       const details = [
         file.format.toUpperCase(),
         formatSize(file.size),
@@ -1268,24 +1285,38 @@ function ChatRow({
     }
     case 'image': {
       const image = item.attachments?.[0];
-      if (!image) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      if (!image) return <StepLine icon="image" text={item.text} />;
       return <ImageCard info={image} expired={!!item.expired} onOpen={onOpenAttachment} onImage={onImage} />;
     }
     case 'pdf': {
       const pdf = item.attachments?.[0];
-      if (!pdf) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      if (!pdf) return <StepLine icon="pdf" text={item.text} />;
       return <PdfCard info={pdf} onOpen={onOpenAttachment} onPdf={onImage} />;
     }
     case 'share': {
       const share = item.share;
-      if (!share) return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      if (!share) return <StepLine icon="share" text={item.text} />;
       return <ShareCard share={share} onOpen={onOpenAttachment} onShare={onShare} />;
     }
     case 'error':
-      return <Text style={styles.error}>⚠️ {item.text}</Text>;
+      return <StepLine icon="insecure" text={item.text} error />;
     default:
-      return <Text style={[styles.action, d?.dim]}>{item.text}</Text>;
+      return <StepLine icon={item.icon} text={item.text} />;
   }
+}
+
+/** An assistant step, a status line, an error or an older card's text: a small icon, then the text. */
+function StepLine({ icon, text, error }: { icon?: IconName; text: string; error?: boolean }) {
+  const styles = useStyles();
+  const d = useContext(PanelTheme);
+  const palette = usePalette();
+  const color = error ? palette.danger : (d?.dim.color ?? palette.textSecondary);
+  return (
+    <View style={styles.stepLine}>
+      {icon ? <Icon name={icon} size={error ? 15 : 14} color={color} style={styles.stepIcon} /> : null}
+      <Text style={[error ? styles.error : [styles.action, d?.dim], styles.stepText]}>{withoutLeadingSymbol(text)}</Text>
+    </View>
+  );
 }
 
 /** An image the assistant made (edit_image): preview, size, format and bytes, Save to Photos and Share. */
@@ -1559,8 +1590,10 @@ const useStyles = makeStyles((c) => ({
     borderBottomColor: c.separator,
   },
   title: { fontWeight: '700', fontSize: 17 },
-  status: { color: c.textSecondary, fontSize: 12, marginTop: 1 },
+  status: { color: c.textSecondary, fontSize: 12, marginTop: 1, flexShrink: 1 },
   statusChosen: { color: c.tintText },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  statusIcon: { marginTop: 1 },
   headerTitle: { flex: 1, marginLeft: 10, marginRight: 8 },
   headerButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   headerButtonText: { fontSize: 18, color: c.textSecondary },
@@ -1612,6 +1645,9 @@ const useStyles = makeStyles((c) => ({
   assistantText: { color: c.text, fontSize: 15, lineHeight: 21 },
   action: { color: c.textSecondary, fontSize: 12, marginLeft: 4 },
   error: { color: c.danger, fontSize: 13, marginLeft: 4 },
+  stepLine: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginLeft: 4 },
+  stepIcon: { marginTop: 1 },
+  stepText: { marginLeft: 0, flexShrink: 1 },
   sources: { alignSelf: 'stretch', gap: 4 },
   sourcesTitle: { fontSize: 12, color: c.textSecondary, marginLeft: 4 },
   sourcesRow: { gap: 6, paddingRight: 8 },
@@ -1627,6 +1663,8 @@ const useStyles = makeStyles((c) => ({
   sourceIndex: { color: c.tintText, fontWeight: '700' },
   sourceTitle: { fontSize: 12.5, color: c.text, lineHeight: 16 },
   sourceHost: { fontSize: 11, color: c.textSecondary },
+  sourceHostRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  sourceHostText: { flexShrink: 1 },
   choices: { alignSelf: 'stretch', gap: 6 },
   choice: {
     alignSelf: 'flex-start',
@@ -1642,6 +1680,8 @@ const useStyles = makeStyles((c) => ({
   choiceClosed: { opacity: 0.4 },
   choiceText: { fontSize: 15, color: c.tintText, fontWeight: '600' },
   choiceTextChosen: { color: c.onTint },
+  choiceWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  choiceLabel: { flexShrink: 1 },
   callCard: {
     alignSelf: 'stretch',
     flexDirection: 'row',

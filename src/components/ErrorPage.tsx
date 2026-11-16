@@ -1,18 +1,21 @@
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { LoadError, LoadErrorKind } from '../browser/navigation';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { Icon, IconName } from '../ui/Icon';
+import { makeStyles, usePalette } from '../ui/theme';
 
-const ICONS: Record<LoadErrorKind, string> = {
-  offline: '📡',
-  dns: '🔎',
-  timeout: '⏳',
-  unreachable: '🔌',
-  cert: '⚠️',
-  ssl: '🔓',
-  cleartext: '🔓',
-  generic: '⚠️',
+const ICONS: Record<LoadErrorKind, IconName> = {
+  offline: 'offline',
+  dns: 'find',
+  timeout: 'wait',
+  unreachable: 'unreachable',
+  cert: 'insecure',
+  ssl: 'unlocked',
+  cleartext: 'unlocked',
+  generic: 'insecure',
 };
+
+const DIM_INCOGNITO = '#a9a8b3';
 
 /** Kinds where a local address gets the "same network, listening on the network" tips. */
 const LOCAL_TIP_KINDS = new Set<LoadErrorKind>(['dns', 'timeout', 'unreachable', 'generic']);
@@ -45,6 +48,7 @@ export function ErrorPage({
   onOpenHttp?: () => void;
 }) {
   const styles = useStyles();
+  const palette = usePalette();
   const { kind } = error;
   const isCert = kind === 'cert';
   const body = isCert
@@ -58,7 +62,11 @@ export function ErrorPage({
       contentContainerStyle={styles.content}
       accessibilityLiveRegion="polite"
     >
-      <Text style={styles.icon}>{ICONS[kind]}</Text>
+      <Icon
+        name={ICONS[kind]}
+        size={44}
+        color={isCert ? palette.danger : incognito ? DIM_INCOGNITO : palette.textSecondary}
+      />
       <Text style={[styles.title, incognito && styles.lightText]} accessibilityRole="header">
         {isCert ? t('loadError.certTitle') : t('loadError.title')}
       </Text>
@@ -109,12 +117,11 @@ const useStyles = makeStyles((c) => ({
   },
   content: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 10 },
   dark: { backgroundColor: '#1c1b22' },
-  icon: { fontSize: 44 },
   title: { fontSize: 19, fontWeight: '700', color: c.text, textAlign: 'center' },
   body: { fontSize: 15, color: c.textSecondary, textAlign: 'center', lineHeight: 21 },
   small: { fontSize: 13, color: c.textSecondary, textAlign: 'center', lineHeight: 18 },
   lightText: { color: '#f2f1f5' },
-  dimText: { color: '#a9a8b3' },
+  dimText: { color: DIM_INCOGNITO },
   url: { fontSize: 12, color: c.textSecondary, textAlign: 'center' },
   primary: { marginTop: 10, backgroundColor: c.tint, borderRadius: 20, paddingHorizontal: 22, paddingVertical: 10 },
   primaryText: { color: c.onTint, fontSize: 15, fontWeight: '600' },

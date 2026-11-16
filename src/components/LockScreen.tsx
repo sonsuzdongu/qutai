@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { Icon } from '../ui/Icon';
+import { makeStyles, usePalette } from '../ui/theme';
 import { DialogHost } from './Dialog';
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
 /** Covers the app until the user proves it's them; asks right away when it appears. */
 export function LockScreen({ locked, onUnlock, onLeave }: Props) {
   const styles = useStyles();
+  const palette = usePalette();
   useEffect(() => {
     if (locked) onUnlock();
     // Ask once when the lock appears; the button asks again.
@@ -24,7 +26,11 @@ export function LockScreen({ locked, onUnlock, onLeave }: Props) {
   return (
     <Modal visible={locked !== null} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
       <View style={[styles.container, locked === 'incognito' && styles.incognito]}>
-        <Text style={styles.icon}>{locked === 'incognito' ? '🕶' : '🔒'}</Text>
+        <Icon
+          name={locked === 'incognito' ? 'incognito' : 'secure'}
+          size={52}
+          color={locked === 'incognito' ? '#a9a8b3' : palette.textSecondary}
+        />
         <Text style={styles.title}>{t(locked === 'incognito' ? 'lock.incognitoTitle' : 'lock.appTitle')}</Text>
         <Pressable onPress={onUnlock} style={styles.button} accessibilityRole="button">
           <Text style={styles.buttonText}>{t('lock.unlock')}</Text>
@@ -50,7 +56,6 @@ const useStyles = makeStyles((c) => ({
     padding: 32,
   },
   incognito: { backgroundColor: '#1c1b22' },
-  icon: { fontSize: 52 },
   title: { fontSize: 18, fontWeight: '700', color: c.textSecondary, textAlign: 'center' },
   button: { paddingHorizontal: 28, height: 48, borderRadius: 24, backgroundColor: c.tint, justifyContent: 'center' },
   buttonText: { color: c.onTint, fontSize: 16, fontWeight: '700' },

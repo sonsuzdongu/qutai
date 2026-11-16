@@ -1,3 +1,5 @@
+import type { IconName } from '../ui/Icon';
+
 export type ToolDefinition = {
   name: string;
   description: string;
@@ -11,8 +13,9 @@ export type AgentEvent =
   | { type: 'text'; text: string }
   /** A piece of the reply being streamed; the complete text follows as a 'text' event. */
   | { type: 'text_delta'; text: string }
-  | { type: 'action'; text: string }
-  | { type: 'info'; text: string }
+  /** icon: shown before the text in the chat (decorative; the text says the same). */
+  | { type: 'action'; text: string; icon: IconName }
+  | { type: 'info'; text: string; icon?: IconName }
   | { type: 'error'; text: string }
   /** The agent asks the user to pick one of these options; the run ends until they answer. */
   | { type: 'choices'; text: string; options: string[] }

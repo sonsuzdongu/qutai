@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { FlatList, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
+import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
@@ -82,7 +83,10 @@ function LicencesContent({
             accessibilityRole="button"
             accessibilityLabel={t('licences.back')}
           >
-            <Text style={styles.done}>‹ {t('licences.back')}</Text>
+            <View style={styles.backRow}>
+              <Icon name="chevronLeft" size={18} color={palette.tintText} />
+              <Text style={styles.done}>{t('licences.back')}</Text>
+            </View>
           </Pressable>
           <Pressable onPress={onClose} hitSlop={8} style={[styles.side, styles.right]} accessibilityRole="button">
             <Text style={styles.done}>{t('common.done')}</Text>
@@ -181,6 +185,7 @@ const useStyles = makeStyles((c) => ({
     borderBottomColor: c.border,
   },
   side: { flex: 1 },
+  backRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   right: { alignItems: 'flex-end' },
   title: { color: c.text, fontSize: 17, fontWeight: '600' },
   done: { color: c.tintText, fontSize: 16, fontWeight: '600' },

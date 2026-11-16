@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { Icon } from '../ui/Icon';
+import { Icon, IconLines } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
 import { useKeyboardHeight } from '../utils/useKeyboardHeight';
 import { useReduceMotion } from '../utils/useReduceMotion';
@@ -50,6 +50,8 @@ export type DialogButton = {
 export type DialogOptions = {
   title: string;
   message?: string;
+  /** Lines with icons, shown before the message (e.g. the step the assistant wants to take). */
+  lines?: IconLines;
   /** One to three buttons; just "OK" when left out. A cancel button is also what the backdrop and back button do. */
   buttons?: DialogButton[];
   /** A picture under the title (e.g. the image a page is about to get); width over height for its shape. */
@@ -234,7 +236,7 @@ function DialogView({ entry }: { entry: Entry }) {
   const reduceMotion = useReduceMotion();
   const keyboard = useKeyboardHeight();
   const { fontScale, height } = useWindowDimensions();
-  const { title, message, buttons, checkbox, input, image } = entry.options;
+  const { title, message, lines, buttons, checkbox, input, image } = entry.options;
 
   const [checked, setChecked] = useState(checkbox?.initial ?? false);
   const [text, setText] = useState(input?.initial ?? '');
@@ -363,6 +365,23 @@ function DialogView({ entry }: { entry: Entry }) {
                   accessibilityLabel={image.label}
                 />
               ) : null}
+              {lines?.lines.length ? (
+                <View style={lines.spaced ? styles.linesSpaced : null}>
+                  {lines.lines.map((line, i) => {
+                    const indent = !lines.spaced && !line.icon && lines.lines.some((l) => l.icon);
+                    return (
+                      <View key={i} style={[styles.line, indent && styles.lineIndent]}>
+                        {line.icon ? (
+                          <Icon name={line.icon} size={16} color={palette.textSecondary} style={styles.lineIcon} />
+                        ) : null}
+                        <Text style={[styles.message, styles.lineText]} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+                          {line.text}
+                        </Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              ) : null}
               {message ? (
                 <Text style={styles.message} maxFontSizeMultiplier={MAX_FONT_SCALE}>
                   {message}
@@ -467,6 +486,12 @@ const useStyles = makeStyles((c) => ({
   bodyContent: { gap: 8 },
   title: { fontSize: 18, fontWeight: '700', color: c.text },
   message: { fontSize: 15, lineHeight: 21, color: c.textSecondary },
+  linesSpaced: { gap: 21 },
+  line: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  // Lines without an icon start where the text of the lines with one does (not paragraphs, which stand alone).
+  lineIndent: { paddingStart: 24 },
+  lineIcon: { marginTop: 2.5 },
+  lineText: { flex: 1 },
   image: { width: '100%', maxHeight: 200, borderRadius: 8, backgroundColor: c.border },
   input: {
     color: c.text,

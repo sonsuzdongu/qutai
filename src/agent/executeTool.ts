@@ -23,6 +23,8 @@ import type { ToolImage } from '../ai/types';
 import type { AttachmentInfo } from '../chat/attachments';
 import { readPdfTool, viewAttachmentTool } from './fileTools';
 import { uiLabel, uiPath } from './uiLabels';
+import type { IconLine, IconLines } from '../ui/Icon';
+import { toolIcon } from './toolIcons';
 import { editImageTool, uploadImageTool } from './imageTools';
 import { BOOKMARK_READS, bookmarkNeedsUser, bookmarksTool, describeBookmarkCall } from './bookmarkTool';
 import { describeSettingsCall, settingsTool } from './settingsTool';
@@ -81,7 +83,7 @@ export type ToolContext = {
    */
   askedFrom?: { id: string };
   /** Asks the user before an action that changes the page (host: the site it acts on). Resolve false to block it. */
-  confirm?: (description: string, host: string | null) => Promise<boolean>;
+  confirm?: (description: string | IconLines, host: string | null) => Promise<boolean>;
   /** The global "ask before actions" setting, for sites without their own permission. Defaults to true when confirm is set. */
   confirmByDefault?: boolean;
   /** Per-site permissions (allow, ask, read-only, blocked). */
@@ -314,7 +316,7 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
             : 'action.openSystemSettings',
       );
     default:
-      return `🔧 ${name}`;
+      return name;
   }
 }
 
@@ -772,13 +774,13 @@ async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext
     ...(probe.size ? [t('downloads.agentSize', { size: formatSize(probe.size) })] : []),
   ].join('\n');
   const android = Platform.OS === 'android';
-  const lines = [
-    t('downloads.agentConfirm'),
-    details,
-    ...(isRiskyDownload(name, probe.type) ? [t('downloads.agentRisky', { host })] : []),
-    t(android ? 'downloads.agentWhereAndroid' : 'downloads.agentWhereIos'),
+  const lines: IconLine[] = [
+    { text: t('downloads.agentConfirm') },
+    { text: details },
+    ...(isRiskyDownload(name, probe.type) ? [{ icon: 'insecure' as const, text: t('downloads.agentRisky', { host }) }] : []),
+    { text: t(android ? 'downloads.agentWhereAndroid' : 'downloads.agentWhereIos') },
   ];
-  if (!(await ctx.confirm(lines.join('\n\n'), null)))
+  if (!(await ctx.confirm({ lines, spaced: true }, null)))
     return { content: 'The user declined the download. Ask them how to proceed.', isError: true };
   try {
     await ctx.startDownload(tab, url, name, probe.type);
@@ -1253,7 +1255,7 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
   }
   // The personal-information question already named this entry; asking "may I type?" right after would be twice.
   if (decision.kind === 'confirm' && ctx.confirm && !personalAsked) {
-    const allowed = await ctx.confirm(describeToolCall(name, input), host);
+    const allowed = await ctx.confirm({ lines: [{ icon: toolIcon(name, input), text: describeToolCall(name, input) }] }, host);
     if (!allowed) return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true });
   }
   return record(await runTool(name, input, ctx, hidden?.memory));

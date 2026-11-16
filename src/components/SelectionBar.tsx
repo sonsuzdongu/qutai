@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Icon, IconName } from '../ui/Icon';
 
-export type SelectionAction = { label: string; onPress: () => void };
+/** icon: drawn before the label (decorative). */
+export type SelectionAction = { label: string; icon?: IconName; onPress: () => void };
 
 /** Floats at the bottom of the page while text is selected; the OS copy menu stays near the selection. */
 export function SelectionBar({
@@ -23,6 +25,7 @@ export function SelectionBar({
             style={({ pressed }) => [styles.button, i > 0 && styles.divider, pressed && styles.pressed]}
             accessibilityRole="button"
           >
+            {action.icon ? <Icon name={action.icon} size={15} color={i === 0 ? PRIMARY : '#fff'} /> : null}
             <Text style={[styles.label, i === 0 && styles.primary]}>{action.label}</Text>
           </Pressable>
         ))}
@@ -30,6 +33,8 @@ export function SelectionBar({
     </View>
   );
 }
+
+const PRIMARY = '#7cc8f2';
 
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', left: 0, right: 0, bottom: 16, alignItems: 'center' },
@@ -45,9 +50,9 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   barDark: { backgroundColor: '#42414d' },
-  button: { paddingHorizontal: 14, paddingVertical: 11 },
+  button: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 14, paddingVertical: 11 },
   divider: { borderLeftWidth: StyleSheet.hairlineWidth, borderLeftColor: 'rgba(255,255,255,0.2)' },
   pressed: { backgroundColor: 'rgba(255,255,255,0.12)' },
   label: { color: '#fff', fontSize: 14 },
-  primary: { color: '#7cc8f2', fontWeight: '700' },
+  primary: { color: PRIMARY, fontWeight: '700' },
 });

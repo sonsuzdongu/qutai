@@ -19,36 +19,36 @@ export function sourcesItem(sources: Source[], searchWidget?: string): ChatItem 
 
 /** A Call button offered by the assistant; the text is what versions without the card show instead. */
 export function callItem(call: CallOffer): ChatItem {
-  const text = `📞 ${call.name ? `${call.name} · ` : ''}${call.number}`;
+  const text = `${call.name ? `${call.name} · ` : ''}${call.number}`;
   return { id: String(++itemCounter), kind: 'call', text, call };
 }
 
 /** An "Open in Messages" card offered by the assistant; the text is what versions without the card show instead. */
 export function smsItem(sms: SmsOffer): ChatItem {
-  const text = `💬 ${sms.name ? `${sms.name} · ` : ''}${sms.number}`;
+  const text = `${sms.name ? `${sms.name} · ` : ''}${sms.number}`;
   return { id: String(++itemCounter), kind: 'sms', text, sms };
 }
 
 /** An "Open in WhatsApp" card offered by the assistant; the text is what versions without the card show instead. */
 export function whatsAppItem(whatsapp: WhatsAppOffer): ChatItem {
   const who = [whatsapp.name, whatsapp.number].filter(Boolean).join(' · ');
-  return { id: String(++itemCounter), kind: 'whatsapp', text: `🟢 WhatsApp${who ? ` · ${who}` : ''}`, whatsapp };
+  return { id: String(++itemCounter), kind: 'whatsapp', text: `WhatsApp${who ? ` · ${who}` : ''}`, whatsapp };
 }
 
 /** A file the assistant composed (save_file), with Share and Save buttons; the text is what older versions show. */
 export function fileItem(file: FileOffer): ChatItem {
-  return { id: String(++itemCounter), kind: 'file', text: `📄 ${file.name} · ${formatSize(file.size)}`, file };
+  return { id: String(++itemCounter), kind: 'file', text: `${file.name} · ${formatSize(file.size)}`, file };
 }
 
 /** An image the assistant made (edit_image), as a card; its manifest makes it one of the conversation's attachments. */
 export function imageItem(info: AttachmentInfo): ChatItem {
   const size = info.width && info.height ? ` · ${info.width}×${info.height}` : '';
-  return { id: String(++itemCounter), kind: 'image', text: `🖼 ${info.name}${size} · ${formatSize(info.size)}`, attachments: [info] };
+  return { id: String(++itemCounter), kind: 'image', text: `${info.name}${size} · ${formatSize(info.size)}`, attachments: [info] };
 }
 
 /** A PDF Qutai made (save_pdf, or an answer saved as a PDF), as a card; its manifest makes it a file of the conversation. */
 export function pdfItem(info: AttachmentInfo): ChatItem {
-  return { id: String(++itemCounter), kind: 'pdf', text: `📄 ${info.name} · ${formatSize(info.size)}`, attachments: [info] };
+  return { id: String(++itemCounter), kind: 'pdf', text: `${info.name} · ${formatSize(info.size)}`, attachments: [info] };
 }
 
 /**
@@ -56,9 +56,9 @@ export function pdfItem(info: AttachmentInfo): ChatItem {
  * versions without the card show: where it goes and the file names, never the message text.
  */
 export function shareItem(share: ShareOffer): ChatItem {
-  const where = share.app === 'whatsapp' ? '🟢 WhatsApp' : share.app === 'email' ? '✉️' : '📤';
+  const where = share.app === 'whatsapp' ? 'WhatsApp: ' : '';
   const files = share.files.map((f) => f.name).join(', ');
-  return { id: String(++itemCounter), kind: 'share', text: `${where} ${files}`.trim(), share };
+  return { id: String(++itemCounter), kind: 'share', text: `${where}${files}`.trim(), share };
 }
 
 /** A message the user sent, with the files attached to it. */

@@ -21,6 +21,7 @@ import {
   TaskTarget,
   updateSavedTask,
 } from '../storage/savedTasks';
+import { Icon, IconName } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -112,6 +113,7 @@ function TaskList({
   draft: TaskDraft | null;
 }) {
   const styles = useStyles();
+  const palette = usePalette();
   const [tasks, setTasks] = useState<SavedTask[] | null>(null);
   // The task being edited: an existing one (id) or a new one (no id).
   const [editing, setEditing] = useState<{ id?: string; input: TaskInput; incognito?: boolean } | null>(() =>
@@ -234,9 +236,12 @@ function TaskList({
               </Text>
               {item.schedule ? (
                 <View style={styles.scheduleRow}>
-                  <Text style={styles.meta} numberOfLines={2}>
-                    {`⏰ ${describeSchedule(item.schedule)} · ${scheduleState(item)}`}
-                  </Text>
+                  <View style={styles.scheduleText}>
+                    <Icon name="alarm" size={13} color={palette.textSecondary} style={styles.scheduleIcon} />
+                    <Text style={[styles.meta, styles.scheduleMeta]} numberOfLines={2}>
+                      {`${describeSchedule(item.schedule)} · ${scheduleState(item)}`}
+                    </Text>
+                  </View>
                   {nextRun(item.schedule) ? (
                     <Pressable
                       onPress={() =>
@@ -450,13 +455,13 @@ function ScheduleFields({ input, set }: { input: TaskInput; set: (patch: Partial
           {schedule.kind === 'once' && at ? (
             <View style={styles.stepRow}>
               <Stepper
-                label="‹"
+                icon="chevronLeft"
                 accessibilityLabel={t('tasks.dayEarlier')}
                 disabled={at.getTime() - 86_400_000 < today.getTime()}
                 onPress={() => shiftDay(-1)}
               />
               <Text style={styles.stepValue}>{formatShortDate(at)}</Text>
-              <Stepper label="›" accessibilityLabel={t('tasks.dayLater')} onPress={() => shiftDay(1)} />
+              <Stepper icon="chevronRight" accessibilityLabel={t('tasks.dayLater')} onPress={() => shiftDay(1)} />
             </View>
           ) : null}
           {schedule.kind === 'weekly' ? (
@@ -535,18 +540,22 @@ function ScheduleFields({ input, set }: { input: TaskInput; set: (patch: Partial
   );
 }
 
+/** A round step button with a short text ("+5") or an icon (the day arrows). */
 function Stepper({
   label,
+  icon,
   accessibilityLabel,
   onPress,
   disabled,
 }: {
-  label: string;
+  label?: string;
+  icon?: IconName;
   accessibilityLabel: string;
   onPress: () => void;
   disabled?: boolean;
 }) {
   const styles = useStyles();
+  const palette = usePalette();
   return (
     <Pressable
       onPress={onPress}
@@ -556,7 +565,7 @@ function Stepper({
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ disabled: !!disabled }}
     >
-      <Text style={styles.stepperText}>{label}</Text>
+      {icon ? <Icon name={icon} size={18} color={palette.text} /> : <Text style={styles.stepperText}>{label}</Text>}
     </Pressable>
   );
 }
@@ -624,9 +633,13 @@ const useStyles = makeStyles((c) => ({
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 },
   switchLabel: { fontSize: 15, color: c.text },
   scheduleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  scheduleText: { flexDirection: 'row', alignItems: 'flex-start', gap: 4, flexShrink: 1 },
+  scheduleIcon: { marginTop: 1 },
+  scheduleMeta: { flexShrink: 1 },
   pause: { fontSize: 13, color: c.tintText, fontWeight: '600' },
   stepRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8 },
   stepValue: { minWidth: 96, textAlign: 'center', fontSize: 17, fontWeight: '600', color: c.text },
+  stepperText: { fontSize: 15, fontWeight: '600', color: c.text },
   stepper: {
     minWidth: 40,
     height: 36,
@@ -636,7 +649,6 @@ const useStyles = makeStyles((c) => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepperText: { fontSize: 15, fontWeight: '600', color: c.text },
   disabled: { opacity: 0.35 },
   days: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
   day: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: 14, backgroundColor: c.sunken },

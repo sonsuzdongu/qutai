@@ -178,6 +178,7 @@ import {
 import { deleteOrphanChats, loadChat, savedAttachmentIds, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings, ThemeSetting } from './src/storage/settings';
+import type { IconLines } from './src/ui/Icon';
 import { holdSplash } from './src/ui/launch';
 import { darkPalette, lightPalette } from './src/ui/theme';
 import { usePersistSession } from './src/storage/usePersistSession';
@@ -230,10 +231,16 @@ function readConversation(chat: Conversation, adoptLegacy = false) {
 }
 
 /** The agent's "may I?" before an action. Stopping the task (signal) dismisses it as declined. */
-async function askConfirmation(description: string, host: string | null, signal: AbortSignal): Promise<boolean> {
+async function askConfirmation(
+  description: string | IconLines,
+  host: string | null,
+  signal: AbortSignal,
+): Promise<boolean> {
+  const text = typeof description === 'string' ? description : null;
   const result = await dialog.show({
     title: t('confirm.title'),
-    message: host ? `${description}\n\n${host}` : description,
+    ...(typeof description === 'string' ? {} : { lines: description }),
+    message: text && host ? `${text}\n\n${host}` : (text ?? host ?? undefined),
     buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: t('confirm.allow') }],
     checkbox: host ? { label: t('confirm.always', { host }) } : undefined,
     signal,
@@ -1034,13 +1041,14 @@ function BrowserApp({
             AccessibilityInfo.announceForAccessibility(event.text);
             return chat.add(newItem('choices', event.text, event.options));
           }
-          chat.add(newItem(event.type, event.text));
+          const item = newItem(event.type, event.text);
+          chat.add('icon' in event && event.icon ? { ...item, icon: event.icon } : item);
         },
       });
-      if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
+      if (signal.aborted) chat.add({ ...newItem('info', t('chat.stopped')), icon: 'stop' });
       else AccessibilityInfo.announceForAccessibility(t('a11y.taskDone'));
     } catch (e) {
-      if (signal.aborted) chat.add(newItem('info', t('chat.stopped')));
+      if (signal.aborted) chat.add({ ...newItem('info', t('chat.stopped')), icon: 'stop' });
       else chat.add(newItem('error', e instanceof Error ? e.message : String(e)));
       outcome = { kind: 'failed', text: e instanceof Error ? e.message : String(e) };
     } finally {
@@ -1659,6 +1667,7 @@ function BrowserApp({
     return [
       {
         label: t('selection.ask'),
+        icon: 'assistant',
         onPress: () => {
           conversation.setDraft(`${quote}\n\n`);
           setPanelOpen(true);

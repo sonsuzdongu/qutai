@@ -20,7 +20,7 @@ import { ActionSheet, SheetAction } from './ActionSheet';
 import { dropTab, Measurable, sectionsOf, TabDrag } from './tabDrag';
 import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
-import { Icon } from '../ui/Icon';
+import { Icon, IconName } from '../ui/Icon';
 import { siteColor } from '../ui/siteColor';
 import { hostOf } from '../i18n/format';
 import { dialog, DialogHost } from './Dialog';
@@ -39,6 +39,8 @@ type Props = {
 const PADDING = 12;
 
 const DarkMode = createContext(false);
+
+const WARNING_TEXT = '#f5d48a';
 
 /** The address after the site, e.g. "/dp/B0C…?ref=x" → "/dp/B0C…". */
 function pathOf(url: string): string {
@@ -228,6 +230,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
           />
           <SegmentButton
             label={t('tabs.incognito', { count: browser.tabsOf(true).length })}
+            icon="incognito"
             selected={incognito}
             incognito={incognito}
             onPress={() => {
@@ -269,7 +272,10 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
       )}
 
       {incognito && !incognitoIsolated() && allTabs.length > 0 && (
-        <Text style={styles.warning}>{t('tabs.androidIncognitoWarning')}</Text>
+        <View style={styles.warning}>
+          <Icon name="insecure" size={16} color={WARNING_TEXT} style={styles.warningIcon} />
+          <Text style={styles.warningText}>{t('tabs.androidIncognitoWarning')}</Text>
+        </View>
       )}
 
       {/* A group's name is edited in place; it scrolls into view above the keyboard. */}
@@ -441,11 +447,13 @@ function RecentlyClosed({ browser, onReopen }: { browser: Browser; onReopen: (in
 
 function SegmentButton({
   label,
+  icon,
   selected,
   incognito,
   onPress,
 }: {
   label: string;
+  icon?: IconName;
   selected: boolean;
   incognito: boolean;
   onPress: () => void;
@@ -459,6 +467,7 @@ function SegmentButton({
       accessibilityRole="tab"
       accessibilityState={{ selected }}
     >
+      {icon ? <Icon name={icon} size={16} color={iconColors(theme).text} /> : null}
       <Text style={[styles.segmentText, theme.text, selected && styles.bold]}>{label}</Text>
     </Pressable>
   );
@@ -494,7 +503,7 @@ function GroupHeader({
         accessibilityState={{ expanded: !group.collapsed }}
         accessibilityLabel={group.name}
       >
-        <Text style={[styles.groupChevron, { color: group.color }]}>{group.collapsed ? '▸' : '▾'}</Text>
+        <Icon name={group.collapsed ? 'chevronRight' : 'chevronDown'} size={16} color={group.color} />
       </Pressable>
       <TextInput
         value={name}
@@ -589,7 +598,11 @@ function TabCard({
           </Text>
           {selection ? (
             <View style={styles.cardClose}>
-              <Text style={[styles.check, selection.selected && theme.accent]}>{selection.selected ? '●' : '○'}</Text>
+              <Icon
+                name={selection.selected ? 'selected' : 'unselected'}
+                size={18}
+                color={selection.selected ? iconColors(theme).accent : iconColors(theme).dim}
+              />
             </View>
           ) : (
             <Pressable
@@ -637,7 +650,7 @@ function EmptyState({ incognito }: { incognito: boolean }) {
   const theme = useTheme(incognito);
   return (
     <View style={styles.empty}>
-      <Text style={styles.emptyIcon}>{incognito ? '🕶' : '🗂'}</Text>
+      <Icon name={incognito ? 'incognito' : 'tabs'} size={44} color={iconColors(theme).dim} />
       <Text style={[styles.emptyTitle, theme.text]}>{t(incognito ? 'tabs.emptyIncognito' : 'tabs.empty')}</Text>
       {incognito && (
         <Text style={[styles.emptyBody, theme.dimText]}>
@@ -656,21 +669,29 @@ const useStyles = makeStyles((c) => ({
   compareText: { fontSize: 15, fontWeight: '600' },
   compareButton: { flex: 2, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   compareButtonText: { color: c.onTint, fontSize: 15, fontWeight: '700' },
-  check: { fontSize: 16, color: c.textSecondary },
   segment: { flexDirection: 'row', borderRadius: 10, padding: 3 },
-  segmentButton: { paddingVertical: 7, paddingHorizontal: 16, borderRadius: 8 },
+  segmentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingVertical: 7,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
   segmentText: { fontSize: 14 },
   bold: { fontWeight: '700' },
   warning: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
     marginHorizontal: PADDING,
     marginBottom: 4,
     padding: 10,
     borderRadius: 10,
     backgroundColor: '#4a3b1a',
-    color: '#f5d48a',
-    fontSize: 12,
-    lineHeight: 17,
   },
+  warningIcon: { marginTop: 0.5 },
+  warningText: { flex: 1, color: WARNING_TEXT, fontSize: 12, lineHeight: 17 },
   search: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -686,7 +707,6 @@ const useStyles = makeStyles((c) => ({
   cards: { flexDirection: 'row', flexWrap: 'wrap', gap: GAP },
   group: { borderLeftWidth: 3, paddingLeft: 7, gap: 8 },
   groupHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 32 },
-  groupChevron: { fontSize: 16, width: 16 },
   groupName: { flex: 1, fontSize: 15, fontWeight: '700', paddingVertical: 0 },
   groupCount: { fontSize: 13 },
   groupUngroup: { fontSize: 13, paddingHorizontal: 4 },
@@ -708,7 +728,6 @@ const useStyles = makeStyles((c) => ({
   placeholderTitle: { fontSize: 14, lineHeight: 19, fontWeight: '600' },
   placeholderPath: { fontSize: 11, marginTop: 'auto' },
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 },
-  emptyIcon: { fontSize: 44 },
   emptyTitle: { fontSize: 18, fontWeight: '600' },
   emptyBody: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
   undoBar: {

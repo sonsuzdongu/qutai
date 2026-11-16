@@ -2,7 +2,8 @@ import { useState, useSyncExternalStore } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { Icon } from '../ui/Icon';
+import { makeStyles, usePalette } from '../ui/theme';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { SitePermissionSheet } from './SitePermissionSheet';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -19,6 +20,7 @@ type Props = {
 /** Sites with their own permission; tap to change, ✕ to go back to the default. */
 export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose }: Props) {
   const styles = useStyles();
+  const palette = usePalette();
   const version = useSyncExternalStore(store.subscribe, () =>
     store
       .list()
@@ -85,7 +87,7 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
                 style={styles.remove}
                 accessibilityLabel={t('site.reset')}
               >
-                <Text style={styles.removeText}>✕</Text>
+                <Icon name="close" size={14} color={palette.textSecondary} />
               </Pressable>
             </Pressable>
           )}
@@ -145,5 +147,4 @@ const useStyles = makeStyles((c) => ({
   level: { fontSize: 13, color: c.textSecondary },
   danger: { color: c.danger },
   remove: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
-  removeText: { fontSize: 14, color: c.textSecondary },
 }));
