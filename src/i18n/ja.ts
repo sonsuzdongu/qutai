@@ -1620,8 +1620,6 @@ export const ja: Record<keyof typeof en, string> = {
   'menu.askQutai': 'Qutai に質問',
   'settings.showAssistantButton': 'Qutai ボタン',
   'settings.showAssistantButtonHint': 'アドレスバーに表示します。オフにすると、ページのメニューから Qutai を開きます。',
-  'settings.animateLogo': 'ロゴのアニメーション',
-  'settings.animateLogoHint': 'ときどき軌道が Q の周りを回ります。Qutai の作業中はどちらの設定でも表示されます。',
   'settings.forceZoom': 'ズームを強制',
   'settings.forceZoomHint': 'サイトがズームを無効にしている場合でも、すべてのページでピンチ操作でズームできます。',
   'settings.mediaSection': '音声と動画',

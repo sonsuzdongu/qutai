@@ -1619,8 +1619,6 @@ export const ru: Record<keyof typeof en, string> = {
   'menu.askQutai': 'Спросить Qutai',
   'settings.showAssistantButton': 'Кнопка Qutai',
   'settings.showAssistantButtonHint': 'В адресной строке. Если выключено, открывайте Qutai из меню страницы.',
-  'settings.animateLogo': 'Анимация логотипа',
-  'settings.animateLogoHint': 'Время от времени орбита облетает букву Q. Пока Qutai работает, она показывается в любом случае.',
   'settings.forceZoom': 'Принудительное масштабирование',
   'settings.forceZoomHint': 'Масштабирование щипком на любой странице, даже если сайт его отключает.',
   'settings.mediaSection': 'Звук и видео',

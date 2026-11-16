@@ -56,7 +56,6 @@ function backupSettings(s: Settings): BackupSettings {
     httpsOnly: s.httpsOnly,
     blockThirdPartyCookies: s.blockThirdPartyCookies,
     showAssistantButton: s.showAssistantButton,
-    animateLogo: s.animateLogo,
     forceZoom: s.forceZoom,
     backgroundPlayback: s.backgroundPlayback,
     pictureInPicture: s.pictureInPicture,
@@ -139,7 +138,6 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
     take('httpsOnly', s.httpsOnly);
     take('blockThirdPartyCookies', s.blockThirdPartyCookies);
     take('showAssistantButton', s.showAssistantButton);
-    take('animateLogo', s.animateLogo);
     take('forceZoom', s.forceZoom);
     take('backgroundPlayback', s.backgroundPlayback);
     take('pictureInPicture', s.pictureInPicture);

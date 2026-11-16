@@ -67,8 +67,6 @@ export type Settings = {
   incognitoLock: boolean;
   /** The Qutai button in the address bar; when off, "Ask Qutai" is in the page menu. */
   showAssistantButton: boolean;
-  /** The logo's orbit sweeps now and then (it still shows, without moving, while a task runs). */
-  animateLogo: boolean;
   /** Pinch-zoom every page, even those that turn zooming off. */
   forceZoom: boolean;
   /** Sound a page plays keeps playing when Qutai is in the background or the screen locks. */
@@ -145,7 +143,6 @@ export const DEFAULT_SETTINGS: Settings = {
   appLock: false,
   incognitoLock: false,
   showAssistantButton: true,
-  animateLogo: true,
   forceZoom: false,
   backgroundPlayback: true,
   pictureInPicture: true,
@@ -188,7 +185,6 @@ const KEYS = {
   appLock: 'app_lock',
   incognitoLock: 'incognito_lock',
   showAssistantButton: 'show_assistant_button',
-  animateLogo: 'animate_logo',
   forceZoom: 'force_zoom',
   backgroundPlayback: 'background_playback',
   pictureInPicture: 'picture_in_picture',
@@ -214,6 +210,8 @@ const KEYS = {
   // Written by the first, Claude-only version of the app.
   legacyApiKey: 'anthropic_api_key',
   legacyModel: 'model',
+  // The retired "Animate the logo" switch (the logo now always animates, unless the system reduces motion).
+  retiredAnimateLogo: 'animate_logo',
 };
 
 export const TEXT_ZOOM_MIN = 50;
@@ -267,7 +265,6 @@ export async function loadSettings(): Promise<Settings> {
     appLock,
     incognitoLock,
     showAssistantButton,
-    animateLogo,
     forceZoom,
     backgroundPlayback,
     pictureInPicture,
@@ -312,7 +309,6 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.appLock),
     get(KEYS.incognitoLock),
     get(KEYS.showAssistantButton),
-    get(KEYS.animateLogo),
     get(KEYS.forceZoom),
     get(KEYS.backgroundPlayback),
     get(KEYS.pictureInPicture),
@@ -365,7 +361,6 @@ export async function loadSettings(): Promise<Settings> {
     appLock: appLock === 'true',
     incognitoLock: incognitoLock === 'true',
     showAssistantButton: showAssistantButton !== 'false',
-    animateLogo: animateLogo !== 'false',
     forceZoom: forceZoom === 'true',
     backgroundPlayback: backgroundPlayback !== 'false',
     pictureInPicture: pictureInPicture !== 'false',
@@ -440,7 +435,6 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.appLock, String(settings.appLock)),
     set(KEYS.incognitoLock, String(settings.incognitoLock)),
     set(KEYS.showAssistantButton, String(settings.showAssistantButton)),
-    set(KEYS.animateLogo, String(settings.animateLogo)),
     set(KEYS.forceZoom, String(settings.forceZoom)),
     set(KEYS.backgroundPlayback, String(settings.backgroundPlayback)),
     set(KEYS.pictureInPicture, String(settings.pictureInPicture)),
@@ -465,5 +459,6 @@ export async function saveSettings(settings: Settings): Promise<void> {
     // Migrated into the per-provider keys above.
     SecureStore.deleteItemAsync(KEYS.legacyApiKey),
     SecureStore.deleteItemAsync(KEYS.legacyModel),
+    SecureStore.deleteItemAsync(KEYS.retiredAnimateLogo),
   ]);
 }

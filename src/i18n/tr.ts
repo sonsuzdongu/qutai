@@ -1614,8 +1614,6 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.askQutai': 'Qutai’ye sor',
   'settings.showAssistantButton': 'Qutai düğmesi',
   'settings.showAssistantButtonHint': 'Adres çubuğunda. Kapalıyken Qutai’yi sayfa menüsünden açın.',
-  'settings.animateLogo': 'Logoyu canlandır',
-  'settings.animateLogoHint': 'Yörünge ara sıra Q’nun çevresinde döner. Qutai çalışırken her durumda görünür.',
   'settings.forceZoom': 'Yakınlaştırmayı zorla aç',
   'settings.forceZoomHint': 'Site kapatmış olsa bile her sayfada iki parmakla yakınlaştırın.',
   'settings.mediaSection': 'Ses ve video',

@@ -1608,8 +1608,6 @@ export const en = {
   'menu.askQutai': 'Ask Qutai',
   'settings.showAssistantButton': 'Qutai button',
   'settings.showAssistantButtonHint': 'In the address bar. When off, open Qutai from the page menu.',
-  'settings.animateLogo': 'Animate the logo',
-  'settings.animateLogoHint': 'The orbit circles the Q now and then. While Qutai works it shows either way.',
   'settings.forceZoom': 'Force zoom',
   'settings.forceZoomHint': 'Pinch to zoom on every page, even where the site turns zooming off.',
   'settings.mediaSection': 'Sound and video',

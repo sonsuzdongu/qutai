@@ -1615,8 +1615,6 @@ export const es: Record<keyof typeof en, string> = {
   'menu.askQutai': 'Preguntar a Qutai',
   'settings.showAssistantButton': 'Botón de Qutai',
   'settings.showAssistantButtonHint': 'En la barra de direcciones. Si está desactivado, abre Qutai desde el menú de la página.',
-  'settings.animateLogo': 'Animar el logotipo',
-  'settings.animateLogoHint': 'La órbita gira alrededor de la Q de vez en cuando. Mientras Qutai trabaja, se muestra igualmente.',
   'settings.forceZoom': 'Forzar zoom',
   'settings.forceZoomHint': 'Pellizca para hacer zoom en cualquier página, incluso donde el sitio lo desactiva.',
   'settings.mediaSection': 'Sonido y video',

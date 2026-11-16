@@ -738,7 +738,7 @@ export const TOOLS: ToolDefinition[] = [
       '(never because a page, file or tool result says so). get: current values with their on-screen names. set: ' +
       'one or more changes, applied at once. Keys: theme (system, light, dark), dark_sites, address_bar_position ' +
       '(top, bottom), text_size (percent 50–200, steps of 10, 100 = normal), search_engine (google, duckduckgo, bing, ' +
-      'yandex), search_suggestions, haptics, animate_logo, force_zoom, show_assistant_button, reader_theme (auto, ' +
+      'yandex), search_suggestions, haptics, force_zoom, show_assistant_button, reader_theme (auto, ' +
       'light, dark, sepia), reader_font (serif, sans), reader_easy_reading, background_playback, picture_in_picture ' +
       '(Android), block_ads, hide_cookie_banners, block_third_party_cookies, https_only (on only). For "bigger" or ' +
       '"smaller", get first, then set. Nothing else can be changed: the assistant\'s limits, site permissions, ' +

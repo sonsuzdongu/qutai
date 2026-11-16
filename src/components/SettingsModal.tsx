@@ -514,12 +514,6 @@ function SettingsPages({
               onChange={(showAssistantButton) => set({ showAssistantButton })}
             />
             <SwitchRow
-              title={t('settings.animateLogo')}
-              hint={t('settings.animateLogoHint')}
-              value={settings.animateLogo}
-              onChange={(animateLogo) => set({ animateLogo })}
-            />
-            <SwitchRow
               title={t('settings.forceZoom')}
               hint={t('settings.forceZoomHint')}
               value={settings.forceZoom}

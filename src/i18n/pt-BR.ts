@@ -1620,8 +1620,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'menu.askQutai': 'Perguntar ao Qutai',
   'settings.showAssistantButton': 'Botão do Qutai',
   'settings.showAssistantButtonHint': 'Na barra de endereço. Quando desativado, abra o Qutai pelo menu da página.',
-  'settings.animateLogo': 'Animar o logotipo',
-  'settings.animateLogoHint': 'A órbita gira em volta do Q de vez em quando. Enquanto o Qutai trabalha, ela aparece de qualquer forma.',
   'settings.forceZoom': 'Forçar zoom',
   'settings.forceZoomHint': 'Use o gesto de pinça para dar zoom em qualquer página, mesmo onde o site desativa o zoom.',
   'settings.mediaSection': 'Som e vídeo',

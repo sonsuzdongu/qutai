@@ -163,7 +163,6 @@ import {
 } from './src/device/entryPoints';
 import { ActionSheet, SheetAction } from './src/components/ActionSheet';
 import { LEGAL_VERSION } from './src/legal/documents';
-import { LogoMotion } from './src/ui/QutaiMark';
 import { OfflinePagesScreen } from './src/components/OfflinePagesScreen';
 import { deleteOfflineFile, savePageOffline } from './src/device/offline';
 import { addOfflinePage, listOfflinePages, removeOfflinePage } from './src/storage/offlinePages';
@@ -417,7 +416,7 @@ export default function App() {
       applyTheme(s.theme);
       const intro: IntroVariant = s.appLock
         ? 'plain'
-        : introPlayed || reduceMotion || !s.animateLogo
+        : introPlayed || reduceMotion
           ? 'still'
           : 'animate';
       introPlayed = true;
@@ -2239,7 +2238,7 @@ function BrowserApp({
   const barAtBottom = settings.addressBarPosition === 'bottom';
 
   return (
-    <LogoMotion.Provider value={settings.animateLogo}>
+    <>
       <View style={[styles.container, (tab.incognito || darkMode) && styles.incognito]}>
         <StatusBar style={tab.incognito || tabsVisible || darkMode ? 'light' : 'dark'} />
         <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
@@ -2709,7 +2708,7 @@ function BrowserApp({
         <Toast key={toast.key} message={toast.message} action={toast.action} onHidden={toast.hide} />
         <DialogHost root />
       </View>
-    </LogoMotion.Provider>
+    </>
   );
 }
 

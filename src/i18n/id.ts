@@ -1619,8 +1619,6 @@ export const id: Record<keyof typeof en, string> = {
   'menu.askQutai': 'Tanya Qutai',
   'settings.showAssistantButton': 'Tombol Qutai',
   'settings.showAssistantButtonHint': 'Di kolom alamat. Jika nonaktif, buka Qutai dari menu halaman.',
-  'settings.animateLogo': 'Animasikan logo',
-  'settings.animateLogoHint': 'Orbit sesekali mengitari huruf Q. Saat Qutai bekerja, orbit tetap ditampilkan.',
   'settings.forceZoom': 'Paksa zoom',
   'settings.forceZoomHint': 'Cubit untuk zoom di setiap halaman, bahkan jika situs menonaktifkan zoom.',
   'settings.mediaSection': 'Suara dan video',

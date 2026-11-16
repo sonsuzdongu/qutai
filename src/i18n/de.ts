@@ -1608,8 +1608,6 @@ export const de: Record<keyof typeof en, string> = {
   'menu.askQutai': 'Qutai fragen',
   'settings.showAssistantButton': 'Qutai-Taste',
   'settings.showAssistantButtonHint': 'In der Adressleiste. Wenn deaktiviert, öffnen Sie Qutai über das Seitenmenü.',
-  'settings.animateLogo': 'Logo animieren',
-  'settings.animateLogoHint': 'Die Umlaufbahn kreist ab und zu um das Q. Während Qutai arbeitet, wird sie in jedem Fall angezeigt.',
   'settings.forceZoom': 'Zoomen erzwingen',
   'settings.forceZoomHint': 'Auf jeder Seite mit zwei Fingern zoomen, auch wo die Website das Zoomen deaktiviert.',
   'settings.mediaSection': 'Ton und Video',

@@ -72,12 +72,6 @@ const CHANGEABLE = {
     kind: 'boolean',
   },
   haptics: { field: 'haptics', label: 'settings.haptics', place: inSettings('settings.appearance'), kind: 'boolean' },
-  animate_logo: {
-    field: 'animateLogo',
-    label: 'settings.animateLogo',
-    place: inSettings('settings.appearance'),
-    kind: 'boolean',
-  },
   force_zoom: { field: 'forceZoom', label: 'settings.forceZoom', place: inSettings('settings.appearance'), kind: 'boolean' },
   show_assistant_button: {
     field: 'showAssistantButton',

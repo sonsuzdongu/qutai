@@ -1618,8 +1618,6 @@ export const ko: Record<keyof typeof en, string> = {
   'menu.askQutai': 'Qutai에게 묻기',
   'settings.showAssistantButton': 'Qutai 버튼',
   'settings.showAssistantButtonHint': '주소창에 표시됩니다. 끄면 페이지 메뉴에서 Qutai를 여세요.',
-  'settings.animateLogo': '로고 애니메이션',
-  'settings.animateLogoHint': '궤도가 가끔 Q 주위를 돕니다. Qutai가 작업하는 동안에는 이 설정과 관계없이 표시됩니다.',
   'settings.forceZoom': '강제 확대/축소',
   'settings.forceZoomHint': '사이트가 확대/축소를 막아 두었더라도 모든 페이지에서 손가락으로 확대/축소할 수 있습니다.',
   'settings.mediaSection': '소리 및 동영상',

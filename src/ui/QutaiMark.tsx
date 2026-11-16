@@ -1,5 +1,5 @@
 import { BlurMask, Canvas, Group, Path, Skia } from '@shopify/react-native-skia';
-import { createContext, useContext, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import {
   cancelAnimation,
@@ -23,9 +23,6 @@ type Props = {
   /** Off-screen marks (inactive tabs, a closed panel) don't animate. */
   animate?: boolean;
 };
-
-/** The app's "Animate the logo" setting; off behaves like the system's reduce motion. */
-export const LogoMotion = createContext(true);
 
 const LOGO = require('../../assets/logo.png');
 const BURST_MS = 1800;
@@ -57,8 +54,7 @@ export function QutaiMark({
   animate = true,
 }: Props) {
   const systemReduceMotion = useReducedMotion();
-  const motionAllowed = useContext(LogoMotion);
-  const still = !animate || systemReduceMotion || !motionAllowed;
+  const still = !animate || systemReduceMotion;
   // 0→1 over one burst; sparks read their own moment from it. -1: no sparks.
   const phase = useSharedValue(-1);
 
