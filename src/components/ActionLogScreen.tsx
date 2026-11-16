@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, SectionList, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles, readableColumn, usePalette } from '../ui/theme';
@@ -11,6 +11,7 @@ import { ActionEntry, clearActions, listActions } from '../storage/actionLog';
 import { getDb } from '../storage/db';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
+import { ScreenHeader } from './ScreenHeader';
 
 type Entry = ActionEntry & { id: number };
 type Props = { visible: boolean; onClose: () => void };
@@ -53,15 +54,11 @@ function ActionLog({ onClose }: { onClose: () => void }) {
 
   return (
     <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
-      <View style={styles.header}>
-        <Pressable accessibilityRole="button" onPress={clearAll} disabled={!entries?.length} hitSlop={8} style={styles.side}>
-          <Text style={[styles.clear, !entries?.length && styles.disabled]}>{t('actionLog.clear')}</Text>
-        </Pressable>
-        <Text style={styles.title}>{t('actionLog.title')}</Text>
-        <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
-          <Text style={styles.done}>{t('common.done')}</Text>
-        </Pressable>
-      </View>
+      <ScreenHeader
+        title={t('actionLog.title')}
+        left={{ label: t('actionLog.clear'), tone: 'danger', disabled: !entries?.length, onPress: clearAll }}
+        right={{ label: t('common.done'), onPress: onClose }}
+      />
       <SectionList
         sections={groupByDay(entries ?? [], (e) => e.at)}
         keyExtractor={(e) => String(e.id)}
@@ -108,19 +105,6 @@ function ActionLog({ onClose }: { onClose: () => void }) {
 
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.border,
-  },
-  side: { flex: 1 },
-  right: { alignItems: 'flex-end' },
-  title: { color: c.text, fontSize: 17, fontWeight: '600' },
-  clear: { fontSize: 15, color: c.danger },
-  done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
-  disabled: { opacity: 0.35 },
   list: { ...readableColumn, padding: 16, gap: 2 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },

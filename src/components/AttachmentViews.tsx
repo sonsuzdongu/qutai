@@ -278,9 +278,11 @@ const useStyles = makeStyles((c) => ({
   body: { flex: 1 },
   missing: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
   missingText: { color: '#cfcfd6', fontSize: 15, textAlign: 'center' },
-  actions: { flexDirection: 'row', justifyContent: 'center', gap: 36, paddingVertical: 14 },
-  action: { alignItems: 'center', gap: 4, minWidth: 64 },
-  actionText: { color: '#ffffff', fontSize: 13 },
+  actions: { flexDirection: 'row', justifyContent: 'center', gap: 28, paddingVertical: 14, paddingHorizontal: 16 },
+  // A long label ("Größe ändern oder zuschneiden") wraps between words under its icon instead of pushing the row
+  // off the screen.
+  action: { alignItems: 'center', gap: 4, minWidth: 64, minHeight: 44, flexShrink: 1 },
+  actionText: { color: '#ffffff', fontSize: 13, textAlign: 'center' },
   panel: { maxHeight: '55%', backgroundColor: '#16161a' },
   panelContent: { padding: 16, gap: 8 },
   panelLabel: { color: '#cfcfd6', fontSize: 13, fontWeight: '600', marginTop: 4 },

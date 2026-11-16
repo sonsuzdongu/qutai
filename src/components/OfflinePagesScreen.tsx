@@ -11,6 +11,7 @@ import { getDb } from '../storage/db';
 import { listOfflinePages, OfflinePage, removeOfflinePage } from '../storage/offlinePages';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
+import { ScreenHeader } from './ScreenHeader';
 
 type Props = { visible: boolean; onOpenLive: (url: string) => void; onClose: () => void };
 
@@ -53,17 +54,10 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
   if (reading) {
     return (
       <SafeAreaView style={styles.container} edges={['top', 'bottom', 'left', 'right']}>
-        <View style={styles.header}>
-          <Pressable accessibilityRole="button" onPress={() => setReading(null)} hitSlop={8} style={styles.side}>
-            <View style={styles.backRow}>
-              <Icon name="chevronLeft" size={18} color={palette.tintText} />
-              <Text style={styles.back}>{t('offline.title')}</Text>
-            </View>
-          </Pressable>
-          <Pressable accessibilityRole="button" onPress={() => onOpenLive(reading.page.url)} hitSlop={8} style={[styles.side, styles.right]}>
-            <Text style={styles.done}>{t('offline.openLive')}</Text>
-          </Pressable>
-        </View>
+        <ScreenHeader
+          left={{ label: t('offline.title'), icon: 'back', iconOnly: true, onPress: () => setReading(null) }}
+          right={{ label: t('offline.openLive'), onPress: () => onOpenLive(reading.page.url) }}
+        />
         <WebView
           source={{ html: reading.html, baseUrl: reading.page.url }}
           originWhitelist={['*']}
@@ -83,13 +77,7 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
 
   return (
     <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
-      <View style={styles.header}>
-        <View style={styles.side} />
-        <Text style={styles.title}>{t('offline.title')}</Text>
-        <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
-          <Text style={styles.done}>{t('common.done')}</Text>
-        </Pressable>
-      </View>
+      <ScreenHeader title={t('offline.title')} right={{ label: t('common.done'), onPress: onClose }} />
       <FlatList
         data={pages ?? []}
         keyExtractor={(p) => p.id}
@@ -123,19 +111,6 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
 
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.border,
-  },
-  side: { flex: 1 },
-  backRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  right: { alignItems: 'flex-end' },
-  title: { color: c.text, fontSize: 17, fontWeight: '600' },
-  back: { fontSize: 16, color: c.tintText },
-  done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   list: { ...readableColumn, padding: 16, gap: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32, lineHeight: 21 },
   loading: { marginTop: 32 },

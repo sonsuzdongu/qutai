@@ -25,6 +25,7 @@ import { siteColor } from '../ui/siteColor';
 import { hostOf } from '../i18n/format';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
+import { HEADER_FONT_SCALE } from './ScreenHeader';
 
 type Props = {
   visible: boolean;
@@ -375,8 +376,10 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
 
       {comparing ? (
         <View style={[styles.toolbar, theme.toolbar]}>
-          <Pressable accessibilityRole="button" onPress={() => setComparing(null)} hitSlop={8} style={styles.toolbarSide}>
-            <Text style={[styles.toolbarText, theme.text]}>{t('common.cancel')}</Text>
+          <Pressable accessibilityRole="button" onPress={() => setComparing(null)} hitSlop={8} style={styles.toolbarCancel}>
+            <Text style={[styles.toolbarText, theme.text]} numberOfLines={1} maxFontSizeMultiplier={HEADER_FONT_SCALE}>
+              {t('common.cancel')}
+            </Text>
           </Pressable>
           <Pressable
             onPress={compareSelected}
@@ -384,16 +387,21 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
             style={[styles.compareButton, theme.newTab, comparing.length < 2 && styles.dimmed]}
             accessibilityRole="button"
           >
-            <Text style={styles.compareButtonText}>
+            <Text style={styles.compareButtonText} numberOfLines={2} maxFontSizeMultiplier={HEADER_FONT_SCALE}>
               {comparing.length < 2 ? t('tabs.compareHint') : t('tabs.compareCount', { count: comparing.length })}
             </Text>
           </Pressable>
-          <View style={styles.toolbarSide} />
         </View>
       ) : (
         <View style={[styles.toolbar, theme.toolbar]}>
           <Pressable accessibilityRole="button" onPress={closeAll} disabled={allTabs.length === 0} hitSlop={8} style={styles.toolbarSide}>
-            <Text style={[styles.toolbarText, theme.text, allTabs.length === 0 && styles.dimmed]}>
+            <Text
+              style={[styles.toolbarText, theme.text, allTabs.length === 0 && styles.dimmed]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+              maxFontSizeMultiplier={HEADER_FONT_SCALE}
+            >
               {t('tabs.closeAll')}
             </Text>
           </Pressable>
@@ -406,7 +414,15 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
             <Icon name="newTab" size={26} color="#ffffff" />
           </Pressable>
           <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.toolbarSide, styles.alignRight]}>
-            <Text style={[styles.toolbarText, styles.bold, theme.accent]}>{t('common.done')}</Text>
+            <Text
+              style={[styles.toolbarText, styles.bold, theme.accent]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+              maxFontSizeMultiplier={HEADER_FONT_SCALE}
+            >
+              {t('common.done')}
+            </Text>
           </Pressable>
         </View>
       )}
@@ -469,7 +485,13 @@ function SegmentButton({
       accessibilityState={{ selected }}
     >
       {icon ? <Icon name={icon} size={16} color={iconColors(theme).text} /> : null}
-      <Text style={[styles.segmentText, theme.text, selected && styles.bold]}>{label}</Text>
+      <Text
+        style={[styles.segmentText, theme.text, selected && styles.bold]}
+        numberOfLines={1}
+        maxFontSizeMultiplier={HEADER_FONT_SCALE}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -670,8 +692,16 @@ const useStyles = makeStyles((c) => ({
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginHorizontal: PADDING, marginBottom: 4 },
   compare: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 38, paddingHorizontal: 8 },
   compareText: { fontSize: 15, fontWeight: '600' },
-  compareButton: { flex: 2, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  compareButtonText: { color: c.onTint, fontSize: 15, fontWeight: '700' },
+  compareButton: {
+    flex: 1,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    paddingVertical: 4,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compareButtonText: { color: c.onTint, fontSize: 15, fontWeight: '700', textAlign: 'center' },
   segment: { flexDirection: 'row', borderRadius: 10, padding: 3 },
   segmentButton: {
     flexDirection: 'row',
@@ -680,8 +710,9 @@ const useStyles = makeStyles((c) => ({
     paddingVertical: 7,
     paddingHorizontal: 16,
     borderRadius: 8,
+    flexShrink: 1,
   },
-  segmentText: { fontSize: 14 },
+  segmentText: { fontSize: 14, flexShrink: 1 },
   bold: { fontWeight: '700' },
   warning: {
     flexDirection: 'row',
@@ -763,7 +794,10 @@ const useStyles = makeStyles((c) => ({
     paddingVertical: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
   },
-  toolbarSide: { flex: 1 },
+  // The two sides share the room left by the new-tab button; labels stay on one line.
+  toolbarSide: { flex: 1, minHeight: 44, justifyContent: 'center' },
+  // Cancel keeps its whole label; the compare button takes the rest.
+  toolbarCancel: { minHeight: 44, justifyContent: 'center', marginRight: 12 },
   alignRight: { alignItems: 'flex-end' },
   toolbarText: { fontSize: 15 },
   dimmed: { opacity: 0.35 },

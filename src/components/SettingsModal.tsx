@@ -46,6 +46,7 @@ import { FilterListsScreen } from './FilterListsScreen';
 import { siteRules } from '../storage/siteRules';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
+import { WholeWordsText } from './WholeWordsText';
 
 /** What Settings says beside a "Don't ask again" switch: where the data goes, or what is still asked. */
 const ALWAYS_ALLOW_NOTES: Partial<Record<AlwaysAllowKind, Parameters<typeof t>[0]>> = {
@@ -923,7 +924,7 @@ function Segment<T extends string>({
           accessibilityRole="radio"
           accessibilityState={{ selected: value === o.value }}
         >
-          <Text style={[styles.segmentText, value === o.value && styles.segmentTextSelected]}>{o.label}</Text>
+          <WholeWordsText style={[styles.segmentText, value === o.value && styles.segmentTextSelected]}>{o.label}</WholeWordsText>
         </Pressable>
       ))}
     </View>

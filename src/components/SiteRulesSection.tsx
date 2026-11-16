@@ -250,14 +250,18 @@ export function SiteRulesSection({ disabled }: { disabled: boolean }) {
           accessibilityRole="button"
           accessibilityState={{ disabled: !siteRules.rules.length }}
         >
-          <Text style={styles.buttonText}>{t('siteRules.export')}</Text>
+          <Text style={styles.buttonText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+            {t('siteRules.export')}
+          </Text>
         </Pressable>
         <Pressable
           onPress={importFile}
           style={({ pressed }) => [styles.button, styles.half, pressed && styles.pressed]}
           accessibilityRole="button"
         >
-          <Text style={styles.buttonText}>{t('siteRules.import')}</Text>
+          <Text style={styles.buttonText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+            {t('siteRules.import')}
+          </Text>
         </Pressable>
       </View>
       <Text style={styles.hint}>{t('siteRules.exportHint')}</Text>
@@ -296,7 +300,7 @@ const useStyles = makeStyles((c) => ({
   value: { fontSize: 14, color: c.text },
   remove: { paddingHorizontal: 4 },
   link: { fontSize: 13, color: c.tintText, fontWeight: '600', paddingVertical: 4 },
-  button: { backgroundColor: c.surface, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  button: { backgroundColor: c.surface, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center' },
   buttonText: { fontSize: 15, fontWeight: '600', color: c.tintText },
   pressed: { backgroundColor: c.pressed },
   pair: { flexDirection: 'row', gap: 8 },

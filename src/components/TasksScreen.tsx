@@ -27,6 +27,8 @@ import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
+import { ScreenHeader } from './ScreenHeader';
+import { WholeWordsText } from './WholeWordsText';
 
 /** A task to create, prefilled (e.g. from "Save as task" on a sent message); `incognito` when it came from one. */
 export type TaskDraft = TaskInput & { incognito?: boolean };
@@ -183,15 +185,11 @@ function TaskList({
   if (editing) {
     return (
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
-        <View style={styles.header}>
-          <Pressable accessibilityRole="button" onPress={() => setEditing(null)} hitSlop={8} style={styles.side}>
-            <Text style={styles.cancel}>{t('common.cancel')}</Text>
-          </Pressable>
-          <Text style={styles.title}>{t(editing.id ? 'tasks.editTitle' : 'tasks.newTitle')}</Text>
-          <Pressable accessibilityRole="button" onPress={save} hitSlop={8} style={[styles.side, styles.right]}>
-            <Text style={styles.done}>{t('common.save')}</Text>
-          </Pressable>
-        </View>
+        <ScreenHeader
+          title={t(editing.id ? 'tasks.editTitle' : 'tasks.newTitle')}
+          left={{ label: t('common.cancel'), tone: 'link', onPress: () => setEditing(null) }}
+          right={{ label: t('common.save'), onPress: save }}
+        />
         <TaskEditor
           input={editing.input}
           onChange={(input) => setEditing({ ...editing, input })}
@@ -203,13 +201,7 @@ function TaskList({
 
   return (
     <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
-      <View style={styles.header}>
-        <View style={styles.side} />
-        <Text style={styles.title}>{t('tasks.title')}</Text>
-        <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
-          <Text style={styles.done}>{t('common.done')}</Text>
-        </Pressable>
-      </View>
+      <ScreenHeader title={t('tasks.title')} right={{ label: t('common.done'), onPress: onClose }} />
       <FlatList
         data={tasks ?? []}
         keyExtractor={(task) => task.id}
@@ -333,7 +325,7 @@ function TaskEditor({
             accessibilityRole="radio"
             accessibilityState={{ selected: input.target === o.value }}
           >
-            <Text style={[styles.segmentText, input.target === o.value && styles.segmentTextSelected]}>{o.label}</Text>
+            <WholeWordsText style={[styles.segmentText, input.target === o.value && styles.segmentTextSelected]}>{o.label}</WholeWordsText>
           </Pressable>
         ))}
       </View>
@@ -446,7 +438,7 @@ function ScheduleFields({ input, set }: { input: TaskInput; set: (patch: Partial
             accessibilityRole="radio"
             accessibilityState={{ selected: kind === o.value }}
           >
-            <Text style={[styles.segmentText, kind === o.value && styles.segmentTextSelected]}>{o.label}</Text>
+            <WholeWordsText style={[styles.segmentText, kind === o.value && styles.segmentTextSelected]}>{o.label}</WholeWordsText>
           </Pressable>
         ))}
       </View>
@@ -573,18 +565,6 @@ function Stepper({
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   flex: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.border,
-  },
-  side: { flex: 1 },
-  right: { alignItems: 'flex-end' },
-  title: { color: c.text, fontSize: 17, fontWeight: '600' },
-  cancel: { fontSize: 16, color: c.tintText },
-  done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   list: { ...readableColumn, padding: 16, gap: 8 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
@@ -627,7 +607,7 @@ const useStyles = makeStyles((c) => ({
   },
   promptInput: { minHeight: 110 },
   segment: { flexDirection: 'row', borderRadius: 10, backgroundColor: c.sunken, padding: 3, gap: 3 },
-  segmentButton: { flex: 1, paddingVertical: 8, borderRadius: 8, alignItems: 'center' },
+  segmentButton: { flex: 1, paddingVertical: 8, paddingHorizontal: 2, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   segmentSelected: { backgroundColor: c.surface },
   segmentText: { fontSize: 13, color: c.textSecondary, textAlign: 'center' },
   segmentTextSelected: { color: c.text, fontWeight: '600' },

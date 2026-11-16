@@ -7,6 +7,7 @@ import { makeStyles } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { BottomSheet } from './BottomSheet';
+import { WholeWordsText } from './WholeWordsText';
 
 type Props = {
   /** The site being set; null hides the sheet. */
@@ -220,7 +221,7 @@ function SettingSegment({
               accessibilityRole="radio"
               accessibilityState={{ selected }}
             >
-              <Text
+              <WholeWordsText
                 style={[
                   styles.segmentText,
                   selected && styles.segmentTextSelected,
@@ -228,7 +229,7 @@ function SettingSegment({
                 ]}
               >
                 {t(`site.setting.${option}`)}
-              </Text>
+              </WholeWordsText>
             </Pressable>
           );
         })}

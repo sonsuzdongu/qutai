@@ -67,8 +67,9 @@ export function TextSizeSheet({ visible, zoom, onChange, onClose }: Props) {
 const useStyles = makeStyles((c) => ({
   sheet: { paddingTop: 14 },
   content: { paddingHorizontal: 20, gap: 14 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 17, fontWeight: '700', color: c.text },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  // A long title wraps; Done keeps its width.
+  title: { fontSize: 17, fontWeight: '700', color: c.text, flexShrink: 1 },
   done: { fontSize: 16, fontWeight: '600', color: c.tintText },
   sample: { color: c.text, minHeight: 44 },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

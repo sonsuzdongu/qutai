@@ -2,10 +2,10 @@ import { useMemo, useState } from 'react';
 import { FlatList, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
+import { ScreenHeader } from './ScreenHeader';
 
 /** One shipped component, from src/legal/licences.json (written by scripts/generate-licences.js). */
 type Licence = {
@@ -75,23 +75,10 @@ function LicencesContent({
   if (open) {
     return (
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
-        <View style={styles.header}>
-          <Pressable
-            onPress={() => onOpen(null)}
-            hitSlop={8}
-            style={styles.side}
-            accessibilityRole="button"
-            accessibilityLabel={t('licences.back')}
-          >
-            <View style={styles.backRow}>
-              <Icon name="chevronLeft" size={18} color={palette.tintText} />
-              <Text style={styles.done}>{t('licences.back')}</Text>
-            </View>
-          </Pressable>
-          <Pressable onPress={onClose} hitSlop={8} style={[styles.side, styles.right]} accessibilityRole="button">
-            <Text style={styles.done}>{t('common.done')}</Text>
-          </Pressable>
-        </View>
+        <ScreenHeader
+          left={{ label: t('licences.back'), icon: 'back', iconOnly: true, onPress: () => onOpen(null) }}
+          right={{ label: t('common.done'), onPress: onClose }}
+        />
         <ScrollView contentContainerStyle={styles.detail}>
           <Text style={styles.detailTitle} accessibilityRole="header">
             {open.name}
@@ -185,8 +172,6 @@ const useStyles = makeStyles((c) => ({
     borderBottomColor: c.border,
   },
   side: { flex: 1 },
-  backRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  right: { alignItems: 'flex-end' },
   title: { color: c.text, fontSize: 17, fontWeight: '600' },
   done: { color: c.tintText, fontSize: 16, fontWeight: '600' },
   list: { paddingBottom: 24, maxWidth: 680, alignSelf: 'center', width: '100%' },

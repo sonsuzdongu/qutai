@@ -25,6 +25,7 @@ import { Icon } from '../ui/Icon';
 import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { costLine, creditsLabel, requestBreakdown, usd } from './AnswerCost';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
+import { ScreenHeader } from './ScreenHeader';
 import { dialog, DialogHost } from './Dialog';
 
 type Props = {
@@ -155,20 +156,11 @@ function SentLog({
   if (open) {
     return (
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
-        <View style={styles.header}>
-          <Pressable onPress={() => setOpen(null)} hitSlop={8} style={styles.side} accessibilityRole="button">
-            <View style={styles.backRow}>
-              <Icon name="chevronLeft" size={18} color={palette.tintText} />
-              <Text style={styles.done}>{t('sentLog.back')}</Text>
-            </View>
-          </Pressable>
-          <Text style={styles.title} accessibilityRole="header" numberOfLines={1}>
-            {t(open === 'instructions' ? 'sentLog.instructions' : 'sentLog.request')}
-          </Text>
-          <Pressable onPress={onClose} hitSlop={8} style={[styles.side, styles.right]} accessibilityRole="button">
-            <Text style={styles.done}>{t('common.done')}</Text>
-          </Pressable>
-        </View>
+        <ScreenHeader
+          title={t(open === 'instructions' ? 'sentLog.instructions' : 'sentLog.request')}
+          left={{ label: t('sentLog.back'), icon: 'back', iconOnly: true, onPress: () => setOpen(null) }}
+          right={{ label: t('common.done'), onPress: onClose }}
+        />
         {open === 'instructions' ? (
           <Instructions customInstructions={customInstructions ?? ''} />
         ) : (
@@ -180,23 +172,11 @@ function SentLog({
 
   return (
     <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={clearAll}
-          disabled={!entries?.length}
-          hitSlop={8}
-          style={styles.side}
-          accessibilityRole="button"
-        >
-          <Text style={[styles.clear, !entries?.length && styles.disabled]}>{t('sentLog.clear')}</Text>
-        </Pressable>
-        <Text style={styles.title} accessibilityRole="header" numberOfLines={1}>
-          {t('sentLog.title')}
-        </Text>
-        <Pressable onPress={onClose} hitSlop={8} style={[styles.side, styles.right]} accessibilityRole="button">
-          <Text style={styles.done}>{t('common.done')}</Text>
-        </Pressable>
-      </View>
+      <ScreenHeader
+        title={t('sentLog.title')}
+        left={{ label: t('sentLog.clear'), tone: 'danger', disabled: !entries?.length, onPress: clearAll }}
+        right={{ label: t('common.done'), onPress: onClose }}
+      />
       <SectionList
         sections={groupByDay(entries ?? [], (e) => e.at)}
         keyExtractor={(e) => e.id}
@@ -441,19 +421,6 @@ function Section({ title, text }: { title: string; text: string }) {
 
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.border,
-  },
-  side: { flex: 1 },
-  right: { alignItems: 'flex-end' },
-  title: { color: c.text, fontSize: 17, fontWeight: '600', flexShrink: 1 },
-  clear: { fontSize: 15, color: c.danger },
-  done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
-  disabled: { opacity: 0.35 },
   list: { ...readableColumn, padding: 16, gap: 2 },
   top: { gap: 10, marginBottom: 4 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
@@ -470,7 +437,6 @@ const useStyles = makeStyles((c) => ({
   host: { fontSize: 12, color: c.textSecondary },
   hostRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   hostText: { flexShrink: 1 },
-  backRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 3 },
   chip: {
     fontSize: 12,

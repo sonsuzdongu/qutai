@@ -14,6 +14,8 @@ import { DialogHost, dialog } from './Dialog';
 import { downloadFraction } from './DownloadIndicator';
 import { openDownload, shareDownload } from './openDownload';
 import { Toast, useToast } from './Toast';
+import { ScreenHeader } from './ScreenHeader';
+import { WholeWordsText } from './WholeWordsText';
 
 type Props = {
   visible: boolean;
@@ -237,15 +239,7 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
-        <View style={styles.header}>
-          <View style={styles.side} />
-          <Text style={styles.title} accessibilityRole="header">
-            {t('downloads.title')}
-          </Text>
-          <Pressable accessibilityRole="button" onPress={close} hitSlop={8} style={[styles.side, styles.right]}>
-            <Text style={styles.done}>{t('common.done')}</Text>
-          </Pressable>
-        </View>
+        <ScreenHeader title={t('downloads.title')} right={{ label: t('common.done'), onPress: close }} />
         {all.length > 0 ? (
           <View style={styles.searchWrap}>
             <TextInput
@@ -283,7 +277,7 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
                   hitSlop={8}
                   accessibilityRole="button"
                 >
-                  <Text style={styles.sectionAction}>{anyRunning ? t('downloads.pauseAll') : t('downloads.resumeAll')}</Text>
+                  <WholeWordsText style={styles.sectionAction}>{anyRunning ? t('downloads.pauseAll') : t('downloads.resumeAll')}</WholeWordsText>
                 </Pressable>
               ) : null}
               {section.key === 'done' && anyFinished ? (
@@ -293,7 +287,7 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
                   accessibilityRole="button"
                   accessibilityHint={t('downloads.clearFinishedHint')}
                 >
-                  <Text style={styles.sectionAction}>{t('downloads.clearFinished')}</Text>
+                  <WholeWordsText style={styles.sectionAction}>{t('downloads.clearFinished')}</WholeWordsText>
                 </Pressable>
               ) : null}
             </View>
@@ -379,17 +373,6 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
 
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.border,
-  },
-  side: { flex: 1 },
-  right: { alignItems: 'flex-end' },
-  title: { color: c.text, fontSize: 17, fontWeight: '600' },
-  done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   searchWrap: { paddingHorizontal: 16, paddingTop: 12 },
   search: {
     fontSize: 15,
@@ -402,10 +385,15 @@ const useStyles = makeStyles((c) => ({
   list: { ...readableColumn, padding: 16, gap: 8 },
   where: { fontSize: 13, color: c.textSecondary, marginBottom: 4 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
+  // At a large text size the action ("Abgeschlossene entfernen") moves under the section name instead of running
+  // off the screen.
   sectionHeader: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
     justifyContent: 'space-between',
+    columnGap: 12,
+    rowGap: 4,
     marginTop: 12,
     marginBottom: 2,
   },

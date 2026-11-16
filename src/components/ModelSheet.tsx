@@ -194,8 +194,9 @@ export function ModelSheet({ visible, settings, current, onChoose, onOpenSetting
 const useStyles = makeStyles((c) => ({
   sheet: { paddingTop: 14 },
   content: { paddingHorizontal: 20, gap: 6 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 17, fontWeight: '700', color: c.text },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  // A long title wraps; Done keeps its width.
+  title: { fontSize: 17, fontWeight: '700', color: c.text, flexShrink: 1 },
   done: { fontSize: 16, fontWeight: '600', color: c.tintText },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   group: { gap: 2 },

@@ -336,7 +336,7 @@ const useStyles = makeStyles((c) => ({
     paddingHorizontal: 20,
     paddingVertical: 14,
   },
-  title: { color: c.text, fontSize: 20, fontWeight: '700' },
+  title: { color: c.text, fontSize: 20, fontWeight: '700', flexShrink: 1 },
   content: { paddingHorizontal: 20, paddingBottom: 32, gap: 12, maxWidth: 560, width: '100%', alignSelf: 'center' },
   flex: { flex: 1 },
   card: { backgroundColor: c.surface, borderRadius: 16, padding: 16, gap: 6 },

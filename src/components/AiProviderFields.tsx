@@ -16,6 +16,7 @@ import { useAccountState } from '../account';
 import { askCreditsDisclosure } from './CreditsDisclosure';
 import { CreditsFields } from './CreditsFields';
 import { dialog } from './Dialog';
+import { WholeWordsText } from './WholeWordsText';
 
 export type AiChoice = Pick<
   Settings,
@@ -114,9 +115,9 @@ export function AiProviderFields({
               accessibilityRole="tab"
               accessibilityState={{ selected }}
             >
-              <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>
+              <WholeWordsText style={[styles.segmentText, selected && styles.segmentTextSelected]}>
                 {getProvider(id).shortLabel ?? getProvider(id).label.replace('Google ', '')}
-              </Text>
+              </WholeWordsText>
               {isConfigured(cleanAiChoice(value), id) && <View style={styles.keyDot} />}
             </Pressable>
           );

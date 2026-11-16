@@ -8,6 +8,7 @@ import type { SitePermissionStore } from '../storage/sitePermissions';
 import { SitePermissionSheet } from './SitePermissionSheet';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
+import { ScreenHeader } from './ScreenHeader';
 
 type Props = {
   visible: boolean;
@@ -34,13 +35,7 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
-        <View style={styles.header}>
-          <View style={styles.side} />
-          <Text style={styles.title}>{t('site.listTitle')}</Text>
-          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.side, styles.right]}>
-            <Text style={styles.done}>{t('common.done')}</Text>
-          </Pressable>
-        </View>
+        <ScreenHeader title={t('site.listTitle')} right={{ label: t('common.done'), onPress: onClose }} />
         <FlatList
           data={sites}
           keyExtractor={(p) => p.host}
@@ -118,17 +113,6 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
 
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.border,
-  },
-  side: { flex: 1 },
-  right: { alignItems: 'flex-end' },
-  title: { color: c.text, fontSize: 17, fontWeight: '600' },
-  done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   list: { ...readableColumn, padding: 16, gap: 8 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useKeyboardHeight } from '../utils/useKeyboardHeight';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
@@ -7,6 +7,7 @@ import { Icon, IconName } from '../ui/Icon';
 import { darkPalette, lightPalette, makeStyles } from '../ui/theme';
 import { DialogHost } from './Dialog';
 import { menuFrame } from './menuFrame';
+import { WholeWordsText } from './WholeWordsText';
 
 export type MenuItem = {
   icon: IconName;
@@ -118,7 +119,7 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor 
               accessibilityLabel={t('menu.backTo')}
             >
               <Icon name="back" size={20} color={palette.textSecondary} />
-              <Text style={[styles.label, styles.labelFlex, styles.subTitle, theme.text]}>{sub.label}</Text>
+              <WholeWordsText style={[styles.label, styles.labelFlex, styles.subTitle, theme.text]}>{sub.label}</WholeWordsText>
             </Pressable>
           )}
           {shown.map((item) => (
@@ -141,9 +142,9 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor 
                   color={palette.textSecondary}
                   style={item.disabled ? styles.disabled : undefined}
                 />
-                <Text style={[styles.label, styles.labelFlex, theme.text, item.disabled && styles.disabled]}>
+                <WholeWordsText style={[styles.label, styles.labelFlex, theme.text, item.disabled && styles.disabled]}>
                   {item.label}
-                </Text>
+                </WholeWordsText>
                 {item.checked && <Icon name="check" size={20} color={palette.tintText} />}
                 {item.submenu && <Icon name="chevronRight" size={20} color={palette.textSecondary} />}
               </Pressable>

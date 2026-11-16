@@ -48,6 +48,8 @@ import { ActionSheet, SheetAction } from './ActionSheet';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAvoidingContainer } from './KeyboardAware';
 import { clearHistory, deleteHistoryEntry, HistoryEntry, listHistory } from '../storage/history';
+import { HEADER_FONT_SCALE } from './ScreenHeader';
+import { WholeWordsText } from './WholeWordsText';
 
 export type LibraryTab = 'bookmarks' | 'history';
 
@@ -89,12 +91,14 @@ function LibraryContent({ initialTab, onOpen, onClose }: Omit<Props, 'visible'>)
               accessibilityRole="tab"
               accessibilityState={{ selected: tab === id }}
             >
-              <Text style={[styles.segmentText, tab === id && styles.bold]}>{t(`library.${id}`)}</Text>
+              <WholeWordsText style={[styles.segmentText, tab === id && styles.bold]}>{t(`library.${id}`)}</WholeWordsText>
             </Pressable>
           ))}
         </View>
         <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8}>
-          <Text style={[styles.action, styles.bold]}>{t('common.done')}</Text>
+          <Text style={[styles.action, styles.bold]} numberOfLines={1} maxFontSizeMultiplier={HEADER_FONT_SCALE}>
+            {t('common.done')}
+          </Text>
         </Pressable>
       </View>
       <TextInput
@@ -865,7 +869,7 @@ const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, gap: 12 },
   segment: { flex: 1, flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
-  segmentButton: { flex: 1, alignItems: 'center', paddingVertical: 7, borderRadius: 8 },
+  segmentButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 7, paddingHorizontal: 4, borderRadius: 8 },
   segmentSelected: { backgroundColor: c.surface },
   segmentText: { fontSize: 14, color: c.text },
   bold: { fontWeight: '700' },

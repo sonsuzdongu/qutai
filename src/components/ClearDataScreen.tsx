@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles, readableColumn } from '../ui/theme';
@@ -7,6 +7,8 @@ import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { ClearOptions } from '../storage/clearData';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
+import { ScreenHeader } from './ScreenHeader';
+import { WholeWordsText } from './WholeWordsText';
 
 type Props = { visible: boolean; onClear: (options: ClearOptions) => Promise<void>; onClose: () => void };
 
@@ -54,13 +56,7 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
-        <View style={styles.header}>
-          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={styles.side}>
-            <Text style={styles.cancel}>{t('common.cancel')}</Text>
-          </Pressable>
-          <Text style={styles.title}>{t('clearData.title')}</Text>
-          <View style={styles.side} />
-        </View>
+        <ScreenHeader title={t('clearData.title')} left={{ label: t('common.cancel'), tone: 'plain', onPress: onClose }} />
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.label}>{t('clearData.range')}</Text>
           <View style={styles.segment}>
@@ -72,9 +68,9 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
                 accessibilityRole="radio"
                 accessibilityState={{ selected: options.range === range }}
               >
-                <Text style={[styles.segmentText, options.range === range && styles.segmentTextSelected]}>
+                <WholeWordsText style={[styles.segmentText, options.range === range && styles.segmentTextSelected]}>
                   {t(`clearData.range.${range}`)}
-                </Text>
+                </WholeWordsText>
               </Pressable>
             ))}
           </View>
@@ -104,21 +100,11 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
 
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.border,
-  },
-  side: { flex: 1 },
-  title: { color: c.text, fontSize: 17, fontWeight: '600' },
-  cancel: { fontSize: 16, color: c.textSecondary },
   content: { ...readableColumn, padding: 16, gap: 12 },
   label: { fontSize: 15, fontWeight: '600', color: c.text },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   segment: { flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
-  segmentButton: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 8 },
+  segmentButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 2, borderRadius: 8 },
   segmentSelected: { backgroundColor: c.surface },
   segmentText: { fontSize: 13, color: c.textSecondary },
   segmentTextSelected: { color: c.text, fontWeight: '700' },

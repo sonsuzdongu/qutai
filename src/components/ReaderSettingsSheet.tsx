@@ -6,6 +6,7 @@ import { clampTextZoom, TEXT_ZOOM_MAX, TEXT_ZOOM_MIN } from '../storage/settings
 import { makeStyles } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { BottomSheet } from './BottomSheet';
+import { WholeWordsText } from './WholeWordsText';
 
 export type ReaderSettings = {
   readerTheme: ReaderTheme;
@@ -77,7 +78,7 @@ export function ReaderSettingsSheet({ visible, value, onChange, onClose }: Props
               accessibilityRole="radio"
               accessibilityState={{ checked: selected }}
             >
-              <Text
+              <WholeWordsText
                 style={[
                   styles.segmentText,
                   font === 'serif' ? styles.serif : null,
@@ -85,7 +86,7 @@ export function ReaderSettingsSheet({ visible, value, onChange, onClose }: Props
                 ]}
               >
                 {t(`reader.font.${font}`)}
-              </Text>
+              </WholeWordsText>
             </Pressable>
           );
         })}
@@ -137,8 +138,9 @@ export function ReaderSettingsSheet({ visible, value, onChange, onClose }: Props
 const useStyles = makeStyles((c) => ({
   sheet: { paddingTop: 14 },
   content: { paddingHorizontal: 20, gap: 10 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { fontSize: 17, fontWeight: '700', color: c.text },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
+  // A long title wraps; Done keeps its width.
+  title: { fontSize: 17, fontWeight: '700', color: c.text, flexShrink: 1 },
   done: { fontSize: 16, fontWeight: '600', color: c.tintText },
   label: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 6 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },

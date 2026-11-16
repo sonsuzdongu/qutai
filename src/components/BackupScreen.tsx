@@ -22,6 +22,7 @@ import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
+import { ScreenHeader } from './ScreenHeader';
 
 type Props = {
   /** 'export', or the bytes of a picked backup file to import; null: closed. */
@@ -45,13 +46,10 @@ export function BackupScreen({ job, appLock, onClose }: Props) {
   return (
     <Modal visible={job !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
-        <View style={styles.header}>
-          <Pressable accessibilityRole="button" onPress={close} hitSlop={8} style={styles.side} disabled={busy}>
-            <Text style={[styles.cancel, busy && styles.disabled]}>{t('common.cancel')}</Text>
-          </Pressable>
-          <Text style={styles.title}>{t(current === 'export' ? 'backup.exportTitle' : 'backup.importTitle')}</Text>
-          <View style={styles.side} />
-        </View>
+        <ScreenHeader
+          title={t(current === 'export' ? 'backup.exportTitle' : 'backup.importTitle')}
+          left={{ label: t('common.cancel'), tone: 'plain', disabled: busy, onPress: close }}
+        />
         {/* Mounted per job, so every export or import starts with empty fields. */}
         {job === 'export' && <ExportForm appLock={appLock} busy={busy} setBusy={setBusy} onDone={onClose} />}
         {job instanceof Uint8Array && <ImportFlow file={job} busy={busy} setBusy={setBusy} />}
@@ -462,16 +460,6 @@ function ImportFlow({ file, busy, setBusy }: BusyProps & { file: Uint8Array }) {
 
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.border,
-  },
-  side: { flex: 1 },
-  title: { color: c.text, fontSize: 17, fontWeight: '600' },
-  cancel: { fontSize: 16, color: c.textSecondary },
   content: { ...readableColumn, padding: 16, gap: 12, paddingBottom: 40 },
   label: { fontSize: 15, fontWeight: '600', color: c.text },
   section: { marginTop: 12 },
