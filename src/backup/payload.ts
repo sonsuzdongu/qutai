@@ -17,6 +17,7 @@ import { READER_FONTS, READER_THEMES } from '../browser/reader';
 import { isSearchEngine } from '../browser/search';
 import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } from '../storage/savedTasks';
 import { cutText, wellFormed } from '../utils/wellFormed';
+import { MAX_RULES, parseRuleLine, siteHost as ruleSite } from '../content/siteRules';
 
 /**
  * What goes inside a backup: versioned JSON by kind of data, independent of the SQLite schema, so a
@@ -31,7 +32,8 @@ import { cutText, wellFormed } from '../utils/wellFormed';
  *            // (= general); sensitive (hidden from the AI) and label: absent before hidden memories (= not hidden)
  *   tasks?: [{ name, prompt, target, url, research, createdAt, lastUsedAt, schedule, paused, private, autoRun }],
  *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }],
- *            blockingOff?: [host], personal?: [{ host, setting }] },
+ *            blockingOff?: [host], personal?: [{ host, setting }],
+ *            rules?: [{ line, enabled, source, site, url?, createdAt }] },   // the user's own site rules (filter lines)
  *   settings?: { theme: "dark", textZoom: 120, models: { anthropic: "…" }, … },
  *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…", openrouter?: "…", custom?: "…" },   // only when the user opted in
  *   customHeaders?: [{ name, value }],   // the custom endpoint's extra headers: secrets, so only with apiKeys' opt-in
@@ -76,6 +78,14 @@ export type BackupSitePermission = { host: string; level: Exclude<SiteLevel, 'de
 export type BackupLocation = { host: string; setting: 'allow' | 'block' };
 /** A site's camera or microphone setting (not in backups made before it existed). */
 export type BackupMedia = { host: string; kind: 'camera' | 'microphone'; setting: 'allow' | 'block' };
+export type BackupSiteRule = {
+  line: string;
+  enabled: boolean;
+  source: 'assistant' | 'manual';
+  site: string;
+  url?: string;
+  createdAt: number;
+};
 export type BackupTab = { url: string; title: string; uid: string; groupId?: string };
 export type BackupGroup = { id: string; name: string; color: string; collapsed?: boolean };
 export type BackupChat = { key: string; items: unknown[]; turns: unknown[] };
@@ -145,6 +155,8 @@ export type BackupPayload = {
     blockingOff?: string[];
     /** Whether the assistant may enter personal details there (not in backups made before it existed). */
     personal?: BackupLocation[];
+    /** The user's own site rules (content/siteRules.ts); not in backups made before them. */
+    rules?: BackupSiteRule[];
   };
   settings?: BackupSettings;
   apiKeys?: Partial<Record<ProviderId, string>>;
@@ -362,12 +374,28 @@ function parseSites(v: unknown): BackupPayload['sites'] {
     const setting = oneOf(l.setting, ['allow', 'block'] as const);
     if (host && setting) personal.set(host, { host, setting });
   }
+  const rules = new Map<string, BackupSiteRule>();
+  for (const r of list(v.rules, MAX_RULES)) {
+    if (!isObj(r) || typeof r.line !== 'string' || !parseRuleLine(r.line)) continue;
+    const site = typeof r.site === 'string' ? ruleSite(r.site) : null;
+    if (!site) continue;
+    const url = typeof r.url === 'string' && /^https?:\/\//i.test(r.url) ? cutText(r.url, 2048) : undefined;
+    rules.set(r.line.trim(), {
+      line: r.line.trim(),
+      enabled: r.enabled !== false,
+      source: r.source === 'assistant' ? 'assistant' : 'manual',
+      site,
+      ...(url ? { url } : {}),
+      createdAt: time(r.createdAt),
+    });
+  }
   return {
     permissions: [...permissions.values()],
     location: [...location.values()],
     media: [...media.values()],
     blockingOff: [...blockingOff],
     personal: [...personal.values()],
+    rules: [...rules.values()],
   };
 }
 
@@ -705,6 +733,7 @@ export function summarize(p: BackupPayload): BackupSummary {
               (s) => s.host,
             ),
             ...(p.sites.blockingOff ?? []),
+            ...(p.sites.rules ?? []).map((r) => r.site),
           ]).size,
         }
       : {}),

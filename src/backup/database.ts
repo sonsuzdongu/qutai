@@ -1,3 +1,4 @@
+import { listSiteRules } from '../storage/siteRules';
 import { exportData as exportBookmarks } from '../storage/bookmarks';
 import { Db, getJson, SqlValue } from '../storage/db';
 import { listActions } from '../storage/actionLog';
@@ -29,7 +30,7 @@ export async function collectBackup(
   db: Db,
   choice: ExportChoice,
 ): Promise<Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'>> {
-  const [version, bookmarks, history, memories, permissions, location, media, blockingOff, tasks, personal] =
+  const [version, bookmarks, history, memories, permissions, location, media, blockingOff, tasks, personal, rules] =
     await Promise.all([
     db.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []),
     exportBookmarks(db),
@@ -44,6 +45,7 @@ export async function collectBackup(
     listBlockingOff(db),
     listSavedTasks(db),
     listPersonalSettings(db),
+    listSiteRules(db),
   ]);
   const payload: Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'> = {
     schemaVersion: version?.user_version ?? 0,
@@ -79,6 +81,14 @@ export async function collectBackup(
       media: media.flatMap((m) => (m.setting === 'ask' ? [] : [{ host: m.host, kind: m.kind, setting: m.setting }])),
       blockingOff,
       personal: personal.flatMap((p) => (p.setting === 'ask' ? [] : [{ host: p.host, setting: p.setting }])),
+      rules: rules.map(({ line, enabled, source, site, url, createdAt }) => ({
+        line,
+        enabled,
+        source,
+        site,
+        ...(url ? { url } : {}),
+        createdAt,
+      })),
     },
   };
   if (choice.tabs) {
@@ -283,6 +293,7 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
         await db.runAsync('DELETE FROM site_media', []);
         await db.runAsync('DELETE FROM site_blocking', []);
         await db.runAsync('DELETE FROM site_personal', []);
+        await db.runAsync('DELETE FROM site_rules', []);
       }
       await insertRows(
         db,
@@ -313,6 +324,16 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
         'INSERT OR IGNORE INTO site_personal (host, setting, updated_at)',
         3,
         (p.sites.personal ?? []).map((s) => [s.host, s.setting, now]),
+      );
+      // A rule the phone already has (the same line) is kept as it is.
+      const have = new Set((await listSiteRules(db)).map((r) => r.line));
+      await insertRows(
+        db,
+        'INSERT OR IGNORE INTO site_rules (id, line, enabled, source, site, url, created_at)',
+        7,
+        (p.sites.rules ?? [])
+          .filter((r) => !have.has(r.line))
+          .map((r, i) => [`b${now.toString(36)}${i}`, r.line, r.enabled ? 1 : 0, r.source, r.site, r.url ?? null, r.createdAt]),
       );
     }
 

@@ -160,6 +160,17 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
   markIdNumbersHidden,
   // "What was sent to the AI": the tokens each request used and its approximate cost (JSON numbers, ai/cost.ts).
   `ALTER TABLE ai_requests ADD COLUMN cost TEXT;`,
+  // The user's own site rules (content/siteRules.ts): a filter line each, the site it is listed under and the page it
+  // was made on. source: 'assistant' or 'manual'.
+  `CREATE TABLE site_rules (
+     id TEXT PRIMARY KEY NOT NULL,
+     line TEXT NOT NULL,
+     enabled INTEGER NOT NULL DEFAULT 1,
+     source TEXT NOT NULL,
+     site TEXT NOT NULL,
+     url TEXT,
+     created_at INTEGER NOT NULL
+   );`,
 ];
 
 /**
