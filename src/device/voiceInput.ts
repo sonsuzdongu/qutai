@@ -5,6 +5,7 @@ import type { ExpoSpeechRecognitionErrorCode } from 'expo-speech-recognition';
 import { onPageMicrophone, pageMicrophoneLive } from '../browser/mediaCapture';
 import { dialog, dialogState } from '../components/Dialog';
 import { t } from '../i18n';
+import { voiceErrorOutcome } from './voiceError';
 import { languageName, languageOf } from './voiceLanguage';
 import { offerSettings } from './settings';
 import { isSpeaking, setMicrophoneGuard, stopSpeaking } from './speech';
@@ -399,18 +400,21 @@ function finish() {
 }
 
 function handleError(s: Session, code: ExpoSpeechRecognitionErrorCode) {
-  if (code === 'aborted') return;
-  // Android only finds out when listening starts that the online recogniser lacks the language: the next one.
-  const fresh = !s.committed && !s.interim && !s.interrupted && state !== 'stopping';
-  if (code === 'language-not-supported' && fresh && s.plan.rest.length) {
+  const outcome = voiceErrorOutcome({
+    code,
+    stopping: state === 'stopping',
+    hasText: !!(s.committed || s.interim),
+    interrupted: s.interrupted,
+    canRetry: s.plan.rest.length > 0,
+  });
+  if (outcome === 'ignore') return;
+  if (outcome === 'retry') {
     s.retry = true;
     return;
   }
-  // Qutai stopped it itself (panel closed, app left…): no message about what followed.
-  const quiet = s.interrupted;
   if (code === 'interrupted') s.interrupted = true;
   else s.failed = true;
-  if (quiet) return;
+  if (outcome === 'quiet') return;
   if (code === 'not-allowed') {
     offerSettings(t('voice.permissionDenied'));
   } else if (code === 'language-not-supported') {
@@ -627,8 +631,10 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
       if (event.isFinal && s.committed) s.final = join(s.base, s.committed);
     }),
     M.addListener('nomatch', () => {
-      // A silent stretch between two in continuous listening is nothing to report.
-      if (session === s && !s.final && !options.hold) s.options.notify(t('voice.error.noSpeech'));
+      // A silent stretch between two in continuous listening is nothing to report, nor is one after words came in.
+      if (session === s && !s.final && !s.committed && !s.interim && !options.hold) {
+        s.options.notify(t('voice.error.noSpeech'));
+      }
     }),
     M.addListener('error', (event) => {
       if (session === s) handleError(s, event.error);
