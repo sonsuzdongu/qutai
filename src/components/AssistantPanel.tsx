@@ -603,6 +603,7 @@ export function AssistantPanel({
                       onShare={onShare}
                       onOpenSource={onOpenSource}
                       onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
+                      answered={item.kind === 'choices' && (!!item.chosen || index < lastUserIndex)}
                       cost={showCost ? item.cost : undefined}
                       costConversation={costConversation}
                       listWidth={listWidth}
@@ -1032,6 +1033,7 @@ function ChatRow({
   onShare,
   onOpenSource,
   onChoose,
+  answered,
   onOpenAttachment,
   onItemAction,
   cost,
@@ -1064,6 +1066,11 @@ function ChatRow({
   onOpenSource: (source: Source) => void;
   /** Set while the question can still be answered. */
   onChoose?: (itemId: string, option: string) => void;
+  /**
+   * The question was answered (an option tapped, or a reply typed): its options are gone and the user's own bubble
+   * below says the answer, so the chat reads as question, answer.
+   */
+  answered?: boolean;
 }) {
   const styles = useStyles();
   const d = useContext(PanelTheme);
@@ -1163,31 +1170,25 @@ function ChatRow({
           <View style={[styles.bubble, styles.assistantBubble, d?.assistantBubble]}>
             <MarkdownText text={item.text} style={textStyle} onOpenLink={onOpenLink} onCall={onCall} dark={!!d} />
           </View>
-          {(item.options ?? []).map((option) => {
-            const chosen = item.chosen === option;
-            return (
-              <Pressable
-                key={option}
-                onPress={() => onChoose?.(item.id, option)}
-                disabled={!onChoose}
-                style={({ pressed }) => [
-                  styles.choice,
-                  d?.choice,
-                  chosen && styles.choiceChosen,
-                  chosen && styles.choiceWithIcon,
-                  !onChoose && !chosen && styles.choiceClosed,
-                  pressed && styles.pressed,
-                ]}
-                accessibilityRole="button"
-                accessibilityState={{ disabled: !onChoose, selected: chosen }}
-              >
-                {chosen ? <Icon name="check" size={16} color={palette.onTint} /> : null}
-                <Text style={[styles.choiceText, chosen && styles.choiceTextChosen, styles.choiceLabel]}>
-                  {option}
-                </Text>
-              </Pressable>
-            );
-          })}
+          {answered
+            ? null
+            : (item.options ?? []).map((option) => (
+                <Pressable
+                  key={option}
+                  onPress={() => onChoose?.(item.id, option)}
+                  disabled={!onChoose}
+                  style={({ pressed }) => [
+                    styles.choice,
+                    d?.choice,
+                    !onChoose && styles.choiceClosed,
+                    pressed && styles.pressed,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: !onChoose }}
+                >
+                  <Text style={[styles.choiceText, styles.choiceLabel]}>{option}</Text>
+                </Pressable>
+              ))}
         </View>
       );
     case 'sources':
@@ -1800,11 +1801,8 @@ const useStyles = makeStyles((c) => ({
     borderColor: c.tint,
     backgroundColor: c.surface,
   },
-  choiceChosen: { backgroundColor: c.tint },
   choiceClosed: { opacity: 0.4 },
   choiceText: { fontSize: 15, color: c.tintText, fontWeight: '600' },
-  choiceTextChosen: { color: c.onTint },
-  choiceWithIcon: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   choiceLabel: { flexShrink: 1 },
   callCard: {
     alignSelf: 'stretch',

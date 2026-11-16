@@ -47,7 +47,7 @@ import { creditsStore, creditsReady, isPreTierChoice, modelTag, refreshCredits, 
 import { creditsLabel } from './src/components/AnswerCost';
 import { nothingSent, RelayError } from './src/credits/errors';
 import { limitsFor, offeredModels } from './src/credits/rules';
-import { resolveTier, tierTarget, usesTiers } from './src/credits/tiers';
+import { resolveTier, tierName, tierTarget, usesTiers } from './src/credits/tiers';
 import type { PublicConfig, Tier } from './src/credits/types';
 import { accountSession, useAccountState } from './src/account';
 import { lostQutaiAccount } from './src/credits/gate';
@@ -131,6 +131,8 @@ import { NotificationOrigin, incognitoOriginTab, initNotifications } from './src
 import { nowContext } from './src/agent/scheduling';
 import { interfaceLanguageNote } from './src/agent/uiLabels';
 import { renderReportPdf } from './src/device/reportPdf';
+import { withIdentity } from './src/agent/identity';
+import { plainError } from './src/ai/plainError';
 import { authenticate } from './src/device/biometric';
 import { scannedTarget } from './src/device/qr';
 import { toUrl } from './src/browser/url';
@@ -1061,6 +1063,15 @@ function BrowserApp({
         browser,
         agentTab,
         askedFrom: { id: current.id },
+      // Which AI it is, for "which model are you?": Qutai on its tier with credits, else the provider and model.
+      if (userTurn.role === 'user') {
+        userTurn.text = withIdentity(
+          userTurn.text,
+          provider === 'qutai'
+            ? { mode: 'credits', ...(tier ? { tier: { id: tier.id, name: tierName(tier.id) } } : {}) }
+            : { mode: 'own', provider: getProvider(provider).label, model: target.model },
+        );
+      }
         privacy: chat.privacy,
         memory: settings.memoryEnabled ? memoryStore : undefined,
         customInstructions: settings.customInstructions,
@@ -1197,10 +1208,16 @@ function BrowserApp({
                 ? 'signIn'
                 : undefined
             : undefined;
-        chat.add({ ...newItem('error', e instanceof Error ? e.message : String(e)), ...(action ? { action } : {}) });
+        // One plain sentence; the raw text (status, the provider's message) stays available as its details.
+        const shown = plainError(e, { credits: provider === 'qutai' });
+        chat.add({
+          ...newItem('error', shown.message),
+          ...(shown.details && shown.details !== shown.message ? { details: shown.details } : {}),
+          ...(action ? { action } : {}),
+        });
       }
       if (kept) chat.add(newItem('info', t('credits.messageKept')));
-      outcome = { kind: 'failed', text: e instanceof Error ? e.message : String(e) };
+      outcome = { kind: 'failed', text: plainError(e, { credits: provider === 'qutai' }).message };
       // What the server says now (a stream cut short was still charged; a refusal may mean the balance moved).
       if (provider === 'qutai' && e instanceof RelayError) refreshCredits();
     } finally {
