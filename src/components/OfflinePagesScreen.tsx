@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { deleteOfflineFile, readOfflinePage } from '../device/offline';
@@ -94,7 +94,7 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
         data={pages ?? []}
         keyExtractor={(p) => p.id}
         contentContainerStyle={styles.list}
-        ListEmptyComponent={pages ? <Text style={styles.empty}>{t('offline.empty')}</Text> : undefined}
+        ListEmptyComponent={pages ? <Text style={styles.empty}>{t('offline.empty')}</Text> : <ActivityIndicator style={styles.loading} />}
         renderItem={({ item }) => (
           <Pressable onPress={() => open(item)} style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
             <View style={styles.texts}>
@@ -137,6 +137,7 @@ const useStyles = makeStyles((c) => ({
   done: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   list: { padding: 16, gap: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32, lineHeight: 21 },
+  loading: { marginTop: 32 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

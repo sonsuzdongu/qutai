@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Image, Modal, Platform, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Platform, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LAST_STEP_PROMPT, RESEARCH_PROMPT, WEB_SEARCH_PROMPT } from '../agent/runAgent';
 import { customInstructionsPrompt, SYSTEM_PROMPT } from '../agent/systemPrompt';
@@ -221,7 +221,9 @@ function SentLog({
             </Pressable>
           </View>
         }
-        ListEmptyComponent={entries ? <Text style={styles.empty}>{t('sentLog.empty')}</Text> : undefined}
+        ListEmptyComponent={
+          entries ? <Text style={styles.empty}>{t('sentLog.empty')}</Text> : <ActivityIndicator style={styles.loading} />
+        }
         ListFooterComponent={<Text style={styles.footer}>{t('sentLog.footer')}</Text>}
         renderSectionHeader={({ section }) => {
           const total = showCost ? dayTotal(section.data) : null;
@@ -457,6 +459,7 @@ const useStyles = makeStyles((c) => ({
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   link: { fontSize: 14, color: c.tintText, fontWeight: '600' },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
+  loading: { marginTop: 32 },
   footer: { fontSize: 12, color: c.textSecondary, lineHeight: 17, marginTop: 20 },
   day: { fontSize: 13, fontWeight: '700', color: c.textSecondary, marginTop: 14, marginBottom: 4 },
   row: { flexDirection: 'row', gap: 10, paddingVertical: 8, borderRadius: 8 },

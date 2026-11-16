@@ -330,7 +330,11 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
           stickySectionHeadersEnabled={false}
           ListHeaderComponent={header}
           ListEmptyComponent={
-            memories ? <Text style={styles.empty}>{t(query.trim() ? 'memory.noMatch' : 'memory.empty')}</Text> : undefined
+            memories ? (
+              <Text style={styles.empty}>{t(query.trim() ? 'memory.noMatch' : 'memory.empty')}</Text>
+            ) : (
+              <ActivityIndicator style={styles.loading} />
+            )
           }
           renderSectionHeader={({ section }) => (
             <View style={styles.sectionHeader}>
@@ -585,6 +589,7 @@ const useStyles = makeStyles((c) => ({
   cancelText: { fontSize: 15, color: c.tintText },
   applyButton: { paddingHorizontal: 16, height: 36, borderRadius: 18, backgroundColor: c.tint, justifyContent: 'center' },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
+  loading: { marginTop: 32 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 2 },
   sectionTitle: { flex: 1, fontSize: 13, fontWeight: '600', color: c.textSecondary, textTransform: 'uppercase' },
   sectionDelete: { fontSize: 13, color: c.danger },

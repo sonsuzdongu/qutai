@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Modal, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
@@ -68,7 +68,9 @@ function ActionLog({ onClose }: { onClose: () => void }) {
         contentContainerStyle={styles.list}
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={<Text style={styles.hint}>{t('actionLog.hint')}</Text>}
-        ListEmptyComponent={entries ? <Text style={styles.empty}>{t('actionLog.empty')}</Text> : undefined}
+        ListEmptyComponent={
+          entries ? <Text style={styles.empty}>{t('actionLog.empty')}</Text> : <ActivityIndicator style={styles.loading} />
+        }
         renderSectionHeader={({ section }) => <Text style={styles.day}>{section.title}</Text>}
         renderItem={({ item }) => (
           <View style={styles.row}>
@@ -122,6 +124,7 @@ const useStyles = makeStyles((c) => ({
   list: { padding: 16, gap: 2 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
+  loading: { marginTop: 32 },
   day: { fontSize: 13, fontWeight: '700', color: c.textSecondary, marginTop: 14, marginBottom: 4 },
   row: { flexDirection: 'row', gap: 10, paddingVertical: 6 },
   time: { width: 44, fontSize: 12, color: c.textSecondary, marginTop: 2 },

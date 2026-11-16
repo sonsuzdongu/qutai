@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getLanguage, t } from '../i18n';
 import { formatDateTime, formatShortDate, formatTime, hostOf, weekdayShort } from '../i18n/format';
@@ -216,7 +216,7 @@ function TaskList({
         keyExtractor={(task) => task.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={<Text style={styles.hint}>{t('tasks.hint')}</Text>}
-        ListEmptyComponent={tasks ? <Text style={styles.empty}>{t('tasks.empty')}</Text> : undefined}
+        ListEmptyComponent={tasks ? <Text style={styles.empty}>{t('tasks.empty')}</Text> : <ActivityIndicator style={styles.loading} />}
         renderItem={({ item }) => (
           <Pressable
             onPress={() => setEditing({ id: item.id, input: item })}
@@ -588,6 +588,7 @@ const useStyles = makeStyles((c) => ({
   list: { padding: 16, gap: 8 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
+  loading: { marginTop: 32 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
