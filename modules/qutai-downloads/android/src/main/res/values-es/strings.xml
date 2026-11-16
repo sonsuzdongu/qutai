@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Notification texts of Qutai's downloads. The language follows the app's own setting (QutaiDownloads.setLanguage). -->
+  <string name="qutai_dl_channel">Descargas en curso</string>
+  <string name="qutai_dl_done_channel">Descargas terminadas</string>
+  <plurals name="qutai_dl_downloading_many">
+    <item quantity="one">Descargando %1$d archivo</item>
+    <item quantity="other">Descargando %1$d archivos</item>
+  </plurals>
+  <string name="qutai_dl_starting">Iniciando…</string>
+  <string name="qutai_dl_of">%1$s de %2$s</string>
+  <string name="qutai_dl_speed">%1$s/s</string>
+  <string name="qutai_dl_left_min">Quedan %1$d min</string>
+  <string name="qutai_dl_left_sec">Quedan %1$d s</string>
+  <string name="qutai_dl_paused">En pausa</string>
+  <plurals name="qutai_dl_paused_many">
+    <item quantity="one">%1$d descarga en pausa</item>
+    <item quantity="other">%1$d descargas en pausa</item>
+  </plurals>
+  <string name="qutai_dl_waiting">Esperando conexión</string>
+  <plurals name="qutai_dl_queued">
+    <item quantity="one">%1$d en espera</item>
+    <item quantity="other">%1$d en espera</item>
+  </plurals>
+  <string name="qutai_dl_pause">Pausar</string>
+  <string name="qutai_dl_resume">Reanudar</string>
+  <string name="qutai_dl_cancel">Cancelar</string>
+  <string name="qutai_dl_done">Descarga completada</string>
+  <plurals name="qutai_dl_done_many">
+    <item quantity="one">%1$d descarga completada</item>
+    <item quantity="other">%1$d descargas completadas</item>
+  </plurals>
+  <string name="qutai_dl_failed">Error en la descarga</string>
+  <string name="qutai_dl_tap_open">Toca para abrir</string>
+</resources>

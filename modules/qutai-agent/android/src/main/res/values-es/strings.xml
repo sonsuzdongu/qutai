@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Defaults until the app passes its own labels (src/i18n), e.g. right after an update. -->
+  <string name="qutai_agent_channel">Tareas del asistente</string>
+  <string name="qutai_agent_alerts_channel">El asistente te necesita</string>
+  <string name="qutai_agent_working">Qutai está trabajando en: %1$s</string>
+  <string name="qutai_agent_working_public">Qutai está trabajando en una tarea</string>
+  <string name="qutai_agent_stop">Detener</string>
+  <string name="qutai_agent_open">Abrir</string>
+  <string name="qutai_agent_paused">Qutai en pausa: vuelve para continuar</string>
+  <string name="qutai_agent_stalled">La página dejó de responder en segundo plano.</string>
+  <string name="qutai_agent_time_limit">La tarea se ejecutó en segundo plano durante mucho tiempo.</string>
+  <string name="qutai_agent_public_alert">Qutai te necesita</string>
+</resources>
