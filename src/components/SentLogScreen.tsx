@@ -6,6 +6,7 @@ import { customInstructionsPrompt, SYSTEM_PROMPT } from '../agent/systemPrompt';
 import { MEMORY_TOOLS, TOOLS } from '../agent/tools';
 import { sumCosts } from '../ai/cost';
 import { getProvider, modelLabel } from '../ai/providers';
+import { providerModelName } from '../credits';
 import type { ToolImage } from '../ai/types';
 import { features } from '../config/features';
 import { MessageKey, t } from '../i18n';
@@ -291,6 +292,9 @@ function RequestDetail({ entry, showCost }: { entry: SentRequest; showCost: bool
           <Text style={styles.host}>{t(entry.research ? 'sentLog.researchHint' : 'sentLog.webSearchHint')}</Text>
         ) : null}
         {entry.provider === 'qutai' ? <Text style={styles.host}>{t('sentLog.viaQutai')}</Text> : null}
+        {entry.cost?.served && entry.cost.served.model !== entry.model ? (
+          <Text style={styles.host}>{t('sentLog.servedBy', { model: providerModelName(entry.cost.served.model) })}</Text>
+        ) : null}
       </View>
       <View style={styles.note}>
         <Text style={styles.cardText}>

@@ -1,5 +1,5 @@
 import { t, type MessageKey } from '../i18n';
-import type { RelayErrorCode, UpstreamError } from './types';
+import type { RelayErrorCode, RelayProvider, UpstreamError } from './types';
 
 /**
  * Why a Qutai Credits request didn't go through: the relay's own error codes (backend/README.md › Relay › Answer),
@@ -32,6 +32,10 @@ const SERVER_CODES: ReadonlySet<string> = new Set<RelayErrorCode>([
   'upstream_unavailable',
   'upstream_error',
   'upstream_timeout',
+  'tier_unknown',
+  'tier_unavailable',
+  'tier_moved',
+  'continuation_invalid',
 ]);
 
 const MESSAGES: Record<RelayErrorKind, MessageKey> = {
@@ -52,6 +56,12 @@ const MESSAGES: Record<RelayErrorKind, MessageKey> = {
   upstream_error: 'credits.error.providerBroke',
   upstream_timeout: 'credits.error.providerTimeout',
   upstream_rejected: 'credits.error.providerRefused',
+  tier_unknown: 'credits.error.tierUnknown',
+  tier_unavailable: 'credits.error.tierUnavailable',
+  // Handled by the provider (one rebuilt retry); seen only when the tier moved again during that retry.
+  tier_moved: 'credits.error.tierMoved',
+  // Handled by the task (it ends with the pause note); seen only outside a continuation.
+  continuation_invalid: 'credits.error.unexpected',
   network: 'credits.error.unreachable',
   timeout: 'credits.error.unreachable',
   stream_lost: 'credits.error.streamLost',
@@ -72,12 +82,21 @@ export class RelayError extends Error {
   readonly requestId?: string;
   /** Micro-credits the request was charged before it failed (a stream cut short is still paid for what came). */
   readonly charged: number;
+  /** `tier_moved`: the provider format the tier runs on now (`error.tier.provider`). */
+  readonly movedTo?: RelayProvider;
 
   constructor(
     readonly kind: RelayErrorKind,
     /** HTTP status, 0 when no answer came. */
     readonly status: number,
-    extra: { retryAfter?: number; upstream?: UpstreamError; requestId?: string; charged?: number; detail?: string } = {},
+    extra: {
+      retryAfter?: number;
+      upstream?: UpstreamError;
+      requestId?: string;
+      charged?: number;
+      detail?: string;
+      movedTo?: RelayProvider;
+    } = {},
   ) {
     super(relayErrorMessage(kind, extra));
     this.name = 'RelayError';
@@ -86,6 +105,7 @@ export class RelayError extends Error {
     this.upstream = extra.upstream;
     this.requestId = extra.requestId;
     this.charged = extra.charged ?? 0;
+    this.movedTo = extra.movedTo;
   }
 
   /** The kind for a server error code, or by HTTP status when the body had none the app knows. */

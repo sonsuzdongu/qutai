@@ -13,6 +13,9 @@ export const CONFIG: PublicConfig = {
     { provider: 'openai', model: 'gpt-5.6-terra', maxOutputTokens: 32000, webSearch: false, prices: [price()] },
     { provider: 'gemini', model: 'gemini-3.8-flash', maxOutputTokens: 32000, webSearch: true, prices: [price()] },
   ],
+  // An older server: no tiers, the direct form (what parseConfig makes of a /config without `tiers`).
+  tiers: [],
+  directModels: true,
   limits: { maxRequestBytes: 8000000, maxImages: 8, maxSteps: 40, maxResearchSteps: 80, maxMemoryChars: 8000, maxCustomInstructionsChars: 500 },
   minAppVersion: '1.0.0',
   maintenance: { enabled: false, message: null },

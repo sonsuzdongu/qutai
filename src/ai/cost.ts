@@ -31,7 +31,12 @@ export type RequestCost = {
    * Such a request never has a dollar figure.
    */
   credits?: number;
+  /** Qutai Credits: the provider and model that really served the request (the tier is what was asked for). */
+  served?: Served;
 };
+
+/** What really served a Qutai Credits request (ids only). */
+export type Served = { provider: string; model: string };
 
 /**
  * One answer (all the requests of one task) as stored with the conversation and shown under the answer: numbers and
@@ -50,6 +55,8 @@ export type AnswerCost = {
   pricesAsOf?: string;
   /** Qutai Credits: micro-credits charged for all the task's requests (never shown as dollars). */
   credits?: number;
+  /** Qutai Credits: the model that served the task's last request that said so (`model` is then the tier). */
+  served?: Served;
 };
 
 /** Pico-dollars of `tokens` at `microsPerMTok` (exact). */
@@ -99,6 +106,7 @@ export function createAnswerMeter(provider: ProviderId, model: string) {
   const sources = new Set<CostSource>();
   let asOf: string | undefined;
   let credits: number | undefined;
+  let served: Served | undefined;
   return {
     /** A request went out; `cost` is undefined when it didn't report usage (or failed). */
     add(cost: RequestCost | undefined) {
@@ -111,6 +119,7 @@ export function createAnswerMeter(provider: ProviderId, model: string) {
       if (cost.source) sources.add(cost.source);
       asOf ??= cost.pricesAsOf;
       if (cost.credits !== undefined) credits = (credits ?? 0) + cost.credits;
+      if (cost.served) served = cost.served;
     },
     get requests() {
       return requests;
@@ -129,6 +138,7 @@ export function createAnswerMeter(provider: ProviderId, model: string) {
         usage: counts,
         ...(priced ? { nanos: nanos as number, ...(source ? { source } : {}), ...(asOf ? { pricesAsOf: asOf } : {}) } : {}),
         ...(credits !== undefined && !priced ? { credits, source: 'server' as const } : {}),
+        ...(served ? { served } : {}),
       };
     },
   };
@@ -206,9 +216,16 @@ function parseFigure(v: Obj) {
   };
 }
 
+/** `served`: ids only, short, of a provider the relay serves from. */
+function parseServed(v: unknown): { served?: Served } {
+  if (!isObj(v) || !['anthropic', 'openai', 'gemini'].includes(String(v.provider))) return {};
+  if (typeof v.model !== 'string' || !/^[\w.:/@-]{1,100}$/.test(v.model)) return {};
+  return { served: { provider: String(v.provider), model: v.model } };
+}
+
 export function parseRequestCost(v: unknown): RequestCost | undefined {
   const usage = isObj(v) ? parseUsage(v.usage) : undefined;
-  return usage ? { usage, ...parseFigure(v as Obj) } : undefined;
+  return usage ? { usage, ...parseFigure(v as Obj), ...parseServed((v as Obj).served) } : undefined;
 }
 
 export function parseAnswerCost(v: unknown): AnswerCost | undefined {
@@ -219,5 +236,5 @@ export function parseAnswerCost(v: unknown): AnswerCost | undefined {
   const requests = whole(v.requests);
   const reported = whole(v.reported);
   if (!usage || !provider || model === undefined || requests === undefined || reported === undefined) return undefined;
-  return { provider, model, requests, reported: Math.min(reported, requests), usage, ...parseFigure(v) };
+  return { provider, model, requests, reported: Math.min(reported, requests), usage, ...parseFigure(v), ...parseServed(v.served) };
 }

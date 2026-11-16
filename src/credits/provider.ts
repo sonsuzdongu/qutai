@@ -10,8 +10,9 @@ import type { Wire } from '../ai/wire';
 import { AGENT_PROFILE_ID } from './agentProfileId';
 import type { CreditsClient } from './client';
 import { RelayError } from './errors';
-import { preflight } from './rules';
-import type { PublicConfig, RelayProvider, RelayRequest } from './types';
+import { checkServer, preflight } from './rules';
+import { expectedModel, resolveTier, tierTarget } from './tiers';
+import type { PublicConfig, RelayPause, RelayProvider, RelayRequest, RelayServed, Tier } from './types';
 
 /**
  * "Qutai Credits" (pro mode only): the assistant's requests go to Qutai's relay (`POST /relay`) instead of to the
@@ -22,6 +23,13 @@ import type { PublicConfig, RelayProvider, RelayRequest } from './types';
  *
  * The system prompt and tools are the server's copy of the app's (the agent profile, `AGENT_PROFILE_ID`); what is
  * the user's own goes as `context` (the memory section and the custom instructions), as the server requires.
+ *
+ * Tiers (backend/README.md › Relay › Tiers): when `/config` lists tiers, `req.model` holds the tier id and the request
+ * is `{ tier, provider: <format>, route? }`; the format, the expected model and the route come from the conversation's
+ * last answer on that tier (tiers.ts tierTarget), and the reply says what served it (`reply.served`, kept with the
+ * turn). `409 tier_moved` rebuilds the conversation for the tier's new provider (another adapter, so no other
+ * provider's raw output) and sends once more without a route; a second move is an error. Without tiers on the server,
+ * `req.model` is a provider model id and the older direct form is sent, as before.
  */
 
 /** What one task step needs besides the conversation (set by runAgent, see ModelRequest.agent). */
@@ -32,7 +40,11 @@ export type CreditsDeps = {
   client: () => CreditsClient | null;
   /** The server's configuration, refreshed when it is old; rejects with a RelayError when it can't be had. */
   config: () => Promise<PublicConfig>;
+  /** Reads the configuration again now (the server said a tier is unknown, or moved). */
+  refreshConfig?: () => Promise<PublicConfig>;
   appVersion: string;
+  /** What a model was in the own-key lists, to map a model saved before tiers (tiers.ts resolveTier). */
+  tagOf?: Parameters<typeof resolveTier>[2];
 };
 
 const ADAPTERS: Record<RelayProvider, (req: ModelRequest, wire: Wire) => Promise<ModelReply>> = {
@@ -73,17 +85,26 @@ function asAdapterError(e: unknown): unknown {
   return e;
 }
 
+/** What the answers of one call said besides their content: who served the last one, and whether it paused. */
+export type AnswerNotes = { served?: RelayServed; paused?: RelayPause };
+
 export function relayWire(
   client: CreditsClient,
   base: Omit<RelayRequest, 'stream' | 'input'>,
   counter: { add(n: number): void },
+  notes: AnswerNotes = {},
 ): Wire {
+  const note = (charge: { served?: RelayServed; paused?: RelayPause }) => {
+    if (charge.served) notes.served = charge.served;
+    notes.paused = charge.paused;
+  };
   return {
     replayAs: 'qutai',
     async json<T>(_url: string, _headers: Record<string, string>, body: Record<string, unknown>, signal: AbortSignal) {
       try {
         const { json, charge } = await client.relayJson<T>({ ...base, stream: false, input: conversationOf(base.provider, body) }, signal);
         counter.add(charge.charged);
+        note(charge);
         return json;
       } catch (e) {
         counter.add(chargedBy(e));
@@ -94,6 +115,7 @@ export function relayWire(
       try {
         const charge = await client.relayStream({ ...base, stream: true, input: conversationOf(base.provider, body) }, signal, onEvent);
         counter.add(charge.charged);
+        note(charge);
       } catch (e) {
         counter.add(chargedBy(e));
         throw asAdapterError(e);
@@ -129,39 +151,93 @@ export function createCreditsProvider(deps: CreditsDeps): Omit<Provider, 'label'
       const client = deps.client();
       if (!client) throw new RelayError('not_signed_in', 0);
       const config = await deps.config();
-      const model = preflight(config, deps.appVersion, req.model);
       const agent: RelayStep = req.agent ?? { step: 0, memoryTools: false };
-      const limits = config.limits;
       const counter = chargeCounter();
-      const base: Omit<RelayRequest, 'stream' | 'input'> = {
-        provider: model.provider as RelayProvider,
-        model: model.model,
-        profile: AGENT_PROFILE_ID,
-        step: agent.step,
-        options: {
-          // Only where the server allows it for this model; otherwise the assistant searches in the browser.
-          ...(req.webSearch && model.webSearch ? { webSearch: true } : {}),
-          ...(req.research ? { research: true } : {}),
-          ...(agent.memoryTools ? { memoryTools: true } : {}),
-        },
-        context: {
-          ...(agent.memory ? { memory: agent.memory } : {}),
-          ...(agent.customInstructions
-            ? { customInstructions: agent.customInstructions.slice(0, limits.maxCustomInstructionsChars ?? Infinity) }
-            : {}),
-        },
-      };
-      const wire = relayWire(client, base, counter);
+      const notes: AnswerNotes = {};
       // The adapter gets no key: the relay wire never sends the headers it builds.
-      const adapterReq: ModelRequest = { ...req, apiKey: '' };
+      const send = async (request: Omit<RelayRequest, 'stream' | 'input' | 'profile' | 'step' | 'options' | 'context'>, model: string, webSearch: boolean, limits: Record<string, number>) => {
+        const base: Omit<RelayRequest, 'stream' | 'input'> = {
+          ...request,
+          profile: AGENT_PROFILE_ID,
+          step: agent.step,
+          options: {
+            // Only where the server allows it for this model; otherwise the assistant searches in the browser.
+            ...(req.webSearch && webSearch ? { webSearch: true } : {}),
+            ...(req.research ? { research: true } : {}),
+            ...(agent.memoryTools ? { memoryTools: true } : {}),
+          },
+          context: {
+            ...(agent.memory ? { memory: agent.memory } : {}),
+            ...(agent.customInstructions
+              ? { customInstructions: agent.customInstructions.slice(0, limits.maxCustomInstructionsChars ?? Infinity) }
+              : {}),
+          },
+          ...(agent.continuation ? { continuation: agent.continuation } : {}),
+        };
+        return ADAPTERS[base.provider]({ ...req, apiKey: '', model }, relayWire(client, base, counter, notes));
+      };
       try {
-        const reply = await ADAPTERS[base.provider](adapterReq, wire);
-        const cost: RequestCost = { usage: reply.usage ?? EMPTY_USAGE, credits: counter.total, source: 'server' };
-        return { ...reply, cost };
+        let reply: ModelReply;
+        if (config.tiers.length > 0) {
+          checkServer(config, deps.appVersion);
+          const tier = resolveTier(config, req.model, deps.tagOf) as Tier;
+          reply = await callTier(tier, req.turns, send, !!agent.continuation, deps);
+        } else {
+          const model = preflight(config, deps.appVersion, req.model);
+          reply = await send({ provider: model.provider as RelayProvider, model: model.model }, model.model, model.webSearch, config.limits);
+          notes.served ??= { provider: model.provider as RelayProvider, model: model.model };
+        }
+        const served = notes.served;
+        const cost: RequestCost = {
+          usage: reply.usage ?? EMPTY_USAGE,
+          credits: counter.total,
+          source: 'server',
+          ...(served ? { served: { provider: served.provider, model: served.model } } : {}),
+        };
+        return {
+          ...reply,
+          cost,
+          ...(served ? { served } : {}),
+          ...(reply.stop === 'pause' && notes.paused ? { continuation: notes.paused } : {}),
+        };
       } catch (e) {
         if (counter.total > 0) withCost(e, { usage: EMPTY_USAGE, credits: counter.total, source: 'server' });
         throw e;
       }
     },
   };
+}
+
+type Send = (
+  request: Pick<RelayRequest, 'provider' | 'model' | 'tier' | 'route'>,
+  model: string,
+  webSearch: boolean,
+  limits: Record<string, number>,
+) => Promise<ModelReply>;
+
+/**
+ * One request on a tier, with the one retry `tier_moved` allows: rebuilt for the provider the tier runs on now, without
+ * a route. A continuation can't move (it is bound to the model that paused): that ends as `continuation_invalid`.
+ */
+async function callTier(tier: Tier, turns: ModelRequest['turns'], send: Send, continuing: boolean, deps: CreditsDeps): Promise<ModelReply> {
+  const target = tierTarget(tier, turns);
+  try {
+    return await send({ tier: tier.id, provider: target.format, ...(target.route ? { route: target.route } : {}) }, target.model, tier.webSearch, tier.limits);
+  } catch (e) {
+    if (!(e instanceof RelayError)) throw e;
+    if (e.kind === 'tier_unknown') deps.refreshConfig?.().catch(() => {});
+    if (e.kind !== 'tier_moved') throw e;
+    deps.refreshConfig?.().catch(() => {});
+    if (continuing) throw new RelayError('continuation_invalid', e.status);
+    const to = e.movedTo ?? tier.format;
+    if (to === target.format && !target.route) throw e;
+    try {
+      const reply = await send({ tier: tier.id, provider: to }, expectedModel(tier, to), tier.webSearch, tier.limits);
+      // Never silently: the conversation goes on with another AI (rebuilt from its text and tool calls).
+      return to === target.format ? reply : { ...reply, notice: reply.notice ?? t('credits.tierMovedNotice') };
+    } catch (again) {
+      if (again instanceof RelayError && again.kind === 'tier_moved') deps.refreshConfig?.().catch(() => {});
+      throw again;
+    }
+  }
 }

@@ -1,4 +1,5 @@
 import type { CustomHeader } from './customHeaders';
+import type { RelayPause, RelayServed } from '../credits/types';
 import type { ToolDefinition } from '../agent/types';
 import type { AttachmentInfo } from '../chat/attachments';
 import type { RequestCost } from './cost';
@@ -46,6 +47,16 @@ export type Turn =
       rawModel: string;
       /** Rebuilt from a stream (Gemini): if the provider rejects its raw output, it is resent as text and tool calls. */
       streamed?: boolean;
+      /**
+       * Qutai Credits: what really served this answer (provider, model, tier and the signed route the next request
+       * of the conversation sends back). Kept with the history like the raw output, so never on disk for incognito.
+       */
+      served?: RelayServed;
+      /**
+       * Qutai Credits: an Anthropic answer that paused (`pause_turn`) and is continued with the next request. It is
+       * sent back as its own assistant message, exactly as received, never joined to the one before it.
+       */
+      paused?: boolean;
     }
   | { role: 'tool_results'; results: ToolResult[] };
 
@@ -77,6 +88,10 @@ export type ModelReply = {
    * (pro mode, Qutai's server) sets it itself and it is kept.
    */
   cost?: RequestCost;
+  /** Qutai Credits: what really served the answer (from the relay's headers). */
+  served?: RelayServed;
+  /** Qutai Credits: the answer paused (`stop: 'pause'`) and can be continued with this. */
+  continuation?: RelayPause;
 };
 
 export type ModelRequest = {
@@ -113,6 +128,8 @@ export type ModelRequest = {
     customInstructions?: string;
     /** The memory tools (remember, forget) are offered. */
     memoryTools: boolean;
+    /** Continues the paused answer that ends `turns` (Anthropic `pause_turn`, the relay's signed continuation). */
+    continuation?: string;
   };
 };
 

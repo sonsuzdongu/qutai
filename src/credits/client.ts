@@ -1,12 +1,17 @@
 import { createSseDecoder, type SseEvent } from '../ai/sse';
 import { RelayError, type RelayErrorKind } from './errors';
-import type {
-  CreditsResponse,
-  PublicConfig,
-  RelayRequest,
-  RelaySettlementEvent,
-  RelayStreamErrorEvent,
-  UpstreamError,
+import { TIER_ID } from './tiers';
+import {
+  isRelayProvider,
+  type CreditsResponse,
+  type PublicConfig,
+  type RelayPause,
+  type RelayRequest,
+  type RelayServed,
+  type RelaySettlementEvent,
+  type RelayStreamErrorEvent,
+  type Tier,
+  type UpstreamError,
 } from './types';
 import type { VerifyAnswer, VerifyPurchaseRequest, VerifyPurchaseResponse } from '../purchases/types';
 
@@ -19,7 +24,13 @@ import type { VerifyAnswer, VerifyPurchaseRequest, VerifyPurchaseResponse } from
  * - a stream: the provider's own events, handed on unchanged, then `qutai.error` (the provider's stream was cut)
  *   and always last `qutai.settlement` (what was charged, the new balance); both are kept from the adapters;
  * - not streamed: the provider's JSON, with the charge and balance in `X-Qutai-Charged` / `X-Qutai-Balance`;
- * - an error: `{ error: { code, message, requestId, upstream? } }` (refusals are never charged).
+ * - an error: `{ error: { code, message, requestId, upstream?, tier? } }` (refusals are never charged);
+ * - always: `X-Qutai-Provider` / `X-Qutai-Model` (and on the tier form `X-Qutai-Tier` / `X-Qutai-Route`) before the
+ *   body. They are read before a single event or byte goes to the adapter: an answer in another provider's format
+ *   than the one the request was built in is never handed to the adapter's parser (it is read to its end for the
+ *   charge and refused as `bad_response`);
+ * - a paused Anthropic answer: `qutai.paused` `{ continuation, expiresAt }` before the settlement (streamed), or the
+ *   `X-Qutai-Continuation` / `X-Qutai-Continuation-Expires` headers (JSON).
  */
 
 /** The account's tokens, from the signed-in session (src/account/session.ts). */
@@ -50,11 +61,15 @@ export interface CreditsClientOptions {
   beforeRetry?: (signal: AbortSignal) => Promise<void>;
 }
 
-/** What one relay request cost, from its settlement. */
+/** What one relay request cost, from its settlement, and what served it. */
 export interface Charge {
   /** Micro-credits charged (0 when the request was refused or the settlement didn't say). */
   charged: number;
   balance: number | null;
+  /** From the answer's headers; absent when the server sent none (an older server). */
+  served?: RelayServed;
+  /** The answer paused (Anthropic `pause_turn`) and may be continued with this. */
+  paused?: RelayPause;
 }
 
 export const APP_VERSION_HEADER = 'X-Qutai-App-Version';
@@ -206,18 +221,22 @@ export function createCreditsClient(options: CreditsClientOptions) {
   async function relayStream(body: RelayRequest, signal: AbortSignal, onEvent: (event: SseEvent) => void): Promise<Charge> {
     const res = await post({ ...body, stream: true }, signal);
     if (!res.body) throw new RelayError('bad_response', res.status);
+    const served = servedFrom(res.headers);
     const reader = res.body.getReader();
     const decoder = createSseDecoder();
     let settlement: RelaySettlementEvent | null = null;
     let cut: RelayStreamErrorEvent | null = null;
+    let paused: RelayPause | null = null;
     // An adapter that gives up on the provider's events (its own `error` event, a malformed stream) throws from
     // onEvent: nothing more is handed to it, but the stream is read to its end for the settlement, which follows
-    // at once, so the charge is known.
-    let adapterError: { error: unknown } | null = null;
+    // at once, so the charge is known. An answer in another format than the request's is never handed to it at all.
+    let adapterError: { error: unknown } | null =
+      served && served.provider !== body.provider ? { error: new RelayError('bad_response', 200) } : null;
     const handle = (event: SseEvent) => {
       const kind = event.event.startsWith('qutai.') ? event.event : qutaiType(event.data);
       if (kind === 'qutai.settlement') settlement = parseSettlement(event.data);
       else if (kind === 'qutai.error') cut = parseStreamError(event.data);
+      else if (kind === 'qutai.paused') paused = parsePause(event.data);
       else if (!kind && !adapterError) {
         try {
           onEvent(event);
@@ -239,9 +258,17 @@ export function createCreditsClient(options: CreditsClientOptions) {
       throw new RelayError('stream_lost', 0);
     }
     const s = settlement as RelaySettlementEvent | null;
-    const charge: Charge = { charged: s?.charged ?? 0, balance: s?.balance ?? null };
+    const pause = paused as RelayPause | null;
+    const charge: Charge = {
+      charged: s?.charged ?? 0,
+      balance: s?.balance ?? null,
+      ...(served ? { served } : {}),
+      ...(pause ? { paused: pause } : {}),
+    };
     if (charge.balance !== null) options.onBalance?.(charge.balance);
     const failed = adapterError as { error: unknown } | null;
+    // The answer was in another format than the request's (refused before any event reached the adapter).
+    if (failed?.error instanceof RelayError) throw new RelayError(failed.error.kind, 200, { charged: charge.charged });
     if (failed) throw attachCharge(failed.error, charge.charged);
     const brokenOff = cut as RelayStreamErrorEvent | null;
     if (brokenOff) throw new RelayError(brokenOff.code, 200, { charged: charge.charged });
@@ -255,13 +282,19 @@ export function createCreditsClient(options: CreditsClientOptions) {
     const charged = wholeHeader(res.headers.get('X-Qutai-Charged')) ?? 0;
     const balance = wholeHeader(res.headers.get('X-Qutai-Balance'));
     if (balance !== null) options.onBalance?.(balance);
+    const served = servedFrom(res.headers);
+    const continuation = res.headers.get('X-Qutai-Continuation');
+    const expiresAt = wholeHeader(res.headers.get('X-Qutai-Continuation-Expires'));
+    const paused = continuation && expiresAt !== null ? { continuation, expiresAt } : null;
     let json: T;
     try {
       json = (await res.json()) as T;
     } catch {
       throw new RelayError('bad_response', res.status, { charged });
     }
-    return { json, charge: { charged, balance } };
+    // Another provider's answer than the request was built for: never read by this request's parser.
+    if (served && served.provider !== body.provider) throw new RelayError('bad_response', res.status, { charged });
+    return { json, charge: { charged, balance, ...(served ? { served } : {}), ...(paused ? { paused } : {}) } };
   }
 
   /**
@@ -371,9 +404,12 @@ export async function errorFrom(res: Response): Promise<RelayError> {
   const error = isRecord(body) && isRecord(body.error) ? body.error : {};
   const code = typeof error.code === 'string' ? error.code : '';
   const upstream = isRecord(error.upstream) ? parseUpstream(error.upstream) : undefined;
+  const tier = isRecord(error.tier) ? error.tier : {};
+  const movedTo = isRelayProvider(tier.provider) ? tier.provider : undefined;
   return new RelayError(RelayError.kindFor(code, res.status), res.status, {
     retryAfter,
     upstream,
+    ...(movedTo ? { movedTo } : {}),
     requestId: typeof error.requestId === 'string' ? error.requestId : (res.headers.get('X-Request-Id') ?? undefined),
   });
 }
@@ -414,34 +450,105 @@ export function parseSettlement(data: unknown): RelaySettlementEvent | null {
   return { type: 'qutai.settlement', charged, balance: whole(data.balance), outcome };
 }
 
+/** `qutai.paused` `{ type, continuation, expiresAt }`; null when malformed (the task then stops with the pause note). */
+export function parsePause(data: unknown): RelayPause | null {
+  if (!isRecord(data) || typeof data.continuation !== 'string' || !data.continuation) return null;
+  const expiresAt = whole(data.expiresAt);
+  return expiresAt === null ? null : { continuation: data.continuation, expiresAt };
+}
+
+/** The answer's `X-Qutai-*` headers: what really served it. Null when the server named no provider it can parse. */
+export function servedFrom(headers: Headers): RelayServed | null {
+  const provider = headers.get('X-Qutai-Provider');
+  if (!isRelayProvider(provider)) return null;
+  const model = headers.get('X-Qutai-Model') ?? '';
+  const tier = headers.get('X-Qutai-Tier');
+  const route = headers.get('X-Qutai-Route');
+  return {
+    provider,
+    model: model.slice(0, 200),
+    ...(tier ? { tier: tier.slice(0, 64) } : {}),
+    ...(route ? { route: route.slice(0, 2000) } : {}),
+  };
+}
+
 function parseStreamError(data: unknown): RelayStreamErrorEvent {
   const code = isRecord(data) && data.code === 'upstream_timeout' ? 'upstream_timeout' : 'upstream_error';
   return { type: 'qutai.error', code };
 }
 
 /** `GET /config`, keeping only what is well formed (a model without a provider or id is dropped). */
+function parsePrices(list: unknown) {
+  return Array.isArray(list)
+    ? list.flatMap((p) => {
+        if (!isRecord(p)) return [];
+        const n = (k: string) => whole(p[k]) ?? 0;
+        return [
+          {
+            aboveInputTokens: n('aboveInputTokens'),
+            inputPerMTok: n('inputPerMTok'),
+            outputPerMTok: n('outputPerMTok'),
+            cacheReadPerMTok: n('cacheReadPerMTok'),
+            cacheWritePerMTok: n('cacheWritePerMTok'),
+            thinkingPerMTok: n('thinkingPerMTok'),
+            perSearch: n('perSearch'),
+          },
+        ];
+      })
+    : [];
+}
+
+function parseLimits(value: unknown): Record<string, number> {
+  const limits: Record<string, number> = {};
+  if (isRecord(value)) {
+    for (const [k, v] of Object.entries(value)) {
+      const n = whole(v);
+      if (n !== null && n > 0) limits[k] = n;
+    }
+  }
+  return limits;
+}
+
+/**
+ * `/config` › `tiers`: well-formed ones only (a known format, a valid id, no duplicates), sorted by `order`; exactly
+ * one default (the server's, else the first).
+ */
+export function parseTiers(value: unknown, topLimits: Record<string, number>): Tier[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const tiers = value.flatMap((t, i): Tier[] => {
+    if (!isRecord(t) || typeof t.id !== 'string' || !TIER_ID.test(t.id) || seen.has(t.id) || !isRelayProvider(t.format)) return [];
+    seen.add(t.id);
+    const served = isRecord(t.servedBy) && typeof t.servedBy.provider === 'string' && typeof t.servedBy.model === 'string'
+      ? { provider: t.servedBy.provider.slice(0, 40), model: t.servedBy.model.slice(0, 200) }
+      : null;
+    const approx = whole(t.approxCreditsPerStep);
+    return [
+      {
+        id: t.id,
+        order: whole(t.order) ?? i,
+        default: t.default === true,
+        format: t.format,
+        maxOutputTokens: whole(t.maxOutputTokens) ?? 0,
+        webSearch: t.webSearch === true,
+        limits: { ...topLimits, ...parseLimits(t.limits) },
+        approxCreditsPerStep: approx !== null && approx >= 0 ? approx : null,
+        prices: parsePrices(t.prices),
+        servedBy: served,
+      },
+    ];
+  });
+  tiers.sort((a, b) => a.order - b.order);
+  const def = tiers.find((t) => t.default) ?? tiers[0];
+  return tiers.map((t) => ({ ...t, default: t === def }));
+}
+
 export function parseConfig(value: unknown): PublicConfig {
   if (!isRecord(value)) throw new RelayError('bad_response', 200);
   const models = Array.isArray(value.models)
     ? value.models.flatMap((m) => {
         if (!isRecord(m) || typeof m.provider !== 'string' || typeof m.model !== 'string' || !m.model) return [];
-        const prices = Array.isArray(m.prices)
-          ? m.prices.flatMap((p) => {
-              if (!isRecord(p)) return [];
-              const n = (k: string) => whole(p[k]) ?? 0;
-              return [
-                {
-                  aboveInputTokens: n('aboveInputTokens'),
-                  inputPerMTok: n('inputPerMTok'),
-                  outputPerMTok: n('outputPerMTok'),
-                  cacheReadPerMTok: n('cacheReadPerMTok'),
-                  cacheWritePerMTok: n('cacheWritePerMTok'),
-                  thinkingPerMTok: n('thinkingPerMTok'),
-                  perSearch: n('perSearch'),
-                },
-              ];
-            })
-          : [];
+        const prices = parsePrices(m.prices);
         return [
           {
             provider: m.provider,
@@ -453,13 +560,7 @@ export function parseConfig(value: unknown): PublicConfig {
         ];
       })
     : [];
-  const limits: Record<string, number> = {};
-  if (isRecord(value.limits)) {
-    for (const [k, v] of Object.entries(value.limits)) {
-      const n = whole(v);
-      if (n !== null && n > 0) limits[k] = n;
-    }
-  }
+  const limits = parseLimits(value.limits);
   const maintenance = isRecord(value.maintenance) ? value.maintenance : {};
   const packs = Array.isArray(value.packs)
     ? value.packs.flatMap((p) =>
@@ -471,6 +572,9 @@ export function parseConfig(value: unknown): PublicConfig {
   return {
     packs,
     models,
+    tiers: parseTiers(value.tiers, limits),
+    // An older server has no such field and takes only the direct form.
+    directModels: value.directModels !== false,
     limits,
     minAppVersion: typeof value.minAppVersion === 'string' ? value.minAppVersion : null,
     maintenance: {

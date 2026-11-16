@@ -6,7 +6,7 @@ import { getLanguage, t } from '../i18n';
 import { formatDate, formatNumber } from '../i18n/format';
 import { makeStyles } from '../ui/theme';
 import { dialog } from './Dialog';
-import { creditsText } from '../credits';
+import { creditsText, providerModelName } from '../credits';
 
 /**
  * The approximate cost of an answer or a request (ai/cost.ts) as people read it: "≈ $0.012 · 3.4k tokens", or the
@@ -73,6 +73,8 @@ export function showAnswerBreakdown(c: AnswerCost, conversation: AnswerCost[]) {
   const total = sumCosts(conversation);
   const lines = [
     t('cost.model', { model: modelLabel(c.provider, c.model) }),
+    // Qutai Credits on a tier: the model that really answered (the tier is what was chosen).
+    ...(c.served && c.served.model !== c.model ? [t('cost.servedBy', { model: providerModelName(c.served.model) })] : []),
     t('cost.requests', { n: count(c.requests) }),
     ...usageLines(c.usage),
     ...(c.reported < c.requests ? ['', t('cost.unreported', { missing: c.requests - c.reported, total: c.requests })] : []),

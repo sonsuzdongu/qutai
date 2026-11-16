@@ -50,6 +50,10 @@ function toMessages(turns: Turn[], model: string, replayAs: Wire['replayAs']): M
           ...(r.isError ? { is_error: true } : {}),
         })),
       );
+    } else if (canReplay(turn, replayAs, model) && turn.paused) {
+      // A paused turn (Qutai Credits' pause_turn continuation) goes back as its own message, exactly as received: the
+      // relay checks that the conversation ends with that very turn.
+      messages.push({ role: 'assistant', content: [...(turn.raw as Block[])] });
     } else if (canReplay(turn, replayAs, model)) {
       // Thinking blocks must be sent back exactly as received.
       push('assistant', turn.raw as Block[]);

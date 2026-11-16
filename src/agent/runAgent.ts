@@ -1,6 +1,9 @@
 import { AnswerCost, createAnswerMeter, failedRequestCost } from '../ai/cost';
 import type { CustomHeader } from '../ai/customHeaders';
 import { getProvider } from '../ai/providers';
+import { RelayError } from '../credits/errors';
+import { continueAfterPause } from '../credits/pause';
+import type { RelayPause } from '../credits/types';
 import { droppedImageNote, KEEP_IMAGE_MESSAGES, MAX_SENT_IMAGES } from '../chat/attachments';
 import type { ProviderId, ToolResult, Turn } from '../ai/types';
 import { t } from '../i18n';
@@ -188,9 +191,17 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
 
   const serverSteps = opts.research ? opts.serverLimits?.maxResearchSteps : opts.serverLimits?.maxSteps;
   const maxSteps = serverSteps ?? (opts.research ? MAX_RESEARCH_STEPS : MAX_STEPS);
+  // Qutai Credits: the continuation of the answer that paused in the last step, sent with this one.
+  let continuation: RelayPause | null = null;
+  const pauseEnds = () => {
+    flushSources();
+    onEvent({ type: 'info', icon: 'pause', text: t('credits.pauseStopped') });
+  };
   for (let step = 0; step < maxSteps; step++) {
     await pauseWhileBackgrounded();
     if (signal.aborted) return;
+    // The continuation ran out while the task waited (in the background, for the user): it can't go on.
+    if (continuation && continuation.expiresAt <= Date.now()) return pauseEnds();
 
     let streamed = false;
     setBackgroundStep(t('background.thinking'));
@@ -218,6 +229,7 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
           ...(prompt.memory ? { memory: prompt.memory.text } : {}),
           ...(opts.customInstructions?.trim() ? { customInstructions: opts.customInstructions } : {}),
           memoryTools: !!opts.memory,
+          ...(continuation ? { continuation: continuation.continuation } : {}),
         },
         maxOutputTokens: opts.maxOutputTokens,
         endpoint: opts.endpoint,
@@ -234,18 +246,27 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     } catch (e) {
       // A failed request may still have been billed; its usage is unknown (Qutai Credits says what it charged).
       meter.add(failedRequestCost(e));
+      // The server didn't take the continuation (expired, or the turn or options differ): the task ends as it did
+      // before continuations, with the note on how to go on.
+      if (continuation && e instanceof RelayError && e.kind === 'continuation_invalid' && !signal.aborted) return pauseEnds();
       throw e;
     }
+    continuation = null;
     meter.add(reply.cost);
     noteBackgroundProgress();
+    const pausedOnCredits = reply.stop === 'pause' && opts.provider === 'qutai';
     turns.push({
       role: 'assistant',
       text: reply.text,
       toolCalls: reply.toolCalls,
       raw: reply.raw,
       rawProvider: provider.id,
-      rawModel: opts.model,
+      // Qutai Credits: the model that really served it (on a tier, the server picks it), so its raw output goes back
+      // only to that model.
+      rawModel: reply.served?.model || opts.model,
       ...(reply.streamed ? { streamed: true } : {}),
+      ...(reply.served ? { served: reply.served } : {}),
+      ...(pausedOnCredits ? { paused: true } : {}),
     });
     if (reply.notice) onEvent({ type: 'info', text: reply.notice });
     if (reply.searchWidget) searchWidget = reply.searchWidget;
@@ -258,12 +279,13 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     );
     // After streaming, the final text replaces what was shown (an empty one removes it).
     if (reply.text || streamed) onEvent({ type: 'text', text: reply.text });
-    // A long web search was paused by the provider; sending the reply back continues it. Qutai's relay doesn't take a
-    // request that ends with the model's own turn, so with Qutai Credits the task stops here and says how to go on.
-    if (reply.stop === 'pause' && opts.provider === 'qutai') {
-      flushSources();
-      onEvent({ type: 'info', icon: 'pause', text: t('credits.pauseStopped') });
-      return;
+    // A long web search was paused by the provider; sending the reply back continues it. Qutai's relay takes a request
+    // that ends with the model's own turn only with the continuation it signed for that turn: the next step sends it.
+    // Without one (or past the step limit, or expired) the task stops here and says how to go on.
+    if (pausedOnCredits) {
+      continuation = continueAfterPause(reply.continuation, step, maxSteps, Date.now());
+      if (continuation) continue;
+      return pauseEnds();
     }
     if (reply.stop === 'pause') continue;
 

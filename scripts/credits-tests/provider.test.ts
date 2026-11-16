@@ -63,7 +63,9 @@ test('Anthropic through the relay: the conversation only, the reply parsed as a 
   assert.equal(reply.stop, 'tool_use');
   assert.equal(reply.usage?.input, 1200);
   assert.equal(reply.usage?.output, 40);
-  assert.deepEqual(reply.cost, { usage: reply.usage, credits: 2_600, source: 'server' });
+  assert.deepEqual(reply.cost, { usage: reply.usage, credits: 2_600, source: 'server', served: { provider: 'anthropic', model: 'claude-sonnet-5-5' } });
+  // An older server (no X-Qutai-* headers, the direct form): what served it is the model asked for.
+  assert.deepEqual(reply.served, { provider: 'anthropic', model: 'claude-sonnet-5-5' });
 
   const [req] = server.relayRequests();
   assert.deepEqual(req.body, {

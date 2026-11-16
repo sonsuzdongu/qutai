@@ -15,10 +15,19 @@ export function isRelayProvider(value: unknown): value is RelayProvider {
   return typeof value === 'string' && (RELAY_PROVIDERS as readonly string[]).includes(value);
 }
 
-/** `POST /relay` body. Unknown fields are refused by the server. */
+/**
+ * `POST /relay` body. Unknown fields are refused by the server. Two forms (backend/README.md › Relay › Request):
+ * the tier form (`tier`, `provider` = the format `input` is built in, optional `route`; no `model`), used whenever the
+ * server's `/config` lists tiers, and the older direct form (`provider` + `model`) for a server without them.
+ */
 export interface RelayRequest {
   provider: RelayProvider;
-  model: string;
+  /** Direct form only. */
+  model?: string;
+  /** Tier form: a `/config` › `tiers[].id`. */
+  tier?: string;
+  /** Tier form: `X-Qutai-Route` of this conversation's last answer on the same tier and provider, if any. */
+  route?: string;
   /** SHA-256 (lowercase hex) of the agent profile JSON (`AGENT_PROFILE_ID`). */
   profile: string;
   /** 0-based step of the agent loop for this user message. */
@@ -28,6 +37,27 @@ export interface RelayRequest {
   context: { memory?: string; customInstructions?: string };
   /** The conversation in the provider's own format (Anthropic `messages`, OpenAI / Gemini `input`). */
   input: unknown[];
+  /** Only to continue an Anthropic `pause_turn`: the continuation the paused answer carried. */
+  continuation?: string;
+}
+
+/**
+ * What really served an answer, from its headers (they arrive before the body): `X-Qutai-Provider` (whose raw output
+ * the answer is), `X-Qutai-Model`, and on the tier form `X-Qutai-Tier` and `X-Qutai-Route` (opaque, signed by the
+ * server, sent back with the next request of the same conversation and tier).
+ */
+export interface RelayServed {
+  provider: RelayProvider;
+  model: string;
+  tier?: string;
+  route?: string;
+}
+
+/** A paused Anthropic answer's continuation (`event: qutai.paused`, or the `X-Qutai-Continuation` headers). */
+export interface RelayPause {
+  continuation: string;
+  /** Unix ms. */
+  expiresAt: number;
 }
 
 export type RelayOutcome = 'completed' | 'upstream_error' | 'upstream_timeout' | 'client_closed';
@@ -71,10 +101,36 @@ export interface AgentProfile {
 export interface PublicConfig {
   packs: CreditPack[];
   models: AllowedModel[];
+  /**
+   * Credit-mode tiers in their display order (empty from a server without tiers: then the direct form and `models`).
+   * Only enabled tiers whose model is allowed and priced are listed.
+   */
+  tiers: Tier[];
+  /** Whether the server still takes the direct `{ provider, model }` form (`model_tiers.acceptDirectModels`). */
+  directModels: boolean;
   /** maxRequestBytes, maxImages, maxSteps, maxResearchSteps, maxMemoryChars, maxCustomInstructionsChars. */
   limits: Record<string, number>;
   minAppVersion: string | null;
   maintenance: { enabled: boolean; message: string | null };
+}
+
+/** `GET /config` › `tiers[]` (backend/README.md › Relay › Tiers). */
+export interface Tier {
+  /** Stable id; the app names the tier from it in its own texts. */
+  id: string;
+  order: number;
+  default: boolean;
+  /** The provider format a new conversation's input is built in. */
+  format: RelayProvider;
+  maxOutputTokens: number;
+  webSearch: boolean;
+  /** The tier's own limits (maxSteps, maxImages, …), already merged with the top-level ones by the server. */
+  limits: Record<string, number>;
+  /** Micro-credits of one reference step on the tier's current model: a hint, never a price. */
+  approxCreditsPerStep: number | null;
+  prices: CreditPriceTier[];
+  /** Which model serves the tier right now (for a details view only; never choose anything by it). */
+  servedBy: { provider: string; model: string } | null;
 }
 
 export interface CreditPack {
@@ -146,7 +202,11 @@ export type RelayErrorCode =
   | 'upstream_rejected'
   | 'upstream_unavailable'
   | 'upstream_error'
-  | 'upstream_timeout';
+  | 'upstream_timeout'
+  | 'tier_unknown'
+  | 'tier_unavailable'
+  | 'tier_moved'
+  | 'continuation_invalid';
 
 export interface UpstreamError {
   status: number;

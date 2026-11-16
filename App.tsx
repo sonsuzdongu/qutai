@@ -43,11 +43,12 @@ import {
 import { AttachmentPreview } from './src/components/AttachmentViews';
 import { PdfReaderHost } from './src/components/PdfReaderHost';
 import { geminiStreamingAvailable } from './src/ai/gemini';
-import { creditsStore, creditsReady, refreshCredits, useCreditsState } from './src/credits';
+import { creditsStore, creditsReady, isPreTierChoice, modelTag, refreshCredits, useCreditsState } from './src/credits';
 import { creditsLabel } from './src/components/AnswerCost';
 import { nothingSent, RelayError } from './src/credits/errors';
-import { offeredModels } from './src/credits/rules';
-import type { PublicConfig } from './src/credits/types';
+import { limitsFor, offeredModels } from './src/credits/rules';
+import { resolveTier, tierTarget, usesTiers } from './src/credits/tiers';
+import type { PublicConfig, Tier } from './src/credits/types';
 import { accountSession, useAccountState } from './src/account';
 import { lostQutaiAccount } from './src/credits/gate';
 import type { ProviderId } from './src/ai/types';
@@ -1019,16 +1020,34 @@ function BrowserApp({
     const target = requestTarget(settings, provider, useChoice ? choice.model : undefined);
     // Qutai Credits: the server's configuration (limits, and which provider's format the model takes).
     let credits: PublicConfig | null = null;
+    let tier: Tier | null = null;
     // The message as typed, to hand back to the input if Qutai Credits refuses it before anything was sent.
     const userTurn = chat.turns[chat.turns.length - 1];
     try {
       if (provider === 'qutai') {
         credits = await creditsStore.config();
-        // The model saved earlier is no longer offered: the server's first one (the relay refuses others).
-        const offered = offeredModels(credits);
-        if (!offered.some((m) => m.model === target.model) && offered[0]) target.model = offered[0].model;
+        if (usesTiers(credits)) {
+          // Tiers: the tier the choice means now. A choice saved before tiers (a provider model) is stored as its
+          // tier from now on; a tier id the server doesn't list (switched off) keeps its place but uses the default.
+          tier = resolveTier(credits, target.model, modelTag);
+          if (tier) {
+            if (isPreTierChoice(target.model, credits)) {
+              if (useChoice) chat.setModel({ provider: 'qutai', model: tier.id });
+              else void onChangeSettings({ ...settingsRef.current, models: { ...settingsRef.current.models, qutai: tier.id } });
+            }
+            target.model = tier.id;
+          }
+        } else {
+          // The model saved earlier is no longer offered: the server's first one (the relay refuses others).
+          const offered = offeredModels(credits);
+          if (!offered.some((m) => m.model === target.model) && offered[0]) target.model = offered[0].model;
+        }
       }
-      const underlying = credits?.models.find((m) => m.model === target.model)?.provider ?? provider;
+      // Which provider's format the answer comes in (Gemini streams only with its setting).
+      const underlying = tier
+        ? tierTarget(tier, chat.turns).format
+        : (credits?.models.find((m) => m.model === target.model)?.provider ?? provider);
+      const limits = credits ? limitsFor(credits, tier) : null;
       await runAgent({
         provider,
         apiKey: target.apiKey,
@@ -1050,13 +1069,14 @@ function BrowserApp({
         research,
         // Gemini streams only with its experimental setting, and not after the API rejected a streamed reply.
         stream: underlying !== 'gemini' || (settings.geminiStreaming && geminiStreamingAvailable()),
-        ...(credits
+        ...(limits
           ? {
+              // The tier's own limits on a server with tiers.
               serverLimits: {
-                maxSteps: credits.limits.maxSteps,
-                maxResearchSteps: credits.limits.maxResearchSteps,
-                maxMemoryChars: credits.limits.maxMemoryChars,
-                maxImages: credits.limits.maxImages,
+                maxSteps: limits.maxSteps,
+                maxResearchSteps: limits.maxResearchSteps,
+                maxMemoryChars: limits.maxMemoryChars,
+                maxImages: limits.maxImages,
               },
             }
           : {}),

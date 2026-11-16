@@ -2,10 +2,20 @@ import { useEffect } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { useAccountState } from '../account';
 import { appVersion } from '../device/appVersion';
-import { creditsModelName, creditsStore, creditsText, refreshCredits, setCreditsConsent, useCreditsConsent, useCreditsState } from '../credits';
+import {
+  creditsStore,
+  creditsText,
+  modelTag,
+  providerModelName,
+  refreshCredits,
+  setCreditsConsent,
+  useCreditsConsent,
+  useCreditsState,
+} from '../credits';
 import { compareVersions } from '../credits/client';
 import { offeredModels } from '../credits/rules';
-import type { AllowedModel } from '../credits/types';
+import { resolveTier, tierAbout, tierCostLine, tierName, usesTiers } from '../credits/tiers';
+import type { AllowedModel, PublicConfig } from '../credits/types';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { Radio } from '../ui/Radio';
@@ -21,10 +31,31 @@ function priceLine(m: AllowedModel): string | null {
   return t('credits.modelPrice', { input: creditsText(base.inputPerMTok), output: creditsText(base.outputPerMTok) });
 }
 
+const PROVIDER_NAMES: Record<string, string> = { anthropic: 'Anthropic', openai: 'OpenAI', gemini: 'Google Gemini' };
+
+/**
+ * The tiers' details (not the menu): which model serves each one right now (`servedBy`, which the server may change
+ * at any time), its step limit and its approximate cost per step. The privacy disclosure names the providers anyway.
+ */
+export function showTierDetails(config: PublicConfig) {
+  const lines = config.tiers.map((tier) => {
+    const served = tier.servedBy
+      ? t('tier.servedBy', {
+          model: providerModelName(tier.servedBy.model),
+          provider: PROVIDER_NAMES[tier.servedBy.provider] ?? tier.servedBy.provider,
+        })
+      : t('tier.servedByUnknown');
+    const steps = tier.limits.maxSteps ? t('tier.steps', { n: tier.limits.maxSteps }) : null;
+    return [tierName(tier.id), served, steps, tierCostLine(tier)].filter(Boolean).join('\n');
+  });
+  dialog.alert(t('tier.detailsTitle'), [...lines, t('tier.detailsNote')].join('\n\n'));
+}
+
 /**
  * Settings › Assistant (and setup's AI step) with "Qutai Credits" picked: no key, the account pays. Shows whether it
- * can be used (signed in, the disclosure accepted), the balance, where the data goes, and the models the server offers
- * with their credit price.
+ * can be used (signed in, the disclosure accepted), the balance, where the data goes, and the tiers the server offers
+ * (what each is for, about how many credits a step takes, a details view with the model behind each), or on a server
+ * without tiers the models it offers with their credit price.
  */
 export function CreditsFields({
   model,
@@ -42,14 +73,20 @@ export function CreditsFields({
   const consented = useCreditsConsent();
   const state = useCreditsState();
   const signedIn = account.status === 'signedIn';
-  const models = offeredModels(state.config);
+  const tiers = usesTiers(state.config);
+  const models = tiers ? [] : offeredModels(state.config);
 
   useEffect(() => {
     refreshCredits();
   }, [signedIn]);
 
-  // The model saved before isn't offered (any more): the first one the server offers is used.
-  const selected = models.some((m) => m.model === model) ? model : (models[0]?.model ?? '');
+  // The model saved before isn't offered (any more): the first one the server offers is used. With tiers, the tier the
+  // saved choice maps to (a model saved before tiers included; the default one otherwise).
+  const selected = tiers
+    ? (resolveTier(state.config!, model, modelTag)?.id ?? '')
+    : models.some((m) => m.model === model)
+      ? model
+      : (models[0]?.model ?? '');
   const tooOld = !!state.config?.minAppVersion && compareVersions(appVersion().version, state.config.minAppVersion) < 0;
 
   return (
@@ -114,7 +151,44 @@ export function CreditsFields({
           </Text>
         </Pressable>
       )}
-      {state.config && models.length === 0 && <Text style={styles.notice}>{t('credits.noModels')}</Text>}
+      {state.config && !tiers && models.length === 0 && <Text style={styles.notice}>{t('credits.noModels')}</Text>}
+      {tiers &&
+        state.config!.tiers.map((tier) => {
+          const about = tierAbout(tier.id);
+          const cost = tierCostLine(tier);
+          const on = selected === tier.id;
+          return (
+            <Pressable
+              key={tier.id}
+              style={styles.option}
+              onPress={() => onModel(tier.id)}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={[tierName(tier.id), about, cost].filter(Boolean).join('. ')}
+            >
+              <Radio selected={on} />
+              <View style={styles.optionBody}>
+                <Text style={styles.optionText}>{tierName(tier.id)}</Text>
+                {about && <Text style={styles.detail}>{about}</Text>}
+                {cost && <Text style={styles.detail}>{cost}</Text>}
+              </View>
+            </Pressable>
+          );
+        })}
+      {tiers && (
+        <>
+          <Text style={styles.hint}>{t('tier.costHint')}</Text>
+          <Pressable
+            onPress={() => showTierDetails(state.config!)}
+            hitSlop={6}
+            accessibilityRole="button"
+            style={styles.detailsLink}
+          >
+            <Icon name="info" size={16} color={palette.tintText} />
+            <Text style={styles.link}>{t('tier.details')}</Text>
+          </Pressable>
+        </>
+      )}
       {models.map((m) => {
         const price = priceLine(m);
         return (
@@ -127,7 +201,7 @@ export function CreditsFields({
           >
             <Radio selected={selected === m.model} />
             <View style={styles.optionBody}>
-              <Text style={styles.optionText}>{creditsModelName(m.model)}</Text>
+              <Text style={styles.optionText}>{providerModelName(m.model)}</Text>
               {price && <Text style={styles.detail}>{price}</Text>}
             </View>
           </Pressable>
@@ -151,6 +225,7 @@ const useStyles = makeStyles((c) => ({
   optionBody: { flex: 1 },
   detail: { color: c.textSecondary, fontSize: 12, marginTop: 2 },
   loading: { alignSelf: 'flex-start', marginVertical: 8 },
+  detailsLink: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4 },
   signIn: {
     flexDirection: 'row',
     alignItems: 'center',
