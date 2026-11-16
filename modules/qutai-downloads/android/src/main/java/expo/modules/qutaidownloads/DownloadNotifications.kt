@@ -89,7 +89,7 @@ object DownloadNotifications {
     val total = active.sumOf { maxOf(it.total, 0) }
     val percent = if (known && total > 0) ((received * 100) / total).toInt().coerceIn(0, 100) else -1
     val speed = running.sumOf { it.speed }
-    val title = if (active.size == 1) active[0].name else r.getString(R.string.qutai_dl_downloading_many, active.size)
+    val title = if (active.size == 1) active[0].name else r.resources.getQuantityString(R.plurals.qutai_dl_downloading_many, active.size, active.size)
     val parts = mutableListOf<String>()
     when {
       running.isEmpty() && active.any { it.state == DlState.WAITING } -> parts += r.getString(R.string.qutai_dl_waiting)
@@ -109,7 +109,7 @@ object DownloadNotifications {
       }
     }
     val queued = active.count { it.state == DlState.QUEUED }
-    if (queued > 0 && running.isNotEmpty()) parts += r.getString(R.string.qutai_dl_queued, queued)
+    if (queued > 0 && running.isNotEmpty()) parts += r.resources.getQuantityString(R.plurals.qutai_dl_queued, queued, queued)
     val pausable = active.any { it.resumable }
     return NotificationCompat.Builder(context, CHANNEL)
       .setSmallIcon(android.R.drawable.stat_sys_download)
@@ -164,7 +164,7 @@ object DownloadNotifications {
     val r = res(context)
     val n = NotificationCompat.Builder(context, CHANNEL)
       .setSmallIcon(android.R.drawable.stat_sys_download_done)
-      .setContentTitle(if (paused.size == 1) paused[0].name else r.getString(R.string.qutai_dl_paused_many, paused.size))
+      .setContentTitle(if (paused.size == 1) paused[0].name else r.resources.getQuantityString(R.plurals.qutai_dl_paused_many, paused.size, paused.size))
       .setContentText(r.getString(R.string.qutai_dl_paused))
       .setOnlyAlertOnce(true)
       .setSilent(true)
@@ -247,7 +247,7 @@ object DownloadNotifications {
         val count = synchronized(shownDone) { shownDone.size }
         nm.notify(GROUP_SUMMARY_ID, NotificationCompat.Builder(context, DONE_CHANNEL)
           .setSmallIcon(android.R.drawable.stat_sys_download_done)
-          .setContentTitle(r.getString(R.string.qutai_dl_done_many, count))
+          .setContentTitle(r.resources.getQuantityString(R.plurals.qutai_dl_done_many, count, count))
           .setContentIntent(openDownloads(context, GROUP_SUMMARY_ID))
           .setGroup(GROUP)
           .setGroupSummary(true)

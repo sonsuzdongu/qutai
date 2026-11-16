@@ -2,21 +2,33 @@
 <resources>
   <string name="qutai_dl_channel">Süren indirmeler</string>
   <string name="qutai_dl_done_channel">Biten indirmeler</string>
-  <string name="qutai_dl_downloading_many">%1$d dosya indiriliyor</string>
+  <plurals name="qutai_dl_downloading_many">
+    <item quantity="one">%1$d dosya indiriliyor</item>
+    <item quantity="other">%1$d dosya indiriliyor</item>
+  </plurals>
   <string name="qutai_dl_starting">Başlıyor…</string>
   <string name="qutai_dl_of">%1$s / %2$s</string>
   <string name="qutai_dl_speed">%1$s/sn</string>
   <string name="qutai_dl_left_min">%1$d dk kaldı</string>
   <string name="qutai_dl_left_sec">%1$d sn kaldı</string>
   <string name="qutai_dl_paused">Duraklatıldı</string>
-  <string name="qutai_dl_paused_many">%1$d indirme duraklatıldı</string>
+  <plurals name="qutai_dl_paused_many">
+    <item quantity="one">%1$d indirme duraklatıldı</item>
+    <item quantity="other">%1$d indirme duraklatıldı</item>
+  </plurals>
   <string name="qutai_dl_waiting">Bağlantı bekleniyor</string>
-  <string name="qutai_dl_queued">%1$d sırada</string>
+  <plurals name="qutai_dl_queued">
+    <item quantity="one">%1$d sırada</item>
+    <item quantity="other">%1$d sırada</item>
+  </plurals>
   <string name="qutai_dl_pause">Duraklat</string>
   <string name="qutai_dl_resume">Sürdür</string>
   <string name="qutai_dl_cancel">İptal</string>
   <string name="qutai_dl_done">İndirme tamamlandı</string>
-  <string name="qutai_dl_done_many">%1$d indirme tamamlandı</string>
+  <plurals name="qutai_dl_done_many">
+    <item quantity="one">%1$d indirme tamamlandı</item>
+    <item quantity="other">%1$d indirme tamamlandı</item>
+  </plurals>
   <string name="qutai_dl_failed">İndirme başarısız oldu</string>
   <string name="qutai_dl_tap_open">Açmak için dokunun</string>
 </resources>
