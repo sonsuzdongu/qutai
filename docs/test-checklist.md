@@ -26,7 +26,7 @@ Sunucu: `cd backend && API_PORT=8000 npm run dev -w @qutai/api` (tünel 8000 por
 - [ ] Çıkış yap, yeniden gir: bakiye korunuyor
 - [ ] Hesabı sil: kullanıcı panelde silinmiş görünüyor
 - [ ] Panel: kullanıcı askıya alınınca uygulama "askıya alındı" diyor; geri açınca çalışıyor
-- [ ] Web aramalı uzun Anthropic isteği (duraklatılan arama): görev notla bitiyor mu (bilinen eksik)
+- [ ] Web aramalı uzun Anthropic isteği (duraklatılan arama): görev notla bitmeden kendiliğinden devam ediyor (10. bölüm)
 - [ ] Gemini 4 Hydrogen seçilince reddediliyor (bilinen eksik: sunucu fiyat tablosunda yok)
 
 Sonraya kalanlar (bugün denenemez): gerçek Apple / Google girişi, satın alma ve iade (RevenueCat),
@@ -153,12 +153,6 @@ Pro mod + test girişi açık APK (`EXPO_PUBLIC_PRO_MODE=on`, API adresi, `EXPO_
 - [ ] Normal APK'da kurulumun yapay zekâ adımı eskisi gibi (sağlayıcı sekmeleri, Qutai yok, oturum açma yok)
 - [ ] Normal APK'da gizlilik ve koşullar açık kaynak sürümün metinleri (pro metinleri değil); güncelleme sonrası yalnızca bir kez yeniden kabul isteniyor (4. bölüm)
 
-## Bulunan sorunlar
-
-Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.
-
-- …
-
 ## 10. Sunucu: kademeler, duraklatma devamı, birlikte çalıştırma
 
 Önce: `cd backend && npm run migrate:local`, panelde `allowed_models` listesine Claude Opus 5.5'i ekleyin,
@@ -177,3 +171,19 @@ Uygulama kademe gönderdikten sonra (yeni APK gerekir):
 - [ ] Konuşma sürerken `standard` kademesi başka modele çevrilince konuşma kendi modelinde kalıyor, yeni konuşma yeni modeli alıyor
 - [ ] `standard` bir Gemini modeline çevrilince eski Anthropic konuşması bir kez yeniden kurulup devam ediyor
 - [ ] Web aramalı uzun Anthropic görevi duraklayınca notla bitmek yerine devam ediyor
+- [ ] Ayarlar › Asistan › Qutai Kredileri: model yerine üç seçenek görünüyor (Qutai Hızlı / Qutai / Qutai Pro), her birinde ne için olduğu ve "adım başına yaklaşık … kredi"; varsayılan olarak "Qutai" seçili
+- [ ] "Bunlar hangi yapay zekâ modellerini kullanıyor" bağlantısı her kademenin şu anki modelini, adım sınırını ve Qutai'nin bunu değiştirebileceğini gösteriyor
+- [ ] Panel başlığının altındaki menüde (bu konuşma için) aynı üç kademe çıkıyor; seçim yalnızca o konuşmaya uygulanıyor, başlıkta kademenin adı yazıyor
+- [ ] Kurulumda Qutai seçilince aynı kademe listesi görünüyor
+- [ ] Eski APK'dan güncelleme: önceden seçilmiş Qutai modeli (ör. Claude Haiku 5.5) uygun kademeye dönüşüyor (Haiku → Hızlı), eski konuşmalar kaybolmuyor
+- [ ] Yanıtın altındaki kredi satırına dokununca kademenin adı ve "Yanıtlayan: <model>" görünüyor; "Yapay zekâya gönderilenler"de de aynısı
+- [ ] Panelden bir kademe kapatılınca (`enabled: false`) "geçici olarak kullanılamıyor" mesajı çıkıyor ve mesaj giriş kutusuna geri geliyor
+- [ ] Gizli sekmede kademeli konuşma: uygulama kapanıp açılınca hiçbir şey kalmıyor
+- [ ] Duraklayan aramada görevi durdurunca normal "durduruldu" notu çıkıyor, kredi bir kez düşüyor
+- [ ] Türkçe ve İngilizce, açık ve koyu temada kademe listesi ve ayrıntılar düzgün görünüyor; ekran okuyucu her seçeneği adı, açıklaması ve maliyetiyle okuyor
+
+## Bulunan sorunlar
+
+Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.
+
+- …

@@ -22,6 +22,13 @@ npm run test:credits:server   # against a local API Worker (QUTAI_TEST_API_URL, 
   read, the charge as the cost), Gemini's non-streaming fallback and thought-signature fallback, raw output never
   replayed across own-key and credits, checks before sending, charges of failed requests, credits in the answer's
   figures, formatting.
+- `tiers.test.ts`: credit-mode tiers and paused answers: `/config` tiers parsed (order, default, limits, malformed
+  ones dropped), an older server's fallback, names and the approximate cost in English and Turkish, choices saved
+  before tiers mapped, the tier form of the request, the `X-Qutai-*` headers, the route kept and sent back, a tier
+  switch, `tier_moved` retried once (not twice) in the other format without the other provider's raw output,
+  `tier_unknown` / `tier_unavailable`, an answer in the wrong format, a paused Anthropic answer continued (streamed and
+  not, paused twice, each charge once), and the ways a continuation ends (none, expired, step limit,
+  `continuation_invalid`, a tier move, a stop).
 - `safe-area-root.test.ts`: regression for the crash when Qutai was picked during setup: App's tree starts with the
   `SafeAreaProvider`, which holds setup and the browser (dialogs read the insets from it).
 - `gate.test.ts`: Qutai Credits only while signed in (`src/credits/gate.ts`) and setup's Qutai step

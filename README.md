@@ -572,11 +572,12 @@ contacts the server for it.
 | Only while signed in: the rules, the prompt to sign in or choose another provider | `src/credits/gate.ts`, `App.tsx` (send, account changes), `AiProviderFields.tsx` |
 | The pro-mode privacy policy and terms (own legal version; the open-source build keeps its own), and setup's legal summary | `src/legal/proDocuments.ts`, `documents.ts` |
 | Buying credits: the screen, the flow (store, `POST /purchases/verify`, retries, purchases kept until credited), the store interface | `src/components/BuyCredits.tsx`, `src/purchases/` |
+| Tiers: names and lines, mapping a stored choice to a tier, the format / model / route of the next request, paused answers continued | `src/credits/tiers.ts`, `pause.ts`, `provider.ts`, `src/agent/runAgent.ts` |
 
 What the user sees: picking Qutai Credits first shows what changes about where data goes (conversation, page
 content, attachments, memory and custom instructions pass through Qutai's server, which doesn't store or log them)
-with "Use Qutai Credits" / "Not now". The provider's page shows the balance, the models the server offers
-(`GET /config`) with their credit prices, and "Buy credits" (below). Under each
+with "Use Qutai Credits" / "Not now". The provider's page shows the balance, the server's **tiers** (below), and
+"Buy credits" (below). Under each
 answer: what the server charged ("0.42 credits · 1.5k tokens"), never a dollar figure; the same per request in
 "What was sent to the AI", whose hint then says requests pass through Qutai's server. The balance is under the
 panel's title while Qutai Credits is in use, and in Settings › Account › Qutai Credits with the ledger's latest
@@ -585,12 +586,51 @@ offered, too large, step limit, suspended, maintenance, unavailable, update need
 message; when the first request of a message is refused before anything reached the AI, the message goes back into
 the input.
 
+**Tiers** (owner decision, 16 Nov 2026; `backend/README.md` › Relay › Tiers). In credit mode the customer picks a
+tier, never a provider model: **Qutai Fast** ("Qutai Hızlı": everyday questions, fewest credits), **Qutai** (most
+tasks, the server's default) and **Qutai Pro** (hard, many-step work, more credits), listed from `GET /config` ›
+`tiers` in the server's order with one line each and "about N credits per step" from `approxCreditsPerStep` (one
+reference step on the tier's current model, so a hint; the hint under the list says a task takes one or more steps
+and the real charge is under each answer). This is the list in Settings › Assistant, setup's AI step and the
+per-conversation menu under the panel title; the header shows the tier's name. "Which AI models these use" (in
+Settings and the menu, not in the list itself) shows the model serving each tier now (`servedBy`), its step limit,
+and that Qutai may change it. A tier id the app has no text for is shown as "Qutai <Id>". Own-key providers keep
+their model lists exactly as before.
+
+- **Stored choices:** the tier id is stored where the Qutai model was (Settings' model for `qutai`, a conversation's
+  own choice). A provider model saved before tiers reads as the tier that model serves now, else by what it was in
+  the own-key lists (fastest → `fast`, recommended → `standard`, strongest → `pro`), else the default tier, and is
+  rewritten as that tier when the next message is sent; the conversation and its history stay. A tier the server no
+  longer lists uses the default without overwriting the choice.
+- **Requests:** `{ tier, provider: <format>, route? }`, no `model`. A new conversation (or one switched to another
+  tier) is built in the tier's `format` without a route. The answer's `X-Qutai-Provider` / `-Model` / `-Tier` /
+  `-Route` are read before any event reaches the adapter (an answer in another format than the request's is never
+  parsed: `bad_response`, its charge kept) and kept on the assistant turn, so the next request of the conversation
+  on the same tier goes in that provider's format with that route, and the turn's raw output is tied to the model
+  that really made it (it is replayed only to that model, the rule own-key mode uses). Kept with the history, so
+  never on disk for incognito conversations; backups leave raw output and routes out.
+- **`409 tier_moved`:** rebuilt for `error.tier.provider` with that provider's adapter (the neutral history, no other
+  provider's raw output), sent once more without a route, with a note under the answer that the conversation goes
+  on with another AI; a second move in a row is an error ("send it again"). **`tier_unknown`**: `/config` is read
+  again (past the platform's HTTP cache, which otherwise keeps it the minute the server allows) and the message asks to pick a Qutai model again; **`tier_unavailable`**: "temporarily unavailable, try
+  again or pick another"; both put the message back into the input (nothing was sent).
+- The tier's own `limits` (steps, images, memory, custom instructions) replace the top-level ones.
+- Costs and logs: the answer's cost and "What was sent to the AI" name the tier; their details add "Answered by
+  <model>".
+- **An older server** (no `tiers` in `/config`): the direct form with the model list and its prices, as before.
+
 **Rules from the server that change behaviour in credit mode:** the step limit is the server's
 (`limits.maxSteps` / `maxResearchSteps`; it adds the last-step note itself); the memory section is shortened to
 `limits.maxMemoryChars` (older memories left out first, as when they don't fit the usual budget) and attached images
-to `limits.maxImages` minus one screenshot; web search only for models the server allows it for; an Anthropic web
-search the provider pauses (`pause_turn`) ends the task with a note to send "continue", because the relay refuses a
-request that ends with the model's own turn.
+to `limits.maxImages` minus one screenshot; web search only for models (tiers) the server allows it for. An
+Anthropic web search the provider pauses (`pause_turn`) is continued at once as the next step: the relay signs a
+continuation (`qutai.paused`, or the `X-Qutai-Continuation` headers), and the app sends the same request with step + 1,
+the same options and route, the continuation, and the paused turn appended exactly as received as its own assistant
+message (never joined to the one before: the relay compares the last message with the paused turn). It may pause
+again; each part is charged and counted once in the answer's total, and stopping during it is an ordinary stop. When
+there is no continuation (a turn the server can't sign), it expired (15 minutes, e.g. while the task waited in the
+background), the next step would pass the step limit, or the relay answers `continuation_invalid`, the task ends with
+the note to send "continue".
 
 #### Setup in pro mode
 
