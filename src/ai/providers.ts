@@ -1,5 +1,6 @@
 import type { CustomHeader } from './customHeaders';
-import { recordRequest } from './audit';
+import { recordRequest, recordRequestCost } from './audit';
+import { priceRequest } from './cost';
 import { anthropic } from './anthropic';
 import { custom } from './custom';
 import { gemini } from './gemini';
@@ -10,14 +11,20 @@ import type { Provider, ProviderId } from './types';
 
 /**
  * The adapters are reached only through here, and every call is recorded for "What was sent to the AI"
- * before it goes out. Recording never throws, so it can't fail a request.
+ * before it goes out. Recording never throws, so it can't fail a request. The reply's usage is priced here
+ * (cost.ts; a cost the adapter already set, such as a server's charge, is kept) and added to the log entry.
  */
 function recorded(provider: Provider): Provider {
   // Over the adapter rather than a copy of it, so labels that follow the app's language stay getters.
   const wrapped: Provider = Object.create(provider);
-  wrapped.call = (req) => {
-    recordRequest(provider.id, req);
-    return provider.call(req);
+  wrapped.call = async (req) => {
+    const at = Date.now();
+    const id = recordRequest(provider.id, req);
+    const reply = await provider.call(req);
+    const cost = reply.cost ?? (reply.usage ? priceRequest(provider.id, req.model, reply.usage, at) : undefined);
+    if (!cost) return reply;
+    if (id) recordRequestCost(id, cost);
+    return { ...reply, cost };
   };
   return wrapped;
 }

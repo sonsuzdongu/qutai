@@ -1756,4 +1756,33 @@ export const en = {
     'Your approximate position is sent to the phone’s address service (Google’s on most Android phones) to look up the place name. Only the text in the field is kept, and only when you continue.',
   'profile.locationPrivacyIos':
     'Your approximate position is sent to Apple’s address service to look up the place name. Only the text in the field is kept, and only when you continue.',
+  // Approximate cost of answers (ai/cost.ts, components/AnswerCost.tsx).
+  'cost.line': '≈ {cost} · {tokens}',
+  'cost.tokens': '{n} tokens',
+  'cost.kTokens': '{n}k tokens',
+  'cost.a11y': 'Approximate cost {cost}, {tokens}',
+  'cost.a11yHint': 'Shows what the answer used and how the figure is worked out',
+  'cost.title': 'Approximate cost',
+  'cost.titleTokens': 'Tokens used',
+  'cost.model': 'Model: {model}',
+  'cost.input': 'Input: {n}',
+  'cost.cacheRead': 'Read from the cache: {n}',
+  'cost.cacheWrite': 'Written to the cache: {n}',
+  'cost.cacheWriteLong': 'Written to the cache (long-lived): {n}',
+  'cost.output': 'Output: {n}',
+  'cost.thinking': 'of which thinking: {n}',
+  'cost.searches': 'Web searches: {n}',
+  'cost.requests': 'Requests to the AI: {n}',
+  'cost.unreported':
+    '{missing} of {total} requests reported no usage (stopped or failed), so the real figure is higher.',
+  'cost.estimate':
+    'An estimate from list prices as of {date}. Your provider’s invoice is what counts: discounts, batch pricing, free allowances and taxes are not known to the app.',
+  'cost.reported': 'The cost OpenRouter reported for these requests. Your invoice is what counts.',
+  'cost.server': 'What Qutai charged for these requests.',
+  'cost.noPrice': 'No price is known for this model, so only its tokens are shown.',
+  'cost.conversation': 'This conversation so far: {figure}',
+  'cost.dayTotal': '≈ {cost} this day',
+  'settings.showCost': 'Show approximate cost',
+  'settings.showCostHint':
+    'Under answers and in “What was sent to the AI”: the tokens used and an estimate from list prices (as of {date}). Your provider’s invoice is what counts.',
 } as const;

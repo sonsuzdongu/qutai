@@ -1,3 +1,4 @@
+import { parseRequestCost, type RequestCost } from '../ai/cost';
 import type { ProviderId, ToolImage } from '../ai/types';
 import { Db, getDb } from './db';
 
@@ -10,6 +11,9 @@ import { Db, getDb } from './db';
  * never copied to disk a second time. Requests from incognito conversations (or ones that touched an
  * incognito tab) stay in memory only, and once a conversation touches one, its earlier entries are
  * removed from disk, as its saved chat is. Not part of the encrypted backup.
+ *
+ * Each entry also gets the tokens the provider reported for the request and its approximate cost (`cost`: numbers,
+ * the price table's date and where the figure came from; no content), once the reply is in.
  */
 
 export type SentKind =
@@ -72,6 +76,8 @@ export type SentRequest = {
   incognito: boolean;
   /** Parallel to items; absent once dropped from memory or for entries read from disk. */
   content?: SentContent[];
+  /** What the request used and approximately cost; absent until the reply is in, or when none was reported. */
+  cost?: RequestCost;
 };
 
 const KEEP_DAYS = 30;
@@ -88,6 +94,8 @@ let session: SentRequest[] = [];
 const listeners = new Set<() => void>();
 /** Conversations whose entries were already removed from disk after they touched an incognito tab. */
 const purged = new Set<string>();
+/** Writes of entries still on their way to disk, so their cost is written after them. */
+const writing = new Map<string, Promise<void>>();
 let counter = 0;
 
 export function newSentId(at: number): string {
@@ -148,8 +156,23 @@ export function recordSent(entry: SentRequest): void {
   }
   // Cleared since (a new chat): it may write again, and be purged again if it touches incognito later.
   purged.delete(entry.conversation);
-  getDb()
+  const write = getDb()
     .then((db) => insertSent(db, entry))
+    .catch(() => {})
+    .finally(() => writing.delete(entry.id));
+  writing.set(entry.id, write);
+}
+
+/** Adds a request's usage and cost to its entry (in memory, and on disk unless it is incognito). Never throws. */
+export function setSentCost(id: string, cost: RequestCost): void {
+  const entry = session.find((e) => e.id === id);
+  if (!entry) return;
+  entry.cost = cost;
+  notify();
+  if (entry.incognito) return;
+  (writing.get(id) ?? Promise.resolve())
+    .then(() => getDb())
+    .then((db) => db.runAsync('UPDATE ai_requests SET cost = ? WHERE id = ?', [JSON.stringify(cost), id]))
     .catch(() => {});
 }
 
@@ -192,6 +215,7 @@ type Row = {
   web_search: number;
   research: number;
   endpoint: string | null;
+  cost: string | null;
 };
 
 function fromRow(r: Row): SentRequest {
@@ -199,6 +223,10 @@ function fromRow(r: Row): SentRequest {
   try {
     const parsed = JSON.parse(r.items);
     if (Array.isArray(parsed)) items = parsed;
+  } catch {}
+  let cost: RequestCost | undefined;
+  try {
+    cost = r.cost ? parseRequestCost(JSON.parse(r.cost)) : undefined;
   } catch {}
   return {
     id: r.id,
@@ -216,6 +244,7 @@ function fromRow(r: Row): SentRequest {
     webSearch: r.web_search === 1,
     research: r.research === 1,
     incognito: false,
+    ...(cost ? { cost } : {}),
   };
 }
 

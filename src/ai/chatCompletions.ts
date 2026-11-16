@@ -17,7 +17,18 @@ export type ChatProviderConfig = {
   endpoint: (req: ModelRequest) => { url: string; headers: Record<string, string> };
   /** The output limit for a request (undefined: the server's default) and the field it goes in. */
   maxTokens: (req: ModelRequest) => { field: 'max_tokens' | 'max_completion_tokens'; value: number } | undefined;
+  /**
+   * Ask for usage at the end of a stream with `stream_options.include_usage` (compatible servers send none
+   * otherwise; OpenRouter always sends it and documents the option as having no effect, so it leaves it out).
+   */
+  streamUsage?: boolean;
 };
+
+/** The server refused the stream_options field: the request is repeated without it, and it isn't sent again. */
+function rejectsStreamOptions(e: unknown): boolean {
+  const status = e instanceof ApiError ? e.status : e instanceof ChatStreamError ? e.status : undefined;
+  return (status === 400 || status === 422) && /stream_options|include_usage/i.test((e as Error).message);
+}
 
 /**
  * The API said the model can't take tools. Neither OpenRouter nor the compatible servers document one wording,
@@ -37,6 +48,7 @@ function rejectsImages(e: unknown, req: ModelRequest): boolean {
 }
 
 export function createChatCompletionsCall(config: ChatProviderConfig) {
+  let streamUsage = !!config.streamUsage;
   async function request(req: ModelRequest, stream: boolean): Promise<ChatResult> {
     const { url, headers } = config.endpoint(req);
     const body = buildChatBody({
@@ -47,6 +59,7 @@ export function createChatCompletionsCall(config: ChatProviderConfig) {
       provider: config.id,
       stream,
       maxTokens: config.maxTokens(req),
+      streamUsage,
     });
     const onText = req.onText;
     if (!stream || !onText) return fromChatResponse(await postJson<unknown>(url, headers, body, req.signal));
@@ -65,10 +78,15 @@ export function createChatCompletionsCall(config: ChatProviderConfig) {
    */
   return async function call(req: ModelRequest): Promise<ModelReply> {
     const stream = !!req.onText;
+    const reply = (result: ChatResult) => toChatReply(result, config.id);
     try {
-      return toChatReply(await request(req, stream));
+      return reply(await request(req, stream));
     } catch (e) {
       if (req.signal.aborted) throw e;
+      if (stream && streamUsage && rejectsStreamOptions(e)) {
+        streamUsage = false;
+        return reply(await request(req, stream));
+      }
       if (rejectsTools(e)) throw new ApiError(t('error.noToolSupport'), 400);
       if (rejectsImages(e, req)) throw new ApiError(t('error.noImageSupport'), 400);
       const status = e instanceof ApiError ? e.status : e instanceof ChatStreamError ? e.status : undefined;
@@ -76,9 +94,9 @@ export function createChatCompletionsCall(config: ChatProviderConfig) {
         req.turns.forEach((turn: Turn) => {
           if (turn.role === 'assistant' && canReplay(turn, config.id, req.model)) turn.raw = null;
         });
-        return toChatReply(await request(req, stream));
+        return reply(await request(req, stream));
       }
-      if (stream && !(e instanceof ApiError) && !(e instanceof TypeError)) return toChatReply(await request(req, false));
+      if (stream && !(e instanceof ApiError) && !(e instanceof TypeError)) return reply(await request(req, false));
       throw e;
     }
   };

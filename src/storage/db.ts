@@ -158,6 +158,8 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
   `ALTER TABLE memories ADD COLUMN sensitive INTEGER NOT NULL DEFAULT 0;
    ALTER TABLE memories ADD COLUMN label TEXT;`,
   markIdNumbersHidden,
+  // "What was sent to the AI": the tokens each request used and its approximate cost (JSON numbers, ai/cost.ts).
+  `ALTER TABLE ai_requests ADD COLUMN cost TEXT;`,
 ];
 
 /**

@@ -47,5 +47,6 @@ export const custom: Provider = {
       return { url: `${req.endpoint}/chat/completions`, headers: customHeaders(req.apiKey, req.extraHeaders) };
     },
     maxTokens: () => undefined,
+    streamUsage: true,
   }),
 };

@@ -19,7 +19,9 @@
  */
 
 import type { ToolDefinition } from '../agent/types';
-import { canReplay, Citation, ModelReply, ProviderId, StopReason, ToolCall, Turn } from './types';
+import { chatUsage } from './usage';
+// Types marked as such, so Node can run this file with its type stripping (scripts/cost-tests/).
+import { canReplay, type Citation, type ModelReply, type ProviderId, type StopReason, type ToolCall, type Turn } from './types';
 
 type Obj = Record<string, unknown>;
 
@@ -155,6 +157,8 @@ export type ChatBodyOptions = {
   stream: boolean;
   /** Output limit, and the field it goes in ('max_tokens' is the one most compatible servers know). */
   maxTokens?: { field: 'max_tokens' | 'max_completion_tokens'; value: number };
+  /** Ask for the usage chunk at the end of a stream (OpenAI's `stream_options.include_usage`). */
+  streamUsage?: boolean;
 };
 
 export function buildChatBody(o: ChatBodyOptions): Obj {
@@ -173,6 +177,7 @@ export function buildChatBody(o: ChatBodyOptions): Obj {
       : {}),
     ...(o.maxTokens ? { [o.maxTokens.field]: o.maxTokens.value } : {}),
     ...(o.stream ? { stream: true } : {}),
+    ...(o.stream && o.streamUsage ? { stream_options: { include_usage: true } } : {}),
   };
 }
 
@@ -330,8 +335,11 @@ function parseArguments(raw: string): Record<string, unknown> {
   }
 }
 
-/** The result to the app's reply; the raw output is the assistant message without annotations or refusal. */
-export function toChatReply(result: ChatResult): ModelReply {
+/**
+ * The result to the app's reply; the raw output is the assistant message without annotations or refusal. `provider`
+ * decides how the usage is read (only OpenRouter's reported cost is used).
+ */
+export function toChatReply(result: ChatResult, provider: ProviderId = 'custom'): ModelReply {
   const { message, finishReason } = result;
   if (finishReason === 'error') throw new ChatStreamError('The provider reported an error');
   const toolCalls: ToolCall[] = (message.tool_calls ?? []).map((c) => ({
@@ -355,6 +363,7 @@ export function toChatReply(result: ChatResult): ModelReply {
     ...(message.tool_calls ? { tool_calls: message.tool_calls } : {}),
     ...(message.reasoning_details ? { reasoning_details: message.reasoning_details } : {}),
   };
+  const usage = chatUsage(result.usage, provider);
   return {
     text: (message.content ?? '').trim() || (message.refusal ?? '').trim(),
     toolCalls,
@@ -362,5 +371,6 @@ export function toChatReply(result: ChatResult): ModelReply {
     raw,
     citations,
     searches: [],
+    ...(usage ? { usage } : {}),
   };
 }

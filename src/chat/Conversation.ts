@@ -1,3 +1,4 @@
+import type { AnswerCost } from '../ai/cost';
 import type { ProviderId, Turn } from '../ai/types';
 import type { Source } from '../agent/types';
 import type { ChatItem } from '../components/AssistantPanel';
@@ -215,6 +216,22 @@ export class Conversation {
         ? this.items.filter((item) => item.id !== id)
         : this.items.map((item) => (item.id === id ? { id, kind: 'assistant', text: text ?? item.text } : item));
     this.onChange();
+  }
+
+  /**
+   * Puts a task's cost on its last answer: the last answer, question, error or note after the message that started
+   * it (`afterId`). Nothing happens when the conversation was cleared meanwhile or the task showed nothing.
+   */
+  addCost(cost: AnswerCost, afterId: string) {
+    const start = this.items.findIndex((item) => item.id === afterId);
+    if (start === -1) return;
+    for (let i = this.items.length - 1; i > start; i--) {
+      const item = this.items[i];
+      if (item.kind !== 'assistant' && item.kind !== 'choices' && item.kind !== 'error' && item.kind !== 'info') continue;
+      this.items = this.items.map((it, j) => (j === i ? { ...it, cost } : it));
+      this.onChange();
+      return;
+    }
   }
 
   setUnseen(outcome: 'done' | 'failed' | 'needsAnswer' | null) {

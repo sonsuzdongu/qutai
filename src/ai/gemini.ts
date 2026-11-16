@@ -1,6 +1,7 @@
 import { ApiError, postJson, postSse } from './http';
 import { t } from '../i18n';
 import { createGeminiAccumulator, GeminiInteraction, GeminiStep, GeminiStreamError } from './geminiStream';
+import { geminiUsage } from './usage';
 import { Citation, canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
 
 const INTERACTIONS_URL = 'https://generativelanguage.googleapis.com/v1beta/interactions';
@@ -194,7 +195,9 @@ function toReply(res: Interaction): ModelReply {
   let stop: StopReason = toolCalls.length > 0 ? 'tool_use' : 'end';
   if (res.status === 'incomplete') stop = 'max_tokens';
 
-  return { text: texts.join('\n\n'), toolCalls, stop, raw: steps, citations, searches, searchWidget };
+  // A stream's usage arrives with interaction.completed, which the accumulator keeps.
+  const usage = geminiUsage(res.usage);
+  return { text: texts.join('\n\n'), toolCalls, stop, raw: steps, citations, searches, searchWidget, ...(usage ? { usage } : {}) };
 }
 
 export const gemini: Provider = {

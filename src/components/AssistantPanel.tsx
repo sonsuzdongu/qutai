@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, Fragment, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   BackHandler,
@@ -34,6 +34,8 @@ import { Icon, IconName } from '../ui/Icon';
 import { GradientText } from '../ui/BrandGradient';
 import { QutaiMark } from '../ui/QutaiMark';
 import type { Source } from '../agent/types';
+import type { AnswerCost } from '../ai/cost';
+import { AnswerCostLine } from './AnswerCost';
 import type { Suggestion } from '../agent/pageSuggestions';
 import type { CallOffer } from '../device/phone';
 import type { SmsOffer } from '../device/sms';
@@ -101,6 +103,8 @@ export type ChatItem = {
   share?: ShareOffer;
   /** For 'image': its file was removed to keep the conversation's edited images under the limit. */
   expired?: boolean;
+  /** The last item of a task: the tokens and approximate cost of all the task's requests (numbers only). */
+  cost?: AnswerCost;
 };
 
 /** Voice input: the settings it follows and where its messages go. */
@@ -162,6 +166,8 @@ type Props = {
   onOpenSettings: () => void;
   /** Opens "What was sent to the AI" for this conversation. */
   onShowSent: () => void;
+  /** Show the approximate cost under answers (Settings › Assistant). */
+  showCost: boolean;
   onMessageAction: (action: MessageAction, text: string) => void;
   /** A link in an answer was tapped. */
   onOpenLink: (url: string) => void;
@@ -237,6 +243,7 @@ export function AssistantPanel({
   onNewChat,
   onOpenSettings,
   onShowSent,
+  showCost,
   onMessageAction,
   onOpenLink,
   onCall,
@@ -538,24 +545,31 @@ export function AssistantPanel({
                   />
                 )}
                 {items.map((item, index) => (
-                  <ChatRow
-                    key={item.id}
-                    item={item}
-                    onOpenAttachment={onOpenAttachment}
-                    reading={speaking && readingId === item.id}
-                    selectable={selectableId === item.id}
-                    onAction={(action) => messageAction(action, item)}
-                    onMenu={(full) => setMenu({ item, full })}
-                    onOpenLink={onOpenLink}
-                    onCall={onCall}
-                    onSms={onSms}
-                    onWhatsApp={onWhatsApp}
-                    onFile={onFile}
-                    onImage={onImage}
-                    onShare={onShare}
-                    onOpenSource={onOpenSource}
-                    onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
-                  />
+                  <Fragment key={item.id}>
+                    <ChatRow
+                      item={item}
+                      onOpenAttachment={onOpenAttachment}
+                      reading={speaking && readingId === item.id}
+                      selectable={selectableId === item.id}
+                      onAction={(action) => messageAction(action, item)}
+                      onMenu={(full) => setMenu({ item, full })}
+                      onOpenLink={onOpenLink}
+                      onCall={onCall}
+                      onSms={onSms}
+                      onWhatsApp={onWhatsApp}
+                      onFile={onFile}
+                      onImage={onImage}
+                      onShare={onShare}
+                      onOpenSource={onOpenSource}
+                      onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
+                    />
+                    {showCost && item.cost ? (
+                      <AnswerCostLine
+                        cost={item.cost}
+                        conversation={() => items.flatMap((i) => (i.cost ? [i.cost] : []))}
+                      />
+                    ) : null}
+                  </Fragment>
                 ))}
               </ScrollView>
 

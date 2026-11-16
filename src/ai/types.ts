@@ -1,6 +1,8 @@
 import type { CustomHeader } from './customHeaders';
 import type { ToolDefinition } from '../agent/types';
 import type { AttachmentInfo } from '../chat/attachments';
+import type { RequestCost } from './cost';
+import type { Usage } from './usage';
 
 export type ProviderId = 'anthropic' | 'openai' | 'gemini' | 'openrouter' | 'custom';
 
@@ -67,6 +69,13 @@ export type ModelReply = {
   streamed?: boolean;
   /** A one-line note for the user about how the request went (e.g. streaming was switched off). */
   notice?: string;
+  /** Tokens the provider reported for this request (usage.ts); absent when it reported none. */
+  usage?: Usage;
+  /**
+   * The request's cost, set by providers.ts from `usage` and the price table. An adapter that knows the real charge
+   * (pro mode, Qutai's server) sets it itself and it is kept.
+   */
+  cost?: RequestCost;
 };
 
 export type ModelRequest = {

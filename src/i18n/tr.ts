@@ -1764,4 +1764,33 @@ export const tr: Record<keyof typeof en, string> = {
     'Yer adını bulmak için yaklaşık konumunuz telefonun adres hizmetine (çoğu Android telefonda Google’ınkine) gönderilir. Yalnızca alandaki metin, siz devam ettiğinizde saklanır.',
   'profile.locationPrivacyIos':
     'Yer adını bulmak için yaklaşık konumunuz Apple’ın adres hizmetine gönderilir. Yalnızca alandaki metin, siz devam ettiğinizde saklanır.',
+  // Approximate cost of answers (ai/cost.ts, components/AnswerCost.tsx).
+  'cost.line': '≈ {cost} · {tokens}',
+  'cost.tokens': '{n} token',
+  'cost.kTokens': '{n} bin token',
+  'cost.a11y': 'Yaklaşık maliyet {cost}, {tokens}',
+  'cost.a11yHint': 'Yanıtın ne kullandığını ve rakamın nasıl hesaplandığını gösterir',
+  'cost.title': 'Yaklaşık maliyet',
+  'cost.titleTokens': 'Kullanılan token',
+  'cost.model': 'Model: {model}',
+  'cost.input': 'Girdi: {n}',
+  'cost.cacheRead': 'Önbellekten okunan: {n}',
+  'cost.cacheWrite': 'Önbelleğe yazılan: {n}',
+  'cost.cacheWriteLong': 'Önbelleğe yazılan (uzun süreli): {n}',
+  'cost.output': 'Çıktı: {n}',
+  'cost.thinking': 'bunun düşünme kısmı: {n}',
+  'cost.searches': 'Web aramaları: {n}',
+  'cost.requests': 'Yapay zekâya giden istekler: {n}',
+  'cost.unreported':
+    '{total} isteğin {missing} tanesi kullanım bildirmedi (durduruldu ya da başarısız oldu); gerçek rakam daha yüksektir.',
+  'cost.estimate':
+    '{date} tarihli liste fiyatlarından bir tahmindir. Geçerli olan sağlayıcınızın faturasıdır: indirimler, toplu işlem fiyatları, ücretsiz kotalar ve vergiler uygulama tarafından bilinmez.',
+  'cost.reported': 'Bu istekler için OpenRouter’ın bildirdiği maliyet. Geçerli olan faturanızdır.',
+  'cost.server': 'Qutai’nin bu istekler için aldığı ücret.',
+  'cost.noPrice': 'Bu modelin fiyatı bilinmiyor; bu yüzden yalnızca token sayısı gösteriliyor.',
+  'cost.conversation': 'Bu sohbette şimdiye kadar: {figure}',
+  'cost.dayTotal': 'Bu gün ≈ {cost}',
+  'settings.showCost': 'Yaklaşık maliyeti göster',
+  'settings.showCostHint':
+    'Yanıtların altında ve “Yapay zekâya gönderilenler”de: kullanılan token ve liste fiyatlarından ({date} itibarıyla) bir tahmin. Geçerli olan sağlayıcınızın faturasıdır.',
 };

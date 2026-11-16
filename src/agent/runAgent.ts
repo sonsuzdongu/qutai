@@ -1,3 +1,4 @@
+import { AnswerCost, createAnswerMeter } from '../ai/cost';
 import type { CustomHeader } from '../ai/customHeaders';
 import { getProvider } from '../ai/providers';
 import { droppedImageNote, KEEP_IMAGE_MESSAGES, MAX_SENT_IMAGES } from '../chat/attachments';
@@ -83,9 +84,24 @@ export type AgentOptions = ToolContext & {
   customInstructions?: string;
   /** For the "What was sent to the AI" log; read before each request, since both can change during a task. */
   audit: { conversation: () => string; incognito: () => boolean };
+  /**
+   * When the task ends (however it ends): the tokens and approximate cost of all its requests, or null when none
+   * went out (ai/cost.ts).
+   */
+  onCost?: (cost: AnswerCost | null) => void;
 };
 
+/** Runs one task: the agent's steps, then the cost of all its requests. */
 export async function runAgent(opts: AgentOptions): Promise<void> {
+  const meter = createAnswerMeter(opts.provider, opts.model);
+  try {
+    await runSteps(opts, meter);
+  } finally {
+    opts.onCost?.(meter.result());
+  }
+}
+
+async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswerMeter>): Promise<void> {
   const { turns, signal, onEvent } = opts;
   const provider = getProvider(opts.provider);
 
@@ -167,33 +183,42 @@ export async function runAgent(opts: AgentOptions): Promise<void> {
     let streamed = false;
     setBackgroundStep(t('background.thinking'));
     const prompt = await systemPrompt(opts);
-    const reply = await provider.call({
-      apiKey: opts.apiKey,
-      model: opts.model,
-      system: prompt.text + (step === maxSteps - 1 ? LAST_STEP_PROMPT : ''),
-      tools: opts.memory ? [...TOOLS, ...MEMORY_TOOLS] : TOOLS,
-      webSearch: !!opts.webSearch,
-      research: opts.research,
-      onText: opts.stream
-        ? (delta) => {
-            streamed = true;
-            noteBackgroundProgress();
-            onEvent({ type: 'text_delta', text: delta });
-          }
-        : undefined,
-      turns: await withAttachedImages(compactHistory(turns)),
-      maxOutputTokens: opts.maxOutputTokens,
-      endpoint: opts.endpoint,
-      extraHeaders: opts.extraHeaders,
-      signal,
-      audit: {
-        conversation: opts.audit.conversation(),
-        incognito: opts.audit.incognito(),
-        host: siteKey(opts.browser.getTab(opts.agentTab.id)?.url ?? ''),
-        resultHosts,
-        memory: prompt.memory,
-      },
-    });
+    const sendTurns = await withAttachedImages(compactHistory(turns));
+    let reply: Awaited<ReturnType<typeof provider.call>>;
+    try {
+      reply = await provider.call({
+        apiKey: opts.apiKey,
+        model: opts.model,
+        system: prompt.text + (step === maxSteps - 1 ? LAST_STEP_PROMPT : ''),
+        tools: opts.memory ? [...TOOLS, ...MEMORY_TOOLS] : TOOLS,
+        webSearch: !!opts.webSearch,
+        research: opts.research,
+        onText: opts.stream
+          ? (delta) => {
+              streamed = true;
+              noteBackgroundProgress();
+              onEvent({ type: 'text_delta', text: delta });
+            }
+          : undefined,
+        turns: sendTurns,
+        maxOutputTokens: opts.maxOutputTokens,
+        endpoint: opts.endpoint,
+        extraHeaders: opts.extraHeaders,
+        signal,
+        audit: {
+          conversation: opts.audit.conversation(),
+          incognito: opts.audit.incognito(),
+          host: siteKey(opts.browser.getTab(opts.agentTab.id)?.url ?? ''),
+          resultHosts,
+          memory: prompt.memory,
+        },
+      });
+    } catch (e) {
+      // A failed request may still have been billed; its usage is unknown.
+      meter.add(undefined);
+      throw e;
+    }
+    meter.add(reply.cost);
     noteBackgroundProgress();
     turns.push({
       role: 'assistant',

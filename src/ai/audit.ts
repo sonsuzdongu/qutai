@@ -1,4 +1,5 @@
-import { newSentId, recordSent, SentContent, SentItem, SentKind } from '../storage/sentLog';
+import { newSentId, recordSent, setSentCost, SentContent, SentItem, SentKind } from '../storage/sentLog';
+import type { RequestCost } from './cost';
 import { endpointHost } from './customEndpoint';
 import type { ModelRequest, ProviderId, ToolImage, Turn } from './types';
 
@@ -128,10 +129,20 @@ function build(providerId: ProviderId, req: ModelRequest) {
  * Records what a request sends, for "What was sent to the AI". Keeps references to the strings being
  * sent (no copies) and writes to disk in the background. Never throws.
  */
-export function recordRequest(providerId: ProviderId, req: ModelRequest): void {
+export function recordRequest(providerId: ProviderId, req: ModelRequest): string | null {
   try {
-    recordSent(build(providerId, req));
+    const entry = build(providerId, req);
+    recordSent(entry);
+    return entry.id;
   } catch {
     // The log must never stop a request.
+    return null;
   }
+}
+
+/** Adds what the request used and cost to its entry, once the reply is in. Never throws. */
+export function recordRequestCost(id: string, cost: RequestCost): void {
+  try {
+    setSentCost(id, cost);
+  } catch {}
 }

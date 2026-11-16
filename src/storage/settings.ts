@@ -80,6 +80,8 @@ export type Settings = {
    * the other providers always stream.
    */
   geminiStreaming: boolean;
+  /** Under answers and in "What was sent to the AI": tokens used and the approximate cost (ai/cost.ts). On by default. */
+  showCost: boolean;
   /** Reader mode colours: following the app's appearance, light, dark or sepia. */
   readerTheme: ReaderTheme;
   readerFont: ReaderFont;
@@ -142,6 +144,7 @@ export const DEFAULT_SETTINGS: Settings = {
   backgroundTasks: false,
   notifyTaskDone: true,
   geminiStreaming: false,
+  showCost: true,
   readerTheme: 'auto',
   readerFont: 'serif',
   readerEasyReading: false,
@@ -183,6 +186,7 @@ const KEYS = {
   backgroundTasks: 'background_tasks',
   notifyTaskDone: 'notify_task_done',
   geminiStreaming: 'gemini_streaming',
+  showCost: 'show_cost',
   readerTheme: 'reader_theme',
   readerFont: 'reader_font',
   readerEasyReading: 'reader_easy_reading',
@@ -259,6 +263,7 @@ export async function loadSettings(): Promise<Settings> {
     backgroundTasks,
     notifyTaskDone,
     geminiStreaming,
+    showCost,
     readerTheme,
     readerFont,
     readerEasyReading,
@@ -302,6 +307,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.backgroundTasks),
     get(KEYS.notifyTaskDone),
     get(KEYS.geminiStreaming),
+    get(KEYS.showCost),
     get(KEYS.readerTheme),
     get(KEYS.readerFont),
     get(KEYS.readerEasyReading),
@@ -352,6 +358,7 @@ export async function loadSettings(): Promise<Settings> {
     backgroundTasks: backgroundTasks === 'true',
     notifyTaskDone: notifyTaskDone !== 'false',
     geminiStreaming: geminiStreaming === 'true',
+    showCost: showCost !== 'false',
     readerTheme: READER_THEMES.includes(readerTheme as ReaderTheme) ? (readerTheme as ReaderTheme) : 'auto',
     readerFont: READER_FONTS.includes(readerFont as ReaderFont) ? (readerFont as ReaderFont) : 'serif',
     readerEasyReading: readerEasyReading === 'true',
@@ -410,6 +417,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.backgroundTasks, String(settings.backgroundTasks)),
     set(KEYS.notifyTaskDone, String(settings.notifyTaskDone)),
     set(KEYS.geminiStreaming, String(settings.geminiStreaming)),
+    set(KEYS.showCost, String(settings.showCost)),
     set(KEYS.readerTheme, settings.readerTheme),
     set(KEYS.readerFont, settings.readerFont),
     set(KEYS.readerEasyReading, String(settings.readerEasyReading)),

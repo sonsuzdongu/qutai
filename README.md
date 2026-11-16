@@ -47,6 +47,49 @@ copied to disk again, and location coordinates are never kept. Incognito convers
 incognito tab, stay in memory only and their earlier entries are removed from disk. Clear browsing data has its own
 item for it.
 
+### Approximate cost
+
+Under each answer a small line shows what the task used and, when the price is known, about what it cost:
+"≈ $0.012 · 3.4k tokens". Tapping it shows the model, the requests the task made (an agent task makes one per step),
+the tokens by kind (input, read from the cache, written to the cache, output with its thinking part), web searches,
+where the figure comes from and the conversation's total so far. "What was sent to the AI" shows the same per
+request, with a breakdown in the request's page and a total per day. Settings › Assistant › "Show approximate cost"
+hides it (on by default).
+
+**It is an estimate.** Own-key mode multiplies the tokens the provider reported for each request by the list prices
+in `src/ai/prices.ts` (standard tier, read from the providers' pricing pages; the date is shown as "prices as of").
+The provider's invoice is what counts: discounts, batch pricing, free allowances (Google's 5,000 free searches a
+month), taxes and credits are not known to the app. Where the app has no price, it shows tokens only and never a
+guess: the custom endpoint, models missing from the table, and OpenRouter unless OpenRouter reports the cost itself
+(it does with every response, and then its figure is shown, with the provider's charge added when the request used
+your own provider key at OpenRouter). Requests that were stopped or failed report nothing, and the breakdown says
+how many.
+
+How it works: each adapter reads the provider's usage (`src/ai/usage.ts`: Anthropic's `usage` from the response or
+from `message_start` and `message_delta` in a stream, cache writes split by lifetime, web search requests; OpenAI's
+Responses `usage` with cached, cache-write and reasoning tokens and one search per `web_search_call`; Gemini's
+interaction `usage`, thinking added to output at the output price, Google Search queries from `grounding_tool_count`;
+Chat Completions `usage` for OpenRouter and the custom endpoint, which is asked for it in a stream with
+`stream_options.include_usage` and repeated without it if the server refuses the field). The provider wrapper in
+`src/ai/providers.ts` prices each reply (`src/ai/cost.ts`: whole micro-dollars per million tokens times tokens, in
+BigInt, rounded once to nano-dollars; prompt-size tiers such as Claude Haiku 5.5 over 100,000 tokens or OpenAI over
+272,000, and dated price changes) and the agent adds up a task's requests.
+
+What is stored: with the conversation, the last item of each task gets the numbers (provider and model ids, request
+counts, token counts by kind, the cost in nano-dollars, the price table's date and where the figure came from), no
+content. It goes where the conversation goes: saved on the phone, in an encrypted backup that includes chats and
+restored with it, never written for incognito conversations. "What was sent to the AI" keeps the same numbers per
+request in its SQLite outline for its 30 days (memory only for incognito).
+
+Updating the prices: open `src/ai/prices.ts`, read each provider's pricing page (the URL is on every row), change
+or add rows (micro-dollars per million tokens: $2.50 = `usd('2.50')`; `above` for a prompt-size tier, `from` /
+`until` for an announced change), set `read` on the rows you checked and `PRICES_AS_OF` to that date, and run
+`npm run test:cost`. A model you can't find a published price for stays out of the table.
+
+Pro mode: requests that go through Qutai's server will show the server's own charge instead. The seam is ready (a
+reply that already carries a `cost` with `source: 'server'` is kept by the wrapper, and the breakdown has its text);
+reading the server's settlement event is a later job.
+
 Hidden memories: national ID and passport numbers, and any memory the user locks on the Memory screen, are never
 sent to the AI provider by value. The prompt names them only ("[id] national ID number (saved; value hidden)"); the
 model asks for one with `type`'s `memory` parameter, the app asks the user the first time each hidden value goes to a
@@ -535,6 +578,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/content/filterLists.ts`, `src/content/blocking.ts` | Ad and tracker blocking: filter lists reduced to domains (pure parser and matcher), their download, updates and per-platform compilation; `src/content/adBlock.ts` is the built-in script blocker |
 | `src/backup/` | The encrypted backup file: what goes in it, the encryption, and merging or replacing on import |
 | `src/ai/audit.ts`, `src/storage/sentLog.ts` | "What was sent to the AI": the entry recorded for each request and how long it is kept |
+| `src/ai/usage.ts`, `src/ai/prices.ts`, `src/ai/cost.ts` | Approximate cost: each provider's usage, the dated price table, the cost maths (tests: `npm run test:cost`) |
 | `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`, `view_attachment`, `read_pdf`), images (`edit_image`, `upload_image`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, `bookmarks`, `settings` (Qutai's appearance and browsing preferences), and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |

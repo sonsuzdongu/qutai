@@ -10,6 +10,7 @@ import {
   MemoryCategory,
   sensitiveReason,
 } from '../agent/memory';
+import { parseAnswerCost } from '../ai/cost';
 import { normalizeBaseUrl } from '../ai/customEndpoint';
 import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES } from '../browser/reader';
@@ -34,7 +35,7 @@ import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } fr
  *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…", openrouter?: "…", custom?: "…" },   // only when the user opted in
  *   customHeaders?: [{ name, value }],   // the custom endpoint's extra headers: secrets, so only with apiKeys' opt-in
  *   tabs?: { tabs: [{ url, title, uid, groupId? }], activeIndex, groups: [{ id, name, color, collapsed? }] },
- *   chats?: [{ key, items: [...], turns: [...] }],   // key: a tab's uid or "group:<id>"
+ *   chats?: [{ key, items: [...], turns: [...] }],   // key: a tab's uid or "group:<id>"; an item's cost: numbers only
  *   activity?: [{ at, host, url, tool, description, ok }]
  * }
  *
@@ -535,6 +536,9 @@ function parseChatItem(v: unknown): Record<string, unknown> | undefined {
       ...(Number.isFinite(v.file.rows) ? { rows: Math.max(0, Math.floor(v.file.rows as number)) } : {}),
     };
   }
+  // The tokens and approximate cost of a task's requests: numbers, the provider and model ids (ai/cost.ts).
+  const cost = parseAnswerCost(v.cost);
+  if (cost) item.cost = cost;
   // Left out: Google's search widget (HTML from the file would be shown in a web view) and "still writing".
   return item;
 }

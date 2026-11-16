@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LAST_STEP_PROMPT, RESEARCH_PROMPT, WEB_SEARCH_PROMPT } from '../agent/runAgent';
 import { customInstructionsPrompt, SYSTEM_PROMPT } from '../agent/systemPrompt';
 import { MEMORY_TOOLS, TOOLS } from '../agent/tools';
+import { sumCosts } from '../ai/cost';
 import { getProvider, modelLabel } from '../ai/providers';
 import type { ToolImage } from '../ai/types';
 import { features } from '../config/features';
@@ -20,6 +21,7 @@ import {
   subscribeSentLog,
 } from '../storage/sentLog';
 import { makeStyles } from '../ui/theme';
+import { costLine, requestBreakdown, usd } from './AnswerCost';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 
@@ -29,6 +31,8 @@ type Props = {
   conversation?: string;
   /** The user's custom instructions, shown with the fixed instructions (they go with every request). */
   customInstructions?: string;
+  /** Show each request's tokens and approximate cost (Settings › Assistant). */
+  showCost?: boolean;
   onClose: () => void;
 };
 
@@ -37,10 +41,12 @@ const MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });
 const PREVIEW_CHARS = 3000;
 
 /** "What was sent to the AI": each request to the provider, newest first, and what left the phone with it. */
-export function SentLogScreen({ visible, conversation, customInstructions, onClose }: Props) {
+export function SentLogScreen({ visible, conversation, customInstructions, showCost = true, onClose }: Props) {
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      {visible && <SentLog conversation={conversation} customInstructions={customInstructions} onClose={onClose} />}
+      {visible && (
+        <SentLog conversation={conversation} customInstructions={customInstructions} showCost={showCost} onClose={onClose} />
+      )}
       <DialogHost />
     </Modal>
   );
@@ -59,8 +65,8 @@ function itemLabel(item: SentItem): string {
   return `${kindLabel(item.kind)} · ${charsLabel(item.chars)}`;
 }
 
-/** One chip per kind in the list, with the sizes added up. */
-function chipsOf(entry: SentRequest): string[] {
+/** One chip per kind in the list, with the sizes added up; then the request's tokens and approximate cost. */
+function chipsOf(entry: SentRequest, showCost: boolean): string[] {
   const merged = new Map<SentKind, SentItem>();
   for (const item of entry.items) {
     const seen = merged.get(item.kind);
@@ -78,7 +84,15 @@ function chipsOf(entry: SentRequest): string[] {
   const chips = [...merged.values()].map(itemLabel);
   if (entry.webSearch) chips.push(t(entry.research ? 'sentLog.research' : 'sentLog.webSearch'));
   if (!entry.items.length) chips.push(t('sentLog.continued'));
+  if (showCost && entry.cost) chips.push(costLine(entry.cost));
   return chips;
+}
+
+/** "≈ $0.42 this day", when every request of the day has a priced cost. */
+function dayTotal(entries: SentRequest[]): string | null {
+  if (!entries.every((e) => e.cost)) return null;
+  const total = sumCosts(entries.map((e) => e.cost!));
+  return total.nanos !== undefined ? t('cost.dayTotal', { cost: usd(total.nanos) }) : null;
 }
 
 const providerLine = (e: SentRequest) =>
@@ -87,10 +101,12 @@ const providerLine = (e: SentRequest) =>
 function SentLog({
   conversation,
   customInstructions,
+  showCost,
   onClose,
 }: {
   conversation?: string;
   customInstructions?: string;
+  showCost: boolean;
   onClose: () => void;
 }) {
   const styles = useStyles();
@@ -136,7 +152,11 @@ function SentLog({
             <Text style={styles.done}>{t('common.done')}</Text>
           </Pressable>
         </View>
-        {open === 'instructions' ? <Instructions customInstructions={customInstructions ?? ''} /> : <RequestDetail entry={open} />}
+        {open === 'instructions' ? (
+          <Instructions customInstructions={customInstructions ?? ''} />
+        ) : (
+          <RequestDetail entry={open} showCost={showCost} />
+        )}
       </SafeAreaView>
     );
   }
@@ -186,9 +206,12 @@ function SentLog({
         }
         ListEmptyComponent={entries ? <Text style={styles.empty}>{t('sentLog.empty')}</Text> : undefined}
         ListFooterComponent={<Text style={styles.footer}>{t('sentLog.footer')}</Text>}
-        renderSectionHeader={({ section }) => <Text style={styles.day}>{section.title}</Text>}
+        renderSectionHeader={({ section }) => {
+          const total = showCost ? dayTotal(section.data) : null;
+          return <Text style={styles.day}>{total ? `${section.title} · ${total}` : section.title}</Text>;
+        }}
         renderItem={({ item }) => {
-          const chips = chipsOf(item);
+          const chips = chipsOf(item, showCost);
           return (
             <Pressable
               onPress={() => setOpen(item)}
@@ -229,7 +252,7 @@ function SentLog({
   );
 }
 
-function RequestDetail({ entry }: { entry: SentRequest }) {
+function RequestDetail({ entry, showCost }: { entry: SentRequest; showCost: boolean }) {
   const styles = useStyles();
   const tokens = Math.round(entry.totalChars / 4);
   return (
@@ -254,6 +277,12 @@ function RequestDetail({ entry }: { entry: SentRequest }) {
           {entry.images ? ` ${t('sentLog.images', { count: entry.images })}` : ''}
         </Text>
       </View>
+      {showCost && entry.cost ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>{costLine(entry.cost)}</Text>
+          <Text style={styles.cardText}>{requestBreakdown(entry.cost)}</Text>
+        </View>
+      ) : null}
       <Text style={styles.day}>{t('sentLog.newInRequest')}</Text>
       {entry.items.length === 0 ? <Text style={styles.cardText}>{t('sentLog.continuedHint')}</Text> : null}
       {entry.items.map((item, i) => (

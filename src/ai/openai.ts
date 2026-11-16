@@ -1,4 +1,5 @@
 import { postJson, postSse } from './http';
+import { openaiUsage } from './usage';
 import { Citation, canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
 
 const RESPONSES_URL = 'https://api.openai.com/v1/responses';
@@ -9,6 +10,7 @@ type Response = {
   status: string;
   incomplete_details?: { reason?: string } | null;
   output: Item[];
+  usage?: unknown;
 };
 
 function toInput(turns: Turn[], model: string): Item[] {
@@ -161,7 +163,16 @@ function toReply(res: Response): ModelReply {
   }
   if (refused) stop = 'refusal';
 
-  return { text: texts.join('\n\n'), toolCalls, stop, raw: res.output, citations, searches: [...new Set(searches)] };
+  const usage = openaiUsage(res.usage, res.output);
+  return {
+    text: texts.join('\n\n'),
+    toolCalls,
+    stop,
+    raw: res.output,
+    citations,
+    searches: [...new Set(searches)],
+    ...(usage ? { usage } : {}),
+  };
 }
 
 export const openai: Provider = {

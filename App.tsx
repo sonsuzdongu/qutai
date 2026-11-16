@@ -43,6 +43,7 @@ import {
 import { AttachmentPreview } from './src/components/AttachmentViews';
 import { PdfReaderHost } from './src/components/PdfReaderHost';
 import { geminiStreamingAvailable } from './src/ai/gemini';
+import type { AnswerCost } from './src/ai/cost';
 import { getProvider, isConfigured, modelLabel, requestTarget } from './src/ai/providers';
 import { loadCatalog } from './src/ai/openrouterModels';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
@@ -860,7 +861,8 @@ function BrowserApp({
     }
     if (prepared?.chat === chat && !options.voice) setPrepared(null);
     const attachments = options.voice ? [] : chat.takePending();
-    chat.add(userItem(text, attachments));
+    const sent = userItem(text, attachments);
+    chat.add(sent);
 
     // The conversation's own model choice, if its provider is still set up; otherwise the default in Settings.
     // Read once here: a running task keeps the model it started with.
@@ -914,6 +916,8 @@ function BrowserApp({
     if (mayContinue) lastTaskTab.current = current.id;
     let outcome: TaskOutcome = { kind: 'done' };
     let lastText = '';
+    // The tokens and approximate cost of the task's requests, shown under its last answer.
+    let answerCost = null as AnswerCost | null;
     // Catalogue providers: what the cached catalogue says about the model (images, output limit).
     if (getProvider(provider).catalog) await loadCatalog();
     const target = requestTarget(settings, provider, useChoice ? choice.model : undefined);
@@ -1013,6 +1017,9 @@ function BrowserApp({
           conversation: () => chat.key,
           incognito: () => chat.incognito || chat.privacy.touchedIncognito,
         },
+        onCost: (cost) => {
+          answerCost = cost;
+        },
         onEvent: (event) => {
           // How the task ends, for the notification when it ends in the background: its last reply, a final
           // error, or a question for the user.
@@ -1044,6 +1051,7 @@ function BrowserApp({
       const quiet = !notifyTaskDoneRef.current && outcome.kind !== 'needsAnswer';
       endBackgroundTask(incognitoTask() || quiet ? { kind: 'stopped' } : outcome);
       chat.finishStreaming();
+      if (answerCost) chat.addCost(answerCost, sent.id);
       chat.finish();
       browser.setAgentTab(null);
       if (outcome.kind !== 'stopped') taskEnded(chat, outcome.kind);
@@ -2040,6 +2048,7 @@ function BrowserApp({
               onNewChat={newChat}
               onOpenSettings={() => setSettingsVisible(true)}
               onShowSent={() => setSentFor(conversation.key)}
+              showCost={settings.showCost}
               onOpenSource={(source) => {
                 // A page that is still open is shown in its tab; otherwise it opens again in the same mode.
                 const open = browser.tabs.find((x) => x.incognito === source.incognito && x.url === source.url);
@@ -2128,6 +2137,7 @@ function BrowserApp({
             visible={sentFor !== null}
             conversation={sentFor ?? undefined}
             customInstructions={settings.customInstructions}
+            showCost={settings.showCost}
             onClose={() => setSentFor(null)}
           />
           <SettingsModal

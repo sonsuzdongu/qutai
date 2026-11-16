@@ -1,4 +1,5 @@
 import { postJson, postSse } from './http';
+import { anthropicUsage, mergeAnthropicStreamUsage } from './usage';
 import { Citation, canReplay, ModelReply, ModelRequest, Provider, StopReason, ToolCall, Turn } from './types';
 
 type Block = { type: string; [key: string]: unknown };
@@ -7,6 +8,7 @@ type Message = { role: 'user' | 'assistant'; content: Block[] };
 type Response = {
   content: Block[];
   stop_reason: string;
+  usage?: Record<string, unknown>;
 };
 
 function toMessages(turns: Turn[], model: string): Message[] {
@@ -92,10 +94,15 @@ async function call(req: ModelRequest): Promise<ModelReply> {
   const headers = { 'x-api-key': req.apiKey, 'anthropic-version': '2023-06-01' };
   if (!req.onText) {
     const res = await postJson<Response>('https://api.anthropic.com/v1/messages', headers, body, req.signal);
-    return toReply(res.content, res.stop_reason);
+    return withUsage(toReply(res.content, res.stop_reason), res.usage);
   }
   const streamed = await streamMessage(headers, body, req.signal, req.onText);
-  return toReply(streamed.content, streamed.stop_reason);
+  return withUsage(toReply(streamed.content, streamed.stop_reason), streamed.usage);
+}
+
+function withUsage(reply: ModelReply, raw: unknown): ModelReply {
+  const usage = anthropicUsage(raw);
+  return usage ? { ...reply, usage } : reply;
 }
 
 /**
@@ -111,15 +118,22 @@ async function streamMessage(
   const content: Block[] = [];
   const json: Record<number, string> = {};
   let stopReason = '';
+  // message_start's usage, updated by message_delta's (cumulative counts).
+  let usage: Record<string, unknown> | undefined;
   await postSse('https://api.anthropic.com/v1/messages', headers, { ...body, stream: true }, signal, ({ data }) => {
     const e = data as {
       type: string;
       index: number;
       content_block?: Block;
       delta?: Block;
+      message?: { usage?: unknown };
+      usage?: unknown;
       error?: { message?: string };
     };
     switch (e.type) {
+      case 'message_start':
+        usage = mergeAnthropicStreamUsage(usage, e.message?.usage);
+        break;
       case 'content_block_start': {
         content[e.index] = { ...e.content_block! };
         // Text after a search or tool call is a new paragraph, as in the final reply.
@@ -152,12 +166,13 @@ async function streamMessage(
       }
       case 'message_delta':
         stopReason = String(e.delta?.stop_reason ?? stopReason);
+        usage = mergeAnthropicStreamUsage(usage, e.usage);
         break;
       case 'error':
         throw new Error(e.error?.message ?? 'Stream error');
     }
   });
-  return { content: content.filter(Boolean), stop_reason: stopReason };
+  return { content: content.filter(Boolean), stop_reason: stopReason, usage };
 }
 
 function toReply(content: Block[], stopReason: string): ModelReply {

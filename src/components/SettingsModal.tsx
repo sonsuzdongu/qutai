@@ -2,6 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cleanCustomInstructions, MAX_CUSTOM_INSTRUCTIONS } from '../agent/systemPrompt';
+import { PRICES_AS_OF } from '../ai/prices';
 import { getProvider, isConfigured, modelLabel, requestTarget } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { useAccountState } from '../account';
@@ -26,6 +27,7 @@ import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { AccountScreen } from './AccountScreen';
 import { ActionLogScreen } from './ActionLogScreen';
+import { pricesDate } from './AnswerCost';
 import { SentLogScreen } from './SentLogScreen';
 import { BackupScreen } from './BackupScreen';
 import { CalendarChoiceScreen } from './CalendarChoiceScreen';
@@ -318,6 +320,12 @@ function SettingsPages({
                 onChange={(geminiStreaming) => set({ geminiStreaming })}
               />
             )}
+            <SwitchRow
+              title={t('settings.showCost')}
+              hint={t('settings.showCostHint', { date: pricesDate(PRICES_AS_OF) })}
+              value={settings.showCost}
+              onChange={(showCost) => set({ showCost })}
+            />
             {Platform.OS === 'android' && (
               <SwitchRow
                 title={t('settings.backgroundTasks')}
@@ -592,6 +600,7 @@ function SettingsPages({
       <SentLogScreen
         visible={sentLogVisible}
         customInstructions={settings.customInstructions}
+        showCost={settings.showCost}
         onClose={() => setSentLogVisible(false)}
       />
       <BackupScreen job={backupJob} appLock={settings.appLock} onClose={() => setBackupJob(null)} />
