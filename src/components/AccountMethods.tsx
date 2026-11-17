@@ -71,6 +71,7 @@ async function emailProof(session: AccountSession, purpose: ProofPurpose, preset
       message: t('account.methods.emailBody'),
       label: t('account.email.addressLabel'),
       placeholder: t('account.email.addressPlaceholder'),
+      kind: 'email',
       confirmText: t('account.methods.sendCode'),
     }));
   if (!address) throw new ProofCancelled();
@@ -90,7 +91,7 @@ async function emailProof(session: AccountSession, purpose: ProofPurpose, preset
     const answer = await dialog.show({
       title: t('account.email.codeTitle'),
       message: [t('account.methods.codeBody', { email: address }), problem].filter(Boolean).join('\n\n'),
-      input: { label: t('account.email.codeLabel', { count: started.codeLength }), maxLength: 12 },
+      input: { label: t('account.email.codeLabel', { count: started.codeLength }), maxLength: 12, kind: 'code' },
       buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: t('account.methods.confirmCode') }],
       signal: controller.signal,
     });

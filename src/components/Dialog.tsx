@@ -11,6 +11,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  type TextInputProps,
   useWindowDimensions,
   View,
 } from 'react-native';
@@ -70,6 +71,11 @@ export type DialogOptions = {
     placeholder?: string;
     initial?: string;
     maxLength?: number;
+    /**
+     * What is typed, for the keyboard and autofill: an email address (email keyboard, no capitals or corrections) or
+     * a one-time code from a message (number pad; iOS offers the code from Mail). Plain text when absent.
+     */
+    kind?: 'email' | 'code';
   };
   /** Aborting dismisses the dialog (or drops it from the queue) as if no button was pressed. */
   signal?: AbortSignal;
@@ -196,6 +202,7 @@ export const dialog = {
     placeholder?: string;
     initial?: string;
     maxLength?: number;
+    kind?: 'email' | 'code';
     confirmText?: string;
   }): Promise<string | null> {
     const result = await show({
@@ -206,6 +213,7 @@ export const dialog = {
         placeholder: options.placeholder,
         initial: options.initial,
         maxLength: options.maxLength,
+        kind: options.kind,
       },
       buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: options.confirmText ?? t('common.save') }],
     });
@@ -413,6 +421,7 @@ function DialogView({ entry }: { entry: Entry }) {
                 onSubmitEditing={() => !missingText && primaryIndex >= 0 && choose(primaryIndex)}
                 maxLength={input.maxLength}
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
+                {...inputKindProps(input.kind)}
               />
             )}
 
@@ -588,3 +597,14 @@ const useStyles = makeStyles((c) => ({
   onFill: { color: c.onTint },
   dangerText: { color: c.danger },
 }));
+
+/** Keyboard and autofill settings of the dialog's text field for an email address or a one-time code. */
+function inputKindProps(kind: 'email' | 'code' | undefined): Partial<TextInputProps> {
+  if (kind === 'email') {
+    return { keyboardType: 'email-address', autoCapitalize: 'none', autoCorrect: false, autoComplete: 'email', textContentType: 'emailAddress' };
+  }
+  if (kind === 'code') {
+    return { keyboardType: 'number-pad', autoComplete: 'one-time-code', textContentType: 'oneTimeCode' };
+  }
+  return {};
+}
