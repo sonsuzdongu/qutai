@@ -129,3 +129,12 @@ test('listening that never started (microphone refused) goes back without "didnâ
   const typing = run([{ type: 'typeInstead' }, { type: 'speak' }, { type: 'voiceEnded', text: '', started: false }]);
   assert.deepEqual(typing.phase, { name: 'transcript' });
 });
+
+test('leaving the flow is left to the screen around (no page change of its own that would swallow setupâ€™s)', async () => {
+  const { leavesFlow } = await import('../../src/intro/flow');
+  assert.ok(leavesFlow({ type: 'done' }));
+  assert.ok(leavesFlow({ type: 'questionsInstead' }));
+  assert.ok(leavesFlow({ type: 'skipAll' }));
+  assert.ok(!leavesFlow({ type: 'next' }));
+  assert.ok(!leavesFlow({ type: 'typeInstead' }));
+});

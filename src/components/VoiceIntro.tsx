@@ -27,7 +27,7 @@ import {
 } from '../device/voiceInput';
 import { getLanguage, MessageKey, t } from '../i18n';
 import { answersTurn, ExtractionError, MAX_TRANSCRIPT_CHARS, transcriptTurn } from '../intro/extract';
-import { canSubmit, finalExtraction, hasBack, introReducer, pendingAnswers, START, type FlowState } from '../intro/flow';
+import { canSubmit, finalExtraction, hasBack, introReducer, leavesFlow, pendingAnswers, START, type FlowState } from '../intro/flow';
 import type { FollowUp, FollowUpAnswer } from '../intro/followUps';
 import { introWrites, reviewRows, withReplacements, withStyleLine, type ReviewRow } from '../intro/items';
 import { understand, type IntroTarget } from '../intro/request';
@@ -107,7 +107,8 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
       dispatchRaw(event);
       if (page !== 'none') scrollRef.current?.scrollTo({ y: 0, animated: false });
     };
-    if (page === 'user' && transition) transition(change);
+    // Leaving the flow: the screen around changes the page (and blurs); a blur here would swallow that change.
+    if (page === 'user' && transition && !leavesFlow(event)) transition(change);
     else change();
   };
 

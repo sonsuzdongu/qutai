@@ -234,6 +234,15 @@ export function introReducer(state: FlowState, event: FlowEvent): FlowState {
   }
 }
 
+/**
+ * Events that leave the flow (to the typed questions, skipped, finished). The screen around makes that change of page
+ * itself (setup's next step, the switch to the questions), so the flow must not start a page change of its own for
+ * them: setup's blur ignores a second change while one runs, which left setup stuck on an empty page.
+ */
+export function leavesFlow(event: FlowEvent): boolean {
+  return event.type === 'questionsInstead' || event.type === 'skipAll' || event.type === 'done';
+}
+
 /** Whether the screen's back button stays inside the flow (false on its first page: the step's own back applies). */
 export function hasBack(state: FlowState): boolean {
   return !['intro', 'saving', 'saved', 'exit'].includes(state.phase.name);
