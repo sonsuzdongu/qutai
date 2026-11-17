@@ -3,7 +3,7 @@
     "name": "Qutai",
     "slug": "qutai",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "ios": {
@@ -239,7 +239,8 @@
           }
         }
       ],
-      "./plugins/withLaunchBackground"
+      "./plugins/withLaunchBackground",
+      "./plugins/withOrientations"
     ],
     "locales": {
       "tr": "./locales/tr.json",
