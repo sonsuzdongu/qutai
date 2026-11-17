@@ -67,6 +67,30 @@ function toMessages(turns: Turn[], model: string, replayAs: Wire['replayAs']): M
   return messages;
 }
 
+/**
+ * Caches the conversation too, not only the tools and system prompt: a cache breakpoint on the last block of the last
+ * user message (the newest tool results in a task). The next step's request starts with this one's messages, so it
+ * reads them from the cache (0.1× the input price) and writes only what is new (1.25×), instead of paying the full
+ * price for the whole history on every step. Anthropic looks for an earlier entry up to 20 blocks back from a
+ * breakpoint, and a step adds two (the call and its results), so a task's steps keep finding the previous one.
+ * One breakpoint here and one on the system prompt; Qutai's relay accepts two from the app and passes them on.
+ * A final assistant message (a paused turn sent back as received) is left untouched: the breakpoint goes on the user
+ * message before it. Only blocks built here are marked, never the raw output kept with the history.
+ */
+export function withHistoryBreakpoint(messages: Message[]): Message[] {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.role !== 'user' || m.content.length === 0) continue;
+    const last = m.content.length - 1;
+    const content = [...m.content];
+    content[last] = { ...content[last], cache_control: { type: 'ephemeral' } };
+    const out = [...messages];
+    out[i] = { ...m, content };
+    return out;
+  }
+  return messages;
+}
+
 function toStop(reason: string): StopReason {
   switch (reason) {
     case 'tool_use':
@@ -96,7 +120,7 @@ export async function callAnthropic(req: ModelRequest, wire: Wire): Promise<Mode
     max_tokens: 8192,
     system: [{ type: 'text', text: req.system, cache_control: { type: 'ephemeral' } }],
     tools: req.webSearch ? [...req.tools, webSearchTool(req.research)] : req.tools,
-    messages: toMessages(req.turns, req.model, wire.replayAs),
+    messages: withHistoryBreakpoint(toMessages(req.turns, req.model, wire.replayAs)),
   };
   const headers = { 'x-api-key': req.apiKey, 'anthropic-version': '2023-06-01' };
   if (!req.onText) {

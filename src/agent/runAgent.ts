@@ -5,7 +5,6 @@ import { getProvider } from '../ai/providers';
 import { RelayError } from '../credits/errors';
 import { continueAfterPause } from '../credits/pause';
 import type { RelayPause } from '../credits/types';
-import { droppedImageNote, KEEP_IMAGE_MESSAGES, MAX_SENT_IMAGES } from '../chat/attachments';
 import type { ProviderId, ToolResult, Turn } from '../ai/types';
 import { t } from '../i18n';
 import {
@@ -22,6 +21,7 @@ import {
 import { getBackgroundCount, isForeground, waitForForeground } from '../utils/foreground';
 import type { AlwaysAllowKind } from './alwaysAllow';
 import { withAttachedImages } from './attachedImages';
+import { compactHistory } from './history';
 import { backgroundBlocker, describeToolCall, executeTool, ToolContext } from './executeTool';
 import { toolIcon, WEB_SEARCH_ICON } from './toolIcons';
 import {
@@ -42,6 +42,7 @@ const MAX_STEPS = 40;
 // The prompt parts live in systemPrompt.ts (exported to the agent profile for Qutai Credits); re-exported here for
 // the screens that show them.
 export { LAST_STEP_PROMPT, RESEARCH_PROMPT, WEB_SEARCH_PROMPT };
+export { compactHistory };
 /** view_screenshot's result for a model without image input. */
 export const NO_IMAGE_INPUT =
   "This model can't take images, so no screenshot was taken. Use read_page to see the page's text, links and " +
@@ -52,9 +53,6 @@ export const NO_IMAGE_INPUT_ATTACHMENT =
   'images (the model under the panel title) if they want you to look at it.';
 /** Research reads many pages, so it may take more steps. */
 const MAX_RESEARCH_STEPS = 80;
-const KEEP_FULL_RESULTS = 2;
-const KEEP_IMAGES = 1;
-const COMPACT_THRESHOLD = 1500;
 /** Tools whose result shows the agent the page's content, which makes the page a source. */
 const READING_TOOLS = new Set(['read_page', 'read_source', 'view_screenshot']);
 const MAX_SOURCES = 10;
@@ -469,65 +467,6 @@ async function systemPrompt(opts: AgentOptions): Promise<{ text: string; memory?
   const section = memoryPrompt(memories, !opts.privacy?.touchedIncognito, opts.serverLimits?.maxMemoryChars);
   const count = section.split('\n- [').length - 1;
   return { text: SYSTEM_PROMPT + search + section + custom, memory: { text: section, count } };
-}
-
-/**
- * Page snapshots are large. Keep only the most recent ones in full so long
- * sessions don't blow up cost and latency. With OpenAI this changes the
- * history prefix, so the API may drop older reasoning; that trade-off is accepted.
- *
- * Images the user attached stay with the KEEP_IMAGE_MESSAGES most recent user messages (MAX_SENT_IMAGES at most);
- * older ones are taken off the turn and named in its text instead, so the model can still refer to them by id.
- */
-export function compactHistory(turns: Turn[], maxImages?: number): Turn[] {
-  // A server's limit on images per request (Qutai Credits' maxImages) leaves room for the latest screenshot.
-  const userImageCap = maxImages ? Math.max(0, Math.min(MAX_SENT_IMAGES, maxImages - KEEP_IMAGES)) : MAX_SENT_IMAGES;
-  let kept = 0;
-  let keptImages = 0;
-  let userMessages = 0;
-  let userImages = 0;
-  const out: Turn[] = [];
-  for (let i = turns.length - 1; i >= 0; i--) {
-    const turn = turns[i];
-    if (turn.role === 'user') {
-      const images = turn.attachments?.filter((a) => a.kind === 'image') ?? [];
-      const recent = userMessages++ < KEEP_IMAGE_MESSAGES;
-      if (images.length && recent && userImages + images.length <= userImageCap) {
-        userImages += images.length;
-        out.unshift(turn);
-      } else if (images.length) {
-        const others = turn.attachments!.filter((a) => a.kind !== 'image');
-        const notes = images.map(droppedImageNote).join('\n');
-        const compacted = { ...turn, text: `${turn.text}\n${notes}` };
-        if (others.length) compacted.attachments = others;
-        else delete compacted.attachments;
-        out.unshift(compacted);
-      } else {
-        out.unshift(turn);
-      }
-      continue;
-    }
-    if (turn.role !== 'tool_results') {
-      out.unshift(turn);
-      continue;
-    }
-    const results = [...turn.results].reverse().map((original) => {
-      let r = original;
-      // Screenshots cost far more than text, so only the latest ones are kept.
-      if (r.images?.length) {
-        if (keptImages < KEEP_IMAGES) keptImages++;
-        else r = { ...r, images: undefined, content: `${r.content}\n[Older screenshot removed]` };
-      }
-      if (r.content.length <= COMPACT_THRESHOLD) return r;
-      if (kept < KEEP_FULL_RESULTS) {
-        kept++;
-        return r;
-      }
-      return { ...r, content: `${cutText(r.content, 300)}\n[Older page snapshot removed]` };
-    });
-    out.unshift({ role: 'tool_results', results: results.reverse() });
-  }
-  return out;
 }
 
 /** A step's id for Qutai Credits (16–64 of a-z, 0-9 and -): unique per step, nothing about the user or the task. */

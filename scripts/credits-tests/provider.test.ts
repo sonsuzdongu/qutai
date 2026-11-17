@@ -76,7 +76,8 @@ test('Anthropic through the relay: the conversation only, the reply parsed as a 
     options: { webSearch: true, memoryTools: true },
     context: { memory: '\n\nMemory:\nYou have no saved memories about the user yet.', customInstructions: 'Be brief' },
     stream: true,
-    input: [{ role: 'user', content: [{ type: 'text', text: 'What is on this page?' }] }],
+    // The history's cache breakpoint (src/ai/anthropic.ts withHistoryBreakpoint) goes through the relay as it is.
+    input: [{ role: 'user', content: [{ type: 'text', text: 'What is on this page?', cache_control: { type: 'ephemeral' } }] }],
   });
   const sent = JSON.stringify(req);
   assert.ok(!sent.includes('sk-own-key'), 'the own key never goes to Qutai’s server');

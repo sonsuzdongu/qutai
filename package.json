@@ -86,6 +86,7 @@
     "test:credits": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/credits-tests/*.test.ts",
     "test:backup": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/backup-tests/logic.test.ts scripts/backup-tests/client.test.ts",
     "test:backup:server": "QUTAI_TEST_API_URL=${QUTAI_TEST_API_URL:-http://localhost:8790} node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/backup-tests/server.test.ts",
+    "measure:tokens": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs scripts/token-tests/measure.ts",
     "measure:backup": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs scripts/backup-tests/measure.ts",
     "test:credits:server": "QUTAI_TEST_API_URL=${QUTAI_TEST_API_URL:-http://localhost:8790} node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/credits-tests/server/relay-server.test.ts",
     "profile:export": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs scripts/agent-profile/export.ts",
