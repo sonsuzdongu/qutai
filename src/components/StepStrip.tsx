@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Animated, Platform, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { emptyStripLine, offerLine, tickLine, type StripLineState } from '../chat/stripLine';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
+import { answerCardMaxHeight } from '../ui/layout';
 import { QutaiMark } from '../ui/QutaiMark';
 import { usePalette, type Palette } from '../ui/theme';
 import { useReduceMotion } from '../utils/useReduceMotion';
@@ -66,6 +68,7 @@ export function StepStrip({
   const styles = useStyles(palette);
   const reduceMotion = useReduceMotion();
   const shown = useCoalescedLine(line);
+  const insets = useSafeAreaInsets();
   const [rise] = useState(() => new Animated.Value(reduceMotion ? 1 : 0));
   useEffect(() => {
     if (reduceMotion) return rise.setValue(1);
@@ -84,6 +87,9 @@ export function StepStrip({
         styles.wrap,
         {
           bottom,
+          // Clear of a camera cut-out at either side when the phone is on its side.
+          left: 12 + insets.left,
+          right: 12 + insets.right,
           opacity: rise,
           transform: [{ translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }],
         },
@@ -154,6 +160,9 @@ export function AnswerCard({
   const palette = usePalette();
   const styles = useStyles(palette);
   const reduceMotion = useReduceMotion();
+  const insets = useSafeAreaInsets();
+  // Never taller than the room above it: a phone on its side is only ~360 pt high.
+  const { height: windowHeight } = useWindowDimensions();
   const [grow] = useState(() => new Animated.Value(reduceMotion ? 1 : 0));
   useEffect(() => {
     if (reduceMotion) return grow.setValue(1);
@@ -166,9 +175,9 @@ export function AnswerCard({
   return (
     <Animated.View
       pointerEvents="box-none"
-      style={[styles.wrap, { bottom, opacity: grow, transform: [{ scale: grow.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }]}
+      style={[styles.wrap, { bottom, left: 12 + insets.left, right: 12 + insets.right, opacity: grow, transform: [{ scale: grow.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }]}
     >
-      <View style={styles.card}>
+      <View style={[styles.card, { maxHeight: answerCardMaxHeight(windowHeight, bottom, insets.top) }]}>
         <View style={styles.cardHeader}>
           <QutaiMark size={20} animate={false} />
           <Text style={styles.cardTitle} accessibilityRole="header">
@@ -238,6 +247,7 @@ function makeStyles(p: Palette) {
     card: {
       width: '100%',
       maxWidth: 560,
+      // At most 360; less in a short window (answerCardMaxHeight).
       maxHeight: 360,
       borderRadius: 20,
       backgroundColor: p.surface,

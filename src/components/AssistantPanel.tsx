@@ -31,6 +31,7 @@ import { languageLabel, spokenLanguageName } from '../device/voiceLanguage';
 import { VoiceLanguageSheet } from './VoiceLanguageSheet';
 import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
+import { panelHeaderHeight, panelWidth } from '../ui/layout';
 import { Icon, IconName } from '../ui/Icon';
 import { GradientText } from '../ui/BrandGradient';
 import { QutaiMark } from '../ui/QutaiMark';
@@ -237,8 +238,6 @@ type Props = {
   onShare: (offer: ShareOffer) => void;
 };
 
-const MAX_WIDTH = 420;
-
 /** Dark styles for the panel's parts, or null in the light theme. */
 const PanelTheme = createContext<typeof darkStyles | null>(null);
 
@@ -305,8 +304,10 @@ export function AssistantPanel({
   const palette = usePalette();
   const d = dark ? darkStyles : null;
   const speaking = useIsSpeaking();
-  const { width: screenWidth, fontScale } = useWindowDimensions();
-  const width = Math.min(Math.round(screenWidth * 0.88), MAX_WIDTH);
+  const { width: screenWidth, height: screenHeight, fontScale } = useWindowDimensions();
+  // About half the screen when it is wider than tall, so the page stays beside it (docs/landscape.md).
+  const width = panelWidth({ width: screenWidth, height: screenHeight });
+  const headerHeight = panelHeaderHeight({ width: screenWidth, height: screenHeight });
   const insets = useSafeAreaInsets();
   const keyboardVisible = useKeyboardVisible();
   const reduceMotion = useReduceMotion();
@@ -575,7 +576,7 @@ export function AssistantPanel({
                 },
               ]}
             >
-              <View style={[styles.header, d?.header]}>
+              <View style={[styles.header, d?.header, { minHeight: headerHeight }]}>
                 <QutaiMark size={24} working={running} sweepWhenIdle animate={open} />
                 <View style={styles.headerTitle} onLayout={(e) => setStatusRoom(e.nativeEvent.layout.width)}>
                   {balance || modelName ? (
@@ -893,6 +894,8 @@ export function AssistantPanel({
                           : 'chat.placeholder',
                   )}
                   multiline
+                  // Android's full-screen landscape keyboard would hide the conversation; the panel keeps the field above it.
+                  disableFullscreenUI
                   editable={!busy}
                   accessibilityState={{ disabled: busy }}
                   // With text kept in the field the placeholder doesn't show, so a screen reader hears why it is closed.
@@ -1891,6 +1894,7 @@ const useStyles = makeStyles((c) => ({
     alignItems: 'center',
     paddingLeft: 16,
     paddingRight: 8,
+    // 44 in a short window (panelHeaderHeight).
     minHeight: 56,
     paddingVertical: 4,
     borderBottomWidth: StyleSheet.hairlineWidth,

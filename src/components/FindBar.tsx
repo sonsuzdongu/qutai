@@ -52,6 +52,8 @@ export function FindBar({ tab, darkMode, onClose }: { tab: Tab; darkMode?: boole
           placeholder={t('find.placeholder')}
           placeholderTextColor={dark ? '#a9a8b3' : '#6b6862'}
           autoFocus
+          // The matches stay in view on a phone on its side (no full-screen keyboard).
+          disableFullscreenUI
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"

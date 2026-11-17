@@ -186,6 +186,8 @@ export function AddressBar({
             }}
             autoFocus
             selectTextOnFocus
+            // On a phone on its side the suggestions and the page stay in view (no full-screen keyboard).
+            disableFullscreenUI
             autoCapitalize="none"
             autoCorrect={false}
             keyboardType="url"
