@@ -1,7 +1,9 @@
 import { useEffect } from 'react';
 import { Linking } from 'react-native';
 import { accountErrorDetails, accountErrorMessage, accountSession, emailSignIn } from '../account';
+import { isAuthReturnLink } from '../account/appleWeb';
 import { NoPendingEmailSignIn, isSignInLink, parseEmailSignInLink } from '../account/emailSignIn';
+import { takeEmailProofLink } from '../account/methodRules';
 import { t } from '../i18n';
 import { providersText } from './accountLabels';
 import { dialog } from './Dialog';
@@ -16,6 +18,11 @@ let launchLinkTaken = false;
  */
 export function takeSignInLink(url: string | null | undefined): boolean {
   if (!url || !isSignInLink(url)) return false;
+  // The return from Apple's web sign-in (Android): the auth session that opened it reads it; nothing to do here.
+  if (isAuthReturnLink(url)) return true;
+  // A confirm link for an address being added (or checked) while signed in: the waiting proof takes it.
+  const proofToken = parseEmailSignInLink(url);
+  if (proofToken && takeEmailProofLink(proofToken)) return true;
   const flow = emailSignIn();
   if (!flow) return false;
   const token = parseEmailSignInLink(url);

@@ -90,6 +90,8 @@ export interface TokenPair {
 
 /** One sign-in method of the account (`GET /me`); several of one provider are possible. */
 export interface SignInMethod {
+  /** Names the method for removal (`POST /account/methods/remove`). Missing in sessions stored before it existed. */
+  id?: string;
   provider: AuthProvider;
   /** Only for `email`: the normalised address. */
   email?: string;
@@ -109,6 +111,8 @@ export interface Me {
   /** Every sign-in method, oldest first. Missing in sessions stored before sign-in by email. */
   methods?: SignInMethod[];
   status: UserStatus;
+  /** The server kept another account of this person apart (same address): offer "Combine with another account". */
+  mergeSuggested?: boolean;
 }
 
 export interface SignInResponse extends TokenPair {
@@ -116,6 +120,49 @@ export interface SignInResponse extends TokenPair {
   /** True when this sign-in created the account. */
   created: boolean;
   emailLink?: EmailLinkOutcome;
+}
+
+// ---------- Sign-in methods while signed in, merging (backend/README.md › Auth › Sign-in methods, Merging accounts) ----------
+
+/** `add` a method, `reauth` (confirm it's you before removing one), `merge` (sign in to your other account to combine it). */
+export type ProofPurpose = 'add' | 'reauth' | 'merge';
+
+export interface ProofResponse {
+  outcome: 'added' | 'already_linked' | 'reauthenticated' | 'other_account';
+  user: Me;
+  /** Unix ms until which removing a method is allowed on this device. */
+  reauthUntil?: number;
+  /** `other_account`: the proof to preview and confirm a merge with, valid `expiresIn` seconds. */
+  merge?: { proofId: string; expiresIn: number };
+}
+
+export interface MergeSide {
+  methods: { provider: AuthProvider; email?: string }[];
+  /** Micro-credits; may be negative; null when unknown right now. */
+  balance: number | null;
+  purchases: number;
+  taskRunning: boolean;
+}
+
+/** `into`: the signed-in account (it stays); `from`: the one merged into it. */
+export interface MergePreview {
+  into: MergeSide;
+  from: MergeSide;
+  expiresIn: number;
+}
+
+/** `running`: a step waits (the other account's task) or failed part-way; repeat the same request. */
+export interface MergeResponse {
+  mergeId: string;
+  status: 'done' | 'running';
+  user: Me;
+}
+
+/** Sign in with Apple on Android: `POST /auth/apple/web/start`. */
+export interface AppleWebStartResponse {
+  url: string;
+  flow: string;
+  expiresIn: number;
 }
 
 export type ApiErrorCode =

@@ -1,6 +1,7 @@
 /**
- * The dynamic parts of the site: `/` sends the visitor to `/en/` or `/tr/`, and `/intent/sign-in/email` hands the
- * sign-in email's link to the app (worker/intent.ts).
+ * The dynamic parts of the site: `/` sends the visitor to `/en/` or `/tr/`, `/intent/sign-in/email` hands the
+ * sign-in email's link to the app (worker/intent.ts), and `/.well-known/` serves the App Links / Universal Links files
+ * when they are configured (worker/wellKnown.ts).
  *
  * 1. A `lang` cookie (set by the language switch on the page) wins.
  * 2. Otherwise the Accept-Language header, in the visitor's order of preference: the first Turkish or
@@ -11,8 +12,9 @@
  */
 import { INTENT_PATH, intentConfig, intentPage } from './intent';
 import { pickLanguage } from './language';
+import { wellKnown, type WellKnownEnv } from './wellKnown';
 
-interface Env {
+interface Env extends WellKnownEnv {
   ASSETS: Fetcher;
   /** The app's URL scheme for the sign-in link (wrangler.jsonc `vars`): `qutai`. */
   SCHEME?: string;
@@ -23,6 +25,9 @@ interface Env {
 export default {
   async fetch(request, env): Promise<Response> {
     const url = new URL(request.url);
+    // App Links / Universal Links files, only when configured (worker/wellKnown.ts).
+    const known = wellKnown(url.pathname, env);
+    if (known) return known;
     if (url.pathname === INTENT_PATH || url.pathname === `${INTENT_PATH}/`) {
       if (request.method !== 'GET' && request.method !== 'HEAD') return new Response(null, { status: 405, headers: { Allow: 'GET, HEAD' } });
       return intentPage(request, intentConfig(env));

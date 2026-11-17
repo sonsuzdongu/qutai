@@ -1,6 +1,11 @@
 import { AccountApiError, type Api } from './api';
 import type {
   AppleSignInRequest,
+  AppleWebStartResponse,
+  MergePreview,
+  MergeResponse,
+  ProofPurpose,
+  ProofResponse,
   DevSignInRequest,
   DevSignInUser,
   EmailStartRequest,
@@ -24,6 +29,9 @@ import type {
  *   deleted): the app forgets the tokens and shows the user as signed out.
  * - `403 account_suspended`: the tokens stay (sign-out and deletion still work); the user is shown as suspended.
  */
+
+/** What Apple's web flow hands back to the app (the return link's flow id and handoff, and the kept verifier). */
+export type AppleWebResult = { flow: string; handoff: string; verifier: string };
 
 export type StoredSession = {
   accessToken: string;
@@ -156,6 +164,82 @@ export class AccountSession {
     return this.start(await this.api.request<SignInResponse>({ method: 'POST', path: '/auth/email/verify', body }));
   }
 
+  // --- Sign in with Apple on Android (the web flow; backend/README.md › Auth › Sign in with Apple on Android) ---
+
+  /** Starts Apple's web authorization; `verifierHash` is the SHA-256 (hex) of a secret the caller keeps. */
+  async startAppleWeb(verifierHash: string): Promise<AppleWebStartResponse> {
+    const deviceId = await this.storage.deviceId();
+    return this.api.request<AppleWebStartResponse>({ method: 'POST', path: '/auth/apple/web/start', body: { deviceId, verifierHash } });
+  }
+
+  /** Finishes Apple's web flow as a sign-in, with the flow id and handoff from the return link and the kept verifier. */
+  async signInWithAppleWeb(result: AppleWebResult): Promise<SignInResponse> {
+    const deviceId = await this.storage.deviceId();
+    return this.start(
+      await this.api.request<SignInResponse>({
+        method: 'POST',
+        path: '/auth/apple/web/finish',
+        body: { ...result, deviceId, ...this.localeField() },
+      }),
+    );
+  }
+
+  // --- Sign-in methods while signed in (backend/README.md › Auth › Sign-in methods) ---
+
+  /** Proves a Google account for `purpose` (add it, confirm it's you, or sign in to another account to combine it). */
+  proveGoogle(token: { idToken: string; nonce: string }, purpose: ProofPurpose): Promise<ProofResponse> {
+    return this.proof('/account/methods/google', { ...token, purpose });
+  }
+
+  proveApple(result: { identityToken: string; nonce: string; authorizationCode?: string }, purpose: ProofPurpose): Promise<ProofResponse> {
+    return this.proof('/account/methods/apple', { ...result, purpose });
+  }
+
+  async proveAppleWeb(result: AppleWebResult, purpose: ProofPurpose): Promise<ProofResponse> {
+    const deviceId = await this.storage.deviceId();
+    return this.proof('/account/methods/apple/web', { ...result, deviceId, purpose });
+  }
+
+  /** Mails a confirm code (and link) to `email`; it works only for this signed-in device. */
+  startEmailProof(email: string, purpose: ProofPurpose): Promise<EmailStartResponse> {
+    return this.authed<EmailStartResponse>({
+      method: 'POST',
+      path: '/account/methods/email/start',
+      body: { email, purpose, ...this.localeField() },
+    });
+  }
+
+  verifyEmailProof(email: string, proof: { code: string } | { linkToken: string }, purpose: ProofPurpose): Promise<ProofResponse> {
+    return this.proof('/account/methods/email/verify', { email, ...proof, purpose });
+  }
+
+  /** Removes one sign-in method (`Me.methods[].id`); the server wants a recent proof first (`reauth_required`). */
+  async removeMethod(methodId: string, appleAuthorizationCode?: string): Promise<Me> {
+    const { user } = await this.authed<{ user: Me }>({
+      method: 'POST',
+      path: '/account/methods/remove',
+      body: { methodId, ...(appleAuthorizationCode ? { appleAuthorizationCode } : {}), ...this.localeField() },
+    });
+    await this.updateUser(user);
+    return user;
+  }
+
+  /** What a merge with the proved account would combine. */
+  previewMerge(proofId: string): Promise<MergePreview> {
+    return this.authed<MergePreview>({ method: 'POST', path: '/account/merge/preview', body: { proofId } });
+  }
+
+  /** Merges the proved account into this one (safe to repeat until `done`). */
+  async confirmMerge(proofId: string): Promise<MergeResponse> {
+    const response = await this.authed<MergeResponse>({
+      method: 'POST',
+      path: '/account/merge',
+      body: { proofId, ...this.localeField() },
+    });
+    await this.updateUser(response.user);
+    return response;
+  }
+
   /** The account as the server sees it now (`GET /me`); also updates the stored copy. */
   async refreshUser(): Promise<Me> {
     const user = await this.authed<Me>({ method: 'GET', path: '/me' });
@@ -223,6 +307,12 @@ export class AccountSession {
   }
 
   // --- internals ---
+
+  private async proof(path: string, body: Record<string, unknown>): Promise<ProofResponse> {
+    const response = await this.authed<ProofResponse>({ method: 'POST', path, body: { ...body, ...this.localeField() } });
+    await this.updateUser(response.user);
+    return response;
+  }
 
   private setState(state: AccountState) {
     this.state = state;

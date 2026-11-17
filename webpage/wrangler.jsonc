@@ -14,10 +14,13 @@
     "not_found_handling": "404-page",
     // Only the bare root needs code (the language redirect); everything else is served as a static file
     // without running the Worker.
-    "run_worker_first": ["/", "/intent/*"]
+    "run_worker_first": ["/", "/intent/*", "/.well-known/apple-app-site-association", "/.well-known/assetlinks.json"]
   },
   // The sign-in email's link (https://<site>/intent/sign-in/email?token=…) opens the app with this scheme and, on
   // Android, this package (worker/intent.ts). Override per environment or in .dev.vars for `wrangler dev`.
   "vars": { "SCHEME": "qutai", "ANDROID_PACKAGE": "com.sonsuzdongu.qutai" },
+  // App Links / Universal Links (worker/wellKnown.ts; the app repository's docs/app-links.md): set APPLE_APP_IDS
+  // (`<Team ID>.<bundle id>`) and ANDROID_CERT_SHA256 (signing certificates' SHA-256) when deploying, e.g.
+  // `wrangler deploy --var APPLE_APP_IDS:… --var ANDROID_CERT_SHA256:…`; never commit them. Unset: both files 404.
   "observability": { "enabled": false }
 }

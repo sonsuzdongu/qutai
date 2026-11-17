@@ -1,10 +1,13 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { requireOptionalNativeModule } from 'expo';
-import { getRandomBytes } from 'expo-crypto';
+import { CryptoDigestAlgorithm, digestStringAsync, getRandomBytes } from 'expo-crypto';
 import { Platform } from 'react-native';
 import { features } from '../config/features';
 import { providerFailureDetail } from './errorDetails';
-import { makeNonce } from './nonce';
+import { APPLE_RETURN_URL, parseAppleReturn } from './appleWeb';
+import { base64url, makeNonce } from './nonce';
+import type { AppleWebResult } from './session';
+import type { AppleWebStartResponse } from './types';
 
 /**
  * Sign in with Apple (iOS) and Sign in with Google (Android and iOS) for pro-mode accounts. Each returns the
@@ -14,6 +17,9 @@ import { makeNonce } from './nonce';
  * - Google on Android: the local module modules/qutai-auth (Credential Manager, "Sign in with Google" button
  *   flow, `setNonce`). The legacy Google Sign-In SDK is deprecated, and the free @react-native-google-signin
  *   module can't pass a nonce on Android.
+ * - Apple on Android: Apple's web flow in a Custom Tab (expo-web-browser's auth session), run by Qutai's server, offered
+ *   only when the server says it is set up (`GET /config` › auth.appleWeb). The app keeps a random verifier and gives
+ *   the server only its hash; the return link carries a flow id and a one-time handoff (src/account/appleWeb.ts).
  * - Google on iOS: expo-auth-session in the system's authentication browser (ASWebAuthenticationSession) with
  *   the iOS OAuth client, PKCE and the nonce, then the code exchange at Google's token endpoint, which returns the
  *   ID token. iOS clients are public clients: no secret is involved.
@@ -147,4 +153,34 @@ async function googleIos(hashedNonce: string): Promise<string> {
   } catch (e) {
     throw new SignInFailed('failed', providerFailureDetail('Google token exchange', errorCode(e), errorMessage(e)));
   }
+}
+
+/**
+ * Sign in with Apple on Android: `start` asks the server for Apple's authorization URL (given the verifier's hash), the
+ * Custom Tab runs it, and the return link's flow and handoff come back with the verifier for the server's finish route
+ * (a sign-in or a proof while signed in).
+ */
+export async function appleWebAuthorize(start: (verifierHash: string) => Promise<AppleWebStartResponse>): Promise<AppleWebResult> {
+  let WebBrowser: typeof import('expo-web-browser');
+  try {
+    WebBrowser = await import('expo-web-browser');
+  } catch {
+    throw new SignInFailed('needsBuild');
+  }
+  const verifier = base64url(getRandomBytes(32));
+  const verifierHash = (await digestStringAsync(CryptoDigestAlgorithm.SHA256, verifier)).toLowerCase();
+  const started = await start(verifierHash);
+  let result: Awaited<ReturnType<typeof WebBrowser.openAuthSessionAsync>>;
+  try {
+    result = await WebBrowser.openAuthSessionAsync(started.url, APPLE_RETURN_URL, { showInRecents: false });
+  } catch (e) {
+    throw new SignInFailed('failed', providerFailureDetail('Apple', errorCode(e), errorMessage(e)));
+  }
+  if (result.type !== 'success') throw new SignInCancelled();
+  const back = parseAppleReturn(result.url);
+  if (!back.ok) {
+    if (back.error === 'cancelled') throw new SignInCancelled();
+    throw new SignInFailed('failed', `Apple (web): ${back.error}`);
+  }
+  return { flow: back.flow, handoff: back.handoff, verifier };
 }

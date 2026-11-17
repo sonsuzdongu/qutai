@@ -1,4 +1,5 @@
 import { AccountApiError } from './api';
+import { isAuthReturnLink } from './appleWeb';
 import type { EmailStartResponse, SignInResponse } from './types';
 
 /**
@@ -95,7 +96,7 @@ export function codeDigits(text: string, length = DEFAULT_CODE_LENGTH): string {
 export function isSignInLink(url: string | null | undefined): boolean {
   if (typeof url !== 'string') return false;
   const value = url.trim();
-  return /^qutai:\/\/sign-in(?:[/?#]|$)/i.test(value) || sitePagePath(value) !== null;
+  return /^qutai:\/\/sign-in(?:[/?#]|$)/i.test(value) || isAuthReturnLink(value) || sitePagePath(value) !== null;
 }
 
 /**
@@ -103,8 +104,26 @@ export function isSignInLink(url: string | null | undefined): boolean {
  * server's MAIL_INTENT_DOMAIN, webpage/worker/intent.ts). In a browser it opens the app; when Qutai is that browser
  * (the default browser on Android, or the page opened in a tab) the app takes the token straight from it.
  */
-export const SIGN_IN_PAGE_HOSTS: readonly string[] = ['qutai.sonsuzdongu.com'];
-const SIGN_IN_PAGE_PATH = '/intent/sign-in/email';
+export const SIGN_IN_PAGE_HOSTS: readonly string[] = linkHosts(process.env.EXPO_PUBLIC_APP_LINK_HOST);
+const SIGN_IN_PAGE_PATH = linkPath(process.env.EXPO_PUBLIC_APP_LINK_PATH);
+
+/**
+ * The hosts whose sign-in page belongs to the app: the website's (always) and, when a build sets
+ * EXPO_PUBLIC_APP_LINK_HOST (docs/app-links.md), the App Link / Universal Link host the server's MAIL_INTENT_DOMAIN
+ * names. Without it the build behaves as before.
+ */
+export function linkHosts(extra: string | undefined): string[] {
+  const hosts = ['qutai.sonsuzdongu.com'];
+  const host = (extra ?? '').trim().toLowerCase();
+  if (/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(host) && !hosts.includes(host)) hosts.push(host);
+  return hosts;
+}
+
+/** The sign-in page's path: EXPO_PUBLIC_APP_LINK_PATH (the server's MAIL_INTENT_PATH) or `/intent/sign-in/email`. */
+export function linkPath(value: string | undefined): string {
+  const path = (value ?? '').trim().replace(/\/+$/, '');
+  return /^(\/[A-Za-z0-9._~-]+){1,8}$/.test(path) ? path : '/intent/sign-in/email';
+}
 
 /** The query of a sign-in page URL on one of our hosts, or null. */
 function sitePagePath(url: string): string | null {

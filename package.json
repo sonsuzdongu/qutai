@@ -70,7 +70,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "test:account": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/account-tests/session.test.ts scripts/account-tests/email.test.ts",
+    "test:account": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/account-tests/session.test.ts scripts/account-tests/email.test.ts scripts/account-tests/methods.test.ts",
     "test:account:server": "QUTAI_TEST_API_URL=${QUTAI_TEST_API_URL:-http://localhost:8790} node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/account-tests/server.test.ts",
     "test:cost": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/cost-tests/cost.test.ts scripts/cost-tests/fit.test.ts",
     "test:custom": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/custom-endpoint-tests/*.test.ts",

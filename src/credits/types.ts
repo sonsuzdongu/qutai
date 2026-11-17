@@ -114,6 +114,8 @@ export interface PublicConfig {
   limits: Record<string, number>;
   minAppVersion: string | null;
   maintenance: { enabled: boolean; message: string | null };
+  /** `appleWeb`: Sign in with Apple through the web flow is set up (Android). Absent from older servers. */
+  auth?: { appleWeb: boolean };
 }
 
 /** `GET /config` › `tiers[]` (backend/README.md › Relay › Tiers). */
