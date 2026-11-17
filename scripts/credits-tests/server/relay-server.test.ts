@@ -141,7 +141,7 @@ describe('Qutai Credits against the local server', { skip: !SECRET && 'QUTAI_TES
 
   // FAKE purchases (the temporary stand-in; backend README › Fake purchases): only against a server started with
   // FAKE_PURCHASES=true. Uses test-3 (each run makes one new test purchase; the server allows 10 a day per account).
-  it('fake mode: buying a pack through the app's flow credits it once and the balance rises', async (t) => {
+  it('fake mode: buying a pack through the app’s flow credits it once and the balance rises', async (t) => {
     if (config.purchases?.mode !== 'fake') return t.skip('the server is not in fake purchase mode (FAKE_PURCHASES=true)');
     const pack = config.packs.find((p) => p.store === 'google') ?? config.packs[0];
     if (!pack) return t.skip('no active pack (seed:local adds some)');
