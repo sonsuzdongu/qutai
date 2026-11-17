@@ -52,6 +52,31 @@ Nothing else may write these values. `eas.json` uses `"appVersionSource": "local
 take the numbers from `app.json` too. `android/` and `ios/` are generated: the numbers reach them at the next
 `expo prebuild` / native build, so a bump needs a native rebuild to show.
 
+## Store packages of a version
+
+After a bump (and its commit), on this machine:
+
+```bash
+npm run build:aab -- --pro-mode     # builds/qutai-<version>-<build>-pro-mode.aab
+npm run build:ipa -- --pro-mode     # builds/qutai-<version>-<build>-pro-mode.ipa
+```
+
+Without `--pro-mode` the package is the plain app (no `-pro-mode` in the name). `-- --dry-run` prints the commands and
+runs nothing. `scripts/build/release.mjs` never changes the version; it
+
+1. regenerates the native project (`expo prebuild --platform …`), so the new numbers and pro mode's entitlements are in it;
+2. Android: `./gradlew :app:createBundleReleaseJsAndAssets --rerun :app:bundleRelease`, signed with the upload key
+   (docs/release-signing.md; it stops when the signing file is missing). iOS: `xcodebuild archive` and
+   `-exportArchive` (App Store Connect, automatic signing);
+3. with `--pro-mode`, checks that the server's host is in the package's JavaScript bundle, and stops if it isn't
+   (Gradle once kept a stale bundle);
+4. copies the package to `builds/` (git-ignored) under the name above.
+
+Two values stay out of the repository and are read from the environment or from `.env.build.local` (git-ignored; Expo's
+own commands don't load a file of that name): `EXPO_PUBLIC_QUTAI_API_URL` (the server of a pro-mode build) and
+`QUTAI_APPLE_TEAM_ID` (the Apple team that signs the IPA). The test sign-in variables are always removed. Run the two
+builds one after the other, not together: each needs most of this machine's memory.
+
 ## The server's minimum version
 
 The server refuses requests from an app older than its `min_app_version` setting (D1 `settings`, changed in the admin

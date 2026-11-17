@@ -83,6 +83,8 @@
     "test:i18n": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/i18n-tests/*.test.ts",
     "test:install": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/install-tests/*.test.ts",
     "version:bump": "node scripts/version/bump.mjs",
+    "build:aab": "node scripts/build/release.mjs aab",
+    "build:ipa": "node scripts/build/release.mjs ipa",
     "test:version": "node --test scripts/version/rule.test.mjs",
     "test:layout": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/layout-tests/*.test.ts",
     "test:siterules": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/site-rules-tests/*.test.ts",
