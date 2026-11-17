@@ -762,6 +762,7 @@ export const ja: Record<keyof typeof en, string> = {
   'voiceIntro.deleteItem': '削除：{text}',
   'voiceIntro.hide': 'AI に見せない',
   'voiceIntro.hideHint': 'AI には保存されていることだけが伝わり、内容は伝わりません。',
+  'voiceIntro.replaces': '置き換え前：{old}',
   'voiceIntro.answersVerbatim': '回答を理解できなかったため、話したとおりに表示しています。保存する前に確認してください。',
   'voiceIntro.failed.request': 'AI に接続できませんでした：{detail}',
   'voiceIntro.failed.unreadable': 'AI の回答を解釈できませんでした。',

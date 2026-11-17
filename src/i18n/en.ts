@@ -753,6 +753,7 @@ export const en = {
   'voiceIntro.deleteItem': 'Delete: {text}',
   'voiceIntro.hide': 'Hide from the AI',
   'voiceIntro.hideHint': 'The AI sees only that this is saved, not what it says.',
+  'voiceIntro.replaces': 'Replaces {old}',
   'voiceIntro.answersVerbatim': 'I couldn’t understand your answers, so they are listed as you said them. Check them before saving.',
   'voiceIntro.failed.request': 'I couldn’t reach the AI: {detail}',
   'voiceIntro.failed.unreadable': 'I couldn’t make sense of the AI’s answer.',

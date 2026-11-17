@@ -761,6 +761,7 @@ export const ru: Record<keyof typeof en, string> = {
   'voiceIntro.deleteItem': 'Удалить: {text}',
   'voiceIntro.hide': 'Скрыть от ИИ',
   'voiceIntro.hideHint': 'ИИ видит только, что это сохранено, но не содержание.',
+  'voiceIntro.replaces': 'Заменит {old}',
   'voiceIntro.answersVerbatim': 'Я не смог понять ваши ответы, поэтому они показаны так, как вы их сказали. Проверьте их перед сохранением.',
   'voiceIntro.failed.request': 'Не удалось связаться с ИИ: {detail}',
   'voiceIntro.failed.unreadable': 'Не удалось разобрать ответ ИИ.',

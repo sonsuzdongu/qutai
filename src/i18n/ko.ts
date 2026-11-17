@@ -760,6 +760,7 @@ export const ko: Record<keyof typeof en, string> = {
   'voiceIntro.deleteItem': '삭제: {text}',
   'voiceIntro.hide': 'AI에게 숨기기',
   'voiceIntro.hideHint': 'AI는 저장되어 있다는 사실만 알고 내용은 볼 수 없습니다.',
+  'voiceIntro.replaces': '대체할 항목: {old}',
   'voiceIntro.answersVerbatim': '답변을 이해하지 못해 말씀하신 그대로 표시했습니다. 저장하기 전에 확인하세요.',
   'voiceIntro.failed.request': 'AI에 연결할 수 없습니다: {detail}',
   'voiceIntro.failed.unreadable': 'AI의 응답을 해석할 수 없습니다.',

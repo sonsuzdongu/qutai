@@ -760,6 +760,7 @@ export const es: Record<keyof typeof en, string> = {
   'voiceIntro.deleteItem': 'Eliminar: {text}',
   'voiceIntro.hide': 'Ocultar a la IA',
   'voiceIntro.hideHint': 'La IA solo ve que esto está guardado, no lo que dice.',
+  'voiceIntro.replaces': 'Sustituye a {old}',
   'voiceIntro.answersVerbatim': 'No he podido entender tus respuestas, así que aparecen tal como las dijiste. Revísalas antes de guardar.',
   'voiceIntro.failed.request': 'No he podido conectar con la IA: {detail}',
   'voiceIntro.failed.unreadable': 'No he podido entender la respuesta de la IA.',

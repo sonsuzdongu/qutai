@@ -110,6 +110,12 @@ Saved with `addMemory`, in the same one-fact lines the typed questions write:
 | style | custom instructions | `profile.style.shortLine` / `detailedLine` (replaces the line set before, as the typed question does); no choice: dropped | |
 | other | general | the value as said | |
 
+Name, city, age, gender and payment take one note each: a row of one of these replaces the earlier note of its
+kind (found by the start of its line, "Preferred name:", in the interface language; `withReplacements`), and the
+review row says which ("Replaces “Preferred name: Sam”"; a hidden note only by its label). Saving updates that note
+(a hidden one stays hidden) and deletes any further ones of the kind; deleting the row keeps them. Other kinds
+(allergies, health, shopping notes, other) add up.
+
 A hidden row is saved with a label in the interface language ("Age", "Food allergy", …) that never contains the value
 (`hiddenLabelProblem`). A row memory refuses (full, sensitive) is reported after saving; the others are kept.
 

@@ -298,4 +298,5 @@ Erişilebilirlik ve görünüm:
 - [ ] TalkBack / VoiceOver: her yeni soruya odak gelir; balonlar "Qutai soruyor: …" / "Yanıtınız: …" diye okunur; öneri düğmeleri seçili durumunu söyler.
 - [ ] En büyük yazı boyutu, koyu tema, yatay ekran: sözcükler bölünmez, düğmeler erişilebilir kalır.
 - [ ] Ayarlar › Asistan › Hafıza › "Kendinizi tanıtın" aynı akışı açar; gizli sekme açıkken düğme pasiftir.
+- [ ] Tanıtımı ikinci kez yapın ve başka bir ad söyleyin: "Anladıklarım"da ad satırının altında "Şunun yerine geçer: “Hitap: …”" yazar; kaydedince Hafıza'da tek ad satırı kalır. Alerjiler ise eklenir, yerine geçmez.
 - [ ] Türkçe arayüzde metinler "siz" ile, yapay zekânın notları Türkçe; adlar ve markalar söylendiği gibi.

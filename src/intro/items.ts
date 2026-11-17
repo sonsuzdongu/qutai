@@ -1,4 +1,4 @@
-import type { MemoryCategory } from '../agent/memory';
+import { hiddenLabel, type Memory, type MemoryCategory } from '../agent/memory';
 import type { MessageKey } from '../i18n';
 import type { IntroItem, IntroTopic } from './extract';
 
@@ -19,6 +19,11 @@ export type ReviewRow = {
   hidden: boolean;
   /** Label of a hidden row (what the AI is told it is); never derived from the value. */
   hiddenLabel: MessageKey | null;
+  /**
+   * Earlier notes of the same one-value kind (name, city, age, gender, payment) this row replaces when saved; `shown`
+   * is what the review page may show (a hidden note's label, never its value).
+   */
+  replaces?: { id: string; shown: string }[];
 };
 
 type T = (key: MessageKey, params?: Record<string, string | number>) => string;
@@ -114,9 +119,59 @@ export function reviewRows(items: IntroItem[], t: T): ReviewRow[] {
   return rows;
 }
 
+/**
+ * The one-value kinds, and the start of their lines in the interface language ("Preferred name:"). Payment has three
+ * lines (cash on delivery, card, other) whose starts may differ in a language, so it has three.
+ */
+const SINGLE_LINES: Partial<Record<IntroTopic, { template?: MessageKey; fixed?: MessageKey }[]>> = {
+  name: [{ template: 'profile.fact.name' }],
+  city: [{ template: 'profile.fact.city' }],
+  age: [{ template: 'voiceIntro.fact.age' }],
+  gender: [{ template: 'voiceIntro.fact.gender' }],
+  payment: [{ template: 'voiceIntro.fact.payment' }, { fixed: 'profile.fact.paymentCod' }, { fixed: 'profile.fact.paymentCard' }],
+};
+
+const lower = (text: string) => text.replace(/\s+/g, ' ').trim().toLocaleLowerCase();
+
+/** "Preferred name:" from "Preferred name: {value}" or "Payment preference: card" (up to its colon). */
+function lineStart(text: string): string | null {
+  const at = text.search(/[:：]/);
+  return at > 0 ? lower(text.slice(0, at + 1)) : null;
+}
+
+/** The starts of a one-value topic's lines, or [] for a topic that may have many notes. */
+export function lineStarts(topic: IntroTopic, t: T): string[] {
+  const starts = (SINGLE_LINES[topic] ?? []).map((line) =>
+    lineStart(line.template ? t(line.template, { value: '' }) : t(line.fixed!)),
+  );
+  return [...new Set(starts.filter((s): s is string => !!s))];
+}
+
+/**
+ * Marks which saved notes each one-value row replaces: notes of the same kind found by the start of their line (the
+ * typed questions write the same lines). Saving updates the first and deletes the rest, so a second introduction
+ * leaves one "Preferred name: …", not two. The review page shows them before anything is saved.
+ */
+export function withReplacements(
+  rows: ReviewRow[],
+  memories: Pick<Memory, 'id' | 'text' | 'sensitive' | 'label'>[],
+  t: T,
+): ReviewRow[] {
+  return rows.map((row) => {
+    if (row.kind !== 'memory') return row;
+    const starts = lineStarts(row.topic, t);
+    if (!starts.length) return row;
+    const same = memories.filter((m) => starts.some((start) => lower(m.text).startsWith(start)));
+    // The one with exactly this text first, so an unchanged note is just kept.
+    same.sort((a, b) => Number(lower(b.text) === lower(row.text)) - Number(lower(a.text) === lower(row.text)));
+    const replaces = same.map((m) => ({ id: m.id, shown: m.sensitive ? hiddenLabel(m) : m.text }));
+    return replaces.length ? { ...row, replaces } : row;
+  });
+}
+
 /** What saving the review page writes: memories (hidden ones with their label) and the custom-instructions line. */
 export type IntroWrite =
-  | { kind: 'memory'; text: string; category: MemoryCategory; hidden?: { label: string } }
+  | { kind: 'memory'; text: string; category: MemoryCategory; hidden?: { label: string }; replace?: string[] }
   | { kind: 'instruction'; line: string };
 
 export function introWrites(rows: ReviewRow[], t: T): IntroWrite[] {
@@ -128,6 +183,7 @@ export function introWrites(rows: ReviewRow[], t: T): IntroWrite[] {
           text: row.text,
           category: row.category,
           ...(row.hidden && row.hiddenLabel ? { hidden: { label: t(row.hiddenLabel) } } : {}),
+          ...(row.replaces?.length ? { replace: row.replaces.map((r) => r.id) } : {}),
         },
   );
 }

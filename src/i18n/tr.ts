@@ -751,6 +751,7 @@ export const tr: Record<keyof typeof en, string> = {
   'voiceIntro.deleteItem': 'Sil: {text}',
   'voiceIntro.hide': 'Yapay zekâdan gizle',
   'voiceIntro.hideHint': 'Yapay zekâ yalnızca bunun kayıtlı olduğunu görür, ne yazdığını görmez.',
+  'voiceIntro.replaces': 'Şunun yerine geçer: {old}',
   'voiceIntro.answersVerbatim': 'Yanıtlarınızı anlayamadım, bu yüzden söylediğiniz gibi listelendiler. Kaydetmeden önce kontrol edin.',
   'voiceIntro.failed.request': 'Yapay zekâya ulaşamadım: {detail}',
   'voiceIntro.failed.unreadable': 'Yapay zekânın yanıtından bir anlam çıkaramadım.',

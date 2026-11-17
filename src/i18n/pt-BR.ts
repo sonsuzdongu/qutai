@@ -762,6 +762,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'voiceIntro.deleteItem': 'Excluir: {text}',
   'voiceIntro.hide': 'Ocultar da IA',
   'voiceIntro.hideHint': 'A IA só vê que isto está salvo, não o que diz.',
+  'voiceIntro.replaces': 'Substitui {old}',
   'voiceIntro.answersVerbatim': 'Não consegui entender suas respostas, então elas aparecem como você disse. Confira antes de salvar.',
   'voiceIntro.failed.request': 'Não consegui falar com a IA: {detail}',
   'voiceIntro.failed.unreadable': 'Não consegui entender a resposta da IA.',

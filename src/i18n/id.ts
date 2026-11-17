@@ -761,6 +761,7 @@ export const id: Record<keyof typeof en, string> = {
   'voiceIntro.deleteItem': 'Hapus: {text}',
   'voiceIntro.hide': 'Sembunyikan dari AI',
   'voiceIntro.hideHint': 'AI hanya melihat bahwa ini tersimpan, bukan isinya.',
+  'voiceIntro.replaces': 'Menggantikan {old}',
   'voiceIntro.answersVerbatim': 'Saya tidak dapat memahami jawaban Anda, jadi jawaban ditampilkan seperti yang Anda ucapkan. Periksa sebelum menyimpan.',
   'voiceIntro.failed.request': 'Saya tidak dapat menghubungi AI: {detail}',
   'voiceIntro.failed.unreadable': 'Saya tidak dapat memahami jawaban AI.',

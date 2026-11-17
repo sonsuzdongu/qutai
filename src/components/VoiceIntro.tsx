@@ -29,10 +29,10 @@ import { getLanguage, MessageKey, t } from '../i18n';
 import { answersTurn, ExtractionError, MAX_TRANSCRIPT_CHARS, transcriptTurn } from '../intro/extract';
 import { canSubmit, finalExtraction, hasBack, introReducer, pendingAnswers, START, type FlowState } from '../intro/flow';
 import type { FollowUp, FollowUpAnswer } from '../intro/followUps';
-import { introWrites, reviewRows, withStyleLine, type ReviewRow } from '../intro/items';
+import { introWrites, reviewRows, withReplacements, withStyleLine, type ReviewRow } from '../intro/items';
 import { understand, type IntroTarget } from '../intro/request';
 import { getDb } from '../storage/db';
-import { addMemory } from '../storage/memory';
+import { addMemory, deleteMemory, listMemories, updateMemory } from '../storage/memory';
 import { GradientButton } from '../ui/BrandGradient';
 import { Icon, type IconName } from '../ui/Icon';
 import { isShort } from '../ui/layout';
@@ -225,6 +225,20 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
     setRowsFor(phase);
     setRows(reviewRows(finalExtraction(state, t).items, t));
   }
+  // Then which earlier notes each one-value row replaces (read from memory, so a moment later).
+  useEffect(() => {
+    if (!rowsFor || rowsFor.name !== 'review') return;
+    let live = true;
+    getDb()
+      .then(listMemories)
+      .then((memories) => {
+        if (live) setRows((current) => withReplacements(current, memories, t));
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [rowsFor]);
 
   const save = async () => {
     dispatch({ type: 'save' }, 'none');
@@ -238,7 +252,14 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
         continue;
       }
       try {
-        await addMemory(db, write.text, write.category, write.hidden);
+        if (write.replace?.length) {
+          // The earlier note of this kind takes the new text (a hidden one stays hidden); any others of the kind go.
+          const [first, ...rest] = write.replace;
+          await updateMemory(db, first, write.text, write.category, write.hidden);
+          for (const id of rest) await deleteMemory(db, id);
+        } else {
+          await addMemory(db, write.text, write.category, write.hidden);
+        }
         count++;
       } catch (e) {
         problems.push(t('voiceIntro.notSaved', { text: write.text, reason: memoryErrorText(e) }));
@@ -853,6 +874,15 @@ function Review({ rows, notice, onChange }: { rows: ReviewRow[]; notice: string 
                 <Icon name="close" size={16} color={palette.textSecondary} />
               </Pressable>
             </View>
+            {(() => {
+              // The same text already saved is just kept; only a different earlier note is worth saying.
+              const other = (row.replaces ?? []).filter((r) => r.shown.trim().toLocaleLowerCase() !== row.text.trim().toLocaleLowerCase());
+              return other.length ? (
+                <Text style={styles.replaces}>
+                  {t('voiceIntro.replaces', { old: other.map((r) => `“${r.shown}”`).join(', ') })}
+                </Text>
+              ) : null;
+            })()}
             {row.canHide && (
               <View style={styles.hideRow}>
                 <View style={styles.flex}>
@@ -981,6 +1011,7 @@ const useStyles = makeStyles((c) => ({
   reviewText: { color: c.text, fontSize: 15, lineHeight: 20 },
   reviewInput: { flex: 1, color: c.text, fontSize: 15, lineHeight: 20, paddingVertical: 0 },
   remove: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+  replaces: { color: c.textSecondary, fontSize: 13.5, lineHeight: 19, paddingLeft: 28, paddingRight: 8 },
   hideRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 28, paddingRight: 8 },
   hideText: { color: c.text, fontSize: 14.5, fontWeight: '600' },
   bottom: {

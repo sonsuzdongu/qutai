@@ -128,3 +128,56 @@ test('saving writes hidden rows with their translated label, never the value', a
     assert.equal(hiddenLabelProblem(t(`voiceIntro.hiddenLabel.${key}`), 'Food allergy: peanuts'), null);
   }
 });
+
+test('a one-value note replaces the earlier note of its kind; the review shows what, never a hidden value', async () => {
+  const { withReplacements, introWrites, lineStarts } = await import('../../src/intro/items');
+  const mem = (id: string, text: string, sensitive = false, label: string | null = null) => ({ id, text, sensitive, label });
+  const saved = [
+    mem('n1', 'Preferred name: Just Just Deniz'),
+    mem('n2', 'preferred name:  Den'),
+    mem('c1', 'City: Ankara'),
+    mem('p1', 'Payment preference: card'),
+    mem('a1', 'Age: 33', true, 'Age'),
+    mem('f1', 'Food allergy: shellfish'),
+    mem('x1', 'Full name: Deniz Yılmaz'),
+  ];
+  const rows = withReplacements(
+    reviewRows([it('name', 'Deniz'), it('city', 'Izmir'), it('payment', 'cash', 'cod'), it('age', '34'), it('allergy', 'peanuts'), it('style', 's', 'short')], t),
+    saved,
+    t,
+  );
+  const by = (topic: string) => rows.find((r) => r.topic === topic)!;
+  assert.deepEqual(by('name').replaces, [
+    { id: 'n1', shown: 'Preferred name: Just Just Deniz' },
+    { id: 'n2', shown: 'preferred name:  Den' },
+  ]);
+  assert.deepEqual(by('city').replaces, [{ id: 'c1', shown: 'City: Ankara' }]);
+  assert.deepEqual(by('payment').replaces, [{ id: 'p1', shown: 'Payment preference: card' }]);
+  assert.deepEqual(by('age').replaces, [{ id: 'a1', shown: 'Age' }]);
+  // Allergies add up; "Full name" is not "Preferred name".
+  assert.equal(by('allergy').replaces, undefined);
+  assert.equal(by('style').replaces, undefined);
+  const writes = introWrites(rows, t);
+  assert.deepEqual(writes.find((w) => w.kind === 'memory' && w.text === 'Preferred name: Deniz'), {
+    kind: 'memory',
+    text: 'Preferred name: Deniz',
+    category: 'identity',
+    replace: ['n1', 'n2'],
+  });
+  // An identical note comes first, so it is kept and only the others go.
+  const same = withReplacements(reviewRows([it('city', 'Izmir')], t), [mem('c0', 'City: Ankara'), mem('c2', 'City: Izmir')], t);
+  assert.deepEqual(same[0].replaces?.map((r) => r.id), ['c2', 'c0']);
+  assert.deepEqual(lineStarts('allergy', t), []);
+});
+
+test('the line starts are found in every interface language', async () => {
+  const { lineStarts } = await import('../../src/intro/items');
+  const { LANGUAGES } = await import('../../src/i18n/languages');
+  const { tIn } = await import('../../src/i18n');
+  for (const language of LANGUAGES) {
+    const tl = (key: Parameters<typeof t>[0], params?: Record<string, string | number>) => tIn(language, key, params);
+    for (const topic of ['name', 'city', 'age', 'gender', 'payment'] as const) {
+      assert.ok(lineStarts(topic, tl).length > 0, `${language} ${topic}`);
+    }
+  }
+});

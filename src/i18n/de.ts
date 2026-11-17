@@ -756,6 +756,7 @@ export const de: Record<keyof typeof en, string> = {
   'voiceIntro.deleteItem': 'Löschen: {text}',
   'voiceIntro.hide': 'Vor der KI verbergen',
   'voiceIntro.hideHint': 'Die KI sieht nur, dass dies gespeichert ist, nicht was es sagt.',
+  'voiceIntro.replaces': 'Ersetzt {old}',
   'voiceIntro.answersVerbatim': 'Ich konnte Ihre Antworten nicht verstehen, daher stehen sie so da, wie Sie sie gesagt haben. Prüfen Sie sie vor dem Speichern.',
   'voiceIntro.failed.request': 'Ich konnte die KI nicht erreichen: {detail}',
   'voiceIntro.failed.unreadable': 'Ich konnte mit der Antwort der KI nichts anfangen.',
