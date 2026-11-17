@@ -27,6 +27,8 @@ import {
 } from '../device/voiceInput';
 import { languageLabel, spokenLanguageName } from '../device/voiceLanguage';
 import { t } from '../i18n';
+import type { AssistantLook } from '../ui/assistantLook';
+import { ListeningLook } from './AssistantGlass';
 import { useReduceMotion } from '../utils/useReduceMotion';
 
 /**
@@ -38,7 +40,7 @@ import { useReduceMotion } from '../utils/useReduceMotion';
  *   preparing ──recogniser started──▶ listening (live transcript, language tag)
  *   preparing/listening ──finger moves past CANCEL_DISTANCE──▶ same, "Release to cancel" (tick); back inside: tick
  *   listening ──lift──▶ finishing: waits up to FINAL_WAIT_MS for the final result
- *   finishing ──text──▶ sent (light haptic, toast with Open) · ──nothing / only noise──▶ nothing (bubble says so)
+ *   finishing ──text──▶ sent (light haptic; the step strip that follows is the confirmation) · ──nothing / only noise──▶ nothing (bubble says so)
  *   any ──lift while "Release to cancel"──▶ cancelled · ──interruption (app left, call, dialog, permission prompt,
  *        touch taken by the system)──▶ stopped, nothing sent
  *   preparing ──permission or online-service question needed──▶ the question instead of listening (idle after)
@@ -60,8 +62,6 @@ const MAX_HOLD_MS = 60_000;
 const NOTICE_MS = 1800;
 /** "Busy" stays longer: it has a button. */
 const BUSY_MS = 4000;
-/** The toast shows the message's first words, up to this many characters. */
-const PREVIEW_CHARS = 48;
 
 /** The button's rectangle in the window, which the bubble is placed next to. */
 export type Anchor = { x: number; y: number; width: number; height: number };
@@ -113,17 +113,10 @@ export type PushToTalkDeps = {
   online: VoiceOnline;
   onOnlineChange: (online: VoiceOnline) => void;
   onStarted: (lang: string) => void;
-  openPanel: () => void;
-  toast: (message: string, action?: { label: string; onPress: () => void }) => void;
 };
 
 /** Speech that is only punctuation or nothing at all is never sent. */
 const hasWords = (text: string) => /[\p{L}\p{N}]/u.test(text);
-
-function preview(text: string): string {
-  const one = text.replace(/\s+/g, ' ').trim();
-  return one.length <= PREVIEW_CHARS ? one : `${one.slice(0, PREVIEW_CHARS).replace(/\s+\S*$/, '')}…`;
-}
 
 export function usePushToTalk(deps: PushToTalkDeps): { handlers: HoldHandlers; bubble: Bubble; dismiss: () => void } {
   const [bubble, setBubble] = useState<Bubble>(IDLE);
@@ -193,7 +186,6 @@ export function usePushToTalk(deps: PushToTalkDeps): { handlers: HoldHandlers; b
       d.send(text);
       tick();
       AccessibilityInfo.announceForAccessibility(t('ptt.sentA11y'));
-      d.toast(t('ptt.sent', { text: preview(text) }), { label: t('ptt.open'), onPress: d.openPanel });
     },
     [hide, linger],
   );
@@ -390,6 +382,7 @@ export function usePushToTalk(deps: PushToTalkDeps): { handlers: HoldHandlers; b
 export function PushToTalkBubble({
   bubble,
   barAtBottom,
+  look = 'classic',
   onOpenPanel,
   onSend,
   onCancel,
@@ -397,6 +390,8 @@ export function PushToTalkBubble({
 }: {
   bubble: Bubble;
   barAtBottom: boolean;
+  /** TRIAL (src/ui/assistantLook.ts): the glass sheet or the light curtain instead of this bubble. */
+  look?: AssistantLook;
   onOpenPanel: () => void;
   onSend: () => void;
   onCancel: () => void;
@@ -427,19 +422,8 @@ export function PushToTalkBubble({
     }).start();
   }, [listening, level, reduceMotion, pulse]);
 
-  if (!visible || !bubble.anchor) return null;
-  const a = bubble.anchor;
-  const bubbleWidth = Math.min(320, width - 32);
-  const GAP = 10;
   const ownLang = info.owner === 'hold' ? info.lang : null;
   const fellBackFrom = info.owner === 'hold' ? info.fellBackFrom : null;
-  // Bottom bar: above the button, its right edge on the button's. Top bar: below, ending left of the button, so the
-  // thumb on the button doesn't cover it.
-  const right = Math.max(insets.right + 8, barAtBottom ? width - (a.x + a.width) : width - a.x + 4);
-  const position = barAtBottom
-    ? { bottom: Math.max(insets.bottom + 8, height - a.y + GAP) }
-    : { top: Math.max(insets.top + 8, a.y + a.height + GAP) };
-
   const status =
     bubble.cancelling && (bubble.phase === 'listening' || bubble.phase === 'preparing')
       ? t('ptt.releaseToCancel')
@@ -462,6 +446,37 @@ export function PushToTalkBubble({
     bubble.phase === 'busy' ||
     (bubble.viaA11y && (bubble.phase === 'preparing' || bubble.phase === 'listening' || bubble.phase === 'ready'));
   const recording = bubble.phase === 'preparing' || bubble.phase === 'listening' || bubble.phase === 'finishing';
+
+  // The trial looks show everything that has no buttons (those stay in the bubble: busy, a screen reader's Send/Cancel).
+  if (look !== 'classic' && !(visible && withButtons)) {
+    return (
+      <ListeningLook
+        look={look}
+        show={visible}
+        barAtBottom={barAtBottom}
+        level={listening ? level : 0}
+        status={status}
+        transcript={bubble.phase === 'nothing' ? '' : bubble.transcript}
+        tag={ownLang && recording ? languageLabel(ownLang) : null}
+        note={
+          fellBackFrom && ownLang && recording
+            ? t('voice.fellBack', { wanted: spokenLanguageName(fellBackFrom), language: spokenLanguageName(ownLang) })
+            : null
+        }
+        cancelling={bubble.cancelling && (bubble.phase === 'listening' || bubble.phase === 'preparing')}
+      />
+    );
+  }
+  if (!visible || !bubble.anchor) return null;
+  const a = bubble.anchor;
+  const bubbleWidth = Math.min(320, width - 32);
+  const GAP = 10;
+  // Bottom bar: above the button, its right edge on the button's. Top bar: below, ending left of the button, so the
+  // thumb on the button doesn't cover it.
+  const right = Math.max(insets.right + 8, barAtBottom ? width - (a.x + a.width) : width - a.x + 4);
+  const position = barAtBottom
+    ? { bottom: Math.max(insets.bottom + 8, height - a.y + GAP) }
+    : { top: Math.max(insets.top + 8, a.y + a.height + GAP) };
 
   return (
     <Animated.View

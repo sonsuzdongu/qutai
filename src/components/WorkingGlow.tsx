@@ -3,8 +3,10 @@ import { useEffect, useState } from 'react';
 import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useDerivedValue, useFrameCallback, useSharedValue } from 'react-native-reanimated';
 import { useWaitingForUser } from '../device/backgroundTask';
+import type { AssistantLook } from '../ui/assistantLook';
 import { usePalette } from '../ui/theme';
 import { useReduceMotion } from '../utils/useReduceMotion';
+import { EdgeLight } from './AssistantGlass';
 
 /** How far the light reaches in from each screen edge, in points. */
 export const GLOW_DEPTH = 40;
@@ -82,7 +84,7 @@ const glowSource = () => (source ??= Skia.RuntimeEffect.Make(GLOW_SKSL))!;
  * Cost: the drift is a Reanimated frame callback on the UI thread (no JavaScript per frame) that moves one uniform
  * 30 times a second; Skia draws only the edge bands. With "Reduce motion" the same light is drawn once, still.
  */
-export function WorkingGlow({ visible }: { visible: boolean }) {
+export function WorkingGlow({ visible, look = 'classic' }: { visible: boolean; look?: AssistantLook }) {
   const waiting = useWaitingForUser();
   const [active, setActive] = useState(AppState.currentState === 'active');
   useEffect(() => {
@@ -90,7 +92,9 @@ export function WorkingGlow({ visible }: { visible: boolean }) {
     return () => sub.remove();
   }, []);
   if (!visible || waiting || !active) return null;
-  return <Glow />;
+  // TRIAL (src/ui/assistantLook.ts): "band" keeps the light on the strip only; "curtain" has a travelling line.
+  if (look === 'band') return null;
+  return look === 'curtain' ? <EdgeLight /> : <Glow />;
 }
 
 function Glow() {

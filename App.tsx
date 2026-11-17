@@ -2261,8 +2261,6 @@ function BrowserApp({
       const chat = browserInstance.conversationOf(active);
       rememberVoiceLanguage(lang, active.incognito || chat.incognito || chat.privacy.touchedIncognito);
     },
-    openPanel: () => setPanelOpen(true),
-    toast: toast.show,
   });
 
   /** The language voice input last listened in: a fallback for conversations that say nothing yet. Not incognito. */
@@ -2590,12 +2588,13 @@ function BrowserApp({
           />
         </ErrorBoundary>
         {/* Over the page and the panel, under the strip; takes no touches. */}
-        <WorkingGlow visible={running} />
+        <WorkingGlow visible={running} look={settings.assistantLook} />
         {stripVisible(work) && runningChat ? (
           <StepStrip
             line={stripLine}
             elsewhere={!!browser.agentTabId && browser.agentTabId !== browser.activeId}
             bottom={stripBottom}
+            look={settings.assistantLook}
             onOpen={() => {
               tick();
               // The panel shows the running conversation's steps.
@@ -2616,6 +2615,7 @@ function BrowserApp({
           <AnswerCard
             text={answerCard}
             bottom={stripBottom}
+            look={settings.assistantLook}
             onOpen={() => {
               applyWork({ type: 'dismissAnswer' });
               setPanelOpen(true);
@@ -2850,6 +2850,7 @@ function BrowserApp({
         <PushToTalkBubble
           bubble={ptt.bubble}
           barAtBottom={barAtBottom}
+          look={settings.assistantLook}
           onOpenPanel={() => setPanelOpen(true)}
           onSend={ptt.handlers.release}
           onCancel={ptt.handlers.cancel}

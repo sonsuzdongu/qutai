@@ -8,6 +8,7 @@ import type { VoiceOnline } from '../device/voiceInput';
 import { AlwaysAllowKind, parseAlwaysAllow, serializeAlwaysAllow } from '../agent/alwaysAllow';
 import { removeRetiredInstructionLines } from '../agent/retiredInstructions';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
+import { ASSISTANT_LOOKS, type AssistantLook } from '../ui/assistantLook';
 import { secureStoreReady } from './secureStoreGate';
 
 export type Settings = {
@@ -93,6 +94,8 @@ export type Settings = {
    * action (docs/working-mode.md). Off: no marker and no pause. On by default.
    */
   showActionMarker: boolean;
+  /** TRIAL (to be settled before launch): which look listening and working have (src/ui/assistantLook.ts). */
+  assistantLook: AssistantLook;
   /** Reader mode colours: following the app's appearance, light, dark or sepia. */
   readerTheme: ReaderTheme;
   readerFont: ReaderFont;
@@ -157,6 +160,7 @@ export const DEFAULT_SETTINGS: Settings = {
   geminiStreaming: false,
   showCost: true,
   showActionMarker: true,
+  assistantLook: 'curtain',
   readerTheme: 'auto',
   readerFont: 'serif',
   readerEasyReading: false,
@@ -200,6 +204,7 @@ const KEYS = {
   geminiStreaming: 'gemini_streaming',
   showCost: 'show_cost',
   showActionMarker: 'show_action_marker',
+  assistantLook: 'assistant_look',
   readerTheme: 'reader_theme',
   readerFont: 'reader_font',
   readerEasyReading: 'reader_easy_reading',
@@ -293,6 +298,7 @@ export async function loadSettings(): Promise<Settings> {
     geminiStreaming,
     showCost,
     showActionMarker,
+    assistantLook,
     readerTheme,
     readerFont,
     readerEasyReading,
@@ -338,6 +344,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.geminiStreaming),
     get(KEYS.showCost),
     get(KEYS.showActionMarker),
+    get(KEYS.assistantLook),
     get(KEYS.readerTheme),
     get(KEYS.readerFont),
     get(KEYS.readerEasyReading),
@@ -391,6 +398,7 @@ export async function loadSettings(): Promise<Settings> {
     geminiStreaming: geminiStreaming === 'true',
     showCost: showCost !== 'false',
     showActionMarker: showActionMarker !== 'false',
+    assistantLook: ASSISTANT_LOOKS.includes(assistantLook as AssistantLook) ? (assistantLook as AssistantLook) : 'curtain',
     readerTheme: READER_THEMES.includes(readerTheme as ReaderTheme) ? (readerTheme as ReaderTheme) : 'auto',
     readerFont: READER_FONTS.includes(readerFont as ReaderFont) ? (readerFont as ReaderFont) : 'serif',
     readerEasyReading: readerEasyReading === 'true',
@@ -466,6 +474,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.geminiStreaming, String(settings.geminiStreaming)),
     set(KEYS.showCost, String(settings.showCost)),
     set(KEYS.showActionMarker, String(settings.showActionMarker)),
+    set(KEYS.assistantLook, settings.assistantLook),
     set(KEYS.readerTheme, settings.readerTheme),
     set(KEYS.readerFont, settings.readerFont),
     set(KEYS.readerEasyReading, String(settings.readerEasyReading)),
