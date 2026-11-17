@@ -40,10 +40,10 @@ grafikleridir, arayüzün parçası değil.
 |---|---|---|---|---|---|
 | 5 | 0:15–0:18 | Yeni bir sekmede yeni sohbet. Osman yazıyor: "Akşam için iki kişilik yemek siparişi ver." (gluten sözü yok) | — | Gluten demedi. | No mention of gluten. |
 | 6 | 0:18–0:23 | Asistan menüyü okur ve yalnızca glutensiz yemekleri sepete ekler (gerçek çekimlerde arama kutusuna yazmadı; menüden seçti). İngilizce çekimde bunu kendisi yazıyor: "Filter is off, but I'll just pick gluten-free items." Türkçe çekimde kanıt, teslimat formuna kendiliğinden yazdığı "Gluten intoleransı var, lütfen …" notu | **Vurgu anı 2:** o satıra teal çerçeve, rozet "Hafızadan". Köşede "Hızlandırıldı ×N" | Ama Qutai hatırladı. | But Qutai remembered. |
-| 7 | — | (Çıkarıldı: asistan iki çekimde de seçimi sormadan, yalnızca glutensiz yemeklerle sepeti doldurdu.) | — | — | — |
+| 7 | — | Türkçe çekimde asistan glutensiz seçenekleri düğmelerle sorar, Osman birine dokunur (İngilizce çekimde sormadan glutensizleri seçti) | Seçilen düğmeye çerçeve | Seçimi siz yaparsınız. | You choose. |
 | 8 | 0:26–0:30 | Teslimat formu. Uygulamanın penceresi: "Kişisel bilgileriniz lokanta… sitesine girilsin mi?" → Osman "Bir kez izin ver"e dokunur; ad ve adres alanları dolar | **Kontrol anı:** pencereye yakınlaşma | Bilgileriniz sorulmadan girilmez. | Your details go in only when you say so. |
 | 9 | 0:30–0:33 | Ödeme adımı: asistan durur ve ödemenin size kaldığını yazar | Ödeme düğmesine hafif vurgu | Ödemeyi siz yaparsınız. | You make the payment. |
-| 10 | 0:33–0:37 | **Kapanış kartı:** Q logosu, slogan, alt satır | Küçük not, altta | Qutai. Sizi tanır, telefonunuzda. · Açık kaynak · Yakında App Store ve Google Play'de | Qutai. It knows you, on your phone. · Open source · Coming to the App Store and Google Play |
+| 10 | son 4 sn | **Kapanış kartı:** Q logosu, slogan, alt satır | Küçük not, altta | Qutai: telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız. · Açık kaynak · Yakında App Store ve Google Play'de | Qutai: the AI assistant in your phone's browser. · Open source · Coming to the App Store and Google Play |
 
 Kapanıştaki küçük not: "Alerjen bilgisini her zaman restoranla doğrulayın." / "Always confirm allergens with the
 restaurant." Ayrıca köşede "Gerçek ekran kaydı. Hızlandırılan yerler belirtilmiştir." / "Real screen recording;
@@ -61,9 +61,9 @@ Sakin, sıcak, kısa cümleler; altyazıyla aynı sözler, sahnelerin üstüne:
 |---|---|---|
 | 1–3 | Bir kez söyleyin, yeter. Qutai hatırlar. | Tell Qutai once. It remembers. |
 | 4 | Telefonunuzda saklanır; görebilir, silebilirsiniz. | It stays on your phone, where you can see it and delete it. |
-| 5–6 | Ertesi akşam yemek isteyin. Söylemenize gerek yok: glutensiz arar. | The next evening, ask for dinner. No need to say it again: it looks for gluten-free. |
-| 8–9 | Bilgileriniz sorulmadan girilmez. Ödemeyi siz yaparsınız. | Your details go in only when you say so. You make the payment. |
-| 10 | Qutai. Sizi tanır, telefonunuzda. | Qutai. It knows you, on your phone. |
+| 5–6 | Ertesi akşam yemek isteyin. · Söylemenize gerek yok: glutensiz seçer. | The next evening, ask for dinner. · No need to say it again: it picks gluten-free. |
+| 8–9 | Bilgileriniz sorulmadan girilmez. · Ödemeyi siz yaparsınız. | Your details go in only when you say so. · You make the payment. |
+| 10 | Qutai: telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız. | Qutai: the AI assistant in your phone's browser. |
 
 ## Müzik (ElevenLabs)
 
@@ -77,31 +77,29 @@ Bütün bölümlerde aynı müzik, değişen tek şey motifin varyasyonu.
   "Lokanta Moda" (puan, teslimat süresi, kategoriler, sepet çubuğu, teslimat zamanı, ödeme). Üstte demo yazısı yok;
   hiçbir şey sipariş edilmez ya da ödenmez. Kayıtta `https://www.yourlocalfooddeliveryservice.com/` adresinden açılır
   (kurulum: `README.md`, "Demo alan adı"). İngilizce için `?lang=en`.
-- **Seslendirme:** Türkçe ve İngilizce hazır (`audio/01/tr-1…5.mp3`, `en-1…5.mp3`, ses: "Ayça D."), her satır
-  sahnesine sığıyor. "Qutai" seslendirmede "Kutay" diye okunuyor (sahibinin kararı; yazıda ve altyazıda "Qutai"
-  kalıyor, okunuşu `make_voice_01.py` içindeki `spoken()` belirliyor). ElevenLabs'in yazıya çevirisiyle kontrol
-  edildi: bütün satırlar doğru duyuluyor.
+- **Seslendirme:** Türkçe ve İngilizce, ses "Ayça D." (`audio/01/<dil>-1, 2, 3a, 3b, 4a, 4b, 5.mp3`). Her dil tek
+  istekte, satırlar arasında duraklamayla üretilip duraklamalardan kesiliyor (`make_voice_01.py`); satırları ayrı
+  isteklerde üretince bazıları farklı biri okuyormuş gibi duyuluyordu. "Qutai" seslendirmede "Kutay" diye okunuyor
+  (sahibinin kararı; yazıda ve altyazıda "Qutai"). Yazıya çeviriyle kontrol edildi.
 - **Müzik:** `audio/01/music.mp3` (37 sn, sözsüz). Yeniden üretmek için `python3 make_music_01.py`.
-- **Ses önizlemesi:** `audio/01/preview-tr.mp3` ve `preview-en.mp3`. Müziğin üstüne seslendirme satırları
-  storyboard'daki zamanlarda (0:02, 0:09, 0:15, 0:26, 0:33) yerleştirildi; konuşurken müzik kısılıyor.
-
 - **Çekimler (2026-11-17, Claude Sonnet 5.5, iOS Simülatör):** `raw/` içinde, git'e girmez.
-  - Türkçe: `ep01-tr-actA-take1.mp4` (tanışma, hafıza ekranı) ve `ep01-tr-actB-take2.mp4` (sipariş). B'nin ilk çekimi
-    elendi. Kullanılan çekimde asistan önce yanlışlıkla lahmacun ekledi, sayfayı yenileyip düzeltti; bu kısım ×12
-    hızlandırılmış bölümde görünüyor, gizlenmedi. Yanıtının ilk satırı ("Bu bilgiler zaten kayıtlıydı") doğru olmadığı
-    için A'da yanıt gösterilmiyor, yalnızca "Hatırlanıyor" satırları.
-  - İngilizce: `ep01-en-actA-take1.mp4`, `ep01-en-actB-take1.mp4` (simülatör dili İngilizce, demo site `?lang=en`).
-    A'da "Remembering" satırları yanıtla aynı anda geliyor ve yanıt Türkçe çıktı; bu yüzden filmde mesaj ve bu satırlar
-    yakınlaştırılarak (kırpma) gösteriliyor. B temiz: asistan yalnızca glutensiz yemek seçtiğini kendisi yazıyor.
-  - Not: Uygulamada bulunan bir hata kayıtta göründü. Asistan, hafıza boşken de "zaten kayıtlıydı" diyor. Filme
-    girmiyor; ayrıca bildirildi.
+  - A (tanışma, hafıza ekranı): `ep01-tr-actA-take1.mp4`, `ep01-en-actA-take1.mp4`. Türkçe yanıtın ilk satırı ("Bu
+    bilgiler zaten kayıtlıydı") doğru olmadığı için gösterilmiyor, yalnızca "Hatırlanıyor" satırları. İngilizcede
+    "Remembering" satırları yanıtla aynı anda geliyor ve yanıt Türkçe çıktı; o an yakınlaştırılarak (kırpma)
+    gösteriliyor.
+  - B (sipariş, yeni demo site ve alan adıyla): `ep01-tr-actB-take3.mp4`, `ep01-en-actB-take2.mp4`. Türkçede asistan
+    "Gluten intoleransın var, glutensiz seçenekleri baz alalım" deyip seçenek soruyor, iki kez kişisel bilgi izni ve
+    teslimat saati soruyor, ödemede duruyor. İngilizcede soru sormadan yalnızca glutensiz seçiyor ("all
+    gluten-free"), restorana glutensiz notu yazıyor, ödemede duruyor. Eski B çekimleri (localhost) artık kullanılmıyor.
+  - Not: Uygulamada bir hata kayıtta göründü: asistan hafıza boşken de "zaten kayıtlıydı" diyor. Filme girmiyor;
+    ayrıca bildirildi.
 - **Kurgu:** `python3 edit_01.py [tr|en] [v|h|short]` (`out/`, git'e girmez). Kesme noktaları, çerçeveler, rozetler ve
   seslendirme zamanları betiğin içinde. Yalnızca kesme, hız (işaretli), kısa donmuş kare, yakınlaştırma ve üstüne
   film grafikleri; uygulama ekranı değiştirilmiyor. Ses: müzik konuşma sırasında kısılıyor, toplam −16 LUFS.
-- **Çıktılar (`out/`):** `01-hafiza-tr.mp4` (38 sn, 9:16), `01-hafiza-tr-16x9.mp4`, `01-hafiza-tr-15s.mp4`; aynıları
-  `-en` ile (40 sn). Her biri `.webm` ve `.vtt` ile; kapak `01-hafiza-{tr,en}-cover.jpg`. MP4'ler 1–2 MB.
-- **Kalan:** Mevcut çekimlerde eski demo site ve `localhost:8090` görünüyor. Yeni site ve alan adıyla yeniden
-  çekilecek. Videoları siteye koymak ayrı bir iş (henüz yapılmadı).
+- **Çıktılar (`out/`):** `01-hafiza-tr.mp4` (45 sn, 9:16), `01-hafiza-tr-16x9.mp4`, `01-hafiza-tr-15s.mp4`; aynıları
+  `-en` ile (43 sn). Her biri `.webm` ve `.vtt` ile; kapak `01-hafiza-{tr,en}-cover.jpg`. MP4'ler 1–2 MB.
+- **Kalan:** Videoları siteye koymak ayrı bir iş (henüz yapılmadı). Filmler yayımlanmadan önce demo alan adı
+  alınmalı ya da sahibinin bir alan adıyla yeniden çekilmeli (README, "Demo alan adı").
 
 ## Teslim edilecekler
 

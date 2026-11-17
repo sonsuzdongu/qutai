@@ -6,7 +6,7 @@
 export const en = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai is an open-source AI browser for iPhone and Android. Its assistant reads and uses pages for you with your own AI key, keeps your data on your phone and asks before sensitive actions. In development.',
+    'Qutai is the AI assistant in your phone’s browser: an open-source browser for iPhone and Android whose assistant reads and uses pages for you with your own AI key, keeps your data on your phone and asks before sensitive actions. In development.',
   'meta.ogAlt': 'The Qutai logo, a blue Q, next to the words: Qutai, Agentic Browser.',
   'meta.appDescription':
     'An open-source AI browser for iOS and Android whose assistant reads and uses web pages for you, with your own AI provider key.',
@@ -30,8 +30,9 @@ export const en = {
 
   'hero.eyebrow': 'AI-first browser',
   'hero.title': 'Built with AI. Built for AI.',
+  'hero.tagline': 'The AI assistant in your phone’s browser.',
   'hero.lede':
-    'A browser for iPhone and Android whose assistant reads the page and uses it for you.',
+    'Qutai is a browser for iPhone and Android whose assistant reads the page and uses it for you.',
   'hero.github': 'View on GitHub',
   'hero.status': 'In development. Coming to the App Store and Google Play; not released yet.',
 

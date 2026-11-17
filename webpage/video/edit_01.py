@@ -25,23 +25,23 @@ def font(spec, size):
 T = {
  'tr': dict(title='Sizi tanır.', series='Qutai · Sizi tanır', next='Ertesi akşam', fast='Hızlandırıldı',
             remembered='Hatırlandı', from_memory='Hafızadan',
-            cap={'say': 'Bir kez söyleyin.', 'rem': 'Hatırladı.',
+            cap={'say': 'Bir kez söyleyin.', 'rem': 'Hatırladı.', 'choose': 'Seçimi siz yaparsınız.',
                  'phone': 'Telefonunuzda durur. Görebilir, değiştirebilir, silebilirsiniz.',
                  'nogluten': 'Gluten demedi.', 'work': 'Menüyü okur, glutensizleri seçer.',
                  'ask': 'Bilgileriniz sorulmadan girilmez.', 'note': 'Ama Qutai hatırladı.',
                  'pay': 'Ödemeyi siz yaparsınız.'},
-            close1='Qutai. Sizi tanır, telefonunuzda.', close2='Açık kaynak · Yakında App Store ve Google Play’de',
+            close1='Qutai: telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız.', close2='Açık kaynak · Yakında App Store ve Google Play’de',
             note1='Alerjen bilgisini her zaman restoranla doğrulayın.',
             note2='Gerçek ekran kaydı. Hızlandırılan yerler belirtilmiştir.',
             note3='Restoran ve sipariş sitesi bu kayıt için hazırlanmış bir örnektir.'),
  'en': dict(title='It gets to know you.', series='Qutai · It gets to know you', next='The next evening',
             fast='Sped up', remembered='Remembered', from_memory='From memory',
-            cap={'say': 'Say it once.', 'rem': 'Remembered.',
+            cap={'say': 'Say it once.', 'rem': 'Remembered.', 'choose': 'You choose.',
                  'phone': 'It stays on your phone. See it, edit it, delete it.',
                  'nogluten': 'No mention of gluten.', 'work': 'It reads the menu and picks gluten-free.',
                  'ask': 'Your details go in only when you say so.', 'note': 'But Qutai remembered.',
                  'pay': 'You make the payment.'},
-            close1='Qutai. It knows you, on your phone.', close2='Open source · Coming to the App Store and Google Play',
+            close1="Qutai: the AI assistant in your phone's browser.", close2='Open source · Coming to the App Store and Google Play',
             note1='Always confirm allergens with the restaurant.',
             note2='Real screen recording; sped-up parts are marked.',
             note3='The restaurant and its ordering site are a mock-up made for this recording.'),
@@ -51,51 +51,57 @@ T = {
 # Source rectangles are in recording pixels (1206x2622). Times are seconds in the raw files.
 # Each language has its own takes; the English ones are filled in once they are recorded (TAKES['en']).
 TAKES = {
- 'tr': {'A': 'raw/ep01-tr-actA-take1.mp4', 'B': 'raw/ep01-tr-actB-take2.mp4'},
- 'en': {'A': 'raw/ep01-en-actA-take1.mp4', 'B': 'raw/ep01-en-actB-take1.mp4'},
+ 'tr': {'A': 'raw/ep01-tr-actA-take1.mp4', 'B': 'raw/ep01-tr-actB-take3.mp4'},
+ 'en': {'A': 'raw/ep01-en-actA-take1.mp4', 'B': 'raw/ep01-en-actB-take2.mp4'},
 }
-CUTS = {}  # per language: list of segments
+# Act B in both languages is on the mock delivery site under its own domain (demo-sites/, README "Demo alan adı").
+# Cuts skip the time the recording waited for a tap (the questions stay on screen until answered); waiting for the
+# assistant is sped up and marked instead.
+DIALOG = (60, 770, 1145, 1925)
+CUTS = {}
 CUTS['tr'] = [
- dict(card='open', dur=2.0),
- dict(src='A', a=5.4, b=7.4, cap='say'),
+ dict(card='open', dur=2.0),                                                                    # 0
+ dict(src='A', a=5.4, b=7.4, cap='say'),                                                        # 1
  dict(src='A', a=7.4, b=9.5, freeze=0.7, cap='rem',
-      rects=[(170, 505, 1150, 690)], badge=('remembered', 'check', (170, 505, 1150, 690))),
- dict(src='A', a=53.6, b=58.6, cap='phone', rects=[(48, 986, 1160, 1144), (48, 1846, 1160, 2002)]),
- dict(card='next', dur=1.2),
- dict(src='B', a=0.2, b=2.8),
- dict(src='B', a=9.8, b=13.3, cap='nogluten'),
- dict(src='B', a=13.3, b=62.1, speed=12, cap='work'),
- dict(src='B', a=62.3, b=65.3, cap='ask', rects=[(72, 843, 1134, 1863)]),
- dict(src='B', a=144.3, b=145.6, cap='ask', rects=[(72, 843, 1134, 1863)]),
- dict(src='B', a=145.6, b=151.4, speed=2, cap='note', late=2.0,
-      rects=[(180, 1040, 1190, 1130)], badge=('from_memory', 'chest', (180, 1040, 1190, 1130))),
- dict(src='B', a=151.6, b=155.6, cap='pay', rects=[(200, 495, 1090, 705)]),
- dict(card='close', dur=4.0),
+      rects=[(170, 505, 1150, 690)], badge=('remembered', 'check', (170, 505, 1150, 690))),       # 2
+ dict(src='A', a=53.6, b=58.6, cap='phone', rects=[(48, 986, 1160, 1144), (48, 1846, 1160, 2002)]),  # 3
+ dict(card='next', dur=1.2),                                                                    # 4
+ dict(src='B', a=0.2, b=2.8),                                                                   # 5
+ dict(src='B', a=11.5, b=14.6, cap='nogluten'),                                                 # 6
+ dict(src='B', a=14.6, b=18.6, cap='note', late=0.6, badge_above=True,                                           # 7 "Gluten intoleransın var…"
+      rects=[(170, 860, 1080, 1095)], badge=('from_memory', 'chest', (170, 860, 1080, 1095))),
+ dict(src='B', a=32.6, b=35.4, cap='choose', rects=[(170, 1375, 1050, 1492)]),                  # 8 Osman picks
+ dict(src='B', a=35.4, b=47.3, speed=6, cap='choose'),                                          # 9
+ dict(src='B', a=47.5, b=50.5, cap='ask', rects=[DIALOG]),                                      # 10
+ dict(src='B', a=63.3, b=64.7, cap='ask', rects=[DIALOG]),                                      # 11
+ dict(src='B', a=132.4, b=139.0, speed=3, cap='ask'),                                           # 12
+ dict(src='B', a=139.6, b=143.6, cap='pay', rects=[(190, 520, 1110, 775)]),                     # 13
+ dict(src='B', a=164.5, b=167.5, cap='pay'),                                                    # 14 the site's payment page
+ dict(card='close', dur=4.0),                                                                   # 15
 ]
-# English: its own takes. In act A the "Remembering" lines arrive with the reply (which came out in Turkish), so the
-# remembering moment is a zoom on the message and those lines only. In act B the assistant says outright that it picks
-# gluten-free dishes: that line is the highlight.
+# English: act A's "Remembering" lines arrive with the reply (which came out in Turkish), so that moment is a zoom on
+# the message and those lines only.
 EN_A_ZOOM = (0, 330, 1206, 770)
 CUTS['en'] = [
- dict(card='open', dur=2.0),
- dict(src='A', a=11.9, b=13.9, cap='say'),
+ dict(card='open', dur=2.0),                                                                    # 0
+ dict(src='A', a=11.9, b=13.9, cap='say'),                                                      # 1
  dict(src='A', a=14.4, b=16.4, freeze=0.8, cap='rem', zoom=EN_A_ZOOM,
-      rects=[(170, 560, 1150, 730)], badge=('remembered', 'check', (170, 560, 1150, 730))),
- dict(src='A', a=66.0, b=71.0, cap='phone', rects=[(48, 986, 1160, 1144), (48, 1846, 1160, 2002)]),
- dict(card='next', dur=1.2),
- dict(src='B', a=0.2, b=2.8),
- dict(src='B', a=10.0, b=12.5, cap='nogluten'),
- dict(src='B', a=12.5, b=23.0, speed=4, cap='work'),
- dict(src='B', a=23.0, b=26.0, cap='note',
-      rects=[(170, 790, 1080, 1035)], badge=('from_memory', 'chest', (170, 790, 1080, 1035))),
- dict(src='B', a=26.0, b=37.8, speed=6, cap='note'),
- dict(src='B', a=38.0, b=41.0, cap='ask', rects=[(72, 843, 1134, 1863)]),
- dict(src='B', a=57.6, b=59.0, cap='ask', rects=[(72, 843, 1134, 1863)]),
- dict(src='B', a=59.0, b=68.8, speed=4, cap='ask', late=1.8, rects=[(175, 1945, 1175, 2050)]),
- dict(src='B', a=69.3, b=73.3, cap='pay', rects=[(175, 1420, 1110, 1815)]),
- dict(card='close', dur=4.0),
+      rects=[(170, 560, 1150, 730)], badge=('remembered', 'check', (170, 560, 1150, 730))),       # 2
+ dict(src='A', a=66.0, b=71.0, cap='phone', rects=[(48, 986, 1160, 1144), (48, 1846, 1160, 2002)]),  # 3
+ dict(card='next', dur=1.2),                                                                    # 4
+ dict(src='B', a=0.2, b=2.8),                                                                   # 5
+ dict(src='B', a=12.3, b=15.8, cap='nogluten'),                                                 # 6
+ dict(src='B', a=15.8, b=27.0, speed=4, cap='work'),                                            # 7
+ dict(src='B', a=27.2, b=30.2, cap='ask', rects=[DIALOG]),                                      # 8
+ dict(src='B', a=38.2, b=39.6, cap='ask', rects=[DIALOG]),                                      # 9
+ dict(src='B', a=39.6, b=48.8, speed=3, cap='note', late=1.4, rects=[(180, 1505, 1190, 1600)]),  # 10 the order note
+ dict(src='B', a=50.0, b=53.0, cap='note', badge_above=True,                                    # 11 "all gluten-free"
+      rects=[(195, 478, 1050, 560)], badge=('from_memory', 'chest', (195, 478, 1050, 560))),
+ dict(src='B', a=53.0, b=57.0, cap='pay', rects=[(195, 1505, 1080, 1710)]),                     # 12
+ dict(src='B', a=72.5, b=75.5, cap='pay'),                                                      # 13 the site's payment page
+ dict(card='close', dur=4.0),                                                                   # 14
 ]
-# The 15-second cut: opening, the remembering, the next evening, the order, the close.
+# The 15-second cut: opening, the remembering, the next evening, the assistant using it, the close.
 SHORT = {
  'tr': [
   dict(card='open', dur=1.2),
@@ -103,10 +109,10 @@ SHORT = {
   dict(src='A', a=7.4, b=9.5, freeze=0.6, cap='rem',
        rects=[(170, 505, 1150, 690)], badge=('remembered', 'check', (170, 505, 1150, 690))),
   dict(card='next', dur=0.7),
-  dict(src='B', a=11.3, b=13.3, cap='nogluten'),
-  dict(src='B', a=145.6, b=151.4, speed=2, cap='note', late=2.0,
-       rects=[(180, 1040, 1190, 1130)], badge=('from_memory', 'chest', (180, 1040, 1190, 1130))),
-  dict(card='close', dur=3.0),
+  dict(src='B', a=12.6, b=14.6, cap='nogluten'),
+  dict(src='B', a=14.6, b=18.4, cap='note', late=0.6, badge_above=True,
+       rects=[(170, 860, 1080, 1095)], badge=('from_memory', 'chest', (170, 860, 1080, 1095))),
+  dict(card='close', dur=3.4),
  ],
  'en': [
   dict(card='open', dur=1.2),
@@ -114,21 +120,19 @@ SHORT = {
   dict(src='A', a=14.4, b=16.4, freeze=0.6, cap='rem', zoom=EN_A_ZOOM,
        rects=[(170, 560, 1150, 730)], badge=('remembered', 'check', (170, 560, 1150, 730))),
   dict(card='next', dur=0.7),
-  dict(src='B', a=10.5, b=12.5, cap='nogluten'),
-  dict(src='B', a=23.0, b=26.4, cap='note',
-       rects=[(170, 790, 1080, 1035)], badge=('from_memory', 'chest', (170, 790, 1080, 1035))),
-  dict(card='close', dur=3.0),
+  dict(src='B', a=13.8, b=15.8, cap='nogluten'),
+  dict(src='B', a=50.0, b=53.4, cap='note', badge_above=True,
+       rects=[(195, 478, 1050, 560)], badge=('from_memory', 'chest', (195, 478, 1050, 560))),
+  dict(card='close', dur=3.4),
  ]}
-# Voice-over: (file, cut from, cut to or None, start in the film). tr-3 and tr-4 are split at their pauses.
+# Voice-over: (file, cut from, cut to or None, start in the film); st = each segment's start.
 VO = {
- 'tr': lambda st: [('tr-1', 0, None, st[1] + 0.2), ('tr-2', 0, None, st[3] + 0.1),
-                   ('tr-3', 0, 2.0, st[4] + 0.15), ('tr-3', 2.6, None, st[6] + 0.6),
-                   ('tr-4', 0, 2.05, st[8] + 0.3), ('tr-4', 2.05, None, st[11] + 0.3),
-                   ('tr-5', 0, None, st[12] + 0.6)],
- 'en': lambda st: [('en-1', 0, None, st[1] + 0.2), ('en-2', 0, None, st[3] + 0.4),
-                   ('en-3', 0, 2.0, st[4] + 0.15), ('en-3', 2.2, None, st[6] + 0.4),
-                   ('en-4', 0, 2.2, st[10] + 0.3), ('en-4', 2.2, None, st[13] + 0.3),
-                   ('en-5', 0, None, st[14] + 0.6)],
+ 'tr': lambda st: [('tr-1', 0, None, st[1] + 0.2), ('tr-2', 0, None, st[3] + 0.3), ('tr-3a', 0, None, st[4] + 0.1),
+                   ('tr-3b', 0, None, st[6] + 0.6), ('tr-4a', 0, None, st[10] + 0.3), ('tr-4b', 0, None, st[13] + 0.3),
+                   ('tr-5', 0, None, st[15] + 0.4)],
+ 'en': lambda st: [('en-1', 0, None, st[1] + 0.2), ('en-2', 0, None, st[3] + 0.3), ('en-3a', 0, None, st[4] + 0.1),
+                   ('en-3b', 0, None, st[6] + 0.6), ('en-4a', 0, None, st[8] + 0.3), ('en-4b', 0, None, st[12] + 0.3),
+                   ('en-5', 0, None, st[14] + 0.4)],
 }
 VO_SHORT = {'tr': lambda st: [('tr-1', 0, None, st[1] + 0.1), ('tr-5', 0, None, st[6] + 0.3)],
             'en': lambda st: [('en-1', 0, None, st[1] + 0.1), ('en-5', 0, None, st[6] + 0.3)]}
@@ -173,11 +177,11 @@ def draw_icon(d, kind, x, y, sz, color, w):
         d.line([(x + sz * .05, y + sz * .5), (x + sz * .95, y + sz * .5)], fill=color, width=w)
         d.rectangle([x + sz * .42, y + sz * .42, x + sz * .58, y + sz * .62], fill=color)
 
-def badge(d, L, label, icon, rect):
+def badge(d, L, label, icon, rect, above=False):
     k = L['k']; f = font(SANS, round(36 * k)); pad = 22 * k; isz = 36 * k
     tw = d.textlength(label, font=f); bw = tw + isz + pad * 2.6; bh = 70 * k
     x1, y1, x2, y2 = mapr(L, rect)
-    bx = min(x2 - bw, L['x0'] + L['pw'] - bw - 8); by = y2 + 18 * k  # under the frame, clear of what it marks
+    bx = min(x2 - bw, L['x0'] + L['pw'] - bw - 8); by = y1 - bh - 18 * k if above else y2 + 18 * k  # clear of what it marks
     if by + bh > L['y0'] + L['ph'] - 20 * k and 'mx' not in L: by = y1 - bh - 18 * k  # a zoom box has room under it
     d.rounded_rectangle([bx, by, bx + bw, by + bh], radius=bh / 2, fill=TEAL)
     draw_icon(d, icon, bx + pad, by + (bh - isz) / 2, isz, 'white', max(3, round(5 * k)))
@@ -223,7 +227,7 @@ def phone_overlay(L, seg, lang, path, with_rects=True, with_badge=True):
             x1, y1, x2, y2 = mapr(L, r); g = 8 * k
             d.rounded_rectangle([x1 - g, y1 - g, x2 + g, y2 + g], radius=18 * k, outline=TEAL, width=max(4, round(7 * k)))
     if with_badge and seg.get('badge'):
-        key, icon, rect = seg['badge']; badge(d, L, W[key], icon, rect)
+        key, icon, rect = seg['badge']; badge(d, L, W[key], icon, rect, seg.get('badge_above', False))
     im.save(path)
 
 def parchment(L, path):

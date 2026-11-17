@@ -7,7 +7,7 @@ import type { Messages } from './en';
 export const tr: Messages = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai, iPhone ve Android için açık kaynak bir yapay zekâ tarayıcısı. Asistanı kendi AI anahtarınızla sayfaları sizin için okur ve kullanır, verilerinizi telefonunuzda tutar, hassas işlemlerden önce sorar. Geliştirme aşamasında.',
+    'Qutai, telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız: iPhone ve Android için açık kaynak bir tarayıcı. Asistanı kendi AI anahtarınızla sayfaları sizin için okur ve kullanır, verilerinizi telefonunuzda tutar, hassas işlemlerden önce sorar. Geliştirme aşamasında.',
   'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: Qutai, Agentic Browser.',
   'meta.appDescription':
     'iOS ve Android için açık kaynak bir yapay zekâ tarayıcısı: asistanı, kendi AI sağlayıcı anahtarınızla web sayfalarını sizin için okur ve kullanır.',
@@ -31,8 +31,9 @@ export const tr: Messages = {
 
   'hero.eyebrow': 'Yapay zekâ odaklı tarayıcı',
   'hero.title': 'Yapay zekâ için, yapay zekâ ile üretildi.',
+  'hero.tagline': 'Telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız.',
   'hero.lede':
-    'Asistanı sayfayı okuyan ve sizin yerinize kullanan bir iPhone ve Android tarayıcısı.',
+    'Qutai, asistanı sayfayı okuyan ve sizin yerinize kullanan bir iPhone ve Android tarayıcısı.',
   'hero.github': 'GitHub’da incele',
   'hero.status': 'Geliştirme aşamasında. App Store ve Google Play’e geliyor; henüz yayımlanmadı.',
 

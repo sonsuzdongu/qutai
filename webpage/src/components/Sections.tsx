@@ -68,6 +68,7 @@ export function Hero() {
       <div className="hero-copy">
         <p className="eyebrow">{t('hero.eyebrow')}</p>
         <h1 id="hero-title">{t('hero.title')}</h1>
+        <p className="tagline">{t('hero.tagline')}</p>
         <p className="lede">{t('hero.lede')}</p>
         <div className="hero-actions">
           <a className="button primary" href={REPO_URL}>
