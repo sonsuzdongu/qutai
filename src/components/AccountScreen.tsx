@@ -8,7 +8,8 @@ import { creditsText, refreshCredits, useCreditsState } from '../credits';
 import { Icon } from '../ui/Icon';
 import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
-import { methodLine, methodsOf, signedInWithText } from './accountLabels';
+import { AddMethods, MethodsList } from './AccountMethods';
+import { signedInWithText } from './accountLabels';
 import { dialog } from './Dialog';
 import { SignInOptions } from './SignInOptions';
 
@@ -133,7 +134,6 @@ export function AccountScreen({
   }
 
   const { user } = state;
-  const methods = methodsOf(user);
   const testUser = user.providers.includes('test');
   return (
     <>
@@ -142,23 +142,12 @@ export function AccountScreen({
       {testUser && <Text style={[styles.notice, styles.noticeWarn]}>{t('account.test.signedIn')}</Text>}
       <View style={styles.card}>
         <Text style={styles.label}>{signedInWithText(user)}</Text>
-        {methods.length > 0 && (
-          <View style={styles.methods} accessible accessibilityLabel={`${t('account.methodsTitle')}: ${methods.map(methodLine).join(', ')}`}>
-            <Text style={styles.hint}>{t('account.methodsTitle')}</Text>
-            {methods.map((m, i) => (
-              <View key={`${m.provider}-${m.email ?? ''}-${i}`} style={styles.method}>
-                <Icon name={m.provider === 'email' ? 'email' : 'person'} size={16} color={palette.textSecondary} />
-                <Text style={[styles.methodText, styles.flex]} selectable>
-                  {methodLine(m)}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
+        <MethodsList user={user} />
         <Text style={styles.hint} selectable>
           {t('account.id', { id: user.id })}
         </Text>
       </View>
+      {user.status === 'active' && <AddMethods user={user} />}
       {creditsEnabled && onOpenCredits && (
         <Pressable
           onPress={onOpenCredits}

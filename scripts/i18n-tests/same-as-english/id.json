@@ -29,5 +29,6 @@
   "tier.fast",
   "siteRules.domainLabel",
   "account.providerEmail",
-  "account.methodEmail"
+  "account.methodEmail",
+  "account.methods.kindEmail"
 ]

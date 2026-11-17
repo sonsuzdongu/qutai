@@ -1,9 +1,17 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
 import { accountErrorDetails, accountErrorMessage, accountSession, emailSignIn } from '../account';
 import { AccountApiError } from '../account/api';
-import { appleSignInAvailable, googleSignInConfigured, SignInCancelled, signInWithApple, signInWithGoogle } from '../account/providers';
+import {
+  appleSignInAvailable,
+  appleWebAuthorize,
+  googleSignInConfigured,
+  SignInCancelled,
+  signInWithApple,
+  signInWithGoogle,
+} from '../account/providers';
+import { creditsStore } from '../credits';
 import { DEV_SIGN_IN_USERS, type DevSignInUser } from '../account/types';
 import { devLoginEnabled, devLoginSecret } from '../config/features';
 import { t } from '../i18n';
@@ -34,12 +42,24 @@ export function SignInOptions({ onResult }: { onResult?: (result: SignInResult) 
   const session = accountSession();
   const [busy, setBusy] = useState<null | 'apple' | 'google' | DevSignInUser>(null);
   const [apple, setApple] = useState(false);
+  /** Android: Sign in with Apple through Apple's web flow, when the server offers it (`GET /config` › auth.appleWeb). */
+  const [appleWeb, setAppleWeb] = useState(false);
   const google = googleSignInConfigured();
   const flow = emailSignIn();
   const [email, setEmail] = useState(() => flow?.getState().status === 'pending');
 
   useEffect(() => {
-    appleSignInAvailable().then(setApple);
+    let live = true;
+    appleSignInAvailable().then((ok) => live && setApple(ok));
+    if (Platform.OS === 'android') {
+      creditsStore
+        .config()
+        .then((config) => live && setAppleWeb(config.auth?.appleWeb === true))
+        .catch(() => {});
+    }
+    return () => {
+      live = false;
+    };
   }, []);
 
   // A code still waiting (the app was closed while the user read the mail): straight back to it.
@@ -78,7 +98,9 @@ export function SignInOptions({ onResult }: { onResult?: (result: SignInResult) 
 
   const signIn = (provider: 'apple' | 'google') =>
     run(provider, async () => {
-      if (provider === 'apple') await session.signInWithApple(await signInWithApple());
+      if (provider === 'apple' && Platform.OS !== 'ios') {
+        await session.signInWithAppleWeb(await appleWebAuthorize((hash) => session.startAppleWeb(hash)));
+      } else if (provider === 'apple') await session.signInWithApple(await signInWithApple());
       else await session.signInWithGoogle(await signInWithGoogle());
     });
 
@@ -105,6 +127,21 @@ export function SignInOptions({ onResult }: { onResult?: (result: SignInResult) 
               onPress={() => signIn('apple')}
             />
           </View>
+        )}
+        {appleWeb && (
+          <Pressable
+            onPress={() => signIn('apple')}
+            disabled={!!busy}
+            style={({ pressed }) => [styles.button, styles.appleWeb, pressed && styles.pressed, busy && styles.dimmed]}
+            accessibilityRole="button"
+            accessibilityState={{ busy: busy === 'apple', disabled: !!busy }}
+          >
+            {busy === 'apple' ? (
+              <ActivityIndicator color={palette.bg} />
+            ) : (
+              <Text style={[styles.buttonText, styles.appleWebText]}>{t('account.signInApple')}</Text>
+            )}
+          </Pressable>
         )}
         {google && (
           <Pressable
@@ -170,6 +207,9 @@ const useStyles = makeStyles((c) => ({
   label: { color: c.text, fontSize: 15, fontWeight: '600' },
   buttons: { gap: 10, marginTop: 12, marginBottom: 8 },
   appleButton: { height: 46, width: '100%' },
+  // Apple's web button: black on a light screen, white on a dark one (the theme's text and background colours).
+  appleWeb: { backgroundColor: c.text, borderColor: c.text },
+  appleWebText: { color: c.bg },
   button: {
     height: 46,
     borderRadius: 23,
