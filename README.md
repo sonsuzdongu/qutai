@@ -33,7 +33,7 @@ same format, so bookmarks can always be taken to another browser. The assistant 
 
 The assistant can also read and change Qutai's appearance and browsing settings when asked (`settings` tool: theme, dark sites, address bar position, text size, search engine and suggestions, haptics, force zoom, the Qutai button, reader mode colours, typeface and easier reading, background playback, picture-in-picture, blocking ads and trackers, hiding cookie banners, third-party cookies, and turning HTTPS-only on). Changes go through the same path as the Settings screen, show as a line in the chat and in the activity history, and the assistant says how to undo them. Everything else (asking before actions, site permissions, memory, custom instructions, provider, model, keys, endpoint, web search, background work, locks, voice consent, turning HTTPS-only off, backup, clearing data, filter lists) is refused with an offer to open Settings: a web page that manages to instruct the assistant must not be able to remove the user's protections. The allowlist is `CHANGEABLE` in `src/agent/settingsTool.ts`; a new setting is not changeable from the chat unless it is added there.
 
-There is no account and no sync, so Settings › Backup exports everything to one password-protected file
+There is no sync, so Settings › Backup exports everything to one password-protected file
 (`qutai-backup-YYYY-MM-DD.qutai`, saved through the share sheet to Files, Drive…) and imports it on this or another
 phone. Always in a backup: bookmarks and folders, history, the assistant's memory (with its categories and which memories are hidden from the AI), site permissions (assistant level, personal information and
 location) and preferences (including reader mode, appearance and custom instructions). Optional: open tabs and tab groups (on by default),
@@ -44,6 +44,13 @@ caches and thumbnails, and the app/incognito lock settings. Importing checks the
 shows what it contains, then merges it with the phone's data (keeping what is there) or replaces each kind it contains,
 in one database transaction, and restarts the app. The file is encrypted with XChaCha20-Poly1305 under a key derived
 from the password with scrypt (`src/backup/crypto.ts` documents the format); the password cannot be recovered.
+
+In pro builds, signed in, the same file can also be kept in the Qutai account (Settings › Backup › Qutai account):
+"Back up now", the account's backups with Restore and Delete, an optional daily automatic backup while the app is open
+(off by default; Wi-Fi only by default; never in the background or with an incognito tab in front), and the backup
+password, set once and kept on the phone (cleared on sign-out). The server stores only the encrypted file and keeps the
+newest 3; a restore goes through the same import screen. After signing in on a new phone the app offers the newest
+backup once. Details: `docs/server-backup.md`; the server: `backend/README.md` › Server backup.
 
 Requests to the AI go from the phone straight to the provider chosen in Settings, with the user's own key.
 "What was sent to the AI" (Settings › Assistant, or "ⓘ Sent" under an answer) lists every request, newest first:
@@ -472,7 +479,7 @@ Google Play are made from this same code with one build-time switch turned on:
 |---|---|---|
 | `EXPO_PUBLIC_PRO_MODE` | `off` | `on` |
 | AI | Your own Anthropic, OpenAI, Gemini or OpenRouter key, or your own OpenAI-compatible server | Your own key, or Qutai credits (planned) |
-| Account and sync | None | An optional Qutai account (Sign in with Apple or Google); sync planned |
+| Account and sync | None | An optional Qutai account (Sign in with Apple or Google, or email) with encrypted backups kept in it; no live sync |
 | Where your data goes | Your device and the AI service you set up; for the features you use, also your search engine (suggestions), Apple's or Google's address and speech services ("Use my location" in setup, voice input off the device) and the filter lists' publishers (list downloads) | Also Qutai's servers, for the pro features you use |
 
 Pro features are shown only when the switch is on (`src/config/features.ts`). So far that is the account:
@@ -497,6 +504,7 @@ out as a submodule at `backend/` (its `README.md` has the setup).
 | Add, re-check and remove sign-in methods; combine two accounts (below) | `src/components/AccountMethods.tsx`, `src/account/methodRules.ts`, `session.ts` |
 | Sign in with Apple on Android: Apple's web flow in a Custom Tab, run by the server, offered only when `GET /config` says `auth.appleWeb` | `src/account/appleWeb.ts`, `providers.ts`, `src/components/SignInOptions.tsx`; owner's setup `docs/apple-sign-in.md` |
 | The mail's https link as an App Link / Universal Link, only with `EXPO_PUBLIC_APP_LINK_HOST` | `plugins/withProAccounts.js`, `src/account/emailSignIn.ts`; `docs/app-links.md` |
+| Backups in the Qutai account: the export's encrypted file uploaded, listed, restored through the import screen, deleted; the daily automatic run; the kept password (`docs/server-backup.md`) | `src/backup/server/` (`logic.ts` pure rules, `client.ts` HTTP, `index.ts` storage and runs, `useServerBackupLifecycle.ts`), `src/components/ServerBackupSection.tsx`, `ServerRestoreOffer.tsx` |
 
 **Making a pro build.** Set the variables in `.env` (local builds) or in an EAS build profile's `env`
 (`eas.json` keeps all three profiles `off`; add your own profile or override with EAS environment variables):

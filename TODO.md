@@ -110,7 +110,7 @@ App ──(session token)──► Qutai server ──(our key)──► Anthrop
 ```
 
 #### Pending decisions
-- [x] Server platform: Cloudflare Workers + Durable Objects + D1 (R2 for sync blobs if needed). The server lives in its own repository; design and decisions in `backend/DESIGN.md` (`docs/server-plan.md` is the earlier plan)
+- [x] Server platform: Cloudflare Workers + Durable Objects + D1 (R2 for server backups). The server lives in its own repository; design and decisions in `backend/DESIGN.md` (`docs/server-plan.md` is the earlier plan)
 - [x] Payments: RevenueCat (`react-native-purchases`, REST verification, one signed webhook), behind an interface so a move to the store APIs is a change in one place (decided 15 Nov 2026, `backend/DESIGN.md`)
 - [ ] Sign-in providers beyond Apple and Google (see Accounts and OAuth sign-in above)
 - [ ] Credit pricing: profit margin on top of token cost, pack sizes, will trial credits be given?
@@ -184,10 +184,23 @@ Done in `backend/` (see its `DESIGN.md` › Order of work and `README.md`):
     table ("Where your data goes" says it), the App Store privacy labels and Play Data safety form (now: identifiers
     and email linked to the user, in pro builds)
 
-### Sync
-- [ ] End-to-end encrypted sync of bookmarks, history, open tabs and the assistant's memory across the
-  user's devices (keys derived on the device; the server stores only ciphertext); deletions kept as
-  tombstones. Incognito data is never synced. See ROADMAP Phase 5
+### Sync → server backup
+Decided by the owner (17 Nov 2026): no live sync for now; "sync" works like the backup export, only stored on the
+server (`docs/server-backup.md`, `backend/DESIGN.md` › Server backup).
+- [x] Back up to the Qutai account: the export's encrypted file uploaded to the account (R2 + D1, newest 3 kept), list,
+  restore through the import screen, delete one or all; optional daily backup while the app is open (off by default,
+  Wi-Fi only by default); the password kept on the phone, cleared on sign-out; a one-time restore offer on a new phone
+- [ ] Owner: create the R2 buckets `qutai-backups-dev` and `qutai-backups` before deploying (backend README › What the
+  owner creates in Cloudflare)
+- [ ] Owner: decide the KDF strength for new files (proposal: scrypt log2 N 16, compatible without a format change;
+  time it on a low-end Android phone first) and whether to compress the payload (a new format version)
+- [ ] Check on devices: a backup and a restore on Android and iOS, a 20–50 MB backup's memory use, "Only on Wi-Fi" on
+  Android with `ACCESS_WIFI_STATE` blocked, large text, a screen reader, landscape (not done yet; needs a new
+  development build for `expo-network`)
+- [ ] Website copy: the sentences that say the server keeps no browsing data (see the server backup report)
+- [ ] Later, real sync: end-to-end encrypted record-level sync of bookmarks, history, open tabs and memory (keys
+  derived on and shared between devices, per-record versions, deletions kept as tombstones, merging concurrent edits,
+  incremental upload, background transfer). Incognito data is never synced. See ROADMAP Phase 5
 
 ### Analytics, with consent
 Decided in `backend/DESIGN.md` (step 7): no Firebase in the first version. Qutai's own consented, anonymous events go

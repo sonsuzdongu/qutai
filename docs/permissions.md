@@ -90,7 +90,7 @@ Install-time permissions (no prompt):
 | Permission | Why | Declared by |
 | --- | --- | --- |
 | `INTERNET` | Loading pages, talking to the AI provider the user chose | Expo template, `expo-file-system` |
-| `ACCESS_NETWORK_STATE` | Whether the phone is online, for the libraries that need it: media playback (`androidx.media3`, used by the `modules/qutai-media` service) and the Firebase libraries `expo-notifications` bundles (Qutai doesn't use push). Qutai's own code doesn't read it | `androidx.media3:media3-common`, `firebase-messaging`, `firebase-installations` |
+| `ACCESS_NETWORK_STATE` | Whether the phone is online, for the libraries that need it: media playback (`androidx.media3`, used by the `modules/qutai-media` service) and the Firebase libraries `expo-notifications` bundles (Qutai doesn't use push). Qutai's own code reads it only in pro builds, for the daily server backup's "Only on Wi-Fi" (`getNetworkStateAsync` in `src/backup/server/index.ts`: the connection type, checked when Qutai opens or comes to the foreground; docs/server-backup.md) | `androidx.media3:media3-common`, `firebase-messaging`, `firebase-installations`, `expo-network` |
 | `USE_BIOMETRIC`, `USE_FINGERPRINT` | App and incognito lock (fingerprint for Android 8 and older) | `expo-local-authentication` |
 | `VIBRATE` | Haptic feedback | `expo-haptics` |
 | `RECEIVE_BOOT_COMPLETED` | Scheduled notifications survive a restart | `expo-notifications` |
@@ -109,6 +109,7 @@ Blocked (`android.blockedPermissions` in `app.json`, removed from the merged man
 | --- | --- | --- |
 | `ACCESS_BACKGROUND_LOCATION`, `FOREGROUND_SERVICE_LOCATION` | `expo-location` | Location is foreground only |
 | `READ_EXTERNAL_STORAGE`, `READ_MEDIA_IMAGES`, `READ_MEDIA_VISUAL_USER_SELECTED` | `READ_EXTERNAL_STORAGE`: `expo-file-system`, `expo-image-picker`, `expo-media-library`; `READ_MEDIA_IMAGES`: `expo-screen-capture`; `READ_MEDIA_VISUAL_USER_SELECTED`: `expo-media-library` | Qutai only adds to the gallery (write-only requests ask for none of these) and doesn't listen for screenshots. File imports use the system picker, which needs no permission |
+| `ACCESS_WIFI_STATE` | `expo-network` | Needed only for `getIpAddressAsync`, which Qutai doesn't call; the network type for the server backup's "Only on Wi-Fi" comes from `ConnectivityManager` (`ACCESS_NETWORK_STATE`). Not verified on a device yet: the Android build must be checked to read Wi-Fi as `WIFI` without it |
 | `SYSTEM_ALERT_WINDOW` | Expo template | Only for the development overlay; debug builds keep it from their own manifest |
 | `com.google.android.c2dm.permission.RECEIVE` | Firebase Messaging (`expo-notifications`) | No push notifications |
 | `com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE` | Install Referrer (`expo-application`) | Qutai doesn't read the install referrer |

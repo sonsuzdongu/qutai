@@ -59,7 +59,7 @@ default-browser entitlement), and testing on real devices: most of it has never 
 | Tab groups, naming, moving | ✅ | | Coloured, nameable, collapsible, saved with the session; a group shares one assistant conversation; its close icon offers "ungroup" or "close all" |
 | Drag to reorder | ✅ | | Also drag into a group (`src/components/tabDrag.ts`) |
 | Putting unused tabs to sleep | ✅ | | At most 5 open WebViews (`MAX_AWAKE_TABS`); a sleeping tab is kept as a URL and thumbnail; private tabs are not put to sleep |
-| Cross-device sync | ⬜ | Server · L | Together with the account system; the encrypted backup file covers moving to a new phone until then |
+| Cross-device sync | 🟡 | Server · L | Replaced for now by backups in the Qutai account (pro mode; the export's encrypted file, newest 3 kept, optional daily backup; `docs/server-backup.md`). Live end-to-end encrypted sync still open |
 
 ### Privacy and security (section 4)
 
@@ -128,8 +128,10 @@ default-browser entitlement), and testing on real devices: most of it has never 
 
 All **Server · L**. Should be handled together with the account infrastructure to be built for the credit system. Suggestion: history,
 tabs and bookmarks should sync **end-to-end encrypted**; the server should not be able to see the content. Password sync
-should not be done; leave it to the system password manager. Until then, an encrypted backup file (Settings › Backup)
-moves everything to another phone.
+should not be done; leave it to the system password manager. Decided 17 Nov 2026: instead of live sync for now, the
+encrypted backup file can be kept in the Qutai account and restored on any phone (pro mode; `docs/server-backup.md`).
+Real sync would still need keys shared between devices, per-record versions with tombstones, merging and incremental
+upload.
 
 ### AI features (sections 9–10)
 
@@ -278,7 +280,7 @@ Account system and Qutai credits: built (app in pro mode; `backend/` steps 1–6
 purchases through RevenueCat, admin panel), not deployed; analytics events (`POST /events`) and abuse protection open.
 **Launch blocker:** buying credits works only through temporary fake purchases (local servers only, nothing charged)
 until RevenueCat and the stores are connected; remove them first (`TODO.md` › Before launch: remove fake purchases).
-Still to build: end-to-end encrypted sync (including memory; deletion markers must be kept for deletions), background
+Built: backups in the Qutai account (the export's encrypted file on R2; replaces sync for now). Still to build: end-to-end encrypted live sync (including memory; deletion markers must be kept for deletions), background
 deep research on iOS (and tasks that go on with the phone off), price and page tracking, Safe Browsing checks.
 
 ---
