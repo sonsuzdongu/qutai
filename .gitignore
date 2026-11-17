@@ -46,3 +46,4 @@ yarn-error.*
 
 # PDF.js for the PDF reader, written from node_modules by `postinstall` (scripts/build-pdf-reader.js)
 /src/pdf/pdfjs.generated.json
+.claude/launch.json
