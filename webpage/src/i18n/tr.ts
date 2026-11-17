@@ -63,7 +63,7 @@ export const tr: Messages = {
   'start.step1.title': 'Qutai’ı kurun',
   'start.step1.body': 'Henüz mağazalarda değil: bugün depodan derleyin ya da projeyi GitHub’da takip edin.',
   'start.step2.title': 'AI anahtarınızı ekleyin',
-  'start.step2.body': 'Anthropic, OpenAI, Gemini, OpenRouter ya da kendi sunucunuz. İsteğe bağlı, ücretli bir Qutai hizmeti kodda var ama henüz sunulmuyor.',
+  'start.step2.body': 'Anthropic, OpenAI, Gemini, OpenRouter ya da kendi sunucunuz. Ya da giriş yapıp anahtar yerine Qutai Kredileri kullanın.',
   'start.step3.title': 'Bir görev verin',
   'start.step3.body': 'Adres çubuğundaki Q’ya dokunun ve ne istediğinizi kendi sözlerinizle söyleyin.',
 
@@ -98,7 +98,7 @@ export const tr: Messages = {
     'Adreslerinizi, bedeninizi, beslenme tercihlerinizi ya da bütçenizi Qutai’a söyleyin veya kurulumda birkaç isteğe bağlı soruyu yanıtlayın. Öğrendiklerini kategorilere ayırır, sonraki görevlerde size yeniden sormadan kullanır ve özel talimatlarınıza her istekte uyar. Kullandıkça daha az anlatmanız gerekir.',
   'agent.memory.point1': 'Kategorilere ayrılır: kimlik ve iletişim, adresler, alışveriş ve teslimat, seyahat, yemek ve beslenme, bütçe, genel tercihler',
   'agent.memory.point2': 'Telefonda saklanır; Ayarlar’dan görebilir, değiştirebilir, silebilirsiniz; şifreli yedeğinize de girer',
-  'agent.memory.point3': 'Yalnızca isteklerinizle birlikte seçtiğiniz AI sağlayıcısına gider ve “Yapay zekâya gönderilenler”de listelenir; kimlik numaraları ve kilitlediğiniz bilgiler yalnızca etiket olarak gider',
+  'agent.memory.point3': 'Yalnızca isteklerinizle birlikte seçtiğiniz AI sağlayıcısına gider (Qutai Kredileriyle Qutai sunucusu üzerinden) ve “Yapay zekâya gönderilenler”de listelenir; kimlik numaraları ve kilitlediğiniz bilgiler yalnızca etiket olarak gider',
   'agent.memory.point4': 'Şifre, kart numarası ve tek kullanımlık kod asla; bilgilerinizi bir siteye girmeden önce site bazında sorar',
   'agent.compare.title': 'Sekmeler arasında ürün karşılaştırma',
   'agent.compare.body':
@@ -131,25 +131,25 @@ export const tr: Messages = {
   'privacy.kicker': 'Tasarımdan gelen gizlilik',
   'privacy.title': 'Anahtar sizin. Telefon sizin. Karar sizin.',
   'privacy.lede':
-    'Qutai’ın yapay zekâya nasıl ulaşacağını siz seçersiniz. Bugün kendi anahtarınızı kullanır: istekler telefonunuzdan doğrudan sağlayıcınıza gider; arada ne Qutai hesabı ne Qutai sunucusu vardır. Anahtarla uğraşmak istemeyenler için ücretli bir Qutai hizmeti kodda var ama henüz sunulmuyor; sunulduğunda da isteğe bağlı olacak.',
+    'Qutai’ın yapay zekâya nasıl ulaşacağını siz seçersiniz. Kendi anahtarınızla istekler telefonunuzdan doğrudan sağlayıcınıza gider; arada ne Qutai hesabı ne Qutai sunucusu vardır. Ya da giriş yapıp Qutai Kredileri kullanırsınız: uğraşacak anahtar yok, istekler Qutai sunucusundan geçer ve orada saklanmaz, kayda geçirilmez.',
   'privacy.diagramLabel':
-    'Yapay zekâya ulaşmanın iki yolunu gösteren şema. Şimdi, kendi anahtarınızla: telefonunuz istekleri doğrudan seçtiğiniz sağlayıcıya gönderir, arada Qutai sunucusu yoktur. Kodda var ama henüz sunulmuyor, isteğe bağlı: ücretli Qutai hizmeti; istekler telefonunuzdan Qutai sunucusu üzerinden yapay zekâya gider.',
+    'Yapay zekâya ulaşmanın iki yolunu gösteren şema. Kendi anahtarınızla: telefonunuz istekleri doğrudan seçtiğiniz sağlayıcıya gönderir, arada Qutai sunucusu yoktur. Qutai Kredileriyle, isteğe bağlı ve ücretli: istekler telefonunuzdan Qutai sunucusu üzerinden yapay zekâya gider, orada saklanmaz ve kayda geçirilmez.',
   'privacy.routeOwn': 'Kendi anahtarınızla',
   'privacy.routeOwnTag': 'Şimdi kullanılabilir',
   'privacy.routeService': 'Qutai hizmetiyle',
-  'privacy.routeServiceTag': 'Henüz sunulmuyor · isteğe bağlı · ücretli',
+  'privacy.routeServiceTag': 'İsteğe bağlı · ücretli',
   'privacy.diagramPhone': 'Telefonunuz',
   'privacy.diagramPhoneSub': 'sekmeler, geçmiş, hafıza, sohbetler',
   'privacy.diagramProvider': 'AI sağlayıcınız',
   'privacy.diagramProviderSub': 'kendi anahtarınızla',
   'privacy.diagramNone': 'Qutai sunucusu yok',
   'privacy.diagramQutai': 'Qutai sunucusu',
-  'privacy.diagramQutaiSub': 'hesap ve kredi',
+  'privacy.diagramQutaiSub': 'saklanmaz, kayda geçmez',
   'privacy.diagramAi': 'Yapay zekâ',
   'privacy.diagramAiSub': 'kendi anahtarınız olmadan',
   'privacy.key.title': 'Kendi AI anahtarınız',
   'privacy.key.body':
-    'Anthropic, OpenAI, Google Gemini ya da OpenRouter anahtarınızı veya kendi OpenAI uyumlu sunucunuzu (Ollama, LM Studio, vLLM) kullanın; bağlantıyı tek dokunuşla sınayabilirsiniz. Modeli siz seçersiniz, isterseniz sohbet başına. Sonra ne gelirse gelsin bu yol kalır.',
+    'Anthropic, OpenAI, Google Gemini ya da OpenRouter anahtarınızı veya kendi OpenAI uyumlu sunucunuzu (Ollama, LM Studio, vLLM) kullanın; bağlantıyı tek dokunuşla sınayabilirsiniz. Modeli siz seçersiniz, isterseniz sohbet başına. Qutai Kredilerinin yanında bu yol hep kalır.',
   'privacy.device.title': 'Telefonda kalır',
   'privacy.device.body':
     'Sekmeler, geçmiş, yer imleri, sohbetler ve asistanın hafızası cihazda saklanır. Şifreler, kart numaraları ve tek kullanımlık kodlar hafızaya hiç alınmaz; kimlik numaraları ve kilitlediğiniz bilgiler yapay zekâya yalnızca etiket olarak gider.',
@@ -166,7 +166,7 @@ export const tr: Messages = {
   'privacy.confirm.body':
     'Hassas adımlar onayınızı bekler; arama, SMS, WhatsApp ve e-posta yalnızca taslaktır, gönderen sizsiniz. Bildirim, takvim etkinliği, hatırlatıcı, takviminizi ya da konumunuzu okuma ve sıradan bir indirme için “Bir daha sorma” diyebilir, bunu Ayarlar’dan geri alabilirsiniz; “hayır” cevabınız hiçbir zaman hatırlanmaz. Yükleme ve riskli dosyalar her seferinde sorulur.',
   'privacy.note':
-    'Ücretli Qutai hizmeti kodda var, ama depodan derlenen sürümlerde kapalı olan bir derleme anahtarına bağlı: Apple ya da Google ile giriş, kendi anahtarınız yerine Qutai kredisi, model yerine Qutai Hızlı, Qutai ya da Qutai Pro seçimi ve bakiye. Henüz kimseye sunulmuyor, kredi satın alma bir mağazaya bağlı değil, eşitleme de yapılmadı. İsteğe bağlı kalacak: kendi anahtarınız çalışmaya devam eder, açık kaynak sürüm hiçbir zaman Qutai sunucusuna ihtiyaç duymaz.',
+    'Qutai hizmeti isteğe bağlıdır: Apple, Google ya da e-postayla giriş yapın, kendi anahtarınız yerine Qutai Kredileri kullanın, model yerine Qutai Hızlı, Qutai ya da Qutai Pro seçin. Qutai sunucusu hesabınızı, kredilerinizi ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı ve sayfaları tutmaz. Depodan derlenen sürümlerde bu hizmet yoktur ve hiçbir zaman Qutai sunucusuna bağlanılmaz.',
 
   'browser.kicker': 'Bir de tarayıcı',
   'browser.title': 'Bir tarayıcıdan beklediğiniz her şey, izlenmeden.',
@@ -244,7 +244,7 @@ export const tr: Messages = {
     'Qutai geliştirme aşamasında. Henüz App Store’da ya da Google Play’de değil; bu sayfada anlatılanların çoğu kodda var ama henüz gerçek bir telefonda denenmedi.',
   'status.today': 'Bugün kodda olanlar',
   'status.today.1': 'Asistan: okuma, dokunma, yazma, form hatalarını düzeltme, sekmeler, kaynaklı derin araştırma',
-  'status.today.2': 'Kendi anahtarınızla beş sağlayıcı seçeneği, sohbet başına model',
+  'status.today.2': 'Kendi anahtarınızla beş sağlayıcı seçeneği ve sohbet başına model, ya da hesapla Qutai Kredileri',
   'status.today.3': 'Kategorili ve gizli kayıtlı hafıza, site bazında izinler, “yapay zekâya gönderilenler” kaydı',
   'status.today.4': 'Takvim okuma ve yazma, hatırlatıcı, Ara düğmesi; SMS, WhatsApp ve e-posta taslakları',
   'status.today.5': 'Adıyla çalıştırabileceğiniz kayıtlı görevler, hatırlatıcılar, PDF okuma, görsel ekleme, indirme ve CSV dışa aktarma',
@@ -258,7 +258,7 @@ export const tr: Messages = {
   'status.planned': 'Planlananlar',
   'status.planned.1': 'App Store ve Google Play’de yayın',
   'status.planned.2': 'Hesap açmayı seçenler için uçtan uca şifreli eşitleme',
-  'status.planned.3': 'Mağaza sürümlerinde Qutai kredisi: kodda var, henüz sunulmuyor',
+  'status.planned.3': 'Qutai Kredilerini App Store ve Google Play’den satın alma',
   'status.planned.4': 'iPhone’da paylaşım uzantısı ve widget',
 
   'footer.tagline': 'Agentic Browser',

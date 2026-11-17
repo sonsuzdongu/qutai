@@ -62,7 +62,7 @@ export const en = {
   'start.step1.title': 'Install Qutai',
   'start.step1.body': 'Not in the stores yet: build it from the repository today, or follow the project on GitHub.',
   'start.step2.title': 'Add your AI key',
-  'start.step2.body': 'Anthropic, OpenAI, Gemini, OpenRouter or your own server. An optional paid Qutai service is in the code but not offered yet.',
+  'start.step2.body': 'Anthropic, OpenAI, Gemini, OpenRouter or your own server. Or sign in and use Qutai Credits instead of a key.',
   'start.step3.title': 'Give it a task',
   'start.step3.body': 'Tap the Q in the address bar and say what you need, in your own words.',
 
@@ -97,7 +97,7 @@ export const en = {
     'Tell Qutai your addresses, sizes, diet or budget, or answer a few optional questions when you set it up. It files what it learns under categories, uses it in later tasks without asking again, and follows your custom instructions in every request. The more you use it, the less you have to explain.',
   'agent.memory.point1': 'Sorted into categories: identity and contact, addresses, shopping and delivery, travel, food and diet, budget, general preferences',
   'agent.memory.point2': 'Stored on the phone; yours to see, edit and delete in Settings, and included in your encrypted backup',
-  'agent.memory.point3': 'Sent only to the AI provider you chose, with your requests, and listed in “What was sent to the AI”; ID numbers and memories you lock go only as a label',
+  'agent.memory.point3': 'Sent only with your requests, to the AI provider you chose (through Qutai’s server with Qutai Credits), and listed in “What was sent to the AI”; ID numbers and memories you lock go only as a label',
   'agent.memory.point4': 'Never passwords, card numbers or one-time codes; it asks per site before entering your details',
   'agent.compare.title': 'Compare products across tabs',
   'agent.compare.body':
@@ -130,25 +130,25 @@ export const en = {
   'privacy.kicker': 'Privacy by design',
   'privacy.title': 'Your key. Your phone. Your say.',
   'privacy.lede':
-    'You choose how Qutai reaches the AI. Today it uses your own key: requests go from your phone straight to your provider, with no Qutai account and no Qutai server in between. A paid Qutai service, for those who would rather not manage a key, is in the code but not offered yet, and it will stay optional.',
+    'You choose how Qutai reaches the AI. With your own key, requests go from your phone straight to your provider, with no Qutai account and no Qutai server in between. Or sign in and use Qutai Credits: no key to manage, and requests pass through Qutai’s server, which doesn’t store or log them.',
   'privacy.diagramLabel':
-    'Diagram of the two ways to reach the AI. Available now, with your own key: your phone sends requests directly to the AI provider you chose, with no Qutai server in between. In the code but not offered yet, and optional: a paid Qutai service, where requests go from your phone through Qutai’s server to the AI.',
+    'Diagram of the two ways to reach the AI. With your own key: your phone sends requests directly to the AI provider you chose, with no Qutai server in between. With Qutai Credits, optional and paid: requests go from your phone through Qutai’s server to the AI, without being stored or logged there.',
   'privacy.routeOwn': 'With your own key',
   'privacy.routeOwnTag': 'Available now',
   'privacy.routeService': 'With the Qutai service',
-  'privacy.routeServiceTag': 'Not offered yet · optional · paid',
+  'privacy.routeServiceTag': 'Optional · paid',
   'privacy.diagramPhone': 'Your phone',
   'privacy.diagramPhoneSub': 'tabs, history, memory, chats',
   'privacy.diagramProvider': 'Your AI provider',
   'privacy.diagramProviderSub': 'with your own key',
   'privacy.diagramNone': 'No Qutai server',
   'privacy.diagramQutai': 'Qutai’s server',
-  'privacy.diagramQutaiSub': 'account and credits',
+  'privacy.diagramQutaiSub': 'not stored or logged',
   'privacy.diagramAi': 'The AI',
   'privacy.diagramAiSub': 'no key of your own',
   'privacy.key.title': 'Bring your own AI key',
   'privacy.key.body':
-    'Use a key from Anthropic, OpenAI, Google Gemini or OpenRouter, or your own OpenAI-compatible server (Ollama, LM Studio, vLLM), with a button to test the connection. Choose the model, even per conversation. This route stays, whatever comes later.',
+    'Use a key from Anthropic, OpenAI, Google Gemini or OpenRouter, or your own OpenAI-compatible server (Ollama, LM Studio, vLLM), with a button to test the connection. Choose the model, even per conversation. This route always stays, next to Qutai Credits.',
   'privacy.device.title': 'Stays on the phone',
   'privacy.device.body':
     'Tabs, history, bookmarks, chats and the assistant’s memory are stored on the device. Passwords, card numbers and one-time codes are never put in memory; ID numbers and memories you lock reach the AI only as a label.',
@@ -165,7 +165,7 @@ export const en = {
   'privacy.confirm.body':
     'Sensitive steps wait for your yes, and calls, texts, WhatsApp messages and emails are only drafts that you send. A notification, a calendar entry, a reminder, reading your calendar or location, and an ordinary download can be allowed with “Don’t ask again”, which you can take back in Settings; a no is never remembered. Uploads and risky files are asked about every time.',
   'privacy.note':
-    'The paid Qutai service is in the code behind a build switch, off in builds from the repository: sign-in with Apple or Google, Qutai credits instead of your own key, a choice of Qutai Fast, Qutai or Qutai Pro instead of a model, and a balance. It is not offered to anyone yet, buying credits is not connected to a store, and sync is not built. It will stay optional: your own key keeps working, and the open-source build never needs a Qutai server.',
+    'The Qutai service is optional: sign in with Apple, Google or email, use Qutai Credits instead of your own key, and choose Qutai Fast, Qutai or Qutai Pro instead of a model. Qutai’s server keeps your account, your credits and, for each request, the model, the token count and the cost; not your messages or pages. Builds from the repository leave it out and never contact a Qutai server.',
 
   'browser.kicker': 'And a browser too',
   'browser.title': 'Everything you expect from a browser, minus the tracking.',
@@ -240,7 +240,7 @@ export const en = {
     'Qutai is in development. It is not in the App Store or Google Play yet, and most of what this page describes is implemented in the code but has not yet been tested on a real phone.',
   'status.today': 'In the code today',
   'status.today.1': 'The assistant: reading, tapping, typing, fixing form errors, tabs, deep research with sources',
-  'status.today.2': 'Five provider options with your own key, and a model per conversation',
+  'status.today.2': 'Five provider options with your own key and a model per conversation, or Qutai Credits with an account',
   'status.today.3': 'Memory with categories and hidden entries, per-site permissions, the “sent to the AI” log',
   'status.today.4': 'Calendar reading and writing, reminders, a Call button, text, WhatsApp and email drafts',
   'status.today.5': 'Saved tasks you can run by name, reminders, PDF reading, image attachments, downloads and CSV export',
@@ -254,7 +254,7 @@ export const en = {
   'status.planned': 'Planned',
   'status.planned.1': 'Release in the App Store and Google Play',
   'status.planned.2': 'End-to-end encrypted sync for those who choose an account',
-  'status.planned.3': 'Qutai credits in the store builds: in the code, not offered yet',
+  'status.planned.3': 'Buying Qutai Credits in the App Store and Google Play',
   'status.planned.4': 'Share extension and widget on iPhone',
 
   'footer.tagline': 'Agentic Browser',

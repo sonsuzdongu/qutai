@@ -171,14 +171,14 @@ export const QUTAI: Product = {
     },
     noAccount: {
       state: 'yes',
-      note: t('No Qutai account with your own key; the optional paid service, in the code but not offered yet, uses one.', 'Kendi anahtarınızla Qutai hesabı yok; kodda olan ama henüz sunulmayan isteğe bağlı ücretli hizmet hesap kullanır.'),
+      note: t('No Qutai account with your own key; Qutai Credits, the optional paid service, use one.', 'Kendi anahtarınızla Qutai hesabı yok; isteğe bağlı ücretli hizmet Qutai Kredileri hesap kullanır.'),
       source: src('README.md'),
     },
     directToProvider: {
       state: 'yes',
       note: t(
-        'With your own key, no Qutai server in between; an optional paid Qutai service through its server is in the code, not offered yet.',
-        'Kendi anahtarınızla arada Qutai sunucusu yok; Qutai sunucusu üzerinden çalışan isteğe bağlı ücretli hizmet kodda var, henüz sunulmuyor.',
+        'With your own key, no Qutai server in between; with Qutai Credits, requests pass through Qutai’s server, which doesn’t store or log them.',
+        'Kendi anahtarınızla arada Qutai sunucusu yok; Qutai Kredileriyle istekler Qutai sunucusundan geçer, orada saklanmaz ve kayda geçirilmez.',
       ),
       source: src('src/ai/providers.ts'),
     },
@@ -215,8 +215,8 @@ export const QUTAI: Product = {
       state: 'yes',
       value: t('Free, open source', 'Ücretsiz, açık kaynak'),
       note: t(
-        'You pay your AI provider for what you use; getting the AI from Qutai as a paid service is in the code but not offered yet.',
-        'Kullandığınız kadarını AI sağlayıcınıza ödersiniz; yapay zekâyı ücretli bir hizmet olarak Qutai’dan almak kodda var ama henüz sunulmuyor.',
+        'With your own key you pay your AI provider for what you use; or buy Qutai Credits from Qutai.',
+        'Kendi anahtarınızla kullandığınız kadarını AI sağlayıcınıza ödersiniz; dilerseniz Qutai’dan Qutai Kredileri alırsınız.',
       ),
       source: src('README.md'),
     },
