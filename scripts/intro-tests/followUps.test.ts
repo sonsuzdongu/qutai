@@ -113,3 +113,18 @@ test('the style line replaces the other style line in the custom instructions', 
   );
   assert.equal(withStyleLine('', styles[0], styles), styles[0]);
 });
+
+test('saving writes hidden rows with their translated label, never the value', async () => {
+  const { introWrites } = await import('../../src/intro/items');
+  const rows = reviewRows([it('allergy', 'peanuts'), it('age', '34'), it('style', 'short', 'short')], t);
+  rows.find((r) => r.topic === 'allergy')!.hidden = true;
+  assert.deepEqual(introWrites(rows, t), [
+    { kind: 'memory', text: 'Age: 34', category: 'identity' },
+    { kind: 'memory', text: 'Food allergy: peanuts', category: 'food', hidden: { label: 'Food allergy' } },
+    { kind: 'instruction', line: 'Answer briefly and to the point.' },
+  ]);
+  const { hiddenLabelProblem } = await import('../../src/agent/memory');
+  for (const key of ['age', 'gender', 'allergy', 'health'] as const) {
+    assert.equal(hiddenLabelProblem(t(`voiceIntro.hiddenLabel.${key}`), 'Food allergy: peanuts'), null);
+  }
+});

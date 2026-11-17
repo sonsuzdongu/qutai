@@ -114,6 +114,24 @@ export function reviewRows(items: IntroItem[], t: T): ReviewRow[] {
   return rows;
 }
 
+/** What saving the review page writes: memories (hidden ones with their label) and the custom-instructions line. */
+export type IntroWrite =
+  | { kind: 'memory'; text: string; category: MemoryCategory; hidden?: { label: string } }
+  | { kind: 'instruction'; line: string };
+
+export function introWrites(rows: ReviewRow[], t: T): IntroWrite[] {
+  return rows.map((row) =>
+    row.kind === 'instruction'
+      ? { kind: 'instruction', line: row.text }
+      : {
+          kind: 'memory',
+          text: row.text,
+          category: row.category,
+          ...(row.hidden && row.hiddenLabel ? { hidden: { label: t(row.hiddenLabel) } } : {}),
+        },
+  );
+}
+
 /** The custom instructions with the answer-style line in place: the other style line goes, as in the typed question. */
 export function withStyleLine(current: string, line: string, styleLines: string[]): string {
   const lines = current.split('\n').filter((l) => l.trim() && !styleLines.includes(l.trim()));

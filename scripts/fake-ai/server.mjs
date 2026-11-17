@@ -66,7 +66,8 @@ function nextStep(messages) {
   const system = messages.find((m) => m.role === 'system');
   const first = messages.find((m) => m.role === 'user');
   if ((system && text(system).includes(INTRO_MARK)) || (first && text(first).includes(INTRO_MARK))) {
-    const said = text(first).split('The text:\n').pop();
+    // iOS types curly apostrophes ("I’m"); the patterns use straight ones.
+    const said = text(first).split('The text:\n').pop().replace(/[’‘]/g, "'");
     return { delay: /\bslow\b/i.test(said) ? 25000 : 600, content: introAnswer(said) };
   }
   const u = lastUserIndex(messages);

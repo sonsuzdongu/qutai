@@ -29,7 +29,7 @@ import { getLanguage, MessageKey, t } from '../i18n';
 import { answersTurn, ExtractionError, MAX_TRANSCRIPT_CHARS, transcriptTurn } from '../intro/extract';
 import { canSubmit, finalExtraction, hasBack, introReducer, pendingAnswers, START, type FlowState } from '../intro/flow';
 import type { FollowUp, FollowUpAnswer } from '../intro/followUps';
-import { reviewRows, withStyleLine, type ReviewRow } from '../intro/items';
+import { introWrites, reviewRows, withStyleLine, type ReviewRow } from '../intro/items';
 import { understand, type IntroTarget } from '../intro/request';
 import { getDb } from '../storage/db';
 import { addMemory } from '../storage/memory';
@@ -231,17 +231,17 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
     const db = await getDb();
     let count = 0;
     const problems: string[] = [];
-    for (const row of rows) {
-      if (row.kind === 'instruction') {
-        onInstructions((current) => withStyleLine(current, row.text, STYLE_LINES()));
+    for (const write of introWrites(rows, t)) {
+      if (write.kind === 'instruction') {
+        onInstructions((current) => withStyleLine(current, write.line, STYLE_LINES()));
         count++;
         continue;
       }
       try {
-        await addMemory(db, row.text, row.category, row.hidden && row.hiddenLabel ? { label: t(row.hiddenLabel) } : undefined);
+        await addMemory(db, write.text, write.category, write.hidden);
         count++;
       } catch (e) {
-        problems.push(t('voiceIntro.notSaved', { text: row.text, reason: memoryErrorText(e) }));
+        problems.push(t('voiceIntro.notSaved', { text: write.text, reason: memoryErrorText(e) }));
       }
     }
     dispatch({ type: 'saved', count }, 'result');
@@ -456,6 +456,11 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
             // A single-choice chip answers and moves on (a page change); a multi-choice one only toggles.
             dispatch({ type: 'toggleChip', chip }, question.multi ? 'none' : 'user');
           }}
+          onSubmit={() => {
+            if (ownsMicrophone) abortVoiceInput();
+            const answer = state.answers[phase.index];
+            dispatch({ type: answer && (answer.chips.length || answer.text.trim()) ? 'next' : 'skipQuestion' });
+          }}
           onMic={() => {
             if (ownsMicrophone) return stop();
             const current = state.answers[phase.index]?.text ?? '';
@@ -600,6 +605,11 @@ function IntroPage({ ai, credits, onSpeak, notice }: { ai: boolean; credits: boo
           <Text style={styles.micLabel} importantForAccessibility="no" accessibilityElementsHidden>
             {t('voiceIntro.speak')}
           </Text>
+          {/* Said before the microphone is used, so it sits right under it (a screen reader reaches it next). */}
+          <View style={[styles.card, styles.privacy]}>
+            <Icon name="secure" size={16} color={palette.textSecondary} />
+            <Text style={styles.hintFlex}>{t(credits ? 'voiceIntro.privacyCredits' : 'voiceIntro.privacy')}</Text>
+          </View>
         </>
       ) : (
         <View style={styles.card}>
@@ -622,12 +632,6 @@ function IntroPage({ ai, credits, onSpeak, notice }: { ai: boolean; credits: boo
           </View>
         ))}
       </View>
-      {ai && (
-        <View style={[styles.card, styles.privacy]}>
-          <Icon name="secure" size={16} color={palette.textSecondary} />
-          <Text style={styles.hintFlex}>{t(credits ? 'voiceIntro.privacyCredits' : 'voiceIntro.privacy')}</Text>
-        </View>
-      )}
     </>
   );
 }
@@ -666,6 +670,7 @@ function FollowUps({
   onText,
   onChip,
   onMic,
+  onSubmit,
 }: {
   questions: FollowUp[];
   answers: FollowUpAnswer[];
@@ -678,6 +683,7 @@ function FollowUps({
   onText: (text: string) => void;
   onChip: (chip: string) => void;
   onMic: () => void;
+  onSubmit: () => void;
 }) {
   const styles = useStyles();
   const palette = usePalette();
@@ -741,6 +747,10 @@ function FollowUps({
           multiline
           maxLength={500}
           autoCapitalize="sentences"
+          // The keyboard's own key answers and moves on (the button below may be under the keyboard).
+          returnKeyType="next"
+          submitBehavior="blurAndSubmit"
+          onSubmitEditing={onSubmit}
         />
         <Pressable
           onPress={onMic}
