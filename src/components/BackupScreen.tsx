@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -25,15 +25,21 @@ import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 import { ScreenHeader } from './ScreenHeader';
 
+/** A backup downloaded from the Qutai account, and the password kept on this phone for it (tried first). */
+export type ServerRestoreJob = { file: Uint8Array; keptPassword: string | null };
+
 type Props = {
-  /** 'export', or the bytes of a picked backup file to import; null: closed. */
-  job: 'export' | Uint8Array | null;
+  /** 'export', the bytes of a picked backup file to import, or a server backup to restore; null: closed. */
+  job: 'export' | Uint8Array | ServerRestoreJob | null;
   /** Export asks for Face ID / fingerprint first when the app lock is on. */
   appLock: boolean;
   onClose: () => void;
 };
 
-/** Export (choose what goes in, set a password) and import (password, summary, merge or replace) of a backup. */
+/**
+ * Export (choose what goes in, set a password) and import (password, summary, merge or replace) of a backup. A server
+ * backup (docs/server-backup.md) is restored through the same import: the same summary, choices and code path.
+ */
 export function BackupScreen({ job, appLock, onClose }: Props) {
   const styles = useStyles();
   // The title stays while the modal slides away.
@@ -54,6 +60,9 @@ export function BackupScreen({ job, appLock, onClose }: Props) {
         {/* Mounted per job, so every export or import starts with empty fields. */}
         {job === 'export' && <ExportForm appLock={appLock} busy={busy} setBusy={setBusy} onDone={onClose} />}
         {job instanceof Uint8Array && <ImportFlow file={job} busy={busy} setBusy={setBusy} />}
+        {job !== null && job !== 'export' && !(job instanceof Uint8Array) && (
+          <ImportFlow file={job.file} keptPassword={job.keptPassword} busy={busy} setBusy={setBusy} />
+        )}
       </SafeAreaView>
       <DialogHost />
     </AppModal>
@@ -80,7 +89,7 @@ function useProgress() {
   return { percent, report, reset };
 }
 
-function PasswordField({
+export function PasswordField({
   value,
   onChange,
   label,
@@ -119,7 +128,7 @@ function PasswordField({
   );
 }
 
-function ShowPassword({ visible, onToggle }: { visible: boolean; onToggle: () => void }) {
+export function ShowPassword({ visible, onToggle }: { visible: boolean; onToggle: () => void }) {
   const styles = useStyles();
   return (
     <Pressable
@@ -291,7 +300,7 @@ function kindNames(s: BackupSummary): string[] {
   return names;
 }
 
-function ImportFlow({ file, busy, setBusy }: BusyProps & { file: Uint8Array }) {
+function ImportFlow({ file, keptPassword, busy, setBusy }: BusyProps & { file: Uint8Array; keptPassword?: string | null }) {
   const styles = useStyles();
   const [password, setPassword] = useState('');
   const [visible, setVisible] = useState(false);
@@ -301,20 +310,31 @@ function ImportFlow({ file, busy, setBusy }: BusyProps & { file: Uint8Array }) {
   const [withKeys, setWithKeys] = useState(true);
   const progress = useProgress();
 
-  const open = async () => {
-    if (!password || busy) return;
+  const open = async (typed = password, kept = false) => {
+    if (!typed || busy) return;
     setBusy(true);
     setError(null);
     progress.reset();
     try {
-      setPayload(await openBackup(file, password, progress.report));
+      setPayload(await openBackup(file, typed, progress.report));
       setPassword('');
     } catch (e) {
-      setError(openError(e));
+      // The kept password may be newer than this backup ("change password" leaves older server copies as they were).
+      setError(kept && e instanceof BackupError && e.code === 'wrong-password' ? t('serverBackup.keptPasswordFailed') : openError(e));
     } finally {
       setBusy(false);
     }
   };
+
+  // A server backup opens with the password kept on this phone first; the field shows only when that fails.
+  const triedKept = useRef(false);
+  useEffect(() => {
+    if (keptPassword && !triedKept.current) {
+      triedKept.current = true;
+      void open(keptPassword, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keptPassword]);
 
   if (!payload) {
     return (
@@ -328,8 +348,8 @@ function ImportFlow({ file, busy, setBusy }: BusyProps & { file: Uint8Array }) {
           }}
           label={t('backup.password')}
           visible={visible}
-          onSubmit={open}
-          autoFocus
+          onSubmit={() => open()}
+          autoFocus={!keptPassword}
         />
         <ShowPassword visible={visible} onToggle={() => setVisible(!visible)} />
         {error && (
@@ -341,7 +361,7 @@ function ImportFlow({ file, busy, setBusy }: BusyProps & { file: Uint8Array }) {
           <Progress percent={progress.percent} label={t('backup.decrypting')} />
         ) : (
           <Pressable
-            onPress={open}
+            onPress={() => open()}
             disabled={!password}
             style={[styles.button, !password && styles.disabled]}
             accessibilityRole="button"

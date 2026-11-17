@@ -14,7 +14,12 @@ import { applyBackup, ApplyMode, collectBackup, ExportChoice } from './database'
 import { BackupPayload, BackupSettings, PAYLOAD_VERSION, parseBackup, serializeBackup } from './payload';
 
 /** The installed development build has no expo-crypto yet (it was added after the build was made). */
-export class CryptoUnavailableError extends Error {}
+export class CryptoUnavailableError extends Error {
+  constructor() {
+    super('crypto unavailable');
+    this.name = 'CryptoUnavailableError';
+  }
+}
 
 /** Random bytes from the OS. Loaded on first use, so an older development build still starts. */
 async function osRandomBytes(length: number): Promise<Uint8Array> {
@@ -27,8 +32,8 @@ async function osRandomBytes(length: number): Promise<Uint8Array> {
   return Crypto.getRandomBytesAsync(length);
 }
 
-/** Shortest password accepted for a backup. */
-export const MIN_BACKUP_PASSWORD = 10;
+/** Shortest password accepted for a backup (shared with the server backup, server/logic.ts). */
+export { MIN_BACKUP_PASSWORD } from './server/logic';
 
 export type ExportOptions = ExportChoice & { apiKeys: boolean };
 
@@ -71,8 +76,11 @@ function backupSettings(s: Settings): BackupSettings {
 const localDate = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-/** Builds the encrypted backup and opens the share sheet to save it. */
-export async function exportBackup(options: ExportOptions, password: string, onProgress?: Progress): Promise<void> {
+/**
+ * Builds the encrypted backup file: the same bytes for the file export and the server backup (docs/server-backup.md),
+ * so either can be restored from the other.
+ */
+export async function buildBackupFile(options: ExportOptions, password: string, onProgress?: Progress): Promise<Uint8Array> {
   const db = await getDb();
   const settings = await loadSettings();
   const payload: BackupPayload = {
@@ -90,12 +98,15 @@ export async function exportBackup(options: ExportOptions, password: string, onP
     // The custom endpoint's extra headers can hold tokens, so they go only where the keys go.
     if (settings.customHeaders.length) payload.customHeaders = settings.customHeaders;
   }
-  const file = await encryptBackup(
-    new TextEncoder().encode(serializeBackup(payload)),
-    password,
-    osRandomBytes,
-    onProgress,
-  );
+  return encryptBackup(new TextEncoder().encode(serializeBackup(payload)), password, osRandomBytes, onProgress);
+}
+
+/** Random bytes from the OS for callers outside this file (the server backup's upload id). */
+export const randomBytes = osRandomBytes;
+
+/** Builds the encrypted backup and opens the share sheet to save it. */
+export async function exportBackup(options: ExportOptions, password: string, onProgress?: Progress): Promise<void> {
+  const file = await buildBackupFile(options, password, onProgress);
   await shareBackupFile(file, `qutai-backup-${localDate(new Date())}.qutai`);
 }
 

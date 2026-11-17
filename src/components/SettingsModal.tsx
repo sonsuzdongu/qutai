@@ -34,7 +34,9 @@ import { CreditsScreen } from './CreditsScreen';
 import { ActionLogScreen } from './ActionLogScreen';
 import { pricesDate } from './AnswerCost';
 import { SentLogScreen } from './SentLogScreen';
-import { BackupScreen } from './BackupScreen';
+import { BackupScreen, type ServerRestoreJob } from './BackupScreen';
+import { ServerBackupSection } from './ServerBackupSection';
+import { serverBackupEnabled } from '../backup/server';
 import { CalendarChoiceScreen } from './CalendarChoiceScreen';
 import { AiChoice, aiChoiceProblem, AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
@@ -137,7 +139,7 @@ function SettingsPages({
   const [legal, setLegal] = useState<LegalKind | null>(null);
   const [licencesVisible, setLicencesVisible] = useState(false);
   const [calendarVisible, setCalendarVisible] = useState(false);
-  const [backupJob, setBackupJob] = useState<'export' | Uint8Array | null>(null);
+  const [backupJob, setBackupJob] = useState<'export' | Uint8Array | ServerRestoreJob | null>(null);
   const account = useAccountState();
 
   const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch });
@@ -591,9 +593,11 @@ function SettingsPages({
 
         {page === 'backup' && (
           <>
-            <Text style={styles.hint}>{t('backup.intro')}</Text>
+            {/* Pro mode: the account can hold backups too, so "no account to sync" would be wrong there. */}
+            <Text style={styles.hint}>{t(serverBackupEnabled ? 'backup.introPro' : 'backup.intro')}</Text>
             <LinkRow label={t('backup.exportTitle')} onPress={() => setBackupJob('export')} />
             <LinkRow label={t('backup.importTitle')} onPress={importBackup} />
+            {serverBackupEnabled && <ServerBackupSection onRestore={setBackupJob} />}
           </>
         )}
 

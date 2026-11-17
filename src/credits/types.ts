@@ -121,6 +121,11 @@ export interface PublicConfig {
    * purchases): packs are bought without any store and nothing is charged; the buy screen says so. Absent = `store`.
    */
   purchases?: { mode: 'store' | 'fake' };
+  /**
+   * Server backup is available (backend README › Server backup): the largest file and how many are kept per account.
+   * Absent when the server has no backup storage, and from older servers.
+   */
+  backups?: { maxBytes: number; keep: number };
 }
 
 /** `GET /config` › `tiers[]` (backend/README.md › Relay › Tiers). */

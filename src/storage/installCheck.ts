@@ -22,6 +22,10 @@ const OTHER_KEYS = [
   // this loses nothing.
   'credits_pending_purchases',
   'webview_user_agent', // browser/userAgent.ts (Android only, listed for completeness)
+  // backup/server/index.ts: the server backup's password and its choices / last-run record. The password must go with
+  // the reinstall: a clean start asks for it again (the server copies stay, protected by it).
+  'server_backup_password',
+  'server_backup_state',
 ];
 
 export function allSecureStoreKeys(): string[] {

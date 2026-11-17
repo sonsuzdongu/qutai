@@ -78,6 +78,8 @@ import { KeyboardAvoidingContainer } from './src/components/KeyboardAware';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
 import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
 import { SettingsModal, type SettingsPage } from './src/components/SettingsModal';
+import { ServerRestoreOffer } from './src/components/ServerRestoreOffer';
+import { useServerBackupLifecycle } from './src/backup/server/useServerBackupLifecycle';
 import { AssistantIntro, assistantIntroSeen, setAssistantIntroSeen } from './src/components/AssistantIntro';
 import { CalendarChoiceHost } from './src/components/CalendarChoiceScreen';
 import { SelectionAction, SelectionBar } from './src/components/SelectionBar';
@@ -728,6 +730,8 @@ function BrowserApp({
     if (lostQutaiAccount(previous, accountState.status, providers) && !settingsVisibleRef.current) promptQutaiSignIn();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountState.status]);
+  // Server backup's daily run: on opening, foreground, sign-in and unlock only (docs/server-backup.md).
+  useServerBackupLifecycle({ incognito: tab.incognito, locked: lock !== null, signedIn: accountState.status === 'signedIn' });
   /** The conversation whose model is being chosen (the sheet under the panel's title). */
   const [modelSheetFor, setModelSheetFor] = useState<Conversation | null>(null);
   const [tabsVisible, setTabsVisible] = useState(false);
@@ -2652,6 +2656,7 @@ function BrowserApp({
           viaQutai={(conversation.model?.provider ?? settings.provider) === 'qutai'}
           onClose={() => setSentFor(null)}
         />
+        <ServerRestoreOffer ready={!lock && !settingsVisible && !introPending} appLock={settings.appLock} />
         <SettingsModal
           onClearData={clearData}
           visible={settingsVisible}

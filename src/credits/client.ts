@@ -602,6 +602,10 @@ export function parseConfig(value: unknown): PublicConfig {
     // Sign-in methods beyond the native ones (Android's Sign in with Apple button). Only an explicit `true` turns one on;
     // an older server without `auth` leaves it absent.
     ...(isRecord(value.auth) ? { auth: { appleWeb: value.auth.appleWeb === true } } : {}),
+    // Server backup: only with both numbers (an older server has no `backups`; the app then hides the section).
+    ...(isRecord(value.backups) && whole(value.backups.maxBytes) !== null && whole(value.backups.keep) !== null
+      ? { backups: { maxBytes: whole(value.backups.maxBytes) as number, keep: whole(value.backups.keep) as number } }
+      : {}),
   };
 }
 
