@@ -235,6 +235,29 @@ Genel
 - [ ] Yazı boyutu en büyükte: tek satırlık alanlarda (sunucu adresi, anahtar, arama) harfler kesilmiyor; panel ve onay penceresi taşmıyor.
 - [ ] TalkBack açıkken satır ve düğmeler "düğme" olarak okunuyor.
 
+## 13. Android telefonda: çalışma modu, yatay ekran, sahte satın alma (17 Kasım, emülatörde denenemedi)
+
+Emülatörde denenemedi: uygulama Android'de kendi isteklerini yalnızca https ile gönderiyor, yerel sunucu ve sahte yapay zekâ ise http. Telefonda tünel adresiyle (pro mod APK) deneyin. Ayrıntı: `docs/performance-2026-11.md` › C.
+
+Çalışma modu (sahte yapay zekâ yerine kendi anahtarınız veya Qutai Kredileri ile, kısa bir görev):
+- [ ] Bir form sayfasında "formu doldur" gibi bir görev verin: panel aşağı iner, alttaki şerit adımları yazar ("Düşünüyor…", "Yazılıyor…", "Tıklanıyor…"), tıklanan düğmede halka, yazılan alanda çerçeve görünür, ekranın kenarlarında ışıltı döner; sonunda panel yanıtla geri gelir.
+- [ ] Görev sürerken şeritteki durdurma düğmesi: görev durur, şerit ve ışıltı kaybolur, panelde "Durduruldu" yazar.
+- [ ] Onay isteyen bir adım (konum): onay penceresi şeridin üstünde açılır; "Reddet" deyince sohbette reddettiğinizi bildiren kısa bir satır çıkar.
+- [ ] İstek sürerken uygulamadan çıkın, 15 saniye sonra dönün: istek bir kez gider, yanıt dönüşte orada olur (bildirim çubuğunda "yanıt tamamlanıyor" bildirimi görünebilir).
+
+Yatay ekran:
+- [ ] Tarayıcı, sekme değiştirici (üç sütun), Ayarlar ve asistan paneli (sağda) yatayda düzgün görünür.
+- [ ] Görev sürerken telefonu çevirin: görev devam eder, şerit ve ışıltı yeni yöne uyar.
+
+Sahte satın alma (sunucuda `FAKE_PURCHASES=true`):
+- [ ] Ayarlar › Hesap › Qutai Kredileri › Kredi satın al: "Test modu" yazısı görünür; "Al (test)" ile bakiye artar.
+- [ ] Aynı ekran kurulumdaki "Kredi satın al" düğmesinden de açılır.
+
+Ölçüm (her biri beş kez, ortanca değeri yazın):
+- [ ] Soğuk açılış: `adb shell am force-stop com.sonsuzdongu.qutai && adb shell am start -W -n com.sonsuzdongu.qutai/.MainActivity` (TotalTime).
+- [ ] Bellek: `adb shell dumpsys meminfo com.sonsuzdongu.qutai | grep -E "TOTAL PSS|TOTAL RSS"`: açılıştan sonra, 1, 5 ve 20 sekmeyle, panel açıkken ve görev sürerken.
+- [ ] Takılma: `adb shell dumpsys gfxinfo com.sonsuzdongu.qutai reset`, uzun bir sayfayı 10 saniye kaydırın (görev varken ve yokken), sonra `adb shell dumpsys gfxinfo com.sonsuzdongu.qutai | grep -E "Janky|50th|90th"`.
+
 ## Bulunan sorunlar
 
 Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.
