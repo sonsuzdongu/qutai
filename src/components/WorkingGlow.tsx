@@ -69,7 +69,9 @@ half4 main(float2 pos) {
 }
 `;
 
-const SOURCE = Skia.RuntimeEffect.Make(GLOW_SKSL)!;
+// Compiled the first time the glow shows, not when the app starts (this module is imported by App).
+let source: ReturnType<typeof Skia.RuntimeEffect.Make> = null;
+const glowSource = () => (source ??= Skia.RuntimeEffect.Make(GLOW_SKSL))!;
 
 /**
  * The working glow at screen level (docs/working-mode.md): around the whole screen while a task runs, over the page
@@ -158,7 +160,7 @@ function Edge({
   return (
     <Canvas style={{ position: 'absolute', left: x, top: y, width: w, height: h }} pointerEvents="none">
       <Fill>
-        <Shader source={SOURCE} uniforms={uniforms} />
+        <Shader source={glowSource()} uniforms={uniforms} />
       </Fill>
     </Canvas>
   );
