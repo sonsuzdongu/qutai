@@ -118,8 +118,8 @@ The UI is in English, Turkish, German, Spanish, Portuguese (Brazil), French, Jap
 (`src/i18n/`, one file per language with exactly the keys of `en.ts`; English is the fallback; only the active
 language is loaded). By default it follows the phone's language (region variants map to the language: es-MX → es,
 pt-PT → pt-BR); *Settings › Language* picks one: on Android 13+ that is the system's per-app language (the same setting
-as Settings › Apps › Qutai › Language, so the two stay in step, and the launcher shortcuts and widget follow); on
-older Android Qutai keeps the choice itself and applies it to its screens, notifications, shortcuts and widget; on iOS
+as Settings › Apps › Qutai › Language, so the two stay in step, and the widget follows); on
+older Android Qutai keeps the choice itself and applies it to its screens, notifications and widget; on iOS
 the row opens Qutai's page in the Settings app, where iOS keeps the per-app language (and restarts the app). The
 interface switches without restarting, so tabs and conversations stay. The privacy policy and terms exist in English
 and Turkish only; other languages show the English text with a translated note. Text sent to the model stays English.
@@ -314,8 +314,9 @@ from outside opens in an incognito tab. Each item is handled once (`src/device/e
   the assistant's message field, unsent) and *Summarize this page* (opens the page with the assistant ready; the user
   taps Summarize). Images and files are not accepted. iOS has no share extension yet (see Known limitations).
 - **Launcher shortcuts:** long-press the app icon for *New tab*, *New incognito tab*, *Ask Qutai* and *Scan QR code*
-  (Android: published by the app, so they appear after the first launch and follow Qutai's own language from
-  Android 13 on, as the widget does; iOS Home Screen quick actions; in all ten interface languages).
+  (Android: static shortcuts, there right after install, in the phone's language; when Qutai's own language differs
+  they stay in the phone's, since Android lets an app neither change nor hide them and dynamic copies would show
+  twice; the widget follows Qutai's language. iOS Home Screen quick actions. In all ten interface languages).
 - **Add to home screen (Android):** page menu (⋮) › *Add to home screen* pins a launcher shortcut for the page, with
   the site's letter badge; it opens the page in Qutai like any link. Not offered in incognito tabs. iOS gives apps no
   way to add a page to the Home Screen (Safari's "Add to Home Screen" is its own), so there is none there.

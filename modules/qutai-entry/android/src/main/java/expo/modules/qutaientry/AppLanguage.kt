@@ -21,20 +21,27 @@ import androidx.core.graphics.drawable.IconCompat
  * Qutai's language is the per-app language Android keeps for it (Android 13+: Settings › Apps › Qutai › Language,
  * declared through expo-localization's supportedLocales; earlier Android: the phone's language). The system reads
  * strings it shows for the app itself (manifest shortcut labels, layout texts drawn by the launcher) in the PHONE's
- * language, so a Turkish Qutai on an English phone had English shortcuts. Here the app resolves the strings in its
- * own process, where its resources already follow the per-app language, and hands the system finished text:
- * - the four launcher shortcuts are dynamic shortcuts (the manifest no longer declares them), published on every
- *   start and on every language change;
- * - the widget's texts are set on its RemoteViews rather than taken from the layout.
+ * language. So:
+ * - the four launcher shortcuts are static (manifest) shortcuts, declared by plugins/withEntryPoints.js with the
+ *   module's strings in the ten languages, so they are there right after install, in the phone's language. Android
+ *   lets an app neither change nor hide its manifest shortcuts, and a launcher shows static and dynamic shortcuts
+ *   side by side (Launcher3: at most four, two of each when both exist), so dynamic copies in the app's language
+ *   would only add duplicates. The app therefore publishes no dynamic launcher shortcuts and removes the ones
+ *   earlier builds published (ids new_tab, …; the static ones are static_new_tab, …). When Qutai's own language
+ *   differs from the phone's, the shortcuts stay in the phone's language;
+ * - shortcuts the user pinned to the home screen from those earlier dynamic ones are relabelled in the app's
+ *   language (a pinned copy is the user's own icon, not a duplicate);
+ * - the widget's texts are set on its RemoteViews rather than taken from the layout, so they follow the app.
  * Android sends ACTION_LOCALE_CHANGED to the app when its own language or the phone's changes, also while it is not
- * running, so both follow without opening the app. What stays in the phone's language: the widget's name and
- * description in the launcher's widget list, and the app's name.
+ * running, and ACTION_MY_PACKAGE_REPLACED after an update, so all of this happens without opening the app. What
+ * stays in the phone's language: the static shortcuts, the widget's name and description in the launcher's widget
+ * list, and the app's name.
  *
  * The language chosen in Qutai's own settings (src/i18n/appLanguage.ts):
  * - Android 13+: handed to the system as the per-app language (LocaleManager), the same setting as Settings › Apps ›
  *   Qutai › Language, so either place changes both. The system then sends ACTION_LOCALE_CHANGED as above.
  * - earlier Android, which has no per-app language: kept here and applied to the strings this module resolves (the
- *   shortcuts and the widget); the JavaScript interface applies it itself.
+ *   pinned shortcuts and the widget); the JavaScript interface applies it itself.
  */
 internal object AppLanguage {
   private const val TAG = "QutaiEntry"
@@ -95,27 +102,30 @@ internal object AppLanguage {
 
   /** Shortcuts and widget in the language the app's resources resolve to now. */
   fun apply(context: Context) {
-    publishShortcuts(context)
+    tidyShortcuts(context)
     refreshWidgets(context)
   }
 
-  private fun publishShortcuts(context: Context) {
+  private fun tidyShortcuts(context: Context) {
     val text = localized(context)
     val launch = context.packageManager.getLaunchIntentForPackage(context.packageName)?.component ?: return
-    val items = SHORTCUTS.mapIndexed { rank, s ->
-      ShortcutInfoCompat.Builder(context, s.id)
-        .setShortLabel(text.getString(s.short))
-        .setLongLabel(text.getString(s.long))
-        .setIcon(IconCompat.createWithResource(context, s.icon))
-        .setActivity(launch)
-        .setRank(rank)
-        .setIntent(Intent(Intent.ACTION_VIEW, Uri.parse(s.url)).setComponent(launch))
-        .build()
-    }
     try {
-      ShortcutManagerCompat.setDynamicShortcuts(context, items)
-      // A shortcut the user pinned to the home screen from an earlier build keeps its label until updated.
-      ShortcutManagerCompat.updateShortcuts(context, items)
+      // Earlier builds published the four as dynamic shortcuts; next to the static ones they would show twice.
+      ShortcutManagerCompat.removeAllDynamicShortcuts(context)
+      val pinned = ShortcutManagerCompat.getShortcuts(context, ShortcutManagerCompat.FLAG_MATCH_PINNED)
+        .filter { !it.isDeclaredInManifest }
+        .map { it.id }
+        .toSet()
+      val items = SHORTCUTS.filter { it.id in pinned }.map { s ->
+        ShortcutInfoCompat.Builder(context, s.id)
+          .setShortLabel(text.getString(s.short))
+          .setLongLabel(text.getString(s.long))
+          .setIcon(IconCompat.createWithResource(context, s.icon))
+          .setActivity(launch)
+          .setIntent(Intent(Intent.ACTION_VIEW, Uri.parse(s.url)).setComponent(launch))
+          .build()
+      }
+      if (items.isNotEmpty()) ShortcutManagerCompat.updateShortcuts(context, items)
     } catch (e: RuntimeException) {
       // The launcher refused (rate limit while in the background, or a pinned shortcut it will not let change).
       Log.w(TAG, "Launcher shortcuts not updated", e)
@@ -129,9 +139,15 @@ internal object AppLanguage {
   }
 }
 
-/** ACTION_LOCALE_CHANGED: the phone's language or Qutai's own language changed (declared by plugins/withEntryPoints.js). */
+/**
+ * ACTION_LOCALE_CHANGED (the phone's language or Qutai's own language changed) and ACTION_MY_PACKAGE_REPLACED (an
+ * update, which may have brought the static shortcuts next to dynamic ones of an earlier build). Declared by
+ * plugins/withEntryPoints.js.
+ */
 class QutaiLocaleReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
-    if (intent.action == Intent.ACTION_LOCALE_CHANGED) AppLanguage.apply(context)
+    if (intent.action == Intent.ACTION_LOCALE_CHANGED || intent.action == Intent.ACTION_MY_PACKAGE_REPLACED) {
+      AppLanguage.apply(context)
+    }
   }
 }
