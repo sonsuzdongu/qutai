@@ -73,10 +73,10 @@ Bütün bölümlerde aynı müzik, değişen tek şey motifin varyasyonu.
 
 ## Durum
 
-- **Demo site hazır:** `demo-sites/lokanta/`. Çalıştırmak için `python3 -m http.server 8090 -d webpage/video/demo-sites/lokanta`
-  (İngilizce için `?lang=en`). Simülatör bilgisayardaki `localhost`'a doğrudan ulaşır. Son filmde adres çubuğunda
-  `localhost` görünmesin diye, kayıttan önce siteyi sitenin alan adı altında (örneğin `lokanta.<alan-adı>`)
-  yayımlamak daha temiz olur.
+- **Demo site:** `demo-sites/lokanta/`, gerçek bir yemek siparişi sitesi gibi: hayalî "yourlocal" platformunda
+  "Lokanta Moda" (puan, teslimat süresi, kategoriler, sepet çubuğu, teslimat zamanı, ödeme). Üstte demo yazısı yok;
+  hiçbir şey sipariş edilmez ya da ödenmez. Kayıtta `https://www.yourlocalfooddeliveryservice.com/` adresinden açılır
+  (kurulum: `README.md`, "Demo alan adı"). İngilizce için `?lang=en`.
 - **Seslendirme:** Türkçe ve İngilizce hazır (`audio/01/tr-1…5.mp3`, `en-1…5.mp3`, ses: "Ayça D."), her satır
   sahnesine sığıyor. "Qutai" seslendirmede "Kutay" diye okunuyor (sahibinin kararı; yazıda ve altyazıda "Qutai"
   kalıyor, okunuşu `make_voice_01.py` içindeki `spoken()` belirliyor). ElevenLabs'in yazıya çevirisiyle kontrol
@@ -100,8 +100,8 @@ Bütün bölümlerde aynı müzik, değişen tek şey motifin varyasyonu.
   film grafikleri; uygulama ekranı değiştirilmiyor. Ses: müzik konuşma sırasında kısılıyor, toplam −16 LUFS.
 - **Çıktılar (`out/`):** `01-hafiza-tr.mp4` (38 sn, 9:16), `01-hafiza-tr-16x9.mp4`, `01-hafiza-tr-15s.mp4`; aynıları
   `-en` ile (40 sn). Her biri `.webm` ve `.vtt` ile; kapak `01-hafiza-{tr,en}-cover.jpg`. MP4'ler 1–2 MB.
-- **Kalan:** Adres çubuğunda ve izin sorusunda `localhost:8090` görünüyor. Son sürüm için demo site bir alan adında
-  yayımlanıp yeniden çekilebilir. Videoları siteye koymak ayrı bir iş (henüz yapılmadı).
+- **Kalan:** Mevcut çekimlerde eski demo site ve `localhost:8090` görünüyor. Yeni site ve alan adıyla yeniden
+  çekilecek. Videoları siteye koymak ayrı bir iş (henüz yapılmadı).
 
 ## Teslim edilecekler
 

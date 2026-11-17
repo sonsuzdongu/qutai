@@ -35,7 +35,20 @@ Toplam 25–35 sn. Her bölümden 15 sn'lik kısa bir kesit de çıkar (açılı
 - **Birkaç çekim, en iyisi seçilir:** Asistanın davranışı modele göre değişir. Ama sonuç uydurulmaz: o çekimde
   gerçekten olan gösterilir.
 - **Demo siteler:** Başka şirketlerin sitelerini ve logolarını kullanmayız. Her bölüm için markasız bir demo site
-  (`video/demo-sites/`) kurulur ve kayıt orada yapılır. Böylece her çekim tekrarlanabilir olur.
+  (`video/demo-sites/`) kurulur ve kayıt orada yapılır. Böylece her çekim tekrarlanabilir olur. Demo siteler gerçek
+  bir site gibi görünür (üstte "demo" yazmaz), ama hayalîdir ve hiçbir şey almaz; bu yüzden filmin kapanışında
+  "Restoran ve sipariş sitesi bu kayıt için hazırlanmış bir örnektir." notu bulunur.
+- **Demo alan adı:** Kayıtta adres çubuğunda `localhost` görünmesin diye site bir alan adıyla ve https ile açılır
+  (varsayılan `www.yourlocalfooddeliveryservice.com`, `DEMO_DOMAIN` ile değişir). Kurulum bir kez yapılır:
+  1. `/etc/hosts` dosyasına (sudo ile) `127.0.0.1 www.yourlocalfooddeliveryservice.com yourlocalfooddeliveryservice.com`
+     satırı eklenir. Simülatör Mac'in ad çözümlemesini kullandığı için bu satır onda da geçerlidir.
+  2. `demo-sites/make-cert.sh [simülatör-udid]`: yerel bir sertifika yetkilisi ve alan adı için sertifika üretir
+     (`demo-sites/.certs/`, git'e girmez) ve yetkiliyi yalnızca o simülatöre güvenilir olarak ekler.
+  3. Kayıt sırasında `python3 demo-sites/serve.py`: 443'te https, 80'de https'e yönlendirme. macOS normal kullanıcıya
+     bu portları yalnızca bütün arayüzlerde açtırır, yani site çalışırken yerel ağdan da görülebilir; kayıt bitince
+     durdurulur. Hızlı bakış için `python3 demo-sites/serve.py --port 8090` (http://localhost:8090/).
+  Alan adı bugün kimseye kayıtlı değil (2026-11-17), ama başkası alabilir; filmler yayımlanmadan önce alan adını
+  almak ya da sahibinin kendi alan adını kullanmak daha güvenli.
 - **Kişisel veri:** Kayıtta test hesabı ve test hafızası kullanılır; gerçek adres, telefon ve kart yok.
 - **Sağlık ve güvenlik:** Diyet veya alerji içeren bölümlerde kapanışa küçük bir not: "Alerjen bilgisini her zaman
   restoranla doğrulayın."

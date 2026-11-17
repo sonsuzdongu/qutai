@@ -32,7 +32,8 @@ T = {
                  'pay': 'Ödemeyi siz yaparsınız.'},
             close1='Qutai. Sizi tanır, telefonunuzda.', close2='Açık kaynak · Yakında App Store ve Google Play’de',
             note1='Alerjen bilgisini her zaman restoranla doğrulayın.',
-            note2='Gerçek ekran kaydı. Hızlandırılan yerler belirtilmiştir.'),
+            note2='Gerçek ekran kaydı. Hızlandırılan yerler belirtilmiştir.',
+            note3='Restoran ve sipariş sitesi bu kayıt için hazırlanmış bir örnektir.'),
  'en': dict(title='It gets to know you.', series='Qutai · It gets to know you', next='The next evening',
             fast='Sped up', remembered='Remembered', from_memory='From memory',
             cap={'say': 'Say it once.', 'rem': 'Remembered.',
@@ -42,7 +43,8 @@ T = {
                  'pay': 'You make the payment.'},
             close1='Qutai. It knows you, on your phone.', close2='Open source · Coming to the App Store and Google Play',
             note1='Always confirm allergens with the restaurant.',
-            note2='Real screen recording; sped-up parts are marked.'),
+            note2='Real screen recording; sped-up parts are marked.',
+            note3='The restaurant and its ordering site are a mock-up made for this recording.'),
 }
 
 # ---------------------------------------------------------------- the cut
@@ -263,9 +265,9 @@ def card_overlay(L, kind, lang, path):
         d.line([(L['W'] / 2 - 60, y), (L['W'] / 2 + 60, y)], fill=GOLD, width=4); y += 60
         for ln in wrap(d, W['close2'], f2, L['W'] - 160):
             d.text((L['W'] / 2, y), ln, font=f2, fill=TEAL_INK, anchor='mm'); y += 52
-        yb = L['H'] - (150 if vert else 90)
-        d.text((L['W'] / 2, yb), W['note1'], font=f3, fill='#5a4c3a', anchor='mm')
-        d.text((L['W'] / 2, yb + 44), W['note2'], font=f3, fill='#5a4c3a', anchor='mm')
+        yb = L['H'] - (190 if vert else 120)
+        for j, key in enumerate(('note1', 'note2', 'note3')):
+            d.text((L['W'] / 2, yb + j * 40), W[key], font=f3, fill='#5a4c3a', anchor='mm')
     im.save(path)
 
 # ---------------------------------------------------------------- rendering

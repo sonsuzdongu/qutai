@@ -2,19 +2,27 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Lokanta · Demo</title>
-<link rel="icon" href="data:,">
+<meta name="theme-color" content="#ffffff">
+<title>Lokanta Moda · yourlocal</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23157a52'/%3E%3Cpath d='M16 7a6 6 0 0 0-6 6c0 4.5 6 11 6 11s6-6.5 6-11a6 6 0 0 0-6-6zm0 8.2A2.2 2.2 0 1 1 16 10.8a2.2 2.2 0 0 1 0 4.4z' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
 <script src="app.js" defer></script>
 </head>
 <body>
-<p class="demo-banner" data-t="banner">Bu bir demo sitedir: sipariş alınmaz, ödeme yapılmaz.</p>
+<!-- A made-up delivery site for recording Qutai videos (video/README.md). Local only: no requests, nothing stored,
+     nothing ordered or paid. Turkish by default, English with ?lang=en. -->
 <header class="top">
-  <a href="#menu" class="logo">Lokanta</a>
-  <a href="#cart" class="cart-link"><span data-t="cart">Sepet</span> (<span id="cart-count">0</span>)</a>
+  <a href="#menu" class="brand" aria-label="yourlocal">
+    <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#157a52"/><path d="M16 7a6 6 0 0 0-6 6c0 4.5 6 11 6 11s6-6.5 6-11a6 6 0 0 0-6-6zm0 8.2A2.2 2.2 0 1 1 16 10.8a2.2 2.2 0 0 1 0 4.4z" fill="#fff"/></svg>
+    <span>your<b>local</b></span>
+  </a>
+  <span class="where"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg><span data-t="where"></span></span>
+  <a href="#cart" class="cart-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM5.2 4H2V2h4.8l.9 2H21l-3.4 8.2a2 2 0 0 1-1.8 1.3H8.1l-1 1.8V16H19v2H7a2 2 0 0 1-1.7-3l1.4-2.5z"/></svg><span class="sr" data-t="cart"></span> <span id="cart-count" class="count">0</span></a>
 </header>
 <main id="app"></main>
+<a href="#cart" id="cartbar" class="cartbar" hidden></a>
+<footer class="foot"><span>© 2026 yourlocal</span><span data-t="footer"></span></footer>
 </body>
 </html>
