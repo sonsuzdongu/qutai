@@ -232,11 +232,8 @@ export const tr: Messages = {
   'oss.body':
     'Uygulamanın tamamı Apache Lisansı 2.0 ile depoda: asistan, güvenlik kuralları, yapay zekâya neyin nasıl gönderildiği. Kendi araçlarınızla ya da kendi Expo hesabınızla bulutta derleyebilirsiniz.',
   'oss.buildLabel': 'Kendi bilgisayarınızda derleyin',
-  'oss.trademark':
-    'Lisans kodu kapsar. Qutai adı ve logosu ticari markadır: yayımladığınız bir çatallamanın kendi adı ve simgeleri olmalı; ayrıntılar TRADEMARKS.md’de.',
   'oss.repo': 'Depo',
   'oss.license': 'Lisans',
-  'oss.trademarks': 'Ticari markalar',
 
   'status.kicker': 'Durum',
   'status.title': 'Nerede olduğumuz, açıkça.',
@@ -268,7 +265,6 @@ export const tr: Messages = {
   'footer.github': 'GitHub',
   'footer.issues': 'Sorun bildir',
   'footer.license': 'Lisans',
-  'footer.trademarks': 'Ticari markalar',
   'footer.appPrivacy': 'Uygulamanın gizlilik politikası',
 
   'notFound.title': 'Sayfa bulunamadı',

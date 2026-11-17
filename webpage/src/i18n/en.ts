@@ -228,11 +228,8 @@ export const en = {
   'oss.body':
     'The whole app is in the repository under the Apache License 2.0: the agent, its safety rules, what is sent to the AI and how. You can build it with your own toolchain, or in the cloud with your own Expo account.',
   'oss.buildLabel': 'Build it on your machine',
-  'oss.trademark':
-    'The licence covers the code. The Qutai name and logo are trademarks: a fork you publish needs its own name and icons, as TRADEMARKS.md explains.',
   'oss.repo': 'Repository',
   'oss.license': 'Licence',
-  'oss.trademarks': 'Trademarks',
 
   'status.kicker': 'Status',
   'status.title': 'Where it stands, honestly.',
@@ -264,7 +261,6 @@ export const en = {
   'footer.github': 'GitHub',
   'footer.issues': 'Issues',
   'footer.license': 'Licence',
-  'footer.trademarks': 'Trademarks',
   'footer.appPrivacy': 'App privacy policy',
 
   'notFound.title': 'Page not found',

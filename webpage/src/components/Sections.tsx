@@ -1,6 +1,6 @@
 import type { MessageKey } from '../i18n/en';
 import { useI18n } from '../lib/i18n';
-import { APP_PRIVACY_URL, ISSUES_URL, LICENSE_URL, REPO_URL, TRADEMARKS_URL } from '../lib/site';
+import { APP_PRIVACY_URL, ISSUES_URL, LICENSE_URL, REPO_URL } from '../lib/site';
 import { Icon, type IconName } from './Icon';
 import { Miniature, type ArtName } from './Miniature';
 import { PhoneMock } from './PhoneMock';
@@ -416,11 +416,7 @@ export function OpenSource() {
             <li>
               <a href={LICENSE_URL}>{t('oss.license')}: Apache-2.0</a>
             </li>
-            <li>
-              <a href={TRADEMARKS_URL}>{t('oss.trademarks')}</a>
-            </li>
           </ul>
-          <p className="footnote reveal">{t('oss.trademark')}</p>
         </div>
         <div className="terminal reveal">
           <p className="terminal-label" id="build-label">
@@ -501,9 +497,6 @@ export function Footer() {
           </li>
           <li>
             <a href={LICENSE_URL}>{t('footer.license')}</a>
-          </li>
-          <li>
-            <a href={TRADEMARKS_URL}>{t('footer.trademarks')}</a>
           </li>
           <li>
             <a href={APP_PRIVACY_URL}>{t('footer.appPrivacy')}</a>
