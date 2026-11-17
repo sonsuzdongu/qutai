@@ -11,7 +11,7 @@ import Animated, {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
 import { accountSession } from '../account';
-import { isConfigured } from '../ai/providers';
+import { isConfigured, requestTarget } from '../ai/providers';
 import { creditsEnabled } from '../config/features';
 import { creditsConsented } from '../credits';
 import { providerToSave } from '../credits/gate';
@@ -37,7 +37,7 @@ import { QutaiSetup } from './QutaiSetup';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 import { DialogHost } from './Dialog';
 import { PermissionsStep } from './PermissionsStep';
-import { ProfileQuestions } from './ProfileQuestions';
+import { ProfileStep } from './ProfileStep';
 import { LegalScreen } from './LegalScreen';
 
 type Step = 'welcome' | 'legal' | 'ai' | 'permissions' | 'profile' | 'background' | 'protection' | 'browser';
@@ -54,7 +54,8 @@ type Props = {
  * First-run setup: what Qutai is, privacy policy and terms (must be accepted), the AI provider and
  * key (can be skipped; in pro mode Qutai Credits leads, with sign-in, the balance and buying credits, and the own key
  * is a separate path: QutaiSetup), the phone permissions the assistant can use (each optional, asked only when its switch is
- * turned on; PermissionsStep), "Let me get to know you" (optional, only with memory on; ProfileQuestions),
+ * turned on; PermissionsStep), "Let me get to know you" (optional, only with memory on; ProfileStep: "Tell me about
+ * yourself" by voice or typing, or the typed questions),
  * whether tasks keep working in the background (Android, with a build that has it; turning it on asks for
  * notifications), protection against ads and trackers, and making Qutai the default browser.
  */
@@ -217,8 +218,12 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
             </View>
 
             {step === 'profile' ? (
-              // Its own pages and buttons; no AI request, every page skippable.
-              <ProfileQuestions
+              // Its own pages and buttons, every page skippable. "Tell me about yourself" sends what was said to the
+              // AI chosen in the step before (one request, two with follow-up answers); without one, the questions.
+              <ProfileStep
+                ai={hasKey ? requestTarget(cleanAiChoice(draft), draft.provider) : null}
+                voice={draft}
+                onVoice={(change) => setDraft((d) => ({ ...d, ...change }))}
                 transition={transition}
                 onInstructions={(update) =>
                   setDraft((d) => ({

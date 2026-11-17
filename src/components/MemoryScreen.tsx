@@ -44,7 +44,7 @@ import {
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { CATEGORY_ICONS, categoryName, warnsAboutIdNumbers } from './memoryCategories';
-import { ProfileQuestionsScreen } from './ProfileQuestions';
+import { ProfileStepScreen, type IntroVoiceSettings } from './ProfileStep';
 import { KeyboardAvoidingContainer, KeyboardAwareScrollView } from './KeyboardAware';
 import { ScreenHeader } from './ScreenHeader';
 
@@ -64,12 +64,14 @@ type Props = {
   /** The app lock is on: showing a hidden memory's value asks for Face ID / fingerprint / passcode first. */
   appLock: boolean;
   /**
-   * "Answer a few questions" (setup's questions again); absent with memory off. Not offered while the tab on screen
-   * is incognito, so nothing typed there lands in memory from an incognito context.
+   * "Introduce yourself" (setup's "Tell me about yourself" and its questions again, ProfileStep); absent with memory
+   * off. Not offered while an incognito tab is open, so nothing said there lands in memory from an incognito context.
    */
   questions?: {
     incognito: boolean;
     onInstructions: (update: (current: string) => string) => void;
+    voice: IntroVoiceSettings;
+    onVoice: (change: Partial<IntroVoiceSettings>) => void;
   };
 };
 
@@ -251,7 +253,7 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
             accessibilityState={{ disabled: questions.incognito }}
             accessibilityHint={questions.incognito ? t('memory.askQuestionsIncognito') : undefined}
           >
-            <Text style={styles.actionText}>{t('memory.askQuestions')}</Text>
+            <Text style={styles.actionText}>{t('memory.introduce')}</Text>
           </Pressable>
         )}
         {general.length > 0 && (
@@ -474,12 +476,15 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
         </View>
       </KeyboardAvoidingContainer>
       {questions && (
-        <ProfileQuestionsScreen
+        <ProfileStepScreen
           visible={asking}
           onClose={() => {
             setAsking(false);
             reload();
           }}
+          ai={ai}
+          voice={questions.voice}
+          onVoice={questions.onVoice}
           onInstructions={questions.onInstructions}
         />
       )}

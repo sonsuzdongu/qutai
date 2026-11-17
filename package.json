@@ -78,6 +78,7 @@
     "test:instructions": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/instructions-tests/*.test.ts",
     "test:approvals": "TZ=Europe/Istanbul node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/approval-tests/*.test.ts",
     "test:text": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/text-tests/*.test.ts",
+    "test:intro": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/intro-tests/*.test.ts",
     "test:assistant": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/assistant-tests/*.test.ts",
     "test:i18n": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/i18n-tests/*.test.ts",
     "test:install": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/install-tests/*.test.ts",

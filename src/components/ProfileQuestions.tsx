@@ -10,9 +10,7 @@ import {
   TextInputProps,
   View,
 } from 'react-native';
-import { AppModal } from '../ui/AppModal';
 import { getLocales } from 'expo-localization';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import type { MemoryCategory } from '../agent/memory';
 import { features } from '../config/features';
 import { ensureLocationPermission, LocationUnavailableError, readPlaceName } from '../device/location';
@@ -25,10 +23,10 @@ import { memoryErrorText } from './memoryError';
 import { GradientButton } from '../ui/BrandGradient';
 import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
-import { MODAL_SCREEN_EDGES } from './BottomSheet';
-import { dialog, DialogHost } from './Dialog';
+import { dialog } from './Dialog';
 import { KeyboardAwareScrollView, useRevealFocused } from './KeyboardAware';
 import { CATEGORY_ICONS } from './memoryCategories';
+import { TranscriptCard } from './VoiceIntro';
 
 /**
  * "Let me get to know you a little": a fixed form (no AI request) that saves a few facts into memory, in the same
@@ -115,13 +113,17 @@ type Props = {
    * screen's back button; null when it goes away.
    */
   registerBack: (handler: (() => boolean) | null) => void;
+  /** The first page: 'name' when "Tell me about yourself" leads here (its own intro said what this is). */
+  startAt?: 'intro' | 'name';
+  /** What the user said in "Tell me about yourself" before ending up here, shown so they can copy from it. */
+  transcript?: string;
 };
 
-export function ProfileQuestions({ transition, onInstructions, onDone, registerBack }: Props) {
+export function ProfileQuestions({ transition, onInstructions, onDone, registerBack, startAt = 'intro', transcript }: Props) {
   const styles = useStyles();
   const palette = usePalette();
   const scrollRef = useRef<ScrollViewInstance>(null);
-  const [page, setPage] = useState<Page>('intro');
+  const [page, setPage] = useState<Page>(startAt);
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [payment, setPayment] = useState<Payment | null>(null);
@@ -159,7 +161,7 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
 
   useEffect(() => {
     registerBack(() => {
-      if (page === 'intro') return false;
+      if (page === startAt) return false;
       // The summary comes after the address offer whichever way it was reached.
       go(page === 'summary' ? 'offer' : PAGES[at - 1]);
       return true;
@@ -369,6 +371,8 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
           </View>
         </>
       )}
+
+      {QUESTIONS.includes(page) && !!transcript && <TranscriptCard text={transcript} />}
 
       {QUESTIONS.includes(page) && (
         <Text style={styles.counter}>
@@ -864,48 +868,6 @@ function AddressFields({
   );
 }
 
-/** The same questions from the Memory screen, in a sheet of their own. */
-export function ProfileQuestionsScreen({
-  visible,
-  onClose,
-  onInstructions,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  onInstructions: (update: (current: string) => string) => void;
-}) {
-  const styles = useStyles();
-  const palette = usePalette();
-  const backHandler = useRef<(() => boolean) | null>(null);
-  const back = () => {
-    if (!backHandler.current?.()) onClose();
-  };
-  return (
-    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={back}>
-      {visible && (
-        <SafeAreaView style={styles.screen} edges={MODAL_SCREEN_EDGES}>
-          <View style={styles.header}>
-            <Pressable onPress={back} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('address.back')} style={styles.headerSide}>
-              <Icon name="back" size={22} color={palette.text} />
-            </Pressable>
-            <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.headerSide, styles.headerRight]}>
-              <Text style={styles.close}>{t('common.close')}</Text>
-            </Pressable>
-          </View>
-          <ProfileQuestions
-            onInstructions={onInstructions}
-            onDone={onClose}
-            registerBack={(handler) => {
-              backHandler.current = handler;
-            }}
-          />
-        </SafeAreaView>
-      )}
-      <DialogHost />
-    </AppModal>
-  );
-}
-
 const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
   locationBox: { gap: 8 },
@@ -921,19 +883,6 @@ const useStyles = makeStyles((c) => ({
     borderColor: c.tint,
   },
   locationText: { color: c.tintText, fontSize: 15, fontWeight: '600' },
-  screen: { flex: 1, backgroundColor: c.bg },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    height: 52,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.border,
-  },
-  headerSide: { minWidth: 64 },
-  headerRight: { alignItems: 'flex-end' },
-  close: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   content: {
     paddingHorizontal: 24,
     paddingTop: 8,

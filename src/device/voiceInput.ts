@@ -30,8 +30,11 @@ export type VoiceOnline = 'ask' | 'allowed' | 'declined';
 
 export type VoiceState = 'idle' | 'preparing' | 'listening' | 'stopping';
 
-/** Who started listening: the panel's microphone, or holding the Qutai button (push-to-talk). */
-export type VoiceOwner = 'panel' | 'hold';
+/**
+ * Who started listening: the panel's microphone, holding the Qutai button (push-to-talk), or "Tell me about yourself"
+ * (setup and Settings › Memory; components/VoiceIntro.tsx).
+ */
+export type VoiceOwner = 'panel' | 'hold' | 'intro';
 
 /** How recognition will run on this phone. */
 export type VoicePlan = {
@@ -323,6 +326,11 @@ export type VoiceOptions = {
    * has to be asked first (microphone permission, the online speech service) is asked instead of listening.
    */
   hold?: boolean;
+  /**
+   * Listens through pauses until stopped, like `hold`, but asks what has to be asked first and then listens (a tap,
+   * not a finger held down): "Tell me about yourself", where the user talks for a while.
+   */
+  continuous?: boolean;
   /** Listening has started, in this recogniser language (e.g. "tr-TR"). */
   onStarted?: (lang: string) => void;
   /** The session is over, however it ended; `text` is what was recognised in it (without the draft). */
@@ -668,7 +676,7 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
     maxAlternatives: 1,
     // Tap to talk: a pause ends it (iOS 18+ and Android at the first final result; iOS 17 after a short silence).
     // Push-to-talk: it goes on until the finger is lifted (Android 12 and older: until a long silence).
-    continuous: !!options.hold,
+    continuous: !!options.hold || !!options.continuous,
     requiresOnDeviceRecognition: plan.onDevice,
     addsPunctuation: true,
     iosTaskHint: 'dictation',

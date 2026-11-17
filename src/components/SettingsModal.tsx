@@ -637,6 +637,8 @@ function SettingsPages({
                 incognito: incognitoActive,
                 onInstructions: (update) =>
                   set({ customInstructions: cleanCustomInstructions(update(settings.customInstructions)) }),
+                voice: settings,
+                onVoice: (change) => set(change),
               }
             : undefined
         }
