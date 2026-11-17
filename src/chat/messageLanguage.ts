@@ -2,8 +2,11 @@
  * Which language the user is writing in, from their own messages: a small guess made on the phone (no AI request),
  * used to pick the voice-input language. Pure: no React Native imports.
  *
- * Signals, per language (see PROFILES; adding a language is adding a profile):
- * - letters only that language uses (Turkish ç ğ ı İ ş ö ü): the strongest signal, 1.5 points per word that has them;
+ * Signals, per language (see PROFILES; adding a language is adding a profile). The profiles cover the app's ten
+ * interface languages:
+ * - letters or a script only that language uses (Turkish ç ğ ı İ ş ö ü, German ä ß, Spanish ñ, Portuguese ã õ, French
+ *   è ë œ ù, Russian Cyrillic, Japanese kana, Korean Hangul): the strongest signal, 1.5 points per word that has them
+ *   (Japanese is written without spaces, so a sentence is one word: one such word is enough on its own);
  * - very frequent function words, plus a few weaker ones that other languages share by accident;
  * - word endings that only that language produces (Turkish -iyor, -ları…, English -ing, -tion…);
  * - for Turkish, a suffix after an apostrophe (Google'da, iPhone'un); for English, contractions (don't, it's).
@@ -20,6 +23,8 @@ export type LanguageProfile = {
   code: string;
   /** Letters (lowercase) that, in this app's languages, only this language uses. */
   letters?: string;
+  /** A writing system only this language uses among the app's languages (Cyrillic, kana, Hangul): as letters. */
+  script?: RegExp;
   /** Very frequent words (lowercase), 1 point each. */
   words: string[];
   /** Words this language uses often but others share by accident, ½ point each. */
@@ -65,6 +70,67 @@ export const PROFILES: LanguageProfile[] = [
     endings: /(?:ing|tion|tions|ness|ment|ments|ly|ed)$/,
     apostrophe: /^[a-z]+['’](?:s|t|re|ll|ve|m|d)$/,
   },
+  {
+    code: 'de',
+    letters: 'äß',
+    words: (
+      'und ist nicht ich du wir ihr das der die den dem des ein eine einen einem mit auf für von zum zur auch noch ' +
+      'nur schon wie was wer wo warum wann bitte danke ja nein kann können möchte will gibt sind war habe hat haben ' +
+      'wird werden diese dieser dieses mein meine dein bei nach aus über unter oder aber wenn dann heute morgen ' +
+      'gestern hier dort jetzt sehr viel mehr alle finde zeig zeige öffne suche lies fasse übersetze seite günstig ' +
+      'billig mir mich dich uns euch sich'
+    ).split(' '),
+    weakWords: 'zu es man'.split(' '),
+    endings: /(?:ung|ungen|keit|heit|lich|isch|chen)$/,
+  },
+  {
+    code: 'es',
+    letters: 'ñ¿¡',
+    words: (
+      'el los las del y es son está están con una uno unos unas mi pero qué cómo cuál cuándo dónde muy más también ' +
+      'hoy mañana ayer aquí allí ahora sí gracias hola puedes busca muestra abre lee resume traduce precio barato ' +
+      'quiero necesito hay este esta estos estas eso esto usted ustedes nosotros ellos mis tus sus'
+    ).split(' '),
+    weakWords: 'la de en lo se no que para por como favor'.split(' '),
+    endings: /(?:ción|ciones|iendo|idad|idades)$/,
+  },
+  {
+    code: 'pt',
+    letters: 'ãõ',
+    words: (
+      'os um uma uns umas do da dos das na nos nas é são está estão com qual quando onde porque muito também já ' +
+      'hoje amanhã ontem aqui ali agora sim obrigado obrigada olá você vocês pode busque procure mostre abra leia ' +
+      'resuma traduza preço barato quero preciso tem isso isto não meu minha seu sua eles elas'
+    ).split(' '),
+    weakWords: 'o as no de e em se que para por como favor'.split(' '),
+    endings: /(?:ção|ções|idade|idades|ões)$/,
+  },
+  {
+    code: 'fr',
+    letters: 'èëœù',
+    words: (
+      'le les des du un une est sont et pour avec dans sur pas je il elle nous vous ils elles ce cette ces mon ma ' +
+      'mes ton ta sa qui quoi comment pourquoi quand très plus aussi déjà aujourd demain hier ici maintenant oui ' +
+      'merci bonjour peux pouvez cherche montre ouvre lis résume traduis prix moins cher veux besoin avoir être fait ' +
+      'leur leurs au aux'
+    ).split(' '),
+    weakWords: 'la de en ne'.split(' '),
+    endings: /(?:eux|euse|aient|ées|ère)$/,
+  },
+  {
+    code: 'id',
+    words: (
+      'yang dan dari ini itu dengan untuk tidak ada saya kamu anda kami kita mereka apa bagaimana mengapa kenapa ' +
+      'kapan dimana mana berapa tolong terima kasih bisa akan sudah belum juga hanya lebih sangat cari tunjukkan ' +
+      'buka baca ringkas terjemahkan halaman harga murah mau ingin perlu hari besok kemarin sini sana sekarang'
+    ).split(' '),
+    weakWords: 'di ke ya'.split(' '),
+    endings: /(?:kan|nya|lah|kah)$/,
+  },
+  // Plain ranges rather than \p{Script=…}, which not every JavaScript engine the app may run on supports.
+  { code: 'ru', script: /[\u0400-\u04ff]/, words: [] },
+  { code: 'ja', script: /[\u3040-\u30ff\u31f0-\u31ff\uff66-\uff9f]/, words: [] },
+  { code: 'ko', script: /[\uac00-\ud7af\u1100-\u11ff\u3130-\u318f]/, words: [] },
 ];
 
 /** One message adds at most this much to a language (a long paste weighs no more than a few sentences). */
@@ -152,6 +218,7 @@ export function scoreMessage(text: string): Record<string, number> {
     for (const p of profiles) {
       const { profile } = p;
       if (profile.letters && [...lowerKeepingDot(raw)].some((ch) => profile.letters!.includes(ch))) add(profile.code, 1.5);
+      else if (profile.script?.test(raw)) add(profile.code, 1.5);
       if (p.words.has(word) || p.folded.has(word)) add(profile.code, 1);
       else if (p.weak.has(word)) add(profile.code, 0.5);
       if (word.length >= 5 && profile.endings?.test(word)) add(profile.code, 1);

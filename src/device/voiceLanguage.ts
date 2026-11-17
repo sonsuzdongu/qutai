@@ -1,3 +1,4 @@
+import { getLocales } from 'expo-localization';
 import { detectWritingLanguage } from '../chat/messageLanguage';
 import type { Conversation } from '../chat/Conversation';
 import { getLanguage, t } from '../i18n';
@@ -8,9 +9,11 @@ import { getLanguage, t } from '../i18n';
  * 1. a language picked by hand for this conversation (the panel's language tag while listening);
  * 2. the "Listening language" setting, when it isn't Automatic;
  * 3. the language of the user's latest message in this conversation that clearly has one (their own messages, never
- *    the assistant's), from messageLanguage.ts: a guess made on the phone, so each message sets the next listening;
+ *    the assistant's), from messageLanguage.ts (any of the app's ten languages): a guess made on the phone, so each
+ *    message sets the next listening;
  * 4. the language voice input was last used in;
- * 5. the app's language.
+ * 5. the app's language;
+ * 6. the phone's own language (any language: tried only when the ones before are not offered by the recogniser).
  */
 
 /** The setting's value for "follow the conversation". */
@@ -100,6 +103,12 @@ export function writingLanguage(chat: Conversation): string | null {
   return detectWritingLanguage(userTexts(chat));
 }
 
+/** The phone's first language as a tag ("de-AT"), or null. */
+function phoneLanguage(): string | null {
+  const locale = getLocales()[0];
+  return locale?.languageTag || locale?.languageCode || null;
+}
+
 /** The languages to try, best first, one per language (see the order above). */
 export function listeningOrder(
   chat: Conversation,
@@ -111,6 +120,7 @@ export function listeningOrder(
     writingLanguage(chat),
     settings.voiceLastLanguage || null,
     getLanguage(),
+    phoneLanguage(),
   ].filter((x): x is string => !!x);
   const seen = new Set<string>();
   return order.filter((tag) => {
