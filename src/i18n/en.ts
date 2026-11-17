@@ -163,6 +163,7 @@ export const en = {
   'taskDone.failed': 'Your task stopped with an error',
   'taskDone.needsAnswer': 'Qutai is waiting for your answer',
   'taskDone.needsApproval': 'Qutai is waiting for your approval',
+  'taskDone.paused': 'Your task is waiting for you. Open Qutai to continue.',
   'address.assistantUnseen': 'a task finished',
   'chat.sources': 'Sources',
   'chat.call': 'Call',

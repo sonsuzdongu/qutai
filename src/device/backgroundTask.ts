@@ -96,6 +96,11 @@ function noticeApprovalWaiting() {
   approvalWaitingListener?.();
 }
 
+/** A confirmation dialog is open (leaving Qutai then posts the "waiting for your approval" notice instead). */
+export function isWaitingForApproval(): boolean {
+  return waitingForUser > 0;
+}
+
 /**
  * `listener` runs when a confirmation is open while Qutai is in the background, once per confirmation, unless
  * "Keep working in the background" owns the task (its own notification says it paused for a confirmation).

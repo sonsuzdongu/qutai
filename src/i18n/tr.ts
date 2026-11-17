@@ -164,6 +164,7 @@ export const tr: Record<keyof typeof en, string> = {
   'taskDone.failed': 'Göreviniz bir hatayla durdu',
   'taskDone.needsAnswer': 'Qutai yanıtınızı bekliyor',
   'taskDone.needsApproval': 'Qutai onayınızı bekliyor',
+  'taskDone.paused': 'Göreviniz sizi bekliyor. Devam etmek için Qutai’yi açın.',
   'address.assistantUnseen': 'bir görev bitti',
   'chat.sources': 'Kaynaklar',
   'chat.call': 'Ara',

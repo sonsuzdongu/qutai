@@ -43,3 +43,14 @@ test('with "Notify me when a task finishes" off, only a task that needs the user
   assert.equal(taskNoticeFor({ ...off, event: 'needsAnswer' }), 'needsAnswer');
   assert.equal(taskNoticeFor({ ...off, event: 'needsApproval' }), 'needsApproval');
 });
+
+test('a task paused because Qutai left the screen notifies like a question: also with "Notify me…" off', () => {
+  assert.equal(taskNoticeFor({ ...away, event: 'paused' }), 'paused');
+  assert.equal(taskNoticeFor({ ...away, event: 'paused', notifyWhenDone: false }), 'paused');
+});
+
+test('no paused notice for incognito, on screen, or when the background run speaks for the task', () => {
+  assert.equal(taskNoticeFor({ ...away, event: 'paused', incognito: true }), null);
+  assert.equal(taskNoticeFor({ ...away, event: 'paused', foreground: true }), null);
+  assert.equal(taskNoticeFor({ ...away, event: 'paused', backgroundRunNotifies: true }), null);
+});

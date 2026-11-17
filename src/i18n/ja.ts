@@ -175,6 +175,7 @@ export const ja: Record<keyof typeof en, string> = {
   'taskDone.failed': 'タスクがエラーで停止しました',
   'taskDone.needsAnswer': 'Qutai が返答を待っています',
   'taskDone.needsApproval': 'Qutai が許可を待っています',
+  'taskDone.paused': 'タスクが待機中です。続けるには Qutai を開いてください。',
   'address.assistantUnseen': 'タスクが完了しました',
   'chat.sources': '出典',
   'chat.call': '電話',

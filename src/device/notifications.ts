@@ -161,27 +161,47 @@ export async function scheduleNotification(plan: NotificationPlan, from: Notific
 const TASK_CHANNEL_ID = 'task-results';
 
 /**
- * Posts a "task finished" notification now: "Qutai" and one line saying how the task ended (never what it found, so
- * nothing of the answer shows on the lock screen). A tap opens Qutai on the assistant panel of the task's tab. Never
- * asks for the permission: without it nothing happens. Errors are swallowed (a missing native module, a refusal).
+ * Posts a "task finished" notification: "Qutai" and one line saying how the task ended or what it waits for (never
+ * what it found, so nothing of the answer shows on the lock screen). A tap opens Qutai on the assistant panel of the
+ * task's tab. `delaySeconds`: shown that much later (scheduled with the system, so it also appears while iOS has
+ * suspended Qutai) unless cancelled with cancelTaskNotice. Never asks for the permission: without it nothing
+ * happens. Errors are swallowed (a missing native module, a refusal). Returns the notification's id, or null.
  */
-export async function postTaskNotice(line: string, from: NotificationOrigin): Promise<void> {
+export async function postTaskNotice(line: string, from: NotificationOrigin, delaySeconds = 0): Promise<string | null> {
   try {
     const Notifications = await load();
-    if (!allowed(Notifications, await Notifications.getPermissionsAsync())) return;
+    if (!allowed(Notifications, await Notifications.getPermissionsAsync())) return null;
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync(TASK_CHANNEL_ID, {
         name: t('notifications.tasksChannel'),
         importance: Notifications.AndroidImportance.HIGH,
       });
     }
-    await Notifications.scheduleNotificationAsync({
+    const channelId = Platform.OS === 'android' ? TASK_CHANNEL_ID : undefined;
+    return await Notifications.scheduleNotificationAsync({
       identifier: `${ID_PREFIX}task-${Date.now().toString(36)}`,
       content: { title: 'Qutai', body: line, sound: 'default', data: { qutaiFrom: from, qutaiOpen: 'assistant' } },
-      trigger: Platform.OS === 'android' ? { channelId: TASK_CHANNEL_ID } : null,
+      trigger:
+        delaySeconds > 0
+          ? { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: delaySeconds, channelId }
+          : channelId
+            ? { channelId }
+            : null,
     });
   } catch {
     // Nothing to tell: the task's result is in the panel.
+    return null;
+  }
+}
+
+/** Takes back a task notice: not shown yet (scheduled) or already in the notification shade. */
+export async function cancelTaskNotice(id: string): Promise<void> {
+  try {
+    const Notifications = await load();
+    await Notifications.cancelScheduledNotificationAsync(id);
+    await Notifications.dismissNotificationAsync(id);
+  } catch {
+    // Gone already.
   }
 }
 

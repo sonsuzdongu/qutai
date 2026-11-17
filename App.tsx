@@ -138,9 +138,10 @@ import {
   incognitoOriginTab,
   initNotifications,
   notificationOrigin,
+  cancelTaskNotice,
   postTaskNotice,
 } from './src/device/notifications';
-import { taskNoticeFor, type TaskNoticeEvent } from './src/agent/taskNotice';
+import { PAUSED_NOTICE_DELAY_S, taskNoticeFor, type TaskNoticeEvent } from './src/agent/taskNotice';
 import { nowContext } from './src/agent/scheduling';
 import { interfaceLanguageNote } from './src/agent/uiLabels';
 import { withIdentity } from './src/agent/identity';
@@ -199,6 +200,7 @@ import {
   beginBackgroundTask,
   configureBackgroundTasks,
   endBackgroundTask,
+  isWaitingForApproval,
   onApprovalWaitingInBackground,
   onBackgroundOpenRequested,
   onBackgroundStopRequested,
@@ -1362,7 +1364,8 @@ function BrowserApp({
       endBackgroundTask(incognitoTask() || quiet ? { kind: 'stopped' } : outcome);
       // Without that background run (iOS, or the setting off), Qutai's own notification when the task ended while
       // the user was away (e.g. the answer arrived after they left).
-      noticeTask(chat, outcome.kind, backgroundRunNotified);
+      takeBackPausedNotice();
+      void noticeTask(chat, outcome.kind, backgroundRunNotified);
       chat.finishStreaming();
       if (answerCost) chat.addCost(answerCost, sent.id);
       // The ledger's latest entries (a stopped request is settled on the server a little later).
@@ -1466,7 +1469,12 @@ function BrowserApp({
    * left the screen cannot end there, and nothing is ever announced for one that did not end.
    */
   /** "Task finished" notification (agent/taskNotice.ts decides; nothing without the permission, never asked here). */
-  const noticeTask = (chat: Conversation, event: TaskNoticeEvent, backgroundRunNotified: boolean) => {
+  const noticeTask = (
+    chat: Conversation,
+    event: TaskNoticeEvent,
+    backgroundRunNotified: boolean,
+    delaySeconds = 0,
+  ): Promise<string | null> | null => {
     const kind = taskNoticeFor({
       event,
       foreground: AppState.currentState === 'active',
@@ -1475,8 +1483,8 @@ function BrowserApp({
       notifyWhenDone: notifyTaskDoneRef.current,
     });
     const tab = browserInstance.tabs.find((x) => browserInstance.conversationOf(x) === chat);
-    if (!kind || !tab || tab.incognito) return;
-    void postTaskNotice(t(`taskDone.${kind}`), notificationOrigin(tab));
+    if (!kind || !tab || tab.incognito) return null;
+    return postTaskNotice(t(`taskDone.${kind}`), notificationOrigin(tab), delaySeconds);
   };
   const noticeTaskRef = useRef(noticeTask);
   noticeTaskRef.current = noticeTask;
@@ -1485,10 +1493,33 @@ function BrowserApp({
     () =>
       onApprovalWaitingInBackground(() => {
         const chat = runningRef.current.chat;
-        if (chat) noticeTaskRef.current(chat, 'needsApproval', false);
+        if (chat) void noticeTaskRef.current(chat, 'needsApproval', false);
       }),
     [],
   );
+
+  // A task that cannot go on while Qutai is away (iPhone; Android without "Keep working in the background") pauses
+  // when the user leaves. A notice scheduled with the system says it waits for them (iOS suspends Qutai within
+  // seconds, so a timer in JavaScript would not fire); coming back before it shows, or the task ending, takes it back.
+  // Not when a confirmation is open (that has its own notice) or the background run speaks for the task.
+  const pausedNotice = useRef<Promise<string | null> | null>(null);
+  const takeBackPausedNotice = useCallback(() => {
+    const pending = pausedNotice.current;
+    pausedNotice.current = null;
+    void pending?.then((id) => {
+      if (id) void cancelTaskNotice(id);
+    });
+  }, []);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') return takeBackPausedNotice();
+      if (state !== 'background' || pausedNotice.current) return;
+      const chat = runningRef.current.chat;
+      if (!chat || isWaitingForApproval()) return;
+      pausedNotice.current = noticeTaskRef.current(chat, 'paused', backgroundRunNotifies(), PAUSED_NOTICE_DELAY_S);
+    });
+    return () => sub.remove();
+  }, [takeBackPausedNotice]);
 
   const taskEnded = (chat: Conversation, kind: 'done' | 'failed' | 'needsAnswer') => {
     const onScreen = AppState.currentState === 'active';

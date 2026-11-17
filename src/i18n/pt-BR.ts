@@ -175,6 +175,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'taskDone.failed': 'Sua tarefa parou com um erro',
   'taskDone.needsAnswer': 'O Qutai está aguardando sua resposta',
   'taskDone.needsApproval': 'O Qutai está aguardando sua aprovação',
+  'taskDone.paused': 'Sua tarefa está esperando por você. Abra o Qutai para continuar.',
   'address.assistantUnseen': 'uma tarefa foi concluída',
   'chat.sources': 'Fontes',
   'chat.call': 'Ligar',

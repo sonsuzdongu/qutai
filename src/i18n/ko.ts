@@ -173,6 +173,7 @@ export const ko: Record<keyof typeof en, string> = {
   'taskDone.failed': '작업이 오류로 중지되었습니다',
   'taskDone.needsAnswer': 'Qutai가 답변을 기다리고 있습니다',
   'taskDone.needsApproval': 'Qutai가 승인을 기다리고 있습니다',
+  'taskDone.paused': '작업이 기다리고 있습니다. 계속하려면 Qutai를 여세요.',
   'address.assistantUnseen': '작업 완료됨',
   'chat.sources': '출처',
   'chat.call': '전화',

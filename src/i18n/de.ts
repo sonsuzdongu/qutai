@@ -175,6 +175,7 @@ export const de: Record<keyof typeof en, string> = {
   'taskDone.failed': 'Ihre Aufgabe wurde mit einem Fehler beendet',
   'taskDone.needsAnswer': 'Qutai wartet auf Ihre Antwort',
   'taskDone.needsApproval': 'Qutai wartet auf Ihre Zustimmung',
+  'taskDone.paused': 'Ihre Aufgabe wartet auf Sie. Öffnen Sie Qutai, um fortzufahren.',
   'address.assistantUnseen': 'eine Aufgabe ist fertig',
   'chat.sources': 'Quellen',
   'chat.call': 'Anrufen',

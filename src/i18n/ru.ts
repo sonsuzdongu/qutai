@@ -174,6 +174,7 @@ export const ru: Record<keyof typeof en, string> = {
   'taskDone.failed': 'Ваша задача остановилась с ошибкой',
   'taskDone.needsAnswer': 'Qutai ждёт вашего ответа',
   'taskDone.needsApproval': 'Qutai ждёт вашего подтверждения',
+  'taskDone.paused': 'Задача ждёт вас. Откройте Qutai, чтобы продолжить.',
   'address.assistantUnseen': 'задача выполнена',
   'chat.sources': 'Источники',
   'chat.call': 'Позвонить',

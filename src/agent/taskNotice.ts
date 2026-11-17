@@ -4,8 +4,13 @@
  * (postTaskNotice), which also does nothing without the notification permission (never asked from here).
  */
 
-/** How the task ended, or 'needsApproval': a confirmation dialog waits while Qutai is not on screen. */
-export type TaskNoticeEvent = 'done' | 'failed' | 'needsAnswer' | 'needsApproval' | 'stopped';
+/**
+ * How the task ended, or 'needsApproval': a confirmation dialog waits while Qutai is not on screen, or 'paused': the
+ * user left Qutai while the task was running and it cannot go on without the app on screen (iPhone; Android without
+ * "Keep working in the background"). The paused notice is scheduled a few seconds ahead and taken back when the user
+ * returns sooner (App.tsx, PAUSED_NOTICE_DELAY_S).
+ */
+export type TaskNoticeEvent = 'done' | 'failed' | 'needsAnswer' | 'needsApproval' | 'paused' | 'stopped';
 
 export type TaskNoticeKind = Exclude<TaskNoticeEvent, 'stopped'>;
 
@@ -28,7 +33,11 @@ export function taskNoticeFor(input: TaskNoticeInput): TaskNoticeKind | null {
   const { event } = input;
   if (event === 'stopped') return null;
   if (input.foreground || input.incognito || input.backgroundRunNotifies) return null;
-  const needsUser = event === 'needsAnswer' || event === 'needsApproval';
+  // A paused task waits for the user as much as a question does.
+  const needsUser = event === 'needsAnswer' || event === 'needsApproval' || event === 'paused';
   if (!needsUser && !input.notifyWhenDone) return null;
   return event;
 }
+
+/** Seconds between leaving Qutai and the "task is waiting for you" notice; coming back sooner cancels it. */
+export const PAUSED_NOTICE_DELAY_S = 8;

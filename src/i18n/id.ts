@@ -174,6 +174,7 @@ export const id: Record<keyof typeof en, string> = {
   'taskDone.failed': 'Tugas Anda berhenti karena error',
   'taskDone.needsAnswer': 'Qutai menunggu jawaban Anda',
   'taskDone.needsApproval': 'Qutai menunggu persetujuan Anda',
+  'taskDone.paused': 'Tugas Anda menunggu. Buka Qutai untuk melanjutkan.',
   'address.assistantUnseen': 'tugas selesai',
   'chat.sources': 'Sumber',
   'chat.call': 'Telepon',
