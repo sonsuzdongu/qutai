@@ -135,3 +135,55 @@ the step only while no incognito tab is open; voice input's own incognito rule s
 | Reply not valid / nothing usable | "I couldn't make sense of the answer. Your words are below, so you can copy them." | `failed` → questions with the transcript shown |
 | Round 2 failed | "I couldn't understand your answers, so they are listed as you said them." | `review` with verbatim rows |
 | A row refused when saving | memory's own reason | the rest saved |
+
+## Cost (`npm run measure:intro`)
+
+Estimated with the project's token estimator (`scripts/token-tests/tokens.ts`, ±10–20 %) for an 84-word introduction
+that yields 12 notes, and a round 2 with two short answers; list prices of `src/ai/prices.ts` (16 Nov 2026), no
+caching.
+
+| | Input tokens | Output tokens |
+| --- | --- | --- |
+| Round 1, own key (prompt ~320 + transcript) | ~445 | ~390 |
+| Round 2, own key (only when a follow-up is answered in words) | ~350 | ~60 |
+| Round 1, Qutai Credits (the relay adds the agent prompt and 49 core tools, ~13,500) | ~13,900 | ~390 |
+
+| Model | Round 1 | Rounds 1 + 2 | Both rounds through the relay, same list price |
+| --- | --- | --- | --- |
+| Claude Haiku 5.5 | $0.0002 | $0.0003 | $0.0030 |
+| Claude Sonnet 5.5 | $0.0048 | $0.0061 | $0.0601 |
+| Claude Opus 5.5 | $0.0095 | $0.0122 | $0.1201 |
+| GPT-5.6 Luna | $0.0006 | $0.0007 | $0.0061 |
+| GPT-5.6 Terra | $0.0055 | $0.0070 | $0.0610 |
+| GPT-6 Astra | $0.0238 | $0.0304 | $0.3003 |
+| Gemini 3.8 Flash | $0.0018 | $0.0023 | $0.0225 |
+| Gemini 4 Hydrogen | $0.0036 | $0.0046 | $0.0450 |
+| Gemini 4 Carbon | $0.0048 | $0.0061 | $0.0601 |
+
+Qutai Credits: the relay only serves the registered agent profile (`backend/apps/api/src/relay/relay.ts`: the system
+prompt and tools come from the profile; the app's `system` is never sent, `src/credits/provider.ts`). So the
+introduction's instructions travel in the user turn, and every such request also carries the agent's prompt and
+tools: about ten times the tokens, less where the server's provider caches that prefix. The same holds for the Memory
+screen's "Organise for me" (`src/agent/organiseMemory.ts`), which sends its instructions as `system` and so loses
+them in credits mode. A server-registered "side request" profile (small system prompt, no tools) would fix both; that
+is server work and an owner decision.
+
+## Verified
+
+- Server-free tests (`npm run test:intro`, 40): schema reading and every rejection rule, quote matching, follow-up
+  choice, chip answers, review rows and what saving writes (hidden rows with their label), the whole reducer
+  including back, cancel, skip, retry, round-2 failure, refused microphone and an interrupted session; the request
+  with a stand-in provider in own-key and credits form; both rounds end to end through the real custom-endpoint
+  adapter against `scripts/fake-ai/server.mjs`.
+- iOS simulator (iPhone 17 Pro, iOS 27, a release build with this JavaScript bundle placed in it; no native rebuild
+  needed), Settings › Assistant › Memory › "Introduce yourself", custom endpoint at the fake AI server:
+  intro page (`docs/voice-introduction/1-intro.png`), typed introduction (`2-typed-introduction.png`), the follow-ups
+  as a chat with a typed answer and a chip (`3-follow-up.png`), round 2, review (`4-review.png`), saving, and the
+  hidden allergy on the Memory screen (`5-memory-hidden.png`); the answer-style line in Settings › Assistant › Custom
+  instructions; the microphone up to the system's speech-recognition and microphone prompts, refused, ending in voice
+  input's own message and back on the intro page. Requests at the fake server: two with an answered follow-up, one
+  with chips and skips only.
+- Not verified on a device: real speech (the simulator has no microphone input; the same code path was driven by
+  typing), the read-aloud toggle, Android, TalkBack / VoiceOver, the largest text size, dark mode, landscape, the
+  onboarding entry (same component; reached on the simulator only from Settings), and Qutai Credits mode against a
+  server. They are in `docs/test-checklist.md` § 14.

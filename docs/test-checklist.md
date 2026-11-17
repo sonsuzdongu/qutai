@@ -273,3 +273,29 @@ Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.
 - [ ] Gözlem (aynı ekran görüntüsü): kendi anahtarla panel başlığında sağlayıcı ve model adı "Anthropi…net 5.5" diye ortadan kesiliyor.
 - Açık kalanlar: yatay ekran (yön dikeye kilitli, karar bekliyor); arka plan görevi kapalıyken uygulamadan çıkınca bekleyen istek dönüşte yeniden gönderiliyor (iki kez ücret); yazı boyutu sayfasında İngilizce "%120" yerine "120%" olmalı.
 - …
+
+## 14. "Kendinizi tanıtın" (sesle tanıtım, 17 Kasım)
+
+iOS simülatöründe yazarak ve sahte yapay zekâyla denendi (simülatöre mikrofondan ses verilemiyor; aynı akış yazılan metinle sürüldü). Telefonda sesle deneyin. Ayrıntı: `docs/voice-introduction.md`.
+
+Kurulumda (yeni kurulum ya da uygulama verisini silerek):
+- [ ] "Yapay zekânızı bağlayın" adımında bir anahtar girin (ya da Qutai Kredileri); sonraki "Bana kendinizden bahsedin" sayfasında büyük mikrofon, "Söylemeye değer olanlar" listesi ve hemen mikrofonun altında gizlilik notu görünür.
+- [ ] Mikrofona dokunup 20-30 saniye konuşun (adınız, şehriniz, bir alerji, kapıda ödeme, kısa yanıtlar): konuşurken metin canlı yazılır; duraklamalarda dinleme kesilmez; "Dinlemeyi durdur" ile biter.
+- [ ] "Duyduklarım" sayfasında metni düzeltin, "Biraz daha konuşun" ile ekleyin, "Devam".
+- [ ] En çok üç kısa soru gelir, yalnızca söylemediğiniz konular için (yaş ve cinsiyet hiç sorulmaz). Bir soruyu sesle, birini yazarak (klavyenin "ileri" tuşu da geçer), birini öneriye dokunarak yanıtlayın, birini geçin.
+- [ ] "Soruları sesli oku" açıkken her soru okunur; konuşmaya başlayınca okuma susar.
+- [ ] "Anladıklarım" sayfasında her not düzenlenir ve silinir; alerji satırında "Yapay zekâdan gizle" açıp kaydedin: Ayarlar › Asistan › Hafıza'da kilitli "Gıda alerjisi · •••" olarak görünür.
+- [ ] Yanıt tarzı Ayarlar › Asistan › Özel talimatlar'a tek satır olarak yazılır.
+- [ ] "Yazmayı tercih ederim" aynı akışı klavyeyle yapar; "Bunun yerine soruları yanıtlayın" eski soruları açar.
+
+Hata yolları:
+- [ ] Yapay zekâ adımını geçin: sayfa bunu açıkça söyler ve "Bunun yerine soruları yanıtlayın" çıkar.
+- [ ] Uçak modunda "Devam": "Yapay zekâya ulaşamadım" ve söyledikleriniz kopyalanabilir halde görünür; "Sorularla devam edin" soruları açar, metin soruların üstünde durur.
+- [ ] Konuşurken uygulamadan çıkın: mikrofon kapanır, dönünce duyulan kısım "Duyduklarım"dadır.
+- [ ] Mikrofon iznini reddedin: uygulamanın kendi uyarısı çıkar, sayfa başa döner ("Hiçbir şey duymadım" demez).
+
+Erişilebilirlik ve görünüm:
+- [ ] TalkBack / VoiceOver: her yeni soruya odak gelir; balonlar "Qutai soruyor: …" / "Yanıtınız: …" diye okunur; öneri düğmeleri seçili durumunu söyler.
+- [ ] En büyük yazı boyutu, koyu tema, yatay ekran: sözcükler bölünmez, düğmeler erişilebilir kalır.
+- [ ] Ayarlar › Asistan › Hafıza › "Kendinizi tanıtın" aynı akışı açar; gizli sekme açıkken düğme pasiftir.
+- [ ] Türkçe arayüzde metinler "siz" ile, yapay zekânın notları Türkçe; adlar ve markalar söylendiği gibi.

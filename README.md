@@ -111,6 +111,18 @@ Pro mode: requests that go through Qutai's server will show the server's own cha
 reply that already carries a `cost` with `source: 'server'` is kept by the wrapper, and the breakdown has its text);
 reading the server's settlement event is a later job.
 
+"Tell me about yourself" (setup's "Let me get to know you a little" step, and Settings › Assistant › Memory ›
+"Introduce yourself"; `src/components/VoiceIntro.tsx`, logic in `src/intro/`, design in
+[docs/voice-introduction.md](docs/voice-introduction.md)): the user talks freely (the panel's voice input, listening
+through pauses) or types, edits the transcript, and one request to their AI turns it into notes. The answer is
+strict JSON that is checked, not trusted: every value must come with the user's own words, found in the transcript, so
+an inferred age, gender or diet is refused. Qutai then asks at most three fixed, translated follow-up questions about
+food, the name, shopping, the city or the answer style (never age or gender), answered by voice, typing, chips or
+Skip; typed or spoken answers cost one more request. Nothing is saved before the review page, where every note can
+be edited, deleted, and for age, gender, allergies and health hidden from the AI. Without an AI, or when the request
+or its answer fails, it says so and continues with the typed questions (`ProfileQuestions`), the transcript shown
+above them. Cost: about 450 tokens in and 400 out per introduction with an own key (`npm run measure:intro`).
+
 Hidden memories: national ID and passport numbers, and any memory the user locks on the Memory screen, are never
 sent to the AI provider by value. The prompt names them only ("[id] national ID number (saved; value hidden)"); the
 model asks for one with `type`'s `memory` parameter, the app asks the user the first time each hidden value goes to a

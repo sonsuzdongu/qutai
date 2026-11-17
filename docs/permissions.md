@@ -282,6 +282,10 @@ Qutai doesn't call `canOpenURL`; links to other apps go straight to `openURL`.
   downloaded). Otherwise the audio goes to Apple's or Google's speech service, only after the user agreed once in Qutai
   (Settings › Assistant shows and changes the answer); incognito conversations never use it. For the store forms this
   is processed by the platform's speech service, not collected by Qutai.
+- Voice introduction ("Tell me about yourself", setup and Settings › Assistant › Memory): the same voice input and the
+  same rules. The recognised text (not the audio) goes to the user's AI provider, or Qutai's AI service in credits
+  mode, once to be understood and once more if follow-up questions are answered in words; only the notes the user
+  confirms are stored, on the phone, as memory. Its page says this before the microphone is used.
 - Camera: QR codes are decoded on the device; photos and videos for uploads go only to the page the user is
   uploading to.
 - PDFs (assistant): a PDF the user attaches comes from the system document picker (no permission). `read_pdf` reads PDFs
