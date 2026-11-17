@@ -1,6 +1,6 @@
 {
   "name": "mobile-claude-browser",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "license": "Apache-2.0",
   "main": "index.ts",
   "dependencies": {
@@ -81,6 +81,8 @@
     "test:assistant": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/assistant-tests/*.test.ts",
     "test:i18n": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/i18n-tests/*.test.ts",
     "test:install": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/install-tests/*.test.ts",
+    "version:bump": "node scripts/version/bump.mjs",
+    "test:version": "node --test scripts/version/rule.test.mjs",
     "test:layout": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/layout-tests/*.test.ts",
     "test:siterules": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/site-rules-tests/*.test.ts",
     "test:credits": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/credits-tests/*.test.ts",
