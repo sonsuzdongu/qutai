@@ -102,10 +102,10 @@ const IOS: VoiceInfo[] = [
   { identifier: 'com.apple.voice.compact.pt-PT.Joana', language: 'pt-PT', quality: 'Default' },
 ];
 
-test('Android gets a bare language code (expo-speech rejects "tr-TR" there) and an offline voice for the region', () => {
-  assert.deepEqual(pickVoice('tr-TR', ANDROID, 'android'), { language: 'tr', voice: 'tr-tr-x-cfs-local' });
-  assert.deepEqual(pickVoice('en-GB', ANDROID, 'android'), { language: 'en', voice: 'en-gb-x-gba-local' });
-  assert.deepEqual(pickVoice('tr', ANDROID, 'android'), { language: 'tr', voice: 'tr-tr-x-cfs-local' });
+test('Android gets the bare language code (expo-speech rejects "tr-TR" there and used the phone language)', () => {
+  assert.deepEqual(pickVoice('tr-TR', ANDROID, 'android'), { language: 'tr' });
+  assert.deepEqual(pickVoice('en-GB', ANDROID, 'android'), { language: 'en' });
+  assert.deepEqual(pickVoice('tr', ANDROID, 'android'), { language: 'tr' });
 });
 
 test('iOS gets the language tag of an installed voice', () => {
@@ -115,7 +115,7 @@ test('iOS gets the language tag of an installed voice', () => {
 
 test('no exact region: the same language in another region', () => {
   assert.deepEqual(pickVoice('pt-BR', IOS, 'ios'), { language: 'pt-PT' });
-  assert.deepEqual(pickVoice('pt-BR', ANDROID, 'android'), { language: 'pt', voice: 'pt-pt-x-sfs-local' });
+  assert.deepEqual(pickVoice('pt-BR', ANDROID, 'android'), { language: 'pt' });
   assert.deepEqual(pickVoice('en-AU', [{ identifier: 'x', language: 'en_GB' }], 'ios'), { language: 'en-GB' });
 });
 

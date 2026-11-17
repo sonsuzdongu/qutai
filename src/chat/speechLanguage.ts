@@ -78,11 +78,11 @@ export function speechLanguage(text: string, hint?: string | null): string | und
 /** A voice as expo-speech's getAvailableVoicesAsync reports it. */
 export type VoiceInfo = { identifier: string; language: string; quality?: string };
 
-/** What to hand the speech engine: `language` and `voice` options, and the language left without a voice, if any. */
-export type VoiceChoice = { language?: string; voice?: string; missing?: string };
+/** What to hand the speech engine as its `language` option, and the language left without a voice, if any. */
+export type VoiceChoice = { language?: string; missing?: string };
 
 /**
- * The speech options for a language, given the phone's voices.
+ * The speech engine's `language` option for a language, given the phone's voices.
  *
  * - No language: nothing (the phone's default voice).
  * - An empty list means "not known yet" (Android engines may report their voices late): the language is passed as
@@ -91,22 +91,19 @@ export type VoiceChoice = { language?: string; voice?: string; missing?: string 
  * - No voice for the language at all: nothing, so the phone's default voice reads, and `missing` names the
  *   language so the user can be told once. Reading isn't blocked.
  *
- * Android (expo-speech builds the locale with Locale.Builder().setLanguage) accepts only a bare language code: a
- * tag such as "tr-TR" is rejected there and the phone's language is used, which is the reported bug. So Android gets
- * the language alone plus, for the region, the identifier of a matching voice (preferring voices that work offline).
- * iOS takes the tag and picks the voice the user set for that language in the system settings.
+ * Android gets the bare language code: expo-speech builds the locale with Locale.Builder().setLanguage, which rejects
+ * a tag such as "tr-TR" and then uses the phone's language (the reported bug), and the engine picks its own voice
+ * for the language. No `voice` option there: when the engine's service has died, expo-speech looks voices up in a
+ * null list and the whole utterance is rejected. iOS takes the tag and reads with the voice the user set for that
+ * language in the system settings.
  */
 export function pickVoice(language: string | undefined, voices: VoiceInfo[], os: string): VoiceChoice {
   if (!language) return {};
   const base = baseLanguage(language);
   const tag = (code: string) => code.replace(/_/g, '-').toLowerCase();
   if (voices.length === 0) return { language: os === 'android' ? base : language };
-  const exact = voices.filter((v) => tag(v.language) === tag(language));
-  const same = exact.length ? exact : voices.filter((v) => baseLanguage(v.language) === base);
-  if (!same.length) return { missing: base };
-  if (os !== 'android') return { language: same[0].language.replace(/_/g, '-') };
-  const rank = (v: VoiceInfo) =>
-    (/network/i.test(v.identifier) ? 0 : 2) + (/local/i.test(v.identifier) ? 1 : 0);
-  const best = [...same].sort((a, b) => rank(b) - rank(a))[0];
-  return { language: base, voice: best.identifier };
+  const exact = voices.find((v) => tag(v.language) === tag(language));
+  const same = exact ?? voices.find((v) => baseLanguage(v.language) === base);
+  if (!same) return { missing: base };
+  return { language: os === 'android' ? base : same.language.replace(/_/g, '-') };
 }

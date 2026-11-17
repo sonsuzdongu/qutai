@@ -121,7 +121,7 @@ export async function speak(text: string, hint?: string): Promise<void> {
   if (chunks.length === 0) return;
 
   const current = ++session;
-  const { language, voice } = await voiceFor(text, hint);
+  const { language } = await voiceFor(text, hint);
   // Stopped, or something else started reading, while the voices were looked up.
   if (current !== session) return;
   setSpeaking(true);
@@ -133,7 +133,6 @@ export async function speak(text: string, hint?: string): Promise<void> {
     const last = i === chunks.length - 1;
     Speech.speak(chunk, {
       language,
-      voice,
       onDone: last ? finish : undefined,
       onStopped: finish,
       onError: finish,
@@ -156,7 +155,7 @@ export async function speakReader(tab: Tab, from = 0): Promise<{ chars: number; 
   const current = ++session;
   const owned = () => current === session;
   // The article's own text decides; the page's `lang` is often missing or wrong (a Turkish article on an "en" page).
-  const { language, voice } = await voiceFor(blocks.join('\n'), article.lang);
+  const { language } = await voiceFor(blocks.join('\n'), article.lang);
   // Stopped, or something else started reading, while the voices were looked up.
   if (!owned()) return { chars: 0, truncated: false };
   const finish = () => {
@@ -178,7 +177,6 @@ export async function speakReader(tab: Tab, from = 0): Promise<{ chars: number; 
   queue.forEach((item, k) => {
     Speech.speak(item.chunk, {
       language,
-      voice,
       onStart: item.first
         ? () => {
             if (owned()) setReading({ tabId: tab.id, index: item.index, paused: false });
