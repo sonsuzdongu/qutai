@@ -494,6 +494,9 @@ out as a submodule at `backend/` (its `README.md` has the setup).
 | Sign-in by email: a 6-digit code and a link in one message (`POST /auth/email/start` / `verify`); the pending address in memory and SecureStore (never the code or link), every server reason as a sentence | `src/account/emailSignIn.ts`, `session.ts`, `src/components/EmailSignIn.tsx` |
 | The mail's link `qutai://sign-in/email?token=…`, at a cold start and while running; never opened as a page | `src/components/AccountLinks.tsx`, `src/device/entryPoints.ts` |
 | Settings › Account (the account's sign-in methods from `GET /me`) | `src/components/AccountScreen.tsx`, `accountLabels.ts` |
+| Add, re-check and remove sign-in methods; combine two accounts (below) | `src/components/AccountMethods.tsx`, `src/account/methodRules.ts`, `session.ts` |
+| Sign in with Apple on Android: Apple's web flow in a Custom Tab, run by the server, offered only when `GET /config` says `auth.appleWeb` | `src/account/appleWeb.ts`, `providers.ts`, `src/components/SignInOptions.tsx`; owner's setup `docs/apple-sign-in.md` |
+| The mail's https link as an App Link / Universal Link, only with `EXPO_PUBLIC_APP_LINK_HOST` | `plugins/withProAccounts.js`, `src/account/emailSignIn.ts`; `docs/app-links.md` |
 
 **Making a pro build.** Set the variables in `.env` (local builds) or in an EAS build profile's `env`
 (`eas.json` keeps all three profiles `off`; add your own profile or override with EAS environment variables):
@@ -504,6 +507,7 @@ out as a submodule at `backend/` (its `README.md` has the setup).
 | `EXPO_PUBLIC_QUTAI_API_URL` | The server: Android emulator `http://10.0.2.2:8790`, iOS simulator `http://localhost:8790`, a phone on the same Wi-Fi `http://<the computer's LAN address>:8790`, or the deployed API's https address |
 | `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` | Google OAuth **Web** client id (Android sends it to Credential Manager; it is the ID token's audience) |
 | `EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID` | Google OAuth **iOS** client id |
+| `EXPO_PUBLIC_APP_LINK_HOST`, `EXPO_PUBLIC_APP_LINK_PATH` | Optional: the sign-in link's host and path as an App Link / Universal Link (`docs/app-links.md`); empty, nothing changes |
 
 Then regenerate the native projects, because the entitlement and URL scheme are written there:
 `npx expo prebuild --clean` (or `npx expo run:android|ios`, which does it), and restart Metro with
@@ -520,8 +524,7 @@ Auth); without them the sign-in routes answer "unavailable", which the app shows
 
 The third button, "Continue with email" (Settings › Account and setup's sign-in step), works in every pro build: no
 client id or native code is involved. The user types an address; the server (`backend/README.md` › Auth ›
-Sign-in by email) mails one message with a 6-digit code and a link, in the app's language (English and Turkish so
-far; the others get English). Either one finishes the sign-in, **only on the phone that asked**:
+Sign-in by email) mails one message with a 6-digit code and a link, in the app's language (all ten). Either one finishes the sign-in, **only on the phone that asked**:
 
 - **Code:** typed or pasted (only the digits count), sent by itself at the last digit. iOS offers a code from Mail
   above the keyboard (`textContentType="oneTimeCode"`); Android gets the one-time-code autofill hint, which
@@ -558,6 +561,32 @@ xcrun simctl openurl booted 'qutai://sign-in/email?token=<token from the server 
 
 A development build started with a link at a cold start shows the development launcher first; opening the app
 from it passes the link on.
+
+#### Sign-in methods and combining accounts
+
+Settings › Account, signed in (`src/components/AccountMethods.tsx`; the server's rules: `backend/README.md` › Auth ›
+Sign-in methods and › Merging accounts):
+
+- **Ways to sign in** lists each method with a remove control (×) when the account has more than one. Removing asks
+  for confirmation (the sentence says devices that are signed in stay signed in, and to use "Sign out of all devices"
+  if someone else used the method). The server wants a recent sign-in on this phone with the method itself or one added
+  before it: when it answers `reauth_required` the app offers exactly those methods that this phone can use, proves one
+  (`purpose: "reauth"`) and removes. Removing Apple on an iPhone first asks Apple again (its fresh code lets the server
+  revoke Apple's authorization).
+- **Add a sign-in method**: Google (when the build has its client id), Apple (iPhone; Android when the server offers
+  the web flow) and email. Email asks for the address, mails a **confirm** code (a different mail from the sign-in
+  one) and asks for it; tapping the mail's link on this phone while the code dialog is open finishes it too (the
+  pending address is kept in memory only). The account's addresses get a "method added" mail.
+- If the method already belongs to **another Qutai account**, nothing changes; the app offers to combine that account
+  into this one.
+- **Combine with another account**: the user signs in to the other account (any of its methods) on this phone; the app
+  shows both accounts' methods and balances, says it can't be undone, and combines on an explicit "Combine". The other
+  account's methods, credits, purchases and usage move here and its sessions end. A notice appears above the section
+  when the server kept a same-address account apart (`mergeSuggested`).
+- **Sign in with Apple on Android** (`docs/apple-sign-in.md`): a "Sign in with Apple" button in the sign-in options
+  when the server is set up for it. It opens Apple's page in a Custom Tab; Apple returns to the server, which sends the
+  browser back to `qutai://auth/apple/done` with a flow id and a one-time value; the app finishes with a verifier
+  that never left the phone. No native module or rebuild is needed for it (the `qutai` scheme exists).
 
 **Not built yet** (each needs work outside the app): adding or removing a sign-in method while signed in (server
 routes to link a method to the signed-in account and to remove one, plus a screen); merging two existing accounts
