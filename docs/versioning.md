@@ -52,6 +52,14 @@ Nothing else may write these values. `eas.json` uses `"appVersionSource": "local
 take the numbers from `app.json` too. `android/` and `ios/` are generated: the numbers reach them at the next
 `expo prebuild` / native build, so a bump needs a native rebuild to show.
 
+## The server's minimum version
+
+The server refuses requests from an app older than its `min_app_version` setting (D1 `settings`, changed in the admin
+panel › Settings, read within 15 seconds; `backend/README.md` › Relay) with `upgrade_required` (426). It compares
+versions, not build numbers. After lowering the app's version, or before raising the minimum, check that the setting is
+not above the version of the builds in use: when the app went from 1.0.0 to 0.1.0 the seeded minimum of 1.0.0 locked
+every build out until it was set to 0.1.0.
+
 ## History
 
 - 0.1.0 (100): first version under this rule, 17 Nov 2026. Before it every build was 1.0.0 (1); nothing had been
