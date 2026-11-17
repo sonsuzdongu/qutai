@@ -15,8 +15,11 @@ const OPEN_SOURCE_LEGAL_VERSION = 2;
 /**
  * 2: the pro-mode documents describe the account, Qutai Credits and buying credits (16 Nov 2026).
  * 3: backups in the Qutai account (what the server keeps, encrypted with the user's password; 17 Nov 2026).
+ * 4: who is responsible and how to reach them, sign-in by email (Mailjet), purchases in the app, the companies that
+ *    process data and the server's IP use and logs, how long data is kept, security, and the open-source policy's
+ *    items the pro one was missing (location, speech, filter lists, details typed into sites; 18 Nov 2026).
  */
-const PRO_LEGAL_VERSION = 3;
+const PRO_LEGAL_VERSION = 4;
 export const LEGAL_VERSION = accountsEnabled ? PRO_LEGAL_VERSION : OPEN_SOURCE_LEGAL_VERSION;
 export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-16';
 

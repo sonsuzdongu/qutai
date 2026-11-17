@@ -6,7 +6,7 @@ import type { LegalDocument, LegalKind, LegalLanguage } from './documents';
  * (README.md › Accounts, › Qutai Credits; backend/README.md › Purchases); have them checked by a lawyer before the
  * store release (TODO.md › Legal).
  */
-export const PRO_LEGAL_UPDATED = '2026-11-17';
+export const PRO_LEGAL_UPDATED = '2026-11-18';
 
 export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
   en: {
@@ -14,9 +14,16 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
       title: 'Privacy Policy',
       intro:
         'Qutai is a web browser with an AI assistant. We built it so your browsing stays on your phone. Qutai’s own ' +
-        'server is used only for your Qutai account and for Qutai Credits, and only when you choose them. We do not ' +
-        'sell your data, and Qutai has no analytics, tracking or advertising.',
+        'server is used only for your Qutai account (sign-in, Qutai Credits, purchases in the app and backups), and ' +
+        'only when you choose them. We do not sell your data, and Qutai has no analytics, tracking or advertising.',
       sections: [
+        {
+          heading: 'Who we are',
+          body:
+            'Qutai is made by Osman Yuksel (“we”), who is responsible for the data described in this policy. For ' +
+            'questions about your privacy, or to ask for a copy or the deletion of what Qutai’s server keeps about ' +
+            'you, write to osmanyuksel@gmail.com.',
+        },
         {
           heading: 'What stays on your phone',
           body:
@@ -29,26 +36,37 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
         {
           heading: 'What leaves your phone, and to whom',
           body:
-            '• Websites you visit receive what any browser sends them.\n' +
-            '• With your own API key, your message and the content the assistant needs (the page text, screenshots when ' +
-            'it looks at a page, files you attach, your memory and custom instructions) go directly to the AI ' +
-            'provider you chose (Anthropic, OpenAI, Google, OpenRouter or your own server). Qutai’s server is not ' +
-            'involved.\n' +
-            '• With Qutai Credits, the same content goes to Qutai’s server first, which passes it to the AI provider ' +
-            '(Anthropic, OpenAI or Google) under Qutai’s own account and sends the answer back. Qutai’s server does not ' +
-            'store or log this content. The app asks before you use Qutai Credits for the first time.\n' +
-            '• If web search is on, the AI provider may run searches for you. The providers’ privacy policies and terms ' +
-            'apply to what they receive.\n' +
-            '• If search suggestions are on, what you type in the address bar is sent to your search engine (never ' +
-            'from incognito tabs).',
+            '• Websites you visit receive what any browser sends them, and the details you ask the assistant to type ' +
+            'into them (such as your name or address in a form).\n• With your own API key, your message and the ' +
+            'content the assistant needs (the page text, screenshots when it looks at a page, files and images you ' +
+            'attach, your memory and custom instructions) go directly to the AI provider you chose (Anthropic, ' +
+            'OpenAI, Google, OpenRouter or your own server). Qutai’s server is not involved. Your calendar events and ' +
+            'your location are sent only when you confirm, each time.\n• With Qutai Credits, the same content goes to ' +
+            'Qutai’s server first, which passes it to the AI provider (Anthropic, OpenAI or Google) under Qutai’s own ' +
+            'account and sends the answer back. Qutai’s server does not store or log this content. The app asks ' +
+            'before you use Qutai Credits for the first time.\n• If web search is on, the AI provider may run searches ' +
+            'for you. The providers’ privacy policies and terms apply to what they receive.\n• If search suggestions ' +
+            'are on, what you type in the address bar is sent to your search engine (never from incognito tabs).\n• If ' +
+            'you tap “Use my location” in setup, your approximate position is sent to the phone’s address service ' +
+            '(Apple’s on an iPhone; on Android usually Google’s) to find the name of the place. Only the place name ' +
+            'is kept.\n• If you speak to the assistant and the phone can’t recognise that language on the device ' +
+            'itself, the audio goes to the phone’s speech service (Apple’s or Google’s), only after you have agreed ' +
+            'once in Qutai and never in incognito conversations. Qutai and the AI service receive only the text.\n• ' +
+            'While “Block ads and trackers” is on, the filter lists you chose are downloaded from their publishers ' +
+            '(such as EasyList and AdGuard) and updated every few days. These requests contain nothing about your ' +
+            'browsing.',
         },
         {
           heading: 'Your Qutai account',
           body:
-            'An account is optional; you need one only for Qutai Credits. You sign in with Apple or Google. Qutai’s ' +
-            'server keeps: an account number; the Apple or Google sign-in the account belongs to and the email address ' +
-            'that sign-in shares (if any); when the account was created and last used; your signed-in devices (a ' +
-            'random device id, not your phone’s identifiers); and your credits: the balance, purchases and credits ' +
+            'An account is optional; you need one only for Qutai Credits, purchases in the app and backups in your ' +
+            'account. You sign in with Apple, with Google or with your email address. With email, we send a message ' +
+            'with a one-time code and a link to the address you enter, through our email service (Mailjet); the code ' +
+            'works for 10 minutes and only on the phone that asked for it, and to prevent abuse the server counts how ' +
+            'many codes are sent to each address and phone. Qutai’s server keeps: an account number; the sign-in ' +
+            'methods the account has (Apple, Google, email) and the email addresses that come with them (with Apple ' +
+            'this can be a private relay address); when the account was created and last used; your signed-in devices ' +
+            '(a random device id, not your phone’s identifiers); and your credits: the balance, purchases and credits ' +
             'added, and for each assistant request the model, the number of tokens, what it cost and when. It does ' +
             'not keep your messages, pages or answers.',
         },
@@ -64,13 +82,36 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'are deleted; you can delete them at any time, and deleting your account deletes them.',
         },
         {
-          heading: 'Buying credits',
+          heading: 'Purchases in the app',
           body:
-            'Credits are bought in the app through the App Store or Google Play; your payment details stay with Apple ' +
-            'or Google and never reach Qutai. A payments service (RevenueCat) receives your Qutai account number and ' +
-            'the store’s purchase record so the purchase can be confirmed and added to your account. Qutai keeps a ' +
-            'record of each purchase (store, transaction, product, credits, price paid and dates), which tax law ' +
-            'requires us to keep, also after the account is deleted, without the link to you.',
+            'Qutai Credits and anything else sold in the app are bought through the App Store or Google Play; your ' +
+            'payment details stay with Apple or Google and never reach Qutai. A payments service (RevenueCat) ' +
+            'receives your Qutai account number and the store’s purchase record so the purchase can be confirmed, ' +
+            'added to your account and restored on another phone. Qutai keeps a record of each purchase (store, ' +
+            'transaction, product, credits, price paid and dates), which tax law requires us to keep, also after the ' +
+            'account is deleted, without the link to you. Refunds are handled by Apple or Google under their own ' +
+            'rules.',
+        },
+        {
+          heading: 'Qutai’s server and who else processes data',
+          body:
+            'Qutai’s server runs on Cloudflare, which also stores the backups. Like any server, it sees your IP ' +
+            'address with each request; it uses it only to limit how many requests can be made, and Qutai’s own logs ' +
+            'never contain your IP address, email address, messages, pages or tokens (they hold a request id, your ' +
+            'account number, what was asked for, how long it took and, for assistant requests, the model, tokens and ' +
+            'cost). The companies that process data for Qutai, each under its own privacy policy, are: Cloudflare ' +
+            '(the server), Apple and Google (sign-in and the stores), Mailjet (sign-in emails), RevenueCat ' +
+            '(purchases) and, with Qutai Credits, Anthropic, OpenAI and Google (the AI). We share your data with no ' +
+            'one else, except when the law requires it (for example a court order) or to protect Qutai and its users ' +
+            'against fraud and abuse.',
+        },
+        {
+          heading: 'How long data is kept',
+          body:
+            'On your phone: until you delete it or uninstall Qutai. On Qutai’s server: your account, its sign-in ' +
+            'methods, devices and credit history until you delete the account; backups as described above; sign-in ' +
+            'codes until they are used or expire; purchase records as long as tax law requires, without the link to ' +
+            'you once the account is deleted.',
         },
         {
           heading: 'Passwords and payment details',
@@ -86,15 +127,25 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
           heading: 'Your control',
           body:
             'You can view and delete the assistant’s memory, clear history, cookies and other data in Settings, and ' +
-            'remove your API keys at any time. You can delete your backups from Qutai’s server in Settings › Backup. You ' +
-            'can stop using Qutai Credits, sign out, or delete your account in ' +
-            'Settings › Account: deleting it removes the account, its balance and its history from Qutai’s server ' +
-            '(purchase records stay without the link to you, as above) and asks the payments service to delete its ' +
-            'record of you. Uninstalling Qutai deletes everything it stored on the phone.',
+            'remove your API keys at any time. You can delete your backups from Qutai’s server in Settings › Backup. ' +
+            'You can stop using Qutai Credits, sign out, or delete your account in Settings › Account: deleting it ' +
+            'removes the account, its balance and its history from Qutai’s server (purchase records stay without the ' +
+            'link to you, as above) and asks the payments service to delete its record of you. You can also write to ' +
+            'osmanyuksel@gmail.com to ask for a copy of what Qutai’s server keeps about you, or for its correction or ' +
+            'deletion. Uninstalling Qutai deletes everything it stored on the phone.',
+        },
+        {
+          heading: 'Security',
+          body:
+            'Connections to Qutai’s server use HTTPS. Sign-in tokens are kept on the server only in hashed form and ' +
+            'on your phone in its encrypted storage, and backups are encrypted on your phone before they are sent.',
         },
         {
           heading: 'Children',
-          body: 'Qutai is not directed at children under 13.',
+          body:
+            'Qutai is not directed at children under 13, and we do not knowingly collect data from them. In some ' +
+            'countries you must be older (for example 16) to agree to this policy yourself; below that age a parent ' +
+            'or guardian must agree for you.',
         },
         {
           heading: 'Changes',
@@ -130,7 +181,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
         {
           heading: 'Your account',
           body:
-            'Keep your Apple or Google sign-in secure; what is done with your account is your responsibility. We may ' +
+            'Keep your sign-in (Apple, Google or your email) secure; what is done with your account is your responsibility. We may ' +
             'suspend an account that breaks these terms. If you delete your account, its remaining credits are lost.',
         },
         {
@@ -169,9 +220,17 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
       title: 'Gizlilik Politikası',
       intro:
         'Qutai, yapay zekâ asistanı olan bir web tarayıcısıdır. Gezinmeniz telefonunuzda kalsın diye tasarlandı. ' +
-        'Qutai’nin kendi sunucusu yalnızca Qutai hesabınız ve Qutai Kredileri için, yalnızca siz bunları ' +
-        'seçtiğinizde kullanılır. Verilerinizi satmayız; Qutai’de analitik, izleme veya reklam yoktur.',
+        'Qutai’nin kendi sunucusu yalnızca Qutai hesabınız (oturum açma, Qutai Kredileri, uygulama içi satın alma ve ' +
+        'yedekler) için, yalnızca siz bunları seçtiğinizde kullanılır. Verilerinizi satmayız; Qutai’de analitik, ' +
+        'izleme veya reklam yoktur.',
       sections: [
+        {
+          heading: 'Biz kimiz',
+          body:
+            'Qutai’yi Osman Yuksel (“biz”) geliştirir ve bu politikada anlatılan verilerden o sorumludur. ' +
+            'Gizliliğinizle ilgili sorularınız için ya da Qutai’nin sunucusunun sizinle ilgili sakladıklarının bir ' +
+            'kopyasını veya silinmesini istemek için osmanyuksel@gmail.com adresine yazın.',
+        },
         {
           heading: 'Telefonunuzda kalanlar',
           body:
@@ -184,29 +243,39 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
         {
           heading: 'Telefonunuzdan çıkanlar ve kime gittiği',
           body:
-            '• Ziyaret ettiğiniz siteler, her tarayıcının gönderdiği bilgileri alır.\n' +
-            '• Kendi API anahtarınızla, mesajınız ve asistanın ihtiyaç duyduğu içerik (sayfa metni, sayfaya baktığında ' +
-            'ekran görüntüleri, eklediğiniz dosyalar, hafızanız ve özel talimatlarınız) doğrudan seçtiğiniz yapay zekâ ' +
+            '• Ziyaret ettiğiniz siteler, her tarayıcının gönderdiği bilgileri ve asistandan o siteye yazmasını ' +
+            'istediğiniz bilgileri (örneğin bir formdaki adınızı veya adresinizi) alır.\n• Kendi API anahtarınızla, ' +
+            'mesajınız ve asistanın ihtiyaç duyduğu içerik (sayfa metni, sayfaya baktığında ekran görüntüleri, ' +
+            'eklediğiniz dosya ve görseller, hafızanız ve özel talimatlarınız) doğrudan seçtiğiniz yapay zekâ ' +
             'sağlayıcısına (Anthropic, OpenAI, Google, OpenRouter veya kendi sunucunuz) gider. Qutai’nin sunucusu ' +
-            'araya girmez.\n' +
-            '• Qutai Kredileriyle aynı içerik önce Qutai’nin sunucusuna gider; sunucu onu Qutai’nin kendi hesabıyla ' +
+            'araya girmez. Takvim etkinlikleriniz ve konumunuz yalnızca her seferinde onayladığınızda gönderilir.\n• ' +
+            'Qutai Kredileriyle aynı içerik önce Qutai’nin sunucusuna gider; sunucu onu Qutai’nin kendi hesabıyla ' +
             'yapay zekâ sağlayıcısına (Anthropic, OpenAI veya Google) iletir ve yanıtı geri gönderir. Qutai’nin ' +
-            'sunucusu bu içeriği saklamaz ve kayda geçirmez. Uygulama, Qutai Kredilerini ilk kez kullanmadan önce size ' +
-            'sorar.\n' +
-            '• Web araması açıksa yapay zekâ sağlayıcısı sizin için arama yapabilir. Sağlayıcıların aldıkları için ' +
-            'kendi gizlilik politikaları ve koşulları geçerlidir.\n' +
-            '• Arama önerileri açıksa adres çubuğuna yazdıklarınız arama motorunuza gönderilir (gizli sekmelerden ' +
-            'asla).',
+            'sunucusu bu içeriği saklamaz ve kayda geçirmez. Uygulama, Qutai Kredilerini ilk kez kullanmadan önce ' +
+            'size sorar.\n• Web araması açıksa yapay zekâ sağlayıcısı sizin için arama yapabilir. Sağlayıcıların ' +
+            'aldıkları için kendi gizlilik politikaları ve koşulları geçerlidir.\n• Arama önerileri açıksa adres ' +
+            'çubuğuna yazdıklarınız arama motorunuza gönderilir (gizli sekmelerden asla).\n• Kurulumda “Konumumu ' +
+            'kullan”a dokunursanız, yer adını bulmak için yaklaşık konumunuz telefonun adres hizmetine (iPhone’da ' +
+            'Apple’ınkine, Android’de genellikle Google’ınkine) gönderilir. Yalnızca yer adı saklanır.\n• Asistana ' +
+            'sesle yazdığınızda telefon o dili cihazın kendisinde tanıyamıyorsa ses, telefonun konuşma hizmetine ' +
+            '(Apple’ın ya da Google’ın) gider; bu yalnızca Qutai’de bir kez izin verdikten sonra olur, gizli ' +
+            'sohbetlerde asla. Qutai ve yapay zekâ hizmeti yalnızca metni alır.\n• “Reklam ve izleyicileri engelle” ' +
+            'açıkken seçtiğiniz filtre listeleri yayıncılarından (örneğin EasyList ve AdGuard) indirilir ve birkaç ' +
+            'günde bir güncellenir. Bu isteklerde gezinmenizle ilgili hiçbir şey yoktur.',
         },
         {
           heading: 'Qutai hesabınız',
           body:
-            'Hesap isteğe bağlıdır; yalnızca Qutai Kredileri için gerekir. Apple veya Google ile oturum açarsınız. ' +
-            'Qutai’nin sunucusu şunları saklar: bir hesap numarası; hesabın bağlı olduğu Apple veya Google girişi ve bu ' +
-            'girişin paylaştığı e-posta adresi (varsa); hesabın oluşturulma ve son kullanılma zamanı; oturum açtığınız ' +
+            'Hesap isteğe bağlıdır; yalnızca Qutai Kredileri, uygulama içi satın almalar ve hesabınızdaki yedekler ' +
+            'için gerekir. Apple, Google ya da e-posta adresinizle oturum açarsınız. E-postayla açarken girdiğiniz ' +
+            'adrese e-posta hizmetimiz (Mailjet) aracılığıyla tek kullanımlık bir kod ve bir bağlantı göndeririz; kod ' +
+            '10 dakika ve yalnızca onu isteyen telefonda geçerlidir, kötüye kullanımı önlemek için sunucu her adrese ' +
+            've telefona kaç kod gönderildiğini sayar. Qutai’nin sunucusu şunları saklar: bir hesap numarası; hesabın ' +
+            'oturum açma yöntemleri (Apple, Google, e-posta) ve bunlarla gelen e-posta adresleri (Apple’da bu, gizli ' +
+            'bir yönlendirme adresi olabilir); hesabın oluşturulma ve son kullanılma zamanı; oturum açtığınız ' +
             'cihazlar (telefonunuzun kimlikleri değil, rastgele bir cihaz numarası); ve kredileriniz: bakiye, satın ' +
-            'almalar ve eklenen krediler, her asistan isteği için model, token sayısı, maliyet ve zaman. Mesajlarınızı, ' +
-            'sayfaları veya yanıtları saklamaz.',
+            'almalar ve eklenen krediler, her asistan isteği için model, token sayısı, maliyet ve zaman. ' +
+            'Mesajlarınızı, sayfaları veya yanıtları saklamaz.',
         },
         {
           heading: 'Qutai hesabınızdaki yedekler',
@@ -221,13 +290,35 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'siler.',
         },
         {
-          heading: 'Kredi satın alma',
+          heading: 'Uygulama içi satın alma',
           body:
-            'Krediler uygulama içinden App Store veya Google Play aracılığıyla satın alınır; ödeme bilgileriniz Apple ' +
-            'veya Google’da kalır, Qutai’ye asla ulaşmaz. Satın almanın doğrulanıp hesabınıza eklenebilmesi için bir ' +
-            'ödeme hizmeti (RevenueCat) Qutai hesap numaranızı ve mağazanın satın alma kaydını alır. Qutai her satın ' +
-            'almanın kaydını (mağaza, işlem, ürün, kredi, ödenen tutar ve tarihler) vergi mevzuatı gereği saklar; hesap ' +
-            'silindikten sonra da, sizinle bağlantısı olmadan.',
+            'Qutai Kredileri ve uygulamada satılan her şey App Store veya Google Play aracılığıyla satın alınır; ' +
+            'ödeme bilgileriniz Apple veya Google’da kalır, Qutai’ye asla ulaşmaz. Satın almanın doğrulanıp ' +
+            'hesabınıza eklenebilmesi ve başka bir telefonda geri yüklenebilmesi için bir ödeme hizmeti (RevenueCat) ' +
+            'Qutai hesap numaranızı ve mağazanın satın alma kaydını alır. Qutai her satın almanın kaydını (mağaza, ' +
+            'işlem, ürün, kredi, ödenen tutar ve tarihler) vergi mevzuatı gereği saklar; hesap silindikten sonra da, ' +
+            'sizinle bağlantısı olmadan. İadeleri Apple veya Google kendi kurallarına göre yapar.',
+        },
+        {
+          heading: 'Qutai’nin sunucusu ve verileri işleyen diğerleri',
+          body:
+            'Qutai’nin sunucusu Cloudflare üzerinde çalışır; yedekler de orada saklanır. Her sunucu gibi o da her ' +
+            'istekte IP adresinizi görür; bunu yalnızca istek sayısını sınırlamak için kullanır ve Qutai’nin kendi ' +
+            'kayıtlarında IP adresiniz, e-posta adresiniz, mesajlarınız, sayfalar veya oturum anahtarları asla ' +
+            'bulunmaz (kayıtlarda bir istek numarası, hesap numaranız, istenen işlem, ne kadar sürdüğü ve asistan ' +
+            'isteklerinde model, token ve maliyet bulunur). Qutai için veri işleyen şirketler, her biri kendi ' +
+            'gizlilik politikasına göre: Cloudflare (sunucu), Apple ve Google (oturum açma ve mağazalar), Mailjet ' +
+            '(oturum açma e-postaları), RevenueCat (satın almalar) ve Qutai Kredileriyle Anthropic, OpenAI ve Google ' +
+            '(yapay zekâ). Verilerinizi başka kimseyle paylaşmayız; yasanın gerektirdiği durumlar (örneğin bir ' +
+            'mahkeme kararı) ve Qutai’yi ve kullanıcılarını dolandırıcılık ve kötüye kullanıma karşı korumak dışında.',
+        },
+        {
+          heading: 'Verilerin ne kadar saklandığı',
+          body:
+            'Telefonunuzda: siz silene ya da Qutai’yi kaldırana kadar. Qutai’nin sunucusunda: hesabınız, oturum açma ' +
+            'yöntemleri, cihazları ve kredi geçmişi siz hesabı silene kadar; yedekler yukarıda anlatıldığı gibi; ' +
+            'oturum açma kodları kullanılana ya da süresi dolana kadar; satın alma kayıtları vergi mevzuatının ' +
+            'gerektirdiği süre boyunca, hesap silindikten sonra sizinle bağlantısı olmadan.',
         },
         {
           heading: 'Şifreler ve ödeme bilgileri',
@@ -243,17 +334,27 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
         {
           heading: 'Kontrol sizde',
           body:
-            'Asistanın hafızasını Ayarlar’dan görüp silebilir; geçmişi, çerezleri ve diğer verileri temizleyebilir, API ' +
-            'anahtarlarınızı istediğiniz an kaldırabilirsiniz. Yedeklerinizi Ayarlar › Yedekleme’den Qutai’nin ' +
-            'sunucusundan silebilirsiniz. Ayarlar › Hesap’tan Qutai Kredilerini kullanmayı ' +
-            'bırakabilir, oturumu kapatabilir ya da hesabınızı silebilirsiniz: silmek hesabı, bakiyesini ve geçmişini ' +
-            'Qutai’nin sunucusundan kaldırır (satın alma kayıtları yukarıdaki gibi sizinle bağlantısı olmadan kalır) ve ' +
-            'ödeme hizmetinden sizinle ilgili kaydını silmesini ister. Qutai’yi kaldırmak telefonda sakladığı her şeyi ' +
-            'siler.',
+            'Asistanın hafızasını Ayarlar’dan görüp silebilir; geçmişi, çerezleri ve diğer verileri temizleyebilir, ' +
+            'API anahtarlarınızı istediğiniz an kaldırabilirsiniz. Yedeklerinizi Ayarlar › Yedekleme’den Qutai’nin ' +
+            'sunucusundan silebilirsiniz. Ayarlar › Hesap’tan Qutai Kredilerini kullanmayı bırakabilir, oturumu ' +
+            'kapatabilir ya da hesabınızı silebilirsiniz: silmek hesabı, bakiyesini ve geçmişini Qutai’nin ' +
+            'sunucusundan kaldırır (satın alma kayıtları yukarıdaki gibi sizinle bağlantısı olmadan kalır) ve ödeme ' +
+            'hizmetinden sizinle ilgili kaydını silmesini ister. Qutai’nin sunucusunun sizinle ilgili sakladıklarının ' +
+            'bir kopyasını, düzeltilmesini veya silinmesini osmanyuksel@gmail.com adresine yazarak da ' +
+            'isteyebilirsiniz. Qutai’yi kaldırmak telefonda sakladığı her şeyi siler.',
+        },
+        {
+          heading: 'Güvenlik',
+          body:
+            'Qutai’nin sunucusuyla bağlantılar HTTPS kullanır. Oturum anahtarları sunucuda yalnızca özetlenmiş (hash) ' +
+            'olarak, telefonunuzda ise şifreli depoda tutulur; yedekler gönderilmeden önce telefonunuzda şifrelenir.',
         },
         {
           heading: 'Çocuklar',
-          body: 'Qutai 13 yaşından küçük çocuklara yönelik değildir.',
+          body:
+            'Qutai 13 yaşından küçük çocuklara yönelik değildir ve onlardan bilerek veri toplamayız. Bazı ülkelerde ' +
+            'bu politikayı kendiniz kabul edebilmek için daha büyük (örneğin 16 yaşında) olmanız gerekir; bu yaşın ' +
+            'altında bir ebeveyn veya vasinin sizin adınıza kabul etmesi gerekir.',
         },
         {
           heading: 'Değişiklikler',
@@ -289,7 +390,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
         {
           heading: 'Hesabınız',
           body:
-            'Apple veya Google girişinizi güvende tutun; hesabınızla yapılanlardan siz sorumlusunuz. Bu koşulları ' +
+            'Oturum açma yönteminizi (Apple, Google veya e-postanız) güvende tutun; hesabınızla yapılanlardan siz sorumlusunuz. Bu koşulları ' +
             'çiğneyen bir hesabı askıya alabiliriz. Hesabınızı silerseniz kalan kredileri kaybolur.',
         },
         {
