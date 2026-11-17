@@ -44,7 +44,7 @@ npm run deploy     # build, then `wrangler deploy` (asks you to log in to Cloudf
 | `src/entry-server.tsx`, `src/main.tsx` | Prerender entry and the browser entry (loads only the page language's strings, then hydrates) |
 | `scripts/prerender.mjs` | Writes `en/index.html`, `tr/index.html` with their head tags and JSON-LD, `404.html`, `robots.txt`, `sitemap.xml`, `_headers` |
 | `scripts/make-assets.mjs` | Builds `public/` images from the app's `assets/` |
-| `worker/` | The Worker: `/` → `/en/` or `/tr/` |
+| `worker/` | The Worker: `/` → `/en/` or `/tr/`; `/intent/sign-in/email` (below) |
 
 ### Language
 
@@ -53,6 +53,23 @@ Cookie`, not cached) by, in order: the `lang` cookie, which the language switch 
 Turkish or English entry of `Accept-Language` by preference (`tr`, `tr-TR` → Turkish; other languages are
 skipped); English. Everything else is a static file. `/en` redirects to `/en/` (Cloudflare's
 `auto-trailing-slash`); unknown paths get `404.html`.
+
+### The sign-in email's link
+
+`/intent/sign-in/email?token=…` (`worker/intent.ts`, run by the Worker: `run_worker_first` includes `/intent/*`) is
+where the app's sign-in email links (the API's `MAIL_INTENT_DOMAIN`), because mail apps such as Gmail don't make a
+`qutai://` link tappable. The page opens the app: `<SCHEME>://sign-in/email?token=…`, on Android as an `intent://`
+URL with `ANDROID_PACKAGE` (Chrome then opens that app, or its store page when it is missing, and comes back here
+marked `tried=1` so it doesn't loop). On a phone it tries once by itself and always shows an "Open Qutai" button; on a
+computer it explains that the link is for the phone. In the app's ten languages, from `Accept-Language` (the `lang`
+cookie first for English and Turkish).
+
+`SCHEME` (`qutai`) and `ANDROID_PACKAGE` (`com.sonsuzdongu.qutai`) are `vars` in `wrangler.jsonc`; for `wrangler dev`
+they can be overridden in `.dev.vars`. The token is a single-use sign-in secret, so the page signs nothing in and
+calls nothing (a mail scanner opening it uses nothing up), loads only the site's own icon, removes the token from the
+address bar and history entry once loaded, and answers with `Cache-Control: no-store`, `Referrer-Policy: no-referrer`,
+`X-Robots-Tag: noindex` and its own Content-Security-Policy (a nonce for its inline style and script). The Worker logs
+nothing (observability is off). A token that isn't one answers 400 with "This link is incomplete".
 
 ### Privacy of the site itself
 
