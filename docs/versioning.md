@@ -1,0 +1,58 @@
+# Version and build number
+
+One rule, one script. Read this before touching `version`, `buildNumber` or `versionCode` anywhere.
+
+## The rule
+
+- The **version** is `major.minor.patch` in `app.json` › `expo.version` (dotted numbers only, no `-beta` suffixes).
+- The **build number** is computed from the version, never counted separately:
+
+  `major*10000 + minor*100 + patch`
+
+  | Version | Build |
+  |---|---|
+  | 0.1.0 | 100 |
+  | 0.1.7 | 107 |
+  | 0.2.0 | 200 |
+  | 1.0.0 | 10000 |
+  | 1.2 (a missing part counts as 0) | 10200 |
+
+- Android (`expo.android.versionCode`, a number) and iOS (`expo.ios.buildNumber`, a string) always carry the **same**
+  build number.
+- Minor and patch stop at 99. `0.1.99` cannot be bumped to `0.1.100` (its number would collide with `0.2.0`): go to
+  `0.2.0` by hand.
+- Why computed: a rule that used the version without its dots went 0.1.16 → 116 and then 0.2.0 → 20, backwards. The
+  stores refuse a build number that isn't larger than the last one they have.
+
+## When
+
+**Only when the owner says so.** Test APKs, simulator builds and commits do not bump anything; an agent never bumps on
+its own initiative. A bump is its own commit ("Version 0.1.1 (101)").
+
+## How
+
+```bash
+npm run version:bump                  # shows the next patch bump, changes nothing
+npm run version:bump -- --yes         # does it
+npm run version:bump -- 0.2.0         # shows what setting 0.2.0 would do
+npm run version:bump -- 0.2.0 --yes   # does it
+```
+
+The script (`scripts/version/bump.mjs`, rule in `scripts/version/rule.mjs`, tests `npm run test:version`):
+
+1. reads `app.json`, raises the last part of the version (or takes the version given);
+2. stops with a message when the version isn't dotted numbers, has more than three parts, or minor/patch would pass 99;
+3. prints `Version: old → new` and `Build: old → new`, and a warning when the new build number is not larger than the
+   current one (the larger of Android's and iOS's): a store that already has the current one will refuse it. The warning
+   does not stop the bump;
+4. with `--yes` writes `expo.version`, `expo.ios.buildNumber`, `expo.android.versionCode`, and the `version` of
+   `package.json` (and `package-lock.json`).
+
+Nothing else may write these values. `eas.json` uses `"appVersionSource": "local"` and no `autoIncrement`, so EAS builds
+take the numbers from `app.json` too. `android/` and `ios/` are generated: the numbers reach them at the next
+`expo prebuild` / native build, so a bump needs a native rebuild to show.
+
+## History
+
+- 0.1.0 (100): first version under this rule, 17 Nov 2026. Before it every build was 1.0.0 (1); nothing had been
+  uploaded to a store, so the smaller number is harmless.
