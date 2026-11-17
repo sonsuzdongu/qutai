@@ -1,6 +1,6 @@
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
-import { Platform } from 'react-native';
+import { Dimensions, Platform } from 'react-native';
 import { addCalendarEvent, addReminder, DeviceToolError, readCalendarEvents } from '../device/calendar';
 import { openDefaultBrowserSettings } from '../device/defaultBrowser';
 import { notificationOrigin, scheduleNotification } from '../device/notifications';
@@ -33,6 +33,7 @@ import { getSavedTaskTool, listSavedTasksTool, type SavedTasksAccess } from './s
 import { describeSettingsCall, settingsTool } from './settingsTool';
 import type { Settings } from '../storage/settings';
 import { sleep } from '../utils/sleep';
+import { screenshotStillValid, windowKey } from '../ui/layout';
 import { markBeforeAction } from './actionMarker';
 import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch, SiteVisits } from '../storage/history';
@@ -1658,7 +1659,7 @@ async function runTool(
           await mask.restore();
         }
         const { width, height, ...image } = shot;
-        tab.modelScreenshotSize = { width, height };
+        tab.modelScreenshotSize = { width, height, window: windowKey(Dimensions.get('window')) };
         return {
           content:
             `Screenshot of the visible area of ${tab.url} (${width}×${height} pixels). ` +
@@ -1671,6 +1672,15 @@ async function runTool(
         const size = tab.modelScreenshotSize;
         if (!size)
           return { content: 'Call view_screenshot first; click_at uses its pixel coordinates.', isError: true };
+        if (!screenshotStillValid(size.window, Dimensions.get('window'))) {
+          tab.modelScreenshotSize = null;
+          return {
+            content:
+              'The screen turned or changed size after that screenshot, so its coordinates no longer match the page. ' +
+              'Call view_screenshot again.',
+            isError: true,
+          };
+        }
         const x = Number(input.x);
         const y = Number(input.y);
         if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || y < 0 || x > size.width || y > size.height) {

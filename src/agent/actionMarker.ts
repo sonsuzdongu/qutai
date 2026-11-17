@@ -1,7 +1,8 @@
-import { AppState } from 'react-native';
+import { AppState, Dimensions } from 'react-native';
 import type { Tab } from '../browser/Tab';
 import { isRunningInBackground } from '../device/backgroundTask';
 import { sleep } from '../utils/sleep';
+import { screenshotStillValid } from '../ui/layout';
 import { FractionBox, MARKER_DWELL_MS, markerPoint, markerRect, Rect, ringFor } from './markerGeometry';
 
 /**
@@ -125,7 +126,8 @@ export async function markBeforeAction(tab: Tab, name: string, input: Record<str
         const size = tab.modelScreenshotSize;
         const x = Number(input.x);
         const y = Number(input.y);
-        if (!size) return;
+        // Taken before the screen turned: the step is refused, so nothing to mark.
+        if (!size || !screenshotStillValid(size.window, Dimensions.get('window'))) return;
         const point = markerPoint(x / size.width, y / size.height, page, origin);
         if (!point) return;
         show({ kind: 'ring', cx: point.x, cy: point.y, size: 40 }, 900);

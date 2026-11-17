@@ -160,8 +160,11 @@ export class Tab {
   private loadErrorAt = 0;
   /** Data URI kept in memory only, so nothing from incognito tabs touches the disk. */
   thumbnail: string | null = null;
-  /** Pixel size of the last screenshot shown to the model, so click_at can map its coordinates. */
-  modelScreenshotSize: { width: number; height: number } | null = null;
+  /**
+   * Pixel size of the last screenshot shown to the model, so click_at can map its coordinates, and the window's size
+   * then (windowKey): once the screen turns, the coordinates no longer match the page.
+   */
+  modelScreenshotSize: { width: number; height: number; window: string } | null = null;
   /** A full-page capture is scrolling this tab: touches, pull to refresh and scrollbars are off. */
   capturing = false;
   /** Width / height of the captured view, so cards can show the top of the page. */

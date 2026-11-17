@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { ComponentRef, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Animated, Easing, StyleSheet, View } from 'react-native';
-import { markerStore, setMarkerLayerOrigin, type Mark } from '../agent/actionMarker';
+import { Animated, Easing, LayoutChangeEvent, StyleSheet, View } from 'react-native';
+import { clearMark, markerStore, setMarkerLayerOrigin, type Mark } from '../agent/actionMarker';
 import { Icon } from '../ui/Icon';
 import { usePalette } from '../ui/theme';
 import { useReduceMotion } from '../utils/useReduceMotion';
@@ -21,8 +21,15 @@ export function ActionMarkerLayer() {
   const colors = markerColors(palette.dark);
 
   useEffect(() => () => setMarkerLayerOrigin(null), []);
-  const measure = () =>
+  const size = useRef('');
+  const measure = (e: LayoutChangeEvent) => {
+    // The screen turned (or the window was resized): a marker on screen points at where the element was, so it goes;
+    // the next step measures again (docs/landscape.md).
+    const next = `${Math.round(e.nativeEvent.layout.width)}x${Math.round(e.nativeEvent.layout.height)}`;
+    if (size.current && size.current !== next) clearMark();
+    size.current = next;
     ref.current?.measureInWindow((x, y, width, height) => setMarkerLayerOrigin(width > 0 && height > 0 ? { x, y } : null));
+  };
 
   return (
     <View
