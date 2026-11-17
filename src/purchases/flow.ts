@@ -1,5 +1,6 @@
 import type {
   PurchaseStore,
+  ReportStore,
   StoreFailure,
   StoreName,
   StoreProduct,
@@ -38,9 +39,12 @@ export function packOffers(packs: Pack[], store: StoreName, products: StoreProdu
 /** A paid purchase the server hasn't credited yet (kept on the phone and reported again later). */
 export interface PendingPurchase {
   userId: string;
-  store: StoreName;
+  /** `fake`: a FAKE purchase (the temporary stand-in, `fake.ts`), reported to `POST /purchases/fake`. */
+  store: ReportStore;
   transactionId: string;
   productId: string;
+  /** Store `fake` only: the store whose pack was bought. */
+  packStore?: StoreName;
   at: number;
 }
 
@@ -64,10 +68,15 @@ export type BuyResult =
   | { kind: 'reversed' }
   | { kind: 'suspended' }
   | { kind: 'signedOut' }
+  /** Fake purchases only: this account reached the server's daily allowance of test purchases. Nothing was charged. */
+  | { kind: 'limit' }
+  /** Fake purchases only: the server no longer takes them (switched off). Nothing was charged. */
+  | { kind: 'testModeOff' }
   | { kind: 'unavailable'; reason: StoreUnavailable };
 
 export interface PurchaseFlowDeps {
-  store: PurchaseStore;
+  /** The store, or how to get the current one (the FAKE store while the server is in fake mode, `index.ts`). */
+  store: PurchaseStore | (() => PurchaseStore);
   storeName: StoreName;
   verify(request: VerifyPurchaseRequest): Promise<VerifyAnswer>;
   pending: PendingStorage;
@@ -113,15 +122,21 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
     queue = run.catch(() => {});
     return run;
   };
-  const sameTx = (a: PendingPurchase, b: { store: StoreName; transactionId: string }) =>
+  const current = () => (typeof deps.store === 'function' ? deps.store() : deps.store);
+  const sameTx = (a: PendingPurchase, b: { store: ReportStore; transactionId: string }) =>
     a.store === b.store && a.transactionId === b.transactionId;
 
   /** Reports one purchase until a final answer, or `notYetCredited` after the allowed attempts. */
-  async function report(store: StoreName, transactionId: string): Promise<BuyResult> {
+  async function report(p: Pick<PendingPurchase, 'store' | 'transactionId' | 'productId' | 'packStore'>): Promise<BuyResult> {
+    const fake = p.store === 'fake';
+    // The real stores' report stays exactly `{ store, transactionId }`; a fake one names its pack.
+    const request: VerifyPurchaseRequest = fake
+      ? { store: 'fake', transactionId: p.transactionId, productId: p.productId, packStore: p.packStore }
+      : { store: p.store, transactionId: p.transactionId };
     for (let attempt = 1; ; attempt++) {
       let answer: VerifyAnswer;
       try {
-        answer = await deps.verify({ store, transactionId });
+        answer = await deps.verify(request);
       } catch {
         answer = { ok: false, status: 0, code: 'network' };
       }
@@ -134,6 +149,9 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
       if (answer.status === 422 || answer.code === 'purchase_rejected') return { kind: 'support', reason: 'rejected' };
       if (answer.code === 'account_suspended') return { kind: 'suspended' };
       if (answer.status === 401 || answer.code === 'not_signed_in') return { kind: 'signedOut' };
+      // Fake purchases: final answers, nothing was charged so nothing is kept.
+      if (fake && answer.code === 'purchase_limit') return { kind: 'limit' };
+      if (fake && (answer.status === 404 || answer.code === 'not_found')) return { kind: 'testModeOff' };
       // Not found yet, unavailable, the network: worth asking again shortly.
       if (attempt >= attempts) return { kind: 'notYetCredited' };
       await sleep(Math.min(MAX_WAIT_S, answer.retryAfter ?? DEFAULT_WAIT_S) * 1000);
@@ -146,21 +164,23 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
   return {
     /** Buys a pack for the signed-in account `userId`. */
     async buy(pack: Pack, userId: string): Promise<BuyResult> {
-      if (deps.store.unavailable) return { kind: 'unavailable', reason: deps.store.unavailable };
-      await deps.store.identify(userId);
-      const outcome = await deps.store.purchase(pack.productId);
+      const store = current();
+      if (store.unavailable) return { kind: 'unavailable', reason: store.unavailable };
+      await store.identify(userId);
+      const outcome = await store.purchase(pack.productId);
       if (outcome.kind !== 'purchased') return outcome;
       if (!outcome.transactionId) return { kind: 'notYetCredited' };
       const entry: PendingPurchase = {
         userId,
-        store: deps.storeName,
+        store: store.fake ? 'fake' : deps.storeName,
         transactionId: outcome.transactionId,
         productId: outcome.productId,
+        ...(store.fake ? { packStore: pack.store } : {}),
         at: now(),
       };
       // Kept before the report, so a crash or a lost connection right now can't lose it.
       await edit((list) => [...list.filter((p) => !sameTx(p, entry)), entry]);
-      const result = await report(entry.store, entry.transactionId);
+      const result = await report(entry);
       if (!keep(result)) await edit((list) => list.filter((p) => !sameTx(p, entry)));
       return result;
     },
@@ -175,7 +195,7 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
       let balance: number | null = null;
       let waiting = 0;
       for (const p of list.filter((x) => x.userId === userId)) {
-        const result = await report(p.store, p.transactionId);
+        const result = await report(p);
         if (result.kind === 'credited') {
           credited += result.credits;
           balance = result.balance ?? balance;

@@ -25,6 +25,8 @@ import { AGENT_PROFILE_ID } from '../../../src/credits/agentProfileId.ts';
 import { createCreditsClient, type CreditsClient } from '../../../src/credits/client.ts';
 import { nothingSent, RelayError } from '../../../src/credits/errors.ts';
 import { createCreditsProvider } from '../../../src/credits/provider.ts';
+import { createFakeStore } from '../../../src/purchases/fake.ts';
+import { createPurchaseFlow, type PendingPurchase } from '../../../src/purchases/flow.ts';
 import type { PublicConfig, RelayRequest } from '../../../src/credits/types.ts';
 
 const API_URL = process.env.QUTAI_TEST_API_URL ?? 'http://localhost:8790';
@@ -135,6 +137,40 @@ describe('Qutai Credits against the local server', { skip: !SECRET && 'QUTAI_TES
     const bad = raw(config.models[0]!.model, { provider: config.models[0]!.provider as 'anthropic' });
     (bad as unknown as Record<string, unknown>).apiKey = 'sk-not-allowed';
     assert.equal(await kindOf(one.client.relayStream(bad, new AbortController().signal, () => {})), 'bad_request');
+  });
+
+  // FAKE purchases (the temporary stand-in; backend README › Fake purchases): only against a server started with
+  // FAKE_PURCHASES=true. Uses test-3 (each run makes one new test purchase; the server allows 10 a day per account).
+  it('fake mode: buying a pack through the app's flow credits it once and the balance rises', async (t) => {
+    if (config.purchases?.mode !== 'fake') return t.skip('the server is not in fake purchase mode (FAKE_PURCHASES=true)');
+    const pack = config.packs.find((p) => p.store === 'google') ?? config.packs[0];
+    if (!pack) return t.skip('no active pack (seed:local adds some)');
+    const three = await signIn('test-3');
+    const before = (await three.client.credits(1)).balance;
+    let list: PendingPurchase[] = [];
+    const asked: string[] = [];
+    const flow = createPurchaseFlow({
+      store: createFakeStore(() => crypto.randomUUID()),
+      storeName: pack.store,
+      verify: (req) => {
+        asked.push(req.transactionId);
+        return three.client.verifyPurchase(req);
+      },
+      pending: { load: async () => list, save: async (l) => void (list = l) },
+    });
+    const result = await flow.buy(pack, three.userId);
+    if (result.kind === 'limit') return t.skip('test-3 used its 10 test purchases for today');
+    assert.equal(result.kind, 'credited', JSON.stringify(result));
+    assert.equal(result.kind === 'credited' && result.credits, pack.credits);
+    assert.equal(result.kind === 'credited' && result.balance, before + pack.credits);
+    assert.deepEqual(list, [], 'nothing left waiting');
+    assert.equal(three.balances.at(-1), before + pack.credits, 'the balance reached the app');
+    assert.equal((await three.client.credits(1)).balance, before + pack.credits);
+
+    // The same transaction reported again (a lost answer, then the queue): the first result, nothing added.
+    const again = await three.client.verifyPurchase({ store: 'fake', transactionId: asked[0]!, productId: pack.productId, packStore: pack.store });
+    assert.ok(again.ok && again.response.replayed && again.response.store === 'fake');
+    assert.equal((await three.client.credits(1)).balance, before + pack.credits);
   });
 
   it('signed out: the server refuses the relay and the client says so', async () => {

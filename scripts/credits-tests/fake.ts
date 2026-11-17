@@ -76,7 +76,8 @@ export function fakeServer(opts: { relay?: Answer[]; config?: PublicConfig; cred
       if (!a) return error('unavailable', 503);
       return typeof a === 'function' ? a(rec) : a;
     }
-    if (url.pathname === '/purchases/verify') {
+    // The fake purchase route (the temporary stand-in) takes the same answers.
+    if (url.pathname === '/purchases/verify' || url.pathname === '/purchases/fake') {
       const a = verify.length > 1 ? verify.shift()! : verify[0];
       if (!a) return error('unavailable', 503);
       return typeof a === 'function' ? a(rec) : a;
