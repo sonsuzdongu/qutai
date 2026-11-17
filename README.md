@@ -131,12 +131,13 @@ lift the finger to stop (the same gesture as holding the Qutai button, `src/comp
 away before lifting stops without sending), or tap it to start and tap again or pause to stop. It listens in the
 language of the user's last message in that conversation, typed or spoken, so an English phone hears Turkish in a
 Turkish chat (`src/chat/messageLanguage.ts`: a small on-phone guess per message from the user's own messages, never
-the assistant's, from Turkish letters, frequent words and endings, ignoring URLs, numbers, code, quotes and names; a
+the assistant's, in any of the ten interface languages: letters only one of them uses, Cyrillic, kana or Hangul,
+frequent words and endings, ignoring URLs, numbers, code, quotes and names; a
 message without a clear language keeps the one before). The recogniser needs the language before it starts, so the
 first sentence spoken in a new language may still be heard in the old one. The order is: a language picked in that
 conversation (the TR/EN tag next to the microphone while listening), the Settings › Assistant › "Listening language"
 default when it isn't Automatic,
-the conversation's language, the language last used, then the app's language, each mapped to the device's regional
+the conversation's language, the language last used, the app's language, then the phone's own language, each mapped to the device's regional
 variant when it has one (`tr-TR`, `en-GB`); a language the phone's recogniser lacks is skipped and the user is told
 which one is used instead (`src/device/voiceLanguage.ts`). Words appear as they are recognised, are added to what is already
 typed and stay editable; nothing is sent until the user taps send (Settings › Assistant › "Send automatically after
