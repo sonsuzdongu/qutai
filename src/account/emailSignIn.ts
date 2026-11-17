@@ -93,18 +93,42 @@ export function codeDigits(text: string, length = DEFAULT_CODE_LENGTH): string {
  * when malformed. Case-insensitive like the scheme and host.
  */
 export function isSignInLink(url: string | null | undefined): boolean {
-  return typeof url === 'string' && /^qutai:\/\/sign-in(?:[/?#]|$)/i.test(url.trim());
+  if (typeof url !== 'string') return false;
+  const value = url.trim();
+  return /^qutai:\/\/sign-in(?:[/?#]|$)/i.test(value) || sitePagePath(value) !== null;
+}
+
+/**
+ * The website page the sign-in email links to (`https://qutai.sonsuzdongu.com/intent/sign-in/email?token=…`; the
+ * server's MAIL_INTENT_DOMAIN, webpage/worker/intent.ts). In a browser it opens the app; when Qutai is that browser
+ * (the default browser on Android, or the page opened in a tab) the app takes the token straight from it.
+ */
+export const SIGN_IN_PAGE_HOSTS: readonly string[] = ['qutai.sonsuzdongu.com'];
+const SIGN_IN_PAGE_PATH = '/intent/sign-in/email';
+
+/** The query of a sign-in page URL on one of our hosts, or null. */
+function sitePagePath(url: string): string | null {
+  const match = /^https:\/\/([^/?#:@]+)(\/[^?#]*)?(?:\?([^#]*))?(?:#.*)?$/i.exec(url);
+  if (!match) return null;
+  const host = match[1].toLowerCase();
+  const path = (match[2] ?? '/').replace(/\/+$/, '');
+  if (!SIGN_IN_PAGE_HOSTS.includes(host) || path !== SIGN_IN_PAGE_PATH) return null;
+  return match[3] ?? '';
 }
 
 const TOKEN = /^[A-Za-z0-9_-]{16,256}$/;
 
-/** `qutai://sign-in/email?token=…` → the token; null for anything else (also for a sign-in link without a good token). */
+/**
+ * `qutai://sign-in/email?token=…` or the website's `https://qutai.sonsuzdongu.com/intent/sign-in/email?token=…` → the
+ * token; null for anything else (also for a sign-in link without a good token).
+ */
 export function parseEmailSignInLink(url: string | null | undefined): string | null {
   if (typeof url !== 'string' || url.length > 2048) return null;
-  const match = /^qutai:\/\/sign-in\/email\/?\?([^#]*)(#.*)?$/i.exec(url.trim());
-  if (!match) return null;
+  const value = url.trim();
+  const query = /^qutai:\/\/sign-in\/email\/?\?([^#]*)(#.*)?$/i.exec(value)?.[1] ?? sitePagePath(value);
+  if (query === null) return null;
   let token: string | null = null;
-  for (const pair of match[1].split('&')) {
+  for (const pair of query.split('&')) {
     if (!pair) continue;
     const at = pair.indexOf('=');
     const key = at < 0 ? pair : pair.slice(0, at);

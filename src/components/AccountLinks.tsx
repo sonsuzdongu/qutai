@@ -10,6 +10,21 @@ import { dialog } from './Dialog';
 let launchLinkTaken = false;
 
 /**
+ * A sign-in link (`qutai://sign-in/email?token=…` or the website page the mail links to) reached the app: finishes the
+ * waiting email sign-in with it. Also called by a tab that was about to load such a link (BrowserView), so the page is
+ * never loaded and its token never reaches the history. True when it was a sign-in link (taken here).
+ */
+export function takeSignInLink(url: string | null | undefined): boolean {
+  if (!url || !isSignInLink(url)) return false;
+  const flow = emailSignIn();
+  if (!flow) return false;
+  const token = parseEmailSignInLink(url);
+  if (token) void flow.verifyLink(token);
+  else flow.reportMalformedLink();
+  return true;
+}
+
+/**
  * Mounted once at the app's root, above setup and the browser (pro mode only; a no-op otherwise):
  * - opens sign-in links from the mail, `qutai://sign-in/email?token=…`, at a cold start and while running, and
  *   finishes the waiting email sign-in with them. The browser's entry points ignore these links
@@ -26,12 +41,7 @@ export function useAccountLinks() {
     const flow = emailSignIn();
     if (!session || !flow) return;
 
-    const handle = (url: string | null | undefined) => {
-      if (!url || !isSignInLink(url)) return;
-      const token = parseEmailSignInLink(url);
-      if (token) void flow.verifyLink(token);
-      else flow.reportMalformedLink();
-    };
+    const handle = (url: string | null | undefined) => void takeSignInLink(url);
     if (!launchLinkTaken) {
       launchLinkTaken = true;
       Linking.getInitialURL().then(handle, () => {});

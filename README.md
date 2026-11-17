@@ -524,14 +524,18 @@ far; the others get English). Either one finishes the sign-in, **only on the pho
 - **Code:** typed or pasted (only the digits count), sent by itself at the last digit. iOS offers a code from Mail
   above the keyboard (`textContentType="oneTimeCode"`); Android gets the one-time-code autofill hint, which
   autofill services use for SMS codes and may not fill from mail.
-- **Link:** `qutai://sign-in/email?token=…` opens the app, which sends the token with the address it is waiting
-  for. The app keeps that address (not the code) in memory and SecureStore, so the link and the code screen still
+- **Link:** the mail links to the website, `https://qutai.sonsuzdongu.com/intent/sign-in/email?token=…` (the
+  server's `MAIL_INTENT_DOMAIN`), because mail apps such as Gmail don't make a `qutai://` link tappable. That page
+  (`webpage/worker/intent.ts`) opens the app with `qutai://sign-in/email?token=…` (on Android an `intent://` URL
+  naming the package), trying once by itself and always offering an "Open Qutai" button; it signs nothing in itself.
+  When Qutai is the browser that gets the https link (the default browser on Android, or the page opened in a tab),
+  the app takes the token from it directly and never loads the page. The app sends the token with the address it
+  is waiting for. The app keeps that address (not the code) in memory and SecureStore, so the link and the code screen still
   work after the system closed the app while the user read the mail; it is forgotten on success, "Use another
   address", "Other ways to sign in", a sign-in by Apple or Google, and when the code has expired (10 minutes).
   The link is handled before the browser sees it: it never becomes a tab, a history entry, a search or text for
   the assistant, and nothing logs it. A link opened on a phone with no sign-in waiting says to enter the code on the
-  phone that asked or ask for a new code here. Mail apps may not make a `qutai://` link tappable (Gmail on
-  Android usually doesn't); the code always works. An https link needs a domain (see "Not built yet" below).
+  phone that asked or ask for a new code here. The code always works too.
 - "Send again" is offered after the server's `resendAfter` (30 s), with a countdown; only the newest code works.
   Refusals (wrong code, expired, too many tries, the rate limits with their wait, the address belonging to two
   accounts, no mail sender on the server) show a plain sentence with the server's code under "Details".
@@ -546,6 +550,7 @@ instead of sending it; `backend/README.md` › Trying it locally) and point a pr
 
 ```bash
 adb shell am start -a android.intent.action.VIEW -d 'qutai://sign-in/email?token=<token from the server output>'
+adb shell am start -a android.intent.action.VIEW -d 'https://qutai.sonsuzdongu.com/intent/sign-in/email?token=<token>' com.sonsuzdongu.qutai
 xcrun simctl openurl booted 'qutai://sign-in/email?token=<token from the server output>'
 ```
 
@@ -555,9 +560,9 @@ from it passes the link on.
 **Not built yet** (each needs work outside the app): adding or removing a sign-in method while signed in (server
 routes to link a method to the signed-in account and to remove one, plus a screen); merging two existing accounts
 (a server merge of ledgers, purchases and identities, with proof of both; the server records the conflicts for it);
-https App Links / Universal Links (a domain with `assetlinks.json` and `apple-app-site-association`, a page that
-hands the token to the app and never signs in on GET, the template change on the server, and the app's intent
-filter and associated domain, which is a native change); the message in the other eight languages
+verified App Links / Universal Links, so the https link opens the app without the page in between
+(`assetlinks.json` and `apple-app-site-association` on the site, and the app's `autoVerify` intent filter and
+associated domain, which is a native change); the message in the other eight languages
 (`backend/apps/api/src/auth/email/message.ts`).
 
 #### Test sign-in (a local test server, before real sign-in exists)

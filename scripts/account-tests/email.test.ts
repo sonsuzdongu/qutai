@@ -309,6 +309,25 @@ describe('email sign-in: links', () => {
     assert.equal(parseEmailSignInLink(`qutai://sign-in/email?token=${encodeURIComponent(TOKEN)}#x`), TOKEN);
   });
 
+  it('reads the token from the website page the mail links to', () => {
+    const page = `https://qutai.sonsuzdongu.com/intent/sign-in/email?token=${TOKEN}`;
+    assert.equal(parseEmailSignInLink(page), TOKEN);
+    assert.equal(parseEmailSignInLink(`https://QUTAI.sonsuzdongu.com/intent/sign-in/email/?token=${TOKEN}&tried=1`), TOKEN);
+    assert.equal(isSignInLink(page), true);
+    assert.equal(isSignInLink('https://qutai.sonsuzdongu.com/intent/sign-in/email'), true, 'no token: still never a page here');
+    for (const other of [
+      `https://evil.example/intent/sign-in/email?token=${TOKEN}`,
+      `https://qutai.sonsuzdongu.com.evil.example/intent/sign-in/email?token=${TOKEN}`,
+      `https://user@qutai.sonsuzdongu.com/intent/sign-in/email?token=${TOKEN}`,
+      `http://qutai.sonsuzdongu.com/intent/sign-in/email?token=${TOKEN}`,
+      `https://qutai.sonsuzdongu.com/en/?token=${TOKEN}`,
+      'https://qutai.sonsuzdongu.com/',
+    ]) {
+      assert.equal(parseEmailSignInLink(other), null, other);
+      assert.equal(isSignInLink(other), false, other);
+    }
+  });
+
   it('refuses anything else', () => {
     for (const url of [
       'qutai://sign-in/email',

@@ -25,6 +25,7 @@ import { FILE_CAPTURE_SCRIPT, handleFileCaptureMessage } from '../browser/fileCa
 import { mediaCaptureScript } from '../browser/mediaCapture';
 import { playbackScript } from '../browser/playback';
 import { openExternal } from '../browser/openExternal';
+import { takeSignInLink } from './AccountLinks';
 import { parsePullState, PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
 import { handleUserAgentMessage, USER_AGENT_SCRIPT, useChromeUserAgent } from '../browser/userAgent';
 import type { Tab } from '../browser/Tab';
@@ -331,6 +332,9 @@ function TabWebView({
             onShouldStartLoadWithRequest={(request) => {
               // Ad and tracker pages, frames and redirects never load.
               if (scriptBlocking() && isAdUrl(request.url)) return false;
+              // The sign-in email's link (its website page, or the app link that page opens): handled by the account,
+              // never loaded, so its token stays out of the tab and the history. Pro builds only (null otherwise).
+              if (request.isTopFrame !== false && takeSignInLink(request.url)) return false;
               if (request.isTopFrame !== false) {
                 const secure = upgradeToHttps(request.url, newTabActions.httpsOnly);
                 if (secure !== request.url) {

@@ -49,10 +49,15 @@ requested and initialised only in pro mode, and the code path is excluded from t
     link while running and at a cold start (development launcher first), a second sign-in to the same address, the
     pending sign-in after a force-stop, a link with nothing waiting, a broken link, Turkish at 360dp, German at
     360dp with 1.5× text
-  - [ ] Not checked: iOS (simulator or phone), real mail through Mailjet (does the mail app make `qutai://` tappable;
-    Gmail on Android usually doesn't), iOS offering the code from Mail, setup's sign-in step on screen
+  - [x] The mail links to the website (`https://qutai.sonsuzdongu.com/intent/sign-in/email?token=…`, owner request
+    after Gmail showed `qutai://` as plain text); the page opens the app. Checked: the page's headers, links and
+    languages against a local `wrangler dev`, and the https link handed to Qutai on the emulator signs in
+  - [ ] Not checked: Gmail or Chrome on a phone opening the page and handing over to the app (the emulator's Chrome
+    was never set up), iOS (simulator or phone), iOS offering the code from Mail, setup's sign-in step on screen;
+    the website with this page must be deployed before the mail's link works
   - [ ] Adding or removing a sign-in method while signed in (needs server routes); merging two existing accounts;
-    https App Links / Universal Links for the mail's link (needs a domain); the mail in the other eight languages
+    verified App Links / Universal Links (the app opens without the page; native change); the mail in the other
+    eight languages
 - [x] Onboarding in pro mode: sign-in is a step of the Qutai Credits path (choose → disclosure → sign in → account;
   `src/credits/setupFlow.ts`); the open-source build never shows it
   - [ ] Owner: whether own-key users should also get an optional "Sign in" step in setup
