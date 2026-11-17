@@ -276,6 +276,8 @@ Done in the development build:
 
 Account system and Qutai credits: built (app in pro mode; `backend/` steps 1–6: auth (Apple, Google, sign-in by email with a code or link), ledger, relay with tiers,
 purchases through RevenueCat, admin panel), not deployed; analytics events (`POST /events`) and abuse protection open.
+**Launch blocker:** buying credits works only through temporary fake purchases (local servers only, nothing charged)
+until RevenueCat and the stores are connected; remove them first (`TODO.md` › Before launch: remove fake purchases).
 Still to build: end-to-end encrypted sync (including memory; deletion markers must be kept for deletions), background
 deep research on iOS (and tasks that go on with the phone off), price and page tracking, Safe Browsing checks.
 

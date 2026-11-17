@@ -785,6 +785,19 @@ purchase stays saved and is reported again when the screen opens, on "Check for 
 live in Qutai's ledger, so there's no "Restore purchases" button; "Check for missing credits" is the way to recover a
 purchase that didn't arrive.
 
+**Fake purchases (temporary, local servers only).** While Qutai's server runs with `FAKE_PURCHASES=true`
+(`backend/README.md` › Fake purchases; a local development server only, the production server refuses it), its
+`GET /config` says `purchases: { mode: 'fake' }` and the app uses the **fake store** (`src/purchases/fake.ts`) instead
+of the unavailable one: no build flag, no store, nothing charged. The buy screen then shows a test-mode notice
+("Test mode: nothing is charged"), every pack of this phone's store without a price, and a "Get (test)" button; the
+store note is hidden. Buying makes a transaction id (`fake-` + a random id), keeps it in the same pending-purchase queue
+as a real purchase, and reports it to `POST /purchases/fake` with its pack (`src/credits/client.ts`); the answer is
+the usual one, so the balance in the header, the account screen and the low-credit note update as after a real
+purchase. A lost answer is reported again with the same id and credited once; the server's daily allowance
+(`purchase_limit`) and a server no longer in fake mode (`404`) are final, nothing kept. The real stores' report is
+unchanged (`{ store, transactionId }` to `/purchases/verify`). Remove all of it before launch: `TODO.md` › Before
+launch: remove fake purchases.
+
 **The store today: unavailable.** RevenueCat's `react-native-purchases` isn't a dependency yet: it adds native code
 and the billing permission to every build, including builds without pro mode, and no RevenueCat project, keys or store
 products exist to try it with. Every build uses the clearly marked unavailable store (`src/purchases/unavailable.ts`):
