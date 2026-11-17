@@ -126,6 +126,20 @@ OAuth error, e.g. `invalid_client` or `redirect_uri_mismatch` for a wrong client
 - The Play Store build is re-signed by **Play App Signing**: its Android client needs the **app signing key
   certificate** SHA-1 from Play Console (Test and release › App integrity), and one for the upload key if
   sideloaded upload-key builds should work too. The template debug keystore must never sign a production build.
+- **What happened on 17 Nov 2026 (internal testing track).** Sign-in in the Play-installed build listed the accounts
+  and then came back as "Sign-in was cancelled" without reaching the server: Google refuses to issue a token when the
+  installed app's signing certificate matches no Android client, and Credential Manager reports that as a
+  cancellation. Play Console › Test and release › App integrity › App signing showed three certificates besides the
+  upload key: the current app signing key's classical certificate, its post-quantum certificate ("Quantum-ready"
+  keys have both), and a previous app signing key (the key had been changed that day). An Android client was added
+  for each SHA-1 (package `com.sonsuzdongu.qutai`); sign-in then worked. Which of the three the phone needed was not
+  established, and a new client can take from five minutes to a few hours to take effect, so register every
+  certificate on that page, including previous keys, and wait before concluding it failed. The internal testing
+  track is enough for the app signing key to exist; the app needn't be released.
+- The consent screen went from Testing to **In production** the same day (any Google account can sign in; no
+  sensitive scopes, so no data-access verification), with app name, home page, privacy policy, the authorised domain
+  and a logo; "Verify branding" passed in about a minute without a Search Console step, and the verified branding
+  must then be published ("Publish branding") within seven days.
 - The production web client id goes into the production build's `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID` and the
   production Worker's `GOOGLE_CLIENT_IDS` (replacing the `PLACEHOLDER` in `backend/apps/api/wrangler.jsonc`
   locally or in CI before a deploy, see `backend/README.md` › What to set up at Apple and Google), together with
