@@ -10,7 +10,8 @@ import {
   View,
 } from 'react-native';
 import { AppModal } from '../ui/AppModal';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { previewRatio, tabCardWidth, tabColumns } from '../ui/layout';
 import { Browser, ClosedGroup, TabGroup, useBrowser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import { matchesTabQuery } from '../browser/tabSearch';
@@ -81,8 +82,15 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
   // Redraws on its own when tabs or groups change, not only when the app does.
   useBrowser(browser);
   const [incognito, setIncognito] = useState(browser.active.incognito);
-  const { width } = useWindowDimensions();
-  const cardWidth = (width - PADDING * 2 - GAP) / 2;
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  // Columns by the room between the side safe areas: 2 upright on a phone, 3 on its side, 4 on a wide tablet.
+  const contentWidth = width - insets.left - insets.right;
+  const columns = tabColumns(contentWidth);
+  const cardWidth = tabCardWidth(contentWidth, columns, PADDING, GAP);
+  // A group's border and padding (10) come out of its cards' widths.
+  const groupCardWidth = cardWidth - Math.ceil(10 / columns);
+  const ratio = previewRatio({ width, height });
 
   const [query, setQuery] = useState('');
   // Compare mode: tapping cards selects them instead of switching tabs.
@@ -312,7 +320,8 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
                     <TabCard
                       key={item.id}
                       tab={item}
-                      width={group ? cardWidth - 5 : cardWidth}
+                      width={group ? groupCardWidth : cardWidth}
+                      previewShape={ratio}
                       active={item.id === browser.activeId}
                       incognito={incognito}
                       selection={
@@ -553,6 +562,7 @@ function GroupHeader({
 function TabCard({
   tab,
   width,
+  previewShape,
   active,
   incognito,
   selection,
@@ -565,6 +575,8 @@ function TabCard({
 }: {
   tab: Tab;
   width: number;
+  /** Preview height / width: the window's shape (previewRatio in src/ui/layout.ts). */
+  previewShape: number;
   active: boolean;
   incognito: boolean;
   /** Set in compare mode. */
@@ -579,7 +591,7 @@ function TabCard({
 }) {
   const styles = useStyles();
   const theme = useTheme(incognito);
-  const previewHeight = width * 1.25;
+  const previewHeight = width * previewShape;
   // The new tab page has no host; the card falls back to its "New tab" title.
   const host = tab.isNewTab ? '' : hostOf(tab.url);
 

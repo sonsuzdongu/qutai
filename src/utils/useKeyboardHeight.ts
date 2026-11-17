@@ -43,7 +43,16 @@ export function useKeyboardHeight() {
             Keyboard.addListener('keyboardDidShow', (e) => update(e, cover(e.endCoordinates))),
             Keyboard.addListener('keyboardDidHide', (e) => update(e, 0)),
           ];
-    return () => subscriptions.forEach((s) => s.remove());
+    // The screen turned with the keyboard open: measured against the new window height (docs/landscape.md). The
+    // keyboard's own event may come before or after the window's, so both measure from what is current.
+    const turned = Dimensions.addEventListener('change', () => {
+      const metrics = Keyboard.isVisible() ? Keyboard.metrics() : undefined;
+      setHeight(metrics ? cover(metrics) : 0);
+    });
+    return () => {
+      subscriptions.forEach((s) => s.remove());
+      turned.remove();
+    };
   }, []);
   return height;
 }

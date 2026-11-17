@@ -1,7 +1,8 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useEffect, useState } from 'react';
-import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
+import { isShort, qrFrameSize } from '../ui/layout';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { openSettingsOrExplain } from '../device/settings';
 import { t } from '../i18n';
@@ -30,6 +31,9 @@ function Scanner({ onScan, onClose }: Omit<Props, 'visible'>) {
   }, [getPermission]);
   // The camera reports a code many times a second; only the first one counts.
   const [done, setDone] = useState(false);
+  // On a phone on its side the frame is smaller and Close sits lower, so the hint and Close don't overlap it.
+  const screen = useWindowDimensions();
+  const frame = qrFrameSize(screen);
 
   return (
     <View style={styles.container}>
@@ -65,9 +69,9 @@ function Scanner({ onScan, onClose }: Omit<Props, 'visible'>) {
         </View>
       )}
       <SafeAreaView style={styles.overlay} pointerEvents="box-none">
-        <View style={styles.frame} pointerEvents="none" />
+        <View style={[styles.frame, { width: frame, height: frame }]} pointerEvents="none" />
         <Text style={styles.hint}>{t('qr.scanHint')}</Text>
-        <Pressable onPress={onClose} style={styles.close} accessibilityRole="button">
+        <Pressable onPress={onClose} style={[styles.close, isShort(screen) && styles.closeLow]} accessibilityRole="button">
           <Text style={styles.closeText}>{t('common.close')}</Text>
         </Pressable>
       </SafeAreaView>
@@ -93,5 +97,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
   },
+  closeLow: { bottom: 12 },
   closeText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });
