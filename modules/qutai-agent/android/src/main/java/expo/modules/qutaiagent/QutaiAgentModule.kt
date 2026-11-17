@@ -23,7 +23,11 @@ class QutaiAgentModule : Module() {
 
     OnDestroy {
       // The JS runtime is going away (reload): no task can go on.
-      appContext.currentActivity?.runOnUiThread { AgentHub.setTask(null) } ?: AgentHub.setTask(null)
+      val reset = {
+        AgentHub.setTask(null)
+        AgentHub.setRequestInFlight(false)
+      }
+      appContext.currentActivity?.runOnUiThread { reset() } ?: reset()
     }
 
     /** The notification labels in the app's language. */
@@ -42,6 +46,7 @@ class QutaiAgentModule : Module() {
           paused = options["paused"] ?: d.paused,
           stalled = options["stalled"] ?: d.stalled,
           timeLimit = options["timeLimit"] ?: d.timeLimit,
+          finishing = options["finishing"] ?: d.finishing,
         ),
       )
     }
@@ -49,6 +54,14 @@ class QutaiAgentModule : Module() {
     /** A task that may continue in the background started (its title), or the task ended / may not (null). */
     AsyncFunction("setTask") { title: String? ->
       AgentHub.setTask(title)
+    }.runOnQueue(Queues.MAIN)
+
+    /**
+     * An own-key AI request started (true) or ended (false): leaving Qutai meanwhile keeps it alive until it ends
+     * (src/device/requestHold.ts). Also with "Keep working in the background" off.
+     */
+    AsyncFunction("holdRequest") { inFlight: Boolean ->
+      AgentHub.setRequestInFlight(inFlight)
     }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("setStep") { text: String ->

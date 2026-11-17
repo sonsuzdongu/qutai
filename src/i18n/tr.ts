@@ -1647,6 +1647,7 @@ export const tr: Record<keyof typeof en, string> = {
   'background.pausedTitle': 'Qutai duraklatıldı: devam etmek için geri dönün',
   'background.stalled': 'Sayfa arka planda yanıt vermeyi bıraktı.',
   'background.timeLimit': 'Görev arka planda 30 dakikalık sınıra kadar çalıştı.',
+  'background.finishing': 'Qutai bir yanıtı tamamlıyor',
   'background.thinking': 'Düşünüyor…',
   'background.needConfirm': 'Sonraki adım için onayınız gerekiyor.',
   'background.needScreen': 'Sonraki adım için Qutai’nin ekranda olması gerekiyor (örneğin ekran görüntüsü veya yeni sekme).',

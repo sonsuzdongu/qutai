@@ -194,6 +194,7 @@ export function configureBackgroundTasks() {
     paused: t('background.pausedTitle'),
     stalled: t('background.stalled'),
     timeLimit: t('background.timeLimit'),
+    finishing: t('background.finishing'),
   });
 }
 

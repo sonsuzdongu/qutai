@@ -1653,6 +1653,7 @@ export const ja: Record<keyof typeof en, string> = {
   'background.pausedTitle': 'Qutai が一時停止しました: 続けるにはアプリに戻ってください',
   'background.stalled': 'バックグラウンドでページが応答しなくなりました。',
   'background.timeLimit': 'バックグラウンドでの実行時間が上限の 30 分に達しました。',
+  'background.finishing': 'Qutai が返答を仕上げています',
   'background.thinking': '考えています…',
   'background.needConfirm': '次のステップには確認が必要です。',
   'background.needScreen': '次のステップには Qutai を画面に表示する必要があります（スクリーンショットや新しいタブなど）。',

@@ -1648,6 +1648,7 @@ export const es: Record<keyof typeof en, string> = {
   'background.pausedTitle': 'Qutai en pausa: vuelve para continuar',
   'background.stalled': 'La página dejó de responder en segundo plano.',
   'background.timeLimit': 'La tarea se ejecutó en segundo plano durante 30 minutos, el límite.',
+  'background.finishing': 'Qutai está terminando una respuesta',
   'background.thinking': 'Pensando…',
   'background.needConfirm': 'El siguiente paso necesita tu confirmación.',
   'background.needScreen': 'El siguiente paso necesita Qutai en pantalla (por ejemplo, una captura de pantalla o una pestaña nueva).',

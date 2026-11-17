@@ -11,4 +11,5 @@
   <string name="qutai_agent_stalled">Halaman berhenti merespons di latar belakang.</string>
   <string name="qutai_agent_time_limit">Tugas sudah lama berjalan di latar belakang.</string>
   <string name="qutai_agent_public_alert">Qutai memerlukan Anda</string>
+  <string name="qutai_agent_finishing">Qutai sedang menyelesaikan balasan</string>
 </resources>

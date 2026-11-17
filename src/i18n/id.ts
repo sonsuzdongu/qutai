@@ -1652,6 +1652,7 @@ export const id: Record<keyof typeof en, string> = {
   'background.pausedTitle': 'Qutai dijeda: kembali untuk melanjutkan',
   'background.stalled': 'Halaman berhenti merespons di latar belakang.',
   'background.timeLimit': 'Tugas berjalan di latar belakang selama 30 menit, batas maksimalnya.',
+  'background.finishing': 'Qutai sedang menyelesaikan balasan',
   'background.thinking': 'Berpikir…',
   'background.needConfirm': 'Langkah berikutnya memerlukan konfirmasi Anda.',
   'background.needScreen': 'Langkah berikutnya memerlukan Qutai di layar (misalnya untuk screenshot atau tab baru).',

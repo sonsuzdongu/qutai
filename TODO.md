@@ -493,9 +493,11 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
   phone cutting the app's connection while it is away (not reproduced on the emulator: the machine was too loaded).
   Qutai Credits (17 Nov 2026): each step carries `stepKey`; the server settles an identical re-send of a charged step
   at 0, once (backend README › Relay › Re-sent steps), and a stream cut while away is sent again on return instead of
-  failing. Own key: still paid twice when the connection is cut after the provider got the request; avoiding it needs
-  the connection kept alive while away (Android: a short foreground service during an in-flight request; iOS: a
-  background-task assertion), an owner decision
+  failing. Own key (owner accepted the fix, 17 Nov 2026): the request in flight is kept alive until it ends
+  (`src/device/requestHold.ts`; Android: the assistant's specialUse service in a short "finishing a reply" mode, quiet
+  notification, 3 minutes at most, not for incognito; iOS: `beginBackgroundTask`, ended with the request). Needs a
+  native rebuild; still to check on a phone: leave Qutai during a long own-key answer, it arrives once and is billed
+  once (provider's usage page), the notification goes away when it ends
 
 ## To try on the phone
 

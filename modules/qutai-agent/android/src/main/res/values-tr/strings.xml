@@ -10,4 +10,5 @@
   <string name="qutai_agent_stalled">Sayfa arka planda yanıt vermeyi bıraktı.</string>
   <string name="qutai_agent_time_limit">Görev uzun süre arka planda çalıştı.</string>
   <string name="qutai_agent_public_alert">Qutai sizi bekliyor</string>
+  <string name="qutai_agent_finishing">Qutai bir yanıtı tamamlıyor</string>
 </resources>

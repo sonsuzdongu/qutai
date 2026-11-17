@@ -1,3 +1,4 @@
+import { whileRequestInFlight } from '../device/requestHold';
 import { AnswerCost, createAnswerMeter, failedRequestCost } from '../ai/cost';
 import type { CustomHeader } from '../ai/customHeaders';
 import { getProvider } from '../ai/providers';
@@ -219,8 +220,11 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     let reply: Awaited<ReturnType<typeof provider.call>>;
     // The same on every send of this step: Qutai Credits charges an identical re-send of it once (README › Relay).
     const stepKey = newStepKey();
+    // Own key: a request still running when the user leaves Qutai is kept alive until it ends (src/device/requestHold.ts),
+    // so the phone doesn't cut it and the app doesn't send it (and the provider bill it) again on return.
+    const holdKey = { ownKey: opts.provider !== 'qutai', incognito: opts.audit.incognito() };
     const ask = () =>
-      provider.call({
+      whileRequestInFlight(holdKey, () => provider.call({
         apiKey: opts.apiKey,
         model: opts.model,
         system: prompt.text + (step === maxSteps - 1 ? LAST_STEP_PROMPT : ''),
@@ -254,7 +258,7 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
           resultHosts,
           memory: prompt.memory,
         },
-      });
+      }));
     const backgroundsBefore = getBackgroundCount();
     try {
       try {

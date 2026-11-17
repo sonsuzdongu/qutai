@@ -11,12 +11,15 @@ const SERVICE = 'expo.modules.qutaiagent.AgentTaskService';
 const SPECIAL_USE =
   'User-started AI assistant task: continues a browsing task the user started in the app (reading and operating ' +
   'web pages the user asked about, and the AI request) after the user leaves the app, only while that task runs, ' +
-  'with an ongoing notification that shows the current step and a Stop button. Opt-in setting.';
+  'with an ongoing notification that shows the current step and a Stop button. Opt-in setting. Also, for at most ' +
+  '3 minutes, finishes one AI request the user already sent when they leave the app while it is in flight, so it ' +
+  'is not cut and sent (and billed) twice; quiet notification, stops as soon as the request ends.';
 
 /**
  * Android: "Keep working in the background" for assistant tasks (src/device/backgroundTask.ts, modules/qutai-agent).
  * The specialUse foreground service, its permissions and the special use property Play review reads. No iOS part:
  * iOS gives an app only a short time to finish work after it leaves the screen, so tasks pause there as before.
+ * The same service also has a short "finishing a reply" mode (src/device/requestHold.ts), with the setting off too.
  */
 module.exports = function withBackgroundTasks(config) {
   return withAndroidManifest(config, (config) => {

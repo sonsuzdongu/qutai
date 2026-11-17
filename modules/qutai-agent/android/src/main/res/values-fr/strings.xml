@@ -11,4 +11,5 @@
   <string name="qutai_agent_stalled">La page a cessé de répondre en arrière-plan.</string>
   <string name="qutai_agent_time_limit">La tâche s’est exécutée longtemps en arrière-plan.</string>
   <string name="qutai_agent_public_alert">Qutai a besoin de vous</string>
+  <string name="qutai_agent_finishing">Qutai termine une réponse</string>
 </resources>

@@ -1641,6 +1641,7 @@ export const en = {
   'background.pausedTitle': 'Qutai paused: come back to continue',
   'background.stalled': 'The page stopped responding in the background.',
   'background.timeLimit': 'The task ran in the background for 30 minutes, the limit.',
+  'background.finishing': 'Qutai is finishing a reply',
   'background.thinking': 'Thinking…',
   'background.needConfirm': 'The next step needs your confirmation.',
   'background.needScreen': 'The next step needs Qutai on screen (for example a screenshot or a new tab).',

@@ -1641,6 +1641,7 @@ export const de: Record<keyof typeof en, string> = {
   'background.pausedTitle': 'Qutai pausiert: Kehren Sie zurück, um fortzufahren',
   'background.stalled': 'Die Seite hat im Hintergrund nicht mehr reagiert.',
   'background.timeLimit': 'Die Aufgabe lief 30 Minuten im Hintergrund – das ist die Höchstdauer.',
+  'background.finishing': 'Qutai stellt eine Antwort fertig',
   'background.thinking': 'Denkt nach…',
   'background.needConfirm': 'Der nächste Schritt erfordert Ihre Bestätigung.',
   'background.needScreen': 'Für den nächsten Schritt muss Qutai angezeigt werden (zum Beispiel für einen Screenshot oder einen neuen Tab).',

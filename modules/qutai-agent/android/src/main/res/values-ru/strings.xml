@@ -11,4 +11,5 @@
   <string name="qutai_agent_stalled">Страница перестала отвечать в фоне.</string>
   <string name="qutai_agent_time_limit">Задача слишком долго работала в фоне.</string>
   <string name="qutai_agent_public_alert">Qutai нужны вы</string>
+  <string name="qutai_agent_finishing">Qutai завершает ответ</string>
 </resources>

@@ -1653,6 +1653,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'background.pausedTitle': 'Qutai pausado: volte para continuar',
   'background.stalled': 'A página parou de responder em segundo plano.',
   'background.timeLimit': 'A tarefa foi executada em segundo plano por 30 minutos, o limite.',
+  'background.finishing': 'O Qutai está terminando uma resposta',
   'background.thinking': 'Pensando…',
   'background.needConfirm': 'A próxima etapa precisa da sua confirmação.',
   'background.needScreen': 'A próxima etapa precisa do Qutai na tela (por exemplo, uma captura de tela ou uma nova guia).',

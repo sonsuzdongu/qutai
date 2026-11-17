@@ -1652,6 +1652,7 @@ export const ru: Record<keyof typeof en, string> = {
   'background.pausedTitle': 'Qutai на паузе: вернитесь, чтобы продолжить',
   'background.stalled': 'Страница перестала отвечать в фоне.',
   'background.timeLimit': 'Задача работала в фоне 30 минут — это максимум.',
+  'background.finishing': 'Qutai завершает ответ',
   'background.thinking': 'Думаю…',
   'background.needConfirm': 'Для следующего шага нужно ваше подтверждение.',
   'background.needScreen': 'Для следующего шага Qutai должен быть на экране (например, для скриншота или новой вкладки).',

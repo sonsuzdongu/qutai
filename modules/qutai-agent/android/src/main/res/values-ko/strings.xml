@@ -11,4 +11,5 @@
   <string name="qutai_agent_stalled">백그라운드에서 페이지가 응답을 멈췄습니다.</string>
   <string name="qutai_agent_time_limit">작업이 백그라운드에서 오랫동안 실행되었습니다.</string>
   <string name="qutai_agent_public_alert">Qutai가 기다리고 있습니다</string>
+  <string name="qutai_agent_finishing">Qutai가 답변을 마무리하는 중입니다</string>
 </resources>

@@ -1651,6 +1651,7 @@ export const ko: Record<keyof typeof en, string> = {
   'background.pausedTitle': 'Qutai 일시중지됨: 계속하려면 돌아오세요',
   'background.stalled': '백그라운드에서 페이지가 응답을 멈췄습니다.',
   'background.timeLimit': '작업이 백그라운드 실행 제한 시간(30분)에 도달했습니다.',
+  'background.finishing': 'Qutai가 답변을 마무리하는 중입니다',
   'background.thinking': '생각하는 중…',
   'background.needConfirm': '다음 단계에 확인이 필요합니다.',
   'background.needScreen': '다음 단계는 Qutai가 화면에 있어야 합니다(예: 스크린샷이나 새 탭).',

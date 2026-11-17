@@ -62,6 +62,11 @@ object AgentHub {
   /** The wake lock times out on its own unless progress renews it. */
   private const val WAKE_MS = 5 * 60_000L
   private const val WATCHDOG_MS = 15_000L
+  /**
+   * "Finishing a reply" (src/device/requestHoldLogic.ts): the longest the service keeps one own-key AI request alive
+   * after Qutai left the screen. Mirrors REQUEST_HOLD_MAX_MS there.
+   */
+  const val REQUEST_HOLD_MS = 3 * 60_000L
   /** Page commands that time out in a row before the page counts as stalled. */
   private const val MAX_PAGE_TIMEOUTS = 2
   /** The notification's step text changes at most this often. */
@@ -80,6 +85,8 @@ object AgentHub {
     val paused: String,
     val stalled: String,
     val timeLimit: String,
+    /** The quiet notification while one AI request finishes in the background. */
+    val finishing: String,
   )
 
   private val main = Handler(Looper.getMainLooper())
@@ -104,6 +111,14 @@ object AgentHub {
   private var headlessTaskId = -1
   private var wakeLock: PowerManager.WakeLock? = null
   private var lastStepAt = 0L
+  /** JS says an own-key AI request is in flight (it may be held when Qutai leaves the screen). */
+  private var requestInFlight = false
+  /**
+   * The service runs in its "finishing a reply" mode: no task goes on, it only keeps the process (and its network
+   * connection) alive until the request ends, Qutai comes back, or [REQUEST_HOLD_MS] passes. Read by the service.
+   */
+  @Volatile var holding = false
+    private set
 
   fun init(appContext: Context, emitter: (String, Map<String, Any?>) -> Unit) {
     context = appContext.applicationContext
@@ -126,6 +141,7 @@ object AgentHub {
     paused = ctx.getString(R.string.qutai_agent_paused),
     stalled = ctx.getString(R.string.qutai_agent_stalled),
     timeLimit = ctx.getString(R.string.qutai_agent_time_limit),
+    finishing = ctx.getString(R.string.qutai_agent_finishing),
   )
 
   /** Main thread. A task started (title) or ended / may no longer continue in the background (null). */
@@ -163,6 +179,7 @@ object AgentHub {
 
   fun setForeground(value: Boolean) {
     foreground = value
+    if (value) stopHold()
     if (value) {
       // Back in the app: the task simply goes on there (or shows what it waits for).
       val was = state
@@ -172,7 +189,47 @@ object AgentHub {
       if (was != State.IDLE) emitState(null)
     } else if (title != null && state == State.IDLE) {
       startService()
+    } else if (requestInFlight && state == State.IDLE && !holding) {
+      startHold()
     }
+  }
+
+  /**
+   * Main thread. An own-key AI request started (true) or ended (false). Leaving the app while one runs starts the
+   * service in its "finishing a reply" mode; its end stops it at once. Nothing else of the task goes on.
+   */
+  fun setRequestInFlight(value: Boolean) {
+    requestInFlight = value
+    if (!value) stopHold()
+  }
+
+  private fun startHold() {
+    val ctx = context ?: return
+    holding = true
+    try {
+      ContextCompat.startForegroundService(ctx, Intent(ctx, AgentTaskService::class.java))
+    } catch (e: Exception) {
+      // Not allowed right now: the request goes on as without the hold (it may be cut and sent again on return).
+      Log.w(TAG, "Could not start the service to finish the request", e)
+      holding = false
+      return
+    }
+    acquireWakeLock(ctx, REQUEST_HOLD_MS)
+    main.removeCallbacks(holdLimit)
+    main.postDelayed(holdLimit, REQUEST_HOLD_MS)
+  }
+
+  private val holdLimit = Runnable { stopHold() }
+
+  /** Ends the "finishing a reply" mode (request ended, Qutai back, time cap, swiped away). */
+  fun stopHold() {
+    if (!holding) return
+    holding = false
+    main.removeCallbacks(holdLimit)
+    wakeLock?.let { if (it.isHeld) it.release() }
+    wakeLock = null
+    service?.finish()
+    service = null
   }
 
   /**
@@ -242,6 +299,8 @@ object AgentHub {
     main.removeCallbacks(watchdog)
     main.removeCallbacks(refreshStep)
     finishHeadlessTask()
+    // The service and wake lock belong to a request being finished, not to a task: stopHold ends them.
+    if (holding) return
     wakeLock?.let { if (it.isHeld) it.release() }
     wakeLock = null
     // A service that was requested but has not started yet finishes itself as soon as it starts (it must call
@@ -300,12 +359,12 @@ object AgentHub {
     if (tasks.isTaskRunning(id)) tasks.finishTask(id)
   }
 
-  private fun acquireWakeLock(ctx: Context) {
+  private fun acquireWakeLock(ctx: Context, timeoutMs: Long = WAKE_MS) {
     if (wakeLock?.isHeld == true) return
     val power = ctx.getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
     wakeLock = power.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Qutai:assistantTask").apply {
       setReferenceCounted(false)
-      acquire(WAKE_MS)
+      acquire(timeoutMs)
     }
   }
 

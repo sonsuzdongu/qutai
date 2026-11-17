@@ -37,7 +37,7 @@ class AgentTaskService : Service() {
       finish()
       return START_NOT_STICKY
     }
-    if (AgentHub.state != AgentHub.State.RUNNING) {
+    if (AgentHub.state != AgentHub.State.RUNNING && !AgentHub.holding) {
       // The task ended or paused (or the user came back) before the service started.
       finish()
       return START_NOT_STICKY
@@ -48,13 +48,13 @@ class AgentTaskService : Service() {
 
   /** Android 15+: the time limit of a foreground service type was reached (not expected for specialUse). */
   override fun onTimeout(startId: Int, fgsType: Int) {
-    AgentHub.systemTimeout()
+    if (AgentHub.holding) AgentHub.stopHold() else AgentHub.systemTimeout()
     finish()
   }
 
   /** Qutai was swiped away in recents: the task ends with the app. */
   override fun onTaskRemoved(rootIntent: Intent?) {
-    AgentHub.userStop()
+    if (AgentHub.holding) AgentHub.stopHold() else AgentHub.userStop()
     finish()
     super.onTaskRemoved(rootIntent)
   }
@@ -93,6 +93,7 @@ class AgentTaskService : Service() {
 
   private fun build(): Notification {
     val labels = AgentHub.labelsOrDefault(this)
+    if (AgentHub.holding) return buildFinishing(labels)
     // Private on the lock screen: the task title comes from the user's message.
     NotificationChannels.ensure(
       this, AgentHub.CHANNEL_ID, labels.channel, NotificationManager.IMPORTANCE_LOW, Notification.VISIBILITY_PRIVATE,
@@ -126,6 +127,27 @@ class AgentTaskService : Service() {
     }
     // Android 12+ may hold back a new foreground service notification for up to 10 s; this one should show at once.
     if (Build.VERSION.SDK_INT >= 31) builder.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
+    return builder.build()
+  }
+
+  /**
+   * "Finishing a reply": one generic line, nothing from the conversation, no Stop (it ends with the request, at most
+   * a few minutes), opens Qutai. Android may hold it back for up to 10 s, so a request that ends quickly never shows it.
+   */
+  private fun buildFinishing(labels: AgentHub.Labels): Notification {
+    NotificationChannels.ensure(
+      this, AgentHub.CHANNEL_ID, labels.channel, NotificationManager.IMPORTANCE_LOW, Notification.VISIBILITY_PRIVATE,
+    )
+    val builder = newBuilder()
+      .setSmallIcon(applicationInfo.icon)
+      .setContentTitle(labels.finishing)
+      .setOngoing(true)
+      .setOnlyAlertOnce(true)
+      .setShowWhen(false)
+      .setCategory(Notification.CATEGORY_PROGRESS)
+      .setVisibility(Notification.VISIBILITY_PUBLIC)
+      .setProgress(0, 0, true)
+    AgentHub.openAppIntent(this)?.let { builder.setContentIntent(it) }
     return builder.build()
   }
 
