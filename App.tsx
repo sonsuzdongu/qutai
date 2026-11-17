@@ -110,7 +110,8 @@ import { saveImage } from './src/device/saveImage';
 import { CaptureCancelled } from './src/device/fullPage';
 import { offerSettings, PermissionDeniedError } from './src/device/settings';
 import { saveFullPageScreenshot, saveScreenshot } from './src/device/screenshot';
-import { speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
+import { setSpeechNotice, speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
+import { speechText } from './src/chat/speechText';
 import { stopVoiceInput } from './src/device/voiceInput';
 import { PushToTalkBubble, usePushToTalk } from './src/components/PushToTalk';
 import { AUTO_LANGUAGE, automaticLanguage, languageName, listeningOrder } from './src/device/voiceLanguage';
@@ -766,6 +767,9 @@ function BrowserApp({
   // reader mode is turned on or off (it searches the text on screen).
   const [findFor, setFindFor] = useState<{ tabId: string; url: string; reader: boolean } | null>(null);
   const toast = useToast();
+  // "No Turkish voice is installed…" when something is read aloud in a language the phone has no voice for.
+  const showToast = toast.show;
+  useEffect(() => setSpeechNotice(showToast), [showToast]);
   // Downloads: notices from the request flow (a finished download shows in the download pill, with Open), the
   // notifications' "open Downloads" and "open this file" (Android: a finished file no app opened directly; Qutai
   // says why), and incognito entries leave the list with the session.
@@ -2579,7 +2583,8 @@ function BrowserApp({
                   return void (await shareAttachment(info));
                 }
                 if (action === 'stopSpeaking') return stopSpeaking();
-                await speak(text);
+                // The words without the Markdown marks; the voice follows the answer's language, not the app's.
+                await speak(speechText(text));
               })
             }
           />

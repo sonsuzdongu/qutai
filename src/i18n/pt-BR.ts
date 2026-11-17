@@ -357,6 +357,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'reader.pause': 'Pausar leitura',
   'reader.resume': 'Retomar leitura',
   'reader.stopReading': 'Parar leitura',
+  'speech.noVoice': 'Nenhuma voz em {language} está instalada neste telefone, então a voz padrão do telefone faz a leitura. Você pode adicionar uma nas configurações de conversão de texto em voz do telefone.',
   'reader.settings': 'Configurações de leitura',
   'reader.theme': 'Cores',
   'reader.theme.auto': 'Automático',

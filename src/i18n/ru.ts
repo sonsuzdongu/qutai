@@ -356,6 +356,7 @@ export const ru: Record<keyof typeof en, string> = {
   'reader.pause': 'Приостановить чтение',
   'reader.resume': 'Продолжить чтение',
   'reader.stopReading': 'Остановить чтение',
+  'speech.noVoice': 'На этом телефоне не установлен голос для языка «{language}», поэтому текст читает голос телефона по умолчанию. Голос можно добавить в настройках синтеза речи телефона.',
   'reader.settings': 'Настройки чтения',
   'reader.theme': 'Тема',
   'reader.theme.auto': 'Авто',

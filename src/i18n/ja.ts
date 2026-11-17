@@ -357,6 +357,7 @@ export const ja: Record<keyof typeof en, string> = {
   'reader.pause': '読み上げを一時停止',
   'reader.resume': '読み上げを再開',
   'reader.stopReading': '読み上げを停止',
+  'speech.noVoice': 'この端末には{language}の音声がインストールされていないため、端末の標準の音声で読み上げます。端末のテキスト読み上げ設定で追加できます。',
   'reader.settings': 'リーダーの設定',
   'reader.theme': '配色',
   'reader.theme.auto': '自動',

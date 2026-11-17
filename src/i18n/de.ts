@@ -356,6 +356,7 @@ export const de: Record<keyof typeof en, string> = {
   'reader.pause': 'Vorlesen pausieren',
   'reader.resume': 'Vorlesen fortsetzen',
   'reader.stopReading': 'Vorlesen beenden',
+  'speech.noVoice': 'Auf diesem Telefon ist keine Stimme für {language} installiert, deshalb liest die Standardstimme des Telefons. Sie können eine in den Sprachausgabe-Einstellungen des Telefons hinzufügen.',
   'reader.settings': 'Leseansicht-Einstellungen',
   'reader.theme': 'Farben',
   'reader.theme.auto': 'Auto',

@@ -345,6 +345,7 @@ export const en = {
   'reader.pause': 'Pause reading',
   'reader.resume': 'Resume reading',
   'reader.stopReading': 'Stop reading',
+  'speech.noVoice': 'No {language} voice is installed on this phone, so the phone’s default voice reads it. You can add one in your phone’s text-to-speech settings.',
   'reader.settings': 'Reader settings',
   'reader.theme': 'Colours',
   'reader.theme.auto': 'Auto',

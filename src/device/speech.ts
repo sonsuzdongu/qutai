@@ -1,7 +1,10 @@
 import * as Speech from 'expo-speech';
 import { useSyncExternalStore } from 'react';
+import { Platform } from 'react-native';
 import type { Tab } from '../browser/Tab';
+import { pickVoice, speechLanguage, type VoiceChoice, type VoiceInfo } from '../chat/speechLanguage';
 import { t } from '../i18n';
+import { languageName } from './voiceLanguage';
 
 /** Upper bound per utterance; Android's engine rejects long inputs. */
 const CHUNK_CHARS = 3000;
@@ -17,6 +20,53 @@ const listeners = new Set<() => void>();
 export type ReaderReading = { tabId: string; index: number; paused: boolean };
 let reading: ReaderReading | null = null;
 const readingListeners = new Set<() => void>();
+
+/** Shows a short message (a toast); set by the app. */
+let notice: (message: string) => void = () => {};
+
+export function setSpeechNotice(show: (message: string) => void) {
+  notice = show;
+}
+
+/** The phone's voices, kept for a while (a voice may be installed meanwhile). Empty lists aren't kept. */
+let voiceCache: { voices: VoiceInfo[]; at: number } | null = null;
+const VOICE_CACHE_MS = 10 * 60 * 1000;
+/** How long reading waits for the voice list the first time; after that it reads without it. */
+const VOICE_WAIT_MS = 1500;
+/** Languages the user was already told have no voice (once per app run). */
+const toldMissing = new Set<string>();
+
+async function phoneVoices(): Promise<VoiceInfo[]> {
+  if (voiceCache && Date.now() - voiceCache.at < VOICE_CACHE_MS) return voiceCache.voices;
+  const listed = Speech.getAvailableVoicesAsync()
+    .then((voices) => {
+      // Android engines may answer with nothing before they are ready: unknown, asked again next time.
+      if (voices.length) voiceCache = { voices, at: Date.now() };
+      return voices as VoiceInfo[];
+    })
+    .catch(() => [] as VoiceInfo[]);
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<VoiceInfo[]>((resolve) => (timer = setTimeout(() => resolve([]), VOICE_WAIT_MS)));
+  const voices = await Promise.race([listed, late]);
+  clearTimeout(timer);
+  return voices;
+}
+
+/**
+ * The speech options for a text: the voice of the language it is written in (chat/speechLanguage.ts), `hint` (a
+ * page's `lang`, or what the assistant named) only where the text doesn't say. Without a voice for that language
+ * the phone's default voice reads, and the user is told once.
+ */
+async function voiceFor(text: string, hint?: string): Promise<VoiceChoice> {
+  const language = speechLanguage(text, hint);
+  const choice = pickVoice(language, language ? await phoneVoices() : [], Platform.OS);
+  if (__DEV__) console.log(`[speech] text language ${language ?? 'unknown'} → ${JSON.stringify(choice)}`);
+  if (choice.missing && !toldMissing.has(choice.missing)) {
+    toldMissing.add(choice.missing);
+    notice(t('speech.noVoice', { language: languageName(choice.missing) }));
+  }
+  return choice;
+}
 
 /** Turns the microphone off (voice input) before anything is read aloud: the two never overlap. */
 let microphoneGuard: () => void = () => {};
@@ -59,8 +109,11 @@ export function splitForSpeech(text: string, maxChars = CHUNK_CHARS): string[] {
   return chunks;
 }
 
-/** Reads text aloud, replacing anything currently being read. */
-export async function speak(text: string, language?: string): Promise<void> {
+/**
+ * Reads text aloud, replacing anything currently being read, in the voice of the language the text is written in;
+ * `hint` (a page's `lang`, or what the assistant named) counts only where the text's language isn't clear.
+ */
+export async function speak(text: string, hint?: string): Promise<void> {
   microphoneGuard();
   setReading(null);
   await Speech.stop();
@@ -68,6 +121,9 @@ export async function speak(text: string, language?: string): Promise<void> {
   if (chunks.length === 0) return;
 
   const current = ++session;
+  const { language, voice } = await voiceFor(text, hint);
+  // Stopped, or something else started reading, while the voices were looked up.
+  if (current !== session) return;
   setSpeaking(true);
   const finish = () => {
     // A newer speak() or stop() may already own the state.
@@ -77,6 +133,7 @@ export async function speak(text: string, language?: string): Promise<void> {
     const last = i === chunks.length - 1;
     Speech.speak(chunk, {
       language,
+      voice,
       onDone: last ? finish : undefined,
       onStopped: finish,
       onError: finish,
@@ -98,6 +155,10 @@ export async function speakReader(tab: Tab, from = 0): Promise<{ chars: number; 
   const start = Math.max(0, Math.min(from, blocks.length - 1));
   const current = ++session;
   const owned = () => current === session;
+  // The article's own text decides; the page's `lang` is often missing or wrong (a Turkish article on an "en" page).
+  const { language, voice } = await voiceFor(blocks.join('\n'), article.lang);
+  // Stopped, or something else started reading, while the voices were looked up.
+  if (!owned()) return { chars: 0, truncated: false };
   const finish = () => {
     if (!owned()) return;
     setSpeaking(false);
@@ -114,10 +175,10 @@ export async function speakReader(tab: Tab, from = 0): Promise<{ chars: number; 
   if (queue.length === 0) throw new Error(t('error.nothingToRead'));
   setSpeaking(true);
   setReading({ tabId: tab.id, index: start, paused: false });
-  const language = article.lang || undefined;
   queue.forEach((item, k) => {
     Speech.speak(item.chunk, {
       language,
+      voice,
       onStart: item.first
         ? () => {
             if (owned()) setReading({ tabId: tab.id, index: item.index, paused: false });

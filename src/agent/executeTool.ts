@@ -19,6 +19,7 @@ import { MAX_SMS_BODY, SmsOffer } from '../device/sms';
 import { MAX_WHATSAPP_BODY, normalizeWhatsAppNumber, WhatsAppOffer } from '../device/whatsapp';
 import { ensureLocationPermission, LocationUnavailableError, readPosition } from '../device/location';
 import { openSystemSettings, PermissionDeniedError } from '../device/settings';
+import { speechText } from '../chat/speechText';
 import { speak, speakPage } from '../device/speech';
 import type { ToolImage } from '../ai/types';
 import type { AttachmentInfo } from '../chat/attachments';
@@ -1698,7 +1699,8 @@ async function runTool(
       case 'read_aloud': {
         const text = typeof input.text === 'string' ? input.text.trim() : '';
         if (text) {
-          await speak(text, typeof input.language === 'string' ? input.language : undefined);
+          // The text's own language decides the voice; the language the model named is only a hint.
+          await speak(speechText(text), typeof input.language === 'string' ? input.language : undefined);
           return { content: `Started reading ${text.length} characters aloud.`, isError: false };
         }
         if (tab.isNewTab)

@@ -355,6 +355,7 @@ export const ko: Record<keyof typeof en, string> = {
   'reader.pause': '읽기 일시중지',
   'reader.resume': '계속 읽기',
   'reader.stopReading': '읽기 중지',
+  'speech.noVoice': '이 휴대전화에 {language} 음성이 설치되어 있지 않아 휴대전화의 기본 음성으로 읽습니다. 휴대전화의 텍스트 음성 변환 설정에서 추가할 수 있습니다.',
   'reader.settings': '읽기 모드 설정',
   'reader.theme': '색상',
   'reader.theme.auto': '자동',

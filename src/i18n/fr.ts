@@ -356,6 +356,7 @@ export const fr: Record<keyof typeof en, string> = {
   'reader.pause': 'Mettre la lecture en pause',
   'reader.resume': 'Reprendre la lecture',
   'reader.stopReading': 'Arrêter la lecture',
+  'speech.noVoice': 'Aucune voix en {language} n’est installée sur ce téléphone : la voix par défaut du téléphone lit le texte. Vous pouvez en ajouter une dans les réglages de synthèse vocale du téléphone.',
   'reader.settings': 'Réglages du mode lecture',
   'reader.theme': 'Couleurs',
   'reader.theme.auto': 'Auto',
