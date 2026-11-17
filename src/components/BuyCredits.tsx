@@ -33,8 +33,24 @@ function closeBuyCredits() {
   emit();
 }
 
-/** Drawn once at the app's root (App.tsx), above setup and the browser. */
+// Where the screen is drawn: the newest mounted host. On iOS a modal can't be presented while another one is up (UIKit
+// refuses: "already presenting"), so a screen that is itself a modal (Settings) mounts its own host inside it, and the
+// screen opens there; the app's root host takes over again when that modal closes. Android stacks modals, but one host
+// at a time keeps it from showing twice there too.
+const hosts: number[] = [];
+let nextHost = 0;
+
+/** Drawn at the app's root (App.tsx), above setup and the browser, and inside Settings (SettingsModal.tsx). */
 export function BuyCreditsHost() {
+  const [id] = useState(() => ++nextHost);
+  useEffect(() => {
+    hosts.push(id);
+    emit();
+    return () => {
+      hosts.splice(hosts.indexOf(id), 1);
+      emit();
+    };
+  }, [id]);
   const visible = useSyncExternalStore(
     (l) => {
       listeners.add(l);
@@ -42,7 +58,7 @@ export function BuyCreditsHost() {
         listeners.delete(l);
       };
     },
-    () => open,
+    () => open && hosts[hosts.length - 1] === id,
   );
   if (!creditsEnabled) return null;
   return (
