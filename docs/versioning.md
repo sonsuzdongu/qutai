@@ -61,6 +61,7 @@ npm run build:aab -- --pro-mode     # builds/qutai-<version>-<build>-pro-mode.aa
 npm run build:ipa -- --pro-mode     # builds/qutai-<version>-<build>-pro-mode.ipa
 ```
 
+`npm run build:aab:pro-mode` and `npm run build:ipa:pro-mode` are the same two commands, shorter to type.
 Without `--pro-mode` the package is the plain app (no `-pro-mode` in the name). `-- --dry-run` prints the commands and
 runs nothing. `scripts/build/release.mjs` never changes the version; it
 

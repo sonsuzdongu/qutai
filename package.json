@@ -85,6 +85,8 @@
     "version:bump": "node scripts/version/bump.mjs",
     "build:aab": "node scripts/build/release.mjs aab",
     "build:ipa": "node scripts/build/release.mjs ipa",
+    "build:aab:pro-mode": "node scripts/build/release.mjs aab --pro-mode",
+    "build:ipa:pro-mode": "node scripts/build/release.mjs ipa --pro-mode",
     "test:version": "node --test scripts/version/rule.test.mjs",
     "test:layout": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/layout-tests/*.test.ts",
     "test:siterules": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/site-rules-tests/*.test.ts",
