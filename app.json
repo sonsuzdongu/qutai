@@ -118,7 +118,7 @@
       [
         "expo-media-library",
         {
-          "photosPermission": false,
+          "photosPermission": "Qutai opens your photos only when you choose one to attach to a message to the assistant or to upload to a web page; it never looks through your library on its own.",
           "savePhotosPermission": "Qutai adds the screenshots and images you choose to save to your photos.",
           "granularPermissions": []
         }
@@ -176,7 +176,7 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": false,
+          "photosPermission": "Qutai opens your photos only when you choose one to attach to a message to the assistant or to upload to a web page; it never looks through your library on its own.",
           "cameraPermission": "Qutai uses the camera to scan QR codes, to take a photo or video for a web page’s upload field or a photo to attach to a message to the assistant, and for sites you allow to use it, such as video calls.",
           "microphonePermission": "Qutai uses the microphone when you speak a message to the assistant, for sites you allow to use it, such as video calls, and to record sound when you take a video to upload to a web page."
         }

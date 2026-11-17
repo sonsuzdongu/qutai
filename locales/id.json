@@ -2,6 +2,7 @@
   "ios": {
     "CFBundleDisplayName": "Qutai",
     "NSPhotoLibraryAddUsageDescription": "Qutai menambahkan screenshot dan gambar yang Anda pilih untuk disimpan ke foto Anda.",
+    "NSPhotoLibraryUsageDescription": "Qutai membuka foto Anda hanya saat Anda memilih foto untuk dilampirkan ke pesan kepada asisten atau diunggah ke halaman web; Qutai tidak pernah menelusuri galeri Anda dengan sendirinya.",
     "NSCameraUsageDescription": "Qutai menggunakan kamera untuk memindai kode QR, mengambil foto atau video untuk kolom upload di halaman web atau foto untuk dilampirkan ke pesan kepada asisten, dan untuk situs yang Anda izinkan menggunakannya, seperti panggilan video.",
     "NSMicrophoneUsageDescription": "Qutai menggunakan mikrofon saat Anda mengucapkan pesan kepada asisten, untuk situs yang Anda izinkan menggunakannya, seperti panggilan video, dan untuk merekam suara saat Anda mengambil video untuk diupload ke halaman web.",
     "NSSpeechRecognitionUsageDescription": "Qutai mengubah ucapan Anda kepada asisten menjadi teks. Jika ucapan Anda tidak dapat dikenali di perangkat itu sendiri, layanan ucapan Apple menerima audionya untuk melakukannya; Qutai dan penyedia AI Anda hanya menerima teksnya.",

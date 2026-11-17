@@ -2,6 +2,7 @@
   "ios": {
     "CFBundleDisplayName": "Qutai",
     "NSPhotoLibraryAddUsageDescription": "Qutai는 저장하기로 선택한 스크린샷과 이미지를 사진 보관함에 추가합니다.",
+    "NSPhotoLibraryUsageDescription": "Qutai는 어시스턴트에게 보낼 메시지에 첨부하거나 웹 페이지에 업로드할 사진을 직접 고를 때에만 사진을 엽니다. 보관함을 임의로 살펴보지 않습니다.",
     "NSCameraUsageDescription": "Qutai는 QR 코드를 스캔하고, 웹페이지의 업로드 입력란에 올릴 사진이나 동영상 또는 어시스턴트에게 보내는 메시지에 첨부할 사진을 촬영하며, 화상 통화처럼 사용을 허용한 사이트에서 카메라를 사용합니다.",
     "NSMicrophoneUsageDescription": "Qutai는 어시스턴트에게 메시지를 음성으로 말할 때, 화상 통화처럼 사용을 허용한 사이트에서, 그리고 웹페이지에 업로드할 동영상을 촬영할 때 소리를 녹음하기 위해 마이크를 사용합니다.",
     "NSSpeechRecognitionUsageDescription": "Qutai는 어시스턴트에게 말한 내용을 텍스트로 변환합니다. 기기 자체에서 음성을 인식할 수 없는 경우 이를 위해 Apple의 음성 서비스가 오디오를 받습니다. Qutai와 AI 제공업체는 텍스트만 받습니다.",

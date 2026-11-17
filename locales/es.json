@@ -2,6 +2,7 @@
   "ios": {
     "CFBundleDisplayName": "Qutai",
     "NSPhotoLibraryAddUsageDescription": "Qutai agrega a tus fotos las capturas de pantalla y las imágenes que decidas guardar.",
+    "NSPhotoLibraryUsageDescription": "Qutai abre tus fotos solo cuando eliges una para adjuntarla a un mensaje al asistente o subirla a una página web; nunca revisa tu fototeca por su cuenta.",
     "NSCameraUsageDescription": "Qutai usa la cámara para escanear códigos QR, para tomar una foto o un video para el campo de subida de una página web o una foto que adjuntar a un mensaje al asistente, y para los sitios a los que permitas usarla, como las videollamadas.",
     "NSMicrophoneUsageDescription": "Qutai usa el micrófono cuando le dices un mensaje al asistente, para los sitios a los que permitas usarlo, como las videollamadas, y para grabar el sonido cuando tomas un video para subirlo a una página web.",
     "NSSpeechRecognitionUsageDescription": "Qutai convierte en texto lo que le dices al asistente. Cuando tu voz no se puede reconocer en el propio dispositivo, el servicio de voz de Apple recibe el audio para hacerlo; Qutai y tu proveedor de IA solo reciben el texto.",

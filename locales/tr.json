@@ -2,6 +2,7 @@
   "ios": {
     "CFBundleDisplayName": "Qutai",
     "NSPhotoLibraryAddUsageDescription": "Qutai, kaydetmek istediğiniz ekran görüntülerini ve görselleri fotoğraflarınıza ekler.",
+    "NSPhotoLibraryUsageDescription": "Qutai, fotoğraflarınızı yalnızca asistana göndereceğiniz bir mesaja eklemek ya da bir web sayfasına yüklemek üzere bir fotoğraf seçtiğinizde açar; arşivinize kendiliğinden bakmaz.",
     "NSCameraUsageDescription": "Qutai kamerayı QR kodlarını okurken, bir web sayfasına yüklemek için fotoğraf ya da video ya da asistana göndereceğiniz mesaja eklemek için fotoğraf çekerken ve izin verdiğiniz siteler (örneğin görüntülü görüşmeler) için kullanır.",
     "NSMicrophoneUsageDescription": "Qutai mikrofonu asistana mesajınızı söylediğinizde, izin verdiğiniz sitelerde (örneğin görüntülü görüşmelerde) ve bir web sayfasına yüklemek için video çektiğinizde sesi kaydetmek için kullanır.",
     "NSSpeechRecognitionUsageDescription": "Qutai asistana söylediklerinizi yazıya döker. Konuşmanız cihazın kendisinde tanınamadığında bunun için sesi Apple’ın konuşma hizmeti alır; Qutai ve yapay zekâ sağlayıcınız yalnızca metni alır.",
