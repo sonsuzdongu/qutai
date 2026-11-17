@@ -5,13 +5,15 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const client = `${root}client/`;
-const { render, messages, SITE_URL, CHECKED } = await import(`${root}server/entry-server.js`);
+const { render, messages, SITE_URL, CHECKED, formatDate } = await import(`${root}server/entry-server.js`);
+const privacy = JSON.parse(await readFile(fileURLToPath(new URL('../src/data/privacy.json', import.meta.url)), 'utf8'));
 
 if (SITE_URL.endsWith('.example')) {
   console.warn(`\n⚠  SITE_URL is still the placeholder ${SITE_URL}: set it in src/lib/site.ts before deploying.\n`);
 }
 
 const template = await readFile(`${client}index.html`, 'utf8');
+const css = template.match(/<link rel="stylesheet"[^>]*>/)?.[0] ?? '';
 const manifest = JSON.parse(await readFile(`${client}.vite/manifest.json`, 'utf8'));
 const LANGS = ['en', 'tr'];
 const LOCALE = { en: 'en_US', tr: 'tr_TR' };
@@ -93,11 +95,75 @@ for (const lang of LANGS) {
   await writeFile(`${client}${lang}/index.html`, html);
 }
 
+// The app's privacy policy: /en/privacy-policy/ and /tr/privacy-policy/, static, no script. The text is the app's own
+// (src/data/privacy.json, copied by `npm run legal`); "• " lines become a list.
+const policyUrl = (lang) => `${SITE_URL}/${lang}/privacy-policy/`;
+function policyBody(text) {
+  const out = [];
+  let list = [];
+  const flush = () => {
+    if (list.length) out.push(`<ul>${list.map((li) => `<li>${esc(li)}</li>`).join('')}</ul>`);
+    list = [];
+  };
+  for (const line of text.split('\n')) {
+    if (line.startsWith('• ')) list.push(line.slice(2));
+    else {
+      flush();
+      if (line.trim()) out.push(`<p>${esc(line)}</p>`);
+    }
+  }
+  flush();
+  return out.join('\n          ');
+}
+for (const lang of LANGS) {
+  const t = messages[lang];
+  const doc = privacy[lang];
+  const other = lang === 'en' ? 'tr' : 'en';
+  const page = `<!doctype html>
+<html lang="${lang}" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${esc(t['policy.metaTitle'])}</title>
+    <meta name="description" content="${esc(t['policy.metaDescription'])}" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f2e7cf" />
+    <link rel="canonical" href="${policyUrl(lang)}" />
+    <link rel="alternate" hreflang="en" href="${policyUrl('en')}" />
+    <link rel="alternate" hreflang="tr" href="${policyUrl('tr')}" />
+    <link rel="alternate" hreflang="x-default" href="${policyUrl('en')}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    ${css}
+  </head>
+  <body>
+    <header class="policy-top">
+      <a class="brand" href="/${lang}/" aria-label="${esc(t['nav.home'])}"><img src="/img/q-64.webp" width="32" height="32" alt="" /><span>Qutai</span></a>
+      <a class="policy-lang" href="/${other}/privacy-policy/" hreflang="${other}" lang="${other}">${esc(t['lang.other'])}</a>
+    </header>
+    <main id="main" class="section policy">
+      <article>
+        <h1>${esc(doc.title)}</h1>
+        <p class="policy-meta">${esc(t['policy.updated'])}: <time datetime="${privacy.updated}">${esc(formatDate(privacy.updated, lang))}</time></p>
+        <p class="policy-note">${esc(t['policy.note'])}</p>
+        <p class="policy-intro">${esc(doc.intro)}</p>
+${doc.sections
+  .map((sec) => `        <section>\n          <h2>${esc(sec.heading)}</h2>\n          ${policyBody(sec.body)}\n        </section>`)
+  .join('\n')}
+      </article>
+      <p class="policy-home"><a href="/${lang}/">${esc(t['policy.home'])}</a></p>
+    </main>
+  </body>
+</html>
+`;
+  await mkdir(`${client}${lang}/privacy-policy`, { recursive: true });
+  await writeFile(`${client}${lang}/privacy-policy/index.html`, page);
+}
+
 // The bare root is answered by the Worker (language redirect); no static file may shadow it.
 await rm(`${client}index.html`);
 
 // 404: static, both languages, no script.
-const css = template.match(/<link rel="stylesheet"[^>]*>/)?.[0] ?? '';
 await writeFile(
   `${client}404.html`,
   `<!doctype html>
@@ -126,11 +192,15 @@ await writeFile(`${client}robots.txt`, `User-agent: *\nAllow: /\n\nSitemap: ${SI
 const alternates = LANGS.map((l) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${pageUrl(l)}" />`)
   .concat(`    <xhtml:link rel="alternate" hreflang="x-default" href="${pageUrl('en')}" />`)
   .join('\n');
+const policyAlternates = LANGS.map((l) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${policyUrl(l)}" />`)
+  .concat(`    <xhtml:link rel="alternate" hreflang="x-default" href="${policyUrl('en')}" />`)
+  .join('\n');
 await writeFile(
   `${client}sitemap.xml`,
   `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${LANGS.map((l) => `  <url>\n    <loc>${pageUrl(l)}</loc>\n    <lastmod>${CHECKED}</lastmod>\n${alternates}\n  </url>`).join('\n')}
+${LANGS.map((l) => `  <url>\n    <loc>${policyUrl(l)}</loc>\n    <lastmod>${privacy.updated}</lastmod>\n${policyAlternates}\n  </url>`).join('\n')}
 </urlset>
 `,
 );
@@ -152,4 +222,4 @@ await writeFile(
 );
 
 await rm(`${client}.vite`, { recursive: true });
-console.log(`Prerendered ${LANGS.map((l) => `/${l}/`).join(', ')}, 404.html, robots.txt, sitemap.xml, _headers`);
+console.log(`Prerendered ${LANGS.map((l) => `/${l}/, /${l}/privacy-policy/`).join(', ')}, 404.html, robots.txt, sitemap.xml, _headers`);

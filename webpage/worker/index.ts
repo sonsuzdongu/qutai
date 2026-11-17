@@ -1,5 +1,6 @@
 /**
- * The dynamic parts of the site: `/` sends the visitor to `/en/` or `/tr/`, `/intent/sign-in/email` hands the
+ * The dynamic parts of the site: `/` sends the visitor to `/en/` or `/tr/` (and `/privacy-policy` to that language's
+ * `/<lang>/privacy-policy/`), `/intent/sign-in/email` hands the
  * sign-in email's link to the app (worker/intent.ts), and `/.well-known/` serves the App Links / Universal Links files
  * when they are configured (worker/wellKnown.ts).
  *
@@ -32,10 +33,11 @@ export default {
       if (request.method !== 'GET' && request.method !== 'HEAD') return new Response(null, { status: 405, headers: { Allow: 'GET, HEAD' } });
       return intentPage(request, intentConfig(env));
     }
-    if (url.pathname !== '/') return env.ASSETS.fetch(request);
+    const policy = url.pathname === '/privacy-policy' || url.pathname === '/privacy-policy/';
+    if (url.pathname !== '/' && !policy) return env.ASSETS.fetch(request);
 
     const lang = pickLanguage(request.headers.get('Cookie'), request.headers.get('Accept-Language'));
-    const target = new URL(`/${lang}/`, url);
+    const target = new URL(policy ? `/${lang}/privacy-policy/` : `/${lang}/`, url);
     target.search = url.search;
     return new Response(null, {
       status: 302,

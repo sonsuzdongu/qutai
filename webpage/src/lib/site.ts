@@ -6,4 +6,5 @@ export const SITE_URL = 'https://qutai.sonsuzdongu.com';
 export const REPO_URL = 'https://github.com/sonsuzdongu/qutai';
 export const ISSUES_URL = `${REPO_URL}/issues`;
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
-export const APP_PRIVACY_URL = `${REPO_URL}/blob/main/src/legal/documents.ts`;
+/** The app's privacy policy, a page of this site in each language (scripts/prerender.mjs, text from the app). */
+export const privacyPolicyPath = (lang: 'en' | 'tr') => `/${lang}/privacy-policy/`;

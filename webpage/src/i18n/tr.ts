@@ -268,6 +268,13 @@ export const tr: Messages = {
   'footer.license': 'Lisans',
   'footer.appPrivacy': 'Uygulamanın gizlilik politikası',
 
+  'policy.metaTitle': 'Gizlilik Politikası · Qutai',
+  'policy.metaDescription':
+    'Qutai uygulamasının gizlilik politikası: telefonunuzda kalanlar, telefonunuzdan çıkanlar ve kime gittiği, Qutai hesabınız ve Qutai Kredileri.',
+  'policy.updated': 'Son güncelleme',
+  'policy.note': 'Qutai’nin iPhone ve Android uygulamasının gizlilik politikası; uygulamanın gösterdiği metnin aynısı.',
+  'policy.home': 'Qutai ana sayfasına dön',
+
   'notFound.title': 'Sayfa bulunamadı',
   'notFound.body': 'Böyle bir sayfa yok.',
   'notFound.home': 'Ana sayfaya git',

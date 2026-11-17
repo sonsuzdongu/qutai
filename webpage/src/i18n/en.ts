@@ -264,6 +264,13 @@ export const en = {
   'footer.license': 'Licence',
   'footer.appPrivacy': 'App privacy policy',
 
+  'policy.metaTitle': 'Privacy Policy · Qutai',
+  'policy.metaDescription':
+    'The privacy policy of the Qutai app: what stays on your phone, what leaves it and to whom, your Qutai account and Qutai Credits.',
+  'policy.updated': 'Last updated',
+  'policy.note': 'This is the privacy policy of the Qutai app for iPhone and Android, the same text the app shows.',
+  'policy.home': 'Back to the Qutai home page',
+
   'notFound.title': 'Page not found',
   'notFound.body': 'This page does not exist.',
   'notFound.home': 'Go to the home page',

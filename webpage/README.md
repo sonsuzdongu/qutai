@@ -21,6 +21,7 @@ npm run lint
 npm run typecheck  # site and Worker
 npm run assets     # regenerate the images in public/ from ../assets (logo, icons, social previews)
 npm run art        # size the miniatures in art-src/ into src/art/ (see ART.md)
+npm run legal      # copy the app's privacy policy into src/data/privacy.json (below)
 npm run deploy     # build, then `wrangler deploy` (asks you to log in to Cloudflare the first time)
 ```
 
@@ -42,7 +43,7 @@ npm run deploy     # build, then `wrangler deploy` (asks you to log in to Cloudf
 | `src/data/comparison.ts` | The comparison table: rows, Qutai's column, every competitor cell with its source and date |
 | `src/lib/motion.ts` | Parallax and reveals: transform/opacity only, off under `prefers-reduced-motion` |
 | `src/entry-server.tsx`, `src/main.tsx` | Prerender entry and the browser entry (loads only the page language's strings, then hydrates) |
-| `scripts/prerender.mjs` | Writes `en/index.html`, `tr/index.html` with their head tags and JSON-LD, `404.html`, `robots.txt`, `sitemap.xml`, `_headers` |
+| `scripts/prerender.mjs` | Writes `en/index.html`, `tr/index.html` with their head tags and JSON-LD, the privacy policy pages, `404.html`, `robots.txt`, `sitemap.xml`, `_headers` |
 | `scripts/make-assets.mjs` | Builds `public/` images from the app's `assets/` |
 | `worker/` | The Worker: `/` → `/en/` or `/tr/`; `/intent/sign-in/email` (below) |
 
@@ -53,6 +54,15 @@ Cookie`, not cached) by, in order: the `lang` cookie, which the language switch 
 Turkish or English entry of `Accept-Language` by preference (`tr`, `tr-TR` → Turkish; other languages are
 skipped); English. Everything else is a static file. `/en` redirects to `/en/` (Cloudflare's
 `auto-trailing-slash`); unknown paths get `404.html`.
+
+### The app's privacy policy
+
+`/en/privacy-policy/` and `/tr/privacy-policy/` show the app's privacy policy, linked from the footer; `/privacy-policy`
+redirects to the visitor's language like `/` does. The text is the app's own, never edited here: the store builds'
+policy in `../src/legal/proDocuments.ts` (with the Qutai account and Qutai Credits; it also covers using your own AI
+key). `npm run legal` copies it into `src/data/privacy.json`; commit that file. `npm run check` fails when the copy no
+longer matches the app, so after the app's policy changes, run `npm run legal` and rebuild. The pages are static, with
+no script.
 
 ### The sign-in email's link
 

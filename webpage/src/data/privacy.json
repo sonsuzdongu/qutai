@@ -1,0 +1,87 @@
+{
+  "updated": "2026-11-17",
+  "en": {
+    "title": "Privacy Policy",
+    "intro": "Qutai is a web browser with an AI assistant. We built it so your browsing stays on your phone. Qutai’s own server is used only for your Qutai account and for Qutai Credits, and only when you choose them. We do not sell your data, and Qutai has no analytics, tracking or advertising.",
+    "sections": [
+      {
+        "heading": "What stays on your phone",
+        "body": "Your tabs, history, bookmarks, saved pages, downloads, site permissions, the assistant’s memory, its action history and your conversations are stored only on this device, also when you are signed in, unless you back them up to your Qutai account (below). API keys and your sign-in are kept in the phone’s encrypted storage. Incognito tabs write nothing to disk; their conversations are not saved."
+      },
+      {
+        "heading": "What leaves your phone, and to whom",
+        "body": "• Websites you visit receive what any browser sends them.\n• With your own API key, your message and the content the assistant needs (the page text, screenshots when it looks at a page, files you attach, your memory and custom instructions) go directly to the AI provider you chose (Anthropic, OpenAI, Google, OpenRouter or your own server). Qutai’s server is not involved.\n• With Qutai Credits, the same content goes to Qutai’s server first, which passes it to the AI provider (Anthropic, OpenAI or Google) under Qutai’s own account and sends the answer back. Qutai’s server does not store or log this content. The app asks before you use Qutai Credits for the first time.\n• If web search is on, the AI provider may run searches for you. The providers’ privacy policies and terms apply to what they receive.\n• If search suggestions are on, what you type in the address bar is sent to your search engine (never from incognito tabs)."
+      },
+      {
+        "heading": "Your Qutai account",
+        "body": "An account is optional; you need one only for Qutai Credits. You sign in with Apple or Google. Qutai’s server keeps: an account number; the Apple or Google sign-in the account belongs to and the email address that sign-in shares (if any); when the account was created and last used; your signed-in devices (a random device id, not your phone’s identifiers); and your credits: the balance, purchases and credits added, and for each assistant request the model, the number of tokens, what it cost and when. It does not keep your messages, pages or answers."
+      },
+      {
+        "heading": "Backups in your Qutai account",
+        "body": "Only if you choose it (Settings › Backup), Qutai’s server keeps your backup file: the same data as a backup you export (bookmarks, history, the assistant’s memory, saved tasks, site settings and preferences; open tabs, conversations, activity and AI keys only if you include them). It is encrypted on your phone with a password you choose before it is sent; Qutai cannot read it and cannot recover the password, which is kept only on your phone. With each backup the server also keeps when it was made, its size, the app version and the kind of phone (for example “iPhone · iOS 26”). The newest backups are kept (3 at present) and older ones are deleted; you can delete them at any time, and deleting your account deletes them."
+      },
+      {
+        "heading": "Buying credits",
+        "body": "Credits are bought in the app through the App Store or Google Play; your payment details stay with Apple or Google and never reach Qutai. A payments service (RevenueCat) receives your Qutai account number and the store’s purchase record so the purchase can be confirmed and added to your account. Qutai keeps a record of each purchase (store, transaction, product, credits, price paid and dates), which tax law requires us to keep, also after the account is deleted, without the link to you."
+      },
+      {
+        "heading": "Passwords and payment details",
+        "body": "Qutai doesn’t let the assistant’s memory keep passwords, card numbers, card security codes, card expiry dates, one-time codes or bank account numbers (IBAN). ID and passport numbers can be kept only under identity or travel; they are hidden from the AI service, which sees only a label, and Qutai types the number into a site itself after you confirm. Before the assistant first enters your saved personal details on a site, Qutai asks you (you can change this for each site). You can also require your confirmation before every action, and block the assistant on sites of your choice."
+      },
+      {
+        "heading": "Your control",
+        "body": "You can view and delete the assistant’s memory, clear history, cookies and other data in Settings, and remove your API keys at any time. You can delete your backups from Qutai’s server in Settings › Backup. You can stop using Qutai Credits, sign out, or delete your account in Settings › Account: deleting it removes the account, its balance and its history from Qutai’s server (purchase records stay without the link to you, as above) and asks the payments service to delete its record of you. Uninstalling Qutai deletes everything it stored on the phone."
+      },
+      {
+        "heading": "Children",
+        "body": "Qutai is not directed at children under 13."
+      },
+      {
+        "heading": "Changes",
+        "body": "If this policy changes, Qutai shows the new version and asks you to accept it before you continue."
+      }
+    ]
+  },
+  "tr": {
+    "title": "Gizlilik Politikası",
+    "intro": "Qutai, yapay zekâ asistanı olan bir web tarayıcısıdır. Gezinmeniz telefonunuzda kalsın diye tasarlandı. Qutai’nin kendi sunucusu yalnızca Qutai hesabınız ve Qutai Kredileri için, yalnızca siz bunları seçtiğinizde kullanılır. Verilerinizi satmayız; Qutai’de analitik, izleme veya reklam yoktur.",
+    "sections": [
+      {
+        "heading": "Telefonunuzda kalanlar",
+        "body": "Sekmeleriniz, geçmişiniz, yer imleriniz, kaydedilen sayfalar, indirilenler, site izinleri, asistanın hafızası, işlem geçmişi ve sohbetleriniz, oturum açmış olsanız da yalnızca bu cihazda saklanır; bunları Qutai hesabınıza yedeklemeyi seçerseniz yedek sunucuda da tutulur (aşağıda). API anahtarları ve oturumunuz telefonun şifreli deposunda tutulur. Gizli sekmeler diske hiçbir şey yazmaz; sohbetleri kaydedilmez."
+      },
+      {
+        "heading": "Telefonunuzdan çıkanlar ve kime gittiği",
+        "body": "• Ziyaret ettiğiniz siteler, her tarayıcının gönderdiği bilgileri alır.\n• Kendi API anahtarınızla, mesajınız ve asistanın ihtiyaç duyduğu içerik (sayfa metni, sayfaya baktığında ekran görüntüleri, eklediğiniz dosyalar, hafızanız ve özel talimatlarınız) doğrudan seçtiğiniz yapay zekâ sağlayıcısına (Anthropic, OpenAI, Google, OpenRouter veya kendi sunucunuz) gider. Qutai’nin sunucusu araya girmez.\n• Qutai Kredileriyle aynı içerik önce Qutai’nin sunucusuna gider; sunucu onu Qutai’nin kendi hesabıyla yapay zekâ sağlayıcısına (Anthropic, OpenAI veya Google) iletir ve yanıtı geri gönderir. Qutai’nin sunucusu bu içeriği saklamaz ve kayda geçirmez. Uygulama, Qutai Kredilerini ilk kez kullanmadan önce size sorar.\n• Web araması açıksa yapay zekâ sağlayıcısı sizin için arama yapabilir. Sağlayıcıların aldıkları için kendi gizlilik politikaları ve koşulları geçerlidir.\n• Arama önerileri açıksa adres çubuğuna yazdıklarınız arama motorunuza gönderilir (gizli sekmelerden asla)."
+      },
+      {
+        "heading": "Qutai hesabınız",
+        "body": "Hesap isteğe bağlıdır; yalnızca Qutai Kredileri için gerekir. Apple veya Google ile oturum açarsınız. Qutai’nin sunucusu şunları saklar: bir hesap numarası; hesabın bağlı olduğu Apple veya Google girişi ve bu girişin paylaştığı e-posta adresi (varsa); hesabın oluşturulma ve son kullanılma zamanı; oturum açtığınız cihazlar (telefonunuzun kimlikleri değil, rastgele bir cihaz numarası); ve kredileriniz: bakiye, satın almalar ve eklenen krediler, her asistan isteği için model, token sayısı, maliyet ve zaman. Mesajlarınızı, sayfaları veya yanıtları saklamaz."
+      },
+      {
+        "heading": "Qutai hesabınızdaki yedekler",
+        "body": "Yalnızca siz seçerseniz (Ayarlar › Yedekleme), Qutai’nin sunucusu yedek dosyanızı saklar: dışa aktardığınız bir yedekle aynı veriler (yer imleri, geçmiş, asistanın hafızası, kayıtlı görevler, site ayarları ve tercihler; açık sekmeler, sohbetler, etkinlik ve yapay zekâ anahtarları yalnızca bunları dahil ederseniz). Dosya gönderilmeden önce telefonunuzda seçtiğiniz bir parolayla şifrelenir; Qutai onu okuyamaz ve yalnızca telefonunuzda tutulan parolayı kurtaramaz. Sunucu her yedekle birlikte ne zaman yapıldığını, boyutunu, uygulama sürümünü ve telefon türünü (örneğin “iPhone · iOS 26”) de saklar. En yeni yedekler tutulur (şu an 3), eskileri silinir; yedekleri istediğiniz an silebilirsiniz, hesabınızı silmek onları da siler."
+      },
+      {
+        "heading": "Kredi satın alma",
+        "body": "Krediler uygulama içinden App Store veya Google Play aracılığıyla satın alınır; ödeme bilgileriniz Apple veya Google’da kalır, Qutai’ye asla ulaşmaz. Satın almanın doğrulanıp hesabınıza eklenebilmesi için bir ödeme hizmeti (RevenueCat) Qutai hesap numaranızı ve mağazanın satın alma kaydını alır. Qutai her satın almanın kaydını (mağaza, işlem, ürün, kredi, ödenen tutar ve tarihler) vergi mevzuatı gereği saklar; hesap silindikten sonra da, sizinle bağlantısı olmadan."
+      },
+      {
+        "heading": "Şifreler ve ödeme bilgileri",
+        "body": "Qutai, asistanın hafızasına şifre, kart numarası, kart güvenlik kodu, kartın son kullanma tarihi, tek kullanımlık kod ve banka hesap numarası (IBAN) kaydedilmesine izin vermez. Kimlik ve pasaport numaraları yalnızca kimlik veya seyahat bilgisi olarak kaydedilebilir; yapay zekâ hizmetinden gizlenir, hizmet yalnızca bir etiket görür ve numarayı siz onayladıktan sonra siteye Qutai kendisi yazar. Asistan kayıtlı kişisel bilgilerinizi bir siteye ilk kez girmeden önce Qutai size sorar (bunu her site için değiştirebilirsiniz). Ayrıca her işlemden önce onayınızın istenmesini seçebilir, seçtiğiniz sitelerde asistanı engelleyebilirsiniz."
+      },
+      {
+        "heading": "Kontrol sizde",
+        "body": "Asistanın hafızasını Ayarlar’dan görüp silebilir; geçmişi, çerezleri ve diğer verileri temizleyebilir, API anahtarlarınızı istediğiniz an kaldırabilirsiniz. Yedeklerinizi Ayarlar › Yedekleme’den Qutai’nin sunucusundan silebilirsiniz. Ayarlar › Hesap’tan Qutai Kredilerini kullanmayı bırakabilir, oturumu kapatabilir ya da hesabınızı silebilirsiniz: silmek hesabı, bakiyesini ve geçmişini Qutai’nin sunucusundan kaldırır (satın alma kayıtları yukarıdaki gibi sizinle bağlantısı olmadan kalır) ve ödeme hizmetinden sizinle ilgili kaydını silmesini ister. Qutai’yi kaldırmak telefonda sakladığı her şeyi siler."
+      },
+      {
+        "heading": "Çocuklar",
+        "body": "Qutai 13 yaşından küçük çocuklara yönelik değildir."
+      },
+      {
+        "heading": "Değişiklikler",
+        "body": "Bu politika değişirse Qutai yeni sürümü gösterir ve devam etmeden önce kabul etmenizi ister."
+      }
+    ]
+  }
+}

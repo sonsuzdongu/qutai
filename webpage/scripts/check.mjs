@@ -2,8 +2,10 @@
 import { readFile, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { pickLanguage } from '../worker/language.ts';
+import { policyFromApp } from './make-legal.mjs';
 
 const dist = fileURLToPath(new URL('../dist/client/', import.meta.url));
+const privacy = JSON.parse(await readFile(new URL('../src/data/privacy.json', import.meta.url), 'utf8'));
 const failures = [];
 const expect = (ok, what) => {
   if (!ok) failures.push(what);
@@ -63,6 +65,20 @@ for (const lang of ['en', 'tr']) {
 const css = await readFile(new URL(`../dist/client/${(await readFile(`${dist}en/index.html`, 'utf8')).match(/href="\/(assets\/[^"]+\.css)"/)[1]}`, import.meta.url), 'utf8');
 expect(!/url\(\s*["']?(https?:)?\/\//i.test(css), 'CSS loads something from another origin');
 
+// The app's privacy policy: a static page per language, and the same text the app has.
+for (const lang of ['en', 'tr']) {
+  const html = await readFile(`${dist}${lang}/privacy-policy/index.html`, 'utf8').catch(() => '');
+  expect(html.includes(`<html lang="${lang}"`), `${lang}/privacy-policy: page with lang attribute`);
+  expect(html.includes(`<h1>${privacy[lang].title}</h1>`), `${lang}/privacy-policy: title`);
+  expect(html.includes(`rel="canonical" href="`) && html.includes('hreflang="x-default"'), `${lang}/privacy-policy: canonical and hreflang`);
+  expect(!/<script\b/.test(html), `${lang}/privacy-policy: no script`);
+  expect((html.match(/<h2>/g) ?? []).length === privacy[lang].sections.length, `${lang}/privacy-policy: every section`);
+  const home = await readFile(`${dist}${lang}/index.html`, 'utf8');
+  expect(home.includes(`href="/${lang}/privacy-policy/"`), `${lang}: footer links to the privacy policy page`);
+}
+expect(JSON.stringify(privacy) === JSON.stringify(await policyFromApp()), 'src/data/privacy.json differs from the app (src/legal/proDocuments.ts): run npm run legal');
+expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/privacy-policy/'), 'sitemap lists the privacy policy');
+
 for (const f of ['robots.txt', 'sitemap.xml', '404.html', '_headers', 'og-en.png', 'og-tr.png', 'apple-touch-icon.png']) {
   await access(`${dist}${f}`).catch(() => failures.push(`missing ${f}`));
 }
@@ -75,4 +91,4 @@ if (failures.length) {
   console.error(`✗ ${failures.length} check(s) failed:\n  ${failures.join('\n  ')}`);
   process.exit(1);
 }
-console.log(`✓ ${cases.length} language cases, both pages, no third-party loads`);
+console.log(`✓ ${cases.length} language cases, both pages and their privacy policy pages, no third-party loads`);
