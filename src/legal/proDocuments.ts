@@ -6,7 +6,7 @@ import type { LegalDocument, LegalKind, LegalLanguage } from './documents';
  * (README.md › Accounts, › Qutai Credits; backend/README.md › Purchases); have them checked by a lawyer before the
  * store release (TODO.md › Legal).
  */
-export const PRO_LEGAL_UPDATED = '2026-11-16';
+export const PRO_LEGAL_UPDATED = '2026-11-17';
 
 export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
   en: {
@@ -21,7 +21,8 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
           heading: 'What stays on your phone',
           body:
             'Your tabs, history, bookmarks, saved pages, downloads, site permissions, the assistant’s memory, its ' +
-            'action history and your conversations are stored only on this device, also when you are signed in. API ' +
+            'action history and your conversations are stored only on this device, also when you are signed in, unless ' +
+            'you back them up to your Qutai account (below). API ' +
             'keys and your sign-in are kept in the phone’s encrypted storage. Incognito tabs write nothing to disk; ' +
             'their conversations are not saved.',
         },
@@ -52,6 +53,17 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'not keep your messages, pages or answers.',
         },
         {
+          heading: 'Backups in your Qutai account',
+          body:
+            'Only if you choose it (Settings › Backup), Qutai’s server keeps your backup file: the same data as a backup ' +
+            'you export (bookmarks, history, the assistant’s memory, saved tasks, site settings and preferences; open ' +
+            'tabs, conversations, activity and AI keys only if you include them). It is encrypted on your phone with a ' +
+            'password you choose before it is sent; Qutai cannot read it and cannot recover the password, which is kept ' +
+            'only on your phone. With each backup the server also keeps when it was made, its size, the app version and ' +
+            'the kind of phone (for example “iPhone · iOS 26”). The newest backups are kept (3 at present) and older ones ' +
+            'are deleted; you can delete them at any time, and deleting your account deletes them.',
+        },
+        {
           heading: 'Buying credits',
           body:
             'Credits are bought in the app through the App Store or Google Play; your payment details stay with Apple ' +
@@ -74,7 +86,8 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
           heading: 'Your control',
           body:
             'You can view and delete the assistant’s memory, clear history, cookies and other data in Settings, and ' +
-            'remove your API keys at any time. You can stop using Qutai Credits, sign out, or delete your account in ' +
+            'remove your API keys at any time. You can delete your backups from Qutai’s server in Settings › Backup. You ' +
+            'can stop using Qutai Credits, sign out, or delete your account in ' +
             'Settings › Account: deleting it removes the account, its balance and its history from Qutai’s server ' +
             '(purchase records stay without the link to you, as above) and asks the payments service to delete its ' +
             'record of you. Uninstalling Qutai deletes everything it stored on the phone.',
@@ -163,7 +176,8 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
           heading: 'Telefonunuzda kalanlar',
           body:
             'Sekmeleriniz, geçmişiniz, yer imleriniz, kaydedilen sayfalar, indirilenler, site izinleri, asistanın ' +
-            'hafızası, işlem geçmişi ve sohbetleriniz, oturum açmış olsanız da yalnızca bu cihazda saklanır. API ' +
+            'hafızası, işlem geçmişi ve sohbetleriniz, oturum açmış olsanız da yalnızca bu cihazda saklanır; bunları ' +
+            'Qutai hesabınıza yedeklemeyi seçerseniz yedek sunucuda da tutulur (aşağıda). API ' +
             'anahtarları ve oturumunuz telefonun şifreli deposunda tutulur. Gizli sekmeler diske hiçbir şey yazmaz; ' +
             'sohbetleri kaydedilmez.',
         },
@@ -195,6 +209,18 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'sayfaları veya yanıtları saklamaz.',
         },
         {
+          heading: 'Qutai hesabınızdaki yedekler',
+          body:
+            'Yalnızca siz seçerseniz (Ayarlar › Yedekleme), Qutai’nin sunucusu yedek dosyanızı saklar: dışa ' +
+            'aktardığınız bir yedekle aynı veriler (yer imleri, geçmiş, asistanın hafızası, kayıtlı görevler, site ' +
+            'ayarları ve tercihler; açık sekmeler, sohbetler, etkinlik ve yapay zekâ anahtarları yalnızca bunları dahil ' +
+            'ederseniz). Dosya gönderilmeden önce telefonunuzda seçtiğiniz bir parolayla şifrelenir; Qutai onu okuyamaz ' +
+            've yalnızca telefonunuzda tutulan parolayı kurtaramaz. Sunucu her yedekle birlikte ne zaman yapıldığını, ' +
+            'boyutunu, uygulama sürümünü ve telefon türünü (örneğin “iPhone · iOS 26”) de saklar. En yeni yedekler ' +
+            'tutulur (şu an 3), eskileri silinir; yedekleri istediğiniz an silebilirsiniz, hesabınızı silmek onları da ' +
+            'siler.',
+        },
+        {
           heading: 'Kredi satın alma',
           body:
             'Krediler uygulama içinden App Store veya Google Play aracılığıyla satın alınır; ödeme bilgileriniz Apple ' +
@@ -218,7 +244,8 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
           heading: 'Kontrol sizde',
           body:
             'Asistanın hafızasını Ayarlar’dan görüp silebilir; geçmişi, çerezleri ve diğer verileri temizleyebilir, API ' +
-            'anahtarlarınızı istediğiniz an kaldırabilirsiniz. Ayarlar › Hesap’tan Qutai Kredilerini kullanmayı ' +
+            'anahtarlarınızı istediğiniz an kaldırabilirsiniz. Yedeklerinizi Ayarlar › Yedekleme’den Qutai’nin ' +
+            'sunucusundan silebilirsiniz. Ayarlar › Hesap’tan Qutai Kredilerini kullanmayı ' +
             'bırakabilir, oturumu kapatabilir ya da hesabınızı silebilirsiniz: silmek hesabı, bakiyesini ve geçmişini ' +
             'Qutai’nin sunucusundan kaldırır (satın alma kayıtları yukarıdaki gibi sizinle bağlantısı olmadan kalır) ve ' +
             'ödeme hizmetinden sizinle ilgili kaydını silmesini ister. Qutai’yi kaldırmak telefonda sakladığı her şeyi ' +

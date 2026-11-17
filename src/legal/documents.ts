@@ -12,8 +12,11 @@ import { PRO_DOCUMENTS, PRO_LEGAL_UPDATED } from './proDocuments';
  * app now enforces about passwords, cards, IBANs and ID numbers (16 Nov 2026).
  */
 const OPEN_SOURCE_LEGAL_VERSION = 2;
-/** 2: the pro-mode documents describe the account, Qutai Credits and buying credits (16 Nov 2026). */
-const PRO_LEGAL_VERSION = 2;
+/**
+ * 2: the pro-mode documents describe the account, Qutai Credits and buying credits (16 Nov 2026).
+ * 3: backups in the Qutai account (what the server keeps, encrypted with the user's password; 17 Nov 2026).
+ */
+const PRO_LEGAL_VERSION = 3;
 export const LEGAL_VERSION = accountsEnabled ? PRO_LEGAL_VERSION : OPEN_SOURCE_LEGAL_VERSION;
 export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-16';
 
