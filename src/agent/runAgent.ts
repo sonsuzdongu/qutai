@@ -217,8 +217,10 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     const prompt = await systemPrompt(opts);
     const sendTurns = await withAttachedImages(compactHistory(turns, opts.serverLimits?.maxImages));
     let reply: Awaited<ReturnType<typeof provider.call>>;
-    try {
-      reply = await provider.call({
+    // The same on every send of this step: Qutai Credits charges an identical re-send of it once (README › Relay).
+    const stepKey = newStepKey();
+    const ask = () =>
+      provider.call({
         apiKey: opts.apiKey,
         model: opts.model,
         system: prompt.text + (step === maxSteps - 1 ? LAST_STEP_PROMPT : ''),
@@ -239,6 +241,7 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
           ...(opts.customInstructions?.trim() ? { customInstructions: opts.customInstructions } : {}),
           memoryTools: !!opts.memory,
           ...(continuation ? { continuation: continuation.continuation } : {}),
+          stepKey,
         },
         maxOutputTokens: opts.maxOutputTokens,
         endpoint: opts.endpoint,
@@ -252,6 +255,21 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
           memory: prompt.memory,
         },
       });
+    const backgroundsBefore = getBackgroundCount();
+    try {
+      try {
+        reply = await ask();
+      } catch (e) {
+        // Qutai Credits: the phone cut the answer's stream while Qutai was away. The server settled what it sent;
+        // the step is sent again once Qutai is back, with the same key and body, which the server doesn't charge.
+        const cut = e instanceof RelayError && e.kind === 'stream_lost' && getBackgroundCount() !== backgroundsBefore;
+        if (!cut || signal.aborted) throw e;
+        await waitForForeground(signal);
+        if (signal.aborted) throw e;
+        if (streamed) onEvent({ type: 'text', text: '' });
+        streamed = false;
+        reply = await ask();
+      }
     } catch (e) {
       // A failed request may still have been billed; its usage is unknown (Qutai Credits says what it charged).
       meter.add(failedRequestCost(e));
@@ -506,4 +524,10 @@ export function compactHistory(turns: Turn[], maxImages?: number): Turn[] {
     out.unshift({ role: 'tool_results', results: results.reverse() });
   }
   return out;
+}
+
+/** A step's id for Qutai Credits (16–64 of a-z, 0-9 and -): unique per step, nothing about the user or the task. */
+function newStepKey(): string {
+  const part = () => Math.random().toString(36).slice(2, 10).padEnd(8, '0');
+  return `${Date.now().toString(36)}-${part()}${part()}`;
 }

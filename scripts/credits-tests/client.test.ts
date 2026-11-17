@@ -192,6 +192,20 @@ test('no answer at all: tried again, then "can’t be reached"', async () => {
   assert.equal(calls, 3);
 });
 
+test('a re-send after the connection was cut sends the identical body, step key included (the server charges it once)', async () => {
+  const bodies: string[] = [];
+  const client = fakeServer().client({
+    fetch: async (_url, init) => {
+      bodies.push(String(init?.body));
+      throw new TypeError('Network request failed');
+    },
+  });
+  await assert.rejects(client.relayStream({ ...BODY, stepKey: 'step-0123456789abcdef' }, signal(), () => {}));
+  assert.equal(bodies.length, 3);
+  assert.ok(bodies.every((b) => b === bodies[0]));
+  assert.equal(JSON.parse(bodies[0]!).stepKey, 'step-0123456789abcdef');
+});
+
 test('stopping aborts the request as it is', async () => {
   const controller = new AbortController();
   const server = fakeServer();

@@ -39,6 +39,8 @@ export interface RelayRequest {
   input: unknown[];
   /** Only to continue an Anthropic `pause_turn`: the continuation the paused answer carried. */
   continuation?: string;
+  /** The step's id, the same on every send of it: an identical re-send of a charged step is free (once). */
+  stepKey?: string;
 }
 
 /**

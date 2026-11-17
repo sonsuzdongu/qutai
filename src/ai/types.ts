@@ -130,6 +130,11 @@ export type ModelRequest = {
     memoryTools: boolean;
     /** Continues the paused answer that ends `turns` (Anthropic `pause_turn`, the relay's signed continuation). */
     continuation?: string;
+    /**
+     * This step's id, the same on every send of it: Qutai Credits doesn't charge an identical re-send of a step it
+     * already charged (the phone cut the connection and the answer was lost).
+     */
+    stepKey?: string;
   };
 };
 

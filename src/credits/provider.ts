@@ -174,6 +174,7 @@ export function createCreditsProvider(deps: CreditsDeps): Omit<Provider, 'label'
               : {}),
           },
           ...(agent.continuation ? { continuation: agent.continuation } : {}),
+          ...(agent.stepKey ? { stepKey: agent.stepKey } : {}),
         };
         return ADAPTERS[base.provider]({ ...req, apiKey: '', model }, relayWire(client, base, counter, notes));
       };
