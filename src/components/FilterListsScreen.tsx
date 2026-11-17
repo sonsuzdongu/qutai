@@ -1,5 +1,6 @@
 import { useState, useSyncExternalStore } from 'react';
-import { Linking, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlockingError, contentBlocking, ListKind, ListState, MAX_LIST_BYTES } from '../content/blocking';
 import { hasNativeBlocking } from '../device/contentBlocker';
@@ -90,7 +91,7 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
   })();
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <ScreenHeader title={t('blocking.title')} right={{ label: t('common.done'), onPress: onClose }} />
         <ScrollView contentContainerStyle={styles.content}>
@@ -148,7 +149,7 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
         </ScrollView>
       </SafeAreaView>
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

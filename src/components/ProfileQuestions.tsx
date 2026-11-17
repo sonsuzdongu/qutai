@@ -1,7 +1,6 @@
 import { ComponentRef, ReactNode, useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
-  Modal,
   Platform,
   Pressable,
   ScrollViewInstance,
@@ -11,6 +10,7 @@ import {
   TextInputProps,
   View,
 } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { getLocales } from 'expo-localization';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { MemoryCategory } from '../agent/memory';
@@ -881,7 +881,7 @@ export function ProfileQuestionsScreen({
     if (!backHandler.current?.()) onClose();
   };
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={back}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={back}>
       {visible && (
         <SafeAreaView style={styles.screen} edges={MODAL_SCREEN_EDGES}>
           <View style={styles.header}>
@@ -902,7 +902,7 @@ export function ProfileQuestionsScreen({
         </SafeAreaView>
       )}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

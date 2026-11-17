@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { deleteOfflineFile, readOfflinePage } from '../device/offline';
@@ -18,10 +19,10 @@ type Props = { visible: boolean; onOpenLive: (url: string) => void; onClose: () 
 /** Pages saved for reading without a connection. */
 export function OfflinePagesScreen({ visible, onOpenLive, onClose }: Props) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {visible && <OfflineList onOpenLive={onOpenLive} onClose={onClose} />}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

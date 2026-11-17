@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AttachmentInfo } from '../chat/attachments';
 import { presetInput, ResizePreset } from '../chat/imageEdit';
@@ -77,7 +78,7 @@ export function AttachmentPreview({
     ? [info.width && info.height ? `${info.width}×${info.height}` : '', formatSize(info.size)].filter(Boolean).join(' · ')
     : '';
   return (
-    <Modal visible={!!info} animationType="fade" onRequestClose={onClose} supportedOrientations={['portrait', 'landscape']}>
+    <AppModal visible={!!info} animationType="fade" onRequestClose={onClose}>
       {/* The resize panel's size fields stay above the keyboard; the image shrinks to make room. */}
       <KeyboardAvoidingContainer style={[styles.preview, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         <View style={styles.bar}>
@@ -128,7 +129,7 @@ export function AttachmentPreview({
           </View>
         ) : null}
       </KeyboardAvoidingContainer>
-    </Modal>
+    </AppModal>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Platform, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LAST_STEP_PROMPT, RESEARCH_PROMPT, WEB_SEARCH_PROMPT } from '../agent/runAgent';
 import { customInstructionsPrompt, SYSTEM_PROMPT } from '../agent/systemPrompt';
@@ -48,7 +49,7 @@ const PREVIEW_CHARS = 3000;
 /** "What was sent to the AI": each request to the provider, newest first, and what left the phone with it. */
 export function SentLogScreen({ visible, conversation, customInstructions, showCost = true, viaQutai = false, onClose }: Props) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {visible && (
         <SentLog
           conversation={conversation}
@@ -59,7 +60,7 @@ export function SentLogScreen({ visible, conversation, customInstructions, showC
         />
       )}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

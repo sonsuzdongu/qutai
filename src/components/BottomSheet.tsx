@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Modal, Platform, Pressable, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles } from '../ui/theme';
@@ -51,7 +52,7 @@ export function BottomSheet({ visible, onClose, style, contentStyle, bottomPaddi
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboardHeight();
   return (
-    <Modal
+    <AppModal
       visible={visible}
       transparent
       animationType="slide"
@@ -88,7 +89,7 @@ export function BottomSheet({ visible, onClose, style, contentStyle, bottomPaddi
         </ScrollView>
       </View>
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

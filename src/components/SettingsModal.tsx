@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ALWAYS_ALLOW_KINDS, AlwaysAllowKind, withKind } from '../agent/alwaysAllow';
 import { cleanCustomInstructions, MAX_CUSTOM_INSTRUCTIONS } from '../agent/systemPrompt';
@@ -89,11 +90,11 @@ class BackRoute {
 export function SettingsModal({ visible, onClose, ...rest }: Props) {
   const [back] = useState(() => new BackRoute());
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => back.run()}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => back.run()}>
       {/* Mounted only while visible, so it always opens on the main page with fresh fields. */}
       {visible && <SettingsPages {...rest} onClose={onClose} back={back} />}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

@@ -2,7 +2,6 @@ import { ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Modal,
   Pressable,
   SectionList,
   StyleSheet,
@@ -10,6 +9,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { pickBookmarkFile, PickerUnavailableError, shareBookmarkFile } from '../device/bookmarksFile';
 import { bump, success, tick } from '../device/haptics';
@@ -65,11 +65,11 @@ const PAGE_SIZE = 60;
 /** Bookmarks and history in one screen, like the library in mobile browsers. */
 export function LibraryScreen({ visible, initialTab, onOpen, onClose }: Props) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {/* Mounted only while visible, so it always opens fresh on the requested tab. */}
       {visible && <LibraryContent initialTab={initialTab} onOpen={onOpen} onClose={onClose} />}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

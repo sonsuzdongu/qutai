@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { useKeyboardHeight } from '../utils/useKeyboardHeight';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
@@ -58,7 +59,7 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor 
   const shown = sub?.submenu ?? items;
 
   return (
-    <Modal
+    <AppModal
       visible={visible}
       transparent
       animationType="fade"
@@ -153,7 +154,7 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor 
         </ScrollView>
       </View>
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import {
   Animated,
   Image,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -10,6 +9,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Browser, ClosedGroup, TabGroup, useBrowser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
@@ -66,13 +66,13 @@ const GAP = 12;
 
 export function TabSwitcher({ visible, darkMode = false, browser, onClose, onCompare }: Props) {
   return (
-    <Modal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="fade" presentationStyle="fullScreen" onRequestClose={onClose}>
       {/* Mounted only while visible, so it opens in the mode of the tab on screen. */}
       <DarkMode.Provider value={darkMode}>
         {visible && <TabSwitcherContent browser={browser} onClose={onClose} onCompare={onCompare} />}
       </DarkMode.Provider>
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

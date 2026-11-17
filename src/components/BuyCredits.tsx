@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
-import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccountState } from '../account';
 import { creditsEnabled } from '../config/features';
@@ -45,10 +46,10 @@ export function BuyCreditsHost() {
   );
   if (!creditsEnabled) return null;
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={closeBuyCredits}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={closeBuyCredits}>
       {visible && <BuyCreditsScreen onClose={closeBuyCredits} />}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

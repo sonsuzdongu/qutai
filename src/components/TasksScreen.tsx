@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { firstDayOfWeek, formatDateTime, formatList, formatShortDate, formatTime, hostOf, weekdayShort } from '../i18n/format';
@@ -45,10 +46,10 @@ type Props = {
 /** Saved tasks: messages to run again, with where they run. Everything can be edited or deleted. */
 export function TasksScreen({ visible, onClose, onRun, draft }: Props) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {visible && <TaskList onClose={onClose} onRun={onRun} draft={draft ?? null} />}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

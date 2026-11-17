@@ -2,7 +2,6 @@ import type { CustomHeader } from '../ai/customHeaders';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   SectionList,
@@ -11,6 +10,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   hiddenKindOf,
@@ -76,10 +76,10 @@ type Props = {
 /** Lists what Qutai remembers about the user by category; everything can be edited, moved or deleted. */
 export function MemoryScreen({ visible, onClose, ai, appLock, questions }: Props) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {visible && <MemoryList onClose={onClose} ai={ai} appLock={appLock} questions={questions} />}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

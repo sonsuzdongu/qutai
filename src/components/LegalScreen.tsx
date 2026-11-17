@@ -1,4 +1,5 @@
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getLanguage, t } from '../i18n';
 import { formatDate } from '../i18n/format';
@@ -9,10 +10,10 @@ import { DialogHost } from './Dialog';
 /** The full privacy policy or terms of use, from onboarding and Settings. */
 export function LegalScreen({ kind, onClose }: { kind: LegalKind | null; onClose: () => void }) {
   return (
-    <Modal visible={kind !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible={kind !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {kind && <LegalContent kind={kind} onClose={onClose} />}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

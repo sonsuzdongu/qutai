@@ -6,7 +6,6 @@ import {
   Easing,
   Image,
   Keyboard,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,6 +14,7 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { confirm as confirmHaptic, tick } from '../device/haptics';
 import { t } from '../i18n';
@@ -320,7 +320,7 @@ function DialogView({ entry }: { entry: Entry }) {
   const scale = reduceMotion ? 1 : progress.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] });
 
   return (
-    <Modal
+    <AppModal
       key={attempt}
       visible
       transparent
@@ -503,7 +503,7 @@ function DialogView({ entry }: { entry: Entry }) {
           </Animated.View>
         </View>
       </Animated.View>
-    </Modal>
+    </AppModal>
   );
 }
 

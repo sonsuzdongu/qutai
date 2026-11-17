@@ -1,5 +1,6 @@
 import { useState, useSyncExternalStore } from 'react';
-import { FlatList, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
@@ -33,7 +34,7 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
   void version;
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <ScreenHeader title={t('site.listTitle')} right={{ label: t('common.done'), onPress: onClose }} />
         <FlatList
@@ -107,7 +108,7 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
         />
       </SafeAreaView>
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

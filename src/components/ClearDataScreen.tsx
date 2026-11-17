@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles, readableColumn } from '../ui/theme';
@@ -54,7 +55,7 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
     ]);
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <ScreenHeader title={t('clearData.title')} left={{ label: t('common.cancel'), tone: 'plain', onPress: onClose }} />
         <ScrollView contentContainerStyle={styles.content}>
@@ -94,7 +95,7 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
         </ScrollView>
       </SafeAreaView>
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

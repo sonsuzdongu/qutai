@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, SectionList, Text, View } from 'react-native';
+import { ActivityIndicator, SectionList, Text, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles, readableColumn, usePalette } from '../ui/theme';
@@ -19,10 +20,10 @@ type Props = { visible: boolean; onClose: () => void };
 /** What Qutai did, newest first, grouped by day. Incognito tabs are never recorded. */
 export function ActionLogScreen({ visible, onClose }: Props) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       {visible && <ActionLog onClose={onClose} />}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

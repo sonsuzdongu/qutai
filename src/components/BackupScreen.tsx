@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProvider } from '../ai/providers';
 import {
@@ -44,7 +45,7 @@ export function BackupScreen({ job, appLock, onClose }: Props) {
     if (!busy) onClose();
   };
   return (
-    <Modal visible={job !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
+    <AppModal visible={job !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <ScreenHeader
           title={t(current === 'export' ? 'backup.exportTitle' : 'backup.importTitle')}
@@ -55,7 +56,7 @@ export function BackupScreen({ job, appLock, onClose }: Props) {
         {job instanceof Uint8Array && <ImportFlow file={job} busy={busy} setBusy={setBusy} />}
       </SafeAreaView>
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { Modal, Platform, Pressable, SectionList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Platform, Pressable, SectionList, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { actionErrorText } from '../agent/stepLine';
@@ -237,7 +238,7 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
   const anyFinished = all.some((i) => i.state === 'done' || i.state === 'failed');
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={close}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <ScreenHeader title={t('downloads.title')} right={{ label: t('common.done'), onPress: close }} />
         {all.length > 0 ? (
@@ -367,7 +368,7 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
       <ActionSheet title={menu ? menu.name : null} actions={menu ? actionsFor(menu) : []} onClose={() => setMenu(null)} />
       <Toast key={toast.key} message={toast.message} action={toast.action} onHidden={toast.hide} />
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

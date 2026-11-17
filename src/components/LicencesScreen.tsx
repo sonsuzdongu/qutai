@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Linking, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { makeStyles, usePalette } from '../ui/theme';
@@ -34,7 +35,7 @@ export function LicencesScreen({ visible, onClose }: { visible: boolean; onClose
   };
   return (
     // Android's back button goes from a licence text back to the list, then closes.
-    <Modal
+    <AppModal
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
@@ -42,7 +43,7 @@ export function LicencesScreen({ visible, onClose }: { visible: boolean; onClose
     >
       {visible && <LicencesContent open={open} onOpen={setOpen} onClose={close} />}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 

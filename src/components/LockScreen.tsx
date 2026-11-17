@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { makeStyles, usePalette } from '../ui/theme';
@@ -24,7 +25,7 @@ export function LockScreen({ locked, onUnlock, onLeave }: Props) {
   }, [locked]);
 
   return (
-    <Modal visible={locked !== null} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
+    <AppModal visible={locked !== null} animationType="fade" presentationStyle="fullScreen" onRequestClose={() => {}}>
       <View style={[styles.container, locked === 'incognito' && styles.incognito]}>
         <Icon
           name={locked === 'incognito' ? 'incognito' : 'secure'}
@@ -42,7 +43,7 @@ export function LockScreen({ locked, onUnlock, onLeave }: Props) {
         )}
       </View>
       <DialogHost hold />
-    </Modal>
+    </AppModal>
   );
 }
 

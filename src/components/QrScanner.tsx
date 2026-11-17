@@ -1,6 +1,7 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useEffect, useState } from 'react';
-import { AppState, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppState, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { openSettingsOrExplain } from '../device/settings';
 import { t } from '../i18n';
@@ -11,10 +12,10 @@ type Props = { visible: boolean; onScan: (data: string) => void; onClose: () => 
 /** Full-screen camera that reads one QR code. */
 export function QrScanner({ visible, onScan, onClose }: Props) {
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
       {visible && <Scanner onScan={onScan} onClose={onClose} />}
       <DialogHost />
-    </Modal>
+    </AppModal>
   );
 }
 
