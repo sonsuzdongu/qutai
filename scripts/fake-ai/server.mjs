@@ -11,6 +11,11 @@
 //   "slow"     waits 25 s, then answers (Stop, backgrounding during a request, the keep-alive)
 //   "long"     read_page, scroll, read_page, scroll, read_page with 3 s pauses (rotation mid-task)
 //   anything else: a short text answer
+// "Tell me about yourself" (setup / Settings › Memory, src/intro/): a request whose system prompt (or, in Qutai
+// Credits' form, user turn) is the extraction prompt gets JSON items found with simple English and Turkish patterns
+// ("I'm Deniz", "my name is", "I live in", "allergic to", "vegetarian", "don't ring", "cash on delivery", "short
+// answers", "About name: …" answers). The word "garbage" gets an answer that is not JSON; "slow" waits 25 s.
+// Nothing is understood for real; it is enough to drive every screen of the flow.
 // Usage: node scripts/fake-ai/server.mjs [port]   (default 8793; listens on 127.0.0.1 only)
 import { createServer } from 'node:http';
 
@@ -23,8 +28,47 @@ function lastUserIndex(messages) {
 }
 const text = (m) => (typeof m.content === 'string' ? m.content : (m.content ?? []).map((p) => p.text ?? '').join(' '));
 
+const INTRO_MARK = 'facts a browsing assistant should remember';
+
+/** The words of `text` matching `re` (first group), with the whole match as the quote. */
+function grab(text, re) {
+  const m = re.exec(text);
+  return m ? { value: m[1].trim().replace(/[.,;]+$/, ''), quote: m[0].trim().replace(/[.,;]+$/, '') } : null;
+}
+
+/** A pretend extraction: JSON in the shape src/intro/extract.ts reads. */
+function introAnswer(text) {
+  if (/\bgarbage\b/i.test(text)) return 'I am not able to produce JSON today.';
+  const items = [];
+  const add = (topic, found, extra = {}) => found && items.push({ topic, value: found.value, quote: found.quote, stated: true, ...extra });
+  // An answer to a follow-up: the answer itself is the user's words.
+  const about = (topic) => {
+    const found = grab(text, new RegExp(`About ${topic}[^:]*: (.+)`, 'i'));
+    return found && { value: found.value, quote: found.value };
+  };
+  add('name', grab(text, /(?:[Mm]y name is|[Cc]all me|I'm|I am|[Bb]en|[Aa]dım) ([A-ZÇĞİÖŞÜ][\p{L}]+)/u) ?? about('what to call them'));
+  add('city', grab(text, /(?:I live in|[Ll]iving in) ([A-ZÇĞİÖŞÜ][\p{L}]+)/u) ?? grab(text, /([A-ZÇĞİÖŞÜ][\p{L}]+)'?(?:da|de|ta|te) yaşıyorum/u) ?? about('the city'));
+  add('age', grab(text, /(?:i'm|i am) (\d{1,3})(?: years old)?/i) ?? grab(text, /(\d{1,3}) yaşındayım/i));
+  for (const m of text.matchAll(/allergic to ([\p{L} ]+?)(?:[.,;]|$| and )/giu)) add('allergy', { value: m[1], quote: m[0].replace(/[.,;]$/, '').replace(/ and $/, '') });
+  add('allergy', grab(text, /([\p{L}]+(?: [\p{L}]+)?) alerjim var/u));
+  add('diet', grab(text, /\b(vegetarian|vegan|vejetaryen(?:im)?|halal)\b/i));
+  add('delivery', grab(text, /(don't ring the (?:door)?bell|zile basmayın)/i));
+  if (/cash on delivery|kapıda ödeme/i.test(text)) add('payment', grab(text, /(cash on delivery|kapıda ödeme)/i), { choice: 'cod' });
+  if (/short answers|kısa yanıt/i.test(text)) add('style', grab(text, /(short answers|kısa yanıt\p{L}*)/iu), { choice: 'short' });
+  const food = about('food');
+  if (food && !items.some((i) => i.topic === 'allergy' || i.topic === 'diet')) add('diet', food);
+  const none = /no allergies|alerjim yok/i.test(text) ? ['allergy'] : [];
+  return JSON.stringify({ items, none, declined: [] });
+}
+
 /** The scripted next step: { delay, content, toolCalls }. */
 function nextStep(messages) {
+  const system = messages.find((m) => m.role === 'system');
+  const first = messages.find((m) => m.role === 'user');
+  if ((system && text(system).includes(INTRO_MARK)) || (first && text(first).includes(INTRO_MARK))) {
+    const said = text(first).split('The text:\n').pop();
+    return { delay: /\bslow\b/i.test(said) ? 25000 : 600, content: introAnswer(said) };
+  }
   const u = lastUserIndex(messages);
   const user = u >= 0 ? text(messages[u]).toLowerCase() : '';
   const results = messages.slice(u + 1).filter((m) => m.role === 'tool');
