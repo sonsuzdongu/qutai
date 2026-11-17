@@ -599,6 +599,9 @@ export function parseConfig(value: unknown): PublicConfig {
     },
     // Only an explicit `fake` switches the app to fake purchases; anything else is the real stores.
     purchases: { mode: isRecord(value.purchases) && value.purchases.mode === 'fake' ? 'fake' : 'store' },
+    // Sign-in methods beyond the native ones (Android's Sign in with Apple button). Only an explicit `true` turns one on;
+    // an older server without `auth` leaves it absent.
+    ...(isRecord(value.auth) ? { auth: { appleWeb: value.auth.appleWeb === true } } : {}),
   };
 }
 
