@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 import { setLanguage } from '../../src/i18n/index.ts';
+import { LANGUAGES } from '../../src/i18n/languages.ts';
 import { formatPercent, formatSize } from '../../src/i18n/format.ts';
 import { actionErrorText, declinedNotice, errorNotice, pageErrorNotice, settingNotice, stepLine } from '../../src/agent/stepLine.ts';
 
@@ -34,10 +35,27 @@ test('a failure without a notice shows a translated line, the model text only as
   assert.equal(line?.type === 'error' && line.details, 'Element ref=12 not found (page changed?). Call read_page again.');
 });
 
-test('a translated error keeps the model text as details', () => {
+test('a failure with a translated reason reads the same way as one without, the model text as details', () => {
   setLanguage('tr');
   const line = stepLine({ content: 'The page did not answer: timeout', isError: true, notice: errorNotice('Sayfa yanıt vermedi') });
-  assert.deepEqual(line, { type: 'error', text: 'Sayfa yanıt vermedi', details: 'The page did not answer: timeout' });
+  assert.deepEqual(line, {
+    type: 'error',
+    text: 'Bu adım yapılamadı: Sayfa yanıt vermedi',
+    details: 'The page did not answer: timeout',
+  });
+});
+
+test('every language starts a failure line with its own "this step didn\'t work", never the model text', () => {
+  for (const code of LANGUAGES) {
+    setLanguage(code);
+    const plain = stepLine({ content: 'Element ref=12 not found.', isError: true });
+    const why = stepLine({ content: 'Element ref=12 not found.', isError: true, notice: errorNotice('X') });
+    assert.equal(plain?.type, 'error');
+    assert.ok(why?.text.startsWith(plain!.text), `${code}: ${why?.text}`);
+    assert.ok(why?.text.endsWith('X'), code);
+    if (code !== 'en') assert.ok(!plain!.text.includes('Element'), code);
+    assert.equal(why?.type === 'error' && why.details, 'Element ref=12 not found.');
+  }
 });
 
 test('a refusal by the user\'s own setting is not shown as an error', () => {

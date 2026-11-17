@@ -5,7 +5,9 @@ import { cutText } from '../utils/wellFormed';
 /**
  * A tool result has two readers. Its `content` is written for the model, in English, and goes to it unchanged; the
  * chat shows the user a short line in the app's language instead (this file). A tool that knows what to tell the user
- * attaches a notice; a failure without one shows a plain "didn't work" line with the model's text as its details.
+ * attaches a notice. Every failure reads the same way in every language: "This step didn't work", followed by the
+ * translated reason when the tool gave one ("This step didn't work: the page didn't respond"), with the model's
+ * English text under Details. The model's text is never the line itself.
  */
 export type StepNotice = {
   text: string;
@@ -34,7 +36,7 @@ export function settingNotice(text: string): StepNotice {
   return { text, tone: 'info', icon: 'shield' };
 }
 
-/** A failure the user should read about in their own language. */
+/** A failure whose reason the user should read in their own language (shown after "This step didn't work: "). */
 export function errorNotice(text: string): StepNotice {
   return { text, tone: 'error' };
 }
@@ -58,12 +60,16 @@ export function actionErrorText(e: unknown): string {
   return pageErrorNotice(e)?.text ?? t('common.error', { message: e instanceof Error ? e.message : String(e) });
 }
 
-/** The tool result shown to the user: its notice, or for an unannotated failure the plain line with details. */
+/**
+ * The tool result shown to the user: an info notice as it is; any failure as "This step didn't work" (with the
+ * notice's translated reason after it when there is one) and the model's text as its details.
+ */
 export function stepLine(result: { content: string; isError: boolean; notice?: StepNotice }): StepLine | null {
   const notice = result.notice;
   if (notice?.tone === 'info') return { type: 'info', text: notice.text, ...(notice.icon ? { icon: notice.icon } : {}) };
   if (!notice && !result.isError) return null;
   // A failure keeps the model's text as its details, for a bug report.
   const details = cutText(result.content.trim(), 400);
-  return { type: 'error', text: notice?.text ?? t('step.failed'), ...(details ? { details } : {}) };
+  const text = notice ? t('step.failedWhy', { reason: notice.text }) : t('step.failed');
+  return { type: 'error', text, ...(details ? { details } : {}) };
 }

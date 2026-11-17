@@ -4,6 +4,7 @@ import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { t, type MessageKey } from '../i18n';
 import { clampTextZoom, Settings, TEXT_ZOOM_MAX, TEXT_ZOOM_MIN } from '../storage/settings';
 import type { ToolContext, ToolOutput } from './executeTool';
+import { settingNotice } from './stepLine';
 import { uiLabel, uiPath } from './uiLabels';
 
 /**
@@ -358,10 +359,12 @@ export async function settingsTool(input: Record<string, unknown>, ctx: ToolCont
   const done: string[] = [];
   const problems: string[] = [];
   let hidesAssistant = false;
+  let refused = false;
   for (const { key, value } of changes) {
     const spec = SPECS[key];
     if (!spec) {
       problems.push(refusal(key));
+      refused = true;
       continue;
     }
     if (unavailable(key)) {
@@ -402,5 +405,10 @@ export async function settingsTool(input: Record<string, unknown>, ctx: ToolCont
         `(${uiLabel('settings.showAssistantButton')}).`,
     );
   if (problems.length) parts.push(problems.join('\n'));
-  return { content: parts.join('\n'), isError: done.length === 0 };
+  // A protected setting the assistant may not change is the user's own rule working, not a failure: a grey line.
+  return {
+    content: parts.join('\n'),
+    isError: done.length === 0,
+    ...(refused ? { notice: settingNotice(t('step.settingProtected')) } : {}),
+  };
 }

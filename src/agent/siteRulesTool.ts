@@ -18,6 +18,7 @@ import {
 import { t } from '../i18n';
 import type { ToolContext, ToolOutput } from './executeTool';
 import { siteKey } from './sitePolicy';
+import { declinedNotice } from './stepLine';
 import { uiLabel, uiPath } from './uiLabels';
 
 /**
@@ -217,7 +218,7 @@ export async function siteRulesTool(
     }
     if (!ctx.confirmSiteRules) return { content: 'Saving needs the user\'s approval, which is not available here.', isError: true };
     const scope = await ctx.confirmSiteRules({ site, url: tab.url, hide: ok, block: domains, incognito: tab.incognito });
-    if (!scope) return { content: 'The user did not save the rules. Nothing was saved.', isError: true };
+    if (!scope) return { content: 'The user did not save the rules. Nothing was saved.', isError: true, notice: declinedNotice() };
     const lines = linesFor(tab.url, scope, ok, domains);
     if (!lines) return { content: 'This page has no address rules can be saved for.', isError: true };
     const added = await access.add(site, lines, tab.url.replace(/#.*$/, ''));
@@ -252,7 +253,7 @@ export async function siteRulesTool(
         site,
       )
     : false;
-  if (!allowed) return { content: 'The user did not remove the rules.', isError: true };
+  if (!allowed) return { content: 'The user did not remove the rules.', isError: true, notice: declinedNotice() };
   const removed = await access.remove(targets.map((r) => r.id));
   return { content: `Removed ${removed.length} rule${removed.length === 1 ? '' : 's'} of ${site}.`, isError: false };
 }

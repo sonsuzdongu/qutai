@@ -1,10 +1,12 @@
 import { MODEL_LONG_EDGE, type AttachmentInfo } from '../chat/attachments';
 import { MAX_PDF_BYTES, modelImageData, originalFile } from '../device/attachments';
 import { fetchPdfData } from '../pdf/fetchPdf';
+import { t } from '../i18n';
 import { formatPdfText, parsePageRange, parseViewPages, PDF_CHAR_BUDGET } from '../pdf/format';
 import { openPdf, PdfReadError, pdfRender, pdfText } from '../pdf/reader';
 import type { ToolContext, ToolOutput } from './executeTool';
 import { siteKey } from './sitePolicy';
+import { settingNotice } from './stepLine';
 
 /** Tools that work on files: the user's attachments (view_attachment) and PDFs (read_pdf). */
 
@@ -103,6 +105,7 @@ async function pdfSource(input: Record<string, unknown>, ctx: ToolContext): Prom
     return {
       content: `The PDF is on ${host}, where the user has blocked Qutai: don't read it. Tell the user if the task needs it.`,
       isError: true,
+      notice: settingNotice(t('step.siteBlocked', { host })),
     };
   }
   const incognito = tab.incognito || !!ctx.privacy?.touchedIncognito;
