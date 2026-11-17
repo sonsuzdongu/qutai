@@ -48,7 +48,10 @@ Toplam 25–35 sn. Her bölümden 15 sn'lik kısa bir kesit de çıkar (açılı
 - **Ayarlar:** "Benimle ilgili bilgileri hatırla" açık; reklam engelleme açık.
 - **Anahtar:** AI anahtarını uygulamaya sahibi girer.
 - **Kayıt:** `xcrun simctl io booted recordVideo` (simülatör) ya da telefonun ekran kaydı. Ham dosyalar
-  `video/raw/` klasörüne konur; bu klasör git'e girmez.
+  `video/raw/` klasörüne konur; bu klasör git'e girmez. Simülatör kaydı yalnızca ekran değişince kare yazar; kurgu
+  betiği önce sabit 30 kare/sn'ye çevirir.
+- **Kurgu:** Her bölümün bir betiği var (`edit_01.py`): ham kayıtlardan 9:16, 16:9 ve 15 sn'lik kesiti, WebM, VTT
+  altyazı ve kapak görselini `video/out/` klasörüne üretir (git'e girmez). ffmpeg ve Pillow gerekir.
 
 ## Bölümler
 

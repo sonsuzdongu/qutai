@@ -11,3 +11,4 @@ art-src/*
 
 # Raw screen recordings for the videos (large); see video/README.md
 video/raw/
+video/out/

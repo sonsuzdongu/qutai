@@ -39,8 +39,8 @@ grafikleridir, arayüzün parçası değil.
 | # | Süre | Görüntü | Vurgu / grafik | Altyazı TR | Altyazı EN |
 |---|---|---|---|---|---|
 | 5 | 0:15–0:18 | Yeni bir sekmede yeni sohbet. Osman yazıyor: "Akşam için iki kişilik yemek siparişi ver." (gluten sözü yok) | — | Gluten demedi. | No mention of gluten. |
-| 6 | 0:18–0:23 | İşlem satırları: "Açılıyor: lokanta…", "Sayfa okunuyor", "Yazılıyor (ref …): \"glutensiz\"". Sayfada arama kutusunda "glutensiz" yazar, sonuçlar süzülür | **Vurgu anı 2:** arama kutusuna yakınlaşma, rozet "Hafızadan". Köşede "Hızlandırıldı" | Ama Qutai hatırladı. | But Qutai remembered. |
-| 7 | 0:23–0:26 | Asistanın yanıtı glutensiz seçenekleri listeler ve seçim düğmeleriyle sorar; Osman birine dokunur, ürün sepete eklenir | — | Seçimi siz yaparsınız. | You choose. |
+| 6 | 0:18–0:23 | Asistan menüyü okur ve yalnızca glutensiz yemekleri sepete ekler (gerçek çekimlerde arama kutusuna yazmadı; menüden seçti). İngilizce çekimde bunu kendisi yazıyor: "Filter is off, but I'll just pick gluten-free items." Türkçe çekimde kanıt, teslimat formuna kendiliğinden yazdığı "Gluten intoleransı var, lütfen …" notu | **Vurgu anı 2:** o satıra teal çerçeve, rozet "Hafızadan". Köşede "Hızlandırıldı ×N" | Ama Qutai hatırladı. | But Qutai remembered. |
+| 7 | — | (Çıkarıldı: asistan iki çekimde de seçimi sormadan, yalnızca glutensiz yemeklerle sepeti doldurdu.) | — | — | — |
 | 8 | 0:26–0:30 | Teslimat formu. Uygulamanın penceresi: "Kişisel bilgileriniz lokanta… sitesine girilsin mi?" → Osman "Bir kez izin ver"e dokunur; ad ve adres alanları dolar | **Kontrol anı:** pencereye yakınlaşma | Bilgileriniz sorulmadan girilmez. | Your details go in only when you say so. |
 | 9 | 0:30–0:33 | Ödeme adımı: asistan durur ve ödemenin size kaldığını yazar | Ödeme düğmesine hafif vurgu | Ödemeyi siz yaparsınız. | You make the payment. |
 | 10 | 0:33–0:37 | **Kapanış kartı:** Q logosu, slogan, alt satır | Küçük not, altta | Qutai. Sizi tanır, telefonunuzda. · Açık kaynak · Yakında App Store ve Google Play'de | Qutai. It knows you, on your phone. · Open source · Coming to the App Store and Google Play |
@@ -84,6 +84,24 @@ Bütün bölümlerde aynı müzik, değişen tek şey motifin varyasyonu.
 - **Müzik:** `audio/01/music.mp3` (37 sn, sözsüz). Yeniden üretmek için `python3 make_music_01.py`.
 - **Ses önizlemesi:** `audio/01/preview-tr.mp3` ve `preview-en.mp3`. Müziğin üstüne seslendirme satırları
   storyboard'daki zamanlarda (0:02, 0:09, 0:15, 0:26, 0:33) yerleştirildi; konuşurken müzik kısılıyor.
+
+- **Çekimler (2026-11-17, Claude Sonnet 5.5, iOS Simülatör):** `raw/` içinde, git'e girmez.
+  - Türkçe: `ep01-tr-actA-take1.mp4` (tanışma, hafıza ekranı) ve `ep01-tr-actB-take2.mp4` (sipariş). B'nin ilk çekimi
+    elendi. Kullanılan çekimde asistan önce yanlışlıkla lahmacun ekledi, sayfayı yenileyip düzeltti; bu kısım ×12
+    hızlandırılmış bölümde görünüyor, gizlenmedi. Yanıtının ilk satırı ("Bu bilgiler zaten kayıtlıydı") doğru olmadığı
+    için A'da yanıt gösterilmiyor, yalnızca "Hatırlanıyor" satırları.
+  - İngilizce: `ep01-en-actA-take1.mp4`, `ep01-en-actB-take1.mp4` (simülatör dili İngilizce, demo site `?lang=en`).
+    A'da "Remembering" satırları yanıtla aynı anda geliyor ve yanıt Türkçe çıktı; bu yüzden filmde mesaj ve bu satırlar
+    yakınlaştırılarak (kırpma) gösteriliyor. B temiz: asistan yalnızca glutensiz yemek seçtiğini kendisi yazıyor.
+  - Not: Uygulamada bulunan bir hata kayıtta göründü. Asistan, hafıza boşken de "zaten kayıtlıydı" diyor. Filme
+    girmiyor; ayrıca bildirildi.
+- **Kurgu:** `python3 edit_01.py [tr|en] [v|h|short]` (`out/`, git'e girmez). Kesme noktaları, çerçeveler, rozetler ve
+  seslendirme zamanları betiğin içinde. Yalnızca kesme, hız (işaretli), kısa donmuş kare, yakınlaştırma ve üstüne
+  film grafikleri; uygulama ekranı değiştirilmiyor. Ses: müzik konuşma sırasında kısılıyor, toplam −16 LUFS.
+- **Çıktılar (`out/`):** `01-hafiza-tr.mp4` (38 sn, 9:16), `01-hafiza-tr-16x9.mp4`, `01-hafiza-tr-15s.mp4`; aynıları
+  `-en` ile (40 sn). Her biri `.webm` ve `.vtt` ile; kapak `01-hafiza-{tr,en}-cover.jpg`. MP4'ler 1–2 MB.
+- **Kalan:** Adres çubuğunda ve izin sorusunda `localhost:8090` görünüyor. Son sürüm için demo site bir alan adında
+  yayımlanıp yeniden çekilebilir. Videoları siteye koymak ayrı bir iş (henüz yapılmadı).
 
 ## Teslim edilecekler
 
