@@ -15,7 +15,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { PersonalKind } from './src/agent/personalData';
 import { afterAnswer, AlwaysAllowKind, isAlwaysAllowed } from './src/agent/alwaysAllow';
@@ -205,8 +205,16 @@ import {
   onBackgroundOpenRequested,
   onBackgroundStopRequested,
   TaskOutcome,
+  useWaitingForUser,
   whileAskingUser,
 } from './src/device/backgroundTask';
+import { setMarkerEnvironment, clearMark } from './src/agent/actionMarker';
+import { ActionMarkerLayer } from './src/components/ActionMarkerLayer';
+import { AnswerCard, StepStrip } from './src/components/StepStrip';
+import { WorkingGlow } from './src/components/WorkingGlow';
+import { useScreenReader } from './src/components/useHoldGesture';
+import { currentStripLine, plainAnswer } from './src/chat/stripLine';
+import { idleView, stripVisible, workingStep, type WorkingEvent, type WorkingView } from './src/chat/workingView';
 import { deleteOrphanChats, loadChat, savedAttachmentIds, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings, ThemeSetting } from './src/storage/settings';
@@ -524,12 +532,49 @@ function BrowserApp({
   const runningTab = runningChat && browser.tabs.find((x) => browser.conversationOf(x) === runningChat);
   const [panelOpen, setPanelOpen] = useState(false);
   const [focusRequest, setFocusRequest] = useState(0);
+  // Working mode (docs/working-mode.md): while a task runs the panel drops into the step strip; the user's own opening
+  // or closing of the panel wins until the task ends; a dialog opens it; the end opens it or shows the answer card.
+  const [work, setWork] = useState<WorkingView>(idleView);
+  const workRef = useRef(work);
+  const [answerCard, setAnswerCard] = useState('');
+  const applyWork = useCallback((event: WorkingEvent) => {
+    const next = workingStep(workRef.current, event);
+    workRef.current = next;
+    setWork(next);
+    if (next.panel !== panelOpenRef.current) {
+      panelOpenRef.current = next.panel;
+      setPanelOpen(next.panel);
+    }
+  }, []);
+  const screenReader = useScreenReader();
+  const insets = useSafeAreaInsets();
+  const screenReaderRef = useRef(screenReader);
+  screenReaderRef.current = screenReader;
   // Text selected on a page; like find in page, it only counts for the page it came from.
   const [selection, setSelection] = useState<{ tabId: string; url: string; text: string } | null>(null);
   const closePanel = useCallback(() => setPanelOpen(false), []);
   // Read when a task ends, which can be long after the render that started it.
   const panelOpenRef = useRef(panelOpen);
   panelOpenRef.current = panelOpen;
+  // The panel opened or closed by the user (the Qutai button, the strip, the backdrop…): their choice for this task.
+  useEffect(() => {
+    if (panelOpen !== workRef.current.panel) applyWork({ type: panelOpen ? 'userOpen' : 'userClose' });
+  }, [panelOpen, applyWork]);
+  // The action marker shows only on the page on screen with nothing over it, and only with its setting on.
+  // Set each render further down, where the screens over the page are known.
+  const coveredRef = useRef(false);
+  useEffect(() => {
+    setMarkerEnvironment({
+      enabled: () => settingsRef.current.showActionMarker,
+      visible: (target) => browserInstance.activeId === target.id && !coveredRef.current,
+    });
+    return () => setMarkerEnvironment(null);
+  }, [browserInstance]);
+  // A dialog waits for the user's answer: the strip expands into the panel, and drops back once answered.
+  const waitingForUser = useWaitingForUser();
+  useEffect(() => {
+    applyWork({ type: 'asking', on: waitingForUser });
+  }, [waitingForUser, applyWork]);
   /** A task ended in a conversation the user has not seen since: the Qutai button shows a dot until they do. */
   const unseenChat = browser.conversations.find((x) => x.unseen);
   // Showing a conversation is seeing it.
@@ -1105,6 +1150,10 @@ function BrowserApp({
     if (research) chat.setResearch(false);
     const signal = chat.start();
     browser.setAgentTab(agentTab);
+    // Every start but a voice one comes from the panel (or opens it): it drops into the step strip; a screen reader
+    // keeps the panel the user is in.
+    setAnswerCard('');
+    applyWork({ type: 'start', panelOpen: !options.voice, collapse: !screenReaderRef.current });
     // May go on in the background (Android, opt-in) unless the conversation is incognito; the notification's title
     // is the user's own message.
     const incognitoTask = () => chat.incognito || chat.privacy.touchedIncognito;
@@ -1372,6 +1421,21 @@ function BrowserApp({
       if (provider === 'qutai') refreshCredits();
       chat.finish();
       browser.setAgentTab(null);
+      clearMark();
+      // The answer since the user's message, for the answer card of a task started with the panel closed.
+      const sentAt = chat.items.findIndex((item) => item.id === sent.id);
+      const answer = chat.items
+        .slice(sentAt + 1)
+        .filter((item) => item.kind === 'assistant' && item.text.trim())
+        .pop();
+      const answerText = answer ? plainAnswer(answer.text) : '';
+      setAnswerCard(answerText);
+      applyWork({
+        type: 'end',
+        outcome: outcome.kind,
+        hasAnswer: !!answerText,
+        sameConversation: AppState.currentState === 'active' && browserInstance.conversationOf(browserInstance.active) === chat,
+      });
       if (outcome.kind !== 'stopped') taskEnded(chat, outcome.kind);
       // Saved under the conversation's key now, which may have changed meanwhile (e.g. the tab founded a group).
       persistConversation(chat);
@@ -1523,7 +1587,11 @@ function BrowserApp({
 
   const taskEnded = (chat: Conversation, kind: 'done' | 'failed' | 'needsAnswer') => {
     const onScreen = AppState.currentState === 'active';
-    if (onScreen && panelOpenRef.current && browserInstance.conversationOf(browserInstance.active) === chat) {
+    if (
+      onScreen &&
+      (panelOpenRef.current || workRef.current.answer) &&
+      browserInstance.conversationOf(browserInstance.active) === chat
+    ) {
       if (kind === 'done') success();
       return;
     }
@@ -2270,6 +2338,17 @@ function BrowserApp({
       ? creditsLabel(creditsState.balance)
       : null;
   const barAtBottom = settings.addressBarPosition === 'bottom';
+  coveredRef.current = panelOpen || settingsVisible || tabsVisible || library !== null || tasksScreen !== null;
+  // The step strip's line: the running conversation's latest step line, in the user's language.
+  const stripSource = runningChat ? currentStripLine(runningChat.items.slice(-12)) : 'thinking';
+  const stripLine =
+    stripSource === 'thinking'
+      ? t('background.thinking')
+      : stripSource === 'answering'
+        ? t('working.answering')
+        : stripSource.text;
+  // Above the home indicator and, when it is at the bottom, the address bar.
+  const stripBottom = insets.bottom + (barAtBottom ? 60 : 0) + 12;
 
   return (
     <>
@@ -2282,7 +2361,6 @@ function BrowserApp({
             <ErrorBoundary>
               <BrowserView
                 browser={browser}
-                working={running}
                 newTabActions={{
                   darkMode,
                   darkSites: settings.darkSites,
@@ -2334,6 +2412,8 @@ function BrowserApp({
             {barAtBottom ? topBar : null}
           </KeyboardAvoidingContainer>
         </SafeAreaView>
+        {/* Where the assistant acts: over the page, under the panel (docs/working-mode.md). */}
+        <ActionMarkerLayer />
 
         <ErrorBoundary full>
           <AssistantPanel
@@ -2428,6 +2508,7 @@ function BrowserApp({
             items={conversation.items}
             running={conversation.running}
             busyElsewhere={running && !conversation.running}
+            collapseToStrip={work.phase !== 'idle'}
             onShowRunningTab={() => runningTab && browser.switchTab(runningTab.id)}
             finishedElsewhere={unseenChat && unseenChat !== conversation ? unseenChat.unseen : null}
             onShowFinished={() => unseenChat && showConversation(unseenChat)}
@@ -2499,6 +2580,40 @@ function BrowserApp({
             }
           />
         </ErrorBoundary>
+        {/* Over the page and the panel, under the strip; takes no touches. */}
+        <WorkingGlow visible={running} />
+        {stripVisible(work) && runningChat ? (
+          <StepStrip
+            line={stripLine}
+            elsewhere={!!browser.agentTabId && browser.agentTabId !== browser.activeId}
+            bottom={stripBottom}
+            onOpen={() => {
+              tick();
+              // The panel shows the running conversation's steps.
+              if (runningTab && browser.conversationOf(browser.active) !== runningChat) browser.switchTab(runningTab.id);
+              setPanelOpen(true);
+            }}
+            onStop={() => {
+              bump();
+              runningChat.stop();
+            }}
+            onShowTab={() => {
+              tick();
+              if (browser.agentTabId) browser.switchTab(browser.agentTabId);
+            }}
+          />
+        ) : null}
+        {work.answer && answerCard && !panelOpen ? (
+          <AnswerCard
+            text={answerCard}
+            bottom={stripBottom}
+            onOpen={() => {
+              applyWork({ type: 'dismissAnswer' });
+              setPanelOpen(true);
+            }}
+            onClose={() => applyWork({ type: 'dismissAnswer' })}
+          />
+        ) : null}
         <PageMenu
           visible={menuVisible}
           iconRow={iconRow}

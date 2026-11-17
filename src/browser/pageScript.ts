@@ -606,6 +606,48 @@ export const PAGE_SCRIPT = String.raw`
     return 'Scrolled to ' + describe(el);
   }
 
+  // ---------- Action marker (docs/working-mode.md) ----------
+
+  // The element's box as fractions of the visual viewport (what the WebView shows: pinch zoom and scrolling included),
+  // with the offsets of the same-origin frames it sits in. The app draws its marker there, above the page; nothing is
+  // added to the page. "mode" scrolls first exactly as the action will ('click' like click, 'field' like type and
+  // select, 'none' not at all), at once (a page's smooth scrolling would move the element after it was measured).
+  function actionRect(ref, mode) {
+    var el = getEl(ref);
+    var how = mode === 'click' ? { block: 'center', inline: 'center' } : mode === 'field' ? { block: 'center' } : null;
+    if (how) {
+      try { el.scrollIntoView({ block: how.block, inline: how.inline || 'nearest', behavior: 'instant' }); }
+      catch (e) { el.scrollIntoView(how); }
+    }
+    return new Promise(function (resolve) {
+      var done = false;
+      var finish = function () {
+        if (done) return;
+        done = true;
+        var r = el.getBoundingClientRect();
+        var x = r.left, y = r.top;
+        var win = el.ownerDocument && el.ownerDocument.defaultView;
+        try {
+          while (win && win !== window && win.frameElement) {
+            var fe = win.frameElement, fr = fe.getBoundingClientRect();
+            x += fr.left + (fe.clientLeft || 0);
+            y += fr.top + (fe.clientTop || 0);
+            win = win.parent;
+          }
+        } catch (e) {}
+        var vv = window.visualViewport;
+        var w = vv ? vv.width : window.innerWidth;
+        var h = vv ? vv.height : window.innerHeight;
+        var ox = vv ? vv.offsetLeft : 0, oy = vv ? vv.offsetTop : 0;
+        if (!w || !h) return resolve(null);
+        resolve({ x: (x - ox) / w, y: (y - oy) / h, width: r.width / w, height: r.height / h });
+      };
+      // After the scroll's layout (sticky headers move); a page whose frames are throttled still answers.
+      try { requestAnimationFrame(function () { requestAnimationFrame(finish); }); } catch (e) {}
+      setTimeout(finish, 80);
+    });
+  }
+
   // ---------- Page snapshot (for PDF export) ----------
 
   var MAX_IMAGE_BYTES = 4e6;
@@ -2088,6 +2130,7 @@ export const PAGE_SCRIPT = String.raw`
     select: select,
     scroll: scroll,
     scrollTo: scrollTo,
+    actionRect: actionRect,
     formReport: formReport,
     linkHref: linkHref,
     snapshotHtml: snapshotHtml,

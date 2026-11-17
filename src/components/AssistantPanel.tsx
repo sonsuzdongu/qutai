@@ -162,6 +162,11 @@ type Props = {
   running: boolean;
   /** Another tab's conversation is running a task (only one runs at a time). */
   busyElsewhere: boolean;
+  /**
+   * The panel is closing because a task started (docs/working-mode.md): it drops down into the step strip instead of
+   * sliding back to the side.
+   */
+  collapseToStrip?: boolean;
   onShowRunningTab: () => void;
   /** How a task ended in another tab's or group's conversation that the user has not looked at since. */
   finishedElsewhere: 'done' | 'failed' | 'needsAnswer' | null;
@@ -253,6 +258,7 @@ export function AssistantPanel({
   items,
   running,
   busyElsewhere,
+  collapseToStrip = false,
   onShowRunningTab,
   finishedElsewhere,
   onShowFinished,
@@ -306,6 +312,13 @@ export function AssistantPanel({
   const reduceMotion = useReduceMotion();
 
   const [progress] = useState(() => new Animated.Value(0));
+  /** 0 → 1 while the panel drops into the step strip (then it is closed and this is 0 again). */
+  const [drop] = useState(() => new Animated.Value(0));
+  const collapseRef = useRef(collapseToStrip);
+  // Before the effect below reads it (effects run in order).
+  useEffect(() => {
+    collapseRef.current = collapseToStrip;
+  }, [collapseToStrip]);
   /** The message whose menu is open; full: opened by long press, so it lists the row's icons too. */
   const [menu, setMenu] = useState<{ item: ChatItem; full: boolean } | null>(null);
   /** The answer being read aloud (Read aloud turns into Stop on that one only). */
@@ -438,13 +451,22 @@ export function AssistantPanel({
   }, [focusRequest]);
 
   useEffect(() => {
-    Animated.timing(progress, {
-      toValue: open ? 1 : 0,
-      duration: reduceMotion ? 0 : 220,
-      useNativeDriver: true,
-    }).start();
+    if (!open && collapseRef.current && !reduceMotion) {
+      // Down and away into the strip, which rises at the same time; then closed as usual.
+      Animated.timing(drop, { toValue: 1, duration: 260, useNativeDriver: true }).start(() => {
+        progress.setValue(0);
+        drop.setValue(0);
+      });
+    } else {
+      drop.setValue(0);
+      Animated.timing(progress, {
+        toValue: open ? 1 : 0,
+        duration: reduceMotion ? 0 : 220,
+        useNativeDriver: true,
+      }).start();
+    }
     if (!open) Keyboard.dismiss();
-  }, [open, progress, reduceMotion]);
+  }, [open, progress, drop, reduceMotion]);
 
   useEffect(() => {
     if (!open) return;
@@ -520,16 +542,24 @@ export function AssistantPanel({
   const statusLine = balance || !modelName || statusFullFits(statusRoom, labelWidth, fontScale) ? modelInfo : modelName;
 
   const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [width, 0] });
+  const dropY = drop.interpolate({ inputRange: [0, 1], outputRange: [0, 260] });
+  const dropScale = drop.interpolate({ inputRange: [0, 1], outputRange: [1, 0.92] });
+  const dropOpacity = drop.interpolate({ inputRange: [0, 0.8, 1], outputRange: [1, 0.2, 0] });
+  const backdropOpacity = Animated.multiply(progress, Animated.subtract(1, drop));
 
   return (
     <PanelTheme.Provider value={d}>
       <View style={StyleSheet.absoluteFill} pointerEvents={open ? 'auto' : 'none'}>
-        <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: progress }]}>
+        <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: backdropOpacity }]}>
           <Pressable accessibilityRole="button" style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('chat.closePanel')} />
         </Animated.View>
 
         <Animated.View
-          style={[styles.panel, d?.panel, { width, transform: [{ translateX }] }]}
+          style={[
+            styles.panel,
+            d?.panel,
+            { width, opacity: dropOpacity, transform: [{ translateX }, { translateY: dropY }, { scale: dropScale }] },
+          ]}
           // VoiceOver stays inside the panel while it is open.
           accessibilityViewIsModal={open}
         >

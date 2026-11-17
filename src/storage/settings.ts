@@ -88,6 +88,11 @@ export type Settings = {
   geminiStreaming: boolean;
   /** Under answers and in "What was sent to the AI": tokens used and the approximate cost (ai/cost.ts). On by default. */
   showCost: boolean;
+  /**
+   * While a task runs: a marker over the page where the assistant clicks or types, shown for a moment before the
+   * action (docs/working-mode.md). Off: no marker and no pause. On by default.
+   */
+  showActionMarker: boolean;
   /** Reader mode colours: following the app's appearance, light, dark or sepia. */
   readerTheme: ReaderTheme;
   readerFont: ReaderFont;
@@ -151,6 +156,7 @@ export const DEFAULT_SETTINGS: Settings = {
   notifyTaskDone: true,
   geminiStreaming: false,
   showCost: true,
+  showActionMarker: true,
   readerTheme: 'auto',
   readerFont: 'serif',
   readerEasyReading: false,
@@ -193,6 +199,7 @@ const KEYS = {
   notifyTaskDone: 'notify_task_done',
   geminiStreaming: 'gemini_streaming',
   showCost: 'show_cost',
+  showActionMarker: 'show_action_marker',
   readerTheme: 'reader_theme',
   readerFont: 'reader_font',
   readerEasyReading: 'reader_easy_reading',
@@ -285,6 +292,7 @@ export async function loadSettings(): Promise<Settings> {
     notifyTaskDone,
     geminiStreaming,
     showCost,
+    showActionMarker,
     readerTheme,
     readerFont,
     readerEasyReading,
@@ -329,6 +337,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.notifyTaskDone),
     get(KEYS.geminiStreaming),
     get(KEYS.showCost),
+    get(KEYS.showActionMarker),
     get(KEYS.readerTheme),
     get(KEYS.readerFont),
     get(KEYS.readerEasyReading),
@@ -381,6 +390,7 @@ export async function loadSettings(): Promise<Settings> {
     notifyTaskDone: notifyTaskDone !== 'false',
     geminiStreaming: geminiStreaming === 'true',
     showCost: showCost !== 'false',
+    showActionMarker: showActionMarker !== 'false',
     readerTheme: READER_THEMES.includes(readerTheme as ReaderTheme) ? (readerTheme as ReaderTheme) : 'auto',
     readerFont: READER_FONTS.includes(readerFont as ReaderFont) ? (readerFont as ReaderFont) : 'serif',
     readerEasyReading: readerEasyReading === 'true',
@@ -455,6 +465,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.notifyTaskDone, String(settings.notifyTaskDone)),
     set(KEYS.geminiStreaming, String(settings.geminiStreaming)),
     set(KEYS.showCost, String(settings.showCost)),
+    set(KEYS.showActionMarker, String(settings.showActionMarker)),
     set(KEYS.readerTheme, settings.readerTheme),
     set(KEYS.readerFont, settings.readerFont),
     set(KEYS.readerEasyReading, String(settings.readerEasyReading)),

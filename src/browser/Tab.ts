@@ -42,6 +42,7 @@ export type PageCommand =
   | 'select'
   | 'scroll'
   | 'scrollTo'
+  | 'actionRect'
   | 'formReport'
   | 'linkHref'
   | 'snapshotHtml'

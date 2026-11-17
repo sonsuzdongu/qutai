@@ -363,6 +363,12 @@ function SettingsPages({
               />
             )}
             <SwitchRow
+              title={t('settings.showActionMarker')}
+              hint={t('settings.showActionMarkerHint')}
+              value={settings.showActionMarker}
+              onChange={(showActionMarker) => set({ showActionMarker })}
+            />
+            <SwitchRow
               title={t('settings.showCost')}
               hint={t('settings.showCostHint', { date: pricesDate(PRICES_AS_OF) })}
               value={settings.showCost}

@@ -4,7 +4,6 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
-import { WorkingGlow } from './WorkingGlow';
 import type { SearchEngineId } from '../browser/search';
 import { CONTEXT_MENU_SCRIPT, ContextTarget, parseContextTarget } from '../browser/contextMenu';
 import { parseSelection, SELECTION_SCRIPT } from '../browser/selection';
@@ -91,12 +90,9 @@ export type TabActions = {
 export function BrowserView({
   browser,
   newTabActions,
-  working,
 }: {
   browser: Browser;
   newTabActions: TabActions;
-  /** A task is running: the tab it works in glows while it is the one on screen. */
-  working: boolean;
 }) {
   return (
     <View style={styles.container}>
@@ -112,8 +108,7 @@ export function BrowserView({
             newTabActions={newTabActions}
           />
         ))}
-      {/* Over the tabs, not inside the tab's container: screenshots of the page never include it. */}
-      <WorkingGlow visible={working && browser.agentTabId === browser.activeId} />
+      {/* The working glow and the action marker are drawn at screen level (App.tsx, docs/working-mode.md). */}
     </View>
   );
 }

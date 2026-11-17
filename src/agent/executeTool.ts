@@ -33,6 +33,7 @@ import { getSavedTaskTool, listSavedTasksTool, type SavedTasksAccess } from './s
 import { describeSettingsCall, settingsTool } from './settingsTool';
 import type { Settings } from '../storage/settings';
 import { sleep } from '../utils/sleep';
+import { markBeforeAction } from './actionMarker';
 import type { ActionEntry } from '../storage/actionLog';
 import type { HistoryMatch, SiteVisits } from '../storage/history';
 import type { Bookmark } from '../storage/bookmarks';
@@ -1535,6 +1536,8 @@ async function runTool(
   if (name === 'upload_file') return uploadFileTool(input, ctx, tab);
 
   try {
+    // Shows the user where the step acts (and waits a moment for clicks and typing); changes nothing in the result.
+    await markBeforeAction(tab, name, input);
     switch (name) {
       case 'read_page': {
         const page = await tab.run<PageSnapshot>('readPage', [input.offset ?? 0]);
