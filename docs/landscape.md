@@ -42,8 +42,8 @@ Control Center (iOS). Phones: portrait and both landscapes, never upside down. T
   when the window is short. Android's full-screen landscape keyboard ("extract" mode) is turned off for the
   panel's input, the address bar and the find bar, so the conversation and the page stay in view while typing;
   the panel's `KeyboardAvoidingContainer` keeps the input above the keyboard.
-- **Step strip and answer card** keep clear of side notches; the answer card is at most half the window's height
-  (360 pt cap as before). The glow already redraws from `useWindowDimensions`.
+- **Step strip and answer card** keep clear of side notches; the answer card is never taller than the room above
+  its bottom edge (360 pt cap as before). The glow already redraws from `useWindowDimensions`.
 - **Marker**: the layer clears its marker when its size changes. A `click_at` after the window changed size since
   the screenshot is refused with a tool result asking for a new screenshot (no change to the prompt or the tool
   definitions; `npm run profile:check` stays the same).
