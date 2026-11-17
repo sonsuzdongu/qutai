@@ -260,7 +260,8 @@ async function mailFor(address: string, after: number): Promise<{ code: string; 
     const last = blocks.at(-1);
     // The code stands alone on an indented line (the subject's wording depends on the language).
     const code = last?.match(/^\s{2,}(\d{6})\s*$/m)?.[1];
-    const token = last?.match(/qutai:\/\/sign-in\/email\?token=([A-Za-z0-9_-]+)/)?.[1];
+    // The custom-scheme link, or the https one (the server's MAIL_INTENT_DOMAIN and MAIL_INTENT_PATH).
+    const token = last?.match(/(?:qutai:\/\/sign-in\/email|https:\/\/[a-z0-9.-]+\/[A-Za-z0-9/._~-]+)\?token=([A-Za-z0-9_-]+)/)?.[1];
     if (code && token) return { code, token };
     await new Promise((r) => setTimeout(r, 100));
   }
