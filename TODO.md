@@ -2,6 +2,54 @@
 
 For the feature inventory comparison and the phased plan, see `ROADMAP.md`.
 
+## Decisions waiting for the owner (collected 17 Nov 2026)
+
+Each item's default is what the code does today; it stays that way until the owner decides. Sources: the sub-session
+reports for sign-in methods and merging, server backup, working mode, landscape, the own-key keep-alive and fake
+purchases. Three more are under Assistant ("Open decisions from the November performance pass").
+
+Security (look at these first)
+
+- [ ] Backup key derivation: scrypt N = 2^14 is weak for a file that now sits on a server (OWASP's minimum is 2^17). Proposed: 2^16 for new files; no format change (the parameters are in the header, readers accept up to 2^20). Time it on a low-end Android phone first
+- [ ] Ask for a recent sign-in before "Delete all backups": a stolen session can delete them, or push them out with junk uploads (12 a day against 3 kept). Proposed, not built
+- [ ] Adding a sign-in method needs no re-check of an existing one: someone holding an unlocked phone can add their own. The notice mail goes out, but access lasts until the owner removes it. Require a proof of an existing method first?
+- [ ] Merging accounts: someone who controls one method of another account (a stolen Google account) can merge its credits into their own, and a merge is final. Accept, or add a waiting period or a confirmation by mail?
+
+Accounts and sign-in
+
+- [ ] Removing a method needs a sign-in on the same phone within 5 minutes, with that method or an older one. The catch: someone who lost access to their oldest method can't remove it without support
+- [ ] Other devices stay signed in after a method is removed (the mail points to "Sign out of all devices"). OK?
+- [ ] Google is trusted for linking only for gmail.com / googlemail.com and Workspace (`hd`) addresses; other domains get a separate account (accepted 16 Nov 2026; listed for confirmation)
+
+Server backup
+
+- [ ] Compress the backup contents? Smaller files, but a new format version
+- [ ] Default contents: open tabs in; conversations, activity and AI keys out (conversations can take a backup to 54 MB). OK?
+- [ ] The backup password is cleared from the phone on sign-out (kept when the server ends the session). OK?
+- [ ] The daily automatic backup is Wi-Fi only by default and runs only while the app is open. OK?
+- [ ] Pro privacy policy: the legal version went up twice (now 4), so every pro user is asked to accept again. Confirm
+
+Interface
+
+- [ ] Landscape: the assistant panel is a side panel about half the screen wide (320 to 420 pt). Right, or narrower?
+- [ ] No in-app "lock to portrait" setting (the system's rotation lock was judged enough). OK?
+- [ ] "Show where the assistant acts" is not in the assistant's settings tool, because adding it changes the agent profile. Add it?
+- [ ] The scroll step's line still shows the English direction word ("Scrolling: down"): a small translation fix, not a decision
+
+Double charge and payments
+
+- [ ] Own key: the keep-alive for a request still running when the user leaves holds at most 3 minutes; very long answers can still be cut. Longer?
+- [ ] Own key: no keep-alive for incognito conversations on Android (it shows a notification); iOS holds anyway. OK?
+- [ ] Fake purchases: 10 test purchases per account in 24 hours. OK for testing?
+
+Set-up only the owner can do (not decisions)
+
+- [ ] Cloudflare: two R2 buckets for backups (`qutai-backups-dev`, `qutai-backups`); a deploy fails until they exist
+- [ ] Apple: a Services ID and return URL for Sign in with Apple on Android (`docs/apple-sign-in.md`)
+- [ ] A domain and the two link files for https sign-in links (`docs/app-links.md`)
+- [ ] Website: three sentences are out of date ("No account needed and no sync", the planned end-to-end sync, the comparison's sync note)
+- [ ] Play Console: update the foreground service declaration (text in `docs/permissions.md`)
+
 ## Before launch: remove fake purchases
 
 Buying credits works today only through **fake purchases**, a deliberate stand-in the owner ordered on 17 Nov 2026
