@@ -448,6 +448,12 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
   a broken string recovers on its next send. Tests: `npm run test:text`.
   - [ ] On the phone: the Trendyol task again, and "Try again" on the old broken conversation (docs/test-checklist.md)
 
+Open decisions from the November performance pass (`docs/performance-2026-11.md`); the owner asked for them to be kept here:
+
+- [ ] Step strip: name the element by its label instead of "ref 1" (the strip shows the tool's reference when the page gave no readable name). Decide, then use the field's label, placeholder or accessible name
+- [ ] Tokens: send fewer tools per request, or shorter tool descriptions. This is the remaining per-task cost after the caching fixes (Anthropic −39 %, OpenAI −8 %, Gemini −5 % on the six test tasks); it changes the agent profile, and the assistant's behaviour tests must stay green
+- [ ] Start-up: decide whether to try the bigger ideas in the report. Measure the native start on a real phone first (Instruments on iPhone, `am start -W` on Android): on iOS about 1.8 s passes before the app's own code runs, which then needs about 150 ms
+
 ## Other
 
 - [x] Open-source build's privacy policy and terms corrected (`src/legal/documents.ts`, English and Turkish; `LEGAL_VERSION` 2 there, dated 16 Nov 2026, so an existing install shows "We've updated our privacy policy and terms" once and asks to accept again; pro builds keep their own version 2). Checked against the code:
