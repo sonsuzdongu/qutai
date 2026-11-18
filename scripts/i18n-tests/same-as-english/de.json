@@ -23,5 +23,6 @@
   "playback.pause",
   "tier.fast",
   "siteRules.domainLabel",
-  "account.email.addressPlaceholder"
+  "account.email.addressPlaceholder",
+  "filters.sepia"
 ]

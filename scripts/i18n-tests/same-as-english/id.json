@@ -31,5 +31,7 @@
   "account.providerEmail",
   "account.methodEmail",
   "account.methods.kindEmail",
-  "approval.total"
+  "approval.total",
+  "filters.sepia",
+  "filters.done.sepia"
 ]

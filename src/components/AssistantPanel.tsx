@@ -49,6 +49,7 @@ import type { AttachmentInfo } from '../chat/attachments';
 import type { ShareOffer } from '../chat/shareable';
 import { AttachmentThumb } from './AttachmentViews';
 import { attachmentAvailable } from '../device/attachments';
+import { describeFilters } from '../chat/filterSummary';
 import { imageFormatLabel } from '../chat/imageEdit';
 import { formatNumber, formatSize, hostOf } from '../i18n/format';
 import { hasTable, MarkdownText } from './MarkdownText';
@@ -1670,6 +1671,8 @@ function ImageCard({
   ]
     .filter(Boolean)
     .join(' · ');
+  // What the filters did, in words ("Greyscale, sharpened").
+  const filters = describeFilters(info.filters);
   return (
     <View style={[styles.smsCard, d?.assistantBubble]}>
       <View style={styles.fileHeader}>
@@ -1679,6 +1682,7 @@ function ImageCard({
             {info.name}
           </Text>
           <Text style={[styles.callNumber, d?.dim]}>{details}</Text>
+          {filters ? <Text style={[styles.callNumber, d?.dim]}>{filters}</Text> : null}
         </View>
       </View>
       {available ? (

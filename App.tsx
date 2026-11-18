@@ -47,6 +47,7 @@ import {
   takePhoto,
 } from './src/device/attachments';
 import { AttachmentPreview } from './src/components/AttachmentViews';
+import { describeFilters } from './src/chat/filterSummary';
 import { PdfReaderHost } from './src/components/PdfReaderHost';
 import { geminiStreamingAvailable } from './src/ai/gemini';
 import { creditsStore, creditsReady, isPreTierChoice, modelTag, refreshCredits, useCreditsState } from './src/credits';
@@ -1574,7 +1575,13 @@ function BrowserApp({
       const made = await editImage(info, req, attachmentIncognito(chat) || isIncognitoAttachment(info.id));
       chat.addPending([made.info]).forEach((a) => deleteAttachment(a.id));
       setPreviewAttachment(made.info);
-      toast.show(t('resize.added', { size: `${made.info.width}×${made.info.height}`, bytes: formatSize(made.info.size) }));
+      const size = `${made.info.width}×${made.info.height}`;
+      const filters = describeFilters(made.info.filters);
+      toast.show(
+        filters
+          ? t('resize.addedWith', { size, bytes: formatSize(made.info.size), filters })
+          : t('resize.added', { size, bytes: formatSize(made.info.size) }),
+      );
     } catch {
       toast.show(t('resize.failed'));
     }
