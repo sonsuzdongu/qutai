@@ -72,6 +72,7 @@ import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar } from './src/components/AddressBar';
 import { BrowserView } from './src/components/BrowserView';
 import { ContextAction, ContextMenuSheet } from './src/components/ContextMenuSheet';
+import { chatLinkPlan } from './src/browser/chatLinks';
 import { AssistantPanel, QuickAction, type ChatItemAction } from './src/components/AssistantPanel';
 import { FindBar } from './src/components/FindBar';
 import { KeyboardAvoidingContainer } from './src/components/KeyboardAware';
@@ -763,6 +764,8 @@ function BrowserApp({
   const [offlineVisible, setOfflineVisible] = useState(false);
   const [scannerVisible, setScannerVisible] = useState(false);
   const [context, setContext] = useState<{ tab: Tab; target: ContextTarget } | null>(null);
+  /** A long-pressed link in the assistant's chat. */
+  const [chatLink, setChatLink] = useState<ContextTarget | null>(null);
   // Find in page belongs to one page: it closes by itself when the tab or the URL changes, or when
   // reader mode is turned on or off (it searches the text on screen).
   const [findFor, setFindFor] = useState<{ tabId: string; url: string; reader: boolean } | null>(null);
@@ -1994,6 +1997,57 @@ function BrowserApp({
     },
   ];
 
+  /**
+   * Opens a link from the assistant's chat in the tab group of the conversation's tab (forming one when that tab has
+   * none), like the tabs the assistant opens during a task; incognito stays incognito (src/browser/chatLinks.ts).
+   */
+  const openChatLink = (
+    url: string,
+    opts: { sourceIncognito?: boolean; openTabs?: readonly Tab[]; background?: boolean } = {},
+  ) => {
+    const owner = browser.active;
+    const plan = chatLinkPlan({ url, owner, conversationIncognito: browser.conversationOf(owner).incognito, ...opts });
+    if (plan.kind === 'switch') return browser.switchTab(plan.tabId);
+    browser.openTab(plan.url, {
+      incognito: plan.incognito,
+      activate: plan.activate,
+      ...(plan.openerId ? { openerId: plan.openerId } : {}),
+      group: plan.group,
+    });
+    if (!plan.activate) toast.show(t('contextMenu.openedInBackground'));
+  };
+
+  /** The long-press menu of a link in the chat: the same group rule as a tap. */
+  const chatLinkActions = (href: string): ContextAction[] => {
+    const incognito = browser.active.incognito || browser.conversationOf(browser.active).incognito;
+    return [
+      {
+        icon: incognito ? 'incognito' : 'newTab',
+        label: t(incognito ? 'contextMenu.openInNewIncognito' : 'contextMenu.openInNewTab'),
+        onPress: () => openChatLink(href, { background: true }),
+      },
+      ...(incognito
+        ? []
+        : [
+            {
+              icon: 'incognito' as const,
+              label: t('contextMenu.openInIncognito'),
+              onPress: () => openChatLink(href, { sourceIncognito: true }),
+            },
+          ]),
+      {
+        icon: 'copy',
+        label: t('menu.copyLink'),
+        onPress: () =>
+          runAction(async () => {
+            await copyText(href);
+            return t('menu.linkCopied');
+          }),
+      },
+      { icon: 'share', label: t('menu.shareLink'), onPress: () => runAction(() => shareText(href)) },
+    ];
+  };
+
   /** Actions for a long-pressed link and/or image. Links from incognito tabs stay incognito. */
   const contextActions = (source: Tab, target: ContextTarget): ContextAction[] => {
     const actions: ContextAction[] = [];
@@ -2533,16 +2587,15 @@ function BrowserApp({
             onShowSent={() => setSentFor(conversation.key)}
             showCost={settings.showCost}
             onOpenSource={(source) => {
-              // A page that is still open is shown in its tab; otherwise it opens again in the same mode.
-              const open = browser.tabs.find((x) => x.incognito === source.incognito && x.url === source.url);
-              if (open) browser.switchTab(open.id);
-              else browser.openTab(source.url, { incognito: source.incognito });
+              // A page that is still open is shown in its tab; otherwise it opens in the conversation's group.
+              openChatLink(source.url, { sourceIncognito: source.incognito, openTabs: browser.tabs });
               closePanel();
             }}
             onOpenLink={(url) => {
-              browser.openTab(url, { incognito: browser.active.incognito });
+              openChatLink(url);
               closePanel();
             }}
+            onLinkMenu={(url, text) => setChatLink({ href: url, linkText: text, src: '', alt: '' })}
             onCall={(number) => {
               bump();
               placeCall(number, () => toast.show(t('common.copied')));
@@ -2685,6 +2738,11 @@ function BrowserApp({
           target={context?.target ?? null}
           actions={context ? contextActions(context.tab, context.target) : []}
           onClose={() => setContext(null)}
+        />
+        <ContextMenuSheet
+          target={chatLink}
+          actions={chatLink ? chatLinkActions(chatLink.href) : []}
+          onClose={() => setChatLink(null)}
         />
         <DownloadsScreen
           visible={downloadsVisible}

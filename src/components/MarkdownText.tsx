@@ -10,6 +10,8 @@ type Props = {
   style: TextStyle;
   /** Called for http(s) links; other schemes are shown as plain text. */
   onOpenLink: (url: string) => void;
+  /** A long press on an http(s) link: its menu (open in new tab, copy…). */
+  onLinkMenu?: (url: string, text: string) => void;
   /** Called for tel: links holding a plain phone number (normalised); without it they are plain text. */
   onCall?: (number: string) => void;
   dark?: boolean;
@@ -64,6 +66,7 @@ export const MarkdownText = memo(function MarkdownText({
   text,
   style,
   onOpenLink,
+  onLinkMenu,
   onCall,
   dark,
   selectable = true,
@@ -121,7 +124,13 @@ export const MarkdownText = memo(function MarkdownText({
           );
         if (!isWebUrl(link.href)) return <Text key={key}>{label}</Text>;
         return (
-          <Text key={key} style={styles.link} onPress={() => onOpenLink(link.href)} accessibilityRole="link">
+          <Text
+            key={key}
+            style={styles.link}
+            onPress={() => onOpenLink(link.href)}
+            onLongPress={onLinkMenu ? () => onLinkMenu(link.href, decodeEntities(link.text)) : undefined}
+            accessibilityRole="link"
+          >
             {label}
           </Text>
         );

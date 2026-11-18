@@ -201,6 +201,8 @@ type Props = {
   onMessageAction: (action: MessageAction, text: string) => void;
   /** A link in an answer was tapped. */
   onOpenLink: (url: string) => void;
+  /** A long press on a link in an answer: its menu. */
+  onLinkMenu?: (url: string, text: string) => void;
   /** A Call button or a tel: link in an answer was tapped; number is already normalised. */
   onCall: (number: string) => void;
   /** The "Open in Messages" button of a prepared text message was tapped. */
@@ -279,6 +281,7 @@ export function AssistantPanel({
   showCost,
   onMessageAction,
   onOpenLink,
+  onLinkMenu,
   onCall,
   onSms,
   onWhatsApp,
@@ -725,6 +728,7 @@ export function AssistantPanel({
                           onAction={(action) => messageAction(action, item)}
                           onMenu={(full) => setMenu({ item, full })}
                           onOpenLink={onOpenLink}
+                          onLinkMenu={onLinkMenu}
                           onCall={onCall}
                           onSms={onSms}
                           onWhatsApp={onWhatsApp}
@@ -1191,6 +1195,7 @@ function ChatRow({
   onAction,
   onMenu,
   onOpenLink,
+  onLinkMenu,
   onCall,
   onSms,
   onWhatsApp,
@@ -1224,6 +1229,7 @@ function ChatRow({
   /** Opens the message's menu; full when opened by long press (it then lists the row's actions too). */
   onMenu: (full: boolean) => void;
   onOpenLink: (url: string) => void;
+  onLinkMenu?: (url: string, text: string) => void;
   onCall: (number: string) => void;
   onSms: (offer: SmsOffer) => void;
   onWhatsApp: (offer: WhatsAppOffer) => void;
@@ -1278,6 +1284,7 @@ function ChatRow({
           text={item.streaming ? `${item.text} ▍` : item.text}
           style={textStyle}
           onOpenLink={onOpenLink}
+          onLinkMenu={onLinkMenu}
           onCall={onCall}
           dark={!!d}
           selectable={selectable}
@@ -1337,7 +1344,7 @@ function ChatRow({
       return (
         <View style={styles.choices}>
           <View style={[styles.bubble, styles.assistantBubble, styles.choicesBubble, d?.assistantBubble]}>
-            <MarkdownText text={item.text} style={textStyle} onOpenLink={onOpenLink} onCall={onCall} dark={!!d} />
+            <MarkdownText text={item.text} style={textStyle} onOpenLink={onOpenLink} onLinkMenu={onLinkMenu} onCall={onCall} dark={!!d} />
           </View>
           {answered
             ? null
