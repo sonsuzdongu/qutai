@@ -25,7 +25,9 @@ function pageScript(fromHead) {
     : readFileSync(join(root, 'src', 'browser', 'pageScript.ts'), 'utf8');
   const start = source.indexOf('export const PAGE_SCRIPT = String.raw`');
   const body = source.slice(start + 'export const PAGE_SCRIPT = String.raw`'.length);
-  return body.slice(0, body.indexOf('\n`;'));
+  const script = body.slice(0, body.indexOf('\n`;'));
+  // A backtick would end the template literal in the app: the page shows the failure instead of passing here.
+  return script.includes('`') ? "throw new Error('The page script contains a backtick: it ends PAGE_SCRIPT early.');" : script;
 }
 
 createServer((req, res) => {
