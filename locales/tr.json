@@ -17,6 +17,7 @@
     "New incognito tab": "Yeni gizli sekme",
     "Ask Qutai": "Qutai’ye sor",
     "Scan QR code": "QR kodu tara",
-    "NSLocalNetworkUsageDescription": "Qutai, yerel ağınızdaki bir yapay zekâ sunucusuna yalnızca onu özel yapay zekâ sunucunuz olarak ayarladığınızda bağlanır."
+    "NSLocalNetworkUsageDescription": "Qutai, yerel ağınızdaki bir yapay zekâ sunucusuna yalnızca onu özel yapay zekâ sunucunuz olarak ayarladığınızda bağlanır.",
+    "NSContactsUsageDescription": "Qutai, yalnızca asistana adını söylediğiniz kişileri arayabilmeniz ya da onlara mesaj gönderebilmeniz için telefonunuzda bulur. Numaraları ve e-posta adresleri yapay zekâya gönderilmez."
   }
 }

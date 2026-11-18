@@ -17,6 +17,7 @@
     "New incognito tab": "Tab Samaran baru",
     "Ask Qutai": "Tanya Qutai",
     "Scan QR code": "Pindai kode QR",
-    "NSLocalNetworkUsageDescription": "Qutai terhubung ke server AI di jaringan lokal Anda hanya jika Anda menyiapkannya sebagai endpoint AI kustom."
+    "NSLocalNetworkUsageDescription": "Qutai terhubung ke server AI di jaringan lokal Anda hanya jika Anda menyiapkannya sebagai endpoint AI kustom.",
+    "NSContactsUsageDescription": "Qutai hanya mencari orang yang Anda sebutkan kepada asisten, di ponsel Anda, agar Anda bisa menelepon atau mengirim pesan kepada mereka. Nomor dan alamat email mereka tidak dikirim ke AI."
   }
 }

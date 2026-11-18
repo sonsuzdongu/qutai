@@ -17,6 +17,7 @@
     "New incognito tab": "Nueva pestaña de incógnito",
     "Ask Qutai": "Preguntar a Qutai",
     "Scan QR code": "Escanear código QR",
-    "NSLocalNetworkUsageDescription": "Qutai se conecta a un servidor de IA de tu red local solo cuando lo configuras como tu endpoint de IA personalizado."
+    "NSLocalNetworkUsageDescription": "Qutai se conecta a un servidor de IA de tu red local solo cuando lo configuras como tu endpoint de IA personalizado.",
+    "NSContactsUsageDescription": "Qutai busca en tu teléfono solo a las personas que nombras al asistente, para que puedas llamarlas o escribirles. Sus números y direcciones de correo no se envían a la IA."
   }
 }

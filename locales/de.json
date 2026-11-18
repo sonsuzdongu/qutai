@@ -17,6 +17,7 @@
     "New incognito tab": "Neuer Inkognito-Tab",
     "Ask Qutai": "Qutai fragen",
     "Scan QR code": "QR-Code scannen",
-    "NSLocalNetworkUsageDescription": "Qutai verbindet sich nur dann mit einem KI-Server in Ihrem lokalen Netzwerk, wenn Sie ihn als eigenen KI-Endpunkt eingerichtet haben."
+    "NSLocalNetworkUsageDescription": "Qutai verbindet sich nur dann mit einem KI-Server in Ihrem lokalen Netzwerk, wenn Sie ihn als eigenen KI-Endpunkt eingerichtet haben.",
+    "NSContactsUsageDescription": "Qutai sucht nur die Personen, die Sie dem Assistenten nennen, auf Ihrem Telefon, damit Sie sie anrufen oder ihnen schreiben können. Ihre Nummern und E-Mail-Adressen werden nicht an die KI gesendet."
   }
 }

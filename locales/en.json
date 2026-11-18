@@ -17,6 +17,7 @@
     "New incognito tab": "New incognito tab",
     "Ask Qutai": "Ask Qutai",
     "Scan QR code": "Scan QR code",
-    "NSLocalNetworkUsageDescription": "Qutai connects to an AI server on your local network only when you set one up as your custom AI endpoint."
+    "NSLocalNetworkUsageDescription": "Qutai connects to an AI server on your local network only when you set one up as your custom AI endpoint.",
+    "NSContactsUsageDescription": "Qutai looks up only the people you name to the assistant, on your phone, so you can call or message them. Their numbers and email addresses are not sent to the AI."
   }
 }

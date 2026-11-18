@@ -17,6 +17,7 @@
     "New incognito tab": "Nouvel onglet privé",
     "Ask Qutai": "Demander à Qutai",
     "Scan QR code": "Scanner un code QR",
-    "NSLocalNetworkUsageDescription": "Qutai se connecte à un serveur d’IA de votre réseau local uniquement si vous l’avez configuré comme serveur d’IA personnalisé."
+    "NSLocalNetworkUsageDescription": "Qutai se connecte à un serveur d’IA de votre réseau local uniquement si vous l’avez configuré comme serveur d’IA personnalisé.",
+    "NSContactsUsageDescription": "Qutai recherche sur votre téléphone uniquement les personnes que vous nommez à l’assistant, pour que vous puissiez les appeler ou leur écrire. Leurs numéros et adresses e-mail ne sont pas envoyés à l’IA."
   }
 }

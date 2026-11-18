@@ -89,6 +89,7 @@
         "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.ACCESS_WIFI_STATE",
+        "android.permission.WRITE_CONTACTS",
         "com.google.android.c2dm.permission.RECEIVE",
         "com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE",
         "android.permission.READ_APP_BADGE",
@@ -241,7 +242,13 @@
         }
       ],
       "./plugins/withLaunchBackground",
-      "./plugins/withOrientations"
+      "./plugins/withOrientations",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Qutai looks up only the people you name to the assistant, on your phone, so you can call or message them. Their numbers and email addresses are not sent to the AI."
+        }
+      ]
     ],
     "locales": {
       "tr": "./locales/tr.json",

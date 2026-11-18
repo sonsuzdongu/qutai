@@ -17,6 +17,7 @@
     "New incognito tab": "新しいシークレット タブ",
     "Ask Qutai": "Qutai に質問",
     "Scan QR code": "QR コードをスキャン",
-    "NSLocalNetworkUsageDescription": "Qutai がローカル ネットワーク上の AI サーバーに接続するのは、それをカスタム AI エンドポイントとして設定した場合のみです。"
+    "NSLocalNetworkUsageDescription": "Qutai がローカル ネットワーク上の AI サーバーに接続するのは、それをカスタム AI エンドポイントとして設定した場合のみです。",
+    "NSContactsUsageDescription": "Qutai は、アシスタントに名前を伝えた人だけを端末内で探し、電話やメッセージができるようにします。電話番号やメールアドレスは AI に送信されません。"
   }
 }
