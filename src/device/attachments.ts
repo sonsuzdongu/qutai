@@ -10,6 +10,7 @@ import {
   MODEL_MAX_BYTES,
   newAttachmentId,
 } from '../chat/attachments';
+import type { Filters } from '../chat/imageFilters';
 import { ensureMediaPermission } from './mediaPermissions';
 import { safeFileName } from './download';
 import { PermissionDeniedError } from './settings';
@@ -312,7 +313,15 @@ export function importFile(source: File, name: string, mimeType: string, size: n
  */
 export async function storeEditedImage(
   file: File,
-  meta: { name: string; mimeType: string; width: number; height: number; derivedFrom: string; edits: string },
+  meta: {
+    name: string;
+    mimeType: string;
+    width: number;
+    height: number;
+    derivedFrom: string;
+    edits: string;
+    filters?: Partial<Filters>;
+  },
   incognito: boolean,
 ): Promise<AttachmentInfo> {
   const id = newAttachmentId(incognito);
@@ -333,6 +342,7 @@ export async function storeEditedImage(
       model: { width: model.width, height: model.height, mimeType: model.mimeType, size: model.size },
       derivedFrom: meta.derivedFrom,
       edits: meta.edits,
+      ...(meta.filters ? { filters: meta.filters } : {}),
     };
   } catch (e) {
     if (dir.exists) dir.delete();

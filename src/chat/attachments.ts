@@ -9,6 +9,8 @@
  * longest side at most MODEL_LONG_EDGE and at most MODEL_MAX_BYTES.
  */
 
+import type { Filters } from './imageFilters';
+
 export type AttachmentKind = 'image' | 'pdf';
 
 /** What the conversation keeps about an attachment (in its messages and history); no file content. */
@@ -30,6 +32,8 @@ export type AttachmentInfo = {
   derivedFrom?: string;
   /** Edited images: what was done, in a short line ("cropped to 1:1 …; resized to 1024×1024; JPEG quality 90"). */
   edits?: string;
+  /** Edited images: the filters applied (only those set), for the card's translated summary. */
+  filters?: Partial<Filters>;
   /**
    * PDFs Qutai made in this conversation (not attached by the user): "page" from save_pdf, "report" from an answer
    * saved as a PDF. Kept like attachments so they can be shared, attached to an email or uploaded later.

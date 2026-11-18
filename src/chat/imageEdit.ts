@@ -9,9 +9,11 @@
  *   2. rotate clockwise by quarter turns, then flip;
  *   3. resize: fit within a box, cover a box exactly (cropping the overflow like step 1), stretch to exact
  *      dimensions, or set one side and keep the aspect ratio; never enlarged unless allowUpscale;
- *   4. flatten transparency onto the background colour when the output is JPEG;
- *   5. encode (JPEG, PNG or WebP at a quality);
- *   6. meet maxBytes: lower the quality (JPEG, WebP), then scale down in steps.
+ *   4. filters, at the result's size: colour (one matrix), then blur or sharpen (src/chat/imageFilters.ts);
+ *   5. flatten transparency onto the background colour when the output is JPEG;
+ *   6. encode (JPEG, PNG or WebP at a quality);
+ *   7. meet maxBytes: lower the quality (JPEG, WebP), then scale down in steps (the filters are drawn again at
+ *      each smaller size, so a blur keeps its look).
  *
  * Coordinates: the source is the image as it is displayed (orientation applied), in its own pixels; crop rectangles,
  * gravity and focus refer to it before rotation. An aspect ratio, a box and output dimensions refer to the result,
@@ -22,6 +24,8 @@
  * half the spare pixels for centre, 0 or all of them for an edge, and the focus point minus half the crop, rounded and
  * clamped inside the area. The cropped area is always drawn to fill the whole output, so no edge strip is ever empty.
  */
+
+import { type Filters, isNeutral, parseFilters } from './imageFilters';
 
 export type Gravity = 'center' | 'top' | 'bottom' | 'left' | 'right';
 export type FitMode = 'fit' | 'cover' | 'exact';
@@ -52,6 +56,10 @@ export type EditRequest = {
   /** CSS hex colour under transparent pixels in a JPEG. */
   background: string;
   maxBytes?: number;
+  /** Absent: no filters. */
+  filters?: Filters;
+  /** What reading the filters changed (clamped amounts), for the model. */
+  filterNotes?: string[];
 };
 
 export type EditPlan = {
@@ -226,12 +234,16 @@ export function parseEditRequest(input: Record<string, unknown>): EditRequest | 
     if (!Number.isFinite(b) || b < MIN_MAX_BYTES) return `max_bytes is a number of bytes, at least ${MIN_MAX_BYTES}.`;
     req.maxBytes = b;
   }
+  const filters = parseFilters(input.filters);
+  if (typeof filters === 'string') return filters;
+  if (!isNeutral(filters.filters)) req.filters = filters.filters;
+  if (filters.notes.length) req.filterNotes = filters.notes;
   return req;
 }
 
 /** Whether the request changes anything at all besides re-encoding. */
 export function changesPixels(req: EditRequest): boolean {
-  return !!(req.crop || req.aspect || req.rotate || req.flipH || req.flipV || req.width || req.height);
+  return !!(req.crop || req.aspect || req.rotate || req.flipH || req.flipV || req.width || req.height || req.filters);
 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
@@ -291,7 +303,7 @@ export function planEdit(req: EditRequest, source: Size): EditPlan | string {
   if (!(source.width >= 1 && source.height >= 1)) return 'The size of this image is unknown, so it cannot be edited.';
   const full: Rect = { x: 0, y: 0, width: source.width, height: source.height };
   const steps: string[] = [];
-  const notes: string[] = [];
+  const notes: string[] = [...(req.filterNotes ?? [])];
   const focus = req.focus ? { x: req.focus.x * source.width, y: req.focus.y * source.height } : undefined;
   const quarter = req.rotate === 90 || req.rotate === 270;
   // A ratio of the result, turned into one of the source when a quarter turn follows.

@@ -212,11 +212,11 @@ export const TOOLS: ToolDefinition[] = [
     name: 'edit_image',
     description:
       'Make an edited copy of an image the user attached (or of an earlier edit) on the phone: crop, rotate, flip, ' +
-      'resize, change the format and quality, or bring it under a file size. Nothing is sent anywhere and the ' +
+      'resize, apply filters, change the format and quality, or bring it under a file size. Nothing is sent anywhere and the ' +
       'original is unchanged; the result is a new image with its own id, shown to the user as a card, and you get ' +
       'its id, size, format and bytes as text (no image). Steps always apply in this order: crop (crop_x/crop_y/' +
       'crop_width/crop_height in source pixels, or aspect with gravity or focus), rotate, flip, resize (width/height ' +
-      'with fit), flatten transparency for JPEG, encode, then max_bytes (lowers quality, then makes it smaller). ' +
+      'with fit), filters, flatten transparency for JPEG, encode, then max_bytes (lowers quality, then makes it smaller). ' +
       'For a form that wants exact dimensions such as 1024×1024 use width, height and fit "cover". Never enlarges ' +
       'unless allow_upscale is true.',
     input_schema: {
@@ -256,6 +256,12 @@ export const TOOLS: ToolDefinition[] = [
         quality: { type: 'integer', description: 'JPEG/WebP quality 1–100 (default 90)' },
         background: { type: 'string', description: 'Hex colour under transparent areas when saving as JPEG (default "#ffffff")' },
         max_bytes: { type: 'integer', description: 'Largest file size in bytes (1 MB = 1000000), e.g. from the form\'s limit' },
+        filters: {
+          type: 'string',
+          description:
+            'Comma-separated, e.g. "greyscale, sharpen 30". On/off: greyscale, sepia, invert, auto (levels stretch). ' +
+            'brightness, contrast, saturation, warmth -100…100; sharpen or blur 0…100. 0 = none, ~25 a little, ~60 much',
+        },
       },
       required: ['id'],
     },

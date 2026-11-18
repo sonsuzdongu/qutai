@@ -18,7 +18,9 @@ import {
   planEdit,
   Size,
 } from '../chat/imageEdit';
+import { compactFilters, filterSteps, type Filters, type Levels } from '../chat/imageFilters';
 import { manipulator, originalFile, storeEditedImage } from './attachments';
+import { filterPaint, measureLevels, sharpenImage } from './filterRender';
 
 /**
  * Image edits on the phone (edit_image and the "Resize or crop" sheet). Nothing is sent anywhere and the source is
@@ -34,6 +36,9 @@ import { manipulator, originalFile, storeEditedImage } from './attachments';
  *    for the rest; Catmull-Rom when enlarging; plain pixel copy when the size is already right. A 4000 px photo made
  *    256 px is thus averaged down, never sampled, and shows no aliasing. A JPEG gets the background colour under
  *    transparent pixels.
+ *    The filters (src/device/filterRender.ts) are drawn in the same pass, at the output size: the colour matrix and
+ *    blur with the draw's paint, sharpen as a second pass; the background goes under them last, so filters never
+ *    tint it. Auto enhance measures the tones once, on the decoded piece.
  * 3. Skia encodes JPEG, PNG or WebP (its encoders write no EXIF), lowering quality and then size for maxBytes.
  */
 
@@ -129,18 +134,25 @@ function halveTowards(image: SkImage, size: Size): SkImage {
 
 /**
  * Step 2: `image` drawn at `size`: halving steps first, then one bicubic draw (Mitchell when reducing, Catmull-Rom
- * when enlarging) or a plain copy at the same size; `background` under transparent pixels (JPEG). The caller
- * disposes the result.
+ * when enlarging) or a plain copy at the same size, with the filters; `background` under transparent pixels (JPEG).
+ * The caller disposes the result.
  */
-function resample(image: SkImage, size: Size, background: string | null): SkImage {
+function resample(
+  image: SkImage,
+  size: Size,
+  background: string | null,
+  look?: { filters: Filters; levels: Levels | null },
+): SkImage {
   const halved = image.width() >= size.width * 2 && image.height() >= size.height * 2 ? halveTowards(image, size) : image;
+  const sharpen = look?.filters.sharpen ?? 0;
   try {
     const surface = surfaceOf(size);
     const canvas = surface.getCanvas();
-    canvas.clear(Skia.Color(background ?? 'transparent'));
+    // With sharpen the background goes in under the second pass, so the edge against it is not sharpened.
+    canvas.clear(Skia.Color(sharpen ? 'transparent' : (background ?? 'transparent')));
     const src = Skia.XYWHRect(0, 0, halved.width(), halved.height());
     const dst = Skia.XYWHRect(0, 0, size.width, size.height);
-    const paint = Skia.Paint();
+    const paint = (look && filterPaint(Skia, look.filters, size, look.levels)) || Skia.Paint();
     if (halved.width() === size.width && halved.height() === size.height) {
       canvas.drawImageRectOptions(halved, src, dst, FilterMode.Nearest, MipmapMode.None, paint);
     } else {
@@ -151,7 +163,12 @@ function resample(image: SkImage, size: Size, background: string | null): SkImag
     surface.flush();
     const result = surface.makeImageSnapshot();
     surface.dispose();
-    return result;
+    if (!sharpen) return result;
+    try {
+      return sharpenImage(Skia, result, sharpen, background);
+    } finally {
+      result.dispose();
+    }
   } finally {
     if (halved !== image) halved.dispose();
   }
@@ -196,12 +213,16 @@ export async function editImage(source: AttachmentInfo, req: EditRequest, incogn
       encoded.dispose();
     }
     const decoded = image;
+    const filters = req.filters;
+    const levels = filters?.auto ? measureLevels(Skia, decoded) : null;
+    const look = filters ? { filters, levels } : undefined;
+    if (filters) steps.push(...filterSteps(filters, levels));
     const lossy = format !== 'png';
     const budget = await fitToBudget<Encoded>(
       // WebP at 100 would be lossless (and much larger); 99 keeps it lossy.
       { maxBytes: req.maxBytes, quality: format === 'webp' ? Math.min(req.quality, 99) : lossy ? req.quality : 100, lossy, size: plan.out },
       async (quality, outSize) => {
-        const drawn = resample(decoded, outSize, background);
+        const drawn = resample(decoded, outSize, background, look);
         try {
           const bytes = drawn.encodeToBytes(SKIA_FORMAT[format], quality);
           if (!bytes || bytes.length === 0) throw new ImageEditError(`This phone could not encode ${formatLabel(format)}.`);
@@ -240,6 +261,7 @@ export async function editImage(source: AttachmentInfo, req: EditRequest, incogn
         height: budget.size.height,
         derivedFrom: source.id,
         edits: steps.join('; '),
+        ...(filters ? { filters: compactFilters(filters) } : {}),
       },
       incognito,
     ).finally(() => {
@@ -298,5 +320,41 @@ export async function uploadableImage(info: AttachmentInfo): Promise<UploadableI
     return { file: out, name: `${base}.${FORMAT_EXT[format]}`, mimeType: FORMAT_MIME[format], ...size, temporary: true };
   } finally {
     if (piece.exists) piece.delete();
+  }
+}
+
+/**
+ * A reduced copy of an image for the edit sheet's live preview: decoded (EXIF orientation applied) with its longest
+ * side at most `edge`, as a raster Skia image the preview redraws on every change. Transparency is kept. The caller
+ * disposes it.
+ */
+export async function loadPreviewImage(info: AttachmentInfo, edge: number): Promise<SkImage> {
+  const file = originalFile(info.id);
+  if (!file) throw new ImageEditError(`The image ${info.id} is no longer on this phone.`);
+  const { ImageManipulator, SaveFormat } = await manipulator();
+  const longest = Math.max(info.width ?? 0, info.height ?? 0);
+  const context = ImageManipulator.manipulate(file.uri, !longest || longest > edge ? { maxWidth: edge, maxHeight: edge } : undefined);
+  let saved: File | null = null;
+  try {
+    const decoded = await context.renderAsync();
+    try {
+      const alpha = mayHaveAlpha(info.mimeType);
+      const result = await decoded.saveAsync({ format: alpha ? SaveFormat.PNG : SaveFormat.JPEG, compress: 0.95 });
+      saved = new File(result.uri);
+    } finally {
+      decoded.release?.();
+    }
+    const encoded = Skia.Image.MakeImageFromEncoded(await Skia.Data.fromURI(saved.uri));
+    if (!encoded) throw new ImageEditError('The image could not be decoded.');
+    try {
+      // Fit within `edge` here too (a platform decoder may not have reduced it), as a raster image.
+      const f = Math.min(1, edge / Math.max(encoded.width(), encoded.height()));
+      return resample(encoded, { width: Math.max(1, Math.round(encoded.width() * f)), height: Math.max(1, Math.round(encoded.height() * f)) }, null);
+    } finally {
+      encoded.dispose();
+    }
+  } finally {
+    (context as { release?: () => void }).release?.();
+    if (saved?.exists) saved.delete();
   }
 }
