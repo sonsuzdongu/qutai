@@ -361,6 +361,8 @@ export const es: Record<keyof typeof en, string> = {
   'reader.resume': 'Reanudar lectura',
   'reader.stopReading': 'Dejar de leer',
   'speech.noVoice': 'No hay ninguna voz en {language} instalada en este teléfono, así que lo lee la voz predeterminada del teléfono. Puede añadir una en los ajustes de texto a voz del teléfono.',
+  'speech.betterVoiceIos': '{language}: solo hay una voz básica instalada. Para una más natural, busque «Voces» en Ajustes y descargue una voz mejorada o prémium.',
+  'speech.betterVoiceAndroid': '{language}: solo hay una voz básica instalada. Para una más natural, busque «Texto a voz» en los ajustes del teléfono e instale los datos de voz de este idioma.',
   'reader.settings': 'Opciones de lectura',
   'reader.theme': 'Colores',
   'reader.theme.auto': 'Automático',

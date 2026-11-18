@@ -359,6 +359,8 @@ export const ko: Record<keyof typeof en, string> = {
   'reader.resume': '계속 읽기',
   'reader.stopReading': '읽기 중지',
   'speech.noVoice': '이 휴대전화에 {language} 음성이 설치되어 있지 않아 휴대전화의 기본 음성으로 읽습니다. 휴대전화의 텍스트 음성 변환 설정에서 추가할 수 있습니다.',
+  'speech.betterVoiceIos': '{language}: 기본 음성만 설치되어 있습니다. 더 자연스러운 음성을 원하면 설정에서 ‘음성’을 검색해 향상된 음성이나 프리미엄 음성을 다운로드하세요.',
+  'speech.betterVoiceAndroid': '{language}: 기본 음성만 설치되어 있습니다. 더 자연스러운 음성을 원하면 휴대폰 설정에서 ‘텍스트 음성 변환’을 검색해 이 언어의 음성 데이터를 설치하세요.',
   'reader.settings': '읽기 모드 설정',
   'reader.theme': '색상',
   'reader.theme.auto': '자동',

@@ -78,32 +78,70 @@ export function speechLanguage(text: string, hint?: string | null): string | und
 /** A voice as expo-speech's getAvailableVoicesAsync reports it. */
 export type VoiceInfo = { identifier: string; language: string; quality?: string };
 
-/** What to hand the speech engine as its `language` option, and the language left without a voice, if any. */
-export type VoiceChoice = { language?: string; missing?: string };
+/**
+ * What to hand the speech engine: its `language` option, on iOS also the `voice` chosen; the language left without a
+ * voice, if any; and `lowQuality` when only basic voices are installed for it (the user can be told once how to get a
+ * better one).
+ */
+export type VoiceChoice = { language?: string; voice?: string; missing?: string; lowQuality?: true };
 
 /**
- * The speech engine's `language` option for a language, given the phone's voices.
+ * How natural a voice sounds, from what the platform reports. iOS: Premium (iOS 16+; expo-speech reports it as
+ * "Default", so it is read from the identifier) > Enhanced > the Siri voices > compact; the Eloquence voices and the
+ * novelty voices ("Bells", "Bad News"…) are last. Android: the engine's quality (expo-speech says "Enhanced" above
+ * QUALITY_NORMAL), and a voice that needs the network counts a little less than the same quality on the phone (it
+ * stalls without a connection).
+ */
+export function voiceRank(voice: VoiceInfo, os: string): number {
+  const id = voice.identifier.toLowerCase();
+  if (os === 'ios') {
+    if (/\.premium\./.test(id)) return 4;
+    if (voice.quality === 'Enhanced' || /\.enhanced\./.test(id)) return 3;
+    if (id.includes('siri')) return 2;
+    if (id.includes('eloquence') || id.startsWith('com.apple.speech.synthesis.voice.')) return 0;
+    return 1;
+  }
+  const enhanced = voice.quality === 'Enhanced' ? 2 : 1;
+  return id.includes('network') ? enhanced - 0.5 : enhanced;
+}
+
+/** Below this rank only basic voices are installed for the language. */
+const GOOD_RANK = { ios: 3, android: 1.5 } as const;
+
+/**
+ * The speech engine's options for a language, given the phone's voices.
  *
  * - No language: nothing (the phone's default voice).
  * - An empty list means "not known yet" (Android engines may report their voices late): the language is passed as
  *   is, no warning.
- * - A voice for the exact language and region, else one for the same language in another region (pt-PT for pt-BR).
+ * - Voices for the exact language and region, else the same language in another region (pt-PT for pt-BR); among
+ *   them the most natural one (voiceRank). `previous` (the voice chosen for this language before) is kept while it is
+ *   still installed and as good as any, so the voice never changes between sentences or answers.
  * - No voice for the language at all: nothing, so the phone's default voice reads, and `missing` names the
  *   language so the user can be told once. Reading isn't blocked.
  *
  * Android gets the bare language code: expo-speech builds the locale with Locale.Builder().setLanguage, which rejects
  * a tag such as "tr-TR" and then uses the phone's language (the reported bug), and the engine picks its own voice
  * for the language. No `voice` option there: when the engine's service has died, expo-speech looks voices up in a
- * null list and the whole utterance is rejected. iOS takes the tag and reads with the voice the user set for that
- * language in the system settings.
+ * null list and the whole utterance is rejected. The list still says whether a natural voice is installed. iOS
+ * takes the tag and the chosen voice's identifier.
  */
-export function pickVoice(language: string | undefined, voices: VoiceInfo[], os: string): VoiceChoice {
+export function pickVoice(language: string | undefined, voices: VoiceInfo[], os: string, previous?: string): VoiceChoice {
   if (!language) return {};
   const base = baseLanguage(language);
   const tag = (code: string) => code.replace(/_/g, '-').toLowerCase();
   if (voices.length === 0) return { language: os === 'android' ? base : language };
-  const exact = voices.find((v) => tag(v.language) === tag(language));
-  const same = exact ?? voices.find((v) => baseLanguage(v.language) === base);
-  if (!same) return { missing: base };
-  return { language: os === 'android' ? base : same.language.replace(/_/g, '-') };
+  const exact = voices.filter((v) => tag(v.language) === tag(language));
+  const candidates = exact.length ? exact : voices.filter((v) => baseLanguage(v.language) === base);
+  if (!candidates.length) return { missing: base };
+  // The most natural; the first listed among equals (a stable order from the platform).
+  let best = candidates[0];
+  for (const v of candidates) if (voiceRank(v, os) > voiceRank(best, os)) best = v;
+  const kept = previous ? candidates.find((v) => v.identifier === previous) : undefined;
+  if (kept && voiceRank(kept, os) >= voiceRank(best, os)) best = kept;
+  const lowQuality = voiceRank(best, os) < (os === 'ios' ? GOOD_RANK.ios : GOOD_RANK.android);
+  return {
+    ...(os === 'android' ? { language: base } : { language: best.language.replace(/_/g, '-'), voice: best.identifier }),
+    ...(lowQuality ? { lowQuality: true as const } : {}),
+  };
 }

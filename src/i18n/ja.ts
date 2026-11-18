@@ -361,6 +361,8 @@ export const ja: Record<keyof typeof en, string> = {
   'reader.resume': '読み上げを再開',
   'reader.stopReading': '読み上げを停止',
   'speech.noVoice': 'この端末には{language}の音声がインストールされていないため、端末の標準の音声で読み上げます。端末のテキスト読み上げ設定で追加できます。',
+  'speech.betterVoiceIos': '{language}: 基本的な音声しかインストールされていません。より自然な音声にするには、設定で「声」を検索し、拡張またはプレミアムの音声をダウンロードしてください。',
+  'speech.betterVoiceAndroid': '{language}: 基本的な音声しかインストールされていません。より自然な音声にするには、端末の設定で「テキスト読み上げ」を検索し、この言語の音声データをインストールしてください。',
   'reader.settings': 'リーダーの設定',
   'reader.theme': '配色',
   'reader.theme.auto': '自動',

@@ -5,6 +5,7 @@ import type { Tab } from '../browser/Tab';
 import { pickVoice, speechLanguage, type VoiceChoice, type VoiceInfo } from '../chat/speechLanguage';
 import { t } from '../i18n';
 import { languageName } from './voiceLanguage';
+import { getDb, getJson, setJson } from '../storage/db';
 
 /** Upper bound per utterance; Android's engine rejects long inputs. */
 const CHUNK_CHARS = 3000;
@@ -35,6 +36,34 @@ const VOICE_CACHE_MS = 10 * 60 * 1000;
 const VOICE_WAIT_MS = 1500;
 /** Languages the user was already told have no voice (once per app run). */
 const toldMissing = new Set<string>();
+/** The voice chosen per language this run (iOS), so it never changes between sentences or answers. */
+const chosen = new Map<string, string>();
+/** Rate and pitch of every utterance: the engine's natural ones (1 = AVSpeechUtteranceDefaultSpeechRate on iOS). */
+const VOICE_RATE = 1;
+const VOICE_PITCH = 1;
+/** Languages the user was told how to get a more natural voice for (once per install). */
+const BETTER_VOICE_KEY = 'speech.betterVoiceTold';
+let betterVoiceTold: Promise<Set<string>> | null = null;
+
+function toldBetterVoice(): Promise<Set<string>> {
+  betterVoiceTold ??= getDb()
+    .then((db) => getJson<string[]>(db, BETTER_VOICE_KEY))
+    .then((list) => new Set(list ?? []))
+    .catch(() => new Set<string>());
+  return betterVoiceTold;
+}
+
+/** Once per language and install: how to get a more natural voice than the basic one installed. Never waits. */
+function offerBetterVoice(base: string) {
+  void toldBetterVoice().then((told) => {
+    if (told.has(base)) return;
+    told.add(base);
+    notice(t(Platform.OS === 'ios' ? 'speech.betterVoiceIos' : 'speech.betterVoiceAndroid', { language: languageName(base) }));
+    void getDb()
+      .then((db) => setJson(db, BETTER_VOICE_KEY, [...told]))
+      .catch(() => {});
+  });
+}
 
 async function phoneVoices(): Promise<VoiceInfo[]> {
   if (voiceCache && Date.now() - voiceCache.at < VOICE_CACHE_MS) return voiceCache.voices;
@@ -59,7 +88,10 @@ async function phoneVoices(): Promise<VoiceInfo[]> {
  */
 async function voiceFor(text: string, hint?: string): Promise<VoiceChoice> {
   const language = speechLanguage(text, hint);
-  const choice = pickVoice(language, language ? await phoneVoices() : [], Platform.OS);
+  const base = language ? language.toLowerCase().split(/[-_]/)[0] : '';
+  const choice = pickVoice(language, language ? await phoneVoices() : [], Platform.OS, chosen.get(base));
+  if (choice.voice) chosen.set(base, choice.voice);
+  if (choice.lowQuality && base) offerBetterVoice(base);
   if (__DEV__) console.log(`[speech] text language ${language ?? 'unknown'} → ${JSON.stringify(choice)}`);
   if (choice.missing && !toldMissing.has(choice.missing)) {
     toldMissing.add(choice.missing);
@@ -121,7 +153,7 @@ export async function speak(text: string, hint?: string): Promise<void> {
   if (chunks.length === 0) return;
 
   const current = ++session;
-  const { language } = await voiceFor(text, hint);
+  const { language, voice } = await voiceFor(text, hint);
   // Stopped, or something else started reading, while the voices were looked up.
   if (current !== session) return;
   setSpeaking(true);
@@ -133,6 +165,9 @@ export async function speak(text: string, hint?: string): Promise<void> {
     const last = i === chunks.length - 1;
     Speech.speak(chunk, {
       language,
+      voice,
+      rate: VOICE_RATE,
+      pitch: VOICE_PITCH,
       onDone: last ? finish : undefined,
       onStopped: finish,
       onError: finish,
@@ -155,7 +190,7 @@ export async function speakReader(tab: Tab, from = 0): Promise<{ chars: number; 
   const current = ++session;
   const owned = () => current === session;
   // The article's own text decides; the page's `lang` is often missing or wrong (a Turkish article on an "en" page).
-  const { language } = await voiceFor(blocks.join('\n'), article.lang);
+  const { language, voice } = await voiceFor(blocks.join('\n'), article.lang);
   // Stopped, or something else started reading, while the voices were looked up.
   if (!owned()) return { chars: 0, truncated: false };
   const finish = () => {
@@ -177,6 +212,9 @@ export async function speakReader(tab: Tab, from = 0): Promise<{ chars: number; 
   queue.forEach((item, k) => {
     Speech.speak(item.chunk, {
       language,
+      voice,
+      rate: VOICE_RATE,
+      pitch: VOICE_PITCH,
       onStart: item.first
         ? () => {
             if (owned()) setReading({ tabId: tab.id, index: item.index, paused: false });

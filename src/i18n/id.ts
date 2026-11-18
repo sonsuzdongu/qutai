@@ -360,6 +360,8 @@ export const id: Record<keyof typeof en, string> = {
   'reader.resume': 'Lanjutkan membacakan',
   'reader.stopReading': 'Berhenti membacakan',
   'speech.noVoice': 'Tidak ada suara {language} yang terpasang di ponsel ini, jadi suara bawaan ponsel yang membacakannya. Anda bisa menambahkannya di pengaturan teks-ke-ucapan ponsel.',
+  'speech.betterVoiceIos': '{language}: hanya suara dasar yang terpasang. Untuk suara yang lebih alami, cari “Suara” di Pengaturan lalu unduh suara Ditingkatkan atau Premium.',
+  'speech.betterVoiceAndroid': '{language}: hanya suara dasar yang terpasang. Untuk suara yang lebih alami, cari “Text-to-speech” di setelan ponsel lalu instal data suara untuk bahasa ini.',
   'reader.settings': 'Setelan mode baca',
   'reader.theme': 'Warna',
   'reader.theme.auto': 'Otomatis',

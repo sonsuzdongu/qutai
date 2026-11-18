@@ -361,6 +361,8 @@ export const ptBR: Record<keyof typeof en, string> = {
   'reader.resume': 'Retomar leitura',
   'reader.stopReading': 'Parar leitura',
   'speech.noVoice': 'Nenhuma voz em {language} está instalada neste telefone, então a voz padrão do telefone faz a leitura. Você pode adicionar uma nas configurações de conversão de texto em voz do telefone.',
+  'speech.betterVoiceIos': '{language}: só há uma voz básica instalada. Para uma mais natural, procure “Vozes” nos Ajustes e baixe uma voz aprimorada ou premium.',
+  'speech.betterVoiceAndroid': '{language}: só há uma voz básica instalada. Para uma mais natural, procure “Conversão de texto em voz” nas configurações do telefone e instale os dados de voz deste idioma.',
   'reader.settings': 'Configurações de leitura',
   'reader.theme': 'Cores',
   'reader.theme.auto': 'Automático',

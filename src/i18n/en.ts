@@ -349,6 +349,8 @@ export const en = {
   'reader.resume': 'Resume reading',
   'reader.stopReading': 'Stop reading',
   'speech.noVoice': 'No {language} voice is installed on this phone, so the phone’s default voice reads it. You can add one in your phone’s text-to-speech settings.',
+  'speech.betterVoiceIos': '{language}: only a basic voice is installed. For a more natural one, search for “Voices” in Settings and download an Enhanced or Premium voice.',
+  'speech.betterVoiceAndroid': '{language}: only a basic voice is installed. For a more natural one, search for “Text-to-speech” in your phone’s settings and install this language’s voice data in the speech engine.',
   'reader.settings': 'Reader settings',
   'reader.theme': 'Colours',
   'reader.theme.auto': 'Auto',

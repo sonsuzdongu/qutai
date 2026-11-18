@@ -350,6 +350,8 @@ export const tr: Record<keyof typeof en, string> = {
   'reader.resume': 'Okumaya devam et',
   'reader.stopReading': 'Okumayı durdur',
   'speech.noVoice': 'Bu telefonda {language} ses yüklü değil, bu yüzden telefonun varsayılan sesiyle okunuyor. Telefonunuzun metin okuma ayarlarından ekleyebilirsiniz.',
+  'speech.betterVoiceIos': '{language}: yalnızca basit bir ses yüklü. Daha doğal bir ses için Ayarlar’da “Sesler” diye aratıp Geliştirilmiş ya da Premium bir ses indirebilirsiniz.',
+  'speech.betterVoiceAndroid': '{language}: yalnızca basit bir ses yüklü. Daha doğal bir ses için telefon ayarlarında “Metin okuma” diye aratıp konuşma motorunda bu dilin ses verilerini yükleyebilirsiniz.',
   'reader.settings': 'Okuma modu ayarları',
   'reader.theme': 'Renkler',
   'reader.theme.auto': 'Otomatik',

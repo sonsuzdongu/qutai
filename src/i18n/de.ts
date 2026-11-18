@@ -360,6 +360,8 @@ export const de: Record<keyof typeof en, string> = {
   'reader.resume': 'Vorlesen fortsetzen',
   'reader.stopReading': 'Vorlesen beenden',
   'speech.noVoice': 'Auf diesem Telefon ist keine Stimme für {language} installiert, deshalb liest die Standardstimme des Telefons. Sie können eine in den Sprachausgabe-Einstellungen des Telefons hinzufügen.',
+  'speech.betterVoiceIos': '{language}: Nur eine einfache Stimme ist installiert. Für eine natürlichere suchen Sie in den Einstellungen nach „Stimmen“ und laden eine erweiterte oder Premium-Stimme.',
+  'speech.betterVoiceAndroid': '{language}: Nur eine einfache Stimme ist installiert. Für eine natürlichere suchen Sie in den Telefoneinstellungen nach „Sprachausgabe“ und installieren die Sprachdaten dieser Sprache.',
   'reader.settings': 'Leseansicht-Einstellungen',
   'reader.theme': 'Farben',
   'reader.theme.auto': 'Auto',

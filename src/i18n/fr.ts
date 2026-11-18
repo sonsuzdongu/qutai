@@ -360,6 +360,8 @@ export const fr: Record<keyof typeof en, string> = {
   'reader.resume': 'Reprendre la lecture',
   'reader.stopReading': 'Arrêter la lecture',
   'speech.noVoice': 'Aucune voix en {language} n’est installée sur ce téléphone : la voix par défaut du téléphone lit le texte. Vous pouvez en ajouter une dans les réglages de synthèse vocale du téléphone.',
+  'speech.betterVoiceIos': '{language} : seule une voix basique est installée. Pour une voix plus naturelle, recherchez « Voix » dans Réglages et téléchargez une voix améliorée ou premium.',
+  'speech.betterVoiceAndroid': '{language} : seule une voix basique est installée. Pour une voix plus naturelle, recherchez « Synthèse vocale » dans les paramètres du téléphone et installez les données vocales de cette langue.',
   'reader.settings': 'Réglages du mode lecture',
   'reader.theme': 'Couleurs',
   'reader.theme.auto': 'Auto',

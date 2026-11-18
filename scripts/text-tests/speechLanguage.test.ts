@@ -108,15 +108,20 @@ test('Android gets the bare language code (expo-speech rejects "tr-TR" there and
   assert.deepEqual(pickVoice('tr', ANDROID, 'android'), { language: 'tr' });
 });
 
-test('iOS gets the language tag of an installed voice', () => {
-  assert.deepEqual(pickVoice('tr-TR', IOS, 'ios'), { language: 'tr-TR' });
-  assert.deepEqual(pickVoice('tr', IOS, 'ios'), { language: 'tr-TR' });
+test('iOS gets the language tag and the identifier of an installed voice', () => {
+  const yelda = { language: 'tr-TR', voice: 'com.apple.voice.compact.tr-TR.Yelda', lowQuality: true };
+  assert.deepEqual(pickVoice('tr-TR', IOS, 'ios'), yelda);
+  assert.deepEqual(pickVoice('tr', IOS, 'ios'), yelda);
 });
 
 test('no exact region: the same language in another region', () => {
-  assert.deepEqual(pickVoice('pt-BR', IOS, 'ios'), { language: 'pt-PT' });
-  assert.deepEqual(pickVoice('pt-BR', ANDROID, 'android'), { language: 'pt' });
-  assert.deepEqual(pickVoice('en-AU', [{ identifier: 'x', language: 'en_GB' }], 'ios'), { language: 'en-GB' });
+  assert.deepEqual(pickVoice('pt-BR', IOS, 'ios'), {
+    language: 'pt-PT',
+    voice: 'com.apple.voice.compact.pt-PT.Joana',
+    lowQuality: true,
+  });
+  assert.deepEqual(pickVoice('pt-BR', ANDROID, 'android'), { language: 'pt', lowQuality: true });
+  assert.equal(pickVoice('en-AU', [{ identifier: 'x', language: 'en_GB' }], 'ios').language, 'en-GB');
 });
 
 test('no voice for the language: the phone default reads, and the language is named for the notice', () => {
@@ -131,4 +136,50 @@ test('voices not known yet (an empty list): the language is passed on, no notice
 
 test('no language: nothing, the phone default voice', () => {
   assert.deepEqual(pickVoice(undefined, ANDROID, 'android'), {});
+});
+
+// 18 Nov 2026 (free speech improvements): the most natural installed voice reads, the same one every time, and only
+// basic voices installed is said once.
+const IOS_MANY: VoiceInfo[] = [
+  { identifier: 'com.apple.speech.synthesis.voice.Bells', language: 'en-US', quality: 'Default' },
+  { identifier: 'com.apple.eloquence.en-US.Eddy', language: 'en-US', quality: 'Default' },
+  { identifier: 'com.apple.voice.compact.en-US.Samantha', language: 'en-US', quality: 'Default' },
+  { identifier: 'com.apple.voice.enhanced.en-US.Evan', language: 'en-US', quality: 'Enhanced' },
+  { identifier: 'com.apple.voice.premium.en-US.Zoe', language: 'en-US', quality: 'Default' },
+  { identifier: 'com.apple.voice.enhanced.tr-TR.Yelda', language: 'tr-TR', quality: 'Enhanced' },
+  { identifier: 'com.apple.voice.enhanced.de-DE.Anna', language: 'de-DE', quality: 'Enhanced' },
+  { identifier: 'com.apple.voice.premium.de-DE.Petra', language: 'de-DE', quality: 'Default' },
+];
+
+test('iOS: Premium beats Enhanced beats compact; novelty and Eloquence voices come last', () => {
+  assert.deepEqual(pickVoice('en-US', IOS_MANY, 'ios'), { language: 'en-US', voice: 'com.apple.voice.premium.en-US.Zoe' });
+  assert.deepEqual(pickVoice('tr-TR', IOS_MANY, 'ios'), { language: 'tr-TR', voice: 'com.apple.voice.enhanced.tr-TR.Yelda' });
+  const novelty = IOS_MANY.slice(0, 2);
+  assert.equal(pickVoice('en-US', [...novelty, IOS_MANY[2]], 'ios').voice, 'com.apple.voice.compact.en-US.Samantha');
+});
+
+test('the voice chosen before stays while it is installed and as good as any (no change between sentences)', () => {
+  const premiums = [
+    { identifier: 'com.apple.voice.premium.en-US.Zoe', language: 'en-US', quality: 'Default' },
+    { identifier: 'com.apple.voice.premium.en-US.Ava', language: 'en-US', quality: 'Default' },
+  ];
+  assert.equal(pickVoice('en-US', premiums, 'ios').voice, 'com.apple.voice.premium.en-US.Zoe');
+  assert.equal(pickVoice('en-US', premiums, 'ios', 'com.apple.voice.premium.en-US.Ava').voice, 'com.apple.voice.premium.en-US.Ava');
+  // A better voice installed since then wins; one that was removed is replaced.
+  assert.equal(pickVoice('de-DE', IOS_MANY, 'ios', 'com.apple.voice.enhanced.de-DE.Anna').voice, 'com.apple.voice.premium.de-DE.Petra');
+  assert.equal(pickVoice('de-DE', IOS_MANY, 'ios', 'com.apple.voice.compact.de-DE.Gone').voice, 'com.apple.voice.premium.de-DE.Petra');
+});
+
+test('only basic voices installed is flagged, so the user can be told once how to get a better one', () => {
+  assert.equal(pickVoice('en-US', IOS, 'ios').lowQuality, true);
+  assert.equal(pickVoice('en-US', IOS_MANY, 'ios').lowQuality, undefined);
+  // Android: the engine's quality; a natural voice that needs the network still counts as natural.
+  assert.equal(pickVoice('tr-TR', ANDROID, 'android').lowQuality, undefined);
+  assert.equal(pickVoice('pt-PT', ANDROID, 'android').lowQuality, true);
+  assert.equal(
+    pickVoice('tr-TR', [{ identifier: 'tr-tr-x-cfs-network', language: 'tr-TR', quality: 'Enhanced' }], 'android').lowQuality,
+    undefined,
+  );
+  // Android never gets a voice option (expo-speech's null voice list), only the bare language.
+  assert.equal(pickVoice('tr-TR', ANDROID, 'android').voice, undefined);
 });
