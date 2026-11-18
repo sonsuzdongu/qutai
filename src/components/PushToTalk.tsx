@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { bump, tick } from '../device/haptics';
+import { signal, tick } from '../device/haptics';
 import { dialogState } from './Dialog';
 import {
   abortVoiceInput,
@@ -36,7 +36,7 @@ import { useReduceMotion } from '../utils/useReduceMotion';
  * on screen as a message, without opening the panel. The gesture is in AssistantButton.tsx; this is what it drives.
  *
  *   idle ──press──▶ (button waits HOLD_TO_TALK_MS; moving more than HOLD_SLOP first makes it a tap or a swipe)
- *        ──held───▶ preparing  haptic bump; a task already running → busy (nothing recorded)
+ *        ──held───▶ preparing  haptic signal (vibrator, also with the phone's touch feedback off); a task already running → busy (nothing recorded)
  *   preparing ──recogniser started──▶ listening (live transcript, language tag)
  *   preparing/listening ──finger moves past CANCEL_DISTANCE──▶ same, "Release to cancel" (tick); back inside: tick
  *   listening ──lift──▶ finishing: waits up to FINAL_WAIT_MS for the final result
@@ -184,7 +184,7 @@ export function usePushToTalk(deps: PushToTalkDeps): { handlers: HoldHandlers; b
       }
       hide();
       d.send(text);
-      tick();
+      signal('sent');
       AccessibilityInfo.announceForAccessibility(t('ptt.sentA11y'));
     },
     [hide, linger],
@@ -225,7 +225,7 @@ export function usePushToTalk(deps: PushToTalkDeps): { handlers: HoldHandlers; b
       s.cancelling = false;
       s.discard = false;
       s.pending = null;
-      bump();
+      signal('listening');
       setBubble({ ...IDLE, anchor, viaA11y, phase: 'preparing' });
       s.phase = 'preparing';
       if (d.busy()) {

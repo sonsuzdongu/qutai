@@ -51,7 +51,38 @@ export function confirm() {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
 }
 
-/** Done, e.g. a task finished. */
+/**
+ * Signals the user should feel without looking at the screen: the microphone is on (holding the Qutai button, whose
+ * finger covers it), a voice message went off, a question waits, a task ended or was stopped.
+ *
+ * Android: a short vibrator waveform (what the hold used before e0bdea8, when the owner felt it), not the view's
+ * performHapticFeedback with a system constant. The constant plays a "prebaked" effect (LONG_PRESS → HEAVY_CLICK)
+ * whose fallback pattern comes from the phone maker's configuration, so whether and how strongly it is felt depends
+ * on the phone; the waveform is played as given. Both follow the phone's "Touch feedback" switch: Android 12+
+ * classes a short vibration from an app as touch feedback (checked on Android 16: with the switch off both are
+ * "ignored_for_settings" in dumpsys vibrator_manager, with it on both play), and the app's own "Haptic feedback"
+ * setting turns everything off. The decorative ticks above keep the system constants.
+ */
+export type Signal = 'listening' | 'sent' | 'attention' | 'failure' | 'stopped' | 'done';
+
+export function signal(kind: Signal) {
+  if (!enabled) return;
+  switch (kind) {
+    case 'listening':
+      return void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    case 'sent':
+    case 'stopped':
+      return void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    case 'attention':
+      return void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+    case 'failure':
+      return void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+    case 'done':
+      return void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  }
+}
+
+/** Done, e.g. a file saved (a finished task is signal('done')). */
 export function success() {
   if (!enabled) return;
   if (Platform.OS === 'android') return android(AndroidHaptics.Confirm, AndroidHaptics.Virtual_Key);

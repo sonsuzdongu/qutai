@@ -56,7 +56,7 @@ import { KeyboardAvoidingContainer } from './KeyboardAware';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { withoutLeadingSymbol } from '../utils/leadingSymbol';
-import { bump, tick, toggle } from '../device/haptics';
+import { bump, signal, tick, toggle } from '../device/haptics';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { FINAL_WAIT_MS } from './PushToTalk';
 import { useHoldGesture, useScreenReader } from './useHoldGesture';
@@ -416,7 +416,7 @@ export function AssistantPanel({
    */
   const holdVoice = {
     start: () => {
-      bump();
+      signal('listening');
       if (!listening) startListening(text, true);
     },
     release: (away: boolean) => stopVoiceInput(away, FINAL_WAIT_MS),
@@ -925,7 +925,10 @@ export function AssistantPanel({
                   // Stopping is always possible, also while a confirmation waits.
                   <Pressable
                     style={[styles.sendButton, styles.stopButton]}
-                    onPress={onStop}
+                    onPress={() => {
+                      signal('stopped');
+                      onStop();
+                    }}
                     accessibilityRole="button"
                     accessibilityLabel={t('common.stop')}
                   >
@@ -934,7 +937,10 @@ export function AssistantPanel({
                 ) : (
                   <Pressable
                     style={[styles.sendButton, !canSend && styles.sendDisabled]}
-                    onPress={send}
+                    onPress={() => {
+                      if (canSend && !running) tick();
+                      send();
+                    }}
                     accessibilityRole="button"
                     accessibilityLabel={t('common.send')}
                   >

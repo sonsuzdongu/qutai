@@ -2,6 +2,7 @@ import { requireOptionalNativeModule } from 'expo';
 import { useSyncExternalStore } from 'react';
 import { AppRegistry, AppState, Platform } from 'react-native';
 import { t } from '../i18n';
+import { signal } from './haptics';
 
 /**
  * "Keep working in the background" (Android, opt-in): an assistant task the user started goes on when they leave
@@ -124,6 +125,8 @@ const waitingListeners = new Set<() => void>();
 /** Questions open for the user (those above, and the ones that don't pause a background run: whileAskingUser). */
 let askingUser = 0;
 const asking = (delta: number) => {
+  // A question now waits for the user (a confirmation, a choice): felt, also with the phone's touch feedback off.
+  if (delta > 0 && askingUser === 0) signal('attention');
   askingUser += delta;
   waitingListeners.forEach((l) => l());
 };

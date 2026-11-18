@@ -180,7 +180,7 @@ import { ClearOptions, rangeStart } from './src/storage/clearData';
 import { deleteActionsSince } from './src/storage/actionLog';
 import { deleteSentSince, moveSentConversation, pruneSent } from './src/storage/sentLog';
 import { SentLogScreen } from './src/components/SentLogScreen';
-import { bump, setHapticsEnabled, success, tick } from './src/device/haptics';
+import { bump, setHapticsEnabled, signal, tick } from './src/device/haptics';
 import { FileExpiredError, saveComposedFileToFolder, shareComposedFile } from './src/device/composedFile';
 import { DownloadItem, DownloadStore } from './src/storage/downloads';
 import { AndroidDownloads, nativeDownloads } from './src/storage/androidDownloads';
@@ -1595,17 +1595,18 @@ function BrowserApp({
 
   const taskEnded = (chat: Conversation, kind: 'done' | 'failed' | 'needsAnswer') => {
     const onScreen = AppState.currentState === 'active';
+    const felt = () => signal(kind === 'done' ? 'done' : kind === 'failed' ? 'failure' : 'attention');
     if (
       onScreen &&
       (panelOpenRef.current || workRef.current.answer) &&
       browserInstance.conversationOf(browserInstance.active) === chat
     ) {
-      if (kind === 'done') success();
+      felt();
       return;
     }
     chat.setUnseen(kind);
     if (!onScreen) return;
-    bump();
+    felt();
     toast.show(t(kind === 'done' ? 'taskDone.done' : kind === 'failed' ? 'taskDone.failed' : 'taskDone.needsAnswer'), {
       label: t('chat.showTab'),
       onPress: () => showConversation(chat),
@@ -2602,7 +2603,7 @@ function BrowserApp({
               setPanelOpen(true);
             }}
             onStop={() => {
-              bump();
+              signal('stopped');
               runningChat.stop();
             }}
             onShowTab={() => {
