@@ -767,7 +767,7 @@ export const PAGE_SCRIPT = String.raw`
     return out;
   }
 
-  // The smallest visible element whose text contains `text` (the total on an order summary), with its ref and line.
+  // The smallest visible element whose text contains the given text (the total on an order summary), with its ref and line.
   function findText(text) {
     var wanted = clean(text);
     var holds = function (el) { return !SKIP[el.tagName] && clean(el.innerText || '').indexOf(wanted) >= 0 && rendered(el); };
