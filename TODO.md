@@ -44,11 +44,11 @@ Double charge and payments
 
 Assistant posting and paying (19 Nov; README › Posting and paying)
 
-- [ ] Decided by default: Settings › Assistant › "Let the assistant complete payments" exists and is **off**; on, every payment shows Qutai's dialog (site, total read from the page, order, payment method, recurring charge), never "Don't ask again". Keep off by default?
-- [ ] No per-payment limit was built: totals come in any currency and Qutai has no exchange rates, so one number would mean different amounts. Add a limit per currency, or leave it out?
-- [ ] The pay dialog shows the total's line as text, not a picture of the order summary (the panel covers the page, and a capture means scrolling to it). Add a picture?
-- [ ] Only final payment buttons are recognised by their label and refused without an approval. Post / Send / Comment buttons are not (too many meanings: "Send code", "Post" in a menu), so for publishing the app relies on the prompt plus the approval's own checks. Add a publish word list anyway?
-- [ ] Website: "Payments are always completed by you" (status.limits.3), "Fill the checkout, stop before payment" / "At the payment step it stops … You pay yourself." / "Stopped at payment: over to you" (agent.checkout.*) are true only while the setting is off; the same in Turkish. Proposed: "By default you complete payments; you can let the assistant pay, approving each payment in Qutai's dialog"
+- [x] Settings › Assistant › "Let the assistant complete payments" stays **off** by default. Decided 19 Nov 2026: yes
+- [x] Per-payment or per-currency limit: decided 19 Nov 2026, not needed (none built)
+- [x] A picture of the order summary in the pay dialog: not asked for, left out (19 Nov 2026)
+- [x] Presses that send text the assistant typed (Post / Send / Comment, Enter in a chat box) without an approval: decided 19 Nov 2026 (by the manager, for the owner) to refuse them in the app, by context rather than a word list. Built: README › Posting and paying
+- [x] Website wording for payments: done by the website session (`2767fae`)
 
 Set-up only the owner can do (not decisions)
 

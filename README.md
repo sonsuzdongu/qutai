@@ -1020,17 +1020,32 @@ step ("Pay", "Pay €24.99", "Place your order", "Siparişi onayla", "注文を�
 `isFinalPaymentLabel`) without a grant is refused, and while payments are off the result tells the model to hand the
 order to the user and say which button to press. Typing a payment card number (13–19 digits passing the Luhn check)
 is refused. The assistant never types card numbers, security codes, passwords or one-time codes, never changes a
-payment method or address on its own, and leaves logins and bank checks (3-D Secure) to the user. A publish button is
-not recognised by its label (too many words mean too many things), so pressing one without an approval is refused only
-by the prompt; the approval's own checks apply whenever one was given. There is no per-payment limit: totals come in
-any currency and Qutai has no exchange rates (see TODO.md › Decisions).
+payment method or address on its own, and leaves logins and bank checks (3-D Secure) to the user. There is no
+per-payment limit (decided 19 Nov 2026): totals come in any currency and Qutai has no exchange rates.
+
+Sending the assistant's own text is recognised by context, not by the button's words ("Send code", "Post" in a menu):
+the page script remembers the fields the assistant typed into on the page and reports, for a press, those in the
+pressed button's form or in the same small composer box (the button joins the field at most six levels up, in a box
+with at most three text fields), and for Enter (`type` with `submit`) the field itself (`pressComposed`, `enterFacts`).
+The app (`contentToApprove`, `isPublicText`) refuses the press, before anything happens, when such a field holds free
+text for other people and no publish approval covers it; the result tells the model to call `request_approval` with
+the field, its text and the button (or the field itself as `button_ref` when Enter is the only way to send, after which
+it types the same text again with `submit`). Free text: a textarea or an editor, or a one-line text input with at least
+two words and twelve characters and no `maxlength` of 40 or less. Never: other input types (search, email, password,
+number…), `role=searchbox` / `combobox`, anything inside `role=search` or `<search>`, forms with `method="get"` or a
+search action, forms with a password field, personal or code `autocomplete` hints (`username`, `one-time-code`,
+`name`, address parts, `cc-*`…), a non-text `inputmode`, and fields whose name, id, placeholder or label say search,
+filter, code, coupon, quantity, login, email, phone or delivery/order note (ten languages). Presses that send nothing are
+left alone: links, toggles and menus (`aria-pressed`, `aria-haspopup`, `aria-expanded`), the field itself, reset, and
+buttons whose label starts with cancel, close, delete, attach, emoji, bold… Per-site "Ask before every action" still
+asks for the click itself, but not again for a press the publish dialog approved.
 
 Typing and tapping copy what a phone's browser sends (`src/browser/pageScript.ts`): text goes to the field inside a
 custom element or its shadow root, rich editors get `beforeinput` (and a paste when they only take that), input events
 are composed and followed by keyup, taps are pointer and touch events before the mouse events and the click (none of
 those when the page handled the touch), and a disabled button is reported instead of "Clicked". A control that checks
 `event.isTrusted` can't be pressed by any page script. The local test pages are `scripts/page-tests/` (`node
-scripts/page-tests/serve.mjs`, then open `http://localhost:8811/`; `?script=head` runs the last commit's page script);
+--experimental-transform-types scripts/page-tests/serve.mjs`, then open `http://localhost:8811/`; `?script=head` runs the last commit's page script);
 the fake AI server's `post`, `pay` and `sneakpay` scripts drive the dialog on a device against them.
 
 ## Permissions
@@ -1184,9 +1199,9 @@ the feature, when the user is asked, the config line that declares it and what i
   before it) are implemented but not yet tried on a phone; `TODO.md` has the checklist.
 - **Prompt injection** is a risk. The system prompt marks page content as untrusted data and asks for confirmation
   for sensitive actions. Posting and paying go through Qutai's own approval dialog, which no page text can answer, and
-  a final payment button can't be pressed without it (README › Posting and paying). Publishing buttons are not
-  recognised by the app, so their approval rests on the prompt. The "Ask before every action" option in Settings
-  provides extra protection.
+  neither a final payment button nor a button (or Enter) that sends text the assistant typed can be pressed without
+  it (README › Posting and paying). A form sent without any free text the assistant typed (only choices or personal
+  details) is not recognised as publishing. The "Ask before every action" option in Settings provides extra protection.
 
 ## License
 
