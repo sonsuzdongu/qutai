@@ -2,7 +2,7 @@ import { Linking } from 'react-native';
 import { dialog } from '../components/Dialog';
 import { t } from '../i18n';
 import { copyText } from './link';
-import { normalizePhone } from './phone';
+import { normalizePhone, type ContactSource } from './phone';
 
 /** WhatsApp allows much longer messages, but a prepared message the user reads on a card should stay short. */
 export const MAX_WHATSAPP_BODY = 2000;
@@ -13,7 +13,7 @@ const MIN_INTERNATIONAL_DIGITS = 8;
  * A WhatsApp message prepared by the assistant: the number in international format as digits with a leading "+"
  * (absent when the user picks the chat in WhatsApp), who it is for, and the text.
  */
-export type WhatsAppOffer = { number?: string; name?: string; body: string };
+export type WhatsAppOffer = { number?: string; name?: string; body: string; contact?: ContactSource };
 
 export type WhatsAppNumberParse = { ok: true; number: string } | { ok: false; error: string };
 

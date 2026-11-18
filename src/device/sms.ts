@@ -2,12 +2,13 @@ import { Linking, Platform } from 'react-native';
 import { dialog } from '../components/Dialog';
 import { t } from '../i18n';
 import { copyText } from './link';
+import type { ContactSource } from './phone';
 
 /** Longer than a few SMS parts is not a text message any more; the assistant is told to shorten it. */
 export const MAX_SMS_BODY = 1000;
 
 /** A text message prepared by the assistant: the recipient (normalised like a call's number) and the text. */
-export type SmsOffer = { number: string; name?: string; body: string };
+export type SmsOffer = { number: string; name?: string; body: string; contact?: ContactSource };
 
 /**
  * The URL that opens the Messages app with the recipient and the text filled in. iOS reads the body after
