@@ -114,6 +114,17 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'you once the account is deleted.',
         },
         {
+          heading: 'Your contacts',
+          body:
+            'If you allow it, the assistant can find a person you name (for example “call Ahmet”) in your phone’s ' +
+            'contacts. Qutai looks up only names you say yourself, on your phone; your address book is never uploaded ' +
+            'or listed. The AI service receives only the names that match and the kinds of number or address each ' +
+            'has (such as “mobile” or “work email”), never the numbers or addresses themselves: you see those on the ' +
+            'button or draft, and you call or send yourself. Numbers and addresses from your contacts are not saved ' +
+            'with your conversations, the assistant’s memory or your backups. Contacts are not used in conversations with incognito ' +
+            'tabs. You can change the permission in Settings.',
+        },
+        {
           heading: 'Passwords and payment details',
           body:
             'Qutai doesn’t let the assistant’s memory keep passwords, card numbers, card security codes, card ' +
@@ -319,6 +330,18 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'yöntemleri, cihazları ve kredi geçmişi siz hesabı silene kadar; yedekler yukarıda anlatıldığı gibi; ' +
             'oturum açma kodları kullanılana ya da süresi dolana kadar; satın alma kayıtları vergi mevzuatının ' +
             'gerektirdiği süre boyunca, hesap silindikten sonra sizinle bağlantısı olmadan.',
+        },
+        {
+          heading: 'Kişileriniz',
+          body:
+            'İzin verirseniz asistan, adını söylediğiniz bir kişiyi (örneğin “Ahmet’i ara”) telefonunuzun ' +
+            'kişilerinde bulabilir. Qutai yalnızca sizin söylediğiniz adları, telefonunuzda arar; kişi listeniz hiçbir ' +
+            'zaman yüklenmez ya da listelenmez. Yapay zekâ hizmeti yalnızca eşleşen adları ve her birinde hangi tür ' +
+            'numara ya da adres bulunduğunu (“cep” ya da “iş e-postası” gibi) alır, numaraların ve adreslerin ' +
+            'kendisini asla almaz: bunları düğmede ya da taslakta siz görürsünüz, aramayı ya da gönderimi siz ' +
+            'yaparsınız. Kişilerinizden gelen numaralar ve adresler sohbetlerinizle, asistanın belleğiyle ya da ' +
+            'yedeklerinizle birlikte saklanmaz. Gizli sekmelerin yer aldığı sohbetlerde kişiler kullanılmaz. İzni Ayarlar’dan ' +
+            'değiştirebilirsiniz.',
         },
         {
           heading: 'Şifreler ve ödeme bilgileri',
