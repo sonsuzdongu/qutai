@@ -8,6 +8,7 @@
 // The answer is scripted from the user's message (case-insensitive word) and how many tool results followed it:
 //   "fill"     read_page → type "Qutai test" into the first text field → click the first button → summary
 //   "approve"  get_location (asks for confirmation) → summary
+//   "filter"   edit_image on the attached image with "greyscale, sharpen 40, brightness 300" (300 is clamped) → summary
 //   "post"     read_page → type a comment into the first text box → request_approval (publish) → click its button
 //   "pay"      read_page → request_approval (pay) with the page's total → click "Pay…" if approved → summary
 //   "sneakpay" read_page → click the "Pay…" button without an approval (the app must refuse it)
@@ -126,6 +127,13 @@ function nextStep(messages) {
     if (n === 1) return call('request_approval', { kind: 'pay', button_ref: button, total, items: 'Test order', payment_method: method });
     if (n === 2) return /^The user approved/.test(lastResult) ? call('click', { ref: button }) : { content: `Not paid: ${lastResult.slice(0, 200)}` };
     return { content: `Paid. The click said: ${lastResult.slice(0, 120)}` };
+  }
+  if (/\bfilter\b/.test(user)) {
+    // The attached image's id is in the message ("att-…" / "inc-…").
+    const id = (/\b((?:att|inc)-[\w-]+)/.exec(text(messages[u])) ?? [])[1];
+    if (!id) return { content: 'Attach an image first.' };
+    if (n === 0) return call('edit_image', { id, filters: 'greyscale, sharpen 40, brightness 300' });
+    return { content: `Edited on the phone. The tool said: ${lastResult.slice(0, 400)}` };
   }
   if (/\bapprove\b/.test(user)) {
     if (n === 0) return call('get_location', { purpose: 'testing the approval dialog' });
