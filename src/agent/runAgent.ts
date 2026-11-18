@@ -23,6 +23,7 @@ import type { AlwaysAllowKind } from './alwaysAllow';
 import { withAttachedImages } from './attachedImages';
 import { compactHistory } from './history';
 import { backgroundBlocker, describeToolCall, executeTool, ToolContext } from './executeTool';
+import { prepareStepTarget } from './stepTarget';
 import { toolIcon, WEB_SEARCH_ICON } from './toolIcons';
 import {
   customInstructionsPrompt,
@@ -380,6 +381,8 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
         results.push({ callId: call.id, name: call.name, content: 'Stopped by the user.', isError: true });
         continue;
       }
+      // The line names the element or tab ("Tapping the “Add to cart” button"), never the model's ref or tab id.
+      await prepareStepTarget(call.name, call.input, opts.browser, opts.agentTab.id);
       const action = describeToolCall(call.name, call.input);
       onEvent({ type: 'action', icon: toolIcon(call.name, call.input), text: action, tool: call.name });
       setBackgroundStep(action);

@@ -115,9 +115,9 @@ test('the strip line comes from the latest step line since the user’s message'
     currentStripLine([
       { kind: 'user', text: 'find' },
       { kind: 'action', text: 'Reading the page' },
-      { kind: 'action', text: 'Clicking (ref 3)' },
+      { kind: 'action', text: 'Tapping the “Buy” button' },
     ]),
-    { text: 'Clicking (ref 3)' },
+    { text: 'Tapping the “Buy” button' },
   );
   assert.deepEqual(
     currentStripLine([

@@ -498,7 +498,7 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
 
 Open decisions from the November performance pass (`docs/performance-2026-11.md`); the owner asked for them to be kept here:
 
-- [ ] (Decided 18 Nov 2026: yes, do it; noted in `docs/test-checklist.md` › Bulunan sorunlar, waiting for the owner's go-ahead) Step strip: name the element by its label instead of "ref 1" (the strip shows the tool's reference when the page gave no readable name). Decide, then use the field's label, placeholder or accessible name
+- [x] (Done 18 Nov 2026: `src/agent/stepTarget.ts`, the page's name and kind in each language's grammar) Step strip: name the element by its label instead of "ref 1" (the strip shows the tool's reference when the page gave no readable name). Decide, then use the field's label, placeholder or accessible name
 - [ ] Tokens: send fewer tools per request, or shorter tool descriptions. This is the remaining per-task cost after the caching fixes (Anthropic −39 %, OpenAI −8 %, Gemini −5 % on the six test tasks); it changes the agent profile, and the assistant's behaviour tests must stay green
 - [ ] Start-up: decide whether to try the bigger ideas in the report. Measure the native start on a real phone first (Instruments on iPhone, `am start -W` on Android): on iOS about 1.8 s passes before the app's own code runs, which then needs about 150 ms
 

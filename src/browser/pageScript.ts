@@ -68,7 +68,7 @@ export const PAGE_SCRIPT = String.raw`
     return r.width > 0 && r.height > 0;
   }
 
-  function labelOf(el) {
+  function labelOf(el, forPeople) {
     // The element's own document: fields in same-origin frames have their labels there.
     var doc = el.ownerDocument || document;
     var t = el.getAttribute('aria-label') || '';
@@ -90,7 +90,8 @@ export const PAGE_SCRIPT = String.raw`
         } catch (e) {}
       }
       if (!t && el.closest('label')) t = el.closest('label').innerText;
-      if (!t) t = el.getAttribute('placeholder') || el.getAttribute('name') || '';
+      // A field's name attribute ("q", "email") is a technical id: the model may use it, a person's step line not.
+      if (!t) t = el.getAttribute('placeholder') || (forPeople ? '' : el.getAttribute('name')) || '';
     }
     if (!t && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') t = el.innerText || '';
     if (!t && tag === 'INPUT' && (el.type === 'submit' || el.type === 'button')) t = el.value;
@@ -1917,6 +1918,27 @@ export const PAGE_SCRIPT = String.raw`
     });
   }
 
+  // ---------- The step line's words for an element (src/agent/stepTarget.ts) ----------
+
+  // What a person would call the element behind ref: its name (as a screen reader would read it, never the name
+  // attribute, a selector or the ref) and the facts its kind is decided from. Only for the chat's step line; the model
+  // never sees it.
+  function targetInfo(ref) {
+    var el = getEl(ref);
+    var check = checkTarget(el);
+    var t = check || el;
+    var editable = t.isContentEditable && t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA';
+    var name = labelOf(el, true);
+    // A field's typed value is not its name (a submit button's value is, and labelOf already took it).
+    return {
+      name: cut(name, 120),
+      role: (t.getAttribute('role') || '').toLowerCase(),
+      tag: t.tagName.toLowerCase(),
+      type: t.tagName === 'INPUT' ? (t.type || 'text').toLowerCase() : '',
+      editable: !!editable
+    };
+  }
+
   // ---------- Hidden values (view_screenshot) ----------
 
   // The label of the field behind ref, for the "enter your saved ID number?" dialog.
@@ -2155,6 +2177,7 @@ export const PAGE_SCRIPT = String.raw`
     fileAbort: fileAbort,
     fileAssign: fileAssign,
     fieldLabel: fieldLabel,
+    targetInfo: targetInfo,
     screenFields: screenFields,
     maskFields: maskFields,
     maskEnd: maskEnd

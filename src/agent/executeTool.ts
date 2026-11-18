@@ -9,7 +9,7 @@ import type { EmailOutcome } from '../device/email';
 import type { ComposedRef, Shareable, ShareOffer } from '../chat/shareable';
 import { AlwaysAllowKind, kindForDownload, kindForSchedule } from './alwaysAllow';
 import { draftEmailTool, shareLog, shareTool, uploadFileTool } from './shareTools';
-import { t } from '../i18n';
+import { t, type MessageKey } from '../i18n';
 import { captureForModel, saveFullPageScreenshot, saveScreenshot } from '../device/screenshot';
 import { fileNameFromUrl, isRiskyDownload, probeDownload } from '../device/download';
 import { composedFileName, composeFile, FileOffer, isFileFormat, keepComposedFile } from '../device/composedFile';
@@ -55,6 +55,7 @@ import {
   SchedulingTool,
 } from './scheduling';
 import { cutText } from '../utils/wellFormed';
+import { capitalizeFirst, stepTabTitle, targetWords } from './stepTarget';
 import type { ScopeKind } from '../content/siteRules';
 import { describeSiteRulesCall, siteRulesTool, type SiteRulesAccess, type SiteRulesApproval } from './siteRulesTool';
 import { SITE_RULE_TOOL_NAMES } from './siteRuleTools';
@@ -227,6 +228,13 @@ const PAGE_TOOLS = new Set([
 /** Short label shown in the chat for each tool call. */
 export function describeToolCall(name: string, input: Record<string, unknown>): string {
   const str = (value: unknown) => String(value ?? '');
+  // A template may start with the element (Turkish "Bir düğmeye dokunuluyor"): its first letter is capitalised.
+  const onTarget = (key: MessageKey, params: Record<string, string> = {}) =>
+    capitalizeFirst(t(key, { ...params, target: targetWords(name, input) }));
+  const tabLine = (key: 'action.switchTab' | 'action.readTab' | 'action.closeTab') => {
+    const title = stepTabTitle(input);
+    return title ? t(key, { title }) : t(`${key}Plain`);
+  };
   switch (name) {
     case 'read_page':
       return t('action.readPage');
@@ -237,17 +245,17 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'go_back':
       return t('action.goBack');
     case 'click':
-      return t('action.click', { ref: str(input.ref) });
+      return onTarget('action.click');
     case 'type':
       return input.memory !== undefined && input.memory !== null && input.memory !== ''
-        ? t('action.typeHidden', { ref: str(input.ref) })
-        : t('action.type', { ref: str(input.ref), text: cutText(str(input.text), 40) });
+        ? onTarget('action.typeHidden')
+        : onTarget('action.type', { text: cutText(str(input.text), 40) });
     case 'select_option':
-      return t('action.select', { ref: str(input.ref), value: str(input.value) });
+      return onTarget('action.select', { value: str(input.value) });
     case 'scroll':
       return t('action.scroll', { direction: str(input.direction) });
     case 'scroll_to':
-      return t('action.scrollTo', { ref: str(input.ref) });
+      return onTarget('action.scrollTo');
     case 'save_pdf':
       return t(input.from_screenshots === true ? 'action.savePdfScreenshots' : 'action.savePdf');
     case 'save_screenshot':
@@ -259,9 +267,9 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'edit_image':
       return t('action.editImage');
     case 'upload_image':
-      return t('action.uploadImage', { ref: str(input.ref) });
+      return onTarget('action.uploadImage');
     case 'upload_file':
-      return t('action.uploadFile', { ref: str(input.ref) });
+      return onTarget('action.uploadFile');
     case 'share':
       return t(input.app === 'whatsapp' ? 'action.shareWhatsApp' : 'action.share');
     case 'read_pdf':
@@ -277,9 +285,9 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'open_tab':
       return t('action.openTab', { url: str(input.url) });
     case 'switch_tab':
-      return t('action.switchTab', { id: str(input.tab_id) });
+      return tabLine('action.switchTab');
     case 'read_tab':
-      return t('action.readTab', { id: str(input.tab_id) });
+      return tabLine('action.readTab');
     case 'search_history':
       if (input.by_site === true)
         return str(input.query).trim()
@@ -309,7 +317,7 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
         ? t('action.draftWhatsApp', { who: cutText(str(input.name).trim() || str(input.phone), 60) })
         : t('action.draftWhatsAppNoNumber');
     case 'close_tab':
-      return t('action.closeTab', { id: str(input.tab_id) });
+      return tabLine('action.closeTab');
     case 'close_tabs':
       return t('action.closeTabs');
     case 'take_notes':
@@ -336,7 +344,7 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'download_file':
       return typeof input.url === 'string' && input.url.trim()
         ? t('action.downloadFile', { name: fileNameFromUrl(input.url.trim()) })
-        : t('action.downloadFileRef', { ref: str(input.ref) });
+        : onTarget('action.downloadFileRef');
     case 'read_calendar':
       return t('action.readCalendar');
     case 'open_settings':
@@ -1274,7 +1282,7 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
         // Typed text can be personal, so the history only says where something was typed.
         description:
           name === 'type'
-            ? t('action.typeRedacted', { ref: String(input.ref ?? '') })
+            ? capitalizeFirst(t('action.typeRedacted', { target: targetWords(name, input) }))
             : name === 'offer_call'
               ? offerCallLog(input)
               : name === 'draft_sms'

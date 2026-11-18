@@ -68,6 +68,7 @@ export type PageCommand =
   | 'fileAbort'
   | 'fileAssign'
   | 'fieldLabel'
+  | 'targetInfo'
   | 'screenFields'
   | 'maskFields'
   | 'hideFind'

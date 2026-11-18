@@ -53,7 +53,9 @@ page, or the rectangle can't be found (the step then runs as before and reports 
 
 One floating line at the bottom (above a bottom address bar): activity mark · current step line · Stop.
 The line is the latest chat step line of the running conversation (`describeToolCall` / `stepLine`, already in the
-user's language), never tool text; before the first step "Thinking…", while the answer is written "Writing the
+user's language), never tool text; a page step names its element by what the page calls it and its kind ("Tapping
+the “Add to cart” button", "“Sepete ekle” düğmesine dokunuluyor", "Typing into a text field"), never the model's
+ref; tab steps name the tab by its title (`src/agent/stepTarget.ts`, display only); before the first step "Thinking…", while the answer is written "Writing the
 answer…". A coalescer (`src/chat/stripLine.ts`, pure) keeps each line at least `MIN_LINE_MS` (900 ms) on screen
 and skips lines that were replaced in the meantime, so fast steps don't flicker. When the agent works in a tab that
 is not on screen the strip says so and offers "Show".
