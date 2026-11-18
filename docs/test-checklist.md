@@ -274,6 +274,12 @@ Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.
 - Açık kalanlar: yatay ekran (yön dikeye kilitli, karar bekliyor); arka plan görevi kapalıyken uygulamadan çıkınca bekleyen istek dönüşte yeniden gönderiliyor (iki kez ücret); yazı boyutu sayfasında İngilizce "%120" yerine "120%" olmalı.
 - …
 
+### 18 Kasım'da bildirilenler ("düzelt" bekleniyor)
+
+Sahibi "not et, ben düzelt deyince alt oturumlardaki Opus ajanlarına düzelttir" dedi; hiçbirine dokunulmadı.
+
+- [ ] Titreşim çalışmıyor: adres çubuğundaki Qutai (Q) düğmesine basılı tutunca titreşim gelmiyor (18 Kas; Play'den kurulan 0.1.0 (100), Android). Daha önce `e0bdea8` ile eklenmişti; çalışma modu, sesle başlatma ya da yatay ekran değişikliklerinden biri bozmuş olabilir. Bakılacaklar: uzun basış başlangıcındaki titreşim çağrısı hâlâ yerinde mi, sistemin "dokunma titreşimi" ayarı kapalıyken ne oluyor, diğer titreşimler (gönder, onay, hata) çalışıyor mu.
+
 ## 14. "Kendinizi tanıtın" (sesle tanıtım, 17 Kasım)
 
 iOS simülatöründe yazarak ve sahte yapay zekâyla denendi (simülatöre mikrofondan ses verilemiyor; aynı akış yazılan metinle sürüldü). Telefonda sesle deneyin. Ayrıntı: `docs/voice-introduction.md`.
