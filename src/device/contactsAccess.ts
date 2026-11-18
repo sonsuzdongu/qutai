@@ -4,6 +4,7 @@ import { dialog } from '../components/Dialog';
 import { makeHandles, type ContactsAccess } from '../agent/contactTool';
 import type { Conversation } from '../chat/Conversation';
 import { t } from '../i18n';
+import { whileAskingUser } from './backgroundTask';
 import { contactsState, readContactNames, readContactValues, requestContacts } from './contacts';
 
 /** Contact handles of every conversation, in memory only (gone when the app restarts). */
@@ -20,7 +21,7 @@ export function contactsAccessFor(chat: Conversation, signal: AbortSignal): Cont
     userTexts: () => chat.items.filter((item) => item.kind === 'user').map((item) => item.text),
     state: contactsState,
     ask: async () => {
-      const result = await dialog.show({
+      const result = await whileAskingUser(() => dialog.show({
         title: t('contacts.askTitle'),
         message: t('contacts.askBody'),
         buttons: [
@@ -28,14 +29,14 @@ export function contactsAccessFor(chat: Conversation, signal: AbortSignal): Cont
           { text: t('contacts.askContinue'), primary: true },
         ],
         signal,
-      });
+      }));
       if (result.button !== 1) return contactsState();
       return requestContacts();
     },
     names: readContactNames,
     values: readContactValues,
     pick: async (title, rows) => {
-      const result = await dialog.show({
+      const result = await whileAskingUser(() => dialog.show({
         title,
         choices: { label: t('contacts.pickLabel'), options: rows, initial: 0 },
         buttons: [
@@ -43,7 +44,7 @@ export function contactsAccessFor(chat: Conversation, signal: AbortSignal): Cont
           { text: t('contacts.pickUse'), primary: true },
         ],
         signal,
-      });
+      }));
       return result.button === 1 ? result.choice : null;
     },
     region: () => getLocales()[0]?.regionCode ?? null,
