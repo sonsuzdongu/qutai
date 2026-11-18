@@ -171,6 +171,12 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
      url TEXT,
      created_at INTEGER NOT NULL
    );`,
+  // Rule kinds (docs/page-customisation.md): 'filter' (the rows above: a filter line), 'style' (line: the scope, body:
+  // the sanitised CSS, name: its name); 'script' is for a later version. meta: JSON for kinds that need more.
+  `ALTER TABLE site_rules ADD COLUMN kind TEXT NOT NULL DEFAULT 'filter';
+   ALTER TABLE site_rules ADD COLUMN name TEXT;
+   ALTER TABLE site_rules ADD COLUMN body TEXT;
+   ALTER TABLE site_rules ADD COLUMN meta TEXT;`,
 ];
 
 /**

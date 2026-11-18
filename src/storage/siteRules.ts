@@ -10,6 +10,17 @@ import {
   rulesForSite,
   SiteRule,
 } from '../content/siteRules';
+import {
+  cleanStyleName,
+  MAX_STYLES,
+  MAX_STYLES_PER_SITE,
+  PageStyle,
+  pageStyles,
+  parseStyleScope,
+  UserStyle,
+} from '../content/userStyles';
+import { sanitizeCss } from '../content/userCss';
+import type { ImportedStyle } from '../content/rulesFile';
 import { Db, getDb } from './db';
 
 /** Rows of the site_rules table (storage/db.ts). */
@@ -17,7 +28,7 @@ type Row = { id: string; line: string; enabled: number; source: string; site: st
 
 export async function listSiteRules(db: Db): Promise<SiteRule[]> {
   const rows = await db.getAllAsync<Row>(
-    'SELECT id, line, enabled, source, site, url, created_at FROM site_rules ORDER BY site, created_at',
+    "SELECT id, line, enabled, source, site, url, created_at FROM site_rules WHERE kind = 'filter' ORDER BY site, created_at",
     [],
   );
   return rows.flatMap((r) =>
@@ -37,10 +48,37 @@ export async function listSiteRules(db: Db): Promise<SiteRule[]> {
   );
 }
 
+type StyleRow = Row & { name: string | null; body: string | null };
+
+/** The user styles (kind 'style'); a row whose scope or CSS no longer passes the checks is left out. */
+export async function listUserStyles(db: Db): Promise<UserStyle[]> {
+  const rows = await db.getAllAsync<StyleRow>(
+    "SELECT id, line, enabled, source, site, url, created_at, name, body FROM site_rules WHERE kind = 'style' ORDER BY site, created_at",
+    [],
+  );
+  return rows.flatMap((r) => {
+    const scope = parseStyleScope(r.line);
+    if (!scope || !r.body) return [];
+    return [
+      {
+        id: r.id,
+        name: cleanStyleName(r.name) || r.line,
+        scope: r.line,
+        css: r.body,
+        enabled: r.enabled !== 0,
+        source: r.source === 'assistant' ? 'assistant' : 'manual',
+        site: r.site,
+        ...(r.url ? { url: r.url } : {}),
+        createdAt: r.created_at,
+      } satisfies UserStyle,
+    ];
+  });
+}
+
 const newId = () => `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
 export class SiteRuleError extends Error {
-  constructor(readonly code: 'tooMany' | 'invalid') {
+  constructor(readonly code: 'tooMany' | 'invalid' | 'css') {
     super(code);
   }
 }
@@ -54,6 +92,9 @@ export class SiteRuleStore {
   /** For the WebViews; new arrays only when the rules change. */
   page: PageRule[] = [];
   domains: string[] = [];
+  /** The user styles (content/userStyles.ts), and the enabled ones for the WebViews (new arrays only on changes). */
+  styles: UserStyle[] = [];
+  pageStyles: PageStyle[] = [];
   version = 0;
   private listeners = new Set<() => void>();
   private loading: Promise<void> | null = null;
@@ -77,10 +118,21 @@ export class SiteRuleStore {
     this.listeners.forEach((l) => l());
   }
 
+  private setStyles(styles: UserStyle[]) {
+    this.styles = styles;
+    this.pageStyles = pageStyles(styles);
+    this.version++;
+    this.listeners.forEach((l) => l());
+  }
+
   load(): Promise<void> {
     this.loading ??= this.getDb()
-      .then(listSiteRules)
-      .then((rules) => this.set(rules))
+      .then(async (db) => {
+        const [rules, styles] = await Promise.all([listSiteRules(db), listUserStyles(db).catch(() => [] as UserStyle[])]);
+        this.styles = styles;
+        this.pageStyles = pageStyles(styles);
+        this.set(rules);
+      })
       .catch(() => {});
     return this.loading;
   }
@@ -180,6 +232,113 @@ export class SiteRuleStore {
     const db = await this.getDb();
     for (const r of gone) await db.runAsync('DELETE FROM site_rules WHERE id = ?', [r.id]);
     return gone;
+  }
+
+  // ---------- User styles ----------
+
+  /** Checks a style's CSS and name; throws SiteRuleError('css') when the CSS is refused. */
+  private checked(css: string): string {
+    const result = sanitizeCss(css);
+    if (!result.ok) throw new SiteRuleError('css');
+    return result.css;
+  }
+
+  /** Keeps a style (the CSS is sanitised again); site: where it is listed; url: the page it was made on. */
+  async addStyle(entry: { name: string; scope: string; css: string; site: string; source: RuleSource; url?: string }): Promise<UserStyle> {
+    await this.load();
+    const scope = parseStyleScope(entry.scope);
+    if (!scope) throw new SiteRuleError('invalid');
+    const css = this.checked(entry.css);
+    if (this.styles.length >= MAX_STYLES || this.styles.filter((s) => s.site === entry.site).length >= MAX_STYLES_PER_SITE) {
+      throw new SiteRuleError('tooMany');
+    }
+    const style: UserStyle = {
+      id: newId(),
+      name: cleanStyleName(entry.name) || entry.scope,
+      scope: entry.scope.trim(),
+      css,
+      enabled: true,
+      source: entry.source,
+      site: entry.site,
+      ...(entry.url ? { url: entry.url } : {}),
+      createdAt: Date.now(),
+    };
+    await (await this.getDb()).runAsync(
+      "INSERT INTO site_rules (id, line, enabled, source, site, url, created_at, kind, name, body) VALUES (?, ?, 1, ?, ?, ?, ?, 'style', ?, ?)",
+      [style.id, style.scope, style.source, style.site, style.url ?? null, style.createdAt, style.name, style.css],
+    );
+    this.setStyles([...this.styles, style]);
+    return style;
+  }
+
+  /** Changes a style's name, CSS (sanitised again), scope or switch. */
+  async updateStyle(id: string, patch: Partial<Pick<UserStyle, 'name' | 'css' | 'scope' | 'enabled'>>): Promise<void> {
+    await this.load();
+    const style = this.styles.find((s) => s.id === id);
+    if (!style) return;
+    const next: UserStyle = { ...style };
+    if (patch.name !== undefined) next.name = cleanStyleName(patch.name) || style.name;
+    if (patch.css !== undefined) next.css = this.checked(patch.css);
+    if (patch.scope !== undefined) {
+      if (!parseStyleScope(patch.scope)) throw new SiteRuleError('invalid');
+      next.scope = patch.scope.trim();
+    }
+    if (patch.enabled !== undefined) next.enabled = patch.enabled;
+    this.setStyles(this.styles.map((s) => (s.id === id ? next : s)));
+    await (await this.getDb()).runAsync('UPDATE site_rules SET name = ?, body = ?, line = ?, enabled = ? WHERE id = ?', [
+      next.name,
+      next.css,
+      next.scope,
+      next.enabled ? 1 : 0,
+      id,
+    ]);
+  }
+
+  async removeStyles(ids: string[]): Promise<UserStyle[]> {
+    await this.load();
+    const gone = this.styles.filter((s) => ids.includes(s.id));
+    if (!gone.length) return [];
+    this.setStyles(this.styles.filter((s) => !ids.includes(s.id)));
+    const db = await this.getDb();
+    for (const s of gone) await db.runAsync('DELETE FROM site_rules WHERE id = ?', [s.id]);
+    return gone;
+  }
+
+  /** Adds styles read from a rules file (already checked and without duplicates), switched on or off as chosen. */
+  async addImportedStyles(entries: ImportedStyle[], enabled: boolean): Promise<number> {
+    await this.load();
+    let added = 0;
+    const perSite = new Map<string, number>();
+    for (const s of this.styles) perSite.set(s.site, (perSite.get(s.site) ?? 0) + 1);
+    const fresh: UserStyle[] = [];
+    const now = Date.now();
+    for (const [i, e] of entries.entries()) {
+      const count = perSite.get(e.site) ?? 0;
+      if (this.styles.length + fresh.length >= MAX_STYLES || count >= MAX_STYLES_PER_SITE) continue;
+      const css = sanitizeCss(e.css);
+      if (!css.ok || !parseStyleScope(e.scope)) continue;
+      perSite.set(e.site, count + 1);
+      fresh.push({
+        id: newId() + i,
+        name: cleanStyleName(e.name) || e.scope,
+        scope: e.scope,
+        css: css.css,
+        enabled: enabled && e.enabled,
+        source: 'manual',
+        site: e.site,
+        createdAt: now,
+      });
+    }
+    const db = await this.getDb();
+    for (const s of fresh) {
+      await db.runAsync(
+        "INSERT INTO site_rules (id, line, enabled, source, site, url, created_at, kind, name, body) VALUES (?, ?, ?, ?, ?, NULL, ?, 'style', ?, ?)",
+        [s.id, s.scope, s.enabled ? 1 : 0, s.source, s.site, s.createdAt, s.name, s.css],
+      );
+      added++;
+    }
+    if (fresh.length) this.setStyles([...this.styles, ...fresh]);
+    return added;
   }
 }
 
