@@ -42,6 +42,14 @@ Double charge and payments
 - [ ] Own key: no keep-alive for incognito conversations on Android (it shows a notification); iOS holds anyway. OK?
 - [ ] Fake purchases: 10 test purchases per account in 24 hours. OK for testing?
 
+Assistant posting and paying (19 Nov; README › Posting and paying)
+
+- [ ] Decided by default: Settings › Assistant › "Let the assistant complete payments" exists and is **off**; on, every payment shows Qutai's dialog (site, total read from the page, order, payment method, recurring charge), never "Don't ask again". Keep off by default?
+- [ ] No per-payment limit was built: totals come in any currency and Qutai has no exchange rates, so one number would mean different amounts. Add a limit per currency, or leave it out?
+- [ ] The pay dialog shows the total's line as text, not a picture of the order summary (the panel covers the page, and a capture means scrolling to it). Add a picture?
+- [ ] Only final payment buttons are recognised by their label and refused without an approval. Post / Send / Comment buttons are not (too many meanings: "Send code", "Post" in a menu), so for publishing the app relies on the prompt plus the approval's own checks. Add a publish word list anyway?
+- [ ] Website: "Payments are always completed by you" (status.limits.3), "Fill the checkout, stop before payment" / "At the payment step it stops … You pay yourself." / "Stopped at payment: over to you" (agent.checkout.*) are true only while the setting is off; the same in Turkish. Proposed: "By default you complete payments; you can let the assistant pay, approving each payment in Qutai's dialog"
+
 Set-up only the owner can do (not decisions)
 
 - [ ] Cloudflare: two R2 buckets for backups (`qutai-backups-dev`, `qutai-backups`); a deploy fails until they exist

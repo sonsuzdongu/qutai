@@ -970,6 +970,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/ai/usage.ts`, `src/ai/prices.ts`, `src/ai/cost.ts` | Approximate cost: each provider's usage, the dated price table, the cost maths (tests: `npm run test:cost`) |
 | `src/agent/tools.ts` | Tools exposed to the model: reading (`read_page`, `read_source`, `read_tab`, `view_screenshot`, `view_attachment`, `read_pdf`), images (`edit_image`, `upload_image`), acting (`click`, `click_at`, `type`, `select_option`, `scroll`, `navigate`, tabs), saving (`save_pdf`, `save_screenshot`, `download_file`, `save_file`), memory, `ask_user`, `draft_email`, `search_history`, `bookmarks`, saved tasks (`list_saved_tasks`, `get_saved_task`, read only), `settings` (Qutai's appearance and browsing preferences), and the phone (`add_calendar_event`, `add_reminder`, `schedule_notification`, `read_calendar`, `get_location`, `offer_call`, `draft_sms`, `draft_whatsapp`, `open_settings`) |
 | `src/agent/executeTool.ts` | Runs tool calls in the browser, asks for user confirmation if enabled |
+| `src/agent/outwardApproval.ts`, `src/agent/approvalTool.ts` | Posting and paying: `request_approval`, the single-use grant, the checks before the approved press, final payment buttons, card numbers (see "Posting and paying" below) |
 | `src/agent/runAgent.ts` | Agent loop and trimming of old page outputs |
 | `src/agent/systemPrompt.ts` | Behavior and safety rules |
 | `src/agent/memory.ts` | The assistant's memory: categories, what is never stored (`sensitiveReason`) and the memory part of the prompt |
@@ -995,6 +996,42 @@ rebuilds the same interaction a non-streamed request returns from the stream's s
 included. A stream that fails is repeated once without streaming; if Gemini rejects a request over a thought
 signature after a streamed reply, the request is repeated once with the streamed replies sent as text and tool calls,
 and streaming stays off until the app restarts.
+
+### Posting and paying
+
+When the user asks the assistant to post, comment, reply, review, send a message or an email on a site, or submit a
+public form, it fills it in and then calls `request_approval` (kind `publish`) right before pressing the site's own
+button. Qutai's dialog shows the site, the kind of action and what Qutai itself reads on the page: the field's exact
+text (the model's copy must match it, or nothing is asked) or the form's filled values. The final step of a payment is
+kind `pay`, available only with Settings › Assistant › "Let the assistant complete payments" (off by default; turning
+it on asks once more; not changed by the assistant's `settings` tool and not restored from a backup). Its dialog
+shows the site, the total as found on the page and the line it is on, the order, the payment method as the page names
+it, and any subscription or renewal. Both dialogs are shown every time (never "Don't ask again", whatever the site's
+permission) and say that only the dialog can approve; read-only and blocked sites never get there.
+
+Approve grants one press of that button, in that tab, on that page (the address without its fragment), during that
+task. Just before the press the app reads the page again: the same page, the field's text unchanged (or the form's
+values), the total still on its line, payments still on; otherwise nothing is pressed and the model has to ask again.
+The press uses the grant up. The tool result after Approve tells the model that the user approved and that it must now
+press the button and report the outcome without asking again in chat; after Cancel, to stop.
+
+Enforced in the app, whatever the model does: a click (or `click_at`) on a button whose whole label is a final payment
+step ("Pay", "Pay €24.99", "Place your order", "Siparişi onayla", "注文を確定する"…, ten languages,
+`isFinalPaymentLabel`) without a grant is refused, and while payments are off the result tells the model to hand the
+order to the user and say which button to press. Typing a payment card number (13–19 digits passing the Luhn check)
+is refused. The assistant never types card numbers, security codes, passwords or one-time codes, never changes a
+payment method or address on its own, and leaves logins and bank checks (3-D Secure) to the user. A publish button is
+not recognised by its label (too many words mean too many things), so pressing one without an approval is refused only
+by the prompt; the approval's own checks apply whenever one was given. There is no per-payment limit: totals come in
+any currency and Qutai has no exchange rates (see TODO.md › Decisions).
+
+Typing and tapping copy what a phone's browser sends (`src/browser/pageScript.ts`): text goes to the field inside a
+custom element or its shadow root, rich editors get `beforeinput` (and a paste when they only take that), input events
+are composed and followed by keyup, taps are pointer and touch events before the mouse events and the click (none of
+those when the page handled the touch), and a disabled button is reported instead of "Clicked". A control that checks
+`event.isTrusted` can't be pressed by any page script. The local test pages are `scripts/page-tests/` (`node
+scripts/page-tests/serve.mjs`, then open `http://localhost:8811/`; `?script=head` runs the last commit's page script);
+the fake AI server's `post`, `pay` and `sneakpay` scripts drive the dialog on a device against them.
 
 ## Permissions
 
@@ -1146,7 +1183,10 @@ the feature, when the user is asked, the config line that declares it and what i
 - **Nothing recent has been tested on a device.** The features added since the move to a development build (and many
   before it) are implemented but not yet tried on a phone; `TODO.md` has the checklist.
 - **Prompt injection** is a risk. The system prompt marks page content as untrusted data and asks for confirmation
-  for sensitive actions. The "Ask before every action" option in Settings provides extra protection.
+  for sensitive actions. Posting and paying go through Qutai's own approval dialog, which no page text can answer, and
+  a final payment button can't be pressed without it (README › Posting and paying). Publishing buttons are not
+  recognised by the app, so their approval rests on the prompt. The "Ask before every action" option in Settings
+  provides extra protection.
 
 ## License
 

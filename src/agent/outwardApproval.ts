@@ -1,7 +1,7 @@
 /**
  * Approvals for what goes out in the user's name on a web page: "publish" (a post, comment, reply, review, a message
  * or email sent on a site, a public form) and "pay" (the final step of a payment, only when the user turned on
- * Settings › Assistant › "Let the assistant complete payments"). docs/permissions.md › Posting and paying.
+ * Settings › Assistant › "Let the assistant complete payments"). README.md › Posting and paying.
  *
  * The model asks with request_approval right before pressing the site's own button; Qutai shows its dialog with what
  * it read from the page itself (the field's text or the form's values; the total and the line it is on), never only
