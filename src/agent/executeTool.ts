@@ -17,6 +17,9 @@ import { formatSize } from '../i18n/format';
 import { CallOffer, normalizePhone } from '../device/phone';
 import { MAX_SMS_BODY, SmsOffer } from '../device/sms';
 import { MAX_WHATSAPP_BODY, normalizeWhatsAppNumber, WhatsAppOffer } from '../device/whatsapp';
+import { toInternational } from '../device/phoneRegion';
+import { contactForUse, findContactTool, type ContactsAccess } from './contactTool';
+import { looksLikeHandle } from './contactHandles';
 import { ensureLocationPermission, LocationUnavailableError, readPosition } from '../device/location';
 import { openSystemSettings, PermissionDeniedError } from '../device/settings';
 import { speechText } from '../chat/speechText';
@@ -218,6 +221,11 @@ export type ToolContext = {
    * again", whatever the site's setting. True only on Approve.
    */
   confirmOutward?: (approval: OutwardApproval) => Promise<boolean>;
+  /**
+   * The address book for find_contact and contact handles (agent/contactTool.ts, docs/contacts.md); absent where
+   * contacts can't be used.
+   */
+  contacts?: ContactsAccess;
 };
 
 /** Tools that need a loaded web page. */
@@ -239,6 +247,11 @@ const PAGE_TOOLS = new Set([
   'upload_file',
   'request_approval',
 ]);
+
+/** Who a call or message is for in its step line when no name was given: the number, or "a contact" for a handle. */
+function phoneWho(phone: unknown): string {
+  return looksLikeHandle(phone) ? t('action.aContact') : String(phone ?? '');
+}
 
 /** Short label shown in the chat for each tool call. */
 export function describeToolCall(name: string, input: Record<string, unknown>): string {
@@ -323,13 +336,15 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return describeSiteRulesCall(name, input);
     case 'draft_email':
       return t('action.draftEmail', { subject: cutText(str(input.subject), 60) });
+    case 'find_contact':
+      return t('action.findContact', { name: cutText(str(input.name).trim(), 60) });
     case 'offer_call':
-      return t('action.offerCall', { who: cutText(str(input.name).trim() || str(input.phone), 60) });
+      return t('action.offerCall', { who: cutText(str(input.name).trim() || phoneWho(input.phone), 60) });
     case 'draft_sms':
-      return t('action.draftSms', { who: cutText(str(input.name).trim() || str(input.phone), 60) });
+      return t('action.draftSms', { who: cutText(str(input.name).trim() || phoneWho(input.phone), 60) });
     case 'draft_whatsapp':
       return str(input.name).trim() || str(input.phone).trim()
-        ? t('action.draftWhatsApp', { who: cutText(str(input.name).trim() || str(input.phone), 60) })
+        ? t('action.draftWhatsApp', { who: cutText(str(input.name).trim() || phoneWho(input.phone), 60) })
         : t('action.draftWhatsAppNoNumber');
     case 'close_tab':
       return tabLine('action.closeTab');
@@ -505,8 +520,20 @@ function offerCallLog(input: Record<string, unknown>): string {
  * Shows a Call button in the chat. Nothing is dialled here: page content is untrusted, so the user's tap
  * on the button is the only thing that opens the dialer, and the button shows the full number first.
  */
-function offerCallTool(input: Record<string, unknown>, ctx: ToolContext): ToolOutput {
+async function offerCallTool(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
   if (!ctx.offerCall) return { content: 'Call buttons are not available here.', isError: true };
+  const contact = await contactForUse(input.phone, 'phone', ctx);
+  if (contact && !contact.ok) return contact.out;
+  if (contact) {
+    ctx.offerCall({ number: contact.value, name: contact.name, contact: { label: contact.label } });
+    return {
+      content:
+        `A call button labelled ${uiLabel('chat.call')} for ${contact.name} (${contact.label}, from the user's contacts) ` +
+        'is shown in the chat with the number, which only the user sees. No call has been made: the user taps the ' +
+        'button to call. Do not say you called.',
+      isError: false,
+    };
+  }
   const phone = normalizePhone(input.phone);
   if (!phone.ok) return { content: `${phone.error} No button was shown.`, isError: true };
   const name = typeof input.name === 'string' ? cutText(input.name.replace(/\s+/g, ' ').trim(), 80) : '';
@@ -531,14 +558,26 @@ function draftSmsLog(input: Record<string, unknown>): string {
  * premium-rate numbers exist, so the card shows the full number and text first, the user's tap opens the
  * Messages app, and the user sends it there.
  */
-function draftSmsTool(input: Record<string, unknown>, ctx: ToolContext): ToolOutput {
+async function draftSmsTool(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
   if (!ctx.offerSms) return { content: 'Text message drafts are not available here.', isError: true };
-  const phone = normalizePhone(input.phone);
-  if (!phone.ok) return { content: `${phone.error} No message was prepared.`, isError: true };
   const body = typeof input.body === 'string' ? input.body.trim() : '';
   if (!body) return { content: 'The message text is empty. No message was prepared.', isError: true };
   if (body.length > MAX_SMS_BODY)
     return { content: `The text is longer than ${MAX_SMS_BODY} characters; shorten it. No message was prepared.`, isError: true };
+  const contact = await contactForUse(input.phone, 'phone', ctx);
+  if (contact && !contact.ok) return contact.out;
+  if (contact) {
+    ctx.offerSms({ number: contact.value, name: contact.name, body, contact: { label: contact.label } });
+    return {
+      content:
+        `A text message to ${contact.name} (${contact.label}, from the user's contacts; only the user sees the number) ` +
+        `is shown in the chat with a ${uiLabel('chat.openInMessages')} button. Nothing has been sent: the user opens it ` +
+        'in their messaging app and sends it themselves. Do not say it was sent.',
+      isError: false,
+    };
+  }
+  const phone = normalizePhone(input.phone);
+  if (!phone.ok) return { content: `${phone.error} No message was prepared.`, isError: true };
   const name = typeof input.name === 'string' ? cutText(input.name.replace(/\s+/g, ' ').trim(), 80) : '';
   ctx.offerSms({ number: phone.number, body, ...(name ? { name } : {}) });
   return {
@@ -561,15 +600,8 @@ function draftWhatsAppLog(input: Record<string, unknown>): string {
  * WhatsApp will use it) and text, the user's tap opens WhatsApp, and the user sends it there. Without a number the
  * user picks the chat in WhatsApp.
  */
-function draftWhatsAppTool(input: Record<string, unknown>, ctx: ToolContext): ToolOutput {
+async function draftWhatsAppTool(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
   if (!ctx.offerWhatsApp) return { content: 'WhatsApp drafts are not available here.', isError: true };
-  const rawPhone = typeof input.phone === 'string' ? input.phone.trim() : '';
-  let number: string | undefined;
-  if (rawPhone) {
-    const phone = normalizeWhatsAppNumber(rawPhone);
-    if (!phone.ok) return { content: `${phone.error} No message was prepared.`, isError: true };
-    number = phone.number;
-  }
   const body = typeof input.body === 'string' ? input.body.trim() : '';
   if (!body) return { content: 'The message text is empty. No message was prepared.', isError: true };
   if (body.length > MAX_WHATSAPP_BODY)
@@ -577,6 +609,36 @@ function draftWhatsAppTool(input: Record<string, unknown>, ctx: ToolContext): To
       content: `The text is longer than ${MAX_WHATSAPP_BODY} characters; shorten it. No message was prepared.`,
       isError: true,
     };
+  const contact = await contactForUse(input.phone, 'phone', ctx);
+  if (contact && !contact.ok) return contact.out;
+  if (contact) {
+    const countryCode = typeof input.country_code === 'string' ? input.country_code : undefined;
+    const intl = toInternational(contact.value, ctx.contacts?.region() ?? null, countryCode);
+    if (!intl.ok) return { content: `${intl.error} No message was prepared.`, isError: true };
+    ctx.offerWhatsApp({
+      number: intl.number,
+      name: contact.name,
+      body,
+      contact: { label: contact.label, ...(intl.added ? { added: intl.added } : {}) },
+    });
+    const added = intl.added
+      ? ` The number was saved without a country code, so ${intl.added} was added (from ${countryCode ? 'country_code' : "the phone's region"}); the card says so, and the user can check it.`
+      : '';
+    return {
+      content:
+        `A WhatsApp message to ${contact.name} (${contact.label}, from the user's contacts; only the user sees the ` +
+        `number) is shown in the chat with a ${uiLabel('chat.openInWhatsApp')} button.${added} Nothing has been sent: ` +
+        'the user opens it in WhatsApp and sends it themselves. Do not say it was sent.',
+      isError: false,
+    };
+  }
+  const rawPhone = typeof input.phone === 'string' ? input.phone.trim() : '';
+  let number: string | undefined;
+  if (rawPhone) {
+    const phone = normalizeWhatsAppNumber(rawPhone);
+    if (!phone.ok) return { content: `${phone.error} No message was prepared.`, isError: true };
+    number = phone.number;
+  }
   const name = typeof input.name === 'string' ? cutText(input.name.replace(/\s+/g, ' ').trim(), 80) : '';
   ctx.offerWhatsApp({ body, ...(number ? { number } : {}), ...(name ? { name } : {}) });
   const to = number ? `to ${name ? `${name}, ` : ''}${number} ` : '(the user picks the chat in WhatsApp) ';
@@ -1075,6 +1137,8 @@ const LOGGED_TOOLS = new Set([
   'offer_call',
   'draft_sms',
   'draft_whatsapp',
+  // Only the name the user said: never who matched, their numbers or addresses.
+  'find_contact',
   'add_calendar_event',
   'add_reminder',
   'schedule_notification',
@@ -1134,6 +1198,7 @@ function actionTarget(
       'offer_call',
       'draft_sms',
       'draft_whatsapp',
+      'find_contact',
       'share',
       'save_file',
       'view_attachment',
@@ -1550,6 +1615,7 @@ async function runTool(
   if (name === 'draft_email') return draftEmailTool(input, ctx);
   if (name === 'share') return shareTool(input, ctx);
   if (name === 'open_settings') return openSettingsTool(input, ctx);
+  if (name === 'find_contact') return findContactTool(input, ctx);
   if (name === 'offer_call') return offerCallTool(input, ctx);
   if (name === 'draft_sms') return draftSmsTool(input, ctx);
   if (name === 'draft_whatsapp') return draftWhatsAppTool(input, ctx);

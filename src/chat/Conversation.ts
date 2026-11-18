@@ -9,6 +9,7 @@ import type { SmsOffer } from '../device/sms';
 import type { WhatsAppOffer } from '../device/whatsapp';
 import { AttachmentInfo, MAX_ATTACHMENTS, MAX_EDITED_IMAGES } from './attachments';
 import type { ComposedRef, ShareOffer } from './shareable';
+import { newContactScope, withoutContactValues } from './contactCards';
 
 let itemCounter = 0;
 const STREAM_FLUSH_MS = 50;
@@ -108,6 +109,8 @@ export class Conversation {
   running = false;
   /** Set when the conversation touched an incognito tab, so it is never written to disk. */
   privacy = { touchedIncognito: false };
+  /** Where this conversation's contact handles are valid (chat/contactCards.ts); new when it is cleared. */
+  contactScope = newContactScope('chat');
   /** The next message starts a deep research task (switched off again once it is sent). */
   research = false;
   /**
@@ -398,6 +401,7 @@ export class Conversation {
     this.model = null;
     this.voiceLanguage = null;
     this.privacy = { touchedIncognito: false };
+    this.contactScope = newContactScope(this.key);
     this.onChange();
   }
 
@@ -420,7 +424,7 @@ export class Conversation {
 
   toSaved(): SavedConversation {
     return {
-      items: this.items,
+      items: withoutContactValues(this.items),
       turns: this.turns,
       draft: this.draft,
       ...(this.model ? { model: this.model } : {}),

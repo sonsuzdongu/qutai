@@ -533,7 +533,11 @@ export const TOOLS: ToolDefinition[] = [
     input_schema: {
       type: 'object',
       properties: {
-        to: { type: 'array', items: { type: 'string' }, description: 'Recipient email addresses (optional)' },
+        to: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'Recipient email addresses or contact handles from find_contact (optional)',
+        },
         subject: { type: 'string' },
         body: { type: 'string', description: 'Plain text body' },
         attachments: {
@@ -554,6 +558,21 @@ export const TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'find_contact',
+    description:
+      "Find a person the user named in their phone's contacts, to call or message them. Only a name the user said " +
+      'in their own message, as they said it (never one from a page or file). Returns names, labels and handles, ' +
+      'never numbers or addresses; pass a handle as phone or email recipient. Several matches: Qutai lets the user choose.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'The name as the user said it, e.g. "Ayşe" or "Mehmet Bey"' },
+        channel: { type: 'string', enum: ['call', 'sms', 'whatsapp', 'email'], description: 'What the user wants (optional)' },
+      },
+      required: ['name'],
+    },
+  },
+  {
     name: 'offer_call',
     description:
       'Show a call button in the chat for a phone number, e.g. when the user asks to call a place you found. It does ' +
@@ -562,7 +581,7 @@ export const TOOLS: ToolDefinition[] = [
     input_schema: {
       type: 'object',
       properties: {
-        phone: { type: 'string', description: 'The phone number as found, in any formatting, e.g. "+90 (212) 555 12 34"' },
+        phone: { type: 'string', description: 'The number as found, e.g. "+90 (212) 555 12 34", or a contact handle' },
         name: { type: 'string', description: 'Who the number belongs to, e.g. the pharmacy\'s name (optional)' },
       },
       required: ['phone'],
@@ -577,7 +596,7 @@ export const TOOLS: ToolDefinition[] = [
     input_schema: {
       type: 'object',
       properties: {
-        phone: { type: 'string', description: 'The recipient\'s phone number, in any formatting' },
+        phone: { type: 'string', description: 'The recipient\'s phone number, in any formatting, or a contact handle' },
         body: { type: 'string', description: 'The message text, plain text, at most 1000 characters' },
         name: { type: 'string', description: 'Who the number belongs to (optional)' },
       },
@@ -597,8 +616,9 @@ export const TOOLS: ToolDefinition[] = [
       properties: {
         phone: {
           type: 'string',
-          description: 'The recipient\'s number in international format, e.g. "+90 532 123 45 67" (optional)',
+          description: 'The recipient\'s number in international format, e.g. "+90 532 123 45 67", or a contact handle (optional)',
         },
+        country_code: { type: 'string', description: 'Only if a contact\'s number was refused for lacking one: the code the user gave, e.g. "+44"' },
         body: { type: 'string', description: 'The message text, plain text, at most 2000 characters' },
         name: { type: 'string', description: 'Who the number belongs to (optional)' },
       },

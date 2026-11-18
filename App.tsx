@@ -112,6 +112,7 @@ import { printPage, savePagePdf, savePdfFromScreenshots } from './src/device/pdf
 import { saveImage } from './src/device/saveImage';
 import { CaptureCancelled } from './src/device/fullPage';
 import { offerSettings, PermissionDeniedError } from './src/device/settings';
+import { contactsAccessFor } from './src/device/contactsAccess';
 import { saveFullPageScreenshot, saveScreenshot } from './src/device/screenshot';
 import { setSpeechNotice, speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { speechText } from './src/chat/speechText';
@@ -1350,6 +1351,8 @@ function BrowserApp({
           },
         },
         composeEmail,
+        // Contacts: never in incognito conversations (the tool refuses there too).
+        ...(chat.incognito ? {} : { contacts: contactsAccessFor(chat, signal) }),
         offerCall: (offer) => {
           AccessibilityInfo.announceForAccessibility(
             offer.name

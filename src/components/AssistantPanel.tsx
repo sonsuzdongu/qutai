@@ -40,9 +40,10 @@ import type { Source } from '../agent/types';
 import type { AnswerCost } from '../ai/cost';
 import { AnswerCostInline, AnswerCostLine } from './AnswerCost';
 import type { Suggestion } from '../agent/pageSuggestions';
-import type { CallOffer } from '../device/phone';
+import type { CallOffer, ContactSource } from '../device/phone';
 import type { SmsOffer } from '../device/sms';
 import type { WhatsAppOffer } from '../device/whatsapp';
+import { shownLabel } from '../agent/contactTool';
 import type { SavedTask } from '../storage/savedTasks';
 import { composedFileAvailable, FileOffer } from '../device/composedFile';
 import type { AttachmentInfo } from '../chat/attachments';
@@ -1402,6 +1403,7 @@ function ChatRow({
     case 'call': {
       const call = item.call;
       if (!call) return <StepLine icon="phone" text={item.text} />;
+      if (call.contact && !call.number) return <ContactNotKept name={call.name} icon="phone" />;
       return (
         <View style={[styles.callCard, d?.assistantBubble]}>
           <View style={styles.callInfo}>
@@ -1413,6 +1415,7 @@ function ChatRow({
             <Text style={[styles.callNumber, d?.dim]} selectable>
               {call.number}
             </Text>
+            {call.contact ? <ContactLine contact={call.contact} /> : null}
           </View>
           <Pressable
             onPress={() => onCall(call.number)}
@@ -1433,6 +1436,7 @@ function ChatRow({
     case 'sms': {
       const sms = item.sms;
       if (!sms) return <StepLine icon="message" text={item.text} />;
+      if (sms.contact && !sms.number) return <ContactNotKept name={sms.name} icon="message" />;
       const label = sms.name
         ? t('chat.smsLabel', { name: sms.name, number: sms.number })
         : t('chat.smsNumberLabel', { number: sms.number });
@@ -1447,6 +1451,7 @@ function ChatRow({
             <Text style={[styles.callNumber, d?.dim]} selectable>
               {sms.number}
             </Text>
+            {sms.contact ? <ContactLine contact={sms.contact} /> : null}
           </View>
           <Text style={[styles.smsBody, d?.text]} selectable>
             {sms.body}
@@ -1466,6 +1471,7 @@ function ChatRow({
     case 'whatsapp': {
       const wa = item.whatsapp;
       if (!wa) return <StepLine icon="message" text={item.text} />;
+      if (wa.contact && !wa.number) return <ContactNotKept name={wa.name} icon="message" />;
       const label = wa.number
         ? t('chat.whatsAppLabel', { who: wa.name ? `${wa.name}, ${wa.number}` : wa.number })
         : t('chat.whatsAppNoNumberLabel');
@@ -1480,6 +1486,7 @@ function ChatRow({
             <Text style={[styles.callNumber, d?.dim]} selectable>
               {wa.number ?? t('chat.whatsAppPickChat')}
             </Text>
+            {wa.contact ? <ContactLine contact={wa.contact} /> : null}
           </View>
           <Text style={[styles.smsBody, d?.text]} selectable>
             {wa.body}
@@ -1646,6 +1653,23 @@ function StepLine({ icon, text, error }: { icon?: IconName; text: string; error?
       <Text style={[error ? styles.error : [styles.action, d?.dim], styles.stepText]}>{withoutLeadingSymbol(text)}</Text>
     </View>
   );
+}
+
+/** Under a card's number from the address book: its label, "from your contacts", and a country code Qutai added. */
+function ContactLine({ contact }: { contact: ContactSource }) {
+  const styles = useStyles();
+  const d = useContext(PanelTheme);
+  return (
+    <>
+      <Text style={[styles.callNumber, d?.dim]}>{t('chat.fromContacts', { label: shownLabel(contact.label) })}</Text>
+      {contact.added ? <Text style={[styles.callNumber, d?.dim]}>{t('chat.countryAdded', { code: contact.added })}</Text> : null}
+    </>
+  );
+}
+
+/** A saved card whose number came from the address book: the name only (the number is never saved). */
+function ContactNotKept({ name, icon }: { name?: string; icon: IconName }) {
+  return <StepLine icon={icon} text={name ? `${name} · ${t('chat.contactNotKept')}` : t('chat.contactNotKept')} />;
 }
 
 /** An image the assistant made (edit_image): preview, size, format and bytes, Save to Photos and Share. */

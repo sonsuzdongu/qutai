@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AppState, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { BuyCreditsHost } from './BuyCredits';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ import { BackupTooLargeError, pickBackupFile, PickerUnavailableError } from '../
 import { rateApp } from '../device/rateApp';
 import { backgroundTasksSupported } from '../device/backgroundTask';
 import { ensureNotificationPermission } from '../device/notifications';
+import { chooseSharedContacts, contactsState, requestContacts, type ContactsState } from '../device/contacts';
 import { offerSettings, openSettingsOrExplain } from '../device/settings';
 import { voiceModeSummary, VoiceModeSummary } from '../device/voiceInput';
 import { AUTO_LANGUAGE, languageName } from '../device/voiceLanguage';
@@ -365,6 +366,7 @@ function SettingsPages({
                 onChange={(on) => set({ alwaysAllow: withKind(settings.alwaysAllow, kind, on) })}
               />
             ))}
+            <ContactsRow />
             {provider.webSearch ? (
               <SwitchRow
                 title={t('settings.webSearch')}
@@ -940,6 +942,47 @@ function CustomInstructionsField({ value, onSave }: { value: string; onSave: (te
   );
 }
 
+/**
+ * Settings › Assistant › Contacts (docs/contacts.md): what the system allows, read again when Qutai comes back from the
+ * phone's settings, with the one thing that helps: Allow (the system prompt, while it still asks), Choose contacts (iOS
+ * limited access) or the phone's settings (refused for good, or to take it back).
+ */
+function ContactsRow() {
+  const styles = useStyles();
+  const [state, setState] = useState<ContactsState | null>(null);
+  useEffect(() => {
+    let live = true;
+    const read = () => {
+      contactsState()
+        .then((next) => live && setState(next))
+        .catch(() => {});
+    };
+    read();
+    const sub = AppState.addEventListener('change', (next) => next === 'active' && read());
+    return () => {
+      live = false;
+      sub.remove();
+    };
+  }, []);
+  if (!state) return null;
+  return (
+    <View>
+      <Text style={styles.label}>{t('settings.contactsTitle')}</Text>
+      <Text style={styles.hint}>{t('settings.contactsHint')}</Text>
+      <Text style={[styles.hint, styles.contactsState]}>{t(`settings.contactsState.${state}`)}</Text>
+      {state === 'undetermined' || state === 'denied' ? (
+        <LinkRow label={t('settings.contactsAllow')} onPress={() => void requestContacts().then(setState)} />
+      ) : null}
+      {state === 'limited' ? (
+        <LinkRow label={t('settings.contactsChoose')} onPress={() => void chooseSharedContacts().then(() => contactsState().then(setState))} />
+      ) : null}
+      {state === 'granted' || state === 'limited' || state === 'blocked' ? (
+        <LinkRow label={t('settings.openSystem')} onPress={openSettingsOrExplain} />
+      ) : null}
+    </View>
+  );
+}
+
 function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
   const styles = useStyles();
   return (
@@ -1009,6 +1052,7 @@ const useStyles = makeStyles((c) => ({
   label: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 12 },
   sectionLabel: { fontSize: 13, color: c.textSecondary, textTransform: 'uppercase', marginTop: 24 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  contactsState: { color: c.text, marginTop: 4 },
   voiceMode: { marginTop: 8 },
   customInput: {
     color: c.text,

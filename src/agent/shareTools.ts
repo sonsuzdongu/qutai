@@ -21,6 +21,7 @@ import { transfer, type FileTarget } from './imageTools';
 import { siteKey } from './sitePolicy';
 import { uiLabel } from './uiLabels';
 import { cutText } from '../utils/wellFormed';
+import { contactForUse } from './contactTool';
 
 /**
  * Tools that hand the conversation's files to someone else, always through a step the user completes:
@@ -69,7 +70,29 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export async function draftEmailTool(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
   if (!ctx.composeEmail) return { content: 'Email drafts are not available.', isError: true };
   const raw = Array.isArray(input.to) ? input.to : typeof input.to === 'string' ? [input.to] : [];
-  const to = raw.map((a) => String(a).trim()).filter((a) => EMAIL_RE.test(a));
+  // Contact handles (find_contact) become the real addresses here; the model never sees them, and the card shows the
+  // person's name instead of the address (the composer shows the address).
+  const to: string[] = [];
+  const shownTo: string[] = [];
+  const fromContacts: string[] = [];
+  for (const entry of raw) {
+    const contact = await contactForUse(entry, 'email', ctx);
+    if (contact && !contact.ok) return contact.out;
+    if (contact) {
+      to.push(contact.value);
+      shownTo.push(contact.name);
+      fromContacts.push(`${contact.name} (${contact.label})`);
+      continue;
+    }
+    const address = String(entry).trim();
+    if (EMAIL_RE.test(address)) {
+      to.push(address);
+      shownTo.push(address);
+    }
+  }
+  const contactsNote = fromContacts.length
+    ? ` Recipients from the user's contacts: ${fromContacts.join(', ')}; the user sees the address in the composer.`
+    : '';
   const picked = pickShareables(input.attachments, conversationShareables(ctx));
   if (!picked.ok) return { content: picked.error, isError: true };
   const items = picked.items;
@@ -82,7 +105,7 @@ export async function draftEmailTool(input: Record<string, unknown>, ctx: ToolCo
       ctx.offerShare?.({
         app: 'email',
         subject,
-        ...(to.length ? { to } : {}),
+        ...(shownTo.length ? { to: shownTo } : {}),
         files: items,
         delivered: outcome.route === 'share' ? 'share' : 'composer',
         ...(original ? { original } : {}),
@@ -91,7 +114,7 @@ export async function draftEmailTool(input: Record<string, unknown>, ctx: ToolCo
     }
     if (outcome.route === 'mailto')
       return {
-        content: 'The mail app was opened with the draft (no mail account is set up in the system composer). You cannot send it yourself.',
+        content: `The mail app was opened with the draft (no mail account is set up in the system composer). You cannot send it yourself.${contactsNote}`,
         isError: false,
       };
     const attached = items.length
@@ -104,7 +127,7 @@ export async function draftEmailTool(input: Record<string, unknown>, ctx: ToolCo
           'No mail account is set up in the phone\'s system mail composer, and a mailto link cannot carry files, so ' +
           `the share sheet was opened instead${attached}, with the subject${outcome.textCopied ? ', and the body copied to the clipboard as well (some apps leave shared text out)' : ' and the body'}. ` +
           'The user picks their mail app there (e.g. Gmail), checks the recipient and sends it themselves. Tell the ' +
-          'user this in those words; do not say it was sent.',
+          `user this in those words; do not say it was sent.${contactsNote}`,
         isError: false,
       };
     }
@@ -115,7 +138,7 @@ export async function draftEmailTool(input: Record<string, unknown>, ctx: ToolCo
     return {
       content:
         `The email composer was shown${attached}; ${status}. A card in the chat lists the attached files. You ` +
-        'cannot send it yourself.',
+        `cannot send it yourself.${contactsNote}`,
       isError: false,
     };
   } catch (e) {
