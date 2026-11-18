@@ -33,6 +33,12 @@ export type Settings = {
    * confirmation is skipped. Turned off one by one in Settings › Assistant. Never set by the assistant itself.
    */
   alwaysAllow: AlwaysAllowKind[];
+  /**
+   * Settings › Assistant › "Let the assistant complete payments": off by default. On, the assistant may press a
+   * site's final payment button after the user approves that payment in Qutai's dialog (agent/outwardApproval.ts);
+   * off, it prepares the order and the user pays. Never changed by the assistant, and not restored from a backup.
+   */
+  assistantPayments: boolean;
   searchEngine: SearchEngineId;
   /** Live suggestions from the search engine while typing; always off in incognito tabs. */
   searchSuggestions: boolean;
@@ -135,6 +141,7 @@ export const DEFAULT_SETTINGS: Settings = {
   customHeaders: [],
   confirmActions: false,
   alwaysAllow: [],
+  assistantPayments: false,
   searchEngine: 'google',
   searchSuggestions: true,
   textZoom: 100,
@@ -179,6 +186,7 @@ const KEYS = {
   customImages: 'custom_images',
   confirmActions: 'confirm_actions',
   alwaysAllow: 'always_allow',
+  assistantPayments: 'assistant_payments',
   searchEngine: 'search_engine',
   searchSuggestions: 'search_suggestions',
   textZoom: 'text_zoom',
@@ -315,6 +323,7 @@ export async function loadSettings(): Promise<Settings> {
     customImages,
     customHeaderRows,
     alwaysAllow,
+    assistantPayments,
     ...perProvider
   ] = await Promise.all([
     get(KEYS.provider),
@@ -361,6 +370,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.customImages),
     Promise.all(Array.from({ length: MAX_CUSTOM_HEADERS }, (_, i) => get(KEYS.customHeader(i)))),
     get(KEYS.alwaysAllow),
+    get(KEYS.assistantPayments),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
   ]);
 
@@ -373,6 +383,7 @@ export async function loadSettings(): Promise<Settings> {
     customHeaders: (customHeaderRows as (string | null)[]).flatMap(parseHeaderRow),
     confirmActions: confirmActions === 'true',
     alwaysAllow: parseAlwaysAllow(alwaysAllow as string | null),
+    assistantPayments: assistantPayments === 'true',
     searchEngine: isSearchEngine(searchEngine) ? searchEngine : DEFAULT_SETTINGS.searchEngine,
     searchSuggestions: searchSuggestions !== 'false',
     textZoom: clampTextZoom(Number(textZoom) || DEFAULT_SETTINGS.textZoom),
@@ -449,6 +460,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     }),
     set(KEYS.confirmActions, String(settings.confirmActions)),
     set(KEYS.alwaysAllow, serializeAlwaysAllow(settings.alwaysAllow)),
+    set(KEYS.assistantPayments, settings.assistantPayments ? 'true' : ''),
     set(KEYS.searchEngine, settings.searchEngine),
     set(KEYS.searchSuggestions, String(settings.searchSuggestions)),
     set(KEYS.textZoom, String(settings.textZoom)),

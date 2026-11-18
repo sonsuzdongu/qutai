@@ -8,6 +8,7 @@ const TOOL_ICONS: Record<string, IconName> = {
   go_back: 'back',
   click: 'tap',
   click_at: 'tap',
+  request_approval: 'shield',
   type: 'keyboard',
   select_option: 'select',
   scroll: 'scroll',

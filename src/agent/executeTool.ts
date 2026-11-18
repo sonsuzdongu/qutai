@@ -44,6 +44,8 @@ import { containsHidden, HiddenNeedle, hiddenNeedles, MEMORY_ID, redactHidden } 
 import { hiddenKindOf, hiddenLabel, hiddenValue, isMemoryCategory, looksLikeIdNumber, Memory, MemoryStore } from './memory';
 import { findPersonalData, PERSONAL_KINDS, PersonalKind, personalNeedles } from './personalData';
 import { decide, SitePolicy, siteKey } from './sitePolicy';
+import { pressGate, requestApprovalTool, type OutwardApproval } from './approvalTool';
+import { CARD_NUMBER_TEXT, containsCardNumber, type ApprovalGrants } from './outwardApproval';
 import {
   describeCalendarRead,
   describePlan,
@@ -204,6 +206,18 @@ export type ToolContext = {
    * the user pick where hiding applies. Resolves with the scope, or null when declined or dismissed.
    */
   confirmSiteRules?: (approval: SiteRulesApproval) => Promise<ScopeKind | null>;
+  /**
+   * Approvals for posting and paying in this task (request_approval, agent/outwardApproval.ts): each is one press of
+   * one button. Absent: request_approval answers that the user presses the button themselves.
+   */
+  approvals?: ApprovalGrants;
+  /** Settings › Assistant › "Let the assistant complete payments", read at each use (off when absent). */
+  paymentsAllowed?: () => boolean;
+  /**
+   * The publish or pay dialog (what Qutai read on the page, the site, the button), every time: never "don't ask
+   * again", whatever the site's setting. True only on Approve.
+   */
+  confirmOutward?: (approval: OutwardApproval) => Promise<boolean>;
 };
 
 /** Tools that need a loaded web page. */
@@ -223,6 +237,7 @@ const PAGE_TOOLS = new Set([
   'view_screenshot',
   'upload_image',
   'upload_file',
+  'request_approval',
 ]);
 
 /** Short label shown in the chat for each tool call. */
@@ -347,6 +362,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
         : onTarget('action.downloadFileRef');
     case 'read_calendar':
       return t('action.readCalendar');
+    case 'request_approval':
+      return t(input.kind === 'pay' ? 'action.requestApprovalPay' : 'action.requestApproval');
     case 'open_settings':
       return t(
         input.target === 'app'
@@ -1033,6 +1050,8 @@ export type EmailDraft = {
 
 /** Actions kept in the action history; bookkeeping (listing tabs, waiting, scrolling) is left out. */
 const LOGGED_TOOLS = new Set([
+  // Only what was asked (post, comment, pay); never the text or the total.
+  'request_approval',
   'save_site_rules',
   'site_rules',
   'navigate',
@@ -1134,7 +1153,14 @@ function actionTarget(
 }
 
 /** Tools that confirm on their own every time, whatever the "ask before actions" setting. */
-const ALWAYS_CONFIRMED = new Set(['get_location', 'read_calendar', 'download_file', 'upload_image', 'upload_file']);
+const ALWAYS_CONFIRMED = new Set([
+  'get_location',
+  'read_calendar',
+  'download_file',
+  'upload_image',
+  'upload_file',
+  'request_approval',
+]);
 
 /**
  * Tools that can run while the app is in the background with "Keep working in the background" on (Android): they
@@ -1255,6 +1281,16 @@ async function hiddenForType(
   return { memory };
 }
 
+/** click_at's point as fractions of the visible area, as runTool computes it; null when it can't run. */
+function clickAtPoint(name: string, input: Record<string, unknown>, tab: Tab): { fx: number; fy: number } | null {
+  const size = tab.modelScreenshotSize;
+  if (name !== 'click_at' || !size) return null;
+  const x = Number(input.x);
+  const y = Number(input.y);
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+  return { fx: x / size.width, fy: y / size.height };
+}
+
 async function executeUnredacted(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
   // Checked before the site permission, which would otherwise ask about a made-up host.
   if ((name === 'navigate' || name === 'open_tab') && isViewSource(input.url)) {
@@ -1329,8 +1365,20 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
     if (gate.kind === 'refuse') return record({ content: gate.reason, isError: true, notice: gate.notice });
     personalAsked = gate.kind === 'asked';
   }
+  // Qutai never types a payment card number, whatever the model was told.
+  if (name === 'type' && !hidden && typeof input.text === 'string' && containsCardNumber(input.text))
+    return record({ content: CARD_NUMBER_TEXT, isError: true, notice: settingNotice(t('step.cardNumber')) });
+  // A press the user approved in the publish or pay dialog is checked and used up here; a final payment button without
+  // an approval is refused (agent/approvalTool.ts).
+  let approvedPress = false;
+  if ((name === 'click' || name === 'click_at') && target?.tab && !target.tab.isNewTab) {
+    const gate = await pressGate(name, input, ctx, target.tab, clickAtPoint(name, input, target.tab));
+    if (gate.kind === 'refuse') return record(gate.output);
+    approvedPress = gate.kind === 'approved';
+  }
   // The personal-information question already named this entry; asking "may I type?" right after would be twice.
-  if (decision.kind === 'confirm' && ctx.confirm && !personalAsked) {
+  // An approved press was just asked in the publish or pay dialog.
+  if (decision.kind === 'confirm' && ctx.confirm && !personalAsked && !approvedPress) {
     const allowed = await ctx.confirm({ lines: [{ icon: toolIcon(name, input), text: describeToolCall(name, input) }] }, host);
     if (!allowed)
       return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true, notice: declinedNotice() });
@@ -1544,6 +1592,8 @@ async function runTool(
   // Confirms on its own with the image, every time.
   if (name === 'upload_image') return uploadImageTool(input, ctx, tab);
   if (name === 'upload_file') return uploadFileTool(input, ctx, tab);
+  // Asks in its own dialog with what it reads on the page.
+  if (name === 'request_approval') return requestApprovalTool(input, ctx, tab);
 
   try {
     // Shows the user where the step acts (and waits a moment for clicks and typing); changes nothing in the result.

@@ -333,6 +333,27 @@ function SettingsPages({
               value={settings.confirmActions}
               onChange={(confirmActions) => set({ confirmActions })}
             />
+            <SwitchRow
+              title={t('settings.payments')}
+              hint={t('settings.paymentsHint')}
+              value={settings.assistantPayments}
+              onChange={(on) => {
+                if (!on) {
+                  set({ assistantPayments: false });
+                  return;
+                }
+                // Turning it on is asked once more, with what it means; turning it off never is.
+                void dialog
+                  .show({
+                    title: t('settings.paymentsConfirmTitle'),
+                    message: t('settings.paymentsConfirmBody'),
+                    buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: t('settings.paymentsConfirmOn'), primary: true }],
+                  })
+                  .then((result) => {
+                    if (result.button === 1) set({ assistantPayments: true });
+                  });
+              }}
+            />
             <Text style={[styles.label, styles.sectionLabel]}>{t('settings.alwaysAllowTitle')}</Text>
             <Text style={styles.hint}>{t('settings.alwaysAllowHint')}</Text>
             {ALWAYS_ALLOW_KINDS.map((kind) => (

@@ -44,7 +44,16 @@ export const ACTIONS_NEEDING_CONFIRMATION = new Set([
 ]);
 
 /** Actions that interact with the page; not allowed on read-only sites. */
-const WRITE_ACTIONS = new Set(['click', 'click_at', 'type', 'select_option', 'download_file', 'upload_image', 'upload_file']);
+const WRITE_ACTIONS = new Set([
+  'click',
+  'click_at',
+  'type',
+  'select_option',
+  'download_file',
+  'upload_image',
+  'upload_file',
+  'request_approval',
+]);
 
 export type Decision = { kind: 'run' } | { kind: 'confirm' } | { kind: 'refuse'; reason: string };
 

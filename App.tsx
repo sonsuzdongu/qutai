@@ -1,6 +1,7 @@
 import { siteRules } from './src/storage/siteRules';
 import { DEFAULT_SCOPE, isOffSite, SCOPE_KINDS, type ScopeKind } from './src/content/siteRules';
 import type { SiteRulesApproval } from './src/agent/siteRulesTool';
+import type { OutwardApproval } from './src/agent/approvalTool';
 import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -357,6 +358,50 @@ async function askSiteRules(approval: SiteRulesApproval, active: boolean, signal
   });
   if (result.button !== 1) return null;
   return approval.hide.length ? (SCOPE_KINDS[result.choice] ?? DEFAULT_SCOPE) : DEFAULT_SCOPE;
+}
+
+/**
+ * Posting and paying (request_approval, agent/approvalTool.ts): the site, what kind of action, and what Qutai read on
+ * the page (the exact text or the form's values; the total, the line it is on, the order and the payment method,
+ * any recurring charge), every time, never "don't ask again". Only Approve grants the one press; stopping the task
+ * dismisses it as declined.
+ */
+async function askOutward(approval: OutwardApproval, signal: AbortSignal): Promise<boolean> {
+  const lines: IconLine[] = [];
+  let title: string;
+  let approve: string;
+  if (approval.kind === 'publish') {
+    title = t(`approval.title.${approval.action}`, { site: approval.site });
+    approve = t('approval.approve');
+    if (approval.text !== undefined) {
+      lines.push({ icon: 'send', text: t('approval.exactText') }, { text: approval.text });
+    } else {
+      lines.push({ icon: 'send', text: t('approval.formValues') }, ...(approval.fields ?? []).map((f) => ({ text: `${f.label}: ${f.value}` })));
+    }
+  } else {
+    title = t('approval.payTitle', { total: approval.total, site: approval.site });
+    approve = t('approval.pay', { total: approval.total });
+    lines.push(
+      { icon: 'wallet', text: t('approval.total', { total: approval.total }) },
+      { text: t('approval.totalLine', { line: approval.totalLine }) },
+    );
+    if (approval.items) lines.push({ icon: 'review', text: t('approval.items', { items: approval.items }) });
+    if (approval.paymentMethod) lines.push({ icon: 'key', text: t('approval.method', { method: approval.paymentMethod }) });
+    if (approval.recurring) lines.push({ icon: 'reload', text: t('approval.recurring', { terms: approval.recurring }) });
+  }
+  const notes = [
+    t('approval.press', { button: approval.button }),
+    ...(approval.kind === 'pay' ? [t('approval.payNote')] : []),
+    t('approval.onlyHere'),
+  ];
+  const result = await dialog.show({
+    title,
+    lines: { lines, spaced: true },
+    message: notes.join('\n\n'),
+    buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: approve, primary: true }],
+    signal,
+  });
+  return result.button === 1;
 }
 
 /**
@@ -1260,6 +1305,9 @@ function BrowserApp({
         confirmPersonal: (host, kinds, incognito) => askPersonalData(host, kinds, incognito, signal),
         confirmHidden: (host, what, field, incognito) => askHiddenValue(host, what, field, incognito, signal),
         confirmImage: (options) => whileAskingUser(() => askImageConfirmation(options, signal)),
+        confirmOutward: (approval) => whileAskingUser(() => askOutward(approval, signal)),
+        // Read at each use: the user may turn it off during a task.
+        paymentsAllowed: () => settingsRef.current.assistantPayments,
         siteRules: {
           list: () => siteRules.rules,
           add: (site, lines, url) => siteRules.add(site, lines, 'assistant', url),

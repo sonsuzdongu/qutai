@@ -30,5 +30,6 @@
   "siteRules.domainLabel",
   "account.providerEmail",
   "account.methodEmail",
-  "account.methods.kindEmail"
+  "account.methods.kindEmail",
+  "approval.total"
 ]

@@ -25,6 +25,7 @@ import { compactHistory } from './history';
 import { backgroundBlocker, describeToolCall, executeTool, ToolContext } from './executeTool';
 import { prepareStepTarget } from './stepTarget';
 import { toolIcon, WEB_SEARCH_ICON } from './toolIcons';
+import { ApprovalGrants } from './outwardApproval';
 import {
   customInstructionsPrompt,
   LAST_STEP_PROMPT,
@@ -171,8 +172,17 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
           return whileWaitingForUser(() => confirmHidden(host, what, field, incognito));
         }
       : undefined,
+    // The publish and pay dialog waits for the user the same way; nothing is approved while they are away.
+    confirmOutward: opts.confirmOutward
+      ? async (approval) => {
+          await pauseWhileBackgrounded('confirm');
+          return whileWaitingForUser(() => opts.confirmOutward!(approval));
+        }
+      : undefined,
     // "Allow once" lasts until this task (this message) ends.
     personalGrants: { allowed: new Set(), declined: new Set() },
+    // So does an approval to post or pay: one press, in this task only.
+    approvals: new ApprovalGrants(),
   };
 
   const sources: Source[] = [];
