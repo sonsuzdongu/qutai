@@ -5,6 +5,7 @@ import { ContactHandles, looksLikeHandle, type ContactValue } from './contactHan
 import { checkQuery, CONTACT_EMAIL, matchContacts, modelLabel, saidByUser, type ContactName } from './contactMatch';
 import type { ToolContext, ToolOutput } from './executeTool';
 import { errorNotice, incognitoNotice, settingNotice } from './stepLine';
+import { uiPath } from './uiLabels';
 
 /**
  * find_contact, and contact handles in offer_call / draft_sms / draft_whatsapp / draft_email (docs/contacts.md). The
@@ -113,7 +114,7 @@ function stateRefusal(state: ContactsState): ToolOutput {
     return {
       content:
         'Contacts access is turned off for Qutai in the phone\'s settings, so nothing was looked up. Ask the user for ' +
-        `the number or address, or tell them they can allow it in ${t('settings.contactsTitle')} in Qutai's settings.`,
+        `the number or address, or tell them they can allow it in Qutai's settings, ${uiPath('settings.title', 'settings.assistant', 'settings.contactsTitle')}.`,
       isError: true,
       notice: settingNotice(t('contacts.blockedNotice')),
     };
