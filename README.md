@@ -168,8 +168,17 @@ only. Nothing is recorded to disk, and no audio goes to Qutai or the AI provider
 panel closes, another tab or a dialog comes up, the app leaves the screen, a call comes in or a site starts using the
 microphone; what was heard stays in the field.
 
-Push-to-talk: holding the Qutai button in the address bar for half a second (a haptic bump) starts listening without
-opening the panel. A bubble next to the button (above it when the bar is at the bottom, below and to its left when at
+Push-to-talk: holding the Qutai button in the address bar for 0.4 s (Android's own long-press time; a vibration)
+starts listening without opening the panel. Everything the start needs (the recogniser's languages, on-device or
+online, the language) is worked out when the button is touched and when the panel opens (`warmVoice`), so the
+recogniser is started the moment the hold registers; the microphone itself stays off until then. "Getting ready…"
+shows (the listening look at less than full strength) until audio is really heard: on Android 13+ a held session
+records the microphone itself and hands the audio to the recogniser through a pipe that keeps it until the
+recogniser has loaded, so listening shows, and the first words count, from that moment; elsewhere from the
+recogniser's "ready". If the recogniser ends a held session by itself (a silence, its time limit) it starts again
+with what was heard kept (at most 4 times), and if the on-device recogniser can't start the same language goes
+online when that is allowed. Each start logs its timings (`[voice-timing] press +0 · begin · plan · start · audio ·
+ready · words`, never words themselves; `adb logcat -s ReactNativeJS`). A bubble next to the button (above it when the bar is at the bottom, below and to its left when at
 the top) shows the listening dot, the TR/EN tag and the live transcript; lifting the finger waits up to a second for the
 final words and sends them to the conversation of the tab on screen through the same path as a typed message (a lighter
 haptic and a "Sent: …" toast with Open). Sliding the finger away turns the bubble red ("Release to cancel"); an

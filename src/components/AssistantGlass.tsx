@@ -212,17 +212,26 @@ function barEdge(height: number, insets: { top: number; bottom: number }, barAtB
  * first frame late (the surface and the shader's program are made then), so the light used to come a second after
  * the words. Nothing animates while it is hidden. It keeps what it last showed while it fades out.
  */
+/** How strongly the listening look shows while still getting ready. */
+const WAITING_STRENGTH = 0.45;
+
 export function ListeningLook({
   look,
   show,
   barAtBottom,
   level,
+  waiting = false,
   ...content
 }: {
   look: Exclude<AssistantLook, 'classic'>;
   show: boolean;
   barAtBottom: boolean;
   level: number;
+  /**
+   * Still getting ready (the recogniser isn't hearing yet): the look shows at less than full strength with its "Getting
+   * ready…" line, so it never looks like listening before words can be heard.
+   */
+  waiting?: boolean;
   status: string;
   transcript: string;
   tag: string | null;
@@ -245,12 +254,12 @@ export function ListeningLook({
 
   useEffect(() => {
     Animated.timing(appear, {
-      toValue: show ? 1 : 0,
+      toValue: show ? (waiting ? WAITING_STRENGTH : 1) : 0,
       duration: reduceMotion ? 0 : show ? 220 : 240,
       easing: show ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
       useNativeDriver: true,
     }).start();
-  }, [show, appear, reduceMotion]);
+  }, [show, waiting, appear, reduceMotion]);
 
   const Look = look === 'band' ? Sheet : Curtain;
   return (

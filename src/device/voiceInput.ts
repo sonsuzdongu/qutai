@@ -5,7 +5,7 @@ import type { ExpoSpeechRecognitionErrorCode } from 'expo-speech-recognition';
 import { onPageMicrophone, pageMicrophoneLive } from '../browser/mediaCapture';
 import { dialog, dialogState } from '../components/Dialog';
 import { t } from '../i18n';
-import { voiceErrorOutcome } from './voiceError';
+import { shouldKeepListening, voiceErrorOutcome } from './voiceError';
 import { languageName, languageOf } from './voiceLanguage';
 import { offerSettings } from './settings';
 import { isSpeaking, setMicrophoneGuard, stopSpeaking } from './speech';
@@ -92,6 +92,31 @@ async function load(): Promise<SpeechModule> {
   }
 }
 
+// ---- Start-up timings ---------------------------------------------------------------------------
+
+/**
+ * Where the time goes between the press and the recogniser listening (18 Nov 2026: listening started 2-3 s late on
+ * the owner's Android phone). One line per session in the log ("[voice-timing] press +0 · hold +400 · …"), release
+ * builds included (adb logcat -s ReactNativeJS); timings only, never words.
+ */
+let markStart = 0;
+let marks: string[] = [];
+/** The latest session's milestones, for tests and a debugging look. */
+export let lastVoiceTimings: readonly string[] = [];
+
+function mark(stage: string) {
+  if (!markStart) markStart = Date.now();
+  marks.push(`${stage} +${Date.now() - markStart}`);
+}
+
+function flushMarks() {
+  if (!marks.length) return;
+  lastVoiceTimings = marks;
+  console.log(`[voice-timing] ${Platform.OS} ${marks.join(' · ')}`);
+  marks = [];
+  markStart = 0;
+}
+
 // ---- State shown by the panel -------------------------------------------------------------------
 
 let state: VoiceState = 'idle';
@@ -160,7 +185,7 @@ export function isListening() {
 
 /** The recogniser has been started (until its end); false while still preparing (questions, permission). */
 export function hasVoiceSession() {
-  return session !== null;
+  return session !== null || continuing;
 }
 
 // ---- Language and on-device support -------------------------------------------------------------
@@ -193,6 +218,9 @@ function pick(preferred: string[], available: string[], language: string): strin
 
 type Locales = { locales: string[]; installedLocales: string[] };
 let localesCache: { at: number; value: Promise<Locales> } | null = null;
+/** When the recogniser service last didn't answer the language question in time. */
+let noAnswerAt = 0;
+const NO_ANSWER_MS = 2 * 60 * 1000;
 
 /**
  * The recogniser's languages (iOS: all it supports; Android 13+: those of the on-device recogniser, installed or
@@ -200,6 +228,8 @@ let localesCache: { at: number; value: Promise<Locales> } | null = null;
  */
 function supportedLocales(M: SpeechModule['ExpoSpeechRecognitionModule']): Promise<Locales> {
   if (localesCache && Date.now() - localesCache.at < LOCALES_CACHE_MS) return localesCache.value;
+  // A service that didn't answer a moment ago won't now: not asked again for a while (each ask waited 3 s).
+  if (noAnswerAt && Date.now() - noAnswerAt < NO_ANSWER_MS) return Promise.resolve({ locales: [], installedLocales: [] });
   const none: Locales = { locales: [], installedLocales: [] };
   // Android asks the recogniser service, which may never answer: then nothing counts as on-device.
   const value = Promise.race([
@@ -208,18 +238,58 @@ function supportedLocales(M: SpeechModule['ExpoSpeechRecognitionModule']): Promi
   ]);
   const entry = { at: Date.now(), value };
   localesCache = entry;
-  // An empty answer (timeout, no service) is asked again next time.
+  // An empty answer (no on-device service, or none in time) is asked again later.
+  const startedAt = Date.now();
   value.then((v) => {
-    if (!v.locales.length && !v.installedLocales.length && localesCache === entry) localesCache = null;
+    if (v.locales.length || v.installedLocales.length || localesCache !== entry) return;
+    localesCache = null;
+    if (Date.now() - startedAt >= LOCALES_TIMEOUT_MS - 50) noAnswerAt = Date.now();
   });
   return value;
 }
 
-/** Reads the recogniser's languages ahead of time (a press on the Qutai button that may become a hold). */
+/** A plan worked out ahead of the start (warmVoice), for the same languages. */
+let warm: { key: string; at: number; plan: Promise<VoicePlan | null> } | null = null;
+const WARM_MS = 60 * 1000;
+
+/**
+ * Gets everything ready that listening needs before the recogniser starts, so the start itself waits for nothing on
+ * the JavaScript side: the native module, the recogniser's language lists (Android asks a service that may take
+ * seconds) and the plan (language, on-device or online). Called when the Qutai button is touched (a press that may
+ * become a hold) and when the assistant panel opens. The microphone stays off: Android and iOS offer no way to load a
+ * recogniser without listening, and the microphone indicator must not light up for a tap.
+ */
+export function warmVoice(languages: string[], press = false): void {
+  if (state !== 'idle') return;
+  if (press) {
+    marks = [];
+    markStart = Date.now();
+    mark('press');
+  }
+  const key = languages.join(',');
+  if (warm && warm.key === key && Date.now() - warm.at < WARM_MS) return;
+  const plan = load()
+    .then(() => voicePlan(languages))
+    .catch(() => null);
+  warm = { key, at: Date.now(), plan };
+  // A plan with nothing in it (the service didn't answer) isn't kept.
+  void plan.then((p) => {
+    if (!p && warm?.plan === plan) warm = null;
+  });
+}
+
+/** Reads the recogniser's languages ahead of time. */
 export function prefetchVoiceLocales(): void {
   load()
     .then((lib) => supportedLocales(lib.ExpoSpeechRecognitionModule))
     .catch(() => {});
+}
+
+/** The plan warmVoice worked out for these languages, if it is fresh. */
+async function warmPlan(languages: string[]): Promise<VoicePlan | null> {
+  const w = warm;
+  if (!w || w.key !== languages.join(',') || Date.now() - w.at >= WARM_MS) return null;
+  return w.plan;
 }
 
 /** The languages the phone's recogniser lists, for "More languages…" (empty when it lists none). */
@@ -335,6 +405,12 @@ export type VoiceOptions = {
   onStarted?: (lang: string) => void;
   /** The session is over, however it ended; `text` is what was recognised in it (without the draft). */
   onEnd?: (result: VoiceResult) => void;
+  /** Internal: what earlier recogniser runs of the same hold heard (a restart after the recogniser ended). */
+  carried?: string;
+  /** Internal: recogniser restarts so far in this hold. */
+  restarts?: number;
+  /** Internal: the on-device recogniser failed to start; this run uses the online one. */
+  forceOnline?: boolean;
 };
 
 export type VoiceResult = {
@@ -362,11 +438,24 @@ type Session = {
   timedOut: boolean;
   /** The recogniser turned the language down at the start: listening starts again with the next one. */
   retry: boolean;
+  /** The on-device recogniser couldn't start: listening starts again online, same language. */
+  retryOnline: boolean;
+  /** Earlier runs of the same hold (a restart): their words come first. */
+  carried: string;
+  /** The error the recogniser ended with. */
+  lastError: ExpoSpeechRecognitionErrorCode | null;
+  /** Listening has been reported (the audio is being heard): onStarted is called once. */
+  started: boolean;
   subscriptions: { remove(): void }[];
   stopTimer: ReturnType<typeof setTimeout> | null;
 };
 
 let session: Session | null = null;
+/**
+ * A held session is being started again after the recogniser ended it by itself (or online after the on-device
+ * recogniser failed): it still counts as a session, so lifting the finger now sends what was heard.
+ */
+let continuing = false;
 /** Set when listening is called off while it is still being prepared (prompts, permission). */
 let cancelled = false;
 
@@ -390,7 +479,10 @@ const ERROR_KEYS: Partial<Record<ExpoSpeechRecognitionErrorCode, Parameters<type
 function finish() {
   const s = session;
   if (!s) return;
+  const asked = state === 'stopping';
   session = null;
+  mark('end');
+  flushMarks();
   if (s.stopTimer) clearTimeout(s.stopTimer);
   s.subscriptions.forEach((sub) => sub.remove());
   setState('idle');
@@ -400,18 +492,48 @@ function finish() {
       module.ExpoSpeechRecognitionModule.setAudioSessionActiveIOS(false, { notifyOthersOnDeactivation: true });
     } catch {}
   }
+  const heard = join(s.carried, join(s.committed, s.interim));
+  const again = (options: VoiceOptions, fellBackFrom: string | null) => {
+    continuing = true;
+    void startVoiceInput(options, fellBackFrom).then((started) => {
+      continuing = false;
+      if (!started) s.options.onEnd?.({ text: heard.trim(), interrupted: false, failed: true, timedOut: false });
+    });
+  };
+  if (s.retryOnline && !cancelled) {
+    // The on-device recogniser couldn't start: the same language with the online one.
+    mark('online instead');
+    again({ ...s.options, draft: s.base, carried: heard, forceOnline: true }, s.plan.fellBackFrom);
+    return;
+  }
   if (s.retry && !cancelled) {
     // The next language in the order, saying which one wasn't available.
     const fellBackFrom = s.plan.fellBackFrom ?? s.options.languages[0];
-    void startVoiceInput({ ...s.options, languages: s.plan.rest, draft: s.base }, fellBackFrom).then((started) => {
-      if (!started) s.options.onEnd?.({ text: '', interrupted: false, failed: true, timedOut: false });
-    });
+    again({ ...s.options, languages: s.plan.rest, draft: s.base }, fellBackFrom);
+    return;
+  }
+  const restarts = s.options.restarts ?? 0;
+  if (
+    !cancelled &&
+    AppState.currentState === 'active' &&
+    shouldKeepListening({
+      continuous: !!s.options.hold || !!s.options.continuous,
+      asked,
+      interrupted: s.interrupted,
+      restarting: false,
+      error: s.failed ? s.lastError : null,
+      restarts,
+    })
+  ) {
+    // The recogniser ended a held session by itself (a silence, its time limit): the hold goes on, with what was
+    // heard so far kept in front of what comes next.
+    again({ ...s.options, draft: s.base, carried: heard, restarts: restarts + 1, onStarted: undefined }, s.plan.fellBackFrom);
     return;
   }
   const ok = !s.interrupted && !s.failed && !s.timedOut;
   if (s.final && ok && s.options.onFinal) s.options.onFinal(s.final);
   s.options.onEnd?.({
-    text: join(s.committed, s.interim).trim(),
+    text: heard.trim(),
     interrupted: s.interrupted,
     failed: s.failed,
     timedOut: s.timedOut,
@@ -425,8 +547,15 @@ function handleError(s: Session, code: ExpoSpeechRecognitionErrorCode) {
     hasText: !!(s.committed || s.interim),
     interrupted: s.interrupted,
     canRetry: s.plan.rest.length > 0,
+    canGoOnline: s.plan.onDevice && !s.options.incognito && s.options.online === 'allowed' && !s.options.forceOnline,
   });
+  mark(`error ${code} → ${outcome}`);
+  s.lastError = code;
   if (outcome === 'ignore') return;
+  if (outcome === 'online') {
+    s.retryOnline = true;
+    return;
+  }
   if (outcome === 'retry') {
     s.retry = true;
     return;
@@ -550,6 +679,12 @@ async function startDownload(options: VoiceOptions, lang: string) {
  */
 export async function startVoiceInput(options: VoiceOptions, fellBackFrom: string | null = null): Promise<boolean> {
   if (state !== 'idle') return false;
+  // A press long ago that never became a hold: this start is measured on its own.
+  if (markStart && Date.now() - markStart > 5000) {
+    marks = [];
+    markStart = 0;
+  }
+  mark(fellBackFrom ? 'retry' : 'begin');
   cancelled = false;
   setState('preparing');
   setInfo({ owner: options.owner, lang: null, fellBackFrom: null });
@@ -561,7 +696,11 @@ export async function startVoiceInput(options: VoiceOptions, fellBackFrom: strin
       dialog.alert(t('voice.title'), t('voice.languageUnavailable', { language: languageName(e.language) }));
     else options.notify(t('voice.error.generic'));
   } finally {
-    if (!session) setState('idle');
+    if (!session) {
+      setState('idle');
+      mark('not started');
+      flushMarks();
+    }
   }
   return !!session;
 }
@@ -569,6 +708,7 @@ export async function startVoiceInput(options: VoiceOptions, fellBackFrom: strin
 async function begin(options: VoiceOptions, fellBackFrom: string | null) {
   const lib = await load();
   const M = lib.ExpoSpeechRecognitionModule;
+  mark('module');
   if (pageMicrophoneLive()) {
     dialog.alert(t('voice.title'), t('voice.siteUsingMicrophone'));
     return;
@@ -582,8 +722,15 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
     return;
   }
 
-  const found = await voicePlan(options.languages);
-  const plan = { ...found, fellBackFrom: found.fellBackFrom ?? fellBackFrom };
+  mark('available');
+  // Worked out while the finger was going down (warmVoice); otherwise now.
+  const found = (await warmPlan(options.languages)) ?? (await voicePlan(options.languages));
+  const plan: VoicePlan = {
+    ...found,
+    fellBackFrom: found.fellBackFrom ?? fellBackFrom,
+    ...(options.forceOnline ? { onDevice: false, downloadable: null } : {}),
+  };
+  mark(`plan ${plan.lang}${plan.onDevice ? ' on-device' : ' online'}`);
   if (!plan.onDevice) {
     if (options.incognito) {
       const buttons = plan.downloadable
@@ -602,6 +749,7 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
   }
 
   if (!(await ensurePermission(M, plan.onDevice, options.hold))) return;
+  mark('permission');
   // Something may have changed while a prompt was up (a site took the microphone, the app was left).
   // ("inactive" is normal right after an iOS permission prompt, so only "background" counts here.)
   if (pageMicrophoneLive() || AppState.currentState === 'background') return;
@@ -624,20 +772,35 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
     failed: false,
     timedOut: false,
     retry: false,
+    retryOnline: false,
+    carried: options.carried ?? '',
+    lastError: null,
+    started: false,
     subscriptions: [],
     stopTimer: null,
   };
   session = s;
+  // The words of this hold so far (a restart) stay in front of what comes next.
+  const said = (words: string) => join(s.base, join(s.carried, words));
   setInfo({ owner: options.owner, lang: plan.lang, fellBackFrom: plan.fellBackFrom });
   s.subscriptions.push(
+    M.addListener('audiostart', () => {
+      if (session !== s) return;
+      mark('audio');
+      // Android 13+ with continuous listening: the module records the microphone itself and hands the audio to the
+      // recogniser through a pipe that holds it until the recogniser reads it, so what is said from now on is heard
+      // even while the recogniser is still loading. Listening is shown from here.
+      if (capturesAhead) listeningNow();
+    }),
     M.addListener('start', () => {
       if (session !== s) return;
-      setState('listening');
-      options.onStarted?.(plan.lang);
+      mark('ready');
+      listeningNow();
     }),
     M.addListener('result', (event) => {
       if (session !== s) return;
       const words = event.results[0]?.transcript?.trim() ?? '';
+      if (!s.committed && !s.interim && words) mark('words');
       // Continuous listening gives one final result per stretch of speech: they add up.
       if (event.isFinal) {
         s.committed = join(s.committed, words);
@@ -645,9 +808,8 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
       } else {
         s.interim = words;
       }
-      const text = join(s.base, join(s.committed, s.interim));
-      s.options.write(text);
-      if (event.isFinal && s.committed) s.final = join(s.base, s.committed);
+      s.options.write(said(join(s.committed, s.interim)));
+      if (event.isFinal && s.committed) s.final = said(s.committed);
     }),
     M.addListener('nomatch', () => {
       // A silent stretch between two in continuous listening is nothing to report, nor is one after words came in.
@@ -666,17 +828,27 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
       if (session === s) finish();
     }),
   );
+  function listeningNow() {
+    if (s.started) return;
+    s.started = true;
+    setState('listening');
+    options.onStarted?.(plan.lang);
+  }
   const unsubscribeDialogs = dialogState.subscribe(() => {
     if (dialogState.isOpen()) stopVoiceInput();
   });
   s.subscriptions.push({ remove: unsubscribeDialogs });
+  const continuous = !!options.hold || !!options.continuous;
+  const apiLevel = typeof Platform.Version === 'number' ? Platform.Version : Number(Platform.Version);
+  const capturesAhead = Platform.OS === 'android' && apiLevel >= 33 && continuous;
+  mark('start');
   M.start({
     lang: plan.lang,
     interimResults: true,
     maxAlternatives: 1,
     // Tap to talk: a pause ends it (iOS 18+ and Android at the first final result; iOS 17 after a short silence).
     // Push-to-talk: it goes on until the finger is lifted (Android 12 and older: until a long silence).
-    continuous: !!options.hold || !!options.continuous,
+    continuous,
     requiresOnDeviceRecognition: plan.onDevice,
     addsPunctuation: true,
     iosTaskHint: 'dictation',

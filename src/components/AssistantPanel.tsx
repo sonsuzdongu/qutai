@@ -21,6 +21,7 @@ import {
   abortVoiceInput,
   startVoiceInput,
   stopVoiceInput,
+  warmVoice,
   useVoiceInfo,
   useVoiceLevel,
   useVoiceState,
@@ -380,6 +381,13 @@ export function AssistantPanel({
         t('voice.fellBack', { wanted: spokenLanguageName(fellBackFrom), language: spokenLanguageName(voiceInfo.lang) }),
       );
   }, [fellBackFrom, voiceInfo.lang, notifyVoice]);
+
+  // The panel opened: the microphone's start is made ready (languages, on-device or online), so tapping or holding it
+  // starts listening without waiting (voiceInput.ts warmVoice; the microphone stays off).
+  useEffect(() => {
+    if (open) warmVoice(voice.languages());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   /** `hold`: the microphone is held down, so listening goes on through pauses until the finger is lifted. */
   const startListening = (draft: string, hold = false) => {
@@ -887,7 +895,9 @@ export function AssistantPanel({
                   placeholder={t(
                     busy
                       ? 'chat.inputBusy'
-                      : listening
+                      : voiceState === 'preparing'
+                        ? 'ptt.preparing'
+                        : listening
                         ? 'voice.listening'
                         : research
                           ? 'chat.researchPlaceholder'

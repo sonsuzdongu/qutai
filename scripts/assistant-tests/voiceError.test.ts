@@ -56,3 +56,41 @@ test('a language turned down at the start goes on to the next one, but not once 
   assert.equal(voiceErrorOutcome({ ...base, code, canRetry: true, stopping: true }), 'report');
   assert.equal(voiceErrorOutcome({ ...base, code, canRetry: true, hasText: true }), 'quiet');
 });
+
+// 18 Nov 2026: listening on Android started late and was unreliable. The on-device recogniser failing to start goes
+// online (when allowed) instead of ending; a held session the recogniser ended by itself listens on.
+import { MAX_RESTARTS, shouldKeepListening } from '../../src/device/voiceError.ts';
+
+test('the on-device recogniser failing before anything was heard: the same language online, when allowed', () => {
+  for (const code of ['language-not-supported', 'service-not-allowed', 'client', 'busy'] as const) {
+    assert.equal(voiceErrorOutcome({ ...base, code, canGoOnline: true, canRetry: true }), 'online', code);
+  }
+  // Not allowed online (incognito, declined): the old outcomes.
+  assert.equal(voiceErrorOutcome({ ...base, code: 'language-not-supported', canRetry: true }), 'retry');
+  // Words already heard, stopping or interrupted: never restarted online.
+  assert.notEqual(voiceErrorOutcome({ ...base, code: 'client', canGoOnline: true, hasText: true }), 'online');
+  assert.notEqual(voiceErrorOutcome({ ...base, code: 'client', canGoOnline: true, stopping: true }), 'online');
+  assert.notEqual(voiceErrorOutcome({ ...base, code: 'client', canGoOnline: true, interrupted: true }), 'online');
+  // A network or microphone problem is not the on-device recogniser's.
+  assert.equal(voiceErrorOutcome({ ...base, code: 'audio-capture', canGoOnline: true }), 'report');
+});
+
+const held = { continuous: true, asked: false, interrupted: false, restarting: false, error: null, restarts: 0 } as const;
+
+test('a held session the recogniser ended by itself listens on', () => {
+  assert.equal(shouldKeepListening(held), true);
+  assert.equal(shouldKeepListening({ ...held, error: 'no-speech' }), true);
+  assert.equal(shouldKeepListening({ ...held, error: 'speech-timeout' }), true);
+  assert.equal(shouldKeepListening({ ...held, error: 'client' }), true);
+});
+
+test('it ends when the user stopped it, something interrupted it, a real error came or it keeps failing', () => {
+  assert.equal(shouldKeepListening({ ...held, continuous: false }), false);
+  assert.equal(shouldKeepListening({ ...held, asked: true }), false);
+  assert.equal(shouldKeepListening({ ...held, interrupted: true }), false);
+  assert.equal(shouldKeepListening({ ...held, restarting: true }), false);
+  for (const error of ['network', 'audio-capture', 'not-allowed', 'service-not-allowed', 'language-not-supported'] as const) {
+    assert.equal(shouldKeepListening({ ...held, error }), false, error);
+  }
+  assert.equal(shouldKeepListening({ ...held, restarts: MAX_RESTARTS }), false);
+});

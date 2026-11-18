@@ -17,7 +17,7 @@ import {
   abortVoiceInput,
   hasVoiceSession,
   isListening,
-  prefetchVoiceLocales,
+  warmVoice,
   startVoiceInput,
   stopVoiceInput,
   useVoiceInfo,
@@ -48,8 +48,11 @@ import { useReduceMotion } from '../utils/useReduceMotion';
  * Cancel) and the bubble shows Send and Cancel buttons.
  */
 
-/** The finger stays down this long before listening starts. */
-export const HOLD_TO_TALK_MS = 500;
+/**
+ * The finger stays down this long before listening starts: Android's own long-press time (400 ms on current
+ * versions). Everything listening needs is made ready while it runs (warmVoice on touch-down).
+ */
+export const HOLD_TO_TALK_MS = 400;
 /** Movement allowed while waiting for the hold (a slightly shaky finger still counts). */
 export const HOLD_SLOP = 16;
 /** Sliding this far from where the finger went down turns the release into a cancel. */
@@ -91,7 +94,7 @@ const IDLE: Bubble = {
 
 /** What the button calls. */
 export type HoldHandlers = {
-  /** A press began (it may become a hold): the recogniser's languages are read ahead. */
+  /** A press began (it may become a hold): the recogniser's languages and the plan are worked out ahead. */
   pressIn: () => void;
   start: (anchor: Anchor, viaA11y?: boolean) => void;
   /** While held: whether the finger is now far enough away to cancel. */
@@ -368,7 +371,7 @@ export function usePushToTalk(deps: PushToTalkDeps): { handlers: HoldHandlers; b
   }, [release]);
 
   const handlers = useMemo<HoldHandlers>(
-    () => ({ pressIn: prefetchVoiceLocales, start, move, release, cancel }),
+    () => ({ pressIn: () => warmVoice(latest.current.languages(), true), start, move, release, cancel }),
     [start, move, release, cancel],
   );
   return { handlers, bubble, dismiss: hide };
@@ -464,6 +467,7 @@ export function PushToTalkBubble({
             : null
         }
         cancelling={bubble.cancelling && (bubble.phase === 'listening' || bubble.phase === 'preparing')}
+        waiting={bubble.phase === 'preparing'}
       />
     );
   }
