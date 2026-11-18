@@ -308,6 +308,24 @@ the incognito session ends. The routes, the user always sending:
 - `upload_file`: a PDF or composed file into a page's file field (webmail attach controls), same page-side transfer as
   `upload_image`, confirmed every time with the file name and the site; on failure the result points at the file's card.
 
+Contacts ("call Ahmet", "WhatsApp Ayşe that I'll be late", "email this page to Mehmet Bey"; design and threat model in
+[docs/contacts.md](docs/contacts.md)): `find_contact { name, channel? }` looks the name up on the phone
+(`expo-contacts`, read only) and gives the model the matching names (at most 5), the labels of their numbers and
+addresses and opaque handles (`ct-k3j2m9qa`, `ct-k3j2m9qa.2`), never a number or address. `offer_call`, `draft_sms`,
+`draft_whatsapp` (`phone`) and `draft_email` (`to`) take a handle; the app puts the real value on the card or into the
+composer, where the user sees it and acts. Matching (`src/agent/contactMatch.ts`) ignores case and diacritics ("ayse" →
+Ayşe, Turkish i folded), honorifics (Bey, Hanım, Abi, Hoca, Dr.…) and Turkish endings after an apostrophe, searches
+given, middle, family and full name, nickname and company, ranks whole and exact names first. The app only looks up a
+name whose words the user said in their own messages in the conversation, so page text can't trigger a lookup.
+Several people or several numbers: Qutai's own picker (with the values, for the user only). Handles live in memory, per
+conversation, for 30 minutes (`src/agent/contactHandles.ts`); a forged, foreign or stale one is refused. WhatsApp: a
+number saved without a country code gets the phone region's code without the trunk prefix
+(`src/device/phoneRegion.ts`), shown on the card; unknown region → the model asks the user and passes `country_code`.
+The permission is asked at the first lookup after a short explanation (no dialog per lookup: nothing leaves the phone
+and every outgoing step stays the user's); iOS limited access works with the shared contacts; Settings › Assistant ›
+Contacts shows the state with Allow / Choose contacts / Open settings. Off in incognito conversations. Saved
+conversations and backups keep the card's name and label, not the number (`src/chat/contactCards.ts`).
+
 From the page menu (⋮) and by asking the agent: save the page as PDF (from its HTML, or from screenshots for pages
 that come out wrong), save a screenshot of the visible area or the whole page (scrolled and stitched) to Photos,
 read the page aloud, share/copy the link. When needed, the agent can also look at a screenshot of the page.
@@ -1080,7 +1098,8 @@ used. On iOS, the microphone allowed without speech recognition shows as limited
 itself work. Whatever is left off is asked the first time a feature needs it: camera (QR codes, photos for
 upload fields), add-only Photos (saving screenshots and images), Face ID, write-only calendar and reminders (full calendar access when the assistant first reads it, or from setup or the calendar chooser to choose a calendar), location
 while in use (per-site), local notifications, camera and microphone for sites you allow (per site, each asked separately), microphone and (iOS)
-speech recognition on the first tap of the panel's microphone button. The full list per platform, with
+speech recognition on the first tap of the panel's microphone button, contacts (read only) at the assistant's first
+`find_contact`, after a short explanation. The full list per platform, with
 the feature, when the user is asked, the config line that declares it and what is blocked, is in
 [docs/permissions.md](docs/permissions.md); use it for the App Store privacy labels and the Play Data safety form.
 
