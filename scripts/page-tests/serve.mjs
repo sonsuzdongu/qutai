@@ -5,7 +5,8 @@
 // text itself from `beforeinput`, buttons that act on pointer or touch events instead of click, a keyup-enabled form,
 // and a checkout with a total. Nothing leaves the machine except React, loaded from cdnjs for the React fixture.
 //
-// Usage: node scripts/page-tests/serve.mjs [port]   (default 8811; 127.0.0.1 only)
+// Usage: node --experimental-transform-types scripts/page-tests/serve.mjs [port]   (default 8811; 127.0.0.1 only)
+//   The flag lets POST /decide judge the page's press facts with the app's own rule (src/agent/outwardApproval.ts).
 //   http://localhost:8811/            the page with the working copy's page script; runs every case and shows a table
 //   http://localhost:8811/?script=head the same with the page script of the last commit (to compare before a fix)
 // The results are also in window.__pageTestResults (an array of { name, ok, detail }).
@@ -30,8 +31,26 @@ function pageScript(fromHead) {
   return script.includes('`') ? "throw new Error('The page script contains a backtick: it ends PAGE_SCRIPT early.');" : script;
 }
 
+const rule = await import('../../src/agent/outwardApproval.ts').catch(() => null);
+
 createServer((req, res) => {
   const url = new URL(req.url ?? '/', `http://localhost:${port}`);
+  if (url.pathname === '/decide' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', () => {
+      if (!rule) {
+        res.writeHead(501).end('Run the server with --experimental-transform-types');
+        return;
+      }
+      const { press, enter, text } = JSON.parse(body);
+      const answer = press
+        ? { field: rule.contentToApprove(press)?.ref ?? null }
+        : { field: enter && rule.isPublicText(enter, text) ? enter.ref : null };
+      res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(answer));
+    });
+    return;
+  }
   if (url.pathname === '/agent.js') {
     res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' });
     res.end(pageScript(url.searchParams.get('script') === 'head'));

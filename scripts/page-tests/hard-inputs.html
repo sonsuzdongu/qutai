@@ -82,6 +82,40 @@
   <div id="paste-editor" contenteditable="true" role="textbox" aria-label="Paste-only box"></div>
 </section>
 
+<!-- I. Sending typed text needs an approval; searching, filtering and signing in don't. -->
+<section id="send">
+  <h2>Sending versus searching</h2>
+  <form id="contact" method="post" onsubmit="event.preventDefault();">
+    <input aria-label="Your name" autocomplete="name">
+    <input type="email" aria-label="Your email" autocomplete="email">
+    <textarea aria-label="Message to the shop"></textarea>
+    <button>Send message</button>
+  </form>
+  <div class="composer">
+    <input type="text" aria-label="Write a chat message">
+    <div role="button" tabindex="0" aria-label="Send chat">Send chat</div>
+    <button type="button" aria-label="Add emoji">Add emoji</button>
+  </div>
+  <form role="search" method="get" action="/results" onsubmit="event.preventDefault();">
+    <input type="search" aria-label="Search videos">
+    <button>Search</button>
+  </form>
+  <div class="toolbar">
+    <input type="text" aria-label="Filter results">
+    <button type="button">Apply filter</button>
+  </div>
+  <form id="login" method="post" onsubmit="event.preventDefault();">
+    <input aria-label="Username" autocomplete="username">
+    <input type="password" aria-label="Password">
+    <button>Sign in</button>
+  </form>
+  <div class="reply-box">
+    <textarea aria-label="Reply text"></textarea>
+    <button type="button">Cancel reply</button>
+    <button type="button">Send reply</button>
+  </div>
+</section>
+
 <!-- G. Checkout with a total, for the payment approval. -->
 <section id="checkout">
   <h2>Checkout</h2>
@@ -218,6 +252,12 @@
     }
     throw new Error('No ref for "' + words + '"');
   }
+  function decide(body) {
+    return fetch('/decide', { method: 'POST', body: JSON.stringify(body) }).then(function (r) {
+      if (!r.ok) throw new Error('decide: ' + r.status + ' (run the server with --experimental-transform-types)');
+      return r.json();
+    });
+  }
   function listHas(id, text) {
     var el = document.getElementById(id);
     if (!el) return false;
@@ -341,6 +381,55 @@
       document.getElementById('total').textContent = '€24.99';
       var ok = found.line === 'Order total: €24.99' && before === '€24.99' && after === '€29.99' && gone === null && pay.label === 'Pay now' && !pay.disabled;
       return { ok: ok, detail: JSON.stringify({ found: found, before: before, after: after, gone: gone, pay: pay }) };
+    }],
+    ['Send needs an approval after typing a comment, a contact message, a chat message, a review or a reply', async function () {
+      var out = [];
+      async function check(fieldWords, text, buttonWords, expectAsk) {
+        A.type(refOf(fieldWords).ref, text, true, false);
+        var facts = A.pressComposed(refOf(buttonWords).ref);
+        var answer = await decide({ press: facts });
+        var asked = answer.field !== null;
+        out.push((asked === expectAsk ? 'ok ' : 'WRONG ') + buttonWords + ': ' + (asked ? 'ask' : 'no ask'));
+        return asked === expectAsk;
+      }
+      // The comment box opens from its placeholder; the earlier case left it open.
+      var ok = [
+        await check('Comment text', 'Lovely video, thanks!', 'Comment', true),
+        await check('Message to the shop', 'Hello, is this still in stock?', 'Send message', true),
+        await check('Write a chat message', 'See you at eight tonight', 'Send chat', true),
+        await check('Your review', 'Great product, works well', 'Publish review', true),
+        await check('Reply text', 'I agree with you', 'Send reply', true),
+        // Not sending: a cancel button and an emoji button in the same composer.
+        await check('Reply text', 'I agree with you', 'Cancel reply', false),
+        await check('Write a chat message', 'See you at eight tonight', 'Add emoji', false),
+      ].every(Boolean);
+      return { ok: ok, detail: out.join(' | ') };
+    }],
+    ['No approval for search, filter, sign-in, personal details or a short chat word', async function () {
+      var out = [];
+      async function check(fieldWords, text, buttonWords) {
+        A.type(refOf(fieldWords).ref, text, true, false);
+        var answer = await decide({ press: A.pressComposed(refOf(buttonWords).ref) });
+        out.push((answer.field === null ? 'ok ' : 'WRONG ') + buttonWords);
+        return answer.field === null;
+      }
+      var ok = [
+        await check('Search videos', 'funny cats compilation 2026', 'Search'),
+        await check('Filter results', 'red running shoes size 42', 'Apply filter'),
+        await check('Username', 'deniz.yilmaz', 'Sign in'),
+        await check('Write a chat message', 'ok', 'Send chat'),
+      ].every(Boolean);
+      // The contact form with only a name typed (message emptied) asks nothing either.
+      A.type(refOf('Your name').ref, 'Deniz Yilmaz from Istanbul', true, false);
+      A.type(refOf('Message to the shop').ref, '', true, false);
+      var contact = await decide({ press: A.pressComposed(refOf('Send message').ref) });
+      out.push((contact.field === null ? 'ok ' : 'WRONG ') + 'Send message with an empty message');
+      return { ok: ok && contact.field === null, detail: out.join(' | ') };
+    }],
+    ['Enter in a chat box with a sentence asks; Enter in a search box does not', async function () {
+      var chat = await decide({ enter: A.enterFacts(refOf('Write a chat message').ref), text: 'Running ten minutes late, sorry' });
+      var search = await decide({ enter: A.enterFacts(refOf('Search videos').ref), text: 'how to fold a fitted sheet' });
+      return { ok: chat.field !== null && search.field === null, detail: JSON.stringify({ chat: chat, search: search }) };
     }],
     ['Button that only trusts real input (known limit: no script can press it)', async function () {
       var r = await step(function () { return A.click(refOf('Send (trusted only)').ref); });
