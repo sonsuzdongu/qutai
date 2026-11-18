@@ -240,9 +240,29 @@ photo made 256 px is not aliased. Skia's encoders write no EXIF or GPS. Results 
 attachment of its own (new id, `derivedFrom` its source, the same folders, pruning, incognito and backup rules) shown in
 the chat as a card with a preview, size, format and bytes, Save to Photos and Share; the model gets text only and can
 look with `view_attachment`. A conversation keeps its 12 newest edited images; older ones nothing depends on lose their
-files and their cards say so. Without the assistant, the full-screen preview of an image has "Resize or crop": shape
+files and their cards say so. Without the assistant, the full-screen preview of an image has "Edit": shape
 (original, square, 4:3, 16:9, following the photo's orientation), longest side (2048, 1024, 512) or an exact size
 (cropped to fill), and a largest file size; the copy is attached to the message being written.
+
+Image filters (same `edit_image` call, argument `filters`, e.g. `"greyscale, sharpen 30"`; the sheet's "Filters"
+part): applied after the geometry, at the result's size, in one drawing pass, in a fixed order whatever order they are
+named in: colour (auto enhance → brightness → contrast → saturation → warmth → greyscale → sepia → invert, multiplied
+into one 4×5 Skia colour matrix on unpremultiplied colours, alpha untouched, clamped once at the end), then blur or
+sharpen (not both), then the JPEG background, encoding and the size budget as before. Ranges, whole numbers, clamped
+with a note to the model: brightness, contrast, saturation, warmth −100…100 (0 none; brightness is ×(1 + v/100),
+contrast stretches around mid-grey, saturation −100 is grey, warmth moves red and blue by up to 20 %); sharpen and blur
+0…100 (sharpen: 3×3 unsharp mask, amount 2·v/100, a small runtime shader that keeps each pixel's alpha and ignores
+fully transparent neighbours; blur: Gaussian, sigma v/100 × 2 % of the shorter side, edges clamped); greyscale, sepia,
+invert, auto on or off. Named without a number: +25, sharpen 40, blur 20. Auto enhance is only a levels stretch:
+luminance of a ≤128 px copy, 0.5 % clipped at each end, the same gain and offset on R, G and B, gain at most 2, nothing
+when the picture already spans 2–253. The tool result lists what was applied ("brightness +25 (×1.25)",
+"sharpened (40)") and any clamping. `src/chat/imageFilters.ts` holds the maths (pure), `src/device/filterRender.ts`
+the Skia drawing (the Skia API is passed in, so `npm run test:image` runs the same code on CanvasKit in Node and checks
+pixels against the reference matrices). The sheet ("Edit" in the preview) has presets (Original, Auto enhance,
+Greyscale, Sepia, Sharpen, Brighter, More contrast, Blur), a slider per amount (screen readers: adjustable, steps of
+5), Reset, a live preview drawn on a copy at most 900 px across (touch and hold, or a screen reader's activate, shows
+the original), side by side with the panel in a wide window; the full size is drawn only when the copy is made. Cards
+and the preview say in the app's language what was done ("Greyscale, sharpened", `src/chat/filterSummary.ts`).
 
 Uploading images (`upload_image`): the assistant puts an image of the conversation (attached, or an edit) into a
 page's file field. The page script (`src/browser/pageScript.ts`) resolves the target: the file input itself, its label,
