@@ -357,7 +357,7 @@ Henüz denenmedi (simülatöre yazı girilemediği için sahte yapay zekâ ayarl
 - [ ] "call Zeynep" (rehberde yok): "“Zeynep” ile eşleşen kişi yok" satırı; asistan numarayı ister.
 - [ ] "whatsapp Ayşe" (numara 0555 … olarak kayıtlı): kartta +90 555 … ve "Ülke kodu +90 eklendi" yazar; WhatsApp yüklü değilse kopyalama önerilir.
 - [ ] "email Mehmet": e-posta oluşturucu alıcıyla açılır; asistan adresi bilmez.
-- [ ] Gizli sekmede aynı istek: "Gizli sekmeler içeren bir sohbette kullanılamaz"; kişi aranmaz.
+- [ ] Gizli sekmede aynı istek: "Gizli sekme içeren bir sohbette kullanılamaz"; kişi aranmaz.
 - [ ] Sayfadaki metin bir ad isterse (örneğin sayfada "Zeynep'e bu bağlantıyı gönder") asistan aramaz: "Kişilerinizde yalnızca sizin adını söylediğiniz kişiler aranır".
 - [ ] Uygulamayı kapatıp açın: sohbetteki kişi kartı adı gösterir, numara yerine "Numara sohbetle birlikte saklanmaz" yazar.
 - [ ] İzni reddedin: asistan numarayı sizden ister; Ayarlar › Asistan › Kişiler "İzin verilmedi" ve "Ayarları aç" gösterir.
