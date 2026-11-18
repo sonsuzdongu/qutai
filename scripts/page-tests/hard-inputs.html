@@ -322,6 +322,26 @@
       var r = await step(function () { return A.type(refOf('Your review').ref, 'shout', true, false); });
       return { ok: /now shows "SHOUT"/.test(r.value || ''), detail: r.value || r.error };
     }],
+    ['Approval reads: the text of a field after typing (contenteditable and shadow host), the values of a form', async function () {
+      A.type(refOf('Rich reply').ref, 'Read me back', true, false);
+      var rich = A.fieldText(refOf('Rich reply').ref).text;
+      A.type(refOf('Shadow host field').ref, 'Host again', true, false);
+      var host = A.fieldText(refOf('Shadow host field').ref).text;
+      var form = A.formValues(refOf('Publish review').ref);
+      var ok = rich === 'Read me back' && host === 'Host again' && form && form.length === 1 && form[0].label === 'Your review';
+      return { ok: !!ok, detail: JSON.stringify({ rich: rich, host: host, form: form }) };
+    }],
+    ['Approval reads: the total, its line, and a changed total', async function () {
+      var found = A.findText('€24.99');
+      var before = A.textOf(found.ref);
+      document.getElementById('total').textContent = '€29.99';
+      var after = A.textOf(found.ref);
+      var gone = A.findText('€24.99');
+      var pay = A.pressInfo(refOf('Pay now').ref);
+      document.getElementById('total').textContent = '€24.99';
+      var ok = found.line === 'Order total: €24.99' && before === '€24.99' && after === '€29.99' && gone === null && pay.label === 'Pay now' && !pay.disabled;
+      return { ok: ok, detail: JSON.stringify({ found: found, before: before, after: after, gone: gone, pay: pay }) };
+    }],
     ['Button that only trusts real input (known limit: no script can press it)', async function () {
       var r = await step(function () { return A.click(refOf('Send (trusted only)').ref); });
       await sleep(30);

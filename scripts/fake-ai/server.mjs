@@ -8,6 +8,10 @@
 // The answer is scripted from the user's message (case-insensitive word) and how many tool results followed it:
 //   "fill"     read_page → type "Qutai test" into the first text field → click the first button → summary
 //   "approve"  get_location (asks for confirmation) → summary
+//   "post"     read_page → type a comment into the first text box → request_approval (publish) → click its button
+//   "pay"      read_page → request_approval (pay) with the page's total → click "Pay…" if approved → summary
+//   "sneakpay" read_page → click the "Pay…" button without an approval (the app must refuse it)
+//   Test pages for these: node scripts/page-tests/serve.mjs (its "Video comments" and "Checkout" sections).
 //   "slow"     waits 25 s, then answers (Stop, backgrounding during a request, the keep-alive)
 //   "long"     read_page, scroll, read_page, scroll, read_page with 3 s pauses (rotation mid-task)
 //   "link"     an answer with a Markdown link (chat links open in the conversation's tab group)
@@ -89,6 +93,39 @@ function nextStep(messages) {
       return button ? call('click', { ref: Number(button[1]) }) : { content: 'Typed; there is no button to click.' };
     }
     return { content: 'Done: I typed "Qutai test" into the first field and clicked the first button.' };
+  }
+  if (/\bpost\b/.test(user)) {
+    const page = n ? text(results[0]) : '';
+    const lines = page.split('\n');
+    const fieldAt = lines.findIndex((l) => /\[ref=\d+\] (?:textarea|textbox|input:text)/.test(l));
+    const field = fieldAt >= 0 ? Number(/\[ref=(\d+)\]/.exec(lines[fieldAt])[1]) : null;
+    const buttonLine = fieldAt >= 0 ? lines.slice(fieldAt + 1).find((l) => /\[ref=\d+\] button/.test(l)) : null;
+    const button = buttonLine ? Number(/\[ref=(\d+)\]/.exec(buttonLine)[1]) : null;
+    const comment = 'Nice page! (Qutai test)';
+    if (n === 0) return call('read_page', {});
+    if (n === 1) return field ? call('type', { ref: field, text: comment }) : { content: 'No text box on this page.' };
+    if (n === 2) {
+      if (!button) return { content: 'Typed; there is no button to send it.' };
+      return call('request_approval', { kind: 'publish', action: 'comment', field_ref: field, text: comment, button_ref: button });
+    }
+    if (n === 3) return /^The user approved/.test(lastResult) ? call('click', { ref: button }) : { content: `Not sent: ${lastResult.slice(0, 160)}` };
+    return { content: `Posted the comment. The click said: ${lastResult.slice(0, 120)}` };
+  }
+  if (/\b(sneakpay|pay)\b/.test(user)) {
+    const page = n ? text(results[0]) : '';
+    const payLine = page.split('\n').find((l) => /\[ref=\d+\] button "Pay/.test(l));
+    const button = payLine ? Number(/\[ref=(\d+)\]/.exec(payLine)[1]) : null;
+    const total = (/total[^\n]*?([€$£₺]\s?\d[\d.,]*|\d[\d.,]*\s?(?:TL|EUR|USD))/i.exec(page) ?? [])[1] ?? '';
+    const method = (/Pay with ([^\n]+)/.exec(page) ?? [])[1] ?? '';
+    if (n === 0) return call('read_page', {});
+    if (!button) return { content: 'There is no Pay button on this page.' };
+    if (/\bsneakpay\b/.test(user)) {
+      if (n === 1) return call('click', { ref: button });
+      return { content: `The app answered: ${lastResult.slice(0, 200)}` };
+    }
+    if (n === 1) return call('request_approval', { kind: 'pay', button_ref: button, total, items: 'Test order', payment_method: method });
+    if (n === 2) return /^The user approved/.test(lastResult) ? call('click', { ref: button }) : { content: `Not paid: ${lastResult.slice(0, 200)}` };
+    return { content: `Paid. The click said: ${lastResult.slice(0, 120)}` };
   }
   if (/\bapprove\b/.test(user)) {
     if (n === 0) return call('get_location', { purpose: 'testing the approval dialog' });
