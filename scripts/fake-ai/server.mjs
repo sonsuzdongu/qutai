@@ -13,6 +13,10 @@
 //   "pay"      read_page → request_approval (pay) with the page's total → click "Pay…" if approved → summary
 //   "sneakpay" read_page → click the "Pay…" button without an approval (the app must refuse it)
 //   Test pages for these: node scripts/page-tests/serve.mjs (its "Video comments" and "Checkout" sections).
+//   "call <name>" / "whatsapp <name>" / "email <name>" (on a line of its own): find_contact with the name →
+//              offer_call / draft_whatsapp ("I'll be late (Qutai test)") / draft_email with the handle it got (the one
+//              that fits or the one picked in Qutai's list) → summary. A WhatsApp refused for a missing country code is
+//              tried once more with country_code "+44". Use made-up contacts on a simulator or emulator only.
 //   "slow"     waits 25 s, then answers (Stop, backgrounding during a request, the keep-alive)
 //   "long"     read_page, scroll, read_page, scroll, read_page with 3 s pauses (rotation mid-task)
 //   "link"     an answer with a Markdown link (chat links open in the conversation's tab group)
@@ -134,6 +138,23 @@ function nextStep(messages) {
     if (!id) return { content: 'Attach an image first.' };
     if (n === 0) return call('edit_image', { id, filters: 'greyscale, sharpen 40, brightness 300' });
     return { content: `Edited on the phone. The tool said: ${lastResult.slice(0, 400)}` };
+  }
+  const contact = /^\s*(call|whatsapp|email)\s+([^\n[]+?)\s*$/imu.exec(u >= 0 ? text(messages[u]) : '');
+  if (contact) {
+    const channel = contact[1].toLowerCase();
+    const name = contact[2].replace(/[.!?]+$/, '');
+    if (n === 0) return call('find_contact', { name, channel });
+    const found = text(results[0]);
+    const chosen = /(?:One fits|the user chose)[^[]*\[(ct-[a-z0-9]{8}(?:\.\d+)?)\]/.exec(found)?.[1];
+    if (!chosen) return { content: `No single contact to use. find_contact said: ${found.slice(0, 300)}` };
+    const body = "I'll be late (Qutai test)";
+    if (n === 1) {
+      if (channel === 'call') return call('offer_call', { phone: chosen });
+      if (channel === 'whatsapp') return call('draft_whatsapp', { phone: chosen, body });
+      return call('draft_email', { to: [chosen], subject: 'Qutai test', body: 'This page (Qutai test).' });
+    }
+    if (n === 2 && channel === 'whatsapp' && /country_code/.test(lastResult)) return call('draft_whatsapp', { phone: chosen, body, country_code: '+44' });
+    return { content: `Done. The tool said: ${lastResult.slice(0, 300)}` };
   }
   if (/\bapprove\b/.test(user)) {
     if (n === 0) return call('get_location', { purpose: 'testing the approval dialog' });
