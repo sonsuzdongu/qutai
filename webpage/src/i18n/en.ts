@@ -106,9 +106,9 @@ export const en = {
   'agent.compare.step1': 'Reading tab 2',
   'agent.compare.step2': 'Reading tab 3',
   'agent.compare.step3': 'Price, delivery, warranty side by side',
-  'agent.checkout.title': 'Fill the checkout, stop before payment',
+  'agent.checkout.title': 'Fill the checkout, pay only with your yes',
   'agent.checkout.body':
-    'It enters your name, address and the delivery note you saved, after asking whether it may use your remembered details on that site. At the payment step it stops: the assistant never types card numbers, passwords or one-time codes. You pay yourself.',
+    'It enters your name, address and the delivery note you saved, after asking whether it may use your remembered details on that site. By default it stops at the payment step and you pay yourself. If you turn on “Let the assistant complete payments” in Settings, Qutai shows its own window for each payment, with the site, the total on the page, the order and the payment method, and presses the button only after you approve. Card numbers, security codes, passwords and one-time codes are never typed, and your bank’s check (3-D Secure) stays with you.',
   'agent.checkout.step1': 'Enter your personal information on shop.example?', // app: personal.title
   'agent.checkout.step2': 'Typed into [12]', // app: action.typeRedacted
   'agent.checkout.step3': 'Stopped at payment: over to you',
@@ -164,7 +164,7 @@ export const en = {
     'Incognito tabs keep no history, and conversations that touch them stay in memory only. Memory, location and calendar are off there, and the incognito tabs can be locked.',
   'privacy.confirm.title': 'Asks before it matters',
   'privacy.confirm.body':
-    'Sensitive steps wait for your yes, and calls, texts, WhatsApp messages and emails are only drafts that you send. A notification, a calendar entry, a reminder, reading your calendar or location, and an ordinary download can be allowed with “Don’t ask again”, which you can take back in Settings; a no is never remembered. Uploads and risky files are asked about every time.',
+    'Sensitive steps wait for your yes. Posts, comments, reviews and messages sent through a site go out only after you approve them in Qutai’s own window, which shows the exact text; words on a web page can never approve them. Calls, texts, WhatsApp messages and emails are only drafts that you send. A notification, a calendar entry, a reminder, reading your calendar or location, and an ordinary download can be allowed with “Don’t ask again”, which you can take back in Settings; a no is never remembered. Uploads and risky files are asked about every time.',
   'privacy.note':
     'The Qutai service is optional: sign in with Apple, Google or email, use Qutai Credits instead of your own key, and choose Qutai Fast, Qutai or Qutai Pro instead of a model. Qutai’s server keeps your account, your credits and, for each request, the model, the token count and the cost; not your messages or pages. Builds from the repository leave it out and never contact a Qutai server.',
 
@@ -247,7 +247,7 @@ export const en = {
   'status.limits': 'Limits to know',
   'status.limits.1': 'Background tasks are Android-only and opt-in, with a notification when a task ends or needs you; on iPhone a task pauses when you leave the app',
   'status.limits.2': 'Scheduled tasks are reminders: nothing runs while Qutai is closed',
-  'status.limits.3': 'Payments are always completed by you',
+  'status.limits.3': 'You complete payments yourself, unless you let the assistant pay; then each payment waits for your approval in Qutai’s window',
   'status.limits.4': 'Sharing to Qutai and the home screen widget are Android-only for now',
   'status.planned': 'Planned',
   'status.planned.1': 'Release in the App Store and Google Play',

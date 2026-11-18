@@ -135,8 +135,8 @@ export const QUTAI: Product = {
     agent: {
       state: 'yes',
       note: t(
-        'Taps, types, selects, navigates and fixes form errors; payment is always left to you.',
-        'Dokunur, yazar, seçer, gezinir, form hatalarını düzeltir; ödeme her zaman size kalır.',
+        'Taps, types, selects, navigates and fixes form errors; posts and pays only after your approval in Qutai’s window (paying is off by default).',
+        'Dokunur, yazar, seçer, gezinir, form hatalarını düzeltir; paylaşım ve ödemeyi yalnızca Qutai’ın penceresinde onayınızla yapar (ödeme varsayılan olarak kapalı).',
       ),
       source: src('src/agent/tools.ts'),
     },

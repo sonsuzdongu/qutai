@@ -107,9 +107,9 @@ export const tr: Messages = {
   'agent.compare.step1': 'Sekme 2 okunuyor',
   'agent.compare.step2': 'Sekme 3 okunuyor',
   'agent.compare.step3': 'Fiyat, teslimat, garanti yan yana',
-  'agent.checkout.title': 'Ödeme formunu doldurur, ödemede durur',
+  'agent.checkout.title': 'Ödeme formunu doldurur, onayınız olmadan ödemez',
   'agent.checkout.body':
-    'Adınızı, adresinizi ve kaydettiğiniz teslimat notunu girer; bunu yapmadan önce hafızadaki bilgilerinizi o sitede kullanıp kullanamayacağını sorar. Ödeme adımında durur: asistan kart numarası, şifre ya da tek kullanımlık kod yazmaz. Ödemeyi siz yaparsınız.',
+    'Adınızı, adresinizi ve kaydettiğiniz teslimat notunu girer; bunu yapmadan önce hafızadaki bilgilerinizi o sitede kullanıp kullanamayacağını sorar. Varsayılan olarak ödeme adımında durur, ödemeyi siz yaparsınız. Ayarlar’da “Asistan ödemeleri tamamlasın”ı açarsanız Qutai her ödemede kendi penceresinde siteyi, sayfadaki toplamı, siparişi ve ödeme yöntemini gösterir; düğmeye ancak siz onaylayınca basar. Kart numarası, güvenlik kodu, şifre ve tek kullanımlık kod asla yazılmaz; bankanızın doğrulaması (3-D Secure) sizde kalır.',
   'agent.checkout.step1': 'Kişisel bilgileriniz magaza.example sitesine girilsin mi?',
   'agent.checkout.step2': '[12] alanına yazdı',
   'agent.checkout.step3': 'Ödemede durdu: sıra sizde',
@@ -165,7 +165,7 @@ export const tr: Messages = {
     'Gizli sekmeler geçmiş tutmaz; onlara dokunan sohbetler yalnızca bellekte kalır. Orada hafıza, konum ve takvim kapalıdır; gizli sekmeleri kilitleyebilirsiniz.',
   'privacy.confirm.title': 'Önemli adımda sorar',
   'privacy.confirm.body':
-    'Hassas adımlar onayınızı bekler; arama, SMS, WhatsApp ve e-posta yalnızca taslaktır, gönderen sizsiniz. Bildirim, takvim etkinliği, hatırlatıcı, takviminizi ya da konumunuzu okuma ve sıradan bir indirme için “Bir daha sorma” diyebilir, bunu Ayarlar’dan geri alabilirsiniz; “hayır” cevabınız hiçbir zaman hatırlanmaz. Yükleme ve riskli dosyalar her seferinde sorulur.',
+    'Hassas adımlar onayınızı bekler. Paylaşım, yorum, değerlendirme ve bir siteden gönderilen mesajlar, tam metni gösteren Qutai penceresinde sizin onayınızla gider; web sayfasındaki yazılar bunları onaylayamaz. Arama, SMS, WhatsApp ve e-posta yalnızca taslaktır, gönderen sizsiniz. Bildirim, takvim etkinliği, hatırlatıcı, takviminizi ya da konumunuzu okuma ve sıradan bir indirme için “Bir daha sorma” diyebilir, bunu Ayarlar’dan geri alabilirsiniz; “hayır” cevabınız hiçbir zaman hatırlanmaz. Yükleme ve riskli dosyalar her seferinde sorulur.',
   'privacy.note':
     'Qutai hizmeti isteğe bağlıdır: Apple, Google ya da e-postayla giriş yapın, kendi anahtarınız yerine Qutai Kredileri kullanın, model yerine Qutai Hızlı, Qutai ya da Qutai Pro seçin. Qutai sunucusu hesabınızı, kredilerinizi ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı ve sayfaları tutmaz. Depodan derlenen sürümlerde bu hizmet yoktur ve hiçbir zaman Qutai sunucusuna bağlanılmaz.',
 
@@ -251,7 +251,7 @@ export const tr: Messages = {
   'status.limits': 'Bilmeniz gereken sınırlar',
   'status.limits.1': 'Arka planda görevler yalnızca Android’de ve isteğe bağlı; görev bitince ya da size ihtiyaç duyunca bildirim gelir; iPhone’da uygulamadan çıkınca görev duraklar',
   'status.limits.2': 'Zamanlanmış görevler birer hatırlatmadır: Qutai kapalıyken hiçbir şey çalışmaz',
-  'status.limits.3': 'Ödemeyi her zaman siz tamamlarsınız',
+  'status.limits.3': 'Ödemeyi siz tamamlarsınız; asistanın ödemesine izin verirseniz her ödeme Qutai’ın penceresinde onayınızı bekler',
   'status.limits.4': 'Qutai ile paylaşma ve ana ekran widget’ı şimdilik yalnızca Android’de',
   'status.planned': 'Planlananlar',
   'status.planned.1': 'App Store ve Google Play’de yayın',
