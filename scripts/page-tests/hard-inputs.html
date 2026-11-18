@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qutai page tests: hard inputs</title>
+<style>
+  body { font: 15px/1.4 system-ui, sans-serif; margin: 16px; }
+  section { border: 1px solid #ccc; border-radius: 8px; padding: 10px; margin: 0 0 12px; }
+  h2 { font-size: 15px; margin: 0 0 6px; }
+  [contenteditable] { border: 1px solid #999; min-height: 1.6em; padding: 4px; }
+  #results td { padding: 2px 6px; border-bottom: 1px solid #eee; vertical-align: top; }
+  .pass { color: #1a7f37; } .fail { color: #c62828; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+</head>
+<body>
+<table id="results"><tbody></tbody></table>
+
+<!-- A. YouTube-like: a placeholder opens a contenteditable box; Comment enables only after input with text. -->
+<section id="yt">
+  <h2>Video comments</h2>
+  <div id="yt-placeholder" tabindex="0">Add a comment…</div>
+  <div id="yt-box" hidden>
+    <yt-formatted-string><div id="yt-editable" contenteditable="true" role="textbox" aria-label="Comment text"></div></yt-formatted-string>
+    <button id="yt-post" disabled>Comment</button>
+  </div>
+  <ul id="yt-list"></ul>
+</section>
+
+<!-- B. Shadow DOM: a comment widget with its textarea and button inside, and a field whose host gets the ref. -->
+<section id="shadow">
+  <h2>Shadow DOM</h2>
+  <x-comment></x-comment>
+  <x-field tabindex="0" role="textbox" aria-label="Shadow host field"></x-field>
+  <button id="host-send" disabled>Send host field</button>
+  <ul id="shadow-list"></ul>
+</section>
+
+<!-- C. React-controlled textarea. -->
+<section id="react">
+  <h2>React</h2>
+  <div id="react-root"></div>
+</section>
+
+<!-- D. A rich editor that inserts text itself from beforeinput (Slate/ProseMirror style) and reverts other DOM changes. -->
+<section id="rich">
+  <h2>Rich editor</h2>
+  <div id="rich-editor" contenteditable="true" role="textbox" aria-label="Rich reply"></div>
+  <button id="rich-post" disabled>Reply</button>
+  <ul id="rich-list"></ul>
+</section>
+
+<!-- E. Buttons that act on pointer or touch events instead of click; one only trusts real input. -->
+<section id="press">
+  <h2>Buttons</h2>
+  <button id="ptr">Send (pointer)</button>
+  <div id="touch" role="button" tabindex="0">Send (touch)</div>
+  <button id="trusted">Send (trusted only)</button>
+  <ul id="press-list"></ul>
+</section>
+
+<!-- F. A review form whose Publish button enables on keyup (jQuery style). -->
+<section id="keyup">
+  <h2>Review</h2>
+  <form id="review-form" onsubmit="event.preventDefault(); document.getElementById('keyup-list').insertAdjacentHTML('beforeend', '<li>' + this.review.value + '</li>');">
+    <input name="review" aria-label="Your review">
+    <button id="keyup-post" disabled>Publish review</button>
+  </form>
+  <ul id="keyup-list"></ul>
+</section>
+
+<!-- H. Ordinary controls: one tap must act once (a checkbox, a submit button, a link, a paste-only editor). -->
+<section id="plain">
+  <h2>Ordinary controls</h2>
+  <label><input type="checkbox" id="agree"> I agree</label>
+  <form id="count-form" onsubmit="event.preventDefault(); this.dataset.count = Number(this.dataset.count || 0) + 1;">
+    <button>Send form</button>
+  </form>
+  <a href="#linked">Go to anchor</a>
+  <div id="paste-editor" contenteditable="true" role="textbox" aria-label="Paste-only box"></div>
+</section>
+
+<!-- G. Checkout with a total, for the payment approval. -->
+<section id="checkout">
+  <h2>Checkout</h2>
+  <div>Wireless earbuds × 1</div>
+  <div>Shipping: €4.99</div>
+  <div id="total-line">Order total: <b id="total">€24.99</b></div>
+  <div>Pay with Visa •••• 4242</div>
+  <button id="pay">Pay now</button>
+  <div id="paid"></div>
+</section>
+
+<script>
+  // ---------- Fixture behaviour ----------
+  var ytPlaceholder = document.getElementById('yt-placeholder');
+  var ytBox = document.getElementById('yt-box');
+  var ytEditable = document.getElementById('yt-editable');
+  var ytPost = document.getElementById('yt-post');
+  ytPlaceholder.addEventListener('click', function () { ytPlaceholder.hidden = true; ytBox.hidden = false; ytEditable.focus(); });
+  ytEditable.addEventListener('input', function () { ytPost.disabled = !ytEditable.innerText.trim(); });
+  ytPost.addEventListener('click', function () {
+    document.getElementById('yt-list').insertAdjacentHTML('beforeend', '<li>' + ytEditable.innerText.trim() + '</li>');
+    ytEditable.textContent = ''; ytPost.disabled = true;
+  });
+
+  customElements.define('x-comment', class extends HTMLElement {
+    connectedCallback() {
+      var root = this.attachShadow({ mode: 'open' });
+      root.innerHTML = '<textarea aria-label="Shadow comment"></textarea><button disabled>Post (shadow)</button>';
+      var area = root.querySelector('textarea');
+      var button = root.querySelector('button');
+      area.addEventListener('input', function () { button.disabled = !area.value.trim(); });
+      button.addEventListener('click', function () {
+        document.getElementById('shadow-list').insertAdjacentHTML('beforeend', '<li>shadow: ' + area.value + '</li>');
+      });
+    }
+  });
+  customElements.define('x-field', class extends HTMLElement {
+    connectedCallback() {
+      var root = this.attachShadow({ mode: 'open' });
+      root.innerHTML = '<input>';
+      var self = this;
+      this.addEventListener('focus', function () { root.querySelector('input').focus(); });
+      Object.defineProperty(this, 'value', { get: function () { return root.querySelector('input').value; } });
+    }
+  });
+  var hostSend = document.getElementById('host-send');
+  // Outside the shadow root: only a composed input event gets here, as from real typing.
+  document.addEventListener('input', function (e) {
+    var host = document.querySelector('x-field');
+    if (e.composedPath && e.composedPath().indexOf(host) >= 0) hostSend.disabled = !host.value.trim();
+  });
+  hostSend.addEventListener('click', function () {
+    document.getElementById('shadow-list').insertAdjacentHTML('beforeend', '<li>host: ' + document.querySelector('x-field').value + '</li>');
+  });
+
+  (function () {
+    if (!window.React) { document.getElementById('react-root').textContent = 'React did not load (offline?)'; return; }
+    var h = React.createElement;
+    function App() {
+      var s = React.useState(''), text = s[0], setText = s[1];
+      var p = React.useState([]), posts = p[0], setPosts = p[1];
+      return h('div', null,
+        h('textarea', { 'aria-label': 'React comment', value: text, onChange: function (e) { setText(e.target.value); } }),
+        h('button', { id: 'react-post', disabled: !text.trim(), onClick: function () { setPosts(posts.concat([text])); setText(''); } }, 'Post (React)'),
+        h('ul', { id: 'react-list' }, posts.map(function (t, i) { return h('li', { key: i }, t); })));
+    }
+    ReactDOM.createRoot(document.getElementById('react-root')).render(h(App));
+  })();
+
+  (function () {
+    var editor = document.getElementById('rich-editor');
+    var post = document.getElementById('rich-post');
+    var model = '';
+    function render() { editor.textContent = model; post.disabled = !model.trim(); }
+    editor.addEventListener('beforeinput', function (e) {
+      e.preventDefault();
+      var sel = window.getSelection();
+      var all = sel && sel.toString() === editor.textContent && editor.textContent !== '';
+      if (e.inputType === 'insertText' || e.inputType === 'insertReplacementText') model = (all ? '' : model) + (e.data || '');
+      else if (e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContent') model = all ? '' : model.slice(0, -1);
+      render();
+    });
+    // Like Slate: DOM changes that didn't come through beforeinput are put back.
+    editor.addEventListener('input', function () { if (editor.textContent !== model) render(); });
+    post.addEventListener('click', function () {
+      document.getElementById('rich-list').insertAdjacentHTML('beforeend', '<li>' + model + '</li>');
+      model = ''; render();
+    });
+  })();
+
+  (function () {
+    var list = document.getElementById('press-list');
+    var add = function (t) { list.insertAdjacentHTML('beforeend', '<li>' + t + '</li>'); };
+    var ptr = document.getElementById('ptr');
+    var down = null;
+    ptr.addEventListener('pointerdown', function (e) { down = e.pointerType ? e.pointerId : null; });
+    ptr.addEventListener('pointerup', function (e) { if (down !== null && e.pointerId === down && e.isPrimary) add('pointer'); down = null; });
+    var touch = document.getElementById('touch');
+    var started = false;
+    touch.addEventListener('touchstart', function () { started = true; });
+    touch.addEventListener('touchend', function (e) { if (started) { e.preventDefault(); add('touch'); } started = false; });
+    document.getElementById('trusted').addEventListener('click', function (e) { if (e.isTrusted) add('trusted'); });
+  })();
+
+  (function () {
+    var form = document.getElementById('review-form');
+    form.review.addEventListener('keyup', function () { document.getElementById('keyup-post').disabled = !form.review.value.trim(); });
+  })();
+
+  (function () {
+    // Takes text only from paste events (and cancels everything else), like some chat composers.
+    var box = document.getElementById('paste-editor');
+    box.addEventListener('beforeinput', function (e) { if (e.inputType !== 'insertFromPaste') e.preventDefault(); });
+    box.addEventListener('paste', function (e) {
+      e.preventDefault();
+      box.textContent = (e.clipboardData && e.clipboardData.getData('text/plain')) || '';
+    });
+  })();
+
+  document.getElementById('pay').addEventListener('click', function () { document.getElementById('paid').textContent = 'Paid ' + document.getElementById('total').textContent; });
+</script>
+<script src="__AGENT_SRC__"></script>
+<script>
+  // ---------- Runner: the agent's own calls, the way the app makes them ----------
+  var A = window.__qutaiAgent;
+  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+  function refOf(words) {
+    var lines = A.readPage(0).content.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      if (lines[i].indexOf('"' + words + '"') >= 0) {
+        var m = /\[ref=(\d+)\]/.exec(lines[i]);
+        if (m) return { ref: Number(m[1]), line: lines[i] };
+      }
+    }
+    throw new Error('No ref for "' + words + '"');
+  }
+  function listHas(id, text) {
+    var el = document.getElementById(id);
+    if (!el) return false;
+    // Exactly once, and nothing doubled inside an item.
+    var items = [].map.call(el.querySelectorAll('li'), function (li) { return li.textContent; });
+    return items.filter(function (t) { return t === text || t === 'shadow: ' + text || t === 'host: ' + text; }).length === 1 ||
+      (el.tagName !== 'UL' && el.textContent.indexOf(text) >= 0);
+  }
+  function shadowListHas(text) { return listHas('shadow-list', text); }
+  async function step(fn) { try { return { value: await fn() }; } catch (e) { return { error: String(e && e.message || e) }; } }
+
+  var cases = [
+    ['YouTube-like contenteditable comment', async function () {
+      A.click(refOf('Add a comment…').ref);
+      await sleep(50);
+      var typed = await step(function () { return A.type(refOf('Comment text').ref, 'Great video!', true, false); });
+      await sleep(50);
+      var post = refOf('Comment');
+      var clicked = await step(function () { return A.click(post.ref); });
+      await sleep(50);
+      return { ok: listHas('yt-list', 'Great video!'), detail: [typed.value || typed.error, post.line, clicked.value || clicked.error].join(' | ') };
+    }],
+    ['Textarea and button inside shadow DOM', async function () {
+      var typed = await step(function () { return A.type(refOf('Shadow comment').ref, 'From the shadow', true, false); });
+      await sleep(50);
+      var post = refOf('Post (shadow)');
+      var clicked = await step(function () { return A.click(post.ref); });
+      await sleep(50);
+      return { ok: listHas('shadow-list', 'From the shadow'), detail: [typed.value || typed.error, post.line, clicked.value || clicked.error].join(' | ') };
+    }],
+    ['Custom element host field (input in its shadow root), page listens for composed input', async function () {
+      var typed = await step(function () { return A.type(refOf('Shadow host field').ref, 'Host text', true, false); });
+      await sleep(50);
+      var send = refOf('Send host field');
+      var clicked = await step(function () { return A.click(send.ref); });
+      await sleep(50);
+      return { ok: listHas('shadow-list', 'Host text'), detail: [typed.value || typed.error, send.line, clicked.value || clicked.error].join(' | ') };
+    }],
+    ['React-controlled textarea', async function () {
+      if (!window.React) return { ok: false, detail: 'React did not load' };
+      var typed = await step(function () { return A.type(refOf('React comment').ref, 'Hello from React', true, false); });
+      await sleep(100);
+      var post = refOf('Post (React)');
+      var clicked = await step(function () { return A.click(post.ref); });
+      await sleep(100);
+      return { ok: listHas('react-list', 'Hello from React'), detail: [typed.value || typed.error, post.line, clicked.value || clicked.error].join(' | ') };
+    }],
+    ['Rich editor that inserts from beforeinput', async function () {
+      var typed = await step(function () { return A.type(refOf('Rich reply').ref, 'Rich answer', true, false); });
+      await sleep(50);
+      var post = refOf('Reply');
+      var clicked = await step(function () { return A.click(post.ref); });
+      await sleep(50);
+      return { ok: listHas('rich-list', 'Rich answer'), detail: [typed.value || typed.error, post.line, clicked.value || clicked.error].join(' | ') };
+    }],
+    ['Button that acts on pointerdown/pointerup', async function () {
+      var r = await step(function () { return A.click(refOf('Send (pointer)').ref); });
+      await sleep(30);
+      return { ok: listHas('press-list', 'pointer'), detail: r.value || r.error };
+    }],
+    ['Button that acts on touchstart/touchend', async function () {
+      var r = await step(function () { return A.click(refOf('Send (touch)').ref); });
+      await sleep(30);
+      return { ok: listHas('press-list', 'touch'), detail: r.value || r.error };
+    }],
+    ['Review form whose button enables on keyup', async function () {
+      var typed = await step(function () { return A.type(refOf('Your review').ref, 'Five stars', true, false); });
+      await sleep(30);
+      var post = refOf('Publish review');
+      var clicked = await step(function () { return A.click(post.ref); });
+      await sleep(30);
+      return { ok: listHas('keyup-list', 'Five stars'), detail: [typed.value || typed.error, post.line, clicked.value || clicked.error].join(' | ') };
+    }],
+    ['Clicking a disabled button says so (expected: an error, not "Clicked")', async function () {
+      document.getElementById('yt-post').disabled = true;
+      var r = await step(function () { return A.click(refOf('Comment').ref); });
+      return { ok: !!r.error && /disabled/i.test(r.error), detail: r.value || r.error };
+    }],
+    ['One tap ticks a checkbox once', async function () {
+      var r = await step(function () { return A.click(refOf('I agree').ref); });
+      return { ok: document.getElementById('agree').checked, detail: r.value || r.error };
+    }],
+    ['One tap submits a form once', async function () {
+      var r = await step(function () { return A.click(refOf('Send form').ref); });
+      await sleep(30);
+      var n = document.getElementById('count-form').dataset.count;
+      return { ok: n === '1', detail: (r.value || r.error) + ' | submitted ' + (n || 0) + ' time(s)' };
+    }],
+    ['A tap follows a link', async function () {
+      var r = await step(function () { return A.click(refOf('Go to anchor').ref); });
+      await sleep(30);
+      return { ok: location.hash === '#linked', detail: (r.value || r.error) + ' | ' + location.hash };
+    }],
+    ['Editor that only takes pasted text', async function () {
+      var r = await step(function () { return A.type(refOf('Paste-only box').ref, 'Pasted words', true, false); });
+      var text = document.getElementById('paste-editor').textContent;
+      return { ok: text === 'Pasted words', detail: (r.value || r.error) + ' | box: ' + text };
+    }],
+    ['Typing reports what the field shows when the page changes it', async function () {
+      var input = document.querySelector('[aria-label="Your review"]');
+      input.addEventListener('input', function upper() { input.value = input.value.toUpperCase(); input.removeEventListener('input', upper); });
+      var r = await step(function () { return A.type(refOf('Your review').ref, 'shout', true, false); });
+      return { ok: /now shows "SHOUT"/.test(r.value || ''), detail: r.value || r.error };
+    }],
+    ['Button that only trusts real input (known limit: no script can press it)', async function () {
+      var r = await step(function () { return A.click(refOf('Send (trusted only)').ref); });
+      await sleep(30);
+      return { ok: listHas('press-list', 'trusted'), detail: (r.value || r.error) + ' — expected to fail', expectedFail: true };
+    }],
+  ];
+
+  (async function run() {
+    await sleep(300);
+    var results = [];
+    for (var i = 0; i < cases.length; i++) {
+      var r;
+      try { r = await cases[i][1](); } catch (e) { r = { ok: false, detail: 'threw: ' + (e && e.message || e) }; }
+      results.push({ name: cases[i][0], ok: r.ok, detail: r.detail, expectedFail: !!r.expectedFail });
+    }
+    window.__pageTestResults = results;
+    var body = document.querySelector('#results tbody');
+    results.forEach(function (r) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td class="' + (r.ok ? 'pass' : 'fail') + '">' + (r.ok ? 'PASS' : 'FAIL') + '</td><td></td><td></td>';
+      tr.children[1].textContent = r.name;
+      tr.children[2].textContent = r.detail;
+      body.appendChild(tr);
+    });
+  })();
+</script>
+</body>
+</html>

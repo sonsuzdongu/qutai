@@ -16,7 +16,7 @@ export const PAGE_SCRIPT = String.raw`
     'a[href]', 'button', 'input', 'select', 'textarea', 'summary',
     '[role=button]', '[role=link]', '[role=checkbox]', '[role=radio]', '[role=tab]',
     '[role=menuitem]', '[role=option]', '[role=switch]', '[role=combobox]', '[role=textbox]',
-    '[contenteditable=""]', '[contenteditable=true]', '[onclick]', '[tabindex]:not([tabindex="-1"])'
+    '[contenteditable=""]', '[contenteditable=true]', '[contenteditable=plaintext-only]', '[onclick]', '[tabindex]:not([tabindex="-1"])'
   ].join(',');
   var SKIP = { SCRIPT: 1, STYLE: 1, NOSCRIPT: 1, TEMPLATE: 1, SVG: 1, svg: 1, CANVAS: 1, HEAD: 1, META: 1, LINK: 1 };
 
@@ -486,81 +486,323 @@ export const PAGE_SCRIPT = String.raw`
     };
   }
 
-  function fireMouse(el) {
+  // ---------- Pressing and typing like a finger and a keyboard ----------
+  // Pages listen for different events: React and most sites for click, some widgets for pointer or touch events only,
+  // old forms enable their button on keyup, rich editors (Slate, ProseMirror, Lexical) insert text themselves from
+  // beforeinput, and web components hear only composed events outside their shadow root. Each action sends the
+  // sequence a phone's browser sends, in its order. Nothing here can produce a trusted event: a control that checks
+  // event.isTrusted can only be pressed by the user.
+
+  function pointOf(el) {
     var r = el.getBoundingClientRect();
-    var x = r.left + r.width / 2;
-    var y = r.top + r.height / 2;
-    var opts = { bubbles: true, cancelable: true, view: window, clientX: x, clientY: y };
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  }
+
+  // A tap at (x, y) on el: pointer events, touch events, then the compatibility mouse events and click. Like a
+  // browser, a touchend the page cancelled (it handled the tap itself) gets no mouse events and no click.
+  function tapAt(el, x, y) {
+    var base = { bubbles: true, cancelable: true, composed: true, view: window, clientX: x, clientY: y, screenX: x, screenY: y };
+    function extend(extra) { var o = {}, k; for (k in base) o[k] = base[k]; for (k in extra) o[k] = extra[k]; return o; }
+    function pointer(type, extra) {
+      var o = extend({ pointerId: 1, pointerType: 'touch', isPrimary: true, width: 1, height: 1, pressure: 0.5 });
+      for (var k in extra || {}) o[k] = extra[k];
+      try { el.dispatchEvent(new PointerEvent(type, o)); } catch (e) {}
+    }
+    function touch(type) {
+      try {
+        var t = new Touch({ identifier: 1, target: el, clientX: x, clientY: y, screenX: x, screenY: y, pageX: x + window.scrollX, pageY: y + window.scrollY });
+        var list = type === 'touchend' ? [] : [t];
+        return el.dispatchEvent(new TouchEvent(type, { bubbles: true, cancelable: true, composed: true, touches: list, targetTouches: list, changedTouches: [t] }));
+      } catch (e) { return true; }
+    }
+    pointer('pointerover');
+    pointer('pointerenter', { bubbles: false });
+    pointer('pointerdown', { button: 0, buttons: 1 });
+    touch('touchstart');
+    pointer('pointerup', { button: 0, buttons: 0, pressure: 0 });
+    var handled = !touch('touchend');
+    pointer('pointerout');
+    pointer('pointerleave', { bubbles: false });
+    if (handled) return;
+    el.dispatchEvent(new MouseEvent('mouseover', base));
+    el.dispatchEvent(new MouseEvent('mousedown', extend({ button: 0, buttons: 1, detail: 1 })));
+    var focusable = el.closest ? el.closest('a, button, input, select, textarea, summary, [tabindex], [contenteditable]') : null;
+    if (focusable && typeof focusable.focus === 'function') focusable.focus();
+    el.dispatchEvent(new MouseEvent('mouseup', extend({ button: 0, buttons: 0, detail: 1 })));
+    // A dispatched click runs the element's own action too (follows a link, submits a form, ticks a box).
+    el.dispatchEvent(new MouseEvent('click', extend({ button: 0, buttons: 0, detail: 1 })));
+  }
+
+  // Press and release without the click (the file chooser's catcher clicks itself).
+  function fireMouse(el) {
+    var p = pointOf(el);
+    var opts = { bubbles: true, cancelable: true, view: window, clientX: p.x, clientY: p.y };
     try { el.dispatchEvent(new PointerEvent('pointerdown', opts)); } catch (e) {}
     el.dispatchEvent(new MouseEvent('mousedown', opts));
     try { el.dispatchEvent(new PointerEvent('pointerup', opts)); } catch (e) {}
     el.dispatchEvent(new MouseEvent('mouseup', opts));
+  }
+
+  // A form control that can't be pressed now ("disabled" in the markup or by its fieldset).
+  function isDisabled(el) {
+    var control = el.closest ? el.closest('button, input, select, textarea, option, optgroup, fieldset') : null;
+    try { return !!control && control.matches(':disabled'); } catch (e) { return !!(control && control.disabled); }
+  }
+  function ariaDisabled(el) {
+    var marked = el.closest ? el.closest('[aria-disabled]') : null;
+    return !!marked && marked.getAttribute('aria-disabled') === 'true';
   }
 
   function click(ref) {
     var el = getEl(ref);
     el.scrollIntoView({ block: 'center', inline: 'center' });
     var desc = describe(el);
+    if (isDisabled(el)) {
+      throw new Error(desc + ' is disabled, so nothing was pressed. Such a button usually enables once what it needs is ' +
+        'filled in: check the field with read_page (type the text again if it is empty), then press it again.');
+    }
     var box = checkTarget(el);
     if (box) checkState(box, box.tagName === 'INPUT' ? box.checked : box.getAttribute('aria-checked') === 'true', !!box.defaultChecked);
-    fireMouse(el);
-    if (typeof el.focus === 'function') el.focus();
-    el.click();
+    var p = pointOf(el);
+    tapAt(el, p.x, p.y);
     if (box) toggled.add(box);
-    return 'Clicked ' + desc;
+    return 'Clicked ' + desc + (ariaDisabled(el) ? ' (it is marked as disabled: check with read_page whether anything happened)' : '');
   }
 
   // Clicks whatever is at a point given as fractions of the visible area (from a screenshot),
   // for things without a ref such as maps and canvases.
-  function clickAt(fx, fy) {
+  function pointFor(fx, fy) {
     var vv = window.visualViewport;
     var w = vv ? vv.width : window.innerWidth;
     var h = vv ? vv.height : window.innerHeight;
-    var x = (vv ? vv.offsetLeft : 0) + Math.min(Math.max(Number(fx), 0), 1) * w;
-    var y = (vv ? vv.offsetTop : 0) + Math.min(Math.max(Number(fy), 0), 1) * h;
-    var el = document.elementFromPoint(x, y);
+    return {
+      x: (vv ? vv.offsetLeft : 0) + Math.min(Math.max(Number(fx), 0), 1) * w,
+      y: (vv ? vv.offsetTop : 0) + Math.min(Math.max(Number(fy), 0), 1) * h
+    };
+  }
+  function clickAt(fx, fy) {
+    var p = pointFor(fx, fy);
+    var el = document.elementFromPoint(p.x, p.y);
     if (!el) throw new Error('Nothing at that point.');
-    var opts = { bubbles: true, cancelable: true, view: window, clientX: x, clientY: y };
-    try { el.dispatchEvent(new PointerEvent('pointerdown', opts)); } catch (e) {}
-    el.dispatchEvent(new MouseEvent('mousedown', opts));
-    try { el.dispatchEvent(new PointerEvent('pointerup', opts)); } catch (e) {}
-    el.dispatchEvent(new MouseEvent('mouseup', opts));
-    el.dispatchEvent(new MouseEvent('click', opts));
     var target = el.closest ? el.closest('a, button, input, select, textarea, [role], [onclick]') || el : el;
-    if (typeof target.focus === 'function') target.focus();
-    return 'Clicked ' + describe(target) + ' at (' + Math.round(x) + ', ' + Math.round(y) + ')';
+    if (isDisabled(target)) throw new Error(describe(target) + ' is disabled, so nothing was pressed.');
+    tapAt(el, p.x, p.y);
+    return 'Clicked ' + describe(target) + ' at (' + Math.round(p.x) + ', ' + Math.round(p.y) + ')';
+  }
+
+  var NOT_TEXT = /^(hidden|checkbox|radio|file|submit|button|reset|image|range|color)$/i;
+  function isTextField(el) {
+    if (!el || el.nodeType !== 1) return false;
+    if (el.tagName === 'TEXTAREA') return true;
+    if (el.tagName === 'INPUT') return !NOT_TEXT.test(el.type || '');
+    return !!el.isContentEditable;
+  }
+  // The outermost editable element around el (the editor itself, not a paragraph inside it).
+  function editingHost(el) {
+    while (el.parentElement && el.parentElement.isContentEditable) el = el.parentElement;
+    return el;
+  }
+  function deepActive() {
+    var a = document.activeElement;
+    while (a && a.shadowRoot && a.shadowRoot.activeElement) a = a.shadowRoot.activeElement;
+    return a;
+  }
+  // The text field a ref stands for: the element itself, or the one inside it or inside its shadow root (a custom
+  // element such as <x-field> gets the ref, its <input> takes the text), or whatever focusing it focused.
+  function fieldFor(el) {
+    if (isTextField(el)) return el.isContentEditable && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA' ? editingHost(el) : el;
+    var roots = [el];
+    for (var i = 0; i < roots.length && i < 200; i++) {
+      var root = roots[i];
+      if (root.shadowRoot) roots.push(root.shadowRoot);
+      var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
+      for (var j = 0; j < all.length; j++) {
+        if (isTextField(all[j]) && rendered(all[j])) return all[j].isContentEditable ? editingHost(all[j]) : all[j];
+        if (all[j].shadowRoot) roots.push(all[j].shadowRoot);
+      }
+    }
+    if (typeof el.focus === 'function') el.focus();
+    var active = deepActive();
+    return active && active !== el && isTextField(active) ? (active.isContentEditable ? editingHost(active) : active) : null;
+  }
+  // What a field holds now, as a person reads it.
+  function fieldValue(field) {
+    var raw = field.tagName === 'INPUT' || field.tagName === 'TEXTAREA' ? field.value : field.innerText;
+    return String(raw || '').replace(/ /g, ' ');
+  }
+  function same(a, b) { return clean(a) === clean(b); }
+
+  function inputEvent(type, inputType, data, cancelable) {
+    try {
+      return new InputEvent(type, { bubbles: true, cancelable: !!cancelable, composed: true, inputType: inputType, data: data });
+    } catch (e) {
+      var ev = document.createEvent('Event');
+      ev.initEvent(type, true, !!cancelable);
+      return ev;
+    }
+  }
+  // Mobile keyboards report keys as "Unidentified": enough for pages that look at the field on keyup.
+  function keyUp(el) {
+    try { el.dispatchEvent(new KeyboardEvent('keyup', { key: 'Unidentified', bubbles: true, cancelable: true, composed: true })); } catch (e) {}
+  }
+
+  function typeIntoInput(field, text, clear) {
+    var next = clear ? text : (field.value || '') + text;
+    var proceed = field.dispatchEvent(inputEvent('beforeinput', clear ? 'insertReplacementText' : 'insertText', text, true));
+    // A page that cancels beforeinput has handled the text itself (an input mask), as with a real keyboard.
+    if (proceed) {
+      var proto = field.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+      var desc = Object.getOwnPropertyDescriptor(proto, 'value');
+      // Use the native setter so frameworks like React notice the change.
+      if (desc && desc.set) desc.set.call(field, next); else field.value = next;
+      field.dispatchEvent(inputEvent('input', clear ? 'insertReplacementText' : 'insertText', text, false));
+    }
+    keyUp(field);
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  function selectContents(field, clear) {
+    var sel = window.getSelection();
+    if (!sel) return;
+    var range = document.createRange();
+    range.selectNodeContents(field);
+    if (!clear) range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function typeIntoEditable(field, text, clear) {
+    var before = fieldValue(field);
+    var landed = function () {
+      var now = clean(fieldValue(field));
+      return now.indexOf(clean(text)) >= 0 && (clear || now !== clean(before));
+    };
+    field.focus();
+    selectContents(field, clear);
+    // The editor sees the text coming (Slate, ProseMirror and Lexical insert it themselves and cancel the event);
+    // otherwise the browser inserts it, which also tells the page with a real input event.
+    if (field.dispatchEvent(inputEvent('beforeinput', 'insertText', text, true))) {
+      try { document.execCommand('insertText', false, text); } catch (e) {}
+    }
+    if (!landed()) {
+      // Editors that only take text from a paste (some chat composers), then, last, the text put in directly.
+      var pasted = true;
+      try {
+        selectContents(field, clear);
+        var dt = new DataTransfer();
+        dt.setData('text/plain', text);
+        pasted = field.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true, composed: true }));
+      } catch (e) {}
+      if (!landed() && pasted) {
+        if (clear) field.textContent = text; else field.appendChild(document.createTextNode(text));
+        field.dispatchEvent(inputEvent('input', 'insertText', text, false));
+      }
+    }
+    keyUp(field);
   }
 
   function type(ref, text, clear, submit) {
     var el = getEl(ref);
     el.scrollIntoView({ block: 'center' });
-    el.focus();
-    if (el.isContentEditable) {
-      if (clear) document.execCommand('selectAll', false);
-      document.execCommand('insertText', false, text);
-    } else {
-      var proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
-      var desc = Object.getOwnPropertyDescriptor(proto, 'value');
-      var next = clear ? text : (el.value || '') + text;
-      // Use the native setter so frameworks like React notice the change.
-      if (desc && desc.set) desc.set.call(el, next); else el.value = next;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-    touched.add(el);
+    var field = fieldFor(el);
+    if (!field) throw new Error(describe(el) + ' is not a text field and has none inside it. Nothing was typed.');
+    field.focus();
+    text = String(text);
+    var wanted = (clear ? '' : fieldValue(field)) + text;
+    if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') typeIntoInput(field, text, clear);
+    else typeIntoEditable(field, text, clear);
+    touched.add(field);
+    // What the page made of it, read back: what the model reports and what an approval shows must be what is there.
+    var now = fieldValue(field);
+    var shown = field.type === 'password' ? '' : now;
     if (submit) {
-      if (el.form) attempted.add(el.form);
-      var kopts = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true };
+      if (field.form) attempted.add(field.form);
+      var kopts = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true, composed: true };
       var down = new KeyboardEvent('keydown', kopts);
-      var notCancelled = el.dispatchEvent(down);
-      el.dispatchEvent(new KeyboardEvent('keypress', kopts));
-      el.dispatchEvent(new KeyboardEvent('keyup', kopts));
-      if (notCancelled && el.form) {
-        if (typeof el.form.requestSubmit === 'function') el.form.requestSubmit();
-        else el.form.submit();
+      var notCancelled = field.dispatchEvent(down);
+      field.dispatchEvent(new KeyboardEvent('keypress', kopts));
+      field.dispatchEvent(new KeyboardEvent('keyup', kopts));
+      if (notCancelled && field.form) {
+        if (typeof field.form.requestSubmit === 'function') field.form.requestSubmit();
+        else field.form.submit();
       }
     }
-    return 'Typed into ' + describe(el) + (submit ? ' and submitted' : '');
+    var note = '';
+    if (field.type !== 'password' && !same(now, wanted)) {
+      note = ' The field now shows "' + cut(clean(shown), 300) + '", which differs from what was typed' +
+        (clean(shown) ? ' (the page may have reformatted it)' : ': the page did not take the text') + '.';
+    }
+    return 'Typed into ' + describe(el) + (field !== el ? ' (its text field)' : '') + (submit ? ' and submitted' : '') + note;
+  }
+
+  // ---------- Approvals for posting and paying (src/agent/outwardApproval.ts) ----------
+
+  // The text a field holds now (a ref of the field or of an element around it), for the approval dialog and for the
+  // check just before the approved button is pressed.
+  function fieldText(ref) {
+    var field = fieldFor(getEl(ref));
+    if (!field) throw new Error('ref=' + ref + ' is not a text field.');
+    return { text: cut(fieldValue(field), 5000), secret: field.type === 'password' };
+  }
+
+  // What a button would send when it belongs to a form: each filled field's label and value (passwords as "(filled)").
+  function formValues(ref) {
+    var el = getEl(ref);
+    var form = el.form || (el.closest ? el.closest('form') : null);
+    if (!form) return null;
+    var out = [];
+    var fields = form.querySelectorAll('input, textarea, select, [contenteditable]:not([contenteditable="false"])');
+    for (var i = 0; i < fields.length && out.length < 20; i++) {
+      var f = fields[i];
+      if (f.tagName === 'INPUT' && /^(hidden|submit|button|reset|image|file)$/i.test(f.type || '')) continue;
+      if (!rendered(f)) continue;
+      var value;
+      if (f.tagName === 'SELECT') value = f.options[f.selectedIndex] ? f.options[f.selectedIndex].text : '';
+      else if (f.type === 'checkbox' || f.type === 'radio') { if (!f.checked) continue; value = 'yes'; }
+      else if (f.type === 'password') value = f.value ? '(filled)' : '';
+      else value = fieldValue(f);
+      if (!clean(value)) continue;
+      out.push({ label: labelOf(f), value: cut(clean(value), 500) });
+    }
+    return out;
+  }
+
+  // The smallest visible element whose text contains `text` (the total on an order summary), with its ref and line.
+  function findText(text) {
+    var wanted = clean(text);
+    var holds = function (el) { return !SKIP[el.tagName] && clean(el.innerText || '').indexOf(wanted) >= 0 && rendered(el); };
+    if (!wanted || !document.body || !holds(document.body)) return null;
+    // Down from the body into the first child that still holds the whole text.
+    var best = document.body;
+    for (var depth = 0; depth < 60; depth++) {
+      var next = null;
+      for (var c = best.firstElementChild; c && !next; c = c.nextElementSibling) if (holds(c)) next = c;
+      if (!next) break;
+      best = next;
+    }
+    var line = best;
+    while (line.parentElement && line.parentElement !== document.body && clean(line.innerText).length < wanted.length + 12) line = line.parentElement;
+    return { ref: getRef(best), line: cut(clean(line.innerText), 160) };
+  }
+
+  // The text of an element by ref now, or null when it left the page.
+  function textOf(ref) {
+    var el = refToEl.get(Number(ref));
+    return el && el.isConnected ? cut(clean(el.innerText || el.textContent || ''), 2000) : null;
+  }
+
+  // The name and state of what a click would press (by ref, or at a point given as fractions like clickAt).
+  function pressInfo(ref, fx, fy) {
+    var el;
+    if (ref != null) el = getEl(ref);
+    else {
+      var p = pointFor(fx, fy);
+      el = document.elementFromPoint(p.x, p.y);
+      if (!el) return null;
+      el = el.closest ? el.closest('a, button, input, select, textarea, [role], [onclick]') || el : el;
+    }
+    var button = el.closest ? el.closest('button, input[type=submit], input[type=button], a, [role=button]') || el : el;
+    return { label: labelOf(button), url: location.href.split('#')[0], disabled: isDisabled(button) };
   }
 
   function select(ref, value) {
@@ -2148,6 +2390,11 @@ export const PAGE_SCRIPT = String.raw`
     readSource: readSource,
     click: click,
     clickAt: clickAt,
+    fieldText: fieldText,
+    formValues: formValues,
+    findText: findText,
+    textOf: textOf,
+    pressInfo: pressInfo,
     type: type,
     select: select,
     scroll: scroll,

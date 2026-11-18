@@ -76,7 +76,12 @@ export type PageCommand =
   | 'hideMeasure'
   | 'hideTry'
   | 'hideUndo'
-  | 'maskEnd';
+  | 'maskEnd'
+  | 'fieldText'
+  | 'formValues'
+  | 'findText'
+  | 'textOf'
+  | 'pressInfo';
 
 /** Commands that search the text on screen: in reader mode they run in the reader view. */
 const READER_COMMANDS = new Set<PageCommand>(['findInPage', 'findStep', 'clearFind']);
