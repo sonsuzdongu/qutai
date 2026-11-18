@@ -5,15 +5,21 @@ import {
   ApprovalGrants,
   approvedText,
   checkPress,
+  contentToApprove,
   declinedText,
+  isPublicText,
   isFinalPaymentLabel,
   PAY_BY_POINT_TEXT,
   pageUrl,
   parseApprovalInput,
   payNeedsApprovalText,
   paymentsOffText,
+  publishEnterFirstText,
+  publishFirstText,
   sameText,
+  type FieldFacts,
   type Grant,
+  type PressFacts,
   type PublishAction,
 } from './outwardApproval';
 import { siteKey } from './sitePolicy';
@@ -147,7 +153,8 @@ export async function requestApprovalTool(input: Record<string, unknown>, ctx: T
   const approved = await ctx.confirmOutward({ kind: 'publish', site, action: request.action, button: info.label, ...shown, incognito });
   if (!approved) return { content: declinedText('publish'), isError: true, notice: declinedNotice() };
   ctx.approvals.add(grant);
-  return { content: approvedText('publish', request.buttonRef, info.label), isError: false };
+  const enter = request.fieldRef === request.buttonRef;
+  return { content: approvedText('publish', request.buttonRef, info.label, enter), isError: false };
 }
 
 export type PressGate =
@@ -177,11 +184,50 @@ export async function pressGate(
   const args = name === 'click' ? [ref] : point ? [null, point.fx, point.fy] : null;
   if (!args) return { kind: 'none' };
   const info = await tab.run<PressInfo>('pressInfo', args).catch(() => null);
-  if (!info || !isFinalPaymentLabel(info.label)) return { kind: 'none' };
-  if (!ctx.paymentsAllowed?.()) return { kind: 'refuse', output: paymentsOff(info.label) };
+  if (info && isFinalPaymentLabel(info.label)) {
+    if (!ctx.paymentsAllowed?.()) return { kind: 'refuse', output: paymentsOff(info.label) };
+    return {
+      kind: 'refuse',
+      output: { content: name === 'click' ? payNeedsApprovalText(info.label) : PAY_BY_POINT_TEXT, isError: true },
+    };
+  }
+  // A press that would send text the assistant typed (its form's button, or one in the same composer box).
+  const facts = await tab.run<PressFacts | null>('pressComposed', args).catch(() => null);
+  const field = contentToApprove(facts);
+  if (!field) return { kind: 'none' };
   return {
     kind: 'refuse',
-    output: { content: name === 'click' ? payNeedsApprovalText(info.label) : PAY_BY_POINT_TEXT, isError: true },
+    output: {
+      content: publishFirstText(name === 'click' ? ref : null, facts?.label ?? '', field),
+      isError: true,
+      notice: settingNotice(t('step.publishFirst')),
+    },
+  };
+}
+
+/**
+ * Before type with submit (Enter): an approval given for Enter in this field (button_ref = the field) is checked and
+ * used up; Enter in a field that will hold free text to send, without one, is refused before anything is typed.
+ */
+export async function enterGate(input: Record<string, unknown>, ctx: ToolContext, tab: Tab): Promise<PressGate> {
+  const ref = typeof input.ref === 'number' ? input.ref : Number(input.ref);
+  const text = typeof input.text === 'string' ? input.text : '';
+  if (!Number.isInteger(ref)) return { kind: 'none' };
+  const grant = ctx.approvals?.take(tab.id, ref) ?? null;
+  if (grant && grant.kind === 'publish' && grant.fieldRef === ref) {
+    const field = await tab.run<{ text: string }>('fieldText', [ref]).catch(() => null);
+    const check = checkPress(grant, { url: tab.url, fieldText: field?.text ?? null });
+    if (check.ok && input.clear !== false && sameText(text, grant.text)) return { kind: 'approved' };
+    const reason = check.ok
+      ? 'The text to type differs from what the user approved (or clear is false). Nothing was typed. Ask again with request_approval.'
+      : check.reason;
+    return { kind: 'refuse', output: { content: reason, isError: true, notice: errorNotice(t('step.approvalChanged')) } };
+  }
+  const facts = await tab.run<FieldFacts | null>('enterFacts', [ref]).catch(() => null);
+  if (!facts || !isPublicText(facts, input.clear === false ? facts.text + text : text)) return { kind: 'none' };
+  return {
+    kind: 'refuse',
+    output: { content: publishEnterFirstText(facts.ref), isError: true, notice: settingNotice(t('step.publishFirst')) },
   };
 }
 

@@ -2409,6 +2409,7 @@ export const ja: Record<keyof typeof en, string> = {
   'action.requestApprovalPay': "支払いの承認をお願いしています",
   'step.paymentsOff': "支払いはご自身で行います（設定）",
   'step.approvalChanged': "承認後にページが変わりました",
+  'step.publishFirst': "送信するには先に承認が必要です",
   'step.cardNumber': "Qutai はカード番号を入力しません",
   'approval.title.post': "{site} に投稿しますか？",
   'approval.title.comment': "{site} にコメントしますか？",

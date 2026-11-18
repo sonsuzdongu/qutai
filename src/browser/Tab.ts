@@ -81,7 +81,9 @@ export type PageCommand =
   | 'formValues'
   | 'findText'
   | 'textOf'
-  | 'pressInfo';
+  | 'pressInfo'
+  | 'pressComposed'
+  | 'enterFacts';
 
 /** Commands that search the text on screen: in reader mode they run in the reader view. */
 const READER_COMMANDS = new Set<PageCommand>(['findInPage', 'findStep', 'clearFind']);

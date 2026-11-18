@@ -2409,6 +2409,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'action.requestApprovalPay': "Pedindo que você aprove o pagamento",
   'step.paymentsOff': "Os pagamentos ficam com você (sua configuração)",
   'step.approvalChanged': "A página mudou depois da sua aprovação",
+  'step.publishFirst': "Para enviar, é preciso primeiro a sua aprovação",
   'step.cardNumber': "O Qutai não digita números de cartão",
   'approval.title.post': "Publicar em {site}?",
   'approval.title.comment': "Comentar em {site}?",

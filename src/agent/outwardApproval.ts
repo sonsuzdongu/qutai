@@ -176,10 +176,13 @@ function clip(text: string, max = 200): string {
 // ---------- Texts for the model ----------
 
 /** After the dialog's Approve. `button`: the button's label as read from the page. */
-export function approvedText(kind: OutwardKind, buttonRef: number, button: string): string {
+export function approvedText(kind: OutwardKind, buttonRef: number, button: string, enter = false): string {
   const what = kind === 'pay' ? 'pay' : 'send it';
+  const how = enter
+    ? `press Enter in ref=${buttonRef}: call type with ref=${buttonRef}, the same text and submit true`
+    : `press ref=${buttonRef} ("${button}") with click to ${what}`;
   return (
-    `The user approved this in Qutai's own dialog. Now complete it: press ref=${buttonRef} ("${button}") with click to ${what}, ` +
+    `The user approved this in Qutai's own dialog. Now complete it: ${how}, ` +
     'then read the page and tell the user the outcome (sent, posted, paid, or the error the site shows). ' +
     'Do not ask for confirmation again in chat. The approval is for one press of that button on this page; ' +
     'if the page or the text changes first, ask again with request_approval.'
@@ -286,3 +289,146 @@ export function containsCardNumber(text: string): boolean {
 export const CARD_NUMBER_TEXT =
   'That looks like a payment card number. Qutai never types card numbers, security codes, passwords or one-time codes: ' +
   'nothing was typed. Ask the user to enter it themselves, or to choose a card the site has saved.';
+
+// ---------- Sending the assistant's own text without an approval ----------
+// Decided 19 Nov 2026: a press that would send free text the assistant typed during the task (a comment, reply, review,
+// message, a contact form's message) is refused until request_approval granted it. Recognised by context, not by the
+// button's words ("Send code", "Post" in a menu): the button is in the field's form, or in the same small composer box,
+// or it is Enter in the field. Search boxes, filters, login, codes, quantities and personal-detail fields never count.
+
+/** What the page script reports about a field (pageScript.ts fieldFacts). */
+export type FieldFacts = {
+  ref: number;
+  tag: string;
+  /** An <input>'s type; '' for a textarea or an editor. */
+  type: string;
+  editable: boolean;
+  role: string;
+  /** Inside role=search or <search>, or a form whose action is a search. */
+  inSearch: boolean;
+  /** Its form says method="get" (a search or a filter: nothing is sent to anyone). */
+  formGet: boolean;
+  /** Its form has a password field (signing in or up). */
+  loginForm: boolean;
+  autocomplete: string;
+  inputMode: string;
+  /** name, id, placeholder and label, lowercase. */
+  hints: string;
+  maxLength: number | null;
+  text: string;
+  label: string;
+};
+
+/** What the page script reports about a press (pageScript.ts pressComposed). */
+export type PressFacts = {
+  label: string;
+  tag: string;
+  type: string;
+  role: string;
+  /** The press is on a field or a select itself (focusing it sends nothing). */
+  field: boolean;
+  link: boolean;
+  /** aria-pressed, aria-haspopup or aria-expanded: a toggle or a menu, not a send button. */
+  toggle: boolean;
+  /** The fields the assistant typed into that this press would send: in its form, or in the same composer box. */
+  fields: (FieldFacts & { sameForm: boolean; near: boolean })[];
+};
+
+/** Autocomplete tokens of personal details, sign-in and codes: never public text. */
+const PRIVATE_AUTOCOMPLETE =
+  /\b(username|email|current-password|new-password|one-time-code|tel[\w-]*|name|given-name|family-name|additional-name|honorific-[\w]+|nickname|organization[\w-]*|street-address|address-line\d|address-level\d|postal-code|country[\w-]*|cc-[\w-]+|bday[\w-]*|sex|url|photo|transaction-[\w-]+)\b/;
+
+/** Words around a field that make it a search, a filter, a code, a quantity or a delivery note (ten languages). */
+const NOT_PUBLIC_HINT = new RegExp(
+  '(?<![\\p{L}\\p{N}])(' +
+    [
+      'search', 'query', 'find', 'filter', 'q', 'keywords?', 'lookup', 'coupon', 'promo', 'voucher', 'code', 'otp', 'pin',
+      'zip', 'postcode', 'quantity', 'qty', 'amount', 'login', 'username', 'user', 'e-?mail', 'phone',
+      'ara', 'arama', 'filtre', 'kod', 'kupon', 'adet', 'miktar', 'kullanıcı adı',
+      'suche', 'suchen', 'menge', 'gutschein', 'recherche', 'rechercher', 'filtrer', 'quantité',
+      'buscar', 'búsqueda', 'filtrar', 'cantidad', 'pesquisar', 'pesquisa', 'quantidade', 'cupom',
+      'поиск', 'найти', 'фильтр', 'код', 'количество', 'cari', 'pencarian', 'jumlah',
+      // A checkout's delivery or order note goes with the order, not to an audience.
+      'delivery', 'shipping', 'order notes?', 'teslimat', 'kargo', 'sipariş notu', 'lieferung', 'lieferhinweis',
+      'livraison', 'entrega', 'envío', 'доставка', 'доставки', 'pengiriman',
+    ].join('|') +
+    ')(?![\\p{L}\\p{N}])',
+  'u',
+);
+/** Japanese and Korean hints, found inside the text. */
+const NOT_PUBLIC_PARTS = ['検索', '絞り込み', 'フィルタ', 'コード', '数量', '配送', '검색', '필터', '코드', '수량', '배송'];
+
+const TEXT_INPUT_MODES = new Set(['', 'text']);
+
+/**
+ * Whether a field holds free text that goes out to other people (a comment, a message, a review), as opposed to a
+ * search, a filter, a sign-in, a code, a quantity or a personal detail. `text`: what it will hold (Enter in type), else
+ * what it holds now. Errs towards not asking: a one-line input counts only for prose of a few words.
+ */
+export function isPublicText(f: FieldFacts, text: string = f.text): boolean {
+  const value = text.trim();
+  if (!value) return false;
+  if (f.tag === 'input' && f.type !== 'text') return false;
+  if (f.role === 'searchbox' || f.role === 'combobox' || f.role === 'spinbutton') return false;
+  if (f.inSearch || f.formGet || f.loginForm) return false;
+  if (PRIVATE_AUTOCOMPLETE.test(f.autocomplete)) return false;
+  if (!TEXT_INPUT_MODES.has(f.inputMode)) return false;
+  if (NOT_PUBLIC_HINT.test(f.hints) || NOT_PUBLIC_PARTS.some((p) => f.hints.includes(p))) return false;
+  // A text area or an editor is made for prose.
+  if (f.tag === 'textarea' || f.editable) return true;
+  // A one-line input: a short field (a name, a code) never; prose of at least two words and twelve characters does.
+  if (f.maxLength !== null && f.maxLength <= 40) return false;
+  return value.length >= 12 && /\S\s+\S/.test(value);
+}
+
+/** Buttons that close, clear or decorate a composer (their label starts with these words): they send nothing. */
+const NOT_SEND_LABEL = new RegExp(
+  '^(' +
+    [
+      'cancel', 'close', 'discard', 'clear', 'back', 'delete', 'remove', 'attach.*', 'add (a )?(photo|image|file|gif|emoji).*',
+      'emoji.*', 'gif', 'bold', 'italic', 'underline', 'strikethrough', 'link', 'insert link', 'mention', 'format.*', 'preview',
+      'edit', 'more', 'more options', 'options', 'show more', 'expand', 'collapse',
+      'vazgeç', 'iptal', 'kapat', 'temizle', 'sil', 'geri', 'önizle', 'abbrechen', 'schließen', 'löschen', 'verwerfen',
+      'annuler', 'fermer', 'effacer', 'supprimer', 'cancelar', 'cerrar', 'borrar', 'eliminar', 'fechar', 'apagar', 'excluir',
+      'отмена', 'отменить', 'закрыть', 'удалить', 'очистить', 'batal', 'tutup', 'hapus', 'キャンセル', '閉じる', '削除', '취소', '닫기', '삭제',
+    ].join('|') +
+    ')(?![\\p{L}\\p{N}])',
+  'iu',
+);
+
+/**
+ * The field whose free text this press would send without an approval, or null when the press sends none of the
+ * assistant's text (a link, a toggle or menu, a field itself, a reset or cancel button, or only non-public fields).
+ */
+export function contentToApprove(p: PressFacts | null): (FieldFacts & { sameForm: boolean; near: boolean }) | null {
+  if (!p || p.field || p.link || p.toggle || p.type === 'reset') return null;
+  if (NOT_SEND_LABEL.test(p.label.trim())) return null;
+  return p.fields.find((f) => isPublicText(f)) ?? null;
+}
+
+function excerpt(text: string, max = 80): string {
+  const t = text.replace(/\s+/g, ' ').trim();
+  return t.length > max ? `${t.slice(0, max)}…` : t;
+}
+
+/** The refusal for a press that would send the assistant's text without an approval. */
+export function publishFirstText(buttonRef: number | null, button: string, field: FieldFacts): string {
+  const which = buttonRef === null ? 'the button at that point' : `ref=${buttonRef} ("${button}")`;
+  return (
+    `Pressing ${which} would send the text you typed into ref=${field.ref} ("${excerpt(field.text)}"), which needs the ` +
+    "user's approval in Qutai's dialog first. Nothing was pressed. Call request_approval with kind \"publish\", " +
+    `field_ref ${field.ref}, text exactly as the field shows it, and button_ref ${buttonRef ?? "(the button's ref from read_page)"}; ` +
+    'once approved, press it with click. Do not ask in chat.'
+  );
+}
+
+/** The refusal for Enter in a field with free text the assistant typed, without an approval. */
+export function publishEnterFirstText(fieldRef: number): string {
+  return (
+    `Pressing Enter in ref=${fieldRef} would send this text, which needs the user's approval in Qutai's dialog first. ` +
+    'Nothing was typed. Type it without submit, then call request_approval with kind "publish", field_ref ' +
+    `${fieldRef}, the text, and button_ref: the site's send button, or ${fieldRef} itself when Enter is the only way to ` +
+    'send. Once approved, press the button with click, or (button_ref = the field) call type again with the same text ' +
+    'and submit true. Do not ask in chat.'
+  );
+}

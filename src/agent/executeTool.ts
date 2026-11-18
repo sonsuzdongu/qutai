@@ -44,7 +44,7 @@ import { containsHidden, HiddenNeedle, hiddenNeedles, MEMORY_ID, redactHidden } 
 import { hiddenKindOf, hiddenLabel, hiddenValue, isMemoryCategory, looksLikeIdNumber, Memory, MemoryStore } from './memory';
 import { findPersonalData, PERSONAL_KINDS, PersonalKind, personalNeedles } from './personalData';
 import { decide, SitePolicy, siteKey } from './sitePolicy';
-import { pressGate, requestApprovalTool, type OutwardApproval } from './approvalTool';
+import { enterGate, pressGate, requestApprovalTool, type OutwardApproval } from './approvalTool';
 import { CARD_NUMBER_TEXT, containsCardNumber, type ApprovalGrants } from './outwardApproval';
 import {
   describeCalendarRead,
@@ -1354,6 +1354,13 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
   if (hidden && 'error' in hidden) return record({ content: hidden.error, isError: true });
   if (name === 'type' && !hidden && typeof input.text !== 'string')
     return record({ content: 'Give the text to type (or memory for a hidden saved value).', isError: true });
+  // Enter that would send free text the assistant types needs a publish approval first (agent/approvalTool.ts).
+  let approvedPress = false;
+  if (name === 'type' && input.submit === true && !hidden && target?.tab && !target.tab.isNewTab) {
+    const gate = await enterGate(input, ctx, target.tab);
+    if (gate.kind === 'refuse') return record(gate.output);
+    approvedPress = gate.kind === 'approved';
+  }
   // Remembered personal details need the site's permission, checked here in the app, not left to the prompt.
   let personalAsked = false;
   if (hidden && target) {
@@ -1370,7 +1377,6 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
     return record({ content: CARD_NUMBER_TEXT, isError: true, notice: settingNotice(t('step.cardNumber')) });
   // A press the user approved in the publish or pay dialog is checked and used up here; a final payment button without
   // an approval is refused (agent/approvalTool.ts).
-  let approvedPress = false;
   if ((name === 'click' || name === 'click_at') && target?.tab && !target.tab.isNewTab) {
     const gate = await pressGate(name, input, ctx, target.tab, clickAtPoint(name, input, target.tab));
     if (gate.kind === 'refuse') return record(gate.output);

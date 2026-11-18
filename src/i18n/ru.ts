@@ -2408,6 +2408,7 @@ export const ru: Record<keyof typeof en, string> = {
   'action.requestApprovalPay': "Просит вас одобрить оплату",
   'step.paymentsOff': "Оплату выполняете вы (ваша настройка)",
   'step.approvalChanged': "Страница изменилась после вашего одобрения",
+  'step.publishFirst': "Для отправки сначала нужно ваше одобрение",
   'step.cardNumber': "Qutai не вводит номера карт",
   'approval.title.post': "Опубликовать на {site}?",
   'approval.title.comment': "Оставить комментарий на {site}?",

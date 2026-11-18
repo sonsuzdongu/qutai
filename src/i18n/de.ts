@@ -2394,6 +2394,7 @@ export const de: Record<keyof typeof en, string> = {
   'action.requestApprovalPay': "Bittet Sie, die Zahlung zu bestätigen",
   'step.paymentsOff': "Zahlungen erledigen Sie selbst (Ihre Einstellung)",
   'step.approvalChanged': "Die Seite hat sich nach Ihrer Bestätigung geändert",
+  'step.publishFirst': "Vor dem Senden ist Ihre Bestätigung nötig",
   'step.cardNumber': "Qutai tippt keine Kartennummern",
   'approval.title.post': "Auf {site} veröffentlichen?",
   'approval.title.comment': "Auf {site} kommentieren?",

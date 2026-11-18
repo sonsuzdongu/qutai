@@ -2408,6 +2408,7 @@ export const fr: Record<keyof typeof en, string> = {
   'action.requestApprovalPay': "Vous demande d’approuver le paiement",
   'step.paymentsOff': "Les paiements restent à vous (votre réglage)",
   'step.approvalChanged': "La page a changé après votre approbation",
+  'step.publishFirst': "L’envoi nécessite d’abord votre approbation",
   'step.cardNumber': "Qutai ne tape pas de numéros de carte",
   'approval.title.post': "Publier sur {site} ?",
   'approval.title.comment': "Commenter sur {site} ?",

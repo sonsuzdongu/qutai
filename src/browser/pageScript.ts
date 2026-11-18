@@ -712,6 +712,7 @@ export const PAGE_SCRIPT = String.raw`
     if (field.tagName === 'INPUT' || field.tagName === 'TEXTAREA') typeIntoInput(field, text, clear);
     else typeIntoEditable(field, text, clear);
     touched.add(field);
+    if (typedFields.indexOf(field) < 0) typedFields.push(field);
     // What the page made of it, read back: what the model reports and what an approval shows must be what is there.
     var now = fieldValue(field);
     var shown = field.type === 'password' ? '' : now;
@@ -789,6 +790,106 @@ export const PAGE_SCRIPT = String.raw`
   function textOf(ref) {
     var el = refToEl.get(Number(ref));
     return el && el.isConnected ? cut(clean(el.innerText || el.textContent || ''), 2000) : null;
+  }
+
+  // ---------- Pressing what sends the assistant's own text (src/agent/outwardApproval.ts, contentToApprove) ----------
+  // The page only reports facts; the app decides whether a press sends free text that needs a publish approval.
+
+  // Fields the assistant typed into on this page, in order.
+  var typedFields = [];
+
+  function upward(n) {
+    var p = n.parentNode;
+    return p && p.nodeType === 11 ? p.host : p;
+  }
+  function formOf(el) {
+    if (el.form) return el.form;
+    for (var n = el; n && n.nodeType === 1; n = upward(n)) if (n.tagName === 'FORM') return n;
+    return null;
+  }
+  function insideSearch(el) {
+    for (var n = el; n && n.nodeType === 1; n = upward(n)) {
+      if (n.tagName === 'SEARCH' || (n.getAttribute('role') || '').toLowerCase() === 'search') return true;
+    }
+    return false;
+  }
+
+  // What the field is and holds: its kind, the hints around it, and the text in it now.
+  function fieldFacts(f) {
+    var tag = f.tagName.toLowerCase();
+    var form = formOf(f);
+    return {
+      ref: getRef(f),
+      tag: tag,
+      type: tag === 'input' ? (f.type || 'text').toLowerCase() : '',
+      editable: !!f.isContentEditable && tag !== 'input' && tag !== 'textarea',
+      role: (f.getAttribute('role') || '').toLowerCase(),
+      inSearch: insideSearch(f) || (!!form && /search|query/i.test(form.getAttribute('action') || '')),
+      formGet: !!form && (form.getAttribute('method') || '').toLowerCase() === 'get',
+      loginForm: !!form && !!form.querySelector('input[type=password]'),
+      autocomplete: (f.getAttribute('autocomplete') || '').toLowerCase(),
+      inputMode: (f.getAttribute('inputmode') || '').toLowerCase(),
+      hints: cut(clean([f.getAttribute('name'), f.id, f.getAttribute('placeholder'), labelOf(f)].join(' ')).toLowerCase(), 200),
+      maxLength: f.maxLength > 0 ? f.maxLength : null,
+      text: cut(fieldValue(f), 2000),
+      label: labelOf(f)
+    };
+  }
+
+  // How many levels above the field the button joins it, when that shared box is a small composer (at most three text
+  // fields, not the whole page); -1 otherwise.
+  function composerDistance(field, button) {
+    var up = 0;
+    for (var n = upward(field); n && n.nodeType === 1 && up < 6; n = upward(n), up++) {
+      if (n === document.body || n === document.documentElement) return -1;
+      if (n.contains(button) || (button.getRootNode && button.getRootNode().host && n.contains(button.getRootNode().host))) {
+        return n.querySelectorAll('input, textarea, [contenteditable]:not([contenteditable="false"])').length <= 3 ? up + 1 : -1;
+      }
+    }
+    return -1;
+  }
+
+  // The control a click by ref (or at a point) would press, and the fields the assistant typed into that it would send:
+  // those in its form, or in the same small composer box.
+  function pressComposed(ref, fx, fy) {
+    var el;
+    if (ref != null) el = getEl(ref);
+    else {
+      var p = pointFor(fx, fy);
+      el = document.elementFromPoint(p.x, p.y);
+      if (!el) return null;
+    }
+    var button = el.closest ? el.closest('button, input, select, textarea, a[href], [role=button], [role=link], [role=menuitem], [contenteditable]') || el : el;
+    var tag = button.tagName.toLowerCase();
+    var form = formOf(button);
+    var fields = [];
+    typedFields.forEach(function (f) {
+      if (!f.isConnected || f === button || f.contains(button)) return;
+      var sameForm = !!form && formOf(f) === form;
+      var distance = sameForm ? 0 : composerDistance(f, button);
+      if (sameForm || distance > 0) {
+        var facts = fieldFacts(f);
+        facts.sameForm = sameForm;
+        facts.near = distance > 0;
+        fields.push(facts);
+      }
+    });
+    return {
+      label: labelOf(button),
+      tag: tag,
+      type: tag === 'input' || tag === 'button' ? (button.getAttribute('type') || (tag === 'button' ? 'submit' : 'text')).toLowerCase() : '',
+      role: (button.getAttribute('role') || '').toLowerCase(),
+      field: isTextField(button) || tag === 'select',
+      link: tag === 'a' && !button.getAttribute('role'),
+      toggle: button.hasAttribute('aria-pressed') || button.hasAttribute('aria-haspopup') || button.hasAttribute('aria-expanded'),
+      fields: fields
+    };
+  }
+
+  // The field Enter would be pressed in (type with submit), as fieldFacts.
+  function enterFacts(ref) {
+    var field = fieldFor(getEl(ref));
+    return field ? fieldFacts(field) : null;
   }
 
   // The name and state of what a click would press (by ref, or at a point given as fractions like clickAt).
@@ -2395,6 +2496,8 @@ export const PAGE_SCRIPT = String.raw`
     findText: findText,
     textOf: textOf,
     pressInfo: pressInfo,
+    pressComposed: pressComposed,
+    enterFacts: enterFacts,
     type: type,
     select: select,
     scroll: scroll,

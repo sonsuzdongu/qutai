@@ -2403,6 +2403,7 @@ export const es: Record<keyof typeof en, string> = {
   'action.requestApprovalPay': "Le pide que apruebe el pago",
   'step.paymentsOff': "Los pagos los hace usted (su ajuste)",
   'step.approvalChanged': "La página cambió después de su aprobación",
+  'step.publishFirst': "Para enviar hace falta primero su aprobación",
   'step.cardNumber': "Qutai no escribe números de tarjeta",
   'approval.title.post': "¿Publicar en {site}?",
   'approval.title.comment': "¿Comentar en {site}?",

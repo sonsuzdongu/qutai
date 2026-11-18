@@ -2408,6 +2408,7 @@ export const id: Record<keyof typeof en, string> = {
   'action.requestApprovalPay': "Meminta persetujuan Anda untuk pembayaran",
   'step.paymentsOff': "Pembayaran Anda lakukan sendiri (pengaturan Anda)",
   'step.approvalChanged': "Halaman berubah setelah Anda menyetujui",
+  'step.publishFirst': "Pengiriman perlu persetujuan Anda terlebih dahulu",
   'step.cardNumber': "Qutai tidak mengetik nomor kartu",
   'approval.title.post': "Posting di {site}?",
   'approval.title.comment': "Berkomentar di {site}?",

@@ -2405,6 +2405,7 @@ export const tr: Record<keyof typeof en, string> = {
   'action.requestApprovalPay': "Ödeme için onayınız isteniyor",
   'step.paymentsOff': "Ödemeyi siz yapıyorsunuz (ayarınız)",
   'step.approvalChanged': "Onayınızdan sonra sayfa değişti",
+  'step.publishFirst': "Göndermeden önce onayınız gerekiyor",
   'step.cardNumber': "Qutai kart numarası yazmaz",
   'approval.title.post': "{site} sitesinde paylaşılsın mı?",
   'approval.title.comment': "{site} sitesinde yorum yapılsın mı?",

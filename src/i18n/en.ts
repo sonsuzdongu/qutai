@@ -2400,6 +2400,7 @@ export const en = {
   'action.requestApprovalPay': "Asking you to approve the payment",
   'step.paymentsOff': "Payments are left to you (your setting)",
   'step.approvalChanged': "The page changed after you approved",
+  'step.publishFirst': "Sending needs your approval first",
   'step.cardNumber': "Qutai doesn’t type card numbers",
   'approval.title.post': "Post on {site}?",
   'approval.title.comment': "Comment on {site}?",
