@@ -7,20 +7,29 @@ export function startMotion() {
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
   if (reduce.matches) return;
 
-  // Depth: each [data-depth] layer moves against its section's scroll position, by that factor.
+  // Depth: each [data-depth] layer moves by that factor of how far its own block (the parent) is from the middle of
+  // the viewport, so the shift stays small (about ±depth × half a screen) however long the section is. Measured
+  // against the whole section, a layer far down a long section drifted onto the text next to it. Off where the
+  // columns stack (narrow screens): there a layer sits right above or below text and any shift can cover it.
+  const stacked = window.matchMedia('(max-width: 900px)');
   const layers = Array.from(document.querySelectorAll<HTMLElement>('[data-depth]')).map((el) => ({
     el,
     depth: Number(el.dataset.depth) || 0,
-    section: el.closest('section') ?? document.body,
+    block: el.parentElement ?? document.body,
   }));
   let queued = false;
   const update = () => {
     queued = false;
     const vh = window.innerHeight;
-    for (const { el, depth, section } of layers) {
-      const r = section.getBoundingClientRect();
+    for (const { el, depth, block } of layers) {
+      if (stacked.matches) {
+        el.style.transform = '';
+        continue;
+      }
+      const r = block.getBoundingClientRect();
       if (r.bottom < -vh || r.top > 2 * vh) continue; // far off screen
-      el.style.transform = `translate3d(0, ${(-r.top * depth).toFixed(1)}px, 0)`;
+      const fromMiddle = r.top + r.height / 2 - vh / 2;
+      el.style.transform = `translate3d(0, ${(-fromMiddle * depth).toFixed(1)}px, 0)`;
     }
   };
   const onScroll = () => {
