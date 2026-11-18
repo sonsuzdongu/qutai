@@ -279,6 +279,7 @@ Deneme sırasında çıkanları buraya yazın; toplu düzeltilir.
 Sahibi "not et, ben düzelt deyince alt oturumlardaki Opus ajanlarına düzelttir" dedi; hiçbirine dokunulmadı.
 
 - [ ] Titreşim çalışmıyor: adres çubuğundaki Qutai (Q) düğmesine basılı tutunca titreşim gelmiyor (18 Kas; Play'den kurulan 0.1.0 (100), Android). Daha önce `e0bdea8` ile eklenmişti; çalışma modu, sesle başlatma ya da yatay ekran değişikliklerinden biri bozmuş olabilir. Bakılacaklar: uzun basış başlangıcındaki titreşim çağrısı hâlâ yerinde mi, sistemin "dokunma titreşimi" ayarı kapalıyken ne oluyor, diğer titreşimler (gönder, onay, hata) çalışıyor mu.
+- [ ] Adım satırlarında "ref" görünüyor: "Tıklanıyor: ref 1" gibi metinlerde teknik referans yerine insanın okuyacağı bir şey yazılsın: önce öğenin adı ("Sepete ekle"), adı yoksa türü ("düğmeye", "metin alanına", "bağlantıya", "onay kutusuna", "listeye" vb.), ikisi de varsa "Sepete ekle düğmesi". Adım şeridi, paneldeki adım listesi ve adım özeti için geçerli; on dilde, Türkçede hâl ekleri doğru olacak şekilde. (18 Kas; TODO'daki "Step strip: name the element by its label instead of ref 1" kararının cevabı: evet.)
 
 ## 14. "Kendinizi tanıtın" (sesle tanıtım, 17 Kasım)
 
