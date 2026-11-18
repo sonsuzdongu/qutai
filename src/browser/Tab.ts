@@ -1,5 +1,5 @@
 import type { ComponentRef } from 'react';
-import type { View } from 'react-native';
+import { Platform, type View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import type { WebView, WebViewNavigation } from 'react-native-webview';
 import { Conversation } from '../chat/Conversation';
@@ -23,6 +23,7 @@ import { PAGE_SCRIPT } from './pageScript';
 import { HIDE_PROBE_SCRIPT } from '../content/hideProbe';
 import { PageSignals, parsePageSignals, samePageSignals } from './pageKind';
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, ReaderArticle } from './reader';
+import { startsLoading } from './loadState';
 
 type Pending = {
   resolve: (value: unknown) => void;
@@ -392,10 +393,14 @@ export class Tab {
     return true;
   }
 
-  handleLoadStart(url?: string) {
+  /** `nativeLoading`: the event's own `loading` (Android: false for a page's pushState / replaceState). */
+  handleLoadStart(url?: string, nativeLoading?: boolean) {
     // Android starts its own error document for the address that just failed (a load start with no load end): the
     // error stays, and the tab isn't loading.
     if (this.loadError && url && url === this.loadErrorUrl && Date.now() - this.loadErrorAt < 2000) return;
+    // A page changing its own address (history API, a #fragment) loads nothing and never reports an end: not a load,
+    // and the page's location, camera and playback state carry on (loadState.ts).
+    if (!startsLoading({ url, currentUrl: this.url, os: Platform.OS, nativeLoading })) return;
     // A new document: its watches, capture and "allow once" answers start over.
     this.geolocation.reset();
     this.media.reset();
@@ -440,6 +445,44 @@ export class Tab {
     const from = this.httpsUpgradedFrom;
     this.httpsUpgradedFrom = null;
     return from;
+  }
+
+  /**
+   * Stop (the page menu): the WebView stops, and the tab is no longer loading whatever the WebView reports (it sends
+   * nothing when it wasn't loading, and iOS reports a stopped navigation as a cancel it doesn't pass on).
+   */
+  stop() {
+    this.webview?.stopLoading();
+    if (this.loading) this.handleLoadEnd();
+  }
+
+  /** The WebView's load progress (0-1): at 1 the load is over, whether or not a load end follows. */
+  handleLoadProgress(progress: number) {
+    if (progress >= 1 && this.loading) this.handleLoadEnd();
+  }
+
+  /** The navigation turned out to be a file: the page on screen stays, and nothing is loading any more. */
+  handleDownloadStart() {
+    if (this.loading) this.handleLoadEnd();
+  }
+
+  /**
+   * The page's web process ended (Android: crashed or killed for memory; iOS: terminated). No load end comes: the
+   * loading state ends here and the page comes back, iOS in the same WebView, Android in a new one (the old one is
+   * unusable).
+   */
+  handleProcessGone() {
+    if (this.loading) this.handleLoadEnd();
+    if (Platform.OS === 'ios') {
+      this.webview?.reload();
+      return;
+    }
+    if (this.asleep || this.isNewTab) return;
+    this.dispose();
+    this.webview = null;
+    this.asleep = true;
+    this.onChange();
+    setTimeout(() => this.wake(), 0);
   }
 
   handleLoadEnd() {

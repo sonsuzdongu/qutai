@@ -289,9 +289,12 @@ function TabWebView({
               if (target && active) newTabActions.onContextMenu(tab, target);
             }}
             onLoadStart={(e) => {
-              tab.handleLoadStart(e.nativeEvent.url);
+              tab.handleLoadStart(e.nativeEvent.url, e.nativeEvent.loading);
               setAtTop(true);
             }}
+            // The WebView's own progress reaching 100 % also ends a load: a page's soft navigation (react.dev's
+            // client-side routing) goes 10 % → 100 % on Android with no load end after its start.
+            onLoadProgress={(e) => tab.handleLoadProgress(e.nativeEvent.progress)}
             onLoadEnd={(e) => {
               tab.handleLoadEnd();
               // An https page that is still on screen without an error a moment later had a valid certificate
@@ -430,7 +433,14 @@ function TabWebView({
             // The app shows its own long-press menu for links and images.
             allowsLinkPreview={false}
             // Both platforms (patched react-native-webview on Android): Qutai downloads the file itself.
-            onFileDownload={(e) => newTabActions.onDownload(tab, pageDownloadFrom(e.nativeEvent))}
+            onFileDownload={(e) => {
+              // iOS: the navigation that turned into this file reported a start and will never finish.
+              tab.handleDownloadStart();
+              newTabActions.onDownload(tab, pageDownloadFrom(e.nativeEvent));
+            }}
+            // The page's web process crashed or was killed (Android) / terminated (iOS): no load end will come.
+            onRenderProcessGone={() => tab.handleProcessGone()}
+            onContentProcessDidTerminate={() => tab.handleProcessGone()}
             allowsBackForwardNavigationGestures
             javaScriptEnabled
             domStorageEnabled

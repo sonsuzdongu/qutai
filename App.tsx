@@ -1807,7 +1807,7 @@ function BrowserApp({
         }),
     },
     tab.loading
-      ? { icon: 'close', label: t('menu.stop'), onPress: () => tab.webview?.stopLoading() }
+      ? { icon: 'close', label: t('menu.stop'), onPress: () => tab.stop() }
       : { icon: 'reload', label: t('menu.reload'), disabled: onNewTab, onPress: () => tab.webview?.reload() },
   ];
 
