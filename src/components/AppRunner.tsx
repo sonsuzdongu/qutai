@@ -201,7 +201,7 @@ function Runner({ request, onEdit, onFix, onNotice }: Props & { request: RunnerR
           mediaCapturePermissionGrantType="deny"
           allowsLinkPreview={false}
           allowsBackForwardNavigationGestures={false}
-          dataDetectorTypes="none"
+          dataDetectorTypes={['none']}
           mixedContentMode="never"
           saveFormDataDisabled
           textZoom={100}

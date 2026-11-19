@@ -14,14 +14,19 @@ export { PickerUnavailableError };
 
 export type PickedAppFile = { bytes: Uint8Array; name: string };
 
-/** The last part of an address, decoded, for "Imported from <file>". */
+/**
+ * The file's name for "Imported from <file>": the last part of the address, decoded. Android's document providers put
+ * a path in that part (`primary:Download/x.qutaiapp`), so only what follows the last `/` or `:` counts; an opaque id
+ * with no extension (MediaStore's `content://media/external/file/26`) gives the generic name.
+ */
 export function fileNameOf(uri: string): string {
   const last = uri.split(/[?#]/)[0].split('/').pop() ?? '';
+  let decoded = last;
   try {
-    return decodeURIComponent(last) || `app.${APP_FILE_EXTENSION}`;
-  } catch {
-    return last || `app.${APP_FILE_EXTENSION}`;
-  }
+    decoded = decodeURIComponent(last);
+  } catch {}
+  const name = decoded.split(/[/:]/).pop() ?? '';
+  return /\.\w+$/.test(name) ? name : `app.${APP_FILE_EXTENSION}`;
 }
 
 async function readChecked(file: File): Promise<Uint8Array> {

@@ -61,13 +61,26 @@ test('the WebView patch: sandbox prop on both architectures, checks before the J
 
   // shouldInterceptRequest: the sandbox answers first, before the main-frame bookkeeping and the ad blocker.
   const intercept = patch.slice(patch.indexOf('public WebResourceResponse shouldInterceptRequest'));
-  const sandboxAt = intercept.indexOf('if (webView.appSandbox != null) return RNCWebViewContentBlocker.blockedResponse();');
+  const sandboxAt = intercept.indexOf('if (webView.appSandbox != null) {');
   assert.ok(sandboxAt > 0);
   assert.ok(sandboxAt < intercept.indexOf('request.isForMainFrame()'));
+  // Only the local schemes pass (the app's own document arrives as a data: request, found on Android 16's WebView);
+  // everything else gets the 403.
+  const block = intercept.slice(sandboxAt, intercept.indexOf('}', sandboxAt + 40) + 1);
+  assert.match(block, /"data"\.equals\(scheme\) \|\| "blob"\.equals\(scheme\) \|\| "about"\.equals\(scheme\)\) return null;/);
+  assert.match(block, /return RNCWebViewContentBlocker\.blockedResponse\(\);/);
+  assert.doesNotMatch(block, /"https?"/);
 
   // shouldOverrideUrlLoading: refused (true) before the lock that waits up to 250 ms for JavaScript.
   const override = patch.slice(patch.indexOf('public boolean shouldOverrideUrlLoading(WebView view, String url)'));
   const refuse = override.indexOf('if (rncWebView.appSandbox != null) {');
   assert.ok(refuse > 0 && refuse < override.indexOf('isJsDebugging'));
   assert.match(override.slice(refuse, refuse + 400), /putDouble\("lockIdentifier", -1\)[\s\S]*return true;/);
+});
+
+test('no WebView gets dataDetectorTypes as a string (Android\'s new architecture expects an array and crashes natively)', () => {
+  for (const path of ['../../src/components/AppRunner.tsx', '../../src/components/ReaderView.tsx']) {
+    const source = readFileSync(new URL(path, import.meta.url), 'utf8');
+    assert.doesNotMatch(source, /dataDetectorTypes=["']/, path);
+  }
 });

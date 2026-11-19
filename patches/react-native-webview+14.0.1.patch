@@ -393,7 +393,7 @@ index 0000000..95b43f2
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
-index 209b855..56df027 100644
+index 209b855..e435415 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 @@ -1,6 +1,7 @@
@@ -418,7 +418,7 @@ index 209b855..56df027 100644
          }
  
          if (!mLastLoadFailed) {
-@@ -63,9 +66,52 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -63,9 +66,57 @@ public class RNCWebViewClient extends WebViewClient {
          }
      }
  
@@ -433,8 +433,13 @@ index 209b855..56df027 100644
 +        if (view instanceof RNCWebView) {
 +            RNCWebView webView = (RNCWebView) view;
 +            // Qutai patch: an app's WebView (appSandbox) loads nothing from anywhere; answered here, on the request
-+            // thread, without JavaScript. data: and blob: never reach this method.
-+            if (webView.appSandbox != null) return RNCWebViewContentBlocker.blockedResponse();
++            // thread, without JavaScript. Only data:, blob: and about: pass: they never leave the phone, and the app's
++            // own document (loadDataWithBaseURL) reaches this method as a data: request on recent WebViews.
++            if (webView.appSandbox != null) {
++                String scheme = request.getUrl() != null ? request.getUrl().getScheme() : null;
++                if ("data".equals(scheme) || "blob".equals(scheme) || "about".equals(scheme)) return null;
++                return RNCWebViewContentBlocker.blockedResponse();
++            }
 +            Uri url = request.getUrl();
 +            String host = url != null ? url.getHost() : null;
 +            if (request.isForMainFrame()) {
@@ -471,7 +476,7 @@ index 209b855..56df027 100644
  
        ((RNCWebView) webView).dispatchEvent(
          webView,
-@@ -78,6 +124,7 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -78,6 +129,7 @@ public class RNCWebViewClient extends WebViewClient {
      public void onPageStarted(WebView webView, String url, Bitmap favicon) {
        super.onPageStarted(webView, url, favicon);
        mLastLoadFailed = false;
@@ -479,7 +484,7 @@ index 209b855..56df027 100644
  
        RNCWebView reactWebView = (RNCWebView) webView;
        reactWebView.callInjectedJavaScriptBeforeContentLoaded();
-@@ -86,6 +133,15 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -86,6 +138,15 @@ public class RNCWebViewClient extends WebViewClient {
      @Override
      public boolean shouldOverrideUrlLoading(WebView view, String url) {
          final RNCWebView rncWebView = (RNCWebView) view;
@@ -495,7 +500,7 @@ index 209b855..56df027 100644
          final boolean isJsDebugging = rncWebView.getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
  
          if (!isJsDebugging && rncWebView.mMessagingJSModule != null) {
-@@ -156,6 +212,15 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -156,6 +217,15 @@ public class RNCWebViewClient extends WebViewClient {
          String topWindowUrl = webView.getUrl();
          String failingUrl = error.getUrl();
  
@@ -511,7 +516,7 @@ index 209b855..56df027 100644
          // Cancel request after obtaining top-level URL.
          // If request is cancelled before obtaining top-level URL, undesired behavior may occur.
          // Undesired behavior: Return value of WebView.getUrl() may be the current URL instead of the failing URL.
-@@ -191,6 +256,13 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -191,6 +261,13 @@ public class RNCWebViewClient extends WebViewClient {
          }
  
          description = descriptionPrefix + description;
