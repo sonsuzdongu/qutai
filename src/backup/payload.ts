@@ -1,5 +1,5 @@
-import { isSiteLevel, SiteLevel } from '../agent/sitePolicy';
-import { cleanCustomHeaders, CustomHeader, headerProblems, MAX_CUSTOM_HEADERS } from '../ai/customHeaders';
+import { isSiteLevel, type SiteLevel } from '../agent/sitePolicy';
+import { cleanCustomHeaders, type CustomHeader, headerProblems, MAX_CUSTOM_HEADERS } from '../ai/customHeaders';
 import { restoredCustomInstructions } from '../agent/retiredInstructions';
 import {
   cleanMemoryText,
@@ -7,7 +7,7 @@ import {
   hiddenLabelProblem,
   isMemoryCategory,
   MAX_MEMORIES,
-  MemoryCategory,
+  type MemoryCategory,
   sensitiveReason,
 } from '../agent/memory';
 import { parseAnswerCost } from '../ai/cost';
@@ -15,11 +15,12 @@ import { normalizeBaseUrl } from '../ai/customEndpoint';
 import type { ProviderId } from '../ai/types';
 import { READER_FONTS, READER_THEMES } from '../browser/reader';
 import { isSearchEngine } from '../browser/search';
-import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } from '../storage/savedTasks';
+import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, type TaskSchedule, type TaskTarget } from '../storage/savedTasks';
 import { cutText, wellFormed } from '../utils/wellFormed';
 import { MAX_RULES, parseRuleLine, siteHost as ruleSite } from '../content/siteRules';
 import { readBackupStyles, type BackupStyle } from '../content/userStyles';
 import { readBackupScripts, type BackupScript } from '../content/userScripts';
+import { readBackupApps, type BackupApps } from '../apps/appBackup';
 
 /**
  * What goes inside a backup: versioned JSON by kind of data, independent of the SQLite schema, so a
@@ -45,7 +46,10 @@ import { readBackupScripts, type BackupScript } from '../content/userScripts';
  *   customHeaders?: [{ name, value }],   // the custom endpoint's extra headers: secrets, so only with apiKeys' opt-in
  *   tabs?: { tabs: [{ url, title, uid, groupId? }], activeIndex, groups: [{ id, name, color, collapsed? }] },
  *   chats?: [{ key, items: [...], turns: [...] }],   // key: a tab's uid or "group:<id>"; an item's cost: numbers only
- *   activity?: [{ at, host, url, tool, description, ok }]
+ *   activity?: [{ at, host, url, tool, description, ok }],
+ *   apps?: { withData, items: [{ manifest, files, sha256, seal, state, grants, createdAt, updatedAt, openedAt,
+ *            data?: { kv, docs } }] }   // the user's apps, current version only (src/apps/appBackup.ts); a version
+ *            // without it ignores the section. Seal and grants count only where the seal verifies (this phone's key)
  * }
  *
  * Never included: the "What was sent to the AI" list (ai_requests), which is a log of this phone's requests.
@@ -174,6 +178,8 @@ export type BackupPayload = {
   tabs?: { tabs: BackupTab[]; activeIndex: number; groups: BackupGroup[] };
   chats?: BackupChat[];
   activity?: BackupAction[];
+  /** The user's apps (docs/mini-apps.md › Backup and restore); not in backups made before them. */
+  apps?: BackupApps;
 };
 
 /** The payload could not be used. */
@@ -708,6 +714,7 @@ export function parseBackup(json: string): BackupPayload {
     tabs: parseTabs(raw.tabs),
     chats: parseChats(raw.chats),
     activity: parseActivity(raw.activity),
+    apps: readBackupApps(raw.apps),
   };
   for (const [key, value] of Object.entries(sections)) {
     if (value !== undefined) (payload as Record<string, unknown>)[key] = value;
@@ -729,6 +736,9 @@ export type BackupSummary = {
   tabs?: number;
   chats?: number;
   activity?: number;
+  /** Apps, and whether the backup has their data. */
+  apps?: number;
+  appsWithData?: boolean;
   /** Providers whose API key is in the backup (custom also when only its extra headers are). */
   apiKeys: ProviderId[];
 };
@@ -758,6 +768,7 @@ export function summarize(p: BackupPayload): BackupSummary {
     ...(p.tabs ? { tabs: p.tabs.tabs.length } : {}),
     ...(p.chats ? { chats: p.chats.length } : {}),
     ...(p.activity ? { activity: p.activity.length } : {}),
+    ...(p.apps ? { apps: p.apps.items.length, appsWithData: p.apps.withData } : {}),
     apiKeys: [
       ...new Set([
         ...(p.apiKeys ? (Object.keys(p.apiKeys) as ProviderId[]) : []),

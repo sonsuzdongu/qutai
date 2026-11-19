@@ -20,6 +20,7 @@ import {
   type AppPermission,
 } from './manifest';
 import type { Grant, Grants } from './contract';
+import { checkAppData, docEntryBytes, kvEntryBytes, uniqueAppName, type AppData, type DocEntry } from './appFile';
 import { checkQuery, runQuery, type Doc, type Query } from './query';
 
 /**
@@ -139,6 +140,46 @@ function parse<T>(text: string | null | undefined, fallback: T): T {
 }
 
 const ID_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+/** A file name as the author line keeps it: no folders, no control characters, at most 120 characters. */
+function cutName(name: string): string {
+  const base = String(name ?? '').split(/[\\/]/).pop() ?? '';
+  return [...base.replace(/[\u0000-\u001f\u007f]+/g, ' ').trim()].slice(0, 120).join('') || 'file';
+}
+
+/** Every key-value entry and document of one app (export file, backup). */
+export async function readAppData(db: Db, appId: string): Promise<AppData> {
+  const kvRows = await db.getAllAsync<{ key: string; value: string }>('SELECT key, value FROM app_kv WHERE app_id = ? ORDER BY key', [appId]);
+  const docRows = await db.getAllAsync<{ collection: string; data: string }>(
+    'SELECT collection, data FROM app_docs WHERE app_id = ? ORDER BY collection, id',
+    [appId],
+  );
+  const kv = kvRows.flatMap((r) => {
+    const value = parse<unknown>(r.value, undefined);
+    return value === undefined ? [] : [{ key: r.key, value }];
+  });
+  const docs = docRows.flatMap((r) => {
+    const doc = parse<DocEntry['doc'] | null>(r.data, null);
+    return doc && typeof doc.id === 'string' ? [{ collection: r.collection, doc }] : [];
+  });
+  return { kv, docs };
+}
+
+/** Writes checked data rows for an app (inside the caller's transaction); sizes as the quota counts them. */
+export async function writeAppData(db: Db, appId: string, data: AppData): Promise<void> {
+  for (const e of data.kv)
+    await db.runAsync('INSERT OR REPLACE INTO app_kv (app_id, key, value, size) VALUES (?, ?, ?, ?)', [
+      appId,
+      e.key,
+      JSON.stringify(e.value),
+      kvEntryBytes(e),
+    ]);
+  for (const e of data.docs)
+    await db.runAsync(
+      'INSERT OR REPLACE INTO app_docs (app_id, collection, id, data, size, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [appId, e.collection, e.doc.id, JSON.stringify(e.doc), docEntryBytes(e), e.doc.createdAt, e.doc.updatedAt],
+    );
+}
 
 export class AppStore {
   private queues = new Map<string, Promise<unknown>>();
@@ -395,6 +436,96 @@ export class AppStore {
       await db.runAsync("UPDATE apps SET state = 'active' WHERE id = ?", [id]);
     });
     return true;
+  }
+
+  // ---------- Export and import (docs/mini-apps.md › Phase 2) ----------
+
+  /** Every key-value entry and document of the app, as an export file or a backup carries them. */
+  async exportData(appId: string): Promise<AppData> {
+    return readAppData(await this.deps.db(), appId);
+  }
+
+  /**
+   * Stores an imported package **switched off and unsealed** (it runs only after the user's Turn on). `mode`:
+   * - `new`: under the file's id, which must be free;
+   * - `keepBoth`: under a new id, with a name no other app has;
+   * - `replace`: as the next version of `targetId` (its older versions stay), which is switched off until approved and
+   *   loses its grants; the phone's data is kept unless `replaceData` (the user confirmed deleting it).
+   * `data` is loaded only when given (the user's consent); in replace mode only into an app without data or with
+   * `replaceData`. Returns the id the app has now.
+   */
+  async importApp(input: {
+    pkg: AppPackage;
+    mode: 'new' | 'keepBoth' | 'replace';
+    targetId?: string;
+    fileName: string;
+    data?: AppData | null;
+    replaceData?: boolean;
+  }): Promise<string> {
+    const problems = checkPackage(input.pkg);
+    if (problems.length) throw new BridgeError('E_BAD_ARGS', describeProblems(problems));
+    if (input.data) {
+      const checked = checkAppData(input.data);
+      if ('problem' in checked) throw new BridgeError('E_BAD_ARGS', checked.problem);
+    }
+    const now = this.now();
+    const db = await this.deps.db();
+    const existing = await db.getAllAsync<{ id: string; name: string }>('SELECT id, name FROM apps', []);
+    const author = { kind: 'imported' as const, file: cutName(input.fileName), importedAt: iso(now) };
+    let id = input.pkg.manifest.id;
+    let name = input.pkg.manifest.name;
+    if (input.mode === 'new' && existing.some((a) => a.id === id)) throw new BridgeError('E_BAD_ARGS', `An app with the id ${id} is already here.`);
+    if (input.mode === 'keepBoth') {
+      do id = this.randomId('app-', 12);
+      while (existing.some((a) => a.id === id));
+      name = uniqueAppName(name, existing);
+    }
+    const target = input.mode === 'replace' ? input.targetId : undefined;
+    if (input.mode === 'replace') {
+      if (!target || !existing.some((a) => a.id === target)) throw new BridgeError('E_NOT_FOUND', 'The app to replace is no longer here.');
+      id = target;
+    }
+    return this.serial(id, async () => {
+      let version = 1;
+      let hasData = false;
+      if (target) {
+        const row = await db.getFirstAsync<{ v: number | null }>('SELECT MAX(version) AS v FROM app_versions WHERE app_id = ?', [target]);
+        version = (row?.v ?? 0) + 1;
+        hasData = (await this.usage(target)) > 0;
+      }
+      const manifest: AppManifest = { ...input.pkg.manifest, id, name, version, author, updatedAt: iso(now) };
+      const pkg = { manifest, files: input.pkg.files };
+      const loadData = !!input.data && (!target || !hasData || !!input.replaceData);
+      await db.withTransactionAsync(async () => {
+        if (target)
+          await db.runAsync("UPDATE apps SET name = ?, current_version = ?, state = 'disabled', grants = '{}', updated_at = ? WHERE id = ?", [
+            name,
+            version,
+            now,
+            id,
+          ]);
+        else
+          await db.runAsync(
+            "INSERT INTO apps (id, name, current_version, state, grants, created_at, updated_at) VALUES (?, ?, ?, 'disabled', '{}', ?, ?)",
+            [id, name, version, now, now],
+          );
+        await db.runAsync(
+          'INSERT INTO app_versions (app_id, version, manifest, files, size, hash, seal, source, note, created_at) VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)',
+          [id, version, JSON.stringify(manifest), JSON.stringify(pkg.files), packageSize(pkg.files), packageHash(pkg), 'import', author.file, now],
+        );
+        await db.runAsync(
+          `DELETE FROM app_versions WHERE app_id = ? AND version <> ? AND version NOT IN
+             (SELECT version FROM app_versions WHERE app_id = ? ORDER BY version DESC LIMIT ?)`,
+          [id, version, id, PACKAGE_LIMITS.keptVersions],
+        );
+        if (loadData && input.data) {
+          await db.runAsync('DELETE FROM app_kv WHERE app_id = ?', [id]);
+          await db.runAsync('DELETE FROM app_docs WHERE app_id = ?', [id]);
+          await writeAppData(db, id, input.data);
+        }
+      });
+      return id;
+    });
   }
 
   async rename(id: string, name: string): Promise<AppPackage> {

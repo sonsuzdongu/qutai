@@ -14,13 +14,15 @@ import {
   listSitePermissions,
 } from '../storage/sitePermissions';
 import type { BackupChat, BackupPayload, BackupTab } from './payload';
+import { collectBackupApps, restoreApps } from '../apps/appBackup';
 
 /**
  * Reads the database into a backup payload and writes a backup back. Settings and API keys live in
  * the secure store and are handled by the caller.
  */
 
-export type ExportChoice = { tabs: boolean; chats: boolean; activity: boolean };
+/** `apps`: the user's apps (current version); `appData`: with their data (docs/mini-apps.md › Backup and restore). */
+export type ExportChoice = { tabs: boolean; chats: boolean; activity: boolean; apps?: boolean; appData?: boolean };
 
 /** Conversations are saved as `chat:<tab uid>` or `chat:group:<group id>` in the kv table. */
 const chatKey = (key: string) => `chat:${key}`;
@@ -145,6 +147,7 @@ export async function collectBackup(
       payload.chats = chats;
     }
   }
+  if (choice.apps) payload.apps = await collectBackupApps(db, !!choice.appData);
   if (choice.activity) {
     payload.activity = (await listActions(db, 5000)).map(({ at, host, url, tool, description, ok }) => ({
       at,
@@ -186,6 +189,8 @@ async function insertRows(db: Db, sql: string, columns: number, rows: SqlValue[]
  * - tabs: the backup's tabs are added after the open ones (a tab or group already here is skipped).
  * - chats: added for the tabs and groups that don't have one.
  * - activity: entries are added unless the same one is already there.
+ * - apps: an app whose id is already here is kept as it is (versions and data); the others are added, on and sealed
+ *   only when their seal verifies with `scriptKey` (this phone), otherwise off and unsealed (src/apps/appBackup.ts).
  * Replace first erases the phone's data of each kind the backup contains.
  */
 /**
@@ -449,6 +454,8 @@ export async function applyBackup(
           .map((c) => [chatKey(c.key), JSON.stringify({ items: c.items, turns: c.turns })]),
       );
     }
+
+    if (p.apps) await restoreApps(db, p.apps, mode, scriptKey, now);
 
     if (p.activity) {
       if (replace) await db.runAsync('DELETE FROM agent_actions', []);

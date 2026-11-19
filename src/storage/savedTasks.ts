@@ -1,4 +1,4 @@
-import { Db } from './db';
+import type { Db } from './db';
 import { cutText } from '../utils/wellFormed';
 
 /** Where a saved task runs: the page on screen, a page opened first in a new tab, or no particular page. */
