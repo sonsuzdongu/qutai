@@ -1,5 +1,5 @@
 import { requireOptionalNativeModule } from 'expo';
-import { Linking, Platform, Settings as IosUserDefaults } from 'react-native';
+import { Linking, Platform, Settings as IosUserDefaults, TurboModuleRegistry, type TurboModule } from 'react-native';
 import { getLanguage, matchLanguage, setLanguageOverride, type Language } from './index';
 
 /**
@@ -92,6 +92,13 @@ export function setupLanguageStart(): SetupLanguageStart {
 
 let iosWrote = false;
 
+/**
+ * React Native's own NSUserDefaults module (the one `Settings` wraps). `Settings.set` can't remove a key (a null is
+ * dropped on the way to native), so removal uses the module's `deleteValues`.
+ */
+type IosSettingsManager = TurboModule & { deleteValues(keys: string[]): void };
+const iosSettingsManager = Platform.OS === 'ios' ? TurboModuleRegistry.get<IosSettingsManager>('SettingsManager') : null;
+
 export function chooseSetupLanguage(language: Language, start: SetupLanguageStart): void {
   const mode = languageChoiceMode();
   const back = language === start.shown;
@@ -101,8 +108,8 @@ export function chooseSetupLanguage(language: Language, start: SetupLanguageStar
         IosUserDefaults.set({ AppleLanguages: [language] });
         iosWrote = true;
       } else if (iosWrote) {
-        // null removes the app's own value: back to the system's language list.
-        IosUserDefaults.set({ AppleLanguages: null });
+        // Removing the app's own value: back to the system's language list ("System default").
+        iosSettingsManager?.deleteValues(['AppleLanguages']);
         iosWrote = false;
       }
     } catch {
