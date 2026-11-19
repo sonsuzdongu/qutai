@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { DatabaseSync } from 'node:sqlite';
 import { test } from 'node:test';
-import { keepOrder, LOOKUP_DEBOUNCE_MS, OmniboxResults, REMOTE_GRACE_MS, withoutQuery } from '../../src/browser/omniboxResults.ts';
+import { keepOrder, LOOKUP_DEBOUNCE_MS, OmniboxResults, REMOTE_DEBOUNCE_MS, withoutQuery } from '../../src/browser/omniboxResults.ts';
 import type { LocalItem, Shown } from '../../src/browser/omniboxResults.ts';
 import { localSuggestions } from '../../src/storage/omnibox.ts';
 import { fakeTimers, flush, seedHistory } from './seed.ts';
@@ -96,52 +96,80 @@ test('an older answer arriving late never replaces a newer one', async () => {
   assert.deepEqual(h.last().local.map((i) => i.url), ['https://new']);
 });
 
-test('history waits briefly for the search engine so both change in one step', async () => {
+test('a word typed without a pause sends exactly one engine request, with the finished text', () => {
+  const h = harness({ remote: true });
+  const word = 'galatasaray';
+  for (let k = 1; k <= word.length; k++) {
+    h.results.setQuery(word.slice(0, k));
+    h.timers.advance(90);
+  }
+  h.timers.advance(1000);
+  assert.deepEqual(h.results.remoteRequests, [word]);
+  assert.ok(h.results.launches.length > 1, 'history still refreshes while typing');
+});
+
+test('a pause over 200 ms in the middle of a word sends two engine requests', () => {
+  const h = harness({ remote: true });
+  for (const q of ['g', 'ga', 'gal']) {
+    h.results.setQuery(q);
+    h.timers.advance(80);
+  }
+  h.timers.advance(REMOTE_DEBOUNCE_MS);
+  for (const q of ['gala', 'galat']) {
+    h.results.setQuery(q);
+    h.timers.advance(80);
+  }
+  h.timers.advance(1000);
+  assert.deepEqual(h.results.remoteRequests, ['gal', 'galat']);
+});
+
+test('no engine request before the pause, and none after the field is cleared', () => {
+  const h = harness({ remote: true });
+  h.results.setQuery('g');
+  h.timers.advance(REMOTE_DEBOUNCE_MS - 1);
+  assert.deepEqual(h.results.remoteRequests, []);
+  h.results.setQuery('');
+  h.timers.advance(1000);
+  assert.deepEqual(h.results.remoteRequests, []);
+});
+
+test('history shows at once; the engine rows join when they land, without emptying the list', async () => {
   const h = harness({ remote: true });
   h.results.setQuery('gal');
   h.local[0].resolve([item('https://a')]);
   await flush();
-  assert.equal(h.shown.length, 0, 'held for the engine');
+  assert.deepEqual(h.last(), { query: 'gal', local: [item('https://a')], remote: [] });
+  h.timers.advance(REMOTE_DEBOUNCE_MS);
   h.remotes[0].resolve(['galatasaray', 'gal']);
   await flush();
-  assert.equal(h.shown.length, 1);
   assert.deepEqual(h.last(), { query: 'gal', local: [item('https://a')], remote: ['galatasaray'] });
 });
 
-test('a slow search engine does not hold history back; its rows join later', async () => {
-  const h = harness({ remote: true });
-  h.results.setQuery('gal');
-  h.local[0].resolve([item('https://a')]);
-  await flush();
-  h.timers.advance(REMOTE_GRACE_MS);
-  assert.deepEqual(h.last(), { query: 'gal', local: [item('https://a')], remote: [] });
-  h.remotes[0].resolve(['galata']);
-  await flush();
-  assert.deepEqual(h.last().remote, ['galata']);
-  assert.deepEqual(h.last().local, [item('https://a')]);
-});
-
-test('while the engine is slow, its earlier rows that still contain the text stay; the others go', async () => {
+test('engine rows that still contain the text stay while history changes; the others go', async () => {
   const h = harness({ remote: true });
   h.results.setQuery('gal');
   h.local[0].resolve([]);
+  h.timers.advance(REMOTE_DEBOUNCE_MS);
   h.remotes[0].resolve(['galatasaray', 'galata', 'gala dinner']);
   await flush();
   h.timers.advance(500);
   h.results.setQuery('galat');
   h.local[1].resolve([]);
   await flush();
-  h.timers.advance(REMOTE_GRACE_MS);
   assert.deepEqual(h.last().remote, ['galatasaray', 'galata']);
 });
 
-test('a newer lookup cancels the search engine request of the one before', () => {
+test('an engine answer for older text is dropped, even if it lands after the text changed', async () => {
   const h = harness({ remote: true });
-  h.results.setQuery('g');
-  h.timers.advance(500);
-  h.results.setQuery('ga');
+  h.results.setQuery('gal');
+  h.local[0].resolve([]);
+  await flush();
+  h.timers.advance(REMOTE_DEBOUNCE_MS);
+  h.results.setQuery('galx');
   assert.equal(h.remotes[0].signal.aborted, true);
-  assert.equal(h.remotes[1].signal.aborted, false);
+  h.remotes[0].resolve(['galatasaray']);
+  await flush();
+  assert.deepEqual(h.results.value.remote, []);
 });
 
 test('nothing changes under a finger; the latest answer shows when it lifts', async () => {

@@ -28,7 +28,7 @@ export type OmniboxResultsOptions<L extends LocalItem> = {
   timers?: Timers;
   debounceMs?: number;
   maxWaitMs?: number;
-  remoteGraceMs?: number;
+  remoteDebounceMs?: number;
   freezeMaxMs?: number;
 };
 
@@ -41,8 +41,11 @@ export type OmniboxResultsOptions<L extends LocalItem> = {
 export const LOOKUP_DEBOUNCE_MS = 120;
 /** While letters keep coming, the list still refreshes at least this often. */
 export const LOOKUP_MAX_WAIT_MS = 360;
-/** History results wait at most this long for the search engine's, so both usually land together. */
-export const REMOTE_GRACE_MS = 150;
+/**
+ * The typed text goes to the search engine only after typing has paused this long (owner, 19 Nov 2026): a word typed
+ * without a pause is one request, with the finished text.
+ */
+export const REMOTE_DEBOUNCE_MS = 200;
 /** Safety net: a touch whose end never arrives stops holding the list back after this long. */
 export const FREEZE_MAX_MS = 3000;
 
@@ -81,19 +84,15 @@ type Lookup<L> = {
   seq: number;
   query: string;
   local: L[] | null;
-  remote: string[] | null;
-  /** No search engine request was made for this lookup. */
-  remoteSkipped: boolean;
-  controller: AbortController;
-  grace: unknown;
 };
 
 /**
  * Debounces lookups and decides what the list shows:
  * - the list is never emptied between letters: what is shown stays until the next answer lands, then is replaced;
- * - an answer for an older lookup never replaces a newer one (each lookup has a number);
- * - history and search engine answers for the same text are shown together, unless the network takes longer than
- *   REMOTE_GRACE_MS (then history shows first and the engine's rows follow);
+ * - an answer for older text never replaces a newer one (each lookup and each engine request has a number);
+ * - history is looked up on its own schedule (LOOKUP_DEBOUNCE_MS, at once after a pause); the search engine is asked
+ *   only after typing has paused for REMOTE_DEBOUNCE_MS, and its rows replace its earlier rows when they land. When
+ *   history lands first, the engine's earlier rows that still contain the text stay until then; the others go;
  * - while a finger is on the list, nothing changes under it; the latest answer is shown when the finger lifts.
  */
 export class OmniboxResults<L extends LocalItem = LocalItem> {
@@ -103,24 +102,28 @@ export class OmniboxResults<L extends LocalItem = LocalItem> {
   private shown: Shown<L> = { query: '', local: [], remote: [] };
   private shownSeq = 0;
   private seq = 0;
-  private current: Lookup<L> | null = null;
   private lastChangeAt = -Infinity;
   private pendingSince: number | null = null;
   private pendingQuery: string | null = null;
   private wantedQuery: string | null = null;
   private debounce: unknown = null;
+  private remoteTimer: unknown = null;
+  private remoteSeq = 0;
+  private remoteController: AbortController | null = null;
   private frozen = false;
   private freezeTimer: unknown = null;
   private held: Shown<L> | null = null;
   private disposed = false;
-  /** Lookups started; for the tests and the measurement. */
+  /** History lookups started; for the tests and the measurement. */
   launches: string[] = [];
+  /** Search engine requests sent; for the tests and the measurement. */
+  remoteRequests: string[] = [];
 
   constructor(options: OmniboxResultsOptions<L>) {
     this.o = {
       debounceMs: LOOKUP_DEBOUNCE_MS,
       maxWaitMs: LOOKUP_MAX_WAIT_MS,
-      remoteGraceMs: REMOTE_GRACE_MS,
+      remoteDebounceMs: REMOTE_DEBOUNCE_MS,
       freezeMaxMs: FREEZE_MAX_MS,
       ...options,
       timers: options.timers ?? realTimers,
@@ -148,6 +151,7 @@ export class OmniboxResults<L extends LocalItem = LocalItem> {
     if (this.disposed) return;
     if (!force && query === this.wantedQuery) return;
     this.wantedQuery = query;
+    this.scheduleRemote(query);
     const now = this.o.timers.now();
     const idle = now - this.lastChangeAt >= this.o.debounceMs;
     this.lastChangeAt = now;
@@ -184,8 +188,7 @@ export class OmniboxResults<L extends LocalItem = LocalItem> {
   dispose(): void {
     this.disposed = true;
     this.cancelPending();
-    this.current?.controller.abort();
-    if (this.current?.grace != null) this.o.timers.clear(this.current.grace);
+    this.cancelRemote();
     if (this.freezeTimer !== null) this.o.timers.clear(this.freezeTimer);
   }
 
@@ -196,6 +199,40 @@ export class OmniboxResults<L extends LocalItem = LocalItem> {
     this.pendingSince = null;
   }
 
+  /** Any change of text stops the engine request waiting or under way; its answer would be for older text. */
+  private cancelRemote(): void {
+    if (this.remoteTimer !== null) this.o.timers.clear(this.remoteTimer);
+    this.remoteTimer = null;
+    this.remoteController?.abort();
+    this.remoteController = null;
+    this.remoteSeq++;
+  }
+
+  private scheduleRemote(query: string): void {
+    this.cancelRemote();
+    if (!query) return;
+    this.remoteTimer = this.o.timers.set(() => this.sendRemote(query), this.o.remoteDebounceMs);
+  }
+
+  private sendRemote(query: string): void {
+    this.remoteTimer = null;
+    if (this.disposed) return;
+    const controller = new AbortController();
+    const seq = this.remoteSeq;
+    const request = this.lookupRemote(query, controller.signal);
+    if (!request) return;
+    this.remoteController = controller;
+    this.remoteRequests.push(query);
+    request
+      .catch(() => [] as string[])
+      .then((items) => {
+        if (this.disposed || controller.signal.aborted || seq !== this.remoteSeq) return;
+        this.remoteController = null;
+        const base = this.held ?? this.shown;
+        this.show({ ...base, remote: keepOrder(base.remote, withoutQuery(query, items), (s) => s) });
+      });
+  }
+
   private flush(): void {
     const query = this.pendingQuery;
     this.cancelPending();
@@ -203,85 +240,30 @@ export class OmniboxResults<L extends LocalItem = LocalItem> {
   }
 
   private launch(query: string): void {
-    const previous = this.current;
-    if (previous) {
-      previous.controller.abort();
-      if (previous.grace != null) this.o.timers.clear(previous.grace);
-    }
     this.launches.push(query);
-    const lookup: Lookup<L> = {
-      seq: ++this.seq,
-      query,
-      local: null,
-      remote: null,
-      remoteSkipped: true,
-      controller: new AbortController(),
-      grace: null,
-    };
-    this.current = lookup;
+    const lookup: Lookup<L> = { seq: ++this.seq, query, local: null };
     if (!query) {
-      this.commit(lookup, [], []);
+      this.commit(lookup, []);
       return;
-    }
-    const remote = this.lookupRemote(query, lookup.controller.signal);
-    if (remote) {
-      lookup.remoteSkipped = false;
-      remote
-        .catch(() => [] as string[])
-        .then((items) => this.remoteArrived(lookup, items));
     }
     this.o
       .lookupLocal(query)
       .catch(() => [] as L[])
-      .then((items) => this.localArrived(lookup, items));
+      .then((items) => {
+        if (!this.disposed && lookup.seq > this.shownSeq) this.commit(lookup, items);
+      });
   }
 
-  private localArrived(lookup: Lookup<L>, items: L[]): void {
-    if (this.disposed || lookup.seq <= this.shownSeq) return;
-    lookup.local = items;
-    if (lookup.remoteSkipped || lookup.remote !== null) {
-      this.commit(lookup, items, lookup.remote ?? []);
-      return;
-    }
-    // Wait a moment for the search engine so both lists change in one step.
-    lookup.grace = this.o.timers.set(() => {
-      lookup.grace = null;
-      if (lookup.seq > this.shownSeq && lookup.local) this.commit(lookup, lookup.local, null);
-    }, this.o.remoteGraceMs);
-  }
-
-  private remoteArrived(lookup: Lookup<L>, items: string[]): void {
-    if (this.disposed || lookup.controller.signal.aborted) return;
-    lookup.remote = items;
-    if (lookup.seq === this.shownSeq) {
-      // History already showed for this text: the engine's rows join it.
-      this.commit(lookup, this.latestLocal(lookup), items);
-    } else if (lookup.seq > this.shownSeq && lookup.local) {
-      if (lookup.grace != null) this.o.timers.clear(lookup.grace);
-      lookup.grace = null;
-      this.commit(lookup, lookup.local, items);
-    }
-  }
-
-  private latestLocal(lookup: Lookup<L>): L[] {
-    return lookup.local ?? (this.held ?? this.shown).local;
-  }
-
-  /** `remote` null: the engine hasn't answered yet; its earlier rows that still contain the text stay until it does. */
-  private commit(lookup: Lookup<L>, local: L[], remote: string[] | null): void {
+  /** New history rows; the engine's earlier rows that still contain the text stay until its next answer. */
+  private commit(lookup: Lookup<L>, local: L[]): void {
     const base = this.held ?? this.shown;
     const q = fold(lookup.query);
-    const remoteNext =
-      remote !== null
-        ? withoutQuery(lookup.query, remote)
-        : lookup.remoteSkipped
-          ? []
-          : withoutQuery(lookup.query, base.remote.filter((s) => fold(s).includes(q)));
+    const remote = q ? withoutQuery(lookup.query, base.remote.filter((s) => fold(s).includes(q))) : [];
     this.shownSeq = lookup.seq;
     this.show({
       query: lookup.query,
       local: keepOrder(base.local, local, (item) => item.url),
-      remote: keepOrder(base.remote, remoteNext, (s) => s),
+      remote: keepOrder(base.remote, remote, (s) => s),
     });
   }
 

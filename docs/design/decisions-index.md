@@ -799,7 +799,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-18` | The new tab page is Qutai's own screen (no web page loaded); it loads no site icons from third parties (a… | Default |  |
 | `UI-19` | Suggestions in the empty panel are chosen on the phone from a few markers in the page's code (structured… | Default |  |
 | `UI-21` | Today Settings › Assistant › "Asistan görünümü (deneme)" switches between three trial looks, default… | Owner | 2026-11-17 |
-| `UI-22` | The address bar's suggestion list never empties between letters; an older answer never replaces a newer… | Default | 2026-11-19 |
+| `UI-22` | The address bar's suggestion list never empties between letters; the search engine is asked only after a 200 ms typing… | Owner (engine pause) | 2026-11-19 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

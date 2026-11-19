@@ -19,6 +19,8 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Address bar: the typed text goes to the search engine only after a 200 ms pause in typing, one
+  request per word typed without a pause; history keeps its own 120 ms schedule (`UI-22`, owner's decision).
 - **2026-11-19:** Address bar suggestions no longer blank and refill on every letter: the last answer stays until the
   next lands, lookups wait 120 ms while typing, history and engine rows land together, fixed rows stay put (`UI-22`).
 - **2026-11-19:** Read-aloud keeps the phone's own speech engine: an on-device neural voice (Supertonic-3) was measured

@@ -41,7 +41,7 @@ function countLookups(gapMs: number) {
   const timers = fakeTimers();
   const results = new OmniboxResults({
     lookupLocal: async () => [],
-    lookupRemote: () => null,
+    lookupRemote: () => new Promise<string[]>(() => {}),
     onChange: () => {},
     timers,
   });
@@ -50,12 +50,13 @@ function countLookups(gapMs: number) {
     timers.advance(gapMs);
   }
   timers.advance(1000);
-  return results.launches.length;
+  return { local: results.launches.length, remote: results.remoteRequests.length };
 }
 
 console.log(`History of ${N} visits (about ${Math.round(N / 3)} addresses), typing "${word}":`);
 await timeLookups(false);
 await timeLookups(true);
 for (const gap of [60, 90, 150, 250]) {
-  console.log(`  ${gap} ms per letter: ${countLookups(gap)} lookups now, ${word.length} before (one per letter)`);
+  const n = countLookups(gap);
+  console.log(`  ${gap} ms per letter: ${n.local} history lookups (${word.length} before), ${n.remote} engine requests`);
 }
