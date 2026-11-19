@@ -740,7 +740,7 @@ export const fr: Record<keyof typeof en, string> = {
   'voiceIntro.transcriptHint': 'Corrigez ce que j’ai mal compris, puis continuez.',
   'voiceIntro.typeHint': 'Écrivez quelques phrases sur vous, puis continuez.',
   'voiceIntro.transcriptLabel': 'Votre présentation',
-  'voiceIntro.placeholder': 'Par exemple : je suis Sam, j’habite à Lyon, je suis végétarien et allergique aux cacahuètes, merci de ne pas sonner…',
+  'voiceIntro.placeholder': 'Par exemple : je suis Thomas, j’habite à Lyon, je suis végétarien et allergique aux cacahuètes, merci de ne pas sonner…',
   'voiceIntro.speakMore': 'Continuer à parler',
   'voiceIntro.startOver': 'Recommencer',
   'voiceIntro.understanding': 'Je comprends ce que vous avez dit…',
@@ -2116,7 +2116,7 @@ export const fr: Record<keyof typeof en, string> = {
   'permissions.microphoneLimited':
     'La reconnaissance vocale n’est pas autorisée : seules les langues que le téléphone reconnaît lui-même fonctionnent. Vous pouvez l’autoriser dans les réglages du téléphone.',
   'permissions.contacts': "Contacts",
-  'permissions.contactsBody': "Pour pouvoir dire « appelle Ahmet » ou « écris à Ayşe ». Qutai cherche seulement les noms que vous dites, sur ce téléphone ; les numéros et adresses ne vont jamais à l’IA.",
+  'permissions.contactsBody': "Pour pouvoir dire « appelle Thomas » ou « écris à Julie ». Qutai cherche seulement les noms que vous dites, sur ce téléphone ; les numéros et adresses ne vont jamais à l’IA.",
   'permissions.contactsLimited': "Seulement les contacts que vous avez choisis.",
   'permissions.calendar': 'Agenda',
   'permissions.calendarBody':

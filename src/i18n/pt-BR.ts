@@ -741,7 +741,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'voiceIntro.transcriptHint': 'Corrija o que eu entendi errado e continue.',
   'voiceIntro.typeHint': 'Escreva algumas frases sobre você e continue.',
   'voiceIntro.transcriptLabel': 'Sua apresentação',
-  'voiceIntro.placeholder': 'Por exemplo: sou o Sam, moro em Curitiba, sou vegetariano e tenho alergia a amendoim, por favor não toque a campainha…',
+  'voiceIntro.placeholder': 'Por exemplo: sou o Lucas, moro em Curitiba, sou vegetariano e tenho alergia a amendoim, por favor não toque a campainha…',
   'voiceIntro.speakMore': 'Falar mais',
   'voiceIntro.startOver': 'Começar de novo',
   'voiceIntro.understanding': 'Entendendo o que você disse…',
@@ -2117,7 +2117,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'permissions.microphoneLimited':
     'O reconhecimento de fala não é permitido: só funcionam os idiomas que o próprio celular reconhece. Você pode permitir nas configurações do celular.',
   'permissions.contacts': "Contatos",
-  'permissions.contactsBody': "Para você poder dizer “ligue para Ahmet” ou “mande mensagem para Ayşe”. O Qutai procura só os nomes que você diz, neste telefone; números e endereços nunca vão para a IA.",
+  'permissions.contactsBody': "Para você poder dizer “ligue para o João” ou “mande mensagem para a Ana”. O Qutai procura só os nomes que você diz, neste telefone; números e endereços nunca vão para a IA.",
   'permissions.contactsLimited': "Só os contatos que você escolheu.",
   'permissions.calendar': 'Agenda',
   'permissions.calendarBody':

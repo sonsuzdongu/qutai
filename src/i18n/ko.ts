@@ -2115,7 +2115,7 @@ export const ko: Record<keyof typeof en, string> = {
   'permissions.microphoneLimited':
     '음성 인식이 허용되지 않았습니다. 휴대전화 자체에서 인식하는 언어만 작동합니다. 휴대전화 설정에서 허용할 수 있습니다.',
   'permissions.contacts': "연락처",
-  'permissions.contactsBody': "“아흐메트에게 전화해” 또는 “아이셰에게 메시지 보내”라고 말할 수 있도록 합니다. Qutai는 말한 이름만 이 휴대전화에서 찾으며, 번호와 주소는 절대 AI로 전송되지 않습니다.",
+  'permissions.contactsBody': "“민준에게 전화해” 또는 “서연에게 메시지 보내”라고 말할 수 있도록 합니다. Qutai는 말한 이름만 이 휴대전화에서 찾으며, 번호와 주소는 절대 AI로 전송되지 않습니다.",
   'permissions.contactsLimited': "선택한 연락처만.",
   'permissions.calendar': '캘린더',
   'permissions.calendarBody':

@@ -2117,7 +2117,7 @@ export const ja: Record<keyof typeof en, string> = {
   'permissions.microphoneLimited':
     '音声認識が許可されていません。スマートフォン自体で認識できる言語のみ使用できます。スマートフォンの設定で許可できます。',
   'permissions.contacts': "連絡先",
-  'permissions.contactsBody': "「アフメトに電話」「アイシェにメッセージ」と言えるようにします。Qutai はあなたが言った名前だけをこの電話で探し、番号やアドレスが AI に送られることはありません。",
+  'permissions.contactsBody': "「健太に電話」「美咲にメッセージ」と言えるようにします。Qutai はあなたが言った名前だけをこの電話で探し、番号やアドレスが AI に送られることはありません。",
   'permissions.contactsLimited': "選んだ連絡先のみ。",
   'permissions.calendar': 'カレンダー',
   'permissions.calendarBody':

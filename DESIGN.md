@@ -19,6 +19,7 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Setup's example names follow the language: the contacts row no longer says "Ahmet" and "Ayşe" in every language, and the introduction example no longer uses "Sam" in German, Spanish, Portuguese and French (`INTRO-25`, owner's request); names outside setup are listed for the owner, unchanged.
 - **2026-11-19:** Setup now starts with a language step, preselected to the phone's language (nearest of the ten); the pick switches setup at once and is the same setting as Settings › Language (iOS: the app's per-app language that iOS Settings shows) (`LANG-21`, `INTRO-1`, owner's request).
 - **2026-11-19:** Setup's welcome and legal screens: smaller type, tighter on small phones and in landscape, text growth capped at 1.4× (then scrolling), and the acceptance checkbox pinned beside the Accept button (`INTRO-24`, owner's report).
 - **2026-11-19:** Every User-Agent ends with ` qutai.<build>` (`qutai.103` for 0.1.3): all web views, including incognito and desktop-site mode, and the app's own requests (`Qutai/<version> (<platform>) qutai.<build>`), so sites learn the app and its exact build (`DATA-23`, owner's request; privacy trade-off and policy wording left open for the owner).
@@ -223,7 +224,7 @@ One file per area. "Rules" counts the decisions with ids; "Waiting" the ones sti
 | 28 | [Accessibility](docs/design/28-accessibility.md) | 8 | 0 | How Qutai works with screen readers (TalkBack, VoiceOver), the system's Reduce motion setting, large text, and page zoom. |
 | 29 | [Landscape](docs/design/29-landscape.md) | 5 | 2 | How Qutai behaves when the phone or tablet is turned on its side. |
 | 30 | [Working mode](docs/design/30-working-mode.md) | 11 | 2 | What the user sees while the assistant carries out a task: where on the page it acts, what it is doing right now, and that the input is closed until it… |
-| 31 | [Onboarding and the voice introduction](docs/design/31-onboarding.md) | 20 | 3 | The first-launch setup, and "Tell me about yourself": the user talks freely and Qutai turns it into memory notes the user checks before anything is saved. |
+| 31 | [Onboarding and the voice introduction](docs/design/31-onboarding.md) | 21 | 3 | The first-launch setup, and "Tell me about yourself": the user talks freely and Qutai turns it into memory notes the user checks before anything is saved. |
 | 32 | [Performance](docs/design/32-performance.md) | 7 | 2 | What was measured and changed in the November 2026 performance pass (the cost of the assistant's requests, start-up time and memory), and the two choices… |
 | 33 | [Accounts and sign-in](docs/design/33-accounts.md) | 45 | 7 | The optional Qutai account in the official (pro) builds: signing in with Apple, Google or an email code, the rules that decide when two sign-ins are the… |
 | 34 | [Qutai Credits, tiers, the relay and the agent profile](docs/design/34-credits-and-relay.md) | 36 | 10 | Qutai Credits let a signed-in user of an official (pro) build use the assistant without their own AI key: requests go through Qutai's server (the "relay"),… |

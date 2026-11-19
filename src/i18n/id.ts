@@ -2116,7 +2116,7 @@ export const id: Record<keyof typeof en, string> = {
   'permissions.microphoneLimited':
     'Pengenalan ucapan tidak diizinkan: hanya bahasa yang dikenali ponsel sendiri yang berfungsi. Anda dapat mengizinkannya di setelan ponsel.',
   'permissions.contacts': "Kontak",
-  'permissions.contactsBody': "Agar Anda bisa berkata “telepon Ahmet” atau “kirim pesan ke Ayşe”. Qutai hanya mencari nama yang Anda sebut, di ponsel ini; nomor dan alamat tidak pernah dikirim ke AI.",
+  'permissions.contactsBody': "Agar Anda bisa berkata “telepon Budi” atau “kirim pesan ke Dewi”. Qutai hanya mencari nama yang Anda sebut, di ponsel ini; nomor dan alamat tidak pernah dikirim ke AI.",
   'permissions.contactsLimited': "Hanya kontak yang Anda pilih.",
   'permissions.calendar': 'Kalender',
   'permissions.calendarBody':

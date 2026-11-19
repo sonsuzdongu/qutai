@@ -2108,7 +2108,7 @@ export const en = {
   'permissions.microphoneLimited':
     'Speech recognition isn’t allowed: only languages the phone recognises itself work. You can allow it in the phone’s settings.',
   'permissions.contacts': "Contacts",
-  'permissions.contactsBody': "So you can say “call Ahmet” or “message Ayşe”. Qutai looks up only the names you say, on this phone; numbers and addresses never go to the AI.",
+  'permissions.contactsBody': "So you can say “call James” or “message Emma”. Qutai looks up only the names you say, on this phone; numbers and addresses never go to the AI.",
   'permissions.contactsLimited': "Only the contacts you chose.",
   'permissions.calendar': 'Calendar',
   'permissions.calendarBody':

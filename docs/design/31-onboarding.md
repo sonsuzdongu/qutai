@@ -58,6 +58,8 @@ The first-launch setup, and "Tell me about yourself": the user talks freely and 
   Status: Waiting for the owner ([TODO.md](../../TODO.md#5-legal)) · Why: true for own keys, not once requests can go through Qutai's server · Source: TODO.md › Qutai Credits › 5. Legal
 - **`INTRO-23`** An official-build step asking for anonymous usage data is planned, not built.
   Status: Default (manager or implementing session; open to change) · Why: analytics only with consent · Enforced: Designed, not built · Source: TODO.md › Analytics, with consent
+- **`INTRO-25`** Example people and sample sentences in setup use common names of the interface language, so they change with the language step: the contacts row says "call Ahmet / message Ayşe" in Turkish, "call James / message Emma" in English, Thomas/Anna in German, Carlos/Lucía in Spanish, João/Ana in Portuguese, Thomas/Julie in French, 健太/美咲 in Japanese, 민준/서연 in Korean, Сергей/Ольга in Russian, Budi/Dewi in Indonesian; the introduction's example speaker and the name placeholder are local names too (Deniz, Sam, Lukas, Pablo, Lucas, Thomas, さくら, 민준, Саша, Sari).
+  Status: Owner, 2026-11-19 · Why: every language showed the Turkish "Ahmet" and "Ayşe", and four used the English "Sam" · Enforced: In the app: src/i18n/*.ts (permissions.contactsBody, voiceIntro.placeholder, profile.namePlaceholder) · Source: docs/test-checklist.md › 19 Kasım'da bildirilenler
 - **`INTRO-24`** The welcome and legal screens use smaller type than the later steps (tagline and bullets 14–15 pt, feature text 13 pt), tighter still on screens under 760 dp tall and in landscape (the logo then sits beside the name). Their text grows with the system's text size up to 1.4× and the screen scrolls past that (the scroll bar flashes when there is more); the "I have read and accept" checkbox sits with the Accept button, pinned at the bottom, and the button grows instead of clipping a wrapped label.
   Status: Owner, 2026-11-19 · Why: on the owner's phone the text of both screens did not fit; the legal summary runs to 600–730 characters in the longer languages, and the checkbox that enables Accept had scrolled out of view · Enforced: In the app: src/components/Onboarding.tsx (FIT_FONT_SCALE, compact styles), src/ui/BrandGradient.tsx (GradientButton) · Source: docs/test-checklist.md › 19 Kasım'da bildirilenler
 
@@ -78,6 +80,7 @@ The first-launch setup, and "Tell me about yourself": the user talks freely and 
 
 ## Limits and what is not built
 
+- Example names outside setup are not localised yet (found 19 Nov 2026, left for the owner): the English and Turkish privacy policies' contacts paragraph ("call Ahmet"; changing it is a legal text edit), the assistant's prompt and the `find_contact` tool description ("call Ahmet", "Ayşe", "Mehmet Bey"; AI-facing, part of the agent profile), and the English and Spanish web suggestion "flights from Istanbul to Ankara" (`LANG-18`).
 - Not verified on a device: real speech in the introduction, Android, TalkBack and VoiceOver, the largest text, dark mode, landscape, the setup entry and credits mode ([docs/test-checklist.md](../../docs/test-checklist.md) § 14).
 - Android location: after Google's "Location Accuracy" dialog is dismissed the read can time out (open in TODO).
 - O1: on the iOS simulator in Turkish the onboarding email field did not take focus (most likely the simulator).
