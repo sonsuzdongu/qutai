@@ -323,6 +323,7 @@ Sahibi "yazdıklarımı incele, ben düzelt deyince düzelt" dedi; hiçbirine do
   - Sahibinin kararı (19 Kas): arama motoruna öneri isteği yalnızca yazmaya 200 ms ara verilince gidiyor; duraksamadan yazılan bir kelime tek istek, bitmiş metinle. Geçmiş önerileri kendi 120 ms düzeninde kalıyor; motor satırları geldiğinde listeye katılıyor, liste boşalmıyor.
   - [ ] Telefonda bakın: adres çubuğuna hızlıca "galatasaray" yazın, birkaç harf silin, alanı temizleyin, yapıştırın; normal ve gizli sekmede, bir de "hareketi azalt" açıkken. Liste hiç boşalmamalı, satırlar yanıp sönmemeli, "Qutai'ye sor" yerinden oynamamalı; web önerileri ancak yazmaya kısa bir ara verince yenilenmeli.
 - [ ] İlk açılışta "Get started" ekranındaki ve ardından gelen "Privacy and terms" ekranındaki metinler ekrana sığmıyor (19 Kas; 0.1.3, telefonda). İstek: bu iki ekrandaki metinler daha küçük olsun. Nedeni henüz incelenmedi; "düzelt" denince bakılacak.
+- [ ] Hesap ekranında giriş yöntemlerinin ("Signed in with email", "Google" gibi) yanında hangi e-posta adresiyle giriş yapıldığı yazsın (19 Kas; 0.1.3). Bilinen: sunucunun `GET /me` yanıtındaki `methods` listesi adresi yalnızca `email` yöntemi için veriyor; Google ve Apple için adres dönmüyor, yani sunucu tarafında da değişiklik gerekir (Apple'da gizli aktarma adresi olabilir; ne gösterileceği kararlaştırılmalı). "düzelt" denince bakılacak.
 
 ## 14. "Kendinizi tanıtın" (sesle tanıtım, 17 Kasım)
 
