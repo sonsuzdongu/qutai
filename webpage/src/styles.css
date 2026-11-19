@@ -736,8 +736,15 @@ h3 {
   padding: 28px 26px 30px 0;
   border-bottom: 1px solid var(--line);
   display: grid;
-  gap: 10px;
+  /* icon beside the heading, the text under both */
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px 12px;
+  align-items: center;
   align-content: start;
+}
+
+.privacy-grid li > p {
+  grid-column: 1 / -1;
 }
 
 .privacy-grid h3 {
@@ -2013,15 +2020,23 @@ h3 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: clamp(24px, 3vw, 40px) clamp(20px, 3vw, 36px);
 }
+.principles li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: center;
+  align-content: start;
+}
 .principles .icon {
   color: var(--accent);
 }
 .principles h3 {
   font-size: 1.18rem;
-  margin: 12px 0 8px;
+  margin: 0;
   line-height: 1.25;
 }
 .principles p {
+  grid-column: 1 / -1;
   color: var(--muted);
   font-size: 0.97rem;
 }
