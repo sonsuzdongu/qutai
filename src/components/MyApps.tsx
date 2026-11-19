@@ -70,7 +70,7 @@ function useApps(active = true): AppSummary[] | null {
   return apps;
 }
 
-function AppGrid({ apps, onMenu }: { apps: AppSummary[]; onMenu: (app: AppSummary) => void }) {
+function AppGrid({ apps, onMenu, onOpen = (id) => appRunner.open(id) }: { apps: AppSummary[]; onMenu: (app: AppSummary) => void; onOpen?: (id: string) => void }) {
   const styles = useStyles();
   return (
     <View style={styles.grid}>
@@ -83,7 +83,7 @@ function AppGrid({ apps, onMenu }: { apps: AppSummary[]; onMenu: (app: AppSummar
           accessibilityActions={[{ name: 'longpress', label: t('apps.options') }]}
           onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && onMenu(app)}
           style={({ pressed }) => [styles.tile, pressed && styles.pressed]}
-          onPress={() => appRunner.open(app.id)}
+          onPress={() => onOpen(app.id)}
           onLongPress={() => {
             bump();
             onMenu(app);
@@ -99,7 +99,7 @@ function AppGrid({ apps, onMenu }: { apps: AppSummary[]; onMenu: (app: AppSummar
   );
 }
 
-function useAppMenu(onNotice?: (text: string) => void) {
+function useAppMenu(onNotice?: (text: string) => void, onOpen: (id: string) => void = (id) => appRunner.open(id)) {
   const [menuFor, setMenuFor] = useState<AppSummary | null>(null);
   const sheet = (dark: boolean) => (
     <ActionSheet
@@ -109,7 +109,7 @@ function useAppMenu(onNotice?: (text: string) => void) {
       actions={
         menuFor
           ? [
-              { icon: 'apps', label: t('apps.open'), onPress: () => appRunner.open(menuFor.id) },
+              { icon: 'apps', label: t('apps.open'), onPress: () => onOpen(menuFor.id) },
               { icon: 'edit', label: t('apps.rename'), onPress: () => void renameApp(menuFor).catch(() => {}) },
               { icon: 'share', label: t('apps.export'), onPress: () => void exportApp(menuFor).catch(() => {}) },
               {
@@ -179,17 +179,19 @@ export function MyAppsScreen({
 }) {
   const styles = useStyles();
   const apps = useApps(visible);
-  const menu = useAppMenu(onNotice);
+  // iOS shows one sheet at a time: this screen closes before the runner opens over the browser.
+  const openApp = (id: string) => {
+    onClose();
+    setTimeout(() => appRunner.open(id), 450);
+  };
+  const menu = useAppMenu(onNotice, openApp);
   return (
     <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.screen} edges={MODAL_SCREEN_EDGES}>
         <ScreenHeader title={t('apps.myApps')} right={{ label: t('common.done'), onPress: onClose }} />
         <ScrollView contentContainerStyle={styles.screenContent}>
           {apps && apps.length > 0 && (
-            <AppGrid
-              apps={apps}
-              onMenu={menu.open}
-            />
+            <AppGrid apps={apps} onMenu={menu.open} onOpen={openApp} />
           )}
           {apps && (
             <View style={styles.empty}>
