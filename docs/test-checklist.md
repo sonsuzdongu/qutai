@@ -512,3 +512,34 @@ Her telefonda denenecekler:
 - Denenmedi: başka telefonda geri yükleme ve sınırı aşan sunucu yedeği (yalnızca birim testleri), Qutai'nin kendi
   İndirilenler'inden içe aktarma, "Yerine koy", Android'de dışa aktarma ve yedek, büyük yazı, ekran okuyucu, koyu tema,
   yatay ekran, gerçek telefon.
+
+## 20. Güvenlik geçişi: şifreler ve kodlar, silme ve hesap onayı, ödeme düğmesi, gizli sekme, ayar aracı, uygulamalar (19 Kasım)
+
+Hazırlık: `node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs scripts/page-tests/serve.mjs`
+(sayfa: `http://localhost:8811/guards`) ve sahte yapay zekâ `node scripts/fake-ai/server.mjs 8794` (Özel uç nokta
+`http://localhost:8794/v1`, model `fake`; Android'de `adb reverse tcp:8794 tcp:8794` ve `tcp:8811`).
+
+- [x] `/guards` sayfası: 34/34 (masaüstü Chromium ve iOS simülatöründe WebKit). Şifre, maskeli alan, doğrulama kodu,
+      `one-time-code`, kart numarası, CVC, gölge DOM'daki özel öğe ve bölünmüş kod kutuları gizli sayılıyor; adet,
+      posta kodu, promosyon kodu, telefon, yorum, e-posta sayılmıyor; read_page, form değerleri, betik kopyası değer
+      göstermiyor; ödeme, silme ve hesap basışları doğru sınıflanıyor.
+- [x] "typepass" (iOS simülatörü): şifre alanına yazma reddedildi, "Qutai şifre veya kod yazmaz" satırı, model
+      kullanıcıdan alanı kendisinin doldurmasını istemesi gerektiğini öğreniyor.
+- [x] "delete thing" (iOS simülatörü): "Delete" onaysız reddedildi ("Bu değişiklik önce onayınızı gerektirir"), Qutai'nin
+      penceresi "localhost:8811 sitesinde bu silinsin mi?" başlığı, sayfa başlığı "Photos" ve öğe "beach.jpg" ile
+      açıldı; Onayla'dan sonra tek basış yapıldı; İptal'de basılmadı ve model "hiçbir şey değişmedi" dedi.
+- [x] "weaken" (iOS simülatörü): reklam engelleme ve çerez bandı gizleme kapatılamadı, gri "Bu ayarı yalnızca siz
+      Ayarlar'da değiştirebilirsiniz" satırı.
+- [ ] Gizli sekmede "Her işlemden önce sor" açıkken bir tıklama onayı: "Bu sitede her zaman izin ver" kutusu yok
+      (birim testinde var; simülatörde anahtar dokunuşu araçla değişmedi, elle denenmeli).
+- [ ] Bir uygulamada hata, "Qutai bunu düzeltsin": mesaj kutusu dolu geliyor, gönderilmiyor; console satırlarında
+      değer yok (`<string 14>` gibi), hata satırı, dosya ve satır var (birim testinde var; cihazda denenmedi).
+- [ ] Silme onayı Android'de, ödeme düğmesi bağlamla (ikon düğme, "Devam et" + toplam) bir cihazda.
+- [x] Uygulamalarda çerçeve yolları: kırılma uygulamasının 25 yeni çerçeve denemesi masaüstü Chromium'da engellendi
+      (`/app-breakout`; Chromium, Android gibi çerçevelere koruma betiği koymuyor). Android öykünücüsünde denenmedi
+      (yerel yama değişmedi).
+- [ ] iPhone'da sil ve yeniden kur: geri yüklenen betikler ve uygulamalar kapalı geliyor (mühür anahtarı silindi).
+- [ ] Sunucu yedeği geri yükleme teklifi: her yeni oturum açışta bir kez; "Şimdi değil" sonrası bir sonraki oturum açışta
+      yine; aynı oturumda tekrar yok; bu telefonun kendi son yedeği teklif edilmiyor (pro yapı, cihazda denenmedi).
+- [ ] Kurulumda "Qutai neleri kullanabilir" adımında Kişiler satırı; atlanırsa ilk aramada eskisi gibi soruluyor;
+      iOS'ta sınırlı erişimde "Kişileri seç" (cihazda denenmedi).

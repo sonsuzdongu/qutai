@@ -12,6 +12,10 @@
 //   "post"     read_page → type a comment into the first text box → request_approval (publish) → click its button
 //   "pay"      read_page → request_approval (pay) with the page's total → click "Pay…" if approved → summary
 //   "sneakpay" read_page → click the "Pay…" button without an approval (the app must refuse it)
+//   "typepass" read_page → type into the first password field (refused: SEC-2)
+//   "deletething" read_page → click "Delete" (refused) → request_approval kind "change" → click it (PAY-26)
+//   "weaken"   settings: block_ads and hide_cookie_banners off (refused: UNTR-8)
+//   Test page for these three: scripts/page-tests/serve.mjs › /guards.
 //   Test pages for these: node scripts/page-tests/serve.mjs (its "Video comments" and "Checkout" sections).
 //   "call <name>" / "whatsapp <name>" / "email <name>" (on a line of its own): find_contact with the name →
 //              offer_call / draft_whatsapp ("I'll be late (Qutai test)") / draft_email with the handle it got (the one
@@ -140,6 +144,31 @@ function nextStep(messages) {
     }
     if (n === 3) return /^The user approved/.test(lastResult) ? call('click', { ref: button }) : { content: `Not sent: ${lastResult.slice(0, 160)}` };
     return { content: `Posted the comment. The click said: ${lastResult.slice(0, 120)}` };
+  }
+  // The 19 Nov 2026 guards (scripts/page-tests/serve.mjs › /guards): typing a password, deleting without an approval,
+  // turning a protection off.
+  if (/\btype ?pass\b/.test(user)) {
+    if (n === 0) return call('read_page', {});
+    if (n === 1) {
+      const line = lastResult.split('\n').find((l) => /password field/.test(l));
+      return line ? call('type', { ref: Number(/\[ref=(\d+)\]/.exec(line)[1]), text: 'hunter2' }) : { content: 'No password field here.' };
+    }
+    return { content: `The app answered: ${lastResult.slice(0, 300)}` };
+  }
+  if (/\bdelete ?thing\b/.test(user)) {
+    const page = n ? text(results[0]) : '';
+    const line = page.split('\n').find((l) => /\[ref=\d+\] button "Delete"/.test(l));
+    const button = line ? Number(/\[ref=(\d+)\]/.exec(line)[1]) : null;
+    if (n === 0) return call('read_page', {});
+    if (!button) return { content: 'No Delete button here.' };
+    if (n === 1) return call('click', { ref: button });
+    if (n === 2) return /request_approval/.test(lastResult) ? call('request_approval', { kind: 'change', action: 'delete', button_ref: button }) : { content: `Pressed without asking: ${lastResult.slice(0, 200)}` };
+    if (n === 3) return /^The user approved/.test(lastResult) ? call('click', { ref: button }) : { content: `Not deleted: ${lastResult.slice(0, 200)}` };
+    return { content: `Deleted. The click said: ${lastResult.slice(0, 120)}` };
+  }
+  if (/\bweaken\b/.test(user)) {
+    if (n === 0) return call('settings', { action: 'set', changes: [{ key: 'block_ads', value: 'false' }, { key: 'hide_cookie_banners', value: 'false' }] });
+    return { content: `The settings tool answered: ${lastResult.slice(0, 400)}` };
   }
   if (/\b(sneakpay|pay)\b/.test(user)) {
     const page = n ? text(results[0]) : '';

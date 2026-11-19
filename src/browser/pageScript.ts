@@ -1016,10 +1016,6 @@ export const PAGE_SCRIPT = String.raw`
     }
     return el.closest ? el.closest('button, input[type=submit], input[type=button], input[type=checkbox], a, [role=button], [role=switch], [role=menuitem], [role=checkbox]') || el : el;
   }
-  function textNear(el, sel, max) {
-    var n = el.closest ? el.closest(sel) : null;
-    return n ? cut(clean(n.innerText || ''), max) : '';
-  }
   function redish(color) {
     var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?/.exec(color || '');
     if (!m || (m[4] !== undefined && Number(m[4]) < 0.3)) return false;
@@ -1102,17 +1098,31 @@ export const PAGE_SCRIPT = String.raw`
   }
   // What the change approval shows, read from the page: the button, the heading, the page's confirm dialog, the item the
   // press is in (a list row or card) and the form's values (secrets as "(filled)").
+  // The heading of the part of the page the button is in (its dialog, section, form or article), else the page's.
+  function headingNear(button, dialog) {
+    var scope = dialog || (button.closest ? button.closest('section, form, article, main, [role=region]') : null);
+    var h = (scope && scope.querySelector('h1, h2, h3, h4, legend, [role=heading]')) || document.querySelector('h1, h2, [role=heading]');
+    return h ? cut(clean(h.innerText || ''), 120) : cut(clean(document.title || ''), 120);
+  }
+  // The row or card the button is in, without the button's own text.
+  function itemNear(button) {
+    var n = button.closest ? button.closest('li, tr, article, [role=row], [role=listitem], [class*=card i], [class*=item i]') : null;
+    if (!n || n === document.body) return '';
+    var text = clean(n.innerText || '');
+    var own = clean(button.innerText || '');
+    if (own) text = clean(text.replace(own, ' '));
+    return cut(text, 160);
+  }
   function changeInfo(ref) {
     var button = pressElement(ref);
     var dialog = button.closest ? button.closest('[role=dialog], [role=alertdialog], dialog[open], [aria-modal=true]') : null;
-    var h = (dialog || document).querySelector('h1, h2, [role=heading]');
     return {
       label: labelOf(button),
       url: location.href.split('#')[0],
       disabled: isDisabled(button),
-      heading: h ? cut(clean(h.innerText || ''), 120) : cut(clean(document.title || ''), 120),
+      heading: headingNear(button, dialog),
       dialog: dialog ? cut(clean(dialog.innerText || ''), 400) : '',
-      item: dialog ? '' : textNear(button, 'li, tr, article, [role=row], [role=listitem], [class*=card i], [class*=item i]', 160),
+      item: dialog ? '' : itemNear(button),
       fields: (button.form || formOf(button)) ? formValues(ref) : null
     };
   }

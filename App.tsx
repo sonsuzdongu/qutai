@@ -411,7 +411,7 @@ async function askOutward(approval: OutwardApproval, signal: AbortSignal): Promi
   } else if (approval.kind === 'change') {
     title = t(`approval.changeTitle.${approval.action}`, { site: approval.site });
     approve = t('approval.approve');
-    if (approval.heading) lines.push({ icon: 'review', text: t('approval.changeHeading', { heading: approval.heading }) });
+    if (approval.heading) lines.push({ icon: 'document', text: t('approval.changeHeading', { heading: approval.heading }) });
     if (approval.dialog) lines.push({ icon: 'info', text: t('approval.changeDialog', { text: approval.dialog }) });
     if (approval.item) lines.push({ icon: 'trash', text: t('approval.changeItem', { item: approval.item }) });
     if (approval.fields?.length)

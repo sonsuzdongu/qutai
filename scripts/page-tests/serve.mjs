@@ -90,7 +90,7 @@ createServer((req, res) => {
     });
     return;
   }
-  if (url.pathname === '/guards' || url.pathname.startsWith('/guards/')) {
+  if (/^\/guards?(\/|$)/.test(url.pathname)) {
     const html = readFileSync(join(here, 'guards.html'), 'utf8').replace(
       '__AGENT_SRC__',
       `/agent.js?script=${url.searchParams.get('script') === 'head' ? 'head' : 'work'}`,
