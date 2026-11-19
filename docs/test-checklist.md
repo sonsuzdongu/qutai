@@ -405,3 +405,27 @@ Denenmedi: Android (yerel derleme yapılmadı; `RNCWebViewCookies.java` hiç der
 - [ ] Kurallar dosyasını dışa aktarın (stiller `! [style]` blokları), stili silin, içe aktarın: stiller listelenir, "Kapalı olarak içe aktar" / "Açık olarak içe aktar".
 - [ ] Yedekle, stili silin, geri yükleyin: stil geri gelir.
 - [ ] Android ve iOS, büyük yazı, koyu/açık tema, yatay ekran, TalkBack/VoiceOver: kart düğmeleri, çerez eylemleri ve stil düzenleyicisi okunur; sözcükler bölünmez.
+
+## 17. Sayfada betik çalıştırma ve kalıcı betikler (19 Kasım)
+
+Yeni yerel derleme gerekmez (yalnızca JavaScript değişti); Release denemesi için uygulama yeniden derlenir. Tasarım:
+`docs/page-customisation.md` › Scripts. Test sayfaları: `node scripts/page-tests/scripts.mjs` (iOS simülatöründe
+`http://localhost:8813`). Sahte yapay zekâ: `node scripts/fake-ai/server.mjs`, Özel sunucu `http://localhost:8793/v1`,
+model `fake`; sözcükler: countlinks, marklinks, editlinks, evilscript, injected, traptable, loginscript, checkoutscript.
+
+- [ ] Ayar kapalıyken (varsayılan) `/links` sayfasında "countlinks": hiçbir şey sorulmadan reddedilir; cevap, betiklerin Ayarlar › Asistan'dan açılabileceğini söyler.
+- [ ] Ayarlar › Asistan › "Asistan sayfalarda betik çalıştırabilsin": açarken açıklamalı onay penceresi; Vazgeç → kapalı kalır.
+- [ ] Açıkken "countlinks": onay penceresinde açıklama, site, "mühürlü kopya" satırı, kırmızı satır yok, kod Ayrıntılar altında; Çalıştır → cevapta 22 (kopyada); sayfa değişmez; sohbette "Sakla" kartı yok.
+- [ ] "marklinks": pencerede kırmızı "canlı sayfa" ve "Sayfayı değiştirir" satırları; Çalıştır → bağlantıların çevresi kırmızı; kartta "Bu site için sakla…". Sakla (nerede: bu site; ne zaman: sayfa hazır olduğunda).
+- [ ] Sayfayı yenileyin: betik kendiliğinden çalışır (bağlantılar kırmızı çerçeveli, sayaç 22); pushState düğmesinde ikinci kez çalışmaz.
+- [ ] Kendi kurallarım › Betikler: ad, nerede, ne zaman, "Sayfayı değiştirir" (kırmızı), son çalışma. "Kodu gör ve düzenle": `red` → `blue`, Kaydet → onay penceresi (kod Ayrıntılar'da); Reddet → "Kaydedilmedi"; Onayla → yenileyince mavi.
+- [ ] Düzenleyicide `document.cookie` yazıp Kaydet: kaydedilmez, cümle + Ayrıntılar'da sebep.
+- [ ] Sayfa menüsü › "Bu sayfada betikleri kapat": sayfa yenilenir, çerçeve yok; "Bu sayfada betikleri aç" → yeniden.
+- [ ] `/login` sayfasında "loginscript": hiçbir şey sorulmadan reddedilir (şifre alanı). `/checkout`: "checkoutscript" reddedilir (ödeme sayfası). Ayarlar › Asistan › "Kendi ayarı olan siteler"e `localhost:8813` "Hassas sayfalarda da izinli" eklenince "loginscript" sorulur.
+- [ ] "evilscript" ve `/inject` sayfasında "injected": hiçbir şey sorulmadan reddedilir.
+- [ ] `/trap` sayfasında "traptable": tablo, "sayfa verisi" işaretleri arasında gelir; asistan içindeki talimata uymaz.
+- [ ] Gizli sekmede "marklinks": onayda gizli sekme notu; kartta "Sakla" yok; kalıcı betikler gizli sekmede çalışmaz.
+- [ ] Siteyi "Yalnızca okuma" veya "Engellendi" yapın: "countlinks" reddedilir ve kalıcı betik çalışmaz.
+- [ ] Kurallar dosyasını dışa aktarın, betiği silin, içe aktarın: betik listelenir (ne yaptığıyla), kapalı gelir; anahtarı açınca onay penceresi.
+- [ ] Ayarı kapatın: kalıcı betik bir sonraki yüklemede çalışmaz; Kendi kurallarım'da "Betikler kapalı" notu.
+- [ ] VoiceOver/TalkBack, büyük yazı, koyu tema, yatay ekran: onay penceresi (kırmızı satırlar yazıyla da anlaşılır), kart, Betikler bölümü, düzenleyici.

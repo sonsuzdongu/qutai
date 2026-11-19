@@ -19,7 +19,18 @@ Page customisation, step one (19 Nov 2026, docs/page-customisation.md)
 
 - [ ] Kept styles on sites set to "Blocked": today they apply wherever their scope says (they are the user's own; the site levels govern the assistant). Should "Blocked" also switch off kept "everywhere" styles there?
 - [ ] Bump the legal version for the privacy policies' new words on cookies (the assistant gets names, sites and settings, never values): not done, on purpose
-- [ ] Step two (user scripts): the design note's "Step two" section lists what that session needs; the owner decides whether imported scripts may ever arrive switched on (proposed: never)
+- [x] Step two (user scripts, 19 Nov 2026): `run_script` with the app's refusals and an approval showing the code; read-only scripts on a sealed copy; kept scripts sealed per device, My rules › Scripts, rules file format 3 (imports arrive off), both backups; Settings switch off by default (README › Page styles, cookies and scripts; docs/page-customisation.md › Scripts). The script half of the 18 Nov request is done
+
+Page customisation, step two (scripts, 19 Nov 2026) — owner decisions
+
+- [ ] Imported scripts never arrive switched on, and restored ones only on the same phone (the seal): confirm (built this way)
+- [ ] One-off live-page scripts may not press, submit, navigate or use site storage at all (the click/type/navigate tools and request_approval do those); kept scripts may not either, so no "auto-click Load more" or redirect userscripts. Loosen any of these for kept scripts?
+- [ ] No "document start" run time for kept scripts (nothing to check for sensitive fields yet; a script that must beat the page's own code is a different risk). Wanted?
+- [ ] iOS isolated content world (WKContentWorld) for scripts: not used (needs a native patch, Android has none, and it doesn't address the main risk). Revisit?
+- [ ] Sensitive-page lists (payment and identity hosts, a short bank list, path words) are a start: extend for the markets you target (banks in Türkiye are listed)
+- [ ] Bump the legal version for the privacy policies' new words ("the result of a script you approved on a page"; en and tr, open-source and pro documents): not done, on purpose
+- [ ] Store: App Review notes for scripts (no downloaded code, page content only, each run approved, off by default; docs/page-customisation.md › Store policies); Play's AI-Generated Content policy asks for an in-app way to report AI output: needed for Qutai?
+- [ ] Style cards from restored chats still offer Keep (the CSS is sanitised again, so low risk); script cards don't (only cards made in this run of the app). Same rule for styles?
 
 Contacts (19 Nov 2026, docs/contacts.md)
 

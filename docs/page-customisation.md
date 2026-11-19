@@ -456,3 +456,34 @@ tabs (nothing is written; the copy lives in memory), but Keep isn't offered ther
   data; the guarded `fetch` is captured before the code runs but a page that ran first can have replaced
   `window.fetch` (the guard then calls the page's version: no more than the page could do itself).
 - **Incognito.** One-off scripts allowed (nothing written; the copy is in memory); no Keep; kept scripts don't run.
+
+### Store policies (checked 19 Nov 2026)
+
+- **Apple, App Store Review Guidelines** (<https://developer.apple.com/app-store/review/guidelines/>):
+  - 2.5.2 forbids apps that "download, install, or execute code which introduces or changes features or functionality of the app".
+  - 2.5.6 requires browsers to use WebKit, which WKWebView does.
+  - 4.7 allows "software that is not embedded in the binary" (HTML5/JavaScript mini apps, chatbots, plug-ins). It asks for:
+    - no native APIs exposed to that software without permission (4.7.2);
+    - consent for any data sharing (4.7.3);
+    - an index of the software offered (4.7.4);
+    - age gating (4.7.5).
+
+  Assessment: scripts here are written by the user or the assistant on the user's request, approved one by one, and run only inside page content. They add no app features, and Qutai serves no catalog. So 2.5.2 and 4.7 most likely don't apply, but this is not certain: a reviewer could read AI-written scripts as "chatbots/plug-ins".
+
+  Review notes should say:
+  - no code is downloaded from the developer;
+  - scripts run only in WKWebView page content, and the message bridge gives them nothing native;
+  - every run is shown and approved by the user;
+  - imported scripts arrive switched off;
+  - the feature is off by default;
+  - there is no store of scripts.
+
+  Context only (a different mechanism, Safari web extensions under 4.4): the "Userscripts" app is on the App Store (<https://apps.apple.com/app/id1463298887>).
+- **Google Play, Device and Network Abuse** (<https://support.google.com/googleplay/android-developer/answer/9888379>):
+  - Apps may not download executable code such as dex, JAR or .so files. This "does not apply to code that runs in a virtual machine or an interpreter … (such as JavaScript in a webview or browser)", which fits this feature.
+  - The policy's example of a violation is "a webview with added JavaScript Interface that loads untrusted web content". Qutai's pages reach the app only through react-native-webview's `postMessage` bridge. Every message is checked against the tab's nonce and the known command shapes, and nothing native is callable from a page.
+- **Google Play, AI-Generated Content** (<https://support.google.com/googleplay/android-developer/answer/14094294>, <https://support.google.com/googleplay/android-developer/answer/13985936>):
+  - It lists "malicious code creation" as violating output. The static check and the refusals are the answer to that.
+  - It asks for an in-app way to report or flag offensive AI output. Whether Qutai's assistant needs one, and whether it counts as an AI "productivity" feature that is exempt, is an owner decision (TODO.md).
+
+Not verified: the dates of the current versions, the full text of Play's Malware and Mobile Unwanted Software pages, and the last part of Apple's page. Nothing in the code needs to change before a store release. The review notes above and the AI-report question are open.

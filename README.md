@@ -1087,9 +1087,10 @@ those when the page handled the touch), and a disabled button is reported instea
 --experimental-transform-types scripts/page-tests/serve.mjs`, then open `http://localhost:8811/`; `?script=head` runs the last commit's page script);
 the fake AI server's `post`, `pay` and `sneakpay` scripts drive the dialog on a device against them.
 
-### Page styles and cookies
+### Page styles, cookies and scripts
 
-Step one of page customisation (design and threat model: [docs/page-customisation.md](docs/page-customisation.md)).
+Page customisation (design and threat model: [docs/page-customisation.md](docs/page-customisation.md)): styles and
+the cookie list (step one), scripts (step two).
 
 - **Styles.** "Make the links red", "bigger text on this site", "dark background here": the assistant calls
   `restyle_page` with CSS and a short description. Qutai parses and sanitises the CSS first (`src/content/userCss.ts`:
@@ -1112,6 +1113,30 @@ Step one of page customisation (design and threat model: [docs/page-customisatio
   domain, hides each value until "Show value", copies it, and deletes one or all for the site behind a confirmation
   that says the user may be signed out. The assistant deletes only by handle, after the user approves. Listing is
   refused on "Blocked" sites, deleting also on "Read only" ones. Limits per platform are in the design note.
+- **Scripts.** Behind Settings › Assistant › "Let the assistant run scripts on pages" (off by default; turning it on
+  asks once more; not changed by the assistant, not restored from a backup; off, kept scripts don't run either). When
+  reading the page isn't enough ("how many links are on this page", "collect this table") the assistant calls
+  `run_script` with the body of an async function and a one-sentence description. Before anything is asked the app
+  refuses: the setting off; a site set to "Read only", "Blocked" or "Scripts off"; a waiting publish or pay approval
+  in the tab; sensitive pages (password, one-time code or card fields; sign-in, payment, bank addresses) unless the
+  site is allowed in Settings › Assistant › Sites with their own setting; code the static check refuses
+  (`src/content/scriptCheck.ts`: a JavaScript tokenizer; no `eval`/`import`/script elements, no network but this
+  site's GET `fetch`, no cookies, storage, passwords, clicking, submitting, navigating, frames, clipboard or disguised
+  names; code that could close its wrapper function); code that doesn't parse. Then Qutai's dialog, every time: the
+  description, the site, where it runs, the flags in red ("Changes the page", "Loads pages from this site as you"…),
+  what an approved live-page script can do, the code under Details. `where: copy` (default) runs it on a sealed copy
+  of the page in a hidden WebView with a CSP that allows no request, no cookies or storage and no navigation;
+  `where: page` runs it on the live page in the page's own JavaScript world (iOS content worlds aren't used; Android
+  has none), main frame only. Exactly the approved code runs once, in that tab, while it shows that page, with a 10 s
+  limit; the result (JSON, 16 KB at most) goes back between page-data markers as untrusted data. After a live-page run
+  the chat's card offers **Keep for this site…** (page, path, site, site and subdomains; never everywhere; when the page
+  is ready or after it loaded; never from incognito; only cards made in this run of the app). Kept scripts are sealed
+  with an HMAC under a key in secure storage: edited, imported or restored-elsewhere code is off until approved again.
+  They run once per page load (and once after an SPA move), injected one by one, never in incognito tabs, on read-only,
+  blocked or sensitive pages, or with the page menu's **Scripts off for this page**. My rules › Scripts: switch, view
+  and edit code, where, when, last run (status and error kind only), delete; rules file format 3 (scripts import
+  switched off); `sites.scripts` in both backups. Test pages: `node scripts/page-tests/scripts.mjs`; fake-AI words
+  `countlinks`, `marklinks`, `editlinks`, `evilscript`, `injected`, `traptable`, `loginscript`, `checkoutscript`.
 
 ## Permissions
 

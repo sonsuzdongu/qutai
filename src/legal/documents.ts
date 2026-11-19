@@ -57,7 +57,7 @@ const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
             'directly to Anthropic, OpenAI or Google; to OpenRouter, which passes it on to the provider of the model ' +
             'you picked; or to an OpenAI-compatible server whose address you entered. A request contains your ' +
             'message, the conversation so far, the content the assistant needs (the page text, screenshots when it ' +
-            'looks at a page, files and images you attach, and when you ask about cookies their names, sites and ' +
+            'looks at a page, files and images you attach, the result of a script you approved on a page, and when you ask about cookies their names, sites and ' +
             'settings, never their values), your custom instructions and, while memory is on, your ' +
             'memories (hidden memories, such as ID numbers, only as a label). Your calendar events and your location ' +
             'are sent only when you confirm, each time. If web search is on, the service may run searches for you. ' +
@@ -177,7 +177,7 @@ const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
             'doğrudan Anthropic, OpenAI veya Google’a; isteği seçtiğiniz modelin sağlayıcısına ileten OpenRouter’a ' +
             'ya da adresini girdiğiniz OpenAI uyumlu bir sunucuya. İstekte mesajınız, sohbetin önceki kısmı, ' +
             'asistanın ihtiyaç duyduğu içerik (sayfa metni, sayfaya baktığında ekran görüntüleri, eklediğiniz dosya ' +
-            've görseller; çerezleri sorduğunuzda adları, siteleri ve ayarları, ama hiçbir zaman değerleri), özel ' +
+            've görseller, bir sayfada onayladığınız bir betiğin sonucu; çerezleri sorduğunuzda adları, siteleri ve ayarları, ama hiçbir zaman değerleri), özel ' +
             'talimatlarınız ve hafıza açıkken hafızanız (kimlik numarası gibi gizli bilgiler ' +
             'yalnızca etiketleriyle) bulunur. Takvim etkinlikleriniz ve konumunuz yalnızca her seferinde ' +
             'onayladığınızda gönderilir. Web araması açıksa hizmet sizin için arama yapabilir. Bu veriler için o ' +
