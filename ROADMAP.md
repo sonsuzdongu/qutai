@@ -213,7 +213,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
      courier and time window, sizes), travel, food, budget, general; grouped in the prompt and on the Memory screen,
      "Organise for me" proposes categories with one AI request; shopping preferences are applied at checkout
    - ✅ **"Let me get to know you"** in setup (optional, no AI request): name, city, shopping and delivery
-     preferences, food, answer style, then optionally address and contact details; again from the Memory screen
+     preferences, food (the answer-style question was removed on 20 Nov 2026), then optionally address and contact details; again from the Memory screen
    - ✅ **Personal information per site**: the app asks before the assistant first enters saved personal details on
      a site (ask / allow / block per site), checked in the tool path, not only in the prompt
    - ✅ **Custom instructions** (Settings › Assistant): the user's standing preferences in every request, below the
@@ -235,7 +235,7 @@ Goal: a Comet-like experience; easy access to AI and reliable answers.
 
 1. ✅ Name: Kutai → Qutai. Shared theme layer (dark theme on every screen, measured contrast), consistent icons (SF/Material Symbols), fixed address suggestions overlapping the bar
 2. ✅ Logo: first drawn in code (Skia) with an orbit, now `assets/logo.png` (the ribbon Q) with sparks now and then and while working. Aurora background (new tab, first launch)
-3. ✅ First-launch setup: introduction, Privacy Policy and Terms of Use (acceptance required, versioned), AI key, protection settings, default browser. Settings › About: Open source licences (every third-party component with its licence text, from `scripts/generate-licences.js`)
+3. ✅ First-launch setup: introduction, Privacy Policy and Terms of Use (acceptance required, versioned), AI key, protection settings, default browser (that step was removed on 20 Nov 2026; the option is in Settings › Search). Settings › About: Open source licences (every third-party component with its licence text, from `scripts/generate-licences.js`)
 4. ✅ Tab groups with tasks: windows opened by the page and the assistant's tabs are grouped; the assistant can close a group at once (close_tabs)
 5. ✅ Pull to refresh, screen does not dim while the app is open, full-width tables in chat, 'Rate Qutai'
 6. ✅ From Comet reviews: undo clearing in the address bar, hiding the Qutai button and turning off the logo animation, persistent chat draft, force zoom, Chrome's user agent on Android (verification loops) and leaving verification to the user, note-taking in long tasks and a status summary at the last step, crash protection
@@ -276,12 +276,24 @@ Done in the development build:
 
 ### Phase 5 – Things that require a server
 
-Account system and Qutai credits: built (app in pro mode; `backend/` steps 1–6: auth (Apple, Google, sign-in by email with a code or link), ledger, relay with tiers,
-purchases through RevenueCat, admin panel), not deployed; analytics events (`POST /events`) and abuse protection open.
+Account system and Qutai credits: built (app in pro mode; `backend/` steps 1–6: auth (Apple, Google, sign-in by email with a code or link), ledger, relay with tiers (the app offers no tier choice since 20 Nov 2026),
+purchases through RevenueCat, admin panel), production deployed on 19 Nov 2026 (`docs/design/37-server-and-analytics.md`, `SRV-22`); analytics events (`POST /events`) and abuse protection open.
 **Launch blocker:** buying credits works only through temporary fake purchases (local servers only, nothing charged)
 until RevenueCat and the stores are connected; remove them first (`TODO.md` › Before launch: remove fake purchases).
 Built: backups in the Qutai account (the export's encrypted file on R2; replaces sync for now). Still to build: end-to-end encrypted live sync (including memory; deletion markers must be kept for deletions), background
-deep research on iOS (and tasks that go on with the phone off), price and page tracking, Safe Browsing checks.
+deep research on iOS (and tasks that go on with the phone off), price and page tracking, Safe Browsing checks (but see `NOT-24`, 20 Nov 2026: no harmful-site lookup service for now; open for the owner).
+
+---
+
+### Built since 17 Nov 2026 (details in the design record)
+
+The design record ([DESIGN.md](DESIGN.md), one file per area in `docs/design/`) is the up-to-date list of what is
+built; this roadmap is not updated feature by feature any more. Built since this file's last update: posting and
+paying through Qutai's own approval (`07-posting-and-paying.md`), contacts with numbers never sent to the AI
+(`17-contacts.md`), page styles, the cookie list and page scripts (`18`–`20`), image filters (`21`), apps inside Qutai
+phases 1 and 2 (`22-apps.md`), backups in the Qutai account (`36`), setup's language step, three ways to introduce
+yourself and no answer-style or default-browser step (`31-onboarding.md`), sign-in method addresses (`33-accounts.md`),
+navigation feedback on slow connections (`14-tabs-and-conversations.md`), and the production server (`37`).
 
 ---
 

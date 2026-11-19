@@ -119,7 +119,7 @@ reading the server's settlement event is a later job.
 through pauses) or types, edits the transcript, and one request to their AI turns it into notes. The answer is
 strict JSON that is checked, not trusted: every value must come with the user's own words, found in the transcript, so
 an inferred age, gender or diet is refused. Qutai then asks at most three fixed, translated follow-up questions about
-food, the name, shopping, the city or the answer style (never age or gender), answered by voice, typing, chips or
+food, the name, shopping or the city (never age or gender; no answer-style question since 20 Nov 2026, setup adds a short-answers line to the custom instructions instead), answered by voice, typing, chips or
 Skip; typed or spoken answers cost one more request. Nothing is saved before the review page, where every note can
 be edited, deleted, and for age, gender, allergies and health hidden from the AI. Without an AI, or when the request
 or its answer fails, it says so and continues with the typed questions (`ProfileQuestions`), the transcript shown
@@ -755,7 +755,7 @@ contacts the server for it.
 
 What the user sees: picking Qutai Credits first shows what changes about where data goes (conversation, page
 content, attachments, memory and custom instructions pass through Qutai's server, which doesn't store or log them)
-with "Use Qutai Credits" / "Not now". The provider's page shows the balance, the server's **tiers** (below), and
+with "Use Qutai Credits" / "Not now". The provider's page shows the balance and
 "Buy credits" (below). Under each
 answer: what the server charged ("0.42 credits · 1.5k tokens"), never a dollar figure; the same per request in
 "What was sent to the AI", whose hint then says requests pass through Qutai's server. The balance is under the
@@ -765,22 +765,15 @@ offered, too large, step limit, suspended, maintenance, unavailable, update need
 message; when the first request of a message is refused before anything reached the AI, the message goes back into
 the input.
 
-**Tiers** (owner decision, 16 Nov 2026; `backend/README.md` › Relay › Tiers). In credit mode the customer picks a
-tier, never a provider model: **Qutai Fast** ("Qutai Hızlı": everyday questions, fewest credits), **Qutai** (most
-tasks, the server's default) and **Qutai Pro** (hard, many-step work, more credits), listed from `GET /config` ›
-`tiers` in the server's order with one line each and "about N credits per step" from `approxCreditsPerStep` (one
-reference step on the tier's current model, so a hint; the hint under the list says a task takes one or more steps
-and the real charge is under each answer). This is the list in Settings › Assistant, setup's AI step and the
-per-conversation menu under the panel title; the header shows the tier's name. "Which AI models these use" (in
-Settings and the menu, not in the list itself) shows the model serving each tier now (`servedBy`), its step limit,
-and that Qutai may change it. A tier id the app has no text for is shown as "Qutai <Id>". Own-key providers keep
-their model lists exactly as before.
+**Tiers** (`backend/README.md` › Relay › Tiers). The server keeps tiers (`fast`, `standard`, `pro` today) and the
+customer never sees a provider model. Since 20 Nov 2026 (owner) the app offers **no tier choice** anywhere (setup,
+Settings › Assistant, the per-conversation menu, cost texts): every request uses the tier `GET /config` marks as
+default (its first tier if none is marked), so the owner changes the model in the admin panel without an app release
+(`docs/design/34-credits-and-relay.md`, `CRED-39`; it replaced the 16 Nov choice between Qutai Fast, Qutai and Qutai
+Pro). Own-key providers keep their model lists exactly as before.
 
-- **Stored choices:** the tier id is stored where the Qutai model was (Settings' model for `qutai`, a conversation's
-  own choice). A provider model saved before tiers reads as the tier that model serves now, else by what it was in
-  the own-key lists (fastest → `fast`, recommended → `standard`, strongest → `pro`), else the default tier, and is
-  rewritten as that tier when the next message is sent; the conversation and its history stay. A tier the server no
-  longer lists uses the default without overwriting the choice.
+- **Stored choices:** a tier or model stored by an older version (Settings' model for `qutai`, a conversation's own
+  choice) is kept but never read; a conversation's route from another tier is not sent (it starts fresh on the default).
 - **Requests:** `{ tier, provider: <format>, route? }`, no `model`. A new conversation (or one switched to another
   tier) is built in the tier's `format` without a route. The answer's `X-Qutai-Provider` / `-Model` / `-Tier` /
   `-Route` are read before any event reaches the adapter (an answer in another format than the request's is never
@@ -790,9 +783,10 @@ their model lists exactly as before.
   never on disk for incognito conversations; backups leave raw output and routes out.
 - **`409 tier_moved`:** rebuilt for `error.tier.provider` with that provider's adapter (the neutral history, no other
   provider's raw output), sent once more without a route, with a note under the answer that the conversation goes
-  on with another AI; a second move in a row is an error ("send it again"). **`tier_unknown`**: `/config` is read
-  again (past the platform's HTTP cache, which otherwise keeps it the minute the server allows) and the message asks to pick a Qutai model again; **`tier_unavailable`**: "temporarily unavailable, try
-  again or pick another"; both put the message back into the input (nothing was sent).
+  on with another AI; a second move in a row is an error ("send it again"). **`tier_unknown`** (the default renamed or
+  removed after `/config` was read): `/config` is read again (past the platform's HTTP cache) and the request is sent
+  once more on the new default; **`tier_unavailable`**: "temporarily unavailable, try again"; a refused request puts
+  the message back into the input (nothing was sent).
 - The tier's own `limits` (steps, images, memory, custom instructions) replace the top-level ones.
 - Costs and logs: the answer's cost and "What was sent to the AI" name the tier; their details add "Answered by
   <model>".

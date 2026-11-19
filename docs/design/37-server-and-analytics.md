@@ -62,6 +62,10 @@ analytics, and how the owner makes pro test builds.
   Status: Owner, 2026-11-17 · Why: the owner controls when the build number moves · Source: docs/versioning.md; memory version-bump-only-on-request
 - **`SRV-21`** The Apple sign-in key shared in chat on 16 Nov 2026 is replaced by a separate key for production.
   Status: Owner, 2026-11-17 (on the fix-before-launch list) · Why: the key left a secure channel · Source: memory fix-before-launch
+- **`SRV-22`** Production runs on Cloudflare since 19 Nov 2026, deployed with one command (`backend/scripts/deploy-prod.mjs`, runbook `backend/DEPLOY-prod.md`). First production values: Anthropic only with a 100 USD monthly limit, example pricing (100 credits per USD, 30 % margin) until the owner's pricing decisions, no purchases until RevenueCat (credits are granted in the admin panel), and fake purchases impossible in production.
+  Status: Owner, 2026-11-19 · Why: the owner's values for the first deploy; the pricing decisions of 20 Nov (1 credit = 1 cent, margin 100 %, Claude Haiku as the base) wait for the go-ahead ([docs/test-checklist.md](../../docs/test-checklist.md)) · Enforced: Server: backend/scripts/deploy-prod.mjs (CONFIG); backend/apps/api/src/purchases/fake.ts · Source: backend cff36cc, ff5bbf9; 2801f70, 39289c6
+- **`SRV-23`** Production hostnames and the admin address are written in the backend repository (deploy script and runbook) by the owner's decision; this app repository still never contains them (a pro build gets the server address at build time, `BUILD-10`), and the test tunnel's address stays out of both (`SRV-17`).
+  Status: Owner, 2026-11-19 · Why: the deploy needs them; the backend runbook says to remove them first if that repository is ever made public · Source: backend/DEPLOY-prod.md; owner's memory note on the pro-mode API URL
 
 ## Details
 
@@ -70,7 +74,7 @@ analytics, and how the owner makes pro test builds.
 
 ## Limits and what is not built
 
-- Not deployed: needs the owner's Cloudflare account, a domain, production secrets and provider keys (planned).
+- Production is deployed (19 Nov 2026, `SRV-22`); never tried with real purchases (no RevenueCat yet) and only one provider.
 - Analytics events and the panel's charts (server step 7): not built (planned). Abuse protection (step 9) and legal
   work (step 10) open.
 - A crash-report service: not decided (see CRED-37).

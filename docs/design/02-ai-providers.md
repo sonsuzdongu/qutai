@@ -13,7 +13,7 @@ that change a request (model per chat, streaming, web search, the custom endpoin
 2. **Own key:** the request goes from the phone straight to the provider with the user's key. Each key is kept in the
    phone's secure storage (iOS Keychain / Android Keystore through `expo-secure-store`).
 3. **Qutai Credits:** the same code builds the request, but only its body is sent to Qutai's server, which picks the
-   model for the chosen tier and charges credits. Before first use a notice says what passes through Qutai's server.
+   model for its default tier (the user chooses no tier, `CRED-39`) and charges credits. Before first use a notice says what passes through Qutai's server.
    Server details are in [section 34](34-credits-and-relay.md).
 4. **Model per chat:** the model name under the panel's title opens a sheet; "use Gemini for this chat" sets a provider
    and model for this conversation only. Settings keeps the default. A task already running keeps its model.
@@ -43,8 +43,8 @@ that change a request (model per chat, streaming, web search, the custom endpoin
   Status: Default (manager or implementing session; open to change) · Why: stated in 3d6b3f7 · Enforced: In the app: src/ai/providers.ts (requestTarget: empty key for qutai); src/ai/wire.ts; src/credits/provider.ts · Source: README › Qutai Credits; 3d6b3f7
 - **`AI-7`** Qutai Credits can be used only while signed in and after the user accepted its notice once on this phone; signed out, a sent message stays in the field and the app offers Sign in / Use my own key / Not now.
   Status: Default (manager or implementing session; open to change) · Why: credits belong to an account · Enforced: In the app: src/ai/providers.ts (isConfigured → creditsReady); src/credits/gate.ts · Source: README › Only while signed in; 0d0c889
-- **`AI-8`** In credit mode the user picks a tier (Qutai Fast, Qutai, Qutai Pro), never a provider model.
-  Status: Owner, 2026-11-16 · Why: see [section 34](34-credits-and-relay.md) · Source: README › Qutai Credits › Tiers
+- **`AI-8`** In credit mode the user never picks a provider model, and since 20 Nov 2026 no tier either: every request uses the tier the server marks as default (`CRED-39`). Changed 2026-11-20: the 16 Nov rule let the user pick a tier (Qutai Fast, Qutai, Qutai Pro).
+  Status: Owner, 2026-11-16; changed by the owner 2026-11-20 (`CRED-39`) · Why: see [section 34](34-credits-and-relay.md) · Source: README › Qutai Credits › Tiers; 6aa2efe
 - **`AI-9`** A conversation's own model is saved with the conversation, read when a message is sent (so a running task keeps its model) and cleared by "New chat"; it never changes the default in Settings.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: src/chat/Conversation.ts (model); d09f015
 - **`AI-13`** Today Gemini streams only with "Stream Gemini responses (experimental)" on (off by default); a broken stream is repeated once without streaming; a refusal over a thought signature after a streamed answer is repeated once as text and turns Gemini streaming off until the app restarts.

@@ -55,13 +55,13 @@ Each rule below names something a user might expect and Qutai does not have, and
 - **`NOT-22`** Qutai never asks for a battery-optimisation exemption for background playback.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded; a hint in Settings › Appearance › Media opens the app settings instead · Source: fix-android-background-playback note; README › Known limitations
 - **`NOT-23`** No preconnecting to sites while the user types in the address bar.
-  Status: Owner's manager, 2026-11-20 · Why: privacy: it would contact a site the user may never open, revealing what is being typed (Chrome does it for speed) · Source: navigation feedback task, 20 Nov 2026
+  Status: Default (manager or implementing session; open to change), decided by the manager on 2026-11-20 · Why: privacy: it would contact a site the user may never open, revealing what is being typed (Chrome does it for speed) · Source: navigation feedback task, 20 Nov 2026
 - **`NOT-24`** No harmful-site lookup service (like Safe Browsing).
-  Status: Owner's manager, 2026-11-20 · Why: out of scope for now: it would send the addresses the user opens, or their hashes, to a third-party service · Source: navigation feedback task, 20 Nov 2026
+  Status: Default (manager or implementing session; open to change), decided by the manager on 2026-11-20 · Why: out of scope for now: it would send the addresses the user opens, or their hashes, to a third-party service · Source: navigation feedback task, 20 Nov 2026
 
 ## Limits and what is not built
 
-- Planned later (ROADMAP Phase 5): end-to-end encrypted live sync (including memory, with deletion markers), deep research in the background on iOS and with the phone off, price and page tracking, Safe Browsing checks (planned).
+- Planned later (ROADMAP Phase 5): end-to-end encrypted live sync (including memory, with deletion markers), deep research in the background on iOS and with the phone off, price and page tracking (planned). Safe Browsing checks are still listed as planned in ROADMAP Phase 5, while `NOT-24` (20 Nov) says no such service for now: for the owner to settle.
 - iOS share extension, iOS home screen widget and the iOS default-browser entitlement: open, they need work in the owner's Apple account (planned).
 - Analytics with consent (official builds): designed, not built (planned).
 

@@ -16,7 +16,7 @@ account, Qutai Credits and backups kept in the account.
 2. **Pro mode.** The switch is on and a server address (`EXPO_PUBLIC_QUTAI_API_URL`) is set. This adds:
    - Settings › Account: Sign in with Apple, Google or email; sign out, sign out of all devices, delete the account.
    - A sixth AI provider, **Qutai Credits**: no key; requests go through Qutai's server and are paid with credits. The
-     user picks a tier (Qutai Fast, Qutai, Qutai Pro), not a model.
+     user picks neither a model nor a tier: the server's default tier serves every request (since 20 Nov 2026, `CRED-39`).
    - Buying credits. Today the test server accepts every purchase without a real store check (a deliberate stand-in).
    - Settings › Backup › Qutai account: the encrypted backup file kept in the account (see [section 3](03-data-on-the-phone.md)).
    - Its own privacy policy and terms.

@@ -48,6 +48,8 @@ How Qutai is built (development builds, EAS profiles, store packages, pro-mode t
   Status: Default (manager or implementing session; open to change) · Why: the Apache licence covers the code, not the Qutai name and logo · Source: 7d65220; TRADEMARKS.md; README.md › License
 - **`BUILD-22`** Today Android declares REQUEST_INSTALL_PACKAGES, so that "Open" on a downloaded APK reaches the system installer. Whether to fill in Play's permissions declaration or drop the permission is still open.
   Status: Waiting for the owner ([TODO.md](../../TODO.md#decisions-waiting-for-the-owner-collected-17-nov-2026)) · Why: the system installer silently refuses an app without this permission (21d43e3). Google Play allows it for web browsers but needs a declaration form (draft in docs/permissions.md) · Source: plugins/withDownloads.js; owner's open question 20
+- **`BUILD-23`** Store packages of the pro build (AAB, IPA and release APKs) are built against the production server since 19 Nov 2026; the tunnel to the owner's computer (item 8 above) is only for testing against the local server, for example a development build with fake purchases. The address is still never committed (`BUILD-10`).
+  Status: Owner, 2026-11-19 · Why: the owner said package builds must use the production server once it was live (`SRV-22`); production has no fake purchases · Source: owner's memory note on the pro-mode API URL; 39289c6
 
 ## Details
 

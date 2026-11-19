@@ -129,7 +129,7 @@ Moved to Details (ids retired, not reused): `PROD-5`
 | `AI-5` | API keys, the custom endpoint's header values and all settings are kept in the phone's secure storage,… | Default |  |
 | `AI-6` | Qutai Credits never has a key in the app: only the request body goes to Qutai's server, never its headers,… | Default |  |
 | `AI-7` | Qutai Credits can be used only while signed in and after the user accepted its notice once on this phone;… | Default |  |
-| `AI-8` | In credit mode the user picks a tier (Qutai Fast, Qutai, Qutai Pro), never a provider model. | Owner | 2026-11-16 |
+| `AI-8` | In credit mode the user picks no provider model and, since 20 Nov, no tier (changed; `CRED-39`). | Owner | 2026-11-16, changed 2026-11-20 |
 | `AI-9` | A conversation's own model is saved with the conversation, read when a message is sent (so a running task… | Default |  |
 | `AI-13` | Today Gemini streams only with "Stream Gemini responses (experimental)" on (off by default); a broken… | **Waiting** |  |
 | `AI-14` | AI search is on by default and can be turned off in Settings › Assistant; when off, neither the search… | Owner | not recorded |
@@ -392,12 +392,12 @@ Moved to Details (ids retired, not reused): `MEM-2`, `MEM-23`, `MEM-18`
 | Id | Decision | Status | Date |
 |---|---|---|---|
 | `PROF-1` | The voice introduction's answer is checked, not trusted: each value must come with the user's own words… | Default |  |
-| `PROF-2` | Follow-up questions are fixed and translated, chosen by code, at most 3, from food, name, shopping, city… | Owner | not recorded |
+| `PROF-2` | Follow-up questions are fixed and translated, chosen by code, at most 3, from food, name, shopping and city (answer style removed 20 Nov). | Owner | not recorded, changed 2026-11-20 |
 | `PROF-3` | Nothing from the introduction is saved before the review page; age, gender, allergy and health rows have a… | Default |  |
 | `PROF-5` | The introduction tells the user before the microphone: no audio is stored or sent by Qutai; the text goes… | Default |  |
 | `PROF-6` | Without an AI, or when the request or its answer fails, the introduction says so and continues with the… | Default |  |
 | `PROF-7` | The typed questions make no AI request; their privacy text says "your AI provider" (no provider name) and… | Default |  |
-| `PROF-8` | The answer-style question writes one custom-instruction line, replaced if answered again; it is not a memory. | Default |  |
+| `PROF-8` | Withdrawn 2026-11-20: no answer-style question any more (`INTRO-29`). | Default (withdrawn) |  |
 | `PROF-9` | Custom instructions: at most 500 characters, blank-line runs shortened; added last to every request,… | Default |  |
 | `PROF-10` | Custom instructions never override the safety, confirmation, memory and personal-information rules; on a… | Default |  |
 | `PROF-11` | The old example line "Always reply in Turkish" / "Her zaman Türkçe yanıt ver" is removed once, only when… | Owner | 2026-11-16 |
@@ -993,7 +993,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-29` | Only models with a price in force are offered; prices are added as new dated rows, never edited, and never… | Default |  |
 | `CRED-30` | Today users are charged for every Gemini search, including those inside Google's free monthly allowance. | **Waiting** |  |
 | `CRED-31` | Kill switches (per provider and global) make the relay "temporarily unavailable" without touching credits;… | Default |  |
-| `CRED-32` | The admin panel is reachable only through Cloudflare Access and checks the Access token itself; writes… | Default |  |
+| `CRED-32` | The admin panel is reachable only through Cloudflare Access and checks the Access token itself (not its audience since 19 Nov)… | Default (audience: Owner) | 2026-11-19 |
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one… | **Waiting** |  |
 | `CRED-34` | Today abuse flags can't be marked resolved. | **Waiting** |  |
 | `CRED-35` | Today credit prices are the model's token price plus a margin, with example values; pack sizes, trial… | **Waiting** |  |
@@ -1083,6 +1083,8 @@ Moved to Details (ids retired, not reused): `BACK-2`, `BACK-16`, `BACK-14`
 | `SRV-18` | Pro test APKs are built without the test sign-in values since 17 Nov 2026. | Owner | 2026-11-17 |
 | `SRV-20` | The app's version (and the build number derived from it) changes only when the owner asks; test builds… | Owner | 2026-11-17 |
 | `SRV-21` | The Apple sign-in key shared in chat on 16 Nov 2026 is replaced by a separate key for production. | Owner | 2026-11-17 |
+| `SRV-22` | Production runs on Cloudflare since 19 Nov, one-command deploy; first values: Anthropic only, 100 USD a month, example pricing, no purchases. | Owner | 2026-11-19 |
+| `SRV-23` | Production hostnames are written in the backend repository only; this app repository never contains them. | Owner | 2026-11-19 |
 
 Moved to Details (ids retired, not reused): `SRV-14`, `SRV-19`
 
@@ -1144,6 +1146,7 @@ Moved to Details (ids retired, not reused): `VER-5`, `VER-6`, `VER-7`, `VER-4`, 
 | `BUILD-16` | Builds without pro mode contain no RevenueCat SDK at all. | Default |  |
 | `BUILD-21` | Builds from the repository are the same code with pro mode off. Forks use their own name, logo, bundle id… | Default |  |
 | `BUILD-22` | Today Android declares REQUEST_INSTALL_PACKAGES, so that "Open" on a downloaded APK reaches the system… | **Waiting** |  |
+| `BUILD-23` | Pro store packages (AAB, IPA, release APK) use the production server since 19 Nov; the tunnel only for local testing. | Owner | 2026-11-19 |
 
 Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BUILD-8`, `BUILD-20`, `BUILD-17`, `BUILD-18`, `BUILD-19`
 
@@ -1238,8 +1241,8 @@ Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 | `NOT-20` | No Siri / App Intents for now; `qutai://` links cover automation from the Shortcuts app. | Default |  |
 | `NOT-21` | The payment approval has no per-payment or per-currency spending limit and no picture of the order summary. | Owner | 2026-11-19 |
 | `NOT-22` | Qutai never asks for a battery-optimisation exemption for background playback. | Default |  |
-| `NOT-23` | No preconnecting to sites while the user types in the address bar. | Owner | 2026-11-20 |
-| `NOT-24` | No harmful-site lookup service (like Safe Browsing). | Owner | 2026-11-20 |
+| `NOT-23` | No preconnecting to sites while the user types in the address bar. | Default | 2026-11-20 |
+| `NOT-24` | No harmful-site lookup service (like Safe Browsing). | Default | 2026-11-20 |
 
 ## [45. Roadmap decisions](45-roadmap-decisions.md)
 

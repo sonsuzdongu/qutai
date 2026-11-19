@@ -11,12 +11,13 @@ for the assistant, and the suggestions the empty assistant panel shows for the p
    Settings › Assistant › Memory ("Introduce yourself", "Answer a few questions").
 2. **Voice introduction.** The first page asks "Tell me about yourself". The user talks freely (or types), edits the
    transcript, and one request to their AI turns it into notes. Qutai then asks at most three fixed follow-up
-   questions (food, the name, shopping, the city, answer style), answered by voice, typing, chips or Skip. A review
+   questions (food, the name, shopping, the city; the answer-style question was removed on 20 Nov 2026, `INTRO-29`), answered by voice, typing, chips or Skip. A review
    page lists every note, editable and deletable; age, gender, allergies and health can be hidden from the AI. Nothing
    is saved before the user confirms. Without an AI, or if the request fails, it says so and offers the typed questions.
 3. **Typed questions** (no AI request): what to call the user, city (typed or "Use my location"), how they pay and
-   receive deliveries, food, answer style; then "Fill in address and contact details now?" and one form.
-4. **Answer style** ("short and to the point" / "detailed") is written as a line in the custom instructions.
+   receive deliveries, food (no answer-style question since 20 Nov 2026); then "Fill in address and contact details now?" and one form.
+4. **Answer style** is no longer asked (20 Nov 2026, `INTRO-29`): a finished first-run setup adds "Answer briefly and to
+   the point." to the custom instructions unless a style line is already there; the user can change it there.
 5. **Custom instructions** (Settings › Assistant, under the memory switch): up to 500 characters, with tappable
    examples ("Answer briefly", "Prefer metric units"). They go with every request, after the safety rules.
 6. **Page suggestions.** The empty panel offers 3 to 5 things that fit the page: "Is this a good buy?" and "Find it
@@ -27,8 +28,8 @@ for the assistant, and the suggestions the empty assistant panel shows for the p
 
 - **`PROF-1`** The voice introduction's answer is checked, not trusted: each value must come with the user's own words found in the transcript, so an inferred age, gender or diet is refused; values up to 120 characters, quotes up to 200, at most 20 items, transcript up to 8,000 characters; each value also passes the memory's refusal check.
   Status: Default (manager or implementing session; open to change) · Why: the AI must not invent facts about the user · Enforced: In the app: src/intro/extract.ts (MAX_VALUE_CHARS, MAX_ITEMS, sensitiveReason check) · Source: 2e86c84; docs/voice-introduction.md
-- **`PROF-2`** Follow-up questions are fixed and translated, chosen by code, at most 3, from food, name, shopping, city and answer style in that order; age and gender are never asked (kept only when the user says them).
-  Status: Owner, date not recorded (docs/voice-introduction.md: "an owner decision") · Why: reason not recorded · Source: src/intro/followUps.ts (MAX_FOLLOW_UPS); docs/voice-introduction.md › Follow-up rules
+- **`PROF-2`** Follow-up questions are fixed and translated, chosen by code, at most 3, from food, name, shopping and city in that order; age and gender are never asked (kept only when the user says them). Changed 2026-11-20: answer style is no longer one of them (`INTRO-29`).
+  Status: Owner, date not recorded (docs/voice-introduction.md: "an owner decision"); answer style removed by the owner 2026-11-20 · Why: reason not recorded · Source: src/intro/followUps.ts (MAX_FOLLOW_UPS); docs/voice-introduction.md › Follow-up rules
 - **`PROF-3`** Nothing from the introduction is saved before the review page; age, gender, allergy and health rows have a "hide from the AI" switch, and a hidden row's label never contains the value.
   Status: Default (manager or implementing session; open to change) · Why: the user confirms every fact · Enforced: In the app: src/intro/items.ts; src/agent/memory.ts (hiddenLabelProblem) · Source: docs/voice-introduction.md › Mapping
 - **`PROF-5`** The introduction tells the user before the microphone: no audio is stored or sent by Qutai; the text goes to their AI provider once (twice with follow-ups); confirmed notes stay only on this phone.
@@ -37,8 +38,8 @@ for the assistant, and the suggestions the empty assistant panel shows for the p
   Status: Default (manager or implementing session; open to change) · Why: "nothing they said is invented or lost" · Source: docs/voice-introduction.md › Failure paths
 - **`PROF-7`** The typed questions make no AI request; their privacy text says "your AI provider" (no provider name) and says "nothing goes to Qutai" only when pro mode is off.
   Status: Default (manager or implementing session; open to change) · Why: the text must be true for every provider and build · Source: src/components/ProfileQuestions.tsx; d1c677e; TODO.md › Assistant
-- **`PROF-8`** The answer-style question writes one custom-instruction line, replaced if answered again; it is not a memory.
-  Status: Default (manager or implementing session; open to change) · Why: "it is a standing instruction about replies, not a fact about the user" · Source: TODO.md › Assistant (custom instructions); item 29 hand-over note
+- **`PROF-8`** Withdrawn (2026-11-20): there is no answer-style question any more (`INTRO-29`). It wrote one custom-instruction line, replaced if answered again, not a memory; the line setup now adds follows the same idea.
+  Status: Default (manager or implementing session; open to change); withdrawn 2026-11-20 by the owner's decision in `INTRO-29` · Why: "it is a standing instruction about replies, not a fact about the user" · Source: TODO.md › Assistant (custom instructions); item 29 hand-over note
 - **`PROF-9`** Custom instructions: at most 500 characters, blank-line runs shortened; added last to every request, between `<<<` and `>>>` (those characters removed from the text), sent with memory on or off.
   Status: Default (manager or implementing session; open to change) · Why: placed last so everything it could conflict with comes before it · Enforced: In the app: src/agent/systemPrompt.ts (MAX_CUSTOM_INSTRUCTIONS, cleanCustomInstructions, customInstructionsPrompt); src/agent/runAgent.ts (systemPrompt) · Source: 849029b
 - **`PROF-10`** Custom instructions never override the safety, confirmation, memory and personal-information rules; on a conflict the assistant follows those and says it can't do that part.
