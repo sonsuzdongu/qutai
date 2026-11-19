@@ -219,6 +219,25 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   // While signing in, the sign-in buttons are the way on (or back to the choice).
   const primaryHidden = proAi && setup.screen === 'signIn';
 
+  // The provider and key fields: the whole AI step without pro mode, the own key's section of the choice with it.
+  const aiFields = (
+    <AiProviderFields
+      hideCredits={creditsEnabled}
+      value={draft}
+      onChange={(ai) =>
+        setDraft((d) => ({
+          ...d,
+          provider: ai.provider,
+          apiKeys: ai.apiKeys,
+          models: ai.models,
+          customBaseUrl: ai.customBaseUrl,
+          customImages: ai.customImages,
+          customHeaders: ai.customHeaders,
+        }))
+      }
+    />
+  );
+
   return (
     <View style={styles.root}>
       <BlurTargetView ref={targetRef} style={StyleSheet.absoluteFill}>
@@ -232,7 +251,8 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                     // Inside the questions, back goes to the previous question first.
                     if (step === 'profile' && profileBack.current?.()) return;
                     // Inside the AI step's own screens (pro mode), back goes to its choice first.
-                    if (proAi && setup.screen !== 'choose') return dispatchSetup({ type: 'back' });
+                    // (The own key is a section of the choice, not a screen of its own: back leaves the step.)
+                    if (proAi && setup.screen !== 'choose' && setup.screen !== 'ownKey') return dispatchSetup({ type: 'back' });
                     go(index - 1);
                   }}
                   hitSlop={10}
@@ -429,51 +449,31 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                     </>
                   )}
 
-                  {proAi && setup.screen !== 'ownKey' && (
+                  {proAi && (
                     <QutaiSetup
                       state={setup}
-                      dispatch={(event) => {
+                      compact={compact}
+                      dispatch={dispatchSetup}
+                      toggle={(event) => {
                         // The own key path starts from an own-key provider, never from Qutai Credits.
                         if (event.type === 'ownKey' && draft.provider === 'qutai') {
                           set('provider', providerToSave('qutai', false, settings.provider));
                         }
-                        dispatchSetup(event);
+                        // Opening a section changes the step in place: no blur, and the page stays where it is.
+                        dispatchSetupRaw(event);
                       }}
                       onSkip={() => go(index + 1)}
+                      ownKeyFields={aiFields}
                     />
                   )}
 
-                  {step === 'ai' && (!creditsEnabled || setup.screen === 'ownKey') && (
+                  {step === 'ai' && !creditsEnabled && (
                     <>
                       <Text style={styles.title} accessibilityRole="header">
                         {t('onboarding.aiTitle')}
                       </Text>
                       <Text style={styles.lead}>{t('onboarding.aiLead')}</Text>
-                      <AiProviderFields
-                        hideCredits={creditsEnabled}
-                        value={draft}
-                        onChange={(ai) =>
-                          setDraft((d) => ({
-                            ...d,
-                            provider: ai.provider,
-                            apiKeys: ai.apiKeys,
-                            models: ai.models,
-                            customBaseUrl: ai.customBaseUrl,
-                            customImages: ai.customImages,
-                            customHeaders: ai.customHeaders,
-                          }))
-                        }
-                      />
-                      {creditsEnabled && (
-                        <Pressable
-                          onPress={() => dispatchSetup({ type: 'back' })}
-                          style={styles.textButton}
-                          accessibilityRole="button"
-                          hitSlop={6}
-                        >
-                          <Text style={styles.link}>{t('setup.backToQutai')}</Text>
-                        </Pressable>
-                      )}
+                      {aiFields}
                     </>
                   )}
 
@@ -776,8 +776,6 @@ const useStyles = makeStyles((c) => ({
     borderBottomWidth: 1.5,
     borderBottomColor: c.tintText,
   },
-  link: { color: c.tintText, fontSize: 15, fontWeight: '600' },
-  textButton: { alignSelf: 'center', paddingVertical: 8 },
   checkRow: {
     flexDirection: 'row',
     alignItems: 'center',

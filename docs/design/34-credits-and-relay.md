@@ -13,7 +13,7 @@ prepaid credits. The server builds the system prompt and tools from a registered
    instructions pass through Qutai's server, which doesn't store or log them. "Use Qutai Credits" / "Not now". The
    answer is remembered on this phone.
 3. Setup in a pro build leads with Qutai Credits (disclosure → sign in → "You're signed in" with the balance and Buy
-   credits). "Use my own AI provider key" is a separate, quieter card; "Decide later" skips.
+   credits). "Use my own AI provider key" is the second section of an accordion (`INTRO-28`); "Decide later" skips.
 4. The user picks a **tier**, never a provider model: **Qutai Fast** (everyday questions, fewest credits), **Qutai**
    (most tasks, the default) and **Qutai Pro** (hard, many-step work). Each shows "about N credits per step". "Which AI
    models these use" shows the model behind each tier today. The per-conversation menu under the panel title offers

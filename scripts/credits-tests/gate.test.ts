@@ -87,3 +87,15 @@ test('setup: own key path and back; stray events change nothing', () => {
   assert.deepEqual(run([{ type: 'signedIn' }]), SETUP_START);
   assert.deepEqual(run([{ type: 'chooseQutai', consented: true, signedIn: true }], own), own);
 });
+
+test('setup accordion (INTRO-28): opening one section closes the other, a note clears, Qutai Credits opens first', () => {
+  assert.equal(SETUP_START.screen, 'choose');
+  const declined = run([{ type: 'chooseQutai', consented: false, signedIn: false }, { type: 'disclosureAnswered', accepted: false, signedIn: false }]);
+  assert.deepEqual(declined, { screen: 'choose', notice: 'declined' });
+  const own = run([{ type: 'ownKey' }], declined);
+  assert.deepEqual(own, { screen: 'ownKey' });
+  // Opening Qutai Credits again: its section, with the note gone; opening the own key a second time is the same section.
+  assert.deepEqual(run([{ type: 'back' }], own), { screen: 'choose' });
+  assert.deepEqual(run([{ type: 'ownKey' }, { type: 'ownKey' }]), { screen: 'ownKey' });
+  assert.equal(setupPicksQutai(own), false);
+});
