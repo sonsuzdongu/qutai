@@ -67,6 +67,7 @@ import { SITE_RULE_TOOL_NAMES } from './siteRuleTools';
 import { describePageCustomCall, pageCustomTool, type CookieAccess, type PageStylesAccess } from './pageCustomTool';
 import { PAGE_CUSTOM_TOOL_NAMES } from './pageCustomTools';
 import { describeScriptCall, scriptTool, type ScriptAccess } from './scriptTool';
+import { appsTool, describeAppsCall, type AppsAccess } from './appTool';
 
 type PageSnapshot = {
   url: string;
@@ -237,6 +238,8 @@ export type ToolContext = {
   thirdPartyCookiesBlocked?: () => boolean;
   /** run_script (agent/scriptTool.ts): the setting, the sandbox, the approval and the script card. */
   scripts?: ScriptAccess;
+  /** The user's own apps (apps tool, agent/appTool.ts, docs/mini-apps.md); absent where apps can't be used. */
+  apps?: AppsAccess;
 };
 
 /** Tools that need a loaded web page. */
@@ -353,6 +356,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
       return describePageCustomCall(name, input);
     case 'run_script':
       return describeScriptCall(input);
+    case 'apps':
+      return describeAppsCall(input);
     case 'draft_email':
       return t('action.draftEmail', { subject: cutText(str(input.subject), 60) });
     case 'find_contact':
@@ -1184,6 +1189,8 @@ const LOGGED_TOOLS = new Set([
   'upload_file',
   // Only that a share was prepared and to which app: never the files, text or number.
   'share',
+  // Apps made, changed or undone (by the step line: the app's name); never the code or the app's data.
+  'apps',
 ]);
 
 /** Whether a call goes in the action history: tools in LOGGED_TOOLS, but not the ones that only read. */
@@ -1194,6 +1201,7 @@ function isLogged(name: string, input: Record<string, unknown>): boolean {
   if (name === 'site_rules') return input.action === 'remove';
   if (name === 'restyle_page') return input.action === 'apply';
   if (name === 'page_cookies') return input.action === 'delete';
+  if (name === 'apps') return input.action === 'create' || input.action === 'update' || input.action === 'undo';
   return true;
 }
 
@@ -1232,6 +1240,7 @@ function actionTarget(
       'open_settings',
       'get_location',
       'read_calendar',
+      'apps',
       ...SCHEDULING_TOOLS,
     ].includes(name)
   )
@@ -1652,6 +1661,7 @@ async function runTool(
   if (name === 'view_attachment') return viewAttachmentTool(input, ctx);
   if (name === 'edit_image') return editImageTool(input, ctx);
   if (name === 'read_pdf') return readPdfTool(input, ctx);
+  if (name === 'apps') return appsTool(input, ctx);
 
   const tab = currentTab(ctx);
   if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;

@@ -1,6 +1,7 @@
 import { MEMORY_CATEGORIES } from './memory';
 import { SITE_RULE_TOOLS } from './siteRuleTools';
 import { PAGE_CUSTOM_TOOLS } from './pageCustomTools';
+import { APP_TOOLS } from './appTools';
 import type { ToolDefinition } from './types';
 
 /** Offered only while memory is turned on in settings. */
@@ -889,6 +890,7 @@ export const TOOLS: ToolDefinition[] = [
   },
   ...SITE_RULE_TOOLS,
   ...PAGE_CUSTOM_TOOLS,
+  ...APP_TOOLS,
   {
     name: 'ask_user',
     description:

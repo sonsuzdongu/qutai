@@ -39,6 +39,7 @@ const TOOL_ICONS: Record<string, IconName> = {
   site_rules: 'shield',
   restyle_page: 'palette',
   run_script: 'script',
+  apps: 'apps',
   page_cookies: 'cookies',
   open_settings: 'settings',
   draft_email: 'email',

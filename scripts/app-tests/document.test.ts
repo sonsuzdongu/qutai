@@ -235,3 +235,15 @@ test('messages besides calls: diagnostics with mapped lines, pongs, ready; anyth
     '- console.warn: hm\n- error (app.js:3): E',
   );
 });
+
+test('the break-out test app is a valid package; its outside loads are left out of the document', async () => {
+  const { breakoutFiles } = await import('./breakoutApp.mjs');
+  const { checkFiles } = await import('../../src/apps/manifest.ts');
+  const files = breakoutFiles(8793);
+  assert.deepEqual(checkFiles(files, 'index.html'), []);
+  const built = buildAppDocument(pkg(files), BOOT);
+  assert.equal(built.notes.length, 3);
+  const head = built.html.slice(0, built.html.indexOf('</head>'));
+  assert.ok(!/<script src=|<link /.test(head));
+  assert.doesNotThrow(() => new vm.Script(files['app.js']));
+});
