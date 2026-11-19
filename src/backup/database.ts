@@ -1,4 +1,5 @@
-import { listSiteRules, listUserStyles } from '../storage/siteRules';
+import { listSiteRules, listUserScripts, listUserStyles, scriptMeta } from '../storage/siteRules';
+import { restoredState } from '../content/userScripts';
 import { exportData as exportBookmarks } from '../storage/bookmarks';
 import { Db, getJson, SqlValue } from '../storage/db';
 import { listActions } from '../storage/actionLog';
@@ -30,7 +31,7 @@ export async function collectBackup(
   db: Db,
   choice: ExportChoice,
 ): Promise<Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'>> {
-  const [version, bookmarks, history, memories, permissions, location, media, blockingOff, tasks, personal, rules, styles] =
+  const [version, bookmarks, history, memories, permissions, location, media, blockingOff, tasks, personal, rules, styles, scripts] =
     await Promise.all([
     db.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []),
     exportBookmarks(db),
@@ -47,6 +48,7 @@ export async function collectBackup(
     listPersonalSettings(db),
     listSiteRules(db),
     listUserStyles(db),
+    listUserScripts(db),
   ]);
   const payload: Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'> = {
     schemaVersion: version?.user_version ?? 0,
@@ -95,6 +97,19 @@ export async function collectBackup(
         scope,
         css,
         enabled,
+        source,
+        site,
+        ...(url ? { url } : {}),
+        createdAt,
+      })),
+      // The seal goes with the script, but counts only on the phone whose key made it (restoredState).
+      scripts: scripts.map(({ name, scope, code, runAt, enabled, seal, source, site, url, createdAt }) => ({
+        name,
+        scope,
+        code,
+        runAt,
+        enabled,
+        seal,
         source,
         site,
         ...(url ? { url } : {}),
@@ -173,7 +188,17 @@ async function insertRows(db: Db, sql: string, columns: number, rows: SqlValue[]
  * - activity: entries are added unless the same one is already there.
  * Replace first erases the phone's data of each kind the backup contains.
  */
-export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now = Date.now()): Promise<void> {
+/**
+ * `scriptKey`: this phone's key for kept scripts' seals (device/scriptKey.ts): a restored script stays switched on only
+ * when its seal verifies with it.
+ */
+export async function applyBackup(
+  db: Db,
+  p: BackupPayload,
+  mode: ApplyMode,
+  now = Date.now(),
+  scriptKey: Uint8Array | null = null,
+): Promise<void> {
   const replace = mode === 'replace';
   await db.withTransactionAsync(async () => {
     if (p.bookmarks) {
@@ -367,6 +392,31 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
             st.name,
             st.css,
           ]),
+      );
+      // A script the phone already has (the same scope and code) is kept as it is; the code was checked when read.
+      const haveScripts = new Set((await listUserScripts(db)).map((sc) => `${sc.scope}\n${sc.code}`));
+      await insertRows(
+        db,
+        'INSERT OR IGNORE INTO site_rules (id, line, enabled, source, site, url, created_at, kind, name, body, meta)',
+        11,
+        (p.sites.scripts ?? [])
+          .filter((sc) => !haveScripts.has(`${sc.scope}\n${sc.code}`))
+          .map((sc, i) => {
+            const state = restoredState(sc, scriptKey);
+            return [
+              `j${now.toString(36)}${i}`,
+              sc.scope,
+              state.enabled ? 1 : 0,
+              sc.source,
+              sc.site,
+              sc.url ?? null,
+              sc.createdAt,
+              'script',
+              sc.name,
+              sc.code,
+              scriptMeta({ runAt: sc.runAt, seal: state.seal }),
+            ];
+          }),
       );
     }
 

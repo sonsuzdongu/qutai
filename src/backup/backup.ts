@@ -6,6 +6,7 @@ import type { ProviderId } from '../ai/types';
 import type { ReaderFont, ReaderTheme } from '../browser/reader';
 import type { SearchEngineId } from '../browser/search';
 import { appVersion } from '../device/appVersion';
+import { loadScriptKey } from '../device/scriptKey';
 import { shareBackupFile } from '../device/backupFile';
 import { getDb, holdDb } from '../storage/db';
 import { clampTextZoom, DEFAULT_SETTINGS, loadSettings, saveSettings, Settings } from '../storage/settings';
@@ -185,7 +186,7 @@ export async function restoreBackup(p: BackupPayload, mode: ApplyMode, withKeys:
   // Nothing else in the running app may write from here on (it would overwrite restored data).
   const release = holdDb();
   try {
-    await applyBackup(db, p, mode);
+    await applyBackup(db, p, mode, Date.now(), await loadScriptKey());
   } catch (e) {
     release();
     throw e;

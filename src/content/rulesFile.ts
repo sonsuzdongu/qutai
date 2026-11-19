@@ -1,5 +1,7 @@
 import { exportRules, importRules, MAX_RULES, type ImportedRule, type SiteRule } from './siteRules';
 import { checkStyleEntry, MAX_STYLES, parseStyleScope, styleSite, type UserStyle } from './userStyles';
+import type { ScriptFlag } from './scriptCheck';
+import { checkScriptEntry, MAX_SCRIPTS, parseScriptScope, type ScriptRunAt, type UserScript } from './userScripts';
 
 /**
  * The "My rules" file, version 2 (docs/page-customisation.md › Export, import, backup). Pure code.
@@ -14,11 +16,19 @@ import { checkStyleEntry, MAX_STYLES, parseStyleScope, styleSite, type UserStyle
  *   ! | }
  *   ! [end]
  *
- * A file without the format line is version 1. Blocks of kinds this version doesn't know ("! [script]") are counted
- * as unsupported, never read as something else.
+ * A file without the format line is version 1. Format 3 adds kept scripts (docs/page-customisation.md › Export,
+ * import, backup), each a block of the same shape:
+ *
+ *   ! [script] {"name":"Count links","scope":"example.com","runAt":"end"}
+ *   ! | return document.links.length;
+ *   ! [end]
+ *
+ * A script block never carries a switch or an approval: imported scripts arrive switched off, and each is approved by
+ * the user before its first run. Blocks of kinds this version doesn't know are counted as unsupported, never read as
+ * something else.
  */
 
-export const RULES_FILE_FORMAT = 2;
+export const RULES_FILE_FORMAT = 3;
 const FORMAT_PREFIX = '! Qutai-Format:';
 const BLOCK_START = /^! \[([a-z]+)\]\s*(.*)$/;
 const BLOCK_LINE = '! |';
@@ -27,11 +37,15 @@ const BLOCK_END = '! [end]';
 /** A style read from a file: checked again (sanitised CSS, a valid scope, a clean name). */
 export type ImportedStyle = { name: string; scope: string; css: string; enabled: boolean; site: string };
 
+/** A script read from a file: checked as a kept script; always added switched off and unapproved. */
+export type ImportedScript = { name: string; scope: string; code: string; runAt: ScriptRunAt; site: string; flags: ScriptFlag[] };
+
 export type RulesFileImport = {
   /** The file's format (1 without the format line). */
   format: number;
   rules: ImportedRule[];
   styles: ImportedStyle[];
+  scripts: ImportedScript[];
   /** Rules and styles already present (on the phone or earlier in the file). */
   duplicates: number;
   /** Lines and styles that are not valid (the same checks as the assistant's). */
@@ -40,13 +54,19 @@ export type RulesFileImport = {
   unsupported: number;
 };
 
-export function exportRulesFile(rules: readonly SiteRule[], styles: readonly UserStyle[], now: Date = new Date()): string {
+export function exportRulesFile(
+  rules: readonly SiteRule[],
+  styles: readonly UserStyle[],
+  now: Date = new Date(),
+  scripts: readonly UserScript[] = [],
+): string {
   const [title, ...rest] = exportRules(rules, now).trimEnd().split('\n');
   const head = [
     title,
     `${FORMAT_PREFIX} ${RULES_FILE_FORMAT}`,
     ...rest.filter((l) => l.startsWith('!') && !l.startsWith('! off: ')),
     ...(styles.length ? ['! Styles: "! [style] {…}" blocks, the CSS on the "! |" lines, up to "! [end]".'] : []),
+    ...(scripts.length ? ['! Scripts: "! [script] {…}" blocks, the code on the "! |" lines; they import switched off.'] : []),
   ];
   const lines = rest.filter((l) => !l.startsWith('!') || l.startsWith('! off: '));
   const blocks = styles.flatMap((s) => [
@@ -54,7 +74,12 @@ export function exportRulesFile(rules: readonly SiteRule[], styles: readonly Use
     ...s.css.trimEnd().split('\n').map((l) => `${BLOCK_LINE} ${l}`),
     BLOCK_END,
   ]);
-  return `${[...head, ...lines, ...blocks].join('\n')}\n`;
+  const scriptBlocks = scripts.flatMap((s) => [
+    `! [script] ${JSON.stringify({ name: s.name, scope: s.scope, runAt: s.runAt })}`,
+    ...s.code.replace(/\r\n?/g, '\n').trimEnd().split('\n').map((l) => `${BLOCK_LINE} ${l}`),
+    BLOCK_END,
+  ]);
+  return `${[...head, ...lines, ...blocks, ...scriptBlocks].join('\n')}\n`;
 }
 
 /**
@@ -65,6 +90,7 @@ export function importRulesFile(
   text: string,
   haveLines: readonly string[] = [],
   haveStyles: readonly { scope: string; css: string }[] = [],
+  haveScripts: readonly { scope: string; code: string }[] = [],
 ): RulesFileImport {
   const clean = text.replace(/^﻿/, '');
   const filter = importRules(clean, haveLines);
@@ -73,6 +99,8 @@ export function importRulesFile(
   const format = formatLine ? Number.parseInt(formatLine.trim().slice(FORMAT_PREFIX.length).trim(), 10) || 1 : 1;
   const seen = new Set(haveStyles.map((s) => styleKey(s.scope, s.css)));
   const styles: ImportedStyle[] = [];
+  const scripts: ImportedScript[] = [];
+  const seenScripts = new Set(haveScripts.map((s) => `${s.scope.trim()}\n${s.code}`));
   let duplicates = filter.duplicates;
   let invalid = filter.invalid;
   let unsupported = 0;
@@ -92,7 +120,7 @@ export function importRulesFile(
       body.push(line.slice(BLOCK_LINE.length).replace(/^ /, ''));
     }
     i = closed ? k : k - 1;
-    if (start[1] !== 'style') {
+    if (start[1] !== 'style' && start[1] !== 'script') {
       unsupported++;
       continue;
     }
@@ -102,6 +130,21 @@ export function importRulesFile(
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) meta = parsed;
     } catch {
       meta = {};
+    }
+    if (start[1] === 'script') {
+      const script = closed ? checkScriptEntry({ name: meta.name, scope: meta.scope, code: body.join('\n'), runAt: meta.runAt }) : null;
+      if (!script || scripts.length >= MAX_SCRIPTS) {
+        invalid++;
+        continue;
+      }
+      const key = `${script.scope}\n${script.code}`;
+      if (seenScripts.has(key)) {
+        duplicates++;
+        continue;
+      }
+      seenScripts.add(key);
+      scripts.push({ ...script, site: parseScriptScope(script.scope)!.host });
+      continue;
     }
     const checked = closed ? checkStyleEntry({ name: meta.name, scope: meta.scope, css: body.join('\n') }) : null;
     if (!checked || styles.length >= MAX_STYLES) {
@@ -117,7 +160,7 @@ export function importRulesFile(
     const scope = parseStyleScope(checked.scope)!;
     styles.push({ ...checked, enabled: meta.enabled !== false, site: styleSite(scope, '*') });
   }
-  return { format, rules: filter.rules.slice(0, MAX_RULES), styles, duplicates, invalid, unsupported };
+  return { format, rules: filter.rules.slice(0, MAX_RULES), styles, scripts, duplicates, invalid, unsupported };
 }
 
 function styleKey(scope: string, css: string): string {

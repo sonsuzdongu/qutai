@@ -19,6 +19,7 @@ import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } fr
 import { cutText, wellFormed } from '../utils/wellFormed';
 import { MAX_RULES, parseRuleLine, siteHost as ruleSite } from '../content/siteRules';
 import { readBackupStyles, type BackupStyle } from '../content/userStyles';
+import { readBackupScripts, type BackupScript } from '../content/userScripts';
 
 /**
  * What goes inside a backup: versioned JSON by kind of data, independent of the SQLite schema, so a
@@ -35,8 +36,10 @@ import { readBackupStyles, type BackupStyle } from '../content/userStyles';
  *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }],
  *            blockingOff?: [host], personal?: [{ host, setting }],
  *            rules?: [{ line, enabled, source, site, url?, createdAt }],   // the user's own site rules (filter lines)
- *            styles?: [{ name, scope, css, enabled, source, site, url?, createdAt }] },   // user styles, CSS sanitised
- *            // again on restore (docs/page-customisation.md); scripts will get their own array
+ *            styles?: [{ name, scope, css, enabled, source, site, url?, createdAt }],   // user styles, CSS sanitised
+ *            // again on restore (docs/page-customisation.md)
+ *            scripts?: [{ name, scope, code, runAt, enabled, seal, source, site, url?, createdAt }] },   // kept scripts:
+ *            // checked again on restore; switched on only when the seal verifies with this phone's own key
  *   settings?: { theme: "dark", textZoom: 120, models: { anthropic: "…" }, … },
  *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…", openrouter?: "…", custom?: "…" },   // only when the user opted in
  *   customHeaders?: [{ name, value }],   // the custom endpoint's extra headers: secrets, so only with apiKeys' opt-in
@@ -162,6 +165,8 @@ export type BackupPayload = {
     rules?: BackupSiteRule[];
     /** User styles (content/userStyles.ts); not in backups made before them. */
     styles?: BackupStyle[];
+    /** Kept scripts (content/userScripts.ts); never read as anything else by versions that don't know them. */
+    scripts?: BackupScript[];
   };
   settings?: BackupSettings;
   apiKeys?: Partial<Record<ProviderId, string>>;
@@ -396,6 +401,8 @@ function parseSites(v: unknown): BackupPayload['sites'] {
   }
   // Styles are checked like a style read from a rules file: the CSS through the sanitiser, the scope and the name.
   const styles = readBackupStyles(v.styles);
+  // Scripts are checked like a script read from a rules file; their seal decides on the phone (restoredState).
+  const scripts = readBackupScripts(v.scripts);
   return {
     permissions: [...permissions.values()],
     location: [...location.values()],
@@ -404,6 +411,7 @@ function parseSites(v: unknown): BackupPayload['sites'] {
     personal: [...personal.values()],
     rules: [...rules.values()],
     ...(styles.length ? { styles } : {}),
+    ...(scripts.length ? { scripts } : {}),
   };
 }
 
@@ -742,6 +750,7 @@ export function summarize(p: BackupPayload): BackupSummary {
             ...(p.sites.blockingOff ?? []),
             ...(p.sites.rules ?? []).map((r) => r.site),
             ...(p.sites.styles ?? []).flatMap((st) => (st.site === '*' ? [] : [st.site])),
+            ...(p.sites.scripts ?? []).map((sc) => sc.site),
           ]).size,
         }
       : {}),

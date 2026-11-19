@@ -39,6 +39,13 @@ export type Settings = {
    * off, it prepares the order and the user pays. Never changed by the assistant, and not restored from a backup.
    */
   assistantPayments: boolean;
+  /**
+   * Settings › Assistant › "Let the assistant run scripts on pages": off by default. Off, run_script is refused and kept
+   * scripts don't run (docs/page-customisation.md › Scripts). Never changed by the assistant, not restored from a backup.
+   */
+  assistantScripts: boolean;
+  /** Per-site script settings under that switch: scripts off on a site, or allowed on its sensitive pages. */
+  scriptSites: ScriptSite[];
   searchEngine: SearchEngineId;
   /** Live suggestions from the search engine while typing; always off in incognito tabs. */
   searchSuggestions: boolean;
@@ -142,6 +149,8 @@ export const DEFAULT_SETTINGS: Settings = {
   confirmActions: false,
   alwaysAllow: [],
   assistantPayments: false,
+  assistantScripts: false,
+  scriptSites: [],
   searchEngine: 'google',
   searchSuggestions: true,
   textZoom: 100,
@@ -187,6 +196,8 @@ const KEYS = {
   confirmActions: 'confirm_actions',
   alwaysAllow: 'always_allow',
   assistantPayments: 'assistant_payments',
+  assistantScripts: 'assistant_scripts',
+  scriptSites: 'script_sites',
   searchEngine: 'search_engine',
   searchSuggestions: 'search_suggestions',
   textZoom: 'text_zoom',
@@ -324,6 +335,8 @@ export async function loadSettings(): Promise<Settings> {
     customHeaderRows,
     alwaysAllow,
     assistantPayments,
+    assistantScripts,
+    scriptSites,
     ...perProvider
   ] = await Promise.all([
     get(KEYS.provider),
@@ -371,6 +384,8 @@ export async function loadSettings(): Promise<Settings> {
     Promise.all(Array.from({ length: MAX_CUSTOM_HEADERS }, (_, i) => get(KEYS.customHeader(i)))),
     get(KEYS.alwaysAllow),
     get(KEYS.assistantPayments),
+    get(KEYS.assistantScripts),
+    get(KEYS.scriptSites),
     ...PROVIDER_ORDER.flatMap((id) => [get(KEYS.apiKey(id)), get(KEYS.model(id))]),
   ]);
 
@@ -384,6 +399,8 @@ export async function loadSettings(): Promise<Settings> {
     confirmActions: confirmActions === 'true',
     alwaysAllow: parseAlwaysAllow(alwaysAllow as string | null),
     assistantPayments: assistantPayments === 'true',
+    assistantScripts: assistantScripts === 'true',
+    scriptSites: parseScriptSites(scriptSites as string | null),
     searchEngine: isSearchEngine(searchEngine) ? searchEngine : DEFAULT_SETTINGS.searchEngine,
     searchSuggestions: searchSuggestions !== 'false',
     textZoom: clampTextZoom(Number(textZoom) || DEFAULT_SETTINGS.textZoom),
@@ -461,6 +478,8 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.confirmActions, String(settings.confirmActions)),
     set(KEYS.alwaysAllow, serializeAlwaysAllow(settings.alwaysAllow)),
     set(KEYS.assistantPayments, settings.assistantPayments ? 'true' : ''),
+    set(KEYS.assistantScripts, settings.assistantScripts ? 'true' : ''),
+    set(KEYS.scriptSites, JSON.stringify(cleanScriptSites(settings.scriptSites))),
     set(KEYS.searchEngine, settings.searchEngine),
     set(KEYS.searchSuggestions, String(settings.searchSuggestions)),
     set(KEYS.textZoom, String(settings.textZoom)),
@@ -506,4 +525,30 @@ export async function saveSettings(settings: Settings): Promise<void> {
     SecureStore.deleteItemAsync(KEYS.legacyModel),
     SecureStore.deleteItemAsync(KEYS.retiredAnimateLogo),
   ]);
+}
+
+/** A site's own script setting (Settings › Assistant › Scripts › Sites). */
+export type ScriptSite = { host: string; setting: 'off' | 'sensitive' };
+
+export function cleanScriptSites(value: unknown): ScriptSite[] {
+  if (!Array.isArray(value)) return [];
+  const out = new Map<string, ScriptSite>();
+  for (const raw of value.slice(0, 200)) {
+    if (!raw || typeof raw !== 'object') continue;
+    const r = raw as Record<string, unknown>;
+    const host = typeof r.host === 'string' ? r.host.trim().toLowerCase().replace(/^www\./, '') : '';
+    if (!host || host.length > 253 || /[\s/]/.test(host)) continue;
+    if (r.setting !== 'off' && r.setting !== 'sensitive') continue;
+    out.set(host, { host, setting: r.setting });
+  }
+  return [...out.values()].sort((a, b) => a.host.localeCompare(b.host));
+}
+
+function parseScriptSites(text: string | null): ScriptSite[] {
+  if (!text) return [];
+  try {
+    return cleanScriptSites(JSON.parse(text));
+  } catch {
+    return [];
+  }
 }

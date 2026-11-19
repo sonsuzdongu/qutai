@@ -223,7 +223,7 @@ test('rules file v2: filter lines and styles round-trip, the format line is writ
   assert.match(text, new RegExp(`^! Title: Qutai site rules\\n! Qutai-Format: ${RULES_FILE_FORMAT}\\n`));
   assert.match(text, /^! \[style\] \{"name":"Red links","scope":"\*\.example\.com","enabled":true\}$/m);
   const read = importRulesFile(text);
-  assert.equal(read.format, 2);
+  assert.equal(read.format, RULES_FILE_FORMAT);
   assert.deepEqual(read.rules, [
     { line: '*.example.com##.ad', enabled: true, site: 'example.com' },
     { line: '||ads.example.net^', enabled: false, site: 'ads.example.net' },
@@ -261,8 +261,11 @@ test('rules file: styles are sanitised on import; broken, unknown and unclosed b
     '! [style] {"name":"Raw","scope":"example.com","enabled":true}',
     '! | a{color:red}',
     '! [end]',
-    '! [script] {"name":"Later","scope":"*"}',
-    '! | alert(1)',
+    '! [script] {"name":"Everywhere","scope":"*"}',
+    '! | return 1;',
+    '! [end]',
+    '! [widget] {"name":"Later"}',
+    '! | something',
     '! [end]',
     '! [style] {"name":"Unclosed","scope":"*"}',
     '! | a{color:blue}',
@@ -277,8 +280,9 @@ test('rules file: styles are sanitised on import; broken, unknown and unclosed b
     read.styles.map((s) => [s.name, s.css]),
     [['Raw', 'a {\n  color: red !important;\n}\n']],
   );
-  assert.equal(read.unsupported, 1, 'the script block');
-  assert.equal(read.invalid, 3, 'the @import style, the unclosed block and the block whose header is not JSON');
+  assert.equal(read.unsupported, 1, 'the block of an unknown kind');
+  assert.equal(read.scripts.length, 0, 'a script for everywhere is refused');
+  assert.equal(read.invalid, 4, 'the @import style, the "everywhere" script, the unclosed block and the block whose header is not JSON');
   assert.equal(read.rules.length, 1);
   assert.ok(read.styles.every((s) => !s.css.includes('@import')));
 });

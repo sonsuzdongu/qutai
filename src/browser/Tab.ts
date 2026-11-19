@@ -21,6 +21,7 @@ import { LoadError, toLoadError } from './navigation';
 import { addCertificateException } from './certificateExceptions';
 import { PAGE_SCRIPT } from './pageScript';
 import { HIDE_PROBE_SCRIPT } from '../content/hideProbe';
+import { SCRIPT_PAGE_SCRIPT } from '../content/scriptPage';
 import { PageSignals, parsePageSignals, samePageSignals } from './pageKind';
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, ReaderArticle } from './reader';
 import { startsLoading } from './loadState';
@@ -84,7 +85,9 @@ export type PageCommand =
   | 'textOf'
   | 'pressInfo'
   | 'pressComposed'
-  | 'enterFacts';
+  | 'enterFacts'
+  | 'scriptFacts'
+  | 'scriptSnapshot';
 
 /** Commands that search the text on screen: in reader mode they run in the reader view. */
 const READER_COMMANDS = new Set<PageCommand>(['findInPage', 'findStep', 'clearFind']);
@@ -409,6 +412,7 @@ export class Tab {
     // A page changing its own address (history API, a #fragment) loads nothing and never reports an end: not a load,
     // and the page's location, camera and playback state carry on (loadState.ts).
     if (!startsLoading({ url, currentUrl: this.url, os: Platform.OS, nativeLoading })) return;
+    this.documents++;
     // A new document: its watches, capture and "allow once" answers start over.
     this.geolocation.reset();
     this.media.reset();
@@ -674,6 +678,9 @@ export class Tab {
     this.handleLoadEnd();
   }
 
+  /** How many documents have started loading in this tab (kept scripts run once per document, browser/keptScripts.ts). */
+  documents = 0;
+
   run<T = unknown>(command: PageCommand, args: unknown[] = [], timeoutMs = 10000): Promise<T> {
     if (PAGE_ACTIONS.has(command)) this.closeReader();
     if (isRunningInBackground()) return this.runInBackground<T>(command, args, timeoutMs);
@@ -691,6 +698,31 @@ export class Tab {
       this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject, timer });
       webview.injectJavaScript(code);
     });
+  }
+
+  /**
+   * Runs a script the user approved (run_script, docs/page-customisation.md › Scripts): `build` makes the wrapped code
+   * from this tab's message nonce and the reply's id (content/userScripts.ts wrapScript); resolves with the reply.
+   * Not while the app is in the background (the approval needs the screen anyway).
+   */
+  runScript<T = unknown>(build: (nonce: string, id: string) => string, timeoutMs: number): Promise<T> {
+    const webview = this.webview;
+    if (!webview || this.isNewTab) return Promise.reject(new Error('The tab is not ready'));
+    this.closeReader();
+    const id = `${this.nonce}-${++this.counter}`;
+    return new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error('timeout'));
+      }, timeoutMs);
+      this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject, timer });
+      webview.injectJavaScript(build(this.nonce, id));
+    });
+  }
+
+  /** The nonce this tab's page messages carry (kept scripts' messages, browser/keptScripts.ts). */
+  get messageNonce(): string {
+    return this.nonce;
   }
 
   /**
@@ -726,6 +758,7 @@ export class Tab {
     return `
 ${PAGE_SCRIPT}
 ${HIDE_PROBE_SCRIPT}
+${SCRIPT_PAGE_SCRIPT}
 (function () {
   var send = function (payload) {
     payload.__qutai = ${JSON.stringify(this.nonce)};
