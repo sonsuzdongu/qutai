@@ -125,7 +125,7 @@ export function AiProviderFields({
       </View>
 
       {value.provider === 'qutai' ? (
-        <CreditsFields model={model} onModel={setModel} onSignIn={onSignIn} />
+        <CreditsFields onSignIn={onSignIn} />
       ) : provider.needsEndpoint ? (
         <CustomEndpointFields value={value} onChange={(next) => onChange({ ...value, ...next })} />
       ) : (

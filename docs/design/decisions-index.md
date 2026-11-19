@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 831 decisions (117 owner, 631 default, 83 waiting); 163 ids moved to Details.
+Totals: 832 decisions (118 owner, 631 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -68,7 +68,7 @@ The open questions, in one place (each row says what the app does today).
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one admin role. | [34](34-credits-and-relay.md) |
 | `CRED-34` | Today abuse flags can't be marked resolved. | [34](34-credits-and-relay.md) |
 | `CRED-35` | Today credit prices are the model's token price plus a margin, with example values; pack sizes, trial credits, which model sits behind… | [34](34-credits-and-relay.md) |
-| `CRED-36` | Today the app shows the model serving each tier ("Which AI models these use"), and the tier names are working names. | [34](34-credits-and-relay.md) |
+| `CRED-36` | Today the app names no tier; the model that served an answer shows only in its cost details and the sent log. | [34](34-credits-and-relay.md) |
 | `CRED-37` | Today there is no crash-report service. | [34](34-credits-and-relay.md) |
 | `CRED-38` | Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3 minutes, and not for incognito… | [34](34-credits-and-relay.md) |
 | `BUY-9` | Today a refund that Apple later cancels does not give the credits back automatically; support can grant them by hand. | [35](35-purchases.md) |
@@ -971,7 +971,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-6` | Only registered agent profiles (named by the SHA-256 of the app's exported prompt and tools) are accepted;… | Default |  |
 | `CRED-7` | The conversation is checked against a per-provider allowlist: no system or developer turns, no remote web… | Default |  |
 | `CRED-8` | Conversations, page content, prompts, web addresses and memory are never stored or logged; relay logs keep… | Owner | not recorded |
-| `CRED-9` | In credit mode the customer sees three tiers (working names Qutai Fast / Qutai Hızlı, Qutai, Qutai Pro),… | Owner | 2026-11-16 |
+| `CRED-9` | In credit mode the server keeps tiers and the customer never sees provider models; the owner sets the model… | Owner | 2026-11-16 |
 | `CRED-10` | A running conversation stays on the model that answered it through a signed route for 30 days after its… | Default |  |
 | `CRED-11` | Today the old request form that names a provider model is still accepted (`acceptDirectModels` on) because… | **Waiting** |  |
 | `CRED-12` | Credits are whole numbers of micro-credits (1 credit = 1 000 000); a charge is the provider's cost ×… | Default |  |
@@ -987,7 +987,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-24` | The relay refuses app versions below the server's minimum version ("update Qutai"); the seeded minimum is… | Default |  |
 | `CRED-25` | Today the deployed relay rules must allow memory of at least about 10 000 characters and 9 images per… | **Waiting** |  |
 | `CRED-26` | Today a step holds its whole output limit, so a small balance refuses requests that would cost far less… | **Waiting** |  |
-| `CRED-27` | The low-credit note shows once when the balance falls below 5 × the tier's "credits per step" and again… | Default |  |
+| `CRED-27` | The low-credit note shows once when the balance falls below 5 × the default tier's "credits per step" and… | Default |  |
 | `CRED-28` | Charges are shown only in credits, never as money, and the balance under the panel title is always shown… | Default |  |
 | `CRED-29` | Only models with a price in force are offered; prices are added as new dated rows, never edited, and never… | Default |  |
 | `CRED-30` | Today users are charged for every Gemini search, including those inside Google's free monthly allowance. | **Waiting** |  |
@@ -996,9 +996,10 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one… | **Waiting** |  |
 | `CRED-34` | Today abuse flags can't be marked resolved. | **Waiting** |  |
 | `CRED-35` | Today credit prices are the model's token price plus a margin, with example values; pack sizes, trial… | **Waiting** |  |
-| `CRED-36` | Today the app shows the model serving each tier ("Which AI models these use"), and the tier names are… | **Waiting** |  |
+| `CRED-36` | Today the app names no tier; the model that served an answer shows only in its cost details and the sent… | **Waiting** |  |
 | `CRED-37` | Today there is no crash-report service. | **Waiting** |  |
 | `CRED-38` | Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3… | **Waiting** |  |
+| `CRED-39` | No tier choice in the app: every Qutai Credits request uses the tier `/config` marks as default; stored… | Owner | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 

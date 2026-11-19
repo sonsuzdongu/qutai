@@ -8,9 +8,6 @@ import { makeStyles } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { BottomSheet } from './BottomSheet';
 import { ModelCatalogPicker, modelDetail, useCatalog } from './ModelCatalogPicker';
-import { creditsChoiceName, currentTier, useCreditsState } from '../credits';
-import { tierAbout, tierCostLine } from '../credits/tiers';
-import { showTierDetails } from './CreditsFields';
 import { compactModelName } from './statusFit';
 
 type Props = {
@@ -36,38 +33,38 @@ export function conversationModelInfo(
   const use = choice && isConfigured(settings, choice.provider) ? choice : null;
   const provider = use?.provider ?? settings.provider;
   const model = use?.model ?? settings.models[provider];
-  const label = choiceLabel(provider, model);
+  // Qutai Credits has no model or tier to name (CRED-39): "Qutai Credits", or "Qutai" beside the balance.
+  const label = provider === 'qutai' ? '' : modelLabel(provider, model);
   const name = short && compact ? compactModelName(label) : label;
-  const line = short ? name : `${getProvider(provider).label} · ${name}`;
+  const line =
+    provider === 'qutai' ? (short ? (getProvider(provider).shortLabel ?? getProvider(provider).label) : getProvider(provider).label) : short ? name : `${getProvider(provider).label} · ${name}`;
   return use ? `${line} · ${t('chat.modelThisChat')}` : line;
 }
 
-/** A provider's model by name; Qutai Credits: the tier the stored choice means now (or the model, without tiers). */
-function choiceLabel(provider: ProviderId, model: string): string {
-  return provider === 'qutai' ? creditsChoiceName(model) : modelLabel(provider, model);
+/** A provider and its model by name; Qutai Credits by its name alone (nothing to choose behind it, CRED-39). */
+function choiceLine(provider: ProviderId, model: string): string {
+  const label = getProvider(provider).label;
+  return provider === 'qutai' ? label : `${label} · ${modelLabel(provider, model)}`;
 }
 
 /** Models offered for a provider: its own list plus the model set in Settings when it isn't on it. */
 function modelsFor(settings: AiConfig, id: ProviderId): string[] {
   const provider = getProvider(id);
   const ids = provider.models.map((m) => m.id);
-  // Qutai Credits: only what the server offers now.
-  if (id === 'qutai') return ids;
   const configured = settings.models[id]?.trim();
   if (configured && !ids.includes(configured)) ids.push(configured);
   return ids;
 }
 
 /**
- * Provider and model for one conversation, from the providers that are set up. "Use my default" clears the choice;
+ * Provider and model for one conversation, from the providers that are set up (Qutai Credits is one row: there is no
+ * model or tier to choose behind it, CRED-39). "Use my default" clears the choice;
  * the default in Settings never changes here. A switch applies to the next message (the history is rebuilt from text
  * and tool calls for the new model, as after any switch).
  */
 export function ModelSheet({ visible, settings, current, onChoose, onOpenSettings, onClose }: Props) {
   const styles = useStyles();
   const catalog = useCatalog();
-  // Qutai Credits' tiers come from the server's configuration: followed so the list fills in once it is read.
-  const credits = useCreditsState();
   const [browsing, setBrowsing] = useState(false);
   const ready = PROVIDER_ORDER.filter((id) => isConfigured(settings, id));
   const selected = current && isConfigured(settings, current.provider) ? current : null;
@@ -75,11 +72,7 @@ export function ModelSheet({ visible, settings, current, onChoose, onOpenSetting
     onChoose(choice);
     onClose();
   };
-  const defaultLine = `${getProvider(settings.provider).label} · ${choiceLabel(settings.provider, settings.models[settings.provider])}`;
-  // A Qutai choice saved before tiers (a model) shows as the tier it maps to.
-  const selectedModel =
-    selected?.provider === 'qutai' ? (currentTier(selected.model)?.id ?? selected.model) : selected?.model;
-  const tiers = !!credits.config?.tiers.length;
+  const defaultLine = choiceLine(settings.provider, settings.models[settings.provider]);
 
   return (
     <BottomSheet
@@ -116,15 +109,29 @@ export function ModelSheet({ visible, settings, current, onChoose, onOpenSetting
 
       {ready.map((id) => {
         const provider = getProvider(id);
+        if (id === 'qutai') {
+          // One row: Qutai Credits, whatever tier an older version stored for this chat.
+          const on = selected?.provider === 'qutai';
+          return (
+            <Pressable
+              key={id}
+              style={[styles.option, styles.group]}
+              onPress={() => choose({ provider: id, model: '' })}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+            >
+              <Radio selected={on} />
+              <Text style={[styles.optionText, styles.flex]}>{provider.label}</Text>
+            </Pressable>
+          );
+        }
         return (
           <View key={id} style={styles.group}>
             <Text style={styles.label}>{provider.label}</Text>
             {modelsFor(settings, id).map((model) => {
-              const on = selected?.provider === id && selectedModel === model;
+              const on = selected?.provider === id && selected.model === model;
               const tag = provider.models.find((m) => m.id === model)?.tag;
               const info = provider.catalog ? catalog?.models.find((m) => m.id === model) : undefined;
-              const tier = id === 'qutai' && tiers ? credits.config!.tiers.find((x) => x.id === model) : undefined;
-              const tierLines = tier ? [tierAbout(tier.id), tierCostLine(tier)].filter((x): x is string => !!x) : [];
               return (
                 <Pressable
                   key={model}
@@ -140,20 +147,10 @@ export function ModelSheet({ visible, settings, current, onChoose, onOpenSetting
                       {tag ? ` (${t(`model.${tag}`)})` : ''}
                     </Text>
                     {info && <Text style={styles.detail}>{modelDetail(info)}</Text>}
-                    {tierLines.map((line) => (
-                      <Text key={line} style={styles.detail}>
-                        {line}
-                      </Text>
-                    ))}
                   </View>
                 </Pressable>
               );
             })}
-            {id === 'qutai' && tiers && (
-              <Pressable onPress={() => showTierDetails(credits.config!)} style={styles.browse} accessibilityRole="button">
-                <Text style={styles.link}>{t('tier.details')}</Text>
-              </Pressable>
-            )}
             {/* A model from the catalogue that was chosen through the full list. */}
             {provider.catalog && selected?.provider === id && !modelsFor(settings, id).includes(selected.model) && (
               <View style={styles.option}>

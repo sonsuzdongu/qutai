@@ -4,22 +4,17 @@
 // tiers, an older server without tiers, choices saved before tiers, and continuing a paused answer.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { anthropic } from '../../src/ai/anthropic.ts';
 import { createAnswerMeter, failedRequestCost } from '../../src/ai/cost.ts';
-import { gemini } from '../../src/ai/gemini.ts';
-import { openai } from '../../src/ai/openai.ts';
 import type { ModelReply, ModelRequest, Turn } from '../../src/ai/types.ts';
 import { parseConfig } from '../../src/credits/client.ts';
 import { nothingSent, RelayError } from '../../src/credits/errors.ts';
 import { continueAfterPause } from '../../src/credits/pause.ts';
 import { createCreditsProvider } from '../../src/credits/provider.ts';
 import { limitsFor, stepLimit } from '../../src/credits/rules.ts';
-import { preTierChoice, resolveTier, tierCostLine, tierName, tierTarget } from '../../src/credits/tiers.ts';
+import { defaultTier, tierTarget } from '../../src/credits/tiers.ts';
 import type { PublicConfig, Tier } from '../../src/credits/types.ts';
 import { CONFIG, error, fakeServer, json, settlement, sse, type Answer } from './fake.ts';
 
-const KNOWN = [...anthropic.models, ...openai.models, ...gemini.models];
-const tagOf = (id: string) => KNOWN.find((m) => m.id === id)?.tag;
 
 function tier(id: string, format: Tier['format'], model: string, extra: Partial<Tier> = {}): Tier {
   return {
@@ -128,19 +123,20 @@ function request(model: string, turns: Turn[], extra: Partial<ModelRequest> = {}
   };
 }
 
-function setup(relay: Answer[], config: PublicConfig = TIERED) {
-  const server = fakeServer({ relay, config });
+/** `config` may be a function: the server's configuration as it is at each read (the owner changes it meanwhile). */
+function setup(relay: Answer[], config: PublicConfig | (() => PublicConfig) = TIERED) {
+  const read = typeof config === 'function' ? config : () => config;
+  const server = fakeServer({ relay, config: read() });
   const client = server.client();
   let refreshed = 0;
   const p = createCreditsProvider({
     client: () => client,
-    config: async () => config,
+    config: async () => read(),
     refreshConfig: async () => {
       refreshed++;
-      return config;
+      return read();
     },
     appVersion: '1.2.0',
-    tagOf,
   });
   return { server, p, refreshed: () => refreshed };
 }
@@ -194,48 +190,23 @@ test('an older server: no tiers, the direct form still accepted', () => {
   assert.equal(stepLimit(config, false), 40);
 });
 
-test('names, lines and the approximate cost of tiers, in English and Turkish', async () => {
-  assert.equal(tierName('fast'), 'Qutai Fast');
-  assert.equal(tierName('standard'), 'Qutai');
-  assert.equal(tierName('pro'), 'Qutai Pro');
-  assert.equal(tierName('deep-research'), 'Qutai Deep research');
-  assert.equal(tierCostLine(TIERED.tiers[2]), 'About 1.20 credits per step');
-  assert.equal(tierCostLine({ ...TIERED.tiers[2], approxCreditsPerStep: null }), null);
-  const { setLanguage } = await import('../../src/i18n/index.ts');
-  setLanguage('tr');
-  try {
-    assert.equal(tierName('fast'), 'Qutai Hızlı');
-    assert.equal(tierCostLine(TIERED.tiers[2]), 'Adım başına yaklaşık 1,20 kredi');
-  } finally {
-    setLanguage('en');
-  }
+test('no tier is named or offered by the app: the server’s default tier, or its first when none is marked (CRED-39)', () => {
+  assert.equal(defaultTier(TIERED)?.id, 'standard');
+  assert.equal(defaultTier({ ...TIERED, tiers: TIERED.tiers.map((t) => ({ ...t, default: false })) })?.id, 'fast');
+  assert.equal(defaultTier(CONFIG), null);
 });
 
 // ---------- stored choices ----------
 
-test('a choice saved before tiers maps to a sensible tier, the default otherwise; tier limits apply', () => {
-  assert.equal(resolveTier(TIERED, 'pro', tagOf)?.id, 'pro');
-  assert.equal(resolveTier(TIERED, '', tagOf)?.id, 'standard');
-  assert.equal(resolveTier(TIERED, undefined, tagOf)?.id, 'standard');
-  // The model the tier is served by now.
-  assert.equal(resolveTier(TIERED, 'claude-haiku-5-5', tagOf)?.id, 'fast');
-  assert.equal(resolveTier(TIERED, 'claude-opus-5-5', tagOf)?.id, 'pro');
-  // By what the model was in the own-key lists: OpenAI's fastest → fast, Gemini's strongest → pro.
-  const fastest = openai.models.find((m) => m.tag === 'fastest')!.id;
-  const strongest = gemini.models.find((m) => m.tag === 'strongest')!.id;
-  assert.equal(resolveTier(TIERED, fastest, tagOf)?.id, 'fast');
-  assert.equal(resolveTier(TIERED, strongest, tagOf)?.id, 'pro');
-  // Unknown model or a tier switched off: the default.
-  assert.equal(resolveTier(TIERED, 'some-model-9', tagOf)?.id, 'standard');
-  assert.equal(resolveTier({ ...TIERED, tiers: TIERED.tiers.slice(0, 2) }, 'pro', tagOf)?.id, 'standard');
-  assert.equal(resolveTier(CONFIG, 'claude-sonnet-5-5', tagOf), null);
-
-  const known = (id: string) => KNOWN.some((m) => m.id === id);
-  assert.equal(preTierChoice('claude-haiku-5-5', TIERED, known), true);
-  assert.equal(preTierChoice('gpt-5.6-terra', TIERED, () => false), true, 'the server’s older model list');
-  assert.equal(preTierChoice('pro', TIERED, known), false);
-  assert.equal(preTierChoice('', TIERED, known), false);
-  assert.equal(preTierChoice('research', TIERED, known), false, 'an unlisted tier id is kept for when it comes back');
+test('a tier or model stored by an older version is ignored: every request goes to the server’s default tier; its limits apply', async () => {
+  const stored = ['pro', 'fast', 'claude-haiku-5-5', 'claude-opus-5-5', 'some-model-9', 'research', ''];
+  const { server, p } = setup(stored.map(() => served(textStream('Hi'), 'anthropic', 'claude-sonnet-5-5', 'standard', ROUTE)));
+  for (const model of stored) await p.call(request(model, [{ role: 'user', text: 'Hi' }]));
+  assert.deepEqual(
+    server.relayRequests().map((r) => r.body.tier),
+    stored.map(() => 'standard'),
+  );
+  assert.ok(server.relayRequests().every((r) => r.body.model === undefined));
 
   assert.equal(limitsFor(TIERED, TIERED.tiers[0]).maxSteps, 25);
   assert.equal(stepLimit(TIERED, false, TIERED.tiers[2]), 60);
@@ -258,10 +229,12 @@ test('a conversation from before tiers keeps its history: the raw output of the 
 
 // ---------- the tier form ----------
 
-test('a new conversation on a tier: { tier, provider: format }, no model, no route; the headers say what served it', async () => {
+test('a new conversation on the default tier: { tier, provider: format }, no model, no route; the headers say what served it', async () => {
   const turns: Turn[] = [{ role: 'user', text: 'Hello' }];
-  const { server, p } = setup([served(textStream('Hi there'), 'anthropic', 'claude-opus-5-5', 'pro', ROUTE)]);
-  const reply = await p.call(request('pro', turns, { agent: { step: 2, memoryTools: true, memory: 'm' } }));
+  // The owner made "pro" the default in the panel; the stored "fast" from an older version plays no part.
+  const proDefault: PublicConfig = { ...TIERED, tiers: TIERED.tiers.map((t) => ({ ...t, default: t.id === 'pro' })) };
+  const { server, p } = setup([served(textStream('Hi there'), 'anthropic', 'claude-opus-5-5', 'pro', ROUTE)], proDefault);
+  const reply = await p.call(request('fast', turns, { agent: { step: 2, memoryTools: true, memory: 'm' } }));
   const [req] = server.relayRequests();
   assert.deepEqual(Object.keys(req.body).sort(), ['context', 'input', 'options', 'profile', 'provider', 'step', 'stream', 'tier']);
   assert.equal(req.body.tier, 'pro');
@@ -294,13 +267,16 @@ test('the route is kept with the conversation and sent back with the same provid
   assert.deepEqual(tierTarget(config.tiers[1], turns), { format: 'anthropic', model: 'claude-sonnet-5-5', route: ROUTE });
 });
 
-test('switching tier mid-conversation: no route (it is bound to its tier), the new tier’s format', async () => {
-  const config: PublicConfig = { ...TIERED, tiers: [...TIERED.tiers.slice(0, 2), tier('pro', 'openai', 'gpt-6-astra', { order: 2 })] };
+test('the owner makes another tier the default mid-conversation: no route (it is bound to its tier), the new tier’s format', async () => {
+  const before: PublicConfig = { ...TIERED, tiers: [...TIERED.tiers.slice(0, 2), tier('pro', 'openai', 'gpt-6-astra', { order: 2 })] };
+  const after: PublicConfig = { ...before, tiers: before.tiers.map((t) => ({ ...t, default: t.id === 'pro' })) };
+  let config = before;
   const turns: Turn[] = [{ role: 'user', text: 'Hello' }];
-  const { server, p } = setup([served(textStream('One'), 'anthropic', 'claude-sonnet-5-5', 'standard', ROUTE), served(openaiStream('Two'), 'openai', 'gpt-6-astra', 'pro', 'r2')], config);
+  const { server, p } = setup([served(textStream('One'), 'anthropic', 'claude-sonnet-5-5', 'standard', ROUTE), served(openaiStream('Two'), 'openai', 'gpt-6-astra', 'pro', 'r2')], () => config);
   keep(turns, await p.call(request('standard', turns)), 'standard');
   turns.push({ role: 'user', text: 'Harder' });
-  await p.call(request('pro', turns));
+  config = after;
+  await p.call(request('standard', turns));
   const [, req] = server.relayRequests();
   assert.equal(req.body.tier, 'pro');
   assert.equal(req.body.provider, 'openai');
@@ -344,7 +320,7 @@ test('tier_unknown: the configuration is read again, nothing was sent or charged
   const { server, p, refreshed } = setup([error('tier_unknown', 400)]);
   await assert.rejects(p.call(request('standard', [{ role: 'user', text: 'Hi' }])), (e: unknown) => {
     assert.ok(e instanceof RelayError && e.kind === 'tier_unknown');
-    assert.match(e.message, /Choose a Qutai model again/);
+    assert.match(e.message, /AI settings have just changed/);
     assert.ok(nothingSent(e), 'the message can go back into the input');
     return true;
   });
@@ -353,11 +329,27 @@ test('tier_unknown: the configuration is read again, nothing was sent or charged
   const { setLanguage } = await import('../../src/i18n/index.ts');
   setLanguage('tr');
   try {
-    assert.match(new RelayError('tier_unknown', 400).message, /yeniden seçin/);
+    assert.match(new RelayError('tier_unknown', 400).message, /az önce değişti/);
     assert.match(new RelayError('tier_unavailable', 503).message, /geçici olarak kullanılamıyor/);
   } finally {
     setLanguage('en');
   }
+});
+
+test('tier_unknown after the owner renamed the default tier: /config read again and sent once on the new default; never twice', async () => {
+  const renamed: PublicConfig = { ...TIERED, tiers: TIERED.tiers.map((t) => (t.id === 'standard' ? { ...t, id: 'everyday' } : t)) };
+  let config = TIERED;
+  const { server, p } = setup([error('tier_unknown', 400), served(textStream('Hi'), 'anthropic', 'claude-sonnet-5-5', 'everyday', ROUTE)], () => config);
+  const call = p.call(request('pro', [{ role: 'user', text: 'Hi' }]));
+  config = renamed;
+  const reply = await call;
+  assert.equal(reply.text, 'Hi');
+  assert.deepEqual(server.relayRequests().map((r) => r.body.tier), ['standard', 'everyday']);
+
+  let flip = 0;
+  const again = setup([error('tier_unknown', 400), error('tier_unknown', 400), textStream('never')], () => (flip++ % 2 ? renamed : TIERED));
+  await assert.rejects(again.p.call(request('', [{ role: 'user', text: 'Hi' }])), (e: unknown) => e instanceof RelayError && e.kind === 'tier_unknown');
+  assert.equal(again.server.relayRequests().length, 2);
 });
 
 test('tier_unavailable (Retry-After 300): not waited out, said plainly, nothing charged', async () => {

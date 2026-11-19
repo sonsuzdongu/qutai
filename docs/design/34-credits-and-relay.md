@@ -14,10 +14,12 @@ prepaid credits. The server builds the system prompt and tools from a registered
    answer is remembered on this phone.
 3. Setup in a pro build leads with Qutai Credits (disclosure → sign in → "You're signed in" with the balance and Buy
    credits). "Use my own AI provider key" is the second section of an accordion (`INTRO-28`); "Decide later" skips.
-4. The user picks a **tier**, never a provider model: **Qutai Fast** (everyday questions, fewest credits), **Qutai**
-   (most tasks, the default) and **Qutai Pro** (hard, many-step work). Each shows "about N credits per step". "Which AI
-   models these use" shows the model behind each tier today. The per-conversation menu under the panel title offers
-   the same list.
+4. There is nothing to choose behind Qutai Credits (since 20 Nov 2026, `CRED-39`): no tier and no model, in setup,
+   Settings or the menu under the panel title. Every request uses the tier the server's `/config` marks as default, so
+   the owner changes the model behind it (or which tier is the default) in the admin panel without an app release.
+   Settings › Assistant says "Qutai chooses the AI model and may change it without an app update". The per-conversation
+   menu still switches between Qutai Credits and the user's own keys. (16–19 Nov 2026 the user picked Qutai Fast, Qutai
+   or Qutai Pro.)
 5. When the user asks "find me a flight to Izmir", the app builds each step exactly as with an own key but sends only
    the conversation, the memory section, the custom instructions, the options and the profile id. The server adds the
    system prompt and tools, picks the model for the tier, reserves the most the step can cost, streams the provider's
@@ -25,7 +27,7 @@ prepaid credits. The server builds the system prompt and tools from a registered
 6. Under each answer: "0.42 credits · 1.5k tokens", never a dollar figure; the same per request in "What was sent to
    the AI". The balance shows under the panel title while Qutai Credits is in use, and in Settings › Account › Qutai
    Credits with the latest ledger entries.
-7. When the balance would pay for fewer than 5 steps on the tier, a quiet note offers Buy credits, once per drop.
+7. When the balance would pay for fewer than 5 steps on the default tier, a quiet note offers Buy credits, once per drop.
 8. Only while signed in: after sign-out, account deletion, a session the server ended or a backup restored on a new
    phone, sending keeps the message (with attachments) in the input and asks "Sign in / Use my own key / Not now".
    Settings › Assistant won't let Qutai be picked while signed out.
@@ -56,7 +58,7 @@ prepaid credits. The server builds the system prompt and tools from a registered
   Status: Default (manager or implementing session; open to change) · Why: "so the relay can't be pointed at other tasks than the agent's"; a user may still ask the assistant anything, which costs them credits · Enforced: Server: backend/apps/api/src/providers/anthropic.ts, openai.ts, gemini.ts (input checks) · Source: backend/README.md › Relay › Request; backend/DESIGN.md › Relay
 - **`CRED-8`** Conversations, page content, prompts, web addresses and memory are never stored or logged; relay logs keep only ids, provider, model, token counts, searches, cost, timing and outcome.
   Status: Owner, date not recorded · Why: privacy; the admin panel "can never show what a user asked or browsed" · Enforced: Server: backend/apps/api/src/lib/log.ts (ALLOWED, sanitize), checked by a test · Source: backend/DESIGN.md › Data added to the plan's tables; backend/README.md › Relay › Logs; TODO.md › 1. Server
-- **`CRED-9`** In credit mode the customer sees three tiers (working names Qutai Fast / Qutai Hızlı, Qutai, Qutai Pro), never provider models; which model serves each is set by the owner in the admin panel without an app release.
+- **`CRED-9`** In credit mode the server keeps tiers (ids `fast`, `standard`, `pro` today) and the customer never sees provider models; which model serves each is set by the owner in the admin panel without an app release. Since 20 Nov 2026 the app shows no tier either (`CRED-39`).
   Status: Owner, 2026-11-16 · Why: reason not recorded beyond the decision · Enforced: Server: backend/apps/api/src/relay/tiers.ts (resolveTarget); In the app: src/credits/tiers.ts · Source: backend/DESIGN.md › Tiers in credit mode; README.md › Tiers; fb223e9
 - **`CRED-10`** A running conversation stays on the model that answered it through a signed route for 30 days after its last answer; when the tier moved to another provider, the app rebuilds the conversation once and retries.
   Status: Default (manager or implementing session; open to change) · Why: a model's raw output is replayed only to that model; a server-side conversation table (stores state) and an unsigned hint (any client could pin any model) were rejected · Enforced: Server: backend/apps/api/src/relay/tiers.ts (ROUTE_TTL_MS, issueRoute), signed.ts (signToken, verifyToken) · Source: backend/DESIGN.md › Tiers › Conversation consistency
@@ -88,7 +90,7 @@ prepaid credits. The server builds the system prompt and tools from a registered
   Status: Waiting for the owner ([TODO.md](../../TODO.md#2-app)) · Why: match own-key mode (the app otherwise shortens memory and drops older images) · Source: TODO.md › 2. App; 50d2289
 - **`CRED-26`** Today a step holds its whole output limit, so a small balance refuses requests that would cost far less (in the seed: about 57 credits for GPT-5.6 Terra, 28 for Claude Sonnet 5.5, 18 for Gemini 3.8 Flash).
   Status: Waiting for the owner ([TODO.md](../../TODO.md#2-app)) · Why: worst-case reservation · Enforced: Server: backend/apps/api/src/account/UserAccount.ts (reserve) · Source: TODO.md › 2. App; notes qutai-credits-app
-- **`CRED-27`** The low-credit note shows once when the balance falls below 5 × the tier's "credits per step" and again only after the balance rose above it; it is kept in memory only.
+- **`CRED-27`** The low-credit note shows once when the balance falls below 5 × the default tier's "credits per step" and again only after the balance rose above it; it is kept in memory only.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded beyond "a quiet low-credit note" · Source: src/credits/lowBalance.ts (LOW_BALANCE_STEPS, nextLowBalance); 2e3b657
 - **`CRED-28`** Charges are shown only in credits, never as money, and the balance under the panel title is always shown in full.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: README.md › Qutai Credits; b211327
@@ -106,8 +108,10 @@ prepaid credits. The server builds the system prompt and tools from a registered
   Status: Waiting for the owner ([TODO.md](../../TODO.md#1-server)) · Why: step 9 decides how flags are raised and cleared · Enforced: Designed, not built · Source: backend/DESIGN.md › Admin panel (step 6) › Open
 - **`CRED-35`** Today credit prices are the model's token price plus a margin, with example values; pack sizes, trial credits, which model sits behind each tier, per-tier step limits, per-user limits and whether credits expire are not decided.
   Status: Waiting for the owner ([TODO.md](../../TODO.md#pending-decisions)) · Why: business decisions; seed values are examples (owner's open questions 1–5 and 8, 16 Nov 2026) · Source: TODO.md › Pending decisions; backend/DESIGN.md › Tiers › Open; memory open-owner-questions
-- **`CRED-36`** Today the app shows the model serving each tier ("Which AI models these use"), and the tier names are working names.
+- **`CRED-36`** Today the app names no tier and has no "Which AI models these use" view (removed with the tier choice, `CRED-39`); the model that served an answer shows only in that answer's cost details ("Answered by …") and in "What was sent to the AI".
   Status: Waiting for the owner ([TODO.md](../../TODO.md#2-app)) · Why: the provider is visible anyway through the answer format, so the question is only the model name · Source: TODO.md › 2. App; backend/DESIGN.md › Tiers › Open
+- **`CRED-39`** No tier choice anywhere in the app (setup, Settings › Assistant, the per-conversation menu, cost texts): every Qutai Credits request uses the tier `/config` marks as default (its first tier if none is marked), read when the request is made; the app hard-codes no tier id or model. A tier or model stored by an older version (Settings' `qutai` model, a conversation's choice) is kept but never read, so it can't break anything; a conversation's route from another tier is not sent (it starts fresh on the default). `tier_unknown` (the default renamed or removed after `/config` was read) reads `/config` again and sends once more on the new default. On a server without tiers the direct form goes out with the stored model if offered, else the server's first model. The identity note says "running on Qutai Credits" without a tier; answer costs say "Model: Qutai Credits" plus "Answered by <model>". The request still names the tier (`tier`): the server refuses a request with neither `tier` nor `model` (400 `bad_request`, reason `model`); letting it default would be a small server change (in `parseRelayRequest`, accept no `tier` and no `model` and resolve to the default tier), not needed because the app reads the default from `/config`.
+  Status: Owner, 2026-11-20 (no choice; the server's default; the owner sets the model in the panel) · Why: the owner wants one model they control from the panel, without asking the user · Enforced: In the app: src/credits/tiers.ts (defaultTier), src/credits/provider.ts (callTier), App.tsx, src/components/CreditsFields.tsx, ModelSheet.tsx, src/agent/identity.ts, src/storage/chat.ts; scripts/credits-tests/tiers.test.ts, provider.test.ts · Source: docs/test-checklist.md › 20 Kasım'da bildirilenler
 - **`CRED-37`** Today there is no crash-report service.
   Status: Waiting for the owner ([TODO.md](../../TODO.md#1-server)) · Why: "decide before launch" · Source: backend/DESIGN.md › Analytics; TODO.md › 1. Server
 - **`CRED-38`** Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3 minutes, and not for incognito conversations on Android (iPhone holds them anyway).

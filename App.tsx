@@ -74,11 +74,11 @@ import { AttachmentPreview } from './src/components/AttachmentViews';
 import { describeFilters } from './src/chat/filterSummary';
 import { PdfReaderHost } from './src/components/PdfReaderHost';
 import { geminiStreamingAvailable } from './src/ai/gemini';
-import { creditsStore, creditsReady, isPreTierChoice, modelTag, refreshCredits, useCreditsState } from './src/credits';
+import { creditsStore, creditsReady, refreshCredits, useCreditsState } from './src/credits';
 import { creditsLabel } from './src/components/AnswerCost';
 import { nothingSent, RelayError } from './src/credits/errors';
 import { limitsFor, offeredModels } from './src/credits/rules';
-import { resolveTier, tierName, tierTarget, usesTiers } from './src/credits/tiers';
+import { defaultTier, tierTarget, usesTiers } from './src/credits/tiers';
 import { dismissLowBalance, LOW_BALANCE_START, lowBalanceThreshold, nextLowBalance } from './src/credits/lowBalance';
 import type { PublicConfig, Tier } from './src/credits/types';
 import { accountSession, useAccountState } from './src/account';
@@ -819,13 +819,11 @@ function BrowserApp({
     refreshCredits();
   }, []);
   // The low-credit hint (Qutai Credits only): once when the balance drops below a few steps' worth on the panel
-  // conversation's tier, again only after it has risen above that (credits/lowBalance.ts).
+  // server's default tier (the one every request uses, CRED-39), again only after it has risen above that
+  // (credits/lowBalance.ts).
   const panelChoice = conversation.model && isConfigured(settings, conversation.model.provider) ? conversation.model : null;
   const panelOnCredits = (panelChoice?.provider ?? settings.provider) === 'qutai';
-  const panelTier =
-    panelOnCredits && usesTiers(creditsState.config)
-      ? resolveTier(creditsState.config, panelChoice?.provider === 'qutai' ? panelChoice.model : settings.models.qutai, modelTag)
-      : null;
+  const panelTier = panelOnCredits && usesTiers(creditsState.config) ? defaultTier(creditsState.config) : null;
   const lowThreshold = lowBalanceThreshold(creditsState.config, panelTier);
   const [lowBalance, setLowBalance] = useState(LOW_BALANCE_START);
   useEffect(() => {
@@ -1313,16 +1311,10 @@ function BrowserApp({
       if (provider === 'qutai') {
         credits = await creditsStore.config();
         if (usesTiers(credits)) {
-          // Tiers: the tier the choice means now. A choice saved before tiers (a provider model) is stored as its
-          // tier from now on; a tier id the server doesn't list (switched off) keeps its place but uses the default.
-          tier = resolveTier(credits, target.model, modelTag);
-          if (tier) {
-            if (isPreTierChoice(target.model, credits)) {
-              if (useChoice) chat.setModel({ provider: 'qutai', model: tier.id });
-              else void onChangeSettings({ ...settingsRef.current, models: { ...settingsRef.current.models, qutai: tier.id } });
-            }
-            target.model = tier.id;
-          }
+          // Tiers: always the server's default one (CRED-39). A tier chosen in an older version is still stored but
+          // not read, so it can't name a tier the server no longer has.
+          tier = defaultTier(credits);
+          if (tier) target.model = tier.id;
         } else {
           // The model saved earlier is no longer offered: the server's first one (the relay refuses others).
           const offered = offeredModels(credits);
@@ -1334,12 +1326,12 @@ function BrowserApp({
         ? tierTarget(tier, chat.turns).format
         : (credits?.models.find((m) => m.model === target.model)?.provider ?? provider);
       const limits = credits ? limitsFor(credits, tier) : null;
-      // Which AI it is, for "which model are you?": Qutai on its tier with credits, else the provider and model.
+      // Which AI it is, for "which model are you?": Qutai Credits (no tier named), else the provider and model.
       if (userTurn.role === 'user') {
         userTurn.text = withIdentity(
           userTurn.text,
           provider === 'qutai'
-            ? { mode: 'credits', ...(tier ? { tier: { id: tier.id, name: tierName(tier.id) } } : {}) }
+            ? { mode: 'credits' }
             : { mode: 'own', provider: getProvider(provider).label, model: target.model },
         );
       }

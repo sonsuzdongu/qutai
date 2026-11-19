@@ -162,11 +162,11 @@ test('raw output from an own-key request is never replayed through the relay (an
   assert.deepEqual(input[1], { role: 'assistant', content: [{ type: 'text', text: 'from my key' }] });
 });
 
-test('checked before sending: maintenance, too old an app, a model not offered; nothing goes out', async () => {
+test('checked before sending: maintenance, too old an app, no model offered at all; nothing goes out', async () => {
   const cases: [PublicConfig, string, string, string][] = [
     [{ ...CONFIG, maintenance: { enabled: true, message: 'Back at 10:00' } }, '1.2.0', 'claude-sonnet-5-5', 'maintenance'],
     [{ ...CONFIG, minAppVersion: '2.0.0' }, '1.2.0', 'claude-sonnet-5-5', 'upgrade_required'],
-    [CONFIG, '1.2.0', 'claude-opus-5-5', 'model_not_allowed'],
+    [{ ...CONFIG, models: [] }, '1.2.0', 'claude-opus-5-5', 'model_not_allowed'],
   ];
   for (const [config, version, model, kind] of cases) {
     const { server, p } = provider([anthropicStream('x')], config, version);
@@ -175,6 +175,14 @@ test('checked before sending: maintenance, too old an app, a model not offered; 
   }
   const { p } = provider([], { ...CONFIG, maintenance: { enabled: true, message: 'Back at 10:00' } });
   await assert.rejects(p.call(request('claude-sonnet-5-5')), /Back at 10:00/);
+});
+
+test('an older server without tiers: a stored model it no longer offers (or none) goes out as its first model, no choice to make (CRED-39)', async () => {
+  for (const stored of ['claude-opus-5-5', 'pro', '']) {
+    const { server, p } = provider([anthropicStream('x')], CONFIG, '1.2.0');
+    await p.call(request(stored));
+    assert.equal(server.relayRequests()[0].body.model, CONFIG.models[0].model);
+  }
 });
 
 test('signed out: refused before anything is sent', async () => {

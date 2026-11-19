@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { AnswerCost, formatUsd, RequestCost, sumCosts } from '../ai/cost';
-import { modelLabel } from '../ai/providers';
+import { getProvider, modelLabel } from '../ai/providers';
 import { totalTokens, type Usage } from '../ai/usage';
 import { getLocale, t } from '../i18n';
 import { formatDate, formatNumber, formatUsdAmount, numberSeparators } from '../i18n/format';
@@ -76,9 +76,10 @@ export function requestBreakdown(c: RequestCost): string {
 /** Shows the breakdown of an answer, with the conversation's total so far. */
 export function showAnswerBreakdown(c: AnswerCost, conversation: AnswerCost[]) {
   const total = sumCosts(conversation);
+  // Qutai Credits on a tier names no tier (CRED-39): "Model: Qutai Credits", and the model that really answered below.
+  const name = modelLabel(c.provider, c.model) || getProvider(c.provider).label;
   const lines = [
-    t('cost.model', { model: modelLabel(c.provider, c.model) }),
-    // Qutai Credits on a tier: the model that really answered (the tier is what was chosen).
+    t('cost.model', { model: name }),
     ...(c.served && c.served.model !== c.model ? [t('cost.servedBy', { model: providerModelName(c.served.model) })] : []),
     t('cost.requests', { n: count(c.requests) }),
     ...usageLines(c.usage),

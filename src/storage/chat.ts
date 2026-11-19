@@ -48,11 +48,17 @@ function validLanguageTag(tag: unknown): tag is string {
   return typeof tag === 'string' && /^[a-zA-Z]{2,3}(?:[-_][a-zA-Z0-9]{2,8}){0,3}$/.test(tag);
 }
 
-/** A saved model choice is used only if it names a provider this version knows and a model id. */
+/**
+ * A saved model choice is used only if it names a provider this version knows and a model id. Qutai Credits needs no
+ * model: it is chosen as `''` (and a tier an older version stored is kept but not read, CRED-39).
+ */
 function validModel(model: unknown): model is ModelChoice {
   const m = model as ModelChoice | undefined;
   return (
-    !!m && (PROVIDER_ORDER as string[]).includes(m.provider) && typeof m.model === 'string' && m.model.trim().length > 0
+    !!m &&
+    (PROVIDER_ORDER as string[]).includes(m.provider) &&
+    typeof m.model === 'string' &&
+    (m.provider === 'qutai' || m.model.trim().length > 0)
   );
 }
 

@@ -1,19 +1,16 @@
 // "Which model are you?" (16 Nov 2026, on the phone: "I have no such information"). Each message now says which AI
-// the assistant is (src/agent/identity.ts): Qutai on its tier with Qutai Credits, never the provider or model behind
+// the assistant is (src/agent/identity.ts): Qutai on Qutai Credits (no tier since 20 Nov 2026), never the provider or model behind
 // it; with the user's own key, the provider and model from settings.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { identityNote, withIdentity } from '../../src/agent/identity.ts';
 
-test('Qutai Credits: Qutai on the tier, and never the provider or model', () => {
-  const note = identityNote({ mode: 'credits', tier: { id: 'pro', name: 'Qutai Pro' } });
+test('Qutai Credits: Qutai on Qutai Credits, no tier named (CRED-39), never the provider or model', () => {
+  const note = identityNote({ mode: 'credits' });
   assert.match(note, /you are Qutai/);
-  assert.match(note, /"Qutai Pro" tier \(pro\) of Qutai Credits/);
+  assert.match(note, /running on Qutai Credits\./);
   assert.match(note, /Never name or guess the AI company or model/);
-  for (const name of ['Anthropic', 'OpenAI', 'Gemini', 'Claude', 'GPT']) assert.ok(!note.includes(name), name);
-  const noTier = identityNote({ mode: 'credits' });
-  assert.match(noTier, /running on Qutai Credits/);
-  assert.match(noTier, /Never name/);
+  for (const name of ['Anthropic', 'OpenAI', 'Gemini', 'Claude', 'GPT', 'tier', 'Qutai Pro', 'Qutai Fast']) assert.ok(!note.includes(name), name);
 });
 
 test("own key: the provider and model from settings", () => {
@@ -30,7 +27,7 @@ test('names cannot break out of the note', () => {
 
 test('the note goes inside the bracketed context at the end of the message', () => {
   const text = 'which model are you?\n\n[Current tab 1: new tab page. Qutai\'s interface language: English.]';
-  const out = withIdentity(text, { mode: 'credits', tier: { id: 'fast', name: 'Qutai Fast' } });
+  const out = withIdentity(text, { mode: 'credits' });
   assert.ok(out.startsWith('which model are you?\n\n[Current tab 1'));
   assert.ok(out.endsWith('can change.]'));
   assert.equal(out.split('[').length, 2);

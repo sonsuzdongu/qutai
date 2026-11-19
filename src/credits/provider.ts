@@ -10,8 +10,8 @@ import type { Wire } from '../ai/wire';
 import { AGENT_PROFILE_ID } from './agentProfileId';
 import type { CreditsClient } from './client';
 import { RelayError } from './errors';
-import { checkServer, preflight } from './rules';
-import { expectedModel, resolveTier, tierTarget } from './tiers';
+import { checkServer, offeredModels, preflight } from './rules';
+import { defaultTier, expectedModel, tierTarget } from './tiers';
 import type { PublicConfig, RelayPause, RelayProvider, RelayRequest, RelayServed, Tier } from './types';
 import { cutText } from '../utils/wellFormed';
 
@@ -25,12 +25,14 @@ import { cutText } from '../utils/wellFormed';
  * The system prompt and tools are the server's copy of the app's (the agent profile, `AGENT_PROFILE_ID`); what is
  * the user's own goes as `context` (the memory section and the custom instructions), as the server requires.
  *
- * Tiers (backend/README.md › Relay › Tiers): when `/config` lists tiers, `req.model` holds the tier id and the request
- * is `{ tier, provider: <format>, route? }`; the format, the expected model and the route come from the conversation's
+ * Tiers (backend/README.md › Relay › Tiers): when `/config` lists tiers, the request uses the tier `/config` marks as
+ * default (never one the user chose: there is no choice since 20 Nov 2026, CRED-39; `req.model` is not read) and is
+ * `{ tier, provider: <format>, route? }`; the format, the expected model and the route come from the conversation's
  * last answer on that tier (tiers.ts tierTarget), and the reply says what served it (`reply.served`, kept with the
  * turn). `409 tier_moved` rebuilds the conversation for the tier's new provider (another adapter, so no other
- * provider's raw output) and sends once more without a route; a second move is an error. Without tiers on the server,
- * `req.model` is a provider model id and the older direct form is sent, as before.
+ * provider's raw output) and sends once more without a route; a second move is an error. `400 tier_unknown` (the
+ * default changed after `/config` was read) reads `/config` again and sends once on the new default. Without tiers on
+ * the server, the older direct form is sent: `req.model` when the server offers it, else its first model.
  */
 
 /** What one task step needs besides the conversation (set by runAgent, see ModelRequest.agent). */
@@ -44,8 +46,6 @@ export type CreditsDeps = {
   /** Reads the configuration again now (the server said a tier is unknown, or moved). */
   refreshConfig?: () => Promise<PublicConfig>;
   appVersion: string;
-  /** What a model was in the own-key lists, to map a model saved before tiers (tiers.ts resolveTier). */
-  tagOf?: Parameters<typeof resolveTier>[2];
 };
 
 const ADAPTERS: Record<RelayProvider, (req: ModelRequest, wire: Wire) => Promise<ModelReply>> = {
@@ -182,10 +182,11 @@ export function createCreditsProvider(deps: CreditsDeps): Omit<Provider, 'label'
         let reply: ModelReply;
         if (config.tiers.length > 0) {
           checkServer(config, deps.appVersion);
-          const tier = resolveTier(config, req.model, deps.tagOf) as Tier;
+          const tier = defaultTier(config) as Tier;
           reply = await callTier(tier, req.turns, send, !!agent.continuation, deps);
         } else {
-          const model = preflight(config, deps.appVersion, req.model);
+          const offered = offeredModels(config);
+          const model = preflight(config, deps.appVersion, offered.some((m) => m.model === req.model) ? req.model : (offered[0]?.model ?? req.model));
           reply = await send({ provider: model.provider as RelayProvider, model: model.model }, model.model, model.webSearch, config.limits);
           notes.served ??= { provider: model.provider as RelayProvider, model: model.model };
         }
@@ -220,14 +221,28 @@ type Send = (
 /**
  * One request on a tier, with the one retry `tier_moved` allows: rebuilt for the provider the tier runs on now, without
  * a route. A continuation can't move (it is bound to the model that paused): that ends as `continuation_invalid`.
+ * `tier_unknown` (the default tier was renamed or removed after `/config` was read): one more try on the default of a
+ * freshly read `/config`, when that is another tier.
  */
-async function callTier(tier: Tier, turns: ModelRequest['turns'], send: Send, continuing: boolean, deps: CreditsDeps): Promise<ModelReply> {
+async function callTier(
+  tier: Tier,
+  turns: ModelRequest['turns'],
+  send: Send,
+  continuing: boolean,
+  deps: CreditsDeps,
+  retried = false,
+): Promise<ModelReply> {
   const target = tierTarget(tier, turns);
   try {
     return await send({ tier: tier.id, provider: target.format, ...(target.route ? { route: target.route } : {}) }, target.model, tier.webSearch, tier.limits);
   } catch (e) {
     if (!(e instanceof RelayError)) throw e;
-    if (e.kind === 'tier_unknown') deps.refreshConfig?.().catch(() => {});
+    if (e.kind === 'tier_unknown') {
+      const fresh = deps.refreshConfig ? await deps.refreshConfig().catch(() => null) : null;
+      const next = fresh ? defaultTier(fresh) : null;
+      if (retried || continuing || !next || next.id === tier.id) throw e;
+      return callTier(next, turns, send, continuing, deps, true);
+    }
     if (e.kind !== 'tier_moved') throw e;
     deps.refreshConfig?.().catch(() => {});
     if (continuing) throw new RelayError('continuation_invalid', e.status);

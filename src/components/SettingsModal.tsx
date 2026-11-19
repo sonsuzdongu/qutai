@@ -277,7 +277,10 @@ function SettingsPages({
               title={t('settings.assistant')}
               summary={
                 configured
-                  ? `${provider.label} · ${modelName}`
+                  ? // Qutai Credits: nothing to name behind it (CRED-39).
+                    settings.provider === 'qutai'
+                    ? provider.label
+                    : `${provider.label} · ${modelName}`
                   : t('settings.noKeySummary')
               }
               onPress={() => setPage('assistant')}
