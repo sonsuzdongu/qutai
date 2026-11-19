@@ -31,7 +31,7 @@ export const PAGE = {
   title: t('Everything Qutai does, in one place.', 'Qutai’ın yaptığı her şey, tek sayfada.'),
   lede: t(
     'A browser for iPhone and Android with an AI assistant built in. Ask in your own words, by typing or by voice; the examples under each feature are requests you could send as they are. This page follows Qutai’s design record: what the code does today, and where its limits are.',
-    'iPhone ve Android için, içinde yapay zekâ asistanı olan bir tarayıcı. Kendi sözlerinizle, yazarak ya da konuşarak isteyin; her özelliğin altındaki örnekleri olduğu gibi gönderebilirsiniz. Bu sayfa Qutai’ın tasarım kaydını izler: kodun bugün yaptıkları ve sınırları.',
+    'iPhone ve Android için, yapay zekâ asistanıyla gelen bir tarayıcı. Ne istediğinizi kendi sözlerinizle yazın ya da söyleyin; her özelliğin altındaki örnekleri olduğu gibi gönderebilirsiniz. Bu sayfa Qutai’ın tasarım kaydına dayanır: kodun bugün yaptıklarını ve sınırlarını anlatır.',
   ),
   medallionLabel: t(
     'An illuminated medallion with Qutai’s mark at its centre and ten petals, one for each group of features; each petal links to its group.',
@@ -48,11 +48,11 @@ export const PAGE = {
   notBuiltTitle: t('Deliberately not built', 'Bilerek yapılmayanlar'),
   notBuiltLede: t(
     'Things you might expect that Qutai does not have, and what it does instead.',
-    'Bekleyebileceğiniz ama Qutai’da olmayan şeyler ve onların yerine yaptıkları.',
+    'Belki beklediğiniz ama Qutai’da olmayanlar, ve bunun yerine ne yaptığı.',
   ),
   status: t(
     'Qutai is in development and not released yet. Most of this has been tried in the iOS simulator and the Android emulator and in tests, much of it not yet on a real phone. What the assistant manages also depends on the AI model you choose and on the site.',
-    'Qutai geliştirme aşamasında ve henüz yayımlanmadı. Buradakilerin çoğu iOS simülatöründe, Android emülatöründe ve testlerde denendi; birçoğu henüz gerçek bir telefonda denenmedi. Asistanın neyi başaracağı seçtiğiniz yapay zekâ modeline ve siteye de bağlıdır.',
+    'Qutai geliştirme aşamasında, henüz yayımlanmadı. Buradakilerin çoğu iOS simülatöründe, Android emülatöründe ve testlerde denendi; birçoğu gerçek bir telefonda henüz denenmedi. Asistanın neyi başaracağı seçtiğiniz yapay zekâ modeline ve siteye göre de değişir.',
   ),
   checked: t('Checked against the design record on', 'Tasarım kaydıyla karşılaştırma tarihi:'),
   home: t('Back to the home page', 'Ana sayfaya dön'),
@@ -81,31 +81,31 @@ export const PRINCIPLES: { icon: IconName; title: Text; body: Text }[] = [
     title: t('The AI gets labels, never secrets', 'Yapay zekâ etiket görür, sır görmez'),
     body: t(
       'Contacts reach the AI as names, never numbers or addresses; cookies as names, never values; ID numbers and locked memories as labels; password fields as “(filled)”.',
-      'Kişiler yapay zekâya numara ya da adres olarak değil, ad olarak gider; çerezler değer olarak değil, ad olarak; kimlik numaraları ve kilitlediğiniz bilgiler etiket olarak; şifre alanları yalnızca dolu olduğu bilgisiyle.',
+      'Yapay zekâ rehberinizdeki kişilerin numarasını ya da adresini değil, yalnızca adını görür; çerezlerin değerini değil, adını görür. Kimlik numaraları ve kilitlediğiniz bilgiler ona etiket olarak gider; şifre alanlarının yalnızca dolu olduğunu bilir.',
     ),
   },
   {
     icon: 'hand',
-    title: t('Nothing irreversible without your yes', 'Onayınız olmadan geri dönüşü olmayan bir şey yapılmaz'),
+    title: t('Nothing irreversible without your yes', 'Geri dönüşü olmayan her adım sizin onayınızla'),
     body: t(
       'Posting, sending, paying, deleting and changing account settings on a site need Qutai’s own dialog, which shows what Qutai itself reads on the page and allows one press of one button.',
-      'Bir sitede paylaşmak, göndermek, ödemek, silmek ve hesap ayarlarını değiştirmek Qutai’ın kendi penceresini ister; pencere Qutai’ın sayfada kendisinin okuduğunu gösterir ve tek bir düğmeye bir kez basmaya izin verir.',
+      'Bir sitede paylaşım, gönderme, ödeme, silme ya da hesap ayarı değişikliği için Qutai kendi penceresini açar. Pencerede Qutai’ın sayfada kendi okuduğu bilgiler görünür; onay, tek bir düğmeye yalnızca bir kez basma izni verir.',
     ),
   },
   {
     icon: 'shield',
-    title: t('Pages are data, not orders', 'Sayfalar veridir, emir değil'),
+    title: t('Pages are data, not orders', 'Sayfadaki yazı emir değildir'),
     body: t(
       'Text on a web page, in a PDF or a file can never approve anything, trigger a contact lookup or make the assistant change a protective setting. The assistant itself can still be misled by a page, which is why those steps are left to the app and to you.',
-      'Bir web sayfasındaki, PDF’teki ya da dosyadaki yazı hiçbir şeyi onaylayamaz, kişi aratamaz, asistana koruyucu bir ayarı değiştirtemez. Asistanın kendisi yine de bir sayfa tarafından yanıltılabilir; bu adımların uygulamaya ve size bırakılmasının nedeni bu.',
+      'Bir web sayfasındaki, PDF’teki ya da dosyadaki yazı hiçbir şeyi onaylayamaz, rehberde kişi aratamaz, asistana koruyucu bir ayarı kapattıramaz. Yine de bir sayfa asistanı yanıltabilir; bu adımları uygulamaya ve size bırakmamızın nedeni de bu.',
     ),
   },
   {
     icon: 'sliders',
-    title: t('Risky powers start switched off', 'Riskli yetkiler kapalı başlar'),
+    title: t('Risky powers start switched off', 'Riskli yetkiler baştan kapalı'),
     body: t(
       'Completing payments, running page scripts, working in the background and putting AI keys in a backup stay off until you turn them on. Imported scripts and apps arrive switched off.',
-      'Ödemeyi tamamlama, sayfalarda betik çalıştırma, arka planda çalışma ve AI anahtarlarını yedeğe koyma siz açana kadar kapalıdır. İçe aktarılan betikler ve uygulamalar kapalı gelir.',
+      'Ödemeyi tamamlamak, sayfalarda betik çalıştırmak, arka planda çalışmak ve AI anahtarlarını yedeğe koymak, siz açmadıkça kapalıdır. İçe aktarılan betikler ve uygulamalar da kapalı gelir.',
     ),
   },
   {
@@ -113,15 +113,15 @@ export const PRINCIPLES: { icon: IconName; title: Text; body: Text }[] = [
     title: t('Open source, no server needed', 'Açık kaynak, sunucu gerekmez'),
     body: t(
       'The whole app is open source (Apache 2.0). A build from the repository has no account section and never contacts a Qutai server.',
-      'Uygulamanın tamamı açık kaynak (Apache 2.0). Depodan derlenen sürümde hesap bölümü yoktur ve hiçbir zaman Qutai sunucusuna bağlanılmaz.',
+      'Uygulamanın tamamı açık kaynak (Apache 2.0). Depodan derlediğiniz sürümde hesap bölümü yoktur, uygulama Qutai sunucusuna hiç bağlanmaz.',
     ),
   },
   {
     icon: 'incognito',
-    title: t('Private means private', 'Gizli, gerçekten gizli'),
+    title: t('Private means private', 'Gizli mod gerçekten gizli'),
     body: t(
       'Incognito tabs, and any conversation that touched one, are never written to disk, and get no location, calendar, contacts, memory or apps.',
-      'Gizli sekmeler ve onlara dokunan her sohbet diske hiç yazılmaz; konum, takvim, kişiler, hafıza ve uygulamalar orada kullanılmaz.',
+      'Gizli sekmeler ve bunlara dokunan sohbetler diske hiç yazılmaz; orada konum, takvim, rehber, hafıza ve uygulamalar kullanılmaz.',
     ),
   },
 ];
@@ -133,14 +133,14 @@ export const GROUPS: Group[] = [
     title: t('The assistant at work', 'İş başında asistan'),
     lede: t(
       'It reads the page and uses it the way you would: taps, types, picks, scrolls and opens tabs, one visible step at a time.',
-      'Sayfayı okur ve sizin kullanacağınız gibi kullanır: dokunur, yazar, seçer, kaydırır, sekme açar; her adımı görünür.',
+      'Sayfayı okur ve tıpkı sizin gibi kullanır: dokunur, yazar, seçer, kaydırır, sekme açar. Her adımı ekranda görürsünüz.',
     ),
     items: [
       {
         title: t('Reads and uses pages', 'Sayfaları okur ve kullanır'),
         body: t(
           'Fills forms, fixes the errors a form reports, chooses options and moves between pages. It answers in the language you write in.',
-          'Form doldurur, formun gösterdiği hataları düzeltir, seçenek seçer, sayfalar arasında gezinir. Size hangi dilde yazdıysanız o dilde yanıt verir.',
+          'Form doldurur, formun gösterdiği hataları düzeltir, seçenekleri işaretler, sayfalar arasında gezinir. Siz hangi dilde yazarsanız o dilde yanıt verir.',
         ),
         asks: [
           t('Fill in this form with my details', 'Bu formu bilgilerimle doldur'),
@@ -151,14 +151,14 @@ export const GROUPS: Group[] = [
         title: t('You see where and what', 'Nerede ve ne yaptığını görürsünüz'),
         body: t(
           'A ring marks the element just before it is tapped or typed into; one line at the bottom says the step (“Tapping the “Add to cart” button”) with Stop next to it. While a task runs, the message field stays closed.',
-          'Bir öğeye dokunmadan ya da yazmadan hemen önce üzerinde bir halka belirir; altta tek bir satır adımı söyler (“Sepete ekle” düğmesine dokunuluyor), yanında Durdur vardır. Görev sürerken mesaj alanı kapalıdır.',
+          'Bir yere dokunmadan ya da yazmadan hemen önce orada bir halka belirir; altta tek satırda o anki adım yazar (“Sepete ekle” düğmesine dokunuluyor), yanında da Durdur düğmesi. Görev sürerken mesaj alanı kapalı kalır.',
         ),
       },
       {
         title: t('Compares across tabs', 'Sekmeler arasında karşılaştırır'),
         body: t(
           'Reads other tabs without switching away and answers with a table, which it can also save as a CSV file.',
-          'Diğer sekmeleri geçmeden okur, bir tabloyla yanıtlar; tabloyu CSV dosyası olarak da kaydedebilir.',
+          'Diğer sekmelere geçmeden onları da okur ve bir tabloyla yanıt verir; tabloyu CSV dosyası olarak da kaydedebilir.',
         ),
         asks: [
           t('Which of these three is the better deal? Make a table', 'Bu üçünden hangisi daha uygun? Tablo yap'),
@@ -168,22 +168,22 @@ export const GROUPS: Group[] = [
         title: t('Deep research with sources', 'Kaynaklı derin araştırma'),
         body: t(
           'Searches and reads many pages and PDFs, takes notes and writes a report with its sources under the answer, which you can share as a PDF. It takes a few minutes and costs more than a normal request.',
-          'Birçok sayfayı ve PDF’i arar ve okur, not alır, kaynakları yanıtın altında listelenen bir rapor yazar; raporu PDF olarak paylaşabilirsiniz. Birkaç dakika sürer, normal bir istekten daha pahalıdır.',
+          'Birçok sayfayı ve PDF’i bulup okur, not alır ve kaynakları altında listelenen bir rapor yazar; raporu PDF olarak paylaşabilirsiniz. Birkaç dakika sürer, normal bir istekten daha pahalıya gelir.',
         ),
         asks: [t('Research the e-bike rules in London', 'İstanbul’daki elektrikli bisiklet kurallarını araştır')],
       },
       {
-        title: t('Tab groups share one conversation', 'Sekme grubu tek sohbeti paylaşır'),
+        title: t('Tab groups share one conversation', 'Bir gruptaki sekmeler aynı sohbette'),
         body: t(
           'Tabs the assistant opens join the current group, so a task’s tabs and its chat stay together; links in an answer open there too.',
-          'Asistanın açtığı sekmeler o anki gruba katılır; böylece bir görevin sekmeleri ve sohbeti bir arada kalır. Yanıttaki bağlantılar da orada açılır.',
+          'Asistanın açtığı sekmeler bulunduğunuz gruba eklenir; böylece bir görevin sekmeleri ve sohbeti bir arada durur. Yanıttaki bağlantılar da aynı grupta açılır.',
         ),
       },
       {
         title: t('Saved tasks and reminders', 'Kayıtlı görevler ve hatırlatmalar'),
         body: t(
           'Save a request as a task, run it by name, or get a reminder daily or weekly. Nothing runs while Qutai is closed. On Android, a task can keep working in the background if you turn that on.',
-          'Bir isteği görev olarak kaydedin, adıyla çalıştırın ya da her gün veya her hafta hatırlatılsın. Qutai kapalıyken hiçbir şey çalışmaz. Android’de açarsanız görev arka planda sürebilir.',
+          'Bir isteği görev olarak kaydedin; sonra adıyla çalıştırın ya da her gün veya her hafta size hatırlatılsın. Qutai kapalıyken hiçbir şey çalışmaz. Android’de bu ayarı açarsanız görev arka planda sürebilir.',
         ),
         asks: [t('Run the task called Weekly prices', 'Haftalık fiyatlar görevini çalıştır')],
       },
@@ -191,7 +191,7 @@ export const GROUPS: Group[] = [
         title: t('Changes Qutai’s settings for you', 'Qutai’ın ayarlarını sizin için değiştirir'),
         body: t(
           'Appearance and browsing preferences from a fixed list, with a line saying what changed. It can never weaken a protection, such as turning blocking off.',
-          'Belirli bir listedeki görünüm ve gezinme tercihleri; neyin değiştiğini bir satırla söyler. Engellemeyi kapatmak gibi bir korumayı asla zayıflatamaz.',
+          'Belirli görünüm ve gezinme ayarlarını değiştirir, neyi değiştirdiğini de bir satırla söyler. Reklam engellemeyi kapatmak gibi bir korumayı ise hiçbir zaman zayıflatamaz.',
         ),
         asks: [t('Turn on dark mode and make the text bigger', 'Koyu temayı aç ve yazıyı büyüt')],
       },
@@ -203,14 +203,14 @@ export const GROUPS: Group[] = [
     title: t('It gets to know you', 'Sizi tanır'),
     lede: t(
       'What you tell it once is kept on the phone and used in later tasks, so each task needs less explaining.',
-      'Bir kez söylediğiniz telefonda saklanır ve sonraki görevlerde kullanılır; her görevde daha az anlatırsınız.',
+      'Bir kez söylediğinizi telefonda saklar ve sonraki görevlerde kullanır; zamanla daha az anlatmanız gerekir.',
     ),
     items: [
       {
-        title: t('Memory in categories', 'Kategorili hafıza'),
+        title: t('Memory in categories', 'Konulara ayrılmış hafıza'),
         body: t(
           'Identity and contact, addresses, shopping, travel, food, budget and general. See, edit, search and delete it in Settings, and lock any memory so the AI sees only a label. Passwords, card numbers, one-time codes and IBANs are never kept, even if you ask.',
-          'Kimlik ve iletişim, adresler, alışveriş, seyahat, yemek, bütçe ve genel. Ayarlar’da görün, düzenleyin, arayın, silin; herhangi bir bilgiyi kilitleyin, yapay zekâ yalnızca etiketini görsün. Şifre, kart numarası, tek kullanımlık kod ve IBAN siz isteseniz de saklanmaz.',
+          'Kimlik ve iletişim, adresler, alışveriş, seyahat, yemek, bütçe ve genel. Hepsini Ayarlar’da görebilir, düzenleyebilir, arayabilir, silebilirsiniz; kilitlediğiniz bir bilginin yalnızca etiketi yapay zekâya gider. Şifre, kart numarası, tek kullanımlık kod ve IBAN siz isteseniz bile saklanmaz.',
         ),
         asks: [
           t('Remember that I’m vegetarian', 'Vejetaryen olduğumu hatırla'),
@@ -221,7 +221,7 @@ export const GROUPS: Group[] = [
         title: t('Tell it about yourself', 'Kendinizden bahsedin'),
         body: t(
           'In setup, talk or type freely. One AI request turns it into notes, Qutai asks at most three follow-up questions, and you review every note before anything is saved; allergies and health can be hidden from the AI.',
-          'Kurulumda serbestçe konuşun ya da yazın. Tek bir yapay zekâ isteği bunu notlara çevirir, Qutai en fazla üç soru daha sorar ve hiçbir şey kaydedilmeden önce her notu gözden geçirirsiniz; alerji ve sağlık bilgileri yapay zekâdan gizlenebilir.',
+          'Kurulumda kendinizi serbestçe anlatın, sesle ya da yazarak. Qutai bunu tek bir yapay zekâ isteğiyle notlara çevirir, en fazla üç soru daha sorar; kaydetmeden önce her notu siz gözden geçirirsiniz. Alerji ve sağlık bilgilerinizi yapay zekâdan gizleyebilirsiniz.',
         ),
         asks: [
           t(
@@ -231,10 +231,10 @@ export const GROUPS: Group[] = [
         ],
       },
       {
-        title: t('Your details, asked per site', 'Bilgileriniz, site bazında sorulur'),
+        title: t('Your details, asked per site', 'Bilgileriniz her site için ayrıca sorulur'),
         body: t(
           'Before your remembered name, address or phone go into a site, Qutai asks whether that site may have them: once, always or never.',
-          'Hafızadaki adınız, adresiniz ya da telefonunuz bir siteye girilmeden önce Qutai o sitenin bunları alıp alamayacağını sorar: bir kez, her zaman ya da hiçbir zaman.',
+          'Hafızadaki adınız, adresiniz ya da telefon numaranız bir siteye yazılmadan önce Qutai size sorar: bu siteye bir kez mi, her zaman mı, yoksa hiç mi?',
         ),
         asks: [t('Order dinner for two from this restaurant', 'Bu restorandan iki kişilik akşam yemeği sipariş et')],
       },
@@ -242,7 +242,7 @@ export const GROUPS: Group[] = [
         title: t('Custom instructions', 'Özel talimatlar'),
         body: t(
           'How you like answers, followed in every request.',
-          'Yanıtları nasıl istediğiniz; her istekte uygulanır.',
+          'Yanıtları nasıl istediğinizi bir kez yazın; her istekte buna uyar.',
         ),
       },
     ],
@@ -253,14 +253,14 @@ export const GROUPS: Group[] = [
     title: t('Asks before it matters', 'Önemli adımda sorar'),
     lede: t(
       'The steps that can’t be undone are decided by the app, not by the AI model: Qutai’s own dialogs, which a page can neither draw nor answer.',
-      'Geri alınamayan adımlara yapay zekâ modeli değil, uygulama karar verir: bir sayfanın ne çizebildiği ne de yanıtlayabildiği Qutai pencereleri.',
+      'Geri alınamayan adımlara yapay zekâ değil, uygulama karar verir: bunlar Qutai’ın kendi pencerelerinde sorulur; bir sayfa bu pencereleri ne taklit edebilir ne de yanıtlayabilir.',
     ),
     items: [
       {
-        title: t('A level for every site', 'Her site için bir düzey'),
+        title: t('A level for every site', 'Her siteye ayrı izin'),
         body: t(
           'Always allow, ask every time, read only or blocked; a site without its own level follows “Ask before every action”.',
-          'Her zaman izin ver, her seferinde sor, salt okunur ya da engelli; kendi düzeyi olmayan site “Her işlemden önce sor” ayarını izler.',
+          'Her zaman izin ver, her seferinde sor, yalnızca oku ya da engelle. Ayrı bir ayar yapmadığınız siteler “Her işlemden önce sor” ayarına uyar.',
         ),
         asks: [t('Only read this site, don’t click anything', 'Bu sitede sadece oku, hiçbir şeye tıklama')],
       },
@@ -268,7 +268,7 @@ export const GROUPS: Group[] = [
         title: t('Posting and sending with your approval', 'Onayınızla paylaşma ve gönderme'),
         body: t(
           'Comments, replies, reviews, contact forms and messages on a site: Qutai reads the exact text in the box and shows it with the button it will press once. If the text changes, nothing is pressed.',
-          'Bir sitedeki yorum, yanıt, değerlendirme, iletişim formu ve mesajlar: Qutai kutudaki metni kendisi okur ve bir kez basacağı düğmeyle birlikte gösterir. Metin değişirse hiçbir şeye basılmaz.',
+          'Yorum, yanıt, değerlendirme, iletişim formu ya da bir sitedeki mesaj: Qutai kutudaki metni kendisi okur, basacağı düğmeyle birlikte size gösterir ve onayınızla bir kez basar. Metin bu arada değişirse hiçbir şeye basmaz.',
         ),
         asks: [t('Comment “Great video, thanks!” on this video', 'Bu videoya “Harika video, teşekkürler!” diye yorum yaz')],
       },
@@ -276,7 +276,7 @@ export const GROUPS: Group[] = [
         title: t('Shopping, up to the payment', 'Ödemeye kadar alışveriş'),
         body: t(
           'The assistant fills the cart and the checkout, then you choose who pays: press the last button yourself, or turn on “Let the assistant complete payments” and approve each payment in Qutai’s window, which shows the site, the total on the page, the order and the payment method every time. There is no spending limit.',
-          'Asistan sepeti ve ödeme formunu doldurur, ödemeyi kimin yapacağını siz seçersiniz: son düğmeye kendiniz basarsınız ya da “Asistan ödemeleri tamamlasın”ı açıp her ödemeyi Qutai penceresinde onaylarsınız; pencere her seferinde siteyi, sayfadaki toplamı, siparişi ve ödeme yöntemini gösterir. Harcama sınırı yoktur.',
+          'Asistan sepeti ve ödeme formunu doldurur; ödemeyi kimin yapacağına siz karar verirsiniz. Son düğmeye kendiniz basarsınız ya da “Asistan ödemeleri tamamlasın”ı açarsınız; o zaman her ödeme, siteyi, sayfadaki tutarı, siparişi ve ödeme yöntemini gösteren Qutai penceresinde onayınızı bekler. Harcama sınırı yoktur.',
         ),
         asks: [
           t('Put these in the cart and go to checkout', 'Bunları sepete ekle, ödeme adımına geç'),
@@ -287,14 +287,14 @@ export const GROUPS: Group[] = [
         title: t('Deleting and account changes', 'Silme ve hesap değişiklikleri'),
         body: t(
           'Deleting something on a site, or changing its account or security settings, gets the same kind of approval.',
-          'Bir sitede bir şeyi silmek ya da hesap veya güvenlik ayarlarını değiştirmek aynı türden bir onay ister.',
+          'Bir sitede bir şeyi silmek ya da hesap veya güvenlik ayarlarını değiştirmek de aynı şekilde onayınızı bekler.',
         ),
       },
       {
         title: t('Secrets stay with you', 'Sırlar sizde kalır'),
         body: t(
           'The app refuses to type card numbers and to type into password, one-time-code, card and security-code fields. Sign-ins and bank checks (3-D Secure) are left to you.',
-          'Uygulama kart numarası yazmayı ve şifre, tek kullanımlık kod, kart ve güvenlik kodu alanlarına yazmayı reddeder. Girişler ve banka doğrulaması (3-D Secure) size bırakılır.',
+          'Qutai kart numarası yazmaz; şifre, tek kullanımlık kod, kart ve güvenlik kodu alanlarına hiçbir şey yazmaz. Siteye giriş ve banka doğrulaması (3-D Secure) size kalır.',
         ),
       },
     ],
@@ -305,14 +305,14 @@ export const GROUPS: Group[] = [
     title: t('Your phone, within reach', 'Telefonunuz elinizin altında'),
     lede: t(
       'Calendar, reminders, calls and messages, prepared by the assistant and finished by you.',
-      'Takvim, hatırlatıcılar, aramalar ve mesajlar: asistan hazırlar, siz tamamlarsınız.',
+      'Takvim, hatırlatıcılar, aramalar ve mesajlar: asistan hazırlar, son adımı siz atarsınız.',
     ),
     items: [
       {
         title: t('Calendar and reminders', 'Takvim ve hatırlatıcılar'),
         body: t(
           'Adds events and reminders after showing you the details, reads your calendar when you allow it, and schedules a notification.',
-          'Ayrıntıları gösterdikten sonra etkinlik ve hatırlatıcı ekler, izin verirseniz takviminizi okur, bildirim kurar.',
+          'Ayrıntıları gösterip onayınızı aldıktan sonra etkinlik ve hatırlatıcı ekler; izin verirseniz takviminizi okur, bildirim kurar.',
         ),
         asks: [
           t('Add this concert to my calendar', 'Bu konseri takvimime ekle'),
@@ -320,18 +320,18 @@ export const GROUPS: Group[] = [
         ],
       },
       {
-        title: t('Calls and messages you send', 'Sizin gönderdiğiniz aramalar ve mesajlar'),
+        title: t('Calls and messages you send', 'Aramayı ve mesajı siz gönderirsiniz'),
         body: t(
           'A call is a Call button; texts, WhatsApp messages and emails are drafts. The assistant never sends a message by itself.',
-          'Arama bir Ara düğmesidir; SMS, WhatsApp ve e-posta birer taslaktır. Asistan hiçbir mesajı kendi başına göndermez.',
+          'Arama için bir Ara düğmesi çıkar; SMS, WhatsApp ve e-posta taslak olarak hazırlanır. Asistan hiçbir mesajı kendi başına göndermez.',
         ),
         asks: [t('Book a table here, or give me their number', 'Burada masa ayırt ya da numaralarını ver')],
       },
       {
-        title: t('Contacts by name', 'Rehberden adıyla'),
+        title: t('Contacts by name', 'Rehberden adıyla bulur'),
         body: t(
           'Only a name you said is looked up, on the phone. The AI sees names and labels such as “mobile”, never numbers or addresses; if several match, you pick in Qutai’s own list. Off in incognito.',
-          'Yalnızca söylediğiniz ad, telefonda aranır. Yapay zekâ “cep” gibi ad ve etiketleri görür, numara ya da adresi asla; birden fazla eşleşme varsa Qutai’ın kendi listesinden siz seçersiniz. Gizli modda kapalıdır.',
+          'Yalnızca söylediğiniz ad aranır, o da telefonda. Yapay zekâ adları ve “cep” gibi etiketleri görür, numaraları ve adresleri hiçbir zaman görmez. Birden fazla kişi çıkarsa Qutai’ın kendi listesinden siz seçersiniz. Gizli modda kapalıdır.',
         ),
         asks: [
           t('Call James', 'Ahmet’i ara'),
@@ -343,7 +343,7 @@ export const GROUPS: Group[] = [
         title: t('Location when it helps', 'Gerektiğinde konum'),
         body: t(
           'With your permission, for “near me” requests; never in incognito.',
-          'İzninizle, “yakınımda” gibi istekler için; gizli modda asla.',
+          '“Yakınımda” gibi istekler için, izin verirseniz; gizli modda hiçbir zaman.',
         ),
         asks: [t('Find a pharmacy open near me', 'Yakınımda açık bir eczane bul')],
       },
@@ -355,14 +355,14 @@ export const GROUPS: Group[] = [
     title: t('Make the web yours', 'Web’i kendinize göre ayarlayın'),
     lede: t(
       'Blocking, your own rules, styles, a page’s cookies and, if you allow them, small scripts.',
-      'Engelleme, kendi kurallarınız, stiller, sayfanın çerezleri ve izin verirseniz küçük betikler.',
+      'Reklam engelleme, kendi kurallarınız, stiller, sayfanın çerezleri ve izin verirseniz küçük betikler.',
     ),
     items: [
       {
         title: t('Ad and tracker blocking', 'Reklam ve izleyici engelleme'),
         body: t(
           'On by default, from filter lists the phone downloads (EasyList, EasyPrivacy, AdGuard Turkish, regional lists or any list by address). The assistant can hide a leftover ad box or block a domain after you approve; the rule goes to My rules.',
-          'Varsayılan olarak açık; telefonun indirdiği filtre listeleriyle (EasyList, EasyPrivacy, AdGuard Turkish, bölgesel listeler ya da adresiyle eklediğiniz bir liste). Asistan kalan boş bir reklam kutusunu gizleyebilir ya da bir alan adını engelleyebilir; onaylarsanız kural Kendi kurallarım’a eklenir.',
+          'Baştan açık gelir; telefonun indirdiği filtre listeleriyle çalışır (EasyList, EasyPrivacy, AdGuard Turkish, bölgesel listeler ya da adresiyle eklediğiniz bir liste). Boş kalan bir reklam kutusunu gizlemesini ya da bir alan adını engellemesini asistandan isteyebilirsiniz; onaylarsanız kural Kendi kurallarım’a eklenir.',
         ),
         asks: [t('Hide this empty gap at the top', 'Üstteki bu boş alanı gizle')],
       },
@@ -370,7 +370,7 @@ export const GROUPS: Group[] = [
         title: t('Your own styles', 'Kendi stilleriniz'),
         body: t(
           'The assistant proposes the change; you approve, try it and keep it for the site. Styles can’t load anything from the internet, and “Styles off for this page” is always one tap away.',
-          'Asistan değişikliği önerir; siz onaylar, dener ve o site için saklarsınız. Stiller internetten hiçbir şey yükleyemez; “Bu sayfada stilleri kapat” her zaman tek dokunuş uzaktadır.',
+          'Asistan değişikliği önerir; siz onaylayıp denersiniz, beğenirseniz o site için saklarsınız. Stiller internetten hiçbir şey yükleyemez; bir şey bozulursa “Bu sayfada stilleri kapat” hep bir dokunuş uzağınızda.',
         ),
         asks: [
           t('Make the links red on this site', 'Bu sitede bağlantıları kırmızı yap'),
@@ -381,15 +381,15 @@ export const GROUPS: Group[] = [
         title: t('A page’s cookies', 'Sayfanın çerezleri'),
         body: t(
           'A list by site, HttpOnly cookies included, with names and settings. Values never go to the AI; you can show or delete them on screen.',
-          'HttpOnly olanlar dahil, siteye göre gruplanmış ad ve ayarlarıyla bir liste. Değerler yapay zekâya hiç gitmez; ekranda görebilir ya da silebilirsiniz.',
+          'HttpOnly olanlar dahil, siteye göre gruplanmış bir liste; her çerezin adı ve ayarları. Değerler yapay zekâya hiç gitmez; isterseniz ekranda görüp silebilirsiniz.',
         ),
         asks: [t('Which cookies does this page have?', 'Bu sayfada hangi çerezler var?')],
       },
       {
-        title: t('Scripts on pages, if you allow them', 'İzin verirseniz sayfalarda betik'),
+        title: t('Scripts on pages, if you allow them', 'İzin verirseniz sayfalarda betik çalıştırır'),
         body: t(
           'Off by default. Questions that only read run on a sealed copy of the page with no internet or sign-in. A script on the live page needs your approval with its code, is refused on sign-in, payment and bank pages, and can then do what the site’s own code can do.',
-          'Varsayılan olarak kapalı. Yalnızca okuyan sorular sayfanın internetsiz ve oturumsuz kapalı bir kopyasında çalışır. Canlı sayfadaki betik kodu gösterilerek onayınızı ister, giriş, ödeme ve banka sayfalarında reddedilir; onaylandığında sitenin kendi kodunun yapabildiğini yapabilir.',
+          'Baştan kapalıdır. Yalnızca bilgi okuyan sorular, sayfanın internete ve oturumunuza bağlı olmayan kapalı bir kopyasında çalışır. Canlı sayfada çalışacak bir betiğin kodunu görüp onay verirsiniz; giriş, ödeme ve banka sayfalarında betik çalıştırılmaz. Onayladığınız betik, sitenin kendi kodunun yapabildiği her şeyi yapabilir.',
         ),
         asks: [
           t('How many links are on this page?', 'Bu sayfada kaç bağlantı var?'),
@@ -397,10 +397,10 @@ export const GROUPS: Group[] = [
         ],
       },
       {
-        title: t('Camera, microphone and location per site', 'Site bazında kamera, mikrofon ve konum'),
+        title: t('Camera, microphone and location per site', 'Her site için kamera, mikrofon ve konum izni'),
         body: t(
           'A site asks; you allow once, always or never. Only the site in the address bar can ask, and only over https.',
-          'Site sorar; bir kez, her zaman ya da hiçbir zaman izin verirsiniz. Yalnızca adres çubuğundaki site, yalnızca https üzerinden sorabilir.',
+          'Site izin ister; siz bir kez, her zaman ya da hiçbir zaman dersiniz. Bunu yalnızca adres çubuğundaki site ve yalnızca https üzerinden isteyebilir.',
         ),
       },
     ],
@@ -411,14 +411,14 @@ export const GROUPS: Group[] = [
     title: t('Apps inside Qutai', 'Qutai içinde uygulamalar'),
     lede: t(
       'Ask for a small app in your own words; the assistant writes it, and it lives in My apps on the new tab page.',
-      'Kendi sözlerinizle küçük bir uygulama isteyin; asistan yazar, uygulama yeni sekme sayfasındaki Uygulamalarım’da durur.',
+      'Kendi sözlerinizle küçük bir uygulama isteyin; asistan yazar, uygulama da yeni sekme sayfasında, Uygulamalarım bölümünde yerini alır.',
     ),
     items: [
       {
         title: t('Built, checked and fixed by the assistant', 'Asistan yazar, dener, düzeltir'),
         body: t(
           'It writes the app, opens a preview, reads its errors and fixes them. Every change is a new version, so you can go back; an error inside the app offers “Ask Qutai to fix this”. Writing an app is an ordinary assistant request; running it costs nothing.',
-          'Uygulamayı yazar, önizlemesini açar, hatalarını okuyup düzeltir. Her değişiklik yeni bir sürümdür, geri dönebilirsiniz; uygulamadaki bir hata “Qutai bunu düzeltsin” seçeneğini sunar. Uygulama yazmak sıradan bir asistan isteğidir; çalıştırmak ücretsizdir.',
+          'Uygulamayı yazar, önizlemesini açar, hatalarını görüp düzeltir. Her değişiklik yeni bir sürüm olur, istediğinizde eskisine dönersiniz; uygulamada bir hata çıkarsa “Qutai bunu düzeltsin” demeniz yeter. Uygulama yazdırmak sıradan bir asistan isteğidir; kullanmak ise ücretsizdir.',
         ),
         asks: [
           t('Build me an app where I can keep my notes', 'Notlarımı tutabileceğim bir uygulama yap'),
@@ -427,17 +427,17 @@ export const GROUPS: Group[] = [
         ],
       },
       {
-        title: t('Sealed off from everything else', 'Her şeyden ayrı'),
+        title: t('Sealed off from everything else', 'Tarayıcıdan ve birbirinden ayrı'),
         body: t(
           'Each app runs in its own view: no internet, no sites’ cookies or sign-ins, no other app’s data. Its data stays on the phone, up to 5 MB per app; reading the clipboard asks once.',
-          'Her uygulama kendi görünümünde çalışır: internet yok, sitelerin çerezleri ya da oturumları yok, başka bir uygulamanın verisi yok. Verisi telefonda kalır, uygulama başına en fazla 5 MB; panoyu okumak bir kez sorulur.',
+          'Her uygulama kendi alanında çalışır: internete, sitelerin çerezlerine ya da oturumlarına, başka uygulamaların verisine erişemez. Verileri telefonda kalır, uygulama başına en fazla 5 MB; panoyu okumak için bir kez izin ister.',
         ),
       },
       {
-        title: t('Share as a file, kept in your backup', 'Dosya olarak paylaşın, yedekte saklanır'),
+        title: t('Share as a file, kept in your backup', 'Dosyayla paylaşılır, yedeğe girer'),
         body: t(
           'Export an app as a file and import it on another phone; an imported app stays off until you look at it and approve it. Apps go into your encrypted backup. There is no app store or gallery.',
-          'Bir uygulamayı dosya olarak dışa aktarıp başka bir telefonda içe aktarın; içe aktarılan uygulama siz bakıp onaylayana kadar kapalı kalır. Uygulamalar şifreli yedeğinize girer. Uygulama mağazası ya da galerisi yoktur.',
+          'Bir uygulamayı dosya olarak dışa aktarıp başka bir telefona alabilirsiniz; içe aktarılan uygulama siz inceleyip onaylayana kadar kapalı kalır. Uygulamalar şifreli yedeğinize de girer. Bir uygulama mağazası ya da galerisi yok.',
         ),
       },
     ],
@@ -448,14 +448,14 @@ export const GROUPS: Group[] = [
     title: t('Read, listen, speak, edit', 'Okuyun, dinleyin, konuşun, düzenleyin'),
     lede: t(
       'Reader mode, read-aloud and voice input with the phone’s own speech services, and image editing on the phone.',
-      'Okuma modu, telefonun kendi konuşma hizmetleriyle sesli okuma ve sesle yazma, telefonda görsel düzenleme.',
+      'Okuma modu; telefonun kendi konuşma hizmetleriyle sesli okuma ve sesle yazma; telefonda görsel düzenleme.',
     ),
     items: [
       {
         title: t('Reader mode and read aloud', 'Okuma modu ve sesli okuma'),
         body: t(
           'Only the article, in light, dark or sepia, serif or sans, with easier-reading spacing. Read aloud uses the language the text is written in and the most natural voice installed on the phone.',
-          'Yalnızca makale; açık, koyu ya da sepya, serif ya da sans, kolay okuma aralığıyla. Sesli okuma metnin yazıldığı dili ve telefonda yüklü en doğal sesi kullanır.',
+          'Sayfada yalnızca makale kalır; açık, koyu ya da sepya zemin, serifli ya da serifsiz yazı, rahat okunan satır aralığı. Sesli okuma metni yazıldığı dilde, telefonda yüklü en doğal sesle okur.',
         ),
         asks: [t('Read this article aloud', 'Bu makaleyi sesli oku')],
       },
@@ -463,14 +463,14 @@ export const GROUPS: Group[] = [
         title: t('Talk instead of typing', 'Yazmak yerine konuşun'),
         body: t(
           'Hold the microphone, or hold the Q button without opening the panel. Speech becomes text on the phone when it can; otherwise Apple’s or Google’s service hears it, after one question. No audio goes to Qutai or the AI.',
-          'Mikrofona ya da paneli açmadan Q düğmesine basılı tutun. Konuşma mümkünse telefonda yazıya çevrilir; değilse, bir kez sorulduktan sonra Apple’ın ya da Google’ın hizmeti dinler. Ses ne Qutai’a ne yapay zekâya gider.',
+          'Mikrofona basılı tutun ya da paneli hiç açmadan Q düğmesine. Konuşmanız mümkünse telefonda yazıya çevrilir; değilse, bir kez sorduktan sonra Apple’ın ya da Google’ın hizmeti kullanılır. Ses kaydı ne Qutai’a ne de yapay zekâya gider.',
         ),
       },
       {
         title: t('Edit images on the phone', 'Görselleri telefonda düzenleyin'),
         body: t(
           'Crop, rotate, resize, set a file size, and apply greyscale, sepia, invert, auto enhance, brightness, contrast, saturation, warmth, sharpen or blur, by asking or with presets and sliders.',
-          'Kırpın, döndürün, boyutlandırın, dosya boyutu belirleyin; siyah-beyaz, sepya, negatif, otomatik iyileştirme, parlaklık, kontrast, doygunluk, sıcaklık, keskinleştirme ya da bulanıklaştırma uygulayın; isteyerek ya da hazır ayar ve kaydırıcılarla.',
+          'Kırpın, döndürün, boyutunu ve dosya boyutunu ayarlayın; siyah-beyaz, sepya, negatif, otomatik iyileştirme, parlaklık, kontrast, doygunluk, sıcaklık, keskinlik ya da bulanıklık uygulayın. Asistana söyleyerek ya da hazır ayarlar ve kaydırıcılarla.',
         ),
         asks: [
           t('Make it square and under 1 MB', 'Kare yap ve 1 MB’ın altına indir'),
@@ -481,14 +481,14 @@ export const GROUPS: Group[] = [
         title: t('Background playback', 'Arka planda çalma'),
         body: t(
           'Sound keeps playing with the screen locked; on Android a video can shrink to picture-in-picture. Some sites, such as YouTube, still stop it.',
-          'Ekran kilitliyken ses çalmaya devam eder; Android’de video resim içinde resme küçülebilir. YouTube gibi bazı siteler yine de durdurur.',
+          'Ekran kilitliyken de ses çalmaya devam eder; Android’de video küçük bir pencerede oynamaya devam edebilir. YouTube gibi bazı siteler yine de durdurur.',
         ),
       },
       {
         title: t('PDF, screenshots and downloads', 'PDF, ekran görüntüsü ve indirmeler'),
         body: t(
           'Save a page as PDF or a full-page screenshot; downloads with pause and resume, and a warning before risky files.',
-          'Sayfayı PDF ya da tam sayfa ekran görüntüsü olarak kaydedin; duraklatılıp sürdürülebilen indirmeler, riskli dosyalardan önce uyarı.',
+          'Sayfayı PDF ya da tam sayfa ekran görüntüsü olarak kaydedin. İndirmeleri duraklatıp sürdürebilirsiniz; riskli bir dosyadan önce uyarı gelir.',
         ),
         asks: [t('Save this page as a PDF', 'Bu sayfayı PDF olarak kaydet')],
       },
@@ -500,28 +500,28 @@ export const GROUPS: Group[] = [
     title: t('Your data, on your phone', 'Verileriniz, telefonunuzda'),
     lede: t(
       'What is kept, what is sent, and how you can see it.',
-      'Ne saklanır, ne gönderilir ve bunu nasıl görürsünüz.',
+      'Neyin saklandığı, neyin gönderildiği ve bunları nasıl görebileceğiniz.',
     ),
     items: [
       {
         title: t('What was sent to the AI', 'Yapay zekâya gönderilenler'),
         body: t(
           'A list of every request: when, which provider and model, which site and what went with it. Each answer shows its tokens and, where the price is known, roughly what it cost.',
-          'Her isteğin listesi: ne zaman, hangi sağlayıcı ve model, hangi site, yanında ne gitti. Her yanıt kullandığı token sayısını ve fiyat biliniyorsa yaklaşık maliyetini gösterir.',
+          'Gönderilen her istek burada listelenir: ne zaman, hangi sağlayıcıya ve modele, hangi siteyle ilgili, yanında neler gitti. Her yanıtın altında kaç token harcandığı ve fiyat biliniyorsa yaklaşık maliyeti yazar.',
         ),
       },
       {
         title: t('Incognito', 'Gizli mod'),
         body: t(
           'Incognito tabs keep their own cookies and site data and save nothing; the assistant still works there, with fewer powers. The incognito tabs can be locked with your face or fingerprint.',
-          'Gizli sekmelerin kendi çerezleri ve site verileri olur, hiçbir şey kaydedilmez; asistan orada daha az yetkiyle çalışır. Gizli sekmeler yüz ya da parmak izinizle kilitlenebilir.',
+          'Gizli sekmelerin kendi çerezleri ve site verileri vardır, hiçbir şey kaydedilmez; asistan orada daha kısıtlı çalışır. Gizli sekmeleri yüz ya da parmak izinizle kilitleyebilirsiniz.',
         ),
       },
       {
         title: t('Encrypted backup', 'Şifreli yedek'),
         body: t(
           'No sync: export everything to one password-protected file and import it on another phone, merging or replacing.',
-          'Eşitleme yok: her şeyi parolalı tek bir dosyaya aktarın ve başka bir telefonda birleştirerek ya da yerine koyarak içe aktarın.',
+          'Eşitleme yok: her şeyi parolalı tek bir dosyaya aktarırsınız, başka bir telefonda da mevcut verilerle birleştirerek ya da onların yerine geri yüklersiniz.',
         ),
       },
     ],
@@ -532,14 +532,14 @@ export const GROUPS: Group[] = [
     title: t('Your AI, your choice', 'Yapay zekânız, seçiminiz'),
     lede: t(
       'Bring your own key, or, in the official builds, use the optional Qutai service.',
-      'Kendi anahtarınızı getirin ya da resmî sürümlerde isteğe bağlı Qutai hizmetini kullanın.',
+      'Kendi anahtarınızı kullanın ya da resmî sürümlerde isteğe bağlı Qutai hizmetini seçin.',
     ),
     items: [
       {
-        title: t('Five ways with your own key', 'Kendi anahtarınızla beş yol'),
+        title: t('Five ways with your own key', 'Kendi anahtarınızla beş seçenek'),
         body: t(
           'Anthropic, OpenAI, Google Gemini, OpenRouter or your own OpenAI-compatible server (Ollama, LM Studio, vLLM), with a connection test. Keys stay in the phone’s secure storage; choose the model per conversation.',
-          'Anthropic, OpenAI, Google Gemini, OpenRouter ya da kendi OpenAI uyumlu sunucunuz (Ollama, LM Studio, vLLM); bağlantı testiyle. Anahtarlar telefonun güvenli deposunda kalır; modeli sohbet başına seçin.',
+          'Anthropic, OpenAI, Google Gemini, OpenRouter ya da kendi OpenAI uyumlu sunucunuz (Ollama, LM Studio, vLLM); bağlantıyı tek dokunuşla test edebilirsiniz. Anahtarlar telefonun güvenli deposunda durur; modeli her sohbet için ayrı seçebilirsiniz.',
         ),
         asks: [t('Use Gemini for this chat', 'Bu sohbette Gemini kullan')],
       },
@@ -554,14 +554,14 @@ export const GROUPS: Group[] = [
         title: t('A Qutai account, if you want one', 'İsterseniz bir Qutai hesabı'),
         body: t(
           'Sign in with Apple, Google or an email code; sign out of every device or delete the account, which deletes your data.',
-          'Apple, Google ya da e-postayla gelen kodla giriş yapın; tüm cihazlardan çıkın ya da hesabı silin; hesapla birlikte verileriniz de silinir.',
+          'Apple, Google ya da e-postanıza gelen kodla giriş yapın. Tüm cihazlarda oturumu kapatabilir ya da hesabı silebilirsiniz; hesapla birlikte verileriniz de silinir.',
         ),
       },
       {
         title: t('Backup in your account', 'Hesabınızda yedek'),
         body: t(
           'The same encrypted backup file, kept in your account (the newest three) and restored on any phone. Your backup password never leaves the phone, and nobody, not even Qutai, can recover it.',
-          'Aynı şifreli yedek dosyası hesabınızda saklanır (en yeni üçü) ve herhangi bir telefonda geri yüklenir. Yedek parolanız telefondan hiç çıkmaz; Qutai dahil kimse onu kurtaramaz.',
+          'Aynı şifreli yedek dosyası hesabınızda da saklanır (en yeni üçü) ve istediğiniz telefonda geri yüklenir. Yedek parolanız telefondan hiç çıkmaz; unutursanız Qutai dahil kimse kurtaramaz.',
         ),
       },
     ],
@@ -572,21 +572,21 @@ export const GROUPS: Group[] = [
     title: t('And a complete browser', 'Ve eksiksiz bir tarayıcı'),
     lede: t(
       'Everything you expect from a browser, in ten languages, on phones and tablets.',
-      'Bir tarayıcıdan beklediğiniz her şey; on dilde, telefonda ve tablette.',
+      'Bir tarayıcıdan beklediğiniz her şey; on dilde, telefonda da tablette de.',
     ),
     items: [
       {
         title: t('Tabs, groups and the address bar', 'Sekmeler, gruplar ve adres çubuğu'),
         body: t(
           'Idle tabs sleep to save memory; swipe on the address bar to switch tabs, and put the bar at the top or the bottom.',
-          'Boştaki sekmeler bellek için uyur; sekme değiştirmek için adres çubuğunda kaydırın, çubuğu üste ya da alta alın.',
+          'Kullanmadığınız sekmeler bellek harcamasın diye uykuya geçer. Sekmeler arasında geçmek için adres çubuğunu kaydırın; çubuğu ekranın üstüne ya da altına alabilirsiniz.',
         ),
       },
       {
         title: t('Bookmarks and history', 'Yer imleri ve geçmiş'),
         body: t(
           'Bookmarks in folders, imported from and exported to the file Chrome, Firefox, Safari or Edge use; the assistant can search your history.',
-          'Klasörlü yer imleri; Chrome, Firefox, Safari ya da Edge’in kullandığı dosyadan içe ve dışa aktarma. Asistan geçmişinizde arama yapabilir.',
+          'Yer imlerinizi klasörlere ayırın; Chrome, Firefox, Safari ya da Edge’den aldığınız dosyayı içe aktarın, aynı biçimde dışa verin. Asistan geçmişinizde de arama yapabilir.',
         ),
         asks: [t('Find the recipe page I read last week', 'Geçen hafta okuduğum yemek tarifi sayfasını bul')],
       },
@@ -598,24 +598,24 @@ export const GROUPS: Group[] = [
         ),
       },
       {
-        title: t('Accessible', 'Erişilebilir'),
+        title: t('Accessible', 'Herkes için erişilebilir'),
         body: t(
           'Labels for screen readers, the phone’s Reduce motion, text size from 50% to 200%, and zoom on pages that forbid it.',
-          'Ekran okuyucu etiketleri, telefonun Hareketi azalt ayarı, %50’den %200’e yazı boyutu ve yakınlaştırmayı yasaklayan sayfalarda yakınlaştırma.',
+          'Ekran okuyucular için etiketler, telefonun Hareketi azalt ayarına uyum, %50 ile %200 arası yazı boyutu ve yakınlaştırmayı engelleyen sayfalarda bile yakınlaştırma.',
         ),
       },
       {
         title: t('Phones, tablets and landscape', 'Telefon, tablet ve yatay ekran'),
         body: t(
           'Turning the device keeps tabs, pages and a running task as they were; on iPad, Split View and Stage Manager at any size.',
-          'Cihazı çevirmek sekmeleri, sayfaları ve süren görevi olduğu gibi korur; iPad’de her boyutta Split View ve Stage Manager.',
+          'Cihazı yan çevirdiğinizde sekmeler, sayfalar ve süren görev olduğu gibi kalır; iPad’de her pencere boyutunda Split View ve Stage Manager çalışır.',
         ),
       },
       {
-        title: t('Opening from other apps', 'Diğer uygulamalardan açma'),
+        title: t('Opening from other apps', 'Diğer uygulamalardan Qutai’a'),
         body: t(
           'Share a link or text to Qutai (Android for now) or use qutai:// links from shortcuts.',
-          'Bir bağlantıyı ya da metni Qutai ile paylaşın (şimdilik Android’de) ya da kısayollardan qutai:// bağlantıları kullanın.',
+          'Bir bağlantıyı ya da metni Qutai’a gönderin (şimdilik Android’de) ya da Kestirmeler’den qutai:// bağlantılarıyla açın.',
         ),
       },
     ],
@@ -635,7 +635,7 @@ export const LEAVES: { to: Text; what: Text; when: Text }[] = [
     to: t('Qutai’s server (official builds)', 'Qutai sunucusu (resmî sürümler)'),
     what: t(
       'Sign-in details; with Qutai Credits, the AI requests on their way, not stored or logged; your encrypted backup file',
-      'Giriş bilgileri; Qutai Kredileriyle, yolda olan yapay zekâ istekleri (saklanmaz, kayda geçirilmez); şifreli yedek dosyanız',
+      'Giriş bilgileri; Qutai Kredileri kullanıyorsanız yapay zekâya giden istekler (saklanmaz, kayda geçirilmez); şifreli yedek dosyanız',
     ),
     when: t('Only when signed in and using those features', 'Yalnızca giriş yaptıysanız ve bu özellikleri kullanıyorsanız'),
   },
@@ -648,7 +648,7 @@ export const LEAVES: { to: Text; what: Text; when: Text }[] = [
     to: t('Apple or Google', 'Apple ya da Google'),
     what: t(
       'The address lookup for “Use my location”; speech, when the phone can’t recognise it itself',
-      '“Konumumu kullan” için adres sorgusu; telefon kendisi tanıyamadığında konuşma',
+      '“Konumumu kullan” dediğinizde adres sorgusu; telefon sesinizi kendisi yazıya çeviremediğinde konuşmanız',
     ),
     when: t('After a one-time question; never in incognito', 'Bir kez sorulduktan sonra; gizli modda asla'),
   },
@@ -661,7 +661,7 @@ export const LEAVES: { to: Text; what: Text; when: Text }[] = [
     to: t('Web sites', 'Web siteleri'),
     what: t(
       'What you or the assistant type and send, after the approvals above',
-      'Sizin ya da asistanın yazıp gönderdikleri, yukarıdaki onaylardan sonra',
+      'Sizin ya da asistanın yazıp gönderdikleri; yukarıdaki onaylardan sonra',
     ),
     when: t('As you browse', 'Gezindikçe'),
   },

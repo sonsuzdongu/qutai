@@ -7,10 +7,10 @@ import type { Messages } from './en';
 export const tr: Messages = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai, telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız: iPhone ve Android için açık kaynak bir tarayıcı. Asistanı kendi AI anahtarınızla sayfaları sizin için okur ve kullanır, verilerinizi telefonunuzda tutar, hassas işlemlerden önce sorar. Geliştirme aşamasında.',
+    'Qutai, iPhone ve Android için açık kaynak bir tarayıcı; içindeki yapay zekâ asistanı sayfaları sizin için okur ve kullanır. Kendi AI anahtarınızla çalışır, verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Henüz geliştirme aşamasında.',
   'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: Qutai, Agentic Browser.',
   'meta.appDescription':
-    'iOS ve Android için açık kaynak bir yapay zekâ tarayıcısı: asistanı, kendi AI sağlayıcı anahtarınızla web sayfalarını sizin için okur ve kullanır.',
+    'iPhone ve Android için açık kaynak, yapay zekâ asistanlı bir tarayıcı: asistan, kendi AI anahtarınızla web sayfalarını sizin için okur ve kullanır.',
 
   'nav.skip': 'İçeriğe geç',
   'nav.label': 'Bölümler',
@@ -31,12 +31,11 @@ export const tr: Messages = {
   'lang.switchTo': 'Switch to English',
 
   'hero.eyebrow': 'Yapay zekâ odaklı tarayıcı',
-  'hero.title': 'Yapay zekâ için, yapay zekâ ile üretildi.',
+  'hero.title': 'Yapay zekâyla, yapay zekâ için yapıldı.',
   'hero.tagline': 'Telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız.',
-  'hero.lede':
-    'Qutai, asistanı sayfayı okuyan ve sizin yerinize kullanan bir iPhone ve Android tarayıcısı.',
-  'hero.github': 'GitHub’da incele',
-  'hero.status': 'Geliştirme aşamasında. App Store ve Google Play’e geliyor; henüz yayımlanmadı.',
+  'hero.lede': 'Qutai, sayfayı sizin için okuyup kullanan bir asistanla gelen iPhone ve Android tarayıcısı.',
+  'hero.github': 'GitHub’da inceleyin',
+  'hero.status': 'Geliştirme aşamasında. App Store ve Google Play için hazırlanıyor; henüz yayımlanmadı.',
 
   'hero.chip1': 'Sekmeleri okur',
   'hero.chip2': 'Sizi hatırlar',
@@ -45,7 +44,7 @@ export const tr: Messages = {
 
   'statement.kicker': 'Qutai hakkında',
   'statement.text':
-    'Qutai, merkezinde bir asistan olan bir tarayıcı. Sayfayı okur, sekmelerinizi karşılaştırır, form doldurur, rezervasyon yapar, araştırır; ona anlattıklarınızı telefonunuzda hatırlar ve önemli bir adımdan önce durup size sorar.',
+    'Qutai, merkezinde bir asistan olan bir tarayıcı. Sayfayı okur, sekmelerinizi karşılaştırır, form doldurur, rezervasyon yapar, araştırır. Ona anlattıklarınızı telefonunuzda hatırlar; önemli bir adımdan önce durup size sorar.',
 
   'art.placeholder': 'Minyatür hazırlanıyor',
   'art.hero.alt': 'Osmanlı minyatürü: renkli kaftanlı robot kâtipler bir saray kütüphanesinde tabletlerde web sayfaları okuyor; pencereden Haliç ve Galata Kulesi görünüyor.',
@@ -61,13 +60,14 @@ export const tr: Messages = {
   'agent.research.kicker': 'Ara, oku, kaynak göster',
 
   'start.kicker': 'Başlarken',
-  'start.title': 'Yayımlandığında üç adım.',
+  'start.title': 'Yayımlandığında üç adımda başlarsınız.',
   'start.step1.title': 'Qutai’ı kurun',
-  'start.step1.body': 'Henüz mağazalarda değil: bugün depodan derleyin ya da projeyi GitHub’da takip edin.',
+  'start.step1.body': 'Henüz mağazalarda yok: bugün depodan derleyebilir ya da projeyi GitHub’dan takip edebilirsiniz.',
   'start.step2.title': 'AI anahtarınızı ekleyin',
-  'start.step2.body': 'Anthropic, OpenAI, Gemini, OpenRouter ya da kendi sunucunuz. Ya da giriş yapıp anahtar yerine Qutai Kredileri kullanın.',
+  'start.step2.body':
+    'Anthropic, OpenAI, Gemini, OpenRouter ya da kendi sunucunuz. İsterseniz giriş yapıp anahtar yerine Qutai Kredileri kullanın.',
   'start.step3.title': 'Bir görev verin',
-  'start.step3.body': 'Adres çubuğundaki Q’ya dokunun ve ne istediğinizi kendi sözlerinizle söyleyin.',
+  'start.step3.body': 'Adres çubuğundaki Q’ya dokunup ne istediğinizi kendi sözlerinizle söyleyin.',
 
   'mock.label':
     'Qutai uygulamasının bir çizimi: asistan paneli açık bir mağaza sayfası. Kullanıcı Qutai’dan bu ayakkabıyı diğer sekmedekiyle karşılaştırıp ucuz olanı sepete eklemesini istiyor. Qutai iki sekmeyi okuyup yanıt veriyor; bir pencere Sepete ekle tıklaması için kullanıcıdan izin istiyor.',
@@ -93,47 +93,51 @@ export const tr: Messages = {
   'agent.kicker': 'Asistan',
   'agent.title': 'Sıkıcı kısmı ona bırakın.',
   'agent.lede':
-    'Qutai’ın asistanı sekmelerinizde çalışır: sayfaları okur, dokunur, yazar, sekme açıp karşılaştırır; adım adım. Her adımı anında görürsünüz, üzerinde çalıştığı sayfa hafifçe parlar ve istediğiniz an durdurabilirsiniz; iş bitince adımlar tek satırda toplanır. Üstelik ona anlattıklarınızı hatırlar; her görevde bir öncekinden daha az açıklama yaparsınız.',
+    'Qutai’ın asistanı sekmelerinizde çalışır: sayfaları okur, dokunur, yazar, gerektiğinde yeni sekme açıp karşılaştırır. Ne yaptığını adım adım görürsünüz; üzerinde çalıştığı sayfa hafifçe parlar, istediğiniz an durdurabilirsiniz. İş bitince adımlar tek satıra toplanır. Ona anlattıklarınızı da hatırlar; zamanla daha az anlatmanız gerekir.',
   'agent.memory.kicker': 'Hafıza, telefonunuzda',
-  'agent.memory.title': 'Sizi tanır; öğrendiklerini telefonunuzda saklar.',
+  'agent.memory.title': 'Sizi tanır, öğrendiklerini telefonunuzda saklar.',
   'agent.memory.body':
-    'Adreslerinizi, bedeninizi, beslenme tercihlerinizi ya da bütçenizi Qutai’a söyleyin. Kurulumda kendinizden sesle ya da yazarak bahsedebilirsiniz: Qutai en fazla üç soru daha sorar, anladığı her şeyi kaydetmeden önce kontrolünüze sunar; sağlık bilgilerini yapay zekâdan gizleyebilirsiniz. Öğrendiklerini kategorilere ayırır, sonraki görevlerde size yeniden sormadan kullanır ve özel talimatlarınıza her istekte uyar. Kullandıkça daha az anlatmanız gerekir.',
-  'agent.memory.point1': 'Kategorilere ayrılır: kimlik ve iletişim, adresler, alışveriş ve teslimat, seyahat, yemek ve beslenme, bütçe, genel tercihler',
-  'agent.memory.point2': 'Telefonda saklanır; Ayarlar’dan görebilir, değiştirebilir, silebilirsiniz; şifreli yedeğinize de girer',
-  'agent.memory.point3': 'Yalnızca isteklerinizle birlikte seçtiğiniz AI sağlayıcısına gider (Qutai Kredileriyle Qutai sunucusu üzerinden) ve “Yapay zekâya gönderilenler”de listelenir; kimlik numaraları ve kilitlediğiniz bilgiler yalnızca etiket olarak gider',
-  'agent.memory.point4': 'Şifre, kart numarası ve tek kullanımlık kod asla; bilgilerinizi bir siteye girmeden önce site bazında sorar',
-  'agent.compare.title': 'Sekmeler arasında ürün karşılaştırma',
+    'Adresinizi, bedeninizi, nasıl beslendiğinizi ya da bütçenizi Qutai’a bir kez söylemeniz yeter. Kurulumda kendinizi sesle ya da yazarak anlatabilirsiniz: Qutai en fazla üç soru daha sorar, anladıklarını kaydetmeden önce size gösterir; sağlık bilgilerinizi yapay zekâdan gizleyebilirsiniz. Öğrendiklerini konularına göre ayırır, sonraki görevlerde size yeniden sormadan kullanır, özel talimatlarınıza da her seferinde uyar.',
+  'agent.memory.point1':
+    'Konulara ayrılır: kimlik ve iletişim, adresler, alışveriş ve teslimat, seyahat, yemek ve beslenme, bütçe, genel tercihler',
+  'agent.memory.point2':
+    'Telefonda saklanır; Ayarlar’dan görüp değiştirebilir ya da silebilirsiniz. Şifreli yedeğinize de girer',
+  'agent.memory.point3':
+    'Yalnızca isteklerinizle birlikte, seçtiğiniz AI sağlayıcısına gider (Qutai Kredileriyle Qutai sunucusu üzerinden) ve “Yapay zekâya gönderilenler” listesinde görünür. Kimlik numaraları ve kilitlediğiniz bilgiler yalnızca etiket olarak gider',
+  'agent.memory.point4':
+    'Şifre, kart numarası ve tek kullanımlık kodları asla saklamaz; bilgilerinizi bir siteye girmeden önce o site için izninizi ister',
+  'agent.compare.title': 'Ürünleri sekmeler arasında karşılaştırır',
   'agent.compare.body':
-    'İki üç ürün sayfası açın, hangisinin size uygun olduğunu sorun. Qutai sekmeleri değiştirmeden her birini okur; fiyatı, teslimat süresini ve özellikleri not edip bir tabloyla yanıt verir, isterseniz tabloyu CSV dosyası olarak da verir.',
+    'İki üç ürün sayfası açıp hangisinin size uygun olduğunu sorun. Qutai sekme değiştirmeden hepsini okur; fiyatı, teslimat süresini ve özellikleri not eder, bir tabloyla yanıt verir. İsterseniz tabloyu CSV dosyası olarak da alırsınız.',
   'agent.compare.step1': 'Sekme 2 okunuyor',
   'agent.compare.step2': 'Sekme 3 okunuyor',
   'agent.compare.step3': 'Fiyat, teslimat, garanti yan yana',
   'agent.checkout.title': 'Sizin için alışveriş yapar',
   'agent.checkout.body':
-    'İstediklerinizi sepete ekler; adınızı, adresinizi ve kaydettiğiniz teslimat notunu girer, bunu yapmadan önce hafızadaki bilgilerinizi o sitede kullanıp kullanamayacağını sorar. Ödemeyi kimin yapacağını siz seçersiniz: son düğmeye kendiniz basarsınız ya da Ayarlar’da “Asistan ödemeleri tamamlasın”ı açıp her ödemeyi Qutai’ın kendi penceresinde onaylarsınız; pencere siteyi, sayfadaki toplamı, siparişi ve ödeme yöntemini gösterir. Kart numarası, güvenlik kodu, şifre ve tek kullanımlık kod asla yazılmaz; bankanızın doğrulaması (3-D Secure) sizde kalır.',
+    'İstediklerinizi sepete ekler; adınızı, adresinizi ve kaydettiğiniz teslimat notunu girer. Hafızadaki bilgilerinizi o sitede kullanmadan önce size sorar. Ödemeyi kimin yapacağına siz karar verirsiniz: son düğmeye kendiniz basarsınız ya da Ayarlar’da “Asistan ödemeleri tamamlasın”ı açarsınız; o zaman her ödeme, siteyi, sayfadaki tutarı, siparişi ve ödeme yöntemini gösteren Qutai penceresinde onayınızı bekler. Kart numarası, güvenlik kodu, şifre ve tek kullanımlık kod asla yazılmaz; bankanın doğrulaması (3-D Secure) sizde kalır.',
   'agent.checkout.step1': 'Kişisel bilgileriniz magaza.example sitesine girilsin mi?',
   'agent.checkout.step2': '[12] alanına yazdı',
   'agent.checkout.step3': 'magaza.example sitesinde 2.490 TL ödensin mi?',
   'agent.booking.title': 'Rezervasyonu yapar, takviminize ekler',
   'agent.booking.body':
-    'Bir masa ya da randevu bulup formu doldurur. Ardından takviminize eklemeyi veya hatırlatıcı kurmayı önerir, ayrıntıları onayınıza sunar. Yer telefonla rezervasyon alıyorsa bir Ara düğmesi çıkar; aramayı siz başlatırsınız.',
+    'Bir masa ya da randevu bulur, formu doldurur. Sonra takviminize eklemeyi ya da hatırlatıcı kurmayı önerir, ayrıntıları onaylamanız için gösterir. Mekân rezervasyonu telefonla alıyorsa bir Ara düğmesi çıkar; aramayı siz yaparsınız.',
   'agent.booking.step1': 'Takvim etkinliği: Akşam yemeği, Cuma 20:00',
   'agent.booking.callName': 'Kebap Evi',
   'agent.booking.callNumber': '+90 212 555 01 23',
   'agent.booking.call': 'Ara',
   'agent.research.title': 'Kaynaklı araştırma',
   'agent.research.body':
-    'Derin araştırma birçok sayfayı ve PDF’i arar ve okur, not alır, kaynakları yanıtın altında listelenen bir rapor yazar. Raporu PDF olarak paylaşabilirsiniz. Birkaç dakika sürer ve API kredinizden daha fazla harcar.',
+    'Derin araştırma birçok sayfayı ve PDF’i bulup okur, not alır ve kaynakları altında listelenen bir rapor yazar. Raporu PDF olarak paylaşabilirsiniz. Birkaç dakika sürer, API kredinizden de daha fazla harcar.',
   'agent.research.step1': 'Arandı: İstanbul’da elektrikli bisiklet kuralları',
   'agent.research.step2': 'Sayfa okunuyor',
   'agent.research.step3': 'Kaynaklar',
   'agent.footnote':
-    'Asistanın neyi başaracağı seçtiğiniz modele ve siteye bağlıdır. Bunlar kodun desteklediklerinden örnekler; çoğu henüz gerçek bir telefonda denenmedi.',
+    'Asistanın neyi başaracağı seçtiğiniz modele ve siteye göre değişir. Bunlar kodun bugün yapabildiklerinden örnekler; çoğu henüz gerçek bir telefonda denenmedi.',
 
-  'privacy.kicker': 'Tasarımdan gelen gizlilik',
+  'privacy.kicker': 'Gizlilik, en baştan',
   'privacy.title': 'Anahtar sizin. Telefon sizin. Karar sizin.',
   'privacy.lede':
-    'Qutai’ın yapay zekâya nasıl ulaşacağını siz seçersiniz. Kendi anahtarınızla istekler telefonunuzdan doğrudan sağlayıcınıza gider; arada ne Qutai hesabı ne Qutai sunucusu vardır. Ya da giriş yapıp Qutai Kredileri kullanırsınız: uğraşacak anahtar yok, istekler Qutai sunucusundan geçer ve orada saklanmaz, kayda geçirilmez.',
+    'Qutai’ın yapay zekâya nasıl bağlanacağını siz seçersiniz. Kendi anahtarınızı kullanırsanız istekler telefonunuzdan doğrudan sağlayıcınıza gider; arada ne Qutai hesabı ne Qutai sunucusu olur. İsterseniz giriş yapıp Qutai Kredileri kullanırsınız: anahtarla uğraşmazsınız, istekler Qutai sunucusundan geçer ama orada saklanmaz, kayda da geçirilmez.',
   'privacy.diagramLabel':
     'Yapay zekâya ulaşmanın iki yolunu gösteren şema. Kendi anahtarınızla: telefonunuz istekleri doğrudan seçtiğiniz sağlayıcıya gönderir, arada Qutai sunucusu yoktur. Qutai Kredileriyle, isteğe bağlı ve ücretli: istekler telefonunuzdan Qutai sunucusu üzerinden yapay zekâya gider, orada saklanmaz ve kayda geçirilmez.',
   'privacy.routeOwn': 'Kendi anahtarınızla',
@@ -151,77 +155,78 @@ export const tr: Messages = {
   'privacy.diagramAiSub': 'kendi anahtarınız olmadan',
   'privacy.key.title': 'Kendi AI anahtarınız',
   'privacy.key.body':
-    'Anthropic, OpenAI, Google Gemini ya da OpenRouter anahtarınızı veya kendi OpenAI uyumlu sunucunuzu (Ollama, LM Studio, vLLM) kullanın; bağlantıyı tek dokunuşla sınayabilirsiniz. Modeli siz seçersiniz, isterseniz sohbet başına. Qutai Kredilerinin yanında bu yol hep kalır.',
+    'Anthropic, OpenAI, Google Gemini ya da OpenRouter anahtarınızla veya kendi OpenAI uyumlu sunucunuzla (Ollama, LM Studio, vLLM) çalışır; bağlantıyı tek dokunuşla test edebilirsiniz. Modeli siz seçersiniz, isterseniz her sohbette ayrı. Qutai Kredileri olsa da bu seçenek her zaman kalır.',
   'privacy.device.title': 'Telefonda kalır',
   'privacy.device.body':
-    'Sekmeler, geçmiş, yer imleri, sohbetler ve asistanın hafızası cihazda saklanır. Şifreler, kart numaraları ve tek kullanımlık kodlar hafızaya hiç alınmaz; kimlik numaraları ve kilitlediğiniz bilgiler yapay zekâya yalnızca etiket olarak gider.',
-  'privacy.sites.title': 'Site bazında izinler',
+    'Sekmeler, geçmiş, yer imleri, sohbetler ve asistanın hafızası telefonda saklanır. Şifreler, kart numaraları ve tek kullanımlık kodlar hafızaya hiç alınmaz; kimlik numaraları ve kilitlediğiniz bilgiler yapay zekâya yalnızca etiket olarak gider.',
+  'privacy.sites.title': 'Her siteye ayrı izin',
   'privacy.sites.body':
-    'Her site için asistan serbestçe işlem yapabilir, her işlemde sorar, yalnızca okur ya da hiç girmez. Hafızadaki bilgilerinizi o siteye girip giremeyeceğine, sayfanın kameranızı, mikrofonunuzu ya da konumunuzu kullanıp kullanamayacağına da ayrıca siz karar verirsiniz.',
+    'Her site için ayrı karar verirsiniz: asistan orada serbestçe işlem yapsın, her adımda sorsun, yalnızca okusun ya da hiç girmesin. Hafızadaki bilgilerinizin o siteye girilip girilmeyeceğini, sayfanın kameranızı, mikrofonunuzu ya da konumunuzu kullanıp kullanamayacağını da ayrıca seçersiniz.',
   'privacy.log.title': 'Yapay zekâya gönderilenler',
   'privacy.log.body':
-    'Her isteğin listesi: ne zaman, hangi sağlayıcı ve model, hangi site, yanında neler gitti. İçeriğin kendisi yalnızca uygulama kapanana kadar bellekte tutulur. Her yanıtın yanında kaç token harcadığı ve fiyatı biliniyorsa yaklaşık maliyeti de görünür.',
-  'privacy.incognito.title': 'Gizli mod: hiçbir şey kaydedilmez',
+    'Gönderilen her istek burada listelenir: ne zaman, hangi sağlayıcıya ve modele, hangi siteyle ilgili, yanında neler gitti. İçeriğin kendisi yalnızca uygulama kapanana kadar bellekte durur. Her yanıtın altında kaç token harcandığı ve fiyat biliniyorsa yaklaşık maliyeti de yazar.',
+  'privacy.incognito.title': 'Gizli modda hiçbir şey kaydedilmez',
   'privacy.incognito.body':
-    'Gizli sekmeler geçmiş tutmaz; onlara dokunan sohbetler yalnızca bellekte kalır. Orada hafıza, konum ve takvim kapalıdır; gizli sekmeleri kilitleyebilirsiniz.',
+    'Gizli sekmeler geçmiş tutmaz; bunlara dokunan sohbetler yalnızca bellekte kalır. Orada hafıza, konum ve takvim kullanılmaz; gizli sekmeleri kilitleyebilirsiniz.',
   'privacy.confirm.title': 'Önemli adımda sorar',
   'privacy.confirm.body':
-    'Hassas adımlar onayınızı bekler. Paylaşım, yorum, değerlendirme ve bir siteden gönderilen mesajlar, tam metni gösteren Qutai penceresinde sizin onayınızla gider; web sayfasındaki yazılar bunları onaylayamaz. Arama, SMS, WhatsApp ve e-posta yalnızca taslaktır, gönderen sizsiniz. Bildirim, takvim etkinliği, hatırlatıcı, takviminizi ya da konumunuzu okuma ve sıradan bir indirme için “Bir daha sorma” diyebilir, bunu Ayarlar’dan geri alabilirsiniz; “hayır” cevabınız hiçbir zaman hatırlanmaz. Yükleme ve riskli dosyalar her seferinde sorulur.',
+    'Hassas adımlar onayınızı bekler. Bir sitede paylaşım, yorum, değerlendirme ya da mesaj, tam metni gösteren Qutai penceresinde siz onaylayınca gider; web sayfasındaki bir yazı bunları onaylayamaz. Arama, SMS, WhatsApp ve e-posta yalnızca hazırlanır, gönderen sizsiniz. Bildirim, takvim etkinliği, hatırlatıcı, takvim ya da konum okuma ve sıradan indirmeler için “Bir daha sorma” diyebilir, bunu Ayarlar’dan geri alabilirsiniz; “hayır” cevabınız ise hiç hatırlanmaz. Yüklemeler ve riskli dosyalar her seferinde sorulur.',
   'privacy.contacts.title': 'Kişileriniz telefonda kalır',
   'privacy.contacts.body':
-    '“Ahmet’i ara” ya da “bunu Mehmet Bey’e e-postayla gönder”: asistan yalnızca söylediğiniz adı, telefonda arar. Yapay zekâ eşleşen adları ve “cep” gibi etiketleri görür; numaraları ve adresleri asla. Birden fazla kişi eşleşirse Qutai’ın kendi listesinden siz seçersiniz; Ara’ya dokunan ve mesajı gönderen yine sizsiniz. İzin ilk kullanımda istenir; gizli modda kapalıdır.',
-  'privacy.scripts.title': 'Betik yalnızca izninizle',
+    '“Ahmet’i ara” ya da “bunu Mehmet Bey’e e-postayla gönder” dediğinizde asistan yalnızca söylediğiniz adı arar, o da telefonda. Yapay zekâ eşleşen adları ve “cep” gibi etiketleri görür; numaraları ve adresleri hiçbir zaman görmez. Birden fazla kişi çıkarsa Qutai’ın kendi listesinden siz seçersiniz; Ara’ya basan da mesajı gönderen de yine sizsiniz. İzin ilk kullanımda istenir, gizli modda kapalıdır.',
+  'privacy.scripts.title': 'Betikler yalnızca izin verirseniz',
   'privacy.scripts.body':
-    'Varsayılan olarak kapalı. Açarsanız asistan “burada kaç bağlantı var?” gibi soruları, sayfanın internete ve oturumunuza erişimi olmayan kapalı bir kopyasında çalışan bir betikle yanıtlar. Canlı sayfadaki bir betik tam kodu ve uyarılarıyla onayınızı ister, giriş, ödeme ve banka sayfalarında reddedilir; onaylandığında sitenin kendi kodunun yapabildiğini yapabilir. Sakladığınız betikler yalnızca kendi sitelerinde çalışır ve kodları değişince yeniden onay ister.',
-  'privacy.apps.title': 'Kendi uygulamalarınız, dışarıya kapalı',
+    'Varsayılan olarak kapalıdır. Açarsanız asistan “burada kaç bağlantı var?” gibi soruları, sayfanın internete ve oturumunuza bağlı olmayan kapalı bir kopyasında çalışan küçük bir betikle yanıtlar. Canlı sayfada çalışacak bir betiğin kodunu ve uyarılarını görüp onay verirsiniz; giriş, ödeme ve banka sayfalarında betik çalıştırılmaz. Onayladığınız betik, sitenin kendi kodunun yapabildiği her şeyi yapabilir. Sakladığınız betikler yalnızca kendi sitelerinde çalışır, kodları değişince yeniden onay ister.',
+  'privacy.apps.title': 'Kendi uygulamalarınız, dış dünyaya kapalı',
   'privacy.apps.body':
-    '“Notlarımı tutabileceğim bir uygulama yap” deyin: Qutai onu yazar, önizlemesini açar, kendi hatalarını düzeltir ve istediğinizde değiştirir; önceki sürümleri saklar, geri dönebilirsiniz. Uygulamalarınız yeni sekme sayfasındaki Uygulamalarım’da durur. Her biri gezintinizden ayrı, kendi görünümünde çalışır: internete, başka sitelerin çerezlerine ya da oturumlarına, başka bir uygulamanın verisine erişemez. Verisi telefonda kalır, uygulama başına en fazla 5 MB. Bir uygulamayı dosya olarak paylaşabilirsiniz; içe aktarılan uygulama siz onaylayana kadar kapalı kalır, uygulamalar şifreli yedeğinize girer. Uygulama yazmak sıradan bir asistan isteğidir; kendi anahtarınızla ya da Qutai Kredileriyle ödenir.',
+    '“Notlarımı tutabileceğim bir uygulama yap” demeniz yeter: Qutai uygulamayı yazar, önizlemesini açar, kendi hatalarını düzeltir, istediğinizde değiştirir. Eski sürümleri saklar; dilediğinizde geri dönersiniz. Uygulamalarınız yeni sekme sayfasında, Uygulamalarım bölümünde durur. Her biri tarayıcıdan ayrı, kendi alanında çalışır: internete, sitelerin çerezlerine ya da oturumlarına, başka uygulamaların verisine erişemez. Verileri telefonda kalır, uygulama başına en fazla 5 MB. Bir uygulamayı dosya olarak paylaşabilirsiniz; içe aktarılan uygulama siz onaylayana kadar kapalı kalır. Uygulamalar şifreli yedeğinize de girer. Uygulama yazdırmak sıradan bir asistan isteğidir; kendi anahtarınızla ya da Qutai Kredileriyle ödenir.',
   'privacy.note':
-    'Qutai hizmeti isteğe bağlıdır: Apple, Google ya da e-postayla giriş yapın, kendi anahtarınız yerine Qutai Kredileri kullanın, model yerine Qutai Hızlı, Qutai ya da Qutai Pro seçin. Qutai sunucusu hesabınızı, kredilerinizi ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı ve sayfaları tutmaz. Depodan derlenen sürümlerde bu hizmet yoktur ve hiçbir zaman Qutai sunucusuna bağlanılmaz.',
+    'Qutai hizmeti tamamen isteğe bağlıdır: Apple, Google ya da e-postayla giriş yapıp kendi anahtarınız yerine Qutai Kredileri kullanabilir, model yerine Qutai Hızlı, Qutai ya da Qutai Pro’yu seçebilirsiniz. Qutai sunucusu hesabınızı, kredilerinizi ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı ve sayfaları tutmaz. Depodan derlenen sürümlerde bu hizmet yoktur, uygulama Qutai sunucusuna hiç bağlanmaz.',
 
-  'browser.kicker': 'Bir de tarayıcı',
-  'browser.title': 'Bir tarayıcıdan beklediğiniz her şey, izlenmeden.',
+  'browser.kicker': 'Üstelik tam bir tarayıcı',
+  'browser.title': 'Bir tarayıcıdan beklediğiniz her şey, takip edilmeden.',
   'browser.tabs.title': 'Sekmeler ve gruplar',
-  'browser.tabs.body': 'Bir sekme grubu asistanla tek bir sohbeti paylaşır. Boştaki sekmeler bellek için uyur.',
+  'browser.tabs.body':
+    'Bir gruptaki sekmeler asistanla aynı sohbeti paylaşır. Kullanmadığınız sekmeler bellek harcamasın diye uykuya geçer.',
   'browser.reader.title': 'Okuma modu ve sesli okuma',
   'browser.reader.body':
-    'Açık, koyu ya da sepya; serif ya da sans; kolay okuma aralığı. Sesli okuma makaleyi paragraf paragraf, her bölümün yazıldığı dilde ve telefonun kendi sesleriyle okur (iPhone’da yüklü en doğal sesle).',
+    'Açık, koyu ya da sepya zemin; serifli ya da serifsiz yazı; daha rahat okunan satır aralığı. Sesli okuma makaleyi paragraf paragraf, her bölümü yazıldığı dilde ve telefondaki seslerle okur (iPhone’da yüklü en doğal sesi seçer).',
   'browser.blocking.title': 'Reklam ve izleyici engelleme',
   'browser.blocking.body':
-    'EasyList, EasyPrivacy ya da AdGuard Turkish’i seçin veya adresiyle istediğiniz listeyi ekleyin; listeler telefonda indirilir ve tüm alan adını engelleyen kuralları kullanılır. Boş bir reklam kutusunu gizlemesini ya da bir alan adını engellemesini asistandan isteyin: onaylayıp nerede geçerli olacağını seçtiğinizde kural “Kendi kurallarım” listesine eklenir; orada kuralı kapatabilir, dışa ya da içe aktarabilirsiniz.',
+    'EasyList, EasyPrivacy ya da AdGuard Turkish listesini seçin, isterseniz adresiyle başka bir liste ekleyin; listeler telefona indirilir ve alan adının tamamını engelleyen kuralları kullanılır. Boş kalan bir reklam kutusunu gizlemesini ya da bir alan adını engellemesini asistandan isteyebilirsiniz: onaylayıp nerede geçerli olacağını seçince kural “Kendi kurallarım” listesine eklenir; oradan kapatabilir, dışa ya da içe aktarabilirsiniz.',
   'browser.audio.title': 'Arka planda çalar',
   'browser.audio.body':
-    'Ekran kilitliyken ses çalmaya devam eder. iPhone’da video yalnızca ses olarak sürer; Android’de resim içinde resim olarak küçülebilir. YouTube gibi bazı siteler yine de durdurur.',
+    'Ekran kilitliyken de ses çalmaya devam eder. iPhone’da video yalnızca sesiyle sürer; Android’de küçük bir pencerede oynamaya devam edebilir. YouTube gibi bazı siteler yine de durdurur.',
   'browser.private.title': 'Gizli sekmeler',
   'browser.private.body':
-    'Kendi çerezleri ve site verileri olur, kapattığınızda silinir; isterseniz biyometrik kilitle korunur.',
+    'Kendi çerezleri ve site verileri vardır, kapatınca silinir; isterseniz yüz ya da parmak izinizle kilitlersiniz.',
   'browser.backup.title': 'Şifreli yedek',
   'browser.backup.body':
-    'Hesap gerekmez, eşitleme de yok: her şeyi parola korumalı tek bir dosyaya aktarın, başka bir telefonda içe aktarın.',
+    'Hesap gerekmez, eşitleme de yok: her şeyi parolalı tek bir dosyaya aktarıp başka bir telefonda geri yüklersiniz.',
   'browser.bookmarks.title': 'Klasörlü yer imleri',
   'browser.bookmarks.body':
-    'Chrome, Firefox, Safari ya da Edge’in dışa aktardığı dosyayı içe aktarın; aynı biçimde dışa aktarın.',
+    'Chrome, Firefox, Safari ya da Edge’den dışa aktardığınız dosyayı içe alın; aynı biçimde dışa da verin.',
   'browser.voice.title': 'Sesle yazma',
   'browser.voice.body':
-    'Görevleri telefonun kendi konuşma tanımasıyla söyleyin; telefon ve dil destekliyorsa tanıma cihazda yapılır. Paneli açmadan konuşmak için Q düğmesine basılı tutun; Qutai sohbetin dilinde dinler.',
+    'Görevleri telefonun kendi konuşma tanıma özelliğiyle söyleyin; telefon ve dil destekliyorsa ses telefonda yazıya çevrilir. Paneli açmadan konuşmak için Q düğmesine basılı tutun; Qutai sohbetin dilinde dinler.',
   'browser.save.title': 'PDF ve tam sayfa ekran görüntüsü',
   'browser.save.body':
-    'Sayfayı PDF ya da tüm sayfanın birleştirilmiş ekran görüntüsü olarak kaydedin veya çevrimdışı okumak için saklayın.',
+    'Sayfayı PDF olarak ya da tamamının tek parça ekran görüntüsü olarak kaydedin, çevrimdışı okumak için saklayın.',
   'browser.more': 'Bütün özellikler, örnek isteklerle',
-  'browser.styles.title': 'Her siteye kendi görünümünüz',
+  'browser.styles.title': 'Her site, istediğiniz görünümde',
   'browser.styles.body':
-    'Kırmızı bağlantılar, daha büyük yazı ya da koyu zemin isteyin. Asistan stili önerir; siz onaylayıp denersiniz, sonra o site için Kendi kurallarım’a kaydedersiniz. Orada kapatabilir, düzenleyebilir, dışa ve içe aktarabilirsiniz. Stiller internetten hiçbir şey yükleyemez.',
+    'Bağlantılar kırmızı olsun, yazı büyüsün, zemin koyulaşsın: asistan stili önerir, siz onaylayıp denersiniz, beğenirseniz o site için Kendi kurallarım’a kaydedersiniz. Oradan kapatabilir, düzenleyebilir, dışa ve içe aktarabilirsiniz. Stiller internetten hiçbir şey yükleyemez.',
   'browser.cookies.title': 'Sayfanın çerezlerini görün',
   'browser.cookies.body':
-    'Bir sayfada hangi çerezler olduğunu sorun: HttpOnly olanlar dahil, siteye göre gruplanmış bir liste; her çerezin adı ve ayarları. Değerleri yapay zekâya hiç gitmez; onları ekranda görebilir ya da silebilirsiniz.',
+    'Bir sayfada hangi çerezler olduğunu sorun: HttpOnly olanlar dahil, siteye göre gruplanmış bir liste gelir; her çerezin adı ve ayarları görünür. Değerler yapay zekâya hiç gitmez; isterseniz ekranda görüp silebilirsiniz.',
   'browser.images.title': 'Görselleri telefonda düzenleyin',
   'browser.images.body':
-    'Kırpın, boyutlandırın; siyah-beyaz, sepya, negatif, otomatik iyileştirme, parlaklık, kontrast, doygunluk, keskinleştirme ya da bulanıklaştırma uygulayın: tek dokunuşluk hazır ayarlarla, kaydırıcılarla ya da asistandan isteyerek. Düzenleme sunucuda değil, telefonda yapılır.',
+    'Kırpın, boyutunu değiştirin; siyah-beyaz, sepya, negatif, otomatik iyileştirme, parlaklık, kontrast, doygunluk, keskinlik ya da bulanıklık uygulayın. Hazır ayarlara tek dokunuşla, kaydırıcılarla ya da asistana söyleyerek. Düzenleme sunucuda değil, telefonda yapılır.',
 
   'compare.kicker': 'Karşılaştırma',
   'compare.title': 'Mobilde Qutai ve diğerleri',
   'compare.lede':
-    'Yalnızca mobil uygulamalar, her üreticinin kendi herkese açık sayfalarına göre. Doğrulayamadığımız bir bilgide tahmin yürütmedik; hücrede bunu belirttik.',
+    'Yalnızca mobil uygulamalar; her üreticinin kendi herkese açık sayfalarına baktık. Doğrulayamadığımız yerde tahmin yürütmedik, hücreye bunu yazdık.',
   'compare.checked': 'Son kontrol: {date}',
   'compare.caption': 'Qutai ve yapay zekâ asistanlı diğer mobil tarayıcıların özellikleri',
   'compare.feature': 'Özellik',
@@ -238,60 +243,70 @@ export const tr: Messages = {
   'compare.methodologyLink': 'Nasıl karşılaştırdık',
   'compare.methodology.title': 'Nasıl karşılaştırdık',
   'compare.methodology.1':
-    'Her tarayıcının masaüstü sürümüne değil, iPhone ve Android uygulamasına baktık: yalnızca masaüstünde olan bir özellik burada yok sayılır.',
+    'Tarayıcıların masaüstü sürümlerine değil, iPhone ve Android uygulamalarına baktık; yalnızca masaüstünde olan bir özellik burada sayılmaz.',
   'compare.methodology.2':
-    'Rakiplerle ilgili her hücre, üreticinin kendi sayfalarına dayanıyor: özellik sayfaları, yardım merkezleri, fiyat sayfaları ve mağaza sayfaları. Her hücre kaynağına ve kontrol tarihine bağlanıyor. Bir özelliği böyle bir sayfadan doğrulayamadıysak hücrede “Doğrulanmadı” yazıyor; bu, özelliğin olmadığı anlamına gelmez.',
+    'Rakiplerle ilgili her hücre üreticinin kendi sayfalarına dayanıyor: özellik sayfaları, yardım merkezleri, fiyat sayfaları ve mağaza sayfaları. Her hücrede kaynağın bağlantısı ve kontrol tarihi var. Bir özelliği böyle bir sayfadan doğrulayamadıysak hücrede “Doğrulanmadı” yazıyor; bu, özelliğin olmadığı anlamına gelmiyor.',
   'compare.methodology.3':
-    'Qutai sütunu bugün kaynak kodunda olanı anlatıyor. Qutai henüz yayımlanmadı ve bu özelliklerin çoğu henüz gerçek bir telefonda denenmedi.',
+    'Qutai sütunu, kaynak kodunda bugün olanı anlatıyor. Qutai henüz yayımlanmadı ve bu özelliklerin çoğu gerçek bir telefonda denenmedi.',
   'compare.methodology.4':
-    'Ürün adları sahiplerinin ticari markalarıdır. Bu karşılaştırma yukarıdaki tarih itibarıyla herkese açık bilgileri yansıtır; adı geçen şirketlerin hiçbiri tarafından onaylanmamıştır.',
+    'Ürün adları sahiplerinin ticari markalarıdır. Bu karşılaştırma, yukarıdaki tarihte herkese açık olan bilgilere dayanır; adı geçen şirketlerin hiçbiri tarafından onaylanmamıştır.',
   'compare.correction': 'Düzeltme bildirin',
   'compare.notes': 'Notlar',
 
   'oss.kicker': 'Açık kaynak',
-  'oss.title': 'Her satırını okuyun. Kendiniz derleyin.',
+  'oss.title': 'Her satırını okuyun, kendiniz derleyin.',
   'oss.body':
-    'Uygulamanın tamamı Apache Lisansı 2.0 ile depoda: asistan, güvenlik kuralları, yapay zekâya neyin nasıl gönderildiği. Kendi araçlarınızla ya da kendi Expo hesabınızla bulutta derleyebilirsiniz.',
+    'Uygulamanın tamamı Apache Lisansı 2.0 ile depoda: asistan, güvenlik kuralları, yapay zekâya neyin nasıl gittiği. Kendi bilgisayarınızda ya da kendi Expo hesabınızla bulutta derleyebilirsiniz.',
   'oss.buildLabel': 'Kendi bilgisayarınızda derleyin',
   'oss.repo': 'Depo',
   'oss.license': 'Lisans',
 
   'status.kicker': 'Durum',
-  'status.title': 'Nerede olduğumuz, açıkça.',
+  'status.title': 'Bugün neredeyiz, açıkça.',
   'status.body':
-    'Qutai geliştirme aşamasında. Henüz App Store’da ya da Google Play’de değil; bu sayfada anlatılanların çoğu kodda var ama henüz gerçek bir telefonda denenmedi.',
+    'Qutai geliştirme aşamasında. Henüz App Store’da ya da Google Play’de yok; bu sayfada anlatılanların çoğu kodda hazır ama gerçek bir telefonda henüz denenmedi.',
   'status.today': 'Bugün kodda olanlar',
-  'status.today.1': 'Asistan: okuma, dokunma, yazma, form hatalarını düzeltme, sekmeler, kaynaklı derin araştırma',
-  'status.today.2': 'Kendi anahtarınızla beş sağlayıcı seçeneği ve sohbet başına model, ya da hesapla Qutai Kredileri',
-  'status.today.3': 'Kategorili ve gizli kayıtlı hafıza, site bazında izinler, “yapay zekâya gönderilenler” kaydı',
-  'status.today.4': 'Takvim okuma ve yazma, hatırlatıcı, Ara düğmesi; SMS, WhatsApp ve e-posta taslakları, rehberdeki kişilere adıyla da',
-  'status.today.5': 'Adıyla çalıştırabileceğiniz kayıtlı görevler, hatırlatıcılar, PDF okuma, görsel ekleme ve telefonda görsel filtreleri, indirme ve CSV dışa aktarma',
+  'status.today.1':
+    'Asistan: okuma, dokunma, yazma, form hatalarını düzeltme, sekmelerle çalışma, kaynaklı derin araştırma',
+  'status.today.2':
+    'Kendi anahtarınızla beş sağlayıcı seçeneği ve her sohbete ayrı model; ya da hesapla Qutai Kredileri',
+  'status.today.3':
+    'Konulara ayrılan ve gizlenebilen kayıtlarıyla hafıza, site bazında izinler, “Yapay zekâya gönderilenler” listesi',
+  'status.today.4':
+    'Takvimi okuma ve takvime yazma, hatırlatıcılar, Ara düğmesi; SMS, WhatsApp ve e-posta taslakları, rehberdeki kişilere adıyla da',
+  'status.today.5':
+    'Adıyla çalıştırılan kayıtlı görevler, hatırlatmalar, PDF okuma, görsel ekleme ve telefonda filtre uygulama, indirmeler, CSV olarak dışa aktarma',
   'status.today.6': 'Okuma modu, sesli okuma, sesle yazma, kendi kurallarınızla reklam ve izleyici engelleme, şifreli yedek',
   'status.today.7': 'On arayüz dili (Türkçe, İngilizce, Almanca, İspanyolca, Brezilya Portekizcesi, Fransızca, Japonca, Korece, Rusça, Endonezce); telefonun diline uyar ya da Ayarlar’dan seçilir; ekran okuyucu etiketleri ve büyük yazı desteği',
-  'status.today.8': 'Sitelere kendi stilleriniz, değerleri yapay zekâya gitmeyen çerez listesi ve sayfalarda betik (varsayılan olarak kapalı, kodu gösterilerek onaylanır)',
-  'status.today.9': 'Asistanın Qutai içinde sizin için yazdığı küçük uygulamalar: çevrimdışı, gezintinizden ayrı, geri dönebileceğiniz sürümlerle',
+  'status.today.8':
+    'Sitelere kendi stilleriniz, değerleri yapay zekâya gitmeyen çerez listesi ve sayfalarda betik (varsayılan olarak kapalı, kodu gösterilip onaylanır)',
+  'status.today.9':
+    'Asistanın Qutai içinde sizin için yazdığı küçük uygulamalar: internetsiz, tarayıcıdan ayrı, eski sürümlerine dönülebilen',
   'status.limits': 'Bilmeniz gereken sınırlar',
-  'status.limits.1': 'Arka planda görevler yalnızca Android’de ve isteğe bağlı; görev bitince ya da size ihtiyaç duyunca bildirim gelir; iPhone’da uygulamadan çıkınca görev duraklar',
-  'status.limits.2': 'Zamanlanmış görevler birer hatırlatmadır: Qutai kapalıyken hiçbir şey çalışmaz',
-  'status.limits.3': 'Ödemeyi siz tamamlarsınız; asistanın ödemesine izin verirseniz her ödeme Qutai’ın penceresinde onayınızı bekler',
+  'status.limits.1':
+    'Arka planda çalışma yalnızca Android’de ve siz açarsanız; görev bitince ya da size ihtiyaç olunca bildirim gelir. iPhone’da uygulamadan çıkınca görev duraklar',
+  'status.limits.2': 'Zamanlanmış görevler aslında hatırlatmadır: Qutai kapalıyken hiçbir şey çalışmaz',
+  'status.limits.3':
+    'Ödemeyi siz yaparsınız; asistanın ödemesine izin verirseniz her ödeme Qutai penceresinde onayınızı bekler',
   'status.limits.4': 'Qutai ile paylaşma ve ana ekran widget’ı şimdilik yalnızca Android’de',
-  'status.limits.5': 'Canlı sayfada onayladığınız bir betik, o sitedeki oturumunuzla sitenin kendi kodunun yapabildiğini yapabilir; yalnızca okuyan sorular bunun yerine kapalı bir kopyada çalışır',
+  'status.limits.5':
+    'Canlı sayfada onayladığınız bir betik, o sitedeki oturumunuzla sitenin kendi kodunun yapabildiği her şeyi yapabilir; yalnızca bilgi okuyan sorular ise kapalı bir kopyada çalışır',
   'status.limits.6': 'Uygulamaların henüz interneti ve konum, kamera, bildirim gibi telefon özellikleri yok',
   'status.limits.7':
     'Web sayfalarına gizlenmiş talimatlar: asistanı yanıltmak için hazırlanmış sayfalarla deniyor ve uygulamanın kendi denetimlerini sıkılaştırmaya devam ediyoruz, ama kusursuz değiliz. Ödeme, paylaşım, silme, hesap değişiklikleri, aramalar ve mesajlar her zaman sizin dokunuşunuzu bekler; yine de asistan bir sayfa yüzünden taraflı bir özet çıkarabilir, kötü bir bağlantı önerebilir ya da onay gerektirmeyen bir adım atabilir. Onay penceresinde yazanı okuyup öyle dokunun; asistanın tanımadığınız bir sayfa hakkındaki özetini bir hüküm değil, bir özet olarak görün',
   'status.planned': 'Planlananlar',
   'status.planned.1': 'App Store ve Google Play’de yayın',
-  'status.planned.2': 'Hesap açmayı seçenler için uçtan uca şifreli eşitleme',
+  'status.planned.2': 'Hesap açanlar için uçtan uca şifreli eşitleme',
   'status.planned.3': 'Qutai Kredilerini App Store ve Google Play’den satın alma',
   'status.planned.4': 'iPhone’da paylaşım uzantısı ve widget',
   'status.planned.5': 'Uygulamalar için: konum, bildirim ve kamera gibi telefon özellikleri, seçtiğiniz sitelere internet, ana ekran kısayolu',
 
   'footer.tagline': 'Agentic Browser',
   'footer.privacy':
-    'Bu site başka sunuculara istek göndermez ve çerez kullanmaz; yalnızca dili değiştirirseniz seçiminizi hatırlayan bir çerez bırakır.',
-  'footer.licenseNote': 'Kod Apache-2.0 ile lisanslıdır.',
+    'Bu site başka sunuculara istek göndermez, çerez de kullanmaz; yalnızca dili değiştirirseniz seçiminizi hatırlamak için bir çerez bırakır.',
+  'footer.licenseNote': 'Kod Apache-2.0 lisanslıdır.',
   'footer.github': 'GitHub',
-  'footer.issues': 'Sorun bildir',
+  'footer.issues': 'Sorun bildirin',
   'footer.license': 'Lisans',
   'footer.appPrivacy': 'Uygulamanın gizlilik politikası',
 
@@ -299,7 +314,7 @@ export const tr: Messages = {
   'policy.metaDescription':
     'Qutai uygulamasının gizlilik politikası: telefonunuzda kalanlar, telefonunuzdan çıkanlar ve kime gittiği, Qutai hesabınız ve Qutai Kredileri.',
   'policy.updated': 'Son güncelleme',
-  'policy.note': 'Qutai’nin iPhone ve Android uygulamasının gizlilik politikası; uygulamanın gösterdiği metnin aynısı.',
+  'policy.note': 'Qutai’ın iPhone ve Android uygulamasının gizlilik politikası; uygulamada gösterilen metnin aynısı.',
   'policy.home': 'Qutai ana sayfasına dön',
 
   'notFound.title': 'Sayfa bulunamadı',
