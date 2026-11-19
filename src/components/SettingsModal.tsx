@@ -17,6 +17,7 @@ import { rateApp } from '../device/rateApp';
 import { backgroundTasksSupported } from '../device/backgroundTask';
 import { ensureNotificationPermission } from '../device/notifications';
 import { chooseSharedContacts, contactsState, requestContacts, type ContactsState } from '../device/contacts';
+import { openDefaultBrowserSettings } from '../device/defaultBrowser';
 import { offerSettings, openSettingsOrExplain } from '../device/settings';
 import { voiceModeSummary, VoiceModeSummary } from '../device/voiceInput';
 import { AUTO_LANGUAGE, languageName } from '../device/voiceLanguage';
@@ -644,6 +645,13 @@ function SettingsPages({
               value={settings.searchSuggestions}
               onChange={(searchSuggestions) => set({ searchSuggestions })}
             />
+            {/* The only place in the app for it since setup's step went (INTRO-30); the phone's own screen decides. */}
+            <Text style={styles.label}>{t('settings.defaultBrowserTitle')}</Text>
+            <Text style={styles.hint}>{t('settings.defaultBrowserLead')}</Text>
+            <LinkRow label={t('settings.defaultBrowserOpen')} onPress={() => openDefaultBrowserSettings().catch(() => {})} />
+            <Text style={styles.hint}>
+              {t(Platform.OS === 'ios' ? 'settings.defaultBrowserHintIos' : 'settings.defaultBrowserHintAndroid')}
+            </Text>
           </>
         )}
 

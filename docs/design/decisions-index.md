@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 830 decisions (116 owner, 631 default, 83 waiting); 163 ids moved to Details.
+Totals: 831 decisions (117 owner, 631 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -882,6 +882,7 @@ Moved to Details (ids retired, not reused): `WORK-4`, `WORK-8`, `WORK-11`, `WORK
 | `INTRO-20` | Today own-key users get no sign-in step in setup. | **Waiting** |  |
 | `INTRO-21` | Today the welcome and legal summary say "Private by design" / "we have no servers"; these must be… | **Waiting** |  |
 | `INTRO-23` | An official-build step asking for anonymous usage data is planned, not built. | Default |  |
+| `INTRO-30` | Setup has no "Make Qutai your default browser" step; protection is the last step; the option is in Settings › Search. | Owner | 2026-11-20 |
 | `INTRO-29` | Setup never asks for an answer style; a finished first-run setup adds "Answer briefly and to the point." to the custom… | Owner | 2026-11-20 |
 | `INTRO-28` | In pro builds the AI step is an accordion: both headings visible at first sight on 360 x 640 dp and with text up to 1.4×; Qutai… | Owner | 2026-11-20 |
 | `INTRO-27` | Setup never says the assistant reads every page: the first feature reads "Reads the page when you ask" and the tagline ends "when you… | Owner | 2026-11-20 |

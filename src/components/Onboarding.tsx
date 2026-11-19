@@ -1,7 +1,6 @@
 import { ComponentRef, useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {
   Keyboard,
-  Platform,
   Pressable,
   ScrollViewInstance,
   StyleSheet,
@@ -28,7 +27,6 @@ import { providerToSave } from '../credits/gate';
 import { SETUP_START, setupReducer, type SetupEvent } from '../credits/setupFlow';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { backgroundTasksSupported } from '../device/backgroundTask';
-import { openDefaultBrowserSettings } from '../device/defaultBrowser';
 import { ensureNotificationPermission } from '../device/notifications';
 import { openSettingsOrExplain } from '../device/settings';
 import { getLanguage, LANGUAGE_INFO, LANGUAGES, t, tIn, type Language } from '../i18n';
@@ -51,7 +49,7 @@ import { PermissionsStep } from './PermissionsStep';
 import { ProfileStep } from './ProfileStep';
 import { LegalScreen } from './LegalScreen';
 
-type Step = 'language' | 'welcome' | 'legal' | 'ai' | 'permissions' | 'profile' | 'background' | 'protection' | 'browser';
+type Step = 'language' | 'welcome' | 'legal' | 'ai' | 'permissions' | 'profile' | 'background' | 'protection';
 const ALL_STEPS: Step[] = [
   'language',
   'welcome',
@@ -61,7 +59,6 @@ const ALL_STEPS: Step[] = [
   'profile',
   'background',
   'protection',
-  'browser',
 ];
 
 /**
@@ -84,7 +81,8 @@ type Props = {
  * turned on; PermissionsStep), "Let me get to know you" (optional, only with memory on; ProfileStep: "Tell me about
  * yourself" by voice or typing, or the typed questions),
  * whether tasks keep working in the background (Android, with a build that has it; turning it on asks for
- * notifications), protection against ads and trackers, and making Qutai the default browser.
+ * notifications), and protection against ads and trackers. Making Qutai the default browser is not a setup step
+ * (`INTRO-30`); it stays in Settings.
  */
 export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   const styles = useStyles();
@@ -583,26 +581,6 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                           </Pressable>
                         ))}
                       </View>
-                    </>
-                  )}
-
-                  {step === 'browser' && (
-                    <>
-                      <Text style={styles.title} accessibilityRole="header">
-                        {t('onboarding.browserTitle')}
-                      </Text>
-                      <Text style={styles.lead}>{t('onboarding.browserLead')}</Text>
-                      <Pressable
-                        onPress={() => openDefaultBrowserSettings().catch(() => {})}
-                        style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
-                        accessibilityRole="button"
-                      >
-                        <Icon name="openInNew" size={18} color={palette.tintText} />
-                        <Text style={styles.secondaryText}>{t('onboarding.setDefault')}</Text>
-                      </Pressable>
-                      <Text style={styles.hint}>
-                        {t(Platform.OS === 'ios' ? 'onboarding.browserHintIos' : 'onboarding.browserHintAndroid')}
-                      </Text>
                     </>
                   )}
                 </View>

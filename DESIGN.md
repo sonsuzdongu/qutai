@@ -19,6 +19,7 @@ Last updated: 2026-11-20
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-20:** Setup no longer has the "Make Qutai your default browser" step (protection is the last step); the option, which only setup had, moved to Settings › Search with the same texts (`INTRO-30`, owner's report).
 - **2026-11-20:** Setup never asks for an answer style: "Ask me questions" has four questions, the follow-up and typed questions lost theirs; a finished first-run setup adds "Answer briefly and to the point." to the custom instructions unless a style line is there (the same line the old choice added); existing installs are untouched; the agent profile is unchanged (`INTRO-29`, owner's report).
 - **2026-11-20:** Setup's "Choose your AI" step (pro builds) is an accordion: Qutai Credits and "Use my own AI provider key" are two headings always on screen (360 x 640 dp, ten languages, text up to 1.4×); tapping one opens it in place and closes the other; the own key's fields open inside its section instead of a separate screen (`INTRO-28`, owner's report and suggestion).
 - **2026-11-20:** Setup no longer says the assistant "reads every page with you": the first feature is now "Reads the page when you ask" and the tagline ends "when you ask", in all ten languages (`INTRO-27`, owner's report). The website's similar sentences are listed in docs/design/31-onboarding.md › Limits, for the website work.
