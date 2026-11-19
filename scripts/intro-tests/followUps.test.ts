@@ -19,9 +19,10 @@ test('nothing said: the first three in priority order, food first', () => {
   assert.deepEqual(ids(EMPTY_EXTRACTION), ['food', 'name', 'shopping']);
 });
 
-test('never more than three, and none for a topic already covered', () => {
-  assert.deepEqual(ids(ext([it('name', 'Deniz'), it('allergy', 'peanuts')])), ['shopping', 'city', 'style']);
-  assert.deepEqual(ids(ext([it('name', 'D'), it('diet', 'v'), it('delivery', 'x'), it('city', 'c')])), ['style']);
+test('never more than three, and none for a topic already covered; the answer style is never asked (INTRO-29)', () => {
+  assert.ok(!FOLLOW_UPS.some((f) => f.topics.includes('style')));
+  assert.deepEqual(ids(ext([it('name', 'Deniz'), it('allergy', 'peanuts')])), ['shopping', 'city']);
+  assert.deepEqual(ids(ext([it('name', 'D'), it('diet', 'v'), it('delivery', 'x'), it('city', 'c')])), []);
   assert.deepEqual(
     ids(ext([it('name', 'D'), it('health', 'h'), it('shopping', 's'), it('city', 'c'), it('style', 's', 'short')])),
     [],
@@ -29,7 +30,7 @@ test('never more than three, and none for a topic already covered', () => {
 });
 
 test('a topic said not to apply or declined is not asked about', () => {
-  assert.deepEqual(ids(ext([it('name', 'D')], { none: ['allergy'], declined: ['payment'] })), ['city', 'style']);
+  assert.deepEqual(ids(ext([it('name', 'D')], { none: ['allergy'], declined: ['payment'] })), ['city']);
 });
 
 test('age and gender are never asked', () => {

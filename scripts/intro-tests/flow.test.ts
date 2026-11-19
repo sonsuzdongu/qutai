@@ -113,14 +113,13 @@ test('back, cancel, skip and start over', () => {
   assert.ok(!hasBack(START) && hasBack(SPEAK) && hasBack(review));
 });
 
-test('a single-choice chip answers at once; a chip of another question is ignored', () => {
+test('a chip of another question is ignored; skipping the last question goes to the review', () => {
   let s = run([...said('hi'), { type: 'submit', hasAi: true }, understood({ items: [NAME], none: ['allergy'], declined: ['payment'] })]);
-  assert.deepEqual(s.questions.map((q) => q.id), ['city', 'style']);
+  assert.deepEqual(s.questions.map((q) => q.id), ['city']);
   s = introReducer(s, { type: 'next' });
   assert.equal(introReducer(s, { type: 'toggleChip', chip: 'vegan' }), s);
-  s = introReducer(s, { type: 'toggleChip', chip: 'detailed' });
+  s = introReducer(s, { type: 'skipQuestion' });
   assert.equal(s.phase.name, 'review');
-  assert.equal(finalExtraction(s, t).items.find((i) => i.topic === 'style')?.choice, 'detailed');
 });
 
 test('events that do not belong to the phase change nothing', () => {
@@ -159,9 +158,9 @@ test('the step opens on three choices; the microphone page only after choosing t
   assert.deepEqual(introReducer(START, { type: 'skipAll' }).phase, { name: 'exit', to: 'skip' });
 });
 
-test('"Ask me questions": all five, one at a time, skippable; typed answers go to round 2', () => {
+test('"Ask me questions": all four, one at a time, skippable, no answer-style question; typed answers go to round 2', () => {
   let s = introReducer(START, { type: 'askMe', hasAi: true });
-  assert.deepEqual(s.questions.map((q) => q.id), ['name', 'city', 'food', 'shopping', 'style']);
+  assert.deepEqual(s.questions.map((q) => q.id), ['name', 'city', 'food', 'shopping']);
   // Asked cold, the food question doesn't say "You didn't mention food".
   assert.equal(s.questions[2].question, 'profile.foodTitle');
   assert.deepEqual(s.phase, { name: 'followUp', index: 0 });
@@ -175,7 +174,6 @@ test('"Ask me questions": all five, one at a time, skippable; typed answers go t
       { type: 'toggleChip', chip: 'vegan' },
       { type: 'next' },
       { type: 'skipQuestion' },
-      { type: 'toggleChip', chip: 'short' },
     ],
     s,
   );
@@ -183,10 +181,10 @@ test('"Ask me questions": all five, one at a time, skippable; typed answers go t
   assert.deepEqual(pendingAnswers(s).map((p) => p.text), ['Deniz']);
   s = introReducer(s, understood({ items: [{ topic: 'name', value: 'Deniz', quote: 'Deniz' }] }));
   assert.equal(s.phase.name, 'review');
-  assert.deepEqual(finalExtraction(s, t).items.map((i) => i.topic).sort(), ['diet', 'name', 'style']);
+  assert.deepEqual(finalExtraction(s, t).items.map((i) => i.topic).sort(), ['diet', 'name']);
   // Cancelling round 2 returns to the last question.
   const cancelled = introReducer(run([{ type: 'back' }, { type: 'answerText', text: 'x' }, { type: 'next' }], s), { type: 'cancel' });
-  assert.deepEqual(cancelled.phase, { name: 'followUp', index: 4 });
+  assert.deepEqual(cancelled.phase, { name: 'followUp', index: 3 });
 });
 
 test('"Ask me questions" without an AI keeps typed answers as given, with its own notice; chips and skips alone need nothing', () => {

@@ -27,12 +27,13 @@ The flow is one reducer (`src/intro/flow.ts`); the screen shows the phase.
 | `failed` | What went wrong in one plain sentence, the transcript (selectable, so it can be copied) | "Continue with questions" → typed questions with the transcript shown above them; "Try again" (request errors only) → `understanding` |
 
 **"Ask me questions"** (owner's request of 19 Nov 2026; the details were left open, this is the default built): the same
-`followUp` pages, but all five fixed questions in conversation order: what to call you, your city, food (diet,
-allergies), shopping and delivery, how you like answers (`askMeQuestions` in `src/intro/followUps.ts`). They are
+`followUp` pages, but all four fixed questions in conversation order: what to call you, your city, food (diet,
+allergies), shopping and delivery (`askMeQuestions` in `src/intro/followUps.ts`; the fifth, how you like answers, was
+removed on 20 Nov 2026, `INTRO-29`). They are
 translated text on the screen, read aloud only with the speaker toggle; each is answered with a chip, by typing, or with
 the small microphone (asking for the microphone permission on that tap), or skipped. No AI is needed to ask them. Free-
 text answers then go through the same round-2 request as follow-up answers (`answersTurn`), and everything ends on the
-same review page and is saved the same way (memory notes, the answer-style line in custom instructions). Without an AI
+same review page and is saved the same way (memory notes). Without an AI
 (or if round 2 fails) the typed and spoken answers are listed as given, one row per question's main topic, with a
 notice; chips need no request. Back from the first question returns to the choices. Asked cold, the food question uses
 the typed questions' wording ("Any food preferences or restrictions?", `profile.foodTitle`) instead of the follow-up's
@@ -97,7 +98,10 @@ only when its topic group has no item and was neither said not to apply nor decl
 3. shopping (payment, delivery, shopping) — "How do you like to pay and receive deliveries?" Chips: Cash on delivery,
    Card, Don't ring the doorbell, Call before you come, Leave it at the door.
 4. city — "Which city do you live in?" (no chips)
-5. style — "Do you prefer short answers or detailed ones?" Chips: Short and to the point, Detailed.
+
+The fifth, style ("Do you prefer short answers or detailed ones?"), was removed on 20 Nov 2026 (`INTRO-29`): the answer
+style is never asked; a finished setup adds "Answer briefly and to the point." to the custom instructions unless a style
+line is there. A style the user volunteers is still understood and saved (row below).
 
 Age and gender are never asked (only saved when volunteered; an owner decision, see the report). A chip answer becomes
 an item directly (its label as the value, no request); "No allergies" marks the topic as not applying. Free-text or

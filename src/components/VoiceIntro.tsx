@@ -47,7 +47,7 @@ import { memoryErrorText } from './memoryError';
 /**
  * "Tell me about yourself": the start of setup's "Let me get to know you a little" step and of
  * Settings › Assistant › Memory › "Introduce yourself" (docs/voice-introduction.md). It opens on three choices: speak
- * (only then the large microphone shows), type, or "Ask me questions" (the five fixed questions one at a time, answered
+ * (only then the large microphone shows), type, or "Ask me questions" (the four fixed questions one at a time, answered
  * by a chip, typing or voice, then the same review). The user talks or types freely;
  * one request to their AI turns it into notes (src/intro/), Qutai asks at most three fixed follow-up questions, and
  * the user checks every note before anything is saved. The typed questions (ProfileQuestions) are the alternative

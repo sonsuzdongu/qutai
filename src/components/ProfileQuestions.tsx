@@ -33,19 +33,18 @@ import { TranscriptCard } from './VoiceIntro';
  * one-fact-per-line form `remember` writes. Shown once in setup, after the AI step, when memory is on; the Memory
  * screen offers it again ("Answer a few questions"). Every page can be skipped, and so can the whole thing.
  *
- * The answer-style question writes a line to the custom instructions (Settings › Assistant), not to memory: it is a
- * standing instruction about replies, which is what that setting is for.
+ * There is no answer-style question (since 20 Nov 2026, `INTRO-29`): setup adds the short-answers line to the custom
+ * instructions itself (src/intro/answerStyle.ts).
  */
 
-type Page = 'intro' | 'name' | 'city' | 'shopping' | 'food' | 'style' | 'offer' | 'address' | 'summary';
-const PAGES: Page[] = ['intro', 'name', 'city', 'shopping', 'food', 'style', 'offer', 'address', 'summary'];
-const QUESTIONS: Page[] = ['name', 'city', 'shopping', 'food', 'style'];
+type Page = 'intro' | 'name' | 'city' | 'shopping' | 'food' | 'offer' | 'address' | 'summary';
+const PAGES: Page[] = ['intro', 'name', 'city', 'shopping', 'food', 'offer', 'address', 'summary'];
+const QUESTIONS: Page[] = ['name', 'city', 'shopping', 'food'];
 
 /** Each saved fact has a slot, so answering again replaces it instead of adding another. */
 type Slot = 'name' | 'city' | 'payment' | 'delivery' | 'food' | 'fullName' | 'phone' | 'email' | 'shipTo' | 'billTo';
 
 type Payment = 'cod' | 'card' | 'none';
-type Style = 'short' | 'detailed';
 type Address = {
   line: string;
   district: string;
@@ -104,8 +103,6 @@ const hasAddress = (a: Address) => !!(a.line.trim() || a.district.trim() || a.po
 type Props = {
   /** Changes the page; setup blurs out and in like its own steps. */
   transition?: (change: () => void) => void;
-  /** Updates the custom instructions (the answer-style question). */
-  onInstructions: (update: (current: string) => string) => void;
   /** Finished or skipped. */
   onDone: () => void;
   /**
@@ -119,7 +116,7 @@ type Props = {
   transcript?: string;
 };
 
-export function ProfileQuestions({ transition, onInstructions, onDone, registerBack, startAt = 'intro', transcript }: Props) {
+export function ProfileQuestions({ transition, onDone, registerBack, startAt = 'intro', transcript }: Props) {
   const styles = useStyles();
   const palette = usePalette();
   const scrollRef = useRef<ScrollViewInstance>(null);
@@ -131,7 +128,6 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
   const [deliveryText, setDeliveryText] = useState('');
   const [foodChips, setFoodChips] = useState<string[]>([]);
   const [foodText, setFoodText] = useState('');
-  const [style, setStyle] = useState<Style | null>(null);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -140,11 +136,8 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
   const [billTo, setBillTo] = useState<Address>(() => emptyAddress('', defaultCountry()));
   /** Memory ids of what this flow saved, by slot. */
   const saved = useRef<Partial<Record<Slot, string>>>({});
-  /** The custom-instructions line this flow added, replaced if the answer changes. */
-  const styleLine = useRef<string | null>(null);
   const [summary, setSummary] = useState<{ id: string; text: string; category: MemoryCategory }[]>([]);
   const [editing, setEditing] = useState<{ id: string; text: string } | null>(null);
-  const [instructionLine, setInstructionLine] = useState<string | null>(null);
 
   const go = (to: Page) => {
     // Onboarding's transition closes the keyboard itself; the Memory screen's sheet has none.
@@ -188,18 +181,6 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
 
   const fact = (key: MessageKey, value: string) => t(key, { value: value.replace(/\s+/g, ' ').trim() });
 
-  const saveStyle = (next: Style | null) => {
-    const line = next ? t(next === 'short' ? 'profile.style.shortLine' : 'profile.style.detailedLine') : null;
-    const previous = styleLine.current;
-    styleLine.current = line;
-    setInstructionLine(line);
-    onInstructions((current) => {
-      const lines = current.split('\n').filter((l) => l.trim() && l.trim() !== previous);
-      if (line && !lines.includes(line)) lines.push(line);
-      return lines.join('\n');
-    });
-  };
-
   const loadSummary = async () => {
     const ids = new Set(Object.values(saved.current));
     const memories = await listMemories(await getDb()).catch(() => []);
@@ -223,7 +204,6 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
       const food = [...foodChips, foodText.trim()].filter(Boolean).join(', ');
       await saveSlot('food', food ? fact('profile.fact.food', food) : null, 'food');
     }
-    if (page === 'style') saveStyle(style);
     if (page === 'address') {
       await saveSlot('fullName', fullName.trim() ? fact('profile.fact.fullName', fullName) : null, 'identity');
       await saveSlot('phone', phone.trim() ? fact('profile.fact.phone', phone) : null, 'identity');
@@ -249,7 +229,6 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
   const next = async () => {
     if (page === 'intro') return go('name');
     await commit();
-    if (page === 'style') return go('offer');
     if (page === 'offer' || page === 'address') return toSummary();
     if (page === 'summary') return onDone();
     go(PAGES[at + 1]);
@@ -261,7 +240,6 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
     (page === 'city' && !!city.trim()) ||
     (page === 'shopping' && (!!payment || deliveryChips.length > 0 || !!deliveryText.trim())) ||
     (page === 'food' && (foodChips.length > 0 || !!foodText.trim())) ||
-    (page === 'style' && !!style) ||
     (page === 'address' &&
       (!!fullName.trim() || !!phone.trim() || !!email.trim() || hasAddress(shipTo) || hasAddress(billTo)));
 
@@ -452,19 +430,6 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
         </Question>
       )}
 
-      {page === 'style' && (
-        <Question title={t('profile.styleTitle')} lead={t('profile.styleLead')}>
-          <Chips
-            options={[t('profile.style.short'), t('profile.style.detailed')]}
-            selected={style ? [t(`profile.style.${style}`)] : []}
-            onPress={(label) => {
-              const value: Style = label === t('profile.style.short') ? 'short' : 'detailed';
-              setStyle(style === value ? null : value);
-            }}
-          />
-        </Question>
-      )}
-
       {page === 'offer' && (
         <>
           <Text style={styles.title} accessibilityRole="header">
@@ -544,7 +509,7 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
             {t('profile.summaryTitle')}
           </Text>
           <Text style={styles.lead}>
-            {t(summary.length || instructionLine ? 'profile.summaryLead' : 'profile.summaryEmpty')}
+            {t(summary.length ? 'profile.summaryLead' : 'profile.summaryEmpty')}
           </Text>
           {summary.map((m) =>
             editing?.id === m.id ? (
@@ -582,24 +547,6 @@ export function ProfileQuestions({ transition, onInstructions, onDone, registerB
                 </Pressable>
               </Pressable>
             ),
-          )}
-          {instructionLine && (
-            <View style={styles.savedRow}>
-              <Icon name="preferences" size={18} color={palette.textSecondary} />
-              <Text style={styles.savedText}>{t('profile.summaryInstruction', { line: instructionLine })}</Text>
-              <Pressable
-                onPress={() => {
-                  setStyle(null);
-                  saveStyle(null);
-                }}
-                hitSlop={10}
-                style={styles.remove}
-                accessibilityRole="button"
-                accessibilityLabel={t('profile.removeInstruction')}
-              >
-                <Icon name="close" size={14} color={palette.textSecondary} />
-              </Pressable>
-            </View>
           )}
           <Text style={styles.hint}>{t('profile.summaryHint')}</Text>
         </>

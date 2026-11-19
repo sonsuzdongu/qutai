@@ -102,7 +102,6 @@ export function ProfileStep({ ai, voice, onVoice, onInstructions, onDone, transi
         startAt="name"
         transcript={typed.transcript}
         transition={transition}
-        onInstructions={onInstructions}
         onDone={onDone}
         registerBack={register}
       />

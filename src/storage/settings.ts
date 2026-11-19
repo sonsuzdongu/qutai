@@ -55,7 +55,7 @@ export type Settings = {
   memoryEnabled: boolean;
   /**
    * The user's standing instructions for the assistant ("Answer briefly"), added to every request below the safety
-   * rules (agent/systemPrompt.ts customInstructionsPrompt). Also where setup's answer-style question writes.
+   * rules (agent/systemPrompt.ts customInstructionsPrompt). A finished first-run setup adds the short-answers line here (INTRO-29).
    */
   customInstructions: string;
   /** The assistant may use the provider's web search (each search is billed to the user's API key). */

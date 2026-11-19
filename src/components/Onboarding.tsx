@@ -19,6 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
+import { withDefaultAnswerStyle } from '../intro/answerStyle';
 import { accountSession } from '../account';
 import { isConfigured, requestTarget } from '../ai/providers';
 import { creditsEnabled } from '../config/features';
@@ -30,7 +31,7 @@ import { backgroundTasksSupported } from '../device/backgroundTask';
 import { openDefaultBrowserSettings } from '../device/defaultBrowser';
 import { ensureNotificationPermission } from '../device/notifications';
 import { openSettingsOrExplain } from '../device/settings';
-import { getLanguage, LANGUAGE_INFO, LANGUAGES, t, type Language } from '../i18n';
+import { getLanguage, LANGUAGE_INFO, LANGUAGES, t, tIn, type Language } from '../i18n';
 import { chooseSetupLanguage, setupLanguageAvailable, setupLanguageStart } from '../i18n/appLanguage';
 import { LEGAL_VERSION, LegalKind } from '../legal/documents';
 import type { Settings } from '../storage/settings';
@@ -186,6 +187,18 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
     const ai = cleanAiChoice(draft);
     onDone({
       ...ai,
+      // Answers are short and to the point unless the user said otherwise (INTRO-29): the line picking it used to add.
+      ...(legalOnly
+        ? {}
+        : {
+            customInstructions: cleanCustomInstructions(
+              withDefaultAnswerStyle(ai.customInstructions, t('profile.style.shortLine'), [
+                t('profile.style.detailedLine'),
+                tIn('en', 'profile.style.shortLine'),
+                tIn('en', 'profile.style.detailedLine'),
+              ]),
+            ),
+          }),
       // Never Qutai Credits without an account (signed out again before the end of setup).
       provider: providerToSave(ai.provider, signedIn(), settings.provider),
       onboarded: true,

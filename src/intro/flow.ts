@@ -7,7 +7,7 @@ import type { MessageKey } from '../i18n';
  * screen runs the microphone and the requests and reports what happened as events; this decides what comes next.
  *
  * It opens on three choices ('choose'): speak (the large microphone, 'intro'), type (the text field), or "Ask me
- * questions" (all five fixed questions, then the same review page). Nothing touches the microphone before speaking is
+ * questions" (all four fixed questions, then the same review page). Nothing touches the microphone before speaking is
  * chosen.
  */
 

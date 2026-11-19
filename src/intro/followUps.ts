@@ -4,10 +4,11 @@ import type { Extraction, IntroItem, IntroTopic } from './extract';
 /**
  * Which follow-up questions Qutai asks after the introduction: fixed, translated questions picked here (never text
  * from the model), at most three, only about important things the user did not mention, said not to apply, or decline.
- * Age and gender are never asked: they are saved only when the user volunteers them.
+ * Age and gender are never asked: they are saved only when the user volunteers them, and so is the answer style
+ * (`INTRO-29`: setup adds the short-answers line itself, src/intro/answerStyle.ts).
  */
 
-export type FollowUpId = 'food' | 'name' | 'shopping' | 'city' | 'style';
+export type FollowUpId = 'food' | 'name' | 'shopping' | 'city';
 
 export type Chip = {
   /** Stable id, also what a test checks. */
@@ -80,24 +81,13 @@ export const FOLLOW_UPS: FollowUp[] = [
     multi: false,
     chips: [],
   },
-  {
-    id: 'style',
-    question: 'voiceIntro.ask.style',
-    about: 'how they like answers',
-    topics: ['style'],
-    multi: false,
-    chips: [
-      { id: 'short', label: 'profile.style.short', item: { topic: 'style', choice: 'short' } },
-      { id: 'detailed', label: 'profile.style.detailed', item: { topic: 'style', choice: 'detailed' } },
-    ],
-  },
 ];
 
 /**
- * "Ask me questions" (the third way to start the introduction): all five, one at a time, in the order a conversation
+ * "Ask me questions" (the third way to start the introduction): all four, one at a time, in the order a conversation
  * would take (name and city first), each answered by a chip, by typing or by voice, or skipped.
  */
-const ASK_ME_ORDER: FollowUpId[] = ['name', 'city', 'food', 'shopping', 'style'];
+const ASK_ME_ORDER: FollowUpId[] = ['name', 'city', 'food', 'shopping'];
 
 export function askMeQuestions(): FollowUp[] {
   return ASK_ME_ORDER.map((id) => {
@@ -154,7 +144,6 @@ export function verbatimItems(pending: { question: FollowUp; text: string }[]): 
     name: 'name',
     shopping: 'shopping',
     city: 'city',
-    style: 'other',
   };
   return pending.map(({ question, text }) => ({ topic: main[question.id], value: text.slice(0, 120), quote: text }));
 }
