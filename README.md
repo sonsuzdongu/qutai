@@ -1,6 +1,6 @@
 # Qutai
 
-> **How Qutai works and why:** [`DESIGN.md`](DESIGN.md) records every design decision (rules, reasons, status) in one place. Read it before changing behaviour, and update it with every change.
+> **How Qutai works and why:** [`DESIGN.md`](DESIGN.md) is the map of every design decision (rules, reasons, status), with one file per area in [`docs/design/`](docs/design/). Read it before changing behaviour, and update it with every change.
 
 An AI-powered mobile browser for iOS and Android: an agent that can read and use the page for you,
 tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models, with the models on OpenRouter, and with a self-hosted OpenAI-compatible server. Besides the page, the assistant
