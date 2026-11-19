@@ -1,6 +1,8 @@
 # To Do
 
 For the feature inventory comparison and the phased plan, see `ROADMAP.md`.
+Decisions already taken, and the ones listed below once the owner answers them, are recorded in [`DESIGN.md`](DESIGN.md)
+(with ids such as `APPS-7`); when an item here is decided, update `DESIGN.md` in the same change.
 
 ## Decisions waiting for the owner (collected 17 Nov 2026)
 

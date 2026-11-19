@@ -1,5 +1,7 @@
 # Qutai
 
+> **How Qutai works and why:** [`DESIGN.md`](DESIGN.md) records every design decision (rules, reasons, status) in one place. Read it before changing behaviour, and update it with every change.
+
 An AI-powered mobile browser for iOS and Android: an agent that can read and use the page for you,
 tabs and private mode. Works with Anthropic (Claude), OpenAI and Google Gemini models, with the models on OpenRouter, and with a self-hosted OpenAI-compatible server. Besides the page, the assistant
 can add calendar events, reminders and notifications, read the calendar when asked about the user's schedule, use the phone's location, offer a Call button and open the
