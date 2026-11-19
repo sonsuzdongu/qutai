@@ -8,6 +8,7 @@ import {
   AUTO_INTERVAL_MS,
   AUTO_RETRY_MS,
   DEFAULT_PREFS,
+  appDataFallback,
   autoBackupDecision,
   clearPasswordOn,
   deviceLabel,
@@ -177,11 +178,28 @@ describe('stored state and helpers', () => {
       prefs: { auto: true, network: 'any', tabs: false, chats: true, activity: true, apiKeys: true },
       accounts: { u1: { lastSuccessAt: 5, last: { at: 6, trigger: 'auto', result: 'skipped', reason: 'not-wifi' }, restoreOffered: true } },
     };
-    assert.deepEqual(parseState(JSON.stringify(state)), state);
+    // Prefs stored before apps existed read back with the apps switches at their defaults (on).
+    assert.deepEqual(parseState(JSON.stringify(state)), { ...state, prefs: { ...state.prefs, apps: true, appData: true } });
+    const withApps = { ...state, prefs: { ...state.prefs, apps: true, appData: false } };
+    assert.deepEqual(parseState(JSON.stringify(withApps)), withApps);
     assert.deepEqual(parseState('nonsense').prefs, DEFAULT_PREFS);
     assert.deepEqual(parseState(JSON.stringify({ prefs: { network: 'cellular', auto: 'yes' } })).prefs, DEFAULT_PREFS);
     const odd = parseState(JSON.stringify({ accounts: { u1: { last: { at: 1, result: 'exploded' } }, 'bad id!': {} } }));
     assert.deepEqual(odd.accounts, { u1: {} });
+  });
+
+  it("over the account's limit with apps' data, the backup is made again without it (and the record says so)", () => {
+    const on = { apps: true, appData: true };
+    assert.equal(appDataFallback(60, 50, on), true);
+    assert.equal(appDataFallback(40, 50, on), false, 'fits');
+    assert.equal(appDataFallback(60, null, on), false, 'no limit known');
+    assert.equal(appDataFallback(60, 50, { apps: true, appData: false }), false, 'the data is out already');
+    assert.equal(appDataFallback(60, 50, { apps: false, appData: true }), false, 'no apps at all');
+    const record = runRecord('auto', 7, { ok: true, appDataLeftOut: true });
+    assert.deepEqual(record, { at: 7, trigger: 'auto', result: 'done', appDataLeftOut: true });
+    const stored = { prefs: DEFAULT_PREFS, accounts: { u1: { lastSuccessAt: 7, last: record } } };
+    assert.deepEqual(parseState(JSON.stringify(stored)).accounts.u1.last, record);
+    assert.deepEqual(runRecord('auto', 7, { ok: true }), { at: 7, trigger: 'auto', result: 'done' });
   });
 
   it('offers a restore once, only to a phone that never backed up this account', () => {
