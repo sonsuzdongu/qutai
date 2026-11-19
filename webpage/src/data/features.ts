@@ -13,7 +13,10 @@ const t = (en: string, tr: string): Text => ({ en, tr });
 export type Feature = {
   title: Text;
   body: Text;
-  /** Example requests to the assistant, in the visitor's language. */
+  /**
+   * Example requests to the assistant, in the visitor's language. Turkish ones are written the way people talk to an
+   * assistant ("hatırla", "ara"), not with the formal "siz" the page itself uses for the visitor.
+   */
   asks?: Text[];
 };
 export type Group = { id: string; icon: IconName; title: Text; lede: Text; items: Feature[] };
@@ -140,8 +143,8 @@ export const GROUPS: Group[] = [
           'Form doldurur, formun gösterdiği hataları düzeltir, seçenek seçer, sayfalar arasında gezinir. Size hangi dilde yazdıysanız o dilde yanıt verir.',
         ),
         asks: [
-          t('Fill in this form with my details', 'Bu formu bilgilerimle doldurun'),
-          t('Summarise this page in five points', 'Bu sayfayı beş maddede özetleyin'),
+          t('Fill in this form with my details', 'Bu formu bilgilerimle doldur'),
+          t('Summarise this page in five points', 'Bu sayfayı beş maddede özetle'),
         ],
       },
       {
@@ -158,7 +161,7 @@ export const GROUPS: Group[] = [
           'Diğer sekmeleri geçmeden okur, bir tabloyla yanıtlar; tabloyu CSV dosyası olarak da kaydedebilir.',
         ),
         asks: [
-          t('Which of these three is the better deal? Make a table', 'Bu üçünden hangisi daha uygun? Tablo yapın'),
+          t('Which of these three is the better deal? Make a table', 'Bu üçünden hangisi daha uygun? Tablo yap'),
         ],
       },
       {
@@ -167,7 +170,7 @@ export const GROUPS: Group[] = [
           'Searches and reads many pages and PDFs, takes notes and writes a report with its sources under the answer, which you can share as a PDF. It takes a few minutes and costs more than a normal request.',
           'Birçok sayfayı ve PDF’i arar ve okur, not alır, kaynakları yanıtın altında listelenen bir rapor yazar; raporu PDF olarak paylaşabilirsiniz. Birkaç dakika sürer, normal bir istekten daha pahalıdır.',
         ),
-        asks: [t('Research the e-bike rules in Istanbul', 'İstanbul’daki elektrikli bisiklet kurallarını araştırın')],
+        asks: [t('Research the e-bike rules in Istanbul', 'İstanbul’daki elektrikli bisiklet kurallarını araştır')],
       },
       {
         title: t('Tab groups share one conversation', 'Sekme grubu tek sohbeti paylaşır'),
@@ -182,7 +185,7 @@ export const GROUPS: Group[] = [
           'Save a request as a task, run it by name, or get a reminder daily or weekly. Nothing runs while Qutai is closed. On Android, a task can keep working in the background if you turn that on.',
           'Bir isteği görev olarak kaydedin, adıyla çalıştırın ya da her gün veya her hafta hatırlatılsın. Qutai kapalıyken hiçbir şey çalışmaz. Android’de açarsanız görev arka planda sürebilir.',
         ),
-        asks: [t('Run the task called Weekly prices', 'Haftalık fiyatlar görevini çalıştırın')],
+        asks: [t('Run the task called Weekly prices', 'Haftalık fiyatlar görevini çalıştır')],
       },
       {
         title: t('Changes Qutai’s settings for you', 'Qutai’ın ayarlarını sizin için değiştirir'),
@@ -190,7 +193,7 @@ export const GROUPS: Group[] = [
           'Appearance and browsing preferences from a fixed list, with a line saying what changed. It can never weaken a protection, such as turning blocking off.',
           'Belirli bir listedeki görünüm ve gezinme tercihleri; neyin değiştiğini bir satırla söyler. Engellemeyi kapatmak gibi bir korumayı asla zayıflatamaz.',
         ),
-        asks: [t('Turn on dark mode and make the text bigger', 'Koyu temayı açın ve yazıyı büyütün')],
+        asks: [t('Turn on dark mode and make the text bigger', 'Koyu temayı aç ve yazıyı büyüt')],
       },
     ],
   },
@@ -210,7 +213,7 @@ export const GROUPS: Group[] = [
           'Kimlik ve iletişim, adresler, alışveriş, seyahat, yemek, bütçe ve genel. Ayarlar’da görün, düzenleyin, arayın, silin; herhangi bir bilgiyi kilitleyin, yapay zekâ yalnızca etiketini görsün. Şifre, kart numarası, tek kullanımlık kod ve IBAN siz isteseniz de saklanmaz.',
         ),
         asks: [
-          t('Remember that I’m vegetarian', 'Vejetaryen olduğumu hatırlayın'),
+          t('Remember that I’m vegetarian', 'Vejetaryen olduğumu hatırla'),
           t('My delivery address is Moda Cd. 12, Kadıköy', 'Teslimat adresim Moda Cd. 12, Kadıköy'),
         ],
       },
@@ -233,7 +236,7 @@ export const GROUPS: Group[] = [
           'Before your remembered name, address or phone go into a site, Qutai asks whether that site may have them: once, always or never.',
           'Hafızadaki adınız, adresiniz ya da telefonunuz bir siteye girilmeden önce Qutai o sitenin bunları alıp alamayacağını sorar: bir kez, her zaman ya da hiçbir zaman.',
         ),
-        asks: [t('Order dinner for two from this restaurant', 'Bu restorandan iki kişilik akşam yemeği sipariş edin')],
+        asks: [t('Order dinner for two from this restaurant', 'Bu restorandan iki kişilik akşam yemeği sipariş et')],
       },
       {
         title: t('Custom instructions', 'Özel talimatlar'),
@@ -259,7 +262,7 @@ export const GROUPS: Group[] = [
           'Always allow, ask every time, read only or blocked; a site without its own level follows “Ask before every action”.',
           'Her zaman izin ver, her seferinde sor, salt okunur ya da engelli; kendi düzeyi olmayan site “Her işlemden önce sor” ayarını izler.',
         ),
-        asks: [t('Only read this site, don’t click anything', 'Bu sitede yalnızca okuyun, hiçbir şeye tıklamayın')],
+        asks: [t('Only read this site, don’t click anything', 'Bu sitede sadece oku, hiçbir şeye tıklama')],
       },
       {
         title: t('Posting and sending with your approval', 'Onayınızla paylaşma ve gönderme'),
@@ -267,7 +270,7 @@ export const GROUPS: Group[] = [
           'Comments, replies, reviews, contact forms and messages on a site: Qutai reads the exact text in the box and shows it with the button it will press once. If the text changes, nothing is pressed.',
           'Bir sitedeki yorum, yanıt, değerlendirme, iletişim formu ve mesajlar: Qutai kutudaki metni kendisi okur ve bir kez basacağı düğmeyle birlikte gösterir. Metin değişirse hiçbir şeye basılmaz.',
         ),
-        asks: [t('Comment “Great video, thanks!” on this video', 'Bu videoya “Harika video, teşekkürler!” yorumunu yazın')],
+        asks: [t('Comment “Great video, thanks!” on this video', 'Bu videoya “Harika video, teşekkürler!” diye yorum yaz')],
       },
       {
         title: t('Payments: yours by default', 'Ödeme: varsayılan olarak sizde'),
@@ -275,7 +278,7 @@ export const GROUPS: Group[] = [
           'The assistant fills the checkout and stops; you press the last button. If you turn on “Let the assistant complete payments”, every payment shows the site, the total on the page, the order and the payment method in Qutai’s window, every time, with no spending limit.',
           'Asistan ödeme formunu doldurur ve durur; son düğmeye siz basarsınız. “Asistan ödemeleri tamamlasın”ı açarsanız her ödemede Qutai penceresi siteyi, sayfadaki toplamı, siparişi ve ödeme yöntemini her seferinde gösterir; harcama sınırı yoktur.',
         ),
-        asks: [t('Put these in the cart and go to checkout', 'Bunları sepete ekleyip ödeme adımına geçin')],
+        asks: [t('Put these in the cart and go to checkout', 'Bunları sepete ekle, ödeme adımına geç')],
       },
       {
         title: t('Deleting and account changes', 'Silme ve hesap değişiklikleri'),
@@ -309,7 +312,7 @@ export const GROUPS: Group[] = [
           'Ayrıntıları gösterdikten sonra etkinlik ve hatırlatıcı ekler, izin verirseniz takviminizi okur, bildirim kurar.',
         ),
         asks: [
-          t('Add this concert to my calendar', 'Bu konseri takvimime ekleyin'),
+          t('Add this concert to my calendar', 'Bu konseri takvimime ekle'),
           t('Am I free on Friday evening?', 'Cuma akşamı boş muyum?'),
         ],
       },
@@ -319,7 +322,7 @@ export const GROUPS: Group[] = [
           'A call is a Call button; texts, WhatsApp messages and emails are drafts. The assistant never sends a message by itself.',
           'Arama bir Ara düğmesidir; SMS, WhatsApp ve e-posta birer taslaktır. Asistan hiçbir mesajı kendi başına göndermez.',
         ),
-        asks: [t('Book a table here, or give me their number', 'Burada masa ayırtın ya da numaralarını verin')],
+        asks: [t('Book a table here, or give me their number', 'Burada masa ayırt ya da numaralarını ver')],
       },
       {
         title: t('Contacts by name', 'Rehberden adıyla'),
@@ -328,9 +331,9 @@ export const GROUPS: Group[] = [
           'Yalnızca söylediğiniz ad, telefonda aranır. Yapay zekâ “cep” gibi ad ve etiketleri görür, numara ya da adresi asla; birden fazla eşleşme varsa Qutai’ın kendi listesinden siz seçersiniz. Gizli modda kapalıdır.',
         ),
         asks: [
-          t('Call Ahmet', 'Ahmet’i arayın'),
-          t('WhatsApp Ayşe that I’ll be ten minutes late', 'Ayşe’ye WhatsApp’tan on dakika gecikeceğimi yazın'),
-          t('Email this page to Mehmet Bey', 'Bu sayfayı Mehmet Bey’e e-postayla gönderin'),
+          t('Call Ahmet', 'Ahmet’i ara'),
+          t('WhatsApp Ayşe that I’ll be ten minutes late', 'Ayşe’ye WhatsApp’tan on dakika gecikeceğimi yaz'),
+          t('Email this page to Mehmet Bey', 'Bu sayfayı Mehmet Bey’e e-postayla gönder'),
         ],
       },
       {
@@ -339,7 +342,7 @@ export const GROUPS: Group[] = [
           'With your permission, for “near me” requests; never in incognito.',
           'İzninizle, “yakınımda” gibi istekler için; gizli modda asla.',
         ),
-        asks: [t('Find a pharmacy open near me', 'Yakınımda açık bir eczane bulun')],
+        asks: [t('Find a pharmacy open near me', 'Yakınımda açık bir eczane bul')],
       },
     ],
   },
@@ -358,7 +361,7 @@ export const GROUPS: Group[] = [
           'On by default, from filter lists the phone downloads (EasyList, EasyPrivacy, AdGuard Turkish, regional lists or any list by address). The assistant can hide a leftover ad box or block a domain after you approve; the rule goes to My rules.',
           'Varsayılan olarak açık; telefonun indirdiği filtre listeleriyle (EasyList, EasyPrivacy, AdGuard Turkish, bölgesel listeler ya da adresiyle eklediğiniz bir liste). Asistan kalan boş bir reklam kutusunu gizleyebilir ya da bir alan adını engelleyebilir; onaylarsanız kural Kendi kurallarım’a eklenir.',
         ),
-        asks: [t('Hide this empty gap at the top', 'Üstteki bu boş alanı gizleyin')],
+        asks: [t('Hide this empty gap at the top', 'Üstteki bu boş alanı gizle')],
       },
       {
         title: t('Your own styles', 'Kendi stilleriniz'),
@@ -367,7 +370,7 @@ export const GROUPS: Group[] = [
           'Asistan değişikliği önerir; siz onaylar, dener ve o site için saklarsınız. Stiller internetten hiçbir şey yükleyemez; “Bu sayfada stilleri kapat” her zaman tek dokunuş uzaktadır.',
         ),
         asks: [
-          t('Make the links red on this site', 'Bu sitede bağlantıları kırmızı yapın'),
+          t('Make the links red on this site', 'Bu sitede bağlantıları kırmızı yap'),
           t('Bigger text and a dark background here', 'Burada daha büyük yazı ve koyu zemin'),
         ],
       },
@@ -387,7 +390,7 @@ export const GROUPS: Group[] = [
         ),
         asks: [
           t('How many links are on this page?', 'Bu sayfada kaç bağlantı var?'),
-          t('Collect this table into a list', 'Bu tabloyu bir listeye toplayın'),
+          t('Collect this table into a list', 'Bu tabloyu bir listeye topla'),
         ],
       },
       {
@@ -415,9 +418,9 @@ export const GROUPS: Group[] = [
           'Uygulamayı yazar, önizlemesini açar, hatalarını okuyup düzeltir. Her değişiklik yeni bir sürümdür, geri dönebilirsiniz; uygulamadaki bir hata “Qutai bunu düzeltsin” seçeneğini sunar. Uygulama yazmak sıradan bir asistan isteğidir; çalıştırmak ücretsizdir.',
         ),
         asks: [
-          t('Build me an app where I can keep my notes', 'Notlarımı tutabileceğim bir uygulama yapın'),
+          t('Build me an app where I can keep my notes', 'Notlarımı tutabileceğim bir uygulama yap'),
           t('A tracker for how much water I drink each day', 'Her gün ne kadar su içtiğimi takip eden bir uygulama'),
-          t('Add a search box to my notes app', 'Not uygulamama bir arama kutusu ekleyin'),
+          t('Add a search box to my notes app', 'Not uygulamama bir arama kutusu ekle'),
         ],
       },
       {
@@ -451,7 +454,7 @@ export const GROUPS: Group[] = [
           'Only the article, in light, dark or sepia, serif or sans, with easier-reading spacing. Read aloud uses the language the text is written in and the most natural voice installed on the phone.',
           'Yalnızca makale; açık, koyu ya da sepya, serif ya da sans, kolay okuma aralığıyla. Sesli okuma metnin yazıldığı dili ve telefonda yüklü en doğal sesi kullanır.',
         ),
-        asks: [t('Read this article aloud', 'Bu makaleyi sesli okuyun')],
+        asks: [t('Read this article aloud', 'Bu makaleyi sesli oku')],
       },
       {
         title: t('Talk instead of typing', 'Yazmak yerine konuşun'),
@@ -467,7 +470,7 @@ export const GROUPS: Group[] = [
           'Kırpın, döndürün, boyutlandırın, dosya boyutu belirleyin; siyah-beyaz, sepya, negatif, otomatik iyileştirme, parlaklık, kontrast, doygunluk, sıcaklık, keskinleştirme ya da bulanıklaştırma uygulayın; isteyerek ya da hazır ayar ve kaydırıcılarla.',
         ),
         asks: [
-          t('Make it square and under 1 MB', 'Kare yapın ve 1 MB’ın altına indirin'),
+          t('Make it square and under 1 MB', 'Kare yap ve 1 MB’ın altına indir'),
           t('Greyscale and a little sharper', 'Siyah-beyaz ve biraz daha keskin'),
         ],
       },
@@ -484,7 +487,7 @@ export const GROUPS: Group[] = [
           'Save a page as PDF or a full-page screenshot; downloads with pause and resume, and a warning before risky files.',
           'Sayfayı PDF ya da tam sayfa ekran görüntüsü olarak kaydedin; duraklatılıp sürdürülebilen indirmeler, riskli dosyalardan önce uyarı.',
         ),
-        asks: [t('Save this page as a PDF', 'Bu sayfayı PDF olarak kaydedin')],
+        asks: [t('Save this page as a PDF', 'Bu sayfayı PDF olarak kaydet')],
       },
     ],
   },
@@ -535,7 +538,7 @@ export const GROUPS: Group[] = [
           'Anthropic, OpenAI, Google Gemini, OpenRouter or your own OpenAI-compatible server (Ollama, LM Studio, vLLM), with a connection test. Keys stay in the phone’s secure storage; choose the model per conversation.',
           'Anthropic, OpenAI, Google Gemini, OpenRouter ya da kendi OpenAI uyumlu sunucunuz (Ollama, LM Studio, vLLM); bağlantı testiyle. Anahtarlar telefonun güvenli deposunda kalır; modeli sohbet başına seçin.',
         ),
-        asks: [t('Use Gemini for this chat', 'Bu sohbet için Gemini kullanın')],
+        asks: [t('Use Gemini for this chat', 'Bu sohbette Gemini kullan')],
       },
       {
         title: t('Qutai Credits', 'Qutai Kredileri'),
@@ -582,7 +585,7 @@ export const GROUPS: Group[] = [
           'Bookmarks in folders, imported from and exported to the file Chrome, Firefox, Safari or Edge use; the assistant can search your history.',
           'Klasörlü yer imleri; Chrome, Firefox, Safari ya da Edge’in kullandığı dosyadan içe ve dışa aktarma. Asistan geçmişinizde arama yapabilir.',
         ),
-        asks: [t('Find the recipe page I read last week', 'Geçen hafta okuduğum yemek tarifi sayfasını bulun')],
+        asks: [t('Find the recipe page I read last week', 'Geçen hafta okuduğum yemek tarifi sayfasını bul')],
       },
       {
         title: t('Ten languages', 'On dil'),

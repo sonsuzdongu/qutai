@@ -40,6 +40,7 @@ Qutai's marketing site lives in `webpage/`, a separate project inside this repos
 ## Details
 
 - (was `WEB-3`) A competitor without a mobile browser, or one shutting down, is listed under "excluded" with the reason (for example Arc Search and Hyperweb), not in the table. Where: webpage/README.md; webpage/src/data/comparison.ts (`EXCLUDED`).
+- The features page's Turkish example requests are written as people talk to an assistant ("Vejetaryen olduğumu hatırla", "Ahmet’i ara"), while the page's own text addresses the visitor with "siz". Why: the owner's request (19 Nov 2026): the formal form sounded unnatural in a request. Where: webpage/src/data/features.ts.
 - (was `WEB-10`) A feature still waiting for an owner decision is left off the website (for example the Cloudflare Workers AI hint on 16 Nov). Why: the site must not promise what may change (WEB-1). Where: d14bd7a and its hand-over note.
 
 ## Limits and what is not built
