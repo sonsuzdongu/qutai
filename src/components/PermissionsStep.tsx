@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AppState, Platform, Pressable, Text, View } from 'react-native';
 import { listWritableCalendars } from '../device/calendarChoice';
+import { chooseSharedContacts } from '../device/contacts';
 import {
   PermissionKind,
   permissionState,
@@ -18,6 +19,7 @@ import { CalendarChoiceScreen } from './CalendarChoiceScreen';
 const ICONS: Record<PermissionKind, IconName> = {
   location: 'location',
   microphone: 'microphone',
+  contacts: 'person',
   calendar: 'calendar',
   reminders: 'reminder',
   notifications: 'notifications',
@@ -26,6 +28,7 @@ const ICONS: Record<PermissionKind, IconName> = {
 const BODY: Record<PermissionKind, MessageKey> = {
   location: 'permissions.locationBody',
   microphone: Platform.OS === 'ios' ? 'permissions.microphoneBodyIos' : 'permissions.microphoneBody',
+  contacts: 'permissions.contactsBody',
   calendar: 'permissions.calendarBody',
   reminders: 'permissions.remindersBody',
   notifications: Platform.OS === 'android' ? 'permissions.notificationsBodyAndroid' : 'permissions.notificationsBody',
@@ -88,6 +91,7 @@ export function PermissionsStep() {
             busy={busy === kind}
             onToggle={(on) => void toggle(kind, on)}
             onChooseCalendar={() => setChoosing(true)}
+            onChooseContacts={() => void chooseSharedContacts().then(refresh)}
           />
         ))}
       </View>
@@ -103,6 +107,7 @@ function Row({
   busy,
   onToggle,
   onChooseCalendar,
+  onChooseContacts,
 }: {
   kind: PermissionKind;
   state: PermissionState | undefined;
@@ -110,6 +115,7 @@ function Row({
   busy: boolean;
   onToggle: (on: boolean) => void;
   onChooseCalendar: () => void;
+  onChooseContacts: () => void;
 }) {
   const styles = useStyles();
   const palette = usePalette();
@@ -118,7 +124,9 @@ function Row({
   let status: string | null = null;
   if (state === 'granted') status = t('permissions.allowed');
   else if (state === 'limited')
-    status = t(kind === 'microphone' ? 'permissions.microphoneLimited' : 'permissions.calendarLimited');
+    status = t(
+      kind === 'microphone' ? 'permissions.microphoneLimited' : kind === 'contacts' ? 'permissions.contactsLimited' : 'permissions.calendarLimited',
+    );
   else if (state === 'blocked') status = t('permissions.blocked');
   else if (state === 'denied' && asked) status = t('permissions.denied');
   else if (state === 'unavailable') status = t('permissions.unavailable');
@@ -138,6 +146,11 @@ function Row({
         {state === 'blocked' && (
           <Pressable onPress={openSettingsOrExplain} accessibilityRole="button" hitSlop={6} style={styles.link}>
             <Text style={styles.linkText}>{t('settings.openSystem')}</Text>
+          </Pressable>
+        )}
+        {kind === 'contacts' && state === 'limited' && (
+          <Pressable onPress={onChooseContacts} accessibilityRole="button" hitSlop={6} style={styles.link}>
+            <Text style={styles.linkText}>{t('settings.contactsChoose')}</Text>
           </Pressable>
         )}
         {kind === 'calendar' && state === 'granted' && (

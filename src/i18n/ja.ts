@@ -2114,6 +2114,9 @@ export const ja: Record<keyof typeof en, string> = {
     'アシスタントと音声で話すため。スマートフォンからマイクと音声認識の許可を求められます。Apple の音声サービスを使う前には、Qutai が別途確認します。',
   'permissions.microphoneLimited':
     '音声認識が許可されていません。スマートフォン自体で認識できる言語のみ使用できます。スマートフォンの設定で許可できます。',
+  'permissions.contacts': "連絡先",
+  'permissions.contactsBody': "「アフメトに電話」「アイシェにメッセージ」と言えるようにします。Qutai はあなたが言った名前だけをこの電話で探し、番号やアドレスが AI に送られることはありません。",
+  'permissions.contactsLimited': "選んだ連絡先のみ。",
   'permissions.calendar': 'カレンダー',
   'permissions.calendarBody':
     'カレンダーを管理し、予定を扱うため。確認した予定は選んだカレンダーに追加され、予定は日程について質問したときにのみ読み取られます。',

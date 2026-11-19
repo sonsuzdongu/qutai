@@ -2113,6 +2113,9 @@ export const id: Record<keyof typeof en, string> = {
     'Untuk berbicara dengan asisten menggunakan suara. Ponsel meminta izin mikrofon dan pengenalan ucapan. Sebelum layanan ucapan Apple digunakan, Qutai menanyakannya kepada Anda secara terpisah.',
   'permissions.microphoneLimited':
     'Pengenalan ucapan tidak diizinkan: hanya bahasa yang dikenali ponsel sendiri yang berfungsi. Anda dapat mengizinkannya di setelan ponsel.',
+  'permissions.contacts': "Kontak",
+  'permissions.contactsBody': "Agar Anda bisa berkata “telepon Ahmet” atau “kirim pesan ke Ayşe”. Qutai hanya mencari nama yang Anda sebut, di ponsel ini; nomor dan alamat tidak pernah dikirim ke AI.",
+  'permissions.contactsLimited': "Hanya kontak yang Anda pilih.",
   'permissions.calendar': 'Kalender',
   'permissions.calendarBody':
     'Untuk mengelola kalender dan bekerja dengan janji temu Anda: acara yang Anda konfirmasi masuk ke kalender yang Anda pilih, dan acara Anda hanya dibaca saat Anda bertanya tentang jadwal Anda.',

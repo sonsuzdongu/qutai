@@ -2099,6 +2099,9 @@ export const de: Record<keyof typeof en, string> = {
     'Um per Sprache mit dem Assistenten zu sprechen. Das Telefon fragt nach dem Mikrofon und der Spracherkennung. Bevor Apples Sprachdienst je genutzt wird, fragt Qutai Sie gesondert.',
   'permissions.microphoneLimited':
     'Spracherkennung ist nicht erlaubt: Nur Sprachen, die das Telefon selbst erkennt, funktionieren. Sie können sie in den Einstellungen des Telefons erlauben.',
+  'permissions.contacts': "Kontakte",
+  'permissions.contactsBody': "Damit Sie „Ruf Ahmet an“ oder „Schreib Ayşe“ sagen können. Qutai sucht nur die Namen, die Sie nennen, auf diesem Telefon; Nummern und Adressen gehen nie an die KI.",
+  'permissions.contactsLimited': "Nur die Kontakte, die Sie ausgewählt haben.",
   'permissions.calendar': 'Kalender',
   'permissions.calendarBody':
     'Um Ihren Kalender zu verwalten und mit Ihren Terminen zu arbeiten: Von Ihnen bestätigte Termine kommen in den gewählten Kalender, und Ihre Termine werden nur gelesen, wenn Sie nach Ihrem Zeitplan fragen.',

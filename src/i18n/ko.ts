@@ -2112,6 +2112,9 @@ export const ko: Record<keyof typeof en, string> = {
     '음성으로 어시스턴트와 대화하기 위해 사용합니다. 휴대전화가 마이크와 음성 인식 권한을 요청합니다. Apple의 음성 서비스를 사용하기 전에는 Qutai가 따로 묻습니다.',
   'permissions.microphoneLimited':
     '음성 인식이 허용되지 않았습니다. 휴대전화 자체에서 인식하는 언어만 작동합니다. 휴대전화 설정에서 허용할 수 있습니다.',
+  'permissions.contacts': "연락처",
+  'permissions.contactsBody': "“아흐메트에게 전화해” 또는 “아이셰에게 메시지 보내”라고 말할 수 있도록 합니다. Qutai는 말한 이름만 이 휴대전화에서 찾으며, 번호와 주소는 절대 AI로 전송되지 않습니다.",
+  'permissions.contactsLimited': "선택한 연락처만.",
   'permissions.calendar': '캘린더',
   'permissions.calendarBody':
     '캘린더를 관리하고 일정을 처리하기 위해 사용합니다. 확인한 일정은 선택한 캘린더에 추가되며, 일정에 대해 물을 때만 일정을 읽습니다.',

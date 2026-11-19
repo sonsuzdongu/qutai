@@ -6,6 +6,7 @@ import {
   requestCalendarListAccess,
   requestRemindersAccess,
 } from './calendarChoice';
+import { contactsState, requestContacts } from './contacts';
 import { ensureNotificationPermission, notificationPermissionState } from './notifications';
 import { requestVoicePermissions, voicePermissionState } from './voiceInput';
 
@@ -18,10 +19,14 @@ import { requestVoicePermissions, voicePermissionState } from './voiceInput';
  * speech recognition, so talking to the assistant later prompts nothing more. The separate one-time question about the
  * phone's online speech service stays where it is (asked before that service is first used).
  *
+ * The contacts row (decided by the owner on 19 Nov 2026) asks what the first lookup asks (device/contacts.ts); a user who
+ * skips it or refuses is asked at the first lookup exactly as before (agent/contactTool.ts). iOS limited access shows
+ * as 'limited' with a way to choose the contacts, as in Settings.
+ *
  * Not offered here: the camera (asked when the user scans a QR code or takes a photo, where the reason is plain) and
  * saving to Photos (asked on the first save).
  */
-export type PermissionKind = 'location' | 'microphone' | 'calendar' | 'reminders' | 'notifications';
+export type PermissionKind = 'location' | 'microphone' | 'contacts' | 'calendar' | 'reminders' | 'notifications';
 
 /**
  * 'limited': iOS write-only calendar access, or the microphone allowed without speech recognition (iOS; only languages
@@ -32,13 +37,13 @@ export type PermissionKind = 'location' | 'microphone' | 'calendar' | 'reminders
 export type PermissionState = 'granted' | 'limited' | 'undetermined' | 'denied' | 'blocked' | 'unavailable';
 
 /**
- * The setup step's rows, in order: the microphone first. Reminders lists exist on iOS only; Android's reminders are
- * calendar events (the calendar row covers them).
+ * The setup step's rows, in order: the microphone first, then contacts (both for talking to Qutai: "call Ahmet").
+ * Reminders lists exist on iOS only; Android's reminders are calendar events (the calendar row covers them).
  */
 export function setupPermissions(): PermissionKind[] {
   return Platform.OS === 'ios'
-    ? ['microphone', 'location', 'calendar', 'reminders', 'notifications']
-    : ['microphone', 'location', 'calendar', 'notifications'];
+    ? ['microphone', 'contacts', 'location', 'calendar', 'reminders', 'notifications']
+    : ['microphone', 'contacts', 'location', 'calendar', 'notifications'];
 }
 
 const fromList = (s: ListAccess): PermissionState => (s === 'writeOnly' ? 'limited' : s);
@@ -59,6 +64,7 @@ export async function permissionState(kind: PermissionKind): Promise<PermissionS
   try {
     if (kind === 'location') return await locationState();
     if (kind === 'microphone') return await voicePermissionState();
+    if (kind === 'contacts') return await contactsState();
     if (kind === 'calendar') return fromList(await calendarListAccess());
     if (kind === 'reminders') return fromList(await remindersAccess());
     return await notificationPermissionState();
@@ -82,6 +88,11 @@ export async function requestPermission(kind: PermissionKind): Promise<Permissio
       if (before === 'granted' || before === 'blocked' || before === 'unavailable') return before;
       await requestVoicePermissions();
       return await voicePermissionState();
+    }
+    if (kind === 'contacts') {
+      const before = await contactsState();
+      if (before === 'granted' || before === 'limited' || before === 'blocked' || before === 'unavailable') return before;
+      return await requestContacts();
     }
     // The calendar row asks for full access on iOS: it is what lets the user choose the calendar and lets the
     // assistant read their appointments ("to manage your calendar"); adding alone keeps asking write-only in context.

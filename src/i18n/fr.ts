@@ -2113,6 +2113,9 @@ export const fr: Record<keyof typeof en, string> = {
     'Pour parler à l’assistant. Le téléphone demande l’accès au micro et à la reconnaissance vocale. Avant toute utilisation du service vocal d’Apple, Qutai vous le demande séparément.',
   'permissions.microphoneLimited':
     'La reconnaissance vocale n’est pas autorisée : seules les langues que le téléphone reconnaît lui-même fonctionnent. Vous pouvez l’autoriser dans les réglages du téléphone.',
+  'permissions.contacts': "Contacts",
+  'permissions.contactsBody': "Pour pouvoir dire « appelle Ahmet » ou « écris à Ayşe ». Qutai cherche seulement les noms que vous dites, sur ce téléphone ; les numéros et adresses ne vont jamais à l’IA.",
+  'permissions.contactsLimited': "Seulement les contacts que vous avez choisis.",
   'permissions.calendar': 'Agenda',
   'permissions.calendarBody':
     'Pour gérer votre agenda et travailler avec vos rendez-vous : les événements que vous confirmez sont ajoutés à l’agenda de votre choix, et vos événements ne sont lus que lorsque vous posez une question sur votre emploi du temps.',

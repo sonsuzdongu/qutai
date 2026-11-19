@@ -10,7 +10,10 @@ text, WhatsApp message or email to them. Numbers and email addresses never reach
    the text / WhatsApp card or into the email composer.
 2. **No listing, no upload.** Lookup runs on the phone, only for a name the user said, and returns at most
    `MAX_CONTACT_MATCHES` (5) people.
-3. **Asked at first use**, not in setup. Refused: things work as before (the user dictates the number).
+3. **Offered in setup, asked at first use.** Setup's "What Qutai may use" step has an optional Contacts row next to the
+   microphone (owner's decision, 19 Nov 2026); skipped or refused there, the first lookup asks exactly as before (Qutai's
+   short explanation, then the system's prompt while it still asks). Refused: things work as before (the user dictates
+   the number). iOS limited access is handled as in Settings (Choose contacts).
 4. **No automatic calling or sending.** The user still taps Call, and still sends the message or email themself.
 5. **Off in incognito conversations.**
 

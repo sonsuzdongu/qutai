@@ -2114,6 +2114,9 @@ export const ptBR: Record<keyof typeof en, string> = {
     'Para falar com o assistente por voz. O celular pede acesso ao microfone e ao reconhecimento de fala. Antes de o serviço de fala da Apple ser usado, o Qutai pergunta a você separadamente.',
   'permissions.microphoneLimited':
     'O reconhecimento de fala não é permitido: só funcionam os idiomas que o próprio celular reconhece. Você pode permitir nas configurações do celular.',
+  'permissions.contacts': "Contatos",
+  'permissions.contactsBody': "Para você poder dizer “ligue para Ahmet” ou “mande mensagem para Ayşe”. O Qutai procura só os nomes que você diz, neste telefone; números e endereços nunca vão para a IA.",
+  'permissions.contactsLimited': "Só os contatos que você escolheu.",
   'permissions.calendar': 'Agenda',
   'permissions.calendarBody':
     'Para gerenciar sua agenda e trabalhar com seus compromissos: os eventos que você confirma vão para a agenda que você escolher, e seus eventos só são lidos quando você pergunta sobre sua programação.',

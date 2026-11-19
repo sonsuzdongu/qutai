@@ -2105,6 +2105,9 @@ export const en = {
     'To talk to the assistant by voice. The phone asks for the microphone and for speech recognition. Before Apple’s speech service is ever used, Qutai asks you separately.',
   'permissions.microphoneLimited':
     'Speech recognition isn’t allowed: only languages the phone recognises itself work. You can allow it in the phone’s settings.',
+  'permissions.contacts': "Contacts",
+  'permissions.contactsBody': "So you can say “call Ahmet” or “message Ayşe”. Qutai looks up only the names you say, on this phone; numbers and addresses never go to the AI.",
+  'permissions.contactsLimited': "Only the contacts you chose.",
   'permissions.calendar': 'Calendar',
   'permissions.calendarBody':
     'To manage your calendar and work with your appointments: events you confirm go to the calendar you choose, and your events are read only when you ask about your schedule.',

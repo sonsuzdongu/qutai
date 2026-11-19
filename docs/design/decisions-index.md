@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 826 decisions (111 owner, 632 default, 83 waiting); 163 ids moved to Details.
+Totals: 826 decisions (112 owner, 631 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -520,7 +520,7 @@ Moved to Details (ids retired, not reused): `TASK-2`, `TASK-14`
 | `CON-8` | Only `offer_call`, `draft_sms`, `draft_whatsapp` and `draft_email` turn a handle into a real value. A… | Default |  |
 | `CON-9` | Nothing is called or sent automatically. The user taps Call, and sends the text, WhatsApp message or email… | Default |  |
 | `CON-10` | There is no approval dialog for each lookup. | Default |  |
-| `CON-11` | The contacts permission is asked at the first lookup, not during setup, after Qutai's own short… | Default |  |
+| `CON-11` | The contacts permission is offered in setup (an optional row) and otherwise asked at the first lookup as before… | Owner | 2026-11-19 |
 | `CON-12` | In a conversation that involves an incognito tab, `find_contact` and every use of a handle are refused,… | Default |  |
 | `CON-13` | Saved conversations and backups keep a card's name, label and message text, never the number. A restored… | Default |  |
 | `CON-14` | The action history records only who a card was for (for example "Offered a call button: Ahmet Yılmaz"),… | Default |  |

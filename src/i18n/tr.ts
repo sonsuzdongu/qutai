@@ -2108,6 +2108,9 @@ export const tr: Record<keyof typeof en, string> = {
     'Sesli asistanı kullanabilmek için. Telefon mikrofon ve konuşma tanıma için izin ister. Apple’ın konuşma hizmeti kullanılmadan önce Qutai size ayrıca sorar.',
   'permissions.microphoneLimited':
     'Konuşma tanımaya izin verilmedi: yalnızca telefonun kendisinin tanıdığı diller çalışır. Telefonun ayarlarından izin verebilirsiniz.',
+  'permissions.contacts': "Kişiler",
+  'permissions.contactsBody': "“Ahmet’i ara” ya da “Ayşe’ye yaz” diyebilmeniz için. Qutai yalnızca söylediğiniz adları bu telefonda arar; numaralar ve adresler hiçbir zaman yapay zekâya gitmez.",
+  'permissions.contactsLimited': "Yalnızca seçtiğiniz kişiler.",
   'permissions.calendar': 'Takvim',
   'permissions.calendarBody':
     'Takviminizi yönetmek ve randevularınızla çalışmak için: onayladığınız etkinlikler seçtiğiniz takvime eklenir, etkinlikleriniz yalnızca programınızı sorduğunuzda okunur.',
