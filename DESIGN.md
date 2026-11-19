@@ -19,6 +19,9 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Apps phase 2 tried in the iOS simulator and on the Android emulator (`22-apps.md`): the runner no longer
+  crashes on Android (`dataDetectorTypes` as an array, APPS-10), the Android sandbox lets `data:`, `blob:` and `about:`
+  through (APPS-41, `903a3f6`), and APPS-42 now names the one open case, WebRTC via `window[0]` on Android.
 - **2026-11-19:** Split into this entry page and one file per area under `docs/design/`, with the decisions index and the
   history in their own files. Each area now separates **Rules** (decisions, with ids) from **Details** (how it is built,
   no id): 825 ids remain as rules (110 owner, 630 default, 85 waiting for the owner); 163 ids

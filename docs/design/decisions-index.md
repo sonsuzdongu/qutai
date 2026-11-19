@@ -38,7 +38,7 @@ The open questions, in one place (each row says what the app does today).
 | `APPS-14` | Each app may store up to 5 MB of data, counted in UTF-8 bytes. One value or document may be up to 256 KB, a batch up to 100 operations,… | [22](22-apps.md) |
 | `APPS-17` | The 20 newest versions plus the current one are kept, and older ones are deleted when a new one is saved. Today: 20. | [22](22-apps.md) |
 | `APPS-23` | "Ask Qutai to fix this" sends a message to the assistant **at once**. The message holds the app's name, id and version and its last 15… | [22](22-apps.md) |
-| `APPS-42` | Some residual risks are accepted for phase 1: | [22](22-apps.md) |
+| `APPS-42` | Today accepted: on Android an app can still get WebRTC from `window[0]` of a fresh `about:blank` frame (break-out 45/46; iOS 46/46); DNS prefetch is off but rests on the engine. | [22](22-apps.md) |
 | `APPS-43` | Phase 3 phone features are each declared and asked per app. `assistant.ask` shows each question and its cost source first, and links ask… | [22](22-apps.md) |
 | `APPS-45` | There is no report button for AI-generated apps. Today: none. | [22](22-apps.md) |
 | `APPS-46` | The privacy policies say nothing about apps yet, and the legal version is not bumped. The proposed sentence: apps are stored only on the… | [22](22-apps.md) |
