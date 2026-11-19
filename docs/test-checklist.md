@@ -366,3 +366,32 @@ Henüz denenmedi (simülatöre yazı girilemediği için sahte yapay zekâ ayarl
 - [ ] Android: ilk retten sonra "İzin ver" sistem iznini yeniden açar; ikinci retten sonra yalnızca "Ayarları aç". Uygulama bilgisinde yalnızca Kişiler (okuma) izni görünür, yazma izni yoktur.
 - [ ] Büyük rehber (binlerce kişi) olan gerçek bir telefonda aramanın hızı.
 - [ ] TalkBack / VoiceOver: kişi listesi seçenekleri ve kart etiketleri okunur; en büyük yazı boyutu, koyu tema, yatay ekran.
+
+## 16. Sayfa görünümü (stiller) ve çerez listesi (19 Kasım)
+
+Yeni yerel derleme gerekir (react-native-webview yaması değişti: çerez deposu). Tasarım: `docs/page-customisation.md`.
+Test sayfaları: `node scripts/page-tests/customise.mjs` (iOS simülatöründe `http://localhost:8812`, Android
+emülatöründe `adb reverse tcp:8812 tcp:8812`). Sahte yapay zekâ: `node scripts/fake-ai/server.mjs`, Özel sunucu
+`http://localhost:8793/v1`, model `fake`; sözcükler: restyle, bigtext, evilcss, cookies, cookiedel.
+
+Denendi: yalnızca testlerle (sanitiser tablosu, kapsamlar, dosya/yedek, onay ve site kipleri, çerez değerlerinin
+modele gitmemesi) ve stil betiği masaüstü Chromium'da yerel sayfada (kapsam, pushState/replaceState/geri, kapat/aç,
+deneme stili, sayfanın kendi mavi rengini ezme). Cihazda henüz denenmedi: iOS derlemesi diskin dolmasıyla yarıda kaldı.
+
+- [ ] `/style` sayfasında "restyle": onay penceresinde açıklama, site, CSS Ayrıntılar altında; Uygula → bağlantılar hemen kırmızı; sohbette kart: "Bu site için sakla…" ve "Geri al".
+- [ ] "Geri al" → bağlantılar mavi; kart "Stil kaldırıldı".
+- [ ] Yeniden "restyle" → Sakla (ad + kapsam) → sayfayı yenileyin: "At first paint" satırı kırmızı (sayfa yanıp sönmez); pushState/replaceState/hash düğmelerinde kırmızı kalır.
+- [ ] Sayfa menüsü › "Bu sayfada stilleri kapat" → mavi; "Bu sayfada stilleri aç" → kırmızı.
+- [ ] Ayarlar › Gizlilik ve güvenlik › Filtre listeleri › Kendi kurallarım › Stiller: anahtar, Düzenle (CSS'e `@import "x"` yazın: kaydedilmez, cümle + Ayrıntılar), "Nerede uygulanacağını değiştir", sil. Reklam engelleme kapalıyken de çalışır.
+- [ ] "evilcss": hiçbir şey sorulmadan reddedilir; sayfa değişmez.
+- [ ] "bigtext" gerçek, oturum gerektirmeyen bir sayfada (örneğin bir Wikipedia maddesi): yazı büyür, arka plan koyu; Sakla, yenile, kapat, geri al.
+- [ ] Gizli sekmede "restyle": onayda gizli sekme notu; kartta "Sakla" yok. Kalıcı stiller gizli sekmede de uygulanır (gizleme kuralları gibi).
+- [ ] Siteyi "Yalnızca okuma" yapın: "restyle" reddedilir, "cookies" çalışır, "cookiedel" reddedilir. "Engellendi": hepsi reddedilir.
+- [ ] `/cookies` sayfasında "cookies": cevapta qt_session (HttpOnly), qt_pref, qt_script; değer yok; "Yapay zekâya gönderilenler" kaydında da değer yok. Kart › "Çerezleri göster".
+- [ ] Çerezler ekranı (kart, sayfa menüsü › Daha fazla › Çerezler, site izin sayfası › "Bu sitenin çerezleri"): alan adına göre gruplu; "Değeri göster" → değer, "Kopyala"; sayfadaki "Page JavaScript sees" satırında qt_session yok.
+- [ ] Tek çerezi silin (oturum kapanabilir uyarısı) → liste yenilenir; "Tümünü sil" → liste boş; sayfayı yenileyince sunucu yeniden kurar.
+- [ ] "cookiedel": onay penceresinde ad ve alan adı, değer yok; Vazgeç → silinmez; Sil → silinir.
+- [ ] Gizli sekmede çerez ekranı yalnızca o sekmenin çerezlerini gösterir (normal sekmedeki qt_session görünmez).
+- [ ] Kurallar dosyasını dışa aktarın (stiller `! [style]` blokları), stili silin, içe aktarın: stiller listelenir, "Kapalı olarak içe aktar" / "Açık olarak içe aktar".
+- [ ] Yedekle, stili silin, geri yükleyin: stil geri gelir.
+- [ ] Android ve iOS, büyük yazı, koyu/açık tema, yatay ekran, TalkBack/VoiceOver: kart düğmeleri, çerez eylemleri ve stil düzenleyicisi okunur; sözcükler bölünmez.
