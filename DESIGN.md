@@ -19,6 +19,8 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Read-aloud keeps the phone's own speech engine: an on-device neural voice (Supertonic-3) was measured
+  and not adopted, parked on the branch `experiment/neural-tts-eval`; a cloud-hosted voice may come later (`VOICE-24`, owner).
 - **2026-11-19:** Contacts are offered in setup's "What Qutai may use" step as an optional row; skipped or refused, the
   first lookup asks as before (`CON-11`, owner's decision; the privacy text doesn't say when it is asked, so unchanged).
 - **2026-11-19:** Server backup: the restore offer comes once after each fresh sign-in, also on a phone that backed up

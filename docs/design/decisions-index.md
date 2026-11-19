@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 826 decisions (112 owner, 631 default, 83 waiting); 163 ids moved to Details.
+Totals: 827 decisions (113 owner, 631 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -758,6 +758,7 @@ Moved to Details (ids retired, not reused): `MEDIA-1`, `MEDIA-8`, `MEDIA-9`, `ME
 | `VOICE-17` | Barge-in: starting to talk stops read-aloud; read-aloud turns the microphone off before it starts; a… | Default |  |
 | `VOICE-19` | Read-aloud uses the most natural installed voice (iOS Premium › Enhanced › Siri › compact; Android by the… | Default |  |
 | `VOICE-21` | A language with no installed voice is read with the phone's default voice and Qutai says so once per… | Default |  |
+| `VOICE-24` | Read-aloud stays on the phone's own speech engine; an on-device neural voice (Supertonic-3) was evaluated and… | Owner | 2026-11-19 |
 
 Moved to Details (ids retired, not reused): `VOICE-10`, `VOICE-12`, `VOICE-16`, `VOICE-18`, `VOICE-20`, `VOICE-22`, `VOICE-23`
 

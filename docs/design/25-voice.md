@@ -48,6 +48,8 @@ Speaking to Qutai instead of typing (the panel's microphone and holding the Quta
 - **`VOICE-19`** Read-aloud uses the most natural installed voice (iOS Premium › Enhanced › Siri › compact; Android by the engine's quality), the same voice for the whole app run, at the engine's natural rate and pitch; when only basic voices exist a one-time tip says how to install a better one.
   Status: Default (manager or implementing session; open to change) · Why: iOS used the compact default voice even with an Enhanced or Premium one installed ("not natural") · Source: 3fc70c0; src/chat/speechLanguage.ts (pickVoice)
 - **`VOICE-21`** A language with no installed voice is read with the phone's default voice and Qutai says so once per language per run.
+
+- **`VOICE-24`** Read-aloud stays on the phone's own speech engine; an on-device neural voice (Supertonic-3) was evaluated on 19 Nov 2026 and not adopted (owner, 19 Nov 2026). On an Honor 90 a 280-character answer took about 11 s before the first sound (real-time factor 0.55) with 0.8 to 0.9 GB peak memory and a 191 to 383 MB download, and shipping it needs a patched native dependency, a number front end and OpenRAIL-M terms; the evaluation is parked on the branch `experiment/neural-tts-eval` (`experiments/neural-tts-eval/README.md`). A cloud-hosted voice is the intended later route; it is not built.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: a61de60
 
 ## Details
@@ -83,6 +85,7 @@ Expo SDK 58 ships no speech-to-text, so Qutai uses the operating system's recogn
 - Voice input needs a new development build; real speech has not been verified on a device.
 - Address-bar voice search: not built (would reuse `startVoiceInput`).
 - Qutai's own audio recording and AI transcription (cloud speech): not planned (TODO "Decision", 2026-11-13).
+- A neural read-aloud voice: on-device was evaluated and not adopted (`VOICE-24`); a cloud-hosted voice is not built.
 
 ## Where it lives
 

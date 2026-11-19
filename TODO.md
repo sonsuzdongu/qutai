@@ -427,6 +427,7 @@ Both as a tool the agent can use and as a button the user can tap in the panel.
   - [ ] Other document types (Word, Excel, images as files) when attached from Files: refused with "Only PDF files" for now
   - [x] Full-page screenshot (scroll and stitch): page menu and `save_screenshot` with `full_page`; Skia stitching into one JPEG, capped at 25 screens; narrower capture to fit the memory budget, split between screens only when the phone can't hold one image
 - [x] Read aloud (`expo-speech`): the page's main content, the agent's text, chat messages
+  - Decision (owner, 19 Nov 2026): no on-device neural voice; Supertonic-3 measured on an Honor 90 (about 11 s to the first sound for a 280-character answer, 0.8 to 0.9 GB, 191 to 383 MB download), parked on the branch `experiment/neural-tts-eval` (`VOICE-24`). A cloud-hosted voice may be built later; not started
 - [x] Reader mode: the article in a themed, script-free view over the page, read aloud paragraph by paragraph with a highlight
 - [x] Share / copy link; copy / share chat messages (`expo-clipboard`)
   - Decision: The agent was not given a clipboard-writing tool (attack that swaps a copied IBAN or wallet address)
