@@ -1754,6 +1754,8 @@ export const es: Record<keyof typeof en, string> = {
     'Este es software de código cerrado de Google que incluye la app de Android. Se usa según las condiciones de Google, que están en la dirección de arriba.',
   'licences.noText': 'El texto de la licencia no se incluye con este componente; consulta la dirección de arriba.',
   'onboarding.start': 'Empezar',
+  'onboarding.languageTitle': 'Elija su idioma',
+  'onboarding.languageLead': 'Las pantallas de Qutai estarán en este idioma. Puede cambiarlo más tarde en Configuración › Idioma.',
   'onboarding.accept': 'Aceptar y continuar',
   'onboarding.skipForNow': 'Omitir por ahora',
   'onboarding.finish': 'Empezar a navegar',

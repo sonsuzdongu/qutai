@@ -1757,6 +1757,8 @@ export const ru: Record<keyof typeof en, string> = {
     'Это проприетарное ПО Google, входящее в приложение для Android. Оно используется на условиях Google, которые доступны по адресу выше.',
   'licences.noText': 'Текст лицензии к этому компоненту не приложен; см. адрес выше.',
   'onboarding.start': 'Начать',
+  'onboarding.languageTitle': 'Выберите язык',
+  'onboarding.languageLead': 'Экраны Qutai будут на этом языке. Позже его можно изменить в разделе «Настройки › Язык».',
   'onboarding.accept': 'Принять и продолжить',
   'onboarding.skipForNow': 'Пока пропустить',
   'onboarding.finish': 'Начать работу',

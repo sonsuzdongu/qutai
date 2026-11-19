@@ -1749,6 +1749,8 @@ export const en = {
     'This is closed-source software from Google that the Android app includes. It is used under Google’s terms, which are at the address above.',
   'licences.noText': 'The licence text isn’t included with this component; see the address above.',
   'onboarding.start': 'Get started',
+  'onboarding.languageTitle': 'Choose your language',
+  'onboarding.languageLead': 'Qutai’s screens will be in this language. You can change it later in Settings › Language.',
   'onboarding.accept': 'Accept and continue',
   'onboarding.skipForNow': 'Skip for now',
   'onboarding.finish': 'Start browsing',

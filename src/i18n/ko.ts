@@ -1756,6 +1756,8 @@ export const ko: Record<keyof typeof en, string> = {
     'Android 앱에 포함된 Google의 비공개 소스 소프트웨어입니다. 위 주소에 있는 Google의 약관에 따라 사용됩니다.',
   'licences.noText': '이 구성요소에는 라이선스 텍스트가 포함되어 있지 않습니다. 위 주소를 참고하세요.',
   'onboarding.start': '시작하기',
+  'onboarding.languageTitle': '언어를 선택하세요',
+  'onboarding.languageLead': 'Qutai 화면이 이 언어로 표시됩니다. 나중에 설정 › 언어에서 바꿀 수 있습니다.',
   'onboarding.accept': '동의하고 계속',
   'onboarding.skipForNow': '지금은 건너뛰기',
   'onboarding.finish': '브라우징 시작',

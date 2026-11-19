@@ -19,6 +19,7 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Setup now starts with a language step, preselected to the phone's language (nearest of the ten); the pick switches setup at once and is the same setting as Settings › Language (iOS: the app's per-app language that iOS Settings shows) (`LANG-21`, `INTRO-1`, owner's request).
 - **2026-11-19:** Setup's welcome and legal screens: smaller type, tighter on small phones and in landscape, text growth capped at 1.4× (then scrolling), and the acceptance checkbox pinned beside the Accept button (`INTRO-24`, owner's report).
 - **2026-11-19:** Every User-Agent ends with ` qutai.<build>` (`qutai.103` for 0.1.3): all web views, including incognito and desktop-site mode, and the app's own requests (`Qutai/<version> (<platform>) qutai.<build>`), so sites learn the app and its exact build (`DATA-23`, owner's request; privacy trade-off and policy wording left open for the owner).
 - **2026-11-19:** Admin panel: the Access token's audience (AUD tag) is no longer checked (owner); signature, issuer, expiry and type still are, so the Access application on the panel's hostname must always exist. Store packages are now built against the production server address (the git-ignored `.env.build.local`).
@@ -217,7 +218,7 @@ One file per area. "Rules" counts the decisions with ids; "Waiting" the ones sti
 | 23 | [Downloads and opening Qutai from other apps](docs/design/23-downloads-and-links.md) | 16 | 0 | The decisions taken before a download starts (who asked, which files warn, which addresses work), and what a link, a shared text or a `qutai://` link from… |
 | 24 | [Reader mode, media and downloads on screen](docs/design/24-reader-and-media.md) | 21 | 2 | What the user sees when reading an article, playing a video or audio, and downloading a file, and how web pages get the camera and microphone. |
 | 25 | [Voice input and read-aloud](docs/design/25-voice.md) | 16 | 0 | Speaking to Qutai instead of typing (the panel's microphone and holding the Qutai button), and Qutai reading text out loud. |
-| 26 | [Languages](docs/design/26-languages.md) | 14 | 3 | The languages of Qutai's interface, how the interface language is chosen, and which language the assistant answers in. |
+| 26 | [Languages](docs/design/26-languages.md) | 15 | 3 | The languages of Qutai's interface, how the interface language is chosen, and which language the assistant answers in. |
 | 27 | [Interface](docs/design/27-interface.md) | 12 | 0 | The look-and-feel rules that apply across the app: icons, dialogs, labels, the address bar, the Qutai button, haptics, the launch screen and the new tab page. |
 | 28 | [Accessibility](docs/design/28-accessibility.md) | 8 | 0 | How Qutai works with screen readers (TalkBack, VoiceOver), the system's Reduce motion setting, large text, and page zoom. |
 | 29 | [Landscape](docs/design/29-landscape.md) | 5 | 2 | How Qutai behaves when the phone or tablet is turned on its side. |

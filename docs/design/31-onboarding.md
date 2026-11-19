@@ -6,7 +6,7 @@ The first-launch setup, and "Tell me about yourself": the user talks freely and 
 
 ## How it works
 
-1. **Setup steps, in order:** welcome → privacy policy and terms (must be accepted) → AI (provider and key; in official builds Qutai Credits first) → "What Qutai may use" (phone permissions) → "Let me get to know you a little" (only while memory is on) → keep working in the background (Android builds that support it) → protection against ads and trackers → make Qutai the default browser. Steps blur out and back in.
+1. **Setup steps, in order:** language (`LANG-21`) → welcome → privacy policy and terms (must be accepted) → AI (provider and key; in official builds Qutai Credits first) → "What Qutai may use" (phone permissions) → "Let me get to know you a little" (only while memory is on) → keep working in the background (Android builds that support it) → protection against ads and trackers → make Qutai the default browser. Steps blur out and back in.
 2. **"What Qutai may use".** Microphone (on iOS also speech recognition), contacts (since 19 Nov 2026, `CON-11`), location, calendar, Reminders (iOS) and notifications. Each row says what it is for and has a switch; the system is asked only when the user turns a switch on, then the real state shows (allowed, iOS "default calendar only", not allowed, not allowed for good with Open settings). Every row is optional; turning an allowed one off opens the phone's settings. There is no camera row.
 3. **Calendar choice.** With two or more calendars, the user picks which one the assistant writes to (and on iOS which Reminders list), or "Automatic". Also in Settings › Assistant › "Calendar for the assistant".
 4. **"Tell me about yourself"** (first page of the get-to-know-you step, and Settings › Assistant › Memory › "Introduce yourself"). Example: the user taps the microphone and says "I'm Ayşe, I live in Kadıköy, I'm allergic to peanuts and I prefer short answers." Ways out: "I'd rather type", "Answer questions instead" (the typed questions), "Not now". A privacy note sits right under the microphone.
@@ -20,7 +20,7 @@ The first-launch setup, and "Tell me about yourself": the user talks freely and 
 
 ## The rules
 
-- **`INTRO-1`** Setup order is welcome, legal, AI, permissions, get-to-know-you (only with memory on), background (only where supported), protection, default browser.
+- **`INTRO-1`** Setup order is language (where it can be kept), welcome, legal, AI, permissions, get-to-know-you (only with memory on), background (only where supported), protection, default browser.
   Status: Default (manager or implementing session; open to change) · Why: the get-to-know-you questions only fill memory, so without memory they are left out · Source: src/components/Onboarding.tsx (ALL_STEPS)
 - **`INTRO-2`** The privacy policy and terms must be accepted to continue; a new legal version asks everyone again.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: In the app: src/legal/documents.ts (LEGAL_VERSION) · Source: ROADMAP.md › Phase 3.5

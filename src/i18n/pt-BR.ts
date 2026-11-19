@@ -1758,6 +1758,8 @@ export const ptBR: Record<keyof typeof en, string> = {
     'Este é um software de código fechado do Google incluído no app para Android. Ele é usado sob os termos do Google, que estão no endereço acima.',
   'licences.noText': 'O texto da licença não acompanha este componente; consulte o endereço acima.',
   'onboarding.start': 'Começar',
+  'onboarding.languageTitle': 'Escolha seu idioma',
+  'onboarding.languageLead': 'As telas do Qutai ficarão neste idioma. Você pode mudar depois em Configurações › Idioma.',
   'onboarding.accept': 'Aceitar e continuar',
   'onboarding.skipForNow': 'Pular por enquanto',
   'onboarding.finish': 'Começar a navegar',

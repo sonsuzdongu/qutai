@@ -1,6 +1,6 @@
 import { requireOptionalNativeModule } from 'expo';
-import { Linking, Platform } from 'react-native';
-import { matchLanguage, setLanguageOverride, type Language } from './index';
+import { Linking, Platform, Settings as IosUserDefaults } from 'react-native';
+import { getLanguage, matchLanguage, setLanguageOverride, type Language } from './index';
 
 /**
  * Settings › Language: which language Qutai's interface is in, and where that choice lives.
@@ -65,6 +65,61 @@ export function chooseLanguage(language: Language | null): boolean {
   // once the configuration change arrives.
   else setLanguageOverride(language, { bridge: true });
   return true;
+}
+
+/**
+ * Setup's first step: the language list, preselected to the language Qutai is already in (the phone's, or a per-app
+ * language set before the first launch). Each pick switches the interface at once and is stored in the same place as
+ * Settings › Language, so there is one setting:
+ * - Android: chooseLanguage (the system's per-app language on 13+, Qutai's stored choice before). Going back to the
+ *   language the step opened with restores what was there (usually "System default", so Qutai keeps following the
+ *   phone).
+ * - iOS: the app's own `AppleLanguages` user default, which is exactly what Settings › Qutai › Language writes. iOS reads
+ *   it at the next launch (the system's permission requests and quick actions follow from then on); the interface
+ *   switches now through the in-memory override. Going back to the opening language removes the value again.
+ * Returns false where no choice can be kept (an Android build without the native function): the step is left out.
+ */
+export function setupLanguageAvailable(): boolean {
+  return languageChoiceMode() !== 'none';
+}
+
+export type SetupLanguageStart = { shown: Language; chosen: Language | null };
+
+/** What the step opened with, captured once so a pick can be undone exactly. */
+export function setupLanguageStart(): SetupLanguageStart {
+  return { shown: getLanguage(), chosen: chosenLanguage() };
+}
+
+let iosWrote = false;
+
+export function chooseSetupLanguage(language: Language, start: SetupLanguageStart): void {
+  const mode = languageChoiceMode();
+  const back = language === start.shown;
+  if (mode === 'settings') {
+    try {
+      if (!back) {
+        IosUserDefaults.set({ AppleLanguages: [language] });
+        iosWrote = true;
+      } else if (iosWrote) {
+        // null removes the app's own value: back to the system's language list.
+        IosUserDefaults.set({ AppleLanguages: null });
+        iosWrote = false;
+      }
+    } catch {
+      // Not stored: the interface still switches for this run.
+    }
+    // Held in memory for this run (iOS applies the stored value from the next launch, or after its own restart).
+    setLanguageOverride(language);
+    return;
+  }
+  if (mode === 'system' || mode === 'app') {
+    const target = back ? start.chosen : language;
+    if (target === chosenLanguage() && getLanguage() === language) return;
+    if (!chooseLanguage(target)) setLanguageOverride(language);
+    // Back to "System default" on Android 13+: the system's language arrives with the configuration change; show the
+    // picked one meanwhile so the step doesn't flicker.
+    else if (target === null) setLanguageOverride(language, { bridge: true });
+  }
 }
 
 /** iOS: Qutai's page in the Settings app, where its Language row is. */

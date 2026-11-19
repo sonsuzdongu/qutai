@@ -30,7 +30,8 @@ import { backgroundTasksSupported } from '../device/backgroundTask';
 import { openDefaultBrowserSettings } from '../device/defaultBrowser';
 import { ensureNotificationPermission } from '../device/notifications';
 import { openSettingsOrExplain } from '../device/settings';
-import { t } from '../i18n';
+import { getLanguage, LANGUAGE_INFO, LANGUAGES, t, type Language } from '../i18n';
+import { chooseSetupLanguage, setupLanguageAvailable, setupLanguageStart } from '../i18n/appLanguage';
 import { LEGAL_VERSION, LegalKind } from '../legal/documents';
 import type { Settings } from '../storage/settings';
 import { Aurora } from '../ui/Aurora';
@@ -49,8 +50,18 @@ import { PermissionsStep } from './PermissionsStep';
 import { ProfileStep } from './ProfileStep';
 import { LegalScreen } from './LegalScreen';
 
-type Step = 'welcome' | 'legal' | 'ai' | 'permissions' | 'profile' | 'background' | 'protection' | 'browser';
-const ALL_STEPS: Step[] = ['welcome', 'legal', 'ai', 'permissions', 'profile', 'background', 'protection', 'browser'];
+type Step = 'language' | 'welcome' | 'legal' | 'ai' | 'permissions' | 'profile' | 'background' | 'protection' | 'browser';
+const ALL_STEPS: Step[] = [
+  'language',
+  'welcome',
+  'legal',
+  'ai',
+  'permissions',
+  'profile',
+  'background',
+  'protection',
+  'browser',
+];
 
 /**
  * How far the system's larger text sizes grow the welcome and legal screens' text (as the screen headers do). Past it
@@ -66,7 +77,7 @@ type Props = {
 };
 
 /**
- * First-run setup: what Qutai is, privacy policy and terms (must be accepted), the AI provider and
+ * First-run setup: the app's language (the same setting as Settings › Language; src/i18n/appLanguage.ts), what Qutai is, privacy policy and terms (must be accepted), the AI provider and
  * key (can be skipped; in pro mode Qutai Credits leads, with sign-in, the balance and buying credits, and the own key
  * is a separate path: QutaiSetup), the phone permissions the assistant can use (each optional, asked only when its switch is
  * turned on; PermissionsStep), "Let me get to know you" (optional, only with memory on; ProfileStep: "Tell me about
@@ -81,7 +92,10 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   const steps = legalOnly
     ? (['legal'] as Step[])
     : ALL_STEPS.filter(
-        (s) => (s !== 'profile' || settings.memoryEnabled) && (s !== 'background' || backgroundTasksSupported()),
+        (s) =>
+          (s !== 'profile' || settings.memoryEnabled) &&
+          (s !== 'background' || backgroundTasksSupported()) &&
+          (s !== 'language' || setupLanguageAvailable()),
       );
   const profileBack = useRef<(() => boolean) | null>(null);
   const [index, setIndex] = useState(0);
@@ -118,6 +132,12 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   };
   const go = (to: number) => transition(() => show(to));
   const [draft, setDraft] = useState(settings);
+  // The language step opens on the language Qutai is already in; a pick switches everything at once.
+  const [languageStart] = useState(setupLanguageStart);
+  const language = getLanguage();
+  const pickLanguage = (to: Language) => {
+    if (to !== language) chooseSetupLanguage(to, languageStart);
+  };
   const [accepted, setAccepted] = useState(false);
   const [reading, setReading] = useState<LegalKind | null>(null);
   const step = steps[index];
@@ -299,6 +319,39 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                 }
               >
                 <View style={[styles.step, (step === 'welcome' || step === 'legal') && compact && styles.stepCompact]}>
+                  {step === 'language' && (
+                    <>
+                      <Text
+                        style={[styles.legalTitle, compact && styles.legalTitleCompact]}
+                        accessibilityRole="header"
+                        maxFontSizeMultiplier={FIT_FONT_SCALE}
+                      >
+                        {t('onboarding.languageTitle')}
+                      </Text>
+                      <Text style={styles.legalLead} maxFontSizeMultiplier={FIT_FONT_SCALE}>
+                        {t('onboarding.languageLead')}
+                      </Text>
+                      <View style={styles.card} accessibilityRole="radiogroup">
+                        {LANGUAGES.map((id) => (
+                          <Pressable
+                            key={id}
+                            style={[styles.option, compact && styles.optionCompact]}
+                            onPress={() => pickLanguage(id)}
+                            accessibilityRole="radio"
+                            accessibilityState={{ checked: language === id }}
+                            accessibilityLanguage={LANGUAGE_INFO[id].locale}
+                          >
+                            <Radio selected={language === id} />
+                            {/* Each name written in its own language, so it can be found whatever is showing. */}
+                            <Text style={styles.optionText} maxFontSizeMultiplier={FIT_FONT_SCALE}>
+                              {LANGUAGE_INFO[id].name}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    </>
+                  )}
+
                   {step === 'welcome' && (
                     <>
                       <View style={[styles.hero, compact && styles.heroCompact, landscape && styles.heroRow]}>
@@ -756,7 +809,8 @@ const useStyles = makeStyles((c) => ({
     paddingVertical: 9,
     gap: 12,
   },
-  optionText: { color: c.text, fontSize: 15 },
+  optionCompact: { paddingVertical: 6 },
+  optionText: { color: c.text, fontSize: 15, flexShrink: 1 },
   secondaryButton: {
     flexDirection: 'row',
     alignItems: 'center',

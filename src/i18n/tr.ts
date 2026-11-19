@@ -1748,6 +1748,8 @@ export const tr: Record<keyof typeof en, string> = {
     'Bu, Android uygulamasında bulunan, Google’a ait kapalı kaynak bir yazılımdır. Google’ın koşulları altında kullanılır; koşullar yukarıdaki adrestedir.',
   'licences.noText': 'Bu bileşenle birlikte lisans metni gelmiyor; yukarıdaki adrese bakın.',
   'onboarding.start': 'Başlayalım',
+  'onboarding.languageTitle': 'Dilinizi seçin',
+  'onboarding.languageLead': 'Qutai’nin ekranları bu dilde olacak. Daha sonra Ayarlar › Dil bölümünden değiştirebilirsiniz.',
   'onboarding.accept': 'Kabul et ve devam et',
   'onboarding.skipForNow': 'Şimdilik atla',
   'onboarding.finish': 'Gezinmeye başla',

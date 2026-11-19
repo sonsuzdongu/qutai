@@ -732,6 +732,8 @@ function SettingsPages({
 function languageSummary(): string {
   const name = LANGUAGE_INFO[getLanguage()].name;
   const mode = languageChoiceMode();
+  // iOS: whether it is a per-app choice (iOS Settings, or setup's first step) or the phone's can't be told apart.
+  if (mode === 'settings') return name;
   if ((mode === 'system' || mode === 'app') && chosenLanguage()) return name;
   return t('settings.languageSummarySystem', { language: name });
 }

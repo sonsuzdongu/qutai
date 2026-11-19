@@ -1746,6 +1746,8 @@ export const de: Record<keyof typeof en, string> = {
     'Dies ist Closed-Source-Software von Google, die in der Android-App enthalten ist. Sie wird gemäß den Bedingungen von Google verwendet, die unter der obigen Adresse stehen.',
   'licences.noText': 'Der Lizenztext liegt dieser Komponente nicht bei; siehe die obige Adresse.',
   'onboarding.start': 'Los geht’s',
+  'onboarding.languageTitle': 'Wählen Sie Ihre Sprache',
+  'onboarding.languageLead': 'Qutai wird in dieser Sprache angezeigt. Sie können sie später unter Einstellungen › Sprache ändern.',
   'onboarding.accept': 'Akzeptieren und weiter',
   'onboarding.skipForNow': 'Vorerst überspringen',
   'onboarding.finish': 'Lossurfen',

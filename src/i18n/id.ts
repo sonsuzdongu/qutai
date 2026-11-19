@@ -1757,6 +1757,8 @@ export const id: Record<keyof typeof en, string> = {
     'Ini adalah software sumber tertutup dari Google yang disertakan dalam aplikasi Android. Software ini digunakan berdasarkan persyaratan Google, yang tersedia di alamat di atas.',
   'licences.noText': 'Teks lisensi tidak disertakan dengan komponen ini; lihat alamat di atas.',
   'onboarding.start': 'Mulai',
+  'onboarding.languageTitle': 'Pilih bahasa Anda',
+  'onboarding.languageLead': 'Layar Qutai akan menggunakan bahasa ini. Anda dapat mengubahnya nanti di Setelan › Bahasa.',
   'onboarding.accept': 'Setujui dan lanjutkan',
   'onboarding.skipForNow': 'Lewati untuk saat ini',
   'onboarding.finish': 'Mulai menjelajah',

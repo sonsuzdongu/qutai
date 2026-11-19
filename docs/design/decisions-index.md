@@ -780,6 +780,7 @@ Moved to Details (ids retired, not reused): `VOICE-10`, `VOICE-12`, `VOICE-16`, 
 | `LANG-17` | Today the eight newer translations are unreviewed by native speakers; brand names "Qutai Credits" / "Qutai… | **Waiting** |  |
 | `LANG-18` | Today translate prompts say "into <interface language>" and examples use local cities. | **Waiting** |  |
 | `LANG-19` | Android launcher shortcuts are static and stay in the phone's language when Qutai's language differs;… | Default |  |
+| `LANG-21` | Setup starts with the language, preselected to the one Qutai already shows; a pick switches at once and is stored where Settings ›… | Owner | 2026-11-19 |
 | `LANG-20` | The custom-instruction line "Always reply in Turkish" / "Her zaman Türkçe yanıt ver" added by older builds… | Owner | 2026-11-16 |
 
 Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LANG-13`, `LANG-14`, `LANG-15`
@@ -853,7 +854,7 @@ Moved to Details (ids retired, not reused): `WORK-4`, `WORK-8`, `WORK-11`, `WORK
 
 | Id | Decision | Status | Date |
 |---|---|---|---|
-| `INTRO-1` | Setup order is welcome, legal, AI, permissions, get-to-know-you (only with memory on), background (only… | Default |  |
+| `INTRO-1` | Setup order is language, welcome, legal, AI, permissions, get-to-know-you (only with memory on),… | Default |  |
 | `INTRO-2` | The privacy policy and terms must be accepted to continue; a new legal version asks everyone again. | Default |  |
 | `INTRO-3` | The permissions step asks the system only when the user turns a switch on; every row is optional; there is… | Default |  |
 | `INTRO-4` | The microphone row asks exactly what voice input asks on first use (microphone, and on iOS speech… | Default |  |

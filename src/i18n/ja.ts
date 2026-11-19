@@ -1758,6 +1758,8 @@ export const ja: Record<keyof typeof en, string> = {
     'これは Android アプリに含まれている Google のクローズドソース ソフトウェアです。上記のアドレスにある Google の規約に基づいて使用されています。',
   'licences.noText': 'このコンポーネントにはライセンスの本文が含まれていません。上記のアドレスをご覧ください。',
   'onboarding.start': '始める',
+  'onboarding.languageTitle': '言語を選択',
+  'onboarding.languageLead': 'Qutai の画面はこの言語で表示されます。あとから「設定 › 言語」で変更できます。',
   'onboarding.accept': '同意して続行',
   'onboarding.skipForNow': '今はスキップ',
   'onboarding.finish': 'ブラウジングを開始',

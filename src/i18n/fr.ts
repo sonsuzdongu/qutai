@@ -1757,6 +1757,8 @@ export const fr: Record<keyof typeof en, string> = {
     'Il s’agit d’un logiciel propriétaire de Google inclus dans l’application Android. Il est utilisé selon les conditions de Google, disponibles à l’adresse ci-dessus.',
   'licences.noText': 'Le texte de la licence n’est pas fourni avec ce composant ; consultez l’adresse ci-dessus.',
   'onboarding.start': 'Commencer',
+  'onboarding.languageTitle': 'Choisissez votre langue',
+  'onboarding.languageLead': 'Les écrans de Qutai seront dans cette langue. Vous pourrez la changer plus tard dans Paramètres › Langue.',
   'onboarding.accept': 'Accepter et continuer',
   'onboarding.skipForNow': 'Passer pour l’instant',
   'onboarding.finish': 'Commencer à naviguer',
