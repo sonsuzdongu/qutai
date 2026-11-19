@@ -1138,6 +1138,36 @@ the cookie list (step one), scripts (step two).
   switched off); `sites.scripts` in both backups. Test pages: `node scripts/page-tests/scripts.mjs`; fake-AI words
   `countlinks`, `marklinks`, `editlinks`, `evilscript`, `injected`, `traptable`, `loginscript`, `checkoutscript`.
 
+### Apps (My apps)
+
+"Build me an app where I can keep my notes": the assistant writes a small app (HTML, CSS and JavaScript) that runs
+inside Qutai, offline, with its data on the phone. Design, contract and threat model:
+[docs/mini-apps.md](docs/mini-apps.md). Phase 1 of the 18 Nov 2026 request (export/import, backup, more bridges and
+network come later).
+
+- **Making and changing.** The assistant's `apps` tool: `guide` (the contract and the writing rules, fetched only when
+  an app is being built), `create`, `update` (small find/replace edits or whole files), `preview` (Qutai opens the app
+  and gives the assistant its errors, console lines and blocked attempts, with file and line), `undo`, `list`, `read`
+  (code only, never the app's data). Every create or change is a new, checked, sealed version (the 20 newest are
+  kept); the chat shows a card with **Open** and **Undo**. At most 8 changes per message; never from an incognito
+  conversation. Fake-AI words: `notes` / `notlar` / `uygulama`, `breakapp`, `undoapp`, `breakout`, and the message
+  "Ask Qutai to fix this" sends.
+- **Running.** Full screen with a slim header (name; menu: Edit with the assistant, Versions, Permissions, Reload,
+  Rename, Delete app). Each app gets its own WebView with an opaque origin (no cookies or web storage), its own data
+  store (iOS non-persistent; Android the `qutai-apps` WebView profile), no navigation, no windows or frames, and no
+  network (a Content Security Policy with `default-src 'none'`, plus on iOS a WebKit rule list that blocks every
+  network load). It reaches the phone only through the `qutai` helper library (contract 1): a key-value and document
+  store with queries (5 MB per app, atomic writes), Qutai's own dialogs, toasts and haptics, theme colours, safe areas
+  and text size, and the clipboard (reading asks the user once per app). Uncaught errors show "<app> ran into a
+  problem" with the details and **Ask Qutai to fix this**; a crash or a hang has its own screen.
+- **My apps.** On the new tab page (an invitation to make one while there are none) and in the main menu › Library ›
+  My apps; long press for rename and delete (deleting removes every version and the app's data, after a confirmation
+  that says how much). Available in every build; writing an app costs an ordinary assistant request.
+- Tests: `npm run test:apps` (package checks, quota and atomic writes, queries, permission checks on every bridge
+  call, versions and undo, the policy and navigation rules, the helper library, the tool). The break-out test app
+  (`scripts/app-tests/breakoutApp.mjs`, fake-AI word `breakout`) tries every way out it can and reports each attempt;
+  network attempts go to the fake AI server's `/leak`, listed at `GET /leaks`.
+
 ## Permissions
 
 Nothing is asked at launch. The first-run setup has an optional step, "What Qutai may use", with a switch per

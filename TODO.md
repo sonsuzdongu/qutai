@@ -21,6 +21,22 @@ Page customisation, step one (19 Nov 2026, docs/page-customisation.md)
 - [ ] Bump the legal version for the privacy policies' new words on cookies (the assistant gets names, sites and settings, never values): not done, on purpose
 - [x] Step two (user scripts, 19 Nov 2026): `run_script` with the app's refusals and an approval showing the code; read-only scripts on a sealed copy; kept scripts sealed per device, My rules › Scripts, rules file format 3 (imports arrive off), both backups; Settings switch off by default (README › Page styles, cookies and scripts; docs/page-customisation.md › Scripts). The script half of the 18 Nov request is done
 
+Apps inside Qutai (the 18 Nov 2026 request, docs/mini-apps.md)
+
+- [x] Phase 1 (19 Nov 2026): the package format and the full bridge contract (all phases), the runner (own WebView per app, no network, no navigation, opaque origin, own data store), storage / ui / clipboard / app bridges, versions and undo, the assistant's `apps` tool with preview and the fix loop, "My apps" on the new tab page and in Library; the notes scenario in Turkish works end to end (README › Apps)
+- [ ] Phase 2: export/import (`.qutaiapp`, arrives disabled and unsealed, "Needs your approval" screen) and apps with their data in the encrypted and server backup (current version only; restored on another phone they arrive off). Before release of phase 2: the Android `blockNetworkLoads` patch (native rebuild) and flags for WebRTC/frame code on the approval screen
+- [ ] Phase 3: share/files, location, notifications, camera/photos, links, assistant bridges (already in contract 1); ask Apple about 4.7.2 first
+- [ ] Phase 4: network to declared hosts (`network.fetch` through Qutai) and a home-screen shortcut (`qutai://app/<id>`)
+
+Apps inside Qutai — owner decisions
+
+- [ ] Per-app quota 5 MB and 20 kept versions per app: enough?
+- [ ] "Ask Qutai to fix this" sends the error to the assistant at once (as built), or puts it in the input first?
+- [ ] Phase 3 bridges (location, camera, notifications) expose native features to generated code: raise Guideline 4.7.2 with Apple before building them?
+- [ ] A report button for AI-generated apps (part of the general AI-report question for Google Play)?
+- [ ] Privacy policies: a sentence for apps (stored only on the phone; the app's code, not its data, and its error messages go to the AI provider when the user asks Qutai to make or fix it). Not added; legal version not bumped
+- [ ] Residual risks accepted for phase 1 (docs/mini-apps.md › The network block): WebRTC to a STUN server and DNS prefetch can't be fully blocked in a WebView; on Android a navigation can slip through if Qutai's JavaScript thread is busy for 250 ms (the app is rebuilt at once, but the request has gone). All need code the user asked for; imports (phase 2) raise them
+
 Page customisation, step two (scripts, 19 Nov 2026) — owner decisions
 
 - [ ] Imported scripts never arrive switched on, and restored ones only on the same phone (the seal): confirm (built this way)

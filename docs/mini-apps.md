@@ -170,6 +170,11 @@ Qutai apps" (a clear error for the assistant instead of a CSP line), `navigator.
   website. The app can't open a website itself.
 - Android before the `blockNetworkLoads` patch: the CSP is the only layer for subresources. CSP is mature on both
   engines and is the same mechanism the script sandbox relies on.
+- **Android navigation decision timeout**: react-native-webview asks JavaScript whether a navigation may start and,
+  if Qutai's JavaScript thread doesn't answer within 250 ms, lets it through (`RNCWebViewClient.shouldOverrideUrlLoading`).
+  The runner then stops the load at `onLoadStart` and rebuilds the app, so nothing else is ever shown, but the request
+  itself (with whatever the app put in its address) has left. iOS waits for the answer and its rule list blocks the
+  load anyway. The `blockNetworkLoads` patch closes this on Android too.
 
 None of these reaches the browsing tabs' cookies, sessions, other apps' data or Qutai's own storage: those are not in
 the WebView at all.
@@ -288,7 +293,7 @@ batch leaves nothing behind.
 
 **Queries** (`runQuery` in `src/apps/query.ts`, in JavaScript over the collection's documents, which the quota keeps
 small): `where` is an object of `field: value` (equal) or `field: { eq, ne, lt, lte, gt, gte, in, contains,
-startsWith, exists }`; fields may be dotted (`"meta.done"`). `search: { text, fields? }` matches every word of the
+startsWith, exists }` (an object value is always read as operators: compare with an object through `{ eq: {...} }`); fields may be dotted (`"meta.done"`). `search: { text, fields? }` matches every word of the
 text, case- and accent-insensitive with Turkish dotted/dotless i handled (`İstanbul` finds `istanbul`), in the given
 fields or every string field. `orderBy` a field or `[{ field, dir }]`, then by `createdAt` for a stable order;
 strings compare with the user's language collation. Enough for notes, lists, trackers and simple journals; joins and
