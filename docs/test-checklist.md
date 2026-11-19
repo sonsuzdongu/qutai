@@ -444,3 +444,35 @@ Denenmedi (cihazda): gizli sekme, "Yalnızca okuma"/"Engellendi" kipleri, kurall
 - [ ] Kurallar dosyasını dışa aktarın, betiği silin, içe aktarın: betik listelenir (ne yaptığıyla), kapalı gelir; anahtarı açınca onay penceresi.
 - [ ] Ayarı kapatın: kalıcı betik bir sonraki yüklemede çalışmaz; Kendi kurallarım'da "Betikler kapalı" notu.
 - [ ] VoiceOver/TalkBack, büyük yazı, koyu tema, yatay ekran: onay penceresi (kırmızı satırlar yazıyla da anlaşılır), kart, Betikler bölümü, düzenleyici.
+
+## 18. Qutai içinde uygulamalar, 1. aşama (19 Kasım)
+
+Tasarım ve sözleşme: `docs/mini-apps.md`. Yeni yerel derleme gerekmez (yalnızca JavaScript); Release denemesi için uygulama
+yeniden derlenir. Sahte yapay zekâ: `node scripts/fake-ai/server.mjs 8794`, Özel sunucu `http://localhost:8794/v1`, model
+`fake`; sözcükler: `notlar` / `uygulama` / `notes`, `breakapp`, `undoapp`, `breakout`; "Qutai bunu düzeltsin"in gönderdiği mesaj
+da çalışır. Dışarı sızan istek olup olmadığı: `curl http://127.0.0.1:8794/leaks` (`[]` olmalı).
+
+iOS simülatöründe denendi (iPhone 18 Pro, Release, ad hoc imza, 19 Kasım; sahte yapay zekâ, İngilizce arayüz):
+- [x] Yeni sekmede "Uygulamalarım" bölümü ve davet kartı (henüz uygulama yokken).
+- [x] "bana bir uygulama oluştur, burada notlarımı tutabileyim": rehber → oluşturma → önizleme; "Notlarım" Türkçe açıldı, temaya uygun.
+- [x] Not ekleme (Qutai'nin "Not kaydedildi" bildirimi), arama ("PEYNIR" → "peynir" bulundu; eşleşmeyen aramada boş durum metni), düzenleme, silme (Qutai'nin onay penceresi, "Uygulamadan: Notlarım" satırıyla).
+- [x] Qutai kapatılıp açılınca not duruyordu; yeni sekmede "Notlarım" kutucuğundan açıldı.
+- [x] "breakapp": hata ekranı "“Notlarım” bir sorunla karşılaştı"; Ayrıntılar'da `app.js:129` ve hata metni (satır doğru).
+- [x] "Qutai bunu düzeltsin": asistan düzeltti (sürüm 3), önizleme 0 sorun; sohbet kartında Aç / Geri al.
+- [x] Kartta Geri al → "sürüm 2'ye dönüldü"; uygulama menüsü › Sürümler'de 3 sürüm, "Bu sürümü kullan" ile sürüm 3'e dönüldü.
+- [x] "breakout": 41/41 deneme engellendi (ağ, WebSocket, WebRTC, işçi, resim, eval, çerçeveler, üst pencere, çerez ve web depolama, köprü, kota, form, bağlantı, yönlendirme, meta refresh); sunucunun `/leaks` listesi boş.
+- [x] Uygulama menüsü › Uygulamayı sil: sürüm sayısı ve veri boyutuyla onay; silindi, Uygulamalarım'dan kalktı.
+- [x] Koyu temada açılınca uygulama koyu.
+- Bulunan ve düzeltilen: `about:blank` kökeninde WebKit uygulama hatalarını "Script error." olarak, satırsız veriyordu; her uygulamaya `.invalid` altında kendi kökeni verildi (yeniden denendi: satır ve mesaj geliyor). Tema, uygulama açılırken değişirse eski temada kalıyordu; "hazır" anında tema yeniden gönderiliyor (bu düzeltme cihazda yeniden denenmedi).
+
+Android: `./gradlew :app:assembleRelease --max-workers=2` derlendi (Hermes paketiyle); emülatörde çalıştırılmadı.
+
+Denenmedi (cihazda): Android'de çalıştırma, açıkken tema değişimi, VoiceOver/TalkBack, büyük yazı, yatay ekran, Türkçe arayüz, panoyu okuma izni penceresi (testlerde var), gizli sekmeden reddedilme (testlerde var), takılma ekranı ve çökme ekranı.
+
+- [ ] Gizli sekmede "notlar": asistan uygulama yapamayacağını söyler; hiçbir uygulama oluşmaz.
+- [ ] Büyük yazıda (Ayarlar › Erişilebilirlik › Daha Büyük Metin) "Notlarım": metin büyür, düğmeler sığar; yatay ekranda da.
+- [ ] VoiceOver/TalkBack: başlık, "Yeni not" düğmesi, arama alanının etiketi, not listesi ve "Not kaydedildi" duyurusu okunur.
+- [ ] Android geri tuşu: düzenleyicide geri tuşu düzenleyiciyi kapatır, ana listede uygulamayı kapatır.
+- [ ] Uygulamalarım'da uzun basma: Aç / Yeniden adlandır / Sil; yeniden adlandırınca yeni sürüm oluşur, veriler kalır.
+- [ ] Ana menü › Kitaplık › Uygulamalarım ekranı ve "Uygulama iste" düğmesi asistana taslak koyar (göndermez).
+- [ ] Android'de "breakout": sonuçlar ve `/leaks` (emülatör yerel sunucuya açık metin isteklerini reddeder; `adb reverse` ile).
