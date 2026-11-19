@@ -19,6 +19,7 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Every User-Agent ends with ` qutai.<build>` (`qutai.103` for 0.1.3): all web views, including incognito and desktop-site mode, and the app's own requests (`Qutai/<version> (<platform>) qutai.<build>`), so sites learn the app and its exact build (`DATA-23`, owner's request; privacy trade-off and policy wording left open for the owner).
 - **2026-11-19:** Server: production is deployed with one command (`backend/scripts/deploy-prod.mjs`, runbook `backend/DEPLOY-prod.md`); first production values decided by the owner: Anthropic only with a 100 USD monthly limit, example pricing (100 credits per USD, 30 % margin) until the pricing decisions, the local server's Apple key and Mailjet account, no spend alert address, no purchases until RevenueCat; fake purchases stay impossible in production.
 - **2026-11-19:** Address bar: the typed text goes to the search engine only after a 200 ms pause in typing, one
   request per word typed without a pause; history keeps its own 120 ms schedule (`UI-22`, owner's decision).
@@ -167,7 +168,7 @@ only partly enforced.
 | The search engine | Search suggestions as the user types | Not in private tabs |
 | Apple or Google | Address lookup for "Use my location"; speech recognition when the phone can't do it itself (after a one-time question, never in incognito) | [25](docs/design/25-voice.md) |
 | Filter list publishers | Downloads of the blocking lists | While blocking is on ([9](docs/design/09-blocking-and-my-rules.md)) |
-| Web sites | What the user or the assistant types and sends, after the approvals above | — |
+| Web sites | What the user or the assistant types and sends, after the approvals above; that the browser is Qutai and its build (` qutai.<build>` in the User-Agent, also in incognito) | Every request ([3](docs/design/03-data-on-the-phone.md), `DATA-23`) |
 
 Never sent anywhere: contact numbers and addresses to the AI, cookie values, the backup password, voice audio to Qutai
 or the AI provider, incognito data to disk.
@@ -191,7 +192,7 @@ One file per area. "Rules" counts the decisions with ids; "Waiting" the ones sti
 |---|---|---|---|---|
 | 1 | [The open-source build and pro mode](docs/design/01-open-source-and-pro.md) | 14 | 0 | Qutai is one open-source code base (Apache-2.0). |
 | 2 | [AI providers and how requests reach them](docs/design/02-ai-providers.md) | 25 | 3 | Which AI answers the assistant, how a request travels from the phone to it, where keys are kept, and the switches that change a request (model per chat,… |
-| 3 | [What is stored on the phone, and what leaves it](docs/design/03-data-on-the-phone.md) | 22 | 1 | Where Qutai keeps the user's data on the phone, the password-protected backup file that moves it to another phone, how a reinstall and "Clear browsing data"… |
+| 3 | [What is stored on the phone, and what leaves it](docs/design/03-data-on-the-phone.md) | 23 | 1 | Where Qutai keeps the user's data on the phone, the password-protected backup file that moves it to another phone, how a reinstall and "Clear browsing data"… |
 | 4 | [Page content is untrusted](docs/design/04-untrusted-content.md) | 18 | 0 | Web pages, PDFs, attached files and script results can contain text written to steer the assistant ("ignore your instructions and…"). |
 | 5 | [Site permissions and approvals](docs/design/05-site-permissions.md) | 20 | 0 | What the assistant may do on each site, and when it must ask the user first: per-site levels, the "Ask before every action" setting, the confirmation… |
 | 6 | [Passwords, card numbers and one-time codes](docs/design/06-secrets.md) | 13 | 1 | What the assistant does with secrets: passwords, one-time codes, card numbers and security codes, bank checks, and sign-in pages. |

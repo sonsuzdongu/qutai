@@ -2,6 +2,8 @@ import { registerRootComponent } from 'expo';
 
 // First: the interface language chosen in Qutai's settings, before any other module reads a string.
 import './src/i18n/startup';
+// Every fetch the app's JavaScript makes says "Qutai/<version> (<platform>) qutai.<build>" (src/net/qutaiUserAgent.ts).
+import './src/net/installUserAgent';
 import App from './App';
 import { registerBackgroundTaskRunner } from './src/device/backgroundTask';
 

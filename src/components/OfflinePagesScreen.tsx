@@ -13,6 +13,7 @@ import { listOfflinePages, OfflinePage, removeOfflinePage } from '../storage/off
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
 import { ScreenHeader } from './ScreenHeader';
+import { QUTAI_UA_TOKEN } from '../net/qutaiUserAgent';
 
 type Props = { visible: boolean; onOpenLive: (url: string) => void; onClose: () => void };
 
@@ -60,6 +61,8 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
           right={{ label: t('offline.openLive'), onPress: () => onOpenLive(reading.page.url) }}
         />
         <WebView
+          // The same " qutai.<build>" ending as the browser's pages (src/net/qutaiUserAgent.ts).
+          applicationNameForUserAgent={QUTAI_UA_TOKEN ?? undefined}
           source={{ html: reading.html, baseUrl: reading.page.url }}
           originWhitelist={['*']}
           // Links lead to the live web: they open in a tab.

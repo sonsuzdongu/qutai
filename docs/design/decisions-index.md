@@ -177,6 +177,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `DATA-20` | Any change to what leaves the phone needs the privacy policy (`src/legal/documents.ts`) changed and its… | Default |  |
 | `DATA-21` | Clear browsing data offers history, cache, recently closed, conversations, activity, the AI request list,… | Default |  |
 | `DATA-22` | The account backup (pro) is the same encrypted file; the server stores only that file and keeps the newest… | Default |  |
+| `DATA-23` | Every User-Agent Qutai sends ends with ` qutai.<build>` (web views incl. incognito and desktop mode, and the… | Owner | 2026-11-19 |
 
 ## [4. Page content is untrusted](04-untrusted-content.md)
 

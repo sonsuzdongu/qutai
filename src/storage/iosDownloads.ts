@@ -5,6 +5,7 @@ import { fileNameFromUrl, mimeForName, safeFileName, siteOf, uniqueName } from '
 import { parseDataUrl } from '../device/saveImage';
 import { Db } from './db';
 import type { DownloadBackend, DownloadItem, OpenResult, PageWriter, StartRequest } from './downloads';
+import { APP_USER_AGENT } from '../net/qutaiUserAgent';
 
 /** Files larger than this are downloaded directly instead of through the page (which holds them in memory). */
 const PAGE_FETCH_MAX_BYTES = 25e6;
@@ -193,6 +194,8 @@ export class IosDownloads implements DownloadBackend {
         } else {
           started = Date.now();
           await File.downloadFileAsync(url, file, {
+            // The tab's own user agent when Qutai set one (desktop mode), else the app's; both end with qutai.<build>.
+            headers: { 'User-Agent': tab.userAgent ?? APP_USER_AGENT },
             signal,
             onProgress: ({ bytesWritten, totalBytes }) => {
               const seconds = (Date.now() - started) / 1000;

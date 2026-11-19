@@ -1,6 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { useSyncExternalStore } from 'react';
 import { secureStoreReady } from '../storage/secureStoreGate';
+import { withoutQutaiToken } from '../net/userAgentToken';
 
 /**
  * Android: the system WebView announces itself as embedded ("; wv" and "Version/4.0"), which
@@ -10,7 +11,9 @@ import { secureStoreReady } from '../storage/secureStoreGate';
  */
 export function chromeUserAgent(webViewUserAgent: string): string {
   return (
-    webViewUserAgent
+    // Without " qutai.<build>" (the WebView's own string carries it through applicationNameForUserAgent); BrowserView
+    // appends the current one, so an app update never leaves an old build number behind.
+    withoutQutaiToken(webViewUserAgent)
       // Chrome's reduced platform part; the WebView adds the model and "Build/…", another tell.
       .replace(/\(Linux; Android [^)]*\)/, '(Linux; Android 10; K)')
       .replace(/; wv\)/, ')')
@@ -44,7 +47,7 @@ const listeners = new Set<() => void>();
 secureStoreReady()
   .then(() => SecureStore.getItemAsync(KEY))
   .then((saved) => {
-    if (saved && !learned) set(saved);
+    if (saved && !learned) set(withoutQutaiToken(saved));
   })
   .catch(() => {});
 

@@ -22,6 +22,7 @@ import { WholeWordsText } from './WholeWordsText';
 import { RunnerSession, type Overlay } from './runnerSession';
 import { AppReview } from './AppImport';
 import { exportApp } from './appActions';
+import { QUTAI_UA_TOKEN } from '../net/qutaiUserAgent';
 
 /**
  * The runner (docs/mini-apps.md › The runtime): one app, full screen, in its own WebView with an opaque origin, no
@@ -173,6 +174,8 @@ function Runner({ request, onEdit, onFix, onNotice }: Props & { request: RunnerR
     return (
       <View style={styles.flex}>
         <WebView
+          // The same " qutai.<build>" ending as the browser's pages (src/net/qutaiUserAgent.ts).
+          applicationNameForUserAgent={QUTAI_UA_TOKEN ?? undefined}
           key={`${loaded.id}:${loaded.version}:${snap.reload}`}
           ref={session.setWebView}
           style={[styles.flex, { backgroundColor: palette.bg }]}
