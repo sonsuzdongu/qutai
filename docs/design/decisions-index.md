@@ -884,7 +884,7 @@ Moved to Details (ids retired, not reused): `WORK-4`, `WORK-8`, `WORK-11`, `WORK
 | `INTRO-23` | An official-build step asking for anonymous usage data is planned, not built. | Default |  |
 | `INTRO-30` | Setup has no "Make Qutai your default browser" step; protection is the last step; the option is in Settings › Search. | Owner | 2026-11-20 |
 | `INTRO-29` | Setup never asks for an answer style; a finished first-run setup adds "Answer briefly and to the point." to the custom… | Owner | 2026-11-20 |
-| `INTRO-28` | In pro builds the AI step is an accordion: both headings visible at first sight on 360 x 640 dp and with text up to 1.4×; Qutai… | Owner | 2026-11-20 |
+| `INTRO-28` | In pro builds the AI step is an accordion: both headings visible at first sight on 360 x 640 dp, at the largest text sizes too; Qutai… | Owner | 2026-11-20 |
 | `INTRO-27` | Setup never says the assistant reads every page: the first feature reads "Reads the page when you ask" and the tagline ends "when you… | Owner | 2026-11-20 |
 | `INTRO-26` | "Tell me about yourself" opens on three choices (speak, type, "Ask me questions"); the microphone only after choosing to speak;… | Owner | 2026-11-19 |
 | `INTRO-25` | Example people and sample sentences in setup use common names of the interface language (contacts row,… | Owner | 2026-11-19 |

@@ -12,8 +12,13 @@ import { signedInWithText } from './accountLabels';
 import { ErrorDetails } from './ErrorDetails';
 import { SignInOptions } from './SignInOptions';
 
-/** How far the system's larger text sizes grow the choice's headings and Qutai text; past it the step scrolls. */
-const FIT = 1.4;
+/**
+ * How far the system's larger text sizes grow the choice's headings, and the open Qutai section's text, so both
+ * headings stay on screen on a 360 x 640 dp phone at the largest sizes (checked on a 375 x 667 simulator at
+ * accessibility sizes); past it the step scrolls.
+ */
+const FIT = 1.3;
+const FIT_BODY = 1.2;
 
 const NOTICE: Record<NonNullable<Extract<SetupState, { screen: 'choose' }>['notice']>, MessageKey> = {
   declined: 'setup.notice.declined',
@@ -183,11 +188,11 @@ export function QutaiSetup({
         </Pressable>
         {!ownKeyOpen && (
           <View style={styles.panel}>
-            <Text style={styles.body} maxFontSizeMultiplier={FIT}>
+            <Text style={[styles.body, compact && styles.bodyCompact]} maxFontSizeMultiplier={FIT_BODY}>
               {t('setup.qutaiBody')}
             </Text>
-            <Point icon="person" text={t('setup.qutaiAccount')} />
-            <Point icon="wallet" text={t('setup.qutaiCredits')} />
+            <Point icon="person" text={t('setup.qutaiAccount')} compact={compact} />
+            <Point icon="wallet" text={t('setup.qutaiCredits')} compact={compact} />
           </View>
         )}
       </View>
@@ -222,13 +227,13 @@ export function QutaiSetup({
   );
 }
 
-function Point({ icon, text }: { icon: IconName; text: string }) {
+function Point({ icon, text, compact = false }: { icon: IconName; text: string; compact?: boolean }) {
   const styles = useStyles();
   const palette = usePalette();
   return (
     <View style={styles.point}>
       <Icon name={icon} size={18} color={palette.tintText} />
-      <Text style={[styles.pointText, styles.flex]} maxFontSizeMultiplier={FIT}>
+      <Text style={[styles.pointText, compact && styles.pointTextCompact, styles.flex]} maxFontSizeMultiplier={FIT_BODY}>
         {text}
       </Text>
     </View>
@@ -248,13 +253,15 @@ const useStyles = makeStyles((c) => ({
   mainTitle: { color: c.text, fontSize: 18, fontWeight: '700' },
   badge: { color: c.tintText, fontSize: 13, fontWeight: '600' },
   body: { color: c.text, fontSize: 15, lineHeight: 21 },
+  bodyCompact: { fontSize: 14, lineHeight: 19 },
   cardTitle: { color: c.text, fontSize: 16, fontWeight: '600' },
   point: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   pointText: { color: c.text, fontSize: 14, lineHeight: 20 },
+  pointTextCompact: { fontSize: 13, lineHeight: 18 },
   section: { backgroundColor: c.surface, borderRadius: 16, borderWidth: 1.5, borderColor: 'transparent' },
   sectionOpen: { borderColor: c.tint },
   heading: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 56 },
-  panel: { paddingHorizontal: 14, paddingBottom: 14, gap: 10 },
+  panel: { paddingHorizontal: 14, paddingBottom: 14, gap: 8 },
   keyIcon: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   keyIconCompact: { width: 28, height: 28 },
   textButton: { alignSelf: 'center', paddingVertical: 6 },
