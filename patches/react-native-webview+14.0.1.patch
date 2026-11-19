@@ -52,7 +52,7 @@ index 1b5c4c9..c86cb6d 100644
      public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
  
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
-index 80c6803..cc37372 100644
+index 80c6803..a471edb 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 @@ -38,15 +38,19 @@ import com.facebook.react.uimanager.events.Event;
@@ -87,7 +87,7 @@ index 80c6803..cc37372 100644
          if (this.nestedScrollEnabled) {
              requestDisallowInterceptTouchEvent(true);
          }
-@@ -224,6 +233,140 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -224,6 +233,164 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -163,6 +163,30 @@ index 80c6803..cc37372 100644
 +        }
 +    }
 +
++    // Qutai patch: the app sandbox for apps inside Qutai (docs/mini-apps.md › The Android network block). Non-null
++    // while on: every network load is refused by the engine (blockNetworkLoads) and answered with an empty 403 in
++    // shouldInterceptRequest, every navigation is refused natively without waiting for JavaScript, and this script (the
++    // frame guard) runs at document start in every frame. Read on WebView's request threads.
++    volatile @Nullable String appSandbox = null;
++    private @Nullable androidx.webkit.ScriptHandler appSandboxScript = null;
++
++    public void setAppSandbox(@Nullable String script) {
++        String next = script == null || script.isEmpty() ? null : script;
++        appSandbox = next;
++        getSettings().setBlockNetworkLoads(next != null);
++        if (appSandboxScript != null) {
++            appSandboxScript.remove();
++            appSandboxScript = null;
++        }
++        if (next != null && WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
++            try {
++                appSandboxScript = WebViewCompat.addDocumentStartJavaScript(this, next, Collections.singleton("*"));
++            } catch (Exception e) {
++                FLog.w("RNCWebView", "app sandbox: document start script not added", e);
++            }
++        }
++    }
++
 +    // Qutai patch: network ad and tracker blocking (RNCWebViewContentBlocker). Read on WebView's request threads.
 +    public volatile boolean contentBlocking = false;
 +    public volatile Set<String> contentBlockingOffSites = Collections.emptySet();
@@ -228,7 +252,7 @@ index 80c6803..cc37372 100644
      WebChromeClient mWebChromeClient;
      @Override
      public void setWebChromeClient(WebChromeClient client) {
-@@ -253,6 +396,10 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -253,6 +420,10 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
              this.bridgeListener = new WebViewCompat.WebMessageListener() {
                @Override
                public void onPostMessage(@NonNull WebView view, @NonNull WebMessageCompat message, @NonNull Uri sourceOrigin, boolean isMainFrame, @NonNull JavaScriptReplyProxy replyProxy) {
@@ -239,7 +263,7 @@ index 80c6803..cc37372 100644
                  RNCWebView.this.onMessage(message.getData(), sourceOrigin.toString());
                }
              };
-@@ -403,6 +550,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -403,6 +574,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -251,7 +275,7 @@ index 80c6803..cc37372 100644
      protected void dispatchEvent(WebView webView, Event event) {
          ThemedReactContext reactContext = getThemedReactContext();
          int reactTag = RNCWebViewWrapper.getReactTagFromWebView(webView);
-@@ -419,7 +571,14 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -419,7 +595,14 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          if (mWebChromeClient != null) {
              mWebChromeClient.onHideCustomView();
          }
@@ -266,7 +290,7 @@ index 80c6803..cc37372 100644
      }
  
    public ThemedReactContext getThemedReactContext() {
-@@ -446,7 +605,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -446,7 +629,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          public void postMessage(String message) {
              if (mWebView.getMessagingEnabled()) {
                  // Post to main thread because `mWebView.getUrl()` requires to be executed on main.
@@ -369,7 +393,7 @@ index 0000000..95b43f2
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
-index 209b855..96993fb 100644
+index 209b855..56df027 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 @@ -1,6 +1,7 @@
@@ -394,7 +418,7 @@ index 209b855..96993fb 100644
          }
  
          if (!mLastLoadFailed) {
-@@ -63,9 +66,49 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -63,9 +66,52 @@ public class RNCWebViewClient extends WebViewClient {
          }
      }
  
@@ -408,6 +432,9 @@ index 209b855..96993fb 100644
 +    public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
 +        if (view instanceof RNCWebView) {
 +            RNCWebView webView = (RNCWebView) view;
++            // Qutai patch: an app's WebView (appSandbox) loads nothing from anywhere; answered here, on the request
++            // thread, without JavaScript. data: and blob: never reach this method.
++            if (webView.appSandbox != null) return RNCWebViewContentBlocker.blockedResponse();
 +            Uri url = request.getUrl();
 +            String host = url != null ? url.getHost() : null;
 +            if (request.isForMainFrame()) {
@@ -444,7 +471,7 @@ index 209b855..96993fb 100644
  
        ((RNCWebView) webView).dispatchEvent(
          webView,
-@@ -78,6 +121,7 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -78,6 +124,7 @@ public class RNCWebViewClient extends WebViewClient {
      public void onPageStarted(WebView webView, String url, Bitmap favicon) {
        super.onPageStarted(webView, url, favicon);
        mLastLoadFailed = false;
@@ -452,7 +479,23 @@ index 209b855..96993fb 100644
  
        RNCWebView reactWebView = (RNCWebView) webView;
        reactWebView.callInjectedJavaScriptBeforeContentLoaded();
-@@ -156,6 +200,15 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -86,6 +133,15 @@ public class RNCWebViewClient extends WebViewClient {
+     @Override
+     public boolean shouldOverrideUrlLoading(WebView view, String url) {
+         final RNCWebView rncWebView = (RNCWebView) view;
++        // Qutai patch: an app's WebView (appSandbox) never navigates. Refused here at once, so a busy JavaScript thread
++        // can't let a navigation through after the 250 ms timeout below. The event still goes to JavaScript (with a lock
++        // id no one waits for) so the runner's diagnostics say "Navigation refused".
++        if (rncWebView.appSandbox != null) {
++            final WritableMap event = createWebViewEvent(view, url);
++            event.putDouble("lockIdentifier", -1);
++            rncWebView.dispatchDirectShouldStartLoadWithRequest(event);
++            return true;
++        }
+         final boolean isJsDebugging = rncWebView.getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
+ 
+         if (!isJsDebugging && rncWebView.mMessagingJSModule != null) {
+@@ -156,6 +212,15 @@ public class RNCWebViewClient extends WebViewClient {
          String topWindowUrl = webView.getUrl();
          String failingUrl = error.getUrl();
  
@@ -468,7 +511,7 @@ index 209b855..96993fb 100644
          // Cancel request after obtaining top-level URL.
          // If request is cancelled before obtaining top-level URL, undesired behavior may occur.
          // Undesired behavior: Return value of WebView.getUrl() may be the current URL instead of the failing URL.
-@@ -191,6 +244,13 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -191,6 +256,13 @@ public class RNCWebViewClient extends WebViewClient {
          }
  
          description = descriptionPrefix + description;
@@ -1252,7 +1295,7 @@ index 0000000..f387e88
 +    rctEventEmitter.receiveEvent(viewTag, eventName, mEventData)
 +}
 diff --git a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index fa8efb8..20b0f65 100644
+index fa8efb8..d7b6326 100644
 --- a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 @@ -23,6 +23,8 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
@@ -1264,10 +1307,17 @@ index fa8efb8..20b0f65 100644
  import com.reactnativecommunity.webview.events.TopRenderProcessGoneEvent;
  import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEvent;
  
-@@ -160,6 +162,46 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -160,6 +162,53 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
          mRNCWebViewManagerImpl.setIncognito(view, value);
      }
  
++    // Qutai patch: the app sandbox for apps inside Qutai (see RNCWebView.setAppSandbox); the frame guard script, or empty.
++    @Override
++    @ReactProp(name = "appSandbox")
++    public void setAppSandbox(RNCWebViewWrapper view, @Nullable String value) {
++        view.getWebView().setAppSandbox(value);
++    }
++
 +    // Qutai patch: network ad and tracker blocking (see RNCWebViewContentBlocker).
 +    @Override
 +    @ReactProp(name = "contentBlocking")
@@ -1311,7 +1361,7 @@ index fa8efb8..20b0f65 100644
      @Override
      @ReactProp(name = "injectedJavaScript")
      public void setInjectedJavaScript(RNCWebViewWrapper view, @Nullable String value) {
-@@ -429,6 +471,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -429,6 +478,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
      @Override
      public void setMediaCapturePermissionGrantType(RNCWebViewWrapper view, @Nullable String value) {}
  
@@ -1325,7 +1375,7 @@ index fa8efb8..20b0f65 100644
      @Override
      public void setFraudulentWebsiteWarningEnabled(RNCWebViewWrapper view, boolean value) {}
      /* !iOS PROPS - no implemented here */
-@@ -537,6 +586,9 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -537,6 +593,9 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
          export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
          export.put(TopHttpErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpError"));
          export.put(TopRenderProcessGoneEvent.EVENT_NAME, MapBuilder.of("registrationName", "onRenderProcessGone"));
@@ -1405,7 +1455,7 @@ index ca9ff96..c368658 100644
          return mRNCWebViewModuleImpl.startPhotoPickerIntent(acceptTypes, allowMultiple, callback, isCaptureEnabled);
      }
 diff --git a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index 974337f..e74046b 100644
+index 974337f..d4c7694 100644
 --- a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 @@ -19,6 +19,8 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
@@ -1417,10 +1467,16 @@ index 974337f..e74046b 100644
  import com.reactnativecommunity.webview.events.TopRenderProcessGoneEvent;
  import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEvent;
  
-@@ -127,6 +129,40 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
+@@ -127,6 +129,46 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
          mRNCWebViewManagerImpl.setIncognito(view, value);
      }
  
++    // Qutai patch: the app sandbox for apps inside Qutai (see RNCWebView.setAppSandbox); the frame guard script, or empty.
++    @ReactProp(name = "appSandbox")
++    public void setAppSandbox(RNCWebViewWrapper view, @Nullable String value) {
++        view.getWebView().setAppSandbox(value);
++    }
++
 +    // Qutai patch: network ad and tracker blocking (see RNCWebViewContentBlocker).
 +    @ReactProp(name = "contentBlocking")
 +    public void setContentBlocking(RNCWebViewWrapper view, boolean value) {
@@ -1458,7 +1514,7 @@ index 974337f..e74046b 100644
      @ReactProp(name = "injectedJavaScript")
      public void setInjectedJavaScript(RNCWebViewWrapper view, @Nullable String value) {
          mRNCWebViewManagerImpl.setInjectedJavaScript(view, value);
-@@ -304,6 +340,9 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
+@@ -304,6 +346,9 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
          export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
          export.put(TopHttpErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpError"));
          export.put(TopRenderProcessGoneEvent.EVENT_NAME, MapBuilder.of("registrationName", "onRenderProcessGone"));
@@ -2048,7 +2104,7 @@ index ae60768..30f1ad8 100644
  declare const _default: Spec;
  export default _default;
 diff --git a/node_modules/react-native-webview/lib/WebViewTypes.d.ts b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
-index f666e81..dd02cf4 100644
+index f666e81..6314b45 100644
 --- a/node_modules/react-native-webview/lib/WebViewTypes.d.ts
 +++ b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
 @@ -97,6 +97,13 @@ export type WebViewErrorEvent = NativeSyntheticEvent<WebViewError>;
@@ -2102,10 +2158,14 @@ index f666e81..dd02cf4 100644
      /**
       * Function that is invoked when the `WebView` process crashes or is killed by the OS.
       * Works only on Android (minimum API level 26).
-@@ -974,6 +1004,35 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -974,6 +1004,39 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
      onLoadSubResourceError?: (event: WebViewErrorEvent) => void;
  }
  export interface WebViewSharedProps extends ViewProps {
++    /**
++     * Qutai patch, Android: the app sandbox for apps inside Qutai; a non-empty value is the frame guard script.
++     */
++    appSandbox?: string;
 +    /**
 +     * Qutai patch: network ad and tracker blocking. Android: every request except the page's own document is checked
 +     * against the domains loaded with RNCWebViewModule.loadContentBlocker (shouldInterceptRequest) and blocked with an
@@ -2172,7 +2232,7 @@ index 146bdf3..ea4ea03 100644
  
  export default TurboModuleRegistry.getEnforcing<Spec>('RNCWebViewModule');
 diff --git a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
-index ca3af15..0d4a282 100644
+index ca3af15..dc378a4 100644
 --- a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
 +++ b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
 @@ -124,6 +124,11 @@ type WebViewRenderProcessGoneEvent = Readonly<{
@@ -2187,7 +2247,7 @@ index ca3af15..0d4a282 100644
  type WebViewDownloadEvent = Readonly<{
    downloadUrl: string;
  }>;
-@@ -136,6 +141,17 @@ export interface NativeProps extends ViewProps {
+@@ -136,6 +141,19 @@ export interface NativeProps extends ViewProps {
    allowsProtectedMedia?: boolean;
    allowsFullscreenVideo?: boolean;
    androidLayerType?: WithDefault<'none' | 'software' | 'hardware', 'none'>;
@@ -2195,6 +2255,8 @@ index ca3af15..0d4a282 100644
 +  webviewProfile?: string;
 +  // Qutai patch: see mediaPlayback in WebViewTypes.ts. Android; iOS ignores it.
 +  mediaPlayback?: string;
++  // Qutai patch: see appSandbox in WebViewTypes.ts. Android; iOS ignores it.
++  appSandbox?: string;
 +  // Qutai patch: network ad and tracker blocking, see contentBlocking in WebViewTypes.ts.
 +  contentBlocking?: WithDefault<boolean, false>;
 +  contentBlockingOffSites?: string;
@@ -2205,7 +2267,7 @@ index ca3af15..0d4a282 100644
    cacheMode?: WithDefault<
      'LOAD_DEFAULT' | 'LOAD_CACHE_ELSE_NETWORK' | 'LOAD_NO_CACHE' | 'LOAD_CACHE_ONLY',
      'LOAD_DEFAULT'
-@@ -208,6 +224,8 @@ export interface NativeProps extends ViewProps {
+@@ -208,6 +226,8 @@ export interface NativeProps extends ViewProps {
      'prompt' | 'grant' | 'deny' | 'grantIfSameHostElsePrompt' | 'grantIfSameHostElseDeny',
      'prompt'
    >;
@@ -2215,7 +2277,7 @@ index ca3af15..0d4a282 100644
    pullToRefreshEnabled?: boolean;
    refreshControlLightMode?: boolean;
 diff --git a/node_modules/react-native-webview/src/WebViewTypes.ts b/node_modules/react-native-webview/src/WebViewTypes.ts
-index 4e7247f..aa32985 100644
+index 4e7247f..3085cbc 100644
 --- a/node_modules/react-native-webview/src/WebViewTypes.ts
 +++ b/node_modules/react-native-webview/src/WebViewTypes.ts
 @@ -149,6 +149,13 @@ export type WebViewHttpErrorEvent = NativeSyntheticEvent<WebViewHttpError>;
@@ -2272,10 +2334,19 @@ index 4e7247f..aa32985 100644
    /**
     * Function that is invoked when the `WebView` process crashes or is killed by the OS.
     * Works only on Android (minimum API level 26).
-@@ -1172,6 +1205,35 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -1172,6 +1205,44 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
  }
  
  export interface WebViewSharedProps extends ViewProps {
++  /**
++   * Qutai patch, Android: the app sandbox for apps inside Qutai (docs/mini-apps.md › The Android network block). A
++   * non-empty value turns it on and is the frame guard script, run at document start in every frame
++   * (WebViewCompat.addDocumentStartJavaScript, where the WebView supports it). While on: WebSettings.setBlockNetworkLoads,
++   * every request answered with an empty 403 in shouldInterceptRequest, and every navigation refused natively without
++   * waiting for onShouldStartLoadWithRequest (which still gets the event). Empty or absent: off.
++   */
++  appSandbox?: string;
++
 +  /**
 +   * Qutai patch: network ad and tracker blocking. Android: every request except the page's own document is checked
 +   * against the domains loaded with RNCWebViewModule.loadContentBlocker (shouldInterceptRequest) and blocked with an

@@ -19,6 +19,26 @@ export const IOS_OFFLINE_RULES = JSON.stringify(
   ['^https?://', '^wss?://', '^ftp://'].map((filter) => ({ trigger: { 'url-filter': filter }, action: { type: 'block' } })),
 );
 
+
+/**
+ * The frame guard (docs/mini-apps.md › Phase 2): runs at document start in **every** frame of an app's WebView (iOS: a
+ * WKUserScript for all frames through injectedJavaScriptBeforeContentLoaded; Android: the patched module's appSandbox,
+ * WebViewCompat.addDocumentStartJavaScript). It deletes WebRTC from the frame's window before any of the app's code
+ * can reach it, including through `window[0]` of an about:blank frame, which the main frame's lockdown can't intercept.
+ * The lockdown then puts its own stubs back in the main frame (with the clear "not available" error).
+ */
+export const APP_FRAME_GUARD = `(function () {
+  var names = ['RTCPeerConnection', 'webkitRTCPeerConnection', 'RTCDataChannel', 'RTCSessionDescription', 'RTCIceCandidate',
+    'RTCRtpTransceiver', 'RTCRtpSender', 'RTCRtpReceiver', 'RTCDtlsTransport', 'RTCIceTransport', 'RTCSctpTransport',
+    'RTCCertificate', 'RTCDTMFSender', 'RTCPeerConnectionIceEvent', 'RTCDataChannelEvent', 'RTCTrackEvent', 'RTCError',
+    'RTCErrorEvent', 'RTCStatsReport', 'RTCEncodedAudioFrame', 'RTCEncodedVideoFrame', 'RTCRtpScriptTransform'];
+  for (var i = 0; i < names.length; i++) {
+    try { delete window[names[i]]; } catch (e) {}
+    try { if (window[names[i]]) Object.defineProperty(window, names[i], { value: undefined, configurable: true }); } catch (e) {}
+  }
+})();
+true;`;
+
 /**
  * The app's own origin: a host under the reserved `.invalid` top-level domain, which never resolves (RFC 6761), one per
  * app. Not an opaque `about:blank` origin, because WebKit then reports every error of the app's own scripts as
@@ -388,7 +408,7 @@ export function buildAppDocument(pkg: AppPackage, boot: BootInfo): BuiltDocument
     text:
       `<!doctype html>\n<html lang="${lang}" data-qutai-theme="${boot.theme.dark ? 'dark' : 'light'}" style="${themeVariables(boot.theme, boot.insets)}">\n<head>\n` +
       `<meta charset="utf-8">\n<meta http-equiv="Content-Security-Policy" content="${APP_CSP}">\n` +
-      `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<meta name="referrer" content="no-referrer">\n` +
+      `<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<meta name="referrer" content="no-referrer">\n<meta http-equiv="x-dns-prefetch-control" content="off">\n` +
       `<script>\n${helperScript(boot)}\n</script>\n<style>\n${BASE_CSS}\n</style>\n`,
     file: null,
     line: 0,

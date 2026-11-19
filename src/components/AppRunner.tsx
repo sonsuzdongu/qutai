@@ -4,7 +4,7 @@ import { AccessibilityInfo, BackHandler, PixelRatio, Platform, Pressable, Scroll
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import type { ThemeInfo } from '../apps/bridge';
-import { IOS_OFFLINE_RULE_LIST_ID, IOS_OFFLINE_RULES, formatDiagnostics } from '../apps/document';
+import { APP_FRAME_GUARD, IOS_OFFLINE_RULE_LIST_ID, IOS_OFFLINE_RULES, formatDiagnostics } from '../apps/document';
 import { CONTRACT_VERSION } from '../apps/manifest';
 import { appRunner, type RunnerRequest } from '../apps/runnerState';
 import { compileIosRuleList, hasIosRuleList, hasNativeBlocking } from '../device/contentBlocker';
@@ -26,7 +26,8 @@ import { exportApp } from './appActions';
 /**
  * The runner (docs/mini-apps.md › The runtime): one app, full screen, in its own WebView with an opaque origin, no
  * storage of its own, its own data store (iOS non-persistent store; Android the `qutai-apps` profile), every
- * navigation refused, the policy and (iOS) a block-everything rule list against the network; the bridge to Qutai;
+ * navigation refused, the policy, (iOS) a block-everything rule list and (Android) the native app sandbox against the
+ * network, and the frame guard in every frame; the bridge to Qutai;
  * diagnostics, the error overlay with "Ask Qutai to fix this", the hang watchdog, and the menu (edit, versions,
  * permissions, reload, rename, delete).
  */
@@ -205,6 +206,11 @@ function Runner({ request, onEdit, onFix, onNotice }: Props & { request: RunnerR
           textZoom={100}
           contentBlocking={Platform.OS === 'ios' && rules.length > 0}
           contentRuleLists={rules.join('\n')}
+          // Android: the native sandbox (no network loads, navigations refused without waiting for JavaScript, the
+          // frame guard in every frame). iOS: the frame guard as a user script in every frame; the rule list blocks loads.
+          appSandbox={Platform.OS === 'android' ? APP_FRAME_GUARD : undefined}
+          injectedJavaScriptBeforeContentLoaded={Platform.OS === 'ios' ? APP_FRAME_GUARD : undefined}
+          injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
           onContentProcessDidTerminate={session.crashed}
           onRenderProcessGone={session.crashed}
         />
