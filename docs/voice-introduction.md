@@ -16,14 +16,25 @@ The flow is one reducer (`src/intro/flow.ts`); the screen shows the phase.
 
 | Phase | Shows | Ways on |
 | --- | --- | --- |
-| `intro` | Title, a large microphone button ("Tap and tell me about yourself"), what is worth mentioning (what to call you; your city; age and gender only if you want; food: diet, allergies or a health condition that affects what you eat; shopping and delivery; how you like answers), the privacy note | Microphone → `listening`; "I'd rather type" → `transcript` (keyboard); "Answer questions instead" → typed questions; "Not now" → step done |
+| `choose` (first page, since 19 Nov 2026) | Title, "How would you like to tell me?", three choices: "I want to say it by speaking", "I want to type", "Ask me questions", and a one-line privacy note (what is said or typed goes to the AI provider, or Qutai's AI service with credits; nothing is saved before it is checked). Without an AI: a note and only "Ask me questions" | Speaking → `intro`; typing → `transcript` (keyboard); "Ask me questions" → `followUp 0` with all five questions; "Not now" → step done. Nothing here touches the microphone |
+| `intro` | Title, a large microphone button ("Tap and tell me about yourself"), what is worth mentioning (what to call you; your city; age and gender only if you want; food: diet, allergies or a health condition that affects what you eat; shopping and delivery; how you like answers), the privacy note | Microphone → `listening` (the permission is asked here, on that tap); "I'd rather type" → `transcript` (keyboard); "Not now" → step done; back → `choose` |
 | `listening` | The live transcript growing, a stop button, the listening language | Stop / the recogniser ends / app backgrounded / a dialog → `transcript` with the words heard (nothing heard → `intro` with "Didn't hear anything") |
-| `transcript` | The transcript in an editable field; "Continue", "Speak more" (appends), "Start over" | Continue → `understanding` (no AI → `failed: noAi`); back → `intro` |
+| `transcript` | The transcript in an editable field; "Continue", "Speak more" (appends), "Start over" (an empty field, or the microphone page, the way it was started) | Continue → `understanding` (no AI → `failed: noAi`); back → `intro` after speaking, `choose` after typing |
 | `understanding` (round 1 or 2) | A spinner, "Understanding what you said…", Cancel | Answer valid → follow-ups or `review`; invalid / error → `failed`; Cancel → `transcript` |
-| `followUp n` | A chat: Qutai's question bubbles, the user's answers; under the current question: suggested chips, a text field with a microphone, "Skip"; a speaker toggle (off by default) reads questions aloud | Answer or Skip → next question, then round 2 (only when an answer was free text) or `review`; back → previous question or `transcript` |
+| `followUp n` | A chat: Qutai's question bubbles, the user's answers; under the current question: suggested chips, a text field with a microphone, "Skip"; a speaker toggle (off by default) reads questions aloud | Answer or Skip → next question, then round 2 (only when an answer was free text) or `review`; back → previous question, or `transcript` (`choose` when asked) |
 | `review` | "Here's what I understood": one row per item (category icon, the text as it will be saved, edit, delete; for age, gender, allergy and health a "Hide from the AI" switch); the answer-style line for custom instructions | "Save" → `saving` → `saved`; back → last question or `transcript` |
 | `saved` | How many were saved, and where to change them | Done → step done |
 | `failed` | What went wrong in one plain sentence, the transcript (selectable, so it can be copied) | "Continue with questions" → typed questions with the transcript shown above them; "Try again" (request errors only) → `understanding` |
+
+**"Ask me questions"** (owner's request of 19 Nov 2026; the details were left open, this is the default built): the same
+`followUp` pages, but all five fixed questions in conversation order: what to call you, your city, food (diet,
+allergies), shopping and delivery, how you like answers (`askMeQuestions` in `src/intro/followUps.ts`). They are
+translated text on the screen, read aloud only with the speaker toggle; each is answered with a chip, by typing, or with
+the small microphone (asking for the microphone permission on that tap), or skipped. No AI is needed to ask them. Free-
+text answers then go through the same round-2 request as follow-up answers (`answersTurn`), and everything ends on the
+same review page and is saved the same way (memory notes, the answer-style line in custom instructions). Without an AI
+(or if round 2 fails) the typed and spoken answers are listed as given, one row per question's main topic, with a
+notice; chips need no request. Back from the first question returns to the choices.
 
 App backgrounded while listening: voice input already stops the microphone (`device/voiceInput.ts`); the session's
 `onEnd` arrives as interrupted and the flow keeps what was heard (`transcript`). Back from `listening` stops first.

@@ -93,6 +93,16 @@ export const FOLLOW_UPS: FollowUp[] = [
   },
 ];
 
+/**
+ * "Ask me questions" (the third way to start the introduction): all five, one at a time, in the order a conversation
+ * would take (name and city first), each answered by a chip, by typing or by voice, or skipped.
+ */
+const ASK_ME_ORDER: FollowUpId[] = ['name', 'city', 'food', 'shopping', 'style'];
+
+export function askMeQuestions(): FollowUp[] {
+  return ASK_ME_ORDER.map((id) => FOLLOW_UPS.find((f) => f.id === id)!);
+}
+
 /** The questions to ask, best first: none whose topics are covered, said not to apply, or declined. */
 export function chooseFollowUps(found: Extraction, max = MAX_FOLLOW_UPS): FollowUp[] {
   const covered = new Set<IntroTopic>([...found.items.map((i) => i.topic), ...found.none, ...found.declined]);

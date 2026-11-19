@@ -1,15 +1,22 @@
 import { EMPTY_EXTRACTION, type Extraction, mergeExtractions } from './extract';
-import { chipAnswers, chooseFollowUps, EMPTY_ANSWER, type FollowUp, type FollowUpAnswer, textAnswers, verbatimItems } from './followUps';
+import { askMeQuestions, chipAnswers, chooseFollowUps, EMPTY_ANSWER, type FollowUp, type FollowUpAnswer, textAnswers, verbatimItems } from './followUps';
 import type { MessageKey } from '../i18n';
 
 /**
  * The "Tell me about yourself" flow as a reducer (docs/voice-introduction.md, "Screens and states"). Pure: the
  * screen runs the microphone and the requests and reports what happened as events; this decides what comes next.
+ *
+ * It opens on three choices ('choose'): speak (the large microphone, 'intro'), type (the text field), or "Ask me
+ * questions" (all five fixed questions, then the same review page). Nothing touches the microphone before speaking is
+ * chosen.
  */
 
 export type FailReason = 'noAi' | 'request' | 'unreadable' | 'nothing';
 
 export type Phase =
+  /** The three ways to start: speak, type, or be asked. */
+  | { name: 'choose' }
+  /** Speaking chosen: the large microphone, what is worth mentioning, the privacy note. */
   | { name: 'intro' }
   | { name: 'listening' }
   | { name: 'transcript' }
@@ -22,7 +29,8 @@ export type Phase =
   /** Left the flow: to the typed questions (with the transcript), skipped, or finished. */
   | { name: 'exit'; to: 'typed' | 'skip' | 'done' };
 
-export type Notice = 'noSpeech' | 'answersVerbatim' | null;
+/** answersAsWritten: "Ask me questions" without an AI, so typed or spoken answers are listed as given. */
+export type Notice = 'noSpeech' | 'answersVerbatim' | 'answersAsWritten' | null;
 
 export type FlowState = {
   phase: Phase;
@@ -30,6 +38,10 @@ export type FlowState = {
   transcript: string;
   /** Started by keyboard ("I'd rather type"): the field takes focus, the microphone is secondary. */
   typing: boolean;
+  /** Started by "Ask me questions": every question, no transcript (back from the first returns to the choices). */
+  asking: boolean;
+  /** Whether an AI can understand typed or spoken answers (asked mode; without one they are kept as given). */
+  hasAi: boolean;
   /** What round 1 understood from the transcript. */
   first: Extraction;
   /** What round 2 understood from the typed or spoken follow-up answers (or those answers as said, if it failed). */
@@ -40,9 +52,11 @@ export type FlowState = {
 };
 
 export const START: FlowState = {
-  phase: { name: 'intro' },
+  phase: { name: 'choose' },
   transcript: '',
   typing: false,
+  asking: false,
+  hasAi: true,
   first: EMPTY_EXTRACTION,
   second: EMPTY_EXTRACTION,
   questions: [],
@@ -51,6 +65,10 @@ export const START: FlowState = {
 };
 
 export type FlowEvent =
+  /** "I want to say it by speaking": the microphone page (listening starts only with its own tap). */
+  | { type: 'chooseSpeak' }
+  /** "Ask me questions". */
+  | { type: 'askMe'; hasAi: boolean }
   | { type: 'speak' }
   | { type: 'typeInstead' }
   | { type: 'questionsInstead' }
@@ -103,7 +121,12 @@ export function finalExtraction(state: FlowState, label: (key: MessageKey) => st
 
 /** After the last question: round 2 when something was typed or said, else straight to review. */
 function afterQuestions(state: FlowState): FlowState {
-  if (pendingAnswers(state).length) return { ...state, phase: { name: 'understanding', round: 2 } };
+  const pending = pendingAnswers(state);
+  if (pending.length && state.asking && !state.hasAi) {
+    // No AI to understand them: each answer is listed as given, to check on the review page.
+    return { ...state, second: { items: verbatimItems(pending), none: [], declined: [] }, phase: { name: 'review' }, notice: 'answersAsWritten' };
+  }
+  if (pending.length) return { ...state, phase: { name: 'understanding', round: 2 } };
   return { ...state, second: EMPTY_EXTRACTION, phase: { name: 'review' } };
 }
 
@@ -121,13 +144,33 @@ function setAnswer(state: FlowState, index: number, change: (a: FollowUpAnswer) 
 export function introReducer(state: FlowState, event: FlowEvent): FlowState {
   const phase = state.phase;
   switch (event.type) {
+    case 'chooseSpeak':
+      if (phase.name !== 'choose') return state;
+      return { ...state, phase: { name: 'intro' }, typing: false, asking: false, notice: null };
+    case 'askMe': {
+      if (phase.name !== 'choose') return state;
+      const questions = askMeQuestions();
+      return {
+        ...state,
+        asking: true,
+        typing: false,
+        hasAi: event.hasAi,
+        transcript: '',
+        first: EMPTY_EXTRACTION,
+        second: EMPTY_EXTRACTION,
+        questions,
+        answers: questions.map(() => EMPTY_ANSWER),
+        phase: { name: 'followUp', index: 0 },
+        notice: null,
+      };
+    }
     case 'speak':
       if (phase.name === 'intro' || phase.name === 'transcript')
         return { ...state, phase: { name: 'listening' }, notice: null };
       return state;
     case 'typeInstead':
-      if (phase.name !== 'intro') return state;
-      return { ...state, phase: { name: 'transcript' }, typing: true, notice: null };
+      if (phase.name !== 'intro' && phase.name !== 'choose') return state;
+      return { ...state, phase: { name: 'transcript' }, typing: true, asking: false, notice: null };
     case 'questionsInstead':
       return { ...state, phase: { name: 'exit', to: 'typed' } };
     case 'skipAll':
@@ -147,7 +190,8 @@ export function introReducer(state: FlowState, event: FlowEvent): FlowState {
       if (phase.name !== 'transcript') return state;
       return { ...state, transcript: event.text };
     case 'startOver':
-      return { ...START };
+      // Starts again the same way (an empty field, or the microphone page), not from the three choices.
+      return { ...START, typing: state.typing, phase: state.typing ? { name: 'transcript' } : { name: 'intro' } };
     case 'submit':
       if (phase.name !== 'transcript' || !canSubmit(state)) return state;
       if (!event.hasAi) return { ...state, phase: { name: 'failed', reason: 'noAi' } };
@@ -208,10 +252,14 @@ export function introReducer(state: FlowState, event: FlowEvent): FlowState {
         case 'listening':
           // The screen stops the microphone; its end event brings the words to the transcript.
           return state;
+        case 'intro':
+          return { ...state, phase: { name: 'choose' }, notice: null };
         case 'transcript':
-          return { ...state, phase: { name: 'intro' }, typing: false };
+          // Typing was chosen on the first page (or on the microphone page): back to the choices.
+          return { ...state, phase: { name: state.typing ? 'choose' : 'intro' }, typing: false };
         case 'followUp':
-          return { ...state, phase: phase.index > 0 ? { name: 'followUp', index: phase.index - 1 } : { name: 'transcript' } };
+          if (phase.index > 0) return { ...state, phase: { name: 'followUp', index: phase.index - 1 } };
+          return { ...state, phase: { name: state.asking ? 'choose' : 'transcript' } };
         case 'review':
           // Back to the questions with round 1's findings (round 2 runs again when they go on).
           if (state.questions.length) return { ...state, phase: { name: 'followUp', index: state.questions.length - 1 } };
@@ -245,5 +293,5 @@ export function leavesFlow(event: FlowEvent): boolean {
 
 /** Whether the screen's back button stays inside the flow (false on its first page: the step's own back applies). */
 export function hasBack(state: FlowState): boolean {
-  return !['intro', 'saving', 'saved', 'exit'].includes(state.phase.name);
+  return !['choose', 'saving', 'saved', 'exit'].includes(state.phase.name);
 }

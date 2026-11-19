@@ -5,7 +5,9 @@ import { t } from '../../src/i18n';
 import { EMPTY_EXTRACTION, type Extraction } from '../../src/intro/extract';
 import { finalExtraction, type FlowEvent, type FlowState, hasBack, introReducer, pendingAnswers, START } from '../../src/intro/flow';
 
-const run = (events: FlowEvent[], from: FlowState = START) => events.reduce(introReducer, from);
+// Most tests start where "I want to say it by speaking" leads: the microphone page.
+const SPEAK = introReducer(START, { type: 'chooseSpeak' });
+const run = (events: FlowEvent[], from: FlowState = SPEAK) => events.reduce(introReducer, from);
 const said = (text: string): FlowEvent[] => [{ type: 'speak' }, { type: 'heard', text }, { type: 'voiceEnded', text }];
 const understood = (result: Partial<Extraction>): FlowEvent => ({ type: 'understood', result: { ...EMPTY_EXTRACTION, ...result } });
 const NAME = { topic: 'name' as const, value: 'Deniz', quote: "I'm Deniz" };
@@ -102,8 +104,13 @@ test('back, cancel, skip and start over', () => {
   assert.equal(review.phase.name, 'review');
   assert.deepEqual(introReducer(review, { type: 'back' }).phase, { name: 'followUp', index: 2 });
   assert.deepEqual(introReducer(START, { type: 'skipAll' }).phase, { name: 'exit', to: 'skip' });
-  assert.deepEqual(introReducer(review, { type: 'startOver' }), START);
-  assert.ok(!hasBack(START) && hasBack(review));
+  // Starting over keeps the way chosen: the microphone page here, an empty field after typing.
+  assert.deepEqual(introReducer(review, { type: 'startOver' }), SPEAK);
+  const typed = run([{ type: 'edit', text: 'hello' }, { type: 'startOver' }], introReducer(START, { type: 'typeInstead' }));
+  assert.deepEqual(typed.phase, { name: 'transcript' });
+  assert.equal(typed.transcript, '');
+  assert.ok(typed.typing);
+  assert.ok(!hasBack(START) && hasBack(SPEAK) && hasBack(review));
 });
 
 test('a single-choice chip answers at once; a chip of another question is ignored', () => {
@@ -137,4 +144,70 @@ test('leaving the flow is left to the screen around (no page change of its own t
   assert.ok(leavesFlow({ type: 'skipAll' }));
   assert.ok(!leavesFlow({ type: 'next' }));
   assert.ok(!leavesFlow({ type: 'typeInstead' }));
+});
+
+test('the step opens on three choices; the microphone page only after choosing to speak', () => {
+  assert.deepEqual(START.phase, { name: 'choose' });
+  // Nothing starts listening from the choices themselves.
+  assert.equal(introReducer(START, { type: 'speak' }), START);
+  assert.deepEqual(SPEAK.phase, { name: 'intro' });
+  assert.deepEqual(introReducer(SPEAK, { type: 'back' }).phase, { name: 'choose' });
+  const typing = introReducer(START, { type: 'typeInstead' });
+  assert.deepEqual(typing.phase, { name: 'transcript' });
+  assert.ok(typing.typing);
+  assert.deepEqual(introReducer(typing, { type: 'back' }).phase, { name: 'choose' });
+  assert.deepEqual(introReducer(START, { type: 'skipAll' }).phase, { name: 'exit', to: 'skip' });
+});
+
+test('"Ask me questions": all five, one at a time, skippable; typed answers go to round 2', () => {
+  let s = introReducer(START, { type: 'askMe', hasAi: true });
+  assert.deepEqual(s.questions.map((q) => q.id), ['name', 'city', 'food', 'shopping', 'style']);
+  assert.deepEqual(s.phase, { name: 'followUp', index: 0 });
+  // Back from the first question returns to the choices.
+  assert.deepEqual(introReducer(s, { type: 'back' }).phase, { name: 'choose' });
+  s = run(
+    [
+      { type: 'answerText', text: 'Deniz' },
+      { type: 'next' },
+      { type: 'skipQuestion' },
+      { type: 'toggleChip', chip: 'vegan' },
+      { type: 'next' },
+      { type: 'skipQuestion' },
+      { type: 'toggleChip', chip: 'short' },
+    ],
+    s,
+  );
+  assert.deepEqual(s.phase, { name: 'understanding', round: 2 });
+  assert.deepEqual(pendingAnswers(s).map((p) => p.text), ['Deniz']);
+  s = introReducer(s, understood({ items: [{ topic: 'name', value: 'Deniz', quote: 'Deniz' }] }));
+  assert.equal(s.phase.name, 'review');
+  assert.deepEqual(finalExtraction(s, t).items.map((i) => i.topic).sort(), ['diet', 'name', 'style']);
+  // Cancelling round 2 returns to the last question.
+  const cancelled = introReducer(run([{ type: 'back' }, { type: 'answerText', text: 'x' }, { type: 'next' }], s), { type: 'cancel' });
+  assert.deepEqual(cancelled.phase, { name: 'followUp', index: 4 });
+});
+
+test('"Ask me questions" without an AI keeps typed answers as given, with its own notice; chips and skips alone need nothing', () => {
+  let s = introReducer(START, { type: 'askMe', hasAi: false });
+  s = run(
+    [
+      { type: 'answerText', text: 'Deniz' },
+      { type: 'next' },
+      { type: 'answerText', text: 'İzmir' },
+      { type: 'next' },
+      { type: 'skipQuestion' },
+      { type: 'skipQuestion' },
+      { type: 'skipQuestion' },
+    ],
+    s,
+  );
+  assert.equal(s.phase.name, 'review');
+  assert.equal(s.notice, 'answersAsWritten');
+  assert.deepEqual(finalExtraction(s, t).items.map((i) => `${i.topic}=${i.value}`), ['name=Deniz', 'city=İzmir']);
+  const skipped = run(
+    [{ type: 'skipQuestion' }, { type: 'skipQuestion' }, { type: 'skipQuestion' }, { type: 'skipQuestion' }, { type: 'skipQuestion' }],
+    introReducer(START, { type: 'askMe', hasAi: false }),
+  );
+  assert.equal(skipped.phase.name, 'review');
+  assert.equal(finalExtraction(skipped, t).items.length, 0);
 });

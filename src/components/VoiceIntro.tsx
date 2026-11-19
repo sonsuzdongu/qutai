@@ -45,8 +45,10 @@ import { CATEGORY_ICONS } from './memoryCategories';
 import { memoryErrorText } from './memoryError';
 
 /**
- * "Tell me about yourself": the voice-first start of setup's "Let me get to know you a little" step and of
- * Settings › Assistant › Memory › "Introduce yourself" (docs/voice-introduction.md). The user talks or types freely;
+ * "Tell me about yourself": the start of setup's "Let me get to know you a little" step and of
+ * Settings › Assistant › Memory › "Introduce yourself" (docs/voice-introduction.md). It opens on three choices: speak
+ * (only then the large microphone shows), type, or "Ask me questions" (the five fixed questions one at a time, answered
+ * by a chip, typing or voice, then the same review). The user talks or types freely;
  * one request to their AI turns it into notes (src/intro/), Qutai asks at most three fixed follow-up questions, and
  * the user checks every note before anything is saved. The typed questions (ProfileQuestions) are the alternative
  * and the way out of every failure; ProfileStep switches between the two.
@@ -293,12 +295,17 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
   // ---- Footer ----
   let footer: ReactNode = null;
   switch (phase.name) {
+    case 'choose':
+      footer = (
+        <Footer>
+          <Secondary label={t('profile.skipAll')} onPress={() => dispatch({ type: 'skipAll' })} />
+        </Footer>
+      );
+      break;
     case 'intro':
       footer = (
         <Footer>
-          {!ai && <Primary label={t('voiceIntro.questionsInstead')} onPress={() => dispatch({ type: 'questionsInstead' })} />}
           {ai && <Secondary label={t('voiceIntro.typeInstead')} icon="keyboard" onPress={() => dispatch({ type: 'typeInstead' })} />}
-          {ai && <Secondary label={t('voiceIntro.questionsInstead')} onPress={() => dispatch({ type: 'questionsInstead' })} />}
           <Secondary label={t('profile.skipAll')} onPress={() => dispatch({ type: 'skipAll' })} />
         </Footer>
       );
@@ -382,6 +389,16 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
 
   return (
     <KeyboardAwareScrollView ref={scrollRef} contentContainerStyle={styles.content} footer={footer}>
+      {phase.name === 'choose' && (
+        <ChoosePage
+          ai={!!ai}
+          credits={ai?.provider === 'qutai'}
+          onSpeak={() => dispatch({ type: 'chooseSpeak' })}
+          onType={() => dispatch({ type: 'typeInstead' })}
+          onAsk={() => dispatch({ type: 'askMe', hasAi: !!ai })}
+        />
+      )}
+
       {phase.name === 'intro' && (
         <IntroPage ai={!!ai} credits={ai?.provider === 'qutai'} onSpeak={speakIntro} notice={state.notice === 'noSpeech' ? t('voice.error.noSpeech') : voiceNotice} />
       )}
@@ -494,7 +511,13 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
       {phase.name === 'review' && (
         <Review
           rows={rows}
-          notice={state.notice === 'answersVerbatim' ? t('voiceIntro.answersVerbatim') : null}
+          notice={
+            state.notice === 'answersVerbatim'
+              ? t('voiceIntro.answersVerbatim')
+              : state.notice === 'answersAsWritten'
+                ? t('voiceIntro.answersAsWritten')
+                : null
+          }
           onChange={setRows}
         />
       )}
@@ -655,6 +678,69 @@ function IntroPage({ ai, credits, onSpeak, notice }: { ai: boolean; credits: boo
         ))}
       </View>
     </>
+  );
+}
+
+/** The first page: three ways to tell Qutai about yourself. Without an AI only the questions are offered. */
+function ChoosePage({
+  ai,
+  credits,
+  onSpeak,
+  onType,
+  onAsk,
+}: {
+  ai: boolean;
+  credits: boolean;
+  onSpeak: () => void;
+  onType: () => void;
+  onAsk: () => void;
+}) {
+  const styles = useStyles();
+  const palette = usePalette();
+  return (
+    <>
+      <Title>{t('voiceIntro.title')}</Title>
+      <Text style={styles.lead}>{t('voiceIntro.chooseLead')}</Text>
+      {!ai && (
+        <View style={styles.card}>
+          <Text style={styles.cardText}>{t('voiceIntro.noAiAsk')}</Text>
+        </View>
+      )}
+      {ai && (
+        <Choice icon="microphone" title={t('voiceIntro.choice.speak')} body={t('voiceIntro.choice.speakHint')} onPress={onSpeak} />
+      )}
+      {ai && <Choice icon="keyboard" title={t('voiceIntro.choice.type')} body={t('voiceIntro.choice.typeHint')} onPress={onType} />}
+      <Choice icon="message" title={t('voiceIntro.choice.ask')} body={t('voiceIntro.choice.askHint')} onPress={onAsk} />
+      {ai && (
+        <View style={styles.privacy}>
+          <Icon name="secure" size={16} color={palette.textSecondary} />
+          <Text style={styles.hintFlex}>{t(credits ? 'voiceIntro.choosePrivacyCredits' : 'voiceIntro.choosePrivacy')}</Text>
+        </View>
+      )}
+    </>
+  );
+}
+
+function Choice({ icon, title, body, onPress }: { icon: IconName; title: string; body: string; onPress: () => void }) {
+  const styles = useStyles();
+  const palette = usePalette();
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.choice, pressed && styles.pressed]}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityHint={body}
+    >
+      <View style={styles.choiceIcon}>
+        <Icon name={icon} size={22} color={palette.onTint} />
+      </View>
+      <View style={styles.flex}>
+        <Text style={styles.choiceTitle}>{title}</Text>
+        <Text style={styles.hint}>{body}</Text>
+      </View>
+      <Icon name="chevronRight" size={18} color={palette.textSecondary} />
+    </Pressable>
   );
 }
 
@@ -926,6 +1012,20 @@ const useStyles = makeStyles((c) => ({
   card: { backgroundColor: c.surface, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, gap: 6 },
   cardText: { color: c.text, fontSize: 15, lineHeight: 21 },
   privacy: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  choice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    minHeight: 72,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 16,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+  },
+  choiceIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: c.tint },
+  choiceTitle: { color: c.text, fontSize: 16, fontWeight: '600', marginBottom: 2 },
   mentions: { gap: 8 },
   mention: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   mentionText: { flex: 1, color: c.text, fontSize: 15, lineHeight: 21 },
