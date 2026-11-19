@@ -6,7 +6,7 @@ import type { LegalDocument, LegalKind, LegalLanguage } from './documents';
  * (README.md › Accounts, › Qutai Credits; backend/README.md › Purchases); have them checked by a lawyer before the
  * store release (TODO.md › Legal).
  */
-export const PRO_LEGAL_UPDATED = '2026-11-18';
+export const PRO_LEGAL_UPDATED = '2026-11-19';
 
 export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
   en: {

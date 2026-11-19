@@ -10,18 +10,21 @@ import { PRO_DOCUMENTS, PRO_LEGAL_UPDATED } from './proDocuments';
  * 2: what leaves the phone, completed (OpenRouter and the user's own server, memory and custom instructions with every
  * request, the platform's geocoder and speech service, filter-list downloads, details typed into sites) and what the
  * app now enforces about passwords, cards, IBANs and ID numbers (16 Nov 2026).
+ * 3: contacts (the assistant finds a person the user names; numbers and addresses never reach the AI), page styles
+ *    and the cookie list (19 Nov 2026).
  */
-const OPEN_SOURCE_LEGAL_VERSION = 2;
+const OPEN_SOURCE_LEGAL_VERSION = 3;
 /**
  * 2: the pro-mode documents describe the account, Qutai Credits and buying credits (16 Nov 2026).
  * 3: backups in the Qutai account (what the server keeps, encrypted with the user's password; 17 Nov 2026).
  * 4: who is responsible and how to reach them, sign-in by email (Mailjet), purchases in the app, the companies that
  *    process data and the server's IP use and logs, how long data is kept, security, and the open-source policy's
  *    items the pro one was missing (location, speech, filter lists, details typed into sites; 18 Nov 2026).
+ * 5: contacts (as in the open-source policy's version 3; 19 Nov 2026).
  */
-const PRO_LEGAL_VERSION = 4;
+const PRO_LEGAL_VERSION = 5;
 export const LEGAL_VERSION = accountsEnabled ? PRO_LEGAL_VERSION : OPEN_SOURCE_LEGAL_VERSION;
-export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-16';
+export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-19';
 
 export type LegalKind = 'privacy' | 'terms';
 export type LegalDocument = { title: string; intro: string; sections: { heading: string; body: string }[] };
