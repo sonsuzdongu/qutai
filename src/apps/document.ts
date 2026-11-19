@@ -19,9 +19,20 @@ export const IOS_OFFLINE_RULES = JSON.stringify(
   ['^https?://', '^wss?://', '^ftp://'].map((filter) => ({ trigger: { 'url-filter': filter }, action: { type: 'block' } })),
 );
 
+/**
+ * The app's own origin: a host under the reserved `.invalid` top-level domain, which never resolves (RFC 6761), one per
+ * app. Not an opaque `about:blank` origin, because WebKit then reports every error of the app's own scripts as
+ * "Script error." with no line, which leaves the fix loop blind. Nothing is ever loaded from it.
+ */
+export function appBaseUrl(appId: string): string {
+  return `https://${appId.replace(/[^a-z0-9-]/g, '')}.apps.qutai.invalid/`;
+}
+
 /** The only address an app's WebView may be on: its own document (fragment links inside it included). */
-export function appNavigationAllowed(url: string): boolean {
-  return url === '' || url === 'about:blank' || /^about:blank#[^\s]*$/.test(url);
+export function appNavigationAllowed(url: string, base: string): boolean {
+  if (url === '' || url === 'about:blank') return true;
+  if (url === base) return true;
+  return url.startsWith(`${base}#`) && !/\s/.test(url);
 }
 
 /** What the runner puts in the document so `qutai.ready` needs no round trip. */
@@ -105,6 +116,22 @@ define(window, 'fetch', function () { diag('blocked', 'fetch: ' + OFF); return P
 try { define(Navigator.prototype, 'sendBeacon', function () { return false; }); } catch (e) {}
 try { define(navigator, 'sendBeacon', function () { return false; }); } catch (e) {}
 define(window, 'open', function () { diag('blocked', 'window.open: apps cannot open windows.'); return null; });
+// Web storage, cookies and the browser's own powerful APIs: apps keep data with qutai.storage / qutai.db and reach the
+// phone only through the bridge (the app's origin is its own, so these would otherwise exist).
+function refuse(what, instead) {
+  return function () { diag('blocked', what + ' is not available in Qutai apps.' + (instead ? ' Use ' + instead + '.' : '')); throw new TypeError(what + ' is not available in Qutai apps.' + (instead ? ' Use ' + instead + '.' : '')); };
+}
+[['localStorage', 'qutai.storage'], ['sessionStorage', 'qutai.storage'], ['indexedDB', 'qutai.db'], ['caches', 'qutai.storage']].forEach(function (p) {
+  try { Object.defineProperty(window, p[0], { get: refuse(p[0], p[1]), configurable: false }); } catch (e) {}
+});
+try { Object.defineProperty(Document.prototype, 'cookie', { get: function () { return ''; }, set: function () { diag('blocked', 'document.cookie is not available in Qutai apps.'); }, configurable: false }); } catch (e) {}
+['clipboard', 'share', 'canShare', 'credentials', 'serviceWorker', 'mediaDevices', 'geolocation', 'bluetooth', 'usb', 'hid', 'serial', 'xr', 'wakeLock', 'storage', 'locks'].forEach(function (n) {
+  try { Object.defineProperty(Navigator.prototype, n, { get: function () { return undefined; }, configurable: false }); } catch (e) {}
+  try { Object.defineProperty(navigator, n, { get: function () { return undefined; }, configurable: false }); } catch (e) {}
+});
+['Notification', 'PaymentRequest', 'BroadcastChannel', 'SharedWorker', 'PushManager'].forEach(function (n) {
+  define(window, n, function () { diag('blocked', n + ' is not available in Qutai apps.'); throw new TypeError(n + ' is not available in Qutai apps.'); });
+});
 ['HTMLIFrameElement', 'HTMLFrameElement', 'HTMLObjectElement', 'HTMLEmbedElement'].forEach(function (n) {
   var P = window[n] && window[n].prototype;
   if (!P) return;
@@ -135,7 +162,9 @@ document.addEventListener('click', function (e) {
 }, true);
 window.addEventListener('error', function (e) {
   if (e.target && e.target !== window && e.target.tagName) return;
-  diag('error', (e.error && e.error.name ? e.error.name + ': ' : '') + (e.message || 'Error'), {
+  var msg = e.message || 'Error';
+  var named = e.error && e.error.name && msg.indexOf(e.error.name) !== 0 ? e.error.name + ': ' : '';
+  diag('error', named + msg, {
     line: e.lineno || 0, col: e.colno || 0, stack: e.error && e.error.stack ? cut(e.error.stack) : undefined });
 }, true);
 window.addEventListener('unhandledrejection', function (e) {

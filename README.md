@@ -1153,7 +1153,7 @@ network come later).
   conversation. Fake-AI words: `notes` / `notlar` / `uygulama`, `breakapp`, `undoapp`, `breakout`, and the message
   "Ask Qutai to fix this" sends.
 - **Running.** Full screen with a slim header (name; menu: Edit with the assistant, Versions, Permissions, Reload,
-  Rename, Delete app). Each app gets its own WebView with an opaque origin (no cookies or web storage), its own data
+  Rename, Delete app). Each app gets its own WebView with its own origin under `.invalid` (web storage and cookies refused), its own data
   store (iOS non-persistent; Android the `qutai-apps` WebView profile), no navigation, no windows or frames, and no
   network (a Content Security Policy with `default-src 'none'`, plus on iOS a WebKit rule list that blocks every
   network load). It reaches the phone only through the `qutai` helper library (contract 1): a key-value and document

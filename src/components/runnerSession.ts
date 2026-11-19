@@ -5,7 +5,7 @@ import type { PreviewReport } from '../agent/appTool';
 import { appStore, appsChanged } from '../apps/appStore';
 import { Bridge, type BridgeHost, type HapticKind, type Insets, type ThemeInfo } from '../apps/bridge';
 import { parseBridgeRequest, permissionStates } from '../apps/contract';
-import { appNavigationAllowed, buildAppDocument, formatDiagnostics, parseAppMessage, type BuiltDocument, type Diagnostic } from '../apps/document';
+import { appBaseUrl, appNavigationAllowed, buildAppDocument, formatDiagnostics, parseAppMessage, type BuiltDocument, type Diagnostic } from '../apps/document';
 import { CONTRACT_VERSION, type AppPermission } from '../apps/manifest';
 import { appRunner, type RunnerRequest } from '../apps/runnerState';
 import type { LoadedApp } from '../apps/store';
@@ -262,13 +262,19 @@ export class RunnerSession {
     else if (msg.type === 'ready') {
       this.ready = true;
       this.lastPong = Date.now();
+      // The theme or safe areas may have changed between building the document and now.
+      this.inject({ event: 'theme', data: this.theme });
+      this.inject({ event: 'insets', data: this.insets });
       if (this.request.preview && !this.settleTimer) this.settleTimer = setTimeout(() => this.settle(true), PREVIEW_SETTLE_MS);
     } else this.addDiagnostic(msg.diag);
   };
 
   /** onShouldStartLoadWithRequest: only the app's own document. */
+  /** The document's own address (docs/mini-apps.md › One WebView per open app). */
+  baseUrl = () => appBaseUrl(this.request.appId);
+
   allowNavigation = (url: string): boolean => {
-    if (appNavigationAllowed(url)) return true;
+    if (appNavigationAllowed(url, this.baseUrl())) return true;
     this.addDiagnostic({ kind: 'blocked', message: `Navigation refused: ${url.slice(0, 120)}`, at: Date.now() });
     return false;
   };
@@ -278,7 +284,7 @@ export class RunnerSession {
    * page that isn't the app's document is never shown: loading stops and the app is built again.
    */
   loadStarted = (url: string) => {
-    if (appNavigationAllowed(url) || url.startsWith('data:')) return;
+    if (appNavigationAllowed(url, this.baseUrl()) || url.startsWith('data:')) return;
     this.webview?.stopLoading();
     this.addDiagnostic({ kind: 'blocked', message: `Navigation stopped: ${url.slice(0, 120)}`, at: Date.now() });
     this.restart();

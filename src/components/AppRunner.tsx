@@ -163,8 +163,9 @@ function Runner({ request, onEdit, onFix, onNotice }: Props & { request: RunnerR
           key={`${loaded.id}:${loaded.version}:${snap.reload}`}
           ref={session.setWebView}
           style={[styles.flex, { backgroundColor: palette.bg }]}
-          // No base address: an opaque origin, apart from every site's cookies and storage and from other apps.
-          source={{ html: snap.built.html, baseUrl: '' }}
+          // The app's own origin under .invalid (never resolves): apart from every site's cookies and storage and from
+          // other apps; web storage and cookies are refused by the document's lockdown.
+          source={{ html: snap.built.html, baseUrl: session.baseUrl() }}
           // Everything passes the origin list (otherwise react-native-webview hands it to another app) and is then
           // refused here: the app never leaves its document.
           originWhitelist={['*']}

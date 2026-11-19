@@ -2822,7 +2822,7 @@ function BrowserApp({
                     const version = await appStore.undo(app.appId);
                     if (version === null) return toast.show(t('apps.undoNone'));
                     appsChanged.emit();
-                    conversation.update(item.id, { app: { ...app, change: 'undone', version } });
+                    conversation.update(item.id, { app: { appId: app.appId, name: app.name, change: 'undone', version } });
                     toast.show(t('apps.cardUndone', { name: app.name, version }));
                   })
                   .catch(() => {});

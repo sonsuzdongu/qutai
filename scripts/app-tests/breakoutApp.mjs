@@ -111,7 +111,9 @@ async function run() {
     setTimeout(() => resolve(true), 2000);
   }));
   await attempt('caches', async () => { if (!window.caches) return true; await caches.open('x'); return 'opened'; });
-  await attempt('origin is opaque', () => (location.origin === 'null' || location.href === 'about:blank') || 'origin ' + location.origin);
+  await attempt("origin is the app's own under .invalid", () => /\.apps\.qutai\.invalid$/.test(location.hostname) || 'origin ' + location.origin);
+  await attempt('navigator.clipboard', async () => { if (!navigator.clipboard) return true; await navigator.clipboard.readText(); return 'read'; });
+  await attempt('navigator.share', () => !navigator.share || 'available');
 
   // Qutai's bridge.
   await attempt('replace the bridge receiver', () => {

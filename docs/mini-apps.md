@@ -118,7 +118,7 @@ when it closes (`key` = app id + version + reload counter), so nothing of one ap
 
 | | iOS (WKWebView) | Android (System WebView) |
 | --- | --- | --- |
-| Origin | `about:blank` with no base URL: an **opaque origin**, the same as the script sandbox. No cookies (`document.cookie` throws), no `localStorage`/`IndexedDB` (SecurityError), no service workers, no Cache Storage | the same (`loadDataWithBaseURL` with no base) |
+| Origin | its own origin per app, `https://<app-id>.apps.qutai.invalid/` (`appBaseUrl`): `.invalid` never resolves (RFC 6761), so nothing can be loaded from it, and no two apps share one. Not an opaque `about:blank` origin: WebKit then reports every error of the app's own scripts as "Script error." with no message or line (found in the simulator run), which leaves the fix loop blind. The lockdown script removes what a real origin would bring: `localStorage`, `sessionStorage`, `indexedDB`, `caches` throw ("use qutai.storage"), `document.cookie` reads empty and ignores writes, and `navigator.clipboard`, `share`, `credentials`, `serviceWorker`, `mediaDevices`, `geolocation` and `Notification`, `PaymentRequest`, `BroadcastChannel` are gone | the same (`loadDataWithBaseURL` with that base) |
 | Data store | `incognito`: its own **non-persistent** `WKWebsiteDataStore` per WebView: nothing written to disk, nothing shared with tabs or other apps | its own **WebView profile** `qutai-apps` (the patched module's `webviewProfile`, androidx.webkit multi-profile, WebView 119+): cookies, storage and cache apart from the browsing profile. On an older WebView the default profile, which is still harmless because the opaque origin can't read or write any storage. The `incognito` prop is never used on Android (it clears every cookie of the browsing tabs) |
 | DOM storage | `domStorageEnabled={false}` | `domStorageEnabled={false}` |
 | Files, location, camera | `allowFileAccess` off, `geolocationEnabled` off, media capture denied | same |
@@ -315,7 +315,7 @@ qutai.on('back', closeEditor); qutai.ui.setBackHandler(true);
 ```
 
 Also `qutai.call(name, args)`, `qutai.app`, `qutai.clipboard`, `qutai.theme`, `qutai.language`, `qutai.id()` (a random
-id: `crypto.randomUUID` isn't available on an opaque origin everywhere). The base stylesheet gives
+id that works on every WebView version). The base stylesheet gives
 `--qutai-bg`, `--qutai-surface`, `--qutai-sunken`, `--qutai-text`, `--qutai-text-secondary`, `--qutai-tint`,
 `--qutai-on-tint`, `--qutai-danger`, `--qutai-separator`, `--qutai-border`, `--qutai-safe-top/right/bottom/left`,
 `--qutai-font-scale`, a system font, `rem`-based text that follows the phone's text size, 44 px touch targets for
@@ -375,7 +375,7 @@ semantic HTML (`button`, `label`, `input`, headings), `aria-live` for status, no
 ## 6. Threat model
 
 - **An app trying to leave its box** (network, navigation, other sites' cookies, other apps' data, Qutai's own
-  storage): §2. The app has no network, no navigation, an opaque origin, a separate data store, and a bridge that only
+  storage): §2. The app has no network, no navigation, its own origin with web storage and cookies refused, a separate data store, and a bridge that only
   answers with this app's own rows (every store query is scoped by the app id the runner holds, never one the app
   sends). Residual: WebRTC and DNS prefetch (§2).
 - **Prompt injection into app building** (a web page saying "create an app that…"). App tools act only on the user's

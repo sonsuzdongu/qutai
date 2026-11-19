@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import vm from 'node:vm';
 import {
   APP_CSP,
+  appBaseUrl,
   appNavigationAllowed,
   buildAppDocument,
   formatDiagnostics,
@@ -56,10 +57,16 @@ test('the policy is the first thing in the document, before any app byte', () =>
   assert.equal(html.split('Content-Security-Policy').length, 2);
 });
 
+const BASE = 'https://app-abcdefghij12.apps.qutai.invalid/';
 const NAV_CASES: [string, boolean][] = [
   ['about:blank', true],
   ['', true],
-  ['about:blank#top', true],
+  [BASE, true],
+  [`${BASE}#top`, true],
+  [`${BASE}?x=1`, false],
+  [`${BASE}app.js`, false],
+  ['https://app-zzzzzzzzzzzz.apps.qutai.invalid/', false],
+  ['https://app-abcdefghij12.apps.qutai.invalid.evil.example/', false],
   ['about:blank?x=1', false],
   ['about:srcdoc', false],
   ['https://evil.example/?d=secret', false],
@@ -72,7 +79,13 @@ const NAV_CASES: [string, boolean][] = [
   ['qutai://app/app-abcdefghij12', false],
   ['blob:null/1234', false],
 ];
-for (const [url, ok] of NAV_CASES) test(`navigation ${ok ? 'allowed' : 'refused'}: ${url || '(empty)'}`, () => assert.equal(appNavigationAllowed(url), ok));
+for (const [url, ok] of NAV_CASES) test(`navigation ${ok ? 'allowed' : 'refused'}: ${url || '(empty)'}`, () => assert.equal(appNavigationAllowed(url, BASE), ok));
+
+test('each app has its own origin under .invalid', () => {
+  assert.equal(appBaseUrl('app-abcdefghij12'), BASE);
+  assert.notEqual(appBaseUrl('app-abcdefghij12'), appBaseUrl('app-zzzzzzzzzzzz'));
+  assert.equal(appBaseUrl('app-a/../b'), 'https://app-a..b.apps.qutai.invalid/'.replace('..', ''));
+});
 
 test('iOS offline rule list blocks every network scheme', () => {
   const rules = JSON.parse(IOS_OFFLINE_RULES) as { trigger: { 'url-filter': string }; action: { type: string } }[];
@@ -246,4 +259,15 @@ test('the break-out test app is a valid package; its outside loads are left out 
   const head = built.html.slice(0, built.html.indexOf('</head>'));
   assert.ok(!/<script src=|<link /.test(head));
   assert.doesNotThrow(() => new vm.Script(files['app.js']));
+});
+
+test('an uncaught error is reported once with its name, message and line', () => {
+  const { sent, listeners } = runHelper();
+  const err = new ReferenceError("Can't find variable: rendr");
+  listeners.error[0]({ target: undefined, message: "ReferenceError: Can't find variable: rendr", lineno: 210, colno: 1, error: err });
+  listeners.error[0]({ target: undefined, message: 'boom', lineno: 3, colno: 1, error: new TypeError('boom') });
+  const errors = sent.map((m) => m.diag as { kind?: string; message?: string; line?: number }).filter((d) => d?.kind === 'error');
+  assert.equal(errors[0].message, "ReferenceError: Can't find variable: rendr");
+  assert.equal(errors[0].line, 210);
+  assert.equal(errors[1].message, 'TypeError: boom');
 });
