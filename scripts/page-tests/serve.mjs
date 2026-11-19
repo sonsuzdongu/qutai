@@ -10,6 +10,7 @@
 //   http://localhost:8811/            the page with the working copy's page script; runs every case and shows a table
 //   http://localhost:8811/?script=head the same with the page script of the last commit (to compare before a fix)
 //   http://localhost:8811/guards      secret fields, payment buttons and destructive or account presses (guards.html)
+//   http://localhost:8811/app-breakout the apps break-out test as an app document (frame routes: window.__results)
 // The results are also in window.__pageTestResults (an array of { name, ok, detail }).
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -56,6 +57,22 @@ createServer((req, res) => {
   if (url.pathname === '/agent.js') {
     res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-store' });
     res.end(pageScript(url.searchParams.get('script') === 'head'));
+    return;
+  }
+  if (url.pathname === '/app-breakout') {
+    // The apps break-out test (scripts/app-tests/breakoutApp.mjs) as Qutai builds its document, in a desktop browser:
+    // Chromium has no frame guard injected into frames (like Android), so it shows whether the main frame's guard
+    // alone keeps every frame route closed. qutai.* bridge calls get no answer here; their cases wait or fail.
+    Promise.all([import('../../src/apps/document.ts'), import('../app-tests/breakoutApp.mjs')]).then(([doc, app]) => {
+      const pkg = { manifest: { entry: 'index.html', language: 'en' }, files: app.breakoutFiles() };
+      const boot = {
+        id: 'app-breakout0001', name: 'Break-out', version: 1, language: 'en', uiLanguage: 'en', platform: 'android', permissions: [],
+        theme: { dark: false, colors: { bg: '#fff', surface: '#fff', sunken: '#eee', text: '#000', textSecondary: '#555', tint: '#1565c0', onTint: '#fff', danger: '#c62828', separator: '#ddd', border: '#ccc' }, fontScale: 1 },
+        insets: { top: 0, right: 0, bottom: 0, left: 0 },
+      };
+      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+      res.end(doc.buildAppDocument(pkg, boot).html);
+    }, (e) => res.writeHead(500).end(String(e)));
     return;
   }
   if (url.pathname === '/classify' && req.method === 'POST') {

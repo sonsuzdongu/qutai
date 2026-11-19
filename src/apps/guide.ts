@@ -10,7 +10,7 @@ export const APP_GUIDE = `Qutai apps: guide and contract 1
 
 WHAT AN APP IS
 - Files: index.html (required), plus .css and .js files (flat names, lowercase, at most ${PACKAGE_LIMITS.files} files, ${PACKAGE_LIMITS.fileBytes / 1024} KB each, ${PACKAGE_LIMITS.totalBytes / 1024} KB in all). Use exactly index.html + style.css + app.js unless there is a reason. Link them with <link rel="stylesheet" href="style.css"> and <script src="app.js"></script> at the end of <body>; Qutai puts them inline.
-- It runs offline in its own sandboxed WebView: NO network (fetch, XHR, WebSocket, CDNs, web fonts, external images all fail), no navigation or links to websites, no iframes, no forms that submit, no eval/new Function, no localStorage/IndexedDB/cookies. Images: inline SVG or data: URLs only. Plain JavaScript (modern syntax is fine), no frameworks, no imports or modules.
+- It runs offline in its own sandboxed WebView: NO network (fetch, XHR, WebSocket, CDNs, web fonts, external images all fail), no navigation or links to websites, no iframes, object or embed, no document.write, no forms that submit, no eval/new Function, no localStorage/IndexedDB/cookies. Images: inline SVG or data: URLs only. Plain JavaScript (modern syntax is fine), no frameworks, no imports or modules.
 - The global object \`qutai\` (injected before your code) is the only way to the phone. Every call returns a Promise; failures reject with an Error that has .code.
 
 STORAGE (all data must go here; it survives restarts; ${LIMITS.quotaBytes / 1024 / 1024} MB per app, one value or document at most ${LIMITS.valueBytes / 1024} KB)

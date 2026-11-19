@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 826 decisions (110 owner, 632 default, 84 waiting); 163 ids moved to Details.
+Totals: 826 decisions (110 owner, 633 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -37,7 +37,6 @@ The open questions, in one place (each row says what the app does today).
 | `SCR-35` | App Review notes for scripts, and whether Qutai needs Google Play's in-app way to report AI output, are open. The proposed review notes… | [20](20-page-scripts.md) |
 | `APPS-14` | Each app may store up to 5 MB of data, counted in UTF-8 bytes. One value or document may be up to 256 KB, a batch up to 100 operations,… | [22](22-apps.md) |
 | `APPS-17` | The 20 newest versions plus the current one are kept, and older ones are deleted when a new one is saved. Today: 20. | [22](22-apps.md) |
-| `APPS-42` | Today accepted: on Android an app can still get WebRTC from `window[0]` of a fresh `about:blank` frame (break-out 45/46; iOS 46/46); DNS prefetch is off but rests on the engine. | [22](22-apps.md) |
 | `APPS-43` | Phase 3 phone features are each declared and asked per app. `assistant.ask` shows each question and its cost source first, and links ask… | [22](22-apps.md) |
 | `APPS-45` | There is no report button for AI-generated apps. Today: none. | [22](22-apps.md) |
 | `APPS-46` | The privacy policies say nothing about apps yet, and the legal version is not bumped. The proposed sentence: apps are stored only on the… | [22](22-apps.md) |
@@ -650,7 +649,7 @@ Moved to Details (ids retired, not reused): `IMG-2`, `IMG-4`, `IMG-5`, `IMG-7`, 
 | `APPS-5` | Each app runs in its own WebView, created when it opens and destroyed when it closes. It has its own data… | Owner | 2026-11-19 |
 | `APPS-7` | Web storage, cookies and the browser's powerful APIs are refused inside apps: | Default |  |
 | `APPS-8` | An app never navigates. Only its own document (and `#fragment` links inside it) is allowed. Links,… | Default |  |
-| `APPS-9` | Frames and plugins are not allowed. `iframe`, `frame`, `object`, `embed` and `portal` elements are removed… | Default |  |
+| `APPS-9` | Frames and plugins are not allowed: no script API can add a frame, frame markup is neutralised at build… | Default | 2026-11-19 |
 | `APPS-10` | The app's WebView has file access, location, camera and microphone switched off. Mixed content, form… | Default |  |
 | `APPS-11` | The app reaches the phone only through bridge contract 1. Every call is checked in this order: known call,… | Owner | 2026-11-19 |
 | `APPS-12` | Permissions work as follows: | Default |  |
@@ -677,7 +676,7 @@ Moved to Details (ids retired, not reused): `IMG-2`, `IMG-4`, `IMG-5`, `IMG-7`, 
 | `APPS-39` | Restore re-checks each app and skips one that fails, never the whole restore. | Default |  |
 | `APPS-40` | If a server backup with apps' data is over the account's per-backup limit, it is made again without apps'… | Default |  |
 | `APPS-41` | On Android, apps run in a native sandbox (a patched WebView prop, `appSandbox`, runner only). It blocks… | Default |  |
-| `APPS-42` | Some residual risks are accepted for phase 1: | **Waiting** |  |
+| `APPS-42` | Residual app risks accepted: WebRTC can't be switched off in a WebView (the `window[0]` frame route is closed, `APPS-9`); DNS prefetch… | Default | 2026-11-19 |
 | `APPS-43` | Phase 3 phone features are each declared and asked per app. `assistant.ask` shows each question and its… | **Waiting** |  |
 | `APPS-44` | Phase 4 network goes only through Qutai's `network.fetch`, to https hosts listed in the manifest, with no… | Default |  |
 | `APPS-45` | There is no report button for AI-generated apps. Today: none. | **Waiting** |  |

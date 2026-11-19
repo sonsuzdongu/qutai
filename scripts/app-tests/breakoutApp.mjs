@@ -23,6 +23,7 @@ export function breakoutFiles(port = 8793) {
 <div class="bg"></div>
 <form id="f" action="${base}/form" method="post"><input name="x" value="secret"></form>
 <a id="link" href="${base}/link">link</a>
+<iframe id="static-frame" onload="window.__staticFrame = (window[0] && window[0].RTCPeerConnection) ? 'reachable' : 'no'"></iframe>
 <script src="app.js"></script>
 </body></html>`,
     'style.css': `body { padding: 1rem; } li.pass { color: var(--qutai-text); } li.fail { color: var(--qutai-danger); font-weight: 700; }
@@ -111,6 +112,47 @@ async function run() {
     } catch (e) {}
     return 'fresh RTCPeerConnection from window[0]';
   });
+  // Every other way of getting a frame (and its window[0]) into the document (phase 2, closed 19 Nov 2026 by the
+  // insertion guard): each must leave no frame and no reachable RTCPeerConnection, checked synchronously.
+  const FRAMES = 'iframe,frame,object,embed,portal,fencedframe';
+  const frameRoutes = {
+    'markup in index.html': () => {},
+    'innerHTML with onload': () => { const d = document.createElement('div'); document.body.append(d); d.innerHTML = '<iframe onload="window.__fr = this"></iframe>'; },
+    'outerHTML': () => { const d = document.createElement('div'); document.body.append(d); d.outerHTML = '<iframe></iframe>'; },
+    'insertAdjacentHTML': () => document.body.insertAdjacentHTML('beforeend', '<IFRAME/>'),
+    'a string that changes on each read': () => { let n = 0; const d = document.createElement('div'); document.body.append(d); d.innerHTML = { toString: () => (n++ ? '<iframe></iframe>' : '<b></b>') }; },
+    'shadow root innerHTML': () => { const h = document.createElement('div'); document.body.append(h); h.attachShadow({ mode: 'closed' }).innerHTML = '<iframe></iframe>'; },
+    'shadow root appendChild': () => { const h = document.createElement('div'); document.body.append(h); h.attachShadow({ mode: 'open' }).appendChild(document.createElement('iframe')); },
+    'a detached closed shadow root moved in': () => { const h = document.createElement('div'); h.attachShadow({ mode: 'closed' }).append(document.createElement('iframe')); document.body.append(h); },
+    'DOMParser and adoptNode': () => { const doc = new DOMParser().parseFromString('<div><iframe></iframe></div>', 'text/html'); document.body.appendChild(document.adoptNode(doc.body.firstChild)); },
+    'XHTML DOMParser': () => { const doc = new DOMParser().parseFromString('<x xmlns="http://www.w3.org/1999/xhtml"><iframe/></x>', 'application/xhtml+xml'); document.body.append(document.importNode(doc.documentElement, true)); },
+    'template content': () => { const t = document.createElement('template'); t.innerHTML = '<iframe></iframe>'; document.body.append(t.content.cloneNode(true)); },
+    'createHTMLDocument': () => { const doc = document.implementation.createHTMLDocument(''); const f = doc.createElement('iframe'); doc.body.append(f); document.body.append(document.adoptNode(doc.body)); },
+    'document.write': () => document.write('<iframe></iframe>'),
+    'document.open': () => document.open(),
+    'execCommand insertHTML': () => { const e = document.createElement('div'); e.contentEditable = 'true'; document.body.append(e); e.focus(); document.execCommand('insertHTML', false, '<iframe></iframe>'); },
+    'Range.insertNode': () => { const r = document.createRange(); r.selectNodeContents(document.body); r.insertNode(document.createElement('iframe')); },
+    'Range.surroundContents': () => { const p = document.createElement('p'); p.textContent = 'x'; document.body.append(p); const r = document.createRange(); r.selectNodeContents(p); r.surroundContents(document.createElement('iframe')); },
+    'createContextualFragment': () => { const r = document.createRange(); r.selectNode(document.body); document.body.append(r.createContextualFragment('<iframe></iframe>')); },
+    'text node after()': () => { const t = document.createTextNode('x'); document.body.append(t); t.after(document.createElement('iframe')); },
+    'replaceChildren': () => { const d = document.createElement('div'); document.body.append(d); d.replaceChildren(document.createElement('iframe')); },
+    'insertAdjacentElement': () => document.body.insertAdjacentElement('beforeend', document.createElement('iframe')),
+    'object element': () => document.body.append(Object.assign(document.createElement('object'), { data: 'about:blank' })),
+    'embed element': () => document.body.append(document.createElement('embed')),
+    'setHTMLUnsafe with a declarative shadow root': () => { const d = document.createElement('div'); document.body.append(d); d.setHTMLUnsafe('<div><template shadowrootmode="closed"><iframe></iframe></template></div>'); },
+    'Node.prototype.appendChild via call': () => Node.prototype.appendChild.call(document.body, document.createElement('iframe')),
+  };
+  for (const [name, route] of Object.entries(frameRoutes)) {
+    await attempt('no frame window via ' + name, () => {
+      try { route(); } catch (e) {}
+      const w = window[0] || window.frames[0];
+      const R = w && (w.RTCPeerConnection || w.webkitRTCPeerConnection);
+      const count = window.length;
+      document.querySelectorAll(FRAMES).forEach((f) => f.remove());
+      if (window.__staticFrame === 'reachable') return 'the static frame reached WebRTC';
+      return (!R && count === 0) || (R ? 'fresh RTCPeerConnection from window[0]' : count + ' frame window(s)');
+    });
+  }
   await attempt('parent and top are this window', () => (window.parent === window && window.top === window && !window.opener) || 'has a parent');
 
   // Site data.

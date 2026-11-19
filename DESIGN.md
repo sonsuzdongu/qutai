@@ -19,6 +19,8 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Apps: no script API can add a frame any more and frame markup is neutralised at build, which closes
+  the Android WebRTC route through `window[0]` (`APPS-9`, `APPS-42`, no longer waiting for the owner).
 - **2026-11-19:** Deleting and account or security changes on a site get Qutai's own approval (`PAY-26`, request_approval
   kind "change"; `UNTR-19` no longer a chat question), and the final payment button is also recognised by context (`PAY-9`).
 - **2026-11-19:** The app refuses typing into password, one-time-code, card-number and security-code fields and never
@@ -203,7 +205,7 @@ One file per area. "Rules" counts the decisions with ids; "Waiting" the ones sti
 | 19 | [Cookies](docs/design/19-cookies.md) | 11 | 0 | The user can ask "Which cookies does this page have?". |
 | 20 | [Page scripts](docs/design/20-page-scripts.md) | 30 | 7 | When reading the page isn't enough ("how many links are on this page", "collect this table"), the assistant can run a small piece of JavaScript on the page. |
 | 21 | [Image editing and filters](docs/design/21-image-editing.md) | 14 | 0 | The assistant can make edited copies of an image the user attached, entirely on the phone. |
-| 22 | [Apps inside Qutai](docs/design/22-apps.md) | 42 | 6 | The assistant can build small personal apps on request ("build me an app where I can keep my notes"). |
+| 22 | [Apps inside Qutai](docs/design/22-apps.md) | 42 | 5 | The assistant can build small personal apps on request ("build me an app where I can keep my notes"). |
 | 23 | [Downloads and opening Qutai from other apps](docs/design/23-downloads-and-links.md) | 16 | 0 | The decisions taken before a download starts (who asked, which files warn, which addresses work), and what a link, a shared text or a `qutai://` link from… |
 | 24 | [Reader mode, media and downloads on screen](docs/design/24-reader-and-media.md) | 21 | 2 | What the user sees when reading an article, playing a video or audio, and downloading a file, and how web pages get the camera and microphone. |
 | 25 | [Voice input and read-aloud](docs/design/25-voice.md) | 16 | 0 | Speaking to Qutai instead of typing (the panel's microphone and holding the Qutai button), and Qutai reading text out loud. |

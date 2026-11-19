@@ -164,12 +164,20 @@ Android emulator, API 36, 45/46 blocked; the leak recorder got nothing on either
   removes the constructors; the frame guard (§8) removes them in every frame too.
   - iOS: closed in the test. The guard runs as a user script in every frame, including a fresh `about:blank` one, so
     `window[0]` of such a frame has no `RTCPeerConnection`.
-  - **Android: still open.** Its document-start scripts don't run in a frame's initial `about:blank` document, so code
-    that adds an `about:blank` frame and reads `window[0]` before the lockdown removes the frame gets a fresh
-    `RTCPeerConnection` (the one failing case). Closing it needs a guard on every way of putting a frame into the
-    document (append and insert calls, `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, parsing),
-    not yet built. Until then: the import and approval screens flag `RTCPeerConnection`, `iframe` and `frames[`
-    (obfuscated code can avoid the flags), and the app needs the user to have turned it on.
+  - **Android: closed in the app document, 19 Nov 2026.** Its document-start scripts don't run in a frame's initial
+    `about:blank` document, so before this a fresh frame's `window[0]` had a fresh `RTCPeerConnection`. Now no frame
+    can exist: the lockdown refuses, *before* the insertion, every script API that would put an `iframe`, `frame`,
+    `object`, `embed`, `portal` or `fencedframe` anywhere (the `Node`, `Element`, `Document`, `DocumentFragment`,
+    `CharacterData`, `DocumentType`, `ShadowRoot` and `Range` insertion methods, checking the node, everything under
+    it and open shadow roots; `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `setHTML`, `setHTMLUnsafe`,
+    `createContextualFragment`, `DOMParser.parseFromString`, `Document.parseHTMLUnsafe` and `execCommand('insertHTML')`
+    when the string holds a frame start tag, read once; `document.body =`), `document.write`, `writeln` and `open` are
+    off, and frame tags in the app's own markup are turned into unknown elements when the document is built (the
+    parser would otherwise create the frame before any script). Before the insertion matters: inserting a frame
+    creates its window and can run its `onload` at once. Checked in desktop Chromium (no frame guard in frames, like
+    Android) with 25 frame routes in the break-out app: all blocked; on the Android emulator: see the test checklist.
+    What remains: an engine bug that creates a browsing context some other way, and the user's own paste of HTML into
+    an app's editable area (the browser's paste is not a script API; it needs the user to paste a frame).
 - **DNS prefetch**: switched off in every app document (`x-dns-prefetch-control: off`, which can't be switched back on;
   `<link rel=dns-prefetch>` is removed). An engine that ignores the switch could still resolve host names in links,
   and a DNS lookup can carry data in the host name to that domain's name server (low bandwidth, no answer reaches the

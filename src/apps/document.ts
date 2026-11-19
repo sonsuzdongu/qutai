@@ -168,6 +168,122 @@ function scrub(node) {
   }
   if (node.querySelectorAll) Array.prototype.forEach.call(node.querySelectorAll('iframe,frame,object,embed,portal'), scrub);
 }
+// The frame guard's main-frame half (decided 19 Nov 2026): no script API may put a frame element anywhere, so no new
+// browsing context (and no window[0] with un-stubbed WebRTC) can ever exist. Checked before the insertion, because
+// inserting a frame creates its window and can run its onload synchronously, before any observer. Node insertions
+// look at the node and everything under it; HTML strings are refused when they hold a frame start tag (only a start
+// tag can make an element); document.write/open are off. The observer below stays as a second line.
+var FRAME_SEL = 'iframe,frame,object,embed,portal,fencedframe';
+var FRAME_TAG = /<\\s*(iframe|frame|object|embed|portal|fencedframe)(?=[\\s\\/>])/i;
+var FRAME_NAME = /^(iframe|frame|object|embed|portal|fencedframe)$/i;
+function framesIn(node) {
+  if (!node || typeof node !== 'object') return false;
+  if (node.nodeType === 1 && FRAME_NAME.test(node.localName || '')) return true;
+  if ((node.nodeType === 1 || node.nodeType === 11 || node.nodeType === 9) && node.querySelector) {
+    if (node.querySelector(FRAME_SEL)) return true;
+    var hosts = node.querySelectorAll('*');
+    for (var i = 0; i < hosts.length; i++) if (hosts[i].shadowRoot && framesIn(hosts[i].shadowRoot)) return true;
+    if (node.nodeType === 1 && node.shadowRoot && framesIn(node.shadowRoot)) return true;
+  }
+  return false;
+}
+function noFrames(what) {
+  diag('blocked', what + ': frames are not allowed in Qutai apps.');
+  throw new TypeError('Frames (iframe, frame, object, embed) are not allowed in Qutai apps.');
+}
+function guardMethod(proto, name, nodesFrom) {
+  if (!proto) return;
+  var original;
+  try { original = proto[name]; } catch (e) { return; }
+  if (typeof original !== 'function') return;
+  define(proto, name, function () {
+    var nodes = nodesFrom(arguments);
+    for (var i = 0; i < nodes.length; i++) if (framesIn(nodes[i])) noFrames(name);
+    return original.apply(this, arguments);
+  });
+}
+function guardHtmlMethod(proto, name, index) {
+  if (!proto) return;
+  var original;
+  try { original = proto[name]; } catch (e) { return; }
+  if (typeof original !== 'function') return;
+  define(proto, name, function () {
+    var args = Array.prototype.slice.call(arguments);
+    // Turned into a string once, so a value that changes its text on each toString can't slip past the check.
+    if (args.length > index) { args[index] = String(args[index]); if (FRAME_TAG.test(args[index])) noFrames(name); }
+    return original.apply(this, args);
+  });
+}
+function guardHtmlSetter(proto, name) {
+  if (!proto) return;
+  var d;
+  try { d = Object.getOwnPropertyDescriptor(proto, name); } catch (e) { return; }
+  if (!d || !d.set) return;
+  try {
+    Object.defineProperty(proto, name, {
+      get: d.get,
+      set: function (v) { var html = String(v); if (FRAME_TAG.test(html)) noFrames(name); return d.set.call(this, html); },
+      enumerable: d.enumerable,
+      configurable: false
+    });
+  } catch (e) {}
+}
+function guardNodeSetter(proto, name) {
+  if (!proto) return;
+  var d;
+  try { d = Object.getOwnPropertyDescriptor(proto, name); } catch (e) { return; }
+  if (!d || !d.set) return;
+  try {
+    Object.defineProperty(proto, name, {
+      get: d.get,
+      set: function (v) { if (framesIn(v)) noFrames(name); return d.set.call(this, v); },
+      enumerable: d.enumerable,
+      configurable: false
+    });
+  } catch (e) {}
+}
+var all = function (a) { return Array.prototype.slice.call(a); };
+var first = function (a) { return [a[0]]; };
+var W = window;
+var P = function (n) { return W[n] && W[n].prototype; };
+guardMethod(P('Node'), 'appendChild', first);
+guardMethod(P('Node'), 'insertBefore', first);
+guardMethod(P('Node'), 'replaceChild', first);
+['Element', 'Document', 'DocumentFragment', 'CharacterData', 'DocumentType'].forEach(function (c) {
+  ['append', 'prepend', 'before', 'after', 'replaceWith', 'replaceChildren', 'moveBefore'].forEach(function (m) { guardMethod(P(c), m, all); });
+});
+guardMethod(P('Element'), 'insertAdjacentElement', function (a) { return [a[1]]; });
+guardMethod(P('Range'), 'insertNode', first);
+guardMethod(P('Range'), 'surroundContents', first);
+guardHtmlSetter(P('Element'), 'innerHTML');
+guardHtmlSetter(P('Element'), 'outerHTML');
+guardHtmlSetter(P('ShadowRoot'), 'innerHTML');
+guardHtmlMethod(P('Element'), 'insertAdjacentHTML', 1);
+guardHtmlMethod(P('Element'), 'setHTML', 0);
+guardHtmlMethod(P('Element'), 'setHTMLUnsafe', 0);
+guardHtmlMethod(P('ShadowRoot'), 'setHTML', 0);
+guardHtmlMethod(P('ShadowRoot'), 'setHTMLUnsafe', 0);
+guardHtmlMethod(P('Range'), 'createContextualFragment', 0);
+guardHtmlMethod(P('DOMParser'), 'parseFromString', 0);
+if (W.Document && typeof W.Document.parseHTMLUnsafe === 'function') {
+  var parseUnsafe = W.Document.parseHTMLUnsafe;
+  define(W.Document, 'parseHTMLUnsafe', function (html) { html = String(html); if (FRAME_TAG.test(html)) noFrames('parseHTMLUnsafe'); return parseUnsafe.call(this, html); });
+}
+guardNodeSetter(P('Document'), 'body');
+if (P('Document')) {
+  var execCommand = P('Document').execCommand;
+  if (typeof execCommand === 'function') define(P('Document'), 'execCommand', function (cmd, ui, value) {
+    if (/^(inserthtml|paste)$/i.test(String(cmd))) {
+      var html = String(value);
+      if (/^paste$/i.test(String(cmd)) || FRAME_TAG.test(html)) noFrames('execCommand ' + cmd);
+      return execCommand.call(this, cmd, ui, html);
+    }
+    return execCommand.apply(this, arguments);
+  });
+  ['write', 'writeln', 'open'].forEach(function (m) {
+    define(P('Document'), m, function () { diag('blocked', 'document.' + m + ' is not available in Qutai apps.'); throw new TypeError('document.' + m + ' is not available in Qutai apps. Use the DOM instead.'); });
+  });
+}
 new MutationObserver(function (records) {
   records.forEach(function (r) { Array.prototype.forEach.call(r.addedNodes, scrub); });
 }).observe(document, { childList: true, subtree: true });
@@ -367,6 +483,9 @@ function lineAt(text: string, offset: number): number {
   return n;
 }
 
+/** A frame element's start tag (only a start tag makes an element; the name ends at a space, "/" or ">"). */
+const FRAME_START = /<(iframe|frame|object|embed|portal|fencedframe)(?=[\s/>])/gi;
+
 const TAG = /<script\b([^>]*)>\s*<\/script\s*>|<link\b[^>]*>|<meta\b[^>]*>|<base\b[^>]*>/gi;
 
 function attr(tag: string, name: string): string | null {
@@ -381,7 +500,14 @@ function inlineFiles(pkg: AppPackage, fragment: string, start: number, source: s
   TAG.lastIndex = 0;
   let m: RegExpExecArray | null;
   const plain = (end: number) => {
-    if (end > last) chunks.push({ text: fragment.slice(last, end), file: entry, line: lineAt(source, start + last) });
+    if (end <= last) return;
+    // Frames in the app's own markup become harmless unknown elements: the parser would otherwise create their window
+    // (and run their onload) before any script could stop it (APPS-42).
+    const text = fragment.slice(last, end).replace(FRAME_START, (_all, name: string) => {
+      notes.push(`left out a <${name.toLowerCase()}>: frames are not allowed in Qutai apps`);
+      return `<qutai-removed-${name.toLowerCase()}`;
+    });
+    chunks.push({ text, file: entry, line: lineAt(source, start + last) });
   };
   while ((m = TAG.exec(fragment))) {
     const tag = m[0];

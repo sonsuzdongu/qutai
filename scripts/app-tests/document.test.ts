@@ -257,7 +257,7 @@ test('the break-out test app is a valid package; its outside loads are left out 
   const files = breakoutFiles(8793);
   assert.deepEqual(checkFiles(files, 'index.html'), []);
   const built = buildAppDocument(pkg(files), BOOT);
-  assert.equal(built.notes.length, 3);
+  assert.equal(built.notes.length, 4, "three outside loads and the static frame");
   const head = built.html.slice(0, built.html.indexOf('</head>'));
   assert.ok(!/<script src=|<link /.test(head));
   assert.doesNotThrow(() => new vm.Script(files['app.js']));
@@ -314,4 +314,21 @@ test('mapStack keeps at most six mapped lines', () => {
   const out = mapStack(Array.from({ length: 20 }, (_, i) => `at f${i} (https://a.apps.qutai.invalid/:${i + 20}:1)`).join('\n'), (n) => ({ file: 'app.js', line: n }));
   assert.equal(out.split('\n').length, 6);
   assert.match(out, /^at f0 \(app\.js:20\)/);
+});
+
+test('frames in the app markup become harmless elements, and the helper refuses frame markup (APPS-42)', () => {
+  const built = buildAppDocument(
+    pkg({ 'index.html': '<body><IFRAME onload="x()"></iframe><object data="a"></object><embed/><p>iframe text</p><iframes></iframes></body>' }),
+    BOOT,
+  );
+  assert.doesNotMatch(built.html.split('</script>').slice(-1)[0], /<(iframe|object|embed)[\s/>]/i);
+  assert.match(built.html, /<qutai-removed-iframe onload/);
+  assert.match(built.html, /<iframes>/, 'other tag names are left alone');
+  assert.equal(built.notes.filter((n) => /frames are not allowed/.test(n)).length, 3);
+  // The regular expression survives the template literal it is written in (a lost backslash once let "<iframe onload" through).
+  assert.match(built.html, /var FRAME_TAG = \/<\\s\*\(iframe\|frame\|object\|embed\|portal\|fencedframe\)\(\?=\[\\s\\\/>\]\)\/i;/);
+  const tag = /var FRAME_TAG = (\/.*\/i);/.exec(built.html)![1];
+  const re = new Function(`return ${tag}`)() as RegExp;
+  for (const yes of ['<iframe>', '<iframe onload="a">', '< IFRAME/>', '<object data=x>', '<embed\n', '<fencedframe>']) assert.ok(re.test(yes), yes);
+  for (const no of ['iframe', '<iframes>', '<b>frame</b>', '&lt;iframe&gt;', '<objectx>']) assert.ok(!re.test(no), no);
 });
