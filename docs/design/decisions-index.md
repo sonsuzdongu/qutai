@@ -1162,6 +1162,7 @@ Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`
 | `WEB-8` | Demo videos are real recordings made on brand-free demo sites, under written honesty rules. Qutai is… | Default |  |
 | `WEB-9` | The brand line and page title are "Qutai: Agentic Browser". The site always uses the light parchment look… | Default |  |
 | `WEB-11` | Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end… | **Waiting** |  |
+| `WEB-12` | The features page describes only what the code does today, from the design record, with limits stated… | Default |  |
 
 Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 

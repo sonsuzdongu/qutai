@@ -6,12 +6,13 @@ Qutai's marketing site lives in `webpage/`, a separate project inside this repos
 
 ## How it works
 
-1. The site is a single long page in English (`/en/`) and Turkish (`/tr/`). It is written in React, turned into static HTML at build time, and served by Cloudflare Workers. A small Worker answers only `/`: it sends the visitor to `/en/` or `/tr/` by the `lang` cookie, then by the browser's language, and otherwise to English.
+1. The site is a long home page in English (`/en/`) and Turkish (`/tr/`), plus a features page (`/en/features/`, `/tr/features/`). It is written in React, turned into static HTML at build time, and served by Cloudflare Workers. A small Worker answers only `/` (and `/features`, `/privacy-policy`): it sends the visitor to `/en/` or `/tr/` by the `lang` cookie, then by the browser's language, and otherwise to English.
 2. The page has these parts: the hero, a statement beside a phone mock drawn from the app's own strings and colours, scenarios, memory, privacy, the browser, a comparison table with eight mobile browsers, getting started, open source, status, and the footer. The illustrations are robot "miniature" paintings (`webpage/ART.md`).
-3. The app's privacy policy has its own pages (`/en/privacy-policy/`, `/tr/privacy-policy/`). The text is copied from the store build's policy (`src/legal/proDocuments.ts`) with `npm run legal`, and `npm run check` fails when the copy no longer matches the app.
-4. `/intent/sign-in/email?token=…` is where the sign-in email links, because mail apps such as Gmail don't make a `qutai://` link tappable. On a phone the page opens Qutai once by itself and always shows an "Open Qutai" button. On a computer it says the link is for the phone. It signs nothing in, removes the token from the address bar, and logs nothing. The Worker also serves the App Link and Universal Link files (404 until they are set up).
-5. The site loads nothing from other websites (no fonts, analytics or CDNs), and its only cookie is `lang`.
-6. When an app feature lands, a session updates the site and the comparison column, for example d14bd7a, 0d51a9e, 2767fae, 3dc3119 and 441b6d1.
+3. **Features page** (`/<lang>/features/`, static, no script): every feature in ten groups written from this design record (`webpage/src/data/features.ts`), each with example requests to the assistant; the principles, "What leaves the phone", and the "Deliberately not built" list. Its picture is an illuminated medallion drawn in SVG (Qutai's mark in the centre, one petal per group, each a link to its group). The header, the footer and the home page's browser section link to it.
+4. The app's privacy policy has its own pages (`/en/privacy-policy/`, `/tr/privacy-policy/`). The text is copied from the store build's policy (`src/legal/proDocuments.ts`) with `npm run legal`, and `npm run check` fails when the copy no longer matches the app.
+5. `/intent/sign-in/email?token=…` is where the sign-in email links, because mail apps such as Gmail don't make a `qutai://` link tappable. On a phone the page opens Qutai once by itself and always shows an "Open Qutai" button. On a computer it says the link is for the phone. It signs nothing in, removes the token from the address bar, and logs nothing. The Worker also serves the App Link and Universal Link files (404 until they are set up).
+6. The site loads nothing from other websites (no fonts, analytics or CDNs), and its only cookie is `lang`.
+7. When an app feature lands, a session updates the site, the features page and the comparison column, for example d14bd7a, 0d51a9e, 2767fae, 3dc3119 and 441b6d1.
 
 ## The rules
 
@@ -33,6 +34,8 @@ Qutai's marketing site lives in `webpage/`, a separate project inside this repos
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: 3ea22b7, eb6e651, f25fa0b, a1d1ca6
 - **`WEB-11`** Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end sync, and the comparison's sync note. The owner updates them.
   Status: Waiting for the owner ([TODO.md](../../TODO.md#decisions-waiting-for-the-owner-collected-17-nov-2026)) · Why: listed among the set-up tasks only the owner can do · Source: TODO.md › Set-up only the owner can do
+- **`WEB-12`** The features page describes only what the code does today, from this design record and `backend/DESIGN.md`, with limits stated plainly; its example requests are things the assistant handles as written. A feature that changes is updated there in both languages together with the home page.
+  Status: Default (manager or implementing session; open to change) · Why: the owner asked for a features page built from DESIGN.md and backend/DESIGN.md, with example prompts (19 Nov 2026); WEB-1 applies · Enforced: In the app: webpage `npm run check` (both pages exist, ten groups, no script, no inline style, linked from home) · Source: this change
 
 ## Details
 
@@ -46,7 +49,7 @@ Qutai's marketing site lives in `webpage/`, a separate project inside this repos
 
 ## Where it lives
 
-- `webpage/README.md` (read first), `webpage/src/data/comparison.ts`, `webpage/src/i18n/en.ts` and `tr.ts`, `webpage/worker/`, `webpage/ART.md`
+- `webpage/README.md` (read first), `webpage/src/data/comparison.ts`, `webpage/src/data/features.ts` and `webpage/src/components/FeaturesPage.tsx`, `webpage/src/i18n/en.ts` and `tr.ts`, `webpage/worker/`, `webpage/ART.md`
 
 ## Disagreements between sources
 

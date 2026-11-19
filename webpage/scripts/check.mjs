@@ -79,6 +79,23 @@ for (const lang of ['en', 'tr']) {
 expect(JSON.stringify(privacy) === JSON.stringify(await policyFromApp()), 'src/data/privacy.json differs from the app (src/legal/proDocuments.ts): run npm run legal');
 expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/privacy-policy/'), 'sitemap lists the privacy policy');
 
+// Every feature: a static page per language with every group, no script, nothing from another origin.
+for (const lang of ['en', 'tr']) {
+  const html = await readFile(`${dist}${lang}/features/index.html`, 'utf8').catch(() => '');
+  expect(html.includes(`<html lang="${lang}"`), `${lang}/features: page with lang attribute`);
+  expect(html.includes(`<link rel="canonical" href="`) && html.includes('hreflang="x-default"'), `${lang}/features: canonical and hreflang`);
+  expect(!/<script\b/.test(html), `${lang}/features: no script`);
+  expect(!/\sstyle="/.test(html), `${lang}/features: no inline style (the CSP forbids it)`);
+  expect((html.match(/class="fgroup"/g) ?? []).length === 10, `${lang}/features: ten groups`);
+  const loaded = [...html.matchAll(/\s(?:src|href)="([^"]+)"/g)].map((m) => m[1]).filter((u) => !u.startsWith('#'));
+  for (const url of loaded.filter((u) => /^(https?:)?\/\//.test(u) && !/rel="(?:canonical|alternate)"/.test(u))) {
+    expect(!html.includes(`<link rel="stylesheet" href="${url}"`) && !html.includes(`src="${url}"`), `${lang}/features: loads ${url}`);
+  }
+  const home = await readFile(`${dist}${lang}/index.html`, 'utf8');
+  expect(home.includes(`href="/${lang}/features/"`), `${lang}: home links to the features page`);
+}
+expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/features/'), 'sitemap lists the features page');
+
 for (const f of ['robots.txt', 'sitemap.xml', '404.html', '_headers', 'og-en.png', 'og-tr.png', 'apple-touch-icon.png']) {
   await access(`${dist}${f}`).catch(() => failures.push(`missing ${f}`));
 }
@@ -91,4 +108,4 @@ if (failures.length) {
   console.error(`✗ ${failures.length} check(s) failed:\n  ${failures.join('\n  ')}`);
   process.exit(1);
 }
-console.log(`✓ ${cases.length} language cases, both pages and their privacy policy pages, no third-party loads`);
+console.log(`✓ ${cases.length} language cases, both pages with their features and privacy policy pages, no third-party loads`);

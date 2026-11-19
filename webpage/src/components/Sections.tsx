@@ -13,9 +13,11 @@ function rememberLanguage(lang: string) {
   document.cookie = `lang=${lang}; Path=/; Max-Age=${LANG_COOKIE_MAX_AGE}; SameSite=Lax${secure}`;
 }
 
-export function Header() {
+/** `page` is the path after the language for pages other than home (`features/`): section links then go home. */
+export function Header({ page }: { page?: string } = {}) {
   const { t, lang } = useI18n();
   const other = lang === 'en' ? 'tr' : 'en';
+  const home = page ? `/${lang}/` : '';
   return (
     <header className="site-header">
       <a className="skip" href="#main">
@@ -27,16 +29,19 @@ export function Header() {
           <span>Qutai</span>
         </a>
         <nav aria-label={t('nav.label')} className="main-nav">
-          <a href="#agent">{t('nav.agent')}</a>
-          <a href="#privacy">{t('nav.privacy')}</a>
-          <a href="#compare">{t('nav.compare')}</a>
-          <a href="#open-source">{t('nav.openSource')}</a>
-          <a href="#status">{t('nav.status')}</a>
+          <a href={`${home}#agent`}>{t('nav.agent')}</a>
+          <a href={`/${lang}/features/`} aria-current={page === 'features/' ? 'page' : undefined}>
+            {t('nav.features')}
+          </a>
+          <a href={`${home}#privacy`}>{t('nav.privacy')}</a>
+          <a href={`${home}#compare`}>{t('nav.compare')}</a>
+          <a href={`${home}#open-source`}>{t('nav.openSource')}</a>
+          <a href={`${home}#status`}>{t('nav.status')}</a>
         </nav>
         <div className="header-actions">
           <a
             className="lang-switch"
-            href={`/${other}/`}
+            href={`/${other}/${page ?? ''}`}
             hrefLang={other}
             lang={other}
             aria-label={t('lang.switchTo')}
@@ -358,7 +363,7 @@ const BROWSER: { icon: IconName; key: 'tabs' | 'reader' | 'blocking' | 'audio' |
 ];
 
 export function BrowserFeatures() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   return (
     <section id="browser" className="section browser" aria-labelledby="browser-title">
       <SectionHead id="browser-title" kicker="browser.kicker" title="browser.title" />
@@ -373,6 +378,12 @@ export function BrowserFeatures() {
           </li>
         ))}
       </ul>
+      <p className="features-more">
+        <a className="button secondary" href={`/${lang}/features/`}>
+          {t('browser.more')}
+          <Icon name="arrow" size={18} />
+        </a>
+      </p>
     </section>
   );
 }
@@ -504,6 +515,9 @@ export function Footer() {
           </li>
           <li>
             <a href={LICENSE_URL}>{t('footer.license')}</a>
+          </li>
+          <li>
+            <a href={`/${lang}/features/`}>{t('nav.features')}</a>
           </li>
           <li>
             <a href={privacyPolicyPath(lang)}>{t('footer.appPrivacy')}</a>

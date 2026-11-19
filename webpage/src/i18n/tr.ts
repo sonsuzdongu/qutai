@@ -20,6 +20,7 @@ export const tr: Messages = {
   'nav.compare': 'Karşılaştırma',
   'nav.openSource': 'Açık kaynak',
   'nav.status': 'Durum',
+  'nav.features': 'Özellikler',
   'nav.github': 'GitHub',
   'nav.home': 'Qutai ana sayfa',
 
@@ -174,7 +175,7 @@ export const tr: Messages = {
     'Varsayılan olarak kapalı. Açarsanız asistan “burada kaç bağlantı var?” gibi soruları, sayfanın internete ve oturumunuza erişimi olmayan kapalı bir kopyasında çalışan bir betikle yanıtlar. Canlı sayfadaki bir betik tam kodu ve uyarılarıyla onayınızı ister, giriş, ödeme ve banka sayfalarında reddedilir; onaylandığında sitenin kendi kodunun yapabildiğini yapabilir. Sakladığınız betikler yalnızca kendi sitelerinde çalışır ve kodları değişince yeniden onay ister.',
   'privacy.apps.title': 'Kendi uygulamalarınız, dışarıya kapalı',
   'privacy.apps.body':
-    '“Notlarımı tutabileceğim bir uygulama yap” deyin: Qutai onu yazar, önizlemesini açar, kendi hatalarını düzeltir ve istediğinizde değiştirir; önceki sürümleri saklar, geri dönebilirsiniz. Uygulamalarınız yeni sekme sayfasındaki Uygulamalarım’da durur. Her biri gezintinizden ayrı, kendi görünümünde çalışır: internete, başka sitelerin çerezlerine ya da oturumlarına, başka bir uygulamanın verisine erişemez. Verisi telefonda kalır, uygulama başına en fazla 5 MB. Uygulama yazmak sıradan bir asistan isteğidir; kendi anahtarınızla ya da Qutai Kredileriyle ödenir.',
+    '“Notlarımı tutabileceğim bir uygulama yap” deyin: Qutai onu yazar, önizlemesini açar, kendi hatalarını düzeltir ve istediğinizde değiştirir; önceki sürümleri saklar, geri dönebilirsiniz. Uygulamalarınız yeni sekme sayfasındaki Uygulamalarım’da durur. Her biri gezintinizden ayrı, kendi görünümünde çalışır: internete, başka sitelerin çerezlerine ya da oturumlarına, başka bir uygulamanın verisine erişemez. Verisi telefonda kalır, uygulama başına en fazla 5 MB. Bir uygulamayı dosya olarak paylaşabilirsiniz; içe aktarılan uygulama siz onaylayana kadar kapalı kalır, uygulamalar şifreli yedeğinize girer. Uygulama yazmak sıradan bir asistan isteğidir; kendi anahtarınızla ya da Qutai Kredileriyle ödenir.',
   'privacy.note':
     'Qutai hizmeti isteğe bağlıdır: Apple, Google ya da e-postayla giriş yapın, kendi anahtarınız yerine Qutai Kredileri kullanın, model yerine Qutai Hızlı, Qutai ya da Qutai Pro seçin. Qutai sunucusu hesabınızı, kredilerinizi ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı ve sayfaları tutmaz. Depodan derlenen sürümlerde bu hizmet yoktur ve hiçbir zaman Qutai sunucusuna bağlanılmaz.',
 
@@ -206,6 +207,7 @@ export const tr: Messages = {
   'browser.save.title': 'PDF ve tam sayfa ekran görüntüsü',
   'browser.save.body':
     'Sayfayı PDF ya da tüm sayfanın birleştirilmiş ekran görüntüsü olarak kaydedin veya çevrimdışı okumak için saklayın.',
+  'browser.more': 'Bütün özellikler, örnek isteklerle',
   'browser.styles.title': 'Her siteye kendi görünümünüz',
   'browser.styles.body':
     'Kırmızı bağlantılar, daha büyük yazı ya da koyu zemin isteyin. Asistan stili önerir; siz onaylayıp denersiniz, sonra o site için Kendi kurallarım’a kaydedersiniz. Orada kapatabilir, düzenleyebilir, dışa ve içe aktarabilirsiniz. Stiller internetten hiçbir şey yükleyemez.',
@@ -274,13 +276,13 @@ export const tr: Messages = {
   'status.limits.3': 'Ödemeyi siz tamamlarsınız; asistanın ödemesine izin verirseniz her ödeme Qutai’ın penceresinde onayınızı bekler',
   'status.limits.4': 'Qutai ile paylaşma ve ana ekran widget’ı şimdilik yalnızca Android’de',
   'status.limits.5': 'Canlı sayfada onayladığınız bir betik, o sitedeki oturumunuzla sitenin kendi kodunun yapabildiğini yapabilir; yalnızca okuyan sorular bunun yerine kapalı bir kopyada çalışır',
-  'status.limits.6': 'Uygulamaların henüz interneti ve konum, kamera, bildirim gibi telefon özellikleri yok; yedeğe girmez, dosya olarak dışa aktarılamaz',
+  'status.limits.6': 'Uygulamaların henüz interneti ve konum, kamera, bildirim gibi telefon özellikleri yok',
   'status.planned': 'Planlananlar',
   'status.planned.1': 'App Store ve Google Play’de yayın',
   'status.planned.2': 'Hesap açmayı seçenler için uçtan uca şifreli eşitleme',
   'status.planned.3': 'Qutai Kredilerini App Store ve Google Play’den satın alma',
   'status.planned.4': 'iPhone’da paylaşım uzantısı ve widget',
-  'status.planned.5': 'Uygulamalar için: dosya olarak dışa ve içe aktarma (mağaza ya da galeri yok), yedekleme, telefon özellikleri, seçtiğiniz sitelere internet, ana ekran kısayolu',
+  'status.planned.5': 'Uygulamalar için: konum, bildirim ve kamera gibi telefon özellikleri, seçtiğiniz sitelere internet, ana ekran kısayolu',
 
   'footer.tagline': 'Agentic Browser',
   'footer.privacy':

@@ -19,6 +19,7 @@ export const en = {
   'nav.compare': 'Compare',
   'nav.openSource': 'Open source',
   'nav.status': 'Status',
+  'nav.features': 'Features',
   'nav.github': 'GitHub',
   'nav.home': 'Qutai home',
 
@@ -173,7 +174,7 @@ export const en = {
     'Off by default. Turned on, the assistant answers questions like “how many links are here?” with a script on a sealed copy of the page, with no internet and no sign-in. A script on the live page needs your approval with its full code and warnings, is refused on sign-in, payment and bank pages, and can then do what the site’s own code can do. Scripts you keep run only on their site and are asked about again when their code changes.',
   'privacy.apps.title': 'Your own apps, sealed off',
   'privacy.apps.body':
-    'Ask for “an app where I can keep my notes” and Qutai writes it, opens a preview, fixes its own errors and changes it when you ask, keeping earlier versions so you can go back. Your apps wait in My apps on the new tab page. Each runs in its own view, apart from your browsing: no internet, no other sites’ cookies or sign-ins, no other app’s data. Its data stays on the phone, up to 5 MB per app. Writing an app is an ordinary assistant request, paid with your own key or Qutai Credits.',
+    'Ask for “an app where I can keep my notes” and Qutai writes it, opens a preview, fixes its own errors and changes it when you ask, keeping earlier versions so you can go back. Your apps wait in My apps on the new tab page. Each runs in its own view, apart from your browsing: no internet, no other sites’ cookies or sign-ins, no other app’s data. Its data stays on the phone, up to 5 MB per app. Share an app as a file; an imported one stays off until you approve it, and apps go into your encrypted backup. Writing an app is an ordinary assistant request, paid with your own key or Qutai Credits.',
   'privacy.note':
     'The Qutai service is optional: sign in with Apple, Google or email, use Qutai Credits instead of your own key, and choose Qutai Fast, Qutai or Qutai Pro instead of a model. Qutai’s server keeps your account, your credits and, for each request, the model, the token count and the cost; not your messages or pages. Builds from the repository leave it out and never contact a Qutai server.',
 
@@ -202,6 +203,7 @@ export const en = {
     'Dictate tasks with the phone’s own speech recognition, on the device when the phone and language allow. Hold the Q button to talk without opening the panel; Qutai listens in the language of your conversation.',
   'browser.save.title': 'PDF and full-page screenshots',
   'browser.save.body': 'Save a page as PDF or a stitched screenshot of the whole page, or keep it for offline reading.',
+  'browser.more': 'See every feature, with example requests',
   'browser.styles.title': 'Your own look for any site',
   'browser.styles.body':
     'Ask for red links, bigger text or a dark background. The assistant proposes the styles; you approve and try them, then keep them for that site in My rules, where you can switch them off, edit, export or import them. Styles can’t load anything from the internet.',
@@ -270,13 +272,13 @@ export const en = {
   'status.limits.3': 'You complete payments yourself, unless you let the assistant pay; then each payment waits for your approval in Qutai’s window',
   'status.limits.4': 'Sharing to Qutai and the home screen widget are Android-only for now',
   'status.limits.5': 'A script you approve on the live page can do what the site’s own code can do, with your sign-in there; questions that only read the page run on a sealed copy instead',
-  'status.limits.6': 'Apps have no internet and no phone features such as location, camera or notifications yet, and are not in backups or exportable as files',
+  'status.limits.6': 'Apps have no internet and no phone features such as location, camera or notifications yet',
   'status.planned': 'Planned',
   'status.planned.1': 'Release in the App Store and Google Play',
   'status.planned.2': 'End-to-end encrypted sync for those who choose an account',
   'status.planned.3': 'Buying Qutai Credits in the App Store and Google Play',
   'status.planned.4': 'Share extension and widget on iPhone',
-  'status.planned.5': 'For apps: export and import as a file (no store or gallery), backup, phone features, internet for sites you choose, a home-screen shortcut',
+  'status.planned.5': 'For apps: phone features such as location, notifications and the camera, internet for sites you choose, a home-screen shortcut',
 
   'footer.tagline': 'Agentic Browser',
   'footer.privacy':

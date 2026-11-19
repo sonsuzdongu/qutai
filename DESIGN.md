@@ -21,6 +21,7 @@ Newest first, one line per change to the design. What happened before 19 Nov 202
 
 - **2026-11-19:** Address bar: the typed text goes to the search engine only after a 200 ms pause in typing, one
   request per word typed without a pause; history keeps its own 120 ms schedule (`UI-22`, owner's decision).
+- **2026-11-19:** Website: a features page (`/en/features/`, `/tr/features/`) written from this record and backend/DESIGN.md, ten groups with example requests, the principles, what leaves the phone and what is deliberately not built, with an illuminated medallion as its picture (`WEB-12`); the home page's apps lines now say export, import and backup are built.
 - **2026-11-19:** Address bar suggestions no longer blank and refill on every letter: the last answer stays until the
   next lands, lookups wait 120 ms while typing, history and engine rows land together, fixed rows stay put (`UI-22`).
 - **2026-11-19:** Read-aloud keeps the phone's own speech engine: an on-device neural voice (Supertonic-3) was measured
@@ -228,7 +229,7 @@ One file per area. "Rules" counts the decisions with ids; "Waiting" the ones sti
 | 39 | [Versioning](docs/design/39-versioning.md) | 4 | 0 | How Qutai's version (for example 0.1.1) and its store build number (for example 101) are set, and who may change them. |
 | 40 | [Signing and builds](docs/design/40-signing-and-builds.md) | 14 | 1 | How Qutai is built (development builds, EAS profiles, store packages, pro-mode test builds), how Android release builds are signed, and the native patches… |
 | 41 | [Legal texts](docs/design/41-legal-texts.md) | 16 | 6 | The privacy policy and terms of use shown in the app (one set for the open-source build, another for pro-mode builds), when users must accept them again,… |
-| 42 | [The website](docs/design/42-website.md) | 9 | 1 | Qutai's marketing site lives in `webpage/`, a separate project inside this repository. |
+| 42 | [The website](docs/design/42-website.md) | 10 | 1 | Qutai's marketing site lives in `webpage/`, a separate project inside this repository. |
 | 43 | [Working on this repository](docs/design/43-working-on-the-repo.md) | 20 | 0 | House rules for anyone who changes Qutai, whether a person or an AI session: how to check work, keep the record, commit, handle secrets, test on phones, and… |
 | 44 | [Deliberately not built](docs/design/44-not-built.md) | 22 | 2 | Features Qutai decided not to build, or postponed, with where the decision is written down. |
 | 45 | [Roadmap decisions](docs/design/45-roadmap-decisions.md) | 9 | 1 | The decisions recorded in `ROADMAP.md` › 5. |

@@ -5,7 +5,9 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const client = `${root}client/`;
-const { render, messages, SITE_URL, CHECKED, formatDate } = await import(`${root}server/entry-server.js`);
+const { render, renderFeatures, messages, SITE_URL, CHECKED, formatDate, FEATURES_CHECKED, FEATURES_PAGE } = await import(
+  `${root}server/entry-server.js`,
+);
 const privacy = JSON.parse(await readFile(fileURLToPath(new URL('../src/data/privacy.json', import.meta.url)), 'utf8'));
 
 if (SITE_URL.endsWith('.example')) {
@@ -160,6 +162,54 @@ ${doc.sections
   await writeFile(`${client}${lang}/privacy-policy/index.html`, page);
 }
 
+// Every feature: /en/features/ and /tr/features/, static, no script (src/components/FeaturesPage.tsx, the content in
+// src/data/features.ts).
+const featuresUrl = (lang) => `${SITE_URL}/${lang}/features/`;
+for (const lang of LANGS) {
+  const other = lang === 'en' ? 'tr' : 'en';
+  const title = FEATURES_PAGE.metaTitle[lang];
+  const description = FEATURES_PAGE.metaDescription[lang];
+  const og = `${SITE_URL}/og-${lang}.png`;
+  const page = `<!doctype html>
+<html lang="${lang}" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${esc(title)}</title>
+    <meta name="description" content="${esc(description)}" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f2e7cf" />
+    <link rel="canonical" href="${featuresUrl(lang)}" />
+    <link rel="alternate" hreflang="en" href="${featuresUrl('en')}" />
+    <link rel="alternate" hreflang="tr" href="${featuresUrl('tr')}" />
+    <link rel="alternate" hreflang="x-default" href="${featuresUrl('en')}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Qutai" />
+    <meta property="og:title" content="${esc(title)}" />
+    <meta property="og:description" content="${esc(description)}" />
+    <meta property="og:url" content="${featuresUrl(lang)}" />
+    <meta property="og:locale" content="${LOCALE[lang]}" />
+    <meta property="og:locale:alternate" content="${LOCALE[other]}" />
+    <meta property="og:image" content="${og}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="${og}" />
+    ${css}
+  </head>
+  <body>
+    <div id="root">${renderFeatures(lang)}</div>
+  </body>
+</html>
+`;
+  await mkdir(`${client}${lang}/features`, { recursive: true });
+  await writeFile(`${client}${lang}/features/index.html`, page);
+}
+
 // The bare root is answered by the Worker (language redirect); no static file may shadow it.
 await rm(`${client}index.html`);
 
@@ -200,6 +250,7 @@ await writeFile(
   `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${LANGS.map((l) => `  <url>\n    <loc>${pageUrl(l)}</loc>\n    <lastmod>${CHECKED}</lastmod>\n${alternates}\n  </url>`).join('\n')}
+${LANGS.map((l) => `  <url>\n    <loc>${featuresUrl(l)}</loc>\n    <lastmod>${FEATURES_CHECKED}</lastmod>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${featuresUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${featuresUrl('en')}" />\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${policyUrl(l)}</loc>\n    <lastmod>${privacy.updated}</lastmod>\n${policyAlternates}\n  </url>`).join('\n')}
 </urlset>
 `,
@@ -222,4 +273,4 @@ await writeFile(
 );
 
 await rm(`${client}.vite`, { recursive: true });
-console.log(`Prerendered ${LANGS.map((l) => `/${l}/, /${l}/privacy-policy/`).join(', ')}, 404.html, robots.txt, sitemap.xml, _headers`);
+console.log(`Prerendered ${LANGS.map((l) => `/${l}/, /${l}/features/, /${l}/privacy-policy/`).join(', ')}, 404.html, robots.txt, sitemap.xml, _headers`);

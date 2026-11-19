@@ -64,6 +64,15 @@ key). `npm run legal` copies it into `src/data/privacy.json`; commit that file. 
 longer matches the app, so after the app's policy changes, run `npm run legal` and rebuild. The pages are static, with
 no script.
 
+### The features page
+
+`/en/features/` and `/tr/features/` list everything Qutai does, in ten groups with example requests, plus the
+principles, what leaves the phone and what is deliberately not built; `/features` redirects by language like `/`.
+The content is `src/data/features.ts` (both languages side by side), written from `DESIGN.md`, `docs/design/` and
+`backend/DESIGN.md`; the page is `src/components/FeaturesPage.tsx`, prerendered without a script. Its picture, the
+medallion, is drawn in SVG from `GROUPS` (one petal per group), so adding a group adds a petal. When an app feature
+lands or changes, update its item here as well as the home page, and the date in `FEATURES_CHECKED`.
+
 ### The sign-in email's link
 
 `/intent/sign-in/email?token=…` (`worker/intent.ts`, run by the Worker: `run_worker_first` includes `/intent/*`) is
