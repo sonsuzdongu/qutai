@@ -170,7 +170,7 @@ export const GROUPS: Group[] = [
           'Searches and reads many pages and PDFs, takes notes and writes a report with its sources under the answer, which you can share as a PDF. It takes a few minutes and costs more than a normal request.',
           'Birçok sayfayı ve PDF’i arar ve okur, not alır, kaynakları yanıtın altında listelenen bir rapor yazar; raporu PDF olarak paylaşabilirsiniz. Birkaç dakika sürer, normal bir istekten daha pahalıdır.',
         ),
-        asks: [t('Research the e-bike rules in Istanbul', 'İstanbul’daki elektrikli bisiklet kurallarını araştır')],
+        asks: [t('Research the e-bike rules in London', 'İstanbul’daki elektrikli bisiklet kurallarını araştır')],
       },
       {
         title: t('Tab groups share one conversation', 'Sekme grubu tek sohbeti paylaşır'),
@@ -214,7 +214,7 @@ export const GROUPS: Group[] = [
         ),
         asks: [
           t('Remember that I’m vegetarian', 'Vejetaryen olduğumu hatırla'),
-          t('My delivery address is Moda Cd. 12, Kadıköy', 'Teslimat adresim Moda Cd. 12, Kadıköy'),
+          t('My delivery address is 12 Camden Road, London NW1', 'Teslimat adresim Moda Cd. 12, Kadıköy'),
         ],
       },
       {
@@ -225,7 +225,7 @@ export const GROUPS: Group[] = [
         ),
         asks: [
           t(
-            'I’m Ayşe, I live in Kadıköy, I’m allergic to peanuts and I prefer short answers',
+            'I’m Emma, I live in Camden, I’m allergic to peanuts and I prefer short answers',
             'Ben Ayşe, Kadıköy’de oturuyorum, yer fıstığına alerjim var, kısa yanıtları severim',
           ),
         ],
@@ -331,9 +331,9 @@ export const GROUPS: Group[] = [
           'Yalnızca söylediğiniz ad, telefonda aranır. Yapay zekâ “cep” gibi ad ve etiketleri görür, numara ya da adresi asla; birden fazla eşleşme varsa Qutai’ın kendi listesinden siz seçersiniz. Gizli modda kapalıdır.',
         ),
         asks: [
-          t('Call Ahmet', 'Ahmet’i ara'),
-          t('WhatsApp Ayşe that I’ll be ten minutes late', 'Ayşe’ye WhatsApp’tan on dakika gecikeceğimi yaz'),
-          t('Email this page to Mehmet Bey', 'Bu sayfayı Mehmet Bey’e e-postayla gönder'),
+          t('Call James', 'Ahmet’i ara'),
+          t('WhatsApp Emma that I’ll be ten minutes late', 'Ayşe’ye WhatsApp’tan on dakika gecikeceğimi yaz'),
+          t('Email this page to Mr Clarke', 'Bu sayfayı Mehmet Bey’e e-postayla gönder'),
         ],
       },
       {

@@ -117,13 +117,13 @@ export const en = {
   'agent.booking.body':
     'Find a table or an appointment and fill in the form. Afterwards Qutai offers to add it to your calendar or set a reminder, showing the details for you to approve. When a place takes bookings by phone, you get a Call button and dial yourself.',
   'agent.booking.step1': 'Calendar event: Dinner, Friday 20:00', // app: action.addCalendarEvent
-  'agent.booking.callName': 'Kebap House',
-  'agent.booking.callNumber': '+90 212 555 01 23',
+  'agent.booking.callName': 'Rose Street Kitchen',
+  'agent.booking.callNumber': '+44 20 7946 0123', // a number set aside for fiction
   'agent.booking.call': 'Call', // app: chat.call
   'agent.research.title': 'Research with sources',
   'agent.research.body':
     'Deep research searches and reads many pages and PDFs, takes notes and writes a report with its sources listed under the answer. Share it as a PDF. It takes a few minutes and uses more of your API credit.',
-  'agent.research.step1': 'Searched: e-bike rules in Istanbul', // app: action.webSearch
+  'agent.research.step1': 'Searched: e-bike rules in London', // app: action.webSearch
   'agent.research.step2': 'Reading the page',
   'agent.research.step3': 'Sources',
   'agent.footnote':
@@ -168,7 +168,7 @@ export const en = {
     'Sensitive steps wait for your yes. Posts, comments, reviews and messages sent through a site go out only after you approve them in Qutai’s own window, which shows the exact text; words on a web page can never approve them. Calls, texts, WhatsApp messages and emails are only drafts that you send. A notification, a calendar entry, a reminder, reading your calendar or location, and an ordinary download can be allowed with “Don’t ask again”, which you can take back in Settings; a no is never remembered. Uploads and risky files are asked about every time.',
   'privacy.contacts.title': 'Your contacts stay on the phone',
   'privacy.contacts.body':
-    '“Call Ahmet” or “email this to Mehmet”: the assistant looks up only the name you said, on the phone. The AI sees matching names and labels such as “mobile”, never numbers or addresses. If several people match, you pick in Qutai’s own list, and you still tap Call or send the message yourself. Asked at first use, off in incognito.',
+    '“Call James” or “email this to Mr Clarke”: the assistant looks up only the name you said, on the phone. The AI sees matching names and labels such as “mobile”, never numbers or addresses. If several people match, you pick in Qutai’s own list, and you still tap Call or send the message yourself. Asked at first use, off in incognito.',
   'privacy.scripts.title': 'Scripts only if you allow them',
   'privacy.scripts.body':
     'Off by default. Turned on, the assistant answers questions like “how many links are here?” with a script on a sealed copy of the page, with no internet and no sign-in. A script on the live page needs your approval with its full code and warnings, is refused on sign-in, payment and bank pages, and can then do what the site’s own code can do. Scripts you keep run only on their site and are asked about again when their code changes.',
