@@ -1,3 +1,4 @@
+import { isEmptyPlace, placeFromAddress, type Place } from '../intro/place';
 import { PermissionDeniedError } from './settings';
 
 type LocationModule = typeof import('expo-location');
@@ -141,19 +142,14 @@ export async function watchPosition(
   return () => subscription.remove();
 }
 
-/** What can be read from the phone's position for "Which city do you live in?". */
-export type PlaceName = {
-  /** Neighbourhood, district, city / province and country, as far as the address service gives them, in that order. */
-  parts: string[];
-};
-
 /**
- * The place the phone is in, as names (no street or house number). Call ensureLocationPermission first.
- * The position (about 100 m, or one the phone already has from the last hour) is turned into names by the system's geocoder: on Android `Geocoder`, which
- * on most phones asks Google's service over the network (no Qutai key); on iOS `CLGeocoder`, which asks Apple's.
- * Nothing goes to Qutai or the AI provider here. Throws LocationUnavailableError when no names come back.
+ * The place the phone is in, as district, city or province, and country (src/intro/place.ts placeFromAddress; no
+ * street, house number or neighbourhood). Call ensureLocationPermission first. The position (about 100 m, or one the
+ * phone already has from the last hour) is used once and kept nowhere: the system's geocoder turns it into names (on
+ * Android `Geocoder`, which on most phones asks Google's service over the network; on iOS `CLGeocoder`, which asks
+ * Apple's). Nothing goes to Qutai or the AI provider here. Throws LocationUnavailableError when no names come back.
  */
-export async function readPlaceName(): Promise<PlaceName> {
+export async function readPlaceName(): Promise<Place> {
   const Location = await load();
   // A city doesn't need a fresh fix: a position the phone already has from the last hour is enough.
   const position = await readPosition({ maximumAge: 60 * 60_000, timeout: 30_000 });
@@ -163,22 +159,7 @@ export async function readPlaceName(): Promise<PlaceName> {
   } catch (e) {
     throw new LocationUnavailableError(e instanceof Error ? e.message : String(e), 'failed');
   }
-  const a = addresses[0];
-  if (!a) throw new LocationUnavailableError('No address was found for this position.', 'failed');
-  // district = sub-locality (a neighbourhood, "mahalle"); city = locality; subregion = the county or, in Türkiye,
-  // the "ilçe"; region = state or province ("il"). A county is not part of an address where there is a city.
-  const parts: string[] = [];
-  for (const value of [a.district, a.city ?? a.subregion, a.region, a.country]) {
-    const name = value?.trim();
-    if (name && !parts.some((p) => p.toLocaleLowerCase() === name.toLocaleLowerCase())) parts.push(name);
-  }
-  // Türkiye: the ilçe is often the subregion with the province's name as the city; keep it when it is different.
-  if (a.isoCountryCode === 'TR' && a.subregion?.trim()) {
-    const ilce = a.subregion.trim();
-    if (!parts.some((p) => p.toLocaleLowerCase('tr') === ilce.toLocaleLowerCase('tr'))) {
-      parts.splice(a.district?.trim() ? 1 : 0, 0, ilce);
-    }
-  }
-  if (parts.length === 0) throw new LocationUnavailableError('No address was found for this position.', 'failed');
-  return { parts };
+  const place = addresses[0] ? placeFromAddress(addresses[0]) : null;
+  if (!place || isEmptyPlace(place)) throw new LocationUnavailableError('No address was found for this position.', 'failed');
+  return place;
 }

@@ -1,7 +1,6 @@
 import { ComponentRef, ReactNode, useEffect, useRef, useState } from 'react';
 import {
   Keyboard,
-  Platform,
   Pressable,
   ScrollViewInstance,
   StyleSheet,
@@ -13,9 +12,8 @@ import {
 import { getLocales } from 'expo-localization';
 import type { MemoryCategory } from '../agent/memory';
 import { features } from '../config/features';
-import { ensureLocationPermission, LocationUnavailableError, readPlaceName } from '../device/location';
+import { FillFromLocation } from './FillFromLocation';
 import { normalizePhone } from '../device/phone';
-import { openSettingsOrExplain, PermissionDeniedError } from '../device/settings';
 import { getLanguage, MessageKey, t } from '../i18n';
 import { getDb } from '../storage/db';
 import { addMemory, deleteMemory, listMemories, updateMemory } from '../storage/memory';
@@ -598,69 +596,6 @@ function Chips({
   );
 }
 
-/**
- * "Use my location" under the city field: reads the position (about 100 m) and fills in the neighbourhood, district,
- * province or state and country as the address service names them (device/location.ts readPlaceName). Uses the
- * location permission the setup step may already have; asks for it here only if it was never decided. The user can
- * edit or clear the text; typing works without any of this.
- */
-function FillFromLocation({ onFill }: { onFill: (text: string) => void }) {
-  const styles = useStyles();
-  const palette = usePalette();
-  const [busy, setBusy] = useState(false);
-  const [problem, setProblem] = useState<{ text: string; settings: boolean } | null>(null);
-  const fill = async () => {
-    setBusy(true);
-    setProblem(null);
-    try {
-      await ensureLocationPermission();
-      const place = await readPlaceName();
-      onFill(place.parts.join(', '));
-    } catch (e) {
-      if (e instanceof PermissionDeniedError) {
-        setProblem({ text: t('profile.locationDenied'), settings: !e.canAskAgain });
-      } else if (e instanceof LocationUnavailableError && e.reason === 'servicesOff') {
-        setProblem({ text: t('profile.locationOff'), settings: false });
-      } else if (e instanceof LocationUnavailableError && e.reason === 'timeout') {
-        setProblem({ text: t('profile.locationTimeout'), settings: false });
-      } else if (e instanceof LocationUnavailableError && e.reason === 'needsBuild') {
-        setProblem({ text: t('profile.locationUnavailable'), settings: false });
-      } else {
-        setProblem({ text: t('profile.locationFailed'), settings: false });
-      }
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <View style={styles.locationBox}>
-      <Pressable
-        onPress={() => void fill()}
-        disabled={busy}
-        style={({ pressed }) => [styles.locationButton, (pressed || busy) && styles.pressed]}
-        accessibilityRole="button"
-        accessibilityState={{ busy }}
-      >
-        <Icon name="location" size={18} color={palette.tintText} />
-        <Text style={styles.locationText}>{t(busy ? 'profile.locationBusy' : 'profile.useLocation')}</Text>
-      </Pressable>
-      {problem && (
-        <Text style={styles.warning} accessibilityLiveRegion="polite">
-          {problem.text}
-        </Text>
-      )}
-      {problem?.settings && (
-        <Pressable onPress={openSettingsOrExplain} accessibilityRole="button" hitSlop={6}>
-          <Text style={styles.locationText}>{t('settings.openSystem')}</Text>
-        </Pressable>
-      )}
-      <Text style={styles.hint}>
-        {t(Platform.OS === 'ios' ? 'profile.locationPrivacyIos' : 'profile.locationPrivacyAndroid')}
-      </Text>
-    </View>
-  );
-}
-
 /** What moves the keyboard's Next from one field to the following one. */
 type ChainProps = {
   inputRef?: (node: ComponentRef<typeof TextInput> | null) => void;
@@ -817,19 +752,6 @@ function AddressFields({
 
 const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
-  locationBox: { gap: 8 },
-  locationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 8,
-    paddingHorizontal: 14,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1.5,
-    borderColor: c.tint,
-  },
-  locationText: { color: c.tintText, fontSize: 15, fontWeight: '600' },
   content: {
     paddingHorizontal: 24,
     paddingTop: 8,

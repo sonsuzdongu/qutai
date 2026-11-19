@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 832 decisions (118 owner, 631 default, 83 waiting); 163 ids moved to Details.
+Totals: 833 decisions (119 owner, 631 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -171,7 +171,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `DATA-14` | Each AI request carries the conversation so far, attachments, the custom instructions and, while memory is… | Default |  |
 | `DATA-15` | Calendar details and the location reach the AI only after a confirmation each time (or the user's own… | Default |  |
 | `DATA-16` | Sites receive only the details the assistant types at the user's request, behind the per-site… | Default |  |
-| `DATA-17` | "Use my location" sends the position to the phone's address lookup (Apple's or, on most Android phones,… | Default |  |
+| `DATA-17` | "Use my location" sends the approximate position once to the phone's address lookup (Apple's, or Google's on most… | Default |  |
 | `DATA-18` | Voice audio never goes to Qutai or the AI provider; it goes to Apple's or Google's speech service only… | Default |  |
 | `DATA-19` | Filter lists are downloaded from their publishers while blocking is on, and search suggestions go to the… | Default |  |
 | `DATA-20` | Any change to what leaves the phone needs the privacy policy (`src/legal/documents.ts`) changed and its… | Default |  |
@@ -882,6 +882,7 @@ Moved to Details (ids retired, not reused): `WORK-4`, `WORK-8`, `WORK-11`, `WORK
 | `INTRO-20` | Today own-key users get no sign-in step in setup. | **Waiting** |  |
 | `INTRO-21` | Today the welcome and legal summary say "Private by design" / "we have no servers"; these must be… | **Waiting** |  |
 | `INTRO-23` | An official-build step asking for anonymous usage data is planned, not built. | Default |  |
+| `INTRO-31` | The city question has "Use my location" wherever setup asks it; the permission only on that tap; district, city… | Owner | 2026-11-20 |
 | `INTRO-30` | Setup has no "Make Qutai your default browser" step; protection is the last step; the option is in Settings › Search. | Owner | 2026-11-20 |
 | `INTRO-29` | Setup never asks for an answer style; a finished first-run setup adds "Answer briefly and to the point." to the custom… | Owner | 2026-11-20 |
 | `INTRO-28` | In pro builds the AI step is an accordion: both headings visible at first sight on 360 x 640 dp, at the largest text sizes too; Qutai… | Owner | 2026-11-20 |

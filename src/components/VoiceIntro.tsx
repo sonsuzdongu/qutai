@@ -29,6 +29,7 @@ import { getLanguage, MessageKey, t } from '../i18n';
 import { answersTurn, ExtractionError, MAX_TRANSCRIPT_CHARS, transcriptTurn } from '../intro/extract';
 import { canSubmit, finalExtraction, hasBack, introReducer, leavesFlow, pendingAnswers, START, type FlowState } from '../intro/flow';
 import type { FollowUp, FollowUpAnswer } from '../intro/followUps';
+import { FillFromLocation } from './FillFromLocation';
 import { introWrites, reviewRows, withReplacements, withStyleLine, type ReviewRow } from '../intro/items';
 import { understand, type IntroTarget } from '../intro/request';
 import { getDb } from '../storage/db';
@@ -878,6 +879,10 @@ function FollowUps({
           <Icon name={listening ? 'stop' : 'microphone'} size={20} color={palette.onTint} />
         </Pressable>
       </View>
+      {question.id === 'city' && (
+        // The place name fills the field like a typed answer (INTRO-31); the microphone stops first.
+        <FillFromLocation onFill={onText} onStart={() => listening && abortVoiceInput()} />
+      )}
       {listening && (
         <Text style={styles.status} accessibilityLiveRegion="polite">
           {t('voice.listening')}
