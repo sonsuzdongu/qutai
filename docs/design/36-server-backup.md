@@ -102,6 +102,5 @@ It replaces live sync for now; the server never sees the password or what is ins
 
 ## Disagreements between sources
 
-- TODO.md › Decisions waiting › Server backup says the pro legal version is "now 4"; the code has 5 (040c537, 19 Nov 2026, "on the owner's word"), and TODO.md › Contacts still says the 4 → 5 raise was "not done… on purpose".
 - README.md › Official builds says sync isn't in the code while its table lists encrypted backups in the account; backups are built, live sync is not.
 - docs/server-plan.md plans `/sync` routes and storage for sync data; superseded by the 17 Nov 2026 backup decision.

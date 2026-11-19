@@ -5,12 +5,13 @@ with `API_PORT=8000`). The tunnel address is a real domain and stays out of comm
 below when running a command (it is the `https://…` address that forwards to port 8000).
 
 Values that come from the uncommitted files by themselves: the Google client ids from the root `.env`
-(docs/google-sign-in.md), and the test sign-in secret, read from `backend/apps/api/.dev.vars` by the command.
+(docs/google-sign-in.md). The test sign-in stays off in these builds (the owner's decision of 17 Nov 2026,
+`HOUSE-16`): they are made without `EXPO_PUBLIC_DEV_LOGIN` and its secret, so sign in with Apple, Google or email.
 
 ## iOS: Release build on a connected iPhone
 
 ```bash
-EXPO_PUBLIC_PRO_MODE=on EXPO_PUBLIC_QUTAI_API_URL=<tunnel URL> EXPO_PUBLIC_DEV_LOGIN=on EXPO_PUBLIC_DEV_LOGIN_SECRET="$(grep '^DEV_SIGN_IN_SECRET=' backend/apps/api/.dev.vars | cut -d= -f2-)" npx expo run:ios --configuration Release --device
+EXPO_PUBLIC_PRO_MODE=on EXPO_PUBLIC_QUTAI_API_URL=<tunnel URL> npx expo run:ios --configuration Release --device
 ```
 
 - `--device` asks which connected iPhone to install on; leave it out for the simulator.

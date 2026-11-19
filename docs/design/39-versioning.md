@@ -55,4 +55,3 @@ How Qutai's version (for example 0.1.1) and its store build number (for example 
 
 ## Disagreements between sources
 
-- README.md › Running says the `production` EAS profile's build numbers "are kept by EAS and go up by one on each build". That was true after 1d5f0d5. Since bf46838, `eas.json` uses `appVersionSource: local` with no auto-increment, which matches docs/versioning.md. The README line is out of date.

@@ -92,4 +92,3 @@ analytics, and how the owner makes pro test builds.
 
 - docs/server-plan.md still lists payments as open (decided 15 Nov 2026) and plans separate Apple and Google notification addresses and `/sync` routes; backend/DESIGN.md (which says it wins) replaced them with one purchase notification address and server backups.
 - backend/DESIGN.md › Layout says the server is in "this repository"; docs/server-plan.md, TODO.md and the repository itself have it as its own repository checked out as a submodule.
-- docs/pro-test-builds.md (16 Nov 2026) still builds the iPhone test build with test sign-in on; the owner's 17 Nov 2026 order turned it off for pro APKs, and whether iPhone builds are included is not recorded.

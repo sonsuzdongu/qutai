@@ -219,7 +219,7 @@ the WebView at all.
 - **Kill / crash / out of memory**: iOS `onContentProcessDidTerminate`, Android `onRenderProcessGone`: the overlay
   says the app stopped, with Reload and Close. Qutai itself is never affected (separate web content process).
 - **Hang** (an endless loop): Qutai's own UI keeps working (the WebView's JavaScript runs on its own thread/process).
-  A ping every 5 seconds; no answer for 10 seconds shows "<name> isn't responding" with Reload and Close.
+  A ping every 5 seconds; no answer for 12 seconds shows "<name> isn't responding" with Reload and Close.
 
 ### Errors and diagnostics
 
@@ -508,7 +508,7 @@ the `fileVersion` number says which one a file is.
   `format`, `fileVersion` ≤ 1 (newer: "This app was exported by a newer Qutai"), the package checks of §1 (manifest,
   files, 12 files, 256 KB per file, 512 KB in all, the SVG icon subset; `formatVersion` newer is refused, `contract`
   newer is accepted and the app is listed as "needs a newer Qutai"), the hash, and the data: keys, collection names
-  and document ids by the contract's patterns, each value or document at most 256 KB, at most 20,000 entries, the
+  and document ids by the contract's patterns, each value or document at most 256 KB, at most 100,000 entries, the
   total at most the **5 MB quota** counted as the store counts it, no key or document twice, `bytes` equal to the
   recount.
 - **Name**: `<app name>.qutaiapp` (characters a file system dislikes replaced), with ` (with data)` when it has data so

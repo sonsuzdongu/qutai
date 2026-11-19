@@ -82,5 +82,4 @@ The privacy policy and terms of use shown in the app (one set for the open-sourc
 ## Disagreements between sources
 
 - TODO.md still lists the legal bump for the cookie wording, and the one for the contacts section, as "not done, on purpose". Both were done by 040c537 (open source 3, pro 5), so these TODO items are stale.
-- TODO.md › Server backup says the pro version "went up twice (now 4)". It is now 5.
 - The open-source policy says calendar events and location "are sent only when you confirm, each time". Since 289a687 the user can tick "Don't ask again" for reading the calendar and the location, and Settings says the data then goes to the AI without asking. The code allows the standing permission, so the policy sentence is stricter than the app.

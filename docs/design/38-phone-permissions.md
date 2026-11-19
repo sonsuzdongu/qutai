@@ -85,9 +85,6 @@ texts prepared for the App Store and Google Play forms. The full table is in [do
 
 ## Disagreements between sources
 
-- docs/permissions.md says HTTPS-only is "on by default"; the code and commit 4fb6a89 say off.
-- docs/permissions.md › Web pages says Android downloads use the system download manager; Qutai has its own engine
-  since fix 9.
 - docs/permissions.md says "Qutai has no servers of its own" and "the collected data types list is empty"; that holds
   for the open-source build, while pro builds have a server (accounts, credits relay, server backup), which the same
   file mentions elsewhere. The store notes don't separate the two builds.

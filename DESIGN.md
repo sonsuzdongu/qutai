@@ -19,6 +19,9 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Stale documents corrected to match the code: README (pro features, sign-in methods, the working glow and
+  input, build numbers), TODO (legal versions), docs/pro-test-builds.md (no test sign-in), docs/permissions.md (HTTPS-only
+  off, Android downloads), docs/mini-apps.md (12 s, 100,000 entries), the `features.ts` comment; disagreements removed.
 - **2026-11-19:** Apps: no script API can add a frame any more and frame markup is neutralised at build, which closes
   the Android WebRTC route through `window[0]` (`APPS-9`, `APPS-42`, no longer waiting for the owner).
 - **2026-11-19:** Deleting and account or security changes on a site get Qutai's own approval (`PAY-26`, request_approval
@@ -163,18 +166,8 @@ The sections list every disagreement they found; these are the ones the owner sh
 
 - **Prompt-only protections.** Deletes, account changes and payment buttons that Qutai can't recognise from their label
   or context fall back to the prompt (`PAY-9`, `PAY-26`). An app's "change only when the user asks" and "at most 3 fix rounds" are prompt-only.
-- **Stale documents.** README › Official builds still says credits and sync are "not in the code yet" (credits and server
-  backup are built; live sync is not); README › Sign-in methods says adding, removing and merging are "not built yet"
-  (built on 17 Nov); README's opening describes the old per-tab glow and an input that reopens during approvals; README
-  says EAS raises the build number (it comes from `app.json` since `bf46838`); TODO.md says the legal versions for
-  contacts and cookies were not raised (they were, in `040c537`: open-source 3, pro 5) and that the pro version is "now 4";
-  docs/pro-test-builds.md still turns test sign-in on, which the owner turned off on 17 Nov; docs/permissions.md says
-  HTTPS-only is on by default (it is off) and that Android uses the system download manager (replaced).
-- **Code comments that disagree with the build.** `src/config/features.ts` says store builds turn pro mode on in an EAS
-  profile, but every profile in `eas.json` has it off. AI keys are stored without the "this device only" option the session tokens use (reason not
+- **AI keys.** AI keys are stored without the "this device only" option the session tokens use (reason not
   recorded).
-- **Apps.** docs/mini-apps.md's numbers differ from the code in places (hang timeout 10 s vs 12 s; import data entries
-  20,000 vs 100,000) ([22](docs/design/22-apps.md)).
 - **Privacy policy vs "Don't ask again".** The open-source policy says calendar and location are sent only after a
   confirmation "each time", but "Don't ask again" allows a standing permission ([41](docs/design/41-legal-texts.md)).
 

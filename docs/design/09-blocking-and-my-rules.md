@@ -57,7 +57,7 @@ file, HTTPS-only, local network pages and certificate errors.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: 2c1cd53; src/content/cookieBanners.ts (COOKIE_BANNER_SELECTORS)
 - **`BLK-20`** "Block third-party cookies" is on by default (Android; iOS blocks them anyway).
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: 4fb6a89
-- **`BLK-21`** HTTPS-only is off by default. Note: docs/permissions.md says "on by default"; the code says off.
+- **`BLK-21`** HTTPS-only is off by default (docs/permissions.md corrected 19 Nov 2026).
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: 4fb6a89; src/storage/settings.ts (DEFAULT_SETTINGS.httpsOnly)
 - **`BLK-22`** With HTTPS-only on, http pages open over https; if that fails, the user is asked, and an exception lasts for the session, per site and port; subresources are not upgraded.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: src/browser/httpsOnly.ts (upgradeToHttps, allowInsecure); ROADMAP.md
@@ -105,6 +105,5 @@ file, HTTPS-only, local network pages and certificate errors.
 
 ## Disagreements between sources
 
-- docs/permissions.md (Cleartext paragraph) says HTTPS-only is "on by default"; commit 4fb6a89 and the code say off.
 - ROADMAP.md › Privacy and security says there is "No per-site cookie list or deletion"; README › Page styles,
   cookies and scripts and the code have both.

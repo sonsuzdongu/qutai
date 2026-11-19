@@ -244,10 +244,8 @@ A hash is deliberately not treated as trust: the switched-off arrival and the re
 
 ## Disagreements between sources
 
-- **Hang timeout:** docs/mini-apps.md §2 says 10 seconds without an answer. The code waits 12 s (`HANG_MS` in src/components/runnerSession.ts).
 - **iOS rule list name:** the doc calls it `qutai-apps-offline-v1`; the code uses `qutaiapps-offline-v1` (`IOS_OFFLINE_RULE_LIST_ID`). It is a name only.
 - **"Opaque origin":** TODO.md › Phase 1, the comment at the top of src/components/AppRunner.tsx and commit 649a542 still say "opaque origin". 453107e replaced it with an own origin under `.invalid`, and the code follows 453107e.
-- **Data entry limit:** doc §8 allows at most 20,000 data entries in an import. The code allows 100,000 (`APP_DATA_MAX_ENTRIES` in src/apps/appFile.ts).
 - **Website limits:** the website (441b6d1) lists "not in backups, no export" as limits. Since 92097ab, apps are in backups and can be exported, so these website limits are out of date.
 - **Passwords in dialogs:** doc §6 says Qutai's dialogs "never take passwords". Nothing in the code stops an app's `ui.prompt` from asking for one; only the import warning tells the user not to.
 - **Undocumented header:** the built document also sets `<meta name="referrer" content="no-referrer">`, which the doc's document outline doesn't mention.

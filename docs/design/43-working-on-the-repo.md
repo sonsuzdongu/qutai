@@ -72,4 +72,3 @@ House rules for anyone who changes Qutai, whether a person or an AI session: how
 
 - AGENTS.md says routes live in `src/app/` with Expo Router. This app has no `src/app/`: it is driven from `App.tsx` and its components. The AGENTS.md line is generic template text.
 - AGENTS.md says to use `bunx` when `bun.lock` exists. There is no `bun.lock` (the project uses npm), so `npx` applies.
-- [docs/pro-test-builds.md](../../docs/pro-test-builds.md) and the header of docs/test-checklist.md still describe pro test builds with the test sign-in on, which contradicts HOUSE-16. The release script strips it.

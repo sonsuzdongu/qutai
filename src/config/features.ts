@@ -2,9 +2,10 @@
  * Build-time switches, read from EXPO_PUBLIC_ environment variables (see .env.example).
  * Expo inlines them into the bundle, so they are visible in the app: never put secrets here.
  *
- * PRO_MODE turns on the parts that talk to Qutai's own servers (accounts, sync, Qutai credits).
- * It is off unless set, so builds from this repository use only the user's own AI key and keep
- * everything on the device. The official store builds set it in their EAS build profile.
+ * PRO_MODE turns on the parts that talk to Qutai's own servers (the account, Qutai credits and purchases, backups
+ * kept in the account; there is no live sync). It is off unless set, so builds from this repository use only the
+ * user's own AI key and keep everything on the device. Every profile in eas.json sets it "off"; pro builds set
+ * EXPO_PUBLIC_PRO_MODE=on in the environment of the build command (docs/pro-test-builds.md, scripts/build/release.mjs).
  */
 const flag = (value: string | undefined) => /^(on|true|1|yes)$/i.test(value?.trim() ?? '');
 const text = (value: string | undefined) => value?.trim() || null;

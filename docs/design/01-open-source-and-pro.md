@@ -75,7 +75,5 @@ account, Qutai Credits and backups kept in the account.
 
 ## Disagreements between sources
 
-- README › Official builds says "credits and sync are not in the code yet" and lists Qutai credits as "planned"; Qutai Credits (3d6b3f7) and account backups (bd6743e) are in the code. There is still no sync.
-- `src/config/features.ts` says the official store builds set pro mode in their EAS build profile; `eas.json` sets `EXPO_PUBLIC_PRO_MODE` to `off` in every profile, production included.
 - The comment in `src/config/features.ts` lists "sync" among pro features; there is no sync.
 - TODO.md › Decisions waiting › Contacts still says the legal versions were not bumped; commit 040c537 bumped them (open-source 3, pro 5).

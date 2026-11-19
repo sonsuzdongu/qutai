@@ -4,7 +4,7 @@ Kodda yapılmış ama gerçek cihazda henüz görülmemiş şeyler. En sonda top
 İşaretler: `[x]` denendi ve çalışıyor, `[ ]` denenmedi, `[!]` denendi ve sorun var (yanına not).
 
 Son güncelleme: 2026-11-16. Denenecek APK'lar: `builds/qutai-release-arm64.apk` (normal),
-`builds/qutai-release-arm64-pro-mode.apk` (pro mod, test girişi açık). İkisi aynı uygulama kimliğini
+`builds/qutai-release-arm64-pro-mode.apk` (pro mod; test girişi 17 Kasım'dan beri kapalı, sahibin kararı). İkisi aynı uygulama kimliğini
 kullanır; biri diğerinin üzerine kurulur.
 
 ## 1. Pro mod: hesap ve krediler (pro-mode APK)
@@ -130,7 +130,7 @@ Cloudflare'e yayın ve Access.
 
 ## 9. Qutai Kredileri (pro mod APK): kurulum, oturum ve kredi satın alma
 
-Pro mod + test girişi açık APK (`EXPO_PUBLIC_PRO_MODE=on`, API adresi, `EXPO_PUBLIC_DEV_LOGIN=on`). Uygulama verisi silinmiş (ilk açılış) olarak başlanmalı.
+Pro mod APK (`EXPO_PUBLIC_PRO_MODE=on`, API adresi; 17 Kasım'dan beri test girişi olmadan: Apple, Google ya da e-postayla girilir). Test girişi satırları yalnızca yerel geliştirme yapısı içindir. Uygulama verisi silinmiş (ilk açılış) olarak başlanmalı.
 
 ### Çökme düzeltmesi
 - [ ] Kurulumda yapay zekâ adımında Qutai seçilince uygulama çökmüyor; veri aktarımı açıklaması (disclosure) açılıyor

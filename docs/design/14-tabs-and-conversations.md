@@ -18,8 +18,8 @@ assistant panel does while a task works.
    "New chat" starts over.
 4. At most five tabs keep a live page; the others "sleep" as an address and a thumbnail and reload when opened.
 5. While a task works the input is closed: dimmed, "Qutai is working…", the attach, microphone and one-tap buttons
-   off, Stop in place of Send. Text already typed stays, to send afterwards. The input opens again when the task needs
-   the user (a confirmation) and when it ends. The page the task works on glows softly at its edges.
+   off, Stop in place of Send. Text already typed stays, to send afterwards. The input stays closed while a dialog waits and opens
+   again when the task ends. A light moves around the screen's edge while the task works (`30-working-mode.md`).
 6. Only one task runs at a time in the whole app; asking in another tab shows that Qutai is busy elsewhere.
 
 ## The rules

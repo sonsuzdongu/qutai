@@ -13,13 +13,13 @@ and chats that touch a private tab save nothing. Each tab has its own chat with 
 While a task works on its own, the panel's input is closed: dimmed, not editable, "Qutai is working…", with the
 attach, microphone and one-tap task buttons disabled and Stop in place of Send (stopping is always possible). Typing
 or sending during a task was never possible (the field was already read-only and a message is not queued or passed to
-the running task); text already in the field stays there, dimmed, to send afterwards. The input opens again as soon as
-the task needs the user (a confirmation), and when it ends: finished, a question with choices or free text, paused
-answers, stopped, failed, or a message handed back to the input. A screen reader hears "Qutai is working…" once. The
-page the task works on shows a soft brand-blue glow fading in from its edges, pulsing slowly (static with Reduce
-motion), only on that tab and only while it is on screen and the task works; off while a confirmation waits and when
-Qutai leaves the screen (picture-in-picture). It is drawn over the tabs, not inside the tab's view, so the assistant's
-screenshots and saved page images never contain it, and it takes no touches (`src/components/WorkingGlow.tsx`).
+the running task); text already in the field stays there, dimmed, to send afterwards. The input stays closed while an
+approval or question dialog waits (the dialog is answered on its own), and opens again when the task ends: finished,
+a question with choices or free text, paused answers, stopped, failed, or a message handed back to the input. A screen
+reader hears "Qutai is working…" once. While a task works and Qutai is on screen, a light moves around the whole
+screen's edge (still under Reduce motion), off while a dialog waits and when Qutai leaves the screen
+(picture-in-picture). It is drawn above the tabs, not inside a tab's view, so the assistant's screenshots and saved
+page images never contain it, and it takes no touches (`src/components/WorkingGlow.tsx`, docs/working-mode.md).
 
 The empty Qutai panel suggests a few things that fit the page on screen: "Is this a good buy?" and "Find it cheaper"
 on a product, the ingredients of a recipe, "Help me fill this in" on a form, "Which result fits best?" on a search
@@ -429,7 +429,7 @@ Or build in the cloud with your own Expo account (`eas.json`; the first build li
 |---|---|
 | `development` | The development build (`expo-dev-client`), installed directly on your devices (internal distribution) |
 | `preview` | A release build to install directly on test devices (internal distribution) |
-| `production` | The build for the stores; the build number (iOS) and version code (Android) are kept by EAS and go up by one on each build |
+| `production` | The build for the stores; the build number (iOS) and version code (Android) come from `app.json`, computed from the version (docs/versioning.md), never raised by EAS |
 
 ```bash
 npx eas-cli build --profile development --platform android   # or ios, or all
@@ -539,13 +539,14 @@ Google Play are made from this same code with one build-time switch turned on:
 | | Built from this repository (default) | Official store builds |
 |---|---|---|
 | `EXPO_PUBLIC_PRO_MODE` | `off` | `on` |
-| AI | Your own Anthropic, OpenAI, Gemini or OpenRouter key, or your own OpenAI-compatible server | Your own key, or Qutai credits (planned) |
+| AI | Your own Anthropic, OpenAI, Gemini or OpenRouter key, or your own OpenAI-compatible server | Your own key, or Qutai Credits (bought in the app, used through Qutai's server) |
 | Account and sync | None | An optional Qutai account (Sign in with Apple or Google, or email) with encrypted backups kept in it; no live sync |
 | Where your data goes | Your device and the AI service you set up; for the features you use, also your search engine (suggestions), Apple's or Google's address and speech services ("Use my location" in setup, voice input off the device) and the filter lists' publishers (list downloads) | Also Qutai's servers, for the pro features you use |
 
-Pro features are shown only when the switch is on (`src/config/features.ts`). So far that is the account:
-Settings › Account (sign in, sign out, sign out of all devices, delete the account), when
-`EXPO_PUBLIC_QUTAI_API_URL` is also set; credits and sync are not in the code yet. A build without the switch
+Pro features are shown only when the switch is on (`src/config/features.ts`): the account (Settings › Account: sign
+in with Apple, Google or email, add or remove a sign-in method, sign out, sign out of all devices, delete the
+account), Qutai Credits (buying them through the stores, the relay to the AI providers) and backups kept in the
+account, when `EXPO_PUBLIC_QUTAI_API_URL` is also set. Live sync between phones is not built. A build without the switch
 has no Account section and never contacts Qutai's server. Qutai's server is a separate repository, checked
 out as a submodule at `backend/` (its `README.md` has the setup).
 
@@ -657,10 +658,9 @@ Sign-in methods and › Merging accounts):
   browser back to `qutai://auth/apple/done` with a flow id and a one-time value; the app finishes with a verifier
   that never left the phone. No native module or rebuild is needed for it (the `qutai` scheme exists).
 
-**Not built yet** (each needs work outside the app): adding or removing a sign-in method while signed in (server
-routes to link a method to the signed-in account and to remove one, plus a screen); merging two existing accounts
-(a server merge of ledgers, purchases and identities, with proof of both; the server records the conflicts for it);
-verified App Links / Universal Links, so the https link opens the app without the page in between
+Adding and removing a sign-in method while signed in, and merging two accounts, are built (17 Nov 2026; Settings ›
+Account › Sign-in methods; docs/design/33-accounts.md). **Not built yet** (each needs work outside the app): verified
+App Links / Universal Links, so the https link opens the app without the page in between
 (`assetlinks.json` and `apple-app-site-association` on the site, and the app's `autoVerify` intent filter and
 associated domain, which is a native change); the message in the other eight languages
 (`backend/apps/api/src/auth/email/message.ts`).

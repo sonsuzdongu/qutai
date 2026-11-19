@@ -190,8 +190,6 @@ removing one needs a recent sign-in with an older method, so an intruder's new m
 
 ## Disagreements between sources
 
-- README.md › Official builds says only the account is in the code and "credits and sync are not in the code yet"; both are built.
 - README.md › Sign-in methods and combining accounts, and TODO.md › Accounts and OAuth sign-in, still list adding and removing methods, merging accounts, App Links and the eight extra mail languages as not built; they were built on 17 Nov 2026 (b91825e, 1c50bc1, 233f602). The code follows the built version.
 - backend/README.md › Owner decisions › Sender still lists sender validation and SPF/DKIM as to do; the Mailjet session note says SPF, DKIM and DMARC passed on 17 Nov 2026.
 - backend/README.md › What to set up at Apple and Google says Apple's web flow on Android is "not built yet"; backend/README.md › Sign in with Apple on Android and the code say it is built.
-- docs/pro-test-builds.md still builds the iPhone test build with test sign-in on; the owner turned test sign-in off on 17 Nov 2026 (worded for pro APKs). Whether iPhone test builds are included is not recorded.

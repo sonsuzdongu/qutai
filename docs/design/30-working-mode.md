@@ -73,5 +73,4 @@ What the user sees while the assistant carries out a task: where on the page it 
 
 ## Disagreements between sources
 
-- README's opening paragraphs say the glow shows "only on that tab" and that the input "opens again ... when the task needs the user (a confirmation)"; docs/working-mode.md and the code draw the glow around the whole screen (App.tsx renders `WorkingGlow`) and keep the input closed while an approval waits (af24ab6). The app follows the code.
 - docs/test-checklist.md § 5 still describes the older per-tab glow.

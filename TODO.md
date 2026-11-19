@@ -21,7 +21,7 @@ Security (look at these first)
 Page customisation, step one (19 Nov 2026, docs/page-customisation.md)
 
 - [ ] Kept styles on sites set to "Blocked": today they apply wherever their scope says (they are the user's own; the site levels govern the assistant). Should "Blocked" also switch off kept "everywhere" styles there?
-- [ ] Bump the legal version for the privacy policies' new words on cookies (the assistant gets names, sites and settings, never values): not done, on purpose
+- [x] Legal version raised for the cookie words too (`040c537`: open-source 3, pro 5)
 - [x] Step two (user scripts, 19 Nov 2026): `run_script` with the app's refusals and an approval showing the code; read-only scripts on a sealed copy; kept scripts sealed per device, My rules › Scripts, rules file format 3 (imports arrive off), both backups; Settings switch off by default (README › Page styles, cookies and scripts; docs/page-customisation.md › Scripts). The script half of the 18 Nov request is done
 
 Apps inside Qutai (the 18 Nov 2026 request, docs/mini-apps.md)
@@ -52,13 +52,13 @@ Page customisation, step two (scripts, 19 Nov 2026) — owner decisions
 - [ ] No "document start" run time for kept scripts (nothing to check for sensitive fields yet; a script that must beat the page's own code is a different risk). Wanted?
 - [ ] iOS isolated content world (WKContentWorld) for scripts: not used (needs a native patch, Android has none, and it doesn't address the main risk). Revisit?
 - [ ] Sensitive-page lists (payment and identity hosts, a short bank list, path words) are a start: extend for the markets you target (banks in Türkiye are listed)
-- [ ] Bump the legal version for the privacy policies' new words ("the result of a script you approved on a page"; en and tr, open-source and pro documents): not done, on purpose
+- [ ] Bump the legal version for the privacy policies' new words ("the result of a script you approved on a page"; en and tr, open-source and pro documents): added after `040c537` (in `589d311`), so not covered by that raise; not done, on purpose
 - [ ] Store: App Review notes for scripts (no downloaded code, page content only, each run approved, off by default; docs/page-customisation.md › Store policies); Play's AI-Generated Content policy asks for an in-app way to report AI output: needed for Qutai?
 - [ ] Style cards from restored chats still offer Keep (the CSS is sanitised again, so low risk); script cards don't (only cards made in this run of the app). Same rule for styles?
 
 Contacts (19 Nov 2026, docs/contacts.md)
 
-- [ ] Bump the legal version (open-source `OPEN_SOURCE_LEGAL_VERSION` 2 → 3 and pro `PRO_LEGAL_VERSION` 4 → 5, with the dates) for the new "Your contacts / Kişileriniz" section in both privacy policies: not done by the contacts session, on purpose
+- [x] Legal versions raised for the contacts section on the owner's word (`040c537`: open-source 2 → 3, pro 4 → 5)
 - [ ] Store forms: App Store privacy label (Contacts › App Functionality, not linked, no tracking, as proposed in docs/permissions.md) and Play Data safety (Contacts › collected, ephemeral, optional); and the store listing sentence for `READ_CONTACTS`
 - [ ] Limits as built: at most 5 people, picker 8 rows, handles valid 30 minutes; lookups only for names the user typed or said (a selection the user sends counts as their text)
 - [ ] Website: add contacts to the feature and privacy pages (sentences proposed in the contacts hand-over note)
@@ -75,7 +75,7 @@ Server backup
 - [ ] Default contents: open tabs in; conversations, activity and AI keys out (conversations can take a backup to 54 MB). OK?
 - [ ] The backup password is cleared from the phone on sign-out (kept when the server ends the session). OK?
 - [ ] The daily automatic backup is Wi-Fi only by default and runs only while the app is open. OK?
-- [ ] Pro privacy policy: the legal version went up twice (now 4), so every pro user is asked to accept again. Confirm
+- [x] Pro privacy policy: the legal version is now 5 (`040c537`, on the owner's word), so every pro user is asked to accept again
 
 Interface
 

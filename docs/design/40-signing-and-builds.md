@@ -82,6 +82,4 @@ How Qutai is built (development builds, EAS profiles, store packages, pro-mode t
 
 ## Disagreements between sources
 
-- [docs/pro-test-builds.md](../../docs/pro-test-builds.md) still builds the iOS test app with `EXPO_PUBLIC_DEV_LOGIN=on`, and the header of docs/test-checklist.md (16 Nov) calls the pro APK "test girişi açık". The owner's note says test sign-in has been off since 17 Nov. The release script follows the newer rule and strips it (BUILD-9). The test-build doc is out of date.
-- The comment in src/config/features.ts says official store builds set pro mode "in their EAS build profile", but every profile in eas.json sets it off, and store packages come from scripts/build/release.mjs.
 - docs/versioning.md says `builds/` is git-ignored. It is ignored only through `.git/info/exclude` on this machine, not in the committed `.gitignore`, so a fresh clone would not ignore it.
