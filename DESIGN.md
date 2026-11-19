@@ -19,6 +19,8 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** The iPhone clean-install check now also clears the script and app seal key and the pending email
+  sign-in request (`03-data-on-the-phone.md`), so after delete-and-reinstall restored scripts and apps arrive off.
 - **2026-11-19:** Apps phase 2 tried in the iOS simulator and on the Android emulator (`22-apps.md`): the runner no longer
   crashes on Android (`dataDetectorTypes` as an array, APPS-10), the Android sandbox lets `data:`, `blob:` and `about:`
   through (APPS-41, `903a3f6`), and APPS-42 now names the one open case, WebRTC via `window[0]` on Android.
@@ -165,8 +167,7 @@ The sections list every disagreement they found; these are the ones the owner sh
   docs/pro-test-builds.md still turns test sign-in on, which the owner turned off on 17 Nov; docs/permissions.md says
   HTTPS-only is on by default (it is off) and that Android uses the system download manager (replaced).
 - **Code comments that disagree with the build.** `src/config/features.ts` says store builds turn pro mode on in an EAS
-  profile, but every profile in `eas.json` has it off. The script seal key is not cleared on an iPhone reinstall,
-  against its own comment. AI keys are stored without the "this device only" option the session tokens use (reason not
+  profile, but every profile in `eas.json` has it off. AI keys are stored without the "this device only" option the session tokens use (reason not
   recorded).
 - **Apps.** docs/mini-apps.md's numbers differ from the code in places (hang timeout 10 s vs 12 s; import data entries
   20,000 vs 100,000), and "Ask Qutai to fix this" sends the app's console errors, which can contain the app's data

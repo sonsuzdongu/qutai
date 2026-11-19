@@ -26,6 +26,10 @@ const OTHER_KEYS = [
   // the reinstall: a clean start asks for it again (the server copies stay, protected by it).
   'server_backup_password',
   'server_backup_state',
+  'account_email_pending', // account/storage.ts: an email sign-in code request in progress
+  // device/scriptKey.ts: the key that seals kept scripts and apps. Cleared so that after delete-and-reinstall a
+  // restored backup's scripts and apps arrive switched off until the user approves them again (as on Android).
+  'qutai.scriptSealKey',
 ];
 
 export function allSecureStoreKeys(): string[] {

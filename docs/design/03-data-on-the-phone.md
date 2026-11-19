@@ -96,5 +96,5 @@ None: every item in this area stays a rule.
 
 ## Disagreements between sources
 
-- `src/device/scriptKey.ts` says that after a reinstall a restore "asks again" for scripts; but its key `qutai.scriptSealKey` is missing from the list `src/storage/installCheck.ts` clears (whose comment says to keep it in step). On iPhone the key survives a reinstall, so kept scripts in a local backup restored after a reinstall may come back still approved.
+- (Resolved 2026-11-19) The script and app seal key `qutai.scriptSealKey` is now in the list `src/storage/installCheck.ts` clears on a clean iPhone install, so restored scripts and apps arrive switched off until approved. Android removes secure storage with the app on uninstall. The pending email sign-in request (`account_email_pending`) was missing from the list too and is now cleared.
 - These settings are not written to a backup, and no source says whether on purpose: the "Don't ask again" list, "Keep working in the background", "Notify me when a task finishes", Gemini streaming, "Show approximate cost", "Show where the assistant acts", the listening language, the custom endpoint's image setting.
