@@ -1144,8 +1144,8 @@ the cookie list (step one), scripts (step two).
 
 "Build me an app where I can keep my notes": the assistant writes a small app (HTML, CSS and JavaScript) that runs
 inside Qutai, offline, with its data on the phone. Design, contract and threat model:
-[docs/mini-apps.md](docs/mini-apps.md). Phase 1 of the 18 Nov 2026 request (export/import, backup, more bridges and
-network come later).
+[docs/mini-apps.md](docs/mini-apps.md). Phases 1 and 2 of the 18 Nov 2026 request (more bridges and network come
+later).
 
 - **Making and changing.** The assistant's `apps` tool: `guide` (the contract and the writing rules, fetched only when
   an app is being built), `create`, `update` (small find/replace edits or whole files), `preview` (Qutai opens the app
@@ -1163,12 +1163,28 @@ network come later).
   and text size, and the clipboard (reading asks the user once per app). Uncaught errors show "<app> ran into a
   problem" with the details and **Ask Qutai to fix this**; a crash or a hang has its own screen.
 - **My apps.** On the new tab page (an invitation to make one while there are none) and in the main menu › Library ›
-  My apps; long press for rename and delete (deleting removes every version and the app's data, after a confirmation
-  that says how much). Available in every build; writing an app costs an ordinary assistant request.
+  My apps; long press for rename, export and delete (deleting removes every version and the app's data, after a
+  confirmation that says how much). Available in every build; writing an app costs an ordinary assistant request.
+- **Export and import (phase 2).** Export from the long-press menu or the app's menu: a `.qutaiapp` file (readable
+  JSON with the current version and its SHA-256), **without data** by default or **with my data**, through the system
+  sheet. Import from My apps › Import an app, by opening a `.qutaiapp` from Files, a mail or AirDrop ("Open in
+  Qutai"; Android "Open with"), or by tapping a downloaded one in Qutai's Downloads (never from incognito, never by
+  a web page or the assistant). The import screen shows the icon, name, "written by someone else", size,
+  permissions in plain words, flags for unusual code, and every file's code before anything is stored; the file's
+  data comes in only when the user switches it on. A clash with an app already here: **Keep both** or **Replace**
+  (the old one stays under Versions; the phone's data is replaced only after a second confirmation). An imported app
+  **arrives switched off** and runs only after **Turn on** on the approval screen, which shows the same review.
+- **Backup.** Settings › Backup (file and Qutai account): **My apps** and **My apps' data** (both on, the data's size
+  shown). Only the current version of each app. Restored on the same phone an app is as it was; on another phone it
+  comes back off until approved, with its data. A server backup over the account's limit is made again without the
+  apps' data and says so.
 - Tests: `npm run test:apps` (package checks, quota and atomic writes, queries, permission checks on every bridge
   call, versions and undo, the policy and navigation rules, the helper library, the tool). The break-out test app
   (`scripts/app-tests/breakoutApp.mjs`, fake-AI word `breakout`) tries every way out it can and reports each attempt;
-  network attempts go to the fake AI server's `/leak`, listed at `GET /leaks`.
+  network attempts go to the fake AI server's `/leak`, listed at `GET /leaks`. `scripts/app-tests/export-fixtures.ts`
+  writes `.qutaiapp` files for phone checks (notes with data, the break-out app, a changed and a newer file). Android
+  app WebViews also run in the patched module's native sandbox (`appSandbox`: no network loads, navigations refused
+  without waiting for JavaScript; a native rebuild is needed).
 
 ## Permissions
 

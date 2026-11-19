@@ -120,11 +120,11 @@ when it closes (`key` = app id + version + reload counter), so nothing of one ap
 | | iOS (WKWebView) | Android (System WebView) |
 | --- | --- | --- |
 | Origin | its own origin per app, `https://<app-id>.apps.qutai.invalid/` (`appBaseUrl`): `.invalid` never resolves (RFC 6761), so nothing can be loaded from it, and no two apps share one. Not an opaque `about:blank` origin: WebKit then reports every error of the app's own scripts as "Script error." with no message or line (found in the simulator run), which leaves the fix loop blind. The lockdown script removes what a real origin would bring: `localStorage`, `sessionStorage`, `indexedDB`, `caches` throw ("use qutai.storage"), `document.cookie` reads empty and ignores writes, and `navigator.clipboard`, `share`, `credentials`, `serviceWorker`, `mediaDevices`, `geolocation` and `Notification`, `PaymentRequest`, `BroadcastChannel` are gone | the same (`loadDataWithBaseURL` with that base) |
-| Data store | `incognito`: its own **non-persistent** `WKWebsiteDataStore` per WebView: nothing written to disk, nothing shared with tabs or other apps | its own **WebView profile** `qutai-apps` (the patched module's `webviewProfile`, androidx.webkit multi-profile, WebView 119+): cookies, storage and cache apart from the browsing profile. On an older WebView the default profile, which is still harmless because the opaque origin can't read or write any storage. The `incognito` prop is never used on Android (it clears every cookie of the browsing tabs) |
+| Data store | `incognito`: its own **non-persistent** `WKWebsiteDataStore` per WebView: nothing written to disk, nothing shared with tabs or other apps | its own **WebView profile** `qutai-apps` (the patched module's `webviewProfile`, androidx.webkit multi-profile, WebView 119+): cookies, storage and cache apart from the browsing profile. On an older WebView the default profile: then only `domStorageEnabled={false}`, the cookie settings and the lockdown script (which make storage and cookies unusable on the app's own origin) keep it apart from browsing data. The `incognito` prop is never used on Android (it clears every cookie of the browsing tabs) |
 | DOM storage | `domStorageEnabled={false}` | `domStorageEnabled={false}` |
 | Files, location, camera | `allowFileAccess` off, `geolocationEnabled` off, media capture denied | same |
 | Windows | `setSupportMultipleWindows={false}`, `javaScriptCanOpenWindowsAutomatically={false}` | same |
-| Navigation | `onShouldStartLoadWithRequest` allows only the initial `about:blank` document; every other URL (links, `location =`, forms, `<meta refresh>`, `window.open`, other schemes such as `tel:` or `intent:`) is refused and reported to the diagnostics | same |
+| Navigation | `onShouldStartLoadWithRequest` allows only the app's own document (its base address and `#fragment` links inside it, `appNavigationAllowed`); every other URL (links, `location =`, forms, `<meta refresh>`, `window.open`, other schemes such as `tel:` or `intent:`) is refused and reported to the diagnostics | same |
 | Text size | the phone's text size through `--qutai-font-scale` (the base stylesheet sets the root font size; apps use `rem`) | same, `textZoom={100}` so it isn't applied twice |
 
 The app's own JavaScript runs in the page's main world; there is no other content in that world (no browsing pages,
@@ -146,10 +146,9 @@ The engine enforces it, not Qutai's script.
 
 Layer 2, native: **navigation refused** (above), on both platforms. iOS also gets a **WebKit content rule list**
 (`qutai-apps-offline-v1`: block every `http`, `https`, `ws`, `wss` and `ftp` load) attached through the patched
-module's `contentBlocking` / `contentRuleLists` props, compiled at the runner's first use. Android has no equivalent
-in the current patch: `shouldInterceptRequest` only consults the ad-block host list. A `blockNetworkLoads` prop
-(`WebSettings.setBlockNetworkLoads(true)`) is a small patch change but needs a native rebuild: **recommended before
-phase 2** (imported apps), not needed for phase 1 where every app is written on the user's request.
+module's `contentBlocking` / `contentRuleLists` props, compiled at the runner's first use. Android gets the native
+app sandbox of phase 2 (§8 "The Android network block": `blockNetworkLoads`, every request answered with a 403,
+navigations refused without waiting for JavaScript, the frame guard in every frame).
 
 Layer 3, the lockdown script (first script in the document): `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`,
 `RTCPeerConnection` and its relatives, `Worker`, `SharedWorker` replaced by stubs that throw "The network is off in
@@ -157,25 +156,33 @@ Qutai apps" (a clear error for the assistant instead of a CSP line), `navigator.
 `window.open` returns null, form submits and link clicks are cancelled and reported, `<iframe>`/`<frame>`/`<object>`/
 `<embed>` elements are removed as soon as they are added and `contentWindow`/`contentDocument` return null.
 
-**What can't be blocked (risks stated):**
+**What can't be blocked (risks stated; checked with the break-out app on 19 Nov 2026: iOS simulator 46/46 blocked,
+Android emulator, API 36, 45/46 blocked; the leak recorder got nothing on either):**
 
-- **WebRTC**: CSP doesn't govern it. ICE candidate gathering can send UDP packets to a STUN/TURN server named in
-  code, which can carry a few bytes of data. The lockdown removes the constructors, but a determined author can try
-  to get fresh ones from an `about:blank` frame in the moment before it is removed (`window[0]` can't be intercepted).
-  Neither platform lets an app turn WebRTC off in a WebView. Mitigation in phase 2: imported packages that mention
-  `RTCPeerConnection`, `RTCDataChannel`, `iframe`, `frames[` or `window[0]` are flagged on the approval screen.
-- **DNS prefetch**: an engine may resolve host names it sees in links (`<link rel=dns-prefetch>` is removed; a plain
-  `<a href>` may still be prefetched by some WebView versions). A DNS lookup can carry data in the host name to that
-  domain's name server. Low bandwidth, no response reaches the app.
+- **WebRTC**: CSP doesn't govern it, and neither platform lets an app turn WebRTC off in a WebView. ICE candidate
+  gathering can send UDP packets to a STUN/TURN server named in code, which can carry a few bytes of data. The lockdown
+  removes the constructors; the frame guard (§8) removes them in every frame too.
+  - iOS: closed in the test. The guard runs as a user script in every frame, including a fresh `about:blank` one, so
+    `window[0]` of such a frame has no `RTCPeerConnection`.
+  - **Android: still open.** Its document-start scripts don't run in a frame's initial `about:blank` document, so code
+    that adds an `about:blank` frame and reads `window[0]` before the lockdown removes the frame gets a fresh
+    `RTCPeerConnection` (the one failing case). Closing it needs a guard on every way of putting a frame into the
+    document (append and insert calls, `innerHTML`, `outerHTML`, `insertAdjacentHTML`, `document.write`, parsing),
+    not yet built. Until then: the import and approval screens flag `RTCPeerConnection`, `iframe` and `frames[`
+    (obfuscated code can avoid the flags), and the app needs the user to have turned it on.
+- **DNS prefetch**: switched off in every app document (`x-dns-prefetch-control: off`, which can't be switched back on;
+  `<link rel=dns-prefetch>` is removed). An engine that ignores the switch could still resolve host names in links,
+  and a DNS lookup can carry data in the host name to that domain's name server (low bandwidth, no answer reaches the
+  app). Not observable with the leak recorder; not seen in either test.
 - **Timing and visual channels** need the user: the app can show text that asks the user to type something into a
   website. The app can't open a website itself.
-- Android before the `blockNetworkLoads` patch: the CSP is the only layer for subresources. CSP is mature on both
-  engines and is the same mechanism the script sandbox relies on.
-- **Android navigation decision timeout**: react-native-webview asks JavaScript whether a navigation may start and,
-  if Qutai's JavaScript thread doesn't answer within 250 ms, lets it through (`RNCWebViewClient.shouldOverrideUrlLoading`).
-  The runner then stops the load at `onLoadStart` and rebuilds the app, so nothing else is ever shown, but the request
-  itself (with whatever the app put in its address) has left. iOS waits for the answer and its rule list blocks the
-  load anyway. The `blockNetworkLoads` patch closes this on Android too.
+- **Android navigation decision timeout**: closed. Unpatched, react-native-webview lets a navigation through when
+  Qutai's JavaScript thread doesn't answer within 250 ms. The app sandbox refuses every navigation natively before
+  that wait, and the break-out app's busy-thread cases (`location =`, `location.replace`, meta refresh, an image while
+  the thread is flooded) are all blocked on the emulator.
+- **Android subresources**: closed natively too (`blockNetworkLoads` and a 403 from `shouldInterceptRequest`); only
+  `data:`, `blob:` and `about:` pass, which never leave the phone. An Android System WebView without document-start
+  scripts runs no frame guard at all (the lockdown still removes frames as they are added).
 
 None of these reaches the browsing tabs' cookies, sessions, other apps' data or Qutai's own storage: those are not in
 the WebView at all.
@@ -382,17 +389,21 @@ semantic HTML (`button`, `label`, `input`, headings), `aria-live` for status, no
 - **Prompt injection into app building** (a web page saying "create an app that…"). App tools act only on the user's
   request (the prompt's rule for all tools); apps can't read web pages or send anything anywhere, so an injected app
   could only show content. The user sees every app the assistant makes as a card and in My apps.
-- **An imported app from someone else** (phase 2): arrives disabled and unsealed; the user sees name, author kind,
-  permissions, hosts (phase 4) and flags before turning it on; isolation and the permission checks bound what it can
-  do. It can still show misleading content (an app imitating a bank's sign-in page): it can't send what is typed
+- **An imported app from someone else** (phase 2, §8): arrives switched off and unsealed, with no grants; the user
+  sees name, "written by someone else", size, permissions in plain words, hosts (phase 4), flags and every file's
+  code before it is stored and again before turning it on; isolation and the permission checks bound what it can
+  do. A web page can only download a file; only the user's tap opens the import screen, never from incognito. The
+  file's hash catches damage, not a deliberate edit (no signatures in format 1). It can still show misleading content (an app imitating a bank's sign-in page): it can't send what is typed
   anywhere without `network`, and phase 4's host list is shown before it is turned on. Qutai's own dialogs show the
   app's name ("Notes asks:") and never take passwords.
 - **Bugs in AI-written apps**: the preview loop, the error overlay with "Ask Qutai to fix this", undo, versions, and a
   hang watchdog; an app can only damage its own data (the quota stops it from filling the phone).
 - **Data loss**: the app's data is only in Qutai's database (and, in phase 2, its backups); deleting an app deletes its
   data after a confirmation that says so.
-- **Backup bloat**: 5 MB per app; versions are not data and phase 2 backs up only the current version's package plus
-  the data.
+- **Backup bloat**: 5 MB per app; versions are not data and the backup has only the current version's package plus
+  the data (§8). A server backup over the account's limit drops apps' data and says so.
+- **A backup or file that claims an app was approved**: the seal is an HMAC under this phone's key, which never leaves
+  secure storage; a backup restored elsewhere or an import never runs before Turn on.
 - **Dialog spam**: one dialog at a time, `E_BUSY` for the next; a toast is short and rate-limited by the toast itself.
 - **Clipboard**: reading is asked; writing is shown.
 
@@ -592,8 +603,9 @@ The patched `react-native-webview` (patches/react-native-webview+14.0.1.patch) g
 **`appSandbox`**, set by the runner only. With it:
 
 - `WebSettings.setBlockNetworkLoads(true)`: the engine refuses every network load of the WebView.
-- `shouldInterceptRequest` answers every request (`http`, `https`, `ws`, `wss`, `ftp`, anything but `data:` and
-  `blob:`, which never reach it) with an empty 403 at once, on WebView's own request thread: no JavaScript is involved.
+- `shouldInterceptRequest` answers every request (`http`, `https`, `ws`, `wss`, `ftp`, any scheme but `data:`, `blob:`
+  and `about:`) with an empty 403 at once, on WebView's own request thread: no JavaScript is involved. The local schemes
+  pass because the app's own document arrives there as a `data:` request on recent WebViews (found on the emulator).
 - `shouldOverrideUrlLoading` refuses every navigation natively **without waiting for JavaScript**, so the 250 ms
   timeout that let a navigation through while Qutai's JavaScript thread was busy is gone. The event still reaches
   the runner (with a lock id no one waits for), so "Navigation refused" stays in the diagnostics.
@@ -626,4 +638,14 @@ frame. What remains open on each platform is in §2 "What can't be blocked", upd
 4. A report button for AI-generated apps (with the general AI-report question)?
 5. Privacy policy sentences (not added; legal version not bumped): "Apps you have Qutai build are stored only on your
    phone with their data. When you ask Qutai to make or change an app, the app's code (not its data) and any error
-   messages it showed are sent to the AI provider as part of the conversation."
+   messages it showed are sent to the AI provider as part of the conversation." Phase 2 adds: "Your apps and, unless
+   you turn it off, their data are part of the backups you make (the file you export and the backup in your Qutai
+   account), encrypted with your backup password. An app you export goes, with its data if you choose, wherever you
+   send the file."
+6. Phase 2: Android "Open with" also claims `application/octet-stream` (needed because Android can't match the
+   extension of a content:// address): keep, or only Qutai's own MIME type?
+7. Phase 2: backups keep only the current version of each app: enough, or the last few within a size budget?
+8. Phase 2 defaults: My apps and My apps' data on in both backups; imported data off on the import screen; a server
+   backup over the limit drops apps' data rather than failing. Confirm.
+9. Phase 2: the residual risks in §2 "What can't be blocked" (after the frame guard and the Android sandbox): accept
+   for imported apps?

@@ -27,7 +27,7 @@ Page customisation, step one (19 Nov 2026, docs/page-customisation.md)
 Apps inside Qutai (the 18 Nov 2026 request, docs/mini-apps.md)
 
 - [x] Phase 1 (19 Nov 2026): the package format and the full bridge contract (all phases), the runner (own WebView per app, no network, no navigation, opaque origin, own data store), storage / ui / clipboard / app bridges, versions and undo, the assistant's `apps` tool with preview and the fix loop, "My apps" on the new tab page and in Library; the notes scenario in Turkish works end to end (README › Apps)
-- [ ] Phase 2: export/import (`.qutaiapp`, arrives disabled and unsealed, "Needs your approval" screen) and apps with their data in the encrypted and server backup (current version only; restored on another phone they arrive off). Before release of phase 2: the Android `blockNetworkLoads` patch (native rebuild) and flags for WebRTC/frame code on the approval screen
+- [x] Phase 2 (19 Nov 2026): export/import as a `.qutaiapp` file (with or without data; imports arrive switched off and unsealed, reviewed on the import and approval screens, keep both or replace), apps and their data in the encrypted and server backup (current version; on another phone off until approved; over the account's limit, made again without apps' data), the Android native app sandbox in the WebView patch and the frame guard on both platforms (README › Apps; docs/mini-apps.md › Phase 2). Needs a native rebuild (file type, patch)
 - [ ] Phase 3: share/files, location, notifications, camera/photos, links, assistant bridges (already in contract 1); ask Apple about 4.7.2 first
 - [ ] Phase 4: network to declared hosts (`network.fetch` through Qutai) and a home-screen shortcut (`qutai://app/<id>`)
 
@@ -38,7 +38,12 @@ Apps inside Qutai — owner decisions
 - [ ] Phase 3 bridges (location, camera, notifications) expose native features to generated code: raise Guideline 4.7.2 with Apple before building them?
 - [ ] A report button for AI-generated apps (part of the general AI-report question for Google Play)?
 - [ ] Privacy policies: a sentence for apps (stored only on the phone; the app's code, not its data, and its error messages go to the AI provider when the user asks Qutai to make or fix it). Not added; legal version not bumped
-- [ ] Residual risks accepted for phase 1 (docs/mini-apps.md › The network block): WebRTC to a STUN server and DNS prefetch can't be fully blocked in a WebView; on Android a navigation can slip through if Qutai's JavaScript thread is busy for 250 ms (the app is rebuilt at once, but the request has gone). All need code the user asked for; imports (phase 2) raise them
+- [ ] Residual risks after phase 2 (docs/mini-apps.md › What can't be blocked): the Android 250 ms navigation race is closed natively (confirmed on the emulator); DNS prefetching is switched off; WebRTC is closed on iOS (break-out 46/46) but still reachable on Android through `window[0]` of a fresh `about:blank` frame (45/46: Android's document-start scripts skip that document; closing it needs a guard on every way of inserting a frame). Accept for imported apps, or build that guard first?
+- [ ] Android "Open with": Qutai claims `application/octet-stream` too (Android can't match `.qutaiapp` by extension in a content:// address), so it appears for other unknown files and says "not a Qutai app". Keep, or claim only Qutai's own MIME type (then many file managers won't offer Qutai for a downloaded `.qutaiapp`)?
+- [ ] Backups keep only each app's current version (versions are an undo aid, up to 10 MB per app). Keep, or add the last few versions within a size budget?
+- [ ] Defaults: "My apps" and "My apps' data" on in both the file export and the server backup; a server backup over the limit drops apps' data and says so (instead of failing). Confirm?
+- [ ] Imported data is off by default on the import screen (the user switches it on). Confirm?
+- [ ] Privacy policies: add that apps and their data are part of the backup the user makes (file and Qutai account, encrypted with the user's password), and that an app the user exports goes, with its data if they choose, wherever they send the file. Not added; legal version not bumped
 
 Page customisation, step two (scripts, 19 Nov 2026) — owner decisions
 

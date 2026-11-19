@@ -476,3 +476,39 @@ Denenmedi (cihazda): Android'de çalıştırma, açıkken tema değişimi, Voice
 - [ ] Uygulamalarım'da uzun basma: Aç / Yeniden adlandır / Sil; yeniden adlandırınca yeni sürüm oluşur, veriler kalır.
 - [ ] Ana menü › Kitaplık › Uygulamalarım ekranı ve "Uygulama iste" düğmesi asistana taslak koyar (göndermez).
 - [ ] Android'de "breakout": sonuçlar ve `/leaks` (emülatör yerel sunucuya açık metin isteklerini reddeder; `adb reverse` ile).
+
+## 19. Qutai içinde uygulamalar, 2. aşama: dışa/içe aktarma, yedek, Android ağ engeli (19 Kasım)
+
+Tasarım: `docs/mini-apps.md` › 8. **Yeni yerel derleme gerekir** (iOS'ta `.qutaiapp` dosya türü ve "Qutai'de aç",
+Android'de "Birlikte aç" ve WebView yamasındaki uygulama kum havuzu). Deneme dosyaları:
+`node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs scripts/app-tests/export-fixtures.ts <klasör> <port>`
+(verili notlar, break-out uygulaması, değiştirilmiş ve daha yeni sürümlü dosya); break-out sızıntıları sahte yapay zekâ
+sunucusunun `/leaks` listesine düşer (`node scripts/fake-ai/server.mjs <port>`).
+
+Her telefonda denenecekler:
+- [ ] Uygulamalarım › uzun basma › Dosya olarak dışa aktar: veri varsa "Verisiz / Verilerimle" sorusu (varsayılan verisiz, verilerin kişisel olabileceği yazıyor); paylaşım sayfası açılır; Dosyalar'a kaydedilir. Uygulama menüsünden de aynı.
+- [ ] Uygulamalarım › Uygulama içe aktar: dosya seçici; içe aktarma ekranı: simge, ad, "başka biri yazdı", boyut, izinler sade sözlerle, uyarı, dosya listesi (dokununca kod, yalnızca okunur), veri sayısı ve boyutu ("Verilerini de getir" kapalı).
+- [ ] İçe aktarılan uygulama kapalı gelir; açınca onay ekranı aynı özeti gösterir; "Aç" sonrası çalışır.
+- [ ] Dosyalar uygulamasında `.qutaiapp` dosyasına dokunmak / paylaş › Qutai: içe aktarma ekranı açılır (Qutai kapalıyken de).
+- [ ] Qutai'nin kendi tarayıcısında indirilen `.qutaiapp`: İndirilenler › Aç → içe aktarma ekranı; gizli sekmede indirilen: "Gizli sekmeden uygulama içe aktarılamaz".
+- [ ] Aynı uygulamayı yeniden içe aktarma: "İkisini de tut" (ad "… 2", ayrı veri) ve "… yerine koy" (eski sürüm Sürümler'de; veriler korunur; dosyanın verisi seçiliyse ikinci onay).
+- [ ] Bozuk / değiştirilmiş / daha yeni / uygulama olmayan / yedek dosyası: tek cümlelik hata, Ayrıntılar'da teknik satır.
+- [ ] Ayarlar › Yedekleme › dışa aktar: "Uygulamalarım" ve "Uygulamalarımın verileri" açık, boyut yazıyor; geri yüklemede özet "Uygulamalar: N, verileriyle"; uygulama silinip yedek geri yüklenince (aynı telefon) açık ve verileriyle geri gelir.
+- [ ] Başka telefonda geri yükleme: uygulama kapalı gelir, verileri durur, onay ekranından açılır.
+- [ ] Qutai hesabına yedek: aynı iki anahtar; sınırı aşan yedek uygulama verileri olmadan yapılır ve bunu söyler.
+- [ ] Android: "breakout" içe aktarılıp açılır; sonuçlar ve `/leaks` boş (yoğun iş parçacığı yarışı dahil).
+- [ ] Büyük yazı, VoiceOver/TalkBack, koyu tema, yatay ekran: içe aktarma ve onay ekranları okunur ve sığar.
+
+19 Kasım sonuçları (Claude, simülatör ve emülatörde):
+- iOS (iPhone 18 Pro simülatörü, Release): dışa aktarma (verilerle, Dosyalar'a kayıt), silip Dosyalar'dan geri açma,
+  içe aktarma ekranı, kod görüntüleyici, onay ve "Aç", notların geri gelmesi; şifreli yedek (anahtarlar ve boyut,
+  "Uygulamalar: 2, verileriyle"), uygulama silinip birleştirerek geri yükleme (açık ve mühürlü, 2 belgesiyle);
+  değiştirilmiş dosya hatası; break-out 46/46 engellendi, `/leaks` boş. Hepsi tamam.
+- Android (emülatör, API 36, Release): Dosyadan "Birlikte aç" ile içe aktarma ekranı, "İkisini de tut", onay ve "Aç";
+  break-out **45/46**: yoğun iş parçacığı yarışı dahil gezinme ve ağ denemelerinin hepsi engellendi, `/leaks` boş.
+  Kalan tek hata: `about:blank` çerçevesinin `window[0]` üzerinden yeni bir `RTCPeerConnection` alınabiliyor
+  (docs/mini-apps.md › What can't be blocked). Bu denemede bulunup düzeltildi (903a3f6): uygulama açılırken yerel
+  çökme ve uygulamanın kendi belgesinin 403 alması.
+- Denenmedi: başka telefonda geri yükleme ve sınırı aşan sunucu yedeği (yalnızca birim testleri), Qutai'nin kendi
+  İndirilenler'inden içe aktarma, "Yerine koy", Android'de dışa aktarma ve yedek, büyük yazı, ekran okuyucu, koyu tema,
+  yatay ekran, gerçek telefon.
