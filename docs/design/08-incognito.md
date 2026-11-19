@@ -52,8 +52,8 @@ fewer powers. Two locks protect Qutai and its incognito tabs from other people h
   Status: Default (manager or implementing session; open to change) · Why: "Like Chrome" · Enforced: In the app: src/device/useIncognitoProtection.ts (useIncognitoProtection) · Source: 97af904
 - **`INC-13`** In incognito, location, camera, microphone and personal-information prompts never offer "Always allow", "Allow once" covers that one request, a stored "allow" is ignored (asks) and a stored "block" still applies.
   Status: Default (manager or implementing session; open to change) · Why: incognito never remembers · Enforced: In the app: src/browser/sitePrompt.ts (askSitePermission); src/browser/geolocation.ts and src/browser/mediaCapture.ts (settingFor) · Source: e60fa84; 0e8b19f
-- **`INC-14`** Today the assistant's action confirmation still offers "Always allow on {site}" in incognito and saves it permanently. Note: this differs from `INC-13`.
-  Status: Default (manager or implementing session; open to change) · Why: reason not recorded (not decided) · Enforced: In the app: App.tsx (askConfirmation) · Source: 647fbd5
+- **`INC-14`** No approval given in incognito is remembered: the assistant's action confirmation offers neither "Always allow on {site}" nor "Don't ask again" for an incognito tab or a conversation that touched one, like the site prompts (`INC-13`); the publish, pay, personal-information, hidden-value, script, style, cookie and download questions never offer it there. Changed 19 Nov 2026 (before: the action confirmation offered and saved "Always allow").
+  Status: Default (manager or implementing session; open to change) · Why: incognito leaves no trace (owner principle) · Enforced: In the app: src/agent/alwaysAllow.ts (rememberOffer), App.tsx (askConfirmation) · Source: 647fbd5; 19 Nov 2026 security pass
 - **`INC-15`** "Keep working in the background" never runs for incognito conversations.
   Status: Default (manager or implementing session; open to change) · Why: its notification would show incognito use · Enforced: In the app: src/device/backgroundTask.ts (forbidBackground) · Source: 0b5f332
 - **`INC-16`** Today the short "finishing a reply" keep-alive for an own-key request is not used for incognito conversations on Android; iOS holds anyway.
@@ -103,7 +103,5 @@ fewer powers. Two locks protect Qutai and its incognito tabs from other people h
 
 ## Disagreements between sources
 
-- The site prompts never remember an answer in incognito, but the action confirmation saves "Always allow on {site}"
-  from incognito (`INC-14`); no source decides which is intended. The code does both.
 - Saving site rules from an incognito tab is allowed (the dialog only adds a note), while styles and scripts are never
   kept from incognito; no source explains the difference.

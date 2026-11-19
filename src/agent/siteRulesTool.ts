@@ -250,7 +250,8 @@ export async function siteRulesTool(
   const allowed = ctx.confirm
     ? await ctx.confirm(
         { lines: [{ icon: 'shield', text: t('siteRules.confirmRemove', { count: targets.length, site }) }, ...targets.map((r) => ({ text: r.line }))] },
-        site,
+        // No site: removing rules must not offer "Always allow on <site>" (that would raise the site's level).
+        null,
       )
     : false;
   if (!allowed) return { content: 'The user did not remove the rules.', isError: true, notice: declinedNotice() };

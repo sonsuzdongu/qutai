@@ -1487,6 +1487,8 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
   }
   // The personal-information question already named this entry; asking "may I type?" right after would be twice.
   // An approved press was just asked in the publish or pay dialog.
+  // An incognito tab makes the conversation incognito before the question, so it offers nothing to remember.
+  if ((target?.tab?.incognito || fromTab?.incognito) && ctx.privacy) ctx.privacy.touchedIncognito = true;
   if (decision.kind === 'confirm' && ctx.confirm && !personalAsked && !approvedPress) {
     const allowed = await ctx.confirm({ lines: [{ icon: toolIcon(name, input), text: describeToolCall(name, input) }] }, host);
     if (!allowed)

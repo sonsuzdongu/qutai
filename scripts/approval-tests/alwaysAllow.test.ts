@@ -113,3 +113,15 @@ test('stored as a list of known kinds; anything else is dropped', () => {
   for (const list of [[], ['notification'], [...ALWAYS_ALLOW_KINDS]] as const)
     assert.deepEqual(parseAlwaysAllow(serializeAlwaysAllow([...list])), [...list]);
 });
+
+test('incognito never offers to remember: neither "Always allow on <site>" nor "Don\'t ask again"', async () => {
+  const { rememberOffer } = await import('../../src/agent/alwaysAllow.ts');
+  assert.equal(rememberOffer({ host: 'example.com', kind: undefined, incognito: false, canRememberKind: true }), 'site');
+  assert.equal(rememberOffer({ host: null, kind: 'notification', incognito: false, canRememberKind: true }), 'kind');
+  assert.equal(rememberOffer({ host: null, kind: 'notification', incognito: false, canRememberKind: false }), null);
+  assert.equal(rememberOffer({ host: null, kind: undefined, incognito: false, canRememberKind: true }), null);
+  for (const kind of ['notification', 'calendarEvent', 'reminder', 'calendarRead', 'location', 'download', undefined] as const) {
+    assert.equal(rememberOffer({ host: 'example.com', kind, incognito: true, canRememberKind: true }), null);
+    assert.equal(rememberOffer({ host: null, kind, incognito: true, canRememberKind: true }), null);
+  }
+});

@@ -43,7 +43,7 @@ import {
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { PersonalKind } from './src/agent/personalData';
-import { afterAnswer, AlwaysAllowKind, isAlwaysAllowed } from './src/agent/alwaysAllow';
+import { afterAnswer, AlwaysAllowKind, isAlwaysAllowed, rememberOffer } from './src/agent/alwaysAllow';
 import { runAgent } from './src/agent/runAgent';
 import { actionErrorText } from './src/agent/stepLine';
 import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
@@ -310,25 +310,29 @@ async function askConfirmation(
   description: string | IconLines,
   host: string | null,
   signal: AbortSignal,
+  incognito: boolean,
   kind?: AlwaysAllowKind,
   onDontAskAgain?: (kind: AlwaysAllowKind) => void,
 ): Promise<boolean> {
   const text = typeof description === 'string' ? description : null;
+  // Incognito never remembers an answer: no "Always allow" and no "Don't ask again" there (alwaysAllow.ts rememberOffer).
+  const offer = rememberOffer({ host, kind, incognito, canRememberKind: !!onDontAskAgain });
   const result = await dialog.show({
     title: t('confirm.title'),
     ...(typeof description === 'string' ? {} : { lines: description }),
     message: text && host ? `${text}\n\n${host}` : (text ?? host ?? undefined),
     buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: t('confirm.allow') }],
-    checkbox: host
-      ? { label: t('confirm.always', { host }) }
-      : kind && onDontAskAgain
-        ? { label: t(`confirm.dontAskAgain.${kind}`) }
-        : undefined,
+    checkbox:
+      offer === 'site' && host
+        ? { label: t('confirm.always', { host }) }
+        : offer === 'kind' && kind
+          ? { label: t(`confirm.dontAskAgain.${kind}`) }
+          : undefined,
     signal,
   });
   const allowed = result.button === 1;
-  if (allowed && host && result.checked) sitePermissions.set(host, 'allow').catch(() => {});
-  if (allowed && !host && kind && result.checked) onDontAskAgain?.(kind);
+  if (allowed && offer === 'site' && host && result.checked) sitePermissions.set(host, 'allow').catch(() => {});
+  if (allowed && offer === 'kind' && kind && result.checked) onDontAskAgain?.(kind);
   return allowed;
 }
 
@@ -1347,7 +1351,7 @@ function BrowserApp({
             }
           : {}),
         confirm: (description, host, kind) =>
-          askConfirmation(description, host, signal, kind, (allowedKind) => {
+          askConfirmation(description, host, signal, incognitoTask(), kind, (allowedKind) => {
             const current = settingsRef.current;
             const next = { ...current, alwaysAllow: afterAnswer(current.alwaysAllow, allowedKind, { allowed: true, dontAskAgain: true }) };
             settingsRef.current = next;

@@ -19,6 +19,8 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Incognito never remembers an approval: the action confirmation offers no "Always allow" or "Don't ask
+  again" there (`SITE-8`, `INC-14`); removing site rules no longer offers "Always allow".
 - **2026-11-19:** The iPhone clean-install check now also clears the script and app seal key and the pending email
   sign-in request (`03-data-on-the-phone.md`), so after delete-and-reinstall restored scripts and apps arrive off.
 - **2026-11-19:** Apps phase 2 tried in the iOS simulator and on the Android emulator (`22-apps.md`): the runner no longer
@@ -157,8 +159,6 @@ The sections list every disagreement they found; these are the ones the owner sh
 - **The settings tool can lower protections.** It can switch "Block ads and trackers", "Hide cookie banners" and "Block
   third-party cookies" off, although its own rule says the assistant must not remove protections; only HTTPS-only is
   on-only (`UNTR-8`, `BLK-24`). No source says why. Not in TODO.md yet.
-- **"Always allow on this site" is offered in incognito** by the general action confirmation and saved for good
-  (`SITE-8`, `INC-14`), while location, camera, microphone and personal-information questions never offer it there.
 - **Stale documents.** README › Official builds still says credits and sync are "not in the code yet" (credits and server
   backup are built; live sync is not); README › Sign-in methods says adding, removing and merging are "not built yet"
   (built on 17 Nov); README's opening describes the old per-tab glow and an input that reopens during approvals; README

@@ -214,7 +214,7 @@ Moved to Details (ids retired, not reused): `UNTR-3`
 | `SITE-5` | On a Read only site, click, click by position, type, select, download, upload, posting/paying approval,… | Default |  |
 | `SITE-6` | Only opening a page, opening a tab, clicking, clicking by position, typing, selecting and saving a… | Default |  |
 | `SITE-7` | "Ask before every action" is off by default; it decides only for Default sites, and it is restored from a… | Default |  |
-| `SITE-8` | Ticking "Always allow on {site}" in the confirmation and tapping Allow sets the site to Always allow for… | Default |  |
+| `SITE-8` | Ticking "Always allow on {site}" in the confirmation sets the site to Always allow for good; never offered in incognito… | Default | 2026-11-19 |
 | `SITE-9` | "Don't ask again" is offered only for six phone kinds: scheduled notifications, calendar events,… | Default |  |
 | `SITE-10` | "Don't ask again" is never offered for anything that acts on a web page or leaves the phone (clicks,… | Default |  |
 | `SITE-11` | A risky download (apps, installers, archives) or a download in a conversation that touched an incognito… | Default |  |
@@ -292,7 +292,7 @@ Moved to Details (ids retired, not reused): `PAY-10`, `PAY-18`, `PAY-19`, `PAY-2
 | `INC-11` | On iOS each incognito tab has its own temporary data store, gone when the tab closes. | Default |  |
 | `INC-12` | System screenshots and screen recording are blocked while incognito content is on screen (also the tab… | Default |  |
 | `INC-13` | In incognito, location, camera, microphone and personal-information prompts never offer "Always allow",… | Default |  |
-| `INC-14` | Today the assistant's action confirmation still offers "Always allow on {site}" in incognito and saves it… | Default |  |
+| `INC-14` | No approval given in incognito is remembered: no "Always allow" or "Don't ask again" there… | Default | 2026-11-19 |
 | `INC-15` | "Keep working in the background" never runs for incognito conversations. | Default |  |
 | `INC-16` | Today the short "finishing a reply" keep-alive for an own-key request is not used for incognito… | **Waiting** |  |
 | `INC-17` | Tabs opened from an incognito tab, and links in an incognito conversation's answers, stay incognito. | Default |  |

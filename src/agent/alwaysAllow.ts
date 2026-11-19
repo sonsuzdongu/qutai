@@ -80,3 +80,19 @@ export function parseAlwaysAllow(raw: string | null | undefined): AlwaysAllowKin
 export function serializeAlwaysAllow(list: readonly AlwaysAllowKind[]): string {
   return cleanAlwaysAllow(list).join(',');
 }
+
+/**
+ * What a confirmation may offer to remember: "Always allow on <site>" for a site's action, "Don't ask again" for a phone
+ * kind, or nothing. Never anything in incognito (a conversation that touched an incognito tab, or an incognito tab):
+ * incognito leaves no trace, so no answer given there is stored (SITE-8, INC-14, decided 19 Nov 2026).
+ */
+export function rememberOffer(o: {
+  host: string | null;
+  kind: AlwaysAllowKind | undefined;
+  incognito: boolean;
+  canRememberKind: boolean;
+}): 'site' | 'kind' | null {
+  if (o.incognito) return null;
+  if (o.host) return 'site';
+  return o.kind && o.canRememberKind ? 'kind' : null;
+}
