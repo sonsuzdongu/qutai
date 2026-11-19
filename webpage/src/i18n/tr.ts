@@ -172,6 +172,9 @@ export const tr: Messages = {
   'privacy.scripts.title': 'Betik yalnızca izninizle',
   'privacy.scripts.body':
     'Varsayılan olarak kapalı. Açarsanız asistan “burada kaç bağlantı var?” gibi soruları, sayfanın internete ve oturumunuza erişimi olmayan kapalı bir kopyasında çalışan bir betikle yanıtlar. Canlı sayfadaki bir betik tam kodu ve uyarılarıyla onayınızı ister, giriş, ödeme ve banka sayfalarında reddedilir; onaylandığında sitenin kendi kodunun yapabildiğini yapabilir. Sakladığınız betikler yalnızca kendi sitelerinde çalışır ve kodları değişince yeniden onay ister.',
+  'privacy.apps.title': 'Kendi uygulamalarınız, dışarıya kapalı',
+  'privacy.apps.body':
+    '“Notlarımı tutabileceğim bir uygulama yap” deyin: Qutai onu yazar, önizlemesini açar, kendi hatalarını düzeltir ve istediğinizde değiştirir; önceki sürümleri saklar, geri dönebilirsiniz. Uygulamalarınız yeni sekme sayfasındaki Uygulamalarım’da durur. Her biri gezintinizden ayrı, kendi görünümünde çalışır: internete, başka sitelerin çerezlerine ya da oturumlarına, başka bir uygulamanın verisine erişemez. Verisi telefonda kalır, uygulama başına en fazla 5 MB. Uygulama yazmak sıradan bir asistan isteğidir; kendi anahtarınızla ya da Qutai Kredileriyle ödenir.',
   'privacy.note':
     'Qutai hizmeti isteğe bağlıdır: Apple, Google ya da e-postayla giriş yapın, kendi anahtarınız yerine Qutai Kredileri kullanın, model yerine Qutai Hızlı, Qutai ya da Qutai Pro seçin. Qutai sunucusu hesabınızı, kredilerinizi ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı ve sayfaları tutmaz. Depodan derlenen sürümlerde bu hizmet yoktur ve hiçbir zaman Qutai sunucusuna bağlanılmaz.',
 
@@ -264,18 +267,20 @@ export const tr: Messages = {
   'status.today.6': 'Okuma modu, sesli okuma, sesle yazma, kendi kurallarınızla reklam ve izleyici engelleme, şifreli yedek',
   'status.today.7': 'On arayüz dili (Türkçe, İngilizce, Almanca, İspanyolca, Brezilya Portekizcesi, Fransızca, Japonca, Korece, Rusça, Endonezce); telefonun diline uyar ya da Ayarlar’dan seçilir; ekran okuyucu etiketleri ve büyük yazı desteği',
   'status.today.8': 'Sitelere kendi stilleriniz, değerleri yapay zekâya gitmeyen çerez listesi ve sayfalarda betik (varsayılan olarak kapalı, kodu gösterilerek onaylanır)',
+  'status.today.9': 'Asistanın Qutai içinde sizin için yazdığı küçük uygulamalar: çevrimdışı, gezintinizden ayrı, geri dönebileceğiniz sürümlerle',
   'status.limits': 'Bilmeniz gereken sınırlar',
   'status.limits.1': 'Arka planda görevler yalnızca Android’de ve isteğe bağlı; görev bitince ya da size ihtiyaç duyunca bildirim gelir; iPhone’da uygulamadan çıkınca görev duraklar',
   'status.limits.2': 'Zamanlanmış görevler birer hatırlatmadır: Qutai kapalıyken hiçbir şey çalışmaz',
   'status.limits.3': 'Ödemeyi siz tamamlarsınız; asistanın ödemesine izin verirseniz her ödeme Qutai’ın penceresinde onayınızı bekler',
   'status.limits.4': 'Qutai ile paylaşma ve ana ekran widget’ı şimdilik yalnızca Android’de',
   'status.limits.5': 'Canlı sayfada onayladığınız bir betik, o sitedeki oturumunuzla sitenin kendi kodunun yapabildiğini yapabilir; yalnızca okuyan sorular bunun yerine kapalı bir kopyada çalışır',
+  'status.limits.6': 'Uygulamaların henüz interneti ve konum, kamera, bildirim gibi telefon özellikleri yok; yedeğe girmez, dosya olarak dışa aktarılamaz',
   'status.planned': 'Planlananlar',
   'status.planned.1': 'App Store ve Google Play’de yayın',
   'status.planned.2': 'Hesap açmayı seçenler için uçtan uca şifreli eşitleme',
   'status.planned.3': 'Qutai Kredilerini App Store ve Google Play’den satın alma',
   'status.planned.4': 'iPhone’da paylaşım uzantısı ve widget',
-  'status.planned.5': 'Asistanın Qutai içinde sizin için yaptığı küçük uygulamalar (şu an geliştiriliyor)',
+  'status.planned.5': 'Uygulamalar için: dosya olarak dışa ve içe aktarma (mağaza ya da galeri yok), yedekleme, telefon özellikleri, seçtiğiniz sitelere internet, ana ekran kısayolu',
 
   'footer.tagline': 'Agentic Browser',
   'footer.privacy':

@@ -259,7 +259,7 @@ export function Memory() {
   );
 }
 
-const PRIVACY: { icon: IconName; key: 'key' | 'device' | 'sites' | 'log' | 'incognito' | 'confirm' | 'contacts' | 'scripts' }[] = [
+const PRIVACY: { icon: IconName; key: 'key' | 'device' | 'sites' | 'log' | 'incognito' | 'confirm' | 'contacts' | 'scripts' | 'apps' }[] = [
   { icon: 'key', key: 'key' },
   { icon: 'phone', key: 'device' },
   { icon: 'sliders', key: 'sites' },
@@ -268,6 +268,7 @@ const PRIVACY: { icon: IconName; key: 'key' | 'device' | 'sites' | 'log' | 'inco
   { icon: 'hand', key: 'confirm' },
   { icon: 'call', key: 'contacts' },
   { icon: 'code', key: 'scripts' },
+  { icon: 'apps', key: 'apps' },
 ];
 
 function Node({ icon, title, sub, dashed }: { icon: IconName; title: MessageKey; sub: MessageKey; dashed?: boolean }) {
@@ -461,14 +462,14 @@ export function Status() {
             <Icon name="check" size={20} />
             {t('status.today')}
           </h3>
-          {list('status.today', 8)}
+          {list('status.today', 9)}
         </div>
         <div className="status-col limits reveal">
           <h3>
             <Icon name="hand" size={20} />
             {t('status.limits')}
           </h3>
-          {list('status.limits', 5)}
+          {list('status.limits', 6)}
         </div>
         <div className="status-col planned reveal">
           <h3>
