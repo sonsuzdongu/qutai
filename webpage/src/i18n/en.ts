@@ -273,6 +273,8 @@ export const en = {
   'status.limits.4': 'Sharing to Qutai and the home screen widget are Android-only for now',
   'status.limits.5': 'A script you approve on the live page can do what the site’s own code can do, with your sign-in there; questions that only read the page run on a sealed copy instead',
   'status.limits.6': 'Apps have no internet and no phone features such as location, camera or notifications yet',
+  'status.limits.7':
+    'Hidden instructions on web pages: we test against pages built to mislead the assistant and keep tightening the app’s own checks, but we are not perfect. Paying, posting, deleting, account changes, calls and messages always wait for your tap, yet the assistant can still be misled into a slanted summary, a bad link or a step that needs no approval. Read what an approval says before you tap, and treat the assistant’s summary of an unfamiliar page as a summary, not a verdict',
   'status.planned': 'Planned',
   'status.planned.1': 'Release in the App Store and Google Play',
   'status.planned.2': 'End-to-end encrypted sync for those who choose an account',

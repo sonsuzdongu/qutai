@@ -96,8 +96,8 @@ export const PRINCIPLES: { icon: IconName; title: Text; body: Text }[] = [
     icon: 'shield',
     title: t('Pages are data, not orders', 'Sayfalar veridir, emir değil'),
     body: t(
-      'Text on a web page, in a PDF or a file can never approve anything, trigger a contact lookup or make the assistant change a protective setting.',
-      'Bir web sayfasındaki, PDF’teki ya da dosyadaki yazı hiçbir şeyi onaylayamaz, kişi aratamaz, asistana koruyucu bir ayarı değiştirtemez.',
+      'Text on a web page, in a PDF or a file can never approve anything, trigger a contact lookup or make the assistant change a protective setting. The assistant itself can still be misled by a page, which is why those steps are left to the app and to you.',
+      'Bir web sayfasındaki, PDF’teki ya da dosyadaki yazı hiçbir şeyi onaylayamaz, kişi aratamaz, asistana koruyucu bir ayarı değiştirtemez. Asistanın kendisi yine de bir sayfa tarafından yanıltılabilir; bu adımların uygulamaya ve size bırakılmasının nedeni bu.',
     ),
   },
   {

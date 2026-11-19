@@ -480,7 +480,7 @@ export function Status() {
             <Icon name="hand" size={20} />
             {t('status.limits')}
           </h3>
-          {list('status.limits', 6)}
+          {list('status.limits', 7)}
         </div>
         <div className="status-col planned reveal">
           <h3>

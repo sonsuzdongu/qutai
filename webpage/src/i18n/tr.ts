@@ -277,6 +277,8 @@ export const tr: Messages = {
   'status.limits.4': 'Qutai ile paylaşma ve ana ekran widget’ı şimdilik yalnızca Android’de',
   'status.limits.5': 'Canlı sayfada onayladığınız bir betik, o sitedeki oturumunuzla sitenin kendi kodunun yapabildiğini yapabilir; yalnızca okuyan sorular bunun yerine kapalı bir kopyada çalışır',
   'status.limits.6': 'Uygulamaların henüz interneti ve konum, kamera, bildirim gibi telefon özellikleri yok',
+  'status.limits.7':
+    'Web sayfalarına gizlenmiş talimatlar: asistanı yanıltmak için hazırlanmış sayfalarla deniyor ve uygulamanın kendi denetimlerini sıkılaştırmaya devam ediyoruz, ama kusursuz değiliz. Ödeme, paylaşım, silme, hesap değişiklikleri, aramalar ve mesajlar her zaman sizin dokunuşunuzu bekler; yine de asistan bir sayfa yüzünden taraflı bir özet çıkarabilir, kötü bir bağlantı önerebilir ya da onay gerektirmeyen bir adım atabilir. Onay penceresinde yazanı okuyup öyle dokunun; asistanın tanımadığınız bir sayfa hakkındaki özetini bir hüküm değil, bir özet olarak görün',
   'status.planned': 'Planlananlar',
   'status.planned.1': 'App Store ve Google Play’de yayın',
   'status.planned.2': 'Hesap açmayı seçenler için uçtan uca şifreli eşitleme',
