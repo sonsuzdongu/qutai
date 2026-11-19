@@ -2050,9 +2050,12 @@ h3 {
   background: var(--lapis);
   box-shadow: 0 0 0 3px var(--surface), 0 0 0 4px var(--gold);
 }
-.fgroup-head .kicker {
-  margin-bottom: 6px;
+.fgroup-num {
+  font: 600 0.5em/1 var(--font);
+  letter-spacing: 0.08em;
   color: var(--gold);
+  margin-right: 0.6em;
+  vertical-align: 0.35em;
 }
 .fgroup-head h2 {
   font-size: clamp(1.9rem, 4vw, 2.9rem);
