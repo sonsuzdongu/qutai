@@ -19,6 +19,7 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Server: production is deployed with one command (`backend/scripts/deploy-prod.mjs`, runbook `backend/DEPLOY-prod.md`); first production values decided by the owner: Anthropic only with a 100 USD monthly limit, example pricing (100 credits per USD, 30 % margin) until the pricing decisions, the local server's Apple key and Mailjet account, no spend alert address, no purchases until RevenueCat; fake purchases stay impossible in production.
 - **2026-11-19:** Address bar: the typed text goes to the search engine only after a 200 ms pause in typing, one
   request per word typed without a pause; history keeps its own 120 ms schedule (`UI-22`, owner's decision).
 - **2026-11-19:** Website: a features page (`/en/features/`, `/tr/features/`) written from this record and backend/DESIGN.md, ten groups with example requests, the principles, what leaves the phone and what is deliberately not built, with an illuminated medallion as its picture (`WEB-12`); the home page's apps lines now say export, import and backup are built.
