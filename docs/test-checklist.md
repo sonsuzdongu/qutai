@@ -326,6 +326,7 @@ Sahibi "yazdıklarımı incele, ben düzelt deyince düzelt" dedi; hiçbirine do
 - [ ] Hesap ekranında giriş yöntemlerinin ("Signed in with email", "Google" gibi) yanında hangi e-posta adresiyle giriş yapıldığı yazsın (19 Kas; 0.1.3). Bilinen: sunucunun `GET /me` yanıtındaki `methods` listesi adresi yalnızca `email` yöntemi için veriyor; Google ve Apple için adres dönmüyor, yani sunucu tarafında da değişiklik gerekir (Apple'da gizli aktarma adresi olabilir; ne gösterileceği kararlaştırılmalı). "düzelt" denince bakılacak.
 - [ ] Kurulumun (onboarding) ilk adımında dil seçimi olsun: burada uygulamanın dili seçilsin, varsayılan cihazın dili olsun (19 Kas; 0.1.3). "düzelt" denince bakılacak.
 - [ ] Kurulumdaki örnek adlar ("Ayşe", "Ahmet" gibi) seçili dile göre olsun: her dilde o dilde yaygın adlar kullanılsın (19 Kas; 0.1.3). On dilin hepsi için. "düzelt" denince bakılacak.
+- [ ] Kurulumdaki "Bana kendinizden bahsedin" ("Tell me about yourself") ekranı daha kullanıcı dostu olsun (19 Kas; 0.1.3). İstek: ilk aşamada üç seçenek çıksın: "Konuşarak söylemek istiyorum", "Yazmak istiyorum", "Bana soru sor". Büyük mikrofon ve dinleme görünümü yalnızca "konuşarak" seçilince gelsin; şimdi ekran doğrudan mikrofonla açılıyor. "Bana soru sor" seçeneğinin nasıl çalışacağı (soruların sesle mi yazıyla mı sorulacağı, kaç soru) düzeltme sırasında kararlaştırılacak. "düzelt" denince bakılacak.
 
 ## 14. "Kendinizi tanıtın" (sesle tanıtım, 17 Kasım)
 
