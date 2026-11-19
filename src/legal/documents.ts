@@ -158,7 +158,7 @@ const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
       title: 'Gizlilik Politikası',
       intro:
         'Qutai, yapay zekâ asistanı olan bir web tarayıcısıdır. Gezinmeniz telefonunuzda kalsın diye tasarlandı. ' +
-        'Qutai’nin kendi sunucusu yoktur: verilerinizi toplamayız, saklamayız, satmayız.',
+        'Qutai’ın kendi sunucusu yoktur: verilerinizi toplamayız, saklamayız, satmayız.',
       sections: [
         {
           heading: 'Telefonunuzda kalanlar',
@@ -188,12 +188,12 @@ const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
             'hizmetine (iPhone’da Apple’ınkine, Android’de genellikle Google’ınkine) gönderilir. Yalnızca yer adı ' +
             'saklanır.\n' +
             '• Asistana sesle yazdığınızda telefon o dili cihazın kendisinde tanıyamıyorsa ses, telefonun konuşma ' +
-            'hizmetine (Apple’ın ya da Google’ın) gider; bu yalnızca Qutai’de bir kez izin verdikten sonra olur, ' +
+            'hizmetine (Apple’ın ya da Google’ın) gider; bu yalnızca Qutai’da bir kez izin verdikten sonra olur, ' +
             'gizli sohbetlerde asla. Qutai ve yapay zekâ hizmeti yalnızca metni alır.\n' +
             '• “Reklam ve izleyicileri engelle” açıkken seçtiğiniz filtre listeleri yayıncılarından (örneğin EasyList ' +
             've AdGuard) indirilir ve birkaç günde bir güncellenir. Bu isteklerde gezinmenizle ilgili hiçbir şey ' +
             'yoktur.\n' +
-            'Başka hiçbir şey gönderilmez: Qutai’de analitik, izleme veya reklam yoktur.',
+            'Başka hiçbir şey gönderilmez: Qutai’da analitik, izleme veya reklam yoktur.',
         },
         {
           heading: 'Kişileriniz',
@@ -222,7 +222,7 @@ const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
           heading: 'Kontrol sizde',
           body:
             'Asistanın hafızasını Ayarlar’dan görüp silebilir; geçmişi, çerezleri ve diğer verileri temizleyebilir, ' +
-            'API anahtarlarınızı istediğiniz an kaldırabilirsiniz. Qutai’yi kaldırmak sakladığı her şeyi siler.',
+            'API anahtarlarınızı istediğiniz an kaldırabilirsiniz. Qutai’ı kaldırmak sakladığı her şeyi siler.',
         },
         {
           heading: 'Çocuklar',
@@ -236,7 +236,7 @@ const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
     },
     terms: {
       title: 'Kullanım Koşulları',
-      intro: 'Qutai’yi kullanarak bu koşulları kabul etmiş olursunuz. Lütfen Gizlilik Politikası ile birlikte okuyun.',
+      intro: 'Qutai’ı kullanarak bu koşulları kabul etmiş olursunuz. Lütfen Gizlilik Politikası ile birlikte okuyun.',
       sections: [
         {
           heading: 'Yapay zekâ sağlayıcınız ve maliyetler',
@@ -255,7 +255,7 @@ const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
         {
           heading: 'Kabul edilebilir kullanım',
           body:
-            'Qutai’yi yasaları, sitelerin veya yapay zekâ sağlayıcılarının koşullarını çiğnemek ya da başkalarına ' +
+            'Qutai’ı yasaları, sitelerin veya yapay zekâ sağlayıcılarının koşullarını çiğnemek ya da başkalarına ' +
             'zarar vermek için (örneğin istenmeyen ileti göndermek, başkalarının verilerini toplamak) kullanmayın.',
         },
         {

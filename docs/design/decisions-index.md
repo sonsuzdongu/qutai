@@ -781,6 +781,7 @@ Moved to Details (ids retired, not reused): `VOICE-10`, `VOICE-12`, `VOICE-16`, 
 | `LANG-3` | Settings › Language uses the system's per-app language on Android 13+ (both ways), Qutai's own stored… | Default |  |
 | `LANG-5` | Turkish interface text addresses the user as "siz", including the setup questions, legal texts, iOS… | Owner | 2026-11-16 |
 | `LANG-6` | Exceptions to "siz": texts the user sends to the assistant (suggestion prompts, custom-instruction… | Default |  |
+| `LANG-22` | Turkish suffixes on "Qutai" follow its pronunciation "Kutay": Qutai'ın, Qutai'ı, Qutai'a, Qutai'da, Qutai'dan (no buffer consonant, back… | Owner | 2026-11-20 |
 | `LANG-7` | The assistant replies in the language the user writes in, even when it differs from the interface… | Default |  |
 | `LANG-8` | The assistant addresses the user formally where the language distinguishes (siz, Sie, vous, usted, вы;… | Default |  |
 | `LANG-9` | Every user message carries the interface language, and tool results name Qutai's buttons, screens and… | Default |  |

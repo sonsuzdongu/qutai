@@ -46,10 +46,10 @@ export const STRINGS: Record<IntentLang, Strings> = {
     home: 'Qutai website',
   },
   tr: {
-    title: 'Qutai’de oturum açın',
+    title: 'Qutai’da oturum açın',
     lead: 'Oturum açmayı Qutai uygulamasında tamamlamak için düğmeye dokunun.',
-    button: 'Qutai’yi aç',
-    help: 'Bir şey olmuyor mu? Bu bağlantıyı, kodu istediğiniz ve Qutai’nin yüklü olduğu telefonda açın. Ya da e-postadaki 6 haneli kodu uygulamaya girin.',
+    button: 'Qutai’ı aç',
+    help: 'Bir şey olmuyor mu? Bu bağlantıyı, kodu istediğiniz ve Qutai’ın yüklü olduğu telefonda açın. Ya da e-postadaki 6 haneli kodu uygulamaya girin.',
     desktop: 'Bu bağlantı telefonunuzdaki Qutai uygulamasını açar. E-postayı kodu istediğiniz telefonda açın ya da e-postadaki 6 haneli kodu orada girin.',
     invalidTitle: 'Bu bağlantı eksik',
     invalid: 'Bağlantıyı en yeni e-postadan tekrar açın ya da e-postadaki 6 haneli kodu uygulamaya girin.',
