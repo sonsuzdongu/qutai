@@ -19,6 +19,8 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** The settings tool can no longer weaken a protection: blocking, cookie banners, third-party cookies and
+  HTTPS-only on only, search suggestions off only (`UNTR-8`, `BLK-24`, `TOOL-7`, `TOOL-8`).
 - **2026-11-19:** Incognito never remembers an approval: the action confirmation offers no "Always allow" or "Don't ask
   again" there (`SITE-8`, `INC-14`); removing site rules no longer offers "Always allow".
 - **2026-11-19:** The iPhone clean-install check now also clears the script and app seal key and the pending email
@@ -121,8 +123,7 @@ only partly enforced.
    payment button is recognised by its label in ten languages (`PAY-9`), so an unusual label falls back to the prompt.
 5. **Page content is untrusted.** Web pages, PDFs and files are data, never instructions. Only the user can answer
    Qutai's dialogs; a page cannot approve anything, cannot trigger a contact lookup, and cannot make the assistant change
-   protective settings ([4](docs/design/04-untrusted-content.md)). *Gap:* the settings tool can still switch some blocking
-   protections off (`UNTR-8`).
+   protective settings ([4](docs/design/04-untrusted-content.md)).
 6. **Risky powers are off by default.** Completing payments, running page scripts, working in the background, putting AI
    keys in a backup, streaming Gemini: all off until the user turns them on. Imported or restored scripts and apps arrive
    switched off and need the user's approval before they run ([20](docs/design/20-page-scripts.md), [22](docs/design/22-apps.md)).
@@ -156,9 +157,6 @@ The sections list every disagreement they found; these are the ones the owner sh
   fields (`SEC-2`). Deleting things or changing account settings on a site is asked by the model in the chat, not by an
   app dialog (`UNTR-19`). A final payment button with an unusual label (an icon, "Continue") is caught only by the prompt
   (`PAY-9`). An app's "change only when the user asks" and "at most 3 fix rounds" are prompt-only.
-- **The settings tool can lower protections.** It can switch "Block ads and trackers", "Hide cookie banners" and "Block
-  third-party cookies" off, although its own rule says the assistant must not remove protections; only HTTPS-only is
-  on-only (`UNTR-8`, `BLK-24`). No source says why. Not in TODO.md yet.
 - **Stale documents.** README › Official builds still says credits and sync are "not in the code yet" (credits and server
   backup are built; live sync is not); README › Sign-in methods says adding, removing and merging are "not built yet"
   (built on 17 Nov); README's opening describes the old per-tab glow and an input that reopens during approvals; README

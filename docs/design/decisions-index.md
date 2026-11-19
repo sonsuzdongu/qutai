@@ -190,7 +190,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `UNTR-5` | Refused by the settings tool: "Ask before every action", every site permission (assistant level, location,… | Default |  |
 | `UNTR-6` | HTTPS-only can be turned on by the assistant, never off. | Default |  |
 | `UNTR-7` | "Let the assistant complete payments" and "Let the assistant run scripts on pages" cannot be changed by… | Owner | 2026-11-19 |
-| `UNTR-8` | Today the settings tool can switch "Block ads and trackers", "Hide cookie banners" and "Block third-party… | Default |  |
+| `UNTR-8` | The settings tool can never weaken a protection: blocking, cookie banners, third-party cookies and HTTPS-only on only… | Default | 2026-11-19 |
 | `UNTR-9` | The assistant changes settings only when the user asks in their own words; a page, file or tool result… | Default |  |
 | `UNTR-10` | Bookmarks, site rules, page styles, cookie deletion and apps change only when the user asks, never because… | Default |  |
 | `UNTR-11` | `find_contact` looks up only a name the user typed or said in this conversation. | Default |  |
@@ -332,7 +332,7 @@ Moved to Details (ids retired, not reused): `INC-8`
 | `BLK-21` | HTTPS-only is off by default. Note: docs/permissions.md says "on by default"; the code says off. | Default |  |
 | `BLK-22` | With HTTPS-only on, http pages open over https; if that fails, the user is asked, and an exception lasts… | Default |  |
 | `BLK-23` | The assistant can turn HTTPS-only on, never off; certificate and insecure-site exceptions are only made by… | Default |  |
-| `BLK-24` | Today the assistant can switch ad blocking, cookie-banner hiding and third-party-cookie blocking off as… | Default |  |
+| `BLK-24` | The assistant can switch ad blocking, cookie-banner hiding and third-party-cookie blocking on, never off… | Default | 2026-11-19 |
 | `BLK-26` | Android allows plain http for the whole app and keeps http in check inside the app (HTTPS-only, "Not… | Default |  |
 | `BLK-27` | On a certificate error (Android), "Continue anyway (not secure)" allows that one certificate on that site… | Default |  |
 | `BLK-28` | Android's local network permission is not declared at target API 36; it must be declared and asked for… | Default |  |

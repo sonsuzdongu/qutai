@@ -4,6 +4,7 @@ import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { t, type MessageKey } from '../i18n';
 import { clampTextZoom, Settings, TEXT_ZOOM_MAX, TEXT_ZOOM_MIN } from '../storage/settings';
 import type { ToolContext, ToolOutput } from './executeTool';
+import { mayWrite, settingClass, type SettingsToolKey } from './settingsClass';
 import { settingNotice } from './stepLine';
 import { uiLabel, uiPath } from './uiLabels';
 
@@ -13,10 +14,13 @@ import { uiLabel, uiPath } from './uiLabels';
  * The rule: only appearance and browsing preferences that are visible and easily changed back. Nothing that sets
  * the assistant's own limits (asking before actions, site permissions, background work), handles secrets or locks
  * (provider, model, keys, endpoint, app and incognito lock), costs money on the user's key (web search), concerns
- * what is kept or sent about the user (memory, custom instructions, voice consent) or lowers a protection
- * (HTTPS-only can be turned on, never off). A web page that manages to instruct the assistant must not be able to
- * remove the user's protections. A setting that is not in CHANGEABLE is not changeable from the chat: add new
- * settings here only deliberately, after checking them against this rule.
+ * what is kept or sent about the user (memory, custom instructions, voice consent), payments, scripts, approvals, or
+ * lowers a protection. A protection (settingsClass.ts) can only be moved towards its protective side by the tool: blocking
+ * ads and trackers, hiding cookie banners, blocking third-party cookies and HTTPS-only can be turned on, never off;
+ * search suggestions (which send what the user types to the search engine) can be turned off, never on. A web page
+ * that manages to instruct the assistant must not be able to remove the user's protections. A setting that is not in
+ * CHANGEABLE is not changeable from the chat: add new settings here only deliberately, after checking them against
+ * this rule, and classify them in settingClass's test (scripts/approval-tests/settingsTool.test.ts).
  */
 type Spec = {
   field: keyof Settings;
@@ -25,7 +29,7 @@ type Spec = {
   /** Where it is, by on-screen names. */
   place: () => string;
 } & (
-  | { kind: 'boolean'; /** Only turning it on is allowed (a protection). */ onlyOn?: boolean }
+  | { kind: 'boolean' }
   | { kind: 'choice'; values: readonly string[]; valueLabel: (value: string) => string }
   | { kind: 'percent'; min: number; max: number }
 );
@@ -132,9 +136,8 @@ const CHANGEABLE = {
     label: 'settings.httpsOnly',
     place: inSettings('settings.privacySection'),
     kind: 'boolean',
-    onlyOn: true,
   },
-} satisfies Record<string, Spec>;
+} satisfies Record<SettingsToolKey, Spec>;
 
 export type ChangeableKey = keyof typeof CHANGEABLE;
 const SPECS: Record<string, Spec> = CHANGEABLE;
@@ -144,6 +147,9 @@ function unavailable(key: string): boolean {
   return key === 'picture_in_picture' && Platform.OS !== 'android';
 }
 
+/** Every key the tool can write. */
+export const CHANGEABLE_KEYS = Object.keys(CHANGEABLE) as ChangeableKey[];
+
 const availableKeys = () => Object.keys(CHANGEABLE).filter((k) => !unavailable(k));
 
 /**
@@ -151,6 +157,24 @@ const availableKeys = () => Object.keys(CHANGEABLE).filter((k) => !unavailable(k
  * them. Only for the refusal's wording: whatever is not in CHANGEABLE is refused anyway.
  */
 const PROTECTED: { names: string[]; label: () => string; why: string; place: () => string }[] = [
+  {
+    names: ['assistant_payments', 'payments', 'complete_payments', 'let_the_assistant_complete_payments'],
+    label: () => uiLabel('settings.payments'),
+    why: 'it lets the assistant complete payments, which only the user may allow',
+    place: inSettings('settings.assistant'),
+  },
+  {
+    names: ['assistant_scripts', 'scripts', 'run_scripts', 'script_sites', 'page_scripts'],
+    label: () => uiLabel('settings.scripts'),
+    why: 'it lets the assistant run code on pages, which only the user may allow',
+    place: inSettings('settings.assistant'),
+  },
+  {
+    names: ['always_allow', 'dont_ask_again', 'approvals', 'approval'],
+    label: () => uiLabel('settings.alwaysAllowTitle'),
+    why: 'it decides which of the assistant\'s questions are skipped',
+    place: inSettings('settings.assistant'),
+  },
   {
     names: ['confirm_actions', 'ask_before_actions', 'confirmations'],
     label: () => uiLabel('settings.confirmActions'),
@@ -264,18 +288,26 @@ const TRUE = ['true', 'on', 'yes', '1', 'enabled', 'açık', 'evet'];
 const FALSE = ['false', 'off', 'no', '0', 'disabled', 'kapalı', 'hayır'];
 
 /** The stored value for a requested one, or why it can't be. */
-function parseValue(key: string, spec: Spec, raw: unknown): { value: Settings[keyof Settings] } | { error: string } {
+function parseValue(
+  key: string,
+  spec: Spec,
+  raw: unknown,
+): { value: Settings[keyof Settings] } | { error: string; protected?: boolean } {
   const text = String(raw ?? '').trim().toLowerCase();
   if (spec.kind === 'boolean') {
     const value = raw === true || TRUE.includes(text) ? true : raw === false || FALSE.includes(text) ? false : null;
     if (value === null) return { error: `${key} takes true or false.` };
-    if (spec.onlyOn && !value) {
+    const cls = settingClass(key) ?? 'preference';
+    if (!mayWrite(cls, value)) {
+      const way = cls === 'protectionOn' ? 'on' : 'off';
+      const other = cls === 'protectionOn' ? 'off' : 'on';
       return {
         error:
-          `Not changed: ${uiLabel(spec.label)} can only be turned on by the assistant, never off, because turning ` +
-          'it off weakens protection (a web page that manages to instruct the assistant must not be able to remove ' +
-          "the user's protections). Explain this and offer (with ask_user) to open Qutai's settings with " +
-          `open_settings (target "app"), where the user can turn it off themselves: ${spec.place()}.`,
+          `Not changed: ${uiLabel(spec.label)} can only be turned ${way} by the assistant, never ${other}, because ` +
+          `turning it ${other} weakens the user's protection (a web page that manages to instruct the assistant must ` +
+          "not be able to remove the user's protections). Explain this and offer (with ask_user) to open Qutai's " +
+          `settings with open_settings (target "app"), where the user can turn it ${other} themselves: ${spec.place()}.`,
+        protected: true,
       };
     }
     return { value };
@@ -321,9 +353,11 @@ function describeSetting(key: string, spec: Spec, settings: Settings): string {
   const current = shownValue(spec, settings[spec.field]);
   const options =
     spec.kind === 'boolean'
-      ? spec.onlyOn
-        ? 'true (only turning it on is allowed)'
-        : 'true or false'
+      ? settingClass(key) === 'protectionOn'
+        ? 'true (a protection: only turning it on is allowed)'
+        : settingClass(key) === 'protectionOff'
+          ? 'false (sends typing to the search engine when on: only turning it off is allowed)'
+          : 'true or false'
       : spec.kind === 'percent'
         ? `${spec.min}–${spec.max} in steps of 10 (100 = normal)`
         : spec.values.map((v) => `${v} (${uiLabel_(spec.valueLabel(v))})`).join(', ');
@@ -346,8 +380,9 @@ export async function settingsTool(input: Record<string, unknown>, ctx: ToolCont
         `Qutai settings you can change with settings set (key: on-screen name = current value [stored value]):\n` +
         `${lines.join('\n')}\n` +
         'Everything else (the assistant\'s own limits, site permissions, memory, custom instructions, provider, ' +
-        'model, keys, web search, background work, locks, voice consent, turning HTTPS-only off, backup, clearing ' +
-        'data, filter lists) only the user changes, in Qutai\'s settings.',
+        'model, keys, web search, background work, locks, voice consent, payments, scripts, "Don\'t ask again", ' +
+        'turning a protection off (ad and tracker blocking, cookie-banner hiding, third-party cookies, HTTPS-only) or ' +
+        'search suggestions on, backup, clearing data, filter lists) only the user changes, in Qutai\'s settings.',
       isError: false,
     };
   }
@@ -374,6 +409,7 @@ export async function settingsTool(input: Record<string, unknown>, ctx: ToolCont
     const parsed = parseValue(key, spec, value);
     if ('error' in parsed) {
       problems.push(parsed.error);
+      if (parsed.protected) refused = true;
       continue;
     }
     const before = settings[spec.field];
