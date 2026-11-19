@@ -8,7 +8,7 @@ import {
   contentToApprove,
   declinedText,
   isPublicText,
-  isFinalPaymentLabel,
+  changeNeedsApprovalText,
   PAY_BY_POINT_TEXT,
   pageUrl,
   parseApprovalInput,
@@ -22,6 +22,7 @@ import {
   type PressFacts,
   type PublishAction,
 } from './outwardApproval';
+import { changePress, payPress, type ChangeAction, type PressContext } from './pressContext';
 import { siteKey } from './sitePolicy';
 import { declinedNotice, errorNotice, settingNotice } from './stepLine';
 import { uiPath } from './uiLabels';
@@ -50,7 +51,29 @@ export type OutwardApproval =
       paymentMethod: string;
       recurring: string | null;
       incognito: boolean;
+    }
+  | {
+      kind: 'change';
+      site: string;
+      action: ChangeAction;
+      button: string;
+      /** The page's heading (or the dialog's), its confirm dialog's text, the list row or card the button is in. */
+      heading: string;
+      dialog: string;
+      item: string;
+      fields?: { label: string; value: string }[];
+      incognito: boolean;
     };
+
+type ChangeInfo = {
+  label: string;
+  url: string;
+  disabled: boolean;
+  heading: string;
+  dialog: string;
+  item: string;
+  fields: FormValue[] | null;
+};
 
 type PressInfo = { label: string; url: string; disabled: boolean } | null;
 type Found = { ref: number; line: string } | null;
@@ -119,6 +142,32 @@ export async function requestApprovalTool(input: Record<string, unknown>, ctx: T
     return { content: approvedText('pay', request.buttonRef, info.label), isError: false };
   }
 
+  if (request.kind === 'change') {
+    const change = await tab.run<ChangeInfo>('changeInfo', [request.buttonRef]).catch(() => null);
+    if (!change) return { content: `ref=${request.buttonRef} was not found. Call read_page again.`, isError: true };
+    const fields = change.fields?.length ? change.fields : undefined;
+    const approved = await ctx.confirmOutward({
+      kind: 'change',
+      site,
+      action: request.action,
+      button: change.label,
+      heading: change.heading,
+      dialog: change.dialog,
+      item: change.item,
+      ...(fields ? { fields } : {}),
+      incognito,
+    });
+    if (!approved) return { content: declinedText('change'), isError: true, notice: declinedNotice() };
+    ctx.approvals.add({
+      ...base,
+      kind: 'change',
+      label: change.label,
+      ...(change.dialog ? { dialog: change.dialog } : {}),
+      ...(fields ? { fields: fieldLines(fields) } : {}),
+    });
+    return { content: approvedText('change', request.buttonRef, change.label), isError: false };
+  }
+
   let grant: Grant;
   let shown: { text?: string; fields?: FormValue[] };
   if (request.fieldRef) {
@@ -183,12 +232,26 @@ export async function pressGate(
   }
   const args = name === 'click' ? [ref] : point ? [null, point.fx, point.fy] : null;
   if (!args) return { kind: 'none' };
-  const info = await tab.run<PressInfo>('pressInfo', args).catch(() => null);
-  if (info && isFinalPaymentLabel(info.label)) {
-    if (!ctx.paymentsAllowed?.()) return { kind: 'refuse', output: paymentsOff(info.label) };
+  // What the press is, from the page's context (agent/pressContext.ts): the final step of a payment, deleting
+  // something, or changing account or security settings.
+  const press = await tab.run<PressContext | null>('pressContext', args).catch(() => null);
+  const pay = payPress(press);
+  if (press && pay.pay) {
+    if (!ctx.paymentsAllowed?.()) return { kind: 'refuse', output: paymentsOff(press.label) };
     return {
       kind: 'refuse',
-      output: { content: name === 'click' ? payNeedsApprovalText(info.label) : PAY_BY_POINT_TEXT, isError: true },
+      output: { content: name === 'click' ? payNeedsApprovalText(press.label, pay.why) : PAY_BY_POINT_TEXT, isError: true },
+    };
+  }
+  const change = changePress(press);
+  if (press && change.change) {
+    return {
+      kind: 'refuse',
+      output: {
+        content: changeNeedsApprovalText(name === 'click' ? ref : null, press.label, change.change, change.why),
+        isError: true,
+        notice: settingNotice(t('step.changeFirst')),
+      },
     };
   }
   // A press that would send text the assistant typed (its form's button, or one in the same composer box).
@@ -233,6 +296,15 @@ export async function enterGate(input: Record<string, unknown>, ctx: ToolContext
 
 /** The page as it is now, for checkPress. */
 async function pressState(grant: Grant, ctx: ToolContext, tab: Tab) {
+  if (grant.kind === 'change') {
+    const now = await tab.run<ChangeInfo>('changeInfo', [grant.buttonRef]).catch(() => null);
+    return {
+      url: tab.url,
+      label: now ? now.label : null,
+      dialog: now ? now.dialog : null,
+      fields: now?.fields?.length ? fieldLines(now.fields) : null,
+    };
+  }
   if (grant.kind === 'pay') {
     const totalText = await tab.run<string | null>('textOf', [grant.totalRef]).catch(() => null);
     const found = await tab.run<Found>('findText', [grant.total]).catch(() => null);

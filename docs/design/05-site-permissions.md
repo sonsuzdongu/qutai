@@ -91,8 +91,9 @@ action" setting, the confirmation dialogs, "Don't ask again", and the actions th
 
 - Levels apply to web pages only; on the new tab page there is no site, so Blocked and Read only don't apply there.
 - Personal-detail checks find only details Qutai remembers; `select_option` can't enter hidden values.
-- "Irreversible or sensitive" actions beyond these gates (deleting things on a site, account settings) rely on the
-  prompt (see `UNTR-19`).
+- Deleting things and account or security changes on a site have the app's change approval (`PAY-26`) where Qutai
+  recognises the press; what it can't recognise relies on the prompt (see `UNTR-19`). An approved press is not asked
+  again by "Ask before every action".
 
 ## Where it lives
 

@@ -1,3 +1,4 @@
+import { CHANGE_ACTIONS, type ChangeAction } from './pressContext';
 /**
  * Approvals for what goes out in the user's name on a web page: "publish" (a post, comment, reply, review, a message
  * or email sent on a site, a public form) and "pay" (the final step of a payment, only when the user turned on
@@ -13,7 +14,7 @@
  * Pure code (no React Native): the rules, the texts for the model, and the payment-button words.
  */
 
-export type OutwardKind = 'publish' | 'pay';
+export type OutwardKind = 'publish' | 'pay' | 'change';
 
 export const PUBLISH_ACTIONS = ['post', 'comment', 'reply', 'review', 'message', 'email', 'form'] as const;
 export type PublishAction = (typeof PUBLISH_ACTIONS)[number];
@@ -27,7 +28,8 @@ export type ApprovalRequest =
       items: string;
       paymentMethod: string;
       recurring: string | null;
-    };
+    }
+  | { kind: 'change'; action: ChangeAction; buttonRef: number };
 
 const MAX_TEXT = 5000;
 
@@ -70,7 +72,12 @@ export function parseApprovalInput(input: Record<string, unknown>): { request: A
       },
     };
   }
-  return { error: 'kind must be "publish" or "pay".' };
+  if (input.kind === 'change') {
+    const action = CHANGE_ACTIONS.includes(input.action as ChangeAction) ? (input.action as ChangeAction) : null;
+    if (!action) return { error: `Give action: one of ${CHANGE_ACTIONS.join(', ')}.` };
+    return { request: { kind: 'change', action, buttonRef } };
+  }
+  return { error: 'kind must be "publish", "pay" or "change".' };
 }
 
 /** Text compared the way a person reads it: spacing and non-breaking spaces don't count. */
@@ -95,6 +102,9 @@ export type Grant = {
   total?: string;
   totalRef?: number;
   totalLine?: string;
+  /** change: the button's label and the page's dialog text as approved. */
+  label?: string;
+  dialog?: string;
 };
 
 /** The grants of one task (runAgent makes one per message): a grant is used up by the press it was for. */
@@ -135,6 +145,9 @@ export type PressState = {
   totalLine?: string | null;
   /** pay: the setting, read again. */
   paymentsOn?: boolean;
+  /** change: the button's label and the dialog's text now (null: gone). */
+  label?: string | null;
+  dialog?: string | null;
 };
 
 export const pageUrl = (url: string) => url.split('#')[0];
@@ -161,6 +174,15 @@ export function checkPress(grant: Grant, now: PressState): { ok: true } | { ok: 
     }
     return { ok: true };
   }
+  if (grant.kind === 'change') {
+    if (now.label === null || now.label === undefined || !sameText(now.label, grant.label))
+      return { ok: false, reason: 'The button is no longer the one the user approved.' + again };
+    if (grant.dialog && !sameText(now.dialog, grant.dialog))
+      return { ok: false, reason: "The page's dialog changed since the user approved." + again };
+    if (grant.fields && (!now.fields || now.fields.join('\n') !== grant.fields.join('\n')))
+      return { ok: false, reason: 'The form changed since the user approved it.' + again };
+    return { ok: true };
+  }
   if (!now.paymentsOn) return { ok: false, reason: paymentsOffText(null) };
   const stillThere =
     (now.totalText != null && now.totalText.includes(grant.total ?? '\u0000')) ||
@@ -182,7 +204,7 @@ function clip(text: string, max = 200): string {
 
 /** After the dialog's Approve. `button`: the button's label as read from the page. */
 export function approvedText(kind: OutwardKind, buttonRef: number, button: string, enter = false): string {
-  const what = kind === 'pay' ? 'pay' : 'send it';
+  const what = kind === 'pay' ? 'pay' : kind === 'change' ? 'make the change' : 'send it';
   const how = enter
     ? `press Enter in ref=${buttonRef}: call type with ref=${buttonRef}, the same text and submit true`
     : `press ref=${buttonRef} ("${button}") with click to ${what}`;
@@ -196,6 +218,8 @@ export function approvedText(kind: OutwardKind, buttonRef: number, button: strin
 
 /** After Cancel, or when the dialog was dismissed. */
 export function declinedText(kind: OutwardKind): string {
+  if (kind === 'change')
+    return 'The user did not approve this change. Do not press the button or make the change any other way. Tell the user nothing was changed and ask what they want instead.';
   return kind === 'pay'
     ? 'The user did not approve the payment. Do not press the payment button or pay any other way. Tell the user nothing was paid and ask what to change.'
     : 'The user did not approve it. Do not press the button or send it any other way. Tell the user it was not sent and ask what to change.';
@@ -215,10 +239,22 @@ export function paymentsOffText(button: string | null, settingPath: string | nul
 }
 
 /** A final payment button pressed without an approval while payments are on. */
-export function payNeedsApprovalText(button: string): string {
+export function payNeedsApprovalText(button: string, why = 'its label is a payment button'): string {
   return (
-    `"${button}" looks like the final payment button, and it needs the user's approval in Qutai's dialog first. ` +
+    `"${button}" looks like the final payment button (${why}), and it needs the user's approval in Qutai's dialog first. ` +
     'Nothing was pressed. Call request_approval with kind "pay" (total, items and payment method as the page shows them), then press it.'
+  );
+}
+
+/** A press that deletes something or changes account or security settings, without an approval. */
+export function changeNeedsApprovalText(buttonRef: number | null, button: string, action: ChangeAction, why: string): string {
+  const which = buttonRef === null ? 'The button at that point' : `ref=${buttonRef} ("${button}")`;
+  const what = action === 'delete' ? 'deletes something' : action === 'security' ? 'changes security settings' : 'changes account settings';
+  return (
+    `${which} ${what} on this site (${why}), which needs the user's approval in Qutai's dialog first. Nothing was ` +
+    `pressed. Call request_approval with kind "change", action "${action}" and button_ref ` +
+    `${buttonRef ?? "(the button's ref from read_page; a tap at a point can't carry an approval)"}; once approved, press ` +
+    'it with click. Do not ask in chat.'
   );
 }
 

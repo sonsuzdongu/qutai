@@ -36,6 +36,11 @@ function fakeTab(page: Page, id = 'tab-1') {
     },
     async run(command: string, args: unknown[]) {
       switch (command) {
+        case 'pressContext': {
+          const b = page.buttons[Number(args[0])];
+          if (!b) throw new Error(`Element ref=${String(args[0])} not found`);
+          return { label: b.label, tag: 'button', type: 'submit', role: '', disabled: !!b.disabled, dialogText: '', heading: '' };
+        }
         case 'pressInfo': {
           const b = page.buttons[Number(args[0])];
           if (!b) throw new Error(`Element ref=${String(args[0])} not found`);
@@ -98,7 +103,7 @@ const pay = { kind: 'pay', button_ref: 9, total: '€24.99', items: 'Wireless ea
 
 test('the request is checked: kind, button, action, the text with its field, a total with a number', () => {
   assert.ok('request' in parseApprovalInput(publish));
-  assert.match((parseApprovalInput({ ...publish, kind: 'buy' }) as { error: string }).error, /publish" or "pay/);
+  assert.match((parseApprovalInput({ ...publish, kind: 'buy' }) as { error: string }).error, /publish", "pay" or "change"/);
   assert.match((parseApprovalInput({ ...publish, button_ref: 0 }) as { error: string }).error, /button_ref/);
   assert.match((parseApprovalInput({ ...publish, action: 'like' }) as { error: string }).error, /action/);
   assert.match((parseApprovalInput({ ...publish, text: ' ' }) as { error: string }).error, /exactly the text/);

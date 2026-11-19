@@ -19,6 +19,8 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Deleting and account or security changes on a site get Qutai's own approval (`PAY-26`, request_approval
+  kind "change"; `UNTR-19` no longer a chat question), and the final payment button is also recognised by context (`PAY-9`).
 - **2026-11-19:** The app refuses typing into password, one-time-code, card-number and security-code fields and never
   shows their values to the AI (`SEC-2`, `SEC-3`; was prompt-only).
 - **2026-11-19:** "Ask Qutai to fix this" fills the message box instead of sending, and console lines carry only the
@@ -122,9 +124,9 @@ only partly enforced.
    which shows what Qutai itself reads on the page and allows one press of one button ([7](docs/design/07-posting-and-paying.md)).
    Payments are off by default, have no spending limit and never offer "Don't ask again". Calls and messages to people
    are only prepared; the user taps Call or Send ([15](docs/design/15-tools-and-phone-actions.md)). Every page script
-   run shows its code first ([20](docs/design/20-page-scripts.md)). *Partly prompt-only:* other irreversible actions (deleting things on
-   a site, changing account settings) are asked in the chat by the model, not by an app dialog (`UNTR-19`), and a final
-   payment button is recognised by its label in ten languages (`PAY-9`), so an unusual label falls back to the prompt.
+   run shows its code first ([20](docs/design/20-page-scripts.md)). Deleting things and changing account or security settings on a site
+   have their own app approval (`PAY-26`), and a final payment button is recognised by its label or its context
+   (`PAY-9`); a press the app can't recognise falls back to the prompt.
 5. **Page content is untrusted.** Web pages, PDFs and files are data, never instructions. Only the user can answer
    Qutai's dialogs; a page cannot approve anything, cannot trigger a contact lookup, and cannot make the assistant change
    protective settings ([4](docs/design/04-untrusted-content.md)).
@@ -157,9 +159,8 @@ or the AI provider, incognito data to disk.
 
 The sections list every disagreement they found; these are the ones the owner should see first.
 
-- **Prompt-only protections.** Deleting things or changing account settings on a site is asked by the model in the chat, not by an
-  app dialog (`UNTR-19`). A final payment button with an unusual label (an icon, "Continue") is caught only by the prompt
-  (`PAY-9`). An app's "change only when the user asks" and "at most 3 fix rounds" are prompt-only.
+- **Prompt-only protections.** Deletes, account changes and payment buttons that Qutai can't recognise from their label
+  or context fall back to the prompt (`PAY-9`, `PAY-26`). An app's "change only when the user asks" and "at most 3 fix rounds" are prompt-only.
 - **Stale documents.** README › Official builds still says credits and sync are "not in the code yet" (credits and server
   backup are built; live sync is not); README › Sign-in methods says adding, removing and merging are "not built yet"
   (built on 17 Nov); README's opening describes the old per-tab glow and an input that reopens during approvals; README
@@ -187,7 +188,7 @@ One file per area. "Rules" counts the decisions with ids; "Waiting" the ones sti
 | 4 | [Page content is untrusted](docs/design/04-untrusted-content.md) | 18 | 0 | Web pages, PDFs, attached files and script results can contain text written to steer the assistant ("ignore your instructions and…"). |
 | 5 | [Site permissions and approvals](docs/design/05-site-permissions.md) | 20 | 0 | What the assistant may do on each site, and when it must ask the user first: per-site levels, the "Ask before every action" setting, the confirmation… |
 | 6 | [Passwords, card numbers and one-time codes](docs/design/06-secrets.md) | 13 | 1 | What the assistant does with secrets: passwords, one-time codes, card numbers and security codes, bank checks, and sign-in pages. |
-| 7 | [Posting and paying](docs/design/07-posting-and-paying.md) | 19 | 0 | How the assistant posts, comments, sends messages on a site and completes a payment: always through Qutai's own approval dialog, one press at a time, and… |
+| 7 | [Posting and paying](docs/design/07-posting-and-paying.md) | 20 | 0 | How the assistant posts, comments, sends messages on a site and completes a payment: always through Qutai's own approval dialog, one press at a time, and… |
 | 8 | [Incognito and locks](docs/design/08-incognito.md) | 27 | 1 | Incognito (private) tabs save nothing and keep their cookies and site data apart; the assistant works in them with fewer powers. |
 | 9 | [Blocking and My rules](docs/design/09-blocking-and-my-rules.md) | 22 | 1 | Blocking ads and trackers, hiding cookie banners, third-party cookies, the user's own rules ("My rules") and their file, HTTPS-only, local network pages and… |
 | 10 | [What web pages may use](docs/design/10-web-page-permissions.md) | 12 | 0 | What a web site itself may use on the phone: the location, the camera and the microphone, each decided per site by the user. |

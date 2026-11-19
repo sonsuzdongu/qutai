@@ -60,8 +60,8 @@ checks in the app, not only behind the model's good behaviour.
   Status: Default (manager or implementing session; open to change) · Why: "every decision to proceed is the user's" (Google Play's rule for onReceivedSslError) · Enforced: In the app: src/browser/certificateExceptions.ts (only the user's ErrorPage adds an exception) · Source: 06b61bb
 - **`UNTR-18`** The user's custom instructions are placed below the safety rules and say they never override them.
   Status: Default (manager or implementing session; open to change) · Why: they are the user's preferences, "lower in precedence than the safety rules" · Enforced: Prompt only: src/agent/systemPrompt.ts (customInstructionsPrompt); the app does not check it · Source: 849029b
-- **`UNTR-19`** Other irreversible or sensitive actions (deleting things, changing account or security settings, sharing personal data) are asked with `ask_user` in the chat first.
-  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: Prompt only: src/agent/systemPrompt.ts; the app does not check it, and the answer is an ordinary chat message · Source: f575c25
+- **`UNTR-19`** Deleting something and changing account or security settings on a site go through Qutai's own approval dialog (`PAY-26`), enforced by the app where it recognises the press; sharing personal data is still asked with `ask_user` in the chat first. Changed 19 Nov 2026 (before: all of these were a chat question).
+  Status: Default (manager or implementing session; open to change) · Why: a chat answer is not a dialog; nothing irreversible without the app's own approval · Enforced: In the app for deleting and account or security changes it recognises: src/agent/approvalTool.ts (pressGate), src/agent/pressContext.ts (changePress); Prompt only for presses it can't recognise and for sharing personal data: src/agent/systemPrompt.ts · Source: f575c25; 19 Nov 2026 security pass
 
 ## Details
 
@@ -81,8 +81,8 @@ until someone adds it on purpose.
 - With "Ask before every action" off (the default), clicks, typing and page changes run without a dialog; only the
   specific gates (posting and paying, personal details, hidden values, card numbers, uploads, downloads, scripts,
   styles) stop them.
-- `UNTR-19` relies on the model and on a chat answer, which a page cannot fake as a dialog but which is also not a
-  dialog.
+- `UNTR-19`: presses the app can't recognise as deleting or account changes (`PAY-26` lists the limits) and sharing
+  personal data still rely on the model.
 
 ## Where it lives
 

@@ -38,6 +38,47 @@
   <label>Comment <textarea id="o-comment">hello</textarea></label>
 </section>
 
+<!-- Payment step: card fields, a total, buttons with odd labels. -->
+<section id="pay">
+  <h2>Payment</h2>
+  <p>Order total: €24.99</p>
+  <form id="payform" onsubmit="return false">
+    <label>Card number <input autocomplete="cc-number"></label>
+    <button type="button" id="p-apply">Apply</button>
+    <button type="submit" id="p-icon"><svg width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6"/></svg></button>
+    <button type="submit" id="p-go">Go</button>
+  </form>
+  <a href="#cart" id="p-back">Back</a>
+  <button type="button" id="p-cart">Add to cart</button>
+</section>
+
+<!-- Deleting: a trash button, a cart's Remove, a confirm dialog with a red Yes. -->
+<section id="del">
+  <h2>Photos</h2>
+  <ul><li>beach.jpg <button type="button" aria-label="Delete" id="d-trash">🗑</button></li></ul>
+  <ul><li>Socks <button type="button" id="d-remove">Remove</button></li></ul>
+  <button type="button" aria-haspopup="menu" aria-label="More" id="d-more">⋮</button>
+  <div role="alertdialog" aria-modal="true" id="d-dialog">
+    <p>Delete this photo? This can’t be undone.</p>
+    <button type="button" id="d-cancel">Cancel</button>
+    <button type="button" class="btn btn-danger" id="d-yes">Yes</button>
+  </div>
+</section>
+
+<!-- Account settings: contact details, a privacy switch, a password change. -->
+<section id="acct">
+  <h2>Account settings</h2>
+  <form id="a-email" onsubmit="return false"><label>Email <input type="email" value="me@example.test"></label><button id="a-save">Save</button></form>
+  <button role="switch" aria-checked="false" id="a-switch">Public profile</button>
+  <form id="a-pass" onsubmit="return false">
+    <input type="password" autocomplete="current-password" aria-label="Current password">
+    <input type="password" autocomplete="new-password" aria-label="New password">
+    <button id="a-pass-save">Update</button>
+  </form>
+  <form id="a-login" onsubmit="return false"><input type="email" aria-label="Email"><input type="password" aria-label="Password"><button id="a-login-btn">Sign in</button></form>
+  <button type="button" id="a-signout">Sign out of all devices</button>
+</section>
+
 <script>
 customElements.define('x-secret-field', class extends HTMLElement {
   connectedCallback() {
@@ -91,6 +132,40 @@ customElements.define('x-secret-field', class extends HTMLElement {
   const snap = A.snapshotHtml();
   row('the script copy holds no secret value', !/hunter2|123456|987654|4242424242424242/.test(JSON.stringify(snap)), '');
   row('screenshot masks codes and cards', A.secretFieldIndices().length >= 4, JSON.stringify(A.secretFieldIndices()));
+  // Presses: facts from the page script, decided by the app's rule (POST /classify, src/agent/pressContext.ts).
+  const presses = [
+    ['/checkout/payment', 'p-icon', { pay: true }],
+    ['/checkout/payment', 'p-go', { pay: true }],
+    ['/checkout/payment', 'p-apply', { pay: false }],
+    ['/checkout/payment', 'p-back', { pay: false }],
+    ['/checkout/payment', 'p-cart', { pay: false }],
+    ['/photos', 'd-trash', { change: 'delete' }],
+    ['/cart', 'd-remove', { change: null }],
+    ['/photos', 'd-more', { change: null }],
+    ['/photos', 'd-cancel', { change: null }],
+    ['/photos', 'd-yes', { change: 'delete' }],
+    ['/account/settings', 'a-save', { change: 'account' }],
+    ['/account/settings', 'a-switch', { change: 'account' }],
+    ['/account/settings', 'a-pass-save', { change: 'security' }],
+    ['/login', 'a-login-btn', { change: null, pay: false }],
+    ['/account/settings', 'a-signout', { change: 'security' }],
+  ];
+  const original = location.pathname;
+  for (const [path, id, want] of presses) {
+    history.replaceState(null, '', path);
+    // The ref read_page gave the element: the one whose press has this element's label (labels are unique here;
+    // the icon-only button is the one button without a label).
+    const el = document.getElementById(id);
+    const label = (el.getAttribute('aria-label') || el.innerText || '').trim();
+    const refs = A.readPage(0).content.split('\n').filter((l) => /\[ref=\d+\] (button|a|switch)/.test(l)).map((l) => Number(/\[ref=(\d+)\]/.exec(l)[1]));
+    const ref = refs.find((r) => A.changeInfo(r).label === label);
+    const facts = ref ? A.pressContext(ref) : null;
+    if (!facts) { row('press ' + id, false, 'no ref'); continue; }
+    const got = await fetch('/classify', { method: 'POST', body: JSON.stringify(facts) }).then((r) => r.json());
+    const ok = Object.keys(want).every((k) => got[k] === want[k]);
+    row('press ' + id + ' on ' + path, ok, JSON.stringify(got));
+  }
+  history.replaceState(null, '', original);
   window.__pageTestResults = results;
   document.getElementById('summary').textContent = results.filter((r) => r.ok).length + ' / ' + results.length + ' passed';
 })();

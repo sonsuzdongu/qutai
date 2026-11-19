@@ -408,6 +408,14 @@ async function askOutward(approval: OutwardApproval, signal: AbortSignal): Promi
     } else {
       lines.push({ icon: 'send', text: t('approval.formValues') }, ...(approval.fields ?? []).map((f) => ({ text: `${f.label}: ${f.value}` })));
     }
+  } else if (approval.kind === 'change') {
+    title = t(`approval.changeTitle.${approval.action}`, { site: approval.site });
+    approve = t('approval.approve');
+    if (approval.heading) lines.push({ icon: 'review', text: t('approval.changeHeading', { heading: approval.heading }) });
+    if (approval.dialog) lines.push({ icon: 'info', text: t('approval.changeDialog', { text: approval.dialog }) });
+    if (approval.item) lines.push({ icon: 'trash', text: t('approval.changeItem', { item: approval.item }) });
+    if (approval.fields?.length)
+      lines.push({ icon: 'send', text: t('approval.formValues') }, ...approval.fields.map((f) => ({ text: `${f.label}: ${f.value}` })));
   } else {
     title = t('approval.payTitle', { total: approval.total, site: approval.site });
     approve = t('approval.pay', { total: approval.total });
@@ -422,6 +430,7 @@ async function askOutward(approval: OutwardApproval, signal: AbortSignal): Promi
   const notes = [
     t('approval.press', { button: approval.button }),
     ...(approval.kind === 'pay' ? [t('approval.payNote')] : []),
+    ...(approval.kind === 'change' ? [t('approval.changeNote')] : []),
     t('approval.onlyHere'),
   ];
   const result = await dialog.show({

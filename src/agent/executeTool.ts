@@ -402,7 +402,9 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'read_calendar':
       return t('action.readCalendar');
     case 'request_approval':
-      return t(input.kind === 'pay' ? 'action.requestApprovalPay' : 'action.requestApproval');
+      return t(
+        input.kind === 'pay' ? 'action.requestApprovalPay' : input.kind === 'change' ? 'action.requestApprovalChange' : 'action.requestApproval',
+      );
     case 'open_settings':
       return t(
         input.target === 'app'

@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 825 decisions (110 owner, 631 default, 84 waiting); 163 ids moved to Details.
+Totals: 826 decisions (110 owner, 632 default, 84 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -200,7 +200,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `UNTR-16` | Scripts are never used to send, post, pay, read passwords, codes or cookies, or because a page asks; their… | Default |  |
 | `UNTR-17` | The certificate error page and its "Continue anyway" are native views the assistant's tools cannot reach. | Default |  |
 | `UNTR-18` | The user's custom instructions are placed below the safety rules and say they never override them. | Default |  |
-| `UNTR-19` | Other irreversible or sensitive actions (deleting things, changing account or security settings, sharing… | Default |  |
+| `UNTR-19` | Deleting and account or security changes on a site go through Qutai's change approval (`PAY-26`); sharing personal data is asked in chat… | Default | 2026-11-19 |
 
 Moved to Details (ids retired, not reused): `UNTR-3`
 
@@ -261,7 +261,7 @@ Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE
 | `PAY-6` | Turning payments on asks once more; turning them off never asks. | Default |  |
 | `PAY-7` | The payments setting is not restored from a backup and can't be changed by the assistant. | Default |  |
 | `PAY-8` | With payments off, pressing a final payment button is refused and the assistant tells the user the order… | Default |  |
-| `PAY-9` | Pressing a button whose whole label is a final payment step ("Pay", "Pay €24.99", "Place your order",… | Default |  |
+| `PAY-9` | The final payment button needs an approval: recognised by its label or by context (payment step, its form, a total)… | Default | 2026-11-19 |
 | `PAY-11` | The pay dialog shows the site, the total exactly as found on the page and the line it is on, the order,… | Default |  |
 | `PAY-12` | The payments setting is read again when the dialog closes and before the press; turned off meanwhile,… | Default |  |
 | `PAY-13` | Both dialogs are shown every time: never "Don't ask again", whatever the site's permission. | Default |  |
@@ -272,6 +272,7 @@ Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE
 | `PAY-23` | Scripts are refused in a tab while a publish or pay approval waits there. | Default |  |
 | `PAY-24` | Before a purchase or sign-up the assistant names any subscription, automatic renewal, free trial turning… | Default |  |
 | `PAY-25` | The activity history records only what was asked (post, comment, pay), never the text or the total. | Default |  |
+| `PAY-26` | Deleting something or changing account or security settings on a site needs Qutai's own approval (request_approval kind "change")… | Default | 2026-11-19 |
 
 Moved to Details (ids retired, not reused): `PAY-10`, `PAY-18`, `PAY-19`, `PAY-20`, `PAY-21`, `PAY-22`
 

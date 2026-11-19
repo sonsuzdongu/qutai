@@ -5,7 +5,7 @@
 // text itself from `beforeinput`, buttons that act on pointer or touch events instead of click, a keyup-enabled form,
 // and a checkout with a total. Nothing leaves the machine except React, loaded from cdnjs for the React fixture.
 //
-// Usage: node --experimental-transform-types scripts/page-tests/serve.mjs [port]   (default 8811; 127.0.0.1 only)
+// Usage: node --experimental-transform-types --import ./scripts/credits-tests/loader.mjs scripts/page-tests/serve.mjs [port]   (default 8811; 127.0.0.1 only)
 //   The flag lets POST /decide judge the page's press facts with the app's own rule (src/agent/outwardApproval.ts).
 //   http://localhost:8811/            the page with the working copy's page script; runs every case and shows a table
 //   http://localhost:8811/?script=head the same with the page script of the last commit (to compare before a fix)
@@ -33,6 +33,7 @@ function pageScript(fromHead) {
 }
 
 const rule = await import('../../src/agent/outwardApproval.ts').catch(() => null);
+const pressRule = await import('../../src/agent/pressContext.ts').catch(() => null);
 
 createServer((req, res) => {
   const url = new URL(req.url ?? '/', `http://localhost:${port}`);
@@ -57,7 +58,22 @@ createServer((req, res) => {
     res.end(pageScript(url.searchParams.get('script') === 'head'));
     return;
   }
-  if (url.pathname === '/guards') {
+  if (url.pathname === '/classify' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (c) => (body += c));
+    req.on('end', () => {
+      if (!pressRule) {
+        res.writeHead(501).end('Run the server with --experimental-transform-types');
+        return;
+      }
+      const facts = JSON.parse(body);
+      const pay = pressRule.payPress(facts);
+      const change = pressRule.changePress(facts);
+      res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ pay: pay.pay, change: change.change }));
+    });
+    return;
+  }
+  if (url.pathname === '/guards' || url.pathname.startsWith('/guards/')) {
     const html = readFileSync(join(here, 'guards.html'), 'utf8').replace(
       '__AGENT_SRC__',
       `/agent.js?script=${url.searchParams.get('script') === 'head' ? 'head' : 'work'}`,

@@ -995,6 +995,128 @@ export const PAGE_SCRIPT = String.raw`
     return { label: labelOf(button), url: location.href.split('#')[0], disabled: isDisabled(button) };
   }
 
+  // ---------- What a press is: payment, deleting, account and security (src/agent/pressContext.ts decides) ----------
+  // Facts only; the app's pure rule (payPress, changePress) decides whether the press needs request_approval.
+
+  var PAY_FRAME = /js\.stripe\.com|stripe\.network|checkoutshopper|adyen|braintree|paypal\.com|iyzi|checkout\.com|mollie|klarna|squareup|worldpay|payu|paytr|craftgate|cardinalcommerce|3dsecure|pay\.google|apple-pay|hips\.com|payfort|razorpay|mercadopago|pagseguro|yoomoney|xendit|midtrans/i;
+  var AMOUNT = /\d[\d.,  ]*\s?(€|\$|£|₺|₽|¥|₩|円|원|tl|try|eur|usd|gbp|rub|руб|idr|rp|brl|r\$|jpy|krw)(?![a-z])|(€|\$|£|₺|₽|¥|₩|r\$|rp)\s?\d/i;
+  var TOTAL_WORD = /total|toplam|gesamt|summe|montant|importe|valor total|итого|сумма|jumlah|合計|総額|합계|총 ?금액|to pay|ödenecek|zu zahlen|à payer|a pagar|к оплате|dibayar/i;
+  var ACCOUNT_PATH = /(^|[\/#._-])(account|accounts|myaccount|my-account|settings|setting|profile|security|privacy|preferences|password|2fa|two-factor|mfa|billing|payment-methods|wallet|hesap|hesabim|hesabım|ayarlar|gizlilik|guvenlik|güvenlik|profil|konto|einstellungen|sicherheit|datenschutz|compte|parametres|paramètres|securite|sécurité|confidentialite|confidentialité|cuenta|configuracion|configuración|seguridad|privacidad|conta|configuracoes|configurações|seguranca|segurança|privacidade|akun|pengaturan|keamanan|privasi|аккаунт|настройки|безопасность|профиль)([\/#._?-]|$)/i;
+  var SIGNUP_PATH = /(^|[\/#._-])(signup|sign-up|register|registration|join|create-account|kayit|kayıt|uye-ol|registrieren|inscription|registro|cadastro|daftar|регистрация)([\/#._?-]|$)/i;
+  var CHECKOUT_PATH = /(^|[\/#._-])(checkout|payment|pay|kasse|zahlung|paiement|caisse|pago|pagamento|oplata|оплата|odeme|ödeme|pembayaran|bayar|決済|결제)([\/#._?-]|$)/i;
+
+  function pressElement(ref, fx, fy) {
+    var el;
+    if (ref != null) el = getEl(ref);
+    else {
+      var p = pointFor(fx, fy);
+      el = document.elementFromPoint(p.x, p.y);
+      if (!el) return null;
+      el = el.closest ? el.closest('a, button, input, select, textarea, [role], [onclick]') || el : el;
+    }
+    return el.closest ? el.closest('button, input[type=submit], input[type=button], input[type=checkbox], a, [role=button], [role=switch], [role=menuitem], [role=checkbox]') || el : el;
+  }
+  function textNear(el, sel, max) {
+    var n = el.closest ? el.closest(sel) : null;
+    return n ? cut(clean(n.innerText || ''), max) : '';
+  }
+  function redish(color) {
+    var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?/.exec(color || '');
+    if (!m || (m[4] !== undefined && Number(m[4]) < 0.3)) return false;
+    return Number(m[1]) >= 170 && Number(m[2]) <= 100 && Number(m[3]) <= 100;
+  }
+  function inputsOf(root) { return root ? Array.prototype.slice.call(root.querySelectorAll('input, textarea, select'), 0, 200) : []; }
+  function countSecret(list, kinds) {
+    var n = 0;
+    list.forEach(function (f) { var k = f.tagName === 'SELECT' ? null : secretOf(f); if (k && kinds.indexOf(k) >= 0) n++; });
+    return n;
+  }
+  function totalOnPage() {
+    var lines = (document.body ? document.body.innerText : '').split('\n').slice(0, 3000);
+    for (var i = 0; i < lines.length; i++) {
+      if (!TOTAL_WORD.test(lines[i]) || lines[i].length > 120) continue;
+      if (AMOUNT.test(lines[i]) || (lines[i + 1] && AMOUNT.test(lines[i + 1])) || (lines[i + 2] && AMOUNT.test(lines[i + 2]))) return true;
+    }
+    return false;
+  }
+  // The facts about a click by ref (or at a point): payment context and destructive or account context.
+  function pressContext(ref, fx, fy) {
+    var button = pressElement(ref, fx, fy);
+    if (!button) return null;
+    var tag = button.tagName.toLowerCase();
+    var type = tag === 'input' || tag === 'button' ? (button.getAttribute('type') || (tag === 'button' ? 'submit' : 'text')).toLowerCase() : '';
+    var form = button.form || formOf(button);
+    var formFields = inputsOf(form);
+    var pageFields = inputsOf(document.body);
+    var payFrame = false;
+    var frames = document.querySelectorAll('iframe[src]');
+    for (var i = 0; i < frames.length && i < 40; i++) if (PAY_FRAME.test(frames[i].getAttribute('src') || '')) payFrame = true;
+    var paymentChoice = !!(form && form.querySelector('input[type=radio][name*="pay" i], input[type=radio][name*="odeme" i], input[type=radio][value*="card" i], [autocomplete^="cc-"]'));
+    var cardOnPage = countSecret(pageFields, ['cardNumber', 'securityCode']) > 0 || !!document.querySelector('[autocomplete^="cc-"]');
+    var formCard = countSecret(formFields, ['cardNumber', 'securityCode']) > 0;
+    var path = location.pathname + location.hash;
+    var checkoutPath = CHECKOUT_PATH.test(path);
+    var dialog = button.closest ? button.closest('[role=dialog], [role=alertdialog], dialog[open], [aria-modal=true]') : null;
+    var cs = null;
+    try { cs = getComputedStyle(button); } catch (e) {}
+    var styleWords = [button.getAttribute('class'), button.id, button.getAttribute('data-variant'), button.getAttribute('data-type'),
+      button.getAttribute('data-color'), button.getAttribute('data-testid')].join(' ').toLowerCase();
+    var heading = '';
+    var h = (dialog || document).querySelector('h1, h2, [role=heading]');
+    if (h) heading = cut(clean(h.innerText || ''), 120);
+    var passwords = formFields.filter(function (f) { return f.tagName !== 'SELECT' && secretOf(f) === 'password'; });
+    return {
+      label: labelOf(button),
+      tag: tag,
+      type: type,
+      role: (button.getAttribute('role') || '').toLowerCase(),
+      link: tag === 'a' && !button.getAttribute('role'),
+      toggle: button.hasAttribute('aria-haspopup') || button.hasAttribute('aria-expanded'),
+      switchLike: (button.getAttribute('role') || '') === 'switch' || (tag === 'input' && type === 'checkbox') || (button.getAttribute('role') || '') === 'checkbox',
+      field: isTextField(button) || tag === 'select',
+      disabled: isDisabled(button),
+      submitsForm: !!form && (type === 'submit' || type === 'image'),
+      inForm: !!form,
+      cardOnPage: cardOnPage,
+      payFrame: payFrame,
+      formCard: formCard,
+      paymentChoice: paymentChoice,
+      checkoutPath: checkoutPath,
+      total: (cardOnPage || payFrame || paymentChoice || checkoutPath) ? totalOnPage() : false,
+      amountInLabel: AMOUNT.test(labelOf(button)),
+      inDialog: !!dialog,
+      alertDialog: !!dialog && (dialog.getAttribute('role') || '') === 'alertdialog',
+      dialogText: dialog ? cut(clean(dialog.innerText || ''), 400) : '',
+      // Style words only: a class named after the action ("remove-item") says nothing about how risky it is.
+      dangerStyle: /danger|destructive|negative|critical|(^|[^a-z])red([^a-z]|$)|warning/.test(styleWords) ||
+        (!!cs && (redish(cs.backgroundColor) || redish(cs.color))),
+      accountPath: ACCOUNT_PATH.test(path),
+      signupPath: SIGNUP_PATH.test(path),
+      heading: heading,
+      formPasswords: passwords.length,
+      formNewPassword: !!(form && form.querySelector('[autocomplete~="new-password"]')) || passwords.length >= 2,
+      formCurrentPassword: !!(form && form.querySelector('[autocomplete~="current-password"]')),
+      formContact: !!(form && form.querySelector('input[type=email], input[type=tel], [autocomplete~="email"], [autocomplete~="tel"]')),
+      formFields: formFields.filter(function (f) { return !/^(hidden|submit|button|reset|image)$/i.test(f.type || '') && rendered(f); }).length
+    };
+  }
+  // What the change approval shows, read from the page: the button, the heading, the page's confirm dialog, the item the
+  // press is in (a list row or card) and the form's values (secrets as "(filled)").
+  function changeInfo(ref) {
+    var button = pressElement(ref);
+    var dialog = button.closest ? button.closest('[role=dialog], [role=alertdialog], dialog[open], [aria-modal=true]') : null;
+    var h = (dialog || document).querySelector('h1, h2, [role=heading]');
+    return {
+      label: labelOf(button),
+      url: location.href.split('#')[0],
+      disabled: isDisabled(button),
+      heading: h ? cut(clean(h.innerText || ''), 120) : cut(clean(document.title || ''), 120),
+      dialog: dialog ? cut(clean(dialog.innerText || ''), 400) : '',
+      item: dialog ? '' : textNear(button, 'li, tr, article, [role=row], [role=listitem], [class*=card i], [class*=item i]', 160),
+      fields: (button.form || formOf(button)) ? formValues(ref) : null
+    };
+  }
+
   function select(ref, value) {
     var el = getEl(ref);
     if (el.tagName !== 'SELECT') throw new Error('ref=' + ref + ' is not a <select>. Use click instead.');
@@ -2619,6 +2741,8 @@ export const PAGE_SCRIPT = String.raw`
     textOf: textOf,
     pressInfo: pressInfo,
     pressComposed: pressComposed,
+    pressContext: pressContext,
+    changeInfo: changeInfo,
     enterFacts: enterFacts,
     type: type,
     select: select,

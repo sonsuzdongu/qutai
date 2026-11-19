@@ -82,6 +82,8 @@ export type PageCommand =
   | 'fieldText'
   | 'secretField'
   | 'secretFieldIndices'
+  | 'pressContext'
+  | 'changeInfo'
   | 'formValues'
   | 'findText'
   | 'textOf'
