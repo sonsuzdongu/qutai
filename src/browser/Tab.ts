@@ -35,6 +35,7 @@ type Pending = {
 export const NEW_TAB_URL = 'qutai://newtab';
 
 export type PageCommand =
+  | 'resourceHosts'
   | 'readPage'
   | 'readSource'
   | 'click'

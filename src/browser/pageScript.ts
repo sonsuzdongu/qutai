@@ -2354,6 +2354,26 @@ export const PAGE_SCRIPT = String.raw`
     return true;
   }
 
+  // ---------- Cookie hosts (page_cookies, docs/page-customisation.md) ----------
+  // The http(s) hosts the page loaded resources and frames from, so the app can ask the native cookie store about
+  // them too. Hosts only: no paths, queries or anything the page says.
+  function resourceHosts() {
+    var hosts = {};
+    function add(url) {
+      try {
+        var u = new URL(url, location.href);
+        if (u.protocol === 'https:' || u.protocol === 'http:') hosts[u.protocol + '//' + u.host] = true;
+      } catch (e) {}
+    }
+    try {
+      var entries = performance.getEntriesByType('resource');
+      for (var i = 0; i < entries.length && i < 2000; i++) add(entries[i].name);
+    } catch (e) {}
+    var frames = document.querySelectorAll('iframe[src], frame[src], script[src], img[src], link[href]');
+    for (var j = 0; j < frames.length && j < 2000; j++) add(frames[j].src || frames[j].href);
+    return Object.keys(hosts);
+  }
+
   // ---------- Page kind (suggestions in the empty assistant panel) ----------
   // A few yes/no signals about what kind of page this is, from markup only (structured data, meta tags, elements and
   // attributes). No page text, field values or addresses leave the page: the app turns the flags into suggestions.
@@ -2530,7 +2550,8 @@ export const PAGE_SCRIPT = String.raw`
     targetInfo: targetInfo,
     screenFields: screenFields,
     maskFields: maskFields,
-    maskEnd: maskEnd
+    maskEnd: maskEnd,
+    resourceHosts: resourceHosts
   };
 })();
 `;
