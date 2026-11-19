@@ -3,8 +3,9 @@
 The owner's request of 18 Nov 2026: users can have Qutai build small applications for them ("build me an app where I
 can keep my notes"); Qutai writes the HTML, CSS and JavaScript, runs it on the phone, keeps its data on the phone, and
 later exports it and includes it in backup and sync. This note is the design and the **contract** every later phase
-builds on. Phase 1 (this step) is the runner, the storage bridge, the assistant writing and editing apps and "My apps";
-phases 2 to 4 are listed at the end, and nothing in phase 1 needs to change for them.
+builds on. Phase 1 is the runner, the storage bridge, the assistant writing and editing apps and "My apps"; phase 2
+(§8) is export and import as a file, apps in the backup and the Android network block; phases 3 and 4 are listed at
+the end.
 
 Decisions accepted by the owner (19 Nov 2026):
 
@@ -26,13 +27,13 @@ the store over SQLite, the bridge), `src/components/AppRunner.tsx`, `src/compone
 
 ### Manifest
 
-Stored as JSON with each version (and, in phase 2, as `qutai-app.json` in the export file).
+Stored as JSON with each version (and as `package.manifest` in the export file, §8).
 
 | field | type | rules |
 | ----- | ---- | ----- |
 | `format` | `"qutai-app"` | fixed; anything else is not an app package |
 | `formatVersion` | integer | `1`. A newer number is refused on import ("needs a newer Qutai") |
-| `id` | string | `app-` + 12 characters `[a-z0-9]`, made by Qutai. An imported app gets a **new** id (two copies of one file never share data) |
+| `id` | string | `app-` + 12 characters `[a-z0-9]`, made by Qutai. An import keeps the file's id when it is free on this phone, otherwise the user chooses "keep both" (a new id: two copies never share data) or "replace" (§8) |
 | `name` | string | 1 to 40 characters after trimming, no control characters |
 | `description` | string | up to 200 characters, may be empty |
 | `icon` | object | `{ "name": "<icon>", "color": "#rrggbb" }` with a name from the app icon set (`APP_ICONS` in `src/apps/manifest.ts`: notes, tasks, calendar, alarm, wallet, food, travel, home, person, photo, document, globe, …), or `{ "svg": "<svg …>", "color": … }` in the SVG subset below. Colour optional (a stable colour from the id otherwise) |
@@ -433,21 +434,191 @@ semantic HTML (`button`, `label`, `input`, headings), `aria-live` for status, no
 - **Google Play, AI-Generated Content** (see docs/page-customisation.md): generated apps are AI output; the open
   question of an in-app report button applies to them too.
 
-## 8. Later phases (nothing in phase 1 blocks them)
+## 8. Phase 2: export, import and backup (19 Nov 2026)
 
-- **Phase 2: export, import, backup.** File `<name>.qutaiapp` = JSON `{ format, formatVersion, manifest, files,
-  sha256, data? }` (data optional, the user chooses). Import: format and hash check, the package checks, a new id,
-  `author: imported`, **state disabled, unsealed**; the "Needs your approval" screen; then sealed. Encrypted and
-  server backup: `apps: [{ manifest, files (current version), data (kv + docs), grants: none }]`; restored apps on the
-  same phone keep `active` only when their seal verifies with this phone's key, otherwise arrive disabled (like kept
-  scripts). The Android `blockNetworkLoads` patch before release. Flags for WebRTC/frame code on the approval screen.
+The owner's request: apps can be exported, and are backed up (and therefore synced through the server backup) together
+with their data. Decisions taken: sharing is by file only; apps are offline; available in every build. Code:
+`src/apps/appFile.ts` (the file, pure), `src/apps/appBackup.ts` (the backup section, pure), `src/apps/store.ts`
+(import, export and restore rows), `src/components/AppImport.tsx` (the import screen and the review shared with the
+approval screen), `src/components/AppExport.tsx`, `src/device/appFile.ts` (pick, share, read an opened file),
+`plugins/withAppFiles.js` (file association). Tests: `npm run test:apps` (file and backup round trips),
+`npm run test:backup`.
+
+### The export file (`.qutaiapp`)
+
+**Container: one UTF-8 JSON object**, not a zip. Everything in an app is text (format 1 has no binary assets), JSON needs
+no archive parser on the phone (no zip-slip, no compression bombs, no extra library), and anyone can open the file in
+a text editor and read the code before importing it. A later file version can add a zip container for binary assets;
+the `fileVersion` number says which one a file is.
+
+```json
+{
+  "format": "qutai-app-file",
+  "fileVersion": 1,
+  "exportedAt": "2026-11-19T10:00:00.000Z",
+  "exportedBy": "Qutai 0.1.1",
+  "package": { "manifest": { … }, "files": { "index.html": "…", "app.js": "…" }, "sha256": "<packageHash>" },
+  "data": {                                                       // only "With my data"
+    "kv": [{ "key": "settings", "value": { … } }],
+    "docs": [{ "collection": "notes", "doc": { "id": "…", "createdAt": 0, "updatedAt": 0, … } }],
+    "bytes": 12345,                                               // as the store counts them (the 5 MB quota)
+    "sha256": "<dataHash>"
+  }
+}
+```
+
+- **Only the current version** is exported. Versions are an undo aid on the phone that made them, not part of the
+  app; 21 versions could be 10 MB. The manifest's `version` travels for information; an import starts at version 1.
+- `author` is written as it is on this phone and ignored on import (Qutai sets `imported`). Grants (the user's
+  answers) are never exported: the importing user answers for themselves.
+- **Without data (default)**: the file is the code only. **With my data**: also every key-value entry and document
+  of the app. The export sheet says why without is the default: the data can be personal (notes, lists) and goes
+  wherever the file is sent.
+- **Hashes.** `package.sha256` = `packageHash` (§1: the canonical manifest fields and the files);
+  `data.sha256` = SHA-256 of `qutai-app-data-v1`, then each key-value entry (`k`, key, JSON value) sorted by key, then
+  each document (`d`, collection, id, JSON) sorted by collection and id. Import recomputes both; a mismatch is refused
+  as "damaged or changed after it was exported". **A hash is not a signature**: whoever edits a file can recompute
+  it. The hash catches damage in transfer and careless edits; the protection against a deliberately changed app is
+  the trust rules below (it arrives switched off and the user reads what it is), the same as for a file written by a
+  stranger.
+- **Limits** (checked before anything is stored, in this order): the file at most **8 MB** (refused before reading:
+  512 KB of package and 5 MB of data with JSON's escaping fit well inside), valid UTF-8 JSON, the shape above,
+  `format`, `fileVersion` ≤ 1 (newer: "This app was exported by a newer Qutai"), the package checks of §1 (manifest,
+  files, 12 files, 256 KB per file, 512 KB in all, the SVG icon subset; `formatVersion` newer is refused, `contract`
+  newer is accepted and the app is listed as "needs a newer Qutai"), the hash, and the data: keys, collection names
+  and document ids by the contract's patterns, each value or document at most 256 KB, at most 20,000 entries, the
+  total at most the **5 MB quota** counted as the store counts it, no key or document twice, `bytes` equal to the
+  recount.
+- **Name**: `<app name>.qutaiapp` (characters a file system dislikes replaced), with ` (with data)` when it has data so
+  the user can tell the two apart in Files.
+- **Type and "Open in Qutai"** (`plugins/withAppFiles.js`):
+  - iOS: an exported type `com.sonsuzdongu.qutai.app` (extension `qutaiapp`, MIME `application/vnd.qutai.app+json`,
+    conforms to `public.json`, so Files' Quick Look shows the code as text) and a document type with Qutai as its
+    Owner (viewer role), `LSSupportsOpeningDocumentsInPlace` false: iOS copies an opened file into Qutai's
+    `Documents/Inbox` and hands the app a `file://` URL (React Native's `Linking`); Qutai reads it and deletes the copy.
+    Files, Mail, Messages, AirDrop and Safari's downloads then offer "Open in Qutai" / "Qutai" in the share sheet.
+  - Android: a `VIEW` intent filter on the main activity, `DEFAULT` category and **not** `BROWSABLE` (a web page in
+    any browser can't launch it with an `intent:` link), schemes `content` and `file`, MIME types
+    `application/vnd.qutai.app+json` (what Qutai's own export sends) and `application/octet-stream` (what file
+    managers and browsers call an unknown `.qutaiapp`, because Android can't match a `content://` address by its
+    extension). The cost: Qutai appears in "Open with" for other unknown files too; it reads the file and says
+    plainly when it isn't a Qutai app (a `.qutai` backup gets "restore it in Settings › Backup"). Owner decision.
+  - Export shares with that MIME type (Android) and UTI (iOS) through the system sheet (save to Files, Drive,
+    AirDrop, mail…).
+
+### Import
+
+**Where from** (each is a user's tap; nothing imports by itself):
+- My apps › **Import an app** (the system file picker).
+- Opening a `.qutaiapp` from outside: Files, a mail or chat attachment, AirDrop, another browser's downloads. It
+  arrives as an entry (`src/device/entryPoints.ts`, kind `appFile`), waits for the app lock like every entry, and
+  switches to a normal tab first.
+- **Qutai's own downloads**: a finished `.qutaiapp` download opens the import screen when the user taps Open in
+  Downloads or on the download pill; a web page can only start a download, never the screen. An incognito tab's
+  download is not imported ("Apps can't be imported from an incognito tab"): incognito leaves nothing behind.
+- Never from an incognito conversation and never by the assistant: the `apps` tool has no import.
+
+**The import screen** (before anything is stored): the icon, name and description; "Imported from <file> · written by
+someone else"; a plain warning ("Only turn on apps from people you trust. The app can't reach the internet or your
+other data, but it can show anything, including text that asks for passwords: never type a password into an app."),
+the size, the version it had, the permissions in plain words (each with "not available in this Qutai yet" when it is
+a later phase's), the hosts it would ask for (phase 4), flags (code that mentions `RTCPeerConnection`,
+`RTCDataChannel`, `iframe`, `frames[`, `window[0]`, `eval`, `Function(`: "uses techniques that apps normally don't
+need"), the file list (tap a file to read its code, read-only, selectable), and, when the file has data, its count
+and size with **Also bring in its data** (off; the user's consent).
+
+**Trust rules** (`importPlan` in `src/apps/appFile.ts`, `AppStore.importApp`):
+1. An imported app **arrives switched off and unsealed** (`apps.state = 'disabled'`, `seal` NULL, version source
+   `import`, `author: { kind: 'imported', file, importedAt }`), with no grants. It never runs until the user turns it
+   on: the runner shows the approval screen (the same review as the import screen, then **Turn on**), which seals it
+   with this phone's key (`approveCurrent`).
+2. **Ids**: a file whose app id is free on this phone keeps it (so a later, updated export of the same app can
+   replace it); otherwise the user chooses.
+3. **Clashes**: the same id, or the same name, as an app already here: **Keep both** (a new id; the name gets " 2",
+   " 3"…) or **Replace "<name>"**. Replace adds the imported package as the next version of that app (the old
+   versions stay in Versions, so going back is one tap), switches the app off until approved, drops its grants (the
+   new code may differ) and keeps the phone's data. If the user also chose to bring in the file's data and the app
+   has data here, a second confirmation names both sizes and says the phone's data will be deleted; no data is ever
+   replaced silently.
+4. **Data** is loaded only with the user's consent, in the same transaction as the app, after the same checks the
+   bridge applies to writes (it can't exceed the quota).
+5. **Errors** are one plain sentence with the technical line under Details: not a Qutai app (or a backup), damaged or
+   changed, too large, exported by a newer Qutai, an app this Qutai can't read (a failing package check, with the
+   reason), the file can't be read.
+
+### Backup and restore
+
+The apps go into the encrypted backup file (`src/backup/payload.ts`), which is also exactly what the server backup
+stores (docs/server-backup.md), so the server needs no change: the backup is an opaque blob to it; account merge moves
+whole backups and account deletion deletes them, without reading them.
+
+```
+apps?: { withData: boolean, items: [{ manifest, files, sha256, seal, state, grants, createdAt, updatedAt, openedAt?,
+         data?: { kv, docs } }] }
+```
+
+- **Two switches** in Settings › Backup (file export) and in the server backup's "What goes in", next to the existing
+  ones: **Apps** (on by default: they are the user's own work and small) and **Apps' data** (on by default: without it
+  a restored notes app is empty, which is the loss a backup is for; the switch shows the current total, "1.2 MB").
+  Server backups keep their own choice, like the other switches.
+- **Only the current version** of each app (the same reasoning as the export file; bounded history would add up to
+  10 MB per app for an undo aid). The seal and state go with it, and the grants; they count only on a phone whose key
+  verifies the seal.
+- **Size**: an app's package is at most 512 KB and its data at most 5 MB. Before a server upload the file is
+  checked against the server's per-backup limit (`backups.maxBytes`, 50 MiB by default); **if it is over and apps'
+  data is in it, the backup is made again without apps' data and uploaded**, and the screen says so ("Backed up
+  without your apps' data: with it the backup was 61 MB, over your account's 50 MB"). The record of the last backup
+  keeps that note. Without apps' data and still too large: the existing "too large" error (turn off conversations…).
+- **Restore** (`applyBackup` → `restoreApps` in `src/apps/appBackup.ts`, inside the restore's one transaction): each
+  app passes the package checks, its hash and (when present) the data checks again; a failing app is skipped, never
+  the whole restore.
+  - **Same phone** (the seal verifies with this phone's key: the device key in secure storage; a reinstall on iOS
+    or Android makes a new key, so it counts as another phone): the app comes back as it was: on or off as it was,
+    sealed, with its grants and data.
+  - **Another phone**: switched off and unsealed, grants dropped, data intact (the same rule as kept scripts). The
+    user turns it on from the approval screen.
+  - **Merge** (the default): an app whose id is already here is kept as it is, with its versions and data (the
+    phone's copy wins, like every merge kind); the backup's copy is skipped. New ids are added.
+  - **Replace**: every app and its data on the phone is deleted and the backup's apps are written; the confirmation
+    lists "Apps" among what is replaced. A backup made **without apps' data** keeps the phone's data of apps whose id
+    it has (replace never empties an app because a switch was off).
+- **Old backups** (no `apps`): apps on the phone are left alone. **An older Qutai** reading a backup with `apps`
+  ignores the section (`parseBackup` keeps only the kinds it knows), restores the rest and doesn't crash; tested
+  against the payload code of the last build before phase 2.
+
+### The Android network block (native)
+
+The patched `react-native-webview` (patches/react-native-webview+14.0.1.patch) gets one Android prop,
+**`appSandbox`**, set by the runner only. With it:
+
+- `WebSettings.setBlockNetworkLoads(true)`: the engine refuses every network load of the WebView.
+- `shouldInterceptRequest` answers every request (`http`, `https`, `ws`, `wss`, `ftp`, anything but `data:` and
+  `blob:`, which never reach it) with an empty 403 at once, on WebView's own request thread: no JavaScript is involved.
+- `shouldOverrideUrlLoading` refuses every navigation natively **without waiting for JavaScript**, so the 250 ms
+  timeout that let a navigation through while Qutai's JavaScript thread was busy is gone. The event still reaches
+  the runner (with a lock id no one waits for), so "Navigation refused" stays in the diagnostics.
+- A document-start script (`WebViewCompat.addDocumentStartJavaScript`, all origins) runs the **frame guard** in every
+  frame the engine creates, including `about:blank` frames: it removes `RTCPeerConnection` and its relatives before any
+  of the app's code can reach the frame.
+- The phase-1 JavaScript checks stay as the second layer (CSP, the lockdown, `onShouldStartLoadWithRequest`,
+  `onLoadStart` stopping and rebuilding).
+
+iOS gets the frame guard too (`injectedJavaScriptBeforeContentLoaded` with `ForMainFrameOnly` off: a WKUserScript in
+every frame), and both platforms get `<meta http-equiv="x-dns-prefetch-control" content="off">` before the app's head
+(both engines honour "off", and it can't be turned back on). The break-out app adds cases for the busy-thread race
+(a flood of bridge messages, then a navigation, a form and a link at once) and for `window[0]` from an `about:blank`
+frame. What remains open on each platform is in §2 "What can't be blocked", updated with the phase-2 results.
+
+## 9. Later phases (nothing in phases 1 and 2 blocks them)
+
+- **Phase 2: export, import, backup**: done, §8.
 - **Phase 3: more bridges**, each already in the contract table: share/files, location, notifications, camera/photos,
   links, assistant (with its per-question consent and cost line). Raise 4.7.2 with Apple first.
 - **Phase 4: network to declared hosts** (`network.fetch` through Qutai, not the WebView's own fetch: CSP stays
   `connect-src 'none'`; Qutai checks host, method, sizes, no cookies) and a **home-screen shortcut** (`qutai://app/<id>`
   deep link opening the runner).
 
-## 9. Owner decisions
+## 10. Owner decisions
 
 1. Per-app quota 5 MB and 20 kept versions: enough?
 2. Should "Ask Qutai to fix this" send at once (as now) or put the message in the input first?
