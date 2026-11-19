@@ -1,8 +1,8 @@
-# Page customisation: user styles, the cookie list, and (next) user scripts
+# Page customisation: user styles, the cookie list and user scripts
 
-The owner's request of 18 Nov 2026, done in two steps. **Step one (this note, shipped): user styles and the cookie
-list.** Step two (a later session): user scripts, with the "which cookies" example done properly through the cookie
-tool below rather than through page JavaScript. Everything here is designed so scripts slot in as one more kind.
+The owner's request of 18 Nov 2026, done in two steps. **Step one: user styles and the cookie list.** **Step two
+(19 Nov 2026): running JavaScript on a page with approval, and kept user scripts** (section "Scripts" below), with the
+"which cookies" example done through the cookie tool rather than through page JavaScript.
 
 ## Rule kinds
 
@@ -13,7 +13,7 @@ one table, `site_rules`.
 | -------- | ---------------------------------------------- | ---------------------------------------------------- | ------------------------------- |
 | `filter` | hide an element (`<scope>##<selector>`) or block a domain (`\|\|domain^`) | `line` (filter syntax), unchanged since the table was created | user, or `save_site_rules` |
 | `style`  | a user stylesheet on the pages its scope covers | `line` = the scope, `body` = sanitised CSS, `name`    | user, or the assistant (`restyle_page` + the user's "Keep") |
-| `script` | *(step two)* run JavaScript on the pages its scope covers | `line` = the scope, `body` = source, `name`, `meta` = JSON | step two decides |
+| `script` | run JavaScript on the pages its scope covers ("Scripts" below) | `line` = the scope, `body` = source, `name`, `meta` = JSON (run time, approval seal, last run) | the user's "Keep" after a run they approved, or written by hand; every first run approved |
 
 Hide and block rules are part of ad blocking: they are off while "Block ads and trackers" is off and on "Don't block on
 this site" sites. Styles are not ad blocking: they apply whatever those switches say, and have their own escape hatch
@@ -218,20 +218,241 @@ Android WebView without profiles incognito tabs share the normal store, as the i
 - **Incognito.** Nothing is written from an incognito tab (no kept style, no action history entry); the cookie list
   of an incognito tab is that tab's own store.
 
-## Step two: what the script session needs
+## Scripts
 
-- **Storage:** `kind = 'script'` rows in `site_rules` with `line` = scope, `body` = source, `name`, `meta` = JSON
-  (at least `runAt` (`start` | `end`), the approved source's hash, `approvedAt`, and any grants). `listSiteRules`
-  already skips kinds it doesn't know; add `scripts` to `SiteRuleStore` like `styles`.
-- **UI:** "My rules" already groups by kind; add a "Scripts" part beside "Styles" with the same row (switch, edit,
-  rename, scope, delete) and the same page-menu escape hatch ("Scripts off for this page").
-- **File and backup:** a `! [script] {…}` block in the rules file and a `sites.scripts` array in the backup; import
-  must list scripts and add them **switched off** (a script is not low risk like a style), with the source shown.
-- **Approval:** a script is not low risk: show the source, say what it can do (read and change the page, read
-  non-HttpOnly cookies, send requests as the user), never "don't ask again"; refused on "Read only" and "Blocked"
-  sites; never written from incognito.
-- **Running it:** `injectedJavaScriptBeforeContentLoaded` for `runAt: start`, `injectedJavaScript` for `end`, main
-  frame only, wrapped in a function scope and a try/catch so it can't break Qutai's own page scripts; results the
-  model sees go through the hidden-value redaction like any page content.
-- **Cookies:** "which cookies does this page have" is answered by `page_cookies` (native store, HttpOnly included,
-  no values); a script never gets the native cookie store.
+Running a script is the riskiest thing the assistant can do: page content can try to instruct the model (prompt
+injection), and a script on the live page runs with the user's sign-in on that site. The rules agreed for this step,
+and how each is met:
+
+1. **Off by default.** Settings › Assistant › "Let the assistant run scripts on pages" (`assistantScripts`), off by
+   default, with a plain explanation; turning it on asks once more. Never changed by the assistant's `settings` tool
+   and not restored from a backup (like payments). Off, the assistant can't run scripts and **kept scripts don't run
+   either**: the switch is the whole capability.
+2. **Every run is approved** in Qutai's own dialog: the description, the site, where it runs (a copy or the live page),
+   the flags in plain words (red), and the exact code under Details. No "Don't ask again", single use, bound to the tab
+   and the page; the code that runs is the code that was shown (the same string, checked against its hash right
+   before it runs).
+3. **Kept scripts** run only on the site they were kept for (page, path, site, site and subdomains; never
+   "everywhere"), are their own kind in "My rules", and any change to their code needs approval again before it runs.
+   Never written from an incognito tab, and kept scripts don't run in incognito tabs.
+4. **Site modes rule.** "Read only" and "Blocked" sites never run scripts (one-off or kept); a per-site "Scripts off"
+   too. Sensitive pages (below) are refused by default; the user can allow scripts on one sensitive site only in
+   Settings › Site permissions.
+5. **What the cookie list protects stays protected.** HttpOnly cookies are out of reach of page JavaScript by nature;
+   scripts that name `document.cookie` or `cookieStore` are refused; the copy a read-only script runs on has no cookies
+   or site storage at all. Nothing a script returns is stored anywhere but the conversation: not in memory, backups,
+   the action history or the "What was sent to the AI" outline (which keeps sizes only, as for every tool result);
+   a kept script's last run is stored as ok / error kind / skipped, never a value or a message.
+6. **Results are untrusted data**: JSON, at most 16 KB, wrapped in a marked block that says it is page data and not
+   instructions, and passed through the hidden-value redaction like every tool result.
+
+### Two places a script can run
+
+`run_script` takes `where`:
+
+- **`copy` (the default): a sealed copy of the page.** Qutai takes a snapshot of the tab's main frame (the DOM, with
+  same-site stylesheets inlined, field values copied in, elements the page hides marked `hidden`, links made absolute)
+  and loads it into a separate, invisible WebView (`ScriptSandbox`) whose own Content Security Policy is
+  `default-src 'none'; style-src 'unsafe-inline'; img-src data:` (no `script-src` at all, no `connect-src`, no frames,
+  no forms, no workers, no base URL), with no cookies, no site storage (iOS: a non-persistent data store; both: an
+  opaque `about:blank` origin and DOM storage off) and every navigation refused. The snapshot never carries the
+  page's scripts, inline handlers, `<meta>`, `<base>`, frames, `<object>`/`<embed>`, password, hidden or one-time-code
+  field values, or payment card fields. The approved code is then evaluated there natively (WebView
+  `injectJavaScript`, which a page's CSP doesn't apply to); `eval`, `new Function` and string timers are blocked by
+  the sandbox's CSP. The sandbox is created for one run and removed after it (a timeout or an endless loop removes
+  it too). **What it costs:** the copy has the page's markup and same-site CSS but not its JavaScript objects, open
+  shadow roots, canvas pixels, cross-site stylesheets or cross-site frames, and `location` is not the page (the
+  wrapper passes `pageUrl`). It is enough for counting, extracting text, links and tables, and checking what the DOM
+  says, which is what the assistant should use scripts for.
+- **`page`: the live page, in the page's own JavaScript world.** Needed to change the page, to read what only the
+  page's JavaScript knows, and for every kept script. It can do what the site's own code can do, with the user's
+  sign-in on that site, and the dialog says so in red.
+
+### Which JavaScript world, per platform
+
+Both platforms run Qutai's page scripts in the page's main world (react-native-webview's `injectJavaScript`,
+`injectedJavaScript` and `injectedJavaScriptBeforeContentLoaded`); scripts use the same path.
+
+- **iOS** offers isolated worlds (`WKContentWorld`, iOS 14+): a script there sees the same DOM but not the page's
+  JavaScript objects, and the page can't see or tamper with it. react-native-webview 14 doesn't expose content worlds,
+  so using one needs a native patch and a rebuild. **Not used in this step**, because what it protects against (the
+  page tampering with the script or faking its result) is already covered by treating results as untrusted page data,
+  and it does nothing against the real risk (the script itself misusing the user's session). It would also make kept
+  scripts behave differently on the two platforms.
+- **Android** has no isolated worlds for WebView (`evaluateJavascript` and `addDocumentStartJavaScript` both run in
+  the main world).
+
+So on both: **DOM: yes. The page's own JavaScript objects: yes (page mode). The page can see and override what the
+script uses**, which is why the wrapper (below) takes its guarded functions as parameters rather than from `window`,
+and why nothing the script reports is trusted.
+
+**Frames: main frame only.** A frame is usually another site (a payment form, a sign-in widget, an ad); a script
+approved for the page's site must not reach it, and the copy leaves frames out. Scripts can't reach frames from the
+main frame either: `contentWindow`, `contentDocument`, `frames`, `top`, `parent`, `opener` are refused.
+
+### The wrapper
+
+Every script, one-off or kept, copy or page, is wrapped the same way (`wrapScript` in `src/content/userScripts.ts`):
+
+```js
+(function () {
+  var run = (function () {
+    return async function (pageUrl, fetch, setTimeout, setInterval) { "use strict";
+<the approved code>
+    };
+  })();
+  /* Qutai's runner: calls run(...) with guarded functions, a time limit, JSON.stringify with a cap, and posts
+     the reply with the tab's nonce; none of its names are in the code's scope */
+})();
+```
+
+The code can't **break out** of its function: the static check tokenizes it (strings, template literals, comments,
+regular expressions, Unicode line terminators) and refuses code whose brackets don't balance or go below zero, and the
+places where a tokenizer and the engine could disagree (a `/` after `}`, after `await`/`yield`/`of`/`let`, HTML-like
+comments `<!--` / `-->`, backslashes outside strings), so the scope check and the "this site only" promise can't be
+escaped by `})(); evil(); (function(){`. Strict mode makes `with` and assignments to undeclared names errors.
+
+`fetch` inside the code is Qutai's guard (the real one is reachable only through names the check refuses): same
+origin as the page only, `GET` or `HEAD` only, no body, redirects not followed (`redirect: 'manual'`, so an open
+redirect can't carry data elsewhere). In the copy there is no network at all. `setTimeout`/`setInterval` take
+functions only. Returns: any JSON value, a string or nothing; `undefined` becomes "no value"; values that
+`JSON.stringify` can't handle become `String(value)`; the page cuts the JSON at 64 KB, the app at 16 KB (marked as
+cut). Errors come back as their kind and message (cut at 300 characters). Time limit: 10 seconds; the copy is then
+destroyed, while on the live page the app stops waiting but **can't stop a script that loops forever** (it blocks
+the page until reloaded; the result says so).
+
+### The static check (`src/content/scriptCheck.ts`)
+
+A tokenizer for JavaScript, then rules over the tokens (identifiers and property names compared after their escapes
+are decoded; escapes in identifiers are refused outright). Size: at most 16 KB and 400 lines.
+
+**Refused, any mode** (the reason goes back to the model; nothing is shown to the user):
+
+- loading or making code: `import(…)`/`import.meta`, `importScripts`, `eval`, `Function`, `.constructor`,
+  `document.write`/`writeln`, `createElement` of `script`, `iframe`, `frame`, `object`, `embed`, `link`, `meta`,
+  `base` or of a computed tag, `srcdoc`, `Worker`, `SharedWorker`, `serviceWorker`, `WebAssembly`, `Blob` +
+  `createObjectURL`, strings holding `<script`, `<iframe`, `javascript:` or `on…=` handlers;
+- other network channels: `XMLHttpRequest`, `sendBeacon`, `WebSocket`, `EventSource`, `WebTransport`,
+  `RTCPeerConnection` and its relatives;
+- cookies and secrets: `cookie`, `cookieStore`, strings naming `password`, `one-time-code`;
+- leaving the page or the frame: `location` changes, `open`, `history.back/forward/go`, `contentWindow`,
+  `contentDocument`, `frames`, `top`, `parent`, `opener`, `frameElement`, `postMessage`;
+- sending in the user's name: `submit`, `requestSubmit`, `.click()`, `dispatchEvent`, synthetic events (`new
+  MouseEvent`…): pressing and sending stay with the click and type tools, where `request_approval` and the payment
+  button checks apply;
+- the clipboard (`clipboard`, `execCommand`);
+- Qutai's own objects (`ReactNativeWebView`, `webkit.messageHandlers`, anything starting `__qutai`);
+- what can't be checked: computed access on `window`, `self`, `globalThis`, `document`, `navigator`, `location`,
+  `this`; those objects used as values (`const w = window`); `Reflect`, `Proxy`, `__proto__`, `with`, `atob`,
+  `fromCharCode`, `fromCodePoint`, `unescape`; computed keys built with `+` or a template; string escapes that spell
+  plain ASCII letters (`'\\x66etch'`); `setTimeout`/`setInterval` with a string.
+
+**Flags, shown in red in the dialog when the script may run:**
+
+| flag | plain words | copy | page | kept |
+| ---- | ----------- | ---- | ---- | ---- |
+| `changesPage` | "Changes the page" | allowed (it changes the copy only, not shown) | allowed, red | allowed, red |
+| `network` | "Loads pages from this site as you (reading only)" — `fetch` | refused (no network in a copy) | allowed, red | allowed, red |
+| `storage` | "Reads or changes what this site stores on your phone" — `localStorage`, `sessionStorage`, `indexedDB`, `caches` | refused (none in a copy) | refused (results go to the AI: tokens live there) | allowed, red |
+| `fields` | "Reads what is typed in the page's fields" — `.value` of inputs | allowed (secret fields are empty in the copy) | allowed, red | allowed, red |
+
+**Honest limit:** a static check is a filter, not a sandbox. It stops the plain and the usual obfuscated ways; a
+determined author can still hide behaviour in data-driven code (a computed method name built from page text, a page
+change that makes the page itself load an address with data in it — an image, a link). That is why every run is
+approved with the code shown, why the dialog says what an approved script can do, and why read-only work goes to the
+copy, where the sandbox — not the check — enforces "no network, no session".
+
+### Sensitive pages (refused by default, both modes)
+
+`sensitivePage(url, facts)` in `src/content/userScripts.ts`; `facts` come from the page (`scriptFacts`):
+
+- a password field, a one-time-code field (`autocomplete="one-time-code"`, or a short numeric field named or labelled
+  like otp / 2fa / verification code / doğrulama kodu…), or payment card fields (`autocomplete="cc-*"`, names like
+  card number / cvc / cvv / iban) anywhere in the main frame;
+- an address that looks like sign-in, payment or account security: paths with `login`, `signin`, `sign-in`,
+  `oauth`, `auth`, `checkout`, `payment`, `pay`, `billing`, `password`, `2fa`, `mfa`, `security`, `wallet`;
+- hosts of payment and identity providers (PayPal, Stripe, Adyen, Klarna, iyzico, Google Pay, Apple ID, Google
+  accounts, Microsoft sign-in, Okta, Auth0…) and bank-like hosts (a host label containing `bank`, and a short list of
+  well-known banks).
+
+The user can allow scripts on one such site in Settings › Site permissions › the site › "Scripts" ("Allowed on
+sensitive pages"); not from the dialog, the chat or the assistant. Kept scripts check the same facts in the page right
+before they run and skip the page ("skipped: sensitive page") unless the site has that setting.
+
+Other refusals before the dialog: the setting is off (the model is told to explain where to switch it on, never to ask
+the page); a pending publish or pay approval for the tab (a script could press or change what the user just
+approved); the reader view, the PDF view and the new tab page (not web pages). One-off scripts may run in incognito
+tabs (nothing is written; the copy lives in memory), but Keep isn't offered there.
+
+### Kept scripts
+
+- **Keep:** after a successful `page` run the chat shows a script card with **Keep for this site…** (not in
+  incognito) → where (this page, pages under this path, this site, this site and subdomains — default "this site") and
+  when (when the page is ready — default — or when it has finished loading) → saved to "My rules". Keeping is the
+  user's tap on code they just approved on that site: no second approval.
+- **Approval seal:** `meta.seal` = HMAC-SHA-256 of the code under a device key kept in secure storage (never in a
+  backup). A kept script runs only while its seal matches its code. Editing the code, importing it, or restoring it
+  on another device leaves it without a valid seal: it is listed as "Needs your approval" and is switched off until
+  the user approves it (the same dialog with the code). The device key also makes a backup or file that claims a
+  script was approved worthless.
+- **Run time:** `end` (DOMContentLoaded; default) or `idle` (after `load`, when the page is idle). No `start`: before
+  the page exists there is nothing to check for sensitive fields, and a script that must beat the page's own code is
+  a different risk (cost: no "block the page's own script" userscripts).
+- **Injection:** every enabled, sealed kept script whose site is allowed is shipped in the main frame's early and
+  after-load scripts (iOS `WKUserScript`, Android `injectedJavaScriptBeforeContentLoaded` + `injectedJavaScript`),
+  each in its own wrapper, with its scope; the page matches the scope against `location` (as styles do), checks the
+  sensitive facts, and runs each script **once per document**. After an SPA move (`pushState`, `replaceState`,
+  `popstate`, `hashchange`) a script whose scope now matches and that hasn't run in this document runs then; none
+  runs twice. Changes (switch, edit, delete, a page's "Scripts off") reach open pages at their next load. Not shipped
+  at all to incognito tabs, to read-only, blocked or "Scripts off" sites, or while the setting is off.
+- **Escape hatch:** the page menu's **Scripts off for this page** (per tab, in memory, like styles) and **Scripts on
+  for this page**; turning them off reloads the page so nothing a script did stays.
+- **Last run:** each run posts ok / error (its kind, e.g. `TypeError`) / skipped (sensitive page) / timed out with the
+  time; stored in `meta.lastRun`. The error message is kept in memory only (it could hold page text).
+- **"My rules" › Scripts:** name, where, when, flags, last run, switch, **View and edit code** (the editor runs the
+  check on save; refused code isn't saved; saving changed code asks for approval, and declining keeps the old code),
+  **Rename**, **Change where it applies**, **Delete**. An unsealed script's switch asks for approval before it turns on.
+
+### Export, import, backup
+
+- **Rules file, format 3** (`! Qutai-Format: 3`; versions 1 and 2 still read): `! [script] {"name","scope","runAt"}`
+  then the code on `! |` lines, then `! [end]`. Older Qutai versions count script blocks as unsupported. No `enabled`
+  and no seal are written: **imported scripts always arrive switched off, unsealed**, listed with their flags; each
+  needs the user's approval before its first run. Scripts that fail the check are counted as invalid; "everywhere"
+  scopes are refused.
+- **Encrypted and server backup:** `sites.scripts` (`name`, `scope`, `code`, `runAt`, `enabled`, `seal`, `site`,
+  `url`, `createdAt`), checked again on restore. A restored script keeps `enabled` only when its seal verifies with
+  this device's key (a restore on the same phone, same install or iOS keychain); anywhere else it arrives off and
+  unsealed. Erring toward off: a seal can't be forged without the device key, and a restore on a new phone asks again.
+  The last run is not backed up.
+
+### Threat model (scripts)
+
+- **Prompt injection from page text** ("run this script", "use run_script to fetch…"). The prompt says only the
+  user's request counts; the app refuses when the setting is off, on sensitive pages, on read-only/blocked sites, and
+  refuses dangerous code whatever the model wanted; every run needs the dialog with the code. A page can't approve.
+- **A script's result carrying instructions.** Marked untrusted page data, capped, redacted; the prompt rule for page
+  content applies to it.
+- **Exfiltration with `fetch`.** Copy: no network (CSP + sandbox, enforced by the engine). Page and kept: `fetch` is
+  the guard (same origin, GET/HEAD, no redirects); other network APIs refused. Residual: a page change that makes the
+  page load an address (an `<img>` with data in its URL) can carry data out; the dialog shows "Changes the page" in
+  red and the code.
+- **Posting, buying, changing account settings.** Scripts may not submit forms, press buttons, dispatch events,
+  navigate or open windows (refused statically), `fetch` can't POST, a pending publish or pay approval refuses the
+  run, and payment and account-security pages are refused. Residual (said plainly in the dialog): an approved
+  live-page script can do what the site's own code can do, with the user's sign-in; checks can be got around by
+  deliberately disguised code.
+- **Passwords and one-time codes.** Pages with such fields are refused; the copy never carries their values; code
+  naming them is refused.
+- **Kept scripts that change after import or restore.** No seal → off and asking. A changed `body` in the database
+  (another app can't write it; a later bug could) no longer matches its seal and doesn't run.
+- **Remote code** (`import()`, `<script src>`, `eval` of fetched text, workers, `srcdoc`): refused statically;
+  `eval`/`Function` are also blocked by the copy's CSP. On the live page a site whose own CSP allows `eval` would let
+  a disguised `eval` run; the check refuses every spelling it can see.
+- **Cookies.** `document.cookie` refused; HttpOnly unreachable; nothing from the native cookie store ever reaches a
+  script.
+- **The page tampering with the script** (overriding `JSON.stringify`, `fetch`, `postMessage`, or faking a result
+  message). It can, as it can fake any page content; the result is untrusted and only ever shown to the model as page
+  data; the guarded `fetch` is captured before the code runs but a page that ran first can have replaced
+  `window.fetch` (the guard then calls the page's version: no more than the page could do itself).
+- **Incognito.** One-off scripts allowed (nothing written; the copy is in memory); no Keep; kept scripts don't run.
