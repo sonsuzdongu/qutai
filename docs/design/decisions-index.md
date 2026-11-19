@@ -450,6 +450,15 @@ Moved to Details (ids retired, not reused): `LOG-7`
 | `TABS-15` | A task that ends while the user is in Qutai but looking at another tab shows a toast with Show and a dot… | Default |  |
 | `TABS-16` | When a task has ended, its runs of 3 or more steps fold into one summary line; a running task stays live. | Default |  |
 | `TABS-17` | On long tasks the assistant keeps notes (`take_notes`) that are never trimmed while old page contents are;… | Default |  |
+| `TABS-18` | A navigation is pending from the moment the app lets a top-frame navigation through for the user's tap… | Default | 2026-11-20 |
+| `TABS-19` | The progress line (3 pt, was 2) starts at once at 10 %, creeps towards 30 % ever more slowly while the… | Default | 2026-11-20 |
+| `TABS-20` | While a navigation the page started (a link tap, a script, a redirect) waits for its site, the address… | Default | 2026-11-20 |
+| `TABS-21` | After 4 s without an answer the line says the site isn't answering yet, with Stop; after 25 s it says… | Default | 2026-11-20 |
+| `TABS-22` | The page on screen stays until the new one commits; a tab leaving the new tab page keeps showing the new… | Default | 2026-11-20 |
+| `TABS-23` | A window a page opens comes to the front only when that page is on screen and the user touched it in the… | Default | 2026-11-20 |
+| `TABS-24` | A tab whose page failed because the phone was offline reloads by itself once when the connection… | Default | 2026-11-20 |
+| `TABS-25` | iOS: reloading, or going back or forward to, the result of a sent form asks "Send the form again?" first… | Default | 2026-11-20 |
+| `TABS-26` | A woken tab comes back at the scroll position it had on the same page (the page reports it half a second… | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-8`
 
@@ -1223,6 +1232,8 @@ Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 | `NOT-20` | No Siri / App Intents for now; `qutai://` links cover automation from the Shortcuts app. | Default |  |
 | `NOT-21` | The payment approval has no per-payment or per-currency spending limit and no picture of the order summary. | Owner | 2026-11-19 |
 | `NOT-22` | Qutai never asks for a battery-optimisation exemption for background playback. | Default |  |
+| `NOT-23` | No preconnecting to sites while the user types in the address bar. | Owner | 2026-11-20 |
+| `NOT-24` | No harmful-site lookup service (like Safe Browsing). | Owner | 2026-11-20 |
 
 ## [45. Roadmap decisions](45-roadmap-decisions.md)
 

@@ -433,14 +433,15 @@ export class Browser {
 
   /**
    * Puts the least recently used background tabs to sleep until at most `maxAwake` tabs have a
-   * WebView. The active tab, the agent's tab, incognito tabs, tabs using the camera or microphone and
-   * tabs playing sound always stay awake.
+   * WebView. The active tab, the agent's tab, incognito tabs, tabs using the camera or microphone, tabs playing
+   * sound and tabs whose navigation is still waiting always stay awake.
    */
   sleepInactive(maxAwake = MAX_AWAKE_TABS) {
     const keep = new Set([this.activeId, this.agentTab?.id, ...this.taskTabs]);
     const awake = this.tabs.filter((t) => !t.asleep && !t.isNewTab);
     const sleepable = awake
-      .filter((t) => !t.incognito && !t.media.capturing && !t.playback.audible && !keep.has(t.id))
+      // A tab whose navigation is still waiting keeps its WebView: sleeping would drop the load the user asked for.
+      .filter((t) => !t.incognito && !t.media.capturing && !t.playback.audible && !t.nav.pending && !keep.has(t.id))
       .sort((a, b) => a.lastActiveAt - b.lastActiveAt);
     sleepable.slice(0, Math.max(0, awake.length - maxAwake)).forEach((t) => t.sleep());
   }

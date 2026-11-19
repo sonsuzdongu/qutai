@@ -72,6 +72,9 @@ export function ErrorPage({
       </Text>
       <Text style={[styles.body, incognito && styles.dimText]}>{body}</Text>
       {isCert && <Text style={[styles.body, incognito && styles.dimText]}>{t('loadError.certRisk')}</Text>}
+      {kind === 'offline' && (
+        <Text style={[styles.body, incognito && styles.dimText]}>{t('loadError.offlineAuto')}</Text>
+      )}
       {local && LOCAL_TIP_KINDS.has(kind) && (
         <Text style={[styles.body, incognito && styles.dimText]}>{t('loadError.localTip')}</Text>
       )}

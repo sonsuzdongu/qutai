@@ -95,7 +95,11 @@ import { ContextTarget, looksLikePdfLink } from './src/browser/contextMenu';
 import { quoteSelection } from './src/browser/selection';
 import type { Tab } from './src/browser/Tab';
 import { useHardwareBack } from './src/browser/useHardwareBack';
-import { AddressBar } from './src/components/AddressBar';
+import { AddressBar, type ProgressLineState } from './src/components/AddressBar';
+import { NavigationStatus } from './src/components/NavigationStatus';
+import { connectivity } from './src/device/connectivity';
+import { tabsToReloadOnReconnect } from './src/browser/offlineReload';
+import { hostOf, slowness } from './src/browser/pendingNavigation';
 import { BrowserView } from './src/components/BrowserView';
 import { ContextAction, ContextMenuSheet } from './src/components/ContextMenuSheet';
 import { chatLinkPlan } from './src/browser/chatLinks';
@@ -610,6 +614,18 @@ function BrowserApp({
   const browser = useBrowser(browserInstance);
   const tab = browser.active;
   useHardwareBack(browser);
+  // Whether the phone is online: a navigation started offline says so at once, and tabs that failed because the phone
+  // was offline reload once when the connection returns.
+  const online = useSyncExternalStore(connectivity.subscribe, () => connectivity.online);
+  useEffect(() => {
+    void connectivity.start();
+    return connectivity.onReconnect(() => {
+      for (const failed of tabsToReloadOnReconnect(browserInstance.tabs)) {
+        failed.offlineErrorUrl = null;
+        failed.reload();
+      }
+    });
+  }, [browserInstance]);
   usePersistSession(browser);
   useRecordHistory(browser);
 
@@ -1973,7 +1989,7 @@ function BrowserApp({
       icon: 'forward',
       label: t('menu.forward'),
       disabled: !tab.canGoForward,
-      onPress: () => tab.webview?.goForward(),
+      onPress: () => tab.historyForward(),
     },
     {
       icon: bookmarked ? 'bookmarked' : 'bookmark',
@@ -1991,9 +2007,10 @@ function BrowserApp({
           return t('menu.bookmarkAdded');
         }),
     },
-    tab.loading
+    // Stop while a navigation waits for the site or loads, reload otherwise (like Chrome).
+    tab.busy
       ? { icon: 'close', label: t('menu.stop'), onPress: () => tab.stop() }
-      : { icon: 'reload', label: t('menu.reload'), disabled: onNewTab, onPress: () => tab.webview?.reload() },
+      : { icon: 'reload', label: t('menu.reload'), disabled: onNewTab, onPress: () => tab.reload() },
   ];
 
   const menuItems: MenuItem[] = [
@@ -2062,7 +2079,7 @@ function BrowserApp({
             onPress: () => {
               const off = !keptScripts.off(tab.id);
               keptScripts.setOff(tab.id, off);
-              tab.webview?.reload();
+              tab.reload();
               toast.show(t(off ? 'menu.scriptsOffDone' : 'menu.scriptsOnDone'));
             },
           },
@@ -2546,12 +2563,49 @@ function BrowserApp({
     onChangeSettings(next);
   };
 
+  // The active tab's navigation: the progress line, the address (Chrome's rule while a page-started one waits) and the
+  // status line ("opening…", "isn't answering yet", "very slow", offline). docs/design/14-tabs-and-conversations.md.
+  const pendingNav = tab.nav.pending;
+  const lastNavEnd = tab.nav.lastEnd;
+  const progressLine: ProgressLineState = pendingNav
+    ? {
+        key: `${tab.id}:${pendingNav.id}`,
+        active: true,
+        startedAt: pendingNav.startedAt,
+        responded: pendingNav.responded,
+        progress: pendingNav.progress,
+        endedAs: null,
+        host: hostOf(pendingNav.url),
+      }
+    : {
+        key: `${tab.id}:${lastNavEnd?.id ?? 0}`,
+        active: false,
+        startedAt: 0,
+        responded: true,
+        progress: 1,
+        endedAs: lastNavEnd?.reason ?? null,
+        host: null,
+      };
+  const address = tab.address;
+  const navStatus =
+    pendingNav && !pendingNav.responded && !onNewTab ? (
+      <NavigationStatus
+        navKey={`${tab.id}:${pendingNav.id}`}
+        opening={pendingNav.origin === 'page' ? address.opening : hostOf(pendingNav.url)}
+        slowness={slowness(pendingNav, Date.now(), online)}
+        offline={!online}
+        dark={tab.incognito || darkMode}
+        onStop={() => tab.stop()}
+        onRetry={() => tab.retryNavigation()}
+      />
+    ) : null;
+
   // The address bar (or the find bar in its place), at the top or the bottom of the screen.
   const topBar = findOpen ? (
     <FindBar tab={tab} darkMode={darkMode} onClose={() => setFindFor(null)} />
   ) : (
     <AddressBar
-      url={onNewTab ? '' : tab.url}
+      url={onNewTab ? '' : address.url}
       editRequest={addressEdit}
       onEditRequestApplied={clearAddressEdit}
       searchEngine={settings.searchEngine}
@@ -2560,7 +2614,7 @@ function BrowserApp({
         setPanelOpen(true);
         send(text);
       }}
-      loading={tab.loading}
+      progress={progressLine}
       usingLocation={!onNewTab && tab.geolocation.inUse}
       notSecure={
         !onNewTab &&
@@ -2580,7 +2634,7 @@ function BrowserApp({
       assistantHold={settings.voiceHoldToTalk ? ptt.handlers : undefined}
       assistantHoldActive={ptt.bubble.phase !== 'idle'}
       onSubmit={(url) => tab.loadUrl(upgradeToHttps(url, settings.httpsOnly))}
-      onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
+      onBack={() => (tab.canGoBack ? tab.historyBack() : tab.showNewTab())}
       readerState={onNewTab ? 'none' : tab.reader ? 'on' : tab.readerAvailable ? 'available' : 'none'}
       onToggleReader={toggleReader}
       onOpenMenu={() => {
@@ -2638,6 +2692,7 @@ function BrowserApp({
         <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
           {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard: the page, and the address bar when it is at the bottom, stay above it. */}
           {barAtBottom ? null : topBar}
+          {barAtBottom || findOpen ? null : navStatus}
           <KeyboardAvoidingContainer style={styles.flex}>
             <ErrorBoundary>
               <BrowserView
@@ -2670,6 +2725,13 @@ function BrowserApp({
                   forceZoom: settings.forceZoom,
                   backgroundPlayback: settings.backgroundPlayback,
                   onNotice: toast.show,
+                  onOpenedInBackground: (opened) =>
+                    toast.show(t('nav.openedBehind'), {
+                      label: t('nav.showTab'),
+                      onPress: () => {
+                        if (browserInstance.getTab(opened.id)) browserInstance.switchTab(opened.id);
+                      },
+                    }),
                   searchEngine: settings.searchEngine,
                   onAsk: (text) => {
                     setPanelOpen(true);
@@ -2694,6 +2756,7 @@ function BrowserApp({
                 bottomOffset={barAtBottom ? 52 : 0}
               />
             ) : null}
+            {barAtBottom && !findOpen ? navStatus : null}
             {barAtBottom ? topBar : null}
           </KeyboardAvoidingContainer>
         </SafeAreaView>
@@ -3071,7 +3134,7 @@ function BrowserApp({
                 : tab.blockedCount
               : undefined
           }
-          onReload={!!permissionHost && siteKey(tab.url) === permissionHost ? () => tab.webview?.reload() : undefined}
+          onReload={!!permissionHost && siteKey(tab.url) === permissionHost ? () => tab.reload() : undefined}
           onShowCookies={
             !!permissionHost && siteKey(tab.url) === permissionHost && !tab.isNewTab
               ? () => {

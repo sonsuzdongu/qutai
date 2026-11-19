@@ -6,7 +6,7 @@ import { Conversation } from '../chat/Conversation';
 import {
   backgroundGoBack,
   backgroundPageState,
-  BackgroundPageState,
+  type BackgroundPageState,
   evaluateInPage,
   isRunningInBackground,
   NeedsForegroundError,
@@ -17,14 +17,24 @@ import { siteKey } from '../agent/sitePolicy';
 import { PageGeolocation } from './geolocation';
 import { PageMediaCapture } from './mediaCapture';
 import { PagePlayback } from './playback';
-import { LoadError, toLoadError } from './navigation';
+import { type LoadError, toLoadError } from './navigation';
 import { addCertificateException } from './certificateExceptions';
 import { PAGE_SCRIPT } from './pageScript';
 import { HIDE_PROBE_SCRIPT } from '../content/hideProbe';
 import { SCRIPT_PAGE_SCRIPT } from '../content/scriptPage';
-import { PageSignals, parsePageSignals, samePageSignals } from './pageKind';
-import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, ReaderArticle } from './reader';
+import { type PageSignals, parsePageSignals, samePageSignals } from './pageKind';
+import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, type ReaderArticle } from './reader';
 import { startsLoading } from './loadState';
+import { NavigationTracker, shownAddress } from './pendingNavigation';
+
+/** iOS: WebKit's progress starts at 0.1 when a navigation begins and passes it only once the site answers. */
+const IOS_ANSWERED_PROGRESS = 0.12;
+
+/** Same page for "did this load end belong to the waiting navigation": no fragment, no trailing slash, any case. */
+function samePage(a: string, b: string): boolean {
+  const norm = (u: string) => (u.split('#')[0] ?? '').replace(/\/$/, '').toLowerCase();
+  return norm(a) === norm(b);
+}
 
 type Pending = {
   resolve: (value: unknown) => void;
@@ -165,7 +175,30 @@ export class Tab {
   desktop = false;
   /** The first page was opened from the new tab page, so back can return there. */
   openedFromNewTab = false;
+  /** The WebView reports a page load in progress (since its load start). See `busy` for what the user sees. */
   loading = false;
+  /**
+   * The navigation in progress, from the tap or the app's own request until the page arrives
+   * (src/browser/pendingNavigation.ts); this tab's only, so another tab's events never reach it.
+   */
+  readonly nav: NavigationTracker;
+  /** The address of the page on screen (committed), which the address bar shows while a page-started load waits. */
+  committedUrl: string;
+  /**
+   * What covers the WebView until the new page arrives, so the screen is never a blank white page: the new tab page
+   * (its first address was just opened) or the tab's last thumbnail (a woken tab).
+   */
+  cover: 'newTab' | 'thumbnail' | null = null;
+  /** The page's last scroll position (main frame), restored when a woken tab's same page loads again. */
+  private scrollMemory: { url: string; y: number } | null = null;
+  /** The address whose scroll position waits to be restored after its load ends. */
+  private scrollRestore: { url: string; y: number } | null = null;
+  /** iOS: the user agreed to send a form again; the next form resubmission until then goes through. */
+  allowResubmitUntil = 0;
+  /** The app's last own navigation, to repeat it once the user agreed to send a form again. */
+  lastAppAction: 'reload' | 'back' | 'forward' | null = null;
+  /** The address of an error page shown because the phone was offline, reloaded once when the connection returns. */
+  offlineErrorUrl: string | null = null;
   canGoBack = false;
   canGoForward = false;
   /** The http:// address this tab was upgraded from (HTTPS-only), until the https:// page loads. */
@@ -220,9 +253,44 @@ export class Tab {
     // Incognito conversations are never saved, so there is nothing to load.
     this.conversation.loaded = incognito;
     this.url = url;
+    this.committedUrl = url;
     this.incognito = incognito;
     this.openerId = openerId;
     this.source = { uri: url };
+    this.nav = new NavigationTracker(() => this.navChanged());
+  }
+
+  /** A navigation is waiting or loading: the progress line shows and the reload control is Stop. */
+  get busy(): boolean {
+    return this.loading || this.nav.pending !== null;
+  }
+
+  /** What the address bar shows, with the destination host while a page-started navigation waits (Chrome's rule). */
+  get address(): { url: string; opening: string | null } {
+    return shownAddress(this.committedUrl, this.nav.pending);
+  }
+
+  private navChanged() {
+    const p = this.nav.pending;
+    if (this.cover && (!p || p.responded)) this.cover = null;
+    this.onChange();
+  }
+
+  /** The site answered: the new page commits and the address bar may show it. */
+  private commit(url?: string) {
+    this.nav.respond(url);
+    this.committedUrl = this.url;
+  }
+
+  /**
+   * The WebView let a top-frame navigation through (onShouldStartLoadWithRequest returned true). A redirect of the
+   * waiting navigation only changes where it goes; a new one begins only for the user's tap on the page.
+   */
+  noteNavigationRequest(url: string, userTap: boolean, origin: 'page' | 'app' = 'page') {
+    if (!/^https?:/i.test(url)) return;
+    if (this.nav.redirect(url)) return;
+    // iOS back and forward swipes are the user's own (the address may show at once).
+    if (userTap || origin === 'app') this.nav.begin(url, origin);
   }
 
   /** Creates the WebView for a sleeping tab; the page loads from its saved URL. */
@@ -230,6 +298,11 @@ export class Tab {
     if (!this.asleep) return;
     this.asleep = false;
     this.source = { uri: this.url };
+    this.committedUrl = this.url;
+    // Its last picture stays until the page is back, and the scroll position comes back with the same page.
+    this.cover = this.thumbnail ? 'thumbnail' : null;
+    if (this.scrollMemory && this.scrollMemory.url === this.url) this.scrollRestore = this.scrollMemory;
+    this.nav.begin(this.url, 'app');
     this.onChange();
   }
 
@@ -244,6 +317,7 @@ export class Tab {
     if (this.asleep || this.incognito || this.isNewTab || this.media.capturing || this.playback.audible) return;
     this.reader = null;
     const thumbnail = this.thumbnail;
+    this.cover = null;
     this.dispose();
     this.thumbnail = thumbnail;
     this.webview = null;
@@ -337,13 +411,20 @@ export class Tab {
     this.canGoBack = false;
     this.canGoForward = false;
     this.loadError = null;
+    this.offlineErrorUrl = null;
     this.openedFromNewTab = false;
+    this.committedUrl = NEW_TAB_URL;
+    this.cover = null;
     this.onChange();
   }
 
+  /** The app's own navigation to an address (address bar, bookmark, history, the new tab page, the assistant). */
   loadUrl(url: string) {
+    this.lastAppAction = null;
+    this.nav.begin(url, 'app');
     if (this.isNewTab) {
-      // Leaving the new tab page mounts a WebView with this URL.
+      // Leaving the new tab page mounts a WebView with this URL; the new tab page stays until the site answers.
+      this.cover = 'newTab';
       this.url = url;
       this.title = '';
       this.openedFromNewTab = true;
@@ -383,10 +464,59 @@ export class Tab {
       this.probeReaderSoon();
     }
     this.url = nav.url;
+    // A page-started navigation that hasn't been answered yet (iOS reports its address at once) isn't on screen.
+    if (!this.nav.pending || this.nav.pending.responded) this.committedUrl = nav.url;
     this.title = nav.title;
     this.canGoBack = nav.canGoBack;
     this.canGoForward = nav.canGoForward;
     this.onChange();
+  }
+
+  /** Reload (menu, pull to refresh, error page, Try again on a page that had loaded). */
+  reload() {
+    this.lastAppAction = 'reload';
+    this.nav.begin(this.url, 'app');
+    this.webview?.reload();
+  }
+
+  /** Back in the page's history (the address isn't known until the WebView says it). */
+  historyBack() {
+    this.lastAppAction = 'back';
+    this.nav.begin('', 'app');
+    this.webview?.goBack();
+  }
+
+  historyForward() {
+    this.lastAppAction = 'forward';
+    this.nav.begin('', 'app');
+    this.webview?.goForward();
+  }
+
+  /**
+   * "Try again" on the very slow line: the waiting navigation is asked for again (the WebView would otherwise reload
+   * the page still on screen).
+   */
+  retryNavigation() {
+    const target = this.nav.pending?.url || this.url;
+    this.webview?.stopLoading();
+    if (this.loading) this.handleLoadEnd();
+    this.nav.end('stopped');
+    if (target && target !== this.committedUrl) this.loadUrl(target);
+    else this.reload();
+  }
+
+  /** The page's scroll position (main frame, sent by the page after scrolling stops). */
+  noteScroll(y: number) {
+    if (!Number.isFinite(y) || y < 0) return;
+    this.scrollMemory = { url: this.url, y: Math.round(y) };
+  }
+
+  /** After a load end: the scroll position to restore for this page (once), if the tab was woken on it. */
+  takeScrollRestore(url: string): number | null {
+    const r = this.scrollRestore;
+    if (!r || !samePage(r.url, url)) return null;
+    this.scrollRestore = null;
+    return r.y > 0 ? r.y : null;
   }
 
   handleMessage(data: string): boolean {
@@ -416,6 +546,13 @@ export class Tab {
     // A page changing its own address (history API, a #fragment) loads nothing and never reports an end: not a load,
     // and the page's location, camera and playback state carry on (loadState.ts).
     if (!startsLoading({ url, currentUrl: this.url, os: Platform.OS, nativeLoading })) return;
+    if (Platform.OS === 'android') {
+      // Android reports the start once the site has answered: the new page commits now.
+      this.commit(url);
+    } else if (!this.nav.redirect(url ?? this.url)) {
+      // iOS reports it when the navigation is decided, before any answer: a navigation the page started on its own.
+      this.nav.begin(url ?? this.url, 'page');
+    }
     this.documents++;
     // A new document: its watches, capture and "allow once" answers start over.
     this.geolocation.reset();
@@ -438,6 +575,9 @@ export class Tab {
     this.loadError = toLoadError(error.code, error.description);
     this.loadErrorUrl = error.url ?? null;
     this.loadErrorAt = Date.now();
+    this.offlineErrorUrl = this.loadError.kind === 'offline' ? (error.url ?? this.url) : null;
+    this.cover = null;
+    this.nav.end('error');
     this.onChange();
   }
 
@@ -470,16 +610,45 @@ export class Tab {
   stop() {
     this.webview?.stopLoading();
     if (this.loading) this.handleLoadEnd();
+    // The page on screen stays, and so does its address.
+    this.nav.end('stopped');
   }
 
   /** The WebView's load progress (0-1): at 1 the load is over, whether or not a load end follows. */
   handleLoadProgress(progress: number) {
-    if (progress >= 1 && this.loading) this.handleLoadEnd();
+    const p = this.nav.pending;
+    if (p && !p.responded && Platform.OS === 'ios' && progress >= IOS_ANSWERED_PROGRESS && progress < 1) this.commit();
+    this.nav.progress(progress);
+    if (progress >= 1 && this.loading) {
+      this.handleLoadEnd();
+      if (this.nav.pending?.responded) this.nav.end('loaded');
+    }
+  }
+
+  /**
+   * The WebView's load end. One that comes before the waiting navigation was answered belongs to the page still on
+   * screen (Android) unless it is for the address being opened; on iOS it means the WebView went idle (the waiting
+   * navigation finished from cache, or was cancelled).
+   */
+  handleWebViewLoadEnd(url?: string) {
+    this.handleLoadEnd();
+    const p = this.nav.pending;
+    if (!p) return;
+    if (p.responded) return this.nav.end('loaded');
+    if (Platform.OS === 'ios') {
+      if (url && samePage(url, this.url) && url !== this.committedUrl) this.commit();
+      return this.nav.end(this.nav.pending?.responded ? 'loaded' : 'stopped');
+    }
+    if (!p.url || (url && samePage(url, p.url))) {
+      this.commit(url);
+      this.nav.end('loaded');
+    }
   }
 
   /** The navigation turned out to be a file: the page on screen stays, and nothing is loading any more. */
   handleDownloadStart() {
     if (this.loading) this.handleLoadEnd();
+    this.nav.end('download');
   }
 
   /**
@@ -489,6 +658,7 @@ export class Tab {
    */
   handleProcessGone() {
     if (this.loading) this.handleLoadEnd();
+    this.nav.end('gone');
     if (Platform.OS === 'ios') {
       this.webview?.reload();
       return;
@@ -680,6 +850,7 @@ export class Tab {
     });
     this.pending.clear();
     this.handleLoadEnd();
+    this.nav.dispose();
   }
 
   /** How many documents have started loading in this tab (kept scripts run once per document, browser/keptScripts.ts). */

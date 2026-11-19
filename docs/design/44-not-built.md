@@ -54,6 +54,10 @@ Each rule below names something a user might expect and Qutai does not have, and
   Status: Owner, 2026-11-19 · Why: not needed / not asked for · Source: TODO.md › Assistant posting and paying
 - **`NOT-22`** Qutai never asks for a battery-optimisation exemption for background playback.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded; a hint in Settings › Appearance › Media opens the app settings instead · Source: fix-android-background-playback note; README › Known limitations
+- **`NOT-23`** No preconnecting to sites while the user types in the address bar.
+  Status: Owner's manager, 2026-11-20 · Why: privacy: it would contact a site the user may never open, revealing what is being typed (Chrome does it for speed) · Source: navigation feedback task, 20 Nov 2026
+- **`NOT-24`** No harmful-site lookup service (like Safe Browsing).
+  Status: Owner's manager, 2026-11-20 · Why: out of scope for now: it would send the addresses the user opens, or their hashes, to a third-party service · Source: navigation feedback task, 20 Nov 2026
 
 ## Limits and what is not built
 

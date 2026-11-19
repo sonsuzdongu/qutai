@@ -339,12 +339,34 @@ Sahibi "yazdıklarımı incele, ben düzelt deyince düzelt" dedi; hiçbirine do
 
 Sahibi telefonda, yavaş bir bağlantıda bildirdi (20 Kas; 0.1.3).
 
-- [ ] Google'ı açıp bir sonuca dokununca bir süre hiçbir şey değişmiyor: adres çubuğu da sayfa da aynı kalıyor; bir
+- [x] Google'ı açıp bir sonuca dokununca bir süre hiçbir şey değişmiyor: adres çubuğu da sayfa da aynı kalıyor; bir
       şeyin olduğu belli değil. İstek: dokunur dokunmaz bir şeyin yüklendiği görünsün (Chrome'daki gibi). Kodda bilinen:
       yükleniyor çizgisi (`tab.loading`) ancak WebView'in yükleme başlangıcında açılıyor; bu da sitenin ilk yanıtından
       sonra geliyor, yani ondan önceki bekleme görünmüyor.
+      **Düzeltildi (20 Kas):** dokunur dokunmaz sekmeye ait "bekleyen gezinme" başlıyor: ilerleme çizgisi hemen %10'da
+      çıkıp yavaşça %30'a ilerliyor, site yanıt verince gerçek ilerlemeyi izliyor, geri gitmiyor; adres çubuğu sayfa
+      açılana kadar ekrandaki sayfayı gösteriyor, altında "localhost açılıyor…" yazıyor; 4 sn sonra "henüz yanıt
+      vermiyor" ve Durdur, 25 sn sonra "Bağlantı çok yavaş", Tekrar deneyin ve Durdur. iOS simülatöründe yavaş sunucuyla
+      görüldü (`node scripts/slow-server/server.mjs`, 10 sn'lik sonuç); Android'de denenemedi (öykünücü bu makinede
+      bellek yetmediği için yanıt vermedi). Kurallar `TABS-18`…`TABS-22`.
+  - [ ] Telefonda bakın (Android ve iOS, yavaş bağlantıda ya da `adb reverse tcp:8823 tcp:8823` ile yavaş sunucuda):
+        bir sonuca dokunun; çizgi hemen çıkmalı, adres değişmemeli, altta "… açılıyor" yazmalı; 4 ve 25 saniyedeki
+        satırlar ve düğmeler; Durdur'da çizgi hemen kaybolmalı ve eski sayfa kalmalı; "Hareketi azalt" açıkken çizgi
+        kaymadan adım adım ilerlemeli; yeni sekme sayfasından bir adres açınca beyaz ekran yerine yeni sekme sayfası
+        site yanıt verene kadar kalmalı; çevrimdışıyken bir bağlantıya dokunun: "İnternet bağlantısı yok" hemen
+        görünmeli, hata sayfası bağlantı gelince kendiliğinden bir kez yeniden açılmalı.
 - [ ] Bu yükleme beklerken başka bir sekme açılıyor; yükleme bitince sayfa sanki yeni açılan sekmede yükleniyor.
       Nedeni henüz bilinmiyor.
+      **Yeniden üretilemedi (20 Kas):** iOS simülatöründe (yavaş sunucu, yeni sekme açma, uyuyan sekmeye geçme) ve
+      gerçek `Browser`/`Tab` sınıflarıyla çalışan senaryo testlerinde (Android ve iOS olay sırasıyla) her yükleme kendi
+      sekmesinde kaldı; Android öykünücüsü bellek yetmediği için çalıştırılamadı. Kodda bulunan olası yol: Android'de
+      bir sayfanın geç açtığı pencere (yavaş yanıttan sonra) yeni sekme olarak öne geçip kullanıcının açtığı sekmenin
+      önüne çıkıyordu. Koruma eklendi: sayfanın açtığı pencere yalnızca sayfa ekrandayken ve son 3 sn'de dokunulduysa
+      öne gelir, yoksa arkada açılır ve "Bir sayfa yeni bir sekme açtı" (Göster) yazar (`TABS-23`); yüklemesi bekleyen
+      sekme bellek uyarısında uyutulmaz (`TABS-10`). Senaryolar kalıcı test: `npm run test:navigation`.
+  - [ ] Telefonda (Android) bakın: yavaş bağlantıda Google'da bir sonuca dokunup hemen yeni sekme açın; sonuç ilk
+        sekmede açılmalı, yeni sekme yeni sekme sayfası olarak kalmalı. Sorun yine olursa: kaç sekme açıktı, yeni
+        sekme nasıl açıldı (menü, sekmeler ekranı) ve sekme sayısı arttı mı, not edin.
 - [ ] Kurulumdaki yanıt tarzı / "özel talimat" seçimi ("kısa ve öz" ve diğer seçenekler) kaldırılsın: yanıt tarzı hep "kısa ve öz" olsun, kullanıcıya hiç sorulmasın (20 Kas; 0.1.3). Kapsam düzeltmede netleşecek: kurulumdaki seçim adımı, "Bana soru sor" akışının beşinci sorusu (yanıt tarzı) ve varsayılan değer. Ayarlar'daki özel talimat alanı kalır (sahibi yalnızca kurulumda sorulmasını istemedi; aksi söylenirse o da değişir). "düzelt" denince bakılacak.
 - [ ] Kurulumdan "varsayılan tarayıcı yap" adımı kaldırılsın (20 Kas; 0.1.3). Ayarlar'daki varsayılan tarayıcı seçeneği kalır. "düzelt" denince bakılacak.
 - [ ] Qutai Kredileri'nde katman seçimi ("Qutai Hızlı", "Qutai", "Qutai Pro") kaldırılsın: kullanıcıya seçenek gösterilmesin, hep hızlı katman kullanılsın, yani arkada Claude Haiku (20 Kas; 0.1.3). Bilinenler: katmanlar sunucudaki `model_tiers` ayarında; şimdiki varsayılan `standard` (Claude Sonnet 5.5), `fast` = Claude Haiku 5.5 ve adım sınırı 25 (standartta 40). Varsayılanı değiştirmek panelden yapılabilir; seçimin arayüzden kalkması uygulama değişikliği ister. Düzeltmede sorulacak: hızlı katmanın adım sınırı 25'te mi kalsın, derin araştırma da Haiku ile mi çalışsın, kendi anahtarıyla kullananların model seçimi aynen kalsın mı. "düzelt" denince bakılacak.

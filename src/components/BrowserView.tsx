@@ -1,7 +1,7 @@
 import { BLOB_KEEP_SCRIPT } from '../browser/pageScript';
 import { PageDownload, pageDownloadFrom } from '../browser/downloadRequests';
 import { ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import { Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
 import type { SearchEngineId } from '../browser/search';
@@ -22,7 +22,9 @@ import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../
 import { linkTarget, toLoadError } from '../browser/navigation';
 import { certificateExceptionsFor, mayBypassCertificate, noteValidCertificate } from '../browser/certificateExceptions';
 import { isLocalUrl } from '../browser/localNetwork';
-import { mayOfferExternal, noteUserGesture } from '../browser/externalGuard';
+import { mayOfferExternal, noteUserGesture, touchedRecently } from '../browser/externalGuard';
+import { isUserTap, windowOpensInFront } from '../browser/pendingNavigation';
+import { parseScrollMessage, restoreScrollScript, SCROLL_MEMORY_SCRIPT } from '../browser/scrollMemory';
 import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
 import { geolocationScript } from '../browser/geolocation';
 import { FILE_CAPTURE_SCRIPT, handleFileCaptureMessage } from '../browser/fileCapture';
@@ -96,6 +98,11 @@ export type TabActions = {
   backgroundPlayback: boolean;
   /** Short notice for the user, e.g. when no app can open a link. */
   onNotice: (message: string) => void;
+  /**
+   * A page opened a window while the user wasn't on it, or without a touch: it opened behind the tab on screen
+   * (never taking the screen from what the user is doing), and the user is told, with a way to switch to it.
+   */
+  onOpenedInBackground: (opened: Tab) => void;
   searchEngine: SearchEngineId;
   onAsk: (text: string) => void;
   /** "My apps" on the new tab page: asks the assistant for a first app (a draft, not sent). */
@@ -222,6 +229,8 @@ function TabWebView({
     Platform.OS === 'android' ? USER_AGENT_SCRIPT : '',
     Platform.OS === 'ios' && textZoom !== 100 ? textZoomScript(textZoom) : '',
     Platform.OS === 'ios' && newTabActions.darkMode && newTabActions.darkSites ? DARK_SITE_SCRIPT : '',
+    // Where the page was scrolled, so a woken tab comes back there (incognito tabs never sleep).
+    tab.incognito ? '' : SCROLL_MEMORY_SCRIPT,
     newTabActions.forceZoom ? FORCE_ZOOM_SCRIPT : '',
   ].join('\n');
 
@@ -308,7 +317,7 @@ function TabWebView({
           background={palette.surface}
           onRefresh={() => {
             setRefreshing(true);
-            tab.webview?.reload();
+            tab.reload();
             // In case the page never reports finishing.
             setTimeout(() => setRefreshing(false), 10000);
           }}
@@ -325,6 +334,8 @@ function TabWebView({
               if (tab.playback.handleMessage(e.nativeEvent.data)) return;
               if (handleFileCaptureMessage(tab, e.nativeEvent.data)) return;
               if (handleUserAgentMessage(e.nativeEvent.data)) return;
+              const scrolled = parseScrollMessage(e.nativeEvent.data);
+              if (scrolled !== null) return tab.noteScroll(scrolled);
               const pull = parsePullState(e.nativeEvent.data);
               if (pull !== null) return setAtTop(pull);
               const selection = parseSelection(e.nativeEvent.data);
@@ -342,7 +353,10 @@ function TabWebView({
             // client-side routing) goes 10 % → 100 % on Android with no load end after its start.
             onLoadProgress={(e) => tab.handleLoadProgress(e.nativeEvent.progress)}
             onLoadEnd={(e) => {
-              tab.handleLoadEnd();
+              tab.handleWebViewLoadEnd(e.nativeEvent.url);
+              // A woken tab back on its page: where it was scrolled.
+              const y = tab.takeScrollRestore(e.nativeEvent.url);
+              if (y !== null) tab.webview?.injectJavaScript(restoreScrollScript(y));
               // An https page that is still on screen without an error a moment later had a valid certificate
               // (Android reports a load end before the error of a failed load).
               const loaded = e.nativeEvent.url;
@@ -367,8 +381,18 @@ function TabWebView({
             onOpenWindow={(e) => {
               if (scriptBlocking() && isAdUrl(e.nativeEvent.targetUrl)) return;
               // A window the page opens joins the page's tab group (pages that open several windows
-              // stay together, and the assistant can manage and close them as one).
-              browser.openTab(e.nativeEvent.targetUrl, { incognito: tab.incognito, openerId: tab.id, group: true });
+              // stay together, and the assistant can manage and close them as one). It comes to the front only when
+              // the user just touched this page and is still on it: a window that arrives late (a slow site) or that
+              // the page opens on its own goes behind, so it never takes the screen from the tab the user is on
+              // (20 Nov 2026 report: a slow load seemed to land in the tab opened meanwhile).
+              const front = windowOpensInFront(active && browser.activeId === tab.id, touchedRecently(tab));
+              const opened = browser.openTab(e.nativeEvent.targetUrl, {
+                incognito: tab.incognito,
+                openerId: tab.id,
+                group: true,
+                activate: front,
+              });
+              if (!front) newTabActions.onOpenedInBackground(opened);
             }}
             // Every URL reaches onShouldStartLoadWithRequest; the default allowlist would hand other
             // schemes to canOpenURL, which silently drops links to apps the OS doesn't let us see.
@@ -386,6 +410,31 @@ function TabWebView({
                   tab.loadUrl(secure);
                   return false;
                 }
+              }
+              if (request.isTopFrame !== false && request.navigationType === 'formresubmit' && Date.now() > tab.allowResubmitUntil) {
+                // iOS: going back to, or reloading, the result of a sent form would send it again (an order, a
+                // payment). Asked first; Android's WebView never sends it again and doesn't say so (no JavaScript hook).
+                dialog.alert(t('nav.resubmitTitle'), t('nav.resubmitBody'), [
+                  { text: t('common.cancel'), style: 'cancel' },
+                  {
+                    text: t('nav.resubmitSend'),
+                    onPress: () => {
+                      tab.allowResubmitUntil = Date.now() + 5000;
+                      if (tab.lastAppAction === 'back') tab.historyBack();
+                      else if (tab.lastAppAction === 'forward') tab.historyForward();
+                      else tab.reload();
+                    },
+                  },
+                ]);
+                tab.nav.end('stopped');
+                return false;
+              }
+              if (linkTarget(request.url) === 'web' && request.isTopFrame !== false) {
+                // The pending navigation starts now (the progress line moves before the site answers). A user's tap:
+                // iOS says so; Android doesn't, so a touch on this page a moment ago counts.
+                const type = request.navigationType;
+                const tapped = isUserTap(Platform.OS, type, touchedRecently(tab));
+                tab.noteNavigationRequest(request.url, tapped, type === 'backforward' || type === 'reload' ? 'app' : 'page');
               }
               if (linkTarget(request.url) !== 'external') return true;
               // Only the page itself may hand off to another app, frames (often ads) can't, and only
@@ -423,8 +472,8 @@ function TabWebView({
                   url={url}
                   local={local}
                   incognito={tab.incognito}
-                  onRetry={() => tab.webview?.reload()}
-                  onBack={() => (tab.canGoBack ? tab.webview?.goBack() : tab.showNewTab())}
+                  onRetry={() => tab.reload()}
+                  onBack={() => (tab.canGoBack ? tab.historyBack() : tab.showNewTab())}
                   // Android only (the patch reports the certificate); never for a host whose certificate was
                   // valid earlier this session.
                   onContinue={
@@ -507,6 +556,31 @@ function TabWebView({
             saveFormDataDisabled={androidIncognito}
           />
         </PullToRefresh>
+      )}
+      {/* Until the site answers, the new tab page (its first address was just opened) or a woken tab's last picture
+          stays on screen instead of a blank white page. */}
+      {!tab.isNewTab && tab.cover === 'newTab' && (
+        <View style={StyleSheet.absoluteFill}>
+          <NewTabPage
+            incognito={tab.incognito}
+            darkMode={newTabActions.darkMode}
+            searchEngine={newTabActions.searchEngine}
+            active={active}
+            onNavigate={(url) => tab.loadUrl(url)}
+            onAsk={newTabActions.onAsk}
+            onAskForApp={newTabActions.onAskForApp}
+            onOpenLibrary={newTabActions.onOpenLibrary}
+          />
+        </View>
+      )}
+      {!tab.isNewTab && tab.cover === 'thumbnail' && tab.thumbnail && (
+        <Image
+          source={{ uri: tab.thumbnail }}
+          style={[StyleSheet.absoluteFill, { backgroundColor: palette.surface }]}
+          resizeMode="cover"
+          accessibilityIgnoresInvertColors
+          accessible={false}
+        />
       )}
       {tab.reader && !tab.isNewTab && (
         <ReaderView

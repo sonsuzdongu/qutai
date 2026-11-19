@@ -48,7 +48,7 @@ export function useHardwareBack(browser: Browser) {
           tab.closeReader();
           return true;
         case 'page-back':
-          tab.webview?.goBack();
+          tab.historyBack();
           return true;
         case 'back-to-new-tab':
           tab.showNewTab();

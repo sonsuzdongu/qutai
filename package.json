@@ -84,6 +84,7 @@
     "test:image": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/image-tests/*.test.ts",
     "test:contacts": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/contacts-tests/*.test.ts",
     "test:i18n": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/i18n-tests/*.test.ts",
+    "test:navigation": "node --no-warnings --experimental-transform-types --import ./scripts/navigation-tests/loader.mjs --test --test-force-exit scripts/navigation-tests/*.test.ts",
     "test:omnibox": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/omnibox-tests/*.test.ts",
     "measure:omnibox": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs scripts/omnibox-tests/measure.ts",
     "test:install": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/install-tests/*.test.ts",

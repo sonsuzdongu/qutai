@@ -14,11 +14,12 @@ for the map, then only the area files you need; never load all of them at once.
 
 ## Changelog
 
-Last updated: 2026-11-19
+Last updated: 2026-11-20
 
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-20:** Navigation gives feedback at once (owner's slow-connection report): a pending navigation per tab with its own number from the tap or the app's request, a Chrome-like progress line (10 % at once, creeping to 30 %, then real progress, never backwards), the address bar keeping the page on screen while a page-started navigation waits with "example.com opening…" under it, "isn't answering yet" after 4 s and "very slow" with Try again after 25 s, offline said at once, no blank page while waiting; windows a page opens late or on its own open behind the tab on screen; offline-failed tabs reload once when back online; iOS asks before sending a form again; woken tabs keep their thumbnail and scroll position (`TABS-18`…`TABS-26`, `TABS-10`); preconnecting while typing and a harmful-site lookup service deliberately not built (`NOT-23`, `NOT-24`).
 - **2026-11-19:** Settings › Account shows each sign-in method's address; the server now keeps the address each Google or Apple method's token gave (`identities.email`, migration 0012) and `GET /me` returns it; an Apple relay address reads "hidden email"; older servers still work (method name alone). Needs the server redeployed (`ACC-52`, owner's request).
 - **2026-11-19:** "Tell me about yourself" opens on three choices (speak, type, "Ask me questions"); the microphone shows only after choosing to speak; "Ask me questions" asks the five fixed questions one at a time and saves through the same review (`INTRO-26`, owner's request; the questions' shape is a default left open).
 - **2026-11-19:** Setup's example names follow the language: the contacts row no longer says "Ahmet" and "Ayşe" in every language, and the introduction example no longer uses "Sam" in German, Spanish, Portuguese and French (`INTRO-25`, owner's request); names outside setup are listed for the owner, unchanged.

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 import type { SearchEngineId } from '../browser/search';
+import { lineTarget, type NavigationEnd } from '../browser/pendingNavigation';
 import { toUrl } from '../browser/url';
 import { t } from '../i18n';
 import { darkPalette, makeStyles, usePalette } from '../ui/theme';
@@ -22,13 +23,32 @@ import { useReduceMotion } from '../utils/useReduceMotion';
 import { OmniboxSuggestions } from './OmniboxSuggestions';
 import type { HoldHandlers } from './PushToTalk';
 
+/**
+ * What the progress line shows (docs/design/14-tabs-and-conversations.md, "Pending navigation"). `key` names the tab and its
+ * navigation number: within one key the line never moves backwards; a new key starts over.
+ */
+export type ProgressLineState = {
+  key: string;
+  /** A navigation is waiting or loading. */
+  active: boolean;
+  startedAt: number;
+  responded: boolean;
+  /** The WebView's own progress (0-1) once the site answered. */
+  progress: number;
+  /** How the navigation ended, once it has: 'loaded' fills and fades, anything else vanishes at once. */
+  endedAs: NavigationEnd | null;
+  /** For screen readers: the site being loaded. */
+  host: string | null;
+};
+
 type Props = {
   url: string;
   /** A new id opens the field for typing with `text` in it (a new tab, or a search from outside); never submits. */
   editRequest?: { id: number; text: string } | null;
   /** Called once the request is applied, so the owner can drop it (a remounted bar must not apply it again). */
   onEditRequestApplied?: () => void;
-  loading: boolean;
+  /** The progress line: the active tab's navigation, or how its last one ended. */
+  progress: ProgressLineState;
   /** The page has used the location (shown as a small pin; tapping it opens the site's permissions). */
   usingLocation?: boolean;
   /** An https page that must not look secure: a certificate error, or one the user chose to continue past. */
@@ -80,7 +100,7 @@ export function AddressBar({
   url,
   editRequest,
   onEditRequestApplied,
-  loading,
+  progress,
   usingLocation,
   notSecure,
   usingCamera,
@@ -329,7 +349,7 @@ export function AddressBar({
           holdActive={assistantHoldActive}
         />
       )}
-      {loading && <LoadingBar top={bottom} />}
+      <ProgressLine state={progress} top={bottom} />
       {editing && (
         <Pressable
           style={[styles.backdrop, bottom ? { bottom: barHeight } : { top: barHeight }]}
@@ -361,32 +381,93 @@ export function AddressBar({
   );
 }
 
-/** Thin indeterminate progress line along the bottom edge while a page loads. */
-function LoadingBar({ top }: { top: boolean }) {
+/** Line height in points; a little thicker than the old indeterminate line (2). */
+const LINE = 3;
+
+/**
+ * The progress line along the bar's page edge, like Chrome's: starts at once at about 10 %, creeps towards 30 % while
+ * the site hasn't answered, follows the WebView's real progress after that, never moves backwards, fills and fades out
+ * when the page has loaded, and vanishes at once on stop or an error. With reduce motion it steps without sliding.
+ */
+function ProgressLine({ state, top }: { state: ProgressLineState; top: boolean }) {
   const styles = useStyles();
   const { width } = useWindowDimensions();
-  const [progress] = useState(() => new Animated.Value(0));
   const reduceMotion = useReduceMotion();
-
+  const [value] = useState(() => new Animated.Value(0));
+  const [opacity] = useState(() => new Animated.Value(0));
+  // Which navigation the line belongs to and whether it is on screen, adjusted while rendering when the navigation
+  // changes: a new one shows at once; one seen only after it ended (a tab switch) shows nothing; stop or an error hides it.
+  const [line, setLine] = useState({ key: state.key, visible: state.active });
+  if (line.key !== state.key) setLine({ key: state.key, visible: state.active });
+  else if (!state.active && line.visible && state.endedAs !== 'loaded') setLine({ key: line.key, visible: false });
+  const shown = useRef(0);
+  const live = useRef(state);
   useEffect(() => {
-    // With reduced motion the bar stays still.
-    if (reduceMotion) return;
-    const loop = Animated.loop(
-      Animated.timing(progress, {
-        toValue: 1,
-        duration: 1100,
-        easing: Easing.inOut(Easing.ease),
-        useNativeDriver: true,
-      }),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [progress, reduceMotion]);
+    live.current = state;
+  });
 
-  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [-width * 0.4, width] });
+  const { key, active, endedAs, responded, progress } = state;
+  // A new navigation starts where its creep is now (10 % for a fresh one).
+  useEffect(() => {
+    value.stopAnimation();
+    opacity.stopAnimation();
+    const start = live.current.active ? lineTarget(live.current, Date.now()) : 0;
+    shown.current = start;
+    value.setValue(start);
+    opacity.setValue(live.current.active ? 1 : 0);
+  }, [key, value, opacity]);
+
+  // While it runs: the creep and the real progress, a few times a second (once a second, in steps, with reduce motion).
+  useEffect(() => {
+    if (!active) return;
+    const tick = () => {
+      const target = lineTarget(live.current, Date.now(), shown.current);
+      if (target <= shown.current) return;
+      shown.current = target;
+      if (reduceMotion) value.setValue(target);
+      else Animated.timing(value, { toValue: target, duration: 260, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+    };
+    tick();
+    const timer = setInterval(tick, reduceMotion ? 1000 : 250);
+    return () => clearInterval(timer);
+  }, [key, active, responded, progress, reduceMotion, value]);
+
+  // A loaded page: the line fills, then fades (with reduce motion: fills, then disappears).
+  useEffect(() => {
+    if (active || endedAs !== 'loaded') return;
+    let cancelled = false;
+    const hide = () => {
+      if (!cancelled) setLine((l) => (l.key === key ? { key, visible: false } : l));
+    };
+    shown.current = 1;
+    if (reduceMotion) {
+      value.setValue(1);
+      const timer = setTimeout(hide, 250);
+      return () => {
+        cancelled = true;
+        clearTimeout(timer);
+      };
+    }
+    Animated.sequence([
+      Animated.timing(value, { toValue: 1, duration: 180, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start(hide);
+    return () => {
+      cancelled = true;
+    };
+  }, [key, active, endedAs, reduceMotion, value, opacity]);
+
+  if (!line.visible || line.key !== state.key) return null;
+  const translateX = value.interpolate({ inputRange: [0, 1], outputRange: [-width, 0], extrapolate: 'clamp' });
   return (
-    <View style={[styles.loadingTrack, top && styles.loadingTrackTop]} pointerEvents="none">
-      <Animated.View style={[styles.loadingBar, { width: width * 0.4, transform: [{ translateX }] }]} />
+    <View
+      style={[styles.loadingTrack, top && styles.loadingTrackTop]}
+      pointerEvents="none"
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel={state.host ? t('nav.loading', { host: state.host }) : undefined}
+    >
+      <Animated.View style={[styles.loadingBar, { width, opacity, transform: [{ translateX }] }]} />
     </View>
   );
 }
@@ -482,9 +563,9 @@ const useStyles = makeStyles((c) => ({
   icon: { width: 32, height: 36, alignItems: 'center', justifyContent: 'center' },
   iconText: { fontSize: 22, color: c.text },
   disabled: { opacity: 0.35 },
-  loadingTrack: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 2, overflow: 'hidden' },
+  loadingTrack: { position: 'absolute', left: 0, right: 0, bottom: 0, height: LINE, overflow: 'hidden' },
   loadingTrackTop: { bottom: 'auto', top: 0 },
-  loadingBar: { height: 2, backgroundColor: c.tint, borderRadius: 1 },
+  loadingBar: { height: LINE, backgroundColor: c.tint, borderTopRightRadius: LINE / 2, borderBottomRightRadius: LINE / 2 },
   tabCount: {
     minWidth: 22,
     height: 22,
