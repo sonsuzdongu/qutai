@@ -162,6 +162,8 @@ test('the step opens on three choices; the microphone page only after choosing t
 test('"Ask me questions": all five, one at a time, skippable; typed answers go to round 2', () => {
   let s = introReducer(START, { type: 'askMe', hasAi: true });
   assert.deepEqual(s.questions.map((q) => q.id), ['name', 'city', 'food', 'shopping', 'style']);
+  // Asked cold, the food question doesn't say "You didn't mention food".
+  assert.equal(s.questions[2].question, 'profile.foodTitle');
   assert.deepEqual(s.phase, { name: 'followUp', index: 0 });
   // Back from the first question returns to the choices.
   assert.deepEqual(introReducer(s, { type: 'back' }).phase, { name: 'choose' });

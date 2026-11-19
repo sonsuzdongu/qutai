@@ -100,7 +100,12 @@ export const FOLLOW_UPS: FollowUp[] = [
 const ASK_ME_ORDER: FollowUpId[] = ['name', 'city', 'food', 'shopping', 'style'];
 
 export function askMeQuestions(): FollowUp[] {
-  return ASK_ME_ORDER.map((id) => FOLLOW_UPS.find((f) => f.id === id)!);
+  return ASK_ME_ORDER.map((id) => {
+    const question = FOLLOW_UPS.find((f) => f.id === id)!;
+    // The follow-up wording ("You didn't mention food…") assumes an introduction came first; asked cold, the typed
+    // questions' own wording reads right.
+    return id === 'food' ? { ...question, question: 'profile.foodTitle' } : question;
+  });
 }
 
 /** The questions to ask, best first: none whose topics are covered, said not to apply, or declined. */

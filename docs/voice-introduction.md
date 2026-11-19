@@ -34,7 +34,10 @@ the small microphone (asking for the microphone permission on that tap), or skip
 text answers then go through the same round-2 request as follow-up answers (`answersTurn`), and everything ends on the
 same review page and is saved the same way (memory notes, the answer-style line in custom instructions). Without an AI
 (or if round 2 fails) the typed and spoken answers are listed as given, one row per question's main topic, with a
-notice; chips need no request. Back from the first question returns to the choices.
+notice; chips need no request. Back from the first question returns to the choices. Asked cold, the food question uses
+the typed questions' wording ("Any food preferences or restrictions?", `profile.foodTitle`) instead of the follow-up's
+"You didn't mention food…". Each new question scrolls the page to its end, so the current question stays in view
+under the earlier ones.
 
 App backgrounded while listening: voice input already stops the microphone (`device/voiceInput.ts`); the session's
 `onEnd` arrives as interrupted and the flow keeps what was heard (`transcript`). Back from `listening` stops first.

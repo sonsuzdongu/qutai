@@ -282,11 +282,19 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
     }
     const question = t(state.questions[followIndex].question);
     if (readAloud) void speak(question, getLanguage());
+    // The earlier questions and answers stay above as a conversation; the current one is at the bottom, so the page
+    // follows it (with five questions it was pushed out of view). After the page change's own scroll to the top.
+    const scroll = setTimeout(() => {
+      if (followIndex > 0) scrollRef.current?.scrollToEnd({ animated: false });
+    }, 60);
     const timer = setTimeout(() => {
       const node = questionRef.current && findNodeHandle(questionRef.current);
       if (node) AccessibilityInfo.setAccessibilityFocus(node);
     }, 400);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(scroll);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [followIndex]);
 
