@@ -413,6 +413,21 @@ Yeni yerel derleme gerekmez (yalnızca JavaScript değişti); Release denemesi i
 `http://localhost:8813`). Sahte yapay zekâ: `node scripts/fake-ai/server.mjs`, Özel sunucu `http://localhost:8793/v1`,
 model `fake`; sözcükler: countlinks, marklinks, editlinks, evilscript, injected, traptable, loginscript, checkoutscript.
 
+iOS simülatöründe denendi (iPhone 18 Pro, iOS 27, Release derleme, 19 Kasım; sahte yapay zekâ, İngilizce arayüz):
+- [x] Ayar kapalıyken "countlinks": hiçbir şey sorulmadan reddedildi; cevap Ayarlar › Asistan'ı gösteriyor. Adım satırı "Scripts are off in Settings".
+- [x] Ayarı açarken açıklamalı onay penceresi; açıldı.
+- [x] "countlinks": onay penceresinde açıklama, site, "sealed copy" satırı, Ayrıntılar'da tam kod; Çalıştır → kopyada 22, "page-data" işaretleri arasında; sayfa değişmedi.
+- [x] "marklinks": kırmızı "live page" ve "Changes the page" satırları; Çalıştır → bağlantılar kırmızı çerçeveli; kart "Keep for this site…"; kapsam seçeneklerinde "everywhere" yok; Sakla → "Script kept in My rules".
+- [x] Sayfa yeni sekmede yeniden açılınca saklanan betik kendiliğinden çalıştı (22 işaretli bağlantı).
+- [x] Sayfa menüsü › "Scripts off for this page": sayfa yenilendi, betik çalışmadı (0).
+- [x] `/login` sayfasında "loginscript": hiçbir şey sorulmadan reddedildi (şifre alanı); saklanan betik o sayfada çalışmadı, Kendi kurallarım'da "Skipped …: sensitive page".
+- [x] Kendi kurallarım › Scripts: ad, nerede, ne zaman, kırmızı "Changes the page", son çalışma, anahtar. Kodu değiştirip Kaydet → "Let this script run on localhost:8813?" onayı (Ayrıntılar'da kod); Onayla → kaydedildi, son çalışma sıfırlandı.
+- Bulunan: `CODE_SIGNING_ALLOWED=NO` ile derlenen simülatör uygulamasında anahtar zinciri yok (ayarlar kaydedilemiyor, betik mührü yapılamaz); ad hoc imzayla (`CODE_SIGN_IDENTITY=-`) derlenince çalıştı. Uygulama hatası değil.
+
+Android: `./gradlew :app:assembleRelease --max-workers=2` derlendi (Hermes paketiyle), cihazda denenmedi.
+
+Denenmedi (cihazda): gizli sekme, "Yalnızca okuma"/"Engellendi" kipleri, kurallar dosyası dışa/içe aktarma, yedekten geri yükleme, "evilscript"/"injected"/"traptable" (testlerde var), Android'de akış (yalnızca derlendi), VoiceOver, büyük yazı, koyu tema, yatay ekran, Türkçe arayüz.
+
 - [ ] Ayar kapalıyken (varsayılan) `/links` sayfasında "countlinks": hiçbir şey sorulmadan reddedilir; cevap, betiklerin Ayarlar › Asistan'dan açılabileceğini söyler.
 - [ ] Ayarlar › Asistan › "Asistan sayfalarda betik çalıştırabilsin": açarken açıklamalı onay penceresi; Vazgeç → kapalı kalır.
 - [ ] Açıkken "countlinks": onay penceresinde açıklama, site, "mühürlü kopya" satırı, kırmızı satır yok, kod Ayrıntılar altında; Çalıştır → cevapta 22 (kopyada); sayfa değişmez; sohbette "Sakla" kartı yok.
