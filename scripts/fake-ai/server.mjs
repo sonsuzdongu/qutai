@@ -31,6 +31,15 @@
 //   "traptable"   run_script (copy) extracting the /trap table: the instructions come back as page data
 //   "loginscript" / "checkoutscript"  run_script (copy) counting links on /login or /checkout: refused (sensitive)
 //   Test pages for these: node scripts/page-tests/scripts.mjs (/links, /inject, /trap, /login, /checkout).
+//   Apps (docs/mini-apps.md; scripts/app-tests/notesApp.mjs, breakoutApp.mjs):
+//   "notes" / "notlar" / "uygulama" (e.g. "bana bir uygulama oluştur, burada notlarımı tutabileyim")
+//              apps guide → apps create (the notes app, Turkish when the message is) → apps preview → summary
+//   "breakapp"  apps list → apps update with an edit that breaks the newest app on load → apps preview → the errors
+//   a message naming an app id with "error", "hata", "fix" or "düzelt" (what "Ask Qutai to fix this" sends)
+//              apps update with the mending edit → apps preview → summary
+//   "undoapp"   apps list → apps undo on the newest app → summary
+//   "breakout"  apps create (the break-out test app, network attempts to this server's /leak) → apps preview →
+//              the console summary. GET /leaks lists any request that reached this server under /leak ([] = none).
 //   "slow"     waits 25 s, then answers (Stop, backgrounding during a request, the keep-alive)
 //   "long"     read_page, scroll, read_page, scroll, read_page with 3 s pauses (rotation mid-task)
 //   "link"     an answer with a Markdown link (chat links open in the conversation's tab group)
@@ -42,6 +51,8 @@
 // Nothing is understood for real; it is enough to drive every screen of the flow.
 // Usage: node scripts/fake-ai/server.mjs [port]   (default 8793; listens on 127.0.0.1 only)
 import { createServer } from 'node:http';
+import { BREAK_EDIT, FIX_EDIT, notesCreateInput } from '../app-tests/notesApp.mjs';
+import { breakoutCreateInput } from '../app-tests/breakoutApp.mjs';
 
 const port = Number(process.argv[2] ?? 8793);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -245,6 +256,8 @@ function nextStep(messages) {
     if (n === 0) return call('page_cookies', { action: 'list' });
     return { content: `What the tool gave me (no values):\n\n${lastResult.slice(0, 1500)}` };
   }
+  const appStep = appsStep(user, text(messages[u] ?? { content: '' }), results, n, lastResult);
+  if (appStep) return appStep;
   if (/\bslow\b/.test(user)) return { delay: 25000, content: 'This slow answer took 25 seconds.' };
   if (/\blong\b/.test(user)) {
     const plan = [['read_page', {}], ['scroll', { direction: 'down' }], ['read_page', {}], ['scroll', { direction: 'down' }], ['read_page', {}]];
@@ -255,12 +268,75 @@ function nextStep(messages) {
   return { content: 'Hello from the fake AI server. Nothing was sent to any provider.' };
 }
 
+/** The apps scenarios (see the list at the top). */
+function appsStep(user, raw, results, n, lastResult) {
+  const call = (name, args) => ({ toolCalls: [{ name, args }] });
+  const idIn = (t) => (/\b(app-[a-z0-9]{12})\b/.exec(t) ?? [])[1];
+  const newest = () => idIn(results.map((r) => text(r)).find((t) => /The user's apps/.test(t)) ?? '');
+  const created = () => idIn(results.map((r) => text(r)).find((t) => /^Created /.test(t)) ?? '');
+  const mentioned = idIn(raw);
+  if (mentioned && /\b(error|fix)\b|hata|düzelt/i.test(user)) {
+    if (n === 0) return call('apps', { action: 'update', app_id: mentioned, edits: [FIX_EDIT], note: 'Fixed the misspelt function' });
+    if (n === 1) return /^Saved /.test(lastResult) ? call('apps', { action: 'preview', app_id: mentioned }) : { content: `Could not fix it: ${lastResult.slice(0, 300)}` };
+    return { content: `I fixed the app. The preview said:\n\n${lastResult.slice(0, 800)}` };
+  }
+  if (/\bbreakapp\b/.test(user)) {
+    if (n === 0) return call('apps', { action: 'list' });
+    const id = newest();
+    if (!id) return { content: 'There is no app to break.' };
+    if (n === 1) return call('apps', { action: 'update', app_id: id, edits: [BREAK_EDIT], note: 'A change that breaks it (test)' });
+    if (n === 2) return call('apps', { action: 'preview', app_id: id });
+    return { content: `The broken version is saved. The preview said:\n\n${lastResult.slice(0, 800)}` };
+  }
+  if (/\bundoapp\b/.test(user)) {
+    if (n === 0) return call('apps', { action: 'list' });
+    const id = newest();
+    if (!id) return { content: 'There is no app.' };
+    if (n === 1) return call('apps', { action: 'undo', app_id: id });
+    return { content: `Undo: ${lastResult.slice(0, 200)}` };
+  }
+  if (/\bbreakout\b/.test(user)) {
+    if (n === 0) return call('apps', breakoutCreateInput(port));
+    const id = created();
+    if (!id) return { content: `Not created: ${lastResult.slice(0, 300)}` };
+    if (n === 1) return call('apps', { action: 'preview', app_id: id });
+    return { content: `Break-out test preview:\n\n${lastResult.slice(0, 2500)}\n\nRequests that reached the server: ${JSON.stringify(leaks)}` };
+  }
+  if (/\bnotes\b|notlar|uygulama/i.test(user)) {
+    const turkish = /[ğüşıöçİ]|uygulama|notlar/i.test(raw);
+    if (n === 0) return call('apps', { action: 'guide' });
+    if (n === 1) return call('apps', notesCreateInput(turkish ? 'tr' : 'en'));
+    const id = created();
+    if (!id) return { content: `Not created: ${lastResult.slice(0, 300)}` };
+    if (n === 2) return call('apps', { action: 'preview', app_id: id });
+    return {
+      content: turkish
+        ? `“Notlarım” uygulamanız hazır: not ekleyebilir, düzenleyebilir, arayabilir ve silebilirsiniz. Yeni sekme sayfasındaki “Uygulamalarım” bölümünde bulabilirsiniz.\n\nÖnizleme: ${lastResult.slice(0, 300)}`
+        : `Your “My notes” app is ready: add, edit, search and delete notes. It is under “My apps” on the new tab page.\n\nPreview: ${lastResult.slice(0, 300)}`,
+    };
+  }
+  return null;
+}
+
+/** Requests the break-out test app managed to send (none expected). */
+const leaks = [];
+
 let callNo = 0;
 function toolCallsOf(step) {
   return (step.toolCalls ?? []).map((c) => ({ id: `call_${++callNo}`, type: 'function', function: { name: c.name, arguments: JSON.stringify(c.args) } }));
 }
 
 const server = createServer(async (req, res) => {
+  if (req.url.startsWith('/leak') && req.url !== '/leaks') {
+    leaks.push({ at: new Date().toISOString(), method: req.method, path: req.url });
+    console.log(`LEAK ${req.method} ${req.url}`);
+    res.writeHead(204);
+    return res.end();
+  }
+  if (req.method === 'GET' && req.url === '/leaks') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(leaks));
+  }
   if (req.method === 'GET' && /\/models$/.test(req.url)) {
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ object: 'list', data: [{ id: 'fake', object: 'model', owned_by: 'qutai-test' }] }));
