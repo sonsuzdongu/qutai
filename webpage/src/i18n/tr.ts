@@ -7,10 +7,10 @@ import type { Messages } from './en';
 export const tr: Messages = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai, iPhone ve Android için açık kaynak bir tarayıcı; içindeki yapay zekâ asistanı sayfaları sizin için okur ve kullanır. Kendi AI anahtarınızla çalışır, verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Henüz geliştirme aşamasında.',
+    'Qutai, iPhone ve Android için açık kaynak bir tarayıcı; içindeki yapay zekâ asistanı, istediğinizde sayfayı okur ve sizin için kullanır. Kendi AI anahtarınızla çalışır, verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Henüz geliştirme aşamasında.',
   'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: Qutai, Agentic Browser.',
   'meta.appDescription':
-    'iPhone ve Android için açık kaynak, yapay zekâ asistanlı bir tarayıcı: asistan, kendi AI anahtarınızla web sayfalarını sizin için okur ve kullanır.',
+    'iPhone ve Android için açık kaynak, yapay zekâ asistanlı bir tarayıcı: asistan, istediğinizde web sayfasını okur ve kendi AI anahtarınızla sizin için kullanır.',
 
   'nav.skip': 'İçeriğe geç',
   'nav.label': 'Bölümler',
@@ -33,7 +33,7 @@ export const tr: Messages = {
   'hero.eyebrow': 'Yapay zekâ odaklı tarayıcı',
   'hero.title': 'Yapay zekâyla, yapay zekâ için yapıldı.',
   'hero.tagline': 'Telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız.',
-  'hero.lede': 'Qutai, sayfayı sizin için okuyup kullanan bir asistanla gelen iPhone ve Android tarayıcısı.',
+  'hero.lede': 'Qutai, istediğinizde sayfayı okuyup sizin için kullanan bir asistanla gelen iPhone ve Android tarayıcısı.',
   'hero.github': 'GitHub’da inceleyin',
   'hero.status': 'Geliştirme aşamasında. App Store ve Google Play için hazırlanıyor; henüz yayımlanmadı.',
 
@@ -44,7 +44,7 @@ export const tr: Messages = {
 
   'statement.kicker': 'Qutai hakkında',
   'statement.text':
-    'Qutai, merkezinde bir asistan olan bir tarayıcı. Sayfayı okur, sekmelerinizi karşılaştırır, form doldurur, rezervasyon yapar, araştırır. Ona anlattıklarınızı telefonunuzda hatırlar; önemli bir adımdan önce durup size sorar.',
+    'Qutai, merkezinde bir asistan olan bir tarayıcı. İstediğinizde sayfayı okur, sekmelerinizi karşılaştırır, form doldurur, rezervasyon yapar, araştırır. Ona anlattıklarınızı telefonunuzda hatırlar; önemli bir adımdan önce durup size sorar.',
 
   'art.placeholder': 'Minyatür hazırlanıyor',
   'art.hero.alt': 'Osmanlı minyatürü: renkli kaftanlı robot kâtipler bir saray kütüphanesinde tabletlerde web sayfaları okuyor; pencereden Haliç ve Galata Kulesi görünüyor.',
@@ -93,11 +93,11 @@ export const tr: Messages = {
   'agent.kicker': 'Asistan',
   'agent.title': 'Sıkıcı kısmı ona bırakın.',
   'agent.lede':
-    'Qutai’ın asistanı sekmelerinizde çalışır: sayfaları okur, dokunur, yazar, gerektiğinde yeni sekme açıp karşılaştırır. Ne yaptığını adım adım görürsünüz; üzerinde çalıştığı sayfa hafifçe parlar, istediğiniz an durdurabilirsiniz. İş bitince adımlar tek satıra toplanır. Ona anlattıklarınızı da hatırlar; zamanla daha az anlatmanız gerekir.',
+    'Qutai’ın asistanı siz isteyince sekmelerinizde çalışır: sayfayı okur, dokunur, yazar, gerektiğinde yeni sekme açıp karşılaştırır. Ne yaptığını adım adım görürsünüz; üzerinde çalıştığı sayfa hafifçe parlar, istediğiniz an durdurabilirsiniz. İş bitince adımlar tek satıra toplanır. Ona anlattıklarınızı da hatırlar; zamanla daha az anlatmanız gerekir.',
   'agent.memory.kicker': 'Hafıza, telefonunuzda',
   'agent.memory.title': 'Sizi tanır, öğrendiklerini telefonunuzda saklar.',
   'agent.memory.body':
-    'Adresinizi, bedeninizi, nasıl beslendiğinizi ya da bütçenizi Qutai’a bir kez söylemeniz yeter. Kurulumda kendinizi sesle ya da yazarak anlatabilirsiniz: Qutai en fazla üç soru daha sorar, anladıklarını kaydetmeden önce size gösterir; sağlık bilgilerinizi yapay zekâdan gizleyebilirsiniz. Öğrendiklerini konularına göre ayırır, sonraki görevlerde size yeniden sormadan kullanır, özel talimatlarınıza da her seferinde uyar.',
+    'Adresinizi, bedeninizi, nasıl beslendiğinizi ya da bütçenizi Qutai’a bir kez söylemeniz yeter. Kurulumda kendinizi sesle ya da yazarak anlatabilir ya da birkaç kısa soruyu yanıtlayabilirsiniz: Qutai en fazla üç soru daha sorar, anladıklarını kaydetmeden önce size gösterir; sağlık bilgilerinizi yapay zekâdan gizleyebilirsiniz. Öğrendiklerini konularına göre ayırır, sonraki görevlerde size yeniden sormadan kullanır, özel talimatlarınıza da her seferinde uyar.',
   'agent.memory.point1':
     'Konulara ayrılır: kimlik ve iletişim, adresler, alışveriş ve teslimat, seyahat, yemek ve beslenme, bütçe, genel tercihler',
   'agent.memory.point2':
@@ -181,7 +181,7 @@ export const tr: Messages = {
   'privacy.apps.body':
     '“Notlarımı tutabileceğim bir uygulama yap” demeniz yeter: Qutai uygulamayı yazar, önizlemesini açar, kendi hatalarını düzeltir, istediğinizde değiştirir. Eski sürümleri saklar; dilediğinizde geri dönersiniz. Uygulamalarınız yeni sekme sayfasında, Uygulamalarım bölümünde durur. Her biri tarayıcıdan ayrı, kendi alanında çalışır: internete, sitelerin çerezlerine ya da oturumlarına, başka uygulamaların verisine erişemez. Verileri telefonda kalır, uygulama başına en fazla 5 MB. Bir uygulamayı dosya olarak paylaşabilirsiniz; içe aktarılan uygulama siz onaylayana kadar kapalı kalır. Uygulamalar şifreli yedeğinize de girer. Uygulama yazdırmak sıradan bir asistan isteğidir; kendi anahtarınızla ya da Qutai Kredileriyle ödenir.',
   'privacy.note':
-    'Qutai hizmeti tamamen isteğe bağlıdır: Apple, Google ya da e-postayla giriş yapıp kendi anahtarınız yerine Qutai Kredileri kullanabilir, model yerine Qutai Hızlı, Qutai ya da Qutai Pro’yu seçebilirsiniz. Qutai sunucusu hesabınızı, kredilerinizi ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı ve sayfaları tutmaz. Depodan derlenen sürümlerde bu hizmet yoktur, uygulama Qutai sunucusuna hiç bağlanmaz.',
+    'Qutai hizmeti tamamen isteğe bağlıdır: Apple, Google ya da e-postayla giriş yapıp kendi anahtarınız yerine Qutai Kredileri kullanabilir, seçmeniz gereken bir şey yok, modeli Qutai belirler. Qutai sunucusu hesabınızı, kredilerinizi ve her istek için modeli, token sayısını ve tutarı tutar, uygulamanın sürümünü ve derleme numarasını görür; mesajlarınızı ve sayfaları tutmaz. Depodan derlenen sürümlerde bu hizmet yoktur, uygulama Qutai sunucusuna hiç bağlanmaz.',
 
   'browser.kicker': 'Üstelik tam bir tarayıcı',
   'browser.title': 'Bir tarayıcıdan beklediğiniz her şey, takip edilmeden.',

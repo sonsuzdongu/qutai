@@ -5,7 +5,7 @@ import type { IconName } from '../components/Icon';
  * backend/DESIGN.md) as of the date below. Only what the code does; limits said plainly. When a feature lands or
  * changes, update its item here in both languages, together with the home page.
  */
-export const FEATURES_CHECKED = '2026-11-19';
+export const FEATURES_CHECKED = '2026-11-20';
 
 export type Text = { en: string; tr: string };
 const t = (en: string, tr: string): Text => ({ en, tr });
@@ -25,7 +25,7 @@ export const PAGE = {
   metaTitle: t('Features · Qutai', 'Özellikler · Qutai'),
   metaDescription: t(
     'Everything Qutai does, from the assistant that reads and uses pages to apps it builds for you, with example requests and the limits stated plainly.',
-    'Qutai’ın yaptığı her şey: sayfaları okuyup kullanan asistandan sizin için yaptığı uygulamalara kadar, örnek isteklerle ve sınırlarıyla birlikte.',
+    'Qutai’ın yaptığı her şey: istediğinizde sayfayı okuyup kullanan asistandan sizin için yaptığı uygulamalara kadar, örnek isteklerle ve sınırlarıyla birlikte.',
   ),
   kicker: t('Features', 'Özellikler'),
   title: t('Everything Qutai does, in one place.', 'Qutai’ın yaptığı her şey, tek sayfada.'),
@@ -132,12 +132,12 @@ export const GROUPS: Group[] = [
     icon: 'hand',
     title: t('The assistant at work', 'İş başında asistan'),
     lede: t(
-      'It reads the page and uses it the way you would: taps, types, picks, scrolls and opens tabs, one visible step at a time.',
-      'Sayfayı okur ve tıpkı sizin gibi kullanır: dokunur, yazar, seçer, kaydırır, sekme açar. Her adımı ekranda görürsünüz.',
+      'When you ask, it reads the page and uses it the way you would: taps, types, picks, scrolls and opens tabs, one visible step at a time.',
+      'İstediğinizde sayfayı okur ve tıpkı sizin gibi kullanır: dokunur, yazar, seçer, kaydırır, sekme açar. Her adımı ekranda görürsünüz.',
     ),
     items: [
       {
-        title: t('Reads and uses pages', 'Sayfaları okur ve kullanır'),
+        title: t('Reads the page when you ask, and uses it', 'İstediğinizde sayfayı okur ve kullanır'),
         body: t(
           'Fills forms, fixes the errors a form reports, chooses options and moves between pages. It answers in the language you write in.',
           'Form doldurur, formun gösterdiği hataları düzeltir, seçenekleri işaretler, sayfalar arasında gezinir. Siz hangi dilde yazarsanız o dilde yanıt verir.',
@@ -220,8 +220,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Tell it about yourself', 'Kendinizden bahsedin'),
         body: t(
-          'In setup, talk or type freely. One AI request turns it into notes, Qutai asks at most three follow-up questions, and you review every note before anything is saved; allergies and health can be hidden from the AI.',
-          'Kurulumda kendinizi serbestçe anlatın, sesle ya da yazarak. Qutai bunu tek bir yapay zekâ isteğiyle notlara çevirir, en fazla üç soru daha sorar; kaydetmeden önce her notu siz gözden geçirirsiniz. Alerji ve sağlık bilgilerinizi yapay zekâdan gizleyebilirsiniz.',
+          'In setup, choose how: speak, type, or let Qutai ask you four short questions. When you speak or type, one AI request turns it into notes and Qutai asks at most three follow-ups; “Use my location” fills in your city, keeping only the city. You review every note before anything is saved, and allergies and health can be hidden from the AI.',
+          'Kurulumda nasıl anlatacağınızı seçin: konuşarak, yazarak ya da Qutai’ın soracağı dört kısa soruyu yanıtlayarak. Konuşur ya da yazarsanız Qutai bunu tek bir yapay zekâ isteğiyle notlara çevirir, en fazla üç soru daha sorar; “Konumumu kullan” şehrinizi doldurur ve yalnızca şehri saklar. Kaydetmeden önce her notu siz gözden geçirirsiniz; alerji ve sağlık bilgilerinizi yapay zekâdan gizleyebilirsiniz.',
         ),
         asks: [
           t(
@@ -241,8 +241,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Custom instructions', 'Özel talimatlar'),
         body: t(
-          'How you like answers, followed in every request.',
-          'Yanıtları nasıl istediğinizi bir kez yazın; her istekte buna uyar.',
+          'How you like answers, followed in every request. Setup starts you with short, to-the-point answers; change that line whenever you like.',
+          'Yanıtları nasıl istediğinizi bir kez yazın; her istekte buna uyar. Kurulum, kısa ve öz yanıtlarla başlatır; o satırı istediğiniz zaman değiştirebilirsiniz.',
         ),
       },
     ],
@@ -546,15 +546,15 @@ export const GROUPS: Group[] = [
       {
         title: t('Qutai Credits', 'Qutai Kredileri'),
         body: t(
-          'In the official builds: no key, pick a tier (Qutai Fast, Qutai or Qutai Pro) instead of a model. Requests pass through Qutai’s server, which keeps the account, the credits and, per request, the model, tokens and cost; never your messages, pages or memory. Buying credits in the App Store and Google Play is being prepared.',
-          'Resmî sürümlerde: anahtar yok, model yerine bir düzey seçersiniz (Qutai Hızlı, Qutai ya da Qutai Pro). İstekler Qutai sunucusundan geçer; sunucu hesabı, kredileri ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı, sayfaları ya da hafızanızı asla. App Store ve Google Play’den kredi satın alma hazırlanıyor.',
+          'In the official builds: no key and nothing to choose; Qutai picks the model. Requests pass through Qutai’s server, which keeps the account, the credits and, per request, the model, tokens and cost; never your messages, pages or memory. Buying credits in the App Store and Google Play is being prepared.',
+          'Resmî sürümlerde: anahtar da yok, seçmeniz gereken bir şey de; modeli Qutai belirler. İstekler Qutai sunucusundan geçer; sunucu hesabı, kredileri ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı, sayfaları ya da hafızanızı asla. App Store ve Google Play’den kredi satın alma hazırlanıyor.',
         ),
       },
       {
         title: t('A Qutai account, if you want one', 'İsterseniz bir Qutai hesabı'),
         body: t(
-          'Sign in with Apple, Google or an email code; sign out of every device or delete the account, which deletes your data.',
-          'Apple, Google ya da e-postanıza gelen kodla giriş yapın. Tüm cihazlarda oturumu kapatabilir ya da hesabı silebilirsiniz; hesapla birlikte verileriniz de silinir.',
+          'Sign in with Apple, Google or an email code; the account screen shows each method with its address (Apple’s private relay as “hidden email”). Sign out of every device or delete the account, which deletes your data.',
+          'Apple, Google ya da e-postanıza gelen kodla giriş yapın; hesap ekranı her giriş yöntemini adresiyle gösterir (Apple’ın gizli adresi “gizli e-posta” olarak). Tüm cihazlarda oturumu kapatabilir ya da hesabı silebilirsiniz; hesapla birlikte verileriniz de silinir.',
         ),
       },
       {
@@ -580,6 +580,13 @@ export const GROUPS: Group[] = [
         body: t(
           'Idle tabs sleep to save memory; swipe on the address bar to switch tabs, and put the bar at the top or the bottom.',
           'Kullanmadığınız sekmeler bellek harcamasın diye uykuya geçer. Sekmeler arasında geçmek için adres çubuğunu kaydırın; çubuğu ekranın üstüne ya da altına alabilirsiniz.',
+        ),
+      },
+      {
+        title: t('Clear feedback while a page loads', 'Sayfa yüklenirken ne olduğunu bilirsiniz'),
+        body: t(
+          'A progress line starts at once; after 4 seconds you hear that the site isn’t answering yet, with Stop, and after 25 seconds that it is very slow, with Try again. Being offline is said at once, and tabs that failed offline reload when the connection returns. The address bar keeps showing the current page until the new site answers, so a slow page can’t pass itself off as another; windows a page opens later appear behind your tab with a notice, and a tab that wakes up returns to where you were.',
+          'İlerleme çizgisi hemen başlar; 4 saniye sonra sitenin henüz yanıt vermediği söylenir ve Durdur çıkar, 25 saniye sonra da çok yavaş olduğu söylenir ve Tekrar dene çıkar. İnternet yoksa bu hemen söylenir; bağlantı yokken açılamayan sekmeler bağlantı gelince yeniden yüklenir. Yeni site yanıt verene kadar adres çubuğu bulunduğunuz sayfayı göstermeye devam eder, böylece yavaş bir sayfa kendini başka bir site gibi gösteremez. Bir sayfanın sonradan açtığı pencereler bir uyarıyla sekmenizin arkasında açılır; uyuyan bir sekme uyanınca kaldığınız yere döner.',
         ),
       },
       {
@@ -634,8 +641,8 @@ export const LEAVES: { to: Text; what: Text; when: Text }[] = [
   {
     to: t('Qutai’s server (official builds)', 'Qutai sunucusu (resmî sürümler)'),
     what: t(
-      'Sign-in details; with Qutai Credits, the AI requests on their way, not stored or logged; your encrypted backup file',
-      'Giriş bilgileri; Qutai Kredileri kullanıyorsanız yapay zekâya giden istekler (saklanmaz, kayda geçirilmez); şifreli yedek dosyanız',
+      'Sign-in details; with Qutai Credits, the AI requests on their way, not stored or logged; your encrypted backup file; the app’s version and build',
+      'Giriş bilgileri; Qutai Kredileri kullanıyorsanız yapay zekâya giden istekler (saklanmaz, kayda geçirilmez); şifreli yedek dosyanız; uygulamanın sürümü ve derleme numarası',
     ),
     when: t('Only when signed in and using those features', 'Yalnızca giriş yaptıysanız ve bu özellikleri kullanıyorsanız'),
   },
@@ -673,6 +680,10 @@ export const NEVER = t(
 );
 
 export const NOT_BUILT: Text[] = [
+  t(
+    'No connecting to sites while you type an address, which would tell a site what you are typing before you choose it. For now, no harmful-site lookup service such as Safe Browsing either, which would send the addresses you open to another company.',
+    'Adres yazarken sitelere önceden bağlanma yok; bu, siz seçmeden önce ne yazdığınızı o siteye bildirirdi. Şimdilik Safe Browsing gibi zararlı site sorgulama hizmeti de yok; açtığınız adresleri başka bir şirkete gönderirdi.',
+  ),
   t(
     'No password manager of its own: the phone’s system autofill works in the browser.',
     'Kendine ait şifre yöneticisi yok: telefonun sistem otomatik doldurması tarayıcıda çalışır.',

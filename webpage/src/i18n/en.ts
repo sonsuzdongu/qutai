@@ -6,10 +6,10 @@
 export const en = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai is the AI assistant in your phone’s browser: an open-source browser for iPhone and Android whose assistant reads and uses pages for you with your own AI key, keeps your data on your phone and asks before sensitive actions. In development.',
+    'Qutai is the AI assistant in your phone’s browser: an open-source browser for iPhone and Android whose assistant reads the page when you ask and uses it for you, with your own AI key; keeps your data on your phone and asks before sensitive actions. In development.',
   'meta.ogAlt': 'The Qutai logo, a blue Q, next to the words: Qutai, Agentic Browser.',
   'meta.appDescription':
-    'An open-source AI browser for iOS and Android whose assistant reads and uses web pages for you, with your own AI provider key.',
+    'An open-source AI browser for iOS and Android whose assistant reads a web page when you ask and uses it for you, with your own AI provider key.',
 
   'nav.skip': 'Skip to content',
   'nav.label': 'Sections',
@@ -33,7 +33,7 @@ export const en = {
   'hero.title': 'Built with AI. Built for AI.',
   'hero.tagline': 'The AI assistant in your phone’s browser.',
   'hero.lede':
-    'Qutai is a browser for iPhone and Android whose assistant reads the page and uses it for you.',
+    'Qutai is a browser for iPhone and Android whose assistant reads the page when you ask, and uses it for you.',
   'hero.github': 'View on GitHub',
   'hero.status': 'In development. Coming to the App Store and Google Play; not released yet.',
 
@@ -44,7 +44,7 @@ export const en = {
 
   'statement.kicker': 'About Qutai',
   'statement.text':
-    'Qutai is a browser with an assistant at its core. It reads the page, compares your tabs, fills in forms, books and researches, remembers what you tell it on your phone, and stops to ask before anything that matters.',
+    'Qutai is a browser with an assistant at its core. When you ask, it reads the page, compares your tabs, fills in forms, books and researches, remembers what you tell it on your phone, and stops to ask before anything that matters.',
 
   'art.placeholder': 'Miniature in preparation',
   'art.hero.alt': 'Ottoman miniature: robot scribes in colourful kaftans read web pages on tablets in a palace library, with the Golden Horn and Galata Tower through the window.',
@@ -92,11 +92,11 @@ export const en = {
   'agent.kicker': 'The assistant',
   'agent.title': 'Hand it the tedious part.',
   'agent.lede':
-    'Qutai’s assistant works in your tabs: it reads pages, taps, types, opens and compares tabs, step by step. Every step is shown as it happens, the page it works on glows softly, and you can stop it at any time; when it is done, the steps fold into one line. And it remembers what you tell it, so each task needs less explaining than the last.',
+    'Qutai’s assistant works in your tabs when you ask: it reads the page, taps, types, opens and compares tabs, step by step. Every step is shown as it happens, the page it works on glows softly, and you can stop it at any time; when it is done, the steps fold into one line. And it remembers what you tell it, so each task needs less explaining than the last.',
   'agent.memory.kicker': 'Memory, on your phone',
   'agent.memory.title': 'It gets to know you, and keeps it on your phone.',
   'agent.memory.body':
-    'Tell Qutai your addresses, sizes, diet or budget. When you set it up, you can simply tell it about yourself, by voice or by typing: it asks at most three follow-up questions and shows everything it understood for you to check before anything is saved, and you can hide health details from the AI. It files what it learns under categories, uses it in later tasks without asking again, and follows your custom instructions in every request. The more you use it, the less you have to explain.',
+    'Tell Qutai your addresses, sizes, diet or budget. When you set it up, you can tell it about yourself by voice or by typing, or let it ask you a few short questions: it asks at most three follow-ups and shows everything it understood for you to check before anything is saved, and you can hide health details from the AI. It files what it learns under categories, uses it in later tasks without asking again, and follows your custom instructions in every request. The more you use it, the less you have to explain.',
   'agent.memory.point1': 'Sorted into categories: identity and contact, addresses, shopping and delivery, travel, food and diet, budget, general preferences',
   'agent.memory.point2': 'Stored on the phone; yours to see, edit and delete in Settings, and included in your encrypted backup',
   'agent.memory.point3': 'Sent only with your requests, to the AI provider you chose (through Qutai’s server with Qutai Credits), and listed in “What was sent to the AI”; ID numbers and memories you lock go only as a label',
@@ -176,7 +176,7 @@ export const en = {
   'privacy.apps.body':
     'Ask for “an app where I can keep my notes” and Qutai writes it, opens a preview, fixes its own errors and changes it when you ask, keeping earlier versions so you can go back. Your apps wait in My apps on the new tab page. Each runs in its own view, apart from your browsing: no internet, no other sites’ cookies or sign-ins, no other app’s data. Its data stays on the phone, up to 5 MB per app. Share an app as a file; an imported one stays off until you approve it, and apps go into your encrypted backup. Writing an app is an ordinary assistant request, paid with your own key or Qutai Credits.',
   'privacy.note':
-    'The Qutai service is optional: sign in with Apple, Google or email, use Qutai Credits instead of your own key, and choose Qutai Fast, Qutai or Qutai Pro instead of a model. Qutai’s server keeps your account, your credits and, for each request, the model, the token count and the cost; not your messages or pages. Builds from the repository leave it out and never contact a Qutai server.',
+    'The Qutai service is optional: sign in with Apple, Google or email, use Qutai Credits instead of your own key, with nothing to choose: Qutai picks the model. Qutai’s server keeps your account, your credits and, for each request, the model, the token count and the cost, and sees the app’s version and build; not your messages or pages. Builds from the repository leave it out and never contact a Qutai server.',
 
   'browser.kicker': 'And a browser too',
   'browser.title': 'Everything you expect from a browser, minus the tracking.',
