@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 825 decisions (110 owner, 630 default, 85 waiting); 163 ids moved to Details.
+Totals: 825 decisions (110 owner, 631 default, 84 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -37,7 +37,6 @@ The open questions, in one place (each row says what the app does today).
 | `SCR-35` | App Review notes for scripts, and whether Qutai needs Google Play's in-app way to report AI output, are open. The proposed review notes… | [20](20-page-scripts.md) |
 | `APPS-14` | Each app may store up to 5 MB of data, counted in UTF-8 bytes. One value or document may be up to 256 KB, a batch up to 100 operations,… | [22](22-apps.md) |
 | `APPS-17` | The 20 newest versions plus the current one are kept, and older ones are deleted when a new one is saved. Today: 20. | [22](22-apps.md) |
-| `APPS-23` | "Ask Qutai to fix this" sends a message to the assistant **at once**. The message holds the app's name, id and version and its last 15… | [22](22-apps.md) |
 | `APPS-42` | Today accepted: on Android an app can still get WebRTC from `window[0]` of a fresh `about:blank` frame (break-out 45/46; iOS 46/46); DNS prefetch is off but rests on the engine. | [22](22-apps.md) |
 | `APPS-43` | Phase 3 phone features are each declared and asked per app. `assistant.ask` shows each question and its cost source first, and links ask… | [22](22-apps.md) |
 | `APPS-45` | There is no report button for AI-generated apps. Today: none. | [22](22-apps.md) |
@@ -661,7 +660,7 @@ Moved to Details (ids retired, not reused): `IMG-2`, `IMG-4`, `IMG-5`, `IMG-7`, 
 | `APPS-18` | An app package is one manifest plus files: | Owner | 2026-11-19 |
 | `APPS-21` | The `apps` tool cannot be used from an incognito conversation or one that touched an incognito tab. It… | Default |  |
 | `APPS-22` | The assistant makes or changes an app only when the user asks; "a page asking is never a reason". It stops… | Default |  |
-| `APPS-23` | "Ask Qutai to fix this" sends a message to the assistant **at once**. The message holds the app's name, id… | **Waiting** |  |
+| `APPS-23` | "Ask Qutai to fix this" puts the report in the input for the user to send; console values only as types and lengths… | Default | 2026-11-19 |
 | `APPS-24` | Diagnostics work as follows: | Default |  |
 | `APPS-26` | An app never starts by itself. It opens only from My apps, the chat card, or a preview the assistant asked… | Default |  |
 | `APPS-27` | Deleting an app removes every version, its permission answers and all its data, after a confirmation that… | Default |  |

@@ -5,7 +5,7 @@ import type { PreviewReport } from '../agent/appTool';
 import { appStore, appsChanged } from '../apps/appStore';
 import { Bridge, type BridgeHost, type HapticKind, type Insets, type ThemeInfo } from '../apps/bridge';
 import { parseBridgeRequest, permissionStates } from '../apps/contract';
-import { appBaseUrl, appNavigationAllowed, buildAppDocument, formatDiagnostics, parseAppMessage, type BuiltDocument, type Diagnostic } from '../apps/document';
+import { appBaseUrl, appNavigationAllowed, buildAppDocument, formatFixReport, parseAppMessage, type BuiltDocument, type Diagnostic } from '../apps/document';
 import { CONTRACT_VERSION, type AppPermission } from '../apps/manifest';
 import { appRunner, type RunnerRequest } from '../apps/runnerState';
 import type { LoadedApp } from '../apps/store';
@@ -361,7 +361,8 @@ export class RunnerSession {
   askFix = () => {
     const app = this.loaded;
     if (!app) return;
-    const errors = formatDiagnostics(
+    // Errors, blocked attempts and console warnings and errors, without the app's data (formatFixReport).
+    const errors = formatFixReport(
       this.diagnostics.filter((d) => d.kind !== 'console' || d.level === 'error' || d.level === 'warn').slice(-15),
     );
     this.close();

@@ -34,7 +34,7 @@ Apps inside Qutai (the 18 Nov 2026 request, docs/mini-apps.md)
 Apps inside Qutai — owner decisions
 
 - [ ] Per-app quota 5 MB and 20 kept versions per app: enough?
-- [ ] "Ask Qutai to fix this" sends the error to the assistant at once (as built), or puts it in the input first?
+- [x] "Ask Qutai to fix this": now puts the report in the input for the user to send, with console values left out (19 Nov 2026 security pass, `APPS-23`; say if you want it sent at once again).
 - [ ] Phase 3 bridges (location, camera, notifications) expose native features to generated code: raise Guideline 4.7.2 with Apple before building them?
 - [ ] A report button for AI-generated apps (part of the general AI-report question for Google Play)?
 - [ ] Privacy policies: a sentence for apps (stored only on the phone; the app's code, not its data, and its error messages go to the AI provider when the user asks Qutai to make or fix it). Not added; legal version not bumped

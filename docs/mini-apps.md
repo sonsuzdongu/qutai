@@ -222,7 +222,10 @@ they could hold the app's data).
 
 - The user sees an **error overlay** for uncaught errors (not for console lines): "<name> ran into a problem." with
   the technical line under Details, and **Ask Qutai to fix this**, Reload, Dismiss. "Ask Qutai to fix this" closes the
-  runner and sends the assistant a message naming the app, its version and the error lines (not the app's data).
+  runner and puts a message in the assistant's input naming the app, its version and the report: each error's message,
+  file, line and a stack of at most six lines; blocked attempts; console warnings and errors only as the types and
+  lengths of their values (`<string 14> <object, 2 keys>`), never the values. The user sees exactly what will be sent
+  and sends it (or edits it) themselves (decided 19 Nov 2026: the safer choice; src/apps/document.ts formatFixReport).
 - The assistant sees the same diagnostics in the `preview` result (§5).
 
 ## 3. The bridge contract (version 1)
@@ -633,7 +636,8 @@ frame. What remains open on each platform is in §2 "What can't be blocked", upd
 ## 10. Owner decisions
 
 1. Per-app quota 5 MB and 20 kept versions: enough?
-2. Should "Ask Qutai to fix this" send at once (as now) or put the message in the input first?
+2. ~~Should "Ask Qutai to fix this" send at once or put the message in the input first?~~ Input first, without the
+   app's values (19 Nov 2026 security pass; the owner may change it).
 3. Phase 3: ask Apple about 4.7.2 before building location/camera bridges?
 4. A report button for AI-generated apps (with the general AI-report question)?
 5. Privacy policy sentences (not added; legal version not bumped): "Apps you have Qutai build are stored only on your

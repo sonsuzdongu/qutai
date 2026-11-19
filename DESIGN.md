@@ -19,6 +19,8 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** "Ask Qutai to fix this" fills the message box instead of sending, and console lines carry only the
+  types and lengths of values, never the app's data (`APPS-23`, decided from the open question).
 - **2026-11-19:** The settings tool can no longer weaken a protection: blocking, cookie banners, third-party cookies and
   HTTPS-only on only, search suggestions off only (`UNTR-8`, `BLK-24`, `TOOL-7`, `TOOL-8`).
 - **2026-11-19:** Incognito never remembers an approval: the action confirmation offers no "Always allow" or "Don't ask
@@ -168,8 +170,7 @@ The sections list every disagreement they found; these are the ones the owner sh
   profile, but every profile in `eas.json` has it off. AI keys are stored without the "this device only" option the session tokens use (reason not
   recorded).
 - **Apps.** docs/mini-apps.md's numbers differ from the code in places (hang timeout 10 s vs 12 s; import data entries
-  20,000 vs 100,000), and "Ask Qutai to fix this" sends the app's console errors, which can contain the app's data
-  ([22](docs/design/22-apps.md)).
+  20,000 vs 100,000) ([22](docs/design/22-apps.md)).
 - **Privacy policy vs "Don't ask again".** The open-source policy says calendar and location are sent only after a
   confirmation "each time", but "Don't ask again" allows a standing permission ([41](docs/design/41-legal-texts.md)).
 
@@ -200,7 +201,7 @@ One file per area. "Rules" counts the decisions with ids; "Waiting" the ones sti
 | 19 | [Cookies](docs/design/19-cookies.md) | 11 | 0 | The user can ask "Which cookies does this page have?". |
 | 20 | [Page scripts](docs/design/20-page-scripts.md) | 30 | 7 | When reading the page isn't enough ("how many links are on this page", "collect this table"), the assistant can run a small piece of JavaScript on the page. |
 | 21 | [Image editing and filters](docs/design/21-image-editing.md) | 14 | 0 | The assistant can make edited copies of an image the user attached, entirely on the phone. |
-| 22 | [Apps inside Qutai](docs/design/22-apps.md) | 42 | 7 | The assistant can build small personal apps on request ("build me an app where I can keep my notes"). |
+| 22 | [Apps inside Qutai](docs/design/22-apps.md) | 42 | 6 | The assistant can build small personal apps on request ("build me an app where I can keep my notes"). |
 | 23 | [Downloads and opening Qutai from other apps](docs/design/23-downloads-and-links.md) | 16 | 0 | The decisions taken before a download starts (who asked, which files warn, which addresses work), and what a link, a shared text or a `qutai://` link from… |
 | 24 | [Reader mode, media and downloads on screen](docs/design/24-reader-and-media.md) | 21 | 2 | What the user sees when reading an article, playing a video or audio, and downloading a file, and how web pages get the camera and microphone. |
 | 25 | [Voice input and read-aloud](docs/design/25-voice.md) | 16 | 0 | Speaking to Qutai instead of typing (the panel's microphone and holding the Qutai button), and Qutai reading text out loud. |

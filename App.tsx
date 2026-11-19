@@ -2967,11 +2967,9 @@ function BrowserApp({
         <ScriptSandboxHost />
         <AppRunnerHost
           onEdit={(app) => askAbout(t('apps.editPrompt', { name: app.name, id: app.id }))}
-          onFix={(app, errors) => {
-            toNormalTab();
-            setPanelOpen(true);
-            void send(t('apps.fixPrompt', { name: app.name, id: app.id, version: app.version, errors }));
-          }}
+          // Not sent at once: the report goes into the message box, so the user sees exactly what the AI would get and
+          // sends it (or edits it) themselves (decided 19 Nov 2026, APPS-23).
+          onFix={(app, errors) => askAbout(t('apps.fixPrompt', { name: app.name, id: app.id, version: app.version, errors }))}
           onNotice={toast.show}
         />
         <MyAppsScreen

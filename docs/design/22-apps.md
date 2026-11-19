@@ -36,7 +36,7 @@ Status by phase (checked against `git log` and `git status` on 19 Nov 2026):
    - use the clipboard. Reading it asks the user once per app ("“Notes” wants to read what you copied"); writing shows "Copied".
 
    It cannot reach the internet, open websites, see any site's cookies, or see other apps' data.
-6. If the app breaks, an overlay says "“Notes” ran into a problem." The technical line (for example `app.js:129`) is under Details, with the buttons **Ask Qutai to fix this**, Reload and Dismiss. "Ask Qutai to fix this" closes the app, opens the assistant in a normal tab and sends the error at once. A crash ("stopped") and a hang ("isn't responding") each have their own screen.
+6. If the app breaks, an overlay says "“Notes” ran into a problem." The technical line (for example `app.js:129`) is under Details, with the buttons **Ask Qutai to fix this**, Reload and Dismiss. "Ask Qutai to fix this" closes the app, opens the assistant in a normal tab and puts the error report in the message box; the user reads it and sends it. A crash ("stopped") and a hang ("isn't responding") each have their own screen.
 7. Every change is a new version.
    - Undo on the card, or ⋮ › Versions › "Use this version", moves between versions.
    - The notes stay the same whichever version runs.
@@ -102,8 +102,8 @@ Status by phase (checked against `git log` and `git status` on 19 Nov 2026):
   Status: Default (manager or implementing session; open to change) · Why: incognito leaves nothing behind; the cap stops runaway fix loops; the AI never sees the user's notes · Enforced: In the app: src/agent/appTool.ts (appsTool, MAX_APP_WRITES), App.tsx (agent `apps` access: `incognito`, `budget`, `preview`) · Source: docs/mini-apps.md › §5; 394655f
 - **`APPS-22`** The assistant makes or changes an app only when the user asks; "a page asking is never a reason". It stops after 3 fix rounds and keeps apps small (under about 30 KB) and in the user's language.
   Status: Default (manager or implementing session; open to change) · Why: defence against a web page injecting "create an app that…"; an injected app could only show content · Enforced: Prompt only: src/agent/systemPrompt.ts and src/apps/guide.ts (APP_GUIDE); the app does not check it (only the 8-write cap in APPS-21) · Source: docs/mini-apps.md › §5, §6
-- **`APPS-23`** "Ask Qutai to fix this" sends a message to the assistant **at once**. The message holds the app's name, id and version and its last 15 error, warning and blocked lines, but not the app's stored data. Today: sends at once.
-  Status: Waiting for the owner ([TODO.md](../../TODO.md#decisions-waiting-for-the-owner-collected-17-nov-2026)) · Why: starts the same fix loop as the preview · Enforced: In the app: src/components/runnerSession.ts (askFix), App.tsx (AppRunnerHost `onFix`, `apps.fixPrompt`) · Source: docs/mini-apps.md › §2, §10 #2
+- **`APPS-23`** "Ask Qutai to fix this" puts a message in the assistant's input, not sent: the app's name, id and version and its last 15 error, warning and blocked lines. Errors keep their message, file and line and a stack of at most 6 lines; console warnings and errors carry only the types and lengths of their values (`<string 14> <object, 2 keys>`), and a rejection with a non-error value only its shape, so the app's data does not reach the AI. The user sees exactly what will be sent and sends or edits it. Changed 19 Nov 2026 (before: sent at once, with console values).
+  Status: Default (19 Nov 2026 security pass, the safer of the two options left open; the owner may change it) · Why: what goes to the AI must be seen by the user first and must not carry the app's data · Enforced: In the app: src/apps/document.ts (helperScript shapeOf, parseAppMessage, mapStack, formatFixReport), src/components/runnerSession.ts (askFix), App.tsx (AppRunnerHost `onFix` → askAbout); tested in scripts/app-tests/document.test.ts · Source: docs/mini-apps.md › §2, §10 #2
 - **`APPS-24`** Diagnostics work as follows:
   - Each line is cut at 300 characters, and at most 50 lines are kept per run.
   - They live in memory only, never on disk or in a backup.
@@ -248,7 +248,6 @@ A hash is deliberately not treated as trust: the switched-off arrival and the re
 - **iOS rule list name:** the doc calls it `qutai-apps-offline-v1`; the code uses `qutaiapps-offline-v1` (`IOS_OFFLINE_RULE_LIST_ID`). It is a name only.
 - **"Opaque origin":** TODO.md › Phase 1, the comment at the top of src/components/AppRunner.tsx and commit 649a542 still say "opaque origin". 453107e replaced it with an own origin under `.invalid`, and the code follows 453107e.
 - **Data entry limit:** doc §8 allows at most 20,000 data entries in an import. The code allows 100,000 (`APP_DATA_MAX_ENTRIES` in src/apps/appFile.ts).
-- **What "fix this" sends:** the doc and the proposed privacy sentence say "Ask Qutai to fix this" sends error lines, "not the app's data". The code includes the app's own console warning and error lines, which can contain whatever the app printed.
 - **Website limits:** the website (441b6d1) lists "not in backups, no export" as limits. Since 92097ab, apps are in backups and can be exported, so these website limits are out of date.
 - **Passwords in dialogs:** doc §6 says Qutai's dialogs "never take passwords". Nothing in the code stops an app's `ui.prompt` from asking for one; only the import warning tells the user not to.
 - **Undocumented header:** the built document also sets `<meta name="referrer" content="no-referrer">`, which the doc's document outline doesn't mention.

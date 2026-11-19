@@ -189,12 +189,28 @@ window.addEventListener('error', function (e) {
 }, true);
 window.addEventListener('unhandledrejection', function (e) {
   var r = e.reason;
-  diag('error', 'Unhandled promise rejection: ' + (r && r.code ? r.code + ' ' : '') + (r && r.message ? r.message : String(r)),
-    { stack: r && r.stack ? cut(r.stack) : undefined });
+  var text = (r && r.code ? r.code + ' ' : '') + (r && r.message ? r.message : String(r));
+  diag('error', 'Unhandled promise rejection: ' + text, {
+    stack: r && r.stack ? cut(r.stack) : undefined,
+    // A rejection with a value that is not an error (a record, a string) could be the app's data: its shape only.
+    shape: 'Unhandled promise rejection: ' + (r instanceof Error || (r && r.message) ? text : shapeOf(r)) });
 });
 document.addEventListener('securitypolicyviolation', function (e) {
   diag('blocked', 'Blocked by the app policy (' + e.violatedDirective + '): ' + (e.blockedURI || 'inline'));
 });
+// What a console argument is without its value (types and lengths), for the report sent to the AI: the app's data
+// stays on the phone. An error keeps its name and message.
+function shapeOf(v) {
+  if (v === null) return 'null';
+  var t = typeof v;
+  if (t === 'undefined') return 'undefined';
+  if (t === 'string') return '<string ' + v.length + '>';
+  if (t === 'number' || t === 'boolean' || t === 'bigint' || t === 'symbol') return '<' + t + '>';
+  if (t === 'function') return '<function>';
+  if (v instanceof Error) return v.name + ': ' + v.message;
+  if (Array.isArray(v)) return '<array ' + v.length + '>';
+  try { return '<object, ' + Object.keys(v).length + ' keys>'; } catch (e) { return '<object>'; }
+}
 function fmt(v) {
   if (typeof v === 'string') return v;
   if (v instanceof Error) return v.name + ': ' + v.message;
@@ -203,7 +219,8 @@ function fmt(v) {
 ['log', 'info', 'warn', 'error'].forEach(function (level) {
   var original = console[level];
   console[level] = function () {
-    diag('console', Array.prototype.map.call(arguments, fmt).join(' '), { level: level });
+    diag('console', Array.prototype.map.call(arguments, fmt).join(' '), {
+      level: level, shape: Array.prototype.map.call(arguments, shapeOf).join(' ') });
     if (original) return original.apply(console, arguments);
   };
 });
@@ -464,6 +481,13 @@ export type Diagnostic = {
   message: string;
   /** "app.js:37" when known. */
   where?: string;
+  /**
+   * The message without values, for what goes to the AI ("Ask Qutai to fix this"): console arguments as their types
+   * and lengths, a non-error rejection as its shape. Absent where the message is already only an error's text.
+   */
+  shape?: string;
+  /** An error's stack, its frames mapped to the app's files ("app.js:37"), at most a few lines. */
+  stack?: string;
   at: number;
 };
 
@@ -490,16 +514,60 @@ export function parseAppMessage(raw: string, mapLine: BuiltDocument['mapLine'], 
     const mapped = mapLine(d.line);
     if (mapped) where = `${mapped.file}:${mapped.line}`;
   }
+  const stack = typeof d.stack === 'string' ? mapStack(d.stack, mapLine) : '';
   return {
     type: 'diag',
     diag: {
       kind,
       ...(typeof d.level === 'string' ? { level: d.level.slice(0, 10) } : {}),
       message: d.message.slice(0, 301),
+      ...(typeof d.shape === 'string' ? { shape: d.shape.slice(0, 301) } : {}),
       ...(where ? { where } : {}),
+      ...(stack ? { stack } : {}),
       at: now,
     },
   };
+}
+
+/** The most stack lines a report carries. */
+export const MAX_STACK_LINES = 6;
+
+/**
+ * A stack with each frame's document address turned into the app's file and line ("at save (app.js:37)") and Qutai's
+ * own frames left out, at most MAX_STACK_LINES lines of 160 characters.
+ */
+export function mapStack(stack: string, mapLine: BuiltDocument['mapLine']): string {
+  return stack
+    .slice(0, 2000)
+    .split('\n')
+    .map((line) =>
+      line.replace(/(?:https?:\/\/[^\s)]*?|about:[^\s)]*?|)?:(\d+):\d+/g, (all: string, n: string) => {
+        const mapped = mapLine(Number(n));
+        return mapped ? `${mapped.file}:${mapped.line}` : all;
+      }),
+    )
+    .map((line) => line.trim())
+    .filter((line) => line && !line.includes('qutai.js:'))
+    .slice(0, MAX_STACK_LINES)
+    .map((line) => (line.length > 160 ? `${line.slice(0, 160)}…` : line))
+    .join('\n');
+}
+
+/**
+ * What "Ask Qutai to fix this" sends (decided 19 Nov 2026): errors with their message, file and line and a short
+ * stack; blocked attempts and bridge errors as they are; console warnings and errors only as their shape (types and
+ * lengths, never values), so the app's data does not reach the AI. The user sees exactly this in the message box and
+ * sends it themselves.
+ */
+export function formatFixReport(diags: Diagnostic[]): string {
+  return diags
+    .map((d) => {
+      const label = d.kind === 'console' ? `console.${d.level ?? 'log'}` : d.kind;
+      const text = d.kind === 'console' ? (d.shape ?? '<values left out>') : d.kind === 'error' && d.shape ? d.shape : d.message;
+      const stack = d.kind === 'error' && d.stack ? `\n${d.stack.split('\n').map((l) => `    ${l}`).join('\n')}` : '';
+      return `- ${label}${d.where ? ` (${d.where})` : ''}: ${text}${stack}`;
+    })
+    .join('\n');
 }
 
 /** Diagnostics as lines for the assistant and the Details line. */

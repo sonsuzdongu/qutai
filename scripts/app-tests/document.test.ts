@@ -10,6 +10,8 @@ import {
   appNavigationAllowed,
   buildAppDocument,
   formatDiagnostics,
+  formatFixReport,
+  mapStack,
   IOS_OFFLINE_RULES,
   parseAppMessage,
   type BootInfo,
@@ -189,7 +191,7 @@ function runHelper() {
     setTimeout,
   });
   vm.runInContext(`with (window) {} ; (function(){ var self = window; ${code.replace(/^\(function \(\) \{/, '(function () { var fetch;')}\n})()`, context);
-  return { window, sent, listeners };
+  return { window, sent, listeners, context };
 }
 
 test('the helper parses, locks the network and windows down, and exposes qutai', () => {
@@ -270,4 +272,46 @@ test('an uncaught error is reported once with its name, message and line', () =>
   assert.equal(errors[0].message, "ReferenceError: Can't find variable: rendr");
   assert.equal(errors[0].line, 210);
   assert.equal(errors[1].message, 'TypeError: boom');
+});
+
+test('"Ask Qutai to fix this" carries the shape of console values, never the values', () => {
+  const { sent, context, listeners } = runHelper();
+  vm.runInContext("console.error('Saved note for', { name: 'Ayşe Yılmaz', phone: '+90 555 111 22 33' }, ['a', 'b'], 42, new TypeError('x is undefined'))", context);
+  const d = sent.map((m) => m.diag as Record<string, unknown>).find((x) => x?.kind === 'console')!;
+  assert.match(String(d.message), /Ayşe/, 'the full line stays on the phone (the overlay and Details)');
+  assert.equal(d.shape, '<string 14> <object, 2 keys> <array 2> <number> TypeError: x is undefined');
+  listeners.unhandledrejection[0]({ reason: { secret: 'my diary' } });
+  const r = sent.map((m) => m.diag as Record<string, unknown>).filter((x) => x?.kind === 'error').pop()!;
+  assert.equal(r.shape, 'Unhandled promise rejection: <object, 1 keys>');
+  const map = (line: number) => (line > 10 ? { file: 'app.js', line: line - 10 } : { file: 'qutai.js', line });
+  const parsed = parseAppMessage(JSON.stringify({ qutai: 1, diag: { ...d, line: 0 } }), map, 1)!;
+  const rejection = parseAppMessage(JSON.stringify({ qutai: 1, diag: r }), map, 1)!;
+  const error = parseAppMessage(
+    JSON.stringify({
+      qutai: 1,
+      diag: {
+        kind: 'error',
+        message: 'TypeError: notes.map is not a function',
+        line: 47,
+        stack: 'TypeError: notes.map is not a function\n    at render (https://app-1.apps.qutai.invalid/:47:12)\n    at call (https://app-1.apps.qutai.invalid/:5:3)\n' + '    at x (https://app-1.apps.qutai.invalid/:30:1)\n'.repeat(10),
+      },
+    }),
+    map,
+    1,
+  )!;
+  assert.equal(parsed.type, 'diag');
+  if (parsed.type !== 'diag' || rejection.type !== 'diag' || error.type !== 'diag') return;
+  const report = formatFixReport([parsed.diag, rejection.diag, error.diag]);
+  assert.doesNotMatch(report, /Ayşe|555|diary/);
+  assert.match(report, /console\.error: <string 14> <object, 2 keys>/);
+  assert.match(report, /error \(app\.js:37\): TypeError: notes\.map is not a function\n {4}TypeError/);
+  assert.match(report, /at render \(app\.js:37\)/);
+  assert.doesNotMatch(report, /qutai\.js|apps\.qutai\.invalid/);
+  assert.ok(report.split('\n').length <= 3 + 6, 'a bounded stack');
+});
+
+test('mapStack keeps at most six mapped lines', () => {
+  const out = mapStack(Array.from({ length: 20 }, (_, i) => `at f${i} (https://a.apps.qutai.invalid/:${i + 20}:1)`).join('\n'), (n) => ({ file: 'app.js', line: n }));
+  assert.equal(out.split('\n').length, 6);
+  assert.match(out, /^at f0 \(app\.js:20\)/);
 });
