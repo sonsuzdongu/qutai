@@ -238,7 +238,10 @@ export const COMPETITORS: Product[] = [
     cells: {
       agent: {
         state: 'yes',
-        note: t('Can navigate sites and complete tasks such as filling in forms.', 'Sitelerde gezinip form doldurmak gibi görevleri yapabiliyor.'),
+        note: t(
+          'With “Smart task automation” it navigates sites and finishes a task by itself, such as adding items to the cart or trying promo codes at checkout; only while the app is open.',
+          '“Smart task automation” ile sitelerde gezinip görevi kendisi bitiriyor; örneğin ürünleri sepete ekliyor ya da ödeme adımında indirim kodlarını deniyor. Yalnızca uygulama açıkken çalışıyor.',
+        ),
         source: 'https://www.perplexity.ai/help-center/comet/en/articles/12875447-comet-for-android-quick-start-and-key-features',
         checked: D,
       },
@@ -510,7 +513,10 @@ export const COMPETITORS: Product[] = [
     cells: {
       agent: {
         state: 'no',
-        note: t('Browse with Copilot is not in the mobile app.', 'Browse with Copilot mobil uygulamada yok.'),
+        note: t(
+          'Copilot can act on sites for you (“Browse with Copilot”) only in Edge for desktop, for Microsoft 365 Premium in the US; the mobile app has no such feature.',
+          'Copilot’un sitelerde sizin yerinize işlem yaptığı özellik (“Browse with Copilot”) yalnızca masaüstündeki Edge’de, ABD’de Microsoft 365 Premium abonelerine açık; mobil uygulamada böyle bir özellik yok.',
+        ),
         source: 'https://blogs.windows.com/msedgedev/2026/05/13/new-updates-to-edge-across-desktop-and-mobile/',
         checked: D,
       },
