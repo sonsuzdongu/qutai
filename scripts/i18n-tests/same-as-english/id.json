@@ -33,5 +33,7 @@
   "account.methods.kindEmail",
   "approval.total",
   "filters.sepia",
-  "filters.done.sepia"
+  "filters.done.sepia",
+  "styles.cssLabel",
+  "styles.edit"
 ]

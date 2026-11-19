@@ -1,4 +1,16 @@
 import { siteRules } from './src/storage/siteRules';
+import { pageStyleState } from './src/browser/pageStyleState';
+import { readTabCookies, deleteTabCookies } from './src/device/cookieStore';
+import { CookiesScreen } from './src/components/CookiesScreen';
+import {
+  applyTrial,
+  askCookieDelete,
+  askStyle,
+  keepStyle,
+  stylesApply,
+  undoOffer,
+  undoTrial,
+} from './src/components/pageCustomisation';
 import { DEFAULT_SCOPE, isOffSite, SCOPE_KINDS, type ScopeKind } from './src/content/siteRules';
 import type { SiteRulesApproval } from './src/agent/siteRulesTool';
 import type { OutwardApproval } from './src/agent/approvalTool';
@@ -24,7 +36,7 @@ import { runAgent } from './src/agent/runAgent';
 import { actionErrorText } from './src/agent/stepLine';
 import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
 import { personalKindsLabel } from './src/components/memoryCategories';
-import { Conversation, callItem, fileItem, newItem, shareItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
+import { Conversation, callItem, cookiesItem, fileItem, styleItem, newItem, shareItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
 import { listShareables, type ShareApp, type ShareOffer } from './src/chat/shareable';
 import { clearOutgoing, OutgoingError, prepareOutgoing } from './src/device/outgoing';
 import { shareToApp } from './src/device/share';
@@ -804,6 +816,10 @@ function BrowserApp({
   const [permissionHost, setPermissionHost] = useState<string | null>(null);
   /** The list of every site with its own permission (page menu, or "All sites" in a site's sheet). */
   const [sitesListVisible, setSitesListVisible] = useState(false);
+  // The Cookies view of a tab (from the page menu, the site's sheet or the assistant's card).
+  const [cookiesTab, setCookiesTab] = useState<Tab | null>(null);
+  // "Styles off for this page" and the tried style are per tab, in memory (pageStyleState).
+  useSyncExternalStore(pageStyleState.subscribe, pageStyleState.getVersion);
   // The permission sheet stays open while the location setting changes, so it must see the update.
   useSyncExternalStore(sitePermissions.subscribe, getSitePermissionsVersion);
   const [downloadsVisible, setDownloadsVisible] = useState(false);
@@ -1324,6 +1340,33 @@ function BrowserApp({
               signal,
             ),
           ),
+        // User styles and the cookie list (docs/page-customisation.md): every apply and every delete is asked.
+        pageStyles: {
+          approve: (approval) => whileAskingUser(() => askStyle(approval, signal)),
+          applyTrial: async (target, css, description) => {
+            applyTrial(target, css, description);
+            const offer = {
+              description,
+              site: siteKey(target.url) ?? '',
+              url: target.url.replace(/#.*$/, ''),
+              css,
+              tabId: target.id,
+              incognito: target.incognito,
+              state: 'applied' as const,
+            };
+            AccessibilityInfo.announceForAccessibility(t('styles.cardApplied'));
+            chat.add(styleItem(offer));
+          },
+          undoTrial: async (target) => undoTrial(target),
+          kept: () => siteRules.styles,
+        },
+        cookies: {
+          read: (target) => readTabCookies(target),
+          remove: (target, keys) => deleteTabCookies(target, keys),
+          confirmDelete: (approval) => whileAskingUser(() => askCookieDelete(approval, signal)),
+          offer: (target, site, count) => chat.add(cookiesItem({ site, count, tabId: target.id })),
+        },
+        thirdPartyCookiesBlocked: () => Platform.OS === 'android' && settingsRef.current.blockThirdPartyCookies,
         imageUsed: (id) => chat.markImageUsed(id),
         confirmByDefault: settings.confirmActions,
         sites: sitePermissions,
@@ -1927,6 +1970,21 @@ function BrowserApp({
       disabled: onNewTab || (!tab.reader && !tab.readerAvailable),
       onPress: toggleReader,
     },
+    // A broken style must never trap the user: whenever a user style applies here (kept or tried), it can be
+    // switched off for this tab, and on again (docs/page-customisation.md).
+    ...(!onNewTab && (pageStyleState.off(tab.id) || stylesApply(tab))
+      ? [
+          {
+            icon: 'palette' as const,
+            label: t(pageStyleState.off(tab.id) ? 'menu.stylesOn' : 'menu.stylesOff'),
+            onPress: () => {
+              const off = !pageStyleState.off(tab.id);
+              pageStyleState.setOff(tab.id, off);
+              toast.show(t(off ? 'menu.stylesOffDone' : 'menu.stylesOnDone'));
+            },
+          },
+        ]
+      : []),
     {
       icon: 'desktop',
       label: t('menu.desktopSite'),
@@ -2038,8 +2096,15 @@ function BrowserApp({
             }),
         },
         {
-          icon: 'textSize',
+          // The cookies that apply to this page, from the tab's own store (values hidden until revealed).
+          icon: 'cookies',
           section: true,
+          label: t('menu.cookies'),
+          disabled: onNewTab || !currentSite,
+          onPress: () => setCookiesTab(tab),
+        },
+        {
+          icon: 'textSize',
           label: t('menu.textSize'),
           onPress: () => setTextSizeVisible(true),
         },
@@ -2488,6 +2553,7 @@ function BrowserApp({
                   contentRuleLists: contentBlocking.ruleLists,
                   siteRules: siteRules.page,
                   userBlockedHosts: siteRules.domains,
+                  userStyles: siteRules.pageStyles,
                   httpsOnly: settings.httpsOnly,
                   blockThirdPartyCookies: settings.blockThirdPartyCookies,
                   hideCookieBanners: settings.hideCookieBanners,
@@ -2658,6 +2724,23 @@ function BrowserApp({
               bump();
               placeCall(number, () => toast.show(t('common.copied')));
             }}
+            onCard={(item, action) => {
+              bump();
+              if (action === 'showCookies') {
+                const target = item.cookiesOffer ? browser.getTab(item.cookiesOffer.tabId) : undefined;
+                if (!target || target.isNewTab) return toast.show(t('cookies.tabGone'));
+                return setCookiesTab(target);
+              }
+              const offer = item.style;
+              if (!offer || offer.state !== 'applied') return;
+              if (action === 'undoStyle') {
+                undoOffer(offer, browser);
+                return conversation.update(item.id, { style: { ...offer, state: 'undone' } });
+              }
+              void keepStyle(offer, browser).then((kept) => {
+                if (kept) conversation.update(item.id, { style: { ...offer, state: 'kept' } });
+              });
+            }}
             onSms={(offer) => {
               bump();
               openSmsComposer(offer, () => toast.show(t('common.copied')));
@@ -2765,6 +2848,7 @@ function BrowserApp({
             send(t('tabs.comparePrompt', { tabs: list }));
           }}
         />
+        <CookiesScreen tab={cookiesTab} onClose={() => setCookiesTab(null)} />
         <SentLogScreen
           visible={sentFor !== null}
           conversation={sentFor ?? undefined}
@@ -2842,6 +2926,14 @@ function BrowserApp({
               : undefined
           }
           onReload={!!permissionHost && siteKey(tab.url) === permissionHost ? () => tab.webview?.reload() : undefined}
+          onShowCookies={
+            !!permissionHost && siteKey(tab.url) === permissionHost && !tab.isNewTab
+              ? () => {
+                  setPermissionHost(null);
+                  setCookiesTab(tab);
+                }
+              : undefined
+          }
           onShowAll={() => {
             setPermissionHost(null);
             setSitesListVisible(true);

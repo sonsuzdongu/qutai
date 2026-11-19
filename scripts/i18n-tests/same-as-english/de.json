@@ -24,5 +24,9 @@
   "tier.fast",
   "siteRules.domainLabel",
   "account.email.addressPlaceholder",
-  "filters.sepia"
+  "filters.sepia",
+  "cookies.title",
+  "menu.cookies",
+  "styles.cssLabel",
+  "styles.nameLabel"
 ]

@@ -64,6 +64,8 @@ import { capitalizeFirst, stepTabTitle, targetWords } from './stepTarget';
 import type { ScopeKind } from '../content/siteRules';
 import { describeSiteRulesCall, siteRulesTool, type SiteRulesAccess, type SiteRulesApproval } from './siteRulesTool';
 import { SITE_RULE_TOOL_NAMES } from './siteRuleTools';
+import { describePageCustomCall, pageCustomTool, type CookieAccess, type PageStylesAccess } from './pageCustomTool';
+import { PAGE_CUSTOM_TOOL_NAMES } from './pageCustomTools';
 
 type PageSnapshot = {
   url: string;
@@ -226,10 +228,18 @@ export type ToolContext = {
    * contacts can't be used.
    */
   contacts?: ContactsAccess;
+  /** User styles (restyle_page; agent/pageCustomTool.ts): the approval, the trial and the kept styles. */
+  pageStyles?: PageStylesAccess;
+  /** The tab's native cookie store (page_cookies): the list without values, deleting after the user's approval. */
+  cookies?: CookieAccess;
+  /** Android's "Block third-party cookies" setting, for the cookie list's note. */
+  thirdPartyCookiesBlocked?: () => boolean;
 };
 
 /** Tools that need a loaded web page. */
 const PAGE_TOOLS = new Set([
+  'restyle_page',
+  'page_cookies',
   'try_hide',
   'save_site_rules',
   'read_page',
@@ -334,6 +344,9 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'save_site_rules':
     case 'site_rules':
       return describeSiteRulesCall(name, input);
+    case 'restyle_page':
+    case 'page_cookies':
+      return describePageCustomCall(name, input);
     case 'draft_email':
       return t('action.draftEmail', { subject: cutText(str(input.subject), 60) });
     case 'find_contact':
@@ -1116,6 +1129,9 @@ const LOGGED_TOOLS = new Set([
   'request_approval',
   'save_site_rules',
   'site_rules',
+  // Applied styles and deleted cookies only, by what was done: never the CSS, cookie names or values.
+  'restyle_page',
+  'page_cookies',
   'navigate',
   'go_back',
   'click',
@@ -1168,6 +1184,8 @@ function isLogged(name: string, input: Record<string, unknown>): boolean {
   if (name === 'bookmarks') return !BOOKMARK_READS.has(String(input.action));
   if (name === 'settings') return input.action === 'set';
   if (name === 'site_rules') return input.action === 'remove';
+  if (name === 'restyle_page') return input.action === 'apply';
+  if (name === 'page_cookies') return input.action === 'delete';
   return true;
 }
 
@@ -1219,6 +1237,8 @@ function actionTarget(
 
 /** Tools that confirm on their own every time, whatever the "ask before actions" setting. */
 const ALWAYS_CONFIRMED = new Set([
+  'restyle_page',
+  'page_cookies',
   'get_location',
   'read_calendar',
   'download_file',
@@ -1356,6 +1376,16 @@ function clickAtPoint(name: string, input: Record<string, unknown>, tab: Tab): {
   return { fx: x / size.width, fy: y / size.height };
 }
 
+/**
+ * The name the site permission decides on: applying a style and deleting cookies change the page or the site's data
+ * (refused on read-only sites); listing and undoing only read or put things back.
+ */
+function policyName(name: string, input: Record<string, unknown>): string {
+  if (name === 'restyle_page') return input.action === 'apply' ? 'restyle_page' : 'restyle_page_read';
+  if (name === 'page_cookies') return input.action === 'delete' ? 'delete_cookies' : 'page_cookies';
+  return name;
+}
+
 async function executeUnredacted(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
   // Checked before the site permission, which would otherwise ask about a made-up host.
   if ((name === 'navigate' || name === 'open_tab') && isViewSource(input.url)) {
@@ -1369,7 +1399,7 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
   const target = actionTarget(name, input, ctx);
   const host = target ? siteKey(target.url) : null;
   const level = host && ctx.sites ? ctx.sites.levelFor(host) : 'default';
-  const decision = decide(name, host, level, ctx.confirm ? (ctx.confirmByDefault ?? true) : false);
+  const decision = decide(policyName(name, input), host, level, ctx.confirm ? (ctx.confirmByDefault ?? true) : false);
   const fromTab = ctx.browser.getTab(ctx.agentTab.id);
 
   const record = (result: ToolOutput): ToolOutput => {
@@ -1658,6 +1688,17 @@ async function runTool(
         content: `The page did not answer: ${e instanceof Error ? e.message : String(e)}`,
         isError: true,
         notice: errorNotice(t('step.pageNoAnswer')),
+      };
+    }
+  }
+  if (PAGE_CUSTOM_TOOL_NAMES.has(name)) {
+    try {
+      return await pageCustomTool(name, input, ctx, tab);
+    } catch (e) {
+      return {
+        content: `It did not work: ${e instanceof Error ? e.message : String(e)}`,
+        isError: true,
+        notice: errorNotice(t(name === 'page_cookies' ? 'step.cookiesFailed' : 'step.pageNoAnswer')),
       };
     }
   }

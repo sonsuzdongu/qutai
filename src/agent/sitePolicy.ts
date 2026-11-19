@@ -53,6 +53,9 @@ const WRITE_ACTIONS = new Set([
   'upload_image',
   'upload_file',
   'request_approval',
+  // Changing how the page looks and deleting the site's cookies (docs/page-customisation.md).
+  'restyle_page',
+  'delete_cookies',
 ]);
 
 export type Decision = { kind: 'run' } | { kind: 'confirm' } | { kind: 'refuse'; reason: string };

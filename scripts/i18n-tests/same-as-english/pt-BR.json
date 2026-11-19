@@ -12,5 +12,8 @@
   "settings.pictureInPicture",
   "cost.tokens",
   "tier.fast",
-  "approval.total"
+  "approval.total",
+  "cookies.title",
+  "menu.cookies",
+  "styles.cssLabel"
 ]

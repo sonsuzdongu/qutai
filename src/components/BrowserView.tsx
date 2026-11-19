@@ -1,6 +1,6 @@
 import { BLOB_KEEP_SCRIPT } from '../browser/pageScript';
 import { PageDownload, pageDownloadFrom } from '../browser/downloadRequests';
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { ReactNode, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { Browser } from '../browser/Browser';
@@ -10,6 +10,9 @@ import { parseSelection, SELECTION_SCRIPT } from '../browser/selection';
 import { adBlockScript, COOKIE_BANNER_SCRIPT, isAdUrl, isHostIn } from '../content';
 import { AD_HOSTS } from '../content/adBlock';
 import { PageRule, siteRulesScript } from '../content/siteRules';
+import { PageStyle, userStylesScript } from '../content/userStyles';
+import { pageStyleState } from '../browser/pageStyleState';
+import { iosStoreKey } from '../device/cookieStore';
 import { siteKey } from '../agent/sitePolicy';
 import { DARK_SITE_SCRIPT } from '../content/darkSites';
 import { allowInsecure, upgradeToHttps } from '../browser/httpsOnly';
@@ -65,6 +68,11 @@ export type TabActions = {
   siteRules: PageRule[];
   /** Domains the user blocks with their own rules, also caught by the page script blocker. */
   userBlockedHosts: string[];
+  /**
+   * The user's kept styles (content/userStyles.ts), enabled ones only; each page applies those whose scope matches.
+   * Not ad blocking: they apply whatever the blocking switches say, in incognito tabs too (as hide rules do).
+   */
+  userStyles: PageStyle[];
   /** A link or image was long-pressed in this tab. */
   onContextMenu: (tab: Tab, target: ContextTarget) => void;
   /** The text selection in this tab changed ("" when cleared). */
@@ -143,6 +151,9 @@ function TabWebView({
     () => siteRulesScript(blockAds ? siteRules : [], blockingOffSites),
     [blockAds, siteRules, blockingOffSites],
   );
+  // The user's kept styles, unless "Styles off for this page" is on for this tab (pageStyleState).
+  const stylesOff = useSyncExternalStore(pageStyleState.subscribe, () => pageStyleState.off(tab.id));
+  const stylesScript = useMemo(() => userStylesScript(newTabActions.userStyles, stylesOff), [newTabActions.userStyles, stylesOff]);
   const offSitesProp = useMemo(() => blockingOffSites.join('\n'), [blockingOffSites]);
   const ruleListsProp = useMemo(() => newTabActions.contentRuleLists.join('\n'), [newTabActions.contentRuleLists]);
   // Navigations and windows the app itself blocks (built-in list) are let through on off sites.
@@ -156,6 +167,7 @@ function TabWebView({
   const mainFrameEarly = [
     adScript,
     rulesScript,
+    stylesScript,
     newTabActions.hideCookieBanners ? COOKIE_BANNER_SCRIPT : '',
     BLOB_KEEP_SCRIPT,
   ].join('\n');
@@ -187,6 +199,7 @@ function TabWebView({
     Platform.OS === 'android' ? BLOB_KEEP_SCRIPT : '',
     // Again after load (main frame): Android may have run the early script for the previous page.
     `if (window.top === window) (function () {\n${rulesScript}\n})();`,
+    `if (window.top === window) (function () {\n${stylesScript}\n})();`,
     CONTEXT_MENU_SCRIPT,
     SELECTION_SCRIPT,
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
@@ -218,6 +231,16 @@ function TabWebView({
     }
     tab.webview?.injectJavaScript(`if (window.top === window) (function () {\n${rulesScript}\n})(); true;`);
   }, [tab, rulesScript]);
+
+  // Changed styles (kept, switched, edited, deleted, "Styles off for this page") reach the page already open at once.
+  const firstStyles = useRef(true);
+  useEffect(() => {
+    if (firstStyles.current) {
+      firstStyles.current = false;
+      return;
+    }
+    tab.webview?.injectJavaScript(`if (window.top === window) (function () {\n${stylesScript}\n})(); true;`);
+  }, [tab, stylesScript]);
 
   // iOS: apply a new text size to the page already on screen too.
   useEffect(() => {
@@ -290,6 +313,8 @@ function TabWebView({
             }}
             onLoadStart={(e) => {
               tab.handleLoadStart(e.nativeEvent.url, e.nativeEvent.loading);
+              // A style tried but not kept belongs to the page it was approved on.
+              pageStyleState.pageLoaded(tab.id);
               setAtTop(true);
             }}
             // The WebView's own progress reaching 100 % also ends a load: a page's soft navigation (react.dev's
@@ -446,8 +471,9 @@ function TabWebView({
             domStorageEnabled
             incognito={iosIncognito}
             // Android (patched react-native-webview): the incognito session's own cookies and site data. Read only
-            // when the WebView is created, before it loads anything; a tab's profile never changes.
-            webviewProfile={tab.profile}
+            // when the WebView is created, before it loads anything; a tab's profile never changes. iOS (patched): a
+            // key naming this WebView's own data store, for the cookie list (device/cookieStore.ts).
+            webviewProfile={Platform.OS === 'ios' ? iosStoreKey(tab) : tab.profile}
             // Network ad and tracker blocking (patched react-native-webview). Android: every request but the page's
             // own document is checked natively against the filter lists' domains; iOS: the compiled WebKit rule lists
             // are attached. Not on sites where the user turned it off. Incognito tabs block the same way.

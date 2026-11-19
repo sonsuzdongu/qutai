@@ -43,6 +43,8 @@ type Props = {
   onReload?: () => void;
   /** Opens the list of every site with its own setting (absent when the sheet is opened from that list). */
   onShowAll?: () => void;
+  /** Opens the Cookies view of the page on screen (only for the page's own site). */
+  onShowCookies?: () => void;
   onClose: () => void;
 };
 
@@ -70,6 +72,7 @@ export function SitePermissionSheet({
   ownRules,
   onReload,
   onShowAll,
+  onShowCookies,
   onClose,
 }: Props) {
   const styles = useStyles();
@@ -181,6 +184,15 @@ export function SitePermissionSheet({
         hint={t(`site.microphoneHint.${microphone}`)}
         onSelect={(setting) => onSelectMedia('microphone', setting)}
       />
+      {onShowCookies && (
+        <Pressable
+          onPress={onShowCookies}
+          style={({ pressed }) => [styles.allSites, pressed && styles.pressed]}
+          accessibilityRole="button"
+        >
+          <Text style={styles.link}>{t('cookies.siteLink')} ›</Text>
+        </Pressable>
+      )}
       {onShowAll && (
         <Pressable
           onPress={onShowAll}

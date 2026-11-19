@@ -64,10 +64,12 @@ import { ActionSheet, SheetAction } from './ActionSheet';
 import { FINAL_WAIT_MS } from './PushToTalk';
 import { useHoldGesture, useScreenReader } from './useHoldGesture';
 import { ErrorDetails } from './ErrorDetails';
+import { CookiesCard, StyleCard, type CookiesOffer, type StyleOffer } from './pageCustomisation';
 import { statusFullFits, statusLabelFits } from './statusFit';
 import { segmentChat, stepSummaryText, summarizeSteps } from '../chat/stepSummary';
 
 export type ChatItemAction = 'buyCredits' | 'signIn';
+export type CardAction = 'keepStyle' | 'undoStyle' | 'showCookies';
 
 export type ChatItem = {
   id: string;
@@ -85,7 +87,9 @@ export type ChatItem = {
     | 'file'
     | 'image'
     | 'pdf'
-    | 'share';
+    | 'share'
+    | 'style'
+    | 'cookies';
   text: string;
   /** For 'action' and 'info': the icon before the text (absent in conversations saved before icons). */
   icon?: IconName;
@@ -101,6 +105,10 @@ export type ChatItem = {
   sources?: Source[];
   /** For 'sources': Google's search suggestions widget, shown with Gemini answers grounded in Google Search. */
   searchWidget?: string;
+  /** For 'style': a style the assistant applied after the user's approval, with Keep… and Undo (pageCustomisation.tsx). */
+  style?: StyleOffer;
+  /** For 'cookies': the cookie list's card ("Show cookies"); counts only, never names or values. */
+  cookiesOffer?: CookiesOffer;
   /** For 'call': the number behind the Call button (stays usable, unlike ask_user options). */
   call?: CallOffer;
   /** For 'sms': the prepared text message behind the "Open in Messages" button. */
@@ -207,6 +215,8 @@ type Props = {
   onLinkMenu?: (url: string, text: string) => void;
   /** A Call button or a tel: link in an answer was tapped; number is already normalised. */
   onCall: (number: string) => void;
+  /** A button on a style or cookies card (pageCustomisation.tsx). */
+  onCard?: (item: ChatItem, action: CardAction) => void;
   /** The "Open in Messages" button of a prepared text message was tapped. */
   onSms: (offer: SmsOffer) => void;
   /** The "Open in WhatsApp" button of a prepared WhatsApp message was tapped. */
@@ -285,6 +295,7 @@ export function AssistantPanel({
   onOpenLink,
   onLinkMenu,
   onCall,
+  onCard,
   onSms,
   onWhatsApp,
   onFile,
@@ -732,6 +743,7 @@ export function AssistantPanel({
                           onOpenLink={onOpenLink}
                           onLinkMenu={onLinkMenu}
                           onCall={onCall}
+                          onCard={onCard}
                           onSms={onSms}
                           onWhatsApp={onWhatsApp}
                           onFile={onFile}
@@ -1199,6 +1211,7 @@ function ChatRow({
   onOpenLink,
   onLinkMenu,
   onCall,
+  onCard,
   onSms,
   onWhatsApp,
   onFile,
@@ -1233,6 +1246,7 @@ function ChatRow({
   onOpenLink: (url: string) => void;
   onLinkMenu?: (url: string, text: string) => void;
   onCall: (number: string) => void;
+  onCard?: (item: ChatItem, action: CardAction) => void;
   onSms: (offer: SmsOffer) => void;
   onWhatsApp: (offer: WhatsAppOffer) => void;
   onFile: (action: 'share' | 'save', file: FileOffer) => void;
@@ -1400,6 +1414,23 @@ function ChatRow({
           {item.searchWidget ? <SearchSuggestions html={item.searchWidget} onOpenLink={onOpenLink} /> : null}
         </View>
       );
+    case 'style': {
+      const offer = item.style;
+      if (!offer) return <StepLine icon="palette" text={item.text} />;
+      return (
+        <StyleCard
+          offer={offer}
+          dark={!!d}
+          onKeep={() => onCard?.(item, 'keepStyle')}
+          onUndo={() => onCard?.(item, 'undoStyle')}
+        />
+      );
+    }
+    case 'cookies': {
+      const offer = item.cookiesOffer;
+      if (!offer) return <StepLine icon="cookies" text={item.text} />;
+      return <CookiesCard offer={offer} dark={!!d} onShow={() => onCard?.(item, 'showCookies')} />;
+    }
     case 'call': {
       const call = item.call;
       if (!call) return <StepLine icon="phone" text={item.text} />;

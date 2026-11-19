@@ -1,12 +1,10 @@
-import { useSyncExternalStore } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import {
   blockLine,
   checkBlockDomain,
   DEFAULT_SCOPE,
-  exportRules,
   hideLine,
-  importRules,
   parseRuleLine,
   parseScope,
   Scope,
@@ -17,6 +15,19 @@ import {
   siteHost,
 } from '../content/siteRules';
 import { siteRules, SiteRuleError } from '../storage/siteRules';
+import { exportRulesFile, importRulesFile } from '../content/rulesFile';
+import {
+  formatStyleScope,
+  parseStyleScope,
+  STYLE_SCOPE_KINDS,
+  styleScopeForUrl,
+  styleSite,
+  type StyleScope,
+  type StyleScopeKind,
+  type UserStyle,
+} from '../content/userStyles';
+import { DEFAULT_STYLE_SCOPE_INDEX, styleScopeLabel } from './pageCustomisation';
+import { StyleEditorScreen, type StyleDraft } from './StyleEditorScreen';
 import { pickRulesFile, RulesFileTooLargeError, shareRulesFile } from '../device/siteRulesFile';
 import { t, type MessageKey } from '../i18n';
 import { Icon } from '../ui/Icon';
@@ -152,7 +163,7 @@ export function SiteRulesSection({ disabled }: { disabled: boolean }) {
 
   const exportAll = async () => {
     const day = new Date().toISOString().slice(0, 10);
-    await shareRulesFile(exportRules(siteRules.rules), `qutai-rules-${day}.txt`).catch(() =>
+    await shareRulesFile(exportRulesFile(siteRules.rules, siteRules.styles), `qutai-rules-${day}.txt`).catch(() =>
       dialog.alert(t('siteRules.exportFailed')),
     );
   };
@@ -165,16 +176,40 @@ export function SiteRulesSection({ disabled }: { disabled: boolean }) {
       return dialog.alert(t('siteRules.importFailed'), e instanceof RulesFileTooLargeError ? t('siteRules.importTooLarge') : undefined);
     }
     if (text === null) return;
-    const read = importRules(text, siteRules.rules.map((r) => r.line));
-    if (!read.rules.length && !read.duplicates) return dialog.alert(t('siteRules.importFailed'), t('siteRules.importNone'));
+    const read = importRulesFile(text, siteRules.rules.map((r) => r.line), siteRules.styles);
+    if (!read.rules.length && !read.styles.length && !read.duplicates) {
+      return dialog.alert(t('siteRules.importFailed'), t('siteRules.importNone'));
+    }
+    // Styles change how pages look: the user sees them listed and decides whether they arrive switched on.
+    let stylesOn = false;
+    if (read.styles.length) {
+      const answer = await dialog.show({
+        title: t('styles.importTitle', { count: read.styles.length }),
+        message: t('styles.importBody'),
+        lines: {
+          lines: read.styles.slice(0, 30).map((style) => ({ icon: 'palette' as const, text: `${style.name} · ${styleWhere(style.scope)}` })),
+        },
+        buttons: [
+          { text: t('common.cancel'), style: 'cancel' },
+          { text: t('styles.importOff') },
+          { text: t('styles.importOn'), primary: true },
+        ],
+      });
+      if (answer.button === null || answer.button === 0) return;
+      stylesOn = answer.button === 2;
+    }
     let added = 0;
     try {
       added = await siteRules.addImported(read.rules);
+      added += await siteRules.addImportedStyles(read.styles, stylesOn);
     } catch {
       return dialog.alert(t('siteRules.importFailed'));
     }
-    const skipped = read.duplicates + read.invalid + (read.rules.length - added);
-    dialog.alert(t('siteRules.importedTitle'), t('siteRules.importedBody', { added, skipped }));
+    const skipped = read.duplicates + read.invalid + read.unsupported + (read.rules.length + read.styles.length - added);
+    const notes = [t('siteRules.importedBody', { added, skipped }), read.unsupported ? t('styles.importUnsupported', { count: read.unsupported }) : '']
+      .filter(Boolean)
+      .join('\n\n');
+    dialog.alert(t('siteRules.importedTitle'), notes);
   };
 
   return (
@@ -242,13 +277,19 @@ export function SiteRulesSection({ disabled }: { disabled: boolean }) {
       >
         <Text style={styles.buttonText}>{t('siteRules.add')}</Text>
       </Pressable>
+      <StylesPart />
       <View style={styles.pair}>
         <Pressable
           onPress={exportAll}
-          disabled={!siteRules.rules.length}
-          style={({ pressed }) => [styles.button, styles.half, pressed && styles.pressed, !siteRules.rules.length && styles.disabled]}
+          disabled={!siteRules.rules.length && !siteRules.styles.length}
+          style={({ pressed }) => [
+            styles.button,
+            styles.half,
+            pressed && styles.pressed,
+            !siteRules.rules.length && !siteRules.styles.length && styles.disabled,
+          ]}
           accessibilityRole="button"
-          accessibilityState={{ disabled: !siteRules.rules.length }}
+          accessibilityState={{ disabled: !siteRules.rules.length && !siteRules.styles.length }}
         >
           <Text style={styles.buttonText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             {t('siteRules.export')}
@@ -267,6 +308,192 @@ export function SiteRulesSection({ disabled }: { disabled: boolean }) {
       <Text style={styles.hint}>{t('siteRules.exportHint')}</Text>
     </View>
   );
+}
+
+/** Where a style applies, in words. */
+function styleWhere(text: string): string {
+  const scope = parseStyleScope(text);
+  if (!scope) return text;
+  return scope.kind === 'all' ? t('styles.where.all') : scopeText(scope);
+}
+
+/** Picks one of the five style scopes; null when cancelled. */
+async function pickStyleScope(initial: StyleScopeKind, title: string, message?: string): Promise<StyleScopeKind | null> {
+  const result = await dialog.show({
+    title,
+    message,
+    choices: { label: t('siteRules.scopeLabel'), options: STYLE_SCOPE_KINDS.map(styleScopeLabel), initial: STYLE_SCOPE_KINDS.indexOf(initial) },
+    buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: t('common.save') }],
+  });
+  return result.button === 1 ? STYLE_SCOPE_KINDS[result.choice] : null;
+}
+
+/**
+ * The user styles in "My rules" (docs/page-customisation.md): not part of ad blocking, so never greyed out with it.
+ * Each with its switch, Edit (name and CSS, sanitised again), where it applies, and Delete.
+ */
+function StylesPart() {
+  const styles = useStyles();
+  const palette = usePalette();
+  useSyncExternalStore(siteRules.subscribe, siteRules.getVersion);
+  const [draft, setDraft] = useState<(StyleDraft & { save: (name: string, css: string) => Promise<void> }) | null>(null);
+  const groups = new Map<string, UserStyle[]>();
+  for (const style of siteRules.styles) {
+    const key = parseStyleScope(style.scope)?.kind === 'all' ? '*' : style.site;
+    groups.set(key, [...(groups.get(key) ?? []), style]);
+  }
+  const keys = [...groups.keys()].sort((a, b) => (a === '*' ? -1 : b === '*' ? 1 : a.localeCompare(b)));
+
+  const failed = (e: unknown) =>
+    dialog.alert(
+      t('styles.failedTitle'),
+      e instanceof SiteRuleError && e.code === 'tooMany' ? t('styles.tooMany') : t('styles.invalid'),
+    );
+
+  const edit = (style: UserStyle) =>
+    setDraft({
+      title: t('styles.editTitle'),
+      name: style.name,
+      css: style.css,
+      where: styleWhere(style.scope),
+      save: (name, css) => siteRules.updateStyle(style.id, { name, css }),
+    });
+
+  const changeScope = async (style: UserStyle) => {
+    const current = parseStyleScope(style.scope);
+    if (!current) return;
+    const kind = await pickStyleScope(current.kind, t('siteRules.scopeTitle'), style.name);
+    if (!kind || kind === current.kind) return;
+    const base = style.url ?? styleBaseUrl(current, style.site);
+    const scope = base ? styleScopeForUrl(base, kind) : null;
+    if (!scope) return dialog.alert(t('styles.failedTitle'), t('styles.noAddress'));
+    await siteRules.updateStyle(style.id, { scope: formatStyleScope(scope) }).catch(failed);
+  };
+
+  const remove = async (style: UserStyle) => {
+    const ok = await dialog.confirm({
+      title: t('styles.removeTitle'),
+      message: style.name,
+      confirmText: t('siteRules.remove'),
+      destructive: true,
+    });
+    if (ok) await siteRules.removeStyles([style.id]).catch(() => {});
+  };
+
+  const add = async () => {
+    const siteText = await dialog.prompt({
+      title: t('styles.addTitle'),
+      message: t('styles.addSiteBody'),
+      label: t('siteRules.siteLabel'),
+      placeholder: 'example.com',
+      maxLength: 300,
+      confirmText: t('siteRules.next'),
+    });
+    if (!siteText) return;
+    const site = siteFromText(siteText);
+    if (!site) return dialog.alert(t('styles.failedTitle'), t('siteRules.badSite'));
+    const url = /^https?:\/\//i.test(siteText.trim()) ? siteText.trim() : `https://${site}/`;
+    const kind = await pickStyleScope(
+      /^https?:\/\//i.test(siteText.trim()) ? 'page' : STYLE_SCOPE_KINDS[DEFAULT_STYLE_SCOPE_INDEX],
+      t('siteRules.scopeTitle'),
+    );
+    if (!kind) return;
+    const scope = styleScopeForUrl(url, kind);
+    if (!scope) return;
+    setDraft({
+      title: t('styles.addTitle'),
+      name: '',
+      css: '',
+      where: styleWhere(formatStyleScope(scope)),
+      save: async (name, css) => {
+        await siteRules.addStyle({
+          name: name || styleWhere(formatStyleScope(scope)),
+          scope: formatStyleScope(scope),
+          css,
+          site: styleSite(scope, site),
+          source: 'manual',
+          url,
+        });
+      },
+    });
+  };
+
+  return (
+    <View style={styles.part}>
+      <Text style={styles.subheading} accessibilityRole="header">
+        {t('styles.title')}
+      </Text>
+      <Text style={styles.hint}>{t('styles.intro')}</Text>
+      {keys.map((key) => (
+        <View key={key} style={styles.card}>
+          <Text style={styles.site}>{key === '*' ? t('styles.where.all') : key}</Text>
+          {groups.get(key)!.map((style) => (
+            <View key={style.id} style={styles.rule}>
+              <View style={styles.row}>
+                <View style={styles.flex}>
+                  <Text style={styles.value} numberOfLines={3}>
+                    {style.name}
+                  </Text>
+                  <Text style={styles.hint}>
+                    {styleWhere(style.scope)}
+                    {' · '}
+                    {t(style.source === 'assistant' ? 'siteRules.byAssistant' : 'siteRules.byYou')}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() => remove(style)}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('styles.removeLabel', { name: style.name })}
+                  style={styles.remove}
+                >
+                  <Icon name="close" size={16} color={palette.textSecondary} />
+                </Pressable>
+                <ThemedSwitch
+                  value={style.enabled}
+                  onValueChange={(on) => siteRules.updateStyle(style.id, { enabled: on }).catch(() => {})}
+                  accessibilityLabel={style.name}
+                />
+              </View>
+              <View style={styles.links}>
+                <Text
+                  style={styles.link}
+                  onPress={() => edit(style)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('styles.editLabel', { name: style.name })}
+                >
+                  {t('styles.edit')}
+                </Text>
+                <Text
+                  style={styles.link}
+                  onPress={() => changeScope(style)}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('siteRules.changeScopeLabel', { scope: styleWhere(style.scope) })}
+                >
+                  {t('styles.changeScope')}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      ))}
+      {!siteRules.styles.length && <Text style={styles.hint}>{t('styles.none')}</Text>}
+      <Pressable onPress={add} style={({ pressed }) => [styles.button, pressed && styles.pressed]} accessibilityRole="button">
+        <Text style={styles.buttonText}>{t('styles.add')}</Text>
+      </Pressable>
+      <StyleEditorScreen
+        draft={draft}
+        onSave={(name, css) => (draft ? draft.save(name, css) : Promise.resolve())}
+        onClose={() => setDraft(null)}
+      />
+    </View>
+  );
+}
+
+/** A page of the style's scope, for widening or narrowing it when the page it was made on is unknown. */
+function styleBaseUrl(scope: StyleScope, site: string): string | null {
+  if (scope.kind === 'all') return site && site !== '*' ? `https://${site}/` : null;
+  return `https://${scope.host}${scope.kind === 'page' || scope.kind === 'path' ? (scope.path ?? '/') : '/'}`;
 }
 
 /** A site key from what the user typed: a site, "*.site", or an address. */
@@ -300,6 +527,9 @@ const useStyles = makeStyles((c) => ({
   value: { fontSize: 14, color: c.text },
   remove: { paddingHorizontal: 4 },
   link: { fontSize: 13, color: c.tintText, fontWeight: '600', paddingVertical: 4 },
+  links: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 16 },
+  part: { gap: 10, marginTop: 8 },
+  subheading: { fontSize: 16, fontWeight: '700', color: c.text },
   button: { backgroundColor: c.surface, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center' },
   buttonText: { fontSize: 15, fontWeight: '600', color: c.tintText },
   pressed: { backgroundColor: c.pressed },

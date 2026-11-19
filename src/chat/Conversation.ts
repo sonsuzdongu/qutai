@@ -4,6 +4,7 @@ import type { Source } from '../agent/types';
 import type { ChatItem } from '../components/AssistantPanel';
 import type { FileOffer } from '../device/composedFile';
 import type { CallOffer } from '../device/phone';
+import type { CookiesOffer, StyleOffer } from '../components/pageCustomisation';
 import { formatSize } from '../i18n/format';
 import type { SmsOffer } from '../device/sms';
 import type { WhatsAppOffer } from '../device/whatsapp';
@@ -60,6 +61,16 @@ export function shareItem(share: ShareOffer): ChatItem {
   const where = share.app === 'whatsapp' ? 'WhatsApp: ' : '';
   const files = share.files.map((f) => f.name).join(', ');
   return { id: String(++itemCounter), kind: 'share', text: `${where}${files}`.trim(), share };
+}
+
+/** A style applied after the user's approval, with Keep… and Undo; the text is what versions without the card show. */
+export function styleItem(style: StyleOffer): ChatItem {
+  return { id: String(++itemCounter), kind: 'style', text: style.description, style };
+}
+
+/** The cookie list's card ("Show cookies"): the site and how many, never names or values. */
+export function cookiesItem(offer: CookiesOffer): ChatItem {
+  return { id: String(++itemCounter), kind: 'cookies', text: `${offer.site} · ${offer.count}`, cookiesOffer: offer };
 }
 
 /** A message the user sent, with the files attached to it. */
@@ -170,6 +181,12 @@ export class Conversation {
   add(item: ChatItem) {
     // A new array, so memoized lists notice the change.
     this.items = [...this.items, item];
+    this.onChange();
+  }
+
+  /** Changes one item (a card's state: a style kept or undone). */
+  update(itemId: string, patch: Partial<ChatItem>) {
+    this.items = this.items.map((item) => (item.id === itemId ? { ...item, ...patch } : item));
     this.onChange();
   }
 
