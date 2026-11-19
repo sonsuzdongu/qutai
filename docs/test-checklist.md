@@ -346,6 +346,7 @@ Sahibi telefonda, yavaş bir bağlantıda bildirdi (20 Kas; 0.1.3).
 - [ ] Bu yükleme beklerken başka bir sekme açılıyor; yükleme bitince sayfa sanki yeni açılan sekmede yükleniyor.
       Nedeni henüz bilinmiyor.
 - [ ] Kurulumdaki yanıt tarzı / "özel talimat" seçimi ("kısa ve öz" ve diğer seçenekler) kaldırılsın: yanıt tarzı hep "kısa ve öz" olsun, kullanıcıya hiç sorulmasın (20 Kas; 0.1.3). Kapsam düzeltmede netleşecek: kurulumdaki seçim adımı, "Bana soru sor" akışının beşinci sorusu (yanıt tarzı) ve varsayılan değer. Ayarlar'daki özel talimat alanı kalır (sahibi yalnızca kurulumda sorulmasını istemedi; aksi söylenirse o da değişir). "düzelt" denince bakılacak.
+- [ ] Kurulumdan "varsayılan tarayıcı yap" adımı kaldırılsın (20 Kas; 0.1.3). Ayarlar'daki varsayılan tarayıcı seçeneği kalır. "düzelt" denince bakılacak.
 
 ## 14. "Kendinizi tanıtın" (sesle tanıtım, 17 Kasım)
 
