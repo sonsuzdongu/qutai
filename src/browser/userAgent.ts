@@ -11,8 +11,8 @@ import { withoutQutaiToken } from '../net/userAgentToken';
  */
 export function chromeUserAgent(webViewUserAgent: string): string {
   return (
-    // Without " qutai.<build>" (the WebView's own string carries it through applicationNameForUserAgent); BrowserView
-    // appends the current one, so an app update never leaves an old build number behind.
+    // Without " qutai.<build>": web views no longer send it (DATA-23), but builds from 19-20 Nov 2026 added it to the
+    // WebView's string and saved the result, so a string learned or saved by them must not bring it back.
     withoutQutaiToken(webViewUserAgent)
       // Chrome's reduced platform part; the WebView adds the model and "Build/…", another tell.
       .replace(/\(Linux; Android [^)]*\)/, '(Linux; Android 10; K)')

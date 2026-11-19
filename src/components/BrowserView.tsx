@@ -34,8 +34,6 @@ import { openExternal } from '../browser/openExternal';
 import { takeSignInLink } from './AccountLinks';
 import { parsePullState, PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
 import { handleUserAgentMessage, USER_AGENT_SCRIPT, useChromeUserAgent } from '../browser/userAgent';
-import { QUTAI_UA_TOKEN } from '../net/qutaiUserAgent';
-import { withQutaiToken } from '../net/userAgentToken';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
 import { usePalette } from '../ui/theme';
@@ -237,11 +235,7 @@ function TabWebView({
   const palette = usePalette();
   // Android: Chrome's own user agent instead of the WebView's "embedded browser" one (fewer bot checks).
   const chromeUserAgent = useChromeUserAgent();
-  // Every string ends with " qutai.<build>" (incognito and desktop mode too). Where Qutai sets no string of its own
-  // (iOS, Android before the first page has told us its engine), applicationNameForUserAgent appends the same token
-  // to the platform's real one; a set userAgent replaces that on both platforms, so it carries the token itself.
-  const ownUserAgent = tab.desktop ? DESKTOP_USER_AGENT : Platform.OS === 'android' ? chromeUserAgent : undefined;
-  const userAgent = ownUserAgent ? withQutaiToken(ownUserAgent, QUTAI_UA_TOKEN) : undefined;
+  const userAgent = tab.desktop ? DESKTOP_USER_AGENT : Platform.OS === 'android' ? chromeUserAgent : undefined;
   // Downloads started outside the WebView's listener (long-press menu, the assistant) send the same user agent.
   useEffect(() => {
     tab.setUserAgent(userAgent);
@@ -495,7 +489,6 @@ function TabWebView({
               );
             }}
             userAgent={userAgent}
-            applicationNameForUserAgent={QUTAI_UA_TOKEN ?? undefined}
             contentMode={tab.desktop ? 'desktop' : 'recommended'}
             thirdPartyCookiesEnabled={!newTabActions.blockThirdPartyCookies}
             // Videos can go full screen (Android) and play in the page (iOS; also a page's camera preview).

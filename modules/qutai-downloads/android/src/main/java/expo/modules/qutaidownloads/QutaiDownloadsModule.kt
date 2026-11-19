@@ -49,7 +49,7 @@ class QutaiDownloadsModule : Module() {
 
     /**
      * Starts an http(s) download with the tab's context. Fields: url, name, nameFixed, mime, site, incognito, profile,
-     * userAgent, userAgentSuffix, referrer, length. Resolves with the download's id once it is listed (queued).
+     * userAgent, referrer, length. Resolves with the download's id once it is listed (queued).
      */
     AsyncFunction("start") { req: Map<String, Any?> ->
       val url = req["url"] as? String ?: throw IllegalArgumentException("No address")
@@ -64,13 +64,9 @@ class QutaiDownloadsModule : Module() {
           site = req["site"] as? String ?: (Uri.parse(url).host ?: ""),
           incognito = req["incognito"] as? Boolean ?: false,
           profile = (req["profile"] as? String)?.takeIf { it.isNotBlank() },
-          // The WebView's own user agent when the app doesn't know the tab's (never OkHttp's), with the same
-          // " qutai.<build>" ending the tab's WebView adds through applicationNameForUserAgent (userAgentSuffix).
+          // The WebView's own user agent when the app doesn't know the tab's (never OkHttp's).
           userAgent = (req["userAgent"] as? String)?.takeIf { it.isNotBlank() }
-            ?: try {
-              val suffix = (req["userAgentSuffix"] as? String)?.takeIf { it.isNotBlank() }
-              android.webkit.WebSettings.getDefaultUserAgent(context).let { if (suffix != null) "$it $suffix" else it }
-            } catch (_: Exception) { null },
+            ?: try { android.webkit.WebSettings.getDefaultUserAgent(context) } catch (_: Exception) { null },
           referrer = (req["referrer"] as? String)?.takeIf { it.isNotBlank() },
           length = (req["length"] as? Number)?.toLong() ?: -1L,
         ),

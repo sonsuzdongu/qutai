@@ -9,7 +9,6 @@ import {
   subscribeReader,
 } from '../pdf/reader';
 import { READER_BASE_URL, readerHtml } from '../pdf/readerHtml';
-import { QUTAI_UA_TOKEN } from '../net/qutaiUserAgent';
 
 /**
  * The hidden WebView that reads PDFs (src/pdf/reader.ts). Rendered only while a PDF is being read, off screen and
@@ -26,8 +25,6 @@ export function PdfReaderHost() {
   return (
     <View style={styles.host} pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       <WebView
-        // The same " qutai.<build>" ending as the browser's pages (src/net/qutaiUserAgent.ts).
-        applicationNameForUserAgent={QUTAI_UA_TOKEN ?? undefined}
         ref={attachReaderWebView}
         source={{ html, baseUrl: READER_BASE_URL }}
         originWhitelist={[READER_BASE_URL, 'about:*', 'blob:*']}

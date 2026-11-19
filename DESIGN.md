@@ -19,6 +19,7 @@ Last updated: 2026-11-20
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-20:** The ` qutai.<build>` User-Agent token is gone from everything sent to websites and third parties: web views send the platform's real User-Agent again (desktop mode's and Android's own strings without it), AI providers, search engines, filter lists, downloads and image saving get the platform's default as before 19 Nov; only requests to Qutai's server (the origin of `EXPO_PUBLIC_QUTAI_API_URL`) say `Qutai/<version> (<platform>) qutai.<build>`, decided by origin in one fetch wrapper; the Android download engine is back to its old code, no native rebuild needed (`DATA-23`, owner's decision).
 - **2026-11-20:** Setup's city question has "Use my location" in "Ask me questions" and the follow-up after an introduction too (it had stayed only in the typed questions since the 19 Nov rework): the permission only on that tap, the phone's geocoder (Apple's, or Google's on most Android phones) names the place, the field fills with district, city or province, and country (ilçe, il, ülke; largest first in Japanese and Korean), editable; failures leave the text field (`INTRO-31`, `DATA-17`, `OSPERM-6`, owner's request). No new permission or usage string.
 - **2026-11-20:** Qutai Credits offers no tier choice any more (Settings, the per-chat menu, cost texts, the identity note): every request uses the tier the server's `/config` marks as default, so the owner sets the model in the admin panel without an app release; a tier stored by an older version is ignored; `tier_unknown` re-reads `/config` and retries once; tier texts removed or rewritten in ten languages; agent profile unchanged (`CRED-39`, `CRED-9`, `CRED-36`, owner's report). To serve Claude Haiku, the owner moves `default: true` to the `fast` tier in the panel.
 - **2026-11-20:** Setup no longer has the "Make Qutai your default browser" step (protection is the last step); the option, which only setup had, moved to Settings › Search with the same texts (`INTRO-30`, owner's report).
@@ -177,11 +178,11 @@ only partly enforced.
 | Goes to | What | When |
 |---|---|---|
 | The AI provider the user chose | The conversation, page text and screenshots the assistant reads for a task, memory (hidden values as labels), custom instructions, tool results | Each assistant request ([3](docs/design/03-data-on-the-phone.md), [13](docs/design/13-sent-to-ai-and-cost.md)) |
-| Qutai's server (pro only) | Account sign-in details; with Qutai Credits, the AI requests on their way to the provider; the encrypted backup file | Only when signed in and using those features ([33](docs/design/33-accounts.md)–[37](docs/design/37-server-and-analytics.md)) |
+| Qutai's server (pro only) | Account sign-in details; with Qutai Credits, the AI requests on their way to the provider; the encrypted backup file; the app's version and build in the User-Agent (`Qutai/<version> (<platform>) qutai.<build>`, `DATA-23`) | Only when signed in and using those features ([33](docs/design/33-accounts.md)–[37](docs/design/37-server-and-analytics.md)) |
 | The search engine | Search suggestions as the user types | Not in private tabs |
 | Apple or Google | Address lookup for "Use my location"; speech recognition when the phone can't do it itself (after a one-time question, never in incognito) | [25](docs/design/25-voice.md) |
 | Filter list publishers | Downloads of the blocking lists | While blocking is on ([9](docs/design/09-blocking-and-my-rules.md)) |
-| Web sites | What the user or the assistant types and sends, after the approvals above; that the browser is Qutai and its build (` qutai.<build>` in the User-Agent, also in incognito) | Every request ([3](docs/design/03-data-on-the-phone.md), `DATA-23`) |
+| Web sites | What the user or the assistant types and sends, after the approvals above; the platform's ordinary User-Agent, as any browser sends (no Qutai token) | Every request ([3](docs/design/03-data-on-the-phone.md), `DATA-23`) |
 
 Never sent anywhere: contact numbers and addresses to the AI, cookie values, the backup password, voice audio to Qutai
 or the AI provider, incognito data to disk.

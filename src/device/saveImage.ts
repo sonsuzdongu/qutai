@@ -3,7 +3,6 @@ import { Asset, requestPermissionsAsync } from 'expo-media-library';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
 import { PermissionDeniedError } from './settings';
-import { APP_USER_AGENT } from '../net/qutaiUserAgent';
 
 const EXTENSIONS: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -50,9 +49,7 @@ export async function saveImage(tab: Tab, src: string): Promise<void> {
       file = new File(Paths.cache, `${name}.${extensionFor(parsed.mime)}`);
       await file.write(parsed.base64, { encoding: 'base64' });
     } else if (!src.startsWith('data:')) {
-      file = await File.downloadFileAsync(src, new File(Paths.cache, `${name}.${extensionFromUrl(src)}`), {
-        headers: { 'User-Agent': tab.userAgent ?? APP_USER_AGENT },
-      });
+      file = await File.downloadFileAsync(src, new File(Paths.cache, `${name}.${extensionFromUrl(src)}`));
     } else {
       throw new Error(t('error.imageUnreadable'));
     }

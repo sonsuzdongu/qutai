@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { QUTAI_UA_TOKEN } from '../net/qutaiUserAgent';
 
 type Props = { html: string; onOpenLink: (url: string) => void };
 
@@ -19,8 +18,6 @@ export function SearchSuggestions({ html, onOpenLink }: Props) {
   const [height, setHeight] = useState(48);
   return (
     <WebView
-      // The same " qutai.<build>" ending as the browser's pages (src/net/qutaiUserAgent.ts).
-      applicationNameForUserAgent={QUTAI_UA_TOKEN ?? undefined}
       source={{
         html: `<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body style="margin:0">${html}</body></html>`,
       }}

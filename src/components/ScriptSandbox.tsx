@@ -3,7 +3,6 @@ import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { PageSnapshot } from '../agent/scriptTool';
 import { readOutcome, SCRIPT_TIME_LIMIT_MS, wrapScript, type ScriptOutcome } from '../content/userScripts';
-import { QUTAI_UA_TOKEN } from '../net/qutaiUserAgent';
 
 /**
  * The sealed place read-only scripts run in (docs/page-customisation.md › Two places a script can run): an invisible
@@ -128,8 +127,6 @@ export function ScriptSandboxHost() {
       importantForAccessibility="no-hide-descendants"
     >
       <WebView
-        // The same " qutai.<build>" ending as the browser's pages (src/net/qutaiUserAgent.ts).
-        applicationNameForUserAgent={QUTAI_UA_TOKEN ?? undefined}
         key={job.id}
         ref={(ref) => {
           webview.current = ref;

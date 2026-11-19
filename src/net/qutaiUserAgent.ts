@@ -1,31 +1,35 @@
 import { Platform } from 'react-native';
+import { features } from '../config/features';
 import { appVersion } from '../device/appVersion';
-import { appUserAgent, qutaiToken, withUserAgentInit } from './userAgentToken';
+import { appUserAgent, initForRequest, qutaiToken } from './userAgentToken';
 
 const { version, build } = appVersion();
 
 /**
- * "qutai.103": appended to every web view's user agent (iOS and Android: the web view's applicationNameForUserAgent,
- * i.e. the platform's real string plus this; where Qutai sets its own string, withQutaiToken) and ending the app's
- * own requests' User-Agent. Null only when the installed app has no readable build number.
+ * "Qutai/0.1.3 (iOS) qutai.103": the User-Agent of requests to Qutai's server (the origin of
+ * EXPO_PUBLIC_QUTAI_API_URL), and of nothing else (DATA-23). Without a readable build number it ends without the token.
  */
-export const QUTAI_UA_TOKEN: string | null = qutaiToken(build);
-
-/** "Qutai/0.1.3 (iOS) qutai.103": the User-Agent of the app's own requests. */
-export const APP_USER_AGENT = appUserAgent(version, Platform.OS, QUTAI_UA_TOKEN);
+export const QUTAI_SERVER_USER_AGENT = appUserAgent(version, Platform.OS, qutaiToken(build));
 
 let installed = false;
 
 /**
- * Gives every fetch the app's JavaScript makes (Qutai's server, AI providers with the user's key, search suggestions,
- * block lists, PDFs, download checks) APP_USER_AGENT, unless the call sets its own User-Agent. Called once, first
- * thing in index.ts. Requests made inside web views are the web views' own and are not affected.
+ * Wraps the global fetch once, first thing in index.ts, so every fetch the app's JavaScript makes goes through one
+ * decision by the request's origin (initForRequest): requests to Qutai's server (accounts, the credits relay, backups,
+ * /config, purchases) get QUTAI_SERVER_USER_AGENT unless they set their own; everything else (AI providers with the
+ * user's key, search suggestions, filter lists, favicons, PDFs, link and download checks) is passed on untouched and
+ * sends the platform's default. A new fetch to a third party therefore can't pick the token up by accident.
+ *
+ * Redirects: React Native's fetch follows them natively (NSURLSession on iOS, OkHttp on Android) and both copy the
+ * request's headers to the next hop, so a Qutai-server response redirecting elsewhere would carry the token along;
+ * JavaScript can't stop that (RN ignores `redirect: 'manual'`). Qutai's API answers its app routes with JSON and no
+ * redirects. Requests made inside web views and native downloads are not fetch calls and never see this.
  */
 export function installAppUserAgent() {
   if (installed || typeof globalThis.fetch !== 'function') return;
   installed = true;
   const original = globalThis.fetch;
   const wrapped = (input: Parameters<typeof fetch>[0], init?: RequestInit) =>
-    original(input, withUserAgentInit(input, init, APP_USER_AGENT));
+    original(input, initForRequest(input, init, features.apiUrl, QUTAI_SERVER_USER_AGENT));
   globalThis.fetch = wrapped as typeof fetch;
 }

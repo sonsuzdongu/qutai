@@ -31,7 +31,6 @@ import { actionErrorText } from '../agent/stepLine';
 import { formatDate } from '../i18n/format';
 import { Icon, IconName } from '../ui/Icon';
 import { useReduceMotion } from '../utils/useReduceMotion';
-import { QUTAI_UA_TOKEN } from '../net/qutaiUserAgent';
 
 export type ReaderPrefs = { theme: ReaderTheme; font: ReaderFont; easyReading: boolean; textZoom: number };
 
@@ -123,8 +122,6 @@ export function ReaderView({ tab, prefs, dark, onOpenSettings, onSelection, onNo
         <BarButton icon="textSize" label={t('reader.settings')} color={colors.text} onPress={onOpenSettings} />
       </View>
       <WebView
-        // The same " qutai.<build>" ending as the browser's pages (src/net/qutaiUserAgent.ts).
-        applicationNameForUserAgent={QUTAI_UA_TOKEN ?? undefined}
         ref={(ref) => tab.setReaderWebView(ref)}
         // No base address: the article gets an opaque origin, apart from the site's cookies and storage.
         source={{ html, baseUrl: '' }}

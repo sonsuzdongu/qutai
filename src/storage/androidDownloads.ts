@@ -2,7 +2,6 @@ import { requireOptionalNativeModule } from 'expo';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
 import { siteOf } from '../device/download';
-import { QUTAI_UA_TOKEN } from '../net/qutaiUserAgent';
 import type { DownloadBackend, DownloadItem, OpenResult, PageWriter, StartRequest } from './downloads';
 
 type Subscription = { remove(): void };
@@ -20,7 +19,6 @@ type NativeDownloads = {
     incognito: boolean;
     profile: string | null;
     userAgent: string | null;
-    userAgentSuffix: string | null;
     referrer: string | null;
     length: number;
   }): Promise<string>;
@@ -112,8 +110,6 @@ export class AndroidDownloads implements DownloadBackend {
       incognito: tab.incognito,
       profile: tab.profile ?? null,
       userAgent: request.userAgent ?? null,
-      // Appended natively to the WebView's default when the tab's own user agent isn't known yet.
-      userAgentSuffix: QUTAI_UA_TOKEN,
       referrer: referrerOf(tab),
       length: request.length ?? -1,
     });

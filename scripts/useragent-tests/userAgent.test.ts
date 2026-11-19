@@ -1,10 +1,14 @@
-// The " qutai.<build>" ending of every User-Agent Qutai sends (src/net/userAgentToken.ts) and its agreement with the
-// version rule (docs/versioning.md). Run: npm run test:useragent
+// The " qutai.<build>" ending of the User-Agent sent to Qutai's server and nowhere else (src/net/userAgentToken.ts,
+// DATA-23), and its agreement with the version rule (docs/versioning.md). Run: npm run test:useragent
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
 import { test } from 'node:test';
 import {
   appUserAgent,
+  initForRequest,
+  isQutaiServer,
+  originOf,
   qutaiToken,
   withoutQutaiToken,
   withQutaiToken,
@@ -34,13 +38,16 @@ test("the token comes from app.json's build numbers, which follow the version ru
 });
 
 test('the token is appended once, at the end after a space, keeping the rest of the string', () => {
-  assert.equal(withQutaiToken(ANDROID_CHROME, 'qutai.103'), `${ANDROID_CHROME} qutai.103`);
-  assert.equal(withQutaiToken(IOS, 'qutai.103'), `${IOS} qutai.103`);
-  // An old build's token (a saved string, the WebView's own string with its application name) is replaced, not kept.
-  assert.equal(withQutaiToken(`${ANDROID_CHROME} qutai.101`, 'qutai.103'), `${ANDROID_CHROME} qutai.103`);
-  assert.equal(withQutaiToken(`${ANDROID_CHROME} qutai.103 qutai.103`, 'qutai.103'), `${ANDROID_CHROME} qutai.103`);
+  assert.equal(withQutaiToken('Qutai/0.1.3 (iOS)', 'qutai.103'), 'Qutai/0.1.3 (iOS) qutai.103');
+  assert.equal(withQutaiToken('Qutai/0.1.3 (iOS) qutai.101', 'qutai.103'), 'Qutai/0.1.3 (iOS) qutai.103');
+  assert.equal(withQutaiToken('Qutai/0.1.3 (iOS) qutai.103 qutai.103', 'qutai.103'), 'Qutai/0.1.3 (iOS) qutai.103');
   // No readable build: the string as it was.
-  assert.equal(withQutaiToken(ANDROID_CHROME, null), ANDROID_CHROME);
+  assert.equal(withQutaiToken('Qutai/0.1.3 (iOS)', null), 'Qutai/0.1.3 (iOS)');
+});
+
+test('a web view string saved by the 19-20 Nov builds loses the token (Android learned string)', () => {
+  assert.equal(withoutQutaiToken(`${ANDROID_CHROME} qutai.103`), ANDROID_CHROME);
+  assert.equal(withoutQutaiToken(`${IOS} qutai.103`), IOS);
 });
 
 test('the token is removed without touching anything else', () => {
@@ -51,13 +58,79 @@ test('the token is removed without touching anything else', () => {
   assert.equal(withoutQutaiToken('Foo myqutai.103x Bar'), 'Foo myqutai.103x Bar');
 });
 
-test("the app's own requests say Qutai/<version> (<platform>) qutai.<build>", () => {
+test("requests to Qutai's server say Qutai/<version> (<platform>) qutai.<build>", () => {
   assert.equal(appUserAgent('0.1.3', 'ios', 'qutai.103'), 'Qutai/0.1.3 (iOS) qutai.103');
   assert.equal(appUserAgent('0.1.3', 'android', 'qutai.103'), 'Qutai/0.1.3 (Android) qutai.103');
   assert.equal(appUserAgent('–', 'ios', null), 'Qutai/0 (iOS)');
 });
 
-test("fetch gets the app's User-Agent unless the call set its own", () => {
+const SERVER = 'https://api.qutai.example/';
+const UA = 'Qutai/0.1.3 (iOS) qutai.103';
+
+test("only the Qutai server's origin counts as Qutai's server", () => {
+  assert.equal(originOf('https://API.qutai.example/v1/'), 'https://api.qutai.example');
+  assert.equal(originOf('ftp://api.qutai.example'), null);
+  assert.equal(originOf(null), null);
+  assert.equal(originOf('not a url'), null);
+  for (const yes of ['https://api.qutai.example/config', 'https://api.qutai.example:443/v1/relay', new URL('https://api.qutai.example/backup')]) {
+    assert.equal(isQutaiServer(yes, SERVER), true, String(yes));
+  }
+  for (const no of [
+    'https://example.com/',
+    'https://evil.api.qutai.example/config', // a subdomain
+    'https://api.qutai.example.evil.com/config', // a lookalike host
+    'http://api.qutai.example/config', // another scheme
+    'https://api.qutai.example:8443/config', // another port
+    'https://user@evil.com/?https://api.qutai.example',
+    '/relative',
+    '',
+  ]) {
+    assert.equal(isQutaiServer(no, SERVER), false, no);
+  }
+  // No server address in this build: nothing is Qutai's.
+  assert.equal(isQutaiServer('https://api.qutai.example/config', null), false);
+  assert.equal(isQutaiServer('https://api.qutai.example/config', ''), false);
+});
+
+test("the token goes to Qutai's server and to nothing else", () => {
+  // Qutai's server: accounts, credits relay, backup, config, purchases.
+  for (const path of ['auth/session', 'v1/relay', 'backup', 'config', 'purchases/sync']) {
+    const init = initForRequest(`https://api.qutai.example/${path}`, { method: 'POST' }, SERVER, UA);
+    assert.deepEqual(init, { method: 'POST', headers: { 'User-Agent': UA } }, path);
+  }
+  const local = initForRequest('http://localhost:8787/config', undefined, 'http://localhost:8787', UA);
+  assert.deepEqual(local, { headers: { 'User-Agent': UA } });
+
+  // Everything else: the init exactly as the caller gave it (the same object, or undefined), no User-Agent added.
+  const third = [
+    'https://www.wikipedia.org/', // a website (favicons, link checks, PDFs)
+    'https://api.anthropic.com/v1/messages', // an AI provider with the user's own key
+    'https://api.openai.com/v1/chat/completions',
+    'https://openrouter.ai/api/v1/chat/completions',
+    'https://suggestqueries.google.com/complete/search?q=x', // a search engine's suggestions
+    'https://duckduckgo.com/ac/?q=x',
+    'https://easylist.to/easylist/easylist.txt', // a filter list
+    'https://cdn.example.net/after-redirect', // where a redirect would lead
+  ];
+  for (const url of third) {
+    const init = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
+    assert.equal(initForRequest(url, init, SERVER, UA), init, url);
+    assert.equal(initForRequest(url, undefined, SERVER, UA), undefined, url);
+    assert.equal(initForRequest(new URL(url), undefined, SERVER, UA), undefined, url);
+  }
+  // A Request object for a third party is left alone too.
+  assert.equal(initForRequest(new Request('https://api.anthropic.com/v1/messages'), undefined, SERVER, UA), undefined);
+  // Without a server address no request gets the token.
+  assert.equal(initForRequest('https://api.qutai.example/config', undefined, null, UA), undefined);
+});
+
+test("a redirect target is decided by its own origin, not the first request's", () => {
+  // Each hop the app itself starts (e.g. following a Location it read) goes through the same decision.
+  assert.equal(initForRequest('https://downloads.example.org/file.zip', undefined, SERVER, UA), undefined);
+  assert.deepEqual(initForRequest('https://api.qutai.example/config', undefined, SERVER, UA), { headers: { 'User-Agent': UA } });
+});
+
+test("fetch to Qutai's server gets the app's User-Agent unless the call set its own", () => {
   const ua = 'Qutai/0.1.3 (iOS) qutai.103';
   assert.deepEqual(withUserAgentInit('https://x.test', undefined, ua), { headers: { 'User-Agent': ua } });
   assert.deepEqual(withUserAgentInit('https://x.test', { method: 'POST', headers: { Accept: 'a' } }, ua), {
@@ -76,4 +149,27 @@ test("fetch gets the app's User-Agent unless the call set its own", () => {
   assert.deepEqual(withUserAgentInit(new URL('https://x.test'), undefined, ua), { headers: { 'User-Agent': ua } });
   const request = new Request('https://x.test');
   assert.equal(withUserAgentInit(request, undefined, ua), undefined);
+});
+
+test('no web view, download or image save adds the token (the sources say so)', () => {
+  const root = new URL('../../', import.meta.url).pathname;
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir)) {
+      const path = join(dir, name);
+      if (statSync(path).isDirectory()) walk(path);
+      else if (/\.(tsx?|kt|swift)$/.test(name)) files.push(path);
+    }
+  };
+  walk(join(root, 'src'));
+  walk(join(root, 'modules'));
+  for (const file of files) {
+    const text = readFileSync(file, 'utf8');
+    const rel = file.slice(root.length);
+    assert.ok(!/applicationNameForUserAgent/.test(text), `${rel} sets applicationNameForUserAgent`);
+    assert.ok(!/userAgentSuffix/.test(text), `${rel} passes a userAgentSuffix`);
+    if (!rel.startsWith('src/net/')) {
+      assert.ok(!/QUTAI_SERVER_USER_AGENT|withQutaiToken|appUserAgent\(/.test(text), `${rel} uses the server User-Agent outside src/net`);
+    }
+  }
 });
