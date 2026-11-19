@@ -45,6 +45,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-21`** Today Settings › Assistant › "Asistan görünümü (deneme)" switches between three trial looks, default "curtain"; the switch and the other two looks are to be removed before launch.
   Status: Owner, 2026-11-17 · Why: the owner compared the looks on a phone and chose "curtain" ("Işık") · Source: e971db7; docs/working-mode.md › 3a; owner's fix-before-launch memory note
 
+- **`UI-22`** The address bar's suggestion list never empties between letters: what it shows stays until the next answer lands, and an older answer never replaces a newer one. History and bookmarks are looked up 120 ms after the last letter (at once after a pause or a cleared field, at least every 360 ms while typing on); search engine suggestions are asked at the same moments and the two land together unless the engine takes over 150 ms. "Ask Qutai" and one "go" row (the typed address, or a search for the typed words) sit at the top and never move; rows that stay keep their place; new rows fade in and the list resizes over about 150 ms (at once with reduce motion); nothing changes while a finger is on the list.
+  Status: Default (manager or implementing session; open to change) · Why: the owner saw the list blank and refill on every letter on an Honor 90 (19 Nov 2026); 120 ms skips letters typed faster than that while a lookup takes well under it (about 3 ms at 5,000 visits on a Mac, est. 10 to 25 ms on a phone, after a covering history index halved it) · Enforced: In the app: src/browser/omniboxResults.ts; src/components/OmniboxSuggestions.tsx; src/storage/db.ts (history_url_title_visited); scripts/omnibox-tests · Source: docs/test-checklist.md › 19 Kasım'da bildirilenler
+
 ## Details
 
 **Icons**
