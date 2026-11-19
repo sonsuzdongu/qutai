@@ -3,6 +3,7 @@ import { loadScriptKey } from '../device/scriptKey';
 import { getLocale } from '../i18n';
 import { getDb } from '../storage/db';
 import { AppStore } from './store';
+import { appsDataBytes } from './appBackup';
 
 /**
  * The app's one AppStore (docs/mini-apps.md): Qutai's database, this install's seal key (the same secure-storage key
@@ -38,3 +39,8 @@ export const appsChanged = {
     listeners.forEach((l) => l());
   },
 };
+
+/** Bytes of every app's data (the backup switches show it). */
+export async function appsDataSize(): Promise<number> {
+  return appsDataBytes(await getDb());
+}

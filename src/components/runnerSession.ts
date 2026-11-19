@@ -10,9 +10,10 @@ import { CONTRACT_VERSION, type AppPermission } from '../apps/manifest';
 import { appRunner, type RunnerRequest } from '../apps/runnerState';
 import type { LoadedApp } from '../apps/store';
 import { getLanguage, t } from '../i18n';
-import { formatDateTime, formatSize } from '../i18n/format';
+import { formatDateTime } from '../i18n/format';
 import { dialog } from './Dialog';
 import { deleteApp, renameApp } from './appActions';
+import { appPermissionLabel } from './appLabels';
 
 /**
  * One open app (docs/mini-apps.md › The runtime, Lifecycle, Errors and diagnostics): its loaded version, the document,
@@ -70,11 +71,7 @@ function playHaptic(kind: HapticKind) {
   run().catch(() => {});
 }
 
-function permissionLabel(permission: string): string {
-  if (permission === 'clipboard-read') return t('apps.perm.clipboardRead');
-  if (permission === 'clipboard-write') return t('apps.perm.clipboardWrite');
-  return permission;
-}
+const permissionLabel = appPermissionLabel;
 
 export class RunnerSession {
   private snap: RunnerSnapshot = { app: null, runnable: false, built: null, reload: 0, title: '', overlay: null };
@@ -436,12 +433,10 @@ export class RunnerSession {
   approve = async () => {
     const app = this.loaded;
     if (!app) return;
+    // The screen above the button showed the review (AppReview): name, author, size, permissions, flags, files.
     const ok = await dialog.confirm({
       title: t('apps.approveTitle', { name: app.name }),
-      message: t('apps.approveBody', {
-        files: Object.keys(app.pkg.files).join(', '),
-        size: formatSize(Object.values(app.pkg.files).join('').length),
-      }),
+      message: t('apps.approveBody'),
       confirmText: t('apps.turnOn'),
     });
     if (ok && (await appStore.approveCurrent(app.id))) await this.load();

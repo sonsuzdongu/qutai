@@ -20,6 +20,8 @@ import { ScreenHeader } from './ScreenHeader';
 import { Toast, useToast } from './Toast';
 import { WholeWordsText } from './WholeWordsText';
 import { RunnerSession, type Overlay } from './runnerSession';
+import { AppReview } from './AppImport';
+import { exportApp } from './appActions';
 
 /**
  * The runner (docs/mini-apps.md › The runtime): one app, full screen, in its own WebView with an opaque origin, no
@@ -140,6 +142,7 @@ function Runner({ request, onEdit, onFix, onNotice }: Props & { request: RunnerR
         { icon: 'shield', label: t('apps.permissions'), onPress: () => void session.showPermissions() },
         { icon: 'reload', label: t('apps.reload'), onPress: session.restart },
         { icon: 'edit', label: t('apps.rename'), onPress: () => void session.rename() },
+        { icon: 'share', label: t('apps.export'), onPress: () => void exportApp(loaded) },
         { icon: 'trash', label: t('apps.delete'), destructive: true, onPress: () => void session.remove() },
       ]
     : [];
@@ -152,9 +155,17 @@ function Runner({ request, onEdit, onFix, onNotice }: Props & { request: RunnerR
     if (loaded && loaded.pkg.manifest.contract > CONTRACT_VERSION) return <Message title={t('apps.needsUpdate')} />;
     if (loaded && !snap.runnable)
       return (
-        <Message title={t('apps.approveTitle', { name: loaded.name })} body={t('apps.needsApproval')}>
+        <ScrollView contentContainerStyle={styles.approval}>
+          <Text style={styles.messageTitle} accessibilityRole="header">
+            {t('apps.approveTitle', { name: loaded.name })}
+          </Text>
+          <Text style={styles.messageBody}>
+            {t(loaded.pkg.manifest.author.kind === 'imported' ? 'apps.needsApprovalImported' : 'apps.needsApproval')}
+          </Text>
+          <AppReview pkg={loaded.pkg} author={loaded.pkg.manifest.author} />
           <Button label={t('apps.turnOn')} onPress={() => void session.approve()} />
-        </Message>
+          <Button label={t('apps.close')} onPress={session.close} tone="secondary" />
+        </ScrollView>
       );
     if (!loaded || !snap.built) return null;
     return (
@@ -322,6 +333,7 @@ const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
   header: { backgroundColor: c.chrome, borderBottomWidth: 1, borderBottomColor: c.separator },
   message: { padding: 24, gap: 12, alignItems: 'stretch' },
+  approval: { padding: 20, gap: 12, alignItems: 'stretch', maxWidth: 640, width: '100%', alignSelf: 'center' },
   messageTitle: { fontSize: 19, fontWeight: '700', color: c.text, textAlign: 'center' },
   messageBody: { fontSize: 15, lineHeight: 21, color: c.textSecondary, textAlign: 'center' },
   overlay: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: c.bg },

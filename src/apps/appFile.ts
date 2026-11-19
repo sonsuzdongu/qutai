@@ -73,6 +73,11 @@ export class AppFileError extends Error {
   }
 }
 
+/** Whether an address handed to Qutai from outside is a file to import (not a web page or a qutai:// link). */
+export function isAppFileUri(uri: string | null | undefined): uri is string {
+  return !!uri && /^(file|content):\/\//i.test(uri) && uri.length <= 4096;
+}
+
 // ---------- Data ----------
 
 /** Bytes of one key-value entry or document, the same count the store's quota uses (src/apps/store.ts). */

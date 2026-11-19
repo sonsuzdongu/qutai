@@ -22,11 +22,14 @@ export type ServerBackupPrefs = {
   auto: boolean;
   /** Automatic backups only on Wi-Fi (default) or on any connection. "Back up now" ignores it. */
   network: NetworkChoice;
-  /** What goes in, like the export's switches. Defaults: tabs on; conversations, activity and AI keys off. */
+  /** What goes in, like the export's switches. Defaults: tabs, apps and their data on; conversations, activity and AI keys off. */
   tabs: boolean;
   chats: boolean;
   activity: boolean;
   apiKeys: boolean;
+  /** The user's apps and their data (docs/mini-apps.md › Backup and restore). Both on by default. */
+  apps: boolean;
+  appData: boolean;
 };
 
 export const DEFAULT_PREFS: ServerBackupPrefs = {
@@ -36,6 +39,8 @@ export const DEFAULT_PREFS: ServerBackupPrefs = {
   chats: false,
   activity: false,
   apiKeys: false,
+  apps: true,
+  appData: true,
 };
 
 /** Why an automatic backup didn't run (shown under the switch). */
@@ -65,6 +70,8 @@ export type RunRecord = {
   reason?: SkipReason | ServerBackupErrorKind;
   /** For quota: don't try again before this (Unix ms). */
   notBefore?: number;
+  /** Done, but without the apps' data: with it the file was over the server's limit (docs/mini-apps.md). */
+  appDataLeftOut?: boolean;
 };
 
 /** Kept on the phone with the prefs: per account, so another account signing in starts fresh. */
@@ -107,6 +114,7 @@ function parseRecord(v: unknown): RunRecord | undefined {
     result: r.result,
     ...(reason ? { reason: reason as RunRecord['reason'] } : {}),
     ...(notBefore !== undefined ? { notBefore } : {}),
+    ...(r.result === 'done' && r.appDataLeftOut === true ? { appDataLeftOut: true } : {}),
   };
 }
 
@@ -128,6 +136,8 @@ export function parseState(raw: string | null): ServerBackupState {
     chats: bool(p.chats, DEFAULT_PREFS.chats),
     activity: bool(p.activity, DEFAULT_PREFS.activity),
     apiKeys: bool(p.apiKeys, DEFAULT_PREFS.apiKeys),
+    apps: bool(p.apps, DEFAULT_PREFS.apps),
+    appData: bool(p.appData, DEFAULT_PREFS.appData),
   };
   const accounts: ServerBackupState['accounts'] = {};
   if (typeof o.accounts === 'object' && o.accounts !== null) {
@@ -203,9 +213,9 @@ export function shouldRecordSkip(last: RunRecord | undefined, reason: SkipReason
 export function runRecord(
   trigger: RunRecord['trigger'],
   now: number,
-  outcome: { ok: true } | { ok: false; kind: ServerBackupErrorKind; retryAfterSeconds?: number | null },
+  outcome: { ok: true; appDataLeftOut?: boolean } | { ok: false; kind: ServerBackupErrorKind; retryAfterSeconds?: number | null },
 ): RunRecord {
-  if (outcome.ok) return { at: now, trigger, result: 'done' };
+  if (outcome.ok) return { at: now, trigger, result: 'done', ...(outcome.appDataLeftOut ? { appDataLeftOut: true } : {}) };
   const record: RunRecord = { at: now, trigger, result: 'failed', reason: outcome.kind };
   if (outcome.kind === 'quota') record.notBefore = now + Math.max(MIN_QUOTA_WAIT_MS, (outcome.retryAfterSeconds ?? 0) * 1000);
   return record;
@@ -350,4 +360,12 @@ export function errorDetails(e: unknown): string {
     return parts.join(' · ');
   }
   return [x.name, typeof x.code === 'string' ? x.code : null].filter(Boolean).join(': ') || 'Error';
+}
+
+/**
+ * Over the server's limit with the apps' data in it: the backup is made again without that data rather than failing
+ * (docs/mini-apps.md › Backup and restore). Null when that wouldn't help (no limit, it fits, or the data is out already).
+ */
+export function appDataFallback(bytes: number, limit: number | null | undefined, prefs: Pick<ServerBackupPrefs, 'apps' | 'appData'>): boolean {
+  return !!limit && bytes > limit && prefs.apps && prefs.appData;
 }

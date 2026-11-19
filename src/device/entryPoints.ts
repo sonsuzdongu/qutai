@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState, Linking, Platform } from 'react-native';
 import { isSignInLink } from '../account/emailSignIn';
 import { siteColor } from '../ui/siteColor';
+import { isAppFileUri } from '../apps/appFile';
 import { isIncomingWebLink } from './defaultBrowser';
 import { NotificationOrigin, onAssistantNotificationTapped } from './notifications';
 import { onTaskReminderTapped } from './taskSchedule';
@@ -27,6 +28,9 @@ import { cutText } from '../utils/wellFormed';
  *   qutai://new-private-tab          a new incognito tab (behind the incognito lock if that is on)
  *   qutai://scan                     the QR code scanner
  *
+ * A `.qutaiapp` file opened from Files, an attachment or another browser's downloads arrives as a file:// (iOS's copy in
+ * Documents/Inbox) or content:// (Android) address: it opens the import screen, never anything else.
+ *
  * Also a tap on a saved task's reminder (src/device/taskSchedule.ts): only the task's id, read from the database; and
  * a tap on a notification the assistant scheduled (src/device/notifications.ts): the tab it was asked from.
  */
@@ -44,7 +48,12 @@ export type Entry =
   | { kind: 'task'; id: string }
   /** The user tapped a notification the assistant scheduled: back to the tab it was asked from. */
   /** assistant: the notification says how a task ended, so its conversation opens in the panel. */
-  | { kind: 'notification'; from: NotificationOrigin; assistant?: boolean };
+  | { kind: 'notification'; from: NotificationOrigin; assistant?: boolean }
+  /**
+   * A file opened in Qutai from outside (iOS "Open in Qutai", Android "Open with"): only `.qutaiapp` files are claimed
+   * (plugins/withAppFiles.js); it opens the import screen and nothing more (docs/mini-apps.md › Import).
+   */
+  | { kind: 'appFile'; uri: string };
 
 /** From the native module: shared text (Android) or a quick action's qutai:// link (iOS). */
 type RawEntry = { source?: string; text?: string; subject?: string | null; url?: string };
@@ -88,6 +97,7 @@ export function entryFromLink(url: string | null | undefined): Entry | null {
   // page, a search or text, so their token can't reach a tab, the history or the AI.
   if (isSignInLink(url)) return null;
   if (isIncomingWebLink(url)) return url.length <= MAX_URL && !/\s/.test(url) ? { kind: 'open', url } : null;
+  if (isAppFileUri(url)) return { kind: 'appFile', uri: url };
   return entryFromAppLink(url);
 }
 

@@ -9,6 +9,7 @@ import { secureStoreReady } from '../../storage/secureStoreGate';
 import { buildBackupFile, randomBytes } from '../backup';
 import { createServerBackupClient, type ServerBackup, type ServerBackupClient } from './client';
 import {
+  appDataFallback,
   autoBackupDecision,
   clearPasswordOn,
   deviceLabel,
@@ -199,7 +200,10 @@ export class BackupBusyError extends Error {
   }
 }
 
-export type BackupOutcome = { ok: true; backup: ServerBackup; removed: number } | { ok: false; kind: ServerBackupErrorKind; error: unknown };
+export type BackupOutcome =
+  /** appDataLeftOut: with the apps' data the file was `bytes`, over the account's `limit`, so it went without. */
+  | { ok: true; backup: ServerBackup; removed: number; appDataLeftOut?: { bytes: number; limit: number } }
+  | { ok: false; kind: ServerBackupErrorKind; error: unknown };
 
 /**
  * Builds the file with the kept password (or `password`, for a first backup), uploads it, and records the run. The
@@ -215,20 +219,33 @@ export async function backUpNow(trigger: 'auto' | 'manual', password = keptPassw
   emit({ job: { kind: 'backup', trigger, phase: 'encrypting', percent: 0, cancel } });
   let lastPercent = -1;
   let outcome: BackupOutcome;
+  let appDataLeftOut: { bytes: number; limit: number } | undefined;
   try {
-    const file = await buildBackupFile(
-      { tabs: prefs.tabs, chats: prefs.tabs && prefs.chats, activity: prefs.activity, apiKeys: prefs.apiKeys },
-      password,
-      (fraction) => {
-        const percent = Math.floor(fraction * 100);
-        if (percent !== lastPercent && snapshot.job.kind === 'backup') {
-          lastPercent = percent;
-          emit({ job: { ...snapshot.job, percent } });
-        }
-      },
-    );
+    const progress = (fraction: number) => {
+      const percent = Math.floor(fraction * 100);
+      if (percent !== lastPercent && snapshot.job.kind === 'backup') {
+        lastPercent = percent;
+        emit({ job: { ...snapshot.job, percent } });
+      }
+    };
+    const choice = {
+      tabs: prefs.tabs,
+      chats: prefs.tabs && prefs.chats,
+      activity: prefs.activity,
+      apiKeys: prefs.apiKeys,
+      apps: prefs.apps,
+      appData: prefs.apps && prefs.appData,
+    };
+    let file = await buildBackupFile(choice, password, progress);
     if (controller.signal.aborted) throw new DOMExceptionLike();
     const limit = (await serverBackupConfig())?.maxBytes;
+    if (appDataFallback(file.length, limit, prefs)) {
+      // Over the account's limit with the apps' data: made again without it rather than failing; the screen says so.
+      appDataLeftOut = { bytes: file.length, limit: limit! };
+      lastPercent = -1;
+      file = await buildBackupFile({ ...choice, appData: false }, password, progress);
+      if (controller.signal.aborted) throw new DOMExceptionLike();
+    }
     if (limit && file.length > limit) throw tooLarge();
     emit({ job: { kind: 'backup', trigger, phase: 'uploading', percent: null, cancel } });
     const meta = {
@@ -249,7 +266,7 @@ export async function backUpNow(trigger: 'auto' | 'manual', password = keptPassw
       if (!isRetryable(e) || controller.signal.aborted) throw e;
       result = await send();
     }
-    outcome = { ok: true, backup: result.backup, removed: result.removed };
+    outcome = { ok: true, backup: result.backup, removed: result.removed, ...(appDataLeftOut ? { appDataLeftOut } : {}) };
   } catch (e) {
     outcome = { ok: false, kind: controller.signal.aborted ? 'cancelled' : errorKind(e), error: e };
   } finally {
@@ -262,7 +279,7 @@ export async function backUpNow(trigger: 'auto' | 'manual', password = keptPassw
     ...(outcome.ok ? { lastSuccessAt: now } : {}),
     // A cancel by the user isn't a failure worth showing.
     ...(outcome.ok || outcome.kind !== 'cancelled'
-      ? { last: runRecord(trigger, now, outcome.ok ? { ok: true } : { ok: false, kind: outcome.kind, retryAfterSeconds: retryAfter }) }
+      ? { last: runRecord(trigger, now, outcome.ok ? { ok: true, appDataLeftOut: !!outcome.appDataLeftOut } : { ok: false, kind: outcome.kind, retryAfterSeconds: retryAfter }) }
       : {}),
   }));
   return outcome;

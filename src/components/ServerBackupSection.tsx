@@ -14,6 +14,7 @@ import {
   savePrefs,
   serverBackupConfig,
   useServerBackup,
+  type BackupOutcome,
   type ServerBackup,
   type ServerBackupErrorKind,
   type ServerBackupPrefs,
@@ -24,7 +25,7 @@ import { formatDateTime, formatPercent, formatSize } from '../i18n/format';
 import { AppModal } from '../ui/AppModal';
 import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
-import { PasswordField, ShowPassword, type ServerRestoreJob } from './BackupScreen';
+import { PasswordField, ShowPassword, useAppsDataSize, type ServerRestoreJob } from './BackupScreen';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { ErrorDetails } from './ErrorDetails';
@@ -82,6 +83,7 @@ function statusLine(lastSuccessAt: number | undefined, last: RunRecord | undefin
         })
       : t('serverBackup.never'),
   );
+  if (last && last.result === 'done' && last.appDataLeftOut) lines.push(t('serverBackup.appDataLeftOutLine'));
   if (last && last.result !== 'done' && (!lastSuccessAt || last.at > lastSuccessAt)) {
     const date = formatDateTime(new Date(last.at));
     lines.push(
@@ -101,6 +103,7 @@ export function ServerBackupSection({ onRestore }: { onRestore: (job: ServerRest
   const account = useAccountState();
   const { state, hasPassword, job } = useServerBackup();
   const [config, setConfig] = useState<{ maxBytes: number; keep: number } | null | undefined>(undefined);
+  const appData = useAppsDataSize();
   const [list, setList] = useState<ListState>({ status: 'loading' });
   const [passwordSheet, setPasswordSheet] = useState<null | {
     change: boolean;
@@ -172,6 +175,15 @@ export function ServerBackupSection({ onRestore }: { onRestore: (job: ServerRest
     dialog.alert(title, serverBackupErrorText(kind), undefined, error ? errorDetails(error) : undefined);
   };
 
+  /** Over the account's limit with the apps' data: it was backed up without; say so (docs/mini-apps.md). */
+  const noteLeftOut = (outcome: BackupOutcome) => {
+    if (!outcome.ok || !outcome.appDataLeftOut) return;
+    dialog.alert(
+      t('serverBackup.appDataLeftOutTitle'),
+      t('serverBackup.appDataLeftOut', { size: formatSize(outcome.appDataLeftOut.bytes), limit: formatSize(outcome.appDataLeftOut.limit) }),
+    );
+  };
+
   const runBackup = async () => {
     if (busy) return;
     if (!keptPassword()) {
@@ -180,6 +192,7 @@ export function ServerBackupSection({ onRestore }: { onRestore: (job: ServerRest
     }
     const outcome = await backUpNow('manual');
     if (!outcome.ok) showError(t('serverBackup.failedTitle'), outcome.error, outcome.kind);
+    else noteLeftOut(outcome);
   };
 
   const restore = async (backup: ServerBackup) => {
@@ -363,6 +376,14 @@ export function ServerBackupSection({ onRestore }: { onRestore: (job: ServerRest
         value={prefs.apiKeys}
         onChange={(apiKeys) => setPref({ apiKeys })}
       />
+      <Row title={t('backup.apps')} hint={t('backup.appsHint')} value={prefs.apps} onChange={(apps) => setPref({ apps })} />
+      <Row
+        title={t('backup.appData')}
+        hint={t('serverBackup.appDataHint', { size: formatSize(appData ?? 0) })}
+        value={prefs.apps && prefs.appData}
+        disabled={!prefs.apps}
+        onChange={(appData) => setPref({ appData })}
+      />
       <Text style={styles.hint}>{t('backup.notIncluded')}</Text>
 
       <PasswordSheet
@@ -373,6 +394,7 @@ export function ServerBackupSection({ onRestore }: { onRestore: (job: ServerRest
           if (thenBackUp) {
             const outcome = await backUpNow('manual');
             if (!outcome.ok) showError(t('serverBackup.failedTitle'), outcome.error, outcome.kind);
+            else noteLeftOut(outcome);
           }
         }}
       />

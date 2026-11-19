@@ -1,6 +1,8 @@
 import { t } from '../i18n';
 import type { DownloadItem, DownloadStore, OpenResult } from '../storage/downloads';
 import { dialog } from './Dialog';
+import { APP_FILE_EXTENSION } from '../apps/appFile';
+import { appImporter } from '../apps/importState';
 
 /** Shares the file; a short notice when it is gone or the share sheet could not open. */
 export async function shareDownload(store: DownloadStore, item: DownloadItem, notify: (message: string) => void) {
@@ -22,6 +24,12 @@ export async function shareDownload(store: DownloadStore, item: DownloadItem, no
  * `notify` shows a short notice where the user is looking (the Downloads screen has its own, over its sheet).
  */
 export async function openDownload(store: DownloadStore, item: DownloadItem, notify: (message: string) => void) {
+  // A Qutai app file opens the import screen (after the user's tap here), never anything else; not from incognito.
+  if (item.uri && item.name.toLowerCase().endsWith(`.${APP_FILE_EXTENSION}`)) {
+    if (item.incognito) return void dialog.alert(t('apps.importIncognito'));
+    appImporter.open({ uri: item.uri });
+    return;
+  }
   let result: OpenResult;
   try {
     result = await store.open(item.id);

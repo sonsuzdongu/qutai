@@ -16,11 +16,11 @@ import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
 import { ScreenHeader } from './ScreenHeader';
 import { WholeWordsText } from './WholeWordsText';
-import { deleteApp, renameApp } from './appActions';
+import { deleteApp, exportApp, renameApp } from './appActions';
 
 /**
  * "My apps" (docs/mini-apps.md): the user's apps as a grid on the new tab page and in their own screen (main menu ›
- * Library › My apps). Tap opens the app; long press offers open, rename and delete. With no apps, a card invites the
+ * Library › My apps). Tap opens the app; long press offers open, rename, export and delete; the screen also imports a .qutaiapp file. With no apps, a card invites the
  * user to ask the assistant for one.
  */
 
@@ -111,6 +111,7 @@ function useAppMenu(onNotice?: (text: string) => void) {
           ? [
               { icon: 'apps', label: t('apps.open'), onPress: () => appRunner.open(menuFor.id) },
               { icon: 'edit', label: t('apps.rename'), onPress: () => void renameApp(menuFor).catch(() => {}) },
+              { icon: 'share', label: t('apps.export'), onPress: () => void exportApp(menuFor).catch(() => {}) },
               {
                 icon: 'trash',
                 label: t('apps.delete'),
@@ -165,12 +166,15 @@ export function MyAppsScreen({
   dark,
   onClose,
   onAskForApp,
+  onImport,
   onNotice,
 }: {
   visible: boolean;
   dark: boolean;
   onClose: () => void;
   onAskForApp: () => void;
+  /** "Import an app": the caller closes this screen and opens the file picker (docs/mini-apps.md › Import). */
+  onImport: () => void;
   onNotice: (text: string) => void;
 }) {
   const styles = useStyles();
@@ -201,6 +205,15 @@ export function MyAppsScreen({
               >
                 <Icon name="assistant" size={16} color={styles.emptyButtonText.color} />
                 <WholeWordsText style={styles.emptyButtonText}>{t('apps.emptyAction')}</WholeWordsText>
+              </Pressable>
+              <Pressable
+                onPress={onImport}
+                accessibilityRole="button"
+                accessibilityHint={t('apps.importHint')}
+                style={({ pressed }) => [styles.emptyButton, pressed && styles.pressed]}
+              >
+                <Icon name="download" size={16} color={styles.emptyButtonText.color} />
+                <WholeWordsText style={styles.emptyButtonText}>{t('apps.import')}</WholeWordsText>
               </Pressable>
             </View>
           )}

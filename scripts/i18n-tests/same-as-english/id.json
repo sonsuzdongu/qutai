@@ -35,5 +35,6 @@
   "filters.sepia",
   "filters.done.sepia",
   "styles.cssLabel",
-  "styles.edit"
+  "styles.edit",
+  "apps.importDataTitle"
 ]

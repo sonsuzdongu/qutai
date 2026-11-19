@@ -131,6 +131,7 @@
       "./plugins/withDownloads",
       "./plugins/withPictureInPicture",
       "./plugins/withEntryPoints",
+      "./plugins/withAppFiles",
       "./plugins/withProAccounts",
       "./plugins/withReleaseSigning",
       [

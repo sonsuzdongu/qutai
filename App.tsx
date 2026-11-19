@@ -6,6 +6,9 @@ import { askScript, keepScript, liveOffer } from './src/components/pageScripts';
 import { scriptSandbox, ScriptSandboxHost } from './src/components/ScriptSandbox';
 import { AppRunnerHost } from './src/components/AppRunner';
 import { MyAppsScreen } from './src/components/MyApps';
+import { AppImportHost } from './src/components/AppImport';
+import { appImporter } from './src/apps/importState';
+import { pickAndImportApp } from './src/components/appActions';
 import { appStore, appsChanged } from './src/apps/appStore';
 import { appRunner } from './src/apps/runnerState';
 import { appItem } from './src/chat/Conversation';
@@ -1081,6 +1084,13 @@ function BrowserApp({
       case 'notification':
         // A task's notification opens its conversation, when its tab is still there.
         if (returnToNotificationTab(entry.from) && entry.assistant) setPanelOpen(true);
+        return;
+      case 'appFile':
+        // An app file opened from outside: the import screen, over a normal tab (never from incognito), nothing else.
+        toNormalTab();
+        setPanelOpen(false);
+        setMyAppsVisible(false);
+        appImporter.open({ uri: entry.uri });
         return;
     }
   };
@@ -2965,8 +2975,15 @@ function BrowserApp({
           dark={darkMode}
           onClose={() => setMyAppsVisible(false)}
           onAskForApp={() => askAbout(t('apps.emptyPrompt'))}
+          onImport={() => {
+            // Never from an incognito context; My apps closes first (iOS shows one sheet at a time).
+            toNormalTab();
+            setMyAppsVisible(false);
+            setTimeout(() => void pickAndImportApp(), 450);
+          }}
           onNotice={toast.show}
         />
+        <AppImportHost onNotice={toast.show} />
         <SentLogScreen
           visible={sentFor !== null}
           conversation={sentFor ?? undefined}

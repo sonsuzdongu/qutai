@@ -16,7 +16,8 @@ import type { ApplyMode } from '../backup/database';
 import { BackupPayload, BackupSummary, PayloadError, summarize } from '../backup/payload';
 import { authenticate } from '../device/biometric';
 import { MessageKey, t } from '../i18n';
-import { formatDateTime, formatList, formatPercent } from '../i18n/format';
+import { formatDateTime, formatList, formatPercent, formatSize } from '../i18n/format';
+import { appsDataSize } from '../apps/appStore';
 import { makeStyles, readableColumn, usePalette } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
@@ -143,6 +144,21 @@ export function ShowPassword({ visible, onToggle }: { visible: boolean; onToggle
   );
 }
 
+/** Bytes of every app's data, for the "Apps' data" switch (null while it is read). */
+export function useAppsDataSize(): number | null {
+  const [size, setSize] = useState<number | null>(null);
+  useEffect(() => {
+    let alive = true;
+    appsDataSize()
+      .then((n) => alive && setSize(n))
+      .catch(() => alive && setSize(0));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  return size;
+}
+
 function SwitchRow({
   title,
   hint,
@@ -185,6 +201,9 @@ function ExportForm({ appLock, busy, setBusy, onDone }: BusyProps & { appLock: b
   const [chats, setChats] = useState(false);
   const [activity, setActivity] = useState(false);
   const [apiKeys, setApiKeys] = useState(false);
+  const [apps, setApps] = useState(true);
+  const [appData, setAppData] = useState(true);
+  const appDataSize = useAppsDataSize();
   const [password, setPassword] = useState('');
   const [repeat, setRepeat] = useState('');
   const [visible, setVisible] = useState(false);
@@ -200,7 +219,7 @@ function ExportForm({ appLock, busy, setBusy, onDone }: BusyProps & { appLock: b
     setBusy(true);
     progress.reset();
     try {
-      await exportBackup({ tabs, chats: tabs && chats, activity, apiKeys }, password, progress.report);
+      await exportBackup({ tabs, chats: tabs && chats, activity, apiKeys, apps, appData: apps && appData }, password, progress.report);
       setBusy(false);
       onDone();
     } catch (e) {
@@ -229,6 +248,14 @@ function ExportForm({ appLock, busy, setBusy, onDone }: BusyProps & { appLock: b
         value={activity}
         onChange={setActivity}
         disabled={busy}
+      />
+      <SwitchRow title={t('backup.apps')} hint={t('backup.appsHint')} value={apps} onChange={setApps} disabled={busy} />
+      <SwitchRow
+        title={t('backup.appData')}
+        hint={t('backup.appDataHint', { size: formatSize(appDataSize ?? 0) })}
+        value={apps && appData}
+        onChange={setAppData}
+        disabled={busy || !apps}
       />
       <SwitchRow
         title={t('backup.apiKeys')}
@@ -297,6 +324,7 @@ function kindNames(s: BackupSummary): string[] {
   if (s.tabs !== undefined) names.push(t('backup.kind.tabs'));
   if (s.chats !== undefined) names.push(t('backup.kind.chats'));
   if (s.activity !== undefined) names.push(t('backup.kind.activity'));
+  if (s.apps !== undefined) names.push(t('backup.kind.apps'));
   return names;
 }
 
@@ -387,6 +415,8 @@ function ImportFlow({ file, keptPassword, busy, setBusy }: BusyProps & { file: U
   if (summary.tabs !== undefined) lines.push(t('backup.summary.tabs', { count: summary.tabs }));
   if (summary.chats !== undefined) lines.push(t('backup.summary.chats', { count: summary.chats }));
   if (summary.activity !== undefined) lines.push(t('backup.summary.activity', { count: summary.activity }));
+  if (summary.apps !== undefined)
+    lines.push(t(summary.appsWithData ? 'backup.summary.appsData' : 'backup.summary.appsNoData', { count: summary.apps }));
 
   const restore = async () => {
     if (mode === 'replace') {
