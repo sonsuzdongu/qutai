@@ -347,6 +347,7 @@ Sahibi telefonda, yavaş bir bağlantıda bildirdi (20 Kas; 0.1.3).
       Nedeni henüz bilinmiyor.
 - [ ] Kurulumdaki yanıt tarzı / "özel talimat" seçimi ("kısa ve öz" ve diğer seçenekler) kaldırılsın: yanıt tarzı hep "kısa ve öz" olsun, kullanıcıya hiç sorulmasın (20 Kas; 0.1.3). Kapsam düzeltmede netleşecek: kurulumdaki seçim adımı, "Bana soru sor" akışının beşinci sorusu (yanıt tarzı) ve varsayılan değer. Ayarlar'daki özel talimat alanı kalır (sahibi yalnızca kurulumda sorulmasını istemedi; aksi söylenirse o da değişir). "düzelt" denince bakılacak.
 - [ ] Kurulumdan "varsayılan tarayıcı yap" adımı kaldırılsın (20 Kas; 0.1.3). Ayarlar'daki varsayılan tarayıcı seçeneği kalır. "düzelt" denince bakılacak.
+- [ ] Qutai Kredileri'nde katman seçimi ("Qutai Hızlı", "Qutai", "Qutai Pro") kaldırılsın: kullanıcıya seçenek gösterilmesin, hep hızlı katman kullanılsın, yani arkada Claude Haiku (20 Kas; 0.1.3). Bilinenler: katmanlar sunucudaki `model_tiers` ayarında; şimdiki varsayılan `standard` (Claude Sonnet 5.5), `fast` = Claude Haiku 5.5 ve adım sınırı 25 (standartta 40). Varsayılanı değiştirmek panelden yapılabilir; seçimin arayüzden kalkması uygulama değişikliği ister. Düzeltmede sorulacak: hızlı katmanın adım sınırı 25'te mi kalsın, derin araştırma da Haiku ile mi çalışsın, kendi anahtarıyla kullananların model seçimi aynen kalsın mı. "düzelt" denince bakılacak.
 
 ## 14. "Kendinizi tanıtın" (sesle tanıtım, 17 Kasım)
 
