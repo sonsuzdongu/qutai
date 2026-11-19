@@ -46,7 +46,7 @@ import type { Db } from '../storage/db';
 import { containsHidden, HiddenNeedle, hiddenNeedles, MEMORY_ID, redactHidden } from './hiddenValues';
 import { hiddenKindOf, hiddenLabel, hiddenValue, isMemoryCategory, looksLikeIdNumber, Memory, MemoryStore } from './memory';
 import { findPersonalData, PERSONAL_KINDS, PersonalKind, personalNeedles } from './personalData';
-import { decide, SitePolicy, siteKey } from './sitePolicy';
+import { decide, policyName, SitePolicy, siteKey } from './sitePolicy';
 import { enterGate, pressGate, requestApprovalTool, type OutwardApproval } from './approvalTool';
 import { CARD_NUMBER_TEXT, containsCardNumber, type ApprovalGrants } from './outwardApproval';
 import {
@@ -1374,16 +1374,6 @@ function clickAtPoint(name: string, input: Record<string, unknown>, tab: Tab): {
   const y = Number(input.y);
   if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
   return { fx: x / size.width, fy: y / size.height };
-}
-
-/**
- * The name the site permission decides on: applying a style and deleting cookies change the page or the site's data
- * (refused on read-only sites); listing and undoing only read or put things back.
- */
-function policyName(name: string, input: Record<string, unknown>): string {
-  if (name === 'restyle_page') return input.action === 'apply' ? 'restyle_page' : 'restyle_page_read';
-  if (name === 'page_cookies') return input.action === 'delete' ? 'delete_cookies' : 'page_cookies';
-  return name;
 }
 
 async function executeUnredacted(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {

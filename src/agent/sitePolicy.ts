@@ -58,6 +58,16 @@ const WRITE_ACTIONS = new Set([
   'delete_cookies',
 ]);
 
+/**
+ * The name the site permission decides a call on: applying a style and deleting cookies change the page or the
+ * site's data (refused on read-only sites); listing and undoing only read or put things back.
+ */
+export function policyName(name: string, input: Record<string, unknown>): string {
+  if (name === 'restyle_page') return input.action === 'apply' ? 'restyle_page' : 'restyle_page_read';
+  if (name === 'page_cookies') return input.action === 'delete' ? 'delete_cookies' : 'page_cookies';
+  return name;
+}
+
 export type Decision = { kind: 'run' } | { kind: 'confirm' } | { kind: 'refuse'; reason: string };
 
 /**
