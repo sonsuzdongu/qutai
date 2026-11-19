@@ -6,7 +6,7 @@ import { pickAppFile, shareAppFile } from '../device/appFile';
 import { t } from '../i18n';
 import { formatSize } from '../i18n/format';
 import { importErrorMessage } from './appLabels';
-import { dialog } from './Dialog';
+import { dialog, dialogState } from './Dialog';
 
 /** Renaming, deleting, exporting and importing apps, the same from "My apps" and the runner's menu. */
 
@@ -63,6 +63,8 @@ export async function exportApp(app: { id: string; name: string }): Promise<bool
     exportedAt: new Date().toISOString(),
     exportedBy: `Qutai ${appVersion().version}`,
   });
+  // iOS can't present the share sheet while the choice dialog is still animating away (the sheet is dropped at once).
+  if (count > 0) await afterDialogsClose();
   try {
     await shareAppFile(text, appFileName(loaded.name, withData, t('apps.fileWithData')));
     return true;
@@ -81,4 +83,17 @@ export async function pickAndImportApp(): Promise<void> {
     const { message, detail } = importErrorMessage(e);
     dialog.alert(t('apps.importErrorTitle'), message, undefined, detail);
   }
+}
+
+/** Resolves once no dialog is showing, plus the time its closing animation takes. */
+function afterDialogsClose(): Promise<void> {
+  return new Promise((resolve) => {
+    const done = () => setTimeout(resolve, 450);
+    if (!dialogState.isOpen()) return done();
+    const unsubscribe = dialogState.subscribe(() => {
+      if (dialogState.isOpen()) return;
+      unsubscribe();
+      done();
+    });
+  });
 }
