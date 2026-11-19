@@ -374,9 +374,19 @@ Test sayfaları: `node scripts/page-tests/customise.mjs` (iOS simülatöründe `
 emülatöründe `adb reverse tcp:8812 tcp:8812`). Sahte yapay zekâ: `node scripts/fake-ai/server.mjs`, Özel sunucu
 `http://localhost:8793/v1`, model `fake`; sözcükler: restyle, bigtext, evilcss, cookies, cookiedel.
 
-Denendi: yalnızca testlerle (sanitiser tablosu, kapsamlar, dosya/yedek, onay ve site kipleri, çerez değerlerinin
-modele gitmemesi) ve stil betiği masaüstü Chromium'da yerel sayfada (kapsam, pushState/replaceState/geri, kapat/aç,
-deneme stili, sayfanın kendi mavi rengini ezme). Cihazda henüz denenmedi: iOS derlemesi diskin dolmasıyla yarıda kaldı.
+iOS simülatöründe denendi (iPhone 17 Pro, iOS 26, Release derleme, 19 Kasım; sahte yapay zekâ, Türkçe arayüz):
+- [x] Var olan kurulumda veritabanı geçişi (21) sorunsuz; eski kurallar ve sohbetler yerinde.
+- [x] "restyle": onay penceresi (açıklama, site, CSS Ayrıntılar altında); Uygula → bağlantı hemen kırmızı; kartta "Bu site için sakla…" ve "Geri al". Geri al → mavi, kart "Stil kaldırıldı".
+- [x] Sakla (varsayılan "Bu site ve alt alan adları") → Kendi kurallarım › Stiller'de "Links in red"; veritabanında temizlenmiş CSS (`!important` ile). Yeni sekmede sayfa: "At first paint: rgb(255, 0, 0)" (yanıp sönme yok); pushState sonrası kırmızı.
+- [x] Sayfa menüsü › "Bu sayfada stilleri kapat" → mavi + bildirim; "Bu sayfada stilleri aç" → kırmızı.
+- [x] Kendi kurallarım › Stiller: anahtarı kapatmak açık sayfaya hemen yansıdı (mavi); "Düzenle" ad, kapsam ve CSS ile açılıyor.
+- [x] Gerçek, oturum gerektirmeyen sayfa (example.com) "bigtext": koyu arka plan ve büyük yazı hemen uygulandı.
+- [x] Çerezler (sayfa menüsü › Diğer › Çerezler ve asistan kartı "Çerezleri göster"): qt_session (HttpOnly, oturum), qt_pref, qt_script; değer dokununca görünüyor, Kopyala; tek çerez silindi (oturum uyarısıyla), liste yenilendi. Sayfa JS'i qt_session'ı göremiyor.
+- [x] "cookies": asistanın cevabında ad, yol, süre, boyut, HttpOnly/Secure/SameSite, birinci taraf; değer yok. Gösterilen qt_session değeri uygulamanın hiçbir dosyasında (veritabanı, sohbetler, "Yapay zekâya gönderilenler") bulunmadı. Eylem geçmişinde stil uygulamaları var, çerez listesi yok (tasarım gereği).
+- Bulunan ve düzeltilen (cihazda yeniden denenmedi): "Sakla" penceresindeki ad alanı klavyeyi açıp başlığı ve açıklamayı gizliyordu: alan kaldırıldı (ad, açıklamadır; Kendi kurallarım'da değiştirilir). Düzenleyicinin ipucunda "!important" satır sonunda bölünüyordu.
+- Not: simülatör aracı yerel anahtarlara (Switch) dokunmayı iletmiyor, sürükleme gerekiyor; uygulama hatası değil.
+
+Denenmedi: Android (yerel derleme yapılmadı; `RNCWebViewCookies.java` hiç derlenmedi), gizli sekme, "Yalnızca okuma"/"Engellendi" kipleri cihazda (testlerde var), "evilcss" cihazda (testlerde var), dosya dışa/içe aktarma ve yedekten geri yükleme cihazda, VoiceOver, büyük yazı, koyu tema, yatay ekran.
 
 - [ ] `/style` sayfasında "restyle": onay penceresinde açıklama, site, CSS Ayrıntılar altında; Uygula → bağlantılar hemen kırmızı; sohbette kart: "Bu site için sakla…" ve "Geri al".
 - [ ] "Geri al" → bağlantılar mavi; kart "Stil kaldırıldı".

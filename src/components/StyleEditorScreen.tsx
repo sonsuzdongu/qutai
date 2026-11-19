@@ -110,7 +110,8 @@ function Editor({ draft, onSave, onClose }: { draft: StyleDraft; onSave: (name: 
             <ErrorDetails details={problem.detail} />
           </View>
         )}
-        <Text style={styles.hint}>{t('styles.cssHint')}</Text>
+        {/* A word joiner keeps "!important" on one line. */}
+        <Text style={styles.hint}>{t('styles.cssHint').replace('!important', '!\u2060important')}</Text>
       </KeyboardAwareScrollView>
     </SafeAreaView>
   );

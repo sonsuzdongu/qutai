@@ -88,13 +88,15 @@ export function stylesApply(tab: Tab): boolean {
   return stylesFor(siteRules.styles, tab.url).length > 0;
 }
 
-/** "Keep…" on the style card: a name and where it applies, then into "My rules". Never from an incognito tab. */
+/**
+ * "Keep…" on the style card: where it applies, then into "My rules", named after its description (renamed there).
+ * No text field here: on a phone its keyboard would cover the dialog's explanation. Never from an incognito tab.
+ */
 export async function keepStyle(offer: StyleOffer, browser: Browser): Promise<boolean> {
   if (offer.incognito) return false;
   const result = await dialog.show({
     title: t('styles.keepTitle'),
     message: t('styles.keepBody'),
-    input: { label: t('styles.nameLabel'), initial: offer.description, maxLength: 80 },
     choices: { label: t('siteRules.scopeLabel'), options: STYLE_SCOPE_KINDS.map(styleScopeLabel), initial: DEFAULT_STYLE_SCOPE_INDEX },
     buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: t('styles.keep'), primary: true }],
   });
@@ -104,7 +106,7 @@ export async function keepStyle(offer: StyleOffer, browser: Browser): Promise<bo
   if (!scope) return false;
   try {
     await siteRules.addStyle({
-      name: result.text.trim() || offer.description,
+      name: offer.description,
       scope: formatStyleScope(scope),
       css: offer.css,
       site: styleSite(scope, offer.site),
