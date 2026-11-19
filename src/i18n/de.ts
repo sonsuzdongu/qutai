@@ -2427,6 +2427,7 @@ export const de: Record<keyof typeof en, string> = {
   'step.approvalChanged': "Die Seite hat sich nach Ihrer Bestätigung geändert",
   'step.publishFirst': "Vor dem Senden ist Ihre Bestätigung nötig",
   'step.cardNumber': "Qutai tippt keine Kartennummern",
+  'step.secretField': "Qutai tippt keine Passwörter oder Codes",
   'approval.title.post': "Auf {site} veröffentlichen?",
   'approval.title.comment': "Auf {site} kommentieren?",
   'approval.title.reply': "Auf {site} antworten?",

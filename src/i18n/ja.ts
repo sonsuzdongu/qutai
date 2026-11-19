@@ -2442,6 +2442,7 @@ export const ja: Record<keyof typeof en, string> = {
   'step.approvalChanged': "承認後にページが変わりました",
   'step.publishFirst': "送信するには先に承認が必要です",
   'step.cardNumber': "Qutai はカード番号を入力しません",
+  'step.secretField': "Qutai はパスワードやコードを入力しません",
   'approval.title.post': "{site} に投稿しますか？",
   'approval.title.comment': "{site} にコメントしますか？",
   'approval.title.reply': "{site} で返信しますか？",

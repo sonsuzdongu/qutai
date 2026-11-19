@@ -236,8 +236,8 @@ Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE
 | Id | Decision | Status | Date |
 |---|---|---|---|
 | `SEC-1` | Typing text that contains a payment card number (13 to 19 digits, spaced or dashed, passing the Luhn… | Default |  |
-| `SEC-2` | The assistant never types passwords, one-time codes or security codes, never changes a payment method or… | Default |  |
-| `SEC-3` | A password field's value is never shown to the model: page text shows "(filled)", typing into it echoes… | Default |  |
+| `SEC-2` | Qutai never types passwords, one-time codes, card numbers or security codes: the app refuses typing into such fields… | Default | 2026-11-19 |
+| `SEC-3` | The value of a secret field (password, code, card) is never shown to the model: page text, approvals, script copy, screenshots… | Default | 2026-11-19 |
 | `SEC-4` | A password field can never be the text of a posting approval. | Default |  |
 | `SEC-5` | The payment method named in a payment approval may never be a card number. | Default |  |
 | `SEC-6` | Memory refuses passwords, passcodes and PINs, card security codes, one-time codes, card expiry dates, card… | Default |  |

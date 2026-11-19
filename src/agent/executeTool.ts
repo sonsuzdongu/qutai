@@ -48,7 +48,7 @@ import { hiddenKindOf, hiddenLabel, hiddenValue, isMemoryCategory, looksLikeIdNu
 import { findPersonalData, PERSONAL_KINDS, PersonalKind, personalNeedles } from './personalData';
 import { decide, policyName, SitePolicy, siteKey } from './sitePolicy';
 import { enterGate, pressGate, requestApprovalTool, type OutwardApproval } from './approvalTool';
-import { CARD_NUMBER_TEXT, containsCardNumber, type ApprovalGrants } from './outwardApproval';
+import { CARD_NUMBER_TEXT, containsCardNumber, isSecretKind, secretFieldText, type ApprovalGrants, type SecretKind } from './outwardApproval';
 import {
   describeCalendarRead,
   describePlan,
@@ -1464,6 +1464,13 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
     if (gate.kind === 'refuse') return record(gate.output);
     approvedPress = gate.kind === 'approved';
   }
+  // Qutai never types into a password, one-time code, card number or security code field, whatever the text (the page script
+  // recognises the field: browser/pageScript.ts secretKind).
+  if (name === 'type' && target?.tab && !target.tab.isNewTab) {
+    const kind = await target.tab.run<SecretKind | null>('secretField', [input.ref], 3000).catch(() => null);
+    if (kind && isSecretKind(kind))
+      return record({ content: secretFieldText(Number(input.ref), kind), isError: true, notice: settingNotice(t('step.secretField')) });
+  }
   // Remembered personal details need the site's permission, checked here in the app, not left to the prompt.
   let personalAsked = false;
   if (hidden && target) {
@@ -1560,8 +1567,14 @@ async function hiddenGate(
  */
 async function maskHiddenForCapture(tab: Tab, ctx: ToolContext): Promise<{ restore: () => Promise<void> } | string> {
   const nothing = { restore: async () => {} };
+  // One-time codes, card numbers and security codes on screen are made transparent for the capture, always.
+  const secrets = await tab.run<number[]>('secretFieldIndices', [], 3000).catch(() => [] as number[]);
   const needles = await hiddenNeedlesFor(ctx);
-  if (!needles.length) return nothing;
+  if (!needles.length) {
+    if (!Array.isArray(secrets) || !secrets.length) return nothing;
+    await tab.run('maskFields', [secrets], 3000);
+    return { restore: () => tab.run('maskEnd', [], 3000).then(() => undefined, () => undefined) };
+  }
   const screen = await tab.run<{ fields: string[]; text: string }>('screenFields', [], 5000);
   if (containsHidden(screen.text, needles)) {
     return (
@@ -1569,7 +1582,10 @@ async function maskHiddenForCapture(tab: Tab, ctx: ToolContext): Promise<{ resto
       'to you. Use read_page instead (hidden values appear there as [hidden: …]).'
     );
   }
-  const indices = screen.fields.flatMap((value, i) => (containsHidden(value, needles) ? [i] : []));
+  const indices = [
+    ...screen.fields.flatMap((value, i) => (containsHidden(value, needles) ? [i] : [])),
+    ...(Array.isArray(secrets) ? secrets : []),
+  ];
   if (!indices.length) return nothing;
   await tab.run('maskFields', [indices], 3000);
   return { restore: () => tab.run('maskEnd', [], 3000).then(() => undefined, () => undefined) };

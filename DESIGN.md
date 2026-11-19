@@ -19,6 +19,8 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** The app refuses typing into password, one-time-code, card-number and security-code fields and never
+  shows their values to the AI (`SEC-2`, `SEC-3`; was prompt-only).
 - **2026-11-19:** "Ask Qutai to fix this" fills the message box instead of sending, and console lines carry only the
   types and lengths of values, never the app's data (`APPS-23`, decided from the open question).
 - **2026-11-19:** The settings tool can no longer weaken a protection: blocking, cookie banners, third-party cookies and
@@ -113,9 +115,9 @@ only partly enforced.
 3. **The AI gets labels, never secrets.** Contacts reach the AI as names and opaque handles, never numbers or email
    addresses ([17](docs/design/17-contacts.md)); cookies as names and settings, never values ([19](docs/design/19-cookies.md)); ID and passport
    numbers as "[hidden: …]" labels ([11](docs/design/11-memory.md)); password fields as "(filled)"; the API key is never
-   in the "What was sent to the AI" log ([13](docs/design/13-sent-to-ai-and-cost.md)). *Partly prompt-only:*
-   the app refuses to type card numbers, but "never type passwords or one-time codes" is today only an instruction to the
-   model ([section 6](docs/design/06-secrets.md), `SEC-2`).
+   in the "What was sent to the AI" log ([13](docs/design/13-sent-to-ai-and-cost.md)). The app
+   refuses to type card numbers and to type into password, one-time-code, card and security-code fields
+   ([section 6](docs/design/06-secrets.md), `SEC-2`).
 4. **Nothing irreversible without Qutai's own approval.** Posting, sending and paying on a site need Qutai's own dialog,
    which shows what Qutai itself reads on the page and allows one press of one button ([7](docs/design/07-posting-and-paying.md)).
    Payments are off by default, have no spending limit and never offer "Don't ask again". Calls and messages to people
@@ -155,8 +157,7 @@ or the AI provider, incognito data to disk.
 
 The sections list every disagreement they found; these are the ones the owner should see first.
 
-- **Prompt-only protections.** The app blocks card numbers but not typing into password, one-time-code or security-code
-  fields (`SEC-2`). Deleting things or changing account settings on a site is asked by the model in the chat, not by an
+- **Prompt-only protections.** Deleting things or changing account settings on a site is asked by the model in the chat, not by an
   app dialog (`UNTR-19`). A final payment button with an unusual label (an icon, "Continue") is caught only by the prompt
   (`PAY-9`). An app's "change only when the user asks" and "at most 3 fix rounds" are prompt-only.
 - **Stale documents.** README › Official builds still says credits and sync are "not in the code yet" (credits and server

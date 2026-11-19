@@ -2436,6 +2436,7 @@ export const es: Record<keyof typeof en, string> = {
   'step.approvalChanged': "La página cambió después de su aprobación",
   'step.publishFirst': "Para enviar hace falta primero su aprobación",
   'step.cardNumber': "Qutai no escribe números de tarjeta",
+  'step.secretField': "Qutai no escribe contraseñas ni códigos",
   'approval.title.post': "¿Publicar en {site}?",
   'approval.title.comment': "¿Comentar en {site}?",
   'approval.title.reply': "¿Responder en {site}?",

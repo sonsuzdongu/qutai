@@ -295,6 +295,35 @@ export const CARD_NUMBER_TEXT =
   'That looks like a payment card number. Qutai never types card numbers, security codes, passwords or one-time codes: ' +
   'nothing was typed. Ask the user to enter it themselves, or to choose a card the site has saved.';
 
+// ---------- Secret fields ----------
+// Decided 19 Nov 2026: Qutai never types into a password, one-time code, card number or security code field. The
+// page script recognises the field (browser/pageScript.ts secretKind: input type, autocomplete, inputmode and length,
+// the words around it in ten languages, custom elements and shadow hosts, split code boxes); the app refuses.
+
+export const SECRET_KINDS = ['password', 'oneTimeCode', 'cardNumber', 'securityCode'] as const;
+export type SecretKind = (typeof SECRET_KINDS)[number];
+
+export function isSecretKind(value: unknown): value is SecretKind {
+  return typeof value === 'string' && (SECRET_KINDS as readonly string[]).includes(value);
+}
+
+const SECRET_WORDS: Record<SecretKind, string> = {
+  password: 'a password',
+  oneTimeCode: 'a one-time code',
+  cardNumber: 'a card number',
+  securityCode: 'a card security code',
+};
+
+/** The refusal for typing into a secret field. */
+export function secretFieldText(ref: number, kind: SecretKind): string {
+  return (
+    `ref=${ref} is a field for ${SECRET_WORDS[kind]}. Qutai never types passwords, one-time codes, card numbers or ` +
+    'security codes, and never reads them back: nothing was typed. Ask the user (with ask_user) to fill in this field ' +
+    'themselves on the page, which is on their screen, and to tell you when they are done; then continue. Do not ask ' +
+    'them to tell you the value.'
+  );
+}
+
 // ---------- Sending the assistant's own text without an approval ----------
 // Decided 19 Nov 2026: a press that would send free text the assistant typed during the task (a comment, reply, review,
 // message, a contact form's message) is refused until request_approval granted it. Recognised by context, not by the

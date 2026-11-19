@@ -103,6 +103,94 @@ export const PAGE_SCRIPT = String.raw`
     return cut(clean(t), 80);
   }
 
+  // ---------- Secret fields: passwords, one-time codes, card numbers and security codes ----------
+  // Qutai never types into them and never reads their values back to the AI (src/agent/executeTool.ts refuses type;
+  // read_page, form values, the script snapshot and screenshots leave the values out). secretKind is pure (tested in
+  // scripts/approval-tests/secretFields.test.ts, which takes it from this file); secretFacts reads the field.
+
+  var SECRET_PASSWORD = /password|passwort|kennwort|mot de passe|contrase[ñn]a|senha|пароль|[şs]ifre|parola|kata ?sandi|passphrase|passcode|パスワード|暗証番号|비밀번호|(^|[^a-z])(pwd|passwd|pass|pin|pin ?code|mdp)([^a-z]|$)/;
+  var SECRET_NOT = /promo|coupon|voucher|discount|gift|referral|invit|postal|zip|post ?code|postleitzahl|(^|[^a-z])plz([^a-z]|$)|code postal|c[óo]digo postal|(^|[^a-z])cep([^a-z]|$)|почтов|kode pos|郵便|우편|kupon|indirim|posta kodu|gutschein|rabatt|cupom|cup[óo]n|промокод|купон|captcha|country|area code|[üu]lke kodu|alan kodu|vorwahl|indicatif|phone|telefon|t[ée]l[ée]fono|telefone|телефон|search|(^|[^a-z])ara([^a-z]|$)|suche|quantity|(^|[^a-z])qty([^a-z]|$)|amount|adet|miktar|menge|cantidad|quantidade|количеств|jumlah|tracking|takip|sendungsnummer|order (number|no)|sipari[şs] no|bestellnummer|num[ée]ro de commande|product|(^|[^a-z])sku([^a-z]|$)|isbn|room|booking|reservation|rezervasyon|buchung|r[ée]servation|reserva/;
+  var SECRET_CARD = /card ?number|card-number|card_number|cardnumber|cc-?number|(^|[^a-z])ccnum|(^|[^a-z])pan([^a-z]|$)|kart (numaras[ıi]|no)|kartennummer|num[ée]ro de (la )?carte|n[úu]mero de (la )?tarjeta|n[úu]mero do cart[ãa]o|номер карты|nomor kartu|カード番号|카드 ?번호/;
+  var SECRET_CVC = /(^|[^a-z])(cvc2?|cvv2?|cvn|csc|cid)([^a-z]|$)|card verification|security code|g[üu]venlik kodu|kartenpr[üu]fnummer|pr[üu]fnummer|sicherheitscode|cryptogramme|code de s[ée]curit[ée]|c[óo]digo de seguridad|c[óo]digo de seguran[çc]a|код безопасности|cvv-код|kode keamanan|セキュリティコード|보안 ?코드/;
+  var SECRET_OTP = /one-?time|(^|[^a-z])(otp|totp|2fa|mfa|tan)([^a-z]|$)|two-?factor|2-?step|verification code|verify code|confirmation code|sms code|text code|authenticat|auth code|login code|sign-?in code|do[ğg]rulama kodu|onay kodu|tek kullan[ıi]ml[ıi]k|sms kodu|best[äa]tigungscode|verifizierungscode|einmalcode|einmalpasswort|code de (v[ée]rification|confirmation)|code (re[çc]u par )?sms|code à usage unique|c[óo]digo de (verificaci[óo]n|confirmaci[óo]n|verifica[çc][ãa]o|confirma[çc][ãa]o)|c[óo]digo (sms|de acesso)|код подтверждения|код из (смс|sms)|одноразов|kode (verifikasi|otp|konfirmasi)|確認コード|認証コード|ワンタイム|인증 ?번호|인증 ?코드|일회용/;
+  var SECRET_CODE_WORD = /(^|[^a-z])(code|kod|kodu|kode|codigo|código|pin)([^a-z]|$)|код|コード|코드/;
+  var SECRET_NOT_TEXT = /^(checkbox|radio|file|submit|button|reset|image|range|color|hidden|date|datetime-local|month|week|time|email|url|search)$/;
+
+  // f: { type, autocomplete, inputMode, hints (lowercase words around the field), maxLength, pattern, textSecurity,
+  // digitBoxes (one-character boxes in its group) }. 'password' | 'oneTimeCode' | 'cardNumber' | 'securityCode' | null.
+  function secretKind(f) {
+    var type = String(f.type || '').toLowerCase();
+    var ac = ' ' + String(f.autocomplete || '').toLowerCase().replace(/\s+/g, ' ') + ' ';
+    var hints = String(f.hints || '').toLowerCase();
+    if (type === 'password' || / (current|new)-password /.test(ac) || f.textSecurity) return 'password';
+    if (/ one-time-code /.test(ac)) return 'oneTimeCode';
+    if (/ cc-number /.test(ac)) return 'cardNumber';
+    if (/ cc-csc /.test(ac)) return 'securityCode';
+    if (SECRET_NOT_TEXT.test(type)) return null;
+    // What autocomplete names as an ordinary detail is that detail.
+    if (/ (username|email|tel|tel-[a-z-]+|name|given-name|family-name|nickname|organization|street-address|address-line\d|address-level\d|postal-code|country|country-name|cc-name|cc-exp|cc-exp-month|cc-exp-year|cc-type|bday[a-z-]*|transaction-amount|url) /.test(ac)) return null;
+    if (SECRET_PASSWORD.test(hints)) return 'password';
+    if (SECRET_NOT.test(hints)) return null;
+    if (SECRET_CARD.test(hints)) return 'cardNumber';
+    if (SECRET_CVC.test(hints)) return 'securityCode';
+    if (SECRET_OTP.test(hints)) return 'oneTimeCode';
+    var numeric = /^(numeric|tel|decimal)$/.test(String(f.inputMode || '').toLowerCase()) || type === 'number' || type === 'tel' ||
+      /^\^?(\\d|\[0-9\])/.test(String(f.pattern || ''));
+    // Split code boxes: four or more one-character boxes side by side.
+    if (f.maxLength === 1 && f.digitBoxes >= 4) return 'oneTimeCode';
+    // A short numeric field named a code ("Code", "Kod", "PIN").
+    if (numeric && f.maxLength >= 4 && f.maxLength <= 8 && SECRET_CODE_WORD.test(hints)) return 'oneTimeCode';
+    return null;
+  }
+  // ---------- end of secretKind
+  var SECRET_NAMES = { password: 'password', oneTimeCode: 'one-time code', cardNumber: 'card number', securityCode: 'security code' };
+
+  function attrWords(el) {
+    if (!el || !el.getAttribute) return '';
+    return [el.getAttribute('name'), el.id, el.getAttribute('placeholder'), el.getAttribute('aria-label'),
+      el.getAttribute('label'), el.getAttribute('data-testid'), el.getAttribute('title')].join(' ');
+  }
+  // What secretKind needs about a text field (an <input>, a textarea or an editor), including the custom elements and
+  // shadow hosts around it (<x-password-field label="Password">).
+  function secretFacts(field) {
+    var hints = [attrWords(field), labelOf(field)];
+    var host = field.getRootNode && field.getRootNode().host;
+    for (var i = 0; host && i < 3; i++) {
+      hints.push(attrWords(host), labelOf(host));
+      host = host.getRootNode && host.getRootNode().host;
+    }
+    var boxes = 0;
+    if (field.tagName === 'INPUT' && field.maxLength === 1) {
+      var group = field.parentElement;
+      if (group && group.querySelectorAll('input').length < 2 && group.parentElement) group = group.parentElement;
+      var all = group ? group.querySelectorAll('input') : [];
+      for (var j = 0; j < all.length; j++) if (all[j].maxLength === 1) boxes++;
+    }
+    var security = '';
+    try { var cs = getComputedStyle(field); security = cs.webkitTextSecurity || cs.getPropertyValue('-webkit-text-security') || ''; } catch (e) {}
+    return {
+      type: field.tagName === 'INPUT' ? (field.type || 'text') : '',
+      autocomplete: field.getAttribute('autocomplete') || '',
+      inputMode: field.getAttribute('inputmode') || '',
+      hints: clean(hints.join(' ')).toLowerCase().slice(0, 400),
+      maxLength: field.maxLength > 0 ? field.maxLength : null,
+      pattern: field.getAttribute('pattern') || '',
+      textSecurity: !!security && security !== 'none',
+      digitBoxes: boxes
+    };
+  }
+  function secretOf(field) {
+    if (!field || field.nodeType !== 1) return null;
+    if (field.tagName !== 'INPUT' && field.tagName !== 'TEXTAREA' && !field.isContentEditable) return null;
+    try { return secretKind(secretFacts(field)); } catch (e) { return null; }
+  }
+  // The secret kind of the field a ref stands for (type's target), or null.
+  function secretField(ref) {
+    var el = getEl(ref);
+    var field = isTextField(el) ? el : fieldFor(el);
+    return field ? secretOf(field) : null;
+  }
+
   // ---------- Form state (required, constraints, validation errors) ----------
 
   // Fields the agent typed into or selected, and forms with a submit attempt: like browsers, an empty required
@@ -324,7 +412,7 @@ export const PAGE_SCRIPT = String.raw`
     if (tag === 'input' || tag === 'textarea') {
       var type = (el.type || '').toLowerCase();
       if (type === 'checkbox' || type === 'radio') parts.push(checkState(el, el.checked, el.defaultChecked));
-      else if (type === 'password') { if (el.value) parts.push('(filled)'); }
+      else if (secretOf(el)) { parts.push('(' + SECRET_NAMES[secretOf(el)] + ' field: only the user fills it in)'); if (el.value) parts.push('(filled)'); }
       else if (el.value) parts.push('value="' + cut(clean(el.value), 60) + '"');
       parts = parts.concat(formNotes(el, tag));
     } else if (tag === 'select') {
@@ -715,7 +803,8 @@ export const PAGE_SCRIPT = String.raw`
     if (typedFields.indexOf(field) < 0) typedFields.push(field);
     // What the page made of it, read back: what the model reports and what an approval shows must be what is there.
     var now = fieldValue(field);
-    var shown = field.type === 'password' ? '' : now;
+    var secret = !!secretOf(field);
+    var shown = secret ? '' : now;
     if (submit) {
       if (field.form) attempted.add(field.form);
       var kopts = { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true, cancelable: true, composed: true };
@@ -729,7 +818,7 @@ export const PAGE_SCRIPT = String.raw`
       }
     }
     var note = '';
-    if (field.type !== 'password' && !same(now, wanted)) {
+    if (!secret && !same(now, wanted)) {
       note = ' The field now shows "' + cut(clean(shown), 300) + '", which differs from what was typed' +
         (clean(shown) ? ' (the page may have reformatted it)' : ': the page did not take the text') + '.';
     }
@@ -743,7 +832,7 @@ export const PAGE_SCRIPT = String.raw`
   function fieldText(ref) {
     var field = fieldFor(getEl(ref));
     if (!field) throw new Error('ref=' + ref + ' is not a text field.');
-    return { text: cut(fieldValue(field), 5000), secret: field.type === 'password' };
+    return { text: cut(fieldValue(field), 5000), secret: !!secretOf(field) };
   }
 
   // What a button would send when it belongs to a form: each filled field's label and value (passwords as "(filled)").
@@ -760,7 +849,7 @@ export const PAGE_SCRIPT = String.raw`
       var value;
       if (f.tagName === 'SELECT') value = f.options[f.selectedIndex] ? f.options[f.selectedIndex].text : '';
       else if (f.type === 'checkbox' || f.type === 'radio') { if (!f.checked) continue; value = 'yes'; }
-      else if (f.type === 'password') value = f.value ? '(filled)' : '';
+      else if (secretOf(f)) value = f.value ? '(filled)' : '';
       else value = fieldValue(f);
       if (!clean(value)) continue;
       out.push({ label: labelOf(f), value: cut(clean(value), 500) });
@@ -1047,7 +1136,7 @@ export const PAGE_SCRIPT = String.raw`
     for (var i = 0; i < fields.length && i < clonedFields.length; i++) {
       var f = fields[i];
       var c = clonedFields[i];
-      if (f.type === 'password') { c.removeAttribute('value'); continue; }
+      if (f.type === 'password' || (f.tagName !== 'SELECT' && secretOf(f))) { c.removeAttribute('value'); c.textContent = ''; continue; }
       if (f.tagName === 'TEXTAREA') c.textContent = f.value;
       else if (f.tagName === 'SELECT') {
         for (var o = 0; o < c.options.length; o++) c.options[o].toggleAttribute('selected', o === f.selectedIndex);
@@ -2329,6 +2418,17 @@ export const PAGE_SCRIPT = String.raw`
     return { fields: fields, text: text };
   }
 
+  // The positions (in screenFields' order) of filled secret fields other than passwords (which the browser masks
+  // itself): one-time codes, card numbers and security codes are made transparent for a screenshot (maskFields).
+  function secretFieldIndices() {
+    var out = [];
+    textFields().forEach(function (el, i) {
+      var kind = secretOf(el);
+      if (kind && kind !== 'password' && (el.value || (el.isContentEditable && el.innerText))) out.push(i);
+    });
+    return out;
+  }
+
   // Makes the fields at these positions (in screenFields' order) transparent until maskEnd, for one capture.
   function maskFields(indices) {
     var fields = textFields();
@@ -2512,6 +2612,8 @@ export const PAGE_SCRIPT = String.raw`
     click: click,
     clickAt: clickAt,
     fieldText: fieldText,
+    secretField: secretField,
+    secretFieldIndices: secretFieldIndices,
     formValues: formValues,
     findText: findText,
     textOf: textOf,

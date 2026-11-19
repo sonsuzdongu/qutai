@@ -2441,6 +2441,7 @@ export const fr: Record<keyof typeof en, string> = {
   'step.approvalChanged': "La page a changé après votre approbation",
   'step.publishFirst': "L’envoi nécessite d’abord votre approbation",
   'step.cardNumber': "Qutai ne tape pas de numéros de carte",
+  'step.secretField': "Qutai ne tape pas de mots de passe ni de codes",
   'approval.title.post': "Publier sur {site} ?",
   'approval.title.comment': "Commenter sur {site} ?",
   'approval.title.reply': "Répondre sur {site} ?",

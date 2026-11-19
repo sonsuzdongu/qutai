@@ -2440,6 +2440,7 @@ export const ko: Record<keyof typeof en, string> = {
   'step.approvalChanged': "승인 후 페이지가 바뀌었습니다",
   'step.publishFirst': "보내려면 먼저 승인이 필요합니다",
   'step.cardNumber': "Qutai는 카드 번호를 입력하지 않습니다",
+  'step.secretField': "Qutai는 비밀번호나 코드를 입력하지 않습니다",
   'approval.title.post': "{site}에 게시할까요?",
   'approval.title.comment': "{site}에 댓글을 달까요?",
   'approval.title.reply': "{site}에서 답글을 달까요?",

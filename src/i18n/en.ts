@@ -2433,6 +2433,7 @@ export const en = {
   'step.approvalChanged': "The page changed after you approved",
   'step.publishFirst': "Sending needs your approval first",
   'step.cardNumber': "Qutai doesn’t type card numbers",
+  'step.secretField': "Qutai doesn’t type passwords or codes",
   'approval.title.post': "Post on {site}?",
   'approval.title.comment': "Comment on {site}?",
   'approval.title.reply': "Reply on {site}?",

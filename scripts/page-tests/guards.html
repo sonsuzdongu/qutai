@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qutai page tests: guards</title>
+<style>
+  body { font: 15px/1.4 system-ui, sans-serif; margin: 16px; }
+  section { border: 1px solid #ccc; border-radius: 8px; padding: 10px; margin: 0 0 12px; }
+  #results td { padding: 2px 6px; border-bottom: 1px solid #eee; vertical-align: top; }
+  .pass { color: #1a7f37; } .fail { color: #c62828; }
+  .secret-style { -webkit-text-security: disc; }
+</style>
+</head>
+<body>
+<p id="summary">Running…</p>
+<table id="results"><tbody></tbody></table>
+
+<!-- Secret fields (src/browser/pageScript.ts secretKind): what read_page, type and approvals must treat as secret. -->
+<section id="secrets">
+  <h2>Sign in</h2>
+  <form>
+    <label>Email <input id="s-email" type="email" autocomplete="username"></label>
+    <label>Password <input id="s-pass" type="password" value="hunter2"></label>
+    <label>Şifre (text, masked by style) <input id="s-masked" class="secret-style" value="x"></label>
+    <label>Verification code <input id="s-otp" inputmode="numeric" maxlength="6" value="123456"></label>
+    <input id="s-otp-ac" autocomplete="one-time-code" value="987654" aria-label="Code">
+    <div class="boxes"><input maxlength="1" id="b1" value="1"><input maxlength="1"><input maxlength="1"><input maxlength="1"><input maxlength="1"><input maxlength="1"></div>
+    <x-secret-field id="s-custom" label="Kennwort"></x-secret-field>
+    <label>Card number <input id="s-card" inputmode="numeric" value="4242424242424242"></label>
+    <label>CVC <input id="s-cvc" maxlength="4" value="123"></label>
+  </form>
+  <h2>Ordinary fields</h2>
+  <label>Quantity <input id="o-qty" type="number" value="2"></label>
+  <label>Zip code <input id="o-zip" inputmode="numeric" maxlength="5" value="34000"></label>
+  <label>Promo code <input id="o-promo" value="SAVE10"></label>
+  <label>Phone <input id="o-phone" type="tel" value="5551112233"></label>
+  <label>Comment <textarea id="o-comment">hello</textarea></label>
+</section>
+
+<script>
+customElements.define('x-secret-field', class extends HTMLElement {
+  connectedCallback() {
+    const root = this.attachShadow({ mode: 'open' });
+    root.innerHTML = '<input part="input" value="s3cret">';
+  }
+});
+</script>
+<script src="__AGENT_SRC__"></script>
+<script>
+(async function () {
+  const A = window.__qutaiAgent;
+  const results = [];
+  const row = (name, ok, detail) => {
+    results.push({ name, ok, detail });
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td class="' + (ok ? 'pass' : 'fail') + '">' + (ok ? 'PASS' : 'FAIL') + '</td><td></td><td></td>';
+    tr.children[1].textContent = name;
+    tr.children[2].textContent = detail || '';
+    document.querySelector('#results tbody').append(tr);
+  };
+  const page = A.readPage(0).content;
+  const lines = page.split('\n');
+  const refOf = (needle) => {
+    const line = lines.find((l) => l.includes('[ref=') && l.includes(needle));
+    return line ? Number(/\[ref=(\d+)\]/.exec(line)[1]) : null;
+  };
+  const expectSecret = [
+    ['"Password', 'password'], ['masked by style', 'password'], ['"Verification code', 'oneTimeCode'],
+    ['"Code"', 'oneTimeCode'], ['"Card number', 'cardNumber'], ['"CVC', 'securityCode'],
+  ];
+  for (const [needle, kind] of expectSecret) {
+    const ref = refOf(needle);
+    const got = ref ? A.secretField(ref) : 'no ref';
+    row('secret: ' + needle, got === kind, String(got));
+  }
+  const refLines = lines.filter((l) => l.includes('[ref='));
+  const boxRef = Number(/\[ref=(\d+)\]/.exec(refLines.find((l) => l.includes('max 1)')) || '[ref=0]')[1]);
+  const customLine = refLines[refLines.findIndex((l) => l.includes('"Card number')) - 1] || '[ref=0]';
+  const customRef = Number(/\[ref=(\d+)\]/.exec(customLine)[1]);
+  row('secret: a custom element with a shadow input', A.secretField(customRef) === 'password', String(A.secretField(customRef)));
+  row('split boxes are a one-time code', A.secretField(boxRef) === 'oneTimeCode', String(A.secretField(boxRef)));
+  for (const needle of ['"Quantity', '"Zip code', '"Promo code', '"Phone', '"Comment', '"Email']) {
+    const ref = refOf(needle);
+    row('not secret: ' + needle, ref !== null && A.secretField(ref) === null, String(ref && A.secretField(ref)));
+  }
+  row('read_page shows no secret value', !/hunter2|123456|987654|4242424242424242|value="123"|s3cret/.test(page), '');
+  row('read_page still shows ordinary values', /value="SAVE10"/.test(page) && /value="34000"/.test(page), '');
+  const form = A.formValues(refOf('"Password'));
+  row('form values hide secrets', !JSON.stringify(form).match(/hunter2|123456|4242|s3cret/), JSON.stringify(form).slice(0, 120));
+  const snap = A.snapshotHtml();
+  row('the script copy holds no secret value', !/hunter2|123456|987654|4242424242424242/.test(JSON.stringify(snap)), '');
+  row('screenshot masks codes and cards', A.secretFieldIndices().length >= 4, JSON.stringify(A.secretFieldIndices()));
+  window.__pageTestResults = results;
+  document.getElementById('summary').textContent = results.filter((r) => r.ok).length + ' / ' + results.length + ' passed';
+})();
+</script>
+</body>
+</html>

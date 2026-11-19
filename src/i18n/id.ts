@@ -2441,6 +2441,7 @@ export const id: Record<keyof typeof en, string> = {
   'step.approvalChanged': "Halaman berubah setelah Anda menyetujui",
   'step.publishFirst': "Pengiriman perlu persetujuan Anda terlebih dahulu",
   'step.cardNumber': "Qutai tidak mengetik nomor kartu",
+  'step.secretField': "Qutai tidak mengetik kata sandi atau kode",
   'approval.title.post': "Posting di {site}?",
   'approval.title.comment': "Berkomentar di {site}?",
   'approval.title.reply': "Membalas di {site}?",

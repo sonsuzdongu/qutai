@@ -80,6 +80,8 @@ export type PageCommand =
   | 'hideUndo'
   | 'maskEnd'
   | 'fieldText'
+  | 'secretField'
+  | 'secretFieldIndices'
   | 'formValues'
   | 'findText'
   | 'textOf'

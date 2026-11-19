@@ -2438,6 +2438,7 @@ export const tr: Record<keyof typeof en, string> = {
   'step.approvalChanged': "Onayınızdan sonra sayfa değişti",
   'step.publishFirst': "Göndermeden önce onayınız gerekiyor",
   'step.cardNumber': "Qutai kart numarası yazmaz",
+  'step.secretField': "Qutai şifre veya kod yazmaz",
   'approval.title.post': "{site} sitesinde paylaşılsın mı?",
   'approval.title.comment': "{site} sitesinde yorum yapılsın mı?",
   'approval.title.reply': "{site} sitesinde yanıt verilsin mi?",

@@ -2442,6 +2442,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'step.approvalChanged': "A página mudou depois da sua aprovação",
   'step.publishFirst': "Para enviar, é preciso primeiro a sua aprovação",
   'step.cardNumber': "O Qutai não digita números de cartão",
+  'step.secretField': "O Qutai não digita senhas nem códigos",
   'approval.title.post': "Publicar em {site}?",
   'approval.title.comment': "Comentar em {site}?",
   'approval.title.reply': "Responder em {site}?",

@@ -2441,6 +2441,7 @@ export const ru: Record<keyof typeof en, string> = {
   'step.approvalChanged': "Страница изменилась после вашего одобрения",
   'step.publishFirst': "Для отправки сначала нужно ваше одобрение",
   'step.cardNumber': "Qutai не вводит номера карт",
+  'step.secretField': "Qutai не вводит пароли и коды",
   'approval.title.post': "Опубликовать на {site}?",
   'approval.title.comment': "Оставить комментарий на {site}?",
   'approval.title.reply': "Ответить на {site}?",
