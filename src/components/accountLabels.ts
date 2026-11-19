@@ -1,4 +1,5 @@
 import type { Me, SignInMethod } from '../account/types';
+import { isPrivateRelayAddress } from '../account/methodRules';
 import { getLocale, t, type MessageKey } from '../i18n';
 import { formatList } from '../i18n/format';
 
@@ -26,12 +27,17 @@ export function methodsOf(user: Me): SignInMethod[] {
   return (Array.isArray(user.providers) ? user.providers : []).map((provider) => ({ provider, linkedAt: 0 }));
 }
 
-/** One method as a line: "Google", "Email: name@example.com". */
+/**
+ * One method as a line: "Email: name@example.com", "Google: name@gmail.com", "Apple: hidden email" (a Hide My Email
+ * relay address), or the method's name alone when the server sent no address (an older server, or a token without one).
+ */
 export function methodLine(method: SignInMethod): string {
-  if (method.provider === 'email' && typeof method.email === 'string' && method.email) {
-    return t('account.methodEmail', { email: method.email });
-  }
-  return providerLabel(method.provider);
+  const email = typeof method.email === 'string' ? method.email.trim() : '';
+  if (method.provider === 'email' && email) return t('account.methodEmail', { email });
+  if (!email || method.provider === 'test') return providerLabel(method.provider);
+  const name = providerLabel(method.provider);
+  if (method.provider === 'apple' && isPrivateRelayAddress(email)) return t('account.methodHiddenEmail', { method: name });
+  return t('account.methodWithAddress', { method: name, email });
 }
 
 /** "Google and email" (distinct providers, no addresses): for "Signed in with …" and the "method added" note. */

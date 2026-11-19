@@ -1,1 +1,3 @@
-["profile.chip.vegan", "settings.model", "cost.model", "styles.cssLabel"]
+["profile.chip.vegan", "settings.model", "cost.model", "styles.cssLabel",
+  "account.methodWithAddress"
+]

@@ -26,7 +26,8 @@ and deleting the account. Builds from this repository have none of it.
    Google with his Gmail address last week; today he chooses email and proves the same Gmail address with the code → Ali lands in the
    same account and Qutai says once which ways Ali can now sign in. An Apple "Hide My Email" address never joins
    anything.
-6. Signed in, Settings › Account lists **Ways to sign in**. **Add a sign-in method** (Google, Apple, or email with a
+6. Signed in, Settings › Account lists **Ways to sign in**, each with its address (since 19 Nov 2026, `ACC-52`):
+   "Email: name@example.com", "Google: name@gmail.com", "Apple: hidden email" for a Hide My Email address. **Add a sign-in method** (Google, Apple, or email with a
    separate "confirm" code) adds one, and every address on the account gets a "sign-in method added" mail. If that
    method already belongs to another Qutai account, nothing changes and Qutai offers **Combine with another account**.
 7. Removing a method (the × next to it) asks for confirmation. If the user hasn't signed in on this phone in the last
@@ -135,6 +136,8 @@ and deleting the account. Builds from this repository have none of it.
   Status: Waiting for the owner ([TODO.md](../../TODO.md#accounts-and-oauth-sign-in)) · Why: "if wanted" · Source: TODO.md › Accounts and OAuth sign-in, › Set-up only the owner can do; docs/apple-sign-in.md
 - **`ACC-51`** Today the sign-in methods are Apple, Google and email; no other provider.
   Status: Waiting for the owner ([TODO.md](../../TODO.md#pending-decisions)) · Why: reason not recorded · Source: TODO.md › Qutai Credits › Pending decisions
+- **`ACC-52`** Each sign-in method shows its address beside it: email methods their address, Google and Apple the address their own token gave (the server keeps it per method, `identities.email`, refreshed on each sign-in with one); an Apple private-relay address shows as a translated "hidden email". A method without an address (an older server, a token that carried none, a method not signed in again since the update on an account with two Google or Apple methods) shows its name alone. Logs stay free of addresses (`ACC-48`).
+  Status: Owner, 2026-11-19 · Why: the owner wanted to see which address each method signed in with; the relay address means nothing to the user · Enforced: Server: backend/apps/api/src/auth/users.ts (getMe, methodEmail, refreshMethodEmail), migration 0012; In the app: src/components/accountLabels.ts (methodLine), src/account/methodRules.ts (isPrivateRelayAddress) · Source: docs/test-checklist.md › 19 Kasım'da bildirilenler; backend/DESIGN.md › Adding a method
 
 ## Details
 

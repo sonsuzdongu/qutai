@@ -2020,6 +2020,8 @@ export const ja: Record<keyof typeof en, string> = {
   'account.providerOther': '別のログイン方法',
   'account.methodsTitle': 'ログイン方法',
   'account.methodEmail': 'メール: {email}',
+  'account.methodWithAddress': '{method}: {email}',
+  'account.methodHiddenEmail': '{method}: 非公開のメール',
   'account.methods.addTitle': 'ログイン方法を追加',
   'account.methods.addHint': 'どれかにアクセスできなくなったときに備えて、このアカウントに複数の方法でログインできるようにします。',
   'account.methods.addLabel': '{method}を追加',

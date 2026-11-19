@@ -942,6 +942,7 @@ Moved to Details (ids retired, not reused): `PERF-1`, `PERF-2`, `PERF-9`
 | `ACC-49` | Today setup offers sign-in only on the Qutai Credits path; own-key users get no optional "Sign in" step. | **Waiting** |  |
 | `ACC-50` | Today Sign in with Apple on Android is built but stays off until the owner creates Apple's Services ID and… | **Waiting** |  |
 | `ACC-51` | Today the sign-in methods are Apple, Google and email; no other provider. | **Waiting** |  |
+| `ACC-52` | Each sign-in method shows its address (Google and Apple from their own token, kept per method on the server); an Apple relay… | Owner | 2026-11-19 |
 
 Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21`, `ACC-38`, `ACC-44`
 

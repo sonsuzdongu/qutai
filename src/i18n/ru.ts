@@ -2019,6 +2019,8 @@ export const ru: Record<keyof typeof en, string> = {
   'account.providerOther': 'другой способ входа',
   'account.methodsTitle': 'Способы входа',
   'account.methodEmail': 'Эл. почта: {email}',
+  'account.methodWithAddress': '{method}: {email}',
+  'account.methodHiddenEmail': '{method}: скрытый адрес',
   'account.methods.addTitle': 'Добавить способ входа',
   'account.methods.addHint': 'Входите в этот аккаунт несколькими способами на случай, если потеряете доступ к одному из них.',
   'account.methods.addLabel': 'Добавить: {method}',

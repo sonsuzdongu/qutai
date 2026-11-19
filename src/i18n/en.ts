@@ -2011,6 +2011,8 @@ export const en = {
   'account.providerOther': 'another sign-in',
   'account.methodsTitle': 'Ways to sign in',
   'account.methodEmail': 'Email: {email}',
+  'account.methodWithAddress': '{method}: {email}',
+  'account.methodHiddenEmail': '{method}: hidden email',
   'account.methods.addTitle': 'Add a sign-in method',
   'account.methods.addHint': 'Sign in to this account in more than one way, in case you lose access to one.',
   'account.methods.addLabel': 'Add {method}',

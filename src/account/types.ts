@@ -93,7 +93,10 @@ export interface SignInMethod {
   /** Names the method for removal (`POST /account/methods/remove`). Missing in sessions stored before it existed. */
   id?: string;
   provider: AuthProvider;
-  /** Only for `email`: the normalised address. */
+  /**
+   * The method's address: for `email` the normalised address; for Google and Apple the address their token gave (an
+   * Apple relay address as it is). Servers before 19 Nov 2026 send it only for `email`.
+   */
   email?: string;
   /** Unix ms. */
   linkedAt: number;

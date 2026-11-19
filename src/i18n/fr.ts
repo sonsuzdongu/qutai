@@ -2019,6 +2019,8 @@ export const fr: Record<keyof typeof en, string> = {
   'account.providerOther': 'une autre connexion',
   'account.methodsTitle': 'Moyens de connexion',
   'account.methodEmail': 'E-mail : {email}',
+  'account.methodWithAddress': '{method} : {email}',
+  'account.methodHiddenEmail': '{method} : e-mail masqué',
   'account.methods.addTitle': 'Ajouter un moyen de connexion',
   'account.methods.addHint': 'Connectez-vous à ce compte de plusieurs façons, au cas où vous perdriez l’accès à l’une d’elles.',
   'account.methods.addLabel': 'Ajouter {method}',

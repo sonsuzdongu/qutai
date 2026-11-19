@@ -637,7 +637,7 @@ from it passes the link on.
 Settings › Account, signed in (`src/components/AccountMethods.tsx`; the server's rules: `backend/README.md` › Auth ›
 Sign-in methods and › Merging accounts):
 
-- **Ways to sign in** lists each method with a remove control (×) when the account has more than one. Removing asks
+- **Ways to sign in** lists each method with its address ("Google: name@gmail.com"; an Apple Hide My Email relay address reads "Apple: hidden email"; a server older than 19 Nov 2026 gives addresses only for email, and the other methods then show their name alone) and a remove control (×) when the account has more than one. Removing asks
   for confirmation (the sentence says devices that are signed in stay signed in, and to use "Sign out of all devices"
   if someone else used the method). The server wants a recent sign-in on this phone with the method itself or one added
   before it: when it answers `reauth_required` the app offers exactly those methods that this phone can use, proves one

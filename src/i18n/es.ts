@@ -2015,6 +2015,8 @@ export const es: Record<keyof typeof en, string> = {
   'account.providerOther': 'otro inicio de sesión',
   'account.methodsTitle': 'Formas de iniciar sesión',
   'account.methodEmail': 'Correo: {email}',
+  'account.methodWithAddress': '{method}: {email}',
+  'account.methodHiddenEmail': '{method}: correo oculto',
   'account.methods.addTitle': 'Añadir una forma de iniciar sesión',
   'account.methods.addHint': 'Inicia sesión en esta cuenta de más de una forma, por si pierdes el acceso a alguna.',
   'account.methods.addLabel': 'Añadir {method}',

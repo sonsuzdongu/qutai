@@ -2019,6 +2019,8 @@ export const id: Record<keyof typeof en, string> = {
   'account.providerOther': 'cara login lain',
   'account.methodsTitle': 'Cara login',
   'account.methodEmail': 'Email: {email}',
+  'account.methodWithAddress': '{method}: {email}',
+  'account.methodHiddenEmail': '{method}: email tersembunyi',
   'account.methods.addTitle': 'Tambahkan cara login',
   'account.methods.addHint': 'Login ke akun ini dengan lebih dari satu cara, untuk berjaga-jaga jika Anda kehilangan akses ke salah satunya.',
   'account.methods.addLabel': 'Tambahkan {method}',

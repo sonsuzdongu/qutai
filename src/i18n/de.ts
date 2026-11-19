@@ -2006,6 +2006,8 @@ export const de: Record<keyof typeof en, string> = {
   'account.providerOther': 'einer anderen Anmeldung',
   'account.methodsTitle': 'Anmeldemethoden',
   'account.methodEmail': 'E-Mail: {email}',
+  'account.methodWithAddress': '{method}: {email}',
+  'account.methodHiddenEmail': '{method}: verborgene E-Mail',
   'account.methods.addTitle': 'Anmeldemethode hinzufügen',
   'account.methods.addHint': 'Melden Sie sich auf mehr als eine Weise bei diesem Konto an, falls Sie den Zugang zu einer verlieren.',
   'account.methods.addLabel': '{method} hinzufügen',

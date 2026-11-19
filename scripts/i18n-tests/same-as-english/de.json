@@ -31,5 +31,6 @@
   "styles.nameLabel",
   "scripts.codeLabel",
   "apps.nameLabel",
-  "apps.versionLine"
+  "apps.versionLine",
+  "account.methodWithAddress"
 ]

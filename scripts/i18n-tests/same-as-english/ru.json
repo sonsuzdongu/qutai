@@ -1,5 +1,6 @@
 [
   "tier.fast",
   "account.email.addressPlaceholder",
-  "styles.cssLabel"
+  "styles.cssLabel",
+  "account.methodWithAddress"
 ]

@@ -18,5 +18,6 @@
   "styles.cssLabel",
   "scripts.title",
   "scripts.editTitle",
-  "backup.kind.apps"
+  "backup.kind.apps",
+  "account.methodWithAddress"
 ]

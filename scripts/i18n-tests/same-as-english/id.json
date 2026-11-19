@@ -36,5 +36,6 @@
   "filters.done.sepia",
   "styles.cssLabel",
   "styles.edit",
-  "apps.importDataTitle"
+  "apps.importDataTitle",
+  "account.methodWithAddress"
 ]

@@ -2020,6 +2020,8 @@ export const ptBR: Record<keyof typeof en, string> = {
   'account.providerOther': 'outro login',
   'account.methodsTitle': 'Formas de entrar',
   'account.methodEmail': 'E-mail: {email}',
+  'account.methodWithAddress': '{method}: {email}',
+  'account.methodHiddenEmail': '{method}: e-mail oculto',
   'account.methods.addTitle': 'Adicionar uma forma de entrar',
   'account.methods.addHint': 'Entre nesta conta de mais de uma forma, caso perca o acesso a alguma.',
   'account.methods.addLabel': 'Adicionar {method}',

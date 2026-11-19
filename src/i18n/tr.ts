@@ -2014,6 +2014,8 @@ export const tr: Record<keyof typeof en, string> = {
   'account.providerOther': 'başka bir giriş',
   'account.methodsTitle': 'Giriş yöntemleri',
   'account.methodEmail': 'E-posta: {email}',
+  'account.methodWithAddress': '{method}: {email}',
+  'account.methodHiddenEmail': '{method}: gizli e-posta',
   'account.methods.addTitle': 'Giriş yöntemi ekleyin',
   'account.methods.addHint': 'Birine erişiminizi kaybederseniz diye bu hesaba birden fazla yolla giriş yapabilirsiniz.',
   'account.methods.addLabel': '{method} ekle',

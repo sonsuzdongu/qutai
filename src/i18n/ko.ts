@@ -2018,6 +2018,8 @@ export const ko: Record<keyof typeof en, string> = {
   'account.providerOther': '다른 로그인',
   'account.methodsTitle': '로그인 방법',
   'account.methodEmail': '이메일: {email}',
+  'account.methodWithAddress': '{method}: {email}',
+  'account.methodHiddenEmail': '{method}: 숨긴 이메일',
   'account.methods.addTitle': '로그인 방법 추가',
   'account.methods.addHint': '하나에 접근할 수 없게 될 때를 대비해 이 계정에 여러 방법으로 로그인하세요.',
   'account.methods.addLabel': '{method} 추가',

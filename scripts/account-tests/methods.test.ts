@@ -7,7 +7,7 @@ import { describe, it } from 'node:test';
 import { createApi, type Fetch } from '../../src/account/api.ts';
 import { isAuthReturnLink, parseAppleReturn } from '../../src/account/appleWeb.ts';
 import { isSignInLink, linkHosts, linkPath, parseEmailSignInLink } from '../../src/account/emailSignIn.ts';
-import { canRemove, mergeRetryDelayMs, methodsThatCanConfirm, setPendingEmailProof, takeEmailProofLink } from '../../src/account/methodRules.ts';
+import { canRemove, isPrivateRelayAddress, mergeRetryDelayMs, methodsThatCanConfirm, setPendingEmailProof, takeEmailProofLink } from '../../src/account/methodRules.ts';
 import { AccountSession, type SessionStorage, type StoredSession } from '../../src/account/session.ts';
 import type { Me, SignInMethod } from '../../src/account/types.ts';
 
@@ -218,4 +218,14 @@ describe('the website’s App Links / Universal Links files (webpage/worker/well
     assert.equal(res.headers.get('Content-Type'), 'application/json');
     assert.match(await res.text(), /"\/s\/email"/);
   });
+});
+
+describe('the address beside a method', () => {
+  it('recognises an Apple Hide My Email relay address, and only that', () => {
+    assert.ok(isPrivateRelayAddress('abc123@privaterelay.appleid.com'));
+    assert.ok(isPrivateRelayAddress(' X@PrivateRelay.AppleID.com '));
+    assert.ok(!isPrivateRelayAddress('name@icloud.com'));
+    assert.ok(!isPrivateRelayAddress('privaterelay.appleid.com@example.com'));
+  });
+
 });

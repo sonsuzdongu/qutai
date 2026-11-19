@@ -5,6 +5,14 @@ import type { SignInMethod } from './types';
  * tested in scripts/account-tests/.
  */
 
+/**
+ * An Apple "Hide My Email" relay address (…@privaterelay.appleid.com): the account screen says "hidden email" instead
+ * of showing it.
+ */
+export function isPrivateRelayAddress(email: string): boolean {
+  return /@privaterelay\.appleid\.com$/i.test(email.trim());
+}
+
 /** Removing needs more than one method, and an id from a current `GET /me`. */
 export function canRemove(methods: SignInMethod[], method: SignInMethod): boolean {
   return methods.length > 1 && typeof method.id === 'string' && method.id.length > 0;
