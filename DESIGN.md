@@ -20,6 +20,7 @@ Newest first, one line per change to the design. What happened before 19 Nov 202
 [docs/design/history.md](docs/design/history.md).
 
 - **2026-11-19:** Every User-Agent ends with ` qutai.<build>` (`qutai.103` for 0.1.3): all web views, including incognito and desktop-site mode, and the app's own requests (`Qutai/<version> (<platform>) qutai.<build>`), so sites learn the app and its exact build (`DATA-23`, owner's request; privacy trade-off and policy wording left open for the owner).
+- **2026-11-19:** Admin panel: the Access token's audience (AUD tag) is no longer checked (owner); signature, issuer, expiry and type still are, so the Access application on the panel's hostname must always exist. Store packages are now built against the production server address (the git-ignored `.env.build.local`).
 - **2026-11-19:** Server: production is deployed with one command (`backend/scripts/deploy-prod.mjs`, runbook `backend/DEPLOY-prod.md`); first production values decided by the owner: Anthropic only with a 100 USD monthly limit, example pricing (100 credits per USD, 30 % margin) until the pricing decisions, the local server's Apple key and Mailjet account, no spend alert address, no purchases until RevenueCat; fake purchases stay impossible in production.
 - **2026-11-19:** Address bar: the typed text goes to the search engine only after a 200 ms pause in typing, one
   request per word typed without a pause; history keeps its own 120 ms schedule (`UI-22`, owner's decision).
