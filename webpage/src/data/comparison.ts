@@ -148,8 +148,8 @@ export const QUTAI: Product = {
     phoneHandoffs: {
       state: 'partial',
       note: t(
-        'Reads and writes your calendar with your approval; calls, texts, WhatsApp and email are a button or a draft that you send.',
-        'Onayınızla takvimi okur ve yazar; arama, SMS, WhatsApp ve e-posta sizin gönderdiğiniz bir düğme ya da taslaktır.',
+        'Reads and writes your calendar with your approval; calls, texts, WhatsApp and email, also to a contact found by name, are a button or a draft that you send.',
+        'Onayınızla takvimi okur ve yazar; arama, SMS, WhatsApp ve e-posta, rehberden adıyla bulunan kişiye de, sizin gönderdiğiniz bir düğme ya da taslaktır.',
       ),
       source: src('src/agent/tools.ts'),
     },
@@ -196,7 +196,11 @@ export const QUTAI: Product = {
       ),
       source: src('README.md'),
     },
-    reader: { state: 'yes', note: t('Both.', 'İkisi de.'), source: src('README.md') },
+    reader: {
+      state: 'yes',
+      note: t('Both; read aloud in the language the text is written in.', 'İkisi de; sesli okuma metnin yazıldığı dilde.'),
+      source: src('README.md'),
+    },
     backgroundAudio: {
       state: 'partial',
       note: t(

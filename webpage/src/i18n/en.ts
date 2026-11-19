@@ -95,7 +95,7 @@ export const en = {
   'agent.memory.kicker': 'Memory, on your phone',
   'agent.memory.title': 'It gets to know you, and keeps it on your phone.',
   'agent.memory.body':
-    'Tell Qutai your addresses, sizes, diet or budget, or answer a few optional questions when you set it up. It files what it learns under categories, uses it in later tasks without asking again, and follows your custom instructions in every request. The more you use it, the less you have to explain.',
+    'Tell Qutai your addresses, sizes, diet or budget. When you set it up, you can simply tell it about yourself, by voice or by typing: it asks at most three follow-up questions and shows everything it understood for you to check before anything is saved, and you can hide health details from the AI. It files what it learns under categories, uses it in later tasks without asking again, and follows your custom instructions in every request. The more you use it, the less you have to explain.',
   'agent.memory.point1': 'Sorted into categories: identity and contact, addresses, shopping and delivery, travel, food and diet, budget, general preferences',
   'agent.memory.point2': 'Stored on the phone; yours to see, edit and delete in Settings, and included in your encrypted backup',
   'agent.memory.point3': 'Sent only with your requests, to the AI provider you chose (through Qutai’s server with Qutai Credits), and listed in “What was sent to the AI”; ID numbers and memories you lock go only as a label',
@@ -165,6 +165,12 @@ export const en = {
   'privacy.confirm.title': 'Asks before it matters',
   'privacy.confirm.body':
     'Sensitive steps wait for your yes. Posts, comments, reviews and messages sent through a site go out only after you approve them in Qutai’s own window, which shows the exact text; words on a web page can never approve them. Calls, texts, WhatsApp messages and emails are only drafts that you send. A notification, a calendar entry, a reminder, reading your calendar or location, and an ordinary download can be allowed with “Don’t ask again”, which you can take back in Settings; a no is never remembered. Uploads and risky files are asked about every time.',
+  'privacy.contacts.title': 'Your contacts stay on the phone',
+  'privacy.contacts.body':
+    '“Call Ahmet” or “email this to Mehmet”: the assistant looks up only the name you said, on the phone. The AI sees matching names and labels such as “mobile”, never numbers or addresses. If several people match, you pick in Qutai’s own list, and you still tap Call or send the message yourself. Asked at first use, off in incognito.',
+  'privacy.scripts.title': 'Scripts only if you allow them',
+  'privacy.scripts.body':
+    'Off by default. Turned on, the assistant answers questions like “how many links are here?” with a script on a sealed copy of the page, with no internet and no sign-in. A script on the live page needs your approval with its full code and warnings, is refused on sign-in, payment and bank pages, and can then do what the site’s own code can do. Scripts you keep run only on their site and are asked about again when their code changes.',
   'privacy.note':
     'The Qutai service is optional: sign in with Apple, Google or email, use Qutai Credits instead of your own key, and choose Qutai Fast, Qutai or Qutai Pro instead of a model. Qutai’s server keeps your account, your credits and, for each request, the model, the token count and the cost; not your messages or pages. Builds from the repository leave it out and never contact a Qutai server.',
 
@@ -174,7 +180,7 @@ export const en = {
   'browser.tabs.body': 'A tab group shares one conversation with the assistant. Idle tabs sleep to save memory.',
   'browser.reader.title': 'Reader mode and read aloud',
   'browser.reader.body':
-    'Light, dark or sepia, serif or sans, easier-reading spacing. Read aloud follows the article paragraph by paragraph.',
+    'Light, dark or sepia, serif or sans, easier-reading spacing. Read aloud follows the article paragraph by paragraph, in the language each part is written in, with the phone’s own voices (on iPhone, the most natural one you have installed).',
   'browser.blocking.title': 'Ad and tracker blocking',
   'browser.blocking.body':
     'Pick EasyList, EasyPrivacy or AdGuard Turkish, or add any list by its address; lists are downloaded on the phone and their rules that block whole domains are used. Ask the assistant to hide an empty ad box or block a domain: once you approve and choose where it applies, the rule goes to My rules, where you can switch it off, export or import it.',
@@ -190,9 +196,18 @@ export const en = {
   'browser.bookmarks.body': 'Import the file Chrome, Firefox, Safari or Edge exports, and export the same format.',
   'browser.voice.title': 'Voice input',
   'browser.voice.body':
-    'Dictate tasks with the phone’s own speech recognition, on the device when the phone and language allow.',
+    'Dictate tasks with the phone’s own speech recognition, on the device when the phone and language allow. Hold the Q button to talk without opening the panel; Qutai listens in the language of your conversation.',
   'browser.save.title': 'PDF and full-page screenshots',
   'browser.save.body': 'Save a page as PDF or a stitched screenshot of the whole page, or keep it for offline reading.',
+  'browser.styles.title': 'Your own look for any site',
+  'browser.styles.body':
+    'Ask for red links, bigger text or a dark background. The assistant proposes the styles; you approve and try them, then keep them for that site in My rules, where you can switch them off, edit, export or import them. Styles can’t load anything from the internet.',
+  'browser.cookies.title': 'See a page’s cookies',
+  'browser.cookies.body':
+    'Ask which cookies a page has: a list grouped by site with each cookie’s name and settings, HttpOnly ones included. Their values never go to the AI; you can show or delete them on screen.',
+  'browser.images.title': 'Edit images on the phone',
+  'browser.images.body':
+    'Crop and resize, or apply greyscale, sepia, invert, auto enhance, brightness, contrast, saturation, sharpen or blur: with one-tap presets and sliders, or by asking the assistant. The editing is done on the phone, not on a server.',
 
   'compare.kicker': 'Comparison',
   'compare.title': 'How Qutai compares on mobile',
@@ -240,20 +255,23 @@ export const en = {
   'status.today.1': 'The assistant: reading, tapping, typing, fixing form errors, tabs, deep research with sources',
   'status.today.2': 'Five provider options with your own key and a model per conversation, or Qutai Credits with an account',
   'status.today.3': 'Memory with categories and hidden entries, per-site permissions, the “sent to the AI” log',
-  'status.today.4': 'Calendar reading and writing, reminders, a Call button, text, WhatsApp and email drafts',
-  'status.today.5': 'Saved tasks you can run by name, reminders, PDF reading, image attachments, downloads and CSV export',
+  'status.today.4': 'Calendar reading and writing, reminders, a Call button, text, WhatsApp and email drafts, also to people found in your contacts by name',
+  'status.today.5': 'Saved tasks you can run by name, reminders, PDF reading, image attachments and on-phone image filters, downloads and CSV export',
   'status.today.6': 'Reader mode, read aloud, voice input, ad and tracker blocking with your own rules, encrypted backup',
   'status.today.7': 'Ten interface languages (English, Turkish, German, Spanish, Brazilian Portuguese, French, Japanese, Korean, Russian, Indonesian), following the phone or chosen in Settings; labels for screen readers and room for large text',
+  'status.today.8': 'Your own styles for sites, a page’s cookie list whose values never go to the AI, and scripts on pages (off by default, approved with the code shown)',
   'status.limits': 'Limits to know',
   'status.limits.1': 'Background tasks are Android-only and opt-in, with a notification when a task ends or needs you; on iPhone a task pauses when you leave the app',
   'status.limits.2': 'Scheduled tasks are reminders: nothing runs while Qutai is closed',
   'status.limits.3': 'You complete payments yourself, unless you let the assistant pay; then each payment waits for your approval in Qutai’s window',
   'status.limits.4': 'Sharing to Qutai and the home screen widget are Android-only for now',
+  'status.limits.5': 'A script you approve on the live page can do what the site’s own code can do, with your sign-in there; questions that only read the page run on a sealed copy instead',
   'status.planned': 'Planned',
   'status.planned.1': 'Release in the App Store and Google Play',
   'status.planned.2': 'End-to-end encrypted sync for those who choose an account',
   'status.planned.3': 'Buying Qutai Credits in the App Store and Google Play',
   'status.planned.4': 'Share extension and widget on iPhone',
+  'status.planned.5': 'Small apps the assistant builds for you inside Qutai (being built now)',
 
   'footer.tagline': 'Agentic Browser',
   'footer.privacy':
