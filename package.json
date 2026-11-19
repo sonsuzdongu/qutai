@@ -92,6 +92,7 @@
     "build:ipa:pro-mode": "node scripts/build/release.mjs ipa --pro-mode",
     "test:version": "node --test scripts/version/rule.test.mjs",
     "test:layout": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/layout-tests/*.test.ts",
+    "test:apps": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/app-tests/*.test.ts",
     "test:siterules": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/site-rules-tests/*.test.ts",
     "test:credits": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs --test scripts/credits-tests/*.test.ts",
     "test:backup": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs --test scripts/backup-tests/logic.test.ts scripts/backup-tests/client.test.ts",

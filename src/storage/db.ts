@@ -1,5 +1,6 @@
 import { openDatabaseAsync } from 'expo-sqlite';
 import { looksLikeIdNumber } from '../agent/memory';
+import { APPS_SCHEMA_V1 } from '../apps/store';
 
 export type SqlValue = string | number | null;
 
@@ -177,6 +178,8 @@ const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
    ALTER TABLE site_rules ADD COLUMN name TEXT;
    ALTER TABLE site_rules ADD COLUMN body TEXT;
    ALTER TABLE site_rules ADD COLUMN meta TEXT;`,
+  // Apps inside Qutai (docs/mini-apps.md): the apps, their kept versions, and each app's key-value and document data.
+  APPS_SCHEMA_V1,
 ];
 
 /**
