@@ -17,6 +17,12 @@
 //              offer_call / draft_whatsapp ("I'll be late (Qutai test)") / draft_email with the handle it got (the one
 //              that fits or the one picked in Qutai's list) → summary. A WhatsApp refused for a missing country code is
 //              tried once more with country_code "+44". Use made-up contacts on a simulator or emulator only.
+//   "restyle"  restyle_page apply "a { color: red }" ("Links in red"): the approval, the trial, the Keep / Undo card
+//   "bigtext"  restyle_page apply a bigger font size and a dark background ("Bigger text, dark background")
+//   "evilcss"  restyle_page apply with @import and url(): refused before the user is asked
+//   "cookies"  page_cookies list → the tool's text back as the answer (metadata only; check no value is in it)
+//   "cookiedel" page_cookies list → page_cookies delete c1 (the approval) → summary
+//   Test pages for these: node scripts/page-tests/customise.mjs (/style and /cookies).
 //   "slow"     waits 25 s, then answers (Stop, backgrounding during a request, the keep-alive)
 //   "long"     read_page, scroll, read_page, scroll, read_page with 3 s pauses (rotation mid-task)
 //   "link"     an answer with a Markdown link (chat links open in the conversation's tab group)
@@ -159,6 +165,32 @@ function nextStep(messages) {
   if (/\bapprove\b/.test(user)) {
     if (n === 0) return call('get_location', { purpose: 'testing the approval dialog' });
     return { content: `The location step ended: ${lastResult.slice(0, 120)}` };
+  }
+  if (/\brestyle\b/.test(user)) {
+    if (n === 0) return call('restyle_page', { action: 'apply', css: 'a { color: red; text-decoration: underline }', description: 'Links in red' });
+    return { content: `The style step ended: ${lastResult.slice(0, 200)}` };
+  }
+  if (/\bbigtext\b/.test(user)) {
+    if (n === 0)
+      return call('restyle_page', {
+        action: 'apply',
+        css: 'html, body { background: #111; color: #eee } body { font-size: 125% } a { color: #9cf }',
+        description: 'Bigger text, dark background',
+      });
+    return { content: `The style step ended: ${lastResult.slice(0, 200)}` };
+  }
+  if (/\bevilcss\b/.test(user)) {
+    if (n === 0) return call('restyle_page', { action: 'apply', css: '@import "https://evil.example/x.css"; a { background: url(https://evil.example/a) }', description: 'Evil' });
+    return { content: `Refused as expected? ${lastResult.slice(0, 200)}` };
+  }
+  if (/\bcookiedel\b/.test(user)) {
+    if (n === 0) return call('page_cookies', { action: 'list' });
+    if (n === 1) return call('page_cookies', { action: 'delete', handles: ['c1'] });
+    return { content: `The delete step ended: ${lastResult.slice(0, 200)}` };
+  }
+  if (/\bcookies\b/.test(user)) {
+    if (n === 0) return call('page_cookies', { action: 'list' });
+    return { content: `What the tool gave me (no values):\n\n${lastResult.slice(0, 1500)}` };
   }
   if (/\bslow\b/.test(user)) return { delay: 25000, content: 'This slow answer took 25 seconds.' };
   if (/\blong\b/.test(user)) {

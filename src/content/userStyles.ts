@@ -241,10 +241,14 @@ export function userStylesScript(styles: readonly PageStyle[], off: boolean): st
 })(); true;`;
 }
 
-/** Applies (or with "" removes) the trial style on the page already open; installs the script first if needed. */
+/**
+ * Applies (or with "" removes) the trial style on the page already open, with the kept styles as they are now (so
+ * keeping a style swaps the trial for the kept copy in one step); installs the script first if needed.
+ */
 export function trialStyleScript(css: string, styles: readonly PageStyle[], off: boolean): string {
   return `if (window.top === window) (function () {
   if (!window.__qutaiUserStyles) { ${userStylesScript(styles, off)} }
+  else window.__qutaiUserStyles.set(${JSON.stringify(styles)}, ${off ? 'true' : 'false'});
   window.__qutaiUserStyles.trial(${JSON.stringify(css)});
 })(); true;`;
 }
