@@ -18,6 +18,7 @@ import { isSearchEngine } from '../browser/search';
 import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, TaskSchedule, TaskTarget } from '../storage/savedTasks';
 import { cutText, wellFormed } from '../utils/wellFormed';
 import { MAX_RULES, parseRuleLine, siteHost as ruleSite } from '../content/siteRules';
+import { readBackupStyles, type BackupStyle } from '../content/userStyles';
 
 /**
  * What goes inside a backup: versioned JSON by kind of data, independent of the SQLite schema, so a
@@ -33,7 +34,9 @@ import { MAX_RULES, parseRuleLine, siteHost as ruleSite } from '../content/siteR
  *   tasks?: [{ name, prompt, target, url, research, createdAt, lastUsedAt, schedule, paused, private, autoRun }],
  *   sites?: { permissions: [{ host, level }], location: [{ host, setting }], media?: [{ host, kind, setting }],
  *            blockingOff?: [host], personal?: [{ host, setting }],
- *            rules?: [{ line, enabled, source, site, url?, createdAt }] },   // the user's own site rules (filter lines)
+ *            rules?: [{ line, enabled, source, site, url?, createdAt }],   // the user's own site rules (filter lines)
+ *            styles?: [{ name, scope, css, enabled, source, site, url?, createdAt }] },   // user styles, CSS sanitised
+ *            // again on restore (docs/page-customisation.md); scripts will get their own array
  *   settings?: { theme: "dark", textZoom: 120, models: { anthropic: "…" }, … },
  *   apiKeys?: { anthropic?: "…", openai?: "…", gemini?: "…", openrouter?: "…", custom?: "…" },   // only when the user opted in
  *   customHeaders?: [{ name, value }],   // the custom endpoint's extra headers: secrets, so only with apiKeys' opt-in
@@ -86,6 +89,7 @@ export type BackupSiteRule = {
   url?: string;
   createdAt: number;
 };
+export type { BackupStyle };
 export type BackupTab = { url: string; title: string; uid: string; groupId?: string };
 export type BackupGroup = { id: string; name: string; color: string; collapsed?: boolean };
 export type BackupChat = { key: string; items: unknown[]; turns: unknown[] };
@@ -156,6 +160,8 @@ export type BackupPayload = {
     personal?: BackupLocation[];
     /** The user's own site rules (content/siteRules.ts); not in backups made before them. */
     rules?: BackupSiteRule[];
+    /** User styles (content/userStyles.ts); not in backups made before them. */
+    styles?: BackupStyle[];
   };
   settings?: BackupSettings;
   apiKeys?: Partial<Record<ProviderId, string>>;
@@ -388,6 +394,8 @@ function parseSites(v: unknown): BackupPayload['sites'] {
       createdAt: time(r.createdAt),
     });
   }
+  // Styles are checked like a style read from a rules file: the CSS through the sanitiser, the scope and the name.
+  const styles = readBackupStyles(v.styles);
   return {
     permissions: [...permissions.values()],
     location: [...location.values()],
@@ -395,6 +403,7 @@ function parseSites(v: unknown): BackupPayload['sites'] {
     blockingOff: [...blockingOff],
     personal: [...personal.values()],
     rules: [...rules.values()],
+    ...(styles.length ? { styles } : {}),
   };
 }
 
@@ -732,6 +741,7 @@ export function summarize(p: BackupPayload): BackupSummary {
             ),
             ...(p.sites.blockingOff ?? []),
             ...(p.sites.rules ?? []).map((r) => r.site),
+            ...(p.sites.styles ?? []).flatMap((st) => (st.site === '*' ? [] : [st.site])),
           ]).size,
         }
       : {}),

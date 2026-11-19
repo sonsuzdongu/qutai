@@ -1,5 +1,5 @@
 import { sanitizeCss } from './userCss';
-import { formatScope, parseScope, type RuleSource, type Scope, type ScopeKind, scopeForUrl, splitUrl } from './siteRules';
+import { formatScope, parseScope, type RuleSource, type Scope, type ScopeKind, scopeForUrl, siteHost, splitUrl } from './siteRules';
 
 /**
  * User styles (docs/page-customisation.md): CSS the user keeps for the pages a scope covers. Pure code: no React
@@ -115,6 +115,46 @@ export function checkStyleEntry(entry: { name?: unknown; scope?: unknown; css?: 
   const css = sanitizeCss(entry.css);
   if (!css.ok) return null;
   return { name: cleanStyleName(entry.name) || formatStyleScope(scope), scope: formatStyleScope(scope), css: css.css };
+}
+
+/** A user style in the encrypted backup and the server backup (src/backup/payload.ts, sites.styles). */
+export type BackupStyle = {
+  name: string;
+  scope: string;
+  css: string;
+  enabled: boolean;
+  source: RuleSource;
+  site: string;
+  url?: string;
+  createdAt: number;
+};
+
+/**
+ * The styles of a backup, checked like a style read from a rules file (the CSS through the sanitiser, the scope, the
+ * name); anything else is dropped. The same scope and CSS twice is kept once.
+ */
+export function readBackupStyles(value: unknown, now = Date.now()): BackupStyle[] {
+  if (!Array.isArray(value)) return [];
+  const out = new Map<string, BackupStyle>();
+  for (const raw of value.slice(0, MAX_STYLES)) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue;
+    const st = raw as Record<string, unknown>;
+    const checked = checkStyleEntry({ name: st.name, scope: st.scope, css: st.css });
+    if (!checked) continue;
+    const scope = parseStyleScope(checked.scope)!;
+    const listed = typeof st.site === 'string' ? (st.site === '*' ? '*' : siteHost(st.site)) : null;
+    const url = typeof st.url === 'string' && /^https?:\/\//i.test(st.url) && st.url.length <= 2048 ? st.url : undefined;
+    const created = typeof st.createdAt === 'number' && Number.isFinite(st.createdAt) && st.createdAt > 0 ? Math.min(st.createdAt, now) : now;
+    out.set(`${checked.scope}\n${checked.css}`, {
+      ...checked,
+      enabled: st.enabled !== false,
+      source: st.source === 'assistant' ? 'assistant' : 'manual',
+      site: listed ?? styleSite(scope, '*'),
+      ...(url ? { url } : {}),
+      createdAt: created,
+    });
+  }
+  return [...out.values()];
 }
 
 /** The site a style is listed under: its scope's host, or (everywhere) the site it came with. */

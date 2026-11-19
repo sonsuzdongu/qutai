@@ -1,4 +1,4 @@
-import { listSiteRules } from '../storage/siteRules';
+import { listSiteRules, listUserStyles } from '../storage/siteRules';
 import { exportData as exportBookmarks } from '../storage/bookmarks';
 import { Db, getJson, SqlValue } from '../storage/db';
 import { listActions } from '../storage/actionLog';
@@ -30,7 +30,7 @@ export async function collectBackup(
   db: Db,
   choice: ExportChoice,
 ): Promise<Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'>> {
-  const [version, bookmarks, history, memories, permissions, location, media, blockingOff, tasks, personal, rules] =
+  const [version, bookmarks, history, memories, permissions, location, media, blockingOff, tasks, personal, rules, styles] =
     await Promise.all([
     db.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []),
     exportBookmarks(db),
@@ -46,6 +46,7 @@ export async function collectBackup(
     listSavedTasks(db),
     listPersonalSettings(db),
     listSiteRules(db),
+    listUserStyles(db),
   ]);
   const payload: Omit<BackupPayload, 'app' | 'payloadVersion' | 'createdAt' | 'appVersion'> = {
     schemaVersion: version?.user_version ?? 0,
@@ -83,6 +84,16 @@ export async function collectBackup(
       personal: personal.flatMap((p) => (p.setting === 'ask' ? [] : [{ host: p.host, setting: p.setting }])),
       rules: rules.map(({ line, enabled, source, site, url, createdAt }) => ({
         line,
+        enabled,
+        source,
+        site,
+        ...(url ? { url } : {}),
+        createdAt,
+      })),
+      styles: styles.map(({ name, scope, css, enabled, source, site, url, createdAt }) => ({
+        name,
+        scope,
+        css,
         enabled,
         source,
         site,
@@ -156,6 +167,7 @@ async function insertRows(db: Db, sql: string, columns: number, rows: SqlValue[]
  * - saved tasks: added unless a task with the same prompt is saved, up to the limit of 200.
  * - site permissions, personal information, location, camera and microphone: the backup's setting applies only to
  *   sites with none on the phone.
+ * - site rules and user styles: added unless the phone has the same rule line, or a style with the same scope and CSS.
  * - tabs: the backup's tabs are added after the open ones (a tab or group already here is skipped).
  * - chats: added for the tabs and groups that don't have one.
  * - activity: entries are added unless the same one is already there.
@@ -334,6 +346,27 @@ export async function applyBackup(db: Db, p: BackupPayload, mode: ApplyMode, now
         (p.sites.rules ?? [])
           .filter((r) => !have.has(r.line))
           .map((r, i) => [`b${now.toString(36)}${i}`, r.line, r.enabled ? 1 : 0, r.source, r.site, r.url ?? null, r.createdAt]),
+      );
+      // A style the phone already has (the same scope and CSS) is kept as it is; the CSS was sanitised when read.
+      const haveStyles = new Set((await listUserStyles(db)).map((st) => `${st.scope}\n${st.css}`));
+      await insertRows(
+        db,
+        'INSERT OR IGNORE INTO site_rules (id, line, enabled, source, site, url, created_at, kind, name, body)',
+        10,
+        (p.sites.styles ?? [])
+          .filter((st) => !haveStyles.has(`${st.scope}\n${st.css}`))
+          .map((st, i) => [
+            `s${now.toString(36)}${i}`,
+            st.scope,
+            st.enabled ? 1 : 0,
+            st.source,
+            st.site,
+            st.url ?? null,
+            st.createdAt,
+            'style',
+            st.name,
+            st.css,
+          ]),
       );
     }
 
