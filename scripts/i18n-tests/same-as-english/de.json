@@ -29,5 +29,7 @@
   "menu.cookies",
   "styles.cssLabel",
   "styles.nameLabel",
-  "scripts.codeLabel"
+  "scripts.codeLabel",
+  "apps.nameLabel",
+  "apps.versionLine"
 ]

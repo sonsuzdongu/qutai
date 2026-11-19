@@ -4,6 +4,11 @@ import { readTabCookies, deleteTabCookies } from './src/device/cookieStore';
 import { CookiesScreen } from './src/components/CookiesScreen';
 import { askScript, keepScript, liveOffer } from './src/components/pageScripts';
 import { scriptSandbox, ScriptSandboxHost } from './src/components/ScriptSandbox';
+import { AppRunnerHost } from './src/components/AppRunner';
+import { MyAppsScreen } from './src/components/MyApps';
+import { appStore, appsChanged } from './src/apps/appStore';
+import { appRunner } from './src/apps/runnerState';
+import { appItem } from './src/chat/Conversation';
 import { keptScripts } from './src/browser/keptScripts';
 import { loadScriptKey, scriptKey } from './src/device/scriptKey';
 import {
@@ -137,7 +142,7 @@ import { PushToTalkBubble, usePushToTalk } from './src/components/PushToTalk';
 import { AUTO_LANGUAGE, automaticLanguage, languageName, listeningOrder } from './src/device/voiceLanguage';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { deleteLeftoverIncognitoProfiles } from './src/device/webviewProfile';
-import { t, useLanguage } from './src/i18n';
+import { getLanguage, t, useLanguage } from './src/i18n';
 import {
   addBookmark,
   Bookmark,
@@ -829,6 +834,7 @@ function BrowserApp({
     [tabUrl],
   );
   const [library, setLibrary] = useState<LibraryTab | null>(null);
+  const [myAppsVisible, setMyAppsVisible] = useState(false);
   const [textSizeVisible, setTextSizeVisible] = useState(false);
   const [readerSettingsVisible, setReaderSettingsVisible] = useState(false);
   const [permissionHost, setPermissionHost] = useState<string | null>(null);
@@ -1393,6 +1399,31 @@ function BrowserApp({
           approve: (approval) => whileAskingUser(() => askScript(approval, signal)),
           runCopy: (snapshot, code, pageUrl) => scriptSandbox.run(snapshot, code, pageUrl),
           offer: (offer) => chat.add(scriptItem(liveOffer(offer))),
+        },
+        // The user's own apps (docs/mini-apps.md): never from an incognito conversation; previews open the runner.
+        apps: {
+          list: () => appStore.list(),
+          load: (id) => appStore.load(id),
+          create: async (app) => {
+            const pkg = await appStore.create(app);
+            appsChanged.emit();
+            return pkg;
+          },
+          change: async (id, change, note) => {
+            const pkg = await appStore.change(id, change, 'assistant', note);
+            appsChanged.emit();
+            return pkg;
+          },
+          undo: async (id) => {
+            const version = await appStore.undo(id);
+            appsChanged.emit();
+            return version;
+          },
+          preview: (id) => (AppState.currentState === 'active' ? whileAskingUser(() => appRunner.preview(id)) : Promise.resolve('unavailable' as const)),
+          offer: (offer) => chat.add(appItem(offer)),
+          incognito: incognitoTask,
+          uiLanguage: getLanguage,
+          budget: { writes: 0 },
         },
         imageUsed: (id) => chat.markImageUsed(id),
         confirmByDefault: settings.confirmActions,
@@ -2056,6 +2087,7 @@ function BrowserApp({
         { icon: 'history', label: t('menu.history'), onPress: () => setLibrary('history') },
         { icon: 'savedPages', label: t('menu.offlinePages'), onPress: () => setOfflineVisible(true) },
         { icon: 'downloads', label: t('menu.downloads'), onPress: () => setDownloadsVisible(true) },
+        { icon: 'apps', label: t('menu.myApps'), onPress: () => setMyAppsVisible(true) },
       ],
     },
     {
@@ -2621,6 +2653,7 @@ function BrowserApp({
                     if (text) send(text);
                     else setFocusRequest((n) => n + 1);
                   },
+                  onAskForApp: () => askAbout(t('apps.emptyPrompt')),
                   onOpenLibrary: setLibrary,
                   reader: {
                     theme: settings.readerTheme,
@@ -2777,6 +2810,23 @@ function BrowserApp({
                   if (kept) conversation.update(item.id, { script: { ...script, state: 'kept' } });
                 });
               }
+              if (action === 'openApp' || action === 'undoApp') {
+                const app = item.app;
+                if (!app) return;
+                if (action === 'openApp') return appRunner.open(app.appId);
+                return void appStore
+                  .load(app.appId)
+                  .then(async (current) => {
+                    if (!current) return toast.show(t('apps.missing'));
+                    if (current.version !== app.version) return toast.show(t('apps.undoStale'));
+                    const version = await appStore.undo(app.appId);
+                    if (version === null) return toast.show(t('apps.undoNone'));
+                    appsChanged.emit();
+                    conversation.update(item.id, { app: { ...app, change: 'undone', version } });
+                    toast.show(t('apps.cardUndone', { name: app.name, version }));
+                  })
+                  .catch(() => {});
+              }
               if (action === 'showCookies') {
                 const target = item.cookiesOffer ? browser.getTab(item.cookiesOffer.tabId) : undefined;
                 if (!target || target.isNewTab) return toast.show(t('cookies.tabGone'));
@@ -2901,6 +2951,22 @@ function BrowserApp({
         />
         <CookiesScreen tab={cookiesTab} onClose={() => setCookiesTab(null)} />
         <ScriptSandboxHost />
+        <AppRunnerHost
+          onEdit={(app) => askAbout(t('apps.editPrompt', { name: app.name, id: app.id }))}
+          onFix={(app, errors) => {
+            toNormalTab();
+            setPanelOpen(true);
+            void send(t('apps.fixPrompt', { name: app.name, id: app.id, version: app.version, errors }));
+          }}
+          onNotice={toast.show}
+        />
+        <MyAppsScreen
+          visible={myAppsVisible}
+          dark={darkMode}
+          onClose={() => setMyAppsVisible(false)}
+          onAskForApp={() => askAbout(t('apps.emptyPrompt'))}
+          onNotice={toast.show}
+        />
         <SentLogScreen
           visible={sentFor !== null}
           conversation={sentFor ?? undefined}

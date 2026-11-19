@@ -6,6 +6,7 @@ import type { FileOffer } from '../device/composedFile';
 import type { CallOffer } from '../device/phone';
 import type { CookiesOffer, StyleOffer } from '../components/pageCustomisation';
 import type { ScriptOffer } from '../agent/scriptTool';
+import type { AppOffer } from '../agent/appTool';
 import { formatSize } from '../i18n/format';
 import type { SmsOffer } from '../device/sms';
 import type { WhatsAppOffer } from '../device/whatsapp';
@@ -73,6 +74,11 @@ export function styleItem(style: StyleOffer): ChatItem {
 /** A script that ran on the live page (run_script): the card offers Keep for this site… (components/pageScripts.tsx). */
 export function scriptItem(script: ScriptOffer): ChatItem {
   return { id: String(++itemCounter), kind: 'script', text: script.description, script };
+}
+
+/** An app the assistant made, changed or took back a version (apps tool): Open, and Undo (components/AppCard.tsx). */
+export function appItem(app: AppOffer): ChatItem {
+  return { id: String(++itemCounter), kind: 'app', text: `${app.name} · ${app.version}`, app };
 }
 
 export function cookiesItem(offer: CookiesOffer): ChatItem {

@@ -96,6 +96,8 @@ export type TabActions = {
   onNotice: (message: string) => void;
   searchEngine: SearchEngineId;
   onAsk: (text: string) => void;
+  /** "My apps" on the new tab page: asks the assistant for a first app (a draft, not sent). */
+  onAskForApp: () => void;
   onOpenLibrary: (tab: LibraryTab) => void;
   /** Reader mode look (the text size is textZoom). */
   reader: Omit<ReaderPrefs, 'textZoom'>;
@@ -289,6 +291,7 @@ function TabWebView({
           active={active}
           onNavigate={(url) => tab.loadUrl(url)}
           onAsk={newTabActions.onAsk}
+          onAskForApp={newTabActions.onAskForApp}
           onOpenLibrary={newTabActions.onOpenLibrary}
         />
       ) : (

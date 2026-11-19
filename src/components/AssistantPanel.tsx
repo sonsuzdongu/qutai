@@ -67,11 +67,13 @@ import { ErrorDetails } from './ErrorDetails';
 import { CookiesCard, StyleCard, type CookiesOffer, type StyleOffer } from './pageCustomisation';
 import { ScriptCard } from './pageScripts';
 import type { ScriptOffer } from '../agent/scriptTool';
+import type { AppOffer } from '../agent/appTool';
+import { AppCard } from './AppCard';
 import { statusFullFits, statusLabelFits } from './statusFit';
 import { segmentChat, stepSummaryText, summarizeSteps } from '../chat/stepSummary';
 
 export type ChatItemAction = 'buyCredits' | 'signIn';
-export type CardAction = 'keepStyle' | 'undoStyle' | 'showCookies' | 'keepScript';
+export type CardAction = 'keepStyle' | 'undoStyle' | 'showCookies' | 'keepScript' | 'openApp' | 'undoApp';
 
 export type ChatItem = {
   id: string;
@@ -92,7 +94,8 @@ export type ChatItem = {
     | 'share'
     | 'style'
     | 'script'
-    | 'cookies';
+    | 'cookies'
+    | 'app';
   text: string;
   /** For 'action' and 'info': the icon before the text (absent in conversations saved before icons). */
   icon?: IconName;
@@ -112,6 +115,8 @@ export type ChatItem = {
   style?: StyleOffer;
   /** For 'script': a script that ran on the page after the user's approval, with Keep for this site… (pageScripts.tsx). */
   script?: ScriptOffer;
+  /** For 'app': an app the assistant made or changed (apps tool), with Open and Undo (AppCard.tsx). */
+  app?: AppOffer;
   /** For 'cookies': the cookie list's card ("Show cookies"); counts only, never names or values. */
   cookiesOffer?: CookiesOffer;
   /** For 'call': the number behind the Call button (stays usable, unlike ask_user options). */
@@ -1435,6 +1440,11 @@ function ChatRow({
       const offer = item.script;
       if (!offer) return <StepLine icon="script" text={item.text} />;
       return <ScriptCard offer={offer} dark={!!d} onKeep={() => onCard?.(item, 'keepScript')} />;
+    }
+    case 'app': {
+      const offer = item.app;
+      if (!offer) return <StepLine icon="apps" text={item.text} />;
+      return <AppCard offer={offer} dark={!!d} onOpen={() => onCard?.(item, 'openApp')} onUndo={() => onCard?.(item, 'undoApp')} />;
     }
     case 'cookies': {
       const offer = item.cookiesOffer;

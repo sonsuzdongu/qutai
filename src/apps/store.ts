@@ -381,6 +381,22 @@ export class AppStore {
     return prev.version;
   }
 
+  /**
+   * The user's "Turn on" for a version without a valid seal (an import, a restore on another phone): it gets this
+   * phone's seal and runs from now on. Only after the user has seen what the app is and can do.
+   */
+  async approveCurrent(id: string): Promise<boolean> {
+    const app = await this.load(id);
+    const key = await this.deps.key();
+    if (!app || !key || checkPackage(app.pkg).length) return false;
+    const db = await this.deps.db();
+    await db.withTransactionAsync(async () => {
+      await db.runAsync('UPDATE app_versions SET seal = ? WHERE app_id = ? AND version = ?', [packageSeal(packageHash(app.pkg), key), id, app.version]);
+      await db.runAsync("UPDATE apps SET state = 'active' WHERE id = ?", [id]);
+    });
+    return true;
+  }
+
   async rename(id: string, name: string): Promise<AppPackage> {
     const clean = cleanAppName(name);
     if (!clean) throw new BridgeError('E_BAD_ARGS', 'The name is empty.');

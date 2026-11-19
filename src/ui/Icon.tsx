@@ -118,6 +118,7 @@ const ICONS = {
   offline: { ios: 'wifi.slash', android: 'wifi_off' },
   unreachable: { ios: 'powerplug', android: 'power_off' },
   unlocked: { ios: 'lock.open', android: 'lock_open' },
+  apps: { ios: 'square.grid.2x2', android: 'apps' },
 } satisfies Record<string, SymbolName>;
 
 export type IconName = keyof typeof ICONS;

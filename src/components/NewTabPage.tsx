@@ -17,6 +17,7 @@ import { HistoryEntry, listHistory } from '../storage/history';
 import { hideTopSite, TopSite, topSites } from '../storage/topSites';
 import { dialog } from './Dialog';
 import type { LibraryTab } from './LibraryScreen';
+import { MyAppsSection } from './MyApps';
 
 type Props = {
   incognito: boolean;
@@ -26,6 +27,8 @@ type Props = {
   active: boolean;
   onNavigate: (url: string) => void;
   onAsk: (text: string) => void;
+  /** "My apps": asks the assistant for a first app. */
+  onAskForApp: () => void;
   onOpenLibrary: (tab: LibraryTab) => void;
 };
 
@@ -57,7 +60,7 @@ const LOCAL_SITES: Record<Language, { wiki: string; wikipedia: string; hl: strin
 
 type Data = { sites: TopSite[]; bookmarks: Bookmark[]; recent: HistoryEntry[] };
 
-export function NewTabPage({ incognito, darkMode, searchEngine, active, onNavigate, onAsk, onOpenLibrary }: Props) {
+export function NewTabPage({ incognito, darkMode, searchEngine, active, onNavigate, onAsk, onAskForApp, onOpenLibrary }: Props) {
   // Incognito is always dark, whatever the app's appearance.
   const styles = useStyles(incognito);
   const [text, setText] = useState('');
@@ -184,6 +187,9 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
                   </Pressable>
                 ))}
               </View>
+
+              {/* The user's own apps (docs/mini-apps.md); never in incognito, like history and bookmarks. */}
+              <MyAppsSection active={active} dark={darkUI} onAskForApp={onAskForApp} />
 
               {data.bookmarks.length > 0 && (
                 <Section title={t('library.bookmarks')} onSeeAll={() => onOpenLibrary('bookmarks')}>
