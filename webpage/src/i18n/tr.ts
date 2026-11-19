@@ -56,7 +56,7 @@ export const tr: Messages = {
   'art.memory.alt': 'Osmanlı minyatürü: robot diz çöküp hatıraları sedefli bir sandığa yerleştiriyor; sahibi sedirden izliyor.',
 
   'agent.compare.kicker': 'Oku, karşılaştır, karar ver',
-  'agent.checkout.kicker': 'Doldur, kontrol et, dur',
+  'agent.checkout.kicker': 'Sepet, bilgiler, ödeme',
   'agent.booking.kicker': 'Ayırt, yaz, hatırlat',
   'agent.research.kicker': 'Ara, oku, kaynak göster',
 
@@ -108,12 +108,12 @@ export const tr: Messages = {
   'agent.compare.step1': 'Sekme 2 okunuyor',
   'agent.compare.step2': 'Sekme 3 okunuyor',
   'agent.compare.step3': 'Fiyat, teslimat, garanti yan yana',
-  'agent.checkout.title': 'Ödeme formunu doldurur, onayınız olmadan ödemez',
+  'agent.checkout.title': 'Sizin için alışveriş yapar',
   'agent.checkout.body':
-    'Adınızı, adresinizi ve kaydettiğiniz teslimat notunu girer; bunu yapmadan önce hafızadaki bilgilerinizi o sitede kullanıp kullanamayacağını sorar. Varsayılan olarak ödeme adımında durur, ödemeyi siz yaparsınız. Ayarlar’da “Asistan ödemeleri tamamlasın”ı açarsanız Qutai her ödemede kendi penceresinde siteyi, sayfadaki toplamı, siparişi ve ödeme yöntemini gösterir; düğmeye ancak siz onaylayınca basar. Kart numarası, güvenlik kodu, şifre ve tek kullanımlık kod asla yazılmaz; bankanızın doğrulaması (3-D Secure) sizde kalır.',
+    'İstediklerinizi sepete ekler; adınızı, adresinizi ve kaydettiğiniz teslimat notunu girer, bunu yapmadan önce hafızadaki bilgilerinizi o sitede kullanıp kullanamayacağını sorar. Ödemeyi kimin yapacağını siz seçersiniz: son düğmeye kendiniz basarsınız ya da Ayarlar’da “Asistan ödemeleri tamamlasın”ı açıp her ödemeyi Qutai’ın kendi penceresinde onaylarsınız; pencere siteyi, sayfadaki toplamı, siparişi ve ödeme yöntemini gösterir. Kart numarası, güvenlik kodu, şifre ve tek kullanımlık kod asla yazılmaz; bankanızın doğrulaması (3-D Secure) sizde kalır.',
   'agent.checkout.step1': 'Kişisel bilgileriniz magaza.example sitesine girilsin mi?',
   'agent.checkout.step2': '[12] alanına yazdı',
-  'agent.checkout.step3': 'Ödemede durdu: sıra sizde',
+  'agent.checkout.step3': 'magaza.example sitesinde 2.490 TL ödensin mi?',
   'agent.booking.title': 'Rezervasyonu yapar, takviminize ekler',
   'agent.booking.body':
     'Bir masa ya da randevu bulup formu doldurur. Ardından takviminize eklemeyi veya hatırlatıcı kurmayı önerir, ayrıntıları onayınıza sunar. Yer telefonla rezervasyon alıyorsa bir Ara düğmesi çıkar; aramayı siz başlatırsınız.',

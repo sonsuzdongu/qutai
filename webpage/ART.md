@@ -16,7 +16,7 @@ its place on the page shows a patterned placeholder.
 |---|---|---|
 | `hero` | Under the headline, full width | 3:2 (e.g. 1920×1280) |
 | `compare` | "Compare products across tabs" | 4:3 |
-| `checkout` | "Fill the checkout, stop before payment" | 4:3 |
+| `checkout` | "Shops for you, all the way to checkout" | 4:3 |
 | `booking` | "Book it, then put it in your calendar" | 4:3 |
 | `research` | "Research with sources" | 4:3 |
 | `memory` | "It gets to know you" | 4:3 |

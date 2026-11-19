@@ -55,7 +55,7 @@ export const en = {
   'art.memory.alt': 'Ottoman miniature: a robot kneels and sorts keepsakes into an inlaid chest while its owner watches from the sofa.',
 
   'agent.compare.kicker': 'Read, compare, decide',
-  'agent.checkout.kicker': 'Fill, check, stop',
+  'agent.checkout.kicker': 'Cart, details, payment',
   'agent.booking.kicker': 'Book, note, remind',
   'agent.research.kicker': 'Search, read, cite',
 
@@ -107,12 +107,12 @@ export const en = {
   'agent.compare.step1': 'Reading tab 2',
   'agent.compare.step2': 'Reading tab 3',
   'agent.compare.step3': 'Price, delivery, warranty side by side',
-  'agent.checkout.title': 'Fill the checkout, pay only with your yes',
+  'agent.checkout.title': 'Shops for you, all the way to checkout',
   'agent.checkout.body':
-    'It enters your name, address and the delivery note you saved, after asking whether it may use your remembered details on that site. By default it stops at the payment step and you pay yourself. If you turn on “Let the assistant complete payments” in Settings, Qutai shows its own window for each payment, with the site, the total on the page, the order and the payment method, and presses the button only after you approve. Card numbers, security codes, passwords and one-time codes are never typed, and your bank’s check (3-D Secure) stays with you.',
+    'It puts what you want in the cart and enters your name, address and the delivery note you saved, after asking whether it may use your remembered details on that site. Then you choose who pays: press the last button yourself, or turn on “Let the assistant complete payments” in Settings and approve each payment in Qutai’s own window, which shows the site, the total on the page, the order and the payment method. Card numbers, security codes, passwords and one-time codes are never typed, and your bank’s check (3-D Secure) stays with you.',
   'agent.checkout.step1': 'Enter your personal information on shop.example?', // app: personal.title
   'agent.checkout.step2': 'Typed into [12]', // app: action.typeRedacted
-  'agent.checkout.step3': 'Stopped at payment: over to you',
+  'agent.checkout.step3': 'Pay €64.90 on shop.example?', // app: approval.payTitle
   'agent.booking.title': 'Book it, then put it in your calendar',
   'agent.booking.body':
     'Find a table or an appointment and fill in the form. Afterwards Qutai offers to add it to your calendar or set a reminder, showing the details for you to approve. When a place takes bookings by phone, you get a Call button and dial yourself.',

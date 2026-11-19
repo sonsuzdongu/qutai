@@ -184,7 +184,7 @@ const SCENARIOS: Scenario[] = [
     steps: [
       { icon: 'hand', text: 'agent.checkout.step1', tone: 'ask' },
       { icon: 'code', text: 'agent.checkout.step2' },
-      { icon: 'key', text: 'agent.checkout.step3', tone: 'stop' },
+      { icon: 'cart', text: 'agent.checkout.step3', tone: 'ask' },
     ],
   },
   { id: 'booking', art: 'booking', steps: [{ icon: 'calendar', text: 'agent.booking.step1', tone: 'ask' }], call: true },

@@ -273,12 +273,15 @@ export const GROUPS: Group[] = [
         asks: [t('Comment “Great video, thanks!” on this video', 'Bu videoya “Harika video, teşekkürler!” diye yorum yaz')],
       },
       {
-        title: t('Payments: yours by default', 'Ödeme: varsayılan olarak sizde'),
+        title: t('Shopping, up to the payment', 'Ödemeye kadar alışveriş'),
         body: t(
-          'The assistant fills the checkout and stops; you press the last button. If you turn on “Let the assistant complete payments”, every payment shows the site, the total on the page, the order and the payment method in Qutai’s window, every time, with no spending limit.',
-          'Asistan ödeme formunu doldurur ve durur; son düğmeye siz basarsınız. “Asistan ödemeleri tamamlasın”ı açarsanız her ödemede Qutai penceresi siteyi, sayfadaki toplamı, siparişi ve ödeme yöntemini her seferinde gösterir; harcama sınırı yoktur.',
+          'The assistant fills the cart and the checkout, then you choose who pays: press the last button yourself, or turn on “Let the assistant complete payments” and approve each payment in Qutai’s window, which shows the site, the total on the page, the order and the payment method every time. There is no spending limit.',
+          'Asistan sepeti ve ödeme formunu doldurur, ödemeyi kimin yapacağını siz seçersiniz: son düğmeye kendiniz basarsınız ya da “Asistan ödemeleri tamamlasın”ı açıp her ödemeyi Qutai penceresinde onaylarsınız; pencere her seferinde siteyi, sayfadaki toplamı, siparişi ve ödeme yöntemini gösterir. Harcama sınırı yoktur.',
         ),
-        asks: [t('Put these in the cart and go to checkout', 'Bunları sepete ekle, ödeme adımına geç')],
+        asks: [
+          t('Put these in the cart and go to checkout', 'Bunları sepete ekle, ödeme adımına geç'),
+          t('Order this and pay with the card saved on the site', 'Bunu sipariş et, sitede kayıtlı kartla öde'),
+        ],
       },
       {
         title: t('Deleting and account changes', 'Silme ve hesap değişiklikleri'),
