@@ -335,6 +335,17 @@ Sahibi "yazdıklarımı incele, ben düzelt deyince düzelt" dedi; hiçbirine do
 - [ ] Kurulumdaki "her sayfayı sizinle okur" anlamındaki tanıtım cümlesi yanıltıcı: asistan her sayfayı kendiliğinden, her seferinde okuyormuş gibi anlaşılıyor; oysa yalnızca siz isteyince okur (20 Kas; 0.1.3). İstek: "dilerseniz okuyabilir" anlamında ya da daha iyi bir ifade. Aynı ifade web sitesinde de olabilir; uygulamada on dilin hepsinde ve web sitesinde (İngilizce, Türkçe) taranıp düzeltilecek. "düzelt" denince bakılacak.
 - [ ] Kurulumdaki "Yapay zekânızı seçin" adımında iki seçenek var: "Qutai Kredileri" ve kendi yapay zekâ anahtarınız. İkincisi ekranın altında kalıyor, kaydırmadan görünmüyor (20 Kas; 0.1.3, telefonda). İstek: iki seçenek de ilk bakışta görünsün; öneri: akordeon (iki başlık görünür, dokunulan açılır, diğeri kapanır). "düzelt" denince bakılacak.
 
+### 20 Kasım'da bildirilenler
+
+Sahibi telefonda, yavaş bir bağlantıda bildirdi (20 Kas; 0.1.3).
+
+- [ ] Google'ı açıp bir sonuca dokununca bir süre hiçbir şey değişmiyor: adres çubuğu da sayfa da aynı kalıyor; bir
+      şeyin olduğu belli değil. İstek: dokunur dokunmaz bir şeyin yüklendiği görünsün (Chrome'daki gibi). Kodda bilinen:
+      yükleniyor çizgisi (`tab.loading`) ancak WebView'in yükleme başlangıcında açılıyor; bu da sitenin ilk yanıtından
+      sonra geliyor, yani ondan önceki bekleme görünmüyor.
+- [ ] Bu yükleme beklerken başka bir sekme açılıyor; yükleme bitince sayfa sanki yeni açılan sekmede yükleniyor.
+      Nedeni henüz bilinmiyor.
+
 ## 14. "Kendinizi tanıtın" (sesle tanıtım, 17 Kasım)
 
 iOS simülatöründe yazarak ve sahte yapay zekâyla denendi (simülatöre mikrofondan ses verilemiyor; aynı akış yazılan metinle sürüldü). Telefonda sesle deneyin. Ayrıntı: `docs/voice-introduction.md`.
