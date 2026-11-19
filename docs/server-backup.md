@@ -13,12 +13,20 @@ goes through the same import screen and code (`ImportFlow` in `src/components/Ba
 `restoreBackup`): the same summary of what is in it, merge or replace, the same confirmation before replacing, the
 same restart. Payload additions reach both at once: user styles (19 Nov 2026) are the optional `sites.styles` array,
 sanitised again on restore (docs/page-customisation.md); a server running an older app version stores them unread.
+Apps (19 Nov 2026, docs/mini-apps.md › Backup and restore) are the optional `apps` section: each app's current version
+with its seal, state and grants, and its data when "My apps' data" is on. On another phone an app comes back switched
+off and unsealed with its data intact; on the same phone as it was. An older app version ignores the section.
+
+**The server needs no change for apps.** The backup stays one opaque encrypted blob: the server never reads it, so
+account merge (which moves whole backup rows) and account deletion (which deletes them) cover apps without knowing
+they exist. Checked against `backend/DESIGN.md` › Server backup; nothing in `backend/` was changed.
 
 What a backup leaves out is unchanged: downloads and saved pages, caches and site data, incognito data, the "What was
 sent to the AI" list, the locks, the account session and Qutai Credits (they live on the server's ledger).
 
 **Size** (`npm run measure:backup`, synthetic data, Node on a Mac): light use 0.3 MB, typical 2.7 MB, heavy with 60
-long conversations 54 MB (without the conversations about 6 MB). The server takes up to 50 MiB per backup by default
+long conversations 54 MB (without the conversations about 6 MB). Apps add their packages (at most 512 KB each, a
+typical notes app 20 KB) and, with their data, up to 5 MB each (a notes app with a hundred notes is a few dozen KB). The server takes up to 50 MiB per backup by default
 (`GET /config` › `backups.maxBytes`); the app checks the size before uploading and says "too large, turn off
 conversations or activity". Hermes builds the whole file in memory: a 50 MB backup needs a few times that while it is
 made (not measured on a phone yet).
@@ -45,9 +53,14 @@ server has no `backups` in `GET /config` (older server or no storage).
   kept, the tab in front is incognito, there is no connection, the phone isn't on Wi-Fi, the connection type can't be
   read (a build without `expo-network`), or the account is suspended. After a failure it waits an hour, and after a
   daily-limit answer until the server's `Retry-After`.
-- **What goes in**: the export's switches, kept for server backups. Defaults: open tabs on; conversations, activity and
-  AI keys off (conversations are what make backups large; keys on a server are a bigger step than keys in a file the
-  user holds).
+- **What goes in**: the export's switches, kept for server backups. Defaults: open tabs, **My apps** and **My apps'
+  data** on; conversations, activity and AI keys off (conversations are what make backups large; keys on a server are
+  a bigger step than keys in a file the user holds). The apps' data switch shows the current total.
+- **Over the limit because of apps' data**: an app may keep 5 MB, so a few apps can push a backup over the account's
+  limit. When the file is over `backups.maxBytes` with apps' data in it, the backup is made again without apps' data
+  and uploaded; the screen says so ("Backed up without your apps' data: with it the backup was 61 MB, over your
+  account's limit of 50 MB") and the status line keeps "Your apps' data was left out" (`appDataLeftOut` in the run
+  record), also for the daily automatic backup. Without apps' data and still too large: the usual "too large" error.
 - **Errors** are one plain sentence with the technical line under Details: wrong password, offline, daily limit, too
   large, signed out, suspended, server unavailable, damaged in transfer, no longer in the account.
 

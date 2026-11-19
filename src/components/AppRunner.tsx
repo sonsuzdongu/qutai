@@ -163,7 +163,8 @@ function Runner({ request, onEdit, onFix, onNotice }: Props & { request: RunnerR
           <Text style={styles.messageBody}>
             {t(loaded.pkg.manifest.author.kind === 'imported' ? 'apps.needsApprovalImported' : 'apps.needsApproval')}
           </Text>
-          <AppReview pkg={loaded.pkg} author={loaded.pkg.manifest.author} />
+          {/* An app made with Qutai but not sealed here (restored on another phone, or changed): the line above says so. */}
+          <AppReview pkg={loaded.pkg} author={loaded.pkg.manifest.author} showAuthor={loaded.pkg.manifest.author.kind === 'imported'} />
           <Button label={t('apps.turnOn')} onPress={() => void session.approve()} />
           <Button label={t('apps.close')} onPress={session.close} tone="secondary" />
         </ScrollView>

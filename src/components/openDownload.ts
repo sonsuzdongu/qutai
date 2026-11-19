@@ -23,11 +23,21 @@ export async function shareDownload(store: DownloadStore, item: DownloadItem, no
  * Files app). An APK goes to the system's installer, which asks "allow from this source" itself.
  * `notify` shows a short notice where the user is looking (the Downloads screen has its own, over its sheet).
  */
-export async function openDownload(store: DownloadStore, item: DownloadItem, notify: (message: string) => void) {
+export async function openDownload(
+  store: DownloadStore,
+  item: DownloadItem,
+  notify: (message: string) => void,
+  /** Closes the screen the tap came from before the import screen opens (iOS shows one sheet at a time). */
+  beforeImport?: () => void,
+) {
   // A Qutai app file opens the import screen (after the user's tap here), never anything else; not from incognito.
   if (item.uri && item.name.toLowerCase().endsWith(`.${APP_FILE_EXTENSION}`)) {
     if (item.incognito) return void dialog.alert(t('apps.importIncognito'));
-    appImporter.open({ uri: item.uri });
+    const uri = item.uri;
+    if (beforeImport) {
+      beforeImport();
+      setTimeout(() => appImporter.open({ uri }), 450);
+    } else appImporter.open({ uri });
     return;
   }
   let result: OpenResult;

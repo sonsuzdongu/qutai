@@ -39,7 +39,7 @@ import { WholeWordsText } from './WholeWordsText';
 const MONO = Platform.select({ ios: 'Menlo', default: 'monospace' });
 
 /** What an app is and can do: shown before an import is stored and on the runner's approval screen. */
-export function AppReview({ pkg, author }: { pkg: AppPackage; author: AppAuthor }) {
+export function AppReview({ pkg, author, showAuthor = true }: { pkg: AppPackage; author: AppAuthor; showAuthor?: boolean }) {
   const styles = useStyles();
   const palette = usePalette();
   const [reading, setReading] = useState<string | null>(null);
@@ -56,9 +56,9 @@ export function AppReview({ pkg, author }: { pkg: AppPackage; author: AppAuthor 
             {m.name}
           </Text>
           {m.description ? <Text style={styles.body}>{m.description}</Text> : null}
-          <Text style={styles.meta}>
-            {author.kind === 'imported' ? t('apps.importFrom', { file: author.file }) : t('apps.madeHere')}
-          </Text>
+          {showAuthor ? (
+            <Text style={styles.meta}>{author.kind === 'imported' ? t('apps.importFrom', { file: author.file }) : t('apps.madeHere')}</Text>
+          ) : null}
           <Text style={styles.meta}>{t('apps.importSize', { size: formatSize(packageBytes(pkg)), version: m.version })}</Text>
         </View>
       </View>

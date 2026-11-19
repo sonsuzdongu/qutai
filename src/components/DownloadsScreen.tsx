@@ -147,7 +147,7 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
     // The store's version changes `all`.
   }, [all, query]);
 
-  const open = (item: DownloadItem) => void openDownload(store, item, toast.show);
+  const open = (item: DownloadItem) => void openDownload(store, item, toast.show, onClose);
   const share = (item: DownloadItem) => void shareDownload(store, item, toast.show);
 
   const deleteFile = async (item: DownloadItem) => {
