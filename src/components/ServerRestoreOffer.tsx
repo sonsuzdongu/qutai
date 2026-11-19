@@ -9,9 +9,9 @@ import { dialog } from './Dialog';
 import { serverBackupErrorText } from './ServerBackupSection';
 
 /**
- * A new phone (docs/server-backup.md › Onboarding): after signing in, if the account has a server backup and this phone
- * never backed it up, offer the newest one once. Yes restores it through the usual import screen. `ready`: nothing else
- * is in front (no lock, no Settings, no intro).
+ * The restore offer (docs/server-backup.md › Restore offer after sign-in): once after each fresh sign-in to an account
+ * with a server backup (logic.ts › shouldOfferRestore). Yes restores it through the usual import screen, which asks
+ * merge or replace. `ready`: nothing else is in front (no lock, no Settings, no intro, no running task).
  */
 export function ServerRestoreOffer({ ready, appLock }: { ready: boolean; appLock: boolean }) {
   const account = useAccountState();

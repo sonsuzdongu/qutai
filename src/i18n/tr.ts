@@ -1383,7 +1383,7 @@ export const tr: Record<keyof typeof en, string> = {
   'serverBackup.chatsHint': 'Açık sekmelerin ve grupların sohbetleri. Büyük ve kişisel olabilirler; büyük bir yedek sığmayabilir. Eklenen görseller ve dosyalar dahil edilmez.',
   'serverBackup.apiKeysHint': 'Özel sunucunun ek başlıkları da dahil. Yedek parolanızla şifrelenirler; bu parolayı bilen ve hesabınıza erişebilen biri onları kullanabilir.',
   'serverBackup.offerTitle': 'Yedeğiniz geri yüklensin mi?',
-  'serverBackup.offerBody': 'Qutai hesabınızda {date} tarihli bir yedek var ({device}). Bu telefona geri yüklensin mi? Bunu daha sonra Ayarlar › Yedekleme’den de yapabilirsiniz.',
+  'serverBackup.offerBody': 'Qutai hesabınızda {date} tarihli bir yedek var ({device}). Bu telefona geri yüklensin mi? Ardından seçersiniz: bu telefondakilerle birleştirmek ya da onların yerine koymak; yerine koymak, yedekteki her türden veriyi bu telefondan siler. Bunu daha sonra Ayarlar › Yedekleme’den de yapabilirsiniz.',
   'serverBackup.offerLater': 'Şimdi değil',
   'serverBackup.error.offline': 'Çevrimdışısınız veya sunucuya ulaşılamıyor. Bağlandığınızda tekrar deneyin.',
   'serverBackup.error.quota': 'Hesabınız bugünkü yedekleme sınırına ulaştı. Yarın tekrar deneyin.',

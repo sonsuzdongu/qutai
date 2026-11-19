@@ -3003,7 +3003,7 @@ function BrowserApp({
           viaQutai={(conversation.model?.provider ?? settings.provider) === 'qutai'}
           onClose={() => setSentFor(null)}
         />
-        <ServerRestoreOffer ready={!lock && !settingsVisible && !introPending} appLock={settings.appLock} />
+        <ServerRestoreOffer ready={!lock && !settingsVisible && !introPending && !running} appLock={settings.appLock} />
         <SettingsModal
           onClearData={clearData}
           visible={settingsVisible}

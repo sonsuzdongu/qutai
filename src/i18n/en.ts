@@ -1385,7 +1385,7 @@ export const en = {
   'serverBackup.chatsHint': 'The chats of the open tabs and groups. They can be large and personal, and a large backup may not fit. Attached images and files are not included.',
   'serverBackup.apiKeysHint': "Including the custom server's extra headers. They are encrypted with your backup password; anyone with that password and access to your account could use them.",
   'serverBackup.offerTitle': 'Restore your backup?',
-  'serverBackup.offerBody': 'Your Qutai account has a backup from {date} ({device}). Restore it on this phone? You can also do it later in Settings › Backup.',
+  'serverBackup.offerBody': 'Your Qutai account has a backup from {date} ({device}). Restore it on this phone? Next you choose: merge it with what is on this phone, or replace it, which erases this phone’s data of each kind in the backup. You can also do it later in Settings › Backup.',
   'serverBackup.offerLater': 'Not now',
   'serverBackup.error.offline': "You're offline, or the server can't be reached. Try again when you're connected.",
   'serverBackup.error.quota': "Your account reached today's limit for backups. Try again tomorrow.",

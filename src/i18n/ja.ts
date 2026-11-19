@@ -1394,7 +1394,7 @@ export const ja: Record<keyof typeof en, string> = {
   'serverBackup.chatsHint': '開いているタブとグループのチャットです。大きく個人的な内容になることがあり、大きなバックアップは保存できない場合があります。添付した画像やファイルは含まれません。',
   'serverBackup.apiKeysHint': 'カスタム サーバーの追加ヘッダーも含みます。バックアップ用パスワードで暗号化されますが、そのパスワードを知っていてアカウントにアクセスできる人は使用できます。',
   'serverBackup.offerTitle': 'バックアップを復元しますか？',
-  'serverBackup.offerBody': 'Qutai アカウントに {date} のバックアップがあります（{device}）。この電話に復元しますか？あとで「設定 › バックアップ」から行うこともできます。',
+  'serverBackup.offerBody': 'Qutai アカウントに {date} のバックアップがあります（{device}）。この電話に復元しますか？次に、この電話のデータと統合するか、置き換えるかを選びます。置き換えると、バックアップに含まれる種類のデータがこの電話から消去されます。あとで「設定 › バックアップ」から行うこともできます。',
   'serverBackup.offerLater': '後で',
   'serverBackup.error.offline': 'オフラインか、サーバーに接続できません。接続してからもう一度お試しください。',
   'serverBackup.error.quota': 'アカウントが本日のバックアップ上限に達しました。明日もう一度お試しください。',

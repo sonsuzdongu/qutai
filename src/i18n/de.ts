@@ -1385,7 +1385,7 @@ export const de: Record<keyof typeof en, string> = {
   'serverBackup.chatsHint': 'Die Chats der offenen Tabs und Gruppen. Sie können groß und persönlich sein, und ein großes Backup passt vielleicht nicht. Angehängte Bilder und Dateien sind nicht enthalten.',
   'serverBackup.apiKeysHint': 'Einschließlich der zusätzlichen Header des eigenen Servers. Sie werden mit Ihrem Backup-Passwort verschlüsselt; wer dieses Passwort kennt und Zugang zu Ihrem Konto hat, könnte sie verwenden.',
   'serverBackup.offerTitle': 'Backup wiederherstellen?',
-  'serverBackup.offerBody': 'Ihr Qutai-Konto hat ein Backup vom {date} ({device}). Auf diesem Telefon wiederherstellen? Sie können es auch später unter Einstellungen › Backup tun.',
+  'serverBackup.offerBody': 'Ihr Qutai-Konto hat ein Backup vom {date} ({device}). Auf diesem Telefon wiederherstellen? Danach wählen Sie: mit den Daten auf diesem Telefon zusammenführen oder sie ersetzen, was die Daten jeder Art im Backup auf diesem Telefon löscht. Sie können es auch später unter Einstellungen › Backup tun.',
   'serverBackup.offerLater': 'Nicht jetzt',
   'serverBackup.error.offline': 'Sie sind offline oder der Server ist nicht erreichbar. Versuchen Sie es erneut, wenn Sie verbunden sind.',
   'serverBackup.error.quota': 'Ihr Konto hat das heutige Limit für Backups erreicht. Versuchen Sie es morgen erneut.',

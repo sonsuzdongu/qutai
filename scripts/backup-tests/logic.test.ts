@@ -176,10 +176,12 @@ describe('stored state and helpers', () => {
   it('reads back what was stored and falls back to defaults on anything else', () => {
     const state = {
       prefs: { auto: true, network: 'any', tabs: false, chats: true, activity: true, apiKeys: true },
-      accounts: { u1: { lastSuccessAt: 5, last: { at: 6, trigger: 'auto', result: 'skipped', reason: 'not-wifi' }, restoreOffered: true } },
+      accounts: { u1: { lastSuccessAt: 5, last: { at: 6, trigger: 'auto', result: 'skipped', reason: 'not-wifi' }, signedInAt: 3, offeredFor: 3, lastUploadId: 'b-1' } },
     };
     // Prefs stored before apps existed read back with the apps switches at their defaults (on).
     assert.deepEqual(parseState(JSON.stringify(state)), { ...state, prefs: { ...state.prefs, apps: true, appData: true } });
+    // The old once-per-phone flag is dropped: the offer comes back at the next sign-in.
+    assert.deepEqual(parseState(JSON.stringify({ accounts: { u1: { restoreOffered: true } } })).accounts, { u1: {} });
     const withApps = { ...state, prefs: { ...state.prefs, apps: true, appData: false } };
     assert.deepEqual(parseState(JSON.stringify(withApps)), withApps);
     assert.deepEqual(parseState('nonsense').prefs, DEFAULT_PREFS);
@@ -202,12 +204,16 @@ describe('stored state and helpers', () => {
     assert.deepEqual(runRecord('auto', 7, { ok: true }), { at: 7, trigger: 'auto', result: 'done' });
   });
 
-  it('offers a restore once, only to a phone that never backed up this account', () => {
-    assert.equal(shouldOfferRestore({ userId: 'u1', offered: false, backups: 2 }), true);
-    assert.equal(shouldOfferRestore({ userId: 'u1', offered: true, backups: 2 }), false);
-    assert.equal(shouldOfferRestore({ userId: 'u1', offered: false, backups: 0 }), false);
-    assert.equal(shouldOfferRestore({ userId: 'u1', offered: false, backups: 2, lastSuccessAt: 1 }), false);
-    assert.equal(shouldOfferRestore({ userId: null, offered: false, backups: 2 }), false);
+  it('offers a restore once after each fresh sign-in, also to a phone that backed up before', () => {
+    const backups = [{ id: 'b-2' }, { id: 'b-1' }];
+    assert.equal(shouldOfferRestore({ userId: 'u1', signedInAt: 10, backups }), true, 'first sign-in');
+    assert.equal(shouldOfferRestore({ userId: 'u1', signedInAt: 10, offeredFor: 10, backups }), false, 'once per sign-in, "Not now" included');
+    assert.equal(shouldOfferRestore({ userId: 'u1', signedInAt: 20, offeredFor: 10, backups }), true, 'asked again at the next sign-in');
+    assert.equal(shouldOfferRestore({ userId: 'u1', signedInAt: 20, offeredFor: 10, backups, lastUploadId: 'b-1' }), true, 'this phone backed up before, but the newest is from elsewhere');
+    assert.equal(shouldOfferRestore({ userId: 'u1', signedInAt: 20, backups, lastUploadId: 'b-2' }), false, 'the newest is this install\'s own upload');
+    assert.equal(shouldOfferRestore({ userId: 'u1', backups }), false, 'no fresh sign-in on record (an app start with a kept session)');
+    assert.equal(shouldOfferRestore({ userId: 'u1', signedInAt: 10, backups: [] }), false, 'no backups');
+    assert.equal(shouldOfferRestore({ userId: null, signedInAt: 10, backups }), false, 'signed out');
   });
 
   it('labels the device generically, never with its own name', () => {

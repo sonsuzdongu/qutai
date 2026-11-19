@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 826 decisions (110 owner, 633 default, 83 waiting); 163 ids moved to Details.
+Totals: 826 decisions (111 owner, 632 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -1032,7 +1032,7 @@ Moved to Details (ids retired, not reused): `BUY-14`, `BUY-20`
 | `BACK-18` | Today "Delete all backups" needs no recent sign-in. | **Waiting** |  |
 | `BACK-19` | Combining two accounts moves the other account's backups to the surviving one; deleting the account… | Default |  |
 | `BACK-20` | Stored files are named by a random id, never the user id; the admin panel shows only how many backups an… | Default |  |
-| `BACK-21` | The restore offer on a new phone appears once per account, only when the account has a backup and this… | Default |  |
+| `BACK-21` | The restore offer appears once after each fresh sign-in to an account with a backup, also on a phone that backed up before… | Owner | 2026-11-19 |
 | `BACK-22` | The pro privacy policy describes server backups, and its version was raised so every pro user accepts… | **Waiting** |  |
 
 Moved to Details (ids retired, not reused): `BACK-2`, `BACK-16`, `BACK-14`

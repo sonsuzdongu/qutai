@@ -276,7 +276,7 @@ export async function backUpNow(trigger: 'auto' | 'manual', password = keptPassw
   const retryAfter = !outcome.ok && typeof (outcome.error as { retryAfter?: unknown })?.retryAfter === 'number' ? (outcome.error as { retryAfter: number }).retryAfter : null;
   await updateAccount(userId, (a) => ({
     ...a,
-    ...(outcome.ok ? { lastSuccessAt: now } : {}),
+    ...(outcome.ok ? { lastSuccessAt: now, lastUploadId: outcome.backup.id } : {}),
     // A cancel by the user isn't a failure worth showing.
     ...(outcome.ok || outcome.kind !== 'cancelled'
       ? { last: runRecord(trigger, now, outcome.ok ? { ok: true, appDataLeftOut: !!outcome.appDataLeftOut } : { ok: false, kind: outcome.kind, retryAfterSeconds: retryAfter }) }
@@ -317,22 +317,34 @@ export async function downloadServerBackup(backup: ServerBackup): Promise<Uint8A
   }
 }
 
-/** After sign-in on a phone that never backed up this account: the newest server backup to offer, once. */
+// A fresh sign-in (any method) is noted per account, so the restore offer comes once after each one. An app start with
+// a kept session and a token refresh don't go through onSignIn.
+let signInWrite: Promise<void> = Promise.resolve();
+if (serverBackupEnabled) {
+  accountSession()?.onSignIn((response) => {
+    const at = Date.now();
+    signInWrite = loadServerBackup().then(() => updateAccount(response.user.id, (a) => ({ ...a, signedInAt: at })));
+  });
+}
+
+/** After a fresh sign-in: the newest server backup to offer, once for that sign-in (logic.ts › shouldOfferRestore). */
 export async function restoreOffer(): Promise<ServerBackup | null> {
   await loadServerBackup();
+  await signInWrite.catch(() => {});
   const userId = currentUserId();
   if (!userId || !(await serverBackupConfig())) return null;
   const account = snapshot.state.accounts[userId] ?? {};
-  if (account.restoreOffered) return null;
+  if (account.signedInAt === undefined || account.offeredFor === account.signedInAt) return null;
   let backups: ServerBackup[];
   try {
     backups = await listServerBackups();
   } catch {
     return null;
   }
-  const offer = shouldOfferRestore({ userId, offered: false, backups: backups.length, lastSuccessAt: account.lastSuccessAt });
-  // Asked once per account on this phone (an account without backups yet is asked when it has one).
-  if (backups.length > 0) await updateAccount(userId, (a) => ({ ...a, restoreOffered: true }));
+  const offer = shouldOfferRestore({ userId, ...account, backups });
+  // Marked before the dialog shows, so it is never asked twice for one sign-in (an account without backups yet is
+  // asked when one appears, still once).
+  if (backups.length > 0) await updateAccount(userId, (a) => ({ ...a, offeredFor: account.signedInAt }));
   return offer ? backups[0]! : null;
 }
 

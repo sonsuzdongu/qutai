@@ -19,6 +19,8 @@ Last updated: 2026-11-19
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-19:** Server backup: the restore offer comes once after each fresh sign-in, also on a phone that backed up
+  before, and again after "Not now" at the next sign-in (`BACK-21`, owner's request).
 - **2026-11-19:** Stale documents corrected to match the code: README (pro features, sign-in methods, the working glow and
   input, build numbers), TODO (legal versions), docs/pro-test-builds.md (no test sign-in), docs/permissions.md (HTTPS-only
   off, Android downloads), docs/mini-apps.md (12 s, 100,000 entries), the `features.ts` comment; disagreements removed.

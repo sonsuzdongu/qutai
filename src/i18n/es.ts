@@ -1390,7 +1390,7 @@ export const es: Record<keyof typeof en, string> = {
   'serverBackup.chatsHint': 'Los chats de las pestañas y grupos abiertos. Pueden ser grandes y personales, y una copia grande puede no caber. No incluye imágenes ni archivos adjuntos.',
   'serverBackup.apiKeysHint': 'Incluye los encabezados adicionales del servidor personalizado. Se cifran con tu contraseña de copia; quien la conozca y tenga acceso a tu cuenta podría usarlos.',
   'serverBackup.offerTitle': '¿Restaurar tu copia?',
-  'serverBackup.offerBody': 'Tu cuenta de Qutai tiene una copia del {date} ({device}). ¿Restaurarla en este teléfono? También puedes hacerlo más tarde en Configuración › Copia de seguridad.',
+  'serverBackup.offerBody': 'Tu cuenta de Qutai tiene una copia del {date} ({device}). ¿Restaurarla en este teléfono? Después eliges: combinarla con lo que hay en este teléfono o reemplazarlo, lo que borra los datos de cada tipo de la copia en este teléfono. También puedes hacerlo más tarde en Configuración › Copia de seguridad.',
   'serverBackup.offerLater': 'Ahora no',
   'serverBackup.error.offline': 'No tienes conexión o no se puede contactar con el servidor. Inténtalo de nuevo cuando estés conectado.',
   'serverBackup.error.quota': 'Tu cuenta alcanzó el límite de copias de hoy. Inténtalo de nuevo mañana.',

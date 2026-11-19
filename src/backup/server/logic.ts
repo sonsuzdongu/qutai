@@ -78,7 +78,19 @@ export type RunRecord = {
 export type ServerBackupState = {
   prefs: ServerBackupPrefs;
   /** Per user id: the last successful backup from this phone and the last run of any kind. */
-  accounts: Record<string, { lastSuccessAt?: number; last?: RunRecord; restoreOffered?: boolean }>;
+  accounts: Record<
+    string,
+    {
+      lastSuccessAt?: number;
+      last?: RunRecord;
+      /** When this account last signed in on this phone (a fresh sign-in, not an app start or a token refresh). */
+      signedInAt?: number;
+      /** The sign-in (its signedInAt) the restore offer was last shown for: once per sign-in. */
+      offeredFor?: number;
+      /** The id of the newest backup this install uploaded: never offered back to it. */
+      lastUploadId?: string;
+    }
+  >;
 };
 
 export const EMPTY_STATE: ServerBackupState = { prefs: DEFAULT_PREFS, accounts: {} };
@@ -146,10 +158,15 @@ export function parseState(raw: string | null): ServerBackupState {
       const x = a as Record<string, unknown>;
       const last = parseRecord(x.last);
       const lastSuccessAt = time(x.lastSuccessAt);
+      const signedInAt = time(x.signedInAt);
+      const offeredFor = time(x.offeredFor);
+      // The old once-per-phone flag (restoreOffered) is dropped: the offer now comes back at the next sign-in.
       accounts[id] = {
         ...(lastSuccessAt !== undefined ? { lastSuccessAt } : {}),
         ...(last ? { last } : {}),
-        ...(x.restoreOffered === true ? { restoreOffered: true } : {}),
+        ...(signedInAt !== undefined ? { signedInAt } : {}),
+        ...(offeredFor !== undefined ? { offeredFor } : {}),
+        ...(typeof x.lastUploadId === 'string' && /^[\w-]{1,128}$/.test(x.lastUploadId) ? { lastUploadId: x.lastUploadId } : {}),
       };
     }
   }
@@ -322,9 +339,26 @@ export function clearPasswordOn(event: { status: 'signedOut'; reason?: 'expired'
 
 // ---------- Restore on a new phone ----------
 
-/** After sign-in: offer the newest server backup once per account on this phone. */
-export function shouldOfferRestore(i: { userId: string | null; offered: boolean; backups: number; lastSuccessAt?: number }): boolean {
-  return !!i.userId && !i.offered && i.backups > 0 && i.lastSuccessAt === undefined;
+/**
+ * Whether to offer the account's newest server backup (decided 19 Nov 2026, docs/server-backup.md › Restore offer): once
+ * after each fresh sign-in to that account on this phone (signing in with Apple, Google, email or the test sign-in; not
+ * an app start with a kept session, not a token refresh), also when this phone has backed up to that account before,
+ * and again after "Not now" at the next sign-in. Never twice for one sign-in, never before a sign-in is on record, and
+ * not when the newest backup is the one this install uploaded itself (the phone's data is at least as new). A backup
+ * this phone restored earlier can't be told apart, so it is offered.
+ */
+export function shouldOfferRestore(i: {
+  userId: string | null;
+  signedInAt?: number;
+  offeredFor?: number;
+  /** The account's backups, newest first. */
+  backups: { id: string }[];
+  lastUploadId?: string;
+}): boolean {
+  if (!i.userId || i.signedInAt === undefined || i.offeredFor === i.signedInAt) return false;
+  const newest = i.backups[0];
+  if (!newest) return false;
+  return newest.id !== i.lastUploadId;
 }
 
 // ---------- Small helpers ----------

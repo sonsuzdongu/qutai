@@ -1393,7 +1393,7 @@ export const id: Record<keyof typeof en, string> = {
   'serverBackup.chatsHint': 'Chat dari tab dan grup yang terbuka. Bisa besar dan pribadi, dan cadangan yang besar mungkin tidak muat. Gambar dan file lampiran tidak disertakan.',
   'serverBackup.apiKeysHint': 'Termasuk header tambahan server kustom. Semuanya dienkripsi dengan sandi cadangan Anda; siapa pun yang tahu sandi itu dan bisa mengakses akun Anda dapat menggunakannya.',
   'serverBackup.offerTitle': 'Pulihkan cadangan Anda?',
-  'serverBackup.offerBody': 'Akun Qutai Anda memiliki cadangan dari {date} ({device}). Pulihkan di ponsel ini? Anda juga dapat melakukannya nanti di Setelan › Cadangan.',
+  'serverBackup.offerBody': 'Akun Qutai Anda memiliki cadangan dari {date} ({device}). Pulihkan di ponsel ini? Berikutnya Anda memilih: gabungkan dengan data di ponsel ini, atau ganti, yang menghapus data setiap jenis dalam cadangan di ponsel ini. Anda juga dapat melakukannya nanti di Setelan › Cadangan.',
   'serverBackup.offerLater': 'Nanti',
   'serverBackup.error.offline': 'Anda sedang offline, atau server tidak dapat dijangkau. Coba lagi saat terhubung.',
   'serverBackup.error.quota': 'Akun Anda mencapai batas cadangan hari ini. Coba lagi besok.',

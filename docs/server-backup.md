@@ -74,9 +74,16 @@ account signing in never uses it.
   server ended (expired, revoked elsewhere) keeps it: the same person signs in again.
 - **Cleared by the iOS reinstall clean start** (`src/storage/installCheck.ts` lists both keys); Android clears secure
   storage on uninstall.
-- **A new phone**: after sign-in, if the account has a backup and this phone never backed it up, the app offers the
-  newest one once (`ServerRestoreOffer`, after the lock, Settings and the intro are out of the way). Yes downloads it
-  and opens the import screen, which asks for the password.
+- **Restore offer after sign-in** (changed 19 Nov 2026, owner's request): after each fresh sign-in to an account
+  that has a backup, the app offers the newest one, also when this phone has backed up to that account before
+  (`ServerRestoreOffer`, `shouldOfferRestore`). A fresh sign-in is signing in with Apple, Google, email (or the test
+  sign-in): not opening the app with a kept session and not a token refresh. It is asked once per sign-in, never in a
+  loop, and after "Not now" again at the next sign-in. It waits until the lock, Settings, the intro and any running
+  task are out of the way (onboarding comes before the browser, so never during it). It is not offered when the newest
+  backup is the one this install uploaded itself (its data is at least as new); a backup this phone restored earlier
+  can't be told apart and is offered. The dialog says that the next screen asks whether to merge or replace, and that
+  replacing erases this phone's data of each kind in the backup; Yes downloads it and opens the import screen, which
+  asks for the password and where that choice is made.
 
 The pure rules (when the daily backup runs or why not, the password's lifecycle, error mapping, the stored state) are
 in `src/backup/server/logic.ts`; the HTTP client in `src/backup/server/client.ts`.

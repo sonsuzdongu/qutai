@@ -1393,7 +1393,7 @@ export const fr: Record<keyof typeof en, string> = {
   'serverBackup.chatsHint': 'Les discussions des onglets et groupes ouverts. Elles peuvent être volumineuses et personnelles, et une grosse sauvegarde peut ne pas passer. Les images et fichiers joints ne sont pas inclus.',
   'serverBackup.apiKeysHint': 'Y compris les en-têtes supplémentaires du serveur personnalisé. Ils sont chiffrés avec votre mot de passe de sauvegarde ; toute personne qui le connaît et a accès à votre compte pourrait les utiliser.',
   'serverBackup.offerTitle': 'Restaurer votre sauvegarde ?',
-  'serverBackup.offerBody': 'Votre compte Qutai contient une sauvegarde du {date} ({device}). La restaurer sur ce téléphone ? Vous pouvez aussi le faire plus tard dans Paramètres › Sauvegarde.',
+  'serverBackup.offerBody': 'Votre compte Qutai contient une sauvegarde du {date} ({device}). La restaurer sur ce téléphone ? Vous choisirez ensuite : la fusionner avec ce qui est sur ce téléphone, ou le remplacer, ce qui efface les données de chaque type de la sauvegarde sur ce téléphone. Vous pouvez aussi le faire plus tard dans Paramètres › Sauvegarde.',
   'serverBackup.offerLater': 'Plus tard',
   'serverBackup.error.offline': 'Vous êtes hors ligne ou le serveur est injoignable. Réessayez une fois connecté.',
   'serverBackup.error.quota': 'Votre compte a atteint la limite de sauvegardes pour aujourd’hui. Réessayez demain.',

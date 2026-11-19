@@ -23,8 +23,8 @@ It replaces live sync for now; the server never sees the password or what is ins
    why, when no password is kept, the tab in front is incognito, there is no connection, the phone isn't on Wi-Fi, the
    connection type can't be read, or the account is suspended. After a failure it waits an hour.
 6. **What goes in** uses the export's switches: open tabs on; conversations, activity and AI keys off by default.
-7. On a new phone, after sign-in, if the account has a backup and this phone never made one, Qutai offers the newest
-   once. Example: Mehmet buys a new phone, signs in, taps "Restore", types his backup password, and his bookmarks,
+7. After each fresh sign-in, if the account has a backup (and its newest is not this phone's own last upload), Qutai
+   offers the newest, once per sign-in. Example: Mehmet buys a new phone, signs in, taps "Restore", types his backup password, and his bookmarks,
    history and settings come back.
 8. Errors are one plain sentence (wrong password, offline, daily limit, too large, signed out, suspended, server
    unavailable, damaged in transfer, no longer in the account) with the technical line under Details.
@@ -65,8 +65,8 @@ It replaces live sync for now; the server never sees the password or what is ins
   Status: Default (manager or implementing session; open to change) · Why: a combine must not delete anyone's data · Enforced: Server: backend/apps/api/src/backups/store.ts (deleteAccountBackups, cleanUpBackups); backend/apps/api/src/account/merge.ts · Source: backend/DESIGN.md › Account deletion and merge
 - **`BACK-20`** Stored files are named by a random id, never the user id; the admin panel shows only how many backups an account has and their total size; logs carry only the user id and a count.
   Status: Default (manager or implementing session; open to change) · Why: privacy; a combine is a list change only · Enforced: Server: backend/apps/api/src/backups/store.ts (objectKey) · Source: backend/DESIGN.md › Storage, › Admin panel, › Logs
-- **`BACK-21`** The restore offer on a new phone appears once per account, only when the account has a backup and this phone never made one.
-  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: src/backup/server/logic.ts (shouldOfferRestore); docs/server-backup.md › A new phone
+- **`BACK-21`** The restore offer appears once after each fresh sign-in to an account with a backup (Apple, Google, email or test sign-in; not an app start with a kept session, not a token refresh), also when this phone backed up to that account before, and again at the next sign-in after "Not now"; never twice for one sign-in; not while the lock, Settings, the intro or a running task is in the way; not when the newest backup is this install's own last upload. The dialog says the next screen asks merge or replace and that replacing erases this phone's data of those kinds. Changed 19 Nov 2026 (before: once per account per phone, and only on a phone that never backed up).
+  Status: Owner, 2026-11-19 (asked for both limits to go); the details (what counts as a sign-in, the own-upload check) are Default · Why: a user signing in again should be able to restore without hunting for it, without being asked in a loop · Enforced: In the app: src/backup/server/logic.ts (shouldOfferRestore, parseState), src/backup/server/index.ts (onSignIn → signedInAt, restoreOffer, lastUploadId), src/components/ServerRestoreOffer.tsx, App.tsx (`ready` includes no running task); tested in scripts/backup-tests/logic.test.ts · Source: docs/server-backup.md › Restore offer after sign-in
 - **`BACK-22`** The pro privacy policy describes server backups, and its version was raised so every pro user accepts again (now version 5).
   Status: Waiting for the owner ([TODO.md](../../TODO.md#decisions-waiting-for-the-owner-collected-17-nov-2026) › Server backup: confirm the re-acceptance) · Why: new data kept on the server · Source: src/legal/documents.ts (PRO_LEGAL_VERSION); d5c0f05, 94f9391, 040c537
 

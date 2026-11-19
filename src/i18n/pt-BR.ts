@@ -1394,7 +1394,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'serverBackup.chatsHint': 'As conversas das guias e grupos abertos. Podem ser grandes e pessoais, e um backup grande pode não caber. Imagens e arquivos anexados não são incluídos.',
   'serverBackup.apiKeysHint': 'Incluindo os cabeçalhos extras do servidor personalizado. Eles são criptografados com sua senha de backup; quem souber essa senha e tiver acesso à sua conta poderia usá-los.',
   'serverBackup.offerTitle': 'Restaurar seu backup?',
-  'serverBackup.offerBody': 'Sua conta Qutai tem um backup de {date} ({device}). Restaurar neste telefone? Você também pode fazer isso depois em Configurações › Backup.',
+  'serverBackup.offerBody': 'Sua conta Qutai tem um backup de {date} ({device}). Restaurar neste telefone? Em seguida você escolhe: mesclar com o que está neste telefone ou substituir, o que apaga os dados de cada tipo do backup neste telefone. Você também pode fazer isso depois em Configurações › Backup.',
   'serverBackup.offerLater': 'Agora não',
   'serverBackup.error.offline': 'Você está off-line ou o servidor não pode ser alcançado. Tente de novo quando estiver conectado.',
   'serverBackup.error.quota': 'Sua conta atingiu o limite de backups de hoje. Tente de novo amanhã.',

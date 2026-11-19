@@ -1392,7 +1392,7 @@ export const ko: Record<keyof typeof en, string> = {
   'serverBackup.chatsHint': '열린 탭과 그룹의 채팅입니다. 크고 개인적인 내용일 수 있으며, 큰 백업은 저장되지 않을 수 있습니다. 첨부한 이미지와 파일은 포함되지 않습니다.',
   'serverBackup.apiKeysHint': '맞춤 서버의 추가 헤더도 포함됩니다. 백업 비밀번호로 암호화되지만, 그 비밀번호를 알고 계정에 접근할 수 있는 사람은 사용할 수 있습니다.',
   'serverBackup.offerTitle': '백업을 복원할까요?',
-  'serverBackup.offerBody': 'Qutai 계정에 {date} 백업이 있습니다({device}). 이 휴대전화에 복원할까요? 나중에 설정 › 백업에서 할 수도 있습니다.',
+  'serverBackup.offerBody': 'Qutai 계정에 {date} 백업이 있습니다({device}). 이 휴대전화에 복원할까요? 다음 단계에서 이 휴대전화의 데이터와 병합할지, 교체할지 선택합니다. 교체하면 백업에 포함된 종류의 데이터가 이 휴대전화에서 지워집니다. 나중에 설정 › 백업에서 할 수도 있습니다.',
   'serverBackup.offerLater': '나중에',
   'serverBackup.error.offline': '오프라인이거나 서버에 연결할 수 없습니다. 연결된 후 다시 시도하세요.',
   'serverBackup.error.quota': '계정이 오늘의 백업 한도에 도달했습니다. 내일 다시 시도하세요.',
