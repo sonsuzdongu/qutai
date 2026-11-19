@@ -92,11 +92,9 @@ function GroupSection({ group, n }: { group: Group; n: number }) {
       <header className="fgroup-head">
         <span className="fgroup-mark" aria-hidden="true">
           <Icon name={group.icon} size={26} />
+          <span className="fgroup-num">{String(n).padStart(2, '0')}</span>
         </span>
         <h2 id={`${group.id}-title`}>
-          <span className="fgroup-num" aria-hidden="true">
-            {String(n).padStart(2, '0')}
-          </span>
           {L(group.title)}
         </h2>
         <p className="lede">{L(group.lede)}</p>
