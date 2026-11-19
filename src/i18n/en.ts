@@ -710,7 +710,7 @@ export const en = {
   'voiceIntro.choice.type': 'I want to type',
   'voiceIntro.choice.typeHint': 'Write a few sentences in your own words.',
   'voiceIntro.choice.ask': 'Ask me questions',
-  'voiceIntro.choice.askHint': 'Five short questions, one at a time. Answer by typing or speaking, or skip any of them.',
+  'voiceIntro.choice.askHint': 'Four short questions, one at a time. Answer by typing or speaking, or skip any of them.',
   'voiceIntro.choosePrivacy': 'What you say or type goes to your AI provider to be turned into notes. Nothing is saved until you check it, and the notes stay on this phone.',
   'voiceIntro.choosePrivacyCredits': 'What you say or type goes to Qutai’s AI service to be turned into notes; this uses your credits. Nothing is saved until you check it, and the notes stay on this phone.',
   'voiceIntro.noAiAsk': 'No AI is set up yet, so I can’t understand a free introduction. I can ask you a few questions instead: your answers are kept as you give them, and you check them before they are saved. You can choose an AI later in Settings › Assistant.',

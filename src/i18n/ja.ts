@@ -722,7 +722,7 @@ export const ja: Record<keyof typeof en, string> = {
   'voiceIntro.choice.type': '入力したい',
   'voiceIntro.choice.typeHint': '自分の言葉で数文書いてください。',
   'voiceIntro.choice.ask': '質問して',
-  'voiceIntro.choice.askHint': '短い質問を1つずつ5つ。入力か音声で答えるか、スキップできます。',
+  'voiceIntro.choice.askHint': '短い質問を1つずつ4つ。入力か音声で答えるか、スキップできます。',
   'voiceIntro.choosePrivacy': '話した内容や入力した内容は、メモにするため AI プロバイダに送られます。確認するまで何も保存されず、メモはこの電話に残ります。',
   'voiceIntro.choosePrivacyCredits': '話した内容や入力した内容は、メモにするため Qutai の AI サービスに送られ、クレジットを使います。確認するまで何も保存されず、メモはこの電話に残ります。',
   'voiceIntro.noAiAsk': 'AI がまだ設定されていないため、自由な自己紹介は理解できません。代わりにいくつか質問できます。回答は入力したとおりに残り、保存前に確認できます。AI は後から「設定 › アシスタント」で選べます。',

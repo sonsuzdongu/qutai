@@ -721,7 +721,7 @@ export const id: Record<keyof typeof en, string> = {
   'voiceIntro.choice.type': 'Saya ingin mengetik',
   'voiceIntro.choice.typeHint': 'Tulis beberapa kalimat dengan kata-kata Anda sendiri.',
   'voiceIntro.choice.ask': 'Ajukan pertanyaan kepada saya',
-  'voiceIntro.choice.askHint': 'Lima pertanyaan singkat, satu per satu. Jawab dengan mengetik atau berbicara, atau lewati yang mana saja.',
+  'voiceIntro.choice.askHint': 'Empat pertanyaan singkat, satu per satu. Jawab dengan mengetik atau berbicara, atau lewati yang mana saja.',
   'voiceIntro.choosePrivacy': 'Yang Anda ucapkan atau ketik dikirim ke penyedia AI Anda untuk diubah menjadi catatan. Tidak ada yang disimpan sebelum Anda memeriksanya, dan catatan tetap di ponsel ini.',
   'voiceIntro.choosePrivacyCredits': 'Yang Anda ucapkan atau ketik dikirim ke layanan AI Qutai untuk diubah menjadi catatan; ini memakai kredit Anda. Tidak ada yang disimpan sebelum Anda memeriksanya, dan catatan tetap di ponsel ini.',
   'voiceIntro.noAiAsk': 'Belum ada AI yang disiapkan, jadi saya tidak dapat memahami perkenalan bebas. Sebagai gantinya saya bisa mengajukan beberapa pertanyaan: jawaban Anda disimpan seperti yang Anda berikan, dan Anda memeriksanya sebelum disimpan. Anda dapat memilih AI nanti di Setelan › Asisten.',

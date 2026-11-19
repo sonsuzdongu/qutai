@@ -722,7 +722,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'voiceIntro.choice.type': 'Quero digitar',
   'voiceIntro.choice.typeHint': 'Escreva algumas frases com suas palavras.',
   'voiceIntro.choice.ask': 'Me faça perguntas',
-  'voiceIntro.choice.askHint': 'Cinco perguntas curtas, uma de cada vez. Responda digitando ou falando, ou pule qualquer uma.',
+  'voiceIntro.choice.askHint': 'Quatro perguntas curtas, uma de cada vez. Responda digitando ou falando, ou pule qualquer uma.',
   'voiceIntro.choosePrivacy': 'O que você fala ou digita vai para o seu provedor de IA para virar anotações. Nada é salvo antes de você conferir, e as anotações ficam neste telefone.',
   'voiceIntro.choosePrivacyCredits': 'O que você fala ou digita vai para o serviço de IA do Qutai para virar anotações; isso usa seus créditos. Nada é salvo antes de você conferir, e as anotações ficam neste telefone.',
   'voiceIntro.noAiAsk': 'Ainda não há uma IA configurada, então não consigo entender uma apresentação livre. Em vez disso, posso fazer algumas perguntas: suas respostas ficam como você der, e você confere antes de salvar. Você pode escolher uma IA depois em Configurações › Assistente.',

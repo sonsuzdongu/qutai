@@ -720,7 +720,7 @@ export const ko: Record<keyof typeof en, string> = {
   'voiceIntro.choice.type': '직접 입력할게요',
   'voiceIntro.choice.typeHint': '자신의 말로 몇 문장 적어 주세요.',
   'voiceIntro.choice.ask': '질문해 주세요',
-  'voiceIntro.choice.askHint': '짧은 질문 다섯 개를 하나씩 드려요. 입력하거나 말로 답하고, 원하면 건너뛰세요.',
+  'voiceIntro.choice.askHint': '짧은 질문 네 개를 하나씩 드려요. 입력하거나 말로 답하고, 원하면 건너뛰세요.',
   'voiceIntro.choosePrivacy': '말하거나 입력한 내용은 메모로 정리되도록 AI 제공업체로 전송됩니다. 확인하기 전에는 아무것도 저장되지 않으며, 메모는 이 휴대전화에 남습니다.',
   'voiceIntro.choosePrivacyCredits': '말하거나 입력한 내용은 메모로 정리되도록 Qutai의 AI 서비스로 전송되며, 크레딧이 사용됩니다. 확인하기 전에는 아무것도 저장되지 않으며, 메모는 이 휴대전화에 남습니다.',
   'voiceIntro.noAiAsk': '아직 AI가 설정되지 않아 자유로운 자기소개를 이해할 수 없습니다. 대신 몇 가지 질문을 드릴 수 있어요. 답변은 주신 그대로 남고, 저장하기 전에 확인합니다. 나중에 설정 › 어시스턴트에서 AI를 선택할 수 있습니다.',

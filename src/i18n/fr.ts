@@ -721,7 +721,7 @@ export const fr: Record<keyof typeof en, string> = {
   'voiceIntro.choice.type': 'Je veux l’écrire',
   'voiceIntro.choice.typeHint': 'Écrivez quelques phrases avec vos mots.',
   'voiceIntro.choice.ask': 'Pose-moi des questions',
-  'voiceIntro.choice.askHint': 'Cinq questions courtes, une à la fois. Répondez en écrivant ou en parlant, ou passez celles que vous voulez.',
+  'voiceIntro.choice.askHint': 'Quatre questions courtes, une à la fois. Répondez en écrivant ou en parlant, ou passez celles que vous voulez.',
   'voiceIntro.choosePrivacy': 'Ce que vous dites ou écrivez part chez votre fournisseur d’IA pour être transformé en notes. Rien n’est enregistré avant que vous l’ayez vérifié, et les notes restent sur ce téléphone.',
   'voiceIntro.choosePrivacyCredits': 'Ce que vous dites ou écrivez part chez le service d’IA de Qutai pour être transformé en notes ; cela utilise vos crédits. Rien n’est enregistré avant que vous l’ayez vérifié, et les notes restent sur ce téléphone.',
   'voiceIntro.noAiAsk': 'Aucune IA n’est encore configurée, je ne peux donc pas comprendre une présentation libre. Je peux plutôt vous poser quelques questions : vos réponses sont gardées telles que vous les donnez, et vous les vérifiez avant l’enregistrement. Vous pourrez choisir une IA plus tard dans Paramètres › Assistant.',

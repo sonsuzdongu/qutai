@@ -711,7 +711,7 @@ export const tr: Record<keyof typeof en, string> = {
   'voiceIntro.choice.type': 'Yazmak istiyorum',
   'voiceIntro.choice.typeHint': 'Kendi sözlerinizle birkaç cümle yazın.',
   'voiceIntro.choice.ask': 'Bana soru sor',
-  'voiceIntro.choice.askHint': 'Tek tek beş kısa soru. Yazarak ya da konuşarak yanıtlayın, istediğinizi atlayın.',
+  'voiceIntro.choice.askHint': 'Tek tek dört kısa soru. Yazarak ya da konuşarak yanıtlayın, istediğinizi atlayın.',
   'voiceIntro.choosePrivacy': 'Söyledikleriniz ya da yazdıklarınız notlara dönüştürülmek üzere yapay zekâ sağlayıcınıza gider. Siz kontrol etmeden hiçbir şey kaydedilmez; notlar bu telefonda kalır.',
   'voiceIntro.choosePrivacyCredits': 'Söyledikleriniz ya da yazdıklarınız notlara dönüştürülmek üzere Qutai’nin yapay zekâ hizmetine gider; bu, kredilerinizi kullanır. Siz kontrol etmeden hiçbir şey kaydedilmez; notlar bu telefonda kalır.',
   'voiceIntro.noAiAsk': 'Henüz bir yapay zekâ ayarlanmadı, bu yüzden serbest bir tanıtımı anlayamam. Bunun yerine size birkaç soru sorabilirim: yanıtlarınız verdiğiniz gibi tutulur ve kaydedilmeden önce siz kontrol edersiniz. Daha sonra Ayarlar › Asistan’dan bir yapay zekâ seçebilirsiniz.',
