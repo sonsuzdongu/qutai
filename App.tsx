@@ -2,6 +2,10 @@ import { siteRules } from './src/storage/siteRules';
 import { pageStyleState } from './src/browser/pageStyleState';
 import { readTabCookies, deleteTabCookies } from './src/device/cookieStore';
 import { CookiesScreen } from './src/components/CookiesScreen';
+import { askScript, keepScript, liveOffer } from './src/components/pageScripts';
+import { scriptSandbox, ScriptSandboxHost } from './src/components/ScriptSandbox';
+import { keptScripts } from './src/browser/keptScripts';
+import { loadScriptKey, scriptKey } from './src/device/scriptKey';
 import {
   applyTrial,
   askCookieDelete,
@@ -36,7 +40,7 @@ import { runAgent } from './src/agent/runAgent';
 import { actionErrorText } from './src/agent/stepLine';
 import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
 import { personalKindsLabel } from './src/components/memoryCategories';
-import { Conversation, callItem, cookiesItem, fileItem, styleItem, newItem, shareItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
+import { Conversation, callItem, cookiesItem, fileItem, scriptItem, styleItem, newItem, shareItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
 import { listShareables, type ShareApp, type ShareOffer } from './src/chat/shareable';
 import { clearOutgoing, OutgoingError, prepareOutgoing } from './src/device/outgoing';
 import { shareToApp } from './src/device/share';
@@ -649,6 +653,20 @@ function BrowserApp({
   // The latest settings for code that runs later than a render (the assistant's settings tool).
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
+  // Kept scripts (docs/page-customisation.md › Kept scripts): what decides whether they run, read at each page load.
+  useEffect(() => {
+    void loadScriptKey();
+    keptScripts.configure({
+      enabled: () => settingsRef.current.assistantScripts,
+      levelFor: (site) => sitePermissions.levelFor(site),
+      siteSetting: (site) => settingsRef.current.scriptSites.find((s) => s.host === site)?.setting ?? 'default',
+      scripts: () => siteRules.scripts,
+      key: scriptKey,
+      recordRun: (id, run) => void siteRules.updateScript(id, { lastRun: run }).catch(() => {}),
+    });
+    return () => keptScripts.configure(null);
+  }, []);
+  useSyncExternalStore(keptScripts.subscribe, keptScripts.getVersion);
   // Read when a task ends, which can be long after the render that started it.
   const notifyTaskDoneRef = useRef(settings.notifyTaskDone);
   notifyTaskDoneRef.current = settings.notifyTaskDone;
@@ -1367,6 +1385,15 @@ function BrowserApp({
           offer: (target, site, count) => chat.add(cookiesItem({ site, count, tabId: target.id })),
         },
         thirdPartyCookiesBlocked: () => Platform.OS === 'android' && settingsRef.current.blockThirdPartyCookies,
+        // Scripts (docs/page-customisation.md › Scripts): every run is asked, with the code.
+        scripts: {
+          enabled: () => settingsRef.current.assistantScripts,
+          siteSetting: (site) => settingsRef.current.scriptSites.find((s) => s.host === site)?.setting ?? 'default',
+          syntax: (code) => scriptSandbox.check(code),
+          approve: (approval) => whileAskingUser(() => askScript(approval, signal)),
+          runCopy: (snapshot, code, pageUrl) => scriptSandbox.run(snapshot, code, pageUrl),
+          offer: (offer) => chat.add(scriptItem(liveOffer(offer))),
+        },
         imageUsed: (id) => chat.markImageUsed(id),
         confirmByDefault: settings.confirmActions,
         sites: sitePermissions,
@@ -1972,6 +1999,21 @@ function BrowserApp({
     },
     // A broken style must never trap the user: whenever a user style applies here (kept or tried), it can be
     // switched off for this tab, and on again (docs/page-customisation.md).
+    // The same for kept scripts; switching them off (or on) reloads the page, so nothing a script did stays.
+    ...(!onNewTab && (keptScripts.off(tab.id) || keptScripts.applyTo(tab).length > 0)
+      ? [
+          {
+            icon: 'script' as const,
+            label: t(keptScripts.off(tab.id) ? 'menu.scriptsOn' : 'menu.scriptsOff'),
+            onPress: () => {
+              const off = !keptScripts.off(tab.id);
+              keptScripts.setOff(tab.id, off);
+              tab.webview?.reload();
+              toast.show(t(off ? 'menu.scriptsOffDone' : 'menu.scriptsOnDone'));
+            },
+          },
+        ]
+      : []),
     ...(!onNewTab && (pageStyleState.off(tab.id) || stylesApply(tab))
       ? [
           {
@@ -2554,6 +2596,8 @@ function BrowserApp({
                   siteRules: siteRules.page,
                   userBlockedHosts: siteRules.domains,
                   userStyles: siteRules.pageStyles,
+                  // Kept scripts: the page says when it is ready; browser/keptScripts.ts decides what runs.
+                  keptScripts: settings.assistantScripts && siteRules.scripts.some((s) => s.enabled),
                   httpsOnly: settings.httpsOnly,
                   blockThirdPartyCookies: settings.blockThirdPartyCookies,
                   hideCookieBanners: settings.hideCookieBanners,
@@ -2726,6 +2770,13 @@ function BrowserApp({
             }}
             onCard={(item, action) => {
               bump();
+              if (action === 'keepScript') {
+                const script = item.script;
+                if (!script) return;
+                return void keepScript(script).then((kept) => {
+                  if (kept) conversation.update(item.id, { script: { ...script, state: 'kept' } });
+                });
+              }
               if (action === 'showCookies') {
                 const target = item.cookiesOffer ? browser.getTab(item.cookiesOffer.tabId) : undefined;
                 if (!target || target.isNewTab) return toast.show(t('cookies.tabGone'));
@@ -2849,6 +2900,7 @@ function BrowserApp({
           }}
         />
         <CookiesScreen tab={cookiesTab} onClose={() => setCookiesTab(null)} />
+        <ScriptSandboxHost />
         <SentLogScreen
           visible={sentFor !== null}
           conversation={sentFor ?? undefined}

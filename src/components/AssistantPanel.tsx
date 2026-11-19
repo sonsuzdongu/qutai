@@ -65,11 +65,13 @@ import { FINAL_WAIT_MS } from './PushToTalk';
 import { useHoldGesture, useScreenReader } from './useHoldGesture';
 import { ErrorDetails } from './ErrorDetails';
 import { CookiesCard, StyleCard, type CookiesOffer, type StyleOffer } from './pageCustomisation';
+import { ScriptCard } from './pageScripts';
+import type { ScriptOffer } from '../agent/scriptTool';
 import { statusFullFits, statusLabelFits } from './statusFit';
 import { segmentChat, stepSummaryText, summarizeSteps } from '../chat/stepSummary';
 
 export type ChatItemAction = 'buyCredits' | 'signIn';
-export type CardAction = 'keepStyle' | 'undoStyle' | 'showCookies';
+export type CardAction = 'keepStyle' | 'undoStyle' | 'showCookies' | 'keepScript';
 
 export type ChatItem = {
   id: string;
@@ -89,6 +91,7 @@ export type ChatItem = {
     | 'pdf'
     | 'share'
     | 'style'
+    | 'script'
     | 'cookies';
   text: string;
   /** For 'action' and 'info': the icon before the text (absent in conversations saved before icons). */
@@ -107,6 +110,8 @@ export type ChatItem = {
   searchWidget?: string;
   /** For 'style': a style the assistant applied after the user's approval, with Keep… and Undo (pageCustomisation.tsx). */
   style?: StyleOffer;
+  /** For 'script': a script that ran on the page after the user's approval, with Keep for this site… (pageScripts.tsx). */
+  script?: ScriptOffer;
   /** For 'cookies': the cookie list's card ("Show cookies"); counts only, never names or values. */
   cookiesOffer?: CookiesOffer;
   /** For 'call': the number behind the Call button (stays usable, unlike ask_user options). */
@@ -1425,6 +1430,11 @@ function ChatRow({
           onUndo={() => onCard?.(item, 'undoStyle')}
         />
       );
+    }
+    case 'script': {
+      const offer = item.script;
+      if (!offer) return <StepLine icon="script" text={item.text} />;
+      return <ScriptCard offer={offer} dark={!!d} onKeep={() => onCard?.(item, 'keepScript')} />;
     }
     case 'cookies': {
       const offer = item.cookiesOffer;

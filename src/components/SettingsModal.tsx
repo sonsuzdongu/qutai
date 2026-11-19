@@ -37,6 +37,7 @@ import { CreditsScreen } from './CreditsScreen';
 import { ActionLogScreen } from './ActionLogScreen';
 import { pricesDate } from './AnswerCost';
 import { SentLogScreen } from './SentLogScreen';
+import { ScriptSitesSection } from './ScriptSitesSection';
 import { BackupScreen, type ServerRestoreJob } from './BackupScreen';
 import { ServerBackupSection } from './ServerBackupSection';
 import { serverBackupEnabled } from '../backup/server';
@@ -355,6 +356,30 @@ function SettingsPages({
                   });
               }}
             />
+            <SwitchRow
+              title={t('settings.scripts')}
+              hint={t('settings.scriptsHint')}
+              value={settings.assistantScripts}
+              onChange={(on) => {
+                if (!on) {
+                  set({ assistantScripts: false });
+                  return;
+                }
+                // The riskiest thing the assistant can do: turning it on is asked once more, in plain words.
+                void dialog
+                  .show({
+                    title: t('settings.scriptsConfirmTitle'),
+                    message: t('settings.scriptsConfirmBody'),
+                    buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: t('settings.scriptsConfirmOn'), primary: true }],
+                  })
+                  .then((result) => {
+                    if (result.button === 1) set({ assistantScripts: true });
+                  });
+              }}
+            />
+            {settings.assistantScripts && (
+              <ScriptSitesSection value={settings.scriptSites} onChange={(scriptSites) => set({ scriptSites })} />
+            )}
             <Text style={[styles.label, styles.sectionLabel]}>{t('settings.alwaysAllowTitle')}</Text>
             <Text style={styles.hint}>{t('settings.alwaysAllowHint')}</Text>
             {ALWAYS_ALLOW_KINDS.map((kind) => (

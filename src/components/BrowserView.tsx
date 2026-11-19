@@ -11,6 +11,8 @@ import { adBlockScript, COOKIE_BANNER_SCRIPT, isAdUrl, isHostIn } from '../conte
 import { AD_HOSTS } from '../content/adBlock';
 import { PageRule, siteRulesScript } from '../content/siteRules';
 import { PageStyle, userStylesScript } from '../content/userStyles';
+import { keptScriptsReadyScript } from '../content/userScripts';
+import { keptScripts } from '../browser/keptScripts';
 import { pageStyleState } from '../browser/pageStyleState';
 import { iosStoreKey } from '../device/cookieStore';
 import { siteKey } from '../agent/sitePolicy';
@@ -73,6 +75,11 @@ export type TabActions = {
    * Not ad blocking: they apply whatever the blocking switches say, in incognito tabs too (as hide rules do).
    */
   userStyles: PageStyle[];
+  /**
+   * Whether kept scripts may run (the setting is on and some are switched on): normal tabs then get the small "ready"
+   * script, and browser/keptScripts.ts decides which scripts run on each page (docs/page-customisation.md).
+   */
+  keptScripts: boolean;
   /** A link or image was long-pressed in this tab. */
   onContextMenu: (tab: Tab, target: ContextTarget) => void;
   /** The text selection in this tab changed ("" when cleared). */
@@ -154,6 +161,8 @@ function TabWebView({
   // The user's kept styles, unless "Styles off for this page" is on for this tab (pageStyleState).
   const stylesOff = useSyncExternalStore(pageStyleState.subscribe, () => pageStyleState.off(tab.id));
   const stylesScript = useMemo(() => userStylesScript(newTabActions.userStyles, stylesOff), [newTabActions.userStyles, stylesOff]);
+  // Kept scripts never run in incognito tabs; the page only reports when it is ready (keptScripts decides).
+  const keptReady = newTabActions.keptScripts && !tab.incognito ? keptScriptsReadyScript(tab.messageNonce) : '';
   const offSitesProp = useMemo(() => blockingOffSites.join('\n'), [blockingOffSites]);
   const ruleListsProp = useMemo(() => newTabActions.contentRuleLists.join('\n'), [newTabActions.contentRuleLists]);
   // Navigations and windows the app itself blocks (built-in list) are let through on off sites.
@@ -188,6 +197,7 @@ function TabWebView({
     mediaScript,
     playScript,
     mainFrameEarly.trim() ? `if (window.top === window) (function () {\n${mainFrameEarly}\n})();` : '',
+    keptReady,
   ].join('\n');
   // Runs after every page load: long-press menu, text selection, desktop viewport (Android) and text size (iOS).
   const pageSetupScript = [
@@ -200,6 +210,7 @@ function TabWebView({
     // Again after load (main frame): Android may have run the early script for the previous page.
     `if (window.top === window) (function () {\n${rulesScript}\n})();`,
     `if (window.top === window) (function () {\n${stylesScript}\n})();`,
+    keptReady,
     CONTEXT_MENU_SCRIPT,
     SELECTION_SCRIPT,
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
@@ -299,6 +310,7 @@ function TabWebView({
             style={styles.flex}
             onMessage={(e) => {
               if (tab.handleMessage(e.nativeEvent.data)) return;
+              if (keptScripts.handleMessage(tab, e.nativeEvent.data)) return;
               if (tab.geolocation.handleMessage(e.nativeEvent.data)) return;
               if (tab.media.handleMessage(e.nativeEvent.data)) return;
               if (tab.playback.handleMessage(e.nativeEvent.data)) return;

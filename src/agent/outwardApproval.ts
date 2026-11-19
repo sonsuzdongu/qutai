@@ -113,6 +113,11 @@ export class ApprovalGrants {
     return this.grants.splice(i, 1)[0];
   }
 
+  /** Whether an approval waits to be used in `tabId` (scripts are refused there meanwhile). */
+  hasTab(tabId: string): boolean {
+    return this.grants.some((g) => g.tabId === tabId);
+  }
+
   get size(): number {
     return this.grants.length;
   }

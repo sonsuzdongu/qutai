@@ -27,7 +27,9 @@ import {
   type UserStyle,
 } from '../content/userStyles';
 import { DEFAULT_STYLE_SCOPE_INDEX, styleScopeLabel } from './pageCustomisation';
+import { flagLines, scriptWhere } from './pageScripts';
 import { StyleEditorScreen, type StyleDraft } from './StyleEditorScreen';
+import { ScriptsPart } from './ScriptsPart';
 import { pickRulesFile, RulesFileTooLargeError, shareRulesFile } from '../device/siteRulesFile';
 import { t, type MessageKey } from '../i18n';
 import { Icon } from '../ui/Icon';
@@ -163,7 +165,7 @@ export function SiteRulesSection({ disabled }: { disabled: boolean }) {
 
   const exportAll = async () => {
     const day = new Date().toISOString().slice(0, 10);
-    await shareRulesFile(exportRulesFile(siteRules.rules, siteRules.styles), `qutai-rules-${day}.txt`).catch(() =>
+    await shareRulesFile(exportRulesFile(siteRules.rules, siteRules.styles, new Date(), siteRules.scripts), `qutai-rules-${day}.txt`).catch(() =>
       dialog.alert(t('siteRules.exportFailed')),
     );
   };
@@ -176,8 +178,8 @@ export function SiteRulesSection({ disabled }: { disabled: boolean }) {
       return dialog.alert(t('siteRules.importFailed'), e instanceof RulesFileTooLargeError ? t('siteRules.importTooLarge') : undefined);
     }
     if (text === null) return;
-    const read = importRulesFile(text, siteRules.rules.map((r) => r.line), siteRules.styles);
-    if (!read.rules.length && !read.styles.length && !read.duplicates) {
+    const read = importRulesFile(text, siteRules.rules.map((r) => r.line), siteRules.styles, siteRules.scripts);
+    if (!read.rules.length && !read.styles.length && !read.scripts.length && !read.duplicates) {
       return dialog.alert(t('siteRules.importFailed'), t('siteRules.importNone'));
     }
     // Styles change how pages look: the user sees them listed and decides whether they arrive switched on.
@@ -198,14 +200,36 @@ export function SiteRulesSection({ disabled }: { disabled: boolean }) {
       if (answer.button === null || answer.button === 0) return;
       stylesOn = answer.button === 2;
     }
+    // Scripts always arrive switched off, listed with what they do; each is approved before its first run.
+    let takeScripts = false;
+    if (read.scripts.length) {
+      const answer = await dialog.show({
+        title: t('scripts.importTitle', { count: read.scripts.length }),
+        message: t('scripts.importBody'),
+        lines: {
+          lines: read.scripts.slice(0, 30).flatMap((script) => [
+            { icon: 'script' as const, text: `${script.name} · ${scriptWhere(script.scope)}` },
+            ...flagLines(script.flags),
+          ]),
+        },
+        buttons: [
+          { text: t('scripts.importSkip'), style: 'cancel' },
+          { text: t('scripts.importOff'), primary: true },
+        ],
+      });
+      if (answer.button === null) return;
+      takeScripts = answer.button === 1;
+    }
     let added = 0;
     try {
       added = await siteRules.addImported(read.rules);
       added += await siteRules.addImportedStyles(read.styles, stylesOn);
+      if (takeScripts) added += await siteRules.addImportedScripts(read.scripts);
     } catch {
       return dialog.alert(t('siteRules.importFailed'));
     }
-    const skipped = read.duplicates + read.invalid + read.unsupported + (read.rules.length + read.styles.length - added);
+    const skipped =
+      read.duplicates + read.invalid + read.unsupported + (read.rules.length + read.styles.length + (takeScripts ? read.scripts.length : 0) - added);
     const notes = [t('siteRules.importedBody', { added, skipped }), read.unsupported ? t('styles.importUnsupported', { count: read.unsupported }) : '']
       .filter(Boolean)
       .join('\n\n');
@@ -278,18 +302,19 @@ export function SiteRulesSection({ disabled }: { disabled: boolean }) {
         <Text style={styles.buttonText}>{t('siteRules.add')}</Text>
       </Pressable>
       <StylesPart />
+      <ScriptsPart />
       <View style={styles.pair}>
         <Pressable
           onPress={exportAll}
-          disabled={!siteRules.rules.length && !siteRules.styles.length}
+          disabled={!siteRules.rules.length && !siteRules.styles.length && !siteRules.scripts.length}
           style={({ pressed }) => [
             styles.button,
             styles.half,
             pressed && styles.pressed,
-            !siteRules.rules.length && !siteRules.styles.length && styles.disabled,
+            !siteRules.rules.length && !siteRules.styles.length && !siteRules.scripts.length && styles.disabled,
           ]}
           accessibilityRole="button"
-          accessibilityState={{ disabled: !siteRules.rules.length && !siteRules.styles.length }}
+          accessibilityState={{ disabled: !siteRules.rules.length && !siteRules.styles.length && !siteRules.scripts.length }}
         >
           <Text style={styles.buttonText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
             {t('siteRules.export')}

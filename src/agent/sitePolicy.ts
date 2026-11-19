@@ -56,6 +56,8 @@ const WRITE_ACTIONS = new Set([
   // Changing how the page looks and deleting the site's cookies (docs/page-customisation.md).
   'restyle_page',
   'delete_cookies',
+  // Scripts, in a copy or on the page: never on read-only sites (docs/page-customisation.md › Scripts).
+  'run_script',
 ]);
 
 /**

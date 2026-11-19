@@ -66,6 +66,7 @@ import { describeSiteRulesCall, siteRulesTool, type SiteRulesAccess, type SiteRu
 import { SITE_RULE_TOOL_NAMES } from './siteRuleTools';
 import { describePageCustomCall, pageCustomTool, type CookieAccess, type PageStylesAccess } from './pageCustomTool';
 import { PAGE_CUSTOM_TOOL_NAMES } from './pageCustomTools';
+import { describeScriptCall, scriptTool, type ScriptAccess } from './scriptTool';
 
 type PageSnapshot = {
   url: string;
@@ -234,10 +235,13 @@ export type ToolContext = {
   cookies?: CookieAccess;
   /** Android's "Block third-party cookies" setting, for the cookie list's note. */
   thirdPartyCookiesBlocked?: () => boolean;
+  /** run_script (agent/scriptTool.ts): the setting, the sandbox, the approval and the script card. */
+  scripts?: ScriptAccess;
 };
 
 /** Tools that need a loaded web page. */
 const PAGE_TOOLS = new Set([
+  'run_script',
   'restyle_page',
   'page_cookies',
   'try_hide',
@@ -347,6 +351,8 @@ export function describeToolCall(name: string, input: Record<string, unknown>): 
     case 'restyle_page':
     case 'page_cookies':
       return describePageCustomCall(name, input);
+    case 'run_script':
+      return describeScriptCall(input);
     case 'draft_email':
       return t('action.draftEmail', { subject: cutText(str(input.subject), 60) });
     case 'find_contact':
@@ -1132,6 +1138,8 @@ const LOGGED_TOOLS = new Set([
   // Applied styles and deleted cookies only, by what was done: never the CSS, cookie names or values.
   'restyle_page',
   'page_cookies',
+  // Only that a script ran and its description: never the code or the result.
+  'run_script',
   'navigate',
   'go_back',
   'click',
@@ -1237,6 +1245,7 @@ function actionTarget(
 
 /** Tools that confirm on their own every time, whatever the "ask before actions" setting. */
 const ALWAYS_CONFIRMED = new Set([
+  'run_script',
   'restyle_page',
   'page_cookies',
   'get_location',
@@ -1678,6 +1687,17 @@ async function runTool(
         content: `The page did not answer: ${e instanceof Error ? e.message : String(e)}`,
         isError: true,
         notice: errorNotice(t('step.pageNoAnswer')),
+      };
+    }
+  }
+  if (name === 'run_script') {
+    try {
+      return await scriptTool(input, ctx, tab);
+    } catch (e) {
+      return {
+        content: `It did not work: ${e instanceof Error ? e.message : String(e)}`,
+        isError: true,
+        notice: errorNotice(t('step.scriptFailed')),
       };
     }
   }

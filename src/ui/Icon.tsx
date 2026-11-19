@@ -26,6 +26,7 @@ const ICONS = {
   shield: { ios: 'checkmark.shield', android: 'shield' },
   textSize: { ios: 'textformat.size', android: 'format_size' },
   palette: { ios: 'paintpalette', android: 'palette' },
+  script: { ios: 'curlybraces', android: 'data_object' },
   cookies: { ios: 'list.bullet.rectangle', android: 'cookie' },
   trash: { ios: 'trash', android: 'delete' },
   undo: { ios: 'arrow.uturn.backward', android: 'undo' },
@@ -122,7 +123,12 @@ const ICONS = {
 export type IconName = keyof typeof ICONS;
 
 /** A line of text with an optional icon before it; the icon is decorative (the text says the same thing). */
-export type IconLine = { icon?: IconName; text: string };
+export type IconLine = {
+  icon?: IconName;
+  text: string;
+  /** 'danger': shown in red (a script's flags); the text must say the same on its own. */
+  tone?: 'danger';
+};
 
 /**
  * A confirmation's message as lines with icons; spaced: a paragraph's space between the lines instead of none.

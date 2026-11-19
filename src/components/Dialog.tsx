@@ -389,9 +389,17 @@ function DialogView({ entry }: { entry: Entry }) {
                     return (
                       <View key={i} style={[styles.line, indent && styles.lineIndent]}>
                         {line.icon ? (
-                          <Icon name={line.icon} size={16} color={palette.textSecondary} style={styles.lineIcon} />
+                          <Icon
+                            name={line.icon}
+                            size={16}
+                            color={line.tone === 'danger' ? palette.danger : palette.textSecondary}
+                            style={styles.lineIcon}
+                          />
                         ) : null}
-                        <Text style={[styles.message, styles.lineText]} maxFontSizeMultiplier={MAX_FONT_SCALE}>
+                        <Text
+                          style={[styles.message, styles.lineText, line.tone === 'danger' && styles.dangerText]}
+                          maxFontSizeMultiplier={MAX_FONT_SCALE}
+                        >
                           {line.text}
                         </Text>
                       </View>
