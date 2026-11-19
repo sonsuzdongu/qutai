@@ -93,15 +93,13 @@ function GroupSection({ group, n }: { group: Group; n: number }) {
         <span className="fgroup-mark" aria-hidden="true">
           <Icon name={group.icon} size={26} />
         </span>
-        <div>
-          <h2 id={`${group.id}-title`}>
-            <span className="fgroup-num" aria-hidden="true">
-              {String(n).padStart(2, '0')}
-            </span>
-            {L(group.title)}
-          </h2>
-          <p className="lede">{L(group.lede)}</p>
-        </div>
+        <h2 id={`${group.id}-title`}>
+          <span className="fgroup-num" aria-hidden="true">
+            {String(n).padStart(2, '0')}
+          </span>
+          {L(group.title)}
+        </h2>
+        <p className="lede">{L(group.lede)}</p>
       </header>
       <ul className="fcards">
         {group.items.map((f) => (
