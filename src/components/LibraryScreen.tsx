@@ -132,6 +132,9 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
   const [loadingMore, setLoadingMore] = useState(false);
   const { entries, done } = result;
   const loading = result.loadedQuery !== query || loadingMore;
+  // While a new search runs, the previous results (or "no results") stay as they are; the spinner is only for the
+  // first load and for older pages, so nothing flickers on every letter.
+  const spinner = result.loadedQuery === null || loadingMore;
 
   useEffect(() => {
     let cancelled = false;
@@ -199,12 +202,12 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
       }}
       onEndReachedThreshold={0.5}
       ListEmptyComponent={
-        loading ? undefined : <Empty title={t(query ? 'library.noResults' : 'library.emptyHistory')} />
+        spinner ? undefined : <Empty title={t(result.loadedQuery ? 'library.noResults' : 'library.emptyHistory')} />
       }
       ListFooterComponent={
-        loading ? (
+        spinner ? (
           <ActivityIndicator style={styles.footer} />
-        ) : entries.length > 0 && !query ? (
+        ) : entries.length > 0 && !result.loadedQuery ? (
           <Pressable onPress={clearAll} style={styles.footer} accessibilityRole="button">
             <Text style={styles.danger}>{t('library.clearHistory')}</Text>
           </Pressable>

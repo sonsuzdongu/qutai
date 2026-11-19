@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
@@ -16,20 +16,24 @@ export function FindBar({ tab, darkMode, onClose }: { tab: Tab; darkMode?: boole
   const [result, setResult] = useState<Result & { query: string }>({ query: '', index: -1, count: 0 });
   const dark = tab.incognito || !!darkMode;
 
+  // Each search has a number, so a late answer for older text never replaces a newer one.
+  const latest = useRef(0);
   useEffect(() => {
     const timer = setTimeout(() => {
+      const id = ++latest.current;
       tab
         .run<Result>('findInPage', [query])
         .catch(() => ({ index: -1, count: 0 }))
-        .then((r) => setResult({ ...r, query }));
+        .then((r) => id === latest.current && setResult({ ...r, query }));
     }, SEARCH_DELAY_MS);
     return () => clearTimeout(timer);
   }, [tab, query]);
 
   const step = (delta: number) => {
+    const id = latest.current;
     tab
       .run<Result>('findStep', [delta])
-      .then((r) => setResult({ ...r, query }))
+      .then((r) => id === latest.current && setResult({ ...r, query }))
       .catch(() => {});
   };
 
@@ -38,7 +42,8 @@ export function FindBar({ tab, darkMode, onClose }: { tab: Tab; darkMode?: boole
     onClose();
   };
 
-  const searched = result.query === query && query.trim() !== '';
+  // The count of the previous text stays until the new one is known, instead of blanking on every letter.
+  const searched = result.query.trim() !== '' && query.trim() !== '';
   const label = searched ? (result.count ? `${result.index + 1}/${result.count}` : t('find.none')) : '';
 
   return (

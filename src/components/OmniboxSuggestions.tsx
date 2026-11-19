@@ -1,6 +1,8 @@
 import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
 import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import Animated, { FadeIn, LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { OmniboxResults, Shown } from '../browser/omniboxResults';
 import { fetchSuggestions, SearchEngineId } from '../browser/search';
 import { looksLikeUrl, toUrl } from '../browser/url';
 import { getLanguage, t } from '../i18n';
@@ -9,6 +11,7 @@ import { getDb } from '../storage/db';
 import { LocalSuggestion, localSuggestions } from '../storage/omnibox';
 import { darkPalette, makeStyles, usePalette } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
+import { useReduceMotion } from '../utils/useReduceMotion';
 
 type Props = {
   text: string;
@@ -25,7 +28,35 @@ type Props = {
   onAsk: (text: string) => void;
 };
 
-const REMOTE_DELAY_MS = 200;
+const MAX_HEIGHT = 360;
+/** Rows fading in and the list growing or shrinking: short enough not to feel slow. */
+const FADE_MS = 120;
+const RESIZE_MS = 150;
+
+/**
+ * History, bookmarks and search engine suggestions for the text being typed. What is shown stays until the next
+ * answer lands (browser/omniboxResults.ts), so the list never empties between letters.
+ */
+function useResults(query: string, remoteAllowed: boolean, searchEngine: SearchEngineId) {
+  const [shown, setShown] = useState<Shown<LocalSuggestion>>({ query: '', local: [], remote: [] });
+  const [results] = useState(
+    () =>
+      new OmniboxResults<LocalSuggestion>({
+        lookupLocal: (q) => getDb().then((db) => localSuggestions(db, q)),
+        onChange: setShown,
+      }),
+  );
+  useEffect(() => () => results.dispose(), [results]);
+  useEffect(() => {
+    // What the user types only leaves the device when suggestions are on, and never from incognito tabs.
+    const changed = results.setRemote(`${remoteAllowed}|${searchEngine}`, (q, signal) =>
+      remoteAllowed ? fetchSuggestions(searchEngine, q, getLanguage(), signal) : null,
+    );
+    // Suggestions switched on or off, or another engine: the same text is looked up again.
+    results.setQuery(query, { force: changed });
+  }, [results, query, remoteAllowed, searchEngine]);
+  return { results, shown };
+}
 
 /** Dropdown under the address bar while editing. */
 export function OmniboxSuggestions({
@@ -42,36 +73,10 @@ export function OmniboxSuggestions({
   const styles = useStyles();
   const darkUI = incognito || !!dark;
   const query = text.trim();
-  const [local, setLocal] = useState<{ query: string; items: LocalSuggestion[] }>({ query: '', items: [] });
-  const [remote, setRemote] = useState<{ query: string; items: string[] }>({ query: '', items: [] });
+  const reduceMotion = useReduceMotion();
   const [canPaste, setCanPaste] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    getDb()
-      .then((db) => localSuggestions(db, query))
-      .catch(() => [] as LocalSuggestion[])
-      .then((items) => !cancelled && setLocal({ query, items }));
-    return () => {
-      cancelled = true;
-    };
-  }, [query]);
-
-  // What the user types only leaves the device when suggestions are on, and never from incognito tabs.
   const remoteAllowed = suggestionsEnabled && !incognito && query.length > 0 && !looksLikeUrl(query);
-  useEffect(() => {
-    if (!remoteAllowed) return;
-    const controller = new AbortController();
-    const timer = setTimeout(() => {
-      fetchSuggestions(searchEngine, query, getLanguage(), controller.signal)
-        .catch(() => [] as string[])
-        .then((items) => !controller.signal.aborted && setRemote({ query, items }));
-    }, REMOTE_DELAY_MS);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
-  }, [remoteAllowed, query, searchEngine]);
+  const { results, shown } = useResults(query, remoteAllowed, searchEngine);
 
   useEffect(() => {
     if (query || Platform.OS === 'ios') return;
@@ -84,9 +89,21 @@ export function OmniboxSuggestions({
     };
   }, [query]);
 
+  // The list grows and shrinks smoothly instead of jumping to its new height.
+  const height = useSharedValue(-1);
+  const heightStyle = useAnimatedStyle(() => (height.value < 0 ? {} : { height: height.value }));
+  const onContentSize = (_w: number, h: number) => {
+    const target = Math.min(h, MAX_HEIGHT);
+    height.set(height.get() < 0 || reduceMotion ? target : withTiming(target, { duration: RESIZE_MS }));
+  };
+
   const go = (input: string) => onNavigate(toUrl(input, searchEngine));
-  const localItems = local.query === query ? local.items : [];
-  const remoteItems = remoteAllowed && remote.query === query ? remote.items : [];
+  // The last answer stays until the next one lands, even if it was for a letter more or less.
+  const localItems = query ? shown.local : [];
+  const remoteItems = remoteAllowed
+    ? shown.remote.filter((s) => s.toLocaleLowerCase().trim() !== query.toLocaleLowerCase())
+    : [];
+  const motion = reduceMotion ? {} : { entering: FadeIn.duration(FADE_MS), layout: LinearTransition.duration(RESIZE_MS) };
 
   return (
     <View
@@ -95,39 +112,51 @@ export function OmniboxSuggestions({
         above ? [styles.panelAbove, { bottom: barHeight }] : { top: barHeight },
         darkUI && styles.panelDark,
       ]}
+      // Nothing moves under a finger that is about to tap: changes wait until it lifts.
+      onTouchStart={() => results.touchStart()}
+      onTouchEnd={() => results.touchEnd()}
+      onTouchCancel={() => results.touchEnd()}
     >
-      <ScrollView keyboardShouldPersistTaps="always" style={styles.scroll}>
-        {!query && <PasteRow android={canPaste} incognito={darkUI} onPaste={go} />}
+      <Animated.View style={heightStyle}>
+        <ScrollView keyboardShouldPersistTaps="always" style={styles.scroll} onContentSizeChange={onContentSize}>
+          {!query && <PasteRow android={canPaste} incognito={darkUI} onPaste={go} />}
 
-        {query.length > 0 && (
-          <Row
-            icon="assistant"
-            title={t('omnibox.ask', { text: query })}
-            incognito={darkUI}
-            accent
-            onPress={() => onAsk(query)}
-          />
-        )}
-        {query.length > 0 && looksLikeUrl(query) && (
-          <Row icon="link" title={query} incognito={darkUI} onPress={() => go(query)} />
-        )}
-        {localItems.map((item) => (
-          <Row
-            key={item.url}
-            icon={item.bookmarked ? 'bookmarked' : 'history'}
-            title={item.title || hostOf(item.url)}
-            subtitle={item.url.replace(/^https?:\/\/(www\.)?/i, '')}
-            incognito={darkUI}
-            onPress={() => onNavigate(item.url)}
-          />
-        ))}
-        {remoteItems.map((suggestion) => (
-          <Row key={suggestion} icon="find" title={suggestion} incognito={darkUI} onPress={() => go(suggestion)} />
-        ))}
-        {query.length > 0 && !looksLikeUrl(query) && !remoteItems.includes(query) && (
-          <Row icon="find" title={query} incognito={darkUI} onPress={() => go(query)} />
-        )}
-      </ScrollView>
+          {query.length > 0 && (
+            <Row
+              icon="assistant"
+              title={t('omnibox.ask', { text: query })}
+              incognito={darkUI}
+              accent
+              onPress={() => onAsk(query)}
+            />
+          )}
+          {/* One "go" row in a fixed place: the typed address, or a search for the typed words. */}
+          {query.length > 0 && (
+            <Row
+              icon={looksLikeUrl(query) ? 'link' : 'find'}
+              title={query}
+              incognito={darkUI}
+              onPress={() => go(query)}
+            />
+          )}
+          {localItems.map((item) => (
+            <Animated.View key={`local:${item.url}`} {...motion}>
+              <Row
+                icon={item.bookmarked ? 'bookmarked' : 'history'}
+                title={item.title || hostOf(item.url)}
+                subtitle={item.url.replace(/^https?:\/\/(www\.)?/i, '')}
+                incognito={darkUI}
+                onPress={() => onNavigate(item.url)}
+              />
+            </Animated.View>
+          ))}
+          {remoteItems.map((suggestion) => (
+            <Animated.View key={`remote:${suggestion}`} {...motion}>
+              <Row icon="find" title={suggestion} incognito={darkUI} onPress={() => go(suggestion)} />
+            </Animated.View>
+          ))}
+        </ScrollView>
+      </Animated.View>
     </View>
   );
 }
@@ -222,7 +251,7 @@ const useStyles = makeStyles((c) => ({
     position: 'absolute',
     left: 0,
     right: 0,
-    maxHeight: 360,
+    maxHeight: MAX_HEIGHT,
     backgroundColor: c.surface,
     borderBottomLeftRadius: 14,
     borderBottomRightRadius: 14,
@@ -240,7 +269,7 @@ const useStyles = makeStyles((c) => ({
     borderTopRightRadius: 14,
   },
   panelDark: { backgroundColor: '#2b2a33' },
-  scroll: { flexGrow: 0 },
+  scroll: { flexGrow: 0, maxHeight: MAX_HEIGHT },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 11 },
   pressed: { backgroundColor: c.pressed },
   pressedDark: { backgroundColor: '#3a3944' },
