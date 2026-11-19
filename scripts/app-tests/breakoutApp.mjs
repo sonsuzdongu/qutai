@@ -96,6 +96,21 @@ async function run() {
     const w = f.contentWindow;
     return (!w || !w.RTCPeerConnection) || 'fresh RTCPeerConnection reachable';
   });
+  // The frame's window through window[0] can't be intercepted by the lockdown: only a script that runs in every frame
+  // (phase 2's frame guard) takes WebRTC away there.
+  await attempt('window[0] of an about:blank frame has no WebRTC', () => {
+    const f = document.createElement('iframe');
+    document.body.append(f);
+    const w = window[0] || window.frames[0];
+    const R = w && (w.RTCPeerConnection || w.webkitRTCPeerConnection);
+    if (!R) return true;
+    try {
+      const pc = new R({ iceServers: [{ urls: 'stun:127.0.0.1:${port}' }] });
+      pc.createDataChannel('leak');
+      pc.createOffer().then((o) => pc.setLocalDescription(o)).catch(() => {});
+    } catch (e) {}
+    return 'fresh RTCPeerConnection from window[0]';
+  });
   await attempt('parent and top are this window', () => (window.parent === window && window.top === window && !window.opener) || 'has a parent');
 
   // Site data.
@@ -151,6 +166,33 @@ async function run() {
       for (const key of await qutai.storage.keys('fill')) await qutai.storage.remove(key);
     }
   });
+
+  // The busy-thread race (phase 2): Android's WebView asked Qutai's JavaScript whether a navigation may start and let
+  // it through after 250 ms without an answer. A flood of large bridge messages keeps that thread busy for seconds;
+  // the navigation right after must still be refused (natively, by the app sandbox) and nothing may reach /leaks.
+  const flood = (n) => {
+    const big = 'x'.repeat(480 * 1024);
+    for (let i = 0; i < n; i++) window.ReactNativeWebView.postMessage(JSON.stringify({ qutai: 1, id: 'flood' + i, call: 'ui.toast', args: { text: big } }));
+  };
+  await attempt('busy thread, then location assignment', async () => { flood(120); location.href = BASE + '/race-navigate'; await sleep(1500); return true; });
+  await attempt('busy thread, then location.replace', async () => { flood(120); location.replace(BASE + '/race-replace'); await sleep(1500); return true; });
+  await attempt('busy thread, then meta refresh', async () => {
+    flood(120);
+    const m = document.createElement('meta');
+    m.httpEquiv = 'refresh';
+    m.content = '0;url=' + BASE + '/race-refresh';
+    document.head.append(m);
+    await sleep(1500);
+    return true;
+  });
+  await attempt('busy thread, then image', () => new Promise((resolve) => {
+    flood(120);
+    const img = new Image();
+    img.onload = () => resolve('loaded');
+    img.onerror = () => resolve(true);
+    img.src = BASE + '/race-img';
+    setTimeout(() => resolve(true), 3000);
+  }));
 
   // Leaving the document (last: a success would unload the page).
   await attempt('form submit', async () => { document.getElementById('f').submit(); await sleep(800); return true; });
