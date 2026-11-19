@@ -1003,6 +1003,7 @@ User ──► AssistantPanel ──► runAgent ──► provider adapter ─�
 | `src/device/` | Device features: PDF, screenshots (also full page), read aloud, voice input (`voiceInput.ts`), share/copy, downloads, private mode protection, calendar and reminders, notifications, location, opening system settings, the phone dialer |
 | `src/browser/geolocation.ts` | Web pages' `navigator.geolocation`, answered by the app with a per-site location permission (ask / allow / block) |
 | `src/content/filterLists.ts`, `src/content/blocking.ts` | Ad and tracker blocking: filter lists reduced to domains (pure parser and matcher), their download, updates and per-platform compilation; `src/content/adBlock.ts` is the built-in script blocker |
+| `src/content/userCss.ts`, `userStyles.ts`, `rulesFile.ts`, `cookieInfo.ts` | Page customisation (pure): the CSS sanitiser, user style scopes and page script, the rules file format 2, cookie metadata without values; the tools are `src/agent/pageCustomTool.ts`, the native store `src/device/cookieStore.ts` (tests: `npm run test:siterules`, `test:approvals`) |
 | `src/backup/` | The encrypted backup file: what goes in it, the encryption, and merging or replacing on import |
 | `src/ai/audit.ts`, `src/storage/sentLog.ts` | "What was sent to the AI": the entry recorded for each request and how long it is kept |
 | `src/ai/usage.ts`, `src/ai/prices.ts`, `src/ai/cost.ts` | Approximate cost: each provider's usage, the dated price table, the cost maths (tests: `npm run test:cost`) |
@@ -1085,6 +1086,32 @@ those when the page handled the touch), and a disabled button is reported instea
 `event.isTrusted` can't be pressed by any page script. The local test pages are `scripts/page-tests/` (`node
 --experimental-transform-types scripts/page-tests/serve.mjs`, then open `http://localhost:8811/`; `?script=head` runs the last commit's page script);
 the fake AI server's `post`, `pay` and `sneakpay` scripts drive the dialog on a device against them.
+
+### Page styles and cookies
+
+Step one of page customisation (design and threat model: [docs/page-customisation.md](docs/page-customisation.md)).
+
+- **Styles.** "Make the links red", "bigger text on this site", "dark background here": the assistant calls
+  `restyle_page` with CSS and a short description. Qutai parses and sanitises the CSS first (`src/content/userCss.ts`:
+  style rules, `@media` and `@supports` only; no `@import`, fonts, `url()` other than small raster `data:` images, or
+  functions that load or read things; every declaration `!important`), then asks every time (the description, the
+  CSS under Details). On approve the page changes at once and the chat gets a card with **Keep for this site…** (name
+  and where: this page, pages under its path, this site, this site and its subdomains, or everywhere) and **Undo**.
+  Nothing is kept from an incognito tab. Kept styles live in Settings › Privacy and security › Filter lists › My rules
+  › Styles (switch, Edit CSS, where it applies, delete; not tied to ad blocking), in the rules file (format 2:
+  styles as `! [style]` blocks, listed and confirmed on import) and in both backups. They are injected at document
+  start in the main frame, follow SPA moves, and apply in incognito tabs as hide rules do. The page menu shows
+  **Styles off for this page** whenever a style applies, so a broken one can never trap the page. Refused on sites
+  set to "Read only" or "Blocked".
+- **Cookies.** "Which cookies does this page have?": `page_cookies` lists the cookies that apply to the page and to
+  the sites it loaded from, from the tab's own native cookie store (HttpOnly included; Android
+  `CookieManagerCompat.getCookieInfo` per WebView profile, iOS `WKHTTPCookieStore` of the tab's data store, through
+  the patched react-native-webview module). The model gets name, domain, path, expiry, size, HttpOnly, Secure,
+  SameSite and first/third party with a handle, never a value; "which are trackers" is its judgement from names and
+  domains. The Cookies view (the chat card, the page menu's More › Cookies, the site's permission sheet) groups them by
+  domain, hides each value until "Show value", copies it, and deletes one or all for the site behind a confirmation
+  that says the user may be signed out. The assistant deletes only by handle, after the user approves. Listing is
+  refused on "Blocked" sites, deleting also on "Read only" ones. Limits per platform are in the design note.
 
 ## Permissions
 

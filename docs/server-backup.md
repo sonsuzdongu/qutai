@@ -11,7 +11,8 @@ The server stores **exactly the bytes the file export makes** (`buildBackupFile`
 (`src/backup/payload.ts`). A server backup can be saved as a `.qutai` file and imported, and a restore from the server
 goes through the same import screen and code (`ImportFlow` in `src/components/BackupScreen.tsx`, `openBackup`,
 `restoreBackup`): the same summary of what is in it, merge or replace, the same confirmation before replacing, the
-same restart.
+same restart. Payload additions reach both at once: user styles (19 Nov 2026) are the optional `sites.styles` array,
+sanitised again on restore (docs/page-customisation.md); a server running an older app version stores them unread.
 
 What a backup leaves out is unchanged: downloads and saved pages, caches and site data, incognito data, the "What was
 sent to the AI" list, the locks, the account session and Qutai Credits (they live on the server's ledger).

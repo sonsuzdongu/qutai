@@ -15,6 +15,12 @@ Security (look at these first)
 - [ ] Adding a sign-in method needs no re-check of an existing one: someone holding an unlocked phone can add their own. The notice mail goes out, but access lasts until the owner removes it. Require a proof of an existing method first?
 - [ ] Merging accounts: someone who controls one method of another account (a stolen Google account) can merge its credits into their own, and a merge is final. Accept, or add a waiting period or a confirmation by mail?
 
+Page customisation, step one (19 Nov 2026, docs/page-customisation.md)
+
+- [ ] Kept styles on sites set to "Blocked": today they apply wherever their scope says (they are the user's own; the site levels govern the assistant). Should "Blocked" also switch off kept "everywhere" styles there?
+- [ ] Bump the legal version for the privacy policies' new words on cookies (the assistant gets names, sites and settings, never values): not done, on purpose
+- [ ] Step two (user scripts): the design note's "Step two" section lists what that session needs; the owner decides whether imported scripts may ever arrive switched on (proposed: never)
+
 Contacts (19 Nov 2026, docs/contacts.md)
 
 - [ ] Bump the legal version (open-source `OPEN_SOURCE_LEGAL_VERSION` 2 → 3 and pro `PRO_LEGAL_VERSION` 4 → 5, with the dates) for the new "Your contacts / Kişileriniz" section in both privacy policies: not done by the contacts session, on purpose
@@ -631,6 +637,7 @@ work. The "Not verified on a device yet" items above list the platform-specific 
 - [ ] Tab comparison mode
 
 ### Assistant and tools
+- [ ] Styles and cookies (docs/test-checklist.md › 16): restyle a real public page, keep it, reload, switch it off, undo; "Styles off for this page"; the Cookies view with an HttpOnly cookie, reveal, copy, delete; Android (not run: the native module change needs a new build)
 - [ ] Site rules: the assistant hiding a cookie wall or a sticky banner on a real site (try, then save with a scope),
   My rules (switches, scope, delete, adding by hand), export and import of the rules file
 - [ ] Approximate cost, with the owner's real keys (only documented payloads were tested): for each of Anthropic, OpenAI, Gemini (streaming on and off), OpenRouter and a custom endpoint (Ollama or LM Studio), one plain answer and one task with tool steps and a web search; the line under the answer appears, its breakdown's tokens match the provider's dashboard or usage page for those requests, the cost is close to what the dashboard shows a day later; OpenRouter's figure matches its activity page; a custom endpoint shows tokens only (and still streams: watch for a 400 about `stream_options`); stopping mid-answer says some requests reported nothing; the switch in Settings › Assistant hides the line in the panel and in the log; a backup with chats restores the lines; an incognito conversation shows the line but nothing is saved

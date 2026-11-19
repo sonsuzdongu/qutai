@@ -39,7 +39,8 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             '• Websites you visit receive what any browser sends them, and the details you ask the assistant to type ' +
             'into them (such as your name or address in a form).\n• With your own API key, your message and the ' +
             'content the assistant needs (the page text, screenshots when it looks at a page, files and images you ' +
-            'attach, your memory and custom instructions) go directly to the AI provider you chose (Anthropic, ' +
+            'attach, when you ask about cookies their names, sites and settings but never their values, your memory ' +
+            'and custom instructions) go directly to the AI provider you chose (Anthropic, ' +
             'OpenAI, Google, OpenRouter or your own server). Qutai’s server is not involved. Your calendar events and ' +
             'your location are sent only when you confirm, each time.\n• With Qutai Credits, the same content goes to ' +
             'Qutai’s server first, which passes it to the AI provider (Anthropic, OpenAI or Google) under Qutai’s own ' +
@@ -257,7 +258,8 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             '• Ziyaret ettiğiniz siteler, her tarayıcının gönderdiği bilgileri ve asistandan o siteye yazmasını ' +
             'istediğiniz bilgileri (örneğin bir formdaki adınızı veya adresinizi) alır.\n• Kendi API anahtarınızla, ' +
             'mesajınız ve asistanın ihtiyaç duyduğu içerik (sayfa metni, sayfaya baktığında ekran görüntüleri, ' +
-            'eklediğiniz dosya ve görseller, hafızanız ve özel talimatlarınız) doğrudan seçtiğiniz yapay zekâ ' +
+            'eklediğiniz dosya ve görseller, çerezleri sorduğunuzda adları, siteleri ve ayarları ama hiçbir zaman ' +
+            'değerleri, hafızanız ve özel talimatlarınız) doğrudan seçtiğiniz yapay zekâ ' +
             'sağlayıcısına (Anthropic, OpenAI, Google, OpenRouter veya kendi sunucunuz) gider. Qutai’nin sunucusu ' +
             'araya girmez. Takvim etkinlikleriniz ve konumunuz yalnızca her seferinde onayladığınızda gönderilir.\n• ' +
             'Qutai Kredileriyle aynı içerik önce Qutai’nin sunucusuna gider; sunucu onu Qutai’nin kendi hesabıyla ' +

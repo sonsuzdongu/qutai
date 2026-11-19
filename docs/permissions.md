@@ -257,6 +257,8 @@ Qutai doesn't call `canOpenURL`; links to other apps go straight to `openURL`.
 | Upload field (`<input type="file">`) | Photo picker (no permission), Files, or the system camera ("Take Photo or Video": camera prompt, plus microphone for a video with sound) | System file picker (no permission); the camera option is offered only once Qutai holds `CAMERA` |
 | Media playback | Plays as in Safari. With "Keep playing in the background" on, `<audio>` and audio-only media go on in the background; WebKit pauses `<video>` elements when the app leaves the foreground (except in picture-in-picture), and the page script plays such a video again so its sound goes on, keeping the page from seeing that the app left while sound plays (not in incognito tabs); the lock screen, Control Center and headphones control the page through WebKit's own Now Playing and the page's Media Session. Incognito tabs: the page's Media Session title, artist and artwork are replaced with "Private tab" | With the setting on, the page's sound goes on in the background with Qutai's media notification (the page's Media Session metadata, or its title and site; "Private tab" for incognito tabs, never artwork). The playing tab keeps seeing itself visible while Qutai is in the background (its `<video>` isn't paused by Chromium and players that pause on visibilitychange go on), only while it plays and up to two minutes after it is paused from the controls; every other tab sees the real state. Media inside frames isn't seen on Android, so it gets no notification and may stop in the background. Phone makers' battery managers may still stop playback; Settings offers a button to Qutai's app settings (battery), no `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` |
 | Downloads | Saved in the app's own Downloads folder (no permission) | System download manager; asks for `WRITE_EXTERNAL_STORAGE` on Android 9 and older |
+| User styles (docs/page-customisation.md) | No permission. CSS the user approved or kept, in the page's main frame only; it can't load anything from the network (sanitised) and can't reach Qutai's own screens | Same |
+| Cookie list (docs/page-customisation.md) | No permission. Read from the tab's own WebKit data store (`WKHTTPCookieStore`; an incognito tab's own non-persistent store), HttpOnly included; deleted only after the user confirms | Read from the tab's WebView profile (`CookieManagerCompat.getCookieInfo`; the incognito profile for incognito tabs) |
 
 ## Notes for the store forms
 
@@ -276,6 +278,10 @@ Qutai doesn't call `canOpenURL`; links to other apps go straight to `openURL`.
   record or keep it, and the assistant can't grant it.
 - Media playback in the background: no data leaves the phone for it. On Android the notification's artwork is
   loaded from the address the page's Media Session gives (https only, normal tabs only), without cookies.
+- Cookies (the assistant's `page_cookies` and the Cookies view): the AI provider gets only each cookie's name, domain,
+  path, expiry, size and flags, and only when the user asks about cookies; values stay on the phone, shown in the
+  Cookies view when the user taps "Show value", and are never stored, logged, in the "sent to the AI" log or in
+  backups. Kept user styles are stored on the phone and in backups (they are the user's settings, not browsing data).
 - Photos: write-only; nothing is read from the library. Reminders: Qutai only writes, though iOS grants read access
   too.
 - Calendar: read only by the assistant's `read_calendar`, when the user asks about their schedule and confirms the
