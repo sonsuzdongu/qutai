@@ -61,6 +61,7 @@ export function GradientButton({
   style,
   textStyle,
   icon,
+  maxFontSizeMultiplier,
 }: {
   label: string;
   onPress: () => void;
@@ -68,6 +69,8 @@ export function GradientButton({
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   icon?: ReactNode;
+  /** Caps how far the system's larger text sizes grow the label (it wraps rather than clips when it grows). */
+  maxFontSizeMultiplier?: number;
 }) {
   return (
     <Pressable
@@ -86,7 +89,9 @@ export function GradientButton({
       />
       <View style={styles.content}>
         {icon}
-        <Text style={[styles.label, textStyle]}>{label}</Text>
+        <Text style={[styles.label, textStyle]} maxFontSizeMultiplier={maxFontSizeMultiplier}>
+          {label}
+        </Text>
       </View>
     </Pressable>
   );
@@ -95,8 +100,8 @@ export function GradientButton({
 const styles = StyleSheet.create({
   invisible: { opacity: 0 },
   button: { overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
-  content: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  label: { color: '#ffffff', fontWeight: '700' },
+  content: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, maxWidth: '100%' },
+  label: { color: '#ffffff', fontWeight: '700', textAlign: 'center', flexShrink: 1 },
   disabled: { opacity: 0.4 },
   pressed: { opacity: 0.85 },
 });

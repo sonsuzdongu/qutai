@@ -58,6 +58,8 @@ The first-launch setup, and "Tell me about yourself": the user talks freely and 
   Status: Waiting for the owner ([TODO.md](../../TODO.md#5-legal)) · Why: true for own keys, not once requests can go through Qutai's server · Source: TODO.md › Qutai Credits › 5. Legal
 - **`INTRO-23`** An official-build step asking for anonymous usage data is planned, not built.
   Status: Default (manager or implementing session; open to change) · Why: analytics only with consent · Enforced: Designed, not built · Source: TODO.md › Analytics, with consent
+- **`INTRO-24`** The welcome and legal screens use smaller type than the later steps (tagline and bullets 14–15 pt, feature text 13 pt), tighter still on screens under 760 dp tall and in landscape (the logo then sits beside the name). Their text grows with the system's text size up to 1.4× and the screen scrolls past that (the scroll bar flashes when there is more); the "I have read and accept" checkbox sits with the Accept button, pinned at the bottom, and the button grows instead of clipping a wrapped label.
+  Status: Owner, 2026-11-19 · Why: on the owner's phone the text of both screens did not fit; the legal summary runs to 600–730 characters in the longer languages, and the checkbox that enables Accept had scrolled out of view · Enforced: In the app: src/components/Onboarding.tsx (FIT_FONT_SCALE, compact styles), src/ui/BrandGradient.tsx (GradientButton) · Source: docs/test-checklist.md › 19 Kasım'da bildirilenler
 
 ## Details
 

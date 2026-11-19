@@ -1,5 +1,14 @@
-import { ComponentRef, useCallback, useReducer, useRef, useState } from 'react';
-import { Keyboard, Platform, Pressable, ScrollViewInstance, StyleSheet, Text, View } from 'react-native';
+import { ComponentRef, useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import {
+  Keyboard,
+  Platform,
+  Pressable,
+  ScrollViewInstance,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { BlurTargetView, BlurView } from 'expo-blur';
 import Animated, {
   useAnimatedProps,
@@ -42,6 +51,12 @@ import { LegalScreen } from './LegalScreen';
 
 type Step = 'welcome' | 'legal' | 'ai' | 'permissions' | 'profile' | 'background' | 'protection' | 'browser';
 const ALL_STEPS: Step[] = ['welcome', 'legal', 'ai', 'permissions', 'profile', 'background', 'protection', 'browser'];
+
+/**
+ * How far the system's larger text sizes grow the welcome and legal screens' text (as the screen headers do). Past it
+ * the text stays readable and the screens scroll; the button and the acceptance checkbox stay pinned at the bottom.
+ */
+const FIT_FONT_SCALE = 1.4;
 
 type Props = {
   settings: Settings;
@@ -107,6 +122,15 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   const [reading, setReading] = useState<LegalKind | null>(null);
   const step = steps[index];
   const last = index === steps.length - 1;
+  // Small phones (about 360 x 640) and landscape get tighter type and spacing on the text-heavy first screens.
+  const { width, height } = useWindowDimensions();
+  const landscape = width > height;
+  const compact = landscape || height < 760;
+  // When a step is taller than the screen, the scroll bar shows briefly so there is visibly more below.
+  useEffect(() => {
+    const timer = setTimeout(() => scrollRef.current?.flashScrollIndicators(), 450);
+    return () => clearTimeout(timer);
+  }, [index, width, height]);
   const hasKey = isConfigured(cleanAiChoice(draft), draft.provider);
   // Pro mode: the AI step's own screens (src/credits/setupFlow.ts). Without pro mode it is never used.
   const [setup, dispatchSetupRaw] = useReducer(setupReducer, SETUP_START);
@@ -181,7 +205,7 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
         <Aurora base={palette.bg} dark={palette.dark} />
         <SafeAreaView style={styles.flex}>
           <View style={styles.flex}>
-            <View style={styles.top}>
+            <View style={[styles.top, landscape && styles.topLandscape]}>
               {index > 0 ? (
                 <Pressable
                   onPress={() => {
@@ -242,29 +266,65 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                 contentContainerStyle={styles.content}
                 footer={
                   primaryHidden ? null : (
-                    <View style={styles.bottom}>
+                    <View style={[styles.bottom, compact && styles.bottomCompact]}>
+                      {step === 'legal' && (
+                        // Next to the button it enables, so it never has to be found by scrolling.
+                        <Pressable
+                          onPress={() => setAccepted(!accepted)}
+                          style={[styles.checkRow, compact && styles.checkRowCompact]}
+                          accessibilityRole="checkbox"
+                          accessibilityState={{ checked: accepted }}
+                        >
+                          <View style={[styles.checkbox, accepted && styles.checkboxOn]}>
+                            {accepted && <Icon name="check" size={16} color="#ffffff" />}
+                          </View>
+                          <Text
+                            style={[styles.checkText, compact && styles.checkTextCompact]}
+                            maxFontSizeMultiplier={FIT_FONT_SCALE}
+                          >
+                            {t('onboarding.acceptCheck')}
+                          </Text>
+                        </Pressable>
+                      )}
                       <GradientButton
                         label={primary}
                         onPress={next}
                         disabled={primaryDisabled || switching}
-                        style={styles.primary}
+                        style={[styles.primary, compact && styles.primaryCompact]}
                         textStyle={styles.primaryText}
+                        maxFontSizeMultiplier={FIT_FONT_SCALE}
                       />
                     </View>
                   )
                 }
               >
-                <View style={styles.step}>
+                <View style={[styles.step, (step === 'welcome' || step === 'legal') && compact && styles.stepCompact]}>
                   {step === 'welcome' && (
                     <>
-                      <View style={styles.hero}>
-                        <QutaiMark size={72} alwaysSparkle />
-                        <GradientText style={styles.wordmark}>Qutai</GradientText>
-                        <Text style={styles.lead}>{t('onboarding.tagline')}</Text>
+                      <View style={[styles.hero, compact && styles.heroCompact, landscape && styles.heroRow]}>
+                        <QutaiMark size={landscape ? 36 : compact ? 48 : 60} alwaysSparkle />
+                        <GradientText style={[styles.wordmark, compact && styles.wordmarkCompact]}>Qutai</GradientText>
                       </View>
-                      <Feature icon="summarize" title={t('onboarding.f1Title')} body={t('onboarding.f1Body')} />
-                      <Feature icon="assistant" title={t('onboarding.f2Title')} body={t('onboarding.f2Body')} />
+                      <Text
+                        style={[styles.tagline, compact && styles.taglineCompact]}
+                        maxFontSizeMultiplier={FIT_FONT_SCALE}
+                      >
+                        {t('onboarding.tagline')}
+                      </Text>
                       <Feature
+                        compact={compact}
+                        icon="summarize"
+                        title={t('onboarding.f1Title')}
+                        body={t('onboarding.f1Body')}
+                      />
+                      <Feature
+                        compact={compact}
+                        icon="assistant"
+                        title={t('onboarding.f2Title')}
+                        body={t('onboarding.f2Body')}
+                      />
+                      <Feature
+                        compact={compact}
                         icon="shield"
                         title={t('onboarding.f3Title')}
                         body={t(creditsEnabled ? 'onboarding.f3BodyPro' : 'onboarding.f3Body')}
@@ -274,16 +334,22 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
 
                   {step === 'legal' && (
                     <>
-                      <Text style={styles.title} accessibilityRole="header">
+                      <Text
+                        style={[styles.legalTitle, compact && styles.legalTitleCompact]}
+                        accessibilityRole="header"
+                        maxFontSizeMultiplier={FIT_FONT_SCALE}
+                      >
                         {t(legalOnly ? 'onboarding.legalUpdatedTitle' : 'onboarding.legalTitle')}
                       </Text>
-                      <Text style={styles.lead}>{t('onboarding.legalLead')}</Text>
+                      <Text style={styles.legalLead} maxFontSizeMultiplier={FIT_FONT_SCALE}>
+                        {t('onboarding.legalLead')}
+                      </Text>
                       <View style={styles.card}>
                         {/* Pro mode: the summary of its own documents (src/legal/proDocuments.ts). */}
-                        <Bullet text={t(creditsEnabled ? 'onboarding.legal1Pro' : 'onboarding.legal1')} />
-                        <Bullet text={t(creditsEnabled ? 'onboarding.legal2Pro' : 'onboarding.legal2')} />
-                        <Bullet text={t(creditsEnabled ? 'onboarding.legal3Pro' : 'onboarding.legal3')} />
-                        <Bullet text={t('onboarding.legal4')} />
+                        <Bullet compact={compact} text={t(creditsEnabled ? 'onboarding.legal1Pro' : 'onboarding.legal1')} />
+                        <Bullet compact={compact} text={t(creditsEnabled ? 'onboarding.legal2Pro' : 'onboarding.legal2')} />
+                        <Bullet compact={compact} text={t(creditsEnabled ? 'onboarding.legal3Pro' : 'onboarding.legal3')} />
+                        <Bullet compact={compact} text={t('onboarding.legal4')} />
                       </View>
                       <View style={styles.linkRow}>
                         <Pressable
@@ -292,7 +358,9 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                           accessibilityRole="link"
                           hitSlop={6}
                         >
-                          <Text style={styles.link}>{t('settings.privacyPolicy')}</Text>
+                          <Text style={styles.legalLink} maxFontSizeMultiplier={FIT_FONT_SCALE}>
+                            {t('settings.privacyPolicy')}
+                          </Text>
                         </Pressable>
                         <Pressable
                           onPress={() => setReading('terms')}
@@ -300,20 +368,11 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                           accessibilityRole="link"
                           hitSlop={6}
                         >
-                          <Text style={styles.link}>{t('settings.terms')}</Text>
+                          <Text style={styles.legalLink} maxFontSizeMultiplier={FIT_FONT_SCALE}>
+                            {t('settings.terms')}
+                          </Text>
                         </Pressable>
                       </View>
-                      <Pressable
-                        onPress={() => setAccepted(!accepted)}
-                        style={styles.checkRow}
-                        accessibilityRole="checkbox"
-                        accessibilityState={{ checked: accepted }}
-                      >
-                        <View style={[styles.checkbox, accepted && styles.checkboxOn]}>
-                          {accepted && <Icon name="check" size={16} color="#ffffff" />}
-                        </View>
-                        <Text style={styles.checkText}>{t('onboarding.acceptCheck')}</Text>
-                      </Pressable>
                     </>
                   )}
 
@@ -506,29 +565,35 @@ const BLUR_MAX = 45;
 const BLUR_OUT_MS = 220;
 const BLUR_IN_MS = 380;
 
-function Feature({ icon, title, body }: { icon: IconName; title: string; body: string }) {
+function Feature({ icon, title, body, compact }: { icon: IconName; title: string; body: string; compact: boolean }) {
   const styles = useStyles();
   const palette = usePalette();
   return (
-    <View style={styles.feature}>
-      <View style={styles.featureIcon}>
-        <Icon name={icon} size={22} color={palette.tintText} />
+    <View style={[styles.feature, compact && styles.featureCompact]}>
+      <View style={[styles.featureIcon, compact && styles.featureIconCompact]}>
+        <Icon name={icon} size={compact ? 18 : 20} color={palette.tintText} />
       </View>
       <View style={styles.flex}>
-        <Text style={styles.featureTitle}>{title}</Text>
-        <Text style={styles.hint}>{body}</Text>
+        <Text style={[styles.featureHead, compact && styles.featureHeadCompact]} maxFontSizeMultiplier={FIT_FONT_SCALE}>
+          {title}
+        </Text>
+        <Text style={[styles.featureBody, compact && styles.featureBodyCompact]} maxFontSizeMultiplier={FIT_FONT_SCALE}>
+          {body}
+        </Text>
       </View>
     </View>
   );
 }
 
-function Bullet({ text }: { text: string }) {
+function Bullet({ text, compact }: { text: string; compact: boolean }) {
   const styles = useStyles();
   const palette = usePalette();
   return (
-    <View style={styles.bullet}>
-      <Icon name="check" size={18} color={palette.tintText} />
-      <Text style={[styles.bulletText, styles.flex]}>{text}</Text>
+    <View style={[styles.bullet, compact && styles.bulletCompact]}>
+      <Icon name="check" size={compact ? 16 : 17} color={palette.tintText} />
+      <Text style={[styles.bulletText, compact && styles.bulletTextCompact, styles.flex]} maxFontSizeMultiplier={FIT_FONT_SCALE}>
+        {text}
+      </Text>
     </View>
   );
 }
@@ -566,11 +631,13 @@ const useStyles = makeStyles((c) => ({
     paddingHorizontal: 20,
     height: 48,
   },
+  topLandscape: { height: 40 },
   topSpacer: { width: 22 },
   dots: { flexDirection: 'row', gap: 6 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: c.border },
   dotActive: { width: 18, backgroundColor: c.tint },
   step: { gap: 14 },
+  stepCompact: { gap: 10 },
   content: {
     paddingHorizontal: 24,
     paddingTop: 8,
@@ -580,8 +647,18 @@ const useStyles = makeStyles((c) => ({
     width: '100%',
     alignSelf: 'center',
   },
-  hero: { alignItems: 'center', gap: 10, marginTop: 24, marginBottom: 18 },
-  wordmark: { fontSize: 34, fontWeight: '700', letterSpacing: -0.6 },
+  // The welcome and legal screens: smaller type than the later steps, so the whole text fits on most phones.
+  hero: { alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 2 },
+  heroCompact: { gap: 4, marginTop: 0, marginBottom: 0 },
+  heroRow: { flexDirection: 'row', justifyContent: 'center', gap: 10 },
+  wordmark: { fontSize: 30, fontWeight: '700', letterSpacing: -0.6 },
+  wordmarkCompact: { fontSize: 26 },
+  tagline: { color: c.textSecondary, fontSize: 15, lineHeight: 21, textAlign: 'center', marginBottom: 4 },
+  taglineCompact: { fontSize: 14, lineHeight: 19.5, marginBottom: 0 },
+  legalTitle: { color: c.text, fontSize: 23, fontWeight: '700', letterSpacing: -0.3, marginTop: 6 },
+  legalTitleCompact: { fontSize: 20, marginTop: 0 },
+  legalLead: { color: c.textSecondary, fontSize: 14, lineHeight: 19 },
+  legalLink: { color: c.tintText, fontSize: 14, fontWeight: '600' },
   title: {
     color: c.text,
     fontSize: 26,
@@ -599,18 +676,24 @@ const useStyles = makeStyles((c) => ({
   hint: { color: c.textSecondary, fontSize: 13.5, lineHeight: 19 },
   feature: {
     flexDirection: 'row',
-    gap: 14,
+    gap: 12,
     alignItems: 'flex-start',
-    paddingVertical: 6,
+    paddingVertical: 4,
   },
+  featureCompact: { paddingVertical: 0, gap: 10 },
   featureIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: c.surface,
   },
+  featureIconCompact: { width: 32, height: 32, borderRadius: 10 },
+  featureHead: { color: c.text, fontSize: 15, fontWeight: '600', marginBottom: 1 },
+  featureHeadCompact: { fontSize: 14 },
+  featureBody: { color: c.textSecondary, fontSize: 13, lineHeight: 18 },
+  featureBodyCompact: { fontSize: 12.5, lineHeight: 17 },
   featureTitle: {
     color: c.text,
     fontSize: 16,
@@ -623,8 +706,10 @@ const useStyles = makeStyles((c) => ({
     paddingHorizontal: 16,
     paddingVertical: 6,
   },
-  bullet: { flexDirection: 'row', gap: 10, paddingVertical: 8 },
-  bulletText: { color: c.text, fontSize: 15, lineHeight: 21 },
+  bullet: { flexDirection: 'row', gap: 10, paddingVertical: 6 },
+  bulletCompact: { gap: 8, paddingVertical: 4 },
+  bulletText: { color: c.text, fontSize: 14, lineHeight: 19.5 },
+  bulletTextCompact: { fontSize: 13, lineHeight: 18 },
   linkRow: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -646,6 +731,7 @@ const useStyles = makeStyles((c) => ({
     gap: 12,
     paddingVertical: 8,
   },
+  checkRowCompact: { paddingVertical: 4 },
   checkbox: {
     width: 24,
     height: 24,
@@ -656,7 +742,8 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
   },
   checkboxOn: { backgroundColor: c.tint, borderColor: c.tint },
-  checkText: { flex: 1, color: c.text, fontSize: 15, lineHeight: 21 },
+  checkText: { flex: 1, color: c.text, fontSize: 14, lineHeight: 19.5 },
+  checkTextCompact: { fontSize: 13.5, lineHeight: 18.5 },
   toggle: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -690,8 +777,12 @@ const useStyles = makeStyles((c) => ({
     maxWidth: 560,
     width: '100%',
     alignSelf: 'center',
+    gap: 6,
   },
-  primary: { height: 52, borderRadius: 26 },
+  bottomCompact: { paddingTop: 4, paddingBottom: 8, gap: 2 },
+  // A minimum, not a fixed height: a label that wraps at a large text size makes the button taller instead of clipping.
+  primary: { minHeight: 52, borderRadius: 26, paddingVertical: 8, paddingHorizontal: 18 },
+  primaryCompact: { minHeight: 46, borderRadius: 23 },
   primaryText: { fontSize: 17 },
   disabled: { opacity: 0.4 },
   pressed: { opacity: 0.8 },
