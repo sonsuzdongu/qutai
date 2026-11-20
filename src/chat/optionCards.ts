@@ -265,10 +265,17 @@ export function cardLabel(card: OptionCard): string {
 /** The tool result the model reads: what was shown and what was left out, and how to finish. */
 export function optionsResult(built: { cards: OptionCard[]; dropped: string[]; pricesDropped: number }): string {
   const withImages = built.cards.filter((c) => c.image).length;
-  const parts = [`Shown to the user as ${built.cards.length} card${built.cards.length === 1 ? '' : 's'} (${withImages} with a picture from the page).`];
+  const withPrices = built.cards.filter((c) => c.price).length;
+  const parts = [
+    `Shown to the user as ${built.cards.length} card${built.cards.length === 1 ? '' : 's'} ` +
+      `(${withImages} with a picture from the page, ${withPrices} with a price).`,
+  ];
   if (built.dropped.length) parts.push(`Left out: ${built.dropped.join(', ')}.`);
   if (built.pricesDropped) {
-    parts.push(`${built.pricesDropped} price${built.pricesDropped === 1 ? ' was' : 's were'} not found in what you read and not shown; give only prices you saw.`);
+    parts.push(
+      `${built.pricesDropped} price${built.pricesDropped === 1 ? ' was' : 's were'} not found in what you read and not shown on the cards; ` +
+        "don't say the cards show prices they don't.",
+    );
   }
   parts.push(
     'Now finish with a short text reply that makes sense without the cards: what you found in a sentence or two ' +

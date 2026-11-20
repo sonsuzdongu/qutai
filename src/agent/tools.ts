@@ -906,7 +906,7 @@ export const TOOLS: ToolDefinition[] = [
     input_schema: {
       type: 'object',
       properties: {
-        question: { type: 'string', description: 'Short question shown above the buttons' },
+        question: { type: 'string', description: 'One short sentence shown above the buttons' },
         options: {
           type: 'array',
           items: { type: 'string' },

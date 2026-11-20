@@ -172,6 +172,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'working.otherTab': 'Em outra aba',
   'working.openHint': 'Abre todas as etapas',
   'working.answerTitle': 'Resposta do Qutai',
+  'working.questionTitle': 'Qutai pergunta',
   'working.openChat': 'Abrir chat',
   'settings.showActionMarker': 'Mostrar onde o assistente age',
   'settings.showActionMarkerHint': 'Antes de o assistente clicar ou digitar em uma página, um anel ou moldura azul mostra o local por um instante. Desativado: sem marcação e sem pausa.',

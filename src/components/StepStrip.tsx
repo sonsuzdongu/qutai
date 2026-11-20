@@ -245,6 +245,88 @@ export function AnswerCard({
   );
 }
 
+/**
+ * A task ended with a short question (ask_user) while the panel was closed: asked over the page instead of opening
+ * the panel (WORK-17, chat/questionBubble.ts decides what fits). The options are buttons; a tap answers and the task goes
+ * on in the strip. "Open chat" opens the panel for a typed answer or the rest of the conversation. Announced to a
+ * screen reader (who keeps the panel open anyway, so rarely sees this).
+ */
+export function QuestionCard({
+  question,
+  options,
+  bottom,
+  look = 'classic',
+  onChoose,
+  onOpen,
+  onClose,
+}: {
+  question: string;
+  options: string[];
+  bottom: number;
+  look?: AssistantLook;
+  onChoose: (option: string) => void;
+  onOpen: () => void;
+  onClose: () => void;
+}) {
+  const palette = usePalette();
+  const styles = useStyles(palette);
+  const reduceMotion = useReduceMotion();
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
+  const [grow] = useState(() => new Animated.Value(reduceMotion ? 1 : 0));
+  useEffect(() => {
+    if (reduceMotion) return grow.setValue(1);
+    Animated.timing(grow, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  }, [grow, reduceMotion]);
+  useEffect(() => {
+    AccessibilityInfo.announceForAccessibility(`${t('working.questionTitle')}: ${question} ${options.join(', ')}`);
+  }, [question, options]);
+
+  return (
+    <Animated.View
+      pointerEvents="box-none"
+      style={[styles.wrap, { bottom, left: 12 + insets.left, right: 12 + insets.right, opacity: grow, transform: [{ scale: grow.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }]}
+    >
+      <View style={[styles.card, look === 'band' && styles.glass, { maxHeight: answerCardMaxHeight(windowHeight, bottom, insets.top) }]}>
+        {look === 'band' ? <GlassBack radius={20} /> : null}
+        <View style={styles.cardHeader}>
+          <QutaiMark size={20} animate={false} />
+          <Text style={styles.cardTitle} accessibilityRole="header">
+            {t('working.questionTitle')}
+          </Text>
+          <Pressable
+            onPress={onClose}
+            style={({ pressed }) => [styles.close, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel={t('common.close')}
+            hitSlop={8}
+          >
+            <Icon name="close" size={20} color={palette.textSecondary} />
+          </Pressable>
+        </View>
+        <ScrollView style={styles.answerScroll} contentContainerStyle={styles.answerContent}>
+          <Text style={styles.answer}>{question}</Text>
+          <View style={styles.questionOptions}>
+            {options.map((option) => (
+              <Pressable
+                key={option}
+                onPress={() => onChoose(option)}
+                style={({ pressed }) => [styles.questionOption, pressed && styles.questionOptionPressed]}
+                accessibilityRole="button"
+              >
+                <Text style={styles.questionOptionText}>{option}</Text>
+              </Pressable>
+            ))}
+          </View>
+        </ScrollView>
+        <Pressable onPress={onOpen} style={({ pressed }) => [styles.openChat, pressed && styles.pressed]} accessibilityRole="button">
+          <Text style={styles.openChatText}>{t('working.openChat')}</Text>
+        </Pressable>
+      </View>
+    </Animated.View>
+  );
+}
+
 function useStyles(p: Palette) {
   return useMemo(() => makeStyles(p), [p]);
 }
@@ -308,6 +390,20 @@ function makeStyles(p: Palette) {
     answerScroll: { flexGrow: 0 },
     answerContent: { paddingHorizontal: 16, paddingBottom: 8 },
     answer: { color: p.text, fontSize: 15, lineHeight: 21 },
+    questionOptions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+    // The same outlined pills as the panel's question buttons.
+    questionOption: {
+      minHeight: 40,
+      justifyContent: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: p.tint,
+      backgroundColor: p.surface,
+    },
+    questionOptionPressed: { backgroundColor: p.pressed },
+    questionOptionText: { color: p.tintText, fontSize: 15, fontWeight: '600' },
     // The cards run to the card's right edge, so the row reads as one to swipe.
     answerCards: { marginTop: 10, marginRight: -16 },
     openChat: {

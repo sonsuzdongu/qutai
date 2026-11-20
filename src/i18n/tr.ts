@@ -161,6 +161,7 @@ export const tr: Record<keyof typeof en, string> = {
   'working.otherTab': 'Başka bir sekmede',
   'working.openHint': 'Tüm adımları açar',
   'working.answerTitle': 'Qutai\'nin yanıtı',
+  'working.questionTitle': 'Qutai soruyor',
   'working.openChat': 'Sohbeti aç',
   'settings.showActionMarker': 'Asistanın nerede işlem yaptığını göster',
   'settings.showActionMarkerHint': 'Asistan bir sayfada tıklamadan veya yazmadan önce mavi bir halka ya da çerçeve yeri kısa süre gösterir. Kapalı: işaret ve bekleme olmaz.',

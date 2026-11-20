@@ -16,6 +16,8 @@ export type WorkingView = {
   origin: 'panel' | 'closed';
   /** The finished task's answer to show in the answer card (origin closed). */
   answer: boolean;
+  /** The task ended with a short question for the user, asked in a bubble over the page instead of the panel (WORK-17). */
+  question: boolean;
 };
 
 export const idleView: WorkingView = {
@@ -25,6 +27,7 @@ export const idleView: WorkingView = {
   autoOpened: false,
   origin: 'panel',
   answer: false,
+  question: false,
 };
 
 export type WorkingEvent =
@@ -33,8 +36,16 @@ export type WorkingEvent =
   | { type: 'userOpen' }
   | { type: 'userClose' }
   | { type: 'asking'; on: boolean }
-  | { type: 'end'; outcome: 'done' | 'failed' | 'needsAnswer' | 'stopped'; hasAnswer: boolean; sameConversation: boolean }
-  | { type: 'dismissAnswer' };
+  /** questionFits: the question it ends with fits a bubble over the page (chat/questionBubble.ts). */
+  | {
+      type: 'end';
+      outcome: 'done' | 'failed' | 'needsAnswer' | 'stopped';
+      hasAnswer: boolean;
+      sameConversation: boolean;
+      questionFits?: boolean;
+    }
+  | { type: 'dismissAnswer' }
+  | { type: 'dismissQuestion' };
 
 export function workingStep(view: WorkingView, event: WorkingEvent): WorkingView {
   switch (event.type) {
@@ -47,9 +58,10 @@ export function workingStep(view: WorkingView, event: WorkingEvent): WorkingView
         autoOpened: false,
         origin: event.panelOpen ? 'panel' : 'closed',
         answer: false,
+        question: false,
       };
     case 'userOpen':
-      if (view.phase === 'idle') return { ...view, panel: true, answer: false };
+      if (view.phase === 'idle') return { ...view, panel: true, answer: false, question: false };
       return { ...view, panel: true, pinned: true, autoOpened: false };
     case 'userClose':
       if (view.phase === 'idle') return { ...view, panel: false };
@@ -72,10 +84,14 @@ export function workingStep(view: WorkingView, event: WorkingEvent): WorkingView
       if (event.outcome === 'done' && view.origin === 'closed' && !view.panel && event.hasAnswer) {
         return { ...base, answer: true };
       }
+      // A short question while the panel is closed: asked over the page; the user's open panel stays where it is.
+      if (event.outcome === 'needsAnswer' && event.questionFits && !view.panel) return { ...base, question: true };
       return { ...base, panel: true };
     }
     case 'dismissAnswer':
       return { ...view, answer: false };
+    case 'dismissQuestion':
+      return { ...view, question: false };
   }
 }
 

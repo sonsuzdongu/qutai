@@ -35,6 +35,7 @@ import {
   Appearance,
   AppState,
   Linking,
+  PixelRatio,
   Platform,
   StyleSheet,
   useColorScheme,
@@ -245,7 +246,8 @@ import {
 } from './src/device/backgroundTask';
 import { setMarkerEnvironment, clearMark } from './src/agent/actionMarker';
 import { ActionMarkerLayer } from './src/components/ActionMarkerLayer';
-import { AnswerCard, StepStrip } from './src/components/StepStrip';
+import { AnswerCard, QuestionCard, StepStrip } from './src/components/StepStrip';
+import { questionFitsBubble } from './src/chat/questionBubble';
 import { setCardImageBlocking } from './src/chat/cardImages';
 import { WorkingGlow } from './src/components/WorkingGlow';
 import { useScreenReader } from './src/components/useHoldGesture';
@@ -644,6 +646,8 @@ function BrowserApp({
   const [answerCard, setAnswerCard] = useState('');
   // The options (cards) of that answer, shown in the answer card under its text.
   const [answerOptions, setAnswerOptions] = useState<ChatItem | null>(null);
+  // A short question the task ended with, asked in a bubble over the page (WORK-17), and its conversation.
+  const [pageQuestion, setPageQuestion] = useState<{ chat: Conversation; item: ChatItem } | null>(null);
   const applyWork = useCallback((event: WorkingEvent) => {
     const next = workingStep(workRef.current, event);
     workRef.current = next;
@@ -1205,8 +1209,10 @@ function BrowserApp({
    * `voice`: a voice message from holding the Qutai button, sent with the panel closed: it leaves the files attached to
    * the message being written, and a saved task waiting in the input, where they are.
    */
-  const send = async (text: string, options: { tab?: Tab; noPage?: boolean; voice?: boolean } = {}) => {
+  // closed: sent with the panel closed without voice (an answer tapped in the question bubble over the page, WORK-17).
+  const send = async (text: string, options: { tab?: Tab; noPage?: boolean; voice?: boolean; closed?: boolean } = {}) => {
     if (running) return;
+    const panelClosed = !!options.voice || !!options.closed;
     // The conversation belongs to the tab the user is looking at when they send the task,
     // and stays there even if the agent moves to other tabs.
     // A grouped tab's conversation is the group's, so the task keeps one context whichever of its tabs is shown.
@@ -1215,7 +1221,7 @@ function BrowserApp({
     // Marked before anything is shown, so a message typed in an incognito tab is never saved.
     if (current.incognito) chat.privacy.touchedIncognito = true;
     // Images go only to a model that takes them: said before anything is sent, with the message kept in the input.
-    if (!options.voice && chat.pending.some((a) => a.kind === 'image')) {
+    if (!panelClosed && chat.pending.some((a) => a.kind === 'image')) {
       const blocked = await imagesBlockedFor(chat);
       if (blocked) {
         chat.setDraft(text);
@@ -1241,8 +1247,8 @@ function BrowserApp({
         return;
       }
     }
-    if (prepared?.chat === chat && !options.voice) setPrepared(null);
-    const attachments = options.voice ? [] : chat.takePending();
+    if (prepared?.chat === chat && !panelClosed) setPrepared(null);
+    const attachments = panelClosed ? [] : chat.takePending();
     const sent = userItem(text, attachments);
     chat.add(sent);
 
@@ -1294,7 +1300,8 @@ function BrowserApp({
     // keeps the panel the user is in.
     setAnswerCard('');
     setAnswerOptions(null);
-    applyWork({ type: 'start', panelOpen: !options.voice, collapse: !screenReaderRef.current });
+    setPageQuestion(null);
+    applyWork({ type: 'start', panelOpen: !panelClosed, collapse: !screenReaderRef.current });
     // May go on in the background (Android, opt-in) unless the conversation is incognito; the notification's title
     // is the user's own message.
     const incognitoTask = () => chat.incognito || chat.privacy.touchedIncognito;
@@ -1637,10 +1644,15 @@ function BrowserApp({
         .pop();
       setAnswerCard(answerText);
       setAnswerOptions(cardsItem ?? null);
+      // The question it ends with, when it fits a bubble over the page (chat/questionBubble.ts).
+      const asked = outcome.kind === 'needsAnswer' ? chat.items.slice(sentAt + 1).filter((item) => item.kind === 'choices').pop() : undefined;
+      const questionFits = !!asked && questionFitsBubble(asked.text, asked.options ?? [], PixelRatio.getFontScale());
+      setPageQuestion(asked && questionFits ? { chat, item: asked } : null);
       applyWork({
         type: 'end',
         outcome: outcome.kind,
         hasAnswer: !!answerText || !!cardsItem,
+        questionFits,
         sameConversation: AppState.currentState === 'active' && browserInstance.conversationOf(browserInstance.active) === chat,
       });
       if (outcome.kind !== 'stopped') taskEnded(chat, outcome.kind);
@@ -2995,6 +3007,27 @@ function BrowserApp({
               tick();
               if (browser.agentTabId) browser.switchTab(browser.agentTabId);
             }}
+          />
+        ) : null}
+        {work.question && pageQuestion && !panelOpen && !running ? (
+          <QuestionCard
+            question={plainAnswer(pageQuestion.item.text)}
+            options={pageQuestion.item.options ?? []}
+            bottom={stripBottom}
+            look={settings.assistantLook}
+            onChoose={(option) => {
+              tick();
+              const { chat, item } = pageQuestion;
+              applyWork({ type: 'dismissQuestion' });
+              setPageQuestion(null);
+              chat.choose(item.id, option);
+              void send(option, { closed: true });
+            }}
+            onOpen={() => {
+              applyWork({ type: 'dismissQuestion' });
+              setPanelOpen(true);
+            }}
+            onClose={() => applyWork({ type: 'dismissQuestion' })}
           />
         ) : null}
         {work.answer && (answerCard || answerOptions) && !panelOpen ? (

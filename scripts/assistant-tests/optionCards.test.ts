@@ -341,5 +341,5 @@ test('the tool: the page gives links and pictures; other tabs of the group fill 
     { title: 'Kırmızı kazak', url: 'https://www.trendyol.com/kazak-p-1', host: 'trendyol.com', image: 'https://cdn.dsmcdn.com/1.jpg', price: '299,99 TL' },
     { title: 'Hepsiburada kazak', url: 'https://www.hepsiburada.com/kazak-p-2', host: 'hepsiburada.com', image: 'https://productimages.hepsiburada.net/2.jpg' },
   ]);
-  assert.match(r.content, /2 cards \(2 with a picture/);
+  assert.match(r.content, /2 cards \(2 with a picture from the page, 1 with a price\)/);
 });

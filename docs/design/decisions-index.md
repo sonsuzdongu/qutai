@@ -858,11 +858,12 @@ Moved to Details (ids retired, not reused): `LAND-4`, `LAND-6`, `LAND-8`, `LAND-
 | `WORK-5` | "Show where the assistant acts" is on by default. | Default |  |
 | `WORK-6` | Today "Show where the assistant acts" cannot be changed by the assistant from the chat. | **Waiting** |  |
 | `WORK-7` | The strip's line is the chat's step line in the user's language, naming the element by what the page calls… | Owner | 2026-11-18 |
-| `WORK-9` | The panel and strip follow one state machine: a task drops the panel into the strip; the user's own open… | Default |  |
+| `WORK-9` | (changed 20 Nov: or the question bubble) The panel and strip follow one state machine: a task drops the panel into the strip; the user's own open… | Default |  |
 | `WORK-10` | Approvals and questions are dialogs above the strip and the glow, never behind them. | Default |  |
 | `WORK-12` | The panel's input is closed for the whole task, including while an approval waits: read-only, dimmed,… | Default |  |
 | `WORK-15` | When Qutai leaves the screen during a task, a "paused" notification is scheduled 8 s later and cancelled… | Default |  |
 | `WORK-16` | Today the scroll step's line shows the English direction word ("Scrolling: down"). | **Waiting** |  |
+| `WORK-17` | A task ending with a short question (≤ 140 characters, 2–4 short options) asks it in a bubble over the page instead of opening the panel | Owner (bubble); Default (limits) | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `WORK-4`, `WORK-8`, `WORK-11`, `WORK-13`, `WORK-14`
 

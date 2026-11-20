@@ -172,6 +172,7 @@ export const de: Record<keyof typeof en, string> = {
   'working.otherTab': 'In einem anderen Tab',
   'working.openHint': 'Öffnet alle Schritte',
   'working.answerTitle': 'Antwort von Qutai',
+  'working.questionTitle': 'Qutai fragt',
   'working.openChat': 'Chat öffnen',
   'settings.showActionMarker': 'Zeigen, wo der Assistent handelt',
   'settings.showActionMarkerHint': 'Bevor der Assistent auf einer Seite klickt oder tippt, zeigt ein blauer Ring oder Rahmen kurz die Stelle. Aus: keine Markierung und keine Pause.',

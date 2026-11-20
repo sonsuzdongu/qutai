@@ -171,6 +171,7 @@ export const id: Record<keyof typeof en, string> = {
   'working.otherTab': 'Di tab lain',
   'working.openHint': 'Membuka semua langkah',
   'working.answerTitle': 'Jawaban Qutai',
+  'working.questionTitle': 'Qutai bertanya',
   'working.openChat': 'Buka obrolan',
   'settings.showActionMarker': 'Tunjukkan tempat asisten bertindak',
   'settings.showActionMarkerHint': 'Sebelum asisten mengeklik atau mengetik di halaman, cincin atau bingkai biru sejenak menunjukkan tempatnya. Nonaktif: tanpa penanda dan tanpa jeda.',

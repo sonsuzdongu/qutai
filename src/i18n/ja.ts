@@ -172,6 +172,7 @@ export const ja: Record<keyof typeof en, string> = {
   'working.otherTab': '別のタブで作業中',
   'working.openHint': 'すべてのステップを開きます',
   'working.answerTitle': 'Qutai の回答',
+  'working.questionTitle': 'Qutai からの質問',
   'working.openChat': 'チャットを開く',
   'settings.showActionMarker': 'アシスタントの操作位置を表示',
   'settings.showActionMarkerHint': 'アシスタントがページでタップや入力をする前に、青いリングや枠がその場所を一瞬示します。オフ:表示も一時停止もしません。',

@@ -2,6 +2,7 @@
 // strip's line without flicker (src/chat/stripLine.ts) and the panel ↔ strip state machine (src/chat/workingView.ts).
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { questionFitsBubble } from '../../src/chat/questionBubble.ts';
 import { markerPoint, markerRect, ringFor, MIN_RING, MARKER_DWELL_MS } from '../../src/agent/markerGeometry.ts';
 import { currentStripLine, emptyStripLine, MIN_LINE_MS, offerLine, plainAnswer, tickLine } from '../../src/chat/stripLine.ts';
 import { idleView, stripVisible, workingStep, type WorkingEvent, type WorkingView } from '../../src/chat/workingView.ts';
@@ -237,4 +238,44 @@ test('events while idle change nothing but the user’s own open and close', () 
   assert.deepEqual(workingStep(idleView, { type: 'asking', on: true }), idleView);
   assert.deepEqual(workingStep(idleView, end('done')), idleView);
   assert.equal(workingStep(idleView, { type: 'userOpen' }).panel, true);
+});
+
+// ---------- A short question over the page (WORK-17) ----------
+
+test('a short question with a few short options fits a bubble; long, structured or many do not', () => {
+  assert.ok(questionFitsBubble('Kadın mı, erkek mi?', ['Kadın', 'Erkek']));
+  assert.ok(questionFitsBubble('Which size?', ['S', 'M', 'L', 'XL']));
+  assert.ok(!questionFitsBubble('Which one?', ['Only one']));
+  assert.ok(!questionFitsBubble('Which size?', ['XS', 'S', 'M', 'L', 'XL']));
+  assert.ok(!questionFitsBubble('x'.repeat(141), ['A', 'B']));
+  assert.ok(!questionFitsBubble('Which one?', ['A very long option that would wrap in a pill', 'B']));
+  assert.ok(!questionFitsBubble('Which?\n- one\n- two', ['One', 'Two']));
+  assert.ok(!questionFitsBubble('See [this](https://a.example) first?', ['Yes', 'No']));
+  assert.ok(!questionFitsBubble('First paragraph.\n\nSecond paragraph?', ['Yes', 'No']));
+  // Larger text: the same question stops fitting sooner.
+  const q = 'Do you want the cheapest one, or the best rated one in your size?';
+  assert.ok(questionFitsBubble(q, ['Cheapest', 'Best rated']));
+  assert.ok(!questionFitsBubble(q, ['Cheapest', 'Best rated'], 2.2));
+});
+
+test('a task that ends with a question that fits asks it over the page; otherwise the panel opens', () => {
+  const working = run([{ type: 'start', panelOpen: true, collapse: true }]);
+  const asked = workingStep(working, { ...end('needsAnswer'), questionFits: true });
+  assert.equal(asked.question, true);
+  assert.equal(asked.panel, false);
+  assert.equal(workingStep(asked, { type: 'dismissQuestion' }).question, false);
+  const opened = workingStep(asked, { type: 'userOpen' });
+  assert.equal(opened.panel, true);
+  assert.equal(opened.question, false);
+  // The answer starts the next task with the panel closed: the strip.
+  const next = workingStep(asked, { type: 'start', panelOpen: false, collapse: true });
+  assert.equal(next.question, false);
+  assert.ok(stripVisible(next));
+  // Too big for a bubble: the panel, as before.
+  assert.equal(workingStep(working, { ...end('needsAnswer'), questionFits: false }).panel, true);
+  // The user kept the panel open: it stays the place for the question.
+  const pinned = run([{ type: 'start', panelOpen: true, collapse: true }, { type: 'userOpen' }]);
+  const inPanel = workingStep(pinned, { ...end('needsAnswer'), questionFits: true });
+  assert.equal(inPanel.panel, true);
+  assert.equal(inPanel.question, false);
 });

@@ -170,6 +170,7 @@ export const ko: Record<keyof typeof en, string> = {
   'working.otherTab': '다른 탭에서 작업 중',
   'working.openHint': '모든 단계를 엽니다',
   'working.answerTitle': 'Qutai의 답변',
+  'working.questionTitle': 'Qutai의 질문',
   'working.openChat': '채팅 열기',
   'settings.showActionMarker': '어시스턴트가 작업하는 위치 표시',
   'settings.showActionMarkerHint': '어시스턴트가 페이지에서 클릭하거나 입력하기 전에 파란 고리나 테두리가 잠시 위치를 보여 줍니다. 끄면 표시와 잠깐 멈춤이 없습니다.',

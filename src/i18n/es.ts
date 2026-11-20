@@ -172,6 +172,7 @@ export const es: Record<keyof typeof en, string> = {
   'working.otherTab': 'En otra pestaña',
   'working.openHint': 'Abre todos los pasos',
   'working.answerTitle': 'Respuesta de Qutai',
+  'working.questionTitle': 'Qutai pregunta',
   'working.openChat': 'Abrir chat',
   'settings.showActionMarker': 'Mostrar dónde actúa el asistente',
   'settings.showActionMarkerHint': 'Antes de que el asistente haga clic o escriba en una página, un anillo o marco azul muestra dónde por un momento. Desactivado: sin marca y sin pausa.',

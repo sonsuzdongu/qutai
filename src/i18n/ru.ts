@@ -171,6 +171,7 @@ export const ru: Record<keyof typeof en, string> = {
   'working.otherTab': 'В другой вкладке',
   'working.openHint': 'Открывает все шаги',
   'working.answerTitle': 'Ответ Qutai',
+  'working.questionTitle': 'Qutai спрашивает',
   'working.openChat': 'Открыть чат',
   'settings.showActionMarker': 'Показывать, где действует ассистент',
   'settings.showActionMarkerHint': 'Перед тем как ассистент нажмёт или введёт текст на странице, синее кольцо или рамка на мгновение покажет место. Выкл.: без отметки и без паузы.',

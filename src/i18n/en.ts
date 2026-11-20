@@ -160,6 +160,7 @@ export const en = {
   'working.otherTab': 'In another tab',
   'working.openHint': 'Opens all steps',
   'working.answerTitle': 'Qutai\'s answer',
+  'working.questionTitle': 'Qutai is asking',
   'working.openChat': 'Open chat',
   'settings.showActionMarker': 'Show where the assistant acts',
   'settings.showActionMarkerHint': 'Before the assistant clicks or types on a page, a blue ring or frame shows where for a moment. Off: no marker and no pause.',

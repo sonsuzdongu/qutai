@@ -171,6 +171,7 @@ export const fr: Record<keyof typeof en, string> = {
   'working.otherTab': 'Dans un autre onglet',
   'working.openHint': 'Ouvre toutes les étapes',
   'working.answerTitle': 'Réponse de Qutai',
+  'working.questionTitle': 'Qutai demande',
   'working.openChat': 'Ouvrir le chat',
   'settings.showActionMarker': 'Montrer où l’assistant agit',
   'settings.showActionMarkerHint': 'Avant que l’assistant ne clique ou ne saisisse du texte sur une page, un anneau ou un cadre bleu montre l’endroit un instant. Désactivé : ni repère ni pause.',
