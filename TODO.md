@@ -117,7 +117,8 @@ would stop every purchase and refund notification.
       `(http.host eq "<api host>" and not http.user_agent contains "qutai." and http.request.uri.path ne "/webhooks/purchases")`.
       The path is safe to open: the server checks RevenueCat's signature on every notification and refuses the rest.
 - [ ] Once RevenueCat exists: send its test event from its dashboard and check it reaches the server (the server answers 200).
-- [ ] RevenueCat itself is a piece of work the owner will plan later (20 Nov 2026: "diğerleri için bir çalışma yapacağız daha sonra"): the project and its keys, the store products and their prices (suggested 0.99 USD = 100 credits, 4.99 = 500, 9.99 = 1000, not decided), the packs in the admin panel, the webhook and its signing secret, then removing fake purchases (next section). Until then nobody can buy credits on the production server; credits are granted in the panel.
+- [ ] RevenueCat set-up, Android first (owner's decisions 20 Nov 2026: three packs `com.sonsuzdongu.qutai.packs.100`, `.500`, `.1000` for 100, 500 and 1000 credits, suggested 0.99, 4.99, 9.99 USD): the app side is built (README.md › Buying credits); the RevenueCat project and keys, the Play products, the webhook and its signing secret, the packs in the admin panel and a licence-tester purchase follow `backend/DEPLOY-prod.md` › "Satın almaları açmak" in that order. Then removing fake purchases (next section). Until then nobody can buy credits on the production server; credits are granted in the panel.
+- [ ] After every test purchase in production: panel › Settings › **Test purchases in production** switched off again (a red banner on the Overview says while it is on). Before launch it must be off.
 - [ ] Any other service that must call the API from outside the app (a monitoring check, a store server notification
       relayed by RevenueCat) needs the same exception or the app's User-Agent shape.
 
@@ -140,10 +141,10 @@ Buying credits works today only through **fake purchases**, a deliberate stand-i
 server, the app's Buy buttons add credits without any store and nothing is charged (`backend/README.md` › Fake
 purchases; README.md › Qutai Credits › Buying credits). None of this may reach a store release or production:
 
-- [ ] Connect RevenueCat and the stores: the RevenueCat project, the consumable products in App Store Connect and Play
-  Console, the webhook and keys (`backend/README.md` › Purchases › What to set up), `react-native-purchases` in pro
-  builds only and `createRevenueCatStore` in `src/purchases/index.ts` (README.md › Buying credits, steps 1–4); buy a
-  pack in the sandbox end to end
+- [ ] Connect RevenueCat and the stores: the RevenueCat project, the consumable products in Play Console (App Store
+  Connect later), the webhook and keys (`backend/DEPLOY-prod.md` › Satın almaları açmak). The app side is done
+  (20 Nov 2026: `react-native-purchases` in pro builds only, `createRevenueCatStore` wired in `src/purchases/index.ts`);
+  buy a pack in the sandbox end to end (docs/test-checklist.md § 30)
 - [ ] Remove or hard-disable the fake path: server `apps/api/src/purchases/fake.ts`, its route and 404 guard
   (`src/routes/index.ts`, `src/index.ts`), `purchases.mode` in `GET /config`, `purchasesMode` in `AccountService`,
   `FAKE_PURCHASES` in `wrangler.jsonc` / `.dev.vars.example` / `check-dev-vars.mjs`, the `purchase_limit` error; app

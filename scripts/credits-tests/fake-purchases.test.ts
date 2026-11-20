@@ -66,7 +66,7 @@ test('fake store: buys without a store, with a transaction id the server accepts
 test('buy in fake mode: reported as store fake with its pack, credited, nothing left waiting', async () => {
   const { flow, asked, pending } = flowWith(fakeStore(), (req) => credited(req.transactionId));
   const result = await flow.buy(PACK, 'u1');
-  assert.deepEqual(result, { kind: 'credited', credits: 100_000_000, balance: 105_000_000 });
+  assert.deepEqual(result, { kind: 'credited', credits: 100_000_000, balance: 105_000_000, replayed: false });
   assert.equal(asked.length, 1);
   assert.deepEqual({ ...asked[0], transactionId: 'x' }, { store: 'fake', transactionId: 'x', productId: 'credits_100', packStore: 'google' });
   assert.deepEqual(pending.get(), []);
@@ -74,9 +74,14 @@ test('buy in fake mode: reported as store fake with its pack, credited, nothing 
 
 test('buy in fake mode: a lost answer keeps the purchase and the next report uses the same id (credited once)', async () => {
   let online = false;
-  const { flow, asked, pending } = flowWith(fakeStore(), (req) =>
-    online ? credited(req.transactionId, asked.filter((a) => a.transactionId === req.transactionId).length > 1) : { ok: false, status: 0, code: 'network' },
-  );
+  // Like the server: a repeat of a report it already answered is `replayed` (attempts that never reached it don't count).
+  const answered = new Set<string>();
+  const { flow, asked, pending } = flowWith(fakeStore(), (req) => {
+    if (!online) return { ok: false, status: 0, code: 'network' };
+    const replayed = answered.has(req.transactionId);
+    answered.add(req.transactionId);
+    return credited(req.transactionId, replayed);
+  });
   assert.deepEqual(await flow.buy(PACK, 'u1'), { kind: 'notYetCredited' });
   const kept = pending.get();
   assert.equal(kept.length, 1);

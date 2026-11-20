@@ -5,6 +5,7 @@
  *   npm run build:aab                    builds/qutai-<version>-<build>.aab
  *   npm run build:aab -- --pro-mode      builds/qutai-<version>-<build>-pro-mode.aab
  *   npm run build:ipa -- --pro-mode      builds/qutai-<version>-<build>-pro-mode.ipa
+ *   ... -- --without-purchases           a pro build that can't sell credits (no RevenueCat key needed)
  *   ... -- --dry-run                     prints what would run, runs nothing
  *
  * The version is never changed here (npm run version:bump, docs/versioning.md). Each run regenerates the native
@@ -14,6 +15,10 @@
  * commands never load a file of that name, so they don't leak into development):
  *
  *   EXPO_PUBLIC_QUTAI_API_URL   the server a pro-mode build talks to (required with --pro-mode)
+ *   EXPO_PUBLIC_REVENUECAT_ANDROID_KEY  RevenueCat's public SDK key for Google Play (goog_…), so a pro AAB can sell
+ *                               credits (required for a pro AAB unless --without-purchases; README.md › Buying credits)
+ *   EXPO_PUBLIC_REVENUECAT_IOS_KEY      the same for the App Store (appl_…; optional for now: without it a pro IPA
+ *                               shows "buying isn't available in this build")
  *   QUTAI_APPLE_TEAM_ID         the Apple Developer team that signs the IPA (required for the IPA)
  *
  * The Google client ids come from .env as in every build. No package carries the test sign-in: the build sets
@@ -21,21 +26,24 @@
  * empty in its own environment, which Expo's .env loading never overrides (deleting them, as before 20 Nov 2026, let
  * a .env value win). After the build the bundle is checked (bundleCheck.mjs): no test sign-in secret (any value the
  * shell or a .env file has) and no runtime reference to the test sign-in variables; the server's host in a pro
- * bundle and no server address in a plain one. Otherwise nothing is written to builds/.
+ * bundle and no server address in a plain one; RevenueCat's SDK only in a pro bundle, and in a pro AAB that sells
+ * credits the Play Billing permission in its manifest (never in a plain AAB). The RevenueCat keys are set to empty in a
+ * plain build's environment, like the server address. Otherwise nothing is written to builds/.
  */
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { bundleProblems, hostOf } from './bundleCheck.mjs';
+import { bundleProblems, hostOf, manifestProblems } from './bundleCheck.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const args = process.argv.slice(2);
 const kind = args.find((a) => a === 'aab' || a === 'ipa');
 const pro = args.includes('--pro-mode');
 const dry = args.includes('--dry-run');
-const unknown = args.filter((a) => !['aab', 'ipa', '--pro-mode', '--dry-run'].includes(a));
+const withoutPurchases = args.includes('--without-purchases');
+const unknown = args.filter((a) => !['aab', 'ipa', '--pro-mode', '--dry-run', '--without-purchases'].includes(a));
 
 function stop(message) {
   console.error(`\n${message}\n`);
@@ -43,7 +51,7 @@ function stop(message) {
 }
 
 if (!kind || unknown.length) {
-  stop(`Usage: npm run build:aab | build:ipa [-- --pro-mode] [--dry-run]${unknown.length ? `\nNot understood: ${unknown.join(' ')}` : ''}`);
+  stop(`Usage: npm run build:aab | build:ipa [-- --pro-mode [--without-purchases]] [--dry-run]${unknown.length ? `\nNot understood: ${unknown.join(' ')}` : ''}`);
 }
 
 /** KEY=value lines of an env file (no export, no interpolation); {} when the file isn't there. */
@@ -83,6 +91,32 @@ if (pro) {
 } else {
   env.EXPO_PUBLIC_QUTAI_API_URL = '';
 }
+
+// RevenueCat's public SDK keys (src/purchases/index.ts). Set, not deleted, for the same reason as above.
+env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY = '';
+env.EXPO_PUBLIC_REVENUECAT_IOS_KEY = '';
+/** Whether this package must be able to sell credits (checked in the bundle and, for the AAB, its manifest). */
+let sellsCredits = false;
+if (withoutPurchases && !pro) stop('--without-purchases is for a pro-mode build; a plain build never sells credits.');
+if (pro && !withoutPurchases) {
+  if (kind === 'aab') {
+    const key = value('EXPO_PUBLIC_REVENUECAT_ANDROID_KEY');
+    if (!key) {
+      stop(
+        'A pro-mode AAB needs EXPO_PUBLIC_REVENUECAT_ANDROID_KEY (RevenueCat › Project settings › API keys › the Play Store app’s public key, goog_…), in the environment or in .build.local.env. To build without purchases on purpose, add --without-purchases.',
+      );
+    }
+    if (!/^goog_[A-Za-z0-9]{8,}$/.test(key)) stop('EXPO_PUBLIC_REVENUECAT_ANDROID_KEY is not a RevenueCat Play Store public key (goog_…). A secret key (sk_…) never goes into the app.');
+    env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY = key;
+    sellsCredits = true;
+  } else {
+    // iOS comes later (App Store products and the key don't exist yet): used when present, never required.
+    const key = value('EXPO_PUBLIC_REVENUECAT_IOS_KEY');
+    if (key && !/^appl_[A-Za-z0-9]{8,}$/.test(key)) stop('EXPO_PUBLIC_REVENUECAT_IOS_KEY is not a RevenueCat App Store public key (appl_…).');
+    env.EXPO_PUBLIC_REVENUECAT_IOS_KEY = key;
+    sellsCredits = Boolean(key);
+  }
+}
 const team = value('QUTAI_APPLE_TEAM_ID');
 if (kind === 'ipa' && !/^[A-Z0-9]{10}$/.test(team)) {
   stop('The IPA needs QUTAI_APPLE_TEAM_ID (the 10-character Apple team id), in the environment or in .env.build.local.');
@@ -114,8 +148,18 @@ function checkBundle(archive, entry) {
     apiHost,
     serverHosts: [value('EXPO_PUBLIC_QUTAI_API_URL'), ...all('EXPO_PUBLIC_QUTAI_API_URL')].map(hostOf),
     secrets: all('EXPO_PUBLIC_DEV_LOGIN_SECRET').map((v) => ({ name: 'EXPO_PUBLIC_DEV_LOGIN_SECRET', value: v })),
+    purchases: sellsCredits,
   });
   if (problems.length) stop(`The JavaScript bundle is not fit to ship: ${problems.join('; ')}. Nothing was written to builds/.`);
+}
+
+/** The AAB's manifest: the Play Billing permission exactly when the package sells credits (never in a plain one). */
+function checkManifest(archive) {
+  if (dry) return;
+  const read = spawnSync('unzip', ['-p', archive, 'base/manifest/AndroidManifest.xml'], { maxBuffer: 64 * 1024 * 1024 });
+  if (read.status !== 0 || !read.stdout.length) stop(`Could not read the manifest in ${archive}.`);
+  const problems = manifestProblems(read.stdout, { pro, purchases: sellsCredits });
+  if (problems.length) stop(`The bundle is not fit to ship: ${problems.join('; ')}. Nothing was written to builds/.`);
 }
 
 function keep(from) {
@@ -125,7 +169,9 @@ function keep(from) {
   console.log(`\nbuilds/${name}  (${(statSync(target).size / 1024 / 1024).toFixed(1)} MB)  version ${version}, build ${build}${pro ? ', pro mode' : ''}`);
 }
 
-console.log(`Qutai ${version} (${build})${pro ? ', pro mode' : ''} → builds/${name}${dry ? '   [dry run]' : ''}`);
+console.log(
+  `Qutai ${version} (${build})${pro ? `, pro mode, ${sellsCredits ? 'sells credits' : 'without purchases'}` : ''} → builds/${name}${dry ? '   [dry run]' : ''}`,
+);
 
 if (kind === 'aab') {
   const signing = process.env.QUTAI_RELEASE_SIGNING || join(homedir(), '.qutai', 'release-signing.properties');
@@ -137,6 +183,7 @@ if (kind === 'aab') {
   run('./gradlew', [':app:createBundleReleaseJsAndAssets', '--rerun', ':app:bundleRelease'], join(root, 'android'));
   const made = join(root, 'android', 'app', 'build', 'outputs', 'bundle', 'release', 'app-release.aab');
   checkBundle(made, 'base/assets/index.android.bundle');
+  checkManifest(made);
   keep(made);
 } else {
   const out = join(root, 'ios', 'build');

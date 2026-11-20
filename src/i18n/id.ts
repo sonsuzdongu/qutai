@@ -2360,7 +2360,7 @@ export const id: Record<keyof typeof en, string> = {
   'buy.status.lateCredited': '{credits} kredit dari pembelian sebelumnya telah ditambahkan.',
   'buy.status.nothingMissing': 'Tidak ada yang terlewat: setiap pembelian sudah dikreditkan.',
   'buy.status.cancelled': 'Pembelian dibatalkan. Tidak ada biaya yang ditagihkan.',
-  'buy.status.pending': 'Pembelian menunggu persetujuan atau pembayaran. Kredit ditambahkan setelah toko menyelesaikannya.',
+  'buy.status.pending': 'Pembelian menunggu persetujuan atau pembayaran (misalnya tunai atau transfer bank). Kredit ditambahkan setelah toko menyelesaikannya; buka Qutai dalam tiga hari setelah membayar agar pembelian dapat diselesaikan. Anda tidak perlu membeli lagi.',
   'buy.status.notYet': 'Pembayaran berhasil, tetapi server Qutai belum mengonfirmasinya. Kredit akan segera ditambahkan; Anda tidak perlu membeli lagi.',
   'buy.status.signedOut': 'Pembayaran berhasil, tetapi Anda telah logout. Login lagi dan kredit akan ditambahkan.',
   'buy.status.held': 'Pembayaran berhasil, tetapi kredit perlu diperiksa oleh tim dukungan Qutai sebelum ditambahkan. Hubungi tim dukungan.',
@@ -2375,6 +2375,9 @@ export const id: Record<keyof typeof en, string> = {
   'buy.status.network': 'Toko tidak dapat dijangkau. Periksa koneksi Anda dan coba lagi.',
   'buy.status.productUnavailable': 'Paket ini tidak dapat dibeli saat ini. Coba paket lain, atau coba lagi nanti.',
   'buy.status.failed': 'Pembelian tidak berhasil. Tidak ada biaya yang ditagihkan. Coba lagi.',
+  'buy.status.alreadyOwned': 'Pembelian sebelumnya untuk paket ini masih diselesaikan. Kreditnya akan ditambahkan dengan sendirinya; Anda tidak perlu membelinya lagi. Untuk membeli paket lain, coba lagi dalam satu menit.',
+  'buy.billingUnavailable': 'Perangkat ini tidak dapat melakukan pembelian melalui toko aplikasinya (misalnya tanpa Play Store, tanpa akun yang masuk ke sana, atau jika pembelian dinonaktifkan).',
+  'buy.refundNote': 'Kredit tidak dapat dikembalikan dananya melalui aplikasi, kecuali jika diwajibkan oleh hukum atau toko; pengembalian dana ditangani oleh Google Play atau Apple.',
 
   'action.hideFind': 'Mencari kotak iklan kosong',
   'action.hideTry': 'Mencoba menyembunyikan kotak di halaman',

@@ -1,31 +1,49 @@
-import type { PurchaseStore, StoreFailure, StoreOutcome, StoreProduct } from './types';
+import type { PurchaseStore, StoreFailure, StoreOutcome, StoreProduct, StoreTransaction } from './types';
 
 /**
- * The store through RevenueCat's `react-native-purchases` (checked against 11.0.2's typings, Nov 2026). The SDK is
- * passed in rather than imported, for two reasons: the package isn't a dependency yet (README.md › Qutai Credits ›
- * Buying credits says what adding it takes), and the tests run this file in Node with a fake SDK.
+ * The store through RevenueCat's `react-native-purchases` (11.0.4, checked against its typings on 20 Nov 2026). The SDK
+ * object is passed in (`index.ts` requires it only in a pro build whose native module is linked), so the tests run this
+ * file in Node with a fake SDK.
  *
  * - Configured once with the platform's public SDK key and **Qutai's account id as the App User ID**, and only while
- *   signed in, so a purchase is never made under an anonymous `$RCAnonymousID:` id the server can't match. Another
- *   account signing in switches with `logIn`; signing out switches to an anonymous id with `logOut`, and no purchase
- *   is offered then.
- * - Packs are consumables: fetched with the non-subscription category (Android needs it), bought with
- *   `purchaseStoreProduct`; RevenueCat finishes and consumes the store transaction itself.
- * - What the server is told is the purchase's `transaction.transactionIdentifier` (Apple's transaction id; on Android
- *   it must be the Play order id `GPA.…` the server searches for: to be checked with the first sandbox purchase).
+ *   signed in, so a purchase is never made under an anonymous `$RCAnonymousID:` id that could later be merged into
+ *   another customer. Another account signing in switches with `logIn`; signing out calls `logOut` (the SDK then holds
+ *   an anonymous id) and nothing is offered or bought until the next sign-in.
+ * - Diagnostics and automatic device-identifier collection are switched off (`configure`); nothing else is set on the
+ *   customer (no attributes, no email).
+ * - Packs are consumables: fetched with the non-subscription category (Android needs it) by the product ids Qutai's
+ *   server lists, bought with `purchaseStoreProduct`. RevenueCat finishes the store transaction and, for a product set up
+ *   as **Consumable** in RevenueCat's product catalog, consumes it on Google Play, so the pack can be bought again.
+ * - What the server is told is the purchase's `transaction.transactionIdentifier` (Apple's transaction id; on Google Play
+ *   the order id `GPA.…`, which the server looks up at RevenueCat). `recent` reads the customer's
+ *   `nonSubscriptionTransactions`, for a purchase whose report was lost.
  */
+
+/** The SDK's product object (only what is read here; the purchase is made with the object the SDK gave). */
+export interface RevenueCatProduct {
+  identifier: string;
+  priceString: string;
+}
 
 /** The parts of `react-native-purchases`' default export used here. */
 export interface RevenueCatSdk {
-  configure(config: { apiKey: string; appUserID?: string | null }): void;
-  isConfigured(): Promise<boolean>;
+  configure(config: {
+    apiKey: string;
+    appUserID?: string | null;
+    diagnosticsEnabled?: boolean;
+    automaticDeviceIdentifierCollectionEnabled?: boolean;
+  }): void;
   logIn(appUserID: string): Promise<unknown>;
   logOut(): Promise<unknown>;
-  getProducts(productIdentifiers: string[], type?: string): Promise<{ identifier: string; priceString: string }[]>;
-  purchaseStoreProduct(product: { identifier: string; priceString: string }): Promise<{
+  getProducts(productIdentifiers: string[], type?: string): Promise<RevenueCatProduct[]>;
+  purchaseStoreProduct(product: RevenueCatProduct): Promise<{
     productIdentifier: string;
     transaction?: { transactionIdentifier: string; productIdentifier: string } | null;
   }>;
+  getCustomerInfo(): Promise<{
+    nonSubscriptionTransactions: { transactionIdentifier: string; productIdentifier: string; purchaseDate: string }[];
+  }>;
+  canMakePayments(): Promise<boolean>;
   /** `Purchases.PRODUCT_CATEGORY.NON_SUBSCRIPTION` ("NON_SUBSCRIPTION"). */
   readonly PRODUCT_CATEGORY: { NON_SUBSCRIPTION: string };
   /** `Purchases.PURCHASES_ERROR_CODE`: string codes ("1" cancelled, "20" payment pending…). */
@@ -34,18 +52,23 @@ export interface RevenueCatSdk {
     STORE_PROBLEM_ERROR: string;
     PURCHASE_NOT_ALLOWED_ERROR: string;
     PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR: string;
+    PRODUCT_ALREADY_PURCHASED_ERROR: string;
     NETWORK_ERROR: string;
     OFFLINE_CONNECTION_ERROR: string;
     PAYMENT_PENDING_ERROR: string;
   };
 }
 
-export function createRevenueCatStore(sdk: RevenueCatSdk, apiKey: string): PurchaseStore {
+/** How many of the customer's purchases `recent` returns, and how far back (older ones the webhook has long credited). */
+const RECENT_MAX = 10;
+const RECENT_DAYS = 30;
+
+export function createRevenueCatStore(sdk: RevenueCatSdk, apiKey: string, now: () => number = Date.now): PurchaseStore {
   /** The account the SDK is set up for; null: not configured yet, or switched to anonymous on sign-out. */
   let current: string | null = null;
   let configured = false;
   /** Products fetched from the store, kept so a purchase uses the object the SDK gave. */
-  const known = new Map<string, { identifier: string; priceString: string }>();
+  const known = new Map<string, RevenueCatProduct>();
   let identifying: Promise<void> = Promise.resolve();
 
   async function setUser(userId: string | null) {
@@ -53,12 +76,19 @@ export function createRevenueCatStore(sdk: RevenueCatSdk, apiKey: string): Purch
     if (!configured) {
       // Not configured before sign-in: never an anonymous customer.
       if (!userId) return;
-      sdk.configure({ apiKey, appUserID: userId });
+      sdk.configure({ apiKey, appUserID: userId, diagnosticsEnabled: false, automaticDeviceIdentifierCollectionEnabled: false });
       configured = true;
     } else if (userId) {
+      // Cleared first: if logIn fails, nothing is bought for the previous account; the next identify tries again.
+      current = null;
+      known.clear();
       await sdk.logIn(userId);
     } else {
+      // Cleared first: even if logOut fails, nothing is bought for the account that left.
+      current = null;
+      known.clear();
       await sdk.logOut().catch(() => {});
+      return;
     }
     current = userId;
     known.clear();
@@ -69,6 +99,7 @@ export function createRevenueCatStore(sdk: RevenueCatSdk, apiKey: string): Purch
     const error = (e ?? {}) as { code?: unknown; userCancelled?: unknown };
     if (error.userCancelled === true || error.code === codes.PURCHASE_CANCELLED_ERROR) return { kind: 'cancelled' };
     if (error.code === codes.PAYMENT_PENDING_ERROR) return { kind: 'pending' };
+    if (error.code === codes.PRODUCT_ALREADY_PURCHASED_ERROR) return { kind: 'alreadyOwned' };
     const reason: StoreFailure =
       error.code === codes.PURCHASE_NOT_ALLOWED_ERROR
         ? 'notAllowed'
@@ -106,17 +137,46 @@ export function createRevenueCatStore(sdk: RevenueCatSdk, apiKey: string): Purch
       let product = known.get(productId);
       try {
         if (!product) {
-          product = (await sdk.getProducts([productId], sdk.PRODUCT_CATEGORY.NON_SUBSCRIPTION)).find(
-            (p) => p.identifier === productId,
-          );
+          product = (await sdk.getProducts([productId], sdk.PRODUCT_CATEGORY.NON_SUBSCRIPTION)).find((p) => p.identifier === productId);
           if (!product) return { kind: 'failed', reason: 'productUnavailable' };
         }
         const result = await sdk.purchaseStoreProduct(product);
-        // Paid even without a transaction id to report: the server's webhook credits it then.
+        // Paid even without a transaction id to report: `recent` or the server's webhook credits it then.
         const transactionId = result.transaction?.transactionIdentifier || null;
         return { kind: 'purchased', productId: result.productIdentifier || productId, transactionId };
       } catch (e) {
-        return outcomeOf(e);
+        const outcome = outcomeOf(e);
+        // Google Play reports a device without billing (no Play Store, no Google account) as "not allowed": tell them apart.
+        if (outcome.kind === 'failed' && outcome.reason === 'notAllowed' && !(await sdk.canMakePayments().catch(() => true))) {
+          return { kind: 'failed', reason: 'billingUnavailable' };
+        }
+        return outcome;
+      }
+    },
+    async canPay(): Promise<boolean> {
+      try {
+        return await sdk.canMakePayments();
+      } catch {
+        // Unknown: the purchase itself will say what is wrong.
+        return true;
+      }
+    },
+    async recent(): Promise<StoreTransaction[]> {
+      await identifying;
+      if (!current) return [];
+      try {
+        const info = await sdk.getCustomerInfo();
+        const since = now() - RECENT_DAYS * 24 * 3600_000;
+        return (info.nonSubscriptionTransactions ?? [])
+          .map((t) => {
+            const at = Date.parse(t.purchaseDate);
+            return { transactionId: t.transactionIdentifier, productId: t.productIdentifier, at: Number.isFinite(at) ? at : null };
+          })
+          .filter((t) => t.transactionId && t.productId && (t.at === null || t.at >= since))
+          .sort((a, b) => (b.at ?? 0) - (a.at ?? 0))
+          .slice(0, RECENT_MAX);
+      } catch {
+        return [];
       }
     },
   };

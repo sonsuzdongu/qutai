@@ -2360,7 +2360,7 @@ export const fr: Record<keyof typeof en, string> = {
   'buy.status.lateCredited': '{credits} {credits|one:crédit|other:crédits} d’un achat précédent {credits|one:a été ajouté|other:ont été ajoutés}.',
   'buy.status.nothingMissing': 'Rien ne manque : tous les achats ont été crédités.',
   'buy.status.cancelled': 'L’achat a été annulé. Rien n’a été débité.',
-  'buy.status.pending': 'L’achat attend une approbation ou un paiement. Les crédits seront ajoutés une fois que la boutique l’aura finalisé.',
+  'buy.status.pending': 'L’achat attend une approbation ou un paiement (par exemple en espèces ou par virement). Les crédits seront ajoutés une fois que la boutique l’aura finalisé ; ouvrez Qutai dans les trois jours suivant le paiement pour que l’achat puisse être finalisé. Inutile d’acheter de nouveau.',
   'buy.status.notYet': 'Le paiement a abouti, mais le serveur de Qutai ne l’a pas encore confirmé. Les crédits seront ajoutés sous peu ; inutile d’acheter de nouveau.',
   'buy.status.signedOut': 'Le paiement a abouti, mais vous avez été déconnecté. Reconnectez-vous et les crédits seront ajoutés.',
   'buy.status.held': 'Le paiement a abouti, mais les crédits doivent être vérifiés par l’assistance de Qutai avant d’être ajoutés. Veuillez contacter l’assistance.',
@@ -2375,6 +2375,9 @@ export const fr: Record<keyof typeof en, string> = {
   'buy.status.network': 'La boutique est injoignable. Vérifiez votre connexion et réessayez.',
   'buy.status.productUnavailable': 'Ce pack ne peut pas être acheté pour le moment. Essayez-en un autre, ou réessayez plus tard.',
   'buy.status.failed': 'L’achat n’a pas abouti. Rien n’a été débité. Réessayez.',
+  'buy.status.alreadyOwned': 'Un achat précédent de ce pack est encore en cours de finalisation. Ses crédits seront ajoutés automatiquement ; inutile de l’acheter de nouveau. Pour acheter un autre pack, réessayez dans une minute.',
+  'buy.billingUnavailable': 'Cet appareil ne peut pas effectuer d’achats via sa boutique d’applications (par exemple sans Play Store, sans compte connecté à celui-ci ou si les achats sont désactivés).',
+  'buy.refundNote': 'Les crédits ne sont pas remboursés via l’application, sauf lorsque la loi ou la boutique l’exige ; les remboursements sont gérés par Google Play ou Apple.',
 
   'action.hideFind': 'Recherche d’encadrés publicitaires vides',
   'action.hideTry': 'Tentative de masquage d’encadrés sur la page',

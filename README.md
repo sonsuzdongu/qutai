@@ -833,20 +833,32 @@ Credits with no account, and then:
 **Buy credits** (from setup's account screen, Settings › Account › Qutai Credits and the "not enough credits" error)
 shows the balance, what credits are, the packs the server offers for this phone's store (`GET /config` › `packs`)
 with their credits and **the store's own price** (never one of ours; a pack the store doesn't sell isn't shown, and
-store products without a pack never are), a store note, Terms and Privacy, and "Check for missing credits". States:
-loading, no packs, configuration unreachable (with Try again), store prices unavailable, purchases unavailable in this
-build, purchase in progress, pending (Ask to Buy, cash payments), cancelled, failed (not allowed, network, product
-unavailable, other), paid but not yet credited, held or refused (support), refunded, suspended, signed out, and
-credited with the new balance.
+store products without a pack never are), a store note, that credits aren't refunded through the app (except as the
+law or the store requires), Terms and Privacy, and "Check for missing credits". States: loading, no packs,
+configuration unreachable (with Try again), store prices unavailable, the device can't pay through its store
+(`canMakePayments`), purchases unavailable in this build, purchase in progress, pending (Ask to Buy, cash and other
+delayed payments on Play: the credits come once the store completes it; open Qutai within three days of paying),
+already owned (an earlier purchase of the pack isn't finished: it is looked for and reported), cancelled, failed (not
+allowed, billing unavailable, network, product unavailable, other), paid but not yet credited, held or refused
+(support), refunded, suspended, signed out, and credited with the new balance.
 
-The flow (`src/purchases/flow.ts`, tested in Node): the store is told the account id before anything is bought; after
-a purchase the store transaction id is kept on the phone **before** it's reported with `POST /purchases/verify`;
-`404 purchase_not_found` / `503` / no answer are asked again after `Retry-After` (at most 15 s, three tries), then the
-purchase stays saved and is reported again when the screen opens, on "Check for missing credits" and after signing in
-(the server's webhook credits it anyway). `held` and `422 purchase_rejected` point to support; refunds say so;
-`403 account_suspended` shows that buying isn't possible. Consumables can't be restored at the stores and credits
-live in Qutai's ledger, so there's no "Restore purchases" button; "Check for missing credits" is the way to recover a
-purchase that didn't arrive.
+The flow (`src/purchases/flow.ts`, tested in Node with a fake store): the store is told the account id before anything
+is bought; after a purchase the store transaction id is kept on the phone **before** it's reported with
+`POST /purchases/verify`; `404 purchase_not_found` / `503` / no answer are asked again after `Retry-After` (at most
+15 s, three tries), then the purchase stays saved and is reported again when the screen opens, on "Check for missing
+credits" and after signing in (the server's webhook credits it anyway). A purchase the phone never got to report (the
+app was killed, the store gave no transaction id, "already owned") is found in the store's list of the customer's
+recent one-time purchases (`PurchaseStore.recent`: RevenueCat's `getCustomerInfo().nonSubscriptionTransactions`, the
+last 30 days, at most 10) and reported then; what the server answered for good (credited, held, refused, refunded) is
+remembered on the phone by store and transaction id (`credits_settled_purchases`, the last 200) so it isn't reported
+again, and a credit the server had already given (`replayed`) is not counted as new. The store's list is read when the
+buy screen opens, on "Check for missing credits", after "already owned" or a purchase without an id, and at app start
+only on a phone that has opened the buy screen before (so RevenueCat isn't contacted at start otherwise). `held` and
+`422 purchase_rejected` point to support; refunds say so; `403 account_suspended` shows that buying isn't possible.
+Consumables can't be restored at the stores and credits live in Qutai's ledger, so there's no "Restore purchases"
+button (Google Play and the App Store ask for one only for what stays owned, such as subscriptions and non-consumables;
+RevenueCat says `restorePurchases` must only follow a user's tap and that consumables are restored only with custom
+App User IDs anyway); "Check for missing credits" is the way to recover a purchase that didn't arrive.
 
 **Fake purchases (temporary, local servers only).** While Qutai's server runs with `FAKE_PURCHASES=true`
 (`backend/README.md` › Fake purchases; a local development server only, the production server refuses it), its
@@ -861,44 +873,81 @@ purchase. A lost answer is reported again with the same id and credited once; th
 unchanged (`{ store, transactionId }` to `/purchases/verify`). Remove all of it before launch: `TODO.md` › Before
 launch: remove fake purchases.
 
-**The store today: unavailable.** RevenueCat's `react-native-purchases` isn't a dependency yet: it adds native code
-and the billing permission to every build, including builds without pro mode, and no RevenueCat project, keys or store
-products exist to try it with. Every build uses the clearly marked unavailable store (`src/purchases/unavailable.ts`):
-the screen shows balance and packs and says buying isn't available in this build. The RevenueCat implementation is
-written and tested against a fake SDK (`src/purchases/revenuecat.ts`: configured only after sign-in with **Qutai's
-account id as the App User ID**, `logIn` on another account, `logOut` on sign-out, packs fetched as non-subscription
-products, bought with `purchaseStoreProduct`, every SDK error mapped to an outcome). To switch it on:
+**The store: RevenueCat, Android first (20 Nov 2026).** `react-native-purchases` 11.0.4 (installed with
+`npx expo install`; no config plugin: RevenueCat's Expo page lists none and Expo's in-app purchase guide says it works
+with CNG as is). `src/purchases/index.ts` uses RevenueCat's store (`createRevenueCatStore`, `src/purchases/revenuecat.ts`)
+when all of these hold, and the unavailable store otherwise:
 
-1. `npx expo install react-native-purchases` (11.x today; Expo SDK 54 or later, no config plugin needed for SDK 58;
-   needs a development build, Expo Go only runs its preview mode). **Builds without pro mode must not contain it at
-   all** (owner's decision, 16 Nov 2026): no native code, no billing permission, no JavaScript. So, read from
-   `EXPO_PUBLIC_PRO_MODE` at build time: exclude it from autolinking when off (`react-native.config.js`
-   `dependencies['react-native-purchases'].platforms` set to `null` for both platforms, or Expo's autolinking
-   `exclude`), and in `metro.config.js` resolve `react-native-purchases` to an empty stub when off, so the bundle has
-   none of it either. Check both APKs: the open-source one must have no `com.revenuecat` classes and no
-   `com.android.vending.BILLING` permission (`aapt dump permissions`, `apkanalyzer dex packages`), and the iOS build
-   no RevenueCat pod.
-2. In `src/purchases/index.ts` `purchaseStore()`: when `revenueCatKey()` gives a key,
-   `createRevenueCatStore(Purchases, key)` (import `Purchases` from `react-native-purchases`).
-3. Set `EXPO_PUBLIC_REVENUECAT_IOS_KEY` / `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` (RevenueCat's public SDK keys, per build;
-   `.env.example`), make a development build, buy a pack in the sandbox (TestFlight / a Play internal test track
-   with a licence tester) and check the transaction id the app reports (below).
-4. Owner setup (also `backend/README.md` › Purchases): the RevenueCat project with restore behaviour "Keep with
-   original App User ID"; **consumable** products in App Store Connect and Play Console, added in RevenueCat (not
-   attached to an entitlement, no In-App Currency) and as packs in the admin panel **before** they go on sale; App
-   Store Server Notifications V2 and Play real-time developer notifications to RevenueCat; the webhook to the API.
-   Store rules this follows: purchases of digital credits only through the store's in-app purchase (no link or
-   button to pay elsewhere), prices only as the store gives them, consumables need no restore, the purchase terms
-   reachable from the screen. Declare the in-app products in the store listings, and update the privacy texts and
-   Google Play's Data safety form for purchase history (RevenueCat as a processor).
+- the build is a pro build with RevenueCat's public SDK key for the platform: `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`
+  (`goog_…`) or `EXPO_PUBLIC_REVENUECAT_IOS_KEY` (`appl_…`; none yet, iOS stays unavailable until its key and App
+  Store products exist, through the same code);
+- the SDK's native module is in the build (`NativeModules.RNPurchases`; Expo Go has none, so the SDK's "preview" mock
+  can never sell anything);
+- Qutai's server says `GET /config` › `purchases.mode` = `store` (in `fake` mode the fake store below is used).
 
-**The transaction id on Android:** an old forum answer said the hybrid SDKs give RevenueCat's own id, but the
-current mapping in RevenueCat's `purchases-hybrid-common` (`StoreTransactionMapper.kt`) sets `transactionIdentifier`
-to the purchase's Google Play **order id** (`GPA.…`), the id RevenueCat's v2 purchase search
-(`GET /v2/projects/{id}/purchases?store_purchase_identifier=`) takes; `purchaseToken` comes separately. So the app
-reports `transaction.transactionIdentifier` as it does now and the server needs no change. If a purchase has no
-order id (the mapping then gives null), the app says the credits will come shortly and the server's webhook credits
-it. Still confirm with the first sandbox purchase on Play (README › Qutai Credits, TODO).
+RevenueCat is configured once, with **Qutai's account id as the App User ID** (never an anonymous `$RCAnonymousID:`
+customer that could later be merged into another), diagnostics off and automatic device-identifier collection off,
+the first time the buy screen opens or a purchase is made after sign-in (or at app start on a phone that has used the
+buy screen). Another account signing in switches with `logIn` (a failed switch leaves no account set, so nothing is
+bought for the previous one); signing out calls `logOut`. Packs are fetched by the product ids the server lists
+(`getProducts`, non-subscription category; no RevenueCat offering is needed), shown with the store's localised
+`priceString`, and bought with `purchaseStoreProduct`. RevenueCat finishes the transaction and **consumes** a product
+set up as *Consumable* in its product catalog, so the pack can be bought again. Error codes map to outcomes: cancelled
+(`1`), payment pending (`20`), already purchased (`6`), not allowed (`3`, told apart from billing unavailable by
+`canMakePayments`), product not available (`5`), network (`10`, `35`), store problem (`2`), anything else "failed".
+
+**What the app sends to RevenueCat** (and through its SDK to Google Play Billing): the Qutai account id (App User ID);
+the pack product ids when asking for prices; the purchase itself (Google Play's purchase token and order id, product,
+price and currency, as the store reports them); requests for the customer's recent one-time purchases. Like any
+request, the SDK's carry the phone's IP address and its own basic device and app information (platform, OS version,
+app version, SDK version, store country and locale). No email, name, subscriber attributes or advertising
+identifiers are set. Google Play shows its own purchase sheet; payment details stay with Google.
+
+**Kept out of builds without pro mode** (owner's decision, 16 Nov 2026: no native code, no billing permission, no
+JavaScript), all decided by `plugins/proBuild.js` (`EXPO_PUBLIC_PRO_MODE=on` with `EXPO_PUBLIC_QUTAI_API_URL`, from the
+environment first, then the `.env` files as Expo reads them):
+
+- `react-native.config.js` sets `react-native-purchases`' platforms to `null` for Android and iOS, so Expo's
+  autolinking (Gradle and CocoaPods) leaves its native code out;
+- `metro.config.js` resolves `react-native-purchases` to an empty module, so the bundle has none of its JavaScript;
+- `plugins/withProPurchases.js` declares `com.android.vending.BILLING` in a pro build and marks it
+  `tools:node="remove"` in any other, so no library can bring it into the open-source manifest; it also makes the
+  generated `android/settings.gradle` drop React Native's cached autolinking list whenever the build kind (pro or
+  plain) changed since the last Gradle run (that cache is keyed on the lockfiles only);
+- `scripts/build/release.mjs` refuses a plain package whose bundle contains RevenueCat's SDK or whose AAB manifest has
+  the billing permission, and a pro AAB without both (see below).
+
+Checked without building (20 Nov 2026), with `npx expo config --type introspect` (the manifest after every plugin) and
+`npx expo-modules-autolinking react-native-config --platform android|ios --json` (what Gradle and CocoaPods would link):
+with pro mode off, `react-native-purchases` is linked on neither platform and the manifest carries the billing
+permission only as `tools:node="remove"`; with it on, the SDK is linked on both and the permission is declared. A
+real package check (`aapt dump permissions`, `apkanalyzer dex packages` showing no `com.revenuecat` in the plain APK)
+belongs to the next native build.
+
+**Building:** a native rebuild is needed (new native module). `npm run build:aab -- --pro-mode` reads
+`EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` from the environment or `.build.local.env` (git-ignored) and stops with a clear
+message when a pro AAB has none, unless `--without-purchases` says to build one that can't sell credits. A pro IPA uses
+`EXPO_PUBLIC_REVENUECAT_IOS_KEY` when present and never requires it. Plain builds get both keys set to empty. Owner
+setup in RevenueCat, Play Console and the admin panel, in order: `backend/DEPLOY-prod.md` › "Satın almaları açmak";
+the list of RevenueCat and store settings: `backend/README.md` › What to set up in RevenueCat. Store rules this
+follows: digital credits only through the store's in-app purchase (no link or button to pay elsewhere), prices only as
+the store gives them, consumables need no restore, the purchase terms reachable from the screen.
+
+**Android launch mode:** RevenueCat's React Native page says an activity with `launchMode` `singleTask` (Expo's
+default, Qutai's too) "can cancel purchases" when the user leaves the app during a purchase (for example to approve it
+in a bank app) and comes back through the launcher icon. Not changed: the main activity's intent filters (sign-in links,
+shortcuts, shared files) rely on it, and a purchase cancelled that way charges nothing; if it shows up in testing,
+`singleTop` is the documented fix (a config plugin change, with the deep links checked again).
+
+**The transaction id on Android:** the current mapping in RevenueCat's `purchases-hybrid-common`
+(`StoreTransactionMapper.kt`) sets `transactionIdentifier` to the purchase's Google Play **order id** (`GPA.…`), the
+id RevenueCat's v2 purchase search (`GET /v2/projects/{id}/purchases?store_purchase_identifier=`) takes;
+`purchaseToken` comes separately. If a purchase has no order id, the app looks for it in the store's list and the
+server's webhook credits it. Confirm with the first sandbox purchase on Play (docs/test-checklist.md).
+
+**Test purchases against production:** the server's `sandbox_purchases` setting (panel › Settings › Test purchases in
+production; `backend/README.md` › Test purchases in production) lets a Play licence tester's purchases add credits for
+the listed accounts only, while it is on.
 
 #### Agent profile
 

@@ -133,6 +133,7 @@
       "./plugins/withEntryPoints",
       "./plugins/withAppFiles",
       "./plugins/withProAccounts",
+      "./plugins/withProPurchases",
       "./plugins/withReleaseSigning",
       [
         "expo-localization",

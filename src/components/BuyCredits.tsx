@@ -7,9 +7,9 @@ import { creditsEnabled } from '../config/features';
 import { creditsStore, creditsText, refreshCredits, useCreditsState } from '../credits';
 import { t, type MessageKey } from '../i18n';
 import type { LegalKind } from '../legal/documents';
-import { purchaseFlow, purchaseStore, storeName } from '../purchases';
+import { noteStoreUsed, purchaseFlow, purchaseStore, storeName } from '../purchases';
 import { packOffers, type BuyResult, type Pack, type PackOffer } from '../purchases/flow';
-import type { StoreProduct } from '../purchases/types';
+import type { StoreFailure, StoreProduct } from '../purchases/types';
 import { Icon, type IconName } from '../ui/Icon';
 import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { DialogHost } from './Dialog';
@@ -77,8 +77,11 @@ type Status = { tone: 'ok' | 'info' | 'warn'; icon: IconName; text: string };
  * Buying Qutai Credits (pro mode, signed in). The balance; what credits are; the packs Qutai's server offers for this
  * phone's store (`GET /config` › packs), each with its credits and the store's own price (never one of ours); buying
  * through the store, then `POST /purchases/verify` (src/purchases/flow.ts); every ending said plainly. Consumable
- * credits need no restore at the stores; "Check for missing credits" reports any purchase not credited yet and reads
- * the balance again. Terms and privacy are one tap away. No link leads out of the app to pay.
+ * credits need no "Restore purchases" (Google Play and the App Store require one only for what stays owned, such as
+ * subscriptions; the credits live in the Qutai account): "Check for missing credits" reports any purchase not credited
+ * yet, including ones the store finished but the phone never reported, and reads the balance again. That credits are
+ * not refunded through the app is said under the packs. Terms and privacy are one tap away. No link leads out of the
+ * app to pay.
  */
 function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   const styles = useStyles();
@@ -94,6 +97,8 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   const suspended = account.status === 'signedIn' && account.user.status === 'suspended';
   const [products, setProducts] = useState<StoreProduct[] | null>(null);
   const [productsFailed, setProductsFailed] = useState(false);
+  /** The device can't pay through its store at all (Play Store missing or billing unavailable). */
+  const [billingOff, setBillingOff] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<Status | null>(null);
@@ -110,16 +115,27 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
     refreshCredits();
   }, []);
   useEffect(() => {
-    if (store.unavailable || testMode || !signedIn || !productKey) return;
+    if (store.unavailable || testMode || !userId || !productKey) return;
     let live = true;
-    store
-      .products(productKey.split(','))
-      .then((p) => live && setProducts(p))
-      .catch(() => live && setProductsFailed(true));
+    void (async () => {
+      try {
+        // The store's customer is this account before anything is asked (RevenueCat: configured or logged in here).
+        await store.identify(userId);
+        noteStoreUsed();
+        if (store.canPay && !(await store.canPay())) {
+          if (live) setBillingOff(true);
+          return;
+        }
+        const p = await store.products(productKey.split(','));
+        if (live) setProducts(p);
+      } catch {
+        if (live) setProductsFailed(true);
+      }
+    })();
     return () => {
       live = false;
     };
-  }, [store, testMode, signedIn, productKey]);
+  }, [store, testMode, userId, productKey]);
 
   /** What reporting the waiting purchases says (quiet: only when credits were added). */
   const lateStatus = (r: { credited: number; waiting: number }, quiet: boolean): Status | null =>
@@ -179,7 +195,7 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   // Test mode: every pack of this phone's store, without a price (none is charged).
   const offers = packOffers(packs, storeName, store.unavailable || testMode ? null : products);
   const loading = !credits.config && !credits.configError;
-  const canBuy = !store.unavailable && signedIn && !suspended;
+  const canBuy = !store.unavailable && signedIn && !suspended && !billingOff;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -230,6 +246,7 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
         {suspended && <Text style={[styles.notice, styles.warnText]}>{t('buy.suspended')}</Text>}
         {store.unavailable && <Text style={styles.notice}>{t(UNAVAILABLE[store.unavailable])}</Text>}
         {productsFailed && <Text style={styles.notice}>{t('buy.storeFailed')}</Text>}
+        {billingOff && <Text style={styles.notice}>{t('buy.billingUnavailable')}</Text>}
 
         <Text style={styles.section}>{t('buy.packs')}</Text>
         {loading && <ActivityIndicator color={palette.textSecondary} style={styles.loading} />}
@@ -240,10 +257,10 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
             </Text>
           </Pressable>
         )}
-        {credits.config && !store.unavailable && !testMode && signedIn && productKey && products === null && !productsFailed && (
+        {credits.config && !store.unavailable && !testMode && signedIn && productKey && products === null && !productsFailed && !billingOff && (
           <ActivityIndicator color={palette.textSecondary} style={styles.loading} />
         )}
-        {credits.config && offers.length === 0 && (products !== null || store.unavailable || testMode || !productKey) && (
+        {credits.config && offers.length === 0 && !billingOff && (products !== null || store.unavailable || testMode || !productKey) && (
           <Text style={styles.hint}>{t('buy.noPacks')}</Text>
         )}
         {offers.map((offer) => {
@@ -293,6 +310,7 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
           </Pressable>
         )}
         {!testMode && <Text style={styles.hint}>{t(Platform.OS === 'ios' ? 'buy.storeNoteIos' : 'buy.storeNoteAndroid')}</Text>}
+        {!testMode && <Text style={styles.hint}>{t('buy.refundNote')}</Text>}
         <View style={styles.links}>
           <Pressable onPress={() => setLegal('terms')} accessibilityRole="link" hitSlop={6}>
             <Text style={styles.link}>{t('settings.terms')}</Text>
@@ -315,6 +333,15 @@ const UNAVAILABLE: Record<NonNullable<ReturnType<typeof purchaseStore>['unavaila
   notSupported: 'buy.unavailable.notSupported',
 };
 
+const FAILED: Record<StoreFailure, MessageKey> = {
+  notAllowed: 'buy.status.notAllowed',
+  billingUnavailable: 'buy.billingUnavailable',
+  network: 'buy.status.network',
+  productUnavailable: 'buy.status.productUnavailable',
+  storeProblem: 'buy.status.failed',
+  unknown: 'buy.status.failed',
+};
+
 /** What the screen says after a purchase (the flow's ending). */
 export function statusFor(result: BuyResult): Status {
   switch (result.kind) {
@@ -331,6 +358,8 @@ export function statusFor(result: BuyResult): Status {
       return { tone: 'info', icon: 'info', text: t('buy.status.cancelled') };
     case 'pending':
       return { tone: 'info', icon: 'wait', text: t('buy.status.pending') };
+    case 'alreadyOwned':
+      return { tone: 'info', icon: 'wait', text: t('buy.status.alreadyOwned') };
     case 'notYetCredited':
       return { tone: 'info', icon: 'wait', text: t('buy.status.notYet') };
     case 'signedOut':
@@ -348,19 +377,7 @@ export function statusFor(result: BuyResult): Status {
     case 'unavailable':
       return { tone: 'info', icon: 'info', text: t(UNAVAILABLE[result.reason]) };
     case 'failed':
-      return {
-        tone: 'warn',
-        icon: 'insecure',
-        text: t(
-          result.reason === 'notAllowed'
-            ? 'buy.status.notAllowed'
-            : result.reason === 'network'
-              ? 'buy.status.network'
-              : result.reason === 'productUnavailable'
-                ? 'buy.status.productUnavailable'
-                : 'buy.status.failed',
-        ),
-      };
+      return { tone: 'warn', icon: 'insecure', text: t(FAILED[result.reason]) };
   }
 }
 

@@ -891,3 +891,42 @@ derlenen APK ile deneyin. Yavaş sayfa ve form için yerel sunucu: `node scripts
 - [ ] Küçük ekranlı bir telefonda (ya da en büyük yazı boyutunda) Japonca ve Almanca metinde en sona kadar kaydırın:
       kesilen ya da üst üste binen satır olmamalı.
 - [ ] Türkçe metin önceki gibi olmalı (İngilizce'nin geçerli olduğunu söyleyen cümle yok).
+
+## 30. Google Play ile kredi satın alma (RevenueCat; 20 Kasım; yeni yerel kodla, telefonda denenmedi)
+
+Önce: sunucu ve RevenueCat kurulumu `backend/DEPLOY-prod.md` › "Satın almaları açmak" sırasıyla yapılmış olmalı
+(üç paket panelde, panel › Settings › Test purchases in production sizin hesabınız için açık). Paket:
+`EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` ile yapılmış pro AAB, Play'in test kanalından kurulmuş; telefonda Play Store'da
+yalnızca lisans test hesabı açık.
+
+- [ ] Ayarlar › Hesap › Qutai Credits › Kredi satın al: üç paket (100, 500, 1000 kredi) **Play'in fiyatıyla** (sizin
+      para biriminizde) görünmeli; panelde olmayan bir Play ürünü görünmemeli, Play'de olmayan bir panel paketi de
+      görünmemeli. Altta "Krediler … uygulama üzerinden iade edilmez" notu olmalı.
+- [ ] 100'lük paketi "Test card, always approves" ile alın: Play'in sayfası açılmalı, bitince "100 kredi eklendi.
+      Bakiyeniz şimdi …" yazmalı; bakiye **sunucunun cevabından sonra** artmalı. Panel › Payments: satır
+      "google (sandbox)", gelir boş; Overview'da "test (sandbox) purchases recorded" notu ve kırmızı "ON" uyarısı.
+- [ ] Aynı paketi hemen yeniden alın: Play "zaten sahipsiniz" dememeli (paket tüketildi), ikinci alım da eklenmeli.
+- [ ] Play'in sayfasını geri tuşuyla kapatın: "Satın alma iptal edildi. Hiçbir ücret alınmadı." yazmalı.
+- [ ] "Test card, always declines": "Satın alma tamamlanmadı…" yazmalı, kredi eklenmemeli.
+- [ ] "Slow test card, approves after a few minutes": "Satın alma onay ya da ödeme bekliyor…" yazmalı; birkaç dakika
+      sonra (uygulama açıkken ya da kapatıp açınca) krediler eklenmeli (webhook ya da "Eksik kredileri denetle").
+- [ ] Bağlantı kopması: satın alma sayfasında ödemeyi onaylamadan hemen önce uçak modunu açın (Play yine de
+      tamamlayabilir) ya da onaydan hemen sonra uygulamayı kapatın; sonra bağlantıyı açıp uygulamayı açın: krediler bir
+      kez eklenmeli ("önceki bir satın almadan … kredi eklendi"), iki kez değil. Panelde aynı işlem tek satır olmalı.
+- [ ] "Eksik kredileri denetle": eksik bir şey yoksa "Eksik bir şey yok…" yazmalı; daha önce eklenmiş bir satın alma
+      yeniden eklenmemeli.
+- [ ] Aktarılan işlem kimliği: panel › Payments'taki satırın işlem kimliği `GPA.` ile başlamalı (README › Buying
+      credits › The transaction id on Android).
+- [ ] Çıkış yapın, başka bir Qutai hesabıyla girin, satın alma ekranını açın: önceki hesabın satın almaları bu hesaba
+      eklenmemeli. Test satın alma ayarında listede olmayan bu hesapla bir test satın alması yapın: "Bu satın alma başka
+      bir hesaba ait…" ya da destek mesajı çıkmalı, kredi eklenmemeli (ayar yalnızca listedeki hesaplara izin verir).
+- [ ] Play'den bir test satın almasını iade edin (Play Console › Order management › Refund): birkaç dakika içinde
+      krediler geri alınmalı, panelde satır "refunded" olmalı.
+- [ ] Google hesabı olmayan ya da Play Store'u olmayan bir cihaz/emülatör: "Bu cihazda uygulama mağazası üzerinden
+      satın alma yapılamıyor…" yazmalı, Satın al düğmesi olmamalı.
+- [ ] Panel › Settings › Test purchases in production'ı kapatın, yeni bir test satın alması yapın: kredi eklenmemeli
+      (destek mesajı), Play iadeyi 3 gün içinde kendisi yapar ya da Play Console'dan iade edin.
+- [ ] Pro olmayan (açık kaynak) APK: `aapt dump permissions <apk>` listesinde `com.android.vending.BILLING` olmamalı;
+      `apkanalyzer dex packages <apk> | grep -c com.revenuecat` 0 olmalı.
+- [ ] `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` olmadan (`--without-purchases`) yapılan pro paket: satın alma ekranı paketleri
+      fiyatsız gösterip "Bu Qutai sürümünde kredi satın alınamıyor…" demeli.

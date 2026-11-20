@@ -2361,7 +2361,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'buy.status.lateCredited': '{credits} créditos de uma compra anterior foram adicionados.',
   'buy.status.nothingMissing': 'Nada está faltando: todas as compras foram creditadas.',
   'buy.status.cancelled': 'A compra foi cancelada. Nada foi cobrado.',
-  'buy.status.pending': 'A compra está aguardando aprovação ou pagamento. Os créditos são adicionados assim que a loja concluí-la.',
+  'buy.status.pending': 'A compra está aguardando aprovação ou pagamento (por exemplo, em dinheiro ou transferência bancária). Os créditos são adicionados assim que a loja concluí-la; abra o Qutai em até três dias após o pagamento para que a compra possa ser finalizada. Você não precisa comprar de novo.',
   'buy.status.notYet': 'O pagamento foi aprovado, mas o servidor do Qutai ainda não o confirmou. Os créditos serão adicionados em breve; você não precisa comprar de novo.',
   'buy.status.signedOut': 'O pagamento foi aprovado, mas você foi desconectado. Faça login de novo e os créditos serão adicionados.',
   'buy.status.held': 'O pagamento foi aprovado, mas os créditos precisam ser verificados pelo suporte do Qutai antes de serem adicionados. Entre em contato com o suporte.',
@@ -2376,6 +2376,9 @@ export const ptBR: Record<keyof typeof en, string> = {
   'buy.status.network': 'Não foi possível acessar a loja. Verifique sua conexão e tente de novo.',
   'buy.status.productUnavailable': 'Este pacote não pode ser comprado agora. Tente outro ou tente mais tarde.',
   'buy.status.failed': 'A compra não foi concluída. Nada foi cobrado. Tente de novo.',
+  'buy.status.alreadyOwned': 'Uma compra anterior deste pacote ainda está sendo concluída. Os créditos dela serão adicionados automaticamente; você não precisa comprá-lo de novo. Para comprar outro pacote, tente novamente em um minuto.',
+  'buy.billingUnavailable': 'Este dispositivo não pode fazer compras pela loja de apps (por exemplo, sem a Play Store, sem uma conta conectada a ela ou com as compras desativadas).',
+  'buy.refundNote': 'Os créditos não são reembolsados pelo app, exceto quando a lei ou a loja exigirem; os reembolsos são feitos pelo Google Play ou pela Apple.',
 
   'action.hideFind': 'Procurando caixas de anúncio vazias',
   'action.hideTry': 'Tentando ocultar caixas na página',

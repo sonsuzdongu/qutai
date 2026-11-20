@@ -1,9 +1,10 @@
-// Buying credits (src/purchases/): the flow against a fake store and the client's POST /purchases/verify against the
-// fake server, and the RevenueCat adapter against a fake SDK. No store or RevenueCat project exists yet, so this is
-// what checks the logic; real purchases are still to be tried (README.md › Qutai Credits › Buying credits).
+// Buying credits (src/purchases/): the flow against a fake store (every ending, a lost answer reported again, purchases
+// found again in the store's list, packs matched to store products), the client's POST /purchases/verify against the
+// fake server, and the RevenueCat adapter against a fake SDK. Real purchases are tried on a phone (checklist.md).
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createPurchaseFlow, packOffers, type Pack, type PendingPurchase } from '../../src/purchases/flow.ts';
+import type { StoreTransaction } from '../../src/purchases/types.ts';
 import { createRevenueCatStore, type RevenueCatSdk } from '../../src/purchases/revenuecat.ts';
 import type { PurchaseStore, StoreOutcome, VerifyAnswer, VerifyPurchaseResponse } from '../../src/purchases/types.ts';
 import { createUnavailableStore } from '../../src/purchases/unavailable.ts';
@@ -76,7 +77,7 @@ test('offers: the server packs for this store, priced by the store; none made up
 test('buy: identifies the account, buys, reports and returns the new balance', async () => {
   const store = fakeStore(BOUGHT);
   const { flow, asked, pending } = flowWith(store, [credited()]);
-  assert.deepEqual(await flow.buy(PACK, 'user-1'), { kind: 'credited', credits: 100_000_000, balance: 105_000_000 });
+  assert.deepEqual(await flow.buy(PACK, 'user-1'), { kind: 'credited', credits: 100_000_000, balance: 105_000_000, replayed: false });
   assert.deepEqual(store.identified, ['user-1']);
   assert.deepEqual(store.bought, ['credits_100']);
   assert.deepEqual(asked, [{ store: 'google', transactionId: 'GPA.1' }]);
@@ -84,7 +85,16 @@ test('buy: identifies the account, buys, reports and returns the new balance', a
 });
 
 test('buy: cancelled, pending and failed purchases report nothing', async () => {
-  for (const outcome of [{ kind: 'cancelled' }, { kind: 'pending' }, { kind: 'failed', reason: 'network' }] as StoreOutcome[]) {
+  const outcomes = [
+    { kind: 'cancelled' },
+    { kind: 'pending' },
+    { kind: 'failed', reason: 'network' },
+    { kind: 'failed', reason: 'notAllowed' },
+    { kind: 'failed', reason: 'billingUnavailable' },
+    { kind: 'failed', reason: 'storeProblem' },
+    { kind: 'failed', reason: 'productUnavailable' },
+  ] as StoreOutcome[];
+  for (const outcome of outcomes) {
     const { flow, asked, pending } = flowWith(fakeStore(outcome), [credited()]);
     assert.deepEqual(await flow.buy(PACK, 'user-1'), outcome);
     assert.equal(asked.length, 0);
@@ -167,6 +177,138 @@ test('buy: paid without a transaction id to report says not yet credited (the we
   assert.equal(asked.length, 0);
 });
 
+/** A fake store that also lists the customer's recent purchases (as RevenueCat's customer info does). */
+function storeWithRecent(outcome: StoreOutcome, recent: StoreTransaction[]) {
+  const store = fakeStore(outcome);
+  return Object.assign(store, { recent: async () => recent });
+}
+
+function settledMemory(initial: string[] = []) {
+  let list = [...initial];
+  return { load: async () => [...list], save: async (l: string[]) => void (list = [...l]), get: () => list };
+}
+
+test('buy: paid without a transaction id, found in the store’s list: reported and credited', async () => {
+  const store = storeWithRecent({ kind: 'purchased', productId: 'credits_100', transactionId: null }, [
+    { transactionId: 'GPA.7', productId: 'credits_100', at: 999_000 },
+  ]);
+  const { flow, asked, pending } = flowWith(store, [credited()]);
+  assert.deepEqual(await flow.buy(PACK, 'user-1'), { kind: 'credited', credits: 100_000_000, balance: 105_000_000 });
+  assert.deepEqual(asked, [{ store: 'google', transactionId: 'GPA.7' }]);
+  assert.deepEqual(pending.get(), []);
+});
+
+test('buy: already owned (an earlier purchase not consumed yet): the earlier one is found and reported', async () => {
+  const store = storeWithRecent({ kind: 'alreadyOwned' }, [{ transactionId: 'GPA.earlier', productId: 'credits_100', at: 900_000 }]);
+  const { flow, asked } = flowWith(store, [credited(100_000_000, 205_000_000)]);
+  assert.deepEqual(await flow.buy(PACK, 'user-1'), { kind: 'credited', credits: 100_000_000, balance: 205_000_000 });
+  assert.deepEqual(asked, [{ store: 'google', transactionId: 'GPA.earlier' }]);
+
+  // Nothing in the store's list (or it was credited before): says so, nothing charged twice.
+  const replay: VerifyAnswer = { ok: true, response: { ...(credited() as { response: VerifyPurchaseResponse }).response, replayed: true } };
+  const again = flowWith(storeWithRecent({ kind: 'alreadyOwned' }, [{ transactionId: 'GPA.earlier', productId: 'credits_100', at: 1 }]), [replay]);
+  assert.deepEqual(await again.flow.buy(PACK, 'user-1'), { kind: 'alreadyOwned' });
+  const none = flowWith(fakeStore({ kind: 'alreadyOwned' }), [credited()]);
+  assert.deepEqual(await none.flow.buy(PACK, 'user-1'), { kind: 'alreadyOwned' });
+  assert.equal(none.asked.length, 0);
+});
+
+test('lost answer: the store charged, the server’s answer never arrived; reported at the next start and credited once', async () => {
+  const pending = memory();
+  const settled = settledMemory();
+  let online = false;
+  let creditedTimes = 0;
+  const seen = new Set<string>();
+  const store = storeWithRecent(BOUGHT, [{ transactionId: 'GPA.1', productId: 'credits_100', at: 999_000 }]);
+  const flow = createPurchaseFlow({
+    store,
+    storeName: 'google',
+    // The server credits a transaction once and answers the same again (replayed) for a repeat.
+    verify: async (req) => {
+      if (!online) throw new Error('connection lost');
+      const replayed = seen.has(req.transactionId);
+      if (!replayed) creditedTimes++;
+      seen.add(req.transactionId);
+      return { ok: true, response: { store: 'google', transactionId: req.transactionId, productId: 'credits_100', status: 'credited', credits: 100_000_000, balance: 100_000_000, replayed } };
+    },
+    pending,
+    settled,
+    sleep: async () => {},
+    now: () => 1_000_000,
+  });
+  assert.deepEqual(await flow.buy(PACK, 'user-1'), { kind: 'notYetCredited' });
+  assert.equal(pending.get().length, 1, 'kept on the phone');
+  assert.equal(await flow.waiting('user-1'), 1);
+
+  online = true;
+  assert.deepEqual(await flow.retryPending('user-1'), { credited: 100_000_000, balance: 100_000_000, waiting: 0 });
+  assert.deepEqual(pending.get(), []);
+  assert.deepEqual(settled.get(), ['google:GPA.1']);
+  // Later starts: the store still lists it, but it's settled: not reported again, nothing added.
+  assert.deepEqual(await flow.retryPending('user-1'), { credited: 0, balance: null, waiting: 0 });
+  assert.equal(creditedTimes, 1);
+});
+
+test('retry: a purchase found in the store’s list that the server had credited before adds nothing to the count', async () => {
+  const replayed: VerifyAnswer = { ok: true, response: { store: 'google', transactionId: 'GPA.old', productId: 'credits_100', status: 'credited', credits: 100_000_000, balance: 300_000_000, replayed: true } };
+  const settled = settledMemory();
+  const flow = createPurchaseFlow({
+    store: storeWithRecent(BOUGHT, [{ transactionId: 'GPA.old', productId: 'credits_100', at: 1 }]),
+    storeName: 'google',
+    verify: async () => replayed,
+    pending: memory(),
+    settled,
+    sleep: async () => {},
+  });
+  assert.deepEqual(await flow.retryPending('user-1'), { credited: 0, balance: 300_000_000, waiting: 0 });
+  assert.deepEqual(settled.get(), ['google:GPA.old']);
+});
+
+test('retry: without looking in the store (app start before the buy screen was used) only kept purchases are reported', async () => {
+  let asked = 0;
+  const store = Object.assign(fakeStore(BOUGHT), {
+    recent: async () => {
+      asked++;
+      return [{ transactionId: 'GPA.x', productId: 'credits_100', at: 1 }];
+    },
+  });
+  const flow = createPurchaseFlow({ store, storeName: 'google', verify: async () => credited(), pending: memory(), sleep: async () => {} });
+  assert.deepEqual(await flow.retryPending('user-1', { lookInStore: false }), { credited: 0, balance: null, waiting: 0 });
+  assert.equal(asked, 0);
+  assert.equal(store.identified.length, 0, 'the store is not even set up');
+});
+
+test('retry: the store’s list is never read for the fake or an unavailable store', async () => {
+  for (const base of [{ ...fakeStore(BOUGHT), fake: true }, createUnavailableStore('notInBuild')]) {
+    let asked = 0;
+    const store = Object.assign(base, {
+      recent: async () => {
+        asked++;
+        return [];
+      },
+    });
+    const flow = createPurchaseFlow({ store, storeName: 'google', verify: async () => credited(), pending: memory(), sleep: async () => {} });
+    await flow.retryPending('user-1');
+    assert.equal(asked, 0);
+  }
+});
+
+test('held by the server: said once, not retried, not looked for again', async () => {
+  const held: VerifyAnswer = { ok: true, response: { store: 'google', transactionId: 'GPA.1', productId: 'credits_100', status: 'held', credits: 0, balance: null, replayed: false } };
+  const settled = settledMemory();
+  const flow = createPurchaseFlow({
+    store: storeWithRecent(BOUGHT, [{ transactionId: 'GPA.1', productId: 'credits_100', at: 1 }]),
+    storeName: 'google',
+    verify: async () => held,
+    pending: memory(),
+    settled,
+    sleep: async () => {},
+  });
+  assert.deepEqual(await flow.buy(PACK, 'user-1'), { kind: 'support', reason: 'held' });
+  assert.deepEqual(settled.get(), ['google:GPA.1']);
+  assert.deepEqual(await flow.retryPending('user-1'), { credited: 0, balance: null, waiting: 0 });
+});
+
 test('pending: old entries are dropped', async () => {
   const pending = memory([{ userId: 'user-1', store: 'google', transactionId: 'GPA.old', productId: 'x', at: 0 }]);
   const flow = createPurchaseFlow({
@@ -219,10 +361,19 @@ function fakeSdk() {
     transactionIdentifier: 'GPA.9',
     productIdentifier: 'credits_100',
   };
+  let canPay = true;
+  let logInFails = false;
+  let configured: Record<string, unknown> | null = null;
+  const history: { transactionIdentifier: string; productIdentifier: string; purchaseDate: string }[] = [];
   const sdk: RevenueCatSdk = {
-    configure: (c) => void calls.push(`configure ${c.appUserID}`),
-    isConfigured: async () => true,
-    logIn: async (id) => void calls.push(`logIn ${id}`),
+    configure: (c) => {
+      configured = c;
+      calls.push(`configure ${c.appUserID}`);
+    },
+    logIn: async (id) => {
+      calls.push(`logIn ${id}`);
+      if (logInFails) throw new Error('offline');
+    },
     logOut: async () => void calls.push('logOut'),
     getProducts: async (ids, type) => {
       calls.push(`getProducts ${ids.join(',')} ${type}`);
@@ -233,12 +384,18 @@ function fakeSdk() {
       if (fail) throw fail;
       return { productIdentifier: p.identifier, transaction };
     },
+    getCustomerInfo: async () => {
+      calls.push('getCustomerInfo');
+      return { nonSubscriptionTransactions: history };
+    },
+    canMakePayments: async () => canPay,
     PRODUCT_CATEGORY: { NON_SUBSCRIPTION: 'NON_SUBSCRIPTION' },
     PURCHASES_ERROR_CODE: {
       PURCHASE_CANCELLED_ERROR: '1',
       STORE_PROBLEM_ERROR: '2',
       PURCHASE_NOT_ALLOWED_ERROR: '3',
       PRODUCT_NOT_AVAILABLE_FOR_PURCHASE_ERROR: '5',
+      PRODUCT_ALREADY_PURCHASED_ERROR: '6',
       NETWORK_ERROR: '10',
       OFFLINE_CONNECTION_ERROR: '35',
       PAYMENT_PENDING_ERROR: '20',
@@ -247,8 +404,12 @@ function fakeSdk() {
   return {
     sdk,
     calls,
+    history,
+    configured: () => configured,
     failWith: (e: unknown) => void (fail = e),
     noTransaction: () => void (transaction = null),
+    noBilling: () => void (canPay = false),
+    logInFails: (v: boolean) => void (logInFails = v),
   };
 }
 
@@ -282,6 +443,7 @@ test('RevenueCat: errors become outcomes', async () => {
     [{ code: '1', userCancelled: true }, { kind: 'cancelled' }],
     [{ code: '1', userCancelled: null }, { kind: 'cancelled' }],
     [{ code: '20' }, { kind: 'pending' }],
+    [{ code: '6' }, { kind: 'alreadyOwned' }],
     [{ code: '3' }, { kind: 'failed', reason: 'notAllowed' }],
     [{ code: '10' }, { kind: 'failed', reason: 'network' }],
     [{ code: '35' }, { kind: 'failed', reason: 'network' }],
@@ -300,4 +462,52 @@ test('RevenueCat: errors become outcomes', async () => {
   const store = createRevenueCatStore(sdk, 'k');
   await store.identify('user-1');
   assert.deepEqual(await store.purchase('credits_100'), { kind: 'purchased', productId: 'credits_100', transactionId: null });
+});
+
+test('RevenueCat: configured with diagnostics and device-identifier collection off', async () => {
+  const { sdk, configured } = fakeSdk();
+  const store = createRevenueCatStore(sdk, 'goog_public');
+  await store.identify('user-1');
+  assert.deepEqual(configured(), { apiKey: 'goog_public', appUserID: 'user-1', diagnosticsEnabled: false, automaticDeviceIdentifierCollectionEnabled: false });
+});
+
+test('RevenueCat: a failed switch to another account never buys for the previous one', async () => {
+  const { sdk, calls, logInFails } = fakeSdk();
+  const store = createRevenueCatStore(sdk, 'k');
+  await store.identify('user-1');
+  logInFails(true);
+  await store.identify('user-2');
+  assert.deepEqual(await store.purchase('credits_100'), { kind: 'failed', reason: 'notAllowed' });
+  assert.ok(!calls.includes('purchase credits_100'));
+  logInFails(false);
+  await store.identify('user-2');
+  assert.equal((await store.purchase('credits_100')).kind, 'purchased');
+});
+
+test('RevenueCat: billing not supported on the device is told apart from "not allowed"', async () => {
+  const { sdk, failWith, noBilling } = fakeSdk();
+  const store = createRevenueCatStore(sdk, 'k');
+  await store.identify('user-1');
+  assert.equal(await store.canPay!(), true);
+  noBilling();
+  assert.equal(await store.canPay!(), false);
+  failWith({ code: '3' });
+  assert.deepEqual(await store.purchase('credits_100'), { kind: 'failed', reason: 'billingUnavailable' });
+});
+
+test('RevenueCat: recent purchases from the customer info, newest first, only the last 30 days, at most 10', async () => {
+  const { sdk, history } = fakeSdk();
+  const day = 24 * 3600_000;
+  const now = Date.parse('2026-11-20T12:00:00Z');
+  history.push({ transactionIdentifier: 'GPA.old', productIdentifier: 'credits_100', purchaseDate: new Date(now - 40 * day).toISOString() });
+  for (let i = 0; i < 12; i++) {
+    history.push({ transactionIdentifier: `GPA.${i}`, productIdentifier: 'credits_100', purchaseDate: new Date(now - i * 3600_000).toISOString() });
+  }
+  const store = createRevenueCatStore(sdk, 'k', () => now);
+  assert.deepEqual(await store.recent!(), [], 'nothing before sign-in');
+  await store.identify('user-1');
+  const recent = await store.recent!();
+  assert.equal(recent.length, 10);
+  assert.equal(recent[0].transactionId, 'GPA.0');
+  assert.ok(!recent.some((t) => t.transactionId === 'GPA.old'));
 });

@@ -2352,7 +2352,7 @@ export const en = {
   'buy.status.lateCredited': '{credits} credits from an earlier purchase were added.',
   'buy.status.nothingMissing': 'Nothing is missing: every purchase has been credited.',
   'buy.status.cancelled': 'The purchase was cancelled. Nothing was charged.',
-  'buy.status.pending': 'The purchase is waiting for approval or payment. The credits are added once the store completes it.',
+  'buy.status.pending': 'The purchase is waiting for approval or payment (for example, cash or a bank transfer). The credits are added once the store completes it; open Qutai within three days of paying so the purchase can be finished. You don’t need to buy again.',
   'buy.status.notYet': 'The payment went through, but Qutai’s server hasn’t confirmed it yet. The credits will be added shortly; you don’t need to buy again.',
   'buy.status.signedOut': 'The payment went through, but you were signed out. Sign in again and the credits will be added.',
   'buy.status.held': 'The payment went through, but the credits need a look from Qutai’s support before they are added. Please contact support.',
@@ -2367,6 +2367,9 @@ export const en = {
   'buy.status.network': 'The store couldn’t be reached. Check your connection and try again.',
   'buy.status.productUnavailable': 'This pack can’t be bought right now. Try another one, or again later.',
   'buy.status.failed': 'The purchase didn’t go through. Nothing was charged. Try again.',
+  'buy.status.alreadyOwned': 'An earlier purchase of this pack is still being completed. Its credits are added by themselves; you don’t need to buy it again. To buy another pack, try again in a minute.',
+  'buy.billingUnavailable': 'This device can’t make purchases through its app store (for example, without the Play Store, without an account signed in to it, or with purchases turned off).',
+  'buy.refundNote': 'Credits aren’t refunded through the app, except as the law or the store requires; refunds are handled by Google Play or Apple.',
 
   'action.hideFind': 'Looking for empty ad boxes',
   'action.hideTry': 'Trying to hide boxes on the page',

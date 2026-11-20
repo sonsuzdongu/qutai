@@ -2357,7 +2357,7 @@ export const tr: Record<keyof typeof en, string> = {
   'buy.status.lateCredited': 'Önceki bir satın almadan {credits} kredi eklendi.',
   'buy.status.nothingMissing': 'Eksik bir şey yok: her satın alma hesabınıza eklendi.',
   'buy.status.cancelled': 'Satın alma iptal edildi. Ücret alınmadı.',
-  'buy.status.pending': 'Satın alma onay ya da ödeme bekliyor. Mağaza tamamladığında krediler eklenir.',
+  'buy.status.pending': 'Satın alma onay ya da ödeme bekliyor (örneğin nakit ya da banka havalesi). Mağaza tamamladığında krediler eklenir; satın almanın bitirilebilmesi için ödemeden sonraki üç gün içinde Qutai’ı açın. Yeniden satın almanız gerekmez.',
   'buy.status.notYet': 'Ödeme yapıldı, ancak Qutai’ın sunucusu henüz onaylamadı. Krediler kısa süre içinde eklenecek; yeniden satın almanız gerekmez.',
   'buy.status.signedOut': 'Ödeme yapıldı, ancak oturumunuz kapandı. Yeniden oturum açtığınızda krediler eklenecek.',
   'buy.status.held': 'Ödeme yapıldı, ancak kredilerin eklenmesi için Qutai desteğinin bakması gerekiyor. Lütfen destekle iletişime geçin.',
@@ -2372,6 +2372,9 @@ export const tr: Record<keyof typeof en, string> = {
   'buy.status.network': 'Mağazaya ulaşılamadı. Bağlantınızı kontrol edip yeniden deneyin.',
   'buy.status.productUnavailable': 'Bu paket şu anda satın alınamıyor. Başka bir paket deneyin ya da daha sonra yeniden deneyin.',
   'buy.status.failed': 'Satın alma tamamlanmadı. Ücret alınmadı. Yeniden deneyin.',
+  'buy.status.alreadyOwned': 'Bu paketin önceki bir satın alması hâlâ tamamlanıyor. Kredileri kendiliğinden eklenir; yeniden satın almanız gerekmez. Bir paket daha almak için bir dakika sonra yeniden deneyin.',
+  'buy.billingUnavailable': 'Bu cihazda uygulama mağazası üzerinden satın alma yapılamıyor (örneğin Play Store yoksa, ona giriş yapılmış bir hesap yoksa ya da satın almalar kapalıysa).',
+  'buy.refundNote': 'Krediler, yasanın ya da mağazanın gerektirdiği durumlar dışında uygulama üzerinden iade edilmez; iadeleri Google Play ya da Apple yürütür.',
 
   'action.hideFind': 'Boş reklam kutuları aranıyor',
   'action.hideTry': 'Sayfadaki kutular gizlenmeye çalışılıyor',

@@ -2361,7 +2361,7 @@ export const ja: Record<keyof typeof en, string> = {
   'buy.status.lateCredited': '以前の購入分の {credits} クレジットが追加されました。',
   'buy.status.nothingMissing': '未反映のものはありません。すべての購入が反映されています。',
   'buy.status.cancelled': '購入はキャンセルされました。料金は請求されていません。',
-  'buy.status.pending': '購入は承認または支払いを待っています。ストアで完了するとクレジットが追加されます。',
+  'buy.status.pending': '購入は承認または支払いを待っています（現金払いや銀行振込など）。ストアで完了するとクレジットが追加されます。購入を完了できるよう、支払いから 3 日以内に Qutai を開いてください。再度購入する必要はありません。',
   'buy.status.notYet': '支払いは完了しましたが、Qutai のサーバーでまだ確認されていません。クレジットはまもなく追加されます。再度購入する必要はありません。',
   'buy.status.signedOut': '支払いは完了しましたが、ログアウトされています。もう一度ログインするとクレジットが追加されます。',
   'buy.status.held': '支払いは完了しましたが、クレジットの追加前に Qutai のサポートによる確認が必要です。サポートにお問い合わせください。',
@@ -2376,6 +2376,9 @@ export const ja: Record<keyof typeof en, string> = {
   'buy.status.network': 'ストアに接続できませんでした。接続を確認して、もう一度お試しください。',
   'buy.status.productUnavailable': '現在このパックは購入できません。別のパックを選ぶか、後でもう一度お試しください。',
   'buy.status.failed': '購入が完了しませんでした。料金は請求されていません。もう一度お試しください。',
+  'buy.status.alreadyOwned': 'このパックの以前の購入がまだ完了処理中です。そのクレジットは自動的に追加されるため、もう一度購入する必要はありません。別のパックを購入するには、1 分ほどしてからもう一度お試しください。',
+  'buy.billingUnavailable': 'このデバイスではアプリストアを通じた購入ができません（Play ストアがない、ログインしているアカウントがない、購入がオフになっているなど）。',
+  'buy.refundNote': 'クレジットはアプリから返金されません。ただし法律またはストアが求める場合を除きます。返金は Google Play または Apple が扱います。',
 
   'action.hideFind': '空の広告枠を探しています',
   'action.hideTry': 'ページ上の枠を非表示にしています',

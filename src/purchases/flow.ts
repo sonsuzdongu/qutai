@@ -53,12 +53,24 @@ export interface PendingStorage {
   save(list: PendingPurchase[]): Promise<void>;
 }
 
+/**
+ * The purchases the server already answered for good (`<store>:<transaction id>`), so the store's list of recent
+ * purchases (`PurchaseStore.recent`) isn't reported again at every start.
+ */
+export interface SettledStorage {
+  load(): Promise<string[]>;
+  save(list: string[]): Promise<void>;
+}
+
 /** How a purchase (or a report of an earlier one) ended, for the screen. */
 export type BuyResult =
-  | { kind: 'credited'; credits: number; balance: number | null }
+  /** `replayed`: the server had credited it before (an earlier report); nothing new was added now. */
+  | { kind: 'credited'; credits: number; balance: number | null; replayed?: boolean }
   | { kind: 'cancelled' }
   /** The store is waiting for something outside the app; credits come once it completes. */
   | { kind: 'pending' }
+  /** An earlier purchase of this pack isn't finished yet; its credits come by themselves (`retryPending`, the webhook). */
+  | { kind: 'alreadyOwned' }
   | { kind: 'failed'; reason: StoreFailure }
   /** Paid, but the server couldn't confirm it yet; kept and reported again (and the webhook credits it anyway). */
   | { kind: 'notYetCredited' }
@@ -80,6 +92,8 @@ export interface PurchaseFlowDeps {
   storeName: StoreName;
   verify(request: VerifyPurchaseRequest): Promise<VerifyAnswer>;
   pending: PendingStorage;
+  /** Purchases already answered for good; without it, `recent` purchases are reported every time (safe, just slower). */
+  settled?: SettledStorage;
   /** Waits before asking the server again. Tests pass a fast one. */
   sleep?: (ms: number) => Promise<void>;
   now?: () => number;
@@ -92,6 +106,7 @@ const MAX_WAIT_S = 15;
 /** Kept this long, then dropped: by then the webhook has credited it or support has to look. */
 const PENDING_KEEP_MS = 30 * 24 * 3600_000;
 const MAX_PENDING = 50;
+const MAX_SETTLED = 200;
 
 /**
  * Buying a pack and telling Qutai's server about it (backend/DESIGN.md › Purchases › What the app-side purchase
@@ -103,6 +118,9 @@ const MAX_PENDING = 50;
  *   "Refresh", at app start). The server's webhook credits it anyway, so "not yet" never means lost.
  * - `held` and `422 purchase_rejected`: support helps, no retry. `403 account_suspended`: no purchases.
  * - A report is safe to repeat: the server credits a transaction once and answers the same again (`replayed`).
+ * - A purchase the store finished but the phone never reported (killed mid-purchase, no transaction id, "already
+ *   owned") is found in the store's list of the customer's recent purchases (`recent`) by `retryPending` and reported
+ *   then; what the server has answered for good is remembered (`settled`) so it isn't asked again.
  */
 export function createPurchaseFlow(deps: PurchaseFlowDeps) {
   const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
@@ -123,6 +141,19 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
     return run;
   };
   const current = () => (typeof deps.store === 'function' ? deps.store() : deps.store);
+  const key = (p: { store: ReportStore; transactionId: string }) => `${p.store}:${p.transactionId}`;
+  let settledQueue: Promise<unknown> = Promise.resolve();
+  const settle = (p: { store: ReportStore; transactionId: string }) => {
+    if (!deps.settled) return Promise.resolve();
+    const store = deps.settled;
+    const run = settledQueue.then(async () => {
+      const list = await store.load().catch(() => [] as string[]);
+      if (list.includes(key(p))) return;
+      await store.save([...list, key(p)].slice(-MAX_SETTLED)).catch(() => {});
+    });
+    settledQueue = run.catch(() => {});
+    return run;
+  };
   const sameTx = (a: PendingPurchase, b: { store: ReportStore; transactionId: string }) =>
     a.store === b.store && a.transactionId === b.transactionId;
 
@@ -142,7 +173,7 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
       }
       if (answer.ok) {
         const r = answer.response;
-        if (r.status === 'credited') return { kind: 'credited', credits: r.credits, balance: r.balance };
+        if (r.status === 'credited') return { kind: 'credited', credits: r.credits, balance: r.balance, replayed: r.replayed };
         if (r.status === 'held') return { kind: 'support', reason: 'held' };
         return { kind: 'reversed' };
       }
@@ -161,6 +192,58 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
   /** Whether a report's ending means the purchase still has to be reported later. */
   const keep = (r: BuyResult) => r.kind === 'notYetCredited' || r.kind === 'signedOut';
 
+  /** Reports one kept purchase and keeps or drops it (and remembers a final answer). */
+  async function reportKept(p: PendingPurchase): Promise<BuyResult> {
+    const result = await report(p);
+    if (!keep(result)) {
+      await edit((l) => l.filter((x) => !sameTx(x, p)));
+      await settle(p);
+    }
+    return result;
+  }
+
+  /**
+   * Adds the store's recent purchases of this customer that the server hasn't answered for good and that aren't kept
+   * already (real stores only; the SDK knows only the signed-in customer, so they are this account's).
+   */
+  async function recover(store: PurchaseStore, userId: string): Promise<void> {
+    if (!store.recent || store.unavailable || store.fake) return;
+    await store.identify(userId);
+    const recent = await store.recent().catch(() => []);
+    if (recent.length === 0) return;
+    const settled = new Set(await deps.settled?.load().catch(() => [] as string[]) ?? []);
+    const found = recent
+      .map((t): PendingPurchase => ({ userId, store: deps.storeName, transactionId: t.transactionId, productId: t.productId, at: now() }))
+      .filter((p) => !settled.has(key(p)));
+    if (found.length === 0) return;
+    await edit((list) => [...list, ...found.filter((p) => !list.some((x) => sameTx(x, p)))]);
+  }
+
+  /** Reports this account's kept purchases (after looking for lost ones in the store). */
+  async function reportAll(userId: string, lookInStore = true): Promise<{ credited: number; balance: number | null; waiting: number }> {
+    if (lookInStore) await recover(current(), userId).catch(() => {});
+    const list = await edit((l) => l);
+    let credited = 0;
+    let balance: number | null = null;
+    let waiting = 0;
+    for (const p of list.filter((x) => x.userId === userId)) {
+      const result = await reportKept(p);
+      if (result.kind === 'credited') {
+        // A purchase the server had credited before (found again in the store's list) adds nothing now.
+        if (!result.replayed) credited += result.credits;
+        balance = result.balance ?? balance;
+      }
+      if (keep(result)) waiting++;
+    }
+    return { credited, balance, waiting };
+  }
+
+  /** After a purchase without a report of its own: what looking for it in the store found. */
+  async function afterLost(userId: string, otherwise: BuyResult): Promise<BuyResult> {
+    const r = await reportAll(userId);
+    return r.credited > 0 ? { kind: 'credited', credits: r.credited, balance: r.balance } : otherwise;
+  }
+
   return {
     /** Buys a pack for the signed-in account `userId`. */
     async buy(pack: Pack, userId: string): Promise<BuyResult> {
@@ -168,8 +251,11 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
       if (store.unavailable) return { kind: 'unavailable', reason: store.unavailable };
       await store.identify(userId);
       const outcome = await store.purchase(pack.productId);
+      // Already owned: an earlier purchase of this pack isn't finished; find it in the store's list and report it.
+      if (outcome.kind === 'alreadyOwned') return afterLost(userId, outcome);
       if (outcome.kind !== 'purchased') return outcome;
-      if (!outcome.transactionId) return { kind: 'notYetCredited' };
+      // Paid, but the store gave no id to report: look for it in the store's list (the webhook credits it anyway).
+      if (!outcome.transactionId) return afterLost(userId, { kind: 'notYetCredited' });
       const entry: PendingPurchase = {
         userId,
         store: store.fake ? 'fake' : deps.storeName,
@@ -180,30 +266,16 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
       };
       // Kept before the report, so a crash or a lost connection right now can't lose it.
       await edit((list) => [...list.filter((p) => !sameTx(p, entry)), entry]);
-      const result = await report(entry);
-      if (!keep(result)) await edit((list) => list.filter((p) => !sameTx(p, entry)));
-      return result;
+      return reportKept(entry);
     },
 
     /**
-     * Reports this account's purchases that weren't credited yet. Returns the credits added now and the latest
-     * balance the server gave, and how many are still waiting.
+     * Reports this account's purchases that weren't credited yet, including any the store finished but the phone never
+     * reported (unless `lookInStore` is false). Returns the credits added now (not those credited before) and the latest balance the server gave, and
+     * how many are still waiting.
      */
-    async retryPending(userId: string): Promise<{ credited: number; balance: number | null; waiting: number }> {
-      const list = await edit((l) => l);
-      let credited = 0;
-      let balance: number | null = null;
-      let waiting = 0;
-      for (const p of list.filter((x) => x.userId === userId)) {
-        const result = await report(p);
-        if (result.kind === 'credited') {
-          credited += result.credits;
-          balance = result.balance ?? balance;
-        }
-        if (keep(result)) waiting++;
-        else await edit((l) => l.filter((x) => !sameTx(x, p)));
-      }
-      return { credited, balance, waiting };
+    retryPending(userId: string, options: { lookInStore?: boolean } = {}): Promise<{ credited: number; balance: number | null; waiting: number }> {
+      return reportAll(userId, options.lookInStore ?? true);
     },
 
     /** How many of this account's purchases are waiting to be credited. */

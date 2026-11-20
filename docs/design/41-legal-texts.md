@@ -76,6 +76,7 @@ The privacy policy and terms of use shown in the app (one set for the open-sourc
 - (in progress) Wording on apps (LEGAL-6) is not yet in the texts.
 - The eight translations are machine translations, not reviewed by native speakers or a lawyer (LEGAL-12).
 - (planned) Lawyer review, store privacy labels and the Google Play Data safety form.
+- The pro privacy policy's "Purchases in the app" says RevenueCat receives the account number and the store's purchase record, but not that its SDK also gets the IP address and basic device and app information, nor the price and recent-purchase lookups (`BUY-29`, 20 Nov 2026). Proposed sentence for the owner, after "…restored on another phone.": "When you open Buy credits, and at each start of the app on a phone where you have opened it before, the app also asks RevenueCat for the packs' prices and your recent purchases; with these requests RevenueCat receives your IP address and basic information about the phone and the app (system, app version, store country and language)." Not edited: it needs another pro legal bump, the owner's call. The same section's "restored on another phone" means the credits in the account, not a store restore.
 - Licences: Gradle's transitive libraries are not listed (no Android SDK on the machine that generated the list), two Expo Android libraries' licences are unconfirmed, and the screen has not been tried on a phone.
 
 ## Where it lives

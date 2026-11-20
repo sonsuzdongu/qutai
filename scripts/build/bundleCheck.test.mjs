@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { bundleProblems, hostOf } from './bundleCheck.mjs';
+import { BILLING_PERMISSION, REVENUECAT_MARK, bundleProblems, hostOf, manifestProblems } from './bundleCheck.mjs';
 
 const SECRET = 'test-sign-in-secret-0123456789abcdef0123';
 const HOST = 'api.example.test';
@@ -55,4 +55,23 @@ test('hostOf', () => {
   assert.equal(hostOf('https://api.example.test/x'), HOST);
   assert.equal(hostOf(''), null);
   assert.equal(hostOf('not a url'), null);
+});
+
+test('RevenueCat’s SDK: never in a plain bundle; required in a pro build that sells credits', () => {
+  const withSdk = bundle(`${clean};console.warn("${REVENUECAT_MARK} Native module (RNPurchases) not found")`);
+  assert.deepEqual(bundleProblems(withSdk, { pro: true, apiHost: HOST, purchases: true }), []);
+  assert.equal(bundleProblems(bundle(clean), { pro: true, apiHost: HOST, purchases: true }).length, 1);
+  assert.deepEqual(bundleProblems(bundle(clean), { pro: true, apiHost: HOST, purchases: false }), []);
+  const plain = bundle(`var x=1;console.warn("${REVENUECAT_MARK}")`);
+  assert.match(bundleProblems(plain, { pro: false, apiHost: null }).join(), /RevenueCat/);
+});
+
+test('the Play Billing permission: never in a plain bundle; required when selling credits', () => {
+  const withBilling = Buffer.concat([Buffer.from([0x0a, 0x1c]), Buffer.from(BILLING_PERMISSION), Buffer.from([0x12])]);
+  const without = Buffer.from([0x0a, 0x10, 0x61, 0x6e, 0x64, 0x72, 0x6f, 0x69, 0x64]);
+  assert.equal(manifestProblems(withBilling, { pro: false, purchases: false }).length, 1);
+  assert.deepEqual(manifestProblems(without, { pro: false, purchases: false }), []);
+  assert.deepEqual(manifestProblems(withBilling, { pro: true, purchases: true }), []);
+  assert.equal(manifestProblems(without, { pro: true, purchases: true }).length, 1);
+  assert.deepEqual(manifestProblems(without, { pro: true, purchases: false }), []);
 });

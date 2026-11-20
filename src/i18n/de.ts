@@ -2346,7 +2346,7 @@ export const de: Record<keyof typeof en, string> = {
   'buy.status.lateCredited': '{credits} {credits|one:Credit|other:Credits} aus einem früheren Kauf {credits|one:wurde|other:wurden} gutgeschrieben.',
   'buy.status.nothingMissing': 'Nichts fehlt: Jeder Kauf wurde gutgeschrieben.',
   'buy.status.cancelled': 'Der Kauf wurde abgebrochen. Es wurde nichts berechnet.',
-  'buy.status.pending': 'Der Kauf wartet auf Genehmigung oder Zahlung. Die Credits werden gutgeschrieben, sobald der Store ihn abschließt.',
+  'buy.status.pending': 'Der Kauf wartet auf Genehmigung oder Zahlung (zum Beispiel Barzahlung oder Überweisung). Die Credits werden gutgeschrieben, sobald der Store ihn abschließt; öffnen Sie Qutai innerhalb von drei Tagen nach der Zahlung, damit der Kauf abgeschlossen werden kann. Sie müssen nicht erneut kaufen.',
   'buy.status.notYet': 'Die Zahlung ist erfolgt, aber Qutais Server hat sie noch nicht bestätigt. Die Credits werden in Kürze gutgeschrieben; Sie müssen nicht erneut kaufen.',
   'buy.status.signedOut': 'Die Zahlung ist erfolgt, aber Sie wurden abgemeldet. Melden Sie sich erneut an, dann werden die Credits gutgeschrieben.',
   'buy.status.held': 'Die Zahlung ist erfolgt, aber die Credits müssen vom Qutai-Support geprüft werden, bevor sie gutgeschrieben werden. Bitte wenden Sie sich an den Support.',
@@ -2361,6 +2361,9 @@ export const de: Record<keyof typeof en, string> = {
   'buy.status.network': 'Der Store ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
   'buy.status.productUnavailable': 'Dieses Paket kann gerade nicht gekauft werden. Versuchen Sie ein anderes oder später erneut.',
   'buy.status.failed': 'Der Kauf ist nicht zustande gekommen. Es wurde nichts berechnet. Versuchen Sie es erneut.',
+  'buy.status.alreadyOwned': 'Ein früherer Kauf dieses Pakets wird noch abgeschlossen. Seine Credits werden automatisch gutgeschrieben; Sie müssen es nicht erneut kaufen. Um ein weiteres Paket zu kaufen, versuchen Sie es in einer Minute noch einmal.',
+  'buy.billingUnavailable': 'Auf diesem Gerät sind Käufe über den App-Store nicht möglich (zum Beispiel ohne Play Store, ohne darin angemeldetes Konto oder wenn Käufe deaktiviert sind).',
+  'buy.refundNote': 'Credits werden nicht über die App erstattet, außer wenn das Gesetz oder der Store es verlangt; Erstattungen wickeln Google Play oder Apple ab.',
 
   'action.hideFind': 'Leere Werbeflächen werden gesucht',
   'action.hideTry': 'Ausblenden von Flächen auf der Seite wird versucht',

@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 833 decisions (119 owner, 631 default, 83 waiting); 163 ids moved to Details.
+Totals: 839 decisions (122 owner, 634 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -69,7 +69,7 @@ The open questions, in one place (each row says what the app does today).
 | `BUY-9` | Today a refund that Apple later cancels does not give the credits back automatically; support can grant them by hand. | [35](35-purchases.md) |
 | `BUY-18` | Today fake purchases allow 10 new per account in any 24 hours and 30 a minute across everyone, one pack each, active packs only, each… | [35](35-purchases.md) |
 | `BUY-24` | Today Qutai only asks RevenueCat to delete a deleted user's customer record; whether to require more is open. | [35](35-purchases.md) |
-| `BUY-25` | Today no packs, prices, trial credits, RevenueCat project, store products or store notifications exist. | [35](35-purchases.md) |
+| `BUY-25` | Today the packs are decided (three Android packs) but the RevenueCat project, Play products, notifications and panel packs are still being created; no trial credits. | [35](35-purchases.md) |
 | `BACK-4` | Today new files use scrypt (a slow password-to-key function) with N = 2^14, r = 8, p = 1 and XChaCha20-Poly1305 encryption; files asking… | [36](36-server-backup.md) |
 | `BACK-5` | Today the backup contents are not compressed. | [36](36-server-backup.md) |
 | `BACK-7` | Today the kept password is cleared on sign-out and account deletion, kept when the server ended the session, and cleared by the iPhone… | [36](36-server-backup.md) |
@@ -176,6 +176,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `DATA-26` | Storage failures reported in one place (fine, record, user); unreadable saved values kept aside; unreadable site permissions mean Ask | Default | 2026-11-20 |
 | `DATA-27` | One secure source for every random value (expo-crypto), 128-bit nonces for bridges and tokens, ids keep their stored shape; no Math.random | Default | 2026-11-20 |
 | `DATA-28` | Every settings change is a patch on the live settings, never a render-time copy; writes go one after another with the latest settings | Default | 2026-11-20 |
+| `DATA-29` | Pro builds only: buying talks to RevenueCat and Google Play Billing (account id, products, purchases, IP and device info); RevenueCat contacted only around Buy credits | Default | 2026-11-20 |
 
 ## [4. Page content is untrusted](04-untrusted-content.md)
 
@@ -1055,14 +1056,14 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-2` | Credits are added only after the server has looked the purchase up with RevenueCat itself; the app's… | Owner | not recorded |
 | `BUY-3` | Each store transaction is accepted once across all users; the first to report it fixes its owner and… | Default |  |
 | `BUY-4` | A purchase is credited and refunded at most once, in any order; a refund that arrives first blocks the… | Default |  |
-| `BUY-5` | The development server accepts only test (sandbox) purchases and the production server only real ones. | Default |  |
+| `BUY-5` | The development server accepts only test (sandbox) purchases and the production server only real ones, except the switch for listed… | Default | 2026-11-20 |
 | `BUY-6` | Credits are bought only through the store's in-app purchase at the store's own price; the app never shows… | Default |  |
 | `BUY-7` | A pack's credits are fixed once it exists, and a purchase keeps the credits it had when first recorded; a… | Default |  |
 | `BUY-8` | A refund or revocation at the store takes the credits back, even into a negative balance. | Default |  |
 | `BUY-9` | Today a refund that Apple later cancels does not give the credits back automatically; support can grant… | **Waiting** |  |
 | `BUY-10` | RevenueCat's notifications are checked by signature (within 5 minutes) before they are read, are limited… | Default |  |
 | `BUY-11` | A suspended account can't buy; a store notification for it is held and credited after the account is restored. | Default |  |
-| `BUY-12` | The payments library gets Qutai's account id after sign-in, switches on another sign-in and logs out on… | Default |  |
+| `BUY-12` | The payments library gets Qutai's account id after sign-in, switches on another sign-in and logs out on… | Default | 2026-11-20 |
 | `BUY-13` | RevenueCat is set to keep each purchase with its original account ("Keep with original App User ID") and… | Default |  |
 | `BUY-15` | Builds without pro mode must not contain the payments library at all: no native code, no billing… | Owner | 2026-11-16 |
 | `BUY-16` | Fake purchases are a deliberate temporary stand-in: with fake purchases switched on at a local server, Buy… | Owner | 2026-11-17 |
@@ -1073,7 +1074,12 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-22` | Deleting an account keeps its purchase records without the user and asks RevenueCat to delete its customer… | Default |  |
 | `BUY-23` | Purchase logs never carry a transaction id, product id, email or key, and nothing else from RevenueCat… | Default |  |
 | `BUY-24` | Today Qutai only asks RevenueCat to delete a deleted user's customer record; whether to require more is open. | **Waiting** |  |
-| `BUY-25` | Today no packs, prices, trial credits, RevenueCat project, store products or store notifications exist. | **Waiting** |  |
+| `BUY-25` | Today the packs are decided (three Android packs); the RevenueCat project, Play products and panel packs… | **Waiting** | 2026-11-20 |
+| `BUY-26` | A production switch lets listed accounts' store test purchases add credits: off by default, never revenue,… | Owner | 2026-11-20 |
+| `BUY-27` | RevenueCat only in a pro build with the platform key, the native module and the server in store mode;… | Owner | 2026-11-20 |
+| `BUY-28` | Every ending said plainly, none loses or doubles a pack; unreported purchases found in the store's list;… | Default | 2026-11-20 |
+| `BUY-29` | RevenueCat gets the account id, product ids, purchases and recent-purchase lookups; diagnostics and… | Default | 2026-11-20 |
+| `BUY-30` | A pro Android package needs the RevenueCat key (or --without-purchases); every package's bundle and… | Owner | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `BUY-14`, `BUY-20`
 

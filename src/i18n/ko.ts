@@ -2359,7 +2359,7 @@ export const ko: Record<keyof typeof en, string> = {
   'buy.status.lateCredited': '이전 구매의 {credits}크레딧이 추가되었습니다.',
   'buy.status.nothingMissing': '누락된 항목이 없습니다. 모든 구매가 적립되었습니다.',
   'buy.status.cancelled': '구매가 취소되었습니다. 청구된 금액은 없습니다.',
-  'buy.status.pending': '구매가 승인 또는 결제를 기다리고 있습니다. 스토어에서 완료되면 크레딧이 추가됩니다.',
+  'buy.status.pending': '구매가 승인 또는 결제를 기다리고 있습니다(예: 현금 또는 계좌 이체). 스토어에서 완료되면 크레딧이 추가됩니다. 구매가 마무리될 수 있도록 결제 후 3일 이내에 Qutai를 열어 주세요. 다시 구매하지 않아도 됩니다.',
   'buy.status.notYet': '결제는 완료되었지만 Qutai 서버에서 아직 확인하지 않았습니다. 곧 크레딧이 추가되니 다시 구매하지 않아도 됩니다.',
   'buy.status.signedOut': '결제는 완료되었지만 로그아웃되었습니다. 다시 로그인하면 크레딧이 추가됩니다.',
   'buy.status.held': '결제는 완료되었지만 크레딧을 추가하기 전에 Qutai 지원팀의 확인이 필요합니다. 지원팀에 문의하세요.',
@@ -2374,6 +2374,9 @@ export const ko: Record<keyof typeof en, string> = {
   'buy.status.network': '스토어에 연결할 수 없습니다. 연결을 확인하고 다시 시도하세요.',
   'buy.status.productUnavailable': '지금은 이 팩을 구매할 수 없습니다. 다른 팩을 선택하거나 나중에 다시 시도하세요.',
   'buy.status.failed': '구매가 완료되지 않았습니다. 청구된 금액은 없습니다. 다시 시도하세요.',
+  'buy.status.alreadyOwned': '이 팩의 이전 구매가 아직 완료 처리 중입니다. 해당 크레딧은 자동으로 추가되니 다시 구매하지 않아도 됩니다. 다른 팩을 구매하려면 1분 후에 다시 시도해 주세요.',
+  'buy.billingUnavailable': '이 기기에서는 앱 스토어를 통해 구매할 수 없습니다(예: Play 스토어가 없거나, 로그인된 계정이 없거나, 구매가 꺼져 있는 경우).',
+  'buy.refundNote': '크레딧은 법률이나 스토어가 요구하는 경우를 제외하고 앱에서 환불되지 않습니다. 환불은 Google Play 또는 Apple에서 처리합니다.',
 
   'action.hideFind': '빈 광고 영역 찾는 중',
   'action.hideTry': '페이지의 영역 숨기기 시도 중',

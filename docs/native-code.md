@@ -1,7 +1,7 @@
 # Native code: patches and Qutai's own native modules
 
 Everything native that Qutai carries besides what Expo generates: the two patches applied to dependencies at install
-time, and the five local Expo modules in `modules/`. Neither has automated tests (a native test setup was decided
+time, the five local Expo modules in `modules/`, and one pro-only third-party native package (RevenueCat). Neither has automated tests (a native test setup was decided
 against on 20 Nov 2026); this page is where a regression is looked up: what each piece does, which JavaScript uses
 it, and how to check it by hand on a phone. Design rules: `BUILD` in
 [design/40-signing-and-builds.md](design/40-signing-and-builds.md), `HOUSE-22` in
@@ -84,6 +84,32 @@ manual pass of the table above on both platforms:
   patch-package's line matching). Costs: about 1.1 MB of vendored source (without build output) in this repository.
 
 Either way the pin, the exclusion and the patch file go away; the JavaScript code is unchanged.
+
+## Pro-only native package: `react-native-purchases` (RevenueCat, Android and iOS)
+
+- **Version:** `^11.0.4` in package.json (installed with `npx expo install`, 20 Nov 2026; its native side is
+  `com.revenuecat.purchases:purchases-hybrid-common` 20.10.0 with Google Play Billing on Android, the RevenueCat pod on
+  iOS). **Not patched and not pinned**: nothing in it is changed, so `npx expo install --fix` may move it within the
+  SDK's range. Requirements its docs state: React Native 0.80+, Android minSdk 23, compileSdk 35, Kotlin 2.1 (Expo SDK
+  58 meets them). No config plugin.
+- **Only in pro builds.** `plugins/proBuild.js` decides (`EXPO_PUBLIC_PRO_MODE=on` with `EXPO_PUBLIC_QUTAI_API_URL`,
+  environment first, then `.env`). Without pro mode: `react-native.config.js` sets its platforms to `null` (not
+  autolinked on either platform), `metro.config.js` resolves it to an empty module, and `plugins/withProPurchases.js`
+  marks `com.android.vending.BILLING` `tools:node="remove"`. With pro mode the plugin declares the permission. The
+  same plugin adds lines to the generated `android/settings.gradle` that drop `android/build/generated/autolinking/
+  autolinking.json` when the build kind changed since the last Gradle run (React Native caches that list by lockfile
+  only, so a plain build right after a pro one would otherwise link the SDK again); the kind is kept in
+  `qutai-build-kind.txt` beside it. `scripts/build/release.mjs` checks the result in every package (RevenueCat's
+  `[RevenueCat]` log text in the bundle, the billing permission in the AAB manifest).
+- **JS:** `src/purchases/index.ts` requires it only when the native module `RNPurchases` exists and the build has a key;
+  `src/purchases/revenuecat.ts` is the adapter (tested in Node against a fake SDK).
+- **Manual check:** a pro build with `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`: Buy credits shows the packs with Play's
+  prices and a purchase opens Play's sheet. A plain build: `aapt dump permissions <apk>` lists no
+  `com.android.vending.BILLING`, `apkanalyzer dex packages <apk> | grep -c com.revenuecat` is 0, and Buy credits isn't
+  there (no pro mode). Steps on a phone: `docs/test-checklist.md` › Buying credits with Google Play.
+- **Known:** Qutai's main activity uses `launchMode="singleTask"`, which RevenueCat says can cancel a purchase when the
+  user leaves to approve it elsewhere and returns through the launcher icon (nothing is charged then). Left as is
+  (README.md › Buying credits › Android launch mode).
 
 ## Qutai's native modules (`modules/`)
 

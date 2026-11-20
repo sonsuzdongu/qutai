@@ -2355,7 +2355,7 @@ export const es: Record<keyof typeof en, string> = {
   'buy.status.lateCredited': 'Se agregaron {credits} {credits|one:crédito|other:créditos} de una compra anterior.',
   'buy.status.nothingMissing': 'No falta nada: todas las compras se han acreditado.',
   'buy.status.cancelled': 'Se canceló la compra. No se cobró nada.',
-  'buy.status.pending': 'La compra está pendiente de aprobación o de pago. Los créditos se agregarán cuando la tienda la complete.',
+  'buy.status.pending': 'La compra está pendiente de aprobación o de pago (por ejemplo, en efectivo o por transferencia bancaria). Los créditos se agregarán cuando la tienda la complete; abre Qutai en los tres días siguientes al pago para que la compra pueda finalizarse. No hace falta que vuelvas a comprar.',
   'buy.status.notYet': 'El pago se realizó, pero el servidor de Qutai aún no lo ha confirmado. Los créditos se agregarán en breve; no hace falta que vuelvas a comprar.',
   'buy.status.signedOut': 'El pago se realizó, pero se cerró tu sesión. Vuelve a iniciar sesión y se agregarán los créditos.',
   'buy.status.held': 'El pago se realizó, pero el soporte de Qutai tiene que revisar los créditos antes de agregarlos. Ponte en contacto con el soporte.',
@@ -2370,6 +2370,9 @@ export const es: Record<keyof typeof en, string> = {
   'buy.status.network': 'No se pudo conectar con la tienda. Comprueba tu conexión y vuelve a intentarlo.',
   'buy.status.productUnavailable': 'Este paquete no se puede comprar en este momento. Prueba con otro o vuelve a intentarlo más tarde.',
   'buy.status.failed': 'La compra no se realizó. No se cobró nada. Vuelve a intentarlo.',
+  'buy.status.alreadyOwned': 'Una compra anterior de este paquete todavía se está completando. Sus créditos se agregarán solos; no hace falta que vuelvas a comprarlo. Para comprar otro paquete, inténtalo de nuevo en un minuto.',
+  'buy.billingUnavailable': 'Este dispositivo no puede hacer compras a través de su tienda de aplicaciones (por ejemplo, sin Play Store, sin una cuenta con sesión iniciada en ella o con las compras desactivadas).',
+  'buy.refundNote': 'Los créditos no se reembolsan desde la app, salvo cuando lo exijan la ley o la tienda; los reembolsos los gestionan Google Play o Apple.',
 
   'action.hideFind': 'Buscando recuadros de anuncios vacíos',
   'action.hideTry': 'Intentando ocultar recuadros en la página',
