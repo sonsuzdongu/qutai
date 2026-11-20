@@ -225,8 +225,29 @@ export function cookieMetadata(cookies: StoreCookie[], pageHost: string): { list
 /** Cookies grouped by domain, first-party domains first (the order cookieMetadata gives). */
 export function groupByDomain<T extends { domain: string }>(list: T[]): { domain: string; cookies: T[] }[] {
   const groups = new Map<string, T[]>();
-  for (const c of list) groups.set(c.domain, [...(groups.get(c.domain) ?? []), c]);
+  for (const c of list) {
+    const group = groups.get(c.domain);
+    if (group) group.push(c);
+    else groups.set(c.domain, [c]);
+  }
   return [...groups.entries()].map(([domain, cookies]) => ({ domain, cookies }));
+}
+
+/**
+ * The list as rows of a virtualised list (UI-32): a domain's heading, then one row per cookie, drawn so each domain
+ * still reads as one card. A heavy site has hundreds of cookies; only the rows on screen are mounted.
+ */
+export type CookieRow =
+  | { kind: 'domain'; key: string; domain: string; party: CookieMeta['party']; first: boolean; empty: boolean }
+  | { kind: 'cookie'; key: string; meta: CookieMeta; last: boolean };
+
+export function cookieRows(list: CookieMeta[]): CookieRow[] {
+  const rows: CookieRow[] = [];
+  groupByDomain(list).forEach(({ domain, cookies }, i) => {
+    rows.push({ kind: 'domain', key: `d:${domain}`, domain, party: cookies[0].party, first: i === 0, empty: !cookies.length });
+    cookies.forEach((meta, j) => rows.push({ kind: 'cookie', key: `c:${cookieId(meta)}`, meta, last: j === cookies.length - 1 }));
+  });
+  return rows;
 }
 
 const flag = (v: boolean | null, word: string) => (v === null ? `${word} unknown` : v ? word : `not ${word}`);

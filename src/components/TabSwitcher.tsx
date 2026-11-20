@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, memo, useContext, useEffect, useState } from 'react';
 import {
   Animated,
+  FlatList,
   Image,
   Pressable,
   StyleSheet,
@@ -19,6 +20,8 @@ import { bump } from '../device/haptics';
 import { incognitoInfoKey, incognitoIsolated } from '../device/webviewProfile';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { dropTab, Measurable, sectionsOf, TabDrag } from './tabDrag';
+import { rowIndexOf, tabListRows, type TabListRow } from './tabRows';
+import { useStableHandlers } from '../utils/useStableHandlers';
 import { t } from '../i18n';
 import { makeStyles, usePalette, radii } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
@@ -198,6 +201,54 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
     browser.switchTab(tab.id);
     onClose();
   };
+
+  // What a card's buttons do: the same functions on every render, so a card redraws only when it changes (UI-32).
+  const cardHandlers = useStableHandlers({
+    register: (id: string, view: Measurable | null) => drag.register('tab', id, view),
+    press: (tab: Tab) => select(tab),
+    longPress: (tab: Tab) => startDrag(tab),
+    pressOut: (id: string) => drag.pressOut(id),
+    close: (tab: Tab) => closeTab(tab),
+  });
+  const card = (item: Tab, width: number) => (
+    <TabCard
+      key={item.id}
+      tab={item}
+      width={width}
+      previewShape={ratio}
+      active={item.id === browser.activeId}
+      incognito={incognito}
+      selected={comparing ? comparing.includes(item.id) : undefined}
+      dragging={drag.id === item.id ? drag.pan : undefined}
+      canDrag={!comparing && !searching}
+      handlers={cardHandlers}
+      shown={`${item.title}|${item.url}|${item.thumbnail ?? ''}|${item.thumbnailAspect}|${item.playback.audible}|${item.isNewTab}`}
+    />
+  );
+  const sections = sectionsOf(tabs, browser);
+  const rows = tabListRows(sections, columns);
+  const draggedRow = rowIndexOf(rows, drag.id);
+  // The list redraws its rows when anything they show changes (a tab's title, the active tab, compare mode…).
+  const listVersion = `${browser.getVersion()}|${browser.activeId}|${comparing?.join(',') ?? '-'}|${drag.id ?? '-'}|${width}`;
+  const renderRow = ({ item: row }: { item: TabListRow<Tab> }) => {
+    if (row.kind === 'cards') return <View style={styles.cards}>{row.tabs.map((item) => card(item, cardWidth))}</View>;
+    const group = browser.getGroup(row.section.groupId ?? undefined);
+    if (!group) return <View style={styles.cards}>{row.section.tabs.map((item) => card(item, cardWidth))}</View>;
+    return (
+      <View style={[styles.group, { borderColor: group.color }]}>
+        <GroupHeader
+          group={group}
+          count={row.section.tabs.length}
+          incognito={incognito}
+          register={(view) => drag.register('group', group.id, view)}
+          onToggle={() => browser.toggleGroup(group.id)}
+          onRename={(name) => browser.renameGroup(group.id, name)}
+          onOptions={() => setMenuGroup(group)}
+        />
+        {group.collapsed ? null : <View style={styles.cards}>{row.section.tabs.map((item) => card(item, groupCardWidth))}</View>}
+      </View>
+    );
+  };
   const comparable = allTabs.filter((tab) => !tab.isNewTab).length >= 2;
   const compareSelected = () => {
     const chosen = allTabs.filter((tab) => comparing?.includes(tab.id));
@@ -287,69 +338,46 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
         </View>
       )}
 
-      {/* A group's name is edited in place; it scrolls into view above the keyboard. */}
-      <KeyboardAwareScrollView
+      {/* Only the rows on screen are mounted (UI-32). A group's name is edited in place; it scrolls into view above
+          the keyboard. */}
+      <FlatList
+        data={rows}
+        keyExtractor={(row) => row.key}
+        renderItem={renderRow}
+        extraData={listVersion}
         contentContainerStyle={styles.grid}
         scrollEnabled={drag.id === null}
         {...drag.responder.panHandlers}
-      >
-        {tabs.length === 0 &&
-          (searching ? (
-            <Text style={[styles.noResults, theme.dimText]}>{t('tabs.noResults')}</Text>
-          ) : (
-            <EmptyState incognito={incognito} />
-          ))}
-        {sectionsOf(tabs, browser).map((section) => {
-          const group = browser.getGroup(section.groupId ?? undefined);
-          return (
-            <View key={section.key} style={group ? [styles.group, { borderColor: group.color }] : undefined}>
-              {group && (
-                <GroupHeader
-                  group={group}
-                  count={section.tabs.length}
-                  incognito={incognito}
-                  register={(view) => drag.register('group', group.id, view)}
-                  onToggle={() => browser.toggleGroup(group.id)}
-                  onRename={(name) => browser.renameGroup(group.id, name)}
-                  onOptions={() => setMenuGroup(group)}
-                />
-              )}
-              {group?.collapsed ? null : (
-                <View style={styles.cards}>
-                  {section.tabs.map((item) => (
-                    <TabCard
-                      key={item.id}
-                      tab={item}
-                      width={group ? groupCardWidth : cardWidth}
-                      previewShape={ratio}
-                      active={item.id === browser.activeId}
-                      incognito={incognito}
-                      selection={
-                        comparing ? { selected: comparing.includes(item.id), disabled: item.isNewTab } : undefined
-                      }
-                      dragging={drag.id === item.id ? drag.pan : undefined}
-                      register={(view) => drag.register('tab', item.id, view)}
-                      onPress={() => select(item)}
-                      onLongPress={comparing || searching ? undefined : () => startDrag(item)}
-                      onPressOut={() => drag.pressOut(item.id)}
-                      onCloseTab={() => closeTab(item)}
-                    />
-                  ))}
-                </View>
-              )}
-            </View>
-          );
-        })}
-        {incognito || searching ? null : (
-          <RecentlyClosed
-            browser={browser}
-            onReopen={(index) => {
-              browser.reopenClosed(index);
-              onClose();
-            }}
-          />
+        renderScrollComponent={(props) => <KeyboardAwareScrollView {...props} />}
+        // The dragged card's row is drawn over the rows after it.
+        CellRendererComponent={({ index, style, children, ...cell }) => (
+          <View {...cell} style={[style, index === draggedRow && styles.draggedRow]}>
+            {children}
+          </View>
         )}
-      </KeyboardAwareScrollView>
+        initialNumToRender={6}
+        windowSize={7}
+        ListHeaderComponent={
+          tabs.length === 0 ? (
+            searching ? (
+              <Text style={[styles.noResults, theme.dimText]}>{t('tabs.noResults')}</Text>
+            ) : (
+              <EmptyState incognito={incognito} />
+            )
+          ) : undefined
+        }
+        ListFooterComponent={
+          incognito || searching ? undefined : (
+            <RecentlyClosed
+              browser={browser}
+              onReopen={(index) => {
+                browser.reopenClosed(index);
+                onClose();
+              }}
+            />
+          )
+        }
+      />
 
       <ActionSheet
         title={menuTab ? menuTab.title || menuTab.url : null}
@@ -559,19 +587,43 @@ function GroupHeader({
   );
 }
 
-function TabCard({
+type CardHandlers = {
+  register: (id: string, view: Measurable | null) => void;
+  press: (tab: Tab) => void;
+  longPress: (tab: Tab) => void;
+  pressOut: (id: string) => void;
+  close: (tab: Tab) => void;
+};
+
+/**
+ * A tab's card. Tabs change in place (title, address, thumbnail, sound), so the card compares what it shows, not the
+ * tab object, to know whether to redraw (UI-32).
+ */
+const TabCard = memo(
+  TabCardView,
+  (a, b) =>
+    a.tab === b.tab &&
+    a.width === b.width &&
+    a.previewShape === b.previewShape &&
+    a.active === b.active &&
+    a.incognito === b.incognito &&
+    a.selected === b.selected &&
+    a.dragging === b.dragging &&
+    a.canDrag === b.canDrag &&
+    a.handlers === b.handlers &&
+    a.shown === b.shown,
+);
+
+function TabCardView({
   tab,
   width,
   previewShape,
   active,
   incognito,
-  selection,
+  selected,
   dragging,
-  register,
-  onPress,
-  onLongPress,
-  onPressOut,
-  onCloseTab,
+  canDrag,
+  handlers,
 }: {
   tab: Tab;
   width: number;
@@ -579,16 +631,22 @@ function TabCard({
   previewShape: number;
   active: boolean;
   incognito: boolean;
-  /** Set in compare mode. */
-  selection?: { selected: boolean; disabled: boolean };
+  /** Set in compare mode: whether the card is picked. */
+  selected?: boolean;
   /** The finger's offset while this card is being dragged. */
   dragging?: Animated.ValueXY;
-  register: (view: Measurable | null) => void;
-  onLongPress?: () => void;
-  onPressOut: () => void;
-  onPress: () => void;
-  onCloseTab: () => void;
+  /** A long press picks the card up (not while comparing or searching). */
+  canDrag: boolean;
+  handlers: CardHandlers;
+  /** What the card shows of the tab, for the comparison above (filled in by the wrapper). */
+  shown?: string;
 }) {
+  const selection = selected === undefined ? undefined : { selected, disabled: tab.isNewTab };
+  const register = (view: Measurable | null) => handlers.register(tab.id, view);
+  const onPress = () => handlers.press(tab);
+  const onLongPress = canDrag ? () => handlers.longPress(tab) : undefined;
+  const onPressOut = () => handlers.pressOut(tab.id);
+  const onCloseTab = () => handlers.close(tab);
   const styles = useStyles();
   const theme = useTheme(incognito);
   const previewHeight = width * previewShape;
@@ -758,6 +816,7 @@ const useStyles = makeStyles((c) => ({
   groupUngroup: { fontSize: 13, paddingHorizontal: 4 },
   dragging: { zIndex: 20, elevation: 12, opacity: 0.92 },
   grid: { padding: PADDING, gap: GAP, flexGrow: 1 },
+  draggedRow: { zIndex: 20, elevation: 12 },
   row: { gap: GAP },
   card: { borderRadius: 14, overflow: 'hidden', borderWidth: 2, borderColor: 'transparent' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', paddingLeft: 10, height: 34 },

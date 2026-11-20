@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import {
   cookieApplies,
   cookieMetadata,
+  cookieRows,
   dedupeCookies,
   expiringCookie,
   fromIosCookie,
@@ -105,4 +106,14 @@ test('Android delete: an expired cookie with the same name, path, domain and Sec
     url: 'http://localhost/',
     line: 'a=; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/',
   });
+});
+
+test('the cookies screen as list rows: a heading per domain, then its cookies, the last one closing the card (UI-32)', () => {
+  const meta = (name: string, domain: string, party: 'first' | 'third') =>
+    ({ name, domain, path: '/', party, secure: false }) as unknown as Parameters<typeof cookieRows>[0][number];
+  const rows = cookieRows([meta('a', 'example.com', 'first'), meta('b', 'ads.net', 'third'), meta('c', 'example.com', 'first')]);
+  assert.deepEqual(
+    rows.map((r) => (r.kind === 'domain' ? `${r.domain}${r.first ? '*' : ''}` : `${r.meta.name}${r.last ? '.' : ''}`)),
+    ['example.com*', 'a', 'c.', 'ads.net', 'b.'],
+  );
 });

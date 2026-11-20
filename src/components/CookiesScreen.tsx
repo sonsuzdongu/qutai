@@ -1,10 +1,10 @@
 import * as Clipboard from 'expo-clipboard';
-import { useEffect, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { AccessibilityInfo, ActivityIndicator, FlatList, Platform, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Tab } from '../browser/Tab';
 import { siteKey } from '../agent/sitePolicy';
-import { cookieId, cookieMetadata, groupByDomain, type CookieKey, type CookieMeta, type StoreCookie } from '../content/cookieInfo';
+import { cookieId, cookieMetadata, cookieRows, type CookieKey, type CookieMeta, type StoreCookie } from '../content/cookieInfo';
 import { deleteTabCookies, readTabCookies } from '../device/cookieStore';
 import { t } from '../i18n';
 import { formatDateTime } from '../i18n/format';
@@ -33,6 +33,7 @@ export function CookiesScreen({ tab, onClose }: { tab: Tab | null; onClose: () =
 
 type Loaded = { cookies: StoreCookie[]; list: CookieMeta[]; detailed: boolean; platform: 'android' | 'ios' };
 
+
 function Cookies({ tab, onClose }: { tab: Tab; onClose: () => void }) {
   const styles = useStyles();
   const palette = usePalette();
@@ -60,8 +61,13 @@ function Cookies({ tab, onClose }: { tab: Tab; onClose: () => void }) {
     setRound((n) => n + 1);
   };
 
-  const valueOf = (meta: CookieMeta) =>
-    typeof state === 'object' && 'cookies' in state ? (state.cookies.find((c) => cookieId(c) === cookieId(meta))?.value ?? '') : '';
+  // Values by cookie, looked up once per read (a heavy site has hundreds).
+  const values = useMemo(
+    () => new Map(typeof state === 'object' && 'cookies' in state ? state.cookies.map((c) => [cookieId(c), c.value] as const) : []),
+    [state],
+  );
+  const valueOf = (meta: CookieMeta) => values.get(cookieId(meta)) ?? '';
+  const rows = useMemo(() => (typeof state === 'object' && 'list' in state ? cookieRows(state.list) : []), [state]);
 
   const remove = async (metas: CookieMeta[], all: boolean) => {
     const ok = await dialog.confirm({
@@ -109,88 +115,105 @@ function Cookies({ tab, onClose }: { tab: Tab; onClose: () => void }) {
         }}
         right={{ label: t('common.done'), onPress: onClose }}
       />
-      <ScrollView contentContainerStyle={[styles.content, readableColumn]}>
-        <Text style={styles.site}>{site}</Text>
-        <Text style={styles.hint}>
-          {tab.incognito ? t('cookies.introIncognito') : t('cookies.intro')}
-        </Text>
-        {state === 'loading' && <ActivityIndicator style={styles.loading} color={palette.tint} />}
-        {typeof state === 'object' && 'error' in state && (
-          <View style={styles.card}>
-            <Text style={styles.text}>{t('cookies.failed')}</Text>
-            <ErrorDetails details={state.error} />
-          </View>
-        )}
-        {typeof state === 'object' && 'list' in state && (
-          <>
-            {!state.list.length && <Text style={styles.text}>{t('cookies.none')}</Text>}
-            {groupByDomain(state.list).map(({ domain, cookies }) => (
-              <View key={domain} style={styles.card}>
-                <Text style={styles.domain} accessibilityRole="header">
-                  {domain}
-                </Text>
-                <Text style={styles.hint}>
-                  {cookies[0].party === 'first' ? t('cookies.firstParty') : t('cookies.thirdParty')}
-                </Text>
-                {cookies.map((c) => {
-                  const open = shown.has(cookieId(c));
-                  return (
-                    <View key={cookieId(c)} style={styles.cookie}>
-                      <Text style={styles.name} selectable>
-                        {c.name || t('cookies.noName')}
-                      </Text>
-                      <Text style={styles.hint}>{describe(c)}</Text>
-                      {open && (
-                        <Text style={styles.value} selectable>
-                          {valueOf(c) || t('cookies.emptyValue')}
-                        </Text>
-                      )}
-                      <View style={styles.actions}>
-                        <Action
-                          icon="view"
-                          label={open ? t('cookies.hideValue') : t('cookies.showValue')}
-                          a11y={open ? t('cookies.hideValueOf', { name: c.name }) : t('cookies.showValueOf', { name: c.name })}
-                          onPress={() => toggle(c)}
-                        />
-                        {open && (
-                          <Action
-                            icon="copy"
-                            label={t('cookies.copy')}
-                            a11y={t('cookies.copyOf', { name: c.name })}
-                            onPress={async () => {
-                              await Clipboard.setStringAsync(valueOf(c));
-                              AccessibilityInfo.announceForAccessibility(t('common.copied'));
-                            }}
-                          />
-                        )}
-                        <Action
-                          icon="trash"
-                          label={t('cookies.delete')}
-                          a11y={t('cookies.deleteOf', { name: c.name })}
-                          danger
-                          onPress={() => void remove([c], false)}
-                        />
-                      </View>
-                    </View>
-                  );
-                })}
+      <FlatList
+        data={rows}
+        keyExtractor={(row) => row.key}
+        extraData={shown}
+        contentContainerStyle={[styles.content, readableColumn]}
+        initialNumToRender={20}
+        ListHeaderComponent={
+          <View style={styles.top}>
+            <Text style={styles.site}>{site}</Text>
+            <Text style={styles.hint}>{tab.incognito ? t('cookies.introIncognito') : t('cookies.intro')}</Text>
+            {state === 'loading' && <ActivityIndicator style={styles.loading} color={palette.tint} />}
+            {typeof state === 'object' && 'error' in state && (
+              <View style={styles.card}>
+                <Text style={styles.text}>{t('cookies.failed')}</Text>
+                <ErrorDetails details={state.error} />
               </View>
-            ))}
-            {state.list.length > 0 && (
-              <Pressable
-                onPress={() => void remove(state.list, true)}
-                style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-                accessibilityRole="button"
-              >
-                <WholeWordsText style={styles.danger}>{t('cookies.deleteAll', { site })}</WholeWordsText>
-              </Pressable>
             )}
-            <Text style={styles.hint}>{limitsText(state)}</Text>
-          </>
-        )}
-      </ScrollView>
+            {typeof state === 'object' && 'list' in state && !state.list.length && (
+              <Text style={styles.text}>{t('cookies.none')}</Text>
+            )}
+          </View>
+        }
+        renderItem={({ item: row }) =>
+          row.kind === 'domain' ? (
+            <View style={[styles.cardTop, !row.first && styles.cardGap]}>
+              <Text style={styles.domain} accessibilityRole="header">
+                {row.domain}
+              </Text>
+              <Text style={styles.hint}>{row.party === 'first' ? t('cookies.firstParty') : t('cookies.thirdParty')}</Text>
+            </View>
+          ) : (
+            <View style={[styles.cardMiddle, row.last && styles.cardBottom]}>
+              {cookieEntry(row.meta)}
+            </View>
+          )
+        }
+        ListFooterComponent={
+          typeof state === 'object' && 'list' in state ? (
+            <View style={styles.bottom}>
+              {state.list.length > 0 && (
+                <Pressable
+                  onPress={() => void remove(state.list, true)}
+                  style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+                  accessibilityRole="button"
+                >
+                  <WholeWordsText style={styles.danger}>{t('cookies.deleteAll', { site })}</WholeWordsText>
+                </Pressable>
+              )}
+              <Text style={styles.hint}>{limitsText(state)}</Text>
+            </View>
+          ) : undefined
+        }
+      />
     </SafeAreaView>
   );
+
+  /** One cookie: a call, not a component, so a row is not remounted when the screen redraws. */
+  function cookieEntry(c: CookieMeta) {
+    const open = shown.has(cookieId(c));
+    return (
+      <View style={styles.cookie}>
+        <Text style={styles.name} selectable>
+          {c.name || t('cookies.noName')}
+        </Text>
+        <Text style={styles.hint}>{describe(c)}</Text>
+        {open && (
+          <Text style={styles.value} selectable>
+            {valueOf(c) || t('cookies.emptyValue')}
+          </Text>
+        )}
+        <View style={styles.actions}>
+          <Action
+            icon="view"
+            label={open ? t('cookies.hideValue') : t('cookies.showValue')}
+            a11y={open ? t('cookies.hideValueOf', { name: c.name }) : t('cookies.showValueOf', { name: c.name })}
+            onPress={() => toggle(c)}
+          />
+          {open && (
+            <Action
+              icon="copy"
+              label={t('cookies.copy')}
+              a11y={t('cookies.copyOf', { name: c.name })}
+              onPress={async () => {
+                await Clipboard.setStringAsync(valueOf(c));
+                AccessibilityInfo.announceForAccessibility(t('common.copied'));
+              }}
+            />
+          )}
+          <Action
+            icon="trash"
+            label={t('cookies.delete')}
+            a11y={t('cookies.deleteOf', { name: c.name })}
+            danger
+            onPress={() => void remove([c], false)}
+          />
+        </View>
+      </View>
+    );
+  }
 
   function Action({ icon, label, a11y, danger, onPress }: { icon: 'view' | 'copy' | 'trash'; label: string; a11y: string; danger?: boolean; onPress: () => void }) {
     return (
@@ -231,7 +254,22 @@ function limitsText(state: Loaded): string {
 
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
-  content: { padding: 16, gap: 12, paddingBottom: 40 },
+  content: { padding: 16, paddingBottom: 40 },
+  top: { gap: 12, marginBottom: 12 },
+  bottom: { gap: 12, marginTop: 12 },
+  // A domain's card, drawn across its rows: heading on top, cookies under it, the last one closing the card.
+  cardTop: {
+    backgroundColor: c.surface,
+    borderTopLeftRadius: radii.card,
+    borderTopRightRadius: radii.card,
+    paddingHorizontal: 14,
+    paddingTop: 14,
+    paddingBottom: 8,
+    gap: 8,
+  },
+  cardGap: { marginTop: 12 },
+  cardMiddle: { backgroundColor: c.surface, paddingHorizontal: 14, paddingBottom: 8 },
+  cardBottom: { borderBottomLeftRadius: radii.card, borderBottomRightRadius: radii.card, paddingBottom: 14 },
   site: { fontSize: 17, fontWeight: '700', color: c.text },
   hint: common(c).hint,
   text: { fontSize: 15, color: c.text },
