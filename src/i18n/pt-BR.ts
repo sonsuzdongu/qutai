@@ -448,7 +448,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'newTab.removeSite': 'Remover "{title}" dos mais visitados?',
   'newTab.remove': 'Remover',
   'newTab.incognitoTitle': 'Você está no modo anônimo',
-  'newTab.page': 'Página de nova guia (nenhuma página da web carregada)',
 
   'contextMenu.openInNewTab': 'Abrir em nova guia',
   'contextMenu.openInIncognito': 'Abrir em guia anônima',
@@ -566,7 +565,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'settings.webSearch': 'Pesquisa com IA',
   'settings.webSearchHint':
     'O Qutai pode pesquisar na web com a pesquisa integrada do provedor e mostrar as fontes. As pesquisas são cobradas na sua chave de API pelo {provider}, além dos tokens.',
-  'settings.memory': 'Memória',
   'settings.memoryEnabled': 'Lembrar coisas sobre mim',
   'settings.memoryHint':
     'O Qutai salva neste celular fatos que você conta (nome, telefone, endereço, preferências) e os usa em conversas futuras, por exemplo para preencher formulários. Nunca senhas ou dados de cartão; nada do modo anônimo.',
@@ -1088,7 +1086,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'contextMenu.readPdf': 'Ler com o Qutai',
   'contextMenu.readPdfPrompt': 'Leia este PDF e resuma: {url}',
   'downloads.ask': 'Perguntar ao Qutai',
-  'downloads.askLabel': 'Perguntar ao Qutai sobre {name}',
   'downloads.askDraft': 'Resuma este PDF',
 
   'menu.downloads': 'Downloads',
@@ -1098,7 +1095,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'downloads.started': 'Baixando…',
   'downloads.done': 'Baixado: {name}',
   'downloads.cancel': 'Cancelar download',
-  'downloads.cancelled': 'Download cancelado',
   'downloads.failed': 'Não foi possível baixar {name}',
   'downloads.agentConfirm': 'Baixar este arquivo?',
   'downloads.agentFrom': 'De: {host}',
@@ -1177,7 +1173,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'downloads.incognito': 'Anônimo',
   'contextMenu.downloadLink': 'Baixar link',
 
-  'settings.content': 'Conteúdo',
   'settings.blockAds': 'Bloquear anúncios e rastreadores',
   'settings.blockAdsHint':
     'Bloqueia solicitações a domínios de anúncios e rastreadores das listas de filtros que você escolher (baixadas de quem as publica) e o que as páginas adicionam depois, a partir de uma lista integrada. O bloqueio é por domínio: anúncios servidos pelo próprio domínio de um site ainda podem aparecer.',
@@ -1957,7 +1952,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'ptt.busy': 'O Qutai está ocupado com uma tarefa. Nada foi enviado.',
   'ptt.stopped': 'A escuta parou. Nada foi enviado.',
   'ptt.cancelled': 'Cancelado. Nada foi enviado.',
-  'ptt.sent': 'Enviado: “{text}”',
   'ptt.sentA11y': 'Mensagem de voz enviada',
   'ptt.open': 'Abrir',
   'voice.noLanguageList': 'Este celular não lista os idiomas de fala dele. Você pode escolher entre os idiomas acima.',
@@ -1996,7 +1990,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'account.introLocal': 'Entrar não envia suas abas, histórico, favoritos, conversas, memória ou chaves de IA para lugar nenhum: eles ficam neste celular. O servidor do Qutai guarda o que a conta precisa: um número de conta, como você entra (Apple, Google ou seu e-mail), o e-mail que um login com Apple ou Google compartilha (se houver) e quando a conta foi usada pela última vez.',
   'account.signInGoogle': 'Fazer login com o Google',
   'account.signInApple': 'Iniciar sessão com a Apple',
-  'account.noProviders': 'O login não está configurado nesta versão.',
   'account.expired': 'Você foi desconectado. Faça login de novo para continuar usando sua conta.',
   'account.signedInWith': 'Conectado com {providers}',
   'account.providerApple': 'Apple',
@@ -2305,7 +2298,6 @@ export const ptBR: Record<keyof typeof en, string> = {
 
   // Pro mode: setup's Qutai step, the sign-in requirement and buying credits
   'onboarding.f3BodyPro': 'Sem anúncios nem rastreamento, e sua navegação fica no seu celular. Com os Qutai Credits, só o que o assistente envia passa pelo servidor do Qutai; com sua própria chave, nem isso.',
-  'account.onlyTestSignIn': 'O login com Apple e Google ainda não está configurado nesta versão. Use o login de teste abaixo.',
   'credits.signIn': 'Fazer login',
   'credits.notNow': 'Agora não',
   'credits.useOwnKey': 'Usar minha própria chave',

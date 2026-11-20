@@ -446,7 +446,6 @@ export const ko: Record<keyof typeof en, string> = {
   'newTab.removeSite': '자주 방문한 사이트에서 ‘{title}’을(를) 삭제하시겠습니까?',
   'newTab.remove': '삭제',
   'newTab.incognitoTitle': '시크릿 모드입니다',
-  'newTab.page': '새 탭 페이지(로드된 웹페이지 없음)',
 
   'contextMenu.openInNewTab': '새 탭에서 열기',
   'contextMenu.openInIncognito': '시크릿 탭에서 열기',
@@ -564,7 +563,6 @@ export const ko: Record<keyof typeof en, string> = {
   'settings.webSearch': 'AI 검색',
   'settings.webSearchHint':
     'Qutai는 제공업체의 기본 제공 검색으로 웹을 검색하고 출처를 보여 줄 수 있습니다. 검색 요금은 토큰과 별도로 {provider}이(가) API 키에 청구합니다.',
-  'settings.memory': '메모리',
   'settings.memoryEnabled': '나에 관한 정보 기억',
   'settings.memoryHint':
     'Qutai는 알려 준 정보(이름, 전화번호, 주소, 선호 사항)를 이 휴대전화에 저장하고 이후 대화에서 사용합니다(예: 양식 작성). 비밀번호나 카드 정보는 절대 저장하지 않으며, 시크릿 모드의 내용도 저장하지 않습니다.',
@@ -1086,7 +1084,6 @@ export const ko: Record<keyof typeof en, string> = {
   'contextMenu.readPdf': 'Qutai로 읽기',
   'contextMenu.readPdfPrompt': '이 PDF를 읽고 요약해 주세요: {url}',
   'downloads.ask': 'Qutai에게 묻기',
-  'downloads.askLabel': '{name}에 대해 Qutai에게 묻기',
   'downloads.askDraft': '이 PDF를 요약해 주세요',
 
   'menu.downloads': '다운로드',
@@ -1096,7 +1093,6 @@ export const ko: Record<keyof typeof en, string> = {
   'downloads.started': '다운로드 중…',
   'downloads.done': '다운로드 완료: {name}',
   'downloads.cancel': '다운로드 취소',
-  'downloads.cancelled': '다운로드가 취소되었습니다',
   'downloads.failed': '{name}을(를) 다운로드하지 못했습니다',
   'downloads.agentConfirm': '이 파일을 다운로드하시겠습니까?',
   'downloads.agentFrom': '출처: {host}',
@@ -1175,7 +1171,6 @@ export const ko: Record<keyof typeof en, string> = {
   'downloads.incognito': '시크릿',
   'contextMenu.downloadLink': '링크 다운로드',
 
-  'settings.content': '콘텐츠',
   'settings.blockAds': '광고 및 추적기 차단',
   'settings.blockAdsHint':
     '선택한 필터 목록(각 게시자에게서 다운로드)에 따라 광고 및 추적기 도메인으로 가는 요청을 차단하고, 페이지가 나중에 추가하는 요청은 기본 제공 목록으로 차단합니다. 도메인 기반이므로 사이트 자체 도메인에서 제공되는 광고는 계속 표시될 수 있습니다.',
@@ -1955,7 +1950,6 @@ export const ko: Record<keyof typeof en, string> = {
   'ptt.busy': 'Qutai가 작업 중입니다. 전송하지 않았습니다.',
   'ptt.stopped': '듣기가 중지되었습니다. 전송하지 않았습니다.',
   'ptt.cancelled': '취소되었습니다. 전송하지 않았습니다.',
-  'ptt.sent': '전송됨: “{text}”',
   'ptt.sentA11y': '음성 메시지가 전송되었습니다',
   'ptt.open': '열기',
   'voice.noLanguageList': '이 휴대전화는 음성 언어 목록을 제공하지 않습니다. 위의 언어 중에서 선택할 수 있습니다.',
@@ -1994,7 +1988,6 @@ export const ko: Record<keyof typeof en, string> = {
   'account.introLocal': '로그인해도 탭, 방문 기록, 북마크, 채팅, 메모리, AI 키는 어디에도 전송되지 않고 이 휴대전화에 남습니다. Qutai 서버는 계정에 필요한 것만 보관합니다: 계정 번호, 로그인 방법(Apple, Google 또는 이메일 주소), Apple 또는 Google 로그인이 공유하는 이메일 주소(있는 경우), 계정을 마지막으로 사용한 시점.',
   'account.signInGoogle': 'Google로 로그인',
   'account.signInApple': 'Apple로 로그인',
-  'account.noProviders': '이 빌드에는 로그인이 설정되어 있지 않습니다.',
   'account.expired': '로그아웃되었습니다. 계정을 계속 사용하려면 다시 로그인하세요.',
   'account.signedInWith': '{providers}(으)로 로그인됨',
   'account.providerApple': 'Apple',
@@ -2303,7 +2296,6 @@ export const ko: Record<keyof typeof en, string> = {
 
   // Pro mode: setup's Qutai step, the sign-in requirement and buying credits
   'onboarding.f3BodyPro': '광고나 추적이 없으며, 브라우징 데이터는 휴대전화에 남습니다. Qutai Credits를 사용하면 어시스턴트가 보내는 내용만 Qutai 서버를 거치며, 개인 키를 사용하면 그마저도 거치지 않습니다.',
-  'account.onlyTestSignIn': '이 빌드에는 아직 Apple 및 Google 로그인이 설정되어 있지 않습니다. 아래의 테스트 로그인을 사용하세요.',
   'credits.signIn': '로그인',
   'credits.notNow': '나중에',
   'credits.useOwnKey': '개인 키 사용',

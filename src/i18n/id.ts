@@ -447,7 +447,6 @@ export const id: Record<keyof typeof en, string> = {
   'newTab.removeSite': 'Hapus "{title}" dari yang sering dikunjungi?',
   'newTab.remove': 'Hapus',
   'newTab.incognitoTitle': 'Anda dalam mode Samaran',
-  'newTab.page': 'Halaman tab baru (tidak ada halaman web yang dimuat)',
 
   'contextMenu.openInNewTab': 'Buka di tab baru',
   'contextMenu.openInIncognito': 'Buka di tab Samaran',
@@ -565,7 +564,6 @@ export const id: Record<keyof typeof en, string> = {
   'settings.webSearch': 'Penelusuran AI',
   'settings.webSearchHint':
     'Qutai dapat menelusuri web dengan fitur penelusuran bawaan penyedia dan menampilkan sumbernya. Penelusuran ditagihkan ke kunci API Anda oleh {provider}, di luar biaya token.',
-  'settings.memory': 'Memori',
   'settings.memoryEnabled': 'Ingat hal-hal tentang saya',
   'settings.memoryHint':
     'Qutai menyimpan fakta yang Anda sampaikan (nama, telepon, alamat, preferensi) di ponsel ini dan menggunakannya dalam percakapan berikutnya, misalnya untuk mengisi formulir. Sandi dan detail kartu tidak pernah disimpan, begitu pula apa pun dari mode Samaran.',
@@ -1087,7 +1085,6 @@ export const id: Record<keyof typeof en, string> = {
   'contextMenu.readPdf': 'Baca dengan Qutai',
   'contextMenu.readPdfPrompt': 'Baca PDF ini dan ringkas isinya: {url}',
   'downloads.ask': 'Tanya Qutai',
-  'downloads.askLabel': 'Tanya Qutai tentang {name}',
   'downloads.askDraft': 'Ringkas PDF ini',
 
   'menu.downloads': 'Download',
@@ -1097,7 +1094,6 @@ export const id: Record<keyof typeof en, string> = {
   'downloads.started': 'Mendownload…',
   'downloads.done': 'Didownload: {name}',
   'downloads.cancel': 'Batalkan download',
-  'downloads.cancelled': 'Download dibatalkan',
   'downloads.failed': 'Tidak dapat mendownload {name}',
   'downloads.agentConfirm': 'Download file ini?',
   'downloads.agentFrom': 'Dari: {host}',
@@ -1176,7 +1172,6 @@ export const id: Record<keyof typeof en, string> = {
   'downloads.incognito': 'Samaran',
   'contextMenu.downloadLink': 'Download link',
 
-  'settings.content': 'Konten',
   'settings.blockAds': 'Blokir iklan dan pelacak',
   'settings.blockAdsHint':
     'Memblokir permintaan ke domain iklan dan pelacak dari daftar filter yang Anda pilih (didownload dari penerbitnya), dan yang ditambahkan halaman kemudian dari daftar bawaan. Pemblokiran berbasis domain: iklan yang ditayangkan dari domain situs itu sendiri masih dapat muncul.',
@@ -1956,7 +1951,6 @@ export const id: Record<keyof typeof en, string> = {
   'ptt.busy': 'Qutai sedang mengerjakan tugas. Tidak ada yang dikirim.',
   'ptt.stopped': 'Berhenti mendengarkan. Tidak ada yang dikirim.',
   'ptt.cancelled': 'Dibatalkan. Tidak ada yang dikirim.',
-  'ptt.sent': 'Terkirim: “{text}”',
   'ptt.sentA11y': 'Pesan suara terkirim',
   'ptt.open': 'Buka',
   'voice.noLanguageList': 'Ponsel ini tidak mencantumkan bahasa ucapannya. Anda dapat memilih dari bahasa di atas.',
@@ -1995,7 +1989,6 @@ export const id: Record<keyof typeof en, string> = {
   'account.introLocal': 'Login tidak mengirim tab, riwayat, bookmark, chat, memori, atau kunci AI Anda ke mana pun: semuanya tetap di ponsel ini. Server Qutai menyimpan yang dibutuhkan akun: nomor akun, cara Anda login (Apple, Google, atau alamat email), alamat email yang dibagikan login Apple atau Google (jika ada), dan kapan akun terakhir dipakai.',
   'account.signInGoogle': 'Login dengan Google',
   'account.signInApple': 'Masuk dengan Apple',
-  'account.noProviders': 'Login belum disiapkan di build ini.',
   'account.expired': 'Anda telah logout. Login lagi untuk terus menggunakan akun Anda.',
   'account.signedInWith': 'Login dengan {providers}',
   'account.providerApple': 'Apple',
@@ -2304,7 +2297,6 @@ export const id: Record<keyof typeof en, string> = {
 
   // Pro mode: setup's Qutai step, the sign-in requirement and buying credits
   'onboarding.f3BodyPro': 'Tanpa iklan atau pelacakan, dan data penjelajahan Anda tetap di ponsel Anda. Dengan Qutai Credits, hanya yang dikirim asisten yang melewati server Qutai; dengan kunci Anda sendiri, itu pun tidak.',
-  'account.onlyTestSignIn': 'Login dengan Apple dan Google belum disiapkan di build ini. Gunakan login uji di bawah.',
   'credits.signIn': 'Login',
   'credits.notNow': 'Lain kali',
   'credits.useOwnKey': 'Gunakan kunci saya sendiri',

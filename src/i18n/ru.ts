@@ -447,7 +447,6 @@ export const ru: Record<keyof typeof en, string> = {
   'newTab.removeSite': 'Удалить «{title}» из часто посещаемых?',
   'newTab.remove': 'Удалить',
   'newTab.incognitoTitle': 'Вы в режиме инкогнито',
-  'newTab.page': 'Страница новой вкладки (веб-страница не загружена)',
 
   'contextMenu.openInNewTab': 'Открыть в новой вкладке',
   'contextMenu.openInIncognito': 'Открыть во вкладке инкогнито',
@@ -565,7 +564,6 @@ export const ru: Record<keyof typeof en, string> = {
   'settings.webSearch': 'Поиск с ИИ',
   'settings.webSearchHint':
     'Qutai может искать в интернете встроенным поиском провайдера и показывать источники. Помимо токенов, {provider} списывает плату за поиски с вашего API-ключа.',
-  'settings.memory': 'Память',
   'settings.memoryEnabled': 'Запоминать сведения обо мне',
   'settings.memoryHint':
     'Qutai сохраняет на этом телефоне то, что вы ему рассказываете (имя, телефон, адрес, предпочтения), и использует это в следующих разговорах, например для заполнения форм. Никогда не сохраняет пароли и данные карт; ничего из режима инкогнито.',
@@ -1087,7 +1085,6 @@ export const ru: Record<keyof typeof en, string> = {
   'contextMenu.readPdf': 'Прочитать с Qutai',
   'contextMenu.readPdfPrompt': 'Прочитай этот PDF и перескажи его: {url}',
   'downloads.ask': 'Спросить Qutai',
-  'downloads.askLabel': 'Спросить Qutai о файле {name}',
   'downloads.askDraft': 'Перескажи этот PDF',
 
   'menu.downloads': 'Загрузки',
@@ -1097,7 +1094,6 @@ export const ru: Record<keyof typeof en, string> = {
   'downloads.started': 'Загрузка…',
   'downloads.done': 'Загружено: {name}',
   'downloads.cancel': 'Отменить загрузку',
-  'downloads.cancelled': 'Загрузка отменена',
   'downloads.failed': 'Не удалось загрузить {name}',
   'downloads.agentConfirm': 'Загрузить этот файл?',
   'downloads.agentFrom': 'Откуда: {host}',
@@ -1176,7 +1172,6 @@ export const ru: Record<keyof typeof en, string> = {
   'downloads.incognito': 'Инкогнито',
   'contextMenu.downloadLink': 'Загрузить по ссылке',
 
-  'settings.content': 'Контент',
   'settings.blockAds': 'Блокировать рекламу и трекеры',
   'settings.blockAdsHint':
     'Блокирует запросы к доменам рекламы и трекеров из выбранных вами списков фильтров (загружаются у их издателей), а то, что страницы добавляют позже, — по встроенному списку. Блокировка работает по доменам: реклама с собственного домена сайта может всё равно появляться.',
@@ -1956,7 +1951,6 @@ export const ru: Record<keyof typeof en, string> = {
   'ptt.busy': 'Qutai занят задачей. Ничего не отправлено.',
   'ptt.stopped': 'Запись остановлена. Ничего не отправлено.',
   'ptt.cancelled': 'Отменено. Ничего не отправлено.',
-  'ptt.sent': 'Отправлено: «{text}»',
   'ptt.sentA11y': 'Голосовое сообщение отправлено',
   'ptt.open': 'Открыть',
   'voice.noLanguageList': 'Этот телефон не сообщает список языков распознавания. Можно выбрать один из языков выше.',
@@ -1995,7 +1989,6 @@ export const ru: Record<keyof typeof en, string> = {
   'account.introLocal': 'Вход никуда не отправляет ваши вкладки, историю, закладки, чаты, память и ключи ИИ: они остаются на этом телефоне. Сервер Qutai хранит только то, что нужно аккаунту: номер аккаунта, способ входа (Apple, Google или адрес эл. почты), адрес эл. почты, который передаёт вход через Apple или Google (если есть), и когда аккаунтом пользовались в последний раз.',
   'account.signInGoogle': 'Войти через Google',
   'account.signInApple': 'Вход с Apple',
-  'account.noProviders': 'В этой сборке вход не настроен.',
   'account.expired': 'Вы вышли из аккаунта. Войдите снова, чтобы продолжить пользоваться им.',
   'account.signedInWith': 'Вход через {providers}',
   'account.providerApple': 'Apple',
@@ -2304,7 +2297,6 @@ export const ru: Record<keyof typeof en, string> = {
 
   // Pro mode: setup's Qutai step, the sign-in requirement and buying credits
   'onboarding.f3BodyPro': 'Никакой рекламы и слежки, а ваши данные просмотра остаются на телефоне. С Qutai Credits через сервер Qutai проходит только то, что отправляет ассистент; с вашим собственным ключом не проходит даже это.',
-  'account.onlyTestSignIn': 'Вход через Apple и Google в этой сборке ещё не настроен. Используйте тестовый вход ниже.',
   'credits.signIn': 'Войти',
   'credits.notNow': 'Не сейчас',
   'credits.useOwnKey': 'Свой ключ',

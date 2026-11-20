@@ -447,7 +447,6 @@ export const fr: Record<keyof typeof en, string> = {
   'newTab.removeSite': 'Retirer « {title} » des sites fréquemment visités ?',
   'newTab.remove': 'Retirer',
   'newTab.incognitoTitle': 'Vous êtes en navigation privée',
-  'newTab.page': 'Page Nouvel onglet (aucune page web chargée)',
 
   'contextMenu.openInNewTab': 'Ouvrir dans un nouvel onglet',
   'contextMenu.openInIncognito': 'Ouvrir dans un onglet privé',
@@ -565,7 +564,6 @@ export const fr: Record<keyof typeof en, string> = {
   'settings.webSearch': 'Recherche IA',
   'settings.webSearchHint':
     'Qutai peut faire des recherches sur le web avec la recherche intégrée du fournisseur et afficher les sources. Les recherches sont facturées sur votre clé API par {provider}, en plus des tokens.',
-  'settings.memory': 'Mémoire',
   'settings.memoryEnabled': 'Mémoriser des informations sur moi',
   'settings.memoryHint':
     'Qutai enregistre sur ce téléphone les informations que vous lui donnez (nom, téléphone, adresse, préférences) et les utilise dans les conversations suivantes, par exemple pour remplir des formulaires. Jamais de mots de passe ni de données de carte ; rien de la navigation privée.',
@@ -1087,7 +1085,6 @@ export const fr: Record<keyof typeof en, string> = {
   'contextMenu.readPdf': 'Lire avec Qutai',
   'contextMenu.readPdfPrompt': 'Lis ce PDF et résume-le : {url}',
   'downloads.ask': 'Demander à Qutai',
-  'downloads.askLabel': 'Demander à Qutai à propos de {name}',
   'downloads.askDraft': 'Résume ce PDF',
 
   'menu.downloads': 'Téléchargements',
@@ -1097,7 +1094,6 @@ export const fr: Record<keyof typeof en, string> = {
   'downloads.started': 'Téléchargement…',
   'downloads.done': 'Téléchargé : {name}',
   'downloads.cancel': 'Annuler le téléchargement',
-  'downloads.cancelled': 'Téléchargement annulé',
   'downloads.failed': 'Impossible de télécharger {name}',
   'downloads.agentConfirm': 'Télécharger ce fichier ?',
   'downloads.agentFrom': 'Source : {host}',
@@ -1176,7 +1172,6 @@ export const fr: Record<keyof typeof en, string> = {
   'downloads.incognito': 'Navigation privée',
   'contextMenu.downloadLink': 'Télécharger le lien',
 
-  'settings.content': 'Contenu',
   'settings.blockAds': 'Bloquer les publicités et les traceurs',
   'settings.blockAdsHint':
     'Bloque les requêtes vers les domaines de publicités et de traceurs à partir des listes de filtres que vous choisissez (téléchargées depuis leurs éditeurs), ainsi que ce que les pages ajoutent ensuite, à partir d’une liste intégrée. Le blocage se fait par domaine : les publicités servies depuis le domaine du site lui-même peuvent encore apparaître.',
@@ -1956,7 +1951,6 @@ export const fr: Record<keyof typeof en, string> = {
   'ptt.busy': 'Qutai est occupé par une tâche. Rien n’a été envoyé.',
   'ptt.stopped': 'L’écoute s’est arrêtée. Rien n’a été envoyé.',
   'ptt.cancelled': 'Annulé. Rien n’a été envoyé.',
-  'ptt.sent': 'Envoyé : « {text} »',
   'ptt.sentA11y': 'Message vocal envoyé',
   'ptt.open': 'Ouvrir',
   'voice.noLanguageList': 'Ce téléphone n’indique pas ses langues de reconnaissance vocale. Vous pouvez choisir parmi les langues ci-dessus.',
@@ -1995,7 +1989,6 @@ export const fr: Record<keyof typeof en, string> = {
   'account.introLocal': 'Se connecter n’envoie nulle part vos onglets, votre historique, vos favoris, vos discussions, votre mémoire ni vos clés d’IA : ils restent sur ce téléphone. Le serveur de Qutai garde ce dont le compte a besoin : un numéro de compte, votre moyen de connexion (Apple, Google ou votre adresse e-mail), l’adresse e-mail que partage une connexion Apple ou Google (le cas échéant) et la date de dernière utilisation du compte.',
   'account.signInGoogle': 'Se connecter avec Google',
   'account.signInApple': 'Se connecter avec Apple',
-  'account.noProviders': 'La connexion n’est pas configurée dans cette version.',
   'account.expired': 'Vous avez été déconnecté. Reconnectez-vous pour continuer à utiliser votre compte.',
   'account.signedInWith': 'Connecté avec {providers}',
   'account.providerApple': 'Apple',
@@ -2304,7 +2297,6 @@ export const fr: Record<keyof typeof en, string> = {
 
   // Pro mode: setup's Qutai step, the sign-in requirement and buying credits
   'onboarding.f3BodyPro': 'Ni publicité ni pistage, et votre navigation reste sur votre téléphone. Avec les Qutai Credits, seul ce que l’assistant envoie passe par le serveur de Qutai ; avec votre propre clé, pas même cela.',
-  'account.onlyTestSignIn': 'La connexion avec Apple et Google n’est pas encore configurée dans cette version. Utilisez la connexion de test ci-dessous.',
   'credits.signIn': 'Se connecter',
   'credits.notNow': 'Plus tard',
   'credits.useOwnKey': 'Utiliser ma propre clé',

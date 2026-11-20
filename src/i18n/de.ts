@@ -446,7 +446,6 @@ export const de: Record<keyof typeof en, string> = {
   'newTab.removeSite': '„{title}“ aus „Häufig besucht“ entfernen?',
   'newTab.remove': 'Entfernen',
   'newTab.incognitoTitle': 'Sie sind im Inkognito-Modus',
-  'newTab.page': 'Neuer Tab (keine Webseite geladen)',
 
   'contextMenu.openInNewTab': 'In neuem Tab öffnen',
   'contextMenu.openInIncognito': 'In Inkognito-Tab öffnen',
@@ -562,7 +561,6 @@ export const de: Record<keyof typeof en, string> = {
 
   'settings.webSearch': 'KI-Suche',
   'settings.webSearchHint': 'Qutai kann mit der integrierten Suche des Anbieters im Web suchen und die Quellen anzeigen. {provider} berechnet Suchen zusätzlich zu den Tokens über Ihren API-Schlüssel.',
-  'settings.memory': 'Gedächtnis',
   'settings.memoryEnabled': 'Dinge über mich merken',
   'settings.memoryHint':
     'Qutai speichert Fakten, die Sie ihm mitteilen (Name, Telefon, Adresse, Vorlieben), auf diesem Telefon und nutzt sie in späteren Unterhaltungen, z. B. zum Ausfüllen von Formularen. Nie Passwörter oder Kartendaten; nichts aus Inkognito.',
@@ -1082,7 +1080,6 @@ export const de: Record<keyof typeof en, string> = {
   'contextMenu.readPdf': 'Mit Qutai lesen',
   'contextMenu.readPdfPrompt': 'Lies dieses PDF und fasse es zusammen: {url}',
   'downloads.ask': 'Qutai fragen',
-  'downloads.askLabel': 'Qutai zu {name} fragen',
   'downloads.askDraft': 'Fasse dieses PDF zusammen',
 
   'menu.downloads': 'Downloads',
@@ -1092,7 +1089,6 @@ export const de: Record<keyof typeof en, string> = {
   'downloads.started': 'Wird heruntergeladen…',
   'downloads.done': 'Heruntergeladen: {name}',
   'downloads.cancel': 'Download abbrechen',
-  'downloads.cancelled': 'Download abgebrochen',
   'downloads.failed': '{name} konnte nicht heruntergeladen werden',
   'downloads.agentConfirm': 'Diese Datei herunterladen?',
   'downloads.agentFrom': 'Von: {host}',
@@ -1171,7 +1167,6 @@ export const de: Record<keyof typeof en, string> = {
   'downloads.incognito': 'Inkognito',
   'contextMenu.downloadLink': 'Link herunterladen',
 
-  'settings.content': 'Inhalte',
   'settings.blockAds': 'Werbung und Tracker blockieren',
   'settings.blockAdsHint':
     'Blockiert Anfragen an Werbe- und Tracker-Domains aus Filterlisten, die Sie auswählen (von ihren Herausgebern heruntergeladen), und was Seiten später nachladen, anhand einer integrierten Liste. Das Blockieren erfolgt nach Domain: Werbung von der eigenen Domain einer Website kann weiterhin erscheinen.',
@@ -1945,7 +1940,6 @@ export const de: Record<keyof typeof en, string> = {
   'ptt.busy': 'Qutai ist mit einer Aufgabe beschäftigt. Nichts wurde gesendet.',
   'ptt.stopped': 'Zuhören beendet. Nichts wurde gesendet.',
   'ptt.cancelled': 'Abgebrochen. Nichts wurde gesendet.',
-  'ptt.sent': 'Gesendet: „{text}“',
   'ptt.sentA11y': 'Sprachnachricht gesendet',
   'ptt.open': 'Öffnen',
   'voice.noLanguageList': 'Dieses Telefon listet seine Sprachen für die Spracherkennung nicht auf. Sie können eine der Sprachen oben wählen.',
@@ -1982,7 +1976,6 @@ export const de: Record<keyof typeof en, string> = {
   'account.introLocal': 'Beim Anmelden werden Ihre Tabs, Ihr Verlauf, Ihre Lesezeichen, Chats, Ihr Gedächtnis und Ihre KI-Schlüssel nirgendwohin gesendet: Sie bleiben auf diesem Telefon. Qutais Server speichert, was das Konto braucht: eine Kontonummer, wie Sie sich anmelden (Apple, Google oder Ihre E-Mail-Adresse), die von einer Apple- oder Google-Anmeldung geteilte E-Mail-Adresse (falls vorhanden) und wann das Konto zuletzt verwendet wurde.',
   'account.signInGoogle': 'Mit Google anmelden',
   'account.signInApple': 'Mit Apple anmelden',
-  'account.noProviders': 'Die Anmeldung ist in dieser Version nicht eingerichtet.',
   'account.expired': 'Sie wurden abgemeldet. Melden Sie sich erneut an, um Ihr Konto weiter zu nutzen.',
   'account.signedInWith': 'Angemeldet mit {providers}',
   'account.providerApple': 'Apple',
@@ -2290,7 +2283,6 @@ export const de: Record<keyof typeof en, string> = {
 
   // Pro mode: setup's Qutai step, the sign-in requirement and buying credits
   'onboarding.f3BodyPro': 'Keine Werbung, kein Tracking, und Ihr Surfen bleibt auf Ihrem Telefon. Mit Qutai Credits läuft nur das, was der Assistent sendet, über Qutais Server; mit Ihrem eigenen Schlüssel nicht einmal das.',
-  'account.onlyTestSignIn': 'Die Anmeldung mit Apple und Google ist in dieser Version noch nicht eingerichtet. Nutzen Sie die Test-Anmeldung unten.',
   'credits.signIn': 'Anmelden',
   'credits.notNow': 'Nicht jetzt',
   'credits.useOwnKey': 'Eigenen Schlüssel nutzen',

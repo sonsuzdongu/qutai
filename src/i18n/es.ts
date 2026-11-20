@@ -448,7 +448,6 @@ export const es: Record<keyof typeof en, string> = {
   'newTab.removeSite': '¿Quitar «{title}» de los sitios más visitados?',
   'newTab.remove': 'Quitar',
   'newTab.incognitoTitle': 'Estás en modo incógnito',
-  'newTab.page': 'Página de nueva pestaña (sin página web cargada)',
 
   'contextMenu.openInNewTab': 'Abrir en una pestaña nueva',
   'contextMenu.openInIncognito': 'Abrir en una pestaña de incógnito',
@@ -564,7 +563,6 @@ export const es: Record<keyof typeof en, string> = {
   'settings.webSearch': 'Búsqueda con IA',
   'settings.webSearchHint':
     'Qutai puede buscar en la web con la búsqueda integrada del proveedor y mostrar las fuentes. {provider} cobra las búsquedas a tu clave de API además de los tokens.',
-  'settings.memory': 'Memoria',
   'settings.memoryEnabled': 'Recordar cosas sobre mí',
   'settings.memoryHint':
     'Qutai guarda en este teléfono los datos que le das (nombre, teléfono, dirección, preferencias) y los usa en conversaciones posteriores, p. ej., para completar formularios. Nunca contraseñas ni datos de tarjetas; nada del modo incógnito.',
@@ -1086,7 +1084,6 @@ export const es: Record<keyof typeof en, string> = {
   'contextMenu.readPdf': 'Leer con Qutai',
   'contextMenu.readPdfPrompt': 'Lee este PDF y resúmelo: {url}',
   'downloads.ask': 'Preguntar a Qutai',
-  'downloads.askLabel': 'Preguntar a Qutai sobre {name}',
   'downloads.askDraft': 'Resume este PDF',
 
   'menu.downloads': 'Descargas',
@@ -1096,7 +1093,6 @@ export const es: Record<keyof typeof en, string> = {
   'downloads.started': 'Descargando…',
   'downloads.done': 'Descargado: {name}',
   'downloads.cancel': 'Cancelar descarga',
-  'downloads.cancelled': 'Descarga cancelada',
   'downloads.failed': 'No se pudo descargar {name}',
   'downloads.agentConfirm': '¿Descargar este archivo?',
   'downloads.agentFrom': 'De: {host}',
@@ -1175,7 +1171,6 @@ export const es: Record<keyof typeof en, string> = {
   'downloads.incognito': 'Incógnito',
   'contextMenu.downloadLink': 'Descargar enlace',
 
-  'settings.content': 'Contenido',
   'settings.blockAds': 'Bloquear anuncios y rastreadores',
   'settings.blockAdsHint':
     'Bloquea las solicitudes a dominios de anuncios y rastreadores de las listas de filtros que elijas (descargadas de sus editores) y lo que las páginas agregan después, con una lista integrada. Se basa en dominios: los anuncios servidos desde el propio dominio de un sitio pueden seguir apareciendo.',
@@ -1952,7 +1947,6 @@ export const es: Record<keyof typeof en, string> = {
   'ptt.busy': 'Qutai está ocupado con una tarea. No se envió nada.',
   'ptt.stopped': 'Se dejó de escuchar. No se envió nada.',
   'ptt.cancelled': 'Cancelado. No se envió nada.',
-  'ptt.sent': 'Enviado: «{text}»',
   'ptt.sentA11y': 'Mensaje de voz enviado',
   'ptt.open': 'Abrir',
   'voice.noLanguageList': 'Este teléfono no indica sus idiomas de voz. Puedes elegir entre los idiomas de arriba.',
@@ -1991,7 +1985,6 @@ export const es: Record<keyof typeof en, string> = {
   'account.introLocal': 'Iniciar sesión no envía a ninguna parte tus pestañas, historial, marcadores, chats, memoria ni claves de IA: se quedan en este teléfono. El servidor de Qutai guarda lo que la cuenta necesita: un número de cuenta, cómo inicias sesión (Apple, Google o tu correo electrónico), el correo que comparte un inicio de sesión con Apple o Google (si lo hay) y cuándo se usó la cuenta por última vez.',
   'account.signInGoogle': 'Iniciar sesión con Google',
   'account.signInApple': 'Iniciar sesión con Apple',
-  'account.noProviders': 'El inicio de sesión no está configurado en esta versión.',
   'account.expired': 'Se cerró tu sesión. Vuelve a iniciar sesión para seguir usando tu cuenta.',
   'account.signedInWith': 'Sesión iniciada con {providers}',
   'account.providerApple': 'Apple',
@@ -2299,7 +2292,6 @@ export const es: Record<keyof typeof en, string> = {
 
   // Pro mode: setup's Qutai step, the sign-in requirement and buying credits
   'onboarding.f3BodyPro': 'Sin anuncios ni rastreo, y tu navegación se queda en tu teléfono. Con Qutai Credits, solo lo que envía el asistente pasa por el servidor de Qutai; con tu propia clave, ni siquiera eso.',
-  'account.onlyTestSignIn': 'El inicio de sesión con Apple y Google aún no está configurado en esta versión. Usa el inicio de sesión de prueba de abajo.',
   'credits.signIn': 'Iniciar sesión',
   'credits.notNow': 'Ahora no',
   'credits.useOwnKey': 'Usar mi propia clave',

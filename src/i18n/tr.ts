@@ -437,7 +437,6 @@ export const tr: Record<keyof typeof en, string> = {
   'newTab.removeSite': '"{title}" sık ziyaret edilenlerden kaldırılsın mı?',
   'newTab.remove': 'Kaldır',
   'newTab.incognitoTitle': 'Gizli moddasınız',
-  'newTab.page': 'Yeni sekme sayfası (web sayfası yüklü değil)',
 
   'contextMenu.openInNewTab': 'Yeni sekmede aç',
   'contextMenu.openInIncognito': 'Gizli sekmede aç',
@@ -554,7 +553,6 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.webSearch': 'Yapay zekâ ile web araması',
   'settings.webSearchHint':
     'Qutai, sağlayıcının kendi arama aracıyla internette arayıp kaynakları gösterebilir. Aramalar token ücretine ek olarak {provider} tarafından API anahtarınıza faturalanır.',
-  'settings.memory': 'Hafıza',
   'settings.memoryEnabled': 'Benimle ilgili bilgileri hatırla',
   'settings.memoryHint':
     'Qutai ona söylediğiniz bilgileri (ad, telefon, adres, tercihler) bu telefonda saklar ve sonraki sohbetlerde, örneğin form doldururken kullanır. Şifre ve kart bilgisi asla saklanmaz; gizli sekmelerden hiçbir şey kaydedilmez.',
@@ -1077,7 +1075,6 @@ export const tr: Record<keyof typeof en, string> = {
   'contextMenu.readPdf': 'Qutai ile oku',
   'contextMenu.readPdfPrompt': "Bu PDF’yi oku ve özetle: {url}",
   'downloads.ask': "Qutai’a sor",
-  'downloads.askLabel': "{name} hakkında Qutai’a sor",
   'downloads.askDraft': "Bu PDF’yi özetle",
 
   'menu.downloads': 'İndirilenler',
@@ -1087,7 +1084,6 @@ export const tr: Record<keyof typeof en, string> = {
   'downloads.started': 'İndiriliyor…',
   'downloads.done': 'İndirildi: {name}',
   'downloads.cancel': 'İndirmeyi iptal et',
-  'downloads.cancelled': 'İndirme iptal edildi',
   'downloads.failed': '{name} indirilemedi',
   'downloads.agentConfirm': 'Bu dosya indirilsin mi?',
   'downloads.agentFrom': 'Kaynak: {host}',
@@ -1166,7 +1162,6 @@ export const tr: Record<keyof typeof en, string> = {
   'downloads.incognito': 'Gizli',
   'contextMenu.downloadLink': 'Bağlantıyı indir',
 
-  'settings.content': 'İçerik',
   'settings.blockAds': 'Reklam ve izleyicileri engelle',
   'settings.blockAdsHint':
     'Seçtiğiniz filtre listelerindeki (yayıncılarından indirilir) reklam ve izleyici alan adlarına giden istekleri, sayfaların sonradan eklediklerini de yerleşik bir listeyle engeller. Alan adına göre çalışır: sitenin kendi alan adından gelen reklamlar yine görünebilir.',
@@ -1951,7 +1946,6 @@ export const tr: Record<keyof typeof en, string> = {
   'ptt.busy': 'Qutai bir görev üzerinde çalışıyor. Hiçbir şey gönderilmedi.',
   'ptt.stopped': 'Dinleme durdu. Hiçbir şey gönderilmedi.',
   'ptt.cancelled': 'İptal edildi. Hiçbir şey gönderilmedi.',
-  'ptt.sent': 'Gönderildi: “{text}”',
   'ptt.sentA11y': 'Sesli mesaj gönderildi',
   'ptt.open': 'Aç',
   'voice.noLanguageList': 'Bu telefon konuşma dillerini listelemiyor. Yukarıdaki dillerden seçebilirsiniz.',
@@ -1990,7 +1984,6 @@ export const tr: Record<keyof typeof en, string> = {
   'account.introLocal': 'Oturum açmak sekmelerinizi, geçmişinizi, yer imlerinizi, sohbetlerinizi, belleği ya da yapay zekâ anahtarlarınızı hiçbir yere göndermez: hepsi bu telefonda kalır. Qutai’ın sunucusu hesabın gerektirdiğini saklar: bir hesap numarası, nasıl oturum açtığınız (Apple, Google ya da e-posta adresiniz), Apple ya da Google girişinin paylaştığı e-posta adresi (varsa) ve hesabın en son ne zaman kullanıldığı.',
   'account.signInGoogle': 'Google ile oturum açın',
   'account.signInApple': 'Apple ile Giriş Yap',
-  'account.noProviders': 'Bu sürümde oturum açma ayarlanmamış.',
   'account.expired': 'Oturumunuz kapatıldı. Hesabınızı kullanmaya devam etmek için yeniden oturum açın.',
   'account.signedInWith': '{providers} ile oturum açıldı',
   'account.providerApple': 'Apple',
@@ -2301,7 +2294,6 @@ export const tr: Record<keyof typeof en, string> = {
 
   // Pro mode: setup's Qutai step, the sign-in requirement and buying credits
   'onboarding.f3BodyPro': 'Reklam ve takip yok, gezinmeniz telefonunuzda kalır. Qutai Kredileriyle yalnızca asistanın gönderdikleri Qutai’ın sunucusundan geçer; kendi anahtarınızla o bile geçmez.',
-  'account.onlyTestSignIn': 'Bu sürümde Apple ve Google ile oturum açma henüz ayarlanmadı. Aşağıdaki test girişini kullanın.',
   'credits.signIn': 'Oturum açın',
   'credits.notNow': 'Şimdi değil',
   'credits.useOwnKey': 'Kendi anahtarımı kullan',

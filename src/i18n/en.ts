@@ -436,7 +436,6 @@ export const en = {
   'newTab.removeSite': 'Remove "{title}" from frequently visited?',
   'newTab.remove': 'Remove',
   'newTab.incognitoTitle': "You're incognito",
-  'newTab.page': 'New tab page (no web page loaded)',
 
   'contextMenu.openInNewTab': 'Open in new tab',
   'contextMenu.openInIncognito': 'Open in incognito tab',
@@ -554,7 +553,6 @@ export const en = {
   'settings.webSearch': 'AI search',
   'settings.webSearchHint':
     "Qutai can search the web with the provider's built-in search and show the sources. Searches are billed to your API key by {provider} in addition to tokens.",
-  'settings.memory': 'Memory',
   'settings.memoryEnabled': 'Remember things about me',
   'settings.memoryHint':
     'Qutai saves facts you tell it (name, phone, address, preferences) on this phone and uses them in later conversations, e.g. to fill in forms. Never passwords or card details; nothing from incognito.',
@@ -1079,7 +1077,6 @@ export const en = {
   'contextMenu.readPdf': 'Read with Qutai',
   'contextMenu.readPdfPrompt': 'Read this PDF and summarise it: {url}',
   'downloads.ask': 'Ask Qutai',
-  'downloads.askLabel': 'Ask Qutai about {name}',
   'downloads.askDraft': 'Summarise this PDF',
 
   'menu.downloads': 'Downloads',
@@ -1089,7 +1086,6 @@ export const en = {
   'downloads.started': 'Downloading…',
   'downloads.done': 'Downloaded: {name}',
   'downloads.cancel': 'Cancel download',
-  'downloads.cancelled': 'Download cancelled',
   'downloads.failed': "Couldn't download {name}",
   'downloads.agentConfirm': 'Download this file?',
   'downloads.agentFrom': 'From: {host}',
@@ -1168,7 +1164,6 @@ export const en = {
   'downloads.incognito': 'Incognito',
   'contextMenu.downloadLink': 'Download link',
 
-  'settings.content': 'Content',
   'settings.blockAds': 'Block ads and trackers',
   'settings.blockAdsHint':
     "Blocks requests to ad and tracker domains from filter lists you choose (downloaded from their publishers), and what pages add later from a built-in list. It's domain-based: ads served from a site's own domain can still appear.",
@@ -1948,7 +1943,6 @@ export const en = {
   'ptt.busy': 'Qutai is busy with a task. Nothing was sent.',
   'ptt.stopped': 'Listening stopped. Nothing was sent.',
   'ptt.cancelled': 'Cancelled. Nothing was sent.',
-  'ptt.sent': 'Sent: “{text}”',
   'ptt.sentA11y': 'Voice message sent',
   'ptt.open': 'Open',
   'voice.noLanguageList': 'This phone doesn’t list its speech languages. You can choose from the languages above.',
@@ -1987,7 +1981,6 @@ export const en = {
   'account.introLocal': 'Signing in doesn’t send your tabs, history, bookmarks, chats, memory or AI keys anywhere: they stay on this phone. Qutai’s server keeps what the account needs: an account number, how you sign in (Apple, Google or your email address), the email address an Apple or Google sign-in shares (if any), and when the account was last used.',
   'account.signInGoogle': 'Sign in with Google',
   'account.signInApple': 'Sign in with Apple',
-  'account.noProviders': 'Sign-in isn’t set up in this build.',
   'account.expired': 'You were signed out. Sign in again to keep using your account.',
   'account.signedInWith': 'Signed in with {providers}',
   'account.providerApple': 'Apple',
@@ -2296,7 +2289,6 @@ export const en = {
 
   // Pro mode: setup's Qutai step, the sign-in requirement and buying credits
   'onboarding.f3BodyPro': 'No ads or tracking, and your browsing stays on your phone. With Qutai Credits, only what the assistant sends passes through Qutai’s server; with your own key, not even that.',
-  'account.onlyTestSignIn': 'Sign in with Apple and Google isn’t set up in this build yet. Use the test sign-in below.',
   'credits.signIn': 'Sign in',
   'credits.notNow': 'Not now',
   'credits.useOwnKey': 'Use my own key',

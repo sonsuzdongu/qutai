@@ -448,7 +448,6 @@ export const ja: Record<keyof typeof en, string> = {
   'newTab.removeSite': '「{title}」をよくアクセスするサイトから削除しますか？',
   'newTab.remove': '削除',
   'newTab.incognitoTitle': 'シークレット モードです',
-  'newTab.page': '新しいタブページ（ウェブページは読み込まれていません）',
 
   'contextMenu.openInNewTab': '新しいタブで開く',
   'contextMenu.openInIncognito': 'シークレット タブで開く',
@@ -566,7 +565,6 @@ export const ja: Record<keyof typeof en, string> = {
   'settings.webSearch': 'AI 検索',
   'settings.webSearchHint':
     'Qutai はプロバイダに組み込まれた検索機能でウェブを検索し、出典を表示できます。検索はトークンとは別に、{provider} から API キーに対して課金されます。',
-  'settings.memory': 'メモリ',
   'settings.memoryEnabled': '自分に関する情報を記憶',
   'settings.memoryHint':
     'Qutai は伝えられた情報（名前、電話番号、住所、好み）をこのスマートフォンに保存し、後の会話でフォームの入力などに使います。パスワードやカード情報は保存しません。シークレット モードの内容も保存しません。',
@@ -1088,7 +1086,6 @@ export const ja: Record<keyof typeof en, string> = {
   'contextMenu.readPdf': 'Qutai で読む',
   'contextMenu.readPdfPrompt': 'この PDF を読んで要約してください: {url}',
   'downloads.ask': 'Qutai に質問',
-  'downloads.askLabel': '{name} について Qutai に質問',
   'downloads.askDraft': 'この PDF を要約してください',
 
   'menu.downloads': 'ダウンロード',
@@ -1098,7 +1095,6 @@ export const ja: Record<keyof typeof en, string> = {
   'downloads.started': 'ダウンロードしています…',
   'downloads.done': 'ダウンロードしました: {name}',
   'downloads.cancel': 'ダウンロードをキャンセル',
-  'downloads.cancelled': 'ダウンロードをキャンセルしました',
   'downloads.failed': '{name} をダウンロードできませんでした',
   'downloads.agentConfirm': 'このファイルをダウンロードしますか？',
   'downloads.agentFrom': 'ダウンロード元: {host}',
@@ -1177,7 +1173,6 @@ export const ja: Record<keyof typeof en, string> = {
   'downloads.incognito': 'シークレット',
   'contextMenu.downloadLink': 'リンク先をダウンロード',
 
-  'settings.content': 'コンテンツ',
   'settings.blockAds': '広告とトラッカーをブロック',
   'settings.blockAdsHint':
     '選択したフィルタリスト（各公開元からダウンロード）に含まれる広告・トラッカーのドメインへのリクエストをブロックし、ページが後から追加するものも組み込みリストでブロックします。ドメイン単位のため、サイト自体のドメインから配信される広告は表示されることがあります。',
@@ -1957,7 +1952,6 @@ export const ja: Record<keyof typeof en, string> = {
   'ptt.busy': 'Qutai はタスクの実行中です。何も送信されませんでした。',
   'ptt.stopped': '聞き取りが停止しました。何も送信されませんでした。',
   'ptt.cancelled': 'キャンセルしました。何も送信されませんでした。',
-  'ptt.sent': '送信しました:「{text}」',
   'ptt.sentA11y': '音声メッセージを送信しました',
   'ptt.open': '開く',
   'voice.noLanguageList': 'このスマートフォンは音声認識の言語一覧を提供していません。上の言語から選べます。',
@@ -1996,7 +1990,6 @@ export const ja: Record<keyof typeof en, string> = {
   'account.introLocal': 'ログインしても、タブ、履歴、ブックマーク、チャット、メモリ、AI キーがどこかに送られることはありません。すべてこのスマートフォンに残ります。Qutai のサーバーが保存するのはアカウントに必要なものだけです: アカウント番号、ログイン方法 (Apple、Google、またはメールアドレス)、Apple または Google のログインで共有されるメールアドレス (ある場合)、アカウントを最後に使用した日時。',
   'account.signInGoogle': 'Google でログイン',
   'account.signInApple': 'Appleでサインイン',
-  'account.noProviders': 'このビルドではログインが設定されていません。',
   'account.expired': 'ログアウトされました。アカウントを引き続き使用するには、もう一度ログインしてください。',
   'account.signedInWith': '{providers} でログイン中',
   'account.providerApple': 'Apple',
@@ -2305,7 +2298,6 @@ export const ja: Record<keyof typeof en, string> = {
 
   // Pro mode: setup's Qutai step, the sign-in requirement and buying credits
   'onboarding.f3BodyPro': '広告やトラッキングはなく、閲覧データはスマートフォンに残ります。Qutai Credits では、アシスタントが送信する内容だけが Qutai のサーバーを経由し、ご自身のキーならそれさえありません。',
-  'account.onlyTestSignIn': 'このビルドでは Apple と Google でのログインはまだ設定されていません。下のテスト ログインを使ってください。',
   'credits.signIn': 'ログイン',
   'credits.notNow': '後で',
   'credits.useOwnKey': '自分のキーを使用',
