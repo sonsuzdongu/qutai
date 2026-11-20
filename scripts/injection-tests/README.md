@@ -78,4 +78,6 @@ npm run measure:injection -- --report before,after
   results/spend.json across all runs; a request that could pass `--cap` (default 5 US dollars) is not sent.
   `--stop-at` ends one invocation earlier to keep budget for a later one. About $0.002 per Haiku run and $0.014 per
   Sonnet run (20 Nov 2026).
+- `SecurityTests.md` (repository root) lists every test with its attacker's text and results; refresh it after a
+  measurement with `node --no-warnings --experimental-transform-types --import ./scripts/injection-tests/loader.mjs scripts/injection-tests/catalog.ts`.
 - No key, or the API refuses: the measurement says so and stops; `npm run test:injection` still runs.

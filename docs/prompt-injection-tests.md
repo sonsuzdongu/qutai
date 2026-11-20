@@ -1,7 +1,8 @@
 # Prompt-injection tests
 
 How well Qutai's assistant resists instructions hidden in web content, measured on 20 Nov 2026 before and after the
-fixes they led to. Tooling: [scripts/injection-tests](../scripts/injection-tests/README.md). Design rules: `UNTR-21` to
+fixes they led to. Every test, its attacker's text and its results one by one: [SecurityTests.md](../SecurityTests.md).
+Tooling: [scripts/injection-tests](../scripts/injection-tests/README.md). Design rules: `UNTR-21` to
 `UNTR-24` in [docs/design/04-untrusted-content.md](design/04-untrusted-content.md).
 
 ## Headline
