@@ -19,7 +19,7 @@
     "expo-constants": "~58.0.16",
     "expo-contacts": "~58.0.11",
     "expo-crypto": "~58.0.8",
-    "expo-dev-client": "~58.0.20",
+    "expo-dev-client": "58.0.20",
     "expo-document-picker": "~58.0.5",
     "expo-file-system": "~58.0.13",
     "expo-font": "~58.0.12",
@@ -113,7 +113,18 @@
     "test:credits:server": "node scripts/test-support/run.mjs credits:server --verbose",
     "profile:export": "node --no-warnings --experimental-transform-types --import ./scripts/test-support/loader.mjs scripts/agent-profile/export.ts",
     "profile:check": "node --no-warnings --experimental-transform-types --import ./scripts/test-support/loader.mjs scripts/agent-profile/export.ts --check",
-    "postinstall": "patch-package && node scripts/build-pdf-reader.js"
+    "postinstall": "patch-package --error-on-fail && node scripts/build-pdf-reader.js"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "expo-dev-launcher": "58.0.20"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "expo-dev-client",
+        "react-native-webview"
+      ]
+    }
+  }
 }

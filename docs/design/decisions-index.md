@@ -1262,6 +1262,7 @@ Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 | `HOUSE-19` | Before any store release or production deploy, the owner is reminded of every stand-in in HOUSE-15 to… | Owner | 2026-11-17 |
 | `HOUSE-20` | The backend is changed only in its own repository (the submodule `backend/`), which the app's typecheck… | Default |  |
 | `HOUSE-21` | One test loader and runner: `npm test` runs every server-free suite and fails on any failure; `npm run check:all` runs every check of the app and backend/ | Default | 2026-11-20 |
+| `HOUSE-22` | Patched dependencies are pinned and excluded from `expo install`'s version fixes; a patch that doesn't apply fails the install; docs/native-code.md describes every patch and native module with its manual check | Default | 2026-11-20 |
 
 ## [44. Deliberately not built](44-not-built.md)
 
