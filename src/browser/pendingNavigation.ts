@@ -12,6 +12,7 @@
  * change nothing once a newer navigation has begun, so an old page's events never touch a newer navigation, and a
  * tab's events only ever reach its own tracker (each Tab owns one).
  */
+import { shownHost } from '../utils/webUrl';
 
 /** Who started it: the page (a link tap, a script, a redirect) or the user through the app (address bar, bookmark,
  * history, the new tab page, back, forward, reload). Decides what the address bar may show before the page commits. */
@@ -98,10 +99,9 @@ export function shownAddress(committedUrl: string, nav: Pick<PendingNavigation, 
   return { url: committedUrl, opening: hostOf(nav.url) };
 }
 
-/** "www.example.com" → "example.com"; null for addresses without a host. */
+/** "www.example.com" → "example.com"; null for addresses without a host (utils/webUrl.ts shownHost). */
 export function hostOf(url: string): string | null {
-  const host = /^[a-z][a-z0-9+.-]*:\/\/([^/?#@]*@)?([^/?#:]+)/i.exec(url)?.[2];
-  return host ? host.toLowerCase().replace(/^www\./, '') : null;
+  return shownHost(url);
 }
 
 function clamp01(n: number): number {

@@ -1,3 +1,4 @@
+import { parseWebUrl } from '../utils/webUrl';
 import { registrableDomain } from './filterLists';
 
 /**
@@ -51,9 +52,9 @@ export type CookieMeta = {
 
 const SAMESITE: Record<string, SameSite> = { strict: 'Strict', lax: 'Lax', none: 'None' };
 
+/** The address's host as the WebView reads it (utils/webUrl.ts), the cookie store's own host. */
 function hostOf(url: string): string | null {
-  const match = /^https?:\/\/(?:[^@/?#]*@)?(\[[^\]]+\]|[^:/?#]+)/i.exec(url.trim());
-  return match ? match[1].toLowerCase().replace(/\.$/, '') : null;
+  return parseWebUrl(url.trim())?.host ?? null;
 }
 
 /**

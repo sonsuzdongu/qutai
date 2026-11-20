@@ -1,5 +1,6 @@
 import { getLanguage, getLocale, t } from './index';
 import { LANGUAGE_INFO } from './languages';
+import { shownHost } from '../utils/webUrl';
 
 /** Dates and numbers go through the app's language (in the phone's region when it speaks the same language). */
 const locale = () => getLocale();
@@ -115,9 +116,16 @@ export function firstDayOfWeek(): 1 | 2 {
   return info().firstDay;
 }
 
+/**
+ * The host shown for an address: for web addresses the one Qutai decides on (utils/webUrl.ts shownHost, SITE-25), so a
+ * userinfo or backslash trick never shows another site's name; other addresses as they start.
+ */
 export function hostOf(url: string): string {
-  return url
-    .replace(/^https?:\/\//i, '')
-    .replace(/^www\./i, '')
-    .split(/[/?#]/)[0];
+  return (
+    shownHost(url) ??
+    url
+      .replace(/^https?:\/\//i, '')
+      .replace(/^www\./i, '')
+      .split(/[/?#]/)[0]
+  );
 }

@@ -8,6 +8,7 @@ import { isIncomingWebLink } from './defaultBrowser';
 import { NotificationOrigin, onAssistantNotificationTapped } from './notifications';
 import { onTaskReminderTapped } from './taskSchedule';
 import { cutText } from '../utils/wellFormed';
+import { shownHost } from '../utils/webUrl';
 
 /**
  * Ways into Qutai from outside the app: links handed to it as the default browser; qutai:// links (launcher shortcuts
@@ -183,12 +184,8 @@ export function canPinSiteShortcut(): boolean {
 
 export function pinSiteShortcut(url: string, title: string): boolean {
   if (!isIncomingWebLink(url)) return false;
-  let host = '';
-  try {
-    host = new URL(url).hostname.replace(/^www\./, '');
-  } catch {
-    return false;
-  }
+  const host = shownHost(url);
+  if (!host) return false;
   try {
     return !!native?.pinSiteShortcut?.(url, title || host, host.charAt(0), hslToHex(siteColor(host)));
   } catch {

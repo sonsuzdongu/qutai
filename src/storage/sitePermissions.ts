@@ -1,5 +1,6 @@
 import { isSiteLevel, PersonalSetting, SiteLevel, SitePolicy } from '../agent/sitePolicy';
 import { Db } from './db';
+import { siteKeyOfHost } from '../utils/webUrl';
 
 export type SitePermission = { host: string; level: SiteLevel; updatedAt: number };
 
@@ -173,15 +174,17 @@ export class SitePermissionStore implements SitePolicy {
         ]),
       )
       .then(([list, locations, media, blockingOff, personal]) => {
-        // Changes made while loading win over what was on disk.
-        for (const p of list) if (!this.levels.has(p.host)) this.levels.set(p.host, p.level);
-        for (const l of locations) if (!this.locations.has(l.host)) this.locations.set(l.host, l.setting);
-        for (const p of personal) if (!this.personal.has(p.host)) this.personal.set(p.host, p.setting);
+        // Changes made while loading win over what was on disk. Stored hosts are read as siteKey makes them now
+        // (utils/webUrl.ts, SITE-25: punycode, no trailing dot), so an older key still matches its site.
+        const key = (host: string) => siteKeyOfHost(host) ?? host;
+        for (const p of list) if (!this.levels.has(key(p.host))) this.levels.set(key(p.host), p.level);
+        for (const l of locations) if (!this.locations.has(key(l.host))) this.locations.set(key(l.host), l.setting);
+        for (const p of personal) if (!this.personal.has(key(p.host))) this.personal.set(key(p.host), p.setting);
         for (const m of media) {
-          const key = `${m.kind} ${m.host}`;
-          if (!this.media.has(key)) this.media.set(key, m.setting);
+          const k = `${m.kind} ${key(m.host)}`;
+          if (!this.media.has(k)) this.media.set(k, m.setting);
         }
-        for (const host of blockingOff) if (!this.blockingTouched.has(host)) this.blockingOff.add(host);
+        for (const host of blockingOff) if (!this.blockingTouched.has(key(host))) this.blockingOff.add(key(host));
         this.blockingOffList = [...this.blockingOff].sort();
         this.emit();
       })

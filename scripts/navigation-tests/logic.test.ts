@@ -106,7 +106,9 @@ test("address bar: a page-started navigation keeps the committed page until it c
   assert.deepEqual(shownAddress(committed, { url: '', origin: 'app', responded: false }), { url: committed, opening: null });
   // Stopped or failed: no pending navigation, the committed page again.
   assert.deepEqual(shownAddress(committed, null), { url: committed, opening: null });
-  assert.equal(hostOf('https://user:pw@www.Example.com:8443/a'), 'example.com');
+  assert.equal(hostOf('https://user:pw@www.Example.com:8443/a'), 'example.com:8443');
+  assert.equal(hostOf('https://www.Example.com:443/a'), 'example.com');
+  assert.equal(hostOf('https://evil.example\\@named.example/'), 'evil.example');
   assert.equal(hostOf('about:blank'), null);
 });
 

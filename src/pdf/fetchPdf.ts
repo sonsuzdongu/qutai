@@ -3,6 +3,7 @@ import { MAX_PDF_BYTES } from '../device/attachments';
 import { fileNameFromDisposition, fileNameFromUrl } from '../device/download';
 import { parseDataUrl } from '../device/saveImage';
 import { PdfReadError } from './reader';
+import { shownHost } from '../utils/webUrl';
 
 /**
  * Fetches a PDF to read it, the way downloads go but into memory only (nothing is written to the phone, nothing
@@ -68,7 +69,7 @@ async function fetchDirect(url: string): Promise<{ base64: string; name: string 
   }
 }
 
-const hostOf = (url: string) => /^https?:\/\/([^/?#]+)/i.exec(url)?.[1] ?? url;
+const hostOf = (url: string) => shownHost(url) ?? url;
 
 /** Base64 of bytes, in pieces whose size is a multiple of 3 so they join into one valid string. */
 export function toBase64(bytes: Uint8Array): string {

@@ -8,20 +8,10 @@ export function isSiteLevel(value: unknown): value is SiteLevel {
 }
 
 /**
- * The key a site's permission is stored under: its host name, lowercase, without "www.", plus the port when it isn't
- * the scheme's default ("192.168.1.2:3000"), so two local apps on different ports of one machine are two sites (as
- * they are two origins for the web, and two sites in history). Web pages only.
+ * The key a site's permission is stored under: utils/webUrl.ts siteKey (host without "www.", with a non-default port,
+ * read as the WebView reads the address; SITE-25).
  */
-export function siteKey(url: string): string | null {
-  const match = /^(https?):\/\/([^/?#]+)/i.exec(url.trim());
-  if (!match) return null;
-  const scheme = match[1].toLowerCase();
-  let host = match[2].replace(/^[^@]*@/, '').toLowerCase();
-  const defaultPort = scheme === 'https' ? ':443' : ':80';
-  if (host.endsWith(defaultPort)) host = host.slice(0, -defaultPort.length);
-  host = host.replace(/:$/, '');
-  return host.replace(/^www\./, '') || null;
-}
+export { siteKey } from '../utils/webUrl';
 
 /** Whether the assistant may enter the user's remembered personal details on a site; 'ask' is the default. */
 export type PersonalSetting = 'ask' | 'allow' | 'block';

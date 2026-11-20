@@ -1,6 +1,7 @@
 /** File names, types and safety checks for downloads (both platforms). The downloads themselves: src/storage/downloads.ts. */
 
 import { cutText, wellFormed } from '../utils/wellFormed';
+import { shownHost } from '../utils/webUrl';
 
 /** A file name safe on both platforms: no path separators or reserved characters, at most 120 characters. */
 export function safeFileName(raw: string, fallback = 'download'): string {
@@ -143,11 +144,7 @@ export function extensionForMime(mime: string | null): string | null {
 
 /** "example.com" for the list ("" when the address has no host). */
 export function siteOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '');
-  } catch {
-    return '';
-  }
+  return shownHost(url) ?? '';
 }
 
 /**

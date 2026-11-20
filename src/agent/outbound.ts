@@ -1,8 +1,7 @@
 import { searchResultsOf } from '../browser/search';
-import { registrableDomain } from '../content/filterLists';
+import { registrableSite } from '../utils/webUrl';
 import type { Memory } from './memory';
 import { findPersonalData, foldText, personalNeedles } from './personalData';
-import { siteKey } from './sitePolicy';
 
 /**
  * What the assistant may carry to another site in an address, decided by the app (docs/design/04-untrusted-content.md,
@@ -78,12 +77,8 @@ export class OutboundGuard {
   }
 }
 
-/** The registrable domain of a web address ("shop.example.com.tr" → "example.com.tr"), or null. */
-export function siteOf(url: string): string | null {
-  const key = siteKey(url);
-  if (!key) return null;
-  return registrableDomain(key.replace(/:\d+$/, ''));
-}
+/** The registrable domain of a web address ("shop.example.com.tr" → "example.com.tr"), or null (utils/webUrl.ts). */
+export const siteOf = registrableSite;
 
 /** The user named the site: its domain, or its name (the label before the suffix, 3+ letters), as a word they wrote. */
 export function namedByUser(site: string, texts: string[]): boolean {

@@ -668,3 +668,7 @@ Bilgisayarda testlerle denendi; telefon ve öykünücü kullanılamadı. En risk
       geçiyor, başlığı ve adresi sohbette, "Yapay zekâya gönderilenler" kaydında ve geçmişte yok (`INC-2`).
 - [ ] "https://… adresindeki PDF'i indirir misiniz?" (adresi siz yazın): indirme penceresi adı gösteriyor, türü ve
       boyutu göstermiyor; "Bir daha sorma" açık olsa da soruluyor; Reddet'ten önce o adrese istek gitmiyor (`DL-5`).
+- [ ] Bir sitenin "Qutai'ın yapabilecekleri"ni "Engellendi" yapın (örneğin example.com); asistana
+      "https://example.com./ adresini açar mısınız" ve "https://kullanici@example.com/ adresini açar mısınız" deyin:
+      ikisi de engelleniyor (`SITE-25`). Yerel bir sunucuda (örneğin 192.168.1.2:3000) sekme listesinde ve "açılıyor"
+      satırında bağlantı noktası görünüyor.

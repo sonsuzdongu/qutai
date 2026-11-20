@@ -235,6 +235,7 @@ Moved to Details (ids retired, not reused): `UNTR-3`
 | `SITE-21` | Deleting a bookmark folder, or removing more than three bookmarks in one task, asks first; a single… | Default |  |
 | `SITE-22` | A confirmation is never answered for the user: while Qutai is in the background the task pauses and waits… | Default |  |
 | `SITE-23` | Every action goes to the activity history (30 days, at most 2000 entries), refused and declined ones… | Default |  |
+| `SITE-25` | One URL module, read as the WebView reads addresses, for every site decision and every host shown; site key (host) vs registrable domain defined there | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE-24`
 

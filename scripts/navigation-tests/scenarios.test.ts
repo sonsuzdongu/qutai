@@ -185,7 +185,8 @@ for (const os of ['android', 'ios'] as const) {
     assert.equal(a.nav.pending?.origin, 'page');
     assert.equal(a.nav.pending?.responded, false);
     assert.equal(a.address.url, `${base}/`, 'the bar keeps the page on screen (Chrome rule)');
-    assert.equal(a.address.opening, '127.0.0.1');
+    // The host as Qutai shows every host (utils/webUrl.ts, SITE-25): a non-default port is part of the site.
+    assert.equal(a.address.opening, base.replace('http://', ''));
 
     // Report (2): the user opens another tab while the load waits.
     const b = browser.openTab();

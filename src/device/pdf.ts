@@ -5,6 +5,7 @@ import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
 import { pieceBase64, withFullPage } from './fullPage';
 import { cutText } from '../utils/wellFormed';
+import { shownHost } from '../utils/webUrl';
 
 export type Snapshot = {
   title: string;
@@ -23,13 +24,7 @@ export type PdfResult = { pages: number; fileName: string; imagesMissing: number
 
 /** Turns a page title into a safe, readable file name. */
 export function pdfFileName(title: string, url: string): string {
-  const fallback = (() => {
-    try {
-      return new URL(url).hostname.replace(/^www\./, '');
-    } catch {
-      return t('pdf.fallbackName');
-    }
-  })();
+  const fallback = shownHost(url) ?? t('pdf.fallbackName');
   const base = (title || fallback)
     .replace(/[\\/:*?"<>|\u0000-\u001f]/g, ' ')
     .replace(/\s+/g, ' ')

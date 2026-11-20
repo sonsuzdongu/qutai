@@ -1,3 +1,4 @@
+import { parseWebUrl } from '../utils/webUrl';
 import { normalizeHost, registrableDomain } from './filterLists';
 
 /**
@@ -57,14 +58,13 @@ const DEFAULT_PORTS: Record<string, string> = { http: '80', https: '443' };
 
 /** Splits an address into its site key and path (with the query, without the fragment); null for non-web pages. */
 export function splitUrl(url: string): { host: string; path: string } | null {
-  const match = /^(https?):\/\/([^/?#]*)([^#]*)/i.exec(url.trim());
-  if (!match) return null;
-  const scheme = match[1].toLowerCase();
-  const host = siteHost(match[2].replace(/^[^@]*@/, ''), DEFAULT_PORTS[scheme]);
+  // Read as the WebView reads it (utils/webUrl.ts, SITE-25): a backslash or userinfo never changes the host.
+  const u = parseWebUrl(url.trim());
+  if (!u) return null;
+  const host = siteHost(u.port ? `${u.host}:${u.port}` : u.host, DEFAULT_PORTS[u.scheme]);
   if (!host) return null;
-  let path = match[3] || '/';
-  if (path.startsWith('?')) path = `/${path}`;
-  return { host, path };
+  const parsed = new URL(u.href);
+  return { host, path: `${parsed.pathname || '/'}${parsed.search}` };
 }
 
 /**

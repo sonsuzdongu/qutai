@@ -1,6 +1,7 @@
 import { getLanguage } from '../i18n';
 import type { Language } from '../i18n/languages';
 import type { Browser } from '../browser/Browser';
+import { shownHost } from '../utils/webUrl';
 
 /**
  * The words a step line uses for the element a page step acts on ("Tapping the “Add to cart” button", Turkish
@@ -550,13 +551,7 @@ export async function prepareStepTarget(
       const tab = browser.getTab(String(input.tab_id ?? ''));
       // An incognito tab's title never goes into a step line (kept in the conversation and the history, INC-2).
       if (!tab || tab.incognito) return;
-      const host = (() => {
-        try {
-          return new URL(tab.url).hostname.replace(/^www\./, '');
-        } catch {
-          return '';
-        }
-      })();
+      const host = shownHost(tab.url) ?? '';
       stepTargets.set(input, { tabTitle: shownName(tab.title) || host });
       return;
     }
