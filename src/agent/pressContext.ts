@@ -55,6 +55,11 @@ export type PressContext = {
   /** An email or telephone field in the press's own form. */
   formContact: boolean;
   formFields: number;
+  /**
+   * The button's visible text (its label may come from aria-label, which the page writes for screen readers and can
+   * word differently). Absent in pages read by older page scripts.
+   */
+  text?: string;
 };
 
 /** Labels that only dismiss or step back (the whole label): never the risky press. */
@@ -110,6 +115,23 @@ const PRIVACY = /privacy|visibility|public profile|gizlilik|görünürlük|daten
 
 export type PayDecision = { pay: true; why: string } | { pay: false };
 
+const AMOUNT = /(?:[$€£₺¥₩₽]|(?<![\p{L}])(?:tl|try|usd|eur|gbp|rub|idr|brl|jpy|krw|rp|r\$)(?![\p{L}]))\s*\d|\d[\d.,\s]*\s*(?:[$€£₺¥₩₽]|(?<![\p{L}])(?:tl|try|usd|eur|gbp|rub|руб|idr|brl|jpy|krw|rp)(?![\p{L}])|円|원)/iu;
+/** A billing period after an amount ("/month", "per year", "aylık", "pro Monat", "月額"…), in the ten languages. */
+const PERIOD =
+  /(?:\/\s*(?:mo|month|yr|year|week|wk|ay|yıl|hafta|monat|jahr|mois|an|mes|año|mês|ano|мес|месяц|год|bln|bulan|tahun|月|年|월|년))(?![\p{L}])|(?<![\p{L}])(?:per (?:month|year|week)|a (?:month|year)|monthly|yearly|annually|weekly|aylık|yıllık|haftalık|ayda|yılda|monatlich|jährlich|pro (?:monat|jahr)|par (?:mois|an)|mensuel|annuel|al (?:mes|año)|mensual|anual|por (?:mês|ano)|mensal|в (?:месяц|год)|ежемесячно|ежегодно|per (?:bulan|tahun)|bulanan|tahunan)(?![\p{L}])|月額|年額|毎月|매월|월간|연간/iu;
+/** A subscribe word ("Subscribe", "Abone ol", "Jetzt abonnieren", "S'abonner"…). */
+const SUBSCRIBE =
+  /(?<![\p{L}])(?:subscribe|subscription|start (?:my |your )?(?:membership|plan)|upgrade|abone|abonelik|abonnieren|abonnement|abo|s'abonner|suscribir(?:se)?|suscripción|assinar|assinatura|подписаться|подписка|оформить подписку|berlangganan|langganan)(?![\p{L}])|購読|定期購入|サブスク|구독/iu;
+
+/**
+ * A paid subscription press: the button's text has an amount together with a billing period or a subscribe word
+ * ("Subscribe – 149 TL/month", "Upgrade for €9.99", "Aylık 79 TL ile başla"). PAY-27.
+ */
+export function isRecurringPaidLabel(text: string | null | undefined): boolean {
+  if (!text || !AMOUNT.test(text)) return false;
+  return PERIOD.test(text) || SUBSCRIBE.test(text);
+}
+
 /**
  * Whether a press is the final step of a payment: its label says so (ten languages), or the context does (it submits
  * the form with the card fields or the payment choice on a payment step; or it is the forward button of a payment
@@ -119,6 +141,9 @@ export function payPress(c: PressContext | null): PayDecision {
   if (!c || c.link || c.toggle || c.field) return { pay: false };
   const label = c.label.trim();
   if (isFinalPaymentLabel(label)) return { pay: true, why: 'its label is a payment button' };
+  // The visible text counts even when an aria-label says something else (a page can word that one freely).
+  if (isRecurringPaidLabel(c.text) || isRecurringPaidLabel(label))
+    return { pay: true, why: 'it starts a paid subscription (an amount with a billing period or a subscribe word)' };
   if (DISMISS.test(label)) return { pay: false };
   const paymentStep = c.cardOnPage || c.payFrame || c.paymentChoice;
   const buttonish = c.submitsForm || c.tag === 'button' || c.role === 'button' || c.type === 'submit';

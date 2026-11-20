@@ -1111,7 +1111,9 @@ export const PAGE_SCRIPT = String.raw`
       formNewPassword: !!(form && form.querySelector('[autocomplete~="new-password"]')) || passwords.length >= 2,
       formCurrentPassword: !!(form && form.querySelector('[autocomplete~="current-password"]')),
       formContact: !!(form && form.querySelector('input[type=email], input[type=tel], [autocomplete~="email"], [autocomplete~="tel"]')),
-      formFields: formFields.filter(function (f) { return !/^(hidden|submit|button|reset|image)$/i.test(f.type || '') && rendered(f); }).length
+      formFields: formFields.filter(function (f) { return !/^(hidden|submit|button|reset|image)$/i.test(f.type || '') && rendered(f); }).length,
+      // The visible text, apart from an aria-label (agent/pressContext.ts isRecurringPaidLabel).
+      text: cut(clean(button.innerText || button.value || ''), 160)
     };
   }
   // What the change approval shows, read from the page: the button, the heading, the page's confirm dialog, the item the
