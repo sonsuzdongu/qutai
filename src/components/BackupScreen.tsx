@@ -40,10 +40,10 @@ type Props = {
   onClose: () => void;
   /**
    * Opened from setup (a server backup offered after signing in there): the restore also saves setup's finished
-   * settings (`prepare`, applied before the backup's own) and runs `afterRestore` before the app starts again, so the
+   * settings (`prepare`, applied before the backup's own) and runs `afterRestore` (with the restore's database handle) before the app starts again, so the
    * app opens in the browser with the restored data instead of in setup.
    */
-  setup?: { prepare: (stored: Settings) => Settings; afterRestore: () => Promise<void> };
+  setup?: { prepare: (stored: Settings) => Settings; afterRestore: Parameters<typeof restoreBackup>[4] };
 };
 
 /**
@@ -339,8 +339,8 @@ function ImportFlow({
     setBusy(true);
     let settingsSaved: boolean;
     try {
-      settingsSaved = await restoreBackup(payload, mode, keys && withKeys, setup?.prepare);
-      if (setup) await setup.afterRestore().catch(() => {});
+      // afterRestore runs inside the restore with its database handle: the database is held from the restore on.
+      settingsSaved = await restoreBackup(payload, mode, keys && withKeys, setup?.prepare, setup?.afterRestore);
     } catch (e) {
       setBusy(false);
       dialog.alert(t('backup.restoreFailed'), e instanceof Error ? e.message : String(e));

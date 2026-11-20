@@ -829,3 +829,9 @@ Sunucuda yedeği olan bir hesapla:
       bir kez çıkmalı (önceden hiç çıkmıyordu).
 - [ ] Yedeği olmayan hesap: soru çıkmamalı; o oturumda ilk yedek alınınca da bu telefonun kendi yedeği olduğu için
       sorulmamalı.
+
+## 27. Kurulumda geri yükleme takılıyordu (20 Kasım, 0.1.5'te bildirildi)
+
+Sahibi telefonda gördü: kurulumda yedeği geri yüklerken ekran "Restoring…" yazısında kalıyordu (birleştir ve değiştir, ikisinde de). Neden: geri yükleme veritabanını uygulama yeniden başlayana kadar tutuyor; kurulumun "tanıtım görüldü" kaydı ise veritabanını yeniden isteyip sonsuza dek bekliyordu. Kayıt artık geri yüklemenin kendi veritabanı bağlantısıyla yazılıyor. Yalnızca tip denetimi ve testlerle doğrulandı.
+
+- [ ] Uygulama verisini silin, kurulumda Qutai hesabına girin, yedeği geri yükleyin (önce "birleştir", sonra aynı denemeyi "değiştir" ile): "geri yüklendi" penceresi gelmeli, Tamam'dan sonra uygulama tarayıcıda yeniden açılmalı, sekmeler ve hatıralar yerinde olmalı, asistan tanıtımı yeniden çıkmamalı.

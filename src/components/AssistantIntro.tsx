@@ -56,6 +56,15 @@ export async function assistantIntroSeen(): Promise<boolean> {
   }
 }
 
+/**
+ * Marks the intro as seen through a database handle the caller already holds. A backup restore holds the database
+ * (storage/db.ts › holdDb), so anything that asks for it again with getDb() waits until the app restarts: after a
+ * restore the mark must be written with the restore's own handle (20 Nov 2026: setup's restore hung on this).
+ */
+export async function markAssistantIntroSeen(db: Awaited<ReturnType<typeof getDb>>): Promise<void> {
+  await setJson(db, KEY, true);
+}
+
 export async function setAssistantIntroSeen(seen: boolean): Promise<void> {
   const db = await getDb();
   if (seen) await setJson(db, KEY, true);

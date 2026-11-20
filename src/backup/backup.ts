@@ -188,6 +188,11 @@ export async function restoreBackup(
   mode: ApplyMode,
   withKeys: boolean,
   prepare?: (stored: Settings) => Settings,
+  /**
+   * Extra writes that belong to the restore, run with the restore's own database handle before anything else. The
+   * database is held from here until the app restarts, so a write that calls getDb() itself would wait forever.
+   */
+  after?: (db: Awaited<ReturnType<typeof getDb>>) => Promise<void>,
 ): Promise<boolean> {
   const db = await getDb();
   // Nothing else in the running app may write from here on (it would overwrite restored data).
@@ -198,6 +203,8 @@ export async function restoreBackup(
     release();
     throw e;
   }
+  // Never fails the restore: the data is in, and the app must still restart.
+  if (after) await after(db).catch(() => {});
   if (!prepare && !p.settings && !(withKeys && (p.apiKeys || p.customHeaders))) return true;
   try {
     const stored = await loadSettings();

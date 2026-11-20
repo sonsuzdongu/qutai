@@ -45,7 +45,7 @@ import { askCreditsDisclosure } from './CreditsDisclosure';
 import { QutaiSetup } from './QutaiSetup';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 import { DialogHost } from './Dialog';
-import { setAssistantIntroSeen } from './AssistantIntro';
+import { markAssistantIntroSeen } from './AssistantIntro';
 import { BackupScreen } from './BackupScreen';
 import { useServerRestoreOffer } from './ServerRestoreOffer';
 import { PermissionsStep } from './PermissionsStep';
@@ -222,7 +222,7 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
   const [restoreJob, closeRestore] = useServerRestoreOffer(proAi && setup.screen === 'account' && !legalOnly);
   const restoreFromSetup = {
     prepare: () => finalSettings({ provider: 'qutai' }),
-    afterRestore: () => setAssistantIntroSeen(true),
+    afterRestore: markAssistantIntroSeen,
   };
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => setDraft((d) => ({ ...d, [key]: value }));
   /** The notification permission, asked when background tasks are turned on (their progress shows there). */
