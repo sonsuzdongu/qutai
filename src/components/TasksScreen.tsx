@@ -23,13 +23,13 @@ import {
   updateSavedTask,
 } from '../storage/savedTasks';
 import { Icon, IconName } from '../ui/Icon';
+import { Segment } from '../ui/SettingsRows';
 import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 import { ScreenHeader } from './ScreenHeader';
-import { WholeWordsText } from './WholeWordsText';
 import { reportStorageFailure } from '../storage/failures';
 
 /** A task to create, prefilled (e.g. from "Save as task" on a sent message); `incognito` when it came from one. */
@@ -321,19 +321,15 @@ function TaskEditor({
       />
       <Text style={styles.small}>{t('tasks.promptHint')}</Text>
       <Text style={styles.label}>{t('tasks.target')}</Text>
-      <View style={styles.segment}>
-        {targets.map((o) => (
-          <Pressable
-            key={o.value}
-            onPress={() => set({ target: o.value })}
-            style={[styles.segmentButton, input.target === o.value && styles.segmentSelected]}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: input.target === o.value }}
-          >
-            <WholeWordsText style={[styles.segmentText, input.target === o.value && styles.segmentTextSelected]}>{o.label}</WholeWordsText>
-          </Pressable>
-        ))}
-      </View>
+      <Segment
+        options={targets}
+        value={input.target}
+        onChange={(target) => set({ target })}
+        accessibilityLabel={t('tasks.target')}
+        style={styles.segment}
+        textStyle={styles.segmentText}
+        selectedTextStyle={() => styles.segmentTextSelected}
+      />
       {input.target === 'url' ? (
         <TextInput
           style={styles.input}
@@ -434,19 +430,15 @@ function ScheduleFields({ input, set }: { input: TaskInput; set: (patch: Partial
   return (
     <>
       <Text style={styles.label}>{t('tasks.schedule')}</Text>
-      <View style={styles.segment}>
-        {kinds.map((o) => (
-          <Pressable
-            key={o.value}
-            onPress={() => choose(o.value)}
-            style={[styles.segmentButton, kind === o.value && styles.segmentSelected]}
-            accessibilityRole="radio"
-            accessibilityState={{ selected: kind === o.value }}
-          >
-            <WholeWordsText style={[styles.segmentText, kind === o.value && styles.segmentTextSelected]}>{o.label}</WholeWordsText>
-          </Pressable>
-        ))}
-      </View>
+      <Segment
+        options={kinds}
+        value={kind}
+        onChange={choose}
+        accessibilityLabel={t('tasks.schedule')}
+        style={styles.segment}
+        textStyle={styles.segmentText}
+        selectedTextStyle={() => styles.segmentTextSelected}
+      />
       {schedule ? (
         <>
           {schedule.kind === 'once' && at ? (
@@ -612,8 +604,6 @@ const useStyles = makeStyles((c) => ({
   },
   promptInput: { minHeight: 110 },
   segment: { ...common(c).segment, gap: 3 },
-  segmentButton: { ...common(c).segmentButton, paddingHorizontal: 2 },
-  segmentSelected: common(c).segmentSelected,
   segmentText: { ...common(c).segmentText, fontSize: 13, textAlign: 'center' },
   segmentTextSelected: { ...common(c).segmentTextSelected, fontWeight: '600' },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 },

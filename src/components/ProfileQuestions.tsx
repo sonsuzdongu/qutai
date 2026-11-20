@@ -20,6 +20,7 @@ import { addMemory, deleteMemory, listMemories, updateMemory } from '../storage/
 import { memoryErrorText } from './memoryError';
 import { GradientButton } from '../ui/BrandGradient';
 import { Icon } from '../ui/Icon';
+import { FactRow } from './FactRow';
 import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { dialog } from './Dialog';
 import { KeyboardAwareScrollView, useRevealFocused } from './KeyboardAware';
@@ -116,7 +117,6 @@ type Props = {
 
 export function ProfileQuestions({ transition, onDone, registerBack, startAt = 'intro', transcript }: Props) {
   const styles = useStyles();
-  const palette = usePalette();
   const scrollRef = useRef<ScrollViewInstance>(null);
   const [page, setPage] = useState<Page>(startAt);
   const [name, setName] = useState('');
@@ -510,43 +510,25 @@ export function ProfileQuestions({ transition, onDone, registerBack, startAt = '
           <Text style={styles.lead}>
             {t(summary.length ? 'profile.summaryLead' : 'profile.summaryEmpty')}
           </Text>
-          {summary.map((m) =>
-            editing?.id === m.id ? (
-              <View key={m.id} style={styles.savedRow}>
-                <TextInput
-                  style={styles.savedInput}
-                  value={editing.text}
-                  onChangeText={(text) => setEditing({ id: m.id, text })}
-                  onBlur={saveSummaryEdit}
-                  autoFocus
-                  multiline
-                  submitBehavior="blurAndSubmit"
-                  returnKeyType="done"
-                  accessibilityLabel={t('memory.editHint')}
-                />
-              </View>
-            ) : (
-              <Pressable
-                accessibilityRole="button"
-                key={m.id}
-                onPress={() => setEditing({ id: m.id, text: m.text })}
-                style={({ pressed }) => [styles.savedRow, pressed && styles.pressed]}
-                accessibilityHint={t('memory.editHint')}
-              >
-                <Icon name={CATEGORY_ICONS[m.category]} size={18} color={palette.textSecondary} />
-                <Text style={styles.savedText}>{m.text}</Text>
-                <Pressable
-                  onPress={() => removeSummary(m.id)}
-                  hitSlop={10}
-                  style={styles.remove}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('memory.delete')}
-                >
-                  <Icon name="close" size={14} color={palette.textSecondary} />
-                </Pressable>
-              </Pressable>
-            ),
-          )}
+          {summary.map((m) => (
+            <FactRow
+              key={m.id}
+              icon={CATEGORY_ICONS[m.category]}
+              text={m.text}
+              onEdit={() => setEditing({ id: m.id, text: m.text })}
+              onRemove={() => void removeSummary(m.id)}
+              editing={
+                editing?.id === m.id
+                  ? {
+                      text: editing.text,
+                      onChange: (text) => setEditing({ id: m.id, text }),
+                      onDone: () => void saveSummaryEdit(),
+                      label: t('memory.editHint'),
+                    }
+                  : undefined
+              }
+            />
+          ))}
           <Text style={styles.hint}>{t('profile.summaryHint')}</Text>
         </>
       )}
@@ -825,34 +807,6 @@ const useStyles = makeStyles((c) => ({
   checkbox: common(c).checkbox,
   checkboxOn: { backgroundColor: c.tint, borderColor: c.tint },
   checkText: { flex: 1, color: c.text, fontSize: 15, lineHeight: 21 },
-  savedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingLeft: 14,
-    paddingRight: 6,
-    paddingVertical: 10,
-    borderRadius: radii.control,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.separator,
-  },
-  pressed: { backgroundColor: c.pressed },
-  savedText: { flex: 1, color: c.text, fontSize: 15, lineHeight: 20 },
-  savedInput: {
-    flex: 1,
-    color: c.text,
-    fontSize: 15,
-    lineHeight: 20,
-    paddingVertical: 0,
-    marginRight: 8,
-  },
-  remove: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   bottom: {
     paddingHorizontal: 24,
     paddingTop: 8,

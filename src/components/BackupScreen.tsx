@@ -19,9 +19,9 @@ import { MessageKey, t } from '../i18n';
 import { formatDateTime, formatList, formatPercent, formatSize } from '../i18n/format';
 import { appsDataSize } from '../apps/appStore';
 import { Button } from '../ui/Button';
+import { SwitchRow } from '../ui/SettingsRows';
 import { makeStyles, readableColumn, usePalette, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
-import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
@@ -160,30 +160,6 @@ export function useAppsDataSize(): number | null {
   return size;
 }
 
-function SwitchRow({
-  title,
-  hint,
-  value,
-  onChange,
-  disabled,
-}: {
-  title: string;
-  hint: string;
-  value: boolean;
-  onChange: (value: boolean) => void;
-  disabled?: boolean;
-}) {
-  const styles = useStyles();
-  return (
-    <View style={[styles.row, disabled && styles.disabled]}>
-      <View style={styles.texts}>
-        <Text style={styles.label}>{title}</Text>
-        <Text style={styles.hint}>{hint}</Text>
-      </View>
-      <ThemedSwitch value={value} onValueChange={onChange} disabled={disabled} accessibilityLabel={title} />
-    </View>
-  );
-}
 
 function Progress({ percent, label }: { percent: number | null; label: string }) {
   const styles = useStyles();
@@ -504,7 +480,6 @@ const useStyles = makeStyles((c) => ({
   error: { color: c.danger },
   warning: { fontSize: 13, color: c.text, lineHeight: 18, fontWeight: '600' },
   link: { fontSize: 14, color: c.tintText, fontWeight: '600' },
-  row: common(c).row,
   texts: { flex: 1, gap: 2 },
   option: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
   showRow: { alignSelf: 'flex-start' },
@@ -520,5 +495,4 @@ const useStyles = makeStyles((c) => ({
     marginTop: 12,
   },
   button: { marginTop: 12 },
-  disabled: { opacity: 0.4 },
 }));

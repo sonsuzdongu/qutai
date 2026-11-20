@@ -28,6 +28,7 @@ import { t } from '../i18n';
 import { memoryErrorText } from './memoryError';
 import { plainError } from '../ai/plainError';
 import { Icon } from '../ui/Icon';
+import { FactRow } from './FactRow';
 import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { authenticate } from '../device/biometric';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
@@ -412,38 +413,24 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
                 </View>
               </View>
             ) : (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => startEdit(item)}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-                accessibilityHint={t('memory.editHint')}
-              >
-                {item.sensitive && <Icon name="secure" size={14} color={palette.textSecondary} />}
-                <Text style={styles.rowText}>
-                  {item.sensitive && !revealed.has(item.id)
-                    ? t('memory.hiddenRow', { label: hiddenLabel(item) })
-                    : item.text}
-                </Text>
-                {item.sensitive && (
-                  <Pressable
-                    onPress={() => (revealed.has(item.id) ? hide(item.id) : reveal(item.id))}
-                    hitSlop={8}
-                    style={styles.revealButton}
-                    accessibilityRole="button"
-                  >
-                    <Text style={styles.revealText}>{t(revealed.has(item.id) ? 'memory.hide' : 'memory.reveal')}</Text>
-                  </Pressable>
-                )}
-                <Pressable
-                  onPress={() => run((db) => deleteMemory(db, item.id))}
-                  hitSlop={10}
-                  style={styles.delete}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('memory.delete')}
-                >
-                  <Icon name="close" size={14} color={palette.textSecondary} />
-                </Pressable>
-              </Pressable>
+              <FactRow
+                icon={item.sensitive ? 'secure' : undefined}
+                text={item.sensitive && !revealed.has(item.id) ? t('memory.hiddenRow', { label: hiddenLabel(item) }) : item.text}
+                onEdit={() => startEdit(item)}
+                onRemove={() => run((db) => deleteMemory(db, item.id))}
+                accessory={
+                  item.sensitive ? (
+                    <Pressable
+                      onPress={() => (revealed.has(item.id) ? hide(item.id) : reveal(item.id))}
+                      hitSlop={8}
+                      style={styles.revealButton}
+                      accessibilityRole="button"
+                    >
+                      <Text style={styles.revealText}>{t(revealed.has(item.id) ? 'memory.hide' : 'memory.reveal')}</Text>
+                    </Pressable>
+                  ) : undefined
+                }
+              />
             )
           }
         />
@@ -626,7 +613,6 @@ const useStyles = makeStyles((c) => ({
   },
   revealButton: { paddingHorizontal: 8, height: 32, justifyContent: 'center' },
   revealText: { fontSize: 14, color: c.tintText, fontWeight: '600' },
-  delete: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   chips: { gap: 6, paddingVertical: 2 },
   chip: {
     flexDirection: 'row',

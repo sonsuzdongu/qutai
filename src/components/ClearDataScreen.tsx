@@ -1,16 +1,16 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { Button } from '../ui/Button';
+import { Segment } from '../ui/SettingsRows';
 import { makeStyles, readableColumn, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { ClearOptions } from '../storage/clearData';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { ScreenHeader } from './ScreenHeader';
-import { WholeWordsText } from './WholeWordsText';
 
 type Props = { visible: boolean; onClear: (options: ClearOptions) => Promise<void>; onClose: () => void };
 
@@ -61,21 +61,13 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
         <ScreenHeader title={t('clearData.title')} left={{ label: t('common.cancel'), tone: 'plain', onPress: onClose }} />
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.label}>{t('clearData.range')}</Text>
-          <View style={styles.segment}>
-            {(['hour', 'day', 'week', 'all'] as const).map((range) => (
-              <Pressable
-                key={range}
-                onPress={() => setOptions({ ...options, range })}
-                style={[styles.segmentButton, options.range === range && styles.segmentSelected]}
-                accessibilityRole="radio"
-                accessibilityState={{ selected: options.range === range }}
-              >
-                <WholeWordsText style={[styles.segmentText, options.range === range && styles.segmentTextSelected]}>
-                  {t(`clearData.range.${range}`)}
-                </WholeWordsText>
-              </Pressable>
-            ))}
-          </View>
+          <Segment
+            options={(['hour', 'day', 'week', 'all'] as const).map((range) => ({ value: range, label: t(`clearData.range.${range}`) }))}
+            value={options.range}
+            onChange={(range) => setOptions({ ...options, range })}
+            accessibilityLabel={t('clearData.range')}
+            textStyle={styles.segmentText}
+          />
           {ITEMS.map((key) => (
             <View key={key} style={styles.row}>
               <View style={styles.texts}>
@@ -105,11 +97,7 @@ const useStyles = makeStyles((c) => ({
   content: { ...readableColumn, padding: 16, gap: 12 },
   label: common(c).label,
   hint: common(c).hint,
-  segment: common(c).segment,
-  segmentButton: { ...common(c).segmentButton, paddingHorizontal: 2 },
-  segmentSelected: common(c).segmentSelected,
   segmentText: { ...common(c).segmentText, fontSize: 13 },
-  segmentTextSelected: common(c).segmentTextSelected,
   row: common(c).row,
   texts: { flex: 1, gap: 2 },
   button: { marginTop: 12 },

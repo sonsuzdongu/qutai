@@ -24,8 +24,8 @@ import { MessageKey, t } from '../i18n';
 import { formatDateTime, formatPercent, formatSize } from '../i18n/format';
 import { AppModal } from '../ui/AppModal';
 import { Button } from '../ui/Button';
+import { SwitchRow } from '../ui/SettingsRows';
 import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
-import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { PasswordField, ShowPassword, useAppsDataSize, type ServerRestoreJob } from './BackupScreen';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
@@ -400,30 +400,12 @@ export function ServerBackupSection({ onRestore }: { onRestore: (job: ServerRest
   );
 }
 
-function Row({
-  title,
-  hint,
-  value,
-  onChange,
-  disabled,
-}: {
-  title: string;
-  hint: string;
-  value: boolean;
-  onChange: (value: boolean) => void;
-  disabled?: boolean;
-}) {
+/** A switch row with this section's lighter title and spacing. */
+function Row(props: Parameters<typeof SwitchRow>[0]) {
   const styles = useStyles();
-  return (
-    <View style={[styles.row, disabled && styles.disabled]}>
-      <View style={styles.flex}>
-        <Text style={styles.rowTitle}>{title}</Text>
-        <Text style={styles.hint}>{hint}</Text>
-      </View>
-      <ThemedSwitch value={value} onValueChange={onChange} disabled={disabled} accessibilityLabel={title} />
-    </View>
-  );
+  return <SwitchRow style={styles.row} titleStyle={styles.rowTitle} {...props} />;
 }
+
 
 /** Set (first time) or change the backup password: twice, with the warning that it can't be recovered. */
 function PasswordSheet({
@@ -517,7 +499,7 @@ const useStyles = makeStyles((c) => ({
   block: { gap: 8, marginTop: 24 },
   title: common(c).title,
   label: common(c).label,
-  rowTitle: { fontSize: 15, color: c.text },
+  rowTitle: { fontWeight: '400' },
   section: { marginTop: 12 },
   hint: common(c).hint,
   status: { fontSize: 14, color: c.text, lineHeight: 20 },
@@ -528,12 +510,7 @@ const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
   gap: { gap: 6 },
   details: { marginLeft: 0 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 4,
-  },
+  row: { paddingVertical: 4 },
   progressRow: {
     flexDirection: 'row',
     alignItems: 'center',

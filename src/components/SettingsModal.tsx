@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { AppState, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { BuyCreditsHost } from './BuyCredits';
@@ -31,9 +31,9 @@ import type { Settings, SettingsPatch } from '../storage/settings';
 import { ASSISTANT_LOOK_LABELS, ASSISTANT_LOOK_TITLE, ASSISTANT_LOOKS } from '../ui/assistantLook';
 import { Icon, IconName } from '../ui/Icon';
 import { Button } from '../ui/Button';
+import { LinkRow, Segment, SwitchRow as SharedSwitchRow } from '../ui/SettingsRows';
 import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
-import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { AccountScreen } from './AccountScreen';
 import { CreditsScreen } from './CreditsScreen';
 import { ActionLogScreen } from './ActionLogScreen';
@@ -55,7 +55,6 @@ import { FilterListsScreen } from './FilterListsScreen';
 import { siteRules } from '../storage/siteRules';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
-import { WholeWordsText } from './WholeWordsText';
 
 /** What Settings says beside a "Don't ask again" switch: where the data goes, or what is still asked. */
 const ALWAYS_ALLOW_NOTES: Partial<Record<AlwaysAllowKind, Parameters<typeof t>[0]>> = {
@@ -890,27 +889,11 @@ function SectionRow({
   );
 }
 
-function SwitchRow({
-  title,
-  hint,
-  value,
-  onChange,
-}: {
-  title: string;
-  hint?: string;
-  value: boolean;
-  onChange: (value: boolean) => void;
-}) {
+
+/** The shared switch row with this screen's spacing above it. */
+function SwitchRow(props: Parameters<typeof SharedSwitchRow>[0]) {
   const styles = useStyles();
-  return (
-    <View style={styles.switchRow}>
-      <View style={styles.flex}>
-        <Text style={styles.label}>{title}</Text>
-        {hint ? <Text style={styles.hint}>{hint}</Text> : null}
-      </View>
-      <ThemedSwitch value={value} onValueChange={onChange} accessibilityLabel={title} />
-    </View>
-  );
+  return <SharedSwitchRow style={styles.switchRow} {...props} />;
 }
 
 const INSTRUCTION_EXAMPLES = ['settings.customExample1', 'settings.customExample2'] as const;
@@ -1022,41 +1005,7 @@ function ContactsRow() {
   );
 }
 
-function LinkRow({ label, onPress }: { label: string; onPress: () => void }) {
-  const styles = useStyles();
-  return (
-    <Pressable onPress={onPress} style={styles.option} accessibilityRole="button">
-      <Text style={[styles.optionText, styles.link]}>{label} ›</Text>
-    </Pressable>
-  );
-}
 
-function Segment<T extends string>({
-  options,
-  value,
-  onChange,
-}: {
-  options: { value: T; label: string }[];
-  value: T;
-  onChange: (value: T) => void;
-}): ReactNode {
-  const styles = useStyles();
-  return (
-    <View style={styles.segment}>
-      {options.map((o) => (
-        <Pressable
-          key={o.value}
-          onPress={() => onChange(o.value)}
-          style={[styles.segmentButton, value === o.value && styles.segmentSelected]}
-          accessibilityRole="radio"
-          accessibilityState={{ selected: value === o.value }}
-        >
-          <WholeWordsText style={[styles.segmentText, value === o.value && styles.segmentTextSelected]}>{o.label}</WholeWordsText>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
 
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
@@ -1119,22 +1068,9 @@ const useStyles = makeStyles((c) => ({
   },
   customExampleText: { fontSize: 13, color: c.text },
   link: { color: c.tintText, fontWeight: '600' },
-  segment: common(c).segment,
-  segmentButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    paddingVertical: 8,
-    borderRadius: radii.inner,
-  },
-  segmentSelected: common(c).segmentSelected,
-  segmentText: common(c).segmentText,
-  segmentTextSelected: common(c).segmentTextSelected,
   option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, gap: 12 },
   optionText: { color: c.text, fontSize: 15 },
-  switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
+  switchRow: { marginTop: 20 },
   saveButton: { marginTop: 4 },
   version: { color: c.textSecondary, fontSize: 13, textAlign: 'center', marginTop: 28 },
 }));

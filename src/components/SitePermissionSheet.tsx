@@ -3,11 +3,11 @@ import { Pressable, Text, View } from 'react-native';
 import { PersonalSetting, SITE_LEVELS, SiteLevel } from '../agent/sitePolicy';
 import { t } from '../i18n';
 import { LocationSetting, MediaKind, PERMISSION_SETTINGS, PermissionSetting } from '../storage/sitePermissions';
+import { Segment } from '../ui/SettingsRows';
 import { makeStyles, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { BottomSheet } from './BottomSheet';
-import { WholeWordsText } from './WholeWordsText';
 
 type Props = {
   /** The site being set; null hides the sheet. */
@@ -222,30 +222,14 @@ function SettingSegment({
   return (
     <>
       <Text style={styles.section}>{title}</Text>
-      <View style={styles.segment} accessibilityRole="radiogroup" accessibilityLabel={title}>
-        {PERMISSION_SETTINGS.map((option) => {
-          const selected = option === value;
-          return (
-            <Pressable
-              key={option}
-              onPress={() => onSelect(option)}
-              style={[styles.segmentButton, selected && styles.segmentSelected]}
-              accessibilityRole="radio"
-              accessibilityState={{ selected }}
-            >
-              <WholeWordsText
-                style={[
-                  styles.segmentText,
-                  selected && styles.segmentTextSelected,
-                  selected && option === 'block' && styles.danger,
-                ]}
-              >
-                {t(`site.setting.${option}`)}
-              </WholeWordsText>
-            </Pressable>
-          );
-        })}
-      </View>
+      <Segment
+        options={PERMISSION_SETTINGS.map((option) => ({ value: option, label: t(`site.setting.${option}`) }))}
+        value={value}
+        onChange={onSelect}
+        accessibilityLabel={title}
+        style={styles.segment}
+        selectedTextStyle={(option) => option === 'block' && styles.danger}
+      />
       <Text style={styles.settingHint}>{hint}</Text>
     </>
   );
@@ -268,9 +252,5 @@ const useStyles = makeStyles((c) => ({
   stopText: { fontSize: 15, fontWeight: '700', color: c.danger },
   section: { fontSize: 15, fontWeight: '700', color: c.text, paddingHorizontal: 20, marginTop: 12, marginBottom: 8 },
   segment: { ...common(c).segment, marginHorizontal: 20 },
-  segmentButton: common(c).segmentButton,
-  segmentSelected: common(c).segmentSelected,
-  segmentText: common(c).segmentText,
-  segmentTextSelected: common(c).segmentTextSelected,
   settingHint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, paddingHorizontal: 20, marginTop: 6 },
 }));

@@ -35,6 +35,7 @@ import { understand, type IntroTarget } from '../intro/request';
 import { getDb } from '../storage/db';
 import { addMemory, deleteMemory, listMemories, updateMemory } from '../storage/memory';
 import { GradientButton } from '../ui/BrandGradient';
+import { FactRow } from './FactRow';
 import type { PressAction } from '../ui/pressGuard';
 import { Icon, type IconName } from '../ui/Icon';
 import { isShort } from '../ui/layout';
@@ -914,7 +915,6 @@ function Bubble({ from, children }: { from: 'qutai' | 'you'; children: string })
 
 function Review({ rows, notice, onChange }: { rows: ReviewRow[]; notice: string | null; onChange: (rows: ReviewRow[]) => void }) {
   const styles = useStyles();
-  const palette = usePalette();
   const [editing, setEditing] = useState<{ key: string; text: string } | null>(null);
   const update = (key: string, change: Partial<ReviewRow>) => onChange(rows.map((r) => (r.key === key ? { ...r, ...change } : r)));
   const remove = (key: string) => onChange(rows.filter((r) => r.key !== key));
@@ -938,44 +938,25 @@ function Review({ rows, notice, onChange }: { rows: ReviewRow[]; notice: string 
       {rows.map((row) => {
         const shown = row.kind === 'instruction' ? t('profile.summaryInstruction', { line: row.text }) : row.text;
         return (
-          <View key={row.key} style={styles.reviewRow}>
-            <View style={styles.reviewMain}>
-              <Icon name={icon(row)} size={18} color={palette.textSecondary} />
-              {editing?.key === row.key ? (
-                <TextInput
-                  style={styles.reviewInput}
-                  value={editing.text}
-                  onChangeText={(text) => setEditing({ key: row.key, text })}
-                  onBlur={finishEdit}
-                  onSubmitEditing={finishEdit}
-                  autoFocus
-                  multiline
-                  submitBehavior="blurAndSubmit"
-                  returnKeyType="done"
-                  maxLength={300}
-                  accessibilityLabel={t('voiceIntro.editItem', { text: row.text })}
-                />
-              ) : (
-                <Pressable
-                  onPress={() => row.kind === 'memory' && setEditing({ key: row.key, text: row.text })}
-                  disabled={row.kind !== 'memory'}
-                  style={styles.flex}
-                  accessibilityRole={row.kind === 'memory' ? 'button' : 'text'}
-                  accessibilityHint={row.kind === 'memory' ? t('memory.editHint') : undefined}
-                >
-                  <Text style={styles.reviewText}>{shown}</Text>
-                </Pressable>
-              )}
-              <Pressable
-                onPress={() => remove(row.key)}
-                hitSlop={10}
-                style={styles.remove}
-                accessibilityRole="button"
-                accessibilityLabel={t('voiceIntro.deleteItem', { text: shown })}
-              >
-                <Icon name="close" size={16} color={palette.textSecondary} />
-              </Pressable>
-            </View>
+          <FactRow
+            key={row.key}
+            icon={icon(row)}
+            text={shown}
+            onEdit={row.kind === 'memory' ? () => setEditing({ key: row.key, text: row.text }) : undefined}
+            onRemove={() => remove(row.key)}
+            removeLabel={t('voiceIntro.deleteItem', { text: shown })}
+            editing={
+              editing?.key === row.key
+                ? {
+                    text: editing.text,
+                    onChange: (text) => setEditing({ key: row.key, text }),
+                    onDone: finishEdit,
+                    label: t('voiceIntro.editItem', { text: row.text }),
+                    maxLength: 300,
+                  }
+                : undefined
+            }
+          >
             {(() => {
               // The same text already saved is just kept; only a different earlier note is worth saying.
               const other = (row.replaces ?? []).filter((r) => r.shown.trim().toLocaleLowerCase() !== row.text.trim().toLocaleLowerCase());
@@ -998,7 +979,7 @@ function Review({ rows, notice, onChange }: { rows: ReviewRow[]; notice: string 
                 />
               </View>
             )}
-          </View>
+          </FactRow>
         );
       })}
     </>
@@ -1113,20 +1094,6 @@ const useStyles = makeStyles((c) => ({
     fontSize: 16,
   },
   smallMic: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: c.tint },
-  reviewRow: {
-    borderRadius: radii.control,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.separator,
-    paddingLeft: 14,
-    paddingRight: 6,
-    paddingVertical: 10,
-    gap: 8,
-  },
-  reviewMain: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  reviewText: { color: c.text, fontSize: 15, lineHeight: 20 },
-  reviewInput: { flex: 1, color: c.text, fontSize: 15, lineHeight: 20, paddingVertical: 0 },
-  remove: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   replaces: { color: c.textSecondary, fontSize: 13.5, lineHeight: 19, paddingLeft: 28, paddingRight: 8 },
   hideRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingLeft: 28, paddingRight: 8 },
   hideText: { color: c.text, fontSize: 14.5, fontWeight: '600' },
