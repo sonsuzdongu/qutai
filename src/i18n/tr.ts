@@ -44,6 +44,7 @@ export const tr: Record<keyof typeof en, string> = {
   'chat.title': 'Qutai',
   'chat.missingKey': 'Önce ayarlardan {provider} API anahtarınızı girin.',
   'chat.stopped': 'Durduruldu',
+  'chat.interrupted': 'Qutai bu görev sürerken kapandı. Yukarıdaki adımlar yapıldı, sonrasında hiçbir şey çalışmadı.',
   'chat.paused': 'Uygulama arka planda, görev duraklatıldı',
   'chat.pausedNeedsYou': 'Duraklatıldı: bu adım için uygulamada olmanız gerekiyor',
   'chat.resumed': 'Devam ediliyor',

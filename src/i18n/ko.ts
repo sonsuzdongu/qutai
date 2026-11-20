@@ -53,6 +53,7 @@ export const ko: Record<keyof typeof en, string> = {
   'chat.title': 'Qutai',
   'chat.missingKey': '먼저 설정에서 {provider} API 키를 입력하세요.',
   'chat.stopped': '중지됨',
+  'chat.interrupted': '이 작업이 진행되는 동안 Qutai가 종료되었습니다. 위의 단계는 완료되었고, 그 이후에는 아무것도 실행되지 않았습니다.',
   'chat.paused': '앱이 백그라운드에 있어 작업이 일시중지되었습니다',
   'chat.pausedNeedsYou': '일시중지됨: 이 단계는 앱에서 직접 진행해야 합니다',
   'chat.resumed': '다시 시작하는 중',

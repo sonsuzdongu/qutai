@@ -7,6 +7,7 @@ import type { CallOffer } from '../device/phone';
 import type { CookiesOffer, StyleOffer } from '../components/pageCustomisation';
 import type { ScriptOffer } from '../agent/scriptTool';
 import type { AppOffer } from '../agent/appTool';
+import { t } from '../i18n';
 import { formatSize } from '../i18n/format';
 import type { SmsOffer } from '../device/sms';
 import type { WhatsAppOffer } from '../device/whatsapp';
@@ -102,6 +103,20 @@ export function newItem(kind: ChatItem['kind'], text: string, options?: string[]
   return options ? { id: String(++itemCounter), kind, text, options } : { id: String(++itemCounter), kind, text };
 }
 
+/**
+ * Saved messages as they are shown after a restart: nothing looks as if it were still being written, and a task that
+ * was running when they were saved (Qutai was closed or killed mid-task) ends with a note saying it was interrupted.
+ */
+function settledItems(saved: SavedConversation): ChatItem[] {
+  const items = saved.items.map((item) => {
+    if (!item.streaming) return item;
+    const { streaming: _streaming, ...rest } = item;
+    return rest;
+  });
+  if (!saved.task) return items;
+  return [...items, { ...newItem('info', t('chat.interrupted')), icon: 'stop' }];
+}
+
 /** Saved messages keep their ids, so new ones must continue after the highest. */
 function continueItemIds(items: ChatItem[]) {
   itemCounter = Math.max(itemCounter, ...items.map((item) => Number(item.id) || 0));
@@ -121,6 +136,11 @@ export type SavedConversation = {
   model?: ModelChoice;
   /** The voice-input language picked by hand for this conversation (a language or a tag, e.g. "tr", "en-GB"). */
   voiceLanguage?: string;
+  /**
+   * A task was running when this was saved (the message that started it): read back, it was interrupted (Qutai was
+   * closed or killed mid-task) and is shown so (TABS-28).
+   */
+  task?: { sentId: string };
 };
 
 /** Storage key of a tab group's conversation (a tab's own conversation is stored under the tab's uid). */
@@ -166,6 +186,8 @@ export class Conversation {
 
   private loadedCallbacks: (() => void)[] = [];
   private abortController: AbortController | null = null;
+  /** The message that started the running task (saved with it, so a killed task is known as interrupted). */
+  private runningFrom: string | null = null;
   private streamingId: string | null = null;
   private pendingText = '';
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -415,7 +437,7 @@ export class Conversation {
     this.loaded = true;
     if (saved && (saved.items.length || saved.turns.length)) {
       continueItemIds(saved.items);
-      this.items = [...saved.items, ...this.items];
+      this.items = [...settledItems(saved), ...this.items];
       this.turns.unshift(...saved.turns);
     }
     // Something typed since the tab opened wins over the saved draft, and a model chosen since over the saved one.
@@ -444,8 +466,9 @@ export class Conversation {
    * A task starts here with its own controller (task/taskRunner.ts), which Stop and closing the tab abort. Without
    * one, a new controller (tests, older callers).
    */
-  start(controller = new AbortController()): AbortSignal {
+  start(controller = new AbortController(), sentId?: string): AbortSignal {
     this.abortController = controller;
+    this.runningFrom = sentId ?? null;
     this.running = true;
     this.onChange();
     return controller.signal;
@@ -458,6 +481,7 @@ export class Conversation {
   finish(signal?: AbortSignal) {
     if (signal && this.abortController && this.abortController.signal !== signal) return;
     this.abortController = null;
+    this.runningFrom = null;
     this.running = false;
     this.onChange();
   }
@@ -473,6 +497,7 @@ export class Conversation {
       draft: this.draft,
       ...(this.model ? { model: this.model } : {}),
       ...(this.voiceLanguage ? { voiceLanguage: this.voiceLanguage } : {}),
+      ...(this.running && this.runningFrom ? { task: { sentId: this.runningFrom } } : {}),
     };
   }
 }

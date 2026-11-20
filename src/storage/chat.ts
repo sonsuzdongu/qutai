@@ -8,7 +8,15 @@ import type { ChatItem } from '../components/AssistantPanel';
 import { Db, deleteKey, getJson, setJson } from './db';
 import { cutText } from '../utils/wellFormed';
 
-export type SavedChat = { items: ChatItem[]; turns: Turn[]; draft?: string; model?: ModelChoice; voiceLanguage?: string };
+export type SavedChat = {
+  items: ChatItem[];
+  turns: Turn[];
+  draft?: string;
+  model?: ModelChoice;
+  voiceLanguage?: string;
+  /** A task was running when it was saved (Conversation.toSaved): read back, it was interrupted. */
+  task?: { sentId: string };
+};
 
 const MAX_ITEMS = 300;
 const MAX_TURNS_JSON = 1_000_000;
@@ -41,7 +49,12 @@ export function prepareForStorage(chat: SavedChat): SavedChat {
     ...(chat.draft ? { draft: cutText(chat.draft, MAX_DRAFT) } : {}),
     ...(validModel(chat.model) ? { model: chat.model } : {}),
     ...(validLanguageTag(chat.voiceLanguage) ? { voiceLanguage: chat.voiceLanguage } : {}),
+    ...(validTask(chat.task) ? { task: { sentId: chat.task.sentId } } : {}),
   };
+}
+
+function validTask(task: unknown): task is { sentId: string } {
+  return !!task && typeof (task as { sentId?: unknown }).sentId === 'string';
 }
 
 /** A BCP 47-like language tag ("tr", "en-GB", "zh-Hant-TW"). */
@@ -82,6 +95,7 @@ export async function loadChat(db: Db, key: string, { adoptLegacy = false } = {}
     chat.items = chat.items.map((item) => checkedOptionItem(item));
     if (chat.model !== undefined && !validModel(chat.model)) delete chat.model;
     if (chat.voiceLanguage !== undefined && !validLanguageTag(chat.voiceLanguage)) delete chat.voiceLanguage;
+    if (chat.task !== undefined && !validTask(chat.task)) delete chat.task;
     return chat;
   }
   if (!adoptLegacy) return null;

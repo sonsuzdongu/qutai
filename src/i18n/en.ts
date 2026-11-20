@@ -43,6 +43,7 @@ export const en = {
   'chat.title': 'Qutai',
   'chat.missingKey': 'Enter your {provider} API key in settings first.',
   'chat.stopped': 'Stopped',
+  'chat.interrupted': 'Qutai was closed while this task was running. The steps above were done; nothing after them ran.',
   'chat.paused': 'The app is in the background, task paused',
   'chat.pausedNeedsYou': 'Paused: this step needs you in the app',
   'chat.resumed': 'Resuming',

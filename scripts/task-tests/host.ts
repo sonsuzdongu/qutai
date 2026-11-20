@@ -4,6 +4,7 @@
 import type { AgentOptions } from '../../src/agent/runAgent';
 import { Browser } from '../../src/browser/Browser';
 import type { Conversation } from '../../src/chat/Conversation';
+import { prepareForStorage, type SavedChat } from '../../src/storage/chat';
 import { DEFAULT_SETTINGS, type Settings } from '../../src/storage/settings';
 import type { SendOptions, TaskHost } from '../../src/task/sendTask';
 import { sendTask } from '../../src/task/sendTask';
@@ -36,6 +37,8 @@ export function makeHost(loop: FakeLoop | ((opts: AgentOptions, n: number) => Pr
   let settings: Settings = { ...DEFAULT_SETTINGS, provider: 'anthropic', apiKeys: { ...DEFAULT_SETTINGS.apiKeys, anthropic: 'k' } };
   const log: string[] = [];
   const saved: { key: string; items: number; turns: number }[] = [];
+  /** What storage holds per key, as the app writes it (storage/chat.ts prepareForStorage, through JSON). */
+  const storage = new Map<string, SavedChat>();
   let runs = 0;
   const marks = { on: false };
   const host: TaskHost = {
@@ -56,6 +59,7 @@ export function makeHost(loop: FakeLoop | ((opts: AgentOptions, n: number) => Pr
     showSettings: () => log.push('showSettings'),
     save: (chat: Conversation) => {
       saved.push({ key: chat.key, items: chat.items.length, turns: chat.turns.length });
+      storage.set(chat.key, JSON.parse(JSON.stringify(prepareForStorage(chat.toSaved()))));
     },
     credits: {
       ready: () => false,
@@ -99,6 +103,7 @@ export function makeHost(loop: FakeLoop | ((opts: AgentOptions, n: number) => Pr
     runner,
     log,
     saved,
+    storage,
     marks,
     setSettings: (next: Partial<Settings>) => (settings = { ...settings, ...next }),
     send: (text: string, options?: SendOptions) => {

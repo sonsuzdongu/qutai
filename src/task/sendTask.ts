@@ -346,9 +346,12 @@ async function runTask(host: TaskHost, task: Task, start: Started) {
   // Research applies to this one message.
   const research = chat.research;
   if (research) chat.setResearch(false);
-  const signal = chat.start(task.controller);
+  const signal = chat.start(task.controller, sent.id);
   const incognito = () => chat.incognito || chat.privacy.touchedIncognito;
   begin(host, task, agentTab, start, settings.backgroundTasks && !incognito());
+  // Saved as soon as it is sent, marked as running: if Qutai is killed now, the next start shows the message and
+  // that the task was interrupted (TABS-28).
+  host.save(chat);
 
   const ending: Ending = { outcome: { kind: 'done' }, lastText: '', cost: null };
   try {
@@ -405,6 +408,8 @@ async function runTask(host: TaskHost, task: Task, start: Started) {
       onCost: (cost) => {
         ending.cost = cost;
       },
+      // Each completed step is saved (the steps shown and the history), so a killed task keeps what it did.
+      onStep: () => host.save(chat),
       onEvent: (event) => {
         noteOutcome(ending, event);
         showAgentEvent(chat, event);

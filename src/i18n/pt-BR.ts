@@ -55,6 +55,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'chat.title': 'Qutai',
   'chat.missingKey': 'Primeiro, insira sua chave de API do {provider} nas configurações.',
   'chat.stopped': 'Parado',
+  'chat.interrupted': 'O Qutai foi fechado enquanto esta tarefa estava em andamento. As etapas acima foram feitas; nada foi executado depois.',
   'chat.paused': 'O app está em segundo plano, tarefa pausada',
   'chat.pausedNeedsYou': 'Pausado: esta etapa precisa de você no app',
   'chat.resumed': 'Retomando',

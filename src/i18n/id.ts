@@ -54,6 +54,7 @@ export const id: Record<keyof typeof en, string> = {
   'chat.title': 'Qutai',
   'chat.missingKey': 'Masukkan kunci API {provider} Anda di setelan terlebih dahulu.',
   'chat.stopped': 'Dihentikan',
+  'chat.interrupted': 'Qutai ditutup saat tugas ini berjalan. Langkah di atas sudah dilakukan; tidak ada yang berjalan setelahnya.',
   'chat.paused': 'Aplikasi berada di latar belakang, tugas dijeda',
   'chat.pausedNeedsYou': 'Dijeda: langkah ini memerlukan Anda di aplikasi',
   'chat.resumed': 'Melanjutkan',

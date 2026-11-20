@@ -54,6 +54,7 @@ export const fr: Record<keyof typeof en, string> = {
   'chat.title': 'Qutai',
   'chat.missingKey': 'Saisissez d’abord votre clé API {provider} dans les paramètres.',
   'chat.stopped': 'Arrêté',
+  'chat.interrupted': 'Qutai a été fermé pendant que cette tâche était en cours. Les étapes ci-dessus ont été faites ; rien n’a été exécuté ensuite.',
   'chat.paused': 'L’application est en arrière-plan, tâche en pause',
   'chat.pausedNeedsYou': 'En pause : cette étape nécessite votre présence dans l’application',
   'chat.resumed': 'Reprise',

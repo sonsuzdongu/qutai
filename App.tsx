@@ -1,5 +1,6 @@
 import { siteRules } from './src/storage/siteRules';
 import { TaskRunner } from './src/task/taskRunner';
+import { ChatSaver } from './src/storage/chatSaver';
 import { sendTask, type SendOptions, type TaskHost } from './src/task/sendTask';
 import type { SettingsPatch } from './src/task/taskContext';
 import { setTaskDialogSites } from './src/task/dialogs';
@@ -833,15 +834,19 @@ function BrowserApp({
   };
 
   // The chat input is saved shortly after typing stops, so closing the app doesn't lose it.
-  const [draftSaver] = useState(() => ({ timer: null as ReturnType<typeof setTimeout> | null }));
-  const persistDraftSoon = (chat: Conversation) => {
-    if (draftSaver.timer) clearTimeout(draftSaver.timer);
-    draftSaver.timer = setTimeout(() => persistConversation(chat), 800);
-  };
-
+  // Each conversation has its own timer and is written one write at a time (src/storage/chatSaver.ts, TABS-29).
+  const [chatSaver] = useState(() => new ChatSaver((chat) => withDb('chat.save', (db) => storeChat(db, chat), 'user')));
+  const persistDraftSoon = (chat: Conversation) => chatSaver.soon(chat);
   const persistConversation = (chat: Conversation) => {
-    void withDb('chat.save', (db) => storeChat(db, chat), 'user');
+    void chatSaver.now(chat);
   };
+  // Switching to another conversation writes the typing left in this one at once.
+  useEffect(
+    () => () => {
+      void chatSaver.flush(conversation);
+    },
+    [conversation, chatSaver],
+  );
 
   // Ways in from outside the app (links handed to Qutai as the default browser, text shared to it): untrusted, so
   // handled only after the app lock, never in an incognito tab, and never sent or searched without the user's
@@ -989,6 +994,16 @@ function BrowserApp({
   // The task lifecycle (src/task/sendTask.ts): one run slot for the app's life; this screen hands each send over with
   // what is React (its state setters, its toasts) and reads nothing from the render the send came from.
   const [taskRunner] = useState(() => new TaskRunner());
+  // Leaving the foreground (the system may end Qutai there without warning): typing waiting on a timer and the
+  // running task's conversation are written now, like the open tabs (usePersistSession).
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') return;
+      void chatSaver.flush();
+      taskRunner.tasks.forEach((task) => void chatSaver.now(task.chat));
+    });
+    return () => sub.remove();
+  }, [chatSaver, taskRunner]);
   const taskHost = (): TaskHost => ({
     browser: browserInstance,
     runner: taskRunner,

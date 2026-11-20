@@ -117,6 +117,8 @@ export type AgentOptions = ToolContext & {
    * went out (ai/cost.ts).
    */
   onCost?: (cost: AnswerCost | null) => void;
+  /** A step has completed: its tool results are in the history (the task saves the conversation here). */
+  onStep?: () => void;
 };
 
 /** Runs one task: the agent's steps, then the cost of all its requests. */
@@ -501,6 +503,7 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
       });
     }
     turns.push({ role: 'tool_results', results });
+    opts.onStep?.();
     // The run ends with the question; the user's answer starts the next one.
     if (waitingForUser) return;
   }

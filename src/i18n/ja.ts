@@ -55,6 +55,7 @@ export const ja: Record<keyof typeof en, string> = {
   'chat.title': 'Qutai',
   'chat.missingKey': '先に設定で {provider} の API キーを入力してください。',
   'chat.stopped': '停止しました',
+  'chat.interrupted': 'このタスクの実行中にQutaiが閉じられました。上の手順は完了していますが、その後は何も実行されていません。',
   'chat.paused': 'アプリがバックグラウンドにあるため、タスクを一時停止しました',
   'chat.pausedNeedsYou': '一時停止中: このステップはアプリ内での操作が必要です',
   'chat.resumed': '再開しています',

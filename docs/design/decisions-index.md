@@ -474,6 +474,8 @@ Moved to Details (ids retired, not reused): `LOG-7`
 | `TABS-25` | iOS: reloading, or going back or forward to, the result of a sent form asks "Send the form again?" first… | Default | 2026-11-20 |
 | `TABS-26` | A woken tab comes back at the scroll position it had on the same page (the page reports it half a second… | Default | 2026-11-20 |
 | `TABS-27` | After the user closes the assistant's tab, its next call on that tab fails clearly instead of acting on the tab on screen | Default | 2026-11-20 |
+| `TABS-28` | A conversation is saved on send, after each completed step, at the end and on leaving the foreground; a killed task shows as… | Default | 2026-11-20 |
+| `TABS-29` | Typing in the chat input is saved per conversation 800 ms after typing stops, and at once on a switch or on leaving the foreground | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-8`
 
