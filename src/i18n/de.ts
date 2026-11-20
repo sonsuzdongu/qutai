@@ -2440,7 +2440,6 @@ export const de: Record<keyof typeof en, string> = {
   'settings.languageHintIos': 'iOS verwaltet die Sprache von Qutai in der Einstellungen-App, wo sie auch für Berechtigungsanfragen und die Schnellaktionen auf dem Home-Bildschirm gilt. Qutai startet neu, wenn Sie sie dort ändern.',
   'settings.languageOpenIos': 'In iOS-Einstellungen ändern',
   'settings.languageNeedsBuild': 'Zum Auswählen einer Sprache ist eine neuere Version von Qutai nötig. Bis dahin folgt Qutai der Sprache Ihres Telefons.',
-  'legal.englishOnly': 'Dieses Dokument ist auf Englisch und Türkisch verfügbar. Unten wird die englische Version angezeigt.',
   'action.requestApproval': "Bittet Sie, das Senden zu bestätigen",
   'action.requestApprovalPay': "Bittet Sie, die Zahlung zu bestätigen",
   'action.requestApprovalChange': "Bittet Sie, die Änderung zu bestätigen",

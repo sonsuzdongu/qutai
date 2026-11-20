@@ -2454,7 +2454,6 @@ export const fr: Record<keyof typeof en, string> = {
   'settings.languageHintIos': 'iOS conserve la langue de Qutai dans l’app Réglages, où elle s’applique aussi aux demandes d’autorisation et aux actions rapides de l’écran d’accueil. Qutai redémarre quand vous la modifiez là-bas.',
   'settings.languageOpenIos': 'Modifier dans les Réglages iOS',
   'settings.languageNeedsBuild': 'Le choix de la langue nécessite une version plus récente de Qutai. En attendant, Qutai suit la langue de votre téléphone.',
-  'legal.englishOnly': 'Ce document est disponible en anglais et en turc. La version anglaise est affichée ci-dessous.',
   'action.requestApproval': "Vous demande d’approuver l’envoi",
   'action.requestApprovalPay': "Vous demande d’approuver le paiement",
   'action.requestApprovalChange': "Vous demande d’approuver la modification",

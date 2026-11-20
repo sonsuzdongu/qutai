@@ -33,7 +33,6 @@ The open questions, in one place (each row says what the app does today).
 | `SCR-19` | Scripts run in the page's main JavaScript world on both platforms. iOS's isolated content world (`WKContentWorld`) is not used. | [20](20-page-scripts.md) |
 | `SCR-20` | Kept scripts have two run times: `end` (DOMContentLoaded, the default) and `idle` (after load). There is no "document start". | [20](20-page-scripts.md) |
 | `SCR-24` | Imported scripts always arrive switched off and unsealed, listed with their flags. The import dialog offers only "Skip" or "Import… | [20](20-page-scripts.md) |
-| `SCR-34` | The privacy policies list "the result of a script you approved on a page" among what goes to the AI. The legal version is not bumped for… | [20](20-page-scripts.md) |
 | `SCR-35` | App Review notes for scripts, and whether Qutai needs Google Play's in-app way to report AI output, are open. The proposed review notes… | [20](20-page-scripts.md) |
 | `APPS-14` | Each app may store up to 5 MB of data, counted in UTF-8 bytes. One value or document may be up to 256 KB, a batch up to 100 operations,… | [22](22-apps.md) |
 | `APPS-17` | The 20 newest versions plus the current one are kept, and older ones are deleted when a new one is saved. Today: 20. | [22](22-apps.md) |
@@ -42,7 +41,6 @@ The open questions, in one place (each row says what the app does today).
 | `APPS-46` | The privacy policies say nothing about apps yet, and the legal version is not bumped. The proposed sentence: apps are stored only on the… | [22](22-apps.md) |
 | `MEDIA-7` | Whether iOS background play of YouTube is acceptable under YouTube's terms and App Review is open; today it works as in MEDIA-6. | [24](24-reader-and-media.md) |
 | `MEDIA-20` | On Android an APK opens in the system installer, which asks "allow from this source" itself; Qutai declares `REQUEST_INSTALL_PACKAGES`… | [24](24-reader-and-media.md) |
-| `LANG-16` | Today the privacy policy and terms exist only in English and Turkish, and other languages show English with a translated note. | [26](26-languages.md) |
 | `LANG-17` | Today the eight newer translations are unreviewed by native speakers; brand names "Qutai Credits" / "Qutai Fast" / "Qutai Pro" stay in… | [26](26-languages.md) |
 | `LANG-18` | Today translate prompts say "into <interface language>" and examples use local cities. | [26](26-languages.md) |
 | `LAND-2` | Today there is no in-app "lock to portrait" setting; the system's rotation lock is the way to stop turning. | [29](29-landscape.md) |
@@ -84,12 +82,11 @@ The open questions, in one place (each row says what the app does today).
 | `OSPERM-8` | Today the proposed store answers for contacts are: App Store "Contacts › App Functionality, not linked to identity, not used for… | [38](38-phone-permissions.md) |
 | `OSPERM-19` | Today the Play Console foreground-service declaration still has the old text; the owner must update it and record the video for the 17… | [38](38-phone-permissions.md) |
 | `BUILD-22` | Today Android declares REQUEST_INSTALL_PACKAGES, so that "Open" on a downloaded APK reaches the system installer. Whether to fill in… | [40](40-signing-and-builds.md) |
-| `LEGAL-5` | Today the privacy policies (en and tr, open source and pro) already list "the result of a script you approved on a page" among what the… | [41](41-legal-texts.md) |
 | `LEGAL-6` | Today the privacy policies do not mention apps inside Qutai. The proposed sentence: apps are stored only on the phone, and an app's code… | [41](41-legal-texts.md) |
 | `LEGAL-9` | Before Qutai's server goes live for everyone, every "no servers of ours" sentence in the onboarding, the legal texts, store listings and… | [41](41-legal-texts.md) |
 | `LEGAL-10` | A lawyer reviews the open-source and pro texts (KVKK/GDPR, Turkish consumer law on digital content) before any store release. Today they… | [41](41-legal-texts.md) |
 | `LEGAL-11` | Today the pro terms say that credits have no cash value, cannot be transferred, are refunded only as the law or the store requires (a… | [41](41-legal-texts.md) |
-| `LEGAL-12` | The legal texts exist only in English and Turkish. The other eight languages show English with a translated note. Today there are no… | [41](41-legal-texts.md) |
+| `LEGAL-19` | Turkish is an original next to English and does not say that English prevails; whether it should is open. | [41](41-legal-texts.md) |
 | `WEB-11` | Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end sync, and the comparison's… | [42](42-website.md) |
 | `NOT-9` | Today there is no sync; whether a future sync must be end-to-end encrypted (so the server cannot read it) is open, recommended yes. | [44](44-not-built.md) |
 | `NOT-15` | Today there is no in-app "lock to portrait"; the system's rotation lock is used (section 29). | [44](44-not-built.md) |
@@ -644,7 +641,7 @@ Moved to Details (ids retired, not reused): `COOK-11`, `COOK-7`, `COOK-10`
 | `SCR-31` | In My rules, the code editor runs the check on save, and refused code is not saved. Saving changed code… | Default |  |
 | `SCR-32` | There are at most 50 kept scripts, 10 per site, names of at most 80 characters and descriptions of at most… | Default |  |
 | `SCR-33` | The model is told to use `run_script` only when reading and the other tools can't answer, to use `copy`… | Default |  |
-| `SCR-34` | The privacy policies list "the result of a script you approved on a page" among what goes to the AI. The… | **Waiting** |  |
+| `SCR-34` | The privacy policies list "the result of a script you approved on a page" among what goes to the AI. The legal version went up… | Owner | 2026-11-20 |
 | `SCR-35` | App Review notes for scripts, and whether Qutai needs Google Play's in-app way to report AI output, are… | **Waiting** |  |
 
 Moved to Details (ids retired, not reused): `SCR-11`, `SCR-13`, `SCR-25`, `SCR-26`, `SCR-28`
@@ -809,7 +806,7 @@ Moved to Details (ids retired, not reused): `VOICE-10`, `VOICE-12`, `VOICE-16`, 
 | `LANG-8` | The assistant addresses the user formally where the language distinguishes (siz, Sie, vous, usted, вы;… | Default |  |
 | `LANG-9` | Every user message carries the interface language, and tool results name Qutai's buttons, screens and… | Default |  |
 | `LANG-10` | What the AI reads stays English (tool results, prompts); the user sees a translated step line, and a… | Default |  |
-| `LANG-16` | Today the privacy policy and terms exist only in English and Turkish, and other languages show English… | **Waiting** |  |
+| `LANG-16` | The privacy policy and terms are shown in the interface language in all ten languages; the eight translations say English… | Owner | 2026-11-20 |
 | `LANG-17` | Today the eight newer translations are unreviewed by native speakers; brand names "Qutai Credits" / "Qutai… | **Waiting** |  |
 | `LANG-18` | Today translate prompts say "into <interface language>" and examples use local cities. | **Waiting** |  |
 | `LANG-19` | Android launcher shortcuts are dynamic, published in Qutai's language (start, language change, update); no static ones; pinned static copies… | Owner | 2026-11-20 |
@@ -1207,20 +1204,21 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | Id | Decision | Status | Date |
 |---|---|---|---|
 | `LEGAL-1` | Anyone whose accepted legal version is lower than the current one must accept again before the browser opens. | Default |  |
-| `LEGAL-2` | Today the open-source legal version is 3 and the pro legal version is 5, both dated 2026-11-19. | Owner | 2026-11-19 |
+| `LEGAL-2` | Today the open-source legal version is 4 and the pro legal version is 6, both dated 2026-11-20. | Owner | 2026-11-20 |
 | `LEGAL-3` | Pro-mode builds show their own texts with their own version, and changing one set never re-asks users of… | Default |  |
 | `LEGAL-4` | The version goes up when the policy or terms change in substance. Only the owner decides a bump: a session… | Owner | 2026-11-19 |
-| `LEGAL-5` | Today the privacy policies (en and tr, open source and pro) already list "the result of a script you… | **Waiting** |  |
+| `LEGAL-5` | The privacy policies' "the result of a script you approved on a page" is covered by the bump to open source 4 / pro 6… | Owner | 2026-11-20 |
 | `LEGAL-6` | Today the privacy policies do not mention apps inside Qutai. The proposed sentence: apps are stored only… | **Waiting** |  |
 | `LEGAL-7` | The legal texts describe only what the app actually does, checked against the code. When something about… | Default |  |
 | `LEGAL-8` | The open-source policy promises: | Default |  |
 | `LEGAL-9` | Before Qutai's server goes live for everyone, every "no servers of ours" sentence in the onboarding, the… | **Waiting** |  |
 | `LEGAL-10` | A lawyer reviews the open-source and pro texts (KVKK/GDPR, Turkish consumer law on digital content) before… | **Waiting** |  |
 | `LEGAL-11` | Today the pro terms say that credits have no cash value, cannot be transferred, are refunded only as the… | **Waiting** |  |
-| `LEGAL-12` | The legal texts exist only in English and Turkish. The other eight languages show English with a… | **Waiting** |  |
+| `LEGAL-12` | The legal texts exist in all ten interface languages; the eight translated from English say the English version prevails… | Owner | 2026-11-20 |
 | `LEGAL-13` | Turkish legal texts address the user as "siz". Short button labels keep the bare imperative ("Kabul et ve… | Owner | 2026-11-16 |
 | `LEGAL-14` | Ad-blocking filter lists are downloaded only after the terms have been accepted at least once. | Default |  |
 | `LEGAL-15` | Settings › About › Open source licences lists every third-party component whose code or assets ship in the… | Default |  |
+| `LEGAL-19` | Turkish is an original next to English and does not say that English prevails; whether it should is open. | **Waiting** |  |
 | `LEGAL-18` | Qutai's code is Apache-2.0. The licence does not cover the Qutai name, logo or icons, and trademark… | Default |  |
 
 Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`

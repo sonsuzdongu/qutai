@@ -2454,7 +2454,6 @@ export const id: Record<keyof typeof en, string> = {
   'settings.languageHintIos': 'iOS menyimpan bahasa Qutai di app Pengaturan, tempat bahasa itu juga berlaku untuk permintaan izin dan tindakan cepat Layar Utama. Qutai dimulai ulang saat Anda mengubahnya di sana.',
   'settings.languageOpenIos': 'Ubah di Pengaturan iOS',
   'settings.languageNeedsBuild': 'Memilih bahasa memerlukan build Qutai yang lebih baru. Sampai saat itu, Qutai mengikuti bahasa ponsel Anda.',
-  'legal.englishOnly': 'Dokumen ini tersedia dalam bahasa Inggris dan Turki. Versi bahasa Inggris ditampilkan di bawah.',
   'action.requestApproval': "Meminta persetujuan Anda untuk mengirim",
   'action.requestApprovalPay': "Meminta persetujuan Anda untuk pembayaran",
   'action.requestApprovalChange': "Meminta Anda menyetujui perubahan",

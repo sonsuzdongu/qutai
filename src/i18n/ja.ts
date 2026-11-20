@@ -2455,7 +2455,6 @@ export const ja: Record<keyof typeof en, string> = {
   'settings.languageHintIos': 'iOS では Qutai の言語は「設定」アプリで管理され、権限のリクエストやホーム画面のクイックアクションにも適用されます。そこで変更すると Qutai は再起動します。',
   'settings.languageOpenIos': 'iOS の「設定」で変更',
   'settings.languageNeedsBuild': '言語を選ぶには新しいビルドの Qutai が必要です。それまでは、Qutai はスマートフォンの言語に従います。',
-  'legal.englishOnly': 'この文書は英語とトルコ語で提供されています。以下に英語版を表示します。',
   'action.requestApproval': "送信の承認をお願いしています",
   'action.requestApprovalPay': "支払いの承認をお願いしています",
   'action.requestApprovalChange': "変更の承認をお願いしています",

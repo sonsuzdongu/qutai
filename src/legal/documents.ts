@@ -12,8 +12,11 @@ import { PRO_DOCUMENTS, PRO_LEGAL_UPDATED } from './proDocuments';
  * app now enforces about passwords, cards, IBANs and ID numbers (16 Nov 2026).
  * 3: contacts (the assistant finds a person the user names; numbers and addresses never reach the AI), page styles
  *    and the cookie list (19 Nov 2026).
+ * 4: the pictures of option cards loaded from sites, the spelling of suffixes on the name in Turkish, the documents
+ *    translated into German, Spanish, Brazilian Portuguese, French, Japanese, Korean, Russian and Indonesian (the
+ *    English version prevails), and the contacts example using a name of each language (20 Nov 2026).
  */
-const OPEN_SOURCE_LEGAL_VERSION = 3;
+const OPEN_SOURCE_LEGAL_VERSION = 4;
 /**
  * 2: the pro-mode documents describe the account, Qutai Credits and buying credits (16 Nov 2026).
  * 3: backups in the Qutai account (what the server keeps, encrypted with the user's password; 17 Nov 2026).
@@ -21,17 +24,24 @@ const OPEN_SOURCE_LEGAL_VERSION = 3;
  *    process data and the server's IP use and logs, how long data is kept, security, and the open-source policy's
  *    items the pro one was missing (location, speech, filter lists, details typed into sites; 18 Nov 2026).
  * 5: contacts (as in the open-source policy's version 3; 19 Nov 2026).
+ * 6: as the open-source policy's version 4, and "sign-in tokens" spelled out in the server's logs (20 Nov 2026).
  */
-const PRO_LEGAL_VERSION = 5;
+const PRO_LEGAL_VERSION = 6;
 export const LEGAL_VERSION = accountsEnabled ? PRO_LEGAL_VERSION : OPEN_SOURCE_LEGAL_VERSION;
-export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-19';
+export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-20';
 
 export type LegalKind = 'privacy' | 'terms';
 export type LegalDocument = { title: string; intro: string; sections: { heading: string; body: string }[] };
-/** The languages the documents are written in (by people, not machine-translated). */
+/** The languages the documents are written in; both are originals. */
 export type LegalLanguage = 'en' | 'tr';
+/** The other eight interface languages, translated from English (src/legal/translations/; the English version prevails). */
+export type TranslatedLegalLanguage = Exclude<Language, LegalLanguage>;
+export type LegalSet = Record<LegalKind, LegalDocument>;
+/** One language's translation of both builds' documents: the open-source build's and the pro-mode build's. */
+export type LegalTranslation = { openSource: LegalSet; pro: LegalSet };
+export type LegalBuild = keyof LegalTranslation;
 
-const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
+export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
   en: {
     privacy: {
       title: 'Privacy Policy',
@@ -79,7 +89,7 @@ const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
         {
           heading: 'Your contacts',
           body:
-            'If you allow it, the assistant can find a person you name (for example “call Ahmet”) in your phone’s ' +
+            'If you allow it, the assistant can find a person you name (for example “call James”) in your phone’s ' +
             'contacts. Qutai looks up only names you say yourself, on your phone; your address book is never uploaded ' +
             'or listed. The AI service receives only the names that match and the kinds of number or address each ' +
             'has (such as “mobile” or “work email”), never the numbers or addresses themselves: you see those on the ' +
@@ -205,7 +215,7 @@ const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
             'zaman yüklenmez ya da listelenmez. Yapay zekâ hizmeti yalnızca eşleşen adları ve her birinde hangi tür ' +
             'numara ya da adres bulunduğunu (“cep” ya da “iş e-postası” gibi) alır, numaraların ve adreslerin ' +
             'kendisini asla almaz: bunları düğmede ya da taslakta siz görürsünüz, aramayı ya da gönderimi siz ' +
-            'yaparsınız. Kişilerinizden gelen numaralar ve adresler sohbetlerinizle, asistanın belleğiyle ya da ' +
+            'yaparsınız. Kişilerinizden gelen numaralar ve adresler sohbetlerinizle, asistanın hafızasıyla ya da ' +
             'yedeklerinizle birlikte saklanmaz. Gizli sekmelerin yer aldığı sohbetlerde kişiler kullanılmaz. İzni Ayarlar’dan ' +
             'değiştirebilirsiniz.',
         },
@@ -280,11 +290,45 @@ const DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
 };
 
 /**
- * The privacy policy and terms exist in English and Turkish only: they are not machine-translated. In the other
- * interface languages the English document is shown, with `englishOnly` set so the screen says so above it.
+ * A translation is loaded the first time its language is shown: Metro keeps each `require` as a separate module that is
+ * evaluated only when called, so the app does not hold eight languages of legal text it never shows.
  */
-export function legalDocument(kind: LegalKind, language: Language): LegalDocument & { englishOnly: boolean } {
-  const documents = accountsEnabled ? PRO_DOCUMENTS : DOCUMENTS;
-  const legalLanguage: LegalLanguage = language === 'tr' ? 'tr' : 'en';
-  return { ...documents[legalLanguage][kind], englishOnly: language !== legalLanguage };
+const translations: Partial<Record<TranslatedLegalLanguage, LegalTranslation>> = {};
+/* eslint-disable @typescript-eslint/no-require-imports */
+const loaders: Record<TranslatedLegalLanguage, () => LegalTranslation> = {
+  de: () => require('./translations/de').de,
+  es: () => require('./translations/es').es,
+  'pt-BR': () => require('./translations/pt-BR').ptBR,
+  fr: () => require('./translations/fr').fr,
+  ja: () => require('./translations/ja').ja,
+  ko: () => require('./translations/ko').ko,
+  ru: () => require('./translations/ru').ru,
+  id: () => require('./translations/id').id,
+};
+/* eslint-enable @typescript-eslint/no-require-imports */
+
+/** For tests run outside the app (no Metro `require`): makes a language's translation available. */
+export function provideLegalTranslation(language: TranslatedLegalLanguage, translation: LegalTranslation) {
+  translations[language] = translation;
+}
+
+/** A build's document in a language: English and Turkish as written, the other eight from their translation. */
+export function legalDocumentFor(build: LegalBuild, kind: LegalKind, language: Language): LegalDocument {
+  if (language === 'en' || language === 'tr') return (build === 'pro' ? PRO_DOCUMENTS : DOCUMENTS)[language][kind];
+  let translation = translations[language];
+  if (!translation) {
+    try {
+      translation = loaders[language]();
+    } catch {
+      // Only outside Metro (Node tests without provideLegalTranslation); the app always has the module.
+      return (build === 'pro' ? PRO_DOCUMENTS : DOCUMENTS).en[kind];
+    }
+    translations[language] = translation;
+  }
+  return translation[build][kind];
+}
+
+/** The privacy policy or terms of this build, in the interface language (all ten have them). */
+export function legalDocument(kind: LegalKind, language: Language): LegalDocument {
+  return legalDocumentFor(accountsEnabled ? 'pro' : 'openSource', kind, language);
 }

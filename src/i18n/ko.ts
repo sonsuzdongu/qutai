@@ -2453,7 +2453,6 @@ export const ko: Record<keyof typeof en, string> = {
   'settings.languageHintIos': 'iOS에서는 Qutai의 언어를 설정 앱에서 관리하며, 권한 요청과 홈 화면 빠른 동작에도 적용됩니다. 설정 앱에서 변경하면 Qutai가 다시 시작됩니다.',
   'settings.languageOpenIos': 'iOS 설정에서 변경',
   'settings.languageNeedsBuild': '언어를 선택하려면 최신 버전의 Qutai가 필요합니다. 그때까지는 Qutai가 휴대전화의 언어를 따릅니다.',
-  'legal.englishOnly': '이 문서는 영어와 튀르키예어로 제공됩니다. 아래에 영어 버전이 표시됩니다.',
   'action.requestApproval': "보내기 승인을 요청하는 중",
   'action.requestApprovalPay': "결제 승인을 요청하는 중",
   'action.requestApprovalChange': "변경 승인을 요청하는 중",

@@ -6,7 +6,7 @@ import type { LegalDocument, LegalKind, LegalLanguage } from './documents';
  * (README.md › Accounts, › Qutai Credits; backend/README.md › Purchases); have them checked by a lawyer before the
  * store release (TODO.md › Legal).
  */
-export const PRO_LEGAL_UPDATED = '2026-11-19';
+export const PRO_LEGAL_UPDATED = '2026-11-20';
 
 export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
   en: {
@@ -99,7 +99,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
           body:
             'Qutai’s server runs on Cloudflare, which also stores the backups. Like any server, it sees your IP ' +
             'address with each request; it uses it only to limit how many requests can be made, and Qutai’s own logs ' +
-            'never contain your IP address, email address, messages, pages or tokens (they hold a request id, your ' +
+            'never contain your IP address, email address, messages, pages or sign-in tokens (they hold a request id, your ' +
             'account number, what was asked for, how long it took and, for assistant requests, the model, tokens and ' +
             'cost). The companies that process data for Qutai, each under its own privacy policy, are: Cloudflare ' +
             '(the server), Apple and Google (sign-in and the stores), Mailjet (sign-in emails), RevenueCat ' +
@@ -118,7 +118,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
         {
           heading: 'Your contacts',
           body:
-            'If you allow it, the assistant can find a person you name (for example “call Ahmet”) in your phone’s ' +
+            'If you allow it, the assistant can find a person you name (for example “call James”) in your phone’s ' +
             'contacts. Qutai looks up only names you say yourself, on your phone; your address book is never uploaded ' +
             'or listed. The AI service receives only the names that match and the kinds of number or address each ' +
             'has (such as “mobile” or “work email”), never the numbers or addresses themselves: you see those on the ' +
@@ -343,7 +343,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'zaman yüklenmez ya da listelenmez. Yapay zekâ hizmeti yalnızca eşleşen adları ve her birinde hangi tür ' +
             'numara ya da adres bulunduğunu (“cep” ya da “iş e-postası” gibi) alır, numaraların ve adreslerin ' +
             'kendisini asla almaz: bunları düğmede ya da taslakta siz görürsünüz, aramayı ya da gönderimi siz ' +
-            'yaparsınız. Kişilerinizden gelen numaralar ve adresler sohbetlerinizle, asistanın belleğiyle ya da ' +
+            'yaparsınız. Kişilerinizden gelen numaralar ve adresler sohbetlerinizle, asistanın hafızasıyla ya da ' +
             'yedeklerinizle birlikte saklanmaz. Gizli sekmelerin yer aldığı sohbetlerde kişiler kullanılmaz. İzni Ayarlar’dan ' +
             'değiştirebilirsiniz.',
         },

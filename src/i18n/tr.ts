@@ -2451,7 +2451,6 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.languageHintIos': "iOS, Qutai'ın dilini Ayarlar uygulamasında tutar; orada izin isteklerine ve Ana Ekran hızlı işlemlerine de uygulanır. Orada değiştirdiğinizde Qutai yeniden başlar.",
   'settings.languageOpenIos': 'iOS Ayarlarında değiştir',
   'settings.languageNeedsBuild': "Dil seçmek için Qutai'ın daha yeni bir sürümü gerekiyor. O zamana kadar Qutai telefonunuzun dilini kullanır.",
-  'legal.englishOnly': 'Bu belge İngilizce ve Türkçe olarak mevcuttur. Aşağıda İngilizce sürümü gösteriliyor.',
   'action.requestApproval': "Göndermek için onayınız isteniyor",
   'action.requestApprovalPay': "Ödeme için onayınız isteniyor",
   'action.requestApprovalChange': "Değişikliği onaylamanız isteniyor",

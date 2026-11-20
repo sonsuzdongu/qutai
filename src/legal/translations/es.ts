@@ -1,0 +1,377 @@
+import type { LegalTranslation } from '../documents';
+
+/**
+ * Spanish translation of the privacy policy and terms of both builds, machine-translated from English on 20 Nov 2026
+ * and not yet reviewed by a native speaker or a lawyer. The English version prevails.
+ */
+
+const CONTACTS_BODY =
+  'Si usted lo permite, el asistente puede encontrar en los contactos de su teléfono a una persona que usted nombre ' +
+  '(por ejemplo, «llama a Carlos»). Qutai busca solo los nombres que usted mismo dice, en su teléfono; su libreta de ' +
+  'direcciones nunca se sube ni se enumera. El servicio de IA recibe solo los nombres que coinciden y los tipos de ' +
+  'número o dirección que tiene cada uno (como «móvil» o «correo del trabajo»), nunca los números ni las direcciones ' +
+  'en sí: usted los ve en el botón o en el borrador, y es usted quien llama o envía. Los números y direcciones de ' +
+  'sus contactos no se guardan con sus conversaciones, la memoria del asistente ni sus copias de seguridad. Los ' +
+  'contactos no se usan en conversaciones con pestañas de incógnito. Puede cambiar el permiso en Configuración.';
+
+const PASSWORDS_BODY =
+  'Qutai no permite que la memoria del asistente guarde contraseñas, números de tarjeta, códigos de seguridad de ' +
+  'tarjeta, fechas de vencimiento de tarjeta, códigos de un solo uso ni números de cuenta bancaria (IBAN). Los ' +
+  'números de documento de identidad y de pasaporte solo pueden guardarse en identidad o viajes; se ocultan al ' +
+  'servicio de IA, que solo ve una etiqueta, y Qutai escribe el número en el sitio por sí mismo después de que usted ' +
+  'lo confirme. Antes de que el asistente introduzca por primera vez en un sitio sus datos personales guardados, ' +
+  'Qutai se lo pregunta (puede cambiar esto para cada sitio). También puede exigir su confirmación antes de cada ' +
+  'acción y bloquear el asistente en los sitios que usted elija.';
+
+const BULLET_WEBSITES =
+  '• Los sitios web que visita reciben lo que cualquier navegador les envía y los datos que usted le pide al ' +
+  'asistente que escriba en ellos (como su nombre o su dirección en un formulario).\n';
+
+const BULLETS_COMMON =
+  '• Si las sugerencias de búsqueda están activadas, lo que escribe en la barra de direcciones se envía a su motor ' +
+  'de búsqueda (nunca desde pestañas de incógnito).\n' +
+  '• Si toca «Usar mi ubicación» en la configuración inicial, su posición aproximada se envía al servicio de ' +
+  'direcciones del teléfono (el de Apple en un iPhone; en Android, normalmente el de Google) para encontrar el ' +
+  'nombre del lugar. Solo se guarda el nombre del lugar.\n' +
+  '• Si le habla al asistente y el teléfono no puede reconocer ese idioma en el propio dispositivo, el audio va al ' +
+  'servicio de voz del teléfono (el de Apple o el de Google), solo después de que usted lo haya aceptado una vez en ' +
+  'Qutai y nunca en conversaciones de incógnito. Qutai y el servicio de IA reciben solo el texto.\n' +
+  '• Cuando el asistente le muestra opciones como tarjetas, sus imágenes se cargan desde los sitios que las muestran ' +
+  '(o desde los servidores de imágenes de esos sitios), sin sus cookies, también para las opciones que usted no ' +
+  'abre; en conversaciones de incógnito, solo cuando toca «Mostrar imágenes».\n' +
+  '• Mientras «Bloquear anuncios y rastreadores» está activado, las listas de filtros que usted eligió se descargan ' +
+  'de sus editores (como EasyList y AdGuard) y se actualizan cada pocos días. Estas solicitudes no contienen nada ' +
+  'sobre su navegación.';
+
+const ENGLISH_PREVAILS = ' Si esta traducción y la versión en inglés difieren, prevalece la versión en inglés.';
+
+const POLICY_CHANGES =
+  'Si esta política cambia, Qutai le muestra la nueva versión y le pide que la acepte antes de continuar.' +
+  ENGLISH_PREVAILS;
+
+const TERMS_CHANGES =
+  'Si estas condiciones cambian, Qutai le muestra la nueva versión y le pide que la acepte antes de continuar.' +
+  ENGLISH_PREVAILS;
+
+const TERMS_INTRO = 'Al usar Qutai, usted acepta estas condiciones. Léalas junto con la Política de privacidad.';
+
+const ASSISTANT_BODY =
+  'El asistente puede leer páginas, hacer clic, escribir y rellenar formularios cuando usted se lo pide. La IA puede ' +
+  'cometer errores: verifique sus respuestas y revise las compras, reservas, mensajes y otras acciones importantes ' +
+  'antes de que se completen. Puede exigir confirmación antes de cada acción en Configuración.';
+
+const WEBSITES_BODY = 'Los sitios web y su contenido pertenecen a sus propietarios. Qutai no es responsable de ellos.';
+
+const WARRANTY_BODY =
+  'Qutai se proporciona «tal cual», sin garantías. En la medida en que la ley lo permita, no somos responsables de ' +
+  'las pérdidas derivadas de su uso, incluidas las acciones realizadas por el asistente.';
+
+export const es: LegalTranslation = {
+  openSource: {
+    privacy: {
+      title: 'Política de privacidad',
+      intro:
+        'Qutai es un navegador web con un asistente de IA. Lo creamos para que su navegación se quede en su ' +
+        'teléfono. Qutai no tiene servidores propios: no recopilamos, almacenamos ni vendemos sus datos.',
+      sections: [
+        {
+          heading: 'Lo que se queda en su teléfono',
+          body:
+            'Sus pestañas, historial, marcadores, páginas guardadas, descargas, permisos de sitios, la memoria del ' +
+            'asistente (incluidas sus respuestas a las preguntas opcionales de la configuración inicial y el ' +
+            'formulario de dirección), sus instrucciones personalizadas, el historial de acciones del asistente y ' +
+            'sus conversaciones se almacenan solo en este dispositivo. Las claves de API se guardan en el ' +
+            'almacenamiento cifrado del teléfono. Las pestañas de incógnito no escriben nada en el disco; sus ' +
+            'conversaciones no se guardan.',
+        },
+        {
+          heading: 'Lo que sale de su teléfono y a quién',
+          body:
+            BULLET_WEBSITES +
+            '• Cuando usa el asistente, cada solicitud va con su propia clave de API al servicio de IA que usted ' +
+            'configuró: directamente a Anthropic, OpenAI o Google; a OpenRouter, que la transmite al proveedor del ' +
+            'modelo que eligió; o a un servidor compatible con OpenAI cuya dirección usted escribió. Una solicitud ' +
+            'contiene su mensaje, la conversación hasta ese momento, el contenido que necesita el asistente (el ' +
+            'texto de la página, capturas de pantalla cuando mira una página, los archivos e imágenes que usted ' +
+            'adjunta, el resultado de un script que aprobó en una página y, cuando pregunta por las cookies, sus ' +
+            'nombres, sitios y ajustes, nunca sus valores), sus instrucciones personalizadas y, mientras la memoria ' +
+            'está activada, sus recuerdos (los recuerdos ocultos, como los números de identificación, solo como una ' +
+            'etiqueta). Sus eventos del calendario y su ubicación se envían solo cuando usted lo confirma, cada vez. ' +
+            'Si la búsqueda web está activada, el servicio puede hacer búsquedas por usted. La política de ' +
+            'privacidad y las condiciones de ese servicio se aplican a estos datos.\n' +
+            BULLETS_COMMON +
+            '\n' +
+            'No se envía nada más: Qutai no tiene analítica, seguimiento ni publicidad.',
+        },
+        {
+          heading: 'Sus contactos',
+          body: CONTACTS_BODY,
+        },
+        {
+          heading: 'Contraseñas y datos de pago',
+          body: PASSWORDS_BODY,
+        },
+        {
+          heading: 'Su control',
+          body:
+            'Puede ver y eliminar la memoria del asistente, borrar el historial, las cookies y otros datos en ' +
+            'Configuración, y quitar sus claves de API en cualquier momento. Desinstalar Qutai elimina todo lo que ' +
+            'almacenó.',
+        },
+        {
+          heading: 'Menores',
+          body: 'Qutai no está dirigido a menores de 13 años.',
+        },
+        {
+          heading: 'Cambios',
+          body: POLICY_CHANGES,
+        },
+      ],
+    },
+    terms: {
+      title: 'Condiciones de uso',
+      intro: TERMS_INTRO,
+      sections: [
+        {
+          heading: 'Su proveedor de IA y los costos',
+          body:
+            'El asistente funciona con su propia clave de API de Anthropic, OpenAI, Google u OpenRouter, o con un ' +
+            'servidor compatible con OpenAI que usted configure. Usted es responsable de su cuenta en ese servicio, ' +
+            'de sus condiciones y de todos los costos que se cobren a su clave.',
+        },
+        {
+          heading: 'El asistente actúa en su nombre',
+          body: ASSISTANT_BODY,
+        },
+        {
+          heading: 'Uso aceptable',
+          body:
+            'No use Qutai para infringir la ley, para incumplir las condiciones de los sitios web o de los ' +
+            'proveedores de IA, ni para perjudicar a otras personas, por ejemplo, enviando spam o recopilando datos ' +
+            'de terceros.',
+        },
+        {
+          heading: 'Sitios web y contenido',
+          body: WEBSITES_BODY,
+        },
+        {
+          heading: 'Sin garantía',
+          body: WARRANTY_BODY,
+        },
+        {
+          heading: 'Cambios',
+          body: TERMS_CHANGES,
+        },
+      ],
+    },
+  },
+  pro: {
+    privacy: {
+      title: 'Política de privacidad',
+      intro:
+        'Qutai es un navegador web con un asistente de IA. Lo creamos para que su navegación se quede en su ' +
+        'teléfono. El servidor propio de Qutai se usa solo para su cuenta de Qutai (inicio de sesión, Qutai Credits, ' +
+        'compras en la app y copias de seguridad), y solo cuando usted los elige. No vendemos sus datos, y Qutai no ' +
+        'tiene analítica, seguimiento ni publicidad.',
+      sections: [
+        {
+          heading: 'Quiénes somos',
+          body:
+            'Qutai está hecho por Osman Yuksel («nosotros»), que es el responsable del tratamiento de los datos ' +
+            'descritos en esta política. Para preguntas sobre su privacidad, o para solicitar una copia o la ' +
+            'supresión de lo que el servidor de Qutai guarda sobre usted, escriba a osmanyuksel@gmail.com.',
+        },
+        {
+          heading: 'Lo que se queda en su teléfono',
+          body:
+            'Sus pestañas, historial, marcadores, páginas guardadas, descargas, permisos de sitios, la memoria del ' +
+            'asistente, su historial de acciones y sus conversaciones se almacenan solo en este dispositivo, también ' +
+            'cuando ha iniciado sesión, salvo que haga una copia de seguridad de ellos en su cuenta de Qutai (véase ' +
+            'más abajo). Las claves de API y su inicio de sesión se guardan en el almacenamiento cifrado del ' +
+            'teléfono. Las pestañas de incógnito no escriben nada en el disco; sus conversaciones no se guardan.',
+        },
+        {
+          heading: 'Lo que sale de su teléfono y a quién',
+          body:
+            BULLET_WEBSITES +
+            '• Con su propia clave de API, su mensaje y el contenido que necesita el asistente (el texto de la ' +
+            'página, capturas de pantalla cuando mira una página, los archivos e imágenes que usted adjunta, el ' +
+            'resultado de un script que aprobó en una página, cuando pregunta por las cookies sus nombres, sitios y ' +
+            'ajustes pero nunca sus valores, su memoria y sus instrucciones personalizadas) van directamente al ' +
+            'proveedor de IA que eligió (Anthropic, OpenAI, Google, OpenRouter o su propio servidor). El servidor de ' +
+            'Qutai no interviene. Sus eventos del calendario y su ubicación se envían solo cuando usted lo confirma, ' +
+            'cada vez.\n' +
+            '• Con Qutai Credits, el mismo contenido va primero al servidor de Qutai, que lo transmite al proveedor ' +
+            'de IA (Anthropic, OpenAI o Google) con la propia cuenta de Qutai y le devuelve la respuesta. El ' +
+            'servidor de Qutai no almacena ni registra este contenido. La app le pregunta antes de que use Qutai ' +
+            'Credits por primera vez.\n' +
+            '• Si la búsqueda web está activada, el proveedor de IA puede hacer búsquedas por usted. Las políticas ' +
+            'de privacidad y las condiciones de los proveedores se aplican a lo que reciben.\n' +
+            BULLETS_COMMON,
+        },
+        {
+          heading: 'Su cuenta de Qutai',
+          body:
+            'La cuenta es opcional; solo la necesita para Qutai Credits, las compras en la app y las copias de ' +
+            'seguridad en su cuenta. Usted inicia sesión con Apple, con Google o con su dirección de correo ' +
+            'electrónico. Con el correo electrónico, enviamos a la dirección que usted introduce un mensaje con un ' +
+            'código de un solo uso y un enlace, a través de nuestro servicio de correo electrónico (Mailjet); el ' +
+            'código es válido durante 10 minutos y solo en el teléfono que lo solicitó y, para evitar abusos, el ' +
+            'servidor cuenta cuántos códigos se envían a cada dirección y a cada teléfono. El servidor de Qutai ' +
+            'guarda: un número de cuenta; los métodos de inicio de sesión que tiene la cuenta (Apple, Google, correo ' +
+            'electrónico) y las direcciones de correo electrónico asociadas a ellos (con Apple puede ser una ' +
+            'dirección de reenvío privada); cuándo se creó la cuenta y cuándo se usó por última vez; sus ' +
+            'dispositivos con sesión iniciada (un identificador de dispositivo aleatorio, no los identificadores de ' +
+            'su teléfono); y sus créditos: el saldo, las compras y los créditos agregados y, para cada solicitud al ' +
+            'asistente, el modelo, el número de tokens, lo que costó y cuándo. No guarda sus mensajes, páginas ni ' +
+            'respuestas.',
+        },
+        {
+          heading: 'Copias de seguridad en su cuenta de Qutai',
+          body:
+            'Solo si usted lo elige (Configuración › Copia de seguridad), el servidor de Qutai guarda su archivo de ' +
+            'copia de seguridad: los mismos datos que una copia de seguridad que usted exporta (marcadores, ' +
+            'historial, la memoria del asistente, tareas guardadas, ajustes de sitios y preferencias; pestañas ' +
+            'abiertas, conversaciones, actividad y claves de IA solo si usted las incluye). Antes de enviarse, se ' +
+            'cifra en su teléfono con una contraseña que usted elige; Qutai no puede leerlo ni recuperar la ' +
+            'contraseña, que se guarda solo en su teléfono. Con cada copia de seguridad, el servidor también guarda ' +
+            'cuándo se hizo, su tamaño, la versión de la app y el tipo de teléfono (por ejemplo, «iPhone · iOS 26»). ' +
+            'Se conservan las copias de seguridad más recientes (3 en la actualidad) y las más antiguas se eliminan; ' +
+            'usted puede eliminarlas en cualquier momento, y al eliminar su cuenta se eliminan.',
+        },
+        {
+          heading: 'Compras en la app',
+          body:
+            'Qutai Credits y cualquier otra cosa que se venda en la app se compran a través de App Store o Google ' +
+            'Play; sus datos de pago se quedan con Apple o Google y nunca llegan a Qutai. Un servicio de pagos ' +
+            '(RevenueCat) recibe su número de cuenta de Qutai y el registro de compra de la tienda para que la ' +
+            'compra pueda confirmarse, agregarse a su cuenta y restaurarse en otro teléfono. Qutai guarda un ' +
+            'registro de cada compra (tienda, transacción, producto, créditos, precio pagado y fechas), que la ' +
+            'legislación tributaria nos obliga a conservar, también después de que se elimine la cuenta, sin el ' +
+            'vínculo con usted. Los reembolsos los gestionan Apple o Google según sus propias normas.',
+        },
+        {
+          heading: 'El servidor de Qutai y quién más trata datos',
+          body:
+            'El servidor de Qutai funciona en Cloudflare, que también almacena las copias de seguridad. Como ' +
+            'cualquier servidor, ve su dirección IP con cada solicitud; la usa solo para limitar cuántas solicitudes ' +
+            'se pueden hacer, y los registros propios de Qutai nunca contienen su dirección IP, su dirección de ' +
+            'correo electrónico, sus mensajes, páginas ni tokens de inicio de sesión (contienen un identificador de ' +
+            'solicitud, su número de cuenta, lo que se solicitó, cuánto tardó y, para las solicitudes al asistente, ' +
+            'el modelo, los tokens y el costo). Las empresas que tratan datos por cuenta de Qutai, ' +
+            'cada una conforme a su propia política de privacidad, son: Cloudflare (el servidor), ' +
+            'Apple y Google (el inicio de sesión y las tiendas), Mailjet (los correos de inicio de sesión), ' +
+            'RevenueCat (las compras) y, con Qutai Credits, Anthropic, OpenAI y Google (la IA). No compartimos sus ' +
+            'datos con nadie más, salvo cuando la ley lo exige (por ejemplo, una orden judicial) o para proteger a ' +
+            'Qutai y a sus usuarios contra el fraude y el abuso.',
+        },
+        {
+          heading: 'Plazo de conservación de los datos',
+          body:
+            'En su teléfono: hasta que usted los elimine o desinstale Qutai. En el servidor de Qutai: su cuenta, ' +
+            'sus métodos de inicio de sesión, dispositivos e historial de créditos, hasta que elimine la cuenta; las ' +
+            'copias de seguridad, como se describe arriba; los códigos de inicio de sesión, hasta que se usen o ' +
+            'caduquen; los registros de compra, durante el tiempo que exija la legislación tributaria, sin el ' +
+            'vínculo con usted una vez eliminada la cuenta.',
+        },
+        {
+          heading: 'Sus contactos',
+          body: CONTACTS_BODY,
+        },
+        {
+          heading: 'Contraseñas y datos de pago',
+          body: PASSWORDS_BODY,
+        },
+        {
+          heading: 'Su control',
+          body:
+            'Puede ver y eliminar la memoria del asistente, borrar el historial, las cookies y otros datos en ' +
+            'Configuración, y quitar sus claves de API en cualquier momento. Puede eliminar sus copias de seguridad ' +
+            'del servidor de Qutai en Configuración › Copia de seguridad. Puede dejar de usar Qutai Credits, cerrar ' +
+            'sesión o eliminar su cuenta en Configuración › Cuenta: al eliminarla se borran la cuenta, su saldo y su ' +
+            'historial del servidor de Qutai (los registros de compra se conservan sin el vínculo con usted, como se ' +
+            'indica arriba) y se pide al servicio de pagos que elimine su registro sobre usted. También puede ' +
+            'escribir a osmanyuksel@gmail.com para solicitar una copia de lo que el servidor de Qutai guarda sobre ' +
+            'usted, o su rectificación o supresión. Desinstalar Qutai elimina todo lo que almacenó en el teléfono.',
+        },
+        {
+          heading: 'Seguridad',
+          body:
+            'Las conexiones con el servidor de Qutai usan HTTPS. Los tokens de inicio de sesión se guardan en el ' +
+            'servidor solo en forma de hash y en su teléfono en su almacenamiento cifrado, y las copias de seguridad ' +
+            'se cifran en su teléfono antes de enviarse.',
+        },
+        {
+          heading: 'Menores',
+          body:
+            'Qutai no está dirigido a menores de 13 años, y no recopilamos a sabiendas datos de ellos. En algunos ' +
+            'países usted debe tener más edad (por ejemplo, 16 años) para dar por sí mismo su consentimiento a esta ' +
+            'política; por debajo de esa edad, debe darlo por usted su padre, su madre o su tutor legal.',
+        },
+        {
+          heading: 'Cambios',
+          body: POLICY_CHANGES,
+        },
+      ],
+    },
+    terms: {
+      title: 'Condiciones de uso',
+      intro: TERMS_INTRO,
+      sections: [
+        {
+          heading: 'Dos formas de usar el asistente',
+          body:
+            '• Su propia clave de API: usted es responsable de su cuenta con ese proveedor, de sus condiciones y de ' +
+            'todos los costos que se cobren a su clave.\n' +
+            '• Qutai Credits: las solicitudes del asistente pasan por el servidor de Qutai y se pagan con créditos ' +
+            'de su cuenta de Qutai. Necesita una cuenta para usarlos.',
+        },
+        {
+          heading: 'Qutai Credits',
+          body:
+            'Los créditos se compran en la app a través de App Store o Google Play, al precio que muestra la tienda, ' +
+            'y se agregan a su cuenta de Qutai una vez confirmada la compra. Solo sirven para pagar las solicitudes ' +
+            'del asistente en Qutai, a los precios en créditos indicados para cada modelo; lo que costó cada ' +
+            'respuesta se muestra debajo de ella. Una solicitud primero reserva lo máximo que podría costar y ' +
+            'devuelve lo que no usó. Los créditos pertenecen a su cuenta de Qutai, pueden usarse en cualquier ' +
+            'teléfono en el que usted inicie sesión, no pueden transferirse ni canjearse por dinero y no se ' +
+            'reembolsan, salvo cuando lo exijan la ley o las normas de reembolso de la tienda; los reembolsos los ' +
+            'gestionan Apple o Google. Si se reembolsa una compra, sus créditos se retiran, lo que puede dejar el ' +
+            'saldo en negativo hasta que usted lo recargue. Los modelos, los precios en créditos y los límites ' +
+            'pueden cambiar; los vigentes se muestran en la app antes de que usted los use. Qutai Credits puede ' +
+            'pausarse por mantenimiento o no estar disponible en algunos momentos.',
+        },
+        {
+          heading: 'Su cuenta',
+          body:
+            'Mantenga seguro su inicio de sesión (Apple, Google o su correo electrónico); lo que se haga con su ' +
+            'cuenta es su responsabilidad. Podemos suspender una cuenta que incumpla estas condiciones. Si elimina ' +
+            'su cuenta, se pierden los créditos que le queden.',
+        },
+        {
+          heading: 'El asistente actúa en su nombre',
+          body: ASSISTANT_BODY,
+        },
+        {
+          heading: 'Uso aceptable',
+          body:
+            'No use Qutai ni Qutai Credits para infringir la ley, para incumplir las condiciones de los sitios web o ' +
+            'de los proveedores de IA, para perjudicar a otras personas (por ejemplo, enviando spam o recopilando ' +
+            'datos de terceros) ni para hacer un uso indebido del servidor de Qutai o sobrecargarlo.',
+        },
+        {
+          heading: 'Sitios web y contenido',
+          body: WEBSITES_BODY,
+        },
+        {
+          heading: 'Sin garantía',
+          body: WARRANTY_BODY,
+        },
+        {
+          heading: 'Cambios',
+          body: TERMS_CHANGES,
+        },
+      ],
+    },
+  },
+};

@@ -2454,7 +2454,6 @@ export const ru: Record<keyof typeof en, string> = {
   'settings.languageHintIos': 'iOS хранит язык Qutai в приложении «Настройки», где он также применяется к запросам разрешений и быстрым действиям на экране «Домой». При изменении там Qutai перезапускается.',
   'settings.languageOpenIos': 'Изменить в настройках iOS',
   'settings.languageNeedsBuild': 'Для выбора языка нужна более новая сборка Qutai. До тех пор Qutai использует язык телефона.',
-  'legal.englishOnly': 'Этот документ доступен на английском и турецком языках. Ниже показана английская версия.',
   'action.requestApproval': "Просит вас одобрить отправку",
   'action.requestApprovalPay': "Просит вас одобрить оплату",
   'action.requestApprovalChange': "Просит вас одобрить изменение",

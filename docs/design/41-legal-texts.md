@@ -6,30 +6,30 @@ The privacy policy and terms of use shown in the app (one set for the open-sourc
 
 ## How it works
 
-1. There are two documents, a Privacy Policy and Terms of Use. People wrote them in English and Turkish; there is no machine translation. In the other eight interface languages the English text appears under the note "This document is available in English and Turkish. The English version is shown below."
+1. There are two documents, a Privacy Policy and Terms of Use, in all ten interface languages. English and Turkish are the originals. German, Spanish, Brazilian Portuguese, French, Japanese, Korean, Russian and Indonesian are machine translations from English (20 Nov 2026, not yet reviewed by native speakers or a lawyer) in `src/legal/translations/`, loaded only when that language is shown; each ends its "Changes" section with a sentence saying the English version prevails if the translation differs. No language shows English with a note any more.
 2. Each build type has its own pair. The open-source build uses `src/legal/documents.ts`, which says Qutai has no servers of its own. Pro-mode builds (with accounts and Qutai Credits) use `src/legal/proDocuments.ts`, which describes the account, credits, purchases, server backups, who processes data, how long it is kept, and who is responsible, with a contact address.
-3. Each pair has a version number. Today the open-source version is **3** and the pro version is **5**, both dated 19 Nov 2026.
+3. Each pair has a version number. Today the open-source version is **4** and the pro version is **6**, both dated 20 Nov 2026.
 4. The first time Qutai is set up, the "Privacy and terms" step must be accepted. Qutai stores the version that was accepted.
 5. On each launch, if the accepted version is lower than the current one, Qutai shows only the legal step, titled "We updated our privacy policy and terms". The browser stays closed until the user accepts.
 6. A change to the pro texts never asks users of the open-source build again, and a change to the open-source texts never asks pro users again.
 7. Ad-blocking filter lists are downloaded only after the user has accepted the terms at least once.
 8. Settings › About opens the full texts with their "Updated" date, and Settings › About › Open source licences lists every third-party component in the app (134 entries) with its version, licence and platform. The list is searchable, and tapping an entry shows the full licence text.
 9. Version history:
-   - Open source: 1 on 14 Nov, 2 on 16 Nov (what actually leaves the phone, and what the app enforces about passwords, cards, IBANs and ID numbers), 3 on 19 Nov (contacts, page styles, the cookie list).
-   - Pro: 2 on 16 Nov (its own texts), 3 on 17 Nov (server backups), 4 on 17 Nov (who is responsible, contact, sign-in by email, purchases, processors, IP addresses and logs, retention, security), 5 on 19 Nov (contacts).
+   - Open source: 1 on 14 Nov, 2 on 16 Nov (what actually leaves the phone, and what the app enforces about passwords, cards, IBANs and ID numbers), 3 on 19 Nov (contacts, page styles, the cookie list), 4 on 20 Nov (option-card pictures loaded from sites, the Turkish spelling of suffixes on the name, the eight translations, the contacts example in each language's own name).
+   - Pro: 2 on 16 Nov (its own texts), 3 on 17 Nov (server backups), 4 on 17 Nov (who is responsible, contact, sign-in by email, purchases, processors, IP addresses and logs, retention, security), 5 on 19 Nov (contacts), 6 on 20 Nov (as open source 4, and "sign-in tokens" spelled out where the server's logs are described).
 
 ## The rules
 
 - **`LEGAL-1`** Anyone whose accepted legal version is lower than the current one must accept again before the browser opens.
   Status: Default (manager or implementing session; open to change) · Why: users must have accepted the current text · Enforced: In the app: App.tsx (`onboarding` = not onboarded or `legalAcceptedVersion < LEGAL_VERSION`), src/components/Onboarding.tsx (`legalOnly`, stores `legalAcceptedVersion: LEGAL_VERSION`), src/storage/settings.ts (default 0) · Source: src/legal/documents.ts (comment above `OPEN_SOURCE_LEGAL_VERSION`)
-- **`LEGAL-2`** Today the open-source legal version is 3 and the pro legal version is 5, both dated 2026-11-19.
-  Status: Owner, 2026-11-19 · Why: the owner approved the bump for the new contacts section, which also covered page styles and the cookie list · Enforced: In the app: src/legal/documents.ts (`OPEN_SOURCE_LEGAL_VERSION`, `PRO_LEGAL_VERSION`, `LEGAL_VERSION`, `LEGAL_UPDATED`), src/legal/proDocuments.ts (`PRO_LEGAL_UPDATED`) · Source: 040c537
+- **`LEGAL-2`** Today the open-source legal version is 4 and the pro legal version is 6, both dated 2026-11-20.
+  Status: Owner, 2026-11-20 ("yasal sürüm artışı yap") · Why: one bump for the option-card pictures, the Turkish spelling of the name's suffixes, the eight translations and the localised contacts example; before it, 3 / 5 for the contacts section (19 Nov) · Enforced: In the app: src/legal/documents.ts (`OPEN_SOURCE_LEGAL_VERSION`, `PRO_LEGAL_VERSION`, `LEGAL_VERSION`, `LEGAL_UPDATED`), src/legal/proDocuments.ts (`PRO_LEGAL_UPDATED`) · Source: 040c537
 - **`LEGAL-3`** Pro-mode builds show their own texts with their own version, and changing one set never re-asks users of the other build.
   Status: Default (manager or implementing session; open to change) · Why: the pro texts describe a server, an account, credits and purchases that the open-source build does not have · Enforced: In the app: src/legal/documents.ts (`LEGAL_VERSION` chosen by `accountsEnabled`, `legalDocument`) · Source: 1e08428
 - **`LEGAL-4`** The version goes up when the policy or terms change in substance. Only the owner decides a bump: a session that changes the wording writes "Legal version NOT bumped" and leaves it.
   Status: Owner, 2026-11-19 · Why: every bump interrupts every user with a re-acceptance screen, so it is the owner's call ("needs the owner's bump") · Source: 9c4ef02, cc45a62, 589d311, 040c537
-- **`LEGAL-5`** Today the privacy policies (en and tr, open source and pro) already list "the result of a script you approved on a page" among what the AI receives, but the version was not raised for it, so users have not been asked to accept it.
-  Status: Waiting for the owner ([TODO.md](../../TODO.md#decisions-waiting-for-the-owner-collected-17-nov-2026)) · Why: left for the owner on purpose (LEGAL-4) · Source: 589d311; TODO.md › Page customisation, step two — owner decisions
+- **`LEGAL-5`** The privacy policies' "the result of a script you approved on a page" (in the texts since 589d311) is covered by the bump to open source 4 / pro 6, so every user has now been asked to accept it.
+  Status: Owner, 2026-11-20 (changed: until then the sentence was in the texts without a bump) · Why: the owner's bump of 20 Nov covers every wording added since the last accepted version · Source: 589d311; this bump
 - **`LEGAL-6`** Today the privacy policies do not mention apps inside Qutai. The proposed sentence: apps are stored only on the phone, and an app's code (not its data) and its error messages go to the AI provider when the user asks Qutai to make or fix it.
   Status: Waiting for the owner ([TODO.md](../../TODO.md#decisions-waiting-for-the-owner-collected-17-nov-2026)) · Why: reason not recorded · Source: TODO.md › Apps inside Qutai — owner decisions
 - **`LEGAL-7`** The legal texts describe only what the app actually does, checked against the code. When something about what leaves the phone changes, the text changes and the version goes up.
@@ -48,14 +48,16 @@ The privacy policy and terms of use shown in the app (one set for the open-sourc
   Status: Waiting for the owner ([TODO.md](../../TODO.md#qutai-credits-paid-usage)) · Why: the texts are not legal advice. The first commit already called them drafts needing legal review · Source: 72302a6; TODO.md › Other ("Before release: legal review"); owner's open question 21
 - **`LEGAL-11`** Today the pro terms say that credits have no cash value, cannot be transferred, are refunded only as the law or the store requires (a refund can make the balance negative), and are lost when the account is deleted. Whether credits expire is left out on purpose.
   Status: Waiting for the owner ([TODO.md](../../TODO.md#qutai-credits-paid-usage)) · Why: a session wrote these business terms. The owner asked to confirm or change them later (open questions 4 and 5) · Source: 1e08428; src/legal/proDocuments.ts (Qutai Credits); owner's open questions note
-- **`LEGAL-12`** The legal texts exist only in English and Turkish. The other eight languages show English with a translated note. Today there are no human translations.
-  Status: Waiting for the owner ([TODO.md](../../TODO.md#other)) · Why: legal texts are not machine-translated. The TODO says to translate after the lawyer's review, if wanted (open question 25) · Enforced: In the app: src/legal/documents.ts (`legalDocument`, `englishOnly`) · Source: TODO.md › Other
+- **`LEGAL-12`** The legal texts exist in all ten interface languages. English and Turkish are originals; the other eight are machine translations from English with the same sections in the same order, and each says, at the end of its "Changes" section, that the English version prevails if the translation differs. Names, addresses, product names and numbers stay as in English; "Qutai Credits" stays in English. The contacts example uses a common name of each language (the names setup uses). Nothing falls back to English.
+  Status: Owner, 2026-11-20 (changed: until then the other eight languages showed English with a note) · Why: the owner asked for the translations ("yasal metinleri çevir"); they are unreviewed, so a native or legal read before a public launch is recommended (LEGAL-10) · Enforced: Test: scripts/i18n-tests/legal.test.ts (same sections, bullets, line breaks, names and numbers in every language, no English left in, the prevail sentence, no fallback); In the app: src/legal/documents.ts (`legalDocument`, `legalDocumentFor`) · Source: owner's request, 20 Nov 2026
 - **`LEGAL-13`** Turkish legal texts address the user as "siz". Short button labels keep the bare imperative ("Kabul et ve devam et").
   Status: Owner, 2026-11-16 · Why: the app mixed "sen" and "siz", and the owner picked "siz" · Source: 9cea977; owner's memory note on Turkish "siz"
 - **`LEGAL-14`** Ad-blocking filter lists are downloaded only after the terms have been accepted at least once.
   Status: Default (manager or implementing session; open to change) · Why: a download to a third party should happen only after the user has seen the policy that describes it · Enforced: In the app: src/components/SettingsModal.tsx (`allowed={settings.blockAds && settings.legalAcceptedVersion > 0}`) · Source: e677bac
 - **`LEGAL-15`** Settings › About › Open source licences lists every third-party component whose code or assets ship in the app, with its full licence text. The list (`src/legal/licences.json`) is committed and generated again by hand (`node scripts/generate-licences.js`) after a dependency is added, removed or upgraded.
   Status: Default (manager or implementing session; open to change) · Why: licences require their notices to ship. The list is built from the real Android and iOS bundles, the autolinked native modules and a manual list (PDF.js decoders, SQLite, Skia and its libraries, Gradle and CocoaPods libraries), so nothing shipped is missed · Source: 2275af2; README.md › License
+- **`LEGAL-19`** Turkish is an original next to English and does not say that English prevails. Whether it should (the operator is in Turkey, where Turkish consumer law may expect a Turkish text that binds) is open.
+  Status: Waiting for the owner · Why: changing which text binds is the owner's (and a lawyer's) call; the translation session left Turkish's standing as it was · Enforced: Test: scripts/i18n-tests/legal.test.ts (Turkish's last section has no prevail sentence) · Source: owner's request of 20 Nov 2026 (translations)
 - **`LEGAL-18`** Qutai's code is Apache-2.0. The licence does not cover the Qutai name, logo or icons, and trademark statements do not name an owner.
   Status: Default (manager or implementing session; open to change) · Why: forks may reuse the code but must not pass themselves off as Qutai · Source: a7884fd, e966c69, 8a61c46; TRADEMARKS.md
 
@@ -68,13 +70,15 @@ The privacy policy and terms of use shown in the app (one set for the open-sourc
 
 ## Limits and what is not built
 
-- (in progress) Wording on approved scripts (LEGAL-5) and on apps (LEGAL-6) is not yet covered by a version bump.
+- (in progress) Wording on apps (LEGAL-6) is not yet in the texts.
+- The eight translations are machine translations, not reviewed by native speakers or a lawyer (LEGAL-12).
 - (planned) Lawyer review, store privacy labels and the Google Play Data safety form.
 - Licences: Gradle's transitive libraries are not listed (no Android SDK on the machine that generated the list), two Expo Android libraries' licences are unconfirmed, and the screen has not been tried on a phone.
 
 ## Where it lives
 
-- `src/legal/documents.ts`, `src/legal/proDocuments.ts`, `src/legal/licences.json`
+- `src/legal/documents.ts`, `src/legal/proDocuments.ts`, `src/legal/translations/` (eight languages), `src/legal/licences.json`
+- `scripts/i18n-tests/legal.test.ts`
 - `src/components/LegalScreen.tsx`, `src/components/LicencesScreen.tsx`, `src/components/Onboarding.tsx`, `App.tsx`
 - `scripts/generate-licences.js`, `scripts/licences-manual.js`, `scripts/licences/`
 - Read next: README.md › License; TODO.md › Decisions waiting for the owner

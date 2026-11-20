@@ -879,3 +879,15 @@ derlenen APK ile deneyin. Yavaş sayfa ve form için yerel sunucu: `node scripts
 - [ ] Dokunmadan açılan açılır pencereler: iki platform da sessizce engelliyor ve uygulamaya haber vermiyor, bu yüzden
       bildirim eklenmedi; `http://localhost:8823/popup` sayfasında kendiliğinden açılan pencere açılmamalı, düğmeyle
       açılan açılmalı.
+
+## 29. Yasal metinler on dilde, yasal sürüm artışı (20 Kasım; açık kaynak 4, pro 6; telefonda denenmedi)
+
+- [ ] Güncellemeden sonra uygulamayı açın: tarayıcıdan önce yalnızca "Gizlilik politikamızı ve koşullarımızı
+      güncelledik" adımı bir kez gelmeli; kabul edince tarayıcı açılmalı, sonraki açılışta bir daha sorulmamalı.
+- [ ] Uygulama dilini Almanca, Japonca ve Rusça yapıp (Ayarlar › Dil) Ayarlar › Hakkında'dan Gizlilik Politikası'nı ve
+      Kullanım Koşulları'nı açın: metin o dilde olmalı, üstte "İngilizce gösteriliyor" notu olmamalı; en sondaki
+      "Değişiklikler" bölümünün son cümlesi İngilizce sürümün geçerli olduğunu söylemeli. Kişiler bölümündeki örnek
+      o dilin adıyla olmalı (Thomas, 健太, Сергей).
+- [ ] Küçük ekranlı bir telefonda (ya da en büyük yazı boyutunda) Japonca ve Almanca metinde en sona kadar kaydırın:
+      kesilen ya da üst üste binen satır olmamalı.
+- [ ] Türkçe metin önceki gibi olmalı (İngilizce'nin geçerli olduğunu söyleyen cümle yok).

@@ -2455,7 +2455,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'settings.languageHintIos': 'O iOS guarda o idioma do Qutai no app Ajustes, onde ele também vale para os pedidos de permissão e as ações rápidas da Tela de Início. O Qutai é reiniciado quando você o muda lá.',
   'settings.languageOpenIos': 'Alterar nos Ajustes do iOS',
   'settings.languageNeedsBuild': 'Escolher um idioma requer uma versão mais recente do Qutai. Até lá, o Qutai segue o idioma do celular.',
-  'legal.englishOnly': 'Este documento está disponível em inglês e turco. A versão em inglês é mostrada abaixo.',
   'action.requestApproval': "Pedindo que você aprove o envio",
   'action.requestApprovalPay': "Pedindo que você aprove o pagamento",
   'action.requestApprovalChange': "Pedindo que você aprove a alteração",

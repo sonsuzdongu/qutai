@@ -31,7 +31,6 @@ function LegalContent({ kind, onClose }: { kind: LegalKind; onClose: () => void 
         </Pressable>
       </View>
       <ScrollView contentContainerStyle={styles.content}>
-        {doc.englishOnly && <Text style={styles.notice}>{t('legal.englishOnly')}</Text>}
         <Text style={styles.updated}>{t('legal.updated', { date: formatDate(new Date(LEGAL_UPDATED)) })}</Text>
         <Text style={styles.body}>{doc.intro}</Text>
         {doc.sections.map((section) => (
@@ -63,7 +62,6 @@ const useStyles = makeStyles((c) => ({
   done: { color: c.tintText, fontSize: 16, fontWeight: '600' },
   content: { padding: 20, gap: 14, maxWidth: 680, alignSelf: 'center', width: '100%' },
   updated: { color: c.textSecondary, fontSize: 13 },
-  notice: { color: c.text, fontSize: 15, lineHeight: 22, fontWeight: '600' },
   section: { gap: 6, marginTop: 6 },
   heading: { color: c.text, fontSize: 16, fontWeight: '700' },
   body: { color: c.text, fontSize: 15, lineHeight: 22 },
