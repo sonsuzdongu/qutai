@@ -53,6 +53,10 @@ object PictureInPicture {
   private const val TAG = "QutaiMedia"
   private const val ACTION_TOGGLE = "expo.modules.qutaimedia.PIP_PLAY_PAUSE"
   private const val MAX_RATIO = 2.39
+  private const val RATIO_SCALE = 10000
+  /** ceil(10000 / 2.39) and floor(10000 * 2.39): the limits as fractions of RATIO_SCALE, never outside Android's. */
+  private const val MIN_RATIO_PARTS = 4185
+  private const val MAX_RATIO_PARTS = 23900
   /** An inline video smaller than this (dp, its visible width) isn't offered (a thumbnail, an ad corner). */
   private const val MIN_INLINE_DP = 120
 
@@ -164,7 +168,10 @@ object PictureInPicture {
     val state = target?.state
     if (state != null && state.videoWidth > 0 && state.videoHeight > 0) {
       val r = (state.videoWidth.toDouble() / state.videoHeight).coerceIn(1 / MAX_RATIO, MAX_RATIO)
-      ratio = Rational((r * 1000).toInt(), 1000)
+      // Android accepts ratios from 1:2.39 to 2.39:1 inclusive and throws outside them. Truncating to thousandths put
+      // the lower limit (0.41841…) at 0.418, just outside, so no tall video could enter picture-in-picture: round, and
+      // keep the fraction itself inside the limits.
+      ratio = Rational(Math.round(r * RATIO_SCALE).toInt().coerceIn(MIN_RATIO_PARTS, MAX_RATIO_PARTS), RATIO_SCALE)
     }
     if (!active) pipView = target?.let { WeakReference(it.view) }
     val ok = allowed && target != null

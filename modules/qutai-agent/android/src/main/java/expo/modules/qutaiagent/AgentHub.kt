@@ -390,11 +390,11 @@ object AgentHub {
     // On the lock screen only a generic line; the task and its result show once the phone is unlocked.
     val public = (if (Build.VERSION.SDK_INT >= 26) Notification.Builder(ctx, ALERT_CHANNEL_ID) else
       @Suppress("DEPRECATION") Notification.Builder(ctx))
-      .setSmallIcon(ctx.applicationInfo.icon)
+      .setSmallIcon(R.drawable.qutai_agent_ic_notification)
       .setContentTitle(l.publicAlert)
       .build()
     val notification = builder
-      .setSmallIcon(ctx.applicationInfo.icon)
+      .setSmallIcon(R.drawable.qutai_agent_ic_notification)
       .setContentTitle(alertTitle)
       .setContentText(alertText)
       .setStyle(Notification.BigTextStyle().bigText(alertText))

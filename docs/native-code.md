@@ -172,7 +172,12 @@ plugins named; nothing in `android/` or `ios/` is edited by hand.
   playing" off, press Home: it pauses within about a second. A video full screen, press Home: a PiP window whose
   play/pause works; closing it pauses. In an incognito tab: the notification says "Private tab", no PiP.
 
-### Known problems found while writing this (20 Nov 2026, not fixed)
+### Known problems found while writing this (20 Nov 2026)
+
+The two clear bugs below were fixed on 20 Nov 2026 (version 0.1.4): the assistant's notifications use the flat
+drawable `qutai_agent_ic_notification` (qutai-agent `res/drawable`), and the picture-in-picture ratio is rounded and
+kept inside Android's limits as a fraction (`MIN_RATIO_PARTS`, `MAX_RATIO_PARTS`). Neither has been seen on a phone
+yet. The descriptions stay as the record of what was wrong.
 
 Clear bugs:
 

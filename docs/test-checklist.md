@@ -756,3 +756,10 @@ betik dağıtmaz, adresiniz yoksa panel sizi de içeri almaz.
       per web search" ile ayarlayabilirsiniz (`CRED-14`).
 - [ ] Sonraki mağaza paketi (`npm run build:aab -- --pro-mode`): paket betiği sonunda paketi denetliyor; test girişi
       sırrı ya da test girişi değişkeni pakette olursa "not fit to ship" diyerek durur (`BUILD-9`).
+
+## 25. Yerel Android düzeltmeleri (20 Kasım, 0.1.4)
+
+Kod okunarak bulundu, derlemede denetlendi; telefonda görülmedi.
+
+- [ ] Asistan bildirimi: bir görev başlatıp uygulamadan çıkın. Durum çubuğundaki küçük simge beyaz bir leke değil, üç yıldızlı asistan simgesi olmalı; bildirim açılınca başlık ve adım görünmeli. Görev bitince ve asistan soru sorunca gelen bildirimlerde de aynı simge olmalı. Mümkünse Android 8 ya da 8.1 bir cihazda da deneyin (eski simge orada çökme nedeni olabiliyordu).
+- [ ] Pencere içinde pencere: çok uzun (dikey, 9:21'den dar) bir videoyu oynatırken ana ekrana dönün; video küçük pencerede sürmeli. Normal yatay ve dikey videolarda davranış değişmemeli.

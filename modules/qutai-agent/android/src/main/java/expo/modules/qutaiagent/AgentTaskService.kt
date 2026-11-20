@@ -101,7 +101,7 @@ class AgentTaskService : Service() {
     val title = AgentHub.title
     val heading = if (title.isNullOrBlank()) labels.workingPublic else formatWorking(labels.working, title)
     val public = newBuilder()
-      .setSmallIcon(applicationInfo.icon)
+      .setSmallIcon(R.drawable.qutai_agent_ic_notification)
       .setContentTitle(labels.workingPublic)
       .build()
     val open = AgentHub.openAppIntent(this)
@@ -110,7 +110,7 @@ class AgentTaskService : Service() {
       PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
     val builder = newBuilder()
-      .setSmallIcon(applicationInfo.icon)
+      .setSmallIcon(R.drawable.qutai_agent_ic_notification)
       .setContentTitle(heading)
       .setContentText(AgentHub.step)
       .setContentIntent(open)
@@ -139,7 +139,7 @@ class AgentTaskService : Service() {
       this, AgentHub.CHANNEL_ID, labels.channel, NotificationManager.IMPORTANCE_LOW, Notification.VISIBILITY_PRIVATE,
     )
     val builder = newBuilder()
-      .setSmallIcon(applicationInfo.icon)
+      .setSmallIcon(R.drawable.qutai_agent_ic_notification)
       .setContentTitle(labels.finishing)
       .setOngoing(true)
       .setOnlyAlertOnce(true)
