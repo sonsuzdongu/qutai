@@ -16,14 +16,19 @@
  *   EXPO_PUBLIC_QUTAI_API_URL   the server a pro-mode build talks to (required with --pro-mode)
  *   QUTAI_APPLE_TEAM_ID         the Apple Developer team that signs the IPA (required for the IPA)
  *
- * The Google client ids come from .env as in every build. A pro-mode package never carries the test sign-in: the
- * EXPO_PUBLIC_DEV_LOGIN variables are removed even if the shell has them.
+ * The Google client ids come from .env as in every build. No package carries the test sign-in: the build sets
+ * EXPO_PUBLIC_DEV_LOGIN to "off" and EXPO_PUBLIC_DEV_LOGIN_SECRET (and, for a plain build, EXPO_PUBLIC_QUTAI_API_URL) to
+ * empty in its own environment, which Expo's .env loading never overrides (deleting them, as before 20 Nov 2026, let
+ * a .env value win). After the build the bundle is checked (bundleCheck.mjs): no test sign-in secret (any value the
+ * shell or a .env file has) and no runtime reference to the test sign-in variables; the server's host in a pro
+ * bundle and no server address in a plain one. Otherwise nothing is written to builds/.
  */
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { bundleProblems, hostOf } from './bundleCheck.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const args = process.argv.slice(2);
@@ -64,8 +69,9 @@ if (String(build) !== String(app.ios.buildNumber)) {
 }
 
 const env = { ...process.env, EXPO_PUBLIC_PRO_MODE: pro ? 'on' : 'off' };
-delete env.EXPO_PUBLIC_DEV_LOGIN;
-delete env.EXPO_PUBLIC_DEV_LOGIN_SECRET;
+// Set, not deleted: Expo fills only variables that are missing from the environment from .env files.
+env.EXPO_PUBLIC_DEV_LOGIN = 'off';
+env.EXPO_PUBLIC_DEV_LOGIN_SECRET = '';
 let apiHost = null;
 if (pro) {
   const api = value('EXPO_PUBLIC_QUTAI_API_URL');
@@ -75,7 +81,7 @@ if (pro) {
   env.EXPO_PUBLIC_QUTAI_API_URL = api;
   apiHost = new URL(api).host;
 } else {
-  delete env.EXPO_PUBLIC_QUTAI_API_URL;
+  env.EXPO_PUBLIC_QUTAI_API_URL = '';
 }
 const team = value('QUTAI_APPLE_TEAM_ID');
 if (kind === 'ipa' && !/^[A-Z0-9]{10}$/.test(team)) {
@@ -92,13 +98,24 @@ function run(command, commandArgs, cwd = root) {
   if (result.status !== 0) stop(`${command} failed (${result.status ?? result.signal}). Nothing was written to builds/.`);
 }
 
-/** The package really is what was asked for: the server's host is in a pro bundle and absent from a plain one. */
+/**
+ * The package really is what was asked for (bundleCheck.mjs): the server's host in a pro bundle and no server address
+ * in a plain one; no test sign-in secret and no runtime reference to the test sign-in variables in either.
+ */
 function checkBundle(archive, entry) {
   if (dry) return;
   const listed = spawnSync('unzip', ['-p', archive, entry], { maxBuffer: 512 * 1024 * 1024 });
   if (listed.status !== 0 || !listed.stdout.length) stop(`Could not read the JavaScript bundle (${entry}) in ${archive}.`);
-  const found = apiHost !== null && listed.stdout.includes(Buffer.from(apiHost));
-  if (pro && !found) stop('The JavaScript bundle does not contain the server address: this is not a pro-mode build. Nothing was written to builds/.');
+  // Every place a value could have come from: the shell and the .env files Expo reads (values stay in memory).
+  const dotenv = ['.env', '.env.local', '.env.production', '.env.production.local'].map(envFile);
+  const all = (key) => [process.env[key], ...dotenv.map((f) => f[key])].filter(Boolean);
+  const problems = bundleProblems(listed.stdout, {
+    pro,
+    apiHost,
+    serverHosts: [value('EXPO_PUBLIC_QUTAI_API_URL'), ...all('EXPO_PUBLIC_QUTAI_API_URL')].map(hostOf),
+    secrets: all('EXPO_PUBLIC_DEV_LOGIN_SECRET').map((v) => ({ name: 'EXPO_PUBLIC_DEV_LOGIN_SECRET', value: v })),
+  });
+  if (problems.length) stop(`The JavaScript bundle is not fit to ship: ${problems.join('; ')}. Nothing was written to builds/.`);
 }
 
 function keep(from) {
