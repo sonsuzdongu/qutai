@@ -19,7 +19,8 @@ export const ptBR: LegalTranslation = {
             'assistente (incluindo suas respostas às perguntas opcionais da configuração inicial e o formulário de ' +
             'endereço), suas instruções personalizadas, o histórico de ações do assistente e suas conversas são ' +
             'armazenados somente neste dispositivo. As chaves de API são mantidas no armazenamento criptografado do ' +
-            'celular. As guias anônimas não gravam nada no disco; suas conversas não são salvas.',
+            'celular. As guias anônimas não salvam nada no celular, exceto os arquivos que você baixar nelas; ' +
+            'suas conversas não são salvas.',
         },
         {
           heading: 'O que sai do seu celular, e para quem',
@@ -34,8 +35,10 @@ export const ptBR: LegalTranslation = {
             'imagens que você anexa, o resultado de um script que você aprovou em uma página e, quando você pergunta ' +
             'sobre cookies, seus nomes, sites e configurações, nunca seus valores), suas instruções personalizadas ' +
             'e, enquanto a memória estiver ativada, suas memórias (memórias ocultas, como números de documentos de ' +
-            'identidade, apenas como um rótulo). Seus eventos de calendário e sua localização são enviados somente ' +
-            'quando você confirma, a cada vez. Se a pesquisa na web estiver ativada, o serviço pode fazer pesquisas ' +
+            'identidade, apenas como um rótulo). Seus eventos de calendário e sua localização são enviados somente quando você confirma, a ' +
+            'cada vez, a menos que você tenha escolhido “Não perguntar mais” para eles (você pode ' +
+            'desfazer isso em Configurações › Assistente › “Permitido sem perguntar”); em conversas ' +
+            'com guias anônimas, eles nunca são usados. Se a pesquisa na web estiver ativada, o serviço pode fazer pesquisas ' +
             'para você. A política de privacidade e os termos desse serviço se aplicam a esses dados.\n' +
             '• Se as sugestões de pesquisa estiverem ativadas, o que você digita na barra de endereço é enviado ao ' +
             'seu mecanismo de pesquisa (nunca a partir de guias anônimas).\n' +
@@ -81,8 +84,8 @@ export const ptBR: LegalTranslation = {
           heading: 'Seu controle',
           body:
             'Você pode ver e excluir a memória do assistente, limpar o histórico, os cookies e outros dados em ' +
-            'Configurações, e remover suas chaves de API a qualquer momento. Desinstalar o Qutai exclui tudo o que ' +
-            'ele armazenou.',
+            'Configurações, e remover suas chaves de API a qualquer momento. Desinstalar o Qutai exclui tudo o que ele armazenou, exceto os arquivos que você salvou ' +
+            'fora dele, como downloads na pasta Downloads do Android e imagens salvas nas suas Fotos.',
         },
         {
           heading: 'Crianças',
@@ -162,8 +165,8 @@ export const ptBR: LegalTranslation = {
             'Suas guias, histórico, favoritos, páginas salvas, downloads, permissões de sites, a memória do ' +
             'assistente, o histórico de ações dele e suas conversas são armazenados somente neste dispositivo, ' +
             'também quando você está conectado à sua conta, a menos que você faça backup deles na sua conta Qutai ' +
-            '(veja abaixo). As chaves de API e seu login são mantidos no armazenamento criptografado do celular. As ' +
-            'guias anônimas não gravam nada no disco; suas conversas não são salvas.',
+            '(veja abaixo). As chaves de API e seu login são mantidos no armazenamento criptografado do celular. As guias anônimas não salvam nada no celular, exceto os arquivos que você baixar nelas; ' +
+            'suas conversas não são salvas.',
         },
         {
           heading: 'O que sai do seu celular, e para quem',
@@ -175,8 +178,10 @@ export const ptBR: LegalTranslation = {
             'um script que você aprovou em uma página, quando você pergunta sobre cookies seus nomes, sites e ' +
             'configurações, mas nunca seus valores, sua memória e suas instruções personalizadas) vão diretamente ' +
             'para o provedor de IA que você escolheu (Anthropic, OpenAI, Google, OpenRouter ou seu próprio ' +
-            'servidor). O servidor do Qutai não participa. Seus eventos de calendário e sua localização são enviados ' +
-            'somente quando você confirma, a cada vez.\n' +
+            'servidor). O servidor do Qutai não participa. Seus eventos de calendário e sua localização são enviados somente quando você confirma, a ' +
+            'cada vez, a menos que você tenha escolhido “Não perguntar mais” para eles (você pode ' +
+            'desfazer isso em Configurações › Assistente › “Permitido sem perguntar”); em conversas ' +
+            'com guias anônimas, eles nunca são usados.\n' +
             '• Com os Qutai Credits, o mesmo conteúdo vai primeiro para o servidor do Qutai, que o repassa ao ' +
             'provedor de IA (Anthropic, OpenAI ou Google) pela conta do próprio Qutai e envia a resposta de volta. O ' +
             'servidor do Qutai não armazena nem registra esse conteúdo. O app pergunta antes de você usar os Qutai ' +
@@ -292,7 +297,9 @@ export const ptBR: LegalTranslation = {
             'servidor do Qutai (os registros de compras permanecem sem o vínculo com você, como acima) e pede ao ' +
             'serviço de pagamentos que exclua o registro que tem sobre você. Você também pode escrever para ' +
             'osmanyuksel@gmail.com para pedir uma cópia do que o servidor do Qutai guarda sobre você, ou a correção ' +
-            'ou eliminação desses dados. Desinstalar o Qutai exclui tudo o que ele armazenou no celular.',
+            'ou eliminação desses dados. Desinstalar o Qutai exclui tudo o que ele armazenou no celular, exceto os arquivos que ' +
+            'você salvou fora dele, como downloads na pasta Downloads do Android e imagens salvas nas ' +
+            'suas Fotos.',
         },
         {
           heading: 'Segurança',

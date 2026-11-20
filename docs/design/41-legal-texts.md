@@ -40,8 +40,11 @@ The privacy policy and terms of use shown in the app (one set for the open-sourc
   - search suggestions are never sent from incognito tabs;
   - speech goes to an online speech service only after a one-time agreement, and never in incognito;
   - filter-list downloads carry nothing about the user's browsing;
-  - the assistant gets cookie names, sites and settings, never their values.
-  Status: Default (manager or implementing session; open to change) · Why: these are what the code does; see the privacy, AI and content sections for each enforcement point · Enforced: In the app: each claim in its own area (not repeated here) · Source: src/legal/documents.ts (`DOCUMENTS.en.privacy`)
+  - the assistant gets cookie names, sites and settings, never their values;
+  - calendar events and the location go to the AI only after the user confirms, each time, unless they chose "Don't ask again" for them (undone in Settings › Assistant › "Allowed without asking"); in conversations with incognito tabs they are never used (the pro policy says the same);
+  - incognito tabs save nothing on the phone except files downloaded from them, and their conversations are not saved;
+  - uninstalling deletes everything Qutai stored, except files saved outside it (downloads in Android's Downloads folder, pictures saved to the photos).
+  Status: Default (manager or implementing session; open to change); the last three changed by the owner on 2026-11-20 ("metni düzelt": the text follows the app) · Why: these are what the code does (until 20 Nov the texts said calendar and location were asked "each time" with no exception, incognito tabs "write nothing to disk" and uninstalling "deletes everything"); see the privacy, AI and content sections for each enforcement point · Enforced: In the app: each claim in its own area (not repeated here) · Source: src/legal/documents.ts (`DOCUMENTS.en.privacy`)
 - **`LEGAL-9`** Before Qutai's server goes live for everyone, every "no servers of ours" sentence in the onboarding, the legal texts, store listings and README must be rewritten and the legal version raised. Today pro builds already use their own texts without that claim, and the open-source build keeps it.
   Status: Waiting for the owner ([TODO.md](../../TODO.md#qutai-credits-paid-usage)) · Why: the claim is true for the open-source build, but not once requests can pass through Qutai's server · Source: 3f340ce; TODO.md › Qutai Credits (paid usage)
 - **`LEGAL-10`** A lawyer reviews the open-source and pro texts (KVKK/GDPR, Turkish consumer law on digital content) before any store release. Today they are unreviewed drafts written from the code.
@@ -56,8 +59,8 @@ The privacy policy and terms of use shown in the app (one set for the open-sourc
   Status: Default (manager or implementing session; open to change) · Why: a download to a third party should happen only after the user has seen the policy that describes it · Enforced: In the app: src/components/SettingsModal.tsx (`allowed={settings.blockAds && settings.legalAcceptedVersion > 0}`) · Source: e677bac
 - **`LEGAL-15`** Settings › About › Open source licences lists every third-party component whose code or assets ship in the app, with its full licence text. The list (`src/legal/licences.json`) is committed and generated again by hand (`node scripts/generate-licences.js`) after a dependency is added, removed or upgraded.
   Status: Default (manager or implementing session; open to change) · Why: licences require their notices to ship. The list is built from the real Android and iOS bundles, the autolinked native modules and a manual list (PDF.js decoders, SQLite, Skia and its libraries, Gradle and CocoaPods libraries), so nothing shipped is missed · Source: 2275af2; README.md › License
-- **`LEGAL-19`** Turkish is an original next to English and does not say that English prevails. Whether it should (the operator is in Turkey, where Turkish consumer law may expect a Turkish text that binds) is open.
-  Status: Waiting for the owner · Why: changing which text binds is the owner's (and a lawyer's) call; the translation session left Turkish's standing as it was · Enforced: Test: scripts/i18n-tests/legal.test.ts (Turkish's last section has no prevail sentence) · Source: owner's request of 20 Nov 2026 (translations)
+- **`LEGAL-19`** Turkish and English are both originals. Turkish does not say that English prevails; only the eight translations do.
+  Status: Owner, 2026-11-20 ("gerek yok") · Why: the owner decided no prevail sentence is needed in Turkish · Enforced: Test: scripts/i18n-tests/legal.test.ts (Turkish's last section has no prevail sentence) · Source: owner's answer of 20 Nov 2026
 - **`LEGAL-18`** Qutai's code is Apache-2.0. The licence does not cover the Qutai name, logo or icons, and trademark statements do not name an owner.
   Status: Default (manager or implementing session; open to change) · Why: forks may reuse the code but must not pass themselves off as Qutai · Source: a7884fd, e966c69, 8a61c46; TRADEMARKS.md
 
@@ -86,4 +89,4 @@ The privacy policy and terms of use shown in the app (one set for the open-sourc
 ## Disagreements between sources
 
 - TODO.md still lists the legal bump for the cookie wording, and the one for the contacts section, as "not done, on purpose". Both were done by 040c537 (open source 3, pro 5), so these TODO items are stale.
-- The open-source policy says calendar events and location "are sent only when you confirm, each time". Since 289a687 the user can tick "Don't ask again" for reading the calendar and the location, and Settings says the data then goes to the AI without asking. The code allows the standing permission, so the policy sentence is stricter than the app.
+- (Resolved 2026-11-20) The open-source policy says calendar events and location "are sent only when you confirm, each time". Since 289a687 the user can tick "Don't ask again" for reading the calendar and the location, and Settings says the data then goes to the AI without asking. The code allows the standing permission, so the policy sentence is stricter than the app. The texts now say what the app does (LEGAL-8).

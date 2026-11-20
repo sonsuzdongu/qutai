@@ -19,8 +19,8 @@ export const de: LegalTranslation = {
             'das Gedächtnis des Assistenten (einschließlich Ihrer Antworten auf die optionalen Einrichtungsfragen ' +
             'und des Adressformulars), Ihre eigenen Anweisungen, der Aktionsverlauf des Assistenten und Ihre ' +
             'Unterhaltungen werden nur auf diesem Gerät gespeichert. API-Schlüssel werden im verschlüsselten ' +
-            'Speicher des Telefons aufbewahrt. Inkognito-Tabs schreiben nichts auf den Datenträger; ihre ' +
-            'Unterhaltungen werden nicht gespeichert.',
+            'Speicher des Telefons aufbewahrt. Inkognito-Tabs speichern nichts auf dem Telefon außer Dateien, die Sie aus ihnen ' +
+            'herunterladen; ihre Unterhaltungen werden nicht gespeichert.',
         },
         {
           heading: 'Was Ihr Telefon verlässt, und an wen',
@@ -35,8 +35,10 @@ export const de: LegalTranslation = {
             'ansieht, Dateien und Bilder, die Sie anhängen, das Ergebnis eines Skripts, das Sie auf einer Seite ' +
             'zugelassen haben, und, wenn Sie nach Cookies fragen, deren Namen, Websites und Einstellungen, nie ' +
             'ihre Werte), Ihre eigenen Anweisungen und, solange das Gedächtnis eingeschaltet ist, Ihre ' +
-            'Gedächtniseinträge (verborgene Einträge, etwa Ausweisnummern, nur als Bezeichnung). Ihre ' +
-            'Kalendertermine und Ihr Standort werden nur gesendet, wenn Sie dies jedes Mal bestätigen. Wenn die ' +
+            'Gedächtniseinträge (verborgene Einträge, etwa Ausweisnummern, nur als Bezeichnung). Ihre Kalendertermine und Ihr Standort werden nur gesendet, wenn Sie dies jedes Mal ' +
+            'bestätigen, es sei denn, Sie haben dafür „Nicht mehr fragen“ gewählt (das können Sie ' +
+            'unter Einstellungen › Assistent › „Ohne Nachfrage erlaubt“ rückgängig machen); in ' +
+            'Unterhaltungen mit Inkognito-Tabs werden sie nie verwendet. Wenn die ' +
             'Websuche eingeschaltet ist, kann der Dienst für Sie Suchen durchführen. Für diese Daten gelten die ' +
             'Datenschutzerklärung und die Bedingungen dieses Dienstes.\n• Wenn Suchvorschläge eingeschaltet sind, ' +
             'wird das, was Sie in die Adressleiste eingeben, an Ihre Suchmaschine gesendet (nie aus ' +
@@ -84,8 +86,9 @@ export const de: LegalTranslation = {
           heading: 'Ihre Kontrolle',
           body:
             'Sie können das Gedächtnis des Assistenten einsehen und löschen, Verlauf, Cookies und andere Daten in ' +
-            'den Einstellungen löschen und Ihre API-Schlüssel jederzeit entfernen. Wenn Sie Qutai deinstallieren, ' +
-            'wird alles gelöscht, was die App gespeichert hat.',
+            'den Einstellungen löschen und Ihre API-Schlüssel jederzeit entfernen. Wenn Sie Qutai deinstallieren, wird alles gelöscht, was die App gespeichert hat, außer ' +
+            'Dateien, die Sie außerhalb der App gespeichert haben, etwa Downloads im Download-Ordner ' +
+            'von Android und Bilder, die Sie in Ihren Fotos gespeichert haben.',
         },
         {
           heading: 'Kinder',
@@ -172,8 +175,8 @@ export const de: LegalTranslation = {
             'das Gedächtnis des Assistenten, sein Aktionsverlauf und Ihre Unterhaltungen werden nur auf diesem ' +
             'Gerät gespeichert, auch wenn Sie angemeldet sind, es sei denn, Sie sichern sie in Ihrem Qutai-Konto ' +
             '(siehe unten). API-Schlüssel und Ihre Anmeldung werden im verschlüsselten Speicher des Telefons ' +
-            'aufbewahrt. Inkognito-Tabs schreiben nichts auf den Datenträger; ihre Unterhaltungen werden nicht ' +
-            'gespeichert.',
+            'aufbewahrt. Inkognito-Tabs speichern nichts auf dem Telefon außer Dateien, die Sie aus ihnen ' +
+            'herunterladen; ihre Unterhaltungen werden nicht gespeichert.',
         },
         {
           heading: 'Was Ihr Telefon verlässt, und an wen',
@@ -185,8 +188,10 @@ export const de: LegalTranslation = {
             'Ergebnis eines Skripts, das Sie auf einer Seite zugelassen haben, wenn Sie nach Cookies fragen, deren ' +
             'Namen, Websites und Einstellungen, aber nie ihre Werte, Ihr Gedächtnis und Ihre eigenen Anweisungen), ' +
             'direkt an den von Ihnen gewählten KI-Anbieter (Anthropic, OpenAI, Google, OpenRouter oder Ihren ' +
-            'eigenen Server). Qutais Server ist nicht beteiligt. Ihre Kalendertermine und Ihr Standort werden nur ' +
-            'gesendet, wenn Sie dies jedes Mal bestätigen.\n• Mit Qutai Credits gehen dieselben Inhalte zuerst an ' +
+            'eigenen Server). Qutais Server ist nicht beteiligt. Ihre Kalendertermine und Ihr Standort werden nur gesendet, wenn Sie dies jedes Mal ' +
+            'bestätigen, es sei denn, Sie haben dafür „Nicht mehr fragen“ gewählt (das können Sie ' +
+            'unter Einstellungen › Assistent › „Ohne Nachfrage erlaubt“ rückgängig machen); in ' +
+            'Unterhaltungen mit Inkognito-Tabs werden sie nie verwendet.\n• Mit Qutai Credits gehen dieselben Inhalte zuerst an ' +
             'Qutais Server, der sie unter Qutais eigenem Konto an den KI-Anbieter (Anthropic, OpenAI oder Google) ' +
             'weiterleitet und die Antwort zurücksendet. Qutais Server speichert oder protokolliert diese Inhalte ' +
             'nicht. Die App fragt nach, bevor Sie Qutai Credits zum ersten Mal verwenden.\n• Wenn die Websuche ' +
@@ -306,8 +311,10 @@ export const de: LegalTranslation = {
             'Guthaben und sein Verlauf von Qutais Server entfernt (Kaufdatensätze bleiben ohne Verbindung zu Ihnen ' +
             'erhalten, wie oben beschrieben), und der Zahlungsdienst wird gebeten, seinen Datensatz über Sie zu ' +
             'löschen. Sie können auch an osmanyuksel@gmail.com schreiben, um eine Kopie dessen, was Qutais Server ' +
-            'über Sie speichert (Auskunft), oder dessen Berichtigung oder Löschung zu verlangen. Wenn Sie Qutai ' +
-            'deinstallieren, wird alles gelöscht, was die App auf dem Telefon gespeichert hat.',
+            'über Sie speichert (Auskunft), oder dessen Berichtigung oder Löschung zu verlangen. Wenn Sie Qutai deinstallieren, wird alles gelöscht, was die App auf dem Telefon ' +
+            'gespeichert hat, außer Dateien, die Sie außerhalb der App gespeichert haben, etwa ' +
+            'Downloads im Download-Ordner von Android und Bilder, die Sie in Ihren Fotos gespeichert ' +
+            'haben.',
         },
         {
           heading: 'Sicherheit',

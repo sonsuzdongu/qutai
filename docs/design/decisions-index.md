@@ -84,7 +84,6 @@ The open questions, in one place (each row says what the app does today).
 | `LEGAL-9` | Before Qutai's server goes live for everyone, every "no servers of ours" sentence in the onboarding, the legal texts, store listings and… | [41](41-legal-texts.md) |
 | `LEGAL-10` | A lawyer reviews the open-source and pro texts (KVKK/GDPR, Turkish consumer law on digital content) before any store release. Today they… | [41](41-legal-texts.md) |
 | `LEGAL-11` | Today the pro terms say that credits have no cash value, cannot be transferred, are refunded only as the law or the store requires (a… | [41](41-legal-texts.md) |
-| `LEGAL-19` | Turkish is an original next to English and does not say that English prevails; whether it should is open. | [41](41-legal-texts.md) |
 | `WEB-11` | Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end sync, and the comparison's… | [42](42-website.md) |
 | `NOT-9` | Today there is no sync; whether a future sync must be end-to-end encrypted (so the server cannot read it) is open, recommended yes. | [44](44-not-built.md) |
 | `NOT-15` | Today there is no in-app "lock to portrait"; the system's rotation lock is used (section 29). | [44](44-not-built.md) |
@@ -1209,7 +1208,7 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | `LEGAL-5` | The privacy policies' "the result of a script you approved on a page" is covered by the bump to open source 4 / pro 6… | Owner | 2026-11-20 |
 | `LEGAL-6` | Today the privacy policies do not mention apps inside Qutai. The proposed sentence: apps are stored only… | **Waiting** |  |
 | `LEGAL-7` | The legal texts describe only what the app actually does, checked against the code. When something about… | Default |  |
-| `LEGAL-8` | The open-source policy promises: | Default |  |
+| `LEGAL-8` | The open-source policy promises: (calendar and location asked each time unless "Don't ask again"; incognito keeps only downloads;… | Default |  |
 | `LEGAL-9` | Before Qutai's server goes live for everyone, every "no servers of ours" sentence in the onboarding, the… | **Waiting** |  |
 | `LEGAL-10` | A lawyer reviews the open-source and pro texts (KVKK/GDPR, Turkish consumer law on digital content) before… | **Waiting** |  |
 | `LEGAL-11` | Today the pro terms say that credits have no cash value, cannot be transferred, are refunded only as the… | **Waiting** |  |
@@ -1217,7 +1216,7 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | `LEGAL-13` | Turkish legal texts address the user as "siz". Short button labels keep the bare imperative ("Kabul et ve… | Owner | 2026-11-16 |
 | `LEGAL-14` | Ad-blocking filter lists are downloaded only after the terms have been accepted at least once. | Default |  |
 | `LEGAL-15` | Settings › About › Open source licences lists every third-party component whose code or assets ship in the… | Default |  |
-| `LEGAL-19` | Turkish is an original next to English and does not say that English prevails; whether it should is open. | **Waiting** |  |
+| `LEGAL-19` | Turkish and English are both originals; Turkish does not say that English prevails, only the eight translations do. | Owner | 2026-11-20 |
 | `LEGAL-18` | Qutai's code is Apache-2.0. The licence does not cover the Qutai name, logo or icons, and trademark… | Default |  |
 
 Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`

@@ -20,8 +20,8 @@ export const fr: LegalTranslation = {
             'autorisations des sites, la mémoire de l’assistant (y compris vos réponses aux questions facultatives ' +
             'de configuration et le formulaire d’adresse), vos instructions personnalisées, l’historique des actions ' +
             'de l’assistant et vos conversations sont stockés uniquement sur cet appareil. Les clés API sont ' +
-            'conservées dans le stockage chiffré du téléphone. Les onglets privés n’écrivent rien sur le disque ; ' +
-            'leurs conversations ne sont pas enregistrées.',
+            'conservées dans le stockage chiffré du téléphone. Les onglets privés n’enregistrent rien sur le téléphone, sauf les fichiers que vous y ' +
+            'téléchargez ; leurs conversations ne sont pas enregistrées.',
         },
         {
           heading: 'Ce qui quitte votre téléphone, et vers qui',
@@ -37,8 +37,10 @@ export const fr: LegalTranslation = {
             'fichiers et images que vous joignez, le résultat d’un script que vous avez approuvé sur une page et, ' +
             'lorsque vous posez une question sur les cookies, leurs noms, leurs sites et leurs paramètres, jamais ' +
             'leurs valeurs), vos instructions personnalisées et, tant que la mémoire est activée, vos souvenirs (les ' +
-            'souvenirs masqués, comme les numéros d’identité, uniquement sous forme d’étiquette). Vos événements ' +
-            'd’agenda et votre position ne sont envoyés que lorsque vous le confirmez, à chaque fois. Si la ' +
+            'souvenirs masqués, comme les numéros d’identité, uniquement sous forme d’étiquette). Vos événements d’agenda et votre position ne sont envoyés que lorsque vous le confirmez, ' +
+            'à chaque fois, sauf si vous avez choisi « Ne plus demander » pour eux (vous pouvez ' +
+            'l’annuler dans Paramètres › Assistant › « Autorisé sans demander ») ; dans les ' +
+            'conversations avec des onglets privés, ils ne sont jamais utilisés. Si la ' +
             'recherche web est activée, le service peut effectuer des recherches pour vous. La politique de ' +
             'confidentialité et les conditions de ce service s’appliquent à ces données.\n' +
             '• Si les suggestions de recherche sont activées, ce que vous tapez dans la barre d’adresse est envoyé à ' +
@@ -88,8 +90,9 @@ export const fr: LegalTranslation = {
           heading: 'Vos moyens de contrôle',
           body:
             'Vous pouvez consulter et supprimer la mémoire de l’assistant, effacer l’historique, les cookies et ' +
-            'd’autres données dans Paramètres, et supprimer vos clés API à tout moment. La désinstallation de Qutai ' +
-            'supprime tout ce qu’il a stocké.',
+            'd’autres données dans Paramètres, et supprimer vos clés API à tout moment. La désinstallation de Qutai supprime tout ce qu’il a stocké, sauf les fichiers que vous ' +
+            'avez enregistrés en dehors de l’application, comme les téléchargements dans le dossier ' +
+            'Téléchargements d’Android et les images enregistrées dans vos Photos.',
         },
         {
           heading: 'Enfants',
@@ -175,8 +178,8 @@ export const fr: LegalTranslation = {
             'autorisations des sites, la mémoire de l’assistant, l’historique de ses actions et vos conversations ' +
             'sont stockés uniquement sur cet appareil, y compris lorsque vous êtes connecté, sauf si vous les ' +
             'sauvegardez dans votre compte Qutai (voir ci-dessous). Les clés API et votre connexion sont conservées ' +
-            'dans le stockage chiffré du téléphone. Les onglets privés n’écrivent rien sur le disque ; leurs ' +
-            'conversations ne sont pas enregistrées.',
+            'dans le stockage chiffré du téléphone. Les onglets privés n’enregistrent rien sur le téléphone, sauf les fichiers que vous y ' +
+            'téléchargez ; leurs conversations ne sont pas enregistrées.',
         },
         {
           heading: 'Ce qui quitte votre téléphone, et vers qui',
@@ -189,8 +192,10 @@ export const fr: LegalTranslation = {
             'résultat d’un script que vous avez approuvé sur une page, lorsque vous posez une question sur les ' +
             'cookies leurs noms, sites et paramètres mais jamais leurs valeurs, votre mémoire et vos instructions ' +
             'personnalisées) sont envoyés directement au fournisseur d’IA que vous avez choisi (Anthropic, OpenAI, ' +
-            'Google, OpenRouter ou votre propre serveur). Le serveur de Qutai n’intervient pas. Vos événements ' +
-            'd’agenda et votre position ne sont envoyés que lorsque vous le confirmez, à chaque fois.\n' +
+            'Google, OpenRouter ou votre propre serveur). Le serveur de Qutai n’intervient pas. Vos événements d’agenda et votre position ne sont envoyés que lorsque vous le confirmez, ' +
+            'à chaque fois, sauf si vous avez choisi « Ne plus demander » pour eux (vous pouvez ' +
+            'l’annuler dans Paramètres › Assistant › « Autorisé sans demander ») ; dans les ' +
+            'conversations avec des onglets privés, ils ne sont jamais utilisés.\n' +
             '• Avec les Qutai Credits, le même contenu est d’abord envoyé au serveur de Qutai, qui le transmet au ' +
             'fournisseur d’IA (Anthropic, OpenAI ou Google) sous le propre compte de Qutai et vous renvoie la ' +
             'réponse. Le serveur de Qutai ne stocke ni ne journalise ce contenu. L’application vous pose la question ' +
@@ -315,8 +320,9 @@ export const fr: LegalTranslation = {
             'serveur de Qutai le compte, son solde et son historique (les traces d’achat sont conservées sans le ' +
             'lien avec vous, comme indiqué ci-dessus) et demande au service de paiement de supprimer ses données ' +
             'vous concernant. Vous pouvez également écrire à osmanyuksel@gmail.com pour demander une copie de ce que ' +
-            'le serveur de Qutai conserve à votre sujet, ou sa rectification ou son effacement. La désinstallation ' +
-            'de Qutai supprime tout ce qu’il a stocké sur le téléphone.',
+            'le serveur de Qutai conserve à votre sujet, ou sa rectification ou son effacement. La désinstallation de Qutai supprime tout ce qu’il a stocké sur le téléphone, sauf les ' +
+            'fichiers que vous avez enregistrés en dehors de l’application, comme les téléchargements ' +
+            'dans le dossier Téléchargements d’Android et les images enregistrées dans vos Photos.',
         },
         {
           heading: 'Sécurité',

@@ -14,7 +14,10 @@ import { PRO_DOCUMENTS, PRO_LEGAL_UPDATED } from './proDocuments';
  *    and the cookie list (19 Nov 2026).
  * 4: the pictures of option cards loaded from sites, the spelling of suffixes on the name in Turkish, the documents
  *    translated into German, Spanish, Brazilian Portuguese, French, Japanese, Korean, Russian and Indonesian (the
- *    English version prevails), and the contacts example using a name of each language (20 Nov 2026).
+ *    English version prevails), the contacts example using a name of each language, and the texts saying what the app
+ *    does: calendar events and location are asked each time unless "Don't ask again" was chosen (undone in Settings ›
+ *    Assistant › Allowed without asking; never used in incognito conversations), incognito tabs keep files downloaded
+ *    from them, and uninstalling leaves files saved outside Qutai (20 Nov 2026).
  */
 const OPEN_SOURCE_LEGAL_VERSION = 4;
 /**
@@ -55,7 +58,7 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
             'Your tabs, history, bookmarks, saved pages, downloads, site permissions, the assistant’s memory ' +
             '(including your answers to the optional setup questions and the address form), your custom ' +
             'instructions, the assistant’s action history and your conversations are stored only on this device. API ' +
-            'keys are kept in the phone’s encrypted storage. Incognito tabs write nothing to disk; their ' +
+            'keys are kept in the phone’s encrypted storage. Incognito tabs save nothing on the phone except files you download from them; their ' +
             'conversations are not saved.',
         },
         {
@@ -69,8 +72,9 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
             'message, the conversation so far, the content the assistant needs (the page text, screenshots when it ' +
             'looks at a page, files and images you attach, the result of a script you approved on a page, and when you ask about cookies their names, sites and ' +
             'settings, never their values), your custom instructions and, while memory is on, your ' +
-            'memories (hidden memories, such as ID numbers, only as a label). Your calendar events and your location ' +
-            'are sent only when you confirm, each time. If web search is on, the service may run searches for you. ' +
+            'memories (hidden memories, such as ID numbers, only as a label). Your calendar events and your location are sent only after you confirm, each time, unless ' +
+            'you chose “Don’t ask again” for them (you can undo this in Settings › Assistant › ' +
+            '“Allowed without asking”); in conversations with incognito tabs they are never used. If web search is on, the service may run searches for you. ' +
             'That service’s privacy policy and terms apply to this data.\n' +
             '• If search suggestions are on, what you type in the address bar is sent to your search engine ' +
             '(never from incognito tabs).\n' +
@@ -111,7 +115,8 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
           heading: 'Your control',
           body:
             'You can view and delete the assistant’s memory, clear history, cookies and other data in Settings, ' +
-            'and remove your API keys at any time. Uninstalling Qutai deletes everything it stored.',
+            'and remove your API keys at any time. Uninstalling Qutai deletes everything it stored, except files you saved outside it, such ' +
+            'as downloads in Android’s Downloads folder and pictures saved to your photos.',
         },
         {
           heading: 'Children',
@@ -177,7 +182,8 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
             'Sekmeleriniz, geçmişiniz, yer imleriniz, kaydedilen sayfalar, indirilenler, site izinleri, ' +
             'asistanın hafızası (kurulumdaki isteğe bağlı soruların ve adres formunun yanıtları dahil), özel ' +
             'talimatlarınız, asistanın işlem geçmişi ve sohbetleriniz yalnızca bu cihazda saklanır. API anahtarları ' +
-            'telefonun şifreli deposunda tutulur. Gizli sekmeler diske hiçbir şey yazmaz; sohbetleri kaydedilmez.',
+            'telefonun şifreli deposunda tutulur. Gizli sekmeler, onlardan indirdiğiniz dosyalar dışında telefona hiçbir şey kaydetmez; ' +
+            'sohbetleri kaydedilmez.',
         },
         {
           heading: 'Telefonunuzdan çıkanlar ve kime gittiği',
@@ -190,8 +196,10 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
             'asistanın ihtiyaç duyduğu içerik (sayfa metni, sayfaya baktığında ekran görüntüleri, eklediğiniz dosya ' +
             've görseller, bir sayfada onayladığınız bir betiğin sonucu; çerezleri sorduğunuzda adları, siteleri ve ayarları, ama hiçbir zaman değerleri), özel ' +
             'talimatlarınız ve hafıza açıkken hafızanız (kimlik numarası gibi gizli bilgiler ' +
-            'yalnızca etiketleriyle) bulunur. Takvim etkinlikleriniz ve konumunuz yalnızca her seferinde ' +
-            'onayladığınızda gönderilir. Web araması açıksa hizmet sizin için arama yapabilir. Bu veriler için o ' +
+            'yalnızca etiketleriyle) bulunur. Takvim etkinlikleriniz ve konumunuz, bunlar için “Bir daha sorma”yı seçmediyseniz ' +
+            'yalnızca her seferinde onayladığınızda gönderilir (bunu Ayarlar › Asistan › “Sormadan ' +
+            'izin verilenler”den geri alabilirsiniz); gizli sekmelerin yer aldığı sohbetlerde hiç ' +
+            'kullanılmaz. Web araması açıksa hizmet sizin için arama yapabilir. Bu veriler için o ' +
             'hizmetin gizlilik politikası ve koşulları geçerlidir.\n' +
             '• Arama önerileri açıksa adres çubuğuna yazdıklarınız arama motorunuza gönderilir (gizli sekmelerden ' +
             'asla).\n' +
@@ -234,7 +242,9 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
           heading: 'Kontrol sizde',
           body:
             'Asistanın hafızasını Ayarlar’dan görüp silebilir; geçmişi, çerezleri ve diğer verileri temizleyebilir, ' +
-            'API anahtarlarınızı istediğiniz an kaldırabilirsiniz. Qutai’ı kaldırmak sakladığı her şeyi siler.',
+            'API anahtarlarınızı istediğiniz an kaldırabilirsiniz. Qutai’ı kaldırmak sakladığı her şeyi siler; Qutai dışına kaydettiğiniz dosyalar, örneğin ' +
+            'Android’in İndirilenler klasöründeki indirmeler ve fotoğraflarınıza kaydettiğiniz ' +
+            'resimler kalır.',
         },
         {
           heading: 'Çocuklar',

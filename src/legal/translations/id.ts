@@ -19,8 +19,8 @@ export const id: LegalTranslation = {
             'Tab, histori, bookmark, halaman tersimpan, download, izin situs, memori asisten (termasuk jawaban Anda ' +
             'atas pertanyaan penyiapan opsional dan formulir alamat), petunjuk khusus Anda, histori tindakan ' +
             'asisten, dan percakapan Anda hanya disimpan di perangkat ini. Kunci API disimpan di penyimpanan ' +
-            'terenkripsi ponsel. Tab Samaran tidak menulis apa pun ke penyimpanan perangkat; percakapannya tidak ' +
-            'disimpan.',
+            'terenkripsi ponsel. Tab Samaran tidak menyimpan apa pun di ponsel kecuali file yang Anda unduh dari tab ' +
+            'tersebut; percakapannya tidak disimpan.',
         },
         {
           heading: 'Yang keluar dari ponsel Anda, dan kepada siapa',
@@ -34,8 +34,10 @@ export const id: LegalTranslation = {
             'asisten (teks halaman, screenshot saat asisten melihat halaman, file dan gambar yang Anda lampirkan, ' +
             'hasil skrip yang Anda setujui di halaman, dan saat Anda bertanya tentang cookie, nama, situs, dan ' +
             'setelannya, tetapi tidak pernah nilainya), petunjuk khusus Anda, dan, selama memori aktif, memori Anda ' +
-            '(memori tersembunyi, seperti nomor identitas, hanya sebagai label). Acara kalender dan lokasi Anda ' +
-            'hanya dikirim jika Anda mengonfirmasinya, setiap kali. Jika penelusuran web aktif, layanan tersebut ' +
+            '(memori tersembunyi, seperti nomor identitas, hanya sebagai label). Acara kalender dan lokasi Anda hanya dikirim jika Anda mengonfirmasinya, setiap kali, ' +
+            'kecuali Anda memilih “Jangan tanya lagi” untuk keduanya (Anda dapat membatalkannya di ' +
+            'Setelan › Asisten › “Diizinkan tanpa bertanya”); dalam percakapan dengan tab Samaran, ' +
+            'keduanya tidak pernah digunakan. Jika penelusuran web aktif, layanan tersebut ' +
             'dapat menjalankan penelusuran untuk Anda. Kebijakan privasi dan ketentuan layanan tersebut berlaku ' +
             'untuk data ini.\n• Jika saran penelusuran aktif, apa yang Anda ketik di kolom alamat dikirim ke mesin ' +
             'telusur Anda (tidak pernah dari tab Samaran).\n• Jika Anda mengetuk “Gunakan lokasi saya” saat ' +
@@ -79,8 +81,9 @@ export const id: LegalTranslation = {
           heading: 'Kendali Anda',
           body:
             'Anda dapat melihat dan menghapus memori asisten, menghapus histori, cookie, dan data lainnya di ' +
-            'Setelan, serta menghapus kunci API Anda kapan saja. Menghapus instalasi Qutai akan menghapus semua yang ' +
-            'disimpannya.',
+            'Setelan, serta menghapus kunci API Anda kapan saja. Menghapus instalasi Qutai akan menghapus semua yang disimpannya, kecuali file yang Anda ' +
+            'simpan di luar Qutai, seperti unduhan di folder Download Android dan gambar yang disimpan ' +
+            'ke Foto Anda.',
         },
         {
           heading: 'Anak-anak',
@@ -167,8 +170,8 @@ export const id: LegalTranslation = {
             'Tab, histori, bookmark, halaman tersimpan, download, izin situs, memori asisten, histori tindakannya, ' +
             'dan percakapan Anda hanya disimpan di perangkat ini, juga saat Anda sudah masuk, kecuali Anda ' +
             'mencadangkannya ke akun Qutai Anda (lihat di bawah). Kunci API dan data masuk Anda disimpan di ' +
-            'penyimpanan terenkripsi ponsel. Tab Samaran tidak menulis apa pun ke penyimpanan perangkat; ' +
-            'percakapannya tidak disimpan.',
+            'penyimpanan terenkripsi ponsel. Tab Samaran tidak menyimpan apa pun di ponsel kecuali file yang Anda unduh dari tab ' +
+            'tersebut; percakapannya tidak disimpan.',
         },
         {
           heading: 'Yang keluar dari ponsel Anda, dan kepada siapa',
@@ -179,8 +182,10 @@ export const id: LegalTranslation = {
             'halaman, screenshot saat asisten melihat halaman, file dan gambar yang Anda lampirkan, hasil skrip yang ' +
             'Anda setujui di halaman, saat Anda bertanya tentang cookie nama, situs, dan setelannya tetapi tidak ' +
             'pernah nilainya, serta memori dan petunjuk khusus Anda) dikirim langsung ke penyedia AI yang Anda pilih ' +
-            '(Anthropic, OpenAI, Google, OpenRouter, atau server Anda sendiri). Server Qutai tidak terlibat. Acara ' +
-            'kalender dan lokasi Anda hanya dikirim jika Anda mengonfirmasinya, setiap kali.\n• Dengan Qutai ' +
+            '(Anthropic, OpenAI, Google, OpenRouter, atau server Anda sendiri). Server Qutai tidak terlibat. Acara kalender dan lokasi Anda hanya dikirim jika Anda mengonfirmasinya, setiap kali, ' +
+            'kecuali Anda memilih “Jangan tanya lagi” untuk keduanya (Anda dapat membatalkannya di ' +
+            'Setelan › Asisten › “Diizinkan tanpa bertanya”); dalam percakapan dengan tab Samaran, ' +
+            'keduanya tidak pernah digunakan.\n• Dengan Qutai ' +
             'Credits, konten yang sama dikirim terlebih dahulu ke server Qutai, yang meneruskannya ke penyedia AI ' +
             '(Anthropic, OpenAI, atau Google) menggunakan akun milik Qutai sendiri dan mengirimkan jawabannya ' +
             'kembali. Server Qutai tidak menyimpan atau mencatat konten ini. Aplikasi bertanya kepada Anda sebelum ' +
@@ -295,8 +300,9 @@ export const id: LegalTranslation = {
             '(catatan pembelian tetap ada tanpa keterkaitan dengan Anda, seperti dijelaskan di atas) dan meminta ' +
             'layanan pembayaran untuk menghapus catatannya tentang Anda. Anda juga dapat mengirim email ke ' +
             'osmanyuksel@gmail.com untuk meminta salinan data yang disimpan server Qutai tentang Anda, atau ' +
-            'perbaikan atau penghapusannya. Menghapus instalasi Qutai akan menghapus semua yang disimpannya di ' +
-            'ponsel.',
+            'perbaikan atau penghapusannya. Menghapus instalasi Qutai akan menghapus semua yang disimpannya di ponsel, kecuali file ' +
+            'yang Anda simpan di luar Qutai, seperti unduhan di folder Download Android dan gambar ' +
+            'yang disimpan ke Foto Anda.',
         },
         {
           heading: 'Keamanan',

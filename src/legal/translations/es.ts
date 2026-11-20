@@ -81,8 +81,8 @@ export const es: LegalTranslation = {
             'asistente (incluidas sus respuestas a las preguntas opcionales de la configuración inicial y el ' +
             'formulario de dirección), sus instrucciones personalizadas, el historial de acciones del asistente y ' +
             'sus conversaciones se almacenan solo en este dispositivo. Las claves de API se guardan en el ' +
-            'almacenamiento cifrado del teléfono. Las pestañas de incógnito no escriben nada en el disco; sus ' +
-            'conversaciones no se guardan.',
+            'almacenamiento cifrado del teléfono. Las pestañas de incógnito no guardan nada en el teléfono, salvo los archivos que usted ' +
+            'descargue desde ellas; sus conversaciones no se guardan.',
         },
         {
           heading: 'Lo que sale de su teléfono y a quién',
@@ -96,7 +96,10 @@ export const es: LegalTranslation = {
             'adjunta, el resultado de un script que aprobó en una página y, cuando pregunta por las cookies, sus ' +
             'nombres, sitios y ajustes, nunca sus valores), sus instrucciones personalizadas y, mientras la memoria ' +
             'está activada, sus recuerdos (los recuerdos ocultos, como los números de identificación, solo como una ' +
-            'etiqueta). Sus eventos del calendario y su ubicación se envían solo cuando usted lo confirma, cada vez. ' +
+            'etiqueta). Sus eventos del calendario y su ubicación se envían solo cuando usted lo confirma, cada ' +
+            'vez, salvo que haya elegido «No volver a preguntar» para ellos (puede deshacerlo en ' +
+            'Configuración › Asistente › «Permitido sin preguntar»); en las conversaciones con ' +
+            'pestañas de incógnito nunca se usan. ' +
             'Si la búsqueda web está activada, el servicio puede hacer búsquedas por usted. La política de ' +
             'privacidad y las condiciones de ese servicio se aplican a estos datos.\n' +
             BULLETS_COMMON +
@@ -115,8 +118,9 @@ export const es: LegalTranslation = {
           heading: 'Su control',
           body:
             'Puede ver y eliminar la memoria del asistente, borrar el historial, las cookies y otros datos en ' +
-            'Configuración, y quitar sus claves de API en cualquier momento. Desinstalar Qutai elimina todo lo que ' +
-            'almacenó.',
+            'Configuración, y quitar sus claves de API en cualquier momento. Desinstalar Qutai elimina todo lo que almacenó, salvo los archivos que usted guardó fuera ' +
+            'de la app, como las descargas en la carpeta Descargas de Android y las imágenes guardadas ' +
+            'en sus Fotos.',
         },
         {
           heading: 'Menores',
@@ -188,7 +192,8 @@ export const es: LegalTranslation = {
             'asistente, su historial de acciones y sus conversaciones se almacenan solo en este dispositivo, también ' +
             'cuando ha iniciado sesión, salvo que haga una copia de seguridad de ellos en su cuenta de Qutai (véase ' +
             'más abajo). Las claves de API y su inicio de sesión se guardan en el almacenamiento cifrado del ' +
-            'teléfono. Las pestañas de incógnito no escriben nada en el disco; sus conversaciones no se guardan.',
+            'teléfono. Las pestañas de incógnito no guardan nada en el teléfono, salvo los archivos que usted ' +
+            'descargue desde ellas; sus conversaciones no se guardan.',
         },
         {
           heading: 'Lo que sale de su teléfono y a quién',
@@ -199,8 +204,10 @@ export const es: LegalTranslation = {
             'resultado de un script que aprobó en una página, cuando pregunta por las cookies sus nombres, sitios y ' +
             'ajustes pero nunca sus valores, su memoria y sus instrucciones personalizadas) van directamente al ' +
             'proveedor de IA que eligió (Anthropic, OpenAI, Google, OpenRouter o su propio servidor). El servidor de ' +
-            'Qutai no interviene. Sus eventos del calendario y su ubicación se envían solo cuando usted lo confirma, ' +
-            'cada vez.\n' +
+            'Qutai no interviene. Sus eventos del calendario y su ubicación se envían solo cuando usted lo confirma, cada ' +
+            'vez, salvo que haya elegido «No volver a preguntar» para ellos (puede deshacerlo en ' +
+            'Configuración › Asistente › «Permitido sin preguntar»); en las conversaciones con ' +
+            'pestañas de incógnito nunca se usan.\n' +
             '• Con Qutai Credits, el mismo contenido va primero al servidor de Qutai, que lo transmite al proveedor ' +
             'de IA (Anthropic, OpenAI o Google) con la propia cuenta de Qutai y le devuelve la respuesta. El ' +
             'servidor de Qutai no almacena ni registra este contenido. La app le pregunta antes de que use Qutai ' +
@@ -292,7 +299,9 @@ export const es: LegalTranslation = {
             'historial del servidor de Qutai (los registros de compra se conservan sin el vínculo con usted, como se ' +
             'indica arriba) y se pide al servicio de pagos que elimine su registro sobre usted. También puede ' +
             'escribir a osmanyuksel@gmail.com para solicitar una copia de lo que el servidor de Qutai guarda sobre ' +
-            'usted, o su rectificación o supresión. Desinstalar Qutai elimina todo lo que almacenó en el teléfono.',
+            'usted, o su rectificación o supresión. Desinstalar Qutai elimina todo lo que almacenó en el teléfono, salvo los archivos que ' +
+            'usted guardó fuera de la app, como las descargas en la carpeta Descargas de Android y las ' +
+            'imágenes guardadas en sus Fotos.',
         },
         {
           heading: 'Seguridad',

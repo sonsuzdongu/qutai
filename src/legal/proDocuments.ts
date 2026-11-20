@@ -30,8 +30,8 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'Your tabs, history, bookmarks, saved pages, downloads, site permissions, the assistant’s memory, its ' +
             'action history and your conversations are stored only on this device, also when you are signed in, unless ' +
             'you back them up to your Qutai account (below). API ' +
-            'keys and your sign-in are kept in the phone’s encrypted storage. Incognito tabs write nothing to disk; ' +
-            'their conversations are not saved.',
+            'keys and your sign-in are kept in the phone’s encrypted storage. Incognito tabs save nothing on the phone except files you download from them; their ' +
+            'conversations are not saved.',
         },
         {
           heading: 'What leaves your phone, and to whom',
@@ -41,8 +41,9 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'content the assistant needs (the page text, screenshots when it looks at a page, files and images you ' +
             'attach, the result of a script you approved on a page, when you ask about cookies their names, sites and settings but never their values, your memory ' +
             'and custom instructions) go directly to the AI provider you chose (Anthropic, ' +
-            'OpenAI, Google, OpenRouter or your own server). Qutai’s server is not involved. Your calendar events and ' +
-            'your location are sent only when you confirm, each time.\n• With Qutai Credits, the same content goes to ' +
+            'OpenAI, Google, OpenRouter or your own server). Qutai’s server is not involved. Your calendar events and your location are sent only after you confirm, each time, unless ' +
+            'you chose “Don’t ask again” for them (you can undo this in Settings › Assistant › ' +
+            '“Allowed without asking”); in conversations with incognito tabs they are never used.\n• With Qutai Credits, the same content goes to ' +
             'Qutai’s server first, which passes it to the AI provider (Anthropic, OpenAI or Google) under Qutai’s own ' +
             'account and sends the answer back. Qutai’s server does not store or log this content. The app asks ' +
             'before you use Qutai Credits for the first time.\n• If web search is on, the AI provider may run searches ' +
@@ -145,7 +146,9 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'removes the account, its balance and its history from Qutai’s server (purchase records stay without the ' +
             'link to you, as above) and asks the payments service to delete its record of you. You can also write to ' +
             'osmanyuksel@gmail.com to ask for a copy of what Qutai’s server keeps about you, or for its correction or ' +
-            'deletion. Uninstalling Qutai deletes everything it stored on the phone.',
+            'deletion. Uninstalling Qutai deletes everything it stored on the phone, except files you saved ' +
+            'outside it, such as downloads in Android’s Downloads folder and pictures saved to your ' +
+            'photos.',
         },
         {
           heading: 'Security',
@@ -250,7 +253,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'Sekmeleriniz, geçmişiniz, yer imleriniz, kaydedilen sayfalar, indirilenler, site izinleri, asistanın ' +
             'hafızası, işlem geçmişi ve sohbetleriniz, oturum açmış olsanız da yalnızca bu cihazda saklanır; bunları ' +
             'Qutai hesabınıza yedeklemeyi seçerseniz yedek sunucuda da tutulur (aşağıda). API ' +
-            'anahtarları ve oturumunuz telefonun şifreli deposunda tutulur. Gizli sekmeler diske hiçbir şey yazmaz; ' +
+            'anahtarları ve oturumunuz telefonun şifreli deposunda tutulur. Gizli sekmeler, onlardan indirdiğiniz dosyalar dışında telefona hiçbir şey kaydetmez; ' +
             'sohbetleri kaydedilmez.',
         },
         {
@@ -262,7 +265,10 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'eklediğiniz dosya ve görseller, bir sayfada onayladığınız bir betiğin sonucu, çerezleri sorduğunuzda adları, siteleri ve ayarları ama hiçbir zaman ' +
             'değerleri, hafızanız ve özel talimatlarınız) doğrudan seçtiğiniz yapay zekâ ' +
             'sağlayıcısına (Anthropic, OpenAI, Google, OpenRouter veya kendi sunucunuz) gider. Qutai’ın sunucusu ' +
-            'araya girmez. Takvim etkinlikleriniz ve konumunuz yalnızca her seferinde onayladığınızda gönderilir.\n• ' +
+            'araya girmez. Takvim etkinlikleriniz ve konumunuz, bunlar için “Bir daha sorma”yı seçmediyseniz ' +
+            'yalnızca her seferinde onayladığınızda gönderilir (bunu Ayarlar › Asistan › “Sormadan ' +
+            'izin verilenler”den geri alabilirsiniz); gizli sekmelerin yer aldığı sohbetlerde hiç ' +
+            'kullanılmaz.\n• ' +
             'Qutai Kredileriyle aynı içerik önce Qutai’ın sunucusuna gider; sunucu onu Qutai’ın kendi hesabıyla ' +
             'yapay zekâ sağlayıcısına (Anthropic, OpenAI veya Google) iletir ve yanıtı geri gönderir. Qutai’ın ' +
             'sunucusu bu içeriği saklamaz ve kayda geçirmez. Uygulama, Qutai Kredilerini ilk kez kullanmadan önce ' +
@@ -368,7 +374,9 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'sunucusundan kaldırır (satın alma kayıtları yukarıdaki gibi sizinle bağlantısı olmadan kalır) ve ödeme ' +
             'hizmetinden sizinle ilgili kaydını silmesini ister. Qutai’ın sunucusunun sizinle ilgili sakladıklarının ' +
             'bir kopyasını, düzeltilmesini veya silinmesini osmanyuksel@gmail.com adresine yazarak da ' +
-            'isteyebilirsiniz. Qutai’ı kaldırmak telefonda sakladığı her şeyi siler.',
+            'isteyebilirsiniz. Qutai’ı kaldırmak telefonda sakladığı her şeyi siler; Qutai dışına kaydettiğiniz ' +
+            'dosyalar, örneğin Android’in İndirilenler klasöründeki indirmeler ve fotoğraflarınıza ' +
+            'kaydettiğiniz resimler kalır.',
         },
         {
           heading: 'Güvenlik',
