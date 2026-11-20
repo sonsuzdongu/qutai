@@ -113,10 +113,11 @@ The owner has a Cloudflare firewall rule on the API's hostname that refuses requ
 notifications to `/webhooks/purchases` come from RevenueCat's servers and do not carry that User-Agent, so the rule
 would stop every purchase and refund notification.
 
-- [ ] When RevenueCat is set up, change the rule to leave that path out, for example:
+- [x] Done by the owner on 20 Nov 2026 ("cf istisnasını ekledim"): the rule leaves that path out, for example:
       `(http.host eq "<api host>" and not http.user_agent contains "qutai." and http.request.uri.path ne "/webhooks/purchases")`.
       The path is safe to open: the server checks RevenueCat's signature on every notification and refuses the rest.
-- [ ] Send RevenueCat's test event from its dashboard and check it reaches the server (the server answers 200).
+- [ ] Once RevenueCat exists: send its test event from its dashboard and check it reaches the server (the server answers 200).
+- [ ] RevenueCat itself is a piece of work the owner will plan later (20 Nov 2026: "diğerleri için bir çalışma yapacağız daha sonra"): the project and its keys, the store products and their prices (suggested 0.99 USD = 100 credits, 4.99 = 500, 9.99 = 1000, not decided), the packs in the admin panel, the webhook and its signing secret, then removing fake purchases (next section). Until then nobody can buy credits on the production server; credits are granted in the panel.
 - [ ] Any other service that must call the API from outside the app (a monitoring check, a store server notification
       relayed by RevenueCat) needs the same exception or the app's User-Agent shape.
 

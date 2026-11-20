@@ -1292,7 +1292,7 @@ Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 | `NOT-21` | The payment approval has no per-payment or per-currency spending limit and no picture of the order summary. | Owner | 2026-11-19 |
 | `NOT-22` | Qutai never asks for a battery-optimisation exemption for background playback. | Default |  |
 | `NOT-23` | No preconnecting to sites while the user types in the address bar. | Default | 2026-11-20 |
-| `NOT-24` | No harmful-site lookup service (like Safe Browsing). | Default | 2026-11-20 |
+| `NOT-24` | No harmful-site lookup service (like Safe Browsing) for now; it stays on the roadmap as planned later. | Owner | 2026-11-20 |
 
 ## [45. Roadmap decisions](45-roadmap-decisions.md)
 

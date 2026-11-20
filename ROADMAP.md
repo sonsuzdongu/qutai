@@ -281,7 +281,7 @@ purchases through RevenueCat, admin panel), production deployed on 19 Nov 2026 (
 **Launch blocker:** buying credits works only through temporary fake purchases (local servers only, nothing charged)
 until RevenueCat and the stores are connected; remove them first (`TODO.md` › Before launch: remove fake purchases).
 Built: backups in the Qutai account (the export's encrypted file on R2; replaces sync for now). Still to build: end-to-end encrypted live sync (including memory; deletion markers must be kept for deletions), background
-deep research on iOS (and tasks that go on with the phone off), price and page tracking, Safe Browsing checks (but see `NOT-24`, 20 Nov 2026: no harmful-site lookup service for now; open for the owner).
+deep research on iOS (and tasks that go on with the phone off), price and page tracking, Safe Browsing checks (`NOT-24`, owner, 20 Nov 2026: not built for now, kept here as planned later).
 
 ---
 
