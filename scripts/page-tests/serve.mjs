@@ -30,7 +30,9 @@ function pageScript(fromHead) {
   const body = source.slice(start + 'export const PAGE_SCRIPT = String.raw`'.length);
   const script = body.slice(0, body.indexOf('\n`;'));
   // A backtick would end the template literal in the app: the page shows the failure instead of passing here.
-  return script.includes('`') ? "throw new Error('The page script contains a backtick: it ends PAGE_SCRIPT early.');" : script;
+  if (script.includes('`')) return "throw new Error('The page script contains a backtick: it ends PAGE_SCRIPT early.');";
+  // The app installs it under a secret name (src/browser/agentScript.ts); the test pages find it as window.__qutaiAgent.
+  return `(function () {\nvar __qutaiAgent = {};\n${script}\nwindow.__qutaiAgent = __qutaiAgent;\n})();`;
 }
 
 const rule = await import('../../src/agent/outwardApproval.ts').catch(() => null);

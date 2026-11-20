@@ -1,6 +1,6 @@
 /**
- * Page commands for the assistant's try_hide tool, added to window.__qutaiAgent after the page script
- * (browser/pageScript.ts) in every command Tab.run sends. Plain ES5 in a string, like the page script.
+ * Page commands for the assistant's try_hide tool, added to the page script's commands (browser/pageScript.ts) by
+ * the installer (browser/agentScript.ts), once per document. Plain ES5 in a string, like the page script.
  *
  * - hideFind(): boxes that take room on the page but show nothing (no text, image, video or canvas of their own
  *   size) or hold an ad frame, with a suggested selector each: what an empty gap left by blocked ads looks like.
@@ -12,7 +12,7 @@
  */
 export const HIDE_PROBE_SCRIPT = String.raw`
 (function () {
-  var agent = window.__qutaiAgent;
+  var agent = __qutaiAgent;
   if (!agent || agent.hideTry) return;
   var AD_WORDS = /(^|[^a-z])(ad|ads|adv|advert|advertisement|banner|sponsor|sponsored|reklam|dfp|gpt|adsense|adslot|ad-slot|ad_slot)([^a-z]|$)/i;
   var GENERATED = /^(css|sc|jsx|emotion|styled)-|[a-z]+-[a-z0-9]{5,}$|^_[a-z0-9]{5,}$|\d{3,}/i;

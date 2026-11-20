@@ -601,7 +601,8 @@ export function checkScript(code: unknown, mode: ScriptMode): ScriptCheck {
 
   function checkName(name: string, property: boolean, k: number) {
     const tok = tokens[k];
-    if (name.startsWith('__qutai')) refuse(tok, "Qutai's own page objects");
+    // Qutai's own page objects: __qutai… and the page script's secret name, __q and hex (browser/agentScript.ts).
+    if (name.startsWith('__q')) refuse(tok, "Qutai's own page objects");
     if (name === 'webkit' && !property) refuse(tok, "the app's own bridge");
     // Only dangerous as navigator.<name>; a local variable or an option key with that name is not.
     if (NAVIGATOR_ONLY.has(name)) {

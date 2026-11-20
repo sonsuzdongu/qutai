@@ -19,9 +19,7 @@ import { PageMediaCapture } from './mediaCapture';
 import { PagePlayback } from './playback';
 import { type LoadError, toLoadError } from './navigation';
 import { addCertificateException } from './certificateExceptions';
-import { PAGE_SCRIPT } from './pageScript';
-import { HIDE_PROBE_SCRIPT } from '../content/hideProbe';
-import { SCRIPT_PAGE_SCRIPT } from '../content/scriptPage';
+import { agentCommandScript, agentInstallScript, MISSING_REPLY, newAgentName } from './agentScript';
 import { type PageSignals, parsePageSignals, samePageSignals } from './pageKind';
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, type ReaderArticle } from './reader';
 import { startsLoading } from './loadState';
@@ -35,6 +33,9 @@ function samePage(a: string, b: string): boolean {
   const norm = (u: string) => (u.split('#')[0] ?? '').replace(/\/$/, '').toLowerCase();
   return norm(a) === norm(b);
 }
+
+/** What a command's reply resolves to when the page script is not in the document. */
+const MISSING = Symbol('missing');
 
 type Pending = {
   resolve: (value: unknown) => void;
@@ -239,6 +240,9 @@ export class Tab {
   // A random prefix makes it hard for page scripts to forge command replies.
   private nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
   private counter = 0;
+  /** The page script's secret name on window (browser/agentScript.ts); on Android a new one for every document. */
+  private agentNameValue = newAgentName();
+  private installCache: { name: string; script: string } | null = null;
 
   constructor(
     id: string,
@@ -535,6 +539,7 @@ export class Tab {
     this.pending.delete(msg.id);
     clearTimeout(p.timer);
     if (msg.ok) p.resolve(msg.result);
+    else if ((msg as Record<string, unknown>)[MISSING_REPLY] === true) p.resolve(MISSING);
     else p.reject(new Error(msg.error || 'Unknown page error'));
     return true;
   }
@@ -555,6 +560,9 @@ export class Tab {
       this.nav.begin(url ?? this.url, 'page');
     }
     this.documents++;
+    // Android may run the early script after the page's own scripts: a new secret name for every document, so a page
+    // can never know the name before Qutai installs it there (browser/agentScript.ts).
+    if (Platform.OS === 'android') this.rotateAgentName();
     // A new document: its watches, capture and "allow once" answers start over.
     this.geolocation.reset();
     this.media.reset();
@@ -857,23 +865,57 @@ export class Tab {
   /** How many documents have started loading in this tab (kept scripts run once per document, browser/keptScripts.ts). */
   documents = 0;
 
-  run<T = unknown>(command: PageCommand, args: unknown[] = [], timeoutMs = 10000): Promise<T> {
+  /** The page script's current secret name on window. */
+  get agentName(): string {
+    return this.agentNameValue;
+  }
+
+  /** The page script installed under the current name (for the WebView's early and after-load scripts). */
+  get agentInstallScript(): string {
+    if (this.installCache?.name !== this.agentNameValue)
+      this.installCache = { name: this.agentNameValue, script: agentInstallScript(this.agentNameValue) };
+    return this.installCache.script;
+  }
+
+  private rotateAgentName() {
+    this.agentNameValue = newAgentName();
+  }
+
+  /**
+   * Runs one page command and resolves with its result. Only the call is sent; when the page script is not in the
+   * document yet (Android's early script came too late or not at all, a page loaded in another way), the command
+   * is sent once more together with the script.
+   */
+  async run<T = unknown>(command: PageCommand, args: unknown[] = [], timeoutMs = 10000): Promise<T> {
     if (PAGE_ACTIONS.has(command)) this.closeReader();
     if (isRunningInBackground()) return this.runInBackground<T>(command, args, timeoutMs);
     const webview = this.reader && READER_COMMANDS.has(command) && this.readerWebview ? this.readerWebview : this.webview;
-    if (!webview) return Promise.reject(new Error('The tab is not ready'));
+    if (!webview) throw new Error('The tab is not ready');
+    const deliver = 'window.ReactNativeWebView.postMessage(JSON.stringify(payload));';
+    const send = (install: boolean) => {
+      const id = `${this.nonce}-${++this.counter}`;
+      const code = (install ? this.agentInstallScript : '') + agentCommandScript(this.agentNameValue, command, args, this.nonce, id, deliver);
+      return new Promise<unknown>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          this.pending.delete(id);
+          reject(new Error('The page did not respond (it may still be loading).'));
+        }, timeoutMs);
+        this.pending.set(id, { resolve, reject, timer });
+        webview.injectJavaScript(code);
+      });
+    };
+    let reply = await send(false);
+    if (reply === MISSING) reply = await send(true);
+    if (reply === MISSING) throw new Error("Qutai's page script could not be set up on this page.");
+    return reply as T;
+  }
 
-    const id = `${this.nonce}-${++this.counter}`;
-    const code = this.commandScript(command, args, id, 'window.ReactNativeWebView.postMessage(JSON.stringify(payload));');
-
-    return new Promise<T>((resolve, reject) => {
-      const timer = setTimeout(() => {
-        this.pending.delete(id);
-        reject(new Error('The page did not respond (it may still be loading).'));
-      }, timeoutMs);
-      this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject, timer });
-      webview.injectJavaScript(code);
-    });
+  /** Bytes the WebView receives for one command now, and what it received before 20 Nov 2026 (for the payload test). */
+  commandSize(command: PageCommand, args: unknown[] = []): { now: number; withScript: number } {
+    const deliver = 'window.ReactNativeWebView.postMessage(JSON.stringify(payload));';
+    const call = agentCommandScript(this.agentNameValue, command, args, this.nonce, `${this.nonce}-0`, deliver);
+    const bytes = (text: string) => new TextEncoder().encode(text).length;
+    return { now: bytes(call), withScript: bytes(this.agentInstallScript + call) };
   }
 
   /**
@@ -909,47 +951,30 @@ export class Tab {
    */
   private async runInBackground<T>(command: PageCommand, args: unknown[], timeoutMs: number): Promise<T> {
     if (!this.webview || this.asleep || this.isNewTab) throw new NeedsForegroundError();
-    const id = `${this.nonce}-${++this.counter}`;
     const box = JSON.stringify(`__qutaiReplies_${this.nonce}`);
-    const code = this.commandScript(
-      command,
-      args,
-      id,
-      `(window[${box}] = window[${box}] || {})[${JSON.stringify(id)}] = payload;`,
-    );
-    const poll =
-      `(function () { var b = window[${box}]; var k = ${JSON.stringify(id)}; if (!b || !(k in b)) return null; ` +
-      'var r = b[k]; delete b[k]; return JSON.stringify(r); })()';
-    const raw = await evaluateInPage(this.playback.nonce, code, poll, timeoutMs);
-    if (raw == null) throw new Error('The page did not respond (it may still be loading).');
-    // The WebView returns the poll's value JSON-encoded: a string holding the reply's JSON.
-    const msg = JSON.parse(wellFormedJsonText(JSON.parse(raw))) as { __qutai?: string; ok?: boolean; result?: unknown; error?: string };
+    const send = async (install: boolean) => {
+      const id = `${this.nonce}-${++this.counter}`;
+      const code =
+        (install ? this.agentInstallScript : '') +
+        agentCommandScript(this.agentNameValue, command, args, this.nonce, id, `(window[${box}] = window[${box}] || {})[${JSON.stringify(id)}] = payload;`);
+      const poll =
+        `(function () { var b = window[${box}]; var k = ${JSON.stringify(id)}; if (!b || !(k in b)) return null; ` +
+        'var r = b[k]; delete b[k]; return JSON.stringify(r); })()';
+      const raw = await evaluateInPage(this.playback.nonce, code, poll, timeoutMs);
+      if (raw == null) throw new Error('The page did not respond (it may still be loading).');
+      // The WebView returns the poll's value JSON-encoded: a string holding the reply's JSON.
+      return JSON.parse(wellFormedJsonText(JSON.parse(raw))) as Record<string, unknown> & {
+        __qutai?: string;
+        ok?: boolean;
+        result?: unknown;
+        error?: string;
+      };
+    };
+    let msg = await send(false);
+    if (msg.__qutai === this.nonce && msg[MISSING_REPLY] === true) msg = await send(true);
     if (msg.__qutai !== this.nonce) throw new Error('Unknown page error');
     if (msg.ok) return msg.result as T;
+    if (msg[MISSING_REPLY] === true) throw new Error("Qutai's page script could not be set up on this page.");
     throw new Error(msg.error || 'Unknown page error');
-  }
-
-  /** The page script plus a call of one of its commands; `deliver` hands `payload` (the reply) back. */
-  private commandScript(command: PageCommand, args: unknown[], id: string, deliver: string): string {
-    return `
-${PAGE_SCRIPT}
-${HIDE_PROBE_SCRIPT}
-${SCRIPT_PAGE_SCRIPT}
-(function () {
-  var send = function (payload) {
-    payload.__qutai = ${JSON.stringify(this.nonce)};
-    payload.id = ${JSON.stringify(id)};
-    ${deliver}
-  };
-  var fail = function (e) { send({ ok: false, error: String((e && e.message) || e) }); };
-  try {
-    var result = window.__qutaiAgent[${JSON.stringify(command)}].apply(null, ${JSON.stringify(args)});
-    // Commands may return a promise (e.g. snapshots that fetch images).
-    Promise.resolve(result).then(function (value) { send({ ok: true, result: value }); }, fail);
-  } catch (e) {
-    fail(e);
-  }
-})();
-true;`;
   }
 }

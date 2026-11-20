@@ -201,7 +201,11 @@ function TabWebView({
     t('playback.privateTab'),
     Platform.OS === 'ios' && newTabActions.backgroundPlayback,
   );
+  // Qutai's page script (browser/agentScript.ts), main frame only: installed before the page's own scripts (iOS; on
+  // Android as early as the WebView runs this), under the tab's secret name; commands then send only the call.
+  const agentScript = tab.agentInstallScript;
   const earlyScript = [
+    agentScript,
     geoScript,
     mediaScript,
     playScript,
@@ -210,6 +214,8 @@ function TabWebView({
   ].join('\n');
   // Runs after every page load: long-press menu, text selection, desktop viewport (Android) and text size (iOS).
   const pageSetupScript = [
+    // Again after load: Android may have run the early script for the previous page (a no-op when installed).
+    agentScript,
     // Android may run the early script too soon for the new page; installing again is a no-op otherwise.
     Platform.OS === 'android' ? geoScript : '',
     Platform.OS === 'android' ? mediaScript : '',

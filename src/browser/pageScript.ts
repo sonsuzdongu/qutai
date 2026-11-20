@@ -3,13 +3,13 @@
  * source in a string: Hermes compiles functions to bytecode, so we cannot use
  * Function.prototype.toString() to ship code into the WebView.
  *
- * Exposes window.__qutaiAgent with: readPage, readSource, click, type, select, scroll, scrollTo, and the
- * snapshot, read-aloud, reader mode, find in page and capture helpers listed at the end.
+ * Fills the object `__qutaiAgent` (declared by the installer, browser/agentScript.ts, which then freezes it and puts it
+ * on window under a secret per-document name) with: readPage, readSource, click, type, select, scroll, scrollTo, and
+ * the snapshot, read-aloud, reader mode, find in page and capture helpers listed at the end.
  * Elements are addressed by numeric refs assigned during readPage.
  */
 export const PAGE_SCRIPT = String.raw`
 (function () {
-  if (window.__qutaiAgent) return;
 
   var MAX_CHARS = 20000;
   var INTERACTIVE = [
@@ -2882,7 +2882,7 @@ export const PAGE_SCRIPT = String.raw`
     return out;
   }
 
-  window.__qutaiAgent = {
+  var commands = {
     pageSignals: pageSignals,
     readPage: readPage,
     readSource: readSource,
@@ -2935,6 +2935,7 @@ export const PAGE_SCRIPT = String.raw`
     resourceHosts: resourceHosts,
     optionDetails: optionDetails
   };
+  for (var name in commands) __qutaiAgent[name] = commands[name];
 })();
 `;
 

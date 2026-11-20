@@ -150,6 +150,8 @@ export class ChromeWebView {
     private tab: Tab,
     private server: Server,
     private onRequest: (r: ServedRequest) => void,
+    /** Install Qutai's page script at document start, as iOS does (false: only the commands' fallback, as on Android at worst). */
+    private early = true,
   ) {
     this.ready = this.init();
     tab.setWebView(this.handle as never);
@@ -182,6 +184,7 @@ export class ChromeWebView {
     await s('Emulation.setUserAgentOverride', { userAgent: MOBILE_UA });
     await s('Runtime.addBinding', { name: '__qutaiPost' });
     await s('Page.addScriptToEvaluateOnNewDocument', { source: POST_BRIDGE });
+    if (this.early) await s('Page.addScriptToEvaluateOnNewDocument', { source: this.tab.agentInstallScript });
   }
 
   async load(url: string) {

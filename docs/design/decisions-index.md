@@ -207,6 +207,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `UNTR-23` | A memory that isn't in what the user wrote is asked in Qutai's dialog before it is saved | Default | 2026-11-20 |
 | `UNTR-24` | Resistance to instructions in pages is measured with the injection test set (opt-in, billed, capped); claims say only what it shows | Default | 2026-11-20 |
 | `UNTR-25` | A settings change the user's own messages don't name is asked in Qutai's dialog before it applies; protections towards safe never asked | Default | 2026-11-20 |
+| `UNTR-26` | Qutai's page script is installed once per document under a secret, frozen, non-configurable name (before the page's scripts on iOS); commands carry only the call | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `UNTR-3`
 

@@ -643,3 +643,21 @@ Hazırlık: `node --no-warnings --experimental-transform-types --import ./script
       isteğinizde pencere çıkmıyor (`UNTR-25`).
 - [ ] `/aria-label` sayfası: "Subscribe – 149 TL/month" düğmesine asistan onaysız basamıyor; ödemeler kapalıyken
       "ödeme size bırakıldı" deniyor (`PAY-27`).
+
+## 22. Kod incelemesi düzeltmeleri: onay denetimleri, sayfa betiği, adresler, depolama (20 Kasım, telefonda denenmedi)
+
+Bilgisayarda testlerle denendi; telefon ve öykünücü kullanılamadı. En riskli kısım sayfa betiğinin yeni kurulumu
+(`UNTR-26`): iki platformda da aşağıdakileri deneyin.
+
+- [ ] iPhone ve Android: bir haber sitesinde "Bu sayfayı özetler misiniz?" çalışıyor; bir düğmeye bastırma, bir alana
+      yazdırma (örneğin bir arama kutusu) çalışıyor; birkaç bağlantıdan geçtikten sonra (yeni sayfalar) asistan hâlâ
+      okuyup basabiliyor; geri ve ileri gittikten sonra da.
+- [ ] Android: bir sayfa açılır açılmaz (yüklenmesi bitmeden) asistana okuma yaptırın; "Qutai's page script could not be
+      set up" hatası çıkmamalı. Çok iframe'li bir sayfada (reklamlı bir haber sitesi) sayfalar eskisinden yavaş açılmıyor.
+- [ ] Okuma modunda sayfada bul (Bul çubuğu) çalışıyor.
+- [ ] Android, "Arka planda çalışmaya devam et" açık: uygulama arka plandayken asistan bir sayfayı okuyup bir düğmeye
+      basabiliyor (bildirimle devam).
+- [ ] Ödeme, silme ve gönderme onayları eskisi gibi soruluyor: `/guards` test sayfası (scripts/page-tests/serve.mjs,
+      `adb reverse tcp:8811 tcp:8811`) telefonda da hepsi geçiyor.
+- [ ] Yavaş bir sayfada (ağ yavaşken) bir "Satın al" düğmesine bastırmaya çalışın: "Qutai bu adımı denetleyemedi"
+      satırı çıkabilir, düğmeye basılmamalı (`PAY-28`).

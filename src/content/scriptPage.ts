@@ -1,6 +1,6 @@
 /**
- * Page commands for run_script (docs/page-customisation.md › Scripts), added to window.__qutaiAgent after the page
- * script (browser/Tab.ts commandScript):
+ * Page commands for run_script (docs/page-customisation.md › Scripts), added to the page script's commands by the
+ * installer (browser/agentScript.ts), once per document:
  *
  * - scriptFacts(): what makes the page sensitive (a password, one-time code or payment card field in the main frame).
  * - scriptSnapshot(max): the copy a read-only script runs on: the main frame's DOM without scripts, inline handlers,
@@ -12,7 +12,7 @@
  */
 export const SCRIPT_PAGE_SCRIPT = String.raw`
 (function () {
-  var agent = window.__qutaiAgent;
+  var agent = __qutaiAgent;
   if (!agent || agent.scriptFacts) return;
   var OTP_WORDS = /otp|2fa|totp|mfa|one.?time|verification|verify|security.?code|sms.?code|auth.?code|dogrulama|doğrulama|onay.?kodu|tek.?kullanım/i;
   var CARD_WORDS = /card.?number|cardnumber|cc.?num|cvc|cvv|csc|security.?code|expir|iban|kart.?no|kart.?numara/i;

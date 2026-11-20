@@ -134,6 +134,8 @@ const REFUSED: [string, RegExp][] = [
   ['window.ReactNativeWebView.postMessage("{}")', /bridge|postMessage/],
   ['webkit.messageHandlers.x.postMessage(1)', /bridge/],
   ['return window.__qutaiAgent', /Qutai's own/],
+  ['return window.__q0123456789abcdef0123456789abcdef.click(3)', /Qutai's own/],
+  ["return window['__q0123456789abcdef0123456789abcdef']", /Qutai's own/],
   // What can't be checked.
   ['window["fe" + "tch"]("/x")', /pieces|used other than/],
   ['document[`coo${"kie"}`]', /pieces|used other than/],
