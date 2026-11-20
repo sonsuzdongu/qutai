@@ -932,6 +932,7 @@ Moved to Details (ids retired, not reused): `INTRO-7`, `INTRO-13`, `INTRO-15`, `
 | `PERF-7` | Today every request sends the full tool list (about 10,000 tokens) with the full descriptions; sending… | **Waiting** |  |
 | `PERF-8` | Today none of the bigger start-up ideas is tried (static linking of iOS libraries, replacing the Skia… | **Waiting** |  |
 | `PERF-10` | The step strip names elements instead of "ref 1" (the third item of the performance pass). | Owner | 2026-11-18 |
+| `PERF-11` | Long conversations get a bounded request: the current task whole, earlier tool results cut, oldest exchanges left out in blocks; only the newest… | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `PERF-1`, `PERF-2`, `PERF-9`
 

@@ -12,6 +12,7 @@ export const KEEP_FULL_RESULTS = 2;
  */
 export const COMPACT_BATCH = 2;
 const KEEP_IMAGES = 1;
+const SCREENSHOT_REMOVED = '\n[Older screenshot removed]';
 /** Results longer than this (in characters) are the ones compacted. */
 export const COMPACT_THRESHOLD = 1500;
 
@@ -106,7 +107,7 @@ export function compactHistory(turns: Turn[], maxImages?: number, batch = COMPAC
       // Screenshots cost far more than text, so only the latest ones are kept.
       if (r.images?.length) {
         if (keptImages < KEEP_IMAGES) keptImages++;
-        else r = { ...r, images: undefined, content: `${r.content}\n[Older screenshot removed]` };
+        else r = { ...r, images: undefined, content: `${r.content}${SCREENSHOT_REMOVED}` };
       }
       if (original.content.length <= COMPACT_THRESHOLD) return r;
       if (kept > 0) {
@@ -118,4 +119,112 @@ export function compactHistory(turns: Turn[], maxImages?: number, batch = COMPAC
     out.unshift({ role: 'tool_results', results: results.reverse() });
   }
   return out;
+}
+
+/**
+ * Long conversations get a bounded request (PERF-11). The history before the current message is what gets trimmed;
+ * the current message and the steps of the task it started are always sent whole (compacted as above), so nothing
+ * changes inside a task and each step keeps reading the previous one from the provider's prompt cache (Anthropic's
+ * breakpoint on the last user message, OpenAI's and Gemini's prefix caching; ai/anthropic.ts withHistoryBreakpoint).
+ * The system prompt and tools are not part of the history and are never touched.
+ *
+ * Over MAX_HISTORY_CHARS (counted as JSON text, an image as IMAGE_CHARS), in this order:
+ * 1. the results of tools in earlier messages are cut to OLD_RESULT_CHARS (their screenshots and attached images are
+ *    already gone, see compactHistory);
+ * 2. whole earlier exchanges (a user message and everything up to the next) are left out from the oldest, in a block:
+ *    once the earlier part passes MAX_HISTORY_CHARS it is brought down to TRIMMED_HISTORY_CHARS, so the start of the
+ *    history, and with it the cache, changes only once in a while, not with every message. Which exchanges go is
+ *    worked out from the history alone (as if it had grown message by message), so the same history always gives
+ *    the same request. A cut is only ever before a user message: a tool call never loses its result.
+ * The first message kept says that earlier ones were left out.
+ */
+export const MAX_HISTORY_CHARS = 300_000;
+export const TRIMMED_HISTORY_CHARS = 150_000;
+export const OLD_RESULT_CHARS = 200;
+/** What an image counts for (a screenshot is about 1,500 tokens, about 6,000 characters of text). */
+export const IMAGE_CHARS = 6_000;
+export const LEFT_OUT_NOTE = '[Earlier messages of this conversation were left out to keep the request small.]';
+
+/** A turn's size as it is sent: its JSON text, with each image counted as IMAGE_CHARS instead of its data. */
+export function turnSize(turn: Turn): number {
+  let images = 0;
+  const text = JSON.stringify(turn, (key, value) => {
+    if (key === 'images' && Array.isArray(value)) {
+      images += value.length;
+      return undefined;
+    }
+    return value;
+  });
+  return text.length + images * IMAGE_CHARS;
+}
+
+const sizeOf = (turns: Turn[]) => turns.reduce((sum, turn) => sum + turnSize(turn), 0);
+
+/** Earlier tool results cut short (step 1). */
+function shortenResults(turn: Turn): Turn {
+  if (turn.role !== 'tool_results') return turn;
+  let changed = false;
+  const results = turn.results.map((r) => {
+    if (r.content.length <= OLD_RESULT_CHARS && !r.images?.length) return r;
+    changed = true;
+    return { ...r, images: undefined, content: `${cutText(r.content, OLD_RESULT_CHARS)}\n[Older result shortened]` };
+  });
+  return changed ? { role: 'tool_results', results } : turn;
+}
+
+/** The request's history for long conversations: see MAX_HISTORY_CHARS. Takes compacted turns. */
+export function boundHistory(turns: Turn[]): Turn[] {
+  let current = -1;
+  for (let i = turns.length - 1; i >= 0; i--) {
+    if (turns[i].role === 'user') {
+      current = i;
+      break;
+    }
+  }
+  // Nothing earlier, or small enough: sent as it is.
+  if (current <= 0 || sizeOf(turns.slice(0, current)) <= MAX_HISTORY_CHARS) return turns;
+  const earlier = turns.slice(0, current).map(shortenResults);
+  // Exchanges: each starts at a user message (the history may start with a turn that isn't one, kept with the first).
+  const starts = earlier.flatMap((turn, i) => (i === 0 || turn.role === 'user' ? [i] : []));
+  const sizes = starts.map((start, k) => sizeOf(earlier.slice(start, starts[k + 1] ?? earlier.length)));
+  let cut = 0;
+  let window = 0;
+  for (let k = 0; k < sizes.length; k++) {
+    window += sizes[k];
+    if (window <= MAX_HISTORY_CHARS) continue;
+    while (window > TRIMMED_HISTORY_CHARS && cut < k) window -= sizes[cut++];
+  }
+  const kept = earlier.slice(starts[cut] ?? 0);
+  if (cut > 0 && kept[0]?.role === 'user') kept[0] = { ...kept[0], text: `${LEFT_OUT_NOTE}\n\n${kept[0].text}` };
+  return [...kept, ...turns.slice(current)];
+}
+
+/** The history a request is built from: compacted (compactHistory), then bounded (boundHistory). */
+export function requestHistory(turns: Turn[], maxImages?: number): Turn[] {
+  return boundHistory(compactHistory(turns, maxImages));
+}
+
+/**
+ * Screenshots kept in memory (PERF-11): only the newest KEEP_IMAGES tool results keep their images in the
+ * conversation; older ones lose them in place, with the same note compactHistory gives them, so every request is
+ * byte for byte what it was (the prompt cache is unaffected). Attached images are files, read for each request.
+ */
+export function releaseOldImages(turns: Turn[]): void {
+  let kept = 0;
+  for (let i = turns.length - 1; i >= 0; i--) {
+    const turn = turns[i];
+    if (turn.role !== 'tool_results') continue;
+    for (let j = turn.results.length - 1; j >= 0; j--) {
+      const r = turn.results[j];
+      if (!r.images?.length) continue;
+      if (kept < KEEP_IMAGES) {
+        kept++;
+        continue;
+      }
+      const content = `${r.content}${SCREENSHOT_REMOVED}`;
+      // The note would make a result count as a large one for compaction: kept as it is (rare: screenshots say little).
+      if (r.content.length <= COMPACT_THRESHOLD && content.length > COMPACT_THRESHOLD) continue;
+      turn.results[j] = { ...r, images: undefined, content };
+    }
+  }
 }

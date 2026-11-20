@@ -21,7 +21,7 @@ import {
 import { getBackgroundCount, isForeground, waitForForeground } from '../utils/foreground';
 import type { AlwaysAllowKind } from './alwaysAllow';
 import { withAttachedImages } from './attachedImages';
-import { compactHistory } from './history';
+import { compactHistory, releaseOldImages, requestHistory } from './history';
 import { backgroundBlocker, describeToolCall, executeTool, ToolContext } from './executeTool';
 import { prepareStepTarget } from './stepTarget';
 import { toolIcon, WEB_SEARCH_ICON } from './toolIcons';
@@ -243,7 +243,7 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     let streamed = false;
     setBackgroundStep(t('background.thinking'));
     const prompt = await systemPrompt(opts);
-    const sendTurns = await withAttachedImages(compactHistory(turns, opts.serverLimits?.maxImages));
+    const sendTurns = await withAttachedImages(requestHistory(turns, opts.serverLimits?.maxImages));
     let reply: Awaited<ReturnType<typeof provider.call>>;
     // The same on every send of this step: Qutai Credits charges an identical re-send of it once (README › Relay).
     const stepKey = newStepKey();
@@ -503,6 +503,8 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
       });
     }
     turns.push({ role: 'tool_results', results });
+    // Only the newest screenshot stays in memory (the requests are unchanged by it).
+    releaseOldImages(turns);
     opts.onStep?.();
     // The run ends with the question; the user's answer starts the next one.
     if (waitingForUser) return;
