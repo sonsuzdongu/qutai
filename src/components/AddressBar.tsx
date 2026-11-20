@@ -9,12 +9,14 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  type TextInputInstance,
   useWindowDimensions,
   View,
 } from 'react-native';
 import type { SearchEngineId } from '../browser/search';
 import { lineTarget, type NavigationEnd } from '../browser/pendingNavigation';
 import { toUrl } from '../browser/url';
+import { addressDisplay } from '../browser/addressDisplay';
 import { t } from '../i18n';
 import { darkPalette, makeStyles, usePalette } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
@@ -88,13 +90,6 @@ type Props = {
   onToggleAssistant: () => void;
 };
 
-/** URL as shown when not editing: no scheme, no "www.", no trailing slash. */
-function displayUrl(url: string): string {
-  return url
-    .replace(/^https?:\/\//i, '')
-    .replace(/^www\./i, '')
-    .replace(/\/$/, '');
-}
 
 export function AddressBar({
   url,
@@ -138,6 +133,14 @@ export function AddressBar({
     setCleared(null);
   };
   const [editing, setEditing] = useState(false);
+  const inputRef = useRef<TextInputInstance>(null);
+  const textRef = useRef(text);
+  useEffect(() => {
+    textRef.current = text;
+  });
+  useEffect(() => {
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
   const [handledEdit, setHandledEdit] = useState<number | null>(null);
   if (editRequest && editRequest.id !== handledEdit) {
     setHandledEdit(editRequest.id);
@@ -204,7 +207,14 @@ export function AddressBar({
               finishEditing();
               onSubmit(toUrl(text, searchEngine));
             }}
-            autoFocus
+            ref={inputRef}
+            // Focused from an effect instead of autoFocus: on iOS (Fabric) autoFocus focuses the field when it joins the
+            // window, a path that skips selectTextOnFocus (only the focus() call selects), so the first typed letters
+            // were appended to the address. The whole address is selected again once focused, on both platforms.
+            onFocus={() => {
+              const length = textRef.current.length;
+              requestAnimationFrame(() => inputRef.current?.setSelection(0, length));
+            }}
             selectTextOnFocus
             // On a phone on its side the suggestions and the page stay in view (no full-screen keyboard).
             disableFullscreenUI
@@ -261,14 +271,17 @@ export function AddressBar({
               <Icon name="insecure" size={13} color={palette.danger} />
             </View>
           )}
-          <Text
-            style={[styles.fieldText, styles.fieldTextFlex, dark?.text, !url && styles.placeholder]}
-            maxFontSizeMultiplier={MAX_FONT_SCALE}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-          >
-            {url ? displayUrl(url) : t('address.placeholder')}
-          </Text>
+          {url ? (
+            <ShownAddress url={url} dark={darkUI} />
+          ) : (
+            <Text
+              style={[styles.fieldText, styles.fieldTextFlex, dark?.text, styles.placeholder]}
+              maxFontSizeMultiplier={MAX_FONT_SCALE}
+              numberOfLines={1}
+            >
+              {t('address.placeholder')}
+            </Text>
+          )}
           {usingCamera && (
             <Pressable
               onPress={onSitePermissionsPress}
@@ -472,6 +485,40 @@ function ProgressLine({ state, top }: { state: ProgressLineState; top: boolean }
   );
 }
 
+/**
+ * The address while not editing (`UI` rules, docs/design/27-interface.md): the registrable domain in full colour and
+ * weight, subdomains and the path subdued. The host keeps its end (the domain) when it is too long, cut from the left;
+ * the path gives way first.
+ */
+function ShownAddress({ url, dark }: { url: string; dark: boolean }) {
+  const styles = useStyles();
+  const parts = addressDisplay(url);
+  const dim = dark ? styles.dimDark : styles.dim;
+  return (
+    <View style={styles.addressRow}>
+      <Text
+        style={[styles.fieldText, styles.host, dark && darkStyles.text]}
+        maxFontSizeMultiplier={MAX_FONT_SCALE}
+        numberOfLines={1}
+        ellipsizeMode="head"
+      >
+        {parts.before ? <Text style={dim}>{parts.before}</Text> : null}
+        <Text style={styles.domain}>{parts.domain}</Text>
+      </Text>
+      {parts.after ? (
+        <Text
+          style={[styles.fieldText, styles.path, dim]}
+          maxFontSizeMultiplier={MAX_FONT_SCALE}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {parts.after}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
 function IconButton({
   icon,
   onPress,
@@ -560,6 +607,13 @@ const useStyles = makeStyles((c) => ({
   insecure: { color: c.danger, fontSize: 14 },
   incognitoBadge: { fontSize: 14 },
   placeholder: { color: c.textSecondary },
+  addressRow: { flex: 1, flexDirection: 'row', alignItems: 'center', minWidth: 0 },
+  // The path shrinks first; the host only once the path is gone, from its left.
+  host: { flexShrink: 1 },
+  path: { flexShrink: 1000, minWidth: 0 },
+  domain: { fontWeight: '600' },
+  dim: { color: c.textSecondary, fontWeight: '400' },
+  dimDark: { color: '#a9a8b3', fontWeight: '400' },
   icon: { width: 32, height: 36, alignItems: 'center', justifyContent: 'center' },
   iconText: { fontSize: 22, color: c.text },
   disabled: { opacity: 0.35 },

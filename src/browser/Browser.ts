@@ -411,6 +411,8 @@ export class Browser {
     if (previous) previous.lastActiveAt = now;
     tab.lastActiveAt = now;
     this.activeId = tab.id;
+    // A page whose process ended while the tab was in the background loads again now.
+    tab.shown();
   }
 
   /** The tab the running task works in, or null between tasks. */

@@ -49,9 +49,9 @@ the SDK's newer recommended version behind the patch's back. On 20 Nov 2026 the 
   the SDK correctly.
 - **Manual check**: `npx expo run:ios` builds; the development launcher opens and its toolbar shows.
 
-### `react-native-webview+14.0.1.patch` (2,441 lines, 24 files, Android and iOS and the JS types)
+### `react-native-webview+14.0.1.patch` (2,609 lines, 25 files, Android and iOS and the JS types)
 
-Qutai's native browser features, each change marked "Qutai patch" (108 marks), by feature (design record `BUILD`,
+Qutai's native browser features, each change marked "Qutai patch" (122 marks), by feature (design record `BUILD`,
 previously `BUILD-18`; each part's reason is in its commit):
 
 | Feature | Files (Android / iOS / JS) | Manual check |
@@ -65,6 +65,7 @@ previously `BUILD-18`; each part's reason is in its commit):
 | Reading and deleting cookies per WebView data store, without values | `RNCWebViewCookies.java`, `RNCWebViewModule` (both archs) / `RNCWebViewModule.mm` | On a site, "which cookies does this page have": names and sites, no values; delete one: it is gone after reload. |
 | App sandbox for apps inside Qutai (Android: no network, no navigation, a frame guard) | `RNCWebViewClient.java`, `RNCWebView.java` | Run a Qutai app that tries `fetch`: it fails; a link in it doesn't navigate. |
 | Qutai's page script at document start on Android (`documentStartScript`: WebViewCompat.addDocumentStartJavaScript, where the WebView has it; `UNTR-26`) | `RNCWebView.java`, `RNCWebViewManager.java` (both archs) / (iOS ignores it) / `WebViewTypes.ts`, `RNCWebViewNativeComponent.ts` | On a news site, ask "Summarise this page" right after it starts loading: it works, no "page script could not be set up" error. |
+| "Send the form again?" on Android (`onFormResubmission` event, `formResubmissionAnswer` prop "<id> resend\|keep"; unanswered for 30 s, a newer question or the WebView going away: not sent again; `TABS-25`) | `RNCWebView.java`, `RNCWebViewClient.java`, `RNCWebViewManager.java` (both archs), `TopFormResubmissionEvent.kt` / (iOS ignores them) / `WebViewTypes.ts`, `RNCWebViewNativeComponent.ts` | Send a form (a search form with POST, or a test shop's checkout), then Reload: Qutai asks; Cancel keeps the page, Send again shows the result once more; leave the question open 30 s: nothing is sent and the page doesn't hang. |
 | Cancelled and interrupted navigations reported (`onLoadingCancelled`-style event) | `RNCWebViewClient.java` / `RNCWebViewImpl.m` | Tap a link to an app (tel:, a store link): the progress line stops instead of hanging. |
 | Full-screen video drawn by Chromium's own view | `RNCWebChromeClient.java` | Play a video full screen and rotate: it fills the screen; leaving full screen returns to the page. |
 

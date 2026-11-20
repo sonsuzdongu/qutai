@@ -109,6 +109,49 @@ export function ErrorPage({
   );
 }
 
+/**
+ * The page's web process ended twice in a short time (a crash, or the system freeing memory): instead of reloading
+ * in a loop, the tab says so and the user chooses (crashPolicy.ts).
+ */
+export function CrashPage({
+  url,
+  incognito,
+  onReload,
+  onClose,
+}: {
+  url: string;
+  incognito: boolean;
+  onReload: () => void;
+  onClose: () => void;
+}) {
+  const styles = useStyles();
+  const palette = usePalette();
+  return (
+    <ScrollView
+      style={[styles.container, incognito && styles.dark]}
+      contentContainerStyle={styles.content}
+      accessibilityLiveRegion="polite"
+    >
+      <Icon name="unreachable" size={44} color={incognito ? DIM_INCOGNITO : palette.textSecondary} />
+      <Text style={[styles.title, incognito && styles.lightText]} accessibilityRole="header">
+        {t('crash.title')}
+      </Text>
+      <Text style={[styles.body, incognito && styles.dimText]}>{t('crash.body')}</Text>
+      {url ? (
+        <Text style={styles.url} numberOfLines={2}>
+          {url}
+        </Text>
+      ) : null}
+      <Pressable onPress={onReload} style={styles.primary} accessibilityRole="button">
+        <Text style={styles.primaryText}>{t('crash.reload')}</Text>
+      </Pressable>
+      <Pressable onPress={onClose} style={styles.secondary} accessibilityRole="button">
+        <Text style={[styles.secondaryText, incognito && styles.dimText]}>{t('crash.close')}</Text>
+      </Pressable>
+    </ScrollView>
+  );
+}
+
 const useStyles = makeStyles((c) => ({
   container: {
     position: 'absolute',

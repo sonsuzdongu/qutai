@@ -472,11 +472,12 @@ Moved to Details (ids retired, not reused): `LOG-7`
 | `TABS-22` | The page on screen stays until the new one commits; a tab leaving the new tab page keeps showing the new… | Default | 2026-11-20 |
 | `TABS-23` | A window a page opens comes to the front only when that page is on screen and the user touched it in the… | Default | 2026-11-20 |
 | `TABS-24` | A tab whose page failed because the phone was offline reloads by itself once when the connection… | Default | 2026-11-20 |
-| `TABS-25` | iOS: reloading, or going back or forward to, the result of a sent form asks "Send the form again?" first… | Default | 2026-11-20 |
+| `TABS-25` | Re-sending a submitted form asks first on both platforms (Android through the patched WebView, "don't send" after 30 s… | Default | 2026-11-20 |
 | `TABS-26` | A woken tab comes back at the scroll position it had on the same page (the page reports it half a second… | Default | 2026-11-20 |
 | `TABS-27` | After the user closes the assistant's tab, its next call on that tab fails clearly instead of acting on the tab on screen | Default | 2026-11-20 |
 | `TABS-28` | A conversation is saved on send, after each completed step, at the end and on leaving the foreground; a killed task shows as… | Default | 2026-11-20 |
 | `TABS-29` | Typing in the chat input is saved per conversation 800 ms after typing stops, and at once on a switch or on leaving the foreground | Default | 2026-11-20 |
+| `TABS-30` | A page whose process ends reloads once; the same page again within a minute shows "This page stopped working"… | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-8`
 
@@ -845,6 +846,9 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-31` | One full screen open at a time, from one state (AppScreens); a late close shuts a screen only if still open | Default | 2026-11-20 |
 | `UI-32` | Tab switcher and cookies screen virtualised; tab cards redrawn only when what they show changes | Default | 2026-11-20 |
 | `UI-33` | Backup password fields: one PasswordField with an eye inside the field (own eye per field), 44 pt, announced; keyboard and cursor kept; new/current autofill hints; AI key fields unchanged | Owner (eye); Default (rest) | 2026-11-20 |
+| `UI-34` | Address bar: registrable domain emphasised, the rest subdued, no https scheme, IDN in Unicode only when safe… | Default | 2026-11-20 |
+| `UI-35` | Tapping the address bar selects the whole address on both platforms (focused from code, not autoFocus) | Default | 2026-11-20 |
+| `UI-36` | The address bar slides away on scroll down and back on a small scroll up, unless something holds it; setting to keep it… | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

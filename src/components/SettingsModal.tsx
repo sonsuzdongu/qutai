@@ -581,6 +581,12 @@ function SettingsPages({
               onChange={(addressBarPosition) => set({ addressBarPosition })}
             />
             <SwitchRow
+              title={t('settings.keepAddressBarVisible')}
+              hint={t('settings.keepAddressBarVisibleHint')}
+              value={settings.keepAddressBarVisible}
+              onChange={(keepAddressBarVisible) => set({ keepAddressBarVisible })}
+            />
+            <SwitchRow
               title={t('settings.showAssistantButton')}
               hint={t('settings.showAssistantButtonHint')}
               value={settings.showAssistantButton}

@@ -138,6 +138,7 @@ export type BackupSettings = Partial<{
   httpsOnly: boolean;
   blockThirdPartyCookies: boolean;
   showAssistantButton: boolean;
+  keepAddressBarVisible: boolean;
   forceZoom: boolean;
   backgroundPlayback: boolean;
   pictureInPicture: boolean;
@@ -434,6 +435,7 @@ const BOOLEAN_SETTINGS = [
   'httpsOnly',
   'blockThirdPartyCookies',
   'showAssistantButton',
+  'keepAddressBarVisible',
   'forceZoom',
   'backgroundPlayback',
   'pictureInPicture',

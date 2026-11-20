@@ -24,6 +24,8 @@ import { type PageSignals, parsePageSignals, samePageSignals } from './pageKind'
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, type ReaderArticle } from './reader';
 import { startsLoading } from './loadState';
 import { NavigationTracker, shownAddress } from './pendingNavigation';
+import type { PageScroll } from './toolbarScroll';
+import { crashPage, PAGE_GONE_ERROR, type ProcessEnd, processGoneAction } from './crashPolicy';
 import { newId, newNonce } from '../utils/ids';
 
 /** iOS: WebKit's progress starts at 0.1 when a navigation begins and passes it only once the site answers. */
@@ -200,6 +202,22 @@ export class Tab {
   allowResubmitUntil = 0;
   /** The app's last own navigation, to repeat it once the user agreed to send a form again. */
   lastAppAction: 'reload' | 'back' | 'forward' | null = null;
+  /**
+   * The page's web process ended twice in a short time while on screen: "This page stopped working" shows instead of
+   * the page, and nothing reloads by itself (crashPolicy.ts).
+   */
+  crashed: { url: string } | null = null;
+  /** The last time this tab's page process ended, for "the same page again shortly after". */
+  private lastProcessEnd: ProcessEnd | null = null;
+  /** iOS: the page's process ended while the tab wasn't on screen; it reloads when the tab is shown. */
+  private reloadOnShow = false;
+  /**
+   * Android: a new value gives the tab a new WebView (the old one is unusable after its process ended). BrowserView
+   * keys the WebView by it.
+   */
+  webviewKey = 0;
+  /** What the page last reported about its scrolling, for the address bar sliding away (toolbarScroll.ts); null: nothing yet. */
+  barScroll: PageScroll | null = null;
   /** The address of an error page shown because the phone was offline, reloaded once when the connection returns. */
   offlineErrorUrl: string | null = null;
   canGoBack = false;
@@ -428,6 +446,17 @@ export class Tab {
   loadUrl(url: string) {
     this.lastAppAction = null;
     this.nav.begin(url, 'app');
+    if (this.crashed) {
+      // Leaving the "stopped working" screen for another address: a fresh WebView opens it.
+      this.crashed = null;
+      const same = this.source.uri === url;
+      this.url = url;
+      this.source = { uri: url };
+      if (Platform.OS === 'android') this.webviewKey++;
+      else if (same) this.webview?.reload();
+      this.onChange();
+      return;
+    }
     if (this.isNewTab) {
       // Leaving the new tab page mounts a WebView with this URL; the new tab page stays until the site answers.
       this.cover = 'newTab';
@@ -511,6 +540,13 @@ export class Tab {
     else this.reload();
   }
 
+  /** The page's scroll report for the address bar (toolbarScroll.ts). */
+  noteBarScroll(scroll: PageScroll) {
+    if (scroll === this.barScroll) return;
+    this.barScroll = scroll;
+    this.onChange();
+  }
+
   /** The page's scroll position (main frame, sent by the page after scrolling stops). */
   noteScroll(y: number) {
     if (!Number.isFinite(y) || y < 0) return;
@@ -553,6 +589,8 @@ export class Tab {
     // A page changing its own address (history API, a #fragment) loads nothing and never reports an end: not a load,
     // and the page's location, camera and playback state carry on (loadState.ts).
     if (!startsLoading({ url, currentUrl: this.url, os: Platform.OS, nativeLoading })) return;
+    // A new document reports its own scrolling; until then the bar shows.
+    this.barScroll = null;
     if (Platform.OS === 'android') {
       // Android reports the start once the site has answered: the new page commits now.
       this.commit(url);
@@ -663,19 +701,70 @@ export class Tab {
    * loading state ends here and the page comes back, iOS in the same WebView, Android in a new one (the old one is
    * unusable).
    */
-  handleProcessGone() {
+  handleProcessGone(onScreen: boolean, now = Date.now()) {
     if (this.loading) this.handleLoadEnd();
     this.nav.end('gone');
-    if (Platform.OS === 'ios') {
-      this.webview?.reload();
+    // Commands waiting for the page get a clear answer now instead of timing out.
+    this.rejectPending(PAGE_GONE_ERROR);
+    if (this.asleep || this.isNewTab) return;
+    const page = crashPage(this.url);
+    const action = processGoneAction(this.lastProcessEnd, page, now, onScreen);
+    this.lastProcessEnd = { page, at: now };
+    if (action === 'reloadOnReturn') {
+      if (Platform.OS === 'ios') {
+        this.reloadOnShow = true;
+      } else {
+        // Like a sleeping tab: the WebView goes, and the page loads again when the user comes back (Browser.switchTab).
+        this.dispose();
+        this.webview = null;
+        this.asleep = true;
+      }
+      this.onChange();
       return;
     }
-    if (this.asleep || this.isNewTab) return;
-    this.dispose();
-    this.webview = null;
-    this.asleep = true;
+    if (action === 'screen') {
+      this.crashed = { url: this.url };
+      this.cover = null;
+      if (Platform.OS === 'android') this.webview = null;
+      this.onChange();
+      return;
+    }
+    this.restartPage();
+  }
+
+  /** The page loads again after its process ended: iOS in the same WebView, Android in a new one. */
+  private restartPage() {
+    this.nav.begin(this.url, 'app');
+    if (Platform.OS === 'ios') {
+      this.webview?.reload();
+    } else {
+      this.webview = null;
+      this.webviewKey++;
+      this.source = { uri: this.url };
+    }
     this.onChange();
-    setTimeout(() => this.wake(), 0);
+  }
+
+  /** "Reload" on the "This page stopped working" screen. */
+  recoverFromCrash() {
+    if (!this.crashed) return;
+    this.crashed = null;
+    this.restartPage();
+  }
+
+  /** The tab came on screen (Browser.setActive): a page whose process ended meanwhile loads again (iOS). */
+  shown() {
+    if (!this.reloadOnShow) return;
+    this.reloadOnShow = false;
+    this.restartPage();
+  }
+
+  private rejectPending(message: string) {
+    this.pending.forEach((p) => {
+      clearTimeout(p.timer);
+      p.reject(new Error(message));
+    });
+    this.pending.clear();
   }
 
   handleLoadEnd() {
@@ -866,11 +955,7 @@ export class Tab {
     this.media.reset();
     this.playback.reset();
     this.thumbnail = null;
-    this.pending.forEach((p) => {
-      clearTimeout(p.timer);
-      p.reject(new Error('The tab was closed.'));
-    });
-    this.pending.clear();
+    this.rejectPending('The tab was closed.');
     this.handleLoadEnd();
     this.nav.dispose();
   }
@@ -898,6 +983,7 @@ export class Tab {
   async run<T = unknown>(command: PageCommand, args: unknown[] = [], timeoutMs = 10000, signal?: AbortSignal): Promise<T> {
     throwIfStopped(signal);
     if (PAGE_ACTIONS.has(command)) this.closeReader();
+    if (this.crashed) throw new Error(PAGE_GONE_ERROR);
     if (isRunningInBackground()) return this.runInBackground<T>(command, args, timeoutMs);
     const webview = this.reader && READER_COMMANDS.has(command) && this.readerWebview ? this.readerWebview : this.webview;
     if (!webview) throw new Error('The tab is not ready');

@@ -838,3 +838,44 @@ Sahibi telefonda gördü: kurulumda yedeği geri yüklerken ekran "Restoring…"
 - [ ] Android (yeni yerel kodla derlenen APK): sayfa betiği belge başında kuruluyor (`UNTR-26`, `documentStartScript`).
       Bir haber sitesini açar açmaz "Bu sayfayı özetler misiniz?" deyin, sonra birkaç bağlantıdan geçin: her sayfada
       okuma, basma ve yazma çalışıyor. Qutai içindeki bir uygulamayı da açın: ağ engeli eskisi gibi çalışıyor.
+
+## 28. Tarayıcı: kaydırınca gizlenen adres çubuğu, belirgin alan adı, çöken sayfa, Android'de form uyarısı (20 Kasım, telefonda denenmedi)
+
+Cihaz yoktu; mantık birim testlerinde (`npm run test:navigation`). Android'deki form uyarısı yeni yerel kod ister: yeni
+derlenen APK ile deneyin. Yavaş sayfa ve form için yerel sunucu: `node scripts/slow-server/server.mjs` (Android'de
+`adb reverse tcp:8823 tcp:8823`; sayfa `http://localhost:8823/`, form `/form`).
+
+- [ ] **Kaydırınca gizlenen çubuk (`UI-36`), Android ve iOS, çubuk üstte ve altta ayrı ayrı:** uzun bir haber
+      sayfasında aşağı kaydırın: çubuk kayarak gizlenmeli, sayfa zıplamamalı, metin yerinden oynamamalı; birazcık
+      yukarı kaydırınca hemen geri gelmeli; sayfanın en üstünde hep görünmeli; en üstte aşağı çekip yenileme
+      çalışmalı.
+  - [ ] Kendi sabit başlığı olan bir sitede (örneğin sabit menülü bir haber sitesi) çubuk görünürken sitenin başlığı
+        çubuğun altında kalmamalı; çubuk alttayken sitenin sabit alt şeridi de çubuğun altında kalmamalı.
+  - [ ] Kısa bir sayfada (`http://localhost:8823/form`) ve bir harita sayfasında (Google Haritalar) çubuk hiç
+        gizlenmemeli.
+  - [ ] Çubuk gizliyken: bir bağlantıya dokunun (yükleme başlayınca çubuk gelmeli), bir alana dokunup klavyeyi açın,
+        sayfada bul'u açın, Qutai panelini açın, bir metin seçin, asistana bir iş verin: her birinde çubuk görünmeli.
+  - [ ] Yatay ekranda ve çentikli telefonda: durum çubuğu ve alt güvenli alan bozulmamalı, çubuk durum çubuğunun
+        üstüne taşmamalı.
+  - [ ] Ayarlar › "Adres çubuğunu hep göster" açıkken çubuk hiç gizlenmemeli. "Hareketi azalt" açıkken çubuk kaymadan
+        bir anda gizlenip görünmeli.
+- [ ] **Adres çubuğunda alan adı (`UI-34`, `UI-35`):** `https://mail.google.com/mail/u/0/` gibi bir adreste
+      "google.com" koyu, "mail." ve yol soluk görünmeli; https için "https://" yazmamalı, http sayfada kırmızı kilit
+      işareti kalmalı. Çok uzun bir alt alan adı (örneğin `https://a.very.long.subdomain.chain.example.co.uk/x`) soldan
+      kısalmalı, "example.co.uk" görünmeli. `http://192.168.1.1:8080/` ve `http://localhost:8823/` düzgün görünmeli.
+  - [ ] `https://bücher.de` Unicode olarak ("bücher.de"), Kiril harfli sahte "аррӏе.com"
+        (`https://xn--80ak6aa92e.com`) punycode olarak görünmeli.
+  - [ ] Adres çubuğuna dokunun ve hemen yazın: eski adres tamamen silinip yerine yazılmalı (iOS'ta önce adresin sonuna
+        ekleniyordu). Android ve iOS'ta, yeni sekmede ve dolu bir sayfada deneyin.
+- [ ] **Çöken sayfa (`TABS-30`):** Android'de `chrome://crash` adresini açın (iOS'ta bir sayfayı bellek
+      doldurarak çökertmek gerekir; çok sayıda ağır sekme açmak işe yarayabilir): ilk seferde sayfa kendiliğinden bir kez
+      yeniden yüklenmeli; bir dakika içinde yine çökerse "Bu sayfa çalışmayı durdurdu", Yeniden yükle ve Sekmeyi kapat
+      görünmeli, kendiliğinden yeniden yüklenmemeli. Arka plandaki bir sekme çökerse o sekmeye dönünce yüklenmeli.
+      Asistan o sekmede çalışırken sayfa çökerse asistan beklemeden "sayfa çalışmayı durdurdu" hatası almalı.
+- [ ] **Android'de form uyarısı (`TABS-25`, yeni yerel kodla):** `http://localhost:8823/form` sayfasında Send'e basın,
+      sonuç sayfasında yeniden yükleyin: "Form yeniden gönderilsin mi?" sorulmalı. Vazgeç: sayfa olduğu gibi kalmalı,
+      çizgi kaybolmalı; "Yeniden gönder": sonuç sayfası (POST) yeniden gelmeli. Soruyu 30 saniye açık bırakın: form
+      gönderilmemeli, sayfa takılı kalmamalı. Aynısını geri/ileri ile de deneyin. iOS'ta önceki gibi sorulmalı.
+- [ ] Dokunmadan açılan açılır pencereler: iki platform da sessizce engelliyor ve uygulamaya haber vermiyor, bu yüzden
+      bildirim eklenmedi; `http://localhost:8823/popup` sayfasında kendiliğinden açılan pencere açılmamalı, düğmeyle
+      açılan açılmalı.

@@ -24,6 +24,8 @@ import { certificateExceptionsFor, mayBypassCertificate, noteValidCertificate } 
 import { isLocalUrl } from '../browser/localNetwork';
 import { mayOfferExternal, noteUserGesture, touchedRecently } from '../browser/externalGuard';
 import { isUserTap, windowOpensInFront } from '../browser/pendingNavigation';
+import { FORM_ANSWER_IDLE, formAnswer } from '../browser/formResubmission';
+import { parseBarMessage, TOOLBAR_SCROLL_SCRIPT } from '../browser/toolbarScroll';
 import { parseScrollMessage, restoreScrollScript, SCROLL_MEMORY_SCRIPT } from '../browser/scrollMemory';
 import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
 import { geolocationScript } from '../browser/geolocation';
@@ -38,7 +40,7 @@ import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
 import { usePalette } from '../ui/theme';
 import { dialog } from './Dialog';
-import { ErrorPage } from './ErrorPage';
+import { CrashPage, ErrorPage } from './ErrorPage';
 import type { LibraryTab } from './LibraryScreen';
 import { NewTabPage } from './NewTabPage';
 import { ReaderPrefs, ReaderView } from './ReaderView';
@@ -235,6 +237,8 @@ function TabWebView({
     Platform.OS === 'ios' && newTabActions.darkMode && newTabActions.darkSites ? DARK_SITE_SCRIPT : '',
     // Where the page was scrolled, so a woken tab comes back there (incognito tabs never sleep).
     tab.incognito ? '' : SCROLL_MEMORY_SCRIPT,
+    // Scrolling down slides the address bar away; the page says when (toolbarScroll.ts), not every scroll frame.
+    TOOLBAR_SCROLL_SCRIPT,
     newTabActions.forceZoom ? FORCE_ZOOM_SCRIPT : '',
   ].join('\n');
 
@@ -249,6 +253,8 @@ function TabWebView({
   // Android pull to refresh: allowed only while the page says a downward drag can't scroll it.
   const [atTop, setAtTop] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  // Android: the answer to the WebView's "send the form again?" question (formResubmission.ts).
+  const [formResubmission, setFormResubmission] = useState(FORM_ANSWER_IDLE);
 
   // Changed rules (saved, switched, removed, an "off" site) reach the page already open at once.
   const firstRules = useRef(true);
@@ -322,7 +328,10 @@ function TabWebView({
             setTimeout(() => setRefreshing(false), 10000);
           }}
         >
+          {/* Android: an ended page process leaves its WebView unusable; a new key gives the tab a new one. */}
+          {Platform.OS === 'android' && tab.crashed ? null : (
           <WebView
+            key={tab.webviewKey}
             ref={(ref) => tab.setWebView(ref)}
             source={tab.source}
             style={styles.flex}
@@ -334,6 +343,8 @@ function TabWebView({
               if (tab.playback.handleMessage(e.nativeEvent.data)) return;
               if (handleFileCaptureMessage(tab, e.nativeEvent.data)) return;
               if (handleUserAgentMessage(e.nativeEvent.data)) return;
+              const bar = parseBarMessage(e.nativeEvent.data);
+              if (bar !== null) return tab.noteBarScroll(bar);
               const scrolled = parseScrollMessage(e.nativeEvent.data);
               if (scrolled !== null) return tab.noteScroll(scrolled);
               const pull = parsePullState(e.nativeEvent.data);
@@ -538,8 +549,22 @@ function TabWebView({
               newTabActions.onDownload(tab, pageDownloadFrom(e.nativeEvent));
             }}
             // The page's web process crashed or was killed (Android) / terminated (iOS): no load end will come.
-            onRenderProcessGone={() => tab.handleProcessGone()}
-            onContentProcessDidTerminate={() => tab.handleProcessGone()}
+            // Android (patched react-native-webview): the WebView asks before sending a form again; the same question
+            // as iOS. Not answered within 30 s (the dialog left open), the form is not sent again.
+            formResubmissionAnswer={Platform.OS === 'android' ? formResubmission : undefined}
+            onFormResubmission={(e) => {
+              const id = e.nativeEvent.id;
+              const answer = (resend: boolean) => {
+                if (!resend) tab.nav.end('stopped');
+                setFormResubmission(formAnswer(id, resend));
+              };
+              dialog.alert(t('nav.resubmitTitle'), t('nav.resubmitBody'), [
+                { text: t('common.cancel'), style: 'cancel', onPress: () => answer(false) },
+                { text: t('nav.resubmitSend'), onPress: () => answer(true) },
+              ]);
+            }}
+            onRenderProcessGone={() => tab.handleProcessGone(active)}
+            onContentProcessDidTerminate={() => tab.handleProcessGone(active)}
             allowsBackForwardNavigationGestures
             javaScriptEnabled
             domStorageEnabled
@@ -558,7 +583,16 @@ function TabWebView({
             cacheEnabled={!androidIncognito}
             saveFormDataDisabled={androidIncognito}
           />
+          )}
         </PullToRefresh>
+      )}
+      {tab.crashed && !tab.isNewTab && (
+        <CrashPage
+          url={tab.crashed.url}
+          incognito={tab.incognito}
+          onReload={() => tab.recoverFromCrash()}
+          onClose={() => browser.closeTab(tab.id)}
+        />
       )}
       {/* Until the site answers, the new tab page (its first address was just opened) or a woken tab's last picture
           stays on screen instead of a blank white page. */}

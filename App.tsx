@@ -129,7 +129,10 @@ import { Toast, useToast } from './src/components/Toast';
 import { DownloadIndicator } from './src/components/DownloadIndicator';
 import { openDownload } from './src/components/openDownload';
 import { CaptureOverlay } from './src/components/CaptureOverlay';
-import { dialog, DialogHost } from './src/components/Dialog';
+import { dialog, DialogHost, dialogState } from './src/components/Dialog';
+import { HidingBar } from './src/components/HidingBar';
+import { barHidden } from './src/browser/toolbarScroll';
+import { useKeyboardVisible } from './src/utils/useKeyboardVisible';
 import { copyLink, copyText, shareLink, shareText } from './src/device/link';
 import { printPage, savePagePdf, savePdfFromScreenshots } from './src/device/pdf';
 import { saveImage } from './src/device/saveImage';
@@ -1991,6 +1994,22 @@ function BrowserApp({
         host: null,
       };
   const address = tab.address;
+  // The address bar slides away while the page is scrolled down, unless something needs it (toolbarScroll.ts).
+  const keyboardVisible = useKeyboardVisible();
+  const dialogOpen = useSyncExternalStore(dialogState.subscribe, dialogState.isOpen);
+  const hideBar = barHidden(tab.barScroll, {
+    alwaysVisible: settings.keepAddressBarVisible,
+    loading: tab.busy,
+    editing: false,
+    keyboard: keyboardVisible,
+    findBar: findOpen,
+    panel: panelOpen,
+    strip: stripVisible(work) && !!runningChat,
+    dialog: dialogOpen,
+    assistantWorking: running,
+    selection: !!selectedText,
+    noPage: onNewTab || !!tab.loadError || !!tab.crashed || !!tab.reader,
+  });
   const navStatus =
     pendingNav && !pendingNav.responded && !onNewTab ? (
       <NavigationStatus
@@ -2273,15 +2292,9 @@ function BrowserApp({
   const showLowCredits = lowBalance.visible && panelOnCredits;
   const panelLowCredits = useMemo(() => (showLowCredits ? lowCreditsHandlers : null), [showLowCredits, lowCreditsHandlers]);
 
-  return (
+  // The page and its selection bar, under (or above) the address bar, which slides away on scroll (HidingBar).
+  const pageContent = (
     <>
-      <View style={[styles.container, (tab.incognito || darkMode) && styles.incognito]}>
-        <StatusBar style={tab.incognito || tabsVisible || darkMode ? 'light' : 'dark'} />
-        <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
-          {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard: the page, and the address bar when it is at the bottom, stay above it. */}
-          {barAtBottom ? null : topBar}
-          {barAtBottom || findOpen ? null : navStatus}
-          <KeyboardAvoidingContainer style={styles.flex}>
             <ErrorBoundary>
               <BrowserView
                 browser={browser}
@@ -2344,9 +2357,37 @@ function BrowserApp({
                 bottomOffset={barAtBottom ? 52 : 0}
               />
             ) : null}
-            {barAtBottom && !findOpen ? navStatus : null}
-            {barAtBottom ? topBar : null}
-          </KeyboardAvoidingContainer>
+    </>
+  );
+  const barArea = barAtBottom ? (
+    <>
+      {findOpen ? null : navStatus}
+      {topBar}
+    </>
+  ) : (
+    <>
+      {topBar}
+      {findOpen ? null : navStatus}
+    </>
+  );
+
+  return (
+    <>
+      <View style={[styles.container, (tab.incognito || darkMode) && styles.incognito]}>
+        <StatusBar style={tab.incognito || tabsVisible || darkMode ? 'light' : 'dark'} />
+        <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
+          {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard: the page, and the address bar when it is at the bottom, stay above it. */}
+          {barAtBottom ? (
+            <KeyboardAvoidingContainer style={styles.flex}>
+              <HidingBar position="bottom" hidden={hideBar} bar={barArea}>
+                <View style={styles.flex}>{pageContent}</View>
+              </HidingBar>
+            </KeyboardAvoidingContainer>
+          ) : (
+            <HidingBar position="top" hidden={hideBar} bar={barArea}>
+              <KeyboardAvoidingContainer style={styles.flex}>{pageContent}</KeyboardAvoidingContainer>
+            </HidingBar>
+          )}
         </SafeAreaView>
         {/* Where the assistant acts: over the page, under the panel (docs/working-mode.md). */}
         <ActionMarkerLayer />
