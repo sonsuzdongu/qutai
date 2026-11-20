@@ -16,7 +16,7 @@ import { DEV_SIGN_IN_USERS, type DevSignInUser } from '../account/types';
 import { devLoginEnabled, devLoginSecret } from '../config/features';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { darkPalette, makeStyles, usePalette, radii } from '../ui/theme';
+import { darkPalette, makeStyles, usePalette, radii, common } from '../ui/theme';
 import { dialog } from './Dialog';
 import { EmailSignIn } from './EmailSignIn';
 import { WholeWordsText } from './WholeWordsText';
@@ -203,7 +203,7 @@ function messageFor(e: unknown): string {
 }
 
 const useStyles = makeStyles((c) => ({
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   label: { color: c.text, fontSize: 15, fontWeight: '600' },
   buttons: { gap: 10, marginTop: 12, marginBottom: 8 },
   appleButton: { height: 46, width: '100%' },
@@ -211,7 +211,8 @@ const useStyles = makeStyles((c) => ({
   appleWeb: { backgroundColor: c.text, borderColor: c.text },
   appleWebText: { color: c.bg },
   button: {
-    height: 46,
+    minHeight: 46,
+    paddingVertical: 8,
     borderRadius: radii.button,
     backgroundColor: c.surface,
     borderWidth: 1,

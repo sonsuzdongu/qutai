@@ -15,7 +15,7 @@ import { offeredModels } from '../credits/rules';
 import { usesTiers } from '../credits/tiers';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette, radii } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { openBuyCredits } from './BuyCredits';
 import { askCreditsDisclosure } from './CreditsDisclosure';
 import { dialog } from './Dialog';
@@ -115,7 +115,7 @@ export function CreditsFields({
 
 const useStyles = makeStyles((c) => ({
   root: { gap: 8, marginTop: 12 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   notice: { fontSize: 14, color: c.text, lineHeight: 20 },
   link: { color: c.tintText, fontWeight: '600', fontSize: 14 },
   balanceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -126,7 +126,8 @@ const useStyles = makeStyles((c) => ({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    height: 42,
+    minHeight: 42,
+    paddingVertical: 8,
     borderRadius: radii.button,
     borderWidth: 1.5,
     borderColor: c.tint,

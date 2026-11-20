@@ -233,7 +233,7 @@ const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   content: { padding: 16, gap: 12, paddingBottom: 40 },
   site: { fontSize: 17, fontWeight: '700', color: c.text },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   text: { fontSize: 15, color: c.text },
   loading: { marginTop: 24 },
   card: { ...common(c).card, padding: 14, gap: 8 },

@@ -1,4 +1,4 @@
-import { AccessibilityInfo, Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Text, View } from 'react-native';
 import type { Browser } from '../browser/Browser';
 import { pageStyleState } from '../browser/pageStyleState';
 import type { Tab } from '../browser/Tab';
@@ -7,10 +7,10 @@ import { formatStyleScope, STYLE_SCOPE_KINDS, styleScopeForUrl, styleSite, style
 import { t, type MessageKey } from '../i18n';
 import { siteRules, SiteRuleError } from '../storage/siteRules';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette, radii, common } from '../ui/theme';
+import { Button } from '../ui/Button';
+import { makeStyles, usePalette, common } from '../ui/theme';
 import { dialog } from './Dialog';
 import type { IconLine } from '../ui/Icon';
-import { WholeWordsText } from './WholeWordsText';
 
 /**
  * The app's side of user styles and the cookie list (docs/page-customisation.md): the approval dialogs, the trial
@@ -157,24 +157,21 @@ export function StyleCard({
       {offer.state === 'applied' && (
         <View style={styles.buttons}>
           {!offer.incognito && (
-            <Pressable
+            <Button
+              label={t('styles.keepFor')}
               onPress={onKeep}
-              style={({ pressed }) => [styles.primary, pressed && styles.primaryPressed]}
-              accessibilityRole="button"
+              style={styles.grow}
               accessibilityLabel={t('styles.keepLabel', { description: offer.description })}
-            >
-              <WholeWordsText style={styles.primaryText}>{t('styles.keepFor')}</WholeWordsText>
-            </Pressable>
+            />
           )}
-          <Pressable
+          <Button
+            variant="secondary"
+            label={t('styles.undo')}
             onPress={onUndo}
-            style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
-            accessibilityRole="button"
+            style={styles.grow}
+            icon={<Icon name="undo" size={16} color={palette.tintText} />}
             accessibilityLabel={t('styles.undoLabel', { description: offer.description })}
-          >
-            <Icon name="undo" size={16} color={palette.tintText} />
-            <WholeWordsText style={styles.secondaryText}>{t('styles.undo')}</WholeWordsText>
-          </Pressable>
+          />
         </View>
       )}
     </View>
@@ -191,42 +188,26 @@ export function CookiesCard({ offer, dark, onShow }: { offer: CookiesOffer; dark
         <Icon name="cookies" size={18} color={palette.tintText} />
         <Text style={[styles.status, dark && styles.textDark]}>{t('cookies.cardTitle', { site: offer.site, count: offer.count })}</Text>
       </View>
-      <Pressable
+      <Button
+        variant="secondary"
+        label={t('cookies.show')}
         onPress={onShow}
-        style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
-        accessibilityRole="button"
+        style={styles.grow}
+        icon={<Icon name="cookies" size={16} color={palette.tintText} />}
         accessibilityLabel={t('cookies.showLabel', { site: offer.site })}
-      >
-        <Icon name="cookies" size={16} color={palette.tintText} />
-        <WholeWordsText style={styles.secondaryText}>{t('cookies.show')}</WholeWordsText>
-      </Pressable>
+      />
     </View>
   );
 }
 
 const useStyles = makeStyles((c) => ({
   card: { ...common(c).card, padding: 14, gap: 8, alignSelf: 'stretch' },
+  grow: { flexGrow: 1 },
   cardDark: { backgroundColor: '#2a2930' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   status: { flex: 1, fontSize: 14, fontWeight: '600', color: c.textSecondary },
   text: { fontSize: 15, color: c.text, lineHeight: 21 },
   textDark: { color: '#f2f1ee' },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  primary: { flexGrow: 1, backgroundColor: c.tint, borderRadius: radii.control, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
-  primaryPressed: { opacity: 0.85 },
-  primaryText: { color: c.onTint, fontSize: 15, fontWeight: '700', textAlign: 'center' },
-  secondary: {
-    flexGrow: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: c.sunken,
-    borderRadius: radii.control,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-  },
-  secondaryText: { color: c.tintText, fontSize: 15, fontWeight: '600', textAlign: 'center' },
-  pressed: { backgroundColor: c.pressed },
 }));

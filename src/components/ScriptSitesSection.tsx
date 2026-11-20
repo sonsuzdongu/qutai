@@ -3,7 +3,7 @@ import { siteKey } from '../agent/sitePolicy';
 import { t } from '../i18n';
 import { cleanScriptSites, type ScriptSite } from '../storage/settings';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette, radii } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { dialog } from './Dialog';
 
 /**
@@ -72,8 +72,8 @@ export function ScriptSitesSection({ value, onChange }: { value: ScriptSite[]; o
 
 const useStyles = makeStyles((c) => ({
   box: { gap: 8, marginTop: 4, marginBottom: 8 },
-  label: { fontSize: 15, fontWeight: '600', color: c.text },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  label: common(c).label,
+  hint: common(c).hint,
   warn: { color: c.danger },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: c.surface, borderRadius: radii.card, padding: 12 },
   flex: { flex: 1 },

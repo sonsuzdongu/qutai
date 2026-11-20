@@ -386,7 +386,7 @@ const useStyles = makeStyles((c) => ({
   method: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 32 },
   methodText: { color: c.text, fontSize: 14, lineHeight: 19 },
   flex: { flex: 1 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   remove: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   section: { gap: 8, marginTop: 8 },
   sectionTitle: { color: c.text, fontSize: 15, fontWeight: '600' },

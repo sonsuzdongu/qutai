@@ -22,7 +22,7 @@ import {
   subscribeSentLog,
 } from '../storage/sentLog';
 import { Icon } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { costLine, creditsLabel, requestBreakdown, usd } from './AnswerCost';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { ScreenHeader } from './ScreenHeader';
@@ -425,7 +425,7 @@ const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   list: { ...readableColumn, padding: 16, gap: 2 },
   top: { gap: 10, marginBottom: 4 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   link: { fontSize: 14, color: c.tintText, fontWeight: '600' },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
   loading: { marginTop: 32 },

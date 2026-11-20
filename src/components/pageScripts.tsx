@@ -1,4 +1,4 @@
-import { AccessibilityInfo, Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Text, View } from 'react-native';
 import type { ScriptApproval, ScriptOffer } from '../agent/scriptTool';
 import { checkScript, type ScriptFlag } from '../content/scriptCheck';
 import { formatScope, parseScope, type Scope, type ScopeKind } from '../content/siteRules';
@@ -15,10 +15,10 @@ import { loadScriptKey } from '../device/scriptKey';
 import { t, type MessageKey } from '../i18n';
 import { siteRules, SiteRuleError } from '../storage/siteRules';
 import { Icon, type IconLine } from '../ui/Icon';
-import { makeStyles, usePalette, radii, common } from '../ui/theme';
+import { Button } from '../ui/Button';
+import { makeStyles, usePalette, common } from '../ui/theme';
 import { dialog } from './Dialog';
 import { scriptSandbox } from './ScriptSandbox';
-import { WholeWordsText } from './WholeWordsText';
 import { newNonce } from '../utils/ids';
 
 /**
@@ -208,15 +208,14 @@ export function ScriptCard({ offer, dark, onKeep }: { offer: ScriptOffer; dark?:
       <Text style={[styles.text, dark && styles.textDark]}>{offer.description}</Text>
       {offer.state === 'ran' && offer.incognito && <Text style={styles.hint}>{t('scripts.cardIncognito')}</Text>}
       {canKeep(offer) && (
-        <Pressable
+        <Button
+          variant="secondary"
+          label={t('scripts.keepFor')}
           onPress={onKeep}
-          style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
-          accessibilityRole="button"
+          style={styles.grow}
+          icon={<Icon name="script" size={16} color={palette.tintText} />}
           accessibilityLabel={t('scripts.keepLabel', { description: offer.description })}
-        >
-          <Icon name="script" size={16} color={palette.tintText} />
-          <WholeWordsText style={styles.secondaryText}>{t('scripts.keepFor')}</WholeWordsText>
-        </Pressable>
+        />
       )}
     </View>
   );
@@ -224,22 +223,11 @@ export function ScriptCard({ offer, dark, onKeep }: { offer: ScriptOffer; dark?:
 
 const useStyles = makeStyles((c) => ({
   card: { ...common(c).card, padding: 14, gap: 8, alignSelf: 'stretch' },
+  grow: { flexGrow: 1 },
   cardDark: { backgroundColor: '#2a2930' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   status: { flex: 1, fontSize: 14, fontWeight: '600', color: c.textSecondary },
   text: { fontSize: 15, color: c.text, lineHeight: 21 },
   textDark: { color: '#f2f1ee' },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
-  secondary: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: c.sunken,
-    borderRadius: radii.control,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-  },
-  secondaryText: { color: c.tintText, fontSize: 15, fontWeight: '600', textAlign: 'center' },
-  pressed: { backgroundColor: c.pressed },
+  hint: common(c).hint,
 }));

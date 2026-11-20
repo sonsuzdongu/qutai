@@ -28,7 +28,7 @@ import { t } from '../i18n';
 import { memoryErrorText } from './memoryError';
 import { plainError } from '../ai/plainError';
 import { Icon } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { authenticate } from '../device/biometric';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { getDb } from '../storage/db';
@@ -540,7 +540,7 @@ const useStyles = makeStyles((c) => ({
   disabled: { opacity: 0.35 },
   list: { ...readableColumn, padding: 16, gap: 8 },
   top: { gap: 10, marginBottom: 4 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   small: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   smallRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 6 },
   smallIcon: { marginTop: 2 },
@@ -589,7 +589,7 @@ const useStyles = makeStyles((c) => ({
   boxOn: { backgroundColor: c.tint, borderColor: c.tint },
   proposalButtons: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 16, marginTop: 4 },
   cancelText: { fontSize: 15, color: c.tintText },
-  applyButton: { paddingHorizontal: 16, height: 36, borderRadius: radii.button, backgroundColor: c.tint, justifyContent: 'center' },
+  applyButton: { paddingHorizontal: 16, minHeight: 36, paddingVertical: 6, borderRadius: radii.button, backgroundColor: c.tint, justifyContent: 'center' },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
   loading: { marginTop: 32 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 2 },
@@ -632,7 +632,8 @@ const useStyles = makeStyles((c) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    height: 32,
+    minHeight: 32,
+    paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
@@ -652,7 +653,8 @@ const useStyles = makeStyles((c) => ({
   addInput: {
     color: c.text,
     flex: 1,
-    height: 42,
+    minHeight: 42,
+    paddingVertical: 8,
     borderRadius: radii.button,
     paddingHorizontal: 14,
     backgroundColor: c.surface,

@@ -543,11 +543,11 @@ function scopeFrom(url: string, kind: ScopeKind): Scope | null {
 const useStyles = makeStyles((c) => ({
   section: { gap: 10, marginTop: 18 },
   heading: { fontSize: 17, fontWeight: '700', color: c.text },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   card: { ...common(c).card, padding: 14, gap: 10 },
   site: { fontSize: 15, fontWeight: '600', color: c.text },
   rule: { gap: 4 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  row: common(c).row,
   flex: { flex: 1 },
   value: { fontSize: 14, color: c.text },
   remove: { paddingHorizontal: 4 },

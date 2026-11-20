@@ -7,7 +7,8 @@ import { hasNativeBlocking } from '../device/contentBlocker';
 import { t } from '../i18n';
 import { formatDateTime, formatNumber } from '../i18n/format';
 import { Icon } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
+import { Button } from '../ui/Button';
+import { makeStyles, readableColumn, usePalette, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
@@ -122,13 +123,15 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
           ))}
 
           <View style={styles.buttons}>
-            <Button label={t('blocking.add')} disabled={busy || !allowed} onPress={addList} />
+            <Button variant="secondary" label={t('blocking.add')} disabled={busy || !allowed} onPress={addList} />
             <Button
+              variant="secondary"
               label={t('blocking.updateNow')}
               disabled={busy || !allowed}
               onPress={() => run(() => contentBlocking.updateNow())}
             />
             <Button
+              variant="secondary"
               label={t('blocking.reset')}
               danger
               disabled={busy}
@@ -224,47 +227,22 @@ function ListRow({
   );
 }
 
-function Button({
-  label,
-  onPress,
-  disabled,
-  danger,
-}: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-  danger?: boolean;
-}) {
-  const styles = useStyles();
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => [styles.button, pressed && styles.pressed, disabled && styles.disabled]}
-      accessibilityRole="button"
-    >
-      <Text style={[styles.buttonText, danger && styles.danger]}>{label}</Text>
-    </Pressable>
-  );
-}
 
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   content: { ...readableColumn, padding: 16, gap: 10 },
   flex: { flex: 1 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   status: { fontSize: 14, color: c.text, fontWeight: '600' },
   statusOn: { color: c.tintText },
   card: { ...common(c).card, padding: 14, gap: 4 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  name: { fontSize: 15, fontWeight: '600', color: c.text },
+  row: common(c).row,
+  name: common(c).label,
   error: { fontSize: 13, color: c.danger, lineHeight: 18 },
   links: { flexDirection: 'row', gap: 16, marginTop: 2 },
   link: { fontSize: 13, color: c.tintText, fontWeight: '600' },
   remove: { paddingHorizontal: 4 },
   buttons: { gap: 8, marginTop: 6 },
-  button: { backgroundColor: c.surface, borderRadius: radii.control, paddingVertical: 12, alignItems: 'center' },
-  buttonText: { fontSize: 15, fontWeight: '600', color: c.tintText },
   danger: { color: c.danger },
   pressed: { backgroundColor: c.pressed },
   disabled: { opacity: 0.5 },

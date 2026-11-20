@@ -58,7 +58,7 @@ const useStyles = makeStyles((c) => ({
   },
   incognito: { backgroundColor: '#1c1b22' },
   title: { fontSize: 18, fontWeight: '700', color: c.textSecondary, textAlign: 'center' },
-  button: { paddingHorizontal: 28, height: 48, borderRadius: radii.button, backgroundColor: c.tint, justifyContent: 'center' },
+  button: { paddingHorizontal: 28, minHeight: 48, paddingVertical: 8, borderRadius: radii.button, backgroundColor: c.tint, justifyContent: 'center' },
   buttonText: { color: c.onTint, fontSize: 16, fontWeight: '700' },
   leave: { color: '#a9a8b3', fontSize: 15 },
 }));

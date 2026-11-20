@@ -4,7 +4,7 @@ import { AiConfig, getProvider, isConfigured, modelLabel, PROVIDER_ORDER } from 
 import type { ProviderId } from '../ai/types';
 import type { ModelChoice } from '../chat/Conversation';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { BottomSheet } from './BottomSheet';
 import { ModelCatalogPicker, modelDetail, useCatalog } from './ModelCatalogPicker';
@@ -193,9 +193,9 @@ const useStyles = makeStyles((c) => ({
   content: { paddingHorizontal: 20, gap: 6 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   // A long title wraps; Done keeps its width.
-  title: { fontSize: 17, fontWeight: '700', color: c.text, flexShrink: 1 },
+  title: { ...common(c).title, flexShrink: 1 },
   done: { fontSize: 16, fontWeight: '600', color: c.tintText },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   group: { gap: 2 },
   label: { color: c.textSecondary, fontSize: 13, fontWeight: '600', marginTop: 12, textTransform: 'uppercase' },
   flex: { flex: 1 },

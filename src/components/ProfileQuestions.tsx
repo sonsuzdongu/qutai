@@ -252,7 +252,8 @@ export function ProfileQuestions({ transition, onDone, registerBack, startAt = '
             ? t(answered ? 'common.save' : 'profile.skip')
             : t(answered ? 'onboarding.continue' : 'profile.skip');
 
-  const onPrimary = () => (page === 'offer' ? go('address') : void next());
+  // The promise holds the button busy while answers are saved: a double tap cannot save a fact twice.
+  const onPrimary = () => (page === 'offer' ? go('address') : next());
 
   const privacy = t(features.pro ? 'profile.privacyPro' : 'profile.privacy');
 
@@ -861,7 +862,7 @@ const useStyles = makeStyles((c) => ({
     width: '100%',
     alignSelf: 'center',
   },
-  primary: { height: 52, borderRadius: radii.button },
+  primary: { minHeight: 52, paddingVertical: 8, borderRadius: radii.button },
   primaryText: { fontSize: 17 },
   secondary: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
   secondaryText: { color: c.tintText, fontSize: 16, fontWeight: '600' },

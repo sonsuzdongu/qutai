@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { t } from '../i18n';
 import { formatPercent } from '../i18n/format';
-import { makeStyles, radii } from '../ui/theme';
+import { makeStyles, radii, common } from '../ui/theme';
 import { clampTextZoom, TEXT_ZOOM_MAX, TEXT_ZOOM_MIN } from '../storage/settings';
 import { BottomSheet } from './BottomSheet';
 
@@ -69,7 +69,7 @@ const useStyles = makeStyles((c) => ({
   content: { paddingHorizontal: 20, gap: 14 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   // A long title wraps; Done keeps its width.
-  title: { fontSize: 17, fontWeight: '700', color: c.text, flexShrink: 1 },
+  title: { ...common(c).title, flexShrink: 1 },
   done: { fontSize: 16, fontWeight: '600', color: c.tintText },
   sample: { color: c.text, minHeight: 44 },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

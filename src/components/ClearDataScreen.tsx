@@ -3,7 +3,8 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { makeStyles, readableColumn, radii, common } from '../ui/theme';
+import { Button } from '../ui/Button';
+import { makeStyles, readableColumn, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { ClearOptions } from '../storage/clearData';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -84,14 +85,14 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
               <ThemedSwitch value={options[key]} onValueChange={(on) => setOptions({ ...options, [key]: on })} />
             </View>
           ))}
-          <Pressable
+          <Button
+            size="large"
+            variant="destructive"
+            label={t('clearData.clear')}
             onPress={clear}
             disabled={!anything}
-            style={[styles.button, !anything && styles.disabled]}
-            accessibilityRole="button"
-          >
-            <Text style={styles.buttonText}>{t('clearData.clear')}</Text>
-          </Pressable>
+            style={styles.button}
+          />
         </ScrollView>
       </SafeAreaView>
       <DialogHost />
@@ -102,23 +103,14 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   content: { ...readableColumn, padding: 16, gap: 12 },
-  label: { fontSize: 15, fontWeight: '600', color: c.text },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  label: common(c).label,
+  hint: common(c).hint,
   segment: common(c).segment,
   segmentButton: { ...common(c).segmentButton, paddingHorizontal: 2 },
   segmentSelected: common(c).segmentSelected,
   segmentText: { ...common(c).segmentText, fontSize: 13 },
   segmentTextSelected: common(c).segmentTextSelected,
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  row: common(c).row,
   texts: { flex: 1, gap: 2 },
-  button: {
-    marginTop: 12,
-    height: 48,
-    borderRadius: radii.button,
-    backgroundColor: c.dangerFill,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: { color: c.onTint, fontSize: 16, fontWeight: '700' },
-  disabled: { opacity: 0.4 },
+  button: { marginTop: 12 },
 }));

@@ -212,8 +212,8 @@ export function AiProviderFields({
 
 const useStyles = makeStyles((c) => ({
   root: { gap: 8 },
-  label: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 12 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  label: { ...common(c).label, marginTop: 12 },
+  hint: common(c).hint,
   link: { color: c.tintText, fontWeight: '600' },
   // Wraps onto a second row when the providers don't fit side by side.
   segment: { ...common(c).segment, flexWrap: 'wrap' },

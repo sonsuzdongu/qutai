@@ -1,8 +1,10 @@
 import MaskedViewBase from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ComponentType, ReactElement, ReactNode } from 'react';
-import { Pressable, StyleProp, StyleSheet, Text, TextStyle, View, ViewProps, ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, StyleProp, StyleSheet, Text, TextStyle, View, ViewProps, ViewStyle } from 'react-native';
 
+import { useBusyPress } from './Button';
+import type { PressAction } from './pressGuard';
 import { usePalette } from './theme';
 
 // The package's class typings predate React 19's JSX types; the component itself works as documented.
@@ -53,7 +55,10 @@ export function GradientText({
   );
 }
 
-/** A primary button on the brand gradient. */
+/**
+ * A primary button on the brand gradient. An action that returns a promise holds it busy until it settles, so a
+ * double tap cannot run it twice (UI-28); give it a minimum height, not a fixed one, so the label can wrap.
+ */
 export function GradientButton({
   label,
   onPress,
@@ -64,7 +69,7 @@ export function GradientButton({
   maxFontSizeMultiplier,
 }: {
   label: string;
-  onPress: () => void;
+  onPress: PressAction;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
@@ -72,12 +77,13 @@ export function GradientButton({
   /** Caps how far the system's larger text sizes grow the label (it wraps rather than clips when it grows). */
   maxFontSizeMultiplier?: number;
 }) {
+  const { busy, press } = useBusyPress(onPress);
   return (
     <Pressable
-      onPress={onPress}
-      disabled={disabled}
+      onPress={press}
+      disabled={disabled || busy}
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
+      accessibilityState={{ disabled, busy }}
       accessibilityLabel={label}
       style={({ pressed }) => [styles.button, style, disabled && styles.disabled, pressed && styles.pressed]}
     >
@@ -88,7 +94,7 @@ export function GradientButton({
         style={StyleSheet.absoluteFill}
       />
       <View style={styles.content}>
-        {icon}
+        {busy ? <ActivityIndicator size="small" color="#ffffff" /> : icon}
         <Text style={[styles.label, textStyle]} maxFontSizeMultiplier={maxFontSizeMultiplier}>
           {label}
         </Text>

@@ -4,7 +4,7 @@ import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import { SitePermissionSheet } from './SitePermissionSheet';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -115,7 +115,7 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   list: { ...readableColumn, padding: 16, gap: 8 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
+  hint: { ...common(c).hint, marginBottom: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
   row: {
     flexDirection: 'row',

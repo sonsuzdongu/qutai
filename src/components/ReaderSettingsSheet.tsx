@@ -140,10 +140,10 @@ const useStyles = makeStyles((c) => ({
   content: { paddingHorizontal: 20, gap: 10 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
   // A long title wraps; Done keeps its width.
-  title: { fontSize: 17, fontWeight: '700', color: c.text, flexShrink: 1 },
+  title: { ...common(c).title, flexShrink: 1 },
   done: { fontSize: 16, fontWeight: '600', color: c.tintText },
   label: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 6 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   swatches: { flexDirection: 'row', gap: 8 },
   swatch: {
     flex: 1,

@@ -3,7 +3,7 @@ import { ActivityIndicator, SectionList, Text, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, common } from '../ui/theme';
 import { Icon } from '../ui/Icon';
 import { toolIcon } from '../agent/toolIcons';
 import { withoutLeadingSymbol } from '../utils/leadingSymbol';
@@ -111,7 +111,7 @@ function ActionLog({ onClose }: { onClose: () => void }) {
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   list: { ...readableColumn, padding: 16, gap: 2 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, marginBottom: 8 },
+  hint: { ...common(c).hint, marginBottom: 8 },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
   loading: { marginTop: 32 },
   day: { fontSize: 13, fontWeight: '700', color: c.textSecondary, marginTop: 14, marginBottom: 4 },

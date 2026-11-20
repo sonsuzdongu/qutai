@@ -174,14 +174,19 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
     dispatchSetup({ type: 'disclosureAnswered', accepted, signedIn: signedIn() });
   };
 
+  /** Set once setup is handed back: a second tap on the last step's button must not finish it twice. */
+  const finished = useRef(false);
+  // Returns startQutai's promise, so the button stays busy while the credits disclosure is open (UI-28).
   const next = () => {
-    if (proAi && (setup.screen === 'choose' || setup.screen === 'disclosure')) return void startQutai();
+    if (proAi && (setup.screen === 'choose' || setup.screen === 'disclosure')) return startQutai();
     if (proAi && setup.screen === 'account') {
       // Qutai Credits is picked only here, signed in.
       setDraft((d) => ({ ...d, provider: 'qutai' }));
       return go(index + 1);
     }
     if (!last) return go(index + 1);
+    if (finished.current) return;
+    finished.current = true;
     const ai = cleanAiChoice(draft);
     onDone({
       ...ai,
@@ -797,7 +802,8 @@ const useStyles = makeStyles((c) => ({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    height: 50,
+    minHeight: 50,
+    paddingVertical: 8,
     borderRadius: radii.button,
     borderWidth: 1.5,
     borderColor: c.tint,

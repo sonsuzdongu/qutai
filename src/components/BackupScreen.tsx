@@ -18,7 +18,8 @@ import { authenticate } from '../device/biometric';
 import { MessageKey, t } from '../i18n';
 import { formatDateTime, formatList, formatPercent, formatSize } from '../i18n/format';
 import { appsDataSize } from '../apps/appStore';
-import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
+import { Button } from '../ui/Button';
+import { makeStyles, readableColumn, usePalette, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -284,15 +285,7 @@ function ExportForm({ appLock, busy, setBusy, onDone }: BusyProps & { appLock: b
       {busy ? (
         <Progress percent={progress.percent} label={t('backup.encrypting')} />
       ) : (
-        <Pressable
-          onPress={run}
-          disabled={!ready}
-          style={[styles.button, !ready && styles.disabled]}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !ready }}
-        >
-          <Text style={styles.buttonText}>{t('backup.export')}</Text>
-        </Pressable>
+        <Button size="large" label={t('backup.export')} onPress={run} disabled={!ready} style={styles.button} />
       )}
     </KeyboardAwareScrollView>
   );
@@ -388,14 +381,7 @@ function ImportFlow({ file, keptPassword, busy, setBusy }: BusyProps & { file: U
         {busy ? (
           <Progress percent={progress.percent} label={t('backup.decrypting')} />
         ) : (
-          <Pressable
-            onPress={() => open()}
-            disabled={!password}
-            style={[styles.button, !password && styles.disabled]}
-            accessibilityRole="button"
-          >
-            <Text style={styles.buttonText}>{t('backup.open')}</Text>
-          </Pressable>
+          <Button size="large" label={t('backup.open')} onPress={() => open()} disabled={!password} style={styles.button} />
         )}
       </KeyboardAwareScrollView>
     );
@@ -497,13 +483,13 @@ function ImportFlow({ file, keptPassword, busy, setBusy }: BusyProps & { file: U
       {busy ? (
         <Progress percent={null} label={t('backup.restoring')} />
       ) : (
-        <Pressable
+        <Button
+          size="large"
+          variant={mode === 'replace' ? 'destructive' : 'primary'}
+          label={t('backup.restore')}
           onPress={restore}
-          style={[styles.button, mode === 'replace' && styles.dangerButton]}
-          accessibilityRole="button"
-        >
-          <Text style={styles.buttonText}>{t('backup.restore')}</Text>
-        </Pressable>
+          style={styles.button}
+        />
       )}
     </ScrollView>
   );
@@ -512,13 +498,13 @@ function ImportFlow({ file, keptPassword, busy, setBusy }: BusyProps & { file: U
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   content: { ...readableColumn, padding: 16, gap: 12, paddingBottom: 40 },
-  label: { fontSize: 15, fontWeight: '600', color: c.text },
+  label: common(c).label,
   section: { marginTop: 12 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   error: { color: c.danger },
   warning: { fontSize: 13, color: c.text, lineHeight: 18, fontWeight: '600' },
   link: { fontSize: 14, color: c.tintText, fontWeight: '600' },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  row: common(c).row,
   texts: { flex: 1, gap: 2 },
   option: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
   showRow: { alignSelf: 'flex-start' },
@@ -533,15 +519,6 @@ const useStyles = makeStyles((c) => ({
     height: 48,
     marginTop: 12,
   },
-  button: {
-    marginTop: 12,
-    height: 48,
-    borderRadius: radii.button,
-    backgroundColor: c.tint,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dangerButton: { backgroundColor: c.dangerFill },
-  buttonText: { color: c.onTint, fontSize: 16, fontWeight: '700' },
+  button: { marginTop: 12 },
   disabled: { opacity: 0.4 },
 }));

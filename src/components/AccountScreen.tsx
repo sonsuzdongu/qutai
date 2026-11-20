@@ -221,7 +221,7 @@ function ActionButton({
 const useStyles = makeStyles((c) => ({
   loading: { marginTop: 24 },
   intro: { color: c.text, fontSize: 15, lineHeight: 21 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   label: { color: c.text, fontSize: 15, fontWeight: '600' },
   card: { ...common(c).card, padding: 14, gap: 4 },
   methods: { gap: 4, marginTop: 4, marginBottom: 2 },
@@ -233,7 +233,8 @@ const useStyles = makeStyles((c) => ({
   noticeWarn: { color: c.danger },
   buttons: { gap: 10, marginTop: 12, marginBottom: 8 },
   button: {
-    height: 46,
+    minHeight: 46,
+    paddingVertical: 8,
     borderRadius: radii.button,
     backgroundColor: c.surface,
     borderWidth: 1,

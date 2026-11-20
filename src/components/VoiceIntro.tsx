@@ -35,6 +35,7 @@ import { understand, type IntroTarget } from '../intro/request';
 import { getDb } from '../storage/db';
 import { addMemory, deleteMemory, listMemories, updateMemory } from '../storage/memory';
 import { GradientButton } from '../ui/BrandGradient';
+import type { PressAction } from '../ui/pressGuard';
 import { Icon, type IconName } from '../ui/Icon';
 import { isShort } from '../ui/layout';
 import { makeStyles, usePalette, radii, common } from '../ui/theme';
@@ -366,7 +367,7 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
       footer = (
         <Footer>
           {rows.length > 0 ? (
-            <Primary label={t('common.save')} onPress={() => void save()} />
+            <Primary label={t('common.save')} onPress={save} />
           ) : (
             <Primary label={t('common.done')} onPress={() => dispatch({ type: 'done' })} />
           )}
@@ -586,7 +587,7 @@ function Footer({ children }: { children: ReactNode }) {
   return <View style={styles.bottom}>{children}</View>;
 }
 
-function Primary({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
+function Primary({ label, onPress, disabled }: { label: string; onPress: PressAction; disabled?: boolean }) {
   const styles = useStyles();
   return <GradientButton label={label} onPress={onPress} disabled={disabled} style={styles.primary} textStyle={styles.primaryText} />;
 }
@@ -1138,7 +1139,7 @@ const useStyles = makeStyles((c) => ({
     width: '100%',
     alignSelf: 'center',
   },
-  primary: { height: 52, borderRadius: radii.button },
+  primary: { minHeight: 52, paddingVertical: 8, borderRadius: radii.button },
   primaryText: { fontSize: 17 },
   secondary: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', minHeight: 44 },
   secondaryText: { color: c.tintText, fontSize: 16, fontWeight: '600', textAlign: 'center' },

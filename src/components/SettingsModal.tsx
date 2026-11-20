@@ -30,6 +30,7 @@ import type { LegalKind } from '../legal/documents';
 import type { Settings, SettingsPatch } from '../storage/settings';
 import { ASSISTANT_LOOK_LABELS, ASSISTANT_LOOK_TITLE, ASSISTANT_LOOKS } from '../ui/assistantLook';
 import { Icon, IconName } from '../ui/Icon';
+import { Button } from '../ui/Button';
 import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
@@ -331,9 +332,7 @@ function SettingsPages({
           <>
             <AiProviderFields value={ai} onChange={setAi} onSignIn={accountsEnabled ? () => setPage('account') : undefined} />
             {aiDirty && (
-              <Pressable onPress={saveAi} style={styles.saveButton} accessibilityRole="button">
-                <Text style={styles.saveButtonText}>{t('common.save')}</Text>
-              </Pressable>
+              <Button size="large" label={t('common.save')} onPress={saveAi} style={styles.saveButton} />
             )}
             <SwitchRow
               title={t('settings.confirmActions')}
@@ -1089,9 +1088,9 @@ const useStyles = makeStyles((c) => ({
   },
   sectionTitle: { color: c.text, fontSize: 16, fontWeight: '600' },
   pressed: { backgroundColor: c.pressed },
-  label: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 12 },
+  label: { ...common(c).label, marginTop: 12 },
   sectionLabel: { fontSize: 13, color: c.textSecondary, textTransform: 'uppercase', marginTop: 24 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   contactsState: { color: c.text, marginTop: 4 },
   voiceMode: { marginTop: 8 },
   customInput: {
@@ -1136,14 +1135,6 @@ const useStyles = makeStyles((c) => ({
   option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, gap: 12 },
   optionText: { color: c.text, fontSize: 15 },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
-  saveButton: {
-    height: 46,
-    borderRadius: radii.button,
-    backgroundColor: c.tint,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  saveButtonText: { color: c.onTint, fontSize: 16, fontWeight: '700' },
+  saveButton: { marginTop: 4 },
   version: { color: c.textSecondary, fontSize: 13, textAlign: 'center', marginTop: 28 },
 }));

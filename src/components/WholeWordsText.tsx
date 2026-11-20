@@ -10,7 +10,15 @@ const STEP = 0.1;
  * inside the word. Here the label wraps only between words: while a line ends inside a word, the text gets a
  * little smaller (down to 60%), so every word stays whole.
  */
-export function WholeWordsText({ children, style }: { children: string; style?: StyleProp<TextStyle> }) {
+export function WholeWordsText({
+  children,
+  style,
+  maxFontSizeMultiplier,
+}: {
+  children: string;
+  style?: StyleProp<TextStyle>;
+  maxFontSizeMultiplier?: number;
+}) {
   const [fit, setFit] = useState({ text: children, scale: 1 });
   const scale = fit.text === children ? fit.scale : 1;
   const fontSize = StyleSheet.flatten(style)?.fontSize ?? 14;
@@ -23,7 +31,11 @@ export function WholeWordsText({ children, style }: { children: string; style?: 
   };
 
   return (
-    <Text style={[style, scale < 1 && { fontSize: fontSize * scale }]} onTextLayout={onTextLayout}>
+    <Text
+      style={[style, scale < 1 && { fontSize: fontSize * scale }]}
+      onTextLayout={onTextLayout}
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
+    >
       {children}
     </Text>
   );

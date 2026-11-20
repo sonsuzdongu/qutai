@@ -143,7 +143,7 @@ const useStyles = makeStyles((c) => ({
   refreshText: { color: c.tintText, fontSize: 15, fontWeight: '600' },
   disabled: { opacity: 0.4 },
   status: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   error: { fontSize: 13, color: c.danger, lineHeight: 18 },
   input: common(c).input,
   option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 12 },

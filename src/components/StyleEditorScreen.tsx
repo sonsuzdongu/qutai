@@ -5,7 +5,7 @@ import { MAX_CSS_LENGTH, sanitizeCss, type CssProblem } from '../content/userCss
 import { MAX_STYLE_NAME } from '../content/userStyles';
 import { t, type MessageKey } from '../i18n';
 import { AppModal } from '../ui/AppModal';
-import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
@@ -121,7 +121,7 @@ const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   content: { padding: 16, gap: 8, paddingBottom: 40 },
   label: { fontSize: 14, fontWeight: '600', color: c.text, marginTop: 8 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   input: { backgroundColor: c.surface, borderRadius: radii.control, padding: 12, fontSize: 16, color: c.text },
   code: { minHeight: 220, fontSize: 14, fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }) },
   problem: { backgroundColor: c.surface, borderRadius: radii.control, padding: 12, gap: 4 },

@@ -21,6 +21,7 @@ import { formatSize } from '../i18n/format';
 import { AppModal } from '../ui/AppModal';
 import { Icon } from '../ui/Icon';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
+import { Button } from '../ui/Button';
 import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost, dialog } from './Dialog';
@@ -28,7 +29,6 @@ import { ErrorDetails } from './ErrorDetails';
 import { appPermissionLabel, importErrorMessage } from './appLabels';
 import { AppIconView } from './MyApps';
 import { ScreenHeader } from './ScreenHeader';
-import { WholeWordsText } from './WholeWordsText';
 
 /**
  * Importing an app (docs/mini-apps.md › Import): the file is read and checked, then this screen shows what the app is
@@ -273,7 +273,7 @@ function ImportScreen({ request, onNotice }: { request: ImportRequest; onNotice:
 
         <Text style={styles.body}>{t('apps.importArrivesOff')}</Text>
         {busy ? <ActivityIndicator /> : <Button label={t('apps.importAction')} onPress={() => void run(state)} />}
-        <Button label={t('common.cancel')} onPress={close} tone="secondary" />
+        <Button label={t('common.cancel')} onPress={close} variant="secondary" />
       </ScrollView>
     );
   };
@@ -308,18 +308,6 @@ function Choice({ selected, label, hint, onPress }: { selected: boolean; label: 
   );
 }
 
-function Button({ label, onPress, tone = 'primary' }: { label: string; onPress: () => void; tone?: 'primary' | 'secondary' }) {
-  const styles = useStyles();
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      style={({ pressed }) => [tone === 'primary' ? styles.primary : styles.secondary, pressed && styles.pressed]}
-    >
-      <WholeWordsText style={tone === 'primary' ? styles.primaryText : styles.secondaryText}>{label}</WholeWordsText>
-    </Pressable>
-  );
-}
 
 const useStyles = makeStyles((c) => ({
   screen: { flex: 1, backgroundColor: c.bg },
@@ -348,8 +336,4 @@ const useStyles = makeStyles((c) => ({
   codeNote: { paddingHorizontal: 16 },
   codeText: { fontSize: 12, lineHeight: 17, color: c.text, fontFamily: MONO },
   pressed: { opacity: 0.7 },
-  primary: { backgroundColor: c.tint, borderRadius: radii.control, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
-  primaryText: { color: c.onTint, fontSize: 16, fontWeight: '600', textAlign: 'center' },
-  secondary: { backgroundColor: c.sunken, borderRadius: radii.control, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
-  secondaryText: { color: c.tintText, fontSize: 16, fontWeight: '600', textAlign: 'center' },
 }));

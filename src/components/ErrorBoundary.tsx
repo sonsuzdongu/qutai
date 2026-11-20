@@ -44,6 +44,6 @@ const styles = StyleSheet.create({
   full: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   title: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
   body: { fontSize: 15, lineHeight: 21, textAlign: 'center', maxWidth: 360 },
-  button: { marginTop: 8, height: 44, paddingHorizontal: 22, borderRadius: radii.button, justifyContent: 'center' },
+  button: { marginTop: 8, minHeight: 44, paddingVertical: 8, paddingHorizontal: 22, borderRadius: radii.button, justifyContent: 'center' },
   buttonText: { fontSize: 16, fontWeight: '600' },
 });

@@ -1,6 +1,6 @@
 import { File, Paths } from 'expo-file-system';
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react';
-import { AccessibilityInfo, BackHandler, PixelRatio, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { AccessibilityInfo, BackHandler, PixelRatio, Platform, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import type { ThemeInfo } from '../apps/bridge';
@@ -12,13 +12,13 @@ import { incognitoProfilesSupported } from '../device/webviewProfile';
 import { t } from '../i18n';
 import { AppModal } from '../ui/AppModal';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette, type Palette, radii } from '../ui/theme';
+import { Button } from '../ui/Button';
+import { makeStyles, usePalette, type Palette } from '../ui/theme';
 import { ActionSheet, type SheetAction } from './ActionSheet';
 import { DialogHost } from './Dialog';
 import { ErrorDetails } from './ErrorDetails';
 import { ScreenHeader } from './ScreenHeader';
 import { Toast, useToast } from './Toast';
-import { WholeWordsText } from './WholeWordsText';
 import { RunnerSession, type Overlay } from './runnerSession';
 import { AppReview } from './AppImport';
 import { exportApp } from './appActions';
@@ -166,7 +166,7 @@ function Runner({ request, onEdit, onFix, onNotice }: Props & { request: RunnerR
           {/* An app made with Qutai but not sealed here (restored on another phone, or changed): the line above says so. */}
           <AppReview pkg={loaded.pkg} author={loaded.pkg.manifest.author} showAuthor={loaded.pkg.manifest.author.kind === 'imported'} />
           <Button label={t('apps.turnOn')} onPress={() => void session.approve()} />
-          <Button label={t('apps.close')} onPress={session.close} tone="secondary" />
+          <Button label={t('apps.close')} onPress={session.close} variant="secondary" />
         </ScrollView>
       );
     if (!loaded || !snap.built) return null;
@@ -261,18 +261,6 @@ function Message({ title, body, children }: { title: string; body?: string; chil
   );
 }
 
-function Button({ label, onPress, tone = 'primary' }: { label: string; onPress: () => void; tone?: 'primary' | 'secondary' }) {
-  const styles = useStyles();
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      style={({ pressed }) => [tone === 'primary' ? styles.primary : styles.secondary, pressed && styles.pressed]}
-    >
-      <WholeWordsText style={tone === 'primary' ? styles.primaryText : styles.secondaryText}>{label}</WholeWordsText>
-    </Pressable>
-  );
-}
 
 function OverlayView({
   overlay,
@@ -308,8 +296,8 @@ function OverlayView({
             <Text style={styles.messageBody}>{t('apps.errorBody')}</Text>
             <ErrorDetails details={formatDiagnostics(overlay.diagnostics.slice(-5))} />
             <Button label={t('apps.askFix')} onPress={onFix} />
-            <Button label={t('apps.reload')} onPress={onReload} tone="secondary" />
-            <Button label={t('apps.dismiss')} onPress={onDismiss} tone="secondary" />
+            <Button label={t('apps.reload')} onPress={onReload} variant="secondary" />
+            <Button label={t('apps.dismiss')} onPress={onDismiss} variant="secondary" />
           </>
         ) : overlay.kind === 'crash' ? (
           <>
@@ -318,7 +306,7 @@ function OverlayView({
             </Text>
             <Text style={styles.messageBody}>{t('apps.crashedBody')}</Text>
             <Button label={t('apps.reload')} onPress={onReload} />
-            <Button label={t('apps.close')} onPress={onClose} tone="secondary" />
+            <Button label={t('apps.close')} onPress={onClose} variant="secondary" />
           </>
         ) : (
           <>
@@ -327,8 +315,8 @@ function OverlayView({
             </Text>
             <Text style={styles.messageBody}>{t('apps.hangBody')}</Text>
             <Button label={t('apps.reload')} onPress={onReload} />
-            <Button label={t('apps.askFix')} onPress={onFix} tone="secondary" />
-            <Button label={t('apps.close')} onPress={onClose} tone="secondary" />
+            <Button label={t('apps.askFix')} onPress={onFix} variant="secondary" />
+            <Button label={t('apps.close')} onPress={onClose} variant="secondary" />
           </>
         )}
       </ScrollView>
@@ -345,9 +333,5 @@ const useStyles = makeStyles((c) => ({
   messageBody: { fontSize: 15, lineHeight: 21, color: c.textSecondary, textAlign: 'center' },
   overlay: { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: c.bg },
   overlayContent: { padding: 24, gap: 12, alignItems: 'stretch', maxWidth: 520, width: '100%', alignSelf: 'center' },
-  primary: { backgroundColor: c.tint, borderRadius: radii.control, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
-  primaryText: { color: c.onTint, fontSize: 16, fontWeight: '600', textAlign: 'center' },
-  secondary: { backgroundColor: c.sunken, borderRadius: radii.control, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
-  secondaryText: { color: c.tintText, fontSize: 16, fontWeight: '600', textAlign: 'center' },
   pressed: { opacity: 0.8 },
 }));

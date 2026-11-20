@@ -174,7 +174,29 @@ export function common(c: Palette) {
     alignItems: 'center',
     justifyContent: 'center',
   };
-  return { card, notice, noticeRow, input, segment, segmentButton, segmentSelected, segmentText, segmentTextSelected, checkbox };
+  /** A row's title and the grey line under it (settings, cards, lists). */
+  const label: TextStyle = { fontSize: 15, fontWeight: '600', color: c.text };
+  const hint: TextStyle = { fontSize: 13, color: c.textSecondary, lineHeight: 18 };
+  /** A screen's or a card's heading. */
+  const title: TextStyle = { fontSize: 17, fontWeight: '700', color: c.text };
+  /** Things side by side, centred: an icon or switch beside its text. */
+  const row: ViewStyle = { flexDirection: 'row', alignItems: 'center', gap: 12 };
+  return {
+    card,
+    notice,
+    noticeRow,
+    input,
+    segment,
+    segmentButton,
+    segmentSelected,
+    segmentText,
+    segmentTextSelected,
+    checkbox,
+    label,
+    hint,
+    title,
+    row,
+  };
 }
 
 /**

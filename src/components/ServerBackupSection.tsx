@@ -23,7 +23,8 @@ import { errorDetails, errorKind, MIN_BACKUP_PASSWORD, newPasswordProblem, type 
 import { MessageKey, t } from '../i18n';
 import { formatDateTime, formatPercent, formatSize } from '../i18n/format';
 import { AppModal } from '../ui/AppModal';
-import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
+import { Button } from '../ui/Button';
+import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { PasswordField, ShowPassword, useAppsDataSize, type ServerRestoreJob } from './BackupScreen';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -31,7 +32,6 @@ import { dialog, DialogHost } from './Dialog';
 import { ErrorDetails } from './ErrorDetails';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 import { ScreenHeader } from './ScreenHeader';
-import { WholeWordsText } from './WholeWordsText';
 
 /**
  * Settings › Backup › Qutai account (docs/server-backup.md): back up now, the account's backups (restore, delete), the
@@ -266,9 +266,7 @@ export function ServerBackupSection({ onRestore }: { onRestore: (job: ServerRest
           </Pressable>
         </View>
       ) : (
-        <Pressable onPress={runBackup} style={({ pressed }) => [styles.button, pressed && styles.pressed]} accessibilityRole="button">
-          <WholeWordsText style={styles.buttonText}>{t('serverBackup.backUpNow')}</WholeWordsText>
-        </Pressable>
+        <Button size="large" label={t('serverBackup.backUpNow')} onPress={runBackup} style={styles.button} />
       )}
 
       <Text style={[styles.label, styles.section]}>{t('serverBackup.listTitle')}</Text>
@@ -500,17 +498,14 @@ function PasswordForm({
         </Text>
         <Text style={styles.warning}>{t('serverBackup.passwordWarning')}</Text>
         {failed && <Text style={[styles.hint, styles.error]}>{t('serverBackup.passwordSaveFailed')}</Text>}
-        <Pressable
+        <Button
+          size="large"
+          label={t(open.thenBackUp ? 'serverBackup.saveAndBackUp' : 'serverBackup.savePassword')}
           onPress={save}
-          disabled={!!problem || saving}
-          style={[styles.button, (!!problem || saving) && styles.disabled]}
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !!problem || saving }}
-        >
-          <WholeWordsText style={styles.buttonText}>
-            {t(open.thenBackUp ? 'serverBackup.saveAndBackUp' : 'serverBackup.savePassword')}
-          </WholeWordsText>
-        </Pressable>
+          disabled={!!problem}
+          busy={saving}
+          style={styles.button}
+        />
       </KeyboardAwareScrollView>
     </>
   );
@@ -520,11 +515,11 @@ const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   sheet: { ...readableColumn, padding: 16, gap: 12, paddingBottom: 40 },
   block: { gap: 8, marginTop: 24 },
-  title: { fontSize: 17, fontWeight: '700', color: c.text },
-  label: { fontSize: 15, fontWeight: '600', color: c.text },
+  title: common(c).title,
+  label: common(c).label,
   rowTitle: { fontSize: 15, color: c.text },
   section: { marginTop: 12 },
-  hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
+  hint: common(c).hint,
   status: { fontSize: 14, color: c.text, lineHeight: 20 },
   error: { color: c.danger },
   danger: { color: c.danger },
@@ -565,22 +560,7 @@ const useStyles = makeStyles((c) => ({
     minHeight: 44,
     justifyContent: 'center',
   },
-  button: {
-    marginTop: 4,
-    minHeight: 48,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: radii.button,
-    backgroundColor: c.tint,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: {
-    color: c.onTint,
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
+  button: { marginTop: 4 },
   pressed: { opacity: 0.7 },
   disabled: { opacity: 0.4 },
 }));

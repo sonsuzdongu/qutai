@@ -2,7 +2,7 @@ import type { ComponentRef } from 'react';
 import { memo, useMemo, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { t } from '../i18n';
-import { makeStyles, radii } from '../ui/theme';
+import { makeStyles, radii, common } from '../ui/theme';
 import { qrMatrix } from '../device/qr';
 import { BottomSheet } from './BottomSheet';
 
@@ -76,7 +76,7 @@ export function QrCodeSheet({ url, onShareLink, onShareImage, onClose }: Props) 
 const useStyles = makeStyles((c) => ({
   sheet: { paddingTop: 20 },
   content: { paddingHorizontal: 20, alignItems: 'center', gap: 14 },
-  title: { fontSize: 17, fontWeight: '700', color: c.text },
+  title: common(c).title,
   // Always white: scanners need a light margin around the code, in dark mode and in the shared image too.
   code: { padding: 16, backgroundColor: '#ffffff', borderRadius: radii.card },
   row: { flexDirection: 'row' },
@@ -84,7 +84,8 @@ const useStyles = makeStyles((c) => ({
   buttons: { flexDirection: 'row', gap: 10, alignSelf: 'stretch' },
   button: {
     flex: 1,
-    height: 44,
+    minHeight: 44,
+    paddingVertical: 8,
     borderRadius: radii.button,
     alignItems: 'center',
     justifyContent: 'center',
