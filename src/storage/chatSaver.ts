@@ -71,3 +71,11 @@ export class ChatSaver {
     return this.timers.has(chat);
   }
 }
+
+/**
+ * Qutai leaves the foreground (the system may end it there without warning): typing waiting on a timer and every
+ * conversation with a task still running or unwinding are written now (TABS-28, TABS-29).
+ */
+export function saveOnLeaving(saver: ChatSaver, running: readonly { chat: Conversation }[]): Promise<void> {
+  return Promise.all([saver.flush(), ...running.map((task) => saver.now(task.chat))]).then(() => undefined);
+}

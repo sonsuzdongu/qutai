@@ -1,6 +1,6 @@
 import { siteRules } from './src/storage/siteRules';
 import { TaskRunner } from './src/task/taskRunner';
-import { ChatSaver } from './src/storage/chatSaver';
+import { ChatSaver, saveOnLeaving } from './src/storage/chatSaver';
 import { SettingsWriter } from './src/storage/settingsWriter';
 import { sendTask, type SendOptions, type TaskHost } from './src/task/sendTask';
 import type { SettingsPatch } from './src/storage/settings';
@@ -999,9 +999,7 @@ function BrowserApp({
   // running task's conversation are written now, like the open tabs (usePersistSession).
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') return;
-      void chatSaver.flush();
-      taskRunner.tasks.forEach((task) => void chatSaver.now(task.chat));
+      if (state !== 'active') void saveOnLeaving(chatSaver, taskRunner.tasks);
     });
     return () => sub.remove();
   }, [chatSaver, taskRunner]);

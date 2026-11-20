@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { compactHistory } from '../../src/agent/history';
 import { Conversation } from '../../src/chat/Conversation';
-import { ChatSaver } from '../../src/storage/chatSaver';
+import { ChatSaver, saveOnLeaving } from '../../src/storage/chatSaver';
 import { makeHost, tick } from './host';
 
 /** A loop that does `steps` steps (one tool call each), saying each, then hangs: Qutai is killed there. */
@@ -166,4 +166,25 @@ test('saves of one conversation never overlap: requests during a write make one 
   assert.deepEqual(written, ['step 3', 'step 3'].slice(0, written.length));
   assert.equal(written.length, 2, 'one write, then exactly one more');
   assert.equal(written.at(-1), 'step 3');
+});
+
+test('leaving the foreground mid-task writes the running conversation and the waiting typing', async () => {
+  const written: string[] = [];
+  const saver = new ChatSaver(async (chat) => {
+    written.push(chat.key);
+  });
+  const { send, browser, runner } = makeHost(async (opts) => {
+    await new Promise<void>((resolve) => opts.signal.addEventListener('abort', () => resolve()));
+  });
+  const running = browser.conversationOf(browser.active);
+  const other = browser.openTab('https://example.com/');
+  browser.conversationOf(other).restore(null);
+  const run = send('Work', { tab: browser.tabs[0] });
+  await tick();
+  browser.conversationOf(other).setDraft('half typed');
+  saver.soon(browser.conversationOf(other), 10_000);
+  await saveOnLeaving(saver, runner.tasks);
+  assert.deepEqual(written.sort(), [browser.conversationOf(other).key, running.key].sort());
+  running.stop();
+  await run;
 });

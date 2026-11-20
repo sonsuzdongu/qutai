@@ -681,3 +681,45 @@ Bilgisayarda testlerle denendi; telefon ve öykünücü kullanılamadı. En risk
       sorusu çıkıyor), bir görüntülü görüşme test sayfasında kamera (Qutai'ın kamera sorusu), bir videoyu arka planda
       çalma ve kilit ekranı denetimleri (Android: bildirimdeki oynatıcı) eskisi gibi çalışıyor; "Bu sayfayı özetler
       misiniz?" ve bir sayfada betik çalıştırma da.
+
+## 23. Görevin yaşam döngüsü: tek görev yeri, Durdur, kayıt noktaları, uzun sohbet, taslaklar, ayarlar (20 Kasım, telefonda denenmedi)
+
+Görevin başlangıcından bitişine kadar olan kısım App.tsx'ten `src/task/` altına taşındı ve Node'da sınandı
+(`npm run test:tasks`); aşağıdakiler yalnızca telefonda görülebilir.
+
+- [ ] Bir görev başlatın ve hemen ardından Qutai düğmesine basılı tutup sesle ikinci bir istek söyleyin: ikinci görev
+      başlamıyor, "Qutai başka bir sekmede çalışıyor" bildirimi çıkıyor ve söylediğiniz metin o sohbetin yazı alanında
+      duruyor; ilk görev kesintisiz sürüyor (`TABS-11`).
+- [ ] Bir görev çalışırken Durdur'a basın, hemen ardından başka bir sekmede sesle yeni bir istek söyleyin: yeni görev
+      başlıyor; durdurulan görevin bitişi yeni görevin şeridini, sayfadaki işaretini ve (Android) arka plan bildirimini
+      kapatmıyor (`TASK-17`).
+- [ ] Bir görev çalışırken görevin sekmesini kapatın, sonra başka bir sekmede yeni bir görev başlatın: yeni görev
+      başlıyor ve sonuna kadar çalışıyor; kapatılan sekmeyi "Son kapatılanlar"dan geri açınca sohbeti "Durduruldu"
+      satırıyla duruyor (`TABS-11`, `TASK-17`).
+- [ ] Yavaş açılan bir sayfada (ağ yavaşken, ya da `scripts/slow-server`) asistan sayfayı açarken Durdur'a basın:
+      "Durduruldu" yaklaşık bir saniye içinde çıkıyor (önceden 15 saniyeye kadar sürebiliyordu); ardından aynı sohbette
+      yeni bir mesaj hatasız yanıtlanıyor (`TASK-18`).
+- [ ] Asistan "10 saniye bekle" derken ya da bir düğmeye bastıktan sonra sayfanın yüklenmesini beklerken Durdur'a basın:
+      aynı şekilde hemen duruyor (`TASK-18`).
+- [ ] Bir görevin ortasında (birkaç adım sonra) uygulamayı uygulama değiştiriciden kapatın (öldürün) ve yeniden açın:
+      sohbette mesajınız ve yapılan adımlar duruyor, sonunda "Qutai bu görev sürerken kapandı. Yukarıdaki adımlar
+      yapıldı, sonrasında hiçbir şey çalışmadı." satırı var; çalışıyormuş gibi görünen hiçbir şey yok (yarım yazılmış
+      yanıt, şerit, parıltı); aynı sohbette "devam et" deyince görev hatasız sürüyor (`TABS-28`).
+- [ ] Aynısını Qutai Kredileri ile yapın: öldürmeden önce harcanan krediler bakiyede ve hesap dökümünde düşülmüş
+      görünüyor (iade yok); yarım kalan görevin altında maliyet satırı yok (`TABS-28`).
+- [ ] Uzun bir sohbet: aynı sohbette 30-40 kez birkaç sayfa okutun (ya da yedekten uzun bir sohbet geri yükleyin);
+      yanıtlar gelmeye devam ediyor, "Yapay zekâya gönderilenler" kaydında istek boyutu bir noktadan sonra büyümüyor,
+      ilk mesajda "[Earlier messages of this conversation were left out…]" notu görünüyor; ekranda sohbetin tamamı
+      duruyor; uygulama zamanla yavaşlamıyor ve bellekten kapanmıyor (`PERF-11`).
+- [ ] Uzun bir görevde (birkaç ekran görüntüsü alan) Anthropic anahtarıyla: maliyet ayrıntısında adımlar arasında
+      önbellekten okuma sürüyor (önbellek bozulmadı) (`PERF-11`).
+- [ ] Android, "Arka planda çalışmaya devam et" açık: bir görev başlatın, Qutai'dan çıkın, görev bildirimle sürüyor;
+      bildirimdeki Durdur görevi hemen durduruyor; geri dönünce sohbette adımlar ve "Durduruldu" var. Görev arka plandayken
+      telefonu kilitleyip birkaç dakika bekleyin ve sonra uygulamayı öldürüp açın: o ana kadarki adımlar kaydedilmiş
+      (`TASK-17`, `TABS-28`).
+- [ ] İki sekmede hızla taslak yazın: birinci sekmede bir şey yazıp hemen (bir saniye içinde) ikinci sekmeye geçip orada
+      yazın, ardından uygulamayı öldürüp açın: iki sekmenin taslağı da duruyor (`TABS-29`).
+- [ ] Taslak yazarken hemen Ana ekrana çıkın ve uygulamayı öldürün: taslak duruyor (`TABS-29`).
+- [ ] Ayarlar › Gizlilik'te "Uygulama kilidi"ni açın; Face ID / parmak izi sorulurken (sormadan önce) asistanın bir
+      görevde reklam engellemeyi kapatmasını sağlayın (ya da iki ayarı hızlıca art arda değiştirin): onaydan sonra iki
+      değişiklik de kalıcı, uygulamayı yeniden açınca da (`DATA-28`).
