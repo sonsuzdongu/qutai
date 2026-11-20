@@ -121,6 +121,18 @@ would stop every purchase and refund notification.
 - [ ] Any other service that must call the API from outside the app (a monitoring check, a store server notification
       relayed by RevenueCat) needs the same exception or the app's User-Agent shape.
 
+## Before launch: store privacy answers and a read of the legal translations
+
+- [ ] The store privacy answers written in `docs/permissions.md` say "no data collected (Qutai has no servers of its
+      own)". That is true for the open-source build only. The official (pro) build keeps an account, email addresses,
+      purchase records, usage counts and encrypted backups on the server, as its privacy policy says. Before the
+      official build is submitted, rewrite the App Store privacy labels and the Play Data safety form for it, from
+      the pro policy (`src/legal/proDocuments.ts`); owner, 20 Nov 2026: "bunu todo'ya al" (design record LEGAL-9).
+- [ ] The eight translations of the legal texts (German, Spanish, Brazilian Portuguese, French, Japanese, Korean,
+      Russian, Indonesian) are machine translations nobody has reviewed (20 Nov 2026). Have German and French read by
+      a lawyer or a native speaker first, then Korean and Japanese; the translators' doubtful terms per language are
+      in the report of commit `bc1d65d`. Owner, 20 Nov 2026: agreed.
+
 ## Before launch: remove fake purchases
 
 Buying credits works today only through **fake purchases**, a deliberate stand-in the owner ordered on 17 Nov 2026
