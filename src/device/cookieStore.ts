@@ -42,10 +42,6 @@ function storeFor(tab: Tab): string {
   return tab.profile ?? '';
 }
 
-export function cookieStoreAvailable(): boolean {
-  return !!native;
-}
-
 export type CookieRead = { cookies: StoreCookie[]; detailed: boolean; platform: 'android' | 'ios' };
 
 /** The cookies that apply to the tab's page and to the other sites it loaded from (their front page). */

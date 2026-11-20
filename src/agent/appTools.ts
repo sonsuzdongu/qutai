@@ -38,5 +38,3 @@ export const APP_TOOLS: ToolDefinition[] = [
     },
   },
 ];
-
-export const APP_TOOL_NAMES = new Set(APP_TOOLS.map((tool) => tool.name));

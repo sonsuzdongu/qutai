@@ -94,10 +94,6 @@ export function setLanguage(language: Language) {
 }
 
 /** Sets (or clears, with null) the language chosen inside Qutai, and re-renders the app in it. */
-export function getLanguageOverride(): Language | null {
-  return override?.language ?? null;
-}
-
 export function setLanguageOverride(language: Language | null, opts: { bridge?: boolean } = {}) {
   override = language ? { language, bridge: !!opts.bridge } : null;
   setLanguage(language ?? detectLanguage(getLocales()));

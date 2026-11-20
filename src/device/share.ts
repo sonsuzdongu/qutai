@@ -40,10 +40,6 @@ export type ShareResult = {
   textCopied: boolean;
 };
 
-export function nativeShareAvailable(): boolean {
-  return typeof native?.shareFiles === 'function';
-}
-
 export async function shareToApp(options: {
   files: OutgoingFile[];
   text?: string;

@@ -10,11 +10,6 @@ import { formatScope, parseScope, type RuleSource, type Scope, type ScopeKind, s
 
 export type StyleScopeKind = ScopeKind | 'all';
 export const STYLE_SCOPE_KINDS: readonly StyleScopeKind[] = ['page', 'path', 'site', 'subdomains', 'all'];
-export const DEFAULT_STYLE_SCOPE: StyleScopeKind = 'subdomains';
-
-export function isStyleScopeKind(value: unknown): value is StyleScopeKind {
-  return typeof value === 'string' && (STYLE_SCOPE_KINDS as readonly string[]).includes(value);
-}
 
 export type StyleScope = Scope | { kind: 'all'; host: '' };
 

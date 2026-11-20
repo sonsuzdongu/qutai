@@ -140,16 +140,12 @@ const CHANGEABLE = {
   },
 } satisfies Record<SettingsToolKey, Spec>;
 
-export type ChangeableKey = keyof typeof CHANGEABLE;
 const SPECS: Record<string, Spec> = CHANGEABLE;
 
 /** Settings that exist only on some phones. */
 function unavailable(key: string): boolean {
   return key === 'picture_in_picture' && Platform.OS !== 'android';
 }
-
-/** Every key the tool can write. */
-export const CHANGEABLE_KEYS = Object.keys(CHANGEABLE) as ChangeableKey[];
 
 const availableKeys = () => Object.keys(CHANGEABLE).filter((k) => !unavailable(k));
 

@@ -93,8 +93,6 @@ export type ServerBackupState = {
   >;
 };
 
-export const EMPTY_STATE: ServerBackupState = { prefs: DEFAULT_PREFS, accounts: {} };
-
 const bool = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback);
 const time = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : undefined);
 const SKIPS: readonly string[] = ['no-password', 'incognito', 'offline', 'not-wifi', 'network-unknown', 'suspended'];

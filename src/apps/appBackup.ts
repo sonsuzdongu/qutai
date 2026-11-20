@@ -173,12 +173,3 @@ export async function restoreApps(db: Db, apps: BackupApps, mode: 'merge' | 'rep
     }
   }
 }
-
-/** Counts for the restore summary. */
-export function summarizeBackupApps(apps: BackupApps): { apps: number; withData: boolean; dataItems: number } {
-  return {
-    apps: apps.items.length,
-    withData: apps.withData,
-    dataItems: apps.items.reduce((n, a) => n + (a.data ? a.data.kv.length + a.data.docs.length : 0), 0),
-  };
-}

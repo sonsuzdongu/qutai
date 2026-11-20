@@ -543,15 +543,8 @@ export interface PlaybackTab {
   notifyPlaybackChange(): void;
 }
 
-const listeners = new Set<() => void>();
 /** Pages with media playing (audible or not). */
 const playingPages = new Set<PagePlayback>();
-
-/** Called when any tab starts or stops being audible. */
-export function onAudibleChange(listener: () => void): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
-}
 
 /** Pauses the media in every tab (iOS, "Keep playing in the background" off, when the app leaves the foreground). */
 export function pauseAllPages() {
@@ -625,6 +618,5 @@ export class PagePlayback {
     if (audible || playing) playingPages.add(this);
     else playingPages.delete(this);
     this.tab.notifyPlaybackChange();
-    if (audibleChanged) listeners.forEach((l) => l());
   }
 }

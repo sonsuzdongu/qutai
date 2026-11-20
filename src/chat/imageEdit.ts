@@ -241,11 +241,6 @@ export function parseEditRequest(input: Record<string, unknown>): EditRequest | 
   return req;
 }
 
-/** Whether the request changes anything at all besides re-encoding. */
-export function changesPixels(req: EditRequest): boolean {
-  return !!(req.crop || req.aspect || req.rotate || req.flipH || req.flipV || req.width || req.height || req.filters);
-}
-
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
 /** Where a crop of `size` starts inside [start, start + length): by gravity (0, 0.5, 1) or around a focus point. */

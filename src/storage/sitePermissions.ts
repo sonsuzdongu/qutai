@@ -13,8 +13,6 @@ export const PERMISSION_SETTINGS: PermissionSetting[] = ['ask', 'allow', 'block'
 /** Whether a site itself may use the user's location. */
 export type LocationSetting = PermissionSetting;
 
-export const LOCATION_SETTINGS = PERMISSION_SETTINGS;
-
 /** What a page can capture with getUserMedia; each has its own per-site setting. */
 export type MediaKind = 'camera' | 'microphone';
 

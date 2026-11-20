@@ -105,5 +105,3 @@ export function createCreditsStore(deps: { client: () => CreditsClient | null; p
     },
   };
 }
-
-export type CreditsStore = ReturnType<typeof createCreditsStore>;

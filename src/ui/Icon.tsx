@@ -137,11 +137,6 @@ export type IconLine = {
  */
 export type IconLines = { lines: IconLine[]; spaced?: boolean };
 
-/** The plain text of icon lines, as one string. */
-export function iconLinesText({ lines, spaced }: IconLines): string {
-  return lines.map((line) => line.text).join(spaced ? '\n\n' : '\n');
-}
-
 type Props = {
   name: IconName;
   size?: number;

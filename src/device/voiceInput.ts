@@ -278,13 +278,6 @@ export function warmVoice(languages: string[], press = false): void {
   });
 }
 
-/** Reads the recogniser's languages ahead of time. */
-export function prefetchVoiceLocales(): void {
-  load()
-    .then((lib) => supportedLocales(lib.ExpoSpeechRecognitionModule))
-    .catch(() => {});
-}
-
 /** The plan warmVoice worked out for these languages, if it is fresh. */
 async function warmPlan(languages: string[]): Promise<VoicePlan | null> {
   const w = warm;

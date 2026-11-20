@@ -25,10 +25,6 @@ export type ScopeKind = 'page' | 'path' | 'site' | 'subdomains';
 export const SCOPE_KINDS: readonly ScopeKind[] = ['page', 'path', 'site', 'subdomains'];
 export const DEFAULT_SCOPE: ScopeKind = 'subdomains';
 
-export function isScopeKind(value: unknown): value is ScopeKind {
-  return typeof value === 'string' && (SCOPE_KINDS as readonly string[]).includes(value);
-}
-
 /** host: a site key (see above). path: for 'page' the path and query, for 'path' the prefix (ends with "/"). */
 export type Scope = { kind: ScopeKind; host: string; path?: string };
 
