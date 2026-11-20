@@ -6,11 +6,9 @@ import { sendTask, type SendOptions, type TaskHost } from './src/task/sendTask';
 import type { SettingsPatch } from './src/storage/settings';
 import { setTaskDialogSites } from './src/task/dialogs';
 import { pageStyleState } from './src/browser/pageStyleState';
-import { CookiesScreen } from './src/components/CookiesScreen';
 import { keepScript } from './src/components/pageScripts';
 import { ScriptSandboxHost } from './src/components/ScriptSandbox';
 import { AppRunnerHost } from './src/components/AppRunner';
-import { MyAppsScreen } from './src/components/MyApps';
 import { AppImportHost } from './src/components/AppImport';
 import { appImporter } from './src/apps/importState';
 import { pickAndImportApp } from './src/components/appActions';
@@ -22,7 +20,7 @@ import { keepStyle, stylesApply, undoOffer } from './src/components/pageCustomis
 import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
-import { ReactNode, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import {
   AccessibilityInfo,
   Appearance,
@@ -86,23 +84,37 @@ import { hostOf, slowness } from './src/browser/pendingNavigation';
 import { BrowserView } from './src/components/BrowserView';
 import { ContextAction, ContextMenuSheet } from './src/components/ContextMenuSheet';
 import { chatLinkPlan } from './src/browser/chatLinks';
-import { AssistantPanel, QuickAction, type ChatItem, type ChatItemAction } from './src/components/AssistantPanel';
+import {
+  AssistantPanel,
+  QuickAction,
+  type AssistantPanelProps,
+  type ChatItem,
+  type ChatItemAction,
+  type VoiceProps,
+} from './src/components/AssistantPanel';
+import { useStableHandlers } from './src/utils/useStableHandlers';
+
+/** The chat panel's functions (every on… prop), kept stable for the memoised panel. */
+type PanelHandlers = {
+  [K in keyof AssistantPanelProps as K extends `on${string}` ? K : never]-?: NonNullable<AssistantPanelProps[K]>;
+};
+type VoiceHandlers = Pick<VoiceProps, 'onOnlineChange' | 'notify' | 'languages' | 'onPick' | 'onStarted'>;
 import { FindBar } from './src/components/FindBar';
 import { KeyboardAvoidingContainer } from './src/components/KeyboardAware';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
 import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
-import { SettingsModal, type SettingsPage } from './src/components/SettingsModal';
+import type { SettingsPage } from './src/components/SettingsModal';
 import { ServerRestoreOffer } from './src/components/ServerRestoreOffer';
 import { useServerBackupLifecycle } from './src/backup/server/useServerBackupLifecycle';
 import { AssistantIntro, assistantIntroSeen, setAssistantIntroSeen } from './src/components/AssistantIntro';
 import { CalendarChoiceHost } from './src/components/CalendarChoiceScreen';
 import { SelectionAction, SelectionBar } from './src/components/SelectionBar';
-import { TabSwitcher } from './src/components/TabSwitcher';
 import { TextSizeSheet } from './src/components/TextSizeSheet';
 import { ReaderSettingsSheet } from './src/components/ReaderSettingsSheet';
 import { conversationModelInfo, ModelSheet } from './src/components/ModelSheet';
 import { sleep } from './src/utils/sleep';
-import { emptyTask, TaskDraft, TasksScreen } from './src/components/TasksScreen';
+import { emptyTask } from './src/components/TasksScreen';
+import { AppScreens, screenOf, type OpenScreen, type ScreenKind } from './src/components/AppScreens';
 import {
   fillTaskPrompt,
   getSavedTask,
@@ -161,8 +173,6 @@ import {
 import { PAUSED_NOTICE_DELAY_S, taskNoticeFor, type TaskNoticeEvent } from './src/agent/taskNotice';
 import { renderReportPdf } from './src/device/reportPdf';
 import { authenticate } from './src/device/biometric';
-import { scannedTarget } from './src/device/qr';
-import { toUrl } from './src/browser/url';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { IntroVariant, LaunchIntro } from './src/components/LaunchIntro';
 import { LockScreen } from './src/components/LockScreen';
@@ -178,18 +188,15 @@ import {
 } from './src/device/entryPoints';
 import { ActionSheet, SheetAction } from './src/components/ActionSheet';
 import { LEGAL_VERSION } from './src/legal/documents';
-import { OfflinePagesScreen } from './src/components/OfflinePagesScreen';
 import { deleteOfflineFile, savePageOffline } from './src/device/offline';
 import { addOfflinePage, listOfflinePages, removeOfflinePage } from './src/storage/offlinePages';
 import { QrCodeSheet } from './src/components/QrCodeSheet';
-import { QrScanner } from './src/components/QrScanner';
 import { captureRef } from 'react-native-view-shot';
 import { clearInsecureExceptions, upgradeToHttps } from './src/browser/httpsOnly';
 import { usesCertificateException } from './src/browser/certificateExceptions';
 import { ClearOptions, rangeStart } from './src/storage/clearData';
 import { deleteActionsSince } from './src/storage/actionLog';
 import { deleteSentSince, moveSentConversation, pruneSent } from './src/storage/sentLog';
-import { SentLogScreen } from './src/components/SentLogScreen';
 import { bump, setHapticsEnabled, signal, tick } from './src/device/haptics';
 import { FileExpiredError, saveComposedFileToFolder, shareComposedFile } from './src/device/composedFile';
 import { DownloadItem, DownloadStore } from './src/storage/downloads';
@@ -197,13 +204,11 @@ import { AndroidDownloads, nativeDownloads } from './src/storage/androidDownload
 import { IosDownloads } from './src/storage/iosDownloads';
 import { DownloadRequests } from './src/browser/downloadRequests';
 import { File } from 'expo-file-system';
-import { DownloadsScreen } from './src/components/DownloadsScreen';
 import * as Sharing from 'expo-sharing';
 import { SitePermissionStore } from './src/storage/sitePermissions';
 import { siteKey } from './src/agent/sitePolicy';
 import { pageSuggestions } from './src/agent/pageSuggestions';
 import { SitePermissionSheet } from './src/components/SitePermissionSheet';
-import { SitePermissionsScreen } from './src/components/SitePermissionsScreen';
 import { configurePageLocation } from './src/browser/geolocation';
 import { configurePageMedia } from './src/browser/mediaCapture';
 import { pauseAllPages } from './src/browser/playback';
@@ -554,14 +559,21 @@ function BrowserApp({
     if (normal.length) browser.switchTab(normal[normal.length - 1].id);
     else browser.openTab();
   };
-  const [settingsVisible, setSettingsVisible] = useState(false);
+  /** The full screen open over the browser, one at a time (src/components/AppScreens.tsx, UI-31). */
+  const [screen, setScreen] = useState<OpenScreen | null>(null);
+  const openScreen = useCallback((next: OpenScreen) => setScreen(next), []);
+  /** Closes that screen if it is still the one open: a late close never shuts a screen opened since. */
+  const closeScreen = useCallback((kind: ScreenKind) => setScreen((open) => (open?.kind === kind ? null : open)), []);
+  const settingsVisible = screen?.kind === 'settings';
+  const tabsVisible = screen?.kind === 'tabs';
+  const tasksScreen = screenOf(screen, 'tasks');
   /** The page Settings opens on next (reset to the main page when it closes). */
   const [settingsPage, setSettingsPage] = useState<SettingsPage>('main');
   const settingsVisibleRef = useRef(false);
   settingsVisibleRef.current = settingsVisible;
   const openSettings = (page: SettingsPage = 'main') => {
     setSettingsPage(page);
-    setSettingsVisible(true);
+    openScreen({ kind: 'settings' });
   };
   /**
    * Qutai Credits is the provider but there is no account (signed out, deleted, session ended, a restored backup):
@@ -602,7 +614,6 @@ function BrowserApp({
     setAssistantIntroSeen(true).catch(() => {});
   }, []);
   /** "What was sent to the AI" opened from the assistant panel, for this conversation key. */
-  const [sentFor, setSentFor] = useState<string | null>(null);
   // Qutai Credits (pro mode): the balance shown under the panel's title while it is the provider in use; the server's
   // configuration and the balance are read once at start (nothing at all without pro mode).
   const creditsState = useCreditsState();
@@ -639,7 +650,6 @@ function BrowserApp({
   useServerBackupLifecycle({ incognito: tab.incognito, locked: lock !== null, signedIn: accountState.status === 'signedIn' });
   /** The conversation whose model is being chosen (the sheet under the panel's title). */
   const [modelSheetFor, setModelSheetFor] = useState<Conversation | null>(null);
-  const [tabsVisible, setTabsVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   // The assistant's bookmarks tool changed something: the page menu's bookmark button follows at once.
@@ -654,23 +664,16 @@ function BrowserApp({
       }),
     [tabUrl],
   );
-  const [library, setLibrary] = useState<LibraryTab | null>(null);
-  const [myAppsVisible, setMyAppsVisible] = useState(false);
   const [textSizeVisible, setTextSizeVisible] = useState(false);
   const [readerSettingsVisible, setReaderSettingsVisible] = useState(false);
   const [permissionHost, setPermissionHost] = useState<string | null>(null);
   /** The list of every site with its own permission (page menu, or "All sites" in a site's sheet). */
-  const [sitesListVisible, setSitesListVisible] = useState(false);
   // The Cookies view of a tab (from the page menu, the site's sheet or the assistant's card).
-  const [cookiesTab, setCookiesTab] = useState<Tab | null>(null);
   // "Styles off for this page" and the tried style are per tab, in memory (pageStyleState).
   useSyncExternalStore(pageStyleState.subscribe, pageStyleState.getVersion);
   // The permission sheet stays open while the location setting changes, so it must see the update.
   useSyncExternalStore(sitePermissions.subscribe, getSitePermissionsVersion);
-  const [downloadsVisible, setDownloadsVisible] = useState(false);
   const [qrUrl, setQrUrl] = useState<string | null>(null);
-  const [offlineVisible, setOfflineVisible] = useState(false);
-  const [scannerVisible, setScannerVisible] = useState(false);
   const [context, setContext] = useState<{ tab: Tab; target: ContextTarget } | null>(null);
   /** A long-pressed link in the assistant's chat. */
   const [chatLink, setChatLink] = useState<ContextTarget | null>(null);
@@ -694,11 +697,11 @@ function BrowserApp({
     const openFile = (id: string) => {
       const item = downloads.get(id);
       if (item) void openDownload(downloads, item, toast.show);
-      else setDownloadsVisible(true);
+      else openScreen({ kind: 'downloads' });
     };
-    const offOpen = nativeDownloads?.addListener('onOpenRequested', () => setDownloadsVisible(true));
+    const offOpen = nativeDownloads?.addListener('onOpenRequested', () => openScreen({ kind: 'downloads' }));
     const offOpenFile = nativeDownloads?.addListener('onOpenFileRequested', ({ id }) => openFile(id));
-    if (nativeDownloads?.consumeOpenRequest()) setDownloadsVisible(true);
+    if (nativeDownloads?.consumeOpenRequest()) openScreen({ kind: 'downloads' });
     const fileRequest = nativeDownloads?.consumeOpenFileRequest?.();
     // At a cold start the list is read first.
     if (fileRequest) downloads.load().then(() => openFile(fileRequest), () => {});
@@ -899,7 +902,7 @@ function BrowserApp({
       case 'scan':
         toNormalTab();
         setPanelOpen(false);
-        setScannerVisible(true);
+        openScreen({ kind: 'scanner' });
         return;
       case 'task':
         openRemindedTask(entry.id);
@@ -912,7 +915,7 @@ function BrowserApp({
         // An app file opened from outside: the import screen, over a normal tab (never from incognito), nothing else.
         toNormalTab();
         setPanelOpen(false);
-        setMyAppsVisible(false);
+        closeScreen('myApps');
         appImporter.open({ uri: entry.uri });
         return;
     }
@@ -1016,7 +1019,7 @@ function BrowserApp({
     log: logAction,
     bookmarksRemoved: offerBookmarkUndo,
     savedTaskUsed: refreshRecentTasks,
-    showSettings: () => setSettingsVisible(true),
+    showSettings: () => openScreen({ kind: 'settings' }),
     save: persistConversation,
     credits: {
       ready: creditsReady,
@@ -1108,7 +1111,7 @@ function BrowserApp({
       const info = importFile(file, entry.name, 'application/pdf', file.size, attachmentIncognito(chat) || !!entry.incognito);
       chat.addPending([info]);
       if (!chat.draft.trim()) chat.setDraft(t('downloads.askDraft'));
-      setDownloadsVisible(false);
+      closeScreen('downloads');
       setPanelOpen(true);
       setFocusRequest((n) => n + 1);
     } catch {
@@ -1226,7 +1229,6 @@ function BrowserApp({
   };
 
   // Saved tasks: the screen (from the panel or Settings), and the three run last as chips in the empty panel.
-  const [tasksScreen, setTasksScreen] = useState<{ draft: TaskDraft | null } | null>(null);
   const [recentTasks, setRecentTasks] = useState<SavedTask[]>([]);
   const refreshRecentTasks = useCallback(() => {
     void withDb('savedTasks.recent', recentSavedTasks).then((list) => list && setRecentTasks(list));
@@ -1240,7 +1242,7 @@ function BrowserApp({
    * tab and the task starts once the page has loaded (or after 15 s); otherwise it goes in the current conversation.
    */
   const runSavedTask = async (task: SavedTask) => {
-    setTasksScreen(null);
+    closeScreen('tasks');
     if (running) return toast.show(t('chat.busyElsewhere'));
     void withDb('savedTasks.used', (db) => markSavedTaskUsed(db, task.id)).then(refreshRecentTasks);
     const prompt = fillTaskPrompt(task.prompt, () => formatDate(new Date()));
@@ -1520,11 +1522,11 @@ function BrowserApp({
       section: true,
       onPress: () => {},
       submenu: [
-        { icon: 'bookmarks', label: t('menu.bookmarks'), onPress: () => setLibrary('bookmarks') },
-        { icon: 'history', label: t('menu.history'), onPress: () => setLibrary('history') },
-        { icon: 'savedPages', label: t('menu.offlinePages'), onPress: () => setOfflineVisible(true) },
-        { icon: 'downloads', label: t('menu.downloads'), onPress: () => setDownloadsVisible(true) },
-        { icon: 'apps', label: t('menu.myApps'), onPress: () => setMyAppsVisible(true) },
+        { icon: 'bookmarks', label: t('menu.bookmarks'), onPress: () => openScreen({ kind: 'library', tab: 'bookmarks' }) },
+        { icon: 'history', label: t('menu.history'), onPress: () => openScreen({ kind: 'library', tab: 'history' }) },
+        { icon: 'savedPages', label: t('menu.offlinePages'), onPress: () => openScreen({ kind: 'offline' }) },
+        { icon: 'downloads', label: t('menu.downloads'), onPress: () => openScreen({ kind: 'downloads' }) },
+        { icon: 'apps', label: t('menu.myApps'), onPress: () => openScreen({ kind: 'myApps' }) },
       ],
     },
     {
@@ -1541,7 +1543,7 @@ function BrowserApp({
         {
           icon: 'scanQr',
           label: t('menu.scanQr'),
-          onPress: () => setScannerVisible(true),
+          onPress: () => openScreen({ kind: 'scanner' }),
         },
         {
           icon: 'pdf',
@@ -1612,7 +1614,7 @@ function BrowserApp({
           section: true,
           label: t('menu.cookies'),
           disabled: onNewTab || !currentSite,
-          onPress: () => setCookiesTab(tab),
+          onPress: () => openScreen({ kind: 'cookies', tab: tab }),
         },
         {
           icon: 'textSize',
@@ -1625,7 +1627,7 @@ function BrowserApp({
           label: currentSite
             ? t('menu.sitePermission', { level: t(`site.level.${sitePermissions.levelFor(currentSite)}`) })
             : t('site.listTitle'),
-          onPress: () => (currentSite ? setPermissionHost(currentSite) : setSitesListVisible(true)),
+          onPress: () => (currentSite ? setPermissionHost(currentSite) : openScreen({ kind: 'sites' })),
         },
       ],
     },
@@ -2062,7 +2064,7 @@ function BrowserApp({
       onOpenTabs={async () => {
         // Thumbnails can only be taken while a tab is on screen.
         await tab.captureThumbnail();
-        setTabsVisible(true);
+        openScreen({ kind: 'tabs' });
       }}
       onToggleAssistant={() => setPanelOpen((v) => !v)}
     />
@@ -2075,7 +2077,7 @@ function BrowserApp({
       ? creditsLabel(creditsState.balance)
       : null;
   const barAtBottom = settings.addressBarPosition === 'bottom';
-  coveredRef.current = panelOpen || settingsVisible || tabsVisible || library !== null || tasksScreen !== null;
+  coveredRef.current = panelOpen || settingsVisible || tabsVisible || screen?.kind === 'library' || tasksScreen !== null;
   // The step strip's line: the running conversation's latest step line, in the user's language.
   const stripSource = runningChat ? currentStripLine(runningChat.items.slice(-12)) : 'thinking';
   const stripLine =
@@ -2086,6 +2088,190 @@ function BrowserApp({
         : stripSource.text;
   // Above the home indicator and, when it is at the bottom, the address bar.
   const stripBottom = insets.bottom + (barAtBottom ? 60 : 0) + 12;
+
+  // The chat panel's functions keep their identity from one render to the next, so the memoised panel redraws only
+  // when something it shows changes, not each time the app redraws for the page (UI-29).
+  const panelHandlers = useStableHandlers<PanelHandlers>({
+    onRunTask: (task) => runSavedTask(task),
+    onOpenTasks: () => openScreen({ kind: 'tasks', draft: null }),
+    onSaveAsTask: (prompt) =>
+      openScreen({
+        kind: 'tasks',
+        draft: {
+          ...emptyTask(),
+          prompt,
+          target: tab.isNewTab ? 'none' : 'page',
+          incognito: conversation.incognito || conversation.privacy.touchedIncognito,
+        },
+      }),
+    onRunPrepared: runPrepared,
+    onAttach: () => setAttachSheet(true),
+    onRemovePending: removePending,
+    onOpenAttachment: setPreviewAttachment,
+    onShare: (offer) => runShare(offer, conversation),
+    onImage: (action, info) =>
+      runAction(async () => {
+        if (action === 'share') return void (await shareAttachment(info));
+        if (info.kind === 'pdf') {
+          if (await saveAttachmentToFolder(info)) return t('chat.fileSaved', { name: info.name });
+          return;
+        }
+        await saveAttachmentToPhotos(info);
+        return t('contextMenu.imageSaved');
+      }),
+    onDraftChange: (text) => {
+      conversation.setDraft(text);
+      persistDraftSoon(conversation);
+    },
+    onResearchChange: (on) => conversation.setResearch(on),
+    onModelPress: () => setModelSheetFor(conversation),
+    onShowRunningTab: () => runningTab && browser.switchTab(runningTab.id),
+    onShowFinished: () => unseenChat && showConversation(unseenChat),
+    onClose: closePanel,
+    onSend: send,
+    onStop: () => conversation.stop(),
+    onChoose: (itemId, option) => {
+      tick();
+      conversation.choose(itemId, option);
+      send(option);
+    },
+    onNewChat: newChat,
+    onOpenSettings: () => openScreen({ kind: 'settings' }),
+    onItemAction: onItemAction,
+    onShowSent: () => openScreen({ kind: 'sent', key: conversation.key }),
+    onOpenSource: (source) => {
+      // A page that is still open is shown in its tab; otherwise it opens in the conversation's group.
+      openChatLink(source.url, { sourceIncognito: source.incognito, openTabs: browser.tabs });
+      closePanel();
+    },
+    onOpenLink: (url) => {
+      openChatLink(url);
+      closePanel();
+    },
+    onLinkMenu: (url, text) => setChatLink({ href: url, linkText: text, src: '', alt: '' }),
+    onCall: (number) => {
+      bump();
+      placeCall(number, () => toast.show(t('common.copied')));
+    },
+    onCard: (item, action) => {
+      bump();
+      if (action === 'keepScript') {
+        const script = item.script;
+        if (!script) return;
+        return void keepScript(script).then((kept) => {
+          if (kept) conversation.update(item.id, { script: { ...script, state: 'kept' } });
+        });
+      }
+      if (action === 'openApp' || action === 'undoApp') {
+        const app = item.app;
+        if (!app) return;
+        if (action === 'openApp') return appRunner.open(app.appId);
+        return void appStore
+          .load(app.appId)
+          .then(async (current) => {
+            if (!current) return toast.show(t('apps.missing'));
+            if (current.version !== app.version) return toast.show(t('apps.undoStale'));
+            const version = await appStore.undo(app.appId);
+            if (version === null) return toast.show(t('apps.undoNone'));
+            appsChanged.emit();
+            conversation.update(item.id, { app: { appId: app.appId, name: app.name, change: 'undone', version } });
+            toast.show(t('apps.cardUndone', { name: app.name, version }));
+          })
+          .catch(() => {});
+      }
+      if (action === 'showCookies') {
+        const target = item.cookiesOffer ? browser.getTab(item.cookiesOffer.tabId) : undefined;
+        if (!target || target.isNewTab) return toast.show(t('cookies.tabGone'));
+        return openScreen({ kind: 'cookies', tab: target });
+      }
+      const offer = item.style;
+      if (!offer || offer.state !== 'applied') return;
+      if (action === 'undoStyle') {
+        undoOffer(offer, browser);
+        return conversation.update(item.id, { style: { ...offer, state: 'undone' } });
+      }
+      void keepStyle(offer, browser).then((kept) => {
+        if (kept) conversation.update(item.id, { style: { ...offer, state: 'kept' } });
+      });
+    },
+    onSms: (offer) => {
+      bump();
+      openSmsComposer(offer, () => toast.show(t('common.copied')));
+    },
+    onWhatsApp: (offer) => {
+      bump();
+      openWhatsApp(offer, () => toast.show(t('common.copied')));
+    },
+    onFile: (action, file) =>
+      runAction(async () => {
+        try {
+          if (action === 'share') return void (await shareComposedFile(file.id));
+          if (await saveComposedFileToFolder(file.id)) return t('chat.fileSaved', { name: file.name });
+        } catch (e) {
+          if (e instanceof FileExpiredError) return t('chat.fileExpired');
+          throw e;
+        }
+      }),
+    onMessageAction: (action, text) =>
+      runAction(async () => {
+        if (action === 'copy') {
+          await copyText(text);
+          return t('common.copied');
+        }
+        if (action === 'share') return shareText(text);
+        if (action === 'pdf') {
+          // Kept with the conversation (so it can be attached or shared later), then the share sheet.
+          const chat = conversation;
+          const pdf = await renderReportPdf(text);
+          const info = storeMadePdf(pdf.file, pdf.fileName, 'report', chat.incognito || chat.privacy.touchedIncognito);
+          chat.addMadePdf(info, true);
+          return void (await shareAttachment(info));
+        }
+        if (action === 'stopSpeaking') return stopSpeaking();
+        // The words without the Markdown marks; the voice follows the answer's language, not the app's.
+        await speak(speechText(text));
+      }),
+  });
+  const voiceIncognito = tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito;
+  const voiceHandlers = useStableHandlers<VoiceHandlers>({
+    onOnlineChange: (voiceOnline) => changeSettings({ voiceOnline }),
+    notify: toast.show,
+    languages: () => listeningOrder(conversation, settingsRef.current),
+    onPick: (language) => {
+      conversation.setVoiceLanguage(language);
+      persistConversation(conversation);
+    },
+    onStarted: (lang) => rememberVoiceLanguage(lang, voiceIncognito),
+  });
+  const voiceAutoLabel =
+    settings.voiceLanguage === AUTO_LANGUAGE
+      ? t('voice.auto')
+      : t('voice.defaultLanguage', { language: languageName(settings.voiceLanguage) });
+  const voiceAutoHint =
+    settings.voiceLanguage === AUTO_LANGUAGE
+      ? t('voice.autoNow', { language: languageName(automaticLanguage(conversation, settings)) })
+      : undefined;
+  const panelVoice = useMemo<VoiceProps>(
+    () => ({
+      ...voiceHandlers,
+      incognito: voiceIncognito,
+      online: settings.voiceOnline,
+      autoSend: settings.voiceAutoSend,
+      picked: conversation.voiceLanguage,
+      autoLabel: voiceAutoLabel,
+      autoHint: voiceAutoHint,
+    }),
+    [voiceHandlers, voiceIncognito, settings.voiceOnline, settings.voiceAutoSend, conversation.voiceLanguage, voiceAutoLabel, voiceAutoHint],
+  );
+  const lowCreditsHandlers = useStableHandlers({
+    onBuy: () => {
+      setLowBalance(dismissLowBalance);
+      openBuyCredits();
+    },
+    onDismiss: () => setLowBalance(dismissLowBalance),
+  });
+  const showLowCredits = lowBalance.visible && panelOnCredits;
+  const panelLowCredits = useMemo(() => (showLowCredits ? lowCreditsHandlers : null), [showLowCredits, lowCreditsHandlers]);
 
   return (
     <>
@@ -2141,7 +2327,7 @@ function BrowserApp({
                     else setFocusRequest((n) => n + 1);
                   },
                   onAskForApp: () => askAbout(t('apps.emptyPrompt')),
-                  onOpenLibrary: setLibrary,
+                  onOpenLibrary: (which: LibraryTab) => openScreen({ kind: 'library', tab: which }),
                   reader: {
                     theme: settings.readerTheme,
                     font: settings.readerFont,
@@ -2172,202 +2358,26 @@ function BrowserApp({
             suggestions={suggestions}
             open={panelOpen}
             recentTasks={recentTasks}
-            onRunTask={(task) => runSavedTask(task)}
-            onOpenTasks={() => setTasksScreen({ draft: null })}
-            onSaveAsTask={(prompt) =>
-              setTasksScreen({
-                draft: {
-                  ...emptyTask(),
-                  prompt,
-                  target: tab.isNewTab ? 'none' : 'page',
-                  incognito: conversation.incognito || conversation.privacy.touchedIncognito,
-                },
-              })
-            }
             preparedTask={
               prepared && prepared.chat === conversation && conversation.draft.trim() ? prepared.task.name : null
             }
-            onRunPrepared={runPrepared}
             pending={conversation.pending}
-            onAttach={() => setAttachSheet(true)}
-            onRemovePending={removePending}
-            onOpenAttachment={setPreviewAttachment}
-            onShare={(offer) => runShare(offer, conversation)}
-            onImage={(action, info) =>
-              runAction(async () => {
-                if (action === 'share') return void (await shareAttachment(info));
-                if (info.kind === 'pdf') {
-                  if (await saveAttachmentToFolder(info)) return t('chat.fileSaved', { name: info.name });
-                  return;
-                }
-                await saveAttachmentToPhotos(info);
-                return t('contextMenu.imageSaved');
-              })
-            }
-            voice={{
-              incognito: tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
-              online: settings.voiceOnline,
-              onOnlineChange: (voiceOnline) => changeSettings({ voiceOnline }),
-              autoSend: settings.voiceAutoSend,
-              notify: toast.show,
-              languages: () => listeningOrder(conversation, settingsRef.current),
-              picked: conversation.voiceLanguage,
-              onPick: (language) => {
-                conversation.setVoiceLanguage(language);
-                persistConversation(conversation);
-              },
-              autoLabel:
-                settings.voiceLanguage === AUTO_LANGUAGE
-                  ? t('voice.auto')
-                  : t('voice.defaultLanguage', { language: languageName(settings.voiceLanguage) }),
-              autoHint:
-                settings.voiceLanguage === AUTO_LANGUAGE
-                  ? t('voice.autoNow', { language: languageName(automaticLanguage(conversation, settings)) })
-                  : undefined,
-              onStarted: (lang) =>
-                rememberVoiceLanguage(
-                  lang,
-                  tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
-                ),
-            }}
             quickActions={quickActions}
             conversation={conversation}
-            onDraftChange={(text) => {
-              conversation.setDraft(text);
-              persistDraftSoon(conversation);
-            }}
             focusRequest={focusRequest}
             research={conversation.research}
-            onResearchChange={(on) => conversation.setResearch(on)}
             modelInfo={conversationModelInfo(settings, conversation.model, panelBalance !== null)}
             modelName={panelBalance === null ? conversationModelInfo(settings, conversation.model, true, true) : undefined}
             balance={panelBalance}
             modelChosen={!!conversation.model && isConfigured(settings, conversation.model.provider)}
-            onModelPress={() => setModelSheetFor(conversation)}
-            lowCredits={
-              lowBalance.visible && panelOnCredits
-                ? {
-                    onBuy: () => {
-                      setLowBalance(dismissLowBalance);
-                      openBuyCredits();
-                    },
-                    onDismiss: () => setLowBalance(dismissLowBalance),
-                  }
-                : null
-            }
             running={conversation.running}
             busyElsewhere={running && !conversation.running}
             collapseToStrip={work.phase !== 'idle'}
-            onShowRunningTab={() => runningTab && browser.switchTab(runningTab.id)}
             finishedElsewhere={unseenChat && unseenChat !== conversation ? unseenChat.unseen : null}
-            onShowFinished={() => unseenChat && showConversation(unseenChat)}
-            onClose={closePanel}
-            onSend={send}
-            onStop={() => conversation.stop()}
-            onChoose={(itemId, option) => {
-              tick();
-              conversation.choose(itemId, option);
-              send(option);
-            }}
-            onNewChat={newChat}
-            onOpenSettings={() => setSettingsVisible(true)}
-            onItemAction={onItemAction}
-            onShowSent={() => setSentFor(conversation.key)}
             showCost={settings.showCost}
-            onOpenSource={(source) => {
-              // A page that is still open is shown in its tab; otherwise it opens in the conversation's group.
-              openChatLink(source.url, { sourceIncognito: source.incognito, openTabs: browser.tabs });
-              closePanel();
-            }}
-            onOpenLink={(url) => {
-              openChatLink(url);
-              closePanel();
-            }}
-            onLinkMenu={(url, text) => setChatLink({ href: url, linkText: text, src: '', alt: '' })}
-            onCall={(number) => {
-              bump();
-              placeCall(number, () => toast.show(t('common.copied')));
-            }}
-            onCard={(item, action) => {
-              bump();
-              if (action === 'keepScript') {
-                const script = item.script;
-                if (!script) return;
-                return void keepScript(script).then((kept) => {
-                  if (kept) conversation.update(item.id, { script: { ...script, state: 'kept' } });
-                });
-              }
-              if (action === 'openApp' || action === 'undoApp') {
-                const app = item.app;
-                if (!app) return;
-                if (action === 'openApp') return appRunner.open(app.appId);
-                return void appStore
-                  .load(app.appId)
-                  .then(async (current) => {
-                    if (!current) return toast.show(t('apps.missing'));
-                    if (current.version !== app.version) return toast.show(t('apps.undoStale'));
-                    const version = await appStore.undo(app.appId);
-                    if (version === null) return toast.show(t('apps.undoNone'));
-                    appsChanged.emit();
-                    conversation.update(item.id, { app: { appId: app.appId, name: app.name, change: 'undone', version } });
-                    toast.show(t('apps.cardUndone', { name: app.name, version }));
-                  })
-                  .catch(() => {});
-              }
-              if (action === 'showCookies') {
-                const target = item.cookiesOffer ? browser.getTab(item.cookiesOffer.tabId) : undefined;
-                if (!target || target.isNewTab) return toast.show(t('cookies.tabGone'));
-                return setCookiesTab(target);
-              }
-              const offer = item.style;
-              if (!offer || offer.state !== 'applied') return;
-              if (action === 'undoStyle') {
-                undoOffer(offer, browser);
-                return conversation.update(item.id, { style: { ...offer, state: 'undone' } });
-              }
-              void keepStyle(offer, browser).then((kept) => {
-                if (kept) conversation.update(item.id, { style: { ...offer, state: 'kept' } });
-              });
-            }}
-            onSms={(offer) => {
-              bump();
-              openSmsComposer(offer, () => toast.show(t('common.copied')));
-            }}
-            onWhatsApp={(offer) => {
-              bump();
-              openWhatsApp(offer, () => toast.show(t('common.copied')));
-            }}
-            onFile={(action, file) =>
-              runAction(async () => {
-                try {
-                  if (action === 'share') return void (await shareComposedFile(file.id));
-                  if (await saveComposedFileToFolder(file.id)) return t('chat.fileSaved', { name: file.name });
-                } catch (e) {
-                  if (e instanceof FileExpiredError) return t('chat.fileExpired');
-                  throw e;
-                }
-              })
-            }
-            onMessageAction={(action, text) =>
-              runAction(async () => {
-                if (action === 'copy') {
-                  await copyText(text);
-                  return t('common.copied');
-                }
-                if (action === 'share') return shareText(text);
-                if (action === 'pdf') {
-                  // Kept with the conversation (so it can be attached or shared later), then the share sheet.
-                  const chat = conversation;
-                  const pdf = await renderReportPdf(text);
-                  const info = storeMadePdf(pdf.file, pdf.fileName, 'report', chat.incognito || chat.privacy.touchedIncognito);
-                  chat.addMadePdf(info, true);
-                  return void (await shareAttachment(info));
-                }
-                if (action === 'stopSpeaking') return stopSpeaking();
-                // The words without the Markdown marks; the voice follows the answer's language, not the app's.
-                await speak(speechText(text));
-              })
-            }
+            voice={panelVoice}
+            lowCredits={panelLowCredits}
+            {...panelHandlers}
           />
         </ErrorBoundary>
         {/* Over the page and the panel, under the strip; takes no touches. */}
@@ -2445,28 +2455,39 @@ function BrowserApp({
           anchor={barAtBottom ? 'bottom' : 'top'}
           onClose={() => setMenuVisible(false)}
         />
-        <LibraryScreen
-          visible={library !== null}
-          initialTab={library ?? 'bookmarks'}
-          onOpen={(url) => {
-            setLibrary(null);
-            tab.loadUrl(url);
-          }}
-          onClose={() => setLibrary(null)}
-        />
-        <TabSwitcher
+        <AppScreens
+          screen={screen}
+          close={closeScreen}
           darkMode={darkMode}
-          visible={tabsVisible}
           browser={browser}
-          onClose={() => setTabsVisible(false)}
-          onCompare={(picked) => {
-            setTabsVisible(false);
+          tab={tab}
+          settings={settings}
+          settingsPage={settingsPage}
+          onSettingsClosed={() => setSettingsPage('main')}
+          changeSettings={changeSettings}
+          clearData={clearData}
+          runSavedTask={runSavedTask}
+          viaQutai={(conversation.model?.provider ?? settings.provider) === 'qutai'}
+          onCompareTabs={(picked) => {
             setPanelOpen(true);
             const list = picked.map((x) => `- tab ${x.id}: ${x.title || x.url} (${x.url})`).join('\n');
             send(t('tabs.comparePrompt', { tabs: list }));
           }}
+          onAskForApp={() => askAbout(t('apps.emptyPrompt'))}
+          onImportApp={() => {
+            // Never from an incognito context; My apps closes first (iOS shows one sheet at a time).
+            toNormalTab();
+            setTimeout(() => void pickAndImportApp(), 450);
+          }}
+          notify={toast.show}
+          downloads={downloads}
+          sitePermissions={sitePermissions}
+          onAskDownload={askAboutDownload}
+          onShowAssistantIntro={() => {
+            setAssistantIntroSeen(false).catch(() => {});
+            setIntroPending(true);
+          }}
         />
-        <CookiesScreen tab={cookiesTab} onClose={() => setCookiesTab(null)} />
         <ScriptSandboxHost />
         <AppRunnerHost
           onEdit={(app) => askAbout(t('apps.editPrompt', { name: app.name, id: app.id }))}
@@ -2475,47 +2496,8 @@ function BrowserApp({
           onFix={(app, errors) => askAbout(t('apps.fixPrompt', { name: app.name, id: app.id, version: app.version, errors }))}
           onNotice={toast.show}
         />
-        <MyAppsScreen
-          visible={myAppsVisible}
-          dark={darkMode}
-          onClose={() => setMyAppsVisible(false)}
-          onAskForApp={() => askAbout(t('apps.emptyPrompt'))}
-          onImport={() => {
-            // Never from an incognito context; My apps closes first (iOS shows one sheet at a time).
-            toNormalTab();
-            setMyAppsVisible(false);
-            setTimeout(() => void pickAndImportApp(), 450);
-          }}
-          onNotice={toast.show}
-        />
         <AppImportHost onNotice={toast.show} />
-        <SentLogScreen
-          visible={sentFor !== null}
-          conversation={sentFor ?? undefined}
-          customInstructions={settings.customInstructions}
-          showCost={settings.showCost}
-          viaQutai={(conversation.model?.provider ?? settings.provider) === 'qutai'}
-          onClose={() => setSentFor(null)}
-        />
         <ServerRestoreOffer ready={!lock && !settingsVisible && !introPending && !running} appLock={settings.appLock} />
-        <SettingsModal
-          onClearData={clearData}
-          visible={settingsVisible}
-          initialPage={settingsPage}
-          settings={settings}
-          onChange={changeSettings}
-          onClose={() => {
-            setSettingsVisible(false);
-            setSettingsPage('main');
-          }}
-          onRunTask={runSavedTask}
-          incognitoActive={browser.active.incognito}
-          onShowAssistantIntro={() => {
-            setSettingsVisible(false);
-            setAssistantIntroSeen(false).catch(() => {});
-            setIntroPending(true);
-          }}
-        />
         <ContextMenuSheet
           target={context?.target ?? null}
           actions={context ? contextActions(context.tab, context.target) : []}
@@ -2525,13 +2507,6 @@ function BrowserApp({
           target={chatLink}
           actions={chatLink ? chatLinkActions(chatLink.href) : []}
           onClose={() => setChatLink(null)}
-        />
-        <DownloadsScreen
-          visible={downloadsVisible}
-          store={downloads}
-          copyText={copyText}
-          onAsk={askAboutDownload}
-          onClose={() => setDownloadsVisible(false)}
         />
         <SitePermissionSheet
           host={permissionHost}
@@ -2570,21 +2545,15 @@ function BrowserApp({
             !!permissionHost && siteKey(tab.url) === permissionHost && !tab.isNewTab
               ? () => {
                   setPermissionHost(null);
-                  setCookiesTab(tab);
+                  openScreen({ kind: 'cookies', tab: tab });
                 }
               : undefined
           }
           onShowAll={() => {
             setPermissionHost(null);
-            setSitesListVisible(true);
+            openScreen({ kind: 'sites' });
           }}
           onClose={() => setPermissionHost(null)}
-        />
-        <SitePermissionsScreen
-          visible={sitesListVisible}
-          store={sitePermissions}
-          blockingEnabled={settings.blockAds}
-          onClose={() => setSitesListVisible(false)}
         />
         <TextSizeSheet
           visible={textSizeVisible}
@@ -2604,7 +2573,7 @@ function BrowserApp({
           }}
           onOpenSettings={() => {
             setPanelOpen(false);
-            setSettingsVisible(true);
+            openScreen({ kind: 'settings' });
           }}
           onClose={() => setModelSheetFor(null)}
         />
@@ -2619,14 +2588,6 @@ function BrowserApp({
           onChange={(value) => changeSettings(value)}
           onClose={() => setReaderSettingsVisible(false)}
         />
-        <OfflinePagesScreen
-          visible={offlineVisible}
-          onOpenLive={(url) => {
-            setOfflineVisible(false);
-            browser.openTab(url, { incognito: tab.incognito });
-          }}
-          onClose={() => setOfflineVisible(false)}
-        />
         <QrCodeSheet
           url={qrUrl}
           onShareLink={(url) => runAction(() => shareText(url))}
@@ -2638,20 +2599,10 @@ function BrowserApp({
           }
           onClose={() => setQrUrl(null)}
         />
-        <QrScanner
-          visible={scannerVisible}
-          onScan={(data) => {
-            setScannerVisible(false);
-            const target = scannedTarget(data);
-            if (target.kind === 'url') browser.openTab(target.value, { incognito: tab.incognito });
-            else if (target.value) tab.loadUrl(toUrl(target.value, settings.searchEngine));
-          }}
-          onClose={() => setScannerVisible(false)}
-        />
         <DownloadIndicator
           store={downloads}
           bottomOffset={barAtBottom ? 64 : 16}
-          onOpen={() => setDownloadsVisible(true)}
+          onOpen={() => openScreen({ kind: 'downloads' })}
           onOpenFile={(item) => void openDownload(downloads, item, toast.show)}
         />
         <ActionSheet
@@ -2679,12 +2630,6 @@ function BrowserApp({
             })
           }
           onResize={resizeAttachment}
-        />
-        <TasksScreen
-          visible={tasksScreen !== null}
-          draft={tasksScreen?.draft}
-          onClose={() => setTasksScreen(null)}
-          onRun={runSavedTask}
         />
         <ActionSheet
           // Hidden while the app lock shows (it reappears after unlocking).

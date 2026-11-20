@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   BackHandler,
@@ -71,6 +71,8 @@ export type VoiceProps = {
 
 /** A one-tap task shown above the input, e.g. "Summarize"; id matches a page suggestion that offers the same. */
 export type QuickAction = { id: string; icon: IconName; label: string; prompt: string };
+
+export type AssistantPanelProps = Props;
 
 type Props = {
   open: boolean;
@@ -174,7 +176,7 @@ type Props = {
  * side panel. It stays mounted while closed so the conversation keeps its
  * scroll position. Its rows are in ChatRows.tsx, its bottom in ChatComposer.tsx.
  */
-export function AssistantPanel({
+function AssistantPanelView({
   open,
   quickActions,
   conversation,
@@ -738,3 +740,22 @@ function HeaderButton({
     </Pressable>
   );
 }
+
+/**
+ * The panel redraws only when what it shows changed (UI-29): the app passes functions that keep their identity
+ * (useStableHandlers) and the conversation, which the panel follows itself. Lists the app rebuilds on every render
+ * (suggestions, one-tap tasks, recent tasks, files about to be sent) count as the same when their contents are.
+ */
+function samePanelProps(a: Props, b: Props): boolean {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]) as Set<keyof Props>;
+  for (const key of keys) {
+    const x = a[key];
+    const y = b[key];
+    if (x === y) continue;
+    if (Array.isArray(x) && Array.isArray(y) && JSON.stringify(x) === JSON.stringify(y)) continue;
+    return false;
+  }
+  return true;
+}
+
+export const AssistantPanel = memo(AssistantPanelView, samePanelProps);
