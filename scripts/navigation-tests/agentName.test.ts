@@ -1,6 +1,6 @@
-// The page script's secret name (UNTR-26, browser/agentScript.ts): a new one for every document on Android, where the
-// early script may run after the page's own scripts, so a page never knows the name before Qutai installs it there;
-// stable on iOS, where it is installed before any page script and a new name would only miss the early install.
+// The page script's secret name (UNTR-26, browser/agentScript.ts): one per tab on both platforms, since both install
+// it at document start (iOS: WebKit user script; Android: the patched documentStartScript); a new name per document
+// would only make that early install miss.
 import assert from 'node:assert/strict';
 import { afterEach, test } from 'node:test';
 import { Tab } from '../../src/browser/Tab.ts';
@@ -20,10 +20,10 @@ function loadTwice(os: 'ios' | 'android') {
   return { tab, names };
 }
 
-test('Android: a new secret name for every document; the scripts and commands follow it', () => {
+test('Android: one secret name for the tab, installed at document start in every document', () => {
   const { tab, names } = loadTwice('android');
-  assert.equal(new Set(names).size, 3);
-  for (const n of names) assert.match(n, /^__q[0-9a-f]{32}$/);
+  assert.equal(new Set(names).size, 1);
+  assert.match(names[0], /^__q[0-9a-f]{32}$/);
   assert.ok(tab.agentInstallScript.includes(JSON.stringify(tab.agentName)));
 });
 

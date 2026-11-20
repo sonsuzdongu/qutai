@@ -835,3 +835,6 @@ Sunucuda yedeği olan bir hesapla:
 Sahibi telefonda gördü: kurulumda yedeği geri yüklerken ekran "Restoring…" yazısında kalıyordu (birleştir ve değiştir, ikisinde de). Neden: geri yükleme veritabanını uygulama yeniden başlayana kadar tutuyor; kurulumun "tanıtım görüldü" kaydı ise veritabanını yeniden isteyip sonsuza dek bekliyordu. Kayıt artık geri yüklemenin kendi veritabanı bağlantısıyla yazılıyor. Yalnızca tip denetimi ve testlerle doğrulandı.
 
 - [ ] Uygulama verisini silin, kurulumda Qutai hesabına girin, yedeği geri yükleyin (önce "birleştir", sonra aynı denemeyi "değiştir" ile): "geri yüklendi" penceresi gelmeli, Tamam'dan sonra uygulama tarayıcıda yeniden açılmalı, sekmeler ve hatıralar yerinde olmalı, asistan tanıtımı yeniden çıkmamalı.
+- [ ] Android (yeni yerel kodla derlenen APK): sayfa betiği belge başında kuruluyor (`UNTR-26`, `documentStartScript`).
+      Bir haber sitesini açar açmaz "Bu sayfayı özetler misiniz?" deyin, sonra birkaç bağlantıdan geçin: her sayfada
+      okuma, basma ve yazma çalışıyor. Qutai içindeki bir uygulamayı da açın: ağ engeli eskisi gibi çalışıyor.

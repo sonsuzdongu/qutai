@@ -49,9 +49,9 @@ the SDK's newer recommended version behind the patch's back. On 20 Nov 2026 the 
   the SDK correctly.
 - **Manual check**: `npx expo run:ios` builds; the development launcher opens and its toolbar shows.
 
-### `react-native-webview+14.0.1.patch` (2,386 lines, 24 files, Android and iOS and the JS types)
+### `react-native-webview+14.0.1.patch` (2,441 lines, 24 files, Android and iOS and the JS types)
 
-Qutai's native browser features, each change marked "Qutai patch" (102 marks), by feature (design record `BUILD`,
+Qutai's native browser features, each change marked "Qutai patch" (108 marks), by feature (design record `BUILD`,
 previously `BUILD-18`; each part's reason is in its commit):
 
 | Feature | Files (Android / iOS / JS) | Manual check |
@@ -64,6 +64,7 @@ previously `BUILD-18`; each part's reason is in its commit):
 | Downloads go to Qutai's own engine (qutai-downloads), not DownloadManager | `RNCWebViewClient.java`, `TopFileDownloadEvent.kt` / (iOS sends onFileDownload itself) | Download a PDF: it appears in Qutai's Downloads with progress; Android's system download list stays empty. |
 | Reading and deleting cookies per WebView data store, without values | `RNCWebViewCookies.java`, `RNCWebViewModule` (both archs) / `RNCWebViewModule.mm` | On a site, "which cookies does this page have": names and sites, no values; delete one: it is gone after reload. |
 | App sandbox for apps inside Qutai (Android: no network, no navigation, a frame guard) | `RNCWebViewClient.java`, `RNCWebView.java` | Run a Qutai app that tries `fetch`: it fails; a link in it doesn't navigate. |
+| Qutai's page script at document start on Android (`documentStartScript`: WebViewCompat.addDocumentStartJavaScript, where the WebView has it; `UNTR-26`) | `RNCWebView.java`, `RNCWebViewManager.java` (both archs) / (iOS ignores it) / `WebViewTypes.ts`, `RNCWebViewNativeComponent.ts` | On a news site, ask "Summarise this page" right after it starts loading: it works, no "page script could not be set up" error. |
 | Cancelled and interrupted navigations reported (`onLoadingCancelled`-style event) | `RNCWebViewClient.java` / `RNCWebViewImpl.m` | Tap a link to an app (tel:, a store link): the progress line stops instead of hanging. |
 | Full-screen video drawn by Chromium's own view | `RNCWebChromeClient.java` | Play a video full screen and rotate: it fills the screen; leaving full screen returns to the page. |
 

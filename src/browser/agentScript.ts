@@ -2,12 +2,13 @@
  * How Qutai's page script (browser/pageScript.ts with content/hideProbe.ts and content/scriptPage.ts) gets into a page
  * and how a command reaches it (`UNTR-26`, docs/design/04-untrusted-content.md).
  *
- * - Installed once per document, in the main frame only, from the WebView's before-content script (iOS: a WebKit user
- *   script at document start, before any of the page's own scripts; Android: as early as react-native-webview runs
- *   it, then again when the page has loaded, and as a fallback by the first command that finds it missing).
- * - It lives on window under a secret name (`__q` and 32 random hex characters, a new one per tab, and on Android a new
- *   one for every document), defined non-writable, non-configurable and non-enumerable, as a frozen object: a page
- *   can't guess the name before it is installed, and once installed it can't replace or delete it.
+ * - Installed once per document, in the main frame only, before any of the page's own scripts: on iOS from the
+ *   WebView's before-content script (a WebKit user script at document start), on Android from the patched
+ *   react-native-webview's documentStartScript (WebViewCompat.addDocumentStartJavaScript). Fallbacks: Android's
+ *   before-content script (onPageStarted), the after-load script, and the first command that finds it missing.
+ * - It lives on window under a secret name (`__q` and 32 random hex characters, a new one per tab), defined
+ *   non-writable, non-configurable and non-enumerable, as a frozen object: a page can't guess the name before it is
+ *   installed, and once installed it can't replace or delete it.
  * - A command is only the call (about 500 bytes plus its arguments), not the whole script.
  *
  * What the page answers stays the page's word: a page's own scripts run in the same JavaScript world and can always

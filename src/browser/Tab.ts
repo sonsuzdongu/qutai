@@ -241,7 +241,7 @@ export class Tab {
   // A random prefix makes it hard for page scripts to forge command replies.
   private nonce = newNonce();
   private counter = 0;
-  /** The page script's secret name on window (browser/agentScript.ts); on Android a new one for every document. */
+  /** The page script's secret name on window (browser/agentScript.ts), one per tab. */
   private agentNameValue = newAgentName();
   private installCache: { name: string; script: string } | null = null;
 
@@ -561,9 +561,6 @@ export class Tab {
       this.nav.begin(url ?? this.url, 'page');
     }
     this.documents++;
-    // Android may run the early script after the page's own scripts: a new secret name for every document, so a page
-    // can never know the name before Qutai installs it there (browser/agentScript.ts).
-    if (Platform.OS === 'android') this.rotateAgentName();
     // A new document: its watches, capture and "allow once" answers start over.
     this.geolocation.reset();
     this.media.reset();
@@ -891,10 +888,6 @@ export class Tab {
     if (this.installCache?.name !== this.agentNameValue)
       this.installCache = { name: this.agentNameValue, script: agentInstallScript(this.agentNameValue) };
     return this.installCache.script;
-  }
-
-  private rotateAgentName() {
-    this.agentNameValue = newAgentName();
   }
 
   /**

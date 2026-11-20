@@ -514,6 +514,10 @@ function TabWebView({
             injectedJavaScriptBeforeContentLoaded={earlyScript}
             // iOS: the geolocation script must reach frames too, so they can't use WebKit's own location prompt.
             injectedJavaScriptBeforeContentLoadedForMainFrameOnly={false}
+            // Android (patched react-native-webview): Qutai's page script at document start, before the page's own
+            // scripts (WebViewCompat.addDocumentStartJavaScript); the early and after-load scripts stay as fallbacks
+            // for WebViews without that feature. iOS already runs the early script at document start.
+            documentStartScript={Platform.OS === 'android' ? agentScript : undefined}
             // Android: native geolocation would grant every site once Qutai has the permission; the script handles it.
             geolocationEnabled={false}
             // Camera and microphone (patched react-native-webview): refused unless this names the requesting
