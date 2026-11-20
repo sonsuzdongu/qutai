@@ -804,6 +804,13 @@ export const id: Record<keyof typeof en, string> = {
   'memory.askQuestionsIncognito': 'Tidak tersedia saat tab Samaran terbuka',
 
   'confirm.always': 'Selalu izinkan di {host}',
+  'confirm.memoryFromPage': 'Simpan ke memori Qutai: “{text}”',
+  'confirm.memoryFromPageWhy': 'Ini tidak ada dalam yang Anda tulis di obrolan ini. Mungkin halaman web atau file yang menyarankannya.',
+  'confirm.urlCarries': 'Buka {host} dengan ini di alamatnya:',
+  'confirm.urlMemory': 'data yang tersimpan di memori Qutai',
+  'confirm.urlChat': 'sesuatu yang Anda tulis di obrolan ini',
+  'confirm.urlOtherSite': 'kode atau nomor referensi dari situs lain',
+  'confirm.urlWhy': 'Anda tidak menyebut situs ini dan situs ini tidak sedang terbuka. Mungkin halaman web sedang mencoba mengirim data Anda ke sana.',
   'menu.sitePermission': 'Izin Qutai di situs ini: {level}',
   'site.title': 'Yang boleh dilakukan Qutai di situs ini',
   'site.level.default': 'Default',

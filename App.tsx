@@ -178,9 +178,8 @@ import {
   postTaskNotice,
 } from './src/device/notifications';
 import { PAUSED_NOTICE_DELAY_S, taskNoticeFor, type TaskNoticeEvent } from './src/agent/taskNotice';
-import { nowContext } from './src/agent/scheduling';
-import { interfaceLanguageNote } from './src/agent/uiLabels';
 import { withIdentity } from './src/agent/identity';
+import { currentTabNote } from './src/agent/contextNote';
 import { plainError } from './src/ai/plainError';
 import { renderReportPdf } from './src/device/reportPdf';
 import { authenticate } from './src/device/biometric';
@@ -1276,11 +1275,8 @@ function BrowserApp({
     }
 
     const agentTab = { id: current.id };
-    const where = current.isNewTab
-      ? 'new tab page, no web page loaded'
-      : `${current.title || '(no title)'} — ${current.url}`;
-    const pageNote = options.noPage && !current.isNewTab ? " This task isn't about this page; don't read it unless needed." : '';
-    const pageInfo = `\n\n[Current tab ${current.id}: ${where}.${pageNote} Open tabs: ${browser.tabs.length}. ${nowContext()}. ${interfaceLanguageNote()}]`;
+    // The page's title goes between untrusted-content markers (agent/contextNote.ts, UNTR-21).
+    const pageInfo = currentTabNote(current, browser.tabs.length, !!options.noPage);
     const message = text || (attachments.length ? 'See the attached files.' : '');
     const attached = attachments.length ? `\n\n${describeAttachments(attachments)}` : '';
     const madeNote = chat.takeMadeNote();

@@ -796,6 +796,13 @@ export const en = {
   'memory.askQuestionsIncognito': 'Not available while an incognito tab is open',
 
   'confirm.always': 'Always allow on {host}',
+  'confirm.memoryFromPage': "Save this to Qutai's memory: “{text}”",
+  'confirm.memoryFromPageWhy': "This isn't in what you wrote in this chat. A web page or a file may have suggested it.",
+  'confirm.urlCarries': 'Open {host} with this in the address:',
+  'confirm.urlMemory': "details saved in Qutai's memory",
+  'confirm.urlChat': 'something you wrote in this chat',
+  'confirm.urlOtherSite': 'a code or reference from another site',
+  'confirm.urlWhy': "You didn't name this site and didn't have it open. A web page may be trying to send your details there.",
   'menu.sitePermission': 'Qutai’s permission on this site: {level}',
   'site.title': 'What Qutai may do on this site',
   'site.level.default': 'Default',

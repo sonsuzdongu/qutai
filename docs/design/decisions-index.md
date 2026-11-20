@@ -183,7 +183,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 
 | Id | Decision | Status | Date |
 |---|---|---|---|
-| `UNTR-1` | Web page content, PDF text and attached files are untrusted data, not instructions; they can never approve… | Default |  |
+| `UNTR-1` | Web page content, PDF text and attached files are untrusted data, not instructions; they arrive between markers (`UNTR-21`)… | Default | 2026-11-20 |
 | `UNTR-2` | Every approval is a native Qutai dialog that only the user can answer; a page, a file or the model cannot… | Default |  |
 | `UNTR-4` | The `settings` tool may change only an allowlist of appearance and browsing preferences; everything else… | Owner | 2026-11-15 |
 | `UNTR-5` | Refused by the settings tool: "Ask before every action", every site permission (assistant level, location,… | Default |  |
@@ -202,6 +202,10 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `UNTR-18` | The user's custom instructions are placed below the safety rules and say they never override them. | Default |  |
 | `UNTR-19` | Deleting and account or security changes on a site go through Qutai's change approval (`PAY-26`); sharing personal data is asked in chat… | Default | 2026-11-19 |
 | `UNTR-20` | Option cards are page data: links, pictures, text, count and prices checked by the app, also when read back | Default | 2026-11-20 |
+| `UNTR-21` | Pages, titles, sources, PDFs and script results reach the model between untrusted-content markers with a random id the page can't forge or close | Default | 2026-11-20 |
+| `UNTR-22` | An address the model writes that carries memory details, the user's references or another site's codes to a site the user didn't name or have open is asked in Qutai's dialog | Default | 2026-11-20 |
+| `UNTR-23` | A memory that isn't in what the user wrote is asked in Qutai's dialog before it is saved | Default | 2026-11-20 |
+| `UNTR-24` | Resistance to instructions in pages is measured with the injection test set (opt-in, billed, capped); claims say only what it shows | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `UNTR-3`
 

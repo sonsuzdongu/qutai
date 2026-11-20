@@ -804,6 +804,13 @@ export const ru: Record<keyof typeof en, string> = {
   'memory.askQuestionsIncognito': 'Недоступно, пока открыта вкладка инкогнито',
 
   'confirm.always': 'Всегда разрешать на {host}',
+  'confirm.memoryFromPage': 'Сохранить в памяти Qutai: «{text}»',
+  'confirm.memoryFromPageWhy': 'Этого нет в том, что вы написали в этом чате. Возможно, это подсказала веб-страница или файл.',
+  'confirm.urlCarries': 'Открыть {host} с этим в адресе:',
+  'confirm.urlMemory': 'сведения из памяти Qutai',
+  'confirm.urlChat': 'то, что вы написали в этом чате',
+  'confirm.urlOtherSite': 'код или номер с другого сайта',
+  'confirm.urlWhy': 'Вы не называли этот сайт, и он не был открыт. Возможно, веб-страница пытается отправить туда ваши данные.',
   'menu.sitePermission': 'Разрешение Qutai на этом сайте: {level}',
   'site.title': 'Что Qutai может делать на этом сайте',
   'site.level.default': 'По умолчанию',

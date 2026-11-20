@@ -799,6 +799,13 @@ export const de: Record<keyof typeof en, string> = {
   'memory.askQuestionsIncognito': 'Nicht verfügbar, solange ein Inkognito-Tab geöffnet ist',
 
   'confirm.always': 'Auf {host} immer erlauben',
+  'confirm.memoryFromPage': 'Im Gedächtnis von Qutai speichern: „{text}“',
+  'confirm.memoryFromPageWhy': 'Das steht nicht in dem, was Sie in diesem Chat geschrieben haben. Eine Webseite oder eine Datei hat es vielleicht vorgeschlagen.',
+  'confirm.urlCarries': '{host} mit Folgendem in der Adresse öffnen:',
+  'confirm.urlMemory': 'Angaben aus dem Gedächtnis von Qutai',
+  'confirm.urlChat': 'etwas, das Sie in diesem Chat geschrieben haben',
+  'confirm.urlOtherSite': 'ein Code oder eine Nummer von einer anderen Website',
+  'confirm.urlWhy': 'Sie haben diese Website nicht genannt und sie war nicht geöffnet. Eine Webseite versucht vielleicht, Ihre Angaben dorthin zu senden.',
   'menu.sitePermission': 'Qutais Berechtigung auf dieser Website: {level}',
   'site.title': 'Was Qutai auf dieser Website darf',
   'site.level.default': 'Standard',

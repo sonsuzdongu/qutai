@@ -4,6 +4,7 @@ import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils.js';
 import { checkScript, type ScriptFlag } from './scriptCheck';
 import { formatScope, parseScope, type RuleSource, type Scope, type ScopeKind, scopeForUrl, siteHost } from './siteRules';
 import { matchesStyleScope } from './userStyles';
+import { fenceUntrusted } from '../agent/untrusted';
 
 /**
  * Scripts (docs/page-customisation.md › Scripts): the kept-script model, scopes, the approval seal, sensitive pages,
@@ -300,12 +301,9 @@ export function readOutcome(raw: unknown): ScriptOutcome {
   }
 }
 
-const OPEN = '<<<page-data';
-const CLOSE = 'page-data>>>';
-
-/** Text from the page between the markers, with anything that looks like a marker broken up. */
+/** Text from the page between the untrusted-content markers (agent/untrusted.ts, UNTR-21). */
 function fenced(text: string): string {
-  return `${OPEN}\n${text.replace(/<<</g, '< < <').replace(/>>>/g, '> > >')}\n${CLOSE}`;
+  return fenceUntrusted(text, 'script');
 }
 
 /**

@@ -794,6 +794,13 @@ export const tr: Record<keyof typeof en, string> = {
   'memory.askQuestionsIncognito': 'Gizli sekme açıkken kullanılamaz',
 
   'confirm.always': '{host} için hep izin ver',
+  'confirm.memoryFromPage': "Qutai'ın belleğine kaydet: “{text}”",
+  'confirm.memoryFromPageWhy': 'Bu, bu sohbette yazdıklarınızda yok. Bunu bir web sayfası veya dosya önermiş olabilir.',
+  'confirm.urlCarries': '{host} sitesini, adresinde şu bilgiyle aç:',
+  'confirm.urlMemory': "Qutai'ın belleğindeki bilgileriniz",
+  'confirm.urlChat': 'bu sohbette yazdığınız bir bilgi',
+  'confirm.urlOtherSite': 'başka bir siteden bir kod veya numara',
+  'confirm.urlWhy': 'Bu siteyi siz belirtmediniz ve açık değildi. Bir web sayfası bilgilerinizi oraya göndermeye çalışıyor olabilir.',
   'menu.sitePermission': 'Qutai’ın bu sitedeki izni: {level}',
   'site.title': "Qutai’ın bu sitedeki izni",
   'site.level.default': 'Varsayılan',

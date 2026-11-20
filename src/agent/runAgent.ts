@@ -35,6 +35,8 @@ import {
 } from './systemPrompt';
 import { memoryPrompt } from './memory';
 import { showOptions } from './optionsTool';
+import { OutboundGuard } from './outbound';
+import { userWords } from './contextNote';
 import { siteKey } from './sitePolicy';
 import { stepLine } from './stepLine';
 import { MEMORY_TOOLS, TOOLS } from './tools';
@@ -149,6 +151,9 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
   // while it is open pauses the background run with a notification. Never answered for the user.
   const confirm = opts.confirm;
   const confirmPersonal = opts.confirmPersonal;
+  // The user's own messages in this conversation, without the notes the app adds to them.
+  const userTexts = () =>
+    turns.flatMap((turn) => (turn.role === 'user' ? [userWords(turn.text)] : [])).filter((text) => text.trim());
   const confirmHidden = opts.confirmHidden;
   const ctx: AgentOptions = {
     ...opts,
@@ -184,6 +189,14 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
     personalGrants: { allowed: new Set(), declined: new Set() },
     // So does an approval to post or pay: one press, in this task only.
     approvals: new ApprovalGrants(),
+    userTexts,
+    // What an address may carry to another site: the sites open when the task starts, the user's words, the memories,
+    // and the codes the task reads on pages (agent/outbound.ts, UNTR-22).
+    outbound: new OutboundGuard(
+      opts.browser.tabs.filter((tab) => !tab.isNewTab).map((tab) => tab.url),
+      userTexts,
+      async () => (opts.memory ? opts.memory.list() : []),
+    ),
   };
 
   const sources: Source[] = [];
@@ -390,6 +403,23 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
       // Cards for the user (UI-26): checked and looked up on the open pages; no step line, no approval.
       if (call.name === 'show_options') {
         const shown = await showOptions(call.input, { browser: opts.browser, agentTabId: opts.agentTab.id, turns });
+        // A card's link is an address the user taps: one carrying the user's details to a site they didn't name or
+        // have open is not shown (UNTR-22).
+        if (shown.cards && ctx.outbound) {
+          const carrying: string[] = [];
+          const kept = [];
+          for (const card of shown.cards) {
+            if ((await ctx.outbound.check(card.url)).length) carrying.push(card.title);
+            else kept.push(card);
+          }
+          if (carrying.length) {
+            shown.cards = kept.length ? kept : undefined;
+            shown.isError = !kept.length;
+            shown.content =
+              `${kept.length ? shown.content + '\n' : ''}Not shown: ${carrying.map((c) => JSON.stringify(c)).join(', ')}, because ` +
+              "the link carries the user's details to a site they didn't name or have open. Use the shop's own links.";
+          }
+        }
         if (shown.cards) onEvent({ type: 'options', cards: shown.cards, incognito: opts.audit.incognito() });
         results.push({ callId: call.id, name: call.name, content: shown.content, isError: shown.isError });
         continue;

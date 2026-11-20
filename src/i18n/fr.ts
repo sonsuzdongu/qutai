@@ -804,6 +804,13 @@ export const fr: Record<keyof typeof en, string> = {
   'memory.askQuestionsIncognito': 'Indisponible tant qu’un onglet privé est ouvert',
 
   'confirm.always': 'Toujours autoriser sur {host}',
+  'confirm.memoryFromPage': 'Enregistrer dans la mémoire de Qutai : « {text} »',
+  'confirm.memoryFromPageWhy': 'Cela ne figure pas dans ce que vous avez écrit dans cette conversation. Une page web ou un fichier l’a peut-être suggéré.',
+  'confirm.urlCarries': 'Ouvrir {host} avec ceci dans l’adresse :',
+  'confirm.urlMemory': 'des informations enregistrées dans la mémoire de Qutai',
+  'confirm.urlChat': 'quelque chose que vous avez écrit dans cette conversation',
+  'confirm.urlOtherSite': 'un code ou une référence provenant d’un autre site',
+  'confirm.urlWhy': 'Vous n’avez pas nommé ce site et il n’était pas ouvert. Une page web essaie peut-être d’y envoyer vos informations.',
   'menu.sitePermission': 'Autorisation de Qutai sur ce site : {level}',
   'site.title': 'Ce que Qutai peut faire sur ce site',
   'site.level.default': 'Par défaut',

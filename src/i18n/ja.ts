@@ -805,6 +805,13 @@ export const ja: Record<keyof typeof en, string> = {
   'memory.askQuestionsIncognito': 'シークレット タブを開いている間は利用できません',
 
   'confirm.always': '{host} では常に許可',
+  'confirm.memoryFromPage': 'Qutai のメモリに保存:「{text}」',
+  'confirm.memoryFromPageWhy': 'これはこのチャットであなたが書いた内容にありません。ウェブページやファイルが提案した可能性があります。',
+  'confirm.urlCarries': 'アドレスに次の情報を含めて {host} を開く:',
+  'confirm.urlMemory': 'Qutai のメモリに保存された情報',
+  'confirm.urlChat': 'このチャットであなたが書いた内容',
+  'confirm.urlOtherSite': '別のサイトのコードや番号',
+  'confirm.urlWhy': 'このサイトはあなたが指定したものではなく、開いてもいませんでした。ウェブページがあなたの情報をそこへ送ろうとしている可能性があります。',
   'menu.sitePermission': 'このサイトでの Qutai の権限: {level}',
   'site.title': 'このサイトで Qutai に許可すること',
   'site.level.default': 'デフォルト',

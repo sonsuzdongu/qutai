@@ -803,6 +803,13 @@ export const ko: Record<keyof typeof en, string> = {
   'memory.askQuestionsIncognito': '시크릿 탭이 열려 있는 동안에는 사용할 수 없습니다',
 
   'confirm.always': '{host}에서 항상 허용',
+  'confirm.memoryFromPage': 'Qutai 메모리에 저장: “{text}”',
+  'confirm.memoryFromPageWhy': '이 채팅에서 작성하신 내용에 없습니다. 웹페이지나 파일이 제안한 것일 수 있습니다.',
+  'confirm.urlCarries': '주소에 다음 정보를 담아 {host} 열기:',
+  'confirm.urlMemory': 'Qutai 메모리에 저장된 정보',
+  'confirm.urlChat': '이 채팅에서 작성하신 내용',
+  'confirm.urlOtherSite': '다른 사이트의 코드 또는 번호',
+  'confirm.urlWhy': '지정하지 않았고 열려 있지도 않던 사이트입니다. 웹페이지가 정보를 그곳으로 보내려는 것일 수 있습니다.',
   'menu.sitePermission': '이 사이트에서 Qutai의 권한: {level}',
   'site.title': '이 사이트에서 Qutai가 할 수 있는 일',
   'site.level.default': '기본값',

@@ -805,6 +805,13 @@ export const ptBR: Record<keyof typeof en, string> = {
   'memory.askQuestionsIncognito': 'Indisponível enquanto houver uma guia anônima aberta',
 
   'confirm.always': 'Sempre permitir em {host}',
+  'confirm.memoryFromPage': 'Salvar na memória do Qutai: “{text}”',
+  'confirm.memoryFromPageWhy': 'Isso não está no que você escreveu nesta conversa. Uma página da web ou um arquivo pode ter sugerido isso.',
+  'confirm.urlCarries': 'Abrir {host} com isto no endereço:',
+  'confirm.urlMemory': 'dados salvos na memória do Qutai',
+  'confirm.urlChat': 'algo que você escreveu nesta conversa',
+  'confirm.urlOtherSite': 'um código ou uma referência de outro site',
+  'confirm.urlWhy': 'Você não mencionou este site e ele não estava aberto. Uma página da web pode estar tentando enviar seus dados para lá.',
   'menu.sitePermission': 'Permissão do Qutai neste site: {level}',
   'site.title': 'O que o Qutai pode fazer neste site',
   'site.level.default': 'Padrão',

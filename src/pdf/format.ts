@@ -3,6 +3,7 @@
  * markers, and how to go on. Pure, so it can be exercised outside the app.
  */
 
+import { fenceUntrusted } from '../agent/untrusted';
 import { cutText } from '../utils/wellFormed';
 
 export type PageText = { page: number; text: string };
@@ -47,11 +48,12 @@ export function parsePageRange(input: unknown, pages: number): { from: number; t
 
 /** Header lines: source, size, metadata. */
 function header(r: PdfTextResult): string[] {
-  const lines = [`PDF: ${JSON.stringify(r.name)} (${r.origin})`, `Pages: ${r.pages}`];
-  for (const key of ['Title', 'Author', 'Subject', 'CreationDate']) {
-    if (r.info[key]) lines.push(`${key}: ${r.info[key]}`);
-  }
-  return lines;
+  return [`PDF: ${JSON.stringify(r.name)} (${r.origin})`, `Pages: ${r.pages}`];
+}
+
+/** The document's own metadata (its author wrote it, like the pages). */
+function infoLines(r: PdfTextResult): string[] {
+  return ['Title', 'Author', 'Subject', 'CreationDate'].filter((key) => r.info[key]).map((key) => `${key}: ${r.info[key]}`);
 }
 
 /** The result for the pages read, cut to the budget at a page boundary (a single huge page is cut inside). */
@@ -81,7 +83,9 @@ export function formatPdfText(r: PdfTextResult, budget = PDF_CHAR_BUDGET): strin
     ? `call read_pdf with ${r.again} and view_pages (up to ${MAX_VIEW_PAGES} page numbers) to look at them as images`
     : "this model can't take images, so tell the user these pages can't be read as text";
 
+  const info = infoLines(r);
   if (empty.length === r.read.length && r.read.length > 0) {
+    if (info.length) lines.push(fenceUntrusted(info.join('\n'), 'pdf'));
     lines.push(
       '',
       `Pages ${r.from}–${last} have no text layer: this PDF looks scanned (pages are images). To read it, ${scannedHint}.`,
@@ -90,7 +94,8 @@ export function formatPdfText(r: PdfTextResult, budget = PDF_CHAR_BUDGET): strin
     return lines.join('\n');
   }
 
-  lines.push(`Showing pages ${r.from}–${last} of ${r.pages}.`, '', ...shown);
+  // The document's text (and metadata) between untrusted-content markers (UNTR-21).
+  lines.push(`Showing pages ${r.from}–${last} of ${r.pages}.`, fenceUntrusted([...info, ...(info.length ? [''] : []), ...shown].join('\n'), 'pdf'));
   if (empty.length) lines.push('', `[Pages without text: ${empty.join(', ')}. To read them, ${scannedHint}.]`);
   if (last < r.to) {
     lines.push(
