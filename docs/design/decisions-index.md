@@ -530,6 +530,7 @@ Moved to Details (ids retired, not reused): `TOOL-4`, `TOOL-18`, `TOOL-28`
 | `TASK-15` | A notification the assistant scheduled carries only internal ids (the tab's and the group's; for an… | Default |  |
 | `TASK-16` | Calendar events, reminders and notifications are never added from incognito conversations. | Default |  |
 | `TASK-17` | A task has its own identity; the shared state it sets records it, and its end clears only what it still owns | Default | 2026-11-20 |
+| `TASK-18` | Stop interrupts a running tool's waits and ends the step within about a second; every tool call keeps a result in the history | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `TASK-2`, `TASK-14`
 

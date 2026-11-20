@@ -11,7 +11,7 @@ import {
   isRunningInBackground,
   NeedsForegroundError,
 } from '../device/backgroundTask';
-import { sleep } from '../utils/sleep';
+import { sleep, StoppedError, throwIfStopped } from '../utils/sleep';
 import { wellFormedJsonText } from '../utils/wellFormed';
 import { siteKey } from '../agent/sitePolicy';
 import { PageGeolocation } from './geolocation';
@@ -691,64 +691,79 @@ export class Tab {
     this.onChange();
   }
 
-  /** Resolves on the next load end, or after the timeout (never rejects). */
-  waitForNextLoad(timeoutMs = 15000): Promise<void> {
-    return new Promise((resolve) => {
+  /**
+   * Resolves on the next load end, or after the timeout; never rejects, except when the task's `signal` aborts
+   * (StoppedError, at once).
+   */
+  waitForNextLoad(timeoutMs = 15000, signal?: AbortSignal): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (signal?.aborted) return reject(new StoppedError());
       let done = false;
-      const finish = () => {
-        if (done) return;
+      const end = () => {
+        if (done) return false;
         done = true;
         clearTimeout(timer);
-        resolve();
+        signal?.removeEventListener('abort', onAbort);
+        this.loadWaiters = this.loadWaiters.filter((w) => w !== finish);
+        return true;
+      };
+      const finish = () => {
+        if (end()) resolve();
+      };
+      const onAbort = () => {
+        if (end()) reject(new StoppedError());
       };
       const timer = setTimeout(finish, timeoutMs);
       this.loadWaiters.push(finish);
+      signal?.addEventListener('abort', onAbort, { once: true });
     });
   }
 
-  /** Gives a click or submit a moment to start navigating, then waits for it to finish. */
-  async settle(): Promise<void> {
-    if (isRunningInBackground()) return this.settleInBackground();
-    await sleep(600);
-    if (this.loading) await this.waitForNextLoad();
-    await sleep(300);
+  /** Gives a click or submit a moment to start navigating, then waits for it to finish (Stop ends it at once). */
+  async settle(signal?: AbortSignal): Promise<void> {
+    if (isRunningInBackground()) return this.settleInBackground(signal);
+    await sleep(600, signal);
+    if (this.loading) await this.waitForNextLoad(undefined, signal);
+    await sleep(300, signal);
   }
 
-  async navigate(url: string): Promise<void> {
+  async navigate(url: string, signal?: AbortSignal): Promise<void> {
+    throwIfStopped(signal);
     if (isRunningInBackground()) {
       if (this.isNewTab || !this.webview || this.asleep) throw new NeedsForegroundError();
       this.loadError = null;
       this.loadUrl(url);
-      return this.settleInBackground();
+      return this.settleInBackground(signal);
     }
-    const wait = this.waitForNextLoad();
+    const wait = this.waitForNextLoad(undefined, signal);
     this.loadUrl(url);
     await wait;
-    await sleep(300);
+    await sleep(300, signal);
   }
 
-  async goBack(): Promise<void> {
+  async goBack(signal?: AbortSignal): Promise<void> {
+    throwIfStopped(signal);
     if (isRunningInBackground()) {
       if (!this.webview || this.asleep) throw new NeedsForegroundError();
       await backgroundGoBack(this.playback.nonce);
-      return this.settleInBackground();
+      return this.settleInBackground(signal);
     }
     this.webview?.goBack();
-    await this.settle();
+    await this.settle(signal);
   }
 
   /**
    * In the background, page load events may not reach the app: waits until the WebView reports the page loaded
    * (or 15 s), then takes the address and title from the WebView itself.
    */
-  private async settleInBackground(): Promise<void> {
-    await sleep(600);
+  private async settleInBackground(signal?: AbortSignal): Promise<void> {
+    await sleep(600, signal);
     const deadline = Date.now() + 15000;
     let state: BackgroundPageState | null = null;
     while (Date.now() < deadline) {
       state = await backgroundPageState(this.playback.nonce);
       if (!state || state.progress >= 100) break;
-      await sleep(300);
+      await sleep(300, signal);
     }
     if (state) {
       this.loading = false;
@@ -760,7 +775,7 @@ export class Tab {
         canGoForward: state.canGoForward,
       } as WebViewNavigation);
     }
-    await sleep(300);
+    await sleep(300, signal);
   }
 
   /**
@@ -887,7 +902,8 @@ export class Tab {
    * document yet (Android's early script came too late or not at all, a page loaded in another way), the command
    * is sent once more together with the script.
    */
-  async run<T = unknown>(command: PageCommand, args: unknown[] = [], timeoutMs = 10000): Promise<T> {
+  async run<T = unknown>(command: PageCommand, args: unknown[] = [], timeoutMs = 10000, signal?: AbortSignal): Promise<T> {
+    throwIfStopped(signal);
     if (PAGE_ACTIONS.has(command)) this.closeReader();
     if (isRunningInBackground()) return this.runInBackground<T>(command, args, timeoutMs);
     const webview = this.reader && READER_COMMANDS.has(command) && this.readerWebview ? this.readerWebview : this.webview;
@@ -897,15 +913,30 @@ export class Tab {
       const id = `${this.nonce}-${++this.counter}`;
       const code = (install ? this.agentInstallScript : '') + agentCommandScript(this.agentNameValue, command, args, this.nonce, id, deliver);
       return new Promise<unknown>((resolve, reject) => {
+        const onAbort = () => {
+          const pending = this.pending.get(id);
+          if (!pending) return;
+          clearTimeout(pending.timer);
+          this.pending.delete(id);
+          reject(new StoppedError());
+        };
         const timer = setTimeout(() => {
+          signal?.removeEventListener('abort', onAbort);
           this.pending.delete(id);
           reject(new Error('The page did not respond (it may still be loading).'));
         }, timeoutMs);
-        this.pending.set(id, { resolve, reject, timer });
+        // A Stop ends the wait for the page's answer at once (the command may still run on the page).
+        const done = (fn: (v: unknown) => void) => (v: unknown) => {
+          signal?.removeEventListener('abort', onAbort);
+          fn(v);
+        };
+        this.pending.set(id, { resolve: done(resolve), reject: done(reject as (v: unknown) => void), timer });
+        signal?.addEventListener('abort', onAbort, { once: true });
         webview.injectJavaScript(code);
       });
     };
     let reply = await send(false);
+    throwIfStopped(signal);
     if (reply === MISSING) reply = await send(true);
     if (reply === MISSING) throw new Error("Qutai's page script could not be set up on this page.");
     return reply as T;

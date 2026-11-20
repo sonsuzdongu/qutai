@@ -476,11 +476,11 @@ async function readTab(
   try {
     if (target.asleep) {
       // A sleeping tab gets its WebView back off screen; the page loads from its saved address.
-      const loaded = target.waitForNextLoad();
+      const loaded = target.waitForNextLoad(undefined, ctx.signal);
       target.wake();
       await loaded;
     }
-    const page = await target.run<PageSnapshot>('readPage', [input.offset ?? 0]);
+    const page = await target.run<PageSnapshot>('readPage', [input.offset ?? 0], undefined, ctx.signal);
     ctx.outbound?.notePage(page.content, page.url);
     const hint =
       target.id === ctx.agentTab.id
@@ -1178,7 +1178,7 @@ function tabClosed(ctx: ToolContext): ToolOutput {
 async function showTab(ctx: ToolContext, tab: Tab) {
   if (ctx.browser.activeId === tab.id) return;
   ctx.browser.switchTab(tab.id);
-  await sleep(400);
+  await sleep(400, ctx.signal);
 }
 
 /** Tabs the agent opened during a task, keyed by that task's agentTab object. */
@@ -1673,7 +1673,7 @@ async function tabsTool(name: string, input: Record<string, unknown>, ctx: ToolC
         });
         noteOpened(ctx, opened.id);
         ctx.agentTab.id = opened.id;
-        await opened.waitForNextLoad();
+        await opened.waitForNextLoad(undefined, ctx.signal);
         return { content: `Opened tab id=${opened.id} at ${opened.url}. Call read_page to see it.`, isError: false };
       }
       case 'switch_tab': {
@@ -1714,7 +1714,7 @@ async function tabsTool(name: string, input: Record<string, unknown>, ctx: ToolC
       }
       case 'wait': {
         const seconds = Math.min(Math.max(Number(input.seconds) || 1, 0), 10);
-        await sleep(seconds * 1000);
+        await sleep(seconds * 1000, ctx.signal);
         return { content: `Waited ${seconds}s.`, isError: false };
       }
       default:
@@ -1767,7 +1767,7 @@ async function runTool(
   const agentTab = browser.getTab(ctx.agentTab.id);
   if (agentTab?.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
   if (agentTab?.asleep) {
-    const loaded = agentTab.waitForNextLoad();
+    const loaded = agentTab.waitForNextLoad(undefined, ctx.signal);
     agentTab.wake();
     await loaded;
   }
@@ -1839,18 +1839,18 @@ async function runTool(
     await markBeforeAction(tab, name, input);
     switch (name) {
       case 'read_page': {
-        const page = await tab.run<PageSnapshot>('readPage', [input.offset ?? 0]);
+        const page = await tab.run<PageSnapshot>('readPage', [input.offset ?? 0], undefined, ctx.signal);
         ctx.outbound?.notePage(page.content, page.url);
         return { content: formatPage(tab, page, 'read_page'), isError: false };
       }
       case 'read_source': {
         const selector = typeof input.selector === 'string' ? input.selector.trim() : '';
-        const source = await tab.run<SourceSnapshot>('readSource', [input.offset ?? 0, selector]);
+        const source = await tab.run<SourceSnapshot>('readSource', [input.offset ?? 0, selector], undefined, ctx.signal);
         return { content: formatSource(tab, source, selector), isError: false };
       }
       case 'navigate': {
         const url = normalizeUrl(input.url);
-        await tab.navigate(url);
+        await tab.navigate(url, ctx.signal);
         if (tab.loadError) {
           return {
             content: `Could not load ${url}: ${tab.loadError.description} (${tab.loadError.kind}).`,
@@ -1860,18 +1860,18 @@ async function runTool(
         return { content: `Opened ${tab.url || url}. Call read_page to see it.`, isError: false };
       }
       case 'go_back': {
-        await tab.goBack();
+        await tab.goBack(ctx.signal);
         return { content: `Went back. Now at ${tab.url}.`, isError: false };
       }
       case 'click': {
         const urlBefore = tab.url;
         const tabsBefore = new Set(browser.tabs.map((t) => t.id));
-        const result = await tab.run<string>('click', [input.ref]);
-        await tab.settle();
+        const result = await tab.run<string>('click', [input.ref], undefined, ctx.signal);
+        await tab.settle(ctx.signal);
         const opened = browser.tabs.find((t) => !tabsBefore.has(t.id));
         if (opened) {
           ctx.agentTab.id = opened.id;
-          await opened.settle();
+          await opened.settle(ctx.signal);
           return {
             content: `${result} It opened a new tab (id=${opened.id}, ${opened.url}); you are now in it.`,
             isError: false,
@@ -1889,10 +1889,10 @@ async function runTool(
           hidden ? hiddenValue(hidden) : String(input.text ?? ''),
           input.clear !== false,
           submit,
-        ]);
-        if (submit) await tab.settle();
+        ], undefined, ctx.signal);
+        if (submit) await tab.settle(ctx.signal);
         // Pages often validate a moment after input; a submit that left the page has nothing to report.
-        else await sleep(150);
+        else await sleep(150, ctx.signal);
         const report = tab.url === urlBefore ? await formReport(tab, input.ref, submit) : '';
         if (hidden) {
           return {
@@ -1905,17 +1905,17 @@ async function runTool(
         return { content: result + report, isError: false };
       }
       case 'select_option': {
-        const result = await tab.run<string>('select', [input.ref, String(input.value ?? '')]);
-        await sleep(300);
+        const result = await tab.run<string>('select', [input.ref, String(input.value ?? '')], undefined, ctx.signal);
+        await sleep(300, ctx.signal);
         return { content: result + (await formReport(tab, input.ref, false)), isError: false };
       }
       case 'scroll': {
-        const result = await tab.run<string>('scroll', [input.direction, input.amount ?? 1]);
-        await sleep(400);
+        const result = await tab.run<string>('scroll', [input.direction, input.amount ?? 1], undefined, ctx.signal);
+        await sleep(400, ctx.signal);
         return { content: result, isError: false };
       }
       case 'scroll_to': {
-        const result = await tab.run<string>('scrollTo', [input.ref]);
+        const result = await tab.run<string>('scrollTo', [input.ref], undefined, ctx.signal);
         return { content: result, isError: false };
       }
       case 'save_pdf': {
@@ -1988,10 +1988,10 @@ async function runTool(
             isError: true,
           };
         }
-        const result = await tab.run<string>('clickAt', [x / size.width, y / size.height]);
+        const result = await tab.run<string>('clickAt', [x / size.width, y / size.height], undefined, ctx.signal);
         // The page may have changed; old coordinates are no longer reliable.
         tab.modelScreenshotSize = null;
-        await tab.settle();
+        await tab.settle(ctx.signal);
         return { content: `${result}. Take a new screenshot to see the result.`, isError: false };
       }
       case 'read_aloud': {

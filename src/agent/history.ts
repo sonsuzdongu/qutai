@@ -24,7 +24,44 @@ export const COMPACT_THRESHOLD = 1500;
  * Images the user attached stay with the KEEP_IMAGE_MESSAGES most recent user messages (MAX_SENT_IMAGES at most);
  * older ones are taken off the turn and named in its text instead, so the model can still refer to them by id.
  */
+/** The result a call gets when its task ended before it returned (Stop, a crash, Qutai killed mid-step). */
+export const UNFINISHED_CALL = 'Not executed: the task ended before this call finished.';
+
+/**
+ * Every tool call followed by its result, as every provider requires: a call whose result never came (the task was
+ * stopped or Qutai was killed while it ran) gets one saying so, in call order. The last turn is left as it is: an
+ * answer that paused mid-search is continued with the next request, never answered with results. Returns the same
+ * array when nothing is missing.
+ */
+export function pairToolCalls(turns: Turn[]): Turn[] {
+  let out: Turn[] | null = null;
+  for (let i = 0; i < turns.length; i++) {
+    const turn = turns[i];
+    const next = turns[i + 1];
+    if (turn.role !== 'assistant' || !turn.toolCalls.length || !next) {
+      out?.push(turn);
+      continue;
+    }
+    const results = next.role === 'tool_results' ? next.results : [];
+    const missing = turn.toolCalls.filter((c) => !results.some((r) => r.callId === c.id));
+    if (!missing.length) {
+      out?.push(turn);
+      continue;
+    }
+    out ??= turns.slice(0, i);
+    out.push(turn, {
+      role: 'tool_results',
+      results: turn.toolCalls.map(
+        (c) => results.find((r) => r.callId === c.id) ?? { callId: c.id, name: c.name, content: UNFINISHED_CALL, isError: true },
+      ),
+    });
+    if (next.role === 'tool_results') i++;
+  }
+  return out ?? turns;
+}
+
 export function compactHistory(turns: Turn[], maxImages?: number, batch = COMPACT_BATCH): Turn[] {
+  turns = pairToolCalls(turns);
   // A server's limit on images per request (Qutai Credits' maxImages) leaves room for the latest screenshot.
   const userImageCap = maxImages ? Math.max(0, Math.min(MAX_SENT_IMAGES, maxImages - KEEP_IMAGES)) : MAX_SENT_IMAGES;
   // The oldest `cut` of the large results are cut: none until there are more than KEEP_FULL_RESULTS, then

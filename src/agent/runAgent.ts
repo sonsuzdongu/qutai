@@ -43,6 +43,7 @@ import { MEMORY_TOOLS, TOOLS } from './tools';
 import type { AgentEvent, Source } from './types';
 import { cutText } from '../utils/wellFormed';
 import { randomBase36 } from '../utils/ids';
+import { untilStopped } from '../utils/sleep';
 
 const MAX_STEPS = 40;
 // The prompt parts live in systemPrompt.ts (exported to the agent profile for Qutai Credits); re-exported here for
@@ -398,7 +399,7 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
         continue;
       }
       if (signal.aborted) {
-        results.push({ callId: call.id, name: call.name, content: 'Stopped by the user.', isError: true });
+        results.push(stoppedResult(call));
         continue;
       }
       // Cards for the user (UI-26): checked and looked up on the open pages; no step line, no approval.
@@ -427,25 +428,39 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
       }
       await pauseWhileBackgrounded(isForeground() ? undefined : (backgroundBlocker(call.name, call.input, ctx) ?? undefined));
       if (signal.aborted) {
-        results.push({ callId: call.id, name: call.name, content: 'Stopped by the user.', isError: true });
+        results.push(stoppedResult(call));
         continue;
       }
       // The line names the element or tab ("Tapping the “Add to cart” button"), never the model's ref or tab id.
-      await prepareStepTarget(call.name, call.input, opts.browser, opts.agentTab.id);
+      await untilStopped(prepareStepTarget(call.name, call.input, opts.browser, opts.agentTab.id), signal, () => undefined);
+      if (signal.aborted) {
+        results.push(stoppedResult(call));
+        continue;
+      }
       const action = describeToolCall(call.name, call.input);
       onEvent({ type: 'action', icon: toolIcon(call.name, call.input), text: action, tool: call.name });
       setBackgroundStep(action);
       const backgroundsBefore = getBackgroundCount();
       const pausesBefore = getBackgroundPauseCount();
       takeNeedsForeground();
+      // Stop ends the step at once: the tool's own waits end with the task's signal, and whatever can't be told to
+      // stop (a page query, a request) is left to finish unheard. The call still gets its result in the history.
       const run = (): ReturnType<typeof executeTool> =>
-        (call.name === 'view_screenshot' || call.name === 'view_attachment') && opts.imageInput === false
-          ? Promise.resolve({
-              content: call.name === 'view_attachment' ? NO_IMAGE_INPUT_ATTACHMENT : NO_IMAGE_INPUT,
-              isError: true,
-            })
-          : executeTool(call.name, call.input, ctx);
+        untilStopped(
+          (call.name === 'view_screenshot' || call.name === 'view_attachment') && opts.imageInput === false
+            ? Promise.resolve({
+                content: call.name === 'view_attachment' ? NO_IMAGE_INPUT_ATTACHMENT : NO_IMAGE_INPUT,
+                isError: true,
+              })
+            : executeTool(call.name, call.input, ctx),
+          signal,
+          () => ({ content: STOPPED, isError: true }),
+        );
       let result = await run();
+      if (signal.aborted) {
+        results.push(stoppedResult(call));
+        continue;
+      }
       noteBackgroundProgress();
       // Touched an incognito tab: from now on the task never goes on in the background.
       if (opts.audit.incognito()) forbidBackground();
@@ -491,6 +506,12 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
   }
 
   onEvent({ type: 'error', text: t('chat.stepLimit', { max: maxSteps }) });
+}
+
+/** A call's result when the task was stopped before or while it ran. */
+const STOPPED = 'Stopped by the user.';
+function stoppedResult(call: { id: string; name: string }): ToolResult {
+  return { callId: call.id, name: call.name, content: STOPPED, isError: true };
 }
 
 const MAX_CHOICES = 8;
