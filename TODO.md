@@ -106,6 +106,20 @@ Set-up only the owner can do (not decisions)
 - [ ] Website: three sentences are out of date ("No account needed and no sync", the planned end-to-end sync, the comparison's sync note)
 - [ ] Play Console: update the foreground service declaration (text in `docs/permissions.md`)
 
+## Before launch: let purchase notifications through the firewall rule
+
+The owner has a Cloudflare firewall rule on the API's hostname that refuses requests whose User-Agent is not the app's
+(owner, 20 Nov 2026; seen as a 403 from Cloudflare for a plain request while the API was healthy). RevenueCat's
+notifications to `/webhooks/purchases` come from RevenueCat's servers and do not carry that User-Agent, so the rule
+would stop every purchase and refund notification.
+
+- [ ] When RevenueCat is set up, change the rule to leave that path out, for example:
+      `(http.host eq "<api host>" and not http.user_agent contains "qutai." and http.request.uri.path ne "/webhooks/purchases")`.
+      The path is safe to open: the server checks RevenueCat's signature on every notification and refuses the rest.
+- [ ] Send RevenueCat's test event from its dashboard and check it reaches the server (the server answers 200).
+- [ ] Any other service that must call the API from outside the app (a monitoring check, a store server notification
+      relayed by RevenueCat) needs the same exception or the app's User-Agent shape.
+
 ## Before launch: remove fake purchases
 
 Buying credits works today only through **fake purchases**, a deliberate stand-in the owner ordered on 17 Nov 2026
