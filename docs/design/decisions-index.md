@@ -811,7 +811,7 @@ Moved to Details (ids retired, not reused): `VOICE-10`, `VOICE-12`, `VOICE-16`, 
 | `LANG-16` | Today the privacy policy and terms exist only in English and Turkish, and other languages show English… | **Waiting** |  |
 | `LANG-17` | Today the eight newer translations are unreviewed by native speakers; brand names "Qutai Credits" / "Qutai… | **Waiting** |  |
 | `LANG-18` | Today translate prompts say "into <interface language>" and examples use local cities. | **Waiting** |  |
-| `LANG-19` | Android launcher shortcuts are static and stay in the phone's language when Qutai's language differs;… | Default |  |
+| `LANG-19` | Android launcher shortcuts are dynamic, published in Qutai's language (start, language change, update); no static ones; pinned static copies… | Owner | 2026-11-20 |
 | `LANG-21` | Setup starts with the language, preselected to the one Qutai already shows; a pick switches at once and is stored where Settings ›… | Owner | 2026-11-19 |
 | `LANG-20` | The custom-instruction line "Always reply in Turkish" / "Her zaman Türkçe yanıt ver" added by older builds… | Owner | 2026-11-16 |
 

@@ -90,6 +90,7 @@
     "test:omnibox": "node scripts/test-support/run.mjs omnibox --verbose",
     "measure:omnibox": "node --no-warnings --experimental-transform-types --import ./scripts/test-support/loader.mjs scripts/omnibox-tests/measure.ts",
     "test:install": "node scripts/test-support/run.mjs install --verbose",
+    "test:entry": "node scripts/test-support/run.mjs entry --verbose",
     "version:bump": "node scripts/version/bump.mjs",
     "build:aab": "node scripts/build/release.mjs aab",
     "build:ipa": "node scripts/build/release.mjs ipa",

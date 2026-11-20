@@ -20,6 +20,7 @@ export const SUITES = {
   navigation: { files: ['scripts/navigation-tests/*.test.ts'], forceExit: true },
   omnibox: { files: ['scripts/omnibox-tests/*.test.ts'] },
   install: { files: ['scripts/install-tests/*.test.ts'] },
+  entry: { files: ['scripts/entry-tests/*.test.ts'] },
   version: { files: ['scripts/version/rule.test.mjs'], plain: true },
   useragent: { files: ['scripts/useragent-tests/*.test.ts'] },
   layout: { files: ['scripts/layout-tests/*.test.ts'] },

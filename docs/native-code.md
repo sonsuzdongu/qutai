@@ -141,8 +141,11 @@ plugins named; nothing in `android/` or `ios/` is edited by hand.
 ### qutai-entry (Android, iOS)
 
 - **Does**: Android: queues text shared to Qutai (SEND, PROCESS_TEXT, WEB_SEARCH) for JavaScript; pinned site
-  shortcuts ("Add to home screen") and the home-screen widget; the app language (the system's per-app language on
-  Android 13+, a stored choice before), relabelling shortcuts and the widget; the theme for the launch splash
+  shortcuts ("Add to home screen") and the home-screen widget; the four launcher shortcuts, published as dynamic
+  shortcuts in Qutai's language (`AppLanguage.kt`: at start, after a language change in Qutai's settings, on
+  `LOCALE_CHANGED` and `MY_PACKAGE_REPLACED`; ids `new_tab`, `new_private_tab`, `ask`, `scan`; no static shortcuts
+  since 20 Nov 2026, `LANG-19`); the app language (the system's per-app language on Android 13+, a stored choice
+  before), which the shortcuts and the widget's texts follow; the theme for the launch splash
   (Android 12+); sharing files Qutai hands out through a FileProvider. iOS: Home Screen quick actions (an
   AppDelegate subscriber keeps a cold-start shortcut until JavaScript asks) and `shareFiles` through the share sheet.
 - **JS**: `src/device/entryPoints.ts` (`takePending`, event `onEntry`, both platforms; `isPinShortcutSupported`,
@@ -150,12 +153,18 @@ plugins named; nothing in `android/` or `ios/` is edited by hand.
   `src/i18n/appLanguage.ts` (`getAppLanguage`, `setAppLanguage`, `hasSystemAppLanguage`, Android). The Android-only
   calls are guarded on iOS.
 - **Declared by**: the module's manifest (`QutaiShareFileProvider`, authority `${applicationId}.qutai.share`, cache
-  folders `outgoing/`, `outgoing-incognito/`); `plugins/withEntryPoints.js` (text intent filters, 4 static
-  shortcuts, `QutaiWidgetProvider`, `QutaiLocaleReceiver`, iOS `UIApplicationShortcutItems`). No permissions.
+  folders `outgoing/`, `outgoing-incognito/`); `plugins/withEntryPoints.js` (text intent filters,
+  `QutaiWidgetProvider`, `QutaiLocaleReceiver`, iOS `UIApplicationShortcutItems`; it declares no launcher shortcuts
+  and deletes the `qutai_shortcuts.xml` earlier prebuilds left). No permissions.
 - **Manual check**: share a link from another app to Qutai: it offers to open it. Add the widget and resize it small
   to large: the layout switches; "Private tab" opens incognito. Switch the app language to Turkish: the widget's
   labels follow without opening the app. "Add to home screen" on a page: the launcher confirms, the icon opens the
-  page. iOS: long-press the icon, "New tab", also from a cold start.
+  page. Launcher shortcuts: phone in English, Qutai in Turkish, open Qutai once, long-press the icon: four shortcuts
+  in Turkish (Yeni sekme, Gizli sekme, Qutai'a sor, QR tara), no English duplicates; change Qutai's language in its
+  settings or the phone's language and long-press again without reopening (Android 13+: within about ten seconds).
+  After an update from 0.1.4 a shortcut pinned from the old static ones is greyed (Android disables it; remove and
+  pin again), the menu shows the four dynamic ones. "Incognito tab" with the incognito lock on asks for the lock.
+  iOS: long-press the icon, "New tab", also from a cold start.
 
 ### qutai-media (Android)
 

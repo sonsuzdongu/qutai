@@ -25,7 +25,8 @@ class QutaiEntryModule : Module() {
     Name("QutaiEntry")
     Events("onEntry")
 
-    // Launcher shortcuts and widget in the app's current language (also kept in step by QutaiLocaleReceiver).
+    // Publishes the launcher shortcuts (dynamic, in Qutai's language) and redoes the widget's texts; a fresh install
+    // has no shortcuts until this runs once. QutaiLocaleReceiver does the same on language changes and updates.
     OnCreate {
       appContext.reactContext?.applicationContext?.let { context ->
         Thread { AppLanguage.apply(context) }.start()
