@@ -1243,7 +1243,7 @@ Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 |---|---|---|---|
 | `HOUSE-1` | `DESIGN.md` is the single record of how Qutai works. Every piece of work that changes behaviour, a… | Owner | 2026-11-19 |
 | `HOUSE-2` | Before writing code against an Expo, EAS or React Native API, check the Expo version in `package.json` and… | Owner | not recorded |
-| `HOUSE-3` | Lint (`npx expo lint`) and typecheck (`npx tsc --noEmit`) pass before any task is called done. | Owner | not recorded |
+| `HOUSE-3` | Lint (`npx expo lint`) and typecheck (`npx tsc --noEmit`) pass before any task is called done (`npm run check:all` runs all checks). | Owner | not recorded |
 | `HOUSE-4` | Sessions commit on `main` and never push. The owner pushes. | Default |  |
 | `HOUSE-5` | Commit messages have no attribution trailers, such as Co-Authored-By. | Default |  |
 | `HOUSE-6` | Stage and commit by path, taking only your own files or hunks, never the whole index. | Default |  |
@@ -1261,6 +1261,7 @@ Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 | `HOUSE-18` | Today Settings › Assistant › "Asistan görünümü (deneme)" switches the listening and working look between… | Owner | 2026-11-17 |
 | `HOUSE-19` | Before any store release or production deploy, the owner is reminded of every stand-in in HOUSE-15 to… | Owner | 2026-11-17 |
 | `HOUSE-20` | The backend is changed only in its own repository (the submodule `backend/`), which the app's typecheck… | Default |  |
+| `HOUSE-21` | One test loader and runner: `npm test` runs every server-free suite and fails on any failure; `npm run check:all` runs every check of the app and backend/ | Default | 2026-11-20 |
 
 ## [44. Deliberately not built](44-not-built.md)
 

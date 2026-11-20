@@ -563,7 +563,7 @@ Denenmedi (cihazda): Android'de çalıştırma, açıkken tema değişimi, Voice
 
 Tasarım: `docs/mini-apps.md` › 8. **Yeni yerel derleme gerekir** (iOS'ta `.qutaiapp` dosya türü ve "Qutai'de aç",
 Android'de "Birlikte aç" ve WebView yamasındaki uygulama kum havuzu). Deneme dosyaları:
-`node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs scripts/app-tests/export-fixtures.ts <klasör> <port>`
+`node --no-warnings --experimental-transform-types --import ./scripts/test-support/loader.mjs scripts/app-tests/export-fixtures.ts <klasör> <port>`
 (verili notlar, break-out uygulaması, değiştirilmiş ve daha yeni sürümlü dosya); break-out sızıntıları sahte yapay zekâ
 sunucusunun `/leaks` listesine düşer (`node scripts/fake-ai/server.mjs <port>`).
 
@@ -597,7 +597,7 @@ Her telefonda denenecekler:
 
 ## 20. Güvenlik geçişi: şifreler ve kodlar, silme ve hesap onayı, ödeme düğmesi, gizli sekme, ayar aracı, uygulamalar (19 Kasım)
 
-Hazırlık: `node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs scripts/page-tests/serve.mjs`
+Hazırlık: `node --no-warnings --experimental-transform-types --import ./scripts/test-support/loader.mjs scripts/page-tests/serve.mjs`
 (sayfa: `http://localhost:8811/guards`) ve sahte yapay zekâ `node scripts/fake-ai/server.mjs 8794` (Özel uç nokta
 `http://localhost:8794/v1`, model `fake`; Android'de `adb reverse tcp:8794 tcp:8794` ve `tcp:8811`).
 

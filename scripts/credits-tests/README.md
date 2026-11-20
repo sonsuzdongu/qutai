@@ -1,8 +1,8 @@
 # Qutai Credits tests (pro mode)
 
 Tests for `src/credits/` and the agent profile, with Node's built-in test runner (`node --test`, Node 22.18+ / 24)
-and its TypeScript support; no test framework is added to the app. `loader.mjs` resolves the app's extensionless
-imports (to `.ts` or a folder's `index.ts`) and stands in for the two native modules the request code touches
+and its TypeScript support; no test framework is added to the app. The shared loader (`scripts/test-support/`)
+resolves the app's extensionless imports and stands in for the native modules the request code touches
 (`react-native`: `Platform`, `AppState`; `expo-localization`: the language), so the real adapters
 (`src/ai/anthropic.ts`, `openai.ts`, `gemini.ts`) run here as they do in the app. The folder is left out of the
 app's `tsc`.

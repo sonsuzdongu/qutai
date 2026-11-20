@@ -5,7 +5,7 @@
 // text itself from `beforeinput`, buttons that act on pointer or touch events instead of click, a keyup-enabled form,
 // and a checkout with a total. Nothing leaves the machine except React, loaded from cdnjs for the React fixture.
 //
-// Usage: node --experimental-transform-types --import ./scripts/credits-tests/loader.mjs scripts/page-tests/serve.mjs [port]   (default 8811; 127.0.0.1 only)
+// Usage: node --experimental-transform-types --import ./scripts/test-support/loader.mjs scripts/page-tests/serve.mjs [port]   (default 8811; 127.0.0.1 only)
 //   The flag lets POST /decide judge the page's press facts with the app's own rule (src/agent/outwardApproval.ts).
 //   http://localhost:8811/            the page with the working copy's page script; runs every case and shows a table
 //   http://localhost:8811/?script=head the same with the page script of the last commit (to compare before a fix)

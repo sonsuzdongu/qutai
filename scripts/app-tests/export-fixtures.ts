@@ -1,6 +1,6 @@
 // Writes .qutaiapp files for phone checks (docs/test-checklist.md › Apps phase 2): the notes app with two notes, the
 // break-out app (its leaks go to the fake AI server's /leak recorder, port 8793 unless given), and broken files for the
-// error screens. Run: node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs \
+// error screens. Run: node --no-warnings --experimental-transform-types --import ./scripts/test-support/loader.mjs \
 //   scripts/app-tests/export-fixtures.ts <out dir> [port]
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';

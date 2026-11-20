@@ -1,9 +1,28 @@
-// Module hooks for ./loader.mjs (see there).
+// Module hooks of the shared test loader (./register.mjs explains what they do). Options arrive in initialize().
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { STUBBED } from './stubs.mjs';
+
+/** App files (by path suffix) replaced by a harness's own stand-ins: { '/src/pdf/reader.ts': 'export …' }. */
+let STUBBED = {};
+export async function initialize(data) {
+  STUBBED = data?.stubs ?? {};
+}
+
+// Stand-ins with behaviour for the two native modules whose values tests read: the language (QUTAI_TEST_LANG,
+// default English) and the calendar's time zone (UTC). Every other name of a native module is the generic stand-in.
+const SPECIFIC = {
+  'expo-localization': `
+    const code = (globalThis.process?.env?.QUTAI_TEST_LANG) || 'en';
+    export function getLocales() { return [{ languageCode: code }]; }
+    export function useLocales() { return getLocales(); }
+    export function getCalendars() { return [{ timeZone: 'UTC' }]; }
+  `,
+};
+const specificNames = (src) => new Set([...src.matchAll(/export\s+(?:function|const)\s+([A-Za-z_$][\w$]*)/g)].map((m) => m[1]));
 const NATIVE = /^(react-native|expo|@react-native|@react-native-masked-view|@shopify|@expo|react-native-[a-z-]+|expo-[a-z-]+)(\/|$)/;
-const STUB = "const handler = { get: (t, k) => k === Symbol.toPrimitive ? () => '' : k === 'then' ? undefined : k === 'OS' ? 'ios' : k === 'currentState' ? 'active' : stub, apply: () => stub, construct: () => stub }; const stub = new Proxy(function () {}, handler);";
+// The generic stand-in: any property is another stand-in, calls and `new` return one; Platform.OS is QUTAI_TEST_OS
+// (read at each access, so one test file can switch platforms; default ios), AppState.currentState is "active".
+const STUB = "const handler = { get: (t, k) => k === Symbol.toPrimitive ? () => '' : k === 'then' ? undefined : k === 'OS' ? (globalThis.process?.env?.QUTAI_TEST_OS || 'ios') : k === 'currentState' ? 'active' : stub, apply: () => stub, construct: () => stub }; const stub = new Proxy(function () {}, handler);";
 const stubbed = (url) => Object.keys(STUBBED).find((k) => url.endsWith(k));
 function local(r) {
   const s = stubbed(r.url);
@@ -43,7 +62,9 @@ export async function load(url, context, next) {
         if (star) for (const u of src.matchAll(new RegExp('\\b' + star[1] + '\\.([A-Za-z_$][\\w$]*)', 'g'))) wanted.add(u[1]);
       }
     }
-    const body = STUB + [...wanted].filter((n) => n !== 'default').map((n) => 'export const ' + n + ' = stub;').join('') + 'export default stub;';
+    const specific = SPECIFIC[spec] ?? '';
+    const own = specificNames(specific);
+    const body = STUB + specific + [...wanted].filter((n) => n !== 'default' && !own.has(n)).map((n) => 'export const ' + n + ' = stub;').join('') + 'export default stub;';
     return { format: 'module', source: body, shortCircuit: true };
   }
   if (url.startsWith('qutai-local:')) return { format: 'module', source: STUBBED[url.slice(12)], shortCircuit: true };

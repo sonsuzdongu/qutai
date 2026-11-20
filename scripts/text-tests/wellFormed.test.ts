@@ -145,10 +145,21 @@ test('wellFormedJson: lone surrogates escaped or raw come out as \\ufffd; everyt
 test('wellFormedJson is cheap on a large well-formed conversation (one regex test, no rewrite)', () => {
   const big = { messages: Array.from({ length: 200 }, (_, i) => ({ role: 'user', content: `${TITLE} ${i} `.repeat(50) })) };
   const plain = JSON.stringify(big);
-  const start = performance.now();
   for (let i = 0; i < 20; i++) assert.equal(wellFormedJson(big), plain);
-  const per = (performance.now() - start) / 20;
-  assert.ok(per < 50, `${per.toFixed(1)} ms per ${(plain.length / 1e6).toFixed(1)} MB body`);
+  // Compared with JSON.stringify of the same body in the same moment, best of five rounds: a wall-clock limit failed
+  // once on a busy machine (20 Nov 2026) at 100 times its usual margin. About 1.7 times JSON.stringify on a laptop.
+  const per = (f: () => unknown) => {
+    let best = Infinity;
+    for (let round = 0; round < 5; round++) {
+      const start = performance.now();
+      for (let i = 0; i < 20; i++) f();
+      best = Math.min(best, (performance.now() - start) / 20);
+    }
+    return best;
+  };
+  const checked = per(() => wellFormedJson(big));
+  const stringify = per(() => JSON.stringify(big));
+  assert.ok(checked < stringify * 10 + 1, `${checked.toFixed(2)} ms against ${stringify.toFixed(2)} ms for JSON.stringify`);
 });
 
 // ---------- The injected page script (it can't import the helper: its own copy is checked here) ----------

@@ -21,7 +21,7 @@ House rules for anyone who changes Qutai, whether a person or an AI session: how
   Status: Owner, 2026-11-19 · Why: decisions were scattered over README, docs, TODO, commit messages and chat, and the owner wants one place that stays true ("sonrasında yaptığımız her şeyi de bu belgeye ekle & güncelle") · Source: AGENTS.md (rule "Keep DESIGN.md current"); owner's memory note on DESIGN.md
 - **`HOUSE-2`** Before writing code against an Expo, EAS or React Native API, check the Expo version in `package.json` and read the matching versioned docs.
   Status: Owner, date not recorded · Why: "Expo ships breaking changes every SDK release", so APIs remembered from training are likely to be wrong · Source: AGENTS.md
-- **`HOUSE-3`** Lint (`npx expo lint`) and typecheck (`npx tsc --noEmit`) pass before any task is called done.
+- **`HOUSE-3`** Lint (`npx expo lint`) and typecheck (`npx tsc --noEmit`) pass before any task is called done. Since 20 Nov 2026 `npm run check:all` runs them with the profile check, `npm test` and the server's typecheck, lint and tests (`HOUSE-21`).
   Status: Owner, date not recorded · Why: reason not recorded · Source: AGENTS.md › Commands
 - **`HOUSE-4`** Sessions commit on `main` and never push. The owner pushes.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: hand-over notes of every session ("not pushed")
@@ -57,10 +57,13 @@ House rules for anyone who changes Qutai, whether a person or an AI session: how
   Status: Owner, 2026-11-17 · Why: the owner asked for these shortcuts to be tracked and undone later · Source: owner's memory note on fixes before launch
 - **`HOUSE-20`** The backend is changed only in its own repository (the submodule `backend/`), which the app's typecheck and lint skip.
   Status: Default (manager or implementing session; open to change) · Why: the server moved to its own repository on 15 Nov 2026 · Source: d3395ba, e4f1bae, 41b767b
+- **`HOUSE-21`** The app's tests run through one loader and one runner (scripts/test-support/): `npm test` runs every server-free suite, four at a time (half the cores, at most 4; `QUTAI_TEST_JOBS` changes it), one line per suite and a total, and fails if any suite fails; `npm run test:<name>` runs one suite with node's full output; suites that need Qutai's local server are named `test:*:server` and never run in `npm test`; billed measurements (`measure:injection`) never run in a check. `npm run check:all` runs, one after the other, the app's typecheck, lint, profile check and `npm test`, then backend/'s typecheck, lint and tests, and exits non-zero on any failure. Tests don't assert absolute wall-clock times; a speed check compares with a reference measured in the same run.
+  Status: Default (code review of 20 Nov 2026, the manager's brief) · Why: about 25 suites were run one by one by hand with four copies of the same loader; `test:text` failed once on a busy machine because of a 50 ms limit · Enforced: In the tooling: scripts/test-support/ (register.mjs, hooks.mjs, suites.mjs, run.mjs, README.md), scripts/check-all.mjs · Source: 20 Nov 2026 tooling clean-up
 
 ## Limits and what is not built
 
-- (not planned: no source) There is no CI. Checks run locally in each session.
+- (not planned: no source) There is no CI. Checks run locally in each session (`npm run check:all`, about a minute on
+  the owner's Mac).
 - HOUSE-4 to HOUSE-6 are practice recorded in hand-over notes and the git log, not written in AGENTS.md.
 
 ## Where it lives

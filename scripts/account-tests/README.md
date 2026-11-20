@@ -2,7 +2,8 @@
 
 Tests for the account client in `src/account/` (`api.ts`, `session.ts`, `nonce.ts`: pure TypeScript, no React
 Native imports). They use Node's built-in test runner (`node --test`, Node 22.18+ / 24) with its TypeScript support;
-no test framework is added to the app. `resolve-ts.mjs` lets Node resolve the app's extensionless imports to `.ts`.
+no test framework is added to the app. The shared loader (`scripts/test-support/`) lets Node resolve the app's
+extensionless imports.
 The folder is left out of the app's `tsc` (Node types aren't installed in the app); Node only strips the types.
 
 ```bash
