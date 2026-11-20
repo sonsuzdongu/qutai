@@ -2450,6 +2450,7 @@ export const en = {
   'action.requestApprovalChange': "Asking you to approve the change",
   'step.paymentsOff': "Payments are left to you (your setting)",
   'step.approvalChanged': "The page changed after you approved",
+  'step.checkFailed': "Qutai couldn't check this step, so it didn't run",
   'step.publishFirst': "Sending needs your approval first",
   'step.cardNumber': "Qutai doesn’t type card numbers",
   'step.secretField': "Qutai doesn’t type passwords or codes",

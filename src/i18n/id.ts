@@ -2458,6 +2458,7 @@ export const id: Record<keyof typeof en, string> = {
   'action.requestApprovalChange': "Meminta Anda menyetujui perubahan",
   'step.paymentsOff': "Pembayaran Anda lakukan sendiri (pengaturan Anda)",
   'step.approvalChanged': "Halaman berubah setelah Anda menyetujui",
+  'step.checkFailed': "Qutai tidak dapat memeriksa langkah ini, jadi tidak menjalankannya",
   'step.publishFirst': "Pengiriman perlu persetujuan Anda terlebih dahulu",
   'step.cardNumber': "Qutai tidak mengetik nomor kartu",
   'step.secretField': "Qutai tidak mengetik kata sandi atau kode",

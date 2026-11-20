@@ -13,6 +13,7 @@ import {
   type FieldFacts,
   type PressFacts,
 } from '../../src/agent/outwardApproval.ts';
+import { nothingComposed, pressContextOf } from './pageFakes.ts';
 
 function field(over: Partial<FieldFacts> = {}): FieldFacts {
   return {
@@ -134,8 +135,10 @@ function setup(facts: { press?: PressFacts | null; enter?: FieldFacts | null; fi
       switch (command) {
         case 'pressInfo':
           return { label: facts.press?.label ?? 'Send', url: page.url, disabled: false };
+        case 'pressContext':
+          return pressContextOf({ label: facts.press?.label ?? 'Send' });
         case 'pressComposed':
-          return facts.press ?? null;
+          return facts.press ?? nothingComposed('Send');
         case 'enterFacts':
           return facts.enter ?? null;
         case 'fieldText':

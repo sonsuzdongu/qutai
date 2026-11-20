@@ -242,8 +242,8 @@ Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE
 | Id | Decision | Status | Date |
 |---|---|---|---|
 | `SEC-1` | Typing text that contains a payment card number (13 to 19 digits, spaced or dashed, passing the Luhn… | Default |  |
-| `SEC-2` | Qutai never types passwords, one-time codes, card numbers or security codes: the app refuses typing into such fields… | Default | 2026-11-19 |
-| `SEC-3` | The value of a secret field (password, code, card) is never shown to the model: page text, approvals, script copy, screenshots… | Default | 2026-11-19 |
+| `SEC-2` | Qutai never types passwords, one-time codes, card numbers or security codes: the app refuses typing into such fields… | Default | 2026-11-20 |
+| `SEC-3` | The value of a secret field (password, code, card) is never shown to the model: page text, approvals, script copy, screenshots… | Default | 2026-11-20 |
 | `SEC-4` | A password field can never be the text of a posting approval. | Default |  |
 | `SEC-5` | The payment method named in a payment approval may never be a card number. | Default |  |
 | `SEC-6` | Memory refuses passwords, passcodes and PINs, card security codes, one-time codes, card expiry dates, card… | Default |  |
@@ -280,6 +280,7 @@ Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE
 | `PAY-25` | The activity history records only what was asked (post, comment, pay), never the text or the total. | Default |  |
 | `PAY-26` | Deleting something or changing account or security settings on a site needs Qutai's own approval (request_approval kind "change")… | Default | 2026-11-19 |
 | `PAY-27` | A button with an amount and a billing period or subscribe word in its visible text is a payment press (pay approval and the payments setting) | Default | 2026-11-20 |
+| `PAY-28` | Every in-app check before a press, typing or an approval fails closed: no answer, an error or a wrong-shaped answer from the page refuses the step | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `PAY-10`, `PAY-18`, `PAY-19`, `PAY-20`, `PAY-21`, `PAY-22`
 

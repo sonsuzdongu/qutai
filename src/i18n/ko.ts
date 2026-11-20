@@ -2457,6 +2457,7 @@ export const ko: Record<keyof typeof en, string> = {
   'action.requestApprovalChange': "변경 승인을 요청하는 중",
   'step.paymentsOff': "결제는 직접 하십니다(설정)",
   'step.approvalChanged': "승인 후 페이지가 바뀌었습니다",
+  'step.checkFailed': "Qutai가 이 단계를 확인할 수 없어 실행하지 않았습니다",
   'step.publishFirst': "보내려면 먼저 승인이 필요합니다",
   'step.cardNumber': "Qutai는 카드 번호를 입력하지 않습니다",
   'step.secretField': "Qutai는 비밀번호나 코드를 입력하지 않습니다",

@@ -17,12 +17,30 @@ import {
   publishEnterFirstText,
   publishFirstText,
   sameText,
-  type FieldFacts,
+  secretFieldText,
   type Grant,
-  type PressFacts,
+  type SecretKind,
   type PublishAction,
 } from './outwardApproval';
-import { changePress, payPress, type ChangeAction, type PressContext } from './pressContext';
+import {
+  gateFailedText,
+  parseChangeInfo,
+  parseEnterFacts,
+  parseFieldText,
+  parseFormValues,
+  parseFound,
+  parsePressContext,
+  parsePressFacts,
+  parsePressInfo,
+  parseSecretField,
+  parseTextOrNull,
+  queryPage,
+  type ChangeInfo,
+  type FormValue,
+  type PageRunner,
+  type PressInfo,
+} from './pageFacts';
+import { changePress, payPress, type ChangeAction } from './pressContext';
 import { siteKey } from './sitePolicy';
 import { declinedNotice, errorNotice, settingNotice } from './stepLine';
 import { uiPath } from './uiLabels';
@@ -65,19 +83,13 @@ export type OutwardApproval =
       incognito: boolean;
     };
 
-type ChangeInfo = {
-  label: string;
-  url: string;
-  disabled: boolean;
-  heading: string;
-  dialog: string;
-  item: string;
-  fields: FormValue[] | null;
-};
+const ask = <T>(tab: Tab, command: string, args: unknown[], parse: (raw: unknown) => T) =>
+  queryPage(tab as unknown as PageRunner, command, args, parse);
 
-type PressInfo = { label: string; url: string; disabled: boolean } | null;
-type Found = { ref: number; line: string } | null;
-type FormValue = { label: string; value: string };
+/** A check that could not run: refused, with the step line of a changed approval. */
+function failed(what: string, e: unknown): ToolOutput {
+  return { content: gateFailedText(what, e), isError: true, notice: errorNotice(t('step.checkFailed')) };
+}
 
 const fieldLines = (fields: FormValue[]) => fields.map((f) => `${f.label}: ${f.value}`);
 
@@ -101,11 +113,11 @@ export async function requestApprovalTool(input: Record<string, unknown>, ctx: T
       isError: true,
     };
   const site = siteKey(tab.url) ?? tab.url;
-  let info: PressInfo;
+  let info: PressInfo | null;
   try {
-    info = await tab.run<PressInfo>('pressInfo', [request.buttonRef]);
+    info = await ask(tab, 'pressInfo', [request.buttonRef], parsePressInfo);
   } catch (e) {
-    return { content: e instanceof Error ? e.message : String(e), isError: true };
+    return { content: gateFailedText('the button', e), isError: true };
   }
   if (!info) return { content: `ref=${request.buttonRef} was not found. Call read_page again.`, isError: true };
   if (info.disabled)
@@ -118,7 +130,12 @@ export async function requestApprovalTool(input: Record<string, unknown>, ctx: T
 
   if (request.kind === 'pay') {
     if (!ctx.paymentsAllowed?.()) return paymentsOff(info.label);
-    const found = await tab.run<Found>('findText', [request.total]).catch(() => null);
+    let found;
+    try {
+      found = await ask(tab, 'findText', [request.total], parseFound);
+    } catch (e) {
+      return { content: gateFailedText('the total on the page', e), isError: true };
+    }
     if (!found)
       return {
         content: `"${request.total}" is not on the page as written. Give total exactly as the page shows it (amount and currency).`,
@@ -143,8 +160,12 @@ export async function requestApprovalTool(input: Record<string, unknown>, ctx: T
   }
 
   if (request.kind === 'change') {
-    const change = await tab.run<ChangeInfo>('changeInfo', [request.buttonRef]).catch(() => null);
-    if (!change) return { content: `ref=${request.buttonRef} was not found. Call read_page again.`, isError: true };
+    let change: ChangeInfo;
+    try {
+      change = await ask(tab, 'changeInfo', [request.buttonRef], parseChangeInfo);
+    } catch (e) {
+      return { content: gateFailedText('what the button changes', e), isError: true };
+    }
     const fields = change.fields?.length ? change.fields : undefined;
     const approved = await ctx.confirmOutward({
       kind: 'change',
@@ -173,9 +194,9 @@ export async function requestApprovalTool(input: Record<string, unknown>, ctx: T
   if (request.fieldRef) {
     let field: { text: string; secret: boolean };
     try {
-      field = await tab.run<{ text: string; secret: boolean }>('fieldText', [request.fieldRef]);
+      field = await ask(tab, 'fieldText', [request.fieldRef], parseFieldText);
     } catch (e) {
-      return { content: e instanceof Error ? e.message : String(e), isError: true };
+      return { content: gateFailedText('the text field', e), isError: true };
     }
     if (field.secret) return { content: 'That is a password field: it is never sent with an approval.', isError: true };
     if (!field.text.trim())
@@ -190,7 +211,12 @@ export async function requestApprovalTool(input: Record<string, unknown>, ctx: T
     grant = { ...base, kind: 'publish', fieldRef: request.fieldRef, text: field.text };
     shown = { text: field.text };
   } else {
-    const fields = await tab.run<FormValue[] | null>('formValues', [request.buttonRef]).catch(() => null);
+    let fields: FormValue[] | null;
+    try {
+      fields = await ask(tab, 'formValues', [request.buttonRef], parseFormValues);
+    } catch (e) {
+      return { content: gateFailedText("the button's form", e), isError: true };
+    }
     if (!fields?.length)
       return {
         content: 'The button is not in a form with filled fields. Give field_ref (the field with the text) and text.',
@@ -226,7 +252,13 @@ export async function pressGate(
   const ref = typeof input.ref === 'number' ? input.ref : Number(input.ref);
   const grant = name === 'click' && Number.isInteger(ref) ? (ctx.approvals?.take(tab.id, ref) ?? null) : null;
   if (grant) {
-    const check = checkPress(grant, await pressState(grant, ctx, tab));
+    let state;
+    try {
+      state = await pressState(grant, ctx, tab);
+    } catch (e) {
+      return { kind: 'refuse', output: failed('the approved press', e) };
+    }
+    const check = checkPress(grant, state);
     if (check.ok) return { kind: 'approved' };
     return { kind: 'refuse', output: { content: check.reason, isError: true, notice: errorNotice(t('step.approvalChanged')) } };
   }
@@ -234,9 +266,17 @@ export async function pressGate(
   if (!args) return { kind: 'none' };
   // What the press is, from the page's context (agent/pressContext.ts): the final step of a payment, deleting
   // something, or changing account or security settings.
-  const press = await tab.run<PressContext | null>('pressContext', args).catch(() => null);
+  // A page that throws, is slow or answers nonsense is refused: nothing is pressed unchecked.
+  let press;
+  let facts;
+  try {
+    press = await ask(tab, 'pressContext', args, parsePressContext);
+    facts = await ask(tab, 'pressComposed', args, parsePressFacts);
+  } catch (e) {
+    return { kind: 'refuse', output: failed('what this press does', e) };
+  }
   const pay = payPress(press);
-  if (press && pay.pay) {
+  if (pay.pay) {
     if (!ctx.paymentsAllowed?.()) return { kind: 'refuse', output: paymentsOff(press.label) };
     return {
       kind: 'refuse',
@@ -244,7 +284,7 @@ export async function pressGate(
     };
   }
   const change = changePress(press);
-  if (press && change.change) {
+  if (change.change) {
     return {
       kind: 'refuse',
       output: {
@@ -255,13 +295,12 @@ export async function pressGate(
     };
   }
   // A press that would send text the assistant typed (its form's button, or one in the same composer box).
-  const facts = await tab.run<PressFacts | null>('pressComposed', args).catch(() => null);
   const field = contentToApprove(facts);
   if (!field) return { kind: 'none' };
   return {
     kind: 'refuse',
     output: {
-      content: publishFirstText(name === 'click' ? ref : null, facts?.label ?? '', field),
+      content: publishFirstText(name === 'click' ? ref : null, facts.label, field),
       isError: true,
       notice: settingNotice(t('step.publishFirst')),
     },
@@ -278,15 +317,26 @@ export async function enterGate(input: Record<string, unknown>, ctx: ToolContext
   if (!Number.isInteger(ref)) return { kind: 'none' };
   const grant = ctx.approvals?.take(tab.id, ref) ?? null;
   if (grant && grant.kind === 'publish' && grant.fieldRef === ref) {
-    const field = await tab.run<{ text: string }>('fieldText', [ref]).catch(() => null);
-    const check = checkPress(grant, { url: tab.url, fieldText: field?.text ?? null });
+    let field;
+    try {
+      field = await ask(tab, 'fieldText', [ref], parseFieldText);
+    } catch (e) {
+      return { kind: 'refuse', output: failed('the approved field', e) };
+    }
+    const check = checkPress(grant, { url: tab.url, fieldText: field.text });
     if (check.ok && input.clear !== false && sameText(text, grant.text)) return { kind: 'approved' };
     const reason = check.ok
       ? 'The text to type differs from what the user approved (or clear is false). Nothing was typed. Ask again with request_approval.'
       : check.reason;
     return { kind: 'refuse', output: { content: reason, isError: true, notice: errorNotice(t('step.approvalChanged')) } };
   }
-  const facts = await tab.run<FieldFacts | null>('enterFacts', [ref]).catch(() => null);
+  let facts;
+  try {
+    facts = await ask(tab, 'enterFacts', [ref], parseEnterFacts);
+  } catch (e) {
+    return { kind: 'refuse', output: failed('what Enter would send', e) };
+  }
+  // No text field at this ref: type itself fails, nothing is sent.
   if (!facts || !isPublicText(facts, input.clear === false ? facts.text + text : text)) return { kind: 'none' };
   return {
     kind: 'refuse',
@@ -294,28 +344,44 @@ export async function enterGate(input: Record<string, unknown>, ctx: ToolContext
   };
 }
 
-/** The page as it is now, for checkPress. */
+/** The page as it is now, for checkPress; throws (PageQueryError) when the page can't say. */
 async function pressState(grant: Grant, ctx: ToolContext, tab: Tab) {
   if (grant.kind === 'change') {
-    const now = await tab.run<ChangeInfo>('changeInfo', [grant.buttonRef]).catch(() => null);
+    const now = await ask(tab, 'changeInfo', [grant.buttonRef], parseChangeInfo);
     return {
       url: tab.url,
-      label: now ? now.label : null,
-      dialog: now ? now.dialog : null,
-      fields: now?.fields?.length ? fieldLines(now.fields) : null,
+      label: now.label,
+      dialog: now.dialog,
+      fields: now.fields?.length ? fieldLines(now.fields) : null,
     };
   }
   if (grant.kind === 'pay') {
-    const totalText = await tab.run<string | null>('textOf', [grant.totalRef]).catch(() => null);
-    const found = await tab.run<Found>('findText', [grant.total]).catch(() => null);
+    const totalText = await ask(tab, 'textOf', [grant.totalRef], parseTextOrNull);
+    const found = await ask(tab, 'findText', [grant.total], parseFound);
     return { url: tab.url, totalText, totalLine: found?.line ?? null, paymentsOn: !!ctx.paymentsAllowed?.() };
   }
   if (grant.fieldRef !== undefined) {
-    const field = await tab.run<{ text: string }>('fieldText', [grant.fieldRef]).catch(() => null);
-    return { url: tab.url, fieldText: field?.text ?? null };
+    const field = await ask(tab, 'fieldText', [grant.fieldRef], parseFieldText);
+    return { url: tab.url, fieldText: field.text };
   }
-  const fields = await tab.run<FormValue[] | null>('formValues', [grant.buttonRef]).catch(() => null);
+  const fields = await ask(tab, 'formValues', [grant.buttonRef], parseFormValues);
   return { url: tab.url, fields: fields ? fieldLines(fields) : null };
+}
+
+/**
+ * Before type: Qutai never types into a password, one-time code, card number or security code field (the page
+ * script recognises it: browser/pageScript.ts secretKind). A page that throws, is slow or answers nonsense is refused
+ * too: nothing is typed into a field Qutai couldn't check. Null when typing may go ahead.
+ */
+export async function secretFieldGate(tab: Tab, ref: unknown): Promise<ToolOutput | null> {
+  let kind: SecretKind | null;
+  try {
+    kind = await queryPage(tab as unknown as PageRunner, 'secretField', [ref], parseSecretField, 3000);
+  } catch (e) {
+    return failed('the field', e);
+  }
+  if (!kind) return null;
+  return { content: secretFieldText(Number(ref), kind), isError: true, notice: settingNotice(t('step.secretField')) };
 }
 
 export { ApprovalGrants };

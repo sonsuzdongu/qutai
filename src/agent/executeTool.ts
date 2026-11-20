@@ -47,8 +47,9 @@ import { containsHidden, HiddenNeedle, hiddenNeedles, MEMORY_ID, redactHidden } 
 import { hiddenKindOf, hiddenLabel, hiddenValue, isMemoryCategory, looksLikeIdNumber, Memory, MemoryStore } from './memory';
 import { findPersonalData, PERSONAL_KINDS, PersonalKind, personalNeedles } from './personalData';
 import { decide, policyName, SitePolicy, siteKey } from './sitePolicy';
-import { enterGate, pressGate, requestApprovalTool, type OutwardApproval } from './approvalTool';
-import { CARD_NUMBER_TEXT, containsCardNumber, isSecretKind, secretFieldText, type ApprovalGrants, type SecretKind } from './outwardApproval';
+import { enterGate, pressGate, requestApprovalTool, secretFieldGate, type OutwardApproval } from './approvalTool';
+import { CARD_NUMBER_TEXT, containsCardNumber, type ApprovalGrants } from './outwardApproval';
+import { gateFailedText, parseIndices, queryPage, type PageRunner } from './pageFacts';
 import {
   describeCalendarRead,
   describePlan,
@@ -1447,7 +1448,19 @@ export function backgroundBlocker(
  */
 export async function executeTool(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
   const result = await executeUnredacted(name, input, ctx);
-  const needles = await hiddenNeedlesFor(ctx);
+  let needles: HiddenNeedle[];
+  try {
+    needles = await hiddenNeedlesFor(ctx);
+  } catch {
+    // Without the list Qutai can't tell whether the result holds a hidden value: it is withheld, not passed on unchecked.
+    return {
+      content:
+        "Qutai couldn't read the user's saved memories to check this result for hidden values, so the result is " +
+        'withheld. The action itself may have run: read the page again before going on.',
+      isError: true,
+      notice: result.notice,
+    };
+  }
   if (!needles.length) return result;
   return { ...result, content: redactHidden(result.content, needles) };
 }
@@ -1455,7 +1468,7 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
 /** The current hidden memories as search patterns; empty without memory or hidden memories (no scan then). */
 async function hiddenNeedlesFor(ctx: ToolContext): Promise<HiddenNeedle[]> {
   if (!ctx.memory) return [];
-  const memories = await ctx.memory.list().catch(() => [] as Memory[]);
+  const memories = await ctx.memory.list();
   return memories.some((m) => m.sensitive) ? hiddenNeedles(memories) : [];
 }
 
@@ -1572,9 +1585,8 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
   // Qutai never types into a password, one-time code, card number or security code field, whatever the text (the page script
   // recognises the field: browser/pageScript.ts secretKind).
   if (name === 'type' && target?.tab && !target.tab.isNewTab) {
-    const kind = await target.tab.run<SecretKind | null>('secretField', [input.ref], 3000).catch(() => null);
-    if (kind && isSecretKind(kind))
-      return record({ content: secretFieldText(Number(input.ref), kind), isError: true, notice: settingNotice(t('step.secretField')) });
+    const refused = await secretFieldGate(target.tab, input.ref);
+    if (refused) return record(refused);
   }
   // Remembered personal details need the site's permission, checked here in the app, not left to the prompt.
   let personalAsked = false;
@@ -1673,10 +1685,16 @@ async function hiddenGate(
 async function maskHiddenForCapture(tab: Tab, ctx: ToolContext): Promise<{ restore: () => Promise<void> } | string> {
   const nothing = { restore: async () => {} };
   // One-time codes, card numbers and security codes on screen are made transparent for the capture, always.
-  const secrets = await tab.run<number[]>('secretFieldIndices', [], 3000).catch(() => [] as number[]);
+  // Not knowing where they are is not "none": the capture is refused rather than taken unmasked.
+  let secrets: number[];
+  try {
+    secrets = await queryPage(tab as unknown as PageRunner, 'secretFieldIndices', [], parseIndices, 3000);
+  } catch (e) {
+    return `Not captured: ${gateFailedText('which fields hold codes or card numbers', e)} Use read_page instead.`;
+  }
   const needles = await hiddenNeedlesFor(ctx);
   if (!needles.length) {
-    if (!Array.isArray(secrets) || !secrets.length) return nothing;
+    if (!secrets.length) return nothing;
     await tab.run('maskFields', [secrets], 3000);
     return { restore: () => tab.run('maskEnd', [], 3000).then(() => undefined, () => undefined) };
   }
@@ -1689,7 +1707,7 @@ async function maskHiddenForCapture(tab: Tab, ctx: ToolContext): Promise<{ resto
   }
   const indices = [
     ...screen.fields.flatMap((value, i) => (containsHidden(value, needles) ? [i] : [])),
-    ...(Array.isArray(secrets) ? secrets : []),
+    ...secrets,
   ];
   if (!indices.length) return nothing;
   await tab.run('maskFields', [indices], 3000);
@@ -1711,7 +1729,19 @@ async function personalGate(
   if (!ctx.memory) return { kind: 'run' };
   const text = String((name === 'type' ? input.text : input.value) ?? '');
   if (!text.trim()) return { kind: 'run' };
-  const memories = await ctx.memory.list().catch(() => []);
+  let memories: Memory[];
+  try {
+    memories = await ctx.memory.list();
+  } catch {
+    // Not knowing the saved details is not "none of them": nothing is entered unchecked.
+    return {
+      kind: 'refuse',
+      reason:
+        "Qutai couldn't read the user's saved details to check this text, so nothing was entered. Try again; if it " +
+        'keeps failing, tell the user, who can fill it in themselves.',
+      notice: errorNotice(t('step.checkFailed')),
+    };
+  }
   const kinds = findPersonalData(text, personalNeedles(memories));
   if (!kinds.size) return { kind: 'run' };
   const setting = ctx.sites?.personalFor(host) ?? 'ask';

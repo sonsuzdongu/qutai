@@ -16,6 +16,7 @@ import {
 import { t } from '../i18n';
 import { cutText } from '../utils/wellFormed';
 import type { ToolContext, ToolOutput } from './executeTool';
+import { gateFailedText, parseScriptFacts, queryPage, type PageRunner } from './pageFacts';
 import { siteKey } from './sitePolicy';
 import { declinedNotice, errorNotice, settingNotice } from './stepLine';
 import { uiPath } from './uiLabels';
@@ -137,7 +138,13 @@ export async function scriptTool(input: Record<string, unknown>, ctx: ToolContex
       isError: true,
     };
   }
-  const facts = await tab.run<PageFacts>('scriptFacts', [], 5000).catch(() => null);
+  // Not knowing whether the page has a password, code or card field is not "it has none": refused, nothing asked.
+  let facts: PageFacts;
+  try {
+    facts = await queryPage(tab as unknown as PageRunner, 'scriptFacts', [], parseScriptFacts, 5000);
+  } catch (e) {
+    return { content: gateFailedText('whether this page is a sensitive one', e), isError: true, notice: errorNotice(t('step.checkFailed')) };
+  }
   const sensitive: SensitiveReason | null = sensitivePage(tab.url, facts);
   if (sensitive && access.siteSetting(site) !== 'sensitive') {
     return {

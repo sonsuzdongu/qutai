@@ -2459,6 +2459,7 @@ export const ja: Record<keyof typeof en, string> = {
   'action.requestApprovalChange': "変更の承認をお願いしています",
   'step.paymentsOff': "支払いはご自身で行います（設定）",
   'step.approvalChanged': "承認後にページが変わりました",
+  'step.checkFailed': "Qutaiはこの操作を確認できなかったため、実行しませんでした",
   'step.publishFirst': "送信するには先に承認が必要です",
   'step.cardNumber': "Qutai はカード番号を入力しません",
   'step.secretField': "Qutai はパスワードやコードを入力しません",

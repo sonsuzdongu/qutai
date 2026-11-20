@@ -2453,6 +2453,7 @@ export const es: Record<keyof typeof en, string> = {
   'action.requestApprovalChange': "Pidiéndole que apruebe el cambio",
   'step.paymentsOff': "Los pagos los hace usted (su ajuste)",
   'step.approvalChanged': "La página cambió después de su aprobación",
+  'step.checkFailed': "Qutai no pudo comprobar este paso y no lo realizó",
   'step.publishFirst': "Para enviar hace falta primero su aprobación",
   'step.cardNumber': "Qutai no escribe números de tarjeta",
   'step.secretField': "Qutai no escribe contraseñas ni códigos",

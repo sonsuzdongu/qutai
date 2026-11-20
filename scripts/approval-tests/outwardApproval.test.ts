@@ -17,6 +17,7 @@ import {
 import { decide } from '../../src/agent/sitePolicy.ts';
 import { SYSTEM_PROMPT } from '../../src/agent/systemPrompt.ts';
 import { TOOLS } from '../../src/agent/tools.ts';
+import { nothingComposed, pressContextOf } from './pageFakes.ts';
 
 type Page = {
   url: string;
@@ -39,7 +40,12 @@ function fakeTab(page: Page, id = 'tab-1') {
         case 'pressContext': {
           const b = page.buttons[Number(args[0])];
           if (!b) throw new Error(`Element ref=${String(args[0])} not found`);
-          return { label: b.label, tag: 'button', type: 'submit', role: '', disabled: !!b.disabled, dialogText: '', heading: '' };
+          return pressContextOf({ label: b.label, disabled: !!b.disabled });
+        }
+        case 'pressComposed': {
+          const b = page.buttons[Number(args[0])];
+          if (!b) throw new Error(`Element ref=${String(args[0])} not found`);
+          return nothingComposed(b.label);
         }
         case 'pressInfo': {
           const b = page.buttons[Number(args[0])];
@@ -264,7 +270,7 @@ test('a final payment button pressed without approval is refused, by ref or at a
   const on = setup({}, { payments: true });
   assert.match(((await on.press(9)) as { output: { content: string } }).output.content, /Call request_approval with kind "pay"/);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const atPoint = await pressGate('click_at', {}, on.ctx as any, { ...on.tab, run: async () => ({ label: 'Place your order', url: '', disabled: false }) } as any, { fx: 0.5, fy: 0.5 });
+  const atPoint = await pressGate('click_at', {}, on.ctx as any, { ...on.tab, run: async (c: string) => (c === 'pressContext' ? pressContextOf({ label: 'Place your order' }) : nothingComposed('Place your order')) } as any, { fx: 0.5, fy: 0.5 });
   assert.match((atPoint as { output: { content: string } }).output.content, /only be pressed with click and its ref/);
   // Other buttons are not touched.
   assert.deepEqual(await off.press(5), { kind: 'none' });

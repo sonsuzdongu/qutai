@@ -2458,6 +2458,7 @@ export const ru: Record<keyof typeof en, string> = {
   'action.requestApprovalChange': "Просит вас одобрить изменение",
   'step.paymentsOff': "Оплату выполняете вы (ваша настройка)",
   'step.approvalChanged': "Страница изменилась после вашего одобрения",
+  'step.checkFailed': "Qutai не смог проверить этот шаг и не выполнил его",
   'step.publishFirst': "Для отправки сначала нужно ваше одобрение",
   'step.cardNumber': "Qutai не вводит номера карт",
   'step.secretField': "Qutai не вводит пароли и коды",

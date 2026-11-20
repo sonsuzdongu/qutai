@@ -7,6 +7,7 @@ import { test } from 'node:test';
 import { pressGate, requestApprovalTool } from '../../src/agent/approvalTool.ts';
 import { ApprovalGrants, parseApprovalInput } from '../../src/agent/outwardApproval.ts';
 import { changePress, isRecurringPaidLabel, payPress, type PressContext } from '../../src/agent/pressContext.ts';
+import { nothingComposed } from './pageFakes.ts';
 
 function ctxOf(over: Partial<PressContext> = {}): PressContext {
   return {
@@ -155,7 +156,7 @@ function setup(press: Partial<PressContext>, info = { label: 'Delete', dialog: '
       if (command === 'pressContext') return ctxOf({ label: page.info.label, ...press });
       if (command === 'changeInfo') return { ...page.info, url: page.url, disabled: false };
       if (command === 'pressInfo') return { label: page.info.label, url: page.url, disabled: false };
-      if (command === 'pressComposed') return null;
+      if (command === 'pressComposed') return nothingComposed(page.info.label);
       throw new Error(command);
     },
   };

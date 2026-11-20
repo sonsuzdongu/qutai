@@ -2455,6 +2455,7 @@ export const tr: Record<keyof typeof en, string> = {
   'action.requestApprovalChange': "Değişikliği onaylamanız isteniyor",
   'step.paymentsOff': "Ödemeyi siz yapıyorsunuz (ayarınız)",
   'step.approvalChanged': "Onayınızdan sonra sayfa değişti",
+  'step.checkFailed': "Qutai bu adımı denetleyemedi, bu yüzden çalıştırmadı",
   'step.publishFirst': "Göndermeden önce onayınız gerekiyor",
   'step.cardNumber': "Qutai kart numarası yazmaz",
   'step.secretField': "Qutai şifre veya kod yazmaz",

@@ -2458,6 +2458,7 @@ export const fr: Record<keyof typeof en, string> = {
   'action.requestApprovalChange': "Vous demande d’approuver la modification",
   'step.paymentsOff': "Les paiements restent à vous (votre réglage)",
   'step.approvalChanged': "La page a changé après votre approbation",
+  'step.checkFailed': "Qutai n'a pas pu vérifier cette étape et ne l'a pas effectuée",
   'step.publishFirst': "L’envoi nécessite d’abord votre approbation",
   'step.cardNumber': "Qutai ne tape pas de numéros de carte",
   'step.secretField': "Qutai ne tape pas de mots de passe ni de codes",

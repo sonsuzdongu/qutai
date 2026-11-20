@@ -2444,6 +2444,7 @@ export const de: Record<keyof typeof en, string> = {
   'action.requestApprovalChange': "Bittet Sie, die Änderung zu bestätigen",
   'step.paymentsOff': "Zahlungen erledigen Sie selbst (Ihre Einstellung)",
   'step.approvalChanged': "Die Seite hat sich nach Ihrer Bestätigung geändert",
+  'step.checkFailed': "Qutai konnte diesen Schritt nicht prüfen und hat ihn nicht ausgeführt",
   'step.publishFirst': "Vor dem Senden ist Ihre Bestätigung nötig",
   'step.cardNumber': "Qutai tippt keine Kartennummern",
   'step.secretField': "Qutai tippt keine Passwörter oder Codes",
