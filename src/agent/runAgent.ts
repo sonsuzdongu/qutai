@@ -42,6 +42,7 @@ import { stepLine } from './stepLine';
 import { MEMORY_TOOLS, TOOLS } from './tools';
 import type { AgentEvent, Source } from './types';
 import { cutText } from '../utils/wellFormed';
+import { randomBase36 } from '../utils/ids';
 
 const MAX_STEPS = 40;
 // The prompt parts live in systemPrompt.ts (exported to the agent profile for Qutai Credits); re-exported here for
@@ -522,6 +523,6 @@ async function systemPrompt(opts: AgentOptions): Promise<{ text: string; memory?
 
 /** A step's id for Qutai Credits (16–64 of a-z, 0-9 and -): unique per step, nothing about the user or the task. */
 function newStepKey(): string {
-  const part = () => Math.random().toString(36).slice(2, 10).padEnd(8, '0');
+  const part = () => randomBase36(8);
   return `${Date.now().toString(36)}-${part()}${part()}`;
 }

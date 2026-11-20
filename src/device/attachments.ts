@@ -14,6 +14,7 @@ import type { Filters } from '../chat/imageFilters';
 import { ensureMediaPermission } from './mediaPermissions';
 import { safeFileName } from './download';
 import { PermissionDeniedError } from './settings';
+import { newId } from '../utils/ids';
 
 /**
  * The files behind attachments (see src/chat/attachments.ts for what the conversation keeps).
@@ -433,7 +434,7 @@ export async function saveImageFileToPhotos(file: File, name: string): Promise<s
   const { Asset, requestPermissionsAsync } = await import('expo-media-library');
   const permission = await requestPermissionsAsync(true, ['photo']);
   if (!permission.granted) throw new PermissionDeniedError(t('error.photosPermission'), permission.canAskAgain);
-  const dir = new Directory(Paths.cache, `qutai-photo-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`);
+  const dir = new Directory(Paths.cache, `qutai-photo-${newId(4)}`);
   dir.create({ intermediates: true, idempotent: true });
   try {
     const named = new File(dir, name);

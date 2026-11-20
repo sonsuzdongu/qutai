@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import type { ComponentRef } from 'react';
 import type { WebView } from 'react-native-webview';
+import { newNonce } from '../utils/ids';
 
 /**
  * Media playing in web pages: which tab is audible (tab switcher speaker, tabs that must not sleep), and the
@@ -560,7 +561,7 @@ export function pauseAllPages() {
 /** One tab's media, as the page script reports it. */
 export class PagePlayback {
   /** A random token only the injected script knows. */
-  readonly nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  readonly nonce = newNonce();
   /** Audible media plays in the page (or in a frame of it, iOS). */
   audible = false;
   /** Some media plays (also muted video), e.g. for picture-in-picture. */

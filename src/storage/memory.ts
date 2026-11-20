@@ -10,6 +10,7 @@ import {
   sensitiveReason,
 } from '../agent/memory';
 import { Db } from './db';
+import { randomBase36 } from '../utils/ids';
 
 type Row = {
   id: string;
@@ -59,7 +60,7 @@ function checkHidden(text: string, label: string | null): string | null {
   return clean;
 }
 
-const newId = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
+const newId = () => randomBase36(6) + Date.now().toString(36).slice(-4);
 
 export async function listMemories(db: Db): Promise<Memory[]> {
   const rows = await db.getAllAsync<Row>('SELECT * FROM memories ORDER BY updated_at DESC', []);

@@ -24,6 +24,7 @@ import { type PageSignals, parsePageSignals, samePageSignals } from './pageKind'
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, type ReaderArticle } from './reader';
 import { startsLoading } from './loadState';
 import { NavigationTracker, shownAddress } from './pendingNavigation';
+import { newId, newNonce } from '../utils/ids';
 
 /** iOS: WebKit's progress starts at 0.1 when a navigation begins and passes it only once the site answers. */
 const IOS_ANSWERED_PROGRESS = 0.12;
@@ -119,7 +120,7 @@ export type ReaderState = { article: ReaderArticle; pageKey: string };
  */
 /** Random id that survives restarts, used to store the tab's conversation. */
 export function newTabUid(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  return newId(8);
 }
 
 export class Tab {
@@ -238,7 +239,7 @@ export class Tab {
   private probeTimer: ReturnType<typeof setTimeout> | null = null;
   private loadWaiters: (() => void)[] = [];
   // A random prefix makes it hard for page scripts to forge command replies.
-  private nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  private nonce = newNonce();
   private counter = 0;
   /** The page script's secret name on window (browser/agentScript.ts); on Android a new one for every document. */
   private agentNameValue = newAgentName();

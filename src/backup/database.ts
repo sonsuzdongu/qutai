@@ -15,6 +15,7 @@ import {
 } from '../storage/sitePermissions';
 import type { BackupChat, BackupPayload, BackupTab } from './payload';
 import { collectBackupApps, restoreApps } from '../apps/appBackup';
+import { newId, randomBase36 } from '../utils/ids';
 
 /**
  * Reads the database into a backup payload and writes a backup back. Settings and API keys live in
@@ -27,7 +28,7 @@ export type ExportChoice = { tabs: boolean; chats: boolean; activity: boolean; a
 /** Conversations are saved as `chat:<tab uid>` or `chat:group:<group id>` in the kv table. */
 const chatKey = (key: string) => `chat:${key}`;
 
-const newUid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+const newUid = () => newId(8);
 
 export async function collectBackup(
   db: Db,
@@ -287,7 +288,7 @@ export async function applyBackup(
         'INSERT INTO memories (id, text, category, created_at, updated_at, sensitive, label)',
         7,
         fresh.map((m, i) => [
-          `${Math.random().toString(36).slice(2, 8)}${(now + i).toString(36).slice(-4)}`,
+          `${randomBase36(6)}${(now + i).toString(36).slice(-4)}`,
           m.text,
           m.category,
           m.createdAt || now,
@@ -311,7 +312,7 @@ export async function applyBackup(
           'schedule, schedule_paused, private, auto_run)',
         13,
         fresh.map((x, i) => [
-          `${Math.random().toString(36).slice(2, 8)}${(now + i).toString(36).slice(-4)}`,
+          `${randomBase36(6)}${(now + i).toString(36).slice(-4)}`,
           x.name,
           x.prompt,
           x.target,

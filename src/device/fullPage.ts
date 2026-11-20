@@ -6,6 +6,7 @@ import { captureRef } from 'react-native-view-shot';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
 import { sleep } from '../utils/sleep';
+import { randomBase36 } from '../utils/ids';
 
 /**
  * At most this many screens are captured, so endless feeds stop; the user is told that only the first screens were
@@ -315,7 +316,7 @@ async function stitch(group: Piece[], width: number, height: number, scale: numb
   }
   if (!bytes || bytes.length === 0) throw new StitchTooLarge();
 
-  const file = new File(Paths.cache, `qutai-page-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`);
+  const file = new File(Paths.cache, `qutai-page-${Date.now()}-${randomBase36(6)}.jpg`);
   await file.write(bytes);
   return file;
 }

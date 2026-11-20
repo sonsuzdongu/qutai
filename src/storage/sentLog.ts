@@ -1,6 +1,7 @@
 import { parseRequestCost, type RequestCost } from '../ai/cost';
 import type { ProviderId, ToolImage } from '../ai/types';
 import { Db, withDb } from './db';
+import { randomBase36 } from '../utils/ids';
 
 /**
  * "What was sent to the AI": one entry per request the app makes to the AI provider.
@@ -99,7 +100,7 @@ const writing = new Map<string, Promise<void>>();
 let counter = 0;
 
 export function newSentId(at: number): string {
-  return `${at.toString(36)}-${(++counter).toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+  return `${at.toString(36)}-${(++counter).toString(36)}-${randomBase36(4)}`;
 }
 
 export function subscribeSentLog(listener: () => void): () => void {

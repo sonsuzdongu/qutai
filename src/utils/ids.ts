@@ -13,7 +13,8 @@ function randomChars(alphabet: string, length: number): string {
   const limit = 256 - (256 % alphabet.length);
   let out = '';
   while (out.length < length) {
-    const bytes = fillRandom(new Uint8Array(length * 2));
+    // Small draws: a platform's getRandomValues takes at most 64 KB at a time (and less on some).
+    const bytes = fillRandom(new Uint8Array(Math.min(256, (length - out.length) * 2)));
     for (let i = 0; i < bytes.length && out.length < length; i++) if (bytes[i] < limit) out += alphabet[bytes[i] % alphabet.length];
   }
   return out;

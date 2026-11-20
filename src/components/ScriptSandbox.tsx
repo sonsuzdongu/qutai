@@ -3,6 +3,7 @@ import { Platform, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 import type { PageSnapshot } from '../agent/scriptTool';
 import { readOutcome, SCRIPT_TIME_LIMIT_MS, wrapScript, type ScriptOutcome } from '../content/userScripts';
+import { newNonce } from '../utils/ids';
 
 /**
  * The sealed place read-only scripts run in (docs/page-customisation.md › Two places a script can run): an invisible
@@ -24,7 +25,7 @@ type Job =
 const queue: Job[] = [];
 let wake: (() => void) | null = null;
 let counter = 0;
-const NONCE = `sbx${Math.random().toString(36).slice(2)}`;
+const NONCE = `sbx${newNonce()}`;
 
 function push(job: Job) {
   queue.push(job);

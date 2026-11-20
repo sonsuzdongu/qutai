@@ -2,6 +2,7 @@ import { Directory, File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { safeFileName } from './download';
 import { cutText } from '../utils/wellFormed';
+import { newId } from '../utils/ids';
 
 /**
  * Files the assistant composes for the user (save_file): CSV, Markdown, plain text or JSON. The content stays in
@@ -158,7 +159,7 @@ const kept = new Map<string, Kept>();
 /** Keeps a composed file in memory for its card; the oldest ones expire past the limits. */
 export function keepComposedFile(file: Composed, incognito: boolean): FileOffer {
   // "file-" marks the id as one tools may name (src/chat/shareable.ts); older cards had bare ids.
-  const id = `file-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  const id = `file-${newId(4)}`;
   const offer: FileOffer = { id, name: file.name, format: file.format, size: file.size, ...(file.rows !== undefined ? { rows: file.rows } : {}) };
   kept.set(id, { offer, text: file.text, incognito });
   let total = 0;

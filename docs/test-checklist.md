@@ -677,3 +677,7 @@ Bilgisayarda testlerle denendi; telefon ve öykünücü kullanılamadı. En risk
 - [ ] Telefonun deposu doluyken bir sohbet yürütün: "Qutai bazı verilerini bu telefona kaydedemedi…" bildirimi bir kez
       çıkıyor, uygulama çalışmaya devam ediyor (`DATA-26`).
 - [ ] Hesapla (pro sürüm): oturum açıkken uygulamayı birkaç saat sonra yeniden açın; oturum açık kalıyor (`ACC-53`).
+- [ ] Rastgele değerler artık güvenli kaynaktan (`DATA-27`): bir harita sitesinde "konumumu kullan" (Qutai'ın konum
+      sorusu çıkıyor), bir görüntülü görüşme test sayfasında kamera (Qutai'ın kamera sorusu), bir videoyu arka planda
+      çalma ve kilit ekranı denetimleri (Android: bildirimdeki oynatıcı) eskisi gibi çalışıyor; "Bu sayfayı özetler
+      misiniz?" ve bir sayfada betik çalıştırma da.

@@ -1,3 +1,4 @@
+import { randomBase36 } from '../utils/ids';
 /**
  * Untrusted-content markers (docs/design/04-untrusted-content.md, UNTR-21): text that someone other than the user
  * wrote (a web page, its title and source, a PDF, an attached file, a search results page, a script's result)
@@ -16,13 +17,9 @@
 /** What the text is, named in the opening marker. */
 export type UntrustedKind = 'page' | 'source' | 'pdf' | 'script' | 'title';
 
-const ID_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
-
-/** A short random id; Math.random is enough here (the page never sees the id, it only must not guess it). */
+/** A short random id from the secure source (utils/ids.ts): the page never sees it and must not guess it. */
 function newId(): string {
-  let id = '';
-  for (let i = 0; i < 6; i++) id += ID_ALPHABET[Math.floor(Math.random() * ID_ALPHABET.length)];
-  return id;
+  return randomBase36(6);
 }
 
 /**

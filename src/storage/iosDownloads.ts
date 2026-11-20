@@ -6,6 +6,7 @@ import { parseDataUrl } from '../device/saveImage';
 import { Db } from './db';
 import type { DownloadBackend, DownloadItem, OpenResult, PageWriter, StartRequest } from './downloads';
 import { reportStorageFailure } from './failures';
+import { newId } from '../utils/ids';
 
 /** Files larger than this are downloaded directly instead of through the page (which holds them in memory). */
 const PAGE_FETCH_MAX_BYTES = 25e6;
@@ -39,7 +40,7 @@ function downloadsDir(): Directory {
   return dir;
 }
 
-const newId = () => `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+const newDownloadId = () => newId(4);
 
 function doneItem(r: Row): DownloadItem {
   return {
@@ -132,7 +133,7 @@ export class IosDownloads implements DownloadBackend {
 
   private begin(tab: Tab, url: string, name: string, mime: string | null, total: number | null): DownloadItem {
     const item: DownloadItem = {
-      id: newId(),
+      id: newDownloadId(),
       url,
       name,
       mime: mime ?? mimeForName(name),

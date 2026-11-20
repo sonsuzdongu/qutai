@@ -10,6 +10,7 @@
  */
 
 import type { Filters } from './imageFilters';
+import { randomBase36 } from '../utils/ids';
 
 export type AttachmentKind = 'image' | 'pdf';
 
@@ -121,7 +122,7 @@ let counter = 0;
 /** A new id; incognito ones are told apart by their prefix (their files live in a session-only folder). */
 export function newAttachmentId(incognito: boolean): string {
   counter = (counter + 1) % 1296;
-  const rand = Math.random().toString(36).slice(2, 6).padEnd(4, '0');
+  const rand = randomBase36(4);
   return `${incognito ? 'inc' : 'att'}-${Date.now().toString(36)}${counter.toString(36).padStart(2, '0')}${rand}`;
 }
 

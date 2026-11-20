@@ -1,5 +1,6 @@
 import type { Db } from './db';
 import { cutText } from '../utils/wellFormed';
+import { randomBase36 } from '../utils/ids';
 
 /** Where a saved task runs: the page on screen, a page opened first in a new tab, or no particular page. */
 export type TaskTarget = 'page' | 'url' | 'none';
@@ -114,7 +115,7 @@ const toTask = (row: Row): SavedTask => ({
   autoRun: row.auto_run === 1,
 });
 
-const newId = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
+const newId = () => randomBase36(6) + Date.now().toString(36).slice(-4);
 
 /** An http(s) address for target 'url' (a bare host gets https://), or null. */
 export function cleanTaskUrl(raw: string): string | null {

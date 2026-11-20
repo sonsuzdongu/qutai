@@ -1,4 +1,5 @@
 import { Platform, TurboModuleRegistry, type TurboModule } from 'react-native';
+import { newId } from '../utils/ids';
 
 /**
  * Android: incognito tabs get their own WebView profile (cookies, localStorage/IndexedDB, cache, service workers,
@@ -51,7 +52,7 @@ export function incognitoIsolated(): boolean {
 /** A new profile name for an incognito session, or undefined where profiles aren't used (iOS, old WebView). */
 export function newIncognitoProfile(): string | undefined {
   if (!incognitoProfilesSupported()) return undefined;
-  return `${PREFIX}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  return `${PREFIX}${newId(6)}`;
 }
 
 /** The incognito session using this profile is over; its data goes once its last WebView is destroyed. */

@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import type { NotificationPlan } from '../agent/scheduling';
 import { t } from '../i18n';
 import { DeviceToolError } from './calendar';
+import { randomBase36 } from '../utils/ids';
 
 type NotificationsModule = typeof import('expo-notifications');
 type PermissionStatus = Awaited<ReturnType<NotificationsModule['getPermissionsAsync']>>;
@@ -59,7 +60,7 @@ const incognitoOrigins = new Map<string, string>();
 /** The origin of a notification asked from this tab. */
 export function notificationOrigin(tab: { id: string; uid: string; groupId?: string; incognito: boolean }): NotificationOrigin {
   if (tab.incognito) {
-    const key = Math.random().toString(36).slice(2, 12);
+    const key = randomBase36(10);
     incognitoOrigins.set(key, tab.id);
     return { incognito: key };
   }
@@ -147,7 +148,7 @@ export async function scheduleNotification(plan: NotificationPlan, from: Notific
     );
   }
   await Notifications.scheduleNotificationAsync({
-    identifier: `${ID_PREFIX}${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+    identifier: `${ID_PREFIX}${Date.now().toString(36)}-${randomBase36(6)}`,
     content: { title: plan.title, body: plan.body, sound: 'default', ...(from ? { data: { qutaiFrom: from } } : {}) },
     // A relative time counts from now (the user has just confirmed it); a clock time is that moment.
     trigger:

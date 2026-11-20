@@ -6,6 +6,7 @@ import { offerSettings, PermissionDeniedError } from '../device/settings';
 import { t } from '../i18n';
 import { MEDIA_KINDS, MediaKind, PermissionSetting } from '../storage/sitePermissions';
 import { askSitePermission, requestingSite } from './sitePrompt';
+import { newNonce } from '../utils/ids';
 
 /**
  * Camera and microphone for web pages (getUserMedia), with the user's per-site permission.
@@ -282,7 +283,7 @@ function promptKey(kinds: MediaKind[]) {
 /** One tab's page camera and microphone: permission, prompts, the native grant and what is live. */
 export class PageMediaCapture {
   /** A random token only the injected script knows (separate from the page command and geolocation nonces). */
-  readonly nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  readonly nonce = newNonce();
   /** The page has a live camera / microphone track: shown in the address bar. */
   camera = false;
   microphone = false;

@@ -9,6 +9,7 @@ import type { Session } from '../storage/session';
 import { NEW_TAB_URL, Tab } from './Tab';
 import { clearCertificateExceptions, removeTabCertificateExceptions } from './certificateExceptions';
 import { t } from '../i18n';
+import { randomBase36 } from '../utils/ids';
 
 /** New tabs open the app's own new tab page. */
 export const HOME_URL = NEW_TAB_URL;
@@ -453,7 +454,7 @@ export class Browser {
   /** Starts a new group with these tabs ("Group 1", "Group 2"… until renamed). */
   createGroup(tabIds: string[], name: string): TabGroup {
     const group: TabGroup = {
-      id: `g${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`,
+      id: `g${Date.now().toString(36)}${randomBase36(3)}`,
       name,
       color: GROUP_COLORS[this.groups.length % GROUP_COLORS.length],
     };

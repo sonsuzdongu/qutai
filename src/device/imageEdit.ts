@@ -21,6 +21,7 @@ import {
 import { compactFilters, filterSteps, type Filters, type Levels } from '../chat/imageFilters';
 import { manipulator, originalFile, storeEditedImage } from './attachments';
 import { filterPaint, measureLevels, sharpenImage } from './filterRender';
+import { randomBase36 } from '../utils/ids';
 
 /**
  * Image edits on the phone (edit_image and the "Resize or crop" sheet). Nothing is sent anywhere and the source is
@@ -56,7 +57,7 @@ const MITCHELL = { B: 1 / 3, C: 1 / 3 };
 const CATMULL_ROM = { B: 0, C: 1 / 2 };
 
 function tempFile(ext: string): File {
-  return new File(Paths.cache, `qutai-edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`);
+  return new File(Paths.cache, `qutai-edit-${Date.now()}-${randomBase36(6)}.${ext}`);
 }
 
 /** Step 1: the cropped, rotated, flipped piece of the source, as a temporary file free of metadata. */

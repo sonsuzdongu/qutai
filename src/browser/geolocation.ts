@@ -13,6 +13,7 @@ import { offerSettings, PermissionDeniedError } from '../device/settings';
 import { t } from '../i18n';
 import type { LocationSetting } from '../storage/sitePermissions';
 import { askSitePermission, requestingSite } from './sitePrompt';
+import { newNonce } from '../utils/ids';
 
 /**
  * Web pages' navigator.geolocation, answered by the app.
@@ -199,7 +200,7 @@ AppState.addEventListener('change', (state) => {
 /** One tab's page geolocation: permission, prompts and watches for the page currently loaded. */
 export class PageGeolocation {
   /** A random token only the injected script knows (separate from the page command nonce). */
-  readonly nonce = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  readonly nonce = newNonce();
   /** The page was given a position, or is watching it: shown in the address bar. */
   inUse = false;
   /** Counts page loads: an answer for an earlier page is never delivered. */

@@ -19,6 +19,7 @@ import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { dialog } from './Dialog';
 import { scriptSandbox } from './ScriptSandbox';
 import { WholeWordsText } from './WholeWordsText';
+import { newNonce } from '../utils/ids';
 
 /**
  * The app's side of scripts (docs/page-customisation.md › Scripts): the approval dialogs (one-off runs and kept
@@ -30,7 +31,7 @@ const liveOffers = new Set<string>();
 
 /** Marks a new script card as made now; returns it with its token. */
 export function liveOffer(offer: ScriptOffer): ScriptOffer {
-  const token = `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+  const token = newNonce();
   liveOffers.add(token);
   return { ...offer, token };
 }

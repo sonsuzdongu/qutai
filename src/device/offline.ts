@@ -2,6 +2,7 @@ import { Directory, File, Paths } from 'expo-file-system';
 import type { Tab } from '../browser/Tab';
 import type { OfflinePage } from '../storage/offlinePages';
 import type { Snapshot } from './pdf';
+import { newId } from '../utils/ids';
 
 function offlineDir(): Directory {
   const dir = new Directory(Paths.document, 'Offline');
@@ -15,7 +16,7 @@ function offlineDir(): Directory {
  */
 export async function savePageOffline(tab: Tab): Promise<OfflinePage> {
   const snapshot = await tab.run<Snapshot>('snapshotHtml', [], 60000);
-  const id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  const id = newId(4);
   const file = new File(offlineDir(), `${id}.html`);
   await file.write(snapshot.html);
   return {

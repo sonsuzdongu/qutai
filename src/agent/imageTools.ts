@@ -17,6 +17,7 @@ import type { ToolContext, ToolOutput } from './executeTool';
 import { declinedNotice, settingNotice } from './stepLine';
 import { findAttachment } from './fileTools';
 import { siteKey } from './sitePolicy';
+import { newNonce } from '../utils/ids';
 
 /**
  * edit_image: crop, rotate, flip, resize and re-encode an image of this conversation on the phone. The result is a
@@ -160,7 +161,7 @@ async function photosFallback(
 
 /** A random one-time token for a transfer (not secret from the app, unknown to the page). */
 function token(): string {
-  return Array.from({ length: 4 }, () => Math.random().toString(36).slice(2, 8)).join('');
+  return newNonce();
 }
 
 /**

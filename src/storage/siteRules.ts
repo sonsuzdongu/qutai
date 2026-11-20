@@ -34,6 +34,7 @@ import {
 import type { ImportedStyle } from '../content/rulesFile';
 import { Db, getDb } from './db';
 import { reportStorageFailure } from './failures';
+import { randomBase36 } from '../utils/ids';
 
 /** Rows of the site_rules table (storage/db.ts). */
 type Row = { id: string; line: string; enabled: number; source: string; site: string; url: string | null; created_at: number };
@@ -137,7 +138,7 @@ export async function listUserScripts(db: Db): Promise<UserScript[]> {
   });
 }
 
-const newId = () => `r${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+const newId = () => `r${Date.now().toString(36)}${randomBase36(6)}`;
 
 export class SiteRuleError extends Error {
   constructor(readonly code: 'tooMany' | 'invalid' | 'css' | 'script') {

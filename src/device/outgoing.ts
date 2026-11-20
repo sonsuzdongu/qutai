@@ -4,6 +4,7 @@ import { originalFile } from './attachments';
 import { composedFileContent, FileExpiredError } from './composedFile';
 import { safeFileName } from './download';
 import { uploadableImage } from './imageEdit';
+import { randomBase36 } from '../utils/ids';
 
 /**
  * The files handed to another app (an email draft, a share) or to a web page, prepared from the conversation's
@@ -99,7 +100,7 @@ export type Prepared = { files: OutgoingFile[]; incognito: boolean; dispose: () 
  */
 export async function prepareOutgoing(items: Shareable[], options: { incognito: boolean; original?: boolean }): Promise<Prepared> {
   sweep(KEEP_MS);
-  const dir = new Directory(rootDir(options.incognito), `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`);
+  const dir = new Directory(rootDir(options.incognito), `${Date.now().toString(36)}-${randomBase36(6)}`);
   dir.create({ intermediates: true, idempotent: true });
   const taken = new Set<string>();
   const files: OutgoingFile[] = [];
