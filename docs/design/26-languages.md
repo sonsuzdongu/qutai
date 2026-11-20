@@ -55,6 +55,8 @@ The languages of Qutai's interface, how the interface language is chosen, and wh
   Status: Default (manager or implementing session; open to change) · Why: Android lets an app neither change nor hide manifest shortcuts, launchers show static and dynamic side by side (duplicates), and dynamic-only shortcuts were missing right after install · Source: e38c806 (2026-11-17), cc84a36; TODO.md › Device integrations
 - **`LANG-20`** The custom-instruction line "Always reply in Turkish" / "Her zaman Türkçe yanıt ver" added by older builds is removed once, only on an exact match, also when restoring an older backup.
   Status: Owner, 2026-11-16 · Why: the answer language now follows the user's message · Enforced: In the app: src/agent/retiredInstructions.ts · Source: ab94093; owner's open-questions memory note (answered item 19)
+- **`LANG-23`** Every key in `en.ts` is reached by the app's code, written out or built from a key template declared in one list (`scripts/i18n-tests/unusedKeys.test.ts`, with where each template is built); a key nothing reaches is removed from all ten languages. A key template in the code that is not declared fails the test too.
+  Status: Default (manager or implementing session; open to change) · Why: the 20 Nov 2026 code review found keys no code used; of the 11 it named, 8 were dead (`newTab.page`, `settings.memory`, `settings.content`, `downloads.askLabel`, `downloads.cancelled`, `ptt.sent`, `account.noProviders`, `account.onlyTestSignIn`) and 3 are built by `describeToolCall` (`action.switchTabPlain`, `action.closeTabPlain`, `action.readTabPlain`) · Enforced: Tests: scripts/i18n-tests/unusedKeys.test.ts
 
 ## Details
 

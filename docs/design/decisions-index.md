@@ -803,6 +803,7 @@ Moved to Details (ids retired, not reused): `VOICE-10`, `VOICE-12`, `VOICE-16`, 
 | `LANG-5` | Turkish interface text addresses the user as "siz", including the setup questions, legal texts, iOS… | Owner | 2026-11-16 |
 | `LANG-6` | Exceptions to "siz": texts the user sends to the assistant (suggestion prompts, custom-instruction… | Default |  |
 | `LANG-22` | Turkish suffixes on "Qutai" follow its pronunciation "Kutay": Qutai'ın, Qutai'ı, Qutai'a, Qutai'da, Qutai'dan (no buffer consonant, back… | Owner | 2026-11-20 |
+| `LANG-23` | Every key in en.ts is reached by the code or a declared key template; dead keys are removed from all ten languages (a test enforces it) | Default | 2026-11-20 |
 | `LANG-7` | The assistant replies in the language the user writes in, even when it differs from the interface… | Default |  |
 | `LANG-8` | The assistant addresses the user formally where the language distinguishes (siz, Sie, vous, usted, вы;… | Default |  |
 | `LANG-9` | Every user message carries the interface language, and tool results name Qutai's buttons, screens and… | Default |  |
@@ -838,6 +839,11 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-25` | Card pictures fetched without cookies or Referer, ≤ 600 KB, JPEG/PNG/GIF/WebP by their bytes, ≤ 24 MP, memory only; ad and tracker hosts skipped while blocking is on | Default | 2026-11-20 |
 | `UI-26` | Incognito: card pictures wait for "Show images" | Default (owner to confirm) | 2026-11-20 |
 | `UI-27` | Corner radii from one token set (`radii` in theme.ts): windows 14, sheet 18, menus and bubbles 12, cards 12, main buttons 14, controls 8, inner 5; circles, chips, browser chrome fields and web content stay as they were; repeated style pieces from `common()` | Owner (lower); Default (values) | 2026-11-20 |
+| `UI-28` | Text buttons have a minimum height, never a fixed one; one Button with a busy guard (a double tap can't run its action twice); shared settings rows and fact row; repeats from `common()` | Default | 2026-11-20 |
+| `UI-29` | A streamed answer and typing redraw only the panel and the changed row: the conversation notifies its panel, the browser only for what the app shows; memoised rows, stable handlers | Default | 2026-11-20 |
+| `UI-30` | The chat follows its end only while the user is at it; scrolling up shows "Jump to the latest message" | Default | 2026-11-20 |
+| `UI-31` | One full screen open at a time, from one state (AppScreens); a late close shuts a screen only if still open | Default | 2026-11-20 |
+| `UI-32` | Tab switcher and cookies screen virtualised; tab cards redrawn only when what they show changes | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 
