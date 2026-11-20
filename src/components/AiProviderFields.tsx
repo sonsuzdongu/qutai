@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Linking, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Linking, Pressable, Text, TextInput, View } from 'react-native';
 import { normalizeBaseUrl } from '../ai/customEndpoint';
 import { getProvider, isConfigured, PROVIDER_ORDER } from '../ai/providers';
 import type { ProviderId } from '../ai/types';
 import { t } from '../i18n';
 import type { Settings } from '../storage/settings';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ALLOW_CLEARTEXT } from '../ai/custom';
 import { cleanCustomHeaders } from '../ai/customHeaders';
@@ -216,7 +216,7 @@ const useStyles = makeStyles((c) => ({
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   link: { color: c.tintText, fontWeight: '600' },
   // Wraps onto a second row when the providers don't fit side by side.
-  segment: { flexDirection: 'row', flexWrap: 'wrap', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
+  segment: { ...common(c).segment, flexWrap: 'wrap' },
   segmentButton: {
     flexGrow: 1,
     flexBasis: '30%',
@@ -225,23 +225,13 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: radii.inner,
   },
-  segmentSelected: { backgroundColor: c.surface },
-  segmentText: { fontSize: 14, color: c.textSecondary },
-  segmentTextSelected: { color: c.text, fontWeight: '700' },
+  segmentSelected: common(c).segmentSelected,
+  segmentText: common(c).segmentText,
+  segmentTextSelected: common(c).segmentTextSelected,
   keyDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#3a9b5c' },
-  input: {
-    color: c.text,
-    // Grows with large text sizes instead of clipping the text.
-    minHeight: 44,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    fontSize: 15,
-  },
+  input: common(c).input,
   option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, gap: 12 },
   optionText: { color: c.text, fontSize: 15 },
   optionBody: { flex: 1 },

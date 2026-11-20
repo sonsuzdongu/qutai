@@ -17,7 +17,7 @@ import { formatDateTime } from '../i18n/format';
 import { t, type MessageKey } from '../i18n';
 import { siteRules, SiteRuleError } from '../storage/siteRules';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { dialog } from './Dialog';
 import { approveKeptCode, runAtLabel, scriptScopeLabel, scriptWhere, switchScriptOn } from './pageScripts';
@@ -231,7 +231,7 @@ const useStyles = makeStyles((c) => ({
   subheading: { fontSize: 16, fontWeight: '700', color: c.text },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   warn: { color: c.danger },
-  card: { backgroundColor: c.surface, borderRadius: 14, padding: 14, gap: 10 },
+  card: { ...common(c).card, padding: 14, gap: 10 },
   site: { fontSize: 15, fontWeight: '600', color: c.text },
   rule: { gap: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -240,7 +240,7 @@ const useStyles = makeStyles((c) => ({
   remove: { paddingHorizontal: 4 },
   link: { fontSize: 13, color: c.tintText, fontWeight: '600', paddingVertical: 4 },
   links: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 16 },
-  button: { backgroundColor: c.surface, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center' },
+  button: { backgroundColor: c.surface, borderRadius: radii.control, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center' },
   buttonText: { fontSize: 15, fontWeight: '600', color: c.tintText },
   pressed: { backgroundColor: c.pressed },
 }));

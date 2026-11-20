@@ -9,7 +9,7 @@ import { getLanguage, t } from '../i18n';
 import { hostOf } from '../i18n/format';
 import { getDb } from '../storage/db';
 import { LocalSuggestion, localSuggestions } from '../storage/omnibox';
-import { darkPalette, makeStyles, usePalette } from '../ui/theme';
+import { darkPalette, makeStyles, usePalette, radii } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
 import { useReduceMotion } from '../utils/useReduceMotion';
 
@@ -253,8 +253,8 @@ const useStyles = makeStyles((c) => ({
     right: 0,
     maxHeight: MAX_HEIGHT,
     backgroundColor: c.surface,
-    borderBottomLeftRadius: 14,
-    borderBottomRightRadius: 14,
+    borderBottomLeftRadius: radii.popover,
+    borderBottomRightRadius: radii.popover,
     shadowColor: '#000',
     shadowOpacity: 0.15,
     shadowRadius: 10,
@@ -265,8 +265,8 @@ const useStyles = makeStyles((c) => ({
   panelAbove: {
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
+    borderTopLeftRadius: radii.popover,
+    borderTopRightRadius: radii.popover,
   },
   panelDark: { backgroundColor: '#2b2a33' },
   scroll: { flexGrow: 0, maxHeight: MAX_HEIGHT },

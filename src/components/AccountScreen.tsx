@@ -7,7 +7,7 @@ import { creditsEnabled } from '../config/features';
 import { creditsText, refreshCredits, useCreditsState } from '../credits';
 import { Icon } from '../ui/Icon';
 import { t } from '../i18n';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { AddMethods, MethodsList } from './AccountMethods';
 import { signedInWithText } from './accountLabels';
 import { dialog } from './Dialog';
@@ -223,25 +223,18 @@ const useStyles = makeStyles((c) => ({
   intro: { color: c.text, fontSize: 15, lineHeight: 21 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   label: { color: c.text, fontSize: 15, fontWeight: '600' },
-  card: { backgroundColor: c.surface, borderRadius: 14, padding: 14, gap: 4 },
+  card: { ...common(c).card, padding: 14, gap: 4 },
   methods: { gap: 4, marginTop: 4, marginBottom: 2 },
   method: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   methodText: { color: c.text, fontSize: 14, lineHeight: 19 },
   creditsRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   flex: { flex: 1 },
-  notice: {
-    fontSize: 14,
-    lineHeight: 19,
-    color: c.text,
-    backgroundColor: c.sunken,
-    borderRadius: 10,
-    padding: 12,
-  },
+  notice: common(c).notice,
   noticeWarn: { color: c.danger },
   buttons: { gap: 10, marginTop: 12, marginBottom: 8 },
   button: {
     height: 46,
-    borderRadius: 23,
+    borderRadius: radii.button,
     backgroundColor: c.surface,
     borderWidth: 1,
     borderColor: c.border,

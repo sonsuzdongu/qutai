@@ -37,7 +37,7 @@ import { Aurora } from '../ui/Aurora';
 import { GradientButton, GradientText } from '../ui/BrandGradient';
 import { Icon, IconName } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { AiProviderFields, cleanAiChoice } from './AiProviderFields';
@@ -746,7 +746,7 @@ const useStyles = makeStyles((c) => ({
   },
   card: {
     backgroundColor: c.surface,
-    borderRadius: 16,
+    borderRadius: radii.card,
     paddingHorizontal: 16,
     paddingVertical: 6,
   },
@@ -774,15 +774,7 @@ const useStyles = makeStyles((c) => ({
     paddingVertical: 8,
   },
   checkRowCompact: { paddingVertical: 4 },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: c.textSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  checkbox: common(c).checkbox,
   checkboxOn: { backgroundColor: c.tint, borderColor: c.tint },
   checkText: { flex: 1, color: c.text, fontSize: 14, lineHeight: 19.5 },
   checkTextCompact: { fontSize: 13.5, lineHeight: 18.5 },
@@ -806,7 +798,7 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     gap: 8,
     height: 50,
-    borderRadius: 25,
+    borderRadius: radii.button,
     borderWidth: 1.5,
     borderColor: c.tint,
     backgroundColor: c.surface,
@@ -824,8 +816,8 @@ const useStyles = makeStyles((c) => ({
   },
   bottomCompact: { paddingTop: 4, paddingBottom: 8, gap: 2 },
   // A minimum, not a fixed height: a label that wraps at a large text size makes the button taller instead of clipping.
-  primary: { minHeight: 52, borderRadius: 26, paddingVertical: 8, paddingHorizontal: 18 },
-  primaryCompact: { minHeight: 46, borderRadius: 23 },
+  primary: { minHeight: 52, borderRadius: radii.button, paddingVertical: 8, paddingHorizontal: 18 },
+  primaryCompact: { minHeight: 46, borderRadius: radii.button },
   primaryText: { fontSize: 17 },
   disabled: { opacity: 0.4 },
   pressed: { opacity: 0.8 },

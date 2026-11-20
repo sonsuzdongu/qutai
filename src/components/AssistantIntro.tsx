@@ -22,7 +22,7 @@ import { deleteKey, getDb, getJson, setJson } from '../storage/db';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii } from '../ui/theme';
 import { useScreenReader } from './useHoldGesture';
 
 /**
@@ -220,7 +220,7 @@ const useStyles = makeStyles((c) => ({
   card: {
     position: 'absolute',
     backgroundColor: c.surface,
-    borderRadius: 18,
+    borderRadius: radii.window,
     padding: 16,
     gap: 10,
     shadowColor: '#000',
@@ -238,7 +238,7 @@ const useStyles = makeStyles((c) => ({
     marginTop: 4,
     paddingHorizontal: 18,
     height: 40,
-    borderRadius: 20,
+    borderRadius: radii.button,
     justifyContent: 'center',
     backgroundColor: c.tint,
   },

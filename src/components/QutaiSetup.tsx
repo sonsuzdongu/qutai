@@ -6,7 +6,7 @@ import type { SetupEvent, SetupState } from '../credits/setupFlow';
 import { t, type MessageKey } from '../i18n';
 import { Icon, type IconName } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { openBuyCredits } from './BuyCredits';
 import { signedInWithText } from './accountLabels';
 import { ErrorDetails } from './ErrorDetails';
@@ -248,7 +248,7 @@ const useStyles = makeStyles((c) => ({
   hint: { color: c.textSecondary, fontSize: 13.5, lineHeight: 19 },
   warn: { color: c.danger },
   label: { color: c.textSecondary, fontSize: 13, fontWeight: '600' },
-  card: { backgroundColor: c.surface, borderRadius: 16, padding: 16, gap: 10 },
+  card: { ...common(c).card, padding: 16, gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   mainTitle: { color: c.text, fontSize: 18, fontWeight: '700' },
   badge: { color: c.tintText, fontSize: 13, fontWeight: '600' },
@@ -258,7 +258,7 @@ const useStyles = makeStyles((c) => ({
   point: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
   pointText: { color: c.text, fontSize: 14, lineHeight: 20 },
   pointTextCompact: { fontSize: 13, lineHeight: 18 },
-  section: { backgroundColor: c.surface, borderRadius: 16, borderWidth: 1.5, borderColor: 'transparent' },
+  section: { ...common(c).card, borderWidth: 1.5, borderColor: 'transparent' },
   sectionOpen: { borderColor: c.tint },
   heading: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 12, minHeight: 56 },
   panel: { paddingHorizontal: 14, paddingBottom: 14, gap: 8 },
@@ -266,7 +266,7 @@ const useStyles = makeStyles((c) => ({
   keyIconCompact: { width: 28, height: 28 },
   textButton: { alignSelf: 'center', paddingVertical: 6 },
   link: { color: c.tintText, fontSize: 15, fontWeight: '600' },
-  notice: { flexDirection: 'row', gap: 10, backgroundColor: c.sunken, borderRadius: 12, padding: 12 },
+  notice: common(c).noticeRow,
   noticeText: { flex: 1, color: c.text, fontSize: 14, lineHeight: 20 },
   noticeDetails: { marginLeft: 12, marginTop: -4 },
   balance: { color: c.text, fontSize: 26, fontWeight: '700' },
@@ -276,7 +276,7 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     gap: 8,
     height: 44,
-    borderRadius: 22,
+    borderRadius: radii.button,
     borderWidth: 1.5,
     borderColor: c.tint,
     marginTop: 4,

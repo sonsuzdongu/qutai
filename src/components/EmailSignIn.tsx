@@ -5,7 +5,7 @@ import { codeDigits, countdownText, looksLikeEmail } from '../account/emailSignI
 import { t } from '../i18n';
 import { timeLabel } from '../i18n/format';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { ErrorDetails } from './ErrorDetails';
 import { WholeWordsText } from './WholeWordsText';
 
@@ -323,7 +323,7 @@ const useStyles = makeStyles((c) => ({
   input: {
     color: c.text,
     minHeight: 46,
-    borderRadius: 12,
+    borderRadius: radii.control,
     paddingHorizontal: 14,
     backgroundColor: c.surface,
     borderWidth: 1,
@@ -340,11 +340,11 @@ const useStyles = makeStyles((c) => ({
   },
   inputError: { borderColor: c.danger },
   fieldError: { color: c.danger, fontSize: 13, lineHeight: 18 },
-  error: { flexDirection: 'row', gap: 10, backgroundColor: c.sunken, borderRadius: 12, padding: 12 },
+  error: common(c).noticeRow,
   errorText: { flex: 1, color: c.text, fontSize: 14, lineHeight: 20 },
   primary: {
     minHeight: 46,
-    borderRadius: 23,
+    borderRadius: radii.button,
     backgroundColor: c.tint,
     alignItems: 'center',
     justifyContent: 'center',
@@ -355,7 +355,7 @@ const useStyles = makeStyles((c) => ({
   primaryText: { color: c.onTint, fontSize: 16, fontWeight: '600', textAlign: 'center' },
   secondary: {
     minHeight: 46,
-    borderRadius: 23,
+    borderRadius: radii.button,
     backgroundColor: c.surface,
     borderWidth: 1,
     borderColor: c.border,

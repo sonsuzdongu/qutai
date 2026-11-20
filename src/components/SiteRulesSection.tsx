@@ -33,7 +33,7 @@ import { ScriptsPart } from './ScriptsPart';
 import { pickRulesFile, RulesFileTooLargeError, shareRulesFile } from '../device/siteRulesFile';
 import { t, type MessageKey } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { dialog } from './Dialog';
 
@@ -544,7 +544,7 @@ const useStyles = makeStyles((c) => ({
   section: { gap: 10, marginTop: 18 },
   heading: { fontSize: 17, fontWeight: '700', color: c.text },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
-  card: { backgroundColor: c.surface, borderRadius: 14, padding: 14, gap: 10 },
+  card: { ...common(c).card, padding: 14, gap: 10 },
   site: { fontSize: 15, fontWeight: '600', color: c.text },
   rule: { gap: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -555,7 +555,7 @@ const useStyles = makeStyles((c) => ({
   links: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 16 },
   part: { gap: 10, marginTop: 8 },
   subheading: { fontSize: 16, fontWeight: '700', color: c.text },
-  button: { backgroundColor: c.surface, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center' },
+  button: { backgroundColor: c.surface, borderRadius: radii.control, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center' },
   buttonText: { fontSize: 15, fontWeight: '600', color: c.tintText },
   pressed: { backgroundColor: c.pressed },
   pair: { flexDirection: 'row', gap: 8 },

@@ -20,7 +20,7 @@ import { addMemory, deleteMemory, listMemories, updateMemory } from '../storage/
 import { memoryErrorText } from './memoryError';
 import { GradientButton } from '../ui/BrandGradient';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { dialog } from './Dialog';
 import { KeyboardAwareScrollView, useRevealFocused } from './KeyboardAware';
 import { CATEGORY_ICONS } from './memoryCategories';
@@ -785,7 +785,7 @@ const useStyles = makeStyles((c) => ({
   },
   card: {
     backgroundColor: c.surface,
-    borderRadius: 16,
+    borderRadius: radii.card,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -805,7 +805,7 @@ const useStyles = makeStyles((c) => ({
   input: {
     color: c.text,
     minHeight: 46,
-    borderRadius: 12,
+    borderRadius: radii.control,
     paddingHorizontal: 14,
     paddingVertical: 10,
     backgroundColor: c.surface,
@@ -821,15 +821,7 @@ const useStyles = makeStyles((c) => ({
     gap: 12,
     paddingVertical: 8,
   },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 7,
-    borderWidth: 2,
-    borderColor: c.textSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  checkbox: common(c).checkbox,
   checkboxOn: { backgroundColor: c.tint, borderColor: c.tint },
   checkText: { flex: 1, color: c.text, fontSize: 15, lineHeight: 21 },
   savedRow: {
@@ -839,7 +831,7 @@ const useStyles = makeStyles((c) => ({
     paddingLeft: 14,
     paddingRight: 6,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: radii.control,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.separator,
@@ -869,7 +861,7 @@ const useStyles = makeStyles((c) => ({
     width: '100%',
     alignSelf: 'center',
   },
-  primary: { height: 52, borderRadius: 26 },
+  primary: { height: 52, borderRadius: radii.button },
   primaryText: { fontSize: 17 },
   secondary: { alignItems: 'center', justifyContent: 'center', minHeight: 44 },
   secondaryText: { color: c.tintText, fontSize: 16, fontWeight: '600' },

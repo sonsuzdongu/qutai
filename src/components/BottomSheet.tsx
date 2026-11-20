@@ -3,7 +3,7 @@ import { Platform, Pressable, ScrollView, StyleProp, StyleSheet, View, ViewStyle
 import { AppModal } from '../ui/AppModal';
 import { Edge, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, radii } from '../ui/theme';
 import { useKeyboardHeight } from '../utils/useKeyboardHeight';
 import { DialogHost } from './Dialog';
 
@@ -103,8 +103,8 @@ const useStyles = makeStyles((c) => ({
     maxWidth: 560,
     alignSelf: 'center',
     backgroundColor: c.bg,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
+    borderTopLeftRadius: radii.window,
+    borderTopRightRadius: radii.window,
   },
   scroll: { flexGrow: 0 },
 }));

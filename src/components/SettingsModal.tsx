@@ -30,7 +30,7 @@ import type { LegalKind } from '../legal/documents';
 import type { Settings } from '../storage/settings';
 import { ASSISTANT_LOOK_LABELS, ASSISTANT_LOOK_TITLE, ASSISTANT_LOOKS } from '../ui/assistantLook';
 import { Icon, IconName } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { AccountScreen } from './AccountScreen';
@@ -1074,7 +1074,7 @@ const useStyles = makeStyles((c) => ({
   title: { color: c.text, fontSize: 17, fontWeight: '600', flexShrink: 1, textAlign: 'center' },
   save: { fontSize: 16, color: c.tintText, fontWeight: '600' },
   content: { ...readableColumn, padding: 16, gap: 8 },
-  card: { backgroundColor: c.surface, borderRadius: 14, overflow: 'hidden' },
+  card: { ...common(c).card, overflow: 'hidden' },
   sectionRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 12 },
   sectionRowLine: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: c.separator },
   sectionIcon: {
@@ -1096,7 +1096,7 @@ const useStyles = makeStyles((c) => ({
     color: c.text,
     minHeight: 96,
     maxHeight: 180,
-    borderRadius: 10,
+    borderRadius: radii.control,
     paddingHorizontal: 12,
     paddingTop: 10,
     paddingBottom: 10,
@@ -1118,7 +1118,7 @@ const useStyles = makeStyles((c) => ({
   },
   customExampleText: { fontSize: 13, color: c.text },
   link: { color: c.tintText, fontWeight: '600' },
-  segment: { flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
+  segment: common(c).segment,
   segmentButton: {
     flex: 1,
     flexDirection: 'row',
@@ -1126,17 +1126,17 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: radii.inner,
   },
-  segmentSelected: { backgroundColor: c.surface },
-  segmentText: { fontSize: 14, color: c.textSecondary },
-  segmentTextSelected: { color: c.text, fontWeight: '700' },
+  segmentSelected: common(c).segmentSelected,
+  segmentText: common(c).segmentText,
+  segmentTextSelected: common(c).segmentTextSelected,
   option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, gap: 12 },
   optionText: { color: c.text, fontSize: 15 },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
   saveButton: {
     height: 46,
-    borderRadius: 23,
+    borderRadius: radii.button,
     backgroundColor: c.tint,
     alignItems: 'center',
     justifyContent: 'center',

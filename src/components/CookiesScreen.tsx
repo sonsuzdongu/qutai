@@ -10,7 +10,7 @@ import { t } from '../i18n';
 import { formatDateTime } from '../i18n/format';
 import { AppModal } from '../ui/AppModal';
 import { Icon } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { ErrorDetails } from './ErrorDetails';
@@ -236,15 +236,15 @@ const useStyles = makeStyles((c) => ({
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   text: { fontSize: 15, color: c.text },
   loading: { marginTop: 24 },
-  card: { backgroundColor: c.surface, borderRadius: 14, padding: 14, gap: 8 },
+  card: { ...common(c).card, padding: 14, gap: 8 },
   domain: { fontSize: 15, fontWeight: '600', color: c.text },
   cookie: { gap: 4, paddingTop: 8, borderTopWidth: Platform.OS === 'ios' ? 0.5 : 1, borderTopColor: c.separator },
   name: { fontSize: 15, color: c.text, fontWeight: '600' },
   value: { fontSize: 13, color: c.text, fontFamily: Platform.select({ ios: 'Menlo', default: 'monospace' }) },
   actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, paddingTop: 2 },
-  action: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, borderRadius: 8 },
+  action: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 6, borderRadius: radii.control },
   actionText: { fontSize: 14, color: c.tintText, fontWeight: '600' },
   danger: { color: c.danger, fontSize: 15, fontWeight: '600', textAlign: 'center' },
-  button: { backgroundColor: c.surface, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center' },
+  button: { backgroundColor: c.surface, borderRadius: radii.control, paddingVertical: 12, paddingHorizontal: 12, alignItems: 'center' },
   pressed: { backgroundColor: c.pressed },
 }));

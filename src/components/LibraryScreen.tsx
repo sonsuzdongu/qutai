@@ -15,7 +15,7 @@ import { pickBookmarkFile, PickerUnavailableError, shareBookmarkFile } from '../
 import { bump, success, tick } from '../device/haptics';
 import { t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { formatDate, groupByDay, hostOf, timeLabel } from '../i18n/format';
 import {
   BookmarkFileError,
@@ -871,9 +871,9 @@ function Empty({ title, hint }: { title: string; hint?: string }) {
 const useStyles = makeStyles((c) => ({
   container: { flex: 1, backgroundColor: c.bg },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 12, gap: 12 },
-  segment: { flex: 1, flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
-  segmentButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 7, paddingHorizontal: 4, borderRadius: 8 },
-  segmentSelected: { backgroundColor: c.surface },
+  segment: { ...common(c).segment, flex: 1 },
+  segmentButton: { ...common(c).segmentButton, paddingVertical: 7, paddingHorizontal: 4 },
+  segmentSelected: common(c).segmentSelected,
   segmentText: { fontSize: 14, color: c.text },
   bold: { fontWeight: '700' },
   action: { fontSize: 16, color: c.tintText },
@@ -883,7 +883,7 @@ const useStyles = makeStyles((c) => ({
     marginBottom: 8,
     // Grows with large text sizes instead of clipping the text.
     minHeight: 38,
-    borderRadius: 10,
+    borderRadius: radii.control,
     paddingHorizontal: 12,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
@@ -945,12 +945,12 @@ const useStyles = makeStyles((c) => ({
   toolText: { fontSize: 14, color: c.tintText, fontWeight: '600' },
   importHint: { fontSize: 13, color: c.textSecondary, paddingHorizontal: 16, paddingVertical: 20, lineHeight: 18 },
   overlay: { backgroundColor: c.backdrop, justifyContent: 'center', padding: 24 },
-  dialog: { backgroundColor: c.bg, borderRadius: 16, padding: 16, gap: 10, maxHeight: '80%' },
+  dialog: { backgroundColor: c.bg, borderRadius: radii.window, padding: 16, gap: 10, maxHeight: '80%' },
   dialogTitle: { fontSize: 17, fontWeight: '700', color: c.text },
   dialogInput: {
     color: c.text,
     height: 42,
-    borderRadius: 10,
+    borderRadius: radii.control,
     paddingHorizontal: 12,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
@@ -966,7 +966,7 @@ const useStyles = makeStyles((c) => ({
     gap: 10,
     paddingHorizontal: 12,
     height: 42,
-    borderRadius: 10,
+    borderRadius: radii.control,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
@@ -978,6 +978,6 @@ const useStyles = makeStyles((c) => ({
     gap: 10,
     paddingRight: 8,
     paddingVertical: 11,
-    borderRadius: 8,
+    borderRadius: radii.control,
   },
 }));

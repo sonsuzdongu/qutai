@@ -22,7 +22,7 @@ import {
   subscribeSentLog,
 } from '../storage/sentLog';
 import { Icon } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
 import { costLine, creditsLabel, requestBreakdown, usd } from './AnswerCost';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { ScreenHeader } from './ScreenHeader';
@@ -445,10 +445,10 @@ const useStyles = makeStyles((c) => ({
     overflow: 'hidden',
   },
   meta: { gap: 3, marginBottom: 10 },
-  note: { backgroundColor: c.sunken, borderRadius: 10, padding: 12, gap: 6 },
+  note: { backgroundColor: c.sunken, borderRadius: radii.control, padding: 12, gap: 6 },
   card: {
     backgroundColor: c.surface,
-    borderRadius: 10,
+    borderRadius: radii.control,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
     padding: 12,

@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { confirm as confirmHaptic, tick } from '../device/haptics';
 import { t } from '../i18n';
 import { Icon, IconLines } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { useKeyboardHeight } from '../utils/useKeyboardHeight';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { ErrorDetails } from './ErrorDetails';
@@ -532,7 +532,7 @@ const useStyles = makeStyles((c) => ({
     maxWidth: 400,
     maxHeight: '100%',
     backgroundColor: c.bg,
-    borderRadius: 18,
+    borderRadius: radii.window,
     padding: 20,
     gap: 14,
     borderWidth: c.dark ? StyleSheet.hairlineWidth : 0,
@@ -550,28 +550,19 @@ const useStyles = makeStyles((c) => ({
   lineIcon: { marginTop: 2.5 },
   lineText: { flex: 1 },
   image: { width: '100%', maxHeight: 200, borderRadius: 8, backgroundColor: c.border },
-  input: {
-    color: c.text,
-    minHeight: 44,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    fontSize: 16,
-  },
+  input: { ...common(c).input, fontSize: 16 },
   checkRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     minHeight: 44,
-    borderRadius: 10,
+    borderRadius: radii.control,
   },
   pressed: { backgroundColor: c.pressed },
   box: {
     width: 22,
     height: 22,
-    borderRadius: 6,
+    borderRadius: radii.inner,
     borderWidth: 2,
     borderColor: c.border,
     alignItems: 'center',
@@ -583,7 +574,7 @@ const useStyles = makeStyles((c) => ({
   buttonsStacked: { flexDirection: 'column' },
   button: {
     minHeight: 44,
-    borderRadius: 12,
+    borderRadius: radii.control,
     paddingHorizontal: 14,
     paddingVertical: 10,
     alignItems: 'center',

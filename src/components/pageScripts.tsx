@@ -15,7 +15,7 @@ import { loadScriptKey } from '../device/scriptKey';
 import { t, type MessageKey } from '../i18n';
 import { siteRules, SiteRuleError } from '../storage/siteRules';
 import { Icon, type IconLine } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { dialog } from './Dialog';
 import { scriptSandbox } from './ScriptSandbox';
 import { WholeWordsText } from './WholeWordsText';
@@ -222,7 +222,7 @@ export function ScriptCard({ offer, dark, onKeep }: { offer: ScriptOffer; dark?:
 }
 
 const useStyles = makeStyles((c) => ({
-  card: { backgroundColor: c.surface, borderRadius: 16, padding: 14, gap: 8, alignSelf: 'stretch' },
+  card: { ...common(c).card, padding: 14, gap: 8, alignSelf: 'stretch' },
   cardDark: { backgroundColor: '#2a2930' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   status: { flex: 1, fontSize: 14, fontWeight: '600', color: c.textSecondary },
@@ -235,7 +235,7 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     gap: 6,
     backgroundColor: c.sunken,
-    borderRadius: 12,
+    borderRadius: radii.control,
     paddingVertical: 10,
     paddingHorizontal: 14,
   },

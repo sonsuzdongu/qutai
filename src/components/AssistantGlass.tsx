@@ -11,7 +11,7 @@ import {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { AssistantLook } from '../ui/assistantLook';
-import { usePalette } from '../ui/theme';
+import { usePalette, radii } from '../ui/theme';
 import { useReduceMotion } from '../utils/useReduceMotion';
 
 /**
@@ -564,8 +564,8 @@ const styles = StyleSheet.create({
   over: { zIndex: 20, elevation: 20 },
   clip: { overflow: 'hidden' },
   sheet: { position: 'absolute', left: 0, right: 0, zIndex: 50, overflow: 'hidden' },
-  sheetUp: { borderTopLeftRadius: 26, borderTopRightRadius: 26, borderTopWidth: StyleSheet.hairlineWidth },
-  sheetDown: { borderBottomLeftRadius: 26, borderBottomRightRadius: 26, borderBottomWidth: StyleSheet.hairlineWidth },
+  sheetUp: { borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet, borderTopWidth: StyleSheet.hairlineWidth },
+  sheetDown: { borderBottomLeftRadius: radii.sheet, borderBottomRightRadius: radii.sheet, borderBottomWidth: StyleSheet.hairlineWidth },
   sheetBody: { width: '100%', maxWidth: 680, alignSelf: 'center', gap: 6 },
   sheetBodyUp: { paddingTop: 18, paddingBottom: 16 },
   sheetBodyDown: { paddingTop: 14, paddingBottom: 20 },

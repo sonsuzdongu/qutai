@@ -23,7 +23,7 @@ import {
   updateSavedTask,
 } from '../storage/savedTasks';
 import { Icon, IconName } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
@@ -577,7 +577,7 @@ const useStyles = makeStyles((c) => ({
     paddingLeft: 14,
     paddingRight: 10,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: radii.control,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.separator,
@@ -590,7 +590,7 @@ const useStyles = makeStyles((c) => ({
   run: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 16, backgroundColor: c.tint },
   runText: { color: c.onTint, fontWeight: '700', fontSize: 14 },
   footer: { padding: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border },
-  addButton: { height: 44, borderRadius: 22, backgroundColor: c.tint, alignItems: 'center', justifyContent: 'center' },
+  addButton: { height: 44, borderRadius: radii.button, backgroundColor: c.tint, alignItems: 'center', justifyContent: 'center' },
   addText: { color: c.onTint, fontWeight: '700', fontSize: 15 },
   form: { ...readableColumn, padding: 16, gap: 8 },
   label: { fontSize: 13, fontWeight: '600', color: c.textSecondary, marginTop: 8 },
@@ -598,7 +598,7 @@ const useStyles = makeStyles((c) => ({
   input: {
     color: c.text,
     minHeight: 42,
-    borderRadius: 10,
+    borderRadius: radii.control,
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: c.surface,
@@ -607,11 +607,11 @@ const useStyles = makeStyles((c) => ({
     fontSize: 15,
   },
   promptInput: { minHeight: 110 },
-  segment: { flexDirection: 'row', borderRadius: 10, backgroundColor: c.sunken, padding: 3, gap: 3 },
-  segmentButton: { flex: 1, paddingVertical: 8, paddingHorizontal: 2, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  segmentSelected: { backgroundColor: c.surface },
-  segmentText: { fontSize: 13, color: c.textSecondary, textAlign: 'center' },
-  segmentTextSelected: { color: c.text, fontWeight: '600' },
+  segment: { ...common(c).segment, gap: 3 },
+  segmentButton: { ...common(c).segmentButton, paddingHorizontal: 2 },
+  segmentSelected: common(c).segmentSelected,
+  segmentText: { ...common(c).segmentText, fontSize: 13, textAlign: 'center' },
+  segmentTextSelected: { ...common(c).segmentTextSelected, fontWeight: '600' },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 12 },
   switchLabel: { fontSize: 15, color: c.text },
   scheduleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },

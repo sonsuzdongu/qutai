@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { t } from '../i18n';
 import { formatPercent } from '../i18n/format';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, radii } from '../ui/theme';
 import { clampTextZoom, TEXT_ZOOM_MAX, TEXT_ZOOM_MIN } from '../storage/settings';
 import { BottomSheet } from './BottomSheet';
 
@@ -76,7 +76,7 @@ const useStyles = makeStyles((c) => ({
   step: {
     width: 56,
     height: 44,
-    borderRadius: 12,
+    borderRadius: radii.control,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,

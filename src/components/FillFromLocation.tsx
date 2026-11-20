@@ -5,7 +5,7 @@ import { openSettingsOrExplain, PermissionDeniedError } from '../device/settings
 import { getLanguage, t } from '../i18n';
 import { formatPlace, LOCATION_PROBLEM_TEXT, type LocationProblem } from '../intro/place';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii } from '../ui/theme';
 
 /** Which of the short lines an error from reading the place gets (src/intro/place.ts). */
 function problemOf(e: unknown): LocationProblem {
@@ -78,7 +78,7 @@ const useStyles = makeStyles((c) => ({
     gap: 8,
     paddingHorizontal: 14,
     height: 40,
-    borderRadius: 20,
+    borderRadius: radii.button,
     borderWidth: 1.5,
     borderColor: c.tint,
   },

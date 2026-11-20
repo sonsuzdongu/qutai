@@ -20,7 +20,7 @@ import { incognitoInfoKey, incognitoIsolated } from '../device/webviewProfile';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { dropTab, Measurable, sectionsOf, TabDrag } from './tabDrag';
 import { t } from '../i18n';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
 import { siteColor } from '../ui/siteColor';
 import { hostOf } from '../i18n/format';
@@ -709,19 +709,19 @@ const useStyles = makeStyles((c) => ({
     minHeight: 44,
     paddingHorizontal: 14,
     paddingVertical: 4,
-    borderRadius: 22,
+    borderRadius: radii.button,
     alignItems: 'center',
     justifyContent: 'center',
   },
   compareButtonText: { color: c.onTint, fontSize: 15, fontWeight: '700', textAlign: 'center' },
-  segment: { flexDirection: 'row', borderRadius: 10, padding: 3 },
+  segment: { flexDirection: 'row', borderRadius: radii.control, padding: 3 },
   segmentButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     paddingVertical: 7,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: radii.inner,
     flexShrink: 1,
   },
   segmentText: { fontSize: 14, flexShrink: 1 },
@@ -733,7 +733,7 @@ const useStyles = makeStyles((c) => ({
     marginHorizontal: PADDING,
     marginBottom: 4,
     padding: 10,
-    borderRadius: 10,
+    borderRadius: radii.control,
     backgroundColor: '#4a3b1a',
   },
   warningIcon: { marginTop: 0.5 },
@@ -745,7 +745,7 @@ const useStyles = makeStyles((c) => ({
     flex: 1,
     paddingHorizontal: 12,
     minHeight: 38,
-    borderRadius: 10,
+    borderRadius: radii.control,
   },
   searchIcon: { fontSize: 17 },
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 0, height: '100%' },
@@ -791,7 +791,7 @@ const useStyles = makeStyles((c) => ({
   },
   undoText: { color: c.onTint, fontSize: 14 },
   undoAction: { color: '#7cc8f2', fontSize: 14, fontWeight: '700' },
-  recent: { marginTop: 8, borderRadius: 14, backgroundColor: c.surface, paddingVertical: 6 },
+  recent: { marginTop: 8, borderRadius: radii.card, backgroundColor: c.surface, paddingVertical: 6 },
   recentTitle: { fontSize: 13, fontWeight: '600', color: c.textSecondary, paddingHorizontal: 14, paddingVertical: 6 },
   recentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8 },
   recentPressed: { backgroundColor: c.pressed },

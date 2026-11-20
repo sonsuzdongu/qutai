@@ -16,7 +16,7 @@ import { DEV_SIGN_IN_USERS, type DevSignInUser } from '../account/types';
 import { devLoginEnabled, devLoginSecret } from '../config/features';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { darkPalette, makeStyles, usePalette } from '../ui/theme';
+import { darkPalette, makeStyles, usePalette, radii } from '../ui/theme';
 import { dialog } from './Dialog';
 import { EmailSignIn } from './EmailSignIn';
 import { WholeWordsText } from './WholeWordsText';
@@ -122,7 +122,7 @@ export function SignInOptions({ onResult }: { onResult?: (result: SignInResult) 
                   ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
                   : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
               }
-              cornerRadius={23}
+              cornerRadius={radii.button}
               style={styles.appleButton}
               onPress={() => signIn('apple')}
             />
@@ -212,7 +212,7 @@ const useStyles = makeStyles((c) => ({
   appleWebText: { color: c.bg },
   button: {
     height: 46,
-    borderRadius: 23,
+    borderRadius: radii.button,
     backgroundColor: c.surface,
     borderWidth: 1,
     borderColor: c.border,
@@ -228,7 +228,7 @@ const useStyles = makeStyles((c) => ({
     gap: 6,
     marginTop: 8,
     padding: 14,
-    borderRadius: 14,
+    borderRadius: radii.card,
     borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: c.danger,

@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { openSettingsOrExplain } from '../device/settings';
 import { t } from '../i18n';
 import { DialogHost } from './Dialog';
+import { radii } from '../ui/theme';
 
 type Props = { visible: boolean; onScan: (data: string) => void; onClose: () => void };
 
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 16 },
   message: { color: '#fff', fontSize: 15, textAlign: 'center', lineHeight: 21 },
-  allow: { paddingHorizontal: 20, height: 44, borderRadius: 22, backgroundColor: '#1565c0', justifyContent: 'center' },
+  allow: { paddingHorizontal: 20, height: 44, borderRadius: radii.button, backgroundColor: '#1565c0', justifyContent: 'center' },
   allowText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', gap: 20 },
   frame: { width: 240, height: 240, borderRadius: 18, borderWidth: 3, borderColor: 'rgba(255,255,255,0.9)' },
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
     bottom: 48,
     paddingHorizontal: 24,
     height: 44,
-    borderRadius: 22,
+    borderRadius: radii.button,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
   },

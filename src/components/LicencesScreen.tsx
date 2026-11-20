@@ -3,7 +3,7 @@ import { FlatList, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, 
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii } from '../ui/theme';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
 import { ScreenHeader } from './ScreenHeader';
@@ -183,7 +183,7 @@ const useStyles = makeStyles((c) => ({
     color: c.text,
     minHeight: 40,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: radii.control,
     paddingHorizontal: 12,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,

@@ -14,7 +14,7 @@ import { t } from '../i18n';
 import { formatPercent, formatSize } from '../i18n/format';
 import type { DownloadItem, DownloadStore } from '../storage/downloads';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii } from '../ui/theme';
 import { useScreenReader } from './useHoldGesture';
 
 /** "42%" when the size is known, else the bytes so far ("3.1 MB"), or "" before anything arrived. */
@@ -242,7 +242,7 @@ const useStyles = makeStyles((c) => ({
     minWidth: 240,
     paddingLeft: 12,
     paddingRight: 4,
-    borderRadius: 20,
+    borderRadius: radii.window,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
@@ -274,7 +274,7 @@ const useStyles = makeStyles((c) => ({
     color: c.textSecondary,
     fontVariant: ['tabular-nums'],
   },
-  action: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
+  action: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radii.control },
   pressed: { opacity: 0.6 },
   actionText: { fontSize: 14, fontWeight: '600', color: c.tintText },
   close: {

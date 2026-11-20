@@ -23,7 +23,7 @@ import { errorDetails, errorKind, MIN_BACKUP_PASSWORD, newPasswordProblem, type 
 import { MessageKey, t } from '../i18n';
 import { formatDateTime, formatPercent, formatSize } from '../i18n/format';
 import { AppModal } from '../ui/AppModal';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { PasswordField, ShowPassword, useAppsDataSize, type ServerRestoreJob } from './BackupScreen';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -547,7 +547,7 @@ const useStyles = makeStyles((c) => ({
   },
   card: {
     backgroundColor: c.surface,
-    borderRadius: 14,
+    borderRadius: radii.card,
     padding: 14,
     gap: 4,
     borderWidth: StyleSheet.hairlineWidth,
@@ -570,7 +570,7 @@ const useStyles = makeStyles((c) => ({
     minHeight: 48,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 24,
+    borderRadius: radii.button,
     backgroundColor: c.tint,
     alignItems: 'center',
     justifyContent: 'center',

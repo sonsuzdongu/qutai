@@ -2,6 +2,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cancelCapture, useCaptureProgress } from '../device/fullPage';
 import { t } from '../i18n';
+import { radii } from '../ui/theme';
 
 /**
  * Shown while a full-page capture scrolls the page: it catches every touch so nothing moves the
@@ -46,7 +47,7 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
     paddingRight: 8,
     paddingVertical: 8,
-    borderRadius: 22,
+    borderRadius: radii.window,
     backgroundColor: 'rgba(30,30,30,0.92)',
   },
   text: { color: '#fff', fontSize: 14, flexShrink: 1 },

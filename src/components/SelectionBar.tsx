@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Icon, IconName } from '../ui/Icon';
+import { radii } from '../ui/theme';
 
 /** icon: drawn before the label (decorative). */
 export type SelectionAction = { label: string; icon?: IconName; onPress: () => void };
@@ -40,7 +41,7 @@ const styles = StyleSheet.create({
   wrap: { position: 'absolute', left: 0, right: 0, bottom: 16, alignItems: 'center' },
   bar: {
     flexDirection: 'row',
-    borderRadius: 22,
+    borderRadius: radii.window,
     backgroundColor: '#2b2a28',
     overflow: 'hidden',
     shadowColor: '#000',

@@ -7,7 +7,7 @@ import { formatStyleScope, STYLE_SCOPE_KINDS, styleScopeForUrl, styleSite, style
 import { t, type MessageKey } from '../i18n';
 import { siteRules, SiteRuleError } from '../storage/siteRules';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { dialog } from './Dialog';
 import type { IconLine } from '../ui/Icon';
 import { WholeWordsText } from './WholeWordsText';
@@ -205,7 +205,7 @@ export function CookiesCard({ offer, dark, onShow }: { offer: CookiesOffer; dark
 }
 
 const useStyles = makeStyles((c) => ({
-  card: { backgroundColor: c.surface, borderRadius: 16, padding: 14, gap: 8, alignSelf: 'stretch' },
+  card: { ...common(c).card, padding: 14, gap: 8, alignSelf: 'stretch' },
   cardDark: { backgroundColor: '#2a2930' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   status: { flex: 1, fontSize: 14, fontWeight: '600', color: c.textSecondary },
@@ -213,7 +213,7 @@ const useStyles = makeStyles((c) => ({
   textDark: { color: '#f2f1ee' },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  primary: { flexGrow: 1, backgroundColor: c.tint, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
+  primary: { flexGrow: 1, backgroundColor: c.tint, borderRadius: radii.control, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
   primaryPressed: { opacity: 0.85 },
   primaryText: { color: c.onTint, fontSize: 15, fontWeight: '700', textAlign: 'center' },
   secondary: {
@@ -223,7 +223,7 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     gap: 6,
     backgroundColor: c.sunken,
-    borderRadius: 12,
+    borderRadius: radii.control,
     paddingVertical: 10,
     paddingHorizontal: 14,
   },

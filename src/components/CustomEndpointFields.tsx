@@ -9,7 +9,7 @@ import type { MessageKey } from '../i18n';
 import { t } from '../i18n';
 import type { Settings } from '../storage/settings';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 
@@ -388,24 +388,14 @@ const useStyles = makeStyles((c) => ({
   disabled: { opacity: 0.4 },
   textButton: { paddingHorizontal: 4, paddingVertical: 10 },
   spinner: { alignSelf: 'flex-start' },
-  input: {
-    color: c.text,
-    // Grows with large text sizes instead of clipping the text.
-    minHeight: 44,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    fontSize: 15,
-  },
+  input: common(c).input,
   option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 12 },
   optionText: { color: c.text, fontSize: 15 },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   button: {
     marginTop: 12,
     height: 44,
-    borderRadius: 10,
+    borderRadius: radii.control,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: c.surface,
@@ -417,7 +407,7 @@ const useStyles = makeStyles((c) => ({
   notice: {
     gap: 4,
     padding: 12,
-    borderRadius: 10,
+    borderRadius: radii.control,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,

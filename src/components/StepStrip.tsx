@@ -7,7 +7,7 @@ import { Icon } from '../ui/Icon';
 import { answerCardMaxHeight } from '../ui/layout';
 import type { AssistantLook } from '../ui/assistantLook';
 import { QutaiMark } from '../ui/QutaiMark';
-import { usePalette, type Palette } from '../ui/theme';
+import { usePalette, type Palette, radii } from '../ui/theme';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { GlassBack } from './AssistantGlass';
 import type { ChatItem } from './AssistantPanel';
@@ -104,7 +104,7 @@ export function StepStrip({
       ]}
     >
       <View style={[styles.strip, look === 'band' && styles.glass]}>
-        {look === 'band' ? <GlassBack radius={26} thread /> : null}
+        {look === 'band' ? <GlassBack radius={radii.sheet} thread /> : null}
         <Pressable
           onPress={onOpen}
           style={({ pressed }) => [styles.main, pressed && styles.pressed]}
@@ -199,7 +199,7 @@ export function AnswerCard({
       <View
         style={[styles.card, look === 'band' && styles.glass, { maxHeight: answerCardMaxHeight(windowHeight, bottom, insets.top) }]}
       >
-        {look === 'band' ? <GlassBack radius={20} /> : null}
+        {look === 'band' ? <GlassBack radius={radii.window} /> : null}
         <View style={styles.cardHeader}>
           <QutaiMark size={20} animate={false} />
           <Text style={styles.cardTitle} accessibilityRole="header">
@@ -288,7 +288,7 @@ export function QuestionCard({
       style={[styles.wrap, { bottom, left: 12 + insets.left, right: 12 + insets.right, opacity: grow, transform: [{ scale: grow.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }]}
     >
       <View style={[styles.card, look === 'band' && styles.glass, { maxHeight: answerCardMaxHeight(windowHeight, bottom, insets.top) }]}>
-        {look === 'band' ? <GlassBack radius={20} /> : null}
+        {look === 'band' ? <GlassBack radius={radii.window} /> : null}
         <View style={styles.cardHeader}>
           <QutaiMark size={20} animate={false} />
           <Text style={styles.cardTitle} accessibilityRole="header">
@@ -342,7 +342,7 @@ function makeStyles(p: Palette) {
       minHeight: 52,
       paddingLeft: 4,
       paddingRight: 8,
-      borderRadius: 26,
+      borderRadius: radii.sheet,
       backgroundColor: p.surface,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: p.border,
@@ -359,7 +359,7 @@ function makeStyles(p: Palette) {
       shadowOpacity: 0,
       elevation: 0,
     },
-    main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingLeft: 12, paddingRight: 6, borderRadius: 22 },
+    main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingLeft: 12, paddingRight: 6, borderRadius: radii.window },
     pressed: { backgroundColor: p.pressed },
     texts: { flex: 1 },
     line: { color: p.text, fontSize: 15 },
@@ -373,7 +373,7 @@ function makeStyles(p: Palette) {
       maxWidth: 560,
       // At most 360; less in a short window (answerCardMaxHeight).
       maxHeight: 360,
-      borderRadius: 20,
+      borderRadius: radii.window,
       backgroundColor: p.surface,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: p.border,

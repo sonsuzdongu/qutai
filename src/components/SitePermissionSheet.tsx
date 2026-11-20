@@ -3,7 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { PersonalSetting, SITE_LEVELS, SiteLevel } from '../agent/sitePolicy';
 import { t } from '../i18n';
 import { LocationSetting, MediaKind, PERMISSION_SETTINGS, PermissionSetting } from '../storage/sitePermissions';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { BottomSheet } from './BottomSheet';
@@ -267,10 +267,10 @@ const useStyles = makeStyles((c) => ({
   stop: { paddingHorizontal: 20, paddingVertical: 10, gap: 2 },
   stopText: { fontSize: 15, fontWeight: '700', color: c.danger },
   section: { fontSize: 15, fontWeight: '700', color: c.text, paddingHorizontal: 20, marginTop: 12, marginBottom: 8 },
-  segment: { flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3, marginHorizontal: 20 },
-  segmentButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 8 },
-  segmentSelected: { backgroundColor: c.surface },
-  segmentText: { fontSize: 14, color: c.textSecondary },
-  segmentTextSelected: { color: c.text, fontWeight: '700' },
+  segment: { ...common(c).segment, marginHorizontal: 20 },
+  segmentButton: common(c).segmentButton,
+  segmentSelected: common(c).segmentSelected,
+  segmentText: common(c).segmentText,
+  segmentTextSelected: common(c).segmentTextSelected,
   settingHint: { fontSize: 13, color: c.textSecondary, lineHeight: 18, paddingHorizontal: 20, marginTop: 6 },
 }));

@@ -6,7 +6,7 @@ import { WebView } from 'react-native-webview';
 import { deleteOfflineFile, readOfflinePage } from '../device/offline';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
 import { dayLabel, formatSize, hostOf } from '../i18n/format';
 import { getDb } from '../storage/db';
 import { listOfflinePages, OfflinePage, removeOfflinePage } from '../storage/offlinePages';
@@ -122,7 +122,7 @@ const useStyles = makeStyles((c) => ({
     paddingLeft: 14,
     paddingRight: 6,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: radii.control,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.separator,

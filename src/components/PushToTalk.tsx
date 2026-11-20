@@ -30,6 +30,7 @@ import { t } from '../i18n';
 import type { AssistantLook } from '../ui/assistantLook';
 import { ListeningLook } from './AssistantGlass';
 import { useReduceMotion } from '../utils/useReduceMotion';
+import { radii } from '../ui/theme';
 
 /**
  * Push-to-talk on the Qutai button: hold it, speak, lift the finger, and the words go to the conversation of the tab
@@ -569,7 +570,7 @@ const styles = StyleSheet.create({
     elevation: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    borderRadius: 16,
+    borderRadius: radii.popover,
     backgroundColor: 'rgba(30,30,30,0.94)',
     gap: 6,
     ...Platform.select({

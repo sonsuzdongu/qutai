@@ -38,7 +38,7 @@ import { formatSize } from '../i18n/format';
 import { Icon } from '../ui/Icon';
 import { isWide } from '../ui/layout';
 import { Slider } from '../ui/Slider';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii } from '../ui/theme';
 import { KeyboardAvoidingContainer, KeyboardAwareScrollView } from './KeyboardAware';
 
 /** A small square for an attachment: the image's model copy, or a document icon with the file name. */
@@ -599,7 +599,7 @@ const useStyles = makeStyles((c) => ({
     paddingVertical: 10,
     backgroundColor: '#16161a',
   },
-  panelButton: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, minWidth: 88, alignItems: 'center' },
+  panelButton: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: radii.button, minWidth: 88, alignItems: 'center' },
   panelPrimary: { backgroundColor: c.tint },
   disabled: { opacity: 0.4 },
 }));

@@ -28,7 +28,7 @@ import { t } from '../i18n';
 import { memoryErrorText } from './memoryError';
 import { plainError } from '../ai/plainError';
 import { Icon } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
 import { authenticate } from '../device/biometric';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { getDb } from '../storage/db';
@@ -544,7 +544,7 @@ const useStyles = makeStyles((c) => ({
     color: c.text,
     // Grows with large text sizes instead of clipping the text.
     minHeight: 40,
-    borderRadius: 10,
+    borderRadius: radii.control,
     paddingHorizontal: 12,
     backgroundColor: c.sunken,
     fontSize: 15,
@@ -563,7 +563,7 @@ const useStyles = makeStyles((c) => ({
   proposal: {
     gap: 8,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: radii.card,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
@@ -575,7 +575,7 @@ const useStyles = makeStyles((c) => ({
   box: {
     width: 22,
     height: 22,
-    borderRadius: 6,
+    borderRadius: radii.inner,
     borderWidth: 1.5,
     borderColor: c.border,
     alignItems: 'center',
@@ -584,7 +584,7 @@ const useStyles = makeStyles((c) => ({
   boxOn: { backgroundColor: c.tint, borderColor: c.tint },
   proposalButtons: { flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', gap: 16, marginTop: 4 },
   cancelText: { fontSize: 15, color: c.tintText },
-  applyButton: { paddingHorizontal: 16, height: 36, borderRadius: 18, backgroundColor: c.tint, justifyContent: 'center' },
+  applyButton: { paddingHorizontal: 16, height: 36, borderRadius: radii.button, backgroundColor: c.tint, justifyContent: 'center' },
   empty: { fontSize: 15, color: c.textSecondary, textAlign: 'center', marginTop: 32 },
   loading: { marginTop: 32 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12, marginBottom: 2 },
@@ -597,7 +597,7 @@ const useStyles = makeStyles((c) => ({
     paddingLeft: 14,
     paddingRight: 6,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: radii.control,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.separator,
@@ -614,7 +614,7 @@ const useStyles = makeStyles((c) => ({
     color: c.text,
     // Grows with large text sizes instead of clipping the text.
     minHeight: 38,
-    borderRadius: 10,
+    borderRadius: radii.control,
     paddingHorizontal: 12,
     backgroundColor: c.sunken,
     fontSize: 15,
@@ -648,7 +648,7 @@ const useStyles = makeStyles((c) => ({
     color: c.text,
     flex: 1,
     height: 42,
-    borderRadius: 21,
+    borderRadius: radii.button,
     paddingHorizontal: 14,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
@@ -657,7 +657,7 @@ const useStyles = makeStyles((c) => ({
   },
   addButton: {
     paddingHorizontal: 16,
-    borderRadius: 21,
+    borderRadius: radii.button,
     backgroundColor: c.tint,
     justifyContent: 'center',
   },

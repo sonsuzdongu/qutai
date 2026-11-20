@@ -3,7 +3,7 @@ import { siteKey } from '../agent/sitePolicy';
 import { t } from '../i18n';
 import { cleanScriptSites, type ScriptSite } from '../storage/settings';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii } from '../ui/theme';
 import { dialog } from './Dialog';
 
 /**
@@ -75,10 +75,10 @@ const useStyles = makeStyles((c) => ({
   label: { fontSize: 15, fontWeight: '600', color: c.text },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   warn: { color: c.danger },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: c.surface, borderRadius: 12, padding: 12 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: c.surface, borderRadius: radii.card, padding: 12 },
   flex: { flex: 1 },
   host: { fontSize: 15, color: c.text },
-  button: { backgroundColor: c.surface, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center' },
+  button: { backgroundColor: c.surface, borderRadius: radii.control, paddingVertical: 12, paddingHorizontal: 8, alignItems: 'center' },
   buttonText: { fontSize: 15, fontWeight: '600', color: c.tintText },
   pressed: { backgroundColor: c.pressed },
 }));

@@ -4,7 +4,7 @@ import { GradientButton, GradientText } from '../ui/BrandGradient';
 import { siteColor } from '../ui/siteColor';
 import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
-import { makeStyles, readableColumn } from '../ui/theme';
+import { makeStyles, readableColumn, radii, common } from '../ui/theme';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { SearchEngineId } from '../browser/search';
 import { toUrl } from '../browser/url';
@@ -284,7 +284,7 @@ const useStyles = makeStyles((c) => ({
   tileIcon: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   tileLetter: { color: c.onTint, fontSize: 22, fontWeight: '700' },
   tileTitle: { fontSize: 12, color: c.text, maxWidth: '90%' },
-  section: { backgroundColor: c.surface, borderRadius: 16, paddingVertical: 6 },
+  section: { ...common(c).card, paddingVertical: 6 },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -300,7 +300,7 @@ const useStyles = makeStyles((c) => ({
   linkLetter: { color: c.onTint, fontSize: 13, fontWeight: '700' },
   linkTitle: { fontSize: 14, color: c.text },
   linkHost: { fontSize: 12, color: c.textSecondary },
-  card: { borderRadius: 16, padding: 16, gap: 8 },
+  card: { borderRadius: radii.card, padding: 16, gap: 8 },
   cardTitle: { fontSize: 17, fontWeight: '700' },
   cardBody: { fontSize: 14, lineHeight: 20 },
 }));

@@ -20,7 +20,7 @@ import { openSettingsOrExplain } from '../device/settings';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { Radio } from '../ui/Radio';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
 
@@ -282,7 +282,7 @@ const useStyles = makeStyles((c) => ({
   content: { padding: 16, gap: 12, maxWidth: 680, alignSelf: 'center', width: '100%' },
   label: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 4 },
   hint: { color: c.textSecondary, fontSize: 13, lineHeight: 18 },
-  card: { backgroundColor: c.surface, borderRadius: 14, overflow: 'hidden' },
+  card: { ...common(c).card, overflow: 'hidden' },
   cardText: { padding: 14, paddingBottom: 4, fontSize: 14, lineHeight: 20 },
   option: {
     flexDirection: 'row',
@@ -306,7 +306,7 @@ const useStyles = makeStyles((c) => ({
     alignSelf: 'flex-start',
     paddingHorizontal: 14,
     height: 40,
-    borderRadius: 20,
+    borderRadius: radii.button,
     borderWidth: 1.5,
     borderColor: c.tint,
   },

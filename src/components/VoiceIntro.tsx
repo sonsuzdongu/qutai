@@ -37,7 +37,7 @@ import { addMemory, deleteMemory, listMemories, updateMemory } from '../storage/
 import { GradientButton } from '../ui/BrandGradient';
 import { Icon, type IconName } from '../ui/Icon';
 import { isShort } from '../ui/layout';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { dialog } from './Dialog';
@@ -1022,7 +1022,7 @@ const useStyles = makeStyles((c) => ({
   status: { color: c.tintText, fontSize: 15, fontWeight: '600', textAlign: 'center' },
   notice: { color: c.text, fontSize: 14.5, lineHeight: 20 },
   counter: { color: c.textSecondary, fontSize: 13, fontWeight: '600' },
-  card: { backgroundColor: c.surface, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 12, gap: 6 },
+  card: { ...common(c).card, paddingHorizontal: 16, paddingVertical: 12, gap: 6 },
   cardText: { color: c.text, fontSize: 15, lineHeight: 21 },
   privacy: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   choice: {
@@ -1032,7 +1032,7 @@ const useStyles = makeStyles((c) => ({
     minHeight: 72,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 16,
+    borderRadius: radii.card,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
@@ -1052,7 +1052,7 @@ const useStyles = makeStyles((c) => ({
   transcriptInput: {
     color: c.text,
     minHeight: 160,
-    borderRadius: 12,
+    borderRadius: radii.control,
     paddingHorizontal: 14,
     paddingVertical: 12,
     backgroundColor: c.surface,
@@ -1068,7 +1068,7 @@ const useStyles = makeStyles((c) => ({
     gap: 8,
     paddingHorizontal: 14,
     minHeight: 40,
-    borderRadius: 20,
+    borderRadius: radii.button,
     borderWidth: 1.5,
     borderColor: c.tint,
   },
@@ -1078,7 +1078,7 @@ const useStyles = makeStyles((c) => ({
   speakerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   speakerText: { flex: 1, color: c.text, fontSize: 15 },
   exchange: { gap: 8 },
-  bubble: { maxWidth: '88%', borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
+  bubble: { maxWidth: '88%', borderRadius: radii.popover, paddingHorizontal: 14, paddingVertical: 10 },
   bubbleQutai: { alignSelf: 'flex-start', backgroundColor: c.surface, borderBottomLeftRadius: 6 },
   bubbleYou: { alignSelf: 'flex-end', backgroundColor: c.tint, borderBottomRightRadius: 6 },
   bubbleText: { color: c.text, fontSize: 16, lineHeight: 22 },
@@ -1102,7 +1102,7 @@ const useStyles = makeStyles((c) => ({
     color: c.text,
     minHeight: 46,
     maxHeight: 140,
-    borderRadius: 12,
+    borderRadius: radii.control,
     paddingHorizontal: 14,
     paddingVertical: 10,
     backgroundColor: c.surface,
@@ -1112,7 +1112,7 @@ const useStyles = makeStyles((c) => ({
   },
   smallMic: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: c.tint },
   reviewRow: {
-    borderRadius: 12,
+    borderRadius: radii.control,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.separator,
@@ -1137,7 +1137,7 @@ const useStyles = makeStyles((c) => ({
     width: '100%',
     alignSelf: 'center',
   },
-  primary: { height: 52, borderRadius: 26 },
+  primary: { height: 52, borderRadius: radii.button },
   primaryText: { fontSize: 17 },
   secondary: { flexDirection: 'row', gap: 8, alignItems: 'center', justifyContent: 'center', minHeight: 44 },
   secondaryText: { color: c.tintText, fontSize: 16, fontWeight: '600', textAlign: 'center' },

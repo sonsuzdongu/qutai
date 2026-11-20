@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { radii } from '../ui/theme';
 
 const VISIBLE_MS = 2200;
 /** A toast with a button stays longer, so there is time to reach it. */
@@ -82,13 +83,13 @@ const styles = StyleSheet.create({
     maxWidth: '86%',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: radii.window,
     backgroundColor: 'rgba(30,30,30,0.92)',
   },
   withAction: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingRight: 8 },
   text: { color: '#fff', fontSize: 14, textAlign: 'center' },
   textWithAction: { flexShrink: 1, textAlign: 'left' },
-  action: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  action: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radii.control },
   pressed: { opacity: 0.6 },
   actionText: { color: '#8ab4f8', fontSize: 14, fontWeight: '600' },
 });

@@ -7,7 +7,7 @@ import { hasNativeBlocking } from '../device/contentBlocker';
 import { t } from '../i18n';
 import { formatDateTime, formatNumber } from '../i18n/format';
 import { Icon } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
@@ -255,7 +255,7 @@ const useStyles = makeStyles((c) => ({
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   status: { fontSize: 14, color: c.text, fontWeight: '600' },
   statusOn: { color: c.tintText },
-  card: { backgroundColor: c.surface, borderRadius: 14, padding: 14, gap: 4 },
+  card: { ...common(c).card, padding: 14, gap: 4 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   name: { fontSize: 15, fontWeight: '600', color: c.text },
   error: { fontSize: 13, color: c.danger, lineHeight: 18 },
@@ -263,7 +263,7 @@ const useStyles = makeStyles((c) => ({
   link: { fontSize: 13, color: c.tintText, fontWeight: '600' },
   remove: { paddingHorizontal: 4 },
   buttons: { gap: 8, marginTop: 6 },
-  button: { backgroundColor: c.surface, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  button: { backgroundColor: c.surface, borderRadius: radii.control, paddingVertical: 12, alignItems: 'center' },
   buttonText: { fontSize: 15, fontWeight: '600', color: c.tintText },
   danger: { color: c.danger },
   pressed: { backgroundColor: c.pressed },

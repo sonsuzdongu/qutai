@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet, useColorScheme, type TextStyle, type ViewStyle } from 'react-native';
 
 /**
  * Semantic colours for both appearances. Text pairs are chosen for at least 4.5:1 contrast
@@ -94,6 +94,87 @@ export function makeStyles<S extends StyleObject>(build: (c: Palette) => S & Sty
       return (light ??= StyleSheet.create(build(palette)));
     }, [palette]);
   };
+}
+
+/**
+ * Corner radii of everything that opens inside Qutai and of its buttons (design record UI-27): change a value here and
+ * every window, card and button of that kind follows. Bigger surfaces stay rounder than what sits on them. Things round
+ * on purpose (circular icon buttons, avatars, the Qutai button, switches, radios, progress lines, dots, chips) keep
+ * `size / 2` and do not use these; nor do web content, page pictures and tab thumbnails.
+ */
+export const radii = {
+  /** The assistant's glass sheet and the working strip over the page (was 26). */
+  sheet: 18,
+  /** Windows: dialogs, bottom sheets, the side panel, the answer card over the page, floating bars, toasts (was 16 to 22). */
+  window: 14,
+  /** Menus, the address bar's suggestion list, chat bubbles and the voice bubble (was 14 to 18). */
+  popover: 12,
+  /** Cards and grouped lists inside a window or a screen (was 14 to 16). */
+  card: 12,
+  /** Main text buttons that were capsules, 40 to 52 pt tall (was 20 to 26). */
+  button: 14,
+  /** Smaller buttons and controls: secondary buttons, inputs, notices, segmented controls, menu icon buttons (was 10 to 12). */
+  control: 8,
+  /** What sits inside a control: a segment's selected part (3 pt in from an 8 pt corner), a checkbox (was 6 to 8). */
+  inner: 5,
+} as const;
+
+/**
+ * Style pieces several screens repeat, so a change to how a card, a notice, a text field or a segmented control looks is
+ * one edit here. Spread one into a style and override what that screen does differently:
+ * `notice: { ...common(c).notice, marginTop: 8 }`. Values are the ones most screens used before (design record UI-27).
+ */
+export function common(c: Palette) {
+  const card: ViewStyle = { backgroundColor: c.surface, borderRadius: radii.card };
+  /** A grey box with a short message in it (the text style is on the box itself). */
+  const notice: TextStyle = {
+    fontSize: 14,
+    lineHeight: 19,
+    color: c.text,
+    backgroundColor: c.sunken,
+    borderRadius: radii.control,
+    padding: 12,
+  };
+  /** A grey box holding an icon beside its text. */
+  const noticeRow: ViewStyle = {
+    flexDirection: 'row',
+    gap: 10,
+    backgroundColor: c.sunken,
+    borderRadius: radii.control,
+    padding: 12,
+  };
+  /** A one-line text field; it grows with large text sizes instead of clipping the text. */
+  const input: TextStyle = {
+    color: c.text,
+    minHeight: 44,
+    borderRadius: radii.control,
+    paddingHorizontal: 12,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    fontSize: 15,
+  };
+  const segment: ViewStyle = { flexDirection: 'row', backgroundColor: c.sunken, borderRadius: radii.control, padding: 3 };
+  const segmentButton: ViewStyle = {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: radii.inner,
+  };
+  const segmentSelected: ViewStyle = { backgroundColor: c.surface };
+  const segmentText: TextStyle = { fontSize: 14, color: c.textSecondary };
+  const segmentTextSelected: TextStyle = { color: c.text, fontWeight: '700' };
+  const checkbox: ViewStyle = {
+    width: 24,
+    height: 24,
+    borderRadius: radii.inner,
+    borderWidth: 2,
+    borderColor: c.textSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  };
+  return { card, notice, noticeRow, input, segment, segmentButton, segmentSelected, segmentText, segmentTextSelected, checkbox };
 }
 
 /**

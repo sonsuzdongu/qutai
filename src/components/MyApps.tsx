@@ -10,7 +10,7 @@ import { bump } from '../device/haptics';
 import { t } from '../i18n';
 import { AppModal } from '../ui/AppModal';
 import { Icon, type IconName } from '../ui/Icon';
-import { makeStyles, readableColumn } from '../ui/theme';
+import { makeStyles, readableColumn, radii, common } from '../ui/theme';
 import { ActionSheet } from './ActionSheet';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
@@ -233,10 +233,10 @@ const useStyles = makeStyles((c) => ({
   section: { gap: 10 },
   sectionTitle: { fontSize: 13, fontWeight: '600', color: c.textSecondary, paddingHorizontal: 4 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 14 },
-  tile: { width: '25%', minWidth: 76, alignItems: 'center', gap: 6, paddingVertical: 4, borderRadius: 12 },
+  tile: { width: '25%', minWidth: 76, alignItems: 'center', gap: 6, paddingVertical: 4, borderRadius: radii.control },
   tileTitle: { fontSize: 12, color: c.text, textAlign: 'center', maxWidth: '92%' },
   pressed: { backgroundColor: c.pressed },
-  empty: { backgroundColor: c.surface, borderRadius: 16, padding: 16, gap: 8 },
+  empty: { ...common(c).card, padding: 16, gap: 8 },
   emptyRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   emptyIcon: { color: c.tintText },
   emptyTitle: { flex: 1, fontSize: 16, fontWeight: '700', color: c.text },
@@ -247,7 +247,7 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     gap: 6,
     backgroundColor: c.sunken,
-    borderRadius: 12,
+    borderRadius: radii.control,
     paddingVertical: 10,
     paddingHorizontal: 14,
     marginTop: 4,

@@ -5,7 +5,7 @@ import { useKeyboardHeight } from '../utils/useKeyboardHeight';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
-import { darkPalette, lightPalette, makeStyles } from '../ui/theme';
+import { darkPalette, lightPalette, makeStyles, radii } from '../ui/theme';
 import { DialogHost } from './Dialog';
 import { menuFrame } from './menuFrame';
 import { WholeWordsText } from './WholeWordsText';
@@ -163,7 +163,7 @@ const useStyles = makeStyles((c) => ({
     position: 'absolute',
     minWidth: 230,
     paddingVertical: 6,
-    borderRadius: 14,
+    borderRadius: radii.popover,
     shadowColor: '#000',
     shadowOpacity: 0.18,
     shadowRadius: 14,
@@ -187,7 +187,7 @@ const useStyles = makeStyles((c) => ({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: c.separator,
   },
-  iconButton: { width: 48, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 10 },
+  iconButton: { width: 48, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: radii.control },
 }));
 
 const light = StyleSheet.create({

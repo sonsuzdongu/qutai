@@ -8,7 +8,7 @@ import { dayLabel, formatPercent, formatSize } from '../i18n/format';
 import type { DownloadItem, DownloadStore } from '../storage/downloads';
 import { isActive } from '../storage/downloads';
 import { Icon, IconName } from '../ui/Icon';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost, dialog } from './Dialog';
@@ -379,7 +379,7 @@ const useStyles = makeStyles((c) => ({
     fontSize: 15,
     color: c.text,
     backgroundColor: c.sunken,
-    borderRadius: 10,
+    borderRadius: radii.control,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
@@ -407,7 +407,7 @@ const useStyles = makeStyles((c) => ({
     paddingLeft: 12,
     paddingRight: 4,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: radii.control,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.separator,

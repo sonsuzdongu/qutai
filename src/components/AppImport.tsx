@@ -21,7 +21,7 @@ import { formatSize } from '../i18n/format';
 import { AppModal } from '../ui/AppModal';
 import { Icon } from '../ui/Icon';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii } from '../ui/theme';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost, dialog } from './Dialog';
 import { ErrorDetails } from './ErrorDetails';
@@ -336,20 +336,20 @@ const useStyles = makeStyles((c) => ({
   section: { fontSize: 13, fontWeight: '700', color: c.textSecondary, marginTop: 8, textTransform: 'uppercase' },
   line: { fontSize: 15, lineHeight: 21, color: c.text },
   problem: { fontSize: 14, lineHeight: 20, color: c.danger },
-  warning: { flexDirection: 'row', gap: 10, backgroundColor: c.surface, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: c.danger },
+  warning: { flexDirection: 'row', gap: 10, backgroundColor: c.surface, borderRadius: radii.control, padding: 12, borderWidth: 1, borderColor: c.danger },
   warningText: { flex: 1, fontSize: 14, lineHeight: 20, color: c.text },
-  fileRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingVertical: 8, paddingHorizontal: 4, borderRadius: 8 },
+  fileRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44, paddingVertical: 8, paddingHorizontal: 4, borderRadius: radii.control },
   fileName: { flex: 1, fontSize: 15, color: c.tintText, fontFamily: MONO },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  choice: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', padding: 12, borderRadius: 12, backgroundColor: c.surface },
+  choice: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', padding: 12, borderRadius: radii.card, backgroundColor: c.surface },
   choiceSelected: { borderWidth: 1, borderColor: c.tint },
   details: { marginLeft: 0 },
   code: { padding: 12 },
   codeNote: { paddingHorizontal: 16 },
   codeText: { fontSize: 12, lineHeight: 17, color: c.text, fontFamily: MONO },
   pressed: { opacity: 0.7 },
-  primary: { backgroundColor: c.tint, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
+  primary: { backgroundColor: c.tint, borderRadius: radii.control, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
   primaryText: { color: c.onTint, fontSize: 16, fontWeight: '600', textAlign: 'center' },
-  secondary: { backgroundColor: c.sunken, borderRadius: 12, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
+  secondary: { backgroundColor: c.sunken, borderRadius: radii.control, paddingVertical: 12, paddingHorizontal: 16, alignItems: 'center' },
   secondaryText: { color: c.tintText, fontSize: 16, fontWeight: '600', textAlign: 'center' },
 }));

@@ -1,7 +1,7 @@
 import { Component, ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { t } from '../i18n';
-import { usePalette } from '../ui/theme';
+import { usePalette, radii } from '../ui/theme';
 
 type Props = { children: ReactNode; /** Fill the screen (whole app) rather than the area it guards. */ full?: boolean };
 
@@ -44,6 +44,6 @@ const styles = StyleSheet.create({
   full: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   title: { fontSize: 18, fontWeight: '700', textAlign: 'center' },
   body: { fontSize: 15, lineHeight: 21, textAlign: 'center', maxWidth: 360 },
-  button: { marginTop: 8, height: 44, paddingHorizontal: 22, borderRadius: 22, justifyContent: 'center' },
+  button: { marginTop: 8, height: 44, paddingHorizontal: 22, borderRadius: radii.button, justifyContent: 'center' },
   buttonText: { fontSize: 16, fontWeight: '600' },
 });

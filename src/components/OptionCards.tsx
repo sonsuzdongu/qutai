@@ -5,7 +5,7 @@ import { cardLabel, type OptionCard } from '../chat/optionCards';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { siteColor } from '../ui/siteColor';
-import { usePalette } from '../ui/theme';
+import { usePalette, radii } from '../ui/theme';
 import { useReduceMotion } from '../utils/useReduceMotion';
 
 /**
@@ -285,7 +285,7 @@ function makeStyles(c: Colors) {
     row: { gap: 10, paddingRight: 12, paddingBottom: 4, alignItems: 'stretch' },
     card: {
       flex: 1,
-      borderRadius: 16,
+      borderRadius: radii.card,
       backgroundColor: c.surface,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: c.border,

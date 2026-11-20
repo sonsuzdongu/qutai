@@ -15,7 +15,7 @@ import { offeredModels } from '../credits/rules';
 import { usesTiers } from '../credits/tiers';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii } from '../ui/theme';
 import { openBuyCredits } from './BuyCredits';
 import { askCreditsDisclosure } from './CreditsDisclosure';
 import { dialog } from './Dialog';
@@ -127,7 +127,7 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     gap: 8,
     height: 42,
-    borderRadius: 21,
+    borderRadius: radii.button,
     borderWidth: 1.5,
     borderColor: c.tint,
   },

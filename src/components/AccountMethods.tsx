@@ -19,7 +19,7 @@ import { creditsStore, creditsText, refreshCredits } from '../credits';
 import { t } from '../i18n';
 import { formatList } from '../i18n/format';
 import { Icon, type IconLine } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { methodLine, methodsOf, providerLabel, providersText } from './accountLabels';
 import { dialog } from './Dialog';
 
@@ -390,7 +390,7 @@ const useStyles = makeStyles((c) => ({
   remove: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   section: { gap: 8, marginTop: 8 },
   sectionTitle: { color: c.text, fontSize: 15, fontWeight: '600' },
-  notice: { fontSize: 14, lineHeight: 19, color: c.text, backgroundColor: c.sunken, borderRadius: 10, padding: 12 },
+  notice: common(c).notice,
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     minHeight: 40,
@@ -407,7 +407,7 @@ const useStyles = makeStyles((c) => ({
   button: {
     minHeight: 46,
     paddingHorizontal: 16,
-    borderRadius: 23,
+    borderRadius: radii.button,
     backgroundColor: c.surface,
     borderWidth: 1,
     borderColor: c.border,

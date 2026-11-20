@@ -6,7 +6,7 @@ import type { LedgerEntry, LedgerKind } from '../credits/types';
 import { t, type MessageKey } from '../i18n';
 import { formatDate } from '../i18n/format';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { openBuyCredits } from './BuyCredits';
 
 const KIND_LABEL: Record<LedgerKind, MessageKey> = {
@@ -109,12 +109,12 @@ function Row({ entry, last }: { entry: LedgerEntry; last: boolean }) {
 }
 
 const useStyles = makeStyles((c) => ({
-  card: { backgroundColor: c.surface, borderRadius: 14, padding: 14, gap: 6 },
+  card: { ...common(c).card, padding: 14, gap: 6 },
   label: { color: c.textSecondary, fontSize: 13, fontWeight: '600' },
   balance: { color: c.text, fontSize: 28, fontWeight: '700' },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   section: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 12 },
-  notice: { fontSize: 14, lineHeight: 19, color: c.text, backgroundColor: c.sunken, borderRadius: 10, padding: 12 },
+  notice: common(c).notice,
   link: { color: c.tintText, fontWeight: '600' },
   button: {
     flexDirection: 'row',
@@ -122,12 +122,12 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     gap: 8,
     height: 42,
-    borderRadius: 21,
+    borderRadius: radii.button,
     marginTop: 6,
     backgroundColor: c.sunken,
   },
   buttonText: { color: c.text, fontSize: 15, fontWeight: '600' },
-  list: { backgroundColor: c.surface, borderRadius: 14, paddingHorizontal: 14 },
+  list: { ...common(c).card, paddingHorizontal: 14 },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, gap: 12 },
   rowLine: { borderBottomWidth: 1, borderBottomColor: c.border },
   rowBody: { flex: 1, gap: 2 },

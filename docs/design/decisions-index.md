@@ -818,6 +818,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-24` | Card contents checked in the app: https only, the link's own host shown, plain cut text, at most 8, pictures only from the page, prices only when read; read_page adds `prices=` to cut links | Default | 2026-11-20 |
 | `UI-25` | Card pictures fetched without cookies or Referer, ≤ 600 KB, JPEG/PNG/GIF/WebP by their bytes, ≤ 24 MP, memory only; ad and tracker hosts skipped while blocking is on | Default | 2026-11-20 |
 | `UI-26` | Incognito: card pictures wait for "Show images" | Default (owner to confirm) | 2026-11-20 |
+| `UI-27` | Corner radii from one token set (`radii` in theme.ts): windows 14, sheet 18, menus and bubbles 12, cards 12, main buttons 14, controls 8, inner 5; circles, chips, browser chrome fields and web content stay as they were; repeated style pieces from `common()` | Owner (lower); Default (values) | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

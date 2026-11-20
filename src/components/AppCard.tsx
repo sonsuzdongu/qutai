@@ -2,7 +2,7 @@ import { Pressable, Text, View } from 'react-native';
 import type { AppOffer } from '../agent/appTool';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { WholeWordsText } from './WholeWordsText';
 
 /** The chat's card for an app the assistant made or changed: what happened, Open, and Undo for a change. */
@@ -48,14 +48,14 @@ export function AppCard({ offer, dark, onOpen, onUndo }: { offer: AppOffer; dark
 }
 
 const useStyles = makeStyles((c) => ({
-  card: { backgroundColor: c.surface, borderRadius: 16, padding: 14, gap: 8, alignSelf: 'stretch' },
+  card: { ...common(c).card, padding: 14, gap: 8, alignSelf: 'stretch' },
   cardDark: { backgroundColor: '#2a2930' },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   status: { flex: 1, fontSize: 15, fontWeight: '600', color: c.text },
   text: { fontSize: 14, color: c.textSecondary, lineHeight: 20 },
   textDark: { color: '#f2f1ee' },
   buttons: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  primary: { flexGrow: 1, backgroundColor: c.tint, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
+  primary: { flexGrow: 1, backgroundColor: c.tint, borderRadius: radii.control, paddingVertical: 10, paddingHorizontal: 14, alignItems: 'center' },
   primaryText: { color: c.onTint, fontSize: 15, fontWeight: '600', textAlign: 'center' },
   secondary: {
     flexGrow: 1,
@@ -64,7 +64,7 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     gap: 6,
     backgroundColor: c.sunken,
-    borderRadius: 12,
+    borderRadius: radii.control,
     paddingVertical: 10,
     paddingHorizontal: 14,
   },

@@ -2,7 +2,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import type { LoadError, LoadErrorKind } from '../browser/navigation';
 import { t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii } from '../ui/theme';
 
 const ICONS: Record<LoadErrorKind, IconName> = {
   offline: 'offline',
@@ -126,7 +126,7 @@ const useStyles = makeStyles((c) => ({
   lightText: { color: '#f2f1f5' },
   dimText: { color: DIM_INCOGNITO },
   url: { fontSize: 12, color: c.textSecondary, textAlign: 'center' },
-  primary: { marginTop: 10, backgroundColor: c.tint, borderRadius: 20, paddingHorizontal: 22, paddingVertical: 10 },
+  primary: { marginTop: 10, backgroundColor: c.tint, borderRadius: radii.button, paddingHorizontal: 22, paddingVertical: 10 },
   primaryText: { color: c.onTint, fontSize: 15, fontWeight: '600' },
   secondary: { paddingHorizontal: 16, paddingVertical: 10 },
   secondaryText: { color: c.tintText, fontSize: 15, fontWeight: '600', textAlign: 'center' },

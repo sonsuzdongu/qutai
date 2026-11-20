@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProvider } from '../ai/providers';
@@ -18,7 +18,7 @@ import { authenticate } from '../device/biometric';
 import { MessageKey, t } from '../i18n';
 import { formatDateTime, formatList, formatPercent, formatSize } from '../i18n/format';
 import { appsDataSize } from '../apps/appStore';
-import { makeStyles, readableColumn, usePalette } from '../ui/theme';
+import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -522,18 +522,8 @@ const useStyles = makeStyles((c) => ({
   texts: { flex: 1, gap: 2 },
   option: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
   showRow: { alignSelf: 'flex-start' },
-  input: {
-    color: c.text,
-    // Grows with large text sizes instead of clipping the text.
-    minHeight: 44,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    fontSize: 15,
-  },
-  card: { backgroundColor: c.surface, borderRadius: 14, padding: 14, gap: 6 },
+  input: common(c).input,
+  card: { ...common(c).card, padding: 14, gap: 6 },
   summaryLine: { fontSize: 15, color: c.text },
   progress: {
     flexDirection: 'row',
@@ -546,7 +536,7 @@ const useStyles = makeStyles((c) => ({
   button: {
     marginTop: 12,
     height: 48,
-    borderRadius: 24,
+    borderRadius: radii.button,
     backgroundColor: c.tint,
     alignItems: 'center',
     justifyContent: 'center',

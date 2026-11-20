@@ -12,7 +12,7 @@ import {
 import { openSettingsOrExplain } from '../device/settings';
 import { MessageKey, t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { CalendarChoiceScreen } from './CalendarChoiceScreen';
 
@@ -171,7 +171,7 @@ function Row({
 
 const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
-  card: { backgroundColor: c.surface, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 4 },
+  card: { ...common(c).card, paddingHorizontal: 16, paddingVertical: 4 },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 12 },
   icon: {
     width: 36,

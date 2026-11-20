@@ -3,7 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
-import { makeStyles, readableColumn } from '../ui/theme';
+import { makeStyles, readableColumn, radii, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { ClearOptions } from '../storage/clearData';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -104,17 +104,17 @@ const useStyles = makeStyles((c) => ({
   content: { ...readableColumn, padding: 16, gap: 12 },
   label: { fontSize: 15, fontWeight: '600', color: c.text },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
-  segment: { flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
-  segmentButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, paddingHorizontal: 2, borderRadius: 8 },
-  segmentSelected: { backgroundColor: c.surface },
-  segmentText: { fontSize: 13, color: c.textSecondary },
-  segmentTextSelected: { color: c.text, fontWeight: '700' },
+  segment: common(c).segment,
+  segmentButton: { ...common(c).segmentButton, paddingHorizontal: 2 },
+  segmentSelected: common(c).segmentSelected,
+  segmentText: { ...common(c).segmentText, fontSize: 13 },
+  segmentTextSelected: common(c).segmentTextSelected,
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   texts: { flex: 1, gap: 2 },
   button: {
     marginTop: 12,
     height: 48,
-    borderRadius: 24,
+    borderRadius: radii.button,
     backgroundColor: c.dangerFill,
     alignItems: 'center',
     justifyContent: 'center',

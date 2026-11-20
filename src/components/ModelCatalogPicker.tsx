@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import { CatalogModel, searchCatalog } from '../ai/openrouterCatalog';
 import { Catalog, getCatalog, loadCatalog, onCatalogChange, refreshCatalog } from '../ai/openrouterModels';
 import { t } from '../i18n';
 import { plainError } from '../ai/plainError';
 import { formatDateTime, formatNumber } from '../i18n/format';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 
 /** Rows shown at once; the rest are reached by searching. */
@@ -145,17 +145,7 @@ const useStyles = makeStyles((c) => ({
   status: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   error: { fontSize: 13, color: c.danger, lineHeight: 18 },
-  input: {
-    color: c.text,
-    // Grows with large text sizes instead of clipping the text.
-    minHeight: 44,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    fontSize: 15,
-  },
+  input: common(c).input,
   option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, gap: 12 },
   optionBody: { flex: 1 },
   optionText: { color: c.text, fontSize: 15 },

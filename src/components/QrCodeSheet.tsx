@@ -2,7 +2,7 @@ import type { ComponentRef } from 'react';
 import { memo, useMemo, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { t } from '../i18n';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, radii } from '../ui/theme';
 import { qrMatrix } from '../device/qr';
 import { BottomSheet } from './BottomSheet';
 
@@ -78,14 +78,14 @@ const useStyles = makeStyles((c) => ({
   content: { paddingHorizontal: 20, alignItems: 'center', gap: 14 },
   title: { fontSize: 17, fontWeight: '700', color: c.text },
   // Always white: scanners need a light margin around the code, in dark mode and in the shared image too.
-  code: { padding: 16, backgroundColor: '#ffffff', borderRadius: 12 },
+  code: { padding: 16, backgroundColor: '#ffffff', borderRadius: radii.card },
   row: { flexDirection: 'row' },
   url: { fontSize: 13, color: c.textSecondary, textAlign: 'center' },
   buttons: { flexDirection: 'row', gap: 10, alignSelf: 'stretch' },
   button: {
     flex: 1,
     height: 44,
-    borderRadius: 22,
+    borderRadius: radii.button,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,

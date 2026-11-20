@@ -11,7 +11,7 @@ import { purchaseFlow, purchaseStore, storeName } from '../purchases';
 import { packOffers, type BuyResult, type Pack, type PackOffer } from '../purchases/flow';
 import type { StoreProduct } from '../purchases/types';
 import { Icon, type IconName } from '../ui/Icon';
-import { makeStyles, usePalette } from '../ui/theme';
+import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { DialogHost } from './Dialog';
 import { LegalScreen } from './LegalScreen';
 
@@ -376,15 +376,15 @@ const useStyles = makeStyles((c) => ({
   title: { color: c.text, fontSize: 20, fontWeight: '700', flexShrink: 1 },
   content: { paddingHorizontal: 20, paddingBottom: 32, gap: 12, maxWidth: 560, width: '100%', alignSelf: 'center' },
   flex: { flex: 1 },
-  card: { backgroundColor: c.surface, borderRadius: 16, padding: 16, gap: 6 },
+  card: { ...common(c).card, padding: 16, gap: 6 },
   label: { color: c.textSecondary, fontSize: 13, fontWeight: '600' },
   balanceRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   balance: { color: c.text, fontSize: 30, fontWeight: '700' },
   hint: { fontSize: 13, color: c.textSecondary, lineHeight: 18 },
   section: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 8 },
-  notice: { fontSize: 14, lineHeight: 19, color: c.text, backgroundColor: c.sunken, borderRadius: 10, padding: 12 },
+  notice: common(c).notice,
   warnText: { color: c.danger },
-  status: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderRadius: 12, padding: 12, backgroundColor: c.sunken },
+  status: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderRadius: radii.control, padding: 12, backgroundColor: c.sunken },
   statusOk: { borderWidth: 1, borderColor: OK_GREEN },
   statusWarn: { borderWidth: 1, borderColor: c.danger },
   testMode: { borderWidth: 1, borderColor: c.border },
@@ -395,7 +395,7 @@ const useStyles = makeStyles((c) => ({
     alignItems: 'center',
     gap: 12,
     backgroundColor: c.surface,
-    borderRadius: 14,
+    borderRadius: radii.card,
     padding: 14,
   },
   packIcon: {
@@ -411,7 +411,7 @@ const useStyles = makeStyles((c) => ({
     minWidth: 96,
     height: 40,
     paddingHorizontal: 16,
-    borderRadius: 20,
+    borderRadius: radii.button,
     backgroundColor: c.tint,
     alignItems: 'center',
     justifyContent: 'center',
@@ -423,7 +423,7 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     gap: 8,
     height: 44,
-    borderRadius: 22,
+    borderRadius: radii.button,
     borderWidth: 1,
     borderColor: c.border,
     backgroundColor: c.surface,

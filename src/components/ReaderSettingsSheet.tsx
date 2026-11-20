@@ -3,7 +3,7 @@ import { READER_COLORS, READER_FONTS, READER_THEMES, ReaderFont, ReaderTheme } f
 import { t } from '../i18n';
 import { formatPercent } from '../i18n/format';
 import { clampTextZoom, TEXT_ZOOM_MAX, TEXT_ZOOM_MIN } from '../storage/settings';
-import { makeStyles } from '../ui/theme';
+import { makeStyles, radii, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { BottomSheet } from './BottomSheet';
 import { WholeWordsText } from './WholeWordsText';
@@ -148,7 +148,7 @@ const useStyles = makeStyles((c) => ({
   swatch: {
     flex: 1,
     minHeight: 44,
-    borderRadius: 10,
+    borderRadius: radii.control,
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
@@ -157,17 +157,17 @@ const useStyles = makeStyles((c) => ({
   swatchAuto: { backgroundColor: c.surface, borderColor: c.border },
   swatchSelected: { borderWidth: 2, borderColor: c.tint },
   swatchText: { fontSize: 14, fontWeight: '600', color: c.text },
-  segment: { flexDirection: 'row', backgroundColor: c.sunken, borderRadius: 10, padding: 3 },
-  segmentButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: 8, borderRadius: 8 },
-  segmentSelected: { backgroundColor: c.surface },
-  segmentText: { fontSize: 15, color: c.textSecondary },
-  segmentTextSelected: { color: c.text, fontWeight: '700' },
+  segment: common(c).segment,
+  segmentButton: common(c).segmentButton,
+  segmentSelected: common(c).segmentSelected,
+  segmentText: { ...common(c).segmentText, fontSize: 15 },
+  segmentTextSelected: common(c).segmentTextSelected,
   serif: { fontFamily: Platform.OS === 'ios' ? 'Georgia' : 'serif' },
   controls: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   step: {
     width: 56,
     height: 44,
-    borderRadius: 12,
+    borderRadius: radii.control,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
