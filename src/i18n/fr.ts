@@ -1300,8 +1300,10 @@ export const fr: Record<keyof typeof en, string> = {
   'backup.notIncluded': 'Non inclus : téléchargements et pages enregistrées (trop volumineux), fichiers en cache et données des sites.',
   'backup.password': 'Mot de passe',
   'backup.repeatPassword': 'Confirmer le mot de passe',
-  'backup.showPassword': 'Afficher le mot de passe',
-  'backup.hidePassword': 'Masquer le mot de passe',
+  'password.show': 'Afficher le mot de passe',
+  'password.hide': 'Masquer le mot de passe',
+  'password.shown': 'Mot de passe affiché',
+  'password.hidden': 'Mot de passe masqué',
   'backup.passwordMin': 'Au moins {min} caractères.',
   'backup.passwordMismatch': 'Les mots de passe ne correspondent pas.',
   'backup.passwordWarning':

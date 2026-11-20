@@ -1297,8 +1297,10 @@ export const es: Record<keyof typeof en, string> = {
   'backup.notIncluded': 'No se incluyen: descargas y páginas guardadas (demasiado grandes), archivos en caché y datos de sitios.',
   'backup.password': 'Contraseña',
   'backup.repeatPassword': 'Repetir contraseña',
-  'backup.showPassword': 'Mostrar contraseña',
-  'backup.hidePassword': 'Ocultar contraseña',
+  'password.show': 'Mostrar contraseña',
+  'password.hide': 'Ocultar contraseña',
+  'password.shown': 'Contraseña visible',
+  'password.hidden': 'Contraseña oculta',
   'backup.passwordMin': 'Al menos {min} caracteres.',
   'backup.passwordMismatch': 'Las contraseñas no coinciden.',
   'backup.passwordWarning':

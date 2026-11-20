@@ -1290,8 +1290,10 @@ export const tr: Record<keyof typeof en, string> = {
   'backup.notIncluded': 'Dahil değil: indirmeler ve kaydedilen sayfalar (çok büyük), önbellek dosyaları ve site verileri.',
   'backup.password': 'Parola',
   'backup.repeatPassword': 'Parolayı tekrarlayın',
-  'backup.showPassword': 'Parolayı göster',
-  'backup.hidePassword': 'Parolayı gizle',
+  'password.show': 'Parolayı göster',
+  'password.hide': 'Parolayı gizle',
+  'password.shown': 'Parola görünüyor',
+  'password.hidden': 'Parola gizli',
   'backup.passwordMin': 'En az {min} karakter.',
   'backup.passwordMismatch': 'Parolalar eşleşmiyor.',
   'backup.passwordWarning':

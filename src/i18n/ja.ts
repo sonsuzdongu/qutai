@@ -1301,8 +1301,10 @@ export const ja: Record<keyof typeof en, string> = {
   'backup.notIncluded': '含まれないもの: ダウンロードと保存したページ（サイズが大きいため）、キャッシュされたファイルとサイトデータ。',
   'backup.password': 'パスワード',
   'backup.repeatPassword': 'パスワード（確認）',
-  'backup.showPassword': 'パスワードを表示',
-  'backup.hidePassword': 'パスワードを非表示',
+  'password.show': 'パスワードを表示',
+  'password.hide': 'パスワードを非表示',
+  'password.shown': 'パスワードを表示しました',
+  'password.hidden': 'パスワードを非表示にしました',
   'backup.passwordMin': '{min} 文字以上。',
   'backup.passwordMismatch': 'パスワードが一致しません。',
   'backup.passwordWarning':

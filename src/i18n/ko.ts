@@ -1299,8 +1299,10 @@ export const ko: Record<keyof typeof en, string> = {
   'backup.notIncluded': '포함되지 않음: 다운로드와 저장된 페이지(용량이 너무 큼), 캐시된 파일 및 사이트 데이터.',
   'backup.password': '비밀번호',
   'backup.repeatPassword': '비밀번호 확인',
-  'backup.showPassword': '비밀번호 표시',
-  'backup.hidePassword': '비밀번호 숨기기',
+  'password.show': '비밀번호 표시',
+  'password.hide': '비밀번호 숨기기',
+  'password.shown': '비밀번호 표시됨',
+  'password.hidden': '비밀번호 숨겨짐',
   'backup.passwordMin': '최소 {min}자 이상이어야 합니다.',
   'backup.passwordMismatch': '비밀번호가 일치하지 않습니다.',
   'backup.passwordWarning':

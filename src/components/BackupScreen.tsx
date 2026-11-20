@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getProvider } from '../ai/providers';
@@ -19,6 +19,7 @@ import { MessageKey, t } from '../i18n';
 import { formatDateTime, formatList, formatPercent, formatSize } from '../i18n/format';
 import { appsDataSize } from '../apps/appStore';
 import { Button } from '../ui/Button';
+import { PasswordField } from '../ui/PasswordField';
 import { SwitchRow } from '../ui/SettingsRows';
 import { makeStyles, readableColumn, usePalette, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
@@ -91,60 +92,6 @@ function useProgress() {
   return { percent, report, reset };
 }
 
-export function PasswordField({
-  value,
-  onChange,
-  label,
-  visible,
-  onSubmit,
-  autoFocus,
-}: {
-  value: string;
-  onChange: (text: string) => void;
-  label: string;
-  visible: boolean;
-  onSubmit?: () => void;
-  autoFocus?: boolean;
-}) {
-  const styles = useStyles();
-  const palette = usePalette();
-  return (
-    <TextInput
-      style={styles.input}
-      value={value}
-      onChangeText={onChange}
-      placeholder={label}
-      placeholderTextColor={palette.textSecondary}
-      accessibilityLabel={label}
-      secureTextEntry={!visible}
-      autoCapitalize="none"
-      autoCorrect={false}
-      autoComplete="off"
-      textContentType="none"
-      importantForAutofill="no"
-      maxLength={200}
-      autoFocus={autoFocus}
-      onSubmitEditing={onSubmit}
-      returnKeyType={onSubmit ? 'go' : 'next'}
-    />
-  );
-}
-
-export function ShowPassword({ visible, onToggle }: { visible: boolean; onToggle: () => void }) {
-  const styles = useStyles();
-  return (
-    <Pressable
-      onPress={onToggle}
-      hitSlop={8}
-      style={styles.showRow}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: visible }}
-    >
-      <Text style={styles.link}>{t(visible ? 'backup.hidePassword' : 'backup.showPassword')}</Text>
-    </Pressable>
-  );
-}
-
 /** Bytes of every app's data, for the "Apps' data" switch (null while it is read). */
 export function useAppsDataSize(): number | null {
   const [size, setSize] = useState<number | null>(null);
@@ -183,7 +130,6 @@ function ExportForm({ appLock, busy, setBusy, onDone }: BusyProps & { appLock: b
   const appDataSize = useAppsDataSize();
   const [password, setPassword] = useState('');
   const [repeat, setRepeat] = useState('');
-  const [visible, setVisible] = useState(false);
   const progress = useProgress();
 
   const tooShort = password.length < MIN_BACKUP_PASSWORD;
@@ -244,15 +190,8 @@ function ExportForm({ appLock, busy, setBusy, onDone }: BusyProps & { appLock: b
       <Text style={styles.hint}>{t('backup.notIncluded')}</Text>
 
       <Text style={[styles.label, styles.section]}>{t('backup.password')}</Text>
-      <PasswordField value={password} onChange={setPassword} label={t('backup.password')} visible={visible} />
-      <PasswordField
-        value={repeat}
-        onChange={setRepeat}
-        label={t('backup.repeatPassword')}
-        visible={visible}
-        onSubmit={run}
-      />
-      <ShowPassword visible={visible} onToggle={() => setVisible(!visible)} />
+      <PasswordField value={password} onChange={setPassword} label={t('backup.password')} purpose="new" />
+      <PasswordField value={repeat} onChange={setRepeat} label={t('backup.repeatPassword')} purpose="new" onSubmit={run} />
       <Text style={[styles.hint, mismatch && styles.error]}>
         {mismatch ? t('backup.passwordMismatch') : t('backup.passwordMin', { min: MIN_BACKUP_PASSWORD })}
       </Text>
@@ -300,7 +239,6 @@ function kindNames(s: BackupSummary): string[] {
 function ImportFlow({ file, keptPassword, busy, setBusy }: BusyProps & { file: Uint8Array; keptPassword?: string | null }) {
   const styles = useStyles();
   const [password, setPassword] = useState('');
-  const [visible, setVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [payload, setPayload] = useState<BackupPayload | null>(null);
   const [mode, setMode] = useState<ApplyMode>('merge');
@@ -344,16 +282,11 @@ function ImportFlow({ file, keptPassword, busy, setBusy }: BusyProps & { file: U
             setError(null);
           }}
           label={t('backup.password')}
-          visible={visible}
+          purpose="current"
+          error={error}
           onSubmit={() => open()}
           autoFocus={!keptPassword}
         />
-        <ShowPassword visible={visible} onToggle={() => setVisible(!visible)} />
-        {error && (
-          <Text style={[styles.hint, styles.error]} accessibilityLiveRegion="assertive">
-            {error}
-          </Text>
-        )}
         {busy ? (
           <Progress percent={progress.percent} label={t('backup.decrypting')} />
         ) : (
@@ -479,11 +412,8 @@ const useStyles = makeStyles((c) => ({
   hint: common(c).hint,
   error: { color: c.danger },
   warning: { fontSize: 13, color: c.text, lineHeight: 18, fontWeight: '600' },
-  link: { fontSize: 14, color: c.tintText, fontWeight: '600' },
   texts: { flex: 1, gap: 2 },
   option: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4 },
-  showRow: { alignSelf: 'flex-start' },
-  input: common(c).input,
   card: { ...common(c).card, padding: 14, gap: 6 },
   summaryLine: { fontSize: 15, color: c.text },
   progress: {

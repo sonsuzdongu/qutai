@@ -1300,8 +1300,10 @@ export const ru: Record<keyof typeof en, string> = {
   'backup.notIncluded': 'Не включаются: загрузки и сохранённые страницы (слишком большие), кеш и данные сайтов.',
   'backup.password': 'Пароль',
   'backup.repeatPassword': 'Повторите пароль',
-  'backup.showPassword': 'Показать пароль',
-  'backup.hidePassword': 'Скрыть пароль',
+  'password.show': 'Показать пароль',
+  'password.hide': 'Скрыть пароль',
+  'password.shown': 'Пароль показан',
+  'password.hidden': 'Пароль скрыт',
   'backup.passwordMin': 'Не менее {min} {min|one:символа|few:символов|many:символов}.',
   'backup.passwordMismatch': 'Пароли не совпадают.',
   'backup.passwordWarning':

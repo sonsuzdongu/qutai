@@ -763,3 +763,50 @@ Kod okunarak bulundu, derlemede denetlendi; telefonda görülmedi.
 
 - [ ] Asistan bildirimi: bir görev başlatıp uygulamadan çıkın. Durum çubuğundaki küçük simge beyaz bir leke değil, üç yıldızlı asistan simgesi olmalı; bildirim açılınca başlık ve adım görünmeli. Görev bitince ve asistan soru sorunca gelen bildirimlerde de aynı simge olmalı. Mümkünse Android 8 ya da 8.1 bir cihazda da deneyin (eski simge orada çökme nedeni olabiliyordu).
 - [ ] Pencere içinde pencere: çok uzun (dikey, 9:21'den dar) bir videoyu oynatırken ana ekrana dönün; video küçük pencerede sürmeli. Normal yatay ve dikey videolarda davranış değişmemeli.
+
+## 26. Kısayollar Qutai'ın dilinde, parola alanlarında göz simgesi (20 Kasım, telefonda denenmedi)
+
+Kısayollar için yeni bir yerel derleme (APK) gerekir; parola alanları yalnız JavaScript'tir.
+
+Uygulama simgesinin kısayolları (Android, `LANG-19`):
+
+- [ ] Telefon İngilizce, Qutai Türkçe (Ayarlar › Dil › Türkçe). Qutai'ı bir kez açıp kapatın, simgeye uzun basın: dört
+      kısayol Türkçe ve bu sırayla olmalı: "Yeni sekme", "Gizli sekme", "Qutai'a sor", "QR tara". İngilizce bir kopya
+      ya da beşinci bir kısayol olmamalı. Her birine dokunun: yeni sekme, gizli sekme, asistan, QR tarayıcı açılmalı.
+- [ ] Uygulama kilidi açıkken bir kısayola dokunun: önce kilit ekranı gelmeli. Gizli sekme kilidi açıkken "Gizli
+      sekme": gizli sekme kilidi sorulmalı.
+- [ ] Qutai'ın dilini Qutai'ın ayarlarından İngilizce yapın, Qutai'ı açmadan (ana ekrana dönüp) simgeye uzun basın:
+      kısayollar İngilizce olmalı. Android 13 ve üstünde birkaç saniye sürebilir. Sonra "Sistem varsayılanı" seçin:
+      telefonun dilinde olmalı.
+- [ ] Qutai Türkçe iken telefonun dilini değiştirin (örneğin Almanca), Qutai'ı açmadan simgeye uzun basın: kısayollar
+      Türkçe kalmalı. Qutai "Sistem varsayılanı" iken telefonun dilini değiştirin: kısayollar yeni dile geçmeli.
+- [ ] Güncelleme: telefonda 0.1.4 (104) kuruluyken bir kısayolu (örneğin "Yeni sekme") ana ekrana sabitleyin, sonra yeni
+      APK'yı üzerine kurun ve Qutai'ı açmadan simgeye uzun basın: dört kısayol Qutai'ın dilinde görünmeli, kopya
+      olmamalı. Ana ekrandaki sabitlenmiş eski kısayol gri ve kullanılamaz olur (Android bunu kendisi yapar, uygulama
+      geri açamaz): silip menüden yeniden sabitleyin; yeni sabitlenen, dil değişince adını değiştirmeli.
+- [ ] Yeni kurulum (kaldırıp kurun): Qutai'ı açmadan önce simgenin menüsünde kısayol olmaz (bilinen ve kabul edilen
+      durum); bir kez açtıktan sonra dördü görünmeli.
+- [ ] Elinizde Android 12 ya da daha eski bir telefon varsa: Qutai'ın dilini Qutai'ın ayarlarından Türkçe yapın (telefon
+      İngilizce), simgeye uzun basın: kısayollar Türkçe olmalı.
+- [ ] iPhone: değişiklik yok. Simgeye uzun basınca hızlı eylemler Qutai'ın dilinde olmalı (iOS bunu kendisi yapar).
+
+Parola alanlarındaki göz (`UI-33`): dosya yedeğini dışa aktarma, sunucu yedeği parolası (parola koyma ve
+değiştirme), yedek dosyasını açma ve girişten sonra sunucu yedeğini geri yükleme ekranları.
+
+- [ ] Her parola alanının sağ ucunda bir göz simgesi var; altındaki "Parolayı göster" bağlantısı artık yok. Göze dokunun:
+      yazı görünmeli, simge çizgili göze dönmeli; yine dokunun: noktalar geri gelmeli. Parola ve tekrarı alanlarının her
+      birinin kendi gözü var, biri diğerini etkilememeli.
+- [ ] Klavye açıkken, bir şey yazıp göze dokunun: klavye kapanmamalı, imleç yerinde kalmalı (sona ya da başa
+      atlamamalı), yazmaya devam edince harf imlecin olduğu yere eklenmeli. Ortaya bir imleç koyup deneyin.
+- [ ] iPhone: parolayı gösterip bir harf yazın, sonra gizleyip hemen bir harf daha yazın: yazılanın tamamı kalmalı (iOS
+      normalde gizlenen alanı ilk tuşta siler; Qutai bunu düzeltiyor). Gizledikten sonra bir kez silme tuşu: yalnız bir
+      harf silinmeli.
+- [ ] Android: göster/gizle arasında yazı tipi değişmemeli (eşit aralıklı yazıya dönmemeli); görünürken klavyede
+      kelime önerisi çıkmamalı.
+- [ ] Uzun bir parola (40 karakter ve üstü): alan taşmamalı, yazı gözün altına girmemeli, göz hep görünmeli. Büyük yazı
+      boyutunda da (telefonun yazı boyutu en büyükte) deneyin.
+- [ ] Yanlış parolayla yedek açın: alanın kenarı kırmızı olmalı, hata alanın hemen altında görünmeli ve okunmalı.
+- [ ] TalkBack / VoiceOver: göz "Parolayı göster" diye okunmalı, dokununca "Parola görünüyor", tekrar dokununca "Parola
+      gizli" denmeli ve düğmenin adı "Parolayı gizle" olmalı. Gizliyken alanın içindeki yazı okunmamalı.
+- [ ] Telefonun parola yöneticisi: yedek parolası koyarken yeni parola önerisi ya da kaydetme teklifi çıkabilir,
+      yedeği açarken kayıtlı parolayı doldurmayı önerebilir (önceden bu alanlarda kapalıydı).

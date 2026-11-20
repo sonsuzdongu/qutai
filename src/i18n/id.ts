@@ -1300,8 +1300,10 @@ export const id: Record<keyof typeof en, string> = {
   'backup.notIncluded': 'Tidak disertakan: download dan halaman tersimpan (terlalu besar), file cache, dan data situs.',
   'backup.password': 'Sandi',
   'backup.repeatPassword': 'Ulangi sandi',
-  'backup.showPassword': 'Tampilkan sandi',
-  'backup.hidePassword': 'Sembunyikan sandi',
+  'password.show': 'Tampilkan sandi',
+  'password.hide': 'Sembunyikan sandi',
+  'password.shown': 'Sandi ditampilkan',
+  'password.hidden': 'Sandi disembunyikan',
   'backup.passwordMin': 'Minimal {min} karakter.',
   'backup.passwordMismatch': 'Sandi tidak cocok.',
   'backup.passwordWarning':

@@ -1301,8 +1301,10 @@ export const ptBR: Record<keyof typeof en, string> = {
   'backup.notIncluded': 'Não incluídos: downloads e páginas salvas (grandes demais), arquivos em cache e dados de sites.',
   'backup.password': 'Senha',
   'backup.repeatPassword': 'Repetir senha',
-  'backup.showPassword': 'Mostrar senha',
-  'backup.hidePassword': 'Ocultar senha',
+  'password.show': 'Mostrar senha',
+  'password.hide': 'Ocultar senha',
+  'password.shown': 'Senha visível',
+  'password.hidden': 'Senha oculta',
   'backup.passwordMin': 'Pelo menos {min} caracteres.',
   'backup.passwordMismatch': 'As senhas não coincidem.',
   'backup.passwordWarning':

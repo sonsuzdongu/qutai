@@ -1292,8 +1292,10 @@ export const en = {
   'backup.notIncluded': 'Not included: downloads and saved pages (too large), cached files and site data.',
   'backup.password': 'Password',
   'backup.repeatPassword': 'Repeat password',
-  'backup.showPassword': 'Show password',
-  'backup.hidePassword': 'Hide password',
+  'password.show': 'Show password',
+  'password.hide': 'Hide password',
+  'password.shown': 'Password shown',
+  'password.hidden': 'Password hidden',
   'backup.passwordMin': 'At least {min} characters.',
   'backup.passwordMismatch': "The passwords don't match.",
   'backup.passwordWarning':

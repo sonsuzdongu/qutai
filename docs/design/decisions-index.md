@@ -844,6 +844,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-30` | The chat follows its end only while the user is at it; scrolling up shows "Jump to the latest message" | Default | 2026-11-20 |
 | `UI-31` | One full screen open at a time, from one state (AppScreens); a late close shuts a screen only if still open | Default | 2026-11-20 |
 | `UI-32` | Tab switcher and cookies screen virtualised; tab cards redrawn only when what they show changes | Default | 2026-11-20 |
+| `UI-33` | Backup password fields: one PasswordField with an eye inside the field (own eye per field), 44 pt, announced; keyboard and cursor kept; new/current autofill hints; AI key fields unchanged | Owner (eye); Default (rest) | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

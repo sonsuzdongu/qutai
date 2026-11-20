@@ -105,6 +105,9 @@ const ICONS = {
   select: { ios: 'chevron.up.chevron.down', android: 'unfold_more' },
   scroll: { ios: 'arrow.up.and.down', android: 'swap_vert' },
   view: { ios: 'eye', android: 'visibility' },
+  // The password field's eye: the icon shows what a tap does.
+  passwordShow: { ios: 'eye', android: 'visibility' },
+  passwordHide: { ios: 'eye.slash', android: 'visibility_off' },
   upload: { ios: 'arrow.up.circle', android: 'upload' },
   tabs: { ios: 'square.on.square', android: 'tab' },
   switchTab: { ios: 'arrow.left.arrow.right', android: 'swap_horiz' },

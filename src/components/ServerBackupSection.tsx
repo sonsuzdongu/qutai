@@ -26,7 +26,8 @@ import { AppModal } from '../ui/AppModal';
 import { Button } from '../ui/Button';
 import { SwitchRow } from '../ui/SettingsRows';
 import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
-import { PasswordField, ShowPassword, useAppsDataSize, type ServerRestoreJob } from './BackupScreen';
+import { useAppsDataSize, type ServerRestoreJob } from './BackupScreen';
+import { PasswordField } from '../ui/PasswordField';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { ErrorDetails } from './ErrorDetails';
@@ -441,7 +442,6 @@ function PasswordForm({
   const styles = useStyles();
   const [password, setPassword] = useState('');
   const [repeat, setRepeat] = useState('');
-  const [visible, setVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [failed, setFailed] = useState(false);
   const problem = newPasswordProblem(password, repeat);
@@ -472,9 +472,8 @@ function PasswordForm({
       <KeyboardAwareScrollView contentContainerStyle={styles.sheet}>
         <Text style={styles.hint}>{t('serverBackup.passwordIntro')}</Text>
         {open.change && <Text style={styles.hint}>{t('serverBackup.changeNote')}</Text>}
-        <PasswordField value={password} onChange={setPassword} label={t('backup.password')} visible={visible} autoFocus />
-        <PasswordField value={repeat} onChange={setRepeat} label={t('backup.repeatPassword')} visible={visible} onSubmit={save} />
-        <ShowPassword visible={visible} onToggle={() => setVisible(!visible)} />
+        <PasswordField value={password} onChange={setPassword} label={t('backup.password')} purpose="new" autoFocus />
+        <PasswordField value={repeat} onChange={setRepeat} label={t('backup.repeatPassword')} purpose="new" onSubmit={save} />
         <Text style={[styles.hint, mismatch && styles.error]}>
           {mismatch ? t('backup.passwordMismatch') : t('backup.passwordMin', { min: MIN_BACKUP_PASSWORD })}
         </Text>
