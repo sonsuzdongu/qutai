@@ -290,7 +290,7 @@ Moved to Details (ids retired, not reused): `PAY-10`, `PAY-18`, `PAY-19`, `PAY-2
 | Id | Decision | Status | Date |
 |---|---|---|---|
 | `INC-1` | Incognito tabs are never written to history, never remembered as recently closed and never restored. | Default |  |
-| `INC-2` | A conversation that touches an incognito tab is never written to disk, and its earlier "sent to the AI"… | Default |  |
+| `INC-2` | A conversation that touches an incognito tab is never written to disk, and its earlier "sent to the AI"… (tab lists hide incognito tabs in normal conversations) | Default | 2026-11-20 |
 | `INC-3` | Nothing is saved to memory from an incognito conversation (memory can still be read). | Default |  |
 | `INC-4` | Calendar events, reminders, notifications, reading the calendar and the location are refused in incognito… | Default |  |
 | `INC-5` | Contacts are off in incognito conversations. | Default |  |
@@ -469,6 +469,7 @@ Moved to Details (ids retired, not reused): `LOG-7`
 | `TABS-24` | A tab whose page failed because the phone was offline reloads by itself once when the connection… | Default | 2026-11-20 |
 | `TABS-25` | iOS: reloading, or going back or forward to, the result of a sent form asks "Send the form again?" first… | Default | 2026-11-20 |
 | `TABS-26` | A woken tab comes back at the scroll position it had on the same page (the page reports it half a second… | Default | 2026-11-20 |
+| `TABS-27` | After the user closes the assistant's tab, its next call on that tab fails clearly instead of acting on the tab on screen | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-8`
 
@@ -502,6 +503,7 @@ Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-
 | `TOOL-26` | `upload_image` and `upload_file` ask "Give this image to <site>?" every time, whatever the site's setting;… | Default |  |
 | `TOOL-27` | `edit_image` works on the phone with no AI request; results are at most 16 megapixels; a conversation… | Default |  |
 | `TOOL-29` | If a page shows a CAPTCHA, the assistant does not solve it; it asks the user to. | Default |  |
+| `TOOL-30` | One table row per tool (target, tab need, address, background, history, own dialog, checks) and one ordered check pipeline; a tool without a row is refused | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `TOOL-4`, `TOOL-18`, `TOOL-28`
 
@@ -715,7 +717,7 @@ Moved to Details (ids retired, not reused): `APPS-6`, `APPS-20`, `APPS-19`, `APP
 | `DL-2` | A download a page starts without a recent tap (10 seconds) asks first, with a warning if the file is risky. | Default |  |
 | `DL-3` | From the second automatic download of a site in a session, the question offers "Block downloads from this… | Default |  |
 | `DL-4` | A risky file (apps, installers, executables, scripts, disk images, archives; a generic binary without an… | Default |  |
-| `DL-5` | The assistant's download is confirmed with name, site, type, size and any risk warning, unless "Don't ask… | Default |  |
+| `DL-5` | The assistant's download is confirmed with name, site, type, size and any risk warning, unless "Don't ask… (a model-written address: nothing requested before the answer, always asked) | Default | 2026-11-20 |
 | `DL-6` | The assistant may download only http(s) files, and not from a site set to "Read only" or "Blocked". | Default |  |
 | `DL-7` | The assistant never opens or reads a downloaded file, and never downloads something the user didn't ask for. | Default |  |
 | `DL-8` | Android 9 and older ask for the storage permission at the first download; Android 13 and newer ask for the… | Default |  |

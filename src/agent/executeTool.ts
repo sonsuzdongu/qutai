@@ -32,7 +32,7 @@ import { declinedNotice, errorNotice, incognitoNotice, pageErrorNotice, settingN
 import type { IconLine, IconLines } from '../ui/Icon';
 import { toolIcon } from './toolIcons';
 import { editImageTool, uploadImageTool } from './imageTools';
-import { BOOKMARK_READS, bookmarkNeedsUser, bookmarksTool, describeBookmarkCall } from './bookmarkTool';
+import { bookmarkNeedsUser, bookmarksTool, describeBookmarkCall } from './bookmarkTool';
 import { getSavedTaskTool, listSavedTasksTool, type SavedTasksAccess } from './savedTaskTool';
 import { describeSettingsCall, settingsTool } from './settingsTool';
 import type { Settings } from '../storage/settings';
@@ -50,6 +50,7 @@ import { decide, policyName, SitePolicy, siteKey } from './sitePolicy';
 import { enterGate, pressGate, requestApprovalTool, secretFieldGate, type OutwardApproval } from './approvalTool';
 import { CARD_NUMBER_TEXT, containsCardNumber, type ApprovalGrants } from './outwardApproval';
 import { gateFailedText, parseIndices, queryPage, type PageRunner } from './pageFacts';
+import { isLoggedCall, toolSpec, withScheme, type Gate, type ToolSpec } from './toolTable';
 import {
   describeCalendarRead,
   describePlan,
@@ -255,29 +256,6 @@ export type ToolContext = {
    */
   userTexts?: () => string[];
 };
-
-/** Tools that need a loaded web page. */
-const PAGE_TOOLS = new Set([
-  'run_script',
-  'restyle_page',
-  'page_cookies',
-  'try_hide',
-  'save_site_rules',
-  'read_page',
-  'read_source',
-  'click',
-  'click_at',
-  'type',
-  'select_option',
-  'scroll',
-  'scroll_to',
-  'save_pdf',
-  'save_screenshot',
-  'view_screenshot',
-  'upload_image',
-  'upload_file',
-  'request_approval',
-]);
 
 /** Who a call or message is for in its step line when no name was given: the number, or "a contact" for a handle. */
 function phoneWho(phone: unknown): string {
@@ -911,7 +889,7 @@ async function locationTool(input: Record<string, unknown>, ctx: ToolContext): P
  * and, when a HEAD request tells, type and size, with a warning for files that install or run code and archives. The
  * file is never opened, and the model only hears that it started and where the user finds it.
  */
-async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext, addressApproved = false): Promise<ToolOutput> {
   if (!ctx.startDownload) return { content: 'Downloads are not available here.', isError: true };
   const tab = currentTab(ctx);
   if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
@@ -943,7 +921,11 @@ async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext
     };
   }
   if (!ctx.confirm) return { content: "This needs the user's confirmation, which is not available here.", isError: true };
-  const probe = await probeDownload(url);
+  // An address the model wrote is not requested before the user has answered (it could carry the user's details,
+  // UNTR-22): only a link the page wrote, or an address the user approved in the outbound dialog, is asked about its
+  // name, type and size first. Unprobed, the dialog shows the name from the address and always asks.
+  const probed = hasRef || addressApproved;
+  const probe = probed ? await probeDownload(url) : { name: null, type: null, size: null };
   const name = probe.name || fileNameFromUrl(url);
   const host = fileHost ?? url;
   const details = [
@@ -961,7 +943,7 @@ async function downloadFileTool(input: Record<string, unknown>, ctx: ToolContext
     { text: t(android ? 'downloads.agentWhereAndroid' : 'downloads.agentWhereIos') },
   ];
   // "Don't ask again" covers ordinary files only: never a risky one, never from an incognito conversation.
-  const kind = kindForDownload({ risky, incognito: !!(ctx.privacy?.touchedIncognito || tab.incognito) });
+  const kind = kindForDownload({ risky: risky || !probed, incognito: !!(ctx.privacy?.touchedIncognito || tab.incognito) });
   if (!(await ctx.confirm({ lines, spaced: true }, null, kind)))
     return { content: 'The user declined the download. Ask them how to proceed.', isError: true, notice: declinedNotice() };
   try {
@@ -1123,14 +1105,6 @@ const CARRIED_WORDS: Record<CarriedKind, string> = {
   otherSite: 'a code read on another site',
 };
 
-/** The address the model wants Qutai to load for this call, if it wrote one (navigate, open_tab, read_pdf's url). */
-function modelAddress(name: string, input: Record<string, unknown>): string | null {
-  if (name === 'navigate' || name === 'open_tab') return normalizeUrl(input.url);
-  if (name === 'read_pdf' && typeof input.url === 'string' && input.url.trim() && (input.ref === undefined || input.ref === null || input.ref === ''))
-    return input.url.trim();
-  return null;
-}
-
 /**
  * Asks before loading an address that carries the user's details to a site the user didn't name or have open
  * (agent/outbound.ts, UNTR-22); 'ok' when nothing is carried, 'approved' after the user's yes, else the refusal.
@@ -1168,17 +1142,31 @@ function isViewSource(raw: unknown): boolean {
   return /^\s*view-source:/i.test(String(raw ?? ''));
 }
 
-function normalizeUrl(raw: unknown): string {
-  const url = String(raw || '').trim();
-  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
-}
+const normalizeUrl = withScheme;
 
+/** Thrown when a call needs the assistant's tab and the user closed it (executeUnredacted answers before that). */
+class AgentTabClosedError extends Error {}
+
+/**
+ * The assistant's tab. When the user closed it, the call fails (tabClosed) instead of acting on whichever tab is on
+ * screen with element numbers from the closed page.
+ */
 function currentTab(ctx: ToolContext): Tab {
   const tab = ctx.browser.getTab(ctx.agentTab.id);
   if (tab) return tab;
-  // The user closed the agent's tab; continue in whatever is on screen.
-  ctx.agentTab.id = ctx.browser.active.id;
-  return ctx.browser.active;
+  throw new AgentTabClosedError();
+}
+
+/** The tool error for a call that needs the assistant's tab after the user closed it. */
+function tabClosed(ctx: ToolContext): ToolOutput {
+  return {
+    content:
+      `The tab you were working in (id=${ctx.agentTab.id}) was closed, so nothing was done: element numbers (ref) from ` +
+      "its page don't apply to any other tab. Call list_tabs, then switch_tab to the tab to work in and read_page " +
+      'there before clicking or typing, or open_tab to open a page.',
+    isError: true,
+    notice: errorNotice(t('step.tabClosed')),
+  };
 }
 
 /** Screenshots can only be taken of the tab on screen, so bring the agent's tab to the front first. */
@@ -1197,8 +1185,14 @@ function noteOpened(ctx: ToolContext, tabId: string) {
   openedByTask.set(ctx.agentTab, opened);
 }
 
+/**
+ * The open tabs for the model. In a normal conversation an incognito tab is listed without its title and address
+ * (INC-2: nothing of an incognito tab is written to disk or the sent log); reading or switching to it makes the
+ * conversation incognito first.
+ */
 function tabList(ctx: ToolContext): string {
   const opened = openedByTask.get(ctx.agentTab);
+  const incognitoChat = isIncognitoConversation(ctx);
   return ctx.browser.tabs
     .map((t) => {
       const group = ctx.browser.getGroup(t.groupId);
@@ -1211,10 +1205,19 @@ function tabList(ctx: ToolContext): string {
       ]
         .filter(Boolean)
         .join(', ');
-      const page = t.isNewTab ? 'new tab page (no web page)' : `"${t.title || '(no title)'}" ${t.url}`;
+      const page = t.isNewTab
+        ? 'new tab page (no web page)'
+        : t.incognito && !incognitoChat
+          ? '(title and address not shown in a normal conversation; read_tab or switch_tab makes it incognito)'
+          : `"${t.title || '(no title)'}" ${t.url}`;
       return `- id=${t.id} ${page}${marks ? ` (${marks})` : ''}`;
     })
     .join('\n');
+}
+
+/** The conversation already involves incognito tabs (its agent's tab is one, or it touched one). */
+function isIncognitoConversation(ctx: ToolContext): boolean {
+  return !!(ctx.privacy?.touchedIncognito || ctx.browser.getTab(ctx.agentTab.id)?.incognito);
 }
 
 /** content: what the model reads (English). notice: what the chat shows the user instead (agent/stepLine.ts). */
@@ -1232,183 +1235,15 @@ export type EmailDraft = {
   original?: boolean;
 };
 
-/** Actions kept in the action history; bookkeeping (listing tabs, waiting, scrolling) is left out. */
-const LOGGED_TOOLS = new Set([
-  // Only what was asked (post, comment, pay); never the text or the total.
-  'request_approval',
-  'save_site_rules',
-  'site_rules',
-  // Applied styles and deleted cookies only, by what was done: never the CSS, cookie names or values.
-  'restyle_page',
-  'page_cookies',
-  // Only that a script ran and its description: never the code or the result.
-  'run_script',
-  'navigate',
-  'go_back',
-  'click',
-  'click_at',
-  'type',
-  'select_option',
-  'read_page',
-  'read_source',
-  'read_tab',
-  'view_screenshot',
-  'save_pdf',
-  'save_screenshot',
-  'read_aloud',
-  'open_tab',
-  'close_tab',
-  'remember',
-  'forget',
-  'draft_email',
-  'offer_call',
-  'draft_sms',
-  'draft_whatsapp',
-  // Only the name the user said: never who matched, their numbers or addresses.
-  'find_contact',
-  'add_calendar_event',
-  'add_reminder',
-  'schedule_notification',
-  'open_settings',
-  // Changes only: list and search are left out (see isLogged).
-  'bookmarks',
-  // Changes only, each with the setting's name and new value.
-  'settings',
-  // Only that the location was read: the coordinates are never written to the history.
-  'get_location',
-  // Only that the calendar was read and the range: the events are never written to the history.
-  'read_calendar',
-  'download_file',
-  'save_file',
-  'read_pdf',
-  // Only that an image was given to the site and where: never the image.
-  'upload_image',
-  // Only that a file was given to the site and where: never the file.
-  'upload_file',
-  // Only that a share was prepared and to which app: never the files, text or number.
-  'share',
-  // Apps made, changed or undone (by the step line: the app's name); never the code or the app's data.
-  'apps',
-]);
-
-/** Whether a call goes in the action history: tools in LOGGED_TOOLS, but not the ones that only read. */
-function isLogged(name: string, input: Record<string, unknown>): boolean {
-  if (!LOGGED_TOOLS.has(name)) return false;
-  if (name === 'bookmarks') return !BOOKMARK_READS.has(String(input.action));
-  if (name === 'settings') return input.action === 'set';
-  if (name === 'site_rules') return input.action === 'remove';
-  if (name === 'restyle_page') return input.action === 'apply';
-  if (name === 'page_cookies') return input.action === 'delete';
-  if (name === 'apps') return input.action === 'create' || input.action === 'update' || input.action === 'undo';
-  return true;
-}
-
-/** The page a tool acts on: the destination for navigation, the read tab for read_tab, else the agent's tab. */
-function actionTarget(
-  name: string,
-  input: Record<string, unknown>,
-  ctx: ToolContext,
-): { url: string; tab?: Tab } | null {
-  if (name === 'navigate' || name === 'open_tab') return { url: normalizeUrl(input.url) };
+/** The page a call acts on (its site decides the permission and is written in the action history), or null. */
+function actionTarget(spec: ToolSpec, input: Record<string, unknown>, ctx: ToolContext): { url: string; tab?: Tab } | null {
+  if (spec.target === 'none') return null;
+  if (spec.target === 'address') return { url: withScheme(input.url) };
   // A PDF the user attached comes from no site.
-  if (name === 'read_pdf' && input.attachment_id !== undefined && input.attachment_id !== '') return null;
-  if (
-    [
-      'list_tabs',
-      'switch_tab',
-      'close_tab',
-      'wait',
-      'remember',
-      'forget',
-      'ask_user',
-      'search_history',
-      'bookmarks',
-      'list_saved_tasks',
-      'get_saved_task',
-      'settings',
-      'draft_email',
-      'offer_call',
-      'draft_sms',
-      'draft_whatsapp',
-      'find_contact',
-      'share',
-      'save_file',
-      'view_attachment',
-      'edit_image',
-      'open_settings',
-      'get_location',
-      'read_calendar',
-      'apps',
-      ...SCHEDULING_TOOLS,
-    ].includes(name)
-  )
-    return null;
-  const tab =
-    name === 'read_tab'
-      ? ctx.browser.getTab(String(input.tab_id ?? ''))
-      : (ctx.browser.getTab(ctx.agentTab.id) ?? ctx.browser.active);
+  if (spec.target === 'pdf' && input.attachment_id !== undefined && input.attachment_id !== '') return null;
+  const tab = spec.target === 'readTab' ? ctx.browser.getTab(String(input.tab_id ?? '')) : ctx.browser.getTab(ctx.agentTab.id);
   return tab ? { url: tab.url, tab } : null;
 }
-
-/** Tools that confirm on their own every time, whatever the "ask before actions" setting. */
-const ALWAYS_CONFIRMED = new Set([
-  'run_script',
-  'restyle_page',
-  'page_cookies',
-  'get_location',
-  'read_calendar',
-  'download_file',
-  'upload_image',
-  'upload_file',
-  'request_approval',
-]);
-
-/**
- * Tools that can run while the app is in the background with "Keep working in the background" on (Android): they
- * read or act on a page through the tab's existing WebView, or only touch the app's own state. Everything else
- * needs the user or the screen: screenshots and PDFs (views that are not drawn), new tabs and waking tabs (their
- * WebView is created by the paused UI), the email composer, settings, and every tool that asks for confirmation.
- */
-const BACKGROUND_TOOLS = new Set([
-  'read_page',
-  'read_source',
-  'navigate',
-  'go_back',
-  'click',
-  'click_at',
-  'type',
-  'select_option',
-  'scroll',
-  'scroll_to',
-  'read_tab',
-  'list_tabs',
-  'switch_tab',
-  'close_tab',
-  'close_tabs',
-  'take_notes',
-  'wait',
-  'remember',
-  'forget',
-  'search_history',
-  // Only the app's own data; asking calls (deleting a folder, many removals) wait for the user, see backgroundBlocker.
-  'bookmarks',
-  // Read the user's saved tasks only.
-  'list_saved_tasks',
-  'get_saved_task',
-  // Reading only: a change waits until the user is back, so they see it happen (backgroundBlocker).
-  'settings',
-  // Only reads a file the user attached.
-  'view_attachment',
-  // Works on the phone only and adds a card.
-  'edit_image',
-  // Only add a card to the conversation; the user acts on it later.
-  'offer_call',
-  'draft_sms',
-  'draft_whatsapp',
-  // Adds a card; the user's tap on it opens WhatsApp or the share sheet later.
-  'share',
-  'save_file',
-]);
 
 /**
  * Why this call cannot run while the app is in the background, or null when it can. Checked before the call, so a
@@ -1420,22 +1255,23 @@ export function backgroundBlocker(
   input: Record<string, unknown>,
   ctx: ToolContext,
 ): 'confirm' | 'onScreen' | 'tab' | null {
-  if (!BACKGROUND_TOOLS.has(name))
-    return SCHEDULING_TOOLS.has(name) || ALWAYS_CONFIRMED.has(name) ? 'confirm' : 'onScreen';
+  const spec = toolSpec(name);
+  if (!spec?.background) return spec?.confirmsItself ? 'confirm' : 'onScreen';
   if (name === 'bookmarks' && bookmarkNeedsUser(input, ctx.agentTab)) return 'confirm';
   if (name === 'settings' && input.action !== 'get') return 'onScreen';
-  const target = actionTarget(name, input, ctx);
+  const target = actionTarget(spec, input, ctx);
   const host = target ? siteKey(target.url) : null;
   const level = host && ctx.sites ? ctx.sites.levelFor(host) : 'default';
-  const decision = decide(name, host, level, ctx.confirm ? (ctx.confirmByDefault ?? true) : false);
+  const decision = decide(policyName(name, input), host, level, ctx.confirm ? (ctx.confirmByDefault ?? true) : false);
   if (decision.kind === 'confirm' && ctx.confirm) return 'confirm';
   // The tab the call works in needs a live WebView: a sleeping tab's (or a page opened from the new tab page) would
-  // have to be created. Page tools on the new tab page only answer that no page is loaded.
+  // have to be created. Page tools on the new tab page only answer that no page is loaded. A closed agent's tab: the
+  // call itself answers that (tabClosed).
   const tab =
     name === 'read_tab'
       ? ctx.browser.getTab(String(input.tab_id ?? ''))
-      : PAGE_TOOLS.has(name) || name === 'navigate' || name === 'go_back'
-        ? (ctx.browser.getTab(ctx.agentTab.id) ?? ctx.browser.active)
+      : spec.page || name === 'navigate' || name === 'go_back'
+        ? ctx.browser.getTab(ctx.agentTab.id)
         : undefined;
   if (tab && (tab.asleep || (tab.isNewTab ? name === 'navigate' : !tab.webview))) return 'tab';
   return null;
@@ -1447,7 +1283,13 @@ export function backgroundBlocker(
  * "What was sent to the AI" log, whatever the tool read.
  */
 export async function executeTool(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
-  const result = await executeUnredacted(name, input, ctx);
+  let result: ToolOutput;
+  try {
+    result = await executeUnredacted(name, input, ctx);
+  } catch (e) {
+    if (!(e instanceof AgentTabClosedError)) throw e;
+    result = tabClosed(ctx);
+  }
   let needles: HiddenNeedle[];
   try {
     needles = await hiddenNeedlesFor(ctx);
@@ -1504,7 +1346,15 @@ function clickAtPoint(name: string, input: Record<string, unknown>, tab: Tab): {
   return { fx: x / size.width, fy: y / size.height };
 }
 
+/**
+ * Every call passes one ordered pipeline (TOOL-30): the tool's row in agent/toolTable.ts says which checks apply, and
+ * they run in GATE_ORDER: site permission, outbound address, secret field, personal data, press, confirmation. A tool
+ * without a row is refused.
+ */
 async function executeUnredacted(name: string, input: Record<string, unknown>, ctx: ToolContext): Promise<ToolOutput> {
+  const spec = toolSpec(name);
+  if (!spec || spec.loop) return { content: `Unknown tool: ${name}`, isError: true };
+  const gate = (g: Gate) => spec.gates.includes(g);
   // Checked before the site permission, which would otherwise ask about a made-up host.
   if ((name === 'navigate' || name === 'open_tab') && isViewSource(input.url)) {
     return {
@@ -1514,15 +1364,17 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
       isError: true,
     };
   }
-  const target = actionTarget(name, input, ctx);
+  const fromTab = ctx.browser.getTab(ctx.agentTab.id);
+  // The user closed the assistant's tab: nothing acts on another tab with the closed page's element numbers.
+  if (spec.tab === 'agent' && !fromTab) return tabClosed(ctx);
+  const target = actionTarget(spec, input, ctx);
   const host = target ? siteKey(target.url) : null;
   const level = host && ctx.sites ? ctx.sites.levelFor(host) : 'default';
   const decision = decide(policyName(name, input), host, level, ctx.confirm ? (ctx.confirmByDefault ?? true) : false);
-  const fromTab = ctx.browser.getTab(ctx.agentTab.id);
 
   const record = (result: ToolOutput): ToolOutput => {
     const incognito = !!(ctx.privacy?.touchedIncognito || target?.tab?.incognito || fromTab?.incognito);
-    if (ctx.log && isLogged(name, input) && !incognito) {
+    if (ctx.log && isLoggedCall(spec, input) && !incognito) {
       ctx.log({
         at: Date.now(),
         host,
@@ -1551,74 +1403,82 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
     return result;
   };
 
-  // Refused and declined actions are recorded too, so the history shows what was stopped.
+  // What an earlier check already asked the user, so the confirmation doesn't ask again.
+  let approvedAddress = false;
+  let personalAsked = false;
+  let approvedPress = false;
+
+  // 1. Site permission. Refused and declined actions are recorded too, so the history shows what was stopped.
   if (decision.kind === 'refuse') {
     const shown = t(level === 'blocked' ? 'step.siteBlocked' : 'step.siteReadOnly', { host: host ?? '' });
     return record({ content: decision.reason, isError: true, notice: settingNotice(shown) });
   }
-  // An address the model wrote that carries the user's details to another site is the user's decision (UNTR-22).
-  const address = modelAddress(name, input);
-  let approvedAddress = false;
+
+  // 2. An address the model wrote that carries the user's details to another site is the user's decision (UNTR-22).
+  const address = gate('outbound') ? (spec.address?.(input) ?? null) : null;
   if (address) {
-    const gate = await outboundGate(address, ctx);
-    if (typeof gate === 'object') return record(gate);
-    approvedAddress = gate === 'approved';
+    const out = await outboundGate(address, ctx);
+    if (typeof out === 'object') return record(out);
+    approvedAddress = out === 'approved';
   }
-  // These confirm on their own, with the details of what will be added.
-  if (SCHEDULING_TOOLS.has(name)) return record(await schedulingTool(name as SchedulingTool, input, ctx));
-  // Asks every time, whatever the "ask before actions" setting.
-  if (name === 'get_location') return record(await locationTool(input, ctx));
-  if (name === 'read_calendar') return record(await readCalendarTool(input, ctx));
-  if (name === 'download_file') return record(await downloadFileTool(input, ctx));
-  // A hidden memory is looked up here and its value only handed to the page-typing path (runTool).
+
+  // type: a hidden memory is looked up here and its value only handed to the page-typing path (runTool).
   const hidden = name === 'type' ? await hiddenForType(input, ctx) : null;
   if (hidden && 'error' in hidden) return record({ content: hidden.error, isError: true });
   if (name === 'type' && !hidden && typeof input.text !== 'string')
     return record({ content: 'Give the text to type (or memory for a hidden saved value).', isError: true });
-  // Enter that would send free text the assistant types needs a publish approval first (agent/approvalTool.ts).
-  let approvedPress = false;
-  if (name === 'type' && input.submit === true && !hidden && target?.tab && !target.tab.isNewTab) {
-    const gate = await enterGate(input, ctx, target.tab);
-    if (gate.kind === 'refuse') return record(gate.output);
-    approvedPress = gate.kind === 'approved';
+  const page = target?.tab && !target.tab.isNewTab ? target.tab : null;
+
+  // 3. Secret fields: Qutai never types into a password, one-time code, card number or security code field (the page
+  // script recognises the field: browser/pageScript.ts secretKind), nor a payment card number anywhere.
+  if (gate('secret')) {
+    if (page) {
+      const refused = await secretFieldGate(page, input.ref);
+      if (refused) return record(refused);
+    }
+    if (!hidden && typeof input.text === 'string' && containsCardNumber(input.text))
+      return record({ content: CARD_NUMBER_TEXT, isError: true, notice: settingNotice(t('step.cardNumber')) });
   }
-  // Qutai never types into a password, one-time code, card number or security code field, whatever the text (the page script
-  // recognises the field: browser/pageScript.ts secretKind).
-  if (name === 'type' && target?.tab && !target.tab.isNewTab) {
-    const refused = await secretFieldGate(target.tab, input.ref);
-    if (refused) return record(refused);
+
+  // 4. Remembered personal details need the site's permission, checked here in the app, not left to the prompt.
+  if (gate('personal')) {
+    if (hidden && target) {
+      const out = await hiddenGate(hidden.memory, input, target.url, host, ctx, target.tab);
+      if (out.kind === 'refuse') return record({ content: out.reason, isError: true, notice: out.notice });
+      personalAsked = true;
+    } else if (host) {
+      const out = await personalGate(name, input, host, ctx, target?.tab);
+      if (out.kind === 'refuse') return record({ content: out.reason, isError: true, notice: out.notice });
+      personalAsked = out.kind === 'asked';
+    }
   }
-  // Remembered personal details need the site's permission, checked here in the app, not left to the prompt.
-  let personalAsked = false;
-  if (hidden && target) {
-    const gate = await hiddenGate(hidden.memory, input, target.url, host, ctx, target.tab);
-    if (gate.kind === 'refuse') return record({ content: gate.reason, isError: true, notice: gate.notice });
-    personalAsked = true;
-  } else if ((name === 'type' || name === 'select_option') && host) {
-    const gate = await personalGate(name, input, host, ctx, target?.tab);
-    if (gate.kind === 'refuse') return record({ content: gate.reason, isError: true, notice: gate.notice });
-    personalAsked = gate.kind === 'asked';
+
+  // 5. Presses: a press or Enter the user approved in the publish, pay or change dialog is checked and used up here;
+  // a final payment, delete or account press, or one that sends the assistant's text, without one is refused
+  // (agent/approvalTool.ts).
+  if (gate('press') && page) {
+    const out =
+      name === 'type'
+        ? input.submit === true && !hidden
+          ? await enterGate(input, ctx, page)
+          : null
+        : await pressGate(name as 'click' | 'click_at', input, ctx, page, clickAtPoint(name, input, page));
+    if (out?.kind === 'refuse') return record(out.output);
+    approvedPress = out?.kind === 'approved';
   }
-  // Qutai never types a payment card number, whatever the model was told.
-  if (name === 'type' && !hidden && typeof input.text === 'string' && containsCardNumber(input.text))
-    return record({ content: CARD_NUMBER_TEXT, isError: true, notice: settingNotice(t('step.cardNumber')) });
-  // A press the user approved in the publish or pay dialog is checked and used up here; a final payment button without
-  // an approval is refused (agent/approvalTool.ts).
-  if ((name === 'click' || name === 'click_at') && target?.tab && !target.tab.isNewTab) {
-    const gate = await pressGate(name, input, ctx, target.tab, clickAtPoint(name, input, target.tab));
-    if (gate.kind === 'refuse') return record(gate.output);
-    approvedPress = gate.kind === 'approved';
-  }
-  // The personal-information question already named this entry; asking "may I type?" right after would be twice.
-  // An approved press was just asked in the publish or pay dialog.
+
   // An incognito tab makes the conversation incognito before the question, so it offers nothing to remember.
   if ((target?.tab?.incognito || fromTab?.incognito) && ctx.privacy) ctx.privacy.touchedIncognito = true;
-  if (decision.kind === 'confirm' && ctx.confirm && !personalAsked && !approvedPress && !approvedAddress) {
+
+  // 6. "Ask before every action" and the site's Ask level. The personal-information question already named this
+  // entry, an approved press was just asked in its dialog, an approved address in its own; tools that confirm on
+  // their own ask with their details.
+  if (gate('confirm') && decision.kind === 'confirm' && ctx.confirm && !personalAsked && !approvedPress && !approvedAddress) {
     const allowed = await ctx.confirm({ lines: [{ icon: toolIcon(name, input), text: describeToolCall(name, input) }] }, host);
     if (!allowed)
       return record({ content: 'The user declined this action. Ask them how to proceed.', isError: true, notice: declinedNotice() });
   }
-  return record(await runTool(name, input, ctx, hidden?.memory));
+  return record(await runTool(name, input, ctx, { hidden: hidden?.memory, addressApproved: approvedAddress }));
 }
 
 /** What the confirmation calls a hidden memory: "ID or passport number" for those, else the user's label. */
@@ -1787,14 +1647,96 @@ function personalSettingPlace(): string {
   );
 }
 
-/** `hidden`: the hidden memory type enters instead of `text` (already checked and confirmed by the caller). */
+/**
+ * The tab tools; null for any other tool. They work without the assistant's tab (`tab` undefined after the user closed
+ * it): listing, switching to or opening a tab is how the assistant goes on.
+ */
+async function tabsTool(name: string, input: Record<string, unknown>, ctx: ToolContext, tab: Tab | undefined): Promise<ToolOutput | null> {
+  const { browser } = ctx;
+  try {
+    switch (name) {
+      case 'list_tabs':
+        return { content: tabList(ctx), isError: false };
+      case 'open_tab': {
+        await tab?.captureThumbnail();
+        // Tabs opened from an incognito tab (or from an incognito conversation whose tab was closed) stay incognito,
+        // like in regular browsers. It joins the current tab's group, so the task's tabs stay together.
+        const opened = browser.openTab(normalizeUrl(input.url), {
+          incognito: tab ? tab.incognito : !!ctx.privacy?.touchedIncognito,
+          openerId: tab?.id,
+          group: true,
+        });
+        noteOpened(ctx, opened.id);
+        ctx.agentTab.id = opened.id;
+        await opened.waitForNextLoad();
+        return { content: `Opened tab id=${opened.id} at ${opened.url}. Call read_page to see it.`, isError: false };
+      }
+      case 'switch_tab': {
+        const target = browser.getTab(String(input.tab_id));
+        if (!target) return { content: `No tab with id=${input.tab_id}.\n${tabList(ctx)}`, isError: true };
+        // Its address is in this result: an incognito tab makes the conversation incognito first (INC-2).
+        if (target.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
+        if (tab && browser.activeId === tab.id) await tab.captureThumbnail();
+        ctx.agentTab.id = target.id;
+        browser.switchTab(target.id);
+        return { content: `Switched to tab id=${target.id} (${target.url}).`, isError: false };
+      }
+      case 'close_tab': {
+        const id = String(input.tab_id);
+        if (!browser.getTab(id)) return { content: `No tab with id=${id}.`, isError: true };
+        browser.closeTab(id);
+        // The assistant closed its own tab: it goes on in the one now on screen, which the list below marks.
+        if (ctx.agentTab.id === id) ctx.agentTab.id = browser.active.id;
+        return { content: `Closed tab ${id}. Open tabs:\n${tabList(ctx)}`, isError: false };
+      }
+      case 'take_notes':
+        // The notes live in the call itself, which is never compacted; nothing to store here.
+        return { content: 'Noted. These notes stay in your context.', isError: false };
+      case 'close_tabs': {
+        const ids = new Set((Array.isArray(input.tab_ids) ? input.tab_ids : []).map(String));
+        const groupId = input.group_id ? String(input.group_id) : null;
+        if (groupId && !browser.getGroup(groupId)) return { content: `No group with id=${groupId}.`, isError: true };
+        if (groupId) browser.tabs.filter((x) => x.groupId === groupId).forEach((x) => ids.add(x.id));
+        const keep = input.keep_tab_id ? String(input.keep_tab_id) : null;
+        if (keep) ids.delete(keep);
+        const closing = [...ids].filter((id) => browser.getTab(id));
+        if (!closing.length) return { content: `Nothing to close.\n${tabList(ctx)}`, isError: true };
+        const ownClosed = closing.includes(ctx.agentTab.id);
+        browser.closeTabs(closing);
+        if (keep && browser.getTab(keep)) browser.switchTab(keep);
+        if (ownClosed) ctx.agentTab.id = browser.active.id;
+        return { content: `Closed ${closing.length} tab(s). Open tabs:\n${tabList(ctx)}`, isError: false };
+      }
+      case 'wait': {
+        const seconds = Math.min(Math.max(Number(input.seconds) || 1, 0), 10);
+        await sleep(seconds * 1000);
+        return { content: `Waited ${seconds}s.`, isError: false };
+      }
+      default:
+        return null;
+    }
+  } catch (e) {
+    return { content: `Error: ${e instanceof Error ? e.message : String(e)}`, isError: true, notice: pageErrorNotice(e) };
+  }
+}
+
+/**
+ * Runs a call that passed its checks. `hidden`: the hidden memory type enters instead of `text` (already checked and
+ * confirmed by the caller); `addressApproved`: the user approved the model's address in the outbound dialog.
+ */
 async function runTool(
   name: string,
   input: Record<string, unknown>,
   ctx: ToolContext,
-  hidden?: Memory,
+  { hidden, addressApproved = false }: { hidden?: Memory; addressApproved?: boolean } = {},
 ): Promise<ToolOutput> {
   const { browser } = ctx;
+
+  // These confirm on their own every time, with the details of what will be added, read or downloaded.
+  if (SCHEDULING_TOOLS.has(name)) return schedulingTool(name as SchedulingTool, input, ctx);
+  if (name === 'get_location') return locationTool(input, ctx);
+  if (name === 'read_calendar') return readCalendarTool(input, ctx);
+  if (name === 'download_file') return downloadFileTool(input, ctx, addressApproved);
 
   if (name === 'remember' || name === 'forget') return memoryTool(name, input, ctx);
   if (name === 'read_tab') return readTab(input, ctx);
@@ -1816,21 +1758,27 @@ async function runTool(
   if (name === 'read_pdf') return readPdfTool(input, ctx);
   if (name === 'apps') return appsTool(input, ctx);
 
-  const tab = currentTab(ctx);
-  if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
-  if (tab.asleep) {
-    const loaded = tab.waitForNextLoad();
-    tab.wake();
+  // The tab tools work without the assistant's tab (the user may have closed it); everything else needs it.
+  const agentTab = browser.getTab(ctx.agentTab.id);
+  if (agentTab?.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
+  if (agentTab?.asleep) {
+    const loaded = agentTab.waitForNextLoad();
+    agentTab.wake();
     await loaded;
   }
+  const tabTool = await tabsTool(name, input, ctx, agentTab);
+  if (tabTool) return tabTool;
+  if (!agentTab) return tabClosed(ctx);
+  const tab = agentTab;
 
   // Reader mode lies over the page: read_page and read_source still read the page itself, while
   // anything that looks at or acts on it shows the page again, so the user sees what happens.
-  if (tab.reader && PAGE_TOOLS.has(name) && name !== 'read_page' && name !== 'read_source') {
+  const pageTool = !!toolSpec(name)?.page;
+  if (tab.reader && pageTool && name !== 'read_page' && name !== 'read_source') {
     await tab.leaveReader();
   }
 
-  if (tab.isNewTab && PAGE_TOOLS.has(name)) {
+  if (tab.isNewTab && pageTool) {
     return {
       content: 'This tab shows the new tab page; no web page is loaded. Use navigate to open one.',
       isError: name !== 'read_page',
@@ -2070,59 +2018,6 @@ async function runTool(
         }
         await saveScreenshot(tab);
         return { content: "Saved a screenshot of the visible area to the user's photo library.", isError: false };
-      }
-      case 'list_tabs':
-        return { content: tabList(ctx), isError: false };
-      case 'open_tab': {
-        await tab.captureThumbnail();
-        // Tabs opened from an incognito tab stay incognito, like in regular browsers.
-        // It joins the current tab's group, so the task's tabs stay together and can be closed together.
-        const opened = browser.openTab(normalizeUrl(input.url), {
-          incognito: tab.incognito,
-          openerId: tab.id,
-          group: true,
-        });
-        noteOpened(ctx, opened.id);
-        ctx.agentTab.id = opened.id;
-        await opened.waitForNextLoad();
-        return { content: `Opened tab id=${opened.id} at ${opened.url}. Call read_page to see it.`, isError: false };
-      }
-      case 'switch_tab': {
-        const target = browser.getTab(String(input.tab_id));
-        if (!target) return { content: `No tab with id=${input.tab_id}.\n${tabList(ctx)}`, isError: true };
-        if (browser.activeId === tab.id) await tab.captureThumbnail();
-        ctx.agentTab.id = target.id;
-        browser.switchTab(target.id);
-        return { content: `Switched to tab id=${target.id} (${target.url}).`, isError: false };
-      }
-      case 'close_tab': {
-        const id = String(input.tab_id);
-        if (!browser.getTab(id)) return { content: `No tab with id=${id}.`, isError: true };
-        browser.closeTab(id);
-        if (ctx.agentTab.id === id) ctx.agentTab.id = browser.active.id;
-        return { content: `Closed tab ${id}. Open tabs:\n${tabList(ctx)}`, isError: false };
-      }
-      case 'take_notes':
-        // The notes live in the call itself, which is never compacted; nothing to store here.
-        return { content: 'Noted. These notes stay in your context.', isError: false };
-      case 'close_tabs': {
-        const ids = new Set((Array.isArray(input.tab_ids) ? input.tab_ids : []).map(String));
-        const groupId = input.group_id ? String(input.group_id) : null;
-        if (groupId && !browser.getGroup(groupId)) return { content: `No group with id=${groupId}.`, isError: true };
-        if (groupId) browser.tabs.filter((x) => x.groupId === groupId).forEach((x) => ids.add(x.id));
-        const keep = input.keep_tab_id ? String(input.keep_tab_id) : null;
-        if (keep) ids.delete(keep);
-        const closing = [...ids].filter((id) => browser.getTab(id));
-        if (!closing.length) return { content: `Nothing to close.\n${tabList(ctx)}`, isError: true };
-        browser.closeTabs(closing);
-        if (keep && browser.getTab(keep)) browser.switchTab(keep);
-        if (!browser.getTab(ctx.agentTab.id)) ctx.agentTab.id = browser.active.id;
-        return { content: `Closed ${closing.length} tab(s). Open tabs:\n${tabList(ctx)}`, isError: false };
-      }
-      case 'wait': {
-        const seconds = Math.min(Math.max(Number(input.seconds) || 1, 0), 10);
-        await sleep(seconds * 1000);
-        return { content: `Waited ${seconds}s.`, isError: false };
       }
       default:
         return { content: `Unknown tool: ${name}`, isError: true };

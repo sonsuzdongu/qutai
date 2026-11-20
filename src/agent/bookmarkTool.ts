@@ -22,6 +22,7 @@ import type { ToolContext, ToolOutput } from './executeTool';
 import { declinedNotice, incognitoNotice } from './stepLine';
 import { uiLabel, uiPath } from './uiLabels';
 import { cutText } from '../utils/wellFormed';
+import { BOOKMARK_READS } from './toolTable';
 
 /**
  * The assistant's bookmarks tool. Adding, renaming, moving and new folders are visible in the Library and easily
@@ -44,7 +45,7 @@ export const BOOKMARK_ACTIONS = [
 export type BookmarkAction = (typeof BOOKMARK_ACTIONS)[number];
 
 /** Read-only actions: not written to the action history. */
-export const BOOKMARK_READS: ReadonlySet<string> = new Set(['list', 'search']);
+export { BOOKMARK_READS };
 
 /** Removals in one task up to this many run without asking; the next one asks once for the rest of the task. */
 const REMOVALS_WITHOUT_ASKING = 3;
@@ -215,7 +216,8 @@ export async function bookmarksTool(input: Record<string, unknown>, ctx: ToolCon
   const action = input.action as BookmarkAction;
   if (!BOOKMARK_ACTIONS.includes(action))
     return { content: `action must be one of: ${BOOKMARK_ACTIONS.join(', ')}.`, isError: true };
-  const tab = ctx.browser.getTab(ctx.agentTab.id) ?? ctx.browser.active;
+  // Undefined when the user closed the assistant's tab: "the current page" is then none, never the tab on screen.
+  const tab = ctx.browser.getTab(ctx.agentTab.id);
   if (tab?.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
   const incognito = !!(ctx.privacy?.touchedIncognito || tab?.incognito);
   if (incognito && action !== 'add' && action !== 'remove') {

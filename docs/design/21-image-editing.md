@@ -33,7 +33,7 @@ The assistant can make edited copies of an image the user attached, entirely on 
 - **`IMG-9`** A conversation keeps its 12 newest edited images. Older ones that nothing depends on lose their files, and their cards say so.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: src/chat/attachments.ts (MAX_EDITED_IMAGES); src/chat/Conversation.ts (addEditedImage)
 - **`IMG-15`** `upload_image` asks every time, whatever the site's setting. The dialog shows the image, its size, bytes and the site, and has no "don't ask again".
-  Status: Default (manager or implementing session; open to change) · Why: an image leaving the phone is the user's decision each time · Enforced: In the app: src/agent/imageTools.ts (uploadImageTool, ctx.confirmImage); upload_image is in ALWAYS_CONFIRMED in src/agent/executeTool.ts and is not a kind in src/agent/alwaysAllow.ts · Source: README › Uploading images; a987554
+  Status: Default (manager or implementing session; open to change) · Why: an image leaving the phone is the user's decision each time · Enforced: In the app: src/agent/imageTools.ts (uploadImageTool, ctx.confirmImage); upload_image confirms itself in src/agent/toolTable.ts (TOOL_TABLE) and is not a kind in src/agent/alwaysAllow.ts · Source: README › Uploading images; a987554
 - **`IMG-16`** Only images from this conversation can be uploaded: ones the user attached, or edits of them. Screenshots, other tabs, downloads and PDFs have no image id and are refused.
   Status: Default (manager or implementing session; open to change) · Why: page content must not be able to make the assistant hand out other files · Enforced: In the app: src/agent/imageTools.ts (findAttachment with kind "image") · Source: README › Uploading images
 - **`IMG-17`** The assistant never uploads because a page asks. It only uploads when the user wants it.
@@ -51,7 +51,7 @@ The assistant can make edited copies of an image the user attached, entirely on 
 - **`IMG-21`** `upload_image` never submits the form. Submitting is a separate step under the usual confirmation rules.
   Status: Default (manager or implementing session; open to change) · Why: sending stays the user's step · Enforced: In the app: the page script only assigns the file and fires input and change events (src/browser/pageScript.ts, fileAssign); the result says nothing was submitted (src/agent/imageTools.ts) · Source: README › Uploading images
 - **`IMG-23`** The action history records only that an image was given to a site and where, never the image.
-  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: src/agent/executeTool.ts (LOGGED_TOOLS)
+  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: src/agent/toolTable.ts (TOOL_TABLE logged)
 - **`IMG-24`** Video editing (the other half of the 18 Nov media request) is postponed.
   Status: Owner, 2026-11-19 · Why: reason not recorded · Source: TODO.md (image filters entry); cc5711d
 

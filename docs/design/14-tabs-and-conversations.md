@@ -69,6 +69,9 @@ assistant panel does while a task works.
 - **`TABS-26`** A woken tab comes back at the scroll position it had on the same page (the page reports it half a second after scrolling stops; memory only, never saved, not in incognito tabs, which never sleep).
   Status: Default (manager or implementing session; open to change) · Why: waking a tab lost the reading position · Enforced: In the app: src/browser/scrollMemory.ts, src/browser/Tab.ts (noteScroll, takeScrollRestore) · Source: owner's report 20 Nov 2026 (docs/test-checklist.md › 20 Kasım'da bildirilenler)
 
+- **`TABS-27`** When the user closes the tab the assistant works in during a task, the assistant's next call that needs that tab (reading, clicking, typing, navigating, downloading a link, reading the PDF open there) fails with "The tab you were working in was closed, so nothing was done" and a step line; it never acts on whichever tab is on screen with element numbers from the closed page. Listing, switching to and opening tabs still work, and switching or opening is how the assistant goes on. When the assistant closes its own tab, it goes on in the tab on screen as before (the tab list it gets back says where it is). Before 20 Nov 2026 it silently went on in the tab on screen.
+  Status: Default (implementing session; owner's 20 Nov 2026 code-review request) · Why: a click by element number on another page presses something else · Enforced: In the app: src/agent/executeTool.ts (tabClosed, currentTab, tabsTool), src/agent/fileTools.ts, src/agent/bookmarkTool.ts, src/agent/toolTable.ts (each tool's tab need) · Tests: scripts/injection-tests/pipeline.test.ts · Source: 20 Nov 2026 code review
+
 ## Details
 
 **Conversations on disk and in memory**

@@ -87,6 +87,9 @@ files and PDFs. Site levels and approvals are in [section 5](05-site-permissions
 - **`TOOL-29`** If a page shows a CAPTCHA, the assistant does not solve it; it asks the user to.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: Prompt only: src/agent/systemPrompt.ts; the app does not check it · Source: 6706522; src/agent/systemPrompt.ts
 
+- **`TOOL-30`** Every tool the assistant can call has one row in one table that says what it acts on (no page, the assistant's tab, the tab it names, the address it loads, a PDF), whether it needs the assistant's tab, the address the model wrote for it, whether it runs in the background, whether and when it goes in the action history, whether it asks the user itself, and which checks apply; every call passes the same ordered checks: the site's permission, the outbound address (`UNTR-22`), secret fields and card numbers (`SEC-1`, `SEC-2`), personal data (`MEM-17`), presses (`PAY-17`, `PAY-26`, `PAY-27`), then "Ask before every action". A tool without a row is refused ("Unknown tool") and fails a test, so a new tool can't skip the checks. Before 20 Nov 2026 five hand-kept lists said this and had drifted (`download_file`'s own address skipped the outbound check). One order change came with it: for typing with Enter, the personal-data question now comes before the publish check (before, the publish refusal came first).
+  Status: Default (implementing session; owner's 20 Nov 2026 code-review request) · Why: a new tool missing from one list silently skipped a check · Enforced: In the app: src/agent/toolTable.ts (TOOL_TABLE, GATE_ORDER), src/agent/executeTool.ts (executeUnredacted, backgroundBlocker, actionTarget) · Tests: scripts/injection-tests/pipeline.test.ts (every tool has a row, rows agree with the site permission's lists, an unknown tool is refused) · Source: 20 Nov 2026 code review
+
 ## Details
 
 **Messages and reminders**

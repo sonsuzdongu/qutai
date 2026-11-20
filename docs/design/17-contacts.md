@@ -46,7 +46,7 @@ The assistant can find a person the user names ("call Ahmet", "WhatsApp Ayşe th
 - **`CON-13`** Saved conversations and backups keep a card's name, label and message text, never the number. A restored card says the number isn't kept.
   Status: Default (manager or implementing session; open to change) · Why: disk and backups must never hold values from contacts · Enforced: In the app: src/chat/contactCards.ts (withoutContactValues), applied in src/chat/Conversation.ts (toSaved) · Source: docs/contacts.md › What is stored where
 - **`CON-14`** The action history records only who a card was for (for example "Offered a call button: Ahmet Yılmaz"), never the number. For `find_contact` it records only the name the user said. Nothing is written for incognito.
-  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: In the app: src/agent/executeTool.ts (LOGGED_TOOLS, record skips incognito) · Source: docs/contacts.md › What is stored where
+  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: In the app: src/agent/toolTable.ts (TOOL_TABLE logged), src/agent/executeTool.ts (record skips incognito) · Source: docs/contacts.md › What is stored where
 - **`CON-15`** Contacts put nothing into memory automatically. "Ayşe is my sister" goes through `remember` like any other statement from the user.
   Status: Default (manager or implementing session; open to change) · Why: the model never has the number to save · Enforced: In the app: follows from CON-1 (there is no path from contacts to memory) · Source: docs/contacts.md › What is stored where
 - **`CON-16`** Contacts are read only. Android's `WRITE_CONTACTS` permission is blocked.

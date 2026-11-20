@@ -661,3 +661,10 @@ Bilgisayarda testlerle denendi; telefon ve öykünücü kullanılamadı. En risk
       `adb reverse tcp:8811 tcp:8811`) telefonda da hepsi geçiyor.
 - [ ] Yavaş bir sayfada (ağ yavaşken) bir "Satın al" düğmesine bastırmaya çalışın: "Qutai bu adımı denetleyemedi"
       satırı çıkabilir, düğmeye basılmamalı (`PAY-28`).
+- [ ] Asistan bir görevde yeni bir sekme açıp orada çalışırken o sekmeyi kapatın: sohbette "Qutai'ın çalıştığı sekme
+      kapatıldı" satırı çıkıyor, asistan ekrandaki başka sekmede bir şeye basmıyor; sekme listesine bakıp devam ediyor
+      (`TABS-27`).
+- [ ] Bir gizli sekme açıkken normal bir sekmede "Açık sekmelerimi listeler misiniz?": gizli sekme yalnızca numarasıyla
+      geçiyor, başlığı ve adresi sohbette, "Yapay zekâya gönderilenler" kaydında ve geçmişte yok (`INC-2`).
+- [ ] "https://… adresindeki PDF'i indirir misiniz?" (adresi siz yazın): indirme penceresi adı gösteriyor, türü ve
+      boyutu göstermiyor; "Bir daha sorma" açık olsa da soruluyor; Reddet'ten önce o adrese istek gitmiyor (`DL-5`).

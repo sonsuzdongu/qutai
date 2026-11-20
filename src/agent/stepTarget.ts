@@ -548,7 +548,8 @@ export async function prepareStepTarget(
   try {
     if (TAB_TOOLS.has(name)) {
       const tab = browser.getTab(String(input.tab_id ?? ''));
-      if (!tab) return;
+      // An incognito tab's title never goes into a step line (kept in the conversation and the history, INC-2).
+      if (!tab || tab.incognito) return;
       const host = (() => {
         try {
           return new URL(tab.url).hostname.replace(/^www\./, '');

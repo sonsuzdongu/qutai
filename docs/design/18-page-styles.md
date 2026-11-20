@@ -19,7 +19,7 @@ The user can change how a site looks by asking: "make the links red", "bigger te
 ## The rules
 
 - **`STY-1`** Every style is approved in Qutai's dialog, every time, with the description, the site and the CSS under Details. There is never a "don't ask again", whatever the site's setting.
-  Status: Default (manager or implementing session; open to change) · Why: covering the page with fake boxes or `content:` text is possible in principle, so every style is shown, approved and can be switched off · Enforced: In the app: src/components/pageCustomisation.tsx (askStyle), called from src/agent/pageCustomTool.ts (pageCustomTool); restyle_page is in ALWAYS_CONFIRMED in src/agent/executeTool.ts and is not a kind in src/agent/alwaysAllow.ts · Source: docs/page-customisation.md › Styles › The flow; 08b4da8
+  Status: Default (manager or implementing session; open to change) · Why: covering the page with fake boxes or `content:` text is possible in principle, so every style is shown, approved and can be switched off · Enforced: In the app: src/components/pageCustomisation.tsx (askStyle), called from src/agent/pageCustomTool.ts (pageCustomTool); restyle_page confirms itself in src/agent/toolTable.ts (TOOL_TABLE) and is not a kind in src/agent/alwaysAllow.ts · Source: docs/page-customisation.md › Styles › The flow; 08b4da8
 - **`STY-2`** The CSS is parsed and written back from the parse, not pattern-matched. Only the written-back CSS is stored and injected, never the input. It is checked again whenever a style is kept, edited, imported or restored from a backup.
   Status: Default (manager or implementing session; open to change) · Why: pattern matching can be got around by escapes and odd spellings; escapes are decoded before any name is checked · Enforced: In the app: src/content/userCss.ts (sanitizeCss); src/storage/siteRules.ts (addStyle, checked); src/content/userStyles.ts (readBackupStyles) · Source: docs/page-customisation.md › CSS sanitising; 362cc0f
 - **`STY-3`** These are allowed:
@@ -63,7 +63,7 @@ The user can change how a site looks by asking: "make the links red", "bigger te
 - **`STY-19`** Kept styles are in the encrypted backup and the server backup (`sites.styles`), checked again on restore. A style with the same scope and CSS is merged. Older versions ignore the array.
   Status: Default (manager or implementing session; open to change) · Why: a malicious backup must not carry unchecked CSS; older versions must not lose their own data · Enforced: In the app: src/content/userStyles.ts (readBackupStyles); src/backup/database.ts · Source: docs/page-customisation.md › Export, import, backup; 5aaf975
 - **`STY-20`** The action history records only that a style was applied, never the CSS.
-  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: src/agent/executeTool.ts (LOGGED_TOOLS, isLogged)
+  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: src/agent/toolTable.ts (TOOL_TABLE logged, isLoggedCall)
 - **`STY-21`** Style cards in restored chats still offer Keep, while script cards don't.
   Status: Waiting for the owner ([TODO.md](../../TODO.md#decisions-waiting-for-the-owner-collected-17-nov-2026)): today a restored style card offers Keep, and the CSS is checked again when it is kept · Why: low risk, because the CSS is sanitised again · Source: TODO.md › Page customisation, step two — owner decisions
 - **`STY-22`** Kept styles on sites set to "Blocked" still apply wherever their scope says.

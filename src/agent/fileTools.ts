@@ -51,10 +51,14 @@ type PdfSource = {
   load: () => Promise<string>;
 };
 
-/** The tab the agent works in (the one on screen if the user closed it). */
+/** The tab the agent works in; undefined when the user closed it (never the tab on screen instead). */
 function agentTab(ctx: ToolContext) {
-  return ctx.browser.getTab(ctx.agentTab.id) ?? ctx.browser.active;
+  return ctx.browser.getTab(ctx.agentTab.id);
 }
+
+const TAB_CLOSED =
+  'The tab you were working in was closed, so there is no link or open PDF to read there. Give the url, or call ' +
+  'list_tabs and switch_tab to the tab with the PDF.';
 
 /** Where the PDF comes from: an attachment, a link on the page (ref), an address, or the current tab. */
 async function pdfSource(input: Record<string, unknown>, ctx: ToolContext): Promise<PdfSource | ToolOutput> {
@@ -76,18 +80,19 @@ async function pdfSource(input: Record<string, unknown>, ctx: ToolContext): Prom
   }
 
   const tab = agentTab(ctx);
-  if (tab.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
+  if (tab?.incognito && ctx.privacy) ctx.privacy.touchedIncognito = true;
   const hasRef = input.ref !== undefined && input.ref !== null && input.ref !== '';
   let url = typeof input.url === 'string' ? input.url.trim() : '';
   let fromTab = false;
-  if (hasRef) {
+  if (!tab && (hasRef || !url)) return { content: TAB_CLOSED, isError: true };
+  if (hasRef && tab) {
     if (tab.isNewTab) return { content: 'No web page is loaded in this tab, so there is no link to read.', isError: true };
     try {
       url = await tab.run<string>('linkHref', [input.ref]);
     } catch (e) {
       return { content: e instanceof Error ? e.message : String(e), isError: true };
     }
-  } else if (!url) {
+  } else if (!url && tab) {
     if (tab.isNewTab) {
       return {
         content: 'No PDF is open: this tab shows the new tab page. Give a url, a link ref or an attachment_id.',
@@ -108,7 +113,7 @@ async function pdfSource(input: Record<string, unknown>, ctx: ToolContext): Prom
       notice: settingNotice(t('step.siteBlocked', { host })),
     };
   }
-  const incognito = tab.incognito || !!ctx.privacy?.touchedIncognito;
+  const incognito = !!tab?.incognito || !!ctx.privacy?.touchedIncognito;
   let name = '';
   return {
     key: `${incognito ? 'i' : 'n'}:${url}`,
@@ -118,7 +123,7 @@ async function pdfSource(input: Record<string, unknown>, ctx: ToolContext): Prom
     origin: fromTab ? `the PDF open in the current tab, ${url}` : url,
     again: `url=${JSON.stringify(url)}`,
     load: async () => {
-      const data = await fetchPdfData(tab, url, fromTab ? 15_000 : 60_000);
+      const data = await fetchPdfData(tab ?? null, url, fromTab ? 15_000 : 60_000);
       name = data.name;
       return data.base64;
     },
