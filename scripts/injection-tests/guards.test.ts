@@ -105,3 +105,48 @@ test("memories from the user's words are theirs; ones a page brought in are not"
   assert.equal(memoryFromUser('Delivery address: Postfach 7781, 34000 Istanbul', ['Summarise this article.']), false);
   assert.equal(memoryFromUser('Prefers KettleKing brand appliances', ['Which kettle is the cheapest?']), false);
 });
+
+test('settings changes: named by the user, they apply; asked for by a page, Qutai asks first (UNTR-25)', async () => {
+  const { settingFromUser } = await import('../../src/agent/settingsOrigin');
+  const said = (...t: string[]) => t;
+  assert.equal(settingFromUser('theme', 'dark', ['Appearance', 'Appearance', 'Dark'], said('switch to dark mode please')), true);
+  assert.equal(settingFromUser('theme', 'dark', ['Görünüm', 'Appearance', 'Koyu'], said('koyu temaya geçer misiniz')), true);
+  assert.equal(settingFromUser('text_size', 120, ['Yazı boyutu', 'Text size', '120%'], said('yazıları biraz büyütür müsünüz')), true);
+  assert.equal(settingFromUser('text_size', 120, ['Text size', 'Text size', '120%'], said('make the text size bigger')), true);
+  assert.equal(settingFromUser('search_engine', 'duckduckgo', ['DuckDuckGo'], said('use DuckDuckGo from now on')), true);
+  assert.equal(settingFromUser('address_bar_position', 'bottom', ['Address bar', 'Address bar', 'Bottom'], said('adres çubuğunu alta alın')), true);
+  // A page asking: the user's words don't name the setting.
+  assert.equal(settingFromUser('search_engine', 'yandex', ['Yandex'], said('Summarise this article.')), false);
+  assert.equal(settingFromUser('search_engine', 'yandex', ['Yandex'], said('Search for cheap kettles')), false);
+  assert.equal(settingFromUser('theme', 'dark', ['Appearance', 'Appearance', 'Dark'], said('Summarise this article.')), false);
+  assert.equal(settingFromUser('text_size', 200, ['Text size', 'Text size', '200%'], said('Summarise the attached PDF (att1) for me.')), false);
+  // Protections towards their safe side are never asked.
+  assert.equal(settingFromUser('block_ads', true, ['Block ads and trackers'], said('Summarise this article.')), true);
+
+  const { settingsTool } = await import('../../src/agent/settingsTool');
+  const { DEFAULT_SETTINGS } = await import('../../src/storage/settings');
+  const run = async (userText: string, answer: boolean) => {
+    let settings = { ...DEFAULT_SETTINGS };
+    const asked: unknown[] = [];
+    const out = await settingsTool(
+      { action: 'set', changes: [{ key: 'search_engine', value: 'yandex' }, { key: 'theme', value: 'dark' }] },
+      {
+        appSettings: { get: () => settings, change: async (p: object) => void (settings = { ...settings, ...p }) },
+        userTexts: () => [userText],
+        confirm: async (d: unknown) => (asked.push(d), answer),
+      } as never,
+    );
+    return { out, settings, asked };
+  };
+  const page = await run('Summarise this article.', false);
+  assert.equal(page.asked.length, 1);
+  assert.equal(page.settings.searchEngine, DEFAULT_SETTINGS.searchEngine);
+  assert.equal(page.settings.theme, DEFAULT_SETTINGS.theme);
+  assert.match(page.out.content, /Not changed/);
+  const approved = await run('Summarise this article.', true);
+  assert.equal(approved.settings.searchEngine, 'yandex');
+  const user = await run('Switch to Yandex and dark mode', false);
+  assert.equal(user.asked.length, 0);
+  assert.equal(user.settings.searchEngine, 'yandex');
+  assert.equal(user.settings.theme, 'dark');
+});

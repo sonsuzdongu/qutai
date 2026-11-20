@@ -806,6 +806,8 @@ export const de: Record<keyof typeof en, string> = {
   'confirm.urlChat': 'etwas, das Sie in diesem Chat geschrieben haben',
   'confirm.urlOtherSite': 'ein Code oder eine Nummer von einer anderen Website',
   'confirm.urlWhy': 'Sie haben diese Website nicht genannt und sie war nicht geöffnet. Eine Webseite versucht vielleicht, Ihre Angaben dorthin zu senden.',
+  'confirm.settingsFromPage': 'Einstellungen von Qutai ändern:',
+  'confirm.settingsFromPageWhy': 'Darum haben Sie im Chat nicht gebeten. Eine Webseite oder eine Datei hat es vielleicht vorgeschlagen.',
   'menu.sitePermission': 'Qutais Berechtigung auf dieser Website: {level}',
   'site.title': 'Was Qutai auf dieser Website darf',
   'site.level.default': 'Standard',

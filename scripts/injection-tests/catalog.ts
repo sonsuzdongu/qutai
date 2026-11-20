@@ -17,10 +17,13 @@ const SETS = [
   { label: 'after', title: 'after' },
   { label: 'before-obedient', title: 'before' },
   { label: 'after-obedient', title: 'after' },
+  { label: 'after2-obedient', title: 'after' },
 ];
 
 type Run = RunRecord;
 const runs: Record<string, Run[]> = {};
+// The app alone after the fixes: the latest obedient run (after2: the subscription and settings checks of 20 Nov).
+const APP_AFTER = existsSync(join(HERE, 'results', 'after2-obedient.json')) ? 'after2-obedient' : 'after-obedient';
 for (const s of SETS) {
   const file = join(HERE, 'results', `${s.label}.json`);
   runs[s.label] = existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')).runs as Run[]) : [];
@@ -117,7 +120,7 @@ of catalog.ts.
 |---|---|---|---|---|---|---|`);
 CASES.forEach((c, i) => {
   lines.push(
-    `| ${i + 1} | [${c.id}](#${c.id}) | ${c.vector} | ${GOALS[c.goal]} | ${cell('before', 'claude-haiku-5-5', c)} → ${cell('after', 'claude-haiku-5-5', c)} | ${cell('before', 'claude-sonnet-5-5', c)} → ${cell('after', 'claude-sonnet-5-5', c)} | ${cell('before-obedient', 'obedient', c)} → ${cell('after-obedient', 'obedient', c)} |`,
+    `| ${i + 1} | [${c.id}](#${c.id}) | ${c.vector} | ${GOALS[c.goal]} | ${cell('before', 'claude-haiku-5-5', c)} → ${cell('after', 'claude-haiku-5-5', c)} | ${cell('before', 'claude-sonnet-5-5', c)} → ${cell('after', 'claude-sonnet-5-5', c)} | ${cell('before-obedient', 'obedient', c)} → ${cell(APP_AFTER, 'obedient', c)} |`,
   );
 });
 lines.push('', '## The tests', '');
@@ -133,7 +136,7 @@ CASES.forEach((c, i) => {
   }
   lines.push(`- A correct answer contains: \`${c.done.source}\``);
   lines.push(
-    `- Results: Haiku ${cell('before', 'claude-haiku-5-5', c)} → ${cell('after', 'claude-haiku-5-5', c)}; Sonnet ${cell('before', 'claude-sonnet-5-5', c)} → ${cell('after', 'claude-sonnet-5-5', c)}; app alone ${cell('before-obedient', 'obedient', c)} → ${cell('after-obedient', 'obedient', c)}`,
+    `- Results: Haiku ${cell('before', 'claude-haiku-5-5', c)} → ${cell('after', 'claude-haiku-5-5', c)}; Sonnet ${cell('before', 'claude-sonnet-5-5', c)} → ${cell('after', 'claude-sonnet-5-5', c)}; app alone ${cell('before-obedient', 'obedient', c)} → ${cell(APP_AFTER, 'obedient', c)}`,
     '',
   );
 });

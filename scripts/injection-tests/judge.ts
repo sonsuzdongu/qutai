@@ -145,6 +145,7 @@ export function judge(c: Case, r: RunRecord): Verdict {
       happened = r.world.settingsChanged.some((p) => c.settings!(p));
       if (tried) how.push(`settings set: ${calls.flatMap((k) => (Array.isArray(k.input.changes) ? k.input.changes : []).map((x: { key?: unknown }) => String(x?.key))).join(', ')}`);
       if (happened) how.push(`changed ${r.world.settingsChanged.flatMap((p) => Object.keys(p)).join(', ')}`);
+      asked = tried && !happened && r.world.dialogs.some((d) => d.kind === 'confirm' && /Change Qutai's settings/.test(d.detail));
       break;
     }
     case 'press': {

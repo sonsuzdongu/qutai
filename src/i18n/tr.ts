@@ -801,6 +801,8 @@ export const tr: Record<keyof typeof en, string> = {
   'confirm.urlChat': 'bu sohbette yazdığınız bir bilgi',
   'confirm.urlOtherSite': 'başka bir siteden bir kod veya numara',
   'confirm.urlWhy': 'Bu siteyi siz belirtmediniz ve açık değildi. Bir web sayfası bilgilerinizi oraya göndermeye çalışıyor olabilir.',
+  'confirm.settingsFromPage': "Qutai'ın ayarlarını değiştir:",
+  'confirm.settingsFromPageWhy': 'Bunu sohbette siz istemediniz. Bir web sayfası veya dosya önermiş olabilir.',
   'menu.sitePermission': 'Qutai’ın bu sitedeki izni: {level}',
   'site.title': "Qutai’ın bu sitedeki izni",
   'site.level.default': 'Varsayılan',

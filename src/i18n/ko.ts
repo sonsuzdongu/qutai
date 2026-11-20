@@ -810,6 +810,8 @@ export const ko: Record<keyof typeof en, string> = {
   'confirm.urlChat': '이 채팅에서 작성하신 내용',
   'confirm.urlOtherSite': '다른 사이트의 코드 또는 번호',
   'confirm.urlWhy': '지정하지 않았고 열려 있지도 않던 사이트입니다. 웹페이지가 정보를 그곳으로 보내려는 것일 수 있습니다.',
+  'confirm.settingsFromPage': 'Qutai 설정 변경:',
+  'confirm.settingsFromPageWhy': '채팅에서 요청하신 내용이 아닙니다. 웹페이지나 파일이 제안한 것일 수 있습니다.',
   'menu.sitePermission': '이 사이트에서 Qutai의 권한: {level}',
   'site.title': '이 사이트에서 Qutai가 할 수 있는 일',
   'site.level.default': '기본값',

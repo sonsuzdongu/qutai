@@ -812,6 +812,8 @@ export const ptBR: Record<keyof typeof en, string> = {
   'confirm.urlChat': 'algo que você escreveu nesta conversa',
   'confirm.urlOtherSite': 'um código ou uma referência de outro site',
   'confirm.urlWhy': 'Você não mencionou este site e ele não estava aberto. Uma página da web pode estar tentando enviar seus dados para lá.',
+  'confirm.settingsFromPage': 'Alterar as configurações do Qutai:',
+  'confirm.settingsFromPageWhy': 'Você não pediu isso na conversa. Uma página da web ou um arquivo pode ter sugerido isso.',
   'menu.sitePermission': 'Permissão do Qutai neste site: {level}',
   'site.title': 'O que o Qutai pode fazer neste site',
   'site.level.default': 'Padrão',

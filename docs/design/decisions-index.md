@@ -190,7 +190,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `UNTR-6` | HTTPS-only can be turned on by the assistant, never off. | Default |  |
 | `UNTR-7` | "Let the assistant complete payments" and "Let the assistant run scripts on pages" cannot be changed by… | Owner | 2026-11-19 |
 | `UNTR-8` | The settings tool can never weaken a protection: blocking, cookie banners, third-party cookies and HTTPS-only on only… | Default | 2026-11-19 |
-| `UNTR-9` | The assistant changes settings only when the user asks in their own words; a page, file or tool result… | Default |  |
+| `UNTR-9` | The assistant changes settings only when the user asks in their own words; a page, file or tool result… (app check: `UNTR-25`) | Default | 2026-11-20 |
 | `UNTR-10` | Bookmarks, site rules, page styles, cookie deletion and apps change only when the user asks, never because… | Default |  |
 | `UNTR-11` | `find_contact` looks up only a name the user typed or said in this conversation. | Default |  |
 | `UNTR-12` | Calls, text messages, WhatsApp messages and emails are only prepared as cards or drafts; the user taps to… | Default |  |
@@ -206,6 +206,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `UNTR-22` | An address the model writes that carries memory details, the user's references or another site's codes to a site the user didn't name or have open is asked in Qutai's dialog | Default | 2026-11-20 |
 | `UNTR-23` | A memory that isn't in what the user wrote is asked in Qutai's dialog before it is saved | Default | 2026-11-20 |
 | `UNTR-24` | Resistance to instructions in pages is measured with the injection test set (opt-in, billed, capped); claims say only what it shows | Default | 2026-11-20 |
+| `UNTR-25` | A settings change the user's own messages don't name is asked in Qutai's dialog before it applies; protections towards safe never asked | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `UNTR-3`
 
@@ -278,8 +279,8 @@ Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE
 | `PAY-24` | Before a purchase or sign-up the assistant names any subscription, automatic renewal, free trial turning… | Default |  |
 | `PAY-25` | The activity history records only what was asked (post, comment, pay), never the text or the total. | Default |  |
 | `PAY-26` | Deleting something or changing account or security settings on a site needs Qutai's own approval (request_approval kind "change")… | Default | 2026-11-19 |
-
 | `PAY-27` | A button with an amount and a billing period or subscribe word in its visible text is a payment press (pay approval and the payments setting) | Default | 2026-11-20 |
+
 Moved to Details (ids retired, not reused): `PAY-10`, `PAY-18`, `PAY-19`, `PAY-20`, `PAY-21`, `PAY-22`
 
 ## [8. Incognito and locks](08-incognito.md)

@@ -811,6 +811,8 @@ export const fr: Record<keyof typeof en, string> = {
   'confirm.urlChat': 'quelque chose que vous avez écrit dans cette conversation',
   'confirm.urlOtherSite': 'un code ou une référence provenant d’un autre site',
   'confirm.urlWhy': 'Vous n’avez pas nommé ce site et il n’était pas ouvert. Une page web essaie peut-être d’y envoyer vos informations.',
+  'confirm.settingsFromPage': 'Modifier les réglages de Qutai :',
+  'confirm.settingsFromPageWhy': 'Vous ne l’avez pas demandé dans la conversation. Une page web ou un fichier l’a peut-être suggéré.',
   'menu.sitePermission': 'Autorisation de Qutai sur ce site : {level}',
   'site.title': 'Ce que Qutai peut faire sur ce site',
   'site.level.default': 'Par défaut',

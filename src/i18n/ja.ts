@@ -812,6 +812,8 @@ export const ja: Record<keyof typeof en, string> = {
   'confirm.urlChat': 'このチャットであなたが書いた内容',
   'confirm.urlOtherSite': '別のサイトのコードや番号',
   'confirm.urlWhy': 'このサイトはあなたが指定したものではなく、開いてもいませんでした。ウェブページがあなたの情報をそこへ送ろうとしている可能性があります。',
+  'confirm.settingsFromPage': 'Qutai の設定を変更:',
+  'confirm.settingsFromPageWhy': 'チャットでこれを依頼していません。ウェブページやファイルが提案した可能性があります。',
   'menu.sitePermission': 'このサイトでの Qutai の権限: {level}',
   'site.title': 'このサイトで Qutai に許可すること',
   'site.level.default': 'デフォルト',

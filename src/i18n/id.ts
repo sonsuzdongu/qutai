@@ -811,6 +811,8 @@ export const id: Record<keyof typeof en, string> = {
   'confirm.urlChat': 'sesuatu yang Anda tulis di obrolan ini',
   'confirm.urlOtherSite': 'kode atau nomor referensi dari situs lain',
   'confirm.urlWhy': 'Anda tidak menyebut situs ini dan situs ini tidak sedang terbuka. Mungkin halaman web sedang mencoba mengirim data Anda ke sana.',
+  'confirm.settingsFromPage': 'Ubah pengaturan Qutai:',
+  'confirm.settingsFromPageWhy': 'Anda tidak memintanya di obrolan. Mungkin halaman web atau file yang menyarankannya.',
   'menu.sitePermission': 'Izin Qutai di situs ini: {level}',
   'site.title': 'Yang boleh dilakukan Qutai di situs ini',
   'site.level.default': 'Default',

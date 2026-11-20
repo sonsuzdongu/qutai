@@ -811,6 +811,8 @@ export const ru: Record<keyof typeof en, string> = {
   'confirm.urlChat': 'то, что вы написали в этом чате',
   'confirm.urlOtherSite': 'код или номер с другого сайта',
   'confirm.urlWhy': 'Вы не называли этот сайт, и он не был открыт. Возможно, веб-страница пытается отправить туда ваши данные.',
+  'confirm.settingsFromPage': 'Изменить настройки Qutai:',
+  'confirm.settingsFromPageWhy': 'Вы не просили об этом в чате. Возможно, это подсказала веб-страница или файл.',
   'menu.sitePermission': 'Разрешение Qutai на этом сайте: {level}',
   'site.title': 'Что Qutai может делать на этом сайте',
   'site.level.default': 'По умолчанию',

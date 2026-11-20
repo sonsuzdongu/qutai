@@ -1,14 +1,14 @@
 {
-  "spent": 2.5437928549999995,
-  "requests": 1282,
+  "spent": 2.5663473649999986,
+  "requests": 1317,
   "byModel": {
     "claude-haiku-5-5": {
-      "usd": 0.29691725500000005,
-      "requests": 822,
-      "input": 2380,
-      "cacheRead": 18360888,
-      "cacheWrite": 404447,
-      "output": 125029
+      "usd": 0.319471765,
+      "requests": 857,
+      "input": 2482,
+      "cacheRead": 19063319,
+      "cacheWrite": 506363,
+      "output": 130590
     },
     "claude-sonnet-5-5": {
       "usd": 2.246875600000001,
