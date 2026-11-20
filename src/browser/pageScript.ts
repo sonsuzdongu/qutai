@@ -401,6 +401,20 @@ export const PAGE_SCRIPT = String.raw`
     return (t.tagName === 'INPUT' && (type === 'checkbox' || type === 'radio')) || CHECK_ROLES.test(t.getAttribute('role') || '') ? t : null;
   }
 
+  var PRICE = /(?:[$€£₺¥₹₽]|\b(?:TL|TRY|USD|EUR|GBP)\b) ?\d[\d.,' ]*\d|\d[\d.,' ]*\d ?(?:[$€£₺¥₹₽]|\b(?:TL|TRY|USD|EUR|GBP|zł|kr)\b|円|원)|\b\d{1,4} ?(?:[$€£₺₽]|TL\b)/g;
+  function cutPrices(el, label) {
+    var full = clean(el.innerText || '');
+    if (full.length <= 80) return '';
+    // "%13 549,99 TL": a percentage before a price is not part of it.
+    var found = full.replace(/%\s?\d+|\d+\s?%/g, ' ').match(PRICE) || [];
+    var out = [];
+    for (var i = 0; i < found.length && out.length < 2; i++) {
+      var p = found[i].trim();
+      if (label.indexOf(p) < 0 && out.indexOf(p) < 0) out.push(cut(p, 24));
+    }
+    return out.join(' | ');
+  }
+
   function describe(el) {
     var tag = el.tagName.toLowerCase();
     var kind = el.getAttribute('role') || tag;
@@ -424,6 +438,10 @@ export const PAGE_SCRIPT = String.raw`
     } else if (tag === 'a') {
       var href = el.getAttribute('href') || '';
       if (href && href.indexOf('javascript:') !== 0) parts.push('href=' + cut(href, 100));
+      // A product card's link: its label is cut at 80 characters, often before the price; up to two amounts from the
+      // rest of its text, so the model sees the price as the page shows it (option cards, UI-24).
+      var prices = cutPrices(el, label);
+      if (prices) parts.push('prices="' + prices + '"');
     } else {
       if (CHECK_ROLES.test(el.getAttribute('role') || '')) {
         var ariaChecked = el.getAttribute('aria-checked');
@@ -2737,6 +2755,131 @@ export const PAGE_SCRIPT = String.raw`
     };
   }
 
+  // Option cards (show_options, src/chat/optionCards.ts): for each option the model named by ref or link, the link's
+  // real address on this page, its main picture and the text around it (for checking its price). Read-only: nothing
+  // is clicked, loaded or changed. Pictures only from <img> (no CSS backgrounds), never data: addresses.
+  function optionKey(u) {
+    try {
+      var x = new URL(u, location.href);
+      return (x.origin + x.pathname).replace(/\/+$/, '') + x.search;
+    } catch (e) { return ''; }
+  }
+  function optionPathKey(u) {
+    try {
+      var x = new URL(u, location.href);
+      return (x.origin + x.pathname).replace(/\/+$/, '');
+    } catch (e) { return ''; }
+  }
+  function optionImgSrc(img) {
+    var pic = img.parentElement && img.parentElement.tagName === 'PICTURE' ? img.parentElement : null;
+    var raw = readerImageSrc(img, pic);
+    if (!raw || /^(data|blob|javascript):/i.test(raw)) return '';
+    try { return new URL(raw, location.href).href; } catch (e) { return ''; }
+  }
+  // The largest picture inside the element (icons, badges and tracking pixels are skipped).
+  function optionBestImg(root) {
+    var imgs = root.querySelectorAll('img');
+    var best = '';
+    var bestArea = 0;
+    for (var i = 0; i < imgs.length && i < 40; i++) {
+      var r = imgs[i].getBoundingClientRect();
+      var w = r.width || parseInt(imgs[i].getAttribute('width'), 10) || 0;
+      var h = r.height || parseInt(imgs[i].getAttribute('height'), 10) || 0;
+      // Not laid out yet (lazy, in a closed carousel): counts, but less than one that is.
+      var area = w && h ? w * h : 1;
+      if (w && h && (w < 48 || h < 48)) continue;
+      var src = optionImgSrc(imgs[i]);
+      if (src && area > bestArea) { best = src; bestArea = area; }
+    }
+    return best;
+  }
+  // The picture of a link: inside it, or in the card around it (going up while the wrapper is still one item:
+  // fewer than five pictures and links to at most two addresses).
+  function optionImageNear(a) {
+    var img = optionBestImg(a);
+    if (img) return { image: img, box: a };
+    var key = optionPathKey(a.href);
+    var box = a;
+    for (var depth = 0; depth < 5 && box.parentElement && box.parentElement !== document.body; depth++) {
+      var up = box.parentElement;
+      if (up.querySelectorAll('img').length > 4) break;
+      var links = up.querySelectorAll('a[href]');
+      var other = 0;
+      for (var i = 0; i < links.length && i < 30; i++) if (optionPathKey(links[i].href) !== key) other++;
+      if (other > 1) break;
+      box = up;
+      img = optionBestImg(box);
+      if (img) return { image: img, box: box };
+    }
+    return { image: '', box: box };
+  }
+  // The page's own main picture (og:image, or the largest picture near the top) when an option is this page itself.
+  function optionPageImage() {
+    var meta = document.querySelector('meta[property="og:image"], meta[name="og:image"], meta[name="twitter:image"], meta[property="twitter:image"]');
+    var content = meta ? meta.getAttribute('content') : '';
+    if (content && !/^data:/i.test(content)) {
+      try { return new URL(content, location.href).href; } catch (e) {}
+    }
+    return document.body ? optionBestImg(document.body) : '';
+  }
+  // The link on the page with the same address (the same path and query; or, for a long product-like path, the same
+  // path), preferring one whose picture has an address (the same product can sit in a lazy carousel without one).
+  function optionFindLink(url) {
+    var key = optionKey(url);
+    var pathKey = optionPathKey(url);
+    if (!key) return null;
+    var longPath = pathKey.replace(/^https?:\/\/[^/]+/, '').length >= 12;
+    var links = document.querySelectorAll('a[href]');
+    var exact = null;
+    var byPath = null;
+    for (var i = 0; i < links.length && i < 4000; i++) {
+      var k = optionKey(links[i].href);
+      var same = k === key || (longPath && optionPathKey(links[i].href) === pathKey);
+      if (!same) continue;
+      if (optionBestImg(links[i])) return links[i];
+      if (k === key) { if (!exact) exact = links[i]; } else if (!byPath) byPath = links[i];
+    }
+    return exact || byPath;
+  }
+  function optionDetails(requests) {
+    var out = [];
+    var list = Array.isArray(requests) ? requests.slice(0, 8) : [];
+    for (var i = 0; i < list.length; i++) {
+      var req = list[i] || {};
+      var result = { href: '', image: '', text: '' };
+      try {
+        // This page itself: its own main picture.
+        if (req.url && optionKey(String(req.url)) === optionKey(location.href)) {
+          result.href = location.href.split('#')[0];
+          result.image = optionPageImage();
+          out.push(result);
+          continue;
+        }
+        // The link the model wrote wins when it is on the page; its ref (whose address read_page shortens) otherwise.
+        var a = req.url ? optionFindLink(String(req.url)) : null;
+        var el = !a && req.ref ? refToEl.get(Number(req.ref)) : null;
+        if (el && !el.isConnected) el = null;
+        if (el) a = el.closest('a[href]') || (el.querySelector && el.querySelector('a[href]'));
+        if (a && /^javascript:/i.test(a.getAttribute('href') || '')) a = null;
+        if (a) {
+          result.href = a.href;
+          var near = optionImageNear(a);
+          result.image = near.image;
+          result.text = cut(clean(near.box.innerText || near.box.textContent), 400);
+        } else if (el) {
+          result.image = optionBestImg(el);
+          result.text = cut(clean(el.innerText || el.textContent), 400);
+        } else if (req.url && optionPathKey(String(req.url)) === optionPathKey(location.href)) {
+          // The same page with other parameters (a product page's colour or size).
+          result.href = location.href.split('#')[0];
+          result.image = optionPageImage();
+        }
+      } catch (e) {}
+      out.push(result);
+    }
+    return out;
+  }
+
   window.__qutaiAgent = {
     pageSignals: pageSignals,
     readPage: readPage,
@@ -2787,7 +2930,8 @@ export const PAGE_SCRIPT = String.raw`
     screenFields: screenFields,
     maskFields: maskFields,
     maskEnd: maskEnd,
-    resourceHosts: resourceHosts
+    resourceHosts: resourceHosts,
+    optionDetails: optionDetails
   };
 })();
 `;

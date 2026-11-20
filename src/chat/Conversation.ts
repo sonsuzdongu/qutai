@@ -13,12 +13,18 @@ import type { WhatsAppOffer } from '../device/whatsapp';
 import { AttachmentInfo, MAX_ATTACHMENTS, MAX_EDITED_IMAGES } from './attachments';
 import type { ComposedRef, ShareOffer } from './shareable';
 import { newContactScope, withoutContactValues } from './contactCards';
+import { cardsText, type OptionCard } from './optionCards';
 
 let itemCounter = 0;
 const STREAM_FLUSH_MS = 50;
 
 export function sourcesItem(sources: Source[], searchWidget?: string): ChatItem {
   return { id: String(++itemCounter), kind: 'sources', text: '', sources, ...(searchWidget ? { searchWidget } : {}) };
+}
+
+/** The assistant's options as cards (show_options); the text is what versions without cards show instead. */
+export function optionsItem(cards: OptionCard[], incognito: boolean): ChatItem {
+  return { id: String(++itemCounter), kind: 'options', text: cardsText(cards), cards, ...(incognito ? { imagesOnTap: true } : {}) };
 }
 
 /** A Call button offered by the assistant; the text is what versions without the card show instead. */

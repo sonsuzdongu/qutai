@@ -10,6 +10,9 @@ import { QutaiMark } from '../ui/QutaiMark';
 import { usePalette, type Palette } from '../ui/theme';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { GlassBack } from './AssistantGlass';
+import type { ChatItem } from './AssistantPanel';
+import { OptionCards } from './OptionCards';
+import type { OptionCard } from '../chat/optionCards';
 
 /**
  * The step line shown while lines arrive faster than they can be read: each stays MIN_LINE_MS, the ones replaced in
@@ -154,12 +157,19 @@ export function StepStrip({
  */
 export function AnswerCard({
   text,
+  options,
+  onOpenOption,
+  onOptionMenu,
   bottom,
   look = 'classic',
   onOpen,
   onClose,
 }: {
   text: string;
+  /** The answer's options as cards (show_options), under its text; absent when it has none. */
+  options?: ChatItem | null;
+  onOpenOption: (card: OptionCard) => void;
+  onOptionMenu: (card: OptionCard) => void;
   bottom: number;
   look?: AssistantLook;
   onOpen: () => void;
@@ -177,8 +187,9 @@ export function AnswerCard({
     Animated.timing(grow, { toValue: 1, duration: 200, useNativeDriver: true }).start();
   }, [grow, reduceMotion]);
   useEffect(() => {
-    AccessibilityInfo.announceForAccessibility(`${t('working.answerTitle')}: ${text}`);
-  }, [text]);
+    const cards = options?.cards?.length ? t('cards.rowLabel', { count: options.cards.length }) : '';
+    AccessibilityInfo.announceForAccessibility(`${t('working.answerTitle')}: ${[text, cards].filter(Boolean).join('. ')}`);
+  }, [text, options]);
 
   return (
     <Animated.View
@@ -205,9 +216,22 @@ export function AnswerCard({
           </Pressable>
         </View>
         <ScrollView style={styles.answerScroll} contentContainerStyle={styles.answerContent}>
-          <Text style={styles.answer} selectable>
-            {text}
-          </Text>
+          {text ? (
+            <Text style={styles.answer} selectable>
+              {text}
+            </Text>
+          ) : null}
+          {options?.cards?.length ? (
+            <View style={styles.answerCards}>
+              <OptionCards
+                cards={options.cards}
+                imagesOnTap={options.imagesOnTap}
+                compact
+                onOpen={onOpenOption}
+                onMenu={onOptionMenu}
+              />
+            </View>
+          ) : null}
         </ScrollView>
         <Pressable
           onPress={onOpen}
@@ -284,6 +308,8 @@ function makeStyles(p: Palette) {
     answerScroll: { flexGrow: 0 },
     answerContent: { paddingHorizontal: 16, paddingBottom: 8 },
     answer: { color: p.text, fontSize: 15, lineHeight: 21 },
+    // The cards run to the card's right edge, so the row reads as one to swipe.
+    answerCards: { marginTop: 10, marginRight: -16 },
     openChat: {
       minHeight: 48,
       alignItems: 'center',

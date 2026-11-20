@@ -69,6 +69,8 @@ import { ScriptCard } from './pageScripts';
 import type { ScriptOffer } from '../agent/scriptTool';
 import type { AppOffer } from '../agent/appTool';
 import { AppCard } from './AppCard';
+import { OptionCards } from './OptionCards';
+import type { OptionCard } from '../chat/optionCards';
 import { statusFullFits, statusLabelFits } from './statusFit';
 import { segmentChat, stepSummaryText, summarizeSteps } from '../chat/stepSummary';
 
@@ -95,7 +97,9 @@ export type ChatItem = {
     | 'style'
     | 'script'
     | 'cookies'
-    | 'app';
+    | 'app'
+    | 'options';
+  /** For 'options': the lines older versions show instead of the cards (chat/optionCards.ts cardsText). */
   text: string;
   /** For 'action' and 'info': the icon before the text (absent in conversations saved before icons). */
   icon?: IconName;
@@ -107,6 +111,10 @@ export type ChatItem = {
   chosen?: string;
   /** For 'assistant': the reply is still being written. */
   streaming?: boolean;
+  /** For 'options': the assistant's options as cards (show_options), checked again whenever they are read back. */
+  cards?: OptionCard[];
+  /** For 'options': from an incognito conversation, so the pictures wait for "Show images". */
+  imagesOnTap?: boolean;
   /** For 'sources': the pages the answer is based on. */
   sources?: Source[];
   /** For 'sources': Google's search suggestions widget, shown with Gemini answers grounded in Google Search. */
@@ -1392,6 +1400,20 @@ function ChatRow({
                 </Pressable>
               ))}
         </View>
+      );
+    case 'options':
+      if (!item.cards?.length) return <StepLine text={item.text} />;
+      return (
+        <OptionCards
+          cards={item.cards}
+          imagesOnTap={item.imagesOnTap}
+          dark={!!d}
+          onOpen={(card) => onOpenLink(card.url)}
+          onMenu={(card) => {
+            bump();
+            onLinkMenu?.(card.url, card.title);
+          }}
+        />
       );
     case 'sources':
       return (

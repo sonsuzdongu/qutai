@@ -53,6 +53,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'is kept.\n• If you speak to the assistant and the phone can’t recognise that language on the device ' +
             'itself, the audio goes to the phone’s speech service (Apple’s or Google’s), only after you have agreed ' +
             'once in Qutai and never in incognito conversations. Qutai and the AI service receive only the text.\n• ' +
+            'When the assistant shows you options as cards, their pictures are loaded from the sites (or the sites’ image servers) that show them, without your cookies, also for options you don’t open; in incognito conversations only when you tap “Show images”.\n• ' +
             'While “Block ads and trackers” is on, the filter lists you chose are downloaded from their publishers ' +
             '(such as EasyList and AdGuard) and updated every few days. These requests contain nothing about your ' +
             'browsing.',
@@ -272,7 +273,8 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'Apple’ınkine, Android’de genellikle Google’ınkine) gönderilir. Yalnızca yer adı saklanır.\n• Asistana ' +
             'sesle yazdığınızda telefon o dili cihazın kendisinde tanıyamıyorsa ses, telefonun konuşma hizmetine ' +
             '(Apple’ın ya da Google’ın) gider; bu yalnızca Qutai’da bir kez izin verdikten sonra olur, gizli ' +
-            'sohbetlerde asla. Qutai ve yapay zekâ hizmeti yalnızca metni alır.\n• “Reklam ve izleyicileri engelle” ' +
+            'sohbetlerde asla. Qutai ve yapay zekâ hizmeti yalnızca metni alır.\n• Asistan seçenekleri kartlarla ' +
+            'gösterdiğinde kartların resimleri, onları gösteren sitelerden (ya da sitelerin resim sunucularından) çerezleriniz gönderilmeden yüklenir; açmadığınız seçenekler için de. Gizli sohbetlerde yalnızca “Resimleri göster”e dokunduğunuzda.\n• “Reklam ve izleyicileri engelle” ' +
             'açıkken seçtiğiniz filtre listeleri yayıncılarından (örneğin EasyList ve AdGuard) indirilir ve birkaç ' +
             'günde bir güncellenir. Bu isteklerde gezinmenizle ilgili hiçbir şey yoktur.',
         },

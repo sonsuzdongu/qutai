@@ -82,6 +82,8 @@ fewer powers. Two locks protect Qutai and its incognito tabs from other people h
   Status: Default (manager or implementing session; open to change) · Why: "locks protect the user's data from other people" · Enforced: In the app: src/storage/settings.ts (DEFAULT_SETTINGS); src/agent/settingsTool.ts (PROTECTED); src/backup/backup.ts (absent) · Source: a365175; 7eae6a1; febcdb4
 - **`INC-28`** With the app lock on, things arriving from other apps wait until the user unlocks.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: In the app: src/device/entryPoints.ts (useEntryPoints) · Source: 6928cb1
+- **`INC-29`** In an incognito conversation the assistant's option cards load no pictures until the user taps "Show images" for that answer (`UI-26`, `DATA-24`).
+  Status: Default (manager or implementing session; open to change), left for the owner to confirm · Why: a picture is a request to the site's server, also for options never opened · Enforced: In the app: src/components/OptionCards.tsx (imagesOnTap)
 
 ## Details
 

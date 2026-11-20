@@ -34,6 +34,7 @@ import {
   WEB_SEARCH_PROMPT,
 } from './systemPrompt';
 import { memoryPrompt } from './memory';
+import { showOptions } from './optionsTool';
 import { siteKey } from './sitePolicy';
 import { stepLine } from './stepLine';
 import { MEMORY_TOOLS, TOOLS } from './tools';
@@ -384,6 +385,13 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
       }
       if (signal.aborted) {
         results.push({ callId: call.id, name: call.name, content: 'Stopped by the user.', isError: true });
+        continue;
+      }
+      // Cards for the user (UI-26): checked and looked up on the open pages; no step line, no approval.
+      if (call.name === 'show_options') {
+        const shown = await showOptions(call.input, { browser: opts.browser, agentTabId: opts.agentTab.id, turns });
+        if (shown.cards) onEvent({ type: 'options', cards: shown.cards, incognito: opts.audit.incognito() });
+        results.push({ callId: call.id, name: call.name, content: shown.content, isError: shown.isError });
         continue;
       }
       await pauseWhileBackgrounded(isForeground() ? undefined : (backgroundBlocker(call.name, call.input, ctx) ?? undefined));

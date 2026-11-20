@@ -47,6 +47,10 @@
 //   "slow"     waits 25 s, then answers (Stop, backgrounding during a request, the keep-alive)
 //   "long"     read_page, scroll, read_page, scroll, read_page with 3 s pauses (rotation mid-task)
 //   "link"     an answer with a Markdown link (chat links open in the conversation's tab group)
+//   "kazak" / "showoptions"  read_page → show_options with up to four product links from the page that carry a price
+//              (in the label, or read_page's prices="…") → a short answer (option cards, UI-23)
+//   "evilcards"  the same plus an http link, a javascript: link, a user@host look-alike and a made-up price: the app
+//              must leave the first three out and drop the price
 //   anything else: a short text answer
 // "Tell me about yourself" (setup / Settings › Memory, src/intro/): a request whose system prompt (or, in Qutai
 // Credits' form, user turn) is the extraction prompt gets JSON items found with simple English and Turkish patterns
@@ -292,6 +296,32 @@ function nextStep(messages) {
     const plan = [['read_page', {}], ['scroll', { direction: 'down' }], ['read_page', {}], ['scroll', { direction: 'down' }], ['read_page', {}]];
     if (n < plan.length) return { delay: 3000, ...call(plan[n][0], plan[n][1]) };
     return { content: 'Read the page in five steps.' };
+  }
+  if (/\b(kazak|showoptions|evilcards)\b/.test(user)) {
+    if (n === 0) return call('read_page', {});
+    if (n === 1) {
+      // Links whose label reads like a product (long, with a price), as a model would pick them from read_page.
+      const picks = [];
+      for (const m of text(results[0]).matchAll(/\[ref=(\d+)\] a "([^"]{20,})" href=(\S+)(?: prices="([^"|]+))?/g)) {
+        const inLabel = /\d{1,3}(?:\.\d{3})*(?:,\d{2})? TL/.exec(m[2]);
+        const price = m[4]?.trim() ?? inLabel?.[0];
+        if (!price) continue;
+        const title = (inLabel ? m[2].slice(0, m[2].indexOf(inLabel[0])) : m[2]).replace(/\s+/g, ' ').trim().slice(0, 70);
+        picks.push({ title, ref: Number(m[1]), url: m[3], price, detail: 'Fake AI: picked from read_page' });
+        if (picks.length === 4) break;
+      }
+      if (/evilcards/.test(user)) {
+        picks.push(
+          { title: 'Plain http', url: 'http://example.com/a' },
+          { title: 'Script link', url: 'javascript:alert(1)' },
+          { title: 'Looks like trendyol.com', url: 'https://www.trendyol.com@example.com/x', price: '1 TL' },
+          { title: 'Made-up price', url: 'https://example.org/p', price: '12.345,67 TL', detail: 'x'.repeat(400) },
+        );
+      }
+      if (!picks.length) return { content: 'No product links with prices on this page.' };
+      return call('show_options', { options: picks });
+    }
+    return { content: `I found ${n > 1 ? 'a few' : 'no'} options; the cards show them. (Tool said: ${lastResult.slice(0, 300)})` };
   }
   if (/\blink\b/.test(user)) return { content: 'Here is a page: [Example Domain](https://example.com/) and [Wikipedia](https://en.m.wikipedia.org/wiki/Bosporus).' };
   return { content: 'Hello from the fake AI server. Nothing was sent to any provider.' };

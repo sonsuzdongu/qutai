@@ -17,6 +17,7 @@ import { READER_FONTS, READER_THEMES } from '../browser/reader';
 import { isSearchEngine } from '../browser/search';
 import { cleanTask, MAX_SAVED_TASKS, TASK_TARGETS, type TaskSchedule, type TaskTarget } from '../storage/savedTasks';
 import { cutText, wellFormed } from '../utils/wellFormed';
+import { storedCards } from '../chat/optionCards';
 import { MAX_RULES, parseRuleLine, siteHost as ruleSite } from '../content/siteRules';
 import { readBackupStyles, type BackupStyle } from '../content/userStyles';
 import { readBackupScripts, type BackupScript } from '../content/userScripts';
@@ -535,7 +536,7 @@ function parseTabs(v: unknown): BackupPayload['tabs'] {
   return { tabs, activeIndex, groups: [...groups.values()].filter((g) => used.has(g.id)) };
 }
 
-const ITEM_KINDS = ['user', 'assistant', 'action', 'error', 'info', 'choices', 'sources', 'call', 'sms', 'whatsapp', 'file'] as const;
+const ITEM_KINDS = ['user', 'assistant', 'action', 'error', 'info', 'choices', 'sources', 'call', 'sms', 'whatsapp', 'file', 'options'] as const;
 const FILE_FORMATS = ['csv', 'md', 'txt', 'json'] as const;
 
 function parseChatItem(v: unknown): Record<string, unknown> | undefined {
@@ -592,6 +593,12 @@ function parseChatItem(v: unknown): Record<string, unknown> | undefined {
       size: Math.max(0, Math.floor(v.file.size as number)),
       ...(Number.isFinite(v.file.rows) ? { rows: Math.max(0, Math.floor(v.file.rows as number)) } : {}),
     };
+  }
+  // Option cards: the same checks as when they were made (https links and pictures, plain text, at most 8); the
+  // incognito flag is never in a backup (incognito conversations aren't saved).
+  if (kind === 'options') {
+    const cards = storedCards(v.cards);
+    if (cards.length) item.cards = cards;
   }
   // The tokens and approximate cost of a task's requests: numbers, the provider and model ids (ai/cost.ts).
   const cost = parseAnswerCost(v.cost);

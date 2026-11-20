@@ -58,6 +58,7 @@ export type PageCommand =
   | 'actionRect'
   | 'formReport'
   | 'linkHref'
+  | 'optionDetails'
   | 'snapshotHtml'
   | 'readableText'
   | 'readerArticle'

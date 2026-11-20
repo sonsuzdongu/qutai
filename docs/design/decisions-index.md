@@ -178,6 +178,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `DATA-21` | Clear browsing data offers history, cache, recently closed, conversations, activity, the AI request list,… | Default |  |
 | `DATA-22` | The account backup (pro) is the same encrypted file; the server stores only that file and keeps the newest… | Default |  |
 | `DATA-23` | Only requests to Qutai's server send `Qutai/<version> (<platform>) qutai.<build>`; web views and every third… | Owner | 2026-11-20 |
+| `DATA-24` | Card pictures are requested from the sites showing them (also for options not opened), without cookies or Referer; not in incognito until asked; policies name it, versions not bumped | Default | 2026-11-20 |
 
 ## [4. Page content is untrusted](04-untrusted-content.md)
 
@@ -201,6 +202,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `UNTR-17` | The certificate error page and its "Continue anyway" are native views the assistant's tools cannot reach. | Default |  |
 | `UNTR-18` | The user's custom instructions are placed below the safety rules and say they never override them. | Default |  |
 | `UNTR-19` | Deleting and account or security changes on a site go through Qutai's change approval (`PAY-26`); sharing personal data is asked in chat… | Default | 2026-11-19 |
+| `UNTR-20` | Option cards are page data: links, pictures, text, count and prices checked by the app, also when read back | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `UNTR-3`
 
@@ -307,6 +309,7 @@ Moved to Details (ids retired, not reused): `PAY-10`, `PAY-18`, `PAY-19`, `PAY-2
 | `INC-26` | A lock can be turned on only when the phone has a screen lock, after one verification; settings load… | Default |  |
 | `INC-27` | Both locks are off by default, are not in backups and can't be changed by the assistant. | Default |  |
 | `INC-28` | With the app lock on, things arriving from other apps wait until the user unlocks. | Default |  |
+| `INC-29` | Incognito conversations load no card pictures until "Show images" | Default (owner to confirm) | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `INC-8`
 
@@ -812,6 +815,10 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-19` | Suggestions in the empty panel are chosen on the phone from a few markers in the page's code (structured… | Default |  |
 | `UI-21` | Today Settings › Assistant › "Asistan görünümü (deneme)" switches between three trial looks, default… | Owner | 2026-11-17 |
 | `UI-22` | The address bar's suggestion list never empties between letters; the search engine is asked only after a 200 ms typing… | Owner (engine pause) | 2026-11-19 |
+| `UI-23` | The assistant's options as cards (`show_options`): picture, title, price as on the page, one detail line, site; a swipeable row in the panel and the answer card; tap opens like a chat link, long press the link menu… | Owner (cards); Default (shape, layout) | 2026-11-20 |
+| `UI-24` | Card contents checked in the app: https only, the link's own host shown, plain cut text, at most 8, pictures only from the page, prices only when read; read_page adds `prices=` to cut links | Default | 2026-11-20 |
+| `UI-25` | Card pictures fetched without cookies or Referer, ≤ 600 KB, JPEG/PNG/GIF/WebP by their bytes, ≤ 24 MP, memory only; ad and tracker hosts skipped while blocking is on | Default | 2026-11-20 |
+| `UI-26` | Incognito: card pictures wait for "Show images" | Default (owner to confirm) | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

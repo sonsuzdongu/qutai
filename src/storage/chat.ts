@@ -2,6 +2,7 @@ import { compactHistory } from '../agent/runAgent';
 import { PROVIDER_ORDER } from '../ai/providers';
 import type { Turn } from '../ai/types';
 import { attachmentIdsIn } from '../chat/attachments';
+import { checkedOptionItem } from '../chat/optionCards';
 import type { Conversation, ModelChoice } from '../chat/Conversation';
 import type { ChatItem } from '../components/AssistantPanel';
 import { Db, deleteKey, getJson, setJson } from './db';
@@ -77,6 +78,8 @@ function isSavedChat(chat: SavedChat | null): chat is SavedChat {
 export async function loadChat(db: Db, key: string, { adoptLegacy = false } = {}): Promise<SavedChat | null> {
   const chat = await getJson<SavedChat>(db, keyFor(key));
   if (isSavedChat(chat)) {
+    // Cards are page data: checked again when read back (chat/optionCards.ts).
+    chat.items = chat.items.map((item) => checkedOptionItem(item));
     if (chat.model !== undefined && !validModel(chat.model)) delete chat.model;
     if (chat.voiceLanguage !== undefined && !validLanguageTag(chat.voiceLanguage)) delete chat.voiceLanguage;
     return chat;

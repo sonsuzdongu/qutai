@@ -918,4 +918,35 @@ export const TOOLS: ToolDefinition[] = [
       required: ['question', 'options'],
     },
   },
+  {
+    name: 'show_options',
+    description:
+      'Show the user several things to choose between (products, places, hotels, flights, articles, search results) as ' +
+      'cards with a picture, title, price and the site. Qutai finds each picture on the page itself. Use it when you found ' +
+      'two or more options for the user to look at; then end with a short text reply. Not for a single answer, a ' +
+      'summary, or a question you need answered (use ask_user for that).',
+    input_schema: {
+      type: 'object',
+      properties: {
+        options: {
+          type: 'array',
+          minItems: 1,
+          maxItems: 8,
+          description: 'Up to 8 options, best first',
+          items: {
+            type: 'object',
+            properties: {
+              title: { type: 'string', description: 'Short name, e.g. the product name' },
+              url: { type: 'string', description: 'The link it opens, as on the page' },
+              ref: { type: 'integer', description: "The option's link ref from read_page, if it has one" },
+              price: { type: 'string', description: 'Only as the page shows it (in the text or a link\'s prices=), e.g. "1.299,99 TL"; omit if not shown' },
+              detail: { type: 'string', description: 'One short line: seller, rating, dates, distance...' },
+            },
+            required: ['title'],
+          },
+        },
+      },
+      required: ['options'],
+    },
+  },
 ];

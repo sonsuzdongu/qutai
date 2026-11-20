@@ -48,7 +48,7 @@ import { runAgent } from './src/agent/runAgent';
 import { actionErrorText } from './src/agent/stepLine';
 import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
 import { personalKindsLabel } from './src/components/memoryCategories';
-import { Conversation, callItem, cookiesItem, fileItem, scriptItem, styleItem, newItem, shareItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
+import { Conversation, callItem, cookiesItem, fileItem, optionsItem, scriptItem, styleItem, newItem, shareItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
 import { listShareables, type ShareApp, type ShareOffer } from './src/chat/shareable';
 import { clearOutgoing, OutgoingError, prepareOutgoing } from './src/device/outgoing';
 import { shareToApp } from './src/device/share';
@@ -103,7 +103,7 @@ import { hostOf, slowness } from './src/browser/pendingNavigation';
 import { BrowserView } from './src/components/BrowserView';
 import { ContextAction, ContextMenuSheet } from './src/components/ContextMenuSheet';
 import { chatLinkPlan } from './src/browser/chatLinks';
-import { AssistantPanel, QuickAction, type ChatItemAction } from './src/components/AssistantPanel';
+import { AssistantPanel, QuickAction, type ChatItem, type ChatItemAction } from './src/components/AssistantPanel';
 import { FindBar } from './src/components/FindBar';
 import { KeyboardAvoidingContainer } from './src/components/KeyboardAware';
 import { LibraryScreen, LibraryTab } from './src/components/LibraryScreen';
@@ -246,6 +246,7 @@ import {
 import { setMarkerEnvironment, clearMark } from './src/agent/actionMarker';
 import { ActionMarkerLayer } from './src/components/ActionMarkerLayer';
 import { AnswerCard, StepStrip } from './src/components/StepStrip';
+import { setCardImageBlocking } from './src/chat/cardImages';
 import { WorkingGlow } from './src/components/WorkingGlow';
 import { useScreenReader } from './src/components/useHoldGesture';
 import { currentStripLine, plainAnswer } from './src/chat/stripLine';
@@ -641,6 +642,8 @@ function BrowserApp({
   const [work, setWork] = useState<WorkingView>(idleView);
   const workRef = useRef(work);
   const [answerCard, setAnswerCard] = useState('');
+  // The options (cards) of that answer, shown in the answer card under its text.
+  const [answerOptions, setAnswerOptions] = useState<ChatItem | null>(null);
   const applyWork = useCallback((event: WorkingEvent) => {
     const next = workingStep(workRef.current, event);
     workRef.current = next;
@@ -687,6 +690,8 @@ function BrowserApp({
   }, [panelOpen, conversation, conversation.unseen]);
 
   const [settings, setSettings] = useState<Settings>(initialSettings);
+  // Option cards' pictures follow "Block ads and trackers" (src/chat/cardImages.ts).
+  useEffect(() => setCardImageBlocking(settings.blockAds), [settings.blockAds]);
   // The latest settings for code that runs later than a render (the assistant's settings tool).
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
@@ -1288,6 +1293,7 @@ function BrowserApp({
     // Every start but a voice one comes from the panel (or opens it): it drops into the step strip; a screen reader
     // keeps the panel the user is in.
     setAnswerCard('');
+    setAnswerOptions(null);
     applyWork({ type: 'start', panelOpen: !options.voice, collapse: !screenReaderRef.current });
     // May go on in the background (Android, opt-in) unless the conversation is incognito; the notification's title
     // is the user's own message.
@@ -1552,6 +1558,7 @@ function BrowserApp({
           if (event.type === 'text_delta') return chat.appendStreaming(event.text);
           if (event.type === 'text') return chat.finishStreaming(event.text);
           if (event.type === 'sources') return chat.add(sourcesItem(event.sources, event.searchWidget));
+          if (event.type === 'options') return chat.add(optionsItem(event.cards, event.incognito));
           if (event.type === 'choices') {
             AccessibilityInfo.announceForAccessibility(event.text);
             return chat.add(newItem('choices', event.text, event.options));
@@ -1624,11 +1631,16 @@ function BrowserApp({
         .filter((item) => item.kind === 'assistant' && item.text.trim())
         .pop();
       const answerText = answer ? plainAnswer(answer.text) : '';
+      const cardsItem = chat.items
+        .slice(sentAt + 1)
+        .filter((item) => item.kind === 'options' && item.cards?.length)
+        .pop();
       setAnswerCard(answerText);
+      setAnswerOptions(cardsItem ?? null);
       applyWork({
         type: 'end',
         outcome: outcome.kind,
-        hasAnswer: !!answerText,
+        hasAnswer: !!answerText || !!cardsItem,
         sameConversation: AppState.currentState === 'active' && browserInstance.conversationOf(browserInstance.active) === chat,
       });
       if (outcome.kind !== 'stopped') taskEnded(chat, outcome.kind);
@@ -2985,9 +2997,18 @@ function BrowserApp({
             }}
           />
         ) : null}
-        {work.answer && answerCard && !panelOpen ? (
+        {work.answer && (answerCard || answerOptions) && !panelOpen ? (
           <AnswerCard
             text={answerCard}
+            options={answerOptions}
+            onOpenOption={(card) => {
+              applyWork({ type: 'dismissAnswer' });
+              openChatLink(card.url);
+            }}
+            onOptionMenu={(card) => {
+              bump();
+              setChatLink({ href: card.url, linkText: card.title, src: '', alt: '' });
+            }}
             bottom={stripBottom}
             look={settings.assistantLook}
             onOpen={() => {
