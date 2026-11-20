@@ -64,6 +64,11 @@ export type Settings = {
   blockAds: boolean;
   /** Hide cookie consent banners. */
   hideCookieBanners: boolean;
+  /**
+   * Remove video ads before the player reads them (supported video sites; content/videoAds.ts, `BLK-29`, `BLK-30`). Off by default (owner,
+   * 21 Nov 2026); sites where "Block ads and trackers here" is off are left alone.
+   */
+  blockVideoAds: boolean;
   /** App appearance; 'system' follows the phone. */
   theme: ThemeSetting;
   /** In the dark theme, darken sites that have no dark design of their own. */
@@ -161,6 +166,7 @@ export const DEFAULT_SETTINGS: Settings = {
   webSearch: true,
   blockAds: true,
   hideCookieBanners: true,
+  blockVideoAds: false,
   theme: 'system',
   darkSites: true,
   addressBarPosition: 'bottom',
@@ -209,6 +215,7 @@ const KEYS = {
   webSearch: 'web_search',
   blockAds: 'block_ads',
   hideCookieBanners: 'hide_cookie_banners',
+  blockVideoAds: 'block_video_ads',
   theme: 'theme',
   darkSites: 'dark_sites',
   addressBarPosition: 'address_bar_position',
@@ -304,6 +311,7 @@ export async function loadSettings(): Promise<Settings> {
     webSearch,
     blockAds,
     hideCookieBanners,
+    blockVideoAds,
     theme,
     darkSites,
     addressBarPosition,
@@ -354,6 +362,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.webSearch),
     get(KEYS.blockAds),
     get(KEYS.hideCookieBanners),
+    get(KEYS.blockVideoAds),
     get(KEYS.theme),
     get(KEYS.darkSites),
     get(KEYS.addressBarPosition),
@@ -415,6 +424,7 @@ export async function loadSettings(): Promise<Settings> {
     webSearch: webSearch !== 'false',
     blockAds: blockAds !== 'false',
     hideCookieBanners: hideCookieBanners !== 'false',
+    blockVideoAds: blockVideoAds === 'true',
     theme: THEMES.includes(theme as ThemeSetting) ? (theme as ThemeSetting) : 'system',
     darkSites: darkSites !== 'false',
     addressBarPosition: addressBarPosition === 'top' ? 'top' : 'bottom',
@@ -495,6 +505,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.webSearch, String(settings.webSearch)),
     set(KEYS.blockAds, String(settings.blockAds)),
     set(KEYS.hideCookieBanners, String(settings.hideCookieBanners)),
+    set(KEYS.blockVideoAds, String(settings.blockVideoAds)),
     set(KEYS.theme, settings.theme),
     set(KEYS.darkSites, String(settings.darkSites)),
     set(KEYS.addressBarPosition, settings.addressBarPosition),

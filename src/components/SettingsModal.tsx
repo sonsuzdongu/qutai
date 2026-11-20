@@ -529,6 +529,12 @@ function SettingsPages({
               onChange={(hideCookieBanners) => set({ hideCookieBanners })}
             />
             <SwitchRow
+              title={t('settings.blockVideoAds')}
+              hint={t('settings.blockVideoAdsHint')}
+              value={settings.blockVideoAds}
+              onChange={(blockVideoAds) => set({ blockVideoAds })}
+            />
+            <SwitchRow
               title={t('settings.httpsOnly')}
               hint={t('settings.httpsOnlyHint')}
               value={settings.httpsOnly}

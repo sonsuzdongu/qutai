@@ -1227,6 +1227,9 @@ export const id: Record<keyof typeof en, string> = {
   'blocking.error.tooManyDomains': 'Total domain terlalu banyak. Nonaktifkan daftar lain terlebih dahulu.',
   'blocking.error.compile': 'Daftar tidak dapat disiapkan; daftar sebelumnya tetap digunakan.',
   'blocking.error.storage': 'Daftar tidak dapat disimpan di ponsel.',
+  'settings.blockVideoAds': 'Blokir iklan video',
+  'settings.blockVideoAdsHint':
+    'Menghapus iklan yang diputar sebelum dan di tengah video di situs video yang didukung. Bisa berhenti berfungsi sementara saat situs berubah.',
   'settings.hideCookieBanners': 'Sembunyikan banner cookie',
   'settings.hideCookieBannersHint':
     'Menyembunyikan pop-up persetujuan dari alat persetujuan yang umum. Situs kemudian menggunakan setelan default-nya, biasanya hanya cookie yang diperlukan.',

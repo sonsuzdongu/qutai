@@ -55,6 +55,7 @@ function backupSettings(s: Settings): BackupSettings {
     webSearch: s.webSearch,
     blockAds: s.blockAds,
     hideCookieBanners: s.hideCookieBanners,
+    blockVideoAds: s.blockVideoAds,
     theme: s.theme,
     darkSites: s.darkSites,
     addressBarPosition: s.addressBarPosition,
@@ -143,6 +144,7 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
     take('webSearch', s.webSearch);
     take('blockAds', s.blockAds);
     take('hideCookieBanners', s.hideCookieBanners);
+    take('blockVideoAds', s.blockVideoAds);
     take('theme', s.theme);
     take('darkSites', s.darkSites);
     take('addressBarPosition', s.addressBarPosition);

@@ -126,6 +126,12 @@ const CHANGEABLE = {
     place: inSettings('settings.privacySection'),
     kind: 'boolean',
   },
+  block_video_ads: {
+    field: 'blockVideoAds',
+    label: 'settings.blockVideoAds',
+    place: inSettings('settings.privacySection'),
+    kind: 'boolean',
+  },
   block_third_party_cookies: {
     field: 'blockThirdPartyCookies',
     label: 'settings.thirdPartyCookies',

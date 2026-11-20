@@ -1228,6 +1228,9 @@ export const ja: Record<keyof typeof en, string> = {
   'blocking.error.tooManyDomains': 'ドメインの合計数が多すぎます。先に別のリストをオフにしてください。',
   'blocking.error.compile': 'リストを準備できませんでした。以前のリストが引き続き使用されます。',
   'blocking.error.storage': 'リストをスマートフォンに保存できませんでした。',
+  'settings.blockVideoAds': '動画広告をブロック',
+  'settings.blockVideoAdsHint':
+    '対応する動画サイトで、動画の前や途中に流れる広告を取り除きます。サイトが変更されると、しばらく機能しなくなることがあります。',
   'settings.hideCookieBanners': 'Cookie バナーを非表示',
   'settings.hideCookieBannersHint':
     '一般的な同意ツールの同意ポップアップを非表示にします。その場合、サイトはデフォルトの設定（通常は必要な Cookie のみ）を使用します。',

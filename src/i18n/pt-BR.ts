@@ -1228,6 +1228,9 @@ export const ptBR: Record<keyof typeof en, string> = {
   'blocking.error.tooManyDomains': 'Domínios demais no total. Desative outra lista primeiro.',
   'blocking.error.compile': 'Não foi possível preparar as listas; as anteriores continuam em uso.',
   'blocking.error.storage': 'Não foi possível salvar a lista no celular.',
+  'settings.blockVideoAds': 'Bloquear anúncios em vídeos',
+  'settings.blockVideoAdsHint':
+    'Remove os anúncios exibidos antes e durante os vídeos em sites de vídeo compatíveis. Pode parar de funcionar por um tempo quando um site muda.',
   'settings.hideCookieBanners': 'Ocultar avisos de cookies',
   'settings.hideCookieBannersHint':
     'Oculta pop-ups de consentimento das ferramentas de consentimento mais comuns. Os sites passam a usar o padrão deles, geralmente só os cookies necessários.',

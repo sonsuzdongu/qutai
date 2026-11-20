@@ -1217,6 +1217,9 @@ export const tr: Record<keyof typeof en, string> = {
   'blocking.error.tooManyDomains': 'Toplamda çok fazla alan adı var. Önce başka bir listeyi kapatın.',
   'blocking.error.compile': 'Listeler hazırlanamadı; öncekiler kullanılmaya devam ediyor.',
   'blocking.error.storage': 'Liste telefona kaydedilemedi.',
+  'settings.blockVideoAds': 'Video reklamlarını engelle',
+  'settings.blockVideoAdsHint':
+    'Desteklenen video sitelerinde videolardan önce ve videolar sırasında oynayan reklamları kaldırır. Site değiştiğinde bir süre çalışmayabilir.',
   'settings.hideCookieBanners': 'Çerez bildirimlerini gizle',
   'settings.hideCookieBannersHint':
     'Yaygın onay araçlarının çerez pencerelerini gizler. Site bu durumda varsayılanını, genellikle yalnızca zorunlu çerezleri kullanır.',

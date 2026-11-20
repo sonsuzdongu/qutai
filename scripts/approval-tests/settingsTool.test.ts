@@ -22,6 +22,7 @@ const EXPECTED = {
   picture_in_picture: 'preference',
   block_ads: 'protectionOn',
   hide_cookie_banners: 'protectionOn',
+  block_video_ads: 'protectionOn',
   block_third_party_cookies: 'protectionOn',
   https_only: 'protectionOn',
 } as const;
@@ -36,7 +37,7 @@ test('every setting the tool can write is classified, and nothing else is writab
 });
 
 test('protections can only be turned on; search suggestions only off; preferences both ways', () => {
-  for (const key of ['block_ads', 'hide_cookie_banners', 'block_third_party_cookies', 'https_only']) {
+  for (const key of ['block_ads', 'hide_cookie_banners', 'block_video_ads', 'block_third_party_cookies', 'https_only']) {
     assert.equal(mayWrite(settingClass(key)!, true), true, key);
     assert.equal(mayWrite(settingClass(key)!, false), false, key);
   }

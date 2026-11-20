@@ -342,10 +342,13 @@ Moved to Details (ids retired, not reused): `INC-8`
 | `BLK-21` | HTTPS-only is off by default. Note: docs/permissions.md says "on by default"; the code says off. | Default |  |
 | `BLK-22` | With HTTPS-only on, http pages open over https; if that fails, the user is asked, and an exception lasts… | Default |  |
 | `BLK-23` | The assistant can turn HTTPS-only on, never off; certificate and insecure-site exceptions are only made by… | Default |  |
-| `BLK-24` | The assistant can switch ad blocking, cookie-banner hiding and third-party-cookie blocking on, never off… | Default | 2026-11-19 |
+| `BLK-24` | The assistant can switch ad blocking, cookie-banner hiding, video-ad blocking and third-party-cookie blocking on, never off… | Default | 2026-11-21 |
 | `BLK-26` | Android allows plain http for the whole app and keeps http in check inside the app (HTTPS-only, "Not… | Default |  |
 | `BLK-27` | On a certificate error (Android), "Continue anyway (not secure)" allows that one certificate on that site… | Default |  |
 | `BLK-28` | Android's local network permission is not declared at target API 36; it must be declared and asked for… | Default |  |
+| `BLK-29` | "Block video ads" is off by default; in Settings › Privacy and security and setup's protection step; kept in backups; named "video ads" everywhere, no site named. | Owner | 2026-11-21 |
+| `BLK-30` | Video ads: a document-start page script on the rules table's hosts (frames too) removes the ad plan from the player's data and hides ad boxes; not on off sites; incognito too; nothing leaves the phone; all site data in one table. | Default | 2026-11-21 |
+| `BLK-31` | An ad that plays anyway is muted, sent to its end and skipped (checked every 300 ms); the sound comes back after, unless the user had muted it. | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `BLK-5`, `BLK-8`, `BLK-9`, `BLK-10`, `BLK-16`, `BLK-25`
 

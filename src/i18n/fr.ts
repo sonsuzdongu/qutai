@@ -1227,6 +1227,9 @@ export const fr: Record<keyof typeof en, string> = {
   'blocking.error.tooManyDomains': 'Trop de domaines au total. Désactivez d’abord une autre liste.',
   'blocking.error.compile': 'Les listes n’ont pas pu être préparées ; les précédentes restent utilisées.',
   'blocking.error.storage': 'La liste n’a pas pu être enregistrée sur le téléphone.',
+  'settings.blockVideoAds': 'Bloquer les publicités vidéo',
+  'settings.blockVideoAdsHint':
+    "Supprime les publicités diffusées avant et pendant les vidéos sur les sites vidéo pris en charge. Peut cesser de fonctionner un temps lorsqu'un site change.",
   'settings.hideCookieBanners': 'Masquer les bannières de cookies',
   'settings.hideCookieBannersHint':
     'Masque les fenêtres de consentement des outils de consentement courants. Les sites appliquent alors leurs réglages par défaut, en général uniquement les cookies nécessaires.',

@@ -799,7 +799,8 @@ export const TOOLS: ToolDefinition[] = [
       '(top, bottom), text_size (percent 50–200, steps of 10, 100 = normal), search_engine (google, duckduckgo, bing, ' +
       'yandex), haptics, force_zoom, show_assistant_button, reader_theme (auto, ' +
       'light, dark, sepia), reader_font (serif, sans), reader_easy_reading, background_playback, picture_in_picture ' +
-      '(Android); protections, on only: block_ads, hide_cookie_banners, block_third_party_cookies, https_only; ' +
+      '(Android); protections, on only: block_ads, hide_cookie_banners, block_video_ads, ' +
+      'block_third_party_cookies, https_only; ' +
       'search_suggestions can only be turned off. For "bigger" or ' +
       '"smaller", get first, then set. Nothing else can be changed: the assistant\'s limits, site permissions, ' +
       'memory, custom instructions, provider, model, keys, web search, background work, locks and the rest stay with ' +

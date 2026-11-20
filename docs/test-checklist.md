@@ -930,3 +930,32 @@ yalnızca lisans test hesabı açık.
       `apkanalyzer dex packages <apk> | grep -c com.revenuecat` 0 olmalı.
 - [ ] `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY` olmadan (`--without-purchases`) yapılan pro paket: satın alma ekranı paketleri
       fiyatsız gösterip "Bu Qutai sürümünde kredi satın alınamıyor…" demeli.
+
+## 31. Video reklamlarını engelle (21 Kasım; `BLK-29`, `BLK-30`, `BLK-31`; yalnızca JS, yeni derleme gerekmez; telefonda denenmedi)
+
+Bilgisayarda WebKit ile desteklenen bir video sitesinin masaüstü sayfalarında denendi (sayfanın oynatıcı verisinde ve
+sayfa içi geçişte reklam alanları kalmadı, video "oynatılabilir" kaldı); telefonda video oynarken görülmedi, sessize
+alma yalnızca birim testlerinde denendi. Android'de sayfa betiği belge başında yüklenir (WebView 87 ve üstü); daha eski
+WebView'da ilk video yine reklamla başlayabilir: o zaman reklam sessize alınmalı, sona sarılmalı, atlanmalı.
+Desteklenen siteler: `src/content/videoAds.ts` içindeki kural tablosu (`hosts`).
+
+- [ ] Kurulumun son adımında (koruma) "Video reklamlarını engelle" anahtarı kapalı görünmeli, altında tek cümle olmalı.
+- [ ] Ayarlar › Gizlilik ve güvenlik: anahtar "Çerez bildirimlerini gizle"nin altında, kapalı.
+- [ ] Anahtar kapalıyken desteklenen bir video sitesinin mobil sayfasında reklam çıkan bir video açın (popüler bir
+      müzik videosu): reklam oynamalı (karşılaştırma için).
+- [ ] Anahtarı açın, sekmeyi yenileyin ya da yeni sekmede aynı videoyu açın: reklam hiç başlamamalı, video
+      doğrudan oynamalı; ses, ileri sarma, altyazı, yorumlar ve önerilen videolar çalışmalı.
+- [ ] Sayfadan çıkmadan önerilen başka bir videoya geçin (sayfa içi geçiş): yine reklamsız başlamalı.
+- [ ] Ana sayfada ve aramada "Sponsorlu" video kutuları ve banner'lar görünmemeli.
+- [ ] Sitede oturum açın: oturum açma, abonelikler ve beğeni çalışmalı.
+- [ ] Sitenin müzik sayfası ve başka bir sitedeki gömülü video (ör. bir haber sitesi): reklamsız başlamalı.
+- [ ] Gizli sekmede aynı video: reklamsız başlamalı.
+- [ ] Sitenin sayfasında "Burada reklam ve izleyicileri engelle"yi kapatın, yenileyin: reklam yine oynamalı.
+- [ ] **Reklam yine de başlarsa (yedek):** reklam hemen sessize alınmalı (ses hiç duyulmamalı), sona sarılmalı ya da
+      "Reklamı atla" kendisi basılmalı; reklam bitince ses geri gelmeli. Bunu denemek için: Android'de eski bir
+      WebView'lu emülatör ya da anahtar kapalıyken reklam başlayınca anahtarı açıp sekmeyi yenilemeden sayfa içinde
+      başka bir videoya geçin.
+  - [ ] Videoyu reklamdan önce kendiniz sessize aldıysanız reklamdan sonra da sessiz kalmalı.
+  - [ ] Reklamda sessiz bir donmuş kare bir an kalabilir; uzun sürerse yazın.
+- [ ] Sitenin "reklam engelleyici" uyarısı çıkarsa yazın (gizlenmiyor).
+- [ ] Asistana "video reklamlarını engelle" deyin: açabilmeli; "kapat" deyince kapatmamalı, Ayarlar'ı önermeli.

@@ -19,6 +19,9 @@ file, HTTPS-only, local network pages and certificate errors.
 4. My rules can be exported and imported as a text file of filter lines that other blockers can read too.
 5. "Hide cookie banners" (on) hides consent banners of common consent tools; it doesn't click "accept".
    "Block third-party cookies" (on) works on Android; iOS blocks them anyway.
+   "Block video ads" (off; also in setup's protection step) removes video ads on the supported video sites before
+   the player sees them: a page script takes the ad plan out of the player's data, so no ad starts; an ad that gets
+   through anyway is muted, sent to its end and skipped (`BLK-29`, `BLK-30`, `BLK-31`).
 6. "HTTPS-only" (off by default): http addresses are opened over https; if that fails, Qutai asks whether to open the
    insecure page, and remembers the answer for that site and port until the app restarts. http pages show "Not secure".
 7. Local network: typing `192.168.1.2:3000`, `localhost:3000` or `router.local` opens it as an address over http.
@@ -63,7 +66,7 @@ file, HTTPS-only, local network pages and certificate errors.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: src/browser/httpsOnly.ts (upgradeToHttps, allowInsecure); ROADMAP.md
 - **`BLK-23`** The assistant can turn HTTPS-only on, never off; certificate and insecure-site exceptions are only made by the user on the page.
   Status: Default (manager or implementing session; open to change) · Why: they lower protection · Enforced: In the app: src/agent/settingsClass.ts (SETTINGS_TOOL_CLASSES, mayWrite), src/agent/settingsTool.ts (parseValue); tested in scripts/approval-tests/settingsTool.test.ts · Source: febcdb4
-- **`BLK-24`** The assistant can switch ad blocking, cookie-banner hiding and third-party-cookie blocking on, never off; only the user turns them off, in Settings (see `UNTR-8`). Changed 19 Nov 2026.
+- **`BLK-24`** The assistant can switch ad blocking, cookie-banner hiding, video-ad blocking (`block_video_ads`, since 21 Nov 2026) and third-party-cookie blocking on, never off; only the user turns them off, in Settings (see `UNTR-8`). Changed 19 Nov 2026.
   Status: Default (manager or implementing session; open to change) · Why: they are protections · Enforced: In the app: src/agent/settingsClass.ts (SETTINGS_TOOL_CLASSES, mayWrite), src/agent/settingsTool.ts (parseValue); tested in scripts/approval-tests/settingsTool.test.ts · Source: febcdb4; 19 Nov 2026 security pass
 - **`BLK-26`** Android allows plain http for the whole app and keeps http in check inside the app (HTTPS-only, "Not secure"); the app's own requests stay https only.
   Status: Default (manager or implementing session; open to change) · Why: without it every http page failed in release builds; a network security config can name domains and exact addresses only, not "local network" in general · Enforced: In the app: plugins/withCleartextBrowsing.js; src/ai/http.ts refuses http on Android · Source: 06b61bb; docs/permissions.md (Cleartext)
@@ -71,6 +74,12 @@ file, HTTPS-only, local network pages and certificate errors.
   Status: Default (manager or implementing session; open to change) · Why: a certificate that turned bad may mean interception; Google Play requires every proceed to be the user's decision · Enforced: In the app: src/browser/certificateExceptions.ts (addCertificateException); patched react-native-webview · Source: 06b61bb
 - **`BLK-28`** Android's local network permission is not declared at target API 36; it must be declared and asked for when the app targets API 37.
   Status: Default (manager or implementing session; open to change) · Why: Android's documentation says apps with INTERNET keep local access below 37 and must not declare it · Source: docs/permissions.md (Local network access)
+- **`BLK-29`** "Block video ads" (Settings › Privacy and security, under "Hide cookie banners", and setup's protection step) is off by default. One sentence under it says it removes the ads before and during videos on supported video sites and can stop working for a while when a site changes; the label, the sentence, the code and commit messages name no site and no other browser (owner, 21 Nov 2026: the feature is called "video ads" everywhere; the site's hosts, field names and selectors appear only as data in the rules table, `BLK-30`). Stored on the phone like the other privacy switches and kept in backups (a backup without it leaves the phone's value).
+  Status: Owner (21 Nov 2026: "default'u false olsun", in onboarding's privacy and security step and in Settings) · Why: it changes the page's own scripts on a site the owner may want to see as it is, and it can break when the site changes · Enforced: In the app: src/storage/settings.ts (DEFAULT_SETTINGS.blockVideoAds); tested in scripts/site-rules-tests/videoAds.test.ts · Source: owner's decision 21 Nov 2026
+- **`BLK-30`** With "Block video ads" on, a page script installed at document start, before the page's own scripts, in every frame (iOS: WebKit user script; Android: patched react-native-webview `documentStartScript`, WebViewCompat.addDocumentStartJavaScript, the same install as `UNTR-26`; on WebViews without it the early and after-load scripts, which come too late for the first video's data), runs only on the hosts listed in the rules table (`VIDEO_AD_RULES.hosts` in src/content/videoAds.ts: one video site's main, mobile, music and privacy-embed hosts), embedded players in other sites' frames included. It removes the ad-plan fields listed there (also inside a nested player response) from the player data embedded in the page, from what the page parses with JSON.parse, and from fetch `json()` and XHR json answers of the listed player, watch, next and playlist requests, and hides promoted-video, companion, overlay and banner ad boxes with a style. It does nothing on a site where "Block ads and trackers here" is off (the player's site or, for an embedded player, the page around it), runs whether or not "Block ads and trackers" is on, and runs in incognito tabs (a built-in protection like hide rules, not a kept script, `INC-20`). Installed once per page (a marker). Nothing new leaves the phone: no request is added, nothing is sent anywhere. Every host, field, address part, class name and selector is in that one JSON-shaped table and nowhere else in the code, so a downloaded rule file can replace it later (TODO.md). Written for Qutai; no code from other blockers.
+  Status: Default (implementing session, 21 Nov 2026; open to change) · Why: domain blocking can't remove these ads (the plan comes in the player's data, the ad video from the same hosts); removing the plan before the player reads it means no ad starts, where skipping a playing ad only muted and froze it (owner's test, 21 Nov 2026) · Enforced: In the app: src/content/videoAds.ts (VIDEO_AD_RULES, pruneSource, videoAdScript), src/components/BrowserView.tsx (videoScript); tested in scripts/site-rules-tests/videoAds.test.ts · Source: owner's request 21 Nov 2026
+- **`BLK-31`** When a video ad plays anyway (pruning missed it, or the script came too late), the fallback acts on every ad on screen: the player's ad classes (in the rules table) are checked every 300 ms (`checkEveryMs`) and when a video loads or starts playing; while an ad shows, the video is muted, sent to its end when its length is known, and every visible skip button listed is pressed; when the ad ends the sound is given back, unless the user had muted the video before the ad. The order of defence is: no ad at all (pruning), then skip, and muted whenever an ad is on screen. This also covers what the owner's assistant-installed script did on 21 Nov 2026.
+  Status: Owner (21 Nov 2026: "video geçerse de en azından sessize alsın"; "şu promptun yaptığı işi de yapsın") · Why: the owner accepted a muted, frozen ad as better than a playing one; on Android WebViews without document-start scripts this fallback is the only defence for the first video · Enforced: In the app: src/content/videoAds.ts (videoAdScript, check); tested in scripts/site-rules-tests/videoAds.test.ts · Source: owner's message via the manager, 21 Nov 2026
 
 ## Details
 
@@ -96,10 +105,18 @@ file, HTTPS-only, local network pages and certificate errors.
   the list file loads. iOS: the first page of a tab may start before the rules attach; iOS gives no blocked counts.
 - google-analytics.com is not blocked (EasyPrivacy's rule uses request-type options that are skipped).
 - No Safe Browsing of Qutai's own (Android System WebView has its own).
+- Video ads (`BLK-30`, `BLK-31`): only the sites in the rules table. It breaks for a while whenever the site renames
+  the fields or moves the ad plan; ads stitched into the video stream itself on the server can't be removed this way;
+  the site's own "ad blockers" warning is not hidden. Android WebViews without document-start scripts (before version
+  87) get the script too late for the first video's data, so that video can still start with an ad: the fallback then
+  mutes it, sends it to its end and presses skip. The fallback can leave a frozen, silent ad frame for a moment.
+  Checked on 21 Nov 2026 in WebKit with the same document-start install on the site's desktop pages (the page's data
+  and an in-page navigation lost every ad field, the video still reported playable); not yet seen on a phone, and the
+  fallback only in tests.
 
 ## Where it lives
 
-- `src/content/blocking.ts`, `filterLists.ts`, `adBlock.ts`, `cookieBanners.ts`, `siteRules.ts`, `rulesFile.ts`,
+- `src/content/blocking.ts`, `filterLists.ts`, `adBlock.ts`, `cookieBanners.ts`, `videoAds.ts`, `siteRules.ts`, `rulesFile.ts`,
   `src/browser/httpsOnly.ts`, `localNetwork.ts`, `certificateExceptions.ts`, `patches/react-native-webview+14.0.1.patch`.
 - Read next: [docs/page-customisation.md](../../docs/page-customisation.md), [docs/permissions.md](../../docs/permissions.md).
 

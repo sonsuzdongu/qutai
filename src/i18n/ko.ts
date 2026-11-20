@@ -1226,6 +1226,9 @@ export const ko: Record<keyof typeof en, string> = {
   'blocking.error.tooManyDomains': '전체 도메인 수가 너무 많습니다. 먼저 다른 목록을 끄세요.',
   'blocking.error.compile': '목록을 준비하지 못했습니다. 이전 목록을 계속 사용합니다.',
   'blocking.error.storage': '목록을 휴대전화에 저장하지 못했습니다.',
+  'settings.blockVideoAds': '동영상 광고 차단',
+  'settings.blockVideoAdsHint':
+    '지원되는 동영상 사이트에서 동영상 앞과 중간에 나오는 광고를 없앱니다. 사이트가 바뀌면 한동안 작동하지 않을 수 있습니다.',
   'settings.hideCookieBanners': '쿠키 배너 숨기기',
   'settings.hideCookieBannersHint':
     '널리 쓰이는 동의 도구의 동의 팝업을 숨깁니다. 그러면 사이트는 기본값(보통 필수 쿠키만)을 사용합니다.',

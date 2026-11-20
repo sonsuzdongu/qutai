@@ -10,6 +10,7 @@ import { parseSelection, SELECTION_SCRIPT } from '../browser/selection';
 import { adBlockScript, COOKIE_BANNER_SCRIPT, isAdUrl, isHostIn } from '../content';
 import { AD_HOSTS } from '../content/adBlock';
 import { PageRule, siteRulesScript } from '../content/siteRules';
+import { VIDEO_AD_RULES, videoAdScript } from '../content/videoAds';
 import { PageStyle, userStylesScript } from '../content/userStyles';
 import { keptScriptsReadyScript } from '../content/userScripts';
 import { keptScripts } from '../browser/keptScripts';
@@ -67,6 +68,8 @@ export type TabActions = {
   /** iOS: the compiled WebKit content rule lists to attach (see blocking.ts); empty until lists are compiled. */
   contentRuleLists: string[];
   hideCookieBanners: boolean;
+  /** "Block video ads" (content/videoAds.ts): off by default; not on "Block ads and trackers here" off sites. */
+  blockVideoAds: boolean;
   /**
    * The user's own hiding rules (content/siteRules.ts), enabled ones only; each page applies those that match its
    * address. Not on "Don't block on this site" sites, and none while blockAds is off.
@@ -164,6 +167,12 @@ function TabWebView({
     () => (blockAds ? adBlockScript([...AD_HOSTS, ...userBlockedHosts], blockingOffSites) : ''),
     [blockAds, blockingOffSites, userBlockedHosts],
   );
+  // "Block video ads": the ad plan taken out of the player's data before the player reads it. Every frame
+  // (embedded players too); the script itself does nothing on other hosts or on off sites. Incognito tabs too.
+  const videoScript = useMemo(
+    () => (newTabActions.blockVideoAds ? videoAdScript(VIDEO_AD_RULES, blockingOffSites) : ''),
+    [newTabActions.blockVideoAds, blockingOffSites],
+  );
   // The user's own hiding rules; installed (empty) even while blocking is off, so turning rules off reaches open pages.
   const rulesScript = useMemo(
     () => siteRulesScript(blockAds ? siteRules : [], blockingOffSites),
@@ -208,6 +217,7 @@ function TabWebView({
   const agentScript = tab.agentInstallScript;
   const earlyScript = [
     agentScript,
+    videoScript,
     geoScript,
     mediaScript,
     playScript,
@@ -219,6 +229,8 @@ function TabWebView({
     // Again after load: Android may have run the early script for the previous page (a no-op when installed).
     agentScript,
     // Android may run the early script too soon for the new page; installing again is a no-op otherwise.
+    // (Video ads: too late for the first player data, but later navigations, ad boxes and the skip fallback work.)
+    Platform.OS === 'android' ? videoScript : '',
     Platform.OS === 'android' ? geoScript : '',
     Platform.OS === 'android' ? mediaScript : '',
     Platform.OS === 'android' ? playScript : '',
@@ -528,7 +540,8 @@ function TabWebView({
             // Android (patched react-native-webview): Qutai's page script at document start, before the page's own
             // scripts (WebViewCompat.addDocumentStartJavaScript); the early and after-load scripts stay as fallbacks
             // for WebViews without that feature. iOS already runs the early script at document start.
-            documentStartScript={Platform.OS === 'android' ? agentScript : undefined}
+            // "Block video ads" goes there too (every frame: the WebView adds it to frames, and it runs only on its hosts).
+            documentStartScript={Platform.OS === 'android' ? [agentScript, videoScript].filter(Boolean).join('\n') : undefined}
             // Android: native geolocation would grant every site once Qutai has the permission; the script handles it.
             geolocationEnabled={false}
             // Camera and microphone (patched react-native-webview): refused unless this names the requesting

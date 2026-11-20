@@ -1219,6 +1219,9 @@ export const en = {
   'blocking.error.tooManyDomains': 'Too many domains in total. Turn another list off first.',
   'blocking.error.compile': "The lists couldn't be prepared; the previous ones stay in use.",
   'blocking.error.storage': "The list couldn't be saved on the phone.",
+  'settings.blockVideoAds': 'Block video ads',
+  'settings.blockVideoAdsHint':
+    'Removes the ads that play before and during videos on supported video sites. It may stop working for a while when a site changes.',
   'settings.hideCookieBanners': 'Hide cookie banners',
   'settings.hideCookieBannersHint':
     'Hides consent pop-ups of common consent tools. Sites then use their defaults, usually only necessary cookies.',

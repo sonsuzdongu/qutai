@@ -2312,6 +2312,7 @@ function BrowserApp({
                   httpsOnly: settings.httpsOnly,
                   blockThirdPartyCookies: settings.blockThirdPartyCookies,
                   hideCookieBanners: settings.hideCookieBanners,
+                  blockVideoAds: settings.blockVideoAds,
                   onContextMenu: (source, target) => {
                     bump();
                     setContext({ tab: source, target });

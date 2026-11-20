@@ -30,6 +30,7 @@ export const SETTINGS_TOOL_CLASSES = {
   picture_in_picture: 'preference',
   block_ads: 'protectionOn',
   hide_cookie_banners: 'protectionOn',
+  block_video_ads: 'protectionOn',
   block_third_party_cookies: 'protectionOn',
   https_only: 'protectionOn',
 } as const satisfies Record<string, SettingClass>;

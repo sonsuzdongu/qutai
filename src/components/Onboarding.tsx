@@ -579,6 +579,12 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                           onChange={(v) => set('hideCookieBanners', v)}
                         />
                         <Toggle
+                          title={t('settings.blockVideoAds')}
+                          body={t('settings.blockVideoAdsHint')}
+                          value={draft.blockVideoAds}
+                          onChange={(v) => set('blockVideoAds', v)}
+                        />
+                        <Toggle
                           title={t('settings.httpsOnly')}
                           body={t('onboarding.httpsOnlyHint')}
                           value={draft.httpsOnly}
