@@ -181,6 +181,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `DATA-25` | Each migration step and its version bump in one transaction; a step left half done by an older version recovers; a failed open is tried again | Default | 2026-11-20 |
 | `DATA-26` | Storage failures reported in one place (fine, record, user); unreadable saved values kept aside; unreadable site permissions mean Ask | Default | 2026-11-20 |
 | `DATA-27` | One secure source for every random value (expo-crypto), 128-bit nonces for bridges and tokens, ids keep their stored shape; no Math.random | Default | 2026-11-20 |
+| `DATA-28` | Every settings change is a patch on the live settings, never a render-time copy; writes go one after another with the latest settings | Default | 2026-11-20 |
 
 ## [4. Page content is untrusted](04-untrusted-content.md)
 

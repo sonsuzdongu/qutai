@@ -27,7 +27,7 @@ import { useLocales } from 'expo-localization';
 import { getLanguage, LANGUAGE_INFO, LANGUAGES, t, type Language } from '../i18n';
 import { chooseLanguage, chosenLanguage, languageChoiceMode, openLanguageSettings } from '../i18n/appLanguage';
 import type { LegalKind } from '../legal/documents';
-import type { Settings } from '../storage/settings';
+import type { Settings, SettingsPatch } from '../storage/settings';
 import { ASSISTANT_LOOK_LABELS, ASSISTANT_LOOK_TITLE, ASSISTANT_LOOKS } from '../ui/assistantLook';
 import { Icon, IconName } from '../ui/Icon';
 import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
@@ -67,7 +67,8 @@ type Props = {
   visible: boolean;
   settings: Settings;
   /** Called for every change; switches and choices apply (and are saved) immediately. */
-  onChange: (settings: Settings) => void;
+  /** A change as a patch, applied to the settings as they are when it lands (DATA-28). */
+  onChange: (patch: SettingsPatch) => void;
   onClose: () => void;
   onClearData: (options: ClearOptions) => Promise<void>;
   /** Run on a saved task: Settings closes and the app runs it. */
@@ -149,11 +150,12 @@ function SettingsPages({
   const [backupJob, setBackupJob] = useState<'export' | Uint8Array | ServerRestoreJob | null>(null);
   const account = useAccountState();
 
-  const set = (patch: Partial<Settings>) => onChange({ ...settings, ...patch });
+  // Patches only: a change made while this screen waited (Face ID, a permission, the assistant) is kept.
+  const set = (patch: Partial<Settings>) => onChange(patch);
   const saveAi = () => {
     const problem = aiChoiceProblem(ai);
     if (problem) return dialog.alert(t('settings.saveFailed'), problem);
-    onChange({ ...settings, ...cleanAiChoice(ai) });
+    onChange(cleanAiChoice(ai));
   };
   const configured = isConfigured(settings, settings.provider);
 

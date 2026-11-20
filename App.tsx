@@ -1,8 +1,9 @@
 import { siteRules } from './src/storage/siteRules';
 import { TaskRunner } from './src/task/taskRunner';
 import { ChatSaver } from './src/storage/chatSaver';
+import { SettingsWriter } from './src/storage/settingsWriter';
 import { sendTask, type SendOptions, type TaskHost } from './src/task/sendTask';
-import type { SettingsPatch } from './src/task/taskContext';
+import type { SettingsPatch } from './src/storage/settings';
 import { setTaskDialogSites } from './src/task/dialogs';
 import { pageStyleState } from './src/browser/pageStyleState';
 import { CookiesScreen } from './src/components/CookiesScreen';
@@ -1919,26 +1920,25 @@ function BrowserApp({
     });
   };
 
-  // Settings apply as they are changed; the screen stays open.
-  const onChangeSettings = async (next: Settings) => {
-    setSettings(next);
-    try {
-      await saveSettings(next);
-    } catch (e) {
-      dialog.alert(t('settings.saveFailed'), e instanceof Error ? e.message : String(e));
-    }
-  };
-
   /**
-   * A change to the settings as a patch on the settings as they are now (settingsRef), never on a copy from an earlier
-   * render: a change made meanwhile (the assistant's settings tool, another switch) is kept.
+   * Settings apply as they are changed (the screen stays open). Every change is a patch on the settings as they are
+   * now (settingsRef), never on a copy from an earlier render, so a change made meanwhile (the assistant's settings
+   * tool, a switch flipped while a dialog awaited Face ID) is kept (DATA-28). Writes go one after another, each with
+   * the latest settings, so an older write never lands last.
    */
-  const changeSettings = (patch: SettingsPatch) => {
-    const current = settingsRef.current;
-    const next = { ...current, ...(typeof patch === 'function' ? patch(current) : patch) };
-    settingsRef.current = next;
-    return onChangeSettings(next);
-  };
+  const [settingsWriter] = useState(
+    () =>
+      new SettingsWriter(
+        () => settingsRef.current,
+        (next) => {
+          settingsRef.current = next;
+          setSettings(next);
+        },
+        saveSettings,
+        (e) => dialog.alert(t('settings.saveFailed'), e instanceof Error ? e.message : String(e)),
+      ),
+  );
+  const changeSettings = (patch: SettingsPatch): Promise<void> => settingsWriter.change(patch);
 
   // Holding the Qutai button: a voice message to the conversation on screen, with the panel closed.
   const sendRef = useRef(send);
@@ -1953,7 +1953,7 @@ function BrowserApp({
       return active.incognito || chat.incognito || chat.privacy.touchedIncognito;
     },
     online: settings.voiceOnline,
-    onOnlineChange: (voiceOnline) => onChangeSettings({ ...settingsRef.current, voiceOnline }),
+    onOnlineChange: (voiceOnline) => changeSettings({ voiceOnline }),
     onStarted: (lang) => {
       const active = browserInstance.active;
       const chat = browserInstance.conversationOf(active);
@@ -1964,9 +1964,7 @@ function BrowserApp({
   /** The language voice input last listened in: a fallback for conversations that say nothing yet. Not incognito. */
   const rememberVoiceLanguage = (lang: string, incognito: boolean) => {
     if (incognito || settingsRef.current.voiceLastLanguage === lang) return;
-    const next = { ...settingsRef.current, voiceLastLanguage: lang };
-    settingsRef.current = next;
-    onChangeSettings(next);
+    void changeSettings({ voiceLastLanguage: lang });
   };
 
   // The active tab's navigation: the progress line, the address (Chrome's rule while a page-started one waits) and the
@@ -2211,7 +2209,7 @@ function BrowserApp({
             voice={{
               incognito: tab.incognito || conversation.incognito || conversation.privacy.touchedIncognito,
               online: settings.voiceOnline,
-              onOnlineChange: (voiceOnline) => onChangeSettings({ ...settings, voiceOnline }),
+              onOnlineChange: (voiceOnline) => changeSettings({ voiceOnline }),
               autoSend: settings.voiceAutoSend,
               notify: toast.show,
               languages: () => listeningOrder(conversation, settingsRef.current),
@@ -2508,7 +2506,7 @@ function BrowserApp({
           visible={settingsVisible}
           initialPage={settingsPage}
           settings={settings}
-          onChange={onChangeSettings}
+          onChange={changeSettings}
           onClose={() => {
             setSettingsVisible(false);
             setSettingsPage('main');
@@ -2594,7 +2592,7 @@ function BrowserApp({
         <TextSizeSheet
           visible={textSizeVisible}
           zoom={settings.textZoom}
-          onChange={(textZoom) => onChangeSettings({ ...settings, textZoom })}
+          onChange={(textZoom) => changeSettings({ textZoom })}
           onClose={() => setTextSizeVisible(false)}
         />
         <ModelSheet
@@ -2621,7 +2619,7 @@ function BrowserApp({
             readerEasyReading: settings.readerEasyReading,
             textZoom: settings.textZoom,
           }}
-          onChange={(value) => onChangeSettings({ ...settings, ...value })}
+          onChange={(value) => changeSettings(value)}
           onClose={() => setReaderSettingsVisible(false)}
         />
         <OfflinePagesScreen

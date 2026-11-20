@@ -552,3 +552,9 @@ function parseScriptSites(text: string | null): ScriptSite[] {
     return [];
   }
 }
+
+/**
+ * A change to the settings, applied to the settings as they are when it lands, never to a copy from an earlier render
+ * (DATA-28): a value, or a function of the current settings (for a change that depends on them).
+ */
+export type SettingsPatch = Partial<Settings> | ((current: Settings) => Partial<Settings>);

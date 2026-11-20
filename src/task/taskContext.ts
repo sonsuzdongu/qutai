@@ -41,7 +41,7 @@ import type { ActionEntry } from '../storage/actionLog';
 import type { Bookmark } from '../storage/bookmarks';
 import { getDb, withDb } from '../storage/db';
 import { fillTaskPrompt, listSavedTasks, markSavedTaskUsed } from '../storage/savedTasks';
-import type { Settings } from '../storage/settings';
+import type { Settings, SettingsPatch } from '../storage/settings';
 import { siteRules } from '../storage/siteRules';
 import type { SitePermissionStore } from '../storage/sitePermissions';
 import {
@@ -53,8 +53,7 @@ import {
   askSiteRules,
 } from './dialogs';
 
-/** A change to the settings, applied to the settings as they are when it lands (never to a copy from earlier). */
-export type SettingsPatch = Partial<Settings> | ((current: Settings) => Partial<Settings>);
+export type { SettingsPatch };
 
 /** What the tools of every task use from the app: the live settings, the stores, and a few screen actions. */
 export type ToolServices = {
