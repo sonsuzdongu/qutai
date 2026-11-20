@@ -2276,8 +2276,6 @@ export const ja: Record<keyof typeof en, string> = {
   'credits.error.tierUnavailable': 'Qutai Credits は一時的に利用できません。数分後にもう一度試すか、自分の AI キーを使ってください。',
   'credits.error.tierMoved': 'メッセージの送信中に Qutai が別の AI に切り替わりました。もう一度送信してください。',
   'credits.tierMovedNotice': 'Qutai は別の AI で動くようになったため、会話はそちらで続きます。',
-  'cost.servedBy': '回答したモデル: {model}',
-  'sentLog.servedBy': '{model} が回答しました。',
   'credits.error.upgrade': 'このバージョンの Qutai では Qutai Credits を使用できなくなりました。引き続き使うには Qutai をアップデートしてください。',
   'credits.error.badRequest': 'Qutai のサーバーがこのリクエストを受け付けませんでした。繰り返し発生する場合は Qutai をアップデートしてください。',
   'credits.error.providerBusy': '現在 AI プロバイダが混み合っています。しばらくしてから、もう一度お試しください。',

@@ -2267,8 +2267,6 @@ export const en = {
   'credits.error.tierUnavailable': 'Qutai Credits are temporarily unavailable. Try again in a few minutes, or use your own AI key.',
   'credits.error.tierMoved': 'Qutai switched to another AI while your message was being sent. Send it again.',
   'credits.tierMovedNotice': 'Qutai now runs on another AI, so the conversation continues there.',
-  'cost.servedBy': 'Answered by: {model}',
-  'sentLog.servedBy': 'Answered by {model}.',
   'credits.error.upgrade': 'This version of Qutai can’t use Qutai Credits any more. Update Qutai to keep using them.',
   'credits.error.badRequest': 'Qutai’s server didn’t accept this request. If it keeps happening, update Qutai.',
   'credits.error.providerBusy': 'The AI provider is busy right now. Try again in a moment.',

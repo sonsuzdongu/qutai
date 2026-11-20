@@ -2,7 +2,7 @@ import type { CustomHeader } from './customHeaders';
 import { recordRequest, recordRequestCost } from './audit';
 import { failedRequestCost, priceRequest } from './cost';
 import { creditsEnabled } from '../config/features';
-import { creditsModelName, creditsProvider, creditsReady } from '../credits';
+import { creditsProvider, creditsReady } from '../credits';
 import { anthropic } from './anthropic';
 import { custom } from './custom';
 import { gemini } from './gemini';
@@ -69,7 +69,8 @@ export function modelLabel(id: ProviderId, model: string): string {
   const provider = getProvider(id);
   const listed = provider.models.find((m) => m.id === model)?.name;
   if (listed) return listed;
-  if (id === 'qutai') return creditsModelName(model);
+  // Qutai Credits never names the model behind it, wherever a label is shown (CRED-44).
+  if (id === 'qutai') return '';
   return (provider.catalog && catalogModel(model)?.name) || model;
 }
 

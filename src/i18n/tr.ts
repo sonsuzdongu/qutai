@@ -2272,8 +2272,6 @@ export const tr: Record<keyof typeof en, string> = {
   'credits.error.tierUnavailable': 'Qutai Kredileri geçici olarak kullanılamıyor. Birkaç dakika sonra yeniden deneyin ya da kendi yapay zekâ anahtarınızı kullanın.',
   'credits.error.tierMoved': 'Mesajınız gönderilirken Qutai başka bir yapay zekâya geçti. Yeniden gönderin.',
   'credits.tierMovedNotice': 'Qutai artık başka bir yapay zekâyla çalışıyor; sohbet orada sürüyor.',
-  'cost.servedBy': 'Yanıtlayan: {model}',
-  'sentLog.servedBy': '{model} yanıtladı.',
   'credits.error.upgrade': 'Qutai’ın bu sürümü artık Qutai Kredilerini kullanamıyor. Kullanmaya devam etmek için Qutai’ı güncelleyin.',
   'credits.error.badRequest': 'Qutai’ın sunucusu bu isteği kabul etmedi. Sürerse Qutai’ı güncelleyin.',
   'credits.error.providerBusy': 'Yapay zekâ sağlayıcısı şu anda yoğun. Biraz sonra tekrar deneyin.',

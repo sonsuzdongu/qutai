@@ -2261,8 +2261,6 @@ export const de: Record<keyof typeof en, string> = {
   'credits.error.tierUnavailable': 'Qutai Credits sind vorübergehend nicht verfügbar. Versuchen Sie es in ein paar Minuten erneut oder nutzen Sie Ihren eigenen KI-Schlüssel.',
   'credits.error.tierMoved': 'Qutai ist beim Senden Ihrer Nachricht zu einer anderen KI gewechselt. Senden Sie sie erneut.',
   'credits.tierMovedNotice': 'Qutai läuft jetzt mit einer anderen KI; das Gespräch geht dort weiter.',
-  'cost.servedBy': 'Beantwortet von: {model}',
-  'sentLog.servedBy': 'Beantwortet von {model}.',
   'credits.error.upgrade': 'Diese Version von Qutai kann Qutai Credits nicht mehr nutzen. Aktualisieren Sie Qutai, um sie weiter zu nutzen.',
   'credits.error.badRequest': 'Qutais Server hat diese Anfrage nicht akzeptiert. Wenn das wiederholt passiert, aktualisieren Sie Qutai.',
   'credits.error.providerBusy': 'Der KI-Anbieter ist gerade ausgelastet. Versuchen Sie es gleich noch einmal.',

@@ -8,7 +8,7 @@ import { formatDate, formatNumber, formatUsdAmount, numberSeparators } from '../
 import { makeStyles } from '../ui/theme';
 import { costFit } from './costFit';
 import { dialog } from './Dialog';
-import { creditsText, providerModelName } from '../credits';
+import { creditsText } from '../credits';
 
 /**
  * The approximate cost of an answer or a request (ai/cost.ts) as people read it: "≈ $0.012 · 3.4k tokens", or the
@@ -76,11 +76,10 @@ export function requestBreakdown(c: RequestCost): string {
 /** Shows the breakdown of an answer, with the conversation's total so far. */
 export function showAnswerBreakdown(c: AnswerCost, conversation: AnswerCost[]) {
   const total = sumCosts(conversation);
-  // Qutai Credits on a tier names no tier (CRED-39): "Model: Qutai Credits", and the model that really answered below.
+  // Qutai Credits names neither a tier (CRED-39) nor the model that answered (CRED-44): "Model: Qutai Credits".
   const name = modelLabel(c.provider, c.model) || getProvider(c.provider).label;
   const lines = [
     t('cost.model', { model: name }),
-    ...(c.served && c.served.model !== c.model ? [t('cost.servedBy', { model: providerModelName(c.served.model) })] : []),
     t('cost.requests', { n: count(c.requests) }),
     ...usageLines(c.usage),
     ...(c.reported < c.requests ? ['', t('cost.unreported', { missing: c.requests - c.reported, total: c.requests })] : []),

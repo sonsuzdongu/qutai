@@ -2275,8 +2275,6 @@ export const id: Record<keyof typeof en, string> = {
   'credits.error.tierUnavailable': 'Qutai Credits untuk sementara tidak tersedia. Coba lagi dalam beberapa menit, atau gunakan kunci AI Anda sendiri.',
   'credits.error.tierMoved': 'Qutai beralih ke AI lain saat pesan Anda sedang dikirim. Kirim lagi.',
   'credits.tierMovedNotice': 'Qutai kini berjalan dengan AI lain, jadi percakapan berlanjut di sana.',
-  'cost.servedBy': 'Dijawab oleh: {model}',
-  'sentLog.servedBy': 'Dijawab oleh {model}.',
   'credits.error.upgrade': 'Versi Qutai ini tidak dapat lagi menggunakan Qutai Credits. Perbarui Qutai untuk terus menggunakannya.',
   'credits.error.badRequest': 'Server Qutai tidak menerima permintaan ini. Jika terus terjadi, perbarui Qutai.',
   'credits.error.providerBusy': 'Penyedia AI sedang sibuk. Coba lagi sebentar lagi.',

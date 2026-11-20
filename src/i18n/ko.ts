@@ -2274,8 +2274,6 @@ export const ko: Record<keyof typeof en, string> = {
   'credits.error.tierUnavailable': 'Qutai Credits를 일시적으로 사용할 수 없습니다. 몇 분 후에 다시 시도하거나 직접 받은 AI 키를 사용하세요.',
   'credits.error.tierMoved': '메시지를 보내는 동안 Qutai가 다른 AI로 바뀌었습니다. 다시 보내세요.',
   'credits.tierMovedNotice': 'Qutai가 이제 다른 AI로 실행되므로 대화는 그곳에서 이어집니다.',
-  'cost.servedBy': '응답 모델: {model}',
-  'sentLog.servedBy': '{model}이(가) 응답했습니다.',
   'credits.error.upgrade': '이 버전의 Qutai에서는 더 이상 Qutai Credits를 사용할 수 없습니다. 계속 사용하려면 Qutai를 업데이트하세요.',
   'credits.error.badRequest': 'Qutai 서버가 이 요청을 받아들이지 않았습니다. 계속 발생하면 Qutai를 업데이트하세요.',
   'credits.error.providerBusy': '지금은 AI 제공업체가 혼잡합니다. 잠시 후 다시 시도하세요.',

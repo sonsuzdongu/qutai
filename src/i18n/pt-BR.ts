@@ -2276,8 +2276,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'credits.error.tierUnavailable': 'O Qutai Credits está temporariamente indisponível. Tente de novo em alguns minutos ou use sua própria chave de IA.',
   'credits.error.tierMoved': 'O Qutai mudou para outra IA enquanto sua mensagem era enviada. Envie de novo.',
   'credits.tierMovedNotice': 'O Qutai agora usa outra IA, então a conversa continua por lá.',
-  'cost.servedBy': 'Respondido por: {model}',
-  'sentLog.servedBy': 'Respondido por {model}.',
   'credits.error.upgrade': 'Esta versão do Qutai não pode mais usar os Qutai Credits. Atualize o Qutai para continuar usando-os.',
   'credits.error.badRequest': 'O servidor do Qutai não aceitou esta solicitação. Se continuar acontecendo, atualize o Qutai.',
   'credits.error.providerBusy': 'O provedor de IA está ocupado agora. Tente de novo em instantes.',

@@ -68,7 +68,6 @@ The open questions, in one place (each row says what the app does today).
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one admin role. | [34](34-credits-and-relay.md) |
 | `CRED-34` | Today abuse flags can't be marked resolved. | [34](34-credits-and-relay.md) |
 | `CRED-35` | Today credit prices are the model's token price plus a margin; pack sizes, trial credits, per-user limits and credit expiry… | [34](34-credits-and-relay.md) |
-| `CRED-36` | Today the app names no tier; the model that served an answer shows only in its cost details and the sent log. | [34](34-credits-and-relay.md) |
 | `CRED-37` | Today there is no crash-report service. | [34](34-credits-and-relay.md) |
 | `CRED-38` | Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3 minutes, and not for incognito… | [34](34-credits-and-relay.md) |
 | `BUY-9` | Today a refund that Apple later cancels does not give the credits back automatically; support can grant them by hand. | [35](35-purchases.md) |
@@ -1005,7 +1004,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one… | **Waiting** |  |
 | `CRED-34` | Today abuse flags can't be marked resolved. | **Waiting** |  |
 | `CRED-35` | Today credit prices are the model's token price plus a margin; pack sizes, trial credits, per-user limits… | **Waiting** | changed 2026-11-20 |
-| `CRED-36` | Today the app names no tier; the model that served an answer shows only in its cost details and the sent… | **Waiting** |  |
+| `CRED-36` | ~~The model that served an answer shows only in its cost details and the sent log~~ (withdrawn; `CRED-44`). | Withdrawn | 2026-11-20 |
 | `CRED-37` | Today there is no crash-report service. | **Waiting** |  |
 | `CRED-38` | Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3… | **Waiting** |  |
 | `CRED-39` | No tier choice in the app: every Qutai Credits request uses the tier `/config` marks as default; stored… | Owner | 2026-11-20 |
@@ -1013,6 +1012,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-41` | "Check prices" reads Anthropic's pricing page as a proposal only; strict parser, refuses when unsure, saves nothing until accepted. | Owner | 2026-11-20 |
 | `CRED-42` | Margin set in the panel as a percentage with a live example; first values 100 credits per dollar and 100 %. | Owner | 2026-11-20 |
 | `CRED-43` | Every panel setting is a form in human units with "What will change"; JSON only under Advanced; emergency controls first. | Owner | 2026-11-20 |
+| `CRED-44` | The app never shows which model is behind Qutai Credits (no "Answered by" in the cost details or the sent log, no model label). | Owner | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 

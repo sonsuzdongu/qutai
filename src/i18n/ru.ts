@@ -2275,8 +2275,6 @@ export const ru: Record<keyof typeof en, string> = {
   'credits.error.tierUnavailable': 'Qutai Credits временно недоступны. Повторите попытку через несколько минут или используйте свой ключ ИИ.',
   'credits.error.tierMoved': 'Пока сообщение отправлялось, Qutai переключился на другой ИИ. Отправьте его ещё раз.',
   'credits.tierMovedNotice': 'Теперь Qutai работает на другом ИИ, и разговор продолжается там.',
-  'cost.servedBy': 'Ответила модель: {model}',
-  'sentLog.servedBy': 'Ответила модель {model}.',
   'credits.error.upgrade': 'Эта версия Qutai больше не может использовать Qutai Credits. Обновите Qutai, чтобы продолжить ими пользоваться.',
   'credits.error.badRequest': 'Сервер Qutai не принял этот запрос. Если это повторяется, обновите Qutai.',
   'credits.error.providerBusy': 'ИИ-провайдер сейчас занят. Повторите попытку чуть позже.',

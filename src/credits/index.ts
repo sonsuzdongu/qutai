@@ -2,9 +2,6 @@ import * as SecureStore from 'expo-secure-store';
 import { secureStoreReady } from '../storage/secureStoreGate';
 import { useSyncExternalStore } from 'react';
 import { accountSession } from '../account';
-import { anthropic } from '../ai/anthropic';
-import { gemini } from '../ai/gemini';
-import { openai } from '../ai/openai';
 import type { Provider } from '../ai/types';
 import { creditsEnabled, features } from '../config/features';
 import { appVersion } from '../device/appVersion';
@@ -14,7 +11,6 @@ import { createCreditsClient, type CreditsClient } from './client';
 import { formatCredits, separators } from './format';
 import { createCreditsProvider } from './provider';
 import { createCreditsStore, type CreditsState } from './store';
-import { TIER_ID } from './tiers';
 
 /**
  * Qutai Credits in the app (pro mode only, `creditsEnabled`): the client, the store the screens follow, the
@@ -122,22 +118,6 @@ export function creditsReady(): boolean {
 }
 
 // --- The provider ---
-
-const KNOWN_MODELS = [...anthropic.models, ...openai.models, ...gemini.models];
-
-/** A provider model's display name: the name the own-key list gives it, else its id. */
-export function providerModelName(id: string): string {
-  return KNOWN_MODELS.find((m) => m.id === id)?.name ?? id;
-}
-
-/**
- * The name of what a Qutai Credits request recorded as its model (logs, answer costs): a provider model's name for a
- * model id (requests on a server without tiers), '' for a tier id (there is no tier to name since CRED-39; the model
- * that served it is shown from `served`).
- */
-export function creditsModelName(id: string): string {
-  return KNOWN_MODELS.some((m) => m.id === id) || !TIER_ID.test(id) ? providerModelName(id) : '';
-}
 
 const core = createCreditsProvider({
   client: signedInClient,
