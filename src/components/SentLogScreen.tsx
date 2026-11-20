@@ -27,6 +27,7 @@ import { costLine, creditsLabel, requestBreakdown, usd } from './AnswerCost';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { ScreenHeader } from './ScreenHeader';
 import { dialog, DialogHost } from './Dialog';
+import { reportStorageFailure } from '../storage/failures';
 
 type Props = {
   visible: boolean;
@@ -134,7 +135,11 @@ function SentLog({
     getDb()
       .then((db) => listSent(db, filter))
       .then(setEntries)
-      .catch(() => setEntries([]));
+      .catch((e) => {
+        // An empty list would say nothing was sent: the user is told it couldn't be read.
+        reportStorageFailure('sentLog.list', e, 'user');
+        setEntries([]);
+      });
   }, [filter]);
   useEffect(reload, [reload]);
   useEffect(() => subscribeSentLog(reload), [reload]);
@@ -149,7 +154,7 @@ function SentLog({
           getDb()
             .then((db) => deleteSentSince(db, 0))
             .then(reload)
-            .catch(() => {}),
+            .catch((e) => reportStorageFailure('sentLog.clear', e, 'user')),
       },
     ]);
 

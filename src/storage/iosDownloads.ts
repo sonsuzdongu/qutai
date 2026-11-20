@@ -5,6 +5,7 @@ import { fileNameFromUrl, mimeForName, safeFileName, siteOf, uniqueName } from '
 import { parseDataUrl } from '../device/saveImage';
 import { Db } from './db';
 import type { DownloadBackend, DownloadItem, OpenResult, PageWriter, StartRequest } from './downloads';
+import { reportStorageFailure } from './failures';
 
 /** Files larger than this are downloaded directly instead of through the page (which holds them in memory). */
 const PAGE_FETCH_MAX_BYTES = 25e6;
@@ -107,7 +108,11 @@ export class IosDownloads implements DownloadBackend {
         );
         this.emit();
       })
-      .catch(() => {});
+      .catch((e) => {
+        // The Downloads screen would look empty: told, and tried again next time.
+        this.loading = null;
+        reportStorageFailure('downloads.load', e, 'user');
+      });
     return this.loading;
   }
 
@@ -161,7 +166,10 @@ export class IosDownloads implements DownloadBackend {
     };
     this.update(id, patch);
     const item = this.items.find((i) => i.id === id);
-    if (item && !item.incognito) await addRow(await this.getDb(), item).catch(() => {});
+    if (item && !item.incognito)
+      await this.getDb()
+        .then((db) => addRow(db, item))
+        .catch((e) => reportStorageFailure('downloads.add', e, 'record'));
   }
 
   private fail(id: string, file: File | null, error: string) {

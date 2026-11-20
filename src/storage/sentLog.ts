@@ -1,6 +1,6 @@
 import { parseRequestCost, type RequestCost } from '../ai/cost';
 import type { ProviderId, ToolImage } from '../ai/types';
-import { Db, getDb } from './db';
+import { Db, withDb } from './db';
 
 /**
  * "What was sent to the AI": one entry per request the app makes to the AI provider.
@@ -148,18 +148,19 @@ export function recordSent(entry: SentRequest): void {
     });
     if (!purged.has(entry.conversation)) {
       purged.add(entry.conversation);
-      getDb()
-        .then((db) => db.runAsync('DELETE FROM ai_requests WHERE conversation = ?', [entry.conversation]))
-        .catch(() => {});
+      // Not removed: an incognito conversation's earlier entries would stay on disk (INC-2); the user is told and the
+      // next request of that conversation tries again.
+      void withDb('sentLog.purgeIncognito', (db) => db.runAsync('DELETE FROM ai_requests WHERE conversation = ?', [entry.conversation]), 'user').then(
+        (done) => {
+          if (done === undefined) purged.delete(entry.conversation);
+        },
+      );
     }
     return;
   }
   // Cleared since (a new chat): it may write again, and be purged again if it touches incognito later.
   purged.delete(entry.conversation);
-  const write = getDb()
-    .then((db) => insertSent(db, entry))
-    .catch(() => {})
-    .finally(() => writing.delete(entry.id));
+  const write = withDb('sentLog.write', (db) => insertSent(db, entry)).finally(() => writing.delete(entry.id));
   writing.set(entry.id, write);
 }
 
@@ -170,10 +171,9 @@ export function setSentCost(id: string, cost: RequestCost): void {
   entry.cost = cost;
   notify();
   if (entry.incognito) return;
-  (writing.get(id) ?? Promise.resolve())
-    .then(() => getDb())
-    .then((db) => db.runAsync('UPDATE ai_requests SET cost = ? WHERE id = ?', [JSON.stringify(cost), id]))
-    .catch(() => {});
+  void (writing.get(id) ?? Promise.resolve()).then(() =>
+    withDb('sentLog.cost', (db) => db.runAsync('UPDATE ai_requests SET cost = ? WHERE id = ?', [JSON.stringify(cost), id])),
+  );
 }
 
 async function insertSent(db: Db, e: SentRequest): Promise<void> {

@@ -178,6 +178,8 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `DATA-22` | The account backup (pro) is the same encrypted file; the server stores only that file and keeps the newest… | Default |  |
 | `DATA-23` | Only requests to Qutai's server send `Qutai/<version> (<platform>) qutai.<build>`; web views and every third… | Owner | 2026-11-20 |
 | `DATA-24` | Card pictures are requested from the sites showing them (also for options not opened), without cookies or Referer; not in incognito until asked; policies name it, versions not bumped | Default | 2026-11-20 |
+| `DATA-25` | Each migration step and its version bump in one transaction; a step left half done by an older version recovers; a failed open is tried again | Default | 2026-11-20 |
+| `DATA-26` | Storage failures reported in one place (fine, record, user); unreadable saved values kept aside; unreadable site permissions mean Ask | Default | 2026-11-20 |
 
 ## [4. Page content is untrusted](04-untrusted-content.md)
 
@@ -977,6 +979,7 @@ Moved to Details (ids retired, not reused): `PERF-1`, `PERF-2`, `PERF-9`
 | `ACC-50` | Today Sign in with Apple on Android is built but stays off until the owner creates Apple's Services ID and… | **Waiting** |  |
 | `ACC-51` | Today the sign-in methods are Apple, Google and email; no other provider. | **Waiting** |  |
 | `ACC-52` | Each sign-in method shows its address (Google and Apple from their own token, kept per method on the server); an Apple relay… | Owner | 2026-11-19 |
+| `ACC-53` | A sign-in or rotated token the phone can't save: three tries, kept in memory, saved before every request, the user told once; a failed sign-out clear told | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21`, `ACC-38`, `ACC-44`
 

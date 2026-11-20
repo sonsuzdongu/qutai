@@ -13,6 +13,7 @@ import { listOfflinePages, OfflinePage, removeOfflinePage } from '../storage/off
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost } from './Dialog';
 import { ScreenHeader } from './ScreenHeader';
+import { reportStorageFailure } from '../storage/failures';
 
 type Props = { visible: boolean; onOpenLive: (url: string) => void; onClose: () => void };
 
@@ -35,7 +36,10 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
     getDb()
       .then(listOfflinePages)
       .then(setPages)
-      .catch(() => setPages([]));
+      .catch((e) => {
+        reportStorageFailure('offlinePages.list', e, 'user');
+        setPages([]);
+      });
   }, []);
   useEffect(reload, [reload]);
 
@@ -49,7 +53,7 @@ function OfflineList({ onOpenLive, onClose }: Omit<Props, 'visible'>) {
     getDb()
       .then((db) => removeOfflinePage(db, page.id))
       .then(reload)
-      .catch(() => {});
+      .catch((e) => reportStorageFailure('offlinePages.remove', e, 'user'));
   };
 
   if (reading) {

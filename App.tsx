@@ -160,7 +160,8 @@ import {
   removeBookmark,
   restoreBookmarks,
 } from './src/storage/bookmarks';
-import { getDb } from './src/storage/db';
+import { getDb, withDb } from './src/storage/db';
+import { setStorageNotice } from './src/storage/failures';
 import { deviceMemoryStore } from './src/storage/memory';
 import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
 import { deleteHistorySince, mostVisitedSites, searchHistory } from './src/storage/history';
@@ -289,9 +290,7 @@ const historySearch = {
 
 /** Records an agent action for the activity screen. */
 function logAction(entry: ActionEntry) {
-  getDb()
-    .then((db) => addAction(db, entry))
-    .catch(() => {});
+  void withDb('actionLog.add', (db) => addAction(db, entry));
 }
 
 // Conversations saved by earlier versions belong to the tab that is active on the first start.
@@ -301,10 +300,8 @@ let legacyChatPending = true;
 function readConversation(chat: Conversation, adoptLegacy = false) {
   if (chat.loaded || chat.loading) return;
   chat.loading = true;
-  getDb()
-    .then((db) => loadChat(db, chat.key, { adoptLegacy }))
-    .catch(() => null)
-    .then((saved) => chat.restore(saved));
+  // Unreadable: the conversation starts empty and the user is told (an unreadable saved value is kept aside, db.ts).
+  void withDb('chat.load', (db) => loadChat(db, chat.key, { adoptLegacy }), 'user').then((saved) => chat.restore(saved ?? null));
 }
 
 /**
@@ -529,9 +526,8 @@ export default function App() {
       introPlayed = true;
       setBoot({ settings: s, intro });
     });
-    getDb()
-      .then((db) => Promise.all([loadSession(db), loadRecentlyClosed(db)]))
-      .catch((): [null, ClosedTab[]] => [null, []])
+    void withDb('session.load', (db) => Promise.all([loadSession(db), loadRecentlyClosed(db)]), 'user')
+      .then((loaded): [Awaited<ReturnType<typeof loadSession>>, ClosedTab[]] => loaded ?? [null, []])
       .then(async ([session, recentlyClosed]) => setRestored({ session, recentlyClosed, settings: await settings }));
   }, []);
 
@@ -898,6 +894,11 @@ function BrowserApp({
   // "No Turkish voice is installed…" when something is read aloud in a language the phone has no voice for.
   const showToast = toast.show;
   useEffect(() => setSpeechNotice(showToast), [showToast]);
+  // Storage failures that may have lost something the user did or saved are told once (storage/failures.ts).
+  useEffect(() => {
+    setStorageNotice(showToast);
+    return () => setStorageNotice(null);
+  }, [showToast]);
   // Downloads: notices from the request flow (a finished download shows in the download pill, with Open), the
   // notifications' "open Downloads" and "open this file" (Android: a finished file no app opened directly; Qutai
   // says why), and incognito entries leave the list with the session.
@@ -1004,12 +1005,10 @@ function BrowserApp({
   useEffect(() => {
     sitePermissions.load();
     downloads.load();
-    getDb()
-      .then(async (db) => {
-        await pruneActions(db);
-        await pruneSent(db);
-      })
-      .catch(() => {});
+    void withDb('logs.prune', async (db) => {
+      await pruneActions(db);
+      await pruneSent(db);
+    });
   }, []);
 
   // Once at start: forget conversations of tabs that are gone (also those that fell out of recently closed), then the
@@ -1056,9 +1055,7 @@ function BrowserApp({
   };
 
   const persistConversation = (chat: Conversation) => {
-    getDb()
-      .then((db) => storeChat(db, chat))
-      .catch(() => {});
+    void withDb('chat.save', (db) => storeChat(db, chat), 'user');
   };
 
   // Ways in from outside the app (links handed to Qutai as the default browser, text shared to it): untrusted, so
@@ -1193,12 +1190,14 @@ function BrowserApp({
   useEffect(
     () =>
       browserInstance.onChatMoved((chat, fromKey) => {
-        getDb()
-          .then(async (db) => {
+        void withDb(
+          'chat.move',
+          async (db) => {
             await storeChat(db, chat, fromKey);
             await moveSentConversation(db, fromKey, chat.key);
-          })
-          .catch(() => {});
+          },
+          'user',
+        );
       }),
     [browserInstance],
   );
@@ -1476,10 +1475,7 @@ function BrowserApp({
           list: () => getDb().then(listSavedTasks),
           fill: (prompt) => fillTaskPrompt(prompt, () => formatDate(new Date())),
           markUsed: (id) => {
-            getDb()
-              .then((db) => markSavedTaskUsed(db, id))
-              .then(refreshRecentTasks)
-              .catch(() => {});
+            void withDb('savedTasks.used', (db) => markSavedTaskUsed(db, id)).then(refreshRecentTasks);
           },
         },
         // The same path as the Settings screen; the tool only passes allowlisted fields (agent/settingsTool.ts).
@@ -1830,10 +1826,7 @@ function BrowserApp({
   const [tasksScreen, setTasksScreen] = useState<{ draft: TaskDraft | null } | null>(null);
   const [recentTasks, setRecentTasks] = useState<SavedTask[]>([]);
   const refreshRecentTasks = useCallback(() => {
-    getDb()
-      .then((db) => recentSavedTasks(db))
-      .then(setRecentTasks)
-      .catch(() => {});
+    void withDb('savedTasks.recent', recentSavedTasks).then((list) => list && setRecentTasks(list));
   }, []);
   useEffect(() => {
     if (panelOpen && !tasksScreen) refreshRecentTasks();
@@ -1846,10 +1839,7 @@ function BrowserApp({
   const runSavedTask = async (task: SavedTask) => {
     setTasksScreen(null);
     if (running) return toast.show(t('chat.busyElsewhere'));
-    getDb()
-      .then((db) => markSavedTaskUsed(db, task.id))
-      .then(refreshRecentTasks)
-      .catch(() => {});
+    void withDb('savedTasks.used', (db) => markSavedTaskUsed(db, task.id)).then(refreshRecentTasks);
     const prompt = fillTaskPrompt(task.prompt, () => formatDate(new Date()));
     let target: Tab = browser.active;
     if (task.target === 'url' && task.url) {
@@ -1869,10 +1859,8 @@ function BrowserApp({
   // also moves Android's next alarm after a time zone change, and fills iOS's limited queue again).
   useEffect(() => {
     const sync = () =>
-      getDb()
-        .then(listSavedTasks)
-        .then(syncTaskReminders)
-        .catch(() => {});
+      // Reminders not set again would silently not ring: the user is told.
+      void withDb('savedTasks.reminders', async (db) => syncTaskReminders(await listSavedTasks(db)), 'user');
     sync();
     const sub = AppState.addEventListener('change', (state) => state === 'active' && sync());
     return () => sub.remove();
@@ -1912,10 +1900,7 @@ function BrowserApp({
     if (!text) return;
     chat.setDraft('');
     persistDraftSoon(chat);
-    getDb()
-      .then((db) => markSavedTaskUsed(db, task.id))
-      .then(refreshRecentTasks)
-      .catch(() => {});
+    void withDb('savedTasks.used', (db) => markSavedTaskUsed(db, task.id)).then(refreshRecentTasks);
     send(text, { noPage: task.target === 'none' });
   };
 
@@ -1923,10 +1908,7 @@ function BrowserApp({
     const chat = conversation;
     chat.clear();
     // Its attached files go once the cleared conversation is saved.
-    getDb()
-      .then((db) => storeChat(db, chat))
-      .then(pruneAttachmentFiles)
-      .catch(() => {});
+    void withDb('chat.clear', (db) => storeChat(db, chat)).then(pruneAttachmentFiles);
   };
 
   /** Runs a menu action and reports the outcome in a toast instead of failing silently. */
@@ -2528,10 +2510,7 @@ function BrowserApp({
     toast.show(message, {
       label: t('common.undo'),
       onPress: () => {
-        getDb()
-          .then((db) => restoreBookmarks(db, removed))
-          .then(notifyBookmarksChanged)
-          .catch(() => {});
+        void withDb('bookmarks.undo', (db) => restoreBookmarks(db, removed), 'user').then(notifyBookmarksChanged);
       },
     });
   };

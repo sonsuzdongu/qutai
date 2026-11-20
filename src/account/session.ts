@@ -83,7 +83,18 @@ export class AccountSession {
      * email and the notice mail ("a sign-in method was added") in it.
      */
     private readonly locale: () => string | undefined = () => undefined,
+    /**
+     * Told when the session could not be saved on the phone after retries (`save`) or not removed from it (`clear`);
+     * the app tells the user once (storage/failures.ts). Never throws into the session.
+     */
+    private readonly onStorageProblem: (kind: 'save' | 'clear', error: unknown) => void = () => {},
+    /** Waits between save attempts (tests pass one that doesn't wait). */
+    private readonly pause: (ms: number) => Promise<void> = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   ) {}
+
+  /** A session the storage refused: saved again before the next request, until it works or another replaces it. */
+  private unsaved: StoredSession | null = null;
+
 
   /** Called after every successful sign-in (any method) with the server's answer (`created`, `emailLink`). */
   onSignIn(listener: (response: SignInResponse) => void): () => void {
@@ -334,7 +345,7 @@ export class AccountSession {
     this.generation++;
     this.refreshing = null;
     this.session = session;
-    await this.storage.save(session).catch(() => {});
+    await this.persist(session);
     this.setState({ status: 'signedIn', user: session.user });
     for (const listener of this.signInListeners) {
       try {
@@ -351,14 +362,16 @@ export class AccountSession {
     this.generation++;
     this.refreshing = null;
     this.session = null;
-    this.storage.clear().catch(() => {});
+    this.unsaved = null;
+    void this.clearStored();
     this.setState(reason ? { status: 'signedOut', reason } : { status: 'signedOut' });
   }
 
   private async updateUser(user: Me) {
     if (!this.session) return;
     this.session = { ...this.session, user };
-    await this.storage.save(this.session).catch(() => {});
+    // Only the profile changed: the stored tokens stay valid, so a failed save loses nothing that matters.
+    await this.persist(this.session, false);
     this.setState({ status: 'signedIn', user });
   }
 
@@ -366,6 +379,74 @@ export class AccountSession {
     if (this.session && this.session.user.status !== 'suspended') {
       this.updateUser({ ...this.session.user, status: 'suspended' }).catch(() => {});
     }
+  }
+
+  /**
+   * Saves the session, trying three times. When the storage still refuses, the new tokens keep working in memory
+   * (the server has already rotated the refresh token: the stored one is spent and can't be kept usable), the session
+   * is saved again before every later request, and with `important` the user is told once that a restart before
+   * then would sign them out (`ACC-53` in docs/design/33-accounts.md).
+   */
+  private async persist(session: StoredSession, important = true): Promise<void> {
+    let last: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await this.storage.save(session);
+        if (this.unsaved === session || this.unsaved === null || this.session === session) this.unsaved = null;
+        return;
+      } catch (e) {
+        last = e;
+        if (attempt < 2) await this.pause(attempt === 0 ? 100 : 500);
+      }
+    }
+    if (this.session === session) this.unsaved = session;
+    if (important) this.safely(() => this.onStorageProblem('save', last));
+  }
+
+  /**
+   * Removes the stored session (sign-out), trying three times. When the storage still refuses, the user is told: after
+   * a restart Qutai may show them signed in again (with tokens the server may already have ended).
+   */
+  private async clearStored(): Promise<void> {
+    const generation = this.generation;
+    let last: unknown = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        await this.storage.clear();
+        return;
+      } catch (e) {
+        last = e;
+        if (attempt < 2) await this.pause(attempt === 0 ? 100 : 500);
+        // Signed in again meanwhile: the new session's save replaces what is stored.
+        if (generation !== this.generation) return;
+      }
+    }
+    this.safely(() => this.onStorageProblem('clear', last));
+  }
+
+  /** One more try at a save the storage refused before (no retries, no new message). */
+  private async retryStorage(): Promise<void> {
+    const pending = this.unsaved;
+    if (!pending || pending !== this.session) return;
+    try {
+      await this.storage.save(pending);
+      if (this.unsaved === pending) this.unsaved = null;
+    } catch {
+      // Still refused: kept for the next request.
+    }
+  }
+
+  private safely(fn: () => void) {
+    try {
+      fn();
+    } catch {
+      // A reporter's mistake must not break the session.
+    }
+  }
+
+  /** For tests and diagnostics: whether a session is waiting to be saved again. */
+  get saveOutstanding(): boolean {
+    return this.unsaved !== null;
   }
 
   private requireSession(): StoredSession {
@@ -407,13 +488,15 @@ export class AccountSession {
     if (generation !== this.generation) throw new AccountApiError('unauthorized', 401);
     const next = toStored(pair, session.user, this.now());
     this.session = next;
-    // Stored before anyone uses it: after a restart the app must hold the new refresh token, not the spent one.
-    await this.storage.save(next).catch(() => {});
+    // Stored before anyone uses it: after a restart the app must hold the new refresh token, not the spent one (the
+    // server treats a spent one as stolen and ends the whole session). See persist for when that fails.
+    await this.persist(next);
     return next;
   }
 
   /** A valid access token, refreshing first when it is about to run out. */
   private async accessToken(): Promise<string> {
+    if (this.unsaved) await this.retryStorage();
     if (this.refreshing) return (await this.refreshing).accessToken;
     const session = this.requireSession();
     if (session.accessExpiresAt - EXPIRY_MARGIN_MS > this.now()) return session.accessToken;

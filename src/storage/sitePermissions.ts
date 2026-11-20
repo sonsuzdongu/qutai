@@ -1,6 +1,7 @@
 import { isSiteLevel, PersonalSetting, SiteLevel, SitePolicy } from '../agent/sitePolicy';
 import { Db } from './db';
 import { siteKeyOfHost } from '../utils/webUrl';
+import { reportStorageFailure } from './failures';
 
 export type SitePermission = { host: string; level: SiteLevel; updatedAt: number };
 
@@ -186,14 +187,26 @@ export class SitePermissionStore implements SitePolicy {
         }
         for (const host of blockingOff) if (!this.blockingTouched.has(key(host))) this.blockingOff.add(key(host));
         this.blockingOffList = [...this.blockingOff].sort();
+        this.unreadable = false;
         this.emit();
       })
-      .catch(() => {});
+      .catch((e) => {
+        // Not knowing which sites the user blocked is not "none": until the permissions are read, every site
+        // without a level in memory is 'ask' (the assistant asks before acting), the user is told, and the next
+        // load tries again (DATA-26).
+        this.unreadable = true;
+        this.loading = null;
+        reportStorageFailure('sitePermissions.load', e, 'user');
+        this.emit();
+      });
     return this.loading;
   }
 
+  /** The stored permissions couldn't be read (load failed): unknown sites are asked about. */
+  private unreadable = false;
+
   levelFor(host: string): SiteLevel {
-    return this.levels.get(host) ?? 'default';
+    return this.levels.get(host) ?? (this.unreadable ? 'ask' : 'default');
   }
 
   locationFor(host: string): LocationSetting {

@@ -146,6 +146,106 @@ describe('session', () => {
     );
   });
 
+  it('a rotated refresh token the phone fails to save is retried, kept working, saved before the next request, and told once (ACC-53)', async () => {
+    const now = 1_000_000;
+    const mem = memoryStorage(stored(now, now - 1));
+    let failSaves = 5;
+    const saveAttempts: string[] = [];
+    const storage: SessionStorage = {
+      ...mem.storage,
+      save: async (s) => {
+        saveAttempts.push(s.refreshToken);
+        if (failSaves-- > 0) throw new Error('keychain locked');
+        await mem.storage.save(s);
+      },
+    };
+    const problems: string[] = [];
+    let refreshes = 0;
+    const { fetchImpl } = fakeServer({
+      'POST /auth/refresh': () => {
+        refreshes++;
+        return { status: 200, body: { accessToken: 'a1', accessTokenExpiresIn: 900, refreshToken: 'r1', refreshTokenExpiresAt: now + 1e9 } };
+      },
+      'GET /me': (_b, headers) => (headers.Authorization === 'Bearer a1' ? { status: 200, body: USER } : error(401, 'unauthorized')),
+    });
+    const session = new AccountSession(
+      createApi('https://api.test', fetchImpl),
+      storage,
+      () => now,
+      undefined,
+      (kind) => problems.push(kind),
+      async () => {},
+    );
+    await session.load();
+    // The refresh's save fails three times (and the user's profile save after it twice): the new pair still works.
+    assert.deepEqual(await session.refreshUser(), USER);
+    assert.equal(refreshes, 1);
+    assert.deepEqual(saveAttempts.slice(0, 3), ['r1', 'r1', 'r1'], 'three tries');
+    assert.deepEqual(problems, ['save'], 'told once');
+    assert.equal(mem.get()?.refreshToken, 'r1', 'the profile save that worked stored the new pair');
+    assert.equal(session.saveOutstanding, false);
+
+    // Only the profile fails to save now: kept pending for the next request, but not told (the tokens are stored).
+    failSaves = 100;
+    await session.refreshUser();
+    assert.equal(session.saveOutstanding, true);
+    assert.deepEqual(problems, ['save']);
+  });
+
+  it('a pending save is retried before the next request and cleared once it works', async () => {
+    const now = 1_000_000;
+    const mem = memoryStorage(stored(now, now - 1));
+    let refuse = true;
+    const storage: SessionStorage = {
+      ...mem.storage,
+      save: async (s) => {
+        if (refuse) throw new Error('disk full');
+        await mem.storage.save(s);
+      },
+    };
+    const problems: string[] = [];
+    const { fetchImpl } = fakeServer({
+      'POST /auth/refresh': () => ({
+        status: 200,
+        body: { accessToken: 'a1', accessTokenExpiresIn: 900, refreshToken: 'r1', refreshTokenExpiresAt: now + 1e9 },
+      }),
+      'GET /me': () => ({ status: 200, body: USER }),
+    });
+    const session = new AccountSession(createApi('https://api.test', fetchImpl), storage, () => now, undefined, (k) => problems.push(k), async () => {});
+    await session.load();
+    await session.refreshUser();
+    assert.equal(session.saveOutstanding, true);
+    assert.equal(mem.get()?.refreshToken, 'r0', 'the phone still holds the spent token');
+    assert.deepEqual(problems, ['save']);
+    refuse = false;
+    await session.refreshUser();
+    assert.equal(session.saveOutstanding, false);
+    assert.equal(mem.get()?.refreshToken, 'r1');
+    assert.deepEqual(problems, ['save'], 'not told again');
+  });
+
+  it('a sign-out the phone fails to clear is tried three times, then told', async () => {
+    const now = 1_000_000;
+    const mem = memoryStorage(stored(now, now + 600_000));
+    let clears = 0;
+    const storage: SessionStorage = {
+      ...mem.storage,
+      clear: async () => {
+        clears++;
+        throw new Error('keychain locked');
+      },
+    };
+    const problems: string[] = [];
+    const { fetchImpl } = fakeServer({ 'POST /auth/signout': () => ({ status: 204 }) });
+    const session = new AccountSession(createApi('https://api.test', fetchImpl), storage, () => now, undefined, (k) => problems.push(k), async () => {});
+    await session.load();
+    await session.signOut();
+    await new Promise((r) => setTimeout(r, 0));
+    assert.equal(clears, 3);
+    assert.deepEqual(problems, ['clear']);
+    assert.equal(session.getState().status, 'signedOut');
+  });
+
   it('signs out when the server refuses the refresh token (reuse, revoked, deleted)', async () => {
     const now = 1_000_000;
     const mem = memoryStorage(stored(now, now));

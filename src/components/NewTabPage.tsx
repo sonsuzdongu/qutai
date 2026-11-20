@@ -18,6 +18,7 @@ import { hideTopSite, TopSite, topSites } from '../storage/topSites';
 import { dialog } from './Dialog';
 import type { LibraryTab } from './LibraryScreen';
 import { MyAppsSection } from './MyApps';
+import { reportStorageFailure } from '../storage/failures';
 
 type Props = {
   incognito: boolean;
@@ -83,7 +84,10 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
         ]);
         return { sites: sites.length ? sites : defaultSites(), bookmarks: bookmarks.slice(0, 5), recent };
       })
-      .catch((): Data => ({ sites: defaultSites(), bookmarks: [], recent: [] }))
+      .catch((e): Data => {
+        reportStorageFailure('newTab.load', e, 'record');
+        return { sites: defaultSites(), bookmarks: [], recent: [] };
+      })
       .then((loaded) => !cancelled && setData(loaded));
     return () => {
       cancelled = true;
@@ -110,7 +114,7 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
           getDb()
             .then((db) => hideTopSite(db, site.host))
             .then(() => setReload((n) => n + 1))
-            .catch(() => {}),
+            .catch((e) => reportStorageFailure('newTab.hideSite', e, 'user')),
       },
     ]);
   };

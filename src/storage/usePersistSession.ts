@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 import type { Browser } from '../browser/Browser';
-import { getDb } from './db';
+import { withDb } from './db';
 import { saveRecentlyClosed, saveSession, sessionFromBrowser } from './session';
 
 const SAVE_DELAY_MS = 800;
@@ -22,11 +22,12 @@ export function usePersistSession(browser: Browser) {
       const json = JSON.stringify([session, closed]);
       if (json === lastSaved) return;
       lastSaved = json;
-      getDb()
-        .then((db) => Promise.all([saveSession(db, session), saveRecentlyClosed(db, closed)]))
-        .catch(() => {
-          lastSaved = '';
-        });
+      // Not saved: the open tabs may not come back after a restart, so the user is told (once); tried again next time.
+      void withDb('session.save', (db) => Promise.all([saveSession(db, session), saveRecentlyClosed(db, closed)]), 'user').then(
+        (saved) => {
+          if (saved === undefined) lastSaved = '';
+        },
+      );
     };
 
     const unsubscribe = browser.subscribe(() => {

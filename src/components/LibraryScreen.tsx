@@ -50,6 +50,7 @@ import { KeyboardAvoidingContainer } from './KeyboardAware';
 import { clearHistory, deleteHistoryEntry, HistoryEntry, listHistory } from '../storage/history';
 import { HEADER_FONT_SCALE } from './ScreenHeader';
 import { WholeWordsText } from './WholeWordsText';
+import { reportStorageFailure } from '../storage/failures';
 
 export type LibraryTab = 'bookmarks' | 'history';
 
@@ -140,7 +141,7 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
     let cancelled = false;
     getDb()
       .then((db) => listHistory(db, { query, limit: PAGE_SIZE }))
-      .catch(() => [] as HistoryEntry[])
+      .catch((e) => (reportStorageFailure('history.list', e, 'user'), [] as HistoryEntry[]))
       .then((page) => {
         if (!cancelled) setResult({ loadedQuery: query, entries: page, done: page.length < PAGE_SIZE });
       });
@@ -259,7 +260,7 @@ function BookmarkList({ query, onOpen }: { query: string; onOpen: (url: string) 
         ]);
         return { all, folders, bookmarks };
       })
-      .catch(() => ({ all: [], folders: [], bookmarks: [] }))
+      .catch((e) => (reportStorageFailure('bookmarks.list', e, 'user'), { all: [], folders: [], bookmarks: [] }))
       .then((loaded) => {
         if (cancelled) return;
         setData(loaded);

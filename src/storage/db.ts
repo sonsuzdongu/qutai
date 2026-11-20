@@ -1,6 +1,7 @@
 import { openDatabaseAsync } from 'expo-sqlite';
 import { looksLikeIdNumber } from '../agent/memory';
 import { APPS_SCHEMA_V1 } from '../apps/store';
+import { reportStorageFailure, type StorageFailureLevel } from './failures';
 
 export type SqlValue = string | number | null;
 
@@ -18,7 +19,7 @@ export interface Db {
  * Each entry upgrades the schema (or the data) by one version: SQL, or a function for changes SQL can't
  * express safely. Never edit a shipped migration; append a new one.
  */
-const MIGRATIONS: (string | ((db: Db) => Promise<void>))[] = [
+export const MIGRATIONS: readonly (string | ((db: Db) => Promise<void>))[] = [
   `CREATE TABLE history (
      id INTEGER PRIMARY KEY AUTOINCREMENT,
      url TEXT NOT NULL,
@@ -227,17 +228,82 @@ async function moveGroupedTabChatsToGroups(db: Db): Promise<void> {
   }
 }
 
+/**
+ * One statement of a migration as it would apply now: null when its change is already there (a column, table, index,
+ * trigger or view of that name), so a step an older version left half done is finished instead of failing forever.
+ */
+async function alreadyApplied(db: Db, statement: string): Promise<boolean> {
+  const alter = /^ALTER\s+TABLE\s+(\w+)\s+ADD\s+(?:COLUMN\s+)?(\w+)/i.exec(statement);
+  if (alter) {
+    const columns = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${alter[1]})`, []);
+    return columns.some((c) => c.name.toLowerCase() === alter[2].toLowerCase());
+  }
+  const create = /^CREATE\s+(?:UNIQUE\s+)?(TABLE|INDEX|TRIGGER|VIEW)\s+(?!IF\s+NOT\s+EXISTS)(\w+)/i.exec(statement);
+  if (create) {
+    const row = await db.getFirstAsync<{ n: number }>('SELECT COUNT(*) AS n FROM sqlite_master WHERE type = ? AND name = ?', [
+      create[1].toLowerCase(),
+      create[2],
+    ]);
+    return (row?.n ?? 0) > 0;
+  }
+  return false;
+}
+
+/**
+ * A migration's statements, split at semicolons that end a line (the migrations write one statement per line group
+ * and never put a semicolon at a line's end inside one; a trigger's BEGIN … END is kept whole).
+ */
+export function migrationStatements(sql: string): string[] {
+  const out: string[] = [];
+  let current = '';
+  let depth = 0;
+  for (const line of sql.split('\n')) {
+    current += `${line}\n`;
+    if (/\bBEGIN\b/i.test(line) && /\bTRIGGER\b/i.test(current)) depth++;
+    if (/^\s*END\s*;\s*$/i.test(line)) depth = Math.max(0, depth - 1);
+    if (depth === 0 && /;\s*$/.test(line)) {
+      if (current.trim()) out.push(current.trim());
+      current = '';
+    }
+  }
+  if (current.trim()) out.push(current.trim());
+  return out;
+}
+
+/**
+ * Brings the schema to the latest version (`DATA-25`). Each step and its version bump run in one transaction, so a
+ * step is either done and counted or not done at all; each statement whose change is already there (left by a
+ * version before 20 Nov 2026, which ran steps outside a transaction) is skipped, so such a database recovers. The
+ * function steps are written to be safe to run again.
+ */
 export async function migrate(db: Db): Promise<void> {
   const row = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []);
   for (let version = row?.user_version ?? 0; version < MIGRATIONS.length; version++) {
     const migration = MIGRATIONS[version];
-    if (typeof migration === 'string') await db.execAsync(migration);
-    else await migration(db);
-    await db.execAsync(`PRAGMA user_version = ${version + 1}`);
+    await db.withTransactionAsync(async () => {
+      if (typeof migration === 'string') {
+        for (const statement of migrationStatements(migration)) {
+          if (!(await alreadyApplied(db, statement))) await db.execAsync(statement);
+        }
+      } else {
+        await migration(db);
+      }
+      await db.execAsync(`PRAGMA user_version = ${version + 1}`);
+    });
   }
 }
 
+/** How many schema versions there are (for the migration tests). */
+export const SCHEMA_VERSION = MIGRATIONS.length;
+
 let opening: Promise<Db> | null = null;
+let openDatabase: () => Promise<Db & { execAsync(sql: string): Promise<void> }> = () => openDatabaseAsync('qutai.db');
+
+/** For tests: how getDb opens the database (and forgets an open one). */
+export function setDatabaseOpenerForTests(open: () => Promise<Db>) {
+  openDatabase = open;
+  opening = null;
+}
 let held: Promise<void> | null = null;
 
 /**
@@ -258,26 +324,71 @@ export function holdDb(): () => void {
 
 export function getDb(): Promise<Db> {
   if (held) return held.then(getDb);
-  opening ??= (async () => {
-    const db = await openDatabaseAsync('qutai.db');
-    await db.execAsync('PRAGMA journal_mode = WAL');
-    await migrate(db);
-    return db;
-  })();
+  if (!opening) {
+    const attempt = (async () => {
+      const db = await openDatabase();
+      await db.execAsync('PRAGMA journal_mode = WAL');
+      await migrate(db);
+      return db;
+    })();
+    opening = attempt;
+    // A failed open is not kept for the life of the app: the next call tries again.
+    attempt.catch((e) => {
+      if (opening === attempt) opening = null;
+      reportStorageFailure('db.open', e, 'user');
+    });
+  }
   return opening;
+}
+
+/**
+ * Runs `fn` with the database and reports a failure in one place (storage/failures.ts) instead of each caller
+ * swallowing it: 'record' keeps it for diagnostics, 'user' also tells the user once. Resolves with `fn`'s result, or
+ * undefined after a failure (callers that need a value give their own fallback with ??).
+ */
+export async function withDb<T>(label: string, fn: (db: Db) => Promise<T>, level: StorageFailureLevel = 'record'): Promise<T | undefined> {
+  try {
+    return await fn(await getDb());
+  } catch (e) {
+    reportStorageFailure(label, e, level);
+    return undefined;
+  }
 }
 
 // ---------- Small JSON key-value store for session, recently closed tabs and chat ----------
 
+/**
+ * A saved JSON value, or null when there is none. A value that can't be read is not treated as "nothing saved" and
+ * then overwritten: it is first copied aside to `unreadable:<key>:<time>` (kept on the phone, never read by the app, not in
+ * backups) and the failure is recorded; then the caller starts empty.
+ */
 export async function getJson<T>(db: Db, key: string): Promise<T | null> {
   const row = await db.getFirstAsync<{ value: string }>('SELECT value FROM kv WHERE key = ?', [key]);
   if (!row) return null;
   try {
     return JSON.parse(row.value) as T;
-  } catch {
+  } catch (e) {
+    await keepAside(db, key, row.value).catch(() => {
+      // Copying failed too: the read failure below is still recorded.
+    });
+    reportStorageFailure(`kv.read ${key.split(':')[0]}`, e, 'record');
     return null;
   }
 }
+
+/** Copies an unreadable kv value aside, once per value. */
+async function keepAside(db: Db, key: string, value: string): Promise<void> {
+  const prefix = `${UNREADABLE_PREFIX}${key}:`;
+  const same = await db.getFirstAsync<{ key: string }>('SELECT key FROM kv WHERE key >= ? AND key < ? AND value = ?', [
+    prefix,
+    `${prefix}\uffff`,
+    value,
+  ]);
+  if (!same) await db.runAsync('INSERT OR IGNORE INTO kv (key, value) VALUES (?, ?)', [`${prefix}${Date.now()}`, value]);
+}
+
+/** Where unreadable kv values are kept (getJson). */
+export const UNREADABLE_PREFIX = 'unreadable:';
 
 export async function setJson(db: Db, key: string, value: unknown): Promise<void> {
   await db.runAsync('INSERT INTO kv (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value', [

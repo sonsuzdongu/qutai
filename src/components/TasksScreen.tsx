@@ -30,6 +30,7 @@ import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 import { ScreenHeader } from './ScreenHeader';
 import { WholeWordsText } from './WholeWordsText';
+import { reportStorageFailure } from '../storage/failures';
 
 /** A task to create, prefilled (e.g. from "Save as task" on a sent message); `incognito` when it came from one. */
 export type TaskDraft = TaskInput & { incognito?: boolean };
@@ -130,7 +131,10 @@ function TaskList({
         setTasks(list);
         syncTaskReminders(list);
       })
-      .catch(() => setTasks([]));
+      .catch((e) => {
+        reportStorageFailure('savedTasks.list', e, 'user');
+        setTasks([]);
+      });
   }, []);
   useEffect(reload, [reload]);
 

@@ -47,6 +47,7 @@ import { CATEGORY_ICONS, categoryName, warnsAboutIdNumbers } from './memoryCateg
 import { ProfileStepScreen, type IntroVoiceSettings } from './ProfileStep';
 import { KeyboardAvoidingContainer, KeyboardAwareScrollView } from './KeyboardAware';
 import { ScreenHeader } from './ScreenHeader';
+import { reportStorageFailure } from '../storage/failures';
 
 /** The AI the user chose in settings, for "Organise for me"; null without a key. */
 export type MemoryAi = {
@@ -118,7 +119,11 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
     getDb()
       .then(listMemories)
       .then(setMemories)
-      .catch(() => setMemories([]));
+      .catch((e) => {
+        // An empty list would say nothing is remembered: the user is told it couldn't be read.
+        reportStorageFailure('memory.list', e, 'user');
+        setMemories([]);
+      });
   }, []);
   useEffect(reload, [reload]);
 

@@ -672,3 +672,8 @@ Bilgisayarda testlerle denendi; telefon ve öykünücü kullanılamadı. En risk
       "https://example.com./ adresini açar mısınız" ve "https://kullanici@example.com/ adresini açar mısınız" deyin:
       ikisi de engelleniyor (`SITE-25`). Yerel bir sunucuda (örneğin 192.168.1.2:3000) sekme listesinde ve "açılıyor"
       satırında bağlantı noktası görünüyor.
+- [ ] Bir önceki sürümden güncelleyin (sürüm atlamadan, verili bir telefonda): açık sekmeler, sohbetler, bellek, yer
+      imleri, kayıtlı görevler ve site izinleri yerinde (`DATA-25`).
+- [ ] Telefonun deposu doluyken bir sohbet yürütün: "Qutai bazı verilerini bu telefona kaydedemedi…" bildirimi bir kez
+      çıkıyor, uygulama çalışmaya devam ediyor (`DATA-26`).
+- [ ] Hesapla (pro sürüm): oturum açıkken uygulamayı birkaç saat sonra yeniden açın; oturum açık kalıyor (`ACC-53`).

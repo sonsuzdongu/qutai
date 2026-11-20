@@ -33,6 +33,7 @@ import {
 } from '../content/userScripts';
 import type { ImportedStyle } from '../content/rulesFile';
 import { Db, getDb } from './db';
+import { reportStorageFailure } from './failures';
 
 /** Rows of the site_rules table (storage/db.ts). */
 type Row = { id: string; line: string; enabled: number; source: string; site: string; url: string | null; created_at: number };
@@ -199,15 +200,19 @@ export class SiteRuleStore {
       .then(async (db) => {
         const [rules, styles, scripts] = await Promise.all([
           listSiteRules(db),
-          listUserStyles(db).catch(() => [] as UserStyle[]),
-          listUserScripts(db).catch(() => [] as UserScript[]),
+          listUserStyles(db).catch((e) => (reportStorageFailure('siteRules.styles', e, 'user'), [] as UserStyle[])),
+          listUserScripts(db).catch((e) => (reportStorageFailure('siteRules.scripts', e, 'user'), [] as UserScript[])),
         ]);
         this.styles = styles;
         this.scripts = scripts;
         this.pageStyles = pageStyles(styles);
         this.set(rules);
       })
-      .catch(() => {});
+      .catch((e) => {
+        // The user's rules, styles and kept scripts would silently not apply: told, and tried again next time.
+        this.loading = null;
+        reportStorageFailure('siteRules.load', e, 'user');
+      });
     return this.loading;
   }
 

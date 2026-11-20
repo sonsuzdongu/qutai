@@ -1,4 +1,4 @@
-import { getDb, getJson as readJson, setJson } from '../storage/db';
+import { getDb, getJson as readJson, setJson, withDb } from '../storage/db';
 import { getJson } from './http';
 import { CatalogModel, parseCatalog } from './openrouterCatalog';
 
@@ -34,9 +34,8 @@ export async function refreshCatalog(apiKey: string, signal?: AbortSignal): Prom
   const json = await getJson<unknown>(MODELS_URL, apiKey ? { authorization: `Bearer ${apiKey}` } : {}, signal);
   const next: Catalog = { at: Date.now(), models: parseCatalog(json) };
   publish(next);
-  getDb()
-    .then((db) => setJson(db, CACHE_KEY, next))
-    .catch(() => {});
+  // A cache: when it can't be written the list is fetched again next time (recorded only).
+  void withDb('openrouter.cache', (db) => setJson(db, CACHE_KEY, next));
   return next;
 }
 

@@ -13,6 +13,7 @@ import { getDb } from '../storage/db';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { ScreenHeader } from './ScreenHeader';
+import { reportStorageFailure } from '../storage/failures';
 
 type Entry = ActionEntry & { id: number };
 type Props = { visible: boolean; onClose: () => void };
@@ -35,7 +36,10 @@ function ActionLog({ onClose }: { onClose: () => void }) {
     getDb()
       .then((db) => listActions(db))
       .then(setEntries)
-      .catch(() => setEntries([]));
+      .catch((e) => {
+        reportStorageFailure('actionLog.list', e, 'user');
+        setEntries([]);
+      });
   }, []);
   useEffect(reload, [reload]);
 
@@ -49,7 +53,7 @@ function ActionLog({ onClose }: { onClose: () => void }) {
           getDb()
             .then(clearActions)
             .then(reload)
-            .catch(() => {}),
+            .catch((e) => reportStorageFailure('actionLog.clear', e, 'user')),
       },
     ]);
 

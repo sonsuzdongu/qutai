@@ -44,6 +44,7 @@ import { dialog } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 import { CATEGORY_ICONS } from './memoryCategories';
 import { memoryErrorText } from './memoryError';
+import { reportStorageFailure } from '../storage/failures';
 
 /**
  * "Tell me about yourself": the start of setup's "Let me get to know you a little" step and of
@@ -238,7 +239,7 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
       .then((memories) => {
         if (live) setRows((current) => withReplacements(current, memories, t));
       })
-      .catch(() => {});
+      .catch((e) => reportStorageFailure('voiceIntro.memories', e, 'record'));
     return () => {
       live = false;
     };

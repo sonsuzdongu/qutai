@@ -6,6 +6,7 @@ import { EmailSignInFlow, emailErrorMessage, waitSpan, type EmailSignInState } f
 import { SignInFailed } from './providers';
 import { AccountSession, type AccountState } from './session';
 import { securePendingEmailStorage, secureSessionStorage } from './storage';
+import { reportStorageFailure } from '../storage/failures';
 
 export { accountErrorDetails } from './errorDetails';
 
@@ -22,7 +23,10 @@ export function accountSession(): AccountSession | null {
   if (!accountsEnabled || !features.apiUrl) return null;
   if (!instance) {
     // The interface language goes with every sign-in: the server writes its mails in it.
-    instance = new AccountSession(createApi(features.apiUrl), secureSessionStorage, Date.now, getLocale);
+    // A sign-in the phone couldn't save (or a sign-out it couldn't remove) is told to the user once.
+    instance = new AccountSession(createApi(features.apiUrl), secureSessionStorage, Date.now, getLocale, (kind, error) =>
+      reportStorageFailure('account.session', error, 'user', kind === 'save' ? 'account.saveFailed' : 'account.clearFailed'),
+    );
     instance.load();
   }
   return instance;
