@@ -810,3 +810,22 @@ değiştirme), yedek dosyasını açma ve girişten sonra sunucu yedeğini geri 
       gizli" denmeli ve düğmenin adı "Parolayı gizle" olmalı. Gizliyken alanın içindeki yazı okunmamalı.
 - [ ] Telefonun parola yöneticisi: yedek parolası koyarken yeni parola önerisi ya da kaydetme teklifi çıkabilir,
       yedeği açarken kayıtlı parolayı doldurmayı önerebilir (önceden bu alanlarda kapalıydı).
+
+### Kurulumda sunucu yedeğini geri yükleme teklifi (20 Kasım, `BACK-21`, pro mod)
+
+Sunucuda yedeği olan bir hesapla:
+
+- [ ] Yeni kurulum (kaldırıp kurun), kurulumda "Qutai ile devam et" ile giriş yapın: hesap ekranında hemen "Yedeğiniz
+      var, geri yüklensin mi?" sorusu çıkmalı (profil sorularından önce).
+- [ ] "Geri yükle": parola bu telefonda kayıtlı değilse parola ekranı açılır (gözlü alan). Klavye açılmalı, parola yanlışsa
+      hata alanın altında görünmeli; "Vazgeç" ve geri tuşu kuruluma dönmeli. Doğru parolayla özet ve "birleştir"
+      seçili gelmeli; geri yükleyince uygulama yeniden başlamalı ve kurulum yerine tarayıcı açılmalı: yer imleri, geçmiş,
+      anılar ve ayarlar gelmiş, asistan tanıtımı çıkmamış, Qutai Credits seçili olmalı. Uygulama kilidi ve izinler
+      telefonun kendi hâlinde kalmalı (yedekten gelmez).
+- [ ] "Şimdi değil": kurulum devam etmeli; kurulum bitince tarayıcıda teklif yeniden çıkmamalı.
+- [ ] Teklif görünmeden kurulumdan çıkın (giriş yapıp hemen uygulamayı kapatın): yeniden açınca kurulum bitince
+      tarayıcıda teklif bir kez çıkmalı.
+- [ ] Çıkış yapıp yeniden giriş yapın (Ayarlar › Hesap): asistan tanıtımı ekrandayken bile, tanıtım kapanınca teklif
+      bir kez çıkmalı (önceden hiç çıkmıyordu).
+- [ ] Yedeği olmayan hesap: soru çıkmamalı; o oturumda ilk yedek alınınca da bu telefonun kendi yedeği olduğu için
+      sorulmamalı.

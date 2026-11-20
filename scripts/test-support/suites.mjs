@@ -27,7 +27,7 @@ export const SUITES = {
   apps: { files: ['scripts/app-tests/*.test.ts'] },
   siterules: { files: ['scripts/site-rules-tests/*.test.ts'] },
   credits: { files: ['scripts/credits-tests/*.test.ts'] },
-  backup: { files: ['scripts/backup-tests/logic.test.ts', 'scripts/backup-tests/client.test.ts'] },
+  backup: { files: ['scripts/backup-tests/logic.test.ts', 'scripts/backup-tests/client.test.ts', 'scripts/backup-tests/offer.test.ts'] },
   injection: { files: ['scripts/injection-tests/*.test.ts'], loader: './scripts/injection-tests/loader.mjs' },
   storage: { files: ['scripts/storage-tests/*.test.ts'] },
   tasks: { files: ['scripts/task-tests/*.test.ts'], forceExit: true },

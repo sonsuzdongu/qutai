@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAccountState } from '../account';
-import { downloadServerBackup, keptPassword, restoreOffer, serverBackupEnabled } from '../backup/server';
+import { downloadServerBackup, keptPassword, runRestoreOffer, serverBackupEnabled, type ServerBackup } from '../backup/server';
 import { errorDetails, errorKind } from '../backup/server/logic';
 import { t } from '../i18n';
 import { formatDateTime } from '../i18n/format';
@@ -8,12 +8,25 @@ import { BackupScreen, type ServerRestoreJob } from './BackupScreen';
 import { dialog } from './Dialog';
 import { serverBackupErrorText } from './ServerBackupSection';
 
+function askRestore(backup: ServerBackup): Promise<boolean> {
+  return dialog.confirm({
+    title: t('serverBackup.offerTitle'),
+    message: t('serverBackup.offerBody', {
+      date: formatDateTime(new Date(backup.createdAt)),
+      device: backup.deviceLabel ?? '–',
+    }),
+    confirmText: t('serverBackup.restore'),
+    cancelText: t('serverBackup.offerLater'),
+  });
+}
+
 /**
- * The restore offer (docs/server-backup.md › Restore offer after sign-in): once after each fresh sign-in to an account
- * with a server backup (logic.ts › shouldOfferRestore). Yes restores it through the usual import screen, which asks
- * merge or replace. `ready`: nothing else is in front (no lock, no Settings, no intro, no running task).
+ * The restore offer (docs/server-backup.md › Restore offer after sign-in; src/backup/server/offer.ts): whenever `ready`
+ * is true after a fresh sign-in to an account with a backup worth offering, asks once; "Restore" downloads it and
+ * returns it as the import screen's job. A result that comes back after `ready` went false is dropped without
+ * counting as asked, and asked again the next time `ready` is true. Used by the browser and by setup's account screen.
  */
-export function ServerRestoreOffer({ ready, appLock }: { ready: boolean; appLock: boolean }) {
+export function useServerRestoreOffer(ready: boolean): [ServerRestoreJob | null, () => void] {
   const account = useAccountState();
   const userId = account.status === 'signedIn' ? account.user.id : null;
   const [job, setJob] = useState<ServerRestoreJob | null>(null);
@@ -22,18 +35,9 @@ export function ServerRestoreOffer({ ready, appLock }: { ready: boolean; appLock
     if (!serverBackupEnabled || !ready || !userId) return;
     let live = true;
     void (async () => {
-      const backup = await restoreOffer();
-      if (!live || !backup) return;
-      const yes = await dialog.confirm({
-        title: t('serverBackup.offerTitle'),
-        message: t('serverBackup.offerBody', {
-          date: formatDateTime(new Date(backup.createdAt)),
-          device: backup.deviceLabel ?? '–',
-        }),
-        confirmText: t('serverBackup.restore'),
-        cancelText: t('serverBackup.offerLater'),
-      });
-      if (!yes || !live) return;
+      const { outcome, backup } = await runRestoreOffer(() => live, askRestore);
+      // The user said "Restore": go on even if something came in front meanwhile (the import screen opens over it).
+      if (outcome !== 'accepted' || !backup) return;
       try {
         setJob({ file: await downloadServerBackup(backup), keptPassword: keptPassword() });
       } catch (error) {
@@ -46,5 +50,13 @@ export function ServerRestoreOffer({ ready, appLock }: { ready: boolean; appLock
     };
   }, [ready, userId]);
 
-  return <BackupScreen job={job} appLock={appLock} onClose={() => setJob(null)} />;
+  return [job, () => setJob(null)];
+}
+
+/**
+ * The browser's restore offer. `ready`: nothing else is in front (no lock, no Settings, no intro, no running task).
+ */
+export function ServerRestoreOffer({ ready, appLock }: { ready: boolean; appLock: boolean }) {
+  const [job, close] = useServerRestoreOffer(ready);
+  return <BackupScreen job={job} appLock={appLock} onClose={close} />;
 }

@@ -78,8 +78,21 @@ account signing in never uses it.
   that has a backup, the app offers the newest one, also when this phone has backed up to that account before
   (`ServerRestoreOffer`, `shouldOfferRestore`). A fresh sign-in is signing in with Apple, Google, email (or the test
   sign-in): not opening the app with a kept session and not a token refresh. It is asked once per sign-in, never in a
-  loop, and after "Not now" again at the next sign-in. It waits until the lock, Settings, the intro and any running
-  task are out of the way (onboarding comes before the browser, so never during it). It is not offered when the newest
+  loop, and after "Not now" again at the next sign-in. It counts as asked only once the dialog was answered
+  (`src/backup/server/offer.ts`): until 20 Nov 2026 it was marked before the dialog, so when the first-run intro
+  (or the lock, Settings, a task) came in front while the backups were being listed, the dialog was dropped and never
+  came back for that sign-in; now a dropped offer is asked the next time nothing is in the way, also after the app
+  was closed. In the browser it waits until the lock, Settings, the intro and any running task are out of the way.
+  In setup (since 20 Nov 2026, owner's request) it is asked on the AI step's account screen right after signing in
+  to Qutai, before the profile questions, with the same texts. Restoring there opens the same import screen (Cancel
+  and back return to setup); the restore saves setup's finished settings (setup done, the privacy policy and terms
+  accepted on this phone, Qutai Credits as the provider) and applies the backup's preferences over them in the same
+  write, marks the assistant's intro as seen and restarts the app in the browser: the remaining steps (permissions,
+  questions, background tasks, protection) are skipped. Merge is preselected, which on a fresh phone takes every
+  preference the backup has except where setup already chose (the provider); replace takes the backup's. A backup
+  never holds the app lock, setup or legal state, permissions or the online-speech answer, so those stay the phone's
+  either way. "Not now" in setup goes on with setup, and the offer does not come again after it for that sign-in;
+  leaving the account screen before the dialog shows leaves the offer for the browser. It is not offered when the newest
   backup is the one this install uploaded itself (its data is at least as new); a backup this phone restored earlier
   can't be told apart and is offered. The dialog says that the next screen asks whether to merge or replace, and that
   replacing erases this phone's data of each kind in the backup; Yes downloads it and opens the import screen, which

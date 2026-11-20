@@ -8,6 +8,7 @@ import { appVersion } from '../../device/appVersion';
 import { secureStoreReady } from '../../storage/secureStoreGate';
 import { buildBackupFile, randomBytes } from '../backup';
 import { createServerBackupClient, type ServerBackup, type ServerBackupClient } from './client';
+import { createRestoreOffer } from './offer';
 import {
   appDataFallback,
   autoBackupDecision,
@@ -19,7 +20,6 @@ import {
   parseStoredPassword,
   passwordFor,
   runRecord,
-  shouldOfferRestore,
   shouldRecordSkip,
   uploadId,
   type NetworkKind,
@@ -327,26 +327,21 @@ if (serverBackupEnabled) {
   });
 }
 
-/** After a fresh sign-in: the newest server backup to offer, once for that sign-in (logic.ts › shouldOfferRestore). */
-export async function restoreOffer(): Promise<ServerBackup | null> {
-  await loadServerBackup();
-  await signInWrite.catch(() => {});
-  const userId = currentUserId();
-  if (!userId || !(await serverBackupConfig())) return null;
-  const account = snapshot.state.accounts[userId] ?? {};
-  if (account.signedInAt === undefined || account.offeredFor === account.signedInAt) return null;
-  let backups: ServerBackup[];
-  try {
-    backups = await listServerBackups();
-  } catch {
-    return null;
-  }
-  const offer = shouldOfferRestore({ userId, ...account, backups });
-  // Marked before the dialog shows, so it is never asked twice for one sign-in (an account without backups yet is
-  // asked when one appears, still once).
-  if (backups.length > 0) await updateAccount(userId, (a) => ({ ...a, offeredFor: account.signedInAt }));
-  return offer ? backups[0]! : null;
-}
+/**
+ * The restore offer after a fresh sign-in (offer.ts): `run(live, ask)` shows `ask` once per sign-in when the account
+ * has a backup worth offering; the offer counts as made only once the dialog was answered.
+ */
+export const runRestoreOffer = createRestoreOffer<ServerBackup>({
+  account: async () => {
+    await loadServerBackup();
+    await signInWrite.catch(() => {});
+    const userId = currentUserId();
+    if (!userId || !(await serverBackupConfig())) return null;
+    return { userId, ...(snapshot.state.accounts[userId] ?? {}) };
+  },
+  list: () => listServerBackups(),
+  mark: (userId, signedInAt) => updateAccount(userId, (a) => ({ ...a, offeredFor: signedInAt })),
+});
 
 // ---------- The automatic backup ----------
 

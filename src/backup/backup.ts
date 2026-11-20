@@ -180,8 +180,15 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
  * Restores a validated backup: the database part in one transaction (on failure nothing changed, the
  * database is released and the error is thrown), then preferences and keys. After success the database
  * stays held until reloadApp() reads everything again. Returns false if the preferences couldn't be saved.
+ * `prepare`: the settings the restored ones are applied to, instead of the stored ones (a restore from setup passes
+ * setup's finished settings, so they are saved only if the data was restored, in the same write).
  */
-export async function restoreBackup(p: BackupPayload, mode: ApplyMode, withKeys: boolean): Promise<boolean> {
+export async function restoreBackup(
+  p: BackupPayload,
+  mode: ApplyMode,
+  withKeys: boolean,
+  prepare?: (stored: Settings) => Settings,
+): Promise<boolean> {
   const db = await getDb();
   // Nothing else in the running app may write from here on (it would overwrite restored data).
   const release = holdDb();
@@ -191,9 +198,10 @@ export async function restoreBackup(p: BackupPayload, mode: ApplyMode, withKeys:
     release();
     throw e;
   }
-  if (!p.settings && !(withKeys && (p.apiKeys || p.customHeaders))) return true;
+  if (!prepare && !p.settings && !(withKeys && (p.apiKeys || p.customHeaders))) return true;
   try {
-    await saveSettings(mergeSettings(await loadSettings(), p, mode, withKeys));
+    const stored = await loadSettings();
+    await saveSettings(mergeSettings(prepare ? prepare(stored) : stored, p, mode, withKeys));
     return true;
   } catch {
     return false;

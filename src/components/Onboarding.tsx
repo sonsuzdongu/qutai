@@ -45,6 +45,9 @@ import { askCreditsDisclosure } from './CreditsDisclosure';
 import { QutaiSetup } from './QutaiSetup';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 import { DialogHost } from './Dialog';
+import { setAssistantIntroSeen } from './AssistantIntro';
+import { BackupScreen } from './BackupScreen';
+import { useServerRestoreOffer } from './ServerRestoreOffer';
 import { PermissionsStep } from './PermissionsStep';
 import { ProfileStep } from './ProfileStep';
 import { LegalScreen } from './LegalScreen';
@@ -187,8 +190,12 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
     if (!last) return go(index + 1);
     if (finished.current) return;
     finished.current = true;
-    const ai = cleanAiChoice(draft);
-    onDone({
+    onDone(finalSettings());
+  };
+  /** The settings setup hands back (also saved with a restore from setup); `provider` overrides the draft's. */
+  const finalSettings = (override?: Pick<Settings, 'provider'>): Settings => {
+    const ai = cleanAiChoice(override ? { ...draft, ...override } : draft);
+    return {
       ...ai,
       // Answers are short and to the point unless the user said otherwise (INTRO-29): the line picking it used to add.
       ...(legalOnly
@@ -206,7 +213,16 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
       provider: providerToSave(ai.provider, signedIn(), settings.provider),
       onboarded: true,
       legalAcceptedVersion: LEGAL_VERSION,
-    });
+    };
+  };
+  // Signed in to a Qutai account on the AI step: the account's server backup is offered here, before the questions
+  // (BACK-21). Restoring ends setup: the restore saves setup's settings with the restored ones and the app starts
+  // again in the browser; the intro and the remaining steps are skipped. "Not now" goes on with setup and the offer
+  // does not come again after it; leaving the account screen before the dialog shows leaves the offer for the browser.
+  const [restoreJob, closeRestore] = useServerRestoreOffer(proAi && setup.screen === 'account' && !legalOnly);
+  const restoreFromSetup = {
+    prepare: () => finalSettings({ provider: 'qutai' }),
+    afterRestore: () => setAssistantIntroSeen(true),
   };
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => setDraft((d) => ({ ...d, [key]: value }));
   /** The notification permission, asked when background tasks are turned on (their progress shows there). */
@@ -603,6 +619,7 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
         style={[StyleSheet.absoluteFill, blurStyle]}
       />
       <LegalScreen kind={reading} onClose={() => setReading(null)} />
+      <BackupScreen job={restoreJob} appLock={false} onClose={closeRestore} setup={restoreFromSetup} />
       {/* The browser's root host isn't mounted during setup; the questions' and settings' dialogs show here. */}
       <DialogHost root />
     </View>

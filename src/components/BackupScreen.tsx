@@ -21,6 +21,7 @@ import { appsDataSize } from '../apps/appStore';
 import { Button } from '../ui/Button';
 import { PasswordField } from '../ui/PasswordField';
 import { SwitchRow } from '../ui/SettingsRows';
+import type { Settings } from '../storage/settings';
 import { makeStyles, readableColumn, usePalette, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
@@ -37,13 +38,19 @@ type Props = {
   /** Export asks for Face ID / fingerprint first when the app lock is on. */
   appLock: boolean;
   onClose: () => void;
+  /**
+   * Opened from setup (a server backup offered after signing in there): the restore also saves setup's finished
+   * settings (`prepare`, applied before the backup's own) and runs `afterRestore` before the app starts again, so the
+   * app opens in the browser with the restored data instead of in setup.
+   */
+  setup?: { prepare: (stored: Settings) => Settings; afterRestore: () => Promise<void> };
 };
 
 /**
  * Export (choose what goes in, set a password) and import (password, summary, merge or replace) of a backup. A server
  * backup (docs/server-backup.md) is restored through the same import: the same summary, choices and code path.
  */
-export function BackupScreen({ job, appLock, onClose }: Props) {
+export function BackupScreen({ job, appLock, onClose, setup }: Props) {
   const styles = useStyles();
   // The title stays while the modal slides away.
   const [kind, setKind] = useState<'export' | 'import'>('export');
@@ -62,9 +69,9 @@ export function BackupScreen({ job, appLock, onClose }: Props) {
         />
         {/* Mounted per job, so every export or import starts with empty fields. */}
         {job === 'export' && <ExportForm appLock={appLock} busy={busy} setBusy={setBusy} onDone={onClose} />}
-        {job instanceof Uint8Array && <ImportFlow file={job} busy={busy} setBusy={setBusy} />}
+        {job instanceof Uint8Array && <ImportFlow file={job} busy={busy} setBusy={setBusy} setup={setup} />}
         {job !== null && job !== 'export' && !(job instanceof Uint8Array) && (
-          <ImportFlow file={job.file} keptPassword={job.keptPassword} busy={busy} setBusy={setBusy} />
+          <ImportFlow file={job.file} keptPassword={job.keptPassword} busy={busy} setBusy={setBusy} setup={setup} />
         )}
       </SafeAreaView>
       <DialogHost />
@@ -236,7 +243,13 @@ function kindNames(s: BackupSummary): string[] {
   return names;
 }
 
-function ImportFlow({ file, keptPassword, busy, setBusy }: BusyProps & { file: Uint8Array; keptPassword?: string | null }) {
+function ImportFlow({
+  file,
+  keptPassword,
+  busy,
+  setBusy,
+  setup,
+}: BusyProps & { file: Uint8Array; keptPassword?: string | null; setup?: Props['setup'] }) {
   const styles = useStyles();
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -326,7 +339,8 @@ function ImportFlow({ file, keptPassword, busy, setBusy }: BusyProps & { file: U
     setBusy(true);
     let settingsSaved: boolean;
     try {
-      settingsSaved = await restoreBackup(payload, mode, keys && withKeys);
+      settingsSaved = await restoreBackup(payload, mode, keys && withKeys, setup?.prepare);
+      if (setup) await setup.afterRestore().catch(() => {});
     } catch (e) {
       setBusy(false);
       dialog.alert(t('backup.restoreFailed'), e instanceof Error ? e.message : String(e));
