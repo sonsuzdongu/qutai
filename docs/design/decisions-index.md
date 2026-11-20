@@ -67,7 +67,7 @@ The open questions, in one place (each row says what the app does today).
 | `CRED-30` | Today users are charged for every Gemini search, including those inside Google's free monthly allowance. | [34](34-credits-and-relay.md) |
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one admin role. | [34](34-credits-and-relay.md) |
 | `CRED-34` | Today abuse flags can't be marked resolved. | [34](34-credits-and-relay.md) |
-| `CRED-35` | Today credit prices are the model's token price plus a margin, with example values; pack sizes, trial credits, which model sits behind… | [34](34-credits-and-relay.md) |
+| `CRED-35` | Today credit prices are the model's token price plus a margin; pack sizes, trial credits, per-user limits and credit expiry… | [34](34-credits-and-relay.md) |
 | `CRED-36` | Today the app names no tier; the model that served an answer shows only in its cost details and the sent log. | [34](34-credits-and-relay.md) |
 | `CRED-37` | Today there is no crash-report service. | [34](34-credits-and-relay.md) |
 | `CRED-38` | Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3 minutes, and not for incognito… | [34](34-credits-and-relay.md) |
@@ -973,7 +973,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-6` | Only registered agent profiles (named by the SHA-256 of the app's exported prompt and tools) are accepted;… | Default |  |
 | `CRED-7` | The conversation is checked against a per-provider allowlist: no system or developer turns, no remote web… | Default |  |
 | `CRED-8` | Conversations, page content, prompts, web addresses and memory are never stored or logged; relay logs keep… | Owner | not recorded |
-| `CRED-9` | In credit mode the server keeps tiers and the customer never sees provider models; the owner sets the model… | Owner | 2026-11-16 |
+| `CRED-9` | In credit mode the server keeps tiers (one since 20 Nov, old ids as aliases) and the customer never sees provider models; the owner… | Owner | 2026-11-16, changed 2026-11-20 |
 | `CRED-10` | A running conversation stays on the model that answered it through a signed route for 30 days after its… | Default |  |
 | `CRED-11` | Today the old request form that names a provider model is still accepted (`acceptDirectModels` on) because… | **Waiting** |  |
 | `CRED-12` | Credits are whole numbers of micro-credits (1 credit = 1 000 000); a charge is the provider's cost ×… | Default |  |
@@ -997,11 +997,15 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-32` | The admin panel is reachable only through Cloudflare Access and checks the Access token itself (not its audience since 19 Nov)… | Default (audience: Owner) | 2026-11-19 |
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one… | **Waiting** |  |
 | `CRED-34` | Today abuse flags can't be marked resolved. | **Waiting** |  |
-| `CRED-35` | Today credit prices are the model's token price plus a margin, with example values; pack sizes, trial… | **Waiting** |  |
+| `CRED-35` | Today credit prices are the model's token price plus a margin; pack sizes, trial credits, per-user limits… | **Waiting** | changed 2026-11-20 |
 | `CRED-36` | Today the app names no tier; the model that served an answer shows only in its cost details and the sent… | **Waiting** |  |
 | `CRED-37` | Today there is no crash-report service. | **Waiting** |  |
 | `CRED-38` | Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3… | **Waiting** |  |
 | `CRED-39` | No tier choice in the app: every Qutai Credits request uses the tier `/config` marks as default; stored… | Owner | 2026-11-20 |
+| `CRED-40` | One model for every task (Claude Haiku 5.5), one tier `standard` with aliases `fast` and `pro`; switched in the panel only, priced first… | Owner | 2026-11-20 |
+| `CRED-41` | "Check prices" reads Anthropic's pricing page as a proposal only; strict parser, refuses when unsure, saves nothing until accepted. | Owner | 2026-11-20 |
+| `CRED-42` | Margin set in the panel as a percentage with a live example; first values 100 credits per dollar and 100 %. | Owner | 2026-11-20 |
+| `CRED-43` | Every panel setting is a form in human units with "What will change"; JSON only under Advanced; emergency controls first. | Owner | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 
@@ -1084,8 +1088,9 @@ Moved to Details (ids retired, not reused): `BACK-2`, `BACK-16`, `BACK-14`
 | `SRV-18` | Pro test APKs are built without the test sign-in values since 17 Nov 2026. | Owner | 2026-11-17 |
 | `SRV-20` | The app's version (and the build number derived from it) changes only when the owner asks; test builds… | Owner | 2026-11-17 |
 | `SRV-21` | The Apple sign-in key shared in chat on 16 Nov 2026 is replaced by a separate key for production. | Owner | 2026-11-17 |
-| `SRV-22` | Production runs on Cloudflare since 19 Nov, one-command deploy; first values: Anthropic only, 100 USD a month, example pricing, no purchases. | Owner | 2026-11-19 |
+| `SRV-22` | Production runs on Cloudflare since 19 Nov, one-command deploy; first values: Anthropic only, 100 USD a month, Haiku only and 100 % margin (since 20 Nov), no purchases. | Owner | 2026-11-19, changed 2026-11-20 |
 | `SRV-23` | Production hostnames are written in the backend repository only; this app repository never contains them. | Owner | 2026-11-19 |
+| `SRV-24` | The admin Worker's only outbound request: Anthropic's pricing page, only when "Check prices" is pressed. | Owner | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `SRV-14`, `SRV-19`
 
