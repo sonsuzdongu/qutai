@@ -36,8 +36,8 @@ assistant panel does while a task works.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: src/browser/Browser.ts (MAX_RECENTLY_CLOSED)
 - **`TABS-10`** At most 5 tabs have a live page; the least recently viewed sleep first; never put to sleep: the active tab, the tab the task works in and tabs it reads, incognito tabs, tabs using the camera or microphone, tabs playing sound; on a low-memory warning all but the active and the task's tab sleep; a tab whose navigation is still pending never sleeps (sleeping would drop the load the user asked for, `TABS-18`).
   Status: Default (manager or implementing session; open to change) · Why: memory; incognito tabs' cookies "live only in their own WebView", so sleeping would lose them · Source: 5196cd6; src/browser/Browser.ts (MAX_AWAKE_TABS, sleepInactive)
-- **`TABS-11`** Only one task runs at a time in the app; closing a tab stops the task running in it.
-  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: 0df7b0e; App.tsx (chat.busyElsewhere)
+- **`TABS-11`** Only one task runs at a time in the app, claimed in the same moment as the send, so a typed send and a voice message (or a saved task that waited for its page) can never both start; a send turned away keeps its text in the input with "Qutai is working in another tab". Closing a tab or pressing Stop frees the slot for another conversation at once, while the stopped task unwinds; in the stopped task's own conversation the next message waits (at most 5 s) until it has unwound. A task whose tab was closed still ends properly: its conversation is saved and nothing it set is left behind (`TASK-17`). Before 20 Nov 2026 the check read a value from the screen's last render, so two sends could start, and a closed tab's task counted as over while it still ran.
+  Status: Default (manager or implementing session; open to change) · Why: reason not recorded; the claim and the hand-back follow the 20 Nov 2026 code review · Enforced: In the app: src/task/taskRunner.ts (claim, blocker); src/task/sendTask.ts (claimSlot); scripts/task-tests/lifecycle.test.ts · Source: 0df7b0e; 20 Nov 2026 code review
 - **`TABS-12`** While a task works, the input is closed: nothing typed is queued or passed to the task, dictation into the field is off, and Stop is always available; it opens again for a confirmation, a question, a pause, a stop, a failure, the end, or a message handed back.
   Status: Default (manager or implementing session; open to change) · Why: sending during a task was already impossible; only dictation was possible, and it is off now · Source: 2a90ca9, af24ab6; README intro
 - **`TABS-13`** The working glow shows only on the task's tab, only while it is on screen and working; off while a confirmation waits and in picture-in-picture; drawn above the tabs, so the assistant's screenshots never contain it; still with Reduce motion.
@@ -88,6 +88,7 @@ assistant panel does while a task works.
 
 ## Where it lives
 
+- `src/task/` (a task's lifecycle: taskRunner.ts, sendTask.ts, taskContext.ts, dialogs.ts; tests in `scripts/task-tests/`)
 - `src/browser/Browser.ts`, `src/browser/Tab.ts`, `src/browser/pendingNavigation.ts`, `src/components/NavigationStatus.tsx`, `src/device/connectivity.ts`, `scripts/navigation-tests/`, `scripts/slow-server/`, `src/browser/chatLinks.ts`, `src/chat/Conversation.ts`, `src/storage/chat.ts`, `src/storage/session.ts`
 - `src/components/BrowserView.tsx`, `AssistantPanel.tsx`, `WorkingGlow.tsx`, `StepStrip.tsx`
 - [docs/working-mode.md](../../docs/working-mode.md); TODO.md › Assistant

@@ -457,7 +457,7 @@ Moved to Details (ids retired, not reused): `LOG-7`
 | `TABS-7` | A saved conversation keeps at most 300 items and about 1,000,000 characters of history (the oldest… | Default |  |
 | `TABS-9` | Recently closed keeps at most 25 tabs. | Default |  |
 | `TABS-10` | At most 5 tabs have a live page; the least recently viewed sleep first; never put to sleep: the active… | Default |  |
-| `TABS-11` | Only one task runs at a time in the app; closing a tab stops the task running in it. | Default |  |
+| `TABS-11` | Only one task runs at a time, claimed in the same moment as the send; a send turned away keeps its text; Stop or closing a tab frees the… | Default | 2026-11-20 |
 | `TABS-12` | While a task works, the input is closed: nothing typed is queued or passed to the task, dictation into the… | Default |  |
 | `TABS-13` | The working glow shows only on the task's tab, only while it is on screen and working; off while a… | Default |  |
 | `TABS-14` | Links in an answer, the search box and Sources cards open in the conversation's tab group; an incognito… | Default |  |
@@ -529,6 +529,7 @@ Moved to Details (ids retired, not reused): `TOOL-4`, `TOOL-18`, `TOOL-28`
 | `TASK-13` | A task notification is never posted while Qutai is on screen, for an incognito conversation, when the… | Default |  |
 | `TASK-15` | A notification the assistant scheduled carries only internal ids (the tab's and the group's; for an… | Default |  |
 | `TASK-16` | Calendar events, reminders and notifications are never added from incognito conversations. | Default |  |
+| `TASK-17` | A task has its own identity; the shared state it sets records it, and its end clears only what it still owns | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `TASK-2`, `TASK-14`
 

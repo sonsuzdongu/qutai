@@ -100,6 +100,11 @@ type SourceSnapshot = {
 
 export type ToolContext = {
   browser: Browser;
+  /**
+   * The task's Stop (task/taskRunner.ts): every wait a tool makes (a page load, a pause, a page command, a request)
+   * ends when it aborts, so Stop returns within about a second. Absent in tests of single tools.
+   */
+  signal?: AbortSignal;
   /** The tab the agent works in. It can differ from the tab the user is looking at. */
   agentTab: { id: string };
   /**

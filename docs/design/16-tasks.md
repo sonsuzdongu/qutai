@@ -58,6 +58,9 @@ when the user leaves Qutai (Android), and the notifications that say how a task 
 - **`TASK-16`** Calendar events, reminders and notifications are never added from incognito conversations.
   Status: Default (manager or implementing session; open to change) · Why: incognito leaves nothing behind · Enforced: In the app: src/agent/executeTool.ts (schedulingTool) · Source: 5e51edb
 
+- **`TASK-17`** A task is one run of the assistant for one message, from the send until everything it started has unwound, with its own identity (src/task/taskRunner.ts). The state it shares with the rest of the app records which task set it: the tab kept awake for it, the action marker, the working strip with the answer card and the question bubble and the "task is waiting" notice, and Android's background run. A task that ends clears only what it still owns, so a stopped task that finishes unwinding after the next task began never clears the next one's tab, marker, strip or background run; its own conversation still ends (Stopped, cost, saved). The conversation's running state ends only for the task that started it.
+  Status: Default (implementing session; owner's 20 Nov 2026 code-review request) · Why: before, the end of a task always cleared the agent's tab, the background run, the marker and the strip, whichever task had set them · Enforced: In the app: src/task/taskRunner.ts (take, release); src/task/sendTask.ts (begin, finish); src/chat/Conversation.ts (finish with the task's signal); scripts/task-tests/lifecycle.test.ts · Source: 20 Nov 2026 code review
+
 ## Details
 
 **Reminder scheduling**
@@ -78,6 +81,7 @@ when the user leaves Qutai (Android), and the notifications that say how a task 
 ## Where it lives
 
 - `src/storage/savedTasks.ts`, `src/device/taskSchedule.ts`, `src/agent/savedTaskTool.ts`, `src/components/TasksScreen.tsx`
+- `src/task/` (one task's lifecycle; `npm run test:tasks`)
 - `src/device/backgroundTask.ts`, `modules/qutai-agent`, `src/agent/taskNotice.ts`, `src/device/notifications.ts`, `src/agent/scheduling.ts`
 - README › Known limitations (background tasks, scheduled tasks, saved tasks); [docs/permissions.md](../../docs/permissions.md) (foreground service declaration)
 

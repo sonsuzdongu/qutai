@@ -104,6 +104,7 @@
     "measure:injection": "node --no-warnings --experimental-transform-types --import ./scripts/injection-tests/loader.mjs scripts/injection-tests/measure.ts",
     "test:injection": "node --no-warnings --experimental-transform-types --import ./scripts/injection-tests/loader.mjs --test scripts/injection-tests/*.test.ts",
     "test:storage": "node --no-warnings --experimental-transform-types --import ./scripts/injection-tests/loader.mjs --test scripts/storage-tests/*.test.ts",
+    "test:tasks": "node --no-warnings --experimental-transform-types --import ./scripts/injection-tests/loader.mjs --test --test-force-exit scripts/task-tests/*.test.ts",
     "measure:tokens": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs scripts/token-tests/measure.ts",
     "measure:intro": "node --no-warnings --experimental-transform-types --import ./scripts/credits-tests/loader.mjs scripts/token-tests/intro.ts",
     "measure:backup": "node --no-warnings --experimental-transform-types --import ./scripts/account-tests/resolve-ts.mjs scripts/backup-tests/measure.ts",

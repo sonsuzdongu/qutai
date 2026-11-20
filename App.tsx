@@ -1,9 +1,12 @@
 import { siteRules } from './src/storage/siteRules';
+import { TaskRunner } from './src/task/taskRunner';
+import { sendTask, type SendOptions, type TaskHost } from './src/task/sendTask';
+import type { SettingsPatch } from './src/task/taskContext';
+import { setTaskDialogSites } from './src/task/dialogs';
 import { pageStyleState } from './src/browser/pageStyleState';
-import { readTabCookies, deleteTabCookies } from './src/device/cookieStore';
 import { CookiesScreen } from './src/components/CookiesScreen';
-import { askScript, keepScript, liveOffer } from './src/components/pageScripts';
-import { scriptSandbox, ScriptSandboxHost } from './src/components/ScriptSandbox';
+import { keepScript } from './src/components/pageScripts';
+import { ScriptSandboxHost } from './src/components/ScriptSandbox';
 import { AppRunnerHost } from './src/components/AppRunner';
 import { MyAppsScreen } from './src/components/MyApps';
 import { AppImportHost } from './src/components/AppImport';
@@ -11,21 +14,9 @@ import { appImporter } from './src/apps/importState';
 import { pickAndImportApp } from './src/components/appActions';
 import { appStore, appsChanged } from './src/apps/appStore';
 import { appRunner } from './src/apps/runnerState';
-import { appItem } from './src/chat/Conversation';
 import { keptScripts } from './src/browser/keptScripts';
 import { loadScriptKey, scriptKey } from './src/device/scriptKey';
-import {
-  applyTrial,
-  askCookieDelete,
-  askStyle,
-  keepStyle,
-  stylesApply,
-  undoOffer,
-  undoTrial,
-} from './src/components/pageCustomisation';
-import { DEFAULT_SCOPE, isOffSite, SCOPE_KINDS, type ScopeKind } from './src/content/siteRules';
-import type { SiteRulesApproval } from './src/agent/siteRulesTool';
-import type { OutwardApproval } from './src/agent/approvalTool';
+import { keepStyle, stylesApply, undoOffer } from './src/components/pageCustomisation';
 import { useKeepAwake } from 'expo-keep-awake';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
@@ -42,18 +33,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import type { PersonalKind } from './src/agent/personalData';
-import { afterAnswer, AlwaysAllowKind, isAlwaysAllowed, rememberOffer } from './src/agent/alwaysAllow';
 import { runAgent } from './src/agent/runAgent';
 import { actionErrorText } from './src/agent/stepLine';
-import { askSitePermission, SitePromptAnswer } from './src/browser/sitePrompt';
-import { personalKindsLabel } from './src/components/memoryCategories';
-import { Conversation, callItem, cookiesItem, fileItem, optionsItem, scriptItem, styleItem, newItem, shareItem, smsItem, sourcesItem, userItem, whatsAppItem } from './src/chat/Conversation';
+import { Conversation } from './src/chat/Conversation';
 import { listShareables, type ShareApp, type ShareOffer } from './src/chat/shareable';
 import { clearOutgoing, OutgoingError, prepareOutgoing } from './src/device/outgoing';
 import { shareToApp } from './src/device/share';
-import { AttachmentInfo, describeAttachments, isIncognitoAttachment, MAX_ATTACHMENTS } from './src/chat/attachments';
+import { AttachmentInfo, isIncognitoAttachment, MAX_ATTACHMENTS } from './src/chat/attachments';
 import { parseEditRequest } from './src/chat/imageEdit';
 import { editImage } from './src/device/imageEdit';
 import {
@@ -74,23 +60,17 @@ import {
 import { AttachmentPreview } from './src/components/AttachmentViews';
 import { describeFilters } from './src/chat/filterSummary';
 import { PdfReaderHost } from './src/components/PdfReaderHost';
-import { geminiStreamingAvailable } from './src/ai/gemini';
 import { creditsStore, creditsReady, refreshCredits, useCreditsState } from './src/credits';
 import { creditsLabel } from './src/components/AnswerCost';
-import { nothingSent, RelayError } from './src/credits/errors';
-import { limitsFor, offeredModels } from './src/credits/rules';
-import { defaultTier, tierTarget, usesTiers } from './src/credits/tiers';
+import { defaultTier, usesTiers } from './src/credits/tiers';
 import { dismissLowBalance, LOW_BALANCE_START, lowBalanceThreshold, nextLowBalance } from './src/credits/lowBalance';
-import type { PublicConfig, Tier } from './src/credits/types';
 import { accountSession, useAccountState } from './src/account';
 import { lostQutaiAccount } from './src/credits/gate';
 import type { ProviderId } from './src/ai/types';
 import { reportPendingPurchases } from './src/purchases';
 import { BuyCreditsHost, openBuyCredits } from './src/components/BuyCredits';
 import { askCreditsDisclosure } from './src/components/CreditsDisclosure';
-import type { AnswerCost } from './src/ai/cost';
-import { getProvider, isConfigured, modelLabel, requestTarget } from './src/ai/providers';
-import { loadCatalog } from './src/ai/openrouterModels';
+import { getProvider, isConfigured } from './src/ai/providers';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import { ContextTarget, looksLikePdfLink } from './src/browser/contextMenu';
 import { quoteSelection } from './src/browser/selection';
@@ -141,7 +121,6 @@ import { printPage, savePagePdf, savePdfFromScreenshots } from './src/device/pdf
 import { saveImage } from './src/device/saveImage';
 import { CaptureCancelled } from './src/device/fullPage';
 import { offerSettings, PermissionDeniedError } from './src/device/settings';
-import { contactsAccessFor } from './src/device/contactsAccess';
 import { saveFullPageScreenshot, saveScreenshot } from './src/device/screenshot';
 import { setSpeechNotice, speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { speechText } from './src/chat/speechText';
@@ -150,7 +129,7 @@ import { PushToTalkBubble, usePushToTalk } from './src/components/PushToTalk';
 import { AUTO_LANGUAGE, automaticLanguage, languageName, listeningOrder } from './src/device/voiceLanguage';
 import { useIncognitoProtection } from './src/device/useIncognitoProtection';
 import { deleteLeftoverIncognitoProfiles } from './src/device/webviewProfile';
-import { getLanguage, t, useLanguage } from './src/i18n';
+import { t, useLanguage } from './src/i18n';
 import {
   addBookmark,
   Bookmark,
@@ -165,7 +144,6 @@ import { setStorageNotice } from './src/storage/failures';
 import { deviceMemoryStore } from './src/storage/memory';
 import { ActionEntry, addAction, pruneActions } from './src/storage/actionLog';
 import { deleteHistorySince, mostVisitedSites, searchHistory } from './src/storage/history';
-import { composeEmail } from './src/device/email';
 import { placeCall } from './src/device/phone';
 import { SEARCH_ENGINES, searchResultsOf } from './src/browser/search';
 import { openSmsComposer } from './src/device/sms';
@@ -179,9 +157,6 @@ import {
   postTaskNotice,
 } from './src/device/notifications';
 import { PAUSED_NOTICE_DELAY_S, taskNoticeFor, type TaskNoticeEvent } from './src/agent/taskNotice';
-import { withIdentity } from './src/agent/identity';
-import { currentTabNote } from './src/agent/contextNote';
-import { plainError } from './src/ai/plainError';
 import { renderReportPdf } from './src/device/reportPdf';
 import { authenticate } from './src/device/biometric';
 import { scannedTarget } from './src/device/qr';
@@ -240,9 +215,7 @@ import {
   onApprovalWaitingInBackground,
   onBackgroundOpenRequested,
   onBackgroundStopRequested,
-  TaskOutcome,
   useWaitingForUser,
-  whileAskingUser,
 } from './src/device/backgroundTask';
 import { setMarkerEnvironment, clearMark } from './src/agent/actionMarker';
 import { ActionMarkerLayer } from './src/components/ActionMarkerLayer';
@@ -256,7 +229,6 @@ import { idleView, stripVisible, workingStep, type WorkingEvent, type WorkingVie
 import { deleteOrphanChats, loadChat, savedAttachmentIds, storeChat } from './src/storage/chat';
 import { loadRecentlyClosed, loadSession, Session } from './src/storage/session';
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, Settings, ThemeSetting } from './src/storage/settings';
-import type { IconLine, IconLines } from './src/ui/Icon';
 import { holdSplash } from './src/ui/launch';
 import { darkPalette, lightPalette } from './src/ui/theme';
 import { usePersistSession } from './src/storage/usePersistSession';
@@ -274,6 +246,8 @@ function applyTheme(theme: ThemeSetting) {
 
 const memoryStore = deviceMemoryStore(getDb);
 const sitePermissions = new SitePermissionStore(getDb);
+// "Always allow" in a task's dialogs (src/task/dialogs.ts) is saved here.
+setTaskDialogSites(sitePermissions);
 // Web pages' location requests check (and "Always allow" saves) the per-site location setting.
 configurePageLocation(sitePermissions);
 // Their camera and microphone requests check (and "Always allow" saves) the per-site camera and microphone settings.
@@ -302,195 +276,6 @@ function readConversation(chat: Conversation, adoptLegacy = false) {
   chat.loading = true;
   // Unreadable: the conversation starts empty and the user is told (an unreadable saved value is kept aside, db.ts).
   void withDb('chat.load', (db) => loadChat(db, chat.key, { adoptLegacy }), 'user').then((saved) => chat.restore(saved ?? null));
-}
-
-/**
- * The agent's "may I?" before an action. Stopping the task (signal) dismisses it as declined. A site's action offers
- * "Always allow on <site>"; a low-risk phone action (`kind`, agent/alwaysAllow.ts) offers "Don't ask again for …",
- * handed to `onDontAskAgain` when allowed with it ticked. A denial is never remembered.
- */
-async function askConfirmation(
-  description: string | IconLines,
-  host: string | null,
-  signal: AbortSignal,
-  incognito: boolean,
-  kind?: AlwaysAllowKind,
-  onDontAskAgain?: (kind: AlwaysAllowKind) => void,
-): Promise<boolean> {
-  const text = typeof description === 'string' ? description : null;
-  // Incognito never remembers an answer: no "Always allow" and no "Don't ask again" there (alwaysAllow.ts rememberOffer).
-  const offer = rememberOffer({ host, kind, incognito, canRememberKind: !!onDontAskAgain });
-  const result = await dialog.show({
-    title: t('confirm.title'),
-    ...(typeof description === 'string' ? {} : { lines: description }),
-    message: text && host ? `${text}\n\n${host}` : (text ?? host ?? undefined),
-    buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: t('confirm.allow') }],
-    checkbox:
-      offer === 'site' && host
-        ? { label: t('confirm.always', { host }) }
-        : offer === 'kind' && kind
-          ? { label: t(`confirm.dontAskAgain.${kind}`) }
-          : undefined,
-    signal,
-  });
-  const allowed = result.button === 1;
-  if (allowed && offer === 'site' && host && result.checked) sitePermissions.set(host, 'allow').catch(() => {});
-  if (allowed && offer === 'kind' && kind && result.checked) onDontAskAgain?.(kind);
-  return allowed;
-}
-
-/**
- * The assistant giving a picture to a page (upload_image), or saving it to Photos instead: the picture and what
- * happens, every time, with no "always allow" (an image can be personal, whatever the site's setting). Stopping the
- * task dismisses it as declined.
- */
-async function askImageConfirmation(
-  options: { title: string; message: string; image?: { uri: string; aspectRatio: number }; confirmText: string },
-  signal: AbortSignal,
-): Promise<boolean> {
-  const result = await dialog.show({
-    title: options.title,
-    message: options.message,
-    ...(options.image ? { image: { ...options.image, label: options.title } } : {}),
-    buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: options.confirmText, primary: true }],
-    signal,
-  });
-  return result.button === 1;
-}
-
-/**
- * The assistant saving site rules (save_site_rules): the selectors and domains in plain words and where hiding
- * applies (default: this site and its subdomains), every time; never "don't ask again". Stopping the task dismisses
- * it as declined.
- */
-async function askSiteRules(approval: SiteRulesApproval, active: boolean, signal: AbortSignal): Promise<ScopeKind | null> {
-  const lines: IconLine[] = [];
-  if (approval.hide.length) {
-    lines.push({ icon: 'shield', text: t('siteRules.saveHide') }, ...approval.hide.map((text) => ({ text })));
-  }
-  if (approval.block.length) {
-    lines.push({ icon: 'shield', text: t('siteRules.saveBlock') }, ...approval.block.map((text) => ({ text })));
-  }
-  const notes = [approval.incognito ? t('siteRules.saveIncognito') : '', active ? '' : t('siteRules.saveOff')].filter(Boolean);
-  const result = await dialog.show({
-    title: t('siteRules.saveTitle', { site: approval.site }),
-    lines: { lines },
-    ...(notes.length ? { message: notes.join('\n\n') } : {}),
-    // Only hiding has a scope; a blocked domain is blocked everywhere.
-    ...(approval.hide.length
-      ? {
-          choices: {
-            label: t('siteRules.scopeLabel'),
-            options: SCOPE_KINDS.map((k) => t(`siteRules.scope.${k}`)),
-            initial: SCOPE_KINDS.indexOf(DEFAULT_SCOPE),
-          },
-        }
-      : {}),
-    buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: t('siteRules.save'), primary: true }],
-    signal,
-  });
-  if (result.button !== 1) return null;
-  return approval.hide.length ? (SCOPE_KINDS[result.choice] ?? DEFAULT_SCOPE) : DEFAULT_SCOPE;
-}
-
-/**
- * Posting and paying (request_approval, agent/approvalTool.ts): the site, what kind of action, and what Qutai read on
- * the page (the exact text or the form's values; the total, the line it is on, the order and the payment method,
- * any recurring charge), every time, never "don't ask again". Only Approve grants the one press; stopping the task
- * dismisses it as declined.
- */
-async function askOutward(approval: OutwardApproval, signal: AbortSignal): Promise<boolean> {
-  const lines: IconLine[] = [];
-  let title: string;
-  let approve: string;
-  if (approval.kind === 'publish') {
-    title = t(`approval.title.${approval.action}`, { site: approval.site });
-    approve = t('approval.approve');
-    if (approval.text !== undefined) {
-      lines.push({ icon: 'send', text: t('approval.exactText') }, { text: approval.text });
-    } else {
-      lines.push({ icon: 'send', text: t('approval.formValues') }, ...(approval.fields ?? []).map((f) => ({ text: `${f.label}: ${f.value}` })));
-    }
-  } else if (approval.kind === 'change') {
-    title = t(`approval.changeTitle.${approval.action}`, { site: approval.site });
-    approve = t('approval.approve');
-    if (approval.heading) lines.push({ icon: 'document', text: t('approval.changeHeading', { heading: approval.heading }) });
-    if (approval.dialog) lines.push({ icon: 'info', text: t('approval.changeDialog', { text: approval.dialog }) });
-    if (approval.item) lines.push({ icon: 'trash', text: t('approval.changeItem', { item: approval.item }) });
-    if (approval.fields?.length)
-      lines.push({ icon: 'send', text: t('approval.formValues') }, ...approval.fields.map((f) => ({ text: `${f.label}: ${f.value}` })));
-  } else {
-    title = t('approval.payTitle', { total: approval.total, site: approval.site });
-    approve = t('approval.pay', { total: approval.total });
-    lines.push(
-      { icon: 'wallet', text: t('approval.total', { total: approval.total }) },
-      { text: t('approval.totalLine', { line: approval.totalLine }) },
-    );
-    if (approval.items) lines.push({ icon: 'review', text: t('approval.items', { items: approval.items }) });
-    if (approval.paymentMethod) lines.push({ icon: 'key', text: t('approval.method', { method: approval.paymentMethod }) });
-    if (approval.recurring) lines.push({ icon: 'reload', text: t('approval.recurring', { terms: approval.recurring }) });
-  }
-  const notes = [
-    t('approval.press', { button: approval.button }),
-    ...(approval.kind === 'pay' ? [t('approval.payNote')] : []),
-    ...(approval.kind === 'change' ? [t('approval.changeNote')] : []),
-    t('approval.onlyHere'),
-  ];
-  const result = await dialog.show({
-    title,
-    lines: { lines, spaced: true },
-    message: notes.join('\n\n'),
-    buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: approve, primary: true }],
-    signal,
-  });
-  return result.button === 1;
-}
-
-/**
- * Before the assistant first enters remembered personal details on a site in a task: which kinds, on which site.
- * "Allow once" (emphasised) covers the site until the task ends; "Always allow on this site" is saved (not offered in
- * incognito). Stopping the task dismisses it as declined.
- */
-async function askPersonalData(
-  host: string,
-  kinds: PersonalKind[],
-  incognito: boolean,
-  signal: AbortSignal,
-): Promise<SitePromptAnswer> {
-  const answer = await askSitePermission({
-    title: t('personal.title', { host }),
-    message: t('personal.body', { what: personalKindsLabel(kinds) }),
-    incognito,
-    signal,
-  });
-  if (answer === 'always') sitePermissions.setPersonal(host, 'allow').catch(() => {});
-  return answer;
-}
-
-/**
- * Before Qutai types a hidden memory (`what`: what it is, never the value) into a field on a site: the first time for
- * each hidden value and site in a task, whatever the site's personal-information setting (blocked sites never get
- * here). No "always": the dialog says the rule. Stopping the task dismisses it as declined.
- */
-async function askHiddenValue(
-  host: string,
-  what: string,
-  field: string,
-  incognito: boolean,
-  signal: AbortSignal,
-): Promise<boolean> {
-  const lines = [
-    ...(field ? [t('hidden.field', { field })] : []),
-    t('hidden.body'),
-    ...(incognito ? [t('hidden.incognito')] : []),
-  ];
-  const result = await dialog.show({
-    title: t('hidden.title', { what, host }),
-    message: lines.join('\n\n'),
-    buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: t('hidden.enter'), primary: true }],
-    signal,
-  });
-  return result.button === 1;
 }
 
 export default function App() {
@@ -1201,470 +986,74 @@ function BrowserApp({
       }),
     [browserInstance],
   );
-  /**
-   * `tab`: the tab the task is for (a saved task's page, opened just before); otherwise the tab on screen.
-   * `noPage`: a saved task meant for no particular page, so the model is told not to start from the one on screen.
-   * `voice`: a voice message from holding the Qutai button, sent with the panel closed: it leaves the files attached to
-   * the message being written, and a saved task waiting in the input, where they are.
-   */
-  // closed: sent with the panel closed without voice (an answer tapped in the question bubble over the page, WORK-17).
-  const send = async (text: string, options: { tab?: Tab; noPage?: boolean; voice?: boolean; closed?: boolean } = {}) => {
-    if (running) return;
-    const panelClosed = !!options.voice || !!options.closed;
-    // The conversation belongs to the tab the user is looking at when they send the task,
-    // and stays there even if the agent moves to other tabs.
-    // A grouped tab's conversation is the group's, so the task keeps one context whichever of its tabs is shown.
-    const current = options.tab && browser.getTab(options.tab.id) ? options.tab : browser.active;
-    const chat = browser.conversationOf(current);
-    // Marked before anything is shown, so a message typed in an incognito tab is never saved.
-    if (current.incognito) chat.privacy.touchedIncognito = true;
-    // Images go only to a model that takes them: said before anything is sent, with the message kept in the input.
-    if (!panelClosed && chat.pending.some((a) => a.kind === 'image')) {
-      const blocked = await imagesBlockedFor(chat);
-      if (blocked) {
-        chat.setDraft(text);
-        chat.add(newItem('error', t('attach.noImageInput', { model: blocked })));
-        return;
-      }
-    }
-    // Qutai Credits: signed in, and the disclosure answered before the first use (asked here if it never was). Checked
-    // before the message is taken, so a refusal leaves it in the input with its files (nothing is lost).
-    const intended = chat.model && isConfigured(settings, chat.model.provider) ? chat.model.provider : settings.provider;
-    if (intended === 'qutai' && !creditsReady()) {
-      const signedIn = accountSession()?.getState().status === 'signedIn';
-      if (signedIn && (await askCreditsDisclosure())) {
-        // Accepted: carry on with this message.
-      } else {
-        chat.setDraft(chat.draft.trim() && chat.draft.trim() !== text.trim() ? `${chat.draft.trimEnd()}\n\n${text}` : text);
-        chat.add({
-          ...newItem('error', t(signedIn ? 'credits.error.notAccepted' : 'credits.error.notSignedInKept')),
-          ...(signedIn ? {} : { action: 'signIn' as const }),
+  // The task lifecycle (src/task/sendTask.ts): one run slot for the app's life; this screen hands each send over with
+  // what is React (its state setters, its toasts) and reads nothing from the render the send came from.
+  const [taskRunner] = useState(() => new TaskRunner());
+  const taskHost = (): TaskHost => ({
+    browser: browserInstance,
+    runner: taskRunner,
+    runAgent,
+    settings: () => settingsRef.current,
+    changeSettings,
+    sitePermissions,
+    memory: memoryStore,
+    downloads: downloadRequests,
+    history: historySearch,
+    log: logAction,
+    bookmarksRemoved: offerBookmarkUndo,
+    savedTaskUsed: refreshRecentTasks,
+    showSettings: () => setSettingsVisible(true),
+    save: persistConversation,
+    credits: {
+      ready: creditsReady,
+      signedIn: () => accountSession()?.getState().status === 'signedIn',
+      askDisclosure: askCreditsDisclosure,
+      promptSignIn: promptQutaiSignIn,
+      config: () => creditsStore.config(),
+      refresh: refreshCredits,
+    },
+    preparedSent: (chat) => setPrepared((p) => (p?.chat === chat ? null : p)),
+    busy: () => toast.show(t('chat.busyElsewhere')),
+    ui: {
+      start: (panelClosed) => {
+        // Every start but a voice one comes from the panel (or opens it): it drops into the step strip; a screen
+        // reader keeps the panel the user is in.
+        setAnswerCard('');
+        setAnswerOptions(null);
+        setPageQuestion(null);
+        applyWork({ type: 'start', panelOpen: !panelClosed, collapse: !screenReaderRef.current });
+      },
+      end: (view) => {
+        setAnswerCard(view.answerText);
+        setAnswerOptions(view.cards);
+        // The question it ends with, when it fits a bubble over the page (chat/questionBubble.ts).
+        const asked = view.question;
+        const questionFits = !!asked && questionFitsBubble(asked.text, asked.options ?? [], PixelRatio.getFontScale());
+        setPageQuestion(asked && questionFits ? { chat: view.chat, item: asked } : null);
+        applyWork({
+          type: 'end',
+          outcome: view.outcome,
+          hasAnswer: !!view.answerText || !!view.cards,
+          questionFits,
+          sameConversation:
+            AppState.currentState === 'active' && browserInstance.conversationOf(browserInstance.active) === view.chat,
         });
-        persistConversation(chat);
-        if (!signedIn) promptQutaiSignIn();
-        return;
-      }
-    }
-    if (prepared?.chat === chat && !panelClosed) setPrepared(null);
-    const attachments = panelClosed ? [] : chat.takePending();
-    const sent = userItem(text, attachments);
-    chat.add(sent);
-
-    // The conversation's own model choice, if its provider is still set up; otherwise the default in Settings.
-    // Read once here: a running task keeps the model it started with.
-    const choice = chat.model;
-    const useChoice = !!choice && isConfigured(settings, choice.provider);
-    if (choice && !useChoice) {
-      chat.add(newItem('info', t('chat.modelChoiceUnavailable', { provider: getProvider(choice.provider).label })));
-      chat.setModel(null);
-    }
-    const provider = useChoice ? choice.provider : settings.provider;
-    if (!isConfigured(settings, provider)) {
-      chat.add(
-        newItem(
-          'error',
-          getProvider(provider).needsEndpoint
-            ? t('chat.missingEndpoint')
-            : t('chat.missingKey', { provider: getProvider(provider).label }),
-        ),
-      );
-      persistConversation(chat);
-      setSettingsVisible(true);
-      return;
-    }
-
-    const agentTab = { id: current.id };
-    // The page's title goes between untrusted-content markers (agent/contextNote.ts, UNTR-21).
-    const pageInfo = currentTabNote(current, browser.tabs.length, !!options.noPage);
-    const message = text || (attachments.length ? 'See the attached files.' : '');
-    const attached = attachments.length ? `\n\n${describeAttachments(attachments)}` : '';
-    const madeNote = chat.takeMadeNote();
-    const made = madeNote ? `\n\n${madeNote}` : '';
-    chat.turns.push({
-      role: 'user',
-      text: message + attached + made + pageInfo,
-      ...(attachments.length ? { attachments } : {}),
-    });
-
-    // Research applies to this one message.
-    const research = chat.research;
-    if (research) chat.setResearch(false);
-    const signal = chat.start();
-    browser.setAgentTab(agentTab);
-    // Every start but a voice one comes from the panel (or opens it): it drops into the step strip; a screen reader
-    // keeps the panel the user is in.
-    setAnswerCard('');
-    setAnswerOptions(null);
-    setPageQuestion(null);
-    applyWork({ type: 'start', panelOpen: !panelClosed, collapse: !screenReaderRef.current });
-    // May go on in the background (Android, opt-in) unless the conversation is incognito; the notification's title
-    // is the user's own message.
-    const incognitoTask = () => chat.incognito || chat.privacy.touchedIncognito;
-    const mayContinue = settings.backgroundTasks && !incognitoTask();
-    beginBackgroundTask(mayContinue ? text : null);
-    if (mayContinue) lastTaskTab.current = current.id;
-    let outcome: TaskOutcome = { kind: 'done' };
-    let lastText = '';
-    // The tokens and approximate cost of the task's requests, shown under its last answer.
-    let answerCost = null as AnswerCost | null;
-    // Catalogue providers: what the cached catalogue says about the model (images, output limit).
-    if (getProvider(provider).catalog) await loadCatalog();
-    const target = requestTarget(settings, provider, useChoice ? choice.model : undefined);
-    // Qutai Credits: the server's configuration (limits, and which provider's format the model takes).
-    let credits: PublicConfig | null = null;
-    let tier: Tier | null = null;
-    // The message as typed, to hand back to the input if Qutai Credits refuses it before anything was sent.
-    const userTurn = chat.turns[chat.turns.length - 1];
-    try {
-      if (provider === 'qutai') {
-        credits = await creditsStore.config();
-        if (usesTiers(credits)) {
-          // Tiers: always the server's default one (CRED-39). A tier chosen in an older version is still stored but
-          // not read, so it can't name a tier the server no longer has.
-          tier = defaultTier(credits);
-          if (tier) target.model = tier.id;
-        } else {
-          // The model saved earlier is no longer offered: the server's first one (the relay refuses others).
-          const offered = offeredModels(credits);
-          if (!offered.some((m) => m.model === target.model) && offered[0]) target.model = offered[0].model;
-        }
-      }
-      // Which provider's format the answer comes in (Gemini streams only with its setting).
-      const underlying = tier
-        ? tierTarget(tier, chat.turns).format
-        : (credits?.models.find((m) => m.model === target.model)?.provider ?? provider);
-      const limits = credits ? limitsFor(credits, tier) : null;
-      // Which AI it is, for "which model are you?": Qutai Credits (no tier named), else the provider and model.
-      if (userTurn.role === 'user') {
-        userTurn.text = withIdentity(
-          userTurn.text,
-          provider === 'qutai'
-            ? { mode: 'credits' }
-            : { mode: 'own', provider: getProvider(provider).label, model: target.model },
-        );
-      }
-      await runAgent({
-        provider,
-        apiKey: target.apiKey,
-        model: target.model,
-        endpoint: target.endpoint,
-        extraHeaders: target.extraHeaders,
-        imageInput: target.images,
-        maxOutputTokens: target.maxOutputTokens,
-        turns: chat.turns,
-        browser,
-        agentTab,
-        askedFrom: { id: current.id },
-        privacy: chat.privacy,
-        memory: settings.memoryEnabled ? memoryStore : undefined,
-        customInstructions: settings.customInstructions,
-        // Research without web search would be guesswork, so it always searches.
-        // Only where the provider has its own web search; elsewhere the assistant searches in the browser.
-        webSearch: getProvider(provider).webSearch && (settings.webSearch || research),
-        research,
-        // Gemini streams only with its experimental setting, and not after the API rejected a streamed reply.
-        stream: underlying !== 'gemini' || (settings.geminiStreaming && geminiStreamingAvailable()),
-        ...(limits
-          ? {
-              // The tier's own limits on a server with tiers.
-              serverLimits: {
-                maxSteps: limits.maxSteps,
-                maxResearchSteps: limits.maxResearchSteps,
-                maxMemoryChars: limits.maxMemoryChars,
-                maxImages: limits.maxImages,
-              },
-            }
-          : {}),
-        confirm: (description, host, kind) =>
-          askConfirmation(description, host, signal, incognitoTask(), kind, (allowedKind) => {
-            const current = settingsRef.current;
-            const next = { ...current, alwaysAllow: afterAnswer(current.alwaysAllow, allowedKind, { allowed: true, dontAskAgain: true }) };
-            settingsRef.current = next;
-            void onChangeSettings(next);
-          }),
-        alwaysAllowed: (kind) => isAlwaysAllowed(settingsRef.current.alwaysAllow, kind),
-        confirmPersonal: (host, kinds, incognito) => askPersonalData(host, kinds, incognito, signal),
-        confirmHidden: (host, what, field, incognito) => askHiddenValue(host, what, field, incognito, signal),
-        confirmImage: (options) => whileAskingUser(() => askImageConfirmation(options, signal)),
-        confirmOutward: (approval) => whileAskingUser(() => askOutward(approval, signal)),
-        // Read at each use: the user may turn it off during a task.
-        paymentsAllowed: () => settingsRef.current.assistantPayments,
-        siteRules: {
-          list: () => siteRules.rules,
-          add: (site, lines, url) => siteRules.add(site, lines, 'assistant', url),
-          remove: (ids) => siteRules.remove(ids),
-          activeOn: (site) => settingsRef.current.blockAds && !isOffSite(site, sitePermissions.blockingOffSites()),
-        },
-        confirmSiteRules: (approval) =>
-          whileAskingUser(() =>
-            askSiteRules(
-              approval,
-              settingsRef.current.blockAds && !isOffSite(approval.site, sitePermissions.blockingOffSites()),
-              signal,
-            ),
-          ),
-        // User styles and the cookie list (docs/page-customisation.md): every apply and every delete is asked.
-        pageStyles: {
-          approve: (approval) => whileAskingUser(() => askStyle(approval, signal)),
-          applyTrial: async (target, css, description) => {
-            applyTrial(target, css, description);
-            const offer = {
-              description,
-              site: siteKey(target.url) ?? '',
-              url: target.url.replace(/#.*$/, ''),
-              css,
-              tabId: target.id,
-              incognito: target.incognito,
-              state: 'applied' as const,
-            };
-            AccessibilityInfo.announceForAccessibility(t('styles.cardApplied'));
-            chat.add(styleItem(offer));
-          },
-          undoTrial: async (target) => undoTrial(target),
-          kept: () => siteRules.styles,
-        },
-        cookies: {
-          read: (target) => readTabCookies(target),
-          remove: (target, keys) => deleteTabCookies(target, keys),
-          confirmDelete: (approval) => whileAskingUser(() => askCookieDelete(approval, signal)),
-          offer: (target, site, count) => chat.add(cookiesItem({ site, count, tabId: target.id })),
-        },
-        thirdPartyCookiesBlocked: () => Platform.OS === 'android' && settingsRef.current.blockThirdPartyCookies,
-        // Scripts (docs/page-customisation.md › Scripts): every run is asked, with the code.
-        scripts: {
-          enabled: () => settingsRef.current.assistantScripts,
-          siteSetting: (site) => settingsRef.current.scriptSites.find((s) => s.host === site)?.setting ?? 'default',
-          syntax: (code) => scriptSandbox.check(code),
-          approve: (approval) => whileAskingUser(() => askScript(approval, signal)),
-          runCopy: (snapshot, code, pageUrl) => scriptSandbox.run(snapshot, code, pageUrl),
-          offer: (offer) => chat.add(scriptItem(liveOffer(offer))),
-        },
-        // The user's own apps (docs/mini-apps.md): never from an incognito conversation; previews open the runner.
-        apps: {
-          list: () => appStore.list(),
-          load: (id) => appStore.load(id),
-          create: async (app) => {
-            const pkg = await appStore.create(app);
-            appsChanged.emit();
-            return pkg;
-          },
-          change: async (id, change, note) => {
-            const pkg = await appStore.change(id, change, 'assistant', note);
-            appsChanged.emit();
-            return pkg;
-          },
-          undo: async (id) => {
-            const version = await appStore.undo(id);
-            appsChanged.emit();
-            return version;
-          },
-          preview: (id) => (AppState.currentState === 'active' ? whileAskingUser(() => appRunner.preview(id)) : Promise.resolve('unavailable' as const)),
-          offer: (offer) => chat.add(appItem(offer)),
-          incognito: incognitoTask,
-          uiLanguage: getLanguage,
-          budget: { writes: 0 },
-        },
-        imageUsed: (id) => chat.markImageUsed(id),
-        confirmByDefault: settings.confirmActions,
-        sites: sitePermissions,
-        log: logAction,
-        history: historySearch,
-        bookmarks: { db: getDb, removed: offerBookmarkUndo },
-        // Read only: the assistant runs a task the user names; saving, editing and reminders stay with the user.
-        savedTasks: {
-          list: () => getDb().then(listSavedTasks),
-          fill: (prompt) => fillTaskPrompt(prompt, () => formatDate(new Date())),
-          markUsed: (id) => {
-            void withDb('savedTasks.used', (db) => markSavedTaskUsed(db, id)).then(refreshRecentTasks);
-          },
-        },
-        // The same path as the Settings screen; the tool only passes allowlisted fields (agent/settingsTool.ts).
-        appSettings: {
-          get: () => settingsRef.current,
-          change: (patch) => {
-            const next = { ...settingsRef.current, ...patch };
-            settingsRef.current = next;
-            return onChangeSettings(next);
-          },
-        },
-        composeEmail,
-        // Contacts: never in incognito conversations (the tool refuses there too).
-        ...(chat.incognito ? {} : { contacts: contactsAccessFor(chat, signal) }),
-        offerCall: (offer) => {
-          AccessibilityInfo.announceForAccessibility(
-            offer.name
-              ? t('chat.callLabel', { name: offer.name, number: offer.number })
-              : t('chat.callNumberLabel', { number: offer.number }),
-          );
-          chat.add(callItem(offer));
-        },
-        offerSms: (offer) => {
-          AccessibilityInfo.announceForAccessibility(
-            offer.name
-              ? t('chat.smsLabel', { name: offer.name, number: offer.number })
-              : t('chat.smsNumberLabel', { number: offer.number }),
-          );
-          chat.add(smsItem(offer));
-        },
-        offerWhatsApp: (offer) => {
-          AccessibilityInfo.announceForAccessibility(
-            offer.number
-              ? t('chat.whatsAppLabel', { who: offer.name ? `${offer.name}, ${offer.number}` : offer.number })
-              : t('chat.whatsAppNoNumberLabel'),
-          );
-          chat.add(whatsAppItem(offer));
-        },
-        startDownload: (tab, url, name, type) => downloadRequests.fromAssistant(tab, url, name, type),
-        offerFile: (file) => {
-          AccessibilityInfo.announceForAccessibility(file.name);
-          chat.add(fileItem(file));
-        },
-        composedFiles: () => chat.composedFiles,
-        offerShare: (offer) => {
-          AccessibilityInfo.announceForAccessibility(
-            offer.files.length ? offer.files.map((f) => f.name).join(', ') : t('chat.shareTo'),
-          );
-          chat.add(shareItem(offer));
-        },
-        offerPdf: (pdf) => {
-          const info = storeMadePdf(pdf.file, pdf.fileName, 'page', incognitoTask());
-          AccessibilityInfo.announceForAccessibility(t('chat.pdfMade', { name: info.name }));
-          chat.addMadePdf(info, false);
-          return info;
-        },
-        showAppSettings: () => setSettingsVisible(true),
-        attachments: () => chat.attachments,
-        offerImage: (info) => {
-          AccessibilityInfo.announceForAccessibility(t('chat.imageMade', { name: info.name }));
-          // The oldest edited images over the limit lose their files.
-          chat.addEditedImage(info).forEach((id) => deleteAttachment(id));
-        },
-        signal,
-        audit: {
-          conversation: () => chat.key,
-          incognito: () => chat.incognito || chat.privacy.touchedIncognito,
-        },
-        onCost: (cost) => {
-          answerCost = cost;
-        },
-        onEvent: (event) => {
-          // How the task ends, for the notification when it ends in the background: its last reply, a final
-          // error, or a question for the user.
-          if (event.type === 'text') lastText = event.text || lastText;
-          if (event.type === 'error') outcome = { kind: 'failed', text: event.text };
-          else if (event.type === 'choices') outcome = { kind: 'needsAnswer' };
-          else if (event.type === 'text' || event.type === 'action') outcome = { kind: 'done' };
-          if (event.type === 'text_delta') return chat.appendStreaming(event.text);
-          if (event.type === 'text') return chat.finishStreaming(event.text);
-          if (event.type === 'sources') return chat.add(sourcesItem(event.sources, event.searchWidget));
-          if (event.type === 'options') return chat.add(optionsItem(event.cards, event.incognito));
-          if (event.type === 'choices') {
-            AccessibilityInfo.announceForAccessibility(event.text);
-            return chat.add(newItem('choices', event.text, event.options));
-          }
-          const item = newItem(event.type, event.text);
-          chat.add({
-            ...item,
-            ...('icon' in event && event.icon ? { icon: event.icon } : {}),
-            ...(event.type === 'action' && event.tool ? { tool: event.tool } : {}),
-            ...(event.type === 'error' && event.details ? { details: event.details } : {}),
-          });
-        },
-      });
-      if (signal.aborted) chat.add({ ...newItem('info', t('chat.stopped')), icon: 'stop' });
-      else AccessibilityInfo.announceForAccessibility(t('a11y.taskDone'));
-    } catch (e) {
-      // Qutai Credits refused the first request (no credits, maintenance, signed out…): nothing reached the AI and
-      // nothing was charged, so the message goes back into the input instead of staying unanswered.
-      const kept =
-        !signal.aborted &&
-        provider === 'qutai' &&
-        nothingSent(e) &&
-        chat.withdraw(sent.id, userTurn, text, attachments);
-      if (signal.aborted) chat.add({ ...newItem('info', t('chat.stopped')), icon: 'stop' });
-      else {
-        // Qutai Credits: the way on under the error (buy credits; sign in again or choose another provider).
-        const action: ChatItemAction | undefined =
-          provider === 'qutai' && e instanceof RelayError
-            ? e.kind === 'insufficient_credits'
-              ? 'buyCredits'
-              : e.kind === 'not_signed_in'
-                ? 'signIn'
-                : undefined
-            : undefined;
-        // One plain sentence; the raw text (status, the provider's message) stays available as its details.
-        const shown = plainError(e, { credits: provider === 'qutai' });
-        chat.add({
-          ...newItem('error', shown.message),
-          ...(shown.details && shown.details !== shown.message ? { details: shown.details } : {}),
-          ...(action ? { action } : {}),
-        });
-      }
-      if (kept) chat.add(newItem('info', t('credits.messageKept')));
-      outcome = { kind: 'failed', text: plainError(e, { credits: provider === 'qutai' }).message };
-      // What the server says now (a stream cut short was still charged; a refusal may mean the balance moved).
-      if (provider === 'qutai' && e instanceof RelayError) refreshCredits();
-    } finally {
-      if (signal.aborted) outcome = { kind: 'stopped' };
-      else if (outcome.kind === 'done') outcome = { kind: 'done', text: lastText };
-      // Nothing from a conversation that touched an incognito tab goes in a notification, and with "Notify me when a
-      // task finishes" off only a question for the user does.
-      const quiet = !notifyTaskDoneRef.current && outcome.kind !== 'needsAnswer';
-      const backgroundRunNotified = backgroundRunNotifies() && !incognitoTask() && !quiet && outcome.kind !== 'stopped';
-      endBackgroundTask(incognitoTask() || quiet ? { kind: 'stopped' } : outcome);
-      // Without that background run (iOS, or the setting off), Qutai's own notification when the task ended while
-      // the user was away (e.g. the answer arrived after they left).
-      takeBackPausedNotice();
-      void noticeTask(chat, outcome.kind, backgroundRunNotified);
-      chat.finishStreaming();
-      if (answerCost) chat.addCost(answerCost, sent.id);
-      // The ledger's latest entries (a stopped request is settled on the server a little later).
-      if (provider === 'qutai') refreshCredits();
-      chat.finish();
-      browser.setAgentTab(null);
-      clearMark();
-      // The answer since the user's message, for the answer card of a task started with the panel closed.
-      const sentAt = chat.items.findIndex((item) => item.id === sent.id);
-      const answer = chat.items
-        .slice(sentAt + 1)
-        .filter((item) => item.kind === 'assistant' && item.text.trim())
-        .pop();
-      const answerText = answer ? plainAnswer(answer.text) : '';
-      const cardsItem = chat.items
-        .slice(sentAt + 1)
-        .filter((item) => item.kind === 'options' && item.cards?.length)
-        .pop();
-      setAnswerCard(answerText);
-      setAnswerOptions(cardsItem ?? null);
-      // The question it ends with, when it fits a bubble over the page (chat/questionBubble.ts).
-      const asked = outcome.kind === 'needsAnswer' ? chat.items.slice(sentAt + 1).filter((item) => item.kind === 'choices').pop() : undefined;
-      const questionFits = !!asked && questionFitsBubble(asked.text, asked.options ?? [], PixelRatio.getFontScale());
-      setPageQuestion(asked && questionFits ? { chat, item: asked } : null);
-      applyWork({
-        type: 'end',
-        outcome: outcome.kind,
-        hasAnswer: !!answerText || !!cardsItem,
-        questionFits,
-        sameConversation: AppState.currentState === 'active' && browserInstance.conversationOf(browserInstance.active) === chat,
-      });
-      if (outcome.kind !== 'stopped') taskEnded(chat, outcome.kind);
-      // Saved under the conversation's key now, which may have changed meanwhile (e.g. the tab founded a group).
-      persistConversation(chat);
-    }
-  };
-
-  /**
-   * The model a message from this conversation would go to, by name, when it can't take images; null when it can
-   * (or when the provider isn't set up, which send reports on its own).
-   */
-  const imagesBlockedFor = async (chat: Conversation): Promise<string | null> => {
-    const choice = chat.model && isConfigured(settings, chat.model.provider) ? chat.model : null;
-    const provider = choice?.provider ?? settings.provider;
-    if (!isConfigured(settings, provider)) return null;
-    if (getProvider(provider).catalog) await loadCatalog();
-    const target = requestTarget(settings, provider, choice?.model);
-    return target.images ? null : modelLabel(provider, target.model);
-  };
+      },
+    },
+    background: { begin: beginBackgroundTask, end: endBackgroundTask, notifies: backgroundRunNotifies },
+    notices: {
+      notifyWhenDone: () => notifyTaskDoneRef.current,
+      takeBackPaused: takeBackPausedNotice,
+      notice: (chat, event, backgroundRunNotified) => void noticeTask(chat, event, backgroundRunNotified),
+      ended: taskEnded,
+      taskTab: (id) => {
+        lastTaskTab.current = id;
+      },
+    },
+    clearMark,
+  });
+  /** Sends a message: the whole task runs in src/task/sendTask.ts. */
+  const send = (text: string, options: SendOptions = {}) => sendTask(taskHost(), text, options);
 
   // Attachments: the attach sheet, the full-screen preview.
   const [attachSheet, setAttachSheet] = useState(false);
@@ -2523,6 +1912,17 @@ function BrowserApp({
     } catch (e) {
       dialog.alert(t('settings.saveFailed'), e instanceof Error ? e.message : String(e));
     }
+  };
+
+  /**
+   * A change to the settings as a patch on the settings as they are now (settingsRef), never on a copy from an earlier
+   * render: a change made meanwhile (the assistant's settings tool, another switch) is kept.
+   */
+  const changeSettings = (patch: SettingsPatch) => {
+    const current = settingsRef.current;
+    const next = { ...current, ...(typeof patch === 'function' ? patch(current) : patch) };
+    settingsRef.current = next;
+    return onChangeSettings(next);
   };
 
   // Holding the Qutai button: a voice message to the conversation on screen, with the panel closed.

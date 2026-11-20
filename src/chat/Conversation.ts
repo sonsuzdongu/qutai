@@ -440,14 +440,23 @@ export class Conversation {
     this.onChange();
   }
 
-  start(): AbortSignal {
-    this.abortController = new AbortController();
+  /**
+   * A task starts here with its own controller (task/taskRunner.ts), which Stop and closing the tab abort. Without
+   * one, a new controller (tests, older callers).
+   */
+  start(controller = new AbortController()): AbortSignal {
+    this.abortController = controller;
     this.running = true;
     this.onChange();
-    return this.abortController.signal;
+    return controller.signal;
   }
 
-  finish() {
+  /**
+   * The task with this signal ended. Only that task's end counts: one that ended after a newer task started here
+   * leaves the newer one running. Without a signal, whatever runs ends.
+   */
+  finish(signal?: AbortSignal) {
+    if (signal && this.abortController && this.abortController.signal !== signal) return;
     this.abortController = null;
     this.running = false;
     this.onChange();
