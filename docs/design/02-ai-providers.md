@@ -14,6 +14,8 @@ that change a request (model per chat, streaming, web search, the custom endpoin
    phone's secure storage (iOS Keychain / Android Keystore through `expo-secure-store`).
 3. **Qutai Credits:** the same code builds the request, but only its body is sent to Qutai's server, which picks the
    model for its default tier (the user chooses no tier, `CRED-39`) and charges credits. Before first use a notice says what passes through Qutai's server.
+   Qutai's server relays Anthropic only (`CRED-47`); the user's own OpenAI, Gemini, OpenRouter and custom-endpoint keys are
+   unaffected, since those requests never touch Qutai's server.
    Server details are in [section 34](34-credits-and-relay.md).
 4. **Model per chat:** the model name under the panel's title opens a sheet; "use Gemini for this chat" sets a provider
    and model for this conversation only. Settings keeps the default. A task already running keeps its model.

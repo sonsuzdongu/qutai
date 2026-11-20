@@ -19,7 +19,7 @@ Sunucu: `cd backend && API_PORT=8000 npm run dev -w @qutai/api` (tünel 8000 por
       ekranına dönüş, Ayarlar › Hesap'ta "Giriş yöntemleri" altında adresin görünmesi
 - [ ] iPhone'da Mail'den gelen kod klavyenin üstünde öneriliyor
 - [x] Gerçek sağlayıcı anahtarıyla relay çalışıyor (hangi sağlayıcı: … )
-- [ ] Diğer sağlayıcılar da çalışıyor: Anthropic / OpenAI / Gemini (üçünün relay yolu ayrı)
+- [x] ~~Diğer sağlayıcılar da çalışıyor: Anthropic / OpenAI / Gemini (üçünün relay yolu ayrı)~~ Gerek kalmadı (20 Kas): sunucu artık yalnızca Anthropic'i aktarıyor (`CRED-47`); uygulamada kendi OpenAI ya da Gemini anahtarınızla kullanım aynen sürüyor.
 - [ ] Rakamlar tutuyor: yanıtın altındaki kredi satırı = paneldeki defter düşüşü; token sayıları sağlayıcı
       panelindekiyle eşleşiyor
 - [ ] Bakiye panelin başlığı altında ve Ayarlar › Hesap › Qutai Credits'te doğru görünüyor, son hareketler listeleniyor

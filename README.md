@@ -928,8 +928,9 @@ its address).
 
 1. Server, once (from `backend/`): `npm install && npm run migrate:local && npm run seed:local` (the seed sets
    example `allowed_models`, `relay_rules`, `pricing`, `credit_limits` and the prices), then register the profile
-   locally (above). Put **your own** provider keys in `apps/api/.dev.vars` (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`,
-   `GEMINI_API_KEY`; never committed); without them every relay request answers "temporarily unavailable".
+   locally (above). Put **your own** Anthropic key in `apps/api/.dev.vars` (`ANTHROPIC_API_KEY`; never committed; the
+   server relays Anthropic only since 20 Nov 2026, while own OpenAI and Gemini keys in the app work as before); without
+   it every relay request answers "temporarily unavailable".
 2. Credits: the admin panel normally keeps its own local state, which the API on port 8000 doesn't see. Run the
    panel on the **API's** state instead, grant, then stop it (two processes can't share the state at once):
 

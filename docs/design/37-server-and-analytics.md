@@ -26,8 +26,8 @@ analytics, and how the owner makes pro test builds.
 
 - **`SRV-1`** Qutai's server exists only for pro mode; builds without pro mode never contact it and must keep working exactly as before.
   Status: Owner, date not recorded · Why: the open-source build stays own-key, no account, nothing sent to Qutai (TODO.md › Pro mode; a9e83e4) · Enforced: In the app: src/config/features.ts (features.pro, accountsEnabled) · Source: TODO.md › Pro mode; docs/server-plan.md
-- **`SRV-2`** The server runs on Cloudflare only (Workers, Durable Objects, D1, Analytics Engine, Queues, scheduled jobs, Access, and R2 for backups), with separate development and production environments.
-  Status: Owner, date not recorded (marked decided in TODO.md › Pending decisions) · Why: reason not recorded · Source: backend/DESIGN.md › Decisions; docs/server-plan.md
+- **`SRV-2`** The server runs on Cloudflare only (Workers, Durable Objects, D1, Queues, scheduled jobs, Access, and R2 for backups; Analytics Engine once consented analytics are built, `SRV-10`), with separate development and production environments.
+  Status: Owner, date not recorded (marked decided in TODO.md › Pending decisions) · Changed 2026-11-20: the unused Analytics Engine binding and the `POST /events` stub were removed until analytics are built · Why: reason not recorded · Source: backend/DESIGN.md › Decisions; docs/server-plan.md
 - **`SRV-3`** The server lives in its own repository, checked out at `backend/` as a git submodule; the app reaches it only through `EXPO_PUBLIC_QUTAI_API_URL`.
   Status: Owner, 2026-11-15 · Why: reason not recorded · Source: docs/server-plan.md; 41b767b
 - **`SRV-4`** No secret is ever committed; limits and abuse thresholds live in the database or secrets, not in code, because the repository may be public.
@@ -43,7 +43,7 @@ analytics, and how the owner makes pro test builds.
 - **`SRV-9`** Provider keys, signing keys and notification secrets are server secrets, different per environment, with a written rotation procedure.
   Status: Owner, date not recorded (server plan rule) · Why: separate test and production; a leaked key can be replaced · Source: docs/server-plan.md › Rules that must hold; backend/README.md › Key rotation (outline)
 - **`SRV-10`** Analytics in the first version are Qutai's own anonymous events sent to its server, not Firebase; the app's event layer is an interface so Firebase can be added later.
-  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: Designed, not built (the server's events address answers "not implemented") · Source: backend/DESIGN.md › Decisions, › Analytics; [TODO.md](../../TODO.md#analytics-with-consent)
+  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: Designed, not built (the server has no events address yet; its 501 stub was removed on 20 Nov 2026) · Source: backend/DESIGN.md › Decisions, › Analytics; [TODO.md](../../TODO.md#analytics-with-consent)
 - **`SRV-11`** Analytics only in pro builds and only after the user agrees, off by default, changeable in Settings › Privacy, never from incognito tabs.
   Status: Default (manager or implementing session; open to change) · Why: privacy · Enforced: Designed, not built · Source: backend/DESIGN.md › Analytics; [TODO.md](../../TODO.md#analytics-with-consent); a9e83e4
 - **`SRV-12`** Analytics events are a small fixed list (feature used, setup finished, task finished or failed with an error kind, purchase screen opened) with app version, platform and language; never web addresses, page content, search terms, chat text, memory, an advertising id or a lasting device id; an install id resets when consent is withdrawn; unknown events and fields are dropped.

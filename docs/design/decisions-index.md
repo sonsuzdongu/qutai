@@ -59,10 +59,8 @@ The open questions, in one place (each row says what the app does today).
 | `ACC-49` | Today setup offers sign-in only on the Qutai Credits path; own-key users get no optional "Sign in" step. | [33](33-accounts.md) |
 | `ACC-50` | Today Sign in with Apple on Android is built but stays off until the owner creates Apple's Services ID and return address. | [33](33-accounts.md) |
 | `ACC-51` | Today the sign-in methods are Apple, Google and email; no other provider. | [33](33-accounts.md) |
-| `CRED-11` | Today the old request form that names a provider model is still accepted (`acceptDirectModels` on) because a released test APK uses it. | [34](34-credits-and-relay.md) |
 | `CRED-25` | Today the deployed relay rules must allow memory of at least about 10 000 characters and 9 images per request; the local seed has these… | [34](34-credits-and-relay.md) |
-| `CRED-26` | Today a step holds its whole output limit, so a small balance refuses requests that would cost far less (in the seed: about 57 credits… | [34](34-credits-and-relay.md) |
-| `CRED-30` | Today users are charged for every Gemini search, including those inside Google's free monthly allowance. | [34](34-credits-and-relay.md) |
+| `CRED-26` | Today a step holds its whole output limit and room for search results, so a small balance refuses cheaper requests (Haiku: ~2.2 / 13 / 71 credits)… | [34](34-credits-and-relay.md) |
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one admin role. | [34](34-credits-and-relay.md) |
 | `CRED-34` | Today abuse flags can't be marked resolved. | [34](34-credits-and-relay.md) |
 | `CRED-35` | Today credit prices are the model's token price plus a margin; pack sizes, trial credits, per-user limits and credit expiry… | [34](34-credits-and-relay.md) |
@@ -1012,7 +1010,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-8` | Conversations, page content, prompts, web addresses and memory are never stored or logged; relay logs keep… | Owner | not recorded |
 | `CRED-9` | In credit mode the server keeps tiers (one since 20 Nov, old ids as aliases) and the customer never sees provider models; the owner… | Owner | 2026-11-16, changed 2026-11-20 |
 | `CRED-10` | A running conversation stays on the model that answered it through a signed route for 30 days after its… | Default |  |
-| `CRED-11` | Today the old request form that names a provider model is still accepted (`acceptDirectModels` on) because… | **Waiting** |  |
+| `CRED-11` | ~~The old request form naming a provider model is still accepted~~ (withdrawn: removed; every app from 0.1.0 sends a tier). | Withdrawn | 2026-11-20 |
 | `CRED-12` | Credits are whole numbers of micro-credits (1 credit = 1 000 000); a charge is the provider's cost ×… | Default |  |
 | `CRED-13` | Each account's balance has one source of truth, its own Durable Object (a per-user server object that… | Owner | not recorded |
 | `CRED-14` | Before each step the server reserves the most it can cost (output limit, searches and their results, dearest tier)… | Default | changed 2026-11-20 |
@@ -1025,11 +1023,11 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-23` | The step limit is the server's; the app shortens the memory section and attached images to the server's… | Default |  |
 | `CRED-24` | The relay refuses app versions below the server's minimum version ("update Qutai"); the seeded minimum is… | Default |  |
 | `CRED-25` | Today the deployed relay rules must allow memory of at least about 10 000 characters and 9 images per… | **Waiting** |  |
-| `CRED-26` | Today a step holds its whole output limit, so a small balance refuses requests that would cost far less… | **Waiting** |  |
+| `CRED-26` | Today a step holds its whole output limit and room for search results, so a small balance refuses cheaper requests… | **Waiting** | changed 2026-11-20 |
 | `CRED-27` | The low-credit note shows once when the balance falls below 5 × the default tier's "credits per step" and… | Default |  |
 | `CRED-28` | Charges are shown only in credits, never as money, and the balance under the panel title is always shown… | Default |  |
 | `CRED-29` | Only models with a price in force are offered; prices are added as new dated rows, never edited, and never… | Default |  |
-| `CRED-30` | Today users are charged for every Gemini search, including those inside Google's free monthly allowance. | **Waiting** |  |
+| `CRED-30` | ~~Users are charged for every Gemini search~~ (withdrawn: the server no longer relays Gemini). | Withdrawn | 2026-11-20 |
 | `CRED-31` | Kill switches (per provider and global) make the relay "temporarily unavailable" without touching credits;… | Default |  |
 | `CRED-32` | The admin panel is reachable only through Cloudflare Access, checks the token itself (not its audience since 19 Nov) and, since 20 Nov, its own allowlist… | Default (audience: Owner) | 2026-11-19, changed 2026-11-20 |
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one… | **Waiting** |  |
@@ -1046,6 +1044,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-44` | The app never shows which model is behind Qutai Credits (no "Answered by" in the cost details or the sent log, no model label). | Owner | 2026-11-20 |
 | `CRED-45` | One reservation scope inside waitUntil: exactly one settle or cancel; the app leaving can't keep the hold and the lock. | Default | 2026-11-20 |
 | `CRED-46` | The account prunes retry-only rows daily: relay keys and finished reservations after 30 days, other keys after 400; never the ledger. | Default | 2026-11-20 |
+| `CRED-47` | Qutai's server relays Anthropic only (seam kept); own OpenAI, Gemini, OpenRouter and custom keys in the app are unaffected. | Owner | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 
@@ -1110,7 +1109,7 @@ Moved to Details (ids retired, not reused): `BACK-2`, `BACK-16`, `BACK-14`
 | Id | Decision | Status | Date |
 |---|---|---|---|
 | `SRV-1` | Qutai's server exists only for pro mode; builds without pro mode never contact it and must keep working… | Owner | not recorded |
-| `SRV-2` | The server runs on Cloudflare only (Workers, Durable Objects, D1, Analytics Engine, Queues, scheduled… | Owner | not recorded |
+| `SRV-2` | The server runs on Cloudflare only (Workers, Durable Objects, D1, Queues, scheduled jobs, Access, R2; Analytics Engine with analytics)… | Owner | not recorded, changed 2026-11-20 |
 | `SRV-3` | The server lives in its own repository, checked out at `backend/` as a git submodule; the app reaches it… | Owner | 2026-11-15 |
 | `SRV-4` | No secret is ever committed; limits and abuse thresholds live in the database or secrets, not in code,… | Default |  |
 | `SRV-5` | The server keeps: the account (id, status, created, last seen), its sign-in methods and address (with who… | Default |  |
