@@ -1,156 +1,51 @@
-import { createContext, Fragment, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AccessibilityInfo,
   Animated,
   BackHandler,
   Keyboard,
-  Platform,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   Pressable,
   ScrollView,
   ScrollViewInstance,
   StyleSheet,
   Text,
-  TextInput,
-  TextInputInstance,
   useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useIsSpeaking } from '../device/speech';
-import {
-  abortVoiceInput,
-  startVoiceInput,
-  stopVoiceInput,
-  warmVoice,
-  useVoiceInfo,
-  useVoiceLevel,
-  useVoiceState,
-  VoiceOnline,
-  VoiceState,
-} from '../device/voiceInput';
-import { languageLabel, spokenLanguageName } from '../device/voiceLanguage';
-import { VoiceLanguageSheet } from './VoiceLanguageSheet';
-import { t } from '../i18n';
-import { makeStyles, usePalette, radii } from '../ui/theme';
-import { panelHeaderHeight, panelWidth } from '../ui/layout';
-import { Icon, IconName } from '../ui/Icon';
-import { GradientText } from '../ui/BrandGradient';
-import { QutaiMark } from '../ui/QutaiMark';
-import type { Source } from '../agent/types';
-import type { AnswerCost } from '../ai/cost';
-import { AnswerCostInline, AnswerCostLine } from './AnswerCost';
 import type { Suggestion } from '../agent/pageSuggestions';
-import type { CallOffer, ContactSource } from '../device/phone';
-import type { SmsOffer } from '../device/sms';
-import type { WhatsAppOffer } from '../device/whatsapp';
-import { shownLabel } from '../agent/contactTool';
-import type { SavedTask } from '../storage/savedTasks';
-import { composedFileAvailable, FileOffer } from '../device/composedFile';
+import type { Source } from '../agent/types';
 import type { AttachmentInfo } from '../chat/attachments';
+import type { Conversation } from '../chat/Conversation';
+import { nextFollowing } from '../chat/followEnd';
 import type { ShareOffer } from '../chat/shareable';
-import { AttachmentThumb } from './AttachmentViews';
-import { attachmentAvailable } from '../device/attachments';
-import { describeFilters } from '../chat/filterSummary';
-import { imageFormatLabel } from '../chat/imageEdit';
-import { formatNumber, formatSize, hostOf } from '../i18n/format';
-import { hasTable, MarkdownText } from './MarkdownText';
-import { SearchSuggestions } from './SearchSuggestions';
-import { KeyboardAvoidingContainer } from './KeyboardAware';
+import { segmentChat } from '../chat/stepSummary';
+import type { FileOffer } from '../device/composedFile';
+import { tick } from '../device/haptics';
+import type { SmsOffer } from '../device/sms';
+import { useIsSpeaking } from '../device/speech';
+import { stopVoiceInput, type VoiceOnline } from '../device/voiceInput';
+import type { WhatsAppOffer } from '../device/whatsapp';
+import { t } from '../i18n';
+import type { SavedTask } from '../storage/savedTasks';
+import { GradientText } from '../ui/BrandGradient';
+import { Icon, type IconName } from '../ui/Icon';
+import { panelHeaderHeight, panelWidth } from '../ui/layout';
+import { QutaiMark } from '../ui/QutaiMark';
+import { usePalette } from '../ui/theme';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 import { useReduceMotion } from '../utils/useReduceMotion';
-import { withoutLeadingSymbol } from '../utils/leadingSymbol';
-import { bump, signal, tick, toggle } from '../device/haptics';
-import { ActionSheet, SheetAction } from './ActionSheet';
-import { FINAL_WAIT_MS } from './PushToTalk';
-import { useHoldGesture, useScreenReader } from './useHoldGesture';
-import { ErrorDetails } from './ErrorDetails';
-import { CookiesCard, StyleCard, type CookiesOffer, type StyleOffer } from './pageCustomisation';
-import { ScriptCard } from './pageScripts';
-import type { ScriptOffer } from '../agent/scriptTool';
-import type { AppOffer } from '../agent/appTool';
-import { AppCard } from './AppCard';
-import { OptionCards } from './OptionCards';
-import type { OptionCard } from '../chat/optionCards';
+import { ActionSheet, type SheetAction } from './ActionSheet';
+import { ChatComposer } from './ChatComposer';
+import { ChatActions, ChatEntry, EmptyState, menuTitle, StepGroup, type ChatActionHandlers } from './ChatRows';
+import { darkStyles, PanelTheme, useChatStyles } from './chatStyles';
+import type { CardAction, ChatItem, ChatItemAction, MessageAction } from './chatTypes';
+import { KeyboardAvoidingContainer } from './KeyboardAware';
 import { statusFullFits, statusLabelFits } from './statusFit';
-import { segmentChat, stepSummaryText, summarizeSteps } from '../chat/stepSummary';
+import { useConversation } from './useConversation';
 
-export type ChatItemAction = 'buyCredits' | 'signIn';
-export type CardAction = 'keepStyle' | 'undoStyle' | 'showCookies' | 'keepScript' | 'openApp' | 'undoApp';
-
-export type ChatItem = {
-  id: string;
-  kind:
-    | 'user'
-    | 'assistant'
-    | 'action'
-    | 'error'
-    | 'info'
-    | 'choices'
-    | 'sources'
-    | 'call'
-    | 'sms'
-    | 'whatsapp'
-    | 'file'
-    | 'image'
-    | 'pdf'
-    | 'share'
-    | 'style'
-    | 'script'
-    | 'cookies'
-    | 'app'
-    | 'options';
-  /** For 'options': the lines older versions show instead of the cards (chat/optionCards.ts cardsText). */
-  text: string;
-  /** For 'action' and 'info': the icon before the text (absent in conversations saved before icons). */
-  icon?: IconName;
-  /** For 'action': the tool's name, for the step summary (absent in conversations saved before it was kept). */
-  tool?: string;
-  /** For 'choices': the buttons offered. */
-  options?: string[];
-  /** For 'choices': the option the user tapped. */
-  chosen?: string;
-  /** For 'assistant': the reply is still being written. */
-  streaming?: boolean;
-  /** For 'options': the assistant's options as cards (show_options), checked again whenever they are read back. */
-  cards?: OptionCard[];
-  /** For 'options': from an incognito conversation, so the pictures wait for "Show images". */
-  imagesOnTap?: boolean;
-  /** For 'sources': the pages the answer is based on. */
-  sources?: Source[];
-  /** For 'sources': Google's search suggestions widget, shown with Gemini answers grounded in Google Search. */
-  searchWidget?: string;
-  /** For 'style': a style the assistant applied after the user's approval, with Keep… and Undo (pageCustomisation.tsx). */
-  style?: StyleOffer;
-  /** For 'script': a script that ran on the page after the user's approval, with Keep for this site… (pageScripts.tsx). */
-  script?: ScriptOffer;
-  /** For 'app': an app the assistant made or changed (apps tool), with Open and Undo (AppCard.tsx). */
-  app?: AppOffer;
-  /** For 'cookies': the cookie list's card ("Show cookies"); counts only, never names or values. */
-  cookiesOffer?: CookiesOffer;
-  /** For 'call': the number behind the Call button (stays usable, unlike ask_user options). */
-  call?: CallOffer;
-  /** For 'sms': the prepared text message behind the "Open in Messages" button. */
-  sms?: SmsOffer;
-  /** For 'whatsapp': the prepared message behind the "Open in WhatsApp" button. */
-  whatsapp?: WhatsAppOffer;
-  /** For 'file': the composed file behind the Share / Save buttons (only its name and size; the content is not saved). */
-  file?: FileOffer;
-  /**
-   * For 'user': the files attached to the message (their manifest; the files are on the phone). For 'image': the one
-   * image the assistant made with edit_image. For 'pdf': the one PDF Qutai made.
-   */
-  attachments?: AttachmentInfo[];
-  /** For 'share': the prepared share (or the files an email draft took), described without content. */
-  share?: ShareOffer;
-  /** For 'image': its file was removed to keep the conversation's edited images under the limit. */
-  expired?: boolean;
-  /** The last item of a task: the tokens and approximate cost of all the task's requests (numbers only). */
-  cost?: AnswerCost;
-  /** For 'error': a way out offered under it (Qutai Credits: buy credits, or sign in / choose another provider). */
-  action?: ChatItemAction;
-  /** For 'error': the raw error text behind the plain sentence, shown on demand (ai/plainError.ts). */
-  details?: string;
-};
+export type { CardAction, ChatItem, ChatItemAction, MessageAction } from './chatTypes';
 
 /** Voice input: the settings it follows and where its messages go. */
 export type VoiceProps = {
@@ -180,15 +75,18 @@ export type QuickAction = { id: string; icon: IconName; label: string; prompt: s
 type Props = {
   open: boolean;
   quickActions: QuickAction[];
-  /** The message being typed; owned by the app so other features (e.g. selected text) can prefill it. */
-  draft: string;
+  /**
+   * The conversation shown. The panel follows it itself, so a streamed piece of an answer or a typed letter redraws
+   * the panel and not the whole app (UI-29). Its draft is the message being typed; the app owns it so other features
+   * (e.g. selected text) can prefill it.
+   */
+  conversation: Conversation;
   onDraftChange: (text: string) => void;
   /** The next message runs as deep research. */
   research: boolean;
   onResearchChange: (on: boolean) => void;
   /** Bumped to focus the input, e.g. after prefilling a quote. */
   focusRequest: number;
-  items: ChatItem[];
   running: boolean;
   /** Another tab's conversation is running a task (only one runs at a time). */
   busyElsewhere: boolean;
@@ -271,23 +169,19 @@ type Props = {
   onShare: (offer: ShareOffer) => void;
 };
 
-/** Dark styles for the panel's parts, or null in the light theme. */
-const PanelTheme = createContext<typeof darkStyles | null>(null);
-
 /**
  * Side panel that slides in from the right over the page, like the Chrome
  * side panel. It stays mounted while closed so the conversation keeps its
- * scroll position.
+ * scroll position. Its rows are in ChatRows.tsx, its bottom in ChatComposer.tsx.
  */
 export function AssistantPanel({
   open,
   quickActions,
-  draft: text,
+  conversation,
   onDraftChange: setText,
   focusRequest,
   research,
   onResearchChange,
-  items,
   running,
   busyElsewhere,
   collapseToStrip = false,
@@ -335,7 +229,10 @@ export function AssistantPanel({
   onImage,
   onShare,
 }: Props) {
-  const styles = useStyles();
+  useConversation(conversation);
+  const items = conversation.items;
+  const text = conversation.draft;
+  const styles = useChatStyles();
   const palette = usePalette();
   const d = dark ? darkStyles : null;
   const speaking = useIsSpeaking();
@@ -363,135 +260,27 @@ export function AssistantPanel({
   const [selectableId, setSelectableId] = useState<string | null>(null);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const [listWidth, setListWidth] = useState<number | null>(null);
-  const costConversation = () => items.flatMap((i) => (i.cost ? [i.cost] : []));
+  // Read through a ref: the rows keep the same function, and it sees the latest items when a cost is opened.
+  const itemsRef = useRef(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  });
+  const costConversation = useCallback(() => itemsRef.current.flatMap((i) => (i.cost ? [i.cost] : [])), []);
   /** Folded step runs the user opened (by their first item's id). */
   const [expandedSteps, setExpandedSteps] = useState<ReadonlySet<string>>(() => new Set());
-  const toggleSteps = (id: string) => {
+  const toggleSteps = useCallback((id: string) => {
     tick();
     setExpandedSteps((open) => {
       const next = new Set(open);
       if (!next.delete(id)) next.add(id);
       return next;
     });
-  };
-  const inputRef = useRef<TextInputInstance>(null);
-  // While a task runs the input is closed (not editable, dimmed, "Qutai is working…") with only Stop left, also while
-  // a confirmation waits: the dialog is answered with its own buttons, and a message can't be sent before the task
-  // ends anyway. It opens again when the task ends (finished, a question with choices or free text, stopped, failed,
-  // a message handed back to the input). Text already in the field stays there, dimmed, to send later.
-  const busy = running;
-  const voiceStateAny = useVoiceState();
-  const voiceInfo = useVoiceInfo();
-  // Holding the Qutai button listens too; that shows in its own bubble, not here.
-  const voiceState: VoiceState = voiceInfo.owner === 'panel' ? voiceStateAny : 'idle';
-  const listening = voiceState !== 'idle';
-  const [languageSheet, setLanguageSheet] = useState(false);
-  // Read when a voice session ends, which may be renders later.
-  const latest = useRef({ running, busyElsewhere, onSend });
-  useEffect(() => {
-    latest.current = { running, busyElsewhere, onSend };
-  });
-
-  // The microphone is only on while the panel is on screen.
-  useEffect(() => {
-    if (!open) stopVoiceInput();
-  }, [open]);
-  useEffect(() => () => stopVoiceInput(), []);
-  // The microphone closes with the input (the words heard so far stay in the field). Said once to a screen reader.
-  useEffect(() => {
-    if (!busy) return;
-    if (voiceInfo.owner === 'panel') stopVoiceInput(false);
-    if (open) AccessibilityInfo.announceForAccessibility(t('chat.inputBusy'));
-    // Only on the change to busy, not when the panel opens later.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [busy]);
-
-  // A language that isn't available here: said once when listening starts in the next one.
-  const fellBackFrom = listening ? voiceInfo.fellBackFrom : null;
-  const notifyVoice = voice.notify;
-  useEffect(() => {
-    if (fellBackFrom && voiceInfo.lang)
-      notifyVoice(
-        t('voice.fellBack', { wanted: spokenLanguageName(fellBackFrom), language: spokenLanguageName(voiceInfo.lang) }),
-      );
-  }, [fellBackFrom, voiceInfo.lang, notifyVoice]);
-
-  // The panel opened: the microphone's start is made ready (languages, on-device or online), so tapping or holding it
-  // starts listening without waiting (voiceInput.ts warmVoice; the microphone stays off).
-  useEffect(() => {
-    if (open) warmVoice(voice.languages());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  /** `hold`: the microphone is held down, so listening goes on through pauses until the finger is lifted. */
-  const startListening = (draft: string, hold = false) => {
-    // Bound to this conversation: if the user switches tabs, the words still land in this draft.
-    const write = setText;
-    void startVoiceInput({
-      languages: voice.languages(),
-      owner: 'panel',
-      hold,
-      onStarted: voice.onStarted,
-      incognito: voice.incognito,
-      online: voice.online,
-      onOnlineChange: voice.onOnlineChange,
-      draft,
-      write,
-      onFinal: voice.autoSend
-        ? (final) => {
-            const message = final.trim();
-            const now = latest.current;
-            // A task still running: the text stays in the field to send later.
-            if (!message || now.running || now.busyElsewhere) return;
-            write('');
-            now.onSend(message);
-          }
-        : undefined,
-      notify: voice.notify,
-    });
-  };
-  const toggleVoice = () => (listening ? stopVoiceInput(false) : startListening(text));
-  /**
-   * Holding the microphone: listens while it is held, like holding the Qutai button in the address bar, and lifting
-   * the finger stops (sent when "Send automatically after speaking" is on). Sliding away before lifting stops without
-   * sending; the words stay in the field. A hold on a microphone already listening (after a tap) stops it on release.
-   */
-  const holdVoice = {
-    start: () => {
-      signal('listening');
-      if (!listening) startListening(text, true);
-    },
-    release: (away: boolean) => stopVoiceInput(away, FINAL_WAIT_MS),
-    cancel: () => stopVoiceInput(),
-  };
-
-  /** A language picked while listening: listening starts again in it, after the words heard so far. */
-  const pickLanguage = (language: string | null) => {
-    voice.onPick(language);
-    if (!listening) return;
-    abortVoiceInput();
-    // The field already holds the words heard so far.
-    startListening(text);
-  };
-
-  /** Typing while listening takes over: the microphone stops and the field is the user's again. */
-  const changeText = (value: string) => {
-    if (listening) abortVoiceInput();
-    setText(value);
-  };
-
+  }, []);
   /** Screens over the panel hide the listening state, so the microphone stops first. */
   const leavePanel = (go: () => void) => () => {
     stopVoiceInput();
     go();
   };
-
-  useEffect(() => {
-    if (!focusRequest) return;
-    // Wait for the slide-in animation, otherwise the keyboard opens over a moving panel.
-    const timer = setTimeout(() => inputRef.current?.focus(), 250);
-    return () => clearTimeout(timer);
-  }, [focusRequest]);
 
   useEffect(() => {
     if (!open && collapseRef.current && !reduceMotion) {
@@ -520,17 +309,44 @@ export function AssistantPanel({
     return () => sub.remove();
   }, [open, onClose]);
 
-  useEffect(() => {
-    if (open) setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
-  }, [items.length, open]);
-
-  const send = () => {
-    const t = text.trim();
-    if ((!t && !pending.length) || running || busyElsewhere) return;
-    setText('');
-    onSend(t);
+  // Follows the end only while the user is at it (UI-30): reading an earlier message while an answer streams in is
+  // left alone, and a button brings the latest back.
+  const following = useRef(true);
+  const userScrolling = useRef(false);
+  const [showJump, setShowJump] = useState(false);
+  const setFollowing = (on: boolean) => {
+    following.current = on;
+    setShowJump((shown) => (shown === !on ? shown : !on));
   };
-  const canSend = (!!text.trim() || pending.length > 0) && !busyElsewhere;
+  const jumpToEnd = (animated: boolean) => {
+    setFollowing(true);
+    scrollRef.current?.scrollToEnd({ animated });
+  };
+  // Opening the panel shows the latest.
+  useEffect(() => {
+    if (!open) return;
+    following.current = true;
+    const timer = setTimeout(() => {
+      setShowJump(false);
+      scrollRef.current?.scrollToEnd({ animated: false });
+    }, 50);
+    return () => clearTimeout(timer);
+  }, [open]);
+  // A new message: shown when following (after its layout, hence the short wait).
+  useEffect(() => {
+    if (!open || !following.current) return;
+    const timer = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
+    return () => clearTimeout(timer);
+  }, [items.length, open]);
+  const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
+    const next = nextFollowing(
+      following.current,
+      { offset: contentOffset.y, viewport: layoutMeasurement.height, content: contentSize.height },
+      userScrolling.current,
+    );
+    if (next !== following.current) setFollowing(next);
+  };
 
   // Only the latest question is answerable, and only until the user has replied in some other way.
   const lastUserIndex = items.findLastIndex((item) => item.kind === 'user');
@@ -540,6 +356,32 @@ export function AssistantPanel({
     if (action === 'speak') setReadingId(item.id);
     onMessageAction(action, item.text);
   };
+
+  // What the rows' buttons do: functions that never change, pointing at the latest props (ChatRows.tsx).
+  const latestProps = useRef({ messageAction, onChoose, onOpenLink, onLinkMenu, onCall, onCard, onSms, onWhatsApp, onFile, onImage, onShare, onOpenSource, onOpenAttachment, onItemAction });
+  useEffect(() => {
+    latestProps.current = { messageAction, onChoose, onOpenLink, onLinkMenu, onCall, onCard, onSms, onWhatsApp, onFile, onImage, onShare, onOpenSource, onOpenAttachment, onItemAction };
+  });
+  const actions = useMemo<ChatActionHandlers>(() => {
+    const p = () => latestProps.current;
+    return {
+      onAction: (action, item) => p().messageAction(action, item),
+      onMenu: (item, full) => setMenu({ item, full }),
+      onChoose: (itemId, option) => p().onChoose(itemId, option),
+      onOpenLink: (url) => p().onOpenLink(url),
+      onLinkMenu: (url, text) => p().onLinkMenu?.(url, text),
+      onCall: (number) => p().onCall(number),
+      onCard: (item, action) => p().onCard?.(item, action),
+      onSms: (offer) => p().onSms(offer),
+      onWhatsApp: (offer) => p().onWhatsApp(offer),
+      onFile: (action, file) => p().onFile(action, file),
+      onImage: (action, info) => p().onImage(action, info),
+      onShare: (offer) => p().onShare(offer),
+      onOpenSource: (source) => p().onOpenSource(source),
+      onOpenAttachment: (info) => p().onOpenAttachment(info),
+      onItemAction: (action) => p().onItemAction?.(action),
+    };
+  }, [setMenu]);
 
   const menuActions = (open: { item: ChatItem; full: boolean }): SheetAction[] => {
     const { item, full } = open;
@@ -592,6 +434,7 @@ export function AssistantPanel({
 
   return (
     <PanelTheme.Provider value={d}>
+      <ChatActions.Provider value={actions}>
       <View style={StyleSheet.absoluteFill} pointerEvents={open ? 'auto' : 'none'}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: backdropOpacity }]}>
           <Pressable accessibilityRole="button" style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel={t('chat.closePanel')} />
@@ -708,6 +551,7 @@ export function AssistantPanel({
                 <HeaderButton icon="close" accessibilityLabel={t('chat.closePanel')} onPress={onClose} />
               </View>
 
+              <View style={styles.flex}>
               <ScrollView
                 ref={scrollRef}
                 style={styles.flex}
@@ -719,8 +563,23 @@ export function AssistantPanel({
                   setListWidth((w) => (w === width ? w : width));
                 }}
                 // Follow a reply while it is being written.
+                // Follows the end while the user is at it (UI-30).
                 onContentSizeChange={() => {
-                  if (open && running) scrollRef.current?.scrollToEnd({ animated: false });
+                  if (open && following.current) scrollRef.current?.scrollToEnd({ animated: false });
+                }}
+                onScroll={onScroll}
+                scrollEventThrottle={100}
+                onScrollBeginDrag={() => {
+                  userScrolling.current = true;
+                }}
+                onScrollEndDrag={() => {
+                  userScrolling.current = false;
+                }}
+                onMomentumScrollBegin={() => {
+                  userScrolling.current = true;
+                }}
+                onMomentumScrollEnd={() => {
+                  userScrolling.current = false;
                 }}
               >
                 {items.length === 0 && (
@@ -736,56 +595,47 @@ export function AssistantPanel({
                 {segmentChat(items, running).map((segment) => {
                   if (segment.type === 'steps') {
                     const first = items[segment.start];
-                    const shown = expandedSteps.has(first.id);
                     return (
                       <StepGroup
                         key={`steps-${first.id}`}
                         items={items.slice(segment.start, segment.end)}
-                        expanded={shown}
-                        onToggle={() => toggleSteps(first.id)}
+                        expanded={expandedSteps.has(first.id)}
+                        onToggle={toggleSteps}
                       />
                     );
                   }
                   const index = segment.index;
                   const item = items[index];
                   return (
-                      <Fragment key={item.id}>
-                        <ChatRow
-                          item={item}
-                          onOpenAttachment={onOpenAttachment}
-                          onItemAction={onItemAction}
-                          reading={speaking && readingId === item.id}
-                          selectable={selectableId === item.id}
-                          onAction={(action) => messageAction(action, item)}
-                          onMenu={(full) => setMenu({ item, full })}
-                          onOpenLink={onOpenLink}
-                          onLinkMenu={onLinkMenu}
-                          onCall={onCall}
-                          onCard={onCard}
-                          onSms={onSms}
-                          onWhatsApp={onWhatsApp}
-                          onFile={onFile}
-                          onImage={onImage}
-                          onShare={onShare}
-                          onOpenSource={onOpenSource}
-                          onChoose={item.kind === 'choices' && canChoose(index) ? onChoose : undefined}
-                          answered={item.kind === 'choices' && (!!item.chosen || index < lastUserIndex)}
-                          cost={showCost ? item.cost : undefined}
-                          costConversation={costConversation}
-                          listWidth={listWidth}
-                        />
-                        {/* An answer shows its figure in its row of icons; items without that row (an error, a stopped
-                            task, a question) keep it on a small line of its own. */}
-                        {showCost && item.cost && item.kind !== 'assistant' ? (
-                          <AnswerCostLine
-                            cost={item.cost}
-                            conversation={costConversation}
-                          />
-                        ) : null}
-                      </Fragment>
+                    <ChatEntry
+                      key={item.id}
+                      item={item}
+                      reading={speaking && readingId === item.id}
+                      selectable={selectableId === item.id}
+                      canChoose={item.kind === 'choices' && canChoose(index)}
+                      answered={item.kind === 'choices' && (!!item.chosen || index < lastUserIndex)}
+                      showCost={showCost}
+                      costConversation={costConversation}
+                      listWidth={listWidth}
+                    />
                   );
                 })}
               </ScrollView>
+              {showJump && items.length > 0 ? (
+                <Pressable
+                  onPress={() => {
+                    tick();
+                    jumpToEnd(true);
+                  }}
+                  style={[styles.jump, d?.chip]}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('chat.jumpToLatest')}
+                >
+                  <Icon name="chevronDown" size={20} color={palette.textSecondary} />
+                </Pressable>
+              ) : null}
+              </View>
 
               {lowCredits && (
                 <View style={[styles.busy, d?.busy, styles.lowCredits]}>
@@ -837,356 +687,37 @@ export function AssistantPanel({
                 </Pressable>
               )}
 
-              {/* One row: the research switch first, then the one-tap tasks (hidden while typing or researching). */}
-              {/* While a task runs the row stays (disabled) so the input doesn't move. */}
-              {!busyElsewhere && (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  style={styles.chips}
-                  contentContainerStyle={styles.chipsContent}
-                >
-                  <Pressable
-                    onPress={() => {
-                      toggle(!research);
-                      onResearchChange(!research);
-                    }}
-                    disabled={busy}
-                    style={[styles.chip, d?.chip, research && styles.chipOn, busy && styles.sendDisabled]}
-                    accessibilityRole="switch"
-                    accessibilityState={{ checked: research, disabled: busy }}
-                    accessibilityHint={t('chat.researchHint')}
-                  >
-                    <Icon name="research" size={15} color={research ? '#ffffff' : palette.textSecondary} />
-                    <Text style={[styles.chipText, d?.text, research && styles.chipTextOn]}>{t('chat.research')}</Text>
-                  </Pressable>
-                  {!research &&
-                    !text.trim() &&
-                    quickActions.map((action) => (
-                      <Pressable
-                        key={action.label}
-                        onPress={() => onSend(action.prompt)}
-                        disabled={busy}
-                        style={({ pressed }) => [styles.chip, d?.chip, pressed && styles.pressed, busy && styles.sendDisabled]}
-                        accessibilityRole="button"
-                        accessibilityState={{ disabled: busy }}
-                      >
-                        <Icon name={action.icon} size={15} color={palette.textSecondary} />
-                        <Text style={[styles.chipText, d?.text]}>{action.label}</Text>
-                      </Pressable>
-                    ))}
-                </ScrollView>
-              )}
-              {research && !running && !busyElsewhere ? (
-                <Text style={styles.modeHint}>{`${t('chat.researchHint')} ${t('chat.researchNext')}`}</Text>
-              ) : null}
-
-              {pending.length > 0 && (
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  keyboardShouldPersistTaps="handled"
-                  style={styles.pendingRow}
-                  contentContainerStyle={styles.pendingContent}
-                >
-                  {pending.map((a, i) => (
-                    <View key={a.id}>
-                      <AttachmentThumb info={a} index={i} size={56} onPress={() => onOpenAttachment(a)} />
-                      {!running && (
-                        <Pressable
-                          onPress={() => onRemovePending(a.id)}
-                          style={styles.thumbRemove}
-                          hitSlop={8}
-                          accessibilityRole="button"
-                          accessibilityLabel={t('attach.remove', { name: a.name })}
-                        >
-                          <Icon name="close" size={12} color="#ffffff" />
-                        </Pressable>
-                      )}
-                    </View>
-                  ))}
-                </ScrollView>
-              )}
-              <View style={[styles.inputRow, d?.inputRow]}>
-                <Pressable
-                  onPress={onAttach}
-                  disabled={running}
-                  style={[styles.attachButton, running && styles.sendDisabled]}
-                  hitSlop={6}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('attach.button')}
-                  accessibilityState={{ disabled: running }}
-                >
-                  <Icon name="attach" size={20} color={palette.textSecondary} />
-                </Pressable>
-                <TextInput
-                  ref={inputRef}
-                  style={[styles.input, d?.input, busy && styles.inputBusy]}
-                  placeholderTextColor={dark ? '#a9a8b3' : '#6b6862'}
-                  value={text}
-                  onChangeText={changeText}
-                  // Short texts that fit beside the buttons on a narrow phone; while listening, the TR/EN tag next
-                  // to the field names the language. At large text sizes the multiline field wraps it.
-                  placeholder={t(
-                    busy
-                      ? 'chat.inputBusy'
-                      : voiceState === 'preparing'
-                        ? 'ptt.preparing'
-                        : listening
-                        ? 'voice.listening'
-                        : research
-                          ? 'chat.researchPlaceholder'
-                          : 'chat.placeholder',
-                  )}
-                  multiline
-                  // Android's full-screen landscape keyboard would hide the conversation; the panel keeps the field above it.
-                  disableFullscreenUI
-                  editable={!busy}
-                  accessibilityState={{ disabled: busy }}
-                  // With text kept in the field the placeholder doesn't show, so a screen reader hears why it is closed.
-                  accessibilityHint={busy && text ? t('chat.inputBusy') : undefined}
-                />
-                {listening && voiceInfo.lang ? (
-                  <Pressable
-                    onPress={() => setLanguageSheet(true)}
-                    hitSlop={8}
-                    style={[styles.langTag, d?.langTag]}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('voice.languageTagLabel', { language: spokenLanguageName(voiceInfo.lang) })}
-                    accessibilityHint={t('voice.languageTagHint')}
-                  >
-                    <Text style={[styles.langTagText, d?.langTagText]}>{languageLabel(voiceInfo.lang)}</Text>
-                  </Pressable>
-                ) : null}
-                <MicButton
-                  disabled={busy}
-                  state={voiceState}
-                  onPress={toggleVoice}
-                  hold={holdVoice}
-                  onLanguage={() => setLanguageSheet(true)}
-                  reduceMotion={reduceMotion}
-                />
-                {running ? (
-                  // Stopping is always possible, also while a confirmation waits.
-                  <Pressable
-                    style={[styles.sendButton, styles.stopButton]}
-                    onPress={() => {
-                      signal('stopped');
-                      onStop();
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('common.stop')}
-                  >
-                    <Icon name="stop" size={16} color="#ffffff" />
-                  </Pressable>
-                ) : (
-                  <Pressable
-                    style={[styles.sendButton, !canSend && styles.sendDisabled]}
-                    onPress={() => {
-                      if (canSend && !running) tick();
-                      send();
-                    }}
-                    accessibilityRole="button"
-                    accessibilityLabel={t('common.send')}
-                  >
-                    <Icon name="send" size={20} color="#ffffff" />
-                  </Pressable>
-                )}
-              </View>
+              <ChatComposer
+                open={open}
+                text={text}
+                setText={setText}
+                research={research}
+                onResearchChange={onResearchChange}
+                quickActions={quickActions}
+                pending={pending}
+                onAttach={onAttach}
+                onRemovePending={onRemovePending}
+                onOpenAttachment={onOpenAttachment}
+                running={running}
+                busyElsewhere={busyElsewhere}
+                voice={voice}
+                onSend={onSend}
+                onStop={onStop}
+                focusRequest={focusRequest}
+                dark={dark}
+              />
             </View>
           </KeyboardAvoidingContainer>
         </Animated.View>
       </View>
-      <VoiceLanguageSheet
-        visible={languageSheet}
-        value={voice.picked}
-        autoLabel={voice.autoLabel}
-        autoHint={voice.autoHint}
-        onPick={pickLanguage}
-        onClose={() => setLanguageSheet(false)}
-        dark={dark}
-      />
       <ActionSheet
         title={menu ? menuTitle(menu.item.text) : null}
         actions={menu ? menuActions(menu) : []}
         dark={dark}
         onClose={() => setMenu(null)}
       />
+      </ChatActions.Provider>
     </PanelTheme.Provider>
-  );
-}
-
-/**
- * The empty chat: what Qutai can do, with suggestions that fit the page on screen (agent/pageSuggestions.ts, picked
- * on the phone). A tap sends one, like the quick chips.
- */
-function EmptyState({
-  hasPage,
-  animate,
-  suggestions,
-  onSuggestion,
-  recentTasks,
-  onRunTask,
-}: {
-  hasPage: boolean;
-  animate: boolean;
-  suggestions: Suggestion[];
-  /** Null while a task runs (here or in another tab): the rows are shown but can't be tapped. */
-  onSuggestion: ((suggestion: Suggestion) => void) | null;
-  recentTasks: SavedTask[];
-  onRunTask: (task: SavedTask) => void;
-}) {
-  const styles = useStyles();
-  const palette = usePalette();
-  const d = useContext(PanelTheme);
-  return (
-    <View style={styles.emptyBox}>
-      <QutaiMark size={40} sweepWhenIdle animate={animate} />
-      <Text style={styles.emptyTitle} accessibilityRole="header">
-        {t('chat.emptyTitle')}
-      </Text>
-      <Text style={styles.emptyLead}>{t(hasPage ? 'chat.emptyLeadPage' : 'chat.emptyLeadWeb')}</Text>
-      {recentTasks.length > 0 ? (
-        <View style={styles.taskChips}>
-          {recentTasks.map((task) => (
-            <Pressable
-              key={task.id}
-              onPress={() => onRunTask(task)}
-              style={({ pressed }) => [styles.chip, styles.taskChip, pressed && styles.pressed]}
-              accessibilityRole="button"
-              accessibilityLabel={t('tasks.runLabel', { name: task.name })}
-            >
-              <Icon name="tasks" size={15} color={palette.textSecondary} />
-              <Text style={[styles.chipText, styles.shrink]} numberOfLines={1}>
-                {task.name}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
-      {suggestions.length > 0 ? (
-        <View style={styles.examples}>
-          <Text style={[styles.suggestTitle, d?.dim]} accessibilityRole="header">
-            {t(suggestions.every((x) => x.general) ? 'suggest.titleWeb' : 'suggest.title')}
-          </Text>
-          {suggestions.map((suggestion) => (
-            <Pressable
-              key={suggestion.id}
-              onPress={onSuggestion ? () => onSuggestion(suggestion) : undefined}
-              disabled={!onSuggestion}
-              style={({ pressed }) => [
-                styles.example,
-                d?.chip,
-                pressed && (d?.pressed ?? styles.pressed),
-                !onSuggestion && styles.sendDisabled,
-              ]}
-              accessibilityRole="button"
-              accessibilityHint={t('suggest.hint')}
-              accessibilityState={{ disabled: !onSuggestion }}
-            >
-              <Icon name={suggestion.icon} size={18} color={palette.tintText} />
-              <Text style={[styles.exampleText, d?.text]} numberOfLines={2} maxFontSizeMultiplier={1.6}>
-                {suggestion.label}
-              </Text>
-              <Icon name="send" size={16} color={palette.textSecondary} />
-            </Pressable>
-          ))}
-        </View>
-      ) : null}
-    </View>
-  );
-}
-
-/**
- * The microphone: hold to talk and lift to stop, or tap to talk and tap again to stop (a pause also stops it). The
- * hold is the address bar's gesture (useHoldGesture.ts); with a screen reader on there is only the tap. While
- * listening it is filled, and a ring grows with the voice's loudness (still, without the ring moving, under Reduce
- * motion).
- */
-function MicButton({
-  state,
-  onPress,
-  hold,
-  onLanguage,
-  reduceMotion,
-  disabled,
-}: {
-  /** While the task works: no listening (and no hold). */
-  disabled: boolean;
-  state: VoiceState;
-  onPress: () => void;
-  hold: { start: () => void; release: (away: boolean) => void; cancel: () => void };
-  /** Opens the listening-language picker (a screen reader's action; the TR/EN tag while listening). */
-  onLanguage: () => void;
-  reduceMotion: boolean;
-}) {
-  const styles = useStyles();
-  const d = useContext(PanelTheme);
-  const palette = usePalette();
-  const level = useVoiceLevel();
-  const screenReader = useScreenReader();
-  const [scale] = useState(() => new Animated.Value(1));
-  const away = useRef(false);
-  const gesture = useHoldGesture(!screenReader && !disabled, {
-    start: () => {
-      away.current = false;
-      hold.start();
-    },
-    move: (far) => {
-      away.current = far;
-      tick();
-    },
-    release: () => hold.release(away.current),
-    cancel: hold.cancel,
-  });
-  const on = state === 'listening';
-  useEffect(() => {
-    Animated.timing(scale, {
-      toValue: on && !reduceMotion ? 1 + level * 0.45 : 1,
-      duration: reduceMotion ? 0 : 110,
-      useNativeDriver: true,
-    }).start();
-  }, [on, level, reduceMotion, scale]);
-  const active = state !== 'idle';
-  return (
-    <View {...gesture.touch}>
-      <Pressable
-        onPress={() => {
-          // The lift that ends a hold is not a tap.
-          if (gesture.held()) return;
-          gesture.clear();
-          onPress();
-        }}
-        disabled={disabled}
-        // Once holding, nothing else can take the touch away.
-        cancelable={!gesture.holding}
-        // 40pt drawn, 44pt to touch.
-        hitSlop={2}
-        style={styles.micWrap}
-        accessibilityRole="button"
-        accessibilityLabel={t(active ? 'voice.stop' : 'voice.start')}
-        accessibilityHint={active ? undefined : t(screenReader ? 'voice.startHint' : 'voice.holdHint')}
-        accessibilityState={{ busy: state === 'preparing' || state === 'stopping', selected: active, disabled }}
-        accessibilityActions={[{ name: 'longpress', label: t('voice.languageTitle') }]}
-        onAccessibilityAction={(e) => {
-          if (e.nativeEvent.actionName === 'longpress') onLanguage();
-        }}
-      >
-        {on ? <Animated.View style={[styles.micRing, { transform: [{ scale }] }]} /> : null}
-        <View
-          style={[
-            styles.micButton,
-            d?.micButton,
-            active && styles.micOn,
-            !on && active && styles.micPending,
-            disabled && styles.sendDisabled,
-          ]}
-        >
-          <Icon name="microphone" size={19} color={active ? '#ffffff' : palette.textSecondary} />
-        </View>
-      </Pressable>
-    </View>
   );
 }
 
@@ -1199,7 +730,7 @@ function HeaderButton({
   accessibilityLabel: string;
   onPress: () => void;
 }) {
-  const styles = useStyles();
+  const styles = useChatStyles();
   const palette = usePalette();
   return (
     <Pressable onPress={onPress} hitSlop={6} style={styles.headerButton} accessibilityRole="button" accessibilityLabel={accessibilityLabel}>
@@ -1207,1127 +738,3 @@ function HeaderButton({
     </Pressable>
   );
 }
-
-export type MessageAction = 'copy' | 'speak' | 'stopSpeaking' | 'share' | 'pdf';
-
-/** A message's first words as the title of its menu, without Markdown marks. */
-function menuTitle(text: string): string {
-  return text
-    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/[#*_`>|]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 120);
-}
-
-function ChatRow({
-  item,
-  reading,
-  selectable,
-  onAction,
-  onMenu,
-  onOpenLink,
-  onLinkMenu,
-  onCall,
-  onCard,
-  onSms,
-  onWhatsApp,
-  onFile,
-  onImage,
-  onShare,
-  onOpenSource,
-  onChoose,
-  answered,
-  onOpenAttachment,
-  onItemAction,
-  cost,
-  costConversation,
-  listWidth,
-}: {
-  item: ChatItem;
-  /** The answer's figure for its row of icons (only when the cost display is on). */
-  cost?: AnswerCost;
-  costConversation: () => AnswerCost[];
-  /** The message list's width (null until measured), for what fits beside the icons. */
-  listWidth: number | null;
-  onOpenAttachment: (info: AttachmentInfo) => void;
-  /** An error's way out (`item.action`). */
-  onItemAction?: (action: ChatItemAction) => void;
-  onImage: (action: 'share' | 'save', info: AttachmentInfo) => void;
-  /** This answer is being read aloud. */
-  reading: boolean;
-  /** This answer's text can be selected (chosen from its menu). */
-  selectable: boolean;
-  onAction: (action: MessageAction) => void;
-  /** Opens the message's menu; full when opened by long press (it then lists the row's actions too). */
-  onMenu: (full: boolean) => void;
-  onOpenLink: (url: string) => void;
-  onLinkMenu?: (url: string, text: string) => void;
-  onCall: (number: string) => void;
-  onCard?: (item: ChatItem, action: CardAction) => void;
-  onSms: (offer: SmsOffer) => void;
-  onWhatsApp: (offer: WhatsAppOffer) => void;
-  onFile: (action: 'share' | 'save', file: FileOffer) => void;
-  onShare: (offer: ShareOffer) => void;
-  onOpenSource: (source: Source) => void;
-  /** Set while the question can still be answered. */
-  onChoose?: (itemId: string, option: string) => void;
-  /**
-   * The question was answered (an option tapped, or a reply typed): its options are gone and the user's own bubble
-   * below says the answer, so the chat reads as question, answer.
-   */
-  answered?: boolean;
-}) {
-  const styles = useStyles();
-  const d = useContext(PanelTheme);
-  const palette = usePalette();
-  const textStyle = styles.assistantText;
-  const wide = item.kind === 'assistant' && hasTable(item.text);
-  switch (item.kind) {
-    case 'user':
-      return (
-        <View style={styles.userRow}>
-          {item.attachments?.length ? (
-            <View style={styles.sentThumbs}>
-              {item.attachments.map((a, i) => (
-                <AttachmentThumb key={a.id} info={a} index={i} size={72} onPress={() => onOpenAttachment(a)} />
-              ))}
-            </View>
-          ) : null}
-          {item.text ? (
-            // Long press: Copy, Save as task (no row under the user's own messages: it would repeat under every one).
-            <Pressable
-              onLongPress={() => {
-                bump();
-                onMenu(true);
-              }}
-              style={[styles.bubble, styles.userBubble]}
-              accessibilityHint={t('chat.userMessageHint')}
-              accessibilityActions={[{ name: 'longpress', label: t('chat.moreActions') }]}
-              onAccessibilityAction={() => onMenu(true)}
-            >
-              <Text style={styles.userText}>{item.text}</Text>
-            </Pressable>
-          ) : null}
-        </View>
-      );
-    case 'assistant': {
-      const bubbleStyle = [styles.bubble, styles.assistantBubble, d?.assistantBubble];
-      const markdown = (
-        <MarkdownText
-          text={item.streaming ? `${item.text} ▍` : item.text}
-          style={textStyle}
-          onOpenLink={onOpenLink}
-          onLinkMenu={onLinkMenu}
-          onCall={onCall}
-          dark={!!d}
-          selectable={selectable}
-        />
-      );
-      return (
-        // Always the column's full width (90%, the whole panel for tables), never shrink-wrapped to the text: list
-        // items are a marker beside text that flexes, which reports almost no width of its own, so a shrink-wrapped
-        // bubble took the width of its widest paragraph and squeezed long items into a narrow column. A fixed width
-        // also keeps the bubble from changing width while the answer streams in.
-        <View style={[styles.assistantRow, wide && styles.wideRow]}>
-          {/* Long press: every action by name. Once "Select text" is chosen, a long press selects instead
-              (a Pressable around the text would keep it from being selected). */}
-          {item.streaming || selectable ? (
-            <View style={bubbleStyle}>{markdown}</View>
-          ) : (
-            <Pressable
-              onLongPress={() => {
-                bump();
-                onMenu(true);
-              }}
-              style={bubbleStyle}
-              // Not one element for screen readers: its links stay reachable, and the row below has every action.
-              accessible={false}
-            >
-              {markdown}
-            </Pressable>
-          )}
-          {item.streaming ? null : (
-            <View style={styles.messageActions}>
-              <ActionIcon icon="copy" label={t('chat.actionCopy')} onPress={() => onAction('copy')} />
-              <ActionIcon
-                icon={reading ? 'stopReading' : 'readAloud'}
-                label={t(reading ? 'chat.actionStopReading' : 'chat.actionRead')}
-                onPress={() => onAction(reading ? 'stopSpeaking' : 'speak')}
-              />
-              <ActionIcon icon="share" label={t('chat.actionShare')} onPress={() => onAction('share')} />
-              <ActionIcon icon="ellipsis" label={t('chat.moreActions')} onPress={() => onMenu(false)} />
-              {cost ? (
-                <AnswerCostInline
-                  cost={cost}
-                  conversation={costConversation}
-                  room={
-                    listWidth === null
-                      ? null
-                      : (listWidth - 2 * LIST_PADDING) * (wide ? 1 : ROW_MAX) - ACTION_ICONS * ACTION_ICON_WIDTH
-                  }
-                  color={d ? '#a9a8b3' : palette.textSecondary}
-                />
-              ) : null}
-            </View>
-          )}
-        </View>
-      );
-    }
-    case 'choices':
-      return (
-        <View style={styles.choices}>
-          <View style={[styles.bubble, styles.assistantBubble, styles.choicesBubble, d?.assistantBubble]}>
-            <MarkdownText text={item.text} style={textStyle} onOpenLink={onOpenLink} onLinkMenu={onLinkMenu} onCall={onCall} dark={!!d} />
-          </View>
-          {answered
-            ? null
-            : (item.options ?? []).map((option) => (
-                <Pressable
-                  key={option}
-                  onPress={() => onChoose?.(item.id, option)}
-                  disabled={!onChoose}
-                  style={({ pressed }) => [
-                    styles.choice,
-                    d?.choice,
-                    !onChoose && styles.choiceClosed,
-                    pressed && styles.pressed,
-                  ]}
-                  accessibilityRole="button"
-                  accessibilityState={{ disabled: !onChoose }}
-                >
-                  <Text style={[styles.choiceText, styles.choiceLabel]}>{option}</Text>
-                </Pressable>
-              ))}
-        </View>
-      );
-    case 'options':
-      if (!item.cards?.length) return <StepLine text={item.text} />;
-      return (
-        <OptionCards
-          cards={item.cards}
-          imagesOnTap={item.imagesOnTap}
-          dark={!!d}
-          onOpen={(card) => onOpenLink(card.url)}
-          onMenu={(card) => {
-            bump();
-            onLinkMenu?.(card.url, card.title);
-          }}
-        />
-      );
-    case 'sources':
-      return (
-        <View style={styles.sources}>
-          {item.sources?.length ? <Text style={styles.sourcesTitle}>{t('chat.sources')}</Text> : null}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sourcesRow}>
-            {(item.sources ?? []).map((source, i) => (
-              <Pressable
-                key={source.url}
-                onPress={() => onOpenSource(source)}
-                style={({ pressed }) => [styles.source, d?.chip, pressed && styles.pressed]}
-                accessibilityRole="link"
-                accessibilityLabel={source.title || hostOf(source.url)}
-              >
-                <Text style={[styles.sourceTitle, d?.text]} numberOfLines={2}>
-                  <Text style={styles.sourceIndex}>{i + 1} </Text>
-                  {source.title || hostOf(source.url)}
-                </Text>
-                <View style={styles.sourceHostRow}>
-                  {source.incognito ? (
-                    <Icon name="incognito" size={12} color={d?.dim.color ?? palette.textSecondary} />
-                  ) : null}
-                  <Text style={[styles.sourceHost, styles.sourceHostText]} numberOfLines={1}>
-                    {hostOf(source.url)}
-                  </Text>
-                </View>
-              </Pressable>
-            ))}
-          </ScrollView>
-          {item.searchWidget ? <SearchSuggestions html={item.searchWidget} onOpenLink={onOpenLink} /> : null}
-        </View>
-      );
-    case 'style': {
-      const offer = item.style;
-      if (!offer) return <StepLine icon="palette" text={item.text} />;
-      return (
-        <StyleCard
-          offer={offer}
-          dark={!!d}
-          onKeep={() => onCard?.(item, 'keepStyle')}
-          onUndo={() => onCard?.(item, 'undoStyle')}
-        />
-      );
-    }
-    case 'script': {
-      const offer = item.script;
-      if (!offer) return <StepLine icon="script" text={item.text} />;
-      return <ScriptCard offer={offer} dark={!!d} onKeep={() => onCard?.(item, 'keepScript')} />;
-    }
-    case 'app': {
-      const offer = item.app;
-      if (!offer) return <StepLine icon="apps" text={item.text} />;
-      return <AppCard offer={offer} dark={!!d} onOpen={() => onCard?.(item, 'openApp')} onUndo={() => onCard?.(item, 'undoApp')} />;
-    }
-    case 'cookies': {
-      const offer = item.cookiesOffer;
-      if (!offer) return <StepLine icon="cookies" text={item.text} />;
-      return <CookiesCard offer={offer} dark={!!d} onShow={() => onCard?.(item, 'showCookies')} />;
-    }
-    case 'call': {
-      const call = item.call;
-      if (!call) return <StepLine icon="phone" text={item.text} />;
-      if (call.contact && !call.number) return <ContactNotKept name={call.name} icon="phone" />;
-      return (
-        <View style={[styles.callCard, d?.assistantBubble]}>
-          <View style={styles.callInfo}>
-            {call.name ? (
-              <Text style={[styles.callName, d?.text]} numberOfLines={2}>
-                {call.name}
-              </Text>
-            ) : null}
-            <Text style={[styles.callNumber, d?.dim]} selectable>
-              {call.number}
-            </Text>
-            {call.contact ? <ContactLine contact={call.contact} /> : null}
-          </View>
-          <Pressable
-            onPress={() => onCall(call.number)}
-            style={({ pressed }) => [styles.callButton, pressed && styles.callButtonPressed]}
-            accessibilityRole="button"
-            accessibilityLabel={
-              call.name
-                ? t('chat.callLabel', { name: call.name, number: call.number })
-                : t('chat.callNumberLabel', { number: call.number })
-            }
-          >
-            <Icon name="phone" size={17} color={palette.onTint} />
-            <Text style={styles.callButtonText}>{t('chat.call')}</Text>
-          </Pressable>
-        </View>
-      );
-    }
-    case 'sms': {
-      const sms = item.sms;
-      if (!sms) return <StepLine icon="message" text={item.text} />;
-      if (sms.contact && !sms.number) return <ContactNotKept name={sms.name} icon="message" />;
-      const label = sms.name
-        ? t('chat.smsLabel', { name: sms.name, number: sms.number })
-        : t('chat.smsNumberLabel', { number: sms.number });
-      return (
-        <View style={[styles.smsCard, d?.assistantBubble]}>
-          <View style={styles.callInfo}>
-            {sms.name ? (
-              <Text style={[styles.callName, d?.text]} numberOfLines={2}>
-                {sms.name}
-              </Text>
-            ) : null}
-            <Text style={[styles.callNumber, d?.dim]} selectable>
-              {sms.number}
-            </Text>
-            {sms.contact ? <ContactLine contact={sms.contact} /> : null}
-          </View>
-          <Text style={[styles.smsBody, d?.text]} selectable>
-            {sms.body}
-          </Text>
-          <Pressable
-            onPress={() => onSms(sms)}
-            style={({ pressed }) => [styles.callButton, styles.smsButton, pressed && styles.callButtonPressed]}
-            accessibilityRole="button"
-            accessibilityLabel={label}
-          >
-            <Icon name="message" size={17} color={palette.onTint} />
-            <Text style={styles.callButtonText}>{t('chat.openInMessages')}</Text>
-          </Pressable>
-        </View>
-      );
-    }
-    case 'whatsapp': {
-      const wa = item.whatsapp;
-      if (!wa) return <StepLine icon="message" text={item.text} />;
-      if (wa.contact && !wa.number) return <ContactNotKept name={wa.name} icon="message" />;
-      const label = wa.number
-        ? t('chat.whatsAppLabel', { who: wa.name ? `${wa.name}, ${wa.number}` : wa.number })
-        : t('chat.whatsAppNoNumberLabel');
-      return (
-        <View style={[styles.smsCard, d?.assistantBubble]}>
-          <View style={styles.callInfo}>
-            {wa.name ? (
-              <Text style={[styles.callName, d?.text]} numberOfLines={2}>
-                {wa.name}
-              </Text>
-            ) : null}
-            <Text style={[styles.callNumber, d?.dim]} selectable>
-              {wa.number ?? t('chat.whatsAppPickChat')}
-            </Text>
-            {wa.contact ? <ContactLine contact={wa.contact} /> : null}
-          </View>
-          <Text style={[styles.smsBody, d?.text]} selectable>
-            {wa.body}
-          </Text>
-          <Pressable
-            onPress={() => onWhatsApp(wa)}
-            style={({ pressed }) => [styles.callButton, styles.smsButton, pressed && styles.callButtonPressed]}
-            accessibilityRole="button"
-            accessibilityLabel={label}
-          >
-            <Icon name="message" size={17} color={palette.onTint} />
-            <Text style={styles.callButtonText}>{t('chat.openInWhatsApp')}</Text>
-          </Pressable>
-        </View>
-      );
-    }
-    case 'file': {
-      const file = item.file;
-      if (!file) return <StepLine icon="document" text={item.text} />;
-      const details = [
-        file.format.toUpperCase(),
-        formatSize(file.size),
-        ...(file.rows !== undefined ? [t('chat.fileRows', { count: formatNumber(file.rows) })] : []),
-      ].join(' · ');
-      const available = composedFileAvailable(file.id);
-      return (
-        <View style={[styles.smsCard, d?.assistantBubble]}>
-          <View style={styles.fileHeader}>
-            <Icon name="document" size={22} color={palette.textSecondary} />
-            <View style={styles.callInfo}>
-              <Text style={[styles.callName, d?.text]} numberOfLines={2}>
-                {file.name}
-              </Text>
-              <Text style={[styles.callNumber, d?.dim]}>{details}</Text>
-            </View>
-          </View>
-          {available ? (
-            <View style={styles.fileButtons}>
-              {Platform.OS === 'android' ? (
-                <Pressable
-                  onPress={() => onFile('save', file)}
-                  style={({ pressed }) => [styles.fileButton, d?.chip, pressed && styles.pressed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('chat.fileSaveLabel', { name: file.name })}
-                >
-                  <Icon name="download" size={17} color={palette.tintText} />
-                  <Text style={styles.fileButtonText}>{t('chat.fileSave')}</Text>
-                </Pressable>
-              ) : null}
-              <Pressable
-                onPress={() => onFile('share', file)}
-                style={({ pressed }) => [styles.callButton, pressed && styles.callButtonPressed]}
-                accessibilityRole="button"
-                accessibilityLabel={t('chat.fileShareLabel', { name: file.name })}
-              >
-                <Icon name="share" size={17} color={palette.onTint} />
-                <Text style={styles.callButtonText}>
-                  {t(Platform.OS === 'ios' ? 'chat.fileShareIos' : 'chat.fileShare')}
-                </Text>
-              </Pressable>
-            </View>
-          ) : (
-            <Text style={[styles.callNumber, d?.dim]}>{t('chat.fileExpired')}</Text>
-          )}
-        </View>
-      );
-    }
-    case 'image': {
-      const image = item.attachments?.[0];
-      if (!image) return <StepLine icon="image" text={item.text} />;
-      return <ImageCard info={image} expired={!!item.expired} onOpen={onOpenAttachment} onImage={onImage} />;
-    }
-    case 'pdf': {
-      const pdf = item.attachments?.[0];
-      if (!pdf) return <StepLine icon="pdf" text={item.text} />;
-      return <PdfCard info={pdf} onOpen={onOpenAttachment} onPdf={onImage} />;
-    }
-    case 'share': {
-      const share = item.share;
-      if (!share) return <StepLine icon="share" text={item.text} />;
-      return <ShareCard share={share} onOpen={onOpenAttachment} onShare={onShare} />;
-    }
-    case 'error':
-      if (item.action && onItemAction) {
-        const action = item.action;
-        return (
-          <View>
-            <StepLine icon="insecure" text={item.text} error />
-            {item.details ? <ErrorDetails details={item.details} /> : null}
-            <Pressable
-              onPress={() => onItemAction(action)}
-              style={({ pressed }) => [styles.itemAction, pressed && styles.itemActionPressed]}
-              accessibilityRole="button"
-              hitSlop={6}
-            >
-              <Icon name={action === 'buyCredits' ? 'wallet' : 'person'} size={16} color={palette.tintText} />
-              <Text style={styles.itemActionText}>{t(action === 'buyCredits' ? 'buy.open' : 'credits.signInOrChoose')}</Text>
-            </Pressable>
-          </View>
-        );
-      }
-      if (item.details) {
-        return (
-          <View>
-            <StepLine icon="insecure" text={item.text} error />
-            <ErrorDetails details={item.details} />
-          </View>
-        );
-      }
-      return <StepLine icon="insecure" text={item.text} error />;
-    default:
-      return <StepLine icon={item.icon} text={item.text} />;
-  }
-}
-
-/**
- * A finished task's steps folded into one line ("7 steps · opened 2 pages · filled 1 form"); a tap shows the step
- * lines as they were recorded, and hides them again.
- */
-function StepGroup({ items, expanded, onToggle }: { items: ChatItem[]; expanded: boolean; onToggle: () => void }) {
-  const styles = useStyles();
-  const d = useContext(PanelTheme);
-  const palette = usePalette();
-  const summary = stepSummaryText(summarizeSteps(items));
-  const color = d?.dim.color ?? palette.textSecondary;
-  return (
-    <View style={styles.stepGroup}>
-      <Pressable
-        onPress={onToggle}
-        style={({ pressed }) => [styles.stepSummary, pressed && styles.pressed]}
-        accessibilityRole="button"
-        accessibilityState={{ expanded }}
-        accessibilityLabel={t(expanded ? 'steps.hideA11y' : 'steps.showA11y', { summary })}
-      >
-        <Icon name="tool" size={14} color={color} style={styles.stepIcon} />
-        <Text style={[styles.action, d?.dim, styles.stepText]}>{summary}</Text>
-        <Icon name={expanded ? 'chevronUp' : 'chevronDown'} size={13} color={color} style={styles.stepIcon} />
-      </Pressable>
-      {expanded
-        ? items.map((item) =>
-            item.kind === 'error' ? (
-              <View key={item.id}>
-                <StepLine icon="insecure" text={item.text} error />
-                {item.details ? <ErrorDetails details={item.details} /> : null}
-              </View>
-            ) : (
-              <StepLine key={item.id} icon={item.icon} text={item.text} />
-            ),
-          )
-        : null}
-    </View>
-  );
-}
-
-/** An assistant step, a status line, an error or an older card's text: a small icon, then the text. */
-function StepLine({ icon, text, error }: { icon?: IconName; text: string; error?: boolean }) {
-  const styles = useStyles();
-  const d = useContext(PanelTheme);
-  const palette = usePalette();
-  const color = error ? palette.danger : (d?.dim.color ?? palette.textSecondary);
-  return (
-    <View style={styles.stepLine}>
-      {icon ? <Icon name={icon} size={error ? 15 : 14} color={color} style={styles.stepIcon} /> : null}
-      <Text style={[error ? styles.error : [styles.action, d?.dim], styles.stepText]}>{withoutLeadingSymbol(text)}</Text>
-    </View>
-  );
-}
-
-/** Under a card's number from the address book: its label, "from your contacts", and a country code Qutai added. */
-function ContactLine({ contact }: { contact: ContactSource }) {
-  const styles = useStyles();
-  const d = useContext(PanelTheme);
-  return (
-    <>
-      <Text style={[styles.callNumber, d?.dim]}>{t('chat.fromContacts', { label: shownLabel(contact.label) })}</Text>
-      {contact.added ? <Text style={[styles.callNumber, d?.dim]}>{t('chat.countryAdded', { code: contact.added })}</Text> : null}
-    </>
-  );
-}
-
-/** A saved card whose number came from the address book: the name only (the number is never saved). */
-function ContactNotKept({ name, icon }: { name?: string; icon: IconName }) {
-  return <StepLine icon={icon} text={name ? `${name} · ${t('chat.contactNotKept')}` : t('chat.contactNotKept')} />;
-}
-
-/** An image the assistant made (edit_image): preview, size, format and bytes, Save to Photos and Share. */
-function ImageCard({
-  info,
-  expired,
-  onOpen,
-  onImage,
-}: {
-  info: AttachmentInfo;
-  expired: boolean;
-  onOpen: (info: AttachmentInfo) => void;
-  onImage: (action: 'share' | 'save', info: AttachmentInfo) => void;
-}) {
-  const styles = useStyles();
-  const d = useContext(PanelTheme);
-  const palette = usePalette();
-  const available = useMemo(() => !expired && attachmentAvailable(info.id), [expired, info.id]);
-  const details = [
-    info.width && info.height ? `${info.width}×${info.height}` : '',
-    imageFormatLabel(info.mimeType),
-    formatSize(info.size),
-  ]
-    .filter(Boolean)
-    .join(' · ');
-  // What the filters did, in words ("Greyscale, sharpened").
-  const filters = describeFilters(info.filters);
-  return (
-    <View style={[styles.smsCard, d?.assistantBubble]}>
-      <View style={styles.fileHeader}>
-        <AttachmentThumb info={info} index={0} size={64} onPress={() => onOpen(info)} />
-        <View style={styles.callInfo}>
-          <Text style={[styles.callName, d?.text]} numberOfLines={2}>
-            {info.name}
-          </Text>
-          <Text style={[styles.callNumber, d?.dim]}>{details}</Text>
-          {filters ? <Text style={[styles.callNumber, d?.dim]}>{filters}</Text> : null}
-        </View>
-      </View>
-      {available ? (
-        <View style={styles.fileButtons}>
-          <Pressable
-            onPress={() => onImage('save', info)}
-            style={({ pressed }) => [styles.fileButton, d?.chip, pressed && styles.pressed]}
-            accessibilityRole="button"
-            accessibilityLabel={t('chat.imageSaveLabel', { name: info.name })}
-          >
-            <Icon name="download" size={17} color={palette.tintText} />
-            <Text style={styles.fileButtonText}>{t('chat.imageSave')}</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => onImage('share', info)}
-            style={({ pressed }) => [styles.callButton, pressed && styles.callButtonPressed]}
-            accessibilityRole="button"
-            accessibilityLabel={t('chat.fileShareLabel', { name: info.name })}
-          >
-            <Icon name="share" size={17} color={palette.onTint} />
-            <Text style={styles.callButtonText}>{t('chat.fileShare')}</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <Text style={[styles.callNumber, d?.dim]}>{t(expired ? 'chat.imageExpired' : 'attach.gone')}</Text>
-      )}
-    </View>
-  );
-}
-
-/** A PDF Qutai made (save_pdf, or an answer saved as a PDF): name and size, Save (Android) and Share. */
-function PdfCard({
-  info,
-  onOpen,
-  onPdf,
-}: {
-  info: AttachmentInfo;
-  onOpen: (info: AttachmentInfo) => void;
-  onPdf: (action: 'share' | 'save', info: AttachmentInfo) => void;
-}) {
-  const styles = useStyles();
-  const d = useContext(PanelTheme);
-  const palette = usePalette();
-  const available = useMemo(() => attachmentAvailable(info.id), [info.id]);
-  return (
-    <View style={[styles.smsCard, d?.assistantBubble]}>
-      <View style={styles.fileHeader}>
-        <AttachmentThumb info={info} index={0} size={56} onPress={() => onOpen(info)} />
-        <View style={styles.callInfo}>
-          <Text style={[styles.callName, d?.text]} numberOfLines={2}>
-            {info.name}
-          </Text>
-          <Text style={[styles.callNumber, d?.dim]}>{`${t('chat.pdfPages')} · ${formatSize(info.size)}`}</Text>
-        </View>
-      </View>
-      {available ? (
-        <View style={styles.fileButtons}>
-          {Platform.OS === 'android' ? (
-            <Pressable
-              onPress={() => onPdf('save', info)}
-              style={({ pressed }) => [styles.fileButton, d?.chip, pressed && styles.pressed]}
-              accessibilityRole="button"
-              accessibilityLabel={t('chat.fileSaveLabel', { name: info.name })}
-            >
-              <Icon name="download" size={17} color={palette.tintText} />
-              <Text style={styles.fileButtonText}>{t('chat.fileSave')}</Text>
-            </Pressable>
-          ) : null}
-          <Pressable
-            onPress={() => onPdf('share', info)}
-            style={({ pressed }) => [styles.callButton, pressed && styles.callButtonPressed]}
-            accessibilityRole="button"
-            accessibilityLabel={t('chat.fileShareLabel', { name: info.name })}
-          >
-            <Icon name="share" size={17} color={palette.onTint} />
-            <Text style={styles.callButtonText}>{t(Platform.OS === 'ios' ? 'chat.fileShareIos' : 'chat.fileShare')}</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <Text style={[styles.callNumber, d?.dim]}>{t('attach.gone')}</Text>
-      )}
-    </View>
-  );
-}
-
-/**
- * A share the assistant prepared (share), or the files an email draft took: who it is for, the files (thumbnails of
- * images, names of other files), the text, what the user does next, and for a share the button that opens WhatsApp
- * or the share sheet. Nothing is sent from here: the user picks the chat or app and sends.
- */
-function ShareCard({
-  share,
-  onOpen,
-  onShare,
-}: {
-  share: ShareOffer;
-  onOpen: (info: AttachmentInfo) => void;
-  onShare: (offer: ShareOffer) => void;
-}) {
-  const styles = useStyles();
-  const d = useContext(PanelTheme);
-  const palette = usePalette();
-  const fileNames = share.files.map((f) => f.name).join(', ');
-  const who = [share.name, share.number].filter(Boolean).join(', ');
-  const email = share.app === 'email';
-  return (
-    <View style={[styles.smsCard, d?.assistantBubble]}>
-      {email ? (
-        <View style={styles.callInfo}>
-          <Text style={[styles.callName, d?.text]} numberOfLines={2}>
-            {share.subject ? t('chat.emailDraftTitle', { subject: share.subject }) : t('chat.emailNoSubject')}
-          </Text>
-          {share.to?.length ? (
-            <Text style={[styles.callNumber, d?.dim]} selectable>
-              {t('chat.emailTo', { to: share.to.join(', ') })}
-            </Text>
-          ) : null}
-        </View>
-      ) : who ? (
-        <View style={styles.callInfo}>
-          <Text style={[styles.callName, d?.text]} numberOfLines={2} selectable>
-            {share.app === 'whatsapp' ? t('chat.shareLookFor', { who }) : who}
-          </Text>
-        </View>
-      ) : null}
-      {share.files.length ? (
-        <View style={styles.shareFiles}>
-          {share.files.map((f, i) =>
-            f.attachment ? (
-              <AttachmentThumb key={f.id} info={f.attachment} index={i} size={64} onPress={() => onOpen(f.attachment!)} />
-            ) : (
-              <View key={f.id} style={styles.shareFileChip} accessible accessibilityLabel={`${f.name}, ${formatSize(f.size)}`}>
-                <Icon name="document" size={18} color={palette.textSecondary} />
-                <Text style={[styles.callNumber, d?.text]} numberOfLines={2}>
-                  {f.name}
-                </Text>
-              </View>
-            ),
-          )}
-        </View>
-      ) : null}
-      {share.files.some((f) => f.attachment) ? (
-        <Text style={[styles.callNumber, d?.dim]} numberOfLines={3}>
-          {fileNames}
-        </Text>
-      ) : null}
-      {share.original ? <Text style={[styles.callNumber, d?.dim]}>{t('chat.shareOriginal')}</Text> : null}
-      {share.text ? (
-        <Text style={[styles.smsBody, d?.text]} selectable>
-          {share.text}
-        </Text>
-      ) : null}
-      <Text style={[styles.callNumber, d?.dim]}>
-        {email
-          ? t(share.delivered === 'share' ? 'chat.emailFilesShared' : 'chat.emailFilesComposer')
-          : t(share.app === 'whatsapp' ? 'chat.sharePickChat' : 'chat.sharePickApp')}
-      </Text>
-      {!email && share.copiesText ? (
-        <Text style={[styles.callNumber, d?.dim]}>
-          {t(share.app === 'whatsapp' ? 'chat.shareCopiesTextWhatsApp' : 'chat.shareCopiesText')}
-        </Text>
-      ) : null}
-      {!email ? (
-        <Pressable
-          onPress={() => onShare(share)}
-          style={({ pressed }) => [styles.callButton, styles.smsButton, pressed && styles.callButtonPressed]}
-          accessibilityRole="button"
-          accessibilityLabel={t(share.app === 'whatsapp' ? 'chat.shareToWhatsAppLabel' : 'chat.shareToLabel', {
-            files: fileNames || t('chat.shareTo'),
-          })}
-        >
-          <Icon name={share.app === 'whatsapp' ? 'message' : 'share'} size={17} color={palette.onTint} />
-          <Text style={styles.callButtonText}>{t(share.app === 'whatsapp' ? 'chat.shareToWhatsApp' : 'chat.shareTo')}</Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-/**
- * An icon under an answer: quiet (secondary colour), 44pt wide and 36pt tall plus 4pt of slop above and
- * below, so it is a 44pt target. Icons are drawn in points, so the row keeps its width at any font size.
- */
-function ActionIcon({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
-  const styles = useStyles();
-  const d = useContext(PanelTheme);
-  const palette = usePalette();
-  return (
-    <Pressable
-      onPress={() => {
-        tick();
-        onPress();
-      }}
-      hitSlop={{ top: 4, bottom: 4 }}
-      style={({ pressed }) => [styles.actionIcon, pressed && (d ? d.pressed : styles.pressed)]}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-    >
-      <Icon name={icon} size={18} color={d ? '#a9a8b3' : palette.textSecondary} />
-    </Pressable>
-  );
-}
-
-/** The message list's padding, an answer's widest share of it, and its icons (copy, read aloud, share, more). */
-const LIST_PADDING = 12;
-const ROW_MAX = 0.9;
-const ACTION_ICONS = 4;
-const ACTION_ICON_WIDTH = 44;
-
-const useStyles = makeStyles((c) => ({
-  flex: { flex: 1 },
-  assistantRow: { alignSelf: 'flex-start', width: `${ROW_MAX * 100}%`, gap: 4 },
-  wideRow: { width: '100%' },
-  // The first icon (18pt in a 44pt button) starts about where the answer's text does (12pt in the bubble).
-  messageActions: { flexDirection: 'row', marginLeft: -1 },
-  actionIcon: { width: ACTION_ICON_WIDTH, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  pressed: { backgroundColor: '#ebe8e0' },
-  backdrop: { backgroundColor: 'rgba(0,0,0,0.35)' },
-  panel: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    right: 0,
-    backgroundColor: c.bg,
-    borderTopLeftRadius: radii.window,
-    borderBottomLeftRadius: radii.window,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    shadowOffset: { width: -2, height: 0 },
-    elevation: 16,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingLeft: 16,
-    paddingRight: 8,
-    // 44 in a short window (panelHeaderHeight).
-    minHeight: 56,
-    paddingVertical: 4,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: c.separator,
-  },
-  title: { fontWeight: '700', fontSize: 17 },
-  status: { color: c.textSecondary, fontSize: 12, marginTop: 1, flexShrink: 1 },
-  statusChosen: { color: c.tintText },
-  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  statusIcon: { marginTop: 1 },
-  statusFixed: { flexShrink: 0 },
-  measure: { position: 'absolute', left: 0, top: 0, width: 2000, opacity: 0, alignItems: 'flex-start' },
-  headerTitle: { flex: 1, marginLeft: 10, marginRight: 8 },
-  headerButton: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerButtonText: { fontSize: 18, color: c.textSecondary },
-  messagesContent: { padding: LIST_PADDING, gap: 8 },
-  emptyBox: { alignItems: 'center', gap: 8, paddingTop: 16, paddingHorizontal: 4 },
-  emptyTitle: { color: c.text, fontSize: 19, fontWeight: '700', marginTop: 6 },
-  emptyLead: { color: c.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center', maxWidth: 300 },
-  examples: { alignSelf: 'stretch', gap: 8, marginTop: 10 },
-  suggestTitle: { color: c.textSecondary, fontSize: 13, fontWeight: '600', marginLeft: 4 },
-  taskChips: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 12 },
-  example: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: radii.card,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.separator,
-  },
-  exampleText: { flex: 1, color: c.text, fontSize: 14.5, lineHeight: 20 },
-  bubble: { borderRadius: radii.popover, paddingHorizontal: 12, paddingVertical: 8, maxWidth: '90%' },
-  userBubble: { alignSelf: 'flex-end', backgroundColor: c.tint },
-  userRow: { alignItems: 'flex-end', gap: 4 },
-  sentThumbs: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 4, maxWidth: '90%' },
-  thumbRemove: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  pendingRow: { flexGrow: 0, maxHeight: 76 },
-  pendingContent: { paddingHorizontal: 12, paddingTop: 10, paddingBottom: 4, gap: 10 },
-  attachButton: { width: 34, height: 40, alignItems: 'center', justifyContent: 'center' },
-  // Spans its row (an answer's or a question's), whatever the text inside reports as its width.
-  assistantBubble: {
-    alignSelf: 'stretch',
-    maxWidth: '100%',
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.separator,
-  },
-  userText: { color: c.onTint, fontSize: 15 },
-  assistantText: { color: c.text, fontSize: 15, lineHeight: 21 },
-  action: { color: c.textSecondary, fontSize: 12, marginLeft: 4 },
-  error: { color: c.danger, fontSize: 13, marginLeft: 4 },
-  stepLine: { flexDirection: 'row', alignItems: 'flex-start', gap: 6, marginLeft: 4 },
-  itemAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 6,
-    marginTop: 6,
-    marginLeft: 24,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: c.tint,
-  },
-  itemActionPressed: { opacity: 0.7 },
-  itemActionText: { color: c.tintText, fontSize: 14, fontWeight: '600' },
-  stepIcon: { marginTop: 1 },
-  stepGroup: { gap: 6 },
-  // A full-height touch target around the small line.
-  stepSummary: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 4, minHeight: 44, alignSelf: 'flex-start' },
-  stepText: { marginLeft: 0, flexShrink: 1 },
-  sources: { alignSelf: 'stretch', gap: 4 },
-  sourcesTitle: { fontSize: 12, color: c.textSecondary, marginLeft: 4 },
-  sourcesRow: { gap: 6, paddingRight: 8 },
-  source: {
-    width: 150,
-    padding: 8,
-    gap: 2,
-    borderRadius: radii.control,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.separator,
-  },
-  sourceIndex: { color: c.tintText, fontWeight: '700' },
-  sourceTitle: { fontSize: 12.5, color: c.text, lineHeight: 16 },
-  sourceHost: { fontSize: 11, color: c.textSecondary },
-  sourceHostRow: { flexDirection: 'row', alignItems: 'center', gap: 3 },
-  sourceHostText: { flexShrink: 1 },
-  choices: { alignSelf: 'stretch', gap: 6 },
-  choicesBubble: { alignSelf: 'flex-start', width: `${ROW_MAX * 100}%` },
-  choice: {
-    alignSelf: 'flex-start',
-    maxWidth: '100%',
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: c.tint,
-    backgroundColor: c.surface,
-  },
-  choiceClosed: { opacity: 0.4 },
-  choiceText: { fontSize: 15, color: c.tintText, fontWeight: '600' },
-  choiceLabel: { flexShrink: 1 },
-  callCard: {
-    alignSelf: 'stretch',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingLeft: 12,
-    paddingRight: 8,
-    paddingVertical: 8,
-    borderRadius: radii.card,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.separator,
-  },
-  callInfo: { flex: 1, gap: 2 },
-  callName: { fontSize: 15, fontWeight: '600', color: c.text },
-  callNumber: { fontSize: 14, color: c.textSecondary, fontVariant: ['tabular-nums'] },
-  callButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    minHeight: 44,
-    maxWidth: '100%',
-    paddingHorizontal: 16,
-    borderRadius: radii.button,
-    backgroundColor: c.tint,
-  },
-  callButtonPressed: { opacity: 0.8 },
-  smsCard: {
-    alignSelf: 'stretch',
-    gap: 8,
-    padding: 12,
-    borderRadius: radii.card,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.separator,
-  },
-  smsBody: {
-    fontSize: 15,
-    color: c.text,
-    paddingLeft: 10,
-    borderLeftWidth: 3,
-    borderLeftColor: c.separator,
-  },
-  smsButton: { alignSelf: 'flex-end', justifyContent: 'center' },
-  fileHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  shareFiles: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  shareFileChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    maxWidth: '100%',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: radii.control,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.separator,
-  },
-  fileButtons: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8 },
-  fileButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    minHeight: 44,
-    maxWidth: '100%',
-    paddingHorizontal: 16,
-    borderRadius: radii.button,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.separator,
-    backgroundColor: c.surface,
-  },
-  fileButtonText: { flexShrink: 1, color: c.tintText, fontSize: 15, fontWeight: '700' },
-  callButtonText: { flexShrink: 1, color: c.onTint, fontSize: 15, fontWeight: '700' },
-  busy: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-    marginHorizontal: 8,
-    marginTop: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    borderRadius: radii.control,
-    backgroundColor: c.dark ? '#1c2b3d' : '#e3eefb',
-  },
-  busyText: { flex: 1, fontSize: 13, color: c.text },
-  busyAction: { fontSize: 13, fontWeight: '700', color: c.tintText },
-  // The buttons give the row its height; each keeps a 44 pt target.
-  lowCredits: { paddingVertical: 0, paddingRight: 0 },
-  lowCreditsAction: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
-  lowCreditsClose: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  chips: { flexGrow: 0 },
-  // Room under the chips too, so they don't sit on the message row's top line.
-  chipsContent: { paddingHorizontal: 8, paddingTop: 8, paddingBottom: 8, gap: 6 },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 16,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-  },
-  chipText: { fontSize: 13, color: c.text },
-  taskChip: { maxWidth: '100%' },
-  shrink: { flexShrink: 1 },
-  chipOn: { backgroundColor: c.tint, borderColor: c.tint },
-  chipTextOn: { color: c.onTint, fontWeight: '600' },
-  modeHint: { fontSize: 12, lineHeight: 17, color: c.textSecondary, paddingHorizontal: 12, paddingBottom: 8 },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    padding: 8,
-    gap: 8,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: c.separator,
-  },
-  input: {
-    flex: 1,
-    minHeight: 40,
-    maxHeight: 120,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingTop: 10,
-    paddingBottom: 10,
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    fontSize: 15,
-  },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: c.tint,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendDisabled: { opacity: 0.4 },
-  // The input while the task works: dimmed, and its text (kept to send later) too.
-  inputBusy: { opacity: 0.55 },
-  micWrap: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  langTag: {
-    minWidth: 30,
-    height: 22,
-    paddingHorizontal: 6,
-    borderRadius: 6,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  langTagText: { fontSize: 11, fontWeight: '700', color: c.textSecondary, letterSpacing: 0.5 },
-  micButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: c.surface,
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: c.border,
-  },
-  micOn: { backgroundColor: c.danger, borderColor: c.danger },
-  micPending: { opacity: 0.6 },
-  micRing: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: c.danger,
-    opacity: 0.25,
-  },
-  stopButton: { backgroundColor: '#444' },
-  sendText: { color: c.onTint, fontSize: 18, fontWeight: '700' },
-}));
-
-const darkStyles = StyleSheet.create({
-  panel: { backgroundColor: '#1f1e24' },
-  header: { borderBottomColor: '#3a3944' },
-  inputRow: { borderTopColor: '#3a3944' },
-  input: { backgroundColor: '#2b2a33', borderColor: '#42414d', color: '#f2f1f5' },
-  micButton: { backgroundColor: '#2b2a33', borderColor: '#42414d' },
-  langTag: { backgroundColor: '#2b2a33', borderColor: '#42414d' },
-  langTagText: { color: '#a9a8b3' },
-  chip: { backgroundColor: '#2b2a33', borderColor: '#42414d' },
-  choice: { backgroundColor: '#2b2a33' },
-  text: { color: '#f2f1f5' },
-  dim: { color: '#9a99a3' },
-  assistantBubble: { backgroundColor: '#2b2a33', borderColor: '#3a3944' },
-  busy: { backgroundColor: '#1c2b3d' },
-  pressed: { backgroundColor: '#3a3944' },
-});

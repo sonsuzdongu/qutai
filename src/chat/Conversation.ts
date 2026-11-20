@@ -197,6 +197,30 @@ export class Conversation {
    *   (e.g. from a tab to the group it founded).
    * @param incognito It belongs to an incognito tab, or to a group that ever held one: never written to disk.
    */
+  /**
+   * Who draws this conversation (the chat panel): told about every change, including each streamed piece of an
+   * answer (every 50 ms) and each letter typed. The owner's `onChange` (the browser, which redraws the whole app) is
+   * told only about changes the rest of the app shows: an item added or removed, a task starting or ending… (UI-29).
+   */
+  private listeners = new Set<() => void>();
+  private version = 0;
+
+  subscribe = (listener: () => void) => {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  };
+
+  getVersion = () => this.version;
+
+  /** `content`: only the text of the streamed answer or of the draft changed, which only the panel shows. */
+  private changed(scope: 'all' | 'content' = 'all') {
+    this.version++;
+    this.listeners.forEach((listener) => listener());
+    if (scope === 'all') this.onChange();
+  }
+
   constructor(
     private onChange: () => void,
     public key: string,
@@ -221,19 +245,19 @@ export class Conversation {
   add(item: ChatItem) {
     // A new array, so memoized lists notice the change.
     this.items = [...this.items, item];
-    this.onChange();
+    this.changed();
   }
 
   /** Changes one item (a card's state: a style kept or undone). */
   update(itemId: string, patch: Partial<ChatItem>) {
     this.items = this.items.map((item) => (item.id === itemId ? { ...item, ...patch } : item));
-    this.onChange();
+    this.changed();
   }
 
   /** Records which option was tapped, so the buttons show the answer and can't be used again. */
   choose(itemId: string, option: string) {
     this.items = this.items.map((item) => (item.id === itemId ? { ...item, chosen: option } : item));
-    this.onChange();
+    this.changed();
   }
 
   /** Adds a piece of a streamed reply. Updates are batched so the screen redraws at most every 50 ms. */
@@ -251,12 +275,14 @@ export class Conversation {
     const id = this.streamingId;
     if (id) {
       this.items = this.items.map((item) => (item.id === id ? { ...item, text: item.text + text } : item));
+      // More of an answer already shown: only the panel redraws.
+      this.changed('content');
     } else {
       const item = { ...newItem('assistant', text), streaming: true };
       this.streamingId = item.id;
       this.items = [...this.items, item];
+      this.changed();
     }
-    this.onChange();
   }
 
   /**
@@ -275,7 +301,7 @@ export class Conversation {
       text === ''
         ? this.items.filter((item) => item.id !== id)
         : this.items.map((item) => (item.id === id ? { id, kind: 'assistant', text: text ?? item.text } : item));
-    this.onChange();
+    this.changed();
   }
 
   /**
@@ -289,7 +315,7 @@ export class Conversation {
       const item = this.items[i];
       if (item.kind !== 'assistant' && item.kind !== 'choices' && item.kind !== 'error' && item.kind !== 'info') continue;
       this.items = this.items.map((it, j) => (j === i ? { ...it, cost } : it));
-      this.onChange();
+      this.changed();
       return;
     }
   }
@@ -297,42 +323,42 @@ export class Conversation {
   setUnseen(outcome: 'done' | 'failed' | 'needsAnswer' | null) {
     if (this.unseen === outcome) return;
     this.unseen = outcome;
-    this.onChange();
+    this.changed();
   }
 
   setResearch(on: boolean) {
     this.research = on;
-    this.onChange();
+    this.changed();
   }
 
   setModel(choice: ModelChoice | null) {
     this.model = choice;
-    this.onChange();
+    this.changed();
   }
 
   setVoiceLanguage(language: string | null) {
     this.voiceLanguage = language;
-    this.onChange();
+    this.changed();
   }
 
   /** Adds attachments to the message being written, up to MAX_ATTACHMENTS; returns those that didn't fit. */
   addPending(list: AttachmentInfo[]): AttachmentInfo[] {
     const room = Math.max(0, MAX_ATTACHMENTS - this.pending.length);
     this.pending = [...this.pending, ...list.slice(0, room)];
-    this.onChange();
+    this.changed();
     return list.slice(room);
   }
 
   removePending(id: string) {
     this.pending = this.pending.filter((a) => a.id !== id);
-    this.onChange();
+    this.changed();
   }
 
   /** The attachments of the message being sent; the input row is empty again. */
   takePending(): AttachmentInfo[] {
     const list = this.pending;
     this.pending = [];
-    if (list.length) this.onChange();
+    if (list.length) this.changed();
     return list;
   }
 
@@ -402,7 +428,7 @@ export class Conversation {
       this.items = this.items.map((item) =>
         item.kind === 'image' && dropped.includes(item.attachments?.[0]?.id ?? '') ? { ...item, expired: true } : item,
       );
-      this.onChange();
+      this.changed();
     }
     return dropped;
   }
@@ -413,8 +439,10 @@ export class Conversation {
   }
 
   setDraft(text: string) {
+    const wasEmpty = !this.draft.trim();
     this.draft = text;
-    this.onChange();
+    // Whether anything is typed shows outside the panel (a task waiting to run); each letter only in it.
+    this.changed(wasEmpty === !text.trim() ? 'content' : 'all');
   }
 
   /**
@@ -428,7 +456,7 @@ export class Conversation {
     this.items = this.items.filter((item) => item.id !== itemId);
     this.draft = this.draft ? `${text}\n${this.draft}` : text;
     if (attachments.length) this.pending = [...attachments, ...this.pending].slice(0, MAX_ATTACHMENTS);
-    this.onChange();
+    this.changed();
     return true;
   }
 
@@ -444,7 +472,7 @@ export class Conversation {
     if (saved?.draft && !this.draft) this.draft = saved.draft;
     if (saved?.model && !this.model) this.model = saved.model;
     if (saved?.voiceLanguage && !this.voiceLanguage) this.voiceLanguage = saved.voiceLanguage;
-    this.onChange();
+    this.changed();
     const callbacks = this.loadedCallbacks;
     this.loadedCallbacks = [];
     callbacks.forEach((fn) => fn());
@@ -459,7 +487,7 @@ export class Conversation {
     this.voiceLanguage = null;
     this.privacy = { touchedIncognito: false };
     this.contactScope = newContactScope(this.key);
-    this.onChange();
+    this.changed();
   }
 
   /**
@@ -470,7 +498,7 @@ export class Conversation {
     this.abortController = controller;
     this.runningFrom = sentId ?? null;
     this.running = true;
-    this.onChange();
+    this.changed();
     return controller.signal;
   }
 
@@ -483,7 +511,7 @@ export class Conversation {
     this.abortController = null;
     this.runningFrom = null;
     this.running = false;
-    this.onChange();
+    this.changed();
   }
 
   stop() {

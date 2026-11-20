@@ -2231,7 +2231,7 @@ function BrowserApp({
                 ),
             }}
             quickActions={quickActions}
-            draft={conversation.draft}
+            conversation={conversation}
             onDraftChange={(text) => {
               conversation.setDraft(text);
               persistDraftSoon(conversation);
@@ -2255,7 +2255,6 @@ function BrowserApp({
                   }
                 : null
             }
-            items={conversation.items}
             running={conversation.running}
             busyElsewhere={running && !conversation.running}
             collapseToStrip={work.phase !== 'idle'}

@@ -218,6 +218,7 @@ export const id: Record<keyof typeof en, string> = {
   'chat.newChat': 'Chat baru',
   'chat.settings': 'Setelan',
   'chat.closePanel': 'Tutup panel',
+  'chat.jumpToLatest': 'Ke pesan terbaru',
   'chat.modelA11y': 'Model: {model}. Ubah',
   'chat.modelThisChat': 'chat ini',
   'chat.modelChoiceUnavailable': 'Model yang dipilih untuk chat ini sudah tidak tersedia ({provider} belum disiapkan), jadi model default Anda yang digunakan.',

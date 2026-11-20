@@ -208,6 +208,7 @@ export const tr: Record<keyof typeof en, string> = {
   'chat.newChat': 'Yeni sohbet',
   'chat.settings': 'Ayarlar',
   'chat.closePanel': 'Paneli kapat',
+  'chat.jumpToLatest': 'En son mesaja git',
   'chat.modelA11y': 'Model: {model}. Değiştir',
   'chat.modelThisChat': 'bu sohbet',
   'chat.modelChoiceUnavailable': 'Bu sohbet için seçilen model artık kullanılamıyor ({provider} ayarlı değil); varsayılanınız kullanılıyor.',

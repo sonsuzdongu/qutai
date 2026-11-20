@@ -217,6 +217,7 @@ export const ko: Record<keyof typeof en, string> = {
   'chat.newChat': '새 대화',
   'chat.settings': '설정',
   'chat.closePanel': '패널 닫기',
+  'chat.jumpToLatest': '최신 메시지로 이동',
   'chat.modelA11y': '모델: {model}. 변경',
   'chat.modelThisChat': '이 대화',
   'chat.modelChoiceUnavailable': '이 대화에 선택한 모델을 더 이상 사용할 수 없어({provider}이(가) 설정되지 않음) 기본 모델을 사용합니다.',

@@ -218,6 +218,7 @@ export const fr: Record<keyof typeof en, string> = {
   'chat.newChat': 'Nouvelle conversation',
   'chat.settings': 'Paramètres',
   'chat.closePanel': 'Fermer le panneau',
+  'chat.jumpToLatest': 'Aller au dernier message',
   'chat.modelA11y': 'Modèle : {model}. Modifier',
   'chat.modelThisChat': 'cette conversation',
   'chat.modelChoiceUnavailable': 'Le modèle choisi pour cette conversation n’est plus disponible ({provider} n’est pas configuré) : votre modèle par défaut est utilisé.',

@@ -219,6 +219,7 @@ export const ja: Record<keyof typeof en, string> = {
   'chat.newChat': '新しいチャット',
   'chat.settings': '設定',
   'chat.closePanel': 'パネルを閉じる',
+  'chat.jumpToLatest': '最新のメッセージへ移動',
   'chat.modelA11y': 'モデル: {model}。変更',
   'chat.modelThisChat': 'このチャット',
   'chat.modelChoiceUnavailable': 'このチャットで選んだモデルは利用できなくなったため（{provider} が設定されていません）、デフォルトのモデルを使用します。',

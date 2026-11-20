@@ -207,6 +207,7 @@ export const en = {
   'chat.newChat': 'New chat',
   'chat.settings': 'Settings',
   'chat.closePanel': 'Close panel',
+  'chat.jumpToLatest': 'Jump to the latest message',
   'chat.modelA11y': 'Model: {model}. Change',
   'chat.modelThisChat': 'this chat',
   'chat.modelChoiceUnavailable': "The model chosen for this chat isn't available any more ({provider} isn't set up), so your default is used.",

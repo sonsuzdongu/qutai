@@ -219,6 +219,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'chat.newChat': 'Nova conversa',
   'chat.settings': 'Configurações',
   'chat.closePanel': 'Fechar painel',
+  'chat.jumpToLatest': 'Ir para a mensagem mais recente',
   'chat.modelA11y': 'Modelo: {model}. Alterar',
   'chat.modelThisChat': 'esta conversa',
   'chat.modelChoiceUnavailable': 'O modelo escolhido para esta conversa não está mais disponível ({provider} não está configurado), então o seu padrão é usado.',

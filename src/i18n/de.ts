@@ -218,6 +218,7 @@ export const de: Record<keyof typeof en, string> = {
   'chat.newChat': 'Neuer Chat',
   'chat.settings': 'Einstellungen',
   'chat.closePanel': 'Bereich schließen',
+  'chat.jumpToLatest': 'Zur neuesten Nachricht',
   'chat.modelA11y': 'Modell: {model}. Ändern',
   'chat.modelThisChat': 'dieser Chat',
   'chat.modelChoiceUnavailable': 'Das für diesen Chat gewählte Modell ist nicht mehr verfügbar ({provider} ist nicht eingerichtet), daher wird Ihr Standardmodell verwendet.',

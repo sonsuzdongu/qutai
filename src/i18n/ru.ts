@@ -218,6 +218,7 @@ export const ru: Record<keyof typeof en, string> = {
   'chat.newChat': 'Новый чат',
   'chat.settings': 'Настройки',
   'chat.closePanel': 'Закрыть панель',
+  'chat.jumpToLatest': 'К последнему сообщению',
   'chat.modelA11y': 'Модель: {model}. Изменить',
   'chat.modelThisChat': 'этот чат',
   'chat.modelChoiceUnavailable': 'Модель, выбранная для этого чата, больше недоступна ({provider} не настроен), поэтому используется модель по умолчанию.',
