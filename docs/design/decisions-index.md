@@ -961,7 +961,7 @@ Moved to Details (ids retired, not reused): `PERF-1`, `PERF-2`, `PERF-9`
 | `ACC-15` | The app keeps its passes in secure storage readable only on this phone, keeps no Apple or Google token,… | Default |  |
 | `ACC-17` | An email sign-in sends one mail with a 6-digit code and a separate long link; using either ends both, and… | Owner | 2026-11-16 |
 | `ACC-18` | Asking for an email code answers the same way for every address and never looks at whether an account exists. | Default |  |
-| `ACC-19` | Email limits: per address 5 codes an hour and 10 a day; per phone 10 an hour; one new code per 30 seconds;… | Owner | 2026-11-16 |
+| `ACC-19` | Email limits per address, phone and network address, and since 20 Nov caps on all mails (60/h, 200/day) and per network (20/day)… | Owner | 2026-11-16, changed 2026-11-20 |
 | `ACC-20` | The code and the link work only on the phone that asked; a link opened elsewhere is refused without being… | Default |  |
 | `ACC-22` | The mail links to an https page on Qutai's website that opens the app; the page never signs anyone in by… | Owner | 2026-11-17 |
 | `ACC-23` | A sign-in link opened inside Qutai's own browser is never loaded: it never becomes a tab, a history entry,… | Default |  |
@@ -1013,12 +1013,12 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-11` | Today the old request form that names a provider model is still accepted (`acceptDirectModels` on) because… | **Waiting** |  |
 | `CRED-12` | Credits are whole numbers of micro-credits (1 credit = 1 000 000); a charge is the provider's cost ×… | Default |  |
 | `CRED-13` | Each account's balance has one source of truth, its own Durable Object (a per-user server object that… | Owner | not recorded |
-| `CRED-14` | Before each step the server reserves the most it can cost (the whole output limit and every allowed… | Default |  |
-| `CRED-15` | A provider error before any output costs nothing; a cut answer is charged on what was seen plus an… | Default |  |
+| `CRED-14` | Before each step the server reserves the most it can cost (output limit, searches and their results, dearest tier)… | Default | changed 2026-11-20 |
+| `CRED-15` | A provider error or the app leaving before any output costs nothing; a cut answer is charged on what was seen plus an… | Default | changed 2026-11-20 |
 | `CRED-16` | A charge that arrives after the hold expired still charges the real cost, even if the balance goes negative. | Default |  |
-| `CRED-17` | A step sent again with the same step key and identical content within 15 minutes is run but charged 0,… | Default |  |
+| `CRED-17` | An identical re-send of a step within 15 minutes is free once only if a charged attempt was cut or estimated… | Default | changed 2026-11-20 |
 | `CRED-18` | A balance may go negative after a refund, and a negative balance blocks spending until topped up. | Default |  |
-| `CRED-19` | Without valid per-user limits every reservation is refused, and without relay rules or pricing the relay… | Default |  |
+| `CRED-19` | Without per-user limits, relay rules or pricing the relay refuses (fail closed); a missing field reads its default… | Default | changed 2026-11-20 |
 | `CRED-22` | An Anthropic answer paused mid-search continues only with a continuation the server signed (tied to the… | Default |  |
 | `CRED-23` | The step limit is the server's; the app shortens the memory section and attached images to the server's… | Default |  |
 | `CRED-24` | The relay refuses app versions below the server's minimum version ("update Qutai"); the seeded minimum is… | Default |  |
@@ -1029,7 +1029,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-29` | Only models with a price in force are offered; prices are added as new dated rows, never edited, and never… | Default |  |
 | `CRED-30` | Today users are charged for every Gemini search, including those inside Google's free monthly allowance. | **Waiting** |  |
 | `CRED-31` | Kill switches (per provider and global) make the relay "temporarily unavailable" without touching credits;… | Default |  |
-| `CRED-32` | The admin panel is reachable only through Cloudflare Access and checks the Access token itself (not its audience since 19 Nov)… | Default (audience: Owner) | 2026-11-19 |
+| `CRED-32` | The admin panel is reachable only through Cloudflare Access, checks the token itself (not its audience since 19 Nov) and, since 20 Nov, its own allowlist… | Default (audience: Owner) | 2026-11-19, changed 2026-11-20 |
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one… | **Waiting** |  |
 | `CRED-34` | Today abuse flags can't be marked resolved. | **Waiting** |  |
 | `CRED-35` | Today credit prices are the model's token price plus a margin; pack sizes, trial credits, per-user limits… | **Waiting** | changed 2026-11-20 |
@@ -1042,6 +1042,8 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-42` | Margin set in the panel as a percentage with a live example; first values 100 credits per dollar and 100 %. | Owner | 2026-11-20 |
 | `CRED-43` | Every panel setting is a form in human units with "What will change"; JSON only under Advanced; emergency controls first. | Owner | 2026-11-20 |
 | `CRED-44` | The app never shows which model is behind Qutai Credits (no "Answered by" in the cost details or the sent log, no model label). | Owner | 2026-11-20 |
+| `CRED-45` | One reservation scope inside waitUntil: exactly one settle or cancel; the app leaving can't keep the hold and the lock. | Default | 2026-11-20 |
+| `CRED-46` | The account prunes retry-only rows daily: relay keys and finished reservations after 30 days, other keys after 400; never the ledger. | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 
@@ -1127,6 +1129,9 @@ Moved to Details (ids retired, not reused): `BACK-2`, `BACK-16`, `BACK-14`
 | `SRV-22` | Production runs on Cloudflare since 19 Nov, one-command deploy; first values: Anthropic only, 100 USD a month, Haiku only and 100 % margin (since 20 Nov), no purchases. | Owner | 2026-11-19, changed 2026-11-20 |
 | `SRV-23` | Production hostnames are written in the backend repository only; this app repository never contains them. | Owner | 2026-11-19 |
 | `SRV-24` | The admin Worker's only outbound request: Anthropic's pricing page, only when "Check prices" is pressed. | Owner | 2026-11-20 |
+| `SRV-25` | One settings schema with defaults, bounds and cross-checks; reading fills and clamps, saving is strict. | Default | 2026-11-20 |
+| `SRV-26` | The deploy runs a preflight (committed, typecheck, tests) and records the deployed commits, shown on the Overview. | Default | 2026-11-20 |
+| `SRV-27` | Test purchases only through one seam, so their removal is one migration and one delete. | Default | 2026-11-20 |
 
 Moved to Details (ids retired, not reused): `SRV-14`, `SRV-19`
 
@@ -1178,7 +1183,7 @@ Moved to Details (ids retired, not reused): `VER-5`, `VER-6`, `VER-7`, `VER-4`, 
 | `BUILD-4` | Packages are added with `npx expo install`, and Expo's own modules are preferred over third-party libraries. | Owner | not recorded |
 | `BUILD-5` | Every EAS profile builds with pro mode off, and `eas.json` has no pro profile. | Default |  |
 | `BUILD-7` | Packages are named `builds/qutai-<version>-<build>.aab\|ipa`, with `-pro-mode` before the extension for pro… | Owner | 2026-11-16 |
-| `BUILD-9` | A store package never contains the test sign-in. `EXPO_PUBLIC_DEV_LOGIN` and its secret are deleted even… | Owner | 2026-11-17 |
+| `BUILD-9` | A store package never contains the test sign-in: the variables are set off for the build and the bundle is checked… | Owner | 2026-11-17, changed 2026-11-20 |
 | `BUILD-10` | A pro build's server address and the Apple team id are never committed. They come from the environment or… | Owner | 2026-11-16 |
 | `BUILD-11` | The pro test tunnel's address is passed only at build time. It is never written into the app or backend… | Owner | 2026-11-16 |
 | `BUILD-12` | Android release builds are signed with Qutai's own upload key, read from a properties file outside the… | Default |  |

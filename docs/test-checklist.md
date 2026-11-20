@@ -730,3 +730,29 @@ Görevin başlangıcından bitişine kadar olan kısım App.tsx'ten `src/task/` 
 - [ ] Ayarlar › Gizlilik'te "Uygulama kilidi"ni açın; Face ID / parmak izi sorulurken (sormadan önce) asistanın bir
       görevde reklam engellemeyi kapatmasını sağlayın (ya da iki ayarı hızlıca art arda değiştirin): onaydan sonra iki
       değişiklik de kalıcı, uygulamayı yeniden açınca da (`DATA-28`).
+
+## 24. Sunucu kod incelemesi düzeltmeleri: panel izin listesi, kredi tutma, ayarlar, e-posta sınırları, dağıtım kaydı (20 Kasım, sonraki dağıtımdan sonra)
+
+Sunucu (backend `d8e0590`…`d583011`) ve paket betiği (`319a6d4`). Yerelde testlerle denendi; production'da denenmedi.
+Dağıtımda yeni bir migration var (0013, yalnızca yeni bir tablo ekler). Dağıtmadan önce `backend/scripts/deploy-prod.mjs`
+içindeki `CONFIG.adminAllowlist` listesinde kendi adresiniz olduğuna bakın (`yuxel@sonsuzdongu.com` yazılı); liste boşsa
+betik dağıtmaz, adresiniz yoksa panel sizi de içeri almaz.
+
+- [ ] `npm run deploy:prod` önce "Ön denetim" yapıyor (commit edilmemiş değişiklik, typecheck, testler) ve sonunda
+      "Dağıtım kaydı" yazıyor; panelin Overview ekranında "Deployed" bölümünde sunucu ve uygulama commit kimlikleri ile
+      ajan profili görünüyor (`SRV-26`).
+- [ ] Panel açılıyor (adresiniz izin listesinde). Mümkünse Access'e girebilen ama listede olmayan başka bir adresle
+      deneyin: panel 401 veriyor (`CRED-32`).
+- [ ] Overview'da "Sign-in mails" kutusu bu saatin ve son 24 saatin postalarını sınırlarla birlikte gösteriyor;
+      Settings › "Sign-in mail caps" formu açılıyor (`ACC-19`).
+- [ ] Settings › "Request limits"te yeni "Tokens reserved per web search" alanı 8 000 gösteriyor (kayıtlı ayarda yoksa
+      varsayılan); bir değişiklik kaydetmek "What will change" ile çalışıyor (`SRV-25`, `CRED-14`).
+- [ ] Telefonda Qutai Kredileri ile bir görev başlatın ve ilk yanıt gelmeden uygulamayı öldürün; hemen yeniden açıp yeni
+      bir görev başlatın: "başka bir görev sürüyor" hatası çıkmamalı, bakiye düşmemiş olmalı (`CRED-45`).
+- [ ] Yanıt akarken uygulamadan çıkın, dönünce aynı adım yeniden gönderilir: o adım ikinci kez ücretlendirilmemeli;
+      tamamlanmış bir yanıtın aynısını tekrar göndermek ise ücretlendirilir (`CRED-17`).
+- [ ] Derin araştırmada bir adımın tuttuğu kredi artık daha yüksek (Haiku ile yaklaşık 71 kredi); bakiyesi bunun altında
+      olan hesap derin araştırma adımında "yetersiz kredi" alır. Bu tutarı Settings › Request limits › "Tokens reserved
+      per web search" ile ayarlayabilirsiniz (`CRED-14`).
+- [ ] Sonraki mağaza paketi (`npm run build:aab -- --pro-mode`): paket betiği sonunda paketi denetliyor; test girişi
+      sırrı ya da test girişi değişkeni pakette olursa "not fit to ship" diyerek durur (`BUILD-9`).
