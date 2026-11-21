@@ -309,6 +309,7 @@ export const tr: Messages = {
   'footer.issues': 'Sorun bildirin',
   'footer.license': 'Lisans',
   'footer.appPrivacy': 'Uygulamanın gizlilik politikası',
+  'footer.terms': 'Uygulamanın kullanım koşulları',
   'footer.deleteAccount': 'Hesabınızı silin',
   'footer.support': 'Destek',
 
@@ -318,6 +319,11 @@ export const tr: Messages = {
   'policy.updated': 'Son güncelleme',
   'policy.note': 'Qutai’ın iPhone ve Android uygulamasının gizlilik politikası; uygulamada gösterilen metnin aynısı.',
   'policy.home': 'Qutai ana sayfasına dön',
+
+  'terms.metaTitle': 'Kullanım Koşulları · Qutai',
+  'terms.metaDescription':
+    'Qutai uygulamasının kullanım koşulları: yapay zekâ anahtarınız ve Qutai Kredileri, siteler, asistan, reklam engelleme, sayfa stilleri ve betikler, uygulamalar, indirmeler, kabul edilebilir kullanım ve haklarınız.',
+  'terms.note': 'Qutai’ın iPhone ve Android uygulamasının kullanım koşulları; uygulamada gösterilen metnin aynısı.',
 
   'deletion.metaTitle': 'Qutai hesabınızı silin · Qutai',
   'deletion.metaDescription': 'Qutai hesabınızı ve verilerini nasıl silersiniz: uygulamada ya da uygulama olmadan e-postayla; neyin silindiği ve neyin kaldığı.',

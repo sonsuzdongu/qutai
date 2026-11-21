@@ -2,7 +2,8 @@ import type { LegalTranslation } from '../documents';
 
 /**
  * Spanish translation of the privacy policy and terms of both builds, machine-translated from English on 20 Nov 2026
- * and not yet reviewed by a native speaker or a lawyer. The English version prevails.
+ * and not yet reviewed by a native speaker or a lawyer. The sections added on 21 Nov 2026 (protective clauses) are
+ * machine-translated too and not reviewed. The English version prevails.
  */
 
 const CONTACTS_BODY =
@@ -55,16 +56,154 @@ const TERMS_CHANGES =
 
 const TERMS_INTRO = 'Al usar Qutai, usted acepta estas condiciones. Léalas junto con la Política de privacidad.';
 
-const ASSISTANT_BODY =
-  'El asistente puede leer páginas, hacer clic, escribir y rellenar formularios cuando usted se lo pide. La IA puede ' +
-  'cometer errores: verifique sus respuestas y revise las compras, reservas, mensajes y otras acciones importantes ' +
-  'antes de que se completen. Puede exigir confirmación antes de cada acción en Configuración.';
+const BLOCKING_HEADING = 'Bloqueo, estilos de página, scripts y apps';
 
-const WEBSITES_BODY = 'Los sitios web y su contenido pertenecen a sus propietarios. Qutai no es responsable de ellos.';
+const BLOCKING_PRIVACY_START =
+  'El bloqueo de anuncios, rastreadores y anuncios de vídeo se hace en su teléfono: las listas de filtros se ' +
+  'descargan en el teléfono (véase más arriba) y las solicitudes de cada página se comprueban allí con ellas, así ' +
+  'que nada sobre las páginas que visita llega a los editores de las listas';
+
+const BLOCKING_PRIVACY_COOKIES =
+  '. «Ocultar avisos de cookies» solo oculta los avisos; nunca acepta ni rechaza cookies por usted. Sus propias ' +
+  'reglas, estilos guardados y scripts guardados se almacenan solo en el teléfono y, si hace una, ';
+
+const BLOCKING_PRIVACY_AI =
+  'Cuando el asistente escribe un estilo o un script, el servicio de IA recibe su solicitud y el contenido de la ' +
+  'página que necesita, como con cualquier pregunta, y también recibe el resultado de un script que usted aprobó; ' +
+  'Qutai rechaza los scripts que tocan las cookies, y el resultado de un script nunca se guarda en la memoria del ' +
+  'asistente, en las copias de seguridad ni en el historial de acciones. Las apps dentro de Qutai se almacenan ' +
+  'solo en el teléfono y, si las incluye, ';
+
+const BLOCKING_PRIVACY_APPS =
+  'Cuando le pide a Qutai que cree o corrija una app, su código y sus mensajes de error van al servicio de IA; lo ' +
+  'que usted guarda en una app, nunca. Las apps no pueden acceder a internet ni ver sitios web ni sus cookies.';
+
+const BLOCKING_PRIVACY_OPEN_SOURCE =
+  BLOCKING_PRIVACY_START +
+  BLOCKING_PRIVACY_COOKIES +
+  'en su archivo de copia de seguridad, cifrado con su contraseña. ' +
+  BLOCKING_PRIVACY_AI +
+  'en su archivo de copia de seguridad. ' +
+  BLOCKING_PRIVACY_APPS;
+
+const BLOCKING_PRIVACY_PRO =
+  BLOCKING_PRIVACY_START +
+  ' ni a Qutai' +
+  BLOCKING_PRIVACY_COOKIES +
+  'en sus copias de seguridad (el archivo que usted exporta o la copia de seguridad en su cuenta de Qutai), ' +
+  'cifradas con su contraseña. ' +
+  BLOCKING_PRIVACY_AI +
+  'en sus copias de seguridad. ' +
+  BLOCKING_PRIVACY_APPS;
+
+const NOT_A_PARTY = 'Qutai no es parte de ese acuerdo y no puede reembolsar esos costos.';
+
+const BROWSER_BODY =
+  'Qutai muestra sitios web que gestionan otras personas. No controlamos, verificamos ni respaldamos los sitios ' +
+  'web, su contenido ni los productos y servicios que ofrecen, y no somos responsables de ellos. Los sitios web y ' +
+  'su contenido pertenecen a sus propietarios. Cuando usa un sitio web, se aplican sus propias condiciones y la ' +
+  'ley, y usted es responsable de cumplirlas. Los enlaces, los resultados de búsqueda y las sugerencias, incluidas ' +
+  'las del asistente, no son recomendaciones nuestras.';
+
+const ASSISTANT_BODY =
+  'El asistente puede leer páginas, hacer clic, escribir, rellenar formularios y preparar publicaciones, mensajes ' +
+  'y pedidos cuando usted se lo pide. Antes de publicar o enviar texto en un sitio, Qutai le pide su aprobación. ' +
+  'Completar un pago está desactivado hasta que usted active «Permitir que el asistente complete pagos» en ' +
+  'Configuración › Asistente; incluso entonces, cada pago necesita su aprobación en el propio cuadro de diálogo de ' +
+  'Qutai, que muestra el total. La IA puede cometer errores: verifique lo que aprueba y revise las compras, ' +
+  'reservas, pagos, publicaciones, mensajes, eliminaciones, cambios en cuentas y otras acciones importantes antes ' +
+  'de que se completen. Usted es responsable de las acciones que pide o aprueba, como si las hubiera realizado ' +
+  'usted mismo. Sus compras y demás tratos con sitios web, vendedores y otras personas son entre usted y ellos: ' +
+  'Qutai no es parte de ellos y nunca gestiona sus pagos a ellos. Puede exigir confirmación antes de cada acción ' +
+  'en Configuración y bloquear el asistente en los sitios que usted elija.';
+
+const AI_ANSWERS_BODY =
+  'Las respuestas, los resúmenes, las traducciones y cualquier otra cosa que escriba la IA pueden ser erróneos, ' +
+  'incompletos o estar desactualizados. No son asesoramiento profesional, por ejemplo médico, jurídico, financiero ' +
+  'o fiscal: para esos asuntos, consulte a un profesional cualificado. Verifique la información importante antes ' +
+  'de confiar en ella.';
+
+const BLOCKING_TERMS_BODY =
+  'Bloquear anuncios y rastreadores, ocultar avisos de cookies y bloquear anuncios de vídeo son funciones que usted ' +
+  'elige: puede desactivar cada una en Configuración › Privacidad y seguridad, y desactivar el bloqueo para un ' +
+  'sitio en el panel de ese sitio («Bloquear anuncios de vídeo» está desactivado hasta que usted lo active). El ' +
+  'bloqueo solo funciona en las páginas que abre en su teléfono; no cambia los sitios web en sí. Las listas de ' +
+  'filtros las elaboran terceros con sus propias licencias (por ejemplo, EasyList con GPLv3 o CC BY-SA 3.0, y ' +
+  'AdGuard con GPLv3); su teléfono las descarga de sus editores, y Configuración muestra la página principal y la ' +
+  'licencia de cada lista. No garantizamos lo que se bloquea o no: las listas pueden bloquear demasiado o ' +
+  'demasiado poco, y un sitio puede dejar de funcionar, mostrar menos o pedirle que desactive el bloqueo. Usar el ' +
+  'bloqueo en un sitio es decisión suya, y las condiciones de ese sitio se aplican a su visita.';
+
+const STYLES_BODY =
+  'Puede pedirle al asistente que cambie el aspecto de una página (un estilo) o que ejecute un script en una ' +
+  'página, guardarlos para un sitio, y escribirlos, editarlos, importarlos y exportarlos usted mismo. Los scripts ' +
+  'están desactivados hasta que usted los active en Configuración › Asistente. Qutai muestra cada estilo y cada ' +
+  'script que escribe el asistente y solo lo ejecuta después de que usted lo apruebe, y los scripts importados ' +
+  'siguen desactivados hasta que usted los apruebe. Los estilos y los scripts solo se ejecutan en las páginas que ' +
+  'usted abre, en su teléfono. Qutai rechaza parte del código de riesgo, pero no revisa el código que usted ' +
+  'escribe, edita o importa, y no puede garantizar lo que hace ningún código: un script se ejecuta con su sesión ' +
+  'iniciada en ese sitio, puede cambiar la página o hacer que deje de funcionar, y puede afectar a su cuenta en él. ' +
+  'Apruebe solo lo que entienda y le merezca confianza. Usted es responsable de los estilos y scripts que aprueba, ' +
+  'guarda, importa o comparte.';
+
+const APPS_BODY =
+  'Las apps dentro de Qutai las escribe la IA a petición suya. Se ejecutan aisladas de internet y de los sitios ' +
+  'web, pero no las probamos ni revisamos y se ofrecen sin garantía: una app puede tener errores o perder los ' +
+  'datos guardados en ella, así que exporte o haga una copia de seguridad de todo lo importante. Las apps que ' +
+  'importa desde un archivo pueden venir de cualquier persona y no las revisamos; Qutai le muestra qué es una app ' +
+  'importada y qué puede usar antes de que usted la active. Usted es responsable de las apps que activa y de las ' +
+  'que comparte con otras personas.';
+
+const DOWNLOADS_BODY =
+  'Usted decide qué descargar, abrir e instalar. Qutai le avisa antes de descargar archivos que pueden instalar o ' +
+  'ejecutar código, pero no analiza los archivos en busca de virus u otros daños. En Android, abrir una app ' +
+  'descargada (un archivo APK) la entrega al instalador del sistema; Qutai nunca instala nada por sí mismo. Los ' +
+  'archivos y apps de fuera de App Store y Google Play pueden dañar su teléfono o sus datos; descargarlos, abrirlos ' +
+  'e instalarlos es responsabilidad suya, al igual que tener derecho a hacerlo.';
+
+const ACCEPTABLE_USE_BULLETS =
+  '• infringir la ley o los derechos de otras personas, como su privacidad, sus derechos de autor o sus marcas;\n' +
+  '• incumplir las condiciones de los sitios web o de los proveedores de IA;\n' +
+  '• eludir contraseñas, controles de acceso, muros de pago, protecciones anticopia (DRM) u otras protecciones ' +
+  'técnicas;\n' +
+  '• recopilar, rastrear o publicar de forma ilícita datos personales de otras personas;\n' +
+  '• enviar spam, crear cuentas o reseñas falsas, publicar o actuar de forma masiva y automatizada, o sobrecargar ' +
+  'sitios web;\n' +
+  '• engañar o estafar a nadie, ni propagar malware';
 
 const WARRANTY_BODY =
-  'Qutai se proporciona «tal cual», sin garantías. En la medida en que la ley lo permita, no somos responsables de ' +
-  'las pérdidas derivadas de su uso, incluidas las acciones realizadas por el asistente.';
+  'Qutai se proporciona «tal cual» y «según disponibilidad». Trabajamos para que sea útil y seguro, pero no ' +
+  'prometemos que funcione siempre, que esté libre de errores, que bloquee lo que usted espera ni que funcione con ' +
+  'todos los sitios web, y no damos más garantías que las que exige la ley. En la medida en que la ley lo permita, ' +
+  'no somos responsables de las pérdidas causadas por los sitios web y su contenido, por otras personas, por los ' +
+  'servicios de los proveedores de IA, por las listas de filtros, por los estilos, scripts y apps que usted aprueba ' +
+  'o importa, ni por las acciones que pidió o aprobó, ni de las pérdidas indirectas, como el lucro cesante. Nada ' +
+  'en estas condiciones limita la responsabilidad por dolo o culpa grave, por muerte o lesiones personales, ni ' +
+  'ninguna otra responsabilidad que la ley no permita limitar o excluir.';
+
+const CONSUMER_BODY =
+  'Si usa Qutai como consumidor, conserva todos los derechos que la ley del lugar donde vive otorga a los ' +
+  'consumidores y que no pueden excluirse por contrato, como sus derechos según la legislación turca de consumo ' +
+  '(Ley n.º 6502 de Protección del Consumidor) y la legislación de consumo de la Unión Europea y del Espacio ' +
+  'Económico Europeo. Nada en estas condiciones limita ni excluye esos derechos; si una condición entra en ' +
+  'conflicto con ellos, prevalecen esos derechos.';
+
+/** The terms sections both builds share, from "Qutai is a browser" to "Changes", around Acceptable use. */
+function sharedTerms(acceptableUse: string) {
+  return [
+    { heading: 'Qutai es un navegador', body: BROWSER_BODY },
+    { heading: 'El asistente actúa en su nombre', body: ASSISTANT_BODY },
+    { heading: 'Respuestas de la IA', body: AI_ANSWERS_BODY },
+    { heading: 'Bloqueo de anuncios y rastreadores', body: BLOCKING_TERMS_BODY },
+    { heading: 'Estilos de página y scripts', body: STYLES_BODY },
+    { heading: 'Apps dentro de Qutai', body: APPS_BODY },
+    { heading: 'Descargas e instalación de archivos', body: DOWNLOADS_BODY },
+    { heading: 'Uso aceptable', body: acceptableUse },
+    { heading: 'Sin garantía y límites de responsabilidad', body: WARRANTY_BODY },
+    { heading: 'Sus derechos como consumidor', body: CONSUMER_BODY },
+    { heading: 'Cambios', body: TERMS_CHANGES },
+  ];
+}
 
 export const es: LegalTranslation = {
   openSource: {
@@ -111,6 +250,10 @@ export const es: LegalTranslation = {
           body: CONTACTS_BODY,
         },
         {
+          heading: BLOCKING_HEADING,
+          body: BLOCKING_PRIVACY_OPEN_SOURCE,
+        },
+        {
           heading: 'Contraseñas y datos de pago',
           body: PASSWORDS_BODY,
         },
@@ -140,32 +283,14 @@ export const es: LegalTranslation = {
           heading: 'Su proveedor de IA y los costos',
           body:
             'El asistente funciona con su propia clave de API de Anthropic, OpenAI, Google u OpenRouter, o con un ' +
-            'servidor compatible con OpenAI que usted configure. Usted es responsable de su cuenta en ese servicio, ' +
-            'de sus condiciones y de todos los costos que se cobren a su clave.',
+            'servidor compatible con OpenAI que usted configure. Usarlo es un acuerdo entre usted y ese servicio: se ' +
+            'aplican sus condiciones, su política de privacidad y sus precios, y usted es responsable de su cuenta en ' +
+            'él y de todos los costos que se cobren a su clave. ' +
+            NOT_A_PARTY,
         },
-        {
-          heading: 'El asistente actúa en su nombre',
-          body: ASSISTANT_BODY,
-        },
-        {
-          heading: 'Uso aceptable',
-          body:
-            'No use Qutai para infringir la ley, para incumplir las condiciones de los sitios web o de los ' +
-            'proveedores de IA, ni para perjudicar a otras personas, por ejemplo, enviando spam o recopilando datos ' +
-            'de terceros.',
-        },
-        {
-          heading: 'Sitios web y contenido',
-          body: WEBSITES_BODY,
-        },
-        {
-          heading: 'Sin garantía',
-          body: WARRANTY_BODY,
-        },
-        {
-          heading: 'Cambios',
-          body: TERMS_CHANGES,
-        },
+        ...sharedTerms(
+          'No use Qutai, el asistente, los estilos, los scripts ni las apps para:\n' + ACCEPTABLE_USE_BULLETS + '.',
+        ),
       ],
     },
   },
@@ -287,6 +412,10 @@ export const es: LegalTranslation = {
           body: CONTACTS_BODY,
         },
         {
+          heading: BLOCKING_HEADING,
+          body: BLOCKING_PRIVACY_PRO,
+        },
+        {
           heading: 'Contraseñas y datos de pago',
           body: PASSWORDS_BODY,
         },
@@ -331,8 +460,11 @@ export const es: LegalTranslation = {
         {
           heading: 'Dos formas de usar el asistente',
           body:
-            '• Su propia clave de API: usted es responsable de su cuenta con ese proveedor, de sus condiciones y de ' +
-            'todos los costos que se cobren a su clave.\n' +
+            '• Su propia clave de API: usarla es un acuerdo entre usted y ese proveedor. Se aplican sus condiciones, ' +
+            'su política de privacidad y sus precios, y usted es responsable de su cuenta en él y de todos los costos ' +
+            'que se cobren a su clave; ' +
+            NOT_A_PARTY +
+            '\n' +
             '• Qutai Credits: las solicitudes del asistente pasan por el servidor de Qutai y se pagan con créditos ' +
             'de su cuenta de Qutai. Necesita una cuenta para usarlos.',
         },
@@ -358,29 +490,13 @@ export const es: LegalTranslation = {
             'cuenta es su responsabilidad. Podemos suspender una cuenta que incumpla estas condiciones. Si elimina ' +
             'su cuenta, se pierden los créditos que le queden.',
         },
-        {
-          heading: 'El asistente actúa en su nombre',
-          body: ASSISTANT_BODY,
-        },
-        {
-          heading: 'Uso aceptable',
-          body:
-            'No use Qutai ni Qutai Credits para infringir la ley, para incumplir las condiciones de los sitios web o ' +
-            'de los proveedores de IA, para perjudicar a otras personas (por ejemplo, enviando spam o recopilando ' +
-            'datos de terceros) ni para hacer un uso indebido del servidor de Qutai o sobrecargarlo.',
-        },
-        {
-          heading: 'Sitios web y contenido',
-          body: WEBSITES_BODY,
-        },
-        {
-          heading: 'Sin garantía',
-          body: WARRANTY_BODY,
-        },
-        {
-          heading: 'Cambios',
-          body: TERMS_CHANGES,
-        },
+        ...sharedTerms(
+          'No use Qutai, Qutai Credits, el asistente, los estilos, los scripts ni las apps para:\n' +
+            ACCEPTABLE_USE_BULLETS +
+            ';\n' +
+            '• hacer un uso indebido del servidor de Qutai, atacarlo o sobrecargarlo.\n' +
+            'Podemos suspender una cuenta que se use de estas formas.',
+        ),
       ],
     },
   },

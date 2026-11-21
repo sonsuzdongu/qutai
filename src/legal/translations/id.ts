@@ -2,7 +2,8 @@ import type { LegalTranslation } from '../documents';
 
 /**
  * Indonesian translation of the privacy policy and terms of both builds, machine-translated from English on 20 Nov 2026
- * and not yet reviewed by a native speaker or a lawyer. The English version prevails.
+ * and not yet reviewed by a native speaker or a lawyer. The sections added on 21 Nov 2026 (protective clauses) are
+ * machine-translated too and not reviewed. The English version prevails.
  */
 export const id: LegalTranslation = {
   openSource: {
@@ -67,6 +68,24 @@ export const id: LegalTranslation = {
             'izin ini di Setelan.',
         },
         {
+          heading: 'Pemblokiran, gaya halaman, skrip, dan aplikasi',
+          body:
+            'Pemblokiran iklan, pelacak, dan iklan video terjadi di ponsel Anda: daftar filter diunduh ke ponsel ' +
+            '(lihat di atas) dan permintaan setiap halaman dicocokkan dengan daftar tersebut di sana, sehingga ' +
+            'tidak ada apa pun tentang halaman yang Anda kunjungi yang sampai ke penerbit daftar. “Sembunyikan ' +
+            'banner cookie” hanya menyembunyikan banner; fitur ini tidak pernah menerima atau menolak cookie atas ' +
+            'nama Anda. Aturan Anda sendiri, gaya yang disimpan, dan skrip yang disimpan hanya disimpan di ponsel ' +
+            'dan, jika Anda membuat cadangan, di file cadangan Anda, dienkripsi dengan kata sandi Anda. Saat ' +
+            'asisten menulis gaya atau skrip, layanan AI menerima permintaan Anda dan konten halaman yang ' +
+            'dibutuhkannya, seperti pada pertanyaan apa pun, dan hasil skrip yang Anda setujui juga dikirim ke ' +
+            'layanan tersebut; Qutai menolak skrip yang menyentuh cookie, dan hasil skrip tidak pernah disimpan di ' +
+            'memori asisten, di cadangan, atau di histori tindakan. Aplikasi di dalam Qutai hanya disimpan di ' +
+            'ponsel dan, jika Anda menyertakannya, di file cadangan Anda. Saat Anda meminta Qutai membuat atau ' +
+            'memperbaiki aplikasi, kode aplikasi dan pesan error-nya dikirim ke layanan AI; apa yang Anda simpan ' +
+            'di dalam aplikasi tidak pernah dikirim. Aplikasi tidak dapat mengakses internet atau melihat situs ' +
+            'web maupun cookie-nya.',
+        },
+        {
           heading: 'Kata sandi dan detail pembayaran',
           body:
             'Qutai tidak mengizinkan memori asisten menyimpan kata sandi, nomor kartu, kode keamanan kartu, tanggal ' +
@@ -108,34 +127,131 @@ export const id: LegalTranslation = {
           heading: 'Penyedia AI Anda dan biaya',
           body:
             'Asisten bekerja dengan kunci API Anda sendiri dari Anthropic, OpenAI, Google, atau OpenRouter, atau ' +
-            'dengan server yang kompatibel dengan OpenAI yang Anda siapkan. Anda bertanggung jawab atas akun Anda di ' +
-            'layanan tersebut, ketentuannya, dan setiap biaya yang ditagihkan ke kunci Anda.',
+            'dengan server yang kompatibel dengan OpenAI yang Anda siapkan. Menggunakannya merupakan perjanjian ' +
+            'antara Anda dan layanan tersebut: ketentuan, kebijakan privasi, dan harganya berlaku, dan Anda ' +
+            'bertanggung jawab atas akun Anda di sana dan setiap biaya yang ditagihkan ke kunci Anda. Qutai bukan ' +
+            'pihak dalam perjanjian tersebut dan tidak dapat mengembalikan biaya tersebut.',
+        },
+        {
+          heading: 'Qutai adalah browser',
+          body:
+            'Qutai menampilkan situs web yang dikelola orang lain. Kami tidak mengendalikan, memeriksa, atau ' +
+            'mendukung situs web, kontennya, atau produk dan layanan yang ditawarkannya, dan kami tidak ' +
+            'bertanggung jawab atasnya. Situs web dan kontennya adalah milik pemiliknya masing-masing. Ketentuan ' +
+            'masing-masing situs web dan hukum berlaku saat Anda menggunakannya, dan Anda bertanggung jawab untuk ' +
+            'mematuhinya. Tautan, hasil penelusuran, dan saran, termasuk dari asisten, bukan rekomendasi dari ' +
+            'kami.',
         },
         {
           heading: 'Asisten bertindak atas nama Anda',
           body:
-            'Asisten dapat membaca halaman, mengeklik, mengetik, dan mengisi formulir saat Anda memintanya. AI dapat ' +
-            'membuat kesalahan: periksa jawabannya, dan tinjau pembelian, pemesanan, pesan, dan tindakan penting ' +
-            'lainnya sebelum diselesaikan. Anda dapat mewajibkan konfirmasi sebelum setiap tindakan di Setelan.',
+            'Asisten dapat membaca halaman, mengeklik, mengetik, mengisi formulir, serta menyiapkan postingan, ' +
+            'pesan, dan pesanan saat Anda memintanya. Sebelum asisten memposting atau mengirim teks di suatu ' +
+            'situs, Qutai meminta persetujuan Anda. Menyelesaikan pembayaran nonaktif sampai Anda mengaktifkan ' +
+            '“Izinkan asisten menyelesaikan pembayaran” di Setelan › Asisten; bahkan setelah itu, setiap ' +
+            'pembayaran memerlukan persetujuan Anda di dialog Qutai sendiri, yang menampilkan totalnya. AI dapat ' +
+            'membuat kesalahan: periksa apa yang Anda setujui, dan tinjau pembelian, pemesanan, pembayaran, ' +
+            'postingan, pesan, penghapusan, perubahan akun, dan tindakan penting lainnya sebelum diselesaikan. ' +
+            'Anda bertanggung jawab atas tindakan yang Anda minta atau setujui, seolah-olah Anda sendiri yang ' +
+            'melakukannya. Pembelian dan urusan Anda lainnya dengan situs web, penjual, dan orang lain adalah ' +
+            'antara Anda dan mereka: Qutai bukan pihak di dalamnya dan tidak pernah menangani pembayaran Anda ' +
+            'kepada mereka. Anda dapat mewajibkan konfirmasi sebelum setiap tindakan di Setelan, dan memblokir ' +
+            'asisten di situs pilihan Anda.',
+        },
+        {
+          heading: 'Jawaban AI',
+          body:
+            'Jawaban, ringkasan, terjemahan, dan apa pun yang ditulis AI dapat salah, tidak lengkap, atau usang. ' +
+            'Semua itu bukan nasihat profesional, misalnya nasihat medis, hukum, keuangan, atau pajak: untuk ' +
+            'hal-hal seperti itu, mintalah pendapat tenaga profesional yang berkualifikasi. Periksa informasi ' +
+            'penting sebelum Anda mengandalkannya.',
+        },
+        {
+          heading: 'Pemblokiran iklan dan pelacak',
+          body:
+            'Memblokir iklan dan pelacak, menyembunyikan banner cookie, dan memblokir iklan video adalah fitur ' +
+            'yang Anda pilih: Anda dapat menonaktifkan masing-masing di Setelan › Privasi dan keamanan, dan ' +
+            'menonaktifkan pemblokiran untuk satu situs di panel situs tersebut (“Blokir iklan video” nonaktif ' +
+            'sampai Anda mengaktifkannya). Pemblokiran hanya berfungsi di halaman yang Anda buka di ponsel Anda; ' +
+            'pemblokiran tidak mengubah situs web itu sendiri. Daftar filter dibuat oleh pihak ketiga dengan ' +
+            'lisensi mereka sendiri (misalnya EasyList dengan GPLv3 atau CC BY-SA 3.0, dan AdGuard dengan GPLv3); ' +
+            'ponsel Anda mengunduhnya dari penerbitnya, dan Setelan menampilkan halaman beranda dan lisensi setiap ' +
+            'daftar. Kami tidak menjamin apa yang diblokir atau tidak diblokir: daftar dapat memblokir terlalu ' +
+            'banyak atau terlalu sedikit, dan situs dapat rusak, menampilkan lebih sedikit, atau meminta Anda ' +
+            'menonaktifkan pemblokiran. Menggunakan pemblokiran di suatu situs atau tidak adalah keputusan Anda, ' +
+            'dan ketentuan situs tersebut berlaku untuk kunjungan Anda.',
+        },
+        {
+          heading: 'Gaya halaman dan skrip',
+          body:
+            'Anda dapat meminta asisten mengubah tampilan halaman (gaya) atau menjalankan skrip di halaman, ' +
+            'menyimpannya untuk suatu situs, serta menulis, mengedit, mengimpor, dan mengekspornya sendiri. Skrip ' +
+            'nonaktif sampai Anda mengaktifkannya di Setelan › Asisten. Qutai menampilkan setiap gaya dan skrip ' +
+            'yang ditulis asisten dan hanya menjalankannya setelah Anda menyetujuinya, dan skrip yang diimpor ' +
+            'tetap nonaktif sampai Anda menyetujuinya. Gaya dan skrip hanya berjalan di halaman yang Anda buka, di ' +
+            'ponsel Anda. Qutai menolak sebagian kode yang berisiko, tetapi tidak meninjau kode yang Anda tulis, ' +
+            'edit, atau impor, dan tidak dapat menjamin apa yang dilakukan kode mana pun: skrip berjalan dengan ' +
+            'sesi masuk Anda di situs tersebut, dapat mengubah atau merusak halaman, dan dapat memengaruhi akun ' +
+            'Anda di sana. Setujui hanya apa yang Anda pahami dan percayai. Anda bertanggung jawab atas gaya dan ' +
+            'skrip yang Anda setujui, simpan, impor, atau bagikan.',
+        },
+        {
+          heading: 'Aplikasi di dalam Qutai',
+          body:
+            'Aplikasi di dalam Qutai ditulis oleh AI atas permintaan Anda. Aplikasi berjalan terisolasi dari ' +
+            'internet dan dari situs web, tetapi tidak diuji atau ditinjau oleh kami dan disediakan tanpa jaminan: ' +
+            'aplikasi dapat mengandung kesalahan atau kehilangan data yang disimpan di dalamnya, jadi ekspor atau ' +
+            'cadangkan apa pun yang penting. Aplikasi yang Anda impor dari file dapat berasal dari siapa saja dan ' +
+            'tidak ditinjau oleh kami; Qutai menunjukkan kepada Anda apa aplikasi yang diimpor itu dan apa yang ' +
+            'boleh digunakannya sebelum Anda mengaktifkannya. Anda bertanggung jawab atas aplikasi yang Anda ' +
+            'aktifkan dan aplikasi yang Anda bagikan kepada orang lain.',
+        },
+        {
+          heading: 'Unduhan dan pemasangan file',
+          body:
+            'Anda yang memutuskan apa yang diunduh, dibuka, dan dipasang. Qutai memperingatkan Anda sebelum ' +
+            'mengunduh file yang dapat memasang atau menjalankan kode, tetapi tidak memindai file untuk mencari ' +
+            'virus atau bahaya lainnya. Di Android, membuka aplikasi yang diunduh (file APK) akan menyerahkannya ' +
+            'ke penginstal sistem; Qutai tidak pernah memasang apa pun sendiri. File dan aplikasi dari luar App ' +
+            'Store dan Google Play dapat membahayakan ponsel atau data Anda; mengunduh, membuka, dan memasangnya ' +
+            'adalah tanggung jawab Anda, demikian pula memastikan bahwa Anda berhak melakukannya.',
         },
         {
           heading: 'Penggunaan yang dapat diterima',
           body:
-            'Jangan gunakan Qutai untuk melanggar hukum, melanggar ketentuan situs web atau penyedia AI, atau ' +
-            'merugikan orang lain, misalnya dengan mengirim spam atau mengumpulkan data orang lain.',
+            'Jangan gunakan Qutai, asisten, gaya, skrip, atau aplikasi untuk:\n' +
+            '• melanggar hukum atau hak orang lain, seperti privasi, hak cipta, atau merek dagang mereka;\n' +
+            '• melanggar ketentuan situs web atau penyedia AI;\n' +
+            '• mengakali kata sandi, kontrol akses, pembatasan konten berbayar, perlindungan salinan (DRM), atau ' +
+            'perlindungan teknis lainnya;\n' +
+            '• mengumpulkan, melacak, atau memublikasikan data pribadi orang lain secara melanggar hukum;\n' +
+            '• mengirim spam, membuat akun atau ulasan palsu, memposting atau bertindak secara massal dan ' +
+            'otomatis, atau membebani situs web secara berlebihan;\n' +
+            '• menipu atau mencurangi siapa pun, atau menyebarkan malware.',
         },
         {
-          heading: 'Situs web dan konten',
+          heading: 'Tanpa jaminan dan batasan tanggung jawab',
           body:
-            'Situs web dan kontennya adalah milik pemiliknya masing-masing. Qutai tidak bertanggung jawab atas situs ' +
-            'web dan konten tersebut.',
+            'Qutai disediakan “sebagaimana adanya” dan “sebagaimana tersedia”. Kami berupaya membuatnya bermanfaat ' +
+            'dan aman, tetapi kami tidak menjanjikan bahwa Qutai akan selalu berfungsi, bebas dari kesalahan, ' +
+            'memblokir apa yang Anda harapkan, atau berfungsi dengan setiap situs web, dan kami tidak memberikan ' +
+            'jaminan apa pun selain yang diwajibkan oleh hukum. Sejauh diizinkan oleh hukum, kami tidak ' +
+            'bertanggung jawab atas kerugian yang disebabkan oleh situs web dan kontennya, oleh orang lain, oleh ' +
+            'layanan penyedia AI, oleh daftar filter, oleh gaya, skrip, dan aplikasi yang Anda setujui atau impor, ' +
+            'atau oleh tindakan yang Anda minta atau setujui, maupun atas kerugian tidak langsung seperti ' +
+            'hilangnya keuntungan. Tidak ada satu pun dalam persyaratan ini yang membatasi tanggung jawab atas ' +
+            'kesengajaan atau kelalaian berat, atas kematian atau cedera badan, atau tanggung jawab lain apa pun ' +
+            'yang menurut hukum tidak boleh dibatasi atau dikecualikan.',
         },
         {
-          heading: 'Tanpa jaminan',
+          heading: 'Hak Anda sebagai konsumen',
           body:
-            'Qutai disediakan “sebagaimana adanya”, tanpa jaminan. Sejauh diizinkan oleh hukum, kami tidak ' +
-            'bertanggung jawab atas kerugian yang timbul dari penggunaannya, termasuk tindakan yang dilakukan oleh ' +
-            'asisten.',
+            'Jika Anda menggunakan Qutai sebagai konsumen, Anda tetap memiliki setiap hak yang diberikan kepada ' +
+            'konsumen oleh hukum di tempat tinggal Anda dan yang tidak dapat dikesampingkan melalui perjanjian, ' +
+            'seperti hak Anda berdasarkan hukum perlindungan konsumen Turki (Undang-Undang No. 6502 tentang ' +
+            'Perlindungan Konsumen) serta hukum perlindungan konsumen Uni Eropa dan Kawasan Ekonomi Eropa. Tidak ' +
+            'ada satu pun dalam persyaratan ini yang membatasi atau mengecualikan hak-hak tersebut; jika suatu ' +
+            'ketentuan bertentangan dengan hak-hak tersebut, hak-hak tersebutlah yang berlaku.',
         },
         {
           heading: 'Perubahan',
@@ -281,6 +397,24 @@ export const id: LegalTranslation = {
             'izin ini di Setelan.',
         },
         {
+          heading: 'Pemblokiran, gaya halaman, skrip, dan aplikasi',
+          body:
+            'Pemblokiran iklan, pelacak, dan iklan video terjadi di ponsel Anda: daftar filter diunduh ke ponsel ' +
+            '(lihat di atas) dan permintaan setiap halaman dicocokkan dengan daftar tersebut di sana, sehingga ' +
+            'tidak ada apa pun tentang halaman yang Anda kunjungi yang sampai ke penerbit daftar atau ke Qutai. ' +
+            '“Sembunyikan banner cookie” hanya menyembunyikan banner; fitur ini tidak pernah menerima atau menolak ' +
+            'cookie atas nama Anda. Aturan Anda sendiri, gaya yang disimpan, dan skrip yang disimpan hanya ' +
+            'disimpan di ponsel dan, jika Anda membuat cadangan, di cadangan Anda (file yang Anda ekspor, atau ' +
+            'cadangan di akun Qutai Anda), dienkripsi dengan kata sandi Anda. Saat asisten menulis gaya atau ' +
+            'skrip, layanan AI menerima permintaan Anda dan konten halaman yang dibutuhkannya, seperti pada ' +
+            'pertanyaan apa pun, dan hasil skrip yang Anda setujui juga dikirim ke layanan tersebut; Qutai menolak ' +
+            'skrip yang menyentuh cookie, dan hasil skrip tidak pernah disimpan di memori asisten, di cadangan, ' +
+            'atau di histori tindakan. Aplikasi di dalam Qutai hanya disimpan di ponsel dan, jika Anda ' +
+            'menyertakannya, di cadangan Anda. Saat Anda meminta Qutai membuat atau memperbaiki aplikasi, kode ' +
+            'aplikasi dan pesan error-nya dikirim ke layanan AI; apa yang Anda simpan di dalam aplikasi tidak ' +
+            'pernah dikirim. Aplikasi tidak dapat mengakses internet atau melihat situs web maupun cookie-nya.',
+        },
+        {
           heading: 'Kata sandi dan detail pembayaran',
           body:
             'Qutai tidak mengizinkan memori asisten menyimpan kata sandi, nomor kartu, kode keamanan kartu, tanggal ' +
@@ -337,9 +471,12 @@ export const id: LegalTranslation = {
         {
           heading: 'Dua cara menggunakan asisten',
           body:
-            '• Kunci API Anda sendiri: Anda bertanggung jawab atas akun Anda di penyedia tersebut, ketentuannya, dan ' +
-            'setiap biaya yang ditagihkan ke kunci Anda.\n• Qutai Credits: permintaan asisten melewati server Qutai ' +
-            'dan dibayar dengan kredit dari akun Qutai Anda. Anda memerlukan akun untuk menggunakannya.',
+            '• Kunci API Anda sendiri: menggunakannya merupakan perjanjian antara Anda dan penyedia tersebut. ' +
+            'Ketentuan, kebijakan privasi, dan harganya berlaku, dan Anda bertanggung jawab atas akun Anda di sana ' +
+            'dan setiap biaya yang ditagihkan ke kunci Anda; Qutai bukan pihak dalam perjanjian tersebut dan tidak ' +
+            'dapat mengembalikan biaya tersebut.\n' +
+            '• Qutai Credits: permintaan asisten melewati server Qutai dan dibayar dengan kredit dari akun Qutai ' +
+            'Anda. Anda memerlukan akun untuk menggunakannya.',
         },
         {
           heading: 'Qutai Credits',
@@ -364,31 +501,127 @@ export const id: LegalTranslation = {
             'menghapus akun Anda, kredit yang tersisa akan hilang.',
         },
         {
+          heading: 'Qutai adalah browser',
+          body:
+            'Qutai menampilkan situs web yang dikelola orang lain. Kami tidak mengendalikan, memeriksa, atau ' +
+            'mendukung situs web, kontennya, atau produk dan layanan yang ditawarkannya, dan kami tidak ' +
+            'bertanggung jawab atasnya. Situs web dan kontennya adalah milik pemiliknya masing-masing. Ketentuan ' +
+            'masing-masing situs web dan hukum berlaku saat Anda menggunakannya, dan Anda bertanggung jawab untuk ' +
+            'mematuhinya. Tautan, hasil penelusuran, dan saran, termasuk dari asisten, bukan rekomendasi dari ' +
+            'kami.',
+        },
+        {
           heading: 'Asisten bertindak atas nama Anda',
           body:
-            'Asisten dapat membaca halaman, mengeklik, mengetik, dan mengisi formulir saat Anda memintanya. AI dapat ' +
-            'membuat kesalahan: periksa jawabannya, dan tinjau pembelian, pemesanan, pesan, dan tindakan penting ' +
-            'lainnya sebelum diselesaikan. Anda dapat mewajibkan konfirmasi sebelum setiap tindakan di Setelan.',
+            'Asisten dapat membaca halaman, mengeklik, mengetik, mengisi formulir, serta menyiapkan postingan, ' +
+            'pesan, dan pesanan saat Anda memintanya. Sebelum asisten memposting atau mengirim teks di suatu ' +
+            'situs, Qutai meminta persetujuan Anda. Menyelesaikan pembayaran nonaktif sampai Anda mengaktifkan ' +
+            '“Izinkan asisten menyelesaikan pembayaran” di Setelan › Asisten; bahkan setelah itu, setiap ' +
+            'pembayaran memerlukan persetujuan Anda di dialog Qutai sendiri, yang menampilkan totalnya. AI dapat ' +
+            'membuat kesalahan: periksa apa yang Anda setujui, dan tinjau pembelian, pemesanan, pembayaran, ' +
+            'postingan, pesan, penghapusan, perubahan akun, dan tindakan penting lainnya sebelum diselesaikan. ' +
+            'Anda bertanggung jawab atas tindakan yang Anda minta atau setujui, seolah-olah Anda sendiri yang ' +
+            'melakukannya. Pembelian dan urusan Anda lainnya dengan situs web, penjual, dan orang lain adalah ' +
+            'antara Anda dan mereka: Qutai bukan pihak di dalamnya dan tidak pernah menangani pembayaran Anda ' +
+            'kepada mereka. Anda dapat mewajibkan konfirmasi sebelum setiap tindakan di Setelan, dan memblokir ' +
+            'asisten di situs pilihan Anda.',
+        },
+        {
+          heading: 'Jawaban AI',
+          body:
+            'Jawaban, ringkasan, terjemahan, dan apa pun yang ditulis AI dapat salah, tidak lengkap, atau usang. ' +
+            'Semua itu bukan nasihat profesional, misalnya nasihat medis, hukum, keuangan, atau pajak: untuk ' +
+            'hal-hal seperti itu, mintalah pendapat tenaga profesional yang berkualifikasi. Periksa informasi ' +
+            'penting sebelum Anda mengandalkannya.',
+        },
+        {
+          heading: 'Pemblokiran iklan dan pelacak',
+          body:
+            'Memblokir iklan dan pelacak, menyembunyikan banner cookie, dan memblokir iklan video adalah fitur ' +
+            'yang Anda pilih: Anda dapat menonaktifkan masing-masing di Setelan › Privasi dan keamanan, dan ' +
+            'menonaktifkan pemblokiran untuk satu situs di panel situs tersebut (“Blokir iklan video” nonaktif ' +
+            'sampai Anda mengaktifkannya). Pemblokiran hanya berfungsi di halaman yang Anda buka di ponsel Anda; ' +
+            'pemblokiran tidak mengubah situs web itu sendiri. Daftar filter dibuat oleh pihak ketiga dengan ' +
+            'lisensi mereka sendiri (misalnya EasyList dengan GPLv3 atau CC BY-SA 3.0, dan AdGuard dengan GPLv3); ' +
+            'ponsel Anda mengunduhnya dari penerbitnya, dan Setelan menampilkan halaman beranda dan lisensi setiap ' +
+            'daftar. Kami tidak menjamin apa yang diblokir atau tidak diblokir: daftar dapat memblokir terlalu ' +
+            'banyak atau terlalu sedikit, dan situs dapat rusak, menampilkan lebih sedikit, atau meminta Anda ' +
+            'menonaktifkan pemblokiran. Menggunakan pemblokiran di suatu situs atau tidak adalah keputusan Anda, ' +
+            'dan ketentuan situs tersebut berlaku untuk kunjungan Anda.',
+        },
+        {
+          heading: 'Gaya halaman dan skrip',
+          body:
+            'Anda dapat meminta asisten mengubah tampilan halaman (gaya) atau menjalankan skrip di halaman, ' +
+            'menyimpannya untuk suatu situs, serta menulis, mengedit, mengimpor, dan mengekspornya sendiri. Skrip ' +
+            'nonaktif sampai Anda mengaktifkannya di Setelan › Asisten. Qutai menampilkan setiap gaya dan skrip ' +
+            'yang ditulis asisten dan hanya menjalankannya setelah Anda menyetujuinya, dan skrip yang diimpor ' +
+            'tetap nonaktif sampai Anda menyetujuinya. Gaya dan skrip hanya berjalan di halaman yang Anda buka, di ' +
+            'ponsel Anda. Qutai menolak sebagian kode yang berisiko, tetapi tidak meninjau kode yang Anda tulis, ' +
+            'edit, atau impor, dan tidak dapat menjamin apa yang dilakukan kode mana pun: skrip berjalan dengan ' +
+            'sesi masuk Anda di situs tersebut, dapat mengubah atau merusak halaman, dan dapat memengaruhi akun ' +
+            'Anda di sana. Setujui hanya apa yang Anda pahami dan percayai. Anda bertanggung jawab atas gaya dan ' +
+            'skrip yang Anda setujui, simpan, impor, atau bagikan.',
+        },
+        {
+          heading: 'Aplikasi di dalam Qutai',
+          body:
+            'Aplikasi di dalam Qutai ditulis oleh AI atas permintaan Anda. Aplikasi berjalan terisolasi dari ' +
+            'internet dan dari situs web, tetapi tidak diuji atau ditinjau oleh kami dan disediakan tanpa jaminan: ' +
+            'aplikasi dapat mengandung kesalahan atau kehilangan data yang disimpan di dalamnya, jadi ekspor atau ' +
+            'cadangkan apa pun yang penting. Aplikasi yang Anda impor dari file dapat berasal dari siapa saja dan ' +
+            'tidak ditinjau oleh kami; Qutai menunjukkan kepada Anda apa aplikasi yang diimpor itu dan apa yang ' +
+            'boleh digunakannya sebelum Anda mengaktifkannya. Anda bertanggung jawab atas aplikasi yang Anda ' +
+            'aktifkan dan aplikasi yang Anda bagikan kepada orang lain.',
+        },
+        {
+          heading: 'Unduhan dan pemasangan file',
+          body:
+            'Anda yang memutuskan apa yang diunduh, dibuka, dan dipasang. Qutai memperingatkan Anda sebelum ' +
+            'mengunduh file yang dapat memasang atau menjalankan kode, tetapi tidak memindai file untuk mencari ' +
+            'virus atau bahaya lainnya. Di Android, membuka aplikasi yang diunduh (file APK) akan menyerahkannya ' +
+            'ke penginstal sistem; Qutai tidak pernah memasang apa pun sendiri. File dan aplikasi dari luar App ' +
+            'Store dan Google Play dapat membahayakan ponsel atau data Anda; mengunduh, membuka, dan memasangnya ' +
+            'adalah tanggung jawab Anda, demikian pula memastikan bahwa Anda berhak melakukannya.',
         },
         {
           heading: 'Penggunaan yang dapat diterima',
           body:
-            'Jangan gunakan Qutai atau Qutai Credits untuk melanggar hukum, melanggar ketentuan situs web atau ' +
-            'penyedia AI, merugikan orang lain (misalnya dengan mengirim spam atau mengumpulkan data orang lain), ' +
-            'atau menyalahgunakan atau membebani server Qutai secara berlebihan.',
+            'Jangan gunakan Qutai, Qutai Credits, asisten, gaya, skrip, atau aplikasi untuk:\n' +
+            '• melanggar hukum atau hak orang lain, seperti privasi, hak cipta, atau merek dagang mereka;\n' +
+            '• melanggar ketentuan situs web atau penyedia AI;\n' +
+            '• mengakali kata sandi, kontrol akses, pembatasan konten berbayar, perlindungan salinan (DRM), atau ' +
+            'perlindungan teknis lainnya;\n' +
+            '• mengumpulkan, melacak, atau memublikasikan data pribadi orang lain secara melanggar hukum;\n' +
+            '• mengirim spam, membuat akun atau ulasan palsu, memposting atau bertindak secara massal dan ' +
+            'otomatis, atau membebani situs web secara berlebihan;\n' +
+            '• menipu atau mencurangi siapa pun, atau menyebarkan malware;\n' +
+            '• menyalahgunakan, menyerang, atau membebani server Qutai secara berlebihan.\n' +
+            'Kami dapat menangguhkan akun yang digunakan dengan cara-cara tersebut.',
         },
         {
-          heading: 'Situs web dan konten',
+          heading: 'Tanpa jaminan dan batasan tanggung jawab',
           body:
-            'Situs web dan kontennya adalah milik pemiliknya masing-masing. Qutai tidak bertanggung jawab atas situs ' +
-            'web dan konten tersebut.',
+            'Qutai disediakan “sebagaimana adanya” dan “sebagaimana tersedia”. Kami berupaya membuatnya bermanfaat ' +
+            'dan aman, tetapi kami tidak menjanjikan bahwa Qutai akan selalu berfungsi, bebas dari kesalahan, ' +
+            'memblokir apa yang Anda harapkan, atau berfungsi dengan setiap situs web, dan kami tidak memberikan ' +
+            'jaminan apa pun selain yang diwajibkan oleh hukum. Sejauh diizinkan oleh hukum, kami tidak ' +
+            'bertanggung jawab atas kerugian yang disebabkan oleh situs web dan kontennya, oleh orang lain, oleh ' +
+            'layanan penyedia AI, oleh daftar filter, oleh gaya, skrip, dan aplikasi yang Anda setujui atau impor, ' +
+            'atau oleh tindakan yang Anda minta atau setujui, maupun atas kerugian tidak langsung seperti ' +
+            'hilangnya keuntungan. Tidak ada satu pun dalam persyaratan ini yang membatasi tanggung jawab atas ' +
+            'kesengajaan atau kelalaian berat, atas kematian atau cedera badan, atau tanggung jawab lain apa pun ' +
+            'yang menurut hukum tidak boleh dibatasi atau dikecualikan.',
         },
         {
-          heading: 'Tanpa jaminan',
+          heading: 'Hak Anda sebagai konsumen',
           body:
-            'Qutai disediakan “sebagaimana adanya”, tanpa jaminan. Sejauh diizinkan oleh hukum, kami tidak ' +
-            'bertanggung jawab atas kerugian yang timbul dari penggunaannya, termasuk tindakan yang dilakukan oleh ' +
-            'asisten.',
+            'Jika Anda menggunakan Qutai sebagai konsumen, Anda tetap memiliki setiap hak yang diberikan kepada ' +
+            'konsumen oleh hukum di tempat tinggal Anda dan yang tidak dapat dikesampingkan melalui perjanjian, ' +
+            'seperti hak Anda berdasarkan hukum perlindungan konsumen Turki (Undang-Undang No. 6502 tentang ' +
+            'Perlindungan Konsumen) serta hukum perlindungan konsumen Uni Eropa dan Kawasan Ekonomi Eropa. Tidak ' +
+            'ada satu pun dalam persyaratan ini yang membatasi atau mengecualikan hak-hak tersebut; jika suatu ' +
+            'ketentuan bertentangan dengan hak-hak tersebut, hak-hak tersebutlah yang berlaku.',
         },
         {
           heading: 'Perubahan',

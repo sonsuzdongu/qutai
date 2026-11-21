@@ -8,6 +8,8 @@ export const ISSUES_URL = `${REPO_URL}/issues`;
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
 /** The app's privacy policy, a page of this site in each language (scripts/prerender.mjs, text from the app). */
 export const privacyPolicyPath = (lang: 'en' | 'tr') => `/${lang}/privacy-policy/`;
+/** The app's terms of use (the pro build's, as the stores ship it), a page of this site in each language. */
+export const termsPath = (lang: 'en' | 'tr') => `/${lang}/terms/`;
 /**
  * Where account deletion requests go without the app (the deletion page, scripts/prerender.mjs): the same contact address
  * as the app's privacy policy. Google Play asks for this page's address in the Play Console (Data safety › Data deletion).

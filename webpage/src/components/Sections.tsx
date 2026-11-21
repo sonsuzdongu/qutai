@@ -1,6 +1,6 @@
 import type { MessageKey } from '../i18n/en';
 import { useI18n } from '../lib/i18n';
-import { ISSUES_URL, LICENSE_URL, REPO_URL, deleteAccountPath, privacyPolicyPath, supportPath } from '../lib/site';
+import { ISSUES_URL, LICENSE_URL, REPO_URL, deleteAccountPath, privacyPolicyPath, supportPath, termsPath } from '../lib/site';
 import { Icon, type IconName } from './Icon';
 import { Miniature, type ArtName } from './Miniature';
 import { PhoneMock } from './PhoneMock';
@@ -521,6 +521,9 @@ export function Footer() {
           </li>
           <li>
             <a href={privacyPolicyPath(lang)}>{t('footer.appPrivacy')}</a>
+          </li>
+          <li>
+            <a href={termsPath(lang)}>{t('footer.terms')}</a>
           </li>
           <li>
             <a href={deleteAccountPath(lang)}>{t('footer.deleteAccount')}</a>

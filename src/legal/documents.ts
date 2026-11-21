@@ -102,6 +102,21 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
             'tabs. You can change the permission in Settings.',
         },
         {
+          heading: 'Blocking, page styles, scripts and apps',
+          body:
+            'Blocking ads, trackers and video ads happens on your phone: the filter lists are downloaded to the phone ' +
+            '(see above) and each page’s requests are checked against them there, so nothing about the pages you ' +
+            'visit goes to the lists’ publishers. “Hide cookie banners” only hides the banners; it never accepts or ' +
+            'refuses cookies for you. Your own rules, kept styles and kept scripts are stored only on the phone and, ' +
+            'if you make one, in your backup file, encrypted with your password. When the assistant writes a style or ' +
+            'a script, the AI service receives your request and the page content it needs, as with any question, and ' +
+            'the result of a script you approved goes to it too; Qutai refuses scripts that touch cookies, and a ' +
+            'script’s result is never kept in the assistant’s memory, in backups or in the action history. Apps ' +
+            'inside Qutai are stored only on the phone and, if you include them, in your backup file. When you ask ' +
+            'Qutai to make or fix an app, its code and its error messages go to the AI service; what you save in an ' +
+            'app never does. Apps cannot reach the internet or see websites or their cookies.',
+        },
+        {
           heading: 'Passwords and payment details',
           body:
             'Qutai doesn’t let the assistant’s memory keep passwords, card numbers, card security codes, card ' +
@@ -136,31 +151,113 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
           heading: 'Your AI provider and costs',
           body:
             'The assistant works with your own API key from Anthropic, OpenAI, Google or OpenRouter, or with an ' +
-            'OpenAI-compatible server you set up. You are responsible for your account with that service, its terms ' +
-            'and every cost billed to your key.',
+            'OpenAI-compatible server you set up. Using it is an agreement between you and that service: its terms, ' +
+            'privacy policy and prices apply, and you are responsible for your account there and every cost billed to ' +
+            'your key. Qutai is not a party to that agreement and cannot refund those costs.',
+        },
+        {
+          heading: 'Qutai is a browser',
+          body:
+            'Qutai shows websites that other people run. We do not control, check or endorse websites, their content, ' +
+            'or the products and services they offer, and we are not responsible for them. Websites and their content ' +
+            'belong to their owners. Each website’s own terms and the law apply when you use it, and you are ' +
+            'responsible for following them. Links, search results and suggestions, including the assistant’s, are ' +
+            'not recommendations from us.',
         },
         {
           heading: 'The assistant acts on your behalf',
           body:
-            'The assistant can read pages, click, type and fill in forms when you ask it to. AI can make ' +
-            'mistakes: check its answers, and review purchases, bookings, messages and other important actions ' +
-            'before they are completed. You can require confirmation before every action in Settings.',
+            'The assistant can read pages, click, type, fill in forms and prepare posts, messages and orders when you ' +
+            'ask it to. Before it posts or submits text on a site, Qutai asks for your approval. Completing a payment ' +
+            'is off until you turn on “Let the assistant complete payments” in Settings › Assistant; even then, each ' +
+            'payment needs your approval in Qutai’s own dialog, which shows the total. AI can make mistakes: check ' +
+            'what you are approving, and review purchases, bookings, payments, posts, messages, deletions, account ' +
+            'changes and other important actions before they are completed. You are responsible for the actions you ' +
+            'ask for or approve, as if you had taken them yourself. Your purchases and other dealings with websites, ' +
+            'sellers and other people are between you and them: Qutai is not a party to them and never handles your ' +
+            'payments to them. You can require confirmation before every action in Settings, and block the assistant ' +
+            'on sites of your choice.',
+        },
+        {
+          heading: 'AI answers',
+          body:
+            'Answers, summaries, translations and anything else the AI writes can be wrong, incomplete or out of ' +
+            'date. They are not professional advice, for example medical, legal, financial or tax advice: for such ' +
+            'matters, ask a qualified professional. Check important information before you rely on it.',
+        },
+        {
+          heading: 'Blocking ads and trackers',
+          body:
+            'Blocking ads and trackers, hiding cookie banners and blocking video ads are features you choose: you can ' +
+            'turn each one off in Settings › Privacy and security, and turn blocking off for one site in its sheet ' +
+            '(“Block video ads” is off until you turn it on). Blocking works only in the pages you open on your ' +
+            'phone; it does not change websites themselves. The filter lists are made by third parties under their ' +
+            'own licences (for example EasyList under GPLv3 or CC BY-SA 3.0, and AdGuard under GPLv3); your phone ' +
+            'downloads them from their publishers, and Settings shows each list’s home page and licence. We do not ' +
+            'guarantee what is or is not blocked: lists can block too much or too little, and a site may break, show ' +
+            'less, or ask you to turn blocking off. Whether to use blocking on a site is your decision, and that ' +
+            'site’s terms apply to your visit.',
+        },
+        {
+          heading: 'Page styles and scripts',
+          body:
+            'You can ask the assistant to change how a page looks (a style) or to run a script on a page, keep them ' +
+            'for a site, and write, edit, import and export them yourself. Scripts are off until you turn them on in ' +
+            'Settings › Assistant. Qutai shows each style and script the assistant writes and runs it only after you ' +
+            'approve it, and imported scripts stay off until you approve them. Styles and scripts run only in pages ' +
+            'you open, on your phone. Qutai refuses some risky code, but it does not review code that you write, edit ' +
+            'or import, and it cannot guarantee what any code does: a script runs with your sign-in on that site, can ' +
+            'change or break the page, and can affect your account there. Approve only what you understand and trust. ' +
+            'You are responsible for the styles and scripts you approve, keep, import or share.',
+        },
+        {
+          heading: 'Apps inside Qutai',
+          body:
+            'Apps inside Qutai are written by the AI at your request. They run sealed off from the internet and from ' +
+            'websites, but they are not tested or reviewed by us and come with no warranty: an app can have mistakes ' +
+            'or lose the data saved in it, so export or back up anything important. Apps you import from a file can ' +
+            'come from anyone and are not reviewed by us; Qutai shows you what an imported app is and what it may use ' +
+            'before you turn it on. You are responsible for the apps you turn on and the apps you share with others.',
+        },
+        {
+          heading: 'Downloads and installing files',
+          body:
+            'You decide what to download, open and install. Qutai warns you before it downloads files that can ' +
+            'install or run code, but it does not scan files for viruses or other harm. On Android, opening a ' +
+            'downloaded app (an APK file) hands it to the system installer; Qutai never installs anything itself. ' +
+            'Files and apps from outside the App Store and Google Play can harm your phone or your data; downloading, ' +
+            'opening and installing them is your responsibility, as is having the right to do so.',
         },
         {
           heading: 'Acceptable use',
           body:
-            'Do not use Qutai to break the law, to break the terms of websites or AI providers, or to harm ' +
-            'others, for example by sending spam or collecting other people’s data.',
+            'Do not use Qutai, the assistant, styles, scripts or apps to:\n' +
+            '• break the law or other people’s rights, such as their privacy, copyright or trademarks;\n' +
+            '• break the terms of websites or AI providers;\n' +
+            '• get around passwords, access controls, paywalls, copy protection (DRM) or other technical protection;\n' +
+            '• collect, track or publish other people’s personal data unlawfully;\n' +
+            '• send spam, create fake accounts or reviews, post or act in bulk automatically, or overload websites;\n' +
+            '• deceive or defraud anyone, or spread malware.',
         },
         {
-          heading: 'Websites and content',
-          body: 'Websites and their content belong to their owners. Qutai is not responsible for them.',
-        },
-        {
-          heading: 'No warranty',
+          heading: 'No warranty and limits of liability',
           body:
-            'Qutai is provided “as is”, without warranties. To the extent the law allows, we are not liable for ' +
-            'losses arising from its use, including actions taken by the assistant.',
+            'Qutai is provided “as is” and “as available”. We work to make it useful and safe, but we do not promise ' +
+            'that it will always work, be free of errors, block what you expect or work with every website, and we ' +
+            'give no warranties beyond those the law requires. To the extent the law allows, we are not liable for ' +
+            'losses caused by websites and their content, by other people, by AI providers’ services, by filter ' +
+            'lists, by styles, scripts and apps you approve or import, or by actions you asked for or approved, nor ' +
+            'for indirect losses such as lost profits. Nothing in these terms limits liability for intent or gross ' +
+            'negligence, for death or personal injury, or any other liability that the law does not allow to be ' +
+            'limited or excluded.',
+        },
+        {
+          heading: 'Your rights as a consumer',
+          body:
+            'If you use Qutai as a consumer, you keep every right that the law where you live gives consumers and ' +
+            'that cannot be waived by contract, such as your rights under Turkish consumer law (Law No. 6502 on ' +
+            'Consumer Protection) and the consumer law of the European Union and the European Economic Area. Nothing ' +
+            'in these terms limits or excludes those rights; where a term conflicts with them, those rights apply.',
         },
         {
           heading: 'Changes',
@@ -228,6 +325,23 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
             'değiştirebilirsiniz.',
         },
         {
+          heading: 'Engelleme, sayfa stilleri, betikler ve uygulamalar',
+          body:
+            'Reklamların, izleyicilerin ve video reklamlarının engellenmesi telefonunuzda olur: filtre listeleri ' +
+            'telefona indirilir (yukarıda) ve her sayfanın istekleri orada bu listelerle karşılaştırılır; böylece ' +
+            'ziyaret ettiğiniz sayfalarla ilgili hiçbir şey listelerin yayıncılarına gitmez. “Çerez bildirimlerini ' +
+            'gizle” yalnızca bildirimleri gizler; sizin yerinize çerezleri hiçbir zaman kabul etmez ya da reddetmez. ' +
+            'Kendi kurallarınız, kalıcı stilleriniz ve kalıcı betikleriniz yalnızca telefonda ve yedek alırsanız, ' +
+            'parolanızla şifrelenmiş olarak yedek dosyanızda saklanır. Asistan bir stil ya da betik yazarken yapay ' +
+            'zekâ hizmeti, her soruda olduğu gibi isteğinizi ve gereken sayfa içeriğini alır; onayladığınız bir ' +
+            'betiğin sonucu da ona gider. Qutai çerezlere dokunan betikleri reddeder ve bir betiğin sonucu asistanın ' +
+            'hafızasında, yedeklerde ya da işlem geçmişinde hiçbir zaman tutulmaz. Qutai içindeki uygulamalar ' +
+            'yalnızca telefonda ve dahil ederseniz yedek dosyanızda saklanır. Qutai’dan bir uygulama yapmasını ya da ' +
+            'düzeltmesini istediğinizde uygulamanın kodu ve hata iletileri yapay zekâ hizmetine gider; bir uygulamaya ' +
+            'kaydettikleriniz hiçbir zaman gitmez. Uygulamalar internete erişemez, siteleri ve sitelerin çerezlerini ' +
+            'göremez.',
+        },
+        {
           heading: 'Şifreler ve ödeme bilgileri',
           body:
             'Qutai, asistanın hafızasına şifre, kart numarası, kart güvenlik kodu, kartın son kullanma tarihi, tek ' +
@@ -263,32 +377,126 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
         {
           heading: 'Yapay zekâ sağlayıcınız ve maliyetler',
           body:
-            'Asistan, Anthropic, OpenAI, Google veya OpenRouter’dan aldığınız kendi API anahtarınızla ya da ' +
-            'kurduğunuz OpenAI uyumlu bir sunucuyla çalışır. O hizmetteki hesabınızdan, koşullarından ve ' +
-            'anahtarınıza yansıyan her ücretten siz sorumlusunuz.',
+            'Asistan; Anthropic, OpenAI, Google ya da OpenRouter’dan aldığınız kendi API anahtarınızla veya ' +
+            'kurduğunuz OpenAI uyumlu bir sunucuyla çalışır. Bunu kullanmak sizinle o hizmet arasında bir ' +
+            'sözleşmedir: hizmetin koşulları, gizlilik politikası ve fiyatları geçerlidir; oradaki hesabınızdan ve ' +
+            'anahtarınıza yansıyan her ücretten siz sorumlusunuz. Qutai bu sözleşmenin tarafı değildir ve bu ' +
+            'ücretleri iade edemez.',
+        },
+        {
+          heading: 'Qutai bir tarayıcıdır',
+          body:
+            'Qutai, başkalarının işlettiği web sitelerini gösterir. Siteleri, içeriklerini ya da sundukları ürün ve ' +
+            'hizmetleri kontrol etmeyiz, denetlemeyiz veya onaylamayız ve bunlardan sorumlu değiliz. Siteler ve ' +
+            'içerikleri sahiplerine aittir. Bir siteyi kullanırken o sitenin kendi koşulları ve yasalar geçerlidir; ' +
+            'bunlara uymak sizin sorumluluğunuzdadır. Asistanınkiler dahil bağlantılar, arama sonuçları ve öneriler ' +
+            'bizim tavsiyemiz değildir.',
         },
         {
           heading: 'Asistan sizin adınıza işlem yapar',
           body:
-            'İstediğinizde asistan sayfaları okuyabilir, tıklayabilir, yazabilir ve form doldurabilir. Yapay zekâ ' +
-            'hata yapabilir: yanıtlarını kontrol edin; satın alma, rezervasyon, mesaj ve diğer önemli işlemleri ' +
-            'tamamlanmadan önce gözden geçirin. Ayarlar’dan her işlemden önce onay istenmesini seçebilirsiniz.',
+            'İstediğinizde asistan sayfaları okuyabilir, tıklayabilir, yazabilir, form doldurabilir; gönderi, mesaj ' +
+            've sipariş hazırlayabilir. Bir sitede metin yayımlamadan ya da göndermeden önce Qutai onayınızı ister. ' +
+            'Ödemeyi tamamlamak, Ayarlar › Asistan’da “Asistan ödemeleri tamamlasın”ı açana kadar kapalıdır; açık ' +
+            'olduğunda da her ödeme, toplam tutarı gösteren Qutai’ın kendi penceresinde onayınızı gerektirir. Yapay ' +
+            'zekâ hata yapabilir: neyi onayladığınızı kontrol edin; satın alma, rezervasyon, ödeme, gönderi, mesaj, ' +
+            'silme, hesap değişikliği ve diğer önemli işlemleri tamamlanmadan önce gözden geçirin. İstediğiniz ya da ' +
+            'onayladığınız işlemlerden, onları kendiniz yapmışsınız gibi siz sorumlusunuz. Siteler, satıcılar ve ' +
+            'başka kişilerle yaptığınız alışverişler ve diğer işler sizinle onlar arasındadır: Qutai bunların tarafı ' +
+            'değildir ve onlara yaptığınız ödemelere hiçbir zaman aracılık etmez. Ayarlar’dan her işlemden önce onay ' +
+            'istenmesini seçebilir, seçtiğiniz sitelerde asistanı engelleyebilirsiniz.',
+        },
+        {
+          heading: 'Yapay zekâ yanıtları',
+          body:
+            'Yapay zekânın yazdığı yanıtlar, özetler, çeviriler ve diğer her şey yanlış, eksik ya da güncelliğini ' +
+            'yitirmiş olabilir. Bunlar profesyonel tavsiye değildir; örneğin tıbbi, hukuki, mali ya da vergi ' +
+            'tavsiyesi değildir: bu tür konularda yetkin bir uzmana danışın. Önemli bilgilere güvenmeden önce onları ' +
+            'kontrol edin.',
+        },
+        {
+          heading: 'Reklam ve izleyici engelleme',
+          body:
+            'Reklam ve izleyicileri engellemek, çerez bildirimlerini gizlemek ve video reklamlarını engellemek sizin ' +
+            'seçtiğiniz özelliklerdir: her birini Ayarlar › Gizlilik ve güvenlik’ten kapatabilir, bir site için ' +
+            'engellemeyi o sitenin sayfasından kapatabilirsiniz (“Video reklamlarını engelle” siz açana kadar ' +
+            'kapalıdır). Engelleme yalnızca telefonunuzda açtığınız sayfalarda çalışır; sitelerin kendisini ' +
+            'değiştirmez. Filtre listelerini üçüncü taraflar kendi lisanslarıyla hazırlar (örneğin EasyList GPLv3 ya ' +
+            'da CC BY-SA 3.0, AdGuard GPLv3 lisansıyla); telefonunuz onları yayıncılarından indirir, Ayarlar da her ' +
+            'listenin ana sayfasını ve lisansını gösterir. Neyin engellenip neyin engellenmeyeceğini garanti etmeyiz: ' +
+            'listeler fazla ya da eksik engelleyebilir; bir site bozulabilir, daha az şey gösterebilir ya da ' +
+            'engellemeyi kapatmanızı isteyebilir. Bir sitede engellemeyi kullanıp kullanmamak sizin kararınızdır ve ' +
+            'ziyaretiniz için o sitenin koşulları geçerlidir.',
+        },
+        {
+          heading: 'Sayfa stilleri ve betikler',
+          body:
+            'Asistandan bir sayfanın görünüşünü değiştirmesini (stil) ya da bir sayfada betik çalıştırmasını ' +
+            'isteyebilir, bunları bir site için kalıcı yapabilir; ayrıca kendiniz yazabilir, düzenleyebilir, içe ve ' +
+            'dışa aktarabilirsiniz. Betikler, siz Ayarlar › Asistan’dan açana kadar kapalıdır. Qutai, asistanın ' +
+            'yazdığı her stili ve betiği size gösterir ve yalnızca siz onayladıktan sonra çalıştırır; içe aktarılan ' +
+            'betikler siz onaylayana kadar kapalı kalır. Stiller ve betikler yalnızca telefonunuzda, açtığınız ' +
+            'sayfalarda çalışır. Qutai riskli bazı kodları reddeder, ancak sizin yazdığınız, düzenlediğiniz ya da içe ' +
+            'aktardığınız kodu incelemez ve hiçbir kodun ne yapacağını garanti edemez: bir betik o sitede sizin ' +
+            'oturumunuzla çalışır, sayfayı değiştirebilir ya da bozabilir ve oradaki hesabınızı etkileyebilir. ' +
+            'Yalnızca anladığınız ve güvendiğiniz şeyleri onaylayın. Onayladığınız, kalıcı yaptığınız, içe ' +
+            'aktardığınız ya da paylaştığınız stillerden ve betiklerden siz sorumlusunuz.',
+        },
+        {
+          heading: 'Qutai içindeki uygulamalar',
+          body:
+            'Qutai içindeki uygulamaları, sizin isteğiniz üzerine yapay zekâ yazar. İnternetten ve sitelerden ' +
+            'yalıtılmış olarak çalışırlar, ancak bizim tarafımızdan test edilmez ya da incelenmez ve hiçbir garanti ' +
+            'olmadan sunulur: bir uygulamada hatalar olabilir ya da içine kaydedilen veriler kaybolabilir; önemli ' +
+            'olan her şeyi dışa aktarın ya da yedekleyin. Bir dosyadan içe aktardığınız uygulamalar herhangi birinden ' +
+            'gelebilir ve bizim tarafımızdan incelenmez; Qutai içe aktarılan bir uygulamanın ne olduğunu ve neleri ' +
+            'kullanabileceğini, siz onu açmadan önce gösterir. Açtığınız ve başkalarıyla paylaştığınız uygulamalardan ' +
+            'siz sorumlusunuz.',
+        },
+        {
+          heading: 'İndirmeler ve dosya yükleme',
+          body:
+            'Neyi indireceğinize, açacağınıza ve yükleyeceğinize siz karar verirsiniz. Qutai, uygulama yükleyebilen ' +
+            'ya da kod çalıştırabilen dosyaları indirmeden önce sizi uyarır, ancak dosyaları virüslere ya da başka ' +
+            'zararlara karşı taramaz. Android’de indirilen bir uygulamayı (APK dosyası) açmak, onu sistemin ' +
+            'yükleyicisine verir; Qutai hiçbir şeyi kendisi yüklemez. App Store ve Google Play dışından gelen ' +
+            'dosyalar ve uygulamalar telefonunuza ya da verilerinize zarar verebilir; bunları indirmek, açmak ve ' +
+            'yüklemek, bunu yapma hakkınızın olması da dahil, sizin sorumluluğunuzdadır.',
         },
         {
           heading: 'Kabul edilebilir kullanım',
           body:
-            'Qutai’ı yasaları, sitelerin veya yapay zekâ sağlayıcılarının koşullarını çiğnemek ya da başkalarına ' +
-            'zarar vermek için (örneğin istenmeyen ileti göndermek, başkalarının verilerini toplamak) kullanmayın.',
+            'Qutai’ı, asistanı, stilleri, betikleri ya da uygulamaları şunlar için kullanmayın:\n' +
+            '• yasaları ya da başkalarının gizlilik, telif veya marka gibi haklarını çiğnemek;\n' +
+            '• sitelerin ya da yapay zekâ sağlayıcılarının koşullarını çiğnemek;\n' +
+            '• şifreleri, erişim denetimlerini, ödeme duvarlarını, kopya korumasını (DRM) ya da başka teknik ' +
+            'korumaları aşmak;\n' +
+            '• başkalarının kişisel verilerini hukuka aykırı biçimde toplamak, izlemek ya da yayımlamak;\n' +
+            '• istenmeyen ileti göndermek, sahte hesap ya da yorum oluşturmak, otomatik olarak toplu gönderi ya da ' +
+            'işlem yapmak veya siteleri aşırı yüklemek;\n' +
+            '• kimseyi aldatmak ya da dolandırmak veya kötü amaçlı yazılım yaymak.',
         },
         {
-          heading: 'Siteler ve içerik',
-          body: 'Siteler ve içerikleri sahiplerine aittir. Qutai bunlardan sorumlu değildir.',
-        },
-        {
-          heading: 'Garanti yoktur',
+          heading: 'Garanti yoktur ve sorumluluğun sınırları',
           body:
-            'Qutai “olduğu gibi”, garanti olmaksızın sunulur. Yasaların izin verdiği ölçüde, asistanın yaptığı ' +
-            'işlemler dahil, kullanımından doğan kayıplardan sorumlu değiliz.',
+            'Qutai “olduğu gibi” ve “sunulabildiği kadarıyla” sunulur. Onu yararlı ve güvenli kılmak için çalışırız, ' +
+            'ancak her zaman çalışacağına, hatasız olacağına, beklediğinizi engelleyeceğine ya da her siteyle ' +
+            'çalışacağına söz vermeyiz ve yasaların gerektirdiklerinin ötesinde garanti vermeyiz. Yasaların izin ' +
+            'verdiği ölçüde; siteler ve içeriklerinin, başka kişilerin, yapay zekâ sağlayıcılarının hizmetlerinin, ' +
+            'filtre listelerinin, onayladığınız ya da içe aktardığınız stillerin, betiklerin ve uygulamaların ya da ' +
+            'istediğiniz veya onayladığınız işlemlerin yol açtığı kayıplardan ve kâr kaybı gibi dolaylı kayıplardan ' +
+            'sorumlu değiliz. Bu koşullardaki hiçbir şey kast ya da ağır ihmalden, ölüm ya da bedensel zarardan doğan ' +
+            'sorumluluğu veya yasaların sınırlanmasına ya da kaldırılmasına izin vermediği başka bir sorumluluğu ' +
+            'sınırlamaz.',
+        },
+        {
+          heading: 'Tüketici olarak haklarınız',
+          body:
+            'Qutai’ı tüketici olarak kullanıyorsanız, yaşadığınız yerin yasalarının tüketicilere tanıdığı ve ' +
+            'sözleşmeyle vazgeçilemeyen her hakkınız saklıdır; örneğin 6502 sayılı Tüketicinin Korunması Hakkında ' +
+            'Kanun’dan ve Avrupa Birliği ile Avrupa Ekonomik Alanı tüketici hukukundan doğan haklarınız. Bu ' +
+            'koşullardaki hiçbir şey bu hakları sınırlamaz ya da kaldırmaz; bir hüküm bunlarla çelişirse bu haklar ' +
+            'geçerli olur.',
         },
         {
           heading: 'Değişiklikler',

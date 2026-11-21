@@ -290,6 +290,7 @@ export const en = {
   'footer.issues': 'Issues',
   'footer.license': 'Licence',
   'footer.appPrivacy': 'App privacy policy',
+  'footer.terms': 'App terms of use',
   'footer.deleteAccount': 'Delete your account',
   'footer.support': 'Support',
 
@@ -299,6 +300,11 @@ export const en = {
   'policy.updated': 'Last updated',
   'policy.note': 'This is the privacy policy of the Qutai app for iPhone and Android, the same text the app shows.',
   'policy.home': 'Back to the Qutai home page',
+
+  'terms.metaTitle': 'Terms of Use · Qutai',
+  'terms.metaDescription':
+    'The terms of use of the Qutai app: your AI key and Qutai Credits, websites, the assistant, ad blocking, page styles and scripts, apps, downloads, acceptable use and your rights.',
+  'terms.note': 'These are the terms of use of the Qutai app for iPhone and Android, the same text the app shows.',
 
   'deletion.metaTitle': 'Delete your Qutai account · Qutai',
   'deletion.metaDescription': 'How to delete your Qutai account and its data, in the app or by email without the app, and what is deleted and kept.',

@@ -2,10 +2,11 @@
 import { readFile, access } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { pickLanguage } from '../worker/language.ts';
-import { policyFromApp } from './make-legal.mjs';
+import { policyFromApp, termsFromApp } from './make-legal.mjs';
 
 const dist = fileURLToPath(new URL('../dist/client/', import.meta.url));
 const privacy = JSON.parse(await readFile(new URL('../src/data/privacy.json', import.meta.url), 'utf8'));
+const terms = JSON.parse(await readFile(new URL('../src/data/terms.json', import.meta.url), 'utf8'));
 const failures = [];
 const expect = (ok, what) => {
   if (!ok) failures.push(what);
@@ -79,6 +80,23 @@ for (const lang of ['en', 'tr']) {
 expect(JSON.stringify(privacy) === JSON.stringify(await policyFromApp()), 'src/data/privacy.json differs from the app (src/legal/proDocuments.ts): run npm run legal');
 expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/privacy-policy/'), 'sitemap lists the privacy policy');
 
+// The app's terms of use (the pro build's): a static page per language, and the same text the app has.
+for (const lang of ['en', 'tr']) {
+  const html = await readFile(`${dist}${lang}/terms/index.html`, 'utf8').catch(() => '');
+  expect(html.includes(`<html lang="${lang}"`), `${lang}/terms: page with lang attribute`);
+  expect(html.includes(`<h1>${terms[lang].title}</h1>`), `${lang}/terms: title`);
+  expect(html.includes(`rel="canonical" href="`) && html.includes('hreflang="x-default"'), `${lang}/terms: canonical and hreflang`);
+  expect(!/<script\b/.test(html), `${lang}/terms: no script`);
+  expect((html.match(/<h2>/g) ?? []).length === terms[lang].sections.length, `${lang}/terms: every section`);
+  expect(html.includes('<ul>'), `${lang}/terms: bullets become a list`);
+  const home = await readFile(`${dist}${lang}/index.html`, 'utf8');
+  expect(home.includes(`href="/${lang}/terms/"`), `${lang}: footer links to the terms page`);
+}
+expect(JSON.stringify(terms) === JSON.stringify(await termsFromApp()), 'src/data/terms.json differs from the app (src/legal/proDocuments.ts): run npm run legal');
+expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/terms/'), 'sitemap lists the terms of use');
+const worker = await readFile(new URL('../worker/index.ts', import.meta.url), 'utf8');
+expect(worker.includes("url.pathname === '/terms'") && worker.includes("'terms/'"), 'the Worker sends /terms to /<lang>/terms/');
+
 // Deleting an account (Google Play's web deletion link): a static page per language, linked from the footer and the sitemap.
 for (const lang of ['en', 'tr']) {
   const html = await readFile(`${dist}${lang}/delete-account/index.html`, 'utf8').catch(() => '');
@@ -135,4 +153,4 @@ if (failures.length) {
   console.error(`✗ ${failures.length} check(s) failed:\n  ${failures.join('\n  ')}`);
   process.exit(1);
 }
-console.log(`✓ ${cases.length} language cases, both pages with their features, privacy policy, account deletion and support pages, no third-party loads`);
+console.log(`✓ ${cases.length} language cases, both pages with their features, privacy policy, terms of use, account deletion and support pages, no third-party loads`);

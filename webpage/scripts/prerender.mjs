@@ -9,6 +9,7 @@ const { render, renderFeatures, messages, SITE_URL, CHECKED, CONTACT_EMAIL, form
   `${root}server/entry-server.js`
 );
 const privacy = JSON.parse(await readFile(fileURLToPath(new URL('../src/data/privacy.json', import.meta.url)), 'utf8'));
+const terms = JSON.parse(await readFile(fileURLToPath(new URL('../src/data/terms.json', import.meta.url)), 'utf8'));
 
 if (SITE_URL.endsWith('.example')) {
   console.warn(`\n⚠  SITE_URL is still the placeholder ${SITE_URL}: set it in src/lib/site.ts before deploying.\n`);
@@ -97,9 +98,11 @@ for (const lang of LANGS) {
   await writeFile(`${client}${lang}/index.html`, html);
 }
 
-// The app's privacy policy: /en/privacy-policy/ and /tr/privacy-policy/, static, no script. The text is the app's own
-// (src/data/privacy.json, copied by `npm run legal`); "• " lines become a list.
+// The app's privacy policy and terms of use: /en/privacy-policy/, /tr/privacy-policy/, /en/terms/ and /tr/terms/,
+// static, no script. The text is the app's own (src/data/privacy.json and terms.json, copied by `npm run legal`);
+// "• " lines become a list.
 const policyUrl = (lang) => `${SITE_URL}/${lang}/privacy-policy/`;
+const termsUrl = (lang) => `${SITE_URL}/${lang}/terms/`;
 function policyBody(text) {
   const out = [];
   let list = [];
@@ -117,23 +120,27 @@ function policyBody(text) {
   flush();
   return out.join('\n          ');
 }
-for (const lang of LANGS) {
+const LEGAL_PAGES = [
+  { data: privacy, dir: 'privacy-policy', url: policyUrl, key: 'policy' },
+  { data: terms, dir: 'terms', url: termsUrl, key: 'terms' },
+];
+for (const { data, dir, url, key } of LEGAL_PAGES) for (const lang of LANGS) {
   const t = messages[lang];
-  const doc = privacy[lang];
+  const doc = data[lang];
   const other = lang === 'en' ? 'tr' : 'en';
   const page = `<!doctype html>
 <html lang="${lang}" dir="ltr">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${esc(t['policy.metaTitle'])}</title>
-    <meta name="description" content="${esc(t['policy.metaDescription'])}" />
+    <title>${esc(t[`${key}.metaTitle`])}</title>
+    <meta name="description" content="${esc(t[`${key}.metaDescription`])}" />
     <meta name="color-scheme" content="light" />
     <meta name="theme-color" content="#f2e7cf" />
-    <link rel="canonical" href="${policyUrl(lang)}" />
-    <link rel="alternate" hreflang="en" href="${policyUrl('en')}" />
-    <link rel="alternate" hreflang="tr" href="${policyUrl('tr')}" />
-    <link rel="alternate" hreflang="x-default" href="${policyUrl('en')}" />
+    <link rel="canonical" href="${url(lang)}" />
+    <link rel="alternate" hreflang="en" href="${url('en')}" />
+    <link rel="alternate" hreflang="tr" href="${url('tr')}" />
+    <link rel="alternate" hreflang="x-default" href="${url('en')}" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     ${css}
@@ -141,13 +148,13 @@ for (const lang of LANGS) {
   <body>
     <header class="policy-top">
       <a class="brand" href="/${lang}/" aria-label="${esc(t['nav.home'])}"><img src="/img/q-64.webp" width="32" height="32" alt="" /><span>Qutai</span></a>
-      <a class="policy-lang" href="/${other}/privacy-policy/" hreflang="${other}" lang="${other}">${esc(t['lang.other'])}</a>
+      <a class="policy-lang" href="/${other}/${dir}/" hreflang="${other}" lang="${other}">${esc(t['lang.other'])}</a>
     </header>
     <main id="main" class="section policy">
       <article>
         <h1>${esc(doc.title)}</h1>
-        <p class="policy-meta">${esc(t['policy.updated'])}: <time datetime="${privacy.updated}">${esc(formatDate(privacy.updated, lang))}</time></p>
-        <p class="policy-note">${esc(t['policy.note'])}</p>
+        <p class="policy-meta">${esc(t['policy.updated'])}: <time datetime="${data.updated}">${esc(formatDate(data.updated, lang))}</time></p>
+        <p class="policy-note">${esc(t[`${key}.note`])}</p>
         <p class="policy-intro">${esc(doc.intro)}</p>
 ${doc.sections
   .map((sec) => `        <section>\n          <h2>${esc(sec.heading)}</h2>\n          ${policyBody(sec.body)}\n        </section>`)
@@ -158,8 +165,8 @@ ${doc.sections
   </body>
 </html>
 `;
-  await mkdir(`${client}${lang}/privacy-policy`, { recursive: true });
-  await writeFile(`${client}${lang}/privacy-policy/index.html`, page);
+  await mkdir(`${client}${lang}/${dir}`, { recursive: true });
+  await writeFile(`${client}${lang}/${dir}/index.html`, page);
 }
 
 // Deleting an account: /en/delete-account/ and /tr/delete-account/, static, no script. Google Play asks for this page in
@@ -355,6 +362,9 @@ const alternates = LANGS.map((l) => `    <xhtml:link rel="alternate" hreflang="$
 const policyAlternates = LANGS.map((l) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${policyUrl(l)}" />`)
   .concat(`    <xhtml:link rel="alternate" hreflang="x-default" href="${policyUrl('en')}" />`)
   .join('\n');
+const termsAlternates = LANGS.map((l) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${termsUrl(l)}" />`)
+  .concat(`    <xhtml:link rel="alternate" hreflang="x-default" href="${termsUrl('en')}" />`)
+  .join('\n');
 await writeFile(
   `${client}sitemap.xml`,
   `<?xml version="1.0" encoding="UTF-8"?>
@@ -362,6 +372,7 @@ await writeFile(
 ${LANGS.map((l) => `  <url>\n    <loc>${pageUrl(l)}</loc>\n    <lastmod>${CHECKED}</lastmod>\n${alternates}\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${featuresUrl(l)}</loc>\n    <lastmod>${FEATURES_CHECKED}</lastmod>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${featuresUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${featuresUrl('en')}" />\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${policyUrl(l)}</loc>\n    <lastmod>${privacy.updated}</lastmod>\n${policyAlternates}\n  </url>`).join('\n')}
+${LANGS.map((l) => `  <url>\n    <loc>${termsUrl(l)}</loc>\n    <lastmod>${terms.updated}</lastmod>\n${termsAlternates}\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${deletionUrl(l)}</loc>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${deletionUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${deletionUrl('en')}" />\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${supportUrl(l)}</loc>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${supportUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${supportUrl('en')}" />\n  </url>`).join('\n')}
 </urlset>
@@ -385,4 +396,4 @@ await writeFile(
 );
 
 await rm(`${client}.vite`, { recursive: true });
-console.log(`Prerendered ${LANGS.map((l) => `/${l}/, /${l}/features/, /${l}/privacy-policy/, /${l}/delete-account/, /${l}/support/`).join(', ')}, 404.html, robots.txt, sitemap.xml, _headers`);
+console.log(`Prerendered ${LANGS.map((l) => `/${l}/, /${l}/features/, /${l}/privacy-policy/, /${l}/terms/, /${l}/delete-account/, /${l}/support/`).join(', ')}, 404.html, robots.txt, sitemap.xml, _headers`);

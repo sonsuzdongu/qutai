@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 852 decisions (129 owner, 641 default, 82 waiting); 163 ids moved to Details.
+Totals: 858 decisions (131 owner, 644 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -78,10 +78,11 @@ The open questions, in one place (each row says what the app does today).
 | `OSPERM-8` | Today the proposed store answers for contacts are: App Store "Contacts › App Functionality, not linked to identity, not used for… | [38](38-phone-permissions.md) |
 | `OSPERM-19` | Today the Play Console foreground-service declaration still has the old text; the owner must update it and record the video for the 17… | [38](38-phone-permissions.md) |
 | `BUILD-22` | Today Android declares REQUEST_INSTALL_PACKAGES, so that "Open" on a downloaded APK reaches the system installer. Whether to fill in… | [40](40-signing-and-builds.md) |
-| `LEGAL-6` | Today the privacy policies do not mention apps inside Qutai. The proposed sentence: apps are stored only on the phone, and an app's code… | [41](41-legal-texts.md) |
 | `LEGAL-9` | Before Qutai's server goes live for everyone, every "no servers of ours" sentence in the onboarding, the legal texts, store listings and… | [41](41-legal-texts.md) |
 | `LEGAL-10` | A lawyer reviews the open-source and pro texts (KVKK/GDPR, Turkish consumer law on digital content) before any store release. Today they… | [41](41-legal-texts.md) |
 | `LEGAL-11` | Today the pro terms say that credits have no cash value, cannot be transferred, are refunded only as the law or the store requires (a… | [41](41-legal-texts.md) |
+| `LEGAL-25` | Proposed: raise the open-source legal version from 4 to 5 and the pro version from 6 to 7 for the protective clauses and the reports… | [41](41-legal-texts.md) |
+| `LEGAL-26` | The terms name no governing law or court. Open for the owner: which law governs and which courts or consumer boards hear disputes… | [41](41-legal-texts.md) |
 | `WEB-11` | Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end sync, and the comparison's… | [42](42-website.md) |
 | `NOT-9` | Today there is no sync; whether a future sync must be end-to-end encrypted (so the server cannot read it) is open, recommended yes. | [44](44-not-built.md) |
 | `NOT-15` | Today there is no in-app "lock to portrait"; the system's rotation lock is used (section 29). | [44](44-not-built.md) |
@@ -1219,7 +1220,7 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | `LEGAL-3` | Pro-mode builds show their own texts with their own version, and changing one set never re-asks users of… | Default |  |
 | `LEGAL-4` | The version goes up when the policy or terms change in substance. Only the owner decides a bump: a session… | Owner | 2026-11-19 |
 | `LEGAL-5` | The privacy policies' "the result of a script you approved on a page" is covered by the bump to open source 4 / pro 6… | Owner | 2026-11-20 |
-| `LEGAL-6` | Today the privacy policies do not mention apps inside Qutai. The proposed sentence: apps are stored only… | **Waiting** |  |
+| `LEGAL-6` | The privacy policies say apps are stored only on the phone (and in backups), and an app's code and errors… | Default | 2026-11-21 |
 | `LEGAL-7` | The legal texts describe only what the app actually does, checked against the code. When something about… | Default |  |
 | `LEGAL-8` | The open-source policy promises: (calendar and location asked each time unless "Don't ask again"; incognito keeps only downloads;… | Default |  |
 | `LEGAL-9` | Before Qutai's server goes live for everyone, every "no servers of ours" sentence in the onboarding, the… | **Waiting** |  |
@@ -1232,6 +1233,11 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | `LEGAL-19` | Turkish and English are both originals; Turkish does not say that English prevails, only the eight translations do. | Owner | 2026-11-20 |
 | `LEGAL-20` | The pro privacy policies (ten languages) say what a report of an answer or an app sends to Qutai's server… | Default | 2026-11-21 |
 | `LEGAL-21` | The legal texts' contact address and the website's account deletion page use qutai@sonsuzdongu.com, not a… | Owner | 2026-11-21 |
+| `LEGAL-22` | The terms of both builds (ten languages) have protective clauses: websites, the assistant's actions, AI answers,… | Owner | 2026-11-21 |
+| `LEGAL-23` | "As is" with liability limited only as far as the law allows (never intent, gross negligence, death or injury);… | Default | 2026-11-21 |
+| `LEGAL-24` | The privacy policies (both builds, ten languages) say what blocking, styles, scripts and apps do with data… | Default | 2026-11-21 |
+| `LEGAL-25` | Proposed: raise the legal versions to open source 5 / pro 7 for the protective clauses; not done… | **Waiting** |  |
+| `LEGAL-26` | The terms name no governing law or court; which law and courts, credit expiry and extra refunds are open… | **Waiting** |  |
 | `LEGAL-18` | Qutai's code is Apache-2.0. The licence does not cover the Qutai name, logo or icons, and trademark… | Default |  |
 
 Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`
@@ -1251,6 +1257,7 @@ Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`
 | `WEB-11` | Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end… | **Waiting** |  |
 | `WEB-12` | The features page describes only what the code does today, from the design record, with limits stated… | Default |  |
 | `WEB-13` | The site has an account deletion page (`/en/delete-account/`, `/tr/delete-account/`, and `/delete-account`… | Owner | 2026-11-21 |
+| `WEB-14` | The site has a terms-of-use page (`/en/terms/`, `/tr/terms/`, `/terms` redirects) with the pro build's terms… | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 

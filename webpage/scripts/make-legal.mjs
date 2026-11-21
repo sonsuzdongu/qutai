@@ -1,7 +1,7 @@
-// Copies the app's privacy policy into the site: src/data/privacy.json, from ../src/legal/proDocuments.ts (the
-// policy of the store builds, which have the Qutai account and Qutai Credits; it also covers using your own AI key).
-// The site never edits the text: change it in the app, then run `npm run legal` and commit the JSON.
-// `npm run check` fails when the JSON no longer matches the app.
+// Copies the app's privacy policy and terms of use into the site: src/data/privacy.json and src/data/terms.json, from
+// ../src/legal/proDocuments.ts (the texts of the store builds, which have the Qutai account and Qutai Credits; they also
+// cover using your own AI key). The site never edits the text: change it in the app, then run `npm run legal` and
+// commit the JSON. `npm run check` fails when either JSON no longer matches the app.
 import { readFile, writeFile, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -10,9 +10,19 @@ import ts from 'typescript';
 
 const SOURCE = fileURLToPath(new URL('../../src/legal/proDocuments.ts', import.meta.url));
 export const OUT = fileURLToPath(new URL('../src/data/privacy.json', import.meta.url));
+export const TERMS_OUT = fileURLToPath(new URL('../src/data/terms.json', import.meta.url));
 
 /** The policy as the site stores it: { updated, en: {title, intro, sections}, tr: {…} }. */
 export async function policyFromApp() {
+  return legalFromApp('privacy');
+}
+
+/** The terms of use, stored the same way as the policy. */
+export async function termsFromApp() {
+  return legalFromApp('terms');
+}
+
+async function legalFromApp(kind) {
   const js = ts.transpileModule(await readFile(SOURCE, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
   }).outputText;
@@ -21,7 +31,7 @@ export async function policyFromApp() {
     const file = join(dir, 'proDocuments.mjs');
     await writeFile(file, js);
     const { PRO_DOCUMENTS, PRO_LEGAL_UPDATED } = await import(pathToFileURL(file).href);
-    return { updated: PRO_LEGAL_UPDATED, en: PRO_DOCUMENTS.en.privacy, tr: PRO_DOCUMENTS.tr.privacy };
+    return { updated: PRO_LEGAL_UPDATED, en: PRO_DOCUMENTS.en[kind], tr: PRO_DOCUMENTS.tr[kind] };
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
@@ -31,4 +41,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const policy = await policyFromApp();
   await writeFile(OUT, `${JSON.stringify(policy, null, 2)}\n`);
   console.log(`src/data/privacy.json: privacy policy of ${policy.updated} (en, tr)`);
+  const terms = await termsFromApp();
+  await writeFile(TERMS_OUT, `${JSON.stringify(terms, null, 2)}\n`);
+  console.log(`src/data/terms.json: terms of use of ${terms.updated} (en, tr)`);
 }

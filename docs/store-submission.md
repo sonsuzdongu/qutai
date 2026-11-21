@@ -100,8 +100,8 @@ Eklemeden önce:
 | ☐ | Ad, alt başlık, anahtar kelimeler, ekran görüntüleri | Rakip tarayıcı, YouTube ya da başka marka adı ve logosu yok; "her şeyi otomatik satın alır" gibi abartı yok; ekranlarda gerçek kart ve gerçek kişi verisi yok (risk 3.4, 4.12) |
 | ☐ | Varsayılan tarayıcı | Açıklamada "varsayılan tarayıcı yapılabilir" vaadi yok (yetki başvurusu yapılmadı; risk 4.2) |
 | ☐ | Export compliance | `app.json` › `usesNonExemptEncryption: false` (yalnızca standart HTTPS). Soru gelirse "hayır" |
-| ☐ | Kullanım şartları (EULA) | Sitede şartlar sayfası yok; Apple'ın standart EULA'sı kullanılır. Kendi şartlarınızı vermek isterseniz önce sitede yayımlatın |
-| ☐ | **Description (açıklama) alanının sonu** | Uygulama içi satın alma olduğu için açıklamanın sonuna iki bağlantı ekleyin (sahibin isteği, 21 Kasım; inceleme bağlantıları açıklamada arar):<br>`Privacy Policy: https://qutai.sonsuzdongu.com/en/privacy-policy/`<br>`Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`<br>Kendi şartlarınızı yayımlarsanız ikinci satırı o sayfayla değiştirin ve App Store Connect › App Information › License Agreement'ı da güncelleyin. Diğer dillerdeki açıklamalara aynı iki satırı ekleyin (gizlilik bağlantısını o dilin sayfasıyla: `/tr/privacy-policy/` gibi) |
+| ☐ | Kullanım şartları (EULA) | Varsayılan: Apple'ın standart EULA'sı (alanı boş bırakın). Sitede artık uygulamanın kullanım koşulları var (`WEB-14`, 21 Kasım): Qutai'ın kendi şartlarını özel EULA olarak vermek isterseniz App Information › License Agreement'a `https://qutai.sonsuzdongu.com/en/terms/` adresini (ya da metnini) koyun. Önce sitenin yayında olduğundan ve şartların yasal sürüm artışıyla uygulamada da kabul ettirildiğinden emin olun (`LEGAL-25`) |
+| ☐ | **Description (açıklama) alanının sonu** | Uygulama içi satın alma olduğu için açıklamanın sonuna iki bağlantı ekleyin (sahibin isteği, 21 Kasım; inceleme bağlantıları açıklamada arar):<br>`Privacy Policy: https://qutai.sonsuzdongu.com/en/privacy-policy/`<br>`Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`<br>Özel EULA seçerseniz ikinci satırı `Terms of Use (EULA): https://qutai.sonsuzdongu.com/en/terms/` ile değiştirin ve App Store Connect › App Information › License Agreement'ı da güncelleyin. Diğer dillerdeki açıklamalara aynı iki satırı ekleyin (gizlilik bağlantısını o dilin sayfasıyla: `/tr/privacy-policy/` gibi) |
 
 ### 3.2 Yaş derecelendirmesi
 
@@ -178,7 +178,7 @@ Bu dosyanın metinleri bunlar yapılmadan tam doğru olmaz. Ayrıntı ve çözü
 - ⛔ **1.3 / 2.1:** video reklam engelleme ve iOS'ta arka plan oynatma. Sizin kararınız.
 - ⛔ **2.3:** kendi anahtar modu için üçüncü taraf AI rıza ekranı; kredi açıklamasındaki "Anthropic, OpenAI or Google" listesi artık yalnızca Anthropic olmalı.
 - ⛔ **1.5:** Ayarlar'daki "(deneme)" anahtarı. ~~Sahte satın alma yolu ve metinleri~~: kaldırıldı (21 Kasım 2026; production veritabanı için migration 0015 bir sonraki sunucu dağıtımıyla gider).
-- ☐ **2.2:** başkasından alınan `.qutaiapp` dosyasının içe aktarılması (uyarı ekleyin ya da ilk sürümde kapatın); gizlilik metnine uygulamalarla ilgili cümle (`LEGAL-6`).
+- ☐ **2.2:** başkasından alınan `.qutaiapp` dosyasının içe aktarılması (uyarı ekleyin ya da ilk sürümde kapatın); ~~gizlilik metnine uygulamalarla ilgili cümle~~: metinlerde (21 Kasım, `LEGAL-6`, `LEGAL-24`), kullanıcılara yasal sürüm artışıyla gider (`LEGAL-25`).
 - ☐ **2.4:** pro gizlilik manifestosu ve `docs/permissions.md`'deki "sunucumuz yok" cümlesi.
 - ☐ **3.8:** yasal metinlerin avukat incelemesi.
 

@@ -2,7 +2,8 @@ import type { LegalTranslation } from '../documents';
 
 /**
  * German translation of the privacy policy and terms of both builds, machine-translated from English on 20 Nov 2026
- * and not yet reviewed by a native speaker or a lawyer. The English version prevails.
+ * and not yet reviewed by a native speaker or a lawyer. The sections added on 21 Nov 2026 (the protective
+ * clauses) are machine-translated too and not reviewed either. The English version prevails.
  */
 export const de: LegalTranslation = {
   openSource: {
@@ -71,6 +72,24 @@ export const de: LegalTranslation = {
             'den Einstellungen ändern.',
         },
         {
+          heading: 'Blockieren, Seitenstile, Skripte und Apps',
+          body:
+            'Das Blockieren von Werbung, Trackern und Videowerbung geschieht auf Ihrem Telefon: Die Filterlisten ' +
+            'werden auf das Telefon heruntergeladen (siehe oben), und die Anfragen jeder Seite werden dort mit ihnen ' +
+            'abgeglichen, sodass nichts über die Seiten, die Sie besuchen, an die Herausgeber der Listen geht. ' +
+            '„Cookie-Banner ausblenden“ blendet nur die Banner aus; es akzeptiert oder lehnt nie Cookies für Sie ab. ' +
+            'Ihre eigenen Regeln, behaltenen Stile und behaltenen Skripte werden nur auf dem Telefon gespeichert und, ' +
+            'wenn Sie eines erstellen, in Ihrer Backup-Datei, verschlüsselt mit Ihrem Passwort. Wenn der Assistent ' +
+            'einen Stil oder ein Skript schreibt, erhält der KI-Dienst wie bei jeder Frage Ihre Anfrage und die ' +
+            'Seiteninhalte, die er benötigt, und auch das Ergebnis eines von Ihnen zugelassenen Skripts geht an ihn; ' +
+            'Qutai lehnt Skripte ab, die auf Cookies zugreifen, und das Ergebnis eines Skripts wird nie im Gedächtnis ' +
+            'des Assistenten, in Backups oder im Aktionsverlauf gespeichert. Apps in Qutai werden nur auf dem Telefon ' +
+            'gespeichert und, wenn Sie sie einschließen, in Ihrer Backup-Datei. Wenn Sie Qutai bitten, eine App zu ' +
+            'erstellen oder zu reparieren, gehen ihr Code und ihre Fehlermeldungen an den KI-Dienst; was Sie in einer ' +
+            'App speichern, nie. Apps können nicht auf das Internet zugreifen und keine Websites oder deren Cookies ' +
+            'sehen.',
+        },
+        {
           heading: 'Passwörter und Zahlungsdaten',
           body:
             'Qutai lässt nicht zu, dass das Gedächtnis des Assistenten Passwörter, Kartennummern, ' +
@@ -113,34 +132,132 @@ export const de: LegalTranslation = {
           heading: 'Ihr KI-Anbieter und die Kosten',
           body:
             'Der Assistent arbeitet mit Ihrem eigenen API-Schlüssel von Anthropic, OpenAI, Google oder OpenRouter ' +
-            'oder mit einem OpenAI-kompatiblen Server, den Sie einrichten. Sie sind verantwortlich für Ihr Konto ' +
-            'bei diesem Dienst, dessen Bedingungen und alle Kosten, die über Ihren Schlüssel abgerechnet werden.',
+            'oder mit einem OpenAI-kompatiblen Server, den Sie einrichten. Die Nutzung ist eine Vereinbarung zwischen ' +
+            'Ihnen und diesem Dienst: Es gelten dessen Bedingungen, Datenschutzerklärung und Preise, und Sie sind ' +
+            'verantwortlich für Ihr Konto dort und alle Kosten, die über Ihren Schlüssel abgerechnet werden. Qutai ' +
+            'ist nicht Partei dieser Vereinbarung und kann diese Kosten nicht erstatten.',
+        },
+        {
+          heading: 'Qutai ist ein Browser',
+          body:
+            'Qutai zeigt Websites an, die andere betreiben. Wir kontrollieren, prüfen oder befürworten weder Websites ' +
+            'noch ihre Inhalte oder die Produkte und Dienstleistungen, die sie anbieten, und wir sind nicht für sie ' +
+            'verantwortlich. Websites und ihre Inhalte gehören ihren Eigentümern. Wenn Sie eine Website nutzen, ' +
+            'gelten deren eigene Bedingungen und das Gesetz, und Sie sind dafür verantwortlich, sie einzuhalten. ' +
+            'Links, Suchergebnisse und Vorschläge, auch die des Assistenten, sind keine Empfehlungen von uns.',
         },
         {
           heading: 'Der Assistent handelt in Ihrem Auftrag',
           body:
-            'Der Assistent kann Seiten lesen, klicken, tippen und Formulare ausfüllen, wenn Sie ihn darum bitten. ' +
-            'KI kann Fehler machen: Prüfen Sie seine Antworten, und kontrollieren Sie Käufe, Buchungen, ' +
-            'Nachrichten und andere wichtige Aktionen, bevor sie abgeschlossen werden. In den Einstellungen können ' +
-            'Sie festlegen, dass vor jeder Aktion eine Bestätigung erforderlich ist.',
+            'Der Assistent kann Seiten lesen, klicken, tippen, Formulare ausfüllen und Beiträge, Nachrichten und ' +
+            'Bestellungen vorbereiten, wenn Sie ihn darum bitten. Bevor er auf einer Website Text veröffentlicht oder ' +
+            'absendet, bittet Qutai um Ihre Zustimmung. Das Abschließen einer Zahlung ist ausgeschaltet, bis Sie ' +
+            '„Assistent darf Zahlungen abschließen“ unter Einstellungen › Assistent einschalten; auch dann muss jede ' +
+            'Zahlung in Qutais eigenem Dialog, der den Gesamtbetrag zeigt, von Ihnen bestätigt werden. KI kann Fehler ' +
+            'machen: Prüfen Sie, was Sie bestätigen, und kontrollieren Sie Käufe, Buchungen, Zahlungen, Beiträge, ' +
+            'Nachrichten, Löschungen, Kontoänderungen und andere wichtige Aktionen, bevor sie abgeschlossen werden. ' +
+            'Sie sind für die Aktionen verantwortlich, die Sie verlangen oder bestätigen, als hätten Sie sie selbst ' +
+            'ausgeführt. Ihre Käufe und sonstigen Geschäfte mit Websites, Verkäufern und anderen Personen bestehen ' +
+            'zwischen Ihnen und diesen: Qutai ist daran nicht beteiligt und wickelt Ihre Zahlungen an sie nie ab. In ' +
+            'den Einstellungen können Sie festlegen, dass vor jeder Aktion eine Bestätigung erforderlich ist, und den ' +
+            'Assistenten auf Websites Ihrer Wahl sperren.',
+        },
+        {
+          heading: 'KI-Antworten',
+          body:
+            'Antworten, Zusammenfassungen, Übersetzungen und alles andere, was die KI schreibt, können falsch, ' +
+            'unvollständig oder veraltet sein. Sie sind keine fachliche Beratung, etwa keine medizinische, ' +
+            'rechtliche, finanzielle oder steuerliche Beratung: Wenden Sie sich in solchen Fragen an eine ' +
+            'qualifizierte Fachperson. Prüfen Sie wichtige Informationen, bevor Sie sich darauf verlassen.',
+        },
+        {
+          heading: 'Blockieren von Werbung und Trackern',
+          body:
+            'Das Blockieren von Werbung und Trackern, das Ausblenden von Cookie-Bannern und das Blockieren von ' +
+            'Videowerbung sind Funktionen, die Sie wählen: Sie können jede davon unter Einstellungen › Datenschutz ' +
+            'und Sicherheit ausschalten und das Blockieren für eine einzelne Website in deren Menü ausschalten ' +
+            '(„Videowerbung blockieren“ ist aus, bis Sie es einschalten). Das Blockieren wirkt nur in den Seiten, die ' +
+            'Sie auf Ihrem Telefon öffnen; die Websites selbst verändert es nicht. Die Filterlisten werden von ' +
+            'Dritten unter deren eigenen Lizenzen erstellt (zum Beispiel EasyList unter GPLv3 oder CC BY-SA 3.0 und ' +
+            'AdGuard unter GPLv3); Ihr Telefon lädt sie von ihren Herausgebern herunter, und die Einstellungen zeigen ' +
+            'die Startseite und die Lizenz jeder Liste. Wir garantieren nicht, was blockiert wird und was nicht: ' +
+            'Listen können zu viel oder zu wenig blockieren, und eine Website kann danach nicht mehr richtig ' +
+            'funktionieren, weniger anzeigen oder Sie bitten, das Blockieren auszuschalten. Ob Sie auf einer Website ' +
+            'blockieren, entscheiden Sie, und für Ihren Besuch gelten die Bedingungen dieser Website.',
+        },
+        {
+          heading: 'Seitenstile und Skripte',
+          body:
+            'Sie können den Assistenten bitten, das Aussehen einer Seite zu ändern (ein Stil) oder ein Skript auf ' +
+            'einer Seite auszuführen, diese für eine Website behalten und sie selbst schreiben, bearbeiten, ' +
+            'importieren und exportieren. Skripte sind ausgeschaltet, bis Sie sie unter Einstellungen › Assistent ' +
+            'einschalten. Qutai zeigt jeden Stil und jedes Skript, das der Assistent schreibt, und führt es erst aus, ' +
+            'nachdem Sie es bestätigt haben; importierte Skripte bleiben ausgeschaltet, bis Sie sie bestätigen. Stile ' +
+            'und Skripte wirken nur in Seiten, die Sie öffnen, auf Ihrem Telefon. Qutai lehnt manchen riskanten Code ' +
+            'ab, prüft aber keinen Code, den Sie schreiben, bearbeiten oder importieren, und kann nicht garantieren, ' +
+            'was Code bewirkt: Ein Skript läuft mit Ihrer Anmeldung auf dieser Website, kann die Seite verändern oder ' +
+            'unbrauchbar machen und kann Ihr Konto dort beeinträchtigen. Bestätigen Sie nur, was Sie verstehen und ' +
+            'dem Sie vertrauen. Sie sind für die Stile und Skripte verantwortlich, die Sie bestätigen, behalten, ' +
+            'importieren oder teilen.',
+        },
+        {
+          heading: 'Apps in Qutai',
+          body:
+            'Apps in Qutai werden auf Ihren Wunsch von der KI geschrieben. Sie laufen abgeschottet vom Internet und ' +
+            'von Websites, werden von uns aber weder getestet noch geprüft und kommen ohne Gewährleistung: Eine App ' +
+            'kann Fehler enthalten oder die in ihr gespeicherten Daten verlieren; exportieren oder sichern Sie daher ' +
+            'alles Wichtige. Apps, die Sie aus einer Datei importieren, können von jedem stammen und werden von uns ' +
+            'nicht geprüft; Qutai zeigt Ihnen, was eine importierte App ist und was sie nutzen darf, bevor Sie sie ' +
+            'einschalten. Sie sind für die Apps verantwortlich, die Sie einschalten, und für die Apps, die Sie mit ' +
+            'anderen teilen.',
+        },
+        {
+          heading: 'Downloads und Installieren von Dateien',
+          body:
+            'Sie entscheiden, was Sie herunterladen, öffnen und installieren. Qutai warnt Sie, bevor es Dateien ' +
+            'herunterlädt, die Code installieren oder ausführen können, durchsucht Dateien aber nicht nach Viren oder ' +
+            'anderer Schadsoftware. Unter Android übergibt das Öffnen einer heruntergeladenen App (einer APK-Datei) ' +
+            'diese an das Installationsprogramm des Systems; Qutai selbst installiert nie etwas. Dateien und Apps von ' +
+            'außerhalb des App Store und von Google Play können Ihrem Telefon oder Ihren Daten schaden; sie ' +
+            'herunterzuladen, zu öffnen und zu installieren liegt in Ihrer Verantwortung, ebenso wie die Berechtigung ' +
+            'dazu.',
         },
         {
           heading: 'Zulässige Nutzung',
           body:
-            'Verwenden Sie Qutai nicht, um gegen Gesetze oder die Bedingungen von Websites oder KI-Anbietern zu ' +
-            'verstoßen oder um anderen zu schaden, zum Beispiel durch das Versenden von Spam oder das Sammeln von ' +
-            'Daten anderer Personen.',
+            'Verwenden Sie Qutai, den Assistenten, Stile, Skripte oder Apps nicht, um:\n' +
+            '• gegen Gesetze oder die Rechte anderer zu verstoßen, etwa deren Privatsphäre, Urheberrechte oder ' +
+            'Marken;\n' +
+            '• gegen die Bedingungen von Websites oder KI-Anbietern zu verstoßen;\n' +
+            '• Passwörter, Zugangskontrollen, Bezahlschranken, Kopierschutz (DRM) oder andere technische ' +
+            'Schutzmaßnahmen zu umgehen;\n' +
+            '• personenbezogene Daten anderer rechtswidrig zu sammeln, zu verfolgen oder zu veröffentlichen;\n' +
+            '• Spam zu versenden, gefälschte Konten oder Bewertungen zu erstellen, automatisiert massenhaft zu posten ' +
+            'oder zu handeln oder Websites zu überlasten;\n' +
+            '• jemanden zu täuschen oder zu betrügen oder Schadsoftware zu verbreiten.',
         },
         {
-          heading: 'Websites und Inhalte',
-          body: 'Websites und ihre Inhalte gehören ihren Eigentümern. Qutai ist nicht für sie verantwortlich.',
-        },
-        {
-          heading: 'Keine Gewährleistung',
+          heading: 'Keine Gewährleistung und Haftungsbeschränkungen',
           body:
-            'Qutai wird „wie besehen“ und ohne Gewährleistung bereitgestellt. Soweit gesetzlich zulässig, haften ' +
-            'wir nicht für Schäden, die aus seiner Nutzung entstehen, einschließlich der vom Assistenten ' +
-            'ausgeführten Aktionen.',
+            'Qutai wird „wie besehen“ und „wie verfügbar“ bereitgestellt. Wir arbeiten daran, dass es nützlich und ' +
+            'sicher ist, versprechen aber nicht, dass es immer funktioniert, fehlerfrei ist, blockiert, was Sie ' +
+            'erwarten, oder mit jeder Website funktioniert, und wir übernehmen keine Gewährleistung über die ' +
+            'gesetzlich vorgeschriebene hinaus. Soweit gesetzlich zulässig, haften wir nicht für Schäden, die durch ' +
+            'Websites und ihre Inhalte, durch andere Personen, durch die Dienste von KI-Anbietern, durch ' +
+            'Filterlisten, durch Stile, Skripte und Apps, die Sie bestätigen oder importieren, oder durch Aktionen, ' +
+            'die Sie verlangt oder bestätigt haben, verursacht werden, und auch nicht für mittelbare Schäden wie ' +
+            'entgangenen Gewinn. Nichts in diesen Bedingungen beschränkt die Haftung für Vorsatz oder grobe ' +
+            'Fahrlässigkeit, für Tod oder Körperverletzung oder eine andere Haftung, die nach dem Gesetz nicht ' +
+            'beschränkt oder ausgeschlossen werden darf.',
+        },
+        {
+          heading: 'Ihre Rechte als Verbraucher',
+          body:
+            'Wenn Sie Qutai als Verbraucher nutzen, behalten Sie alle Rechte, die das Recht Ihres Wohnorts ' +
+            'Verbrauchern gewährt und auf die nicht vertraglich verzichtet werden kann, etwa Ihre Rechte nach ' +
+            'türkischem Verbraucherrecht (Gesetz Nr. 6502 über den Verbraucherschutz) und nach dem Verbraucherrecht ' +
+            'der Europäischen Union und des Europäischen Wirtschaftsraums. Nichts in diesen Bedingungen beschränkt ' +
+            'diese Rechte oder schließt sie aus; wo eine Bestimmung ihnen widerspricht, gelten diese Rechte.',
         },
         {
           heading: 'Änderungen',
@@ -291,6 +408,24 @@ export const de: LegalTranslation = {
             'den Einstellungen ändern.',
         },
         {
+          heading: 'Blockieren, Seitenstile, Skripte und Apps',
+          body:
+            'Das Blockieren von Werbung, Trackern und Videowerbung geschieht auf Ihrem Telefon: Die Filterlisten ' +
+            'werden auf das Telefon heruntergeladen (siehe oben), und die Anfragen jeder Seite werden dort mit ihnen ' +
+            'abgeglichen, sodass nichts über die Seiten, die Sie besuchen, an die Herausgeber der Listen oder an ' +
+            'Qutai geht. „Cookie-Banner ausblenden“ blendet nur die Banner aus; es akzeptiert oder lehnt nie Cookies ' +
+            'für Sie ab. Ihre eigenen Regeln, behaltenen Stile und behaltenen Skripte werden nur auf dem Telefon ' +
+            'gespeichert und, wenn Sie eines erstellen, in Ihren Backups (der Datei, die Sie exportieren, oder dem ' +
+            'Backup in Ihrem Qutai-Konto), verschlüsselt mit Ihrem Passwort. Wenn der Assistent einen Stil oder ein ' +
+            'Skript schreibt, erhält der KI-Dienst wie bei jeder Frage Ihre Anfrage und die Seiteninhalte, die er ' +
+            'benötigt, und auch das Ergebnis eines von Ihnen zugelassenen Skripts geht an ihn; Qutai lehnt Skripte ' +
+            'ab, die auf Cookies zugreifen, und das Ergebnis eines Skripts wird nie im Gedächtnis des Assistenten, in ' +
+            'Backups oder im Aktionsverlauf gespeichert. Apps in Qutai werden nur auf dem Telefon gespeichert und, ' +
+            'wenn Sie sie einschließen, in Ihren Backups. Wenn Sie Qutai bitten, eine App zu erstellen oder zu ' +
+            'reparieren, gehen ihr Code und ihre Fehlermeldungen an den KI-Dienst; was Sie in einer App speichern, ' +
+            'nie. Apps können nicht auf das Internet zugreifen und keine Websites oder deren Cookies sehen.',
+        },
+        {
           heading: 'Passwörter und Zahlungsdaten',
           body:
             'Qutai lässt nicht zu, dass das Gedächtnis des Assistenten Passwörter, Kartennummern, ' +
@@ -350,10 +485,12 @@ export const de: LegalTranslation = {
         {
           heading: 'Zwei Wege, den Assistenten zu nutzen',
           body:
-            '• Ihr eigener API-Schlüssel: Sie sind verantwortlich für Ihr Konto bei diesem Anbieter, dessen ' +
-            'Bedingungen und alle Kosten, die über Ihren Schlüssel abgerechnet werden.\n• Qutai Credits: Die ' +
-            'Anfragen des Assistenten laufen über Qutais Server und werden mit Credits aus Ihrem Qutai-Konto ' +
-            'bezahlt. Um sie zu nutzen, benötigen Sie ein Konto.',
+            '• Ihr eigener API-Schlüssel: Die Nutzung ist eine Vereinbarung zwischen Ihnen und diesem Anbieter. Es ' +
+            'gelten dessen Bedingungen, Datenschutzerklärung und Preise, und Sie sind verantwortlich für Ihr Konto ' +
+            'dort und alle Kosten, die über Ihren Schlüssel abgerechnet werden; Qutai ist nicht Partei dieser ' +
+            'Vereinbarung und kann diese Kosten nicht erstatten.\n' +
+            '• Qutai Credits: Die Anfragen des Assistenten laufen über Qutais Server und werden mit Credits aus Ihrem ' +
+            'Qutai-Konto bezahlt. Um sie zu nutzen, benötigen Sie ein Konto.',
         },
         {
           heading: 'Qutai Credits',
@@ -379,30 +516,128 @@ export const de: LegalTranslation = {
             'Wenn Sie Ihr Konto löschen, verfallen die verbleibenden Credits.',
         },
         {
+          heading: 'Qutai ist ein Browser',
+          body:
+            'Qutai zeigt Websites an, die andere betreiben. Wir kontrollieren, prüfen oder befürworten weder Websites ' +
+            'noch ihre Inhalte oder die Produkte und Dienstleistungen, die sie anbieten, und wir sind nicht für sie ' +
+            'verantwortlich. Websites und ihre Inhalte gehören ihren Eigentümern. Wenn Sie eine Website nutzen, ' +
+            'gelten deren eigene Bedingungen und das Gesetz, und Sie sind dafür verantwortlich, sie einzuhalten. ' +
+            'Links, Suchergebnisse und Vorschläge, auch die des Assistenten, sind keine Empfehlungen von uns.',
+        },
+        {
           heading: 'Der Assistent handelt in Ihrem Auftrag',
           body:
-            'Der Assistent kann Seiten lesen, klicken, tippen und Formulare ausfüllen, wenn Sie ihn darum bitten. ' +
-            'KI kann Fehler machen: Prüfen Sie seine Antworten, und kontrollieren Sie Käufe, Buchungen, ' +
-            'Nachrichten und andere wichtige Aktionen, bevor sie abgeschlossen werden. In den Einstellungen können ' +
-            'Sie festlegen, dass vor jeder Aktion eine Bestätigung erforderlich ist.',
+            'Der Assistent kann Seiten lesen, klicken, tippen, Formulare ausfüllen und Beiträge, Nachrichten und ' +
+            'Bestellungen vorbereiten, wenn Sie ihn darum bitten. Bevor er auf einer Website Text veröffentlicht oder ' +
+            'absendet, bittet Qutai um Ihre Zustimmung. Das Abschließen einer Zahlung ist ausgeschaltet, bis Sie ' +
+            '„Assistent darf Zahlungen abschließen“ unter Einstellungen › Assistent einschalten; auch dann muss jede ' +
+            'Zahlung in Qutais eigenem Dialog, der den Gesamtbetrag zeigt, von Ihnen bestätigt werden. KI kann Fehler ' +
+            'machen: Prüfen Sie, was Sie bestätigen, und kontrollieren Sie Käufe, Buchungen, Zahlungen, Beiträge, ' +
+            'Nachrichten, Löschungen, Kontoänderungen und andere wichtige Aktionen, bevor sie abgeschlossen werden. ' +
+            'Sie sind für die Aktionen verantwortlich, die Sie verlangen oder bestätigen, als hätten Sie sie selbst ' +
+            'ausgeführt. Ihre Käufe und sonstigen Geschäfte mit Websites, Verkäufern und anderen Personen bestehen ' +
+            'zwischen Ihnen und diesen: Qutai ist daran nicht beteiligt und wickelt Ihre Zahlungen an sie nie ab. In ' +
+            'den Einstellungen können Sie festlegen, dass vor jeder Aktion eine Bestätigung erforderlich ist, und den ' +
+            'Assistenten auf Websites Ihrer Wahl sperren.',
+        },
+        {
+          heading: 'KI-Antworten',
+          body:
+            'Antworten, Zusammenfassungen, Übersetzungen und alles andere, was die KI schreibt, können falsch, ' +
+            'unvollständig oder veraltet sein. Sie sind keine fachliche Beratung, etwa keine medizinische, ' +
+            'rechtliche, finanzielle oder steuerliche Beratung: Wenden Sie sich in solchen Fragen an eine ' +
+            'qualifizierte Fachperson. Prüfen Sie wichtige Informationen, bevor Sie sich darauf verlassen.',
+        },
+        {
+          heading: 'Blockieren von Werbung und Trackern',
+          body:
+            'Das Blockieren von Werbung und Trackern, das Ausblenden von Cookie-Bannern und das Blockieren von ' +
+            'Videowerbung sind Funktionen, die Sie wählen: Sie können jede davon unter Einstellungen › Datenschutz ' +
+            'und Sicherheit ausschalten und das Blockieren für eine einzelne Website in deren Menü ausschalten ' +
+            '(„Videowerbung blockieren“ ist aus, bis Sie es einschalten). Das Blockieren wirkt nur in den Seiten, die ' +
+            'Sie auf Ihrem Telefon öffnen; die Websites selbst verändert es nicht. Die Filterlisten werden von ' +
+            'Dritten unter deren eigenen Lizenzen erstellt (zum Beispiel EasyList unter GPLv3 oder CC BY-SA 3.0 und ' +
+            'AdGuard unter GPLv3); Ihr Telefon lädt sie von ihren Herausgebern herunter, und die Einstellungen zeigen ' +
+            'die Startseite und die Lizenz jeder Liste. Wir garantieren nicht, was blockiert wird und was nicht: ' +
+            'Listen können zu viel oder zu wenig blockieren, und eine Website kann danach nicht mehr richtig ' +
+            'funktionieren, weniger anzeigen oder Sie bitten, das Blockieren auszuschalten. Ob Sie auf einer Website ' +
+            'blockieren, entscheiden Sie, und für Ihren Besuch gelten die Bedingungen dieser Website.',
+        },
+        {
+          heading: 'Seitenstile und Skripte',
+          body:
+            'Sie können den Assistenten bitten, das Aussehen einer Seite zu ändern (ein Stil) oder ein Skript auf ' +
+            'einer Seite auszuführen, diese für eine Website behalten und sie selbst schreiben, bearbeiten, ' +
+            'importieren und exportieren. Skripte sind ausgeschaltet, bis Sie sie unter Einstellungen › Assistent ' +
+            'einschalten. Qutai zeigt jeden Stil und jedes Skript, das der Assistent schreibt, und führt es erst aus, ' +
+            'nachdem Sie es bestätigt haben; importierte Skripte bleiben ausgeschaltet, bis Sie sie bestätigen. Stile ' +
+            'und Skripte wirken nur in Seiten, die Sie öffnen, auf Ihrem Telefon. Qutai lehnt manchen riskanten Code ' +
+            'ab, prüft aber keinen Code, den Sie schreiben, bearbeiten oder importieren, und kann nicht garantieren, ' +
+            'was Code bewirkt: Ein Skript läuft mit Ihrer Anmeldung auf dieser Website, kann die Seite verändern oder ' +
+            'unbrauchbar machen und kann Ihr Konto dort beeinträchtigen. Bestätigen Sie nur, was Sie verstehen und ' +
+            'dem Sie vertrauen. Sie sind für die Stile und Skripte verantwortlich, die Sie bestätigen, behalten, ' +
+            'importieren oder teilen.',
+        },
+        {
+          heading: 'Apps in Qutai',
+          body:
+            'Apps in Qutai werden auf Ihren Wunsch von der KI geschrieben. Sie laufen abgeschottet vom Internet und ' +
+            'von Websites, werden von uns aber weder getestet noch geprüft und kommen ohne Gewährleistung: Eine App ' +
+            'kann Fehler enthalten oder die in ihr gespeicherten Daten verlieren; exportieren oder sichern Sie daher ' +
+            'alles Wichtige. Apps, die Sie aus einer Datei importieren, können von jedem stammen und werden von uns ' +
+            'nicht geprüft; Qutai zeigt Ihnen, was eine importierte App ist und was sie nutzen darf, bevor Sie sie ' +
+            'einschalten. Sie sind für die Apps verantwortlich, die Sie einschalten, und für die Apps, die Sie mit ' +
+            'anderen teilen.',
+        },
+        {
+          heading: 'Downloads und Installieren von Dateien',
+          body:
+            'Sie entscheiden, was Sie herunterladen, öffnen und installieren. Qutai warnt Sie, bevor es Dateien ' +
+            'herunterlädt, die Code installieren oder ausführen können, durchsucht Dateien aber nicht nach Viren oder ' +
+            'anderer Schadsoftware. Unter Android übergibt das Öffnen einer heruntergeladenen App (einer APK-Datei) ' +
+            'diese an das Installationsprogramm des Systems; Qutai selbst installiert nie etwas. Dateien und Apps von ' +
+            'außerhalb des App Store und von Google Play können Ihrem Telefon oder Ihren Daten schaden; sie ' +
+            'herunterzuladen, zu öffnen und zu installieren liegt in Ihrer Verantwortung, ebenso wie die Berechtigung ' +
+            'dazu.',
         },
         {
           heading: 'Zulässige Nutzung',
           body:
-            'Verwenden Sie Qutai oder Qutai Credits nicht, um gegen Gesetze oder die Bedingungen von Websites oder ' +
-            'KI-Anbietern zu verstoßen, um anderen zu schaden (zum Beispiel durch das Versenden von Spam oder das ' +
-            'Sammeln von Daten anderer Personen) oder um Qutais Server zu missbrauchen oder zu überlasten.',
+            'Verwenden Sie Qutai, Qutai Credits, den Assistenten, Stile, Skripte oder Apps nicht, um:\n' +
+            '• gegen Gesetze oder die Rechte anderer zu verstoßen, etwa deren Privatsphäre, Urheberrechte oder ' +
+            'Marken;\n' +
+            '• gegen die Bedingungen von Websites oder KI-Anbietern zu verstoßen;\n' +
+            '• Passwörter, Zugangskontrollen, Bezahlschranken, Kopierschutz (DRM) oder andere technische ' +
+            'Schutzmaßnahmen zu umgehen;\n' +
+            '• personenbezogene Daten anderer rechtswidrig zu sammeln, zu verfolgen oder zu veröffentlichen;\n' +
+            '• Spam zu versenden, gefälschte Konten oder Bewertungen zu erstellen, automatisiert massenhaft zu posten ' +
+            'oder zu handeln oder Websites zu überlasten;\n' +
+            '• jemanden zu täuschen oder zu betrügen oder Schadsoftware zu verbreiten;\n' +
+            '• Qutais Server zu missbrauchen, anzugreifen oder zu überlasten.\n' +
+            'Wir können ein Konto sperren, das auf diese Weise genutzt wird.',
         },
         {
-          heading: 'Websites und Inhalte',
-          body: 'Websites und ihre Inhalte gehören ihren Eigentümern. Qutai ist nicht für sie verantwortlich.',
-        },
-        {
-          heading: 'Keine Gewährleistung',
+          heading: 'Keine Gewährleistung und Haftungsbeschränkungen',
           body:
-            'Qutai wird „wie besehen“ und ohne Gewährleistung bereitgestellt. Soweit gesetzlich zulässig, haften ' +
-            'wir nicht für Schäden, die aus seiner Nutzung entstehen, einschließlich der vom Assistenten ' +
-            'ausgeführten Aktionen.',
+            'Qutai wird „wie besehen“ und „wie verfügbar“ bereitgestellt. Wir arbeiten daran, dass es nützlich und ' +
+            'sicher ist, versprechen aber nicht, dass es immer funktioniert, fehlerfrei ist, blockiert, was Sie ' +
+            'erwarten, oder mit jeder Website funktioniert, und wir übernehmen keine Gewährleistung über die ' +
+            'gesetzlich vorgeschriebene hinaus. Soweit gesetzlich zulässig, haften wir nicht für Schäden, die durch ' +
+            'Websites und ihre Inhalte, durch andere Personen, durch die Dienste von KI-Anbietern, durch ' +
+            'Filterlisten, durch Stile, Skripte und Apps, die Sie bestätigen oder importieren, oder durch Aktionen, ' +
+            'die Sie verlangt oder bestätigt haben, verursacht werden, und auch nicht für mittelbare Schäden wie ' +
+            'entgangenen Gewinn. Nichts in diesen Bedingungen beschränkt die Haftung für Vorsatz oder grobe ' +
+            'Fahrlässigkeit, für Tod oder Körperverletzung oder eine andere Haftung, die nach dem Gesetz nicht ' +
+            'beschränkt oder ausgeschlossen werden darf.',
+        },
+        {
+          heading: 'Ihre Rechte als Verbraucher',
+          body:
+            'Wenn Sie Qutai als Verbraucher nutzen, behalten Sie alle Rechte, die das Recht Ihres Wohnorts ' +
+            'Verbrauchern gewährt und auf die nicht vertraglich verzichtet werden kann, etwa Ihre Rechte nach ' +
+            'türkischem Verbraucherrecht (Gesetz Nr. 6502 über den Verbraucherschutz) und nach dem Verbraucherrecht ' +
+            'der Europäischen Union und des Europäischen Wirtschaftsraums. Nichts in diesen Bedingungen beschränkt ' +
+            'diese Rechte oder schließt sie aus; wo eine Bestimmung ihnen widerspricht, gelten diese Rechte.',
         },
         {
           heading: 'Änderungen',
