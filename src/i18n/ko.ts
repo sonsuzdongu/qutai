@@ -1789,14 +1789,12 @@ export const ko: Record<keyof typeof en, string> = {
   'settings.licences': '오픈소스 라이선스',
   'licences.title': '오픈소스 라이선스',
   'licences.intro':
-    'Qutai는 {count}개의 서드 파티 소프트웨어로 만들어졌습니다. 항목을 탭하여 라이선스를 읽어 보세요. 일부는 Android나 iOS에서만 사용됩니다.',
+    'Qutai는 {count}개의 서드 파티 소프트웨어로 만들어졌습니다. 항목을 탭하여 라이선스를 읽어 보세요.',
   'licences.search': '이름 또는 라이선스로 검색',
   'licences.none': '검색과 일치하는 항목이 없습니다.',
   'licences.back': '라이선스',
   'licences.version': '버전: {version}',
   'licences.licence': '라이선스: {licence}',
-  'licences.androidOnly': 'Android 전용',
-  'licences.iosOnly': 'iOS 전용',
   'licences.proprietary':
     'Android 앱에 포함된 Google의 비공개 소스 소프트웨어입니다. 위 주소에 있는 Google의 약관에 따라 사용됩니다.',
   'licences.noText': '이 구성요소에는 라이선스 텍스트가 포함되어 있지 않습니다. 위 주소를 참고하세요.',

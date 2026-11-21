@@ -1779,14 +1779,12 @@ export const de: Record<keyof typeof en, string> = {
   'settings.licences': 'Open-Source-Lizenzen',
   'licences.title': 'Open-Source-Lizenzen',
   'licences.intro':
-    'Qutai ist mit {count} Softwarekomponenten von Drittanbietern gebaut. Tippen Sie auf eine, um ihre Lizenz zu lesen. Einige werden nur unter Android oder nur unter iOS verwendet.',
+    'Qutai ist mit {count} Softwarekomponenten von Drittanbietern gebaut. Tippen Sie auf eine, um ihre Lizenz zu lesen.',
   'licences.search': 'Nach Name oder Lizenz suchen',
   'licences.none': 'Nichts passt zu Ihrer Suche.',
   'licences.back': 'Lizenzen',
   'licences.version': 'Version: {version}',
   'licences.licence': 'Lizenz: {licence}',
-  'licences.androidOnly': 'Nur Android',
-  'licences.iosOnly': 'Nur iOS',
   'licences.proprietary':
     'Dies ist Closed-Source-Software von Google, die in der Android-App enthalten ist. Sie wird gemäß den Bedingungen von Google verwendet, die unter der obigen Adresse stehen.',
   'licences.noText': 'Der Lizenztext liegt dieser Komponente nicht bei; siehe die obige Adresse.',

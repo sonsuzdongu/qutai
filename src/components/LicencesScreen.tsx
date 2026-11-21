@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FlatList, Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { t } from '../i18n';
@@ -47,12 +47,6 @@ export function LicencesScreen({ visible, onClose }: { visible: boolean; onClose
   );
 }
 
-function platformLabel(platform: Licence['platform']): string | null {
-  if (platform === 'android') return t('licences.androidOnly');
-  if (platform === 'ios') return t('licences.iosOnly');
-  return null;
-}
-
 function LicencesContent({
   open,
   onOpen,
@@ -65,7 +59,9 @@ function LicencesContent({
   const styles = useStyles();
   const palette = usePalette();
   const [query, setQuery] = useState('');
-  const { entries, texts } = licenceData();
+  const { entries: all, texts } = licenceData();
+  // Only what this phone's build contains (LEGAL-27): software used only on the other platform isn't in it.
+  const entries = useMemo(() => all.filter((e) => !e.platform || e.platform === Platform.OS), [all]);
 
   const shown = useMemo(() => {
     const q = query.trim().toLocaleLowerCase();
@@ -88,7 +84,6 @@ function LicencesContent({
             {t('licences.version', { version: open.version })}
             {'\n'}
             {t('licences.licence', { licence: open.licence })}
-            {platformLabel(open.platform) ? `\n${platformLabel(open.platform)}` : ''}
           </Text>
           {open.url && (
             <Text style={styles.link} onPress={() => Linking.openURL(open.url!)} accessibilityRole="link">
@@ -142,7 +137,6 @@ function LicencesContent({
         }
         ListEmptyComponent={<Text style={[styles.hint, styles.empty]}>{t('licences.none')}</Text>}
         renderItem={({ item }) => {
-          const platform = platformLabel(item.platform);
           return (
             <Pressable
               onPress={() => onOpen(item)}
@@ -152,7 +146,6 @@ function LicencesContent({
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.meta}>
                 {item.version} · {item.licence}
-                {platform ? ` · ${platform}` : ''}
               </Text>
             </Pressable>
           );

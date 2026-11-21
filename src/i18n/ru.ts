@@ -1790,14 +1790,12 @@ export const ru: Record<keyof typeof en, string> = {
   'settings.licences': 'Лицензии открытого ПО',
   'licences.title': 'Лицензии открытого ПО',
   'licences.intro':
-    'В Qutai используется {count} {count|one:сторонний компонент|few:сторонних компонента|many:сторонних компонентов}. Нажмите на компонент, чтобы прочитать его лицензию. Некоторые используются только на Android или только на iOS.',
+    'В Qutai используется {count} {count|one:сторонний компонент|few:сторонних компонента|many:сторонних компонентов}. Нажмите на компонент, чтобы прочитать его лицензию.',
   'licences.search': 'Поиск по названию или лицензии',
   'licences.none': 'Ничего не найдено.',
   'licences.back': 'Лицензии',
   'licences.version': 'Версия: {version}',
   'licences.licence': 'Лицензия: {licence}',
-  'licences.androidOnly': 'Только Android',
-  'licences.iosOnly': 'Только iOS',
   'licences.proprietary':
     'Это проприетарное ПО Google, входящее в приложение для Android. Оно используется на условиях Google, которые доступны по адресу выше.',
   'licences.noText': 'Текст лицензии к этому компоненту не приложен; см. адрес выше.',

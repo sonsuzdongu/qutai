@@ -1782,14 +1782,12 @@ export const en = {
   'settings.licences': 'Open source licences',
   'licences.title': 'Open source licences',
   'licences.intro':
-    'Qutai is built with {count} pieces of third-party software. Tap one to read its licence. Some are used only on Android or only on iOS.',
+    'Qutai is built with {count} pieces of third-party software. Tap one to read its licence.',
   'licences.search': 'Search by name or licence',
   'licences.none': 'Nothing matches your search.',
   'licences.back': 'Licences',
   'licences.version': 'Version: {version}',
   'licences.licence': 'Licence: {licence}',
-  'licences.androidOnly': 'Android only',
-  'licences.iosOnly': 'iOS only',
   'licences.proprietary':
     'This is closed-source software from Google that the Android app includes. It is used under Google’s terms, which are at the address above.',
   'licences.noText': 'The licence text isn’t included with this component; see the address above.',

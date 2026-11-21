@@ -1791,14 +1791,12 @@ export const ptBR: Record<keyof typeof en, string> = {
   'settings.licences': 'Licenças de código aberto',
   'licences.title': 'Licenças de código aberto',
   'licences.intro':
-    'O Qutai é feito com {count} componentes de software de terceiros. Toque em um para ler a licença. Alguns são usados só no Android ou só no iOS.',
+    'O Qutai é feito com {count} componentes de software de terceiros. Toque em um para ler a licença.',
   'licences.search': 'Pesquisar por nome ou licença',
   'licences.none': 'Nada corresponde à sua pesquisa.',
   'licences.back': 'Licenças',
   'licences.version': 'Versão: {version}',
   'licences.licence': 'Licença: {licence}',
-  'licences.androidOnly': 'Somente Android',
-  'licences.iosOnly': 'Somente iOS',
   'licences.proprietary':
     'Este é um software de código fechado do Google incluído no app para Android. Ele é usado sob os termos do Google, que estão no endereço acima.',
   'licences.noText': 'O texto da licença não acompanha este componente; consulte o endereço acima.',

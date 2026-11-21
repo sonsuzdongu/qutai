@@ -1791,14 +1791,12 @@ export const ja: Record<keyof typeof en, string> = {
   'settings.licences': 'オープンソース ライセンス',
   'licences.title': 'オープンソース ライセンス',
   'licences.intro':
-    'Qutai は {count} 個のサードパーティ製ソフトウェアを使って作られています。タップするとライセンスを確認できます。Android のみ、または iOS のみで使用されるものもあります。',
+    'Qutai は {count} 個のサードパーティ製ソフトウェアを使って作られています。タップするとライセンスを確認できます。',
   'licences.search': '名前またはライセンスで検索',
   'licences.none': '検索に一致するものはありません。',
   'licences.back': 'ライセンス',
   'licences.version': 'バージョン: {version}',
   'licences.licence': 'ライセンス: {licence}',
-  'licences.androidOnly': 'Android のみ',
-  'licences.iosOnly': 'iOS のみ',
   'licences.proprietary':
     'これは Android アプリに含まれている Google のクローズドソース ソフトウェアです。上記のアドレスにある Google の規約に基づいて使用されています。',
   'licences.noText': 'このコンポーネントにはライセンスの本文が含まれていません。上記のアドレスをご覧ください。',

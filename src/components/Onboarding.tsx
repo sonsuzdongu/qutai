@@ -1,6 +1,7 @@
 import { ComponentRef, useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import {
   Keyboard,
+  Platform,
   Pressable,
   ScrollViewInstance,
   StyleSheet,
@@ -579,12 +580,15 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
                           value={draft.blockAds}
                           onChange={(v) => set('blockAds', v)}
                         />
-                        <Toggle
-                          title={t('settings.thirdPartyCookies')}
-                          body={t('onboarding.trackersHint')}
-                          value={draft.blockThirdPartyCookies}
-                          onChange={(v) => set('blockThirdPartyCookies', v)}
-                        />
+                        {/* Android only (BLK-32): WebKit always blocks them. */}
+                        {Platform.OS === 'android' && (
+                          <Toggle
+                            title={t('settings.thirdPartyCookies')}
+                            body={t('onboarding.trackersHint')}
+                            value={draft.blockThirdPartyCookies}
+                            onChange={(v) => set('blockThirdPartyCookies', v)}
+                          />
+                        )}
                         <Toggle
                           title={t('settings.hideCookieBanners')}
                           body={t('onboarding.cookieBannersHint')}

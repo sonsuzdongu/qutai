@@ -39,6 +39,9 @@ export async function openSettingsTool(input: Record<string, unknown>, ctx: Tool
   }
   if (target !== 'system' && target !== 'default_browser')
     return { content: 'target must be "system", "default_browser" or "app".', isError: true };
+  // INTRO-32: without Apple's web-browser entitlement the phone's Default Browser App list doesn't offer Qutai.
+  if (target === 'default_browser' && Platform.OS === 'ios')
+    return { content: "Qutai can't be chosen as the default browser on iPhone and iPad yet. Tell the user that plainly; don't send them to the phone's settings for it.", isError: true };
   try {
     if (target === 'default_browser') await openDefaultBrowserSettings();
     else await openSystemSettings();

@@ -150,7 +150,7 @@ const SPECS: Record<string, Spec> = CHANGEABLE;
 
 /** Settings that exist only on some phones. */
 function unavailable(key: string): boolean {
-  return key === 'picture_in_picture' && Platform.OS !== 'android';
+  return (key === 'picture_in_picture' || key === 'block_third_party_cookies') && Platform.OS !== 'android';
 }
 
 const availableKeys = () => Object.keys(CHANGEABLE).filter((k) => !unavailable(k));

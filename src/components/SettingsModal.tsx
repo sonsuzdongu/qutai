@@ -510,12 +510,15 @@ function SettingsPages({
               }
               onPress={() => setListsVisible(true)}
             />
-            <SwitchRow
-              title={t('settings.thirdPartyCookies')}
-              hint={t('settings.thirdPartyCookiesHint')}
-              value={settings.blockThirdPartyCookies}
-              onChange={(blockThirdPartyCookies) => set({ blockThirdPartyCookies })}
-            />
+            {/* Android only (BLK-32): WebKit always blocks them, so on iOS the switch would do nothing. */}
+            {Platform.OS === 'android' && (
+              <SwitchRow
+                title={t('settings.thirdPartyCookies')}
+                hint={t('settings.thirdPartyCookiesHint')}
+                value={settings.blockThirdPartyCookies}
+                onChange={(blockThirdPartyCookies) => set({ blockThirdPartyCookies })}
+              />
+            )}
             <SwitchRow
               title={t('settings.hideCookieBanners')}
               hint={t('settings.hideCookieBannersHint')}

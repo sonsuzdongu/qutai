@@ -1790,14 +1790,12 @@ export const id: Record<keyof typeof en, string> = {
   'settings.licences': 'Lisensi open source',
   'licences.title': 'Lisensi open source',
   'licences.intro':
-    'Qutai dibangun dengan {count} software pihak ketiga. Ketuk salah satu untuk membaca lisensinya. Beberapa hanya digunakan di Android atau hanya di iOS.',
+    'Qutai dibangun dengan {count} software pihak ketiga. Ketuk salah satu untuk membaca lisensinya.',
   'licences.search': 'Telusuri berdasarkan nama atau lisensi',
   'licences.none': 'Tidak ada yang cocok dengan penelusuran Anda.',
   'licences.back': 'Lisensi',
   'licences.version': 'Versi: {version}',
   'licences.licence': 'Lisensi: {licence}',
-  'licences.androidOnly': 'Hanya Android',
-  'licences.iosOnly': 'Hanya iOS',
   'licences.proprietary':
     'Ini adalah software sumber tertutup dari Google yang disertakan dalam aplikasi Android. Software ini digunakan berdasarkan persyaratan Google, yang tersedia di alamat di atas.',
   'licences.noText': 'Teks lisensi tidak disertakan dengan komponen ini; lihat alamat di atas.',

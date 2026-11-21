@@ -1781,14 +1781,12 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.licences': 'Açık kaynak lisansları',
   'licences.title': 'Açık kaynak lisansları',
   'licences.intro':
-    'Qutai, üçüncü taraflara ait {count} yazılım bileşeniyle geliştirildi. Lisansını okumak için bir bileşene dokunun. Bazıları yalnızca Android’de ya da yalnızca iOS’ta kullanılır.',
+    'Qutai, üçüncü taraflara ait {count} yazılım bileşeniyle geliştirildi. Lisansını okumak için bir bileşene dokunun.',
   'licences.search': 'Ada veya lisansa göre arayın',
   'licences.none': 'Aramanızla eşleşen bir şey yok.',
   'licences.back': 'Lisanslar',
   'licences.version': 'Sürüm: {version}',
   'licences.licence': 'Lisans: {licence}',
-  'licences.androidOnly': 'Yalnızca Android',
-  'licences.iosOnly': 'Yalnızca iOS',
   'licences.proprietary':
     'Bu, Android uygulamasında bulunan, Google’a ait kapalı kaynak bir yazılımdır. Google’ın koşulları altında kullanılır; koşullar yukarıdaki adrestedir.',
   'licences.noText': 'Bu bileşenle birlikte lisans metni gelmiyor; yukarıdaki adrese bakın.',
