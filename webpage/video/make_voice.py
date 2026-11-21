@@ -8,6 +8,7 @@ KEY = os.environ['ELEVENLABS_API_KEY']; VOICE = '5RqXmIU9ikjifeWoXHMG'; GAP = 2.
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 ep = importlib.import_module(sys.argv[1]).EP
+CLOSE = {'en': "Qutai: the AI assistant in your phone's browser."}
 def spoken(text): return text.replace('Qutai:', 'Kutay,').replace('Qutai', 'Kutay')
 def run(*cmd): return subprocess.run(cmd, capture_output=True, text=True)
 d = os.path.join(HERE, 'audio', ep['audio']); os.makedirs(d, exist_ok=True); os.chdir(d)
@@ -31,3 +32,9 @@ for lang in [a for a in sys.argv[2:] if a in ep['lines']] or list(ep['lines']):
         a = max(0, a - 0.06); b = min(dur, b + 0.12)
         run('ffmpeg', '-y', '-v', 'error', '-i', whole, '-ss', f'{a:.3f}', '-to', f'{b:.3f}', '-c:a', 'libmp3lame', '-b:a', '128k', f'{lang}-{n}.mp3')
         print(f'{lang}-{n} {b - a:5.2f}s  {t}')
+    # The closing line is the same take in every film: one reading where "Kutay" is said right (the owner chose it,
+    # 21 Nov 2026; other generations said "kutey"). It replaces the freshly cut one.
+    fixed = os.path.join(HERE, 'audio', 'common', f'{lang}-close.mp3')
+    for n, t in lines:
+        if t == CLOSE.get(lang) and os.path.exists(fixed):
+            subprocess.run(['cp', fixed, f'{lang}-{n}.mp3']); print(f'{lang}-{n} replaced by audio/common/{lang}-close.mp3')

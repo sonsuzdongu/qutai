@@ -51,3 +51,6 @@ for lang in [a for a in sys.argv[1:] if a in LINES] or list(LINES):
         a = max(0, a - 0.06); b = min(dur, b + 0.12)
         run('ffmpeg', '-y', '-v', 'error', '-i', whole, '-ss', f'{a:.3f}', '-to', f'{b:.3f}', '-c:a', 'libmp3lame', '-b:a', '128k', f'{lang}-{n}.mp3')
         print(f'{lang}-{n} {b - a:5.2f}s  {t}')
+    # The English closing line is the shared take where "Kutay" is said right (audio/common/en-close.mp3, see make_voice.py).
+    fixed = os.path.join('..', 'common', f'{lang}-close.mp3')  # the working folder is audio/01
+    if lang == 'en' and os.path.exists(fixed): run('cp', fixed, 'en-5.mp3'); print('en-5 replaced by audio/common/en-close.mp3')
