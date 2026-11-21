@@ -31,6 +31,7 @@ export const SUITES = {
   injection: { files: ['scripts/injection-tests/*.test.ts'], loader: './scripts/injection-tests/loader.mjs' },
   storage: { files: ['scripts/storage-tests/*.test.ts'] },
   tasks: { files: ['scripts/task-tests/*.test.ts'], forceExit: true },
+  voice: { files: ['scripts/voice-tests/*.test.ts'], loader: './scripts/voice-tests/loader.mjs' },
   'account:server': { files: ['scripts/account-tests/server.test.ts'], env: LOCAL_API, server: true },
   'backup:server': { files: ['scripts/backup-tests/server.test.ts'], env: LOCAL_API, server: true },
   'credits:server': { files: ['scripts/credits-tests/server/relay-server.test.ts'], env: LOCAL_API, server: true },

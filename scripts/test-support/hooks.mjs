@@ -4,8 +4,11 @@ import { fileURLToPath } from 'node:url';
 
 /** App files (by path suffix) replaced by a harness's own stand-ins: { '/src/pdf/reader.ts': 'export …' }. */
 let STUBBED = {};
+/** Native modules (by exact name) a harness replaces with its own source: { 'expo-speech-recognition': 'export …' }. */
+let NATIVES = {};
 export async function initialize(data) {
   STUBBED = data?.stubs ?? {};
+  NATIVES = data?.natives ?? {};
 }
 
 // Stand-ins with behaviour for the two native modules whose values tests read: the language (QUTAI_TEST_LANG,
@@ -31,6 +34,7 @@ function local(r) {
   return r;
 }
 export async function resolve(specifier, context, next) {
+  if (Object.hasOwn(NATIVES, specifier)) return { url: 'qutai-native:' + specifier, shortCircuit: true };
   if (specifier !== 'react' && !specifier.startsWith('react/') && NATIVE.test(specifier)) {
     return { url: 'qutai-stub:' + specifier + '?from=' + encodeURIComponent(context.parentURL || ''), shortCircuit: true };
   }
@@ -67,6 +71,7 @@ export async function load(url, context, next) {
     const body = STUB + specific + [...wanted].filter((n) => n !== 'default' && !own.has(n)).map((n) => 'export const ' + n + ' = stub;').join('') + 'export default stub;';
     return { format: 'module', source: body, shortCircuit: true };
   }
+  if (url.startsWith('qutai-native:')) return { format: 'module', source: NATIVES[url.slice(13)], shortCircuit: true };
   if (url.startsWith('qutai-local:')) return { format: 'module', source: STUBBED[url.slice(12)], shortCircuit: true };
   if (url.startsWith('qutai-tsx:')) {
     const src = readFileSync(fileURLToPath(url.slice(10)), 'utf8');

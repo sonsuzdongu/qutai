@@ -110,6 +110,7 @@
     "test:injection": "node scripts/test-support/run.mjs injection --verbose",
     "test:storage": "node scripts/test-support/run.mjs storage --verbose",
     "test:tasks": "node scripts/test-support/run.mjs tasks --verbose",
+    "test:voice": "node scripts/test-support/run.mjs voice --verbose",
     "measure:tokens": "node --no-warnings --experimental-transform-types --import ./scripts/test-support/loader.mjs scripts/token-tests/measure.ts",
     "measure:intro": "node --no-warnings --experimental-transform-types --import ./scripts/test-support/loader.mjs scripts/token-tests/intro.ts",
     "measure:backup": "node --no-warnings --experimental-transform-types --import ./scripts/test-support/loader.mjs scripts/backup-tests/measure.ts",
