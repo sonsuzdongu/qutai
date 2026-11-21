@@ -5,7 +5,7 @@ import type { IconName } from '../components/Icon';
  * backend/DESIGN.md) as of the date below. Only what the code does; limits said plainly. When a feature lands or
  * changes, update its item here in both languages, together with the home page.
  */
-export const FEATURES_CHECKED = '2026-11-20';
+export const FEATURES_CHECKED = '2026-11-21';
 
 export type Text = { en: string; tr: string };
 const t = (en: string, tr: string): Text => ({ en, tr });
@@ -165,6 +165,21 @@ export const GROUPS: Group[] = [
         ],
       },
       {
+        title: t('Choices as cards', 'Seçenekler kart olarak'),
+        body: t(
+          'When the assistant finds several things to choose from, such as products, places, hotels or flights, they come as cards: a picture, the title, the price as the page shows it, and the site, which Qutai takes from the card’s own link. The pictures load from the shops’ own servers, without your cookies; in incognito none load until you tap “Show images”.',
+          'Asistan aralarından seçim yapacağınız birkaç şey bulduğunda (ürünler, mekânlar, oteller, uçuşlar gibi) bunları kart olarak gösterir: bir resim, başlık, sayfada yazdığı haliyle fiyat ve site; siteyi Qutai kartın kendi bağlantısından alır. Resimler mağazaların kendi sunucularından, çerezleriniz olmadan yüklenir; gizli modda siz “Resimleri göster”e dokunana kadar hiçbiri yüklenmez.',
+        ),
+        asks: [t('Find me three rain jackets under £80', 'Bana 2.000 TL altında üç yağmurluk bul')],
+      },
+      {
+        title: t('Short questions, answered with a tap', 'Kısa sorular, tek dokunuşla yanıt'),
+        body: t(
+          'When a task ends with a short question and two to four options, it is asked in a bubble over the page with a button for each answer.',
+          'Bir görev kısa bir soru ve iki ila dört seçenekle biterse, soru sayfanın üstünde bir baloncukta, her yanıt için bir düğmeyle sorulur.',
+        ),
+      },
+      {
         title: t('Deep research with sources', 'Kaynaklı derin araştırma'),
         body: t(
           'Searches and reads many pages and PDFs, takes notes and writes a report with its sources under the answer, which you can share as a PDF. It takes a few minutes and costs more than a normal request.',
@@ -190,8 +205,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Changes Qutai’s settings for you', 'Qutai’ın ayarlarını sizin için değiştirir'),
         body: t(
-          'Appearance and browsing preferences from a fixed list, with a line saying what changed. It can never weaken a protection, such as turning blocking off.',
-          'Belirli görünüm ve gezinme ayarlarını değiştirir, neyi değiştirdiğini de bir satırla söyler. Reklam engellemeyi kapatmak gibi bir korumayı ise hiçbir zaman zayıflatamaz.',
+          'Appearance and browsing preferences from a fixed list, with a line saying what changed. It can never weaken a protection, such as turning blocking off, and a change you didn’t ask for in the chat, for example one a page suggested, waits for your yes in Qutai’s dialog.',
+          'Belirli görünüm ve gezinme ayarlarını değiştirir, neyi değiştirdiğini de bir satırla söyler. Reklam engellemeyi kapatmak gibi bir korumayı ise hiçbir zaman zayıflatamaz; sohbette sizin istemediğiniz bir değişiklik, örneğin bir sayfanın önerdiği, Qutai’ın penceresinde onayınızı bekler.',
         ),
         asks: [t('Turn on dark mode and make the text bigger', 'Koyu temayı aç ve yazıyı büyüt')],
       },
@@ -275,8 +290,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Shopping, up to the payment', 'Ödemeye kadar alışveriş'),
         body: t(
-          'The assistant fills the cart and the checkout, then you choose who pays: press the last button yourself, or turn on “Let the assistant complete payments” and approve each payment in Qutai’s window, which shows the site, the total on the page, the order and the payment method every time. There is no spending limit.',
-          'Asistan sepeti ve ödeme formunu doldurur; ödemeyi kimin yapacağına siz karar verirsiniz. Son düğmeye kendiniz basarsınız ya da “Asistan ödemeleri tamamlasın”ı açarsınız; o zaman her ödeme, siteyi, sayfadaki tutarı, siparişi ve ödeme yöntemini gösteren Qutai penceresinde onayınızı bekler. Harcama sınırı yoktur.',
+          'The assistant fills the cart and the checkout, then you choose who pays: press the last button yourself, or turn on “Let the assistant complete payments” and approve each payment in Qutai’s window, which shows the site, the total on the page, the order and the payment method every time. A subscribe button with a price (“Subscribe – £4.99 a month”) counts as a payment too. There is no spending limit.',
+          'Asistan sepeti ve ödeme formunu doldurur; ödemeyi kimin yapacağına siz karar verirsiniz. Son düğmeye kendiniz basarsınız ya da “Asistan ödemeleri tamamlasın”ı açarsınız; o zaman her ödeme, siteyi, sayfadaki tutarı, siparişi ve ödeme yöntemini gösteren Qutai penceresinde onayınızı bekler. “Abone ol – aylık 149 TL” gibi fiyatlı bir abonelik düğmesi de ödeme sayılır. Harcama sınırı yoktur.',
         ),
         asks: [
           t('Put these in the cart and go to checkout', 'Bunları sepete ekle, ödeme adımına geç'),
@@ -295,6 +310,20 @@ export const GROUPS: Group[] = [
         body: t(
           'The app refuses to type card numbers and to type into password, one-time-code, card and security-code fields. Sign-ins and bank checks (3-D Secure) are left to you.',
           'Qutai kart numarası yazmaz; şifre, tek kullanımlık kod, kart ve güvenlik kodu alanlarına hiçbir şey yazmaz. Siteye giriş ve banka doğrulaması (3-D Secure) size kalır.',
+        ),
+      },
+      {
+        title: t('Tested against hidden instructions', 'Gizli talimatlara karşı test edilir'),
+        body: t(
+          'How well the assistant resists instructions hidden in pages is measured with a test set of 35 trap pages, run through the app’s real steps and checks. A test is not a guarantee, which is why the steps that matter are decided by the app. Qutai’s own script on the page runs under a secret name that the page can’t replace or tamper with.',
+          'Asistanın sayfalara gizlenmiş talimatlara ne kadar direndiği, uygulamanın gerçek adımları ve denetimlerinden geçen 35 tuzak sayfalık bir test setiyle ölçülür. Test bir garanti değildir; önemli adımlara uygulamanın karar vermesinin nedeni de bu. Qutai’ın sayfadaki kendi betiği, sayfanın değiştiremeyeceği ya da kurcalayamayacağı gizli bir adla çalışır.',
+        ),
+      },
+      {
+        title: t('When a check fails, nothing happens', 'Bir denetim tutmazsa hiçbir şey yapılmaz'),
+        body: t(
+          'Every step the assistant takes passes the same ordered set of checks. If Qutai can’t read what a press would do, or a page interferes with its checks before an approval, the step is refused rather than guessed.',
+          'Asistanın attığı her adım aynı sıralı denetimlerden geçer. Qutai bir düğmenin ne yapacağını okuyamazsa ya da bir sayfa onaydan önceki denetimlere karışırsa adım tahminle atılmaz, reddedilir.',
         ),
       },
     ],
@@ -365,6 +394,13 @@ export const GROUPS: Group[] = [
           'Baştan açık gelir; telefonun indirdiği filtre listeleriyle çalışır (EasyList, EasyPrivacy, AdGuard Turkish, bölgesel listeler ya da adresiyle eklediğiniz bir liste). Boş kalan bir reklam kutusunu gizlemesini ya da bir alan adını engellemesini asistandan isteyebilirsiniz; onaylarsanız kural Kendi kurallarım’a eklenir.',
         ),
         asks: [t('Hide this empty gap at the top', 'Üstteki bu boş alanı gizle')],
+      },
+      {
+        title: t('Video ads, if you want', 'İsterseniz video reklamları'),
+        body: t(
+          'An optional switch, off by default, in Settings › Privacy and security and in setup’s protection step. It removes the ads that play before and during videos on supported video sites, and can stop working for a while when a site changes.',
+          'Ayarlar › Gizlilik ve güvenlik’te ve kurulumun koruma adımında, baştan kapalı gelen isteğe bağlı bir anahtar. Desteklenen video sitelerinde videolardan önce ve video sırasında çıkan reklamları kaldırır; bir site değiştiğinde bir süre çalışmayabilir.',
+        ),
       },
       {
         title: t('Your own styles', 'Kendi stilleriniz'),
@@ -480,8 +516,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Background playback', 'Arka planda çalma'),
         body: t(
-          'Sound keeps playing with the screen locked; on Android a video can shrink to picture-in-picture. Some sites, such as YouTube, still stop it.',
-          'Ekran kilitliyken de ses çalmaya devam eder; Android’de video küçük bir pencerede oynamaya devam edebilir. YouTube gibi bazı siteler yine de durdurur.',
+          'Sound keeps playing with the screen locked; on Android a video can shrink to picture-in-picture. Some video sites still stop it.',
+          'Ekran kilitliyken de ses çalmaya devam eder; Android’de video küçük bir pencerede oynamaya devam edebilir. Bazı video siteleri yine de durdurur.',
         ),
       },
       {
@@ -506,8 +542,8 @@ export const GROUPS: Group[] = [
       {
         title: t('What was sent to the AI', 'Yapay zekâya gönderilenler'),
         body: t(
-          'A list of every request: when, which provider and model, which site and what went with it. Each answer shows its tokens and, where the price is known, roughly what it cost.',
-          'Gönderilen her istek burada listelenir: ne zaman, hangi sağlayıcıya ve modele, hangi siteyle ilgili, yanında neler gitti. Her yanıtın altında kaç token harcandığı ve fiyat biliniyorsa yaklaşık maliyeti yazar.',
+          'A list of every request: when, which provider and model (with Qutai Credits, just “Qutai Credits”), which site and what went with it. Each answer shows its tokens and, where the price is known, roughly what it cost; with Qutai Credits, the credits it was charged.',
+          'Gönderilen her istek burada listelenir: ne zaman, hangi sağlayıcıya ve modele (Qutai Kredileri’nde yalnızca “Qutai Kredileri”), hangi siteyle ilgili, yanında neler gitti. Her yanıtın altında kaç token harcandığı ve fiyat biliniyorsa yaklaşık maliyeti yazar; Qutai Kredileri’nde ise düşülen kredi.',
         ),
       },
       {
@@ -546,8 +582,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Qutai Credits', 'Qutai Kredileri'),
         body: t(
-          'In the official builds: no key and nothing to choose; Qutai picks the model. Requests pass through Qutai’s server, which keeps the account, the credits and, per request, the model, tokens and cost; never your messages, pages or memory. Buying credits in the App Store and Google Play is being prepared.',
-          'Resmî sürümlerde: anahtar da yok, seçmeniz gereken bir şey de; modeli Qutai belirler. İstekler Qutai sunucusundan geçer; sunucu hesabı, kredileri ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı, sayfaları ya da hafızanızı asla. App Store ve Google Play’den kredi satın alma hazırlanıyor.',
+          'In the official builds: no key, and no tier or model to choose; Qutai picks the model, and the app doesn’t show which one answered. Requests pass through Qutai’s server to Anthropic; the server keeps the account, the credits and, per request, the model, tokens and cost; never your messages, pages or memory. Buying credits in the App Store and Google Play is being prepared.',
+          'Resmî sürümlerde: anahtar da yok, seçmeniz gereken bir paket ya da model de; modeli Qutai belirler, uygulama hangi modelin yanıt verdiğini göstermez. İstekler Qutai sunucusu üzerinden Anthropic’e gider; sunucu hesabı, kredileri ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı, sayfaları ya da hafızanızı asla. App Store ve Google Play’den kredi satın alma hazırlanıyor.',
         ),
       },
       {
@@ -560,8 +596,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Backup in your account', 'Hesabınızda yedek'),
         body: t(
-          'The same encrypted backup file, kept in your account (the newest three) and restored on any phone. Your backup password never leaves the phone, and nobody, not even Qutai, can recover it.',
-          'Aynı şifreli yedek dosyası hesabınızda da saklanır (en yeni üçü) ve istediğiniz telefonda geri yüklenir. Yedek parolanız telefondan hiç çıkmaz; unutursanız Qutai dahil kimse kurtaramaz.',
+          'The same encrypted backup file, kept in your account (the newest three) and restored on any phone; after you sign in, Qutai offers to restore the newest one. Your backup password never leaves the phone, and nobody, not even Qutai, can recover it.',
+          'Aynı şifreli yedek dosyası hesabınızda da saklanır (en yeni üçü) ve istediğiniz telefonda geri yüklenir; giriş yaptığınızda Qutai en yenisini geri yüklemeyi önerir. Yedek parolanız telefondan hiç çıkmaz; unutursanız Qutai dahil kimse kurtaramaz.',
         ),
       },
     ],
@@ -578,15 +614,15 @@ export const GROUPS: Group[] = [
       {
         title: t('Tabs, groups and the address bar', 'Sekmeler, gruplar ve adres çubuğu'),
         body: t(
-          'Idle tabs sleep to save memory; swipe on the address bar to switch tabs, and put the bar at the top or the bottom.',
-          'Kullanmadığınız sekmeler bellek harcamasın diye uykuya geçer. Sekmeler arasında geçmek için adres çubuğunu kaydırın; çubuğu ekranın üstüne ya da altına alabilirsiniz.',
+          'Idle tabs sleep to save memory; swipe on the address bar to switch tabs, and put the bar at the top or the bottom. It slides away while you scroll down and comes back on a small scroll up (or keep it always visible), and it shows the site’s domain clearly, with the rest of the address subdued.',
+          'Kullanmadığınız sekmeler bellek harcamasın diye uykuya geçer. Sekmeler arasında geçmek için adres çubuğunu kaydırın; çubuğu ekranın üstüne ya da altına alabilirsiniz. Aşağı kaydırırken çubuk gizlenir, biraz yukarı kaydırınca geri gelir (isterseniz hep görünür kalır); sitenin alan adını belirgin, adresin geri kalanını soluk gösterir.',
         ),
       },
       {
         title: t('Clear feedback while a page loads', 'Sayfa yüklenirken ne olduğunu bilirsiniz'),
         body: t(
-          'A progress line starts at once; after 4 seconds you hear that the site isn’t answering yet, with Stop, and after 25 seconds that it is very slow, with Try again. Being offline is said at once, and tabs that failed offline reload when the connection returns. The address bar keeps showing the current page until the new site answers, so a slow page can’t pass itself off as another; windows a page opens later appear behind your tab with a notice, and a tab that wakes up returns to where you were.',
-          'İlerleme çizgisi hemen başlar; 4 saniye sonra sitenin henüz yanıt vermediği söylenir ve Durdur çıkar, 25 saniye sonra da çok yavaş olduğu söylenir ve Tekrar dene çıkar. İnternet yoksa bu hemen söylenir; bağlantı yokken açılamayan sekmeler bağlantı gelince yeniden yüklenir. Yeni site yanıt verene kadar adres çubuğu bulunduğunuz sayfayı göstermeye devam eder, böylece yavaş bir sayfa kendini başka bir site gibi gösteremez. Bir sayfanın sonradan açtığı pencereler bir uyarıyla sekmenizin arkasında açılır; uyuyan bir sekme uyanınca kaldığınız yere döner.',
+          'A progress line starts at once; after 4 seconds you hear that the site isn’t answering yet, with Stop, and after 25 seconds that it is very slow, with Try again. Being offline is said at once, and tabs that failed offline reload when the connection returns. The address bar keeps showing the current page until the new site answers, so a slow page can’t pass itself off as another; windows a page opens later appear behind your tab with a notice, and a tab that wakes up returns to where you were. A line names the site that is opening while it answers. Reloading or going back to a form you sent asks before sending it again, since that could repeat an order. A page that stops working reloads once; if it stops again, you get a “This page stopped working” screen with Reload instead of a blank tab.',
+          'İlerleme çizgisi hemen başlar; 4 saniye sonra sitenin henüz yanıt vermediği söylenir ve Durdur çıkar, 25 saniye sonra da çok yavaş olduğu söylenir ve Tekrar dene çıkar. İnternet yoksa bu hemen söylenir; bağlantı yokken açılamayan sekmeler bağlantı gelince yeniden yüklenir. Yeni site yanıt verene kadar adres çubuğu bulunduğunuz sayfayı göstermeye devam eder, böylece yavaş bir sayfa kendini başka bir site gibi gösteremez. Bir sayfanın sonradan açtığı pencereler bir uyarıyla sekmenizin arkasında açılır; uyuyan bir sekme uyanınca kaldığınız yere döner. Site yanıt verene kadar bir satır hangi sitenin açıldığını söyler. Gönderdiğiniz bir formun sonucunu yenilediğinizde ya da ona geri döndüğünüzde, bir siparişi yineleyebileceği için formu yeniden göndermeden önce sorar. Çalışmayı durduran bir sayfa bir kez kendiliğinden yenilenir; yine durursa boş bir sekme yerine Yeniden yükle düğmesiyle “Bu sayfa çalışmayı durdurdu” ekranı çıkar.',
         ),
       },
       {
@@ -600,8 +636,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Ten languages', 'On dil'),
         body: t(
-          'English, Turkish, German, Spanish, Brazilian Portuguese, French, Japanese, Korean, Russian and Indonesian, following the phone or chosen in Settings.',
-          'Türkçe, İngilizce, Almanca, İspanyolca, Brezilya Portekizcesi, Fransızca, Japonca, Korece, Rusça ve Endonezce; telefonun diline uyar ya da Ayarlar’dan seçilir.',
+          'English, Turkish, German, Spanish, Brazilian Portuguese, French, Japanese, Korean, Russian and Indonesian, following the phone or chosen in Settings. The privacy policy and terms are available in all ten.',
+          'Türkçe, İngilizce, Almanca, İspanyolca, Brezilya Portekizcesi, Fransızca, Japonca, Korece, Rusça ve Endonezce; telefonun diline uyar ya da Ayarlar’dan seçilir. Gizlilik politikası ve kullanım koşulları da on dilin hepsinde var.',
         ),
       },
       {
@@ -621,8 +657,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Opening from other apps', 'Diğer uygulamalardan Qutai’a'),
         body: t(
-          'Share a link or text to Qutai (Android for now) or use qutai:// links from shortcuts.',
-          'Bir bağlantıyı ya da metni Qutai’a gönderin (şimdilik Android’de) ya da Kestirmeler’den qutai:// bağlantılarıyla açın.',
+          'Share a link or text to Qutai (Android for now) or use qutai:// links from shortcuts. Make Qutai your default browser from Settings › Search. On Android, the launcher shortcuts (New tab, Incognito tab, Ask Qutai, Scan QR code) follow Qutai’s language.',
+          'Bir bağlantıyı ya da metni Qutai’a gönderin (şimdilik Android’de) ya da Kestirmeler’den qutai:// bağlantılarıyla açın. Qutai’ı varsayılan tarayıcınız yapmak için Ayarlar › Arama’ya gidin. Android’de ana ekran kısayolları (Yeni sekme, Gizli sekme, Qutai’a sor, QR kodu tara) Qutai’ın diline uyar.',
         ),
       },
     ],
@@ -658,6 +694,14 @@ export const LEAVES: { to: Text; what: Text; when: Text }[] = [
       '“Konumumu kullan” dediğinizde adres sorgusu; telefon sesinizi kendisi yazıya çeviremediğinde konuşmanız',
     ),
     when: t('After a one-time question; never in incognito', 'Bir kez sorulduktan sonra; gizli modda asla'),
+  },
+  {
+    to: t('Sites shown on option cards', 'Seçenek kartlarındaki siteler'),
+    what: t(
+      'Requests for the cards’ pictures, from the phone, without cookies or a referrer',
+      'Kartlardaki resimlerin istekleri; telefondan, çerez ve yönlendiren adres olmadan',
+    ),
+    when: t('When the assistant shows cards; in incognito only after “Show images”', 'Asistan kart gösterdiğinde; gizli modda yalnızca “Resimleri göster”den sonra'),
   },
   {
     to: t('Filter list publishers', 'Filtre listesi yayıncıları'),
