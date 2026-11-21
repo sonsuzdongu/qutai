@@ -37,13 +37,32 @@ export async function outboundGate(url: string, ctx: ToolContext): Promise<'ok' 
   try {
     carried = await ctx.outbound.check(url);
   } catch {
-    // Not knowing the saved details is not "carries none of them": the address isn't loaded unchecked (UNTR-27).
+    // Not knowing the saved details is not "carries none of them" (UNTR-27): the address is the user's decision, in
+    // Qutai's own dialog saying it couldn't be checked. Without a dialog, or in an incognito task, it isn't loaded.
+    const tab = ctx.browser.getTab(ctx.agentTab.id);
+    const incognito = !!(ctx.privacy?.touchedIncognito || tab?.incognito);
+    const allowed =
+      ctx.confirm && !incognito
+        ? await ctx.confirm(
+            {
+              lines: [
+                { icon: 'link', text: t('confirm.urlUnchecked', { host }) },
+                { icon: 'insecure', text: t('confirm.urlWhy') },
+              ],
+            },
+            null,
+          )
+        : false;
+    if (allowed) return 'approved';
     return {
       content:
         `Not opened: Qutai couldn't read the user's saved details to check whether this address carries them to ${host}, ` +
-        "a site the user didn't name and didn't have open. Try again; if it keeps failing, tell the user.",
+        "a site the user didn't name and didn't have open" +
+        (ctx.confirm && !incognito
+          ? ", and the user declined to open it unchecked. Don't try this address again; go on with the user's task."
+          : '. Try again; if it keeps failing, tell the user.'),
       isError: true,
-      notice: errorNotice(t('step.checkFailed')),
+      notice: ctx.confirm && !incognito ? declinedNotice() : errorNotice(t('step.checkFailed')),
     };
   }
   if (!carried.length) return 'ok';

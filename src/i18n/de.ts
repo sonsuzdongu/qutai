@@ -802,6 +802,7 @@ export const de: Record<keyof typeof en, string> = {
   'confirm.memoryFromPage': 'Im Gedächtnis von Qutai speichern: „{text}“',
   'confirm.memoryFromPageWhy': 'Das steht nicht in dem, was Sie in diesem Chat geschrieben haben. Eine Webseite oder eine Datei hat es vielleicht vorgeschlagen.',
   'confirm.urlCarries': '{host} mit Folgendem in der Adresse öffnen:',
+  'confirm.urlUnchecked': "{host} öffnen? Qutai konnte Ihre gespeicherten Angaben nicht lesen und kann daher nicht prüfen, ob diese Adresse sie enthält.",
   'confirm.urlMemory': 'Angaben aus dem Gedächtnis von Qutai',
   'confirm.urlChat': 'etwas, das Sie in diesem Chat geschrieben haben',
   'confirm.urlOtherSite': 'ein Code oder eine Nummer von einer anderen Website',

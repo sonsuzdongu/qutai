@@ -162,16 +162,29 @@ test("an error a tool didn't catch is that call's error, not the end of the task
   await assert.rejects(executeTool('search_history', { query: 'kettle' }, { ...failing, signal: stopped.signal }));
 });
 
-test('an address is not opened when the saved details could not be read to check it (UNTR-27)', async () => {
-  const { ctx, order } = setup();
-  const unreadable: ToolContext = {
+test("saved details unreadable: the address is the user's decision in a dialog, and nothing loads before the answer (UNTR-27)", async () => {
+  const unreadable = (ctx: ToolContext): ToolContext => ({
     ...ctx,
     outbound: new OutboundGuard([ctx.agentTab.url], () => ['Find the user guide for my kettle.'], async () => {
       throw new Error('database is locked');
     }),
-  };
-  const out = await executeTool('download_file', { url: 'https://kettle-manuals.example/get?phone=5324187705' }, unreadable);
+  });
+  const url = 'https://kettle-manuals.example/get?phone=5324187705';
+  // Declined (setup's dialog answers no): asked once, nothing requested.
+  const declined = setup();
+  const out = await executeTool('download_file', { url }, unreadable(declined.ctx));
   assert.equal(out.isError, true);
   assert.match(out.content, /^Not opened: Qutai couldn't read/);
-  assert.deepEqual(order, [], 'no dialog and no request');
+  assert.equal(declined.order.length, 1);
+  assert.match(declined.order[0], /^dialog: /);
+  // No dialog to ask in: refused without asking.
+  const silent = setup();
+  const refused = await executeTool('download_file', { url }, { ...unreadable(silent.ctx), confirm: undefined });
+  assert.equal(refused.isError, true);
+  assert.deepEqual(silent.order, []);
+  // An incognito task: refused without asking.
+  const hidden = setup();
+  const inIncognito = await executeTool('download_file', { url }, { ...unreadable(hidden.ctx), privacy: { touchedIncognito: true } } as ToolContext);
+  assert.equal(inIncognito.isError, true);
+  assert.deepEqual(hidden.order, []);
 });

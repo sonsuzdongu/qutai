@@ -807,6 +807,7 @@ export const ru: Record<keyof typeof en, string> = {
   'confirm.memoryFromPage': 'Сохранить в памяти Qutai: «{text}»',
   'confirm.memoryFromPageWhy': 'Этого нет в том, что вы написали в этом чате. Возможно, это подсказала веб-страница или файл.',
   'confirm.urlCarries': 'Открыть {host} с этим в адресе:',
+  'confirm.urlUnchecked': "Открыть {host}? Qutai не смог прочитать ваши сохранённые сведения и не может проверить, есть ли они в этом адресе.",
   'confirm.urlMemory': 'сведения из памяти Qutai',
   'confirm.urlChat': 'то, что вы написали в этом чате',
   'confirm.urlOtherSite': 'код или номер с другого сайта',

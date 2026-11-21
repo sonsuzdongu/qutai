@@ -208,7 +208,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `UNTR-24` | Resistance to instructions in pages is measured with the injection test set (opt-in, billed, capped); claims say only what it shows | Default | 2026-11-20 |
 | `UNTR-25` | A settings change the user's own messages don't name is asked in Qutai's dialog before it applies; protections towards safe never asked | Default | 2026-11-20 |
 | `UNTR-26` | Qutai's page script is installed once per document under a secret, frozen, non-configurable name, before the page's scripts on iOS and Android; commands carry only the call | Default | 2026-11-20 |
-| `UNTR-27` | Saved details unreadable: an address to a site the user didn't name or have open isn't loaded, its card isn't shown | Default | 2026-11-21 |
+| `UNTR-27` | Saved details unreadable: an address to a site the user didn't name or have open is asked about in Qutai's dialog (refused where nothing can be asked); its card isn't shown | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `UNTR-3`
 

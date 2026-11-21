@@ -807,6 +807,7 @@ export const id: Record<keyof typeof en, string> = {
   'confirm.memoryFromPage': 'Simpan ke memori Qutai: “{text}”',
   'confirm.memoryFromPageWhy': 'Ini tidak ada dalam yang Anda tulis di obrolan ini. Mungkin halaman web atau file yang menyarankannya.',
   'confirm.urlCarries': 'Buka {host} dengan ini di alamatnya:',
+  'confirm.urlUnchecked': "Buka {host}? Qutai tidak dapat membaca data tersimpan Anda, jadi tidak dapat memeriksa apakah alamat ini membawanya.",
   'confirm.urlMemory': 'data yang tersimpan di memori Qutai',
   'confirm.urlChat': 'sesuatu yang Anda tulis di obrolan ini',
   'confirm.urlOtherSite': 'kode atau nomor referensi dari situs lain',

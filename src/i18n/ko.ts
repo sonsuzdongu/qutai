@@ -806,6 +806,7 @@ export const ko: Record<keyof typeof en, string> = {
   'confirm.memoryFromPage': 'Qutai 메모리에 저장: “{text}”',
   'confirm.memoryFromPageWhy': '이 채팅에서 작성하신 내용에 없습니다. 웹페이지나 파일이 제안한 것일 수 있습니다.',
   'confirm.urlCarries': '주소에 다음 정보를 담아 {host} 열기:',
+  'confirm.urlUnchecked': "{host}을(를) 열까요? Qutai가 저장된 정보를 읽지 못해 이 주소에 그 정보가 담겨 있는지 확인할 수 없습니다.",
   'confirm.urlMemory': 'Qutai 메모리에 저장된 정보',
   'confirm.urlChat': '이 채팅에서 작성하신 내용',
   'confirm.urlOtherSite': '다른 사이트의 코드 또는 번호',

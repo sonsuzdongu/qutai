@@ -808,6 +808,7 @@ export const ja: Record<keyof typeof en, string> = {
   'confirm.memoryFromPage': 'Qutai のメモリに保存:「{text}」',
   'confirm.memoryFromPageWhy': 'これはこのチャットであなたが書いた内容にありません。ウェブページやファイルが提案した可能性があります。',
   'confirm.urlCarries': 'アドレスに次の情報を含めて {host} を開く:',
+  'confirm.urlUnchecked': "{host} を開きますか？Qutai は保存された情報を読み取れなかったため、このアドレスにその情報が含まれているか確認できません。",
   'confirm.urlMemory': 'Qutai のメモリに保存された情報',
   'confirm.urlChat': 'このチャットであなたが書いた内容',
   'confirm.urlOtherSite': '別のサイトのコードや番号',

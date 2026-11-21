@@ -808,6 +808,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'confirm.memoryFromPage': 'Salvar na memória do Qutai: “{text}”',
   'confirm.memoryFromPageWhy': 'Isso não está no que você escreveu nesta conversa. Uma página da web ou um arquivo pode ter sugerido isso.',
   'confirm.urlCarries': 'Abrir {host} com isto no endereço:',
+  'confirm.urlUnchecked': "Abrir {host}? O Qutai não conseguiu ler seus dados salvos, então não pode verificar se este endereço os leva.",
   'confirm.urlMemory': 'dados salvos na memória do Qutai',
   'confirm.urlChat': 'algo que você escreveu nesta conversa',
   'confirm.urlOtherSite': 'um código ou uma referência de outro site',

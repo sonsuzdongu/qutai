@@ -806,6 +806,7 @@ export const es: Record<keyof typeof en, string> = {
   'confirm.memoryFromPage': 'Guardar en la memoria de Qutai: «{text}»',
   'confirm.memoryFromPageWhy': 'Esto no está en lo que escribió en este chat. Puede que una página web o un archivo lo haya sugerido.',
   'confirm.urlCarries': 'Abrir {host} con esto en la dirección:',
+  'confirm.urlUnchecked': "¿Abrir {host}? Qutai no pudo leer sus datos guardados, así que no puede comprobar si esta dirección los lleva.",
   'confirm.urlMemory': 'datos guardados en la memoria de Qutai',
   'confirm.urlChat': 'algo que escribió en este chat',
   'confirm.urlOtherSite': 'un código o una referencia de otro sitio',

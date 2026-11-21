@@ -799,6 +799,7 @@ export const en = {
   'confirm.memoryFromPage': "Save this to Qutai's memory: “{text}”",
   'confirm.memoryFromPageWhy': "This isn't in what you wrote in this chat. A web page or a file may have suggested it.",
   'confirm.urlCarries': 'Open {host} with this in the address:',
+  'confirm.urlUnchecked': "Open {host}? Qutai couldn't read your saved details, so it can't check whether this address carries them.",
   'confirm.urlMemory': "details saved in Qutai's memory",
   'confirm.urlChat': 'something you wrote in this chat',
   'confirm.urlOtherSite': 'a code or reference from another site',

@@ -797,6 +797,7 @@ export const tr: Record<keyof typeof en, string> = {
   'confirm.memoryFromPage': "Qutai'ın belleğine kaydet: “{text}”",
   'confirm.memoryFromPageWhy': 'Bu, bu sohbette yazdıklarınızda yok. Bunu bir web sayfası veya dosya önermiş olabilir.',
   'confirm.urlCarries': '{host} sitesini, adresinde şu bilgiyle aç:',
+  'confirm.urlUnchecked': "{host} açılsın mı? Qutai kayıtlı bilgilerinizi okuyamadı; bu adresin onları taşıyıp taşımadığını denetleyemiyor.",
   'confirm.urlMemory': "Qutai'ın belleğindeki bilgileriniz",
   'confirm.urlChat': 'bu sohbette yazdığınız bir bilgi',
   'confirm.urlOtherSite': 'başka bir siteden bir kod veya numara',
