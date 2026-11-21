@@ -1190,7 +1190,7 @@ Moved to Details (ids retired, not reused): `SRV-14`, `SRV-19`
 | `OSPERM-20` | `REQUEST_INSTALL_PACKAGES` is declared only so "Open" on a downloaded APK reaches the system installer; a… | Default |  |
 | `OSPERM-23` | Ways in from other apps (share, text selection menu, web search, shortcuts, widget) need no permission;… | Default |  |
 | `OSPERM-24` | Store notes: page content, chats and screenshots go from the phone to the AI provider the user chose with… | Default |  |
-| `OSPERM-25` | Export compliance: `ITSAppUsesNonExemptEncryption` is true (own-code standard encryption for backups); France out of availability until its declaration. | Owner | 2026-11-21 |
+| `OSPERM-25` | Export compliance: `ITSAppUsesNonExemptEncryption` left out, App Store Connect asks for each build (standard algorithms); France out of availability until its declaration. | Owner | 2026-11-21 |
 | `OSPERM-26` | A pro build's iOS privacy manifest lists six collected data types (app functionality, linked, no tracking); open source: none. | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `OSPERM-15`, `OSPERM-21`, `OSPERM-22`

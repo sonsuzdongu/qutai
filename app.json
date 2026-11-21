@@ -8,9 +8,6 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
-      "config": {
-        "usesNonExemptEncryption": true
-      },
       "infoPlist": {
         "CFBundleAllowMixedLocalizations": true,
         "NSCalendarsFullAccessUsageDescription": "Qutai lists your calendars so you can choose where new events go, and reads your events only when you ask the assistant about your schedule and confirm; it sends the events in the range you approved to your AI provider.",
