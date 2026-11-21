@@ -19,6 +19,7 @@ Last updated: 2026-11-21
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-21:** "Don't ask again" on every device-permission dialog (16 Nov checklist; done in 289a687) confirmed after the tools split with a test through the real tool pipeline and all ten languages; recorded as the owner's request, and that a download from an address the assistant wrote itself always asks (`SITE-9`, `SITE-11`); no behaviour change.
 - **2026-11-21:** Running a saved task by name ("Deneme adlı görevi çalıştır", 16 Nov checklist) confirmed working after the tools split, with a test through the real tool pipeline; no behaviour change, the task's text never counts as the user's own message, so it skips no approval (`TASK-7`).
 - **2026-11-21:** Voice input: a recogniser that refuses to start no longer leaves the microphone on "Preparing…" with later presses ignored; the usual error is shown and the next press starts (25-voice, Details › Recogniser errors).
 - **2026-11-21:** Voice input: words heard before a held session's automatic restart count as heard, so a late recogniser error before new words no longer shows "Voice typing didn't work" while the text is in the field, and they are the final text if nothing new follows (25-voice, Details › Recogniser errors).
