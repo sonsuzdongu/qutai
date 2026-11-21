@@ -50,20 +50,26 @@ export const MAX_AWAKE_TABS = 5;
 /**
  * Removes an ended incognito session's files. Both removers do nothing when there is nothing to remove, so a throw
  * means files are still on disk (INC-30): the failure is recorded and the removal tried once more shortly after (a
- * file still being read is free by then). Whatever is left then goes at the next app start, which clears both folders.
+ * file still being read is free by then), unless a new incognito session has started meanwhile: the removers take the
+ * whole folder, which by then holds the new session's files. Whatever is left goes when that session ends or at the
+ * next app start, which clears both folders.
+ *
+ * The recorded message may name a file of the incognito session. It stays in memory only (storage/failures.ts); it
+ * must not be added to anything that leaves the phone or is written to disk.
  */
-function removeIncognitoFiles(label: string, remove: () => void) {
+export function removeIncognitoFiles(label: string, remove: () => void, sessionStillOver: () => boolean, retryMs = 2000) {
   try {
     remove();
   } catch (e) {
     reportStorageFailure(label, e, 'record');
     setTimeout(() => {
+      if (!sessionStillOver()) return;
       try {
         remove();
       } catch (again) {
         reportStorageFailure(`${label}.retry`, again, 'record');
       }
-    }, 2000);
+    }, retryMs);
   }
 }
 
@@ -677,9 +683,10 @@ export class Browser {
     // Files the assistant made in incognito conversations go with the session.
     forgetIncognitoFiles();
     // And the copies of files handed from incognito conversations to other apps.
-    removeIncognitoFiles('incognito.outgoing', forgetIncognitoOutgoing);
+    const stillOver = () => !this.tabs.some((t) => t.incognito);
+    removeIncognitoFiles('incognito.outgoing', forgetIncognitoOutgoing, stillOver);
     // So do the files attached in incognito conversations, and a PDF still open in the reader.
-    removeIncognitoFiles('incognito.attachments', forgetIncognitoAttachments);
+    removeIncognitoFiles('incognito.attachments', forgetIncognitoAttachments, stillOver);
     closePdf();
     this.incognitoEndListeners.forEach((l) => l());
     if (!this.incognitoProfile) return;
