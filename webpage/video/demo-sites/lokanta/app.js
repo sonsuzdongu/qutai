@@ -3,17 +3,23 @@
 // Nothing is ever ordered or paid: the payment step shows a saved card that exists only on this page, "paying" with it
 // just shows the confirmation, and the form for another card has no action and sends nothing anywhere.
 const EN = new URLSearchParams(location.search).get('lang') === 'en';
+// ?r=sofra shows a second made-up restaurant (other name, prices and a delivery fee), so two tabs can be compared.
+const SOFRA = new URLSearchParams(location.search).get('r') === 'sofra';
+if (SOFRA) {
+  document.documentElement.classList.add('sofra');
+  document.title = 'Sofra Ocakbaşı · yourlocal';
+}
 document.documentElement.lang = EN ? 'en' : 'tr';
 
 const T = {
   where: ['Moda, Kadıköy', 'Moda, Kadıköy'],
   cart: ['Sepet', 'Cart'],
   footer: ['Yardım · Gizlilik · Kullanım koşulları', 'Help · Privacy · Terms'],
-  restaurant: ['Lokanta Moda', 'Lokanta Moda'],
-  cuisine: ['Ev yemekleri · Türk mutfağı · Glutensiz seçenekler', 'Home cooking · Turkish · Gluten-free options'],
-  reviews: ['(1.200+ değerlendirme)', '(1,200+ reviews)'],
-  eta: ['25–35 dk', '25–35 min'],
-  free: ['Ücretsiz teslimat', 'Free delivery'],
+  restaurant: SOFRA ? ['Sofra Ocakbaşı', 'Sofra Ocakbaşı'] : ['Lokanta Moda', 'Lokanta Moda'],
+  cuisine: SOFRA ? ['Ocakbaşı · Pide · Çorba', 'Grill · Pide · Soups'] : ['Ev yemekleri · Türk mutfağı · Glutensiz seçenekler', 'Home cooking · Turkish · Gluten-free options'],
+  reviews: SOFRA ? ['(640+ değerlendirme)', '(640+ reviews)'] : ['(1.200+ değerlendirme)', '(1,200+ reviews)'],
+  eta: SOFRA ? ['35–45 dk', '35–45 min'] : ['25–35 dk', '25–35 min'],
+  free: SOFRA ? ['Teslimat ₺45', 'Delivery ₺45'] : ['Ücretsiz teslimat', 'Free delivery'],
   min: ['Min. sepet ₺150', 'Min. order ₺150'],
   open: ['Açık · 23:00’e kadar', 'Open · until 11 pm'],
   search: ['Menüde ara', 'Search the menu'],
@@ -58,7 +64,7 @@ const T = {
   otherCard: ['Başka bir kart kullan', 'Use a different card'],
   oneClick: ['Tek dokunuşla öde: kayıtlı kartınız kullanılır.', 'One-tap checkout: your saved card is used.'],
   doneTitle: ['Siparişiniz alındı', 'Order placed'],
-  doneBody: [(n, w) => `Teşekkürler ${n}! Lokanta Moda siparişinizi hazırlıyor. Teslimat: ${w}.`, (n, w) => `Thanks, ${n}! Lokanta Moda is preparing your order. Delivery: ${w}.`],
+  doneBody: [(n, w) => `Teşekkürler ${n}! ${SOFRA ? 'Sofra Ocakbaşı' : 'Lokanta Moda'} siparişinizi hazırlıyor. Teslimat: ${w}.`, (n, w) => `Thanks, ${n}! ${SOFRA ? 'Sofra Ocakbaşı' : 'Lokanta Moda'} is preparing your order. Delivery: ${w}.`],
   paidWith: [(c, s) => `${c} ile ${s} ödendi`, (c, s) => `Paid ${s} with ${c}`],
   orderNo: ['Sipariş no', 'Order no.'],
   payFail: ['Ödeme şu anda alınamıyor. Lütfen biraz sonra tekrar deneyin.', 'We can’t take payments right now. Please try again shortly.'],
@@ -92,6 +98,10 @@ const MENU = [
   { id: 9, cat: 'sweet', art: 'pudding', tr: ['Fırın sütlaç', 'Pirinç, süt, tarçın'], en: ['Baked rice pudding', 'Rice, milk, cinnamon'], price: 100, gf: true },
   { id: 10, cat: 'sweet', art: 'baklava', pop: true, tr: ['Fıstıklı baklava', 'Dört dilim, Antep fıstığı'], en: ['Pistachio baklava', 'Four pieces, Antep pistachio'], price: 160, gf: false },
 ];
+// Sofra's prices: cheaper dishes, but a delivery fee and a longer wait.
+const SOFRA_PRICE = { 1: 105, 2: 120, 4: 240, 3: 280, 5: 310, 6: 265, 7: 175, 8: 105, 9: 95, 10: 150 };
+if (SOFRA) for (const m of MENU) m.price = SOFRA_PRICE[m.id];
+const FEE = SOFRA ? 45 : 0;
 const label = (m) => m[EN ? 'en' : 'tr'];
 
 // Small drawings of each dish on a plate (inline SVG, nothing loaded).
@@ -129,12 +139,12 @@ function menuView() {
     <section class="hero">
       <div class="cover" aria-hidden="true"></div>
       <div class="hero-card">
-        <div class="mark" aria-hidden="true">LM</div>
+        <div class="mark" aria-hidden="true">${SOFRA ? 'SO' : 'LM'}</div>
         <h1>${t('restaurant')}</h1>
         <p class="cuisine">${t('cuisine')}</p>
-        <p class="facts"><span class="rating">${star} 4,8 <span class="muted">${t('reviews')}</span></span></p>
+        <p class="facts"><span class="rating">${star} ${SOFRA ? (EN ? '4.6' : '4,6') : EN ? '4.8' : '4,8'} <span class="muted">${t('reviews')}</span></span></p>
         <ul class="chips">
-          <li>${t('eta')}</li><li class="good">${t('free')}</li><li>${t('min')}</li><li>${t('open')}</li>
+          <li>${t('eta')}</li><li${SOFRA ? '' : ' class="good"'}>${t('free')}</li><li>${t('min')}</li><li>${t('open')}</li>
         </ul>
       </div>
     </section>
@@ -213,7 +223,7 @@ function summary(editable) {
   });
   const { sum } = totals();
   return `<ul class="lines">${rows.join('')}</ul>
-    <dl class="sums"><dt>${t('subtotal')}</dt><dd>${money(sum)}</dd><dt>${t('deliveryFee')}</dt><dd class="good">${t('freeFee')}</dd><dt class="tot">${t('total')}</dt><dd class="tot">${money(sum)}</dd></dl>`;
+    <dl class="sums"><dt>${t('subtotal')}</dt><dd>${money(sum)}</dd><dt>${t('deliveryFee')}</dt>${FEE ? `<dd>${money(FEE)}</dd>` : `<dd class="good">${t('freeFee')}</dd>`}<dt class="tot">${t('total')}</dt><dd class="tot">${money(sum + FEE)}</dd></dl>`;
 }
 
 const stepper = (i) =>
@@ -289,7 +299,7 @@ function paymentView() {
         </div>
       </div>
       <p class="muted small">${t('oneClick')}</p>
-      <button class="primary" type="submit">${t('pay', money(totals().sum))}</button>
+      <button class="primary" type="submit">${t('pay', money(totals().sum + FEE))}</button>
       <p id="paynote" role="alert"></p>
     </form>`;
   const form = document.getElementById('pay');
@@ -304,7 +314,7 @@ function paymentView() {
       document.getElementById('paynote').textContent = t('payFail');
       return;
     }
-    state.paid = { sum: totals().sum, when, name: d.name.trim().split(/\s+/)[0] };
+    state.paid = { sum: totals().sum + FEE, when, name: d.name.trim().split(/\s+/)[0] };
     location.hash = '#done';
   });
 }

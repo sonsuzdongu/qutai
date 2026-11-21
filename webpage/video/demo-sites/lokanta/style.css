@@ -127,3 +127,6 @@ label.saved input { width: 20px; height: 20px; margin: 0; padding: 0; accent-col
 .done > p { margin: 0 22px 8px; color: var(--muted); }
 .tick { display: inline-grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--brand); }
 .tick svg { width: 34px; height: 34px; fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+/* Second restaurant (?r=sofra): warmer cover and mark. */
+.sofra .cover { filter: hue-rotate(-35deg) saturate(1.2); }
+.sofra .mark { background: #8a2b17; color: #ffe3b0; }
