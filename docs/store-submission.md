@@ -100,6 +100,7 @@ Eklemeden önce:
 | ☐ | Varsayılan tarayıcı | Açıklamada "varsayılan tarayıcı yapılabilir" vaadi yok (yetki başvurusu yapılmadı; risk 4.2) |
 | ☐ | Export compliance | `app.json` › `usesNonExemptEncryption: false` (yalnızca standart HTTPS). Soru gelirse "hayır" |
 | ☐ | Kullanım şartları (EULA) | Sitede şartlar sayfası yok; Apple'ın standart EULA'sı kullanılır. Kendi şartlarınızı vermek isterseniz önce sitede yayımlatın |
+| ☐ | **Description (açıklama) alanının sonu** | Uygulama içi satın alma olduğu için açıklamanın sonuna iki bağlantı ekleyin (sahibin isteği, 21 Kasım; inceleme bağlantıları açıklamada arar):<br>`Privacy Policy: https://qutai.sonsuzdongu.com/en/privacy-policy/`<br>`Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`<br>Kendi şartlarınızı yayımlarsanız ikinci satırı o sayfayla değiştirin ve App Store Connect › App Information › License Agreement'ı da güncelleyin. Diğer dillerdeki açıklamalara aynı iki satırı ekleyin (gizlilik bağlantısını o dilin sayfasıyla: `/tr/privacy-policy/` gibi) |
 
 ### 3.2 Yaş derecelendirmesi
 
@@ -165,6 +166,7 @@ Eklemeden önce:
 | ☐ | Contact details › Email | `qutai@sonsuzdongu.com` |
 | ☐ | Website | `https://qutai.sonsuzdongu.com/en/` |
 | ☐ | Başlık, kısa ve uzun açıklama, ekran görüntüleri | App Store'daki kurallar (§3.1): marka adı yok, abartı yok, gerçek kart yok |
+| ☐ | Uzun açıklamanın sonu | `Privacy Policy: https://qutai.sonsuzdongu.com/en/privacy-policy/` (her dilde o dilin sayfası). Apple'ın EULA bağlantısı Play'e konmaz |
 
 ---
 
