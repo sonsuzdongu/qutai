@@ -19,6 +19,7 @@ Last updated: 2026-11-21
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-21:** Android: tapping the address bar always opens the keyboard; the first request was dropped when focus came from the web page (Android 14+ switches the keyboard to a new field a moment later), so the bar asks again shortly after focus while none shows, and a tap on the focused bar after Back reopens it (`UI-39`).
 - **2026-11-21:** The page menu (⋮) fits the screen (16 Nov checklist; height and scrolling done in 1e06ccb) and now also keeps 8 pt from both side edges with long labels; recorded and checked at 2× text on a small screen and on its side (`UI-38`).
 - **2026-11-21:** A tap on the address bar's suggestion list ("Ask Qutai", search, history, bookmark rows) or the dimmed area no longer also presses the web page behind it on Android: the list is drawn in a page-sized layer instead of hanging outside the bar's box (`UI-37`).
 - **2026-11-21:** "Don't ask again" on every device-permission dialog (16 Nov checklist; done in 289a687) confirmed after the tools split with a test through the real tool pipeline and all ten languages; recorded as the owner's request, and that a download from an address the assistant wrote itself always asks (`SITE-9`, `SITE-11`); no behaviour change.

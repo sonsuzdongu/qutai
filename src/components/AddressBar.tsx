@@ -22,6 +22,8 @@ import { darkPalette, makeStyles, usePalette } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
 import { AssistantButton } from './AssistantButton';
 import { useReduceMotion } from '../utils/useReduceMotion';
+import { nudgeKeyboard } from '../utils/keyboardNudge';
+import { showKeyboardFor } from '../utils/showKeyboard';
 import { BarOverlay } from './BarOverlay';
 import { OmniboxSuggestions } from './OmniboxSuggestions';
 import { omniboxOverlayFrame } from './overlaySlot';
@@ -143,6 +145,24 @@ export function AddressBar({
   useEffect(() => {
     if (editing) inputRef.current?.focus();
   }, [editing]);
+  // Android: the keyboard is asked for again while it isn't showing after the field got focus (why: keyboardNudge.ts).
+  const stopNudge = useRef<(() => void) | null>(null);
+  const endNudge = () => {
+    stopNudge.current?.();
+    stopNudge.current = null;
+  };
+  const startNudge = () => {
+    if (Platform.OS !== 'android') return;
+    endNudge();
+    stopNudge.current = nudgeKeyboard({
+      isFocused: () => inputRef.current?.isFocused() ?? false,
+      keyboardShown: () => Keyboard.isVisible(),
+      show: () => showKeyboardFor(inputRef.current),
+      setTimer: (run, ms) => setTimeout(run, ms),
+      clearTimer: (timer) => clearTimeout(timer as ReturnType<typeof setTimeout>),
+    });
+  };
+  useEffect(() => endNudge, []);
   const [handledEdit, setHandledEdit] = useState<number | null>(null);
   if (editRequest && editRequest.id !== handledEdit) {
     setHandledEdit(editRequest.id);
@@ -202,6 +222,7 @@ export function AddressBar({
             value={text}
             onChangeText={changeText}
             onBlur={() => {
+              endNudge();
               setEditing(false);
               setCleared(null);
             }}
@@ -215,10 +236,15 @@ export function AddressBar({
             // window, a path that skips selectTextOnFocus (only the focus() call selects), so the first typed letters
             // were appended to the address. The whole address is selected again once focused, on both platforms.
             onFocus={() => {
+              startNudge();
               const length = textRef.current.length;
               requestAnimationFrame(() => inputRef.current?.setSelection(0, length));
             }}
             selectTextOnFocus
+            // A tap on the field while it has focus and the keyboard was closed (Back) opens the keyboard again.
+            onPress={() => {
+              if (Platform.OS === 'android' && !Keyboard.isVisible()) showKeyboardFor(inputRef.current);
+            }}
             // On a phone on its side the suggestions and the page stay in view (no full-screen keyboard).
             disableFullscreenUI
             autoCapitalize="none"
