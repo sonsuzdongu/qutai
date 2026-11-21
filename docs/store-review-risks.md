@@ -76,6 +76,7 @@ Bunlar düzeltilmeden gönderirseniz büyük olasılıkla ret alırsınız. Play
 - **Bizde ne var:** "Fix before launch" listesindeki geçici çözümler **[kodda doğrulandı]**: sahte satın alma yolu ve on dildeki metinleri (`BUY-16` ile `BUY-21`, ayrıca TODO.md). Production'da kapalı (`BUY-17`) ama uygulamadaki metinler ve kod yolu `BUY-21`'e göre henüz temizlenmedi. Ayarlar › Asistan altında "Asistan görünümü (deneme)" adlı deneme anahtarı duruyor. Test girişi mağaza paketlerinden çıkarılıyor (`BUILD-9`, doğrulandı).
 - **Olasılık:** orta-yüksek. İnceleme ekibi "deneme" yazan bir ayar görürse ya da sahte satın alma metni ortaya çıkarsa ret gelir.
 - **Çözüm:** `BUY-21` listesini bitirin (uygulamadaki sahte yolu ve metinleri kaldırın, veritabanını temizleyin). "(deneme)" anahtarını kaldırın. Paketten sonra `bundleCheck` sahte satın alma metinlerini de arasın.
+- **Durum (21 Kasım 2026):** sahte satın alma kısmı yapıldı. Sahte yol uygulamadan ve sunucudan kaldırıldı (on dildeki beş metin, `POST /purchases/fake`, `FAKE_PURCHASES`, panel denetimleri, testleri); `scripts/build/bundleCheck.mjs` bu metinleri ya da yolu içeren paketi durdurur; sunucu migration 0015 `fake` satırlarını siler ve mağaza listesinden `fake`'i çıkarır (production'a bir sonraki dağıtımla gider, henüz çalıştırılmadı). `BUY-16`…`BUY-21` emekliye ayrıldı. Açık kalan: "Asistan görünümü (deneme)" anahtarı (karar sizde).
 
 ---
 
@@ -291,4 +292,4 @@ ATT (izleme izni): gerekmez. Reklam ve izleme yok.
 3. Mağaza derlemelerinden YouTube video reklam engellemeyi kaldırma (1.3), iOS'ta YouTube arka plan taklidini kapatma (2.1).
 4. İnceleme erişimi: `review_login`, inceleme hesabına kredi, production'da sandbox satın alma, iOS IAP ürünleri ve iOS RevenueCat anahtarı (1.4).
 5. Kendi anahtar için üçüncü taraf AI rıza ekranı, gizlilik metinlerine uygulamalar cümlesi, pro derleme için doğru mağaza formları (2.3, 2.4, 3.8).
-6. "Fix before launch" listesini kapatma: sahte satın alma metinleri ve "(deneme)" görünüm anahtarı (1.5).
+6. "Fix before launch" listesini kapatma: "(deneme)" görünüm anahtarı (1.5). Sahte satın alma metinleri 21 Kasım'da kaldırıldı.

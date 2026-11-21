@@ -7,6 +7,8 @@
  *   sign-in variables that was left for runtime (the build sets them to off, so the bundler inlines them away).
  * - A plain bundle contains no code of RevenueCat's SDK (metro.config.js resolves it to an empty module); a bundle meant
  *   to sell credits (`purchases`) does.
+ * - No bundle contains the removed fake purchases (21 Nov 2026, docs/design/35-purchases.md › BUY-21): their text keys
+ *   or their server route.
  *
  * Problems name what was found, never a secret's value.
  */
@@ -15,6 +17,8 @@ const TEST_SIGN_IN_NAMES = ['EXPO_PUBLIC_DEV_LOGIN_SECRET', 'EXPO_PUBLIC_DEV_LOG
 export const REVENUECAT_MARK = '[RevenueCat]';
 /** The Play Billing permission as it appears in a bundle's (binary) AndroidManifest.xml. */
 export const BILLING_PERMISSION = 'com.android.vending.BILLING';
+/** Texts only the removed fake purchase path carried (its i18n keys and its server route); none may come back. */
+export const FAKE_PURCHASE_MARKS = ['buy.testMode.', 'buy.status.testModeOff', '/purchases/fake'];
 
 /**
  * @param {Buffer} bundle
@@ -36,6 +40,7 @@ export function bundleProblems(bundle, { pro, apiHost, serverHosts = [], secrets
   for (const name of TEST_SIGN_IN_NAMES) if (has(name)) problems.push(`the bundle still refers to ${name} (not replaced at build time)`);
   if (!pro && has(REVENUECAT_MARK)) problems.push('a plain (not pro-mode) bundle contains RevenueCat’s SDK');
   if (purchases && !has(REVENUECAT_MARK)) problems.push('the bundle does not contain RevenueCat’s SDK, so it cannot sell credits');
+  for (const mark of FAKE_PURCHASE_MARKS) if (has(mark)) problems.push(`the bundle contains the removed fake purchases (${mark})`);
   return problems;
 }
 

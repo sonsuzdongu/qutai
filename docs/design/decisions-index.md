@@ -66,7 +66,6 @@ The open questions, in one place (each row says what the app does today).
 | `CRED-37` | Today there is no crash-report service. | [34](34-credits-and-relay.md) |
 | `CRED-38` | Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3 minutes, and not for incognito… | [34](34-credits-and-relay.md) |
 | `BUY-9` | Today a refund that Apple later cancels does not give the credits back automatically; support can grant them by hand. | [35](35-purchases.md) |
-| `BUY-18` | Today fake purchases allow 10 new per account in any 24 hours and 30 a minute across everyone, one pack each, active packs only, each… | [35](35-purchases.md) |
 | `BUY-24` | Today Qutai only asks RevenueCat to delete a deleted user's customer record; whether to require more is open. | [35](35-purchases.md) |
 | `BUY-25` | Today the packs are decided (three Android packs) but the RevenueCat project, Play products, notifications and panel packs are still being created; no trial credits. | [35](35-purchases.md) |
 | `BACK-4` | Today new files use scrypt (a slow password-to-key function) with N = 2^14, r = 8, p = 1 and XChaCha20-Poly1305 encryption; files asking… | [36](36-server-backup.md) |
@@ -100,7 +99,7 @@ The open questions, in one place (each row says what the app does today).
 | `PROD-4` | A backup that names Qutai Credits as the provider does not switch a build without pro mode to it; the… | Default |  |
 | `PROD-6` | Pro-only parts must keep the repository build working without them. | Default |  |
 | `PROD-7` | Test sign-in exists only with accounts on, `EXPO_PUBLIC_DEV_LOGIN` on and the test server's secret;… | Owner | 2026-11-17 |
-| `PROD-8` | Fake purchases (the server accepts every credit purchase) are a temporary stand-in, only on a development… | Owner | 2026-11-17 |
+| `PROD-8` | ~~Fake purchases are a temporary stand-in, only on a development server~~ (withdrawn: removed). | Withdrawn | 2026-11-21 |
 | `PROD-9` | The open-source build and pro mode have separate privacy policies and terms with separate version numbers… | Owner | 2026-11-19 |
 | `PROD-10` | The open-source privacy policy says: "Qutai has no servers of its own: we do not collect, store or sell… | Default |  |
 | `PROD-11` | The code is licensed under Apache-2.0; the licence covers the code only, not the name "Qutai", its logo or… | Owner | 2026-11-14 |
@@ -1072,17 +1071,17 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-12` | The payments library gets Qutai's account id after sign-in, switches on another sign-in and logs out on… | Default | 2026-11-20 |
 | `BUY-13` | RevenueCat's restore behaviour is "Transfer to new App User ID"; each store transaction is still credited once (changed). | Owner | 2026-11-21 |
 | `BUY-15` | Builds without pro mode must not contain the payments library at all: no native code, no billing… | Owner | 2026-11-16 |
-| `BUY-16` | Fake purchases are a deliberate temporary stand-in: with fake purchases switched on at a local server, Buy… | Owner | 2026-11-17 |
-| `BUY-17` | Fake purchases exist only on a development server with the switch set exactly to true; anywhere else the… | Default |  |
-| `BUY-18` | Today fake purchases allow 10 new per account in any 24 hours and 30 a minute across everyone, one pack… | **Waiting** |  |
-| `BUY-19` | Fake purchases are recorded as store "fake" with no revenue, and the admin panel leaves them out of… | Default |  |
-| `BUY-21` | Before launch: connect RevenueCat and the stores and buy a pack in the sandbox; remove or hard-disable… | Owner | 2026-11-17 |
+| `BUY-16` | ~~Fake purchases are a deliberate temporary stand-in~~ (withdrawn: removed from the app and the server). | Withdrawn | 2026-11-21 |
+| `BUY-17` | ~~Fake purchases exist only on a development server with the switch set to true~~ (withdrawn: no server has them). | Withdrawn | 2026-11-21 |
+| `BUY-18` | ~~Today fake purchases allow 10 new per account in any 24 hours~~ (withdrawn: no fake purchases, no limits). | Withdrawn | 2026-11-21 |
+| `BUY-19` | ~~Fake purchases are recorded as store "fake" and left out of the panel's figures~~ (withdrawn: migration 0015 removes the store value). | Withdrawn | 2026-11-21 |
+| `BUY-21` | Before launch: remove every fake purchase path, text, test and row; removal done 2026-11-21 (migration 0015 reaches production with the next deploy). | Owner | 2026-11-17, done 2026-11-21 |
 | `BUY-22` | Deleting an account keeps its purchase records without the user and asks RevenueCat to delete its customer… | Default |  |
 | `BUY-23` | Purchase logs never carry a transaction id, product id, email or key, and nothing else from RevenueCat… | Default |  |
 | `BUY-24` | Today Qutai only asks RevenueCat to delete a deleted user's customer record; whether to require more is open. | **Waiting** |  |
 | `BUY-25` | Today the packs are decided (three Android packs); the RevenueCat project, Play products and panel packs… | **Waiting** | 2026-11-20 |
 | `BUY-26` | A production switch lets listed accounts' store test purchases add credits: off by default, never revenue,… | Owner | 2026-11-20 |
-| `BUY-27` | RevenueCat only in a pro build with the platform key, the native module and the server in store mode;… | Owner | 2026-11-20 |
+| `BUY-27` | RevenueCat only in a pro build with the platform key, the native module and a signed-in account;… | Owner | 2026-11-20, changed 2026-11-21 |
 | `BUY-28` | Every ending said plainly, none loses or doubles a pack; unreported purchases found in the store's list;… | Default | 2026-11-20 |
 | `BUY-29` | RevenueCat gets the account id, product ids, purchases and recent-purchase lookups; diagnostics and… | Default | 2026-11-20 |
 | `BUY-30` | A pro Android package needs the RevenueCat key (or --without-purchases); every package's bundle and… | Owner | 2026-11-20 |
@@ -1145,7 +1144,7 @@ Moved to Details (ids retired, not reused): `BACK-2`, `BACK-16`, `BACK-14`
 | `SRV-24` | The admin Worker's only outbound request: Anthropic's pricing page, only when "Check prices" is pressed. | Owner | 2026-11-20 |
 | `SRV-25` | One settings schema with defaults, bounds and cross-checks; reading fills and clamps, saving is strict. | Default | 2026-11-20 |
 | `SRV-26` | The deploy runs a preflight (committed, typecheck, tests) and records the deployed commits, shown on the Overview. | Default | 2026-11-20 |
-| `SRV-27` | Test purchases only through one seam, so their removal is one migration and one delete. | Default | 2026-11-20 |
+| `SRV-27` | ~~Test purchases only through one seam, so their removal is one migration and one delete~~ (withdrawn: removed that way). | Withdrawn | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `SRV-14`, `SRV-19`
 
@@ -1273,7 +1272,7 @@ Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 | `HOUSE-12` | Every feature that has not been seen on a phone gets a numbered section in `docs/test-checklist.md`, in… | Default |  |
 | `HOUSE-13` | When a decision for the owner comes up, it goes into `TODO.md` › "Decisions waiting for the owner", and… | Owner | 2026-11-19 |
 | `HOUSE-14` | When the owner asks what is open, list the open questions with the numbers used on 2026-11-16, and remove… | Owner | 2026-11-16 |
-| `HOUSE-15` | Today credit purchases are fake: with `FAKE_PURCHASES=true` on a local dev server, the Buy buttons add… | Owner | 2026-11-17 |
+| `HOUSE-15` | ~~Today credit purchases are fake~~ (withdrawn: fake purchases removed; real purchases through RevenueCat). | Withdrawn | 2026-11-21 |
 | `HOUSE-16` | The test sign-in (Settings › Account › Test sign-in) stays off in every build that leaves the owner's… | Owner | 2026-11-17 |
 | `HOUSE-17` | Before release, a new Apple sign-in key is made for production, because the current one was pasted into… | Owner | 2026-11-17 |
 | `HOUSE-18` | Retired: the trial assistant-look switch (curtain is the only look, `UI-21`) | Owner | 2026-11-21 |

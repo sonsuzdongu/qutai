@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { BILLING_PERMISSION, REVENUECAT_MARK, bundleProblems, hostOf, manifestProblems } from './bundleCheck.mjs';
+import { BILLING_PERMISSION, FAKE_PURCHASE_MARKS, REVENUECAT_MARK, bundleProblems, hostOf, manifestProblems } from './bundleCheck.mjs';
 
 const SECRET = 'test-sign-in-secret-0123456789abcdef0123';
 const HOST = 'api.example.test';
@@ -64,6 +64,19 @@ test('RevenueCat’s SDK: never in a plain bundle; required in a pro build that 
   assert.deepEqual(bundleProblems(bundle(clean), { pro: true, apiHost: HOST, purchases: false }), []);
   const plain = bundle(`var x=1;console.warn("${REVENUECAT_MARK}")`);
   assert.match(bundleProblems(plain, { pro: false, apiHost: null }).join(), /RevenueCat/);
+});
+
+test('the removed fake purchases fail every bundle, pro or plain', () => {
+  for (const [text, mark] of [
+    ['t("buy.testMode.notice")', 'buy.testMode.'],
+    ['{"buy.status.testModeOff":"Test purchases are switched off"}', 'buy.status.testModeOff'],
+    ['fetch(base+"/purchases/fake")', '/purchases/fake'],
+  ]) {
+    assert.ok(FAKE_PURCHASE_MARKS.includes(mark));
+    assert.match(bundleProblems(bundle(`${clean};${text}`), { pro: true, apiHost: HOST }).join(), /removed fake purchases/);
+    assert.match(bundleProblems(bundle(`var x=1;${text}`), { pro: false, apiHost: null }).join(), /removed fake purchases/);
+  }
+  assert.deepEqual(bundleProblems(bundle(`${clean};fetch(base+"/purchases/verify")`), { pro: true, apiHost: HOST }), []);
 });
 
 test('the Play Billing permission: never in a plain bundle; required when selling credits', () => {

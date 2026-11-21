@@ -1,11 +1,9 @@
-import { randomUUID } from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 import { secureStoreReady } from '../storage/secureStoreGate';
 import { NativeModules, Platform } from 'react-native';
 import { accountSession } from '../account';
 import { creditsEnabled, features } from '../config/features';
 import { creditsClient, creditsStore } from '../credits';
-import { createFakeStore, fakeTransactionId } from './fake';
 import { createPurchaseFlow, type PendingPurchase, type PurchaseFlow } from './flow';
 import { createRevenueCatStore, type RevenueCatSdk } from './revenuecat';
 import type { PurchaseStore, StoreName } from './types';
@@ -16,15 +14,15 @@ import { createUnavailableStore } from './unavailable';
  *
  * - **RevenueCat** (`revenuecat.ts`, `react-native-purchases`): a pro build with RevenueCat's public SDK key for this
  *   platform (`EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`, `EXPO_PUBLIC_REVENUECAT_IOS_KEY`; scripts/build/release.mjs reads the
- *   Android one from .build.local.env), the SDK's native module linked into the build, and Qutai's server saying
- *   `GET /config` › `purchases.mode` = `store`. Android first (20 Nov 2026); iOS takes the same path once its key and
+ *   Android one from .build.local.env), the SDK's native module linked into the build, and signed in to Qutai's
+ *   server. Android first (20 Nov 2026); iOS takes the same path once its key and
  *   App Store products exist.
  * - **Unavailable** (`unavailable.ts`) otherwise: no key, no native module (the open-source build never links it:
  *   react-native.config.js and metro.config.js leave the SDK out without pro mode), or a platform without a store. The
  *   screen shows packs and balance and says buying isn't available in this build.
- * - **Fake mode (temporary):** while Qutai's server says `purchases.mode` = `fake` (a local server with
- *   FAKE_PURCHASES=true; production refuses it), the fake store (`fake.ts`): nothing is charged, purchases are reported
- *   to `POST /purchases/fake`. TODO.md › Before launch: remove fake purchases.
+ *
+ * The temporary fake store (purchases without any store on a local development server) was removed on 21 Nov 2026
+ * (docs/design/35-purchases.md › BUY-21).
  */
 
 /** The store this phone buys from, as the server names it. */
@@ -36,7 +34,6 @@ export function revenueCatKey(): string | null {
 }
 
 let unavailableStore: PurchaseStore | null = null;
-let fakeStore: PurchaseStore | null = null;
 /** RevenueCat's store, made once the first time it may be used; kept so sign-out reaches it whatever the mode. */
 let revenueCatStore: PurchaseStore | null = null;
 
@@ -66,20 +63,8 @@ function revenueCat(): PurchaseStore | null {
   return revenueCatStore;
 }
 
-/** Whether Qutai's server takes FAKE purchases now (`GET /config` › `purchases.mode`; local development servers only). */
-export function fakePurchasesOn(): boolean {
-  return creditsStore.getState().config?.purchases?.mode === 'fake';
-}
-
-/**
- * The store to buy from now (see above): the FAKE store while the server is in fake mode (nothing is charged;
- * TODO.md › Before launch: remove fake purchases), RevenueCat when this build can use it, else the unavailable store.
- */
+/** The store to buy from now (see above): RevenueCat when this build can use it, else the unavailable store. */
 export function purchaseStore(): PurchaseStore {
-  if (creditsEnabled && fakePurchasesOn()) {
-    fakeStore ??= createFakeStore(() => fakeTransactionId(randomUUID()));
-    return fakeStore;
-  }
   const real = creditsEnabled ? revenueCat() : null;
   if (real) return real;
   unavailableStore ??= createUnavailableStore(
@@ -111,7 +96,8 @@ const pendingStorage = {
     const raw = await SecureStore.getItemAsync(PENDING_KEY);
     if (!raw) return [];
     const list: unknown = JSON.parse(raw);
-    return Array.isArray(list) ? (list as PendingPurchase[]) : [];
+    // Only real stores' purchases: a leftover from the removed fake store (a development phone) is dropped.
+    return Array.isArray(list) ? (list as PendingPurchase[]).filter((p) => p?.store === 'apple' || p?.store === 'google') : [];
   },
   async save(list: PendingPurchase[]) {
     if (list.length) await SecureStore.setItemAsync(PENDING_KEY, JSON.stringify(list));

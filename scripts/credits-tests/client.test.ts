@@ -240,6 +240,8 @@ test('parsers keep only well-formed data', () => {
   assert.equal(config.models.length, 1);
   assert.deepEqual(config.limits, { b: 2 });
   assert.deepEqual(config.maintenance, { enabled: true, message: null });
+  // Fake purchases were removed (21 Nov 2026, BUY-21): an old server's `purchases: { mode: 'fake' }` changes nothing.
+  assert.equal('purchases' in parseConfig({ purchases: { mode: 'fake' } }), false);
   assert.throws(() => parseCredits({ balance: 1.5 }), RelayError);
   assert.deepEqual(parseCredits({ balance: -3, entries: [{ id: 'a', kind: 'bogus', amount: 1, at: 1 }, { id: 'b', kind: 'settle', amount: 2, at: 3 }] }).entries, [
     { id: 'b', kind: 'settle', amount: 2, at: 3 },

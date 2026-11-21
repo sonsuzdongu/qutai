@@ -89,8 +89,6 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   const account = useAccountState();
   const credits = useCreditsState();
   const store = purchaseStore();
-  /** The server takes FAKE purchases (local development only; a temporary stand-in): nothing is charged, no prices. */
-  const testMode = store.fake === true;
   const flow = purchaseFlow();
   const signedIn = account.status === 'signedIn';
   const userId = account.status === 'signedIn' ? account.user.id : null;
@@ -115,7 +113,7 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
     refreshCredits();
   }, []);
   useEffect(() => {
-    if (store.unavailable || testMode || !userId || !productKey) return;
+    if (store.unavailable || !userId || !productKey) return;
     let live = true;
     void (async () => {
       try {
@@ -135,7 +133,7 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
     return () => {
       live = false;
     };
-  }, [store, testMode, userId, productKey]);
+  }, [store, userId, productKey]);
 
   /** What reporting the waiting purchases says (quiet: only when credits were added). */
   const lateStatus = (r: { credited: number; waiting: number }, quiet: boolean): Status | null =>
@@ -192,8 +190,7 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
     }
   };
 
-  // Test mode: every pack of this phone's store, without a price (none is charged).
-  const offers = packOffers(packs, storeName, store.unavailable || testMode ? null : products);
+  const offers = packOffers(packs, storeName, store.unavailable ? null : products);
   const loading = !credits.config && !credits.configError;
   const canBuy = !store.unavailable && signedIn && !suspended && !billingOff;
 
@@ -218,13 +215,6 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
           </View>
           <Text style={styles.hint}>{t('buy.what')}</Text>
         </View>
-
-        {testMode && (
-          <View style={[styles.status, styles.testMode]} accessible accessibilityRole="text">
-            <Icon name="info" size={18} color={palette.text} />
-            <Text style={styles.statusText}>{t('buy.testMode.notice')}</Text>
-          </View>
-        )}
 
         {status && (
           <View
@@ -257,10 +247,10 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
             </Text>
           </Pressable>
         )}
-        {credits.config && !store.unavailable && !testMode && signedIn && productKey && products === null && !productsFailed && !billingOff && (
+        {credits.config && !store.unavailable && signedIn && productKey && products === null && !productsFailed && !billingOff && (
           <ActivityIndicator color={palette.textSecondary} style={styles.loading} />
         )}
-        {credits.config && offers.length === 0 && !billingOff && (products !== null || store.unavailable || testMode || !productKey) && (
+        {credits.config && offers.length === 0 && !billingOff && (products !== null || store.unavailable || !productKey) && (
           <Text style={styles.hint}>{t('buy.noPacks')}</Text>
         )}
         {offers.map((offer) => {
@@ -273,23 +263,21 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
               </View>
               <View style={styles.flex}>
                 <Text style={styles.packTitle}>{amount}</Text>
-                {!offer.price && !testMode && <Text style={styles.hint}>{t('buy.noPrice')}</Text>}
+                {!offer.price && <Text style={styles.hint}>{t('buy.noPrice')}</Text>}
               </View>
-              {canBuy && (offer.price || testMode) && (
+              {canBuy && offer.price && (
                 <Pressable
                   onPress={() => void buy(offer)}
                   disabled={!!busy}
                   style={({ pressed }) => [styles.buyButton, pressed && styles.pressed, busy && !working && styles.dimmed]}
                   accessibilityRole="button"
-                  accessibilityLabel={
-                    offer.price ? t('buy.buyLabel', { credits: amount, price: offer.price }) : t('buy.testMode.buyLabel', { credits: amount })
-                  }
+                  accessibilityLabel={t('buy.buyLabel', { credits: amount, price: offer.price })}
                   accessibilityState={{ busy: working, disabled: !!busy }}
                 >
                   {working ? (
                     <ActivityIndicator color="#ffffff" />
                   ) : (
-                    <Text style={styles.buyText}>{offer.price ?? t('buy.testMode.buy')}</Text>
+                    <Text style={styles.buyText}>{offer.price}</Text>
                   )}
                 </Pressable>
               )}
@@ -309,8 +297,8 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
             <Text style={styles.secondaryText}>{t('buy.check')}</Text>
           </Pressable>
         )}
-        {!testMode && <Text style={styles.hint}>{t(Platform.OS === 'ios' ? 'buy.storeNoteIos' : 'buy.storeNoteAndroid')}</Text>}
-        {!testMode && <Text style={styles.hint}>{t('buy.refundNote')}</Text>}
+        <Text style={styles.hint}>{t(Platform.OS === 'ios' ? 'buy.storeNoteIos' : 'buy.storeNoteAndroid')}</Text>
+        <Text style={styles.hint}>{t('buy.refundNote')}</Text>
         <View style={styles.links}>
           <Pressable onPress={() => setLegal('terms')} accessibilityRole="link" hitSlop={6}>
             <Text style={styles.link}>{t('settings.terms')}</Text>
@@ -370,10 +358,6 @@ export function statusFor(result: BuyResult): Status {
       return { tone: 'warn', icon: 'insecure', text: t('buy.status.reversed') };
     case 'suspended':
       return { tone: 'warn', icon: 'insecure', text: t('buy.suspended') };
-    case 'limit':
-      return { tone: 'warn', icon: 'wait', text: t('buy.status.limit') };
-    case 'testModeOff':
-      return { tone: 'info', icon: 'info', text: t('buy.status.testModeOff') };
     case 'unavailable':
       return { tone: 'info', icon: 'info', text: t(UNAVAILABLE[result.reason]) };
     case 'failed':
@@ -404,7 +388,6 @@ const useStyles = makeStyles((c) => ({
   status: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderRadius: radii.control, padding: 12, backgroundColor: c.sunken },
   statusOk: { borderWidth: 1, borderColor: OK_GREEN },
   statusWarn: { borderWidth: 1, borderColor: c.danger },
-  testMode: { borderWidth: 1, borderColor: c.border },
   statusText: { flex: 1, color: c.text, fontSize: 14, lineHeight: 20 },
   loading: { alignSelf: 'flex-start', marginVertical: 8 },
   pack: {

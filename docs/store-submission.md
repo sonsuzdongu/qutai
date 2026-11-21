@@ -74,6 +74,7 @@ Eklemeden önce:
 
 - ⚠ Menü yollarını ("Settings › Qutai Credits › Sign in", "Settings › Account › Delete account") gönderilecek derlemede İngilizce arayüzle bir kez açıp kontrol edin; inceleme ekibi tam olarak bu adımları izler.
 
+- ✅ **Sahte satın alma kaldırıldı** (21 Kasım 2026, risk 1.5'in bu kısmı): kredi ekranında "Test mode" yazısı ya da "Get (test)" düğmesi artık yok; paket denetimi bu metinler geri gelirse paketi durdurur. Notlardaki "Sandbox purchases" cümlesi mağazanın kendi test satın almasını anlatır (`BUY-32`), sahte yolu değil.
 - ⚠ **IN-APP PURCHASES** paragrafının ikinci cümlesini yalnızca "Test purchases in production" gerçekten **everyone** iken yazın.
 - ⚠ **IN-APP PURCHASES** "Credits never expire": kararı açık (`CRED-35`, `LEGAL-11`). Şartlara "satın alınan kredilerin süresi dolmaz" yazılmadan bu cümleyi bırakmayın ya da silin (risk 3.7).
 - ⛔ **Üçüncü taraf AI'a veri gönderimi:** Apple 5.1.2(i) göndermeden önce açık izin istiyor. Qutai Kredileri için bu ekran var; **kendi anahtar modunda yok** (risk 2.3). Ekran yapılınca PRIVACY paragrafına şu cümleyi ekleyin: "Before the first request, the user accepts a screen naming where the data goes (Qutai's server and Anthropic for Qutai Credits, or the provider of the user's own key)."
@@ -176,7 +177,7 @@ Bu dosyanın metinleri bunlar yapılmadan tam doğru olmaz. Ayrıntı ve çözü
 
 - ⛔ **1.3 / 2.1:** video reklam engelleme ve iOS'ta arka plan oynatma. Sizin kararınız.
 - ⛔ **2.3:** kendi anahtar modu için üçüncü taraf AI rıza ekranı; kredi açıklamasındaki "Anthropic, OpenAI or Google" listesi artık yalnızca Anthropic olmalı.
-- ⛔ **1.5:** sahte satın alma yolu ve metinleri, Ayarlar'daki "(deneme)" anahtarı.
+- ⛔ **1.5:** Ayarlar'daki "(deneme)" anahtarı. ~~Sahte satın alma yolu ve metinleri~~: kaldırıldı (21 Kasım 2026; production veritabanı için migration 0015 bir sonraki sunucu dağıtımıyla gider).
 - ☐ **2.2:** başkasından alınan `.qutaiapp` dosyasının içe aktarılması (uyarı ekleyin ya da ilk sürümde kapatın); gizlilik metnine uygulamalarla ilgili cümle (`LEGAL-6`).
 - ☐ **2.4:** pro gizlilik manifestosu ve `docs/permissions.md`'deki "sunucumuz yok" cümlesi.
 - ☐ **3.8:** yasal metinlerin avukat incelemesi.

@@ -249,8 +249,8 @@ Yatay ekran:
 - [ ] Tarayıcı, sekme değiştirici (üç sütun), Ayarlar ve asistan paneli (sağda) yatayda düzgün görünür.
 - [ ] Görev sürerken telefonu çevirin: görev devam eder, şerit ve ışıltı yeni yöne uyar.
 
-Sahte satın alma (sunucuda `FAKE_PURCHASES=true`):
-- [ ] Ayarlar › Hesap › Qutai Kredileri › Kredi satın al: "Test modu" yazısı görünür; "Al (test)" ile bakiye artar.
+Kredi satın alma ekranı (sahte satın alma 21 Kasım 2026'da kaldırıldı; gerçek satın alma 30. bölümde):
+- [ ] Ayarlar › Hesap › Qutai Kredileri › Kredi satın al: "Test modu" yazısı ve "Al (test)" düğmesi hiçbir sunucuda görünmez; paketler mağaza fiyatıyla çıkar.
 - [ ] Aynı ekran kurulumdaki "Kredi satın al" düğmesinden de açılır.
 
 Ölçüm (her biri beş kez, ortanca değeri yazın):

@@ -9,11 +9,6 @@
 /** The store the app is installed from, as Qutai's server names it (`POST /purchases/verify`, `GET /config` packs). */
 export type StoreName = 'apple' | 'google';
 
-/**
- * Where a purchase is reported: a real store's, or `fake` for a FAKE purchase made while the server runs in fake mode
- * (`GET /config` › `purchases.mode`; a temporary stand-in, local development only: `fake.ts`).
- */
-export type ReportStore = StoreName | 'fake';
 
 /** A product as the store sells it to this user: the price is the store's, in the user's currency, never ours. */
 export interface StoreProduct {
@@ -54,8 +49,6 @@ export type StoreUnavailable = 'notInBuild' | 'notConfigured' | 'notSupported';
 export interface PurchaseStore {
   /** `null` when purchases work; otherwise why not (the screen says so and offers no Buy buttons). */
   readonly unavailable: StoreUnavailable | null;
-  /** True only for the FAKE store (`fake.ts`): nothing is charged; purchases are reported as store `fake`. */
-  readonly fake?: boolean;
   /**
    * Ties the store's customer to Qutai's account id before anything is bought, so the server can match the
    * purchase to the account (RevenueCat: the App User ID). `null` on sign-out.
@@ -75,23 +68,16 @@ export interface PurchaseStore {
   recent?(): Promise<StoreTransaction[]>;
 }
 
-/**
- * `POST /purchases/verify` (backend/packages/shared/src/purchases.ts), or for store `fake` `POST /purchases/fake`, which
- * also needs the pack (`packStore` + `productId`): there is no store to look the purchase up in.
- */
+/** `POST /purchases/verify` (backend/packages/shared/src/purchases.ts). */
 export interface VerifyPurchaseRequest {
-  store: ReportStore;
+  store: StoreName;
   transactionId: string;
-  /** Store `fake` only. */
-  productId?: string;
-  /** Store `fake` only: the store whose pack was bought. */
-  packStore?: StoreName;
 }
 
 export type PurchaseStatus = 'credited' | 'refunded' | 'revoked' | 'held';
 
 export interface VerifyPurchaseResponse {
-  store: ReportStore;
+  store: StoreName;
   transactionId: string;
   productId: string;
   status: PurchaseStatus;

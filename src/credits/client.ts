@@ -310,18 +310,13 @@ export function createCreditsClient(options: CreditsClientOptions) {
   /**
    * `POST /purchases/verify` (backend/README.md › Purchases): reports a store purchase. Never throws for the server's
    * answers: the purchase flow (src/purchases/flow.ts) decides what each one means; no answer at all is `network`.
-   * A FAKE purchase (store `fake`, the temporary stand-in; backend README › Fake purchases) goes to
-   * `POST /purchases/fake` with its pack instead; the answers are the same shape.
    */
   async function verifyPurchase(request: VerifyPurchaseRequest): Promise<VerifyAnswer> {
-    const fake = request.store === 'fake';
-    const body = fake
-      ? { packStore: request.packStore, productId: request.productId, transactionId: request.transactionId }
-      : { store: request.store, transactionId: request.transactionId };
+    const body = { store: request.store, transactionId: request.transactionId };
     try {
       return await withTimeout(VERIFY_TIMEOUT_MS, async (signal) => {
         const res = await authorized((token) =>
-          fetchImpl(`${base}/purchases/${fake ? 'fake' : 'verify'}`, {
+          fetchImpl(`${base}/purchases/verify`, {
             method: 'POST',
             headers: {
               Accept: 'application/json',
@@ -367,7 +362,7 @@ export function parseVerify(value: unknown): VerifyPurchaseResponse {
   const statuses = ['credited', 'refunded', 'revoked', 'held'];
   if (
     !isRecord(value) ||
-    (value.store !== 'apple' && value.store !== 'google' && value.store !== 'fake') ||
+    (value.store !== 'apple' && value.store !== 'google') ||
     typeof value.transactionId !== 'string' ||
     typeof value.status !== 'string' ||
     !statuses.includes(value.status) ||
@@ -597,8 +592,6 @@ export function parseConfig(value: unknown): PublicConfig {
       enabled: maintenance.enabled === true,
       message: typeof maintenance.message === 'string' && maintenance.message.trim() ? maintenance.message.slice(0, 300) : null,
     },
-    // Only an explicit `fake` switches the app to fake purchases; anything else is the real stores.
-    purchases: { mode: isRecord(value.purchases) && value.purchases.mode === 'fake' ? 'fake' : 'store' },
     // Sign-in methods beyond the native ones (Android's Sign in with Apple button). Only an explicit `true` turns one on;
     // an older server without `auth` leaves it absent.
     ...(isRecord(value.auth) ? { auth: { appleWeb: value.auth.appleWeb === true } } : {}),

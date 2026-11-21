@@ -88,7 +88,7 @@ Double charge and payments
 
 - [ ] Own key: the keep-alive for a request still running when the user leaves holds at most 3 minutes; very long answers can still be cut. Longer?
 - [ ] Own key: no keep-alive for incognito conversations on Android (it shows a notification); iOS holds anyway. OK?
-- [ ] Fake purchases: 10 test purchases per account in 24 hours. OK for testing?
+- [x] ~~Fake purchases: 10 test purchases per account in 24 hours. OK for testing?~~ Moot: fake purchases removed 21 Nov 2026
 
 Assistant posting and paying (19 Nov; README › Posting and paying)
 
@@ -136,28 +136,31 @@ would stop every purchase and refund notification.
 
 ## Before launch: remove fake purchases
 
-Buying credits works today only through **fake purchases**, a deliberate stand-in the owner ordered on 17 Nov 2026
-("make the payment step fake for now, add it to the things to fix later"): with `FAKE_PURCHASES=true` on a local
-server, the app's Buy buttons add credits without any store and nothing is charged (`backend/README.md` › Fake
-purchases; README.md › Qutai Credits › Buying credits). None of this may reach a store release or production:
+**Removed 21 Nov 2026** (owner: "sahte satın alma metinlerini ve bu özelliği çıkarabiliriz"). Fake purchases were a
+deliberate stand-in the owner ordered on 17 Nov 2026 ("make the payment step fake for now, add it to the things to fix
+later"); real purchases now go through RevenueCat (Google Play live, iOS later). What is left is marked below
+(`docs/design/35-purchases.md` › `BUY-21`; `backend/README.md` › Fake purchases (removed 21 Nov 2026)):
 
 - [ ] Connect RevenueCat and the stores: the RevenueCat project, the consumable products in Play Console (App Store
   Connect later), the webhook and keys (`backend/DEPLOY-prod.md` › Satın almaları açmak). The app side is done
   (20 Nov 2026: `react-native-purchases` in pro builds only, `createRevenueCatStore` wired in `src/purchases/index.ts`);
   buy a pack in the sandbox end to end (docs/test-checklist.md § 30)
-- [ ] Remove or hard-disable the fake path: server `apps/api/src/purchases/fake.ts`, its route and 404 guard
+- [x] Removed the fake path (21 Nov 2026): server `apps/api/src/purchases/fake.ts`, its route and 404 guard
   (`src/routes/index.ts`, `src/index.ts`), `purchases.mode` in `GET /config`, `purchasesMode` in `AccountService`,
   `FAKE_PURCHASES` in `wrangler.jsonc` / `.dev.vars.example` / `check-dev-vars.mjs`, the `purchase_limit` error; app
   `src/purchases/fake.ts`, `fakePurchasesOn` in `src/purchases/index.ts`, the `fake` branches in `flow.ts` and
   `client.ts`, the test-mode texts (`buy.testMode.*`, `buy.status.limit`, `buy.status.testModeOff`) in all ten
-  languages, and their tests
-- [ ] Purge fake purchase rows (`purchases` where `store = 'fake'`) and take back the credits they granted (ledger
+  languages, and their tests; `scripts/build/bundleCheck.mjs` now fails a package that contains them again
+- [ ] Purge fake purchase rows: written as backend migration 0015 (deletes the rows, drops `'fake'` from the CHECK),
+  applied to production by the next `npm run deploy:prod` (check `SELECT COUNT(*) FROM purchases WHERE store = 'fake'`
+  is 0 first: `backend/DEPLOY-prod.md` › Sahte ödeme kaldırıldı). Local servers: `npm run migrate:local`, after taking
+  back test credits or discarding the local state. Originally: purge fake purchase rows (`purchases` where `store = 'fake'`) and take back the credits they granted (ledger
   references `fake:<transaction id>`), or reset / delete the test accounts that used them, on every database that ever
   had `FAKE_PURCHASES=true` (local, and dev if it was ever set there); then drop `'fake'` from the `purchases.store`
   CHECK with a migration
 - [ ] Re-check the admin panel's revenue figures, credits sold, credits outstanding and the payments CSV after the
   purge (fake rows are left out of revenue today, but credits they granted count as outstanding)
-- [ ] Make sure the variable `FAKE_PURCHASES` does not exist in the production environment (not in `vars`, not a
+- [x] The code no longer reads `FAKE_PURCHASES` and `deploy-prod.mjs` refuses it in production (21 Nov 2026). Originally: make sure the variable `FAKE_PURCHASES` does not exist in the production environment (not in `vars`, not a
   secret; `npm run check:dev-vars` checks `vars`), nor on any deployed dev Worker; the production server logs
   `fake_purchases_set_outside_dev` if it ever appears
 
@@ -291,7 +294,7 @@ Done in `backend/` (see its `DESIGN.md` › Order of work and `README.md`):
 - [ ] Credit packs as consumable in-app products (App Store IAP, Google Play Billing): the store side is the owner's step under 2. App (RevenueCat project, products)
 - [x] Credits are added to the account only after RevenueCat has verified the purchase with Apple or Google; the app's report is not trusted (backend step 5)
 - [x] Refunds: RevenueCat's webhook takes refunded credits back (backend step 5)
-- [x] Buying works end to end against a local server through **fake purchases** (temporary; see "Before launch: remove fake purchases" at the top)
+- [x] ~~Buying works end to end against a local server through **fake purchases**~~ (removed 21 Nov 2026; real purchases through RevenueCat)
 - [ ] Before release, check the current version of the stores' rules on digital goods and external payments
 
 #### 4. Abuse protection

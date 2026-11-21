@@ -860,18 +860,11 @@ button (Google Play and the App Store ask for one only for what stays owned, suc
 RevenueCat says `restorePurchases` must only follow a user's tap and that consumables are restored only with custom
 App User IDs anyway); "Check for missing credits" is the way to recover a purchase that didn't arrive.
 
-**Fake purchases (temporary, local servers only).** While Qutai's server runs with `FAKE_PURCHASES=true`
-(`backend/README.md` › Fake purchases; a local development server only, the production server refuses it), its
-`GET /config` says `purchases: { mode: 'fake' }` and the app uses the **fake store** (`src/purchases/fake.ts`) instead
-of the unavailable one: no build flag, no store, nothing charged. The buy screen then shows a test-mode notice
-("Test mode: nothing is charged"), every pack of this phone's store without a price, and a "Get (test)" button; the
-store note is hidden. Buying makes a transaction id (`fake-` + a random id), keeps it in the same pending-purchase queue
-as a real purchase, and reports it to `POST /purchases/fake` with its pack (`src/credits/client.ts`); the answer is
-the usual one, so the balance in the header, the account screen and the low-credit note update as after a real
-purchase. A lost answer is reported again with the same id and credited once; the server's daily allowance
-(`purchase_limit`) and a server no longer in fake mode (`404`) are final, nothing kept. The real stores' report is
-unchanged (`{ store, transactionId }` to `/purchases/verify`). Remove all of it before launch: `TODO.md` › Before
-launch: remove fake purchases.
+**Fake purchases: removed (21 Nov 2026).** The temporary fake store (17–21 Nov 2026: a local server with
+`FAKE_PURCHASES=true` let the Buy buttons add credits without any store) is gone from the app and the server
+(`docs/design/35-purchases.md` › `BUY-21`). The app only reports real store purchases, as `{ store, transactionId }` to
+`POST /purchases/verify`; a leftover fake purchase kept on a development phone is dropped when the queue is read, and
+`scripts/build/bundleCheck.mjs` fails a package whose bundle still contains the fake purchase texts or route.
 
 **The store: RevenueCat, Android first (20 Nov 2026).** `react-native-purchases` 11.0.4 (installed with
 `npx expo install`; no config plugin: RevenueCat's Expo page lists none and Expo's in-app purchase guide says it works
@@ -883,7 +876,7 @@ when all of these hold, and the unavailable store otherwise:
   Store products exist, through the same code);
 - the SDK's native module is in the build (`NativeModules.RNPurchases`; Expo Go has none, so the SDK's "preview" mock
   can never sell anything);
-- Qutai's server says `GET /config` › `purchases.mode` = `store` (in `fake` mode the fake store below is used).
+- the user is signed in to Qutai (purchases are never offered while signed out).
 
 RevenueCat is configured once, with **Qutai's account id as the App User ID** (never an anonymous `$RCAnonymousID:`
 customer that could later be merged into another), diagnostics off and automatic device-identifier collection off,

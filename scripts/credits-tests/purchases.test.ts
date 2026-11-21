@@ -278,8 +278,8 @@ test('retry: without looking in the store (app start before the buy screen was u
   assert.equal(store.identified.length, 0, 'the store is not even set up');
 });
 
-test('retry: the store’s list is never read for the fake or an unavailable store', async () => {
-  for (const base of [{ ...fakeStore(BOUGHT), fake: true }, createUnavailableStore('notInBuild')]) {
+test('retry: the store’s list is never read for an unavailable store', async () => {
+  for (const base of [createUnavailableStore('notInBuild')]) {
     let asked = 0;
     const store = Object.assign(base, {
       recent: async () => {

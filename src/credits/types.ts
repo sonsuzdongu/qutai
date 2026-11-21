@@ -117,11 +117,6 @@ export interface PublicConfig {
   /** `appleWeb`: Sign in with Apple through the web flow is set up (Android). Absent from older servers. */
   auth?: { appleWeb: boolean };
   /**
-   * `fake`: the server takes FAKE purchases (local development only, a temporary stand-in; backend README › Fake
-   * purchases): packs are bought without any store and nothing is charged; the buy screen says so. Absent = `store`.
-   */
-  purchases?: { mode: 'store' | 'fake' };
-  /**
    * Server backup is available (backend README › Server backup): the largest file and how many are kept per account.
    * Absent when the server has no backup storage, and from older servers.
    */
