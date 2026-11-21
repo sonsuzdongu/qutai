@@ -5,11 +5,9 @@ import { emptyStripLine, offerLine, tickLine, type StripLineState } from '../cha
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
 import { answerCardMaxHeight } from '../ui/layout';
-import type { AssistantLook } from '../ui/assistantLook';
 import { QutaiMark } from '../ui/QutaiMark';
 import { usePalette, type Palette, radii } from '../ui/theme';
 import { useReduceMotion } from '../utils/useReduceMotion';
-import { GlassBack } from './AssistantGlass';
 import type { ChatItem } from './AssistantPanel';
 import { OptionCards } from './OptionCards';
 import type { OptionCard } from '../chat/optionCards';
@@ -55,7 +53,6 @@ export function StepStrip({
   line,
   elsewhere,
   bottom,
-  look = 'classic',
   onOpen,
   onStop,
   onShowTab,
@@ -66,8 +63,6 @@ export function StepStrip({
   elsewhere: boolean;
   /** Room to leave at the bottom (safe area, a bottom address bar). */
   bottom: number;
-  /** TRIAL (src/ui/assistantLook.ts): "band" makes the strip glass with a thread of light around it. */
-  look?: AssistantLook;
   onOpen: () => void;
   onStop: () => void;
   onShowTab: () => void;
@@ -103,8 +98,7 @@ export function StepStrip({
         },
       ]}
     >
-      <View style={[styles.strip, look === 'band' && styles.glass]}>
-        {look === 'band' ? <GlassBack radius={radii.sheet} thread /> : null}
+      <View style={styles.strip}>
         <Pressable
           onPress={onOpen}
           style={({ pressed }) => [styles.main, pressed && styles.pressed]}
@@ -161,7 +155,6 @@ export function AnswerCard({
   onOpenOption,
   onOptionMenu,
   bottom,
-  look = 'classic',
   onOpen,
   onClose,
 }: {
@@ -171,7 +164,6 @@ export function AnswerCard({
   onOpenOption: (card: OptionCard) => void;
   onOptionMenu: (card: OptionCard) => void;
   bottom: number;
-  look?: AssistantLook;
   onOpen: () => void;
   onClose: () => void;
 }) {
@@ -196,10 +188,7 @@ export function AnswerCard({
       pointerEvents="box-none"
       style={[styles.wrap, { bottom, left: 12 + insets.left, right: 12 + insets.right, opacity: grow, transform: [{ scale: grow.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }]}
     >
-      <View
-        style={[styles.card, look === 'band' && styles.glass, { maxHeight: answerCardMaxHeight(windowHeight, bottom, insets.top) }]}
-      >
-        {look === 'band' ? <GlassBack radius={radii.window} /> : null}
+      <View style={[styles.card, { maxHeight: answerCardMaxHeight(windowHeight, bottom, insets.top) }]}>
         <View style={styles.cardHeader}>
           <QutaiMark size={20} animate={false} />
           <Text style={styles.cardTitle} accessibilityRole="header">
@@ -255,7 +244,6 @@ export function QuestionCard({
   question,
   options,
   bottom,
-  look = 'classic',
   onChoose,
   onOpen,
   onClose,
@@ -263,7 +251,6 @@ export function QuestionCard({
   question: string;
   options: string[];
   bottom: number;
-  look?: AssistantLook;
   onChoose: (option: string) => void;
   onOpen: () => void;
   onClose: () => void;
@@ -287,8 +274,7 @@ export function QuestionCard({
       pointerEvents="box-none"
       style={[styles.wrap, { bottom, left: 12 + insets.left, right: 12 + insets.right, opacity: grow, transform: [{ scale: grow.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }]}
     >
-      <View style={[styles.card, look === 'band' && styles.glass, { maxHeight: answerCardMaxHeight(windowHeight, bottom, insets.top) }]}>
-        {look === 'band' ? <GlassBack radius={radii.window} /> : null}
+      <View style={[styles.card, { maxHeight: answerCardMaxHeight(windowHeight, bottom, insets.top) }]}>
         <View style={styles.cardHeader}>
           <QutaiMark size={20} animate={false} />
           <Text style={styles.cardTitle} accessibilityRole="header">
@@ -351,13 +337,6 @@ function makeStyles(p: Palette) {
       shadowRadius: 10,
       shadowOffset: { width: 0, height: 3 },
       elevation: 8,
-    },
-    // The glass is drawn behind the content (GlassBack); a shadow would show through it as a grey smear.
-    glass: {
-      backgroundColor: 'transparent',
-      borderColor: p.dark ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.75)',
-      shadowOpacity: 0,
-      elevation: 0,
     },
     main: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingLeft: 12, paddingRight: 6, borderRadius: radii.window },
     pressed: { backgroundColor: p.pressed },

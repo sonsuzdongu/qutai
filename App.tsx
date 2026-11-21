@@ -2423,13 +2423,12 @@ function BrowserApp({
           />
         </ErrorBoundary>
         {/* Over the page and the panel, under the strip; takes no touches. */}
-        <WorkingGlow visible={running} look={settings.assistantLook} />
+        <WorkingGlow visible={running} />
         {stripVisible(work) && runningChat ? (
           <StepStrip
             line={stripLine}
             elsewhere={!!browser.agentTabId && browser.agentTabId !== browser.activeId}
             bottom={stripBottom}
-            look={settings.assistantLook}
             onOpen={() => {
               tick();
               // The panel shows the running conversation's steps.
@@ -2451,7 +2450,6 @@ function BrowserApp({
             question={plainAnswer(pageQuestion.item.text)}
             options={pageQuestion.item.options ?? []}
             bottom={stripBottom}
-            look={settings.assistantLook}
             onChoose={(option) => {
               tick();
               const { chat, item } = pageQuestion;
@@ -2480,7 +2478,6 @@ function BrowserApp({
               setChatLink({ href: card.url, linkText: card.title, src: '', alt: '' });
             }}
             bottom={stripBottom}
-            look={settings.assistantLook}
             onOpen={() => {
               applyWork({ type: 'dismissAnswer' });
               setPanelOpen(true);
@@ -2686,7 +2683,6 @@ function BrowserApp({
         <PushToTalkBubble
           bubble={ptt.bubble}
           barAtBottom={barAtBottom}
-          look={settings.assistantLook}
           onOpenPanel={() => setPanelOpen(true)}
           onSend={ptt.handlers.release}
           onCancel={ptt.handlers.cancel}

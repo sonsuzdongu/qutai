@@ -830,7 +830,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-17` | Launch shows no logo: the native splash is the theme's background colour; the mark fades in over 450 ms on… | Default |  |
 | `UI-18` | The new tab page is Qutai's own screen (no web page loaded); it loads no site icons from third parties (a… | Default |  |
 | `UI-19` | Suggestions in the empty panel are chosen on the phone from a few markers in the page's code (structured… | Default |  |
-| `UI-21` | Today Settings › Assistant › "Asistan görünümü (deneme)" switches between three trial looks, default… | Owner | 2026-11-17 |
+| `UI-21` | One look for listening and working: the light ("Işık"); the trial switch and the other two looks removed | Owner | 2026-11-21 |
 | `UI-22` | The address bar's suggestion list never empties between letters; the search engine is asked only after a 200 ms typing… | Owner (engine pause) | 2026-11-19 |
 | `UI-23` | The assistant's options as cards (`show_options`): picture, title, price as on the page, one detail line, site; a swipeable row in the panel and the answer card; tap opens like a chat link, long press the link menu… | Owner (cards); Default (shape, layout) | 2026-11-20 |
 | `UI-24` | Card contents checked in the app: https only, the link's own host shown, plain cut text, at most 8, pictures only from the page, prices only when read; read_page adds `prices=` to cut links | Default | 2026-11-20 |
@@ -1276,7 +1276,7 @@ Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 | `HOUSE-15` | Today credit purchases are fake: with `FAKE_PURCHASES=true` on a local dev server, the Buy buttons add… | Owner | 2026-11-17 |
 | `HOUSE-16` | The test sign-in (Settings › Account › Test sign-in) stays off in every build that leaves the owner's… | Owner | 2026-11-17 |
 | `HOUSE-17` | Before release, a new Apple sign-in key is made for production, because the current one was pasted into… | Owner | 2026-11-17 |
-| `HOUSE-18` | Today Settings › Assistant › "Asistan görünümü (deneme)" switches the listening and working look between… | Owner | 2026-11-17 |
+| `HOUSE-18` | Retired: the trial assistant-look switch (curtain is the only look, `UI-21`) | Owner | 2026-11-21 |
 | `HOUSE-19` | Before any store release or production deploy, the owner is reminded of every stand-in in HOUSE-15 to… | Owner | 2026-11-17 |
 | `HOUSE-20` | The backend is changed only in its own repository (the submodule `backend/`), which the app's typecheck… | Default |  |
 | `HOUSE-21` | One test loader and runner: `npm test` runs every server-free suite and fails on any failure; `npm run check:all` runs every check of the app and backend/ | Default | 2026-11-20 |

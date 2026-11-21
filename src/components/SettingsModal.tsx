@@ -28,7 +28,6 @@ import { getLanguage, LANGUAGE_INFO, LANGUAGES, t, type Language } from '../i18n
 import { chooseLanguage, chosenLanguage, languageChoiceMode, openLanguageSettings } from '../i18n/appLanguage';
 import type { LegalKind } from '../legal/documents';
 import type { Settings, SettingsPatch } from '../storage/settings';
-import { ASSISTANT_LOOK_LABELS, ASSISTANT_LOOK_TITLE, ASSISTANT_LOOKS } from '../ui/assistantLook';
 import { Icon, IconName } from '../ui/Icon';
 import { Button } from '../ui/Button';
 import { LinkRow, Segment, SwitchRow as SharedSwitchRow } from '../ui/SettingsRows';
@@ -415,13 +414,6 @@ function SettingsPages({
                 onChange={(geminiStreaming) => set({ geminiStreaming })}
               />
             )}
-            {/* TRIAL: compared on a phone, then one look stays and this row goes (src/ui/assistantLook.ts). */}
-            <Text style={styles.label}>{ASSISTANT_LOOK_TITLE}</Text>
-            <Segment
-              options={ASSISTANT_LOOKS.map((look) => ({ value: look, label: ASSISTANT_LOOK_LABELS[look] }))}
-              value={settings.assistantLook}
-              onChange={(assistantLook) => set({ assistantLook })}
-            />
             <SwitchRow
               title={t('settings.showActionMarker')}
               hint={t('settings.showActionMarkerHint')}

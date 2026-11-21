@@ -92,24 +92,18 @@ Reanimated frame clock on the UI thread (no JS per frame): slow drifting bands o
 following rounded screen corners, alpha fading to 0 within ~36 dp. Reduce motion: the same shader with a fixed time,
 no clock (static soft frame).
 
-## 3a. Trial looks (to be settled before launch)
+## 3a. The look (settled 2026-11-21)
 
-Settings › Assistant › "Asistan görünümü (deneme)" (`assistantLook`, `src/ui/assistantLook.ts`; not translated, not in
-the assistant's `settings` tool) switches listening and working between today's look and two trials drawn in
-`src/components/AssistantGlass.tsx`, so they can be compared on real phones. The default is `curtain` (the owner's choice on 2026-11-17); the other two
-and the switch stay until the looks are settled.
+Listening and working have one look, the light ("curtain", "Işık" in Turkish), drawn in
+`src/components/AssistantGlass.tsx`. Two other looks (a dark bubble with an aurora glow, and a frosted-glass sheet) were
+compared on phones from 2026-11-17 through a trial switch in Settings; the owner chose this one and the switch and the
+other looks were removed on 2026-11-21 (`UI-21`).
 
-| Look | Listening (Q held) | Working |
-| --- | --- | --- |
-| `classic` | dark bubble next to the button | aurora glow around the screen, plain strip |
-| `band` | a glass sheet attached to the bar's page-side edge, full width, the words at 20 pt in it; aurora smoke inside, a bright line on its free edge that swells with the voice | glass strip with a thread of light around it, glass answer card, no screen glow |
-| `curtain` | the page dims from the bar's edge (dark scrim, no blur) and rays of light rise with the voice; the words in white at 24 pt | a line of light travelling around the screen edge (four thin edge canvases), plain strip |
+- **Listening (Q held):** the page dims from the address bar's edge (dark scrim, no blur) and rays of light rise with the
+  voice; the words in white at 24 pt. Bubbles with buttons (busy, a screen reader's Send / Cancel) stay a bubble.
+- **Working:** a line of light travels around the screen's edge (four thin edge canvases), under the plain step strip.
 
-Blur: on iOS the glass is the system material (`expo-blur`, a `UIVisualEffectView`, which blurs a web page behind it).
-On Android `expo-blur` only blurs the content of a `BlurTargetView`, which would mean wrapping the tabs, and whether a
-WebView's and a video's pixels come through is untested; so Android's glass is a 95 % tint with the aurora on it (text
-never sits on the page). `curtain` never blurs and is identical on both. Bubbles with buttons (busy, a screen reader's
-Send / Cancel) stay the classic bubble in every look. The marker and the approval dialog are unchanged so far.
+No blur anywhere, so the look is the same on iOS and Android. The marker and the approval dialog are unchanged.
 
 ## 4. Settings and accessibility
 

@@ -27,7 +27,6 @@ import {
 } from '../device/voiceInput';
 import { languageLabel, spokenLanguageName } from '../device/voiceLanguage';
 import { t } from '../i18n';
-import type { AssistantLook } from '../ui/assistantLook';
 import { ListeningLook } from './AssistantGlass';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { radii } from '../ui/theme';
@@ -386,7 +385,6 @@ export function usePushToTalk(deps: PushToTalkDeps): { handlers: HoldHandlers; b
 export function PushToTalkBubble({
   bubble,
   barAtBottom,
-  look = 'classic',
   onOpenPanel,
   onSend,
   onCancel,
@@ -394,8 +392,6 @@ export function PushToTalkBubble({
 }: {
   bubble: Bubble;
   barAtBottom: boolean;
-  /** TRIAL (src/ui/assistantLook.ts): the glass sheet or the light curtain instead of this bubble. */
-  look?: AssistantLook;
   onOpenPanel: () => void;
   onSend: () => void;
   onCancel: () => void;
@@ -451,11 +447,10 @@ export function PushToTalkBubble({
     (bubble.viaA11y && (bubble.phase === 'preparing' || bubble.phase === 'listening' || bubble.phase === 'ready'));
   const recording = bubble.phase === 'preparing' || bubble.phase === 'listening' || bubble.phase === 'finishing';
 
-  // The trial looks show everything that has no buttons (those stay in the bubble: busy, a screen reader's Send/Cancel).
-  if (look !== 'classic' && !(visible && withButtons)) {
+  // The light curtain shows everything that has no buttons (those stay in the bubble: busy, a screen reader's Send/Cancel).
+  if (!(visible && withButtons)) {
     return (
       <ListeningLook
-        look={look}
         show={visible}
         barAtBottom={barAtBottom}
         level={listening ? level : 0}

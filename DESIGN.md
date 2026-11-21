@@ -19,6 +19,7 @@ Last updated: 2026-11-21
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-21:** One assistant look: the owner chose the light ("Işık"); the trial switch "Asistan görünümü (deneme)" in Settings › Assistant and the classic and glass looks are removed, and the stored choice is deleted (`UI-21` changed, `HOUSE-18` retired).
 - **2026-11-21:** Android: tapping the address bar always opens the keyboard; the first request was dropped when focus came from the web page (Android 14+ switches the keyboard to a new field a moment later), so the bar asks again shortly after focus while none shows, and a tap on the focused bar after Back reopens it (`UI-39`).
 - **2026-11-21:** The page menu (⋮) fits the screen (16 Nov checklist; height and scrolling done in 1e06ccb) and now also keeps 8 pt from both side edges with long labels; recorded and checked at 2× text on a small screen and on its side (`UI-38`).
 - **2026-11-21:** A tap on the address bar's suggestion list ("Ask Qutai", search, history, bookmark rows) or the dimmed area no longer also presses the web page behind it on Android: the list is drawn in a page-sized layer instead of hanging outside the bar's box (`UI-37`).

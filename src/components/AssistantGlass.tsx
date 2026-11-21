@@ -1,7 +1,6 @@
 import { Canvas, Fill, Shader, Skia } from '@shopify/react-native-skia';
-import { BlurView } from 'expo-blur';
 import { useEffect, useState } from 'react';
-import { Animated, Easing, Platform, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Animated, Easing, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import {
   useDerivedValue,
   useFrameCallback,
@@ -10,30 +9,22 @@ import {
   type SharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { AssistantLook } from '../ui/assistantLook';
-import { usePalette, radii } from '../ui/theme';
+import { usePalette } from '../ui/theme';
 import { useReduceMotion } from '../utils/useReduceMotion';
 
 /**
- * TRIAL looks for listening and working (src/ui/assistantLook.ts), next to today's ("classic"):
+ * The assistant's look while listening and working (owner, 21 Nov 2026: "Işık" chosen after comparing three looks on a
+ * phone; the trial switch is gone):
  *
- *   band     ListeningLook: a glass sheet attached to the address bar's page-side edge, the words in it; aurora smoke
- *            inside, brightest along the sheet's free edge, which swells with the voice. GlassBack: the same glass
- *            behind the step strip and the answer card, with a thread of light around the strip.
- *   curtain  ListeningLook: the page dims from the bar's edge and rays of light rise with the voice, the words in
- *            white on the dark. EdgeLight: a line of light travelling around the screen while working.
- *
- * Blur: iOS uses the system material (a UIVisualEffectView blurs whatever is behind it, a web page included).
- * Android gets no blur here: expo-blur can only blur a BlurTargetView's content there, which would mean wrapping the
- * tabs, and whether a WebView's (and a video's) pixels come through is untested; so the Android sheet is the same
- * glass as a nearly opaque tint with the aurora on it. The "curtain" look never blurs, so it is the same everywhere.
+ *   ListeningLook  the page dims from the address bar's edge and rays of light rise with the voice, the words in white
+ *                  on the dark. No blur, so it is the same on iOS and Android.
+ *   EdgeLight      while working, a line of light travelling around the screen's edge.
  *
  * Cost: one Skia canvas each, a Reanimated frame callback moving one uniform 30 times a second (no JavaScript per
  * frame). Reduce motion: the same picture with a fixed time.
  */
 
 const FRAME_MS = 1000 / 30;
-const IOS = Platform.OS === 'ios';
 
 const NOISE = `
 float hash(float2 p) { return fract(sin(dot(p, float2(127.1, 311.7))) * 43758.5453); }
@@ -56,36 +47,6 @@ const COLOURS = `
   float3 blue = dark > 0.5 ? float3(0.36, 0.72, 0.94) : float3(0.08, 0.40, 0.75);
   float3 teal = dark > 0.5 ? float3(0.31, 0.82, 0.77) : float3(0.07, 0.62, 0.66);
   float3 violet = dark > 0.5 ? float3(0.62, 0.55, 0.98) : float3(0.40, 0.30, 0.85);
-`;
-
-/**
- * Smoke inside the glass sheet: strongest at the sheet's free edge (y = 0, or the bottom when flip = 1), where a
- * bright line sits; both reach further with the voice level. Weak where the words are. Premultiplied.
- */
-const BAND_SKSL = `
-uniform float2 size;
-uniform float time;
-uniform float dark;
-uniform float level;
-uniform float flip;
-${NOISE}
-half4 main(float2 p) {
-  float t = time;
-  float y = flip > 0.5 ? size.y - p.y : p.y;
-  float2 w = float2(fbm(p / 150.0 + float2(t * 0.05, -t * 0.03)), fbm(p / 130.0 + float2(-t * 0.04, t * 0.05)));
-  float smoke = fbm(p / 80.0 + w * 2.2 + float2(t * 0.06, t * 0.04));
-  float hue = fbm(p / 210.0 + w + float2(-t * 0.02, t * 0.025));
-  ${COLOURS}
-  float3 col = mix(blue, teal, smoothstep(0.35, 0.7, hue));
-  col = mix(col, violet, 0.55 * smoothstep(0.55, 0.85, smoke));
-  float reach = 26.0 + 70.0 * level;
-  float body = (0.3 + 0.7 * smoke) * (0.14 + 0.86 * exp(-y / reach));
-  float line = exp(-y / (1.5 + 3.0 * level));
-  float strength = dark > 0.5 ? 0.5 : 0.42;
-  float a = clamp(strength * body + 0.7 * line, 0.0, 1.0);
-  float3 c = mix(col, float3(1.0), 0.75 * line);
-  return half4(half3(c * a), half(a));
-}
 `;
 
 /**
@@ -122,7 +83,7 @@ half4 main(float2 p) {
 `;
 
 /**
- * A line of light on a rounded rectangle (the screen, or the step strip): two bright stretches travel around it, a
+ * A line of light on the screen's rounded rectangle: two bright stretches travel around it, a
  * white glint at each head, a dim line and a soft haze everywhere else. \`offset\` is where this canvas lies in the
  * rectangle (the screen's is drawn as four thin edge canvases). Premultiplied.
  */
@@ -207,7 +168,7 @@ function barEdge(height: number, insets: { top: number; bottom: number }, barAtB
 }
 
 /**
- * Listening in the "band" or "curtain" look, in place of the classic bubble. Takes no touches (the finger is on the
+ * Listening: the light curtain over the page, in place of a bubble. Takes no touches (the finger is on the
  * button). Always mounted, invisible until `show`: a canvas that is only created when the hold starts draws its
  * first frame late (the surface and the shader's program are made then), so the light used to come a second after
  * the words. Nothing animates while it is hidden. It keeps what it last showed while it fades out.
@@ -216,14 +177,12 @@ function barEdge(height: number, insets: { top: number; bottom: number }, barAtB
 const WAITING_STRENGTH = 0.45;
 
 export function ListeningLook({
-  look,
   show,
   barAtBottom,
   level,
   waiting = false,
   ...content
 }: {
-  look: Exclude<AssistantLook, 'classic'>;
   show: boolean;
   barAtBottom: boolean;
   level: number;
@@ -261,9 +220,8 @@ export function ListeningLook({
     }).start();
   }, [show, waiting, appear, reduceMotion]);
 
-  const Look = look === 'band' ? Sheet : Curtain;
   return (
-    <Look
+    <Curtain
       c={show ? content : kept}
       barAtBottom={barAtBottom}
       appear={appear}
@@ -283,80 +241,6 @@ type LookProps = {
   active: boolean;
   still: boolean;
 };
-
-function Sheet({ c, barAtBottom, appear, level, active, still }: LookProps) {
-  const palette = usePalette();
-  const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
-  const [size, setSize] = useState({ w: 0, h: 0 });
-  const time = useClock(active && !still);
-  const eased = useEasedLevel(level, still);
-  const dark = palette.dark ? 1 : 0;
-  const flip = barAtBottom ? 0 : 1;
-  const uniforms = useDerivedValue(() => ({ size: [size.w, size.h], time: time.value, dark, level: eased.value, flip }));
-
-  const edge = barEdge(height, insets, barAtBottom);
-  const tint = c.cancelling ? 'rgba(150,32,32,0.9)' : glassTint(palette.dark);
-  const text = c.cancelling ? '#ffffff' : palette.text;
-  const soft = c.cancelling ? '#f3d6d6' : palette.textSecondary;
-  return (
-    <Animated.View
-      pointerEvents="none"
-      accessibilityLiveRegion="polite"
-      style={[
-        styles.sheet,
-        barAtBottom ? [styles.sheetUp, { bottom: height - edge }] : [styles.sheetDown, { top: edge }],
-        { borderColor: glassEdge(palette.dark) },
-        {
-          opacity: appear,
-          transform: [{ translateY: appear.interpolate({ inputRange: [0, 1], outputRange: [barAtBottom ? 44 : -44, 0] }) }],
-        },
-      ]}
-      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
-    >
-      {IOS ? (
-        <BlurView
-          tint={palette.dark ? 'systemThinMaterialDark' : 'systemThinMaterialLight'}
-          intensity={85}
-          style={StyleSheet.absoluteFill}
-        />
-      ) : null}
-      <View style={[StyleSheet.absoluteFill, { backgroundColor: tint }]} />
-      {size.w > 0 && !c.cancelling ? (
-        <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-          <Fill>
-            <Shader source={effect(BAND_SKSL)} uniforms={uniforms} />
-          </Fill>
-        </Canvas>
-      ) : null}
-      <View
-        style={[
-          styles.sheetBody,
-          { paddingLeft: 20 + insets.left, paddingRight: 20 + insets.right },
-          barAtBottom ? styles.sheetBodyUp : styles.sheetBodyDown,
-        ]}
-      >
-        <View style={styles.head}>
-          <LevelDot level={level} still={still} color={c.cancelling ? '#ffffff' : palette.tintText} />
-          <Text style={[styles.status, { color: soft }]} numberOfLines={2}>
-            {c.status}
-          </Text>
-          {c.tag ? (
-            <View style={[styles.tag, { borderColor: soft }]}>
-              <Text style={[styles.tagText, { color: soft }]}>{c.tag}</Text>
-            </View>
-          ) : null}
-        </View>
-        {c.transcript ? (
-          <Text style={[styles.words, { color: text }]} numberOfLines={5} ellipsizeMode="head">
-            {c.transcript}
-          </Text>
-        ) : null}
-        {c.note ? <Text style={[styles.note, { color: soft }]}>{c.note}</Text> : null}
-      </View>
-    </Animated.View>
-  );
-}
 
 function Curtain({ c, barAtBottom, appear, level, active, still }: LookProps) {
   const insets = useSafeAreaInsets();
@@ -422,77 +306,13 @@ function LevelDot({ level, still, color }: { level: number; still: boolean; colo
   return <Animated.View style={[styles.dot, { backgroundColor: color, transform: [{ scale }] }]} />;
 }
 
-/** The glass's own colour over the blur (iOS) or instead of it (Android: nearly opaque, so text never sits on the page). */
-function glassTint(dark: boolean): string {
-  if (IOS) return dark ? 'rgba(36,35,44,0.5)' : 'rgba(255,255,255,0.5)';
-  return dark ? 'rgba(36,35,44,0.95)' : 'rgba(255,255,255,0.95)';
-}
-
-const glassEdge = (dark: boolean) => (dark ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.75)');
-
-/**
- * The glass behind the step strip and the answer card in the "band" look: fills its parent (which must not have a
- * background of its own), rounded like it. `thread`: a thread of light travels around it (the strip while working).
- */
-export function GlassBack({ radius, thread = false }: { radius: number; thread?: boolean }) {
-  const palette = usePalette();
-  const reduceMotion = useReduceMotion();
-  return (
-    <>
-      <View style={[StyleSheet.absoluteFill, styles.clip, { borderRadius: radius }]} pointerEvents="none">
-        {IOS ? (
-          <BlurView
-            tint={palette.dark ? 'systemThinMaterialDark' : 'systemThinMaterialLight'}
-            intensity={85}
-            style={StyleSheet.absoluteFill}
-          />
-        ) : null}
-        <View style={[StyleSheet.absoluteFill, { backgroundColor: glassTint(palette.dark) }]} />
-      </View>
-      {thread ? <Thread radius={radius} dark={palette.dark} still={reduceMotion} /> : null}
-    </>
-  );
-}
-
-function Thread({ radius, dark, still }: { radius: number; dark: boolean; still: boolean }) {
-  const [size, setSize] = useState({ w: 0, h: 0 });
-  const time = useClock(!still);
-  const d = dark ? 1 : 0;
-  const uniforms = useDerivedValue(() => ({
-    size: [size.w, size.h],
-    offset: [0, 0],
-    time: time.value,
-    dark: d,
-    radius: Math.min(radius, size.h / 2) - 1,
-    inset: 1,
-    core: 1.3,
-    haze: 4,
-    glow: 0.32,
-  }));
-  return (
-    <View
-      style={StyleSheet.absoluteFill}
-      pointerEvents="none"
-      onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}
-    >
-      {size.w > 0 ? (
-        <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-          <Fill>
-            <Shader source={effect(EDGE_SKSL)} uniforms={uniforms} />
-          </Fill>
-        </Canvas>
-      ) : null}
-    </View>
-  );
-}
-
 /** How far in from each screen edge the travelling light is drawn, and the screen's corner it follows. */
 const EDGE_DEPTH = 82;
 const SCREEN_CORNER = 28;
 
 /**
- * Working in the "curtain" look: a line of light travelling around the screen's edge, drawn in four thin edge
- * canvases like the classic glow (WorkingGlow.tsx), so the page's middle is never covered or redrawn.
+ * Working: a line of light travelling around the screen's edge, drawn in four thin edge canvases, so the page's
+ * middle is never covered or redrawn.
  */
 export function EdgeLight() {
   const palette = usePalette();
@@ -562,13 +382,6 @@ function ScreenEdge({
 
 const styles = StyleSheet.create({
   over: { zIndex: 20, elevation: 20 },
-  clip: { overflow: 'hidden' },
-  sheet: { position: 'absolute', left: 0, right: 0, zIndex: 50, overflow: 'hidden' },
-  sheetUp: { borderTopLeftRadius: radii.sheet, borderTopRightRadius: radii.sheet, borderTopWidth: StyleSheet.hairlineWidth },
-  sheetDown: { borderBottomLeftRadius: radii.sheet, borderBottomRightRadius: radii.sheet, borderBottomWidth: StyleSheet.hairlineWidth },
-  sheetBody: { width: '100%', maxWidth: 680, alignSelf: 'center', gap: 6 },
-  sheetBodyUp: { paddingTop: 18, paddingBottom: 16 },
-  sheetBodyDown: { paddingTop: 14, paddingBottom: 20 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   dot: { width: 9, height: 9, borderRadius: 4.5 },
   status: { flex: 1, fontSize: 13, fontWeight: '600' },
@@ -582,7 +395,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tagText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  words: { fontSize: 20, lineHeight: 27, fontWeight: '500' },
   note: { fontSize: 12 },
   curtain: { position: 'absolute', left: 0, right: 0, zIndex: 50 },
   curtainBody: { width: '100%', maxWidth: 680, alignSelf: 'center', paddingVertical: 22, gap: 8 },
