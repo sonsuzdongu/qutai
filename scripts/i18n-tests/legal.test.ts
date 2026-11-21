@@ -49,7 +49,7 @@ const ENGLISH_WORD: Record<TranslatedLegalLanguage, RegExp> = {
 const KEPT = [
   'Qutai Credits',
   'Osman Yuksel',
-  'osmanyuksel@gmail.com',
+  'qutai@sonsuzdongu.com',
   'Anthropic',
   'OpenAI',
   'OpenRouter',

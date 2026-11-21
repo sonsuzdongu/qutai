@@ -183,7 +183,7 @@ export const es: LegalTranslation = {
           body:
             'Qutai está hecho por Osman Yuksel («nosotros»), que es el responsable del tratamiento de los datos ' +
             'descritos en esta política. Para preguntas sobre su privacidad, o para solicitar una copia o la ' +
-            'supresión de lo que el servidor de Qutai guarda sobre usted, escriba a osmanyuksel@gmail.com.',
+            'supresión de lo que el servidor de Qutai guarda sobre usted, escriba a qutai@sonsuzdongu.com.',
         },
         {
           heading: 'Lo que se queda en su teléfono',
@@ -214,7 +214,8 @@ export const es: LegalTranslation = {
             'Credits por primera vez.\n' +
             '• Si la búsqueda web está activada, el proveedor de IA puede hacer búsquedas por usted. Las políticas ' +
             'de privacidad y las condiciones de los proveedores se aplican a lo que reciben.\n' +
-            BULLETS_COMMON,
+            BULLETS_COMMON +
+            '\n• Si denuncia una respuesta o una app (⋮ › Denunciar), la denuncia va al servidor de Qutai: el motivo, su nota, el texto de la respuesta o el nombre y el código de la app solo si deja marcada la casilla «Incluir», si la respuesta vino de Qutai Credits o de su propia clave, la versión de la app, el sistema del teléfono y el idioma de la app, y su cuenta si ha iniciado sesión. Las denuncias se guardan 180 días y solo se usan para encontrar y corregir respuestas y apps dañinas.',
         },
         {
           heading: 'Su cuenta de Qutai',
@@ -298,7 +299,7 @@ export const es: LegalTranslation = {
             'sesión o eliminar su cuenta en Configuración › Cuenta: al eliminarla se borran la cuenta, su saldo y su ' +
             'historial del servidor de Qutai (los registros de compra se conservan sin el vínculo con usted, como se ' +
             'indica arriba) y se pide al servicio de pagos que elimine su registro sobre usted. También puede ' +
-            'escribir a osmanyuksel@gmail.com para solicitar una copia de lo que el servidor de Qutai guarda sobre ' +
+            'escribir a qutai@sonsuzdongu.com para solicitar una copia de lo que el servidor de Qutai guarda sobre ' +
             'usted, o su rectificación o supresión. Desinstalar Qutai elimina todo lo que almacenó en el teléfono, salvo los archivos que ' +
             'usted guardó fuera de la app, como las descargas en la carpeta Descargas de Android y las ' +
             'imágenes guardadas en sus Fotos.',

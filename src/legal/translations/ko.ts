@@ -186,7 +186,7 @@ export const ko: LegalTranslation = {
           body:
             'Qutai는 Osman Yuksel(이하 “저희”)이 만들며, Osman Yuksel은 본 방침에 기술된 데이터의 ' +
             '개인정보처리자입니다. 귀하의 개인정보에 관한 문의가 있거나, Qutai의 서버가 보관하는 귀하에 관한 ' +
-            '정보의 사본 또는 삭제를 요청하려면 osmanyuksel@gmail.com으로 연락해 주십시오.',
+            '정보의 사본 또는 삭제를 요청하려면 qutai@sonsuzdongu.com으로 연락해 주십시오.',
         },
         {
           heading: '휴대전화에 남는 것',
@@ -218,7 +218,8 @@ export const ko: LegalTranslation = {
             '\n' +
             CARDS_BULLET +
             '\n' +
-            FILTER_LISTS_BULLET,
+            FILTER_LISTS_BULLET +
+            '\n• 답변이나 앱을 신고하면(⋮ › 신고) 신고는 Qutai 서버로 전송됩니다. 사유, 메모, \'포함\'을 체크한 상태로 둔 경우에만 답변 텍스트 또는 앱 이름과 코드, 답변이 Qutai 크레딧에서 왔는지 본인 키에서 왔는지, 앱 버전, 휴대전화 시스템과 앱 언어, 로그인한 경우 계정이 포함됩니다. 신고는 180일 동안 보관되며 해로운 답변과 앱을 찾아 고치는 데에만 사용됩니다.',
         },
         {
           heading: 'Qutai 계정',
@@ -286,7 +287,7 @@ export const ko: LegalTranslation = {
             '있습니다. 설정 › 계정에서 Qutai Credits 사용을 중단하거나, 로그아웃하거나, 계정을 삭제할 수 ' +
             '있습니다. 계정을 삭제하면 Qutai의 서버에서 계정, 잔액 및 내역이 삭제되고(구매 기록은 위에 설명한 ' +
             '대로 귀하와의 연결 없이 남습니다), 결제 서비스에 귀하에 관한 기록의 삭제를 요청합니다. 또한 ' +
-            'osmanyuksel@gmail.com으로 연락하여 Qutai의 서버가 보관하는 귀하에 관한 정보의 사본, 또는 그 ' +
+            'qutai@sonsuzdongu.com으로 연락하여 Qutai의 서버가 보관하는 귀하에 관한 정보의 사본, 또는 그 ' +
             '정정이나 삭제를 요청할 수 있습니다. Qutai를 제거하면 Qutai가 휴대전화에 저장한 모든 것이 삭제됩니다. 단, Android의 다운로드 폴더에 있는 다운로드 파일이나 사진에 저장한 이미지처럼 ' +
             'Qutai 밖에 저장한 파일은 남습니다.',
         },

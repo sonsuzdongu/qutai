@@ -169,7 +169,7 @@ export const fr: LegalTranslation = {
           body:
             'Qutai est développé par Osman Yuksel (« nous »), responsable du traitement des données décrites dans la ' +
             'présente politique. Pour toute question relative à votre vie privée, ou pour demander une copie ou ' +
-            'l’effacement de ce que le serveur de Qutai conserve à votre sujet, écrivez à osmanyuksel@gmail.com.',
+            'l’effacement de ce que le serveur de Qutai conserve à votre sujet, écrivez à qutai@sonsuzdongu.com.',
         },
         {
           heading: 'Ce qui reste sur votre téléphone',
@@ -217,7 +217,8 @@ export const fr: LegalTranslation = {
             '« Afficher les images ».\n' +
             '• Tant que « Bloquer les publicités et les traceurs » est activé, les listes de filtres que vous avez ' +
             'choisies sont téléchargées auprès de leurs éditeurs (comme EasyList et AdGuard) et mises à jour à ' +
-            'quelques jours d’intervalle. Ces requêtes ne contiennent rien sur votre navigation.',
+            'quelques jours d’intervalle. Ces requêtes ne contiennent rien sur votre navigation.\n• ' +
+            'Si vous signalez une réponse ou une app (⋮ › Signaler), le signalement va au serveur de Qutai : le motif, votre note, le texte de la réponse ou le nom et le code de l’app seulement si vous laissez « Inclure » coché, si la réponse venait des crédits Qutai ou de votre propre clé, la version de l’app, le système du téléphone et la langue de l’app, et votre compte si vous êtes connecté. Les signalements sont conservés 180 jours et servent uniquement à trouver et corriger les réponses et apps nuisibles.',
         },
         {
           heading: 'Votre compte Qutai',
@@ -319,7 +320,7 @@ export const fr: LegalTranslation = {
             'Credits, vous déconnecter ou supprimer votre compte dans Paramètres › Compte : sa suppression efface du ' +
             'serveur de Qutai le compte, son solde et son historique (les traces d’achat sont conservées sans le ' +
             'lien avec vous, comme indiqué ci-dessus) et demande au service de paiement de supprimer ses données ' +
-            'vous concernant. Vous pouvez également écrire à osmanyuksel@gmail.com pour demander une copie de ce que ' +
+            'vous concernant. Vous pouvez également écrire à qutai@sonsuzdongu.com pour demander une copie de ce que ' +
             'le serveur de Qutai conserve à votre sujet, ou sa rectification ou son effacement. La désinstallation de Qutai supprime tout ce qu’il a stocké sur le téléphone, sauf les ' +
             'fichiers que vous avez enregistrés en dehors de l’application, comme les téléchargements ' +
             'dans le dossier Téléchargements d’Android et les images enregistrées dans vos Photos.',

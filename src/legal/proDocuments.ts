@@ -22,7 +22,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
           body:
             'Qutai is made by Osman Yuksel (“we”), who is responsible for the data described in this policy. For ' +
             'questions about your privacy, or to ask for a copy or the deletion of what Qutai’s server keeps about ' +
-            'you, write to osmanyuksel@gmail.com.',
+            'you, write to qutai@sonsuzdongu.com.',
         },
         {
           heading: 'What stays on your phone',
@@ -57,7 +57,8 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'When the assistant shows you options as cards, their pictures are loaded from the sites (or the sites’ image servers) that show them, without your cookies, also for options you don’t open; in incognito conversations only when you tap “Show images”.\n• ' +
             'While “Block ads and trackers” is on, the filter lists you chose are downloaded from their publishers ' +
             '(such as EasyList and AdGuard) and updated every few days. These requests contain nothing about your ' +
-            'browsing.',
+            'browsing.\n• ' +
+            'If you report an answer or an app (⋮ › Report), the report goes to Qutai’s server: the reason, your note, the answer’s text or the app’s name and code only if you leave “Include” ticked, whether the answer came from Qutai Credits or your own key, the app version, the phone’s system and the app’s language, and your account if you are signed in. Reports are kept 180 days and are used only to find and fix harmful answers and apps.',
         },
         {
           heading: 'Your Qutai account',
@@ -145,7 +146,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'You can stop using Qutai Credits, sign out, or delete your account in Settings › Account: deleting it ' +
             'removes the account, its balance and its history from Qutai’s server (purchase records stay without the ' +
             'link to you, as above) and asks the payments service to delete its record of you. You can also write to ' +
-            'osmanyuksel@gmail.com to ask for a copy of what Qutai’s server keeps about you, or for its correction or ' +
+            'qutai@sonsuzdongu.com to ask for a copy of what Qutai’s server keeps about you, or for its correction or ' +
             'deletion. Uninstalling Qutai deletes everything it stored on the phone, except files you saved ' +
             'outside it, such as downloads in Android’s Downloads folder and pictures saved to your ' +
             'photos.',
@@ -245,7 +246,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
           body:
             'Qutai’ı Osman Yuksel (“biz”) geliştirir ve bu politikada anlatılan verilerden o sorumludur. ' +
             'Gizliliğinizle ilgili sorularınız için ya da Qutai’ın sunucusunun sizinle ilgili sakladıklarının bir ' +
-            'kopyasını veya silinmesini istemek için osmanyuksel@gmail.com adresine yazın.',
+            'kopyasını veya silinmesini istemek için qutai@sonsuzdongu.com adresine yazın.',
         },
         {
           heading: 'Telefonunuzda kalanlar',
@@ -282,7 +283,8 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'sohbetlerde asla. Qutai ve yapay zekâ hizmeti yalnızca metni alır.\n• Asistan seçenekleri kartlarla ' +
             'gösterdiğinde kartların resimleri, onları gösteren sitelerden (ya da sitelerin resim sunucularından) çerezleriniz gönderilmeden yüklenir; açmadığınız seçenekler için de. Gizli sohbetlerde yalnızca “Resimleri göster”e dokunduğunuzda.\n• “Reklam ve izleyicileri engelle” ' +
             'açıkken seçtiğiniz filtre listeleri yayıncılarından (örneğin EasyList ve AdGuard) indirilir ve birkaç ' +
-            'günde bir güncellenir. Bu isteklerde gezinmenizle ilgili hiçbir şey yoktur.',
+            'günde bir güncellenir. Bu isteklerde gezinmenizle ilgili hiçbir şey yoktur.\n• ' +
+            'Bir cevabı ya da uygulamayı bildirirseniz (⋮ › Bildir), bildirim Qutai’ın sunucusuna gider: sebep, notunuz, yalnızca “Ekle” işaretli kalırsa cevabın metni ya da uygulamanın adı ve kodu, cevabın Qutai Kredileriyle mi kendi anahtarınızla mı geldiği, uygulama sürümü, telefonun sistemi ve uygulamanın dili, giriş yaptıysanız da hesabınız. Bildirimler 180 gün saklanır ve yalnızca zararlı cevapları ve uygulamaları bulup düzeltmek için kullanılır.',
         },
         {
           heading: 'Qutai hesabınız',
@@ -373,7 +375,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'kapatabilir ya da hesabınızı silebilirsiniz: silmek hesabı, bakiyesini ve geçmişini Qutai’ın ' +
             'sunucusundan kaldırır (satın alma kayıtları yukarıdaki gibi sizinle bağlantısı olmadan kalır) ve ödeme ' +
             'hizmetinden sizinle ilgili kaydını silmesini ister. Qutai’ın sunucusunun sizinle ilgili sakladıklarının ' +
-            'bir kopyasını, düzeltilmesini veya silinmesini osmanyuksel@gmail.com adresine yazarak da ' +
+            'bir kopyasını, düzeltilmesini veya silinmesini qutai@sonsuzdongu.com adresine yazarak da ' +
             'isteyebilirsiniz. Qutai’ı kaldırmak telefonda sakladığı her şeyi siler; Qutai dışına kaydettiğiniz ' +
             'dosyalar, örneğin Android’in İndirilenler klasöründeki indirmeler ve fotoğraflarınıza ' +
             'kaydettiğiniz resimler kalır.',

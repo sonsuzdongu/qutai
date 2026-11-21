@@ -162,7 +162,7 @@ export const id: LegalTranslation = {
             'Qutai dibuat oleh Osman Yuksel (“kami”), yang bertanggung jawab atas data yang dijelaskan dalam ' +
             'kebijakan ini sebagai Pengendali Data Pribadi. Untuk pertanyaan tentang privasi Anda, atau untuk ' +
             'meminta salinan atau penghapusan data yang disimpan server Qutai tentang Anda, kirim email ke ' +
-            'osmanyuksel@gmail.com.',
+            'qutai@sonsuzdongu.com.',
         },
         {
           heading: 'Yang tetap berada di ponsel Anda',
@@ -203,7 +203,8 @@ export const id: LegalTranslation = {
             'Anda buka; dalam percakapan Samaran hanya saat Anda mengetuk “Tampilkan gambar”.\n• Selama “Blokir ' +
             'iklan dan pelacak” aktif, daftar filter yang Anda pilih diunduh dari penerbitnya (seperti EasyList dan ' +
             'AdGuard) dan diperbarui setiap beberapa hari. Permintaan ini tidak berisi apa pun tentang aktivitas ' +
-            'penjelajahan Anda.',
+            'penjelajahan Anda.\n• ' +
+            'Jika Anda melaporkan jawaban atau aplikasi (⋮ › Laporkan), laporan dikirim ke server Qutai: alasannya, catatan Anda, teks jawaban atau nama dan kode aplikasi hanya jika Anda membiarkan “Sertakan” tercentang, apakah jawaban berasal dari Kredit Qutai atau kunci Anda sendiri, versi aplikasi, sistem ponsel dan bahasa aplikasi, serta akun Anda jika Anda masuk. Laporan disimpan 180 hari dan hanya digunakan untuk menemukan dan memperbaiki jawaban dan aplikasi yang berbahaya.',
         },
         {
           heading: 'Akun Qutai Anda',
@@ -299,7 +300,7 @@ export const id: LegalTranslation = {
             'Anda di Setelan › Akun: menghapusnya akan menghapus akun, saldonya, dan historinya dari server Qutai ' +
             '(catatan pembelian tetap ada tanpa keterkaitan dengan Anda, seperti dijelaskan di atas) dan meminta ' +
             'layanan pembayaran untuk menghapus catatannya tentang Anda. Anda juga dapat mengirim email ke ' +
-            'osmanyuksel@gmail.com untuk meminta salinan data yang disimpan server Qutai tentang Anda, atau ' +
+            'qutai@sonsuzdongu.com untuk meminta salinan data yang disimpan server Qutai tentang Anda, atau ' +
             'perbaikan atau penghapusannya. Menghapus instalasi Qutai akan menghapus semua yang disimpannya di ponsel, kecuali file ' +
             'yang Anda simpan di luar Qutai, seperti unduhan di folder Download Android dan gambar ' +
             'yang disimpan ke Foto Anda.',

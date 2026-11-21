@@ -166,7 +166,7 @@ export const de: LegalTranslation = {
           body:
             'Qutai wird von Osman Yuksel („wir“) entwickelt, der Verantwortlicher für die in dieser Erklärung ' +
             'beschriebenen Daten ist. Bei Fragen zu Ihrem Datenschutz oder um eine Kopie oder die Löschung dessen ' +
-            'zu verlangen, was Qutais Server über Sie speichert, schreiben Sie an osmanyuksel@gmail.com.',
+            'zu verlangen, was Qutais Server über Sie speichert, schreiben Sie an qutai@sonsuzdongu.com.',
         },
         {
           heading: 'Was auf Ihrem Telefon bleibt',
@@ -210,7 +210,8 @@ export const de: LegalTranslation = {
             'Inkognito-Tabs nur, wenn Sie auf „Bilder anzeigen“ tippen.\n• Solange „Werbung und Tracker ' +
             'blockieren“ eingeschaltet ist, werden die von Ihnen gewählten Filterlisten von ihren Herausgebern ' +
             '(etwa EasyList und AdGuard) heruntergeladen und alle paar Tage aktualisiert. Diese Anfragen enthalten ' +
-            'nichts über Ihr Surfen.',
+            'nichts über Ihr Surfen.\n• ' +
+            'Wenn Sie eine Antwort oder eine App melden (⋮ › Melden), geht die Meldung an Qutais Server: der Grund, Ihre Notiz, der Text der Antwort oder Name und Code der App nur, wenn Sie „Mitsenden“ angehakt lassen, ob die Antwort von Qutai Credits oder Ihrem eigenen Schlüssel kam, die App-Version, das System des Telefons und die Sprache der App sowie Ihr Konto, wenn Sie angemeldet sind. Meldungen werden 180 Tage aufbewahrt und nur verwendet, um schädliche Antworten und Apps zu finden und zu beheben.',
         },
         {
           heading: 'Ihr Qutai-Konto',
@@ -310,7 +311,7 @@ export const de: LegalTranslation = {
             'von Qutai Credits beenden, sich abmelden oder Ihr Konto löschen: Dadurch werden das Konto, sein ' +
             'Guthaben und sein Verlauf von Qutais Server entfernt (Kaufdatensätze bleiben ohne Verbindung zu Ihnen ' +
             'erhalten, wie oben beschrieben), und der Zahlungsdienst wird gebeten, seinen Datensatz über Sie zu ' +
-            'löschen. Sie können auch an osmanyuksel@gmail.com schreiben, um eine Kopie dessen, was Qutais Server ' +
+            'löschen. Sie können auch an qutai@sonsuzdongu.com schreiben, um eine Kopie dessen, was Qutais Server ' +
             'über Sie speichert (Auskunft), oder dessen Berichtigung oder Löschung zu verlangen. Wenn Sie Qutai deinstallieren, wird alles gelöscht, was die App auf dem Telefon ' +
             'gespeichert hat, außer Dateien, die Sie außerhalb der App gespeichert haben, etwa ' +
             'Downloads im Download-Ordner von Android und Bilder, die Sie in Ihren Fotos gespeichert ' +
