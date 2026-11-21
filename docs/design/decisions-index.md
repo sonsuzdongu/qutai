@@ -1068,7 +1068,7 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-10` | RevenueCat's notifications are checked by signature (within 5 minutes) before they are read, are limited… | Default |  |
 | `BUY-11` | A suspended account can't buy; a store notification for it is held and credited after the account is restored. | Default |  |
 | `BUY-12` | The payments library gets Qutai's account id after sign-in, switches on another sign-in and logs out on… | Default | 2026-11-20 |
-| `BUY-13` | RevenueCat is set to keep each purchase with its original account ("Keep with original App User ID") and… | Default |  |
+| `BUY-13` | RevenueCat's restore behaviour is "Transfer to new App User ID"; each store transaction is still credited once (changed). | Owner | 2026-11-21 |
 | `BUY-15` | Builds without pro mode must not contain the payments library at all: no native code, no billing… | Owner | 2026-11-16 |
 | `BUY-16` | Fake purchases are a deliberate temporary stand-in: with fake purchases switched on at a local server, Buy… | Owner | 2026-11-17 |
 | `BUY-17` | Fake purchases exist only on a development server with the switch set exactly to true; anywhere else the… | Default |  |
