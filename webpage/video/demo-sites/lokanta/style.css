@@ -130,3 +130,20 @@ label.saved input { width: 20px; height: 20px; margin: 0; padding: 0; accent-col
 /* Second restaurant (?r=sofra): warmer cover and mark. */
 .sofra .cover { filter: hue-rotate(-35deg) saturate(1.2); }
 .sofra .mark { background: #8a2b17; color: #ffe3b0; }
+/* Reviews (#reviews) */
+.pagehead { margin: 16px 14px 2px; font-size: 22px; }
+.pad { margin: 0 14px 10px; }
+.facts a.muted { color: var(--muted); }
+#review h2 { margin: 0 0 8px; font-size: 17px; }
+.rate { display: flex; gap: 6px; border: 0; margin: 0 0 10px; padding: 0; }
+.rate legend { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+.rate label { display: block; }
+.rate input { position: absolute; opacity: 0; }
+.rate span { display: block; padding: 6px 10px; border-radius: 10px; border: 1px solid var(--line); font-weight: 700; font-size: 14px; }
+.rate input:checked + span { background: var(--gold); border-color: var(--gold); color: #1d1d1b; }
+.reviews { list-style: none; margin: 10px 14px; padding: 0; display: grid; gap: 10px; }
+.review { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.review p { margin: 0; font-size: 14.5px; }
+.review .who { margin-bottom: 4px; font-size: 13.5px; }
+.stars { color: var(--gold); letter-spacing: 1px; }
+.stars .off { color: var(--line); }
