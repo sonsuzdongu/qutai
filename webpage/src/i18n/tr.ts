@@ -309,6 +309,7 @@ export const tr: Messages = {
   'footer.issues': 'Sorun bildirin',
   'footer.license': 'Lisans',
   'footer.appPrivacy': 'Uygulamanın gizlilik politikası',
+  'footer.deleteAccount': 'Hesabınızı silin',
 
   'policy.metaTitle': 'Gizlilik Politikası · Qutai',
   'policy.metaDescription':
@@ -316,6 +317,22 @@ export const tr: Messages = {
   'policy.updated': 'Son güncelleme',
   'policy.note': 'Qutai’ın iPhone ve Android uygulamasının gizlilik politikası; uygulamada gösterilen metnin aynısı.',
   'policy.home': 'Qutai ana sayfasına dön',
+
+  'deletion.metaTitle': 'Qutai hesabınızı silin · Qutai',
+  'deletion.metaDescription': 'Qutai hesabınızı ve verilerini nasıl silersiniz: uygulamada ya da uygulama olmadan e-postayla; neyin silindiği ve neyin kaldığı.',
+  'deletion.title': 'Qutai hesabınızı silin',
+  'deletion.intro': 'Bu sayfa Qutai’ın iPhone ve Android uygulaması içindir. Qutai hesabınızı ve onunla birlikte Qutai’ın sunucusunda tutulan verileri istediğiniz an silebilirsiniz: uygulamada ya da uygulama olmadan e-postayla.',
+  'deletion.inApp.heading': 'Uygulamada',
+  'deletion.inApp.body': '• Qutai’ı açın, ardından Ayarlar › Hesap’a gidin.\n• Hesabı sil’e dokunun ve onaylayın.\n• Apple ile giriş yaptıysanız iPhone’unuz bir kez daha Apple ile onaylamanızı ister; böylece Qutai, Apple’daki erişimini de geri çeker.\nHesap hemen silinir ve tüm cihazlarda oturumunuz kapanır.',
+  'deletion.byEmail.heading': 'Uygulama olmadan',
+  'deletion.byEmail.body': 'Qutai’da kullandığınız e-posta adresinden (Apple ya da Google ile giriş yaptıysanız Ayarlar › Hesap’ta görünen adresten) {email} adresine “Qutai hesabımı silin” konulu bir e-posta gönderin. İsteğin size ait olduğundan emin olmak için o adrese bir kod gönderebiliriz. Hesabı en geç 30 gün içinde, genellikle çok daha önce siler ve işlem bitince size yazarız.',
+  'deletion.deleted.heading': 'Neler silinir',
+  'deletion.deleted.body': '• Hesabınız, giriş yöntemleri (Apple, Google, e-posta) ve bunların adresleri\n• Tüm cihazlardaki oturumlarınız\n• Qutai Kredisi bakiyeniz ve kredi geçmişiniz. Kullanılmamış krediler kaybolur ve yasanın ya da mağazanın gerektirdiği durumlar dışında iade edilmez\n• Qutai’ın sunucusunda tuttuğunuz yedekler\n• Ödeme hizmetindeki (RevenueCat) müşteri kaydınız',
+  'deletion.kept.heading': 'Neler kalır',
+  'deletion.kept.body': '• Satın alma kayıtları, vergi mevzuatının gerektirdiği süre boyunca ve sizinle hiçbir bağlantısı olmadan\n• Bir cevap ya da uygulama hakkında gönderdiğiniz bildirimler, hesabınız olmadan, 180 gün sonra silinene kadar\n• Telefonunuzda saklananlar, siz temizleyene (Ayarlar › Gezinme verilerini temizle) ya da uygulamayı kaldırana kadar kalır\n• Kendi AI anahtarınızı kullandıysanız o AI sağlayıcısına gönderdikleriniz sağlayıcının kendi koşullarına tabidir',
+  'deletion.noAccount.heading': 'Qutai’ı hesap olmadan kullanmak',
+  'deletion.noAccount.body': 'Yalnızca kendi AI anahtarınızı kullanıyor ve hiç giriş yapmadıysanız Qutai’ın sunucusunda size ait bir hesap yoktur. Her şey telefonunuzdadır: Ayarlar › Gezinme verilerini temizle ile silin ya da uygulamayı kaldırın.',
+  'deletion.home': 'Qutai ana sayfasına dön',
 
   'notFound.title': 'Sayfa bulunamadı',
   'notFound.body': 'Böyle bir sayfa yok.',

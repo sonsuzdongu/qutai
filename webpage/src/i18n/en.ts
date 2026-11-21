@@ -290,6 +290,7 @@ export const en = {
   'footer.issues': 'Issues',
   'footer.license': 'Licence',
   'footer.appPrivacy': 'App privacy policy',
+  'footer.deleteAccount': 'Delete your account',
 
   'policy.metaTitle': 'Privacy Policy · Qutai',
   'policy.metaDescription':
@@ -297,6 +298,22 @@ export const en = {
   'policy.updated': 'Last updated',
   'policy.note': 'This is the privacy policy of the Qutai app for iPhone and Android, the same text the app shows.',
   'policy.home': 'Back to the Qutai home page',
+
+  'deletion.metaTitle': 'Delete your Qutai account · Qutai',
+  'deletion.metaDescription': 'How to delete your Qutai account and its data, in the app or by email without the app, and what is deleted and kept.',
+  'deletion.title': 'Delete your Qutai account',
+  'deletion.intro': 'This page is for the Qutai app for iPhone and Android. You can delete your Qutai account and the data kept with it on Qutai’s server at any time, in the app or, without the app, by email.',
+  'deletion.inApp.heading': 'In the app',
+  'deletion.inApp.body': '• Open Qutai, then Settings › Account.\n• Tap Delete account and confirm.\n• If you signed in with Apple, your iPhone asks you to confirm with Apple once more, so Qutai can also withdraw its access at Apple.\nThe account is deleted at once and you are signed out on every device.',
+  'deletion.byEmail.heading': 'Without the app',
+  'deletion.byEmail.body': 'Write to {email} from the email address you use for Qutai (for an Apple or Google sign-in, the address shown under Settings › Account), with the subject “Delete my Qutai account”. We may send a code to that address to make sure the request is yours. We delete the account within 30 days, usually much sooner, and write back when it is done.',
+  'deletion.deleted.heading': 'What is deleted',
+  'deletion.deleted.body': '• Your account, its sign-in methods (Apple, Google, email) and their addresses\n• Your sessions on every device\n• Your Qutai Credits balance and credit history. Unused credits are lost and are not refunded, except where the law or the store requires it\n• Backups you kept on Qutai’s server\n• Your customer record at the payments service (RevenueCat)',
+  'deletion.kept.heading': 'What is kept',
+  'deletion.kept.body': '• Purchase records, for as long as tax law requires, without any link to you\n• Reports you sent about an answer or an app, without your account, until they are deleted after 180 days\n• What is stored on your phone stays until you clear it (Settings › Clear browsing data) or remove the app\n• If you used your own AI key, what you sent to that AI provider is covered by the provider’s own terms',
+  'deletion.noAccount.heading': 'Using Qutai without an account',
+  'deletion.noAccount.body': 'If you only use your own AI key and never signed in, Qutai has no account of yours on its server. Everything is on your phone: clear it in Settings › Clear browsing data, or remove the app.',
+  'deletion.home': 'Back to the Qutai home page',
 
   'notFound.title': 'Page not found',
   'notFound.body': 'This page does not exist.',

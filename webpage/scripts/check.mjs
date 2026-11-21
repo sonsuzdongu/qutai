@@ -79,6 +79,19 @@ for (const lang of ['en', 'tr']) {
 expect(JSON.stringify(privacy) === JSON.stringify(await policyFromApp()), 'src/data/privacy.json differs from the app (src/legal/proDocuments.ts): run npm run legal');
 expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/privacy-policy/'), 'sitemap lists the privacy policy');
 
+// Deleting an account (Google Play's web deletion link): a static page per language, linked from the footer and the sitemap.
+for (const lang of ['en', 'tr']) {
+  const html = await readFile(`${dist}${lang}/delete-account/index.html`, 'utf8').catch(() => '');
+  expect(html.includes(`<html lang="${lang}"`), `${lang}/delete-account: page with lang attribute`);
+  expect(html.includes('<h1>') && html.includes('mailto:'), `${lang}/delete-account: title and the email way`);
+  expect(!html.includes('{email}'), `${lang}/delete-account: the address is filled in`);
+  expect((html.match(/<h2>/g) ?? []).length === 5, `${lang}/delete-account: every section`);
+  expect(!/<script\b/.test(html), `${lang}/delete-account: no script`);
+  const home = await readFile(`${dist}${lang}/index.html`, 'utf8');
+  expect(home.includes(`href="/${lang}/delete-account/"`), `${lang}: footer links to the account deletion page`);
+}
+expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/delete-account/'), 'sitemap lists the account deletion page');
+
 // Every feature: a static page per language with every group, no script, nothing from another origin.
 for (const lang of ['en', 'tr']) {
   const html = await readFile(`${dist}${lang}/features/index.html`, 'utf8').catch(() => '');
@@ -108,4 +121,4 @@ if (failures.length) {
   console.error(`✗ ${failures.length} check(s) failed:\n  ${failures.join('\n  ')}`);
   process.exit(1);
 }
-console.log(`✓ ${cases.length} language cases, both pages with their features and privacy policy pages, no third-party loads`);
+console.log(`✓ ${cases.length} language cases, both pages with their features, privacy policy and account deletion pages, no third-party loads`);

@@ -1,7 +1,7 @@
 /**
  * The dynamic parts of the site: `/` sends the visitor to `/en/` or `/tr/` (and `/privacy-policy` to that language's
- * `/<lang>/privacy-policy/`, `/features` to `/<lang>/features/`), `/intent/sign-in/email` hands the
- * sign-in email's link to the app (worker/intent.ts), and `/.well-known/` serves the App Links / Universal Links files
+ * `/<lang>/privacy-policy/`, `/features` to `/<lang>/features/`, `/delete-account` to `/<lang>/delete-account/`),
+ * `/intent/sign-in/email` hands the sign-in email's link to the app (worker/intent.ts), and `/.well-known/` serves the App Links / Universal Links files
  * when they are configured (worker/wellKnown.ts).
  *
  * 1. A `lang` cookie (set by the language switch on the page) wins.
@@ -35,10 +35,12 @@ export default {
     }
     const policy = url.pathname === '/privacy-policy' || url.pathname === '/privacy-policy/';
     const features = url.pathname === '/features' || url.pathname === '/features/';
-    if (url.pathname !== '/' && !policy && !features) return env.ASSETS.fetch(request);
+    const deletion = url.pathname === '/delete-account' || url.pathname === '/delete-account/';
+    if (url.pathname !== '/' && !policy && !features && !deletion) return env.ASSETS.fetch(request);
 
     const lang = pickLanguage(request.headers.get('Cookie'), request.headers.get('Accept-Language'));
-    const target = new URL(policy ? `/${lang}/privacy-policy/` : features ? `/${lang}/features/` : `/${lang}/`, url);
+    const path = policy ? 'privacy-policy/' : features ? 'features/' : deletion ? 'delete-account/' : '';
+    const target = new URL(`/${lang}/${path}`, url);
     target.search = url.search;
     return new Response(null, {
       status: 302,

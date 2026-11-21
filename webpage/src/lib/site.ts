@@ -8,3 +8,10 @@ export const ISSUES_URL = `${REPO_URL}/issues`;
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
 /** The app's privacy policy, a page of this site in each language (scripts/prerender.mjs, text from the app). */
 export const privacyPolicyPath = (lang: 'en' | 'tr') => `/${lang}/privacy-policy/`;
+/**
+ * Where account deletion requests go without the app (the deletion page, scripts/prerender.mjs): the same contact address
+ * as the app's privacy policy. Google Play asks for this page's address in the Play Console (Data safety › Data deletion).
+ */
+export const CONTACT_EMAIL = 'qutai@sonsuzdongu.com';
+/** How to delete a Qutai account, in the app or by email, and what is deleted and kept (a page of this site). */
+export const deleteAccountPath = (lang: 'en' | 'tr') => `/${lang}/delete-account/`;

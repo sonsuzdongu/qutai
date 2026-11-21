@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const client = `${root}client/`;
-const { render, renderFeatures, messages, SITE_URL, CHECKED, formatDate, FEATURES_CHECKED, FEATURES_PAGE } = await import(
+const { render, renderFeatures, messages, SITE_URL, CHECKED, CONTACT_EMAIL, formatDate, FEATURES_CHECKED, FEATURES_PAGE } = await import(
   `${root}server/entry-server.js`,
 );
 const privacy = JSON.parse(await readFile(fileURLToPath(new URL('../src/data/privacy.json', import.meta.url)), 'utf8'));
@@ -162,6 +162,56 @@ ${doc.sections
   await writeFile(`${client}${lang}/privacy-policy/index.html`, page);
 }
 
+// Deleting an account: /en/delete-account/ and /tr/delete-account/, static, no script. Google Play asks for this page in
+// the Play Console (account deletion without the app); the text is in src/i18n/{en,tr}.ts (`deletion.*`).
+const deletionUrl = (lang) => `${SITE_URL}/${lang}/delete-account/`;
+const DELETION_SECTIONS = ['inApp', 'byEmail', 'deleted', 'kept', 'noAccount'];
+for (const lang of LANGS) {
+  const t = messages[lang];
+  const other = lang === 'en' ? 'tr' : 'en';
+  const mail = `<a href="mailto:${esc(CONTACT_EMAIL)}?subject=${encodeURIComponent(lang === 'tr' ? 'Qutai hesabımı silin' : 'Delete my Qutai account')}">${esc(CONTACT_EMAIL)}</a>`;
+  const sections = DELETION_SECTIONS.map((key) => {
+    const body = policyBody(t[`deletion.${key}.body`]).replaceAll(esc('{email}'), mail);
+    return `        <section>\n          <h2>${esc(t[`deletion.${key}.heading`])}</h2>\n          ${body}\n        </section>`;
+  }).join('\n');
+  const page = `<!doctype html>
+<html lang="${lang}" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${esc(t['deletion.metaTitle'])}</title>
+    <meta name="description" content="${esc(t['deletion.metaDescription'])}" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f2e7cf" />
+    <link rel="canonical" href="${deletionUrl(lang)}" />
+    <link rel="alternate" hreflang="en" href="${deletionUrl('en')}" />
+    <link rel="alternate" hreflang="tr" href="${deletionUrl('tr')}" />
+    <link rel="alternate" hreflang="x-default" href="${deletionUrl('en')}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    ${css}
+  </head>
+  <body>
+    <header class="policy-top">
+      <a class="brand" href="/${lang}/" aria-label="${esc(t['nav.home'])}"><img src="/img/q-64.webp" width="32" height="32" alt="" /><span>Qutai</span></a>
+      <a class="policy-lang" href="/${other}/delete-account/" hreflang="${other}" lang="${other}">${esc(t['lang.other'])}</a>
+    </header>
+    <main id="main" class="section policy">
+      <article>
+        <h1>${esc(t['deletion.title'])}</h1>
+        <p class="policy-intro">${esc(t['deletion.intro'])}</p>
+${sections}
+        <p class="policy-meta"><a href="/${lang}/privacy-policy/">${esc(t['footer.appPrivacy'])}</a></p>
+      </article>
+      <p class="policy-home"><a href="/${lang}/">${esc(t['deletion.home'])}</a></p>
+    </main>
+  </body>
+</html>
+`;
+  await mkdir(`${client}${lang}/delete-account`, { recursive: true });
+  await writeFile(`${client}${lang}/delete-account/index.html`, page);
+}
+
 // Every feature: /en/features/ and /tr/features/, static, no script (src/components/FeaturesPage.tsx, the content in
 // src/data/features.ts).
 const featuresUrl = (lang) => `${SITE_URL}/${lang}/features/`;
@@ -252,6 +302,7 @@ await writeFile(
 ${LANGS.map((l) => `  <url>\n    <loc>${pageUrl(l)}</loc>\n    <lastmod>${CHECKED}</lastmod>\n${alternates}\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${featuresUrl(l)}</loc>\n    <lastmod>${FEATURES_CHECKED}</lastmod>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${featuresUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${featuresUrl('en')}" />\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${policyUrl(l)}</loc>\n    <lastmod>${privacy.updated}</lastmod>\n${policyAlternates}\n  </url>`).join('\n')}
+${LANGS.map((l) => `  <url>\n    <loc>${deletionUrl(l)}</loc>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${deletionUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${deletionUrl('en')}" />\n  </url>`).join('\n')}
 </urlset>
 `,
 );
@@ -273,4 +324,4 @@ await writeFile(
 );
 
 await rm(`${client}.vite`, { recursive: true });
-console.log(`Prerendered ${LANGS.map((l) => `/${l}/, /${l}/features/, /${l}/privacy-policy/`).join(', ')}, 404.html, robots.txt, sitemap.xml, _headers`);
+console.log(`Prerendered ${LANGS.map((l) => `/${l}/, /${l}/features/, /${l}/privacy-policy/, /${l}/delete-account/`).join(', ')}, 404.html, robots.txt, sitemap.xml, _headers`);
