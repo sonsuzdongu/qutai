@@ -2,7 +2,7 @@
 // the bottom, never under the system bars or the keyboard.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { menuFrame } from '../../src/components/menuFrame.ts';
+import { menuFrame, menuMaxWidth } from '../../src/components/menuFrame.ts';
 
 test('address bar at the top: starts under it, stops above the navigation bar', () => {
   assert.deepEqual(menuFrame(800, 40, 24, 0, 'top'), { top: 88, bottom: undefined, maxHeight: 800 - 88 - 24 - 8 });
@@ -20,4 +20,10 @@ test('the keyboard takes the place of the navigation bar when it is open', () =>
 test('never a negative height on a tiny window', () => {
   assert.equal(menuFrame(100, 40, 24, 300, 'top').maxHeight, 0);
   assert.equal(menuFrame(100, 40, 24, 300, 'bottom').maxHeight, 0);
+});
+
+test('the menu keeps clear of both side edges and the cut-out on a phone on its side', () => {
+  assert.equal(menuMaxWidth(375, 0, 0), 375 - 16);
+  assert.equal(menuMaxWidth(844, 47, 47), 844 - 94 - 16);
+  assert.equal(menuMaxWidth(10, 0, 0), 0);
 });

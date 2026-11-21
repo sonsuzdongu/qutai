@@ -18,3 +18,11 @@ export function menuFrame(area: number, insetTop: number, insetBottom: number, k
   const top = insetTop + BAR;
   return { top, bottom: undefined, maxHeight: Math.max(0, area - top - below - MARGIN) };
 }
+
+/**
+ * The menu's greatest width in a window `width` wide: with long labels (large text, German) it stops short of the left
+ * edge and the camera cut-out on a phone on its side, as it does on the right, and the labels wrap instead.
+ */
+export function menuMaxWidth(width: number, insetLeft: number, insetRight: number) {
+  return Math.max(0, width - insetLeft - insetRight - 2 * MARGIN);
+}

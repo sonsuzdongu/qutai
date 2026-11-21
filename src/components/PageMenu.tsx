@@ -7,7 +7,7 @@ import { t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
 import { darkPalette, lightPalette, makeStyles, radii } from '../ui/theme';
 import { DialogHost } from './Dialog';
-import { menuFrame } from './menuFrame';
+import { menuFrame, menuMaxWidth } from './menuFrame';
 import { WholeWordsText } from './WholeWordsText';
 
 export type MenuItem = {
@@ -41,7 +41,7 @@ type Props = {
 export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor = 'top', onClose }: Props) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
-  const { height } = useWindowDimensions();
+  const { height, width } = useWindowDimensions();
   const keyboard = useKeyboardHeight();
   // The modal's real size (the window's until it is measured): with the system bars drawn over the app, some
   // Android phones report a window height that does not match the screen the menu is drawn on.
@@ -78,7 +78,13 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor 
         style={[
           styles.menu,
           theme.menu,
-          { top: frame.top, bottom: frame.bottom, maxHeight: frame.maxHeight, right: insets.right + 8 },
+          {
+            top: frame.top,
+            bottom: frame.bottom,
+            maxHeight: frame.maxHeight,
+            maxWidth: menuMaxWidth(width, insets.left, insets.right),
+            right: insets.right + 8,
+          },
         ]}
       >
         {iconRow && iconRow.length > 0 && (
