@@ -1283,6 +1283,8 @@ export const ja: Record<keyof typeof en, string> = {
   'clearData.confirm': '選択したデータを削除しますか？',
   'clearData.clear': 'データを削除',
   'clearData.done': '閲覧履歴データを削除しました',
+  'clearData.failedTitle': "すべてを消去できませんでした",
+  'clearData.failed': "選択したデータの一部がこのスマートフォンに残っている可能性があります。もう一度お試しください。",
 
   'backup.section': 'バックアップ',
   'backup.sectionSummary': '暗号化されたバックアップのエクスポートとインポート',

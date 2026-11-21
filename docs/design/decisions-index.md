@@ -139,6 +139,8 @@ Moved to Details (ids retired, not reused): `PROD-5`
 | `AI-30` | The assistant's settings tool cannot change the provider, model, keys, custom endpoint, its headers or web… | Default |  |
 | `AI-31` | Gemini's search suggestions box is shown under the answer; Anthropic and OpenAI citations are shown as… | Default |  |
 | `AI-32` | With an own key, nothing goes to a provider before the user accepted, on this phone, a screen that names… | Owner | 2026-11-21 |
+| `AI-33` | AI keys and custom header values are kept "this device only" like the other secrets; older ones rewritten once | Default | 2026-11-21 |
+| `AI-34` | Own-key requests retry after 1, 2, 4 s or a longer Retry-After (20 s at most); Stop ends the wait at once | Default | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `AI-11`, `AI-12`
 
@@ -175,6 +177,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `DATA-27` | One secure source for every random value (expo-crypto), 128-bit nonces for bridges and tokens, ids keep their stored shape; no Math.random | Default | 2026-11-20 |
 | `DATA-28` | Every settings change is a patch on the live settings, never a render-time copy; writes go one after another with the latest settings | Default | 2026-11-20 |
 | `DATA-29` | Pro builds only: buying talks to RevenueCat and Google Play Billing (account id, products, purchases, IP and device info); RevenueCat contacted only around Buy credits | Default | 2026-11-20 |
+| `DATA-30` | A failed clearing or profile save is said and the screen stays usable (no silent close, no stuck "saving") | Default | 2026-11-21 |
 
 ## [4. Page content is untrusted](04-untrusted-content.md)
 
@@ -205,6 +208,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `UNTR-24` | Resistance to instructions in pages is measured with the injection test set (opt-in, billed, capped); claims say only what it shows | Default | 2026-11-20 |
 | `UNTR-25` | A settings change the user's own messages don't name is asked in Qutai's dialog before it applies; protections towards safe never asked | Default | 2026-11-20 |
 | `UNTR-26` | Qutai's page script is installed once per document under a secret, frozen, non-configurable name, before the page's scripts on iOS and Android; commands carry only the call | Default | 2026-11-20 |
+| `UNTR-27` | Saved details unreadable: an address to a site the user didn't name or have open isn't loaded, its card isn't shown | Default | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `UNTR-3`
 
@@ -233,6 +237,7 @@ Moved to Details (ids retired, not reused): `UNTR-3`
 | `SITE-22` | A confirmation is never answered for the user: while Qutai is in the background the task pauses and waits… | Default |  |
 | `SITE-23` | Every action goes to the activity history (30 days, at most 2000 entries), refused and declined ones… | Default |  |
 | `SITE-25` | One URL module, read as the WebView reads addresses, for every site decision and every host shown; site key (host) vs registrable domain defined there | Default | 2026-11-20 |
+| `SITE-26` | A site setting changed while the stored ones load wins over disk, for every kind, also back to the default | Default | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE-24`
 
@@ -315,6 +320,7 @@ Moved to Details (ids retired, not reused): `PAY-10`, `PAY-18`, `PAY-19`, `PAY-2
 | `INC-27` | Both locks are off by default, are not in backups and can't be changed by the assistant. | Default |  |
 | `INC-28` | With the app lock on, things arriving from other apps wait until the user unlocks. | Default |  |
 | `INC-29` | Incognito conversations load no card pictures until "Show images" | Default (owner to confirm) | 2026-11-20 |
+| `INC-30` | Incognito leftovers: failed removals recorded and retried, the sent-log purge waits for writes on their way, unknown state counts as incognito | Default | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `INC-8`
 
@@ -508,6 +514,8 @@ Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-
 | `TOOL-27` | `edit_image` works on the phone with no AI request; results are at most 16 megapixels; a conversation… | Default |  |
 | `TOOL-29` | If a page shows a CAPTCHA, the assistant does not solve it; it asks the user to. | Default |  |
 | `TOOL-30` | One table row per tool (target, tab need, address, background, history, own dialog, checks) and one ordered check pipeline; a tool without a row is refused | Default | 2026-11-20 |
+| `TOOL-31` | A tool's uncaught error is that call's error result (only Stop throws); a cut-off Anthropic tool call gets an empty input | Default | 2026-11-21 |
+| `TOOL-32` | "Ask before actions" is read at every tool call; a change during a task applies from its next step | Default | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `TOOL-4`, `TOOL-18`, `TOOL-28`
 
@@ -944,6 +952,7 @@ Moved to Details (ids retired, not reused): `INTRO-7`, `INTRO-13`, `INTRO-15`, `
 | `PERF-8` | Today none of the bigger start-up ideas is tried (static linking of iOS libraries, replacing the Skia… | **Waiting** |  |
 | `PERF-10` | The step strip names elements instead of "ref 1" (the third item of the performance pass). | Owner | 2026-11-18 |
 | `PERF-11` | Long conversations get a bounded request: the current task whole, earlier tool results cut, oldest exchanges left out in blocks; only the newest… | Default | 2026-11-20 |
+| `PERF-12` | Page script forgets elements that left the page and stops timed-out or oversized fetches; tab switcher rows aren't remounted | Default | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `PERF-1`, `PERF-2`, `PERF-9`
 
@@ -1090,6 +1099,7 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-32` | Test purchases in production: off, listed accounts only, or an explicit "everyone" (all live accounts; loud banner);… | Owner | 2026-11-21 |
 | `BUY-33` | A pro IPA needs the RevenueCat iOS key (or --without-purchases), like a pro AAB. | Owner | 2026-11-21 |
 | `BUY-34` | The buy screen and the rating message name only the phone's own store (or none); ten languages. | Owner | 2026-11-21 |
+| `BUY-35` | The kept list of uncredited purchases is never written over when it couldn't be read; unsaved changes stay in memory | Default | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `BUY-14`, `BUY-20`
 
@@ -1116,6 +1126,7 @@ Moved to Details (ids retired, not reused): `BUY-14`, `BUY-20`
 | `BACK-20` | Stored files are named by a random id, never the user id; the admin panel shows only how many backups an… | Default |  |
 | `BACK-21` | The restore offer appears once after each fresh sign-in to an account with a backup, counted only once answered; asked in setup right after signing in… | Owner | 2026-11-20 |
 | `BACK-22` | The pro privacy policy describes server backups, and its version was raised so every pro user accepts… | **Waiting** |  |
+| `BACK-23` | A failed removal of the kept backup password is retried, and marked so the next start removes it | Default | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `BACK-2`, `BACK-16`, `BACK-14`
 

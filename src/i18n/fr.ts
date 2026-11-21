@@ -1282,6 +1282,8 @@ export const fr: Record<keyof typeof en, string> = {
   'clearData.confirm': 'Effacer les données sélectionnées ?',
   'clearData.clear': 'Effacer les données',
   'clearData.done': 'Données de navigation effacées',
+  'clearData.failedTitle': "Tout n’a pas pu être effacé",
+  'clearData.failed': "Une partie des données sélectionnées est peut-être encore sur ce téléphone. Réessayez.",
 
   'backup.section': 'Sauvegarde',
   'backup.sectionSummary': 'Exporter ou importer une sauvegarde chiffrée',

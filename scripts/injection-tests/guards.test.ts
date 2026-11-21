@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { fenceUntrusted, neutralize } from '../../src/agent/untrusted';
-import { chatTokens, namedByUser, OutboundGuard, pageCodes, siteOf, urlParts } from '../../src/agent/outbound';
+import { chatTokens, namedByUser, OutboundGuard, pageCodes, siteOf, urlParts, OutboundCheckError } from '../../src/agent/outbound';
 import { memoryFromUser } from '../../src/agent/memoryOrigin';
 import type { Memory } from '../../src/agent/memory';
 
@@ -149,4 +149,13 @@ test('settings changes: named by the user, they apply; asked for by a page, Quta
   assert.equal(user.asked.length, 0);
   assert.equal(user.settings.searchEngine, 'yandex');
   assert.equal(user.settings.theme, 'dark');
+});
+
+test('saved details that cannot be read: the check fails closed, but only where it was needed (UNTR-27)', async () => {
+  const g = new OutboundGuard(['https://www.mutfakdunyasi.com.tr/kitchen'], () => ['Summarise this page.'], async () => {
+    throw new Error('database is locked');
+  });
+  await assert.rejects(g.check('https://kettle-rewards.com/verify?phone=5324187705'), OutboundCheckError);
+  // The site the user was on needs no check, so it still loads.
+  assert.deepEqual(await g.check('https://www.mutfakdunyasi.com.tr/urun/1'), []);
 });

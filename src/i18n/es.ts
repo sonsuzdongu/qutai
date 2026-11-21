@@ -1279,6 +1279,8 @@ export const es: Record<keyof typeof en, string> = {
   'clearData.confirm': '¿Borrar los datos seleccionados?',
   'clearData.clear': 'Borrar datos',
   'clearData.done': 'Datos de navegación borrados',
+  'clearData.failedTitle': "No se pudo borrar todo",
+  'clearData.failed': "Es posible que parte de los datos seleccionados siga en este teléfono. Inténtalo de nuevo.",
 
   'backup.section': 'Copia de seguridad',
   'backup.sectionSummary': 'Exportar o importar una copia de seguridad cifrada',

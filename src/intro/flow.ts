@@ -90,6 +90,8 @@ export type FlowEvent =
   | { type: 'back' }
   | { type: 'save' }
   | { type: 'saved'; count: number }
+  /** Nothing could be saved (the database couldn't be opened): back to the rows, which are kept for another try. */
+  | { type: 'saveFailed' }
   | { type: 'done' };
 
 /** The shortest text worth sending (a name alone is enough). */
@@ -277,6 +279,9 @@ export function introReducer(state: FlowState, event: FlowEvent): FlowState {
     case 'saved':
       if (phase.name !== 'saving') return state;
       return { ...state, phase: { name: 'saved', count: event.count } };
+    case 'saveFailed':
+      if (phase.name !== 'saving') return state;
+      return { ...state, phase: { name: 'review' } };
     case 'done':
       return { ...state, phase: { name: 'exit', to: 'done' } };
   }

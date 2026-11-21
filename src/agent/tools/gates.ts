@@ -32,9 +32,21 @@ export const CARRIED_WORDS: Record<CarriedKind, string> = {
  */
 export async function outboundGate(url: string, ctx: ToolContext): Promise<'ok' | 'approved' | ToolOutput> {
   if (!ctx.outbound) return 'ok';
-  const carried = await ctx.outbound.check(url);
-  if (!carried.length) return 'ok';
   const host = siteKey(url) ?? url;
+  let carried: CarriedKind[];
+  try {
+    carried = await ctx.outbound.check(url);
+  } catch {
+    // Not knowing the saved details is not "carries none of them": the address isn't loaded unchecked (UNTR-27).
+    return {
+      content:
+        `Not opened: Qutai couldn't read the user's saved details to check whether this address carries them to ${host}, ` +
+        "a site the user didn't name and didn't have open. Try again; if it keeps failing, tell the user.",
+      isError: true,
+      notice: errorNotice(t('step.checkFailed')),
+    };
+  }
+  if (!carried.length) return 'ok';
   const allowed = ctx.confirm
     ? await ctx.confirm(
         {

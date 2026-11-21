@@ -1281,6 +1281,8 @@ export const ko: Record<keyof typeof en, string> = {
   'clearData.confirm': '선택한 데이터를 삭제하시겠습니까?',
   'clearData.clear': '데이터 삭제',
   'clearData.done': '인터넷 사용 기록이 삭제되었습니다',
+  'clearData.failedTitle': "모두 지우지 못했습니다",
+  'clearData.failed': "선택한 데이터 일부가 이 휴대전화에 남아 있을 수 있습니다. 다시 시도해 주세요.",
 
   'backup.section': '백업',
   'backup.sectionSummary': '암호화된 백업 내보내기 또는 가져오기',

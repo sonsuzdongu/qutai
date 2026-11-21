@@ -1272,6 +1272,8 @@ export const tr: Record<keyof typeof en, string> = {
   'clearData.confirm': 'Seçilen veriler temizlensin mi?',
   'clearData.clear': 'Verileri temizle',
   'clearData.done': 'Gezinme verileri temizlendi',
+  'clearData.failedTitle': "Her şey temizlenemedi",
+  'clearData.failed': "Seçilen verilerin bir kısmı hâlâ bu telefonda olabilir. Yeniden deneyin.",
 
   'backup.section': 'Yedekleme',
   'backup.sectionSummary': 'Şifreli yedeği dışa veya içe aktarın',

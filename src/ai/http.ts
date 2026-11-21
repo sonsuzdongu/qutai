@@ -34,6 +34,21 @@ function assertSecure(url: string) {
   throw new Error(t('custom.httpsOnlyAndroid'));
 }
 
+/** The longest wait before a retry, whatever the server asks for: the user is watching the answer start. */
+const MAX_RETRY_WAIT_MS = 20_000;
+
+/**
+ * How long to wait before retry number `attempt` (0, 1, 2): 1 s, 2 s, 4 s, or the server's `Retry-After` when that
+ * is longer (seconds, or an HTTP date), never more than 20 s.
+ */
+export function retryDelay(attempt: number, retryAfter: string | null, now = Date.now()): number {
+  const backoff = 1000 * 2 ** attempt;
+  const text = retryAfter?.trim() ?? '';
+  const asked = /^\d+(\.\d+)?$/.test(text) ? Number(text) * 1000 : text ? Date.parse(text) - now : NaN;
+  if (!Number.isFinite(asked) || asked <= backoff) return backoff;
+  return Math.min(asked, MAX_RETRY_WAIT_MS);
+}
+
 /**
  * POSTs JSON with retries for rate limits, overloads and requests cut off
  * when the OS suspended the app. Resolves with a successful response.
@@ -61,7 +76,8 @@ async function postWithRetry(
     } catch (e) {
       if (signal.aborted || attempt >= MAX_RETRIES) throw e;
       await waitForForeground(signal);
-      await sleep(1000 * 2 ** attempt);
+      // With the signal: Stop ends the wait at once instead of sitting out the pause.
+      await sleep(1000 * 2 ** attempt, signal);
       continue;
     }
 
@@ -69,7 +85,7 @@ async function postWithRetry(
 
     const retryable = res.status === 429 || res.status === 529 || res.status >= 500;
     if (retryable && attempt < MAX_RETRIES) {
-      await sleep(1000 * 2 ** attempt);
+      await sleep(retryDelay(attempt, res.headers.get('retry-after')), signal);
       continue;
     }
 
@@ -155,7 +171,7 @@ export async function postSse(
     } catch (e) {
       if (signal.aborted || received || attempt >= MAX_RETRIES) throw e;
       await waitForForeground(signal);
-      await sleep(1000 * 2 ** attempt);
+      await sleep(1000 * 2 ** attempt, signal);
     }
   }
 }

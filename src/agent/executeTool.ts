@@ -1,3 +1,4 @@
+import { StoppedError } from '../utils/sleep';
 import type { Browser } from '../browser/Browser';
 import type { Tab } from '../browser/Tab';
 import type { RenderedPdf } from '../device/pdf';
@@ -75,8 +76,12 @@ export type ToolContext = {
    * `kind`: a low-risk phone action the user may allow for good ("Don't ask again", agent/alwaysAllow.ts).
    */
   confirm?: (description: string | IconLines, host: string | null, kind?: AlwaysAllowKind) => Promise<boolean>;
-  /** The global "ask before actions" setting, for sites without their own permission. Defaults to true when confirm is set. */
-  confirmByDefault?: boolean;
+  /**
+   * The global "ask before actions" setting, for sites without their own permission. Defaults to true when confirm is
+   * set. A function is asked at every call, so a change the user makes while a task runs applies from its next step
+   * (TOOL-32); a plain value is for tests.
+   */
+  confirmByDefault?: boolean | (() => boolean);
   /** Per-site permissions (allow, ask, read-only, blocked). */
   sites?: SitePolicy;
   /** Browsing history search (search_history); absent in tests or when unavailable. */
@@ -235,6 +240,12 @@ export type EmailDraft = {
   original?: boolean;
 };
 
+/** The "ask before actions" setting as it is now (read at each call, never kept from the task's start). */
+function confirmsByDefault(ctx: ToolContext): boolean {
+  const setting = ctx.confirmByDefault;
+  return typeof setting === 'function' ? setting() : (setting ?? true);
+}
+
 /** The page a call acts on (its site decides the permission and is written in the action history), or null. */
 function actionTarget(spec: ToolSpec, input: Record<string, unknown>, ctx: ToolContext): { url: string; tab?: Tab } | null {
   if (spec.target === 'none') return null;
@@ -262,7 +273,7 @@ export function backgroundBlocker(
   const target = actionTarget(spec, input, ctx);
   const host = target ? siteKey(target.url) : null;
   const level = host && ctx.sites ? ctx.sites.levelFor(host) : 'default';
-  const decision = decide(policyName(name, input), host, level, ctx.confirm ? (ctx.confirmByDefault ?? true) : false);
+  const decision = decide(policyName(name, input), host, level, ctx.confirm ? confirmsByDefault(ctx) : false);
   if (decision.kind === 'confirm' && ctx.confirm) return 'confirm';
   // The tab the call works in needs a live WebView: a sleeping tab's (or a page opened from the new tab page) would
   // have to be created. Page tools on the new tab page only answer that no page is loaded. A closed agent's tab: the
@@ -287,8 +298,14 @@ export async function executeTool(name: string, input: Record<string, unknown>, 
   try {
     result = await executeUnredacted(name, input, ctx);
   } catch (e) {
-    if (!(e instanceof AgentTabClosedError)) throw e;
-    result = tabClosed(ctx);
+    // Stop still ends the step by throwing. Anything else a tool didn't catch itself (a failed database read, a
+    // bug) is that call's error, told to the model like any other, so the step's other calls keep their results
+    // and the task goes on.
+    if (e instanceof StoppedError || ctx.signal?.aborted) throw e;
+    result =
+      e instanceof AgentTabClosedError
+        ? tabClosed(ctx)
+        : { content: `Error: ${e instanceof Error ? e.message : String(e)}`.slice(0, 500), isError: true };
   }
   let needles: HiddenNeedle[];
   try {
@@ -341,7 +358,7 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
   const target = actionTarget(spec, input, ctx);
   const host = target ? siteKey(target.url) : null;
   const level = host && ctx.sites ? ctx.sites.levelFor(host) : 'default';
-  const decision = decide(policyName(name, input), host, level, ctx.confirm ? (ctx.confirmByDefault ?? true) : false);
+  const decision = decide(policyName(name, input), host, level, ctx.confirm ? confirmsByDefault(ctx) : false);
 
   const record = (result: ToolOutput): ToolOutput => {
     const incognito = !!(ctx.privacy?.touchedIncognito || target?.tab?.incognito || fromTab?.incognito);

@@ -190,7 +190,7 @@ async function streamMessage(
       }
       case 'content_block_stop': {
         const block = content[e.index];
-        if (block && e.index in json) block.input = json[e.index] ? JSON.parse(json[e.index]) : {};
+        if (block && e.index in json) block.input = parseToolInput(json[e.index]);
         // Streamed text blocks start with an empty citation list; the non-streamed form omits it.
         if (block?.type === 'text' && Array.isArray(block.citations) && block.citations.length === 0)
           delete block.citations;
@@ -205,6 +205,20 @@ async function streamMessage(
     }
   });
   return { content: content.filter(Boolean), stop_reason: stopReason, usage };
+}
+
+/**
+ * A tool call's streamed input. A reply cut off mid-call (max_tokens) leaves half a JSON text: the call then has no
+ * input rather than the whole reply failing, and runAgent answers it "Not executed: the response was cut off".
+ */
+export function parseToolInput(raw: string | undefined): Record<string, unknown> {
+  if (!raw) return {};
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : {};
+  } catch {
+    return {};
+  }
 }
 
 function toReply(content: Block[], stopReason: string): ModelReply {

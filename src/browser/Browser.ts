@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 import { Conversation, groupChatKey } from '../chat/Conversation';
 import { forgetIncognitoOutgoing } from '../device/outgoing';
+import { reportStorageFailure } from '../storage/failures';
 import { forgetIncognitoFiles } from '../device/composedFile';
 import { forgetIncognitoAttachments } from '../device/attachments';
 import { closePdf } from '../pdf/reader';
@@ -45,6 +46,26 @@ export type ClosedGroup = {
 const MAX_RECENTLY_CLOSED = 25;
 /** Background tabs beyond this many keep only their URL and title (each WebView costs a lot of memory). */
 export const MAX_AWAKE_TABS = 5;
+
+/**
+ * Removes an ended incognito session's files. Both removers do nothing when there is nothing to remove, so a throw
+ * means files are still on disk (INC-30): the failure is recorded and the removal tried once more shortly after (a
+ * file still being read is free by then). Whatever is left then goes at the next app start, which clears both folders.
+ */
+function removeIncognitoFiles(label: string, remove: () => void) {
+  try {
+    remove();
+  } catch (e) {
+    reportStorageFailure(label, e, 'record');
+    setTimeout(() => {
+      try {
+        remove();
+      } catch (again) {
+        reportStorageFailure(`${label}.retry`, again, 'record');
+      }
+    }, 2000);
+  }
+}
 
 /** Holds all tabs and notifies React when anything about them changes. */
 export class Browser {
@@ -656,17 +677,9 @@ export class Browser {
     // Files the assistant made in incognito conversations go with the session.
     forgetIncognitoFiles();
     // And the copies of files handed from incognito conversations to other apps.
-    try {
-      forgetIncognitoOutgoing();
-    } catch {
-      // Nothing to remove.
-    }
+    removeIncognitoFiles('incognito.outgoing', forgetIncognitoOutgoing);
     // So do the files attached in incognito conversations, and a PDF still open in the reader.
-    try {
-      forgetIncognitoAttachments();
-    } catch {
-      // Nothing to remove.
-    }
+    removeIncognitoFiles('incognito.attachments', forgetIncognitoAttachments);
     closePdf();
     this.incognitoEndListeners.forEach((l) => l());
     if (!this.incognitoProfile) return;

@@ -1283,6 +1283,8 @@ export const ptBR: Record<keyof typeof en, string> = {
   'clearData.confirm': 'Limpar os dados selecionados?',
   'clearData.clear': 'Limpar dados',
   'clearData.done': 'Dados de navegação limpos',
+  'clearData.failedTitle': "Não foi possível limpar tudo",
+  'clearData.failed': "Parte dos dados selecionados talvez ainda esteja neste telefone. Tente de novo.",
 
   'backup.section': 'Backup',
   'backup.sectionSummary': 'Exportar ou importar um backup criptografado',

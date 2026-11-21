@@ -1282,6 +1282,8 @@ export const ru: Record<keyof typeof en, string> = {
   'clearData.confirm': 'Удалить выбранные данные?',
   'clearData.clear': 'Удалить данные',
   'clearData.done': 'История очищена',
+  'clearData.failedTitle': "Не удалось очистить всё",
+  'clearData.failed': "Часть выбранных данных могла остаться на этом телефоне. Повторите попытку.",
 
   'backup.section': 'Резервная копия',
   'backup.sectionSummary': 'Экспорт или импорт зашифрованной копии',

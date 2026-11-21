@@ -511,3 +511,60 @@ test('RevenueCat: recent purchases from the customer info, newest first, only th
   assert.equal(recent[0].transactionId, 'GPA.0');
   assert.ok(!recent.some((t) => t.transactionId === 'GPA.old'));
 });
+
+test('a kept list that cannot be read is never written over; the purchase is kept in memory (BUY-35)', async () => {
+  const earlier: PendingPurchase = { userId: 'user-1', store: 'google', transactionId: 'GPA.0', productId: 'credits_100', at: 999_000 };
+  const store = memory([earlier]);
+  let broken = true;
+  const failures: string[] = [];
+  const unavailable: VerifyAnswer = { ok: false, status: 503, code: 'unavailable' };
+  const flow = createPurchaseFlow({
+    store: fakeStore(BOUGHT),
+    storeName: 'google',
+    verify: async () => unavailable,
+    pending: {
+      load: async () => {
+        if (broken) throw new Error('keychain');
+        return store.load();
+      },
+      save: store.save,
+    },
+    onStorageFailure: (label) => void failures.push(label),
+    sleep: async () => {},
+    now: () => 1_000_000,
+  });
+  assert.deepEqual(await flow.buy(PACK, 'user-1'), { kind: 'notYetCredited' });
+  assert.deepEqual(store.get(), [earlier], 'the stored list is untouched');
+  assert.ok(failures.includes('purchases.pending.load'));
+  assert.equal(await flow.waiting('user-1'), 1, 'the new purchase waits in memory');
+  // Storage answers again: the earlier purchase and the new one are both there and stored.
+  broken = false;
+  assert.equal((await flow.retryPending('user-1')).waiting, 2);
+  assert.deepEqual(store.get().map((p) => p.transactionId).sort(), ['GPA.0', 'GPA.1']);
+});
+
+test('a kept list that cannot be written stays in memory and is written at the next change (BUY-35)', async () => {
+  const store = memory();
+  let broken = true;
+  const unavailable: VerifyAnswer = { ok: false, status: 503, code: 'unavailable' };
+  const flow = createPurchaseFlow({
+    store: fakeStore(BOUGHT),
+    storeName: 'google',
+    verify: async () => unavailable,
+    pending: {
+      load: store.load,
+      save: async (l) => {
+        if (broken) throw new Error('keychain');
+        await store.save(l);
+      },
+    },
+    sleep: async () => {},
+    now: () => 1_000_000,
+  });
+  assert.deepEqual(await flow.buy(PACK, 'user-1'), { kind: 'notYetCredited' });
+  assert.deepEqual(store.get(), []);
+  assert.equal(await flow.waiting('user-1'), 1);
+  broken = false;
+  assert.equal((await flow.retryPending('user-1')).waiting, 1);
+  assert.equal(store.get().length, 1);
+});

@@ -132,6 +132,15 @@ test('an action on a web page asks with the site and no kind: "Always allow on <
   assert.equal(asked[0].host, 'mutfakdunyasi.com.tr');
 });
 
+test('"Ask before actions" is read at each call, so a change during a task applies from the next step (TOOL-32)', async () => {
+  const { ctx, asked } = setup();
+  let ask = false;
+  (ctx as { confirmByDefault: unknown }).confirmByDefault = () => ask;
+  ask = true;
+  await executeTool('navigate', { url: 'https://www.mutfakdunyasi.com.tr/manuals' }, ctx);
+  assert.equal(asked.length, 1, 'switched on after the task started: the step asks');
+});
+
 test('every kind has its "Don\'t ask again" label and its Settings switch in all ten languages', () => {
   const dicts: Record<string, Record<string, string>> = { en, tr, de, es, 'pt-BR': ptBR, fr, ja, ko, ru, id };
   for (const [lang, dict] of Object.entries(dicts)) {

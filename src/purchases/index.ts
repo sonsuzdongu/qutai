@@ -3,7 +3,8 @@ import { secureStoreReady } from '../storage/secureStoreGate';
 import { NativeModules, Platform } from 'react-native';
 import { accountSession } from '../account';
 import { creditsEnabled, features } from '../config/features';
-import { creditsClient, creditsStore } from '../credits';
+import { creditsClient } from '../credits';
+import { reportStorageFailure } from '../storage/failures';
 import { createPurchaseFlow, type PendingPurchase, type PurchaseFlow } from './flow';
 import { createRevenueCatStore, type RevenueCatSdk } from './revenuecat';
 import type { PurchaseStore, StoreName } from './types';
@@ -137,6 +138,7 @@ export function purchaseFlow(): PurchaseFlow | null {
       },
       pending: pendingStorage,
       settled: settledStorage,
+      onStorageFailure: (label, error) => reportStorageFailure(label, error, 'record'),
     });
     // The store's customer follows the account: Qutai's id while signed in, never anonymous purchases. RevenueCat is
     // configured at the first purchase screen or purchase after sign-in (not at app start), and told about every

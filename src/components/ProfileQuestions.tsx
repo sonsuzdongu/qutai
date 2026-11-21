@@ -162,9 +162,10 @@ export function ProfileQuestions({ transition, onDone, registerBack, startAt = '
 
   /** Saves, replaces or (empty text) removes the fact in a slot. A refused fact is said, never blocks. */
   const saveSlot = async (slot: Slot, text: string | null, category: MemoryCategory) => {
-    const db = await getDb();
     const id = saved.current[slot];
     try {
+      // Inside the try: a database that can't be opened is said like any refused fact, and the questions go on.
+      const db = await getDb();
       if (!text?.trim()) {
         if (id) await deleteMemory(db, id);
         delete saved.current[slot];
@@ -181,7 +182,7 @@ export function ProfileQuestions({ transition, onDone, registerBack, startAt = '
 
   const loadSummary = async () => {
     const ids = new Set(Object.values(saved.current));
-    const memories = await listMemories(await getDb()).catch(() => []);
+    const memories = await getDb().then(listMemories).catch(() => []);
     setSummary(memories.filter((m) => ids.has(m.id)).reverse());
   };
 

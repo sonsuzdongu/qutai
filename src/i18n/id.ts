@@ -1282,6 +1282,8 @@ export const id: Record<keyof typeof en, string> = {
   'clearData.confirm': 'Hapus data yang dipilih?',
   'clearData.clear': 'Hapus data',
   'clearData.done': 'Data penjelajahan dihapus',
+  'clearData.failedTitle': "Tidak semuanya dapat dihapus",
+  'clearData.failed': "Sebagian data yang dipilih mungkin masih ada di ponsel ini. Coba lagi.",
 
   'backup.section': 'Cadangan',
   'backup.sectionSummary': 'Ekspor atau impor cadangan terenkripsi',

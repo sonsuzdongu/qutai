@@ -1274,6 +1274,8 @@ export const en = {
   'clearData.confirm': 'Clear the selected data?',
   'clearData.clear': 'Clear data',
   'clearData.done': 'Browsing data cleared',
+  'clearData.failedTitle': "Couldn't clear everything",
+  'clearData.failed': "Some of the selected data may still be on this phone. Try again.",
 
   'backup.section': 'Backup',
   'backup.sectionSummary': 'Export or import an encrypted backup',

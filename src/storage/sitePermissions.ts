@@ -152,8 +152,11 @@ export class SitePermissionStore implements SitePolicy {
   private personal = new Map<string, PersonalSetting>();
   /** Sites where ad and tracker blocking is off ("Don't block on this site"). */
   private blockingOff = new Set<string>();
-  /** Changes made before loading finished: they win over what was on disk. */
-  private blockingTouched = new Set<string>();
+  /**
+   * Settings changed before loading finished (`${kind} ${host}`): they win over what was on disk, also when the change
+   * was back to the default, which leaves nothing in the maps above to show it (SITE-26).
+   */
+  private touched = new Set<string>();
   /** The same, sorted; a new array only when it changes (a WebView prop). */
   private blockingOffList: string[] = [];
   private listeners = new Set<() => void>();
@@ -176,15 +179,21 @@ export class SitePermissionStore implements SitePolicy {
         // Changes made while loading win over what was on disk. Stored hosts are read as siteKey makes them now
         // (utils/webUrl.ts, SITE-25: punycode, no trailing dot), so an older key still matches its site.
         const key = (host: string) => siteKeyOfHost(host) ?? host;
-        for (const p of list) if (!this.levels.has(key(p.host))) this.levels.set(key(p.host), p.level);
-        for (const l of locations) if (!this.locations.has(key(l.host))) this.locations.set(key(l.host), l.setting);
-        for (const p of personal) if (!this.personal.has(key(p.host))) this.personal.set(key(p.host), p.setting);
+        const fresh = (kind: string, host: string) => !this.touched.has(`${kind} ${host}`);
+        for (const p of list) if (fresh('level', key(p.host)) && !this.levels.has(key(p.host))) this.levels.set(key(p.host), p.level);
+        for (const l of locations)
+          if (fresh('location', key(l.host)) && !this.locations.has(key(l.host))) this.locations.set(key(l.host), l.setting);
+        for (const p of personal)
+          if (fresh('personal', key(p.host)) && !this.personal.has(key(p.host))) this.personal.set(key(p.host), p.setting);
         for (const m of media) {
           const k = `${m.kind} ${key(m.host)}`;
-          if (!this.media.has(k)) this.media.set(k, m.setting);
+          if (fresh(m.kind, key(m.host)) && !this.media.has(k)) this.media.set(k, m.setting);
         }
-        for (const host of blockingOff) if (!this.blockingTouched.has(key(host))) this.blockingOff.add(key(host));
+        for (const host of blockingOff) if (fresh('blocking', key(host))) this.blockingOff.add(key(host));
         this.blockingOffList = [...this.blockingOff].sort();
+        // Merged: from here on the maps are the whole truth. (After a failed load the marks stay for the next try.)
+        this.touched.clear();
+        this.loaded = true;
         this.unreadable = false;
         this.emit();
       })
@@ -198,6 +207,13 @@ export class SitePermissionStore implements SitePolicy {
         this.emit();
       });
     return this.loading;
+  }
+
+  /** The stored settings are merged in; changes no longer need a mark. */
+  private loaded = false;
+
+  private touch(kind: string, host: string) {
+    if (!this.loaded) this.touched.add(`${kind} ${host}`);
   }
 
   /** The stored permissions couldn't be read (load failed): unknown sites are asked about. */
@@ -216,6 +232,7 @@ export class SitePermissionStore implements SitePolicy {
   }
 
   async setPersonal(host: string, setting: PersonalSetting): Promise<void> {
+    this.touch('personal', host);
     if (setting === 'ask') this.personal.delete(host);
     else this.personal.set(host, setting);
     this.emit();
@@ -237,7 +254,7 @@ export class SitePermissionStore implements SitePolicy {
   }
 
   async setBlocking(host: string, on: boolean): Promise<void> {
-    this.blockingTouched.add(host);
+    this.touch('blocking', host);
     if (on) this.blockingOff.delete(host);
     else this.blockingOff.add(host);
     this.blockingOffList = [...this.blockingOff].sort();
@@ -268,6 +285,7 @@ export class SitePermissionStore implements SitePolicy {
   }
 
   async setMedia(host: string, kind: MediaKind, setting: PermissionSetting): Promise<void> {
+    this.touch(kind, host);
     if (setting === 'ask') this.media.delete(`${kind} ${host}`);
     else this.media.set(`${kind} ${host}`, setting);
     this.emit();
@@ -275,6 +293,7 @@ export class SitePermissionStore implements SitePolicy {
   }
 
   async setLocation(host: string, setting: LocationSetting): Promise<void> {
+    this.touch('location', host);
     if (setting === 'ask') this.locations.delete(host);
     else this.locations.set(host, setting);
     this.emit();
@@ -293,6 +312,7 @@ export class SitePermissionStore implements SitePolicy {
   }
 
   async set(host: string, level: SiteLevel): Promise<void> {
+    this.touch('level', host);
     if (level === 'default') this.levels.delete(host);
     else this.levels.set(host, level);
     this.emit();

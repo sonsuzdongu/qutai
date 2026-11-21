@@ -91,6 +91,8 @@ export interface PurchaseFlowDeps {
   now?: () => number;
   /** Reports per purchase before it's left for later (default 3). */
   attempts?: number;
+  /** Told when the kept list couldn't be read or written (the flow goes on from memory; see `edit`). */
+  onStorageFailure?: (label: string, error: unknown) => void;
 }
 
 const DEFAULT_WAIT_S = 3;
@@ -118,29 +120,59 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
   const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const now = deps.now ?? Date.now;
   const attempts = deps.attempts ?? 3;
-  /** One change to the stored list at a time. */
+  const current = () => (typeof deps.store === 'function' ? deps.store() : deps.store);
+  const key = (p: { store: StoreName; transactionId: string }) => `${p.store}:${p.transactionId}`;
+  /**
+   * The list as it should be stored, while storage couldn't take it (a read or a write failed); null once it is
+   * stored. Until then the flow works from this copy, and the next change that can read the stored list writes both.
+   */
+  let unsaved: PendingPurchase[] | null = null;
+  /** The stored list with what is only in memory added (a purchase in both is listed once). */
+  const withUnsaved = (stored: PendingPurchase[]) =>
+    unsaved ? [...stored, ...unsaved.filter((p) => !stored.some((x) => key(x) === key(p)))] : stored;
+  /**
+   * One change to the stored list at a time. A list that couldn't be read is never written over (BUY-35): a paid
+   * purchase waiting to be reported must not be lost to a corrupt value or a Keychain error, so the change is kept in
+   * memory instead. A change that couldn't be written is kept the same way. Merging may bring back a purchase that
+   * was just dropped; reporting it again is safe (the server credits a transaction once).
+   */
   let queue: Promise<unknown> = Promise.resolve();
   const edit = (change: (list: PendingPurchase[]) => PendingPurchase[]) => {
     const run = queue.then(async () => {
-      const list = await deps.pending.load().catch(() => [] as PendingPurchase[]);
-      const next = change(list)
+      let stored: PendingPurchase[] | null;
+      try {
+        stored = await deps.pending.load();
+      } catch (e) {
+        stored = null;
+        deps.onStorageFailure?.('purchases.pending.load', e);
+      }
+      const next = change(withUnsaved(stored ?? []))
         .filter((p) => now() - p.at < PENDING_KEEP_MS)
         .slice(-MAX_PENDING);
-      await deps.pending.save(next).catch(() => {});
+      if (!stored) {
+        unsaved = next;
+        return next;
+      }
+      try {
+        await deps.pending.save(next);
+        unsaved = null;
+      } catch (e) {
+        unsaved = next;
+        deps.onStorageFailure?.('purchases.pending.save', e);
+      }
       return next;
     });
     queue = run.catch(() => {});
     return run;
   };
-  const current = () => (typeof deps.store === 'function' ? deps.store() : deps.store);
-  const key = (p: { store: StoreName; transactionId: string }) => `${p.store}:${p.transactionId}`;
   let settledQueue: Promise<unknown> = Promise.resolve();
   const settle = (p: { store: StoreName; transactionId: string }) => {
     if (!deps.settled) return Promise.resolve();
     const store = deps.settled;
     const run = settledQueue.then(async () => {
-      const list = await store.load().catch(() => [] as string[]);
-      if (list.includes(key(p))) return;
+      // A list that couldn't be read isn't written over; the purchase is only asked about once more.
+      const list = await store.load().catch(() => null);
+      if (!list || list.includes(key(p))) return;
       await store.save([...list, key(p)].slice(-MAX_SETTLED)).catch(() => {});
     });
     settledQueue = run.catch(() => {});
@@ -264,7 +296,7 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
 
     /** How many of this account's purchases are waiting to be credited. */
     async waiting(userId: string): Promise<number> {
-      const list = await deps.pending.load().catch(() => []);
+      const list = withUnsaved(await deps.pending.load().catch(() => []));
       return list.filter((p) => p.userId === userId).length;
     },
   };

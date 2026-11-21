@@ -9,6 +9,7 @@ import {
   TextInput,
   useWindowDimensions,
   View,
+  type ViewProps,
 } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -44,6 +45,24 @@ type Props = {
 const PADDING = 12;
 
 const DarkMode = createContext(false);
+
+/** The row holding the card being dragged (-1 for none): it is drawn over the rows after it. */
+const DraggedRow = createContext(-1);
+const DRAGGED_ROW = { zIndex: 20, elevation: 12 };
+
+/**
+ * The list's cell. One component for the life of the app: written inline in the list it was a new component type at
+ * every render, so every row on screen was unmounted and mounted again (at each drag step too) and memo(TabCard)
+ * never saved a render. The dragged row arrives through a context instead of the closure.
+ */
+function RowCell({ index, style, children, ...cell }: ViewProps & { index: number }) {
+  const dragged = useContext(DraggedRow);
+  return (
+    <View {...cell} style={[style, index === dragged && DRAGGED_ROW]}>
+      {children}
+    </View>
+  );
+}
 
 const WARNING_TEXT = '#f5d48a';
 
@@ -340,6 +359,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
 
       {/* Only the rows on screen are mounted (UI-32). A group's name is edited in place; it scrolls into view above
           the keyboard. */}
+      <DraggedRow.Provider value={draggedRow}>
       <FlatList
         data={rows}
         keyExtractor={(row) => row.key}
@@ -350,11 +370,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
         {...drag.responder.panHandlers}
         renderScrollComponent={(props) => <KeyboardAwareScrollView {...props} />}
         // The dragged card's row is drawn over the rows after it.
-        CellRendererComponent={({ index, style, children, ...cell }) => (
-          <View {...cell} style={[style, index === draggedRow && styles.draggedRow]}>
-            {children}
-          </View>
-        )}
+        CellRendererComponent={RowCell}
         initialNumToRender={6}
         windowSize={7}
         ListHeaderComponent={
@@ -378,6 +394,7 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
           )
         }
       />
+      </DraggedRow.Provider>
 
       <ActionSheet
         title={menuTab ? menuTab.title || menuTab.url : null}
@@ -816,7 +833,6 @@ const useStyles = makeStyles((c) => ({
   groupUngroup: { fontSize: 13, paddingHorizontal: 4 },
   dragging: { zIndex: 20, elevation: 12, opacity: 0.92 },
   grid: { padding: PADDING, gap: GAP, flexGrow: 1 },
-  draggedRow: { zIndex: 20, elevation: 12 },
   row: { gap: GAP },
   card: { borderRadius: 14, overflow: 'hidden', borderWidth: 2, borderColor: 'transparent' },
   cardHeader: { flexDirection: 'row', alignItems: 'center', paddingLeft: 10, height: 34 },

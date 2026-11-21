@@ -242,6 +242,7 @@ const KEYS = {
   legalAcceptedVersion: 'legal_accepted_version',
   /** '1' once the retired example lines were taken out of the custom instructions (agent/retiredInstructions.ts). */
   retiredInstructionsRemoved: 'retired_instructions_removed',
+  secretsDeviceOnly: 'secrets_device_only',
   apiKey:(id: ProviderId) => `api_key_${id}`,
   customHeader: (i: number) => `custom_header_${i}`,
   model: (id: ProviderId) => `model_${id}`,
@@ -472,19 +473,48 @@ export async function loadSettings(): Promise<Settings> {
     } catch {}
   }
 
+  await protectStoredSecrets(get).catch(() => {});
+
   return settings;
+}
+
+/**
+ * How the AI keys and the custom endpoint's header values are kept (AI-33): like the account session and the backup
+ * password, readable after the phone's first unlock and on this device only, so they never move to another phone
+ * through a device backup. Reading needs no option (the item is found by its name).
+ */
+const SECRET_OPTIONS: SecureStore.SecureStoreOptions = { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY };
+
+/**
+ * Once per install: the keys and header values written by earlier builds (with the default protection) are written
+ * again with SECRET_OPTIONS. Writing over an item changes its protection in place, so nothing is removed first and a
+ * failure loses nothing; the mark is only set when every write worked, else the next launch tries again.
+ */
+async function protectStoredSecrets(get: (key: string) => Promise<string | null>): Promise<void> {
+  if ((await get(KEYS.secretsDeviceOnly)) === '1') return;
+  const keys = [
+    ...PROVIDER_ORDER.map((id) => KEYS.apiKey(id)),
+    ...Array.from({ length: MAX_CUSTOM_HEADERS }, (_, i) => KEYS.customHeader(i)),
+  ];
+  for (const key of keys) {
+    const value = await get(key);
+    if (value) await SecureStore.setItemAsync(key, value, SECRET_OPTIONS);
+  }
+  await SecureStore.setItemAsync(KEYS.secretsDeviceOnly, '1');
 }
 
 export async function saveSettings(settings: Settings): Promise<void> {
   const set = (key: string, value: string) =>
     value ? SecureStore.setItemAsync(key, value) : SecureStore.deleteItemAsync(key);
+  const setSecret = (key: string, value: string) =>
+    value ? SecureStore.setItemAsync(key, value, SECRET_OPTIONS) : SecureStore.deleteItemAsync(key);
   await Promise.all([
     set(KEYS.provider, settings.provider),
     set(KEYS.customBaseUrl, settings.customBaseUrl),
     set(KEYS.customImages, String(settings.customImages)),
     ...Array.from({ length: MAX_CUSTOM_HEADERS }, (_, i) => {
       const h = cleanCustomHeaders(settings.customHeaders)[i];
-      return set(KEYS.customHeader(i), h ? JSON.stringify({ name: h.name, value: h.value }) : '');
+      return setSecret(KEYS.customHeader(i), h ? JSON.stringify({ name: h.name, value: h.value }) : '');
     }),
     set(KEYS.confirmActions, String(settings.confirmActions)),
     set(KEYS.alwaysAllow, serializeAlwaysAllow(settings.alwaysAllow)),
@@ -529,7 +559,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.onboarded, String(settings.onboarded)),
     set(KEYS.legalAcceptedVersion, String(settings.legalAcceptedVersion)),
     ...PROVIDER_ORDER.flatMap((id) => [
-      set(KEYS.apiKey(id), settings.apiKeys[id]),
+      setSecret(KEYS.apiKey(id), settings.apiKeys[id]),
       set(KEYS.model(id), settings.models[id]),
     ]),
     // Migrated into the per-provider keys above.

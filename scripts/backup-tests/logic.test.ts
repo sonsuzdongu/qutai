@@ -185,6 +185,9 @@ describe('stored state and helpers', () => {
     const withApps = { ...state, prefs: { ...state.prefs, apps: true, appData: false } };
     assert.deepEqual(parseState(JSON.stringify(withApps)), withApps);
     assert.deepEqual(parseState('nonsense').prefs, DEFAULT_PREFS);
+    // The mark for a password removal still owed (BACK-23) is kept, and only as true.
+    assert.equal(parseState(JSON.stringify({ forgetPassword: true })).forgetPassword, true);
+    assert.equal('forgetPassword' in parseState(JSON.stringify({ forgetPassword: 'yes' })), false);
     assert.deepEqual(parseState(JSON.stringify({ prefs: { network: 'cellular', auto: 'yes' } })).prefs, DEFAULT_PREFS);
     const odd = parseState(JSON.stringify({ accounts: { u1: { last: { at: 1, result: 'exploded' } }, 'bad id!': {} } }));
     assert.deepEqual(odd.accounts, { u1: {} });

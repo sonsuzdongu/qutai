@@ -5,6 +5,7 @@ import { accountSession } from '../../account';
 import { accountsEnabled, features } from '../../config/features';
 import { creditsStore } from '../../credits';
 import { appVersion } from '../../device/appVersion';
+import { reportStorageFailure } from '../../storage/failures';
 import { secureStoreReady } from '../../storage/secureStoreGate';
 import { buildBackupFile, randomBytes } from '../backup';
 import { createServerBackupClient, type ServerBackup, type ServerBackupClient } from './client';
@@ -116,12 +117,15 @@ export function loadServerBackup(): Promise<void> {
       SecureStore.getItemAsync(STATE_KEY, OPTIONS).catch(() => null),
       SecureStore.getItemAsync(PASSWORD_KEY, OPTIONS).catch(() => null),
     ]);
-    stored = parseStoredPassword(password);
-    emit({ state: parseState(state), hasPassword: passwordFor(stored, currentUserId()) !== null });
+    const kept = parseState(state);
+    // A removal owed from an earlier run (BACK-23): the password is not used, and is removed now.
+    stored = kept.forgetPassword ? null : parseStoredPassword(password);
+    emit({ state: kept, hasPassword: passwordFor(stored, currentUserId()) !== null });
+    if (kept.forgetPassword) void forgetPassword();
     accountSession()?.subscribe((s) => {
       if (s.status === 'loading') return;
       const event = s.status === 'signedIn' ? { status: 'signedIn' as const, userId: s.user.id } : { status: 'signedOut' as const, reason: s.reason };
-      if (clearPasswordOn(event, stored)) void forgetPassword();
+      if (clearPasswordOn(event, stored) || (forgetOwed && !stored)) void forgetPassword();
       else emit({ hasPassword: passwordFor(stored, currentUserId()) !== null });
     });
   })();
@@ -158,12 +162,40 @@ export async function keepPassword(password: string): Promise<void> {
   await SecureStore.setItemAsync(PASSWORD_KEY, JSON.stringify(next), OPTIONS);
   stored = next;
   emit({ hasPassword: true });
+  // A removal still owed was for the earlier password, not this one.
+  forgetOwed = false;
+  if (snapshot.state.forgetPassword) await saveState({ ...snapshot.state, forgetPassword: undefined });
 }
 
+/** A removal of the kept password that failed and is still owed (BACK-23). */
+let forgetOwed = false;
+
+/**
+ * Forgets the kept password: at once for the app, and from the phone's secure storage. A removal that fails is tried
+ * again shortly after, at every later account change in this run, and (through the mark in the kept state) at the
+ * next app start, so a password the user was told is gone doesn't stay behind after sign-out (BACK-23).
+ */
 export async function forgetPassword(): Promise<void> {
   stored = null;
   emit({ hasPassword: false });
-  await SecureStore.deleteItemAsync(PASSWORD_KEY, OPTIONS).catch(() => {});
+  for (const wait of [0, 500, 2000]) {
+    if (wait) await new Promise<void>((r) => setTimeout(r, wait));
+    // A password kept meanwhile (signed in again, set anew) is not this removal's to take.
+    if (stored) return;
+    try {
+      await SecureStore.deleteItemAsync(PASSWORD_KEY, OPTIONS);
+      if (forgetOwed || snapshot.state.forgetPassword) {
+        forgetOwed = false;
+        await saveState({ ...snapshot.state, forgetPassword: undefined });
+      }
+      return;
+    } catch (e) {
+      forgetOwed = true;
+      reportStorageFailure('serverBackup.forgetPassword', e, 'record');
+    }
+  }
+  // Still there: marked in the kept state, so the next start removes it before anything reads it.
+  await saveState({ ...snapshot.state, forgetPassword: true });
 }
 
 /** The kept password for the signed-in account, or null. */

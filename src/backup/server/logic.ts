@@ -77,6 +77,8 @@ export type RunRecord = {
 /** Kept on the phone with the prefs: per account, so another account signing in starts fresh. */
 export type ServerBackupState = {
   prefs: ServerBackupPrefs;
+  /** The kept password is to be removed from secure storage (a removal that failed; index.ts › forgetPassword). */
+  forgetPassword?: true;
   /** Per user id: the last successful backup from this phone and the last run of any kind. */
   accounts: Record<
     string,
@@ -168,7 +170,7 @@ export function parseState(raw: string | null): ServerBackupState {
       };
     }
   }
-  return { prefs, accounts };
+  return { prefs, accounts, ...(o.forgetPassword === true ? { forgetPassword: true as const } : {}) };
 }
 
 // ---------- The automatic backup ----------

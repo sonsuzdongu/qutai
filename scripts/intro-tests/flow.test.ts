@@ -211,3 +211,9 @@ test('"Ask me questions" without an AI keeps typed answers as given, with its ow
   assert.equal(skipped.phase.name, 'review');
   assert.equal(finalExtraction(skipped, t).items.length, 0);
 });
+
+test('a save that could not start goes back to the rows', () => {
+  const saving = { ...START, phase: { name: 'saving' as const } };
+  assert.equal(introReducer(saving, { type: 'saveFailed' }).phase.name, 'review');
+  assert.equal(introReducer(START, { type: 'saveFailed' }), START);
+});

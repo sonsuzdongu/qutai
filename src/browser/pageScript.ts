@@ -55,6 +55,15 @@ export const PAGE_SCRIPT = String.raw`
     return r;
   }
 
+  // Elements that left the page keep no number: on a page that rebuilds itself (a single-page app, an endless feed)
+  // the map would otherwise hold every element ever numbered, for the life of the document. getEl refuses a
+  // disconnected element anyway, so nothing that worked before stops working.
+  function pruneRefs() {
+    refToEl.forEach(function (el, ref) {
+      if (!el || !el.isConnected) refToEl.delete(ref);
+    });
+  }
+
   function getEl(ref) {
     var el = refToEl.get(Number(ref));
     if (!el || !el.isConnected) {
@@ -457,6 +466,7 @@ export const PAGE_SCRIPT = String.raw`
 
   function readPage(offset) {
     offset = Math.max(0, Number(offset) || 0);
+    pruneRefs();
     var lines = [];
     var lineIndex = 0;
     var cur = '';
@@ -1238,11 +1248,18 @@ export const PAGE_SCRIPT = String.raw`
   var MAX_IMAGE_BYTES = 4e6;
   var MAX_INLINE_BYTES = 25e6;
 
-  function withTimeout(promise, ms) {
-    return Promise.race([
-      promise,
-      new Promise(function (_, reject) { setTimeout(function () { reject(new Error('timeout')); }, ms); })
-    ]);
+  // On time-out the download itself is stopped (controller, where the WebView has one), not only no longer awaited.
+  function withTimeout(promise, ms, controller) {
+    var timer;
+    var timedOut = new Promise(function (_, reject) {
+      timer = setTimeout(function () {
+        if (controller) { try { controller.abort(); } catch (e) {} }
+        reject(new Error('timeout'));
+      }, ms);
+    });
+    var done = function () { clearTimeout(timer); };
+    promise.then(done, done);
+    return Promise.race([promise, timedOut]);
   }
 
   function blobToDataUrl(blob) {
@@ -1259,16 +1276,26 @@ export const PAGE_SCRIPT = String.raw`
   function fetchAsDataUrl(src, maxBytes, timeoutMs) {
     maxBytes = maxBytes || MAX_IMAGE_BYTES;
     var sameOrigin = new URL(src, location.href).origin === location.origin;
-    var request = fetch(src, { credentials: sameOrigin ? 'include' : 'omit', mode: 'cors' })
+    var controller = typeof AbortController === 'function' ? new AbortController() : null;
+    var options = { credentials: sameOrigin ? 'include' : 'omit', mode: 'cors' };
+    if (controller) options.signal = controller.signal;
+    var request = fetch(src, options)
       .then(function (res) {
         if (!res.ok) throw new Error('HTTP ' + res.status);
+        // A file that says it is too large is refused before any of it is downloaded (the size is checked again
+        // below: the header may be missing or wrong).
+        var declared = Number(res.headers.get('content-length'));
+        if (declared > maxBytes) {
+          if (controller) controller.abort();
+          throw new Error('too large');
+        }
         return res.blob();
       })
       .then(function (blob) {
         if (blob.size > maxBytes) throw new Error('too large');
         return blobToDataUrl(blob);
       });
-    return withTimeout(request, timeoutMs || 8000);
+    return withTimeout(request, timeoutMs || 8000, controller);
   }
 
   function imageSource(img) {

@@ -249,7 +249,15 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
 
   const save = async () => {
     dispatch({ type: 'save' }, 'none');
-    const db = await getDb();
+    let db: Awaited<ReturnType<typeof getDb>>;
+    try {
+      db = await getDb();
+    } catch (e) {
+      // Without the database nothing was saved: back to the rows (still as edited), and the reason is said.
+      dispatch({ type: 'saveFailed' }, 'none');
+      dialog.alert(t('memory.saveFailed'), memoryErrorText(e));
+      return;
+    }
     let count = 0;
     const problems: string[] = [];
     for (const write of introWrites(rows, t)) {

@@ -31,6 +31,12 @@ import { findPersonalData, foldText, personalNeedles } from './personalData';
 
 export type CarriedKind = 'memory' | 'chat' | 'otherSite';
 
+/**
+ * The user's saved details couldn't be read, so an address to a site they didn't name or have open can't be checked
+ * for them. Not knowing is not "carries nothing" (UNTR-27, as for typing: tools/gates.ts › personalGate).
+ */
+export class OutboundCheckError extends Error {}
+
 /** One task's view of what is the user's: filled by runAgent at the start, and by the page reads during the task. */
 export class OutboundGuard {
   /** Registrable domains of the tabs open when the task started. */
@@ -59,14 +65,23 @@ export class OutboundGuard {
     }
   }
 
-  /** What the address carries that may not go there; empty when it may load. */
+  /**
+   * What the address carries that may not go there; empty when it may load. Throws OutboundCheckError when the saved
+   * details couldn't be read for an address that needed the check.
+   */
   async check(url: string): Promise<CarriedKind[]> {
     const dest = siteOf(url);
     if (!dest || searchResultsOf(url)) return [];
     if (this.startSites.has(dest) || namedByUser(dest, this.userTexts())) return [];
     const parts = urlParts(url);
     const found = new Set<CarriedKind>();
-    const needles = personalNeedles(await this.memories().catch(() => []));
+    let memories: Memory[];
+    try {
+      memories = await this.memories();
+    } catch {
+      throw new OutboundCheckError('saved details unreadable');
+    }
+    const needles = personalNeedles(memories);
     if (parts.some((p) => findPersonalData(p, needles).size > 0)) found.add('memory');
     const tokens = chatTokens(this.userTexts());
     if (tokens.some((t) => carries(parts, t))) found.add('chat');

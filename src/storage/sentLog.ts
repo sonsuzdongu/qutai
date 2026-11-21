@@ -151,11 +151,16 @@ export function recordSent(entry: SentRequest): void {
       purged.add(entry.conversation);
       // Not removed: an incognito conversation's earlier entries would stay on disk (INC-2); the user is told and the
       // next request of that conversation tries again.
-      void withDb('sentLog.purgeIncognito', (db) => db.runAsync('DELETE FROM ai_requests WHERE conversation = ?', [entry.conversation]), 'user').then(
-        (done) => {
+      // After this conversation's writes still on their way (as setSentCost waits): a write landing after the purge
+      // would leave an incognito conversation's entry on disk.
+      const inFlight = session.filter((e) => e.conversation === entry.conversation).map((e) => writing.get(e.id));
+      void Promise.allSettled(inFlight)
+        .then(() =>
+          withDb('sentLog.purgeIncognito', (db) => db.runAsync('DELETE FROM ai_requests WHERE conversation = ?', [entry.conversation]), 'user'),
+        )
+        .then((done) => {
           if (done === undefined) purged.delete(entry.conversation);
-        },
-      );
+        });
     }
     return;
   }

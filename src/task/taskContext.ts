@@ -226,7 +226,7 @@ export function taskToolContext(
     // The user's own apps (docs/mini-apps.md): never from an incognito conversation; previews open the runner.
     apps: appsAccess(chat, scope),
     imageUsed: (id) => chat.markImageUsed(id),
-    confirmByDefault: settings().confirmActions,
+    confirmByDefault: () => settings().confirmActions,
     sites: services.sitePermissions,
     log: services.log,
     history: services.history,

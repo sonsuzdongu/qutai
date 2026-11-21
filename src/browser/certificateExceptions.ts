@@ -11,6 +11,8 @@
  * show "Not secure", including in other tabs of the same kind (normal or incognito), which share the engine's memory.
  */
 
+import { parseWebUrl } from '../utils/webUrl';
+
 type Entry = { key: string; fingerprint: string; incognito: boolean; tabId: string };
 
 let entries: Entry[] = [];
@@ -18,12 +20,15 @@ let entries: Entry[] = [];
 /** Hosts (with port) that served a valid certificate this session; a certificate error there is not bypassable. */
 const validHosts = new Set<string>();
 
-/** "host:port" of an https URL (default port 443, IPv6 without brackets), lowercase; null for other URLs. */
+/**
+ * "host:port" of an https URL (default port 443, IPv6 without brackets, IDN in punycode), lowercase; null for other
+ * URLs. Read with the one parser every security decision uses (utils/webUrl.ts, SITE-25), so the host here is the host
+ * the WebView loads: "https://a\@b/" is host a, as in the WebView, not b.
+ */
 export function certificateKey(url: string): string | null {
-  const m = /^https:\/\/(?:[^/?#@]*@)?(\[[^\]]+\]|[^/?#:]+)(?::(\d+))?/i.exec(url.trim());
-  if (!m) return null;
-  const host = m[1].replace(/^\[|\]$/g, '').toLowerCase().replace(/\.$/, '');
-  return `${host}:${m[2] ?? '443'}`;
+  const u = parseWebUrl(url);
+  if (!u || u.scheme !== 'https') return null;
+  return `${u.host.replace(/^\[|\]$/g, '')}:${u.port || '443'}`;
 }
 
 /** The user chose "Continue anyway" on the error page of this tab, for this URL's host and this certificate. */

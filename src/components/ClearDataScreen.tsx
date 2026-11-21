@@ -8,6 +8,7 @@ import { Segment } from '../ui/SettingsRows';
 import { makeStyles, readableColumn, common } from '../ui/theme';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import type { ClearOptions } from '../storage/clearData';
+import { reportStorageFailure } from '../storage/failures';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { dialog, DialogHost } from './Dialog';
 import { ScreenHeader } from './ScreenHeader';
@@ -50,7 +51,11 @@ export function ClearDataScreen({ visible, onClear, onClose }: Props) {
         text: t('clearData.clear'),
         style: 'destructive',
         onPress: () => {
-          onClear(options).finally(onClose);
+          // Closed only once everything asked for is cleared; a failure is said, and the screen stays for another try.
+          onClear(options).then(onClose, (e) => {
+            reportStorageFailure('clearData', e, 'record');
+            dialog.alert(t('clearData.failedTitle'), t('clearData.failed'));
+          });
         },
       },
     ]);

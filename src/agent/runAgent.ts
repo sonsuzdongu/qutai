@@ -413,7 +413,12 @@ async function runSteps(opts: AgentOptions, meter: ReturnType<typeof createAnswe
           const carrying: string[] = [];
           const kept = [];
           for (const card of shown.cards) {
-            if ((await ctx.outbound.check(card.url)).length) carrying.push(card.title);
+            // A link that couldn't be checked (the saved details were unreadable) is not shown either (UNTR-27).
+            const carries = await ctx.outbound.check(card.url).then(
+              (kinds) => kinds.length > 0,
+              () => true,
+            );
+            if (carries) carrying.push(card.title);
             else kept.push(card);
           }
           if (carrying.length) {

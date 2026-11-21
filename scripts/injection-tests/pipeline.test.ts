@@ -147,3 +147,31 @@ test('the user closed the assistant\'s tab: the next page call fails clearly and
   await executeTool('read_page', {}, ctx);
   assert.deepEqual(ran, ['readPage']);
 });
+
+test("an error a tool didn't catch is that call's error, not the end of the task; Stop still throws (TOOL-31)", async () => {
+  const { ctx } = setup();
+  const failing = {
+    ...ctx,
+    history: { search: async () => Promise.reject(new Error('database is locked')), sites: async () => [] },
+  } as unknown as ToolContext;
+  const out = await executeTool('search_history', { query: 'kettle' }, failing);
+  assert.equal(out.isError, true);
+  assert.match(out.content, /^Error: database is locked/);
+  const stopped = new AbortController();
+  stopped.abort();
+  await assert.rejects(executeTool('search_history', { query: 'kettle' }, { ...failing, signal: stopped.signal }));
+});
+
+test('an address is not opened when the saved details could not be read to check it (UNTR-27)', async () => {
+  const { ctx, order } = setup();
+  const unreadable: ToolContext = {
+    ...ctx,
+    outbound: new OutboundGuard([ctx.agentTab.url], () => ['Find the user guide for my kettle.'], async () => {
+      throw new Error('database is locked');
+    }),
+  };
+  const out = await executeTool('download_file', { url: 'https://kettle-manuals.example/get?phone=5324187705' }, unreadable);
+  assert.equal(out.isError, true);
+  assert.match(out.content, /^Not opened: Qutai couldn't read/);
+  assert.deepEqual(order, [], 'no dialog and no request');
+});

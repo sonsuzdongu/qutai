@@ -46,7 +46,8 @@ function composedIncognito(id: string): boolean {
   try {
     return composedFileContent(id).incognito;
   } catch {
-    return false;
+    // Unknown is treated as incognito: the copy then goes to the session-only folder, never the lasting one (INC-30).
+    return true;
   }
 }
 
