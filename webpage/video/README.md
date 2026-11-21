@@ -47,6 +47,10 @@ Toplam 25–35 sn. Her bölümden 15 sn'lik kısa bir kesit de çıkar (açılı
   3. Kayıt sırasında `python3 demo-sites/serve.py`: 443'te https, 80'de https'e yönlendirme. macOS normal kullanıcıya
      bu portları yalnızca bütün arayüzlerde açtırır, yani site çalışırken yerel ağdan da görülebilir; kayıt bitince
      durdurulur. Hızlı bakış için `python3 demo-sites/serve.py --port 8090` (http://localhost:8090/).
+  Android emülatörü Mac'in `/etc/hosts` dosyasını okumaz ve yerel sertifikaya güvenmez: `python3 demo-sites/dns.py`
+  (alan adını 10.0.2.2'ye çevirir, gerisini olduğu gibi iletir; yalnızca bu Mac'ten gelen sorulara yanıt verir),
+  emülatörü `-dns-server <Mac'in yerel IP'si>` ile başlatın ve siteyi `python3 demo-sites/serve.py --plain-80` ile
+  açın (80. port siteyi http ile verir). Kayıt bitince ikisini de durdurun.
   Alan adı bugün kimseye kayıtlı değil (2026-11-17), ama başkası alabilir; filmler yayımlanmadan önce alan adını
   almak ya da sahibinin kendi alan adını kullanmak daha güvenli.
 - **Kişisel veri:** Kayıtta test hesabı ve test hafızası kullanılır; gerçek adres, telefon ve kart yok.

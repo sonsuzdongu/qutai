@@ -2,6 +2,8 @@
 #   python3 serve.py                 https on 443 (certificate from make-cert.sh) and http on 80, which redirects to it
 #   python3 serve.py --port 8090     plain http on that port only (for a quick look)
 #   python3 serve.py --site other    another folder next to this script
+#   python3 serve.py --plain-80      port 80 serves the site itself instead of redirecting: for the Android emulator,
+#                                    which doesn't trust the local certificate (with dns.py for the domain)
 # macOS lets a normal user open ports 80 and 443 only on all interfaces (0.0.0.0), so the site is reachable from the
 # local network while this runs. It is a static demo with nothing to take; stop it (Ctrl-C) when the recording is done.
 import argparse, functools, http.server, os, ssl, threading
@@ -24,7 +26,7 @@ class ToHttps(http.server.BaseHTTPRequestHandler):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--port', type=int); ap.add_argument('--site', default='lokanta')
+    ap.add_argument('--port', type=int); ap.add_argument('--site', default='lokanta'); ap.add_argument('--plain-80', action='store_true')
     a = ap.parse_args()
     handler = functools.partial(Quiet, directory=os.path.join(HERE, a.site))
     if a.port:
@@ -34,7 +36,7 @@ def main():
     https = http.server.ThreadingHTTPServer(('0.0.0.0', 443), handler)
     ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); ctx.load_cert_chain(cert, key)
     https.socket = ctx.wrap_socket(https.socket, server_side=True)
-    threading.Thread(target=http.server.ThreadingHTTPServer(('0.0.0.0', 80), ToHttps).serve_forever, daemon=True).start()
+    threading.Thread(target=http.server.ThreadingHTTPServer(('0.0.0.0', 80), handler if a.plain_80 else ToHttps).serve_forever, daemon=True).start()
     print(f'https://{DOMAIN}/  (and ?lang=en)')
     https.serve_forever()
 

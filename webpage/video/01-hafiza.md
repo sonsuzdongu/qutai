@@ -93,11 +93,22 @@ Bütün bölümlerde aynı müzik, değişen tek şey motifin varyasyonu.
     gluten-free"), restorana glutensiz notu yazıyor, ödemede duruyor. Eski B çekimleri (localhost) artık kullanılmıyor.
   - Not: Uygulamada bir hata kayıtta göründü: asistan hafıza boşken de "zaten kayıtlıydı" diyor. Filme girmiyor;
     ayrıca bildirildi.
+- **İngilizce yeniden çekim (2026-11-21, 0.1.7, arayüz değiştiği için):** Pro sürüm, Qutai Kredileri (model Qutai'ın
+  seçtiği), iOS Simülatör. A: `ep01-en-actA-take2.mp4` (yanıt İngilizce, "Remembering" satırları yanıtla birlikte,
+  hafıza ekranında yalnızca ad ve gluten). B: `ep01-en-actB-take4.mp4`, yazılı komut: asistan "You're gluten
+  intolerant, so I'd pick from the gluten-free dishes" deyip glutensiz seçenekleri düğmelerle sunuyor, Osman ilkini
+  seçiyor, sepet ve teslimat formu dolduruluyor, kişisel bilgi izni soruluyor, "Card details are for you to enter, so
+  I've stopped here" diyerek ödemede duruyor. Türkçe film henüz eski arayüzle (ilk etapta yalnızca İngilizce isteniyor).
+- **Sesli komut (yapılmadı):** Planı Q düğmesine basılı tutup "Order dinner for two for this evening" demekti.
+  Bu Mac'te kaydedilemedi: Xcode yalnızca komut satırı araçlarıyla kurulu olduğu için simülatörün mikrofon girişi yok;
+  Android emülatörü (`demo-sites/dns.py` ve `serve.py --plain-80` ile alan adı çalışıyor) Mac mikrofonundan yalnızca
+  sessizlik alıyor (`no-speech`). Sahibinin telefonundan sesli bir ekran kaydı gelince B'nin başına eklenecek.
+  `audio/01/en-command.mp3` bu deneme için üretilen sentetik ses; filmde kullanılmıyor.
 - **Kurgu:** `python3 edit_01.py [tr|en] [v|h|short]` (`out/`, git'e girmez). Kesme noktaları, çerçeveler, rozetler ve
   seslendirme zamanları betiğin içinde. Yalnızca kesme, hız (işaretli), kısa donmuş kare, yakınlaştırma ve üstüne
   film grafikleri; uygulama ekranı değiştirilmiyor. Ses: müzik konuşma sırasında kısılıyor, toplam −16 LUFS.
 - **Çıktılar (`out/`):** `01-hafiza-tr.mp4` (45 sn, 9:16), `01-hafiza-tr-16x9.mp4`, `01-hafiza-tr-15s.mp4`; aynıları
-  `-en` ile (43 sn). Her biri `.webm` ve `.vtt` ile; kapak `01-hafiza-{tr,en}-cover.jpg`. MP4'ler 1–2 MB.
+  `-en` ile (21 Kasım çekimiyle 45 sn, kısa kesit 14 sn). Her biri `.webm` ve `.vtt` ile; kapak `01-hafiza-{tr,en}-cover.jpg`. MP4'ler 1–2 MB.
 - **Kalan:** Videoları siteye koymak ayrı bir iş (henüz yapılmadı). Filmler yayımlanmadan önce demo alan adı
   alınmalı ya da sahibinin bir alan adıyla yeniden çekilmeli (README, "Demo alan adı").
 
