@@ -212,6 +212,66 @@ ${sections}
   await writeFile(`${client}${lang}/delete-account/index.html`, page);
 }
 
+// Support: /en/support/ and /tr/support/, static, no script. The App Store asks for a Support URL; the text is in
+// src/i18n/{en,tr}.ts (`support.*`), the answers checked against docs/design/.
+const supportUrl = (lang) => `${SITE_URL}/${lang}/support/`;
+const SUPPORT_FAQ = ['signIn', 'credits', 'missing', 'ownKey', 'report', 'delete', 'privacy', 'openSource'];
+for (const lang of LANGS) {
+  const t = messages[lang];
+  const other = lang === 'en' ? 'tr' : 'en';
+  const mail = `<a href="mailto:${esc(CONTACT_EMAIL)}?subject=${encodeURIComponent(lang === 'tr' ? 'Qutai destek' : 'Qutai support')}">${esc(CONTACT_EMAIL)}</a>`;
+  const fill = (html) =>
+    html
+      .replaceAll(esc('{email}'), mail)
+      .replaceAll(esc('{deleteLink}'), `<a href="/${lang}/delete-account/">${esc(t['support.deleteLink'])}</a>`)
+      .replaceAll(esc('{privacyLink}'), `<a href="/${lang}/privacy-policy/">${esc(t['footer.appPrivacy'])}</a>`);
+  const section = (key) =>
+    `        <section>\n          <h2>${esc(t[`support.${key}.heading`])}</h2>\n          ${fill(policyBody(t[`support.${key}.body`]))}\n        </section>`;
+  const faq = SUPPORT_FAQ.map(
+    (key) => `          <h3>${esc(t[`support.${key}.q`])}</h3>\n          ${fill(policyBody(t[`support.${key}.a`]))}`,
+  ).join('\n');
+  const page = `<!doctype html>
+<html lang="${lang}" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${esc(t['support.metaTitle'])}</title>
+    <meta name="description" content="${esc(t['support.metaDescription'])}" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f2e7cf" />
+    <link rel="canonical" href="${supportUrl(lang)}" />
+    <link rel="alternate" hreflang="en" href="${supportUrl('en')}" />
+    <link rel="alternate" hreflang="tr" href="${supportUrl('tr')}" />
+    <link rel="alternate" hreflang="x-default" href="${supportUrl('en')}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    ${css}
+  </head>
+  <body>
+    <header class="policy-top">
+      <a class="brand" href="/${lang}/" aria-label="${esc(t['nav.home'])}"><img src="/img/q-64.webp" width="32" height="32" alt="" /><span>Qutai</span></a>
+      <a class="policy-lang" href="/${other}/support/" hreflang="${other}" lang="${other}">${esc(t['lang.other'])}</a>
+    </header>
+    <main id="main" class="section policy">
+      <article>
+        <h1>${esc(t['support.title'])}</h1>
+        <p class="policy-intro">${esc(t['support.intro'])}</p>
+${section('contact')}
+${section('include')}
+        <section>
+          <h2>${esc(t['support.faq.heading'])}</h2>
+${faq}
+        </section>
+      </article>
+      <p class="policy-home"><a href="/${lang}/">${esc(t['support.home'])}</a></p>
+    </main>
+  </body>
+</html>
+`;
+  await mkdir(`${client}${lang}/support`, { recursive: true });
+  await writeFile(`${client}${lang}/support/index.html`, page);
+}
+
 // Every feature: /en/features/ and /tr/features/, static, no script (src/components/FeaturesPage.tsx, the content in
 // src/data/features.ts).
 const featuresUrl = (lang) => `${SITE_URL}/${lang}/features/`;
@@ -303,6 +363,7 @@ ${LANGS.map((l) => `  <url>\n    <loc>${pageUrl(l)}</loc>\n    <lastmod>${CHECKE
 ${LANGS.map((l) => `  <url>\n    <loc>${featuresUrl(l)}</loc>\n    <lastmod>${FEATURES_CHECKED}</lastmod>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${featuresUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${featuresUrl('en')}" />\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${policyUrl(l)}</loc>\n    <lastmod>${privacy.updated}</lastmod>\n${policyAlternates}\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${deletionUrl(l)}</loc>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${deletionUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${deletionUrl('en')}" />\n  </url>`).join('\n')}
+${LANGS.map((l) => `  <url>\n    <loc>${supportUrl(l)}</loc>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${supportUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${supportUrl('en')}" />\n  </url>`).join('\n')}
 </urlset>
 `,
 );
@@ -324,4 +385,4 @@ await writeFile(
 );
 
 await rm(`${client}.vite`, { recursive: true });
-console.log(`Prerendered ${LANGS.map((l) => `/${l}/, /${l}/features/, /${l}/privacy-policy/, /${l}/delete-account/`).join(', ')}, 404.html, robots.txt, sitemap.xml, _headers`);
+console.log(`Prerendered ${LANGS.map((l) => `/${l}/, /${l}/features/, /${l}/privacy-policy/, /${l}/delete-account/, /${l}/support/`).join(', ')}, 404.html, robots.txt, sitemap.xml, _headers`);

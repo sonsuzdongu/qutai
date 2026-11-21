@@ -92,6 +92,20 @@ for (const lang of ['en', 'tr']) {
 }
 expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/delete-account/'), 'sitemap lists the account deletion page');
 
+// Support (the App Store's Support URL): a static page per language, linked from the footer and the sitemap.
+for (const lang of ['en', 'tr']) {
+  const html = await readFile(`${dist}${lang}/support/index.html`, 'utf8').catch(() => '');
+  expect(html.includes(`<html lang="${lang}"`), `${lang}/support: page with lang attribute`);
+  expect(html.includes('<h1>') && html.includes('mailto:'), `${lang}/support: title and the email address`);
+  expect(!/\{(email|deleteLink|privacyLink)\}/.test(html), `${lang}/support: the address and links are filled in`);
+  expect((html.match(/<h2>/g) ?? []).length === 3 && (html.match(/<h3>/g) ?? []).length === 8, `${lang}/support: every section and question`);
+  expect(html.includes(`href="/${lang}/delete-account/"`) && html.includes(`href="/${lang}/privacy-policy/"`), `${lang}/support: links to deletion and privacy`);
+  expect(!/<script\b/.test(html), `${lang}/support: no script`);
+  const home = await readFile(`${dist}${lang}/index.html`, 'utf8');
+  expect(home.includes(`href="/${lang}/support/"`), `${lang}: footer links to the support page`);
+}
+expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/support/'), 'sitemap lists the support page');
+
 // Every feature: a static page per language with every group, no script, nothing from another origin.
 for (const lang of ['en', 'tr']) {
   const html = await readFile(`${dist}${lang}/features/index.html`, 'utf8').catch(() => '');
@@ -121,4 +135,4 @@ if (failures.length) {
   console.error(`✗ ${failures.length} check(s) failed:\n  ${failures.join('\n  ')}`);
   process.exit(1);
 }
-console.log(`✓ ${cases.length} language cases, both pages with their features, privacy policy and account deletion pages, no third-party loads`);
+console.log(`✓ ${cases.length} language cases, both pages with their features, privacy policy, account deletion and support pages, no third-party loads`);

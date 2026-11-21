@@ -15,3 +15,5 @@ export const privacyPolicyPath = (lang: 'en' | 'tr') => `/${lang}/privacy-policy
 export const CONTACT_EMAIL = 'qutai@sonsuzdongu.com';
 /** How to delete a Qutai account, in the app or by email, and what is deleted and kept (a page of this site). */
 export const deleteAccountPath = (lang: 'en' | 'tr') => `/${lang}/delete-account/`;
+/** Help for the app: contact, what to include, common questions (a page of this site; the App Store's Support URL). */
+export const supportPath = (lang: 'en' | 'tr') => `/${lang}/support/`;
