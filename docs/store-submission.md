@@ -55,7 +55,7 @@ PAGE SCRIPTS AND STYLES (Guideline 2.5.2)
 Scripts and styles run only inside web pages the user opens, after the user sees the code and approves it. Scripts are off until the user turns them on in Settings › Assistant. They never change the app's own functionality, and no code comes from our servers.
 
 PRIVACY
-Location, contacts and calendar are asked for only when the user uses that feature. Contact numbers and email addresses are never sent to the AI. "What was sent to the AI" in Settings lists every request.
+Location, contacts and calendar are asked for only when the user uses that feature. Contact numbers and email addresses are never sent to the AI. Before the first request, the user accepts a screen naming where the data goes (Qutai's server and Anthropic for Qutai Credits, or the provider of the user's own key, or the host of their own server) and what is sent; Cancel sends nothing. With an own key the screen is shown again for a different provider or server. "What was sent to the AI" in Settings lists every request.
 
 OWN API KEY (optional)
 Users may instead use their own API key with an AI provider they already have an account with. This does not unlock any paid feature of Qutai.
@@ -77,7 +77,7 @@ Eklemeden önce:
 - ✅ **Sahte satın alma kaldırıldı** (21 Kasım 2026, risk 1.5'in bu kısmı): kredi ekranında "Test mode" yazısı ya da "Get (test)" düğmesi artık yok; paket denetimi bu metinler geri gelirse paketi durdurur. Notlardaki "Sandbox purchases" cümlesi mağazanın kendi test satın almasını anlatır (`BUY-32`), sahte yolu değil.
 - ⚠ **IN-APP PURCHASES** paragrafının ikinci cümlesini yalnızca "Test purchases in production" gerçekten **everyone** iken yazın.
 - ⚠ **IN-APP PURCHASES** "Credits never expire": kararı açık (`CRED-35`, `LEGAL-11`). Şartlara "satın alınan kredilerin süresi dolmaz" yazılmadan bu cümleyi bırakmayın ya da silin (risk 3.7).
-- ⛔ **Üçüncü taraf AI'a veri gönderimi:** Apple 5.1.2(i) göndermeden önce açık izin istiyor. Qutai Kredileri için bu ekran var; **kendi anahtar modunda yok** (risk 2.3). Ekran yapılınca PRIVACY paragrafına şu cümleyi ekleyin: "Before the first request, the user accepts a screen naming where the data goes (Qutai's server and Anthropic for Qutai Credits, or the provider of the user's own key)."
+- ✅ **Üçüncü taraf AI'a veri gönderimi** (21 Kasım 2026, risk 2.3): kendi anahtar modu için de rıza ekranı var (`AI-32`); cümle yukarıdaki PRIVACY paragrafında. İnceleme ekibi bunu kurulumun "Connect your AI" adımında kendi anahtarla, ya da ilk mesajda görür.
 - ⛔ **Video reklam engelleme** (risk 1.3) ve iOS'ta arka plan oynatma (2.1): karar sizde. Mağaza derlemesinde kalacaksa inceleme notlarında site adı vermeyin.
 - iOS ilk gönderimi: IPA'yı RevenueCat iOS anahtarıyla derleyin; anahtarsız pakette kredi ekranı var ama satın alma yok, bu 2.1(b) reddidir (risk 1.4).
 
@@ -176,7 +176,7 @@ Eklemeden önce:
 Bu dosyanın metinleri bunlar yapılmadan tam doğru olmaz. Ayrıntı ve çözüm önerisi [store-review-risks.md](store-review-risks.md) › §7'de.
 
 - ⛔ **1.3 / 2.1:** video reklam engelleme ve iOS'ta arka plan oynatma. Sizin kararınız.
-- ⛔ **2.3:** kendi anahtar modu için üçüncü taraf AI rıza ekranı; kredi açıklamasındaki "Anthropic, OpenAI or Google" listesi artık yalnızca Anthropic olmalı.
+- ✅ **2.3:** ~~kendi anahtar modu için üçüncü taraf AI rıza ekranı; kredi açıklamasındaki sağlayıcı listesi~~: yapıldı (21 Kasım 2026, `AI-32`; kredi açıklaması artık yalnızca Anthropic diyor).
 - ⛔ **1.5:** Ayarlar'daki "(deneme)" anahtarı. ~~Sahte satın alma yolu ve metinleri~~: kaldırıldı (21 Kasım 2026; production veritabanı için migration 0015 bir sonraki sunucu dağıtımıyla gider).
 - ☐ **2.2:** başkasından alınan `.qutaiapp` dosyasının içe aktarılması (uyarı ekleyin ya da ilk sürümde kapatın); ~~gizlilik metnine uygulamalarla ilgili cümle~~: metinlerde (21 Kasım, `LEGAL-6`, `LEGAL-24`), kullanıcılara yasal sürüm artışıyla gider (`LEGAL-25`).
 - ☐ **2.4:** pro gizlilik manifestosu ve `docs/permissions.md`'deki "sunucumuz yok" cümlesi.

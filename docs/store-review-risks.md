@@ -114,6 +114,7 @@ Bunlar düzeltilmeden gönderirseniz büyük olasılıkla ret alırsınız. Play
 - **Bizde ne var:** Qutai Kredileri için ayrı bir açıklama ve kabul var **[kodda doğrulandı]**: `CRED-4`, `src/components/CreditsDisclosure.ts`, `AiProviderFields.tsx:100`. Kendi anahtarla (Anthropic, OpenAI, Gemini, OpenRouter, özel uç nokta) böyle bir diyalog yok. Yalnızca kurulumda gizlilik politikası ve şartlar kabul ediliyor (`INTRO-2`). Ayrıca kredi açıklaması "Anthropic, OpenAI or Google" diyor ama sunucu artık yalnızca Anthropic'e aktarıyor (`src/i18n/en.ts:2263`, `CRED-47`). Metin gerçeği tam yansıtmıyor.
 - **Olasılık:** orta-yüksek
 - **Çözüm:** Kendi anahtarla bir sağlayıcı ilk kez seçildiğinde kısa bir kabul ekranı gösterin: "Sayfa metni, ekran görüntüsü, sesten çevrilen metin ve onayladığınız konum ya da takvim [sağlayıcı adı]'na gönderilir; [sağlayıcı]'nın gizlilik politikası…". Düğmeler "Kabul ediyorum" ve "Vazgeç" olsun. Kredi açıklamasındaki sağlayıcı listesini düzeltin. İnceleme notlarında bu ekranları gösterin.
+- **Durum (21 Kasım 2026): yapıldı.** Kendi anahtarla ilk istekten önce sağlayıcıyı (özel uç noktada sunucunun adresini) adıyla anan, neyin gittiğini söyleyen, gizlilik politikasına bağlantı veren "Vazgeç" / "Kabul ediyorum" ekranı var; kabul sağlayıcı ya da adres başına, yalnızca bu telefonda ve yedekten geri gelmez (`AI-32`). Kredi açıklaması artık yalnızca Anthropic diyor (on dil).
 
 ### 2.4 Mağaza formlarının dayanağı olan belge "sunucumuz yok" diyor
 - **Mağaza:** her ikisi

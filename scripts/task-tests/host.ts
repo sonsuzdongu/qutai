@@ -41,6 +41,15 @@ export function makeHost(loop: FakeLoop | ((opts: AgentOptions, n: number) => Pr
   const storage = new Map<string, SavedChat>();
   let runs = 0;
   const marks = { on: false };
+  /** The own-key consent screen: accepted unless a test says otherwise; every ask is recorded. */
+  const consent = {
+    asked: [] as { provider: string; endpoint?: string }[],
+    accept: true,
+    answer(target: { provider: string; endpoint?: string }) {
+      consent.asked.push(target);
+      return consent.accept;
+    },
+  };
   const host: TaskHost = {
     browser,
     runner,
@@ -61,6 +70,7 @@ export function makeHost(loop: FakeLoop | ((opts: AgentOptions, n: number) => Pr
       saved.push({ key: chat.key, items: chat.items.length, turns: chat.turns.length });
       storage.set(chat.key, JSON.parse(JSON.stringify(prepareForStorage(chat.toSaved()))));
     },
+    aiConsent: { ensure: async (target) => consent.answer(target) },
     credits: {
       ready: () => false,
       signedIn: () => false,
@@ -105,6 +115,7 @@ export function makeHost(loop: FakeLoop | ((opts: AgentOptions, n: number) => Pr
     saved,
     storage,
     marks,
+    consent,
     setSettings: (next: Partial<Settings>) => (settings = { ...settings, ...next }),
     send: (text: string, options?: SendOptions) => {
       ready();

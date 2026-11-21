@@ -7,12 +7,15 @@ import { afterEach, test } from 'node:test';
 import { executeTool } from '../../src/agent/executeTool';
 import { compactHistory, pairToolCalls, UNFINISHED_CALL } from '../../src/agent/history';
 import { runAgent } from '../../src/agent/runAgent';
+import { aiConsent } from '../../src/ai/consent';
 import type { Turn } from '../../src/ai/types';
 import { Browser } from '../../src/browser/Browser';
 import { sleep, StoppedError } from '../../src/utils/sleep';
 import { makeWorld } from '../injection-tests/world';
 
 const realFetch = globalThis.fetch;
+// The own-key consent screen (AI-32) counts as accepted here: these tests are about Stop, not the screen.
+aiConsent.setAsker(async () => true);
 afterEach(() => {
   globalThis.fetch = realFetch;
 });

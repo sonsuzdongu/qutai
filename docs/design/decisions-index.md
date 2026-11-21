@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 858 decisions (131 owner, 644 default, 83 waiting); 163 ids moved to Details.
+Totals: 859 decisions (132 owner, 644 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -140,6 +140,7 @@ Moved to Details (ids retired, not reused): `PROD-5`
 | `AI-29` | Qutai Credits requests are never held; the server charges a re-sent step only once. | Default |  |
 | `AI-30` | The assistant's settings tool cannot change the provider, model, keys, custom endpoint, its headers or web… | Default |  |
 | `AI-31` | Gemini's search suggestions box is shown under the answer; Anthropic and OpenAI citations are shown as… | Default |  |
+| `AI-32` | With an own key, nothing goes to a provider before the user accepted, on this phone, a screen that names… | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `AI-11`, `AI-12`
 

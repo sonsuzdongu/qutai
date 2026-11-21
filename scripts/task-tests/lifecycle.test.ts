@@ -52,6 +52,8 @@ test('two sends in the same tick: only one starts; the other is kept in the inpu
   const first = send('First');
   const second = send('Second, by voice', { voice: true });
   await second;
+  // The first is shown once its checks (the own-key consent, AI-32) are through.
+  await tick(10);
   assert.ok(log.includes(`busy:${chat.key}`));
   assert.equal(chat.draft, 'Second, by voice');
   assert.equal(chat.items.filter((i) => i.kind === 'user').length, 1);

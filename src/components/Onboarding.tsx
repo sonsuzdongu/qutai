@@ -42,6 +42,7 @@ import { Radio } from '../ui/Radio';
 import { ThemedSwitch } from '../ui/ThemedSwitch';
 import { AiProviderFields, cleanAiChoice } from './AiProviderFields';
 import { askCreditsDisclosure } from './CreditsDisclosure';
+import { ensureAiConsent } from './AiConsent';
 import { QutaiSetup } from './QutaiSetup';
 import { KeyboardAwareScrollView } from './KeyboardAware';
 import { DialogHost } from './Dialog';
@@ -177,6 +178,12 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
     dispatchSetup({ type: 'disclosureAnswered', accepted, signedIn: signedIn() });
   };
 
+  const leaveAiStep = async () => {
+    const ai = cleanAiChoice(draft);
+    if (!(await ensureAiConsent({ provider: ai.provider, endpoint: ai.customBaseUrl || undefined }))) return;
+    advance();
+  };
+
   /** Set once setup is handed back: a second tap on the last step's button must not finish it twice. */
   const finished = useRef(false);
   // Returns startQutai's promise, so the button stays busy while the credits disclosure is open (UI-28).
@@ -187,6 +194,12 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
       setDraft((d) => ({ ...d, provider: 'qutai' }));
       return go(index + 1);
     }
+    // "Connect your AI" with an own key: the consent screen for that provider or host before going on (AI-32);
+    // Cancel stays on this step. Returned, so the button stays busy while it is open.
+    if (step === 'ai' && hasKey && draft.provider !== 'qutai') return leaveAiStep();
+    advance();
+  };
+  const advance = () => {
     if (!last) return go(index + 1);
     if (finished.current) return;
     finished.current = true;

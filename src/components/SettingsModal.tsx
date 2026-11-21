@@ -44,6 +44,7 @@ import { ServerBackupSection } from './ServerBackupSection';
 import { serverBackupEnabled } from '../backup/server';
 import { CalendarChoiceScreen } from './CalendarChoiceScreen';
 import { AiChoice, aiChoiceProblem, AiProviderFields, cleanAiChoice } from './AiProviderFields';
+import { ensureAiConsent } from './AiConsent';
 import { backStep, pickAi as pickAiFields, type SettingsPage } from './settingsNavigation';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { LegalScreen } from './LegalScreen';
@@ -145,10 +146,17 @@ function SettingsPages({
 
   // Patches only: a change made while this screen waited (Face ID, a permission, the assistant) is kept.
   const set = (patch: Partial<Settings>) => onChange(patch);
-  const saveAi = () => {
+  const saveAi = async () => {
     const problem = aiChoiceProblem(ai);
     if (problem) return dialog.alert(t('settings.saveFailed'), problem);
-    onChange(cleanAiChoice(ai));
+    const clean = cleanAiChoice(ai);
+    // An own-key provider (or custom endpoint host) not accepted on this phone: its consent screen first; Cancel
+    // saves nothing and stays here (AI-32).
+    if (clean.provider !== 'qutai' && isConfigured(clean, clean.provider)) {
+      const endpoint = getProvider(clean.provider).needsEndpoint ? clean.customBaseUrl : undefined;
+      if (!(await ensureAiConsent({ provider: clean.provider, endpoint }))) return;
+    }
+    onChange(clean);
   };
   const configured = isConfigured(settings, settings.provider);
 

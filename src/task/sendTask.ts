@@ -65,6 +65,8 @@ export type TaskHost = ToolServices & {
   runAgent: (opts: AgentOptions) => Promise<void>;
   /** Writes the conversation to storage (storage/chat.ts storeChat decides what an incognito one leaves: nothing). */
   save: (chat: Conversation) => void;
+  /** The own-key consent screen (AI-32): true when the provider (or the custom endpoint's host) may be sent to. */
+  aiConsent: { ensure: (target: { provider: ProviderId; endpoint?: string }) => Promise<boolean> };
   credits: {
     ready: () => boolean;
     signedIn: () => boolean;
@@ -159,6 +161,17 @@ async function mayTakeMessage(host: TaskHost, chat: Conversation, text: string, 
       });
       host.save(chat);
       if (!signedIn) host.credits.promptSignIn();
+      return false;
+    }
+  }
+  // Own key: the consent screen for this provider (or the custom endpoint's host), asked here before the message is
+  // taken if setup and Settings never showed it, for example after an update (AI-32). Cancel sends nothing.
+  if (intended !== 'qutai' && isConfigured(settings, intended)) {
+    const target = requestTarget(settings, intended);
+    if (!(await host.aiConsent.ensure({ provider: intended, endpoint: target.endpoint }))) {
+      chat.setDraft(keptDraft(chat, text));
+      chat.add(newItem('error', t('aiConsent.notAccepted')));
+      host.save(chat);
       return false;
     }
   }

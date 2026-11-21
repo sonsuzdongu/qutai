@@ -9,17 +9,22 @@ import { gemini } from './gemini';
 import { openai } from './openai';
 import { openrouter } from './openrouter';
 import { catalogModel } from './openrouterModels';
+import { aiConsent } from './consent';
+import { ConsentNeededError } from './consentLogic';
 import type { Provider, ProviderId } from './types';
 
 /**
- * The adapters are reached only through here, and every call is recorded for "What was sent to the AI"
- * before it goes out. Recording never throws, so it can't fail a request. The reply's usage is priced here
+ * The adapters are reached only through here. With an own key, nothing goes out before the user accepted the screen
+ * naming that provider (or the custom endpoint's host) on this phone (AI-32): the request waits for the screen, and a
+ * cancel throws ConsentNeededError with nothing sent and nothing recorded. Every call is recorded for "What was sent
+ * to the AI" before it goes out. Recording never throws, so it can't fail a request. The reply's usage is priced here
  * (cost.ts; a cost the adapter already set, such as a server's charge, is kept) and added to the log entry.
  */
 function recorded(provider: Provider): Provider {
   // Over the adapter rather than a copy of it, so labels that follow the app's language stay getters.
   const wrapped: Provider = Object.create(provider);
   wrapped.call = async (req) => {
+    if (!(await aiConsent.ensure({ provider: provider.id, endpoint: req.endpoint }, req.signal))) throw new ConsentNeededError();
     const at = Date.now();
     const id = recordRequest(provider.id, req);
     let reply;

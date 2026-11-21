@@ -11,7 +11,9 @@ that change a request (model per chat, streaming, web search, the custom endpoin
    key), or a **custom endpoint** (the user's own OpenAI-compatible server, such as Ollama, LM Studio, vLLM or a company
    gateway). In pro mode a sixth choice appears: Qutai Credits (see [section 1](01-open-source-and-pro.md)).
 2. **Own key:** the request goes from the phone straight to the provider with the user's key. Each key is kept in the
-   phone's secure storage (iOS Keychain / Android Keystore through `expo-secure-store`).
+   phone's secure storage (iOS Keychain / Android Keystore through `expo-secure-store`). Before the first request to a
+   provider (for the custom endpoint: to its host), a consent screen names it and what goes there; nothing is sent
+   until the user taps Accept (`AI-32`).
 3. **Qutai Credits:** the same code builds the request, but only its body is sent to Qutai's server, which picks the
    model for its default tier (the user chooses no tier, `CRED-39`) and charges credits. Before first use a notice says what passes through Qutai's server.
    Qutai's server relays Anthropic only (`CRED-47`); the user's own OpenAI, Gemini, OpenRouter and custom-endpoint keys are
@@ -83,6 +85,8 @@ that change a request (model per chat, streaming, web search, the custom endpoin
   Status: Default (manager or implementing session; open to change) · Why: "they handle the user's secrets and where their conversations are sent"; web search "is billed to the user's API key" · Enforced: In the app: src/agent/settingsTool.ts (CHANGEABLE) · Source: febcdb4
 - **`AI-31`** Gemini's search suggestions box is shown under the answer; Anthropic and OpenAI citations are shown as tappable source cards.
   Status: Default (manager or implementing session; open to change); legal check pending (TODO.md › Other) · Why: the providers' terms require showing them · Source: e7e8aeb; TODO.md › Other
+- **`AI-32`** With an own key, nothing goes to a provider before the user accepted, on this phone, a screen that names it (for the custom endpoint: its host) and says what goes there: messages, page text and screenshots, attached files, text from voice (never audio), memory and custom instructions, and location or calendar only after the user allows them; it links the provider's privacy policy (none for a custom endpoint), points to Settings › What was sent to the AI, and has Cancel / Accept. Cancel sends and stores nothing (a message stays in the input with a line saying so). Accepted once per provider, and per host for the custom endpoint (another host, or another provider, asks again; another port or path on the same host does not). It is shown on setup's "Connect your AI" step, on Save in Settings › Assistant, and otherwise before the first message (existing own-key users after the update, the model-per-chat choice, voice intro, "Organise for me", saved and background tasks: the request waits for the screen). Incognito follows the same rule. Acceptances are kept in secure storage "this device only", never in Qutai's backup file or server backup, so a restore or a new phone asks again; only the screen's Accept button can store one (the assistant has no way to). "Test connection" for the custom endpoint is not gated: it asks for the model list and sends fixed test prompts, no personal data. Qutai Credits keeps its own disclosure (`CRED-4`).
+  Status: Owner, 2026-11-21 (the owner asked for the screen); not restoring acceptances from a backup: Default (implementing session; open to change) · Why: Apple 5.1.2(i) (disclosure and explicit permission before personal data goes to a third-party AI) and Play's User Data policy (prominent disclosure and affirmative consent); docs/store-review-risks.md › 2.3. A restored acceptance would be consent given on another phone, possibly by someone else, for a choice the user may no longer remember · Enforced: In the app: src/ai/providers.ts (recorded: aiConsent.ensure before every adapter call, ConsentNeededError); src/ai/consentLogic.ts (consentSubject, createConsentStore, AI_CONSENT_VERSION); src/ai/consent.ts (SecureStore AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY); src/components/AiConsent.ts; src/task/sendTask.ts (mayTakeMessage); Onboarding.tsx (leaveAiStep); SettingsModal.tsx (saveAi). Tests: scripts/assistant-tests/aiConsent.test.ts, scripts/task-tests/consent.test.ts · Source: owner's request 2026-11-21
 
 ## Details
 
@@ -115,7 +119,7 @@ Qutai Credits is that server in pro mode, and it is built so an own key can neve
 
 ## Where it lives
 
-- `src/ai/providers.ts`, `anthropic.ts`, `openai.ts`, `gemini.ts`, `geminiStream.ts`, `openrouter.ts`, `openrouterCatalog.ts`, `chatWire.ts`, `chatCompletions.ts`, `custom.ts`, `customEndpoint.ts`, `customHeaders.ts`, `customTest.ts`, `cloudflare.ts`, `serverError.ts`, `wire.ts`, `http.ts`
+- `src/ai/providers.ts`, `consent.ts`, `consentLogic.ts`, `src/components/AiConsent.ts`, `anthropic.ts`, `openai.ts`, `gemini.ts`, `geminiStream.ts`, `openrouter.ts`, `openrouterCatalog.ts`, `chatWire.ts`, `chatCompletions.ts`, `custom.ts`, `customEndpoint.ts`, `customHeaders.ts`, `customTest.ts`, `cloudflare.ts`, `serverError.ts`, `wire.ts`, `http.ts`
 - `src/credits/` (Qutai Credits), `src/device/requestHold.ts`, `requestHoldLogic.ts`
 - `src/chat/Conversation.ts`, `src/components/ModelSheet.tsx`, `AiProviderFields.tsx`, `CustomEndpointFields.tsx`
 - README › How does it work?, › Qutai Credits (pro mode); backend/README.md › Relay

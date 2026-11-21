@@ -70,6 +70,7 @@ import type { ProviderId } from './src/ai/types';
 import { reportPendingPurchases } from './src/purchases';
 import { BuyCreditsHost, openBuyCredits } from './src/components/BuyCredits';
 import { askCreditsDisclosure } from './src/components/CreditsDisclosure';
+import { ensureAiConsent } from './src/components/AiConsent';
 import { getProvider, isConfigured } from './src/ai/providers';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import { ContextTarget, looksLikePdfLink } from './src/browser/contextMenu';
@@ -1024,6 +1025,7 @@ function BrowserApp({
     savedTaskUsed: refreshRecentTasks,
     showSettings: () => openScreen({ kind: 'settings' }),
     save: persistConversation,
+    aiConsent: { ensure: ensureAiConsent },
     credits: {
       ready: creditsReady,
       signedIn: () => accountSession()?.getState().status === 'signedIn',

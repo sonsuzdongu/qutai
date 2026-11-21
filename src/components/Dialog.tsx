@@ -6,6 +6,7 @@ import {
   Easing,
   Image,
   Keyboard,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -55,6 +56,8 @@ export type DialogOptions = {
   message?: string;
   /** Technical text behind a "Details" toggle under the message (e.g. why signing in failed). */
   details?: string;
+  /** A web link under the message, opened in the phone's browser without closing the dialog (e.g. a privacy policy). */
+  link?: { label: string; url: string };
   /** Lines with icons, shown before the message (e.g. the step the assistant wants to take). */
   lines?: IconLines;
   /** One to three buttons; just "OK" when left out. A cancel button is also what the backdrop and back button do. */
@@ -250,7 +253,7 @@ function DialogView({ entry }: { entry: Entry }) {
   const reduceMotion = useReduceMotion();
   const keyboard = useKeyboardHeight();
   const { fontScale, height } = useWindowDimensions();
-  const { title, message, details, lines, buttons, checkbox, input, image, choices } = entry.options;
+  const { title, message, details, link, lines, buttons, checkbox, input, image, choices } = entry.options;
 
   const [checked, setChecked] = useState(checkbox?.initial ?? false);
   const [choice, setChoice] = useState(choices?.initial ?? 0);
@@ -413,6 +416,16 @@ function DialogView({ entry }: { entry: Entry }) {
                 </Text>
               ) : null}
               {details ? <ErrorDetails details={details} style={styles.details} /> : null}
+              {link ? (
+                <Text
+                  style={[styles.message, styles.link]}
+                  onPress={() => void Linking.openURL(link.url).catch(() => {})}
+                  accessibilityRole="link"
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                >
+                  {link.label}
+                </Text>
+              ) : null}
             </ScrollView>
 
             {input && (
@@ -543,6 +556,7 @@ const useStyles = makeStyles((c) => ({
   title: { fontSize: 18, fontWeight: '700', color: c.text },
   message: { fontSize: 15, lineHeight: 21, color: c.textSecondary },
   details: { marginLeft: 0, marginTop: 10 },
+  link: { color: c.tintText, fontWeight: '600' },
   linesSpaced: { gap: 21 },
   line: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   // Lines without an icon start where the text of the lines with one does (not paragraphs, which stand alone).
