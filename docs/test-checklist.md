@@ -397,6 +397,12 @@ Sahibi telefonda, yavaş bir bağlantıda bildirdi (20 Kas; 0.1.3).
   - [ ] Telefonda bakın: çok çerezli bir sitede (ör. büyük bir haber sitesi) sayfa menüsü › Çerezler; liste hızlı açılmalı ve kaymalı, her alan adı tek kart gibi görünmeli, Değeri göster / Kopyala / Sil ve Tümünü sil çalışmalı.
   - [ ] Telefonda bakın, en büyük yazı boyutunda ve Almanca gibi uzun bir dilde: kurulum, profil soruları, sesli tanıtım, Hafıza, Görevler, kilit ekranı, Yedekleme, Verileri temizle, Ayarlar › Kaydet ve hata ekranındaki ana düğmeler; yazı iki satıra inmeli, kesilmemeli. Profil sorularında ve sesli tanıtımda Kaydet'e iki kez hızla dokunun: bilgi bir kez kaydedilmeli (Hafıza'da tek satır).
   - [ ] Telefonda bakın: Ayarlar, Gönderilenler, Sekmeler, Yer imleri ve geçmiş, Uygulamalarım, Site izinleri, Çerezler, İndirilenler, Kayıtlı sayfalar, QR tarayıcı ve Görevler ekranlarını tek tek açıp geri hareketiyle (Android'de geri tuşu, iOS'ta aşağı kaydırma) kapatın; her biri eskisi gibi kayarak açılıp kapanmalı. İndirme bildirimine dokunarak İndirilenler'i başka bir ekran açıkken açın: o ekran kapanıp İndirilenler açılmalı (iOS'ta açılmazsa söyleyin).
+
+### 21 Kasım'da bildirilenler ("düzelt" bekleniyor)
+
+Sahibi "not et, ben düzelt deyince alttaki ajanlara düzelttir" dedi; hiçbirine dokunulmadı.
+
+- [ ] Adres çubuğuna bir şey yazınca açılan öneri listesindeki "Qutai'a sor" satırına dokununca, dokunuş arkadaki sayfaya da geçiyor: satırın altındaki sayfa öğesine de basılmış oluyor (olay arkaya yayılıyor). Öneri listesindeki her satıra (ve listenin boşluklarına) dokunuş yalnızca o satırı tetiklemeli, altındaki web sayfasına hiç ulaşmamalı. Bakılacaklar: öneri katmanının dokunuşu tüketip tüketmediği (Android'de WebView'in üstündeki görünüme geçen dokunuşun aşağı düşmesi, `onPressIn`/`onPress` sırasında klavyenin kapanıp listenin kaybolmasıyla dokunuşun "bırakma" kısmının sayfaya gitmesi), diğer öneri satırlarında (arama, geçmiş, yer imi) da aynısının olup olmadığı, iOS'ta da olup olmadığı. (21 Kas; hangi telefonda olduğu belirtilmedi)
 ## 14. "Kendinizi tanıtın" (sesle tanıtım, 17 Kasım)
 
 iOS simülatöründe yazarak ve sahte yapay zekâyla denendi (simülatöre mikrofondan ses verilemiyor; aynı akış yazılan metinle sürüldü). Telefonda sesle deneyin. Ayrıntı: `docs/voice-introduction.md`.
