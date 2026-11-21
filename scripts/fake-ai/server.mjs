@@ -47,6 +47,8 @@
 //   "slow"     waits 25 s, then answers (Stop, backgrounding during a request, the keep-alive)
 //   "long"     read_page, scroll, read_page, scroll, read_page with 3 s pauses (rotation mid-task)
 //   "link"     an answer with a Markdown link (chat links open in the conversation's tab group)
+//   "bullets" / "liste" / "punkte"  a short intro and three long bullet items, English / Turkish / German (the
+//              answer bubble spans the column whatever the intro's width)
 //   "kazak" / "showoptions"  read_page → show_options with up to four product links from the page that carry a price
 //              (in the label, or read_page's prices="…") → a short answer (option cards, UI-23)
 //   "evilcards"  the same plus an http link, a javascript: link, a user@host look-alike and a made-up price: the app
@@ -322,6 +324,15 @@ function nextStep(messages) {
       return call('show_options', { options: picks });
     }
     return { content: `I found ${n > 1 ? 'a few' : 'no'} options; the cards show them. (Tool said: ${lastResult.slice(0, 300)})` };
+  }
+  // A short intro and long bullet items: the answer bubble must span the column, not the intro's width.
+  const lists = {
+    bullets: ['I can do these:', ['Read the page you are on and summarise it in a few sentences, with its sources', 'Fill in a form for you and ask before anything is sent', 'Compare prices across the tabs you have open and list the cheapest first']],
+    liste: ['Şunları yapabilirim:', ['Açık olan sayfayı okuyup birkaç cümleyle özetlerim, kaynaklarıyla birlikte', 'Sizin için bir formu doldururum ve bir şey gönderilmeden önce sorarım', 'Açık sekmelerdeki fiyatları karşılaştırıp en ucuzunu başa yazarım']],
+    punkte: ['Das kann ich:', ['Die geöffnete Seite lesen und in wenigen Sätzen mit Quellen zusammenfassen', 'Ein Formular für Sie ausfüllen und vor dem Absenden nachfragen', 'Preise in Ihren offenen Tabs vergleichen und die günstigsten zuerst nennen']],
+  };
+  for (const [word, [intro, items]] of Object.entries(lists)) {
+    if (new RegExp(`\\b${word}\\b`).test(user)) return { content: `${intro}\n\n${items.map((i) => `- ${i}`).join('\n')}` };
   }
   if (/\blink\b/.test(user)) return { content: 'Here is a page: [Example Domain](https://example.com/) and [Wikipedia](https://en.m.wikipedia.org/wiki/Bosporus).' };
   return { content: 'Hello from the fake AI server. Nothing was sent to any provider.' };
