@@ -70,8 +70,8 @@ Other store-facing iOS declarations:
   `expo-localization`, `expo-media-library`, `expo-notifications`, `expo-system-ui`), repeated at app level as the
   Expo guide advises, because Apple doesn't always read the manifests of static CocoaPods: UserDefaults `CA92.1`,
   file timestamp `C617.1` `0A2A.1` `3B52.1`, system boot time `35F9.1`, disk space `E174.1` `85F4.1`. No tracking,
-  no tracking domains; the collected data types list is empty (Qutai has no servers of its own; see "Notes for the
-  store forms"). Update it when a library adds a new reason (Apple's email after an upload lists any missing one).
+  no tracking domains; the collected data types list is empty in the open-source build (it has no server; see
+  "Notes for the store forms") and filled in a pro build by `plugins/withProAccounts.js` (`OSPERM-26`). Update it when a library adds a new reason (Apple's email after an upload lists any missing one).
 
 ## Android (AndroidManifest.xml)
 
@@ -264,8 +264,15 @@ Qutai doesn't call `canOpenURL`; links to other apps go straight to `openURL`.
 
 ## Notes for the store forms
 
-- Qutai has no servers of its own. Page content, chats and screenshots the user sends to the assistant go from the
-  device to the AI provider the user chose, with the user's own key.
+- **Open-source build:** Qutai has no servers of its own. Page content, chats and screenshots the user sends to the
+  assistant go from the device to the AI provider the user chose, with the user's own key.
+- **Pro build (the one sent to the stores):** it has a server. Collected and linked to the account: email address,
+  user ID, device ID (sessions), purchase history, and other user content (reports sent with "Report"; with Qutai
+  Credits, chats, page text and screenshots pass through Qutai's server to Anthropic and are not stored by Qutai).
+  RevenueCat receives the account number for purchases. The optional server backup is encrypted on the phone with the
+  user's password. No analytics, advertising or tracking. The store forms are filled from
+  [store-submission.md](store-submission.md) § 3.3 and § 4.2, and the iOS privacy manifest lists the same types
+  (`OSPERM-26`).
 - Location goes only to sites the user allowed and, when the user confirms each time, to the AI provider. Setup's
   "Use my location" (city question, only on the user's tap): the position (about 100 m, a cached one up to an hour
   old) is turned into place names by the platform's geocoder, which needs the network: on iOS `CLGeocoder` sends the

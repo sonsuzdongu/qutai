@@ -48,6 +48,29 @@ module.exports = function withProAccounts(config) {
   });
   if (!pro) return config;
 
+  // The privacy manifest's collected data types (OSPERM-26): a pro build talks to Qutai's server, so the list that is
+  // empty in app.json (the open-source build has no server) is filled here. Kept the same as App Store Connect ›
+  // App Privacy (docs/store-submission.md § 3.3): all for app functionality, linked to the account, never tracking.
+  const collected = [
+    'NSPrivacyCollectedDataTypeEmailAddress',
+    'NSPrivacyCollectedDataTypeUserID',
+    'NSPrivacyCollectedDataTypeDeviceID',
+    'NSPrivacyCollectedDataTypePurchaseHistory',
+    'NSPrivacyCollectedDataTypeOtherUserContent',
+    'NSPrivacyCollectedDataTypeOtherUsageData',
+  ];
+  config.ios = config.ios ?? {};
+  config.ios.privacyManifests = {
+    ...(config.ios.privacyManifests ?? {}),
+    NSPrivacyTracking: false,
+    NSPrivacyCollectedDataTypes: collected.map((type) => ({
+      NSPrivacyCollectedDataType: type,
+      NSPrivacyCollectedDataTypeLinked: true,
+      NSPrivacyCollectedDataTypeTracking: false,
+      NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality'],
+    })),
+  };
+
   const link = appLink();
   if (link) {
     config = withEntitlementsPlist(config, (config) => {

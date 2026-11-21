@@ -657,8 +657,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Opening from other apps', 'Diğer uygulamalardan Qutai’a'),
         body: t(
-          'Share a link or text to Qutai (Android for now) or use qutai:// links from shortcuts. Make Qutai your default browser from Settings › Search. On Android, the launcher shortcuts (New tab, Incognito tab, Ask Qutai, Scan QR code) follow Qutai’s language.',
-          'Bir bağlantıyı ya da metni Qutai’a gönderin (şimdilik Android’de) ya da Kestirmeler’den qutai:// bağlantılarıyla açın. Qutai’ı varsayılan tarayıcınız yapmak için Ayarlar › Arama’ya gidin. Android’de ana ekran kısayolları (Yeni sekme, Gizli sekme, Qutai’a sor, QR kodu tara) Qutai’ın diline uyar.',
+          'Share a link or text to Qutai (Android for now) or use qutai:// links from shortcuts. On Android, make Qutai your default browser from Settings › Search. On Android, the launcher shortcuts (New tab, Incognito tab, Ask Qutai, Scan QR code) follow Qutai’s language.',
+          'Bir bağlantıyı ya da metni Qutai’a gönderin (şimdilik Android’de) ya da Kestirmeler’den qutai:// bağlantılarıyla açın. Android’de Qutai’ı varsayılan tarayıcınız yapmak için Ayarlar › Arama’ya gidin. Android’de ana ekran kısayolları (Yeni sekme, Gizli sekme, Qutai’a sor, QR kodu tara) Qutai’ın diline uyar.',
         ),
       },
     ],

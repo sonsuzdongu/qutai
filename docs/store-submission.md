@@ -79,7 +79,9 @@ Eklemeden önce:
 - ✅ **IN-APP PURCHASES** "Credits never expire": karar verildi (21 Kasım, `LEGAL-11`); pro şartlar on dilde "kredilerin süresi dolmaz" diyor (yasal sürüm pro 7). Cümle kalabilir (risk 3.7).
 - ✅ **Üçüncü taraf AI'a veri gönderimi** (21 Kasım 2026, risk 2.3): kendi anahtar modu için de rıza ekranı var (`AI-32`); cümle yukarıdaki PRIVACY paragrafında. İnceleme ekibi bunu kurulumun "Connect your AI" adımında kendi anahtarla, ya da ilk mesajda görür.
 - ⛔ **Video reklam engelleme** (risk 1.3) ve iOS'ta arka plan oynatma (2.1): karar sizde. Mağaza derlemesinde kalacaksa inceleme notlarında site adı vermeyin.
-- iOS ilk gönderimi: IPA'yı RevenueCat iOS anahtarıyla derleyin; anahtarsız pakette kredi ekranı var ama satın alma yok, bu 2.1(b) reddidir (risk 1.4).
+- ✅ iOS: `release.mjs` artık RevenueCat iOS anahtarı olmadan pro IPA çıkarmıyor (`BUY-33`; bilerek satın almasız paket için `--without-purchases`).
+- ✅ iOS'ta "Varsayılan tarayıcı yap" satırı gizlendi (`INTRO-32`): Apple'ın `com.apple.developer.web-browser` yetkisi alınana kadar. Mağaza açıklamasında da bu vaat olmasın.
+- ✅ Satın alma ekranı ve değerlendirme mesajı yalnızca telefonun kendi mağazasını anıyor (`BUY-34`; Apple 2.3.10).
 
 **Demo (isteğe bağlı):** ödeme onayını görmek isterlerse bir test sitesi verin (tanıtım filmlerindeki sahte kartlı demo site gibi). Adresi buraya yazın: `<demo site URL>`.
 
@@ -124,7 +126,7 @@ Eklemeden önce:
 | Tarama geçmişi, şifreli yedek, çökme ve analiz | Beyan yok (telefonda kalıyor ya da uçtan uca şifreli; analiz yok) | — | — | — |
 
 - ATT izni gerekmez (reklam ve izleme yok).
-- ☐ `app.json` › `privacyManifests` içine pro derleme için `NSPrivacyCollectedDataTypes` eklenmeli (e-posta, kullanıcı kimliği, satın alma geçmişi, diğer kullanıcı içeriği). Bugün liste boş ve `docs/permissions.md` "sunucumuz yok" diyor; pro için yanlış (risk 2.4).
+- ✅ Pro derlemenin gizlilik manifestosu toplanan veri türlerini listeliyor (`plugins/withProAccounts.js`, `OSPERM-26`): e-posta, kullanıcı kimliği, cihaz kimliği, satın alma geçmişi, diğer kullanıcı içeriği, diğer kullanım verisi. App Store Connect › App Privacy'de bugün "Other User Content" **yok**; ekleyip yayımlayın, yoksa manifest ile etiket uyuşmaz.
 
 ### 3.4 Uygulama içi satın almalar
 
@@ -179,7 +181,7 @@ Bu dosyanın metinleri bunlar yapılmadan tam doğru olmaz. Ayrıntı ve çözü
 - ✅ **2.3:** ~~kendi anahtar modu için üçüncü taraf AI rıza ekranı; kredi açıklamasındaki sağlayıcı listesi~~: yapıldı (21 Kasım 2026, `AI-32`; kredi açıklaması artık yalnızca Anthropic diyor).
 - ⛔ **1.5:** Ayarlar'daki "(deneme)" anahtarı. ~~Sahte satın alma yolu ve metinleri~~: kaldırıldı (21 Kasım 2026; production veritabanı için migration 0015 bir sonraki sunucu dağıtımıyla gider).
 - ☐ **2.2:** başkasından alınan `.qutaiapp` dosyasının içe aktarılması (uyarı ekleyin ya da ilk sürümde kapatın); ~~gizlilik metnine uygulamalarla ilgili cümle~~: metinlerde (21 Kasım, `LEGAL-6`, `LEGAL-24`), yasal sürüm açık kaynak 5 / pro 7 ile kabul ettiriliyor (`LEGAL-25`).
-- ☐ **2.4:** pro gizlilik manifestosu ve `docs/permissions.md`'deki "sunucumuz yok" cümlesi.
+- ✅ **2.4:** ~~pro gizlilik manifestosu ve `docs/permissions.md`'deki "sunucumuz yok" cümlesi~~: yapıldı (21 Kasım 2026, `OSPERM-26`; pro derlemede altı veri türü, açık kaynakta boş).
 - ☐ **3.8:** yasal metinlerin avukat incelemesi.
 
 Yapılanlar (21 Kasım): uygulama içi Bildir (1.1, 2.2'nin bildirme kısmı), web'de hesap silme sayfası (1.2), iletişim adresi `qutai@sonsuzdongu.com` (3.8, `LEGAL-21`), inceleme hesabı admin panelinde açıldı (1.4'ün bir kısmı).

@@ -11,14 +11,15 @@
  * The version is never changed here (npm run version:bump, docs/versioning.md). Each run regenerates the native
  * project (expo prebuild), so the version, the build number and pro mode's entitlements are in it.
  *
- * Values that must not be committed are read from the environment or from .env.build.local (git-ignored; Expo's own
- * commands never load a file of that name, so they don't leak into development):
+ * Values that must not be committed are read from the environment or from .build.local.env (git-ignored). The name must not start
+ * with ".env": Expo's development bundler pulls every .env* file in the project root into the bundle (a file named
+ * .env.build.local broke `expo start` on 20 Nov 2026), and these values must not leak into development:
  *
  *   EXPO_PUBLIC_QUTAI_API_URL   the server a pro-mode build talks to (required with --pro-mode)
  *   EXPO_PUBLIC_REVENUECAT_ANDROID_KEY  RevenueCat's public SDK key for Google Play (goog_…), so a pro AAB can sell
  *                               credits (required for a pro AAB unless --without-purchases; README.md › Buying credits)
- *   EXPO_PUBLIC_REVENUECAT_IOS_KEY      the same for the App Store (appl_…; optional for now: without it a pro IPA
- *                               shows "buying isn't available in this build")
+ *   EXPO_PUBLIC_REVENUECAT_IOS_KEY      the same for the App Store (appl_…; required for a pro IPA unless
+ *                               --without-purchases, BUY-33)
  *   QUTAI_APPLE_TEAM_ID         the Apple Developer team that signs the IPA (required for the IPA)
  *
  * The Google client ids come from .env as in every build. No package carries the test sign-in: the build sets
@@ -66,7 +67,7 @@ function envFile(name) {
   return out;
 }
 
-const local = envFile('.env.build.local');
+const local = envFile('.build.local.env');
 const value = (key) => (process.env[key] || local[key] || '').trim();
 
 const app = JSON.parse(readFileSync(join(root, 'app.json'), 'utf8')).expo;
@@ -84,7 +85,7 @@ let apiHost = null;
 if (pro) {
   const api = value('EXPO_PUBLIC_QUTAI_API_URL');
   if (!/^https:\/\/[^/\s]+/.test(api)) {
-    stop('A pro-mode build needs EXPO_PUBLIC_QUTAI_API_URL (an https:// address), in the environment or in .env.build.local.');
+    stop('A pro-mode build needs EXPO_PUBLIC_QUTAI_API_URL (an https:// address), in the environment or in .build.local.env.');
   }
   env.EXPO_PUBLIC_QUTAI_API_URL = api;
   apiHost = new URL(api).host;
@@ -110,16 +111,21 @@ if (pro && !withoutPurchases) {
     env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY = key;
     sellsCredits = true;
   } else {
-    // iOS comes later (App Store products and the key don't exist yet): used when present, never required.
+    // Required like Android's (BUY-33): a pro IPA that shows Qutai Credits but can't sell them is refused by App Review.
     const key = value('EXPO_PUBLIC_REVENUECAT_IOS_KEY');
-    if (key && !/^appl_[A-Za-z0-9]{8,}$/.test(key)) stop('EXPO_PUBLIC_REVENUECAT_IOS_KEY is not a RevenueCat App Store public key (appl_…).');
+    if (!key) {
+      stop(
+        'A pro-mode IPA needs EXPO_PUBLIC_REVENUECAT_IOS_KEY (RevenueCat › Project settings › API keys › the App Store app’s public key, appl_…), in the environment or in .build.local.env. To build without purchases on purpose, add --without-purchases.',
+      );
+    }
+    if (!/^appl_[A-Za-z0-9]{8,}$/.test(key)) stop('EXPO_PUBLIC_REVENUECAT_IOS_KEY is not a RevenueCat App Store public key (appl_…). A secret key (sk_…) never goes into the app.');
     env.EXPO_PUBLIC_REVENUECAT_IOS_KEY = key;
-    sellsCredits = Boolean(key);
+    sellsCredits = true;
   }
 }
 const team = value('QUTAI_APPLE_TEAM_ID');
 if (kind === 'ipa' && !/^[A-Z0-9]{10}$/.test(team)) {
-  stop('The IPA needs QUTAI_APPLE_TEAM_ID (the 10-character Apple team id), in the environment or in .env.build.local.');
+  stop('The IPA needs QUTAI_APPLE_TEAM_ID (the 10-character Apple team id), in the environment or in .build.local.env.');
 }
 
 const name = `qutai-${version}-${build}${pro ? '-pro-mode' : ''}.${kind}`;

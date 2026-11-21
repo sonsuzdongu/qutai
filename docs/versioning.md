@@ -73,8 +73,8 @@ runs nothing. `scripts/build/release.mjs` never changes the version; it
    (Gradle once kept a stale bundle);
 4. copies the package to `builds/` (git-ignored) under the name above.
 
-Two values stay out of the repository and are read from the environment or from `.env.build.local` (git-ignored; Expo's
-own commands don't load a file of that name): `EXPO_PUBLIC_QUTAI_API_URL` (the server of a pro-mode build) and
+Two values stay out of the repository and are read from the environment or from `.build.local.env` (git-ignored; its name must not
+start with `.env`, because Expo's development bundler pulls every `.env*` file in the project root into the bundle): `EXPO_PUBLIC_QUTAI_API_URL` (the server of a pro-mode build) and
 `QUTAI_APPLE_TEAM_ID` (the Apple team that signs the IPA). The test sign-in variables are always removed. Run the two
 builds one after the other, not together: each needs most of this machine's memory.
 

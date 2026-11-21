@@ -47,3 +47,5 @@ yarn-error.*
 # PDF.js for the PDF reader, written from node_modules by `postinstall` (scripts/build-pdf-reader.js)
 /src/pdf/pdfjs.generated.json
 .claude/launch.json
+# build settings for scripts/build/release.mjs (must not start with ".env": the dev bundler pulls every .env* file in)
+.build.local.env

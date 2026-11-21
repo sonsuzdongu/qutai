@@ -920,6 +920,7 @@ Moved to Details (ids retired, not reused): `WORK-4`, `WORK-8`, `WORK-11`, `WORK
 | `INTRO-20` | Today own-key users get no sign-in step in setup. | **Waiting** |  |
 | `INTRO-21` | Today the welcome and legal summary say "Private by design" / "we have no servers"; these must be… | **Waiting** |  |
 | `INTRO-23` | An official-build step asking for anonymous usage data is planned, not built. | Default |  |
+| `INTRO-32` | iOS: Settings › Search has no "Make Qutai your default browser" row until Apple grants the web-browser entitlement; Android unchanged. | Owner | 2026-11-21 |
 | `INTRO-31` | The city question has "Use my location" wherever setup asks it; the permission only on that tap; district, city… | Owner | 2026-11-20 |
 | `INTRO-30` | Setup has no "Make Qutai your default browser" step; protection is the last step; the option is in Settings › Search. | Owner | 2026-11-20 |
 | `INTRO-29` | Setup never asks for an answer style; a finished first-run setup adds "Answer briefly and to the point." to the custom… | Owner | 2026-11-20 |
@@ -1087,6 +1088,8 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-30` | A pro Android package needs the RevenueCat key (or --without-purchases); every package's bundle and… | Owner | 2026-11-20 |
 | `BUY-31` | Pack order is changed in the admin panel (Order…), one number per product for both stores; the app keeps the server's order… | Owner | 2026-11-20 |
 | `BUY-32` | Test purchases in production: off, listed accounts only, or an explicit "everyone" (all live accounts; loud banner);… | Owner | 2026-11-21 |
+| `BUY-33` | A pro IPA needs the RevenueCat iOS key (or --without-purchases), like a pro AAB. | Owner | 2026-11-21 |
+| `BUY-34` | The buy screen and the rating message name only the phone's own store (or none); ten languages. | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `BUY-14`, `BUY-20`
 
@@ -1174,6 +1177,7 @@ Moved to Details (ids retired, not reused): `SRV-14`, `SRV-19`
 | `OSPERM-23` | Ways in from other apps (share, text selection menu, web search, shortcuts, widget) need no permission;… | Default |  |
 | `OSPERM-24` | Store notes: page content, chats and screenshots go from the phone to the AI provider the user chose with… | Default |  |
 | `OSPERM-25` | Export compliance: `ITSAppUsesNonExemptEncryption` is false. | Default |  |
+| `OSPERM-26` | A pro build's iOS privacy manifest lists six collected data types (app functionality, linked, no tracking); open source: none. | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `OSPERM-15`, `OSPERM-21`, `OSPERM-22`
 

@@ -654,13 +654,17 @@ function SettingsPages({
               value={settings.searchSuggestions}
               onChange={(searchSuggestions) => set({ searchSuggestions })}
             />
-            {/* The only place in the app for it since setup's step went (INTRO-30); the phone's own screen decides. */}
-            <Text style={styles.label}>{t('settings.defaultBrowserTitle')}</Text>
-            <Text style={styles.hint}>{t('settings.defaultBrowserLead')}</Text>
-            <LinkRow label={t('settings.defaultBrowserOpen')} onPress={() => openDefaultBrowserSettings().catch(() => {})} />
-            <Text style={styles.hint}>
-              {t(Platform.OS === 'ios' ? 'settings.defaultBrowserHintIos' : 'settings.defaultBrowserHintAndroid')}
-            </Text>
+            {/* The only place in the app for it since setup's step went (INTRO-30); the phone's own screen decides.
+                Not on iOS (INTRO-32): without Apple's com.apple.developer.web-browser entitlement Qutai isn't in the
+                phone's Default Browser App list, so the row would lead nowhere. */}
+            {Platform.OS !== 'ios' && (
+              <>
+                <Text style={styles.label}>{t('settings.defaultBrowserTitle')}</Text>
+                <Text style={styles.hint}>{t('settings.defaultBrowserLead')}</Text>
+                <LinkRow label={t('settings.defaultBrowserOpen')} onPress={() => openDefaultBrowserSettings().catch(() => {})} />
+                <Text style={styles.hint}>{t('settings.defaultBrowserHintAndroid')}</Text>
+              </>
+            )}
           </>
         )}
 

@@ -60,10 +60,12 @@ texts prepared for the App Store and Google Play forms. The full table is in [do
   Status: Default (manager or implementing session; open to change); whether to file the declaration or drop the permission is an open owner question · Why: Play allows it for web browsers; Firefox declares it too · Source: 21d43e3; docs/permissions.md
 - **`OSPERM-23`** Ways in from other apps (share, text selection menu, web search, shortcuts, widget) need no permission; files shared out go through a private file provider limited to hand-out folders, with a read grant per share.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: docs/permissions.md
-- **`OSPERM-24`** Store notes: page content, chats and screenshots go from the phone to the AI provider the user chose with the user's own key; no analytics, advertising ID or tracking; the iOS privacy manifest lists the libraries' required-reason APIs and no collected data.
+- **`OSPERM-24`** Store notes: page content, chats and screenshots go from the phone to the AI provider the user chose with the user's own key; no analytics, advertising ID or tracking; the iOS privacy manifest lists the libraries' required-reason APIs and, in the open-source build, no collected data (pro build: `OSPERM-26`).
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Source: docs/permissions.md › Notes for the store forms
 - **`OSPERM-25`** Export compliance: `ITSAppUsesNonExemptEncryption` is false.
   Status: Default (manager or implementing session; open to change) · Why: Qutai uses only HTTPS and the system's own encryption (Keychain) · Source: docs/permissions.md
+- **`OSPERM-26`** A pro build's iOS privacy manifest lists the collected data types, the same as App Store Connect › App Privacy: email address, user ID, device ID, purchase history, other user content and other usage data; each for app functionality, linked to the account, never for tracking. The open-source build's list stays empty.
+  Status: Owner, 2026-11-21 ("düzeltilebileceklerin hepsini düzelt", after the store-review audit); the wording and mechanism are the implementing session's · Why: a pro build signs in to Qutai's server, sells credits and relays requests, so "no collected data" was wrong for it; the manifest and the store's privacy answers must agree. · Where: `plugins/withProAccounts.js`, docs/permissions.md › Notes for the store forms
 
 ## Details
 

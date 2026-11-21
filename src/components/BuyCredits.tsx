@@ -236,7 +236,7 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
         {suspended && <Text style={[styles.notice, styles.warnText]}>{t('buy.suspended')}</Text>}
         {store.unavailable && <Text style={styles.notice}>{t(UNAVAILABLE[store.unavailable])}</Text>}
         {productsFailed && <Text style={styles.notice}>{t('buy.storeFailed')}</Text>}
-        {billingOff && <Text style={styles.notice}>{t('buy.billingUnavailable')}</Text>}
+        {billingOff && <Text style={styles.notice}>{t(Platform.OS === 'ios' ? 'buy.billingUnavailableIos' : 'buy.billingUnavailable')}</Text>}
 
         <Text style={styles.section}>{t('buy.packs')}</Text>
         {loading && <ActivityIndicator color={palette.textSecondary} style={styles.loading} />}
@@ -298,7 +298,7 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
           </Pressable>
         )}
         <Text style={styles.hint}>{t(Platform.OS === 'ios' ? 'buy.storeNoteIos' : 'buy.storeNoteAndroid')}</Text>
-        <Text style={styles.hint}>{t('buy.refundNote')}</Text>
+        <Text style={styles.hint}>{t(Platform.OS === 'ios' ? 'buy.refundNoteIos' : 'buy.refundNoteAndroid')}</Text>
         <View style={styles.links}>
           <Pressable onPress={() => setLegal('terms')} accessibilityRole="link" hitSlop={6}>
             <Text style={styles.link}>{t('settings.terms')}</Text>
@@ -323,7 +323,7 @@ const UNAVAILABLE: Record<NonNullable<ReturnType<typeof purchaseStore>['unavaila
 
 const FAILED: Record<StoreFailure, MessageKey> = {
   notAllowed: 'buy.status.notAllowed',
-  billingUnavailable: 'buy.billingUnavailable',
+  billingUnavailable: Platform.OS === 'ios' ? 'buy.billingUnavailableIos' : 'buy.billingUnavailable',
   network: 'buy.status.network',
   productUnavailable: 'buy.status.productUnavailable',
   storeProblem: 'buy.status.failed',
