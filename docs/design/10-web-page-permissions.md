@@ -42,7 +42,7 @@ the user. Web pages can't show notifications.
 - **`WPERM-12`** The assistant can't grant a site the location, camera or microphone or change these settings; when a site asks for the location itself, the assistant lets the site's own prompt answer.
   Status: Default (manager or implementing session; open to change) · Why: site permissions set what sites may do; only the user decides · Enforced: In the app: src/browser/sitePrompt.ts; src/agent/settingsTool.ts (PROTECTED) · Source: febcdb4; e60fa84
 - **`WPERM-13`** The assistant's own location request (`get_location`) is separate from sites: confirmed each time unless "Don't ask again for your location", never in incognito, and the coordinates are for that task only, never saved to memory.
-  Status: Default (manager or implementing session; open to change) · Why: the location then goes to the AI provider · Enforced: In the app: src/agent/executeTool.ts (locationTool); "never save them" is Prompt only (tool result text) · Source: e60fa84; 289a687
+  Status: Default (manager or implementing session; open to change) · Why: the location then goes to the AI provider · Enforced: In the app: src/agent/tools/device.ts (locationTool); "never save them" is Prompt only (tool result text) · Source: e60fa84; 289a687
 - **`WPERM-14`** Web pages can't show notifications: there is no web notification or push support.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: Designed, not built (no page shim, no push entitlement, push permission blocked on Android) · Source: docs/permissions.md
 

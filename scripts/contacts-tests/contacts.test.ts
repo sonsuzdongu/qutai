@@ -269,7 +269,7 @@ test('using a handle: the value for the app, refused for the wrong kind, another
 });
 
 test('outgoing tools never put a contact\'s value into what the model reads', () => {
-  for (const file of ['src/agent/executeTool.ts', 'src/agent/shareTools.ts']) {
+  for (const file of ['src/agent/executeTool.ts', 'src/agent/tools/phone.ts', 'src/agent/shareTools.ts']) {
     const src = readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
     assert.ok(!/\$\{contact\.value\}/.test(src), `${file}: contact.value in a template`);
     assert.ok(!/\$\{intl\.number\}/.test(src), `${file}: intl.number in a template`);

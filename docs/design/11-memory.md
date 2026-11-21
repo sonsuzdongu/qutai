@@ -40,11 +40,11 @@ what it refuses to keep, memories hidden from the AI, and the per-site question 
 - **`MEM-6`** National ID and passport numbers may be kept only in identity and travel (the Memory screen shows a warning line there); elsewhere they are refused.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: In the app: src/agent/memory.ts (sensitiveReason, ID_NUMBER_CATEGORIES) · Source: d2a78fd; item 29 hand-over note
 - **`MEM-7`** `remember` refuses coordinates and text with two or more calendar date-times.
-  Status: Default (manager or implementing session; open to change) · Why: "a location is not something to remember"; "the user's schedule … is never kept in memory" · Enforced: In the app: src/agent/executeTool.ts (memoryTool) · Source: src/agent/executeTool.ts
+  Status: Default (manager or implementing session; open to change) · Why: "a location is not something to remember"; "the user's schedule … is never kept in memory" · Enforced: In the app: src/agent/tools/memory.ts (memoryTool) · Source: src/agent/executeTool.ts
 - **`MEM-8`** The assistant saves only what the user said in their own messages, never information from web pages.
   Status: Default (manager or implementing session; open to change) · Why: a page must not plant facts about the user · Enforced: Prompt only: src/agent/memory.ts (memoryPrompt); the app does not check it · Source: 09f1190
 - **`MEM-9`** Incognito conversations read memories but `remember` and `forget` are refused there.
-  Status: Default (manager or implementing session; open to change) · Why: "Incognito conversations leave nothing behind, memories included" · Enforced: In the app: src/agent/executeTool.ts (memoryTool); src/agent/runAgent.ts (memoryPrompt canWrite) · Source: 09f1190
+  Status: Default (manager or implementing session; open to change) · Why: "Incognito conversations leave nothing behind, memories included" · Enforced: In the app: src/agent/tools/memory.ts (memoryTool); src/agent/runAgent.ts (memoryPrompt canWrite) · Source: 09f1190
 - **`MEM-10`** National ID and passport numbers (named as such, or a valid Turkish ID number) are saved hidden automatically, whether saved by the assistant, the Memory screen, setup or a backup; an update hid those saved earlier.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: In the app: src/storage/memory.ts (addMemory, updateMemory); src/storage/db.ts (migration) · Source: 530b106
 - **`MEM-11`** Saving a hidden memory again never makes it visible.
@@ -56,11 +56,11 @@ what it refuses to keep, memories hidden from the AI, and the per-site question 
 - **`MEM-14`** Every tool result is scanned for hidden values before it goes back to the AI, into the conversation, an error line or the "What was sent to the AI" log, and each is replaced by "[hidden: …]" (also when written with spaces, dashes, dots or URL escapes; values shorter than 4 letters or digits are not looked for).
   Status: Default (manager or implementing session; open to change) · Why: a page may print the value back (a field, the HTML, an error message) · Enforced: In the app: src/agent/executeTool.ts (executeTool wraps executeUnredacted); src/agent/hiddenValues.ts (redactHidden) · Source: 530b106
 - **`MEM-15`** A hidden value is typed only on https pages, never on a blocked site or where personal details are blocked, and only after a question the first time each hidden value goes to a site in a task, even where personal details are always allowed; that question has no "always".
-  Status: Default (manager or implementing session; open to change) · Why: the value is the most sensitive kind · Enforced: In the app: src/agent/executeTool.ts (hiddenGate); App.tsx (askHiddenValue) · Source: 530b106; item 34 hand-over note
+  Status: Default (manager or implementing session; open to change) · Why: the value is the most sensitive kind · Enforced: In the app: src/agent/tools/gates.ts (hiddenGate); App.tsx (askHiddenValue) · Source: 530b106; item 34 hand-over note
 - **`MEM-16`** A screenshot for the AI makes fields showing a hidden value transparent, and is refused when the value appears in the page's text; no hidden value is sent into the page to look for it.
-  Status: Default (manager or implementing session; open to change) · Why: chosen to "mask, not refuse" for fields · Enforced: In the app: src/agent/executeTool.ts (maskHiddenForCapture) · Source: item 34 hand-over note
+  Status: Default (manager or implementing session; open to change) · Why: chosen to "mask, not refuse" for fields · Enforced: In the app: src/agent/tools/page.ts (maskHiddenForCapture) · Source: item 34 hand-over note
 - **`MEM-17`** Before `type` or `select_option` enters text that contains remembered personal details, the site's "Your personal information" setting decides: Allow runs, Block refuses, Ask (default) asks once per site and task with Don't allow / Allow once / Always allow on this site; "Always" saves Allow and is not offered in incognito.
-  Status: Default (manager or implementing session; open to change) · Why: checked "in the app", not left to the instructions · Enforced: In the app: src/agent/executeTool.ts (personalGate); App.tsx (askPersonalData); src/browser/sitePrompt.ts · Source: e7414e3
+  Status: Default (manager or implementing session; open to change) · Why: checked "in the app", not left to the instructions · Enforced: In the app: src/agent/tools/gates.ts (personalGate); App.tsx (askPersonalData); src/browser/sitePrompt.ts · Source: e7414e3
 - **`MEM-19`** Once the personal-information question was answered, the general "ask before actions" question is not asked again for the same step.
   Status: Default (manager or implementing session; open to change) · Why: asking twice for one step · Source: item 29 hand-over note; src/agent/executeTool.ts
 - **`MEM-20`** Typed text is never written to the activity history; it only says where something was typed.
@@ -72,7 +72,7 @@ what it refuses to keep, memories hidden from the AI, and the per-site question 
 - **`MEM-24`** The assistant cannot switch memory on or off or hide or show memories; it can only remember and forget single facts.
   Status: Default (manager or implementing session; open to change) · Why: "what the assistant keeps about the user is theirs to decide" · Enforced: In the app: src/agent/settingsTool.ts (CHANGEABLE) · Source: febcdb4
 - **`MEM-25`** When the assistant saves an ID number, the chat line and the activity history do not repeat the value.
-  Status: Default (manager or implementing session; open to change) · Why: the value must not appear on screen or in logs · Enforced: In the app: src/agent/executeTool.ts (describeToolCall: action.rememberHidden) · Source: 530b106
+  Status: Default (manager or implementing session; open to change) · Why: the value must not appear on screen or in logs · Enforced: In the app: src/agent/tools/describe.ts (describeToolCall: action.rememberHidden) · Source: 530b106
 
 ## Details
 
