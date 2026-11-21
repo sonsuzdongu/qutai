@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useState } from 'react';
 import { Animated, Easing, type LayoutChangeEvent, StyleSheet, View } from 'react-native';
 import { useReduceMotion } from '../utils/useReduceMotion';
+import { BarOverlayLayer, BarOverlayProvider, useBarOverlaySlot } from './BarOverlay';
 
 const SLIDE_MS = 200;
 
@@ -28,6 +29,8 @@ export function HidingBar({
   children: ReactNode;
 }) {
   const reduceMotion = useReduceMotion();
+  // What the bar draws over the page (the address suggestions), in a layer as large as the page: BarOverlay.tsx.
+  const overlay = useBarOverlaySlot();
   const [height, setHeight] = useState(0);
   const [slide] = useState(() => new Animated.Value(0));
   // The page is extended (laid out with the bar's room) while the bar is hidden or on its way out or in.
@@ -77,9 +80,10 @@ export function HidingBar({
       <View style={styles.clip}>
         <Animated.View style={[styles.flex, { marginBottom: -room, transform: [{ translateY }] }]}>
           <View onLayout={onBarLayout} style={styles.bar}>
-            {bar}
+            <BarOverlayProvider slot={overlay}>{bar}</BarOverlayProvider>
           </View>
           {children}
+          <BarOverlayLayer slot={overlay} />
         </Animated.View>
       </View>
     );
@@ -89,8 +93,9 @@ export function HidingBar({
     <View style={styles.clip}>
       {children}
       <Animated.View onLayout={onBarLayout} style={[styles.bar, { marginTop: -room, transform: [{ translateY }] }]}>
-        {bar}
+        <BarOverlayProvider slot={overlay}>{bar}</BarOverlayProvider>
       </Animated.View>
+      <BarOverlayLayer slot={overlay} />
     </View>
   );
 }

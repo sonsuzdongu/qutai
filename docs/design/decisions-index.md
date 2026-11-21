@@ -847,6 +847,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-34` | Address bar: registrable domain emphasised, the rest subdued, no https scheme, IDN in Unicode only when safe… | Default | 2026-11-20 |
 | `UI-35` | Tapping the address bar selects the whole address on both platforms (focused from code, not autoFocus) | Default | 2026-11-20 |
 | `UI-36` | The address bar slides away on scroll down and back on a small scroll up, unless something holds it; setting to keep it… | Default | 2026-11-20 |
+| `UI-37` | A tap on the address suggestions or the dimmed area around them never reaches the page behind (drawn in a page-sized layer) | Default | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

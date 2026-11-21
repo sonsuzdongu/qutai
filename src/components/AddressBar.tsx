@@ -22,7 +22,9 @@ import { darkPalette, makeStyles, usePalette } from '../ui/theme';
 import { Icon, IconName } from '../ui/Icon';
 import { AssistantButton } from './AssistantButton';
 import { useReduceMotion } from '../utils/useReduceMotion';
+import { BarOverlay } from './BarOverlay';
 import { OmniboxSuggestions } from './OmniboxSuggestions';
+import { omniboxOverlayFrame } from './overlaySlot';
 import type { HoldHandlers } from './PushToTalk';
 
 /**
@@ -158,6 +160,7 @@ export function AddressBar({
   const bottom = position === 'bottom';
   // Suggestions and the dimmed backdrop start exactly at the bar's edge (percent offsets drift on Android).
   const [barHeight, setBarHeight] = useState(48);
+  const overlayFrame = omniboxOverlayFrame(bottom, barHeight);
   // Swiping sideways on the bar switches tabs; taps and vertical moves are left alone.
   const swipe = useMemo(
     () =>
@@ -363,32 +366,34 @@ export function AddressBar({
         />
       )}
       <ProgressLine state={progress} top={bottom} />
+      {/* Drawn in a layer as large as the page, never hanging outside the bar: on Android a tap there also pressed the
+          page behind (components/overlaySlot.ts). */}
       {editing && (
-        <Pressable
-          style={[styles.backdrop, bottom ? { bottom: barHeight } : { top: barHeight }]}
-          onPress={finishEditing}
-          accessibilityLabel={t('common.close')}
-          accessibilityRole="button"
-        />
-      )}
-      {editing && (
-        <OmniboxSuggestions
-          text={text}
-          incognito={incognito}
-          dark={darkUI}
-          above={bottom}
-          barHeight={barHeight}
-          searchEngine={searchEngine}
-          suggestionsEnabled={searchSuggestions}
-          onNavigate={(next) => {
-            finishEditing();
-            onSubmit(next);
-          }}
-          onAsk={(query) => {
-            finishEditing();
-            onAsk(query);
-          }}
-        />
+        <BarOverlay>
+          <Pressable
+            style={[styles.backdrop, overlayFrame.backdrop]}
+            onPress={finishEditing}
+            accessibilityLabel={t('common.close')}
+            accessibilityRole="button"
+          />
+          <OmniboxSuggestions
+            text={text}
+            incognito={incognito}
+            dark={darkUI}
+            above={bottom}
+            barHeight={barHeight}
+            searchEngine={searchEngine}
+            suggestionsEnabled={searchSuggestions}
+            onNavigate={(next) => {
+              finishEditing();
+              onSubmit(next);
+            }}
+            onAsk={(query) => {
+              finishEditing();
+              onAsk(query);
+            }}
+          />
+        </BarOverlay>
       )}
     </View>
   );
@@ -586,7 +591,7 @@ const useStyles = makeStyles((c) => ({
   fieldRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', gap: 6 },
   fieldTextFlex: { flex: 1 },
   input: { paddingVertical: 0, height: '100%' },
-  backdrop: { position: 'absolute', left: 0, right: 0, height: 4000, backgroundColor: c.backdrop },
+  backdrop: { position: 'absolute', left: 0, right: 0, backgroundColor: c.backdrop },
   barBottom: {
     borderBottomWidth: 0,
     borderTopWidth: StyleSheet.hairlineWidth,
