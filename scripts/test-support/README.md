@@ -8,6 +8,7 @@ npm test                    # every server-free suite, 4 at a time: one line per
 npm run test:text           # one suite with node's full output (every suite keeps its test:<name>)
 node scripts/test-support/run.mjs text apps     # some suites, summarised
 QUTAI_TEST_JOBS=1 npm test  # one at a time (default: half the cores, at most 4)
+npm run test:coverage       # the same with node's own coverage: per-file summary in node_modules/.cache/qutai-coverage/
 npm run check:all           # before a commit or a build: typecheck, lint, profile, npm test, and the server's checks
 ```
 

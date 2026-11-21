@@ -74,6 +74,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "node scripts/test-support/run.mjs",
+    "test:coverage": "node scripts/test-support/run.mjs --coverage",
     "check:all": "node scripts/check-all.mjs",
     "test:account": "node scripts/test-support/run.mjs account --verbose",
     "test:account:server": "node scripts/test-support/run.mjs account:server --verbose",
