@@ -67,16 +67,28 @@ Toplam 25–35 sn. Her bölümden 15 sn'lik kısa bir kesit de çıkar (açılı
 - **Kayıt:** `xcrun simctl io booted recordVideo` (simülatör) ya da telefonun ekran kaydı. Ham dosyalar
   `video/raw/` klasörüne konur; bu klasör git'e girmez. Simülatör kaydı yalnızca ekran değişince kare yazar; kurgu
   betiği önce sabit 30 kare/sn'ye çevirir.
-- **Kurgu:** Her bölümün bir betiği var (`edit_01.py`): ham kayıtlardan 9:16, 16:9 ve 15 sn'lik kesiti, WebM, VTT
-  altyazı ve kapak görselini `video/out/` klasörüne üretir (git'e girmez). ffmpeg ve Pillow gerekir.
+- **Kurgu:** 1. bölümün kendi betiği var (`edit_01.py`); ötekiler ortak motoru (`film.py`) kullanan birer bölüm
+  dosyası (`ep02_apps.py` gibi): `python3 ep03_compare.py v|h|short` ham kayıtlardan 9:16, 16:9 ve 15 sn'lik kesiti,
+  WebM, VTT altyazı ve kapak görselini `video/out/` klasörüne üretir (git'e girmez). Seslendirme:
+  `python3 make_voice.py ep03_compare en` (ElevenLabs, satır başına bir dosya, `audio/<bölüm>/`). ffmpeg ve Pillow gerekir.
+- **Simülatör kaydı izni:** Claude oturumundan kayıt depo klasörüne yazamıyor (izin hatası); önce geçici klasöre
+  kaydedip `raw/` içine taşıyın. Kaydedici ilk saniyeleri kaçırabiliyor: başlattıktan sonra ~12 sn bekleyin.
 
-## Bölümler
+## Bölümler (İngilizce, 21 Kasım 2026)
 
-| # | Bölüm | Vurgu anı | Kontrol anı |
-|---|---|---|---|
-| 1 | [Sizi tanır](01-hafiza.md): hafıza ve glutensiz sipariş | "Hatırlanıyor" satırı, sonra kendiliğinden "glutensiz" araması | Kişisel bilgi sorusu, ödemede durma |
-| 2 | Sekmeler arası karşılaştırma | "Sekme 2 okunuyor" ve karşılaştırma tablosu | Sepete eklemeden önce onay |
-| 3 | Rezervasyon ve takvim | Takvim etkinliği kartı, Ara düğmesi | Takvime yazmadan önce onay |
-| 4 | Kaynaklı araştırma | Yanıtın altındaki kaynak kartları | — (yalnızca okuma) |
-| 5 | Kendi anahtarınız | Sohbet başına model seçimi | — |
-| 6 | Yapay zekâya gönderilenler | İstek listesi: ne, hangi siteden, nereye | — |
+Kişi adı İngilizce videolarda Emma. Demo site: `demo-sites/lokanta` (Lokanta Moda; `?r=sofra` ikinci restoran,
+`#reviews` değerlendirmeler sayfası, içinde yapay zekâ asistanlarına yazılmış uydurma bir talimat).
+
+| Dosya | Bölüm | Ham kayıt |
+|---|---|---|
+| `edit_01.py` | 1. [Sizi tanır](01-hafiza.md): hafıza, glutensiz sipariş, onaylı ödeme | `ep01-en-actA-take3`, `ep01-en-actB-take6` |
+| `ep02_apps.py` | 2. Qutai içinde uygulamalar (su takibi) | `ep02-en-apps-take2` |
+| `ep03_compare.py` | 3. Sekmeleri karşılaştırma, ucuz sepete ekleme (teslimat ücreti dahil) | `ep03-en-compare-take1` |
+| `ep04_review.py` | 4. Onayla yayınlama, sayfadaki gizli talimatın yok sayılması | `ep04-en-review-take1` |
+| `ep05_styles.py` | 5. Sayfa stilleri | `ep05-en-styles-take1` |
+| `ep08_research.py` | 8. Kaynaklı araştırma (gerçek web) | `ep08-en-research-take2` |
+| `ep09_sent.py` | 9. Yapay zekâya gönderilenler ve maliyet | `ep09-en-sent-take1` |
+| `ep00_all.py` | Hepsi bir arada, 9:16 (~66 sn) | yukarıdakiler |
+
+Çekilemeyenler: 6. görsel düzenleme (simülatörün fotoğraf seçicisi kendiliğinden kapanıyor), 7. kişiler ve mesaj,
+rezervasyon ve takvim (telefonun izin sorularını kayıt cihazında sahibinin yanıtlaması gerekiyor).

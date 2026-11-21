@@ -1,5 +1,6 @@
 # The shared film engine for the Qutai promo series (video/README.md): an episode file defines EP (its words,
 # takes, cuts, the short cut and the voice-over) and calls film.main(EP). Episode 1 keeps its own edit_01.py.
+# A segment's 'series' names a words key to show instead of the episode's series (the all-in-one film).
 # Only cuts, speed (marked), a short freeze frame and film graphics on top: the app's screen itself is never changed.
 # Needs ffmpeg (libx264, libvpx-vp9, libopus) and Pillow.
 import os, subprocess, sys
@@ -98,7 +99,7 @@ def phone_overlay(L, seg, lang, path, with_rects=True, with_badge=True):
                         radius=r_in + bz + 7 * k, outline=GOLD, width=max(2, round(3 * k)))
     W = EP['words'][lang]
     if L['W'] < L['H']:  # 9:16: series name on top, caption under the phone
-        d.text((L['W'] / 2, 78), W['series'], font=font(SERIF, 40), fill=TEAL_INK, anchor='mm')
+        d.text((L['W'] / 2, 78), W.get(seg.get('series'), W['series']), font=font(SERIF, 40), fill=TEAL_INK, anchor='mm')
         if seg.get('cap'):
             f = font(SANS, 50); lines = wrap(d, W['cap'][seg['cap']], f, 960)
             top = 1810 - (len(lines) - 1) * 33
@@ -110,7 +111,7 @@ def phone_overlay(L, seg, lang, path, with_rects=True, with_badge=True):
             d.text((L['W'] - 44 - 18 - tw, 107), t, font=f, fill=PARCH, anchor='lm')
     else:  # 16:9: series and caption in the right column
         cx = 1020
-        d.text((cx, 330), W['series'], font=font(SERIF, 40), fill=TEAL_INK, anchor='lm')
+        d.text((cx, 330), W.get(seg.get('series'), W['series']), font=font(SERIF, 40), fill=TEAL_INK, anchor='lm')
         d.line([(cx, 372), (cx + 120, 372)], fill=GOLD, width=3)
         if seg.get('cap'):
             f = font(SERIF_B, 72); lines = wrap(d, W['cap'][seg['cap']], f, 800)
