@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 859 decisions (132 owner, 644 default, 83 waiting); 163 ids moved to Details.
+Totals: 859 decisions (134 owner, 644 default, 81 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -62,7 +62,7 @@ The open questions, in one place (each row says what the app does today).
 | `CRED-26` | Today a step holds its whole output limit and room for search results, so a small balance refuses cheaper requests (Haiku: ~2.2 / 13 / 71 credits)… | [34](34-credits-and-relay.md) |
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one admin role. | [34](34-credits-and-relay.md) |
 | `CRED-34` | Today abuse flags can't be marked resolved. | [34](34-credits-and-relay.md) |
-| `CRED-35` | Today credit prices are the model's token price plus a margin; pack sizes, trial credits, per-user limits and credit expiry… | [34](34-credits-and-relay.md) |
+| `CRED-35` | Today credit prices are the model's token price plus a margin; pack sizes, trial credits and per-user limits are open (credits never expire… | [34](34-credits-and-relay.md) |
 | `CRED-37` | Today there is no crash-report service. | [34](34-credits-and-relay.md) |
 | `CRED-38` | Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3 minutes, and not for incognito… | [34](34-credits-and-relay.md) |
 | `BUY-9` | Today a refund that Apple later cancels does not give the credits back automatically; support can grant them by hand. | [35](35-purchases.md) |
@@ -80,8 +80,6 @@ The open questions, in one place (each row says what the app does today).
 | `BUILD-22` | Today Android declares REQUEST_INSTALL_PACKAGES, so that "Open" on a downloaded APK reaches the system installer. Whether to fill in… | [40](40-signing-and-builds.md) |
 | `LEGAL-9` | Before Qutai's server goes live for everyone, every "no servers of ours" sentence in the onboarding, the legal texts, store listings and… | [41](41-legal-texts.md) |
 | `LEGAL-10` | A lawyer reviews the open-source and pro texts (KVKK/GDPR, Turkish consumer law on digital content) before any store release. Today they… | [41](41-legal-texts.md) |
-| `LEGAL-11` | Today the pro terms say that credits have no cash value, cannot be transferred, are refunded only as the law or the store requires (a… | [41](41-legal-texts.md) |
-| `LEGAL-25` | Proposed: raise the open-source legal version from 4 to 5 and the pro version from 6 to 7 for the protective clauses and the reports… | [41](41-legal-texts.md) |
 | `LEGAL-26` | The terms name no governing law or court. Open for the owner: which law governs and which courts or consumer boards hear disputes… | [41](41-legal-texts.md) |
 | `WEB-11` | Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end sync, and the comparison's… | [42](42-website.md) |
 | `NOT-9` | Today there is no sync; whether a future sync must be end-to-end encrypted (so the server cannot read it) is open, recommended yes. | [44](44-not-built.md) |
@@ -1217,7 +1215,7 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | Id | Decision | Status | Date |
 |---|---|---|---|
 | `LEGAL-1` | Anyone whose accepted legal version is lower than the current one must accept again before the browser opens. | Default |  |
-| `LEGAL-2` | Today the open-source legal version is 4 and the pro legal version is 6, both dated 2026-11-20. | Owner | 2026-11-20 |
+| `LEGAL-2` | Today the open-source legal version is 5 and the pro legal version is 7, both dated 2026-11-21. | Owner | 2026-11-21 |
 | `LEGAL-3` | Pro-mode builds show their own texts with their own version, and changing one set never re-asks users of… | Default |  |
 | `LEGAL-4` | The version goes up when the policy or terms change in substance. Only the owner decides a bump: a session… | Owner | 2026-11-19 |
 | `LEGAL-5` | The privacy policies' "the result of a script you approved on a page" is covered by the bump to open source 4 / pro 6… | Owner | 2026-11-20 |
@@ -1226,7 +1224,7 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | `LEGAL-8` | The open-source policy promises: (calendar and location asked each time unless "Don't ask again"; incognito keeps only downloads;… | Default |  |
 | `LEGAL-9` | Before Qutai's server goes live for everyone, every "no servers of ours" sentence in the onboarding, the… | **Waiting** |  |
 | `LEGAL-10` | A lawyer reviews the open-source and pro texts (KVKK/GDPR, Turkish consumer law on digital content) before… | **Waiting** |  |
-| `LEGAL-11` | Today the pro terms say that credits have no cash value, cannot be transferred, are refunded only as the… | **Waiting** |  |
+| `LEGAL-11` | The pro terms: credits have no cash value, cannot be transferred, do not expire, are refunded only as the law… | Owner | 2026-11-21 |
 | `LEGAL-12` | The legal texts exist in all ten interface languages; the eight translated from English say the English version prevails… | Owner | 2026-11-20 |
 | `LEGAL-13` | Turkish legal texts address the user as "siz". Short button labels keep the bare imperative ("Kabul et ve… | Owner | 2026-11-16 |
 | `LEGAL-14` | Ad-blocking filter lists are downloaded only after the terms have been accepted at least once. | Default |  |
@@ -1237,8 +1235,8 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | `LEGAL-22` | The terms of both builds (ten languages) have protective clauses: websites, the assistant's actions, AI answers,… | Owner | 2026-11-21 |
 | `LEGAL-23` | "As is" with liability limited only as far as the law allows (never intent, gross negligence, death or injury);… | Default | 2026-11-21 |
 | `LEGAL-24` | The privacy policies (both builds, ten languages) say what blocking, styles, scripts and apps do with data… | Default | 2026-11-21 |
-| `LEGAL-25` | Proposed: raise the legal versions to open source 5 / pro 7 for the protective clauses; not done… | **Waiting** |  |
-| `LEGAL-26` | The terms name no governing law or court; which law and courts, credit expiry and extra refunds are open… | **Waiting** |  |
+| `LEGAL-25` | The legal versions went to open source 5 / pro 7 on 2026-11-21 for the protective clauses, reports, contact and… | Owner | 2026-11-21 |
+| `LEGAL-26` | The terms name no governing law or court; which law governs and which courts or boards hear disputes is open… | **Waiting** |  |
 | `LEGAL-18` | Qutai's code is Apache-2.0. The licence does not cover the Qutai name, logo or icons, and trademark… | Default |  |
 
 Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`

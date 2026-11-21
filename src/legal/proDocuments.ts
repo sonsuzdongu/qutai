@@ -6,7 +6,7 @@ import type { LegalDocument, LegalKind, LegalLanguage } from './documents';
  * (README.md › Accounts, › Qutai Credits; backend/README.md › Purchases); have them checked by a lawyer before the
  * store release (TODO.md › Legal).
  */
-export const PRO_LEGAL_UPDATED = '2026-11-20';
+export const PRO_LEGAL_UPDATED = '2026-11-21';
 
 export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocument>> = {
   en: {
@@ -209,7 +209,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'be used on any phone you sign in on, cannot be transferred or exchanged for money, and are not refunded ' +
             'except where the law or the store’s refund rules require it; refunds are handled by Apple or Google. If a ' +
             'purchase is refunded, its credits are taken back, which can make the balance negative until you top it up. ' +
-            'Models, credit prices and limits can change; the current ones are shown in the app before you use them. ' +
+            'Credits do not expire. Models, credit prices and limits can change; the current ones are shown in the app before you use them. ' +
             'Qutai Credits can be paused for maintenance or be unavailable at times.',
         },
         {
@@ -538,7 +538,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'hesabınıza aittir, oturum açtığınız her telefonda kullanılabilir, devredilemez, paraya çevrilemez ve ' +
             'yasaların ya da mağazanın iade kurallarının gerektirdiği durumlar dışında iade edilmez; iadeleri Apple veya ' +
             'Google yürütür. Bir satın alma iade edilirse kredileri geri alınır; bu, bakiyeyi yeniden kredi alana kadar ' +
-            'eksiye düşürebilir. Modeller, kredi fiyatları ve sınırlar değişebilir; güncel olanlar kullanmadan önce ' +
+            'eksiye düşürebilir. Kredilerin süresi dolmaz. Modeller, kredi fiyatları ve sınırlar değişebilir; güncel olanlar kullanmadan önce ' +
             'uygulamada gösterilir. Qutai Kredileri bakım nedeniyle durdurulabilir ya da zaman zaman kullanılamayabilir.',
         },
         {

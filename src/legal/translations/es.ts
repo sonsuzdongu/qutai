@@ -479,7 +479,7 @@ export const es: LegalTranslation = {
             'teléfono en el que usted inicie sesión, no pueden transferirse ni canjearse por dinero y no se ' +
             'reembolsan, salvo cuando lo exijan la ley o las normas de reembolso de la tienda; los reembolsos los ' +
             'gestionan Apple o Google. Si se reembolsa una compra, sus créditos se retiran, lo que puede dejar el ' +
-            'saldo en negativo hasta que usted lo recargue. Los modelos, los precios en créditos y los límites ' +
+            'saldo en negativo hasta que usted lo recargue. Los créditos no caducan. Los modelos, los precios en créditos y los límites ' +
             'pueden cambiar; los vigentes se muestran en la app antes de que usted los use. Qutai Credits puede ' +
             'pausarse por mantenimiento o no estar disponible en algunos momentos.',
         },

@@ -1,5 +1,5 @@
 {
-  "updated": "2026-11-20",
+  "updated": "2026-11-21",
   "en": {
     "title": "Terms of Use",
     "intro": "By using Qutai you agree to these terms. Please read them together with the Privacy Policy.",
@@ -10,7 +10,7 @@
       },
       {
         "heading": "Qutai Credits",
-        "body": "Credits are bought in the app through the App Store or Google Play, at the price the store shows, and are added to your Qutai account once the purchase is confirmed. They pay only for the assistant’s requests in Qutai, at the credit prices shown for each model; what each answer cost is shown under it. A request first holds the most it could cost and gives back what it did not use. Credits belong to your Qutai account, can be used on any phone you sign in on, cannot be transferred or exchanged for money, and are not refunded except where the law or the store’s refund rules require it; refunds are handled by Apple or Google. If a purchase is refunded, its credits are taken back, which can make the balance negative until you top it up. Models, credit prices and limits can change; the current ones are shown in the app before you use them. Qutai Credits can be paused for maintenance or be unavailable at times."
+        "body": "Credits are bought in the app through the App Store or Google Play, at the price the store shows, and are added to your Qutai account once the purchase is confirmed. They pay only for the assistant’s requests in Qutai, at the credit prices shown for each model; what each answer cost is shown under it. A request first holds the most it could cost and gives back what it did not use. Credits belong to your Qutai account, can be used on any phone you sign in on, cannot be transferred or exchanged for money, and are not refunded except where the law or the store’s refund rules require it; refunds are handled by Apple or Google. If a purchase is refunded, its credits are taken back, which can make the balance negative until you top it up. Credits do not expire. Models, credit prices and limits can change; the current ones are shown in the app before you use them. Qutai Credits can be paused for maintenance or be unavailable at times."
       },
       {
         "heading": "Your account",
@@ -72,7 +72,7 @@
       },
       {
         "heading": "Qutai Kredileri",
-        "body": "Krediler uygulama içinden App Store veya Google Play aracılığıyla, mağazanın gösterdiği fiyatla satın alınır ve satın alma doğrulandığında Qutai hesabınıza eklenir. Yalnızca Qutai’da asistanın isteklerinin ücretini, her model için gösterilen kredi fiyatlarıyla öder; her yanıtın ne kadar tuttuğu altında gösterilir. Bir istek önce tutabileceği en yüksek tutarı ayırır, kullanmadığını geri verir. Krediler Qutai hesabınıza aittir, oturum açtığınız her telefonda kullanılabilir, devredilemez, paraya çevrilemez ve yasaların ya da mağazanın iade kurallarının gerektirdiği durumlar dışında iade edilmez; iadeleri Apple veya Google yürütür. Bir satın alma iade edilirse kredileri geri alınır; bu, bakiyeyi yeniden kredi alana kadar eksiye düşürebilir. Modeller, kredi fiyatları ve sınırlar değişebilir; güncel olanlar kullanmadan önce uygulamada gösterilir. Qutai Kredileri bakım nedeniyle durdurulabilir ya da zaman zaman kullanılamayabilir."
+        "body": "Krediler uygulama içinden App Store veya Google Play aracılığıyla, mağazanın gösterdiği fiyatla satın alınır ve satın alma doğrulandığında Qutai hesabınıza eklenir. Yalnızca Qutai’da asistanın isteklerinin ücretini, her model için gösterilen kredi fiyatlarıyla öder; her yanıtın ne kadar tuttuğu altında gösterilir. Bir istek önce tutabileceği en yüksek tutarı ayırır, kullanmadığını geri verir. Krediler Qutai hesabınıza aittir, oturum açtığınız her telefonda kullanılabilir, devredilemez, paraya çevrilemez ve yasaların ya da mağazanın iade kurallarının gerektirdiği durumlar dışında iade edilmez; iadeleri Apple veya Google yürütür. Bir satın alma iade edilirse kredileri geri alınır; bu, bakiyeyi yeniden kredi alana kadar eksiye düşürebilir. Kredilerin süresi dolmaz. Modeller, kredi fiyatları ve sınırlar değişebilir; güncel olanlar kullanmadan önce uygulamada gösterilir. Qutai Kredileri bakım nedeniyle durdurulabilir ya da zaman zaman kullanılamayabilir."
       },
       {
         "heading": "Hesabınız",

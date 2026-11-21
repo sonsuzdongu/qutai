@@ -517,7 +517,7 @@ export const fr: LegalTranslation = {
             'ni échangés contre de l’argent, et ne sont pas remboursés, sauf lorsque la loi ou les règles de ' +
             'remboursement de la boutique l’exigent ; les remboursements sont traités par Apple ou Google. Si un ' +
             'achat est remboursé, ses crédits sont repris, ce qui peut rendre le solde négatif jusqu’à ce que vous ' +
-            'le rechargiez. Les modèles, les prix en crédits et les limites peuvent changer ; ceux en vigueur sont ' +
+            'le rechargiez. Les crédits n’expirent pas. Les modèles, les prix en crédits et les limites peuvent changer ; ceux en vigueur sont ' +
             'affichés dans l’application avant que vous ne les utilisiez. Les Qutai Credits peuvent être suspendus ' +
             'pour maintenance ou être indisponibles par moments.',
         },

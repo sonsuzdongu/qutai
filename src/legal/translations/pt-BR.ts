@@ -486,7 +486,7 @@ export const ptBR: LegalTranslation = {
             'login, não podem ser transferidos nem trocados por dinheiro e não são reembolsados, exceto quando a lei ' +
             'ou as regras de reembolso da loja o exigirem; os reembolsos são tratados pela Apple ou pelo Google. Se ' +
             'uma compra for reembolsada, os créditos dela são retirados, o que pode deixar o saldo negativo até você ' +
-            'recarregá-lo. Os modelos, os preços em créditos e os limites podem mudar; os atuais são mostrados no ' +
+            'recarregá-lo. Os créditos não expiram. Os modelos, os preços em créditos e os limites podem mudar; os atuais são mostrados no ' +
             'app antes de você usá-los. Os Qutai Credits podem ser pausados para manutenção ou ficar indisponíveis ' +
             'em alguns momentos.',
         },

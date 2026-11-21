@@ -18,8 +18,11 @@ import { PRO_DOCUMENTS, PRO_LEGAL_UPDATED } from './proDocuments';
  *    does: calendar events and location are asked each time unless "Don't ask again" was chosen (undone in Settings ›
  *    Assistant › Allowed without asking; never used in incognito conversations), incognito tabs keep files downloaded
  *    from them, and uninstalling leaves files saved outside Qutai (20 Nov 2026).
+ * 5: protective clauses in the terms (websites, the assistant's actions and the user's responsibility, AI answers,
+ *    blocking, page styles and scripts, apps, downloads, the own key, acceptable use, warranty and liability, consumer
+ *    rights) and a privacy section on what blocking, styles, scripts and apps do with data (21 Nov 2026).
  */
-const OPEN_SOURCE_LEGAL_VERSION = 4;
+const OPEN_SOURCE_LEGAL_VERSION = 5;
 /**
  * 2: the pro-mode documents describe the account, Qutai Credits and buying credits (16 Nov 2026).
  * 3: backups in the Qutai account (what the server keeps, encrypted with the user's password; 17 Nov 2026).
@@ -28,10 +31,12 @@ const OPEN_SOURCE_LEGAL_VERSION = 4;
  *    items the pro one was missing (location, speech, filter lists, details typed into sites; 18 Nov 2026).
  * 5: contacts (as in the open-source policy's version 3; 19 Nov 2026).
  * 6: as the open-source policy's version 4, and "sign-in tokens" spelled out in the server's logs (20 Nov 2026).
+ * 7: as the open-source policy's version 5, the reports section (what a report sends, kept 180 days), and in the
+ *    terms that Qutai Credits do not expire (21 Nov 2026).
  */
-const PRO_LEGAL_VERSION = 6;
+const PRO_LEGAL_VERSION = 7;
 export const LEGAL_VERSION = accountsEnabled ? PRO_LEGAL_VERSION : OPEN_SOURCE_LEGAL_VERSION;
-export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-20';
+export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-21';
 
 export type LegalKind = 'privacy' | 'terms';
 export type LegalDocument = { title: string; intro: string; sections: { heading: string; body: string }[] };

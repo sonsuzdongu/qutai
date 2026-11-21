@@ -504,7 +504,7 @@ export const de: LegalTranslation = {
             'nicht übertragen oder in Geld umgetauscht werden und werden nicht erstattet, außer wenn das Gesetz ' +
             'oder die Erstattungsregeln des Stores dies verlangen; Erstattungen werden von Apple oder Google ' +
             'abgewickelt. Wird ein Kauf erstattet, werden seine Credits zurückgebucht, wodurch das Guthaben ' +
-            'negativ werden kann, bis Sie es aufladen. Modelle, Credit-Preise und Limits können sich ändern; die ' +
+            'negativ werden kann, bis Sie es aufladen. Credits verfallen nicht. Modelle, Credit-Preise und Limits können sich ändern; die ' +
             'aktuellen werden in der App angezeigt, bevor Sie sie verwenden. Qutai Credits können für ' +
             'Wartungsarbeiten pausiert werden oder zeitweise nicht verfügbar sein.',
         },

@@ -490,7 +490,7 @@ export const id: LegalTranslation = {
             'uang, dan tidak dapat dikembalikan dananya kecuali jika diwajibkan oleh hukum atau aturan pengembalian ' +
             'dana toko; pengembalian dana ditangani oleh Apple atau Google. Jika dana suatu pembelian dikembalikan, ' +
             'kreditnya ditarik kembali, yang dapat membuat saldo menjadi negatif sampai Anda mengisinya kembali. ' +
-            'Model, harga kredit, dan batas dapat berubah; yang berlaku saat ini ditampilkan di aplikasi sebelum ' +
+            'Kredit tidak memiliki masa kedaluwarsa. Model, harga kredit, dan batas dapat berubah; yang berlaku saat ini ditampilkan di aplikasi sebelum ' +
             'Anda menggunakannya. Qutai Credits dapat dijeda untuk pemeliharaan atau sesekali tidak tersedia.',
         },
         {

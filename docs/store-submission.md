@@ -76,7 +76,7 @@ Eklemeden önce:
 
 - ✅ **Sahte satın alma kaldırıldı** (21 Kasım 2026, risk 1.5'in bu kısmı): kredi ekranında "Test mode" yazısı ya da "Get (test)" düğmesi artık yok; paket denetimi bu metinler geri gelirse paketi durdurur. Notlardaki "Sandbox purchases" cümlesi mağazanın kendi test satın almasını anlatır (`BUY-32`), sahte yolu değil.
 - ⚠ **IN-APP PURCHASES** paragrafının ikinci cümlesini yalnızca "Test purchases in production" gerçekten **everyone** iken yazın.
-- ⚠ **IN-APP PURCHASES** "Credits never expire": kararı açık (`CRED-35`, `LEGAL-11`). Şartlara "satın alınan kredilerin süresi dolmaz" yazılmadan bu cümleyi bırakmayın ya da silin (risk 3.7).
+- ✅ **IN-APP PURCHASES** "Credits never expire": karar verildi (21 Kasım, `LEGAL-11`); pro şartlar on dilde "kredilerin süresi dolmaz" diyor (yasal sürüm pro 7). Cümle kalabilir (risk 3.7).
 - ✅ **Üçüncü taraf AI'a veri gönderimi** (21 Kasım 2026, risk 2.3): kendi anahtar modu için de rıza ekranı var (`AI-32`); cümle yukarıdaki PRIVACY paragrafında. İnceleme ekibi bunu kurulumun "Connect your AI" adımında kendi anahtarla, ya da ilk mesajda görür.
 - ⛔ **Video reklam engelleme** (risk 1.3) ve iOS'ta arka plan oynatma (2.1): karar sizde. Mağaza derlemesinde kalacaksa inceleme notlarında site adı vermeyin.
 - iOS ilk gönderimi: IPA'yı RevenueCat iOS anahtarıyla derleyin; anahtarsız pakette kredi ekranı var ama satın alma yok, bu 2.1(b) reddidir (risk 1.4).
@@ -100,7 +100,7 @@ Eklemeden önce:
 | ☐ | Ad, alt başlık, anahtar kelimeler, ekran görüntüleri | Rakip tarayıcı, YouTube ya da başka marka adı ve logosu yok; "her şeyi otomatik satın alır" gibi abartı yok; ekranlarda gerçek kart ve gerçek kişi verisi yok (risk 3.4, 4.12) |
 | ☐ | Varsayılan tarayıcı | Açıklamada "varsayılan tarayıcı yapılabilir" vaadi yok (yetki başvurusu yapılmadı; risk 4.2) |
 | ☐ | Export compliance | `app.json` › `usesNonExemptEncryption: false` (yalnızca standart HTTPS). Soru gelirse "hayır" |
-| ☐ | Kullanım şartları (EULA) | Varsayılan: Apple'ın standart EULA'sı (alanı boş bırakın). Sitede artık uygulamanın kullanım koşulları var (`WEB-14`, 21 Kasım): Qutai'ın kendi şartlarını özel EULA olarak vermek isterseniz App Information › License Agreement'a `https://qutai.sonsuzdongu.com/en/terms/` adresini (ya da metnini) koyun. Önce sitenin yayında olduğundan ve şartların yasal sürüm artışıyla uygulamada da kabul ettirildiğinden emin olun (`LEGAL-25`) |
+| ☐ | Kullanım şartları (EULA) | Varsayılan: Apple'ın standart EULA'sı (alanı boş bırakın). Sitede artık uygulamanın kullanım koşulları var (`WEB-14`, 21 Kasım): Qutai'ın kendi şartlarını özel EULA olarak vermek isterseniz App Information › License Agreement'a `https://qutai.sonsuzdongu.com/en/terms/` adresini (ya da metnini) koyun. Önce sitenin yayında olduğundan emin olun; şartlar uygulamada pro 7 ile kabul ettiriliyor (`LEGAL-25`) |
 | ☐ | **Description (açıklama) alanının sonu** | Uygulama içi satın alma olduğu için açıklamanın sonuna iki bağlantı ekleyin (sahibin isteği, 21 Kasım; inceleme bağlantıları açıklamada arar):<br>`Privacy Policy: https://qutai.sonsuzdongu.com/en/privacy-policy/`<br>`Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`<br>Özel EULA seçerseniz ikinci satırı `Terms of Use (EULA): https://qutai.sonsuzdongu.com/en/terms/` ile değiştirin ve App Store Connect › App Information › License Agreement'ı da güncelleyin. Diğer dillerdeki açıklamalara aynı iki satırı ekleyin (gizlilik bağlantısını o dilin sayfasıyla: `/tr/privacy-policy/` gibi) |
 
 ### 3.2 Yaş derecelendirmesi
@@ -178,7 +178,7 @@ Bu dosyanın metinleri bunlar yapılmadan tam doğru olmaz. Ayrıntı ve çözü
 - ⛔ **1.3 / 2.1:** video reklam engelleme ve iOS'ta arka plan oynatma. Sizin kararınız.
 - ✅ **2.3:** ~~kendi anahtar modu için üçüncü taraf AI rıza ekranı; kredi açıklamasındaki sağlayıcı listesi~~: yapıldı (21 Kasım 2026, `AI-32`; kredi açıklaması artık yalnızca Anthropic diyor).
 - ⛔ **1.5:** Ayarlar'daki "(deneme)" anahtarı. ~~Sahte satın alma yolu ve metinleri~~: kaldırıldı (21 Kasım 2026; production veritabanı için migration 0015 bir sonraki sunucu dağıtımıyla gider).
-- ☐ **2.2:** başkasından alınan `.qutaiapp` dosyasının içe aktarılması (uyarı ekleyin ya da ilk sürümde kapatın); ~~gizlilik metnine uygulamalarla ilgili cümle~~: metinlerde (21 Kasım, `LEGAL-6`, `LEGAL-24`), kullanıcılara yasal sürüm artışıyla gider (`LEGAL-25`).
+- ☐ **2.2:** başkasından alınan `.qutaiapp` dosyasının içe aktarılması (uyarı ekleyin ya da ilk sürümde kapatın); ~~gizlilik metnine uygulamalarla ilgili cümle~~: metinlerde (21 Kasım, `LEGAL-6`, `LEGAL-24`), yasal sürüm açık kaynak 5 / pro 7 ile kabul ettiriliyor (`LEGAL-25`).
 - ☐ **2.4:** pro gizlilik manifestosu ve `docs/permissions.md`'deki "sunucumuz yok" cümlesi.
 - ☐ **3.8:** yasal metinlerin avukat incelemesi.
 
