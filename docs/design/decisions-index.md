@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 840 decisions (123 owner, 634 default, 83 waiting); 163 ids moved to Details.
+Totals: 841 decisions (124 owner, 634 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -1084,6 +1084,7 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-29` | RevenueCat gets the account id, product ids, purchases and recent-purchase lookups; diagnostics and… | Default | 2026-11-20 |
 | `BUY-30` | A pro Android package needs the RevenueCat key (or --without-purchases); every package's bundle and… | Owner | 2026-11-20 |
 | `BUY-31` | Pack order is changed in the admin panel (Order…), one number per product for both stores; the app keeps the server's order… | Owner | 2026-11-20 |
+| `BUY-32` | Test purchases in production: off, listed accounts only, or an explicit "everyone" (all live accounts; loud banner);… | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `BUY-14`, `BUY-20`
 
