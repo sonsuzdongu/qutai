@@ -45,6 +45,7 @@ import { ServerBackupSection } from './ServerBackupSection';
 import { serverBackupEnabled } from '../backup/server';
 import { CalendarChoiceScreen } from './CalendarChoiceScreen';
 import { AiChoice, aiChoiceProblem, AiProviderFields, cleanAiChoice } from './AiProviderFields';
+import { backStep, pickAi as pickAiFields, type SettingsPage } from './settingsNavigation';
 import { ClearDataScreen, ClearOptions } from './ClearDataScreen';
 import { LegalScreen } from './LegalScreen';
 import { LicencesScreen } from './LicencesScreen';
@@ -81,8 +82,8 @@ type Props = {
   initialPage?: SettingsPage;
 };
 
-export type SettingsPage = Page;
-type Page = 'main' | 'account' | 'credits' | 'assistant' | 'privacy' | 'appearance' | 'language' | 'search' | 'backup' | 'about';
+export type { SettingsPage };
+type Page = SettingsPage;
 
 /** Where the Android back button goes; the open page sets it (the modal receives the button). */
 class BackRoute {
@@ -108,14 +109,7 @@ export function SettingsModal({ visible, onClose, ...rest }: Props) {
   );
 }
 
-const pickAi = (s: Settings): AiChoice => ({
-  provider: s.provider,
-  apiKeys: s.apiKeys,
-  models: s.models,
-  customBaseUrl: s.customBaseUrl,
-  customImages: s.customImages,
-  customHeaders: s.customHeaders,
-});
+const pickAi = (s: Settings): AiChoice => pickAiFields(s);
 // An address that isn't valid counts as typed (cleaning would drop it), so it still asks to be saved or discarded.
 const aiKey = (c: AiChoice) => JSON.stringify({ ...cleanAiChoice(c), typed: aiChoiceProblem(c) ? c.customBaseUrl : '' });
 const sameAi = (a: AiChoice, b: AiChoice) => aiKey(a) === aiKey(b);
@@ -160,9 +154,9 @@ function SettingsPages({
   const configured = isConfigured(settings, settings.provider);
 
   const goBack = () => {
-    if (page === 'main') return onClose();
-    if (page === 'credits') return setPage('account');
-    if (page !== 'assistant' || !aiDirty) return setPage('main');
+    const step = backStep(page, aiDirty);
+    if (step.kind === 'close') return onClose();
+    if (step.kind === 'page') return setPage(step.page);
     dialog.alert(t('settings.unsavedTitle'), t('settings.unsavedBody'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
