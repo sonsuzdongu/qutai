@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 842 decisions (125 owner, 634 default, 83 waiting); 163 ids moved to Details.
+Totals: 852 decisions (129 owner, 641 default, 82 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -37,7 +37,6 @@ The open questions, in one place (each row says what the app does today).
 | `APPS-14` | Each app may store up to 5 MB of data, counted in UTF-8 bytes. One value or document may be up to 256 KB, a batch up to 100 operations,… | [22](22-apps.md) |
 | `APPS-17` | The 20 newest versions plus the current one are kept, and older ones are deleted when a new one is saved. Today: 20. | [22](22-apps.md) |
 | `APPS-43` | Phase 3 phone features are each declared and asked per app. `assistant.ask` shows each question and its cost source first, and links ask… | [22](22-apps.md) |
-| `APPS-45` | There is no report button for AI-generated apps. Today: none. | [22](22-apps.md) |
 | `APPS-46` | The privacy policies say nothing about apps yet, and the legal version is not bumped. The proposed sentence: apps are stored only on the… | [22](22-apps.md) |
 | `MEDIA-7` | Whether iOS background play of YouTube is acceptable under YouTube's terms and App Review is open; today it works as in MEDIA-6. | [24](24-reader-and-media.md) |
 | `MEDIA-20` | On Android an APK opens in the system installer, which asks "allow from this source" itself; Qutai declares `REQUEST_INSTALL_PACKAGES`… | [24](24-reader-and-media.md) |
@@ -709,7 +708,7 @@ Moved to Details (ids retired, not reused): `IMG-2`, `IMG-4`, `IMG-5`, `IMG-7`, 
 | `APPS-42` | Residual app risks accepted: WebRTC can't be switched off in a WebView (the `window[0]` frame route is closed, `APPS-9`); DNS prefetch… | Default | 2026-11-19 |
 | `APPS-43` | Phase 3 phone features are each declared and asked per app. `assistant.ask` shows each question and its… | **Waiting** |  |
 | `APPS-44` | Phase 4 network goes only through Qutai's `network.fetch`, to https hosts listed in the manifest, with no… | Default |  |
-| `APPS-45` | There is no report button for AI-generated apps. Today: none. | **Waiting** |  |
+| `APPS-45` | Apps have ⋮ › Report in My apps and in the running app's menu, in builds with Qutai's server (`SAFE-1`,… | Owner | 2026-11-21 |
 | `APPS-46` | The privacy policies say nothing about apps yet, and the legal version is not bumped. The proposed… | **Waiting** |  |
 | `APPS-47` | The App Review notes describe apps as personal tools written at the user's request: | Default |  |
 | `APPS-49` | The file backup and the server backup each keep their own Apps and Apps' data choice. Apps' data can only… | Default |  |
@@ -1231,6 +1230,8 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | `LEGAL-14` | Ad-blocking filter lists are downloaded only after the terms have been accepted at least once. | Default |  |
 | `LEGAL-15` | Settings › About › Open source licences lists every third-party component whose code or assets ship in the… | Default |  |
 | `LEGAL-19` | Turkish and English are both originals; Turkish does not say that English prevails, only the eight translations do. | Owner | 2026-11-20 |
+| `LEGAL-20` | The pro privacy policies (ten languages) say what a report of an answer or an app sends to Qutai's server… | Default | 2026-11-21 |
+| `LEGAL-21` | The legal texts' contact address and the website's account deletion page use qutai@sonsuzdongu.com, not a… | Owner | 2026-11-21 |
 | `LEGAL-18` | Qutai's code is Apache-2.0. The licence does not cover the Qutai name, logo or icons, and trademark… | Default |  |
 
 Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`
@@ -1249,6 +1250,7 @@ Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`
 | `WEB-9` | The brand line and page title are "Qutai: Agentic Browser". The site always uses the light parchment look… | Default |  |
 | `WEB-11` | Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end… | **Waiting** |  |
 | `WEB-12` | The features page describes only what the code does today, from the design record, with limits stated… | Default |  |
+| `WEB-13` | The site has an account deletion page (`/en/delete-account/`, `/tr/delete-account/`, and `/delete-account`… | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 
@@ -1321,3 +1323,15 @@ Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 | `RMAP-7` | Qutai does not offer its own DNS over HTTPS. | Default |  |
 | `RMAP-8` | Qutai does not support browser extensions. | Default |  |
 | `RMAP-9` | Qutai does not offer undo for actions on the web. | Default |  |
+
+## [46. Reporting answers and apps](46-reports.md)
+
+| Id | Decision | Status | Date |
+|---|---|---|---|
+| `SAFE-1` | Every assistant answer and every app has ⋮ › Report in builds with Qutai's server (pro mode with a server… | Owner | 2026-11-21 |
+| `SAFE-2` | Reporting is one dialog with the reason and an "Include the text" box, ticked, that says the text goes to… | Default |  |
+| `SAFE-3` | An app's report includes, when ticked, its name and the files of its current version, never its data. | Default |  |
+| `SAFE-4` | A report carries only the kind, reason, note (Other only), the text when ticked (at most 20 000… | Default |  |
+| `SAFE-5` | The server takes at most 20 reports a day per account and per sender address (stored only as a keyed… | Default |  |
+| `SAFE-6` | The admin panel lists reports (open first) and resolving one asks for a reason and is audited. | Default |  |
+| `SAFE-7` | Today nobody is alerted when a report arrives; the owner reads the panel's Reports screen. | Default |  |

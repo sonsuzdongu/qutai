@@ -32,6 +32,8 @@ Yalnızca okuma yapıldı; kodda hiçbir şey değiştirilmedi.
 Bunlar düzeltilmeden gönderirseniz büyük olasılıkla ret alırsınız. Play'de bazıları Console formunu bile tamamlatmaz.
 
 ### 1.1 Yapay zekâ cevaplarını uygulama içinden bildirme yolu yok
+> **Durum (21 Kasım 2026):** yapıldı. Asistan cevaplarının ve uygulamaların ⋮ menüsünde artık "Bildir" var (pro derleme); bildirimler admin panelinin Reports ekranında görünüyor (`SAFE-1` ile `SAFE-7`, [46-reports.md](design/46-reports.md)). Sunucuya yeni tablo eklendi: production'da önce `npm run migrate:prod`, sonra deploy gerekiyor.
+
 - **Mağaza:** Google Play (kesin), Apple (yüksek)
 - **Kural:** Play: [AI-Generated Content](https://support.google.com/googleplay/android-developer/answer/13985936). Uygulamadan çıkmadan rahatsız edici içeriği geliştiriciye bildirme (report/flag) yolu zorunlu. Apple: [1.2 User-Generated Content](https://developer.apple.com/app-store/review/guidelines/#user-generated-content). 1.2 açıkça "AI content creation apps" uygulamalarını da sayıyor: içerik filtresi, şikâyet yolu, zamanında yanıt ve yayımlanmış iletişim bilgisi isteniyor.
 - **Bizde ne var:** Sohbet cevaplarında "Bildir" ya da "Bu cevabı şikâyet et" yok **[kodda doğrulandı]**: `src/chat` ve `src/components` içinde böyle bir işlem ya da metin bulunmuyor. AI'ın yazdığı uygulamalar için de yok: `APPS-45` ("There is no report button for AI-generated apps") [docs/design/22-apps.md:164](design/22-apps.md).
@@ -39,6 +41,8 @@ Bunlar düzeltilmeden gönderirseniz büyük olasılıkla ret alırsınız. Play
 - **Çözüm:** Her asistan cevabına ve her uygulama kartına ⋮ › "Bildir" ekleyin. Sebep seçilsin (saldırgan, zararlı, yanlış, diğer) ve isteğe bağlı bir not yazılabilsin. Pro modda bildirim sunucuya gitsin (cevap metni yalnızca kullanıcı onaylarsa eklensin; bu "telefondan çıkan veri" sayılır, gizlilik metnine yazılmalı). Açık kaynak modda e-posta taslağı açılabilir. Bildirimler admin panelde görünsün. İnceleme notunda hangi düğmenin bu işi yaptığını yazın.
 
 ### 1.2 Web'den hesap silme bağlantısı yok
+> **Durum (21 Kasım 2026):** yapıldı. Sitede `/en/delete-account/` ve `/tr/delete-account/` sayfaları var (`/delete-account` dile göre yönlendiriyor), footer'dan bağlantı veriliyor (`WEB-13`). Play Console'a girilecek adres: `https://qutai.sonsuzdongu.com/delete-account`. Sitenin yeniden yayımlanması gerekiyor.
+
 - **Mağaza:** Google Play
 - **Kural:** [Hesap silme şartları](https://support.google.com/googleplay/android-developer/answer/13327111) ve [User Data](https://support.google.com/googleplay/android-developer/answer/10144311). Uygulamada hesap açılabiliyorsa silme hem uygulama içinden hem de Play Console'a girilen bir **web bağlantısından**, uygulamayı yeniden kurmadan yapılabilmeli. Sayfada uygulamanın ya da geliştiricinin adı geçmeli. Dondurmak ya da devre dışı bırakmak silme sayılmaz.
 - **Bizde ne var:** Uygulama içinde silme var **[kodda doğrulandı]**: `ACC-40`, `src/components/AccountScreen.tsx:100` (`deleteAccount`). Web sitesinde (`webpage/src`) silme sayfası ya da yolu yok **[kodda doğrulandı]**. Gizlilik metni yalnızca "Ayarlar › Hesap" yolunu anlatıyor (`webpage/src/data/privacy.json:49`).
@@ -46,6 +50,8 @@ Bunlar düzeltilmeden gönderirseniz büyük olasılıkla ret alırsınız. Play
 - **Çözüm:** Sitede `/hesap-silme` (ve `/delete-account`) sayfası açın. Adımları anlatsın: uygulamadan Ayarlar › Hesap › Sil. Uygulama yoksa ya da açılmıyorsa e-posta veya form ile silme isteği, giriş yapılan adresten. Ne silinir: hesap, giriş yöntemleri, kredi bakiyesi ve geçmişi, sunucu yedekleri. Ne kalır: vergi için kullanıcıdan ayrılmış satın alma kayıtları (`BUY-22`). Ne kadar sürede silinir, onu da yazın. Bağlantıyı Play Console › App content › Data deletion alanına girin.
 
 ### 1.3 YouTube'a özel video reklam engelleme
+> **Durum (21 Kasım 2026):** sahibin kararıyla şimdilik olduğu gibi kalıyor; teste gönderilecek, ret gelirse ele alınacak.
+
 - **Mağaza:** Google Play (kesin), Apple (yüksek)
 - **Kural:** Play: [Device and Network Abuse](https://support.google.com/googleplay/android-developer/answer/9888379). Bir hizmete onun kullanım şartlarını ihlal edecek biçimde erişmek ve "Google hizmetlerine müdahale" ihlal örnekleri arasında. Çalışma anında yüklenen yorumlanan kod (JavaScript) da politika ihlaline imkân vermemeli. Apple: [5.2.2 Third-Party Sites/Services](https://developer.apple.com/app-store/review/guidelines/#intellectual-property). Üçüncü taraf hizmetin içeriği ancak o hizmetin şartları izin veriyorsa kullanılabilir ve istenirse izin belgesi gösterilmeli.
 - **Bizde ne var:** "Video reklamlarını engelle" ayarı **[kodda doğrulandı]**: `BLK-29`, `BLK-30` ve `BLK-31`, `src/content/videoAds.ts:37` `VIDEO_AD_RULES`. Kural listesinde `youtube.com`, `m.youtube.com`, `music.youtube.com` ve `youtube-nocookie.com` var (`videoAds.ts:40-44`). Betik, sayfanın oynatıcı yanıtından `playerAds`/`adPlacements` alanlarını budayıp reklam sınıflarını izliyor. Asistan da bu ayarı açabiliyor (`BLK-24`). YouTube'un şartları reklamların atlatılmasını yasaklıyor, YouTube da Google'ın. Bu yüzden Play'de ret, sonradan kaldırılma ve hesap uyarısı riski çok yüksek **[tahmin, güçlü]**. Not: Play sayfasının "başka uygulamanın reklamlarını engelleme" maddesi uygulamanın kendi tarayıcısındaki web sayfalarını açıkça kapsamıyor. Genel reklam ve izleyici engelleme (filtre listeleri) bu yüzden düşük risk (bkz. 4.4). Sorun, adıyla YouTube'u hedefleyen kural.
@@ -53,6 +59,8 @@ Bunlar düzeltilmeden gönderirseniz büyük olasılıkla ret alırsınız. Play
 - **Çözüm:** Mağaza derlemesinde video reklam engellemeyi tümüyle kaldırın: kural tablosundan YouTube alan adlarını çıkarın, ayarı gizleyin, asistanın `block_video_ads` anahtarını kapatın. En azından derleme bayrağıyla mağaza paketlerinde kapalı olsun. Mağaza açıklaması, ekran görüntüleri ve web sitesinde "YouTube reklamlarını engeller" gibi bir cümle olmasın. Genel EasyList tarzı engelleme kalabilir.
 
 ### 1.4 İnceleme ekibinin girişi, kredisi ve satın alması çalışmalı
+> **Durum (21 Kasım 2026):** sahip admin panelinde inceleme kullanıcısını açtı. Sandbox satın alma ve iOS IAP maddeleri ayrıca kontrol edilmeli.
+
 - **Mağaza:** her ikisi
 - **Kural:** Apple [2.1 App Completeness](https://developer.apple.com/app-store/review/guidelines/#app-completeness). Giriş varsa demo hesabı verilmeli, sunucu inceleme boyunca açık olmalı, uygulama içi satın almalar görünür ve çalışır olmalı. Play: [App access](https://support.google.com/googleplay/android-developer/answer/9859455). Girişle kapanan her bölüm için erişim bilgisi verilmeli (OTP için "Any other instructions" alanı var).
 - **Bizde ne var:**
@@ -183,9 +191,9 @@ Bunlar düzeltilmeden gönderirseniz büyük olasılıkla ret alırsınız. Play
 ### 3.8 Hukuki metinler ve iletişim bilgisi
 - **Mağaza:** her ikisi
 - **Kural:** Apple [1.5 Developer Information](https://developer.apple.com/app-store/review/guidelines/#developer-information), [5.1.1(i)](https://developer.apple.com/app-store/review/guidelines/#data-collection-and-storage) (gizlilik politikası hem App Store Connect'te hem uygulamada; kimlerle paylaşıldığı, ne kadar tutulduğu ve nasıl silindiği yazmalı). Play [User Data](https://support.google.com/googleplay/android-developer/answer/10144311) (herkese açık, PDF olmayan, bölgeye göre kısıtlanmamış politika).
-- **Bizde ne var:** Metinler avukat görmemiş taslak (`LEGAL-10`). Uygulamalardan söz edilmiyor (`LEGAL-6`). İletişim adresi kişisel bir Gmail hesabı (`src/legal/proDocuments.ts:25`) **[kodda doğrulandı]**.
+- **Bizde ne var:** Metinler avukat görmemiş taslak (`LEGAL-10`). Uygulamalardan söz edilmiyor (`LEGAL-6`). İletişim adresi kişisel bir Gmail hesabıydı (`src/legal/proDocuments.ts:25`) **[kodda doğrulandı]**. 21 Kasım 2026'da on dilde ve sitede qutai@sonsuzdongu.com olarak değiştirildi (`LEGAL-21`).
 - **Olasılık:** orta (Apple genelde ret vermez ama Play'de politika bağlantısının içeriği kontrol ediliyor)
-- **Çözüm:** Politikayı web sitesinde yayımlayın ve iki Console'a girin. Destek adresi alan adınızda olsun (ör. destek@…) ve App Store'daki "Support URL" çalışan bir sayfaya gitsin. Avukat incelemesini gönderimden önce yaptırın.
+- **Çözüm:** Politikayı web sitesinde yayımlayın ve iki Console'a girin. Destek adresi artık qutai@sonsuzdongu.com; App Store Connect ve Play Console'daki iletişim e-postasını da bu yapın ve App Store'daki "Support URL" çalışan bir sayfaya gitsin. Avukat incelemesini gönderimden önce yaptırın.
 
 ---
 
