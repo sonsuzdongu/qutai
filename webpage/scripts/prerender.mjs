@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const client = `${root}client/`;
 const { render, renderFeatures, messages, SITE_URL, CHECKED, CONTACT_EMAIL, formatDate, FEATURES_CHECKED, FEATURES_PAGE } = await import(
-  `${root}server/entry-server.js`,
+  `${root}server/entry-server.js`
 );
 const privacy = JSON.parse(await readFile(fileURLToPath(new URL('../src/data/privacy.json', import.meta.url)), 'utf8'));
 

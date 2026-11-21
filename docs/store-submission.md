@@ -91,7 +91,7 @@ Eklemeden önce:
 | | Alan | Değer |
 |---|---|---|
 | ☐ | Privacy Policy URL | `https://qutai.sonsuzdongu.com/en/privacy-policy/` |
-| ☐ | Support URL | ⚠ Sitede ayrı bir destek sayfası yok. Ana sayfa (`https://qutai.sonsuzdongu.com/en/`) iletişim adresini gösteriyorsa onu verin; yoksa basit bir destek sayfası ekletin |
+| ☐ | Support URL | `https://qutai.sonsuzdongu.com/en/support/` (her dilde o dilin sayfası, örneğin `/tr/support/`); iletişim adresi, mesaja yazılacaklar ve sık sorulan sorular var |
 | ☐ | Marketing URL | `https://qutai.sonsuzdongu.com/en/` |
 | ☐ | App Review Information › Contact | `qutai@sonsuzdongu.com` ve telefonunuz |
 | ☐ | Sign-in required | Evet; §2'deki adres ve kod |
