@@ -19,6 +19,7 @@ Last updated: 2026-11-21
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-21:** Running a saved task by name ("Deneme adlı görevi çalıştır", 16 Nov checklist) confirmed working after the tools split, with a test through the real tool pipeline; no behaviour change, the task's text never counts as the user's own message, so it skips no approval (`TASK-7`).
 - **2026-11-21:** Voice input: a recogniser that refuses to start no longer leaves the microphone on "Preparing…" with later presses ignored; the usual error is shown and the next press starts (25-voice, Details › Recogniser errors).
 - **2026-11-21:** Voice input: words heard before a held session's automatic restart count as heard, so a late recogniser error before new words no longer shows "Voice typing didn't work" while the text is in the field, and they are the final text if nothing new follows (25-voice, Details › Recogniser errors).
 - **2026-11-21:** RevenueCat's restore behaviour is "Transfer to new App User ID" (owner): a second Qutai account on the same Apple ID could not buy under "Keep"; each store transaction is still credited once and transfers are ignored (`BUY-13`). Also `VOICE-21`'s lost status line restored.
