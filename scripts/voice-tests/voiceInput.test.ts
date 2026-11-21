@@ -349,8 +349,7 @@ test(
 );
 
 test(
-  'KNOWN BUG: the recogniser throwing at start leaves voice input stuck in "preparing" until a stop',
-  { todo: 'startVoiceInput reports the generic error but keeps the session it had just set up; waits for the owner' },
+  'the recogniser throwing at start: the usual error, the session dropped, and the next press starts',
   async () => {
     __speech.startThrows = new Error('native start failed');
     const { o, log } = options();
@@ -358,6 +357,10 @@ test(
     assert.deepEqual(log.notes, [t('voice.error.generic')]);
     assert.equal(started, false, 'reported as not started');
     assert.equal(isListening(), false, 'back to idle, so the next press can start');
+    assert.equal(__speech.listenerCount('end'), 0, 'its listeners are removed');
+    __speech.startThrows = null;
+    assert.equal(await startVoiceInput(options().o), true, 'the next press starts listening');
+    assert.equal(__speech.started().length, 2);
   },
 );
 

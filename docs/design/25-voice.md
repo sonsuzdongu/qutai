@@ -63,6 +63,7 @@ Speaking to Qutai instead of typing (the panel's microphone and holding the Quta
 **Recogniser errors**
 
 - (was `VOICE-16`) No error notice appears once words have arrived (a late recogniser error while stopping is ignored); a real failure with nothing heard is reported. Words heard before an automatic restart of a held session count as arrived: a late "client" or "no-speech" error in the new run, before new words, shows no notice, and those words are the session's final text when nothing new follows (21 Nov 2026). · Why: Android sends a "client" error after release although the words came through; on a Honor (Android 15) "Voice typing didn't work" showed while the text was written · Where: 7a563b9; src/device/voiceError.ts (voiceErrorOutcome); src/device/voiceInput.ts (handleError, the session's `carried`)
+- If the phone's recogniser refuses to start (its start call throws), the session is dropped at once and the usual "Voice typing didn't work" notice is shown, so the next press starts normally instead of staying on "Preparing…" until a stop times out (21 Nov 2026). · Where: src/device/voiceInput.ts (begin)
 
 **Read-aloud mechanics**
 

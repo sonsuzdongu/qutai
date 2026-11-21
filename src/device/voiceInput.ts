@@ -838,20 +838,28 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
   const apiLevel = typeof Platform.Version === 'number' ? Platform.Version : Number(Platform.Version);
   const capturesAhead = Platform.OS === 'android' && apiLevel >= 33 && continuous;
   mark('start');
-  M.start({
-    lang: plan.lang,
-    interimResults: true,
-    maxAlternatives: 1,
-    // Tap to talk: a pause ends it (iOS 18+ and Android at the first final result; iOS 17 after a short silence).
-    // Push-to-talk: it goes on until the finger is lifted (Android 12 and older: until a long silence).
-    continuous,
-    requiresOnDeviceRecognition: plan.onDevice,
-    addsPunctuation: true,
-    iosTaskHint: 'dictation',
-    volumeChangeEventOptions: { enabled: true, intervalMillis: 120 },
-    // Never written to disk.
-    recordingOptions: { persist: false },
-  });
+  try {
+    M.start({
+      lang: plan.lang,
+      interimResults: true,
+      maxAlternatives: 1,
+      // Tap to talk: a pause ends it (iOS 18+ and Android at the first final result; iOS 17 after a short silence).
+      // Push-to-talk: it goes on until the finger is lifted (Android 12 and older: until a long silence).
+      continuous,
+      requiresOnDeviceRecognition: plan.onDevice,
+      addsPunctuation: true,
+      iosTaskHint: 'dictation',
+      volumeChangeEventOptions: { enabled: true, intervalMillis: 120 },
+      // Never written to disk.
+      recordingOptions: { persist: false },
+    });
+  } catch (e) {
+    // The recogniser refused to start: nothing would ever end this session, so it is dropped here and the start
+    // reports the usual error (startVoiceInput), leaving voice input idle for the next press.
+    if (session === s) session = null;
+    s.subscriptions.forEach((sub) => sub.remove());
+    throw e;
+  }
 }
 
 /**

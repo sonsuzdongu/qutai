@@ -19,6 +19,7 @@ Last updated: 2026-11-21
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-21:** Voice input: a recogniser that refuses to start no longer leaves the microphone on "Preparing…" with later presses ignored; the usual error is shown and the next press starts (25-voice, Details › Recogniser errors).
 - **2026-11-21:** Voice input: words heard before a held session's automatic restart count as heard, so a late recogniser error before new words no longer shows "Voice typing didn't work" while the text is in the field, and they are the final text if nothing new follows (25-voice, Details › Recogniser errors).
 - **2026-11-21:** RevenueCat's restore behaviour is "Transfer to new App User ID" (owner): a second Qutai account on the same Apple ID could not buy under "Keep"; each store transaction is still credited once and transfers are ignored (`BUY-13`). Also `VOICE-21`'s lost status line restored.
 - **2026-11-21:** One store-review account can sign in by email with a fixed code while the server's "Fixed sign-in code for a review account" switch is on (owner: `test@sonsuzdongu.com`, `000000`), for signing in only, everything else about the code unchanged, off by default, never logged, a red banner in the admin panel while on (`ACC-54`; backend only, no app change).
