@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 841 decisions (124 owner, 634 default, 83 waiting); 163 ids moved to Details.
+Totals: 842 decisions (125 owner, 634 default, 83 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -996,6 +996,7 @@ Moved to Details (ids retired, not reused): `PERF-1`, `PERF-2`, `PERF-9`
 | `ACC-51` | Today the sign-in methods are Apple, Google and email; no other provider. | **Waiting** |  |
 | `ACC-52` | Each sign-in method shows its address (Google and Apple from their own token, kept per method on the server); an Apple relay… | Owner | 2026-11-19 |
 | `ACC-53` | A sign-in or rotated token the phone can't save: three tries, kept in memory, saved before every request, the user told once; a failed sign-out clear told | Default | 2026-11-20 |
+| `ACC-54` | A store-review account signs in by email with a fixed code while the server's review_login switch is on (off by default; sign-in only… | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21`, `ACC-38`, `ACC-44`
 
