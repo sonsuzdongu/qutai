@@ -332,8 +332,7 @@ test('held: lifting the finger (asked to stop) does not start it again', async (
 });
 
 test(
-  'KNOWN BUG: held, after a restart, a late recogniser error with the earlier words kept shows "Voice typing didn\'t work"',
-  { todo: 'handleError counts only this run\'s words (committed/interim), not the carried ones; waits for the owner' },
+  'held, after a restart: a late recogniser error before new words, with the earlier words kept, is not told',
   async () => {
     const { o, log } = options({ hold: true });
     await startVoiceInput(o);

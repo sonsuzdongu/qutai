@@ -537,7 +537,9 @@ function handleError(s: Session, code: ExpoSpeechRecognitionErrorCode) {
   const outcome = voiceErrorOutcome({
     code,
     stopping: state === 'stopping',
-    hasText: !!(s.committed || s.interim),
+    // The words of earlier runs of this hold count too: after an automatic restart the recogniser's late trouble
+    // (client, no-speech) comes before any new words, and what was heard is already in the field.
+    hasText: !!(s.carried || s.committed || s.interim),
     interrupted: s.interrupted,
     canRetry: s.plan.rest.length > 0,
     canGoOnline: s.plan.onDevice && !s.options.incognito && s.options.online === 'allowed' && !s.options.forceOnline,
@@ -760,7 +762,8 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
     base: options.draft,
     committed: '',
     interim: '',
-    final: null,
+    // After an automatic restart the words of the earlier runs are what was said, even if nothing new follows.
+    final: options.carried ? join(options.draft, options.carried) : null,
     interrupted: false,
     failed: false,
     timedOut: false,
