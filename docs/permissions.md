@@ -63,8 +63,12 @@ Other store-facing iOS declarations:
   networking exception is what lets a custom AI endpoint on the local network be reached over plain http (`.local`
   and unqualified names; ATS does not apply to IP address literals). The app itself allows http for a custom endpoint
   only to loopback and private addresses (`src/ai/customEndpoint.ts`) and says "not encrypted, local network only".
-- `ITSAppUsesNonExemptEncryption` is `false` (`ios.config.usesNonExemptEncryption`): Qutai only uses HTTPS and the
-  operating system's own encryption (Keychain via `expo-secure-store`).
+- `ITSAppUsesNonExemptEncryption` is `true` (`ios.config.usesNonExemptEncryption`, `OSPERM-25`): besides HTTPS and the
+  operating system's own encryption (Keychain via `expo-secure-store`), Qutai encrypts backup files and exported apps
+  in its own code with standard algorithms (XChaCha20-Poly1305, scrypt; `src/backup/crypto.ts`). App Store Connect
+  asks the export questions for each uploaded build: the answer is "standard encryption algorithms instead of, or in
+  addition to, the operating system's". France asks for its own declaration for that, so France is not in the app's
+  availability until the owner has it.
 - Privacy manifest (`ios.privacyManifests`): the required-reason APIs that the bundled libraries declare in their own
   `PrivacyInfo.xcprivacy` (React Native, `expo-application`, `expo-constants`, `expo-file-system`,
   `expo-localization`, `expo-media-library`, `expo-notifications`, `expo-system-ui`), repeated at app level as the

@@ -986,3 +986,20 @@ Desteklenen siteler: `src/content/videoAds.ts` içindeki kural tablosu (`hosts`)
   - [ ] Reklamda sessiz bir donmuş kare bir an kalabilir; uzun sürerse yazın.
 - [ ] Sitenin "reklam engelleyici" uyarısı çıkarsa yazın (gizlenmiyor).
 - [ ] Asistana "video reklamlarını engelle" deyin: açabilmeli; "kapat" deyince kapatmamalı, Ayarlar'ı önermeli.
+
+## 32. Kod incelemesi düzeltmeleri (21 Kasım; commit 8379e6c; telefonda denenmedi)
+
+Mağazaya gönderilecek derlemede, gönderimden önce bir kez denenecekler ([store-submission.md](store-submission.md) › §5).
+
+- [ ] **AI anahtarı güncellemeden sonra yerinde (iPhone, `AI-33`):** eski derlemede kendi API anahtarınızı kaydedin,
+      üzerine yeni derlemeyi kurun, uygulamayı açın: anahtar Ayarlar › AI sağlayıcısı'nda duruyor ve asistana bir istek
+      atılabiliyor. Özel uç nokta kullanıyorsanız başlık değerleri de yerinde. Android'de aynı deneme.
+- [ ] Yeni kurulumda (eski veri yok) anahtar kaydedilip uygulama kapatılıp açılınca yerinde.
+- [ ] Sekme değiştiricide sekmeyi sürükleme takılmadan çalışıyor (`PERF-12`).
+- [ ] Sayfayı PDF olarak kaydetme ve bir görseli indirme çalışıyor; çok yavaş bir sayfada sonsuza kadar beklemiyor,
+      hata veriyor.
+- [ ] Android: süresi dolmuş ya da kendinden imzalı sertifikalı bir sitede "Yine de devam et" çalışıyor ve aynı
+      site için yeniden sormuyor; başka bir site için yeniden soruyor.
+- [ ] "Gezinme verilerini temizle" normalde eskisi gibi bitiyor (`DATA-30`; hata metni yalnızca silme başarısız olursa
+      çıkar, elle denemek zor).
+- [ ] Kredi satın alma (sandbox) eskisi gibi tamamlanıyor ve kredi ekleniyor (`BUY-35`).

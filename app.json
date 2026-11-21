@@ -9,7 +9,7 @@
     "ios": {
       "supportsTablet": true,
       "config": {
-        "usesNonExemptEncryption": false
+        "usesNonExemptEncryption": true
       },
       "infoPlist": {
         "CFBundleAllowMixedLocalizations": true,

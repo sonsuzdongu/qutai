@@ -101,7 +101,7 @@ Eklemeden önce:
 | ☐ | Notes | §2'deki metin |
 | ☐ | Ad, alt başlık, anahtar kelimeler, ekran görüntüleri | Rakip tarayıcı, YouTube ya da başka marka adı ve logosu yok; "her şeyi otomatik satın alır" gibi abartı yok; ekranlarda gerçek kart ve gerçek kişi verisi yok (risk 3.4, 4.12) |
 | ☐ | Varsayılan tarayıcı | Açıklamada "varsayılan tarayıcı yapılabilir" vaadi yok (yetki başvurusu yapılmadı; risk 4.2) |
-| ☐ | Export compliance | `app.json` › `usesNonExemptEncryption: false` (yalnızca standart HTTPS). Soru gelirse "hayır" |
+| ☐ | Export compliance | `app.json` › `usesNonExemptEncryption: true` (21 Kasım, `OSPERM-25`): yedekler uygulamanın kendi kodunda standart algoritmalarla şifreleniyor. Build yüklenince sorulan soruya "Standard encryption algorithms instead of, or in addition to, using or accessing the encryption within Apple's operating system" deyin. Fransa bunun için ayrı beyan istediğinden Fransa satış dışı bırakıldı (Pricing and Availability); belge alınınca geri açın |
 | ☐ | Kullanım şartları (EULA) | Varsayılan: Apple'ın standart EULA'sı (alanı boş bırakın). Sitede artık uygulamanın kullanım koşulları var (`WEB-14`, 21 Kasım): Qutai'ın kendi şartlarını özel EULA olarak vermek isterseniz App Information › License Agreement'a `https://qutai.sonsuzdongu.com/en/terms/` adresini (ya da metnini) koyun. Önce sitenin yayında olduğundan emin olun; şartlar uygulamada pro 7 ile kabul ettiriliyor (`LEGAL-25`) |
 | ☐ | **Description (açıklama) alanının sonu** | Uygulama içi satın alma olduğu için açıklamanın sonuna iki bağlantı ekleyin (sahibin isteği, 21 Kasım; inceleme bağlantıları açıklamada arar):<br>`Privacy Policy: https://qutai.sonsuzdongu.com/en/privacy-policy/`<br>`Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`<br>Özel EULA seçerseniz ikinci satırı `Terms of Use (EULA): https://qutai.sonsuzdongu.com/en/terms/` ile değiştirin ve App Store Connect › App Information › License Agreement'ı da güncelleyin. Diğer dillerdeki açıklamalara aynı iki satırı ekleyin (gizlilik bağlantısını o dilin sayfasıyla: `/tr/privacy-policy/` gibi) |
 
@@ -130,7 +130,7 @@ Eklemeden önce:
 
 ### 3.4 Uygulama içi satın almalar
 
-- ☐ Kredi paketlerini **Consumable** olarak oluşturun; kimlikler Android'deki ve sunucunun listesindekiyle aynı (`com.sonsuzdongu.qutai.packs.*`; RevenueCat'te bugün 1, 100, 500 ve 1000 kredilik ürünler görünüyor, 1 kredilik olan test için olabilir: mağazaya hangilerinin gideceğine admin panelindeki paket listesine bakarak karar verin).
+- ☐ Kredi paketlerini **Consumable** olarak oluşturun; kimlikler Android'deki ve sunucunun listesindekiyle aynı (`com.sonsuzdongu.qutai.packs.*`). **1 kredilik paket (`…packs.1`) test ürünüdür ve mağazaya gönderilmez** (sahibin kararı, 21 Kasım): sürüme yalnızca 100, 500 ve 1000 kredilik paketleri ekleyin, Play'de de 1 kredilik ürünü etkinleştirmeyin ve admin panelindeki paket listesinde production'da görünmediğinden emin olun.
 - ☐ Her pakete yerelleştirilmiş ad, açıklama ve inceleme ekran görüntüsü; durum "Ready to Submit".
 - ☐ Paketleri ilk sürümle **aynı gönderimde** ekleyin.
 - ☐ RevenueCat'te iOS uygulamasını ve App Store Connect bağlantısını kurun; IPA'yı iOS anahtarıyla derleyin.
@@ -183,5 +183,6 @@ Bu dosyanın metinleri bunlar yapılmadan tam doğru olmaz. Ayrıntı ve çözü
 - ☐ **2.2:** başkasından alınan `.qutaiapp` dosyasının içe aktarılması (uyarı ekleyin ya da ilk sürümde kapatın); ~~gizlilik metnine uygulamalarla ilgili cümle~~: metinlerde (21 Kasım, `LEGAL-6`, `LEGAL-24`), yasal sürüm açık kaynak 5 / pro 7 ile kabul ettiriliyor (`LEGAL-25`).
 - ✅ **2.4:** ~~pro gizlilik manifestosu ve `docs/permissions.md`'deki "sunucumuz yok" cümlesi~~: yapıldı (21 Kasım 2026, `OSPERM-26`; pro derlemede altı veri türü, açık kaynakta boş).
 - ☐ **3.8:** yasal metinlerin avukat incelemesi.
+- ☐ **Cihazda deneme (2.1, çökme ve bozuk özellik reddi):** 21 Kasım kod incelemesi düzeltmeleri (commit 8379e6c) telefonda denenmedi. Gönderilecek derlemede [test-checklist.md](test-checklist.md) › §32'yi bir kez geçin: güncellemeden sonra kayıtlı AI anahtarının yerinde durması (iPhone, `AI-33`), sekme sürükleme, PDF'e aktarma ve görsel indirme, Android'de sertifika uyarısında "Yine de devam et", sandbox satın alma. Bu commit mağaza formlarını değiştirmez: yeni izin, SDK, ağ hedefi ya da toplanan veri yok; gizlilik etiketleri, Data safety ve gizlilik manifestosu aynı kalır.
 
 Yapılanlar (21 Kasım): uygulama içi Bildir (1.1, 2.2'nin bildirme kısmı), web'de hesap silme sayfası (1.2), iletişim adresi `qutai@sonsuzdongu.com` (3.8, `LEGAL-21`), inceleme hesabı admin panelinde açıldı (1.4'ün bir kısmı).

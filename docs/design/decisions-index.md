@@ -81,6 +81,7 @@ The open questions, in one place (each row says what the app does today).
 | `LEGAL-9` | Before Qutai's server goes live for everyone, every "no servers of ours" sentence in the onboarding, the legal texts, store listings and… | [41](41-legal-texts.md) |
 | `LEGAL-10` | A lawyer reviews the open-source and pro texts (KVKK/GDPR, Turkish consumer law on digital content) before any store release. Today they… | [41](41-legal-texts.md) |
 | `LEGAL-26` | The terms name no governing law or court. Open for the owner: which law governs and which courts or consumer boards hear disputes… | [41](41-legal-texts.md) |
+| `LEGAL-27` | Open source licences lists only this platform's components; no "Android only" / "iOS only" labels. | Owner | 2026-11-21 |
 | `WEB-11` | Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end sync, and the comparison's… | [42](42-website.md) |
 | `NOT-9` | Today there is no sync; whether a future sync must be end-to-end encrypted (so the server cannot read it) is open, recommended yes. | [44](44-not-built.md) |
 | `NOT-15` | Today there is no in-app "lock to portrait"; the system's rotation lock is used (section 29). | [44](44-not-built.md) |
@@ -353,6 +354,7 @@ Moved to Details (ids retired, not reused): `INC-8`
 | `BLK-29` | "Block video ads" is off by default; in Settings › Privacy and security and setup's protection step; kept in backups; named "video ads" everywhere, no site named. | Owner | 2026-11-21 |
 | `BLK-30` | Video ads: a document-start page script on the rules table's hosts (frames too) removes the ad plan from the player's data and hides ad boxes; not on off sites; incognito too; nothing leaves the phone; all site data in one table. | Default | 2026-11-21 |
 | `BLK-31` | An ad that plays anyway is muted, sent to its end and skipped (checked every 300 ms); the sound comes back after, unless the user had muted it. | Owner | 2026-11-21 |
+| `BLK-32` | "Block third-party cookies" is shown and offered on Android only; iOS has no row (WebKit always blocks them). | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `BLK-5`, `BLK-8`, `BLK-9`, `BLK-10`, `BLK-16`, `BLK-25`
 
@@ -516,6 +518,7 @@ Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-
 | `TOOL-30` | One table row per tool (target, tab need, address, background, history, own dialog, checks) and one ordered check pipeline; a tool without a row is refused | Default | 2026-11-20 |
 | `TOOL-31` | A tool's uncaught error is that call's error result (only Stop throws); a cut-off Anthropic tool call gets an empty input | Default | 2026-11-21 |
 | `TOOL-32` | "Ask before actions" is read at every tool call; a change during a task applies from its next step | Default | 2026-11-21 |
+| `TOOL-33` | `open_settings` `default_browser` is Android only; on iOS it refuses and opens nothing; profile id changed. | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `TOOL-4`, `TOOL-18`, `TOOL-28`
 
@@ -1187,7 +1190,7 @@ Moved to Details (ids retired, not reused): `SRV-14`, `SRV-19`
 | `OSPERM-20` | `REQUEST_INSTALL_PACKAGES` is declared only so "Open" on a downloaded APK reaches the system installer; a… | Default |  |
 | `OSPERM-23` | Ways in from other apps (share, text selection menu, web search, shortcuts, widget) need no permission;… | Default |  |
 | `OSPERM-24` | Store notes: page content, chats and screenshots go from the phone to the AI provider the user chose with… | Default |  |
-| `OSPERM-25` | Export compliance: `ITSAppUsesNonExemptEncryption` is false. | Default |  |
+| `OSPERM-25` | Export compliance: `ITSAppUsesNonExemptEncryption` is true (own-code standard encryption for backups); France out of availability until its declaration. | Owner | 2026-11-21 |
 | `OSPERM-26` | A pro build's iOS privacy manifest lists six collected data types (app functionality, linked, no tracking); open source: none. | Owner | 2026-11-21 |
 
 Moved to Details (ids retired, not reused): `OSPERM-15`, `OSPERM-21`, `OSPERM-22`
