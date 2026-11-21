@@ -134,6 +134,26 @@ would stop every purchase and refund notification.
       a lawyer or a native speaker first, then Korean and Japanese; the translators' doubtful terms per language are
       in the report of commit `bc1d65d`. Owner, 20 Nov 2026: agreed.
 
+## Later: distribute in France and China
+
+Owner, 21 Nov 2026: "todo list'e fransa ve çin'e de gönderme işini ekle". Both are left out of the App Store
+availability for the first release. These are legal and registration steps for the owner; check the current rules
+before starting, nothing below is legal advice.
+
+- [ ] **France:** Qutai encrypts backup files and exported apps in its own code with standard algorithms
+      (XChaCha20-Poly1305, scrypt; `OSPERM-25`), and France controls importing and distributing encryption apps
+      ("Secure Storage" is one of its listed categories). To sell there: make the encryption declaration to ANSSI,
+      upload the approved declaration in App Store Connect › App Information › App Encryption Documentation, then
+      decide how the Info.plist reports it (`ITSAppUsesNonExemptEncryption` YES needs the `ITSEncryptionExportComplianceCode`
+      Apple gives for the approved document; see `docs/permissions.md`) and add France back in Pricing and Availability.
+      Google Play has no such step; check whether Play's France availability needs anything separate.
+- [ ] **China (mainland):** the App Store in mainland China needs an ICP filing number for the app, and a generative AI
+      service offered to users there needs the government's AI service filing (the assistant relays requests to a
+      foreign AI provider, which may not be allowed at all). The main AI providers and Google Play are not available
+      in mainland China either. Find out first whether Qutai can be offered there in its current form (credits through
+      Qutai's server to Anthropic, own-key mode), with what filings and which local entity; then decide whether it's
+      worth it. Until then mainland China stays out of the App Store availability.
+
 ## Before launch: remove fake purchases
 
 **Removed 21 Nov 2026** (owner: "sahte satın alma metinlerini ve bu özelliği çıkarabiliriz"). Fake purchases were a
