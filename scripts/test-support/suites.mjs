@@ -32,6 +32,7 @@ export const SUITES = {
   storage: { files: ['scripts/storage-tests/*.test.ts'] },
   tasks: { files: ['scripts/task-tests/*.test.ts'], forceExit: true },
   blocking: { files: ['scripts/blocking-tests/*.test.ts'], loader: './scripts/blocking-tests/loader.mjs' },
+  tools: { files: ['scripts/tools-tests/*.test.ts'] },
   media: { files: ['scripts/media-tests/*.test.ts'] },
   voice: { files: ['scripts/voice-tests/*.test.ts'], loader: './scripts/voice-tests/loader.mjs' },
   'account:server': { files: ['scripts/account-tests/server.test.ts'], env: LOCAL_API, server: true },
