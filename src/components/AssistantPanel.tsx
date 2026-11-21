@@ -37,6 +37,8 @@ import { usePalette } from '../ui/theme';
 import { useKeyboardVisible } from '../utils/useKeyboardVisible';
 import { useReduceMotion } from '../utils/useReduceMotion';
 import { ActionSheet, type SheetAction } from './ActionSheet';
+import { reportAnswer } from './reportFlow';
+import { reportsAvailable } from '../report/report';
 import { ChatComposer } from './ChatComposer';
 import { ChatActions, ChatEntry, EmptyState, menuTitle, StepGroup, type ChatActionHandlers } from './ChatRows';
 import { darkStyles, PanelTheme, useChatStyles } from './chatStyles';
@@ -417,6 +419,16 @@ function AssistantPanelView({
         : [{ icon: 'selectText' as const, label: t('chat.actionSelect'), onPress: () => setSelectableId(item.id) }]),
       { icon: 'pdf', label: t('chat.actionPdf'), onPress: () => messageAction('pdf', item) },
       { icon: 'info', label: t('chat.actionSent'), onPress: leavePanel(onShowSent) },
+      // Report (SAFE-2): only where reports reach someone (builds with Qutai's server).
+      ...(reportsAvailable && item.kind === 'assistant'
+        ? [
+            {
+              icon: 'report' as const,
+              label: t('report.action'),
+              onPress: () => void reportAnswer(item.text, item.cost?.provider === 'qutai' || balance ? 'qutai' : 'own'),
+            },
+          ]
+        : []),
     ];
   };
 

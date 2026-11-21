@@ -17,6 +17,8 @@ import { DialogHost } from './Dialog';
 import { ScreenHeader } from './ScreenHeader';
 import { WholeWordsText } from './WholeWordsText';
 import { deleteApp, exportApp, renameApp } from './appActions';
+import { reportApp } from './reportFlow';
+import { reportsAvailable } from '../report/report';
 
 /**
  * "My apps" (docs/mini-apps.md): the user's apps as a grid on the new tab page and in their own screen (main menu ›
@@ -112,6 +114,9 @@ function useAppMenu(onNotice?: (text: string) => void, onOpen: (id: string) => v
               { icon: 'apps', label: t('apps.open'), onPress: () => onOpen(menuFor.id) },
               { icon: 'edit', label: t('apps.rename'), onPress: () => void renameApp(menuFor).catch(() => {}) },
               { icon: 'share', label: t('apps.export'), onPress: () => void exportApp(menuFor).catch(() => {}) },
+              ...(reportsAvailable
+                ? [{ icon: 'report' as const, label: t('report.action'), onPress: () => void reportApp(menuFor).catch(() => {}) }]
+                : []),
               {
                 icon: 'trash',
                 label: t('apps.delete'),

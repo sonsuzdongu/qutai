@@ -22,6 +22,8 @@ import { Toast, useToast } from './Toast';
 import { RunnerSession, type Overlay } from './runnerSession';
 import { AppReview } from './AppImport';
 import { exportApp } from './appActions';
+import { reportApp } from './reportFlow';
+import { reportsAvailable } from '../report/report';
 
 /**
  * The runner (docs/mini-apps.md › The runtime): one app, full screen, in its own WebView with an opaque origin, no
@@ -144,6 +146,7 @@ function Runner({ request, onEdit, onFix, onNotice }: Props & { request: RunnerR
         { icon: 'reload', label: t('apps.reload'), onPress: session.restart },
         { icon: 'edit', label: t('apps.rename'), onPress: () => void session.rename() },
         { icon: 'share', label: t('apps.export'), onPress: () => void exportApp(loaded) },
+        ...(reportsAvailable ? [{ icon: 'report' as const, label: t('report.action'), onPress: () => void reportApp(loaded) }] : []),
         { icon: 'trash', label: t('apps.delete'), destructive: true, onPress: () => void session.remove() },
       ]
     : [];
