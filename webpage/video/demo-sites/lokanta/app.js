@@ -1,6 +1,7 @@
 // yourlocal · Lokanta Moda: a made-up food delivery site for recording Qutai videos (video/README.md). No network
 // requests, no storage: the cart lives in memory for the visit. Turkish by default, English with ?lang=en.
-// Nothing is ever ordered or paid: the payment form has no action and sends nothing anywhere.
+// Nothing is ever ordered or paid: the payment step shows a saved card that exists only on this page, "paying" with it
+// just shows the confirmation, and the form for another card has no action and sends nothing anywhere.
 const EN = new URLSearchParams(location.search).get('lang') === 'en';
 document.documentElement.lang = EN ? 'en' : 'tr';
 
@@ -50,7 +51,16 @@ const T = {
   card: ['Kart numarası', 'Card number'],
   expiry: ['Son kullanma tarihi', 'Expiry date'],
   cvc: ['Güvenlik kodu', 'Security code'],
-  pay: [(s) => `Siparişi ver · ${s}`, (s) => `Place order · ${s}`],
+  pay: [(s) => `${s} öde`, (s) => `Pay ${s}`],
+  savedCard: ['Kayıtlı kart', 'Saved card'],
+  cardName: ['Visa •••• 4242', 'Visa •••• 4242'],
+  cardExp: ['Son kullanma 08/29', 'Expires 08/29'],
+  otherCard: ['Başka bir kart kullan', 'Use a different card'],
+  oneClick: ['Tek dokunuşla öde: kayıtlı kartınız kullanılır.', 'One-tap checkout: your saved card is used.'],
+  doneTitle: ['Siparişiniz alındı', 'Order placed'],
+  doneBody: [(n, w) => `Teşekkürler ${n}! Lokanta Moda siparişinizi hazırlıyor. Teslimat: ${w}.`, (n, w) => `Thanks, ${n}! Lokanta Moda is preparing your order. Delivery: ${w}.`],
+  paidWith: [(c, s) => `${c} ile ${s} ödendi`, (c, s) => `Paid ${s} with ${c}`],
+  orderNo: ['Sipariş no', 'Order no.'],
   payFail: ['Ödeme şu anda alınamıyor. Lütfen biraz sonra tekrar deneyin.', 'We can’t take payments right now. Please try again shortly.'],
   deliverTo: ['Teslimat', 'Delivering to'],
   steps: [['Sepet', 'Teslimat', 'Ödeme'], ['Cart', 'Delivery', 'Payment']],
@@ -267,32 +277,66 @@ function paymentView() {
     <div class="card"><p class="to"><b>${t('deliverTo')}</b><br>${esc(d.name)} · ${esc(d.phone)}<br>${esc(d.address)}<br><span class="muted">${esc(when)}</span></p></div>
     <div class="card">${summary(false)}</div>
     <form id="pay" class="card" novalidate>
-      <label>${t('card')}<input autocomplete="cc-number" inputmode="numeric" placeholder="0000 0000 0000 0000"></label>
-      <div class="two">
-        <label>${t('expiry')}<input autocomplete="cc-exp" placeholder="${EN ? 'MM/YY' : 'AA/YY'}"></label>
-        <label>${t('cvc')}<input autocomplete="cc-csc" inputmode="numeric" placeholder="123"></label>
+      <p class="label">${t('savedCard')}</p>
+      <label class="saved"><input type="radio" name="method" value="saved" checked>
+        <span class="cardmark" aria-hidden="true">VISA</span><span><b>${t('cardName')}</b><br><span class="muted">${t('cardExp')}</span></span></label>
+      <label class="saved"><input type="radio" name="method" value="other"><span>${t('otherCard')}</span></label>
+      <div id="other" hidden>
+        <label>${t('card')}<input autocomplete="cc-number" inputmode="numeric" placeholder="0000 0000 0000 0000"></label>
+        <div class="two">
+          <label>${t('expiry')}<input autocomplete="cc-exp" placeholder="${EN ? 'MM/YY' : 'AA/YY'}"></label>
+          <label>${t('cvc')}<input autocomplete="cc-csc" inputmode="numeric" placeholder="123"></label>
+        </div>
       </div>
+      <p class="muted small">${t('oneClick')}</p>
       <button class="primary" type="submit">${t('pay', money(totals().sum))}</button>
       <p id="paynote" role="alert"></p>
     </form>`;
-  // The card fields have no names and the form no action: nothing typed here goes anywhere.
-  document.getElementById('pay').addEventListener('submit', (e) => {
-    e.preventDefault();
-    document.getElementById('paynote').textContent = t('payFail');
+  const form = document.getElementById('pay');
+  form.addEventListener('change', () => {
+    document.getElementById('other').hidden = form.method.value !== 'other';
   });
+  // The other-card fields have no names and the form no action: nothing typed here goes anywhere. The saved card is
+  // only text on this page; "paying" with it shows the confirmation and charges nothing.
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (form.method.value !== 'saved') {
+      document.getElementById('paynote').textContent = t('payFail');
+      return;
+    }
+    state.paid = { sum: totals().sum, when, name: d.name.trim().split(/\s+/)[0] };
+    location.hash = '#done';
+  });
+}
+
+function doneView() {
+  if (!state.paid) {
+    location.hash = '#menu';
+    return;
+  }
+  const p = state.paid;
+  app.innerHTML = `
+    ${stepper(3)}
+    <div class="done">
+      <span class="tick" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+      <h1>${t('doneTitle')}</h1>
+      <p>${esc(t('doneBody', p.name, p.when))}</p>
+      <div class="card"><p class="to">${t('paidWith', t('cardName'), money(p.sum))}<br><span class="muted">${t('orderNo')} 48213</span></p></div>
+    </div>`;
+  state.cart.clear();
 }
 
 function updateCount() {
   const { n, sum } = totals();
   count.textContent = n;
   count.classList.toggle('on', n > 0);
-  const onMenu = !['#cart', '#delivery', '#payment'].includes(location.hash);
+  const onMenu = !['#cart', '#delivery', '#payment', '#done'].includes(location.hash);
   bar.hidden = !(n > 0 && onMenu);
   bar.innerHTML = `<span class="bn">${n}</span><span>${t('viewCart')}</span><span>${money(sum)}</span>`;
 }
 
 function route() {
-  const view = { '#cart': cartView, '#delivery': deliveryView, '#payment': paymentView }[location.hash] ?? menuView;
+  const view = { '#cart': cartView, '#delivery': deliveryView, '#payment': paymentView, '#done': doneView }[location.hash] ?? menuView;
   view();
   updateCount();
   window.scrollTo(0, 0);

@@ -114,3 +114,16 @@ form .primary { width: 100%; margin: 4px 0 0; }
 [role=alert] { margin: 0; color: #b42318; font-weight: 600; font-size: 14px; }
 
 .foot { display: flex; justify-content: space-between; gap: 10px; margin: 24px 14px 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+
+/* saved card and one-tap checkout */
+.label { margin: 0; font-weight: 700; font-size: 13.5px; }
+label.saved { display: flex; flex-direction: row; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; font-weight: 600; font-size: 15px; }
+label.saved:has(input:checked) { border-color: var(--brand); background: var(--brand-soft); }
+label.saved input { width: 20px; height: 20px; margin: 0; padding: 0; accent-color: var(--brand); flex: none; }
+.cardmark { display: grid; place-items: center; width: 46px; height: 30px; border-radius: 6px; background: #1a1f71; color: #fff; font: italic 800 13px/1 -apple-system, sans-serif; letter-spacing: .04em; flex: none; }
+.small { margin: 0; font-size: 13px; }
+.done { text-align: center; padding: 24px 0 0; }
+.done h1 { margin: 12px 14px 6px !important; }
+.done > p { margin: 0 22px 8px; color: var(--muted); }
+.tick { display: inline-grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; background: var(--brand); }
+.tick svg { width: 34px; height: 34px; fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }

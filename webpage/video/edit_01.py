@@ -27,7 +27,8 @@ T = {
             remembered='Hatırlandı', from_memory='Hafızadan',
             cap={'say': 'Bir kez söyleyin.', 'rem': 'Hatırladı.', 'choose': 'Seçimi siz yaparsınız.',
                  'phone': 'Telefonunuzda durur. Görebilir, değiştirebilir, silebilirsiniz.',
-                 'nogluten': 'Gluten demedi.', 'work': 'Menüyü okur, glutensizleri seçer.', 'fill': 'Sepeti ve teslimat formunu doldurur.',
+                 'nogluten': 'Gluten demedi.', 'work': 'Menüyü okur, glutensizleri seçer.', 'fill': 'Sepeti ve teslimat formunu doldurur.', 'saved': 'Sitede kayıtlı kartı kullanır.',
+                 'approve': 'Ancak siz onaylayınca öder.', 'paid': 'Sipariş verildi.', 'calendar': 'Sonra takvime eklemeyi önerir.',
                  'ask': 'Bilgileriniz sorulmadan girilmez.', 'note': 'Ama Qutai hatırladı.',
                  'pay': 'Ödemeyi siz yaparsınız.'},
             close1='Qutai: telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız.', close2='Açık kaynak · Yakında App Store ve Google Play’de',
@@ -38,7 +39,8 @@ T = {
             fast='Sped up', remembered='Remembered', from_memory='From memory',
             cap={'say': 'Say it once.', 'rem': 'Remembered.', 'choose': 'You choose.',
                  'phone': 'It stays on your phone. See it, edit it, delete it.',
-                 'nogluten': 'No mention of gluten.', 'work': 'It reads the menu and picks gluten-free.', 'fill': 'It fills the cart and the delivery form.',
+                 'nogluten': 'No mention of gluten.', 'work': 'It reads the menu and picks gluten-free.', 'fill': 'It fills the cart and the delivery form.', 'saved': 'It uses the card the site has saved.',
+                 'approve': 'It pays only when you approve.', 'paid': 'Order placed.', 'calendar': 'Then it offers a calendar reminder.',
                  'ask': 'Your details go in only when you say so.', 'note': 'But Qutai remembered.',
                  'pay': 'You make the payment.'},
             close1="Qutai: the AI assistant in your phone's browser.", close2='Open source · Coming to the App Store and Google Play',
@@ -53,7 +55,7 @@ T = {
 TAKES = {
  'tr': {'A': 'raw/ep01-tr-actA-take1.mp4', 'B': 'raw/ep01-tr-actB-take3.mp4'},
  # English re-recorded on 21 Nov 2026 with the current interface, pro mode and Qutai Credits (0.1.7).
- 'en': {'A': 'raw/ep01-en-actA-take2.mp4', 'B': 'raw/ep01-en-actB-take4.mp4'},
+ 'en': {'A': 'raw/ep01-en-actA-take3.mp4', 'B': 'raw/ep01-en-actB-take6.mp4'},
 }
 # Act B in both languages is on the mock delivery site under its own domain (demo-sites/, README "Demo alan adı").
 # Cuts skip the time the recording waited for a tap (the questions stay on screen until answered); waiting for the
@@ -80,30 +82,34 @@ CUTS['tr'] = [
  dict(src='B', a=164.5, b=167.5, cap='pay'),                                                    # 14 the site's payment page
  dict(card='close', dur=4.0),                                                                   # 15
 ]
-# English (21 Nov 2026 takes): act A's reply and its "Remembering" lines are shown magnified; act B is typed (a spoken
-# version of the command is planned once it can be recorded on a phone).
+# English (21 Nov 2026 takes, Emma): act A's reply and its "Remembering" lines are shown magnified; act B is typed and
+# ends with a payment the assistant makes after Qutai's own approval (the demo site's saved card; nothing is charged).
 EN_A_ZOOM = (0, 340, 1206, 1080)
 EN_DIALOG = (60, 830, 1145, 1875)
+EN_PAY = (60, 440, 1145, 2265)
 CUTS['en'] = [
  dict(card='open', dur=2.0),                                                                    # 0
- dict(src='A', a=17.0, b=19.5, cap='say'),                                                      # 1 the message in the box
- dict(src='A', a=20.5, b=22.5, freeze=0.8, cap='rem', zoom=EN_A_ZOOM,
-      rects=[(170, 560, 820, 690)], badge=('remembered', 'check', (170, 560, 820, 690)), badge_above='right'),  # 2
- dict(src='A', a=66.0, b=71.0, cap='phone', rects=[(48, 1005, 1160, 1140), (48, 1329, 1160, 1470)]),  # 3 memory screen
+ dict(src='A', a=3.4, b=5.9, cap='say'),                                                        # 1 the message in the box
+ dict(src='A', a=6.2, b=8.2, freeze=0.8, cap='rem', zoom=EN_A_ZOOM, badge_above='outside',
+      rects=[(170, 560, 880, 690)], badge=('remembered', 'check', (170, 560, 880, 690))),         # 2
+ dict(src='A', a=40.0, b=45.0, cap='phone', rects=[(48, 1005, 1160, 1140), (48, 1329, 1160, 1470)]),  # 3 memory screen
  dict(card='next', dur=1.2),                                                                    # 4
- dict(src='B', a=0.2, b=2.6),                                                                   # 5 the restaurant
- dict(src='B', a=2.8, b=5.2, cap='nogluten'),                                                   # 6 "Order dinner for two…"
- dict(src='B', a=5.2, b=11.4, speed=3, cap='work'),                                             # 7 reading the page
- dict(src='B', a=11.6, b=14.6, cap='note', badge_above=True,                                    # 8 "You're gluten intolerant…"
-      rects=[(180, 605, 1060, 740)], badge=('from_memory', 'chest', (180, 605, 1060, 740))),
- dict(src='B', a=14.6, b=16.6, cap='choose', rects=[(170, 1430, 1180, 1985)]),                  # 9 gluten-free options
- dict(src='B', a=30.6, b=32.2, cap='choose', rects=[(170, 1430, 1180, 1600)]),                  # 10 Osman picks
- dict(src='B', a=32.2, b=41.8, speed=4, cap='fill'),                                            # 11 cart, delivery form
- dict(src='B', a=42.2, b=45.0, cap='ask', rects=[EN_DIALOG]),                                   # 12 "Enter your personal information…"
- dict(src='B', a=55.4, b=59.9, speed=2, cap='ask'),                                             # 13 the fields fill
- dict(src='B', a=63.5, b=67.0, cap='pay', rects=[(175, 690, 1080, 940)]),                        # 14 "…so I've stopped here."
- dict(src='B', a=79.0, b=82.0, cap='pay'),                                                      # 15 the site's payment page
- dict(card='close', dur=4.0),                                                                   # 16
+ dict(src='B', a=9.6, b=12.3),                                                                  # 5 the restaurant
+ dict(src='B', a=12.4, b=14.6, cap='nogluten'),                                                 # 6 "Order dinner for two…"
+ dict(src='B', a=14.8, b=18.9, speed=2, cap='work'),                                            # 7 reading the page
+ dict(src='B', a=19.2, b=22.2, cap='note', badge_above=True,                                    # 8 "Your saved note says…"
+      rects=[(180, 625, 1070, 780)], badge=('from_memory', 'chest', (180, 625, 1070, 780))),
+ dict(src='B', a=22.2, b=24.0, cap='choose', rects=[(170, 1430, 1180, 1975)]),                  # 9 the options
+ dict(src='B', a=44.0, b=45.6, cap='choose', rects=[(170, 1430, 1180, 1597)]),                  # 10 Emma picks
+ dict(src='B', a=45.6, b=64.5, speed=6, cap='fill'),                                            # 11 cart, delivery form
+ dict(src='B', a=65.0, b=68.0, cap='ask', rects=[EN_DIALOG]),                                   # 12 "Enter your personal information…"
+ dict(src='B', a=76.0, b=80.5, speed=2, cap='ask'),                                             # 13 the fields fill
+ dict(src='B', a=99.6, b=105.6, speed=3, cap='saved'),                                          # 14 payment page, saved card
+ dict(src='B', a=106.0, b=110.0, cap='approve', rects=[EN_PAY]),                                # 15 Qutai's payment dialog
+ dict(src='B', a=128.8, b=131.0, cap='approve', rects=[(840, 2145, 1145, 2265)]),               # 16 Pay ₺720 pressed
+ dict(src='B', a=133.0, b=136.0, cap='paid', late=0.4, rects=[(40, 1120, 1166, 1300)]),          # 17 "Order placed"
+ dict(src='B', a=136.6, b=140.0, cap='calendar'),                                               # 18 the calendar offer
+ dict(card='close', dur=4.0),                                                                   # 19
 ]
 # The 15-second cut: opening, the remembering, the next evening, the assistant using it, the close.
 SHORT = {
@@ -119,15 +125,16 @@ SHORT = {
   dict(card='close', dur=3.4),
  ],
  'en': [
-  dict(card='open', dur=1.2),
-  dict(src='A', a=18.0, b=19.5, cap='say'),
-  dict(src='A', a=20.5, b=22.5, freeze=0.6, cap='rem', zoom=EN_A_ZOOM,
-       rects=[(170, 560, 820, 690)], badge=('remembered', 'check', (170, 560, 820, 690)), badge_above='right'),
-  dict(card='next', dur=0.7),
-  dict(src='B', a=3.2, b=5.2, cap='nogluten'),
-  dict(src='B', a=11.6, b=14.6, cap='note', badge_above=True,
-       rects=[(180, 605, 1060, 740)], badge=('from_memory', 'chest', (180, 605, 1060, 740))),
-  dict(card='close', dur=3.4),
+  dict(card='open', dur=1.0),
+  dict(src='A', a=4.4, b=5.9, cap='say'),
+  dict(src='A', a=6.2, b=8.0, freeze=0.5, cap='rem', zoom=EN_A_ZOOM, badge_above='outside',
+       rects=[(170, 560, 880, 690)], badge=('remembered', 'check', (170, 560, 880, 690))),
+  dict(card='next', dur=0.6),
+  dict(src='B', a=12.8, b=14.6, cap='nogluten'),
+  dict(src='B', a=19.4, b=22.0, cap='note', badge_above=True,
+       rects=[(180, 625, 1070, 780)], badge=('from_memory', 'chest', (180, 625, 1070, 780))),
+  dict(src='B', a=106.0, b=108.4, cap='approve', rects=[EN_PAY]),
+  dict(card='close', dur=3.0),
  ]}
 # Voice-over: (file, cut from, cut to or None, start in the film); st = each segment's start.
 VO = {
@@ -135,11 +142,11 @@ VO = {
                    ('tr-3b', 0, None, st[6] + 0.6), ('tr-4a', 0, None, st[10] + 0.3), ('tr-4b', 0, None, st[13] + 0.3),
                    ('tr-5', 0, None, st[15] + 0.4)],
  'en': lambda st: [('en-1', 0, None, st[1] + 0.2), ('en-2', 0, None, st[3] + 0.3), ('en-3a', 0, None, st[4] + 0.1),
-                   ('en-3b', 0, None, st[8] + 0.4), ('en-4a', 0, None, st[12] + 0.3), ('en-4b', 0, None, st[14] + 0.3),
-                   ('en-5', 0, None, st[16] + 0.4)],
+                   ('en-3b', 0, None, st[8] + 0.4), ('en-4a', 0, None, st[12] + 0.3), ('en-4b', 0, None, st[15] + 0.3),
+                   ('en-5', 0, None, st[19] + 0.4)],
 }
 VO_SHORT = {'tr': lambda st: [('tr-1', 0, None, st[1] + 0.1), ('tr-5', 0, None, st[6] + 0.3)],
-            'en': lambda st: [('en-1', 0, None, st[1] + 0.1), ('en-5', 0, None, st[6] + 0.3)]}
+            'en': lambda st: [('en-1', 0, None, st[1] + 0.1), ('en-4b', 0, None, st[6] + 0.2), ('en-5', 0, None, st[7] + 0.3)]}
 
 # ---------------------------------------------------------------- layouts
 def layout(kind):
@@ -182,11 +189,14 @@ def draw_icon(d, kind, x, y, sz, color, w):
         d.rectangle([x + sz * .42, y + sz * .42, x + sz * .58, y + sz * .62], fill=color)
 
 def badge(d, L, label, icon, rect, above=False):
-    # above: True (over the rect), False (under it) or 'right' (beside it, for short lines with room on their right)
+    # above: True (over the rect), False (under it), 'right' (beside it, for short lines with room on their right) or
+    # 'outside' (on the parchment just above a magnified box, right-aligned, when nothing inside has room)
     k = L['k']; f = font(SANS, round(36 * k)); pad = 22 * k; isz = 36 * k
     tw = d.textlength(label, font=f); bw = tw + isz + pad * 2.6; bh = 70 * k
     x1, y1, x2, y2 = mapr(L, rect)
-    if above == 'right':
+    if above == 'outside':
+        bx = L['x0'] + L['pw'] - bw; by = L['y0'] - bh - 22 * k
+    elif above == 'right':
         bx = min(x2 + 18 * k, L['W'] - bw - 8); by = (y1 + y2) / 2 - bh / 2
     else:
         bx = min(x2 - bw, L['x0'] + L['pw'] - bw - 8); by = y1 - bh - 18 * k if above else y2 + 18 * k  # clear of what it marks

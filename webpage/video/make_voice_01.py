@@ -18,7 +18,7 @@ LINES = {
         ('3a', 'The next evening, ask for dinner.'),
         ('3b', 'No need to say it again: it picks gluten-free.'),
         ('4a', 'Your details go in only when you say so.'),
-        ('4b', 'You make the payment.'),
+        ('4b', 'It pays only when you approve.'),
         ('5', "Qutai: the AI assistant in your phone's browser.")],
 }
 GAP = 2.5  # seconds of pause between lines in the request; a line's own pauses stay well under the cut threshold

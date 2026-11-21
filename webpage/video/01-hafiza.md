@@ -94,11 +94,17 @@ Bütün bölümlerde aynı müzik, değişen tek şey motifin varyasyonu.
   - Not: Uygulamada bir hata kayıtta göründü: asistan hafıza boşken de "zaten kayıtlıydı" diyor. Filme girmiyor;
     ayrıca bildirildi.
 - **İngilizce yeniden çekim (2026-11-21, 0.1.7, arayüz değiştiği için):** Pro sürüm, Qutai Kredileri (model Qutai'ın
-  seçtiği), iOS Simülatör. A: `ep01-en-actA-take2.mp4` (yanıt İngilizce, "Remembering" satırları yanıtla birlikte,
-  hafıza ekranında yalnızca ad ve gluten). B: `ep01-en-actB-take4.mp4`, yazılı komut: asistan "You're gluten
-  intolerant, so I'd pick from the gluten-free dishes" deyip glutensiz seçenekleri düğmelerle sunuyor, Osman ilkini
-  seçiyor, sepet ve teslimat formu dolduruluyor, kişisel bilgi izni soruluyor, "Card details are for you to enter, so
-  I've stopped here" diyerek ödemede duruyor. Türkçe film henüz eski arayüzle (ilk etapta yalnızca İngilizce isteniyor).
+  seçtiği), iOS Simülatör, kişi adı **Emma** (İngilizce filmde Osman yok). Ayarlar › Asistan › "Let the assistant
+  complete payments" açık. A: `ep01-en-actA-take3.mp4` ("Remembering: Name: Emma", "Remembering: Diet: gluten
+  intolerant", hafıza ekranında ikisi). B: `ep01-en-actB-take6.mp4`, yazılı komut: asistan "Your saved note says
+  you're gluten intolerant, so I can filter for gluten-free dishes" deyip seçenekleri düğmelerle sunuyor (biri glutensiz
+  değil, "Mixed"), Emma ilk glutensiz seti seçiyor, sepet ve form doluyor, kişisel bilgi izni soruluyor, teslimat saati
+  soruluyor, ödeme sayfasında sitenin kayıtlı kartı (Visa •••• 4242) var; Qutai'ın kendi ödeme penceresi siteyi, toplamı
+  (₺720), siparişi ve ödeme yöntemini gösteriyor; onaydan sonra "Pay ₺720"ye bir kez basılıyor, "Order placed" çıkıyor
+  ve Qutai takvime eklemeyi öneriyor. Demo sitede hiçbir şey ödenmez: kayıtlı kart yalnızca sayfadaki bir yazı.
+  Simülatörün kayıt aracı ilk ~15 saniyeyi kaçırabildiği için (take 5'te komut ve "Thinking" kayboldu) kayda başladıktan
+  sonra ~12 sn beklenip komut öyle gönderildi. Seslendirmede "You make the payment." yerine "It pays only when you
+  approve." (İngilizce seslendirme tek istekte yeniden üretildi). Türkçe film henüz eski arayüzle.
 - **Sesli komut (yapılmadı):** Planı Q düğmesine basılı tutup "Order dinner for two for this evening" demekti.
   Bu Mac'te kaydedilemedi: Xcode yalnızca komut satırı araçlarıyla kurulu olduğu için simülatörün mikrofon girişi yok;
   Android emülatörü (`demo-sites/dns.py` ve `serve.py --plain-80` ile alan adı çalışıyor) Mac mikrofonundan yalnızca
@@ -108,7 +114,7 @@ Bütün bölümlerde aynı müzik, değişen tek şey motifin varyasyonu.
   seslendirme zamanları betiğin içinde. Yalnızca kesme, hız (işaretli), kısa donmuş kare, yakınlaştırma ve üstüne
   film grafikleri; uygulama ekranı değiştirilmiyor. Ses: müzik konuşma sırasında kısılıyor, toplam −16 LUFS.
 - **Çıktılar (`out/`):** `01-hafiza-tr.mp4` (45 sn, 9:16), `01-hafiza-tr-16x9.mp4`, `01-hafiza-tr-15s.mp4`; aynıları
-  `-en` ile (21 Kasım çekimiyle 45 sn, kısa kesit 14 sn). Her biri `.webm` ve `.vtt` ile; kapak `01-hafiza-{tr,en}-cover.jpg`. MP4'ler 1–2 MB.
+  `-en` ile (21 Kasım çekimiyle 54 sn, kısa kesit 15 sn). Her biri `.webm` ve `.vtt` ile; kapak `01-hafiza-{tr,en}-cover.jpg`. MP4'ler 1–2 MB.
 - **Kalan:** Videoları siteye koymak ayrı bir iş (henüz yapılmadı). Filmler yayımlanmadan önce demo alan adı
   alınmalı ya da sahibinin bir alan adıyla yeniden çekilmeli (README, "Demo alan adı").
 
