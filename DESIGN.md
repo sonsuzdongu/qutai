@@ -19,6 +19,7 @@ Last updated: 2026-11-22
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-22:** "Rate Qutai" opens the App Store review form or the Google Play page instead of the in-app rating sheet, which the systems silently skip (`UI-40`, owner).
 - **2026-11-22:** Pro mode lists Qutai Credits first among the AI providers (`AI-35`, owner).
 - **2026-11-22:** Settings › About shows only the version, no longer the build number, in every language (`VER-11`, owner).
 - **2026-11-22:** Device verification fix: the proof's nonce now comes from expo-crypto (React Native has no global `crypto`, so every proof in 0.1.13 and 0.1.14 failed before starting and showed `app_failed`); failures before the platform steps now read `config_failed`, `nonce_failed` or `setup_failed` instead of plain `failed` (`SRV-34`).
