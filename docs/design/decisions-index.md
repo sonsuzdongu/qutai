@@ -82,7 +82,6 @@ The open questions, in one place (each row says what the app does today).
 | `LEGAL-10` | A lawyer reviews the open-source and pro texts (KVKK/GDPR, Turkish consumer law on digital content) before any store release. Today they… | [41](41-legal-texts.md) |
 | `LEGAL-26` | The terms name no governing law or court. Open for the owner: which law governs and which courts or consumer boards hear disputes… | [41](41-legal-texts.md) |
 | `LEGAL-27` | Open source licences lists only this platform's components; no "Android only" / "iOS only" labels. | Owner | 2026-11-21 |
-| `LEGAL-29` | Today the pro privacy policy describes analytics and device verification, but the legal version is not bumped (pro stays 7). | [41](41-legal-texts.md) |
 | `WEB-11` | Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end sync, and the comparison's… | [42](42-website.md) |
 | `NOT-9` | Today there is no sync; whether a future sync must be end-to-end encrypted (so the server cannot read it) is open, recommended yes. | [44](44-not-built.md) |
 | `NOT-15` | Today there is no in-app "lock to portrait"; the system's rotation lock is used (section 29). | [44](44-not-built.md) |
@@ -1267,7 +1266,7 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | `LEGAL-25` | The legal versions went to open source 5 / pro 7 on 2026-11-21 for the protective clauses, reports, contact and… | Owner | 2026-11-21 |
 | `LEGAL-26` | The terms name no governing law or court; which law governs and which courts or boards hear disputes is open… | **Waiting** |  |
 | `LEGAL-28` | Each legal text names only its platform's store and services (`{{ios:…\|android:…\|web:…}}`); the website copy names both; no legal bump. | Owner | 2026-11-22 |
-| `LEGAL-29` | The pro privacy policy describes analytics and device verification in ten languages; legal version NOT bumped (the owner's call). | **Waiting** | 2026-11-22 |
+| `LEGAL-29` | The pro privacy policy describes analytics and device verification in ten languages; pro legal version 8 (2026-11-22), open source stays 5. | Owner | 2026-11-22 |
 | `LEGAL-18` | Qutai's code is Apache-2.0. The licence does not cover the Qutai name, logo or icons, and trademark… | Default |  |
 
 Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`

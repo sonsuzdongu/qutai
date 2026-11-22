@@ -34,8 +34,10 @@ const OPEN_SOURCE_LEGAL_VERSION = 5;
  * 6: as the open-source policy's version 4, and "sign-in tokens" spelled out in the server's logs (20 Nov 2026).
  * 7: as the open-source policy's version 5, the reports section (what a report sends, kept 180 days), and in the
  *    terms that Qutai Credits do not expire (21 Nov 2026).
+ * 8: the consented anonymous usage statistics and the device verification and abuse checks (what goes to Apple and
+ *    Google, what the server keeps), and the intro no longer says there are no analytics (22 Nov 2026).
  */
-const PRO_LEGAL_VERSION = 7;
+const PRO_LEGAL_VERSION = 8;
 export const LEGAL_VERSION = accountsEnabled ? PRO_LEGAL_VERSION : OPEN_SOURCE_LEGAL_VERSION;
 export const LEGAL_UPDATED = accountsEnabled ? PRO_LEGAL_UPDATED : '2026-11-21';
 
