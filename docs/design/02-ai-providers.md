@@ -91,6 +91,8 @@ that change a request (model per chat, streaming, web search, the custom endpoin
   Status: Default (implementing session, 21 Nov 2026 code review; open to change); closes the open point "why do AI keys use the default protection" · Why: one protection for every secret; an AI key in a device backup can end up on a phone its owner no longer controls · Enforced: src/storage/settings.ts (SECRET_OPTIONS, protectStoredSecrets, saveSettings) · Tests: none (the Keychain's behaviour needs an iPhone; checked against expo-secure-store 58's iOS source, which changes an existing item's protection on update)
 - **`AI-34`** A request to an AI provider with the user's own key that fails with 429, 529 or a 5xx status, or whose connection breaks before the first piece of the answer, is tried again up to three times after 1, 2 and 4 seconds, or after the server's `Retry-After` when that is longer, never more than 20 seconds. Stop ends such a wait at once.
   Status: Default (implementing session, 21 Nov 2026 code review; open to change) · Why: before, Stop sat out the wait (up to 4 seconds) and `Retry-After` was ignored, so a rate-limited provider was asked again too early · Enforced: src/ai/http.ts (postWithRetry, postSse, retryDelay) · Tests: scripts/assistant-tests/retryDelay.test.ts
+- **`AI-35`** In pro mode Qutai Credits is the first provider everywhere providers are listed (Settings › Assistant tabs, the model sheet), before Anthropic, OpenAI, Gemini, OpenRouter and custom; open-source builds have no Qutai Credits and keep that order.
+  Status: Owner, 2026-11-22 · Why: owner's request ("pro-mode'da ise qutai ilk başta olsun"); replaces the old sixth place (was `AI-3`) · Source: `PROVIDER_ORDER` in src/ai/providers.ts
 
 ## Details
 

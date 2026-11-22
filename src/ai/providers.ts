@@ -54,16 +54,17 @@ export const PROVIDERS: Record<ProviderId, Provider> = {
 };
 
 /**
- * Every provider this build offers, in the order the settings list them. Nothing else may assume how many there are.
+ * Every provider this build offers, in the order the settings list them (Qutai Credits first when offered). Nothing else may assume how many there are.
  * Qutai Credits only in pro mode with a server address (`creditsEnabled`).
  */
 export const PROVIDER_ORDER: ProviderId[] = [
+  // Pro mode puts Qutai Credits first (owner, 22 Nov 2026).
+  ...(creditsEnabled ? (['qutai'] as const) : []),
   'anthropic',
   'openai',
   'gemini',
   'openrouter',
   'custom',
-  ...(creditsEnabled ? (['qutai'] as const) : []),
 ];
 
 export function getProvider(id: ProviderId): Provider {

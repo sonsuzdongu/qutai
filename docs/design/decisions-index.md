@@ -142,6 +142,7 @@ Moved to Details (ids retired, not reused): `PROD-5`
 | `AI-32` | With an own key, nothing goes to a provider before the user accepted, on this phone, a screen that names… | Owner | 2026-11-21 |
 | `AI-33` | AI keys and custom header values are kept "this device only" like the other secrets; older ones rewritten once | Default | 2026-11-21 |
 | `AI-34` | Own-key requests retry after 1, 2, 4 s or a longer Retry-After (20 s at most); Stop ends the wait at once | Default | 2026-11-21 |
+| `AI-35` | In pro mode Qutai Credits is listed first among the providers. | Owner | 2026-11-22 |
 
 Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `AI-11`, `AI-12`
 
