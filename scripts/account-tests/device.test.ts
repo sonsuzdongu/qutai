@@ -7,7 +7,8 @@ import { describe, it } from 'node:test';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils.js';
 import { createApi, type Fetch } from '../../src/account/api.ts';
-import { createDeviceProof, type DeviceCheckConfig, type IntegrityModule } from '../../src/account/deviceProof.ts';
+import { readFileSync } from 'node:fs';
+import { createDeviceProof, deviceErrorToken, type DeviceCheckConfig, type IntegrityModule } from '../../src/account/deviceProof.ts';
 
 function fakeModule(overrides: Partial<IntegrityModule> = {}) {
   const calls: string[] = [];
@@ -97,13 +98,68 @@ describe('device proof', () => {
       'X-Qutai-Device-Error': 'not_configured',
     });
     const broken = fakeModule({ requestIntegrityCheckAsync: async () => Promise.reject(new Error('no play')) });
-    assert.equal((await make('android', broken.m).proof.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'failed');
+    assert.equal((await make('android', broken.m).proof.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'req_failed');
     const noAttest = fakeModule({ attestKeyAsync: async () => Promise.reject(new Error('x')) });
     const ios = make('ios', noAttest.m);
-    assert.equal((await ios.proof.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'failed');
-    // The next try waits an hour (no attestation storm).
-    await ios.proof.headers('POST', '/relay', true);
+    assert.equal((await ios.proof.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'attest_failed');
+    // The next try waits an hour (no attestation storm), and the reason stays the same meanwhile.
+    assert.equal((await ios.proof.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'attest_failed');
     assert.equal(noAttest.calls.filter((c) => c === 'generate').length, 1);
+  });
+
+  it('the error header names the stage and the native cause, never the message', async () => {
+    const coded = (code: string) => Object.assign(new Error('secret text https://x'), { code });
+    const prep = fakeModule({ prepareIntegrityTokenProviderAsync: async () => Promise.reject(coded('ERR_APP_INTEGRITY_API_NOT_AVAILABLE')) });
+    assert.equal((await make('android', prep.m).proof.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'prep_api_not_available');
+    const req = fakeModule({ requestIntegrityCheckAsync: async () => Promise.reject(coded('ERR_APP_INTEGRITY_PLAY_STORE_NOT_FOUND')) });
+    assert.equal((await make('android', req.m).proof.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'req_play_store_missing');
+    // A stale provider is prepared again; a failure there is reported as prep.
+    let prepares = 0;
+    const stale = fakeModule({
+      prepareIntegrityTokenProviderAsync: async () => {
+        if (prepares++ > 0) throw coded('ERR_APP_INTEGRITY_NETWORK_ERROR');
+      },
+      requestIntegrityCheckAsync: async () => Promise.reject(coded('ERR_APP_INTEGRITY_PROVIDER_INVALID')),
+    });
+    assert.equal((await make('android', stale.m).proof.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'prep_network_error');
+    const keygen = fakeModule({ generateKeyAsync: async () => Promise.reject(coded('ERR_APP_INTEGRITY_FEATURE_UNSUPPORTED')) });
+    assert.equal((await make('ios', keygen.m).proof.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'keygen_feature_unsupported');
+    const assertFail = fakeModule({ generateAssertionAsync: async () => Promise.reject(coded('ERR_APP_INTEGRITY_SERVER_UNAVAILABLE')) });
+    assert.equal((await make('ios', assertFail.m).proof.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'assert_apple_unavailable');
+    // Our own server failing during attestation.
+    const server = createDeviceProof({
+      platform: 'ios',
+      module: () => fakeModule().m,
+      config: async () => CONFIG,
+      post: async (path) => {
+        if (path === '/device/attest') throw new Error('400');
+        return { challenge: 'CHAL' };
+      },
+      keys: { get: async () => null, set: async () => {} },
+      now: () => 1000,
+      random: () => 'n'.repeat(32),
+    });
+    assert.equal((await server.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'register_failed');
+    // Unknown or missing codes fall back to <stage>_failed.
+    assert.equal(deviceErrorToken('req', coded('ERR_APP_INTEGRITY_SOMETHING_NEW')), 'req_failed');
+    assert.equal(deviceErrorToken('req', coded('E_OTHER')), 'req_failed');
+    assert.equal(deviceErrorToken('prep', null), 'prep_failed');
+    assert.equal(deviceErrorToken('prep', 'string'), 'prep_failed');
+  });
+
+  it('every native error code of @expo/app-integrity has a word that fits the server rule', () => {
+    const base = 'node_modules/@expo/app-integrity';
+    const sources = [`${base}/android/src/main/java/expo/modules/integrity/IntegrityErrorCodes.kt`, `${base}/ios/IntegrityErrorCodes.swift`];
+    const codes = sources.flatMap((f) => [...readFileSync(f, 'utf8').matchAll(/"(ERR_APP_INTEGRITY_[A-Z_]+)"/g)].map((x) => x[1]));
+    assert.ok(codes.length > 20);
+    for (const code of codes) {
+      if (code.includes('HARDWARE_ATTESTATION')) continue; // functions the app doesn't call
+      for (const stage of ['prep', 'req', 'keygen', 'attest', 'assert'] as const) {
+        const token = deviceErrorToken(stage, { code });
+        assert.notEqual(token, `${stage}_failed`, code);
+        assert.match(token, /^[a-z_]{1,30}$/, token);
+      }
+    }
   });
 
   it('the API client adds proofs only to the sign-in routes', async () => {

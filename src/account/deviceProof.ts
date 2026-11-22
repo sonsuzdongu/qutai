@@ -64,6 +64,57 @@ export interface DeviceProof {
   reset(): void;
 }
 
+/**
+ * The `@expo/app-integrity` error codes (the native module rejects with `ERR_APP_INTEGRITY_<X>`: Android maps Google's
+ * StandardIntegrityErrorCode, iOS maps Apple's DCError) and the short word each becomes in `X-Qutai-Device-Error`.
+ */
+const NATIVE_CAUSES: Readonly<Record<string, string>> = {
+  // Android, Play Integrity
+  API_NOT_AVAILABLE: 'api_not_available',
+  APP_NOT_INSTALLED: 'app_not_installed',
+  APP_UID_MISMATCH: 'app_uid_mismatch',
+  CANNOT_BIND_SERVICE: 'cannot_bind_service',
+  CLIENT_TRANSIENT_ERROR: 'client_transient',
+  INVALID_PROJECT_NUMBER: 'invalid_project',
+  GOOGLE_SERVER_UNAVAILABLE: 'google_unavailable',
+  PROVIDER_INVALID: 'provider_invalid',
+  INTERNAL_ERROR: 'internal_error',
+  NETWORK_ERROR: 'network_error',
+  NO_ERROR: 'no_error',
+  PLAY_SERVICES_NOT_FOUND: 'play_services_missing',
+  PLAY_SERVICES_OUTDATED: 'play_services_outdated',
+  PLAY_STORE_NOT_FOUND: 'play_store_missing',
+  PLAY_STORE_OUTDATED: 'play_store_outdated',
+  REQUEST_HASH_TOO_LONG: 'hash_too_long',
+  TOO_MANY_REQUESTS: 'too_many_requests',
+  CANCELLED: 'cancelled',
+  PROVIDER_NOT_PREPARED: 'not_prepared',
+  DECODE_FAILED: 'decode_failed',
+  // iOS, App Attest (DCError)
+  FEATURE_UNSUPPORTED: 'feature_unsupported',
+  INVALID_INPUT: 'invalid_input',
+  INVALID_KEY: 'invalid_key',
+  SERVER_UNAVAILABLE: 'apple_unavailable',
+  SYSTEM_FAILURE: 'system_failure',
+  // Both
+  UNKNOWN: 'unknown',
+};
+
+/** Where a proof failed: Android `prep` (prepareIntegrityTokenProvider) or `req` (the token); iOS `keygen`, `challenge`
+ * and `register` (our server), `attest`, `assert`. */
+export type ProofStage = 'prep' | 'req' | 'keygen' | 'challenge' | 'attest' | 'register' | 'assert';
+
+/**
+ * The `X-Qutai-Device-Error` value for an error: `<stage>_<cause>`, the cause read only from the error's `code` (never its
+ * message), `<stage>_failed` for a code we don't know or an error without one. Always matches the server's
+ * `^[a-z_]{1,30}$` (recorded as `app_<value>`); nothing from the error's text or the device goes in.
+ */
+export function deviceErrorToken(stage: ProofStage, error: unknown): string {
+  const code = (error as { code?: unknown } | null | undefined)?.code;
+  const known = typeof code === 'string' && code.startsWith('ERR_APP_INTEGRITY_') ? NATIVE_CAUSES[code.slice('ERR_APP_INTEGRITY_'.length)] : undefined;
+  return `${stage}_${known ?? 'failed'}`;
+}
+
 function defaultRandom(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
@@ -75,6 +126,8 @@ export function createDeviceProof(deps: DeviceProofDeps): DeviceProof {
   const random = deps.random ?? defaultRandom;
   let attesting: Promise<string | null> | null = null;
   let attestFailedAt = Number.NEGATIVE_INFINITY;
+  /** Why the last attestation failed: sent on every iOS request until the next try. */
+  let attestError = 'failed';
   let prepared: string | null = null;
   let passUntil = 0;
 
@@ -84,15 +137,21 @@ export function createDeviceProof(deps: DeviceProofDeps): DeviceProof {
     if (attesting) return attesting;
     if (now() - attestFailedAt < ATTEST_RETRY_MS) return null;
     attesting = (async () => {
+      let stage: ProofStage = 'keygen';
       try {
         const keyId = await m.generateKeyAsync();
+        stage = 'challenge';
         const { challenge } = (await deps.post('/device/challenge', {})) as { challenge: string };
+        stage = 'attest';
         const attestation = await m.attestKeyAsync(keyId, challenge);
+        stage = 'register';
         await deps.post('/device/attest', { keyId, attestation, challenge });
         await deps.keys.set(keyId);
         return keyId;
-      } catch {
+      } catch (e) {
         attestFailedAt = now();
+        // Our own server's errors (challenge, register) carry no native code: `challenge_failed`, `register_failed`.
+        attestError = deviceErrorToken(stage, e);
         return null;
       } finally {
         attesting = null;
@@ -117,13 +176,13 @@ export function createDeviceProof(deps: DeviceProofDeps): DeviceProof {
       if (!config.appAttest) return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': 'not_configured' };
       if (!m.isSupported) return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': 'unsupported' };
       const keyId = await attestedKey(m);
-      if (!keyId) return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': 'failed' };
+      if (!keyId) return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': attestError };
       try {
         return { ...base, 'X-Qutai-Device-Key': keyId, 'X-Qutai-Device-Assertion': await m.generateAssertionAsync(keyId, clientData) };
       } catch (e) {
         // A key the system no longer has (reinstall, restore): make a new one next time.
         if ((e as { code?: string })?.code === 'ERR_APP_INTEGRITY_INVALID_KEY') await deps.keys.set(null);
-        return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': 'failed' };
+        return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': deviceErrorToken('assert', e) };
       }
     }
 
@@ -131,6 +190,7 @@ export function createDeviceProof(deps: DeviceProofDeps): DeviceProof {
     if (signedIn && passUntil > time + 60_000) return { 'X-Qutai-Device-Platform': platform };
     const project = config.playCloudProjectNumber;
     if (!project) return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': 'not_configured' };
+    let stage: ProofStage = 'prep';
     try {
       if (prepared !== project) {
         await m.prepareIntegrityTokenProviderAsync(project);
@@ -139,16 +199,19 @@ export function createDeviceProof(deps: DeviceProofDeps): DeviceProof {
       const hash = bytesToHex(sha256(utf8ToBytes(clientData)));
       let token: string;
       try {
+        stage = 'req';
         token = await m.requestIntegrityCheckAsync(hash);
       } catch (e) {
         if ((e as { code?: string })?.code !== 'ERR_APP_INTEGRITY_PROVIDER_INVALID') throw e;
+        stage = 'prep';
         await m.prepareIntegrityTokenProviderAsync(project);
+        stage = 'req';
         token = await m.requestIntegrityCheckAsync(hash);
       }
       return { ...base, 'X-Qutai-Device-Integrity': token };
-    } catch {
+    } catch (e) {
       prepared = null;
-      return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': 'failed' };
+      return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': deviceErrorToken(stage, e) };
     }
   }
 

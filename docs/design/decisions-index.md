@@ -1172,6 +1172,7 @@ Moved to Details (ids retired, not reused): `BACK-2`, `BACK-16`, `BACK-14`
 | `SRV-31` | Product analytics: server switch off by default; one-time equal-weight question after setup; consent and install id on the phone only; never from incognito. | Default | 2026-11-22 |
 | `SRV-32` | Five event names with fixed-word fields; the server keeps only those words and a hash prefix of the install id, three months. | Default | 2026-11-22 |
 | `SRV-33` | The panel reads the events through the Analytics Engine SQL API with fixed queries; its only other outbound request besides SRV-24. | Default | 2026-11-22 |
+| `SRV-34` | A missing device proof's error header names the stage and the native error code as a fixed word (`prep_api_not_available`), never the message. | Default | 2026-11-22 |
 
 Moved to Details (ids retired, not reused): `SRV-14`, `SRV-19`
 
