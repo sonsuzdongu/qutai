@@ -27,6 +27,8 @@ How Qutai behaves when the phone or tablet is turned on its side.
   Status: Default (manager or implementing session; open to change) · Why: keep the conversation and page in view while typing · Source: docs/landscape.md › Decisions
 - **`LAND-7`** When the window changes size the action marker is cleared, and a `click_at` using a screenshot taken before the change is refused with a request for a new screenshot; the prompt and tool definitions are unchanged.
   Status: Default (manager or implementing session; open to change) · Why: positions from an old screenshot would click a different spot · Enforced: In the app: src/ui/layout.ts (screenshotStillValid) and src/agent/actionMarker.ts (clearMark) · Source: docs/landscape.md; 12d9fa4
+- **`LAND-12`** Android declares the portrait and landscape screen features as optional (`uses-feature … required="false"`), so Google Play offers Qutai on tablets, desktops and Android XR too. ML Kit's invisible scanner activities (QR and document scanning, from expo-camera) are fixed to portrait in their own manifests, which made Play infer a required portrait screen and refuse the 0.1.10 release.
+  Status: Default (manager session, 2026-11-22, after the Play Console refused 0.1.10) · Why: Qutai needs no particular orientation; a required feature hides the app from devices without it · Enforced: plugins/withOrientations.js (withOptionalScreenFeatures)
 
 ## Details
 

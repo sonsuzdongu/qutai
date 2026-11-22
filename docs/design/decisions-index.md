@@ -886,6 +886,7 @@ Moved to Details (ids retired, not reused): `A11Y-3`, `A11Y-4`, `A11Y-8`, `A11Y-
 | `LAND-3` | Today the assistant panel in landscape is a side panel on the trailing edge, about half the width (320–420… | **Waiting** |  |
 | `LAND-5` | Android's full-screen landscape keyboard is turned off for the panel's input, the address bar and the find… | Default |  |
 | `LAND-7` | When the window changes size the action marker is cleared, and a `click_at` using a screenshot taken… | Default |  |
+| `LAND-12` | Android's portrait and landscape screen features are optional, so Play doesn't hide Qutai from tablets, desktops and XR… | Default | 2026-11-22 |
 
 Moved to Details (ids retired, not reused): `LAND-4`, `LAND-6`, `LAND-8`, `LAND-9`, `LAND-10`, `LAND-11`
 
