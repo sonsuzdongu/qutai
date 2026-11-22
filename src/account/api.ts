@@ -1,3 +1,5 @@
+import type { DeviceProof } from './deviceProof';
+import { DEVICE_CHECKED_PATHS } from './deviceProof';
 import type { ApiErrorCode } from './types';
 
 /**
@@ -77,7 +79,11 @@ export function parseRetryAfter(value: string | null): number | null {
   return seconds > 0 ? Math.min(seconds, 86_400) : null;
 }
 
-export function createApi(baseUrl: string, fetchImpl: Fetch = fetch) {
+/**
+ * `proof`: device verification (pro builds; src/account/deviceCheck.ts), added to the sign-in routes that create a
+ * session (DEVICE_CHECKED_PATHS). Left out for the device routes themselves, so the proof never needs itself.
+ */
+export function createApi(baseUrl: string, fetchImpl: Fetch = fetch, proof: () => DeviceProof | null = () => null) {
   const base = baseUrl.replace(/\/+$/, '');
 
   /** Sends one request; resolves with the parsed JSON (or null for 204), rejects with AccountApiError. */
@@ -88,7 +94,8 @@ export function createApi(baseUrl: string, fetchImpl: Fetch = fetch) {
       timedOut = true;
       controller.abort();
     }, timeoutMs);
-    const headers: Record<string, string> = { ...extra, Accept: 'application/json' };
+    const device = DEVICE_CHECKED_PATHS.has(path) ? proof() : null;
+    const headers: Record<string, string> = { ...(device ? await device.headers(method, path, !!accessToken) : {}), ...extra, Accept: 'application/json' };
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
@@ -106,6 +113,7 @@ export function createApi(baseUrl: string, fetchImpl: Fetch = fetch) {
       clearTimeout(timer);
     }
 
+    if (device && response.ok) device.observe(response.status, response.headers, null);
     const requestId = response.headers.get('X-Request-Id');
     const retryAfter = parseRetryAfter(response.headers.get('Retry-After'));
     if (response.status === 204) return null as T;
@@ -126,6 +134,7 @@ export function createApi(baseUrl: string, fetchImpl: Fetch = fetch) {
     const code = typeof error?.code === 'string' && KNOWN_CODES.has(error.code) ? (error.code as ApiErrorCode) : codeForStatus(response.status);
     // Only a short code word is kept: it is shown to the user under "Details".
     const reason = typeof error?.reason === 'string' && REASON.test(error.reason) ? error.reason : null;
+    device?.observe(response.status, response.headers, reason);
     throw new AccountApiError(
       code,
       response.status,

@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 860 decisions (134 owner, 645 default, 81 waiting); 163 ids moved to Details.
+Totals: 861 decisions (135 owner, 645 default, 81 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -1032,7 +1032,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-11` | ~~The old request form naming a provider model is still accepted~~ (withdrawn: removed; every app from 0.1.0 sends a tier). | Withdrawn | 2026-11-20 |
 | `CRED-12` | Credits are whole numbers of micro-credits (1 credit = 1 000 000); a charge is the provider's cost ×… | Default |  |
 | `CRED-13` | Each account's balance has one source of truth, its own Durable Object (a per-user server object that… | Owner | not recorded |
-| `CRED-14` | Before each step the server reserves the most it can cost (output limit, searches and their results, dearest tier)… | Default | changed 2026-11-20 |
+| `CRED-14` | Before each step the server reserves the most it can cost (output limit, searches and their results, dearest tier)… | Default | changed 2026-11-22 |
 | `CRED-15` | A provider error or the app leaving before any output costs nothing; a cut answer is charged on what was seen plus an… | Default | changed 2026-11-20 |
 | `CRED-16` | A charge that arrives after the hold expired still charges the real cost, even if the balance goes negative. | Default |  |
 | `CRED-17` | An identical re-send of a step within 15 minutes is free once only if a charged attempt was cut or estimated… | Default | changed 2026-11-20 |
@@ -1064,6 +1064,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-45` | One reservation scope inside waitUntil: exactly one settle or cancel; the app leaving can't keep the hold and the lock. | Default | 2026-11-20 |
 | `CRED-46` | The account prunes retry-only rows daily: relay keys and finished reservations after 30 days, other keys after 400; never the ledger. | Default | 2026-11-20 |
 | `CRED-47` | Qutai's server relays Anthropic only (seam kept); own OpenAI, Gemini, OpenRouter and custom keys in the app are unaffected. | Owner | 2026-11-20 |
+| `CRED-48` | A step the balance can't hold is shortened to fit (fewer searches down to 1, then output down to `minOutputTokens`), refused only below that. | Owner | 2026-11-22 |
 
 Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 

@@ -131,6 +131,7 @@
       "./plugins/withAppFiles",
       "./plugins/withProAccounts",
       "./plugins/withProPurchases",
+      "./plugins/withProDeviceCheck",
       "./plugins/withReleaseSigning",
       [
         "expo-localization",

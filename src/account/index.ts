@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { accountsEnabled, features } from '../config/features';
 import { getLocale, t } from '../i18n';
 import { AccountApiError, createApi } from './api';
+import { deviceProof } from './deviceCheck';
 import { EmailSignInFlow, emailErrorMessage, waitSpan, type EmailSignInState } from './emailSignIn';
 import { SignInFailed } from './providers';
 import { AccountSession, type AccountState } from './session';
@@ -24,7 +25,7 @@ export function accountSession(): AccountSession | null {
   if (!instance) {
     // The interface language goes with every sign-in: the server writes its mails in it.
     // A sign-in the phone couldn't save (or a sign-out it couldn't remove) is told to the user once.
-    instance = new AccountSession(createApi(features.apiUrl), secureSessionStorage, Date.now, getLocale, (kind, error) =>
+    instance = new AccountSession(createApi(features.apiUrl, fetch, deviceProof), secureSessionStorage, Date.now, getLocale, (kind, error) =>
       reportStorageFailure('account.session', error, 'user', kind === 'save' ? 'account.saveFailed' : 'account.clearFailed'),
     );
     instance.load();

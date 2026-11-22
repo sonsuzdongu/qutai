@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import { secureStoreReady } from '../storage/secureStoreGate';
 import { useSyncExternalStore } from 'react';
 import { accountSession } from '../account';
+import { deviceProof } from '../account/deviceCheck';
 import type { Provider } from '../ai/types';
 import { creditsEnabled, features } from '../config/features';
 import { appVersion } from '../device/appVersion';
@@ -36,12 +37,16 @@ function getClient(): CreditsClient | null {
       },
       onBalance: (balance) => creditsStore.setBalance(balance),
       beforeRetry: (signal) => waitForForeground(signal),
+      deviceProof: deviceProof(),
     });
     // Another account's balance must never show: forget it when the account changes.
     let user: string | null = null;
     session.subscribe((state) => {
       const next = state.status === 'signedIn' ? state.user.id : null;
-      if (next !== user) creditsStore.forgetAccount();
+      if (next !== user) {
+        creditsStore.forgetAccount();
+        deviceProof()?.reset();
+      }
       user = next;
     });
   }

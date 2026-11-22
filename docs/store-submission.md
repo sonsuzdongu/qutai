@@ -16,6 +16,7 @@ Bu dosya, Qutai'ın pro derlemesini App Store'a ve Google Play'e gönderirken ya
 | ☐ | İnceleme hesabına kredi yükleyin (ör. 300) | Admin paneli › Users | Ekip asistanı kredi satın almadan deneyebilsin |
 | ☐ | "Test purchases in production" → **everyone** | Admin paneli › Settings (`BUY-32`) | Apple ve Google inceleme ekipleri production derlemesinde sandbox ile satın alır |
 | ☐ | Hesapta gerçek veri olmasın | — | Hesap herkesin bildiği bir kodla açılıyor |
+| ☐ | Cihaz doğrulaması "Log only" kalsın (varsayılan); **Enforce yapmayın** | Admin paneli › Settings › Device verification (`SRV-29`) | İnceleme cihazları ve TestFlight derlemeleri reddedilmesin; Apple/Google kurulumu: `backend/DEPLOY-prod.md` › Cihaz doğrulaması |
 | ☐ | Web sitesi yayında olsun: gizlilik politikası ve hesap silme sayfası | `qutai.sonsuzdongu.com` | İki konsolun da girdiği bağlantılar (21 Kasım'da yayımlandı) |
 
 **İnceleme bitince:** `review_login` kapatın, "Test purchases in production" kapatın ya da yalnızca kendi hesabınıza indirin. Her güncelleme gönderiminde ikisini yeniden açın.

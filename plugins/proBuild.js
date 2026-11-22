@@ -31,6 +31,6 @@ function isProBuild(projectRoot = root) {
 }
 
 /** Native packages only a pro build contains (left out of autolinking and of the bundle otherwise). */
-const PRO_ONLY_PACKAGES = ['react-native-purchases'];
+const PRO_ONLY_PACKAGES = ['react-native-purchases', '@expo/app-integrity'];
 
 module.exports = { isProBuild, PRO_ONLY_PACKAGES };

@@ -85,6 +85,24 @@ manual pass of the table above on both platforms:
 
 Either way the pin, the exclusion and the patch file go away; the JavaScript code is unchanged.
 
+## Pro-only native package: `@expo/app-integrity` (device verification, Android and iOS)
+
+- **Version:** `^58.0.2` (installed with `npx expo install`, 22 Nov 2026; Expo's own module for SDK 58). iOS: Apple's
+  DeviceCheck `DCAppAttestService` (App Attest); Android: `com.google.android.play:integrity` 1.4.0 (standard requests).
+  Not patched. It has **no config plugin**: `plugins/withProDeviceCheck.js` adds the iOS entitlement
+  `com.apple.developer.devicecheck.appattest-environment` (`production`, or `development` with
+  `QUTAI_APP_ATTEST_ENVIRONMENT=development`) to pro builds only and removes it from others. Android needs nothing in
+  the manifest. The module signs SHA-256 of the UTF-8 string it is given (read in its Swift source), which the server
+  repeats.
+- **Only in pro builds**, exactly like RevenueCat below: listed in `PRO_ONLY_PACKAGES` (`plugins/proBuild.js`), so it is
+  not autolinked and Metro resolves it to an empty module without pro mode.
+- **JS:** `src/account/deviceCheck.ts` requires it lazily; `src/account/deviceProof.ts` is the logic (tested in Node,
+  `scripts/account-tests/device.test.ts`). A pro build made before 22 Nov 2026 doesn't have it: the app then sends
+  "unsupported" and the server, in its default "log only", lets everything through. **A new development build and new
+  store builds are needed.**
+- **Manual check:** pro build on a real iPhone (App Attest doesn't run in the Simulator) and an Android phone with Play:
+  after a sign-in and one assistant request, the panel's Abuse › Device verification shows passes for both platforms.
+
 ## Pro-only native package: `react-native-purchases` (RevenueCat, Android and iOS)
 
 - **Version:** `^11.0.4` in package.json (installed with `npx expo install`, 20 Nov 2026; its native side is

@@ -6,7 +6,7 @@
 const LOCAL_API = { QUTAI_TEST_API_URL: process.env.QUTAI_TEST_API_URL || 'http://localhost:8790' };
 
 export const SUITES = {
-  account: { files: ['scripts/account-tests/session.test.ts', 'scripts/account-tests/email.test.ts', 'scripts/account-tests/methods.test.ts'] },
+  account: { files: ['scripts/account-tests/session.test.ts', 'scripts/account-tests/email.test.ts', 'scripts/account-tests/methods.test.ts', 'scripts/account-tests/device.test.ts'] },
   cost: { files: ['scripts/cost-tests/*.test.ts'] },
   custom: { files: ['scripts/custom-endpoint-tests/*.test.ts'] },
   instructions: { files: ['scripts/instructions-tests/*.test.ts'] },

@@ -1,4 +1,5 @@
 import { createSseDecoder, type SseEvent } from '../ai/sse';
+import type { DeviceProof } from '../account/deviceProof';
 import { RelayError, type RelayErrorKind } from './errors';
 import { TIER_ID } from './tiers';
 import { wellFormedJson } from '../utils/wellFormed';
@@ -60,6 +61,8 @@ export interface CreditsClientOptions {
   sleep?: (ms: number, signal?: AbortSignal) => Promise<void>;
   /** Before retrying a request cut off by the network: waits until the app is in the foreground again. */
   beforeRetry?: (signal: AbortSignal) => Promise<void>;
+  /** Device verification headers for `POST /relay` (pro builds; src/account/deviceCheck.ts), fresh for every attempt. */
+  deviceProof?: DeviceProof | null;
 }
 
 /** What one relay request cost, from its settlement, and what served it. */
@@ -188,10 +191,11 @@ export function createCreditsClient(options: CreditsClientOptions) {
       if (signal.aborted) throw abortError();
       let res: Response;
       try {
-        res = await authorized((token) =>
+        res = await authorized(async (token) =>
           fetchImpl(`${base}/relay`, {
             method: 'POST',
             headers: {
+              ...(options.deviceProof ? await options.deviceProof.headers('POST', '/relay', true) : {}),
               'Content-Type': 'application/json',
               Accept: body.stream ? 'text/event-stream' : 'application/json',
               Authorization: `Bearer ${token}`,
@@ -211,8 +215,12 @@ export function createCreditsClient(options: CreditsClientOptions) {
         if (signal.aborted) throw abortError();
         continue;
       }
-      if (res.ok) return res;
+      if (res.ok) {
+        options.deviceProof?.observe(res.status, res.headers, null);
+        return res;
+      }
       const error = await errorFrom(res);
+      options.deviceProof?.observe(res.status, res.headers, error.reason ?? null);
       if (WAITABLE.has(error.kind) && waits < MAX_WAITS && (error.retryAfter ?? 5) <= MAX_WAIT_SECONDS) {
         waits++;
         await sleep((error.retryAfter ?? 5) * 1000, signal);
@@ -421,6 +429,7 @@ export async function errorFrom(res: Response): Promise<RelayError> {
     retryAfter,
     upstream,
     ...(movedTo ? { movedTo } : {}),
+    ...(typeof error.reason === 'string' && /^[a-z_]{1,40}$/.test(error.reason) ? { reason: error.reason } : {}),
     requestId: typeof error.requestId === 'string' ? error.requestId : (res.headers.get('X-Request-Id') ?? undefined),
   });
 }

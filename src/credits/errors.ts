@@ -84,6 +84,8 @@ export class RelayError extends Error {
   readonly charged: number;
   /** `tier_moved`: the provider format the tier runs on now (`error.tier.provider`). */
   readonly movedTo?: RelayProvider;
+  /** The server's short reason code (for example `device_check` on a 403), when it sent one. */
+  readonly reason?: string;
 
   constructor(
     readonly kind: RelayErrorKind,
@@ -96,6 +98,7 @@ export class RelayError extends Error {
       charged?: number;
       detail?: string;
       movedTo?: RelayProvider;
+      reason?: string;
     } = {},
   ) {
     super(relayErrorMessage(kind, extra));
@@ -106,6 +109,7 @@ export class RelayError extends Error {
     this.requestId = extra.requestId;
     this.charged = extra.charged ?? 0;
     this.movedTo = extra.movedTo;
+    this.reason = extra.reason;
   }
 
   /** The kind for a server error code, or by HTTP status when the body had none the app knows. */

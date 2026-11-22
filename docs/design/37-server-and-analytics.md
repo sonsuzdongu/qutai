@@ -78,6 +78,10 @@ analytics, and how the owner makes pro test builds.
   Status: Withdrawn 2026-11-21 (owner); was: Default (code review, 20 Nov 2026) · Why: `fake` was spelled out in a D1 CHECK, the account's reference check, shared types, SQL filters and the panel · Enforced: Server: purchases.ts; a test ties the D1 CHECK to `RECORDED_STORES` · Source: backend/DESIGN.md › Review fixes (20 Nov 2026); code review of 20 Nov 2026
 - **`SRV-28`** Rate-limit refusals (per IP, per IP on sign-in routes, and the user's own task limits) are counted in each server instance's memory and written to the database as daily totals at most once a minute per instance, never one row per request; only the route is kept, never an IP address; kept 30 days; the admin panel's Abuse screen shows them with the flags (`CRED-34`).
   Status: Default (backend step 9, part 1, 2026-11-22) · Why: an attack that is being refused must not turn into a database write per request · Enforced: Server: backend/apps/api/src/abuse/hits.ts; migration 0016 · Source: backend/DESIGN.md › Abuse protection (step 9)
+- **`SRV-29`** Pro builds prove to the server that sign-in and AI requests come from Qutai as the App Store or Google Play installed it on a real device (Apple App Attest: a key attested once per install, an assertion per request; Google Play Integrity: a token per request, or once an hour per signed-in session). The server's switch is off / log only / enforce, **log only by default**: it checks and counts on the Abuse screen but refuses nothing; enforce refuses failed or missing proofs; a request the server can't check always goes through.
+  Status: Default (backend step 9, part 2, 2026-11-22; enforce is the owner's switch) · Why: Qutai Credits cost real money per request, and a scripted client or a modified app shouldn't be able to spend them freely; log only first so nothing breaks before the new app version is out · Enforced: Server: backend/apps/api/src/device/; In the app: src/account/deviceProof.ts, deviceCheck.ts; plugins/withProDeviceCheck.js · Source: backend/DESIGN.md › Abuse protection (step 9) › Part 2; backend/README.md › Device verification
+- **`SRV-30`** What device verification sends: to Apple and Google, only what their own services need on the phone (Apple: an attestation of a key and assertions; Google: a request hash, Google's integrity verdict about the app, the device and the install); to Qutai's server, the key id, assertions and Google's token, never linked to the account (keys are deleted after 180 days unused; per-day counts are kept 30 days). The app sends proofs only when the server's `/config` asks, never in the open-source build, and a proof it can't make never blocks a request on the phone.
+  Status: Default (backend step 9, part 2, 2026-11-22) · Why: data minimisation; the open-source build talks to no server · Enforced: In the app: src/account/deviceProof.ts (headers, error header), plugins/proBuild.js (PRO_ONLY_PACKAGES); Server: migration 0017 · Source: backend/README.md › Device verification
 
 ## Details
 
@@ -88,7 +92,8 @@ analytics, and how the owner makes pro test builds.
 
 - Production is deployed (19 Nov 2026, `SRV-22`); never tried with real purchases (no RevenueCat yet) and only one provider.
 - Analytics events and the panel's charts (server step 7): not built (planned). Abuse protection (step 9): flags and
-  rate-limit hits built (22 Nov 2026, `SRV-28`, `CRED-34`); device verification and trial-credit limits open. Legal
+  rate-limit hits built (22 Nov 2026, `SRV-28`, `CRED-34`); device verification built in "log only" (`SRV-29`, `SRV-30`;
+  enforce, and the owner's Apple / Google set-up, open); no trial credits, so no trial limits. Legal
   work (step 10) open.
 - A crash-report service: not decided (see CRED-37).
 - App Store privacy labels and Play Data safety must describe the account data (identifiers and email linked to the
