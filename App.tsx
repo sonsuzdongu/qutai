@@ -244,6 +244,8 @@ import { holdSplash } from './src/ui/launch';
 import { darkPalette, lightPalette } from './src/ui/theme';
 import { usePersistSession } from './src/storage/usePersistSession';
 import { useRecordHistory } from './src/storage/useRecordHistory';
+import { setIncognitoProbe } from './src/analytics';
+import { askAnalyticsConsentOnce } from './src/analytics/consentPrompt';
 
 // The native splash stays until the first real frame is ready (src/ui/launch.ts).
 holdSplash();
@@ -2373,6 +2375,14 @@ function BrowserApp({
       {findOpen ? null : navStatus}
     </>
   );
+
+  // Product analytics (pro builds, SRV-31): never from an incognito tab; the one-time consent question once nothing else
+  // is in front (setup, the lock, Settings, a running task) and the current tab isn't incognito.
+  useEffect(() => setIncognitoProbe(() => browserInstance.active.incognito), [browserInstance]);
+  const consentReady = !lock && !settingsVisible && !introPending && !running && !tab.incognito;
+  useEffect(() => {
+    if (consentReady) void askAnalyticsConsentOnce(() => browserInstance.active.incognito);
+  }, [consentReady, browserInstance]);
 
   return (
     <>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { track } from '../analytics';
 import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -84,6 +85,8 @@ type Status = { tone: 'ok' | 'info' | 'warn'; icon: IconName; text: string };
  * app to pay.
  */
 function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
+  // Product analytics (with consent, SRV-31): only that the screen was opened.
+  useEffect(() => track('purchase_screen_opened'), []);
   const styles = useStyles();
   const palette = usePalette();
   const account = useAccountState();

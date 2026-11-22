@@ -268,10 +268,10 @@ export const de: LegalTranslation = {
     privacy: {
       title: 'Datenschutzerklärung',
       intro:
-        'Qutai ist ein Webbrowser mit einem KI-Assistenten. Wir haben ihn so gebaut, dass Ihr Surfen auf Ihrem ' +
-        'Telefon bleibt. Qutais eigener Server wird nur für Ihr Qutai-Konto verwendet (Anmeldung, Qutai Credits, ' +
-        'Käufe in der App und Backups) und nur, wenn Sie sich dafür entscheiden. Wir verkaufen Ihre Daten nicht, ' +
-        'und Qutai enthält keine Analysen, kein Tracking und keine Werbung.',
+        'Qutai ist ein Webbrowser mit einem KI-Assistenten. Wir haben ihn so gebaut, dass Ihr Surfen auf Ihrem Telefon ' +
+        'bleibt. Qutais eigener Server wird nur für Ihr Qutai-Konto verwendet (Anmeldung, Qutai Credits, Käufe in der App ' +
+        'und Backups) und nur, wenn Sie sich dafür entscheiden. Wir verkaufen Ihre Daten nicht, und Qutai enthält kein ' +
+        'Tracking und keine Werbung; anonyme Nutzungsstatistiken werden nur gesendet, wenn Sie es erlauben.',
       sections: [
         {
           heading: 'Wer wir sind',
@@ -384,6 +384,42 @@ export const de: LegalTranslation = {
             'seine Anmeldemethoden, Geräte und der Credit-Verlauf, bis Sie das Konto löschen; Backups wie oben ' +
             'beschrieben; Anmeldecodes, bis sie verwendet werden oder ablaufen; Kaufdatensätze so lange, wie das ' +
             'Steuerrecht es verlangt, nach der Löschung des Kontos ohne Verbindung zu Ihnen.',
+        },
+        {
+          heading: 'Anonyme Nutzungsstatistiken (nur wenn Sie es erlauben)',
+          body:
+            'Qutai fragt Sie einmal, ob es anonyme Nutzungsstatistiken senden darf. Nichts wird gesendet, solange Sie nicht ' +
+            'auf „Erlauben“ tippen, und Sie können Ihre Antwort jederzeit unter Einstellungen › Datenschutz und Sicherheit ' +
+            'ändern. Wenn Sie es erlauben, sendet die App wenige feste Angaben an den Server von Qutai: welche Funktionen ' +
+            'genutzt werden, dass die Einrichtung abgeschlossen wurde, dass eine Aufgabe des Assistenten abgeschlossen wurde ' +
+            'oder gescheitert ist (nur mit der Art des Fehlers, etwa ein Netzwerkfehler) und dass der Bildschirm zum Kauf von ' +
+            'Credits geöffnet wurde, zusammen mit der App-Version, {{ios:dass es ein iPhone ist|android:dass es Android ' +
+            'ist|web:der Art des Telefons}}, der Sprache der App und einer Zufallszahl, die dafür auf Ihrem Telefon erzeugt ' +
+            'wird. Diese Zahl ist nicht mit Ihrem Konto, Ihrer Anmeldung oder einer anderen Kennung verknüpft und wird ' +
+            'gelöscht, wenn Sie die Einstellung ausschalten; der Server speichert nur eine gekürzte, verschlüsselte Form ' +
+            'davon. Aus Inkognito-Tabs und -Unterhaltungen wird nichts gesendet, und niemals Webadressen, Seiteninhalte, ' +
+            'Suchen, was Sie schreiben, oder das Gedächtnis des Assistenten. Qutai verwendet keine Werbe-ID und verfolgt Sie ' +
+            'nicht über Apps oder Websites hinweg. Die Statistiken werden bei Cloudflare gespeichert und drei Monate ' +
+            'aufbewahrt.',
+        },
+        {
+          heading: 'Prüfung von Anfragen und Schutz vor Missbrauch',
+          body:
+            'Um Qutai Credits vor Missbrauch zu schützen, bittet die App bei der Anmeldung und wenn der Assistent Qutai ' +
+            'Credits nutzt {{ios:den App-Attest-Dienst von Apple|android:den Integritätsdienst von Google Play|web:auf einem ' +
+            'iPhone den App-Attest-Dienst von Apple, auf Android den Integritätsdienst von Google Play}} zu bestätigen, dass ' +
+            'die Anfrage von der echten Qutai-App auf einem echten Gerät kommt, und sendet diese Bestätigung an den Server ' +
+            'von Qutai. {{ios:Apple erhält einen dafür auf Ihrem Telefon erzeugten Schlüssel und eine Prüfsumme der Anfrage; ' +
+            'der Server von Qutai speichert den öffentlichen Teil des Schlüssels und einen Zähler, nicht mit Ihrem Konto ' +
+            'verknüpft, und löscht sie nach 180 Tagen ohne Nutzung.|android:Google erhält eine Prüfsumme der Anfrage und ' +
+            'prüft die App und das Gerät; der Server von Qutai speichert nur das Ergebnis, zusammen mit Ihrer Anmeldesitzung, ' +
+            'höchstens eine Stunde.|web:Apple oder Google erhält eine Prüfsumme der Anfrage; der Server von Qutai speichert ' +
+            'nur, was er für die Prüfung braucht, nicht mit Ihrem Konto verknüpft.}} Die Prüfung umfasst nie den Inhalt Ihrer ' +
+            'Anfragen. Der Server von Qutai zählt außerdem pro Tag, wie viele Anfragen von seinen Grenzen abgelehnt wurden ' +
+            'oder diese Prüfung nicht bestanden haben, und für jedes Konto, wie oft das geschah; diese Zählungen werden 30 ' +
+            'Tage aufbewahrt. Ein Konto kann zur Prüfung durch eine Person bei Qutai markiert werden (etwa nach vielen ' +
+            'abgelehnten Anfragen oder der Erstattung bereits verbrauchter Credits); eine Markierung sperrt für sich allein ' +
+            'nichts und wird mit dem Konto gelöscht.',
         },
         {
           heading: 'Ihre Kontakte',

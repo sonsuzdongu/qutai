@@ -126,7 +126,13 @@ Eklemeden önce:
 | Takvim (onaylanan aralık AI'a) | Other User Content | App Functionality | Hayır | Hayır |
 | Tarama geçmişi, şifreli yedek, çökme ve analiz | Beyan yok (telefonda kalıyor ya da uçtan uca şifreli; analiz yok) | — | — | — |
 
-- ATT izni gerekmez (reklam ve izleme yok).
+| Product Interaction (anonim kullanım olayları, yalnızca kullanıcı **İzin ver** derse; `SRV-31`) | Collected | **Analytics** | **Hayır** (rastgele kurulum kimliği, hesaba bağlı değil) | Hayır |
+| Device ID (cihaz doğrulaması: App Attest anahtar kimliği; `SRV-29`) | Collected (zaten beyanlı) | App Functionality (sahtekârlık önleme) | Hayır | Hayır |
+
+- ATT izni gerekmez (reklam ve izleme yok; analitik reklam kimliği kullanmaz ve uygulamalar arası izleme yapmaz).
+- ☐ Analitik: sunucuda `analytics` ayarı **kapalı** olsa bile beyanı ekleyin; uygulama sürümünde kod var ve açıldığında
+  veri toplanır. Pro derlemenin gizlilik manifestosu da bunu listeliyor (`plugins/withProAccounts.js`: Product Interaction,
+  hesaba bağlı değil, amaç Analytics).
 - ✅ Pro derlemenin gizlilik manifestosu toplanan veri türlerini listeliyor (`plugins/withProAccounts.js`, `OSPERM-26`): e-posta, kullanıcı kimliği, cihaz kimliği, satın alma geçmişi, diğer kullanıcı içeriği, diğer kullanım verisi. App Store Connect › App Privacy'de bugün "Other User Content" **yok**; ekleyip yayımlayın, yoksa manifest ile etiket uyuşmaz.
 
 ### 3.4 Uygulama içi satın almalar
@@ -161,6 +167,12 @@ Eklemeden önce:
 - **İsteğe bağlı:** konum; takvim; kişiler (isim AI'a gidiyorsa). Ses: Qutai yalnızca metni alır; tanıma telefonun ya da Google'ın hizmetinde.
 - **Paylaşım:** Anthropic ve RevenueCat sizin adınıza işleyen hizmet sağlayıcıları; Play'in tanımına göre "sharing" sayılmaz. Kendi anahtar modunda veri kullanıcının kendi seçtiği sağlayıcıya gider. Kesin cevabı hukukçunuzla netleştirin.
 - **Web gezintisi:** tarama geçmişi telefonda kalıyor; beyan gerekmez.
+- **İsteğe bağlı (22 Kasım 2026):** App activity › **App interactions** (anonim kullanım olayları; kullanıcı izin
+  verirse; amaç **Analytics**; paylaşım yok; hesaba bağlı değil, `SRV-31`).
+- **Cihaz doğrulaması (`SRV-29`):** Play Integrity jetonu Google'a gider ve sunucu sonucu bir saat oturumla saklar:
+  Device or other IDs için **Fraud prevention, security, and compliance** amacını işaretleyin (gerekli, paylaşım yok).
+  Google'ın güncel Data safety rehberinde Play Integrity için ayrıca beyan gerekip gerekmediğini gönderimden önce
+  kontrol edin.
 - **Güvenlik:** aktarım şifreli: **evet** · silme isteği yolu: **evet** (uygulama içi ve web sayfası).
 
 ### 4.3 Store listing ve hesap

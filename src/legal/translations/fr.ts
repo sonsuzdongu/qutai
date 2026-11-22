@@ -275,10 +275,11 @@ export const fr: LegalTranslation = {
     privacy: {
       title: 'Politique de confidentialité',
       intro:
-        'Qutai est un navigateur web doté d’un assistant IA. Nous l’avons conçu pour que votre navigation reste sur ' +
-        'votre téléphone. Le serveur propre de Qutai n’est utilisé que pour votre compte Qutai (connexion, Qutai ' +
-        'Credits, achats dans l’application et sauvegardes), et uniquement lorsque vous les choisissez. Nous ne ' +
-        'vendons pas vos données, et Qutai n’a ni outil d’analyse, ni pistage, ni publicité.',
+        'Qutai est un navigateur web doté d’un assistant IA. Nous l’avons conçu pour que votre navigation reste sur votre ' +
+        'téléphone. Le serveur propre de Qutai n’est utilisé que pour votre compte Qutai (connexion, Qutai Credits, ' +
+        'achats dans l’application et sauvegardes), et uniquement lorsque vous les choisissez. Nous ne vendons pas vos ' +
+        'données, et Qutai n’a ni pistage ni publicité ; des statistiques d’utilisation anonymes ne sont envoyées que si ' +
+        'vous l’autorisez.',
       sections: [
         {
           heading: 'Qui nous sommes',
@@ -397,6 +398,42 @@ export const fr: LegalTranslation = {
             'que vous supprimiez le compte ; les sauvegardes comme décrit ci-dessus ; les codes de connexion jusqu’à ' +
             'leur utilisation ou leur expiration ; les traces d’achat aussi longtemps que la législation fiscale ' +
             'l’exige, sans le lien avec vous une fois le compte supprimé.',
+        },
+        {
+          heading: 'Statistiques d’utilisation anonymes (seulement si vous l’autorisez)',
+          body:
+            'Qutai vous demande une fois s’il peut envoyer des statistiques d’utilisation anonymes. Rien n’est envoyé tant ' +
+            'que vous n’appuyez pas sur Autoriser, et vous pouvez changer votre réponse à tout moment dans Paramètres › ' +
+            'Confidentialité et sécurité. Si vous l’autorisez, l’app envoie au serveur de Qutai quelques informations fixes : ' +
+            'les fonctions utilisées, la fin de la configuration, la réussite ou l’échec d’une tâche de l’assistant (avec ' +
+            'seulement le type d’erreur, par exemple une erreur réseau) et l’ouverture de l’écran d’achat de crédits, avec la ' +
+            'version de l’app, {{ios:le fait qu’il s’agit d’un iPhone|android:le fait qu’il s’agit d’Android|web:le type de ' +
+            'téléphone}}, la langue de l’app et un nombre aléatoire créé pour cela sur votre téléphone. Ce nombre n’est lié ' +
+            'ni à votre compte, ni à votre connexion, ni à aucun autre identifiant, et il est supprimé lorsque vous ' +
+            'désactivez le réglage ; le serveur n’en garde qu’une forme raccourcie et brouillée. Rien n’est envoyé depuis les ' +
+            'onglets ou conversations de navigation privée, et jamais d’adresses web, de contenu de pages, de recherches, de ' +
+            'ce que vous écrivez ni de la mémoire de l’assistant. Qutai n’utilise aucun identifiant publicitaire et ne vous ' +
+            'suit pas d’une app ou d’un site à l’autre. Les statistiques sont stockées chez Cloudflare et conservées trois ' +
+            'mois.',
+        },
+        {
+          heading: 'Vérification des requêtes et prévention des abus',
+          body:
+            'Pour protéger les Qutai Credits contre les abus, lorsque vous vous connectez et lorsque l’assistant utilise des ' +
+            'Qutai Credits, l’app demande {{ios:au service App Attest d’Apple|android:au service d’intégrité de Google ' +
+            'Play|web:au service App Attest d’Apple sur un iPhone ou au service d’intégrité de Google Play sur Android}} de ' +
+            'confirmer que la requête vient de la véritable app Qutai sur un appareil réel, et envoie cette confirmation au ' +
+            'serveur de Qutai. {{ios:Apple reçoit une clé créée pour cela sur votre téléphone et une empreinte de la requête ' +
+            '; le serveur de Qutai conserve la partie publique de la clé et un compteur, sans lien avec votre compte, et les ' +
+            'supprime après 180 jours sans utilisation.|android:Google reçoit une empreinte de la requête et vérifie l’app et ' +
+            'l’appareil ; le serveur de Qutai ne conserve que le résultat, avec votre session de connexion, au plus une ' +
+            'heure.|web:Apple ou Google reçoit une empreinte de la requête ; le serveur de Qutai ne conserve que ce qui est ' +
+            'nécessaire à la vérification, sans lien avec votre compte.}} La vérification ne porte jamais sur le contenu de ' +
+            'vos requêtes. Le serveur de Qutai compte aussi, par jour, combien de requêtes ont été refusées par ses limites ' +
+            'ou ont échoué à cette vérification, et pour chaque compte combien de fois cela s’est produit ; ces décomptes ' +
+            'sont conservés 30 jours. Un compte peut être signalé pour qu’une personne de Qutai l’examine (par exemple après ' +
+            'de nombreuses requêtes refusées ou le remboursement de crédits déjà dépensés) ; un signalement ne bloque rien à ' +
+            'lui seul et est supprimé avec le compte.',
         },
         {
           heading: 'Vos contacts',

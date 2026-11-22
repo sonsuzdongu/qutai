@@ -9,6 +9,7 @@ import { PRICES_AS_OF } from '../ai/prices';
 import { getProvider, isConfigured, modelLabel, requestTarget } from '../ai/providers';
 import { SEARCH_ENGINE_ORDER, SEARCH_ENGINES } from '../browser/search';
 import { useAccountState } from '../account';
+import { analyticsOffered, setAnalyticsConsent, useAnalyticsConsent } from '../analytics';
 import { accountsEnabled, creditsEnabled } from '../config/features';
 import { authenticate, canAuthenticate } from '../device/biometric';
 import { appVersion } from '../device/appVersion';
@@ -537,6 +538,7 @@ function SettingsPages({
               value={settings.httpsOnly}
               onChange={(httpsOnly) => set({ httpsOnly })}
             />
+            <AnalyticsSwitch />
             <LinkRow label={t('settings.clearData')} onPress={() => setClearDataVisible(true)} />
             <Text style={[styles.label, styles.sectionLabel]}>{t('settings.security')}</Text>
             <SwitchRow
@@ -1087,3 +1089,28 @@ const useStyles = makeStyles((c) => ({
   saveButton: { marginTop: 4 },
   version: { color: c.textSecondary, fontSize: 13, textAlign: 'center', marginTop: 28 },
 }));
+
+/**
+ * Settings › Privacy and security › "Share anonymous usage data" (pro builds, SRV-31): shown while the server collects,
+ * or while this phone has said yes (so it can always be turned off). Off deletes this phone's anonymous id.
+ */
+function AnalyticsSwitch() {
+  const consent = useAnalyticsConsent();
+  const [offered, setOffered] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void analyticsOffered().then((on) => live && setOffered(on));
+    return () => {
+      live = false;
+    };
+  }, []);
+  if (consent === null || (!offered && consent !== 'allowed')) return null;
+  return (
+    <SwitchRow
+      title={t('settings.analytics')}
+      hint={t('settings.analyticsHint')}
+      value={consent === 'allowed'}
+      onChange={(on) => void setAnalyticsConsent(on)}
+    />
+  );
+}

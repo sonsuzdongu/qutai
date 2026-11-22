@@ -1,4 +1,5 @@
 import { ComponentRef, useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { noteSetupFinished } from '../analytics';
 import {
   Keyboard,
   Platform,
@@ -204,6 +205,8 @@ export function Onboarding({ settings, legalOnly = false, onDone }: Props) {
     if (!last) return go(index + 1);
     if (finished.current) return;
     finished.current = true;
+    // Product analytics (pro builds): sent only if the user later allows it (src/analytics, SRV-31).
+    noteSetupFinished();
     onDone(finalSettings());
   };
   /** The settings setup hands back (also saved with a restore from setup); `provider` overrides the draft's. */

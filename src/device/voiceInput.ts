@@ -1,4 +1,5 @@
 import { getLocales } from 'expo-localization';
+import { track } from '../analytics';
 import { useSyncExternalStore } from 'react';
 import { AppState, Platform } from 'react-native';
 import type { ExpoSpeechRecognitionErrorCode } from 'expo-speech-recognition';
@@ -683,6 +684,8 @@ export async function startVoiceInput(options: VoiceOptions, fellBackFrom: strin
   cancelled = false;
   setState('preparing');
   setInfo({ owner: options.owner, lang: null, fellBackFrom: null });
+  // Product analytics (with consent, never from incognito, SRV-31): only that voice input was used, not a retry.
+  if (!fellBackFrom) track('feature_used', { feature: 'voice_input' });
   try {
     await begin(options, fellBackFrom);
   } catch (e) {

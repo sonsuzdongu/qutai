@@ -14,8 +14,9 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
       title: 'Privacy Policy',
       intro:
         'Qutai is a web browser with an AI assistant. We built it so your browsing stays on your phone. Qutai’s own ' +
-        'server is used only for your Qutai account (sign-in, Qutai Credits, purchases in the app and backups), and ' +
-        'only when you choose them. We do not sell your data, and Qutai has no analytics, tracking or advertising.',
+        'server is used only for your Qutai account (sign-in, Qutai Credits, purchases in the app and backups), and only ' +
+        'when you choose them. We do not sell your data, and Qutai has no tracking or advertising; anonymous usage ' +
+        'statistics are sent only if you allow them.',
       sections: [
         {
           heading: 'Who we are',
@@ -115,6 +116,38 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'methods, devices and credit history until you delete the account; backups as described above; sign-in ' +
             'codes until they are used or expire; purchase records as long as tax law requires, without the link to ' +
             'you once the account is deleted.',
+        },
+        {
+          heading: 'Anonymous usage statistics (only if you allow them)',
+          body:
+            'Qutai asks you once whether it may send anonymous usage statistics. Nothing is sent unless you tap Allow, and ' +
+            'you can change your answer at any time in Settings › Privacy and security. If you allow it, the app sends ' +
+            'Qutai’s server a few fixed facts: which features are used, that setup was finished, that an assistant task ' +
+            'finished or failed (with only the kind of error, such as a network error), and that the screen for buying ' +
+            'credits was opened, together with the app version, {{ios:that it is an iPhone|android:that it is Android|web:the ' +
+            'kind of phone}}, the app’s language and a random number made for this on your phone. That number is not linked ' +
+            'to your account, your sign-in or any other identifier, and it is deleted when you turn the setting off; the ' +
+            'server keeps only a shortened, scrambled form of it. Nothing is sent from incognito tabs or conversations, and ' +
+            'never web addresses, page content, searches, what you write or the assistant’s memory. Qutai uses no advertising ' +
+            'identifier and does not track you across apps or websites. The statistics are stored by Cloudflare and kept for ' +
+            'three months.',
+        },
+        {
+          heading: 'Checking requests and preventing misuse',
+          body:
+            'To protect Qutai Credits from misuse, when you sign in and when the assistant uses Qutai Credits the app asks ' +
+            '{{ios:Apple’s App Attest service|android:Google Play’s integrity service|web:Apple’s App Attest service on an ' +
+            'iPhone or Google Play’s integrity service on Android}} to confirm that the request comes from the genuine Qutai ' +
+            'app on a real device, and sends that confirmation to Qutai’s server. {{ios:Apple receives a key made for this on ' +
+            'your phone and a digest of the request; Qutai’s server keeps the key’s public part and a counter, not linked to ' +
+            'your account, and deletes them after 180 days without use.|android:Google receives a digest of the request and ' +
+            'checks the app and the device; Qutai’s server keeps only the result, with your signed-in session, for up to an ' +
+            'hour.|web:Apple or Google receives a digest of the request; Qutai’s server keeps only what it needs to check it, ' +
+            'not linked to your account.}} The check never includes the content of your requests. Qutai’s server also counts, ' +
+            'per day, how many requests were refused by its limits or failed this check, and for each account how often that ' +
+            'happened; these counts are kept for 30 days. An account can be marked for a person at Qutai to review (for ' +
+            'example after many refused requests, or a refund of credits that were already spent); a mark never blocks ' +
+            'anything by itself and is deleted with the account.',
         },
         {
           heading: 'Your contacts',
@@ -332,10 +365,10 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
     privacy: {
       title: 'Gizlilik Politikası',
       intro:
-        'Qutai, yapay zekâ asistanı olan bir web tarayıcısıdır. Gezinmeniz telefonunuzda kalsın diye tasarlandı. ' +
-        'Qutai’ın kendi sunucusu yalnızca Qutai hesabınız (oturum açma, Qutai Kredileri, uygulama içi satın alma ve ' +
-        'yedekler) için, yalnızca siz bunları seçtiğinizde kullanılır. Verilerinizi satmayız; Qutai’da analitik, ' +
-        'izleme veya reklam yoktur.',
+        'Qutai, yapay zekâ asistanı olan bir web tarayıcısıdır. Gezinmeniz telefonunuzda kalsın diye tasarlandı. Qutai’ın ' +
+        'kendi sunucusu yalnızca Qutai hesabınız (oturum açma, Qutai Kredileri, uygulama içi satın alma ve yedekler) ' +
+        'için, yalnızca siz bunları seçtiğinizde kullanılır. Verilerinizi satmayız; Qutai’da izleme veya reklam yoktur, ' +
+        'anonim kullanım istatistikleri yalnızca siz izin verirseniz gönderilir.',
       sections: [
         {
           heading: 'Biz kimiz',
@@ -435,6 +468,38 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'yöntemleri, cihazları ve kredi geçmişi siz hesabı silene kadar; yedekler yukarıda anlatıldığı gibi; ' +
             'oturum açma kodları kullanılana ya da süresi dolana kadar; satın alma kayıtları vergi mevzuatının ' +
             'gerektirdiği süre boyunca, hesap silindikten sonra sizinle bağlantısı olmadan.',
+        },
+        {
+          heading: 'Anonim kullanım istatistikleri (yalnızca izin verirseniz)',
+          body:
+            'Qutai, anonim kullanım istatistikleri gönderip gönderemeyeceğini size bir kez sorar. İzin ver’e dokunmadığınız ' +
+            'sürece hiçbir şey gönderilmez; cevabınızı istediğiniz zaman Ayarlar › Gizlilik ve güvenlik bölümünden ' +
+            'değiştirebilirsiniz. İzin verirseniz uygulama Qutai’ın sunucusuna birkaç sabit bilgi gönderir: hangi ' +
+            'özelliklerin kullanıldığı, kurulumun bittiği, bir asistan görevinin bittiği ya da başarısız olduğu (yalnızca ağ ' +
+            'hatası gibi hata türüyle) ve kredi satın alma ekranının açıldığı; bunlarla birlikte uygulama sürümü, ' +
+            '{{ios:iPhone olduğu|android:Android olduğu|web:telefonun türü}}, uygulamanın dili ve telefonunuzda bu iş için ' +
+            'üretilen rastgele bir sayı. Bu sayı hesabınıza, oturum açmanıza ya da başka bir kimliğe bağlı değildir ve ayarı ' +
+            'kapattığınızda silinir; sunucu onun yalnızca kısaltılmış ve karıştırılmış bir biçimini saklar. Gizli sekmelerden ' +
+            've sohbetlerden hiçbir şey gönderilmez; web adresleri, sayfa içeriği, aramalar, yazdıklarınız ya da asistanın ' +
+            'hafızası asla gönderilmez. Qutai reklam kimliği kullanmaz ve sizi uygulamalar ya da siteler arasında izlemez. ' +
+            'İstatistikler Cloudflare’de saklanır ve üç ay tutulur.',
+        },
+        {
+          heading: 'İsteklerin denetlenmesi ve kötüye kullanımın önlenmesi',
+          body:
+            'Qutai Kredilerini kötüye kullanıma karşı korumak için, oturum açtığınızda ve asistan Qutai Kredilerini ' +
+            'kullandığında uygulama, isteğin gerçek bir cihazdaki gerçek Qutai uygulamasından geldiğini doğrulaması için ' +
+            '{{ios:Apple’ın App Attest hizmetine|android:Google Play’in bütünlük hizmetine|web:iPhone’da Apple’ın App Attest ' +
+            'hizmetine, Android’de Google Play’in bütünlük hizmetine}} başvurur ve bu doğrulamayı Qutai’ın sunucusuna ' +
+            'gönderir. {{ios:Apple, telefonunuzda bu iş için üretilen bir anahtarı ve isteğin bir özetini alır; Qutai’ın ' +
+            'sunucusu anahtarın açık kısmını ve bir sayacı hesabınıza bağlamadan saklar ve 180 gün kullanılmazsa ' +
+            'siler.|android:Google, isteğin bir özetini alır ve uygulamayı ve cihazı denetler; Qutai’ın sunucusu yalnızca ' +
+            'sonucu, oturumunuzla birlikte en fazla bir saat saklar.|web:Apple ya da Google isteğin bir özetini alır; ' +
+            'Qutai’ın sunucusu yalnızca denetim için gerekeni, hesabınıza bağlamadan saklar.}} Denetim, isteklerinizin ' +
+            'içeriğini asla kapsamaz. Qutai’ın sunucusu ayrıca, sınırlarına takılarak reddedilen ya da bu denetimden ' +
+            'geçemeyen istekleri günlük olarak ve her hesap için ne kadar sık olduğunu sayar; bu sayılar 30 gün tutulur. Bir ' +
+            'hesap, Qutai’dan bir kişinin incelemesi için işaretlenebilir (örneğin çok sayıda reddedilen istekten ya da ' +
+            'harcanmış kredilerin iadesinden sonra); işaret tek başına hiçbir şeyi engellemez ve hesapla birlikte silinir.',
         },
         {
           heading: 'Kişileriniz',

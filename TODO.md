@@ -193,8 +193,8 @@ requested and initialised only in pro mode, and the code path is excluded from t
 
 - [ ] Server (its own repository, checked out at `backend/`): design and order of work in its `DESIGN.md`,
   setup in its `README.md`. Steps 1–6 are done (scaffold, auth, credit ledger, relay with tiers and
-  `pause_turn` continuations, purchases through RevenueCat, admin panel); open: step 7 (the app's consented
-  events, `POST /events` still answers "not implemented"), step 9 (abuse protection), step 10 (legal) and the
+  `pause_turn` continuations, purchases through RevenueCat, admin panel); open: step 7 (consented events, built 22 Nov
+  2026, off until switched on), step 9 (abuse protection, built 22 Nov 2026 in "log only"), step 10 (legal) and the
   deploy (needs the Cloudflare account and a domain)
 - [x] Making a pro build: `EXPO_PUBLIC_PRO_MODE=on`, `EXPO_PUBLIC_QUTAI_API_URL`, the Google client ids
   (`.env.example`, README › Accounts (pro mode)); local server `http://10.0.2.2:8790` (Android emulator),
@@ -362,7 +362,8 @@ server (`docs/server-backup.md`, `backend/DESIGN.md` › Server backup).
 Decided in `backend/DESIGN.md` (step 7): no Firebase in the first version. Qutai's own consented, anonymous events go
 to the server's `POST /events` (Analytics Engine); the event layer in the app is an interface so Firebase can be added
 later. The Firebase plan below is kept for that later step; the consent rules apply to both.
-- [ ] App: the consented event layer and the onboarding question (below), sending to `POST /events`; server: the endpoint (not implemented yet)
+- [x] App: the consented event layer and the consent question (a one-time dialog after setup, `SRV-31`), sending to `POST /events`; server: the endpoint and the admin panel's charts (22 Nov 2026). Off on the server until the owner switches it on
+  - [ ] Owner: enable Analytics Engine, the admin token `ANALYTICS_SQL_TOKEN` and `CONFIG.cloudflareAccountId` (backend/DEPLOY-prod.md › Ürün analitiği); bump the pro legal version (`LEGAL-29`) and publish the app before switching `analytics` on; App Store privacy label and Play Data safety (docs/store-submission.md)
 - [ ] Later, if wanted: Firebase Analytics only in pro mode, and only after the user agrees
   - [ ] New onboarding step in pro mode only: "Help improve Qutai: may we collect anonymous usage data?"
     with Allow / Don't allow (equal weight, no pre-ticked choice) and a short list of what is and isn't

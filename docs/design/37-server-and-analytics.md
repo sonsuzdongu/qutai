@@ -16,9 +16,10 @@ analytics, and how the owner makes pro test builds.
 3. It keeps the account, how the person signs in, sessions per phone, the credit ledger and per-request counts
    (model, tokens, cost), purchases and encrypted backups. It never keeps conversations, page content, prompts, web
    addresses or memory. Deleting the account deletes the person's data; purchase records stay without the person.
-4. Analytics are not built. Planned: in pro builds only, a setup question "Help improve Qutai: may we collect anonymous
-   usage data?" with Allow / Don't allow of equal weight, nothing pre-ticked, changeable later in Settings › Privacy;
-   events go to Qutai's own server, not Firebase.
+4. Analytics (built 22 Nov 2026, off on the server until the owner switches it on): in pro builds only, once setup is
+   done, a one-time question "Help improve Qutai?" with Allow / Don't allow of equal weight and nothing pre-ticked,
+   changeable in Settings › Privacy and security; a small fixed list of events goes to Qutai's own server (Analytics
+   Engine), not Firebase, never from incognito, with a random install id that is deleted when the user says no.
 5. The owner tests pro mode with a phone build that points at the server on their own computer through a tunnel (a
    public address forwarding to local port 8000).
 
@@ -43,13 +44,13 @@ analytics, and how the owner makes pro test builds.
 - **`SRV-9`** Provider keys, signing keys and notification secrets are server secrets, different per environment, with a written rotation procedure.
   Status: Owner, date not recorded (server plan rule) · Why: separate test and production; a leaked key can be replaced · Source: docs/server-plan.md › Rules that must hold; backend/README.md › Key rotation (outline)
 - **`SRV-10`** Analytics in the first version are Qutai's own anonymous events sent to its server, not Firebase; the app's event layer is an interface so Firebase can be added later.
-  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: Designed, not built (the server has no events address yet; its 501 stub was removed on 20 Nov 2026) · Source: backend/DESIGN.md › Decisions, › Analytics; [TODO.md](../../TODO.md#analytics-with-consent)
+  Status: Default (manager or implementing session; open to change) · Changed 2026-11-22: built (`SRV-31`) · Why: reason not recorded · Enforced: In the app: src/analytics/analytics.ts (AnalyticsSink); Server: backend/apps/api/src/routes/events.ts · Source: backend/DESIGN.md › Decisions, › Analytics; [TODO.md](../../TODO.md#analytics-with-consent)
 - **`SRV-11`** Analytics only in pro builds and only after the user agrees, off by default, changeable in Settings › Privacy, never from incognito tabs.
-  Status: Default (manager or implementing session; open to change) · Why: privacy · Enforced: Designed, not built · Source: backend/DESIGN.md › Analytics; [TODO.md](../../TODO.md#analytics-with-consent); a9e83e4
+  Status: Default (manager or implementing session; open to change) · Changed 2026-11-22: built; the question is a one-time dialog after setup, not a setup step (`SRV-31`) · Why: privacy · Enforced: In the app: src/analytics/index.ts, consentPrompt.ts, src/components/SettingsModal.tsx (AnalyticsSwitch) · Source: backend/DESIGN.md › Analytics; [TODO.md](../../TODO.md#analytics-with-consent); a9e83e4
 - **`SRV-12`** Analytics events are a small fixed list (feature used, setup finished, task finished or failed with an error kind, purchase screen opened) with app version, platform and language; never web addresses, page content, search terms, chat text, memory, an advertising id or a lasting device id; an install id resets when consent is withdrawn; unknown events and fields are dropped.
-  Status: Default (manager or implementing session; open to change) · Why: anonymous usage only · Enforced: Designed, not built · Source: backend/DESIGN.md › Analytics; [TODO.md](../../TODO.md#analytics-with-consent)
+  Status: Default (manager or implementing session; open to change) · Changed 2026-11-22: built (`SRV-32`) · Why: anonymous usage only · Enforced: In the app: src/analytics/events.ts; Server: backend/packages/shared/src/events.ts, apps/api/src/routes/events.ts (cleanEvents); tests scripts/analytics-tests, backend/apps/api/test/events.test.ts · Source: backend/DESIGN.md › Analytics; [TODO.md](../../TODO.md#analytics-with-consent)
 - **`SRV-13`** No advertising id is collected (so no App Tracking Transparency prompt on iPhone, ad id off on Android).
-  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: Designed, not built · Source: [TODO.md](../../TODO.md#analytics-with-consent)
+  Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: No advertising-id library in the app; the events carry none (src/analytics/events.ts) · Source: [TODO.md](../../TODO.md#analytics-with-consent)
 - **`SRV-15`** Before the server goes live, every "no servers of ours" promise (setup welcome and legal summary, privacy texts, store listings, README) must be rewritten and the legal version raised; pro builds already show their own documents.
   Status: Default (manager or implementing session; open to change) · Why: no longer true once requests pass through Qutai's server · Source: TODO.md › 5. Legal; src/legal/proDocuments.ts; 1e08428
 - **`SRV-16`** A server-side browser for background research is not part of this platform.
@@ -83,6 +84,12 @@ analytics, and how the owner makes pro test builds.
 - **`SRV-30`** What device verification sends: to Apple and Google, only what their own services need on the phone (Apple: an attestation of a key and assertions; Google: a request hash, Google's integrity verdict about the app, the device and the install); to Qutai's server, the key id, assertions and Google's token, never linked to the account (keys are deleted after 180 days unused; per-day counts are kept 30 days). The app sends proofs only when the server's `/config` asks, never in the open-source build, and a proof it can't make never blocks a request on the phone.
   Status: Default (backend step 9, part 2, 2026-11-22) · Why: data minimisation; the open-source build talks to no server · Enforced: In the app: src/account/deviceProof.ts (headers, error header), plugins/proBuild.js (PRO_ONLY_PACKAGES); Server: migration 0017 · Source: backend/README.md › Device verification
 
+- **`SRV-31`** Product analytics in pro builds: the server's `analytics` switch is **off by default** (while off the app neither asks nor sends). When on, the app asks once after setup and the legal step, when nothing else is in front and the tab isn't incognito: "Help improve Qutai?" with what is and isn't sent, Allow / Don't allow of equal weight, nothing preselected; no answer asks again on a later start. The answer and a random install id (made at Allow, deleted at Don't allow or when switched off in Settings › Privacy and security) stay on the phone, outside Settings and backups. Events wait in memory only and go in batches without the account; nothing is recorded from an incognito tab or conversation. "Setup finished" is held for that run and sent only if the user then allows.
+  Status: Default (backend step 7, 2026-11-22; switching the server on is the owner's, after the policy that describes it is published) · Why: TODO.md › Analytics, with consent; a question in setup itself would come before the user knows the app, and an event can't be sent before the answer anyway · Enforced: In the app: src/analytics/ (index.ts, analytics.ts, consentPrompt.ts), App.tsx (askAnalyticsConsentOnce, setIncognitoProbe), src/components/Dialog.tsx (equalButtons); Server: backend/apps/api/src/routes/events.ts (analyticsEnabled) · Source: backend/DESIGN.md › Analytics
+- **`SRV-32`** The events and what they carry: `setup_finished`, `feature_used` (one of nine feature words), `task_finished` and `task_failed` (provider `qutai` / `own`, and for a failure one of seven error kinds read from status codes and our own error kinds, never the message), `purchase_screen_opened`; each batch has the app version, platform, interface language and the install id. Instrumented today: setup, assistant tasks, Buy credits, voice input. The server drops anything else and stores per event only those words plus the first 32 hex characters of SHA-256 of the install id, in Analytics Engine for three months.
+  Status: Default (backend step 7, 2026-11-22) · Why: the fixed list in backend/DESIGN.md › Analytics, made checkable · Enforced: src/analytics/events.ts, errorClass.ts; backend/packages/shared/src/events.ts; a test compares the two lists · Source: backend/README.md › Product analytics
+- **`SRV-33`** The admin panel's Product analytics screen reads the events through Cloudflare's Analytics Engine SQL API with fixed queries (only the number of days, 7 / 30 / 90, is put in) and an API token with Account Analytics: Read; besides Anthropic's pricing page (`SRV-24`) and Access's keys, it is the panel's only outbound request.
+  Status: Default (backend step 7, 2026-11-22) · Why: Analytics Engine is read only through its SQL API · Enforced: Server: backend/apps/admin/worker/api/analytics.ts · Source: backend/README.md › Product analytics; backend/DEPLOY-prod.md › Ürün analitiği
 ## Details
 
 - (was `SRV-14`) If Firebase is added later, its config files stay out of the public repository. Why: the repository is open source. Where: [TODO.md](../../TODO.md#analytics-with-consent).
@@ -91,7 +98,8 @@ analytics, and how the owner makes pro test builds.
 ## Limits and what is not built
 
 - Production is deployed (19 Nov 2026, `SRV-22`); never tried with real purchases (no RevenueCat yet) and only one provider.
-- Analytics events and the panel's charts (server step 7): not built (planned). Abuse protection (step 9): flags and
+- Analytics events and the panel's charts (server step 7): built 22 Nov 2026, off on the server (`SRV-31`…`SRV-33`);
+  waiting for the owner's switch, the Analytics Engine set-up, and the published policy text. Abuse protection (step 9): flags and
   rate-limit hits built (22 Nov 2026, `SRV-28`, `CRED-34`); device verification built in "log only" (`SRV-29`, `SRV-30`;
   enforce, and the owner's Apple / Google set-up, open); no trial credits, so no trial limits. Legal
   work (step 10) open.

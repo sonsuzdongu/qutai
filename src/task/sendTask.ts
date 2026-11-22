@@ -15,6 +15,8 @@ import { newItem, optionsItem, sourcesItem, userItem, type Conversation } from '
 import { plainAnswer } from '../chat/stripLine';
 import type { ChatItem, ChatItemAction } from '../components/AssistantPanel';
 import { nothingSent, RelayError } from '../credits/errors';
+import { track } from '../analytics';
+import { errorClassOf } from '../analytics/errorClass';
 import { limitsFor, offeredModels } from '../credits/rules';
 import { defaultTier, tierTarget, usesTiers } from '../credits/tiers';
 import type { PublicConfig, Tier } from '../credits/types';
@@ -430,7 +432,10 @@ async function runTask(host: TaskHost, task: Task, start: Started) {
     });
     if (signal.aborted) chat.add({ ...newItem('info', t('chat.stopped')), icon: 'stop' });
     else AccessibilityInfo.announceForAccessibility(t('a11y.taskDone'));
+    // Product analytics (pro builds, with consent; never for an incognito conversation): only that a task finished.
+    if (!signal.aborted && !incognito()) track('task_finished', { provider: provider === 'qutai' ? 'qutai' : 'own' });
   } catch (e) {
+    if (!signal.aborted && !incognito()) track('task_failed', { provider: provider === 'qutai' ? 'qutai' : 'own', errorClass: errorClassOf(e) });
     // Qutai Credits refused the first request (no credits, maintenance, signed out…): nothing reached the AI and
     // nothing was charged, so the message goes back into the input instead of staying unanswered.
     const kept =

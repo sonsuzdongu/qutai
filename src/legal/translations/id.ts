@@ -264,10 +264,10 @@ export const id: LegalTranslation = {
     privacy: {
       title: 'Kebijakan Privasi',
       intro:
-        'Qutai adalah browser web dengan asisten AI. Kami membuatnya agar aktivitas penjelajahan Anda tetap berada ' +
-        'di ponsel Anda. Server Qutai sendiri hanya digunakan untuk akun Qutai Anda (masuk, Qutai Credits, pembelian ' +
-        'dalam aplikasi, dan cadangan), dan hanya jika Anda memilihnya. Kami tidak menjual data Anda, dan Qutai ' +
-        'tidak memiliki analitik, pelacakan, atau iklan.',
+        'Qutai adalah browser web dengan asisten AI. Kami membuatnya agar aktivitas penjelajahan Anda tetap berada di ' +
+        'ponsel Anda. Server Qutai sendiri hanya digunakan untuk akun Qutai Anda (masuk, Qutai Credits, pembelian dalam ' +
+        'aplikasi, dan cadangan), dan hanya jika Anda memilihnya. Kami tidak menjual data Anda, dan Qutai tidak memiliki ' +
+        'pelacakan atau iklan; statistik penggunaan anonim hanya dikirim jika Anda mengizinkannya.',
       sections: [
         {
           heading: 'Siapa kami',
@@ -378,6 +378,39 @@ export const id: LegalTranslation = {
             'metode masuknya, perangkat, dan histori kredit sampai Anda menghapus akun; cadangan sebagaimana ' +
             'dijelaskan di atas; kode masuk sampai digunakan atau kedaluwarsa; catatan pembelian selama diwajibkan ' +
             'oleh hukum perpajakan, tanpa keterkaitan dengan Anda setelah akun dihapus.',
+        },
+        {
+          heading: 'Statistik penggunaan anonim (hanya jika Anda mengizinkan)',
+          body:
+            'Qutai menanyakan sekali apakah boleh mengirim statistik penggunaan anonim. Tidak ada yang dikirim kecuali Anda ' +
+            'mengetuk Izinkan, dan Anda dapat mengubah jawaban kapan saja di Setelan › Privasi dan keamanan. Jika Anda ' +
+            'mengizinkan, aplikasi mengirim beberapa informasi tetap ke server Qutai: fitur yang dipakai, bahwa penyiapan ' +
+            'selesai, bahwa tugas asisten selesai atau gagal (hanya dengan jenis kesalahannya, misalnya kesalahan jaringan), ' +
+            'dan bahwa layar pembelian kredit dibuka, bersama versi aplikasi, {{ios:bahwa ini iPhone|android:bahwa ini ' +
+            'Android|web:jenis ponsel}}, bahasa aplikasi, dan angka acak yang dibuat untuk ini di ponsel Anda. Angka itu ' +
+            'tidak terhubung dengan akun, proses masuk, atau pengenal lain apa pun, dan dihapus saat Anda mematikan ' +
+            'setelannya; server hanya menyimpan bentuknya yang dipendekkan dan diacak. Tidak ada yang dikirim dari tab atau ' +
+            'percakapan mode samaran, dan tidak pernah alamat web, isi halaman, pencarian, apa yang Anda tulis, atau memori ' +
+            'asisten. Qutai tidak memakai ID iklan dan tidak melacak Anda di berbagai aplikasi atau situs web. Statistik ' +
+            'disimpan di Cloudflare selama tiga bulan.',
+        },
+        {
+          heading: 'Pemeriksaan permintaan dan pencegahan penyalahgunaan',
+          body:
+            'Untuk melindungi Qutai Credits dari penyalahgunaan, saat Anda masuk dan saat asisten memakai Qutai Credits, ' +
+            'aplikasi meminta {{ios:layanan App Attest dari Apple|android:layanan integritas Google Play|web:layanan App ' +
+            'Attest dari Apple di iPhone atau layanan integritas Google Play di Android}} untuk memastikan bahwa permintaan ' +
+            'berasal dari aplikasi Qutai asli di perangkat sungguhan, lalu mengirim konfirmasi itu ke server Qutai. ' +
+            '{{ios:Apple menerima kunci yang dibuat untuk ini di ponsel Anda dan ringkasan permintaan; server Qutai menyimpan ' +
+            'bagian publik kunci dan sebuah penghitung tanpa menghubungkannya dengan akun Anda, dan menghapusnya setelah 180 ' +
+            'hari tidak dipakai.|android:Google menerima ringkasan permintaan dan memeriksa aplikasi serta perangkat; server ' +
+            'Qutai hanya menyimpan hasilnya, bersama sesi masuk Anda, paling lama satu jam.|web:Apple atau Google menerima ' +
+            'ringkasan permintaan; server Qutai hanya menyimpan yang diperlukan untuk pemeriksaan, tanpa menghubungkannya ' +
+            'dengan akun Anda.}} Pemeriksaan tidak pernah mencakup isi permintaan Anda. Server Qutai juga menghitung per hari ' +
+            'berapa banyak permintaan yang ditolak oleh batasnya atau gagal dalam pemeriksaan ini, dan untuk setiap akun ' +
+            'seberapa sering hal itu terjadi; hitungan ini disimpan 30 hari. Sebuah akun dapat ditandai untuk ditinjau oleh ' +
+            'seseorang di Qutai (misalnya setelah banyak permintaan ditolak atau pengembalian dana untuk kredit yang sudah ' +
+            'dipakai); tanda itu sendiri tidak memblokir apa pun dan dihapus bersama akunnya.',
         },
         {
           heading: 'Kontak Anda',

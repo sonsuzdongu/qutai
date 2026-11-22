@@ -3,7 +3,8 @@ import { Platform } from 'react-native';
 import { accountsEnabled, features } from '../config/features';
 import { secureStoreReady } from '../storage/secureStoreGate';
 import { createApi } from './api';
-import { createDeviceProof, type DeviceCheckConfig, type DeviceProof, type IntegrityModule } from './deviceProof';
+import { createDeviceProof, type DeviceProof, type IntegrityModule } from './deviceProof';
+import { serverFlags } from './serverFlags';
 
 /**
  * The app's device verification (src/account/deviceProof.ts) wired to React Native: pro builds only. The native module
@@ -13,11 +14,8 @@ import { createDeviceProof, type DeviceCheckConfig, type DeviceProof, type Integ
 
 const KEY_ID = 'device_app_attest_key';
 const OPTIONS: SecureStore.SecureStoreOptions = { keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY };
-/** `/config` is read at most this often for the device check (the server lets it be cached a minute). */
-const CONFIG_TTL_MS = 10 * 60_000;
 
 let instance: DeviceProof | null = null;
-let config: { value: DeviceCheckConfig | null; at: number } | null = null;
 
 function nativeModule(): IntegrityModule | null {
   try {
@@ -25,24 +23,6 @@ function nativeModule(): IntegrityModule | null {
     const m = require('@expo/app-integrity') as Partial<IntegrityModule> | undefined;
     return m && typeof m.generateAssertionAsync === 'function' ? (m as IntegrityModule) : null;
   } catch {
-    return null;
-  }
-}
-
-async function readConfig(baseUrl: string): Promise<DeviceCheckConfig | null> {
-  if (config && Date.now() - config.at < CONFIG_TTL_MS) return config.value;
-  try {
-    const res = await fetch(`${baseUrl.replace(/\/+$/, '')}/config`, { headers: { Accept: 'application/json' } });
-    const body = (await res.json()) as { deviceCheck?: Partial<DeviceCheckConfig> };
-    const d = body?.deviceCheck;
-    const value: DeviceCheckConfig | null =
-      d && (d.mode === 'log' || d.mode === 'enforce')
-        ? { mode: d.mode, playCloudProjectNumber: typeof d.playCloudProjectNumber === 'string' && /^\d{1,20}$/.test(d.playCloudProjectNumber) ? d.playCloudProjectNumber : null, appAttest: d.appAttest === true }
-        : null;
-    config = { value, at: Date.now() };
-    return value;
-  } catch {
-    // No answer: send nothing this time (the server counts it as missing, and refuses only in "enforce").
     return null;
   }
 }
@@ -56,7 +36,7 @@ export function deviceProof(): DeviceProof | null {
     instance = createDeviceProof({
       platform: Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'other',
       module: nativeModule,
-      config: () => readConfig(baseUrl),
+      config: async () => (await serverFlags(baseUrl)).deviceCheck,
       post: (path, body) => api.request({ method: 'POST', path, body }),
       keys: {
         async get() {

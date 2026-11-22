@@ -82,6 +82,8 @@ export type DialogOptions = {
   };
   /** Aborting dismisses the dialog (or drops it from the queue) as if no button was pressed. */
   signal?: AbortSignal;
+  /** No button is emphasised: a choice of equal weight (the analytics consent question, SRV-31). */
+  equalButtons?: boolean;
 };
 
 /** button: the index of the pressed button in `buttons`, null when dismissed by the signal. choice: see `choices`. */
@@ -253,7 +255,7 @@ function DialogView({ entry }: { entry: Entry }) {
   const reduceMotion = useReduceMotion();
   const keyboard = useKeyboardHeight();
   const { fontScale, height } = useWindowDimensions();
-  const { title, message, details, link, lines, buttons, checkbox, input, image, choices } = entry.options;
+  const { title, message, details, link, lines, buttons, checkbox, input, image, choices, equalButtons } = entry.options;
 
   const [checked, setChecked] = useState(checkbox?.initial ?? false);
   const [choice, setChoice] = useState(choices?.initial ?? 0);
@@ -278,7 +280,7 @@ function DialogView({ entry }: { entry: Entry }) {
 
   const cancelIndex = buttons.findIndex((b) => b.style === 'cancel');
   let primaryIndex = buttons.findIndex((b) => b.primary && b.style !== 'cancel');
-  if (primaryIndex < 0) {
+  if (primaryIndex < 0 && !equalButtons) {
     buttons.forEach((b, i) => {
       if (b.style !== 'cancel') primaryIndex = i;
     });

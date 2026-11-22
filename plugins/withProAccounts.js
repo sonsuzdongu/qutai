@@ -63,12 +63,21 @@ module.exports = function withProAccounts(config) {
   config.ios.privacyManifests = {
     ...(config.ios.privacyManifests ?? {}),
     NSPrivacyTracking: false,
-    NSPrivacyCollectedDataTypes: collected.map((type) => ({
-      NSPrivacyCollectedDataType: type,
-      NSPrivacyCollectedDataTypeLinked: true,
-      NSPrivacyCollectedDataTypeTracking: false,
-      NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality'],
-    })),
+    NSPrivacyCollectedDataTypes: [
+      ...collected.map((type) => ({
+        NSPrivacyCollectedDataType: type,
+        NSPrivacyCollectedDataTypeLinked: true,
+        NSPrivacyCollectedDataTypeTracking: false,
+        NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAppFunctionality'],
+      })),
+      // Product analytics (SRV-31): consented, anonymous usage events, not linked to the account (a random install id).
+      {
+        NSPrivacyCollectedDataType: 'NSPrivacyCollectedDataTypeProductInteraction',
+        NSPrivacyCollectedDataTypeLinked: false,
+        NSPrivacyCollectedDataTypeTracking: false,
+        NSPrivacyCollectedDataTypePurposes: ['NSPrivacyCollectedDataTypePurposeAnalytics'],
+      },
+    ],
   };
 
   const link = appLink();

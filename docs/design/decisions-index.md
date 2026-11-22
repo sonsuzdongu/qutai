@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 863 decisions (137 owner, 645 default, 81 waiting); 163 ids moved to Details.
+Totals: 869 decisions (137 owner, 650 default, 82 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -82,6 +82,7 @@ The open questions, in one place (each row says what the app does today).
 | `LEGAL-10` | A lawyer reviews the open-source and pro texts (KVKK/GDPR, Turkish consumer law on digital content) before any store release. Today they… | [41](41-legal-texts.md) |
 | `LEGAL-26` | The terms name no governing law or court. Open for the owner: which law governs and which courts or consumer boards hear disputes… | [41](41-legal-texts.md) |
 | `LEGAL-27` | Open source licences lists only this platform's components; no "Android only" / "iOS only" labels. | Owner | 2026-11-21 |
+| `LEGAL-29` | Today the pro privacy policy describes analytics and device verification, but the legal version is not bumped (pro stays 7). | [41](41-legal-texts.md) |
 | `WEB-11` | Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end sync, and the comparison's… | [42](42-website.md) |
 | `NOT-9` | Today there is no sync; whether a future sync must be end-to-end encrypted (so the server cannot read it) is open, recommended yes. | [44](44-not-built.md) |
 | `NOT-15` | Today there is no in-app "lock to portrait"; the system's rotation lock is used (section 29). | [44](44-not-built.md) |
@@ -931,7 +932,7 @@ Moved to Details (ids retired, not reused): `WORK-4`, `WORK-8`, `WORK-11`, `WORK
 | `INTRO-19` | In official builds setup leads with Qutai Credits; Qutai Credits is saved only from the signed-in account… | Default |  |
 | `INTRO-20` | Today own-key users get no sign-in step in setup. | **Waiting** |  |
 | `INTRO-21` | Today the welcome and legal summary say "Private by design" / "we have no servers"; these must be… | **Waiting** |  |
-| `INTRO-23` | An official-build step asking for anonymous usage data is planned, not built. | Default |  |
+| `INTRO-23` | Official builds ask about anonymous usage data once, right after setup, only while the server collects. | Default | changed 2026-11-22 |
 | `INTRO-33` | With Qutai Credits the introduction is free (3 per account, server-owned prompt, facts only); any refusal falls back to the credits relay. | Owner | 2026-11-22 |
 | `INTRO-32` | iOS: Settings › Search has no "Make Qutai your default browser" row until Apple grants the web-browser entitlement; Android unchanged. | Owner | 2026-11-21 |
 | `INTRO-31` | The city question has "Use my location" wherever setup asks it; the permission only on that tap; district, city… | Owner | 2026-11-20 |
@@ -1150,9 +1151,9 @@ Moved to Details (ids retired, not reused): `BACK-2`, `BACK-16`, `BACK-14`
 | `SRV-7` | Deleting the account deletes the server's data for it (database rows, the credit ledger, backups, the… | Default |  |
 | `SRV-8` | The API accepts the app only (no web-page origins), and the admin API only its own page. | Default |  |
 | `SRV-9` | Provider keys, signing keys and notification secrets are server secrets, different per environment, with a… | Owner | not recorded |
-| `SRV-10` | Analytics in the first version are Qutai's own anonymous events sent to its server, not Firebase; the… | Default |  |
-| `SRV-11` | Analytics only in pro builds and only after the user agrees, off by default, changeable in Settings ›… | Default |  |
-| `SRV-12` | Analytics events are a small fixed list (feature used, setup finished, task finished or failed with an… | Default |  |
+| `SRV-10` | Analytics in the first version are Qutai's own anonymous events sent to its server, not Firebase; the app's layer is an interface. | Default | changed 2026-11-22 (built) |
+| `SRV-11` | Analytics only in pro builds and only after the user agrees, off by default, changeable in Settings › Privacy, never from incognito. | Default | changed 2026-11-22 (built) |
+| `SRV-12` | Analytics events are a small fixed list with app version, platform and language; unknown events and fields dropped; install id resets on withdrawal. | Default | changed 2026-11-22 (built) |
 | `SRV-13` | No advertising id is collected (so no App Tracking Transparency prompt on iPhone, ad id off on Android). | Default |  |
 | `SRV-15` | Before the server goes live, every "no servers of ours" promise (setup welcome and legal summary, privacy… | Default |  |
 | `SRV-16` | A server-side browser for background research is not part of this platform. | Default |  |
@@ -1167,6 +1168,11 @@ Moved to Details (ids retired, not reused): `BACK-2`, `BACK-16`, `BACK-14`
 | `SRV-26` | The deploy runs a preflight (committed, typecheck, tests) and records the deployed commits, shown on the Overview. | Default | 2026-11-20 |
 | `SRV-27` | ~~Test purchases only through one seam, so their removal is one migration and one delete~~ (withdrawn: removed that way). | Withdrawn | 2026-11-21 |
 | `SRV-28` | Rate-limit refusals are counted in memory and written as daily totals about once a minute per instance; no IP kept; 30 days. | Default | 2026-11-22 |
+| `SRV-29` | Pro builds prove sign-in and AI requests come from the real app (App Attest, Play Integrity); server switch off / log / enforce, log only by default. | Default | 2026-11-22 |
+| `SRV-30` | Device verification sends only what Apple's and Google's checks need; proofs are not linked to the account; never in the open-source build, never blocks on the phone. | Default | 2026-11-22 |
+| `SRV-31` | Product analytics: server switch off by default; one-time equal-weight question after setup; consent and install id on the phone only; never from incognito. | Default | 2026-11-22 |
+| `SRV-32` | Five event names with fixed-word fields; the server keeps only those words and a hash prefix of the install id, three months. | Default | 2026-11-22 |
+| `SRV-33` | The panel reads the events through the Analytics Engine SQL API with fixed queries; its only other outbound request besides SRV-24. | Default | 2026-11-22 |
 
 Moved to Details (ids retired, not reused): `SRV-14`, `SRV-19`
 
@@ -1196,7 +1202,7 @@ Moved to Details (ids retired, not reused): `SRV-14`, `SRV-19`
 | `OSPERM-23` | Ways in from other apps (share, text selection menu, web search, shortcuts, widget) need no permission;… | Default |  |
 | `OSPERM-24` | Store notes: page content, chats and screenshots go from the phone to the AI provider the user chose with… | Default |  |
 | `OSPERM-25` | Export compliance: `ITSAppUsesNonExemptEncryption` left out, App Store Connect asks for each build (standard algorithms); France out of availability until its declaration. | Owner | 2026-11-21 |
-| `OSPERM-26` | A pro build's iOS privacy manifest lists six collected data types (app functionality, linked, no tracking); open source: none. | Owner | 2026-11-21 |
+| `OSPERM-26` | A pro build's iOS privacy manifest lists six collected data types (app functionality, linked) and product interaction (analytics, not linked); open source: none. | Owner | 2026-11-21, changed 2026-11-22 |
 
 Moved to Details (ids retired, not reused): `OSPERM-15`, `OSPERM-21`, `OSPERM-22`
 
@@ -1261,6 +1267,7 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | `LEGAL-25` | The legal versions went to open source 5 / pro 7 on 2026-11-21 for the protective clauses, reports, contact and… | Owner | 2026-11-21 |
 | `LEGAL-26` | The terms name no governing law or court; which law governs and which courts or boards hear disputes is open… | **Waiting** |  |
 | `LEGAL-28` | Each legal text names only its platform's store and services (`{{ios:…\|android:…\|web:…}}`); the website copy names both; no legal bump. | Owner | 2026-11-22 |
+| `LEGAL-29` | The pro privacy policy describes analytics and device verification in ten languages; legal version NOT bumped (the owner's call). | **Waiting** | 2026-11-22 |
 | `LEGAL-18` | Qutai's code is Apache-2.0. The licence does not cover the Qutai name, logo or icons, and trademark… | Default |  |
 
 Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`

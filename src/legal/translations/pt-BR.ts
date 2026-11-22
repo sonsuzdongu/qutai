@@ -276,10 +276,10 @@ export const ptBR: LegalTranslation = {
     privacy: {
       title: 'Política de Privacidade',
       intro:
-        'O Qutai é um navegador web com um assistente de IA. Nós o criamos para que sua navegação fique no seu ' +
-        'celular. O servidor próprio do Qutai é usado somente para sua conta Qutai (login, Qutai Credits, compras no ' +
-        'app e backups), e somente quando você os escolhe. Não vendemos seus dados, e o Qutai não tem análises, ' +
-        'rastreamento nem publicidade.',
+        'O Qutai é um navegador web com um assistente de IA. Nós o criamos para que sua navegação fique no seu celular. O ' +
+        'servidor próprio do Qutai é usado somente para sua conta Qutai (login, Qutai Credits, compras no app e backups), ' +
+        'e somente quando você os escolhe. Não vendemos seus dados, e o Qutai não tem rastreamento nem publicidade; ' +
+        'estatísticas de uso anônimas só são enviadas se você permitir.',
       sections: [
         {
           heading: 'Quem somos',
@@ -392,6 +392,39 @@ export const ptBR: LegalTranslation = {
             'métodos de login, dispositivos e histórico de créditos até você excluir a conta; backups conforme ' +
             'descrito acima; códigos de login até serem usados ou expirarem; registros de compras pelo tempo que a ' +
             'legislação tributária exigir, sem o vínculo com você depois que a conta for excluída.',
+        },
+        {
+          heading: 'Estatísticas de uso anônimas (só se você permitir)',
+          body:
+            'O Qutai pergunta uma vez se pode enviar estatísticas de uso anônimas. Nada é enviado a menos que você toque em ' +
+            'Permitir, e você pode mudar sua resposta a qualquer momento em Configurações › Privacidade e segurança. Se você ' +
+            'permitir, o app envia ao servidor do Qutai alguns dados fixos: quais recursos são usados, que a configuração foi ' +
+            'concluída, que uma tarefa do assistente terminou ou falhou (só com o tipo de erro, como um erro de rede) e que a ' +
+            'tela de compra de créditos foi aberta, junto com a versão do app, {{ios:que é um iPhone|android:que é ' +
+            'Android|web:o tipo de celular}}, o idioma do app e um número aleatório criado para isso no seu celular. Esse ' +
+            'número não está ligado à sua conta, ao seu login nem a outro identificador, e é apagado quando você desativa a ' +
+            'opção; o servidor guarda apenas uma forma encurtada e embaralhada dele. Nada é enviado de abas ou conversas ' +
+            'anônimas, e nunca endereços da web, conteúdo de páginas, pesquisas, o que você escreve ou a memória do ' +
+            'assistente. O Qutai não usa identificador de publicidade e não acompanha você entre apps ou sites. As ' +
+            'estatísticas ficam armazenadas na Cloudflare por três meses.',
+        },
+        {
+          heading: 'Verificação de solicitações e prevenção de abuso',
+          body:
+            'Para proteger os Qutai Credits de abuso, quando você faz login e quando o assistente usa Qutai Credits, o app ' +
+            'pede {{ios:ao serviço App Attest da Apple|android:ao serviço de integridade do Google Play|web:ao serviço App ' +
+            'Attest da Apple no iPhone ou ao serviço de integridade do Google Play no Android}} que confirme que a ' +
+            'solicitação vem do app Qutai genuíno em um dispositivo real, e envia essa confirmação ao servidor do Qutai. ' +
+            '{{ios:A Apple recebe uma chave criada para isso no seu celular e um resumo da solicitação; o servidor do Qutai ' +
+            'guarda a parte pública da chave e um contador, sem ligá-los à sua conta, e os apaga após 180 dias sem ' +
+            'uso.|android:O Google recebe um resumo da solicitação e verifica o app e o dispositivo; o servidor do Qutai ' +
+            'guarda só o resultado, com sua sessão de login, por até uma hora.|web:A Apple ou o Google recebe um resumo da ' +
+            'solicitação; o servidor do Qutai guarda apenas o necessário para a verificação, sem ligá-lo à sua conta.}} A ' +
+            'verificação nunca inclui o conteúdo das suas solicitações. O servidor do Qutai também conta, por dia, quantas ' +
+            'solicitações foram recusadas pelos seus limites ou não passaram nesta verificação, e para cada conta com que ' +
+            'frequência isso aconteceu; essas contagens são guardadas por 30 dias. Uma conta pode ser marcada para análise ' +
+            'por uma pessoa do Qutai (por exemplo, após muitas solicitações recusadas ou o reembolso de créditos já gastos); ' +
+            'uma marcação não bloqueia nada por si só e é apagada com a conta.',
         },
         {
           heading: 'Seus contatos',
