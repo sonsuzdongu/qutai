@@ -50,9 +50,9 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'for you. The providers’ privacy policies and terms apply to what they receive.\n• If search suggestions ' +
             'are on, what you type in the address bar is sent to your search engine (never from incognito tabs).\n• If ' +
             'you tap “Use my location” in setup, your approximate position is sent to the phone’s address service ' +
-            '(Apple’s on an iPhone; on Android usually Google’s) to find the name of the place. Only the place name ' +
+            '{{ios:(Apple’s)|android:(usually Google’s)|web:(Apple’s on an iPhone; on Android usually Google’s)}} to find the name of the place. Only the place name ' +
             'is kept.\n• If you speak to the assistant and the phone can’t recognise that language on the device ' +
-            'itself, the audio goes to the phone’s speech service (Apple’s or Google’s), only after you have agreed ' +
+            'itself, the audio goes to the phone’s speech service {{ios:(Apple’s)|android:(usually Google’s)|web:(Apple’s or Google’s)}}, only after you have agreed ' +
             'once in Qutai and never in incognito conversations. Qutai and the AI service receive only the text.\n• ' +
             'When the assistant shows you options as cards, their pictures are loaded from the sites (or the sites’ image servers) that show them, without your cookies, also for options you don’t open; in incognito conversations only when you tap “Show images”.\n• ' +
             'While “Block ads and trackers” is on, the filter lists you chose are downloaded from their publishers ' +
@@ -82,18 +82,17 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'tabs, conversations, activity and AI keys only if you include them). It is encrypted on your phone with a ' +
             'password you choose before it is sent; Qutai cannot read it and cannot recover the password, which is kept ' +
             'only on your phone. With each backup the server also keeps when it was made, its size, the app version and ' +
-            'the kind of phone (for example “iPhone · iOS 26”). The newest backups are kept (3 at present) and older ones ' +
+            'the kind of phone {{ios:(for example “iPhone · iOS 26”)|android:(for example “Android 16”)|web:(for example “iPhone · iOS 26”)}}. The newest backups are kept (3 at present) and older ones ' +
             'are deleted; you can delete them at any time, and deleting your account deletes them.',
         },
         {
           heading: 'Purchases in the app',
           body:
-            'Qutai Credits and anything else sold in the app are bought through the App Store or Google Play; your ' +
-            'payment details stay with Apple or Google and never reach Qutai. A payments service (RevenueCat) ' +
+            'Qutai Credits and anything else sold in the app are bought through {{ios:the App Store|android:Google Play|web:the App Store or Google Play}}; your payment details stay with {{ios:Apple|android:Google|web:Apple or Google}} and never reach Qutai. A payments service (RevenueCat) ' +
             'receives your Qutai account number and the store’s purchase record so the purchase can be confirmed, ' +
             'added to your account and restored on another phone. Qutai keeps a record of each purchase (store, ' +
             'transaction, product, credits, price paid and dates), which tax law requires us to keep, also after the ' +
-            'account is deleted, without the link to you. Refunds are handled by Apple or Google under their own ' +
+            'account is deleted, without the link to you. Refunds are handled by {{ios:Apple|android:Google|web:Apple or Google}} under their own ' +
             'rules.',
         },
         {
@@ -104,7 +103,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'never contain your IP address, email address, messages, pages or sign-in tokens (they hold a request id, your ' +
             'account number, what was asked for, how long it took and, for assistant requests, the model, tokens and ' +
             'cost). The companies that process data for Qutai, each under its own privacy policy, are: Cloudflare ' +
-            '(the server), Apple and Google (sign-in and the stores), Mailjet (sign-in emails), RevenueCat ' +
+            '(the server), {{ios:Apple (sign-in and the App Store), Google (sign-in)|android:Google (sign-in and Google Play), Apple (sign-in)|web:Apple and Google (sign-in and the stores)}}, Mailjet (sign-in emails), RevenueCat ' +
             '(purchases) and, with Qutai Credits, Anthropic, OpenAI and Google (the AI). We share your data with no ' +
             'one else, except when the law requires it (for example a court order) or to protect Qutai and its users ' +
             'against fraud and abuse.',
@@ -164,7 +163,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'link to you, as above) and asks the payments service to delete its record of you. You can also write to ' +
             'qutai@sonsuzdongu.com to ask for a copy of what Qutai’s server keeps about you, or for its correction or ' +
             'deletion. Uninstalling Qutai deletes everything it stored on the phone, except files you saved ' +
-            'outside it, such as downloads in Android’s Downloads folder and pictures saved to your ' +
+            'outside it, such as {{ios:files you saved to the Files app|android:downloads in Android’s Downloads folder|web:downloads in Android’s Downloads folder or in the Files app on an iPhone}} and pictures saved to your ' +
             'photos.',
         },
         {
@@ -202,12 +201,12 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
         {
           heading: 'Qutai Credits',
           body:
-            'Credits are bought in the app through the App Store or Google Play, at the price the store shows, and are ' +
+            'Credits are bought in the app through {{ios:the App Store|android:Google Play|web:the App Store or Google Play}}, at the price the store shows, and are ' +
             'added to your Qutai account once the purchase is confirmed. They pay only for the assistant’s requests in ' +
             'Qutai, at the credit prices shown for each model; what each answer cost is shown under it. A request first ' +
             'holds the most it could cost and gives back what it did not use. Credits belong to your Qutai account, can ' +
             'be used on any phone you sign in on, cannot be transferred or exchanged for money, and are not refunded ' +
-            'except where the law or the store’s refund rules require it; refunds are handled by Apple or Google. If a ' +
+            'except where the law or the store’s refund rules require it; refunds are handled by {{ios:Apple|android:Google|web:Apple or Google}}. If a ' +
             'purchase is refunded, its credits are taken back, which can make the balance negative until you top it up. ' +
             'Credits do not expire. Models, credit prices and limits can change; the current ones are shown in the app before you use them. ' +
             'Qutai Credits can be paused for maintenance or be unavailable at times.',
@@ -286,9 +285,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
           heading: 'Downloads and installing files',
           body:
             'You decide what to download, open and install. Qutai warns you before it downloads files that can ' +
-            'install or run code, but it does not scan files for viruses or other harm. On Android, opening a ' +
-            'downloaded app (an APK file) hands it to the system installer; Qutai never installs anything itself. ' +
-            'Files and apps from outside the App Store and Google Play can harm your phone or your data; downloading, ' +
+            'install or run code, but it does not scan files for viruses or other harm. {{ios:Qutai never installs anything itself. Downloaded files can harm|android:Opening a downloaded app (an APK file) hands it to the system installer; Qutai never installs anything itself. Files and apps from outside Google Play can harm|web:On Android, opening a downloaded app (an APK file) hands it to the system installer; Qutai never installs anything itself. Files and apps from outside the App Store and Google Play can harm}} your phone or your data; downloading, ' +
             'opening and installing them is your responsibility, as is having the right to do so.',
         },
         {
@@ -375,10 +372,8 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'size sorar.\n• Web araması açıksa yapay zekâ sağlayıcısı sizin için arama yapabilir. Sağlayıcıların ' +
             'aldıkları için kendi gizlilik politikaları ve koşulları geçerlidir.\n• Arama önerileri açıksa adres ' +
             'çubuğuna yazdıklarınız arama motorunuza gönderilir (gizli sekmelerden asla).\n• Kurulumda “Konumumu ' +
-            'kullan”a dokunursanız, yer adını bulmak için yaklaşık konumunuz telefonun adres hizmetine (iPhone’da ' +
-            'Apple’ınkine, Android’de genellikle Google’ınkine) gönderilir. Yalnızca yer adı saklanır.\n• Asistana ' +
-            'sesle yazdığınızda telefon o dili cihazın kendisinde tanıyamıyorsa ses, telefonun konuşma hizmetine ' +
-            '(Apple’ın ya da Google’ın) gider; bu yalnızca Qutai’da bir kez izin verdikten sonra olur, gizli ' +
+            'kullan”a dokunursanız, yer adını bulmak için yaklaşık konumunuz telefonun adres hizmetine {{ios:(Apple’ınkine)|android:(genellikle Google’ınkine)|web:(iPhone’da Apple’ınkine, Android’de genellikle Google’ınkine)}} gönderilir. Yalnızca yer adı saklanır.\n• Asistana ' +
+            'sesle yazdığınızda telefon o dili cihazın kendisinde tanıyamıyorsa ses, telefonun konuşma hizmetine {{ios:(Apple’ın)|android:(genellikle Google’ın)|web:(Apple’ın ya da Google’ın)}} gider; bu yalnızca Qutai’da bir kez izin verdikten sonra olur, gizli ' +
             'sohbetlerde asla. Qutai ve yapay zekâ hizmeti yalnızca metni alır.\n• Asistan seçenekleri kartlarla ' +
             'gösterdiğinde kartların resimleri, onları gösteren sitelerden (ya da sitelerin resim sunucularından) çerezleriniz gönderilmeden yüklenir; açmadığınız seçenekler için de. Gizli sohbetlerde yalnızca “Resimleri göster”e dokunduğunuzda.\n• “Reklam ve izleyicileri engelle” ' +
             'açıkken seçtiğiniz filtre listeleri yayıncılarından (örneğin EasyList ve AdGuard) indirilir ve birkaç ' +
@@ -407,19 +402,18 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'ayarları ve tercihler; açık sekmeler, sohbetler, etkinlik ve yapay zekâ anahtarları yalnızca bunları dahil ' +
             'ederseniz). Dosya gönderilmeden önce telefonunuzda seçtiğiniz bir parolayla şifrelenir; Qutai onu okuyamaz ' +
             've yalnızca telefonunuzda tutulan parolayı kurtaramaz. Sunucu her yedekle birlikte ne zaman yapıldığını, ' +
-            'boyutunu, uygulama sürümünü ve telefon türünü (örneğin “iPhone · iOS 26”) de saklar. En yeni yedekler ' +
+            'boyutunu, uygulama sürümünü ve telefon türünü {{ios:(örneğin “iPhone · iOS 26”)|android:(örneğin “Android 16”)|web:(örneğin “iPhone · iOS 26”)}} de saklar. En yeni yedekler ' +
             'tutulur (şu an 3), eskileri silinir; yedekleri istediğiniz an silebilirsiniz, hesabınızı silmek onları da ' +
             'siler.',
         },
         {
           heading: 'Uygulama içi satın alma',
           body:
-            'Qutai Kredileri ve uygulamada satılan her şey App Store veya Google Play aracılığıyla satın alınır; ' +
-            'ödeme bilgileriniz Apple veya Google’da kalır, Qutai’a asla ulaşmaz. Satın almanın doğrulanıp ' +
+            'Qutai Kredileri ve uygulamada satılan her şey {{ios:App Store|android:Google Play|web:App Store veya Google Play}} aracılığıyla satın alınır; ödeme bilgileriniz {{ios:Apple’da|android:Google’da|web:Apple veya Google’da}} kalır, Qutai’a asla ulaşmaz. Satın almanın doğrulanıp ' +
             'hesabınıza eklenebilmesi ve başka bir telefonda geri yüklenebilmesi için bir ödeme hizmeti (RevenueCat) ' +
             'Qutai hesap numaranızı ve mağazanın satın alma kaydını alır. Qutai her satın almanın kaydını (mağaza, ' +
             'işlem, ürün, kredi, ödenen tutar ve tarihler) vergi mevzuatı gereği saklar; hesap silindikten sonra da, ' +
-            'sizinle bağlantısı olmadan. İadeleri Apple veya Google kendi kurallarına göre yapar.',
+            'sizinle bağlantısı olmadan. İadeleri {{ios:Apple|android:Google|web:Apple veya Google}} kendi kurallarına göre yapar.',
         },
         {
           heading: 'Qutai’ın sunucusu ve verileri işleyen diğerleri',
@@ -429,7 +423,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'kayıtlarında IP adresiniz, e-posta adresiniz, mesajlarınız, sayfalar veya oturum anahtarları asla ' +
             'bulunmaz (kayıtlarda bir istek numarası, hesap numaranız, istenen işlem, ne kadar sürdüğü ve asistan ' +
             'isteklerinde model, token ve maliyet bulunur). Qutai için veri işleyen şirketler, her biri kendi ' +
-            'gizlilik politikasına göre: Cloudflare (sunucu), Apple ve Google (oturum açma ve mağazalar), Mailjet ' +
+            'gizlilik politikasına göre: Cloudflare (sunucu), {{ios:Apple (oturum açma ve App Store), Google (oturum açma)|android:Google (oturum açma ve Google Play), Apple (oturum açma)|web:Apple ve Google (oturum açma ve mağazalar)}}, Mailjet ' +
             '(oturum açma e-postaları), RevenueCat (satın almalar) ve Qutai Kredileriyle Anthropic, OpenAI ve Google ' +
             '(yapay zekâ). Verilerinizi başka kimseyle paylaşmayız; yasanın gerektirdiği durumlar (örneğin bir ' +
             'mahkeme kararı) ve Qutai’ı ve kullanıcılarını dolandırıcılık ve kötüye kullanıma karşı korumak dışında.',
@@ -493,7 +487,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
             'hizmetinden sizinle ilgili kaydını silmesini ister. Qutai’ın sunucusunun sizinle ilgili sakladıklarının ' +
             'bir kopyasını, düzeltilmesini veya silinmesini qutai@sonsuzdongu.com adresine yazarak da ' +
             'isteyebilirsiniz. Qutai’ı kaldırmak telefonda sakladığı her şeyi siler; Qutai dışına kaydettiğiniz ' +
-            'dosyalar, örneğin Android’in İndirilenler klasöründeki indirmeler ve fotoğraflarınıza ' +
+            'dosyalar, örneğin {{ios:Dosyalar uygulamasına kaydettiğiniz dosyalar|android:Android’in İndirilenler klasöründeki indirmeler|web:Android’in İndirilenler klasöründeki ya da iPhone’da Dosyalar uygulamasındaki indirmeler}} ve fotoğraflarınıza ' +
             'kaydettiğiniz resimler kalır.',
         },
         {
@@ -531,13 +525,12 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
         {
           heading: 'Qutai Kredileri',
           body:
-            'Krediler uygulama içinden App Store veya Google Play aracılığıyla, mağazanın gösterdiği fiyatla satın ' +
+            'Krediler uygulama içinden {{ios:App Store|android:Google Play|web:App Store veya Google Play}} aracılığıyla, mağazanın gösterdiği fiyatla satın ' +
             'alınır ve satın alma doğrulandığında Qutai hesabınıza eklenir. Yalnızca Qutai’da asistanın isteklerinin ' +
             'ücretini, her model için gösterilen kredi fiyatlarıyla öder; her yanıtın ne kadar tuttuğu altında ' +
             'gösterilir. Bir istek önce tutabileceği en yüksek tutarı ayırır, kullanmadığını geri verir. Krediler Qutai ' +
             'hesabınıza aittir, oturum açtığınız her telefonda kullanılabilir, devredilemez, paraya çevrilemez ve ' +
-            'yasaların ya da mağazanın iade kurallarının gerektirdiği durumlar dışında iade edilmez; iadeleri Apple veya ' +
-            'Google yürütür. Bir satın alma iade edilirse kredileri geri alınır; bu, bakiyeyi yeniden kredi alana kadar ' +
+            'yasaların ya da mağazanın iade kurallarının gerektirdiği durumlar dışında iade edilmez; iadeleri {{ios:Apple|android:Google|web:Apple veya Google}} yürütür. Bir satın alma iade edilirse kredileri geri alınır; bu, bakiyeyi yeniden kredi alana kadar ' +
             'eksiye düşürebilir. Kredilerin süresi dolmaz. Modeller, kredi fiyatları ve sınırlar değişebilir; güncel olanlar kullanmadan önce ' +
             'uygulamada gösterilir. Qutai Kredileri bakım nedeniyle durdurulabilir ya da zaman zaman kullanılamayabilir.',
         },
@@ -622,9 +615,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
           body:
             'Neyi indireceğinize, açacağınıza ve yükleyeceğinize siz karar verirsiniz. Qutai, uygulama yükleyebilen ' +
             'ya da kod çalıştırabilen dosyaları indirmeden önce sizi uyarır, ancak dosyaları virüslere ya da başka ' +
-            'zararlara karşı taramaz. Android’de indirilen bir uygulamayı (APK dosyası) açmak, onu sistemin ' +
-            'yükleyicisine verir; Qutai hiçbir şeyi kendisi yüklemez. App Store ve Google Play dışından gelen ' +
-            'dosyalar ve uygulamalar telefonunuza ya da verilerinize zarar verebilir; bunları indirmek, açmak ve ' +
+            'zararlara karşı taramaz. {{ios:Qutai hiçbir şeyi kendisi yüklemez. İndirilen dosyalar telefonunuza|android:İndirilen bir uygulamayı (APK dosyası) açmak, onu sistemin yükleyicisine verir; Qutai hiçbir şeyi kendisi yüklemez. Google Play dışından gelen dosyalar ve uygulamalar telefonunuza|web:Android’de indirilen bir uygulamayı (APK dosyası) açmak, onu sistemin yükleyicisine verir; Qutai hiçbir şeyi kendisi yüklemez. App Store ve Google Play dışından gelen dosyalar ve uygulamalar telefonunuza}} ya da verilerinize zarar verebilir; bunları indirmek, açmak ve ' +
             'yüklemek, bunu yapma hakkınızın olması da dahil, sizin sorumluluğunuzdadır.',
         },
         {

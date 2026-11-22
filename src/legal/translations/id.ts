@@ -42,10 +42,9 @@ export const id: LegalTranslation = {
             'dapat menjalankan penelusuran untuk Anda. Kebijakan privasi dan ketentuan layanan tersebut berlaku ' +
             'untuk data ini.\n• Jika saran penelusuran aktif, apa yang Anda ketik di kolom alamat dikirim ke mesin ' +
             'telusur Anda (tidak pernah dari tab Samaran).\n• Jika Anda mengetuk “Gunakan lokasi saya” saat ' +
-            'penyiapan, perkiraan posisi Anda dikirim ke layanan alamat ponsel (milik Apple di iPhone; di Android ' +
-            'biasanya milik Google) untuk menemukan nama tempatnya. Hanya nama tempat yang disimpan.\n• Jika Anda ' +
+            'penyiapan, perkiraan posisi Anda dikirim ke layanan alamat ponsel {{ios:(milik Apple)|android:(biasanya milik Google)}} untuk menemukan nama tempatnya. Hanya nama tempat yang disimpan.\n• Jika Anda ' +
             'berbicara kepada asisten dan ponsel tidak dapat mengenali bahasa tersebut di perangkat itu sendiri, ' +
-            'audionya dikirim ke layanan ucapan ponsel (milik Apple atau Google), hanya setelah Anda menyetujuinya ' +
+            'audionya dikirim ke layanan ucapan ponsel {{ios:(milik Apple)|android:(biasanya milik Google)}}, hanya setelah Anda menyetujuinya ' +
             'satu kali di Qutai dan tidak pernah dalam percakapan Samaran. Qutai dan layanan AI hanya menerima ' +
             'teksnya.\n• Saat asisten menampilkan pilihan kepada Anda dalam bentuk kartu, gambarnya dimuat dari ' +
             'situs (atau server gambar situs) yang menampilkannya, tanpa cookie Anda, juga untuk pilihan yang tidak ' +
@@ -101,7 +100,7 @@ export const id: LegalTranslation = {
           body:
             'Anda dapat melihat dan menghapus memori asisten, menghapus histori, cookie, dan data lainnya di ' +
             'Setelan, serta menghapus kunci API Anda kapan saja. Menghapus instalasi Qutai akan menghapus semua yang disimpannya, kecuali file yang Anda ' +
-            'simpan di luar Qutai, seperti unduhan di folder Download Android dan gambar yang disimpan ' +
+            'simpan di luar Qutai, seperti {{ios:file yang disimpan di app File|android:unduhan di folder Download Android}} dan gambar yang disimpan ' +
             'ke Foto Anda.',
         },
         {
@@ -211,9 +210,7 @@ export const id: LegalTranslation = {
           body:
             'Anda yang memutuskan apa yang diunduh, dibuka, dan dipasang. Qutai memperingatkan Anda sebelum ' +
             'mengunduh file yang dapat memasang atau menjalankan kode, tetapi tidak memindai file untuk mencari ' +
-            'virus atau bahaya lainnya. Di Android, membuka aplikasi yang diunduh (file APK) akan menyerahkannya ' +
-            'ke penginstal sistem; Qutai tidak pernah memasang apa pun sendiri. File dan aplikasi dari luar App ' +
-            'Store dan Google Play dapat membahayakan ponsel atau data Anda; mengunduh, membuka, dan memasangnya ' +
+            'virus atau bahaya lainnya. {{ios:Qutai tidak pernah memasang apa pun sendiri. File yang diunduh dapat|android:Membuka aplikasi yang diunduh (file APK) akan menyerahkannya ke penginstal sistem; Qutai tidak pernah memasang apa pun sendiri. File dan aplikasi dari luar Google Play dapat}} membahayakan ponsel atau data Anda; mengunduh, membuka, dan memasangnya ' +
             'adalah tanggung jawab Anda, demikian pula memastikan bahwa Anda berhak melakukannya.',
         },
         {
@@ -309,10 +306,9 @@ export const id: LegalTranslation = {
             'menjalankan penelusuran untuk Anda. Kebijakan privasi dan ketentuan para penyedia berlaku untuk apa ' +
             'yang mereka terima.\n• Jika saran penelusuran aktif, apa yang Anda ketik di kolom alamat dikirim ke ' +
             'mesin telusur Anda (tidak pernah dari tab Samaran).\n• Jika Anda mengetuk “Gunakan lokasi saya” saat ' +
-            'penyiapan, perkiraan posisi Anda dikirim ke layanan alamat ponsel (milik Apple di iPhone; di Android ' +
-            'biasanya milik Google) untuk menemukan nama tempatnya. Hanya nama tempat yang disimpan.\n• Jika Anda ' +
+            'penyiapan, perkiraan posisi Anda dikirim ke layanan alamat ponsel {{ios:(milik Apple)|android:(biasanya milik Google)}} untuk menemukan nama tempatnya. Hanya nama tempat yang disimpan.\n• Jika Anda ' +
             'berbicara kepada asisten dan ponsel tidak dapat mengenali bahasa tersebut di perangkat itu sendiri, ' +
-            'audionya dikirim ke layanan ucapan ponsel (milik Apple atau Google), hanya setelah Anda menyetujuinya ' +
+            'audionya dikirim ke layanan ucapan ponsel {{ios:(milik Apple)|android:(biasanya milik Google)}}, hanya setelah Anda menyetujuinya ' +
             'satu kali di Qutai dan tidak pernah dalam percakapan Samaran. Qutai dan layanan AI hanya menerima ' +
             'teksnya.\n• Saat asisten menampilkan pilihan kepada Anda dalam bentuk kartu, gambarnya dimuat dari ' +
             'situs (atau server gambar situs) yang menampilkannya, tanpa cookie Anda, juga untuk pilihan yang tidak ' +
@@ -346,20 +342,19 @@ export const id: LegalTranslation = {
             'menyertakannya). File tersebut dienkripsi di ponsel Anda dengan kata sandi yang Anda pilih sebelum ' +
             'dikirim; Qutai tidak dapat membacanya dan tidak dapat memulihkan kata sandinya, yang hanya disimpan di ' +
             'ponsel Anda. Untuk setiap cadangan, server juga menyimpan kapan cadangan dibuat, ukurannya, versi ' +
-            'aplikasi, dan jenis ponsel (misalnya “iPhone · iOS 26”). Cadangan terbaru disimpan (saat ini 3) dan ' +
+            'aplikasi, dan jenis ponsel {{ios:(misalnya “iPhone · iOS 26”)|android:(misalnya “Android 16”)}}. Cadangan terbaru disimpan (saat ini 3) dan ' +
             'yang lebih lama dihapus; Anda dapat menghapusnya kapan saja, dan menghapus akun Anda akan menghapus ' +
             'cadangan tersebut.',
         },
         {
           heading: 'Pembelian dalam aplikasi',
           body:
-            'Qutai Credits dan apa pun yang dijual dalam aplikasi dibeli melalui App Store atau Google Play; detail ' +
-            'pembayaran Anda tetap berada di Apple atau Google dan tidak pernah sampai ke Qutai. Layanan pembayaran ' +
+            'Qutai Credits dan apa pun yang dijual dalam aplikasi dibeli melalui {{ios:App Store|android:Google Play}}; detail pembayaran Anda tetap berada di {{ios:Apple|android:Google}} dan tidak pernah sampai ke Qutai. Layanan pembayaran ' +
             '(RevenueCat) menerima nomor akun Qutai Anda dan catatan pembelian dari toko agar pembelian dapat ' +
             'dikonfirmasi, ditambahkan ke akun Anda, dan dipulihkan di ponsel lain. Qutai menyimpan catatan setiap ' +
             'pembelian (toko, transaksi, produk, kredit, harga yang dibayar, dan tanggal), yang wajib kami simpan ' +
             'menurut hukum perpajakan, juga setelah akun dihapus, tanpa keterkaitan dengan Anda. Pengembalian dana ' +
-            'ditangani oleh Apple atau Google sesuai aturan mereka sendiri.',
+            'ditangani oleh {{ios:Apple|android:Google}} sesuai aturan mereka sendiri.',
         },
         {
           heading: 'Server Qutai dan pihak lain yang memproses data',
@@ -370,7 +365,7 @@ export const id: LegalTranslation = {
             'email, pesan, halaman, atau token masuk Anda (log tersebut berisi ID permintaan, nomor akun Anda, apa ' +
             'yang diminta, berapa lama prosesnya, dan, untuk permintaan asisten, model, token, dan biaya). ' +
             'Perusahaan yang memproses data untuk Qutai, masing-masing berdasarkan ' +
-            'kebijakan privasinya sendiri, adalah: Cloudflare (server), Apple dan Google (masuk dan toko aplikasi), ' +
+            'kebijakan privasinya sendiri, adalah: Cloudflare (server), {{ios:Apple (masuk dan App Store), Google (masuk)|android:Google (masuk dan Google Play), Apple (masuk)}}, ' +
             'Mailjet (email masuk), RevenueCat (pembelian), dan, dengan Qutai Credits, Anthropic, OpenAI, dan Google ' +
             '(AI). Kami tidak membagikan data Anda kepada pihak lain mana pun, kecuali jika diwajibkan oleh hukum ' +
             '(misalnya perintah pengadilan) atau untuk melindungi Qutai dan penggunanya dari penipuan dan ' +
@@ -436,7 +431,7 @@ export const id: LegalTranslation = {
             'layanan pembayaran untuk menghapus catatannya tentang Anda. Anda juga dapat mengirim email ke ' +
             'qutai@sonsuzdongu.com untuk meminta salinan data yang disimpan server Qutai tentang Anda, atau ' +
             'perbaikan atau penghapusannya. Menghapus instalasi Qutai akan menghapus semua yang disimpannya di ponsel, kecuali file ' +
-            'yang Anda simpan di luar Qutai, seperti unduhan di folder Download Android dan gambar ' +
+            'yang Anda simpan di luar Qutai, seperti {{ios:file yang disimpan di app File|android:unduhan di folder Download Android}} dan gambar ' +
             'yang disimpan ke Foto Anda.',
         },
         {
@@ -481,14 +476,14 @@ export const id: LegalTranslation = {
         {
           heading: 'Qutai Credits',
           body:
-            'Kredit dibeli dalam aplikasi melalui App Store atau Google Play, dengan harga yang ditampilkan toko, ' +
+            'Kredit dibeli dalam aplikasi melalui {{ios:App Store|android:Google Play}}, dengan harga yang ditampilkan toko, ' +
             'dan ditambahkan ke akun Qutai Anda setelah pembelian dikonfirmasi. Kredit hanya digunakan untuk ' +
             'membayar permintaan asisten di Qutai, dengan harga kredit yang ditampilkan untuk setiap model; biaya ' +
             'setiap jawaban ditampilkan di bawahnya. Setiap permintaan terlebih dahulu menahan biaya maksimum yang ' +
             'mungkin timbul dan mengembalikan bagian yang tidak terpakai. Kredit merupakan milik akun Qutai Anda, ' +
             'dapat digunakan di ponsel mana pun tempat Anda masuk, tidak dapat dipindahtangankan atau ditukar dengan ' +
             'uang, dan tidak dapat dikembalikan dananya kecuali jika diwajibkan oleh hukum atau aturan pengembalian ' +
-            'dana toko; pengembalian dana ditangani oleh Apple atau Google. Jika dana suatu pembelian dikembalikan, ' +
+            'dana toko; pengembalian dana ditangani oleh {{ios:Apple|android:Google}}. Jika dana suatu pembelian dikembalikan, ' +
             'kreditnya ditarik kembali, yang dapat membuat saldo menjadi negatif sampai Anda mengisinya kembali. ' +
             'Kredit tidak memiliki masa kedaluwarsa. Model, harga kredit, dan batas dapat berubah; yang berlaku saat ini ditampilkan di aplikasi sebelum ' +
             'Anda menggunakannya. Qutai Credits dapat dijeda untuk pemeliharaan atau sesekali tidak tersedia.',
@@ -579,9 +574,7 @@ export const id: LegalTranslation = {
           body:
             'Anda yang memutuskan apa yang diunduh, dibuka, dan dipasang. Qutai memperingatkan Anda sebelum ' +
             'mengunduh file yang dapat memasang atau menjalankan kode, tetapi tidak memindai file untuk mencari ' +
-            'virus atau bahaya lainnya. Di Android, membuka aplikasi yang diunduh (file APK) akan menyerahkannya ' +
-            'ke penginstal sistem; Qutai tidak pernah memasang apa pun sendiri. File dan aplikasi dari luar App ' +
-            'Store dan Google Play dapat membahayakan ponsel atau data Anda; mengunduh, membuka, dan memasangnya ' +
+            'virus atau bahaya lainnya. {{ios:Qutai tidak pernah memasang apa pun sendiri. File yang diunduh dapat|android:Membuka aplikasi yang diunduh (file APK) akan menyerahkannya ke penginstal sistem; Qutai tidak pernah memasang apa pun sendiri. File dan aplikasi dari luar Google Play dapat}} membahayakan ponsel atau data Anda; mengunduh, membuka, dan memasangnya ' +
             'adalah tanggung jawab Anda, demikian pula memastikan bahwa Anda berhak melakukannya.',
         },
         {

@@ -1256,6 +1256,7 @@ Moved to Details (ids retired, not reused): `BUILD-1`, `BUILD-3`, `BUILD-6`, `BU
 | `LEGAL-24` | The privacy policies (both builds, ten languages) say what blocking, styles, scripts and apps do with data… | Default | 2026-11-21 |
 | `LEGAL-25` | The legal versions went to open source 5 / pro 7 on 2026-11-21 for the protective clauses, reports, contact and… | Owner | 2026-11-21 |
 | `LEGAL-26` | The terms name no governing law or court; which law governs and which courts or boards hear disputes is open… | **Waiting** |  |
+| `LEGAL-28` | Each legal text names only its platform's store and services (`{{ios:…\|android:…\|web:…}}`); the website copy names both; no legal bump. | Owner | 2026-11-22 |
 | `LEGAL-18` | Qutai's code is Apache-2.0. The licence does not cover the Qutai name, logo or icons, and trademark… | Default |  |
 
 Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`

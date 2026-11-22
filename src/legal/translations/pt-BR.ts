@@ -106,9 +106,7 @@ const APPS_BODY =
 
 const DOWNLOADS_BODY =
   'Você decide o que baixar, abrir e instalar. O Qutai avisa você antes de baixar arquivos que podem instalar ou ' +
-  'executar código, mas não verifica os arquivos em busca de vírus ou outros danos. No Android, abrir um app ' +
-  'baixado (um arquivo APK) o entrega ao instalador do sistema; o próprio Qutai nunca instala nada. Arquivos e ' +
-  'apps de fora da App Store e do Google Play podem prejudicar seu celular ou seus dados; baixá-los, abri-los e ' +
+  'executar código, mas não verifica os arquivos em busca de vírus ou outros danos. {{ios:O próprio Qutai nunca instala nada. Arquivos baixados podem|android:Abrir um app baixado (um arquivo APK) o entrega ao instalador do sistema; o próprio Qutai nunca instala nada. Arquivos e apps de fora do Google Play podem}} prejudicar seu celular ou seus dados; baixá-los, abri-los e ' +
   'instalá-los é responsabilidade sua, assim como ter o direito de fazer isso.';
 
 const ACCEPTABLE_USE_BULLETS =
@@ -197,10 +195,10 @@ export const ptBR: LegalTranslation = {
             '• Se as sugestões de pesquisa estiverem ativadas, o que você digita na barra de endereço é enviado ao ' +
             'seu mecanismo de pesquisa (nunca a partir de guias anônimas).\n' +
             '• Se você tocar em “Usar minha localização” na configuração inicial, sua posição aproximada é enviada ' +
-            'ao serviço de endereços do celular (o da Apple em um iPhone; no Android, geralmente o do Google) para ' +
+            'ao serviço de endereços do celular {{ios:(o da Apple)|android:(geralmente o do Google)}} para ' +
             'encontrar o nome do lugar. Somente o nome do lugar é mantido.\n' +
             '• Se você falar com o assistente e o celular não conseguir reconhecer esse idioma no próprio aparelho, ' +
-            'o áudio vai para o serviço de fala do celular (da Apple ou do Google), somente depois que você tiver ' +
+            'o áudio vai para o serviço de fala do celular {{ios:(da Apple)|android:(geralmente do Google)}}, somente depois que você tiver ' +
             'concordado uma vez no Qutai e nunca em conversas anônimas. O Qutai e o serviço de IA recebem apenas o ' +
             'texto.\n' +
             '• Quando o assistente mostra opções em forma de cartões, as imagens delas são carregadas dos sites (ou ' +
@@ -243,7 +241,7 @@ export const ptBR: LegalTranslation = {
           body:
             'Você pode ver e excluir a memória do assistente, limpar o histórico, os cookies e outros dados em ' +
             'Configurações, e remover suas chaves de API a qualquer momento. Desinstalar o Qutai exclui tudo o que ele armazenou, exceto os arquivos que você salvou ' +
-            'fora dele, como downloads na pasta Downloads do Android e imagens salvas nas suas Fotos.',
+            'fora dele, como {{ios:arquivos salvos no app Arquivos|android:downloads na pasta Downloads do Android}} e imagens salvas nas suas Fotos.',
         },
         {
           heading: 'Crianças',
@@ -322,10 +320,10 @@ export const ptBR: LegalTranslation = {
             '• Se as sugestões de pesquisa estiverem ativadas, o que você digita na barra de endereço é enviado ao ' +
             'seu mecanismo de pesquisa (nunca a partir de guias anônimas).\n' +
             '• Se você tocar em “Usar minha localização” na configuração inicial, sua posição aproximada é enviada ' +
-            'ao serviço de endereços do celular (o da Apple em um iPhone; no Android, geralmente o do Google) para ' +
+            'ao serviço de endereços do celular {{ios:(o da Apple)|android:(geralmente o do Google)}} para ' +
             'encontrar o nome do lugar. Somente o nome do lugar é mantido.\n' +
             '• Se você falar com o assistente e o celular não conseguir reconhecer esse idioma no próprio aparelho, ' +
-            'o áudio vai para o serviço de fala do celular (da Apple ou do Google), somente depois que você tiver ' +
+            'o áudio vai para o serviço de fala do celular {{ios:(da Apple)|android:(geralmente do Google)}}, somente depois que você tiver ' +
             'concordado uma vez no Qutai e nunca em conversas anônimas. O Qutai e o serviço de IA recebem apenas o ' +
             'texto.\n' +
             '• Quando o assistente mostra opções em forma de cartões, as imagens delas são carregadas dos sites (ou ' +
@@ -360,19 +358,18 @@ export const ptBR: LegalTranslation = {
             'somente se você os incluir). Ele é criptografado no seu celular com uma senha que você escolhe antes de ' +
             'ser enviado; o Qutai não consegue lê-lo nem recuperar a senha, que fica guardada somente no seu ' +
             'celular. Com cada backup, o servidor também guarda quando ele foi feito, seu tamanho, a versão do app e ' +
-            'o tipo de celular (por exemplo “iPhone · iOS 26”). Os backups mais recentes são mantidos (3 atualmente) ' +
+            'o tipo de celular {{ios:(por exemplo “iPhone · iOS 26”)|android:(por exemplo “Android 16”)}}. Os backups mais recentes são mantidos (3 atualmente) ' +
             'e os mais antigos são excluídos; você pode excluí-los a qualquer momento, e excluir sua conta os exclui.',
         },
         {
           heading: 'Compras no app',
           body:
-            'Os Qutai Credits e qualquer outra coisa vendida no app são comprados pela App Store ou pelo Google ' +
-            'Play; seus dados de pagamento ficam com a Apple ou o Google e nunca chegam ao Qutai. Um serviço de ' +
+            'Os Qutai Credits e qualquer outra coisa vendida no app são comprados {{ios:pela App Store|android:pelo Google Play}}; seus dados de pagamento ficam com {{ios:a Apple|android:o Google}} e nunca chegam ao Qutai. Um serviço de ' +
             'pagamentos (RevenueCat) recebe o número da sua conta Qutai e o registro de compra da loja para que a ' +
             'compra possa ser confirmada, adicionada à sua conta e restaurada em outro celular. O Qutai mantém um ' +
             'registro de cada compra (loja, transação, produto, créditos, preço pago e datas), que a legislação ' +
             'tributária nos obriga a manter, também depois que a conta é excluída, sem o vínculo com você. Os ' +
-            'reembolsos são tratados pela Apple ou pelo Google de acordo com as regras deles.',
+            'reembolsos são tratados {{ios:pela Apple|android:pelo Google}} de acordo com as regras deles.',
         },
         {
           heading: 'O servidor do Qutai e quem mais trata dados',
@@ -383,7 +380,7 @@ export const ptBR: LegalTranslation = {
             'mensagens, páginas ou tokens de login (eles guardam um identificador da solicitação, o número da sua ' +
             'conta, o que foi pedido, quanto tempo levou e, para solicitações ao assistente, o modelo, os tokens e o ' +
             'custo). As empresas que tratam dados para o Qutai, cada uma sob sua própria política de ' +
-            'privacidade, são: Cloudflare (o servidor), Apple e Google (login e as lojas), Mailjet (e-mails de ' +
+            'privacidade, são: Cloudflare (o servidor), {{ios:Apple (login e a App Store), Google (login)|android:Google (login e o Google Play), Apple (login)}}, Mailjet (e-mails de ' +
             'login), RevenueCat (compras) e, com os Qutai Credits, Anthropic, OpenAI e Google (a IA). Não ' +
             'compartilhamos seus dados com mais ninguém, exceto quando a lei exige (por exemplo, uma ordem judicial) ' +
             'ou para proteger o Qutai e seus usuários contra fraudes e abusos.',
@@ -434,7 +431,7 @@ export const ptBR: LegalTranslation = {
             'serviço de pagamentos que exclua o registro que tem sobre você. Você também pode escrever para ' +
             'qutai@sonsuzdongu.com para pedir uma cópia do que o servidor do Qutai guarda sobre você, ou a correção ' +
             'ou eliminação desses dados. Desinstalar o Qutai exclui tudo o que ele armazenou no celular, exceto os arquivos que ' +
-            'você salvou fora dele, como downloads na pasta Downloads do Android e imagens salvas nas ' +
+            'você salvou fora dele, como {{ios:arquivos salvos no app Arquivos|android:downloads na pasta Downloads do Android}} e imagens salvas nas ' +
             'suas Fotos.',
         },
         {
@@ -478,13 +475,13 @@ export const ptBR: LegalTranslation = {
         {
           heading: 'Qutai Credits',
           body:
-            'Os créditos são comprados no app pela App Store ou pelo Google Play, ao preço que a loja mostra, e são ' +
+            'Os créditos são comprados no app {{ios:pela App Store|android:pelo Google Play}}, ao preço que a loja mostra, e são ' +
             'adicionados à sua conta Qutai assim que a compra é confirmada. Eles pagam somente as solicitações do ' +
             'assistente no Qutai, aos preços em créditos mostrados para cada modelo; quanto custou cada resposta é ' +
             'mostrado abaixo dela. Uma solicitação primeiro reserva o máximo que poderia custar e devolve o que não ' +
             'usou. Os créditos pertencem à sua conta Qutai, podem ser usados em qualquer celular em que você fizer ' +
             'login, não podem ser transferidos nem trocados por dinheiro e não são reembolsados, exceto quando a lei ' +
-            'ou as regras de reembolso da loja o exigirem; os reembolsos são tratados pela Apple ou pelo Google. Se ' +
+            'ou as regras de reembolso da loja o exigirem; os reembolsos são tratados {{ios:pela Apple|android:pelo Google}}. Se ' +
             'uma compra for reembolsada, os créditos dela são retirados, o que pode deixar o saldo negativo até você ' +
             'recarregá-lo. Os créditos não expiram. Os modelos, os preços em créditos e os limites podem mudar; os atuais são mostrados no ' +
             'app antes de você usá-los. Os Qutai Credits podem ser pausados para manutenção ou ficar indisponíveis ' +

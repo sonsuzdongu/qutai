@@ -14,11 +14,12 @@ for the map, then only the area files you need; never load all of them at once.
 
 ## Changelog
 
-Last updated: 2026-11-21
+Last updated: 2026-11-22
 
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-22:** The privacy policy and terms (both builds, ten languages) name only the phone's own platform: on iOS no Google Play, Android or APK, on Android no App Store or iPhone (Apple 2.3.10); Sign in with Apple and Google and Google as an AI provider stay; the website copy names both stores; legal version not bumped (`LEGAL-28`).
 - **2026-11-22:** Android: the portrait and landscape screen features are declared optional; ML Kit's portrait-only scanner activities made Google Play require a portrait screen and refuse the 0.1.10 release (`LAND-12`).
 - **2026-11-21:** iOS export compliance: `ITSAppUsesNonExemptEncryption` is no longer set; `true` needs the code of approved export documentation (the 0.1.10 upload was refused with error 90592) and `false` would claim exemption, so App Store Connect asks the export questions for each build (`OSPERM-25`).
 - **2026-11-21:** When the saved details can't be read, an address to a site the user didn't name or have open is now asked about in Qutai's dialog instead of refused (owner: "Evet, sorsun"); refused only where nothing can be asked (no dialog, incognito). One new text in the ten languages (`UNTR-27` changed).

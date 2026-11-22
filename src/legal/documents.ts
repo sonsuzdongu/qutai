@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { accountsEnabled } from '../config/features';
 import type { Language } from '../i18n';
 import { PRO_DOCUMENTS, PRO_LEGAL_UPDATED } from './proDocuments';
@@ -84,10 +85,10 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
             '• If search suggestions are on, what you type in the address bar is sent to your search engine ' +
             '(never from incognito tabs).\n' +
             '• If you tap “Use my location” in setup, your approximate position is sent to the phone’s address ' +
-            'service (Apple’s on an iPhone; on Android usually Google’s) to find the name of the place. Only the ' +
+            'service {{ios:(Apple’s)|android:(usually Google’s)|web:(Apple’s on an iPhone; on Android usually Google’s)}} to find the name of the place. Only the ' +
             'place name is kept.\n' +
             '• If you speak to the assistant and the phone can’t recognise that language on the device itself, the ' +
-            'audio goes to the phone’s speech service (Apple’s or Google’s), only after you have agreed once in ' +
+            'audio goes to the phone’s speech service {{ios:(Apple’s)|android:(usually Google’s)|web:(Apple’s or Google’s)}}, only after you have agreed once in ' +
             'Qutai and never in incognito conversations. Qutai and the AI service receive only the text.\n' +
             '• When the assistant shows you options as cards, their pictures are loaded from the sites (or the sites’ image servers) that show them, without your cookies, also for options you don’t open; in incognito conversations only when you tap “Show images”.\n' +
             '• While “Block ads and trackers” is on, the filter lists you chose are downloaded from their publishers ' +
@@ -135,8 +136,7 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
           heading: 'Your control',
           body:
             'You can view and delete the assistant’s memory, clear history, cookies and other data in Settings, ' +
-            'and remove your API keys at any time. Uninstalling Qutai deletes everything it stored, except files you saved outside it, such ' +
-            'as downloads in Android’s Downloads folder and pictures saved to your photos.',
+            'and remove your API keys at any time. Uninstalling Qutai deletes everything it stored, except files you saved outside it, such as {{ios:files you saved to the Files app|android:downloads in Android’s Downloads folder|web:downloads in Android’s Downloads folder or in the Files app on an iPhone}} and pictures saved to your photos.',
         },
         {
           heading: 'Children',
@@ -228,9 +228,7 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
           heading: 'Downloads and installing files',
           body:
             'You decide what to download, open and install. Qutai warns you before it downloads files that can ' +
-            'install or run code, but it does not scan files for viruses or other harm. On Android, opening a ' +
-            'downloaded app (an APK file) hands it to the system installer; Qutai never installs anything itself. ' +
-            'Files and apps from outside the App Store and Google Play can harm your phone or your data; downloading, ' +
+            'install or run code, but it does not scan files for viruses or other harm. {{ios:Qutai never installs anything itself. Downloaded files can harm|android:Opening a downloaded app (an APK file) hands it to the system installer; Qutai never installs anything itself. Files and apps from outside Google Play can harm|web:On Android, opening a downloaded app (an APK file) hands it to the system installer; Qutai never installs anything itself. Files and apps from outside the App Store and Google Play can harm}} your phone or your data; downloading, ' +
             'opening and installing them is your responsibility, as is having the right to do so.',
         },
         {
@@ -306,10 +304,10 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
             '• Arama önerileri açıksa adres çubuğuna yazdıklarınız arama motorunuza gönderilir (gizli sekmelerden ' +
             'asla).\n' +
             '• Kurulumda “Konumumu kullan”a dokunursanız, yer adını bulmak için yaklaşık konumunuz telefonun adres ' +
-            'hizmetine (iPhone’da Apple’ınkine, Android’de genellikle Google’ınkine) gönderilir. Yalnızca yer adı ' +
+            'hizmetine {{ios:(Apple’ınkine)|android:(genellikle Google’ınkine)|web:(iPhone’da Apple’ınkine, Android’de genellikle Google’ınkine)}} gönderilir. Yalnızca yer adı ' +
             'saklanır.\n' +
             '• Asistana sesle yazdığınızda telefon o dili cihazın kendisinde tanıyamıyorsa ses, telefonun konuşma ' +
-            'hizmetine (Apple’ın ya da Google’ın) gider; bu yalnızca Qutai’da bir kez izin verdikten sonra olur, ' +
+            'hizmetine {{ios:(Apple’ın)|android:(genellikle Google’ın)|web:(Apple’ın ya da Google’ın)}} gider; bu yalnızca Qutai’da bir kez izin verdikten sonra olur, ' +
             'gizli sohbetlerde asla. Qutai ve yapay zekâ hizmeti yalnızca metni alır.\n' +
             '• Asistan seçenekleri kartlarla gösterdiğinde kartların resimleri, onları gösteren sitelerden (ya da sitelerin resim sunucularından) çerezleriniz gönderilmeden yüklenir; açmadığınız seçenekler için de. Gizli sohbetlerde yalnızca “Resimleri göster”e dokunduğunuzda.\n' +
             '• “Reklam ve izleyicileri engelle” açıkken seçtiğiniz filtre listeleri yayıncılarından (örneğin EasyList ' +
@@ -361,8 +359,7 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
           heading: 'Kontrol sizde',
           body:
             'Asistanın hafızasını Ayarlar’dan görüp silebilir; geçmişi, çerezleri ve diğer verileri temizleyebilir, ' +
-            'API anahtarlarınızı istediğiniz an kaldırabilirsiniz. Qutai’ı kaldırmak sakladığı her şeyi siler; Qutai dışına kaydettiğiniz dosyalar, örneğin ' +
-            'Android’in İndirilenler klasöründeki indirmeler ve fotoğraflarınıza kaydettiğiniz ' +
+            'API anahtarlarınızı istediğiniz an kaldırabilirsiniz. Qutai’ı kaldırmak sakladığı her şeyi siler; Qutai dışına kaydettiğiniz dosyalar, örneğin {{ios:Dosyalar uygulamasına kaydettiğiniz dosyalar|android:Android’in İndirilenler klasöründeki indirmeler|web:Android’in İndirilenler klasöründeki ya da iPhone’da Dosyalar uygulamasındaki indirmeler}} ve fotoğraflarınıza kaydettiğiniz ' +
             'resimler kalır.',
         },
         {
@@ -463,9 +460,7 @@ export const DOCUMENTS: Record<LegalLanguage, LegalSet> = {
           body:
             'Neyi indireceğinize, açacağınıza ve yükleyeceğinize siz karar verirsiniz. Qutai, uygulama yükleyebilen ' +
             'ya da kod çalıştırabilen dosyaları indirmeden önce sizi uyarır, ancak dosyaları virüslere ya da başka ' +
-            'zararlara karşı taramaz. Android’de indirilen bir uygulamayı (APK dosyası) açmak, onu sistemin ' +
-            'yükleyicisine verir; Qutai hiçbir şeyi kendisi yüklemez. App Store ve Google Play dışından gelen ' +
-            'dosyalar ve uygulamalar telefonunuza ya da verilerinize zarar verebilir; bunları indirmek, açmak ve ' +
+            'zararlara karşı taramaz. {{ios:Qutai hiçbir şeyi kendisi yüklemez. İndirilen dosyalar telefonunuza|android:İndirilen bir uygulamayı (APK dosyası) açmak, onu sistemin yükleyicisine verir; Qutai hiçbir şeyi kendisi yüklemez. Google Play dışından gelen dosyalar ve uygulamalar telefonunuza|web:Android’de indirilen bir uygulamayı (APK dosyası) açmak, onu sistemin yükleyicisine verir; Qutai hiçbir şeyi kendisi yüklemez. App Store ve Google Play dışından gelen dosyalar ve uygulamalar telefonunuza}} ya da verilerinize zarar verebilir; bunları indirmek, açmak ve ' +
             'yüklemek, bunu yapma hakkınızın olması da dahil, sizin sorumluluğunuzdadır.',
         },
         {
@@ -535,8 +530,35 @@ export function provideLegalTranslation(language: TranslatedLegalLanguage, trans
   translations[language] = translation;
 }
 
-/** A build's document in a language: English and Turkish as written, the other eight from their translation. */
-export function legalDocumentFor(build: LegalBuild, kind: LegalKind, language: Language): LegalDocument {
+/** The platform a document is shown on: it names only that platform's store and services. */
+export type LegalPlatform = 'ios' | 'android';
+
+/**
+ * Wording that differs by platform is written in the texts as `{{ios:…|android:…|web:…}}`: the app shows the branch of
+ * the phone it runs on, so the iOS texts never name Google Play or Android and the Android texts never name the App
+ * Store or the iPhone where they mean the other platform (Apple's guideline 2.3.10). The `web` branch is what the
+ * website's copy shows (webpage/scripts/make-legal.mjs, English and Turkish pro texts only); the eight translations,
+ * shown only in the app, leave it out. A branch may be empty.
+ */
+const PLATFORM_WORDING = /\{\{ios:([^{}|]*)\|android:([^{}|]*)(?:\|web:([^{}|]*))?\}\}/g;
+
+/** A text with each platform part replaced by the given platform's wording. */
+export function textForPlatform(text: string, platform: LegalPlatform): string {
+  return text.replace(PLATFORM_WORDING, (_, ios: string, android: string) => (platform === 'ios' ? ios : android));
+}
+
+function documentForPlatform(doc: LegalDocument, platform: LegalPlatform): LegalDocument {
+  return {
+    title: textForPlatform(doc.title, platform),
+    intro: textForPlatform(doc.intro, platform),
+    sections: doc.sections.map((s) => ({ heading: textForPlatform(s.heading, platform), body: textForPlatform(s.body, platform) })),
+  };
+}
+
+const thisPlatform = (): LegalPlatform => (Platform.OS === 'android' ? 'android' : 'ios');
+
+/** A build's document as written, before the platform's wording is chosen. */
+function writtenDocument(build: LegalBuild, kind: LegalKind, language: Language): LegalDocument {
   if (language === 'en' || language === 'tr') return (build === 'pro' ? PRO_DOCUMENTS : DOCUMENTS)[language][kind];
   let translation = translations[language];
   if (!translation) {
@@ -551,7 +573,20 @@ export function legalDocumentFor(build: LegalBuild, kind: LegalKind, language: L
   return translation[build][kind];
 }
 
-/** The privacy policy or terms of this build, in the interface language (all ten have them). */
+/**
+ * A build's document in a language (English and Turkish as written, the other eight from their translation), worded for
+ * a platform (this phone's unless given).
+ */
+export function legalDocumentFor(
+  build: LegalBuild,
+  kind: LegalKind,
+  language: Language,
+  platform: LegalPlatform = thisPlatform(),
+): LegalDocument {
+  return documentForPlatform(writtenDocument(build, kind, language), platform);
+}
+
+/** The privacy policy or terms of this build, in the interface language (all ten have them), for this phone's platform. */
 export function legalDocument(kind: LegalKind, language: Language): LegalDocument {
   return legalDocumentFor(accountsEnabled ? 'pro' : 'openSource', kind, language);
 }

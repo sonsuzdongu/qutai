@@ -1,20 +1,24 @@
 // The privacy policy and terms in all ten interface languages (src/legal/): English and Turkish are originals, the
 // other eight are translated from English (src/legal/translations/). Every language has the same documents with the
 // same sections in the same order, the same bullets and line breaks, the same names, addresses and numbers in each
-// section, no empty text and no English left in; each translation says the English version prevails; and no
-// language falls back to English any more.
+// section, no empty text and no English left in; each translation says the English version prevails; no language
+// falls back to English any more; and each platform's texts name only its own store and services (Apple 2.3.10).
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import {
+  DOCUMENTS,
   legalDocumentFor,
   provideLegalTranslation,
+  textForPlatform,
   type LegalBuild,
   type LegalDocument,
   type LegalKind,
+  type LegalPlatform,
   type LegalTranslation,
   type TranslatedLegalLanguage,
 } from '../../src/legal/documents.ts';
+import { PRO_DOCUMENTS } from '../../src/legal/proDocuments.ts';
 import { LANGUAGES, type Language } from '../../src/i18n/languages.ts';
 import { de } from '../../src/legal/translations/de.ts';
 import { es } from '../../src/legal/translations/es.ts';
@@ -31,6 +35,7 @@ for (const [language, translation] of Object.entries(TRANSLATIONS)) {
 }
 
 const BUILDS: LegalBuild[] = ['openSource', 'pro'];
+const PLATFORMS: LegalPlatform[] = ['ios', 'android'];
 const KINDS: LegalKind[] = ['privacy', 'terms'];
 
 /** The word for "English" each translation's prevail sentence uses. */
@@ -116,14 +121,14 @@ test('every language has its own documents; none falls back to English', () => {
 });
 
 test('same sections in the same order, bullets, line breaks, names and numbers in every language', () => {
-  for (const build of BUILDS) {
+  for (const platform of PLATFORMS) for (const build of BUILDS) {
     for (const kind of KINDS) {
-      const english = legalDocumentFor(build, kind, 'en');
+      const english = legalDocumentFor(build, kind, 'en', platform);
       const englishParts = parts(english);
       for (const language of LANGUAGES) {
         if (language === 'en') continue;
-        const doc = legalDocumentFor(build, kind, language);
-        const label = `${build} ${kind} (${language})`;
+        const doc = legalDocumentFor(build, kind, language, platform);
+        const label = `${build} ${kind} (${language}, ${platform})`;
         assert.equal(doc.sections.length, english.sections.length, `${label}: number of sections`);
         parts(doc).forEach((part, i) => {
           const source = englishParts[i];
@@ -139,13 +144,13 @@ test('same sections in the same order, bullets, line breaks, names and numbers i
 });
 
 test('no English left in a translation, and each says the English version prevails', () => {
-  for (const build of BUILDS) {
+  for (const platform of PLATFORMS) for (const build of BUILDS) {
     for (const kind of KINDS) {
-      const english = legalDocumentFor(build, kind, 'en');
+      const english = legalDocumentFor(build, kind, 'en', platform);
       const sentences = englishSentences(english);
       for (const language of Object.keys(TRANSLATIONS) as TranslatedLegalLanguage[]) {
-        const doc = legalDocumentFor(build, kind, language);
-        const label = `${build} ${kind} (${language})`;
+        const doc = legalDocumentFor(build, kind, language, platform);
+        const label = `${build} ${kind} (${language}, ${platform})`;
         const text = parts(doc).map((p) => p.text).join('\n');
         const left = sentences.filter((s) => text.includes(s));
         assert.deepEqual(left, [], `${label}: English sentences left in`);
@@ -167,4 +172,66 @@ test('Turkish is an original: it does not say a translation prevails', () => {
       assert.doesNotMatch(last, /İngilizce/);
     }
   }
+});
+
+/** What a platform's texts must not name: the other platform and its store (Apple's guideline 2.3.10 for iOS). */
+const OTHER_PLATFORM: Record<LegalPlatform, RegExp> = {
+  ios: /Google Play|Play Store|Android|APK/,
+  android: /App Store|iPhone|iPad|\biOS\b/,
+};
+
+test('each platform names only its own store and services, in every language and build', () => {
+  for (const platform of PLATFORMS) {
+    for (const build of BUILDS) {
+      for (const kind of KINDS) {
+        for (const language of LANGUAGES) {
+          const doc = legalDocumentFor(build, kind, language, platform);
+          for (const part of parts(doc)) {
+            const label = `${build} ${kind} (${language}, ${platform}) ${part.where}`;
+            assert.doesNotMatch(part.text, /\{\{|\}\}|\|android:|\|web:/, `${label}: platform wording left unresolved`);
+            assert.doesNotMatch(part.text, OTHER_PLATFORM[platform], `${label}: names the other platform`);
+          }
+        }
+      }
+    }
+  }
+});
+
+test('the platforms differ where the stores are named, and Sign in with Apple and Google stay on both', () => {
+  const ios = parts(legalDocumentFor('pro', 'privacy', 'en', 'ios')).map((p) => p.text).join('\n');
+  const android = parts(legalDocumentFor('pro', 'privacy', 'en', 'android')).map((p) => p.text).join('\n');
+  assert.match(ios, /bought through the App Store; your payment details stay with Apple and/);
+  assert.match(android, /bought through Google Play; your payment details stay with Google and/);
+  for (const text of [ios, android]) assert.match(text, /You sign in with Apple, with Google or with your email address/);
+  assert.match(ios, /Anthropic, OpenAI and Google \(the AI\)/);
+  const iosTerms = parts(legalDocumentFor('openSource', 'terms', 'tr', 'ios')).map((p) => p.text).join('\n');
+  assert.match(iosTerms, /Qutai hiçbir şeyi kendisi yüklemez\. İndirilen dosyalar/);
+});
+
+test('platform wording is well formed; English and Turkish carry the website’s branch', () => {
+  const marks = (text: string) => text.match(/\{\{[^]*?\}\}/g) ?? [];
+  const wellFormed = /^\{\{ios:[^{}|]*\|android:[^{}|]*(\|web:[^{}|]*)?\}\}$/;
+  const written: { where: string; text: string; web: boolean }[] = [];
+  for (const [name, set] of [['documents', DOCUMENTS], ['proDocuments', PRO_DOCUMENTS]] as const) {
+    for (const language of ['en', 'tr'] as const) {
+      for (const kind of KINDS) for (const p of parts(set[language][kind])) written.push({ where: `${name} ${language} ${kind} ${p.where}`, text: p.text, web: true });
+    }
+  }
+  for (const [language, translation] of Object.entries(TRANSLATIONS)) {
+    for (const build of BUILDS) for (const kind of KINDS) {
+      for (const p of parts(translation[build][kind])) written.push({ where: `${language} ${build} ${kind} ${p.where}`, text: p.text, web: false });
+    }
+  }
+  let count = 0;
+  for (const { where, text, web } of written) {
+    for (const mark of marks(text)) {
+      count++;
+      assert.match(mark, wellFormed, `${where}: ${mark}`);
+      if (web) assert.match(mark, /\|web:/, `${where}: no website wording in ${mark}`);
+    }
+    assert.equal(text.split('{{').length, text.split('}}').length, `${where}: unbalanced braces`);
+  }
+  assert.ok(count > 100, `platform parts found: ${count}`);
+  assert.equal(textForPlatform('a {{ios:b|android:c|web:d}} e {{ios:|android:f}}', 'ios'), 'a b e ');
+  assert.equal(textForPlatform('a {{ios:b|android:c|web:d}} e {{ios:|android:f}}', 'android'), 'a c e f');
 });

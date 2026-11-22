@@ -44,11 +44,9 @@ export const de: LegalTranslation = {
             'Datenschutzerklärung und die Bedingungen dieses Dienstes.\n• Wenn Suchvorschläge eingeschaltet sind, ' +
             'wird das, was Sie in die Adressleiste eingeben, an Ihre Suchmaschine gesendet (nie aus ' +
             'Inkognito-Tabs).\n• Wenn Sie bei der Einrichtung auf „Meinen Standort verwenden“ tippen, wird Ihre ' +
-            'ungefähre Position an den Adressdienst des Telefons gesendet (auf einem iPhone an den von Apple, auf ' +
-            'Android meist an den von Google), um den Namen des Ortes zu ermitteln. Nur der Ortsname wird ' +
+            'ungefähre Position an den Adressdienst des Telefons gesendet {{ios:(den von Apple)|android:(meist den von Google)}}, um den Namen des Ortes zu ermitteln. Nur der Ortsname wird ' +
             'gespeichert.\n• Wenn Sie mit dem Assistenten sprechen und das Telefon diese Sprache nicht auf dem ' +
-            'Gerät selbst erkennen kann, geht die Audioaufnahme an den Sprachdienst des Telefons (den von Apple ' +
-            'oder Google), und zwar nur, nachdem Sie einmal in Qutai zugestimmt haben, und nie in Unterhaltungen ' +
+            'Gerät selbst erkennen kann, geht die Audioaufnahme an den Sprachdienst des Telefons {{ios:(den von Apple)|android:(meist den von Google)}}, und zwar nur, nachdem Sie einmal in Qutai zugestimmt haben, und nie in Unterhaltungen ' +
             'mit Inkognito-Tabs. Qutai und der KI-Dienst erhalten nur den Text.\n• Wenn der Assistent Ihnen ' +
             'Optionen als Karten zeigt, werden deren Bilder von den Websites (oder deren Bildservern) geladen, die ' +
             'sie zeigen, ohne Ihre Cookies, auch für Optionen, die Sie nicht öffnen; in Unterhaltungen mit ' +
@@ -106,8 +104,7 @@ export const de: LegalTranslation = {
           body:
             'Sie können das Gedächtnis des Assistenten einsehen und löschen, Verlauf, Cookies und andere Daten in ' +
             'den Einstellungen löschen und Ihre API-Schlüssel jederzeit entfernen. Wenn Sie Qutai deinstallieren, wird alles gelöscht, was die App gespeichert hat, außer ' +
-            'Dateien, die Sie außerhalb der App gespeichert haben, etwa Downloads im Download-Ordner ' +
-            'von Android und Bilder, die Sie in Ihren Fotos gespeichert haben.',
+            'Dateien, die Sie außerhalb der App gespeichert haben, etwa {{ios:Dateien in der Dateien-App|android:Downloads im Download-Ordner von Android}} und Bilder, die Sie in Ihren Fotos gespeichert haben.',
         },
         {
           heading: 'Kinder',
@@ -216,9 +213,7 @@ export const de: LegalTranslation = {
           body:
             'Sie entscheiden, was Sie herunterladen, öffnen und installieren. Qutai warnt Sie, bevor es Dateien ' +
             'herunterlädt, die Code installieren oder ausführen können, durchsucht Dateien aber nicht nach Viren oder ' +
-            'anderer Schadsoftware. Unter Android übergibt das Öffnen einer heruntergeladenen App (einer APK-Datei) ' +
-            'diese an das Installationsprogramm des Systems; Qutai selbst installiert nie etwas. Dateien und Apps von ' +
-            'außerhalb des App Store und von Google Play können Ihrem Telefon oder Ihren Daten schaden; sie ' +
+            'anderer Schadsoftware. {{ios:Qutai selbst installiert nie etwas. Heruntergeladene Dateien können|android:Das Öffnen einer heruntergeladenen App (einer APK-Datei) übergibt diese an das Installationsprogramm des Systems; Qutai selbst installiert nie etwas. Dateien und Apps von außerhalb von Google Play können}} Ihrem Telefon oder Ihren Daten schaden; sie ' +
             'herunterzuladen, zu öffnen und zu installieren liegt in Ihrer Verantwortung, ebenso wie die Berechtigung ' +
             'dazu.',
         },
@@ -316,11 +311,9 @@ export const de: LegalTranslation = {
             'erhalten, gelten deren Datenschutzerklärungen und Bedingungen.\n• Wenn Suchvorschläge eingeschaltet ' +
             'sind, wird das, was Sie in die Adressleiste eingeben, an Ihre Suchmaschine gesendet (nie aus ' +
             'Inkognito-Tabs).\n• Wenn Sie bei der Einrichtung auf „Meinen Standort verwenden“ tippen, wird Ihre ' +
-            'ungefähre Position an den Adressdienst des Telefons gesendet (auf einem iPhone an den von Apple, auf ' +
-            'Android meist an den von Google), um den Namen des Ortes zu ermitteln. Nur der Ortsname wird ' +
+            'ungefähre Position an den Adressdienst des Telefons gesendet {{ios:(den von Apple)|android:(meist den von Google)}}, um den Namen des Ortes zu ermitteln. Nur der Ortsname wird ' +
             'gespeichert.\n• Wenn Sie mit dem Assistenten sprechen und das Telefon diese Sprache nicht auf dem ' +
-            'Gerät selbst erkennen kann, geht die Audioaufnahme an den Sprachdienst des Telefons (den von Apple ' +
-            'oder Google), und zwar nur, nachdem Sie einmal in Qutai zugestimmt haben, und nie in Unterhaltungen ' +
+            'Gerät selbst erkennen kann, geht die Audioaufnahme an den Sprachdienst des Telefons {{ios:(den von Apple)|android:(meist den von Google)}}, und zwar nur, nachdem Sie einmal in Qutai zugestimmt haben, und nie in Unterhaltungen ' +
             'mit Inkognito-Tabs. Qutai und der KI-Dienst erhalten nur den Text.\n• Wenn der Assistent Ihnen ' +
             'Optionen als Karten zeigt, werden deren Bilder von den Websites (oder deren Bildservern) geladen, die ' +
             'sie zeigen, ohne Ihre Cookies, auch für Optionen, die Sie nicht öffnen; in Unterhaltungen mit ' +
@@ -355,20 +348,19 @@ export const de: LegalTranslation = {
             'von Ihnen gewählten Passwort verschlüsselt, bevor sie gesendet wird; Qutai kann sie nicht lesen und ' +
             'das Passwort nicht wiederherstellen, das nur auf Ihrem Telefon gespeichert ist. Mit jedem Backup ' +
             'speichert der Server außerdem, wann es erstellt wurde, seine Größe, die App-Version und die Art des ' +
-            'Telefons (zum Beispiel „iPhone · iOS 26“). Die neuesten Backups werden aufbewahrt (derzeit 3), ältere ' +
+            'Telefons {{ios:(zum Beispiel „iPhone · iOS 26“)|android:(zum Beispiel „Android 16“)}}. Die neuesten Backups werden aufbewahrt (derzeit 3), ältere ' +
             'werden gelöscht; Sie können sie jederzeit löschen, und wenn Sie Ihr Konto löschen, werden sie ' +
             'mitgelöscht.',
         },
         {
           heading: 'Käufe in der App',
           body:
-            'Qutai Credits und alles andere, was in der App verkauft wird, werden über den App Store oder Google ' +
-            'Play gekauft; Ihre Zahlungsdaten bleiben bei Apple oder Google und erreichen Qutai nie. Ein ' +
+            'Qutai Credits und alles andere, was in der App verkauft wird, werden über {{ios:den App Store|android:Google Play}} gekauft; Ihre Zahlungsdaten bleiben bei {{ios:Apple|android:Google}} und erreichen Qutai nie. Ein ' +
             'Zahlungsdienst (RevenueCat) erhält Ihre Qutai-Kontonummer und den Kaufbeleg des Stores, damit der ' +
             'Kauf bestätigt, Ihrem Konto gutgeschrieben und auf einem anderen Telefon wiederhergestellt werden ' +
             'kann. Qutai speichert zu jedem Kauf einen Datensatz (Store, Transaktion, Produkt, Credits, gezahlter ' +
             'Preis und Daten), den wir nach Steuerrecht aufbewahren müssen, auch nach der Löschung des Kontos, ' +
-            'dann ohne Verbindung zu Ihnen. Erstattungen werden von Apple oder Google nach deren eigenen Regeln ' +
+            'dann ohne Verbindung zu Ihnen. Erstattungen werden von {{ios:Apple|android:Google}} nach deren eigenen Regeln ' +
             'abgewickelt.',
         },
         {
@@ -380,8 +372,7 @@ export const de: LegalTranslation = {
             'Nachrichten, Seiten oder Anmelde-Tokens (sie enthalten eine Anfrage-ID, Ihre Kontonummer, was ' +
             'angefordert wurde, wie lange es gedauert hat und, bei Anfragen an den Assistenten, das Modell, die ' +
             'Tokens und die Kosten). Die Unternehmen, die Daten für Qutai verarbeiten, ' +
-            'jeweils nach ihrer eigenen Datenschutzerklärung, sind: Cloudflare (der Server), Apple und Google ' +
-            '(Anmeldung und die Stores), Mailjet (Anmelde-E-Mails), RevenueCat (Käufe) und, bei Qutai Credits, ' +
+            'jeweils nach ihrer eigenen Datenschutzerklärung, sind: Cloudflare (der Server), {{ios:Apple (Anmeldung und der App Store), Google (Anmeldung)|android:Google (Anmeldung und Google Play), Apple (Anmeldung)}}, Mailjet (Anmelde-E-Mails), RevenueCat (Käufe) und, bei Qutai Credits, ' +
             'Anthropic, OpenAI und Google (die KI). Wir geben Ihre Daten an niemanden sonst weiter, außer wenn das ' +
             'Gesetz es verlangt (zum Beispiel ein Gerichtsbeschluss) oder um Qutai und seine Nutzer vor Betrug und ' +
             'Missbrauch zu schützen.',
@@ -448,8 +439,7 @@ export const de: LegalTranslation = {
             'erhalten, wie oben beschrieben), und der Zahlungsdienst wird gebeten, seinen Datensatz über Sie zu ' +
             'löschen. Sie können auch an qutai@sonsuzdongu.com schreiben, um eine Kopie dessen, was Qutais Server ' +
             'über Sie speichert (Auskunft), oder dessen Berichtigung oder Löschung zu verlangen. Wenn Sie Qutai deinstallieren, wird alles gelöscht, was die App auf dem Telefon ' +
-            'gespeichert hat, außer Dateien, die Sie außerhalb der App gespeichert haben, etwa ' +
-            'Downloads im Download-Ordner von Android und Bilder, die Sie in Ihren Fotos gespeichert ' +
+            'gespeichert hat, außer Dateien, die Sie außerhalb der App gespeichert haben, etwa {{ios:Dateien in der Dateien-App|android:Downloads im Download-Ordner von Android}} und Bilder, die Sie in Ihren Fotos gespeichert ' +
             'haben.',
         },
         {
@@ -495,14 +485,14 @@ export const de: LegalTranslation = {
         {
           heading: 'Qutai Credits',
           body:
-            'Credits werden in der App über den App Store oder Google Play zu dem vom Store angezeigten Preis ' +
+            'Credits werden in der App über {{ios:den App Store|android:Google Play}} zu dem vom Store angezeigten Preis ' +
             'gekauft und Ihrem Qutai-Konto gutgeschrieben, sobald der Kauf bestätigt ist. Mit ihnen werden nur die ' +
             'Anfragen des Assistenten in Qutai bezahlt, zu den für jedes Modell angezeigten Credit-Preisen; was ' +
             'jede Antwort gekostet hat, wird darunter angezeigt. Eine Anfrage reserviert zunächst den ' +
             'Höchstbetrag, den sie kosten könnte, und gibt zurück, was sie nicht verbraucht hat. Credits gehören ' +
             'zu Ihrem Qutai-Konto, können auf jedem Telefon verwendet werden, auf dem Sie sich anmelden, können ' +
             'nicht übertragen oder in Geld umgetauscht werden und werden nicht erstattet, außer wenn das Gesetz ' +
-            'oder die Erstattungsregeln des Stores dies verlangen; Erstattungen werden von Apple oder Google ' +
+            'oder die Erstattungsregeln des Stores dies verlangen; Erstattungen werden von {{ios:Apple|android:Google}} ' +
             'abgewickelt. Wird ein Kauf erstattet, werden seine Credits zurückgebucht, wodurch das Guthaben ' +
             'negativ werden kann, bis Sie es aufladen. Credits verfallen nicht. Modelle, Credit-Preise und Limits können sich ändern; die ' +
             'aktuellen werden in der App angezeigt, bevor Sie sie verwenden. Qutai Credits können für ' +
@@ -594,9 +584,7 @@ export const de: LegalTranslation = {
           body:
             'Sie entscheiden, was Sie herunterladen, öffnen und installieren. Qutai warnt Sie, bevor es Dateien ' +
             'herunterlädt, die Code installieren oder ausführen können, durchsucht Dateien aber nicht nach Viren oder ' +
-            'anderer Schadsoftware. Unter Android übergibt das Öffnen einer heruntergeladenen App (einer APK-Datei) ' +
-            'diese an das Installationsprogramm des Systems; Qutai selbst installiert nie etwas. Dateien und Apps von ' +
-            'außerhalb des App Store und von Google Play können Ihrem Telefon oder Ihren Daten schaden; sie ' +
+            'anderer Schadsoftware. {{ios:Qutai selbst installiert nie etwas. Heruntergeladene Dateien können|android:Das Öffnen einer heruntergeladenen App (einer APK-Datei) übergibt diese an das Installationsprogramm des Systems; Qutai selbst installiert nie etwas. Dateien und Apps von außerhalb von Google Play können}} Ihrem Telefon oder Ihren Daten schaden; sie ' +
             'herunterzuladen, zu öffnen und zu installieren liegt in Ihrer Verantwortung, ebenso wie die Berechtigung ' +
             'dazu.',
         },
