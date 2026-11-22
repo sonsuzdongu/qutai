@@ -1,5 +1,6 @@
 import { sha256 } from '@noble/hashes/sha2.js';
 import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils.js';
+import { fillRandom } from '../utils/secureRandom';
 
 /**
  * Device verification (pro builds only; backend/README.md › Device verification, docs/design/33-accounts.md): a proof
@@ -100,9 +101,10 @@ const NATIVE_CAUSES: Readonly<Record<string, string>> = {
   UNKNOWN: 'unknown',
 };
 
-/** Where a proof failed: Android `prep` (prepareIntegrityTokenProvider) or `req` (the token); iOS `keygen`, `challenge`
- * and `register` (our server), `attest`, `assert`. */
-export type ProofStage = 'prep' | 'req' | 'keygen' | 'challenge' | 'attest' | 'register' | 'assert';
+/** Where a proof failed: before either platform's steps, `config` (the server's `/config`), `nonce` (the random
+ * source) or `setup` (anything else); Android `prep` (prepareIntegrityTokenProvider) or `req` (the token); iOS `keygen`,
+ * `challenge` and `register` (our server), `attest`, `assert`. */
+export type ProofStage = 'config' | 'nonce' | 'setup' | 'prep' | 'req' | 'keygen' | 'challenge' | 'attest' | 'register' | 'assert';
 
 /**
  * The `X-Qutai-Device-Error` value for an error: `<stage>_<cause>`, the cause read only from the error's `code` (never its
@@ -115,10 +117,9 @@ export function deviceErrorToken(stage: ProofStage, error: unknown): string {
   return `${stage}_${known ?? 'failed'}`;
 }
 
+/** The nonce: 16 secure random bytes (expo-crypto in the app; React Native has no global `crypto`). */
 function defaultRandom(): string {
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return bytesToHex(bytes);
+  return bytesToHex(fillRandom(new Uint8Array(16)));
 }
 
 export function createDeviceProof(deps: DeviceProofDeps): DeviceProof {
@@ -162,13 +163,23 @@ export function createDeviceProof(deps: DeviceProofDeps): DeviceProof {
 
   async function make(method: string, path: string, signedIn: boolean): Promise<ProofHeaders> {
     if (deps.platform === 'other') return {};
-    const config = await deps.config();
-    if (!config) return {};
     const platform = deps.platform;
+    let config: DeviceCheckConfig | null;
+    try {
+      config = await deps.config();
+    } catch (e) {
+      return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': deviceErrorToken('config', e) };
+    }
+    if (!config) return {};
     const m = deps.module();
     if (!m) return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': 'unsupported' };
     const time = now();
-    const nonce = random();
+    let nonce: string;
+    try {
+      nonce = random();
+    } catch (e) {
+      return { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Error': deviceErrorToken('nonce', e) };
+    }
     const clientData = `${method} ${path}\n${time}\n${nonce}`;
     const base = { 'X-Qutai-Device-Platform': platform, 'X-Qutai-Device-Time': String(time), 'X-Qutai-Device-Nonce': nonce };
 
@@ -225,8 +236,9 @@ export function createDeviceProof(deps: DeviceProofDeps): DeviceProof {
             timer = setTimeout(() => resolve(deps.platform === 'other' ? {} : { 'X-Qutai-Device-Platform': deps.platform, 'X-Qutai-Device-Error': 'timeout' }), PROOF_TIMEOUT_MS);
           }),
         ]);
-      } catch {
-        return deps.platform === 'other' ? {} : { 'X-Qutai-Device-Platform': deps.platform, 'X-Qutai-Device-Error': 'failed' };
+      } catch (e) {
+        // Anything not caught at a named step (the key store, the native module lookup): `setup_failed`, never plain `failed`.
+        return deps.platform === 'other' ? {} : { 'X-Qutai-Device-Platform': deps.platform, 'X-Qutai-Device-Error': deviceErrorToken('setup', e) };
       } finally {
         if (timer) clearTimeout(timer);
       }

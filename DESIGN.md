@@ -19,6 +19,7 @@ Last updated: 2026-11-22
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-22:** Device verification fix: the proof's nonce now comes from expo-crypto (React Native has no global `crypto`, so every proof in 0.1.13 and 0.1.14 failed before starting and showed `app_failed`); failures before the platform steps now read `config_failed`, `nonce_failed` or `setup_failed` instead of plain `failed` (`SRV-34`).
 - **2026-11-22:** Device verification: a proof the app can't make now says where and why in `X-Qutai-Device-Error` (`prep_` / `req_` on Android, `keygen_` / `attest_` / `assert_` / `challenge_` / `register_` on iOS, plus the native error code as a fixed word such as `api_not_available`), so the Abuse screen shows e.g. `app_req_play_store_missing` instead of only `app_failed`; no server change (`SRV-34`).
 - **2026-11-22:** Pro legal version 8, dated 22 Nov 2026 (owner: "Evet, artır"): every pro user accepts the updated privacy policy (analytics, device verification) and terms once on the next launch; open source stays 5 (`LEGAL-29`).
 - **2026-11-22:** Qutai Credits: the onboarding introduction is free on its own server route and Anthropic key (3 requests per account, server-owned instructions, only extracted facts returned, caps and an on/off switch in the admin panel, its own statistics apart from paid usage); any refusal falls back to the credits relay as before (`INTRO-33`, `CRED-49`; app change, needs a new build).

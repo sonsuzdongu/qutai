@@ -147,6 +147,54 @@ describe('device proof', () => {
     assert.equal(deviceErrorToken('prep', 'string'), 'prep_failed');
   });
 
+  it('works without a global crypto (React Native has none) and names failures before the platform steps', async (t) => {
+    const saved = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+    Object.defineProperty(globalThis, 'crypto', { value: undefined, configurable: true, writable: true });
+    t.after(() => {
+      if (saved) Object.defineProperty(globalThis, 'crypto', saved);
+    });
+    // The app's wiring (deviceCheck.ts) passes its own secure random; with it, both platforms make proofs.
+    for (const platform of ['android', 'ios'] as const) {
+      const h = await make(platform, fakeModule().m).proof.headers('POST', '/relay', true);
+      assert.equal(h['X-Qutai-Device-Error'], undefined, platform);
+      assert.equal(h['X-Qutai-Device-Nonce'], 'n'.repeat(32));
+    }
+    // Without one and without a random source: a named word, not plain `failed`.
+    const noRandom = createDeviceProof({
+      platform: 'android',
+      module: () => fakeModule().m,
+      config: async () => CONFIG,
+      post: async () => ({}),
+      keys: { get: async () => null, set: async () => {} },
+    });
+    assert.equal((await noRandom.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'nonce_failed');
+    const badConfig = createDeviceProof({
+      platform: 'ios',
+      module: () => fakeModule().m,
+      config: async () => Promise.reject(new Error('offline')),
+      post: async () => ({}),
+      keys: { get: async () => null, set: async () => {} },
+      random: () => 'n'.repeat(32),
+    });
+    assert.equal((await badConfig.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'config_failed');
+    const badStore = createDeviceProof({
+      platform: 'ios',
+      module: () => fakeModule().m,
+      config: async () => CONFIG,
+      post: async () => ({}),
+      keys: { get: async () => Promise.reject(new Error('keychain')), set: async () => {} },
+      random: () => 'n'.repeat(32),
+    });
+    assert.equal((await badStore.headers('POST', '/relay', true))['X-Qutai-Device-Error'], 'setup_failed');
+  });
+
+  it('the app wires a secure random from expo-crypto, not the global crypto', () => {
+    const wiring = readFileSync('src/account/deviceCheck.ts', 'utf8');
+    assert.match(wiring, /random: \(\) => bytesToHex\(fillRandom\(/);
+    assert.match(wiring, /from '\.\.\/utils\/secureRandom'/);
+    assert.doesNotMatch(readFileSync('src/account/deviceProof.ts', 'utf8'), /\bcrypto\.getRandomValues/);
+  });
+
   it('every native error code of @expo/app-integrity has a word that fits the server rule', () => {
     const base = 'node_modules/@expo/app-integrity';
     const sources = [`${base}/android/src/main/java/expo/modules/integrity/IntegrityErrorCodes.kt`, `${base}/ios/IntegrityErrorCodes.swift`];

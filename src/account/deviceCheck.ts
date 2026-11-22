@@ -5,6 +5,8 @@ import { secureStoreReady } from '../storage/secureStoreGate';
 import { createApi } from './api';
 import { createDeviceProof, type DeviceProof, type IntegrityModule } from './deviceProof';
 import { serverFlags } from './serverFlags';
+import { fillRandom } from '../utils/secureRandom';
+import { bytesToHex } from '@noble/hashes/utils.js';
 
 /**
  * The app's device verification (src/account/deviceProof.ts) wired to React Native: pro builds only. The native module
@@ -37,6 +39,8 @@ export function deviceProof(): DeviceProof | null {
       platform: Platform.OS === 'ios' ? 'ios' : Platform.OS === 'android' ? 'android' : 'other',
       module: nativeModule,
       config: async () => (await serverFlags(baseUrl)).deviceCheck,
+      // expo-crypto (secureRandom.native.ts): React Native has no global `crypto`, which left every proof without a nonce.
+      random: () => bytesToHex(fillRandom(new Uint8Array(16))),
       post: (path, body) => api.request({ method: 'POST', path, body }),
       keys: {
         async get() {
