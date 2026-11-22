@@ -79,6 +79,8 @@ export interface Charge {
 export const APP_VERSION_HEADER = 'X-Qutai-App-Version';
 const CONFIG_TIMEOUT_MS = 10_000;
 const CREDITS_TIMEOUT_MS = 15_000;
+/** The server gives the provider 30 s. */
+const INTRO_TIMEOUT_MS = 40_000;
 /** The server waits up to 10 s for RevenueCat. */
 const VERIFY_TIMEOUT_MS = 20_000;
 /** Refusals worth waiting for (our own previous step still settling, a short rate limit, a busy provider). */
@@ -350,8 +352,55 @@ export function createCreditsClient(options: CreditsClientOptions) {
     }
   }
 
-  return { config, credits, relayStream, relayJson, verifyPurchase };
+  /**
+   * `POST /relay/intro`: the free introduction (backend README › Relay › Introduction). The server owns the
+   * instructions; this sends only the user's words. Resolves with the server's answer as received (the caller reads it
+   * as strictly as a model's answer); rejects with a RelayError on any refusal, or the abort error when `signal` ends.
+   */
+  async function intro(body: IntroRequestBody, signal: AbortSignal): Promise<unknown> {
+    const controller = new AbortController();
+    const stop = () => controller.abort();
+    signal.addEventListener('abort', stop);
+    const timer = setTimeout(stop, INTRO_TIMEOUT_MS);
+    try {
+      const res = await authorized(async (token) =>
+        fetchImpl(`${base}/relay/intro`, {
+          method: 'POST',
+          headers: {
+            ...(options.deviceProof ? await options.deviceProof.headers('POST', '/relay/intro', true) : {}),
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            Authorization: `Bearer ${token}`,
+            [APP_VERSION_HEADER]: options.appVersion,
+          },
+          body: wellFormedJson(body),
+          signal: controller.signal,
+        }),
+      );
+      if (!res.ok) {
+        const error = await errorFrom(res);
+        options.deviceProof?.observe(res.status, res.headers, error.reason ?? null);
+        throw error;
+      }
+      options.deviceProof?.observe(res.status, res.headers, null);
+      return await readJson(res);
+    } catch (e) {
+      if (signal.aborted) throw abortError();
+      if (e instanceof RelayError) throw e;
+      throw new RelayError(controller.signal.aborted ? 'timeout' : 'network', 0);
+    } finally {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', stop);
+    }
+  }
+
+  return { config, credits, relayStream, relayJson, verifyPurchase, intro };
 }
+
+/** `POST /relay/intro` body: the user's words only (backend packages/shared/src/intro.ts). */
+export type IntroRequestBody =
+  | { round: 'introduction'; language: string; text: string }
+  | { round: 'answers'; language: string; answers: { about: string; text: string }[] };
 
 /** A refusal of `POST /purchases/verify`, with the server's own code (`purchase_not_found`, `purchase_rejected`…). */
 async function verifyError(res: Response): Promise<VerifyAnswer> {

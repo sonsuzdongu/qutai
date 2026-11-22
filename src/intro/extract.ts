@@ -178,7 +178,24 @@ export class ExtractionError extends Error {
 export function parseExtraction(reply: string, sent: string): Extraction {
   const parsed = firstObject(reply);
   if (parsed === null) throw new ExtractionError('unreadable');
-  if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new ExtractionError('shape');
+  return readAnswer(parsed, sent);
+}
+
+/**
+ * The free introduction's answer (`POST /relay/intro`, backend README › Relay › Introduction): already facts the server
+ * checked (it returns only what the user plainly said, so `stated` is implied), read here by the same rules as a
+ * model's answer, against the same text.
+ */
+export function parseServerExtraction(answer: unknown, sent: string): Extraction {
+  if (!answer || typeof answer !== 'object' || Array.isArray(answer)) throw new ExtractionError('shape');
+  const a = answer as Record<string, unknown>;
+  if (!Array.isArray(a.items)) throw new ExtractionError('shape');
+  const items = a.items.map((item) => (item && typeof item === 'object' && !Array.isArray(item) ? { ...item, stated: true } : item));
+  return readAnswer({ items, none: a.none, declined: a.declined }, sent);
+}
+
+function readAnswer(parsed: unknown, sent: string): Extraction {
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) throw new ExtractionError('shape');
   const answer = parsed as Record<string, unknown>;
   if (!Array.isArray(answer.items)) throw new ExtractionError('shape');
 

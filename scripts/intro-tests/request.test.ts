@@ -49,3 +49,59 @@ test('an unreadable answer is an ExtractionError; a provider error passes throug
   const failing = { call: async () => { throw new Error('401 invalid key'); } } as unknown as Provider;
   await assert.rejects(understand(target('openai'), TRANSCRIPT, 'en', new AbortController().signal, failing), /invalid key/);
 });
+
+// ---- The free introduction (POST /relay/intro, backend README › Relay › Introduction) ----
+
+const SERVER_ANSWER = {
+  items: [
+    { topic: 'name', value: 'Deniz', quote: "I'm Deniz" },
+    { topic: 'allergy', value: 'peanuts', quote: 'allergic to peanuts' },
+    // The app checks again: a quote the user didn't say is dropped even when the server sent it.
+    { topic: 'city', value: 'Izmir', quote: 'I live in Izmir' },
+  ],
+  none: ['diet'],
+  declined: [],
+  remaining: 2,
+};
+
+test('Qutai Credits: the free introduction is used first, and the credits relay is not called', async () => {
+  const { provider, sent } = stand(ANSWER);
+  const bodies: unknown[] = [];
+  const found = await understand(target('qutai'), TRANSCRIPT, 'en', new AbortController().signal, provider, TRANSCRIPT, {
+    call: async (body) => (bodies.push(body), SERVER_ANSWER),
+    body: { round: 'introduction', language: 'en', text: TRANSCRIPT },
+  });
+  assert.deepEqual(bodies, [{ round: 'introduction', language: 'en', text: TRANSCRIPT }]);
+  assert.equal(sent.length, 0);
+  assert.deepEqual(found.items.map((i) => `${i.topic}=${i.value}`), ['name=Deniz', 'allergy=peanuts']);
+  assert.deepEqual(found.none, ['diet']);
+});
+
+test('Qutai Credits: any refusal of the free introduction falls back to the credits relay, as before', async () => {
+  for (const failure of [new Error('intro_quota_used'), new Error('network')]) {
+    const { provider, sent } = stand(ANSWER);
+    const found = await understand(target('qutai'), TRANSCRIPT, 'en', new AbortController().signal, provider, TRANSCRIPT, {
+      call: async () => {
+        throw failure;
+      },
+      body: { round: 'introduction', language: 'en', text: TRANSCRIPT },
+    });
+    assert.equal(sent.length, 1);
+    assert.deepEqual(found.items.map((i) => i.value), ['Deniz', 'yer fıstığı']);
+  }
+  // No signed-in client: straight to the relay.
+  const { provider, sent } = stand(ANSWER);
+  await understand(target('qutai'), TRANSCRIPT, 'en', new AbortController().signal, provider, TRANSCRIPT, { call: null, body: { round: 'introduction', language: 'en', text: TRANSCRIPT } });
+  assert.equal(sent.length, 1);
+});
+
+test('own key: the free introduction is never used', async () => {
+  const { provider, sent } = stand(ANSWER);
+  let called = false;
+  await understand(target('anthropic'), TRANSCRIPT, 'en', new AbortController().signal, provider, TRANSCRIPT, {
+    call: async () => ((called = true), SERVER_ANSWER),
+    body: { round: 'introduction', language: 'en', text: TRANSCRIPT },
+  });
+  assert.equal(called, false);
+  assert.equal(sent.length, 1);
+});

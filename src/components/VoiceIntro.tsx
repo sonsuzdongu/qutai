@@ -31,7 +31,8 @@ import { canSubmit, finalExtraction, hasBack, introReducer, leavesFlow, pendingA
 import type { FollowUp, FollowUpAnswer } from '../intro/followUps';
 import { FillFromLocation } from './FillFromLocation';
 import { introWrites, reviewRows, withReplacements, withStyleLine, type ReviewRow } from '../intro/items';
-import { understand, type IntroTarget } from '../intro/request';
+import { understand, type FreeIntro, type IntroTarget } from '../intro/request';
+import { freeIntro } from '../credits';
 import { getDb } from '../storage/db';
 import { addMemory, deleteMemory, listMemories, updateMemory } from '../storage/memory';
 import { GradientButton } from '../ui/BrandGradient';
@@ -207,7 +208,18 @@ export function VoiceIntro({ ai, voice, onInstructions, onExit, transition, regi
         : answersTurn(pending.map((p) => ({ about: p.question.about, text: p.text })));
     const quotes = round === 1 ? text : pending.map((p) => p.text).join('\n');
     AccessibilityInfo.announceForAccessibility(t(round === 1 ? 'voiceIntro.understanding' : 'voiceIntro.understandingAnswers'));
-    understand(ai, text, getLanguage(), controller.signal, getProvider(ai.provider), quotes)
+    const language = getLanguage();
+    const free: FreeIntro | undefined =
+      ai.provider === 'qutai'
+        ? {
+            call: freeIntro(),
+            body:
+              round === 1
+                ? { round: 'introduction', language, text }
+                : { round: 'answers', language, answers: pending.map((p) => ({ about: p.question.id, text: p.text })) },
+          }
+        : undefined;
+    understand(ai, text, language, controller.signal, getProvider(ai.provider), quotes, free)
       .then((result) => {
         if (!controller.signal.aborted) dispatch({ type: 'understood', result }, 'result');
       })

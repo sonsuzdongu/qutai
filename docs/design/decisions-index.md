@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 861 decisions (135 owner, 645 default, 81 waiting); 163 ids moved to Details.
+Totals: 863 decisions (137 owner, 645 default, 81 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -932,6 +932,7 @@ Moved to Details (ids retired, not reused): `WORK-4`, `WORK-8`, `WORK-11`, `WORK
 | `INTRO-20` | Today own-key users get no sign-in step in setup. | **Waiting** |  |
 | `INTRO-21` | Today the welcome and legal summary say "Private by design" / "we have no servers"; these must be… | **Waiting** |  |
 | `INTRO-23` | An official-build step asking for anonymous usage data is planned, not built. | Default |  |
+| `INTRO-33` | With Qutai Credits the introduction is free (3 per account, server-owned prompt, facts only); any refusal falls back to the credits relay. | Owner | 2026-11-22 |
 | `INTRO-32` | iOS: Settings › Search has no "Make Qutai your default browser" row until Apple grants the web-browser entitlement; Android unchanged. | Owner | 2026-11-21 |
 | `INTRO-31` | The city question has "Use my location" wherever setup asks it; the permission only on that tap; district, city… | Owner | 2026-11-20 |
 | `INTRO-30` | Setup has no "Make Qutai your default browser" step; protection is the last step; the option is in Settings › Search. | Owner | 2026-11-20 |
@@ -1065,6 +1066,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-46` | The account prunes retry-only rows daily: relay keys and finished reservations after 30 days, other keys after 400; never the ledger. | Default | 2026-11-20 |
 | `CRED-47` | Qutai's server relays Anthropic only (seam kept); own OpenAI, Gemini, OpenRouter and custom keys in the app are unaffected. | Owner | 2026-11-20 |
 | `CRED-48` | A step the balance can't hold is shortened to fit (fewer searches down to 1, then output down to `minOutputTokens`), refused only below that. | Owner | 2026-11-22 |
+| `CRED-49` | The free introduction runs on its own key and table: no credits, apart from paid usage, counted in the spend limit; own Usage section. | Owner | 2026-11-22 |
 
 Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 

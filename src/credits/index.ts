@@ -8,7 +8,9 @@ import { creditsEnabled, features } from '../config/features';
 import { appVersion } from '../device/appVersion';
 import { getLanguage, t } from '../i18n';
 import { waitForForeground } from '../utils/foreground';
-import { createCreditsClient, type CreditsClient } from './client';
+import { createCreditsClient, type CreditsClient, type IntroRequestBody } from './client';
+import { INTRO_AUDIT } from '../intro/request';
+import { newSentId, recordSent } from '../storage/sentLog';
 import { formatCredits, separators } from './format';
 import { createCreditsProvider } from './provider';
 import { createCreditsStore, type CreditsState } from './store';
@@ -57,6 +59,38 @@ function getClient(): CreditsClient | null {
 function signedInClient(): CreditsClient | null {
   const session = accountSession();
   return session?.getState().status === 'signedIn' ? getClient() : null;
+}
+
+/**
+ * The free introduction (backend README › Relay › Introduction): null when there is no signed-in client, so the
+ * caller uses the credits relay as before.
+ */
+export function freeIntro(): ((body: IntroRequestBody, signal: AbortSignal) => Promise<unknown>) | null {
+  const c = signedInClient();
+  if (!c) return null;
+  return (body, signal) => {
+    // The user's words leave the phone: listed in "What was sent to the AI" like the relay's request (INTRO-9).
+    const text = body.round === 'introduction' ? body.text : body.answers.map((a) => a.text).join('\n');
+    const at = Date.now();
+    recordSent({
+      id: newSentId(at),
+      at,
+      provider: 'qutai',
+      model: '',
+      host: null,
+      conversation: INTRO_AUDIT,
+      items: [{ kind: 'message', chars: text.length }],
+      totalChars: text.length,
+      images: 0,
+      resentTurns: 0,
+      resentChars: 0,
+      webSearch: false,
+      research: false,
+      incognito: false,
+      content: [{ text }],
+    });
+    return c.intro(body, signal);
+  };
 }
 
 /** The signed-in client (purchases report through it); null while signed out or without credits. */
