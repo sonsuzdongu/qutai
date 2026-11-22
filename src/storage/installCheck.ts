@@ -30,6 +30,7 @@ const OTHER_KEYS = [
   // device/scriptKey.ts: the key that seals kept scripts and apps. Cleared so that after delete-and-reinstall a
   // restored backup's scripts and apps arrive switched off until the user approves them again (as on Android).
   'qutai.scriptSealKey',
+  'review_prompt', // device/reviewPrompt.ts: the days of use counted for the rating sheet (UI-41)
 ];
 
 export function allSecureStoreKeys(): string[] {

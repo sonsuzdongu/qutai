@@ -246,6 +246,7 @@ import { usePersistSession } from './src/storage/usePersistSession';
 import { useRecordHistory } from './src/storage/useRecordHistory';
 import { setIncognitoProbe } from './src/analytics';
 import { askAnalyticsConsentOnce } from './src/analytics/consentPrompt';
+import { maybeAskForReview } from './src/device/reviewPrompt';
 
 // The native splash stays until the first real frame is ready (src/ui/launch.ts).
 holdSplash();
@@ -2383,6 +2384,21 @@ function BrowserApp({
   useEffect(() => {
     if (consentReady) void askAnalyticsConsentOnce(() => browserInstance.active.incognito);
   }, [consentReady, browserInstance]);
+  // Pro mode: the system's rating sheet on the 3rd and the 30th day of use (UI-41), at the same calm moments, a little
+  // after the app comes to the front so it never lands on top of the first screen.
+  useEffect(() => {
+    if (!consentReady) return;
+    let timer = setTimeout(() => void maybeAskForReview(), 2500);
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state !== 'active') return;
+      clearTimeout(timer);
+      timer = setTimeout(() => void maybeAskForReview(), 2500);
+    });
+    return () => {
+      clearTimeout(timer);
+      sub.remove();
+    };
+  }, [consentReady]);
 
   return (
     <>
