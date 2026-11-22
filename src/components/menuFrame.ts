@@ -26,3 +26,16 @@ export function menuFrame(area: number, insetTop: number, insetBottom: number, k
 export function menuMaxWidth(width: number, insetLeft: number, insetRight: number) {
   return Math.max(0, width - insetLeft - insetRight - 2 * MARGIN);
 }
+
+/** Pixels of overflow that come from rounding (fractional row heights, hairline separators), not from a long menu. */
+const ROUNDING = 2;
+
+/**
+ * Whether the menu's list should scroll: only when its content (`content`, from onContentSizeChange) is really taller
+ * than the room it got (`viewport`, from onLayout). A menu that fits stays still instead of moving a pixel or two
+ * under the finger; until both are measured it scrolls, so a long menu is never stuck.
+ */
+export function menuScrolls(content: number | null, viewport: number | null) {
+  if (content === null || viewport === null) return true;
+  return content - viewport > ROUNDING;
+}

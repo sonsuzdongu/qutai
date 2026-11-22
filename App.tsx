@@ -2403,7 +2403,8 @@ function BrowserApp({
   return (
     <>
       <View style={[styles.container, (tab.incognito || darkMode) && styles.incognito]}>
-        <StatusBar style={tab.incognito || tabsVisible || darkMode ? 'light' : 'dark'} />
+        {/* The tab switcher sets its own while it is open (TabSwitcher.tsx). */}
+        <StatusBar style={tab.incognito || darkMode ? 'light' : 'dark'} />
         <SafeAreaView style={styles.flex} edges={['top', 'left', 'right', 'bottom']}>
           {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard: the page, and the address bar when it is at the bottom, stay above it. */}
           {barAtBottom ? (

@@ -862,6 +862,10 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-39` | Android: tapping the address bar always opens the keyboard; asked for again at 60/250/600 ms while focused with none showing | Default | 2026-11-21 |
 | `UI-40` | "Rate Qutai" opens the store's review page, never the in-app rating sheet. | Owner | 2026-11-22 |
 | `UI-41` | Pro mode asks for the system rating sheet on its own on the 3rd and the 30th day of use, once each. | Owner | 2026-11-23 |
+| `UI-42` | Android text without its own font family gets sans-serif (patched Text.js), so bold labels are measured and drawn alike. | Default | 2026-11-23 |
+| `UI-43` | The status bar follows the tab switcher: dark icons on the light switcher, light on dark and incognito. | Default | 2026-11-23 |
+| `UI-44` | The page menu scrolls only when its items are taller than its room (2 px rounding allowed). | Default | 2026-11-23 |
+| `UI-45` | Icons filled on iOS (`.fill`) are filled on Android with the filled Material Symbols font; the rest stay outlined. | Default | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

@@ -7,7 +7,7 @@ import { t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
 import { darkPalette, lightPalette, makeStyles, radii } from '../ui/theme';
 import { DialogHost } from './Dialog';
-import { menuFrame, menuMaxWidth } from './menuFrame';
+import { menuFrame, menuMaxWidth, menuScrolls } from './menuFrame';
 import { WholeWordsText } from './WholeWordsText';
 
 export type MenuItem = {
@@ -57,6 +57,9 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor 
     onClose();
   };
   const shown = sub?.submenu ?? items;
+  // The list's content and its own height: it scrolls only when the content is really taller (menuFrame.ts).
+  const [listContent, setListContent] = useState<number | null>(null);
+  const [listHeight, setListHeight] = useState<number | null>(null);
 
   return (
     <AppModal
@@ -112,7 +115,14 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor 
             ))}
           </View>
         )}
-        <ScrollView style={styles.list} bounces={false}>
+        <ScrollView
+          style={styles.list}
+          bounces={false}
+          overScrollMode="never"
+          scrollEnabled={menuScrolls(listContent, listHeight)}
+          onContentSizeChange={(_, h) => setListContent(h)}
+          onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
+        >
           {sub && (
             <Pressable
               onPress={() => setSub(null)}

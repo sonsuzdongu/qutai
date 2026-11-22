@@ -1,0 +1,32 @@
+diff --git a/node_modules/react-native/Libraries/Text/Text.js b/node_modules/react-native/Libraries/Text/Text.js
+index 4044f0f..549900f 100644
+--- a/node_modules/react-native/Libraries/Text/Text.js
++++ b/node_modules/react-native/Libraries/Text/Text.js
+@@ -281,6 +281,17 @@ const TextImpl: component(
+     return <NativeVirtualText {...processedProps} ref={forwardedRef} />;
+   }
+ 
++  // Qutai (patches/react-native+0.88.1.patch, docs/design/27-interface.md UI-42): on Android, Fabric measures a Text without a fontFamily with
++  // the bare default typeface but draws it with the typeface the TextView inherits from the theme. Where a phone's
++  // system font is swapped (ColorOS, HyperOS) and the app's theme differs from the phone's, the two disagree and bold
++  // labels lose their last letters. An explicit family makes both sides use the same typeface (react/react-native#58036).
++  if (
++    Platform.OS === 'android' &&
++    (processedStyle == null || processedStyle.fontFamily == null)
++  ) {
++    processedProps.style = [styles.androidFont, processedProps.style];
++  }
++
+   let nativeText = null;
+ 
+   processedProps.accessible = _accessible;
+@@ -549,6 +560,9 @@ const styles = StyleSheet.create({
+   default: {
+     overflow: 'hidden',
+   },
++  androidFont: {
++    fontFamily: 'sans-serif',
++  },
+ });
+ 
+ export default TextImpl;

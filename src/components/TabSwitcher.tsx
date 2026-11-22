@@ -11,6 +11,7 @@ import {
   View,
   type ViewProps,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { previewRatio, tabCardWidth, tabColumns } from '../ui/layout';
@@ -295,6 +296,9 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
 
   return (
     <SafeAreaView style={[styles.container, theme.container]}>
+      {/* Over the app's own while the switcher is open: dark icons on the light switcher, light on the dark and incognito
+          ones, following the incognito pane as it is switched (React Native restyles the modal's window too). */}
+      <StatusBar style={incognito || darkMode ? 'light' : 'dark'} />
       <View style={styles.header}>
         <View style={[styles.segment, theme.segment]}>
           <SegmentButton
