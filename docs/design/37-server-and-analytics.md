@@ -76,6 +76,8 @@ analytics, and how the owner makes pro test builds.
   Status: Default (code review, 20 Nov 2026) · Why: what runs in production should be known and tested · Enforced: Server: scripts/deploy-prod.mjs (preflight, deployRecord); apps/admin/worker/api/overview.ts · Source: backend/DESIGN.md › Review fixes (20 Nov 2026); code review of 20 Nov 2026
 - **`SRV-27`** ~~Test ("fake") purchases exist only through one seam (`TEST_STORES` and its helpers in `backend/packages/shared/src/purchases.ts`), so removing them before launch is taking back their credits, one migration and one delete (written in backend/DESIGN.md › Review fixes › Fake purchases seam). Nothing is removed yet.~~ Withdrawn 2026-11-21: the removal was done through the seam as planned (migration 0015; `TEST_STORES`, `RECORDED_STORES`, `isTestStore` and `testStoreSql` are gone, `realStoreSql` stays as a plain Apple-or-Google guard; backend/DESIGN.md › Fake purchases removed).
   Status: Withdrawn 2026-11-21 (owner); was: Default (code review, 20 Nov 2026) · Why: `fake` was spelled out in a D1 CHECK, the account's reference check, shared types, SQL filters and the panel · Enforced: Server: purchases.ts; a test ties the D1 CHECK to `RECORDED_STORES` · Source: backend/DESIGN.md › Review fixes (20 Nov 2026); code review of 20 Nov 2026
+- **`SRV-28`** Rate-limit refusals (per IP, per IP on sign-in routes, and the user's own task limits) are counted in each server instance's memory and written to the database as daily totals at most once a minute per instance, never one row per request; only the route is kept, never an IP address; kept 30 days; the admin panel's Abuse screen shows them with the flags (`CRED-34`).
+  Status: Default (backend step 9, part 1, 2026-11-22) · Why: an attack that is being refused must not turn into a database write per request · Enforced: Server: backend/apps/api/src/abuse/hits.ts; migration 0016 · Source: backend/DESIGN.md › Abuse protection (step 9)
 
 ## Details
 
@@ -85,7 +87,8 @@ analytics, and how the owner makes pro test builds.
 ## Limits and what is not built
 
 - Production is deployed (19 Nov 2026, `SRV-22`); never tried with real purchases (no RevenueCat yet) and only one provider.
-- Analytics events and the panel's charts (server step 7): not built (planned). Abuse protection (step 9) and legal
+- Analytics events and the panel's charts (server step 7): not built (planned). Abuse protection (step 9): flags and
+  rate-limit hits built (22 Nov 2026, `SRV-28`, `CRED-34`); device verification and trial-credit limits open. Legal
   work (step 10) open.
 - A crash-report service: not decided (see CRED-37).
 - App Store privacy labels and Play Data safety must describe the account data (identifiers and email linked to the

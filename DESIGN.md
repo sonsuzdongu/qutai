@@ -19,6 +19,7 @@ Last updated: 2026-11-22
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-22:** Abuse protection, part 1 (server and admin panel only, no app change): the server raises abuse flags itself (task limits refused 50 times in a day, a refund leaving a debt, 3 refunds in 90 days), the panel's Abuse screen shows rate-limit hits per day (counted in memory, written about once a minute, no IP kept) and resolves flags with a reason; a flag never blocks anything (`CRED-34` changed, `SRV-28`).
 - **2026-11-22:** Admin panel › Switch the model: the model id is a searchable list inside the dialog (fuzzy on the id and the readable name, keyboard, the chosen provider only) and now includes the model in use, marked "in use"; the browser's datalist popup left Haiku out because it skipped the current model (`CRED-40`).
 - **2026-11-22:** The privacy policy and terms (both builds, ten languages) name only the phone's own platform: on iOS no Google Play, Android or APK, on Android no App Store or iPhone (Apple 2.3.10); Sign in with Apple and Google and Google as an AI provider stay; the website copy names both stores; legal version not bumped (`LEGAL-28`).
 - **2026-11-22:** Android: the portrait and landscape screen features are declared optional; ML Kit's portrait-only scanner activities made Google Play require a portrait screen and refuse the 0.1.10 release (`LAND-12`).

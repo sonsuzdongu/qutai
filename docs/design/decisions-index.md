@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 859 decisions (134 owner, 644 default, 81 waiting); 163 ids moved to Details.
+Totals: 860 decisions (134 owner, 645 default, 81 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -61,7 +61,7 @@ The open questions, in one place (each row says what the app does today).
 | `CRED-25` | Today the deployed relay rules must allow memory of at least about 10 000 characters and 9 images per request; the local seed has these… | [34](34-credits-and-relay.md) |
 | `CRED-26` | Today a step holds its whole output limit and room for search results, so a small balance refuses cheaper requests (Haiku: ~2.2 / 13 / 71 credits)… | [34](34-credits-and-relay.md) |
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one admin role. | [34](34-credits-and-relay.md) |
-| `CRED-34` | Today abuse flags can't be marked resolved. | [34](34-credits-and-relay.md) |
+| `CRED-34` | Today the server raises abuse flags (task limits hit often, refund debt, many refunds) and the panel resolves them; thresholds are guesses. | [34](34-credits-and-relay.md) |
 | `CRED-35` | Today credit prices are the model's token price plus a margin; pack sizes, trial credits and per-user limits are open (credits never expire… | [34](34-credits-and-relay.md) |
 | `CRED-37` | Today there is no crash-report service. | [34](34-credits-and-relay.md) |
 | `CRED-38` | Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3 minutes, and not for incognito… | [34](34-credits-and-relay.md) |
@@ -1050,7 +1050,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-31` | Kill switches (per provider and global) make the relay "temporarily unavailable" without touching credits;… | Default |  |
 | `CRED-32` | The admin panel is reachable only through Cloudflare Access, checks the token itself (not its audience since 19 Nov) and, since 20 Nov, its own allowlist… | Default (audience: Owner) | 2026-11-19, changed 2026-11-20 |
 | `CRED-33` | Today the panel shows revenue gross (before the store's share), "active" means seen, and there is one… | **Waiting** |  |
-| `CRED-34` | Today abuse flags can't be marked resolved. | **Waiting** |  |
+| `CRED-34` | Today the server raises abuse flags (task limits hit often, refund debt, many refunds) and the panel resolves them; thresholds are guesses. | **Waiting** | changed 2026-11-22 |
 | `CRED-35` | Today credit prices are the model's token price plus a margin; pack sizes, trial credits, per-user limits… | **Waiting** | changed 2026-11-20 |
 | `CRED-36` | ~~The model that served an answer shows only in its cost details and the sent log~~ (withdrawn; `CRED-44`). | Withdrawn | 2026-11-20 |
 | `CRED-37` | Today there is no crash-report service. | **Waiting** |  |
@@ -1163,6 +1163,7 @@ Moved to Details (ids retired, not reused): `BACK-2`, `BACK-16`, `BACK-14`
 | `SRV-25` | One settings schema with defaults, bounds and cross-checks; reading fills and clamps, saving is strict. | Default | 2026-11-20 |
 | `SRV-26` | The deploy runs a preflight (committed, typecheck, tests) and records the deployed commits, shown on the Overview. | Default | 2026-11-20 |
 | `SRV-27` | ~~Test purchases only through one seam, so their removal is one migration and one delete~~ (withdrawn: removed that way). | Withdrawn | 2026-11-21 |
+| `SRV-28` | Rate-limit refusals are counted in memory and written as daily totals about once a minute per instance; no IP kept; 30 days. | Default | 2026-11-22 |
 
 Moved to Details (ids retired, not reused): `SRV-14`, `SRV-19`
 
