@@ -1903,7 +1903,7 @@ export const en = {
   'chat.emptyLeadPage':
     'Ask about this page or give me a task. I can read it, click, fill in forms and open other tabs.',
   'chat.emptyLeadWeb': 'Give me a task on the web. I search, compare and do the clicking for you.',
-  'settings.version': 'Version {version} (build {build})',
+  'settings.version': 'Version {version}',
   'voice.title': 'Voice input',
   'voice.start': 'Speak your message',
   'voice.holdHint': 'Hold to talk and lift your finger to stop, or tap to start and tap again to stop.',

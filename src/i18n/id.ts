@@ -1911,7 +1911,7 @@ export const id: Record<keyof typeof en, string> = {
   'chat.emptyLeadPage':
     'Tanyakan tentang halaman ini atau beri saya tugas. Saya dapat membacanya, mengklik, mengisi formulir, dan membuka tab lain.',
   'chat.emptyLeadWeb': 'Beri saya tugas di web. Saya menelusuri, membandingkan, dan melakukan klik untuk Anda.',
-  'settings.version': 'Versi {version} (build {build})',
+  'settings.version': 'Versi {version}',
   'voice.title': 'Input suara',
   'voice.start': 'Ucapkan pesan Anda',
   'voice.holdHint': 'Tahan untuk berbicara dan angkat jari untuk berhenti, atau ketuk untuk mulai dan ketuk lagi untuk berhenti.',

@@ -1911,7 +1911,7 @@ export const fr: Record<keyof typeof en, string> = {
   'chat.emptyLeadPage':
     'Posez une question sur cette page ou confiez-moi une tâche. Je peux la lire, cliquer, remplir des formulaires et ouvrir d’autres onglets.',
   'chat.emptyLeadWeb': 'Confiez-moi une tâche sur le web. Je recherche, je compare et je clique à votre place.',
-  'settings.version': 'Version {version} (build {build})',
+  'settings.version': 'Version {version}',
   'voice.title': 'Saisie vocale',
   'voice.start': 'Dicter votre message',
   'voice.holdHint': 'Maintenez appuyé pour parler et relâchez pour arrêter, ou appuyez pour commencer et appuyez à nouveau pour arrêter.',

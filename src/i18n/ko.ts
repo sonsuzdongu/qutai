@@ -1910,7 +1910,7 @@ export const ko: Record<keyof typeof en, string> = {
   'chat.emptyLeadPage':
     '이 페이지에 대해 묻거나 작업을 맡겨 주세요. 페이지를 읽고, 클릭하고, 양식을 작성하고, 다른 탭을 열 수 있습니다.',
   'chat.emptyLeadWeb': '웹에서 할 작업을 맡겨 주세요. 검색하고 비교하고 클릭도 대신 해 드립니다.',
-  'settings.version': '버전 {version}(빌드 {build})',
+  'settings.version': '버전 {version}',
   'voice.title': '음성 입력',
   'voice.start': '음성으로 메시지 입력',
   'voice.holdHint': '길게 누른 채 말하고 손가락을 떼면 멈춥니다. 또는 탭하여 시작하고 다시 탭하여 멈추세요.',

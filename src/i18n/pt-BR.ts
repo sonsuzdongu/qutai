@@ -1912,7 +1912,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'chat.emptyLeadPage':
     'Pergunte sobre esta página ou me dê uma tarefa. Posso lê-la, clicar, preencher formulários e abrir outras guias.',
   'chat.emptyLeadWeb': 'Me dê uma tarefa na web. Eu pesquiso, comparo e clico por você.',
-  'settings.version': 'Versão {version} (build {build})',
+  'settings.version': 'Versão {version}',
   'voice.title': 'Entrada de voz',
   'voice.start': 'Falar sua mensagem',
   'voice.holdHint': 'Segure para falar e solte o dedo para parar, ou toque para começar e toque de novo para parar.',

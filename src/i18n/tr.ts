@@ -1906,7 +1906,7 @@ export const tr: Record<keyof typeof en, string> = {
   'chat.emptyLeadPage':
     'Bu sayfayla ilgili sorun ya da bir görev verin. Okuyabilir, tıklayabilir, form doldurabilir ve başka sekmeler açabilirim.',
   'chat.emptyLeadWeb': 'Web’de bir görev verin. Sizin için arar, karşılaştırır ve tıklamaları yaparım.',
-  'settings.version': 'Sürüm {version} (derleme {build})',
+  'settings.version': 'Sürüm {version}',
   'voice.title': 'Sesle yazma',
   'voice.start': 'Mesajınızı söyleyin',
   'voice.holdHint': 'Konuşmak için basılı tutun, bitince parmağınızı kaldırın; ya da dokunarak başlatıp yeniden dokunarak durdurun.',

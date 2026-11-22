@@ -1900,7 +1900,7 @@ export const de: Record<keyof typeof en, string> = {
   'chat.emptyLeadPage':
     'Fragen Sie etwas zu dieser Seite oder geben Sie mir eine Aufgabe. Ich kann sie lesen, klicken, Formulare ausfüllen und andere Tabs öffnen.',
   'chat.emptyLeadWeb': 'Geben Sie mir eine Aufgabe im Web. Ich suche, vergleiche und klicke für Sie.',
-  'settings.version': 'Version {version} (Build {build})',
+  'settings.version': 'Version {version}',
   'voice.title': 'Spracheingabe',
   'voice.start': 'Nachricht sprechen',
   'voice.holdHint': 'Zum Sprechen gedrückt halten und zum Beenden loslassen, oder zum Starten tippen und zum Beenden erneut tippen.',

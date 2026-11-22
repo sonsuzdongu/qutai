@@ -26,6 +26,8 @@ How Qutai's version (for example 0.1.1) and its store build number (for example 
   Status: Owner, 2026-11-17 · Why: the computed rule cannot drift if only one tool writes the numbers · Source: [docs/versioning.md](../../docs/versioning.md) › How; scripts/version/bump.mjs
 - **`VER-9`** The server's minimum app version must never be above the version of the builds people are using. Check it after lowering the app's version and before raising the minimum.
   Status: Default (manager or implementing session; open to change) · Why: when the app went from 1.0.0 to 0.1.0, the minimum of 1.0.0 seeded on the server locked every build out until it was set to 0.1.0 · Enforced: Server: backend relay/settings (`min_app_version`, answer `upgrade_required` 426) · Source: [docs/versioning.md](../../docs/versioning.md) › The server's minimum version; b563215, 9c5e1d8
+- **`VER-11`** Settings › About shows only the version (for example "Sürüm 0.1.15"), never the build number. The build number still goes to Qutai's server in the User-Agent (`DATA-23`).
+  Status: Owner, 2026-11-22 · Why: owner's request ("build numarayı gösterme, sadece versiyon yeterli"); the build number follows from the version anyway (`VER-1`) · Source: `settings.version` in src/i18n/*.ts, src/components/SettingsModal.tsx
 
 ## Details
 

@@ -31,5 +31,6 @@
   "scripts.codeLabel",
   "apps.nameLabel",
   "apps.versionLine",
-  "account.methodWithAddress"
+  "account.methodWithAddress",
+  "settings.version"
 ]

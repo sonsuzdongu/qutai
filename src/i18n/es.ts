@@ -1907,7 +1907,7 @@ export const es: Record<keyof typeof en, string> = {
   'chat.emptyLeadPage':
     'Pregunta sobre esta página o dame una tarea. Puedo leerla, hacer clic, completar formularios y abrir otras pestañas.',
   'chat.emptyLeadWeb': 'Dame una tarea en la web. Busco, comparo y hago los clics por ti.',
-  'settings.version': 'Versión {version} (compilación {build})',
+  'settings.version': 'Versión {version}',
   'voice.title': 'Entrada de voz',
   'voice.start': 'Dicta tu mensaje',
   'voice.holdHint': 'Mantén presionado para hablar y levanta el dedo para parar, o toca para empezar y vuelve a tocar para parar.',

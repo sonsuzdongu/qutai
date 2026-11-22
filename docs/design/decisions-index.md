@@ -1214,6 +1214,7 @@ Moved to Details (ids retired, not reused): `OSPERM-15`, `OSPERM-21`, `OSPERM-22
 | `VER-2` | The version is raised only when the owner explicitly says so. Test APKs, simulator builds and commits… | Owner | 2026-11-17 |
 | `VER-3` | Only `npm run version:bump` writes `version`, `buildNumber` and `versionCode`. Nobody edits them by hand. | Owner | 2026-11-17 |
 | `VER-9` | The server's minimum app version must never be above the version of the builds people are using. Check it… | Default |  |
+| `VER-11` | Settings › About shows only the version, never the build number. | Owner | 2026-11-22 |
 
 Moved to Details (ids retired, not reused): `VER-5`, `VER-6`, `VER-7`, `VER-4`, `VER-8`, `VER-10`
 

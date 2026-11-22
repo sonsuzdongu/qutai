@@ -1912,7 +1912,7 @@ export const ja: Record<keyof typeof en, string> = {
   'chat.emptyLeadPage':
     'このページについて質問するか、タスクを任せてください。ページを読んだり、クリックしたり、フォームに入力したり、ほかのタブを開いたりできます。',
   'chat.emptyLeadWeb': 'ウェブでのタスクを任せてください。検索、比較、クリック操作を代わりに行います。',
-  'settings.version': 'バージョン {version}（ビルド {build}）',
+  'settings.version': 'バージョン {version}',
   'voice.title': '音声入力',
   'voice.start': 'メッセージを音声で入力',
   'voice.holdHint': '長押ししながら話し、指を離すと停止します。または、タップで開始し、もう一度タップすると停止します。',
