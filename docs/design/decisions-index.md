@@ -1056,7 +1056,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-37` | Today there is no crash-report service. | **Waiting** |  |
 | `CRED-38` | Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3… | **Waiting** |  |
 | `CRED-39` | No tier choice in the app: every Qutai Credits request uses the tier `/config` marks as default; stored… | Owner | 2026-11-20 |
-| `CRED-40` | One model for every task (Claude Haiku 5.5), one tier `standard` with aliases `fast` and `pro`; switched in the panel only, priced first… | Owner | 2026-11-20 |
+| `CRED-40` | One model for every task (Claude Haiku 5.5), one tier `standard` with aliases `fast` and `pro`; switched in the panel only (searchable list), priced first… | Owner | 2026-11-20 |
 | `CRED-41` | "Check prices" reads Anthropic's pricing page as a proposal only; strict parser, refuses when unsure, saves nothing until accepted. | Owner | 2026-11-20 |
 | `CRED-42` | Margin set in the panel as a percentage with a live example; first values 100 credits per dollar and 100 %. | Owner | 2026-11-20 |
 | `CRED-43` | Every panel setting is a form in human units with "What will change"; JSON only under Advanced; emergency controls first. | Owner | 2026-11-20 |
