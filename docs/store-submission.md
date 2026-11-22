@@ -3,7 +3,7 @@
 Bu dosya, Qutai'ın pro derlemesini App Store'a ve Google Play'e gönderirken yapılacakları tek yerde toplar: inceleme ekibine yazılacak notlar (kopyalayıp yapıştırılacak İngilizce metin), App Store Connect'te ve Play Console'da doldurulacak alanlar, gönderimden önce ve sonra sunucuda açılıp kapatılacaklar.
 
 - **Dayanak:** [store-review-risks.md](store-review-risks.md) (21 Kasım 2026; kuralların bağlantıları ve gerekçeleri orada). Madde numaraları (1.4, 2.2 …) o rapora aittir.
-- **Durum:** 21 Kasım 2026, 0.1.9 (109). Bir madde değişirse bu dosyayı da güncelleyin.
+- **Durum:** 22 Kasım 2026, 0.1.13 (113). Bir madde değişirse bu dosyayı da güncelleyin.
 - **İşaretler:** ☐ yapılacak · ⚠ yazmadan önce koşulu sağlanmalı · ⛔ henüz yapılmadı, bu hâliyle gönderilirse ret riski var.
 
 ---
@@ -56,7 +56,7 @@ PAGE SCRIPTS AND STYLES (Guideline 2.5.2)
 Scripts and styles run only inside web pages the user opens, after the user sees the code and approves it. Scripts are off until the user turns them on in Settings › Assistant. They never change the app's own functionality, and no code comes from our servers.
 
 PRIVACY
-Location, contacts and calendar are asked for only when the user uses that feature. Contact numbers and email addresses are never sent to the AI. Before the first request, the user accepts a screen naming where the data goes (Qutai's server and Anthropic for Qutai Credits, or the provider of the user's own key, or the host of their own server) and what is sent; Cancel sends nothing. With an own key the screen is shown again for a different provider or server. "What was sent to the AI" in Settings lists every request.
+Location, contacts and calendar are asked for only when the user uses that feature. Contact numbers and email addresses are never sent to the AI. Anonymous usage statistics are sent only if the user allows them (asked once, Allow and Don't allow of equal weight; Settings › Privacy to turn off); they are not linked to the account. The app checks with Apple App Attest / Google Play Integrity that requests come from the genuine app (fraud prevention). No tracking or ads. Before the first request, the user accepts a screen naming where the data goes (Qutai's server and Anthropic for Qutai Credits, or the provider of the user's own key, or the host of their own server) and what is sent; Cancel sends nothing. With an own key the screen is shown again for a different provider or server. "What was sent to the AI" in Settings lists every request.
 
 OWN API KEY (optional)
 Users may instead use their own API key with an AI provider they already have an account with. This does not unlock any paid feature of Qutai.
@@ -130,7 +130,7 @@ Eklemeden önce:
 | Device ID (cihaz doğrulaması: App Attest anahtar kimliği; `SRV-29`) | Collected (zaten beyanlı) | App Functionality (sahtekârlık önleme) | Hayır | Hayır |
 
 - ATT izni gerekmez (reklam ve izleme yok; analitik reklam kimliği kullanmaz ve uygulamalar arası izleme yapmaz).
-- ☐ Analitik: sunucuda `analytics` ayarı **kapalı** olsa bile beyanı ekleyin; uygulama sürümünde kod var ve açıldığında
+- ✅ Analitik (22 Kasım 2026, yayımlandı): App Privacy'de Product Interaction · Analytics · kimliğe bağlı değil · izleme yok. Sürüm sayfasında açıklamanın "No analytics" satırı "Optional anonymous usage statistics, only if you allow them; no tracking or advertising" oldu, inceleme notlarına izinli istatistik ve App Attest cümlesi eklendi. Not: sunucuda `analytics` ayarı **kapalı** olsa bile beyan kalmalı; uygulama sürümünde kod var ve açıldığında
   veri toplanır. Pro derlemenin gizlilik manifestosu da bunu listeliyor (`plugins/withProAccounts.js`: Product Interaction,
   hesaba bağlı değil, amaç Analytics).
 - ✅ Pro derlemenin gizlilik manifestosu toplanan veri türlerini listeliyor (`plugins/withProAccounts.js`, `OSPERM-26`): e-posta, kullanıcı kimliği, cihaz kimliği, satın alma geçmişi, diğer kullanıcı içeriği, diğer kullanım verisi. App Store Connect › App Privacy'de bugün "Other User Content" **yok**; ekleyip yayımlayın, yoksa manifest ile etiket uyuşmaz.
@@ -167,6 +167,7 @@ Eklemeden önce:
 - **İsteğe bağlı:** konum; takvim; kişiler (isim AI'a gidiyorsa). Ses: Qutai yalnızca metni alır; tanıma telefonun ya da Google'ın hizmetinde.
 - **Paylaşım:** Anthropic ve RevenueCat sizin adınıza işleyen hizmet sağlayıcıları; Play'in tanımına göre "sharing" sayılmaz. Kendi anahtar modunda veri kullanıcının kendi seçtiği sağlayıcıya gider. Kesin cevabı hukukçunuzla netleştirin.
 - **Web gezintisi:** tarama geçmişi telefonda kalıyor; beyan gerekmez.
+- ✅ **22 Kasım 2026, kaydedildi; Publishing overview'dan Google'a gönderilmesi bekliyor:** App interactions'a Analytics amacı, Device or other IDs'e Fraud prevention amacı eklendi.
 - **İsteğe bağlı (22 Kasım 2026):** App activity › **App interactions** (anonim kullanım olayları; kullanıcı izin
   verirse; amaç **Analytics**; paylaşım yok; hesaba bağlı değil, `SRV-31`).
 - **Cihaz doğrulaması (`SRV-29`):** Play Integrity jetonu Google'a gider ve sunucu sonucu bir saat oturumla saklar:
