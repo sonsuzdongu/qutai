@@ -243,6 +243,7 @@
       ],
       "./plugins/withLaunchBackground",
       "./plugins/withOrientations",
+      "./plugins/withPreparedTextLayout",
       [
         "expo-contacts",
         {

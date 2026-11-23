@@ -871,6 +871,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-46` | A live theme switch measures and draws Android labels anew: family alias and view key follow the native scheme. | Default | 2026-11-23 |
 | `UI-47` | The page menu is a fixed 230 pt wide and laid out in the room between the bars, so its rows are measured as drawn and it scrolls only when the room is full. | Default | 2026-11-23 |
 | `UI-48` | Everything follows the app's theme through the palette (incognito always dark); toasts sit above every bar; listed exceptions over photos, video, camera and brand art; a test stops new literal colours. | Default | 2026-11-23 |
+| `UI-49` | Android draws each text from the layout that was measured (prepared text layout, config plugin), so text never comes out wider than its box. | Default | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 
