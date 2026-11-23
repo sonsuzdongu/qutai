@@ -2101,6 +2101,8 @@ function BrowserApp({
       ? creditsLabel(creditsState.balance)
       : null;
   const barAtBottom = settings.addressBarPosition === 'bottom';
+  // The bottom address bar's height, so a toast stays above it (UI-48).
+  const [bottomBarHeight, setBottomBarHeight] = useState(0);
   coveredRef.current = panelOpen || settingsVisible || tabsVisible || screen?.kind === 'library' || tasksScreen !== null;
   // The step strip's line: the running conversation's latest step line, in the user's language.
   const stripSource = runningChat ? currentStripLine(runningChat.items.slice(-12)) : 'thinking';
@@ -2409,7 +2411,7 @@ function BrowserApp({
           {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard: the page, and the address bar when it is at the bottom, stay above it. */}
           {barAtBottom ? (
             <KeyboardAvoidingContainer style={styles.flex}>
-              <HidingBar position="bottom" hidden={hideBar} bar={barArea}>
+              <HidingBar position="bottom" hidden={hideBar} bar={barArea} onBarHeight={setBottomBarHeight}>
                 <View style={styles.flex}>{pageContent}</View>
               </HidingBar>
             </KeyboardAvoidingContainer>
@@ -2669,7 +2671,8 @@ function BrowserApp({
         />
         <DownloadIndicator
           store={downloads}
-          bottomOffset={barAtBottom ? 64 : 16}
+          // Above the address bar at the bottom while it shows, measured rather than guessed (UI-48).
+          bottomOffset={(barAtBottom && !hideBar ? bottomBarHeight : 0) + 16}
           onOpen={() => openScreen({ kind: 'downloads' })}
           onOpenFile={(item) => void openDownload(downloads, item, toast.show)}
         />
@@ -2707,11 +2710,12 @@ function BrowserApp({
           onClose={() => setIncoming(null)}
         />
         <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
-        <CaptureOverlay />
+        <CaptureOverlay bottomInset={barAtBottom && !hideBar ? bottomBarHeight : 0} dark={tab.incognito} />
         <PdfReaderHost />
         <PushToTalkBubble
           bubble={ptt.bubble}
           barAtBottom={barAtBottom}
+          dark={tab.incognito}
           onOpenPanel={() => setPanelOpen(true)}
           onSend={ptt.handlers.release}
           onCancel={ptt.handlers.cancel}
@@ -2726,7 +2730,15 @@ function BrowserApp({
           onOpenAssistant={() => setPanelOpen(true)}
           onDismiss={dismissIntro}
         />
-        <Toast key={toast.key} message={toast.message} action={toast.action} onHidden={toast.hide} />
+        <Toast
+          key={toast.key}
+          message={toast.message}
+          action={toast.action}
+          onHidden={toast.hide}
+          // Above the address bar at the bottom while it shows (it slides away while a page scrolls, UI-36).
+          bottomInset={barAtBottom && !hideBar && !tabsVisible ? bottomBarHeight : 0}
+          dark={tab.incognito}
+        />
         <DialogHost root />
       </View>
     </>

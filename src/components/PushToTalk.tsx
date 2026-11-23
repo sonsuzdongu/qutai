@@ -29,7 +29,7 @@ import { languageLabel, spokenLanguageName } from '../device/voiceLanguage';
 import { t } from '../i18n';
 import { ListeningLook } from './AssistantGlass';
 import { useReduceMotion } from '../utils/useReduceMotion';
-import { radii } from '../ui/theme';
+import { makeStyles, radii } from '../ui/theme';
 
 /**
  * Push-to-talk on the Qutai button: hold it, speak, lift the finger, and the words go to the conversation of the tab
@@ -389,6 +389,7 @@ export function PushToTalkBubble({
   onSend,
   onCancel,
   onDismiss,
+  dark = false,
 }: {
   bubble: Bubble;
   barAtBottom: boolean;
@@ -396,8 +397,13 @@ export function PushToTalkBubble({
   onSend: () => void;
   onCancel: () => void;
   onDismiss: () => void;
+  /** Always dark (an incognito tab); otherwise the app's theme (UI-48). */
+  dark?: boolean;
 }) {
   const { width, height } = useWindowDimensions();
+  const styles = useStyles(dark);
+  // While a release would cancel, the bubble turns red and its text white.
+  const red = bubble.cancelling;
   const insets = useSafeAreaInsets();
   const reduceMotion = useReduceMotion();
   const info = useVoiceInfo();
@@ -495,26 +501,26 @@ export function PushToTalkBubble({
             style={[styles.dot, bubble.phase !== 'listening' && styles.dotWaiting, { transform: [{ scale: pulse }] }]}
           />
         ) : null}
-        <Text style={styles.status} numberOfLines={2}>
+        <Text style={[styles.status, red && styles.onDanger]} numberOfLines={2}>
           {status}
         </Text>
         {ownLang && recording ? (
           <View
-            style={styles.tag}
+            style={[styles.tag, red && styles.tagOnDanger]}
             accessible
             accessibilityLabel={t('voice.languageTagLabel', { language: spokenLanguageName(ownLang) })}
           >
-            <Text style={styles.tagText}>{languageLabel(ownLang)}</Text>
+            <Text style={[styles.tagText, red && styles.onDanger]}>{languageLabel(ownLang)}</Text>
           </View>
         ) : null}
       </View>
       {bubble.transcript && bubble.phase !== 'nothing' ? (
-        <Text style={styles.transcript} numberOfLines={4} ellipsizeMode="head">
+        <Text style={[styles.transcript, red && styles.onDanger]} numberOfLines={4} ellipsizeMode="head">
           {bubble.transcript}
         </Text>
       ) : null}
       {fellBackFrom && ownLang && recording ? (
-        <Text style={styles.note}>
+        <Text style={[styles.note, red && styles.onDanger]}>
           {t('voice.fellBack', { wanted: spokenLanguageName(fellBackFrom), language: spokenLanguageName(ownLang) })}
         </Text>
       ) : null}
@@ -522,8 +528,10 @@ export function PushToTalkBubble({
         <View style={styles.buttons}>
           {bubble.phase === 'busy' ? (
             <>
-              <BubbleButton label={t('common.close')} onPress={onDismiss} />
+              <BubbleButton dark={dark} red={red} label={t('common.close')} onPress={onDismiss} />
               <BubbleButton
+                dark={dark}
+                red={red}
                 label={t('ptt.open')}
                 primary
                 onPress={() => {
@@ -534,8 +542,8 @@ export function PushToTalkBubble({
             </>
           ) : (
             <>
-              <BubbleButton label={t('common.cancel')} onPress={onCancel} />
-              <BubbleButton label={t('common.send')} primary onPress={onSend} />
+              <BubbleButton dark={dark} red={red} label={t('common.cancel')} onPress={onCancel} />
+              <BubbleButton dark={dark} red={red} label={t('common.send')} primary onPress={onSend} />
             </>
           )}
         </View>
@@ -544,7 +552,20 @@ export function PushToTalkBubble({
   );
 }
 
-function BubbleButton({ label, primary, onPress }: { label: string; primary?: boolean; onPress: () => void }) {
+function BubbleButton({
+  label,
+  primary,
+  onPress,
+  dark,
+  red,
+}: {
+  label: string;
+  primary?: boolean;
+  onPress: () => void;
+  dark: boolean;
+  red: boolean;
+}) {
+  const styles = useStyles(dark);
   return (
     <Pressable
       onPress={onPress}
@@ -552,13 +573,13 @@ function BubbleButton({ label, primary, onPress }: { label: string; primary?: bo
       accessibilityRole="button"
       style={({ pressed }) => [styles.button, pressed && styles.pressed]}
     >
-      <Text style={[styles.buttonText, primary && styles.primary]}>{label}</Text>
+      <Text style={[styles.buttonText, primary && styles.primary, red && styles.onDanger]}>{label}</Text>
     </Pressable>
   );
 }
 
-// One look in every theme, like the toast: dark and translucent over any page.
-const styles = StyleSheet.create({
+// The app's theme, like the toast (UI-48): a raised card of the theme's surface over any page; red while cancelling.
+const useStyles = makeStyles((c) => ({
   bubble: {
     position: 'absolute',
     zIndex: 50,
@@ -566,33 +587,37 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: radii.popover,
-    backgroundColor: 'rgba(30,30,30,0.94)',
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
     gap: 6,
     ...Platform.select({
       ios: { shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 4 } },
     }),
   },
-  cancelling: { backgroundColor: 'rgba(150,32,32,0.95)' },
+  cancelling: { backgroundColor: c.dangerFill, borderColor: c.dangerFill },
+  onDanger: { color: c.onTint },
   header: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#ff5a5a' },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: c.danger },
   dotWaiting: { opacity: 0.5 },
-  status: { flex: 1, color: '#ffffff', fontSize: 14, fontWeight: '600' },
+  status: { flex: 1, color: c.text, fontSize: 14, fontWeight: '600' },
   tag: {
     minWidth: 28,
     height: 20,
     paddingHorizontal: 5,
     borderRadius: 5,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.5)',
+    borderColor: c.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tagText: { color: '#ffffff', fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  transcript: { color: '#f2f1f5', fontSize: 15, lineHeight: 20 },
-  note: { color: '#c9c8d0', fontSize: 12 },
+  tagOnDanger: { borderColor: c.onTint },
+  tagText: { color: c.text, fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+  transcript: { color: c.text, fontSize: 15, lineHeight: 20 },
+  note: { color: c.textSecondary, fontSize: 12 },
   buttons: { flexDirection: 'row', justifyContent: 'flex-end', gap: 18, marginTop: 2 },
   button: { paddingVertical: 4, paddingHorizontal: 4 },
   pressed: { opacity: 0.6 },
-  buttonText: { color: '#d8d7de', fontSize: 14, fontWeight: '600' },
-  primary: { color: '#8ab4f8' },
-});
+  buttonText: { color: c.textSecondary, fontSize: 14, fontWeight: '600' },
+  primary: { color: c.tintText },
+}));

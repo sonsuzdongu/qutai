@@ -275,7 +275,7 @@ const useStyles = makeStyles((c) => ({
   codeContent: { padding: 10 },
   codeText: { fontFamily: MONO, fontSize: 12.5, color: c.text },
   quote: { borderLeftWidth: 3, borderLeftColor: c.separator, paddingLeft: 10, gap: 4 },
-  hr: { height: StyleSheet.hairlineWidth, backgroundColor: '#d6d3c9', marginVertical: 4 },
+  hr: { height: StyleSheet.hairlineWidth, backgroundColor: c.border, marginVertical: 4 },
   // flexGrow 0: a horizontal ScrollView grows by default, which left a gap under tables on Android.
   table: { flexGrow: 0, borderRadius: 8, borderWidth: StyleSheet.hairlineWidth, borderColor: c.border },
   tableContent: { flexGrow: 1 },

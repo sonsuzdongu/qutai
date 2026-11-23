@@ -421,69 +421,72 @@ function TabSwitcherContent({ browser, onClose, onCompare }: Omit<Props, 'visibl
         onClose={() => setMenuGroup(null)}
       />
 
-      {undo && (
-        <View style={styles.undoBar} accessibilityLiveRegion="polite">
-          <Text style={styles.undoText}>
-            {undo.count === 1 ? t('tabs.closed') : t('tabs.closedCount', { count: undo.count })}
-          </Text>
-          <Pressable onPress={undoClose} hitSlop={8} accessibilityRole="button">
-            <Text style={styles.undoAction}>{t('tabs.undo')}</Text>
-          </Pressable>
-        </View>
-      )}
+      {/* The toolbar, with the undo bar standing on it (never behind it, at any text size or inset: UI-48). */}
+      <View>
+        {undo && (
+          <View style={[styles.undoBar, theme.card]} accessibilityLiveRegion="polite">
+            <Text style={[styles.undoText, theme.text]}>
+              {undo.count === 1 ? t('tabs.closed') : t('tabs.closedCount', { count: undo.count })}
+            </Text>
+            <Pressable onPress={undoClose} hitSlop={8} accessibilityRole="button">
+              <Text style={[styles.undoAction, theme.accent]}>{t('tabs.undo')}</Text>
+            </Pressable>
+          </View>
+        )}
 
-      {comparing ? (
-        <View style={[styles.toolbar, theme.toolbar]}>
-          <Pressable accessibilityRole="button" onPress={() => setComparing(null)} hitSlop={8} style={styles.toolbarCancel}>
-            <Text style={[styles.toolbarText, theme.text]} numberOfLines={1} maxFontSizeMultiplier={HEADER_FONT_SCALE}>
-              {t('common.cancel')}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={compareSelected}
-            disabled={comparing.length < 2}
-            style={[styles.compareButton, theme.newTab, comparing.length < 2 && styles.dimmed]}
-            accessibilityRole="button"
-          >
-            <Text style={styles.compareButtonText} numberOfLines={2} maxFontSizeMultiplier={HEADER_FONT_SCALE}>
-              {comparing.length < 2 ? t('tabs.compareHint') : t('tabs.compareCount', { count: comparing.length })}
-            </Text>
-          </Pressable>
-        </View>
-      ) : (
-        <View style={[styles.toolbar, theme.toolbar]}>
-          <Pressable accessibilityRole="button" onPress={closeAll} disabled={allTabs.length === 0} hitSlop={8} style={styles.toolbarSide}>
-            <Text
-              style={[styles.toolbarText, theme.text, allTabs.length === 0 && styles.dimmed]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.8}
-              maxFontSizeMultiplier={HEADER_FONT_SCALE}
+        {comparing ? (
+          <View style={[styles.toolbar, theme.toolbar]}>
+            <Pressable accessibilityRole="button" onPress={() => setComparing(null)} hitSlop={8} style={styles.toolbarCancel}>
+              <Text style={[styles.toolbarText, theme.text]} numberOfLines={1} maxFontSizeMultiplier={HEADER_FONT_SCALE}>
+                {t('common.cancel')}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={compareSelected}
+              disabled={comparing.length < 2}
+              style={[styles.compareButton, theme.newTab, comparing.length < 2 && styles.dimmed]}
+              accessibilityRole="button"
             >
-              {t('tabs.closeAll')}
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={newTab}
-            style={[styles.newTab, theme.newTab]}
-            accessibilityRole="button"
-            accessibilityLabel={t(incognito ? 'menu.newIncognitoTab' : 'menu.newTab')}
-          >
-            <Icon name="newTab" size={26} color="#ffffff" />
-          </Pressable>
-          <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.toolbarSide, styles.alignRight]}>
-            <Text
-              style={[styles.toolbarText, styles.bold, theme.accent]}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-              minimumFontScale={0.8}
-              maxFontSizeMultiplier={HEADER_FONT_SCALE}
+              <Text style={styles.compareButtonText} numberOfLines={2} maxFontSizeMultiplier={HEADER_FONT_SCALE}>
+                {comparing.length < 2 ? t('tabs.compareHint') : t('tabs.compareCount', { count: comparing.length })}
+              </Text>
+            </Pressable>
+          </View>
+        ) : (
+          <View style={[styles.toolbar, theme.toolbar]}>
+            <Pressable accessibilityRole="button" onPress={closeAll} disabled={allTabs.length === 0} hitSlop={8} style={styles.toolbarSide}>
+              <Text
+                style={[styles.toolbarText, theme.text, allTabs.length === 0 && styles.dimmed]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+                maxFontSizeMultiplier={HEADER_FONT_SCALE}
+              >
+                {t('tabs.closeAll')}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={newTab}
+              style={[styles.newTab, theme.newTab]}
+              accessibilityRole="button"
+              accessibilityLabel={t(incognito ? 'menu.newIncognitoTab' : 'menu.newTab')}
             >
-              {t('common.done')}
-            </Text>
-          </Pressable>
-        </View>
-      )}
+              <Icon name="newTab" size={26} color="#ffffff" />
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8} style={[styles.toolbarSide, styles.alignRight]}>
+              <Text
+                style={[styles.toolbarText, styles.bold, theme.accent]}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
+                maxFontSizeMultiplier={HEADER_FONT_SCALE}
+              >
+                {t('common.done')}
+              </Text>
+            </Pressable>
+          </View>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
@@ -855,21 +858,28 @@ const useStyles = makeStyles((c) => ({
   empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32, gap: 10 },
   emptyTitle: { fontSize: 18, fontWeight: '600' },
   emptyBody: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  // Stands on the toolbar ('100%' of its height up), in the switcher's own card colours (UI-48).
   undoBar: {
     position: 'absolute',
     left: 16,
     right: 16,
-    bottom: 84,
+    bottom: '100%',
+    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: 'rgba(30,30,30,0.94)',
+    borderRadius: radii.window,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
-  undoText: { color: c.onTint, fontSize: 14 },
-  undoAction: { color: '#7cc8f2', fontSize: 14, fontWeight: '700' },
+  undoText: { flexShrink: 1, fontSize: 14 },
+  undoAction: { fontSize: 14, fontWeight: '700' },
   recent: { marginTop: 8, borderRadius: radii.card, backgroundColor: c.surface, paddingVertical: 6 },
   recentTitle: { fontSize: 13, fontWeight: '600', color: c.textSecondary, paddingHorizontal: 14, paddingVertical: 6 },
   recentRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8 },

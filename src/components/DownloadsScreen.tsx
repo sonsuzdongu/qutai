@@ -418,7 +418,7 @@ const useStyles = makeStyles((c) => ({
   name: { fontSize: 15, color: c.text },
   dim: { color: c.textSecondary },
   meta: { fontSize: 12, color: c.textSecondary },
-  error: { color: '#d64545' },
+  error: { color: c.danger },
   button: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   track: { height: 3, borderRadius: 2, backgroundColor: c.sunken, overflow: 'hidden', marginVertical: 3 },
   bar: { height: 3, borderRadius: 2, backgroundColor: c.tint },

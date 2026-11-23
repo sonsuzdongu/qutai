@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { radii } from '../ui/theme';
+import { makeStyles, radii } from '../ui/theme';
+import { useKeyboardHeight } from '../utils/useKeyboardHeight';
+import { toastBottom } from './toastPlacement';
 
 const VISIBLE_MS = 2200;
 /** A toast with a button stays longer, so there is time to reach it. */
@@ -31,12 +33,20 @@ export function Toast({
   message,
   action,
   onHidden,
+  bottomInset = 0,
+  dark = false,
 }: {
   message: string | null;
   action?: ToastAction | null;
   onHidden: () => void;
+  /** Height of a bar along the bottom (the address bar, a toolbar): the toast stays above it (UI-48). */
+  bottomInset?: number;
+  /** Always dark (an incognito tab); otherwise the app's theme (UI-48). */
+  dark?: boolean;
 }) {
   const insets = useSafeAreaInsets();
+  const keyboard = useKeyboardHeight();
+  const styles = useStyles(dark);
   const [opacity] = useState(() => new Animated.Value(0));
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -55,7 +65,7 @@ export function Toast({
   return (
     <Animated.View
       pointerEvents={action ? 'box-none' : 'none'}
-      style={[styles.toast, action && styles.withAction, { bottom: insets.bottom + 24, opacity }]}
+      style={[styles.toast, action && styles.withAction, { bottom: toastBottom(insets.bottom, keyboard, bottomInset), opacity }]}
       accessibilityLiveRegion="polite"
     >
       <Text style={[styles.text, action && styles.textWithAction]}>{message}</Text>
@@ -76,7 +86,8 @@ export function Toast({
   );
 }
 
-const styles = StyleSheet.create({
+// The app's palette (UI-48): a raised card of the theme's surface, like the app's sheets; the button in the brand colour.
+const useStyles = makeStyles((c) => ({
   toast: {
     position: 'absolute',
     alignSelf: 'center',
@@ -84,12 +95,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: radii.window,
-    backgroundColor: 'rgba(30,30,30,0.92)',
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.18,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
   withAction: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingRight: 8 },
-  text: { color: '#fff', fontSize: 14, textAlign: 'center' },
+  text: { color: c.text, fontSize: 14, textAlign: 'center' },
   textWithAction: { flexShrink: 1, textAlign: 'left' },
   action: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: radii.control },
   pressed: { opacity: 0.6 },
-  actionText: { color: '#8ab4f8', fontSize: 14, fontWeight: '600' },
-});
+  actionText: { color: c.tintText, fontSize: 14, fontWeight: '600' },
+}));

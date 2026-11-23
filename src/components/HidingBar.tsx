@@ -22,11 +22,14 @@ export function HidingBar({
   position,
   hidden,
   children,
+  onBarHeight,
 }: {
   bar: ReactNode;
   position: 'top' | 'bottom';
   hidden: boolean;
   children: ReactNode;
+  /** The bar's measured height, e.g. to keep a toast above it (UI-48). */
+  onBarHeight?: (height: number) => void;
 }) {
   const reduceMotion = useReduceMotion();
   // What the bar draws over the page (the address suggestions), in a layer as large as the page: BarOverlay.tsx.
@@ -70,7 +73,10 @@ export function HidingBar({
 
   const onBarLayout = (e: LayoutChangeEvent) => {
     const h = Math.round(e.nativeEvent.layout.height);
-    if (h > 0 && h !== height) setHeight(h);
+    if (h > 0 && h !== height) {
+      setHeight(h);
+      onBarHeight?.(h);
+    }
   };
   const room = extended ? height : 0;
 

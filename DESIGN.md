@@ -19,6 +19,7 @@ Last updated: 2026-11-23
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-23:** Toasts, the capture pill, the push-to-talk bubble, the selection bar and the action sheet follow the app's theme instead of staying dark, and toasts never sit under a bar (the tab switcher's undo bar stands on its toolbar); a test stops new hard-coded colours (`UI-48`, owner's 0.1.16 test).
 - **2026-11-23:** The ⋮ page menu no longer scrolls with free room above it: it is a fixed 230 pt wide, so wrapped labels are measured as drawn, and it fills the room between the bars before scrolling (`UI-47`, owner's 0.1.16 test).
 - **2026-11-23:** Android labels are no longer cut right after switching the theme while the app runs: the text font's name and the text views follow the colour scheme, so every label is measured and drawn again as at launch (`UI-46`, owner's 0.1.16 test).
 - **2026-11-23:** "Rate Qutai" on Android opens Google Play's web link instead of `market://`, which some phone makers route to their own store (`UI-40` changed, owner).
