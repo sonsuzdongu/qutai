@@ -8,9 +8,9 @@ const PLAY_PACKAGE = 'com.sonsuzdongu.qutai';
 /** The store page where a review is written: the App Store's review form, Google Play's app page. */
 export function reviewUrls(os: string = Platform.OS): string[] {
   if (os === 'ios') return [`https://apps.apple.com/app/id${APP_STORE_ID}?action=write-review`];
-  if (os === 'android') {
-    return [`market://details?id=${PLAY_PACKAGE}`, `https://play.google.com/store/apps/details?id=${PLAY_PACKAGE}`];
-  }
+  // The web link, not market://: Android hands it to Google Play when installed (Play claims the link), and a phone
+  // whose maker sends market:// to its own store still reaches Qutai's Google Play page.
+  if (os === 'android') return [`https://play.google.com/store/apps/details?id=${PLAY_PACKAGE}`];
   return [];
 }
 
@@ -25,7 +25,7 @@ export async function rateApp(): Promise<boolean> {
       await Linking.openURL(url);
       return true;
     } catch {
-      // market:// fails without the Play Store app: try the web page next.
+      // Nothing could open it: try the next one, if any.
     }
   }
   return false;

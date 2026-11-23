@@ -19,6 +19,7 @@ Last updated: 2026-11-23
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-23:** "Rate Qutai" on Android opens Google Play's web link instead of `market://`, which some phone makers route to their own store (`UI-40` changed, owner).
 - **2026-11-23:** Android fixes from the owner's 0.1.15 test: text without its own font family gets sans-serif so bold labels are no longer cut with a theme other than the phone's (`UI-42`), the status bar is dark on the light tab switcher (`UI-43`), the page menu scrolls only when it doesn't fit (`UI-44`) and filled icons are filled (`UI-45`).
 - **2026-11-23:** Pro mode asks for the system rating sheet on the 3rd and the 30th day Qutai is opened, once each (`UI-41`, owner).
 - **2026-11-22:** "Rate Qutai" opens the App Store review form or the Google Play page instead of the in-app rating sheet, which the systems silently skip (`UI-40`, owner).
