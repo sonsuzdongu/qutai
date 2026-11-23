@@ -866,6 +866,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-43` | The status bar follows the tab switcher: dark icons on the light switcher, light on dark and incognito. | Default | 2026-11-23 |
 | `UI-44` | The page menu scrolls only when its items are taller than its room (2 px rounding allowed). | Default | 2026-11-23 |
 | `UI-45` | Icons filled on iOS (`.fill`) are filled on Android with the filled Material Symbols font; the rest stay outlined. | Default | 2026-11-23 |
+| `UI-46` | A live theme switch measures and draws Android labels anew: family alias and view key follow the native scheme. | Default | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 
