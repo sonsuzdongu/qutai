@@ -111,6 +111,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-51`** The ⋮ page menu is shorter: no "Copy link" (the share sheet has it), no "Read page aloud" ("Stop reading" still appears while something is being read), and no "Save screenshot" (only "Save full-page screenshot", under More). "Cookies" and "Block ads on this site" (`BLK-33`) are in the main list after "Desktop site", no longer under More.
   Status: Decided by the owner (23 Nov 2026: "too many items in the ⋮ menu") · Why: fewer, more used items at the top · Enforced: In the app: App.tsx (menuItems)
 
+- **`UI-52`** The address bar's suggestions show "Ask Qutai: …" only when the text has more than one word ("http://google.com ne iş yapar"); a single word or an address ("http://google.com") shows only the go and search rows.
+  Status: Decided by the owner (23 Nov 2026) · Why: an address or one word is a place to go, not a question · Enforced: In the app: src/components/OmniboxSuggestions.tsx
+
 ## Details
 
 **Icons**

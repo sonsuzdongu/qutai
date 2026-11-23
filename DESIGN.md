@@ -19,6 +19,7 @@ Last updated: 2026-11-23
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-23:** "Ask Qutai" in the address bar suggestions appears only for more than one word (`UI-52`).
 - **2026-11-23:** The ⋮ page menu drops Copy link, Read page aloud and Save screenshot (full-page stays); Cookies and Block ads on this site move to the main list (`UI-51`).
 - **2026-11-23:** "Dark sites in dark mode" is gone: Qutai no longer darkens pages (no iOS invert script, no Android force-dark); a page sees the app's theme through `prefers-color-scheme`, live, so sites with a dark design go dark and others stay as they are; the `settings` tool lost `dark_sites`, agent profile re-exported (`UI-50`, `TOOL-7`; owner).
 - **2026-11-23:** "Block ads on this site" in the ⋮ menu switches ad blocking per site and reloads (`BLK-33`); sending with no AI set up asks to choose an AI provider instead of naming Anthropic (`AI-36`).

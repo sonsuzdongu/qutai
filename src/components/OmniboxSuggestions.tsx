@@ -121,7 +121,8 @@ export function OmniboxSuggestions({
         <ScrollView keyboardShouldPersistTaps="always" style={styles.scroll} onContentSizeChange={onContentSize}>
           {!query && <PasteRow android={canPaste} incognito={darkUI} onPaste={go} />}
 
-          {query.length > 0 && (
+          {/* "Ask Qutai" only for more than one word: an address or a single word is a place to go (UI-52). */}
+          {/\S\s+\S/.test(query.trim()) && (
             <Row
               icon="assistant"
               title={t('omnibox.ask', { text: query })}
