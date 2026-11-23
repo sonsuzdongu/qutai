@@ -65,7 +65,7 @@ export function makeHost(loop: FakeLoop | ((opts: AgentOptions, n: number) => Pr
     log: () => {},
     bookmarksRemoved: () => {},
     savedTaskUsed: () => {},
-    showSettings: () => log.push('showSettings'),
+    showSettings: (page) => log.push(page ? `showSettings:${page}` : 'showSettings'),
     save: (chat: Conversation) => {
       saved.push({ key: chat.key, items: chat.items.length, turns: chat.turns.length });
       storage.set(chat.key, JSON.parse(JSON.stringify(prepareForStorage(chat.toSaved()))));

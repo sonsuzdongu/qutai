@@ -70,7 +70,8 @@ export type ToolServices = {
   bookmarksRemoved: (removed: Bookmark[]) => void;
   /** A saved task was run by name: the recent-task chips follow. */
   savedTaskUsed: () => void;
-  showSettings: () => void;
+  /** Opens Settings, on the Assistant page when asked (no AI set up yet, AI-36). */
+  showSettings: (page?: 'assistant') => void;
 };
 
 /** The task a context is built for. */
@@ -274,7 +275,7 @@ export function taskToolContext(
       chat.addMadePdf(info, false);
       return info;
     },
-    showAppSettings: services.showSettings,
+    showAppSettings: () => services.showSettings(),
     attachments: () => chat.attachments,
     offerImage: (info) => offerEditedImage(chat, info),
   };

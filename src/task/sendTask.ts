@@ -204,7 +204,7 @@ function chooseModel(host: TaskHost, chat: Conversation): { provider: ProviderId
       ),
     );
     host.save(chat);
-    host.showSettings();
+    host.showSettings('assistant');
     return null;
   }
   return { provider, ...(useChoice ? { model: choice.model } : {}) };

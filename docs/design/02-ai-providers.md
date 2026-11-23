@@ -94,7 +94,7 @@ that change a request (model per chat, streaming, web search, the custom endpoin
 - **`AI-35`** In pro mode Qutai Credits is the first provider everywhere providers are listed (Settings › Assistant tabs, the model sheet), before Anthropic, OpenAI, Gemini, OpenRouter and custom; open-source builds have no Qutai Credits and keep that order.
   Status: Owner, 2026-11-22 · Why: owner's request ("pro-mode'da ise qutai ilk başta olsun"); replaces the old sixth place (was `AI-3`) · Source: `PROVIDER_ORDER` in src/ai/providers.ts
 
-- **`AI-36`** Sending with no AI set up says "To start, choose an AI provider in Settings and set it up." and opens Settings; it names no provider (the custom endpoint keeps its own message about its address and model).
+- **`AI-36`** Sending with no AI set up says "To start, choose an AI provider in Settings and set it up." and opens Settings on the Assistant page; it names no provider (the custom endpoint keeps its own message about its address and model).
   Status: Decided by the owner (23 Nov 2026) · Why: the old text named the default provider ("Enter your Anthropic API key"), which read wrong after the user picked another one and assumed a provider the user never chose · Enforced: In the app: src/task/sendTask.ts (chooseModel); src/i18n/*.ts (chat.missingKey)
 
 ## Details

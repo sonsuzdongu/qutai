@@ -1026,7 +1026,7 @@ function BrowserApp({
     log: logAction,
     bookmarksRemoved: offerBookmarkUndo,
     savedTaskUsed: refreshRecentTasks,
-    showSettings: () => openScreen({ kind: 'settings' }),
+    showSettings: (page) => openSettings(page),
     save: persistConversation,
     aiConsent: { ensure: ensureAiConsent },
     credits: {

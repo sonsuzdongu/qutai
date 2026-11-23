@@ -201,7 +201,7 @@ test('a provider without a key: the message stays shown, nothing runs, the slot 
   await send('Hi');
   assert.equal(chat.turns.length, 0);
   assert.equal(runner.tasks.length, 0);
-  assert.ok(log.includes('showSettings'));
+  assert.ok(log.includes('showSettings:assistant'));
   assert.ok(!log.includes('ui.start'));
 });
 
