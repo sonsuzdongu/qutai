@@ -51,7 +51,7 @@ export const ko: Record<keyof typeof en, string> = {
   'when.hours': '{count}시간',
 
   'chat.title': 'Qutai',
-  'chat.missingKey': '먼저 설정에서 {provider} API 키를 입력하세요.',
+  'chat.missingKey': '먼저 설정에서 AI 제공자를 선택하고 설정하세요.',
   'chat.stopped': '중지됨',
   'chat.interrupted': '이 작업이 진행되는 동안 Qutai가 종료되었습니다. 위의 단계는 완료되었고, 그 이후에는 아무것도 실행되지 않았습니다.',
   'chat.paused': '앱이 백그라운드에 있어 작업이 일시중지되었습니다',
@@ -415,6 +415,7 @@ export const ko: Record<keyof typeof en, string> = {
   'menu.reader': '읽기 모드',
   'menu.readerNone': '읽기 모드(기사 없음)',
   'menu.textSize': '글자 크기',
+  'menu.blockAdsHere': '이 사이트에서 광고 차단',
   'menu.desktopSite': '데스크톱 사이트',
   'menu.savePdf': 'PDF로 저장',
   'menu.pdfPreparing': 'PDF 준비 중…',

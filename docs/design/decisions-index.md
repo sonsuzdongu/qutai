@@ -143,6 +143,7 @@ Moved to Details (ids retired, not reused): `PROD-5`
 | `AI-33` | AI keys and custom header values are kept "this device only" like the other secrets; older ones rewritten once | Default | 2026-11-21 |
 | `AI-34` | Own-key requests retry after 1, 2, 4 s or a longer Retry-After (20 s at most); Stop ends the wait at once | Default | 2026-11-21 |
 | `AI-35` | In pro mode Qutai Credits is listed first among the providers. | Owner | 2026-11-22 |
+| `AI-36` | Sending with no AI set up says "choose an AI provider in Settings" and names no provider. | Owner | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `AI-11`, `AI-12`
 
@@ -358,6 +359,7 @@ Moved to Details (ids retired, not reused): `INC-8`
 | `BLK-30` | Video ads: a document-start page script on the rules table's hosts (frames too) removes the ad plan from the player's data and hides ad boxes; not on off sites; incognito too; nothing leaves the phone; all site data in one table. | Default | 2026-11-21 |
 | `BLK-31` | An ad that plays anyway is muted, sent to its end and skipped (checked every 300 ms); the sound comes back after, unless the user had muted it. | Owner | 2026-11-21 |
 | `BLK-32` | "Block third-party cookies" is shown and offered on Android only; iOS has no row (WebKit always blocks them). | Owner | 2026-11-21 |
+| `BLK-33` | "Block ads on this site" in the ⋮ menu (checked while on) turns blocking off or on for the site and reloads; same setting as `BLK-11`. | Owner | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `BLK-5`, `BLK-8`, `BLK-9`, `BLK-10`, `BLK-16`, `BLK-25`
 

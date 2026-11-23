@@ -1637,6 +1637,23 @@ function BrowserApp({
             : t('site.listTitle'),
           onPress: () => (currentSite ? setPermissionHost(currentSite) : openScreen({ kind: 'sites' })),
         },
+        // Ad blocking for this site straight from the menu (BLK-33): a site that won't open with it gets a way out in
+        // one tap; the page reloads so the change applies.
+        ...(settings.blockAds && currentSite && !onNewTab
+          ? [
+              {
+                icon: 'shield' as const,
+                label: t('menu.blockAdsHere'),
+                checked: sitePermissions.blockingFor(currentSite),
+                onPress: () => {
+                  sitePermissions
+                    .setBlocking(currentSite, !sitePermissions.blockingFor(currentSite))
+                    .then(() => tab.reload())
+                    .catch(() => {});
+                },
+              },
+            ]
+          : []),
       ],
     },
   ];

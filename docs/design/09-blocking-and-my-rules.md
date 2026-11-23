@@ -83,6 +83,9 @@ file, HTTPS-only, local network pages and certificate errors.
 - **`BLK-32`** The "Block third-party cookies" switch is shown on Android only: iOS has no row in Settings › Privacy and security or in setup's protection step, and the assistant's settings tool does not offer `block_third_party_cookies` there. The stored value and the backup field stay.
   Status: Owner, 2026-11-21 ("kodda bulduklarını düzelt", second store-review pass); the mechanism is the implementing session's · Why: WebKit always blocks third-party cookies, so on iOS the switch did nothing and its hint named Android; App Review refuses both (2.1, 2.3.10). · Where: `src/components/SettingsModal.tsx`, `src/components/Onboarding.tsx`, `src/agent/settingsTool.ts`
 
+- **`BLK-33`** The ⋮ page menu has "Block ads on this site" with a check mark while ad blocking is on in Settings and the tab shows a site; tapping it turns blocking off (or back on) for that site, the same setting as the site sheet's switch (`BLK-11`), and reloads the page.
+  Status: Decided by the owner (23 Nov 2026: some sites don't open with the ad blocker, it must be switchable per site) · Why: the per-site switch existed only inside "Qutai's permission on this site", where nobody looks for it · Enforced: In the app: App.tsx (page menu items); src/storage/sitePermissions.ts (setBlocking)
+
 ## Details
 
 **Filter lists and the blocker**

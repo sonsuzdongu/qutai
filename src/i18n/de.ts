@@ -53,7 +53,7 @@ export const de: Record<keyof typeof en, string> = {
   'when.hours': '{count} Stunden',
 
   'chat.title': 'Qutai',
-  'chat.missingKey': 'Geben Sie zuerst in den Einstellungen Ihren API-Schlüssel für {provider} ein.',
+  'chat.missingKey': 'Wählen Sie zuerst in den Einstellungen einen KI-Anbieter und richten Sie ihn ein.',
   'chat.stopped': 'Gestoppt',
   'chat.interrupted': 'Qutai wurde geschlossen, während diese Aufgabe lief. Die Schritte oben wurden ausgeführt; danach lief nichts mehr.',
   'chat.paused': 'App im Hintergrund – Aufgabe pausiert',
@@ -416,6 +416,7 @@ export const de: Record<keyof typeof en, string> = {
   'menu.reader': 'Leseansicht',
   'menu.readerNone': 'Leseansicht (hier kein Artikel)',
   'menu.textSize': 'Textgröße',
+  'menu.blockAdsHere': 'Werbung auf dieser Website blockieren',
   'menu.desktopSite': 'Desktop-Version',
   'menu.savePdf': 'Als PDF speichern',
   'menu.pdfPreparing': 'PDF wird erstellt…',

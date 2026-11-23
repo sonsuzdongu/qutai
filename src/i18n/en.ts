@@ -41,7 +41,7 @@ export const en = {
   'when.hours': '{count} hours',
 
   'chat.title': 'Qutai',
-  'chat.missingKey': 'Enter your {provider} API key in settings first.',
+  'chat.missingKey': 'To start, choose an AI provider in Settings and set it up.',
   'chat.stopped': 'Stopped',
   'chat.interrupted': 'Qutai was closed while this task was running. The steps above were done; nothing after them ran.',
   'chat.paused': 'The app is in the background, task paused',
@@ -405,6 +405,7 @@ export const en = {
   'menu.reader': 'Reader mode',
   'menu.readerNone': 'Reader mode (no article here)',
   'menu.textSize': 'Text size',
+  'menu.blockAdsHere': 'Block ads on this site',
   'menu.desktopSite': 'Desktop site',
   'menu.savePdf': 'Save as PDF',
   'menu.pdfPreparing': 'Preparing PDF…',

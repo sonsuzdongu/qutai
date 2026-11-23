@@ -42,7 +42,7 @@ export const tr: Record<keyof typeof en, string> = {
   'when.hours': '{count} saat',
 
   'chat.title': 'Qutai',
-  'chat.missingKey': 'Önce ayarlardan {provider} API anahtarınızı girin.',
+  'chat.missingKey': 'Başlamak için Ayarlar’dan bir yapay zekâ sağlayıcısı seçip ayarlayın.',
   'chat.stopped': 'Durduruldu',
   'chat.interrupted': 'Qutai bu görev sürerken kapandı. Yukarıdaki adımlar yapıldı, sonrasında hiçbir şey çalışmadı.',
   'chat.paused': 'Uygulama arka planda, görev duraklatıldı',
@@ -406,6 +406,7 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.reader': 'Okuma modu',
   'menu.readerNone': 'Okuma modu (burada makale yok)',
   'menu.textSize': 'Yazı boyutu',
+  'menu.blockAdsHere': 'Bu sitede reklamları engelle',
   'menu.desktopSite': 'Masaüstü sitesi',
   'menu.savePdf': 'PDF olarak kaydet',
   'menu.pdfPreparing': 'PDF hazırlanıyor…',

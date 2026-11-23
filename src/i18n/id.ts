@@ -52,7 +52,7 @@ export const id: Record<keyof typeof en, string> = {
   'when.hours': '{count} jam',
 
   'chat.title': 'Qutai',
-  'chat.missingKey': 'Masukkan kunci API {provider} Anda di setelan terlebih dahulu.',
+  'chat.missingKey': 'Untuk memulai, pilih penyedia AI di setelan dan atur.',
   'chat.stopped': 'Dihentikan',
   'chat.interrupted': 'Qutai ditutup saat tugas ini berjalan. Langkah di atas sudah dilakukan; tidak ada yang berjalan setelahnya.',
   'chat.paused': 'Aplikasi berada di latar belakang, tugas dijeda',
@@ -416,6 +416,7 @@ export const id: Record<keyof typeof en, string> = {
   'menu.reader': 'Mode baca',
   'menu.readerNone': 'Mode baca (tidak ada artikel di sini)',
   'menu.textSize': 'Ukuran teks',
+  'menu.blockAdsHere': 'Blokir iklan di situs ini',
   'menu.desktopSite': 'Situs desktop',
   'menu.savePdf': 'Simpan sebagai PDF',
   'menu.pdfPreparing': 'Menyiapkan PDF…',

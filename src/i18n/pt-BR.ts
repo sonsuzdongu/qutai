@@ -53,7 +53,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'when.hours': '{count} horas',
 
   'chat.title': 'Qutai',
-  'chat.missingKey': 'Primeiro, insira sua chave de API do {provider} nas configurações.',
+  'chat.missingKey': 'Para começar, escolha um provedor de IA nas configurações e configure-o.',
   'chat.stopped': 'Parado',
   'chat.interrupted': 'O Qutai foi fechado enquanto esta tarefa estava em andamento. As etapas acima foram feitas; nada foi executado depois.',
   'chat.paused': 'O app está em segundo plano, tarefa pausada',
@@ -417,6 +417,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'menu.reader': 'Modo de leitura',
   'menu.readerNone': 'Modo de leitura (nenhum artigo aqui)',
   'menu.textSize': 'Tamanho do texto',
+  'menu.blockAdsHere': 'Bloquear anúncios neste site',
   'menu.desktopSite': 'Versão para computador',
   'menu.savePdf': 'Salvar como PDF',
   'menu.pdfPreparing': 'Preparando PDF…',

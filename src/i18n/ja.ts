@@ -53,7 +53,7 @@ export const ja: Record<keyof typeof en, string> = {
   'when.hours': '{count} 時間',
 
   'chat.title': 'Qutai',
-  'chat.missingKey': '先に設定で {provider} の API キーを入力してください。',
+  'chat.missingKey': 'まず設定で AI プロバイダを選んで設定してください。',
   'chat.stopped': '停止しました',
   'chat.interrupted': 'このタスクの実行中にQutaiが閉じられました。上の手順は完了していますが、その後は何も実行されていません。',
   'chat.paused': 'アプリがバックグラウンドにあるため、タスクを一時停止しました',
@@ -417,6 +417,7 @@ export const ja: Record<keyof typeof en, string> = {
   'menu.reader': 'リーダー モード',
   'menu.readerNone': 'リーダー モード（記事がありません）',
   'menu.textSize': '文字サイズ',
+  'menu.blockAdsHere': 'このサイトで広告をブロック',
   'menu.desktopSite': 'PC 版サイト',
   'menu.savePdf': 'PDF として保存',
   'menu.pdfPreparing': 'PDF を準備しています…',

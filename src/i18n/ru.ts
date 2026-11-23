@@ -52,7 +52,7 @@ export const ru: Record<keyof typeof en, string> = {
   'when.hours': '{count} {count|one:час|few:часа|many:часов}',
 
   'chat.title': 'Qutai',
-  'chat.missingKey': 'Сначала введите API-ключ {provider} в настройках.',
+  'chat.missingKey': 'Сначала выберите поставщика ИИ в настройках и настройте его.',
   'chat.stopped': 'Остановлено',
   'chat.interrupted': 'Qutai был закрыт, пока выполнялась эта задача. Шаги выше выполнены; после них ничего не запускалось.',
   'chat.paused': 'Приложение в фоне, задача приостановлена',
@@ -416,6 +416,7 @@ export const ru: Record<keyof typeof en, string> = {
   'menu.reader': 'Режим чтения',
   'menu.readerNone': 'Режим чтения (здесь нет статьи)',
   'menu.textSize': 'Размер текста',
+  'menu.blockAdsHere': 'Блокировать рекламу на этом сайте',
   'menu.desktopSite': 'Версия для ПК',
   'menu.savePdf': 'Сохранить как PDF',
   'menu.pdfPreparing': 'Подготовка PDF…',

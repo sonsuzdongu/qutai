@@ -200,7 +200,7 @@ function chooseModel(host: TaskHost, chat: Conversation): { provider: ProviderId
     chat.add(
       newItem(
         'error',
-        getProvider(provider).needsEndpoint ? t('chat.missingEndpoint') : t('chat.missingKey', { provider: getProvider(provider).label }),
+        getProvider(provider).needsEndpoint ? t('chat.missingEndpoint') : t('chat.missingKey'),
       ),
     );
     host.save(chat);
