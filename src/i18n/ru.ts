@@ -619,6 +619,7 @@ export const ru: Record<keyof typeof en, string> = {
   'memory.organiseNoKey': 'Сначала добавьте ключ ИИ в разделе Настройки › Ассистент.',
   'memory.organiseNothing': 'Нечего перемещать: все записи подходят к категории «Общие предпочтения».',
   'memory.organiseFailed': 'Не удалось упорядочить',
+  'memory.organiseNotAvailable': '«Упорядочить» пока недоступно с Qutai Credits. Обновите Qutai или попробуйте позже.',
   'memory.proposalTitle': 'Предлагаемые категории',
   'memory.proposalHint': 'Снимите отметку с того, что должно остаться на месте.',
   'memory.proposalApply': 'Переместить',

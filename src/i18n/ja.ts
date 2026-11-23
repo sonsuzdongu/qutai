@@ -620,6 +620,7 @@ export const ja: Record<keyof typeof en, string> = {
   'memory.organiseNoKey': '先に「設定 › アシスタント」で AI キーを追加してください。',
   'memory.organiseNothing': '移動するものはありません。すべて「一般的な好み」に合っています。',
   'memory.organiseFailed': '整理できませんでした',
+  'memory.organiseNotAvailable': '「自動で整理」は Qutai クレジットではまだ使えません。Qutai を更新するか、後でもう一度お試しください。',
   'memory.proposalTitle': '提案されたカテゴリ',
   'memory.proposalHint': '今の場所に残すものはチェックを外してください。',
   'memory.proposalApply': '移動',

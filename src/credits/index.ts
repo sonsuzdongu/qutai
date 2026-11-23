@@ -8,8 +8,9 @@ import { creditsEnabled, features } from '../config/features';
 import { appVersion } from '../device/appVersion';
 import { getLanguage, t } from '../i18n';
 import { waitForForeground } from '../utils/foreground';
-import { createCreditsClient, type CreditsClient, type IntroRequestBody } from './client';
+import { createCreditsClient, type CreditsClient, type IntroRequestBody, type OrganiseRequestBody } from './client';
 import { INTRO_AUDIT } from '../intro/request';
+import { ORGANISE_AUDIT } from '../agent/organiseAudit';
 import { newSentId, recordSent } from '../storage/sentLog';
 import { formatCredits, separators } from './format';
 import { createCreditsProvider } from './provider';
@@ -90,6 +91,37 @@ export function freeIntro(): ((body: IntroRequestBody, signal: AbortSignal) => P
       content: [{ text }],
     });
     return c.intro(body, signal);
+  };
+}
+
+/**
+ * Memory's "Organise for me" with Qutai Credits (backend README › Relay › Organise memory): null when there is no
+ * signed-in client. The facts sent are listed in "What was sent to the AI" like any other request (MEM-*, CRED-*).
+ */
+export function organiseMemoryRequest(): ((body: OrganiseRequestBody, signal: AbortSignal) => Promise<unknown>) | null {
+  const c = signedInClient();
+  if (!c) return null;
+  return (body, signal) => {
+    const text = body.items.map((i) => `[${i.id}] ${i.text}`).join('\n');
+    const at = Date.now();
+    recordSent({
+      id: newSentId(at),
+      at,
+      provider: 'qutai',
+      model: '',
+      host: null,
+      conversation: ORGANISE_AUDIT,
+      items: [{ kind: 'message', chars: text.length }],
+      totalChars: text.length,
+      images: 0,
+      resentTurns: 0,
+      resentChars: 0,
+      webSearch: false,
+      research: false,
+      incognito: false,
+      content: [{ text }],
+    });
+    return c.organiseMemory(body, signal);
   };
 }
 

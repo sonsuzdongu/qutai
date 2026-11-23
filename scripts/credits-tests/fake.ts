@@ -50,7 +50,7 @@ export const settlement = (charged: number, balance: number | null = 9_000_000, 
   ['qutai.settlement', { type: 'qutai.settlement', charged, balance, outcome }] as [string, unknown];
 
 /** A fake server; `relay` answers are taken in order (the last one repeats). */
-export function fakeServer(opts: { relay?: Answer[]; config?: PublicConfig; credits?: Answer; verify?: Answer[] } = {}) {
+export function fakeServer(opts: { relay?: Answer[]; config?: PublicConfig; credits?: Answer; verify?: Answer[]; organise?: Answer } = {}) {
   const requests: Recorded[] = [];
   const relay = [...(opts.relay ?? [])];
   const verify = [...(opts.verify ?? [])];
@@ -76,6 +76,8 @@ export function fakeServer(opts: { relay?: Answer[]; config?: PublicConfig; cred
       if (!a) return error('unavailable', 503);
       return typeof a === 'function' ? a(rec) : a;
     }
+    // Absent: an older server without the route (404 below).
+    if (url.pathname === '/relay/organise-memory' && opts.organise) return typeof opts.organise === 'function' ? opts.organise(rec) : opts.organise;
     if (url.pathname === '/purchases/verify') {
       const a = verify.length > 1 ? verify.shift()! : verify[0];
       if (!a) return error('unavailable', 503);

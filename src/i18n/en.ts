@@ -608,6 +608,7 @@ export const en = {
   'memory.organiseNoKey': 'Add an AI key in Settings › Assistant first.',
   'memory.organiseNothing': 'Nothing to move: they all fit General preferences.',
   'memory.organiseFailed': "Couldn't organise",
+  'memory.organiseNotAvailable': "Organise for me isn’t available with Qutai Credits yet. Update Qutai or try again later.",
   'memory.proposalTitle': 'Proposed categories',
   'memory.proposalHint': 'Untick anything that should stay where it is.',
   'memory.proposalApply': 'Move',

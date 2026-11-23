@@ -73,6 +73,8 @@ what it refuses to keep, memories hidden from the AI, and the per-site question 
   Status: Default (manager or implementing session; open to change) · Why: "what the assistant keeps about the user is theirs to decide" · Enforced: In the app: src/agent/settingsTool.ts (CHANGEABLE) · Source: febcdb4
 - **`MEM-25`** When the assistant saves an ID number, the chat line and the activity history do not repeat the value.
   Status: Default (manager or implementing session; open to change) · Why: the value must not appear on screen or in logs · Enforced: In the app: src/agent/tools/describe.ts (describeToolCall: action.rememberHidden) · Source: 530b106
+- **`MEM-26`** "Organise for me" sends one request with each General memory as its id and text (a hidden one only as its label, "(value hidden)"), at most 60, no tools and no web search, and changes nothing until the user accepts the proposal; only moves to a known category, for a memory that was sent, are proposed. With an own key it goes to the user's provider with the app's instructions. With Qutai Credits it goes to the server's own request (`POST /relay/organise-memory`), not the credits relay (whose agent profile replaces the instructions, so the reply had no categories and the user saw "a problem with the AI connection"): the server holds the instructions and the category list, the app sends only `{ id, text }`, and the answer is only the moves; it is paid like a relay step (`CRED-50`). Either way it is listed in "What was sent to the AI" (`memory:organise`). Errors say what happened: sign in, not enough credits, unavailable or busy; an older server without the route says "not available with Qutai Credits yet, update Qutai or try again later".
+  Status: Owner, 2026-11-23 (dedicated server request) · Why: the relay only serves the agent's own prompt, so a request with its own instructions can't go through it · Enforced: In the app: src/agent/organiseMemory.ts (proposeCategories, OrganiseNotAvailable), src/credits/client.ts (organiseMemory), src/credits/index.ts (organiseMemoryRequest), src/components/MemoryScreen.tsx; tests scripts/credits-tests/organise-memory.test.ts · Source: backend/README.md › Relay › Organise memory
 
 ## Details
 
@@ -101,6 +103,6 @@ sites" are left to the instructions, because the app cannot judge them.
 
 ## Where it lives
 
-- `src/agent/memory.ts`, `hiddenValues.ts`, `personalData.ts`, `organiseMemory.ts`, `executeTool.ts` (memoryTool, hiddenGate, personalGate, maskHiddenForCapture)
+- `src/agent/memory.ts`, `hiddenValues.ts`, `personalData.ts`, `organiseMemory.ts`, `organiseAudit.ts`, `executeTool.ts` (memoryTool, hiddenGate, personalGate, maskHiddenForCapture)
 - `src/storage/memory.ts`, `src/storage/db.ts`, `src/components/MemoryScreen.tsx`, `App.tsx` (askPersonalData, askHiddenValue)
 - TODO.md › Assistant (categorised memory, personal information, hidden memories); README intro (hidden memories)

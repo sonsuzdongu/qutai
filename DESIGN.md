@@ -1,5 +1,6 @@
 # Qutai: how it works and the decisions behind it
 
+- **2026-11-23:** Memory's "Organise for me" works with Qutai Credits: it goes to the server's own request `POST /relay/organise-memory` (server-owned instructions, only ids and texts sent, only moves returned, paid like a relay step, usage marked `organise_memory` in the panel) instead of the relay, whose agent prompt dropped its instructions; an older server says "not available yet" (`MEM-26`, `CRED-50`; owner).
 This is the entry point to the record of how Qutai behaves and why. Every design decision taken so far is written down
 as a short, testable rule with a stable id (for example `APPS-7` or `PAY-3`), its status and its reason, in one file per
 area under [docs/design/](docs/design/). This page has the map, the five-minute overview, the principles and the known

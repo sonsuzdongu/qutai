@@ -22,7 +22,8 @@ import {
   MemoryCategory,
   suggestsHiding,
 } from '../agent/memory';
-import { MAX_ORGANISE, proposeCategories } from '../agent/organiseMemory';
+import { MAX_ORGANISE, OrganiseNotAvailable, proposeCategories } from '../agent/organiseMemory';
+import { organiseMemoryRequest } from '../credits';
 import type { ProviderId } from '../ai/types';
 import { t } from '../i18n';
 import { memoryErrorText } from './memoryError';
@@ -199,12 +200,16 @@ function MemoryList({ onClose, ai, appLock, questions }: Omit<Props, 'visible'>)
     abort.current = controller;
     setOrganising(true);
     try {
-      const moves = await proposeCategories(general, ai, controller.signal);
+      // Qutai Credits: the server's own organise request (the relay can't carry these instructions).
+      const credits = ai.provider === 'qutai' ? organiseMemoryRequest() : undefined;
+      const moves = await proposeCategories(general, ai, controller.signal, { credits });
       if (controller.signal.aborted) return;
       if (!moves.length) dialog.alert(t('memory.organiseNothing'));
       else setProposal(moves.map((m) => ({ ...m, accepted: true })));
     } catch (e) {
-      if (!controller.signal.aborted) dialog.alert(t('memory.organiseFailed'), plainError(e).message);
+      if (!controller.signal.aborted) {
+        dialog.alert(t('memory.organiseFailed'), e instanceof OrganiseNotAvailable ? t('memory.organiseNotAvailable') : plainError(e).message);
+      }
     } finally {
       if (abort.current === controller) setOrganising(false);
     }

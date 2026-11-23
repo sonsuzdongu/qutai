@@ -408,6 +408,7 @@ Moved to Details (ids retired, not reused): `WPERM-8`, `WPERM-11`
 | `MEM-22` | At checkout the assistant applies shopping preferences without being asked and says so; a preference is… | Default |  |
 | `MEM-24` | The assistant cannot switch memory on or off or hide or show memories; it can only remember and forget… | Default |  |
 | `MEM-25` | When the assistant saves an ID number, the chat line and the activity history do not repeat the value. | Default |  |
+| `MEM-26` | "Organise for me" sends only ids and texts (hidden: label), ≤60; with Qutai Credits via the server's own organise request, not the relay. | Owner | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `MEM-2`, `MEM-23`, `MEM-18`
 
@@ -1086,6 +1087,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-47` | Qutai's server relays Anthropic only (seam kept); own OpenAI, Gemini, OpenRouter and custom keys in the app are unaffected. | Owner | 2026-11-20 |
 | `CRED-48` | A step the balance can't hold is shortened to fit (fewer searches down to 1, then output down to `minOutputTokens`), refused only below that. | Owner | 2026-11-22 |
 | `CRED-49` | The free introduction runs on its own key and table: no credits, apart from paid usage, counted in the spend limit; own Usage section. | Owner | 2026-11-22 |
+| `CRED-50` | `POST /relay/organise-memory`: server-owned instructions, facts in, `{ moves }` out; paid like a relay step, usage `purpose` in the panel. | Owner | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 

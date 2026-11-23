@@ -619,6 +619,7 @@ export const fr: Record<keyof typeof en, string> = {
   'memory.organiseNoKey': 'Ajoutez d’abord une clé IA dans Paramètres › Assistant.',
   'memory.organiseNothing': 'Rien à déplacer : tout a sa place dans Préférences générales.',
   'memory.organiseFailed': 'Impossible de ranger',
+  'memory.organiseNotAvailable': '« Ranger pour moi » n’est pas encore disponible avec les Qutai Credits. Mettez Qutai à jour ou réessayez plus tard.',
   'memory.proposalTitle': 'Catégories proposées',
   'memory.proposalHint': 'Décochez ce qui doit rester à sa place.',
   'memory.proposalApply': 'Déplacer',

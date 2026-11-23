@@ -618,6 +618,7 @@ export const ko: Record<keyof typeof en, string> = {
   'memory.organiseNoKey': '먼저 설정 › 어시스턴트에서 AI 키를 추가하세요.',
   'memory.organiseNothing': '옮길 항목이 없습니다. 모두 일반 선호 사항에 맞습니다.',
   'memory.organiseFailed': '정리하지 못했습니다',
+  'memory.organiseNotAvailable': '‘자동 정리’는 아직 Qutai 크레딧으로 사용할 수 없습니다. Qutai를 업데이트하거나 나중에 다시 시도하세요.',
   'memory.proposalTitle': '제안된 카테고리',
   'memory.proposalHint': '그대로 둘 항목은 체크를 해제하세요.',
   'memory.proposalApply': '이동',

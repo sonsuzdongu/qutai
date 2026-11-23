@@ -81,6 +81,8 @@ const CONFIG_TIMEOUT_MS = 10_000;
 const CREDITS_TIMEOUT_MS = 15_000;
 /** The server gives the provider 30 s. */
 const INTRO_TIMEOUT_MS = 40_000;
+/** `POST /relay/organise-memory`: the server's own limit is 45 s, plus the way there and back. */
+const ORGANISE_TIMEOUT_MS = 55_000;
 /** The server waits up to 10 s for RevenueCat. */
 const VERIFY_TIMEOUT_MS = 20_000;
 /** Refusals worth waiting for (our own previous step still settling, a short rate limit, a busy provider). */
@@ -358,16 +360,34 @@ export function createCreditsClient(options: CreditsClientOptions) {
    * as strictly as a model's answer); rejects with a RelayError on any refusal, or the abort error when `signal` ends.
    */
   async function intro(body: IntroRequestBody, signal: AbortSignal): Promise<unknown> {
+    return (await fixedRequest('/relay/intro', body, INTRO_TIMEOUT_MS, signal)).json;
+  }
+
+  /**
+   * `POST /relay/organise-memory`: Memory's "Organise for me" (backend README › Relay › Organise memory). The server owns
+   * the instructions and the categories; this sends only the facts. Paid like a relay step: the balance in the answer
+   * updates the store. Resolves with the server's answer as received (the caller keeps only what it sent); rejects with
+   * a RelayError on any refusal (an older server without the route: status 404), or the abort error.
+   */
+  async function organiseMemory(body: OrganiseRequestBody, signal: AbortSignal): Promise<unknown> {
+    const { json, headers } = await fixedRequest('/relay/organise-memory', body, ORGANISE_TIMEOUT_MS, signal);
+    const balance = wholeHeader(headers.get('X-Qutai-Balance'));
+    if (balance !== null) options.onBalance?.(balance);
+    return json;
+  }
+
+  /** A fixed-purpose request the server words itself (intro, organise-memory): signed in, device proof, JSON both ways. */
+  async function fixedRequest(path: string, body: unknown, timeoutMs: number, signal: AbortSignal): Promise<{ json: unknown; headers: Headers }> {
     const controller = new AbortController();
     const stop = () => controller.abort();
     signal.addEventListener('abort', stop);
-    const timer = setTimeout(stop, INTRO_TIMEOUT_MS);
+    const timer = setTimeout(stop, timeoutMs);
     try {
       const res = await authorized(async (token) =>
-        fetchImpl(`${base}/relay/intro`, {
+        fetchImpl(`${base}${path}`, {
           method: 'POST',
           headers: {
-            ...(options.deviceProof ? await options.deviceProof.headers('POST', '/relay/intro', true) : {}),
+            ...(options.deviceProof ? await options.deviceProof.headers('POST', path, true) : {}),
             'Content-Type': 'application/json',
             Accept: 'application/json',
             Authorization: `Bearer ${token}`,
@@ -383,7 +403,7 @@ export function createCreditsClient(options: CreditsClientOptions) {
         throw error;
       }
       options.deviceProof?.observe(res.status, res.headers, null);
-      return await readJson(res);
+      return { json: await readJson(res), headers: res.headers };
     } catch (e) {
       if (signal.aborted) throw abortError();
       if (e instanceof RelayError) throw e;
@@ -394,8 +414,11 @@ export function createCreditsClient(options: CreditsClientOptions) {
     }
   }
 
-  return { config, credits, relayStream, relayJson, verifyPurchase, intro };
+  return { config, credits, relayStream, relayJson, verifyPurchase, intro, organiseMemory };
 }
+
+/** `POST /relay/organise-memory` body: the facts only (backend packages/shared/src/organiseMemory.ts). */
+export type OrganiseRequestBody = { items: { id: string; text: string }[] };
 
 /** `POST /relay/intro` body: the user's words only (backend packages/shared/src/intro.ts). */
 export type IntroRequestBody =

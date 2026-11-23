@@ -616,6 +616,7 @@ export const de: Record<keyof typeof en, string> = {
   'memory.organiseNoKey': 'Fügen Sie zuerst unter Einstellungen › Assistent einen KI-Schlüssel hinzu.',
   'memory.organiseNothing': 'Nichts zu verschieben: Alle passen zu „Allgemeine Vorlieben“.',
   'memory.organiseFailed': 'Ordnen fehlgeschlagen',
+  'memory.organiseNotAvailable': '„Für mich ordnen“ ist mit Qutai Credits noch nicht verfügbar. Aktualisieren Sie Qutai oder versuchen Sie es später erneut.',
   'memory.proposalTitle': 'Vorgeschlagene Kategorien',
   'memory.proposalHint': 'Entfernen Sie das Häkchen bei allem, was bleiben soll, wo es ist.',
   'memory.proposalApply': 'Verschieben',

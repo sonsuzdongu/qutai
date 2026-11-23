@@ -619,6 +619,7 @@ export const id: Record<keyof typeof en, string> = {
   'memory.organiseNoKey': 'Tambahkan kunci AI di Setelan › Asisten terlebih dahulu.',
   'memory.organiseNothing': 'Tidak ada yang perlu dipindah: semuanya cocok di Preferensi umum.',
   'memory.organiseFailed': 'Tidak dapat mengatur',
+  'memory.organiseNotAvailable': '“Atur untuk saya” belum tersedia dengan Qutai Credits. Perbarui Qutai atau coba lagi nanti.',
   'memory.proposalTitle': 'Kategori yang diusulkan',
   'memory.proposalHint': 'Hapus centang pada apa pun yang harus tetap di tempatnya.',
   'memory.proposalApply': 'Pindahkan',

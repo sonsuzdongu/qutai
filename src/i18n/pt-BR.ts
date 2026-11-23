@@ -620,6 +620,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'memory.organiseNoKey': 'Primeiro, adicione uma chave de IA em Configurações › Assistente.',
   'memory.organiseNothing': 'Nada para mover: todas se encaixam em Preferências gerais.',
   'memory.organiseFailed': 'Não foi possível organizar',
+  'memory.organiseNotAvailable': '“Organizar para mim” ainda não está disponível com os Qutai Credits. Atualize o Qutai ou tente novamente mais tarde.',
   'memory.proposalTitle': 'Categorias propostas',
   'memory.proposalHint': 'Desmarque o que deve ficar onde está.',
   'memory.proposalApply': 'Mover',

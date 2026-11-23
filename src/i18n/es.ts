@@ -618,6 +618,7 @@ export const es: Record<keyof typeof en, string> = {
   'memory.organiseNoKey': 'Primero agrega una clave de IA en Configuración › Asistente.',
   'memory.organiseNothing': 'Nada que mover: todos encajan en Preferencias generales.',
   'memory.organiseFailed': 'No se pudo organizar',
+  'memory.organiseNotAvailable': '“Organizar por mí” aún no está disponible con Qutai Credits. Actualice Qutai o inténtelo más tarde.',
   'memory.proposalTitle': 'Categorías propuestas',
   'memory.proposalHint': 'Desmarca lo que deba quedarse donde está.',
   'memory.proposalApply': 'Mover',

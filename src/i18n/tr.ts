@@ -609,6 +609,7 @@ export const tr: Record<keyof typeof en, string> = {
   'memory.organiseNoKey': 'Önce Ayarlar › Asistan bölümünden bir yapay zekâ anahtarı ekleyin.',
   'memory.organiseNothing': 'Taşınacak bir şey yok: hepsi Genel tercihler için uygun.',
   'memory.organiseFailed': 'Düzenlenemedi',
+  'memory.organiseNotAvailable': '“Benim için düzenle” Qutai Kredileriyle henüz kullanılamıyor. Qutai’ı güncelleyin veya daha sonra tekrar deneyin.',
   'memory.proposalTitle': 'Önerilen kategoriler',
   'memory.proposalHint': 'Yerinde kalması gerekenlerin işaretini kaldırın.',
   'memory.proposalApply': 'Taşı',
