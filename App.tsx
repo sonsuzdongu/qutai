@@ -139,8 +139,8 @@ import { printPage, savePagePdf, savePdfFromScreenshots } from './src/device/pdf
 import { saveImage } from './src/device/saveImage';
 import { CaptureCancelled } from './src/device/fullPage';
 import { offerSettings, PermissionDeniedError } from './src/device/settings';
-import { saveFullPageScreenshot, saveScreenshot } from './src/device/screenshot';
-import { setSpeechNotice, speak, speakPage, stopSpeaking, useIsSpeaking } from './src/device/speech';
+import { saveFullPageScreenshot } from './src/device/screenshot';
+import { setSpeechNotice, speak, stopSpeaking, useIsSpeaking } from './src/device/speech';
 import { speechText } from './src/chat/speechText';
 import { stopVoiceInput } from './src/device/voiceInput';
 import { PushToTalkBubble, usePushToTalk } from './src/components/PushToTalk';
@@ -1438,16 +1438,7 @@ function BrowserApp({
       disabled: onNewTab,
       onPress: () => runAction(() => shareLink(tab)),
     },
-    {
-      icon: 'copy',
-      label: t('menu.copyLink'),
-      disabled: onNewTab,
-      onPress: () =>
-        runAction(async () => {
-          await copyLink(tab);
-          return t('menu.linkCopied');
-        }),
-    },
+    // No "Copy link" here: the share sheet has it (UI-51).
     // Android: a launcher shortcut for this page (iOS gives apps no way to add one; Safari's is its own).
     ...(pinShortcuts && !tab.incognito
       ? [
@@ -1512,17 +1503,32 @@ function BrowserApp({
       disabled: onNewTab,
       onPress: () => tab.toggleDesktop(),
     },
-    speaking
-      ? { icon: 'stopReading', label: t('menu.stopReading'), onPress: () => runAction(stopSpeaking) }
-      : {
-          icon: 'readAloud',
-          label: t('menu.readAloud'),
-          disabled: onNewTab,
-          onPress: () =>
-            runAction(async () => {
-              await speakPage(tab);
-            }),
-        },
+    {
+      // The cookies that apply to this page, from the tab's own store (values hidden until revealed).
+      icon: 'cookies',
+      label: t('menu.cookies'),
+      disabled: onNewTab || !currentSite,
+      onPress: () => openScreen({ kind: 'cookies', tab: tab }),
+    },
+    // Ad blocking for this site straight from the menu (BLK-33): a site that won't open with it gets a way out in
+    // one tap; the page reloads so the change applies.
+    ...(settings.blockAds && currentSite && !onNewTab
+      ? [
+          {
+            icon: 'shield' as const,
+            label: t('menu.blockAdsHere'),
+            checked: sitePermissions.blockingFor(currentSite),
+            onPress: () => {
+              sitePermissions
+                .setBlocking(currentSite, !sitePermissions.blockingFor(currentSite))
+                .then(() => tab.reload())
+                .catch(() => {});
+            },
+          },
+        ]
+      : []),
+    // "Read page aloud" is no longer offered here (UI-51); while something is being read, it can still be stopped.
+    ...(speaking ? [{ icon: 'stopReading' as const, label: t('menu.stopReading'), onPress: () => runAction(stopSpeaking) }] : []),
     // Less frequent things live one level down, so the menu fits without scrolling.
     {
       icon: 'library',
@@ -1595,16 +1601,7 @@ function BrowserApp({
           onPress: () => runAction(() => printPage(tab)),
         },
         {
-          icon: 'screenshot',
-          label: t('menu.saveScreenshot'),
-          disabled: onNewTab,
-          onPress: () =>
-            runAction(async () => {
-              await saveScreenshot(tab);
-              return t('menu.screenshotSaved');
-            }),
-        },
-        {
+          // Only the full-page screenshot here; the visible part alone is left to the phone's own screenshot (UI-51).
           icon: 'screenshot',
           label: t('menu.saveFullScreenshot'),
           disabled: onNewTab,
@@ -1617,15 +1614,8 @@ function BrowserApp({
             }),
         },
         {
-          // The cookies that apply to this page, from the tab's own store (values hidden until revealed).
-          icon: 'cookies',
-          section: true,
-          label: t('menu.cookies'),
-          disabled: onNewTab || !currentSite,
-          onPress: () => openScreen({ kind: 'cookies', tab: tab }),
-        },
-        {
           icon: 'textSize',
+          section: true,
           label: t('menu.textSize'),
           onPress: () => setTextSizeVisible(true),
         },
@@ -1637,23 +1627,6 @@ function BrowserApp({
             : t('site.listTitle'),
           onPress: () => (currentSite ? setPermissionHost(currentSite) : openScreen({ kind: 'sites' })),
         },
-        // Ad blocking for this site straight from the menu (BLK-33): a site that won't open with it gets a way out in
-        // one tap; the page reloads so the change applies.
-        ...(settings.blockAds && currentSite && !onNewTab
-          ? [
-              {
-                icon: 'shield' as const,
-                label: t('menu.blockAdsHere'),
-                checked: sitePermissions.blockingFor(currentSite),
-                onPress: () => {
-                  sitePermissions
-                    .setBlocking(currentSite, !sitePermissions.blockingFor(currentSite))
-                    .then(() => tab.reload())
-                    .catch(() => {});
-                },
-              },
-            ]
-          : []),
       ],
     },
   ];

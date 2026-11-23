@@ -412,8 +412,6 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.pdfPreparing': 'PDF hazırlanıyor…',
   'menu.pdfImagesMissing': "{count} görsel PDF’ye eklenemedi",
   'menu.print': 'Yazdır',
-  'menu.saveScreenshot': 'Ekran görüntüsünü kaydet',
-  'menu.screenshotSaved': "Ekran görüntüsü Fotoğraflar’a kaydedildi",
   'menu.saveFullScreenshot': 'Tam sayfa ekran görüntüsü',
   'menu.fullScreenshotSaved': "Tam sayfa ekran görüntüsü Fotoğraflar’a kaydedildi",
   'menu.fullScreenshotParts':
@@ -426,7 +424,6 @@ export const tr: Record<keyof typeof en, string> = {
   'capture.busy': 'Zaten bir sayfa yakalama işlemi sürüyor.',
   'capture.decodeFailed': 'Yakalanan ekranlardan biri okunamadı.',
   'capture.tooLarge': 'Sayfa bu cihazda birleştirilemeyecek kadar büyük.',
-  'menu.readAloud': 'Sayfayı sesli oku',
   'menu.stopReading': 'Okumayı durdur',
   'menu.bookmarks': 'Yer imleri',
   'menu.history': 'Geçmiş',

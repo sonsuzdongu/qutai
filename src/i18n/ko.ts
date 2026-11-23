@@ -421,8 +421,6 @@ export const ko: Record<keyof typeof en, string> = {
   'menu.pdfPreparing': 'PDF 준비 중…',
   'menu.pdfImagesMissing': '이미지 {count}개를 PDF에 추가하지 못했습니다',
   'menu.print': '인쇄',
-  'menu.saveScreenshot': '스크린샷 저장',
-  'menu.screenshotSaved': '스크린샷이 사진에 저장되었습니다',
   'menu.saveFullScreenshot': '전체 페이지 스크린샷',
   'menu.fullScreenshotSaved': '전체 페이지 스크린샷이 사진에 저장되었습니다',
   'menu.fullScreenshotParts':
@@ -435,7 +433,6 @@ export const ko: Record<keyof typeof en, string> = {
   'capture.busy': '이미 페이지 캡처가 진행 중입니다.',
   'capture.decodeFailed': '캡처한 화면을 읽을 수 없습니다.',
   'capture.tooLarge': '페이지가 너무 커서 이 기기에서 하나로 합칠 수 없습니다.',
-  'menu.readAloud': '페이지 소리 내어 읽기',
   'menu.stopReading': '읽기 중지',
   'menu.bookmarks': '북마크',
   'menu.history': '방문 기록',

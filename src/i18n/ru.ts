@@ -422,8 +422,6 @@ export const ru: Record<keyof typeof en, string> = {
   'menu.pdfPreparing': 'Подготовка PDF…',
   'menu.pdfImagesMissing': 'Не удалось добавить в PDF {count} {count|one:изображение|few:изображения|many:изображений}',
   'menu.print': 'Печать',
-  'menu.saveScreenshot': 'Сохранить скриншот',
-  'menu.screenshotSaved': 'Скриншот сохранён в «Фото»',
   'menu.saveFullScreenshot': 'Скриншот всей страницы',
   'menu.fullScreenshotSaved': 'Скриншот всей страницы сохранён в «Фото»',
   'menu.fullScreenshotParts':
@@ -436,7 +434,6 @@ export const ru: Record<keyof typeof en, string> = {
   'capture.busy': 'Снимок страницы уже выполняется.',
   'capture.decodeFailed': 'Не удалось прочитать снятый экран.',
   'capture.tooLarge': 'Страница слишком большая, чтобы собрать её на этом устройстве.',
-  'menu.readAloud': 'Прочитать страницу вслух',
   'menu.stopReading': 'Остановить чтение',
   'menu.bookmarks': 'Закладки',
   'menu.history': 'История',

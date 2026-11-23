@@ -423,8 +423,6 @@ export const es: Record<keyof typeof en, string> = {
   'menu.pdfPreparing': 'Preparando PDF…',
   'menu.pdfImagesMissing': 'No se {count|one:pudo|other:pudieron} agregar {count} {count|one:imagen|other:imágenes} al PDF',
   'menu.print': 'Imprimir',
-  'menu.saveScreenshot': 'Guardar captura de pantalla',
-  'menu.screenshotSaved': 'Captura guardada en Fotos',
   'menu.saveFullScreenshot': 'Captura de página completa',
   'menu.fullScreenshotSaved': 'Captura de página completa guardada en Fotos',
   'menu.fullScreenshotParts':
@@ -437,7 +435,6 @@ export const es: Record<keyof typeof en, string> = {
   'capture.busy': 'Ya hay una captura de página en curso.',
   'capture.decodeFailed': 'No se pudo leer una pantalla capturada.',
   'capture.tooLarge': 'La página es demasiado grande para unirla en este dispositivo.',
-  'menu.readAloud': 'Leer la página en voz alta',
   'menu.stopReading': 'Dejar de leer',
   'menu.bookmarks': 'Marcadores',
   'menu.history': 'Historial',

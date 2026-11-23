@@ -422,8 +422,6 @@ export const id: Record<keyof typeof en, string> = {
   'menu.pdfPreparing': 'Menyiapkan PDF…',
   'menu.pdfImagesMissing': '{count} gambar tidak dapat ditambahkan ke PDF',
   'menu.print': 'Cetak',
-  'menu.saveScreenshot': 'Simpan screenshot',
-  'menu.screenshotSaved': 'Screenshot disimpan ke Foto',
   'menu.saveFullScreenshot': 'Screenshot satu halaman penuh',
   'menu.fullScreenshotSaved': 'Screenshot satu halaman penuh disimpan ke Foto',
   'menu.fullScreenshotParts':
@@ -436,7 +434,6 @@ export const id: Record<keyof typeof en, string> = {
   'capture.busy': 'Pengambilan halaman sedang berjalan.',
   'capture.decodeFailed': 'Layar yang diambil tidak dapat dibaca.',
   'capture.tooLarge': 'Halaman terlalu besar untuk disatukan di perangkat ini.',
-  'menu.readAloud': 'Bacakan halaman',
   'menu.stopReading': 'Berhenti membacakan',
   'menu.bookmarks': 'Bookmark',
   'menu.history': 'Histori',

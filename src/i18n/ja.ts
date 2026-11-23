@@ -423,8 +423,6 @@ export const ja: Record<keyof typeof en, string> = {
   'menu.pdfPreparing': 'PDF を準備しています…',
   'menu.pdfImagesMissing': '{count} 枚の画像を PDF に追加できませんでした',
   'menu.print': '印刷',
-  'menu.saveScreenshot': 'スクリーンショットを保存',
-  'menu.screenshotSaved': 'スクリーンショットを写真に保存しました',
   'menu.saveFullScreenshot': 'ページ全体のスクリーンショット',
   'menu.fullScreenshotSaved': 'ページ全体のスクリーンショットを写真に保存しました',
   'menu.fullScreenshotParts':
@@ -437,7 +435,6 @@ export const ja: Record<keyof typeof en, string> = {
   'capture.busy': 'ページのキャプチャはすでに実行中です。',
   'capture.decodeFailed': 'キャプチャした画面を読み取れませんでした。',
   'capture.tooLarge': 'ページが大きすぎて、このデバイスではつなぎ合わせられません。',
-  'menu.readAloud': 'ページを読み上げ',
   'menu.stopReading': '読み上げを停止',
   'menu.bookmarks': 'ブックマーク',
   'menu.history': '履歴',

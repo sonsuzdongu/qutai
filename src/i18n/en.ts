@@ -411,8 +411,6 @@ export const en = {
   'menu.pdfPreparing': 'Preparing PDF…',
   'menu.pdfImagesMissing': "{count} image(s) couldn't be added to the PDF",
   'menu.print': 'Print',
-  'menu.saveScreenshot': 'Save screenshot',
-  'menu.screenshotSaved': 'Screenshot saved to Photos',
   'menu.saveFullScreenshot': 'Full-page screenshot',
   'menu.fullScreenshotSaved': 'Full-page screenshot saved to Photos',
   'menu.fullScreenshotParts':
@@ -425,7 +423,6 @@ export const en = {
   'capture.busy': 'A page capture is already running.',
   'capture.decodeFailed': "A captured screen couldn't be read.",
   'capture.tooLarge': 'The page is too large to put together on this device.',
-  'menu.readAloud': 'Read page aloud',
   'menu.stopReading': 'Stop reading',
   'menu.bookmarks': 'Bookmarks',
   'menu.history': 'History',

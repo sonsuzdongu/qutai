@@ -423,8 +423,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'menu.pdfPreparing': 'Preparando PDF…',
   'menu.pdfImagesMissing': '{count} {count|one:imagem não pôde ser adicionada|other:imagens não puderam ser adicionadas} ao PDF',
   'menu.print': 'Imprimir',
-  'menu.saveScreenshot': 'Salvar captura de tela',
-  'menu.screenshotSaved': 'Captura de tela salva em Fotos',
   'menu.saveFullScreenshot': 'Captura da página inteira',
   'menu.fullScreenshotSaved': 'Captura da página inteira salva em Fotos',
   'menu.fullScreenshotParts':
@@ -437,7 +435,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'capture.busy': 'Uma captura de página já está em andamento.',
   'capture.decodeFailed': 'Não foi possível ler uma tela capturada.',
   'capture.tooLarge': 'A página é grande demais para ser montada neste dispositivo.',
-  'menu.readAloud': 'Ler página em voz alta',
   'menu.stopReading': 'Parar leitura',
   'menu.bookmarks': 'Favoritos',
   'menu.history': 'Histórico',
