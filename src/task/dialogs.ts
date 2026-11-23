@@ -14,10 +14,10 @@ import type { IconLine, IconLines } from '../ui/Icon';
  * The questions a running task asks the user (moved from App.tsx with the task lifecycle, task/sendTask.ts). Each is
  * dismissed as declined when the task stops (`signal`). "Always allow" answers are saved in the site permissions.
  */
-let sitePermissions: Pick<SitePermissionStore, 'set' | 'setPersonal'> | null = null;
+let sitePermissions: Pick<SitePermissionStore, 'set' | 'setPersonal' | 'setPosting'> | null = null;
 
 /** The site permissions "Always allow" answers go to (set once by App.tsx). */
-export function setTaskDialogSites(sites: Pick<SitePermissionStore, 'set' | 'setPersonal'>) {
+export function setTaskDialogSites(sites: Pick<SitePermissionStore, 'set' | 'setPersonal' | 'setPosting'>) {
   sitePermissions = sites;
 }
 
@@ -111,12 +111,14 @@ export async function askSiteRules(approval: SiteRulesApproval, active: boolean,
 }
 
 /**
- * Posting and paying (request_approval, agent/approvalTool.ts): the site, what kind of action, and what Qutai read on
- * the page (the exact text or the form's values; the total, the line it is on, the order and the payment method,
- * any recurring charge), every time, never "don't ask again". Only Approve grants the one press; stopping the task
- * dismisses it as declined.
+ * Posting, paying and changes (request_approval, agent/approvalTool.ts): the site, what kind of action, and what Qutai
+ * read on the page (the exact text or the form's values; the total, the line it is on, the order and the payment
+ * method, any recurring charge). Pay and change ask every time, never "don't ask again". Publish offers "Post on
+ * {site} without asking" (off; PAY-29), never in incognito (`incognito`: the task's conversation touched an incognito
+ * tab); Approve with it ticked saves it for the site. Only Approve grants the one press; stopping the task dismisses
+ * it as declined.
  */
-export async function askOutward(approval: OutwardApproval, signal: AbortSignal): Promise<boolean> {
+export async function askOutward(approval: OutwardApproval, signal: AbortSignal, incognito = false): Promise<boolean> {
   const lines: IconLine[] = [];
   let title: string;
   let approve: string;
@@ -153,14 +155,18 @@ export async function askOutward(approval: OutwardApproval, signal: AbortSignal)
     ...(approval.kind === 'change' ? [t('approval.changeNote')] : []),
     t('approval.onlyHere'),
   ];
+  const remember = approval.kind === 'publish' && approval.canRemember && !approval.incognito && !incognito;
   const result = await dialog.show({
     title,
     lines: { lines, spaced: true },
     message: notes.join('\n\n'),
     buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: approve, primary: true }],
+    ...(remember ? { checkbox: { label: t('approval.rememberSite', { site: approval.site }) } } : {}),
     signal,
   });
-  return result.button === 1;
+  const approved = result.button === 1;
+  if (approved && remember && result.checked) sitePermissions?.setPosting(approval.site, true).catch(() => {});
+  return approved;
 }
 
 /**

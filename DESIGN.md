@@ -19,6 +19,7 @@ Last updated: 2026-11-23
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-23:** The publish dialog offers "Post on {site} without asking from now on" (off); a remembered site posts without the dialog while the text check and the check before the press stay, never for payments or changes, in incognito, on Read only or Blocked sites or in the background; shown and removable in the site's settings (`PAY-29`, `SITE-27`, `PAY-13` and `SITE-10` changed; owner).
 - **2026-11-23:** The privacy policy names no person: "Who we are" says Qutai is developed as open source and the Qutai team is responsible for the data, in all ten languages; legal version unchanged (`LEGAL-30`).
 - **2026-11-23:** Toasts, the capture pill, the push-to-talk bubble, the selection bar and the action sheet follow the app's theme instead of staying dark, and toasts never sit under a bar (the tab switcher's undo bar stands on its toolbar); a test stops new hard-coded colours (`UI-48`, owner's 0.1.16 test).
 - **2026-11-23:** The ⋮ page menu no longer scrolls with free room above it: it is a fixed 230 pt wide, so wrapped labels are measured as drawn, and it fills the room between the bars before scrolling (`UI-47`, owner's 0.1.16 test).

@@ -74,6 +74,24 @@ export async function setPersonalSetting(db: Db, host: string, setting: Personal
   );
 }
 
+/** Sites where the assistant may post without the publish dialog (PAY-29). */
+export async function listPostingRemembered(db: Db): Promise<string[]> {
+  const rows = await db.getAllAsync<{ host: string }>('SELECT host FROM site_posting ORDER BY host', []);
+  return rows.map((r) => r.host);
+}
+
+/** Remembers (or forgets) that the assistant may post on a site without the publish dialog. */
+export async function setPostingRemembered(db: Db, host: string, on: boolean): Promise<void> {
+  if (!on) {
+    await db.runAsync('DELETE FROM site_posting WHERE host = ?', [host]);
+    return;
+  }
+  await db.runAsync(
+    'INSERT INTO site_posting (host, updated_at) VALUES (?, ?) ON CONFLICT(host) DO UPDATE SET updated_at = excluded.updated_at',
+    [host, Date.now()],
+  );
+}
+
 /** Sites where network ad and tracker blocking is off. */
 export async function listBlockingOff(db: Db): Promise<string[]> {
   const rows = await db.getAllAsync<{ host: string }>('SELECT host FROM site_blocking ORDER BY host', []);
@@ -137,6 +155,8 @@ export type SiteEntry = {
   blocking: boolean;
   /** Whether the assistant may enter the user's remembered personal details here. */
   personal: PersonalSetting;
+  /** The user ticked "Post on {site} without asking" in the publish dialog (PAY-29). */
+  posting: boolean;
 };
 
 /**
@@ -152,6 +172,8 @@ export class SitePermissionStore implements SitePolicy {
   private personal = new Map<string, PersonalSetting>();
   /** Sites where ad and tracker blocking is off ("Don't block on this site"). */
   private blockingOff = new Set<string>();
+  /** Sites where the assistant posts without the publish dialog (PAY-29). */
+  private posting = new Set<string>();
   /**
    * Settings changed before loading finished (`${kind} ${host}`): they win over what was on disk, also when the change
    * was back to the default, which leaves nothing in the maps above to show it (SITE-26).
@@ -173,9 +195,10 @@ export class SitePermissionStore implements SitePolicy {
           listMediaSettings(db),
           listBlockingOff(db),
           listPersonalSettings(db),
+          listPostingRemembered(db),
         ]),
       )
-      .then(([list, locations, media, blockingOff, personal]) => {
+      .then(([list, locations, media, blockingOff, personal, posting]) => {
         // Changes made while loading win over what was on disk. Stored hosts are read as siteKey makes them now
         // (utils/webUrl.ts, SITE-25: punycode, no trailing dot), so an older key still matches its site.
         const key = (host: string) => siteKeyOfHost(host) ?? host;
@@ -190,6 +213,7 @@ export class SitePermissionStore implements SitePolicy {
           if (fresh(m.kind, key(m.host)) && !this.media.has(k)) this.media.set(k, m.setting);
         }
         for (const host of blockingOff) if (fresh('blocking', key(host))) this.blockingOff.add(key(host));
+        for (const host of posting) if (fresh('posting', key(host))) this.posting.add(key(host));
         this.blockingOffList = [...this.blockingOff].sort();
         // Merged: from here on the maps are the whole truth. (After a failed load the marks stay for the next try.)
         this.touched.clear();
@@ -239,6 +263,22 @@ export class SitePermissionStore implements SitePolicy {
     await setPersonalSetting(await this.getDb(), host, setting);
   }
 
+  /**
+   * Whether the user chose "Post on {site} without asking" for this site (PAY-29). Only the remembered choice: the
+   * caller also checks incognito and the site's level.
+   */
+  postingFor(host: string): boolean {
+    return this.posting.has(host);
+  }
+
+  async setPosting(host: string, on: boolean): Promise<void> {
+    this.touch('posting', host);
+    if (on) this.posting.add(host);
+    else this.posting.delete(host);
+    this.emit();
+    await setPostingRemembered(await this.getDb(), host, on);
+  }
+
   mediaFor(host: string, kind: MediaKind): PermissionSetting {
     return this.media.get(`${kind} ${host}`) ?? 'ask';
   }
@@ -262,7 +302,10 @@ export class SitePermissionStore implements SitePolicy {
     await setBlockingOff(await this.getDb(), host, !on);
   }
 
-  /** Every site with an assistant level, a personal-information, location, camera or microphone setting of its own. */
+  /**
+   * Every site with an assistant level, a personal-information, location, camera or microphone setting, blocking off
+   * or posting without asking of its own.
+   */
   list(): SiteEntry[] {
     const hosts = new Set([
       ...this.levels.keys(),
@@ -270,6 +313,7 @@ export class SitePermissionStore implements SitePolicy {
       ...[...this.media.keys()].map((key) => key.slice(key.indexOf(' ') + 1)),
       ...this.blockingOff,
       ...this.personal.keys(),
+      ...this.posting,
     ]);
     return [...hosts]
       .map((host) => ({
@@ -280,6 +324,7 @@ export class SitePermissionStore implements SitePolicy {
         microphone: this.mediaFor(host, 'microphone'),
         blocking: this.blockingFor(host),
         personal: this.personalFor(host),
+        posting: this.postingFor(host),
       }))
       .sort((a, b) => a.host.localeCompare(b.host));
   }
@@ -308,6 +353,7 @@ export class SitePermissionStore implements SitePolicy {
       ...MEDIA_KINDS.map((kind) => this.setMedia(host, kind, 'ask')),
       this.setBlocking(host, true),
       this.setPersonal(host, 'ask'),
+      this.setPosting(host, false),
     ]);
   }
 

@@ -194,10 +194,15 @@ export type ToolContext = {
   /** Settings › Assistant › "Let the assistant complete payments", read at each use (off when absent). */
   paymentsAllowed?: () => boolean;
   /**
-   * The publish or pay dialog (what Qutai read on the page, the site, the button), every time: never "don't ask
-   * again", whatever the site's setting. True only on Approve.
+   * The publish, pay or change dialog (what Qutai read on the page, the site, the button). Pay and change ask every
+   * time; publish may offer "Post on {site} without asking" (PAY-29). True only on Approve.
    */
   confirmOutward?: (approval: OutwardApproval) => Promise<boolean>;
+  /**
+   * Whether the user chose "Post on {site} without asking" for this site and it applies now: not in a conversation
+   * that touched an incognito tab, not on a Read only or Blocked site (PAY-29). Absent: the dialog is always shown.
+   */
+  postingRemembered?: (site: string) => boolean;
   /**
    * The address book for find_contact and contact handles (agent/contactTool.ts, docs/contacts.md); absent where
    * contacts can't be used.

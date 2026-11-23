@@ -2,8 +2,9 @@
 
 Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md) · [All decisions](decisions-index.md) · [History](history.md)
 
-How the assistant posts, comments, sends messages on a site and completes a payment: always through Qutai's own
-approval dialog, one press at a time, and payments only when the user switched them on.
+How the assistant posts, comments, sends messages on a site and completes a payment: through Qutai's own approval
+dialog, one press at a time (posting can skip the dialog on a site the user chose, `PAY-29`), and payments only when
+the user switched them on.
 
 ## How it works
 
@@ -15,6 +16,10 @@ approval dialog, one press at a time, and payments only when the user switched t
 3. Approve allows ONE press of that button, in that tab, on that page, during this task. Just before the press Qutai
    reads the page again; if the page or the text changed, nothing is pressed and the assistant must ask again. No
    second "are you sure?" in the chat.
+   Under the text the publish dialog has a box, off: "Post on youtube.com without asking from now on". Approve with it
+   ticked remembers the site: the next post there shows no dialog, only the step line "Sent without the dialog: you
+   allowed posting on youtube.com". Qutai still reads the field, compares it with what the model typed and checks the
+   page again before the press. The site's settings show "Posting without asking" with "Ask every time again".
 4. If the assistant tries to press "Post" or Enter after typing its own text without an approval, Qutai refuses the
    press and tells it to ask first. This is judged by context (the button belongs to the field's form or composer),
    not by the button's words, so searches, filters, sign-in, codes and quantities are not affected.
@@ -49,8 +54,8 @@ approval dialog, one press at a time, and payments only when the user switched t
   Status: Default (manager or implementing session; open to change) · Why: what the user approves is read by Qutai, not taken from the model · Enforced: In the app: src/agent/approvalTool.ts (requestApprovalTool); App.tsx (askOutward) · Source: 4d97c4d
 - **`PAY-12`** The payments setting is read again when the dialog closes and before the press; turned off meanwhile, nothing is paid.
   Status: Default (manager or implementing session; open to change) · Why: the user may turn it off during a task · Enforced: In the app: src/agent/approvalTool.ts; src/agent/outwardApproval.ts (checkPress) · Source: 4d97c4d
-- **`PAY-13`** Both dialogs are shown every time: never "Don't ask again", whatever the site's permission.
-  Status: Default (manager or implementing session; open to change) · Why: part of the frame explained to the owner on 18 Nov · Enforced: In the app: App.tsx (askOutward has no box) · Source: 4d97c4d; docs/test-checklist.md (18 Nov)
+- **`PAY-13`** The pay and change dialogs are shown every time: never "Don't ask again", whatever the site's permission. The publish dialog is shown every time too, unless the user chose "Post on {site} without asking" for that site (`PAY-29`). Changed 23 Nov 2026 (owner): before, the publish dialog had no box either.
+  Status: Default for pay and change (manager or implementing session; open to change); the publish exception is the owner's, 2026-11-23 · Why: part of the frame explained to the owner on 18 Nov; on 23 Nov the owner asked to be asked once for social-media posting, "same as the site rules" · Enforced: In the app: src/task/dialogs.ts (askOutward offers the box only for publish) · Tests: scripts/approval-tests/rememberPosting.test.ts · Source: 4d97c4d; docs/test-checklist.md (18 Nov); owner, 23 Nov 2026
 - **`PAY-14`** Read only and Blocked sites never reach the dialog.
   Status: Default (manager or implementing session; open to change) · Why: reason not recorded · Enforced: In the app: src/agent/sitePolicy.ts (WRITE_ACTIONS includes request_approval) · Source: 4d97c4d
 - **`PAY-15`** There is no spending limit per payment or per currency.
@@ -74,6 +79,9 @@ approval dialog, one press at a time, and payments only when the user switched t
 
 - **`PAY-28`** Every check Qutai makes in the app before pressing, typing or granting an approval fails closed: when the page fact it needs (what a press does, the text a press or Enter would send, the field the approval covers, the total, the change dialog, whether a field is a password, code or card field, where such fields are on screen for a screenshot, whether a page is sensitive for a script) does not come back, comes back too late (5 s, 3 s for field checks) or comes back in the wrong shape, the step is refused with "Qutai couldn't check …; nothing was done", no approval dialog is shown and nothing is granted; a step line says Qutai couldn't check the step. The same holds when the user's saved memories can't be read: typing that might carry personal details is refused, and a tool result that might hold a hidden value is withheld. A real "nothing here" answer (no text field at that ref, an ordinary field, a button in no form) still counts as an answer. What the page answers is still only the page's word.
   Status: Default (implementing session; owner's 20 Nov 2026 code-review request) · Why: before this an error, a timeout or a nonsense answer from the page read as "nothing to approve", so a slow or hostile page could turn off the payment, delete, publish and secret-field checks · Enforced: In the app: src/agent/pageFacts.ts (queryPage, the parsers, gateFailedText), src/agent/approvalTool.ts (pressGate, enterGate, requestApprovalTool, secretFieldGate), src/agent/tools/page.ts (maskHiddenForCapture); src/agent/tools/gates.ts (personalGate); src/agent/executeTool.ts (executeTool), src/agent/scriptTool.ts · Tests: scripts/approval-tests/failClosed.test.ts (each gate's query throwing, never answering and answering the wrong shape) · Limits: a page that answers in the right shape but lies (hides its pay button's words) is not caught by this rule; that is what the page-independent limits of `PAY-26` and `PAY-27` describe · Source: 20 Nov 2026 code review
+
+- **`PAY-29`** The publish dialog offers a box, off by default: "Post on {site} without asking from now on" (site: the site key, as site permissions use it, `SITE-25`). Approve with it ticked remembers that site; afterwards a publish approval there shows no dialog and grants the one press at once, with the step line "Sent without the dialog: you allowed posting on {site}". Everything else still holds: the field's text is read and must match what the model typed (`PAY-2`), the grant is one press of that button on that page in that task (`PAY-3`), the page is checked again before the press (`PAY-4`), a send without a request is refused (`PAY-17`), every check fails closed (`PAY-28`), and the activity history records the request without the text (`PAY-25`). Only kind "publish": pay and change always show their dialog (`PAY-13`). Never offered or honoured in an incognito tab or a conversation that touched one, nor on a Read only or Blocked site (which never reach the dialog, `PAY-14`). In the background the task pauses before the request as before (`SITE-22`, `TASK-10`): a remembered site posts only while Qutai is open, unlike a site's "Always allow", which lets clicks and typing go on in the background. The choice is stored on the phone (table site_posting), shown and removable in the site's settings and cleared by the site's ✕ reset (`SITE-27`), not in backups, and the assistant can't set it (no tool writes it).
+  Status: Owner, 2026-11-23 (the feature: "ask once for social-media posting… Always remember for this site, same as the site rules"); the scope and safeguards (publish only, off by default, no incognito, foreground only, not in backups) are the manager's defaults, open to change · Why: the owner found the dialog on every post of a routine task tiring; the checks that make a post safe (the text read from the page, the press checked again) are the app's, not the dialog's, so they stay · Enforced: In the app: src/agent/approvalTool.ts (requestApprovalTool, canRemember, postingRemembered), src/agent/sitePolicy.ts (postingWithoutAsking), src/task/taskContext.ts, src/task/dialogs.ts (askOutward's box), src/storage/sitePermissions.ts (postingFor, setPosting, reset), src/storage/db.ts (site_posting); src/agent/executeTool.ts (backgroundBlocker: request_approval never runs in the background) · Tests: scripts/approval-tests/rememberPosting.test.ts (remembered vs not, form posts, incognito tab and conversation, Read only and Blocked, pay and change unaffected, a text mismatch still refused, a changed text refused at the press, the store and its reset); scripts/storage-tests/sitePermissionsLoad.test.ts · Limits: a remembered site covers every kind of publish there (post, comment, message, review, public form), not one kind; the model still decides what to write, so a page that talks the model into posting something can now post it on a remembered site without the user seeing it first; the step line in the chat shows that a post was made · Source: owner, 23 Nov 2026
 
 ## Details
 
@@ -109,7 +117,7 @@ presses. Payments stay off unless the user turns them on, and are approved one b
 
 ## Where it lives
 
-- `src/agent/outwardApproval.ts`, `src/agent/approvalTool.ts`, `src/agent/executeTool.ts`, `App.tsx` (`askOutward`),
+- `src/agent/outwardApproval.ts`, `src/agent/approvalTool.ts`, `src/agent/executeTool.ts`, `src/task/dialogs.ts` (`askOutward`),
   `src/components/SettingsModal.tsx`, `src/browser/pageScript.ts`, `scripts/page-tests/`.
 - Read next: README › Posting and paying.
 

@@ -126,7 +126,7 @@ test('publish: the dialog shows the text read from the field, and Approve grants
   assert.match(result.content, /approved this in Qutai's own dialog/);
   assert.match(result.content, /press ref=5 \("Comment"\)/);
   assert.match(result.content, /Do not ask for confirmation again in chat/);
-  assert.deepEqual(s.asked[0], { kind: 'publish', site: 'video.test', action: 'comment', button: 'Comment', text: 'Great video!', incognito: false });
+  assert.deepEqual(s.asked[0], { kind: 'publish', site: 'video.test', action: 'comment', button: 'Comment', text: 'Great video!', incognito: false, canRemember: true });
   assert.deepEqual(await s.press(5), { kind: 'approved' });
   // Used up: a second press of the same button has no approval left.
   assert.deepEqual(await s.press(5), { kind: 'none' });

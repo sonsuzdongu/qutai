@@ -186,6 +186,12 @@ export const MIGRATIONS: readonly (string | ((db: Db) => Promise<void>))[] = [
   // visits). It also serves every lookup by address, so the old index goes.
   `CREATE INDEX history_url_title_visited ON history (url, title, visited_at);
    DROP INDEX IF EXISTS history_url;`,
+  // Sites where the user ticked "Post on {site} without asking" in the publish dialog (PAY-29): the assistant's posts
+  // there skip the dialog (the app's checks still run). No row means the dialog is shown. Not in backups.
+  `CREATE TABLE site_posting (
+     host TEXT PRIMARY KEY NOT NULL,
+     updated_at INTEGER NOT NULL
+   );`,
 ];
 
 /**

@@ -1084,8 +1084,11 @@ text (the model's copy must match it, or nothing is asked) or the form's filled 
 kind `pay`, available only with Settings › Assistant › "Let the assistant complete payments" (off by default; turning
 it on asks once more; not changed by the assistant's `settings` tool and not restored from a backup). Its dialog
 shows the site, the total as found on the page and the line it is on, the order, the payment method as the page names
-it, and any subscription or renewal. Both dialogs are shown every time (never "Don't ask again", whatever the site's
-permission) and say that only the dialog can approve; read-only and blocked sites never get there.
+it, and any subscription or renewal. The pay dialog is shown every time (never "Don't ask again", whatever the site's
+permission); the publish dialog offers one box, off: "Post on {site} without asking from now on". With it, later posts
+on that site skip the dialog while every check below still runs; never in incognito, never in the background, shown and
+removable in the site's settings (`PAY-29`). Both dialogs say that only the dialog can approve; read-only and blocked
+sites never get there.
 
 Approve grants one press of that button, in that tab, on that page (the address without its fragment), during that
 task. Just before the press the app reads the page again: the same page, the field's text unchanged (or the form's

@@ -16,6 +16,7 @@ import {
   paymentsOffText,
   publishEnterFirstText,
   publishFirstText,
+  rememberedText,
   sameText,
   secretFieldText,
   type Grant,
@@ -57,6 +58,11 @@ export type OutwardApproval =
       text?: string;
       fields?: { label: string; value: string }[];
       incognito: boolean;
+      /**
+       * The dialog may offer "Post on {site} without asking" (PAY-29): an http(s) site in an ordinary tab. The task
+       * still leaves it out when its conversation touched an incognito tab.
+       */
+      canRemember: boolean;
     }
   | {
       kind: 'pay';
@@ -225,10 +231,30 @@ export async function requestApprovalTool(input: Record<string, unknown>, ctx: T
     grant = { ...base, kind: 'publish', fields: fieldLines(fields) };
     shown = { fields };
   }
-  const approved = await ctx.confirmOutward({ kind: 'publish', site, action: request.action, button: info.label, ...shown, incognito });
+  const enter = request.fieldRef === request.buttonRef;
+  // The user chose "Post on {site} without asking" (PAY-29): the text was read and matched above, and the press is
+  // checked again before it happens (checkPress), as after the dialog. Never in an incognito tab, and the task's own
+  // check (ctx.postingRemembered) also leaves out incognito conversations, Read only and Blocked sites.
+  const canRemember = !incognito && siteKey(tab.url) !== null;
+  if (canRemember && ctx.postingRemembered?.(site)) {
+    ctx.approvals.add(grant);
+    return {
+      content: rememberedText(site, request.buttonRef, info.label, enter),
+      isError: false,
+      notice: settingNotice(t('step.postRemembered', { site })),
+    };
+  }
+  const approved = await ctx.confirmOutward({
+    kind: 'publish',
+    site,
+    action: request.action,
+    button: info.label,
+    ...shown,
+    incognito,
+    canRemember,
+  });
   if (!approved) return { content: declinedText('publish'), isError: true, notice: declinedNotice() };
   ctx.approvals.add(grant);
-  const enter = request.fieldRef === request.buttonRef;
   return { content: approvedText('publish', request.buttonRef, info.label, enter), isError: false };
 }
 

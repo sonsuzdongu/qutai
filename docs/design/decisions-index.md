@@ -225,7 +225,7 @@ Moved to Details (ids retired, not reused): `UNTR-3`
 | `SITE-7` | "Ask before every action" is off by default; it decides only for Default sites, and it is restored from a… | Default |  |
 | `SITE-8` | Ticking "Always allow on {site}" in the confirmation sets the site to Always allow for good; never offered in incognito… | Default | 2026-11-19 |
 | `SITE-9` | "Don't ask again" is offered only for six phone kinds: scheduled notifications, calendar events,… | Default |  |
-| `SITE-10` | "Don't ask again" is never offered for anything that acts on a web page or leaves the phone (clicks,… | Default |  |
+| `SITE-10` | "Don't ask again" is never offered for anything that acts on a web page or leaves the phone (clicks,…; except `PAY-29` | Default | 2026-11-23 |
 | `SITE-11` | A risky download (apps, installers, archives) or a download in a conversation that touched an incognito… | Default |  |
 | `SITE-12` | A denial is never remembered; only Allow with the box ticked is. | Default |  |
 | `SITE-13` | "Allowed without asking" is not in backups and can't be changed by the assistant. | Default |  |
@@ -240,6 +240,7 @@ Moved to Details (ids retired, not reused): `UNTR-3`
 | `SITE-23` | Every action goes to the activity history (30 days, at most 2000 entries), refused and declined ones… | Default |  |
 | `SITE-25` | One URL module, read as the WebView reads addresses, for every site decision and every host shown; site key (host) vs registrable domain defined there | Default | 2026-11-20 |
 | `SITE-26` | A site setting changed while the stored ones load wins over disk, for every kind, also back to the default | Default | 2026-11-21 |
+| `SITE-27` | The site's settings show "Posting without asking" with "Ask every time again"; the list shows it and ✕ resets it; only the publish dialog turns it on | Default | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE-24`
 
@@ -276,7 +277,7 @@ Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE
 | `PAY-9` | The final payment button needs an approval: recognised by its label or by context (payment step, its form, a total)… | Default | 2026-11-19 |
 | `PAY-11` | The pay dialog shows the site, the total exactly as found on the page and the line it is on, the order,… | Default |  |
 | `PAY-12` | The payments setting is read again when the dialog closes and before the press; turned off meanwhile,… | Default |  |
-| `PAY-13` | Both dialogs are shown every time: never "Don't ask again", whatever the site's permission. | Default |  |
+| `PAY-13` | The pay and change dialogs are shown every time, never "Don't ask again"; publish too unless the site is remembered (`PAY-29`) | Default / Owner | 2026-11-23 |
 | `PAY-14` | Read only and Blocked sites never reach the dialog. | Default |  |
 | `PAY-15` | There is no spending limit per payment or per currency. | Owner | 2026-11-19 |
 | `PAY-16` | The pay dialog shows no picture of the order summary. | Owner | 2026-11-19 |
@@ -287,6 +288,7 @@ Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE
 | `PAY-26` | Deleting something or changing account or security settings on a site needs Qutai's own approval (request_approval kind "change")… | Default | 2026-11-19 |
 | `PAY-27` | A button with an amount and a billing period or subscribe word in its visible text is a payment press (pay approval and the payments setting) | Default | 2026-11-20 |
 | `PAY-28` | Every in-app check before a press, typing or an approval fails closed: no answer, an error or a wrong-shaped answer from the page refuses the step | Default | 2026-11-20 |
+| `PAY-29` | The publish dialog's box "Post on {site} without asking" (off) skips the dialog there later; text match, re-check and one-press grant stay; not pay/change, incognito, Read only, Blocked, background or backups | Owner | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `PAY-10`, `PAY-18`, `PAY-19`, `PAY-20`, `PAY-21`, `PAY-22`
 

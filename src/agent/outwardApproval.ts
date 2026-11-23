@@ -216,6 +216,22 @@ export function approvedText(kind: OutwardKind, buttonRef: number, button: strin
   );
 }
 
+/**
+ * The user chose "Post on {site} without asking" for this site (PAY-29): no dialog was shown, the press is granted
+ * as if approved, and the app's checks before the press still run.
+ */
+export function rememberedText(site: string, buttonRef: number, button: string, enter = false): string {
+  const how = enter
+    ? `press Enter in ref=${buttonRef}: call type with ref=${buttonRef}, the same text and submit true`
+    : `press ref=${buttonRef} ("${button}") with click to send it`;
+  return (
+    `The user chose to let Qutai post on ${site} without its dialog, so this is approved. Now complete it: ${how}, ` +
+    'then read the page and tell the user the outcome (sent, posted, or the error the site shows). ' +
+    'Do not ask for confirmation in chat. The approval is for one press of that button on this page; ' +
+    'if the page or the text changes first, ask again with request_approval.'
+  );
+}
+
 /** After Cancel, or when the dialog was dismissed. */
 export function declinedText(kind: OutwardKind): string {
   if (kind === 'change')

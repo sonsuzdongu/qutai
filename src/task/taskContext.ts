@@ -3,7 +3,7 @@ import { afterAnswer, isAlwaysAllowed, type AlwaysAllowKind } from '../agent/alw
 import type { ToolContext } from '../agent/executeTool';
 import type { AgentOptions } from '../agent/runAgent';
 import type { MemoryStore } from '../agent/memory';
-import { siteKey } from '../agent/sitePolicy';
+import { postingWithoutAsking, siteKey } from '../agent/sitePolicy';
 import { appStore, appsChanged } from '../apps/appStore';
 import { appRunner } from '../apps/runnerState';
 import type { Browser } from '../browser/Browser';
@@ -189,7 +189,9 @@ export function taskToolContext(
     confirmPersonal: (host, kinds, incognito) => askPersonalData(host, kinds, incognito, signal),
     confirmHidden: (host, what, field, incognito) => askHiddenValue(host, what, field, incognito, signal),
     confirmImage: (options) => whileAskingUser(() => askImageConfirmation(options, signal)),
-    confirmOutward: (approval) => whileAskingUser(() => askOutward(approval, signal)),
+    confirmOutward: (approval) => whileAskingUser(() => askOutward(approval, signal, scope.incognito())),
+    // "Post on {site} without asking" (PAY-29), read at each use: the user may remove it during a task.
+    postingRemembered: (site) => postingWithoutAsking(services.sitePermissions, site, scope.incognito()),
     // Read at each use: the user may turn it off during a task.
     paymentsAllowed: () => settings().assistantPayments,
     siteRules: {

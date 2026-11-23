@@ -84,3 +84,19 @@ export function decide(tool: string, host: string | null, level: SiteLevel, conf
   if (level === 'ask') return { kind: 'confirm' };
   return confirmByDefault ? { kind: 'confirm' } : { kind: 'run' };
 }
+
+/**
+ * Whether the assistant may post on a site without the publish dialog (PAY-29): the user's remembered choice ("Post on
+ * {site} without asking"), never in a conversation that touched an incognito tab, never on a Read only or Blocked site
+ * (those are refused before the dialog anyway, PAY-14). Only kind "publish": pay and change always ask.
+ */
+export function postingWithoutAsking(
+  sites: { levelFor(host: string): SiteLevel; postingFor(host: string): boolean },
+  site: string,
+  incognito: boolean,
+): boolean {
+  if (incognito) return false;
+  const level = sites.levelFor(site);
+  if (level === 'readonly' || level === 'blocked') return false;
+  return sites.postingFor(site);
+}

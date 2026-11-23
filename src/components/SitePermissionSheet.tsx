@@ -17,6 +17,12 @@ type Props = {
   /** Whether the assistant may enter the user's remembered personal details on this site. */
   personal: PersonalSetting;
   onSelectPersonal: (setting: PersonalSetting) => void;
+  /**
+   * The user ticked "Post on {site} without asking" in the publish dialog (PAY-29, SITE-27): shown with a way to
+   * remove it. It is only turned on from that dialog.
+   */
+  posting?: boolean;
+  onForgetPosting?: () => void;
   /** Whether the site itself may use the location. */
   location: LocationSetting;
   onSelectLocation: (setting: LocationSetting) => void;
@@ -58,6 +64,8 @@ export function SitePermissionSheet({
   onSelect,
   personal,
   onSelectPersonal,
+  posting,
+  onForgetPosting,
   location,
   onSelectLocation,
   camera,
@@ -166,6 +174,19 @@ export function SitePermissionSheet({
         hint={t(`site.personalHint.${personal}`)}
         onSelect={onSelectPersonal}
       />
+      {posting && onForgetPosting && (
+        <>
+          <Text style={styles.section}>{t('site.postingTitle')}</Text>
+          <Text style={styles.settingHint}>{t('site.postingHint')}</Text>
+          <Pressable
+            onPress={onForgetPosting}
+            style={({ pressed }) => [styles.forget, pressed && styles.pressed]}
+            accessibilityRole="button"
+          >
+            <Text style={styles.link}>{t('site.postingForget')}</Text>
+          </Pressable>
+        </>
+      )}
       <SettingSegment
         title={t('site.locationTitle')}
         value={location}
@@ -248,6 +269,7 @@ const useStyles = makeStyles((c) => ({
   blockRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingVertical: 10 },
   link: { fontSize: 14, fontWeight: '700', color: c.tintText, marginTop: 4 },
   allSites: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8 },
+  forget: { paddingHorizontal: 20, paddingVertical: 4 },
   stop: { paddingHorizontal: 20, paddingVertical: 10, gap: 2 },
   stopText: { fontSize: 15, fontWeight: '700', color: c.danger },
   section: { fontSize: 15, fontWeight: '700', color: c.text, paddingHorizontal: 20, marginTop: 12, marginBottom: 8 },

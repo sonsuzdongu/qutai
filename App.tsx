@@ -2595,6 +2595,8 @@ function BrowserApp({
           onSelectPersonal={(setting) =>
             permissionHost && sitePermissions.setPersonal(permissionHost, setting).catch(() => {})
           }
+          posting={!!permissionHost && sitePermissions.postingFor(permissionHost)}
+          onForgetPosting={() => permissionHost && sitePermissions.setPosting(permissionHost, false).catch(() => {})}
           // The page on screen is capturing on this site: offer to stop it right here.
           capturing={!!permissionHost && siteKey(tab.url) === permissionHost && tab.media.capturing}
           onStopCapture={() => tab.media.stop()}
