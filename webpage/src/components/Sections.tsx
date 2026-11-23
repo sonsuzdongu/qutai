@@ -287,11 +287,27 @@ function Node({ icon, title, sub, dashed }: { icon: IconName; title: MessageKey;
   );
 }
 
-/** The two ways to the AI: today with the user's own key (no Qutai server), later optionally through Qutai's. */
+/**
+ * The two ways to the AI: Qutai Credits through Qutai's server (official builds; listed first, as in the app, AI-35),
+ * and the user's own key straight to the provider (every build, the only way in builds from the repository).
+ */
 function DataPath() {
   const { t } = useI18n();
   return (
     <figure className="datapath reveal" role="img" aria-label={t('privacy.diagramLabel')}>
+      <div className="dp-lane">
+        <p className="dp-lane-head">
+          <strong>{t('privacy.routeService')}</strong>
+          <span className="dp-tag now">{t('privacy.routeServiceTag')}</span>
+        </p>
+        <div className="dp-route">
+          <Node icon="phone" title="privacy.diagramPhone" sub="privacy.diagramPhoneSub" />
+          <span className="dp-arrow" />
+          <Node icon="server" title="privacy.diagramQutai" sub="privacy.diagramQutaiSub" />
+          <span className="dp-arrow" />
+          <Node icon="globe" title="privacy.diagramAi" sub="privacy.diagramAiSub" />
+        </div>
+      </div>
       <div className="dp-lane">
         <p className="dp-lane-head">
           <strong>{t('privacy.routeOwn')}</strong>
@@ -306,19 +322,6 @@ function DataPath() {
           </span>
           <span className="dp-arrow" />
           <Node icon="key" title="privacy.diagramProvider" sub="privacy.diagramProviderSub" />
-        </div>
-      </div>
-      <div className="dp-lane planned">
-        <p className="dp-lane-head">
-          <strong>{t('privacy.routeService')}</strong>
-          <span className="dp-tag">{t('privacy.routeServiceTag')}</span>
-        </p>
-        <div className="dp-route">
-          <Node icon="phone" title="privacy.diagramPhone" sub="privacy.diagramPhoneSub" dashed />
-          <span className="dp-arrow dashed" />
-          <Node icon="server" title="privacy.diagramQutai" sub="privacy.diagramQutaiSub" dashed />
-          <span className="dp-arrow dashed" />
-          <Node icon="globe" title="privacy.diagramAi" sub="privacy.diagramAiSub" dashed />
         </div>
       </div>
     </figure>

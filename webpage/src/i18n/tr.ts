@@ -7,10 +7,10 @@ import type { Messages } from './en';
 export const tr: Messages = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai, iPhone ve Android için açık kaynak bir tarayıcı; içindeki yapay zekâ asistanı, istediğinizde sayfayı okur ve sizin için kullanır. Kendi AI anahtarınızla çalışır, verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Henüz geliştirme aşamasında.',
+    'Qutai, iPhone ve Android için açık kaynak bir tarayıcı; içindeki yapay zekâ asistanı, istediğinizde sayfayı okur ve sizin için kullanır. Qutai Kredileriyle ya da kendi AI anahtarınızla çalışır, verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Henüz geliştirme aşamasında.',
   'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: Qutai, Agentic Browser.',
   'meta.appDescription':
-    'iPhone ve Android için açık kaynak, yapay zekâ asistanlı bir tarayıcı: asistan, istediğinizde web sayfasını okur ve kendi AI anahtarınızla sizin için kullanır.',
+    'iPhone ve Android için açık kaynak, yapay zekâ asistanlı bir tarayıcı: asistan, istediğinizde web sayfasını okur ve Qutai Kredileriyle ya da kendi AI anahtarınızla sizin için kullanır.',
 
   'nav.skip': 'İçeriğe geç',
   'nav.label': 'Bölümler',
@@ -40,7 +40,8 @@ export const tr: Messages = {
   'hero.chip1': 'Sekmeleri okur',
   'hero.chip2': 'Sizi hatırlar',
   'hero.chip3': 'Önce sorar',
-  'hero.chip4': 'Kendi AI anahtarınız',
+  'hero.chip4':
+    'Qutai Kredileri ya da kendi anahtarınız',
 
   'statement.kicker': 'Qutai hakkında',
   'statement.text':
@@ -63,9 +64,10 @@ export const tr: Messages = {
   'start.title': 'Yayımlandığında üç adımda başlarsınız.',
   'start.step1.title': 'Qutai’ı kurun',
   'start.step1.body': 'Henüz mağazalarda yok: bugün depodan derleyebilir ya da projeyi GitHub’dan takip edebilirsiniz.',
-  'start.step2.title': 'AI anahtarınızı ekleyin',
+  'start.step2.title':
+    'Yapay zekâya nasıl bağlanacağını seçin',
   'start.step2.body':
-    'Anthropic, OpenAI, Gemini, OpenRouter ya da kendi sunucunuz. İsterseniz giriş yapıp anahtar yerine Qutai Kredileri kullanın.',
+    'Giriş yapıp Qutai Kredileri kullanın, anahtarla uğraşmayın. Ya da kendi anahtarınızı ekleyin: Anthropic, OpenAI, Gemini, OpenRouter ya da kendi sunucunuz.',
   'start.step3.title': 'Bir görev verin',
   'start.step3.body': 'Adres çubuğundaki Q’ya dokunup ne istediğinizi kendi sözlerinizle söyleyin.',
 
@@ -135,15 +137,17 @@ export const tr: Messages = {
     'Asistanın neyi başaracağı seçtiğiniz modele ve siteye göre değişir. Bunlar kodun bugün yapabildiklerinden örnekler; çoğu henüz gerçek bir telefonda denenmedi.',
 
   'privacy.kicker': 'Gizlilik, en baştan',
-  'privacy.title': 'Anahtar sizin. Telefon sizin. Karar sizin.',
+  'privacy.title': 'Seçim sizin. Telefon sizin. Karar sizin.',
   'privacy.lede':
-    'Qutai’ın yapay zekâya nasıl bağlanacağını siz seçersiniz. Kendi anahtarınızı kullanırsanız istekler telefonunuzdan doğrudan sağlayıcınıza gider; arada ne Qutai hesabı ne Qutai sunucusu olur. İsterseniz giriş yapıp Qutai Kredileri kullanırsınız: anahtarla uğraşmazsınız, istekler Qutai sunucusundan geçer ama orada saklanmaz, kayda da geçirilmez.',
+    'Qutai’ın yapay zekâya nasıl bağlanacağını siz seçersiniz. Giriş yapıp Qutai Kredileri kullanırsanız anahtarla uğraşmazsınız; istekler Qutai sunucusundan geçer ama orada saklanmaz, kayda da geçirilmez. Kendi anahtarınızı kullanırsanız istekler telefonunuzdan doğrudan sağlayıcınıza gider; arada ne Qutai hesabı ne Qutai sunucusu olur.',
   'privacy.diagramLabel':
-    'Yapay zekâya ulaşmanın iki yolunu gösteren şema. Kendi anahtarınızla: telefonunuz istekleri doğrudan seçtiğiniz sağlayıcıya gönderir, arada Qutai sunucusu yoktur. Qutai Kredileriyle, isteğe bağlı ve ücretli: istekler telefonunuzdan Qutai sunucusu üzerinden yapay zekâya gider, orada saklanmaz ve kayda geçirilmez.',
+    'Yapay zekâya ulaşmanın iki yolunu gösteren şema. Qutai Kredileriyle, resmî sürümlerde: istekler telefonunuzdan Qutai sunucusu üzerinden yapay zekâya gider, orada saklanmaz ve kayda geçirilmez. Kendi anahtarınızla, her sürümde: telefonunuz istekleri doğrudan seçtiğiniz sağlayıcıya gönderir, arada Qutai sunucusu yoktur.',
   'privacy.routeOwn': 'Kendi anahtarınızla',
-  'privacy.routeOwnTag': 'Şimdi kullanılabilir',
+  'privacy.routeOwnTag':
+    'Her sürümde',
   'privacy.routeService': 'Qutai hizmetiyle',
-  'privacy.routeServiceTag': 'İsteğe bağlı · ücretli',
+  'privacy.routeServiceTag':
+    'Resmî sürümlerde',
   'privacy.diagramPhone': 'Telefonunuz',
   'privacy.diagramPhoneSub': 'sekmeler, geçmiş, hafıza, sohbetler',
   'privacy.diagramProvider': 'AI sağlayıcınız',
@@ -269,7 +273,7 @@ export const tr: Messages = {
   'status.today.1':
     'Asistan: okuma, dokunma, yazma, form hatalarını düzeltme, sekmelerle çalışma, kaynaklı derin araştırma',
   'status.today.2':
-    'Kendi anahtarınızla beş sağlayıcı seçeneği ve her sohbete ayrı model; ya da hesapla Qutai Kredileri',
+    'Hesapla Qutai Kredileri; ya da kendi anahtarınızla beş sağlayıcı seçeneği ve her sohbete ayrı model',
   'status.today.3':
     'Konulara ayrılan ve gizlenebilen kayıtlarıyla hafıza, site bazında izinler, “Yapay zekâya gönderilenler” listesi',
   'status.today.4':

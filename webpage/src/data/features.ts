@@ -5,7 +5,7 @@ import type { IconName } from '../components/Icon';
  * backend/DESIGN.md) as of the date below. Only what the code does; limits said plainly. When a feature lands or
  * changes, update its item here in both languages, together with the home page.
  */
-export const FEATURES_CHECKED = '2026-11-21';
+export const FEATURES_CHECKED = '2026-11-23';
 
 export type Text = { en: string; tr: string };
 const t = (en: string, tr: string): Text => ({ en, tr });
@@ -62,10 +62,10 @@ export const PAGE = {
 export const PRINCIPLES: { icon: IconName; title: Text; body: Text }[] = [
   {
     icon: 'key',
-    title: t('Your key, or the optional service', 'Kendi anahtarınız ya da isteğe bağlı hizmet'),
+    title: t('Qutai Credits, or your own key', 'Qutai Kredileri ya da kendi anahtarınız'),
     body: t(
-      'With your own key, requests go from the phone straight to the provider you chose. In the official builds you may use Qutai Credits instead, through Qutai’s server, which doesn’t store or log them.',
-      'Kendi anahtarınızla istekler telefondan doğrudan seçtiğiniz sağlayıcıya gider. Resmî sürümlerde bunun yerine Qutai Kredileri kullanabilirsiniz; istekler Qutai sunucusundan geçer, orada saklanmaz ve kayda geçirilmez.',
+      'In the official builds, Qutai Credits come first: no key to manage, and requests go through Qutai’s server, which doesn’t store or log them. Or use your own key, and requests go from the phone straight to the provider you chose; builds from the repository work this way only.',
+      'Resmî sürümlerde önce Qutai Kredileri gelir: anahtarla uğraşmazsınız, istekler Qutai sunucusundan geçer, orada saklanmaz ve kayda geçirilmez. Ya da kendi anahtarınızı kullanırsınız; istekler telefondan doğrudan seçtiğiniz sağlayıcıya gider. Depodan derlenen sürümler yalnızca böyle çalışır.',
     ),
   },
   {
@@ -235,8 +235,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Tell it about yourself', 'Kendinizden bahsedin'),
         body: t(
-          'In setup, choose how: speak, type, or let Qutai ask you four short questions. When you speak or type, one AI request turns it into notes and Qutai asks at most three follow-ups; “Use my location” fills in your city, keeping only the city. You review every note before anything is saved, and allergies and health can be hidden from the AI.',
-          'Kurulumda nasıl anlatacağınızı seçin: konuşarak, yazarak ya da Qutai’ın soracağı dört kısa soruyu yanıtlayarak. Konuşur ya da yazarsanız Qutai bunu tek bir yapay zekâ isteğiyle notlara çevirir, en fazla üç soru daha sorar; “Konumumu kullan” şehrinizi doldurur ve yalnızca şehri saklar. Kaydetmeden önce her notu siz gözden geçirirsiniz; alerji ve sağlık bilgilerinizi yapay zekâdan gizleyebilirsiniz.',
+          'In setup, choose how: speak, type, or let Qutai ask you four short questions. When you speak or type, one AI request turns it into notes and Qutai asks at most three follow-ups; “Use my location” fills in your city, keeping only the city. You review every note before anything is saved, and allergies and health can be hidden from the AI. With Qutai Credits, this introduction is free: it uses none of your credits (up to three requests per account).',
+          'Kurulumda nasıl anlatacağınızı seçin: konuşarak, yazarak ya da Qutai’ın soracağı dört kısa soruyu yanıtlayarak. Konuşur ya da yazarsanız Qutai bunu tek bir yapay zekâ isteğiyle notlara çevirir, en fazla üç soru daha sorar; “Konumumu kullan” şehrinizi doldurur ve yalnızca şehri saklar. Kaydetmeden önce her notu siz gözden geçirirsiniz; alerji ve sağlık bilgilerinizi yapay zekâdan gizleyebilirsiniz. Qutai Kredileri kullanıyorsanız bu tanışma ücretsizdir, kredinizden düşmez (hesap başına en fazla üç istek).',
         ),
         asks: [
           t(
@@ -567,10 +567,17 @@ export const GROUPS: Group[] = [
     icon: 'key',
     title: t('Your AI, your choice', 'Yapay zekânız, seçiminiz'),
     lede: t(
-      'Bring your own key, or, in the official builds, use the optional Qutai service.',
-      'Kendi anahtarınızı kullanın ya da resmî sürümlerde isteğe bağlı Qutai hizmetini seçin.',
+      'In the official builds, use Qutai Credits with no key to manage, or bring your own key.',
+      'Resmî sürümlerde anahtarla uğraşmadan Qutai Kredileri kullanın ya da kendi anahtarınızı getirin.',
     ),
     items: [
+      {
+        title: t('Qutai Credits', 'Qutai Kredileri'),
+        body: t(
+          'In the official builds: no key, and no tier or model to choose; Qutai picks the model, and the app doesn’t show which one answered. Requests pass through Qutai’s server to Anthropic; the server keeps the account, the credits and, per request, the model, tokens and cost; never your messages, pages or memory. Buying credits in the App Store and Google Play is being prepared.',
+          'Resmî sürümlerde: anahtar da yok, seçmeniz gereken bir paket ya da model de; modeli Qutai belirler, uygulama hangi modelin yanıt verdiğini göstermez. İstekler Qutai sunucusu üzerinden Anthropic’e gider; sunucu hesabı, kredileri ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı, sayfaları ya da hafızanızı asla. App Store ve Google Play’den kredi satın alma hazırlanıyor.',
+        ),
+      },
       {
         title: t('Five ways with your own key', 'Kendi anahtarınızla beş seçenek'),
         body: t(
@@ -578,13 +585,6 @@ export const GROUPS: Group[] = [
           'Anthropic, OpenAI, Google Gemini, OpenRouter ya da kendi OpenAI uyumlu sunucunuz (Ollama, LM Studio, vLLM); bağlantıyı tek dokunuşla test edebilirsiniz. Anahtarlar telefonun güvenli deposunda durur; modeli her sohbet için ayrı seçebilirsiniz.',
         ),
         asks: [t('Use Gemini for this chat', 'Bu sohbette Gemini kullan')],
-      },
-      {
-        title: t('Qutai Credits', 'Qutai Kredileri'),
-        body: t(
-          'In the official builds: no key, and no tier or model to choose; Qutai picks the model, and the app doesn’t show which one answered. Requests pass through Qutai’s server to Anthropic; the server keeps the account, the credits and, per request, the model, tokens and cost; never your messages, pages or memory. Buying credits in the App Store and Google Play is being prepared.',
-          'Resmî sürümlerde: anahtar da yok, seçmeniz gereken bir paket ya da model de; modeli Qutai belirler, uygulama hangi modelin yanıt verdiğini göstermez. İstekler Qutai sunucusu üzerinden Anthropic’e gider; sunucu hesabı, kredileri ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı, sayfaları ya da hafızanızı asla. App Store ve Google Play’den kredi satın alma hazırlanıyor.',
-        ),
       },
       {
         title: t('A Qutai account, if you want one', 'İsterseniz bir Qutai hesabı'),
