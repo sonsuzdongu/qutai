@@ -2,7 +2,7 @@
   "expo": {
     "name": "Qutai",
     "slug": "qutai",
-    "version": "0.1.19",
+    "version": "0.1.20",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -17,7 +17,7 @@
           "NSAllowsLocalNetworking": true
         }
       },
-      "buildNumber": "119",
+      "buildNumber": "120",
       "bundleIdentifier": "com.sonsuzdongu.qutai",
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
@@ -76,7 +76,7 @@
           ]
         }
       ],
-      "versionCode": 119,
+      "versionCode": 120,
       "package": "com.sonsuzdongu.qutai",
       "blockedPermissions": [
         "android.permission.ACCESS_BACKGROUND_LOCATION",
