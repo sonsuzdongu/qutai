@@ -134,7 +134,6 @@ export type BackupSettings = Partial<{
   /** Missing in backups made before 21 Nov 2026 (left as it is on restore). */
   blockVideoAds?: boolean;
   theme: 'system' | 'light' | 'dark';
-  darkSites: boolean;
   addressBarPosition: 'top' | 'bottom';
   haptics: boolean;
   httpsOnly: boolean;
@@ -433,7 +432,6 @@ const BOOLEAN_SETTINGS = [
   'blockAds',
   'hideCookieBanners',
   'blockVideoAds',
-  'darkSites',
   'haptics',
   'httpsOnly',
   'blockThirdPartyCookies',

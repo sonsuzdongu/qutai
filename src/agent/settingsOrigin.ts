@@ -20,7 +20,6 @@ import { settingClass } from './settingsClass';
  */
 const WORDS: Record<string, string[]> = {
   theme: ['dark', 'light', 'night', 'theme', 'koyu', 'karanlık', 'açık', 'aydınlık', 'gece', 'tema', 'görünüm', 'dunkel', 'sombre', 'oscuro', 'escuro', 'тёмн', 'gelap', 'ダーク', '다크'],
-  dark_sites: ['dark', 'koyu', 'karanlık'],
   address_bar_position: ['address bar', 'adres çubu', 'top', 'bottom', 'üste', 'alta', 'yukarı', 'aşağı'],
   text_size: ['text size', 'font size', 'bigger', 'smaller', 'larger', 'zoom', 'yazı boyut', 'yazılar', 'büyüt', 'küçült', 'büyük yaz', 'küçük yaz', 'punto'],
   search_engine: ['search engine', 'arama motor', 'google', 'duckduckgo', 'bing', 'yandex'],

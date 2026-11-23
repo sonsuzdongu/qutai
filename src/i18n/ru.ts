@@ -1247,8 +1247,6 @@ export const ru: Record<keyof typeof en, string> = {
   'settings.theme.system': 'Как в системе',
   'settings.theme.light': 'Светлая',
   'settings.theme.dark': 'Тёмная',
-  'settings.darkSites': 'Тёмные сайты в тёмной теме',
-  'settings.darkSitesHint': 'Сайты без собственного тёмного оформления тоже показываются тёмными.',
 
   'settings.addressBarPosition': 'Адресная строка',
   'settings.addressBar.top': 'Вверху',

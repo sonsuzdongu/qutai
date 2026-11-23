@@ -2324,7 +2324,6 @@ function BrowserApp({
                 browser={browser}
                 newTabActions={{
                   darkMode,
-                  darkSites: settings.darkSites,
                   blockAds: settings.blockAds,
                   blockingOffSites: sitePermissions.blockingOffSites(),
                   contentRuleLists: contentBlocking.ruleLists,

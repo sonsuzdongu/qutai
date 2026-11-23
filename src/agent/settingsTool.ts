@@ -46,7 +46,6 @@ const CHANGEABLE = {
     values: ['system', 'light', 'dark'],
     valueLabel: (v: string) => t(`settings.theme.${v}` as MessageKey),
   },
-  dark_sites: { field: 'darkSites', label: 'settings.darkSites', place: inSettings('settings.appearance'), kind: 'boolean' },
   address_bar_position: {
     field: 'addressBarPosition',
     label: 'settings.addressBarPosition',

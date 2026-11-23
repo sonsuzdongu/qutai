@@ -1248,8 +1248,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'settings.theme.system': 'Sistema',
   'settings.theme.light': 'Claro',
   'settings.theme.dark': 'Escuro',
-  'settings.darkSites': 'Sites escuros no modo escuro',
-  'settings.darkSitesHint': 'Sites sem um design escuro próprio também são mostrados escuros.',
 
   'settings.addressBarPosition': 'Barra de endereço',
   'settings.addressBar.top': 'Em cima',

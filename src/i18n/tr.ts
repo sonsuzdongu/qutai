@@ -1237,8 +1237,6 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.theme.system': 'Sistem',
   'settings.theme.light': 'Açık',
   'settings.theme.dark': 'Koyu',
-  'settings.darkSites': 'Koyu temada siteleri de koyulaştır',
-  'settings.darkSitesHint': 'Kendi koyu tasarımı olmayan siteler de koyu gösterilir.',
 
   'settings.addressBarPosition': 'Adres çubuğu',
   'settings.addressBar.top': 'Üstte',

@@ -570,12 +570,6 @@ function SettingsPages({
               value={settings.theme}
               onChange={(theme) => set({ theme })}
             />
-            <SwitchRow
-              title={t('settings.darkSites')}
-              hint={t('settings.darkSitesHint')}
-              value={settings.darkSites}
-              onChange={(darkSites) => set({ darkSites })}
-            />
             <Text style={styles.label}>{t('settings.addressBarPosition')}</Text>
             <Segment
               options={(['top', 'bottom'] as const).map((position) => ({

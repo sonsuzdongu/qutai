@@ -499,7 +499,7 @@ Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-
 | `TOOL-3` | `share` (WhatsApp or any app) shows a card; only the user's tap prepares the files and opens the target; a… | Default |  |
 | `TOOL-5` | A text message is at most 1,000 characters and a WhatsApp message at most 2,000; WhatsApp needs an… | Default |  |
 | `TOOL-6` | `find_contact` gives the AI only names, labels ("mobile", "work email") and short-lived codes, never… | Default |  |
-| `TOOL-7` | The `settings` tool may change only these: theme, dark sites, address bar position, text size (50–200 %,… | Owner | 2026-11-15 |
+| `TOOL-7` | The `settings` tool may change only these: theme, address bar position, text size (50–200 %,… | Owner | 2026-11-15 |
 | `TOOL-8` | Refused by the `settings` tool, with the reason and an offer to open Settings: ask before every action;… | Default |  |
 | `TOOL-9` | A new setting is not changeable from the chat unless someone deliberately adds it to `CHANGEABLE` after… | Default |  |
 | `TOOL-10` | Today "Show where the assistant acts" is not in the settings tool. | **Waiting** |  |
@@ -875,6 +875,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-47` | The page menu is a fixed 230 pt wide and laid out in the room between the bars, so its rows are measured as drawn and it scrolls only when the room is full. | Default | 2026-11-23 |
 | `UI-48` | Everything follows the app's theme through the palette (incognito always dark); toasts sit above every bar; listed exceptions over photos, video, camera and brand art; a test stops new literal colours. | Default | 2026-11-23 |
 | `UI-49` | Android draws each text from the layout that was measured (prepared text layout, config plugin), so text never comes out wider than its box. | Default | 2026-11-23 |
+| `UI-50` | Qutai never darkens pages: `prefers-color-scheme` follows the app's theme (live); the "Dark sites in dark mode" switch is gone. | Owner | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

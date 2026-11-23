@@ -70,8 +70,6 @@ export type Settings = {
   blockVideoAds: boolean;
   /** App appearance; 'system' follows the phone. */
   theme: ThemeSetting;
-  /** In the dark theme, darken sites that have no dark design of their own. */
-  darkSites: boolean;
   /** Address bar at the top (default) or the bottom of the screen. */
   addressBarPosition: 'top' | 'bottom';
   /** Light vibrations for taps like switching tabs. */
@@ -165,7 +163,6 @@ export const DEFAULT_SETTINGS: Settings = {
   hideCookieBanners: true,
   blockVideoAds: false,
   theme: 'system',
-  darkSites: true,
   addressBarPosition: 'bottom',
   haptics: true,
   httpsOnly: false,
@@ -213,7 +210,6 @@ const KEYS = {
   hideCookieBanners: 'hide_cookie_banners',
   blockVideoAds: 'block_video_ads',
   theme: 'theme',
-  darkSites: 'dark_sites',
   addressBarPosition: 'address_bar_position',
   haptics: 'haptics',
   httpsOnly: 'https_only',
@@ -253,6 +249,8 @@ const KEYS = {
   retiredAnimateLogo: 'animate_logo',
   // The retired trial switch "Asistan görünümü (deneme)" (owner, 21 Nov 2026: the light look stays, the switch goes).
   retiredAssistantLook: 'assistant_look',
+  // The retired "Dark sites in dark mode" switch (owner, 23 Nov 2026: sites go dark only through their own dark design).
+  retiredDarkSites: 'dark_sites',
 };
 
 /** Every secure-storage key settings.ts writes or once wrote (cleared on a reinstall, storage/installCheck.ts). */
@@ -311,7 +309,6 @@ export async function loadSettings(): Promise<Settings> {
     hideCookieBanners,
     blockVideoAds,
     theme,
-    darkSites,
     addressBarPosition,
     haptics,
     httpsOnly,
@@ -361,7 +358,6 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.hideCookieBanners),
     get(KEYS.blockVideoAds),
     get(KEYS.theme),
-    get(KEYS.darkSites),
     get(KEYS.addressBarPosition),
     get(KEYS.haptics),
     get(KEYS.httpsOnly),
@@ -422,7 +418,6 @@ export async function loadSettings(): Promise<Settings> {
     hideCookieBanners: hideCookieBanners !== 'false',
     blockVideoAds: blockVideoAds === 'true',
     theme: THEMES.includes(theme as ThemeSetting) ? (theme as ThemeSetting) : 'system',
-    darkSites: darkSites !== 'false',
     addressBarPosition: addressBarPosition === 'top' ? 'top' : 'bottom',
     haptics: haptics !== 'false',
     httpsOnly: httpsOnly === 'true',
@@ -531,7 +526,6 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.hideCookieBanners, String(settings.hideCookieBanners)),
     set(KEYS.blockVideoAds, String(settings.blockVideoAds)),
     set(KEYS.theme, settings.theme),
-    set(KEYS.darkSites, String(settings.darkSites)),
     set(KEYS.addressBarPosition, settings.addressBarPosition),
     set(KEYS.haptics, String(settings.haptics)),
     set(KEYS.httpsOnly, String(settings.httpsOnly)),

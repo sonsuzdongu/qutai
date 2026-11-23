@@ -203,3 +203,15 @@ test('an older build reads a backup with apps: it ignores the section, keeps the
   assert.equal(parsed.memories?.length, 1);
   assert.equal(old.summarize(parsed).memories, 1);
 });
+
+test('an old backup with the retired "Dark sites" switch still restores; the field is dropped (UI-50)', () => {
+  const old = parseBackup(
+    JSON.stringify({
+      app: 'qutai', payloadVersion: 1, createdAt: 1, appVersion: '0.1.20', schemaVersion: 20,
+      settings: { theme: 'dark', darkSites: false, blockAds: true },
+    }),
+  );
+  assert.equal(old.settings?.theme, 'dark');
+  assert.equal(old.settings?.blockAds, true);
+  assert.ok(old.settings && !('darkSites' in old.settings));
+});

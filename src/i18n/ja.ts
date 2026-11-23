@@ -1248,8 +1248,6 @@ export const ja: Record<keyof typeof en, string> = {
   'settings.theme.system': 'システム',
   'settings.theme.light': 'ライト',
   'settings.theme.dark': 'ダーク',
-  'settings.darkSites': 'ダークモードでサイトもダークに',
-  'settings.darkSitesHint': '独自のダーク デザインがないサイトもダークで表示されます。',
 
   'settings.addressBarPosition': 'アドレスバー',
   'settings.addressBar.top': '上',

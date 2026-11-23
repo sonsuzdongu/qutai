@@ -1247,8 +1247,6 @@ export const id: Record<keyof typeof en, string> = {
   'settings.theme.system': 'Sistem',
   'settings.theme.light': 'Terang',
   'settings.theme.dark': 'Gelap',
-  'settings.darkSites': 'Situs gelap dalam mode gelap',
-  'settings.darkSitesHint': 'Situs tanpa desain gelapnya sendiri juga ditampilkan gelap.',
 
   'settings.addressBarPosition': 'Kolom alamat',
   'settings.addressBar.top': 'Atas',

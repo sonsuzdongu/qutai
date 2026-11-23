@@ -1239,8 +1239,6 @@ export const en = {
   'settings.theme.system': 'System',
   'settings.theme.light': 'Light',
   'settings.theme.dark': 'Dark',
-  'settings.darkSites': 'Dark sites in dark mode',
-  'settings.darkSitesHint': 'Sites without a dark design of their own are shown dark too.',
 
   'settings.addressBarPosition': 'Address bar',
   'settings.addressBar.top': 'Top',

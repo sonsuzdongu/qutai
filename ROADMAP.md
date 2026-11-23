@@ -113,7 +113,7 @@ default-browser entitlement), and testing on real devices: most of it has never 
 
 | Feature | Status | Infrastructure | Note |
 |---|---|---|---|
-| Dark / light / system theme | ✅ | | App UI + dark mode for sites (Android `forceDarkOn`, inverted pages on iOS) |
+| Dark / light / system theme | ✅ | | App UI; sites see the theme through `prefers-color-scheme` and use their own dark design (Qutai doesn't darken pages, `UI-50`) |
 | Bottom / top toolbar choice | ✅ | | Address bar at the top or bottom (Settings) |
 | Gestures | ✅ | | iOS edge swipe, Android back, swiping on the address bar to switch tabs, pull to refresh |
 | Haptic feedback | ✅ | | `expo-haptics` |

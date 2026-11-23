@@ -7,7 +7,6 @@ import { mayWrite, settingClass, SETTINGS_TOOL_CLASSES } from '../../src/agent/s
 
 const EXPECTED = {
   theme: 'preference',
-  dark_sites: 'preference',
   address_bar_position: 'preference',
   text_size: 'preference',
   search_engine: 'preference',

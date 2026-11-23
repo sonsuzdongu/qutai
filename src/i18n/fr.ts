@@ -1247,8 +1247,6 @@ export const fr: Record<keyof typeof en, string> = {
   'settings.theme.system': 'Système',
   'settings.theme.light': 'Clair',
   'settings.theme.dark': 'Sombre',
-  'settings.darkSites': 'Sites sombres en mode sombre',
-  'settings.darkSitesHint': 'Les sites sans thème sombre propre sont aussi affichés en sombre.',
 
   'settings.addressBarPosition': 'Barre d’adresse',
   'settings.addressBar.top': 'En haut',

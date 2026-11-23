@@ -57,7 +57,6 @@ function backupSettings(s: Settings): BackupSettings {
     hideCookieBanners: s.hideCookieBanners,
     blockVideoAds: s.blockVideoAds,
     theme: s.theme,
-    darkSites: s.darkSites,
     addressBarPosition: s.addressBarPosition,
     haptics: s.haptics,
     httpsOnly: s.httpsOnly,
@@ -146,7 +145,6 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
     take('hideCookieBanners', s.hideCookieBanners);
     take('blockVideoAds', s.blockVideoAds);
     take('theme', s.theme);
-    take('darkSites', s.darkSites);
     take('addressBarPosition', s.addressBarPosition);
     take('haptics', s.haptics);
     take('httpsOnly', s.httpsOnly);

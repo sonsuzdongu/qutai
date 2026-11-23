@@ -1246,8 +1246,6 @@ export const ko: Record<keyof typeof en, string> = {
   'settings.theme.system': '시스템',
   'settings.theme.light': '밝게',
   'settings.theme.dark': '어둡게',
-  'settings.darkSites': '다크 모드에서 사이트 어둡게',
-  'settings.darkSitesHint': '자체 다크 디자인이 없는 사이트도 어둡게 표시됩니다.',
 
   'settings.addressBarPosition': '주소창',
   'settings.addressBar.top': '상단',

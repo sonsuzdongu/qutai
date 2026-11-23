@@ -17,7 +17,6 @@ import { keptScripts } from '../browser/keptScripts';
 import { pageStyleState } from '../browser/pageStyleState';
 import { iosStoreKey } from '../device/cookieStore';
 import { siteKey } from '../agent/sitePolicy';
-import { DARK_SITE_SCRIPT } from '../content/darkSites';
 import { allowInsecure, upgradeToHttps } from '../browser/httpsOnly';
 import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
 import { linkTarget, toLoadError } from '../browser/navigation';
@@ -56,9 +55,8 @@ export type TabActions = {
   httpsOnly: boolean;
   /** Android: block third-party cookies (iOS always does). */
   blockThirdPartyCookies: boolean;
-  /** Dark theme is on (sites are darkened when darkSites is also on). */
+  /** Dark theme is on. */
   darkMode: boolean;
-  darkSites: boolean;
   blockAds: boolean;
   /**
    * Sites where ad and tracker blocking is off ("Don't block on this site"), with their subdomains; read natively
@@ -246,7 +244,6 @@ function TabWebView({
     Platform.OS === 'android' ? PULL_STATE_SCRIPT : '',
     Platform.OS === 'android' ? USER_AGENT_SCRIPT : '',
     Platform.OS === 'ios' && textZoom !== 100 ? textZoomScript(textZoom) : '',
-    Platform.OS === 'ios' && newTabActions.darkMode && newTabActions.darkSites ? DARK_SITE_SCRIPT : '',
     // Where the page was scrolled, so a woken tab comes back there (incognito tabs never sleep).
     tab.incognito ? '' : SCROLL_MEMORY_SCRIPT,
     // Scrolling down slides the address bar away; the page says when (toolbarScroll.ts), not every scroll frame.
@@ -532,7 +529,6 @@ function TabWebView({
             // user's tap is long gone after the prompt). iOS sets this only when the WebView is created; WebKit
             // already lets a capturing page play its stream.
             mediaPlaybackRequiresUserAction={Platform.OS === 'android' ? !tab.media.playbackUnlocked : undefined}
-            forceDarkOn={newTabActions.darkMode && newTabActions.darkSites}
             injectedJavaScript={pageSetupScript}
             injectedJavaScriptBeforeContentLoaded={earlyScript}
             // iOS: the geolocation script must reach frames too, so they can't use WebKit's own location prompt.

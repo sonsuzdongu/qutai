@@ -1241,8 +1241,6 @@ export const de: Record<keyof typeof en, string> = {
   'settings.theme.system': 'System',
   'settings.theme.light': 'Hell',
   'settings.theme.dark': 'Dunkel',
-  'settings.darkSites': 'Dunkle Websites im dunklen Modus',
-  'settings.darkSitesHint': 'Websites ohne eigenes dunkles Design werden ebenfalls dunkel angezeigt.',
 
   'settings.addressBarPosition': 'Adressleiste',
   'settings.addressBar.top': 'Oben',

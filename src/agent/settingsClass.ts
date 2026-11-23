@@ -15,7 +15,6 @@ export type SettingClass = 'preference' | 'protectionOn' | 'protectionOff';
 
 export const SETTINGS_TOOL_CLASSES = {
   theme: 'preference',
-  dark_sites: 'preference',
   address_bar_position: 'preference',
   text_size: 'preference',
   search_engine: 'preference',
