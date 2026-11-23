@@ -3,7 +3,7 @@ import { afterAnswer, isAlwaysAllowed, type AlwaysAllowKind } from '../agent/alw
 import type { ToolContext } from '../agent/executeTool';
 import type { AgentOptions } from '../agent/runAgent';
 import type { MemoryStore } from '../agent/memory';
-import { postingWithoutAsking, siteKey } from '../agent/sitePolicy';
+import { postingWithoutAsking, scriptsWithoutAsking, siteKey } from '../agent/sitePolicy';
 import { appStore, appsChanged } from '../apps/appStore';
 import { appRunner } from '../apps/runnerState';
 import type { Browser } from '../browser/Browser';
@@ -216,12 +216,23 @@ export function taskToolContext(
       offer: (target, site, count) => chat.add(cookiesItem({ site, count, tabId: target.id })),
     },
     thirdPartyCookiesBlocked: () => Platform.OS === 'android' && settings().blockThirdPartyCookies,
-    // Scripts (docs/page-customisation.md › Scripts): every run is asked, with the code.
+    // Scripts (docs/page-customisation.md › Scripts): every run is asked, with the code, unless the user chose "Run
+    // scripts on {site} without asking" (SCR-36; never in incognito, read at each use).
     scripts: {
       enabled: () => settings().assistantScripts,
       siteSetting: (site) => settings().scriptSites.find((s) => s.host === site)?.setting ?? 'default',
       syntax: (code) => scriptSandbox.check(code),
-      approve: (approval) => whileAskingUser(() => askScript(approval, signal)),
+      approve: (approval) =>
+        whileAskingUser(() =>
+          askScript(
+            approval,
+            signal,
+            approval.canRemember && !approval.incognito && !scope.incognito()
+              ? () => services.sitePermissions.setScripts(approval.site, true).catch(() => {})
+              : undefined,
+          ),
+        ),
+      remembered: (site) => scriptsWithoutAsking(services.sitePermissions, site, scope.incognito()),
       runCopy: (snapshot, code, pageUrl) => scriptSandbox.run(snapshot, code, pageUrl),
       offer: (offer) => chat.add(scriptItem(liveOffer(offer))),
     },

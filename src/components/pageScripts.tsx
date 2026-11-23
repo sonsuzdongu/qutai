@@ -72,8 +72,12 @@ export function scopeWords(scope: Scope): string {
   }
 }
 
-/** run_script: the description, where it runs, the flags in red, what an approved script can do, the code under Details. */
-export async function askScript(approval: ScriptApproval, signal: AbortSignal): Promise<boolean> {
+/**
+ * run_script: the description, where it runs, the flags in red, what an approved script can do, the code under Details.
+ * `onRemember` (absent in incognito): the box "Run scripts on {site} without asking" (off, SCR-36), called on Run with
+ * it ticked.
+ */
+export async function askScript(approval: ScriptApproval, signal: AbortSignal, onRemember?: () => void): Promise<boolean> {
   const lines: IconLine[] = [
     { icon: 'script', text: approval.description },
     approval.where === 'copy'
@@ -91,9 +95,12 @@ export async function askScript(approval: ScriptApproval, signal: AbortSignal): 
     message: notes.join('\n\n'),
     details: approval.code,
     buttons: [{ text: t('confirm.deny'), style: 'cancel' }, { text: t('scripts.run'), primary: true }],
+    ...(onRemember ? { checkbox: { label: t('scripts.rememberSite', { site: approval.site }) } } : {}),
     signal,
   });
-  return result.button === 1;
+  const approved = result.button === 1;
+  if (approved && onRemember && result.checked) onRemember();
+  return approved;
 }
 
 /**

@@ -26,7 +26,7 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
   const version = useSyncExternalStore(store.subscribe, () =>
     store
       .list()
-      .map((p) => p.host + p.level + p.personal + p.posting + p.location + p.camera + p.microphone + p.blocking)
+      .map((p) => p.host + p.level + p.personal + p.posting + p.scripts + p.location + p.camera + p.microphone + p.blocking)
       .join(),
   );
   const sites = store.list();
@@ -62,6 +62,7 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
                   </Text>
                 )}
                 {item.posting && <Text style={styles.level}>{t('site.postingSummary')}</Text>}
+                {item.scripts && <Text style={styles.level}>{t('site.scriptsSummary')}</Text>}
                 {item.location !== 'ask' && (
                   <Text style={[styles.level, item.location === 'block' && styles.danger]}>
                     {t(`site.locationSummary.${item.location}`)}
@@ -104,6 +105,8 @@ export function SitePermissionsScreen({ visible, store, blockingEnabled, onClose
           onSelectPersonal={(setting) => editing && store.setPersonal(editing, setting)}
           posting={editing ? store.postingFor(editing) : false}
           onForgetPosting={() => editing && store.setPosting(editing, false)}
+          scripts={editing ? store.scriptsFor(editing) : false}
+          onForgetScripts={() => editing && store.setScripts(editing, false)}
           blocking={editing ? store.blockingFor(editing) : true}
           onSetBlocking={(on) => editing && store.setBlocking(editing, on)}
           blockingEnabled={blockingEnabled}

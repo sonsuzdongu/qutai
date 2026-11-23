@@ -40,8 +40,8 @@ export const PAGE_CUSTOM_TOOLS: ToolDefinition[] = [
   {
     name: 'run_script',
     description:
-      "Run JavaScript on the page when reading it and other tools can't (count, extract a table, check the DOM). " +
-      'The user approves each run, code shown. code: async function body returning JSON. where copy (default): sealed ' +
+      "Run JavaScript on the page when reading it and other tools can't (count, extract a table, the DOM). " +
+      'Each run is approved unless the user allowed the site. code: async function body returning JSON. where copy (default): sealed ' +
       'copy, no network; page: live page, only to change it. Refused: cookies, storage, passwords, clicks, submits, ' +
       'navigation, eval, network but same-site fetch. Untrusted result.',
     input_schema: {

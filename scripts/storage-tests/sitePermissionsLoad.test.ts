@@ -19,6 +19,7 @@ function slowDb() {
     site_personal: [{ host: 'a.example', setting: 'allow' }],
     site_blocking: [{ host: 'a.example' }],
     site_posting: [{ host: 'a.example' }],
+    site_scripts: [{ host: 'a.example' }],
   };
   const db = {
     // The lists wait until the test lets them through; writes go through at once.
@@ -44,6 +45,7 @@ test('a reset made while loading is not undone by what was on disk', async () =>
   assert.equal(store.personalFor('a.example'), 'ask');
   assert.equal(store.blockingFor('a.example'), true);
   assert.equal(store.postingFor('a.example'), false);
+  assert.equal(store.scriptsFor('a.example'), false);
   // A site nobody touched gets its stored setting.
   assert.equal(store.levelFor('b.example'), 'blocked');
 });
@@ -59,4 +61,5 @@ test('without a change while loading, the stored settings are read as before', a
   assert.equal(store.personalFor('a.example'), 'allow');
   assert.equal(store.blockingFor('a.example'), false);
   assert.equal(store.postingFor('a.example'), true);
+  assert.equal(store.scriptsFor('a.example'), true);
 });

@@ -95,8 +95,25 @@ export function postingWithoutAsking(
   site: string,
   incognito: boolean,
 ): boolean {
+  return actsOn(sites, site, incognito) && sites.postingFor(site);
+}
+
+/**
+ * Whether the assistant's one-off scripts may run on a site without the script dialog (SCR-36): the user's remembered
+ * choice ("Run scripts on {site} without asking"), with the same limits as posting (`PAY-29`): never in a conversation
+ * that touched an incognito tab, never on a Read only or Blocked site.
+ */
+export function scriptsWithoutAsking(
+  sites: { levelFor(host: string): SiteLevel; scriptsFor(host: string): boolean },
+  site: string,
+  incognito: boolean,
+): boolean {
+  return actsOn(sites, site, incognito) && sites.scriptsFor(site);
+}
+
+/** A remembered "without asking" applies: not incognito, and the site may be acted on. */
+function actsOn(sites: { levelFor(host: string): SiteLevel }, site: string, incognito: boolean): boolean {
   if (incognito) return false;
   const level = sites.levelFor(site);
-  if (level === 'readonly' || level === 'blocked') return false;
-  return sites.postingFor(site);
+  return level !== 'readonly' && level !== 'blocked';
 }

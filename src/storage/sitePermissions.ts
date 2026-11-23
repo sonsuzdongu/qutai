@@ -92,6 +92,24 @@ export async function setPostingRemembered(db: Db, host: string, on: boolean): P
   );
 }
 
+/** Sites where the assistant's one-off scripts run without the script dialog (SCR-36). */
+export async function listScriptsRemembered(db: Db): Promise<string[]> {
+  const rows = await db.getAllAsync<{ host: string }>('SELECT host FROM site_scripts ORDER BY host', []);
+  return rows.map((r) => r.host);
+}
+
+/** Remembers (or forgets) that the assistant's scripts may run on a site without the script dialog. */
+export async function setScriptsRemembered(db: Db, host: string, on: boolean): Promise<void> {
+  if (!on) {
+    await db.runAsync('DELETE FROM site_scripts WHERE host = ?', [host]);
+    return;
+  }
+  await db.runAsync(
+    'INSERT INTO site_scripts (host, updated_at) VALUES (?, ?) ON CONFLICT(host) DO UPDATE SET updated_at = excluded.updated_at',
+    [host, Date.now()],
+  );
+}
+
 /** Sites where network ad and tracker blocking is off. */
 export async function listBlockingOff(db: Db): Promise<string[]> {
   const rows = await db.getAllAsync<{ host: string }>('SELECT host FROM site_blocking ORDER BY host', []);
@@ -157,6 +175,8 @@ export type SiteEntry = {
   personal: PersonalSetting;
   /** The user ticked "Post on {site} without asking" in the publish dialog (PAY-29). */
   posting: boolean;
+  /** The user ticked "Run scripts on {site} without asking" in the script dialog (SCR-36). */
+  scripts: boolean;
 };
 
 /**
@@ -174,6 +194,8 @@ export class SitePermissionStore implements SitePolicy {
   private blockingOff = new Set<string>();
   /** Sites where the assistant posts without the publish dialog (PAY-29). */
   private posting = new Set<string>();
+  /** Sites where the assistant's one-off scripts run without the script dialog (SCR-36). */
+  private scripts = new Set<string>();
   /**
    * Settings changed before loading finished (`${kind} ${host}`): they win over what was on disk, also when the change
    * was back to the default, which leaves nothing in the maps above to show it (SITE-26).
@@ -196,9 +218,10 @@ export class SitePermissionStore implements SitePolicy {
           listBlockingOff(db),
           listPersonalSettings(db),
           listPostingRemembered(db),
+          listScriptsRemembered(db),
         ]),
       )
-      .then(([list, locations, media, blockingOff, personal, posting]) => {
+      .then(([list, locations, media, blockingOff, personal, posting, scripts]) => {
         // Changes made while loading win over what was on disk. Stored hosts are read as siteKey makes them now
         // (utils/webUrl.ts, SITE-25: punycode, no trailing dot), so an older key still matches its site.
         const key = (host: string) => siteKeyOfHost(host) ?? host;
@@ -214,6 +237,7 @@ export class SitePermissionStore implements SitePolicy {
         }
         for (const host of blockingOff) if (fresh('blocking', key(host))) this.blockingOff.add(key(host));
         for (const host of posting) if (fresh('posting', key(host))) this.posting.add(key(host));
+        for (const host of scripts) if (fresh('scripts', key(host))) this.scripts.add(key(host));
         this.blockingOffList = [...this.blockingOff].sort();
         // Merged: from here on the maps are the whole truth. (After a failed load the marks stay for the next try.)
         this.touched.clear();
@@ -279,6 +303,22 @@ export class SitePermissionStore implements SitePolicy {
     await setPostingRemembered(await this.getDb(), host, on);
   }
 
+  /**
+   * Whether the user chose "Run scripts on {site} without asking" for this site (SCR-36). Only the remembered choice:
+   * the caller also checks incognito and the site's level.
+   */
+  scriptsFor(host: string): boolean {
+    return this.scripts.has(host);
+  }
+
+  async setScripts(host: string, on: boolean): Promise<void> {
+    this.touch('scripts', host);
+    if (on) this.scripts.add(host);
+    else this.scripts.delete(host);
+    this.emit();
+    await setScriptsRemembered(await this.getDb(), host, on);
+  }
+
   mediaFor(host: string, kind: MediaKind): PermissionSetting {
     return this.media.get(`${kind} ${host}`) ?? 'ask';
   }
@@ -304,7 +344,7 @@ export class SitePermissionStore implements SitePolicy {
 
   /**
    * Every site with an assistant level, a personal-information, location, camera or microphone setting, blocking off
-   * or posting without asking of its own.
+   * or posting or scripts without asking of its own.
    */
   list(): SiteEntry[] {
     const hosts = new Set([
@@ -314,6 +354,7 @@ export class SitePermissionStore implements SitePolicy {
       ...this.blockingOff,
       ...this.personal.keys(),
       ...this.posting,
+      ...this.scripts,
     ]);
     return [...hosts]
       .map((host) => ({
@@ -325,6 +366,7 @@ export class SitePermissionStore implements SitePolicy {
         blocking: this.blockingFor(host),
         personal: this.personalFor(host),
         posting: this.postingFor(host),
+        scripts: this.scriptsFor(host),
       }))
       .sort((a, b) => a.host.localeCompare(b.host));
   }
@@ -354,6 +396,7 @@ export class SitePermissionStore implements SitePolicy {
       this.setBlocking(host, true),
       this.setPersonal(host, 'ask'),
       this.setPosting(host, false),
+      this.setScripts(host, false),
     ]);
   }
 

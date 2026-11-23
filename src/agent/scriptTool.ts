@@ -24,7 +24,8 @@ import { uiPath } from './uiLabels';
 /**
  * run_script (docs/page-customisation.md › Scripts): the app's checks, in this order, before anything runs: the
  * setting, the site's own script setting, a pending publish or pay approval, the static check, sensitive pages, the
- * syntax; then the user's approval (description, site, where, flags, the exact code); then exactly that code, once,
+ * syntax; then the user's approval (description, site, where, flags, the exact code), unless the user chose "Run
+ * scripts on {site} without asking" (SCR-36); then exactly that code, once,
  * in that tab, while it still shows that page. The result goes back as untrusted page data.
  */
 
@@ -39,6 +40,11 @@ export type ScriptApproval = {
   where: ScriptWhere;
   flags: ScriptFlag[];
   incognito: boolean;
+  /**
+   * The dialog may offer "Run scripts on {site} without asking" (SCR-36): an ordinary tab. The task still leaves it out
+   * when its conversation touched an incognito tab.
+   */
+  canRemember: boolean;
 };
 
 /** A successful run on the live page: the chat card offers to keep it (not from incognito tabs). */
@@ -71,6 +77,11 @@ export type ScriptAccess = {
   /** Compiles the code without running it (in the sandbox); the error message, or null when it parses. */
   syntax(code: string): Promise<string | null>;
   approve(approval: ScriptApproval): Promise<boolean>;
+  /**
+   * Whether the user chose "Run scripts on {site} without asking" for this site and it applies now: not in a
+   * conversation that touched an incognito tab, not on a Read only or Blocked site (SCR-36). Absent: always asked.
+   */
+  remembered?(site: string): boolean;
   /** Runs the code on the copy in the sandbox. */
   runCopy(snapshot: PageSnapshot, code: string, pageUrl: string): Promise<ScriptOutcome>;
   /** Puts the script card in the chat (Keep for this site…). */
@@ -161,8 +172,13 @@ export async function scriptTool(input: Record<string, unknown>, ctx: ToolContex
   const url = pageOf(tab.url);
   const shown = checked.code;
   const shownHash = codeHash(shown);
-  const approved = await access.approve({ site, url, description, code: shown, where, flags: checked.flags, incognito: tab.incognito });
-  if (!approved) return { content: 'The user did not approve the script. Nothing ran.', isError: true, notice: declinedNotice() };
+  // "Run scripts on {site} without asking" (SCR-36): only the dialog is skipped; every check above and below still runs.
+  const canRemember = !tab.incognito;
+  const remembered = canRemember && !!access.remembered?.(site);
+  if (!remembered) {
+    const approved = await access.approve({ site, url, description, code: shown, where, flags: checked.flags, incognito: tab.incognito, canRemember });
+    if (!approved) return { content: 'The user did not approve the script. Nothing ran.', isError: true, notice: declinedNotice() };
+  }
 
   // The approval is for this code, in this tab, on this page, now.
   const live = ctx.browser.getTab(tab.id);
@@ -175,14 +191,18 @@ export async function scriptTool(input: Record<string, unknown>, ctx: ToolContex
     const snapshot = await live.run<PageSnapshot>('scriptSnapshot', [SNAPSHOT_MAX], 15000).catch(() => null);
     if (!snapshot) return { content: 'The page did not give a copy (it may still be loading). Nothing ran.', isError: true, notice: errorNotice(t('step.pageNoAnswer')) };
     outcome = await access.runCopy(snapshot, shown, url);
-    if (snapshot.cut && outcome.status === 'ok')
-      return withNote(formatOutcome(outcome, 'copy', site), 'The page was too large: the copy held only its first 2 million characters.');
+    if (snapshot.cut && outcome.status === 'ok') {
+      const cut = withNote(formatOutcome(outcome, 'copy', site), 'The page was too large: the copy held only its first 2 million characters.');
+      return remembered ? { ...cut, notice: settingNotice(t('step.scriptRemembered', { site })) } : cut;
+    }
   } else {
     outcome = await live
       .runScript<unknown>((nonce, id) => wrapScript(shown, { mode: 'page', nonce, id, url }), SCRIPT_TIME_LIMIT_MS + 2000)
       .then(readOutcome, (): ScriptOutcome => ({ status: 'timeout' }));
   }
-  const result = formatOutcome(outcome, where, site);
+  const ran = formatOutcome(outcome, where, site);
+  // The chat says that a script ran without the dialog, and why.
+  const result: ToolOutput = remembered && !ran.isError ? { ...ran, notice: settingNotice(t('step.scriptRemembered', { site })) } : ran;
   if (where === 'page' && outcome.status === 'ok') {
     access.offer({ description, site, url, code: shown, tabId: tab.id, incognito: tab.incognito, flags: checked.flags, state: 'ran' });
     return withNote(
@@ -195,6 +215,6 @@ export async function scriptTool(input: Record<string, unknown>, ctx: ToolContex
   return result.isError ? { ...result, notice: errorNotice(t('step.scriptFailed')) } : result;
 }
 
-function withNote(result: { content: string; isError: boolean }, note: string): ToolOutput {
+function withNote(result: ToolOutput, note: string): ToolOutput {
   return { ...result, content: `${result.content}\n${note}` };
 }

@@ -225,7 +225,7 @@ Moved to Details (ids retired, not reused): `UNTR-3`
 | `SITE-7` | "Ask before every action" is off by default; it decides only for Default sites, and it is restored from a… | Default |  |
 | `SITE-8` | Ticking "Always allow on {site}" in the confirmation sets the site to Always allow for good; never offered in incognito… | Default | 2026-11-19 |
 | `SITE-9` | "Don't ask again" is offered only for six phone kinds: scheduled notifications, calendar events,… | Default |  |
-| `SITE-10` | "Don't ask again" is never offered for anything that acts on a web page or leaves the phone (clicks,…; except `PAY-29` | Default | 2026-11-23 |
+| `SITE-10` | "Don't ask again" is never offered for anything that acts on a web page or leaves the phone (clicks,…; except `PAY-29`, `SCR-36` | Default | 2026-11-23 |
 | `SITE-11` | A risky download (apps, installers, archives) or a download in a conversation that touched an incognito… | Default |  |
 | `SITE-12` | A denial is never remembered; only Allow with the box ticked is. | Default |  |
 | `SITE-13` | "Allowed without asking" is not in backups and can't be changed by the assistant. | Default |  |
@@ -240,7 +240,7 @@ Moved to Details (ids retired, not reused): `UNTR-3`
 | `SITE-23` | Every action goes to the activity history (30 days, at most 2000 entries), refused and declined ones… | Default |  |
 | `SITE-25` | One URL module, read as the WebView reads addresses, for every site decision and every host shown; site key (host) vs registrable domain defined there | Default | 2026-11-20 |
 | `SITE-26` | A site setting changed while the stored ones load wins over disk, for every kind, also back to the default | Default | 2026-11-21 |
-| `SITE-27` | The site's settings show "Posting without asking" with "Ask every time again"; the list shows it and ✕ resets it; only the publish dialog turns it on | Default | 2026-11-23 |
+| `SITE-27` | The site's settings show "Posting without asking" and "Scripts without asking" with "Ask every time again"; the list shows them and ✕ resets them; only their dialogs turn them on | Default | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE-24`
 
@@ -628,7 +628,7 @@ Moved to Details (ids retired, not reused): `COOK-11`, `COOK-7`, `COOK-10`
 |---|---|---|---|
 | `SCR-1` | Scripts are off by default. Turning them on asks once more. The assistant's `settings` tool can't change… | Default |  |
 | `SCR-2` | While the setting is off, no script runs at all, one-off or kept. | Default |  |
-| `SCR-3` | Every run is approved in Qutai's dialog, every time. The dialog shows the description, site, where it… | Default |  |
+| `SCR-3` | Every run is approved in Qutai's dialog, every time, unless the site is remembered (`SCR-36`); dialog shows description, site, where… | Default / Owner | 2026-11-23 |
 | `SCR-4` | The code that runs is the code that was shown, checked against its hash right before the run. Nothing runs… | Default |  |
 | `SCR-5` | Sites set to "Read only" or "Blocked", or with scripts switched off, never run scripts, one-off or kept. | Default |  |
 | `SCR-6` | Sensitive pages are refused by default, in both modes. A page is sensitive if it has any of these: | Default |  |
@@ -656,6 +656,7 @@ Moved to Details (ids retired, not reused): `COOK-11`, `COOK-7`, `COOK-10`
 | `SCR-33` | The model is told to use `run_script` only when reading and the other tools can't answer, to use `copy`… | Default |  |
 | `SCR-34` | The privacy policies list "the result of a script you approved on a page" among what goes to the AI. The legal version went up… | Owner | 2026-11-20 |
 | `SCR-35` | App Review notes for scripts, and whether Qutai needs Google Play's in-app way to report AI output, are… | **Waiting** |  |
+| `SCR-36` | The script dialog's box "Run scripts on {site} without asking" (off) skips the dialog there later; every other check stays; not incognito, Read only, Blocked, background or backups | Owner | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `SCR-11`, `SCR-13`, `SCR-25`, `SCR-26`, `SCR-28`
 

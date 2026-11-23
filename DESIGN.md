@@ -19,6 +19,7 @@ Last updated: 2026-11-23
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-23:** The script dialog offers "Run scripts on {site} without asking from now on" (off); a remembered site runs the assistant's one-off scripts without the dialog while every other check stays, never in incognito, on Read only or Blocked sites or in the background; shown and removable in the site's settings; tool description changed, agent profile re-exported (`SCR-36`, `SCR-3`, `SITE-10`, `SITE-27` changed; owner).
 - **2026-11-23:** The publish dialog offers "Post on {site} without asking from now on" (off); a remembered site posts without the dialog while the text check and the check before the press stay, never for payments or changes, in incognito, on Read only or Blocked sites or in the background; shown and removable in the site's settings (`PAY-29`, `SITE-27`, `PAY-13` and `SITE-10` changed; owner).
 - **2026-11-23:** Android draws every text from the layout React Native measured for it (prepared text layout), so labels are no longer cut after a live dark → light switch on ColorOS (`UI-49`, `UI-46` updated; owner's 0.1.17 test).
 - **2026-11-23:** The privacy policy names no person: "Who we are" says Qutai is developed as open source and the Qutai team is responsible for the data, in all ten languages; legal version unchanged (`LEGAL-30`).

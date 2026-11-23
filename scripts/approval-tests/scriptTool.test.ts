@@ -178,6 +178,7 @@ test('the approval shows the description, the site, where, the flags and the cod
     where: 'copy',
     flags: [],
     incognito: false,
+    canRemember: true,
   });
   assert.deepEqual(s.copies, [COUNT], 'the copy ran the approved code');
   assert.equal(tab.snapshots, 1);

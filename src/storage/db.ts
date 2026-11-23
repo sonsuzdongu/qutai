@@ -192,6 +192,12 @@ export const MIGRATIONS: readonly (string | ((db: Db) => Promise<void>))[] = [
      host TEXT PRIMARY KEY NOT NULL,
      updated_at INTEGER NOT NULL
    );`,
+  // Sites where the user ticked "Run scripts on {site} without asking" in the script dialog (SCR-36): the assistant's
+  // one-off scripts there skip the dialog (every other check still runs). No row means the dialog is shown. Not in backups.
+  `CREATE TABLE site_scripts (
+     host TEXT PRIMARY KEY NOT NULL,
+     updated_at INTEGER NOT NULL
+   );`,
 ];
 
 /**

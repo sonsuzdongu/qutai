@@ -23,6 +23,9 @@ type Props = {
    */
   posting?: boolean;
   onForgetPosting?: () => void;
+  /** The user ticked "Run scripts on {site} without asking" in the script dialog (SCR-36, SITE-27): shown to remove. */
+  scripts?: boolean;
+  onForgetScripts?: () => void;
   /** Whether the site itself may use the location. */
   location: LocationSetting;
   onSelectLocation: (setting: LocationSetting) => void;
@@ -66,6 +69,8 @@ export function SitePermissionSheet({
   onSelectPersonal,
   posting,
   onForgetPosting,
+  scripts,
+  onForgetScripts,
   location,
   onSelectLocation,
   camera,
@@ -180,6 +185,19 @@ export function SitePermissionSheet({
           <Text style={styles.settingHint}>{t('site.postingHint')}</Text>
           <Pressable
             onPress={onForgetPosting}
+            style={({ pressed }) => [styles.forget, pressed && styles.pressed]}
+            accessibilityRole="button"
+          >
+            <Text style={styles.link}>{t('site.postingForget')}</Text>
+          </Pressable>
+        </>
+      )}
+      {scripts && onForgetScripts && (
+        <>
+          <Text style={styles.section}>{t('site.scriptsTitle')}</Text>
+          <Text style={styles.settingHint}>{t('site.scriptsHint')}</Text>
+          <Pressable
+            onPress={onForgetScripts}
             style={({ pressed }) => [styles.forget, pressed && styles.pressed]}
             accessibilityRole="button"
           >
