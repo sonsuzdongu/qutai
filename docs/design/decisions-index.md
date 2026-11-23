@@ -858,7 +858,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-35` | Tapping the address bar selects the whole address on both platforms (focused from code, not autoFocus) | Default | 2026-11-20 |
 | `UI-36` | The address bar slides away on scroll down and back on a small scroll up, unless something holds it; setting to keep it… | Default | 2026-11-20 |
 | `UI-37` | A tap on the address suggestions or the dimmed area around them never reaches the page behind (drawn in a page-sized layer) | Default | 2026-11-21 |
-| `UI-38` | The page menu fits the screen: measured height, list scrolls under a fixed icon row, opens above a bottom bar, side margins | Default | 2026-11-21 |
+| `UI-38` | The page menu fits the screen: fills the room between the bars (UI-47), list scrolls under a fixed icon row, opens above a bottom bar, side margins | Default | 2026-11-21 |
 | `UI-39` | Android: tapping the address bar always opens the keyboard; asked for again at 60/250/600 ms while focused with none showing | Default | 2026-11-21 |
 | `UI-40` | "Rate Qutai" opens the store's review page, never the in-app rating sheet. | Owner | 2026-11-22 |
 | `UI-41` | Pro mode asks for the system rating sheet on its own on the 3rd and the 30th day of use, once each. | Owner | 2026-11-23 |
@@ -867,6 +867,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-44` | The page menu scrolls only when its items are taller than its room (2 px rounding allowed). | Default | 2026-11-23 |
 | `UI-45` | Icons filled on iOS (`.fill`) are filled on Android with the filled Material Symbols font; the rest stay outlined. | Default | 2026-11-23 |
 | `UI-46` | A live theme switch measures and draws Android labels anew: family alias and view key follow the native scheme. | Default | 2026-11-23 |
+| `UI-47` | The page menu is a fixed 230 pt wide and laid out in the room between the bars, so its rows are measured as drawn and it scrolls only when the room is full. | Default | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

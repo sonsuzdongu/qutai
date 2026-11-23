@@ -19,6 +19,7 @@ Last updated: 2026-11-23
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-23:** The ⋮ page menu no longer scrolls with free room above it: it is a fixed 230 pt wide, so wrapped labels are measured as drawn, and it fills the room between the bars before scrolling (`UI-47`, owner's 0.1.16 test).
 - **2026-11-23:** Android labels are no longer cut right after switching the theme while the app runs: the text font's name and the text views follow the colour scheme, so every label is measured and drawn again as at launch (`UI-46`, owner's 0.1.16 test).
 - **2026-11-23:** "Rate Qutai" on Android opens Google Play's web link instead of `market://`, which some phone makers route to their own store (`UI-40` changed, owner).
 - **2026-11-23:** Android fixes from the owner's 0.1.15 test: text without its own font family gets sans-serif so bold labels are no longer cut with a theme other than the phone's (`UI-42`), the status bar is dark on the light tab switcher (`UI-43`), the page menu scrolls only when it doesn't fit (`UI-44`) and filled icons are filled (`UI-45`).

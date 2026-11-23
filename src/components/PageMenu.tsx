@@ -7,7 +7,7 @@ import { t } from '../i18n';
 import { Icon, IconName } from '../ui/Icon';
 import { darkPalette, lightPalette, makeStyles, radii } from '../ui/theme';
 import { DialogHost } from './Dialog';
-import { menuFrame, menuMaxWidth, menuScrolls } from './menuFrame';
+import { menuFrame, menuScrolls, menuWidth } from './menuFrame';
 import { WholeWordsText } from './WholeWordsText';
 
 export type MenuItem = {
@@ -41,13 +41,11 @@ type Props = {
 export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor = 'top', onClose }: Props) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
-  const { height, width } = useWindowDimensions();
+  const { width } = useWindowDimensions();
   const keyboard = useKeyboardHeight();
-  // The modal's real size (the window's until it is measured): with the system bars drawn over the app, some
-  // Android phones report a window height that does not match the screen the menu is drawn on.
-  const [area, setArea] = useState<number | null>(null);
-  // Long menus scroll instead of running off the screen (short screens, large text); the icon row stays on top.
-  const frame = menuFrame(area ?? height, insets.top, insets.bottom, keyboard, anchor);
+  // The room between the bars (menuFrame.ts); long menus scroll inside it (short screens, large text), the icon row
+  // stays on top.
+  const frame = menuFrame(insets.top, insets.bottom, keyboard, anchor);
   const theme = incognito || darkMode ? dark : light;
   const palette = incognito || darkMode ? darkPalette : lightPalette;
   // An open submenu ("Library", "More"); it starts over each time the menu opens.
@@ -75,99 +73,95 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor 
         style={StyleSheet.absoluteFill}
         onPress={close}
         accessibilityLabel={t('menu.close')}
-        onLayout={(e) => setArea(e.nativeEvent.layout.height)}
       />
+      {/* The room between the bars; taps outside the menu go through it to the backdrop. */}
       <View
+        pointerEvents="box-none"
         style={[
-          styles.menu,
-          theme.menu,
-          {
-            top: frame.top,
-            bottom: frame.bottom,
-            maxHeight: frame.maxHeight,
-            maxWidth: menuMaxWidth(width, insets.left, insets.right),
-            right: insets.right + 8,
-          },
+          styles.room,
+          { top: frame.top, bottom: frame.bottom, justifyContent: frame.justify, right: insets.right + 8 },
         ]}
       >
-        {iconRow && iconRow.length > 0 && (
-          <View style={[styles.iconRow, theme.separator]}>
-            {iconRow.map((item) => (
-              <Pressable
-                key={item.label}
-                disabled={item.disabled}
-                onPress={() => {
-                  close();
-                  item.onPress();
-                }}
-                style={({ pressed }) => [styles.iconButton, pressed && theme.pressed]}
-                accessibilityRole="button"
-                accessibilityLabel={item.label}
-                accessibilityState={{ disabled: item.disabled }}
-              >
-                <Icon
-                  name={item.icon}
-                  size={22}
-                  color={item.active ? palette.tintText : palette.text}
-                  style={item.disabled ? styles.disabled : undefined}
-                />
-              </Pressable>
-            ))}
-          </View>
-        )}
-        <ScrollView
-          style={styles.list}
-          bounces={false}
-          overScrollMode="never"
-          scrollEnabled={menuScrolls(listContent, listHeight)}
-          onContentSizeChange={(_, h) => setListContent(h)}
-          onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
-        >
-          {sub && (
-            <Pressable
-              onPress={() => setSub(null)}
-              style={({ pressed }) => [
-                styles.item,
-                styles.subHeader,
-                { borderBottomColor: palette.separator },
-                pressed && theme.pressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t('menu.backTo')}
-            >
-              <Icon name="back" size={20} color={palette.textSecondary} />
-              <WholeWordsText style={[styles.label, styles.labelFlex, styles.subTitle, theme.text]}>{sub.label}</WholeWordsText>
-            </Pressable>
-          )}
-          {shown.map((item) => (
-            <View key={item.label}>
-              {item.section && <View style={[styles.separator, theme.separator]} />}
-              <Pressable
-                disabled={item.disabled}
-                onPress={() => {
-                  if (item.submenu) return setSub(item);
-                  close();
-                  item.onPress();
-                }}
-                style={({ pressed }) => [styles.item, pressed && theme.pressed]}
-                accessibilityRole="menuitem"
-                accessibilityState={{ disabled: item.disabled }}
-              >
-                <Icon
-                  name={item.icon}
-                  size={20}
-                  color={palette.textSecondary}
-                  style={item.disabled ? styles.disabled : undefined}
-                />
-                <WholeWordsText style={[styles.label, styles.labelFlex, theme.text, item.disabled && styles.disabled]}>
-                  {item.label}
-                </WholeWordsText>
-                {item.checked && <Icon name="check" size={20} color={palette.tintText} />}
-                {item.submenu && <Icon name="chevronRight" size={20} color={palette.textSecondary} />}
-              </Pressable>
+        <View style={[styles.menu, theme.menu, { width: menuWidth(width, insets.left, insets.right) }]}>
+          {iconRow && iconRow.length > 0 && (
+            <View style={[styles.iconRow, theme.separator]}>
+              {iconRow.map((item) => (
+                <Pressable
+                  key={item.label}
+                  disabled={item.disabled}
+                  onPress={() => {
+                    close();
+                    item.onPress();
+                  }}
+                  style={({ pressed }) => [styles.iconButton, pressed && theme.pressed]}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.label}
+                  accessibilityState={{ disabled: item.disabled }}
+                >
+                  <Icon
+                    name={item.icon}
+                    size={22}
+                    color={item.active ? palette.tintText : palette.text}
+                    style={item.disabled ? styles.disabled : undefined}
+                  />
+                </Pressable>
+              ))}
             </View>
-          ))}
-        </ScrollView>
+          )}
+          <ScrollView
+            style={styles.list}
+            bounces={false}
+            overScrollMode="never"
+            scrollEnabled={menuScrolls(listContent, listHeight)}
+            onContentSizeChange={(_, h) => setListContent(h)}
+            onLayout={(e) => setListHeight(e.nativeEvent.layout.height)}
+          >
+            {sub && (
+              <Pressable
+                onPress={() => setSub(null)}
+                style={({ pressed }) => [
+                  styles.item,
+                  styles.subHeader,
+                  { borderBottomColor: palette.separator },
+                  pressed && theme.pressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={t('menu.backTo')}
+              >
+                <Icon name="back" size={20} color={palette.textSecondary} />
+                <WholeWordsText style={[styles.label, styles.labelFlex, styles.subTitle, theme.text]}>{sub.label}</WholeWordsText>
+              </Pressable>
+            )}
+            {shown.map((item) => (
+              <View key={item.label}>
+                {item.section && <View style={[styles.separator, theme.separator]} />}
+                <Pressable
+                  disabled={item.disabled}
+                  onPress={() => {
+                    if (item.submenu) return setSub(item);
+                    close();
+                    item.onPress();
+                  }}
+                  style={({ pressed }) => [styles.item, pressed && theme.pressed]}
+                  accessibilityRole="menuitem"
+                  accessibilityState={{ disabled: item.disabled }}
+                >
+                  <Icon
+                    name={item.icon}
+                    size={20}
+                    color={palette.textSecondary}
+                    style={item.disabled ? styles.disabled : undefined}
+                  />
+                  <WholeWordsText style={[styles.label, styles.labelFlex, theme.text, item.disabled && styles.disabled]}>
+                    {item.label}
+                  </WholeWordsText>
+                  {item.checked && <Icon name="check" size={20} color={palette.tintText} />}
+                  {item.submenu && <Icon name="chevronRight" size={20} color={palette.textSecondary} />}
+                </Pressable>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
       </View>
       <DialogHost />
     </AppModal>
@@ -175,9 +169,10 @@ export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor 
 }
 
 const useStyles = makeStyles((c) => ({
+  // Spans the modal's width; the menu sits at its right end.
+  room: { position: 'absolute', left: 0, alignItems: 'flex-end' },
   menu: {
-    position: 'absolute',
-    minWidth: 230,
+    flexShrink: 1,
     paddingVertical: 6,
     borderRadius: radii.popover,
     shadowColor: '#000',
