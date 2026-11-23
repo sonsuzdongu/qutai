@@ -1,6 +1,5 @@
 # Qutai: how it works and the decisions behind it
 
-- **2026-11-23:** Memory's "Organise for me" works with Qutai Credits: it goes to the server's own request `POST /relay/organise-memory` (server-owned instructions, only ids and texts sent, only moves returned, paid like a relay step, usage marked `organise_memory` in the panel) instead of the relay, whose agent prompt dropped its instructions; an older server says "not available yet" (`MEM-26`, `CRED-50`; owner).
 This is the entry point to the record of how Qutai behaves and why. Every design decision taken so far is written down
 as a short, testable rule with a stable id (for example `APPS-7` or `PAY-3`), its status and its reason, in one file per
 area under [docs/design/](docs/design/). This page has the map, the five-minute overview, the principles and the known
@@ -21,6 +20,7 @@ Newest first, one line per change to the design. What happened before 19 Nov 202
 [docs/design/history.md](docs/design/history.md).
 
 - **2026-11-23:** The new tab page loses its search box and Ask Qutai button and its aurora drifts slowly (`UI-53`); Reader mode and Add to Home screen move under ⋮ › More and Settings is the menu's last item (`UI-51`).
+- **2026-11-23:** Memory's "Organise for me" works with Qutai Credits: it goes to the server's own request `POST /relay/organise-memory` (server-owned instructions, only ids and texts sent, only moves returned, paid like a relay step, usage marked `organise_memory` in the panel) instead of the relay, whose agent prompt dropped its instructions; an older server says "not available yet" (`MEM-26`, `CRED-50`; owner).
 - **2026-11-23:** "Ask Qutai" in the address bar suggestions appears only for more than one word (`UI-52`).
 - **2026-11-23:** The ⋮ page menu drops Copy link, Read page aloud and Save screenshot (full-page stays); Cookies and Block ads on this site move to the main list (`UI-51`).
 - **2026-11-23:** "Dark sites in dark mode" is gone: Qutai no longer darkens pages (no iOS invert script, no Android force-dark); a page sees the app's theme through `prefers-color-scheme`, live, so sites with a dark design go dark and others stay as they are; the `settings` tool lost `dark_sites`, agent profile re-exported (`UI-50`, `TOOL-7`; owner).
