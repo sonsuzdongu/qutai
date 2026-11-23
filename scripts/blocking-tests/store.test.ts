@@ -8,7 +8,10 @@ import { test } from 'node:test';
 import { __fs } from 'expo-file-system';
 // @ts-expect-error the harness's stand-in (./loader.mjs) exports the test handle
 import { __native } from '../../src/device/contentBlocker.ts';
-import { BlockingError, CATALOGUE, contentBlocking, MAX_CUSTOM_LISTS, MAX_LIST_BYTES } from '../../src/content/blocking.ts';
+import { BlockingError, CATALOGUE, contentBlocking, MAX_CUSTOM_LISTS, MAX_LIST_BYTES, TIMING } from '../../src/content/blocking.ts';
+
+// Host spacing and timeouts are covered in download.test.ts.
+TIMING.hostSpacingMs = 0;
 
 type Answer = { status?: number; body?: string; headers?: Record<string, string> };
 const server = new Map<string, Answer>();

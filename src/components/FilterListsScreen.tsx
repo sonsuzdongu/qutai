@@ -1,8 +1,16 @@
 import { useState, useSyncExternalStore } from 'react';
-import { Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BlockingError, contentBlocking, ListKind, ListState, MAX_LIST_BYTES } from '../content/blocking';
+import {
+  BlockingError,
+  BlockingErrorCode,
+  contentBlocking,
+  ListKind,
+  ListProgress,
+  ListState,
+  MAX_LIST_BYTES,
+} from '../content/blocking';
 import { hasNativeBlocking } from '../device/contentBlocker';
 import { t } from '../i18n';
 import { formatDateTime, formatNumber } from '../i18n/format';
@@ -24,11 +32,18 @@ type Props = {
   onClose: () => void;
 };
 
+function reasonText(code: BlockingErrorCode, status?: number): string {
+  if (code === 'http') return t('blocking.error.http', { status: status ?? 0 });
+  if (code === 'tooBig') return t('blocking.error.tooBig', { mb: Math.round(MAX_LIST_BYTES / 1024 / 1024) });
+  return t(`blocking.error.${code}`);
+}
+
+/** The alert's text: each list that failed with its reason ("AdGuard German filter: …"), or the one reason. */
 function errorText(e: unknown): string {
   if (!(e instanceof BlockingError)) return t('blocking.error.network');
-  if (e.code === 'http') return t('blocking.error.http', { status: e.status ?? 0 });
-  if (e.code === 'tooBig') return t('blocking.error.tooBig', { mb: Math.round(MAX_LIST_BYTES / 1024 / 1024) });
-  return t(`blocking.error.${e.code}`);
+  if (e.lists?.length)
+    return e.lists.map((l) => t('blocking.failedList', { name: l.name, reason: reasonText(l.code, l.status) })).join('\n');
+  return reasonText(e.code, e.status);
 }
 
 function sizeLabel(bytes: number): string {
@@ -44,6 +59,7 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
   const [busy, setBusy] = useState(false);
   const { lists, status, compiled, active } = contentBlocking;
   const native = hasNativeBlocking();
+  const palette = usePalette();
 
   const run = async (task: () => Promise<unknown>) => {
     setBusy(true);
@@ -53,6 +69,16 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
       dialog.alert(t('blocking.failedTitle'), errorText(e));
     } finally {
       setBusy(false);
+    }
+  };
+
+  /** A list's switch or "Try again": no screen-wide lock, the row shows its own progress; a cancel says nothing. */
+  const runList = async (task: () => Promise<unknown>) => {
+    try {
+      await task();
+    } catch (e) {
+      if (e instanceof BlockingError && e.code === 'cancelled') return;
+      dialog.alert(t('blocking.failedTitle'), errorText(e));
     }
   };
 
@@ -97,15 +123,20 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
         <ScreenHeader title={t('blocking.title')} right={{ label: t('common.done'), onPress: onClose }} />
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.hint}>{t('blocking.intro')}</Text>
-          <Text style={[styles.status, active && blockingEnabled && styles.statusOn]}>{statusLine}</Text>
+          <View style={styles.statusRow}>
+            {blockingEnabled && status.phase !== 'idle' && <ActivityIndicator size="small" color={palette.tintText} />}
+            <Text style={[styles.status, styles.flex, active && blockingEnabled && styles.statusOn]}>{statusLine}</Text>
+          </View>
           {Platform.OS === 'ios' && <Text style={styles.hint}>{t('blocking.iosNoCounts')}</Text>}
 
           {lists.map((list) => (
             <ListRow
               key={list.id}
               list={list}
-              disabled={busy || !blockingEnabled}
-              onToggle={(on) => run(() => contentBlocking.setEnabled(list.id, on, allowed))}
+              progress={contentBlocking.progressOf(list.id)}
+              disabled={!blockingEnabled}
+              onToggle={(on) => runList(() => contentBlocking.setEnabled(list.id, on, allowed))}
+              onRetry={allowed ? () => runList(() => contentBlocking.retry(list.id, allowed)) : undefined}
               onRemove={
                 list.kind === 'custom'
                   ? async () => {
@@ -158,13 +189,20 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
 
 function ListRow({
   list,
+  progress,
   disabled,
   onToggle,
+  onRetry,
   onRemove,
 }: {
   list: ListState;
+  /** Waiting for or in the current download run. */
+  progress?: ListProgress;
   disabled: boolean;
+  /** Switching a waiting or downloading list off cancels it. */
   onToggle: (on: boolean) => void;
+  /** "Try again" after a failure (only when downloads are allowed). */
+  onRetry?: () => void;
   onRemove?: () => void;
 }) {
   const styles = useStyles();
@@ -179,7 +217,8 @@ function ListRow({
         rules: formatNumber(list.stats.rules),
       }),
     );
-  } else if (list.enabled) details.push(t('blocking.notDownloaded'));
+  } else if (list.error && !progress) details.push(t('blocking.row.failed'));
+  else if (list.enabled && !progress) details.push(t('blocking.notDownloaded'));
   return (
     <View style={styles.card}>
       <View style={styles.row}>
@@ -204,7 +243,23 @@ function ListRow({
           {d}
         </Text>
       ))}
-      {list.error && <Text style={styles.error}>{errorText(new BlockingError(list.error))}</Text>}
+      {progress && (
+        <View style={styles.progress}>
+          <ActivityIndicator size="small" color={palette.tintText} />
+          <Text style={styles.hint}>{t(progress === 'downloading' ? 'blocking.row.downloading' : 'blocking.row.queued')}</Text>
+        </View>
+      )}
+      {list.error && !progress && (
+        <Text style={styles.error}>
+          {reasonText(list.error, list.errorStatus)}
+          {onRetry && !disabled && (
+            <Text style={styles.link} onPress={onRetry} accessibilityRole="button">
+              {' · '}
+              {t('blocking.row.retry')}
+            </Text>
+          )}
+        </Text>
+      )}
       {list.kind === 'custom' ? (
         <Text style={styles.hint} selectable numberOfLines={2}>
           {list.url}
@@ -234,6 +289,8 @@ const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
   hint: common(c).hint,
   status: { fontSize: 14, color: c.text, fontWeight: '600' },
+  statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  progress: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   statusOn: { color: c.tintText },
   card: { ...common(c).card, padding: 14, gap: 4 },
   row: common(c).row,

@@ -334,7 +334,7 @@ Moved to Details (ids retired, not reused): `INC-8`
 | Id | Decision | Status | Date |
 |---|---|---|---|
 | `BLK-1` | "Block ads and trackers" is on by default. | Default |  |
-| `BLK-2` | Filter lists are never bundled: the phone downloads them from the publisher's official https address, only… | Default |  |
+| `BLK-2` | Filter lists are never bundled: downloaded from the publisher's official https address, or its own mirror (AdGuard: FiltersRegistry on GitHub) when that times out, refuses or fails. | Default; mirror Owner | 2026-11-23 |
 | `BLK-3` | EasyList and EasyPrivacy are on by default; AdGuard Turkish is on when the app language is Turkish; the… | Default |  |
 | `BLK-4` | The Turkish hosts list "turk-adlist" is not offered. | Default |  |
 | `BLK-6` | Limits: one list at most 15 MB, 400,000 domains in total, at most 10 custom lists; lists update at most… | Default |  |
@@ -360,6 +360,7 @@ Moved to Details (ids retired, not reused): `INC-8`
 | `BLK-31` | An ad that plays anyway is muted, sent to its end and skipped (checked every 300 ms); the sound comes back after, unless the user had muted it. | Owner | 2026-11-21 |
 | `BLK-32` | "Block third-party cookies" is shown and offered on Android only; iOS has no row (WebKit always blocks them). | Owner | 2026-11-21 |
 | `BLK-33` | "Block ads on this site" in the ⋮ menu (checked while on) turns blocking off or on for the site and reloads; same setting as `BLK-11`. | Owner | 2026-11-23 |
+| `BLK-34` | List downloads: 15 s to start answering, 60 s in all, 3 s between requests to one host, retries after 1 h / 4 h / daily; per-row spinner, switching off cancels, a never-downloaded failure switches back off with "Try again", the alert names the lists. | Owner | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `BLK-5`, `BLK-8`, `BLK-9`, `BLK-10`, `BLK-16`, `BLK-25`
 

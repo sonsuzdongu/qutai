@@ -40,6 +40,11 @@ export type CatalogueEntry = {
   id: string;
   name: string;
   url: string;
+  /**
+   * The publisher's own other addresses for the same file, tried in order when the main one doesn't answer in time,
+   * refuses (403, 429) or fails (5xx). AdGuard's CDN blocks a network for a while after a burst of requests.
+   */
+  mirrors?: string[];
   homepage: string;
   license: string;
   licenseUrl: string;
@@ -47,6 +52,11 @@ export type CatalogueEntry = {
   /** On in a fresh install (the Turkish list when the app is in Turkish; the other regional lists never). */
   defaultOn: () => boolean;
 };
+
+/** AdGuard publishes the same files in its FiltersRegistry repository on GitHub. */
+function adguardMirror(filterId: number): string {
+  return `https://raw.githubusercontent.com/AdguardTeam/FiltersRegistry/master/platforms/extension/ublock/filters/${filterId}.txt`;
+}
 
 /**
  * Well-known, maintained lists whose licences allow a browser to download them on the user's phone (as uBlock
@@ -77,6 +87,7 @@ export const CATALOGUE: CatalogueEntry[] = [
     id: 'adguard-turkish',
     name: 'AdGuard Turkish filter',
     url: 'https://filters.adtidy.org/extension/ublock/filters/13.txt',
+    mirrors: [adguardMirror(13)],
     homepage: 'https://github.com/AdguardTeam/AdguardFilters',
     license: 'GPLv3',
     licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
@@ -89,6 +100,7 @@ export const CATALOGUE: CatalogueEntry[] = [
     id: 'adguard-german',
     name: 'AdGuard German filter',
     url: 'https://filters.adtidy.org/extension/ublock/filters/6.txt',
+    mirrors: [adguardMirror(6)],
     homepage: 'https://github.com/AdguardTeam/AdguardFilters',
     license: 'GPLv3',
     licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
@@ -99,6 +111,7 @@ export const CATALOGUE: CatalogueEntry[] = [
     id: 'adguard-spanish-portuguese',
     name: 'AdGuard Spanish/Portuguese filter',
     url: 'https://filters.adtidy.org/extension/ublock/filters/9.txt',
+    mirrors: [adguardMirror(9)],
     homepage: 'https://github.com/AdguardTeam/AdguardFilters',
     license: 'GPLv3',
     licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
@@ -109,6 +122,7 @@ export const CATALOGUE: CatalogueEntry[] = [
     id: 'adguard-french',
     name: 'AdGuard French filter',
     url: 'https://filters.adtidy.org/extension/ublock/filters/16.txt',
+    mirrors: [adguardMirror(16)],
     homepage: 'https://github.com/AdguardTeam/AdguardFilters',
     license: 'GPLv3',
     licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
@@ -119,6 +133,7 @@ export const CATALOGUE: CatalogueEntry[] = [
     id: 'adguard-japanese',
     name: 'AdGuard Japanese filter',
     url: 'https://filters.adtidy.org/extension/ublock/filters/7.txt',
+    mirrors: [adguardMirror(7)],
     homepage: 'https://github.com/AdguardTeam/AdguardFilters',
     license: 'GPLv3',
     licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
@@ -129,6 +144,7 @@ export const CATALOGUE: CatalogueEntry[] = [
     id: 'adguard-russian',
     name: 'AdGuard Russian filter',
     url: 'https://filters.adtidy.org/extension/ublock/filters/1.txt',
+    mirrors: [adguardMirror(1)],
     homepage: 'https://github.com/AdguardTeam/AdguardFilters',
     license: 'GPLv3',
     licenseUrl: 'https://github.com/AdguardTeam/AdguardFilters/blob/master/LICENSE',
@@ -153,9 +169,17 @@ export const MAX_TOTAL_DOMAINS = 400_000;
 export const MAX_CUSTOM_LISTS = 10;
 /** Automatic updates at most this often (lists say they expire after 4-5 days). */
 export const UPDATE_INTERVAL_MS = 4 * 24 * 60 * 60 * 1000;
-/** A list that never downloaded is retried at most this often. */
-const RETRY_INTERVAL_MS = 60 * 60 * 1000;
-const DOWNLOAD_TIMEOUT_MS = 60_000;
+/** After failed automatic downloads a list is tried again after 1 hour, then 4 hours, then once a day. */
+export const BACKOFF_MS = [60 * 60 * 1000, 4 * 60 * 60 * 1000, 24 * 60 * 60 * 1000];
+/** Network timing; the tests shorten it. */
+export const TIMING = {
+  /** A server that hasn't started answering by then is given up on (and the mirror tried). */
+  responseTimeoutMs: 15_000,
+  /** The whole list, once the server answered. */
+  bodyTimeoutMs: 60_000,
+  /** Requests to the same host at least this far apart, so a CDN doesn't take Qutai for a flood. */
+  hostSpacingMs: 3_000,
+};
 const RULE_LIST_PREFIX = 'qutai-cb-';
 
 export type ListState = {
@@ -179,7 +203,16 @@ export type ListState = {
   domains?: number;
   /** Code of the last failure (see BlockingError), cleared by a success. */
   error?: BlockingErrorCode;
+  /** HTTP status of the last failure, when the server answered with an error. */
+  errorStatus?: number;
+  /** Failed downloads in a row (automatic retries wait BACKOFF_MS); 0 after a success. */
+  failures?: number;
+  /** The address the saved version came from (the main one or a mirror): its ETag only means something there. */
+  source?: string;
 };
+
+/** Where a list is in the current download run (the screen shows a spinner on its row). */
+export type ListProgress = 'queued' | 'downloading';
 
 type Compiled = {
   /** Which list versions it was made from. */
@@ -197,6 +230,8 @@ export type BlockingErrorCode =
   | 'duplicate'
   | 'tooManyLists'
   | 'network'
+  | 'timeout'
+  | 'cancelled'
   | 'http'
   | 'tooBig'
   | 'noRules'
@@ -208,9 +243,22 @@ export class BlockingError extends Error {
   constructor(
     readonly code: BlockingErrorCode,
     readonly status?: number,
+    /** Lists that failed in an update, each with its own reason (the alert names them). */
+    readonly lists?: { name: string; code: BlockingErrorCode; status?: number }[],
   ) {
     super(code);
   }
+}
+
+/** Whether another address of the same list is worth trying after this failure. */
+function tryMirror(e: BlockingError): boolean {
+  if (e.code === 'network' || e.code === 'timeout') return true;
+  return e.code === 'http' && (e.status === 403 || e.status === 429 || (e.status ?? 0) >= 500);
+}
+
+/** How long automatic updates wait after `failures` failed downloads in a row. */
+export function backoffDelay(failures: number): number {
+  return BACKOFF_MS[Math.min(Math.max(failures, 1), BACKOFF_MS.length) - 1];
 }
 
 export type BlockingStatus =
@@ -249,6 +297,12 @@ class ContentBlockingStore {
   private loaded: Promise<void> | null = null;
   /** One download / compile at a time. */
   private queue: Promise<unknown> = Promise.resolve();
+  /** Lists waiting for or in the current download run. */
+  private progress = new Map<string, ListProgress>();
+  /** The running download of a list, to cancel it when the list is switched off. */
+  private controllers = new Map<string, AbortController>();
+  /** When each host was last asked for a list (TIMING.hostSpacingMs). */
+  private hostRequests = new Map<string, number>();
   private master = false;
   /** Domains the user blocks with their own rules (content/siteRules.ts), merged with the lists' domains. */
   private userDomains: string[] = [];
@@ -327,7 +381,9 @@ class ContentBlockingStore {
     const due = this.lists.filter((l) => {
       if (!l.enabled) return false;
       const last = l.checkedAt ?? 0;
-      if (!l.fetchedAt) return now - last > RETRY_INTERVAL_MS;
+      // After failures: 1 hour, 4 hours, then a day, so a server that blocks or is down isn't asked again and again.
+      if (l.failures) return now - last > backoffDelay(l.failures);
+      if (!l.fetchedAt) return true;
       return now - last > UPDATE_INTERVAL_MS;
     });
     if (due.length) await this.update(due.map((l) => l.id)).catch(() => {});
@@ -349,15 +405,52 @@ class ContentBlockingStore {
     return this.update(this.lists.filter((l) => l.enabled).map((l) => l.id));
   }
 
-  /** Turns a list on or off; one never downloaded is downloaded when `allowed` (terms accepted, blocking on). */
+  /** Whether a list is waiting for or in the current download run (its row shows a spinner). */
+  progressOf(id: string): ListProgress | undefined {
+    return this.progress.get(id);
+  }
+
+  /**
+   * Turns a list on or off; one never downloaded is downloaded when `allowed` (terms accepted, blocking on). Turning
+   * off a list that is waiting or downloading cancels it. A list that was never downloaded and fails to download
+   * switches back off (its row says why and offers to try again); one with an earlier version stays on with it.
+   */
   async setEnabled(id: string, enabled: boolean, allowed: boolean): Promise<void> {
     await this.load();
-    this.patch(id, { enabled });
-    await this.save();
     const list = this.lists.find((l) => l.id === id);
-    if (enabled && list && !list.fetchedAt) {
-      if (allowed) await this.update([id]);
+    if (!list) return;
+    if (!enabled) this.cancel(id);
+    this.patch(id, enabled ? { enabled } : { enabled, ...(list.fetchedAt ? {} : { error: undefined, errorStatus: undefined }) });
+    await this.save();
+    if (enabled && !list.fetchedAt) {
+      if (!allowed) return;
+      try {
+        await this.update([id]);
+      } catch (e) {
+        const now = this.lists.find((l) => l.id === id);
+        if (now && !now.fetchedAt && now.enabled) {
+          this.patch(id, { enabled: false });
+          await this.save();
+        }
+        throw e;
+      }
     } else await this.recompile();
+  }
+
+  /** "Try again" on a list's row: downloads it now (switching it on if it went back off), whatever the backoff. */
+  retry(id: string, allowed: boolean): Promise<void> {
+    const list = this.lists.find((l) => l.id === id);
+    if (!list) return Promise.resolve();
+    if (!list.enabled) return this.setEnabled(id, true, allowed);
+    return allowed ? this.update([id]) : Promise.resolve();
+  }
+
+  /** Stops a list's download, or takes it out of the queue. */
+  private cancel(id: string) {
+    if (!this.progress.has(id)) return;
+    this.progress.delete(id);
+    this.controllers.get(id)?.abort();
+    this.emit();
   }
 
   /** Adds a list by its https:// address after downloading and checking it; throws a BlockingError otherwise. */
@@ -402,6 +495,7 @@ class ContentBlockingStore {
     await this.load();
     const list = this.lists.find((l) => l.id === id);
     if (!list || list.kind !== 'custom') return;
+    this.cancel(id);
     this.lists = this.lists.filter((l) => l.id !== id);
     await this.save();
     try {
@@ -414,6 +508,7 @@ class ContentBlockingStore {
   /** "Reset blocking": default lists only, everything downloaded or compiled removed, then downloaded again. */
   async reset(allowed: boolean): Promise<void> {
     await this.load();
+    for (const id of [...this.progress.keys()]) this.cancel(id);
     await this.run(async () => {
       try {
         if (dir.exists) dir.delete();
@@ -460,51 +555,135 @@ class ContentBlockingStore {
     return next;
   }
 
+  /**
+   * Downloads the given lists one after another (each row shows "queued", then "downloading"), then compiles once.
+   * Rejects with every list that failed (named in the alert); a cancelled list is not a failure.
+   */
   private async update(ids: string[]): Promise<void> {
     await this.load();
-    let failure: unknown = null;
+    // A list already waiting or downloading isn't asked for twice.
+    const mine = ids.filter((id) => !this.progress.has(id));
+    for (const id of mine) this.progress.set(id, 'queued');
+    if (mine.length) this.emit();
+    const failed: { name: string; code: BlockingErrorCode; status?: number }[] = [];
     await this.run(async () => {
-      for (const id of ids) {
-        const list = this.lists.find((l) => l.id === id);
-        if (!list) continue;
-        try {
-          const result = await this.download(list);
-          this.patch(id, result === 'unchanged' ? { checkedAt: Date.now(), error: undefined } : result.state);
-        } catch (e) {
-          failure ??= e;
-          this.patch(id, {
-            checkedAt: Date.now(),
-            error: e instanceof BlockingError ? e.code : 'network',
-          });
+      try {
+        for (const id of mine) {
+          const list = this.lists.find((l) => l.id === id);
+          // Switched off or removed while it waited.
+          if (!this.progress.has(id) || !list) continue;
+          this.progress.set(id, 'downloading');
+          this.emit();
+          const controller = new AbortController();
+          this.controllers.set(id, controller);
+          try {
+            const result = await this.download(list, controller.signal);
+            this.patch(
+              id,
+              result === 'unchanged'
+                ? { checkedAt: Date.now(), error: undefined, errorStatus: undefined, failures: 0 }
+                : result.state,
+            );
+          } catch (e) {
+            const error = e instanceof BlockingError ? e : new BlockingError('network');
+            if (error.code !== 'cancelled') {
+              failed.push({ name: list.name, code: error.code, status: error.status });
+              this.patch(id, {
+                checkedAt: Date.now(),
+                error: error.code,
+                errorStatus: error.status,
+                failures: (list.failures ?? 0) + 1,
+              });
+            }
+          } finally {
+            this.controllers.delete(id);
+            this.progress.delete(id);
+            this.emit();
+          }
+          await this.save();
         }
-        await this.save();
+      } finally {
+        for (const id of mine) this.progress.delete(id);
       }
       this.status = { phase: 'idle' };
       this.emit();
       if (this.needsCompile()) await this.compileNow();
     });
-    if (failure) throw failure;
+    if (failed.length) throw new BlockingError(failed[0].code, failed[0].status, failed);
   }
 
-  /** Downloads and parses one list; writes its domain sets only when everything succeeded. */
-  private async download(list: ListState): Promise<'unchanged' | { state: Partial<ListState> }> {
+  /**
+   * Downloads and parses one list from its address, then from the publisher's mirrors when the address doesn't
+   * answer in time, refuses or fails (see tryMirror); writes its domain sets only when everything succeeded. The
+   * error of the main address is the one reported.
+   */
+  private async download(
+    list: ListState,
+    signal: AbortSignal = new AbortController().signal,
+  ): Promise<'unchanged' | { state: Partial<ListState> }> {
+    const mirrors = list.kind === 'custom' ? [] : (CATALOGUE.find((c) => c.id === list.id)?.mirrors ?? []);
+    let first: BlockingError | null = null;
+    for (const url of [list.url, ...mirrors]) {
+      try {
+        return await this.downloadFrom(list, url, signal);
+      } catch (e) {
+        const error = e instanceof BlockingError ? e : new BlockingError('network');
+        if (error.code === 'cancelled' || !tryMirror(error)) throw error;
+        first ??= error;
+      }
+    }
+    throw first ?? new BlockingError('network');
+  }
+
+  /** Waits until the host may be asked again (TIMING.hostSpacingMs after the last request to it). */
+  private async waitForHost(url: string, signal: AbortSignal): Promise<void> {
+    let host: string;
+    try {
+      host = new URL(url).hostname;
+    } catch {
+      return;
+    }
+    const wait = (this.hostRequests.get(host) ?? -Infinity) + TIMING.hostSpacingMs - Date.now();
+    if (wait > 0) await new Promise<void>((resolve) => setTimeout(resolve, wait));
+    if (signal.aborted) throw new BlockingError('cancelled');
+    this.hostRequests.set(host, Date.now());
+  }
+
+  private async downloadFrom(
+    list: ListState,
+    url: string,
+    signal: AbortSignal,
+  ): Promise<'unchanged' | { state: Partial<ListState> }> {
+    if (signal.aborted) throw new BlockingError('cancelled');
+    await this.waitForHost(url, signal);
     this.status = { phase: 'downloading', name: list.name };
     this.emit();
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), DOWNLOAD_TIMEOUT_MS);
+    let reason: 'timeout' | 'cancelled' | null = null;
+    const stop = (why: 'timeout' | 'cancelled') => {
+      reason ??= why;
+      controller.abort();
+    };
+    const onCancel = () => stop('cancelled');
+    signal.addEventListener('abort', onCancel);
+    const failure = (code: BlockingErrorCode) => new BlockingError(reason ?? code);
+    // First the answer must start within responseTimeoutMs, then the whole list must arrive within bodyTimeoutMs.
+    let timer = setTimeout(() => stop('timeout'), TIMING.responseTimeoutMs);
     let text: string;
     let response: Response;
     try {
       const headers: Record<string, string> = { Accept: 'text/plain, */*' };
-      // Only with data to fall back on: a missing file must be downloaded again in full.
-      const haveData = !!list.fetchedAt && listFile(list.id).exists;
+      // Only with data to fall back on, and only to the address that data came from (a mirror has its own ETags).
+      const haveData = !!list.fetchedAt && listFile(list.id).exists && (list.source ?? list.url) === url;
       if (haveData && list.etag) headers['If-None-Match'] = list.etag;
       if (haveData && list.lastModified) headers['If-Modified-Since'] = list.lastModified;
       try {
-        response = await fetch(list.url, { headers, signal: controller.signal });
+        response = await fetch(url, { headers, signal: controller.signal });
       } catch {
-        throw new BlockingError('network');
+        throw failure('network');
       }
+      clearTimeout(timer);
+      timer = setTimeout(() => stop('timeout'), TIMING.bodyTimeoutMs);
       if (response.status === 304) return 'unchanged';
       if (!response.ok) throw new BlockingError('http', response.status);
       const length = Number(response.headers.get('content-length'));
@@ -515,13 +694,15 @@ class ContentBlockingStore {
       try {
         text = await response.text();
       } catch {
-        throw new BlockingError('network');
+        throw failure('network');
       }
     } finally {
       clearTimeout(timer);
+      signal.removeEventListener('abort', onCancel);
     }
     if (text.length > MAX_LIST_BYTES) throw new BlockingError('tooBig');
     const parsed: ParsedList = await parseListInBatches(text, pause);
+    if (signal.aborted) throw new BlockingError('cancelled');
     const domains = parsed.block.length + parsed.blockThirdParty.length + parsed.allow.length;
     if (domains === 0) throw new BlockingError('noRules');
     try {
@@ -536,12 +717,15 @@ class ContentBlockingStore {
       state: {
         etag: response.headers.get('etag') ?? undefined,
         lastModified: response.headers.get('last-modified') ?? undefined,
+        source: url,
         fetchedAt: Date.now(),
         checkedAt: Date.now(),
         bytes: text.length,
         stats: parsed.stats,
         domains,
         error: undefined,
+        errorStatus: undefined,
+        failures: 0,
       },
     };
   }
@@ -575,6 +759,8 @@ class ContentBlockingStore {
       if (domains > MAX_TOTAL_DOMAINS) throw new BlockingError('tooManyDomains');
       let ruleLists: string[] = [];
       if (Platform.OS === 'android') {
+        this.status = { phase: 'compiling', done: 0, total: 1 };
+        this.emit();
         const target = androidFile();
         const temp = new File(dir, 'blocker.tmp');
         if (!dir.exists) dir.create({ intermediates: true, idempotent: true });
