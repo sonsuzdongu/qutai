@@ -21,7 +21,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
         {
           heading: 'Who we are',
           body:
-            'Qutai is made by Osman Yuksel (“we”), who is responsible for the data described in this policy. For ' +
+            'Qutai is developed as open source. The Qutai team (“we”) is responsible for the data described in this policy. For ' +
             'questions about your privacy, or to ask for a copy or the deletion of what Qutai’s server keeps about ' +
             'you, write to qutai@sonsuzdongu.com.',
         },
@@ -373,7 +373,7 @@ export const PRO_DOCUMENTS: Record<LegalLanguage, Record<LegalKind, LegalDocumen
         {
           heading: 'Biz kimiz',
           body:
-            'Qutai’ı Osman Yuksel (“biz”) geliştirir ve bu politikada anlatılan verilerden o sorumludur. ' +
+            'Qutai açık kaynak geliştirilen bir üründür. Bu politikada anlatılan verilerden Qutai ekibi (“biz”) sorumludur. ' +
             'Gizliliğinizle ilgili sorularınız için ya da Qutai’ın sunucusunun sizinle ilgili sakladıklarının bir ' +
             'kopyasını veya silinmesini istemek için qutai@sonsuzdongu.com adresine yazın.',
         },

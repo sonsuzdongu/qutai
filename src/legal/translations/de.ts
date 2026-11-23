@@ -276,7 +276,7 @@ export const de: LegalTranslation = {
         {
           heading: 'Wer wir sind',
           body:
-            'Qutai wird von Osman Yuksel („wir“) entwickelt, der Verantwortlicher für die in dieser Erklärung ' +
+            'Qutai wird als Open Source entwickelt. Das Qutai-Team („wir“) ist Verantwortlicher für die in dieser Erklärung ' +
             'beschriebenen Daten ist. Bei Fragen zu Ihrem Datenschutz oder um eine Kopie oder die Löschung dessen ' +
             'zu verlangen, was Qutais Server über Sie speichert, schreiben Sie an qutai@sonsuzdongu.com.',
         },

@@ -272,7 +272,7 @@ export const id: LegalTranslation = {
         {
           heading: 'Siapa kami',
           body:
-            'Qutai dibuat oleh Osman Yuksel (“kami”), yang bertanggung jawab atas data yang dijelaskan dalam ' +
+            'Qutai dikembangkan sebagai sumber terbuka. Tim Qutai (“kami”) bertanggung jawab atas data yang dijelaskan dalam ' +
             'kebijakan ini sebagai Pengendali Data Pribadi. Untuk pertanyaan tentang privasi Anda, atau untuk ' +
             'meminta salinan atau penghapusan data yang disimpan server Qutai tentang Anda, kirim email ke ' +
             'qutai@sonsuzdongu.com.',

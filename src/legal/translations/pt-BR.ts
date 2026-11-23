@@ -284,7 +284,7 @@ export const ptBR: LegalTranslation = {
         {
           heading: 'Quem somos',
           body:
-            'O Qutai é feito por Osman Yuksel (“nós”), que é o controlador dos dados descritos nesta política. Para ' +
+            'O Qutai é desenvolvido como código aberto. A equipe do Qutai (“nós”) é a controladora dos dados descritos nesta política. Para ' +
             'dúvidas sobre sua privacidade, ou para pedir uma cópia ou a eliminação do que o servidor do Qutai ' +
             'guarda sobre você, escreva para qutai@sonsuzdongu.com.',
         },

@@ -242,7 +242,7 @@ export const ja: LegalTranslation = {
         {
           heading: '運営者について',
           body:
-            'Qutai は Osman Yuksel（以下「当方」）が開発しており、Osman Yuksel ' +
+            'Qutai はオープンソースで開発されています。Qutai チーム（以下「当方」）' +
             'が本ポリシーに記載するデータの取扱いについて責任を負います。プライバシーに関するお問い合わせ、または ' +
             'Qutai のサーバーが保有するお客様に関する情報の開示（写しの提供）や削除のご請求は、qutai@sonsuzdongu.com ' +
             'までご連絡ください。',

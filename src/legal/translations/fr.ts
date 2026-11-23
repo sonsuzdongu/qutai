@@ -284,7 +284,7 @@ export const fr: LegalTranslation = {
         {
           heading: 'Qui nous sommes',
           body:
-            'Qutai est développé par Osman Yuksel (« nous »), responsable du traitement des données décrites dans la ' +
+            'Qutai est développé en open source. L’équipe Qutai (« nous ») est responsable du traitement des données décrites dans la ' +
             'présente politique. Pour toute question relative à votre vie privée, ou pour demander une copie ou ' +
             'l’effacement de ce que le serveur de Qutai conserve à votre sujet, écrivez à qutai@sonsuzdongu.com.',
         },

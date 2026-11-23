@@ -53,7 +53,6 @@ const ENGLISH_WORD: Record<TranslatedLegalLanguage, RegExp> = {
 /** Names, addresses and terms that stay as written in every language. Turkish has its own "Qutai Kredileri". */
 const KEPT = [
   'Qutai Credits',
-  'Osman Yuksel',
   'qutai@sonsuzdongu.com',
   'Anthropic',
   'OpenAI',

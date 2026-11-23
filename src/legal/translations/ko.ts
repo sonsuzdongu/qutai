@@ -298,7 +298,7 @@ export const ko: LegalTranslation = {
         {
           heading: '운영자 정보',
           body:
-            'Qutai는 Osman Yuksel(이하 “저희”)이 만들며, Osman Yuksel은 본 방침에 기술된 데이터의 ' +
+            'Qutai는 오픈 소스로 개발됩니다. Qutai 팀(이하 “저희”)은 본 방침에 기술된 데이터의 ' +
             '개인정보처리자입니다. 귀하의 개인정보에 관한 문의가 있거나, Qutai의 서버가 보관하는 귀하에 관한 ' +
             '정보의 사본 또는 삭제를 요청하려면 qutai@sonsuzdongu.com으로 연락해 주십시오.',
         },

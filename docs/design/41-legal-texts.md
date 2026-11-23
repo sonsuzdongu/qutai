@@ -86,6 +86,9 @@ The privacy policy and terms of use shown in the app (one set for the open-sourc
 
 - **`LEGAL-29`** The pro privacy policy (ten languages, `{{ios:…|android:…|web:…}}` wording) describes the consented anonymous usage statistics (`SRV-31`, `SRV-32`) and the device verification and abuse checks (`SRV-28`…`SRV-30`) in two sections after "How long data is kept", and its intro no longer says Qutai has no analytics. The owner bumped the pro legal version to 8, dated 22 Nov 2026 (`LEGAL-4`): every pro user accepts the updated texts once on the next launch; the open-source version stays 5.
   Status: Decided by the owner (22 Nov 2026: "Evet, artır") · Why: what leaves the phone changed (`LEGAL-7`): Apple's and Google's device checks run with the next pro build in "log only", and analytics once the owner switches them on · Enforced: In the app: src/legal/proDocuments.ts, src/legal/translations/*.ts › pro; scripts/i18n-tests/legal.test.ts · Source: backend/DESIGN.md › Abuse protection (step 9), › Analytics
+- **`LEGAL-30`** No person is named in the legal texts: the pro privacy policy's "Who we are" says Qutai is developed as open source and that the Qutai team ("we") is responsible for the data it describes, with qutai@sonsuzdongu.com as the contact, in all ten languages. The legal version was not raised (wording only; nothing collected changed).
+  Status: Decided by the owner (23 Nov 2026: the owner's name must appear nowhere, in the app or on the website) · Why: the owner's request; caveat given to the owner: data-protection law expects the controller to be identifiable, and the App Store and Google Play still show the developer's name as seller/trader · Enforced: In the app: src/legal/proDocuments.ts, src/legal/translations/*.ts › pro; scripts/i18n-tests/legal.test.ts (the name is no longer a kept term); the website's privacy page is generated from these (webpage/scripts/make-legal.mjs)
+
 ## Details
 
 **Licences screen**
