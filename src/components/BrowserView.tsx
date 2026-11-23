@@ -317,10 +317,8 @@ function TabWebView({
         <NewTabPage
           incognito={tab.incognito}
           darkMode={newTabActions.darkMode}
-          searchEngine={newTabActions.searchEngine}
           active={active}
           onNavigate={(url) => tab.loadUrl(url)}
-          onAsk={newTabActions.onAsk}
           onAskForApp={newTabActions.onAskForApp}
           onOpenLibrary={newTabActions.onOpenLibrary}
         />
@@ -610,10 +608,8 @@ function TabWebView({
           <NewTabPage
             incognito={tab.incognito}
             darkMode={newTabActions.darkMode}
-            searchEngine={newTabActions.searchEngine}
             active={active}
             onNavigate={(url) => tab.loadUrl(url)}
-            onAsk={newTabActions.onAsk}
             onAskForApp={newTabActions.onAskForApp}
             onOpenLibrary={newTabActions.onOpenLibrary}
           />

@@ -441,7 +441,6 @@ export const ja: Record<keyof typeof en, string> = {
   'menu.newTab': '新しいタブ',
   'menu.newIncognitoTab': '新しいシークレット タブ',
 
-  'newTab.ask': 'Qutai に質問',
   'newTab.recent': '最近アクセスしたサイト',
   'newTab.seeAll': 'すべて表示',
   'newTab.removeSite': '「{title}」をよくアクセスするサイトから削除しますか？',

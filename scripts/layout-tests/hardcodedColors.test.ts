@@ -37,7 +37,7 @@ const BASELINE: Record<string, number> = {
   'src/components/MarkdownText.tsx': 6,
   'src/components/MyApps.tsx': 1,
   'src/components/NavigationStatus.tsx': 2,
-  'src/components/NewTabPage.tsx': 18,
+  'src/components/NewTabPage.tsx': 13,
   'src/components/OmniboxSuggestions.tsx': 3,
   'src/components/Onboarding.tsx': 1,
   'src/components/OptionCards.tsx': 12,

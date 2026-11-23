@@ -429,7 +429,6 @@ export const en = {
   'menu.newTab': 'New tab',
   'menu.newIncognitoTab': 'New incognito tab',
 
-  'newTab.ask': 'Ask Qutai',
   'newTab.recent': 'Recently visited',
   'newTab.seeAll': 'See all',
   'newTab.removeSite': 'Remove "{title}" from frequently visited?',

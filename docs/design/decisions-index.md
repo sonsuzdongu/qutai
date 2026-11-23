@@ -877,8 +877,9 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-48` | Everything follows the app's theme through the palette (incognito always dark); toasts sit above every bar; listed exceptions over photos, video, camera and brand art; a test stops new literal colours. | Default | 2026-11-23 |
 | `UI-49` | Android draws each text from the layout that was measured (prepared text layout, config plugin), so text never comes out wider than its box. | Default | 2026-11-23 |
 | `UI-50` | Qutai never darkens pages: `prefers-color-scheme` follows the app's theme (live); the "Dark sites in dark mode" switch is gone. | Owner | 2026-11-23 |
-| `UI-51` | ⋮ menu: no Copy link, Read aloud or visible-part screenshot; Cookies and Block ads on this site moved up from More. | Owner | 2026-11-23 |
+| `UI-51` | ⋮ menu: no Copy link, Read aloud or visible-part screenshot; Cookies and Block ads moved up; Reader mode and Add to Home screen under More; Settings last. | Owner | 2026-11-23 |
 | `UI-52` | "Ask Qutai" in the address bar suggestions only for more than one word, never for a lone address or word. | Owner | 2026-11-23 |
+| `UI-53` | New tab page: no search box or Ask Qutai button; the aurora drifts slowly while on screen (still with Reduce Motion). | Owner | 2026-11-23 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

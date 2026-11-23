@@ -440,7 +440,6 @@ export const ru: Record<keyof typeof en, string> = {
   'menu.newTab': 'Новая вкладка',
   'menu.newIncognitoTab': 'Новая вкладка инкогнито',
 
-  'newTab.ask': 'Спросить Qutai',
   'newTab.recent': 'Недавно посещённые',
   'newTab.seeAll': 'Все',
   'newTab.removeSite': 'Удалить «{title}» из часто посещаемых?',

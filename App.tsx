@@ -1439,32 +1439,11 @@ function BrowserApp({
       onPress: () => runAction(() => shareLink(tab)),
     },
     // No "Copy link" here: the share sheet has it (UI-51).
-    // Android: a launcher shortcut for this page (iOS gives apps no way to add one; Safari's is its own).
-    ...(pinShortcuts && !tab.incognito
-      ? [
-          {
-            icon: 'addToHome' as const,
-            label: t('menu.addToHomeScreen'),
-            disabled: !/^https?:\/\//i.test(tab.url) || onNewTab,
-            onPress: () => {
-              if (!pinSiteShortcut(tab.url, tab.title)) toast.show(t('menu.addToHomeScreenFailed'));
-            },
-          },
-        ]
-      : []),
     {
       icon: 'find',
       label: t('menu.find'),
       disabled: onNewTab,
       onPress: () => setFindFor({ tabId: tab.id, url: tab.url, reader: !!tab.reader }),
-    },
-    {
-      icon: 'reader',
-      label: t(tab.reader || tab.readerAvailable || onNewTab ? 'menu.reader' : 'menu.readerNone'),
-      checked: !!tab.reader,
-      // Offered only when the page looks like an article; the full check runs when it opens.
-      disabled: onNewTab || (!tab.reader && !tab.readerAvailable),
-      onPress: toggleReader,
     },
     // A broken style must never trap the user: whenever a user style applies here (kept or tried), it can be
     // switched off for this tab, and on again (docs/page-customisation.md).
@@ -1549,6 +1528,27 @@ function BrowserApp({
       onPress: () => {},
       submenu: [
         {
+          icon: 'reader',
+          label: t(tab.reader || tab.readerAvailable || onNewTab ? 'menu.reader' : 'menu.readerNone'),
+          checked: !!tab.reader,
+          // Under More (UI-51); offered only when the page looks like an article; the full check runs when it opens.
+          disabled: onNewTab || (!tab.reader && !tab.readerAvailable),
+          onPress: toggleReader,
+        },
+        // Android: a launcher shortcut for this page, under More (UI-51) (iOS gives apps no way to add one; Safari's is its own).
+        ...(pinShortcuts && !tab.incognito
+          ? [
+              {
+                icon: 'addToHome' as const,
+                label: t('menu.addToHomeScreen'),
+                disabled: !/^https?:\/\//i.test(tab.url) || onNewTab,
+                onPress: () => {
+                  if (!pinSiteShortcut(tab.url, tab.title)) toast.show(t('menu.addToHomeScreenFailed'));
+                },
+              },
+            ]
+          : []),
+        {
           icon: 'qrCode',
           label: t('menu.qrCode'),
           disabled: onNewTab,
@@ -1629,6 +1629,8 @@ function BrowserApp({
         },
       ],
     },
+    // Qutai's own settings, last in the menu (UI-51).
+    { icon: 'settings', label: t('settings.title'), section: true, onPress: () => openSettings() },
   ];
 
   /**

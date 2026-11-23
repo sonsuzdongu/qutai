@@ -430,7 +430,6 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.newTab': 'Yeni sekme',
   'menu.newIncognitoTab': 'Yeni gizli sekme',
 
-  'newTab.ask': "Qutai’a sor",
   'newTab.recent': 'Son ziyaret edilenler',
   'newTab.seeAll': 'Tümü',
   'newTab.removeSite': '"{title}" sık ziyaret edilenlerden kaldırılsın mı?',

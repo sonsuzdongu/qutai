@@ -439,7 +439,6 @@ export const ko: Record<keyof typeof en, string> = {
   'menu.newTab': '새 탭',
   'menu.newIncognitoTab': '새 시크릿 탭',
 
-  'newTab.ask': 'Qutai에게 묻기',
   'newTab.recent': '최근 방문',
   'newTab.seeAll': '모두 보기',
   'newTab.removeSite': '자주 방문한 사이트에서 ‘{title}’을(를) 삭제하시겠습니까?',

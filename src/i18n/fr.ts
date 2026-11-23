@@ -440,7 +440,6 @@ export const fr: Record<keyof typeof en, string> = {
   'menu.newTab': 'Nouvel onglet',
   'menu.newIncognitoTab': 'Nouvel onglet privé',
 
-  'newTab.ask': 'Demander à Qutai',
   'newTab.recent': 'Visités récemment',
   'newTab.seeAll': 'Tout afficher',
   'newTab.removeSite': 'Retirer « {title} » des sites fréquemment visités ?',

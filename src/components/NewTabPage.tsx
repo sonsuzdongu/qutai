@@ -1,13 +1,11 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { Aurora } from '../ui/Aurora';
-import { GradientButton, GradientText } from '../ui/BrandGradient';
+import { GradientText } from '../ui/BrandGradient';
 import { siteColor } from '../ui/siteColor';
 import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles, readableColumn, radii, common } from '../ui/theme';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import type { SearchEngineId } from '../browser/search';
-import { toUrl } from '../browser/url';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { incognitoInfoKey } from '../device/webviewProfile';
 import { getLanguage, t, type Language } from '../i18n';
 import { hostOf } from '../i18n/format';
@@ -23,11 +21,9 @@ import { reportStorageFailure } from '../storage/failures';
 type Props = {
   incognito: boolean;
   darkMode?: boolean;
-  searchEngine: SearchEngineId;
   /** Data is refreshed each time the page comes on screen. */
   active: boolean;
   onNavigate: (url: string) => void;
-  onAsk: (text: string) => void;
   /** "My apps": asks the assistant for a first app. */
   onAskForApp: () => void;
   onOpenLibrary: (tab: LibraryTab) => void;
@@ -61,10 +57,9 @@ const LOCAL_SITES: Record<Language, { wiki: string; wikipedia: string; hl: strin
 
 type Data = { sites: TopSite[]; bookmarks: Bookmark[]; recent: HistoryEntry[] };
 
-export function NewTabPage({ incognito, darkMode, searchEngine, active, onNavigate, onAsk, onAskForApp, onOpenLibrary }: Props) {
+export function NewTabPage({ incognito, darkMode, active, onNavigate, onAskForApp, onOpenLibrary }: Props) {
   // Incognito is always dark, whatever the app's appearance.
   const styles = useStyles(incognito);
-  const [text, setText] = useState('');
   const [data, setData] = useState<Data | null>(null);
   const [reload, setReload] = useState(0);
   // Bookmarks the assistant adds or removes show at once.
@@ -94,15 +89,6 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
     };
   }, [active, incognito, reload]);
 
-  const submit = () => {
-    if (text.trim()) onNavigate(toUrl(text, searchEngine));
-  };
-  // With nothing typed, it opens the assistant to type there.
-  const ask = () => {
-    onAsk(text.trim());
-    setText('');
-  };
-
   const removeSite = (site: TopSite) => {
     if (site.visits === 0) return;
     dialog.alert(t('newTab.removeSite', { title: site.title || site.host }), undefined, [
@@ -125,7 +111,7 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
   return (
     <View style={[styles.flex, theme.page]}>
       {/* Incognito keeps its own plain look. */}
-      {!incognito && <Aurora base={darkUI ? '#1c1b22' : '#f5f4ef'} dark={darkUI} fade={0.5} />}
+      {!incognito && <Aurora base={darkUI ? '#1c1b22' : '#f5f4ef'} dark={darkUI} fade={0.5} animate={active} />}
       <ScrollView style={styles.flex} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {incognito ? (
           <View style={styles.logoRow}>
@@ -140,26 +126,7 @@ export function NewTabPage({ incognito, darkMode, searchEngine, active, onNaviga
           </View>
         )}
 
-        <View style={[styles.searchRow, theme.search]}>
-          <TextInput
-            style={[styles.searchInput, theme.text]}
-            value={text}
-            onChangeText={setText}
-            onSubmitEditing={submit}
-            placeholder={t('address.placeholder')}
-            placeholderTextColor={darkUI ? '#a9a8b3' : '#6b6862'}
-            autoCapitalize="none"
-            autoCorrect={false}
-            returnKeyType="search"
-          />
-          <GradientButton
-            label={t('newTab.ask')}
-            onPress={ask}
-            style={styles.askButton}
-            textStyle={styles.askText}
-            icon={<Icon name="assistant" size={15} color="#ffffff" />}
-          />
-        </View>
+        {/* No search box here: the address bar is the one place to type (UI-53). */}
 
         {incognito ? (
           <View style={[styles.card, theme.card]}>
@@ -261,27 +228,6 @@ const useStyles = makeStyles((c) => ({
   logoRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
   logo: { fontSize: 30, fontWeight: '700', letterSpacing: -0.5 },
   askInner: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 24,
-    paddingLeft: 16,
-    paddingRight: 5,
-    height: 48,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  searchInput: { flex: 1, fontSize: 16, paddingVertical: 0 },
-  askButton: {
-    borderRadius: 19,
-    paddingHorizontal: 12,
-    height: 38,
-    justifyContent: 'center',
-  },
-  askText: { color: c.onTint, fontWeight: '600', fontSize: 14 },
   dimmed: { opacity: 0.8 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 16 },
   tile: { width: '25%', alignItems: 'center', gap: 6 },
@@ -312,7 +258,6 @@ const useStyles = makeStyles((c) => ({
 const light = StyleSheet.create({
   page: { backgroundColor: '#f5f4ef' },
   logo: { color: '#1460b4' },
-  search: { backgroundColor: '#fff' },
   text: { color: '#222' },
   dim: { color: '#6b6862' },
   card: { backgroundColor: '#fff' },
@@ -321,7 +266,6 @@ const light = StyleSheet.create({
 const dark = StyleSheet.create({
   page: { backgroundColor: '#1c1b22' },
   logo: { color: '#f2f1f5' },
-  search: { backgroundColor: '#2b2a33' },
   text: { color: '#f2f1f5' },
   dim: { color: '#a9a8b3' },
   card: { backgroundColor: '#2b2a33' },

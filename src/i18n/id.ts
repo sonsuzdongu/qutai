@@ -440,7 +440,6 @@ export const id: Record<keyof typeof en, string> = {
   'menu.newTab': 'Tab baru',
   'menu.newIncognitoTab': 'Tab Samaran baru',
 
-  'newTab.ask': 'Tanya Qutai',
   'newTab.recent': 'Baru saja dikunjungi',
   'newTab.seeAll': 'Lihat semua',
   'newTab.removeSite': 'Hapus "{title}" dari yang sering dikunjungi?',

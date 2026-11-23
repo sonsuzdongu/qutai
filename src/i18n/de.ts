@@ -439,7 +439,6 @@ export const de: Record<keyof typeof en, string> = {
   'menu.newTab': 'Neuer Tab',
   'menu.newIncognitoTab': 'Neuer Inkognito-Tab',
 
-  'newTab.ask': 'Qutai fragen',
   'newTab.recent': 'Zuletzt besucht',
   'newTab.seeAll': 'Alle anzeigen',
   'newTab.removeSite': '„{title}“ aus „Häufig besucht“ entfernen?',

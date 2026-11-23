@@ -441,7 +441,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'menu.newTab': 'Nova guia',
   'menu.newIncognitoTab': 'Nova guia anônima',
 
-  'newTab.ask': 'Perguntar ao Qutai',
   'newTab.recent': 'Visitados recentemente',
   'newTab.seeAll': 'Ver tudo',
   'newTab.removeSite': 'Remover "{title}" dos mais visitados?',

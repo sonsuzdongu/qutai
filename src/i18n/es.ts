@@ -441,7 +441,6 @@ export const es: Record<keyof typeof en, string> = {
   'menu.newTab': 'Nueva pestaña',
   'menu.newIncognitoTab': 'Nueva pestaña de incógnito',
 
-  'newTab.ask': 'Preguntar a Qutai',
   'newTab.recent': 'Visitados recientemente',
   'newTab.seeAll': 'Ver todo',
   'newTab.removeSite': '¿Quitar «{title}» de los sitios más visitados?',
