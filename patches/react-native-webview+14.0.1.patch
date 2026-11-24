@@ -491,7 +491,7 @@ index 0000000..95b43f2
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
-index 209b855..f45b030 100644
+index 209b855..882f955 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 @@ -1,6 +1,7 @@
@@ -625,13 +625,13 @@ index 209b855..f45b030 100644
          }
      }
  
-+    // Qutai patch: schemes the WebView loads itself; anything else is a link for another app.
++    // Qutai patch: schemes the WebView loads itself (the app's linkTarget 'web' and 'in-page'); anything else
++    // (whatsapp:, tel:, market:, intent:, file:, any app's own scheme) is a link for another app.
 +    private static boolean isWebViewScheme(String url) {
 +        if (url == null) return true;
 +        String lower = url.toLowerCase(java.util.Locale.ROOT);
 +        return lower.startsWith("http:") || lower.startsWith("https:") || lower.startsWith("about:")
-+                || lower.startsWith("data:") || lower.startsWith("blob:") || lower.startsWith("javascript:")
-+                || lower.startsWith("file:");
++                || lower.startsWith("data:") || lower.startsWith("blob:") || lower.startsWith("javascript:");
 +    }
 +
      @Override

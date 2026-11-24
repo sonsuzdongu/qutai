@@ -19,7 +19,7 @@ import { iosStoreKey } from '../device/cookieStore';
 import { siteKey } from '../agent/sitePolicy';
 import { allowInsecure, upgradeToHttps } from '../browser/httpsOnly';
 import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
-import { linkTarget, toLoadError } from '../browser/navigation';
+import { isAppLinkError, linkTarget, toLoadError } from '../browser/navigation';
 import { certificateExceptionsFor, mayBypassCertificate, noteValidCertificate } from '../browser/certificateExceptions';
 import { isLocalUrl } from '../browser/localNetwork';
 import { endLaunchChain, mayOfferExternal, noteUserGesture, touchedRecently } from '../browser/externalGuard';
@@ -488,6 +488,15 @@ function TabWebView({
               const fingerprint = error.fingerprint;
               return (
                 <ErrorPage
+              // A link for another app that the WebView tried to load itself (any scheme, DL-18): no error page; the
+              // tab goes back to where it was (or to the new tab page, when it was opened just for that link).
+              if (isAppLinkError(e.nativeEvent.url)) {
+                e.preventDefault();
+                tab.nav.end('stopped');
+                if (tab.canGoBack) tab.historyBack();
+                else tab.showNewTab();
+                return;
+              }
                   error={error}
                   url={url}
                   local={local}

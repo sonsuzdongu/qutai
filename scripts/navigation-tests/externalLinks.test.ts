@@ -9,7 +9,7 @@ import {
   noteOpenedFromApp,
   noteUserGesture,
 } from '../../src/browser/externalGuard';
-import { parseIntentUrl, playStoreUrl } from '../../src/browser/navigation';
+import { isAppLinkError, linkTarget, parseIntentUrl, playStoreUrl } from '../../src/browser/navigation';
 import type { Tab } from '../../src/browser/Tab';
 
 const tab = () => ({}) as Tab;
@@ -37,6 +37,16 @@ test("a tab opened from another app: its first load's redirect to Play counts as
   assert.equal(mayOfferExternal(t, MARKET, false, 9000), true);
   // One hand-off per opening.
   assert.equal(mayOfferExternal(t, MARKET, false, 9100), false);
+});
+
+test('the launch chain covers every app scheme, not only Play (whatsapp:, tg:, tel:, a made-up myapp:)', () => {
+  for (const url of ['whatsapp://send?text=hi', 'tg://resolve?domain=x', 'tel:+905551112233', 'mailto:a@b.c', 'sms:+90555', 'fb://page/1', 'myapp://open/42']) {
+    const t = tab();
+    noteOpenedFromApp(t, 1000);
+    assert.equal(mayOfferExternal(t, url, false, 2000), true, url);
+    // Not Play: these still get the question (openExternal), never a direct open.
+    assert.equal(playStoreUrl(url), null, url);
+  }
 });
 
 test('the launch chain ends when the first page has loaded', () => {
@@ -127,4 +137,16 @@ test('intent parsing: app URL, page fallback, package and its Play page', () => 
   // The Play Store's own package needs no Play fallback.
   assert.equal(parseIntentUrl('intent://details?id=a.b#Intent;scheme=market;package=com.android.vending;end').marketUrl, undefined);
   assert.deepEqual(parseIntentUrl('https://example.com'), {});
+});
+
+test('a load error for any app scheme is never shown as a page; web and in-page errors are', () => {
+  for (const url of ['market://details?id=a.b', 'intent://x#Intent;scheme=y;end', 'whatsapp://send', 'tg://resolve', 'tel:1', 'mailto:a@b.c', 'myapp://open/42', 'file:///sdcard/x.html']) {
+    assert.equal(linkTarget(url), 'external', url);
+    assert.equal(isAppLinkError(url), true, url);
+  }
+  for (const url of ['https://example.com', 'http://10.0.2.2:8799/', 'about:blank', 'data:text/html,x', 'blob:https://a/b']) {
+    assert.equal(isAppLinkError(url), false, url);
+  }
+  assert.equal(isAppLinkError(undefined), false);
+  assert.equal(isAppLinkError(''), false);
 });

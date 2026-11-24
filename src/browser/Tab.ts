@@ -17,7 +17,7 @@ import { siteKey } from '../agent/sitePolicy';
 import { PageGeolocation } from './geolocation';
 import { PageMediaCapture } from './mediaCapture';
 import { PagePlayback } from './playback';
-import { type LoadError, toLoadError } from './navigation';
+import { isAppLinkError, type LoadError, toLoadError } from './navigation';
 import { addCertificateException } from './certificateExceptions';
 import { agentCommandScript, agentInstallScript, MISSING_REPLY, newAgentName } from './agentScript';
 import { type PageSignals, parsePageSignals, samePageSignals } from './pageKind';
@@ -489,6 +489,9 @@ export class Tab {
       this.geolocation.reset();
       this.media.reset();
     }
+    // A link for another app that the WebView cancelled (a redirect to whatsapp:, market:, myapp: …; Android reports
+    // its address after the cancel) is never the tab's address (DL-18).
+    if (isAppLinkError(nav.url)) return;
     // Another page (also one a script switched to without loading): reader mode belongs to the old one.
     if (pageKey(nav.url) !== pageKey(this.url)) {
       if (this.reader && pageKey(nav.url) !== this.reader.pageKey) this.reader = null;
@@ -606,6 +609,7 @@ export class Tab {
     // Reader mode and the article check end only when another page starts. Android reports every history update
     // (a page's own replaceState / pushState) as a load start, and iOS a jump to a #fragment, with no load end
     // after them; those would otherwise turn reader mode off and hide it on almost every page.
+    if (isAppLinkError(url)) return;
     if (!url || pageKey(url) !== pageKey(this.url)) {
       this.reader = null;
       this.readerAvailable = false;
@@ -702,6 +706,8 @@ export class Tab {
    * unusable).
    */
   handleProcessGone(onScreen: boolean, now = Date.now()) {
+    // The navigation ended in a link for another app (cancelled, handed off): nothing new is on screen (DL-18).
+    if (isAppLinkError(url)) return this.nav.end('stopped');
     if (this.loading) this.handleLoadEnd();
     this.nav.end('gone');
     // Commands waiting for the page get a clear answer now instead of timing out.

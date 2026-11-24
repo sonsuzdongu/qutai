@@ -97,6 +97,15 @@ export function linkTarget(url: string): LinkTarget {
   return 'external';
 }
 
+/**
+ * A load error for a link meant for another app (Android's ERR_UNKNOWN_URL_SCHEME for whatsapp:, tg:, tel:, myapp:,
+ * market:, intent:, file: …): never shown as a page. The hand-off itself was already decided in
+ * onShouldStartLoadWithRequest, which sees every top-level URL first (DL-18).
+ */
+export function isAppLinkError(url: string | undefined | null): boolean {
+  return !!url && linkTarget(url) === 'external';
+}
+
 const PLAY_STORE_PACKAGE = 'com.android.vending';
 const PACKAGE_NAME = /^[A-Za-z][\w]*(\.[A-Za-z][\w]*)+$/;
 

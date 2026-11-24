@@ -308,3 +308,20 @@ for (const os of ['android', 'ios'] as const) {
     views.done();
   });
 }
+
+for (const os of ['android', 'ios'] as const) {
+  test(`${os}: a redirect to another app's link (cancelled, handed off) never becomes the tab's address (DL-18)`, async () => {
+    const { a } = await start(os);
+    for (const link of ['myapp://open/42', 'whatsapp://send?text=hi', 'market://details?id=a.b']) {
+      // The user taps a link whose server redirects to an app; the WebView cancels the redirect and Android reports
+      // the app link's address in its navigation state and load end.
+      a.noteNavigationRequest(`${base}/redirect-to-app`, true);
+      a.handleLoadStart(link, true);
+      a.handleNavigationStateChange({ url: link, title: '', loading: false, canGoBack: true, canGoForward: false } as never);
+      a.handleWebViewLoadEnd(link);
+      assert.equal(a.url, `${base}/`, `${link}: the page on screen keeps its address`);
+      assert.equal(a.address.url, `${base}/`, `${link}: the address bar too`);
+      assert.equal(a.busy, false, `${link}: nothing is loading any more`);
+    }
+  });
+}
