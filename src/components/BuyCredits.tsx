@@ -205,7 +205,8 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   return (
     <SafeAreaView style={styles.screen}>
       {/* A paywall with the brand's look (UI-60): the drifting light behind the top, the mark, the name in the
-          brand gradient, what credits are for, then the packs. */}
+          brand gradient, three facts, then the packs, compact enough that their buttons show without scrolling on a
+          phone; the explanations and links come after them. */}
       <Aurora base={palette.bg} dark={palette.dark} fade={0.6} animate />
       <View style={styles.header}>
         <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('common.close')} style={styles.close}>
@@ -214,12 +215,11 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
       </View>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
-          <QutaiMark size={72} sweepWhenIdle />
+          <QutaiMark size={56} sweepWhenIdle />
           <Text style={styles.title} accessibilityRole="header">
             {t('buy.title')}
           </Text>
           <GradientText style={styles.brand}>{t('credits.provider')}</GradientText>
-          <Text style={styles.heroText}>{t('buy.what')}</Text>
           <View style={styles.balancePill} accessible accessibilityLiveRegion="polite">
             <Icon name="wallet" size={16} color={palette.tintText} />
             <Text style={styles.balanceText}>
@@ -287,16 +287,16 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
           const top = offer.pack.credits === mostCredits;
           return (
             <View key={offer.pack.productId} style={[styles.pack, top && styles.packTop]}>
-              {top && (
-                <View style={styles.badge}>
-                  <GradientText style={styles.badgeText}>{t('buy.mostCredits')}</GradientText>
-                </View>
-              )}
               <View style={styles.packRow}>
                 <View style={styles.packIcon}>
                   <Icon name="wallet" size={22} color={palette.tintText} />
                 </View>
                 <View style={styles.flex}>
+                  {top && (
+                    <View style={styles.badge}>
+                      <GradientText style={styles.badgeText}>{t('buy.mostCredits')}</GradientText>
+                    </View>
+                  )}
                   <Text style={styles.packTitle}>{amount}</Text>
                   {!offer.price && <Text style={styles.hint}>{t('buy.noPrice')}</Text>}
                 </View>
@@ -315,6 +315,7 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
           );
         })}
 
+        <Text style={styles.hint}>{t('buy.what')}</Text>
         {signedIn && (
           <Pressable
             onPress={() => void check()}
@@ -404,7 +405,7 @@ export function statusFor(result: BuyResult): Status {
 
 const useStyles = makeStyles((c) => ({
   screen: { flex: 1, backgroundColor: c.bg },
-  header: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 8 },
+  header: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 4 },
   close: {
     width: 36,
     height: 36,
@@ -413,38 +414,37 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     backgroundColor: c.surface,
   },
-  content: { paddingHorizontal: 20, paddingBottom: 32, gap: 12, maxWidth: 560, width: '100%', alignSelf: 'center' },
+  content: { paddingHorizontal: 20, paddingBottom: 32, gap: 10, maxWidth: 560, width: '100%', alignSelf: 'center' },
   flex: { flex: 1 },
-  hero: { alignItems: 'center', gap: 6, paddingTop: 4, paddingBottom: 8 },
-  title: { color: c.textSecondary, fontSize: 15, fontWeight: '600', marginTop: 10, textAlign: 'center' },
-  brand: { fontSize: 30, fontWeight: '800', textAlign: 'center' },
-  heroText: { color: c.textSecondary, fontSize: 15, lineHeight: 21, textAlign: 'center', paddingHorizontal: 8 },
+  hero: { alignItems: 'center', gap: 4, paddingBottom: 4 },
+  title: { color: c.textSecondary, fontSize: 14, fontWeight: '600', marginTop: 6, textAlign: 'center' },
+  brand: { fontSize: 28, fontWeight: '800', textAlign: 'center' },
   balancePill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 8,
+    marginTop: 6,
     paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingVertical: 6,
     borderRadius: 20,
     backgroundColor: c.surface,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
   },
   balanceText: { color: c.text, fontSize: 15, fontWeight: '600' },
-  perks: { ...common(c).card, padding: 14, gap: 12 },
-  perk: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  perks: { ...common(c).card, paddingHorizontal: 14, paddingVertical: 12, gap: 8 },
+  perk: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   perkIcon: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: c.sunken,
   },
-  perkText: { flex: 1, color: c.text, fontSize: 15, lineHeight: 20 },
+  perkText: { flex: 1, color: c.text, fontSize: 14, lineHeight: 19 },
   hint: common(c).hint,
-  section: { color: c.text, fontSize: 17, fontWeight: '700', marginTop: 8 },
+  section: { color: c.text, fontSize: 17, fontWeight: '700', marginTop: 4 },
   notice: common(c).notice,
   warnText: { color: c.danger },
   status: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderRadius: radii.control, padding: 12, backgroundColor: c.sunken },
@@ -455,19 +455,19 @@ const useStyles = makeStyles((c) => ({
   pack: {
     backgroundColor: c.surface,
     borderRadius: radii.card,
-    padding: 16,
-    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     borderWidth: 1,
     borderColor: c.border,
   },
-  packTop: { borderWidth: 2, borderColor: c.tint },
+  packTop: { borderWidth: 2, borderColor: c.tint, paddingVertical: 11, paddingHorizontal: 13 },
   packRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: c.sunken },
+  badge: { alignSelf: 'flex-start', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, backgroundColor: c.sunken, marginBottom: 2 },
   badgeText: { fontSize: 12, fontWeight: '800' },
   packIcon: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: c.sunken,

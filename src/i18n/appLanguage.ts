@@ -1,5 +1,5 @@
 import { requireOptionalNativeModule } from 'expo';
-import { Linking, Platform, Settings as IosUserDefaults, TurboModuleRegistry, type TurboModule } from 'react-native';
+import { Platform, Settings as IosUserDefaults, TurboModuleRegistry, type TurboModule } from 'react-native';
 import { getLanguage, matchLanguage, setLanguageOverride, type Language } from './index';
 
 /**
@@ -12,10 +12,12 @@ import { getLanguage, matchLanguage, setLanguageOverride, type Language } from '
  * - Android before 13 ('app'): there is no per-app language in the system. The choice is kept by the native module and
  *   applied to the interface, the launcher shortcuts and the widget; the notifications follow the interface. The
  *   system's own screens (permission requests, the app's name) stay in the phone's language, as for every app there.
- * - iOS ('settings'): the per-app language lives in the Settings app (Settings › Qutai › Language), which also
- *   translates the system's permission requests and the Home Screen quick actions, and restarts Qutai when changed.
- *   Switching only the JavaScript interface from inside the app would leave those in the other language until the next
- *   launch, so Qutai opens that page instead of keeping a choice of its own.
+ * - iOS ('settings'): the per-app language is the app's own `AppleLanguages` user default, the value Settings › Qutai ›
+ *   Language writes. Picking one in Qutai (since LANG-24) writes that same value, so there is still one setting, and
+ *   switches the interface at once; iOS's own texts for Qutai (permission requests, Home Screen quick actions) follow
+ *   from the next launch. Qutai also keeps `QutaiLanguage`, the language it wrote, to tell its own choice apart from
+ *   the phone's list (both read as `AppleLanguages`); a change made in the Settings app wins, because the two then
+ *   disagree and Qutai's marker is dropped.
  */
 export type LanguageChoiceMode = 'system' | 'app' | 'settings' | 'none';
 
@@ -33,10 +35,51 @@ export function languageChoiceMode(): LanguageChoiceMode {
   return native.hasSystemAppLanguage?.() ? 'system' : 'app';
 }
 
+/** iOS: the language Qutai wrote this run (null: "System default" picked; undefined: read the stored values). */
+let iosChoice: Language | null | undefined;
+
+/** iOS: the language Qutai wrote to `AppleLanguages`, while that is still what iOS has for the app. */
+function iosChosenLanguage(): Language | null {
+  if (iosChoice !== undefined) return iosChoice;
+  try {
+    const marker = IosUserDefaults.get(IOS_MARKER);
+    const apple = IosUserDefaults.get('AppleLanguages');
+    const chosen = typeof marker === 'string' ? matchLanguage(marker) : null;
+    const first = Array.isArray(apple) && typeof apple[0] === 'string' ? matchLanguage(apple[0]) : null;
+    return chosen && first === chosen ? chosen : null;
+  } catch {
+    return null;
+  }
+}
+
+const IOS_MARKER = 'QutaiLanguage';
+
+/** iOS: stores the choice where Settings › Qutai › Language keeps it (null removes it: back to the phone's list). */
+function iosStore(language: Language | null) {
+  try {
+    if (language) IosUserDefaults.set({ AppleLanguages: [language], [IOS_MARKER]: language });
+    else iosSettingsManager?.deleteValues(['AppleLanguages', IOS_MARKER]);
+  } catch {
+    // Not stored: the interface still switches for this run.
+  }
+  iosChoice = language;
+}
+
+/** iOS: the phone's own first language once Qutai's value is removed (the global list shows through). */
+function iosSystemLanguage(): Language | null {
+  try {
+    const apple = IosUserDefaults.get('AppleLanguages');
+    return Array.isArray(apple) && typeof apple[0] === 'string' ? matchLanguage(apple[0]) : null;
+  } catch {
+    return null;
+  }
+}
+
 /** The language picked for Qutai, or null for "System default". */
 export function chosenLanguage(): Language | null {
   const mode = languageChoiceMode();
   if (mode === 'system' || mode === 'app') return matchLanguage(native?.getAppLanguage?.() ?? '');
+  if (mode === 'settings') return iosChosenLanguage();
   return null;
 }
 
@@ -57,6 +100,13 @@ export function initAppLanguage() {
 /** Picks Qutai's language (null = the system's) and switches the interface to it straight away. */
 export function chooseLanguage(language: Language | null): boolean {
   const mode = languageChoiceMode();
+  if (mode === 'settings') {
+    iosStore(language);
+    // This run keeps the language iOS started it in until told otherwise: "System default" shows the phone's own
+    // first language now (read once Qutai's value is gone), and from the next launch iOS starts in it by itself.
+    setLanguageOverride(language ?? iosSystemLanguage());
+    return true;
+  }
   if (mode !== 'system' && mode !== 'app') return false;
   if (!native?.setAppLanguage?.(language ?? '')) return false;
   if (mode === 'app') setLanguageOverride(language);
@@ -103,17 +153,13 @@ export function chooseSetupLanguage(language: Language, start: SetupLanguageStar
   const mode = languageChoiceMode();
   const back = language === start.shown;
   if (mode === 'settings') {
-    try {
-      if (!back) {
-        IosUserDefaults.set({ AppleLanguages: [language] });
-        iosWrote = true;
-      } else if (iosWrote) {
-        // Removing the app's own value: back to the system's language list ("System default").
-        iosSettingsManager?.deleteValues(['AppleLanguages']);
-        iosWrote = false;
-      }
-    } catch {
-      // Not stored: the interface still switches for this run.
+    if (!back) {
+      iosStore(language);
+      iosWrote = true;
+    } else if (iosWrote) {
+      // Removing the app's own value: back to the system's language list ("System default").
+      iosStore(start.chosen);
+      iosWrote = false;
     }
     // Held in memory for this run (iOS applies the stored value from the next launch, or after its own restart).
     setLanguageOverride(language);
@@ -129,7 +175,4 @@ export function chooseSetupLanguage(language: Language, start: SetupLanguageStar
   }
 }
 
-/** iOS: Qutai's page in the Settings app, where its Language row is. */
-export function openLanguageSettings(): Promise<void> {
-  return Linking.openSettings();
-}
+

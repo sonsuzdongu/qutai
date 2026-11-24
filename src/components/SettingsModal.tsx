@@ -26,7 +26,7 @@ import { VoiceLanguageSheet } from './VoiceLanguageSheet';
 import { incognitoIsolated } from '../device/webviewProfile';
 import { useLocales } from 'expo-localization';
 import { getLanguage, LANGUAGE_INFO, LANGUAGES, t, type Language } from '../i18n';
-import { chooseLanguage, chosenLanguage, languageChoiceMode, openLanguageSettings } from '../i18n/appLanguage';
+import { chooseLanguage, chosenLanguage, languageChoiceMode } from '../i18n/appLanguage';
 import type { LegalKind } from '../legal/documents';
 import type { Settings, SettingsPatch } from '../storage/settings';
 import { Icon, IconName } from '../ui/Icon';
@@ -853,16 +853,14 @@ function SettingsPages({
 function languageSummary(): string {
   const name = LANGUAGE_INFO[getLanguage()].name;
   const mode = languageChoiceMode();
-  // iOS: whether it is a per-app choice (iOS Settings, or setup's first step) or the phone's can't be told apart.
-  if (mode === 'settings') return name;
-  if ((mode === 'system' || mode === 'app') && chosenLanguage()) return name;
+  if (mode !== 'none' && chosenLanguage()) return name;
   return t('settings.languageSummarySystem', { language: name });
 }
 
 /**
  * Settings › Language: "System default" and the ten languages, each written in itself. Android: picking one switches
- * the whole interface at once (src/i18n/appLanguage.ts says where the choice lives). iOS: the per-app language is in
- * the Settings app, so this page explains that and opens it.
+ * the whole interface at once (src/i18n/appLanguage.ts says where the choice lives). iOS too (LANG-24): the choice is
+ * the same per-app value iOS Settings › Qutai › Language keeps; iOS's own texts follow from the next launch.
  */
 function LanguagePage() {
   const styles = useStyles();
@@ -871,18 +869,7 @@ function LanguagePage() {
   const mode = languageChoiceMode();
   // Read from the platform on each render (a synchronous native call), so a change made elsewhere shows.
   const [, rerender] = useState(0);
-  const chosen = mode === 'system' || mode === 'app' ? chosenLanguage() : null;
-  if (mode === 'settings') {
-    return (
-      <SettingsSection style={styles.first} footer={t('settings.languageHintIos')}>
-        <GroupLink
-          title={t('settings.languageOpenIos')}
-          value={LANGUAGE_INFO[getLanguage()].name}
-          onPress={() => openLanguageSettings().catch(() => {})}
-        />
-      </SettingsSection>
-    );
-  }
+  const chosen = chosenLanguage();
   if (mode === 'none') return <Text style={styles.hint}>{t('settings.languageNeedsBuild')}</Text>;
   const pick = (language: Language | null) => {
     if (language === chosen) return;
@@ -894,7 +881,9 @@ function LanguagePage() {
   return (
     <SettingsSection
       style={styles.first}
-      footer={t(mode === 'system' ? 'settings.languageHintAndroid' : 'settings.languageHintOld')}
+      footer={t(
+        mode === 'settings' ? 'settings.languageHintIos' : mode === 'system' ? 'settings.languageHintAndroid' : 'settings.languageHintOld',
+      )}
     >
       {option('system', t('settings.languageSystem'), null)}
       {LANGUAGES.map((language) => option(language, LANGUAGE_INFO[language].name, language))}

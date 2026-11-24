@@ -816,6 +816,7 @@ Moved to Details (ids retired, not reused): `VOICE-10`, `VOICE-12`, `VOICE-16`, 
 | `LANG-1` | The interface ships in exactly ten languages; English is the source and the fallback for any missing text. | Owner | not recorded |
 | `LANG-2` | The default interface language is the first of the phone's languages that Qutai has, otherwise English. | Owner | not recorded |
 | `LANG-3` | Settings › Language uses the system's per-app language on Android 13+ (both ways), Qutai's own stored… | Default |  |
+| `LANG-24` | iOS: Settings › Language lists the languages and switches at once, writing the same per-app value as iOS Settings; iOS's own texts follow next launch. | Owner | 2026-11-24 |
 | `LANG-5` | Turkish interface text addresses the user as "siz", including the setup questions, legal texts, iOS… | Owner | 2026-11-16 |
 | `LANG-6` | Exceptions to "siz": texts the user sends to the assistant (suggestion prompts, custom-instruction… | Default |  |
 | `LANG-22` | Turkish suffixes on "Qutai" follow its pronunciation "Kutay": Qutai'ın, Qutai'ı, Qutai'a, Qutai'da, Qutai'dan (no buffer consonant, back… | Owner | 2026-11-20 |
@@ -887,7 +888,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-57` | Filter lists opens at the top; grouped into publishers' lists, my lists, my rules, styles, scripts. | Default | 2026-11-24 |
 | `UI-58` | "Make Qutai your default browser" moved from Settings › Search to Settings › About under Rate Qutai (Android only). | Owner | 2026-11-24 |
 | `UI-59` | Backup's "What's included" (file and account backups), password and automatic backups are grouped cards with notes above and below. | Owner | 2026-11-24 |
-| `UI-60` | Buy credits is a paywall: aurora, mark, gradient name, balance pill, three facts, large pack cards with gradient price buttons, "Most credits" badge. | Owner | 2026-11-24 |
+| `UI-60` | Buy credits is a paywall: aurora, mark, gradient name, balance pill, three facts, pack cards with gradient price buttons and a "Most credits" badge, all on the first screen. | Owner | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 
