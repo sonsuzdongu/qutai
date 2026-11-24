@@ -52,7 +52,7 @@ index 1b5c4c9..c86cb6d 100644
      public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
  
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
-index 80c6803..a2299d3 100644
+index 80c6803..7f42ad7 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 @@ -38,15 +38,19 @@ import com.facebook.react.uimanager.events.Event;
@@ -75,12 +75,32 @@ index 80c6803..a2299d3 100644
  
  public class RNCWebView extends WebView implements LifecycleEventListener {
      protected @Nullable
-@@ -122,8 +126,22 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -122,8 +126,42 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          cleanupCallbacksAndDestroy();
      }
  
 +    // Qutai patch: the app's pull to refresh, decided per touch with the page's answer (RNCWebViewPull).
 +    final RNCWebViewPull pull = new RNCWebViewPull(this);
++
++    // Qutai patch: pages get only the safe-area insets that really cover the WebView (RNCWebViewInsets).
++    private final android.view.ViewTreeObserver.OnGlobalLayoutListener insetsWatcher = RNCWebViewInsets.watcher(this);
++
++    @Override
++    public android.view.WindowInsets dispatchApplyWindowInsets(android.view.WindowInsets insets) {
++        return super.dispatchApplyWindowInsets(RNCWebViewInsets.clip(this, insets));
++    }
++
++    @Override
++    protected void onAttachedToWindow() {
++        super.onAttachedToWindow();
++        getViewTreeObserver().addOnGlobalLayoutListener(insetsWatcher);
++    }
++
++    @Override
++    protected void onDetachedFromWindow() {
++        getViewTreeObserver().removeOnGlobalLayoutListener(insetsWatcher);
++        super.onDetachedFromWindow();
++    }
 +
 +    @Override
 +    public boolean dispatchTouchEvent(MotionEvent event) {
@@ -98,7 +118,7 @@ index 80c6803..a2299d3 100644
          if (this.nestedScrollEnabled) {
              requestDisallowInterceptTouchEvent(true);
          }
-@@ -224,6 +242,188 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -224,6 +262,188 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -287,7 +307,7 @@ index 80c6803..a2299d3 100644
      WebChromeClient mWebChromeClient;
      @Override
      public void setWebChromeClient(WebChromeClient client) {
-@@ -253,6 +453,12 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -253,6 +473,12 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
              this.bridgeListener = new WebViewCompat.WebMessageListener() {
                @Override
                public void onPostMessage(@NonNull WebView view, @NonNull WebMessageCompat message, @NonNull Uri sourceOrigin, boolean isMainFrame, @NonNull JavaScriptReplyProxy replyProxy) {
@@ -300,7 +320,7 @@ index 80c6803..a2299d3 100644
                  RNCWebView.this.onMessage(message.getData(), sourceOrigin.toString());
                }
              };
-@@ -403,6 +609,67 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -403,6 +629,67 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -368,7 +388,7 @@ index 80c6803..a2299d3 100644
      protected void dispatchEvent(WebView webView, Event event) {
          ThemedReactContext reactContext = getThemedReactContext();
          int reactTag = RNCWebViewWrapper.getReactTagFromWebView(webView);
-@@ -419,7 +686,17 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -419,7 +706,17 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          if (mWebChromeClient != null) {
              mWebChromeClient.onHideCustomView();
          }
@@ -386,7 +406,7 @@ index 80c6803..a2299d3 100644
      }
  
    public ThemedReactContext getThemedReactContext() {
-@@ -446,7 +723,13 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -446,7 +743,13 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          public void postMessage(String message) {
              if (mWebView.getMessagingEnabled()) {
                  // Post to main thread because `mWebView.getUrl()` requires to be executed on main.
@@ -993,8 +1013,88 @@ index 0000000..f144112
 +        });
 +    }
 +}
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewInsets.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewInsets.java
+new file mode 100644
+index 0000000..438745c
+--- /dev/null
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewInsets.java
+@@ -0,0 +1,74 @@
++package com.reactnativecommunity.webview;
++
++import android.graphics.Rect;
++import android.view.View;
++import android.view.ViewTreeObserver;
++import android.view.WindowInsets;
++
++import androidx.annotation.NonNull;
++import androidx.core.graphics.Insets;
++import androidx.core.view.WindowInsetsCompat;
++
++/**
++ * Qutai patch: the safe-area insets a page gets (CSS env(safe-area-inset-*)) are only the parts of the system bars
++ * and display cutout that really cover the WebView.
++ *
++ * The app is edge to edge and keeps its views clear of the bars with padding in its React Native layout, so the
++ * window's insets reach the WebView untouched. Since M144 Android's WebView hands systemBars() and displayCutout()
++ * to pages with viewport-fit=cover in every WebView, and a WebView above the app's bottom address bar was given the
++ * navigation bar's height: YouTube and Instagram padded their bottom navigation by it, leaving an empty band above
++ * the address bar. Each side of those insets is reduced by the WebView's distance from that edge of the window
++ * (Android's own advice: zero the insets the app has already handled before they reach the WebView). The insets are
++ * applied again whenever the WebView moves or changes size (the address bar moved to the top, landscape).
++ */
++final class RNCWebViewInsets {
++    private static final int TYPES = WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout()
++            | WindowInsetsCompat.Type.tappableElement() | WindowInsetsCompat.Type.mandatorySystemGestures()
++            | WindowInsetsCompat.Type.systemGestures();
++
++    private RNCWebViewInsets() {}
++
++    /** The part of an inset of `inset` px at one edge that covers a view `distance` px away from that edge. */
++    static int covering(int inset, int distance) {
++        return Math.max(0, inset - Math.max(0, distance));
++    }
++
++    /** The insets that cover the view: each side reduced by the view's distance from that edge of the window. */
++    static WindowInsets clip(@NonNull View view, @NonNull WindowInsets insets) {
++        View root = view.getRootView();
++        int[] at = new int[2];
++        view.getLocationInWindow(at);
++        int left = at[0];
++        int top = at[1];
++        int right = root.getWidth() - (at[0] + view.getWidth());
++        int bottom = root.getHeight() - (at[1] + view.getHeight());
++        WindowInsetsCompat compat = WindowInsetsCompat.toWindowInsetsCompat(insets, view);
++        WindowInsetsCompat.Builder builder = new WindowInsetsCompat.Builder(compat);
++        for (int type = 1; type <= TYPES; type <<= 1) {
++            if ((TYPES & type) == 0) continue;
++            Insets i = compat.getInsets(type);
++            builder.setInsets(type, Insets.of(covering(i.left, left), covering(i.top, top),
++                    covering(i.right, right), covering(i.bottom, bottom)));
++        }
++        // The cutout's own safe area (read separately by some code): dropped when none of it covers the view.
++        Insets cut = compat.getInsets(WindowInsetsCompat.Type.displayCutout());
++        if (covering(cut.left, left) == 0 && covering(cut.top, top) == 0 && covering(cut.right, right) == 0
++                && covering(cut.bottom, bottom) == 0) {
++            builder.setDisplayCutout(null);
++        }
++        WindowInsets out = builder.build().toWindowInsets();
++        return out != null ? out : insets;
++    }
++
++    /** Applies the insets again when the view's place in the window changes; add on attach, remove on detach. */
++    static ViewTreeObserver.OnGlobalLayoutListener watcher(@NonNull View view) {
++        final Rect last = new Rect();
++        final int[] at = new int[2];
++        return () -> {
++            view.getLocationInWindow(at);
++            if (last.left == at[0] && last.top == at[1] && last.width() == view.getWidth() && last.height() == view.getHeight()) return;
++            last.set(at[0], at[1], at[0] + view.getWidth(), at[1] + view.getHeight());
++            view.requestApplyInsets();
++        };
++    }
++}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
-index f83033b..de057e2 100644
+index f83033b..b78f6af 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
 @@ -1,6 +1,5 @@

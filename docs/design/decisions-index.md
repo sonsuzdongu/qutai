@@ -903,6 +903,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-64` | ~~"Open Qutai's app settings" in About~~ (withdrawn: stays under Appearance › Media). | Withdrawn | 2026-11-24 |
 | `UI-65` | No "Translate" quick action in the assistant panel; translation is asked for in words. | Owner | 2026-11-24 |
 | `UI-66` | Settings › About: Rate Qutai, the button tour, then Default browser (title only, its hint under it). | Owner | 2026-11-24 |
+| `UI-67` | Android: pages get only the safe-area insets that really cover the WebView (no navigation-bar inset above the bottom address bar) | Default | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 
