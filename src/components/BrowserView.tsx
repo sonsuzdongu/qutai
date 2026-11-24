@@ -462,6 +462,15 @@ function TabWebView({
               return false;
             }}
             onError={(e) => {
+              // A link for another app that the WebView tried to load itself (any scheme, DL-18): no error page; the
+              // tab goes back to where it was (or to the new tab page, when it was opened just for that link).
+              if (isAppLinkError(e.nativeEvent.url)) {
+                e.preventDefault();
+                tab.nav.end('stopped');
+                if (tab.canGoBack) tab.historyBack();
+                else tab.showNewTab();
+                return;
+              }
               tab.handleError(e.nativeEvent);
               const insecure = tab.takeHttpsUpgrade();
               if (!insecure) return;
@@ -484,15 +493,6 @@ function TabWebView({
               const fingerprint = error.fingerprint;
               return (
                 <ErrorPage
-              // A link for another app that the WebView tried to load itself (any scheme, DL-18): no error page; the
-              // tab goes back to where it was (or to the new tab page, when it was opened just for that link).
-              if (isAppLinkError(e.nativeEvent.url)) {
-                e.preventDefault();
-                tab.nav.end('stopped');
-                if (tab.canGoBack) tab.historyBack();
-                else tab.showNewTab();
-                return;
-              }
                   error={error}
                   url={url}
                   local={local}

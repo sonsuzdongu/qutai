@@ -481,14 +481,14 @@ export class Tab {
   }
 
   handleNavigationStateChange(nav: WebViewNavigation) {
+    // A link for another app that the WebView cancelled (a redirect to whatsapp:, market:, myapp: …; Android reports
+    // its address after the cancel) is never the tab's address (DL-18).
+    if (isAppLinkError(nav.url)) return;
     // Location, camera and microphone given to one site never carry over to the next (same-document changes stay).
     if (siteKey(nav.url) !== siteKey(this.url)) {
       this.geolocation.reset();
       this.media.reset();
     }
-    // A link for another app that the WebView cancelled (a redirect to whatsapp:, market:, myapp: …; Android reports
-    // its address after the cancel) is never the tab's address (DL-18).
-    if (isAppLinkError(nav.url)) return;
     // Another page (also one a script switched to without loading): reader mode belongs to the old one.
     if (pageKey(nav.url) !== pageKey(this.url)) {
       if (this.reader && pageKey(nav.url) !== this.reader.pageKey) this.reader = null;
@@ -576,6 +576,7 @@ export class Tab {
 
   /** `nativeLoading`: the event's own `loading` (Android: false for a page's pushState / replaceState). */
   handleLoadStart(url?: string, nativeLoading?: boolean) {
+    if (isAppLinkError(url)) return;
     // Android starts its own error document for the address that just failed (a load start with no load end): the
     // error stays, and the tab isn't loading.
     if (this.loadError && url && url === this.loadErrorUrl && Date.now() - this.loadErrorAt < 2000) return;
@@ -597,7 +598,6 @@ export class Tab {
     // Reader mode and the article check end only when another page starts. Android reports every history update
     // (a page's own replaceState / pushState) as a load start, and iOS a jump to a #fragment, with no load end
     // after them; those would otherwise turn reader mode off and hide it on almost every page.
-    if (isAppLinkError(url)) return;
     if (!url || pageKey(url) !== pageKey(this.url)) {
       this.reader = null;
       this.readerAvailable = false;
@@ -671,6 +671,8 @@ export class Tab {
     this.handleLoadEnd();
     const p = this.nav.pending;
     if (!p) return;
+    // The navigation ended in a link for another app (cancelled, handed off): nothing new is on screen (DL-18).
+    if (isAppLinkError(url)) return this.nav.end('stopped');
     if (p.responded) return this.nav.end('loaded');
     if (Platform.OS === 'ios') {
       if (url && samePage(url, this.url) && url !== this.committedUrl) this.commit();
@@ -694,8 +696,6 @@ export class Tab {
    * unusable).
    */
   handleProcessGone(onScreen: boolean, now = Date.now()) {
-    // The navigation ended in a link for another app (cancelled, handed off): nothing new is on screen (DL-18).
-    if (isAppLinkError(url)) return this.nav.end('stopped');
     if (this.loading) this.handleLoadEnd();
     this.nav.end('gone');
     // Commands waiting for the page get a clear answer now instead of timing out.
