@@ -566,8 +566,7 @@ export const id: Record<keyof typeof en, string> = {
   'settings.customInstructions': 'Petunjuk khusus',
   'settings.customInstructionsHint':
     'Preferensi tetap Anda, ditambahkan ke setiap permintaan ke AI. Petunjuk ini tidak dapat menonaktifkan aturan keamanan atau konfirmasi Qutai.',
-  'settings.customInstructionsPlaceholder': 'mis. Jawab dengan singkat. Gunakan satuan metrik.',
-  'settings.customExample1': 'Jawab dengan singkat',
+  'settings.customInstructionsPlaceholder': 'mis. Gunakan satuan metrik.',
   'settings.customExample2': 'Gunakan satuan metrik',
   'settings.customExampleHint': 'Menambahkannya sebagai satu baris',
   'settings.geminiStreaming': 'Stream respons Gemini (eksperimental)',

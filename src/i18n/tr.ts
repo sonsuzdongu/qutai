@@ -555,8 +555,7 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.customInstructions': 'Özel talimatlar',
   'settings.customInstructionsHint':
     'Kalıcı tercihleriniz; yapay zekâya giden her isteğe eklenir. Qutai’ın güvenlik kurallarını ve onaylarını kapatamaz.',
-  'settings.customInstructionsPlaceholder': 'örn. Kısa yanıt ver. Metrik birimler kullan.',
-  'settings.customExample1': 'Kısa yanıt ver',
+  'settings.customInstructionsPlaceholder': 'örn. Metrik birimler kullan.',
   'settings.customExample2': 'Metrik birimler kullan',
   'settings.customExampleHint': 'Satır olarak ekler',
   'settings.geminiStreaming': 'Gemini yanıtlarını akış olarak göster (deneysel)',

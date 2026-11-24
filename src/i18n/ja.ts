@@ -567,8 +567,7 @@ export const ja: Record<keyof typeof en, string> = {
   'settings.customInstructions': 'カスタム指示',
   'settings.customInstructionsHint':
     'AI へのすべてのリクエストに追加される、普段からの希望です。Qutai の安全ルールや確認をオフにすることはできません。',
-  'settings.customInstructionsPlaceholder': '例: 簡潔に答える。メートル法の単位を使う。',
-  'settings.customExample1': '簡潔に答える',
+  'settings.customInstructionsPlaceholder': '例: メートル法の単位を使う。',
   'settings.customExample2': 'メートル法の単位を使う',
   'settings.customExampleHint': '1 行として追加します',
   'settings.geminiStreaming': 'Gemini の応答をストリーミング（試験運用）',

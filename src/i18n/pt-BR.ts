@@ -567,8 +567,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'settings.customInstructions': 'Instruções personalizadas',
   'settings.customInstructionsHint':
     'Suas preferências fixas, adicionadas a cada solicitação à IA. Elas não podem desativar as regras de segurança nem as confirmações do Qutai.',
-  'settings.customInstructionsPlaceholder': 'ex.: Responda brevemente. Prefira unidades métricas.',
-  'settings.customExample1': 'Responda brevemente',
+  'settings.customInstructionsPlaceholder': 'ex.: Prefira unidades métricas.',
   'settings.customExample2': 'Prefira unidades métricas',
   'settings.customExampleHint': 'Adiciona como uma linha',
   'settings.geminiStreaming': 'Transmitir respostas do Gemini (experimental)',

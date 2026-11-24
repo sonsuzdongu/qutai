@@ -566,8 +566,7 @@ export const ru: Record<keyof typeof en, string> = {
   'settings.customInstructions': 'Свои инструкции',
   'settings.customInstructionsHint':
     'Ваши постоянные пожелания, добавляемые к каждому запросу к ИИ. Они не могут отключить правила безопасности и подтверждения Qutai.',
-  'settings.customInstructionsPlaceholder': 'Например: Отвечай кратко. Используй метрическую систему.',
-  'settings.customExample1': 'Отвечай кратко',
+  'settings.customInstructionsPlaceholder': 'Например: Используй метрическую систему.',
   'settings.customExample2': 'Метрическая система',
   'settings.customExampleHint': 'Добавляет отдельной строкой',
   'settings.geminiStreaming': 'Потоковые ответы Gemini (экспериментально)',

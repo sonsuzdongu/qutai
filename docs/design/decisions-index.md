@@ -972,10 +972,11 @@ Moved to Details (ids retired, not reused): `WORK-4`, `WORK-8`, `WORK-11`, `WORK
 | `INTRO-21` | Today the welcome and legal summary say "Private by design" / "we have no servers"; these must be… | **Waiting** |  |
 | `INTRO-23` | Official builds ask about anonymous usage data once, right after setup, only while the server collects. | Default | changed 2026-11-22 |
 | `INTRO-33` | With Qutai Credits the introduction is free (3 per account, server-owned prompt, facts only); any refusal falls back to the credits relay. | Owner | 2026-11-22 |
+| `INTRO-34` | Short answers are the assistant's own rule: no "Answer briefly" line or chip in Custom instructions; the old line is removed once and from backups. | Owner | 2026-11-24 |
 | `INTRO-32` | iOS: Settings › About (was Search, `UI-58`) has no "Make Qutai your default browser" row until Apple grants the web-browser entitlement; Android unchanged. | Owner | 2026-11-21 |
 | `INTRO-31` | The city question has "Use my location" wherever setup asks it; the permission only on that tap; district, city… | Owner | 2026-11-20 |
 | `INTRO-30` | Setup has no "Make Qutai your default browser" step; protection is the last step; the option is in Settings › About since `UI-58` (was Search). | Owner | 2026-11-20 |
-| `INTRO-29` | Setup never asks for an answer style; a finished first-run setup adds "Answer briefly and to the point." to the custom… | Owner | 2026-11-20 |
+| `INTRO-29` | Setup never asks for an answer style (no line added since `INTRO-34`)… | Owner | 2026-11-20 |
 | `INTRO-28` | In pro builds the AI step is an accordion: both headings visible at first sight on 360 x 640 dp, at the largest text sizes too; Qutai… | Owner | 2026-11-20 |
 | `INTRO-27` | Setup never says the assistant reads every page: the first feature reads "Reads the page when you ask" and the tagline ends "when you… | Owner | 2026-11-20 |
 | `INTRO-26` | "Tell me about yourself" opens on three choices (speak, type, "Ask me questions"); the microphone only after choosing to speak;… | Owner | 2026-11-19 |

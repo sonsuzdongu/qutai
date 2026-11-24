@@ -995,7 +995,8 @@ function RadioRow({ label, selected, onPress }: { label: string; selected: boole
   );
 }
 
-const INSTRUCTION_EXAMPLES = ['settings.customExample1', 'settings.customExample2'] as const;
+// No "Answer briefly" example: short answers are the assistant's own rule (INTRO-34).
+const INSTRUCTION_EXAMPLES = ['settings.customExample2'] as const;
 
 /**
  * Settings › Assistant › Custom instructions: saved when the field loses focus (and when the page closes), so

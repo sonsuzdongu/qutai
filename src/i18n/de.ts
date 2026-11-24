@@ -563,8 +563,7 @@ export const de: Record<keyof typeof en, string> = {
   'settings.customInstructions': 'Eigene Anweisungen',
   'settings.customInstructionsHint':
     'Ihre dauerhaften Vorgaben, die jeder Anfrage an die KI hinzugefügt werden. Sie können Qutais Sicherheitsregeln und Bestätigungen nicht abschalten.',
-  'settings.customInstructionsPlaceholder': 'z. B. Antworte kurz. Bevorzuge metrische Einheiten.',
-  'settings.customExample1': 'Antworte kurz',
+  'settings.customInstructionsPlaceholder': 'z. B. Bevorzuge metrische Einheiten.',
   'settings.customExample2': 'Metrische Einheiten bevorzugen',
   'settings.customExampleHint': 'Fügt es als Zeile hinzu',
   'settings.geminiStreaming': 'Gemini-Antworten streamen (experimentell)',

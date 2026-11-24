@@ -89,3 +89,27 @@ describe('restoring a backup', () => {
     assert.equal(restoredCustomInstructions('x'.repeat(600), undefined).length, 500);
   });
 });
+
+describe('removeDefaultStyleLine (INTRO-34)', async () => {
+  const { removeDefaultStyleLine, DEFAULT_STYLE_LINES } = await import('../../src/agent/retiredInstructions.ts');
+
+  it('knows the line in all ten languages', () => {
+    assert.equal(DEFAULT_STYLE_LINES.length, 10);
+  });
+
+  it('removes the line setup added, alone or after the user’s own lines', () => {
+    assert.equal(removeDefaultStyleLine('Answer briefly and to the point.'), '');
+    assert.equal(removeDefaultStyleLine('Kısa ve öz yanıt ver.'), '');
+    assert.equal(removeDefaultStyleLine('Call me Deniz.\nAnswer briefly and to the point.'), 'Call me Deniz.');
+  });
+
+  it('leaves everything else, including a similar sentence in other words', () => {
+    for (const text of ['Answer briefly.', 'Prefer metric units', 'Answer briefly and to the point, please.']) {
+      assert.equal(removeDefaultStyleLine(text), text);
+    }
+  });
+
+  it('a restored backup loses the line too, whatever its flags', () => {
+    assert.equal(restoredCustomInstructions('Prefer metric units\nAnswer briefly and to the point.', true), 'Prefer metric units');
+  });
+});

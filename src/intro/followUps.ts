@@ -5,7 +5,7 @@ import type { Extraction, IntroItem, IntroTopic } from './extract';
  * Which follow-up questions Qutai asks after the introduction: fixed, translated questions picked here (never text
  * from the model), at most three, only about important things the user did not mention, said not to apply, or decline.
  * Age and gender are never asked: they are saved only when the user volunteers them, and so is the answer style
- * (`INTRO-29`: setup adds the short-answers line itself, src/intro/answerStyle.ts).
+ * (`INTRO-29`; short answers are the assistant's own rule, `INTRO-34`).
  */
 
 export type FollowUpId = 'food' | 'name' | 'shopping' | 'city';

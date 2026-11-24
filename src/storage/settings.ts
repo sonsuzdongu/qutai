@@ -6,7 +6,7 @@ import { READER_FONTS, READER_THEMES, ReaderFont, ReaderTheme } from '../browser
 import { isSearchEngine, SearchEngineId } from '../browser/search';
 import type { VoiceOnline } from '../device/voiceInput';
 import { AlwaysAllowKind, parseAlwaysAllow, serializeAlwaysAllow } from '../agent/alwaysAllow';
-import { removeRetiredInstructionLines } from '../agent/retiredInstructions';
+import { removeDefaultStyleLine, removeRetiredInstructionLines } from '../agent/retiredInstructions';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
 import { secureStoreReady } from './secureStoreGate';
 
@@ -54,7 +54,7 @@ export type Settings = {
   memoryEnabled: boolean;
   /**
    * The user's standing instructions for the assistant ("Answer briefly"), added to every request below the safety
-   * rules (agent/systemPrompt.ts customInstructionsPrompt). A finished first-run setup adds the short-answers line here (INTRO-29).
+   * rules (agent/systemPrompt.ts customInstructionsPrompt). Short answers are the assistant's own rule, not a line here (INTRO-34).
    */
   customInstructions: string;
   /** The assistant may use the provider's web search (each search is billed to the user's API key). */
@@ -238,6 +238,8 @@ const KEYS = {
   legalAcceptedVersion: 'legal_accepted_version',
   /** '1' once the retired example lines were taken out of the custom instructions (agent/retiredInstructions.ts). */
   retiredInstructionsRemoved: 'retired_instructions_removed',
+  /** '1' once the default answer-style line was taken out of the custom instructions (INTRO-34). */
+  defaultStyleLineRemoved: 'default_style_line_removed',
   secretsDeviceOnly: 'secrets_device_only',
   apiKey:(id: ProviderId) => `api_key_${id}`,
   customHeader: (i: number) => `custom_header_${i}`,
@@ -465,6 +467,21 @@ export async function loadSettings(): Promise<Settings> {
           : SecureStore.deleteItemAsync(KEYS.customInstructions));
       }
       await SecureStore.setItemAsync(KEYS.retiredInstructionsRemoved, '1');
+    } catch {}
+  }
+
+  // Once per install: the "Answer briefly and to the point." line setup used to add (INTRO-34); short answers are the
+  // assistant's own rule now. As above, a failed save leaves it out of this session and the next launch tries again.
+  if ((await get(KEYS.defaultStyleLineRemoved)) !== '1') {
+    try {
+      const cleaned = removeDefaultStyleLine(settings.customInstructions);
+      if (cleaned !== settings.customInstructions) {
+        settings.customInstructions = cleaned;
+        await (cleaned
+          ? SecureStore.setItemAsync(KEYS.customInstructions, cleaned)
+          : SecureStore.deleteItemAsync(KEYS.customInstructions));
+      }
+      await SecureStore.setItemAsync(KEYS.defaultStyleLineRemoved, '1');
     } catch {}
   }
 

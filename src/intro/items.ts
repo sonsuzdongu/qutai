@@ -108,10 +108,9 @@ export function reviewRows(items: IntroItem[], t: T): ReviewRow[] {
         break;
       case 'style': {
         const choice = list[0].choice;
-        // Free text about answers is not a standing instruction Qutai writes for the user.
-        if (choice === 'short' || choice === 'detailed') {
-          row(topic, t(choice === 'short' ? 'profile.style.shortLine' : 'profile.style.detailedLine'), 'general', 'instruction');
-        }
+        // Free text about answers is not a standing instruction Qutai writes for the user. "Short" is already the
+        // assistant's own rule (INTRO-34), so only "detailed" becomes a line.
+        if (choice === 'detailed') row(topic, t('profile.style.detailedLine'), 'general', 'instruction');
         break;
       }
     }

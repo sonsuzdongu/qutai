@@ -19,6 +19,7 @@ Last updated: 2026-11-24
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-24:** Custom instructions start empty: no "Answer briefly and to the point." line or "Answer briefly" chip, short answers being the assistant's own rule; the old line is removed once (`INTRO-34`, `INTRO-29`).
 - **2026-11-24:** The Default browser row in About shows only its title (`UI-66`).
 - **2026-11-24:** In About, the Qutai button tour now comes before Default browser (`UI-66`).
 - **2026-11-24:** The assistant panel's "Translate" quick action is gone (`UI-65`, `NOT-5`).

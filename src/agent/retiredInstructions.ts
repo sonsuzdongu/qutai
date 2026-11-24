@@ -12,6 +12,32 @@ import { cleanCustomInstructions } from './systemPrompt';
  */
 export const RETIRED_INSTRUCTION_LINES: readonly string[] = ['Always reply in Turkish', 'Her zaman Türkçe yanıt ver'];
 
+/**
+ * "Answer briefly and to the point." in every language Qutai ships: setup wrote it into Custom instructions from
+ * 20 Nov 2026 (`INTRO-29`). Since 24 Nov 2026 short answers are the assistant's own rule (systemPrompt.ts, "Keep
+ * replies short"), so the line is redundant and goes (`INTRO-34`): once on launch (settings.ts) and from every restored
+ * backup. Only a line that is exactly one of these goes.
+ */
+export const DEFAULT_STYLE_LINES: readonly string[] = [
+  'Answer briefly and to the point.',
+  'Kısa ve öz yanıt ver.',
+  'Antworte kurz und auf den Punkt.',
+  'Responde de forma breve y al grano.',
+  'Responda de forma breve e direta.',
+  'Réponds brièvement et va droit au but.',
+  '簡潔に要点だけ答える。',
+  '짧고 핵심만 답변할 것.',
+  'Отвечай кратко и по делу.',
+  'Jawab dengan singkat dan langsung ke intinya.',
+];
+
+/** The instructions without the default answer-style line, cleaned as when saved; the same text when there is none. */
+export function removeDefaultStyleLine(text: string): string {
+  const lines = text.replace(/\r\n?/g, '\n').split('\n');
+  const kept = lines.filter((line) => !DEFAULT_STYLE_LINES.includes(line.trim()));
+  return kept.length === lines.length ? text : cleanCustomInstructions(kept.join('\n'));
+}
+
 /** The instructions without the retired lines, cleaned as when saved; the same text when there is none. */
 export function removeRetiredInstructionLines(text: string): string {
   const lines = text.replace(/\r\n?/g, '\n').split('\n');
@@ -24,6 +50,6 @@ export function removeRetiredInstructionLines(text: string): string {
  * true`, which backups made after this change do (the phone had already removed them; what is left is the user's).
  */
 export function restoredCustomInstructions(text: string, retiredInstructionsRemoved: unknown): string {
-  const clean = cleanCustomInstructions(text);
+  const clean = removeDefaultStyleLine(cleanCustomInstructions(text));
   return retiredInstructionsRemoved === true ? clean : removeRetiredInstructionLines(clean);
 }

@@ -36,7 +36,6 @@ test('round 1: a spoken introduction becomes checked items and review rows', asy
       "Delivery note: don't ring the doorbell",
       'Food: vegetarian',
       'Food allergy: peanuts',
-      'Answer briefly and to the point.',
     ],
   );
 });

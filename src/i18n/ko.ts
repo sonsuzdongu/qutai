@@ -565,8 +565,7 @@ export const ko: Record<keyof typeof en, string> = {
   'settings.customInstructions': '맞춤 지침',
   'settings.customInstructionsHint':
     'AI에 보내는 모든 요청에 추가되는 고정 선호 사항입니다. Qutai의 안전 규칙이나 확인 절차를 끌 수는 없습니다.',
-  'settings.customInstructionsPlaceholder': '예: 간단히 답할 것. 미터법 단위 사용.',
-  'settings.customExample1': '간단히 답하기',
+  'settings.customInstructionsPlaceholder': '예: 미터법 단위 사용.',
   'settings.customExample2': '미터법 단위 사용',
   'settings.customExampleHint': '한 줄로 추가합니다',
   'settings.geminiStreaming': 'Gemini 응답 스트리밍(실험적)',

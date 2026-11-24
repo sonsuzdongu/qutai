@@ -75,7 +75,7 @@ test('review rows: the typed questions’ lines and categories, sensitive rows c
       it('shopping', 'Shoe size 39'),
       it('city', 'İzmir'),
       it('other', 'Has a dog'),
-      it('style', 'short', 'short'),
+      it('style', 'detailed', 'detailed'),
     ],
     t,
   );
@@ -94,7 +94,7 @@ test('review rows: the typed questions’ lines and categories, sensitive rows c
       ['Food allergy: shellfish', 'food', 'memory', true],
       ['Health condition that affects food: celiac disease', 'food', 'memory', true],
       ['Has a dog', 'general', 'memory', false],
-      ['Answer briefly and to the point.', 'general', 'instruction', false],
+      ['Give detailed answers with explanations.', 'general', 'instruction', false],
     ],
   );
   assert.ok(rows.every((r) => !r.hidden));
@@ -117,12 +117,12 @@ test('the style line replaces the other style line in the custom instructions', 
 
 test('saving writes hidden rows with their translated label, never the value', async () => {
   const { introWrites } = await import('../../src/intro/items');
-  const rows = reviewRows([it('allergy', 'peanuts'), it('age', '34'), it('style', 'short', 'short')], t);
+  const rows = reviewRows([it('allergy', 'peanuts'), it('age', '34'), it('style', 'detailed', 'detailed')], t);
   rows.find((r) => r.topic === 'allergy')!.hidden = true;
   assert.deepEqual(introWrites(rows, t), [
     { kind: 'memory', text: 'Age: 34', category: 'identity' },
     { kind: 'memory', text: 'Food allergy: peanuts', category: 'food', hidden: { label: 'Food allergy' } },
-    { kind: 'instruction', line: 'Answer briefly and to the point.' },
+    { kind: 'instruction', line: 'Give detailed answers with explanations.' },
   ]);
   const { hiddenLabelProblem } = await import('../../src/agent/memory');
   for (const key of ['age', 'gender', 'allergy', 'health'] as const) {
@@ -143,7 +143,7 @@ test('a one-value note replaces the earlier note of its kind; the review shows w
     mem('x1', 'Full name: Deniz Yılmaz'),
   ];
   const rows = withReplacements(
-    reviewRows([it('name', 'Deniz'), it('city', 'Izmir'), it('payment', 'cash', 'cod'), it('age', '34'), it('allergy', 'peanuts'), it('style', 's', 'short')], t),
+    reviewRows([it('name', 'Deniz'), it('city', 'Izmir'), it('payment', 'cash', 'cod'), it('age', '34'), it('allergy', 'peanuts'), it('style', 'd', 'detailed')], t),
     saved,
     t,
   );
@@ -181,4 +181,8 @@ test('the line starts are found in every interface language', async () => {
       assert.ok(lineStarts(topic, tl).length > 0, `${language} ${topic}`);
     }
   }
+});
+
+test('"short answers" adds no line: short answers are the assistant\'s own rule (INTRO-34)', () => {
+  assert.deepEqual(reviewRows([it('style', 'short', 'short')], t), []);
 });

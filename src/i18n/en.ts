@@ -555,8 +555,7 @@ export const en = {
   'settings.customInstructions': 'Custom instructions',
   'settings.customInstructionsHint':
     "Your standing preferences, added to every request to the AI. They can't turn off Qutai's safety rules or confirmations.",
-  'settings.customInstructionsPlaceholder': 'e.g. Answer briefly. Prefer metric units.',
-  'settings.customExample1': 'Answer briefly',
+  'settings.customInstructionsPlaceholder': 'e.g. Prefer metric units.',
   'settings.customExample2': 'Prefer metric units',
   'settings.customExampleHint': 'Adds it as a line',
   'settings.geminiStreaming': 'Stream Gemini responses (experimental)',

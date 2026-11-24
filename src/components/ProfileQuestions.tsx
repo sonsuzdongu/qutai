@@ -32,8 +32,8 @@ import { TranscriptCard } from './VoiceIntro';
  * one-fact-per-line form `remember` writes. Shown once in setup, after the AI step, when memory is on; the Memory
  * screen offers it again ("Answer a few questions"). Every page can be skipped, and so can the whole thing.
  *
- * There is no answer-style question (since 20 Nov 2026, `INTRO-29`): setup adds the short-answers line to the custom
- * instructions itself (src/intro/answerStyle.ts).
+ * There is no answer-style question (since 20 Nov 2026, `INTRO-29`): short answers are the assistant's own rule
+ * (`INTRO-34`).
  */
 
 type Page = 'intro' | 'name' | 'city' | 'shopping' | 'food' | 'offer' | 'address' | 'summary';

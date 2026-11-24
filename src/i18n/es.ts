@@ -565,8 +565,7 @@ export const es: Record<keyof typeof en, string> = {
   'settings.customInstructions': 'Instrucciones personalizadas',
   'settings.customInstructionsHint':
     'Tus preferencias permanentes, que se agregan a cada solicitud a la IA. No pueden desactivar las reglas de seguridad ni las confirmaciones de Qutai.',
-  'settings.customInstructionsPlaceholder': 'p. ej., Responde brevemente. Prefiero el sistema métrico.',
-  'settings.customExample1': 'Responde brevemente',
+  'settings.customInstructionsPlaceholder': 'p. ej., Prefiero el sistema métrico.',
   'settings.customExample2': 'Prefiero el sistema métrico',
   'settings.customExampleHint': 'Lo agrega como una línea',
   'settings.geminiStreaming': 'Transmitir las respuestas de Gemini (experimental)',
