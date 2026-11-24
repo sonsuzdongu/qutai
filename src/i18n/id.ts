@@ -2374,7 +2374,6 @@ export const id: Record<keyof typeof en, string> = {
   'buy.signIn': 'Login di Setelan › Akun untuk membeli kredit.',
   'buy.suspended': 'Akun ini ditangguhkan, jadi kredit tidak dapat dibeli.',
   'buy.storeFailed': 'Harga dari toko tidak dapat dimuat. Periksa koneksi Anda dan buka halaman ini lagi.',
-  'buy.waiting': 'Pembelian yang menunggu dikreditkan: {count}. Biasanya masuk dalam beberapa menit; Anda tidak perlu membeli lagi.',
   'buy.storeNoteIos': 'Pembayaran ditagihkan ke Akun Apple Anda. Kredit ditambahkan ke akun Qutai Anda dan dapat digunakan di ponsel mana pun tempat Anda login.',
   'buy.storeNoteAndroid': 'Pembayaran ditagihkan ke akun Google Play Anda. Kredit ditambahkan ke akun Qutai Anda dan dapat digunakan di ponsel mana pun tempat Anda login.',
   'buy.unavailable.notInBuild': 'Pembelian kredit tidak tersedia di build Qutai ini. Saldo dan paket Anda ditampilkan di sini.',

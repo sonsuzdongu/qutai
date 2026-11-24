@@ -2366,7 +2366,6 @@ export const en = {
   'buy.signIn': 'Sign in under Settings › Account to buy credits.',
   'buy.suspended': 'This account is suspended, so credits can’t be bought.',
   'buy.storeFailed': 'The store’s prices couldn’t be loaded. Check your connection and open this page again.',
-  'buy.waiting': 'Purchases waiting to be credited: {count}. They usually arrive within minutes; you don’t need to buy again.',
   'buy.storeNoteIos': 'Payment is charged to your Apple Account. Credits are added to your Qutai account and can be used on any phone you sign in on.',
   'buy.storeNoteAndroid': 'Payment is charged to your Google Play account. Credits are added to your Qutai account and can be used on any phone you sign in on.',
   'buy.unavailable.notInBuild': 'Buying credits isn’t available in this build of Qutai. Your balance and the packs are shown here.',

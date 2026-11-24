@@ -2375,7 +2375,6 @@ export const ja: Record<keyof typeof en, string> = {
   'buy.signIn': 'クレジットを購入するには「設定 › アカウント」でログインしてください。',
   'buy.suspended': 'このアカウントは停止されているため、クレジットを購入できません。',
   'buy.storeFailed': 'ストアの価格を読み込めませんでした。接続を確認して、このページを開き直してください。',
-  'buy.waiting': '反映待ちの購入: {count} 件。通常は数分以内に反映されます。再度購入する必要はありません。',
   'buy.storeNoteIos': '支払いは Apple アカウントに請求されます。クレジットは Qutai アカウントに追加され、ログインしたどのスマートフォンでも使用できます。',
   'buy.storeNoteAndroid': '支払いは Google Play アカウントに請求されます。クレジットは Qutai アカウントに追加され、ログインしたどのスマートフォンでも使用できます。',
   'buy.unavailable.notInBuild': 'このビルドの Qutai ではクレジットを購入できません。残高とパックはここに表示されます。',

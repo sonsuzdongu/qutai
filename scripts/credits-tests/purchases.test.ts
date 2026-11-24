@@ -568,3 +568,19 @@ test('a kept list that cannot be written stays in memory and is written at the n
   assert.equal((await flow.retryPending('user-1')).waiting, 1);
   assert.equal(store.get().length, 1);
 });
+
+test('retry: ten kept purchases are asked about together, once each, with no waiting between (BUY-36)', async () => {
+  const kept = Array.from({ length: 10 }, (_, i): PendingPurchase => ({
+    userId: 'user-1',
+    store: 'google',
+    transactionId: `GPA.${i}`,
+    productId: 'credits_100',
+    at: 1_000_000,
+  }));
+  const notFound: VerifyAnswer = { ok: false, status: 404, code: 'purchase_not_found', retryAfter: 5 };
+  const { flow, asked, waits, pending } = flowWith(fakeStore(BOUGHT), [notFound], memory(kept));
+  assert.deepEqual(await flow.retryPending('user-1', { lookInStore: false }), { credited: 0, balance: null, waiting: 10 });
+  assert.equal(asked.length, 10, 'one question per purchase');
+  assert.deepEqual(waits, [], 'no Retry-After waits when checking');
+  assert.equal(pending.get().length, 10, 'still kept for next time');
+});

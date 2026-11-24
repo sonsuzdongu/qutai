@@ -2371,7 +2371,6 @@ export const tr: Record<keyof typeof en, string> = {
   'buy.signIn': 'Kredi satın almak için Ayarlar › Hesap’tan oturum açın.',
   'buy.suspended': 'Bu hesap askıya alındı, bu yüzden kredi satın alınamaz.',
   'buy.storeFailed': 'Mağazanın fiyatları yüklenemedi. Bağlantınızı kontrol edip bu sayfayı yeniden açın.',
-  'buy.waiting': 'Hesaba eklenmeyi bekleyen satın almalar: {count}. Genellikle birkaç dakika içinde eklenir; yeniden satın almanız gerekmez.',
   'buy.storeNoteIos': 'Ödeme Apple hesabınızdan alınır. Krediler Qutai hesabınıza eklenir ve oturum açtığınız her telefonda kullanılabilir.',
   'buy.storeNoteAndroid': 'Ödeme Google Play hesabınızdan alınır. Krediler Qutai hesabınıza eklenir ve oturum açtığınız her telefonda kullanılabilir.',
   'buy.unavailable.notInBuild': 'Qutai’ın bu sürümünde kredi satın alınamıyor. Bakiyeniz ve paketler burada gösteriliyor.',

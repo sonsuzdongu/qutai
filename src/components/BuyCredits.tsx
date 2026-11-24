@@ -110,7 +110,6 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<Status | null>(null);
-  const [waiting, setWaiting] = useState(0);
   const [legal, setLegal] = useState<LegalKind | null>(null);
   // A floating notice goes away by itself after FLOAT_MS, or when tapped.
   useEffect(() => {
@@ -155,9 +154,11 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   const lateStatus = (r: { credited: number; waiting: number }, quiet: boolean): Status | null =>
     r.credited > 0
       ? { tone: 'ok', icon: 'selected', text: t('buy.status.lateCredited', { credits: creditsText(r.credited) }) }
-      : quiet || r.waiting
+      : quiet
         ? null
-        : { tone: 'info', icon: 'info', text: t('buy.status.nothingMissing') };
+        : r.waiting
+          ? { tone: 'info', icon: 'wait', text: t('buy.status.notYet') }
+          : { tone: 'info', icon: 'info', text: t('buy.status.nothingMissing') };
 
   // Opening the screen reports any purchase the server hasn't credited yet (quietly).
   useEffect(() => {
@@ -167,7 +168,6 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
       .retryPending(userId)
       .then((r) => {
         if (!live) return;
-        setWaiting(r.waiting);
         const next = lateStatus(r, true);
         if (next) setStatus(next);
       })
@@ -184,7 +184,6 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
     setChecking(true);
     try {
       const r = await flow.retryPending(userId);
-      setWaiting(r.waiting);
       setStatus(lateStatus(r, false));
     } finally {
       await creditsStore.refreshCredits().catch(() => {});
@@ -199,7 +198,6 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
     try {
       const result = await flow.buy(offer.pack, userId);
       setStatus(statusFor(result));
-      setWaiting(await flow.waiting(userId));
     } finally {
       setBusy(null);
       creditsStore.refreshCredits().catch(() => {});
@@ -281,7 +279,6 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
             <Text style={styles.statusText}>{status.text}</Text>
           </View>
         )}
-        {waiting > 0 && <Text style={styles.notice}>{t('buy.waiting', { count: waiting })}</Text>}
 
         {!signedIn && <Text style={styles.notice}>{t('buy.signIn')}</Text>}
         {suspended && <Text style={[styles.notice, styles.warnText]}>{t('buy.suspended')}</Text>}
@@ -307,7 +304,8 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
           <Text style={styles.hint}>{t('buy.noPacks')}</Text>
         )}
         {offers.map((offer) => {
-          const amount = t('credits.amount', { credits: creditsText(offer.pack.credits) });
+          // Packs are whole credits: "100", not "100,00" (UI-63).
+          const amount = t('credits.amount', { credits: wholeCredits(offer.pack.credits) });
           const working = busy === offer.pack.productId;
           const top = offer.pack.credits === mostCredits;
           return (
@@ -392,6 +390,12 @@ const FAILED: Record<StoreFailure, MessageKey> = {
   storeProblem: 'buy.status.failed',
   unknown: 'buy.status.failed',
 };
+
+/** A pack's credits without the decimals when they are whole ("100"); otherwise as the balance shows them. */
+function wholeCredits(micro: number): string {
+  const text = creditsText(micro);
+  return micro % 1_000_000 === 0 ? text.replace(/[.,]0+$/, '') : text;
+}
 
 /** What the screen says after a purchase (the flow's ending). */
 export function statusFor(result: BuyResult): Status {
@@ -517,9 +521,9 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
     backgroundColor: c.sunken,
   },
-  packTitle: { color: c.text, fontSize: 19, fontWeight: '700' },
+  packTitle: { color: c.text, fontSize: 16, fontWeight: '700' },
   buyButton: { minWidth: 104, minHeight: 44, paddingVertical: 8, paddingHorizontal: 18, borderRadius: radii.button },
-  buyText: { fontSize: 16 },
+  buyText: { fontSize: 14 },
   secondary: {
     flexDirection: 'row',
     alignItems: 'center',

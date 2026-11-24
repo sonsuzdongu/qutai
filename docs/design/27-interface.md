@@ -137,6 +137,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-62`** A cancelled purchase on the Buy credits screen ("The purchase was cancelled. Nothing was charged.") is a floating notice in the error colour just under the close button, over the page; it goes away when tapped or after 4 seconds. Other purchase endings stay as boxes in the page.
   Status: Decided by the owner (24 Nov 2026) · Why: the in-page box looked like lasting information and stayed · Enforced: In the app: src/components/BuyCredits.tsx (statusFor, floating)
 
+- **`UI-63`** Credit packs show whole credits ("100 kredi", not "100,00 kredi") in a smaller title (16 pt) and a smaller price button text (14 pt); the balance keeps its decimals.
+  Status: Decided by the owner (24 Nov 2026) · Enforced: In the app: src/components/BuyCredits.tsx (wholeCredits, packTitle, buyText)
+
 ## Details
 
 **Icons**

@@ -182,7 +182,7 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
     a.store === b.store && a.transactionId === b.transactionId;
 
   /** Reports one purchase until a final answer, or `notYetCredited` after the allowed attempts. */
-  async function report(p: Pick<PendingPurchase, 'store' | 'transactionId'>): Promise<BuyResult> {
+  async function report(p: Pick<PendingPurchase, 'store' | 'transactionId'>, tries = attempts): Promise<BuyResult> {
     const request: VerifyPurchaseRequest = { store: p.store, transactionId: p.transactionId };
     for (let attempt = 1; ; attempt++) {
       let answer: VerifyAnswer;
@@ -201,7 +201,7 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
       if (answer.code === 'account_suspended') return { kind: 'suspended' };
       if (answer.status === 401 || answer.code === 'not_signed_in') return { kind: 'signedOut' };
       // Not found yet, unavailable, the network: worth asking again shortly.
-      if (attempt >= attempts) return { kind: 'notYetCredited' };
+      if (attempt >= tries) return { kind: 'notYetCredited' };
       await sleep(Math.min(MAX_WAIT_S, answer.retryAfter ?? DEFAULT_WAIT_S) * 1000);
     }
   }
@@ -210,8 +210,8 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
   const keep = (r: BuyResult) => r.kind === 'notYetCredited' || r.kind === 'signedOut';
 
   /** Reports one kept purchase and keeps or drops it (and remembers a final answer). */
-  async function reportKept(p: PendingPurchase): Promise<BuyResult> {
-    const result = await report(p);
+  async function reportKept(p: PendingPurchase, tries = attempts): Promise<BuyResult> {
+    const result = await report(p, tries);
     if (!keep(result)) {
       await edit((l) => l.filter((x) => !sameTx(x, p)));
       await settle(p);
@@ -243,8 +243,10 @@ export function createPurchaseFlow(deps: PurchaseFlowDeps) {
     let credited = 0;
     let balance: number | null = null;
     let waiting = 0;
-    for (const p of list.filter((x) => x.userId === userId)) {
-      const result = await reportKept(p);
+    // Kept purchases are asked about together and once each (BUY-36): one at a time with retries, ten waiting
+    // purchases kept "Check for missing credits" busy for minutes. One that isn't found yet stays kept for next time.
+    const results = await Promise.all(list.filter((x) => x.userId === userId).map((p) => reportKept(p, 1)));
+    for (const result of results) {
       if (result.kind === 'credited') {
         // A purchase the server had credited before (found again in the store's list) adds nothing now.
         if (!result.replayed) credited += result.credits;

@@ -2360,7 +2360,6 @@ export const de: Record<keyof typeof en, string> = {
   'buy.signIn': 'Melden Sie sich unter Einstellungen › Konto an, um Credits zu kaufen.',
   'buy.suspended': 'Dieses Konto ist gesperrt, daher können keine Credits gekauft werden.',
   'buy.storeFailed': 'Die Preise des Stores konnten nicht geladen werden. Prüfen Sie Ihre Verbindung und öffnen Sie diese Seite erneut.',
-  'buy.waiting': 'Käufe, die auf Gutschrift warten: {count}. Sie kommen meist innerhalb von Minuten an; Sie müssen nicht erneut kaufen.',
   'buy.storeNoteIos': 'Die Zahlung wird Ihrem Apple Account belastet. Credits werden Ihrem Qutai-Konto gutgeschrieben und können auf jedem Telefon genutzt werden, auf dem Sie angemeldet sind.',
   'buy.storeNoteAndroid': 'Die Zahlung wird Ihrem Google Play-Konto belastet. Credits werden Ihrem Qutai-Konto gutgeschrieben und können auf jedem Telefon genutzt werden, auf dem Sie angemeldet sind.',
   'buy.unavailable.notInBuild': 'Der Kauf von Credits ist in dieser Version von Qutai nicht verfügbar. Ihr Guthaben und die Pakete werden hier angezeigt.',

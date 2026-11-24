@@ -2373,7 +2373,6 @@ export const ko: Record<keyof typeof en, string> = {
   'buy.signIn': '크레딧을 구매하려면 설정 › 계정에서 로그인하세요.',
   'buy.suspended': '이 계정은 정지되어 크레딧을 구매할 수 없습니다.',
   'buy.storeFailed': '스토어 가격을 불러오지 못했습니다. 연결을 확인하고 이 페이지를 다시 여세요.',
-  'buy.waiting': '적립 대기 중인 구매: {count}건. 보통 몇 분 안에 적립되니 다시 구매하지 않아도 됩니다.',
   'buy.storeNoteIos': '결제는 Apple 계정으로 청구됩니다. 크레딧은 Qutai 계정에 추가되며, 로그인한 모든 휴대전화에서 사용할 수 있습니다.',
   'buy.storeNoteAndroid': '결제는 Google Play 계정으로 청구됩니다. 크레딧은 Qutai 계정에 추가되며, 로그인한 모든 휴대전화에서 사용할 수 있습니다.',
   'buy.unavailable.notInBuild': '이 Qutai 빌드에서는 크레딧을 구매할 수 없습니다. 잔액과 크레딧 팩은 여기에 표시됩니다.',

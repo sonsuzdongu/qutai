@@ -891,6 +891,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-60` | Buy credits is a paywall: aurora, mark, gradient name, balance pill, three facts, pack cards with gradient price buttons and a "Most credits" badge, all on the first screen. | Owner | 2026-11-24 |
 | `UI-61` | "Show the Qutai button tour" is in Settings › About, not Assistant. | Owner | 2026-11-24 |
 | `UI-62` | A cancelled purchase is a floating error-coloured notice that goes on tap or after 4 s. | Owner | 2026-11-24 |
+| `UI-63` | Credit packs show whole credits ("100") in smaller text and button; the balance keeps decimals. | Owner | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 
@@ -1141,6 +1142,7 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-33` | A pro IPA needs the RevenueCat iOS key (or --without-purchases), like a pro AAB. | Owner | 2026-11-21 |
 | `BUY-34` | The buy screen and the rating message name only the phone's own store (or none); ten languages. | Owner | 2026-11-21 |
 | `BUY-35` | The kept list of uncredited purchases is never written over when it couldn't be read; unsaved changes stay in memory | Default | 2026-11-21 |
+| `BUY-36` | The missing-credits check asks about all kept purchases at once, once each, no waits; no waiting count on the screen. | Owner | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `BUY-14`, `BUY-20`
 

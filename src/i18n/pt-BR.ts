@@ -2375,7 +2375,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'buy.signIn': 'Faça login em Configurações › Conta para comprar créditos.',
   'buy.suspended': 'Esta conta está suspensa, então não é possível comprar créditos.',
   'buy.storeFailed': 'Não foi possível carregar os preços da loja. Verifique sua conexão e abra esta página de novo.',
-  'buy.waiting': 'Compras aguardando crédito: {count}. Elas costumam chegar em minutos; você não precisa comprar de novo.',
   'buy.storeNoteIos': 'O pagamento é cobrado na sua Conta Apple. Os créditos são adicionados à sua conta Qutai e podem ser usados em qualquer celular em que você fizer login.',
   'buy.storeNoteAndroid': 'O pagamento é cobrado na sua conta do Google Play. Os créditos são adicionados à sua conta Qutai e podem ser usados em qualquer celular em que você fizer login.',
   'buy.unavailable.notInBuild': 'A compra de créditos não está disponível nesta versão do Qutai. Seu saldo e os pacotes são mostrados aqui.',
