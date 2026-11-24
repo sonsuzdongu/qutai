@@ -465,8 +465,6 @@ export const es: Record<keyof typeof en, string> = {
     'Resume los resultados de {engine} de esta página para «{query}»: qué dicen al respecto, en unos pocos puntos breves, citando con su enlace el resultado del que viene cada punto. Lee los resultados de esta página; no salgas de ella ni cambies la búsqueda.',
   'quick.keyPoints': 'Puntos clave',
   'quick.keyPointsPrompt': 'Enumera los puntos clave de esta página en viñetas breves.',
-  'quick.translate': 'Traducir',
-  'quick.translatePrompt': 'Traduce el contenido principal de esta página al español.',
   'quick.review': '¿Es bueno este producto?',
   'quick.reviewPrompt':
     '¿Es una buena compra el producto de esta página? Revisa sus especificaciones, su precio y sus reseñas, y enumera los pros y los contras.',

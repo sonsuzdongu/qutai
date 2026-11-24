@@ -464,8 +464,6 @@ export const id: Record<keyof typeof en, string> = {
     'Ringkas hasil {engine} di halaman ini untuk “{query}”: apa yang dikatakan tentang topik itu, dalam beberapa poin singkat, dengan menyebutkan hasil asal setiap poin beserta link-nya. Baca hasilnya dari halaman ini; jangan tinggalkan halaman ini atau mengubah penelusuran.',
   'quick.keyPoints': 'Poin utama',
   'quick.keyPointsPrompt': 'Buat daftar poin utama halaman ini sebagai butir-butir singkat.',
-  'quick.translate': 'Terjemahkan',
-  'quick.translatePrompt': 'Terjemahkan konten utama halaman ini ke bahasa Indonesia.',
   'quick.review': 'Apakah produk ini bagus?',
   'quick.reviewPrompt':
     'Apakah produk di halaman ini layak dibeli? Lihat spesifikasi, harga, dan ulasannya, lalu buat daftar kelebihan dan kekurangannya.',

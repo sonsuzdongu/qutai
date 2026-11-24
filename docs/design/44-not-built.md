@@ -18,7 +18,7 @@ Each rule below names something a user might expect and Qutai does not have, and
   Status: Default (manager or implementing session; open to change) · Why: not possible with the WebView architecture · Source: ROADMAP.md › 3
 - **`NOT-4`** No "undo" for web actions; instead a confirmation before sensitive actions and per-site permissions.
   Status: Default (manager or implementing session; open to change) · Why: a submitted form or a completed payment cannot be undone from the browser · Source: ROADMAP.md › 3
-- **`NOT-5`** No in-place page translation; the Translate chip translates in the chat.
+- **`NOT-5`** No in-place page translation; the user asks the assistant to translate in the chat (the Translate chip went in `UI-65`).
   Status: Owner, 2026-11-15 · Why: reason not recorded · Source: ROADMAP.md › Translation and Phase 2 item 7; TODO.md › Assistant ("Decided not to do")
 - **`NOT-6`** No separate model per saved task; a saved task runs with the conversation's model.
   Status: Owner, 2026-11-15 · Why: reason not recorded · Source: ROADMAP.md › AI features; TODO.md › Assistant and Assistant and tools

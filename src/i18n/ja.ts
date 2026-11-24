@@ -465,8 +465,6 @@ export const ja: Record<keyof typeof en, string> = {
     'このページにある「{query}」の {engine} 検索結果を要約してください。それについて何が書かれているかをいくつかの短い要点にまとめ、各要点の元になった検索結果をリンク付きで示してください。検索結果はこのページから読み、ページを離れたり検索を変えたりしないでください。',
   'quick.keyPoints': '要点',
   'quick.keyPointsPrompt': 'このページの要点を短い箇条書きで挙げてください。',
-  'quick.translate': '翻訳',
-  'quick.translatePrompt': 'このページの主な内容を日本語に翻訳してください。',
   'quick.review': 'この商品はおすすめ？',
   'quick.reviewPrompt':
     'このページの商品は買う価値がありますか？仕様、価格、レビューを確認し、長所と短所を挙げてください。',

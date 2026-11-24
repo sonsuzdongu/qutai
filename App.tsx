@@ -1844,7 +1844,8 @@ function BrowserApp({
     tab.readerAvailable ||
     !!signals?.kinds.some((kind) => kind !== 'product');
   const pageChips =
-    onNewTab || siteLevel === 'blocked' ? [] : (['summarize', 'keyPoints', 'translate', 'review'] as const);
+    // No "Translate" chip (UI-65): the user asks for a translation in their own words.
+    onNewTab || siteLevel === 'blocked' ? [] : (['summarize', 'keyPoints', 'review'] as const);
   const quickActions: QuickAction[] = [
     ...(results && siteLevel !== 'blocked'
       ? [

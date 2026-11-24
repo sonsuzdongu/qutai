@@ -463,8 +463,6 @@ export const ko: Record<keyof typeof en, string> = {
     '이 페이지에 있는 “{query}”에 대한 {engine} 검색 결과를 요약해 주세요. 결과에서 말하는 내용을 짧은 요점 몇 개로 정리하고, 각 요점마다 출처가 된 결과를 링크와 함께 밝혀 주세요. 결과는 이 페이지에서 읽고, 페이지를 벗어나거나 검색어를 바꾸지 마세요.',
   'quick.keyPoints': '핵심 요점',
   'quick.keyPointsPrompt': '이 페이지의 핵심 요점을 짧은 글머리 기호 목록으로 정리해 주세요.',
-  'quick.translate': '번역',
-  'quick.translatePrompt': '이 페이지의 주요 내용을 한국어로 번역해 주세요.',
   'quick.review': '좋은 제품일까요?',
   'quick.reviewPrompt':
     '이 페이지의 제품은 살 만한가요? 사양, 가격, 리뷰를 살펴보고 장단점을 정리해 주세요.',

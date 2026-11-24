@@ -465,8 +465,6 @@ export const ptBR: Record<keyof typeof en, string> = {
     'Resuma os resultados do {engine} nesta página para “{query}”: o que dizem sobre o assunto, em alguns pontos curtos, citando o resultado de onde vem cada ponto, com o link. Leia os resultados nesta página; não saia dela nem mude a pesquisa.',
   'quick.keyPoints': 'Pontos principais',
   'quick.keyPointsPrompt': 'Liste os pontos principais desta página em tópicos curtos.',
-  'quick.translate': 'Traduzir',
-  'quick.translatePrompt': 'Traduza o conteúdo principal desta página para o português.',
   'quick.review': 'Este produto é bom?',
   'quick.reviewPrompt':
     'O produto desta página é uma boa compra? Veja as especificações, o preço e as avaliações, e liste os prós e contras.',

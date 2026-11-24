@@ -893,6 +893,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-62` | Buy credits messages are floating notices (90 % opacity) in their tone's colour; they go on tap or after 4–10 s, "finishing" stays. | Owner | 2026-11-24 |
 | `UI-63` | Credit packs show whole credits ("100") in smaller text and button; the balance keeps decimals. | Owner | 2026-11-24 |
 | `UI-64` | ~~"Open Qutai's app settings" in About~~ (withdrawn: stays under Appearance › Media). | Withdrawn | 2026-11-24 |
+| `UI-65` | No "Translate" quick action in the assistant panel; translation is asked for in words. | Owner | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 
@@ -1366,7 +1367,7 @@ Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 | `NOT-2` | No DNS over HTTPS setting. | Default |  |
 | `NOT-3` | No browser extensions. | Default |  |
 | `NOT-4` | No "undo" for web actions; instead a confirmation before sensitive actions and per-site permissions. | Default |  |
-| `NOT-5` | No in-place page translation; the Translate chip translates in the chat. | Owner | 2026-11-15 |
+| `NOT-5` | No in-place page translation; translation is asked for in the chat (no chip since UI-65). | Owner | 2026-11-15 |
 | `NOT-6` | No separate model per saved task; a saved task runs with the conversation's model. | Owner | 2026-11-15 |
 | `NOT-7` | No "smart address bar" that sends natural-language text to the assistant by itself; "Ask Qutai" is at the… | Owner | not recorded |
 | `NOT-8` | No live sync between devices for now; in official builds the encrypted backup file can be kept in the… | Owner | 2026-11-17 |

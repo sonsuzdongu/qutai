@@ -454,8 +454,6 @@ export const tr: Record<keyof typeof en, string> = {
     'Bu sayfadaki “{query}” için {engine} sonuçlarını özetle: konu hakkında ne dediklerini birkaç kısa maddede, her maddenin geldiği sonucu bağlantısıyla belirterek yaz. Sonuçları bu sayfadan oku; sayfadan çıkma ve aramayı değiştirme.',
   'quick.keyPoints': 'Önemli noktalar',
   'quick.keyPointsPrompt': 'Bu sayfanın önemli noktalarını kısa maddeler halinde listele.',
-  'quick.translate': 'Çevir',
-  'quick.translatePrompt': 'Bu sayfanın ana içeriğini Türkçeye çevir.',
   'quick.review': 'Bu ürün iyi mi?',
   'quick.reviewPrompt':
     'Bu sayfadaki ürün almaya değer mi? Özelliklerine, fiyatına ve yorumlarına bakıp artılarını ve eksilerini listele.',

@@ -453,8 +453,6 @@ export const en = {
     'Summarize the {engine} results on this page for “{query}”: what they say about it, in a few short points, citing the result each point comes from with its link. Read the results from this page; don’t leave it or change the search.',
   'quick.keyPoints': 'Key points',
   'quick.keyPointsPrompt': 'List the key points of this page as short bullets.',
-  'quick.translate': 'Translate',
-  'quick.translatePrompt': 'Translate the main content of this page into English.',
   'quick.review': 'Is this product good?',
   'quick.reviewPrompt':
     'Is the product on this page a good buy? Look at its specs, price and reviews, and list the pros and cons.',

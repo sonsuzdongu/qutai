@@ -463,8 +463,6 @@ export const de: Record<keyof typeof en, string> = {
     'Fasse die {engine}-Ergebnisse auf dieser Seite für „{query}“ zusammen: was sie dazu sagen, in ein paar kurzen Punkten, und nenne zu jedem Punkt das Ergebnis, aus dem er stammt, mit Link. Lies die Ergebnisse auf dieser Seite; verlasse sie nicht und ändere die Suche nicht.',
   'quick.keyPoints': 'Kernpunkte',
   'quick.keyPointsPrompt': 'Liste die Kernpunkte dieser Seite als kurze Stichpunkte auf.',
-  'quick.translate': 'Übersetzen',
-  'quick.translatePrompt': 'Übersetze den Hauptinhalt dieser Seite ins Deutsche.',
   'quick.review': 'Ist das Produkt gut?',
   'quick.reviewPrompt':
     'Ist das Produkt auf dieser Seite ein guter Kauf? Sieh dir technische Daten, Preis und Bewertungen an und liste Vor- und Nachteile auf.',

@@ -143,6 +143,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-64`** ~~"Open Qutai's app settings" moves to Settings › About~~ (withdrawn the same day: it stays under Appearance › Media with its battery-manager hint, shown with background playback, `MEDIA-10`).
   Status: Withdrawn by the owner (24 Nov 2026)
 
+- **`UI-65`** The assistant panel's quick actions have no "Translate" chip; the user asks for a translation in their own words (Summarize, Key points, the product question, Summarize results and Compare stay).
+  Status: Decided by the owner (24 Nov 2026) · Enforced: In the app: App.tsx (pageChips)
+
 ## Details
 
 **Icons**
