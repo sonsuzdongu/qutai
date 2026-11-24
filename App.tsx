@@ -2547,6 +2547,8 @@ function BrowserApp({
           onShowAssistantIntro={() => {
             setAssistantIntroSeen(false).catch(() => {});
             setIntroPending(true);
+            // The tour waits while Settings is in front, so Settings closes for it to show (UI-61).
+            closeScreen('settings');
           }}
         />
         <ScriptSandboxHost />
