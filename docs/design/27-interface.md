@@ -140,6 +140,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-63`** Credit packs show whole credits ("100 kredi", not "100,00 kredi") in a smaller title (16 pt) and a smaller price button text (14 pt); the balance keeps its decimals.
   Status: Decided by the owner (24 Nov 2026) · Enforced: In the app: src/components/BuyCredits.tsx (wholeCredits, packTitle, buyText)
 
+- **`UI-64`** "Open Qutai's app settings" (Android, with the battery-manager hint) is in Settings › About after the Qutai button tour, always shown on Android; it was under Appearance › Media and only while background playback was on.
+  Status: Decided by the owner (24 Nov 2026) · Enforced: In the app: src/components/SettingsModal.tsx (about page)
+
 ## Details
 
 **Icons**
