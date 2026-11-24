@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qutai page tests: pop-ups</title>
+<style>
+  body { font: 16px/1.4 system-ui, sans-serif; margin: 16px; }
+  button, a.button { display: block; width: 100%; margin: 0 0 10px; padding: 12px; font-size: 16px; text-align: center; box-sizing: border-box; }
+  #log li { margin: 0 0 4px; }
+  .pass { color: #1a7f37; } .fail { color: #c62828; }
+  [hidden] { display: none !important; }
+  @media (prefers-color-scheme: dark) { body { background: #111; color: #eee; } }
+</style>
+</head>
+<body>
+<!--
+  Pop-up windows that keep their opener (src/browser/popups.ts), the way "Sign in with Google" and payment windows work:
+  the opener opens a window, the window reads window.opener, posts its result back and closes itself.
+  Served by serve.mjs at /popup. Open it in Qutai, tap each button, and read the list:
+    1. same site:   the pop-up posts back and closes; the app returns to this tab (PASS lines 1a, 1b).
+    2. other site:  the same across origins (localhost <-> 127.0.0.1), as a sign-in provider does (2a, 2b).
+    3. noopener:    the new tab has no window.opener (3: PASS shown in the new tab); close it by hand.
+    4. link target=_blank: a plain link opens a new tab (no result expected).
+  Android: run `adb reverse tcp:8811 tcp:8811` so both localhost and 127.0.0.1 reach the server.
+-->
+<div id="opener">
+  <h1>Pop-up tests</h1>
+  <button id="same">1. Open pop-up (same site)</button>
+  <button id="other">2. Open pop-up (other site)</button>
+  <button id="noopener">3. Open with noopener</button>
+  <a class="button" id="blank" target="_blank" href="/popup?child=link">4. Link with target=_blank</a>
+  <ol id="log"></ol>
+</div>
+<div id="child" hidden>
+  <h1>Pop-up window</h1>
+  <p id="state">Checking window.opener…</p>
+  <button id="send">Send result and close</button>
+</div>
+<script>
+(function () {
+  var params = new URLSearchParams(location.search);
+  var mode = params.get('child');
+  function line(text, ok) {
+    var li = document.createElement('li');
+    li.textContent = (ok === undefined ? '' : ok ? 'PASS ' : 'FAIL ') + text;
+    if (ok !== undefined) li.className = ok ? 'pass' : 'fail';
+    document.getElementById('log').appendChild(li);
+  }
+  if (mode) {
+    document.getElementById('opener').hidden = true;
+    document.getElementById('child').hidden = false;
+    var state = document.getElementById('state');
+    var has = !!window.opener;
+    if (mode === 'noopener') {
+      state.textContent = has ? 'FAIL 3: window.opener is set despite noopener' : 'PASS 3: no window.opener (noopener respected)';
+      state.className = has ? 'fail' : 'pass';
+      document.getElementById('send').hidden = true;
+      return;
+    }
+    state.textContent = has ? 'window.opener is set; sending the result in 1.5 s…' : 'No window.opener: the result cannot reach the site.';
+    state.className = has ? 'pass' : 'fail';
+    function send() {
+      if (window.opener) window.opener.postMessage({ qutaiPopupTest: mode, origin: location.origin }, '*');
+      window.close();
+    }
+    document.getElementById('send').onclick = send;
+    if (has && mode !== 'link') setTimeout(send, 1500);
+    return;
+  }
+  var other = location.hostname === 'localhost' ? '127.0.0.1' : 'localhost';
+  var base = location.protocol + '//' + other + (location.port ? ':' + location.port : '');
+  var windows = {};
+  function open(label, url, features) {
+    var w = window.open(url, '_blank', features || 'popup,width=420,height=640');
+    windows[label] = w;
+    if (features === 'noopener') line(label + ': window.open returned ' + (w ? 'a window (wrong for noopener)' : 'null, as noopener asks'), !w);
+    else line(label + ': window.open returned ' + (w ? 'a window' : 'null'), !!w);
+  }
+  document.getElementById('same').onclick = function () { open('1a', '/popup?child=same'); };
+  document.getElementById('other').onclick = function () { open('2a', base + '/popup?child=other'); };
+  document.getElementById('noopener').onclick = function () { open('3', '/popup?child=noopener', 'noopener'); };
+  window.addEventListener('message', function (e) {
+    var d = e.data || {};
+    if (!d.qutaiPopupTest) return;
+    var label = d.qutaiPopupTest === 'same' ? '1b' : '2b';
+    line(label + ': result posted back from ' + d.origin, true);
+    var w = windows[label.charAt(0) + 'a'];
+    setTimeout(function () {
+      if (w) line(label + ': the pop-up closed itself (window.closed = ' + w.closed + ')', w.closed);
+    }, 1000);
+  });
+})();
+</script>
+</body>
+</html>

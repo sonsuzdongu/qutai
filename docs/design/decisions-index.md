@@ -494,6 +494,7 @@ Moved to Details (ids retired, not reused): `LOG-7`
 | `TABS-31` | Android pull to refresh only when the page and every scroll area under the finger are at their start (reversed and flipped lists, overscroll-behavior, touch-action), decided per touch in the patched WebView | Default | 2026-11-24 |
 | `TABS-32` | The long-press menu never opens while scrolling (move, touchcancel, any scroll, a touch stopping a fling); opens once per press | Default | 2026-11-24 |
 | `TABS-33` | Back skips entries a page added without a touch on the entry left (Android: the WebView's own; iOS: the page script goes back itself); never a user-made entry | Default | 2026-11-24 |
+| `TABS-34` | A page's window is a real pop-up that keeps window.opener (sign-in, payment windows); window.close() closes it and returns to the opener; ads still refused; the opener of a pop-up on screen never sleeps | Default | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-8`
 

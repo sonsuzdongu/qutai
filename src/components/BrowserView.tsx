@@ -24,6 +24,8 @@ import { certificateExceptionsFor, mayBypassCertificate, noteValidCertificate } 
 import { isLocalUrl } from '../browser/localNetwork';
 import { endLaunchChain, mayOfferExternal, noteUserGesture, touchedRecently } from '../browser/externalGuard';
 import { isUserTap, windowOpensInFront } from '../browser/pendingNavigation';
+import { closesOnWindowClose, closesRefusedPopup, planPopupOpen } from '../browser/popups';
+import { releasePopup } from '../device/popupWindows';
 import { parseShareMessage, shareDoneScript, webShareScript } from '../browser/webShare';
 import { shareFromPage } from '../device/link';
 import { FORM_ANSWER_IDLE, formAnswer } from '../browser/formResubmission';
@@ -418,27 +420,44 @@ function TabWebView({
             }}
             // Links opened from an incognito tab stay incognito.
             onOpenWindow={(e) => {
-              if (scriptBlocking() && isAdUrl(e.nativeEvent.targetUrl)) return;
+              // A real pop-up (popups.ts): the new tab's WebView takes the page's waiting window, which keeps
+              // window.opener (sign-in and payment windows post their result back and close themselves).
+              const plan = planPopupOpen(e.nativeEvent.targetUrl, e.nativeEvent.popupId, (url) => scriptBlocking() && isAdUrl(url));
+              if (plan.kind === 'refuse') {
+                if (plan.release) releasePopup(plan.release);
+                return;
+              }
               // A window the page opens joins the page's tab group (pages that open several windows
               // stay together, and the assistant can manage and close them as one). It comes to the front only when
               // the user just touched this page and is still on it: a window that arrives late (a slow site) or that
               // the page opens on its own goes behind, so it never takes the screen from the tab the user is on
               // (20 Nov 2026 report: a slow load seemed to land in the tab opened meanwhile).
               const front = windowOpensInFront(active && browser.activeId === tab.id, touchedRecently(tab));
-              const opened = browser.openTab(e.nativeEvent.targetUrl, {
+              const opened = browser.openTab(plan.url, {
                 incognito: tab.incognito,
                 openerId: tab.id,
                 group: true,
                 activate: front,
+                popupId: plan.popupId,
               });
               if (!front) newTabActions.onOpenedInBackground(opened);
+            }}
+            // The page's pop-up this tab was opened for: its WebView takes it over instead of loading the source.
+            popupId={tab.popupId}
+            // The page closed its own window (a sign-in or payment window that is done): back to the opener.
+            onCloseWindow={() => {
+              if (closesOnWindowClose(tab)) browser.closeTab(tab.id);
             }}
             // Every URL reaches onShouldStartLoadWithRequest; the default allowlist would hand other
             // schemes to canOpenURL, which silently drops links to apps the OS doesn't let us see.
             originWhitelist={['*']}
             onShouldStartLoadWithRequest={(request) => {
-              // Ad and tracker pages, frames and redirects never load.
-              if (scriptBlocking() && isAdUrl(request.url)) return false;
+              // Ad and tracker pages, frames and redirects never load. A pop-up whose first page is one closes (Android
+              // only learns a window.open's address here).
+              if (scriptBlocking() && isAdUrl(request.url)) {
+                if (closesRefusedPopup(tab, request.isTopFrame !== false)) setTimeout(() => browser.closeTab(tab.id), 0);
+                return false;
+              }
               // The sign-in email's link (its website page, or the app link that page opens): handled by the account,
               // never loaded, so its token stays out of the tab and the history. Pro builds only (null otherwise).
               if (request.isTopFrame !== false && takeSignInLink(request.url)) return false;

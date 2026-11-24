@@ -151,6 +151,13 @@ export class Tab {
   }
   /** The tab whose link opened this one; back returns there once this tab has no history. */
   readonly openerId: string | undefined;
+  /**
+   * A page's pop-up window (src/browser/popups.ts): the id of the new-window request the tab's first WebView takes
+   * over, so the page keeps window.opener. Never saved; a WebView made later (woken, after a crash) loads the URL.
+   */
+  popupId: string | undefined;
+  /** The pop-up's first page finished loading (an ad refused before that closes the tab, popups.ts). */
+  popupLoaded = false;
   webview: ComponentRef<typeof WebView> | null = null;
   /** The reader mode WebView, while reader mode is on. */
   readerWebview: ComponentRef<typeof WebView> | null = null;
@@ -693,6 +700,7 @@ export class Tab {
    */
   handleWebViewLoadEnd(url?: string) {
     this.handleLoadEnd();
+    if (url && url !== 'about:blank') this.popupLoaded = true;
     const p = this.nav.pending;
     if (!p) return;
     // The navigation ended in a link for another app (cancelled, handed off): nothing new is on screen (DL-18).

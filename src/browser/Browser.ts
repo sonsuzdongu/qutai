@@ -11,6 +11,7 @@ import { NEW_TAB_URL, Tab } from './Tab';
 import { clearCertificateExceptions, removeTabCertificateExceptions } from './certificateExceptions';
 import { t } from '../i18n';
 import { randomBase36 } from '../utils/ids';
+import { popupOpenerToKeep } from './popups';
 
 /** New tabs open the app's own new tab page. */
 export const HOME_URL = NEW_TAB_URL;
@@ -224,6 +225,7 @@ export class Browser {
       asleep = false,
       uid,
       group = false,
+      popupId,
     }: {
       activate?: boolean;
       incognito?: boolean;
@@ -232,9 +234,12 @@ export class Browser {
       uid?: string;
       /** Join the opener's tab group, starting one named after the opener's site if it has none. */
       group?: boolean;
+      /** A page's pop-up window: the WebView's waiting request the new tab takes over (src/browser/popups.ts). */
+      popupId?: string;
     } = {},
   ): Tab {
     const tab = new Tab(String(++this.counter), url, incognito, openerId, this.emit, uid);
+    tab.popupId = popupId;
     if (incognito) tab.profile = this.incognitoProfile ??= newIncognitoProfile();
     tab.asleep = asleep && !activate;
     if (tab.asleep) tab.lastActiveAt = 0;
@@ -467,7 +472,8 @@ export class Browser {
    * sound and tabs whose navigation is still waiting always stay awake.
    */
   sleepInactive(maxAwake = MAX_AWAKE_TABS) {
-    const keep = new Set([this.activeId, this.agentTab?.id, ...this.taskTabs]);
+    // The opener of the pop-up on screen too: the pop-up posts its result there (popups.ts).
+    const keep = new Set([this.activeId, this.agentTab?.id, ...this.taskTabs, popupOpenerToKeep(this.getTab(this.activeId))]);
     const awake = this.tabs.filter((t) => !t.asleep && !t.isNewTab);
     const sleepable = awake
       // A tab whose navigation is still waiting keeps its WebView: sleeping would drop the load the user asked for.

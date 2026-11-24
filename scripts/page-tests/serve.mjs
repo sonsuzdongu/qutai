@@ -10,6 +10,7 @@
 //   http://localhost:8811/            the page with the working copy's page script; runs every case and shows a table
 //   http://localhost:8811/?script=head the same with the page script of the last commit (to compare before a fix)
 //   http://localhost:8811/guards      secret fields, payment buttons and destructive or account presses (guards.html)
+//   http://localhost:8811/popup       pop-up windows that post back to window.opener and close themselves (popup.html)
 //   http://localhost:8811/app-breakout the apps break-out test as an app document (frame routes: window.__results)
 // The results are also in window.__pageTestResults (an array of { name, ok, detail }).
 import { execFileSync } from 'node:child_process';
@@ -90,6 +91,11 @@ createServer((req, res) => {
       const change = pressRule.changePress(facts);
       res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ pay: pay.pay, change: change.change }));
     });
+    return;
+  }
+  if (url.pathname === '/popup') {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+    res.end(readFileSync(join(here, 'popup.html'), 'utf8'));
     return;
   }
   if (/^\/guards?(\/|$)/.test(url.pathname)) {

@@ -14,11 +14,12 @@ for the map, then only the area files you need; never load all of them at once.
 
 ## Changelog
 
-Last updated: 2026-11-24
+Last updated: 2026-11-25
 
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-25:** Windows a page opens are real pop-ups that keep `window.opener` and close themselves back to the opener, so "Sign in with Google" and payment windows no longer end on a blank page; Android's `X-Requested-With` header can't be turned off any more (`TABS-34`).
 - **2026-11-24:** JSON and other plain-text pages are readable in dark theme (`UI-69`).
 - **2026-11-24:** The slow-site line floats over the page at 90 % opacity instead of pushing it down (`UI-68`).
 - **2026-11-24:** Android: pages get only the safe-area insets that cover the WebView, so YouTube and Instagram no longer leave an empty band above the bottom address bar (`UI-67`).
