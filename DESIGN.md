@@ -19,6 +19,7 @@ Last updated: 2026-11-24
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-24:** A cancelled purchase shows as a floating error-coloured notice that disappears on tap or after 4 seconds (`UI-62`).
 - **2026-11-24:** "Show the Qutai button tour" moves from Settings › Assistant to About (`UI-61`).
 - **2026-11-24:** iPhone: the language is chosen inside Qutai (Settings › Language), the same per-app setting as iOS Settings (`LANG-24`); the paywall's packs and buttons fit the first screen (`UI-60`).
 - **2026-11-24:** Backup's "What's included", password and automatic backups are grouped (`UI-59`); Buy credits becomes a proper paywall (`UI-60`).

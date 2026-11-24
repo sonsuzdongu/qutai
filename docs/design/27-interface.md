@@ -134,6 +134,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-61`** "Show the Qutai button tour" is in Settings › About, after "Rate Qutai" (and Default browser on Android), shown while the Qutai button is on; it closes Settings so the tour shows.
   Status: Decided by the owner (24 Nov 2026) · Why: a one-off help item, not an assistant setting · Enforced: In the app: src/components/SettingsModal.tsx (about page)
 
+- **`UI-62`** A cancelled purchase on the Buy credits screen ("The purchase was cancelled. Nothing was charged.") is a floating notice in the error colour just under the close button, over the page; it goes away when tapped or after 4 seconds. Other purchase endings stay as boxes in the page.
+  Status: Decided by the owner (24 Nov 2026) · Why: the in-page box looked like lasting information and stayed · Enforced: In the app: src/components/BuyCredits.tsx (statusFor, floating)
+
 ## Details
 
 **Icons**

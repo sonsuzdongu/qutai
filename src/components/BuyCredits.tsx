@@ -75,7 +75,11 @@ export function BuyCreditsHost() {
 
 // --- The screen ---
 
-type Status = { tone: 'ok' | 'info' | 'warn'; icon: IconName; text: string };
+/** `float`: a short-lived floating notice over the screen (a cancelled purchase, UI-62) instead of a box in the page. */
+type Status = { tone: 'ok' | 'info' | 'warn'; icon: IconName; text: string; float?: boolean };
+
+/** How long a floating notice stays unless tapped away. */
+const FLOAT_MS = 4000;
 
 /**
  * Buying Qutai Credits (pro mode, signed in). The balance; what credits are; the packs Qutai's server offers for this
@@ -108,6 +112,12 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   const [status, setStatus] = useState<Status | null>(null);
   const [waiting, setWaiting] = useState(0);
   const [legal, setLegal] = useState<LegalKind | null>(null);
+  // A floating notice goes away by itself after FLOAT_MS, or when tapped.
+  useEffect(() => {
+    if (!status?.float) return;
+    const timer = setTimeout(() => setStatus((s) => (s?.float ? null : s)), FLOAT_MS);
+    return () => clearTimeout(timer);
+  }, [status]);
 
   const packs: Pack[] = credits.config?.packs ?? [];
   const productIds = packs.filter((p) => p.store === storeName).map((p) => p.productId);
@@ -213,6 +223,21 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
           <Icon name="close" size={20} color={palette.text} />
         </Pressable>
       </View>
+      {/* Just under the close button, over the page; the zero-height holder keeps the page from moving. */}
+      {status?.float && (
+        <View style={styles.floatingHolder}>
+          <Pressable
+            style={styles.floating}
+            onPress={() => setStatus(null)}
+            accessibilityRole="alert"
+            accessibilityLiveRegion="assertive"
+            accessibilityHint={t('common.close')}
+          >
+            <Icon name={status.icon} size={18} color={palette.onTint} />
+            <Text style={styles.floatingText}>{status.text}</Text>
+          </Pressable>
+        </View>
+      )}
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
           <QutaiMark size={56} sweepWhenIdle />
@@ -242,7 +267,7 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
           ))}
         </View>
 
-        {status && (
+        {status && !status.float && (
           <View
             style={[styles.status, status.tone === 'ok' && styles.statusOk, status.tone === 'warn' && styles.statusWarn]}
             accessibilityLiveRegion="polite"
@@ -381,7 +406,7 @@ export function statusFor(result: BuyResult): Status {
             : t('buy.status.creditedBalance', { credits: creditsText(result.credits), balance: creditsText(result.balance) }),
       };
     case 'cancelled':
-      return { tone: 'info', icon: 'info', text: t('buy.status.cancelled') };
+      return { tone: 'warn', icon: 'close', text: t('buy.status.cancelled'), float: true };
     case 'pending':
       return { tone: 'info', icon: 'wait', text: t('buy.status.pending') };
     case 'alreadyOwned':
@@ -451,6 +476,26 @@ const useStyles = makeStyles((c) => ({
   statusOk: { borderWidth: 1, borderColor: OK_GREEN },
   statusWarn: { borderWidth: 1, borderColor: c.danger },
   statusText: { flex: 1, color: c.text, fontSize: 14, lineHeight: 20 },
+  floatingHolder: { height: 0, zIndex: 10, elevation: 6 },
+  floating: {
+    position: 'absolute',
+    top: 8,
+    left: 16,
+    right: 16,
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+    borderRadius: radii.control,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: c.dangerFill,
+    shadowColor: c.text,
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  floatingText: { flex: 1, color: c.onTint, fontSize: 14, lineHeight: 20, fontWeight: '600' },
   loading: { alignSelf: 'flex-start', marginVertical: 8 },
   pack: {
     backgroundColor: c.surface,
