@@ -29,6 +29,7 @@ import { shareFromPage } from '../device/link';
 import { FORM_ANSWER_IDLE, formAnswer } from '../browser/formResubmission';
 import { parseScrollMessage, restoreScrollScript, SCROLL_MEMORY_SCRIPT } from '../browser/scrollMemory';
 import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
+import { PLAIN_TEXT_THEME_SCRIPT } from '../browser/plainTextTheme';
 import { geolocationScript } from '../browser/geolocation';
 import { FILE_CAPTURE_SCRIPT, handleFileCaptureMessage } from '../browser/fileCapture';
 import { mediaCaptureScript } from '../browser/mediaCapture';
@@ -261,6 +262,8 @@ function TabWebView({
     // Where the page was scrolled, so a woken tab comes back there (incognito tabs never sleep).
     tab.incognito ? '' : SCROLL_MEMORY_SCRIPT,
     newTabActions.forceZoom ? FORCE_ZOOM_SCRIPT : '',
+    // A JSON or text file stays readable in dark theme (UI-69).
+    PLAIN_TEXT_THEME_SCRIPT,
   ].join('\n');
 
   const palette = usePalette();

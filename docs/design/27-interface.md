@@ -154,6 +154,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-68`** The slow-site line next to the address bar ("example.com opening…", "not answering yet" with Stop, "very slow" with Try again, offline) floats over the page against the bar at 90 % opacity instead of taking room, so the page doesn't jump down (bar at the top) or up (bar at the bottom) when it appears or goes. Its buttons still take every touch.
   Status: Decided by the owner (24 Nov 2026) · Enforced: In the app: src/components/BarLayout.tsx (status layer), App.tsx (barStatus)
 
+- **`UI-69`** A plain-text document (JSON, .txt, .csv, `+json` types) gets the colour scheme's own background and text colours (`Canvas` / `CanvasText`), so in dark theme it is light text on a dark page instead of white on white; HTML and XML pages are untouched.
+  Status: Decided by the owner (24 Nov 2026: a JSON page was white text on white) · Enforced: In the app: src/browser/plainTextTheme.ts, src/components/BrowserView.tsx (pageSetupScript); scripts/navigation-tests/plainTextTheme.test.ts
+
 ## Details
 
 **Icons**
