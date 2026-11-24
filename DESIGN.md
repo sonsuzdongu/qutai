@@ -19,6 +19,7 @@ Last updated: 2026-11-24
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-24:** In About, the Qutai button tour now comes before Default browser (`UI-66`).
 - **2026-11-24:** The assistant panel's "Translate" quick action is gone (`UI-65`, `NOT-5`).
 - **2026-11-24:** Android, like Chrome: a link from another app may redirect to Google Play or another app in its first load, and Google Play links the user started open Play without the question; other apps keep it (`DL-18`).
 - **2026-11-24:** Android pull to refresh is decided per touch in the patched WebView and no longer fires while scrolling inside a page, reversed chat lists included (`TABS-31`); the long-press menu no longer opens while scrolling (`TABS-32`).

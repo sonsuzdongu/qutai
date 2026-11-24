@@ -772,6 +772,10 @@ function SettingsPages({
                     .catch(() => dialog.alert(t('settings.rateUnavailable')))
                 }
               />
+              {/* The Qutai button tour, here since UI-61 (was at the end of Settings › Assistant), before Default browser (UI-66), whose hint is the section's footer. */}
+              {settings.showAssistantButton && (
+                <GroupLink icon="info" title={t('settings.assistantIntro')} chevron={false} onPress={onShowAssistantIntro} />
+              )}
               {/* The only place in the app for it since setup's step went (INTRO-30); the phone's own screen decides.
                   Not on iOS (INTRO-32): without Apple's com.apple.developer.web-browser entitlement Qutai isn't in the
                   phone's Default Browser App list, so the row would lead nowhere. Here since UI-58 (was under Search). */}
@@ -782,10 +786,6 @@ function SettingsPages({
                   summary={t('settings.defaultBrowserLead')}
                   onPress={() => openDefaultBrowserSettings().catch(() => {})}
                 />
-              )}
-              {/* The Qutai button tour, here since UI-61 (was at the end of Settings › Assistant). */}
-              {settings.showAssistantButton && (
-                <GroupLink icon="info" title={t('settings.assistantIntro')} chevron={false} onPress={onShowAssistantIntro} />
               )}
             </SettingsSection>
             <SettingsSection>

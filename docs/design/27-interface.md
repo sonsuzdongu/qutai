@@ -146,6 +146,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-65`** The assistant panel's quick actions have no "Translate" chip; the user asks for a translation in their own words (Summarize, Key points, the product question, Summarize results and Compare stay).
   Status: Decided by the owner (24 Nov 2026) · Enforced: In the app: App.tsx (pageChips)
 
+- **`UI-66`** In Settings › About the order is Rate Qutai, Show the Qutai button tour, then Default browser (Android), so the section's footer ("choose Browser app › Qutai") sits right under the row it explains.
+  Status: Decided by the owner (24 Nov 2026) · Enforced: In the app: src/components/SettingsModal.tsx (about page)
+
 ## Details
 
 **Icons**
