@@ -34,7 +34,7 @@ import { mediaCaptureScript } from '../browser/mediaCapture';
 import { playbackScript } from '../browser/playback';
 import { openExternal } from '../browser/openExternal';
 import { takeSignInLink } from './AccountLinks';
-import { parsePullState, PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
+import { PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
 import { handleUserAgentMessage, USER_AGENT_SCRIPT, useChromeUserAgent } from '../browser/userAgent';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
@@ -221,6 +221,8 @@ function TabWebView({
     playScript,
     mainFrameEarly.trim() ? `if (window.top === window) (function () {\n${mainFrameEarly}\n})();` : '',
     keptReady,
+    // Answers touches while the page is still loading (main frame only; installed once).
+    Platform.OS === 'android' ? PULL_STATE_SCRIPT : '',
   ].join('\n');
   // Runs after every page load: long-press menu, text selection, desktop viewport (Android) and text size (iOS).
   const pageSetupScript = [
@@ -259,8 +261,8 @@ function TabWebView({
   useEffect(() => {
     tab.setUserAgent(userAgent);
   }, [tab, userAgent]);
-  // Android pull to refresh: allowed only while the page says a downward drag can't scroll it.
-  const [atTop, setAtTop] = useState(true);
+  // Android pull to refresh: the patched WebView turns it off for each touch the page says would scroll
+  // (pullToRefresh.ts, RNCWebViewPull.java).
   const [refreshing, setRefreshing] = useState(false);
   // Android: the answer to the WebView's "send the form again?" question (formResubmission.ts).
   const [formResubmission, setFormResubmission] = useState(FORM_ANSWER_IDLE);
@@ -324,7 +326,7 @@ function TabWebView({
         />
       ) : (
         <PullToRefresh
-          enabled={atTop && !tab.capturing}
+          enabled={!tab.capturing}
           refreshing={refreshing}
           tint={palette.tint}
           background={palette.surface}
@@ -354,8 +356,6 @@ function TabWebView({
               if (bar !== null) return tab.noteBarScroll(bar);
               const scrolled = parseScrollMessage(e.nativeEvent.data);
               if (scrolled !== null) return tab.noteScroll(scrolled);
-              const pull = parsePullState(e.nativeEvent.data);
-              if (pull !== null) return setAtTop(pull);
               const selection = parseSelection(e.nativeEvent.data);
               if (selection !== null) return newTabActions.onSelection(tab, selection);
               const target = parseContextTarget(e.nativeEvent.data);
@@ -365,7 +365,6 @@ function TabWebView({
               tab.handleLoadStart(e.nativeEvent.url, e.nativeEvent.loading);
               // A style tried but not kept belongs to the page it was approved on.
               pageStyleState.pageLoaded(tab.id);
-              setAtTop(true);
             }}
             // The WebView's own progress reaching 100 % also ends a load: a page's soft navigation (react.dev's
             // client-side routing) goes 10 % → 100 % on Android with no load end after its start.

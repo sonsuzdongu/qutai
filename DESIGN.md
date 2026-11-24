@@ -21,6 +21,7 @@ Newest first, one line per change to the design. What happened before 19 Nov 202
 
 - **2026-11-24:** The assistant panel's "Translate" quick action is gone (`UI-65`, `NOT-5`).
 - **2026-11-24:** Android, like Chrome: a link from another app may redirect to Google Play or another app in its first load, and Google Play links the user started open Play without the question; other apps keep it (`DL-18`).
+- **2026-11-24:** Android pull to refresh is decided per touch in the patched WebView and no longer fires while scrolling inside a page, reversed chat lists included (`TABS-31`); the long-press menu no longer opens while scrolling (`TABS-32`).
 - **2026-11-24:** "Open Qutai's app settings" stays under Appearance › Media after all; the move to About is withdrawn (`UI-64`).
 - **2026-11-24:** Every Buy credits message is a floating notice in its tone's colour at 90 % opacity (`UI-62`); the Qutai button tour also closes the assistant panel (`UI-61`).
 - **2026-11-24:** Buy credits: no waiting-purchases count, "Check for missing credits" asks about all kept purchases at once without waits (`BUY-36`); packs show whole credits in smaller text (`UI-63`).

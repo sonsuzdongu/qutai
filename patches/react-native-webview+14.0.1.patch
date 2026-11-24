@@ -52,7 +52,7 @@ index 1b5c4c9..c86cb6d 100644
      public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
  
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
-index 80c6803..4d04414 100644
+index 80c6803..a2299d3 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 @@ -38,15 +38,19 @@ import com.facebook.react.uimanager.events.Event;
@@ -75,8 +75,19 @@ index 80c6803..4d04414 100644
  
  public class RNCWebView extends WebView implements LifecycleEventListener {
      protected @Nullable
-@@ -124,6 +128,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -122,8 +126,22 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+         cleanupCallbacksAndDestroy();
+     }
  
++    // Qutai patch: the app's pull to refresh, decided per touch with the page's answer (RNCWebViewPull).
++    final RNCWebViewPull pull = new RNCWebViewPull(this);
++
++    @Override
++    public boolean dispatchTouchEvent(MotionEvent event) {
++        pull.onTouch(event);
++        return super.dispatchTouchEvent(event);
++    }
++
      @Override
      public boolean onTouchEvent(MotionEvent event) {
 +        // Qutai patch: when the user last touched the page, so a download that follows a tap counts as theirs.
@@ -87,7 +98,7 @@ index 80c6803..4d04414 100644
          if (this.nestedScrollEnabled) {
              requestDisallowInterceptTouchEvent(true);
          }
-@@ -224,6 +233,188 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -224,6 +242,188 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -276,18 +287,20 @@ index 80c6803..4d04414 100644
      WebChromeClient mWebChromeClient;
      @Override
      public void setWebChromeClient(WebChromeClient client) {
-@@ -253,6 +444,10 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -253,6 +453,12 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
              this.bridgeListener = new WebViewCompat.WebMessageListener() {
                @Override
                public void onPostMessage(@NonNull WebView view, @NonNull WebMessageCompat message, @NonNull Uri sourceOrigin, boolean isMainFrame, @NonNull JavaScriptReplyProxy replyProxy) {
 +                // Qutai patch: playback state also goes straight to the app's media service (works in the background).
 +                // This is the bridge on every WebView that supports WEB_MESSAGE_LISTENER (UI thread), so the report
 +                // must be here too, not only in the addJavascriptInterface fallback below.
++                // Qutai patch: pull to refresh answers are handled here at once and never reach the app.
++                if (pull.handleMessage(message.getData(), isMainFrame)) return;
 +                if (isMainFrame) RNCWebViewPlayback.report(RNCWebView.this, message.getData());
                  RNCWebView.this.onMessage(message.getData(), sourceOrigin.toString());
                }
              };
-@@ -403,6 +598,67 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -403,6 +609,67 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -355,7 +368,7 @@ index 80c6803..4d04414 100644
      protected void dispatchEvent(WebView webView, Event event) {
          ThemedReactContext reactContext = getThemedReactContext();
          int reactTag = RNCWebViewWrapper.getReactTagFromWebView(webView);
-@@ -419,7 +675,17 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -419,7 +686,17 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          if (mWebChromeClient != null) {
              mWebChromeClient.onHideCustomView();
          }
@@ -373,13 +386,15 @@ index 80c6803..4d04414 100644
      }
  
    public ThemedReactContext getThemedReactContext() {
-@@ -446,7 +712,11 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -446,7 +723,13 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          public void postMessage(String message) {
              if (mWebView.getMessagingEnabled()) {
                  // Post to main thread because `mWebView.getUrl()` requires to be executed on main.
 -                mWebView.post(() -> mWebView.onMessage(message, mWebView.getUrl()));
 +                mWebView.post(() -> {
 +                    // Qutai patch: playback state also goes straight to the app's media service (works in the background).
++                    // Qutai patch: pull to refresh answers are handled here at once and never reach the app.
++                    if (mWebView.pull.handleMessage(message, true)) return;
 +                    RNCWebViewPlayback.report(mWebView, message);
 +                    mWebView.onMessage(message, mWebView.getUrl());
 +                });
@@ -476,7 +491,7 @@ index 0000000..95b43f2
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
-index 209b855..9d625c6 100644
+index 209b855..f45b030 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 @@ -1,6 +1,7 @@
@@ -559,15 +574,18 @@ index 209b855..9d625c6 100644
  
        ((RNCWebView) webView).dispatchEvent(
          webView,
-@@ -78,6 +129,7 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -78,14 +129,26 @@ public class RNCWebViewClient extends WebViewClient {
      public void onPageStarted(WebView webView, String url, Bitmap favicon) {
        super.onPageStarted(webView, url, favicon);
        mLastLoadFailed = false;
 +      noteContentTopPage(webView, url, true);
  
        RNCWebView reactWebView = (RNCWebView) webView;
++      // Qutai patch: the new page's script hasn't answered for pull to refresh yet.
++      reactWebView.pull.pageStarted();
        reactWebView.callInjectedJavaScriptBeforeContentLoaded();
-@@ -86,6 +138,15 @@ public class RNCWebViewClient extends WebViewClient {
+     }
+ 
      @Override
      public boolean shouldOverrideUrlLoading(WebView view, String url) {
          final RNCWebView rncWebView = (RNCWebView) view;
@@ -583,7 +601,7 @@ index 209b855..9d625c6 100644
          final boolean isJsDebugging = rncWebView.getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
  
          if (!isJsDebugging && rncWebView.mMessagingJSModule != null) {
-@@ -105,7 +166,9 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -105,7 +168,9 @@ public class RNCWebViewClient extends WebViewClient {
                          if (SystemClock.elapsedRealtime() - startTime > SHOULD_OVERRIDE_URL_LOADING_TIMEOUT) {
                              FLog.w(TAG, "Did not receive response to shouldOverrideUrlLoading in time, defaulting to allow loading.");
                              RNCWebViewModuleImpl.shouldOverrideUrlLoadingLock.removeLock(lockIdentifier);
@@ -594,7 +612,7 @@ index 209b855..9d625c6 100644
                          }
                          lockObject.wait(SHOULD_OVERRIDE_URL_LOADING_TIMEOUT);
                      }
-@@ -113,7 +176,7 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -113,7 +178,7 @@ public class RNCWebViewClient extends WebViewClient {
              } catch (InterruptedException e) {
                  FLog.e(TAG, "shouldOverrideUrlLoading was interrupted while waiting for result.", e);
                  RNCWebViewModuleImpl.shouldOverrideUrlLoadingLock.removeLock(lockIdentifier);
@@ -603,7 +621,7 @@ index 209b855..9d625c6 100644
              }
  
              final boolean shouldOverride = lockObject.get() == RNCWebViewModuleImpl.ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState.SHOULD_OVERRIDE;
-@@ -132,6 +195,15 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -132,6 +197,15 @@ public class RNCWebViewClient extends WebViewClient {
          }
      }
  
@@ -619,7 +637,7 @@ index 209b855..9d625c6 100644
      @Override
      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
          final String url = request.getUrl().toString();
-@@ -156,6 +228,15 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -156,6 +230,15 @@ public class RNCWebViewClient extends WebViewClient {
          String topWindowUrl = webView.getUrl();
          String failingUrl = error.getUrl();
  
@@ -635,7 +653,7 @@ index 209b855..9d625c6 100644
          // Cancel request after obtaining top-level URL.
          // If request is cancelled before obtaining top-level URL, undesired behavior may occur.
          // Undesired behavior: Return value of WebView.getUrl() may be the current URL instead of the failing URL.
-@@ -191,6 +272,13 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -191,6 +274,13 @@ public class RNCWebViewClient extends WebViewClient {
          }
  
          description = descriptionPrefix + description;
@@ -649,7 +667,7 @@ index 209b855..9d625c6 100644
  
        if (!topWindowUrl.equalsIgnoreCase(failingUrl)) {
          // If error is not due to top-level navigation, then do not call onReceivedError()
-@@ -248,6 +336,17 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -248,6 +338,17 @@ public class RNCWebViewClient extends WebViewClient {
          UIManagerHelper.getEventDispatcherForReactTag((ReactContext) webView.getContext(), reactTag).dispatchEvent(new TopLoadingErrorEvent(reactTag, eventData));
      }
  
@@ -1372,6 +1390,116 @@ index 0000000..694636a
 +        if (name == null) return CookieManager.getInstance();
 +        Profile profile = ProfileStore.getInstance().getProfile(name);
 +        return profile != null ? profile.getCookieManager() : null;
++    }
++}
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPull.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPull.java
+new file mode 100644
+index 0000000..9a63b1a
+--- /dev/null
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewPull.java
+@@ -0,0 +1,104 @@
++package com.reactnativecommunity.webview;
++
++import android.view.MotionEvent;
++import android.view.ViewParent;
++
++import androidx.annotation.Nullable;
++import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
++
++import org.json.JSONObject;
++
++/**
++ * Qutai patch: pull to refresh decided per touch (the app's src/browser/pullToRefresh.ts).
++ *
++ * The app wraps the WebView in a SwipeRefreshLayout. That layout only knows whether its own child can scroll, not
++ * whether the page or a scroll area inside it can, and React Native state arrives too late to switch it per touch.
++ * So the page's script answers each touchstart with {"__qutaiPull":true,"touch":true,"atTop":...}, which reaches
++ * this class on the UI thread through the message bridge, and the WebView turns the layout off for that touch
++ * unless the answer is "refresh is fine". The layout records the touch's start before the WebView sees it (its
++ * intercept runs first), so turning it off and on again within the touch keeps its distance right.
++ *
++ * Main thread only.
++ */
++final class RNCWebViewPull {
++    static final String PREFIX = "{\"__qutaiPull\":true";
++
++    private final RNCWebView view;
++    /** This page's script reports touches; until it does (a page still loading), only the page's own scroll counts. */
++    private boolean pageAnswers = false;
++    /** A finger is down. */
++    private boolean touching = false;
++    /** The layout this class turned off for the current touch, to turn on again when it ends. */
++    private @Nullable SwipeRefreshLayout turnedOff = null;
++
++    RNCWebViewPull(RNCWebView view) {
++        this.view = view;
++    }
++
++    /** A new page: its script hasn't answered yet. */
++    void pageStarted() {
++        pageAnswers = false;
++    }
++
++    /** Called with every touch event before the WebView handles it. */
++    void onTouch(MotionEvent event) {
++        switch (event.getActionMasked()) {
++            case MotionEvent.ACTION_DOWN:
++                touching = true;
++                // Off until the page answers for this touch.
++                if (pageAnswers) block(true);
++                break;
++            case MotionEvent.ACTION_MOVE:
++                // The page itself scrolled down during the drag.
++                if (view.canScrollVertically(-1)) block(true);
++                break;
++            case MotionEvent.ACTION_UP:
++            case MotionEvent.ACTION_CANCEL:
++                touching = false;
++                block(false);
++                break;
++            default:
++                break;
++        }
++    }
++
++    /** True when the message was a pull report (handled here, never passed to the app). */
++    boolean handleMessage(String message, boolean isMainFrame) {
++        if (message == null || !message.startsWith(PREFIX)) return false;
++        if (!isMainFrame) return true;
++        try {
++            JSONObject json = new JSONObject(message);
++            pageAnswers = true;
++            if (!touching) return true;
++            if (json.optBoolean("took")) {
++                block(true);
++            } else if (json.optBoolean("touch")) {
++                block(!json.optBoolean("atTop") || view.canScrollVertically(-1));
++            }
++        } catch (Exception ignored) {
++            // Not a well-formed report: nothing changes.
++        }
++        return true;
++    }
++
++    private void block(boolean off) {
++        if (off) {
++            if (turnedOff != null) return;
++            SwipeRefreshLayout layout = findLayout();
++            // Turning a refreshing layout off would hide its spinner; it ignores drags while refreshing anyway.
++            if (layout == null || !layout.isEnabled() || layout.isRefreshing()) return;
++            layout.setEnabled(false);
++            turnedOff = layout;
++        } else if (turnedOff != null) {
++            turnedOff.setEnabled(true);
++            turnedOff = null;
++        }
++    }
++
++    private @Nullable SwipeRefreshLayout findLayout() {
++        for (ViewParent p = view.getParent(); p != null; p = p.getParent()) {
++            if (p instanceof SwipeRefreshLayout) return (SwipeRefreshLayout) p;
++        }
++        return null;
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopContentBlockedEvent.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopContentBlockedEvent.kt
