@@ -2311,6 +2311,7 @@ function BrowserApp({
                   textZoom: settings.textZoom,
                   forceZoom: settings.forceZoom,
                   backgroundPlayback: settings.backgroundPlayback,
+                  autoplaySound: settings.autoplaySound,
                   onNotice: toast.show,
                   onOpenedInBackground: (opened) =>
                     toast.show(t('nav.openedBehind'), {

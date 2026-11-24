@@ -1860,6 +1860,8 @@ export const id: Record<keyof typeof en, string> = {
   'settings.forceZoom': 'Paksa zoom',
   'settings.forceZoomHint': 'Cubit untuk zoom di setiap halaman, bahkan jika situs menonaktifkan zoom.',
   'settings.mediaSection': 'Suara dan video',
+  'settings.autoplaySound': 'Izinkan situs memutar video dengan suara secara otomatis',
+  'settings.autoplaySoundHint': 'Jika nonaktif, halaman hanya dapat memutar suara setelah Anda menyentuhnya; video tanpa suara tetap diputar sendiri.',
   'settings.backgroundPlayback': 'Tetap memutar di latar belakang',
   'settings.backgroundPlaybackHint': 'Musik dan podcast yang Anda mulai di halaman tetap diputar saat Anda meninggalkan Qutai atau mengunci layar, dengan kontrol di layar kunci. Video tetap berjalan sebagai suara saja (picture-in-picture mempertahankan gambarnya); tab Samaran menjeda video. Jika nonaktif, pemutaran dijeda saat Anda meninggalkan Qutai.',
   'settings.backgroundPlaybackHintAndroid': 'Suara yang Anda mulai di halaman tetap diputar saat Anda meninggalkan Qutai atau mengunci layar, dengan kontrol di notifikasi, layar kunci, dan headphone. Jika nonaktif, pemutaran dijeda saat Anda meninggalkan Qutai.',

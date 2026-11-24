@@ -33,6 +33,7 @@ import { geolocationScript } from '../browser/geolocation';
 import { FILE_CAPTURE_SCRIPT, handleFileCaptureMessage } from '../browser/fileCapture';
 import { mediaCaptureScript } from '../browser/mediaCapture';
 import { playbackScript } from '../browser/playback';
+import { autoplayGuardScript } from '../browser/autoplay';
 import { openExternal } from '../browser/openExternal';
 import { takeSignInLink } from './AccountLinks';
 import { PULL_STATE_SCRIPT } from '../browser/pullToRefresh';
@@ -98,6 +99,8 @@ export type TabActions = {
   forceZoom: boolean;
   /** "Keep playing in the background" (iOS: videos paused by WebKit on leaving the app play on as sound). */
   backgroundPlayback: boolean;
+  /** "Let sites play videos with sound automatically": off, the autoplay guard holds sound back (autoplay.ts). */
+  autoplaySound: boolean;
   /** Short notice for the user, e.g. when no app can open a link. */
   onNotice: (message: string) => void;
   /**
@@ -213,6 +216,9 @@ function TabWebView({
   );
   // Qutai's page script (browser/agentScript.ts), main frame only: installed before the page's own scripts (iOS; on
   // Android as early as the WebView runs this), under the tab's secret name; commands then send only the call.
+  // Off ("Let sites play videos with sound automatically"): sound waits for the user's first touch, every frame at
+  // document start; before the playback script, which keeps the real play() for Qutai's own controls.
+  const autoplayScript = newTabActions.autoplaySound ? '' : autoplayGuardScript(tab.playback.nonce);
   const agentScript = tab.agentInstallScript;
   // navigator.share for pages (Android's WebView has none; iOS keeps WebKit's own): main frame, at document start.
   const shareScript = webShareScript(tab.messageNonce);
@@ -222,6 +228,7 @@ function TabWebView({
     videoScript,
     geoScript,
     mediaScript,
+    autoplayScript,
     playScript,
     mainFrameEarly.trim() ? `if (window.top === window) (function () {\n${mainFrameEarly}\n})();` : '',
     keptReady,
@@ -237,6 +244,7 @@ function TabWebView({
     Platform.OS === 'android' ? videoScript : '',
     Platform.OS === 'android' ? geoScript : '',
     Platform.OS === 'android' ? mediaScript : '',
+    Platform.OS === 'android' ? autoplayScript : '',
     Platform.OS === 'android' ? playScript : '',
     Platform.OS === 'android' ? FILE_CAPTURE_SCRIPT : '',
     Platform.OS === 'android' ? BLOB_KEEP_SCRIPT : '',
@@ -543,10 +551,10 @@ function TabWebView({
             // Android (patched react-native-webview): the playback script's reports also reach the background playback
             // service natively, which keeps working while React Native is paused. "private": no title or site shown.
             mediaPlayback={Platform.OS === 'android' ? `${tab.playback.nonce}${tab.incognito ? ' private' : ''}` : undefined}
-            // Android: a page that was allowed to capture may play its own preview without another tap (the
-            // user's tap is long gone after the prompt). iOS sets this only when the WebView is created; WebKit
-            // already lets a capturing page play its stream.
-            mediaPlaybackRequiresUserAction={Platform.OS === 'android' ? !tab.media.playbackUnlocked : undefined}
+            // Pages may start media without a tap; whether it may have sound is the autoplay setting's, enforced by
+            // the autoplay guard (autoplay.ts), which never holds back a camera preview. iOS reads this only when the
+            // WebView is created.
+            mediaPlaybackRequiresUserAction={false}
             injectedJavaScript={pageSetupScript}
             injectedJavaScriptBeforeContentLoaded={earlyScript}
             // iOS: the geolocation script must reach frames too, so they can't use WebKit's own location prompt.
@@ -555,7 +563,7 @@ function TabWebView({
             // scripts (WebViewCompat.addDocumentStartJavaScript); the early and after-load scripts stay as fallbacks
             // for WebViews without that feature. iOS already runs the early script at document start.
             // "Block video ads" goes there too (every frame: the WebView adds it to frames, and it runs only on its hosts).
-            documentStartScript={Platform.OS === 'android' ? [agentScript, shareScript, videoScript].filter(Boolean).join('\n') : undefined}
+            documentStartScript={Platform.OS === 'android' ? [agentScript, shareScript, autoplayScript, videoScript].filter(Boolean).join('\n') : undefined}
             // Android: native geolocation would grant every site once Qutai has the permission; the script handles it.
             geolocationEnabled={false}
             // Camera and microphone (patched react-native-webview): refused unless this names the requesting

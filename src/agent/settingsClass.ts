@@ -26,6 +26,7 @@ export const SETTINGS_TOOL_CLASSES = {
   reader_font: 'preference',
   reader_easy_reading: 'preference',
   background_playback: 'preference',
+  autoplay_sound: 'preference',
   picture_in_picture: 'preference',
   block_ads: 'protectionOn',
   hide_cookie_banners: 'protectionOn',

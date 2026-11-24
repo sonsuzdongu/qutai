@@ -798,7 +798,7 @@ export const TOOLS: ToolDefinition[] = [
       'one or more changes, applied at once. Keys: theme (system, light, dark), address_bar_position ' +
       '(top, bottom), text_size (percent 50–200, steps of 10, 100 = normal), search_engine (google, duckduckgo, bing, ' +
       'yandex), haptics, force_zoom, show_assistant_button, reader_theme (auto, ' +
-      'light, dark, sepia), reader_font (serif, sans), reader_easy_reading, background_playback, picture_in_picture ' +
+      'light, dark, sepia), reader_font (serif, sans), reader_easy_reading, background_playback, autoplay_sound (sites may play videos with sound before you touch the page), picture_in_picture ' +
       '(Android); protections, on only: block_ads, hide_cookie_banners, block_video_ads, ' +
       'block_third_party_cookies, https_only; ' +
       'search_suggestions can only be turned off. For "bigger" or ' +

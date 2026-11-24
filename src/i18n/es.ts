@@ -1856,6 +1856,8 @@ export const es: Record<keyof typeof en, string> = {
   'settings.forceZoom': 'Forzar zoom',
   'settings.forceZoomHint': 'Pellizca para hacer zoom en cualquier página, incluso donde el sitio lo desactiva.',
   'settings.mediaSection': 'Sonido y video',
+  'settings.autoplaySound': 'Permitir que los sitios reproduzcan videos con sonido automáticamente',
+  'settings.autoplaySoundHint': 'Si está desactivado, una página solo puede reproducir sonido después de que la toque; los videos sin sonido siguen reproduciéndose solos.',
   'settings.backgroundPlayback': 'Seguir reproduciendo en segundo plano',
   'settings.backgroundPlaybackHint': 'La música y los podcasts que inicias en una página continúan cuando sales de Qutai o bloqueas la pantalla, con controles en la pantalla de bloqueo. Un video continúa solo con sonido (el modo pantalla en pantalla mantiene la imagen); las pestañas de incógnito pausan los videos. Si está desactivado, la reproducción se pausa al salir de Qutai.',
   'settings.backgroundPlaybackHintAndroid': 'El sonido que inicias en una página continúa cuando sales de Qutai o bloqueas la pantalla, con una notificación y controles en la pantalla de bloqueo y los auriculares. Si está desactivado, la reproducción se pausa al salir de Qutai.',

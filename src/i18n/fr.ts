@@ -1860,6 +1860,8 @@ export const fr: Record<keyof typeof en, string> = {
   'settings.forceZoom': 'Forcer le zoom',
   'settings.forceZoomHint': 'Pincez pour zoomer sur toutes les pages, même là où le site désactive le zoom.',
   'settings.mediaSection': 'Son et vidéo',
+  'settings.autoplaySound': 'Autoriser les sites à lire automatiquement des vidéos avec le son',
+  'settings.autoplaySoundHint': 'Désactivé, une page ne peut lancer du son qu’après que vous l’avez touchée ; les vidéos muettes se lancent toujours seules.',
   'settings.backgroundPlayback': 'Continuer la lecture en arrière-plan',
   'settings.backgroundPlaybackHint': 'La musique et les podcasts lancés sur une page continuent quand vous quittez Qutai ou verrouillez l’écran, avec des commandes sur l’écran de verrouillage. Une vidéo continue en son seul (l’image dans l’image garde l’image) ; les onglets privés mettent les vidéos en pause. Si cette option est désactivée, la lecture se met en pause quand vous quittez Qutai.',
   'settings.backgroundPlaybackHintAndroid': 'Le son lancé sur une page continue quand vous quittez Qutai ou verrouillez l’écran, avec une notification et des commandes sur l’écran de verrouillage et le casque. Si cette option est désactivée, la lecture se met en pause quand vous quittez Qutai.',

@@ -89,6 +89,8 @@ export type Settings = {
   forceZoom: boolean;
   /** Sound a page plays keeps playing when Qutai is in the background or the screen locks. */
   backgroundPlayback: boolean;
+  /** Sites may start media with sound before the user touches the page (off: muted autoplay only, browser/autoplay.ts). */
+  autoplaySound: boolean;
   /** Android: a playing video goes into picture-in-picture when the user leaves Qutai (modules/qutai-media). */
   pictureInPicture: boolean;
   /**
@@ -171,6 +173,7 @@ export const DEFAULT_SETTINGS: Settings = {
   showAssistantButton: true,
   forceZoom: false,
   backgroundPlayback: true,
+  autoplaySound: false,
   pictureInPicture: true,
   backgroundTasks: false,
   notifyTaskDone: true,
@@ -217,6 +220,7 @@ const KEYS = {
   showAssistantButton: 'show_assistant_button',
   forceZoom: 'force_zoom',
   backgroundPlayback: 'background_playback',
+  autoplaySound: 'autoplay_sound',
   pictureInPicture: 'picture_in_picture',
   backgroundTasks: 'background_tasks',
   notifyTaskDone: 'notify_task_done',
@@ -317,6 +321,7 @@ export async function loadSettings(): Promise<Settings> {
     showAssistantButton,
     forceZoom,
     backgroundPlayback,
+    autoplaySound,
     pictureInPicture,
     backgroundTasks,
     notifyTaskDone,
@@ -365,6 +370,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.showAssistantButton),
     get(KEYS.forceZoom),
     get(KEYS.backgroundPlayback),
+    get(KEYS.autoplaySound),
     get(KEYS.pictureInPicture),
     get(KEYS.backgroundTasks),
     get(KEYS.notifyTaskDone),
@@ -424,6 +430,7 @@ export async function loadSettings(): Promise<Settings> {
     showAssistantButton: showAssistantButton !== 'false',
     forceZoom: forceZoom === 'true',
     backgroundPlayback: backgroundPlayback !== 'false',
+    autoplaySound: autoplaySound === 'true',
     pictureInPicture: pictureInPicture !== 'false',
     backgroundTasks: backgroundTasks === 'true',
     notifyTaskDone: notifyTaskDone !== 'false',
@@ -546,6 +553,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.showAssistantButton, String(settings.showAssistantButton)),
     set(KEYS.forceZoom, String(settings.forceZoom)),
     set(KEYS.backgroundPlayback, String(settings.backgroundPlayback)),
+    set(KEYS.autoplaySound, String(settings.autoplaySound)),
     set(KEYS.pictureInPicture, String(settings.pictureInPicture)),
     set(KEYS.backgroundTasks, String(settings.backgroundTasks)),
     set(KEYS.notifyTaskDone, String(settings.notifyTaskDone)),

@@ -1859,6 +1859,8 @@ export const ko: Record<keyof typeof en, string> = {
   'settings.forceZoom': '강제 확대/축소',
   'settings.forceZoomHint': '사이트가 확대/축소를 막아 두었더라도 모든 페이지에서 손가락으로 확대/축소할 수 있습니다.',
   'settings.mediaSection': '소리 및 동영상',
+  'settings.autoplaySound': '사이트에서 동영상을 소리와 함께 자동 재생하도록 허용',
+  'settings.autoplaySoundHint': '끄면 페이지를 터치한 후에만 소리를 재생할 수 있습니다. 소리 없는 동영상은 계속 자동으로 재생됩니다.',
   'settings.backgroundPlayback': '백그라운드에서 계속 재생',
   'settings.backgroundPlaybackHint': '페이지에서 시작한 음악과 팟캐스트가 Qutai를 나가거나 화면을 잠가도 계속 재생되며, 잠금 화면에 컨트롤이 표시됩니다. 동영상은 소리만 계속 재생되며(PIP 모드에서는 화면도 유지), 시크릿 탭에서는 동영상이 일시중지됩니다. 끄면 Qutai를 나갈 때 재생이 일시중지됩니다.',
   'settings.backgroundPlaybackHintAndroid': '페이지에서 시작한 소리가 Qutai를 나가거나 화면을 잠가도 계속 재생되며, 알림, 잠금 화면, 헤드폰으로 제어할 수 있습니다. 끄면 Qutai를 나갈 때 재생이 일시중지됩니다.',

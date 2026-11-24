@@ -112,6 +112,12 @@ const CHANGEABLE = {
     place: inSettings('settings.appearance', 'settings.mediaSection'),
     kind: 'boolean',
   },
+  autoplay_sound: {
+    field: 'autoplaySound',
+    label: 'settings.autoplaySound',
+    place: inSettings('settings.appearance', 'settings.mediaSection'),
+    kind: 'boolean',
+  },
   picture_in_picture: {
     field: 'pictureInPicture',
     label: 'settings.pictureInPicture',

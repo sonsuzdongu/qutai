@@ -30,6 +30,7 @@ const WORDS: Record<string, string[]> = {
   reader_font: ['reader', 'font', 'serif', 'sans', 'typeface', 'okuma', 'yazı tipi', 'okuyucu'],
   reader_easy_reading: ['reader', 'easy', 'easier', 'okuma', 'kolay', 'okuyucu'],
   background_playback: ['background', 'playback', 'arka plan'],
+  autoplay_sound: ['autoplay', 'auto-play', 'sound', 'otomatik oynat', 'kendiliğinden', 'sesli', 'ses'],
   picture_in_picture: ['picture', 'pip', 'resim içinde', 'küçük pencere'],
 };
 

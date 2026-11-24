@@ -1849,6 +1849,8 @@ export const de: Record<keyof typeof en, string> = {
   'settings.forceZoom': 'Zoomen erzwingen',
   'settings.forceZoomHint': 'Auf jeder Seite mit zwei Fingern zoomen, auch wo die Website das Zoomen deaktiviert.',
   'settings.mediaSection': 'Ton und Video',
+  'settings.autoplaySound': 'Websites dürfen Videos automatisch mit Ton abspielen',
+  'settings.autoplaySoundHint': 'Wenn aus, kann eine Seite erst Ton abspielen, nachdem Sie sie berührt haben; stumme Videos laufen weiterhin von selbst.',
   'settings.backgroundPlayback': 'Im Hintergrund weiterspielen',
   'settings.backgroundPlaybackHint': 'Musik und Podcasts, die Sie auf einer Seite starten, laufen weiter, wenn Sie Qutai verlassen oder den Bildschirm sperren, mit Steuerung auf dem Sperrbildschirm. Ein Video läuft nur als Ton weiter (Bild-im-Bild behält das Bild); in Inkognito-Tabs werden Videos pausiert. Wenn deaktiviert, wird die Wiedergabe beim Verlassen von Qutai pausiert.',
   'settings.backgroundPlaybackHintAndroid': 'Ton, den Sie auf einer Seite starten, läuft weiter, wenn Sie Qutai verlassen oder den Bildschirm sperren, mit Benachrichtigung sowie Steuerung auf dem Sperrbildschirm und per Kopfhörer. Wenn deaktiviert, wird die Wiedergabe beim Verlassen von Qutai pausiert.',

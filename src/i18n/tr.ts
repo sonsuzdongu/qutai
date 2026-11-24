@@ -1855,6 +1855,8 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.forceZoom': 'Yakınlaştırmayı zorla aç',
   'settings.forceZoomHint': 'Site kapatmış olsa bile her sayfada iki parmakla yakınlaştırın.',
   'settings.mediaSection': 'Ses ve video',
+  'settings.autoplaySound': 'Sitelerin videoları sesli olarak kendiliğinden oynatmasına izin ver',
+  'settings.autoplaySoundHint': 'Kapalıyken bir sayfa ancak siz ona dokunduktan sonra ses çalabilir; sessiz videolar yine kendiliğinden oynar.',
   'settings.backgroundPlayback': 'Arka planda çalmaya devam et',
   'settings.backgroundPlaybackHint': 'Bir sayfada başlattığınız müzik ve podcast’ler Qutai’dan çıkınca veya ekranı kilitleyince sürer; kilit ekranında denetimleri olur. Videolar yalnızca ses olarak sürer (resim içinde resim görüntüyü de korur); gizli sekmelerde videolar duraklar. Kapalıyken Qutai’dan çıkınca çalma duraklar.',
   'settings.backgroundPlaybackHintAndroid': 'Bir sayfada başlattığınız ses Qutai’dan çıkınca veya ekranı kilitleyince sürer; bildirimden, kilit ekranından ve kulaklıktan denetlenir. Kapalıyken Qutai’dan çıkınca çalma duraklar.',

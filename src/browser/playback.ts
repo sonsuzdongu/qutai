@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import type { ComponentRef } from 'react';
 import type { WebView } from 'react-native-webview';
 import { newNonce } from '../utils/ids';
+import { realPlayKey } from './autoplay';
 
 /**
  * Media playing in web pages: which tab is audible (tab switcher speaker, tabs that must not sleep), and the
@@ -89,7 +90,10 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
   var setRepeat = window.setInterval, clearRepeat = window.clearInterval;
   var now = Date.now;
   var proto = ME.prototype;
-  var realPlay = proto.play, realPause = proto.pause;
+  // The page's play() goes through the autoplay guard when it is there (autoplay.ts); Qutai's own commands (lock
+  // screen, notification, PiP window) use the real one the guard keeps under this tab's name.
+  var pagePlay = proto.play;
+  var realPlay = window[${JSON.stringify(realPlayKey(nonce))}] || pagePlay, realPause = proto.pause;
   function getter(target, name) { var d = target && Object.getOwnPropertyDescriptor(target, name); return d && d.get; }
   var gPaused = getter(proto, 'paused'), gEnded = getter(proto, 'ended'), gMuted = getter(proto, 'muted');
   var gVolume = getter(proto, 'volume'), gReady = getter(proto, 'readyState'), gDuration = getter(proto, 'duration');
@@ -135,7 +139,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
   }
   try {
     Object.defineProperty(proto, 'play', {
-      value: function play() { track(this); schedule(); return realPlay.apply(this, arguments); },
+      value: function play() { track(this); schedule(); return pagePlay.apply(this, arguments); },
       writable: true, configurable: true,
     });
   } catch (e) {}

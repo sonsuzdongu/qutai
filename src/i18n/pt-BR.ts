@@ -1861,6 +1861,8 @@ export const ptBR: Record<keyof typeof en, string> = {
   'settings.forceZoom': 'Forçar zoom',
   'settings.forceZoomHint': 'Use o gesto de pinça para dar zoom em qualquer página, mesmo onde o site desativa o zoom.',
   'settings.mediaSection': 'Som e vídeo',
+  'settings.autoplaySound': 'Permitir que sites reproduzam vídeos com som automaticamente',
+  'settings.autoplaySoundHint': 'Desativado, uma página só pode tocar som depois que você tocar nela; vídeos sem som continuam tocando sozinhos.',
   'settings.backgroundPlayback': 'Continuar tocando em segundo plano',
   'settings.backgroundPlaybackHint': 'Músicas e podcasts que você inicia em uma página continuam quando você sai do Qutai ou bloqueia a tela, com controles na tela de bloqueio. Um vídeo continua só com o som (o picture-in-picture mantém a imagem); guias anônimas pausam os vídeos. Quando desativado, a reprodução pausa quando você sai do Qutai.',
   'settings.backgroundPlaybackHintAndroid': 'O som que você inicia em uma página continua quando você sai do Qutai ou bloqueia a tela, com notificação e controles na tela de bloqueio e nos fones de ouvido. Quando desativado, a reprodução pausa quando você sai do Qutai.',

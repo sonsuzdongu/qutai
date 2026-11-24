@@ -1861,6 +1861,8 @@ export const ja: Record<keyof typeof en, string> = {
   'settings.forceZoom': 'ズームを強制',
   'settings.forceZoomHint': 'サイトがズームを無効にしている場合でも、すべてのページでピンチ操作でズームできます。',
   'settings.mediaSection': '音声と動画',
+  'settings.autoplaySound': 'サイトが動画を音声付きで自動再生することを許可',
+  'settings.autoplaySoundHint': 'オフの場合、ページはタップした後にのみ音声を再生できます。音声なしの動画は引き続き自動で再生されます。',
   'settings.backgroundPlayback': 'バックグラウンドで再生を続ける',
   'settings.backgroundPlaybackHint': 'ページで再生を始めた音楽やポッドキャストは、Qutai から離れたり画面をロックしたりしても続き、ロック画面で操作できます。動画は音声のみで続きます（ピクチャー イン ピクチャーなら映像も続きます）。シークレット タブでは動画は一時停止します。オフにすると、Qutai から離れたときに再生が一時停止します。',
   'settings.backgroundPlaybackHintAndroid': 'ページで再生を始めた音声は、Qutai から離れたり画面をロックしたりしても続き、通知、ロック画面、ヘッドフォンで操作できます。オフにすると、Qutai から離れたときに再生が一時停止します。',

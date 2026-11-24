@@ -1852,6 +1852,8 @@ export const en = {
   'settings.forceZoom': 'Force zoom',
   'settings.forceZoomHint': 'Pinch to zoom on every page, even where the site turns zooming off.',
   'settings.mediaSection': 'Sound and video',
+  'settings.autoplaySound': 'Let sites play videos with sound automatically',
+  'settings.autoplaySoundHint': 'When off, a page can start sound only after you touch it; silent videos still play by themselves.',
   'settings.backgroundPlayback': 'Keep playing in the background',
   'settings.backgroundPlaybackHint': 'Music and podcasts you start on a page go on when you leave Qutai or lock the screen, with controls on the lock screen. A video goes on as sound only (picture-in-picture keeps the picture); incognito tabs pause videos. When off, playback pauses when you leave Qutai.',
   'settings.backgroundPlaybackHintAndroid': 'Sound you start on a page goes on when you leave Qutai or lock the screen, with a notification, lock screen and headphone controls. When off, playback pauses when you leave Qutai.',

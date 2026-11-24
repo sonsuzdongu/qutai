@@ -698,6 +698,12 @@ function SettingsPages({
                   onPress={openSettingsOrExplain}
                 />
               )}
+              <GroupSwitch
+                title={t('settings.autoplaySound')}
+                hint={t('settings.autoplaySoundHint')}
+                value={settings.autoplaySound}
+                onChange={(autoplaySound) => set({ autoplaySound })}
+              />
               {Platform.OS === 'android' && (
                 <GroupSwitch
                   title={t('settings.pictureInPicture')}
