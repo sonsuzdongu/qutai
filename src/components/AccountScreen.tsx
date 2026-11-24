@@ -10,7 +10,7 @@ import { t } from '../i18n';
 import { GroupItem, GroupLink, SettingsSection } from '../ui/SettingsRows';
 import { makeStyles, usePalette, common } from '../ui/theme';
 import { isPrivateRelayAddress } from '../account/methodRules';
-import { AddMethods, CombineAccountsRow, MethodsList } from './AccountMethods';
+import { CombineAccountsRow, MethodsList } from './AccountMethods';
 import { methodsOf, signedInWithText } from './accountLabels';
 import { dialog } from './Dialog';
 import { SignInOptions } from './SignInOptions';
@@ -18,7 +18,8 @@ import { SignInOptions } from './SignInOptions';
 /**
  * Settings › Account (pro mode only; SettingsModal shows the row only when `accountsEnabled`).
  * Signed out: what the account is for and the sign-in buttons. Signed in (UI-56), top to bottom: who is signed in
- * (from `GET /me`), Qutai Credits and its balance, the ways to sign in, then the rarely used and destructive actions:
+ * (from `GET /me`), Qutai Credits and its balance, the ways to sign in (another way is added by combining accounts),
+ * then the rarely used and destructive actions:
  * combine accounts, sign out, sign out of all devices, delete account. The sign-in buttons are SignInOptions (also in setup's Qutai step).
  * Builds made against a local test server (`devLoginEnabled`) also show a test sign-in under the buttons, and
  * mark a test user's account as such.
@@ -186,11 +187,6 @@ export function AccountScreen({
         <GroupItem>
           <MethodsList user={user} />
         </GroupItem>
-        {user.status === 'active' && (
-          <GroupItem>
-            <AddMethods user={user} />
-          </GroupItem>
-        )}
       </SettingsSection>
       <Text style={[styles.hint, styles.privacyNote]}>{t('account.introLocal')}</Text>
       {/* The rarely used and the destructive, last. */}

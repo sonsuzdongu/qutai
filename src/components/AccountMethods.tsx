@@ -285,75 +285,6 @@ export function MethodsList({ user }: { user: Me }) {
   );
 }
 
-/** "Add a sign-in method": a chip per way this phone can prove one (UI-56). */
-export function AddMethods({ user }: { user: Me }) {
-  const styles = useStyles();
-  const palette = usePalette();
-  const session = accountSession();
-  const kinds = useAvailableKinds();
-  const [busy, setBusy] = useState<null | Kind>(null);
-
-  const offerMerge = async (proofId: string, kind: Kind) => {
-    if (!session) return;
-    const ok = await dialog.confirm({
-      title: t('account.methods.otherAccountTitle'),
-      message: t('account.methods.otherAccountBody', { method: KIND_LABEL[kind]() }),
-      confirmText: t('account.merge.review'),
-    });
-    if (ok) await runMerge(session, proofId);
-  };
-
-  const add = async (kind: Kind) => {
-    if (!session || busy) return;
-    setBusy(kind);
-    try {
-      const result = await proveWith(session, kind, 'add');
-      if (result.outcome === 'added') {
-        dialog.alert(t('account.methods.addedTitle'), t('account.linkedBody', { providers: providersText(result.user) }));
-      } else if (result.outcome === 'other_account' && result.merge) {
-        await offerMerge(result.merge.proofId, kind);
-      } else {
-        dialog.alert(t('account.methods.alreadyTitle'), t('account.methods.alreadyBody'));
-      }
-    } catch (e) {
-      failed(e);
-    } finally {
-      setBusy(null);
-    }
-  };
-
-  return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle} accessibilityRole="header">
-        {t('account.methods.addTitle')}
-      </Text>
-      <Text style={styles.hint}>{t('account.methods.addHint')}</Text>
-      <View style={styles.row}>
-        {kinds.map((kind) => (
-          <Pressable
-            key={kind}
-            onPress={() => add(kind)}
-            disabled={!!busy}
-            style={({ pressed }) => [styles.chip, pressed && styles.pressed, !!busy && busy !== kind && styles.dimmed]}
-            accessibilityRole="button"
-            accessibilityLabel={t('account.methods.addLabel', { method: KIND_LABEL[kind]() })}
-            accessibilityState={{ busy: busy === kind, disabled: !!busy }}
-          >
-            {busy === kind ? (
-              <ActivityIndicator color={palette.text} />
-            ) : (
-              <>
-                <Icon name={kind === 'email' ? 'email' : 'newTab'} size={16} color={palette.tintText} />
-                <Text style={styles.chipText}>{KIND_LABEL[kind]()}</Text>
-              </>
-            )}
-          </Pressable>
-        ))}
-      </View>
-    </View>
-  );
-}
-
 /**
  * "Combine with another account", with the rarely used account actions at the bottom of Settings › Account (UI-56):
  * prove a method of the other account, then review and confirm the merge.
@@ -399,22 +330,5 @@ const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
   hint: common(c).hint,
   remove: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  section: { gap: 8 },
-  sectionTitle: { color: c.text, fontSize: 15, fontWeight: '600' },
-  notice: common(c).notice,
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    minHeight: 40,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: c.surface,
-    borderWidth: 1,
-    borderColor: c.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  chipText: { color: c.text, fontSize: 15, fontWeight: '500' },
   pressed: { backgroundColor: c.pressed },
-  dimmed: { opacity: 0.5 },
 }));

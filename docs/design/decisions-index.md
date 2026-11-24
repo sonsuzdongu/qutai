@@ -883,7 +883,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-53` | New tab page: no search box or Ask Qutai button; the aurora drifts slowly while on screen (still with Reduce Motion). | Owner | 2026-11-23 |
 | `UI-54` | Settings pages are grouped: headed groups of rows in cards, the main page in four cards; pages open at the top, back returns to where they were. | Default | 2026-11-24 |
 | `UI-55` | Settings › Assistant: provider, Answers, Memory and instructions on the page; Permissions, Voice input, Tasks and history as their own pages; the tour link closes Settings. | Default | 2026-11-24 |
-| `UI-56` | Settings › Account: Apple's and Google's own sign-in buttons; signed in: identity, credits, ways to sign in, then rare and destructive actions last. | Default | 2026-11-24 |
+| `UI-56` | Settings › Account: Apple's and Google's own sign-in buttons; signed in: identity, credits, ways to sign in (no add, `ACC-55`), then rare and destructive actions last. | Default | 2026-11-24 |
 | `UI-57` | Filter lists opens at the top; grouped into publishers' lists, my lists, my rules, styles, scripts. | Default | 2026-11-24 |
 | `UI-58` | "Make Qutai your default browser" moved from Settings › Search to Settings › About under Rate Qutai (Android only). | Owner | 2026-11-24 |
 
@@ -1040,6 +1040,7 @@ Moved to Details (ids retired, not reused): `PERF-1`, `PERF-2`, `PERF-9`
 | `ACC-52` | Each sign-in method shows its address (Google and Apple from their own token, kept per method on the server); an Apple relay… | Owner | 2026-11-19 |
 | `ACC-53` | A sign-in or rotated token the phone can't save: three tries, kept in memory, saved before every request, the user told once; a failed sign-out clear told | Default | 2026-11-20 |
 | `ACC-54` | A store-review account signs in by email with a fixed code while the server's review_login switch is on (off by default; sign-in only… | Owner | 2026-11-21 |
+| `ACC-55` | Settings › Account has no "Add a sign-in method"; a second way in comes from Combine with another account. | Owner | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21`, `ACC-38`, `ACC-44`
 

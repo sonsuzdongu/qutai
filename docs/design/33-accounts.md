@@ -27,9 +27,8 @@ and deleting the account. Builds from this repository have none of it.
    same account and Qutai says once which ways Ali can now sign in. An Apple "Hide My Email" address never joins
    anything.
 6. Signed in, Settings › Account lists **Ways to sign in**, each with its address (since 19 Nov 2026, `ACC-52`):
-   "Email: name@example.com", "Google: name@gmail.com", "Apple: hidden email" for a Hide My Email address. **Add a sign-in method** (Google, Apple, or email with a
-   separate "confirm" code) adds one, and every address on the account gets a "sign-in method added" mail. If that
-   method already belongs to another Qutai account, nothing changes and Qutai offers **Combine with another account**.
+   "Email: name@example.com", "Google: name@gmail.com", "Apple: hidden email" for a Hide My Email address. Settings has no "Add a sign-in method" since 24 Nov 2026
+   (`ACC-55`): another way in comes from **Combine with another account** at the bottom of the page.
 7. Removing a method (the × next to it) asks for confirmation. If the user hasn't signed in on this phone in the last
    5 minutes with that method or an older one, Qutai asks them to confirm with one of exactly those methods first. The
    last method can't be removed. Other phones stay signed in; the confirmation and the mail point to "Sign out of all
@@ -143,6 +142,8 @@ and deleting the account. Builds from this repository have none of it.
   Status: Default (implementing session; owner's 20 Nov 2026 code-review request) · Why: a swallowed failure meant a silent sign-out at the next start, and presenting the spent token could end the session on the server · Enforced: In the app: src/account/session.ts (persist, retryStorage, clearStored), src/account/index.ts (the message through storage/failures.ts) · Tests: scripts/account-tests/session.test.ts · Source: 20 Nov 2026 code review
 - **`ACC-54`** One store-review account can sign in by email with a fixed code: while the server setting "Fixed sign-in code for a review account" (`review_login`) is on, a sign-in for exactly its address (normalised like every sign-in) takes its six-digit code instead of a random one (owner's account `test@sonsuzdongu.com`, code `000000`). Everything else about the code is unchanged (10 minutes, 5 tries, the asking phone only, the per-address limits, the mail still sent). Off by default; on needs an address and a code; malformed means off; only for signing in, never for adding the address as a method of another account; the code is never logged; the admin Overview shows a red banner while it is on.
   Status: Owner, 2026-11-21 ("bizde, email ile bir OTP üretiliyor. bunu test@sonsuzdongu.com kullanıcısı için her zaman 000000 yapar mısın"); the switch, the sign-in-only rule and the banner are the implementing session's defaults · Why: App Store and Google Play reviewers can't read the sign-in mail; anyone who knows the address and code can sign in as that account, so it stays off outside a review and the account holds no real credits or data · Enforced: Server: backend/packages/shared/src/settingsSchema.ts (checkReviewLogin, readReviewLogin), backend/apps/api/src/auth/email/challenges.ts (reviewLoginCode, createChallenge); panel: backend/apps/admin/src/settingForms.tsx (ReviewLoginEditor), screens/Overview.tsx · Tests: backend/apps/api/test/review-login.test.ts, backend/apps/admin/test/review-login.test.ts · Source: backend/README.md › Sign-in by email › Fixed code for a review account; backend/DEPLOY-prod.md › Mağaza incelemesi için sabit giriş kodu
+- **`ACC-55`** Settings › Account offers no "Add a sign-in method" (the Google / Apple / Email chips are gone); a second way to sign in is gained by **Combine with another account**, at the bottom of the page. The server's add-method endpoint and the methods list with its remove control are unchanged.
+  Status: Decided by the owner (24 Nov 2026) · Why: "giriş yöntemi ekleyin bölümüne gerek yok, zaten altta başka bir hesapla birleştir var" · Enforced: In the app: src/components/AccountScreen.tsx, src/components/AccountMethods.tsx
 
 ## Details
 
