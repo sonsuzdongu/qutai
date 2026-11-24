@@ -359,7 +359,8 @@ function TabWebView({
               const selection = parseSelection(e.nativeEvent.data);
               if (selection !== null) return newTabActions.onSelection(tab, selection);
               const target = parseContextTarget(e.nativeEvent.data);
-              if (target && active) newTabActions.onContextMenu(tab, target);
+              // Never during a pull to refresh: the long press under the finger was the start of the pull (TABS-32).
+              if (target && active && !refreshing) newTabActions.onContextMenu(tab, target);
             }}
             onLoadStart={(e) => {
               tab.handleLoadStart(e.nativeEvent.url, e.nativeEvent.loading);
