@@ -1047,6 +1047,7 @@ Moved to Details (ids retired, not reused): `PERF-1`, `PERF-2`, `PERF-9`
 | `ACC-53` | A sign-in or rotated token the phone can't save: three tries, kept in memory, saved before every request, the user told once; a failed sign-out clear told | Default | 2026-11-20 |
 | `ACC-54` | A store-review account signs in by email with a fixed code while the server's review_login switch is on (off by default; sign-in only… | Owner | 2026-11-21 |
 | `ACC-55` | Settings › Account has no "Add a sign-in method"; a second way in comes from Combine with another account. | Owner | 2026-11-24 |
+| `ACC-56` | Combine with another account adds a sign-in that has no Qutai account yet to this one (server, one step); another account's still needs the combine confirmation. | Owner | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21`, `ACC-38`, `ACC-44`
 

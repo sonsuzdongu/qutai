@@ -2080,9 +2080,9 @@ export const es: Record<keyof typeof en, string> = {
   'account.methods.error.lastMethod': 'Una cuenta necesita al menos una forma de iniciar sesión.',
   'account.methods.error.proofExpired': 'Esa confirmación caducó. Vuelve a iniciar sesión en la otra cuenta.',
   'account.merge.title': 'Combinar con otra cuenta',
-  'account.merge.hint': 'Pasa otra cuenta de Qutai tuya, con sus créditos, a esta.',
+  'account.merge.hint': "Pasa otra cuenta tuya de Qutai, con sus créditos, a esta. Un inicio de sesión que aún no tiene cuenta de Qutai se añade a esta.",
   'account.merge.suggested': 'Puede que tengas otra cuenta de Qutai con el mismo correo electrónico. Puedes combinarla con esta.',
-  'account.merge.chooseBody': 'Inicia sesión en tu otra cuenta de Qutai. Verás qué se combinará antes de que cambie nada.',
+  'account.merge.chooseBody': "Inicia sesión en tu otra cuenta de Qutai, o con el Google, Apple o correo que quieras añadir. Verás qué se combinará antes de que cambie nada.",
   'account.merge.emailTitle': 'Correo electrónico de tu otra cuenta',
   'account.merge.sameAccount': 'Ese inicio de sesión ya pertenece a esta cuenta.',
   'account.merge.previewTitle': '¿Combinar estas cuentas?',
@@ -2950,4 +2950,7 @@ export const es: Record<keyof typeof en, string> = {
   "buy.perk.noKey": "Sin clave de API ni cuenta de IA",
   "buy.perk.oneTime": "Paquetes de pago único, sin suscripción",
   "buy.perk.private": "Tus mensajes pasan por el servidor de Qutai y no se guardan allí",
+  // Combine with another account adds a sign-in nobody has (ACC-56).
+  "account.merge.addedTitle": "{method} añadido como método de inicio de sesión",
+  "account.merge.addedBody": "Ninguna cuenta de Qutai iniciaba sesión con él, así que se añadió a esta; no se combinó nada. Ahora puedes iniciar sesión con {providers}.",
 };

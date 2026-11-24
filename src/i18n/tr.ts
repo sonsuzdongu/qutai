@@ -2079,9 +2079,9 @@ export const tr: Record<keyof typeof en, string> = {
   'account.methods.error.lastMethod': 'Bir hesabın en az bir giriş yöntemi olmalıdır.',
   'account.methods.error.proofExpired': 'Bu onayın süresi doldu. Diğer hesaba yeniden giriş yapın.',
   'account.merge.title': 'Başka bir hesapla birleştir',
-  'account.merge.hint': 'Size ait başka bir Qutai hesabını, kredileriyle birlikte bu hesaba taşır.',
+  'account.merge.hint': "Size ait başka bir Qutai hesabını, kredileriyle birlikte bu hesaba taşır. Henüz Qutai hesabı olmayan bir giriş ise bu hesaba eklenir.",
   'account.merge.suggested': 'Aynı e-posta adresiyle başka bir Qutai hesabınız olabilir. Onu bu hesapla birleştirebilirsiniz.',
-  'account.merge.chooseBody': 'Diğer Qutai hesabınıza giriş yapın. Bir şey değişmeden önce neyin birleştirileceğini göreceksiniz.',
+  'account.merge.chooseBody': "Diğer Qutai hesabınıza ya da eklemek istediğiniz Google, Apple veya e-postayla giriş yapın. Bir şey değişmeden önce neyin birleştirileceğini göreceksiniz.",
   'account.merge.emailTitle': 'Diğer hesabınızın e-posta adresi',
   'account.merge.sameAccount': 'Bu giriş zaten bu hesaba ait.',
   'account.merge.previewTitle': 'Bu hesaplar birleştirilsin mi?',
@@ -2952,4 +2952,7 @@ export const tr: Record<keyof typeof en, string> = {
   "buy.perk.noKey": "API anahtarı ya da yapay zekâ hesabı gerekmez",
   "buy.perk.oneTime": "Tek seferlik paketler, abonelik yok",
   "buy.perk.private": "Mesajlarınız Qutai’ın sunucusundan geçer, orada saklanmaz",
+  // Combine with another account adds a sign-in nobody has (ACC-56).
+  "account.merge.addedTitle": "{method} giriş yöntemi olarak eklendi",
+  "account.merge.addedBody": "Bununla giriş yapan bir Qutai hesabı yoktu; bu yüzden bu hesaba eklendi, hiçbir şey birleştirilmedi. Artık {providers} ile oturum açabilirsiniz.",
 };

@@ -2076,9 +2076,9 @@ export const en = {
   'account.methods.error.lastMethod': 'An account needs at least one sign-in method.',
   'account.methods.error.proofExpired': 'That confirmation has expired. Sign in to the other account again.',
   'account.merge.title': 'Combine with another account',
-  'account.merge.hint': 'Moves another Qutai account of yours, with its credits, into this one.',
+  'account.merge.hint': "Moves another Qutai account of yours, with its credits, into this one. A sign-in that has no Qutai account yet is added to this one instead.",
   'account.merge.suggested': 'You may have another Qutai account with the same email address. You can combine it with this one.',
-  'account.merge.chooseBody': 'Sign in to your other Qutai account. You’ll see what will be combined before anything changes.',
+  'account.merge.chooseBody': "Sign in to your other Qutai account, or with the Google, Apple or email you want to add. You’ll see what will be combined before anything changes.",
   'account.merge.emailTitle': 'Your other account’s email address',
   'account.merge.sameAccount': 'That sign-in already belongs to this account.',
   'account.merge.previewTitle': 'Combine these accounts?',
@@ -2947,4 +2947,7 @@ export const en = {
   "buy.perk.noKey": "No API key or AI account needed",
   "buy.perk.oneTime": "One-time packs, no subscription",
   "buy.perk.private": "Your messages pass through Qutai’s server and aren’t stored there",
+  // Combine with another account adds a sign-in nobody has (ACC-56).
+  "account.merge.addedTitle": "{method} added as a sign-in method",
+  "account.merge.addedBody": "No Qutai account signed in with it, so it was added to this one; nothing was combined. You can now sign in with {providers}.",
 } as const;

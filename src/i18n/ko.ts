@@ -2083,9 +2083,9 @@ export const ko: Record<keyof typeof en, string> = {
   'account.methods.error.lastMethod': '계정에는 로그인 방법이 하나 이상 있어야 합니다.',
   'account.methods.error.proofExpired': '확인이 만료되었습니다. 다른 계정에 다시 로그인하세요.',
   'account.merge.title': '다른 계정과 통합',
-  'account.merge.hint': '본인의 다른 Qutai 계정을 크레딧과 함께 이 계정으로 옮깁니다.',
+  'account.merge.hint': "내 다른 Qutai 계정을 크레딧과 함께 이 계정으로 옮깁니다. 아직 Qutai 계정이 없는 로그인은 대신 이 계정에 추가됩니다.",
   'account.merge.suggested': '같은 이메일 주소로 된 다른 Qutai 계정이 있을 수 있습니다. 이 계정과 통합할 수 있습니다.',
-  'account.merge.chooseBody': '다른 Qutai 계정에 로그인하세요. 변경되기 전에 무엇이 통합되는지 확인할 수 있습니다.',
+  'account.merge.chooseBody': "다른 Qutai 계정에, 또는 추가하려는 Google, Apple, 이메일로 로그인하세요. 무엇이 바뀌기 전에 통합될 내용을 확인할 수 있습니다.",
   'account.merge.emailTitle': '다른 계정의 이메일 주소',
   'account.merge.sameAccount': '그 로그인은 이미 이 계정에 속해 있습니다.',
   'account.merge.previewTitle': '이 계정들을 통합할까요?',
@@ -2954,4 +2954,7 @@ export const ko: Record<keyof typeof en, string> = {
   "buy.perk.noKey": "API 키나 AI 계정이 필요 없음",
   "buy.perk.oneTime": "일회성 팩, 구독 없음",
   "buy.perk.private": "메시지는 Qutai 서버를 거치지만 저장되지 않습니다",
+  // Combine with another account adds a sign-in nobody has (ACC-56).
+  "account.merge.addedTitle": "{method}을(를) 로그인 방법으로 추가했습니다",
+  "account.merge.addedBody": "이것으로 로그인하는 Qutai 계정이 없어서 이 계정에 추가했습니다. 통합된 것은 없습니다. 이제 {providers}(으)로 로그인할 수 있습니다.",
 };

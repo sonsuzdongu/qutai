@@ -22,6 +22,7 @@ Newest first, one line per change to the design. What happened before 19 Nov 202
 - **2026-11-24:** Buy credits: no waiting-purchases count, "Check for missing credits" asks about all kept purchases at once without waits (`BUY-36`); packs show whole credits in smaller text (`UI-63`).
 - **2026-11-24:** A cancelled purchase shows as a floating error-coloured notice that disappears on tap or after 4 seconds (`UI-62`).
 - **2026-11-24:** "Show the Qutai button tour" moves from Settings › Assistant to About (`UI-61`).
+- **2026-11-24:** "Combine with another account" adds a Google, Apple or email sign-in that has no Qutai account yet to this account instead of saying there is no such account (`ACC-56`; server change in backend a1c1337).
 - **2026-11-24:** iPhone: the language is chosen inside Qutai (Settings › Language), the same per-app setting as iOS Settings (`LANG-24`); the paywall's packs and buttons fit the first screen (`UI-60`).
 - **2026-11-24:** Backup's "What's included", password and automatic backups are grouped (`UI-59`); Buy credits becomes a proper paywall (`UI-60`).
 - **2026-11-24:** Settings › Account drops "Add a sign-in method"; a second way in comes from Combine with another account (`ACC-55`).

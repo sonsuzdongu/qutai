@@ -2085,9 +2085,9 @@ export const ptBR: Record<keyof typeof en, string> = {
   'account.methods.error.lastMethod': 'Uma conta precisa de pelo menos uma forma de entrar.',
   'account.methods.error.proofExpired': 'Essa confirmação expirou. Entre na outra conta de novo.',
   'account.merge.title': 'Combinar com outra conta',
-  'account.merge.hint': 'Passa outra conta sua do Qutai, com os créditos dela, para esta.',
+  'account.merge.hint': "Move outra conta Qutai sua, com os créditos, para esta. Um login que ainda não tem conta Qutai é adicionado a esta.",
   'account.merge.suggested': 'Talvez você tenha outra conta do Qutai com o mesmo e-mail. Você pode combiná-la com esta.',
-  'account.merge.chooseBody': 'Entre na sua outra conta do Qutai. Você vai ver o que será combinado antes de qualquer mudança.',
+  'account.merge.chooseBody': "Entre na sua outra conta Qutai, ou com o Google, Apple ou e-mail que quer adicionar. Você verá o que será combinado antes de qualquer mudança.",
   'account.merge.emailTitle': 'E-mail da sua outra conta',
   'account.merge.sameAccount': 'Esse login já pertence a esta conta.',
   'account.merge.previewTitle': 'Combinar estas contas?',
@@ -2956,4 +2956,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   "buy.perk.noKey": "Sem chave de API nem conta de IA",
   "buy.perk.oneTime": "Pacotes avulsos, sem assinatura",
   "buy.perk.private": "Suas mensagens passam pelo servidor do Qutai e não ficam guardadas lá",
+  // Combine with another account adds a sign-in nobody has (ACC-56).
+  "account.merge.addedTitle": "{method} adicionado como forma de login",
+  "account.merge.addedBody": "Nenhuma conta Qutai entrava com ele, então ele foi adicionado a esta; nada foi combinado. Agora você pode entrar com {providers}.",
 };

@@ -2084,9 +2084,9 @@ export const fr: Record<keyof typeof en, string> = {
   'account.methods.error.lastMethod': 'Un compte a besoin d’au moins un moyen de connexion.',
   'account.methods.error.proofExpired': 'Cette confirmation a expiré. Reconnectez-vous à l’autre compte.',
   'account.merge.title': 'Fusionner avec un autre compte',
-  'account.merge.hint': 'Transfère un autre de vos comptes Qutai, avec ses crédits, dans celui-ci.',
+  'account.merge.hint': "Transfère un autre de vos comptes Qutai, avec ses crédits, dans celui-ci. Une connexion qui n’a pas encore de compte Qutai est ajoutée à celui-ci.",
   'account.merge.suggested': 'Vous avez peut-être un autre compte Qutai avec la même adresse e-mail. Vous pouvez le fusionner avec celui-ci.',
-  'account.merge.chooseBody': 'Connectez-vous à votre autre compte Qutai. Vous verrez ce qui sera fusionné avant tout changement.',
+  'account.merge.chooseBody': "Connectez-vous à votre autre compte Qutai, ou avec le Google, l’Apple ou l’e-mail que vous voulez ajouter. Vous verrez ce qui sera fusionné avant tout changement.",
   'account.merge.emailTitle': 'Adresse e-mail de votre autre compte',
   'account.merge.sameAccount': 'Cette connexion appartient déjà à ce compte.',
   'account.merge.previewTitle': 'Fusionner ces comptes ?',
@@ -2955,4 +2955,7 @@ export const fr: Record<keyof typeof en, string> = {
   "buy.perk.noKey": "Ni clé d’API ni compte d’IA nécessaires",
   "buy.perk.oneTime": "Packs à l’unité, sans abonnement",
   "buy.perk.private": "Vos messages passent par le serveur de Qutai et n’y sont pas conservés",
+  // Combine with another account adds a sign-in nobody has (ACC-56).
+  "account.merge.addedTitle": "{method} ajouté comme moyen de connexion",
+  "account.merge.addedBody": "Aucun compte Qutai ne s’y connectait : il a donc été ajouté à celui-ci, rien n’a été fusionné. Vous pouvez maintenant vous connecter avec {providers}.",
 };

@@ -2084,9 +2084,9 @@ export const ru: Record<keyof typeof en, string> = {
   'account.methods.error.lastMethod': 'У аккаунта должен быть хотя бы один способ входа.',
   'account.methods.error.proofExpired': 'Срок этого подтверждения истёк. Войдите в другой аккаунт ещё раз.',
   'account.merge.title': 'Объединить с другим аккаунтом',
-  'account.merge.hint': 'Переносит другой ваш аккаунт Qutai вместе с кредитами в этот.',
+  'account.merge.hint': "Переносит другой ваш аккаунт Qutai вместе с кредитами в этот. Вход, у которого ещё нет аккаунта Qutai, добавляется к этому.",
   'account.merge.suggested': 'Возможно, у вас есть другой аккаунт Qutai с тем же адресом эл. почты. Его можно объединить с этим.',
-  'account.merge.chooseBody': 'Войдите в свой другой аккаунт Qutai. Прежде чем что-то изменится, вы увидите, что будет объединено.',
+  'account.merge.chooseBody': "Войдите в другой аккаунт Qutai или через Google, Apple или почту, которые хотите добавить. Перед любыми изменениями вы увидите, что будет объединено.",
   'account.merge.emailTitle': 'Адрес эл. почты другого аккаунта',
   'account.merge.sameAccount': 'Этот вход уже принадлежит этому аккаунту.',
   'account.merge.previewTitle': 'Объединить эти аккаунты?',
@@ -2955,4 +2955,7 @@ export const ru: Record<keyof typeof en, string> = {
   "buy.perk.noKey": "Не нужны ни API-ключ, ни аккаунт ИИ",
   "buy.perk.oneTime": "Разовые пакеты, без подписки",
   "buy.perk.private": "Сообщения проходят через сервер Qutai и не хранятся там",
+  // Combine with another account adds a sign-in nobody has (ACC-56).
+  "account.merge.addedTitle": "{method}: добавлен как способ входа",
+  "account.merge.addedBody": "Ни один аккаунт Qutai не входил с ним, поэтому он добавлен к этому; ничего не объединялось. Теперь можно входить через {providers}.",
 };

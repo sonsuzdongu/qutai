@@ -1,4 +1,4 @@
-import type { SignInMethod } from './types';
+import type { ProofResponse, SignInMethod } from './types';
 
 /**
  * Rules the server applies to sign-in methods, mirrored for the UI (backend/README.md › Auth › Sign-in methods). Pure,
@@ -46,4 +46,15 @@ export function takeEmailProofLink(linkToken: string): boolean {
 export function mergeRetryDelayMs(retryAfterSeconds: number | null): number {
   const seconds = retryAfterSeconds && retryAfterSeconds > 0 ? retryAfterSeconds : 5;
   return Math.min(60, Math.max(2, seconds)) * 1000;
+}
+
+/**
+ * What "Combine with another account" did, from the proof's answer: another account to review and combine (`merge`),
+ * a sign-in nobody had that the server added to this account in the same step (`added`, ACC-56), or one this account
+ * already has (`same`). Never a silent move: another account's method always goes through the combine confirmation.
+ */
+export function combineOutcome(result: ProofResponse): { kind: 'merge'; proofId: string } | { kind: 'added' } | { kind: 'same' } {
+  if (result.outcome === 'other_account' && result.merge) return { kind: 'merge', proofId: result.merge.proofId };
+  if (result.outcome === 'added') return { kind: 'added' };
+  return { kind: 'same' };
 }

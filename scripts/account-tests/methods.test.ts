@@ -7,7 +7,7 @@ import { describe, it } from 'node:test';
 import { createApi, type Fetch } from '../../src/account/api.ts';
 import { isAuthReturnLink, parseAppleReturn } from '../../src/account/appleWeb.ts';
 import { isSignInLink, linkHosts, linkPath, parseEmailSignInLink } from '../../src/account/emailSignIn.ts';
-import { canRemove, isPrivateRelayAddress, mergeRetryDelayMs, methodsThatCanConfirm, setPendingEmailProof, takeEmailProofLink } from '../../src/account/methodRules.ts';
+import { canRemove, combineOutcome, isPrivateRelayAddress, mergeRetryDelayMs, methodsThatCanConfirm, setPendingEmailProof, takeEmailProofLink } from '../../src/account/methodRules.ts';
 import { AccountSession, type SessionStorage, type StoredSession } from '../../src/account/session.ts';
 import type { Me, SignInMethod } from '../../src/account/types.ts';
 
@@ -228,4 +228,22 @@ describe('the address beside a method', () => {
     assert.ok(!isPrivateRelayAddress('privaterelay.appleid.com@example.com'));
   });
 
+});
+
+describe('Combine with another account (ACC-56)', () => {
+  const user = { id: 'u1' } as unknown as Me;
+  it('reviews another account before anything moves', () => {
+    assert.deepEqual(combineOutcome({ outcome: 'other_account', user, merge: { proofId: 'qmp_x', expiresIn: 600 } }), {
+      kind: 'merge',
+      proofId: 'qmp_x',
+    });
+  });
+  it('says a sign-in nobody had was added to this account', () => {
+    assert.deepEqual(combineOutcome({ outcome: 'added', user }), { kind: 'added' });
+  });
+  it('says a sign-in this account already has is already here', () => {
+    assert.deepEqual(combineOutcome({ outcome: 'already_linked', user }), { kind: 'same' });
+    // An answer without its merge proof is never treated as a combine.
+    assert.deepEqual(combineOutcome({ outcome: 'other_account', user }), { kind: 'same' });
+  });
 });

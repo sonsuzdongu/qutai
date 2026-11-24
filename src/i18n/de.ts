@@ -2071,9 +2071,9 @@ export const de: Record<keyof typeof en, string> = {
   'account.methods.error.lastMethod': 'Ein Konto braucht mindestens eine Anmeldemethode.',
   'account.methods.error.proofExpired': 'Diese Bestätigung ist abgelaufen. Melden Sie sich erneut beim anderen Konto an.',
   'account.merge.title': 'Mit einem anderen Konto zusammenführen',
-  'account.merge.hint': 'Verschiebt ein anderes Qutai-Konto von Ihnen mit seinen Credits in dieses.',
+  'account.merge.hint': "Verschiebt ein anderes Qutai-Konto von Ihnen samt Credits in dieses. Eine Anmeldung ohne Qutai-Konto wird stattdessen diesem hinzugefügt.",
   'account.merge.suggested': 'Möglicherweise haben Sie ein weiteres Qutai-Konto mit derselben E-Mail-Adresse. Sie können es mit diesem zusammenführen.',
-  'account.merge.chooseBody': 'Melden Sie sich bei Ihrem anderen Qutai-Konto an. Bevor sich etwas ändert, sehen Sie, was zusammengeführt wird.',
+  'account.merge.chooseBody': "Melden Sie sich bei Ihrem anderen Qutai-Konto an oder mit dem Google-, Apple- oder E-Mail-Zugang, den Sie hinzufügen möchten. Sie sehen, was zusammengeführt wird, bevor sich etwas ändert.",
   'account.merge.emailTitle': 'E-Mail-Adresse Ihres anderen Kontos',
   'account.merge.sameAccount': 'Diese Anmeldung gehört bereits zu diesem Konto.',
   'account.merge.previewTitle': 'Diese Konten zusammenführen?',
@@ -2941,4 +2941,7 @@ export const de: Record<keyof typeof en, string> = {
   "buy.perk.noKey": "Kein API-Schlüssel und kein KI-Konto nötig",
   "buy.perk.oneTime": "Einmalige Pakete, kein Abo",
   "buy.perk.private": "Ihre Nachrichten laufen über Qutais Server und werden dort nicht gespeichert",
+  // Combine with another account adds a sign-in nobody has (ACC-56).
+  "account.merge.addedTitle": "{method} als Anmeldemethode hinzugefügt",
+  "account.merge.addedBody": "Kein Qutai-Konto meldete sich damit an, daher wurde es diesem hinzugefügt; nichts wurde zusammengeführt. Sie können sich jetzt mit {providers} anmelden.",
 };

@@ -2085,9 +2085,9 @@ export const ja: Record<keyof typeof en, string> = {
   'account.methods.error.lastMethod': 'アカウントには少なくとも 1 つのログイン方法が必要です。',
   'account.methods.error.proofExpired': 'この確認は有効期限が切れました。もう一方のアカウントにもう一度ログインしてください。',
   'account.merge.title': '別のアカウントと統合',
-  'account.merge.hint': 'お持ちの別の Qutai アカウントを、クレジットごとこのアカウントに移します。',
+  'account.merge.hint': "あなたの別の Qutai アカウントを、クレジットごとこのアカウントに移します。まだ Qutai アカウントがないサインインは、このアカウントに追加されます。",
   'account.merge.suggested': '同じメールアドレスの別の Qutai アカウントをお持ちかもしれません。このアカウントに統合できます。',
-  'account.merge.chooseBody': 'もう一方の Qutai アカウントにログインしてください。何かが変わる前に、統合される内容を確認できます。',
+  'account.merge.chooseBody': "別の Qutai アカウント、または追加したい Google・Apple・メールでサインインしてください。何かが変わる前に、統合される内容を確認できます。",
   'account.merge.emailTitle': 'もう一方のアカウントのメールアドレス',
   'account.merge.sameAccount': 'そのログインはすでにこのアカウントのものです。',
   'account.merge.previewTitle': 'これらのアカウントを統合しますか？',
@@ -2956,4 +2956,7 @@ export const ja: Record<keyof typeof en, string> = {
   "buy.perk.noKey": "API キーも AI のアカウントも不要",
   "buy.perk.oneTime": "買い切りパック、サブスクリプションなし",
   "buy.perk.private": "メッセージは Qutai のサーバーを通りますが、保存されません",
+  // Combine with another account adds a sign-in nobody has (ACC-56).
+  "account.merge.addedTitle": "{method} をサインイン方法として追加しました",
+  "account.merge.addedBody": "これでサインインする Qutai アカウントがなかったため、このアカウントに追加しました。統合は行っていません。これからは {providers} でサインインできます。",
 };

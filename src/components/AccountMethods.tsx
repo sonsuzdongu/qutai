@@ -3,7 +3,7 @@ import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native
 import { accountErrorDetails, accountErrorMessage, accountSession } from '../account';
 import { AccountApiError } from '../account/api';
 import { codeDigits, looksLikeEmail } from '../account/emailSignIn';
-import { canRemove, mergeRetryDelayMs, methodsThatCanConfirm, setPendingEmailProof } from '../account/methodRules';
+import { canRemove, combineOutcome, mergeRetryDelayMs, methodsThatCanConfirm, setPendingEmailProof } from '../account/methodRules';
 import {
   SignInCancelled,
   appleSignInAvailable,
@@ -287,7 +287,8 @@ export function MethodsList({ user }: { user: Me }) {
 
 /**
  * "Combine with another account", with the rarely used account actions at the bottom of Settings › Account (UI-56):
- * prove a method of the other account, then review and confirm the merge.
+ * prove a method of the other account, then review and confirm the merge. A method no Qutai account has yet is added
+ * to this account by the server in the same step (ACC-56); an older server answers `no_account` instead.
  */
 export function CombineAccountsRow({ disabled }: { disabled?: boolean }) {
   const palette = usePalette();
@@ -302,8 +303,15 @@ export function CombineAccountsRow({ disabled }: { disabled?: boolean }) {
     setBusy('merge');
     try {
       const result = await proveWith(session, kind, 'merge');
-      if (result.outcome === 'other_account' && result.merge) await runMerge(session, result.merge.proofId);
-      else dialog.alert(t('account.merge.title'), t('account.merge.sameAccount'));
+      const outcome = combineOutcome(result);
+      if (outcome.kind === 'merge') await runMerge(session, outcome.proofId);
+      // No Qutai account signed in with it: the server added it to this account in the same step (ACC-56).
+      else if (outcome.kind === 'added') {
+        dialog.alert(
+          t('account.merge.addedTitle', { method: KIND_LABEL[kind]() }),
+          t('account.merge.addedBody', { providers: providersText(result.user) }),
+        );
+      } else dialog.alert(t('account.merge.title'), t('account.merge.sameAccount'));
     } catch (e) {
       failed(e);
     } finally {

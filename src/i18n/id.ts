@@ -2084,9 +2084,9 @@ export const id: Record<keyof typeof en, string> = {
   'account.methods.error.lastMethod': 'Akun memerlukan setidaknya satu cara login.',
   'account.methods.error.proofExpired': 'Konfirmasi itu sudah kedaluwarsa. Login lagi ke akun lain itu.',
   'account.merge.title': 'Gabungkan dengan akun lain',
-  'account.merge.hint': 'Memindahkan akun Qutai Anda yang lain, beserta kreditnya, ke akun ini.',
+  'account.merge.hint': "Memindahkan akun Qutai Anda yang lain, beserta kreditnya, ke akun ini. Cara masuk yang belum punya akun Qutai ditambahkan ke akun ini.",
   'account.merge.suggested': 'Anda mungkin punya akun Qutai lain dengan alamat email yang sama. Anda bisa menggabungkannya dengan akun ini.',
-  'account.merge.chooseBody': 'Login ke akun Qutai Anda yang lain. Anda akan melihat apa yang digabungkan sebelum ada yang berubah.',
+  'account.merge.chooseBody': "Masuk ke akun Qutai Anda yang lain, atau dengan Google, Apple, atau email yang ingin Anda tambahkan. Anda akan melihat apa yang digabungkan sebelum ada yang berubah.",
   'account.merge.emailTitle': 'Alamat email akun Anda yang lain',
   'account.merge.sameAccount': 'Login itu sudah menjadi milik akun ini.',
   'account.merge.previewTitle': 'Gabungkan akun-akun ini?',
@@ -2955,4 +2955,7 @@ export const id: Record<keyof typeof en, string> = {
   "buy.perk.noKey": "Tanpa kunci API atau akun AI",
   "buy.perk.oneTime": "Paket sekali beli, tanpa langganan",
   "buy.perk.private": "Pesan Anda melewati server Qutai dan tidak disimpan di sana",
+  // Combine with another account adds a sign-in nobody has (ACC-56).
+  "account.merge.addedTitle": "{method} ditambahkan sebagai metode masuk",
+  "account.merge.addedBody": "Tidak ada akun Qutai yang masuk dengannya, jadi ditambahkan ke akun ini; tidak ada yang digabungkan. Sekarang Anda dapat masuk dengan {providers}.",
 };
