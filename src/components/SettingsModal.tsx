@@ -695,6 +695,15 @@ function SettingsPages({
                 value={settings.backgroundPlayback}
                 onChange={(backgroundPlayback) => set({ backgroundPlayback })}
               />
+              {/* Vendor battery managers may stop even a foreground service; Qutai never asks to be exempted itself
+                  (no REQUEST_IGNORE_BATTERY_OPTIMIZATIONS), the user decides in the system's own settings. */}
+              {Platform.OS === 'android' && settings.backgroundPlayback && (
+                <GroupLink
+                  title={t('settings.backgroundPlaybackBatteryButton')}
+                  summary={t('settings.backgroundPlaybackBattery')}
+                  onPress={openSettingsOrExplain}
+                />
+              )}
               {Platform.OS === 'android' && (
                 <GroupSwitch
                   title={t('settings.pictureInPicture')}
@@ -777,16 +786,6 @@ function SettingsPages({
               {/* The Qutai button tour, here since UI-61 (was at the end of Settings › Assistant). */}
               {settings.showAssistantButton && (
                 <GroupLink icon="info" title={t('settings.assistantIntro')} chevron={false} onPress={onShowAssistantIntro} />
-              )}
-              {/* Qutai's page in the phone's own settings (Android), here since UI-64 (was under Appearance › Media, shown
-                  with background playback). Vendor battery managers may stop even a foreground service; Qutai never asks
-                  to be exempted itself (no REQUEST_IGNORE_BATTERY_OPTIMIZATIONS), the user decides there. */}
-              {Platform.OS === 'android' && (
-                <GroupLink
-                  title={t('settings.backgroundPlaybackBatteryButton')}
-                  summary={t('settings.backgroundPlaybackBattery')}
-                  onPress={openSettingsOrExplain}
-                />
               )}
             </SettingsSection>
             <SettingsSection>

@@ -767,7 +767,7 @@ Moved to Details (ids retired, not reused): `DL-12`
 | `MEDIA-5` | "Keep playing in the background" and "Picture-in-picture" are both on by default. | Default |  |
 | `MEDIA-6` | iOS: when Qutai leaves the screen, a video WebKit paused is played again (sound only) and, while sound… | Default |  |
 | `MEDIA-7` | Whether iOS background play of YouTube is acceptable under YouTube's terms and App Review is open; today… | **Waiting** |  |
-| `MEDIA-10` | Qutai never asks for a battery-optimisation exemption; Settings › About opens the app settings (UI-64)… | Default |  |
+| `MEDIA-10` | Qutai never asks for a battery-optimisation exemption; Settings › Appearance › Media shows an Android hint… | Default |  |
 | `MEDIA-11` | Android PiP on youtube.com is offered only when YouTube's player says the video may play in the… | Default |  |
 | `MEDIA-12` | YouTube without Premium not opening PiP is expected and accepted. | Owner | 2026-11-16 |
 | `MEDIA-14` | No PiP for incognito tabs or while the app lock is on; incognito tabs show "Private tab" in the media… | Default |  |
@@ -892,7 +892,6 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-61` | "Show the Qutai button tour" is in Settings › About, not Assistant. | Owner | 2026-11-24 |
 | `UI-62` | Buy credits messages are floating notices (90 % opacity) in their tone's colour; they go on tap or after 4–10 s, "finishing" stays. | Owner | 2026-11-24 |
 | `UI-63` | Credit packs show whole credits ("100") in smaller text and button; the balance keeps decimals. | Owner | 2026-11-24 |
-| `UI-64` | "Open Qutai's app settings" (Android) is in Settings › About, always shown. | Owner | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

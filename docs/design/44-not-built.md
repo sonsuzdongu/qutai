@@ -53,7 +53,7 @@ Each rule below names something a user might expect and Qutai does not have, and
 - **`NOT-21`** The payment approval has no per-payment or per-currency spending limit and no picture of the order summary.
   Status: Owner, 2026-11-19 · Why: not needed / not asked for · Source: TODO.md › Assistant posting and paying
 - **`NOT-22`** Qutai never asks for a battery-optimisation exemption for background playback.
-  Status: Default (manager or implementing session; open to change) · Why: reason not recorded; a row in Settings › About opens the app settings instead (`UI-64`) · Source: fix-android-background-playback note; README › Known limitations
+  Status: Default (manager or implementing session; open to change) · Why: reason not recorded; a hint in Settings › Appearance › Media opens the app settings instead · Source: fix-android-background-playback note; README › Known limitations
 - **`NOT-23`** No preconnecting to sites while the user types in the address bar.
   Status: Default (manager or implementing session; open to change), decided by the manager on 2026-11-20 · Why: privacy: it would contact a site the user may never open, revealing what is being typed (Chrome does it for speed) · Source: navigation feedback task, 20 Nov 2026
 - **`NOT-24`** No harmful-site lookup service (like Safe Browsing) for now; it stays on the roadmap as planned later.
