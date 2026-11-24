@@ -2346,17 +2346,9 @@ function BrowserApp({
             ) : null}
     </>
   );
-  const barArea = barAtBottom ? (
-    <>
-      {findOpen ? null : navStatus}
-      {topBar}
-    </>
-  ) : (
-    <>
-      {topBar}
-      {findOpen ? null : navStatus}
-    </>
-  );
+  // The slow-site line floats over the page next to the bar instead of taking room, so the page never moves (UI-68).
+  const barArea = topBar;
+  const barStatus = findOpen ? null : navStatus;
 
   // Product analytics (pro builds, SRV-31): never from an incognito tab; the one-time consent question once nothing else
   // is in front (setup, the lock, Settings, a running task) and the current tab isn't incognito.
@@ -2390,12 +2382,12 @@ function BrowserApp({
           {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard: the page, and the address bar when it is at the bottom, stay above it. */}
           {barAtBottom ? (
             <KeyboardAvoidingContainer style={styles.flex}>
-              <BarLayout position="bottom" bar={barArea} onBarHeight={setBottomBarHeight}>
+              <BarLayout position="bottom" bar={barArea} status={barStatus} onBarHeight={setBottomBarHeight}>
                 <View style={styles.flex}>{pageContent}</View>
               </BarLayout>
             </KeyboardAvoidingContainer>
           ) : (
-            <BarLayout position="top" bar={barArea}>
+            <BarLayout position="top" bar={barArea} status={barStatus}>
               <KeyboardAvoidingContainer style={styles.flex}>{pageContent}</KeyboardAvoidingContainer>
             </BarLayout>
           )}

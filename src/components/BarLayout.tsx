@@ -10,11 +10,17 @@ export function BarLayout({
   bar,
   position,
   children,
+  status,
   onBarHeight,
 }: {
   bar: ReactNode;
   position: 'top' | 'bottom';
   children: ReactNode;
+  /**
+   * A line drawn over the page against the bar (the slow-site line, UI-68): it takes no room, so the page doesn't move
+   * when it appears. Inside this view's own box, so its buttons get every touch on Android.
+   */
+  status?: ReactNode;
   /** The bar's measured height, e.g. to keep a toast above it (UI-48). */
   onBarHeight?: (height: number) => void;
 }) {
@@ -38,6 +44,11 @@ export function BarLayout({
       {position === 'top' ? barView : null}
       {children}
       {position === 'bottom' ? barView : null}
+      {status ? (
+        <View style={styles.statusLayer} pointerEvents="box-none">
+          <View style={[styles.status, position === 'top' ? { top: height } : { bottom: height }]}>{status}</View>
+        </View>
+      ) : null}
       <BarOverlayLayer slot={overlay} />
     </View>
   );
@@ -46,4 +57,7 @@ export function BarLayout({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   bar: { zIndex: 10 },
+  statusLayer: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, zIndex: 15 },
+  // Slightly see-through over the page (owner, 24 Nov 2026).
+  status: { position: 'absolute', left: 0, right: 0, opacity: 0.9 },
 });
