@@ -112,6 +112,12 @@ object PictureInPicture {
     update()
   }
 
+  /** The app's activity (FullscreenOrientation). */
+  internal fun currentActivity(): Activity? = activity?.get()
+
+  /** The view's full screen was made for picture-in-picture (not the user's own). */
+  internal fun madeFullscreenFor(view: WebView): Boolean = madeFullscreen?.get() === view
+
   fun setAllowed(value: Boolean) {
     allowed = value
     update()

@@ -338,6 +338,32 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     } catch (e) { return null; }
   }
   var lastVideo = null;
+  // Android: the size of the video the page shows full screen, so the app turns to landscape for a landscape video
+  // (modules/qutai-media, FullscreenOrientation.kt). A frame shown full screen gives the size its own script
+  // reported (iOS, where frames run it), else its width and height attributes (an embedded player), else 16:9.
+  function fullVideo() {
+    var fs = document.fullscreenElement || document.webkitFullscreenElement;
+    if (!fs) return null;
+    var best = null, area = 0;
+    var list = VE && fs instanceof VE ? [fs] : (fs.querySelectorAll ? fs.querySelectorAll('video') : []);
+    for (var i = 0; i < list.length; i++) {
+      var w = gWidth.call(list[i]), h = gHeight.call(list[i]);
+      if (w > 0 && h > 0 && w * h > area) { area = w * h; best = [w, h]; }
+    }
+    if (best) return best;
+    if (String(fs.tagName).toUpperCase() !== 'IFRAME') return null;
+    for (var j = 0; j < frames.length; j++) {
+      if (frames[j].source === fs.contentWindow && frames[j].full) return frames[j].full;
+    }
+    var aw = parseInt(fs.getAttribute('width'), 10), ah = parseInt(fs.getAttribute('height'), 10);
+    if (aw > 0 && ah > 0) return [aw, ah];
+    return [16, 9];
+  }
+  ['fullscreenchange', 'webkitfullscreenchange'].forEach(function (type) { document.addEventListener(type, schedule, true); });
+  // A video's size known (or changed) while it is full screen.
+  ['loadedmetadata', 'resize'].forEach(function (type) {
+    document.addEventListener(type, function () { if (document.fullscreenElement || document.webkitFullscreenElement) schedule(); }, true);
+  });
   // Sites that refuse picture-in-picture themselves. YouTube's mobile site allows it only for "backgroundable" videos
   // (YouTube Premium): otherwise it treats a small window as PiP, leaves full screen and pauses, and keeps pausing
   // until the window is big again, which would also stop the sound that background playback keeps going. Its
@@ -421,7 +447,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     if (s.playing || frames.length) { if (!repeat) repeat = setRepeat(heartbeat, HEARTBEAT); }
     else if (repeat) { clearRepeat(repeat); repeat = null; }
     if (!mainFrame) {
-      try { window.parent.postMessage({ __qutaiPlaybackFrame: NONCE, audible: s.audible, playing: s.playing }, '*'); } catch (e) {}
+      try { window.parent.postMessage({ __qutaiPlaybackFrame: NONCE, audible: s.audible, playing: s.playing, full: fullVideo() }, '*'); } catch (e) {}
       return;
     }
     var meta = metadataOf();
@@ -437,6 +463,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
       paused: el ? gPaused.call(el) : true,
       ended: el ? gEnded.call(el) : false,
       video: s.video ? [gWidth.call(s.video), gHeight.call(s.video)] : null,
+      full: fullVideo(),
       rect: s.video ? rectOf(s.video) : null,
       noPip: s.video ? pipRefused() : false,
       title: meta.title || document.title || '',
@@ -519,6 +546,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
       if (!found) { found = { source: e.source }; frames[frames.length] = found; }
       found.audible = d.audible === true;
       found.playing = d.playing === true;
+      found.full = d.full && d.full.length === 2 && d.full[0] > 0 && d.full[1] > 0 ? [+d.full[0], +d.full[1]] : null;
       found.at = now();
       schedule();
     } else if (d.__qutaiPlaybackFrame === NONCE) {

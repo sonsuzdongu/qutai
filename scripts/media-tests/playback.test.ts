@@ -335,3 +335,29 @@ test('pauseAllPages reaches the pages with media playing, not the others', () =>
   assert.equal(b.injected.length, 0);
   playing.reset();
 });
+
+test('the video shown full screen reports its size (Android turns to landscape for a wide one)', () => {
+  const p = page('android');
+  const video = p.media(true);
+  video.play();
+  p.tick();
+  assert.equal(p.last().full, null);
+  (p.doc as unknown as Record<string, unknown>).fullscreenElement = { querySelectorAll: () => [video], tagName: 'DIV' };
+  p.doc.fire('fullscreenchange');
+  p.tick();
+  assert.deepEqual(p.last().full, [640, 360]);
+});
+
+test('a frame shown full screen: its width and height attributes, else 16:9', () => {
+  const p = page('android');
+  const attrs: Record<string, string> = { width: '315', height: '560' };
+  const frame = { tagName: 'IFRAME', contentWindow: {}, querySelectorAll: () => [], getAttribute: (n: string) => attrs[n] ?? null };
+  (p.doc as unknown as Record<string, unknown>).fullscreenElement = frame;
+  p.doc.fire('fullscreenchange');
+  p.tick();
+  assert.deepEqual(p.last().full, [315, 560]);
+  delete attrs.width;
+  p.doc.fire('fullscreenchange');
+  p.tick();
+  assert.deepEqual(p.last().full, [16, 9]);
+});

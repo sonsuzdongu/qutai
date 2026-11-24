@@ -31,6 +31,9 @@ class PageState(view: WebView, val isPrivate: Boolean) {
   var rate = 1.0
   var videoWidth = 0
   var videoHeight = 0
+  /** The size of the video the page shows full screen (0 when none or not known), for FullscreenOrientation. */
+  var fullWidth = 0
+  var fullHeight = 0
   /** Where the playing video is in the page's view, device pixels (left, top, width, height); null off screen. */
   var videoRect: IntArray? = null
   /** The site refuses picture-in-picture for this video (see pipRefused in src/browser/playback.ts). */
@@ -125,20 +128,26 @@ object PlaybackHub : RNCWebViewPlayback.Listener {
     val video = msg.optJSONArray("video")
     state.videoWidth = video?.optInt(0) ?: 0
     state.videoHeight = video?.optInt(1) ?: 0
+    val full = msg.optJSONArray("full")
+    state.fullWidth = full?.optInt(0)?.coerceAtLeast(0) ?: 0
+    state.fullHeight = full?.optInt(1)?.coerceAtLeast(0) ?: 0
     val rect = msg.optJSONArray("rect")
     state.noPip = msg.optBoolean("noPip")
     state.videoRect = if (rect != null && rect.length() == 4) IntArray(4) { rect.optInt(it) } else null
     state.reportedAt = now
     update()
+    FullscreenOrientation.onState(view)
   }
 
   override fun onFullscreenChanged(view: WebView, fullscreen: Boolean) {
     PictureInPicture.onFullscreenChanged(view, fullscreen)
+    FullscreenOrientation.onFullscreenChanged(view, fullscreen)
   }
 
   override fun onWebViewGone(view: WebView) {
     pages.removeAll { it.view.get() === view || it.view.get() == null }
     PictureInPicture.onFullscreenChanged(view, false)
+    FullscreenOrientation.onFullscreenChanged(view, false)
     update()
   }
 

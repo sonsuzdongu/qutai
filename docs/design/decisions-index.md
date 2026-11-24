@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 872 decisions (137 owner, 653 default, 82 waiting); 163 ids moved to Details.
+Totals: 873 decisions (137 owner, 654 default, 82 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -788,6 +788,7 @@ Moved to Details (ids retired, not reused): `DL-12`
 | `MEDIA-27` | Screen sharing (`getDisplayMedia`) is always refused; http pages get no camera or microphone. | Default |  |
 | `MEDIA-28` | Capture is paused while another tab is shown or Qutai is in the background; revoking reloads the page. | Default |  |
 | `MEDIA-29` | "Let sites play videos with sound automatically", off by default: sound waits for a touch, muted autoplay plays (page script in every frame) | Default | 2026-11-24 |
+| `MEDIA-30` | Android: a wide full-screen video turns to landscape (sensor, also with auto-rotate off) and back on exit; iOS's own player already rotates | Default | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `MEDIA-1`, `MEDIA-8`, `MEDIA-9`, `MEDIA-13`, `MEDIA-16`, `MEDIA-21`, `MEDIA-22`
 
