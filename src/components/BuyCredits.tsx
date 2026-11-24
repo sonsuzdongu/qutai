@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { track } from '../analytics';
-import { ActivityIndicator, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAccountState } from '../account';
@@ -12,6 +12,9 @@ import { noteStoreUsed, purchaseFlow, purchaseStore, storeName } from '../purcha
 import { packOffers, type BuyResult, type Pack, type PackOffer } from '../purchases/flow';
 import type { StoreFailure, StoreProduct } from '../purchases/types';
 import { Icon, type IconName } from '../ui/Icon';
+import { Aurora } from '../ui/Aurora';
+import { GradientButton, GradientText } from '../ui/BrandGradient';
+import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles, usePalette, radii, common } from '../ui/theme';
 import { DialogHost } from './Dialog';
 import { LegalScreen } from './LegalScreen';
@@ -197,26 +200,46 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   const loading = !credits.config && !credits.configError;
   const canBuy = !store.unavailable && signedIn && !suspended && !billingOff;
 
+  const mostCredits = offers.length > 1 ? Math.max(...offers.map((o) => o.pack.credits)) : null;
+
   return (
     <SafeAreaView style={styles.screen}>
+      {/* A paywall with the brand's look (UI-60): the drifting light behind the top, the mark, the name in the
+          brand gradient, what credits are for, then the packs. */}
+      <Aurora base={palette.bg} dark={palette.dark} fade={0.6} animate />
       <View style={styles.header}>
-        <Text style={styles.title} accessibilityRole="header">
-          {t('buy.title')}
-        </Text>
-        <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('common.close')}>
-          <Icon name="close" size={22} color={palette.text} />
+        <Pressable onPress={onClose} hitSlop={10} accessibilityRole="button" accessibilityLabel={t('common.close')} style={styles.close}>
+          <Icon name="close" size={20} color={palette.text} />
         </Pressable>
       </View>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.label}>{t('credits.balanceTitle')}</Text>
-          <View style={styles.balanceRow}>
-            <Text style={styles.balance} accessibilityLiveRegion="polite">
-              {credits.balance === null ? '–' : t('credits.amount', { credits: creditsText(credits.balance) })}
+        <View style={styles.hero}>
+          <QutaiMark size={72} sweepWhenIdle />
+          <Text style={styles.title} accessibilityRole="header">
+            {t('buy.title')}
+          </Text>
+          <GradientText style={styles.brand}>{t('credits.provider')}</GradientText>
+          <Text style={styles.heroText}>{t('buy.what')}</Text>
+          <View style={styles.balancePill} accessible accessibilityLiveRegion="polite">
+            <Icon name="wallet" size={16} color={palette.tintText} />
+            <Text style={styles.balanceText}>
+              {credits.balance === null
+                ? t('credits.balanceUnknown')
+                : t('credits.balance', { credits: creditsText(credits.balance) })}
             </Text>
-            {checking && <ActivityIndicator color={palette.textSecondary} />}
+            {checking && <ActivityIndicator size="small" color={palette.textSecondary} />}
           </View>
-          <Text style={styles.hint}>{t('buy.what')}</Text>
+        </View>
+
+        <View style={styles.perks}>
+          {PERKS.map((perk) => (
+            <View key={perk.text} style={styles.perk}>
+              <View style={styles.perkIcon}>
+                <Icon name={perk.icon} size={16} color={palette.tintText} />
+              </View>
+              <Text style={styles.perkText}>{t(perk.text)}</Text>
+            </View>
+          ))}
         </View>
 
         {status && (
@@ -241,7 +264,9 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
         {productsFailed && <Text style={styles.notice}>{t('buy.storeFailed')}</Text>}
         {billingOff && <Text style={styles.notice}>{t(Platform.OS === 'ios' ? 'buy.billingUnavailableIos' : 'buy.billingUnavailable')}</Text>}
 
-        <Text style={styles.section}>{t('buy.packs')}</Text>
+        <Text style={styles.section} accessibilityRole="header">
+          {t('buy.packs')}
+        </Text>
         {loading && <ActivityIndicator color={palette.textSecondary} style={styles.loading} />}
         {!credits.config && credits.configError && (
           <Pressable onPress={() => void creditsStore.config(0).catch(() => {})} accessibilityRole="button">
@@ -259,31 +284,33 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
         {offers.map((offer) => {
           const amount = t('credits.amount', { credits: creditsText(offer.pack.credits) });
           const working = busy === offer.pack.productId;
+          const top = offer.pack.credits === mostCredits;
           return (
-            <View key={offer.pack.productId} style={styles.pack}>
-              <View style={styles.packIcon}>
-                <Icon name="wallet" size={20} color={palette.tintText} />
-              </View>
-              <View style={styles.flex}>
-                <Text style={styles.packTitle}>{amount}</Text>
-                {!offer.price && <Text style={styles.hint}>{t('buy.noPrice')}</Text>}
-              </View>
-              {canBuy && offer.price && (
-                <Pressable
-                  onPress={() => void buy(offer)}
-                  disabled={!!busy}
-                  style={({ pressed }) => [styles.buyButton, pressed && styles.pressed, busy && !working && styles.dimmed]}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('buy.buyLabel', { credits: amount, price: offer.price })}
-                  accessibilityState={{ busy: working, disabled: !!busy }}
-                >
-                  {working ? (
-                    <ActivityIndicator color="#ffffff" />
-                  ) : (
-                    <Text style={styles.buyText}>{offer.price}</Text>
-                  )}
-                </Pressable>
+            <View key={offer.pack.productId} style={[styles.pack, top && styles.packTop]}>
+              {top && (
+                <View style={styles.badge}>
+                  <GradientText style={styles.badgeText}>{t('buy.mostCredits')}</GradientText>
+                </View>
               )}
+              <View style={styles.packRow}>
+                <View style={styles.packIcon}>
+                  <Icon name="wallet" size={22} color={palette.tintText} />
+                </View>
+                <View style={styles.flex}>
+                  <Text style={styles.packTitle}>{amount}</Text>
+                  {!offer.price && <Text style={styles.hint}>{t('buy.noPrice')}</Text>}
+                </View>
+                {canBuy && offer.price && (
+                  <GradientButton
+                    label={offer.price}
+                    accessibilityLabel={t('buy.buyLabel', { credits: amount, price: offer.price })}
+                    onPress={() => buy(offer)}
+                    disabled={!!busy && !working}
+                    style={styles.buyButton}
+                    textStyle={styles.buyText}
+                  />
+                )}
+              </View>
             </View>
           );
         })}
@@ -317,6 +344,13 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
 }
 
 const OK_GREEN = '#3a9b5c';
+
+/** What credits give, in three short lines (each true of every pack: BUY-1 consumables, CRED relay rules). */
+const PERKS: { icon: IconName; text: MessageKey }[] = [
+  { icon: 'key', text: 'buy.perk.noKey' },
+  { icon: 'wallet', text: 'buy.perk.oneTime' },
+  { icon: 'secure', text: 'buy.perk.private' },
+];
 
 const UNAVAILABLE: Record<NonNullable<ReturnType<typeof purchaseStore>['unavailable']>, MessageKey> = {
   notInBuild: 'buy.unavailable.notInBuild',
@@ -370,22 +404,47 @@ export function statusFor(result: BuyResult): Status {
 
 const useStyles = makeStyles((c) => ({
   screen: { flex: 1, backgroundColor: c.bg },
-  header: {
-    flexDirection: 'row',
+  header: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingTop: 8 },
+  close: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    justifyContent: 'center',
+    backgroundColor: c.surface,
   },
-  title: { color: c.text, fontSize: 20, fontWeight: '700', flexShrink: 1 },
   content: { paddingHorizontal: 20, paddingBottom: 32, gap: 12, maxWidth: 560, width: '100%', alignSelf: 'center' },
   flex: { flex: 1 },
-  card: { ...common(c).card, padding: 16, gap: 6 },
-  label: { color: c.textSecondary, fontSize: 13, fontWeight: '600' },
-  balanceRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  balance: { color: c.text, fontSize: 30, fontWeight: '700' },
+  hero: { alignItems: 'center', gap: 6, paddingTop: 4, paddingBottom: 8 },
+  title: { color: c.textSecondary, fontSize: 15, fontWeight: '600', marginTop: 10, textAlign: 'center' },
+  brand: { fontSize: 30, fontWeight: '800', textAlign: 'center' },
+  heroText: { color: c.textSecondary, fontSize: 15, lineHeight: 21, textAlign: 'center', paddingHorizontal: 8 },
+  balancePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: c.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: c.border,
+  },
+  balanceText: { color: c.text, fontSize: 15, fontWeight: '600' },
+  perks: { ...common(c).card, padding: 14, gap: 12 },
+  perk: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  perkIcon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: c.sunken,
+  },
+  perkText: { flex: 1, color: c.text, fontSize: 15, lineHeight: 20 },
   hint: common(c).hint,
-  section: { color: c.text, fontSize: 15, fontWeight: '600', marginTop: 8 },
+  section: { color: c.text, fontSize: 17, fontWeight: '700', marginTop: 8 },
   notice: common(c).notice,
   warnText: { color: c.danger },
   status: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderRadius: radii.control, padding: 12, backgroundColor: c.sunken },
@@ -394,33 +453,28 @@ const useStyles = makeStyles((c) => ({
   statusText: { flex: 1, color: c.text, fontSize: 14, lineHeight: 20 },
   loading: { alignSelf: 'flex-start', marginVertical: 8 },
   pack: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
     backgroundColor: c.surface,
     borderRadius: radii.card,
-    padding: 14,
+    padding: 16,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: c.border,
   },
+  packTop: { borderWidth: 2, borderColor: c.tint },
+  packRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  badge: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: c.sunken },
+  badgeText: { fontSize: 12, fontWeight: '800' },
   packIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: c.sunken,
   },
-  packTitle: { color: c.text, fontSize: 16, fontWeight: '600' },
-  buyButton: {
-    minWidth: 96,
-    minHeight: 40,
-    paddingVertical: 6,
-    paddingHorizontal: 16,
-    borderRadius: radii.button,
-    backgroundColor: c.tint,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buyText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
+  packTitle: { color: c.text, fontSize: 19, fontWeight: '700' },
+  buyButton: { minWidth: 104, minHeight: 44, paddingVertical: 8, paddingHorizontal: 18, borderRadius: radii.button },
+  buyText: { fontSize: 16 },
   secondary: {
     flexDirection: 'row',
     alignItems: 'center',

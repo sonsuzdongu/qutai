@@ -2951,4 +2951,9 @@ export const ko: Record<keyof typeof en, string> = {
   "blocking.publisherSection": "광고 및 추적기 목록",
   "blocking.mineSection": "내 목록",
   "blocking.mineNone": "주소로 추가한 목록이 여기에 표시됩니다.",
+  // Buy credits as a paywall (UI-60).
+  "buy.mostCredits": "최다 크레딧",
+  "buy.perk.noKey": "API 키나 AI 계정이 필요 없음",
+  "buy.perk.oneTime": "일회성 팩, 구독 없음",
+  "buy.perk.private": "메시지는 Qutai 서버를 거치지만 저장되지 않습니다",
 };

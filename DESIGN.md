@@ -19,6 +19,7 @@ Last updated: 2026-11-24
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-24:** Backup's "What's included", password and automatic backups are grouped (`UI-59`); Buy credits becomes a proper paywall (`UI-60`).
 - **2026-11-24:** Settings › Account drops "Add a sign-in method"; a second way in comes from Combine with another account (`ACC-55`).
 - **2026-11-24:** Settings reorganised: grouped pages with headings (`UI-54`, Appearance gets "Theme"); Assistant split into Permissions, Voice input and Tasks and history pages, its tour link closing Settings (`UI-55`); Account with Apple's and Google's own sign-in buttons and identity → credits → sign-in methods → rare and destructive actions (`UI-56`); Filter lists grouped and opening at the top (`UI-57`); the default-browser row moved from Search to About (`UI-58`, `INTRO-30`, `INTRO-32`).
 - **2026-11-23:** Filter list downloads: the AdGuard lists fall back to AdGuard's FiltersRegistry copy on GitHub when filters.adtidy.org doesn't answer in 15 s, refuses or fails (`BLK-2`); requests to one host are spaced, failed retries wait 1 h / 4 h / a day, each row shows its own progress, switching off cancels, a never-downloaded failure switches back off with "Try again", and the alert names the lists (`BLK-34`).

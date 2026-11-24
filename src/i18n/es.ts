@@ -2947,4 +2947,9 @@ export const es: Record<keyof typeof en, string> = {
   "blocking.publisherSection": "Listas de anuncios y rastreadores",
   "blocking.mineSection": "Mis listas",
   "blocking.mineNone": "Aquí aparecen las listas que añades por dirección.",
+  // Buy credits as a paywall (UI-60).
+  "buy.mostCredits": "Más créditos",
+  "buy.perk.noKey": "Sin clave de API ni cuenta de IA",
+  "buy.perk.oneTime": "Paquetes de pago único, sin suscripción",
+  "buy.perk.private": "Tus mensajes pasan por el servidor de Qutai y no se guardan allí",
 };

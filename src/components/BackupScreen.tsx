@@ -20,7 +20,7 @@ import { formatDateTime, formatList, formatPercent, formatSize } from '../i18n/f
 import { appsDataSize } from '../apps/appStore';
 import { Button } from '../ui/Button';
 import { PasswordField } from '../ui/PasswordField';
-import { SwitchRow } from '../ui/SettingsRows';
+import { GroupSwitch, SettingsSection, SwitchRow } from '../ui/SettingsRows';
 import type { Settings } from '../storage/settings';
 import { makeStyles, readableColumn, usePalette, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
@@ -163,38 +163,44 @@ function ExportForm({ appLock, busy, setBusy, onDone }: BusyProps & { appLock: b
 
   return (
     <KeyboardAwareScrollView contentContainerStyle={styles.content}>
-      <Text style={styles.hint}>{t('backup.alwaysIncluded')}</Text>
-      <SwitchRow title={t('backup.tabs')} hint={t('backup.tabsHint')} value={tabs} onChange={setTabs} disabled={busy} />
-      <SwitchRow
+      {/* What goes in, as one group (UI-59). */}
+      <SettingsSection
+        title={t('serverBackup.contents')}
+        description={t('backup.alwaysIncluded')}
+        footer={t('backup.notIncluded')}
+        style={styles.firstGroup}
+      >
+        <GroupSwitch title={t('backup.tabs')} hint={t('backup.tabsHint')} value={tabs} onChange={setTabs} disabled={busy} />
+        <GroupSwitch
         title={t('backup.chats')}
-        hint={t('backup.chatsHint')}
-        value={tabs && chats}
-        onChange={setChats}
-        disabled={busy || !tabs}
-      />
-      <SwitchRow
+          hint={t('backup.chatsHint')}
+          value={tabs && chats}
+          onChange={setChats}
+          disabled={busy || !tabs}
+        />
+        <GroupSwitch
         title={t('backup.activity')}
-        hint={t('backup.activityHint')}
-        value={activity}
-        onChange={setActivity}
-        disabled={busy}
-      />
-      <SwitchRow title={t('backup.apps')} hint={t('backup.appsHint')} value={apps} onChange={setApps} disabled={busy} />
-      <SwitchRow
+          hint={t('backup.activityHint')}
+          value={activity}
+          onChange={setActivity}
+          disabled={busy}
+        />
+        <GroupSwitch title={t('backup.apps')} hint={t('backup.appsHint')} value={apps} onChange={setApps} disabled={busy} />
+        <GroupSwitch
         title={t('backup.appData')}
-        hint={t('backup.appDataHint', { size: formatSize(appDataSize ?? 0) })}
-        value={apps && appData}
-        onChange={setAppData}
-        disabled={busy || !apps}
-      />
-      <SwitchRow
+          hint={t('backup.appDataHint', { size: formatSize(appDataSize ?? 0) })}
+          value={apps && appData}
+          onChange={setAppData}
+          disabled={busy || !apps}
+        />
+        <GroupSwitch
         title={t('backup.apiKeys')}
-        hint={t('backup.apiKeysHint')}
-        value={apiKeys}
-        onChange={setApiKeys}
-        disabled={busy}
-      />
-      <Text style={styles.hint}>{t('backup.notIncluded')}</Text>
+          hint={t('backup.apiKeysHint')}
+          value={apiKeys}
+          onChange={setApiKeys}
+          disabled={busy}
+        />
+      </SettingsSection>
 
       <Text style={[styles.label, styles.section]}>{t('backup.password')}</Text>
       <PasswordField value={password} onChange={setPassword} label={t('backup.password')} purpose="new" />
@@ -419,6 +425,7 @@ function ImportFlow({
 }
 
 const useStyles = makeStyles((c) => ({
+  firstGroup: { marginTop: 0 },
   container: { flex: 1, backgroundColor: c.bg },
   content: { ...readableColumn, padding: 16, gap: 12, paddingBottom: 40 },
   label: common(c).label,

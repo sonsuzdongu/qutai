@@ -2938,4 +2938,9 @@ export const de: Record<keyof typeof en, string> = {
   "blocking.publisherSection": "Werbe- und Trackerlisten",
   "blocking.mineSection": "Meine Listen",
   "blocking.mineNone": "Listen, die Sie per Adresse hinzufügen, erscheinen hier.",
+  // Buy credits as a paywall (UI-60).
+  "buy.mostCredits": "Meiste Credits",
+  "buy.perk.noKey": "Kein API-Schlüssel und kein KI-Konto nötig",
+  "buy.perk.oneTime": "Einmalige Pakete, kein Abo",
+  "buy.perk.private": "Ihre Nachrichten laufen über Qutais Server und werden dort nicht gespeichert",
 };

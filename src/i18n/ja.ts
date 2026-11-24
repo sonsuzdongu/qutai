@@ -2953,4 +2953,9 @@ export const ja: Record<keyof typeof en, string> = {
   "blocking.publisherSection": "広告とトラッカーのリスト",
   "blocking.mineSection": "マイリスト",
   "blocking.mineNone": "アドレスで追加したリストがここに表示されます。",
+  // Buy credits as a paywall (UI-60).
+  "buy.mostCredits": "最大クレジット",
+  "buy.perk.noKey": "API キーも AI のアカウントも不要",
+  "buy.perk.oneTime": "買い切りパック、サブスクリプションなし",
+  "buy.perk.private": "メッセージは Qutai のサーバーを通りますが、保存されません",
 };

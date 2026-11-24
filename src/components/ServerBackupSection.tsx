@@ -24,7 +24,7 @@ import { MessageKey, t } from '../i18n';
 import { formatDateTime, formatPercent, formatSize } from '../i18n/format';
 import { AppModal } from '../ui/AppModal';
 import { Button } from '../ui/Button';
-import { SwitchRow } from '../ui/SettingsRows';
+import { GroupLink, GroupSwitch, SettingsSection } from '../ui/SettingsRows';
 import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { useAppsDataSize, type ServerRestoreJob } from './BackupScreen';
 import { PasswordField } from '../ui/PasswordField';
@@ -330,60 +330,58 @@ export function ServerBackupSection({ onRestore }: { onRestore: (job: ServerRest
         </>
       )}
 
-      <Text style={[styles.label, styles.section]}>{t('serverBackup.password')}</Text>
-      <Text style={styles.hint}>{hasPassword ? t('serverBackup.passwordSet') : t('serverBackup.passwordNotSet')}</Text>
-      <Pressable
-        onPress={() => setPasswordSheet({ change: hasPassword, thenBackUp: false })}
-        disabled={busy}
-        accessibilityRole="button"
-        hitSlop={8}
-        style={styles.smallButton}
-      >
-        <Text style={styles.link}>{t(hasPassword ? 'serverBackup.changePassword' : 'serverBackup.setPassword')}</Text>
-      </Pressable>
-
-      <Text style={[styles.label, styles.section]}>{t('serverBackup.automatic')}</Text>
-      <Row title={t('serverBackup.auto')} hint={t('serverBackup.autoHint')} value={prefs.auto} onChange={(auto) => setPref({ auto })} />
-      {prefs.auto && (
-        <Row
-          title={t('serverBackup.wifiOnly')}
-          hint={t('serverBackup.wifiOnlyHint')}
-          value={prefs.network === 'wifi'}
-          onChange={(wifi) => setPref({ network: wifi ? 'wifi' : 'any' })}
+      <SettingsSection title={t('serverBackup.password')}>
+        <GroupLink
+          title={t(hasPassword ? 'serverBackup.changePassword' : 'serverBackup.setPassword')}
+          summary={hasPassword ? t('serverBackup.passwordSet') : t('serverBackup.passwordNotSet')}
+          disabled={busy}
+          onPress={() => setPasswordSheet({ change: hasPassword, thenBackUp: false })}
         />
-      )}
+      </SettingsSection>
 
-      <Text style={[styles.label, styles.section]}>{t('serverBackup.contents')}</Text>
-      <Text style={styles.hint}>{t('backup.alwaysIncluded')}</Text>
-      <Row title={t('backup.tabs')} hint={t('backup.tabsHint')} value={prefs.tabs} onChange={(tabs) => setPref({ tabs })} />
-      <Row
-        title={t('backup.chats')}
-        hint={t('serverBackup.chatsHint')}
-        value={prefs.tabs && prefs.chats}
-        disabled={!prefs.tabs}
-        onChange={(chats) => setPref({ chats })}
-      />
-      <Row
-        title={t('backup.activity')}
-        hint={t('backup.activityHint')}
-        value={prefs.activity}
-        onChange={(activity) => setPref({ activity })}
-      />
-      <Row
-        title={t('backup.apiKeys')}
-        hint={t('serverBackup.apiKeysHint')}
-        value={prefs.apiKeys}
-        onChange={(apiKeys) => setPref({ apiKeys })}
-      />
-      <Row title={t('backup.apps')} hint={t('backup.appsHint')} value={prefs.apps} onChange={(apps) => setPref({ apps })} />
-      <Row
-        title={t('backup.appData')}
-        hint={t('serverBackup.appDataHint', { size: formatSize(appData ?? 0) })}
-        value={prefs.apps && prefs.appData}
-        disabled={!prefs.apps}
-        onChange={(appData) => setPref({ appData })}
-      />
-      <Text style={styles.hint}>{t('backup.notIncluded')}</Text>
+      <SettingsSection title={t('serverBackup.automatic')}>
+        <GroupSwitch title={t('serverBackup.auto')} hint={t('serverBackup.autoHint')} value={prefs.auto} onChange={(auto) => setPref({ auto })} />
+        {prefs.auto && (
+          <GroupSwitch
+            title={t('serverBackup.wifiOnly')}
+            hint={t('serverBackup.wifiOnlyHint')}
+            value={prefs.network === 'wifi'}
+            onChange={(wifi) => setPref({ network: wifi ? 'wifi' : 'any' })}
+          />
+        )}
+      </SettingsSection>
+
+      {/* What goes in, as one group (UI-59). */}
+      <SettingsSection title={t('serverBackup.contents')} description={t('backup.alwaysIncluded')} footer={t('backup.notIncluded')}>
+        <GroupSwitch title={t('backup.tabs')} hint={t('backup.tabsHint')} value={prefs.tabs} onChange={(tabs) => setPref({ tabs })} />
+        <GroupSwitch
+          title={t('backup.chats')}
+          hint={t('serverBackup.chatsHint')}
+          value={prefs.tabs && prefs.chats}
+          disabled={!prefs.tabs}
+          onChange={(chats) => setPref({ chats })}
+        />
+        <GroupSwitch
+          title={t('backup.activity')}
+          hint={t('backup.activityHint')}
+          value={prefs.activity}
+          onChange={(activity) => setPref({ activity })}
+        />
+        <GroupSwitch
+          title={t('backup.apiKeys')}
+          hint={t('serverBackup.apiKeysHint')}
+          value={prefs.apiKeys}
+          onChange={(apiKeys) => setPref({ apiKeys })}
+        />
+        <GroupSwitch title={t('backup.apps')} hint={t('backup.appsHint')} value={prefs.apps} onChange={(apps) => setPref({ apps })} />
+        <GroupSwitch
+          title={t('backup.appData')}
+          hint={t('serverBackup.appDataHint', { size: formatSize(appData ?? 0) })}
+          value={prefs.apps && prefs.appData}
+          disabled={!prefs.apps}
+          onChange={(appData) => setPref({ appData })}
+        />
+      </SettingsSection>
 
       <PasswordSheet
         open={passwordSheet}
@@ -400,13 +398,6 @@ export function ServerBackupSection({ onRestore }: { onRestore: (job: ServerRest
     </View>
   );
 }
-
-/** A switch row with this section's lighter title and spacing. */
-function Row(props: Parameters<typeof SwitchRow>[0]) {
-  const styles = useStyles();
-  return <SwitchRow style={styles.row} titleStyle={styles.rowTitle} {...props} />;
-}
-
 
 /** Set (first time) or change the backup password: twice, with the warning that it can't be recovered. */
 function PasswordSheet({
@@ -498,7 +489,6 @@ const useStyles = makeStyles((c) => ({
   block: { gap: 8, marginTop: 24 },
   title: common(c).title,
   label: common(c).label,
-  rowTitle: { fontWeight: '400' },
   section: { marginTop: 12 },
   hint: common(c).hint,
   status: { fontSize: 14, color: c.text, lineHeight: 20 },
@@ -509,7 +499,6 @@ const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
   gap: { gap: 6 },
   details: { marginLeft: 0 },
-  row: { paddingVertical: 4 },
   progressRow: {
     flexDirection: 'row',
     alignItems: 'center',

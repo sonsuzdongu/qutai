@@ -26,7 +26,7 @@ const BASELINE: Record<string, number> = {
   'src/components/AssistantGlass.tsx': 7,
   'src/components/AssistantIntro.tsx': 1,
   'src/components/AttachmentViews.tsx': 30,
-  'src/components/BuyCredits.tsx': 3,
+  'src/components/BuyCredits.tsx': 1,
   'src/components/ChatComposer.tsx': 7,
   'src/components/ChatRows.tsx': 2,
   'src/components/CreditsScreen.tsx': 1,

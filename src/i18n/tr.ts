@@ -2949,4 +2949,9 @@ export const tr: Record<keyof typeof en, string> = {
   "blocking.publisherSection": "Reklam ve izleyici listeleri",
   "blocking.mineSection": "Kendi listelerim",
   "blocking.mineNone": "Adresle eklediğiniz listeler burada görünür.",
+  // Buy credits as a paywall (UI-60).
+  "buy.mostCredits": "En çok kredi",
+  "buy.perk.noKey": "API anahtarı ya da yapay zekâ hesabı gerekmez",
+  "buy.perk.oneTime": "Tek seferlik paketler, abonelik yok",
+  "buy.perk.private": "Mesajlarınız Qutai’ın sunucusundan geçer, orada saklanmaz",
 };

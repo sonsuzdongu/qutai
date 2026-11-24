@@ -2952,4 +2952,9 @@ export const fr: Record<keyof typeof en, string> = {
   "blocking.publisherSection": "Listes de publicités et de traqueurs",
   "blocking.mineSection": "Mes listes",
   "blocking.mineNone": "Les listes que vous ajoutez par adresse apparaissent ici.",
+  // Buy credits as a paywall (UI-60).
+  "buy.mostCredits": "Le plus de crédits",
+  "buy.perk.noKey": "Ni clé d’API ni compte d’IA nécessaires",
+  "buy.perk.oneTime": "Packs à l’unité, sans abonnement",
+  "buy.perk.private": "Vos messages passent par le serveur de Qutai et n’y sont pas conservés",
 };

@@ -2944,4 +2944,9 @@ export const en = {
   "blocking.publisherSection": "Ad and tracker lists",
   "blocking.mineSection": "My lists",
   "blocking.mineNone": "Lists you add by address appear here.",
+  // Buy credits as a paywall (UI-60).
+  "buy.mostCredits": "Most credits",
+  "buy.perk.noKey": "No API key or AI account needed",
+  "buy.perk.oneTime": "One-time packs, no subscription",
+  "buy.perk.private": "Your messages pass through Qutai’s server and aren’t stored there",
 } as const;

@@ -102,16 +102,19 @@ export function Segment<T extends string>({
 
 /**
  * A group of settings (design record UI-54): an optional heading (a header for screen readers), the rows in one card
- * with a thin line between them, and an optional grey note under the card. Rows are GroupSwitch, GroupLink and
+ * with a thin line between them, an optional grey line above the card and an optional grey note under it. Rows are GroupSwitch, GroupLink and
  * GroupItem (anything else, padded like a row); `null`/`false` children are skipped, so a row can be conditional.
  */
 export function SettingsSection({
   title,
+  description,
   footer,
   children,
   style,
 }: {
   title?: string;
+  /** A grey line between the heading and the card (what the group is about). */
+  description?: string;
   footer?: string | ReactNode;
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -125,6 +128,7 @@ export function SettingsSection({
           {title}
         </Text>
       ) : null}
+      {description ? <Text style={styles.footer}>{description}</Text> : null}
       {rows.length > 0 && (
         <View style={styles.card}>
           {rows.map((row, i) => (

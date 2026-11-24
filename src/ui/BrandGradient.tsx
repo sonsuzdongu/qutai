@@ -67,8 +67,11 @@ export function GradientButton({
   textStyle,
   icon,
   maxFontSizeMultiplier,
+  accessibilityLabel,
 }: {
   label: string;
+  /** What a screen reader says, when the label alone isn't enough (a price: "Buy 500 credits for €4.99"). */
+  accessibilityLabel?: string;
   onPress: PressAction;
   disabled?: boolean;
   style?: StyleProp<ViewStyle>;
@@ -84,7 +87,7 @@ export function GradientButton({
       disabled={disabled || busy}
       accessibilityRole="button"
       accessibilityState={{ disabled, busy }}
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       style={({ pressed }) => [styles.button, style, disabled && styles.disabled, pressed && styles.pressed]}
     >
       <LinearGradient

@@ -2952,4 +2952,9 @@ export const id: Record<keyof typeof en, string> = {
   "blocking.publisherSection": "Daftar iklan dan pelacak",
   "blocking.mineSection": "Daftar saya",
   "blocking.mineNone": "Daftar yang Anda tambahkan lewat alamat muncul di sini.",
+  // Buy credits as a paywall (UI-60).
+  "buy.mostCredits": "Kredit terbanyak",
+  "buy.perk.noKey": "Tanpa kunci API atau akun AI",
+  "buy.perk.oneTime": "Paket sekali beli, tanpa langganan",
+  "buy.perk.private": "Pesan Anda melewati server Qutai dan tidak disimpan di sana",
 };
