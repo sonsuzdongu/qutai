@@ -435,11 +435,6 @@ function SettingsPages({
                 onPress={() => setPage('assistantTasks')}
               />
             </SettingsSection>
-            {settings.showAssistantButton && (
-              <SettingsSection>
-                <GroupLink icon="info" title={t('settings.assistantIntro')} chevron={false} onPress={onShowAssistantIntro} />
-              </SettingsSection>
-            )}
           </>
         )}
 
@@ -787,6 +782,10 @@ function SettingsPages({
                   summary={t('settings.defaultBrowserLead')}
                   onPress={() => openDefaultBrowserSettings().catch(() => {})}
                 />
+              )}
+              {/* The Qutai button tour, here since UI-61 (was at the end of Settings › Assistant). */}
+              {settings.showAssistantButton && (
+                <GroupLink icon="info" title={t('settings.assistantIntro')} chevron={false} onPress={onShowAssistantIntro} />
               )}
             </SettingsSection>
             <SettingsSection>
