@@ -756,6 +756,7 @@ Moved to Details (ids retired, not reused): `APPS-6`, `APPS-20`, `APPS-19`, `APP
 | `DL-17` | "Add to home screen" is not offered for incognito tabs. | Default |  |
 
 Moved to Details (ids retired, not reused): `DL-12`
+| `DL-18` | Android: a link from another app counts as the user's tap for its first load's redirects; Google Play links the… | Owner | 2026-11-24 |
 
 ## [24. Reader mode, media and downloads on screen](24-reader-and-media.md)
 

@@ -476,7 +476,7 @@ index 0000000..95b43f2
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
-index 209b855..070ca8b 100644
+index 209b855..9d625c6 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 @@ -1,6 +1,7 @@
@@ -583,7 +583,43 @@ index 209b855..070ca8b 100644
          final boolean isJsDebugging = rncWebView.getReactApplicationContext().getJavaScriptContextHolder().get() == 0;
  
          if (!isJsDebugging && rncWebView.mMessagingJSModule != null) {
-@@ -156,6 +217,15 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -105,7 +166,9 @@ public class RNCWebViewClient extends WebViewClient {
+                         if (SystemClock.elapsedRealtime() - startTime > SHOULD_OVERRIDE_URL_LOADING_TIMEOUT) {
+                             FLog.w(TAG, "Did not receive response to shouldOverrideUrlLoading in time, defaulting to allow loading.");
+                             RNCWebViewModuleImpl.shouldOverrideUrlLoadingLock.removeLock(lockIdentifier);
+-                            return false;
++                            // Qutai patch: a link for another app (market://, intent://) is never loaded as a page (an
++                            // ERR_UNKNOWN_URL_SCHEME error page); JavaScript still gets the event and hands it off.
++                            return !isWebViewScheme(url);
+                         }
+                         lockObject.wait(SHOULD_OVERRIDE_URL_LOADING_TIMEOUT);
+                     }
+@@ -113,7 +176,7 @@ public class RNCWebViewClient extends WebViewClient {
+             } catch (InterruptedException e) {
+                 FLog.e(TAG, "shouldOverrideUrlLoading was interrupted while waiting for result.", e);
+                 RNCWebViewModuleImpl.shouldOverrideUrlLoadingLock.removeLock(lockIdentifier);
+-                return false;
++                return !isWebViewScheme(url);
+             }
+ 
+             final boolean shouldOverride = lockObject.get() == RNCWebViewModuleImpl.ShouldOverrideUrlLoadingLock.ShouldOverrideCallbackState.SHOULD_OVERRIDE;
+@@ -132,6 +195,15 @@ public class RNCWebViewClient extends WebViewClient {
+         }
+     }
+ 
++    // Qutai patch: schemes the WebView loads itself; anything else is a link for another app.
++    private static boolean isWebViewScheme(String url) {
++        if (url == null) return true;
++        String lower = url.toLowerCase(java.util.Locale.ROOT);
++        return lower.startsWith("http:") || lower.startsWith("https:") || lower.startsWith("about:")
++                || lower.startsWith("data:") || lower.startsWith("blob:") || lower.startsWith("javascript:")
++                || lower.startsWith("file:");
++    }
++
+     @Override
+     public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+         final String url = request.getUrl().toString();
+@@ -156,6 +228,15 @@ public class RNCWebViewClient extends WebViewClient {
          String topWindowUrl = webView.getUrl();
          String failingUrl = error.getUrl();
  
@@ -599,7 +635,7 @@ index 209b855..070ca8b 100644
          // Cancel request after obtaining top-level URL.
          // If request is cancelled before obtaining top-level URL, undesired behavior may occur.
          // Undesired behavior: Return value of WebView.getUrl() may be the current URL instead of the failing URL.
-@@ -191,6 +261,13 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -191,6 +272,13 @@ public class RNCWebViewClient extends WebViewClient {
          }
  
          description = descriptionPrefix + description;
@@ -613,7 +649,7 @@ index 209b855..070ca8b 100644
  
        if (!topWindowUrl.equalsIgnoreCase(failingUrl)) {
          // If error is not due to top-level navigation, then do not call onReceivedError()
-@@ -248,6 +325,17 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -248,6 +336,17 @@ public class RNCWebViewClient extends WebViewClient {
          UIManagerHelper.getEventDispatcherForReactTag((ReactContext) webView.getContext(), reactTag).dispatchEvent(new TopLoadingErrorEvent(reactTag, eventData));
      }
  

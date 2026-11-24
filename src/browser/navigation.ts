@@ -97,12 +97,16 @@ export function linkTarget(url: string): LinkTarget {
   return 'external';
 }
 
+const PLAY_STORE_PACKAGE = 'com.android.vending';
+const PACKAGE_NAME = /^[A-Za-z][\w]*(\.[A-Za-z][\w]*)+$/;
+
 /**
  * Android `intent://` links (`intent://host/path#Intent;scheme=x;package=y;S.browser_fallback_url=…;end`)
  * can't be opened as-is from React Native. They become the app's own URL, plus the web
- * fallback the page provided for when the app isn't installed.
+ * fallback the page provided for when the app isn't installed, or else (like Chrome) the app's
+ * Google Play page when the link names a package.
  */
-export function parseIntentUrl(url: string): { appUrl?: string; fallbackUrl?: string } {
+export function parseIntentUrl(url: string): { appUrl?: string; fallbackUrl?: string; packageName?: string; marketUrl?: string } {
   const match = /^intent:\/\/([^#]*)#Intent;(.*?);?end;?$/i.exec(url);
   if (!match) return {};
   const [, rest, params] = match;
@@ -118,7 +122,27 @@ export function parseIntentUrl(url: string): { appUrl?: string; fallbackUrl?: st
     if (raw) fallbackUrl = decodeURIComponent(raw);
   } catch {}
   if (fallbackUrl && !/^https?:\/\//i.test(fallbackUrl)) fallbackUrl = undefined;
-  return { appUrl: scheme ? `${scheme}://${rest}` : undefined, fallbackUrl };
+  const pkg = fields.get('package');
+  const packageName = pkg && PACKAGE_NAME.test(pkg) ? pkg : undefined;
+  const marketUrl =
+    packageName && packageName !== PLAY_STORE_PACKAGE ? `market://details?id=${packageName}` : undefined;
+  return { appUrl: scheme ? `${scheme}://${rest}` : undefined, fallbackUrl, packageName, marketUrl };
+}
+
+/**
+ * The Google Play address of a link meant for Play (`market://…`, or an `intent://` link for the
+ * Play Store app or the market scheme), as a `market://` URL Play opens directly; null for any
+ * other link. A Play web address inside such an intent (`play.google.com/store/apps/details?id=…`)
+ * becomes `market://details?id=…`, so Android doesn't hand it back to the default browser.
+ */
+export function playStoreUrl(url: string): string | null {
+  if (/^market:\/\//i.test(url)) return url;
+  const { appUrl, packageName } = parseIntentUrl(url);
+  if (!appUrl) return null;
+  if (/^market:\/\//i.test(appUrl)) return appUrl;
+  if (packageName !== PLAY_STORE_PACKAGE) return null;
+  const web = /^https?:\/\/play\.google\.com\/store\/apps\/(details\?[^#]*)$/i.exec(appUrl);
+  return web ? `market://${web[1]}` : null;
 }
 
 /** Short, readable form of an external link for the confirmation prompt. */

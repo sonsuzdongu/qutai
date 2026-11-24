@@ -22,7 +22,7 @@ import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../
 import { linkTarget, toLoadError } from '../browser/navigation';
 import { certificateExceptionsFor, mayBypassCertificate, noteValidCertificate } from '../browser/certificateExceptions';
 import { isLocalUrl } from '../browser/localNetwork';
-import { mayOfferExternal, noteUserGesture, touchedRecently } from '../browser/externalGuard';
+import { endLaunchChain, mayOfferExternal, noteUserGesture, touchedRecently } from '../browser/externalGuard';
 import { isUserTap, windowOpensInFront } from '../browser/pendingNavigation';
 import { FORM_ANSWER_IDLE, formAnswer } from '../browser/formResubmission';
 import { parseBarMessage, TOOLBAR_SCROLL_SCRIPT } from '../browser/toolbarScroll';
@@ -384,6 +384,8 @@ function TabWebView({
                 }, 1500);
               }
               setRefreshing(false);
+              // A page has loaded: a tab opened from another app no longer counts its redirects as the user's tap.
+              if (/^https?:/i.test(e.nativeEvent.url)) endLaunchChain(tab);
               // Is this page an article? (reader mode indicator)
               tab.probeReaderSoon();
             }}
@@ -456,7 +458,8 @@ function TabWebView({
               }
               if (linkTarget(request.url) !== 'external') return true;
               // Only the page itself may hand off to another app, frames (often ads) can't, and only
-              // when the user just touched it: no prompts from redirects on load.
+              // when the user just touched it or the tab was just opened from another app (its first
+              // load's redirects, DL-18): no prompts from redirects on load otherwise.
               const clicked = request.navigationType === 'click';
               if (request.isTopFrame !== false && mayOfferExternal(tab, request.url, clicked)) {
                 openExternal(request.url, tab, newTabActions.onNotice);

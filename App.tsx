@@ -75,6 +75,7 @@ import { getProvider, isConfigured } from './src/ai/providers';
 import { Browser, ClosedTab, useBrowser } from './src/browser/Browser';
 import { ContextTarget, looksLikePdfLink } from './src/browser/contextMenu';
 import { quoteSelection } from './src/browser/selection';
+import { noteOpenedFromApp } from './src/browser/externalGuard';
 import type { Tab } from './src/browser/Tab';
 import { useHardwareBack } from './src/browser/useHardwareBack';
 import { AddressBar, type ProgressLineState } from './src/components/AddressBar';
@@ -887,7 +888,9 @@ function BrowserApp({
   const handleEntry = (entry: Entry) => {
     switch (entry.kind) {
       case 'open':
-        browser.openTab(entry.url);
+        // A link opened from another app: its first load's redirects to Google Play or another app count as the
+        // user's tap (DL-18).
+        noteOpenedFromApp(browser.openTab(entry.url));
         return;
       case 'shared':
         // The chooser is not shown over an incognito tab (or its lock screen).
