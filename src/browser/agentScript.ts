@@ -14,9 +14,11 @@
  * What the page answers stays the page's word: a page's own scripts run in the same JavaScript world and can always
  * change what the DOM shows, so every answer is checked as untrusted data by the caller (agent/pageFacts.ts).
  */
+import { Platform } from 'react-native';
 import { HIDE_PROBE_SCRIPT } from '../content/hideProbe';
 import { SCRIPT_PAGE_SCRIPT } from '../content/scriptPage';
 import { newNonce } from '../utils/ids';
+import { BACK_TRAP_SCRIPT } from './backTrap';
 import { PAGE_SCRIPT } from './pageScript';
 
 /** A new secret name for the page script's object on window. */
@@ -37,6 +39,7 @@ export function agentInstallScript(name: string): string {
 ${PAGE_SCRIPT}
 ${HIDE_PROBE_SCRIPT}
 ${SCRIPT_PAGE_SCRIPT}
+${Platform.OS === 'ios' ? BACK_TRAP_SCRIPT : ''}
   Object.freeze(__qutaiAgent);
   try {
     Object.defineProperty(window, NAME, { value: __qutaiAgent, writable: false, enumerable: false, configurable: false });

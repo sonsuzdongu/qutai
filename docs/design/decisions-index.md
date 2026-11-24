@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 869 decisions (137 owner, 650 default, 82 waiting); 163 ids moved to Details.
+Totals: 870 decisions (137 owner, 651 default, 82 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -491,6 +491,7 @@ Moved to Details (ids retired, not reused): `LOG-7`
 | `TABS-30` | A page whose process ends reloads once; the same page again within a minute shows "This page stopped working"… | Default | 2026-11-20 |
 | `TABS-31` | Android pull to refresh only when the page and every scroll area under the finger are at their start (reversed and flipped lists, overscroll-behavior, touch-action), decided per touch in the patched WebView | Default | 2026-11-24 |
 | `TABS-32` | The long-press menu never opens while scrolling (move, touchcancel, any scroll, a touch stopping a fling); opens once per press | Default | 2026-11-24 |
+| `TABS-33` | Back skips entries a page added without a touch on the entry left (Android: the WebView's own; iOS: the page script goes back itself); never a user-made entry | Default | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-8`
 

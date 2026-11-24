@@ -48,6 +48,9 @@ type Pending = {
 /** Internal address of the app's own new tab page; never handed to a WebView. */
 export const NEW_TAB_URL = 'qutai://newtab';
 
+/** How long Back waits for the page script's answer (back-button traps, backTrap.ts) before the WebView goes back. */
+const BACK_ANSWER_MS = 400;
+
 export type PageCommand =
   | 'resourceHosts'
   | 'readPage'
@@ -105,7 +108,8 @@ export type PageCommand =
   | 'pressComposed'
   | 'enterFacts'
   | 'scriptFacts'
-  | 'scriptSnapshot';
+  | 'scriptSnapshot'
+  | 'back';
 
 /** Commands that search the text on screen: in reader mode they run in the reader view. */
 const READER_COMMANDS = new Set<PageCommand>(['findInPage', 'findStep', 'clearFind']);
@@ -514,11 +518,31 @@ export class Tab {
     this.webview?.reload();
   }
 
-  /** Back in the page's history (the address isn't known until the WebView says it). */
+  /**
+   * Back in the page's history (the address isn't known until the WebView says it). iOS: the page script goes back
+   * itself, past entries the page added without the user (back-button traps, backTrap.ts); when it doesn't answer
+   * quickly (no script on this page, no Navigation API), the WebView goes back one entry.
+   */
   historyBack() {
     this.lastAppAction = 'back';
     this.nav.begin('', 'app');
-    this.webview?.goBack();
+    const webview = this.webview;
+    if (!webview) return;
+    // Android: the WebView's own back already skips them (Chromium's history manipulation intervention reaches
+    // WebView.goBack; checked on Android 16's WebView, 24 Nov 2026).
+    if (Platform.OS === 'android' || this.isNewTab || this.loadError || this.crashed || isRunningInBackground()) {
+      webview.goBack();
+      return;
+    }
+    // The deadline: a page too busy to run the command in time doesn't go back after the WebView already has.
+    this.run<number>('back', [Date.now() + BACK_ANSWER_MS - 100], BACK_ANSWER_MS).then(
+      (steps) => {
+        if (!(typeof steps === 'number' && steps > 0) && this.webview === webview) webview.goBack();
+      },
+      () => {
+        if (this.webview === webview) webview.goBack();
+      },
+    );
   }
 
   historyForward() {
