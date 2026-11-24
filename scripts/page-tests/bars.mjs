@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Local test pages for the hiding address bar (src/components/HidingBar.tsx): how a page's own bottom navigation
-// follows the page's height when Qutai's bar slides away. Nothing leaves the machine.
+// Local test pages for the address bar at the bottom (src/components/BarLayout.tsx): how a page's own bottom navigation
+// stays above it. Nothing leaves the machine.
 //
 // Usage: node scripts/page-tests/bars.mjs [port]   (default 8815; 127.0.0.1 only; the Android emulator reaches it as
 //        http://10.0.2.2:8815, the iOS simulator as http://localhost:8815)

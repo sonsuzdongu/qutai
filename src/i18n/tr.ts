@@ -1727,8 +1727,6 @@ export const tr: Record<keyof typeof en, string> = {
   'crash.body': "Sayfa kısa sürede iki kez kapandı (sayfadaki bir sorun ya da telefonun bellek açması), bu yüzden Qutai onu kendiliğinden yeniden açmadı.",
   'crash.reload': "Yeniden yükle",
   'crash.close': "Sekmeyi kapat",
-  'settings.keepAddressBarVisible': "Adres çubuğunu hep göster",
-  'settings.keepAddressBarVisibleHint': "Kapalıyken bir sayfayı aşağı kaydırdığınızda adres çubuğu gizlenir, biraz yukarı kaydırınca geri gelir.",
   'nav.opening': '{host} açılıyor…',
   'nav.slow': '{host} henüz yanıt vermiyor',
   'nav.verySlow': 'Bağlantı çok yavaş',

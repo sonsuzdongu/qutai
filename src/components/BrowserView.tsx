@@ -25,7 +25,6 @@ import { isLocalUrl } from '../browser/localNetwork';
 import { endLaunchChain, mayOfferExternal, noteUserGesture, touchedRecently } from '../browser/externalGuard';
 import { isUserTap, windowOpensInFront } from '../browser/pendingNavigation';
 import { FORM_ANSWER_IDLE, formAnswer } from '../browser/formResubmission';
-import { parseBarMessage, TOOLBAR_SCROLL_SCRIPT } from '../browser/toolbarScroll';
 import { parseScrollMessage, restoreScrollScript, SCROLL_MEMORY_SCRIPT } from '../browser/scrollMemory';
 import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
 import { geolocationScript } from '../browser/geolocation';
@@ -248,8 +247,6 @@ function TabWebView({
     Platform.OS === 'ios' && textZoom !== 100 ? textZoomScript(textZoom) : '',
     // Where the page was scrolled, so a woken tab comes back there (incognito tabs never sleep).
     tab.incognito ? '' : SCROLL_MEMORY_SCRIPT,
-    // Scrolling down slides the address bar away; the page says when (toolbarScroll.ts), not every scroll frame.
-    TOOLBAR_SCROLL_SCRIPT,
     newTabActions.forceZoom ? FORCE_ZOOM_SCRIPT : '',
   ].join('\n');
 
@@ -352,8 +349,6 @@ function TabWebView({
               if (tab.playback.handleMessage(e.nativeEvent.data)) return;
               if (handleFileCaptureMessage(tab, e.nativeEvent.data)) return;
               if (handleUserAgentMessage(e.nativeEvent.data)) return;
-              const bar = parseBarMessage(e.nativeEvent.data);
-              if (bar !== null) return tab.noteBarScroll(bar);
               const scrolled = parseScrollMessage(e.nativeEvent.data);
               if (scrolled !== null) return tab.noteScroll(scrolled);
               const selection = parseSelection(e.nativeEvent.data);

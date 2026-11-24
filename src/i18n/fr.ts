@@ -1736,8 +1736,6 @@ export const fr: Record<keyof typeof en, string> = {
   'crash.body': "La page s’est fermée deux fois en peu de temps (un problème de la page ou le téléphone qui libère de la mémoire) ; Qutai ne l’a donc pas rouverte de lui-même.",
   'crash.reload': "Recharger",
   'crash.close': "Fermer l’onglet",
-  'settings.keepAddressBarVisible': "Toujours afficher la barre d’adresse",
-  'settings.keepAddressBarVisibleHint': "Désactivé : la barre d’adresse disparaît quand vous faites défiler vers le bas et revient dès que vous remontez un peu.",
   'nav.opening': 'Ouverture de {host}…',
   'nav.slow': '{host} ne répond pas encore',
   'nav.verySlow': 'La connexion est très lente',

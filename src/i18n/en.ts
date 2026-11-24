@@ -1728,8 +1728,6 @@ export const en = {
   'crash.body': "Its page closed twice in a short time (a problem in the page, or the phone freeing memory), so Qutai didn't open it again by itself.",
   'crash.reload': "Reload",
   'crash.close': "Close tab",
-  'settings.keepAddressBarVisible': "Keep the address bar visible",
-  'settings.keepAddressBarVisibleHint': "Off: the address bar slides away while you scroll down a page and comes back when you scroll up a little.",
   'nav.opening': '{host} opening…',
   'nav.slow': "{host} isn't answering yet",
   'nav.verySlow': 'The connection is very slow',

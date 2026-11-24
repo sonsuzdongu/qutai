@@ -867,7 +867,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-33` | Backup password fields: one PasswordField with an eye inside the field (own eye per field), 44 pt, announced; keyboard and cursor kept; new/current autofill hints; AI key fields unchanged | Owner (eye); Default (rest) | 2026-11-20 |
 | `UI-34` | Address bar: registrable domain emphasised, the rest subdued, no https scheme, IDN in Unicode only when safe… | Default | 2026-11-20 |
 | `UI-35` | Tapping the address bar selects the whole address on both platforms (focused from code, not autoFocus) | Default | 2026-11-20 |
-| `UI-36` | The address bar slides away on scroll down and back on a small scroll up, unless something holds it; setting to keep it… | Default | 2026-11-20 |
+| `UI-36` | The address bar always stays at the top or bottom (the only choice); no slide-away on scroll and no setting for it; old backups' setting ignored | Owner | 2026-11-24 |
 | `UI-37` | A tap on the address suggestions or the dimmed area around them never reaches the page behind (drawn in a page-sized layer) | Default | 2026-11-21 |
 | `UI-38` | The page menu fits the screen: fills the room between the bars (UI-47), list scrolls under a fixed icon row, opens above a bottom bar, side margins | Default | 2026-11-21 |
 | `UI-39` | Android: tapping the address bar always opens the keyboard; asked for again at 60/250/600 ms while focused with none showing | Default | 2026-11-21 |

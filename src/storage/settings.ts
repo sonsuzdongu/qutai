@@ -85,7 +85,6 @@ export type Settings = {
   /** The Qutai button in the address bar; when off, "Ask Qutai" is in the page menu. */
   showAssistantButton: boolean;
   /** The address bar stays on screen while a page is scrolled down (off: it slides away, `UI` rules). */
-  keepAddressBarVisible: boolean;
   /** Pinch-zoom every page, even those that turn zooming off. */
   forceZoom: boolean;
   /** Sound a page plays keeps playing when Qutai is in the background or the screen locks. */
@@ -170,7 +169,6 @@ export const DEFAULT_SETTINGS: Settings = {
   appLock: false,
   incognitoLock: false,
   showAssistantButton: true,
-  keepAddressBarVisible: false,
   forceZoom: false,
   backgroundPlayback: true,
   pictureInPicture: true,
@@ -217,7 +215,6 @@ const KEYS = {
   appLock: 'app_lock',
   incognitoLock: 'incognito_lock',
   showAssistantButton: 'show_assistant_button',
-  keepAddressBarVisible: 'keep_address_bar_visible',
   forceZoom: 'force_zoom',
   backgroundPlayback: 'background_playback',
   pictureInPicture: 'picture_in_picture',
@@ -318,7 +315,6 @@ export async function loadSettings(): Promise<Settings> {
     appLock,
     incognitoLock,
     showAssistantButton,
-    keepAddressBarVisible,
     forceZoom,
     backgroundPlayback,
     pictureInPicture,
@@ -367,7 +363,6 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.appLock),
     get(KEYS.incognitoLock),
     get(KEYS.showAssistantButton),
-    get(KEYS.keepAddressBarVisible),
     get(KEYS.forceZoom),
     get(KEYS.backgroundPlayback),
     get(KEYS.pictureInPicture),
@@ -427,7 +422,6 @@ export async function loadSettings(): Promise<Settings> {
     appLock: appLock === 'true',
     incognitoLock: incognitoLock === 'true',
     showAssistantButton: showAssistantButton !== 'false',
-    keepAddressBarVisible: keepAddressBarVisible === 'true',
     forceZoom: forceZoom === 'true',
     backgroundPlayback: backgroundPlayback !== 'false',
     pictureInPicture: pictureInPicture !== 'false',
@@ -550,7 +544,6 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.appLock, String(settings.appLock)),
     set(KEYS.incognitoLock, String(settings.incognitoLock)),
     set(KEYS.showAssistantButton, String(settings.showAssistantButton)),
-    set(KEYS.keepAddressBarVisible, String(settings.keepAddressBarVisible)),
     set(KEYS.forceZoom, String(settings.forceZoom)),
     set(KEYS.backgroundPlayback, String(settings.backgroundPlayback)),
     set(KEYS.pictureInPicture, String(settings.pictureInPicture)),

@@ -4,7 +4,7 @@ import { createOverlaySlot, type OverlaySlot } from './overlaySlot';
 
 const SlotContext = createContext<OverlaySlot<ReactNode> | null>(null);
 
-/** One layer per HidingBar: the bar's content is given `slot`, and `BarOverlayLayer` draws what it shows. */
+/** One layer per BarLayout: the bar's content is given `slot`, and `BarOverlayLayer` draws what it shows. */
 export function useBarOverlaySlot() {
   const [slot] = useState(() => createOverlaySlot<ReactNode>());
   return slot;
@@ -28,7 +28,7 @@ export function BarOverlayLayer({ slot }: { slot: OverlaySlot<ReactNode> }) {
   );
 }
 
-/** Draws `children` in the HidingBar's layer instead of here; in place when there is none. */
+/** Draws `children` in the BarLayout's layer instead of here; in place when there is none. */
 export function BarOverlay({ children }: { children: ReactNode }) {
   const slot = useContext(SlotContext);
   const [owner] = useState(() => ({}));

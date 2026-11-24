@@ -1736,8 +1736,6 @@ export const id: Record<keyof typeof en, string> = {
   'crash.body': "Halaman tertutup dua kali dalam waktu singkat (masalah pada halaman, atau ponsel membebaskan memori), jadi Qutai tidak membukanya lagi dengan sendirinya.",
   'crash.reload': "Muat ulang",
   'crash.close': "Tutup tab",
-  'settings.keepAddressBarVisible': "Selalu tampilkan bilah alamat",
-  'settings.keepAddressBarVisibleHint': "Mati: bilah alamat bergeser hilang saat Anda menggulir ke bawah dan kembali saat menggulir sedikit ke atas.",
   'nav.opening': 'Membuka {host}…',
   'nav.slow': '{host} belum merespons',
   'nav.verySlow': 'Koneksi sangat lambat',

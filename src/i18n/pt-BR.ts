@@ -1737,8 +1737,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'crash.body': "A página fechou duas vezes em pouco tempo (um problema na página ou o celular liberando memória), então o Qutai não a abriu de novo sozinho.",
   'crash.reload': "Recarregar",
   'crash.close': "Fechar aba",
-  'settings.keepAddressBarVisible': "Manter a barra de endereço visível",
-  'settings.keepAddressBarVisibleHint': "Desligado: a barra de endereço some quando você rola a página para baixo e volta quando rola um pouco para cima.",
   'nav.opening': 'Abrindo {host}…',
   'nav.slow': '{host} ainda não respondeu',
   'nav.verySlow': 'A conexão está muito lenta',

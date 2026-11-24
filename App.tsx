@@ -131,9 +131,8 @@ import { Toast, useToast } from './src/components/Toast';
 import { DownloadIndicator } from './src/components/DownloadIndicator';
 import { openDownload } from './src/components/openDownload';
 import { CaptureOverlay } from './src/components/CaptureOverlay';
-import { dialog, DialogHost, dialogState } from './src/components/Dialog';
-import { HidingBar } from './src/components/HidingBar';
-import { barHidden } from './src/browser/toolbarScroll';
+import { dialog, DialogHost } from './src/components/Dialog';
+import { BarLayout } from './src/components/BarLayout';
 import { useKeyboardVisible } from './src/utils/useKeyboardVisible';
 import { copyLink, copyText, shareLink, shareText } from './src/device/link';
 import { printPage, savePagePdf, savePdfFromScreenshots } from './src/device/pdf';
@@ -1995,22 +1994,6 @@ function BrowserApp({
         host: null,
       };
   const address = tab.address;
-  // The address bar slides away while the page is scrolled down, unless something needs it (toolbarScroll.ts).
-  const keyboardVisible = useKeyboardVisible();
-  const dialogOpen = useSyncExternalStore(dialogState.subscribe, dialogState.isOpen);
-  const hideBar = barHidden(tab.barScroll, {
-    alwaysVisible: settings.keepAddressBarVisible,
-    loading: tab.busy,
-    editing: false,
-    keyboard: keyboardVisible,
-    findBar: findOpen,
-    panel: panelOpen,
-    strip: stripVisible(work) && !!runningChat,
-    dialog: dialogOpen,
-    assistantWorking: running,
-    selection: !!selectedText,
-    noPage: onNewTab || !!tab.loadError || !!tab.crashed || !!tab.reader,
-  });
   const navStatus =
     pendingNav && !pendingNav.responded && !onNewTab ? (
       <NavigationStatus
@@ -2295,7 +2278,7 @@ function BrowserApp({
   const showLowCredits = lowBalance.visible && panelOnCredits;
   const panelLowCredits = useMemo(() => (showLowCredits ? lowCreditsHandlers : null), [showLowCredits, lowCreditsHandlers]);
 
-  // The page and its selection bar, under (or above) the address bar, which slides away on scroll (HidingBar).
+  // The page and its selection bar, under (or above) the address bar (BarLayout; the bar always stays, UI-36).
   const pageContent = (
     <>
             <ErrorBoundary>
@@ -2406,14 +2389,14 @@ function BrowserApp({
           {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard: the page, and the address bar when it is at the bottom, stay above it. */}
           {barAtBottom ? (
             <KeyboardAvoidingContainer style={styles.flex}>
-              <HidingBar position="bottom" hidden={hideBar} bar={barArea} onBarHeight={setBottomBarHeight}>
+              <BarLayout position="bottom" bar={barArea} onBarHeight={setBottomBarHeight}>
                 <View style={styles.flex}>{pageContent}</View>
-              </HidingBar>
+              </BarLayout>
             </KeyboardAvoidingContainer>
           ) : (
-            <HidingBar position="top" hidden={hideBar} bar={barArea}>
+            <BarLayout position="top" bar={barArea}>
               <KeyboardAvoidingContainer style={styles.flex}>{pageContent}</KeyboardAvoidingContainer>
-            </HidingBar>
+            </BarLayout>
           )}
         </SafeAreaView>
         {/* Where the assistant acts: over the page, under the panel (docs/working-mode.md). */}
@@ -2674,7 +2657,7 @@ function BrowserApp({
         <DownloadIndicator
           store={downloads}
           // Above the address bar at the bottom while it shows, measured rather than guessed (UI-48).
-          bottomOffset={(barAtBottom && !hideBar ? bottomBarHeight : 0) + 16}
+          bottomOffset={(barAtBottom ? bottomBarHeight : 0) + 16}
           onOpen={() => openScreen({ kind: 'downloads' })}
           onOpenFile={(item) => void openDownload(downloads, item, toast.show)}
         />
@@ -2712,7 +2695,7 @@ function BrowserApp({
           onClose={() => setIncoming(null)}
         />
         <LockScreen locked={lock} onUnlock={unlock} onLeave={leaveIncognito} />
-        <CaptureOverlay bottomInset={barAtBottom && !hideBar ? bottomBarHeight : 0} dark={tab.incognito} />
+        <CaptureOverlay bottomInset={barAtBottom ? bottomBarHeight : 0} dark={tab.incognito} />
         <PdfReaderHost />
         <PushToTalkBubble
           bubble={ptt.bubble}
@@ -2738,7 +2721,7 @@ function BrowserApp({
           action={toast.action}
           onHidden={toast.hide}
           // Above the address bar at the bottom while it shows (it slides away while a page scrolls, UI-36).
-          bottomInset={barAtBottom && !hideBar && !tabsVisible ? bottomBarHeight : 0}
+          bottomInset={barAtBottom && !tabsVisible ? bottomBarHeight : 0}
           dark={tab.incognito}
         />
         <DialogHost root />

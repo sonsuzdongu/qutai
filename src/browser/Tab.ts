@@ -24,7 +24,6 @@ import { type PageSignals, parsePageSignals, samePageSignals } from './pageKind'
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, type ReaderArticle } from './reader';
 import { startsLoading } from './loadState';
 import { NavigationTracker, shownAddress } from './pendingNavigation';
-import type { PageScroll } from './toolbarScroll';
 import { crashPage, PAGE_GONE_ERROR, type ProcessEnd, processGoneAction } from './crashPolicy';
 import { newId, newNonce } from '../utils/ids';
 
@@ -216,8 +215,6 @@ export class Tab {
    * keys the WebView by it.
    */
   webviewKey = 0;
-  /** What the page last reported about its scrolling, for the address bar sliding away (toolbarScroll.ts); null: nothing yet. */
-  barScroll: PageScroll | null = null;
   /** The address of an error page shown because the phone was offline, reloaded once when the connection returns. */
   offlineErrorUrl: string | null = null;
   canGoBack = false;
@@ -543,13 +540,6 @@ export class Tab {
     else this.reload();
   }
 
-  /** The page's scroll report for the address bar (toolbarScroll.ts). */
-  noteBarScroll(scroll: PageScroll) {
-    if (scroll === this.barScroll) return;
-    this.barScroll = scroll;
-    this.onChange();
-  }
-
   /** The page's scroll position (main frame, sent by the page after scrolling stops). */
   noteScroll(y: number) {
     if (!Number.isFinite(y) || y < 0) return;
@@ -592,8 +582,6 @@ export class Tab {
     // A page changing its own address (history API, a #fragment) loads nothing and never reports an end: not a load,
     // and the page's location, camera and playback state carry on (loadState.ts).
     if (!startsLoading({ url, currentUrl: this.url, os: Platform.OS, nativeLoading })) return;
-    // A new document reports its own scrolling; until then the bar shows.
-    this.barScroll = null;
     if (Platform.OS === 'android') {
       // Android reports the start once the site has answered: the new page commits now.
       this.commit(url);

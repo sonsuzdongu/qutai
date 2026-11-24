@@ -1725,8 +1725,6 @@ export const de: Record<keyof typeof en, string> = {
   'crash.body': "Die Seite wurde kurz hintereinander zweimal beendet (ein Fehler der Seite oder das Telefon brauchte Speicher), deshalb hat Qutai sie nicht von selbst neu geöffnet.",
   'crash.reload': "Neu laden",
   'crash.close': "Tab schließen",
-  'settings.keepAddressBarVisible': "Adressleiste immer anzeigen",
-  'settings.keepAddressBarVisibleHint': "Aus: Die Adressleiste verschwindet beim Herunterscrollen und kommt beim kurzen Hochscrollen zurück.",
   'nav.opening': '{host} wird geöffnet …',
   'nav.slow': '{host} antwortet noch nicht',
   'nav.verySlow': 'Die Verbindung ist sehr langsam',

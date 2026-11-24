@@ -662,12 +662,6 @@ function SettingsPages({
                 />
               </GroupItem>
               <GroupSwitch
-                title={t('settings.keepAddressBarVisible')}
-                hint={t('settings.keepAddressBarVisibleHint')}
-                value={settings.keepAddressBarVisible}
-                onChange={(keepAddressBarVisible) => set({ keepAddressBarVisible })}
-              />
-              <GroupSwitch
                 title={t('settings.showAssistantButton')}
                 hint={t('settings.showAssistantButtonHint')}
                 value={settings.showAssistantButton}
