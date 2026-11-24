@@ -227,8 +227,8 @@ function baseUrl(scope: Scope): string {
 }
 
 const useStyles = makeStyles((c) => ({
-  part: { gap: 10, marginTop: 8 },
-  subheading: { fontSize: 16, fontWeight: '700', color: c.text },
+  part: { gap: 10, marginTop: 18 },
+  subheading: { fontSize: 17, fontWeight: '700', color: c.text },
   hint: common(c).hint,
   warn: { color: c.danger },
   card: { ...common(c).card, padding: 14, gap: 10 },

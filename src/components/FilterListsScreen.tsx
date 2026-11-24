@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore, type ComponentRef } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { AppModal } from '../ui/AppModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -60,6 +60,15 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
   const { lists, status, compiled, active } = contentBlocking;
   const native = hasNativeBlocking();
   const palette = usePalette();
+  const publisherLists = lists.filter((l) => l.kind !== 'custom');
+  const myLists = lists.filter((l) => l.kind === 'custom');
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
+  const dragged = useRef(false);
+  useEffect(() => {
+    if (!visible) return;
+    dragged.current = false;
+    scroller.current?.scrollTo({ y: 0, animated: false });
+  }, [visible]);
 
   const run = async (task: () => Promise<unknown>) => {
     setBusy(true);
@@ -121,7 +130,18 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
     <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.container} edges={MODAL_SCREEN_EDGES}>
         <ScreenHeader title={t('blocking.title')} right={{ label: t('common.done'), onPress: onClose }} />
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          ref={scroller}
+          contentContainerStyle={styles.content}
+          // Opens at the top: until the user scrolls, content that grows or arrives late (the rules, a list's row)
+          // never leaves the screen scrolled down (UI-57).
+          onScrollBeginDrag={() => {
+            dragged.current = true;
+          }}
+          onContentSizeChange={() => {
+            if (!dragged.current) scroller.current?.scrollTo({ y: 0, animated: false });
+          }}
+        >
           <Text style={styles.hint}>{t('blocking.intro')}</Text>
           <View style={styles.statusRow}>
             {blockingEnabled && status.phase !== 'idle' && <ActivityIndicator size="small" color={palette.tintText} />}
@@ -129,7 +149,11 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
           </View>
           {Platform.OS === 'ios' && <Text style={styles.hint}>{t('blocking.iosNoCounts')}</Text>}
 
-          {lists.map((list) => (
+          {/* Grouped (UI-57): the publishers' lists, the user's own lists, then the user's rules, styles and scripts. */}
+          <Text style={styles.heading} accessibilityRole="header">
+            {t('blocking.publisherSection')}
+          </Text>
+          {publisherLists.map((list) => (
             <ListRow
               key={list.id}
               list={list}
@@ -152,33 +176,58 @@ export function FilterListsScreen({ visible, blockingEnabled, allowed, onClose }
               }
             />
           ))}
-
-          <View style={styles.buttons}>
-            <Button variant="secondary" label={t('blocking.add')} disabled={busy || !allowed} onPress={addList} />
-            <Button
-              variant="secondary"
-              label={t('blocking.updateNow')}
-              disabled={busy || !allowed}
-              onPress={() => run(() => contentBlocking.updateNow())}
-            />
-            <Button
-              variant="secondary"
-              label={t('blocking.reset')}
-              danger
-              disabled={busy}
-              onPress={async () => {
-                const ok = await dialog.confirm({
-                  title: t('blocking.resetTitle'),
-                  message: t('blocking.resetBody'),
-                  confirmText: t('blocking.resetConfirm'),
-                  destructive: true,
-                });
-                if (ok) await run(() => contentBlocking.reset(allowed));
-              }}
-            />
-          </View>
+          <Button
+            variant="secondary"
+            label={t('blocking.updateNow')}
+            disabled={busy || !allowed}
+            onPress={() => run(() => contentBlocking.updateNow())}
+          />
           <Text style={styles.hint}>{t('blocking.updatesHint')}</Text>
           <Text style={styles.hint}>{t('blocking.boundaryHint')}</Text>
+
+          <Text style={[styles.heading, styles.group]} accessibilityRole="header">
+            {t('blocking.mineSection')}
+          </Text>
+          {myLists.length === 0 && <Text style={styles.hint}>{t('blocking.mineNone')}</Text>}
+          {myLists.map((list) => (
+            <ListRow
+              key={list.id}
+              list={list}
+              progress={contentBlocking.progressOf(list.id)}
+              disabled={!blockingEnabled}
+              onToggle={(on) => runList(() => contentBlocking.setEnabled(list.id, on, allowed))}
+              onRetry={allowed ? () => runList(() => contentBlocking.retry(list.id, allowed)) : undefined}
+              onRemove={
+                list.kind === 'custom'
+                  ? async () => {
+                      const ok = await dialog.confirm({
+                        title: t('blocking.removeTitle'),
+                        message: list.url,
+                        confirmText: t('blocking.remove'),
+                        destructive: true,
+                      });
+                      if (ok) await run(() => contentBlocking.removeCustom(list.id));
+                    }
+                  : undefined
+              }
+            />
+          ))}
+          <Button variant="secondary" label={t('blocking.add')} disabled={busy || !allowed} onPress={addList} />
+          <Button
+            variant="secondary"
+            label={t('blocking.reset')}
+            danger
+            disabled={busy}
+            onPress={async () => {
+              const ok = await dialog.confirm({
+                title: t('blocking.resetTitle'),
+                message: t('blocking.resetBody'),
+                confirmText: t('blocking.resetConfirm'),
+                destructive: true,
+              });
+              if (ok) await run(() => contentBlocking.reset(allowed));
+            }}
+          />
           <SiteRulesSection disabled={!blockingEnabled} />
         </ScrollView>
       </SafeAreaView>
@@ -299,7 +348,8 @@ const useStyles = makeStyles((c) => ({
   links: { flexDirection: 'row', gap: 16, marginTop: 2 },
   link: { fontSize: 13, color: c.tintText, fontWeight: '600' },
   remove: { paddingHorizontal: 4 },
-  buttons: { gap: 8, marginTop: 6 },
+  heading: { fontSize: 17, fontWeight: '700', color: c.text, marginTop: 8 },
+  group: { marginTop: 18 },
   danger: { color: c.danger },
   pressed: { backgroundColor: c.pressed },
   disabled: { opacity: 0.5 },

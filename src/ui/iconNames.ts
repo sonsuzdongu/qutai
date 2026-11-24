@@ -123,6 +123,11 @@ export const ICONS = {
   unlocked: { ios: 'lock.open', android: 'lock_open' },
   apps: { ios: 'square.grid.2x2', android: 'apps' },
   report: { ios: 'flag', android: 'flag' },
+  // Settings › Account (UI-56).
+  signOut: { ios: 'rectangle.portrait.and.arrow.right', android: 'logout' },
+  devices: { ios: 'laptopcomputer.and.iphone', android: 'devices' },
+  // Settings › About › Rate Qutai.
+  rate: { ios: 'star.bubble', android: 'reviews' },
 } satisfies Record<string, SymbolName>;
 
 export type IconName = keyof typeof ICONS;

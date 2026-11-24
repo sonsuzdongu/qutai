@@ -102,6 +102,15 @@ export function makeStyles<S extends StyleObject>(build: (c: Palette) => S & Sty
  * on purpose (circular icon buttons, avatars, the Qutai button, switches, radios, progress lines, dots, chips) keep
  * `size / 2` and do not use these; nor do web content, page pictures and tab thumbnails.
  */
+/**
+ * Google's "Sign in with Google" button colours, fixed by Google's branding guidelines (not the app's palette): the
+ * light button on a light screen, the dark one on a dark screen (UI-56).
+ */
+export const googleButton = {
+  light: { fill: '#FFFFFF', stroke: '#747775', text: '#1F1F1F' },
+  dark: { fill: '#131314', stroke: '#8E918F', text: '#E3E3E3' },
+} as const;
+
 export const radii = {
   /** The assistant's glass sheet and the working strip over the page (was 26). */
   sheet: 18,

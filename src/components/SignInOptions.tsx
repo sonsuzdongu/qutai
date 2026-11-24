@@ -1,6 +1,6 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Platform, Pressable, Text, View } from 'react-native';
 import { accountErrorDetails, accountErrorMessage, accountSession, emailSignIn } from '../account';
 import { AccountApiError } from '../account/api';
 import {
@@ -16,10 +16,13 @@ import { DEV_SIGN_IN_USERS, type DevSignInUser } from '../account/types';
 import { devLoginEnabled, devLoginSecret } from '../config/features';
 import { t } from '../i18n';
 import { Icon } from '../ui/Icon';
-import { darkPalette, makeStyles, usePalette, radii, common } from '../ui/theme';
+import { darkPalette, googleButton, makeStyles, usePalette, radii, common } from '../ui/theme';
 import { dialog } from './Dialog';
 import { EmailSignIn } from './EmailSignIn';
 import { WholeWordsText } from './WholeWordsText';
+
+/** Google's "G" mark, as Google publishes it for its sign-in button (assets/google-g*.png, 20 pt). */
+const GOOGLE_G = require('../../assets/google-g.png');
 
 export type SignInResult =
   | { kind: 'signedIn' }
@@ -45,6 +48,7 @@ export function SignInOptions({ onResult }: { onResult?: (result: SignInResult) 
   /** Android: Sign in with Apple through Apple's web flow, when the server offers it (`GET /config` › auth.appleWeb). */
   const [appleWeb, setAppleWeb] = useState(false);
   const google = googleSignInConfigured();
+  const googleColors = palette === darkPalette ? googleButton.dark : googleButton.light;
   const flow = emailSignIn();
   const [email, setEmail] = useState(() => flow?.getState().status === 'pending');
 
@@ -144,17 +148,29 @@ export function SignInOptions({ onResult }: { onResult?: (result: SignInResult) 
           </Pressable>
         )}
         {google && (
+          // Google's own button (branding guidelines): the "G" mark on the left, "Sign in with Google" in Google's
+          // wording for each language, its light or dark colours with their outline (UI-56).
           <Pressable
             onPress={() => signIn('google')}
             disabled={!!busy}
-            style={({ pressed }) => [styles.button, pressed && styles.pressed, busy && styles.dimmed]}
+            style={({ pressed }) => [
+              styles.button,
+              styles.googleButton,
+              { backgroundColor: googleColors.fill, borderColor: googleColors.stroke },
+              pressed && styles.googlePressed,
+              busy && styles.dimmed,
+            ]}
             accessibilityRole="button"
+            accessibilityLabel={t('account.signInGoogle')}
             accessibilityState={{ busy: busy === 'google', disabled: !!busy }}
           >
             {busy === 'google' ? (
-              <ActivityIndicator color={palette.text} />
+              <ActivityIndicator color={googleColors.text} />
             ) : (
-              <Text style={styles.buttonText}>{t('account.signInGoogle')}</Text>
+              <>
+                <Image source={GOOGLE_G} style={styles.googleMark} accessible={false} />
+                <WholeWordsText style={[styles.googleText, { color: googleColors.text }]}>{t('account.signInGoogle')}</WholeWordsText>
+              </>
             )}
           </Pressable>
         )}
@@ -221,6 +237,11 @@ const useStyles = makeStyles((c) => ({
     justifyContent: 'center',
   },
   buttonText: { color: c.text, fontSize: 16, fontWeight: '600' },
+  googleButton: { flexDirection: 'row', gap: 10, paddingHorizontal: 16 },
+  googleMark: { width: 20, height: 20 },
+  // Google asks for Roboto Medium: the system font's medium weight (Roboto itself on most Android phones).
+  googleText: { fontSize: 16, fontWeight: '500', flexShrink: 1, textAlign: 'center' },
+  googlePressed: { opacity: 0.85 },
   iconButton: { flexDirection: 'row', gap: 10, minHeight: 46, height: undefined, paddingHorizontal: 16, paddingVertical: 8 },
   shrink: { flexShrink: 1, textAlign: 'center' },
   pressed: { backgroundColor: c.pressed },

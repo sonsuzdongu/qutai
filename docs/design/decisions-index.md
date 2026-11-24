@@ -881,6 +881,11 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-51` | ⋮ menu: no Copy link, Read aloud or visible-part screenshot; Cookies and Block ads moved up; Reader mode and Add to Home screen under More; Settings last. | Owner | 2026-11-23 |
 | `UI-52` | "Ask Qutai" in the address bar suggestions only for more than one word, never for a lone address or word. | Owner | 2026-11-23 |
 | `UI-53` | New tab page: no search box or Ask Qutai button; the aurora drifts slowly while on screen (still with Reduce Motion). | Owner | 2026-11-23 |
+| `UI-54` | Settings pages are grouped: headed groups of rows in cards, the main page in four cards; pages open at the top, back returns to where they were. | Default | 2026-11-24 |
+| `UI-55` | Settings › Assistant: provider, Answers, Memory and instructions on the page; Permissions, Voice input, Tasks and history as their own pages; the tour link closes Settings. | Default | 2026-11-24 |
+| `UI-56` | Settings › Account: Apple's and Google's own sign-in buttons; signed in: identity, credits, ways to sign in, then rare and destructive actions last. | Default | 2026-11-24 |
+| `UI-57` | Filter lists opens at the top; grouped into publishers' lists, my lists, my rules, styles, scripts. | Default | 2026-11-24 |
+| `UI-58` | "Make Qutai your default browser" moved from Settings › Search to Settings › About under Rate Qutai (Android only). | Owner | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 
@@ -955,9 +960,9 @@ Moved to Details (ids retired, not reused): `WORK-4`, `WORK-8`, `WORK-11`, `WORK
 | `INTRO-21` | Today the welcome and legal summary say "Private by design" / "we have no servers"; these must be… | **Waiting** |  |
 | `INTRO-23` | Official builds ask about anonymous usage data once, right after setup, only while the server collects. | Default | changed 2026-11-22 |
 | `INTRO-33` | With Qutai Credits the introduction is free (3 per account, server-owned prompt, facts only); any refusal falls back to the credits relay. | Owner | 2026-11-22 |
-| `INTRO-32` | iOS: Settings › Search has no "Make Qutai your default browser" row until Apple grants the web-browser entitlement; Android unchanged. | Owner | 2026-11-21 |
+| `INTRO-32` | iOS: Settings › About (was Search, `UI-58`) has no "Make Qutai your default browser" row until Apple grants the web-browser entitlement; Android unchanged. | Owner | 2026-11-21 |
 | `INTRO-31` | The city question has "Use my location" wherever setup asks it; the permission only on that tap; district, city… | Owner | 2026-11-20 |
-| `INTRO-30` | Setup has no "Make Qutai your default browser" step; protection is the last step; the option is in Settings › Search. | Owner | 2026-11-20 |
+| `INTRO-30` | Setup has no "Make Qutai your default browser" step; protection is the last step; the option is in Settings › About since `UI-58` (was Search). | Owner | 2026-11-20 |
 | `INTRO-29` | Setup never asks for an answer style; a finished first-run setup adds "Answer briefly and to the point." to the custom… | Owner | 2026-11-20 |
 | `INTRO-28` | In pro builds the AI step is an accordion: both headings visible at first sight on 360 x 640 dp, at the largest text sizes too; Qutai… | Owner | 2026-11-20 |
 | `INTRO-27` | Setup never says the assistant reads every page: the first feature reads "Reads the page when you ask" and the tagline ends "when you… | Owner | 2026-11-20 |

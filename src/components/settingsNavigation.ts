@@ -10,6 +10,10 @@ export type SettingsPage =
   | 'account'
   | 'credits'
   | 'assistant'
+  /** Assistant's own pages (UI-55): what it may do, voice input, tasks and history. */
+  | 'assistantPermissions'
+  | 'assistantVoice'
+  | 'assistantTasks'
   | 'privacy'
   | 'appearance'
   | 'language'
@@ -29,14 +33,18 @@ export const pickAi = (s: Settings) => ({
 
 /**
  * The back step (the header's back button, Android's back button): the main page closes Settings, Qutai Credits goes
- * back to Account, the Assistant page with unsaved AI fields asks to discard them, every other page goes to the main
- * page.
+ * back to Account, the Assistant's own pages go back to Assistant, the Assistant page with unsaved AI fields asks to
+ * discard them, every other page goes to the main page.
  */
 export type BackStep = { kind: 'close' } | { kind: 'page'; page: SettingsPage } | { kind: 'askDiscard' };
 
 export function backStep(page: SettingsPage, aiDirty: boolean): BackStep {
   if (page === 'main') return { kind: 'close' };
   if (page === 'credits') return { kind: 'page', page: 'account' };
+  if (ASSISTANT_PAGES.includes(page)) return { kind: 'page', page: 'assistant' };
   if (page !== 'assistant' || !aiDirty) return { kind: 'page', page: 'main' };
   return { kind: 'askDiscard' };
 }
+
+/** The pages under Settings › Assistant; their back step is Assistant, which keeps unsaved AI fields as they were. */
+export const ASSISTANT_PAGES: readonly SettingsPage[] = ['assistantPermissions', 'assistantVoice', 'assistantTasks'];

@@ -19,7 +19,8 @@ import { creditsStore, creditsText, refreshCredits } from '../credits';
 import { t } from '../i18n';
 import { formatList } from '../i18n/format';
 import { Icon, type IconLine } from '../ui/Icon';
-import { makeStyles, usePalette, radii, common } from '../ui/theme';
+import { GroupLink } from '../ui/SettingsRows';
+import { makeStyles, usePalette, common } from '../ui/theme';
 import { methodLine, methodsOf, providerLabel, providersText } from './accountLabels';
 import { dialog } from './Dialog';
 
@@ -203,7 +204,7 @@ function failed(e: unknown) {
   dialog.alert(t('account.failedTitle'), accountErrorMessage(e), undefined, accountErrorDetails(e));
 }
 
-/** The methods card's list, with a remove control per method when there is more than one. */
+/** The account's sign-in methods (under the page's "Ways to sign in" heading), with a remove control each when there is more than one. */
 export function MethodsList({ user }: { user: Me }) {
   const styles = useStyles();
   const palette = usePalette();
@@ -257,7 +258,6 @@ export function MethodsList({ user }: { user: Me }) {
   if (methods.length === 0) return null;
   return (
     <View style={styles.methods}>
-      <Text style={styles.hint}>{t('account.methodsTitle')}</Text>
       {methods.map((m, i) => (
         <View key={m.id ?? `${m.provider}-${m.email ?? ''}-${i}`} style={styles.method}>
           <Icon name={m.provider === 'email' ? 'email' : 'person'} size={16} color={palette.textSecondary} />
@@ -285,13 +285,13 @@ export function MethodsList({ user }: { user: Me }) {
   );
 }
 
-/** "Add a sign-in method" and "Combine with another account", under the account card. */
+/** "Add a sign-in method": a chip per way this phone can prove one (UI-56). */
 export function AddMethods({ user }: { user: Me }) {
   const styles = useStyles();
   const palette = usePalette();
   const session = accountSession();
   const kinds = useAvailableKinds();
-  const [busy, setBusy] = useState<null | Kind | 'merge'>(null);
+  const [busy, setBusy] = useState<null | Kind>(null);
 
   const offerMerge = async (proofId: string, kind: Kind) => {
     if (!session) return;
@@ -322,25 +322,8 @@ export function AddMethods({ user }: { user: Me }) {
     }
   };
 
-  const combine = async () => {
-    if (!session || busy) return;
-    const kind = await chooseKind(t('account.merge.title'), t('account.merge.chooseBody'), kinds);
-    if (!kind) return;
-    setBusy('merge');
-    try {
-      const result = await proveWith(session, kind, 'merge');
-      if (result.outcome === 'other_account' && result.merge) await runMerge(session, result.merge.proofId);
-      else dialog.alert(t('account.merge.title'), t('account.merge.sameAccount'));
-    } catch (e) {
-      failed(e);
-    } finally {
-      setBusy(null);
-    }
-  };
-
   return (
     <View style={styles.section}>
-      {user.mergeSuggested && <Text style={styles.notice}>{t('account.merge.suggested')}</Text>}
       <Text style={styles.sectionTitle} accessibilityRole="header">
         {t('account.methods.addTitle')}
       </Text>
@@ -367,17 +350,45 @@ export function AddMethods({ user }: { user: Me }) {
           </Pressable>
         ))}
       </View>
-      <Pressable
-        onPress={combine}
-        disabled={!!busy}
-        style={({ pressed }) => [styles.button, pressed && styles.pressed, !!busy && busy !== 'merge' && styles.dimmed]}
-        accessibilityRole="button"
-        accessibilityState={{ busy: busy === 'merge', disabled: !!busy }}
-      >
-        {busy === 'merge' ? <ActivityIndicator color={palette.text} /> : <Text style={styles.buttonText}>{t('account.merge.title')}</Text>}
-      </Pressable>
-      <Text style={styles.hint}>{t('account.merge.hint')}</Text>
     </View>
+  );
+}
+
+/**
+ * "Combine with another account", with the rarely used account actions at the bottom of Settings › Account (UI-56):
+ * prove a method of the other account, then review and confirm the merge.
+ */
+export function CombineAccountsRow({ disabled }: { disabled?: boolean }) {
+  const palette = usePalette();
+  const session = accountSession();
+  const kinds = useAvailableKinds();
+  const [busy, setBusy] = useState<null | 'merge'>(null);
+
+  const combine = async () => {
+    if (!session || busy) return;
+    const kind = await chooseKind(t('account.merge.title'), t('account.merge.chooseBody'), kinds);
+    if (!kind) return;
+    setBusy('merge');
+    try {
+      const result = await proveWith(session, kind, 'merge');
+      if (result.outcome === 'other_account' && result.merge) await runMerge(session, result.merge.proofId);
+      else dialog.alert(t('account.merge.title'), t('account.merge.sameAccount'));
+    } catch (e) {
+      failed(e);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <GroupLink
+      icon="person"
+      title={t('account.merge.title')}
+      summary={t('account.merge.hint')}
+      onPress={combine}
+      disabled={disabled || !!busy}
+      right={busy ? <ActivityIndicator color={palette.textSecondary} /> : undefined}
+    />
   );
 }
 
@@ -388,7 +399,7 @@ const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
   hint: common(c).hint,
   remove: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  section: { gap: 8, marginTop: 8 },
+  section: { gap: 8 },
   sectionTitle: { color: c.text, fontSize: 15, fontWeight: '600' },
   notice: common(c).notice,
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -404,17 +415,6 @@ const useStyles = makeStyles((c) => ({
     gap: 6,
   },
   chipText: { color: c.text, fontSize: 15, fontWeight: '500' },
-  button: {
-    minHeight: 46,
-    paddingHorizontal: 16,
-    borderRadius: radii.button,
-    backgroundColor: c.surface,
-    borderWidth: 1,
-    borderColor: c.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonText: { color: c.text, fontSize: 16, fontWeight: '600', textAlign: 'center' },
   pressed: { backgroundColor: c.pressed },
   dimmed: { opacity: 0.5 },
 }));

@@ -31,7 +31,7 @@ import type { LegalKind } from '../legal/documents';
 import type { Settings, SettingsPatch } from '../storage/settings';
 import { Icon, IconName } from '../ui/Icon';
 import { Button } from '../ui/Button';
-import { LinkRow, Segment, SwitchRow as SharedSwitchRow } from '../ui/SettingsRows';
+import { GroupItem, GroupLink, GroupSwitch, LinkRow, Segment, SettingsSection } from '../ui/SettingsRows';
 import { makeStyles, readableColumn, usePalette, radii, common } from '../ui/theme';
 import { Radio } from '../ui/Radio';
 import { AccountScreen } from './AccountScreen';
@@ -128,7 +128,13 @@ function SettingsPages({
 }: Omit<Props, 'visible'> & { back: BackRoute }) {
   const styles = useStyles();
   const palette = usePalette();
-  const [page, setPage] = useState<Page>(initialPage);
+  // Each page opens at its top; going back returns to where the previous page was scrolled (Assistant's own pages
+  // are opened from its end).
+  const [view, setView] = useState<{ page: Page; offset: number }>({ page: initialPage, offset: 0 });
+  const page = view.page;
+  // How far each page was scrolled; written while scrolling, read when going back (no redraw needed).
+  const [offsets] = useState(() => new Map<Page, number>());
+  const setPage = (next: Page) => setView({ page: next, offset: 0 });
   // The API key, provider and model are typed, so they wait for Save; everything else applies at once.
   const [ai, setAi] = useState<AiChoice>(() => pickAi(settings));
   const aiDirty = !sameAi(ai, pickAi(settings));
@@ -164,7 +170,7 @@ function SettingsPages({
   const goBack = () => {
     const step = backStep(page, aiDirty);
     if (step.kind === 'close') return onClose();
-    if (step.kind === 'page') return setPage(step.page);
+    if (step.kind === 'page') return setView({ page: step.page, offset: offsets.get(step.page) ?? 0 });
     dialog.alert(t('settings.unsavedTitle'), t('settings.unsavedBody'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
@@ -222,6 +228,9 @@ function SettingsPages({
     account: t('account.title'),
     credits: t('credits.provider'),
     assistant: t('settings.assistant'),
+    assistantPermissions: t('settings.permissions'),
+    assistantVoice: t('settings.voiceSection'),
+    assistantTasks: t('settings.tasksSection'),
     privacy: t('settings.privacySection'),
     appearance: t('settings.appearance'),
     language: t('settings.language'),
@@ -256,7 +265,16 @@ function SettingsPages({
         )}
       </View>
 
-      <KeyboardAwareScrollView contentContainerStyle={styles.content}>
+      {/* Keyed by page: a page opens at its top (or, going back, where it was), not where the previous one was. */}
+      <KeyboardAwareScrollView
+        key={page}
+        contentContainerStyle={styles.content}
+        contentOffset={{ x: 0, y: view.offset }}
+        scrollEventThrottle={64}
+        onScroll={(e) => {
+          offsets.set(page, e.nativeEvent.contentOffset.y);
+        }}
+      >
         {page === 'main' && accountsEnabled && (
           <View style={styles.card}>
             <SectionRow
@@ -275,58 +293,66 @@ function SettingsPages({
           </View>
         )}
         {page === 'main' && (
-          <View style={styles.card}>
-            <SectionRow
-              icon="assistant"
-              title={t('settings.assistant')}
-              summary={
-                configured
-                  ? // Qutai Credits: nothing to name behind it (CRED-39).
-                    settings.provider === 'qutai'
-                    ? provider.label
-                    : `${provider.label} · ${modelName}`
-                  : t('settings.noKeySummary')
-              }
-              onPress={() => setPage('assistant')}
-            />
-            <SectionRow
-              icon="shield"
-              title={t('settings.privacySection')}
-              summary={t('settings.privacySummary')}
-              onPress={() => setPage('privacy')}
-            />
-            <SectionRow
-              icon="textSize"
-              title={t('settings.appearance')}
-              summary={`${t(`settings.theme.${settings.theme}`)} · ${t(`settings.addressBar.${settings.addressBarPosition}`)}`}
-              onPress={() => setPage('appearance')}
-            />
-            <SectionRow
-              icon="globe"
-              title={t('settings.language')}
-              summary={languageSummary()}
-              onPress={() => setPage('language')}
-            />
-            <SectionRow
-              icon="find"
-              title={t('settings.search')}
-              summary={SEARCH_ENGINES[settings.searchEngine].name}
-              onPress={() => setPage('search')}
-            />
-            <SectionRow
-              icon="secure"
-              title={t('backup.section')}
-              summary={t('backup.sectionSummary')}
-              onPress={() => setPage('backup')}
-            />
-            <SectionRow
-              icon="moreHorizontal"
-              title={t('settings.about')}
-              summary={t('settings.aboutSummary')}
-              onPress={() => setPage('about')}
-              last
-            />
-          </View>
+          <>
+            <View style={styles.card}>
+              <SectionRow
+                icon="assistant"
+                title={t('settings.assistant')}
+                summary={
+                  configured
+                    ? // Qutai Credits: nothing to name behind it (CRED-39).
+                      settings.provider === 'qutai'
+                      ? provider.label
+                      : `${provider.label} · ${modelName}`
+                    : t('settings.noKeySummary')
+                }
+                onPress={() => setPage('assistant')}
+              />
+              <SectionRow
+                icon="shield"
+                title={t('settings.privacySection')}
+                summary={t('settings.privacySummary')}
+                onPress={() => setPage('privacy')}
+                last
+              />
+            </View>
+            <View style={styles.card}>
+              <SectionRow
+                icon="textSize"
+                title={t('settings.appearance')}
+                summary={`${t(`settings.theme.${settings.theme}`)} · ${t(`settings.addressBar.${settings.addressBarPosition}`)}`}
+                onPress={() => setPage('appearance')}
+              />
+              <SectionRow
+                icon="globe"
+                title={t('settings.language')}
+                summary={languageSummary()}
+                onPress={() => setPage('language')}
+              />
+              <SectionRow
+                icon="find"
+                title={t('settings.search')}
+                summary={SEARCH_ENGINES[settings.searchEngine].name}
+                onPress={() => setPage('search')}
+                last
+              />
+            </View>
+            <View style={styles.card}>
+              <SectionRow
+                icon="secure"
+                title={t('backup.section')}
+                summary={t('backup.sectionSummary')}
+                onPress={() => setPage('backup')}
+              />
+              <SectionRow
+                icon="info"
+                title={t('settings.about')}
+                summary={t('settings.aboutSummary')}
+                onPress={() => setPage('about')}
+                last
+              />
+            </View>
+          </>
         )}
 
         {page === 'assistant' && (
@@ -335,299 +361,363 @@ function SettingsPages({
             {aiDirty && (
               <Button size="large" label={t('common.save')} onPress={saveAi} style={styles.saveButton} />
             )}
-            <SwitchRow
-              title={t('settings.confirmActions')}
-              hint={t('settings.confirmActionsHint')}
-              value={settings.confirmActions}
-              onChange={(confirmActions) => set({ confirmActions })}
-            />
-            <SwitchRow
-              title={t('settings.payments')}
-              hint={t('settings.paymentsHint')}
-              value={settings.assistantPayments}
-              onChange={(on) => {
-                if (!on) {
-                  set({ assistantPayments: false });
-                  return;
-                }
-                // Turning it on is asked once more, with what it means; turning it off never is.
-                void dialog
-                  .show({
-                    title: t('settings.paymentsConfirmTitle'),
-                    message: t('settings.paymentsConfirmBody'),
-                    buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: t('settings.paymentsConfirmOn'), primary: true }],
-                  })
-                  .then((result) => {
-                    if (result.button === 1) set({ assistantPayments: true });
-                  });
-              }}
-            />
-            <SwitchRow
-              title={t('settings.scripts')}
-              hint={t('settings.scriptsHint')}
-              value={settings.assistantScripts}
-              onChange={(on) => {
-                if (!on) {
-                  set({ assistantScripts: false });
-                  return;
-                }
-                // The riskiest thing the assistant can do: turning it on is asked once more, in plain words.
-                void dialog
-                  .show({
-                    title: t('settings.scriptsConfirmTitle'),
-                    message: t('settings.scriptsConfirmBody'),
-                    buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: t('settings.scriptsConfirmOn'), primary: true }],
-                  })
-                  .then((result) => {
-                    if (result.button === 1) set({ assistantScripts: true });
-                  });
-              }}
-            />
+            <SettingsSection title={t('settings.answersSection')}>
+              {provider.webSearch ? (
+                <GroupSwitch
+                  title={t('settings.webSearch')}
+                  hint={
+                    settings.provider === 'qutai'
+                      ? t('credits.webSearchHint')
+                      : t('settings.webSearchHint', { provider: provider.label })
+                  }
+                  value={settings.webSearch}
+                  onChange={(webSearch) => set({ webSearch })}
+                />
+              ) : (
+                <GroupItem>
+                  <Text style={styles.itemLabel}>{t('settings.webSearch')}</Text>
+                  <Text style={styles.hint}>{t('settings.webSearchUnavailable', { provider: provider.label })}</Text>
+                </GroupItem>
+              )}
+              {settings.provider === 'gemini' && (
+                <GroupSwitch
+                  title={t('settings.geminiStreaming')}
+                  hint={t('settings.geminiStreamingHint')}
+                  value={settings.geminiStreaming}
+                  onChange={(geminiStreaming) => set({ geminiStreaming })}
+                />
+              )}
+              <GroupSwitch
+                title={t('settings.showCost')}
+                hint={t('settings.showCostHint', { date: pricesDate(PRICES_AS_OF) })}
+                value={settings.showCost}
+                onChange={(showCost) => set({ showCost })}
+              />
+              <GroupSwitch
+                title={t('settings.showActionMarker')}
+                hint={t('settings.showActionMarkerHint')}
+                value={settings.showActionMarker}
+                onChange={(showActionMarker) => set({ showActionMarker })}
+              />
+            </SettingsSection>
+            <SettingsSection title={t('settings.memorySection')}>
+              <GroupSwitch
+                title={t('settings.memoryEnabled')}
+                hint={t('settings.memoryHint')}
+                value={settings.memoryEnabled}
+                onChange={(memoryEnabled) => set({ memoryEnabled })}
+              />
+              <GroupLink title={t('settings.manageMemory')} onPress={() => setMemoryVisible(true)} />
+              <GroupItem>
+                <CustomInstructionsField
+                  value={settings.customInstructions}
+                  onSave={(customInstructions) => set({ customInstructions })}
+                />
+              </GroupItem>
+            </SettingsSection>
+            <SettingsSection>
+              <GroupLink
+                icon="shield"
+                title={t('settings.permissions')}
+                summary={t('settings.permissionsSummary')}
+                onPress={() => setPage('assistantPermissions')}
+              />
+              <GroupLink
+                icon="microphone"
+                title={t('settings.voiceSection')}
+                summary={voiceLanguageLabel(settings.voiceLanguage)}
+                onPress={() => setPage('assistantVoice')}
+              />
+              <GroupLink
+                icon="tasks"
+                title={t('settings.tasksSection')}
+                summary={t('settings.tasksSummary')}
+                onPress={() => setPage('assistantTasks')}
+              />
+            </SettingsSection>
+            {settings.showAssistantButton && (
+              <SettingsSection>
+                <GroupLink icon="info" title={t('settings.assistantIntro')} chevron={false} onPress={onShowAssistantIntro} />
+              </SettingsSection>
+            )}
+          </>
+        )}
+
+        {page === 'assistantPermissions' && (
+          <>
+            <SettingsSection title={t('settings.mayDoSection')} style={styles.first}>
+              <GroupSwitch
+                title={t('settings.confirmActions')}
+                hint={t('settings.confirmActionsHint')}
+                value={settings.confirmActions}
+                onChange={(confirmActions) => set({ confirmActions })}
+              />
+              <GroupSwitch
+                title={t('settings.payments')}
+                hint={t('settings.paymentsHint')}
+                value={settings.assistantPayments}
+                onChange={(on) => {
+                  if (!on) {
+                    set({ assistantPayments: false });
+                    return;
+                  }
+                  // Turning it on is asked once more, with what it means; turning it off never is.
+                  void dialog
+                    .show({
+                      title: t('settings.paymentsConfirmTitle'),
+                      message: t('settings.paymentsConfirmBody'),
+                      buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: t('settings.paymentsConfirmOn'), primary: true }],
+                    })
+                    .then((result) => {
+                      if (result.button === 1) set({ assistantPayments: true });
+                    });
+                }}
+              />
+              <GroupSwitch
+                title={t('settings.scripts')}
+                hint={t('settings.scriptsHint')}
+                value={settings.assistantScripts}
+                onChange={(on) => {
+                  if (!on) {
+                    set({ assistantScripts: false });
+                    return;
+                  }
+                  // The riskiest thing the assistant can do: turning it on is asked once more, in plain words.
+                  void dialog
+                    .show({
+                      title: t('settings.scriptsConfirmTitle'),
+                      message: t('settings.scriptsConfirmBody'),
+                      buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: t('settings.scriptsConfirmOn'), primary: true }],
+                    })
+                    .then((result) => {
+                      if (result.button === 1) set({ assistantScripts: true });
+                    });
+                }}
+              />
+            </SettingsSection>
             {settings.assistantScripts && (
               <ScriptSitesSection value={settings.scriptSites} onChange={(scriptSites) => set({ scriptSites })} />
             )}
-            <Text style={[styles.label, styles.sectionLabel]}>{t('settings.alwaysAllowTitle')}</Text>
-            <Text style={styles.hint}>{t('settings.alwaysAllowHint')}</Text>
-            {ALWAYS_ALLOW_KINDS.map((kind) => (
-              <SwitchRow
-                key={kind}
-                title={t(`settings.alwaysAllow.${kind}`)}
-                hint={ALWAYS_ALLOW_NOTES[kind] ? t(ALWAYS_ALLOW_NOTES[kind]) : undefined}
-                value={settings.alwaysAllow.includes(kind)}
-                onChange={(on) => set({ alwaysAllow: withKind(settings.alwaysAllow, kind, on) })}
+            <SettingsSection title={t('settings.alwaysAllowTitle')} footer={t('settings.alwaysAllowHint')}>
+              {ALWAYS_ALLOW_KINDS.map((kind) => (
+                <GroupSwitch
+                  key={kind}
+                  title={t(`settings.alwaysAllow.${kind}`)}
+                  hint={ALWAYS_ALLOW_NOTES[kind] ? t(ALWAYS_ALLOW_NOTES[kind]) : undefined}
+                  value={settings.alwaysAllow.includes(kind)}
+                  onChange={(on) => set({ alwaysAllow: withKind(settings.alwaysAllow, kind, on) })}
+                />
+              ))}
+            </SettingsSection>
+            <SettingsSection title={t('settings.phoneDataSection')}>
+              <ContactsRow />
+              <GroupLink title={t('settings.calendarChoice')} onPress={() => setCalendarVisible(true)} />
+            </SettingsSection>
+          </>
+        )}
+
+        {page === 'assistantVoice' && (
+          <>
+            <SettingsSection style={styles.first} footer={<VoiceModeLine online={settings.voiceOnline} language={settings.voiceLanguage} />}>
+              <VoiceLanguageRow value={settings.voiceLanguage} onChange={(voiceLanguage) => set({ voiceLanguage })} />
+              <GroupSwitch
+                title={t('settings.voiceAutoSend')}
+                hint={t('settings.voiceAutoSendHint')}
+                value={settings.voiceAutoSend}
+                onChange={(voiceAutoSend) => set({ voiceAutoSend })}
               />
-            ))}
-            <ContactsRow />
-            {provider.webSearch ? (
-              <SwitchRow
-                title={t('settings.webSearch')}
-                hint={
-                  settings.provider === 'qutai'
-                    ? t('credits.webSearchHint')
-                    : t('settings.webSearchHint', { provider: provider.label })
-                }
-                value={settings.webSearch}
-                onChange={(webSearch) => set({ webSearch })}
+              <GroupSwitch
+                title={t('settings.voiceOnline')}
+                hint={t('settings.voiceOnlineHint', { service: speechService() })}
+                value={settings.voiceOnline === 'allowed'}
+                onChange={(on) => set({ voiceOnline: on ? 'allowed' : 'declined' })}
               />
-            ) : (
-              <View>
-                <Text style={styles.label}>{t('settings.webSearch')}</Text>
-                <Text style={styles.hint}>{t('settings.webSearchUnavailable', { provider: provider.label })}</Text>
-              </View>
-            )}
-            {settings.provider === 'gemini' && (
-              <SwitchRow
-                title={t('settings.geminiStreaming')}
-                hint={t('settings.geminiStreamingHint')}
-                value={settings.geminiStreaming}
-                onChange={(geminiStreaming) => set({ geminiStreaming })}
+              {settings.showAssistantButton && (
+                <GroupSwitch
+                  title={t('settings.voiceHoldToTalk')}
+                  hint={t('settings.voiceHoldToTalkHint')}
+                  value={settings.voiceHoldToTalk}
+                  onChange={(voiceHoldToTalk) => set({ voiceHoldToTalk })}
+                />
+              )}
+            </SettingsSection>
+          </>
+        )}
+
+        {page === 'assistantTasks' && (
+          <>
+            <SettingsSection title={t('settings.tasksTitle')} style={styles.first}>
+              {/* Also without "Keep working in the background": a task can end after the user left (the answer
+                  arrives), or wait for a confirmation. */}
+              <GroupSwitch
+                title={t('settings.notifyTaskDone')}
+                hint={t('settings.notifyTaskDoneHint')}
+                value={settings.notifyTaskDone}
+                onChange={(notifyTaskDone) => set({ notifyTaskDone })}
               />
-            )}
-            <SwitchRow
-              title={t('settings.showActionMarker')}
-              hint={t('settings.showActionMarkerHint')}
-              value={settings.showActionMarker}
-              onChange={(showActionMarker) => set({ showActionMarker })}
-            />
-            <SwitchRow
-              title={t('settings.showCost')}
-              hint={t('settings.showCostHint', { date: pricesDate(PRICES_AS_OF) })}
-              value={settings.showCost}
-              onChange={(showCost) => set({ showCost })}
-            />
-            {Platform.OS === 'android' && (
-              <SwitchRow
-                title={t('settings.backgroundTasks')}
-                hint={t('settings.backgroundTasksHint')}
-                value={settings.backgroundTasks}
-                onChange={setBackgroundTasks}
-              />
-            )}
-            {/* Also without "Keep working in the background": a task can end after the user left (the answer
-                arrives), or wait for a confirmation. */}
-            <SwitchRow
-              title={t('settings.notifyTaskDone')}
-              hint={t('settings.notifyTaskDoneHint')}
-              value={settings.notifyTaskDone}
-              onChange={(notifyTaskDone) => set({ notifyTaskDone })}
-            />
-            <SwitchRow
-              title={t('settings.memoryEnabled')}
-              hint={t('settings.memoryHint')}
-              value={settings.memoryEnabled}
-              onChange={(memoryEnabled) => set({ memoryEnabled })}
-            />
-            <CustomInstructionsField
-              value={settings.customInstructions}
-              onSave={(customInstructions) => set({ customInstructions })}
-            />
-            <Text style={[styles.label, styles.sectionLabel]}>{t('settings.voiceSection')}</Text>
-            <VoiceLanguageRow value={settings.voiceLanguage} onChange={(voiceLanguage) => set({ voiceLanguage })} />
-            <SwitchRow
-              title={t('settings.voiceAutoSend')}
-              hint={t('settings.voiceAutoSendHint')}
-              value={settings.voiceAutoSend}
-              onChange={(voiceAutoSend) => set({ voiceAutoSend })}
-            />
-            <SwitchRow
-              title={t('settings.voiceOnline')}
-              hint={t('settings.voiceOnlineHint', { service: speechService() })}
-              value={settings.voiceOnline === 'allowed'}
-              onChange={(on) => set({ voiceOnline: on ? 'allowed' : 'declined' })}
-            />
-            <VoiceModeLine online={settings.voiceOnline} language={settings.voiceLanguage} />
-            {settings.showAssistantButton ? (
-              <SwitchRow
-                title={t('settings.voiceHoldToTalk')}
-                hint={t('settings.voiceHoldToTalkHint')}
-                value={settings.voiceHoldToTalk}
-                onChange={(voiceHoldToTalk) => set({ voiceHoldToTalk })}
-              />
-            ) : null}
-            {settings.showAssistantButton && (
-              <LinkRow label={t('settings.assistantIntro')} onPress={onShowAssistantIntro} />
-            )}
-            <LinkRow label={t('settings.calendarChoice')} onPress={() => setCalendarVisible(true)} />
-            <LinkRow label={t('settings.manageMemory')} onPress={() => setMemoryVisible(true)} />
-            <LinkRow label={t('settings.savedTasks')} onPress={() => setTasksVisible(true)} />
-            <LinkRow label={t('settings.actionLog')} onPress={() => setActionLogVisible(true)} />
-            <LinkRow label={t('settings.sentLog')} onPress={() => setSentLogVisible(true)} />
+              {Platform.OS === 'android' && (
+                <GroupSwitch
+                  title={t('settings.backgroundTasks')}
+                  hint={t('settings.backgroundTasksHint')}
+                  value={settings.backgroundTasks}
+                  onChange={setBackgroundTasks}
+                />
+              )}
+              <GroupLink title={t('settings.savedTasks')} onPress={() => setTasksVisible(true)} />
+            </SettingsSection>
+            <SettingsSection title={t('settings.historySection')}>
+              <GroupLink title={t('settings.actionLog')} onPress={() => setActionLogVisible(true)} />
+              <GroupLink title={t('settings.sentLog')} onPress={() => setSentLogVisible(true)} />
+            </SettingsSection>
           </>
         )}
 
         {page === 'privacy' && (
           <>
-            <SwitchRow
-              title={t('settings.blockAds')}
-              hint={t('settings.blockAdsHint')}
-              value={settings.blockAds}
-              onChange={(blockAds) => set({ blockAds })}
-            />
-            <LinkRow
-              label={
-                siteRules.rules.length
-                  ? t('settings.filterListsRules', { count: siteRules.rules.length })
-                  : t('settings.filterLists')
-              }
-              onPress={() => setListsVisible(true)}
-            />
-            {/* Android only (BLK-32): WebKit always blocks them, so on iOS the switch would do nothing. */}
-            {Platform.OS === 'android' && (
-              <SwitchRow
-                title={t('settings.thirdPartyCookies')}
-                hint={t('settings.thirdPartyCookiesHint')}
-                value={settings.blockThirdPartyCookies}
-                onChange={(blockThirdPartyCookies) => set({ blockThirdPartyCookies })}
+            <SettingsSection title={t('settings.blockingSection')} style={styles.first}>
+              <GroupSwitch
+                title={t('settings.blockAds')}
+                hint={t('settings.blockAdsHint')}
+                value={settings.blockAds}
+                onChange={(blockAds) => set({ blockAds })}
               />
-            )}
-            <SwitchRow
-              title={t('settings.hideCookieBanners')}
-              hint={t('settings.hideCookieBannersHint')}
-              value={settings.hideCookieBanners}
-              onChange={(hideCookieBanners) => set({ hideCookieBanners })}
-            />
-            <SwitchRow
-              title={t('settings.blockVideoAds')}
-              hint={t('settings.blockVideoAdsHint')}
-              value={settings.blockVideoAds}
-              onChange={(blockVideoAds) => set({ blockVideoAds })}
-            />
-            <SwitchRow
-              title={t('settings.httpsOnly')}
-              hint={t('settings.httpsOnlyHint')}
-              value={settings.httpsOnly}
-              onChange={(httpsOnly) => set({ httpsOnly })}
-            />
-            <AnalyticsSwitch />
-            <LinkRow label={t('settings.clearData')} onPress={() => setClearDataVisible(true)} />
-            <Text style={[styles.label, styles.sectionLabel]}>{t('settings.security')}</Text>
-            <SwitchRow
-              title={t('settings.appLock')}
-              hint={t('settings.appLockHint')}
-              value={settings.appLock}
-              onChange={(on) => setLock('appLock', on)}
-            />
-            <SwitchRow
-              title={t('settings.incognitoLock')}
-              hint={
-                incognitoIsolated()
-                  ? t('settings.incognitoLockHint')
-                  : `${t('settings.incognitoLockHint')} ${t('settings.incognitoSharedHint')}`
-              }
-              value={settings.incognitoLock}
-              onChange={(on) => setLock('incognitoLock', on)}
-            />
+              <GroupLink
+                title={t('settings.filterLists')}
+                summary={siteRules.rules.length ? t('settings.filterListsRules', { count: siteRules.rules.length }) : undefined}
+                onPress={() => setListsVisible(true)}
+              />
+              {/* Android only (BLK-32): WebKit always blocks them, so on iOS the switch would do nothing. */}
+              {Platform.OS === 'android' && (
+                <GroupSwitch
+                  title={t('settings.thirdPartyCookies')}
+                  hint={t('settings.thirdPartyCookiesHint')}
+                  value={settings.blockThirdPartyCookies}
+                  onChange={(blockThirdPartyCookies) => set({ blockThirdPartyCookies })}
+                />
+              )}
+              <GroupSwitch
+                title={t('settings.hideCookieBanners')}
+                hint={t('settings.hideCookieBannersHint')}
+                value={settings.hideCookieBanners}
+                onChange={(hideCookieBanners) => set({ hideCookieBanners })}
+              />
+              <GroupSwitch
+                title={t('settings.blockVideoAds')}
+                hint={t('settings.blockVideoAdsHint')}
+                value={settings.blockVideoAds}
+                onChange={(blockVideoAds) => set({ blockVideoAds })}
+              />
+            </SettingsSection>
+            <SettingsSection title={t('settings.dataSection')}>
+              <GroupSwitch
+                title={t('settings.httpsOnly')}
+                hint={t('settings.httpsOnlyHint')}
+                value={settings.httpsOnly}
+                onChange={(httpsOnly) => set({ httpsOnly })}
+              />
+              <AnalyticsSwitch />
+              <GroupLink title={t('settings.clearData')} onPress={() => setClearDataVisible(true)} />
+            </SettingsSection>
+            <SettingsSection title={t('settings.security')}>
+              <GroupSwitch
+                title={t('settings.appLock')}
+                hint={t('settings.appLockHint')}
+                value={settings.appLock}
+                onChange={(on) => setLock('appLock', on)}
+              />
+              <GroupSwitch
+                title={t('settings.incognitoLock')}
+                hint={
+                  incognitoIsolated()
+                    ? t('settings.incognitoLockHint')
+                    : `${t('settings.incognitoLockHint')} ${t('settings.incognitoSharedHint')}`
+                }
+                value={settings.incognitoLock}
+                onChange={(on) => setLock('incognitoLock', on)}
+              />
+            </SettingsSection>
           </>
         )}
 
         {page === 'appearance' && (
           <>
-            <Segment
-              options={(['system', 'light', 'dark'] as const).map((theme) => ({
-                value: theme,
-                label: t(`settings.theme.${theme}`),
-              }))}
-              value={settings.theme}
-              onChange={(theme) => set({ theme })}
-            />
-            <Text style={styles.label}>{t('settings.addressBarPosition')}</Text>
-            <Segment
-              options={(['top', 'bottom'] as const).map((position) => ({
-                value: position,
-                label: t(`settings.addressBar.${position}`),
-              }))}
-              value={settings.addressBarPosition}
-              onChange={(addressBarPosition) => set({ addressBarPosition })}
-            />
-            <SwitchRow
-              title={t('settings.keepAddressBarVisible')}
-              hint={t('settings.keepAddressBarVisibleHint')}
-              value={settings.keepAddressBarVisible}
-              onChange={(keepAddressBarVisible) => set({ keepAddressBarVisible })}
-            />
-            <SwitchRow
-              title={t('settings.showAssistantButton')}
-              hint={t('settings.showAssistantButtonHint')}
-              value={settings.showAssistantButton}
-              onChange={(showAssistantButton) => set({ showAssistantButton })}
-            />
-            <SwitchRow
-              title={t('settings.forceZoom')}
-              hint={t('settings.forceZoomHint')}
-              value={settings.forceZoom}
-              onChange={(forceZoom) => set({ forceZoom })}
-            />
-            <Text style={[styles.label, styles.sectionLabel]}>{t('settings.mediaSection')}</Text>
-            <SwitchRow
-              title={t('settings.backgroundPlayback')}
-              hint={t(Platform.OS === 'android' ? 'settings.backgroundPlaybackHintAndroid' : 'settings.backgroundPlaybackHint')}
-              value={settings.backgroundPlayback}
-              onChange={(backgroundPlayback) => set({ backgroundPlayback })}
-            />
-            {/* Vendor battery managers may stop even a foreground service; Qutai never asks to be exempted itself
-                (no REQUEST_IGNORE_BATTERY_OPTIMIZATIONS), the user decides in the system's own settings. */}
-            {Platform.OS === 'android' && settings.backgroundPlayback && (
-              <Pressable onPress={openSettingsOrExplain} style={styles.switchRow} accessibilityRole="button">
-                <View style={styles.flex}>
-                  <Text style={styles.hint}>{t('settings.backgroundPlaybackBattery')}</Text>
-                  <Text style={[styles.optionText, styles.link]}>{t('settings.backgroundPlaybackBatteryButton')} ›</Text>
-                </View>
-              </Pressable>
-            )}
-            {Platform.OS === 'android' && (
-              <SwitchRow
-                title={t('settings.pictureInPicture')}
-                hint={t('settings.pictureInPictureHint')}
-                value={settings.pictureInPicture}
-                onChange={(pictureInPicture) => set({ pictureInPicture })}
+            <SettingsSection title={t('settings.themeSection')} style={styles.first}>
+              <GroupItem>
+                <Segment
+                  accessibilityLabel={t('settings.themeSection')}
+                  options={(['system', 'light', 'dark'] as const).map((theme) => ({
+                    value: theme,
+                    label: t(`settings.theme.${theme}`),
+                  }))}
+                  value={settings.theme}
+                  onChange={(theme) => set({ theme })}
+                />
+              </GroupItem>
+            </SettingsSection>
+            <SettingsSection title={t('settings.addressBarPosition')}>
+              <GroupItem>
+                <Segment
+                  accessibilityLabel={t('settings.addressBarPosition')}
+                  options={(['top', 'bottom'] as const).map((position) => ({
+                    value: position,
+                    label: t(`settings.addressBar.${position}`),
+                  }))}
+                  value={settings.addressBarPosition}
+                  onChange={(addressBarPosition) => set({ addressBarPosition })}
+                />
+              </GroupItem>
+              <GroupSwitch
+                title={t('settings.keepAddressBarVisible')}
+                hint={t('settings.keepAddressBarVisibleHint')}
+                value={settings.keepAddressBarVisible}
+                onChange={(keepAddressBarVisible) => set({ keepAddressBarVisible })}
               />
-            )}
-            <SwitchRow
-              title={t('settings.haptics')}
-              hint={t('settings.hapticsHint')}
-              value={settings.haptics}
-              onChange={(haptics) => set({ haptics })}
-            />
+              <GroupSwitch
+                title={t('settings.showAssistantButton')}
+                hint={t('settings.showAssistantButtonHint')}
+                value={settings.showAssistantButton}
+                onChange={(showAssistantButton) => set({ showAssistantButton })}
+              />
+            </SettingsSection>
+            <SettingsSection title={t('settings.touchSection')}>
+              <GroupSwitch
+                title={t('settings.forceZoom')}
+                hint={t('settings.forceZoomHint')}
+                value={settings.forceZoom}
+                onChange={(forceZoom) => set({ forceZoom })}
+              />
+              <GroupSwitch
+                title={t('settings.haptics')}
+                hint={t('settings.hapticsHint')}
+                value={settings.haptics}
+                onChange={(haptics) => set({ haptics })}
+              />
+            </SettingsSection>
+            <SettingsSection title={t('settings.mediaSection')}>
+              <GroupSwitch
+                title={t('settings.backgroundPlayback')}
+                hint={t(Platform.OS === 'android' ? 'settings.backgroundPlaybackHintAndroid' : 'settings.backgroundPlaybackHint')}
+                value={settings.backgroundPlayback}
+                onChange={(backgroundPlayback) => set({ backgroundPlayback })}
+              />
+              {/* Vendor battery managers may stop even a foreground service; Qutai never asks to be exempted itself
+                  (no REQUEST_IGNORE_BATTERY_OPTIMIZATIONS), the user decides in the system's own settings. */}
+              {Platform.OS === 'android' && settings.backgroundPlayback && (
+                <GroupLink
+                  title={t('settings.backgroundPlaybackBatteryButton')}
+                  summary={t('settings.backgroundPlaybackBattery')}
+                  onPress={openSettingsOrExplain}
+                />
+              )}
+              {Platform.OS === 'android' && (
+                <GroupSwitch
+                  title={t('settings.pictureInPicture')}
+                  hint={t('settings.pictureInPictureHint')}
+                  value={settings.pictureInPicture}
+                  onChange={(pictureInPicture) => set({ pictureInPicture })}
+                />
+              )}
+            </SettingsSection>
           </>
         )}
 
@@ -635,35 +725,24 @@ function SettingsPages({
 
         {page === 'search' && (
           <>
-            {SEARCH_ENGINE_ORDER.map((id) => (
-              <Pressable
-                key={id}
-                style={styles.option}
-                onPress={() => set({ searchEngine: id })}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: settings.searchEngine === id }}
-              >
-                <Radio selected={settings.searchEngine === id} />
-                <Text style={styles.optionText}>{SEARCH_ENGINES[id].name}</Text>
-              </Pressable>
-            ))}
-            <SwitchRow
-              title={t('settings.searchSuggestions')}
-              hint={t('settings.searchSuggestionsHint')}
-              value={settings.searchSuggestions}
-              onChange={(searchSuggestions) => set({ searchSuggestions })}
-            />
-            {/* The only place in the app for it since setup's step went (INTRO-30); the phone's own screen decides.
-                Not on iOS (INTRO-32): without Apple's com.apple.developer.web-browser entitlement Qutai isn't in the
-                phone's Default Browser App list, so the row would lead nowhere. */}
-            {Platform.OS !== 'ios' && (
-              <>
-                <Text style={styles.label}>{t('settings.defaultBrowserTitle')}</Text>
-                <Text style={styles.hint}>{t('settings.defaultBrowserLead')}</Text>
-                <LinkRow label={t('settings.defaultBrowserOpen')} onPress={() => openDefaultBrowserSettings().catch(() => {})} />
-                <Text style={styles.hint}>{t('settings.defaultBrowserHintAndroid')}</Text>
-              </>
-            )}
+            <SettingsSection title={t('settings.searchEngineSection')} style={styles.first}>
+              {SEARCH_ENGINE_ORDER.map((id) => (
+                <RadioRow
+                  key={id}
+                  label={SEARCH_ENGINES[id].name}
+                  selected={settings.searchEngine === id}
+                  onPress={() => set({ searchEngine: id })}
+                />
+              ))}
+            </SettingsSection>
+            <SettingsSection>
+              <GroupSwitch
+                title={t('settings.searchSuggestions')}
+                hint={t('settings.searchSuggestionsHint')}
+                value={settings.searchSuggestions}
+                onChange={(searchSuggestions) => set({ searchSuggestions })}
+              />
+            </SettingsSection>
           </>
         )}
 
@@ -674,25 +753,47 @@ function SettingsPages({
           <>
             {/* Pro mode: the account can hold backups too, so "no account to sync" would be wrong there. */}
             <Text style={styles.hint}>{t(serverBackupEnabled ? 'backup.introPro' : 'backup.intro')}</Text>
-            <LinkRow label={t('backup.exportTitle')} onPress={() => setBackupJob('export')} />
-            <LinkRow label={t('backup.importTitle')} onPress={importBackup} />
+            <SettingsSection title={t('backup.fileSection')}>
+              <GroupLink icon="upload" title={t('backup.exportTitle')} onPress={() => setBackupJob('export')} />
+              <GroupLink icon="download" title={t('backup.importTitle')} onPress={importBackup} />
+            </SettingsSection>
             {serverBackupEnabled && <ServerBackupSection onRestore={setBackupJob} />}
           </>
         )}
 
         {page === 'about' && (
           <>
-            <LinkRow
-              label={t('settings.rate')}
-              onPress={() =>
-                rateApp()
-                  .then((ok) => ok || dialog.alert(t('settings.rateUnavailable')))
-                  .catch(() => dialog.alert(t('settings.rateUnavailable')))
-              }
-            />
-            <LinkRow label={t('settings.privacyPolicy')} onPress={() => setLegal('privacy')} />
-            <LinkRow label={t('settings.terms')} onPress={() => setLegal('terms')} />
-            <LinkRow label={t('settings.licences')} onPress={() => setLicencesVisible(true)} />
+            <SettingsSection
+              style={styles.first}
+              footer={Platform.OS !== 'ios' ? t('settings.defaultBrowserHintAndroid') : undefined}
+            >
+              <GroupLink
+                icon="rate"
+                title={t('settings.rate')}
+                chevron={false}
+                onPress={() =>
+                  rateApp()
+                    .then((ok) => ok || dialog.alert(t('settings.rateUnavailable')))
+                    .catch(() => dialog.alert(t('settings.rateUnavailable')))
+                }
+              />
+              {/* The only place in the app for it since setup's step went (INTRO-30); the phone's own screen decides.
+                  Not on iOS (INTRO-32): without Apple's com.apple.developer.web-browser entitlement Qutai isn't in the
+                  phone's Default Browser App list, so the row would lead nowhere. Here since UI-58 (was under Search). */}
+              {Platform.OS !== 'ios' && (
+                <GroupLink
+                  icon="globe"
+                  title={t('settings.defaultBrowserTitle')}
+                  summary={t('settings.defaultBrowserLead')}
+                  onPress={() => openDefaultBrowserSettings().catch(() => {})}
+                />
+              )}
+            </SettingsSection>
+            <SettingsSection>
+              <GroupLink title={t('settings.privacyPolicy')} onPress={() => setLegal('privacy')} />
+              <GroupLink title={t('settings.terms')} onPress={() => setLegal('terms')} />
+              <GroupLink title={t('settings.licences')} onPress={() => setLicencesVisible(true)} />
+            </SettingsSection>
             <Text style={styles.version} selectable>
               {t('settings.version', appVersion())}
             </Text>
@@ -773,11 +874,13 @@ function LanguagePage() {
   const chosen = mode === 'system' || mode === 'app' ? chosenLanguage() : null;
   if (mode === 'settings') {
     return (
-      <>
-        <Text style={styles.optionText}>{LANGUAGE_INFO[getLanguage()].name}</Text>
-        <Text style={styles.hint}>{t('settings.languageHintIos')}</Text>
-        <LinkRow label={t('settings.languageOpenIos')} onPress={() => openLanguageSettings().catch(() => {})} />
-      </>
+      <SettingsSection style={styles.first} footer={t('settings.languageHintIos')}>
+        <GroupLink
+          title={t('settings.languageOpenIos')}
+          value={LANGUAGE_INFO[getLanguage()].name}
+          onPress={() => openLanguageSettings().catch(() => {})}
+        />
+      </SettingsSection>
     );
   }
   if (mode === 'none') return <Text style={styles.hint}>{t('settings.languageNeedsBuild')}</Text>;
@@ -786,51 +889,41 @@ function LanguagePage() {
     if (chooseLanguage(language)) rerender((n) => n + 1);
   };
   const option = (key: string, label: string, language: Language | null) => (
-    <Pressable
-      key={key}
-      style={styles.option}
-      onPress={() => pick(language)}
-      accessibilityRole="radio"
-      accessibilityState={{ checked: chosen === language }}
-    >
-      <Radio selected={chosen === language} />
-      <Text style={styles.optionText}>{label}</Text>
-    </Pressable>
+    <RadioRow key={key} label={label} selected={chosen === language} onPress={() => pick(language)} />
   );
   return (
-    <>
+    <SettingsSection
+      style={styles.first}
+      footer={t(mode === 'system' ? 'settings.languageHintAndroid' : 'settings.languageHintOld')}
+    >
       {option('system', t('settings.languageSystem'), null)}
       {LANGUAGES.map((language) => option(language, LANGUAGE_INFO[language].name, language))}
-      <Text style={styles.hint}>{t(mode === 'system' ? 'settings.languageHintAndroid' : 'settings.languageHintOld')}</Text>
-    </>
+    </SettingsSection>
   );
 }
 
 const speechService = () => t(Platform.OS === 'ios' ? 'voice.serviceApple' : 'voice.serviceGoogle');
 
+/** "Automatic" or the fixed listening language's name. */
+function voiceLanguageLabel(value: string): string {
+  return value === AUTO_LANGUAGE ? t('settings.voiceLanguageAuto') : languageName(value);
+}
+
 /**
- * Settings › Assistant › Listening language: Automatic (follows each conversation) or a fixed language, chosen in the
- * same sheet as the panel's (Turkish, English, More languages…).
+ * Settings › Assistant › Voice input › Listening language: Automatic (follows each conversation) or a fixed language,
+ * chosen in the same sheet as the panel's (Turkish, English, More languages…).
  */
 function VoiceLanguageRow({ value, onChange }: { value: string; onChange: (value: string) => void }) {
-  const styles = useStyles();
   const [open, setOpen] = useState(false);
   const auto = value === AUTO_LANGUAGE;
-  const current = auto ? t('settings.voiceLanguageAuto') : languageName(value);
   return (
     <>
-      <Pressable
+      <GroupLink
+        title={t('settings.voiceLanguage')}
+        value={voiceLanguageLabel(value)}
+        summary={t('settings.voiceLanguageHint')}
         onPress={() => setOpen(true)}
-        style={styles.switchRow}
-        accessibilityRole="button"
-        accessibilityLabel={`${t('settings.voiceLanguage')}: ${current}`}
-      >
-        <View style={styles.flex}>
-          <Text style={styles.label}>{t('settings.voiceLanguage')}</Text>
-          <Text style={[styles.optionText, styles.link]}>{current} ›</Text>
-          <Text style={styles.hint}>{t('settings.voiceLanguageHint')}</Text>
-        </View>
-      </Pressable>
+      />
       <VoiceLanguageSheet
         visible={open}
         value={auto ? null : value}
@@ -856,7 +949,7 @@ function VoiceModeLine({ online, language }: { online: Settings['voiceOnline']; 
     };
   }, [online, language]);
   return (
-    <Text style={[styles.hint, styles.voiceMode]}>
+    <Text style={[styles.hint, styles.footerNote]}>
       {t(`settings.voiceMode.${mode ?? 'checking'}`, { service: speechService() })}
     </Text>
   );
@@ -899,10 +992,20 @@ function SectionRow({
 }
 
 
-/** The shared switch row with this screen's spacing above it. */
-function SwitchRow(props: Parameters<typeof SharedSwitchRow>[0]) {
+/** A choice among several, inside a SettingsSection card (search engine, language). */
+function RadioRow({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   const styles = useStyles();
-  return <SharedSwitchRow style={styles.switchRow} {...props} />;
+  return (
+    <Pressable
+      style={({ pressed }) => [styles.radioRow, pressed && styles.pressed]}
+      onPress={onPress}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected }}
+    >
+      <Radio selected={selected} />
+      <Text style={[styles.optionText, styles.flex]}>{label}</Text>
+    </Pressable>
+  );
 }
 
 const INSTRUCTION_EXAMPLES = ['settings.customExample1', 'settings.customExample2'] as const;
@@ -939,7 +1042,7 @@ function CustomInstructionsField({ value, onSave }: { value: string; onSave: (te
   };
   return (
     <>
-      <Text style={styles.label}>{t('settings.customInstructions')}</Text>
+      <Text style={styles.itemLabel}>{t('settings.customInstructions')}</Text>
       <Text style={styles.hint}>{t('settings.customInstructionsHint')}</Text>
       <TextInput
         style={styles.customInput}
@@ -997,8 +1100,8 @@ function ContactsRow() {
   }, []);
   if (!state) return null;
   return (
-    <View>
-      <Text style={styles.label}>{t('settings.contactsTitle')}</Text>
+    <GroupItem>
+      <Text style={styles.itemLabel}>{t('settings.contactsTitle')}</Text>
       <Text style={styles.hint}>{t('settings.contactsHint')}</Text>
       <Text style={[styles.hint, styles.contactsState]}>{t(`settings.contactsState.${state}`)}</Text>
       {state === 'undetermined' || state === 'denied' ? (
@@ -1010,7 +1113,7 @@ function ContactsRow() {
       {state === 'granted' || state === 'limited' || state === 'blocked' ? (
         <LinkRow label={t('settings.openSystem')} onPress={openSettingsOrExplain} />
       ) : null}
-    </View>
+    </GroupItem>
   );
 }
 
@@ -1046,11 +1149,13 @@ const useStyles = makeStyles((c) => ({
   },
   sectionTitle: { color: c.text, fontSize: 16, fontWeight: '600' },
   pressed: { backgroundColor: c.pressed },
-  label: { ...common(c).label, marginTop: 12 },
-  sectionLabel: { fontSize: 13, color: c.textSecondary, textTransform: 'uppercase', marginTop: 24 },
+  itemLabel: common(c).label,
   hint: common(c).hint,
   contactsState: { color: c.text, marginTop: 4 },
-  voiceMode: { marginTop: 8 },
+  footerNote: { marginHorizontal: 4 },
+  /** The first section of a page sits closer to the header. */
+  first: { marginTop: 4 },
+  radioRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 46, paddingHorizontal: 14, paddingVertical: 10 },
   customInput: {
     color: c.text,
     minHeight: 96,
@@ -1059,7 +1164,7 @@ const useStyles = makeStyles((c) => ({
     paddingHorizontal: 12,
     paddingTop: 10,
     paddingBottom: 10,
-    backgroundColor: c.surface,
+    backgroundColor: c.sunken,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
     fontSize: 15,
@@ -1073,13 +1178,11 @@ const useStyles = makeStyles((c) => ({
     borderRadius: 14,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: c.border,
-    backgroundColor: c.surface,
+    backgroundColor: c.sunken,
   },
   customExampleText: { fontSize: 13, color: c.text },
   link: { color: c.tintText, fontWeight: '600' },
-  option: { flexDirection: 'row', alignItems: 'center', paddingVertical: 9, gap: 12 },
   optionText: { color: c.text, fontSize: 15 },
-  switchRow: { marginTop: 20 },
   saveButton: { marginTop: 4 },
   version: { color: c.textSecondary, fontSize: 13, textAlign: 'center', marginTop: 28 },
 }));
@@ -1100,7 +1203,7 @@ function AnalyticsSwitch() {
   }, []);
   if (consent === null || (!offered && consent !== 'allowed')) return null;
   return (
-    <SwitchRow
+    <GroupSwitch
       title={t('settings.analytics')}
       hint={t('settings.analyticsHint')}
       value={consent === 'allowed'}

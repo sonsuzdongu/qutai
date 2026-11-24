@@ -14,11 +14,12 @@ for the map, then only the area files you need; never load all of them at once.
 
 ## Changelog
 
-Last updated: 2026-11-23
+Last updated: 2026-11-24
 
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-24:** Settings reorganised: grouped pages with headings (`UI-54`, Appearance gets "Theme"); Assistant split into Permissions, Voice input and Tasks and history pages, its tour link closing Settings (`UI-55`); Account with Apple's and Google's own sign-in buttons and identity → credits → sign-in methods → rare and destructive actions (`UI-56`); Filter lists grouped and opening at the top (`UI-57`); the default-browser row moved from Search to About (`UI-58`, `INTRO-30`, `INTRO-32`).
 - **2026-11-23:** Filter list downloads: the AdGuard lists fall back to AdGuard's FiltersRegistry copy on GitHub when filters.adtidy.org doesn't answer in 15 s, refuses or fails (`BLK-2`); requests to one host are spaced, failed retries wait 1 h / 4 h / a day, each row shows its own progress, switching off cancels, a never-downloaded failure switches back off with "Try again", and the alert names the lists (`BLK-34`).
 - **2026-11-23:** The new tab page loses its search box and Ask Qutai button and its aurora drifts slowly (`UI-53`); Reader mode and Add to Home screen move under ⋮ › More and Settings is the menu's last item (`UI-51`).
 - **2026-11-23:** Memory's "Organise for me" works with Qutai Credits: it goes to the server's own request `POST /relay/organise-memory` (server-owned instructions, only ids and texts sent, only moves returned, paid like a relay step, usage marked `organise_memory` in the panel) instead of the relay, whose agent prompt dropped its instructions; an older server says "not available yet" (`MEM-26`, `CRED-50`; owner).

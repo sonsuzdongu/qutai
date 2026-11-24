@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { accountErrorDetails, accountErrorMessage, accountSession, isServerUnreachable, useAccountState } from '../account';
 import { AccountApiError } from '../account/api';
 import { appleSignInAvailable, SignInCancelled, signInWithApple } from '../account/providers';
@@ -7,16 +7,19 @@ import { creditsEnabled } from '../config/features';
 import { creditsText, refreshCredits, useCreditsState } from '../credits';
 import { Icon } from '../ui/Icon';
 import { t } from '../i18n';
-import { makeStyles, usePalette, radii, common } from '../ui/theme';
-import { AddMethods, MethodsList } from './AccountMethods';
-import { signedInWithText } from './accountLabels';
+import { GroupItem, GroupLink, SettingsSection } from '../ui/SettingsRows';
+import { makeStyles, usePalette, common } from '../ui/theme';
+import { isPrivateRelayAddress } from '../account/methodRules';
+import { AddMethods, CombineAccountsRow, MethodsList } from './AccountMethods';
+import { methodsOf, signedInWithText } from './accountLabels';
 import { dialog } from './Dialog';
 import { SignInOptions } from './SignInOptions';
 
 /**
  * Settings › Account (pro mode only; SettingsModal shows the row only when `accountsEnabled`).
- * Signed out: what the account is for and the sign-in buttons. Signed in: the account from `GET /me`, sign out,
- * sign out of all devices, delete account. The sign-in buttons are SignInOptions (also in setup's Qutai step).
+ * Signed out: what the account is for and the sign-in buttons. Signed in (UI-56), top to bottom: who is signed in
+ * (from `GET /me`), Qutai Credits and its balance, the ways to sign in, then the rarely used and destructive actions:
+ * combine accounts, sign out, sign out of all devices, delete account. The sign-in buttons are SignInOptions (also in setup's Qutai step).
  * Builds made against a local test server (`devLoginEnabled`) also show a test sign-in under the buttons, and
  * mark a test user's account as such.
  */
@@ -126,125 +129,132 @@ export function AccountScreen({
       <>
         {state.reason === 'expired' && <Text style={[styles.notice, styles.noticeWarn]}>{t('account.expired')}</Text>}
         {creditsEnabled && usesCredits && <Text style={styles.notice}>{t('credits.signedOutNotice')}</Text>}
-        <Text style={styles.intro}>{t('account.intro')}</Text>
-        <Text style={styles.hint}>{t('account.introLocal')}</Text>
+        <View style={styles.hero}>
+          <View style={styles.heroIcon}>
+            <Icon name="person" size={30} color={palette.tintText} />
+          </View>
+          <Text style={styles.heroTitle} accessibilityRole="header">
+            {t('account.signInHeading')}
+          </Text>
+          <Text style={styles.heroText}>{t('account.intro')}</Text>
+        </View>
         <SignInOptions />
+        <Text style={[styles.hint, styles.privacyNote]}>{t('account.introLocal')}</Text>
       </>
     );
   }
 
   const { user } = state;
   const testUser = user.providers.includes('test');
+  // The address the account is best known by: the first method that has one (Hide My Email shows as Apple's).
+  const primary = methodsOf(user).find((m) => typeof m.email === 'string' && m.email.trim() && !isPrivateRelayAddress(m.email));
+  const busyMark = (kind: NonNullable<typeof busy>) =>
+    busy === kind ? <ActivityIndicator color={palette.textSecondary} /> : undefined;
   return (
     <>
       {user.status === 'suspended' && <Text style={[styles.notice, styles.noticeWarn]}>{t('account.suspended')}</Text>}
       {notice && <Text style={styles.notice}>{notice}</Text>}
       {testUser && <Text style={[styles.notice, styles.noticeWarn]}>{t('account.test.signedIn')}</Text>}
-      <View style={styles.card}>
-        <Text style={styles.label}>{signedInWithText(user)}</Text>
-        <MethodsList user={user} />
-        <Text style={styles.hint} selectable>
-          {t('account.id', { id: user.id })}
-        </Text>
+      {user.mergeSuggested && <Text style={styles.notice}>{t('account.merge.suggested')}</Text>}
+      {/* Who is signed in, first (UI-56). */}
+      <View style={[styles.card, styles.identity]}>
+        <View style={styles.avatar}>
+          <Icon name="person" size={26} color={palette.tintText} />
+        </View>
+        <View style={styles.flex}>
+          <Text style={styles.identityTitle} selectable>
+            {primary?.email?.trim() ?? signedInWithText(user)}
+          </Text>
+          {primary && <Text style={styles.hint}>{signedInWithText(user)}</Text>}
+          <Text style={styles.idText} selectable>
+            {t('account.id', { id: user.id })}
+          </Text>
+        </View>
       </View>
-      {user.status === 'active' && <AddMethods user={user} />}
       {creditsEnabled && onOpenCredits && (
-        <Pressable
-          onPress={onOpenCredits}
-          style={({ pressed }) => [styles.card, styles.creditsRow, pressed && styles.pressed]}
-          accessibilityRole="button"
-        >
-          <Icon name="wallet" size={20} color={palette.tintText} />
-          <View style={styles.flex}>
-            <Text style={styles.label}>{t('credits.provider')}</Text>
-            <Text style={styles.hint}>
-              {credits.balance === null ? t('credits.balanceUnknown') : t('credits.balance', { credits: creditsText(credits.balance) })}
-            </Text>
-          </View>
-          <Icon name="chevronRight" size={18} color={palette.textSecondary} />
-        </Pressable>
+        <SettingsSection>
+          <GroupLink
+            icon="wallet"
+            title={t('credits.provider')}
+            value={credits.balance === null ? undefined : t('credits.balance', { credits: creditsText(credits.balance) })}
+            summary={credits.balance === null ? t('credits.balanceUnknown') : undefined}
+            onPress={onOpenCredits}
+          />
+        </SettingsSection>
       )}
-      <Text style={styles.hint}>{t('account.introLocal')}</Text>
-      <View style={styles.buttons}>
-        <ActionButton label={t('account.signOut')} busy={busy === 'signOut'} disabled={!!busy} onPress={signOut} />
-        <ActionButton
-          label={t('account.signOutAll')}
-          busy={busy === 'signOutAll'}
+      <SettingsSection title={t('account.methodsTitle')}>
+        <GroupItem>
+          <MethodsList user={user} />
+        </GroupItem>
+        {user.status === 'active' && (
+          <GroupItem>
+            <AddMethods user={user} />
+          </GroupItem>
+        )}
+      </SettingsSection>
+      <Text style={[styles.hint, styles.privacyNote]}>{t('account.introLocal')}</Text>
+      {/* The rarely used and the destructive, last. */}
+      <SettingsSection footer={t('account.deleteHint')}>
+        {user.status === 'active' && <CombineAccountsRow disabled={!!busy} />}
+        <GroupLink
+          icon="signOut"
+          title={t('account.signOut')}
+          chevron={false}
           disabled={!!busy}
+          right={busyMark('signOut')}
+          onPress={signOut}
+        />
+        <GroupLink
+          icon="devices"
+          title={t('account.signOutAll')}
+          chevron={false}
+          disabled={!!busy}
+          right={busyMark('signOutAll')}
           onPress={signOutEverywhere}
         />
-        <ActionButton
-          label={t('account.delete')}
-          busy={busy === 'delete'}
-          disabled={!!busy}
+        <GroupLink
+          icon="trash"
+          title={t('account.delete')}
           danger
+          disabled={!!busy}
+          right={busyMark('delete')}
           onPress={deleteAccount}
         />
-      </View>
-      <Text style={styles.hint}>{t('account.deleteHint')}</Text>
+      </SettingsSection>
     </>
-  );
-}
-
-function ActionButton({
-  label,
-  busy,
-  disabled,
-  danger,
-  onPress,
-}: {
-  label: string;
-  busy: boolean;
-  disabled: boolean;
-  danger?: boolean;
-  onPress: () => void;
-}) {
-  const styles = useStyles();
-  const palette = usePalette();
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => [styles.button, pressed && styles.pressed, disabled && !busy && styles.dimmed]}
-      accessibilityRole="button"
-      accessibilityState={{ busy, disabled }}
-    >
-      {busy ? (
-        <ActivityIndicator color={danger ? palette.danger : palette.text} />
-      ) : (
-        <Text style={[styles.buttonText, danger && styles.danger]}>{label}</Text>
-      )}
-    </Pressable>
   );
 }
 
 const useStyles = makeStyles((c) => ({
   loading: { marginTop: 24 },
-  intro: { color: c.text, fontSize: 15, lineHeight: 21 },
   hint: common(c).hint,
-  label: { color: c.text, fontSize: 15, fontWeight: '600' },
-  card: { ...common(c).card, padding: 14, gap: 4 },
-  methods: { gap: 4, marginTop: 4, marginBottom: 2 },
-  method: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  methodText: { color: c.text, fontSize: 14, lineHeight: 19 },
-  creditsRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  card: { ...common(c).card, padding: 14 },
   flex: { flex: 1 },
   notice: common(c).notice,
   noticeWarn: { color: c.danger },
-  buttons: { gap: 10, marginTop: 12, marginBottom: 8 },
-  button: {
-    minHeight: 46,
-    paddingVertical: 8,
-    borderRadius: radii.button,
-    backgroundColor: c.surface,
-    borderWidth: 1,
-    borderColor: c.border,
+  hero: { alignItems: 'center', gap: 8, paddingTop: 8, paddingBottom: 4, paddingHorizontal: 8 },
+  heroIcon: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: c.sunken,
+    marginBottom: 4,
   },
-  buttonText: { color: c.text, fontSize: 16, fontWeight: '600' },
-  danger: { color: c.danger },
-  pressed: { backgroundColor: c.pressed },
-  dimmed: { opacity: 0.5 },
+  heroTitle: { ...common(c).title, fontSize: 20, textAlign: 'center' },
+  heroText: { color: c.textSecondary, fontSize: 15, lineHeight: 21, textAlign: 'center' },
+  privacyNote: { marginTop: 14, marginHorizontal: 4 },
+  identity: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  avatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: c.sunken,
+  },
+  identityTitle: { color: c.text, fontSize: 17, fontWeight: '700' },
+  idText: { ...common(c).hint, fontSize: 12, marginTop: 2 },
 }));
 
