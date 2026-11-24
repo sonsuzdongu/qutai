@@ -890,7 +890,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-59` | Backup's "What's included" (file and account backups), password and automatic backups are grouped cards with notes above and below. | Owner | 2026-11-24 |
 | `UI-60` | Buy credits is a paywall: aurora, mark, gradient name, balance pill, three facts, pack cards with gradient price buttons and a "Most credits" badge, all on the first screen. | Owner | 2026-11-24 |
 | `UI-61` | "Show the Qutai button tour" is in Settings › About, not Assistant. | Owner | 2026-11-24 |
-| `UI-62` | A cancelled purchase is a floating error-coloured notice that goes on tap or after 4 s. | Owner | 2026-11-24 |
+| `UI-62` | Buy credits messages are floating notices (90 % opacity) in their tone's colour; they go on tap or after 4–10 s, "finishing" stays. | Owner | 2026-11-24 |
 | `UI-63` | Credit packs show whole credits ("100") in smaller text and button; the balance keeps decimals. | Owner | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`

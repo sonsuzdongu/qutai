@@ -19,6 +19,7 @@ Last updated: 2026-11-24
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-24:** Every Buy credits message is a floating notice in its tone's colour at 90 % opacity (`UI-62`); the Qutai button tour also closes the assistant panel (`UI-61`).
 - **2026-11-24:** Buy credits: no waiting-purchases count, "Check for missing credits" asks about all kept purchases at once without waits (`BUY-36`); packs show whole credits in smaller text (`UI-63`).
 - **2026-11-24:** A cancelled purchase shows as a floating error-coloured notice that disappears on tap or after 4 seconds (`UI-62`).
 - **2026-11-24:** "Show the Qutai button tour" moves from Settings › Assistant to About (`UI-61`).

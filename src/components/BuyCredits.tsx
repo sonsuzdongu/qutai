@@ -75,11 +75,15 @@ export function BuyCreditsHost() {
 
 // --- The screen ---
 
-/** `float`: a short-lived floating notice over the screen (a cancelled purchase, UI-62) instead of a box in the page. */
-type Status = { tone: 'ok' | 'info' | 'warn'; icon: IconName; text: string; float?: boolean };
+/**
+ * Every ending is a floating notice over the screen in its tone's colour (UI-62): green when credits came, the brand
+ * blue for information, red for a problem. `stay`: it waits for the next one instead of going away (a purchase in
+ * progress).
+ */
+type Status = { tone: 'ok' | 'info' | 'warn'; icon: IconName; text: string; stay?: boolean };
 
-/** How long a floating notice stays unless tapped away. */
-const FLOAT_MS = 4000;
+/** How long a notice stays unless tapped away: longer for longer texts, between 4 and 10 seconds. */
+const floatMs = (text: string) => Math.min(10_000, Math.max(4_000, text.length * 60));
 
 /**
  * Buying Qutai Credits (pro mode, signed in). The balance; what credits are; the packs Qutai's server offers for this
@@ -111,10 +115,10 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   const [checking, setChecking] = useState(false);
   const [status, setStatus] = useState<Status | null>(null);
   const [legal, setLegal] = useState<LegalKind | null>(null);
-  // A floating notice goes away by itself after FLOAT_MS, or when tapped.
+  // A notice goes away by itself after a while (unless it stays for what comes next), or when tapped.
   useEffect(() => {
-    if (!status?.float) return;
-    const timer = setTimeout(() => setStatus((s) => (s?.float ? null : s)), FLOAT_MS);
+    if (!status || status.stay) return;
+    const timer = setTimeout(() => setStatus((s) => (s === status ? null : s)), floatMs(status.text));
     return () => clearTimeout(timer);
   }, [status]);
 
@@ -194,10 +198,13 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   const buy = async (offer: PackOffer) => {
     if (!flow || !userId || busy) return;
     setBusy(offer.pack.productId);
-    setStatus({ tone: 'info', icon: 'wallet', text: t('buy.status.inProgress') });
+    setStatus({ tone: 'info', icon: 'wallet', text: t('buy.status.inProgress'), stay: true });
     try {
       const result = await flow.buy(offer.pack, userId);
       setStatus(statusFor(result));
+    } catch {
+      // The "finishing" notice stays until replaced, so an unexpected error must replace it too.
+      setStatus({ tone: 'warn', icon: 'insecure', text: t('buy.status.failed') });
     } finally {
       setBusy(null);
       creditsStore.refreshCredits().catch(() => {});
@@ -222,10 +229,10 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
         </Pressable>
       </View>
       {/* Just under the close button, over the page; the zero-height holder keeps the page from moving. */}
-      {status?.float && (
+      {status && (
         <View style={styles.floatingHolder}>
           <Pressable
-            style={styles.floating}
+            style={[styles.floating, status.tone === 'ok' ? styles.floatingOk : status.tone === 'warn' ? styles.floatingWarn : null]}
             onPress={() => setStatus(null)}
             accessibilityRole="alert"
             accessibilityLiveRegion="assertive"
@@ -265,20 +272,6 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
           ))}
         </View>
 
-        {status && !status.float && (
-          <View
-            style={[styles.status, status.tone === 'ok' && styles.statusOk, status.tone === 'warn' && styles.statusWarn]}
-            accessibilityLiveRegion="polite"
-            accessible
-          >
-            <Icon
-              name={status.icon}
-              size={18}
-              color={status.tone === 'warn' ? palette.danger : status.tone === 'ok' ? OK_GREEN : palette.textSecondary}
-            />
-            <Text style={styles.statusText}>{status.text}</Text>
-          </View>
-        )}
 
         {!signedIn && <Text style={styles.notice}>{t('buy.signIn')}</Text>}
         {suspended && <Text style={[styles.notice, styles.warnText]}>{t('buy.suspended')}</Text>}
@@ -367,7 +360,8 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   );
 }
 
-const OK_GREEN = '#3a9b5c';
+/** Credits came: white text on it is about 5:1. */
+const OK_GREEN = '#2e7d4a';
 
 /** What credits give, in three short lines (each true of every pack: BUY-1 consumables, CRED relay rules). */
 const PERKS: { icon: IconName; text: MessageKey }[] = [
@@ -410,7 +404,7 @@ export function statusFor(result: BuyResult): Status {
             : t('buy.status.creditedBalance', { credits: creditsText(result.credits), balance: creditsText(result.balance) }),
       };
     case 'cancelled':
-      return { tone: 'warn', icon: 'close', text: t('buy.status.cancelled'), float: true };
+      return { tone: 'warn', icon: 'close', text: t('buy.status.cancelled') };
     case 'pending':
       return { tone: 'info', icon: 'wait', text: t('buy.status.pending') };
     case 'alreadyOwned':
@@ -476,10 +470,6 @@ const useStyles = makeStyles((c) => ({
   section: { color: c.text, fontSize: 17, fontWeight: '700', marginTop: 4 },
   notice: common(c).notice,
   warnText: { color: c.danger },
-  status: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderRadius: radii.control, padding: 12, backgroundColor: c.sunken },
-  statusOk: { borderWidth: 1, borderColor: OK_GREEN },
-  statusWarn: { borderWidth: 1, borderColor: c.danger },
-  statusText: { flex: 1, color: c.text, fontSize: 14, lineHeight: 20 },
   floatingHolder: { height: 0, zIndex: 10, elevation: 6 },
   floating: {
     position: 'absolute',
@@ -492,13 +482,16 @@ const useStyles = makeStyles((c) => ({
     borderRadius: radii.control,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: c.dangerFill,
+    backgroundColor: c.tint,
+    opacity: 0.9,
     shadowColor: c.text,
     shadowOpacity: 0.25,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 6,
   },
+  floatingOk: { backgroundColor: OK_GREEN },
+  floatingWarn: { backgroundColor: c.dangerFill },
   floatingText: { flex: 1, color: c.onTint, fontSize: 14, lineHeight: 20, fontWeight: '600' },
   loading: { alignSelf: 'flex-start', marginVertical: 8 },
   pack: {
