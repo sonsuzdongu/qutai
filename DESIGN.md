@@ -19,6 +19,7 @@ Last updated: 2026-11-24
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-24:** Five browser behaviours: Back skips entries a page added without the user (`TABS-33`); Android pages get Web Share (`WPERM-15`); Android passkeys reach the credential provider instead of closing the app, iOS not possible without the browser entitlement (`WPERM-16`); "Let sites play videos with sound automatically", off by default (`MEDIA-29`); Android turns a wide full-screen video to landscape (`MEDIA-30`); the settings tool can change autoplay with sound (`TOOL-7`).
 - **2026-11-24:** Every app link (whatsapp:, tel:, myapp: …, not only Play) is never loaded or shown like a page: no error page, never the tab's address; the first-load rule covers them all, only Play skips the question (`DL-18`).
 - **2026-11-24:** Custom instructions start empty: no "Answer briefly and to the point." line or "Answer briefly" chip, short answers being the assistant's own rule; the old line is removed once (`INTRO-34`, `INTRO-29`).
 - **2026-11-24:** The Default browser row in About shows only its title (`UI-66`).

@@ -123,6 +123,7 @@
       ],
       "./plugins/withLegacyStorageWrite",
       "./plugins/withCleartextBrowsing",
+      "./plugins/withPasskeys",
       "./plugins/withBackgroundMedia",
       "./plugins/withBackgroundTasks",
       "./plugins/withDownloads",

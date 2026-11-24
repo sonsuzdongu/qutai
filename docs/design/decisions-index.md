@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 873 decisions (137 owner, 654 default, 82 waiting); 163 ids moved to Details.
+Totals: 874 decisions (137 owner, 655 default, 82 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -381,6 +381,7 @@ Moved to Details (ids retired, not reused): `BLK-5`, `BLK-8`, `BLK-9`, `BLK-10`,
 | `WPERM-13` | The assistant's own location request (`get_location`) is separate from sites: confirmed each time unless… | Default |  |
 | `WPERM-14` | Web pages can't show notifications: there is no web notification or push support. | Default |  |
 | `WPERM-15` | Web Share: Android gets navigator.share (main frame, user gesture and a recent touch, http(s) only, no files) opening the system sheet; iOS keeps WebKit's own | Default | 2026-11-24 |
+| `WPERM-16` | Passkeys: Android WebView WebAuthn as a browser with CREDENTIAL_MANAGER_SET_ORIGIN; works once the provider accepts Qutai as a browser; iOS not possible without the browser entitlement | Default | 2026-11-24 |
 
 Moved to Details (ids retired, not reused): `WPERM-8`, `WPERM-11`
 

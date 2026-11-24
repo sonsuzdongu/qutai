@@ -1004,7 +1004,21 @@ index f83033b..de057e2 100644
  import android.content.pm.ActivityInfo
  import android.graphics.Bitmap
  import android.graphics.Color
-@@ -91,49 +90,22 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+@@ -82,6 +81,13 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+         settings.allowFileAccessFromFileURLs = false
+         settings.allowUniversalAccessFromFileURLs = false
+         settings.mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
++        // Qutai patch: passkeys and security keys (WebAuthn) on every site, as a browser does (androidx.webkit 1.12+,
++        // a WebView with WEB_AUTHENTICATION). Android's credential providers decide whether they serve Qutai as a
++        // browser (Google Password Manager's list of privileged browsers); without it, sign-in with a passkey fails
++        // as before.
++        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_AUTHENTICATION)) {
++            WebSettingsCompat.setWebAuthenticationSupport(settings, WebSettingsCompat.WEB_AUTHENTICATION_SUPPORT_FOR_BROWSER)
++        }
+ 
+         // Fixes broken full-screen modals/galleries due to body height being 0.
+         webView.layoutParams = ViewGroup.LayoutParams(
+@@ -91,49 +97,22 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
          if (ReactBuildConfig.DEBUG) {
              WebView.setWebContentsDebuggingEnabled(true)
          }
@@ -1069,7 +1083,7 @@ index f83033b..de057e2 100644
          })
          return RNCWebViewWrapper(context, webView)
      }
-@@ -155,7 +127,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+@@ -155,7 +134,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
                              callback.onCustomViewHidden()
                              return
                          }
@@ -1079,7 +1093,7 @@ index f83033b..de057e2 100644
                          mCustomViewCallback = callback
                          activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
                          mVideoView.systemUiVisibility = FULLSCREEN_SYSTEM_UI_VISIBILITY
-@@ -182,6 +155,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+@@ -182,6 +162,8 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
                              mWebView.visibility = View.GONE
                          }
                          mWebView.themedReactContext.addLifecycleEventListener(this)
@@ -1088,7 +1102,7 @@ index f83033b..de057e2 100644
                      }
  
                      override fun onHideCustomView() {
-@@ -204,6 +179,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+@@ -204,6 +186,7 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
                          mCustomViewCallback = null
                          activity.requestedOrientation = initialRequestedOrientation
                          mWebView.themedReactContext.removeLifecycleEventListener(this)
