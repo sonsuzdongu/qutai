@@ -1600,7 +1600,6 @@ export const tr: Record<keyof typeof en, string> = {
   'settings.searchSuggestionsHint':
     'Adres çubuğuna yazdıklarınız öneriler için arama motoruna gönderilir. Gizli sekmelerde her zaman kapalıdır.',
   'settings.defaultBrowserTitle': 'Qutai’ı varsayılan tarayıcınız yapın',
-  'settings.defaultBrowserLead': 'Diğer uygulamalardaki bağlantılar, asistanınız elinizin altındayken Qutai’da açılır.',
   'settings.defaultBrowserHintAndroid': 'Açılan ekranda Tarayıcı uygulaması › Qutai’ı seçin, sonra geri dönün.',
   'settings.assistant': 'Asistan',
   'settings.confirmActions': 'Her işlemden önce onay iste',

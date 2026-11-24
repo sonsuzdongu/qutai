@@ -1609,7 +1609,6 @@ export const id: Record<keyof typeof en, string> = {
   'settings.searchSuggestionsHint':
     'Apa yang Anda ketik di kolom alamat dikirim ke mesin telusur untuk mendapatkan saran. Selalu nonaktif di tab Samaran.',
   'settings.defaultBrowserTitle': 'Jadikan Qutai browser default Anda',
-  'settings.defaultBrowserLead': 'Link dari aplikasi lain akan terbuka di Qutai, dengan asisten Anda yang siap membantu.',
   'settings.defaultBrowserHintAndroid': 'Di layar yang terbuka, pilih Aplikasi browser › Qutai, lalu kembali ke sini.',
   'settings.assistant': 'Asisten',
   'settings.confirmActions': 'Tanya sebelum setiap tindakan',

@@ -783,7 +783,6 @@ function SettingsPages({
                 <GroupLink
                   icon="globe"
                   title={t('settings.defaultBrowserTitle')}
-                  summary={t('settings.defaultBrowserLead')}
                   onPress={() => openDefaultBrowserSettings().catch(() => {})}
                 />
               )}

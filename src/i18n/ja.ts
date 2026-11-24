@@ -1610,7 +1610,6 @@ export const ja: Record<keyof typeof en, string> = {
   'settings.searchSuggestionsHint':
     'アドレスバーに入力した内容は、候補を表示するために検索エンジンに送信されます。シークレット タブでは常にオフです。',
   'settings.defaultBrowserTitle': 'Qutai をデフォルトのブラウザに設定',
-  'settings.defaultBrowserLead': 'ほかのアプリのリンクが Qutai で開き、すぐにアシスタントを使えます。',
   'settings.defaultBrowserHintAndroid': '開いた画面で「ブラウザアプリ › Qutai」を選んでから、戻ってきてください。',
   'settings.assistant': 'アシスタント',
   'settings.confirmActions': 'すべての操作の前に確認',

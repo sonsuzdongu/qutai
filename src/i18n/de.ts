@@ -1600,7 +1600,6 @@ export const de: Record<keyof typeof en, string> = {
   'settings.searchSuggestionsHint':
     'Was Sie in die Adressleiste eingeben, wird für Vorschläge an die Suchmaschine gesendet. In Inkognito-Tabs immer aus.',
   'settings.defaultBrowserTitle': 'Qutai als Standardbrowser festlegen',
-  'settings.defaultBrowserLead': 'Links aus anderen Apps öffnen sich in Qutai, mit Ihrem Assistenten griffbereit.',
   'settings.defaultBrowserHintAndroid': 'Wählen Sie im sich öffnenden Bildschirm Browser-App › Qutai und kehren Sie dann zurück.',
   'settings.assistant': 'Assistent',
   'settings.confirmActions': 'Vor jeder Aktion fragen',

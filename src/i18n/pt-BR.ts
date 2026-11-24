@@ -1610,7 +1610,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'settings.searchSuggestionsHint':
     'O que você digita na barra de endereço é enviado ao mecanismo de pesquisa para gerar sugestões. Sempre desativado em guias anônimas.',
   'settings.defaultBrowserTitle': 'Torne o Qutai seu navegador padrão',
-  'settings.defaultBrowserLead': 'Links de outros apps vão abrir no Qutai, com seu assistente à mão.',
   'settings.defaultBrowserHintAndroid': 'Na tela que abrir, escolha App de navegador › Qutai e depois volte.',
   'settings.assistant': 'Assistente',
   'settings.confirmActions': 'Perguntar antes de cada ação',

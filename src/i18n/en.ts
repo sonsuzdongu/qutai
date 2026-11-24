@@ -1601,7 +1601,6 @@ export const en = {
   'settings.searchSuggestionsHint':
     'What you type in the address bar is sent to the search engine for suggestions. Always off in incognito tabs.',
   'settings.defaultBrowserTitle': 'Make Qutai your default browser',
-  'settings.defaultBrowserLead': 'Links from other apps will open in Qutai, with your assistant at hand.',
   'settings.defaultBrowserHintAndroid': 'In the screen that opens, choose Browser app › Qutai, then come back.',
   'settings.assistant': 'Assistant',
   'settings.confirmActions': 'Ask before every action',

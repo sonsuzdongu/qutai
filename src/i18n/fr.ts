@@ -1609,7 +1609,6 @@ export const fr: Record<keyof typeof en, string> = {
   'settings.searchSuggestionsHint':
     'Ce que vous saisissez dans la barre d’adresse est envoyé au moteur de recherche pour obtenir des suggestions. Toujours désactivé dans les onglets privés.',
   'settings.defaultBrowserTitle': 'Faites de Qutai votre navigateur par défaut',
-  'settings.defaultBrowserLead': 'Les liens des autres applications s’ouvriront dans Qutai, avec votre assistant à portée de main.',
   'settings.defaultBrowserHintAndroid': 'Dans l’écran qui s’ouvre, choisissez Application de navigation › Qutai, puis revenez.',
   'settings.assistant': 'Assistant',
   'settings.confirmActions': 'Demander avant chaque action',

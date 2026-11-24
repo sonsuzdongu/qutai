@@ -1609,7 +1609,6 @@ export const ru: Record<keyof typeof en, string> = {
   'settings.searchSuggestionsHint':
     'То, что вы вводите в адресной строке, отправляется поисковой системе для подсказок. Во вкладках инкогнито всегда отключено.',
   'settings.defaultBrowserTitle': 'Сделайте Qutai браузером по умолчанию',
-  'settings.defaultBrowserLead': 'Ссылки из других приложений будут открываться в Qutai, а ассистент будет под рукой.',
   'settings.defaultBrowserHintAndroid': 'На открывшемся экране выберите «Браузер» › Qutai, затем вернитесь.',
   'settings.assistant': 'Ассистент',
   'settings.confirmActions': 'Спрашивать перед каждым действием',

@@ -1608,7 +1608,6 @@ export const ko: Record<keyof typeof en, string> = {
   'settings.searchSuggestionsHint':
     '주소창에 입력하는 내용이 추천을 위해 검색엔진으로 전송됩니다. 시크릿 탭에서는 항상 꺼져 있습니다.',
   'settings.defaultBrowserTitle': 'Qutai를 기본 브라우저로 설정',
-  'settings.defaultBrowserLead': '다른 앱의 링크가 어시스턴트와 함께 Qutai에서 열립니다.',
   'settings.defaultBrowserHintAndroid': '열리는 화면에서 브라우저 앱 › Qutai를 선택한 다음 돌아오세요.',
   'settings.assistant': '어시스턴트',
   'settings.confirmActions': '모든 동작 전에 묻기',
