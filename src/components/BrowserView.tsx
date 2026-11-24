@@ -24,6 +24,8 @@ import { certificateExceptionsFor, mayBypassCertificate, noteValidCertificate } 
 import { isLocalUrl } from '../browser/localNetwork';
 import { endLaunchChain, mayOfferExternal, noteUserGesture, touchedRecently } from '../browser/externalGuard';
 import { isUserTap, windowOpensInFront } from '../browser/pendingNavigation';
+import { parseShareMessage, shareDoneScript, webShareScript } from '../browser/webShare';
+import { shareFromPage } from '../device/link';
 import { FORM_ANSWER_IDLE, formAnswer } from '../browser/formResubmission';
 import { parseScrollMessage, restoreScrollScript, SCROLL_MEMORY_SCRIPT } from '../browser/scrollMemory';
 import { FORCE_ZOOM_SCRIPT } from '../browser/forceZoom';
@@ -212,8 +214,11 @@ function TabWebView({
   // Qutai's page script (browser/agentScript.ts), main frame only: installed before the page's own scripts (iOS; on
   // Android as early as the WebView runs this), under the tab's secret name; commands then send only the call.
   const agentScript = tab.agentInstallScript;
+  // navigator.share for pages (Android's WebView has none; iOS keeps WebKit's own): main frame, at document start.
+  const shareScript = webShareScript(tab.messageNonce);
   const earlyScript = [
     agentScript,
+    shareScript,
     videoScript,
     geoScript,
     mediaScript,
@@ -342,6 +347,14 @@ function TabWebView({
             source={tab.source}
             style={styles.flex}
             onMessage={(e) => {
+              // A page's navigator.share (webShare.ts): only on the tab on screen, right after the user touched it.
+              const share = parseShareMessage(e.nativeEvent.data, tab.messageNonce);
+              if (share) {
+                const done = (ok: boolean) => tab.webview?.injectJavaScript(shareDoneScript(tab.messageNonce, share.id, ok));
+                if (!active || !touchedRecently(tab)) return done(false);
+                shareFromPage(share).then(done, () => done(false));
+                return;
+              }
               if (tab.handleMessage(e.nativeEvent.data)) return;
               if (keptScripts.handleMessage(tab, e.nativeEvent.data)) return;
               if (tab.geolocation.handleMessage(e.nativeEvent.data)) return;
@@ -542,7 +555,7 @@ function TabWebView({
             // scripts (WebViewCompat.addDocumentStartJavaScript); the early and after-load scripts stay as fallbacks
             // for WebViews without that feature. iOS already runs the early script at document start.
             // "Block video ads" goes there too (every frame: the WebView adds it to frames, and it runs only on its hosts).
-            documentStartScript={Platform.OS === 'android' ? [agentScript, videoScript].filter(Boolean).join('\n') : undefined}
+            documentStartScript={Platform.OS === 'android' ? [agentScript, shareScript, videoScript].filter(Boolean).join('\n') : undefined}
             // Android: native geolocation would grant every site once Qutai has the permission; the script handles it.
             geolocationEnabled={false}
             // Camera and microphone (patched react-native-webview): refused unless this names the requesting
