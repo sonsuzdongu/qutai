@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qutai page tests: clipboard</title>
+<style>
+  body { font: 16px/1.4 system-ui, sans-serif; margin: 16px; }
+  button { display: block; width: 100%; margin: 0 0 10px; padding: 12px; font-size: 16px; }
+  #log li { margin: 0 0 4px; }
+  .pass { color: #1a7f37; } .fail { color: #c62828; }
+  textarea { width: 100%; height: 60px; font-size: 16px; box-sizing: border-box; }
+</style>
+</head>
+<body>
+<!--
+  "Copy" buttons on pages (the app's clipboard rules). Served by serve.mjs at /clipboard. Tap each button, then paste
+  into the box at the bottom (long-press, Paste) to see what reached the phone's clipboard.
+    1. navigator.clipboard.writeText after a tap      (what "Copy code" buttons do)
+    2. document.execCommand('copy') after a tap       (older sites)
+    3. writeText without a tap (2 s after loading)     must not reach the clipboard
+    4. navigator.clipboard.readText                     must be refused unless the system asks the user
+-->
+<h1>Clipboard tests</h1>
+<button id="write">1. Copy with navigator.clipboard.writeText</button>
+<button id="exec">2. Copy with document.execCommand('copy')</button>
+<button id="read">4. Read with navigator.clipboard.readText</button>
+<ol id="log"></ol>
+<p>Paste here to check:</p>
+<textarea id="paste"></textarea>
+<script>
+(function () {
+  function line(text, ok) {
+    var li = document.createElement('li');
+    li.textContent = (ok === undefined ? '' : ok ? 'PASS ' : 'FAIL ') + text;
+    if (ok !== undefined) li.className = ok ? 'pass' : 'fail';
+    document.getElementById('log').appendChild(li);
+  }
+  var stamp = function () { return String(Date.now()).slice(-5); };
+  document.getElementById('write').onclick = function () {
+    var text = 'writeText ' + stamp();
+    if (!navigator.clipboard || !navigator.clipboard.writeText) return line('1: navigator.clipboard.writeText is missing', false);
+    navigator.clipboard.writeText(text).then(
+      function () { line('1: writeText resolved ("' + text + '")', true); },
+      function (e) { line('1: writeText rejected: ' + (e && (e.name + ' ' + e.message)), false); }
+    );
+  };
+  document.getElementById('exec').onclick = function () {
+    var text = 'execCommand ' + stamp();
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    ta.remove();
+    line('2: execCommand copy returned ' + ok + ' ("' + text + '")', ok);
+  };
+  document.getElementById('read').onclick = function () {
+    if (!navigator.clipboard || !navigator.clipboard.readText) return line('4: readText is missing (fine: pages can\'t read)', true);
+    navigator.clipboard.readText().then(
+      function (t) { line('4: readText gave the page "' + String(t).slice(0, 40) + '"', undefined); },
+      function (e) { line('4: readText refused: ' + (e && e.name), true); }
+    );
+  };
+  setTimeout(function () {
+    if (!navigator.clipboard || !navigator.clipboard.writeText) return;
+    var text = 'no-tap ' + stamp();
+    navigator.clipboard.writeText(text).then(
+      function () { line('3: writeText without a tap resolved ("' + text + '"): paste to see whether it reached the clipboard'); },
+      function (e) { line('3: writeText without a tap refused: ' + (e && e.name), true); }
+    );
+  }, 2000);
+})();
+</script>
+</body>
+</html>
