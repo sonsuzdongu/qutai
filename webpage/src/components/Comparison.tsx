@@ -3,16 +3,17 @@ import { CHECKED, COMPETITORS, DEFAULT_PICK, EXCLUDED, GROUPS, QUTAI, type Cell,
 import type { MessageKey } from '../i18n/en';
 import { formatDate, useI18n } from '../lib/i18n';
 import { ISSUES_URL } from '../lib/site';
+import { VS } from '../data/guide';
 import { Icon } from './Icon';
 
-const STATE_LABEL: Record<State, MessageKey> = {
+export const STATE_LABEL: Record<State, MessageKey> = {
   yes: 'compare.yes',
   partial: 'compare.partial',
   no: 'compare.no',
   unknown: 'compare.unknown',
 };
 
-function StateMark({ state }: { state: State }) {
+export function StateMark({ state }: { state: State }) {
   if (state === 'partial')
     return (
       <svg className="mark mark-partial" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -220,6 +221,15 @@ export function Comparison() {
       </div>
 
       <p className="footnote">{t('compare.excluded', { list: excluded })}</p>
+      <p className="footnote vs-index">
+        {VS.sideBySide[lang]}{' '}
+        {COMPETITORS.map((c, i) => (
+          <span key={c.id}>
+            {i > 0 && ' · '}
+            <a href={`/${lang}/vs/${c.id}/`}>{VS.title[lang].replace('{name}', c.name)}</a>
+          </span>
+        ))}
+      </p>
 
       <aside id="methodology" className="methodology" aria-labelledby="methodology-title">
         <h3 id="methodology-title">{t('compare.methodology.title')}</h3>

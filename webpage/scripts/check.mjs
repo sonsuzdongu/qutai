@@ -50,7 +50,8 @@ for (const lang of ['en', 'tr']) {
   const ld = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s);
   try {
     const data = JSON.parse(ld?.[1] ?? '');
-    expect(data['@type'] === 'SoftwareApplication' && !('aggregateRating' in data) && !('offers' in data), `${lang}: JSON-LD fields`);
+    // No rating (there is none to show); the one offer is the free app (WEB-17).
+    expect(data['@type'] === 'SoftwareApplication' && !('aggregateRating' in data) && data.offers?.price === '0', `${lang}: JSON-LD fields`);
   } catch {
     failures.push(`${lang}: JSON-LD does not parse`);
   }
@@ -141,13 +142,23 @@ for (const lang of ['en', 'tr']) {
   const pricing = await readFile(`${dist}${lang}/pricing/index.html`, 'utf8').catch(() => '');
   expect(pricing.includes(`<html lang="${lang}"`), `${lang}/pricing: page with lang attribute`);
   expect(pricing.includes(`<link rel="canonical" href="`) && pricing.includes('hreflang="x-default"'), `${lang}/pricing: canonical and hreflang`);
-  expect(!/<script\b/.test(pricing), `${lang}/pricing: no script`);
+  expect(!/<script\b(?![^>]*application\/ld\+json)/.test(pricing), `${lang}/pricing: no script (structured data only)`);
   expect(!/\sstyle="/.test(pricing), `${lang}/pricing: no inline style (the CSP forbids it)`);
   expect((pricing.match(/class="pack( bonus)?"/g) ?? []).length === 3, `${lang}/pricing: three credit packs`);
   expect(home.includes(`href="/${lang}/pricing/"`), `${lang}: home links to the pricing page`);
+  const guide = await readFile(`${dist}${lang}/agentic-browser/index.html`, 'utf8').catch(() => '');
+  expect(guide.includes('"@type":"FAQPage"') && !/<script\b(?![^>]*application\/ld\+json)/.test(guide), `${lang}/agentic-browser: FAQ data, no script`);
+  expect(!/\sstyle="/.test(guide), `${lang}/agentic-browser: no inline style`);
+  for (const id of ['comet', 'sigma', 'brave', 'edge', 'chrome', 'opera', 'duckduckgo', 'samsung']) {
+    const vs = await readFile(`${dist}${lang}/vs/${id}/index.html`, 'utf8').catch(() => '');
+    expect(vs.includes('class="vs-row"') && !/<script\b/.test(vs) && !/\sstyle="/.test(vs), `${lang}/vs/${id}: page, no script or inline style`);
+    expect(home.includes(`href="/${lang}/vs/${id}/"`), `${lang}: home links to vs/${id}`);
+  }
 }
 expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/features/'), 'sitemap lists the features page');
 expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/pricing/'), 'sitemap lists the pricing page');
+expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/vs/comet/') && (await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/agentic-browser/'), 'sitemap lists the guide and comparison pages');
+expect((await readFile(`${dist}llms.txt`, 'utf8').catch(() => '')).startsWith('# Qutai'), 'llms.txt');
 
 for (const f of ['robots.txt', 'sitemap.xml', '404.html', '_headers', 'og-en.png', 'og-tr.png', 'apple-touch-icon.png']) {
   await access(`${dist}${f}`).catch(() => failures.push(`missing ${f}`));

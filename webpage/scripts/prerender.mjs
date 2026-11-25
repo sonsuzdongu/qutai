@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../dist/', import.meta.url));
 const client = `${root}client/`;
-const { render, renderFeatures, renderPricing, messages, SITE_URL, CHECKED, CONTACT_EMAIL, formatDate, FEATURES_CHECKED, FEATURES_PAGE, PRICING_PAGE, PRICING_CHECKED } = await import(
+const { render, renderFeatures, renderPricing, messages, SITE_URL, CHECKED, CONTACT_EMAIL, formatDate, FEATURES_CHECKED, FEATURES_PAGE, PRICING_PAGE, PRICING_CHECKED, renderVs, renderGuide, GUIDE, VS, COMPETITORS, PACKS, guideFaq, PLAY_URL, REPO_URL, TESTFLIGHT_URL } = await import(
   `${root}server/entry-server.js`
 );
 const privacy = JSON.parse(await readFile(fileURLToPath(new URL('../src/data/privacy.json', import.meta.url)), 'utf8'));
@@ -41,6 +41,11 @@ function head(lang) {
     license: 'https://www.apache.org/licenses/LICENSE-2.0',
     sameAs: ['https://github.com/sonsuzdongu/qutai'],
     image: `${SITE_URL}/icon-512.png`,
+    downloadUrl: PLAY_URL,
+    installUrl: PLAY_URL,
+    softwareHelp: `${SITE_URL}/${lang}/support/`,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    featureList: [t['hero.chip1'], t['hero.chip2'], t['hero.chip3'], t['hero.chip4']].join(', '),
   };
   return [
     `<title>${esc(t['meta.title'])}</title>`,
@@ -327,6 +332,145 @@ for (const lang of LANGS) {
   await writeFile(`${client}${lang}/features/index.html`, page);
 }
 
+const ldJson = (o) => JSON.stringify(o).replace(/</g, '\\u003c');
+/** The pricing page's structured data: the app, free, with the credit packs as further offers. */
+const pricingLd = (lang) => ({
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Qutai',
+  applicationCategory: 'BrowserApplication',
+  operatingSystem: 'iOS, iPadOS, macOS, Android',
+  url: `${SITE_URL}/${lang}/pricing/`,
+  inLanguage: lang,
+  offers: [
+    { '@type': 'Offer', name: PRICING_PAGE.metaTitle[lang].split(' · ')[0], price: '0', priceCurrency: 'USD' },
+    ...PACKS.map((p) => ({
+      '@type': 'Offer',
+      name: lang === 'tr' ? `${p.credits} Qutai Kredisi` : `${p.credits} Qutai Credits`,
+      price: String(p.usd),
+      priceCurrency: 'USD',
+    })),
+  ],
+});
+
+/** A static page with the shared head (canonical, hreflang, Open Graph, optional JSON-LD) around a rendered body. */
+async function writePage({ path, lang, title, description, body, ld }) {
+  const other = lang === 'en' ? 'tr' : 'en';
+  const url = (l) => `${SITE_URL}/${l}/${path}`;
+  const og = `${SITE_URL}/og-${lang}.png`;
+  const page = `<!doctype html>
+<html lang="${lang}" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${esc(title)}</title>
+    <meta name="description" content="${esc(description)}" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f2e7cf" />
+    <link rel="canonical" href="${url(lang)}" />
+    <link rel="alternate" hreflang="en" href="${url('en')}" />
+    <link rel="alternate" hreflang="tr" href="${url('tr')}" />
+    <link rel="alternate" hreflang="x-default" href="${url('en')}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Qutai" />
+    <meta property="og:title" content="${esc(title)}" />
+    <meta property="og:description" content="${esc(description)}" />
+    <meta property="og:url" content="${url(lang)}" />
+    <meta property="og:locale" content="${LOCALE[lang]}" />
+    <meta property="og:locale:alternate" content="${LOCALE[other]}" />
+    <meta property="og:image" content="${og}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="${og}" />
+    ${ld ? `<script type="application/ld+json">${ldJson(ld)}</script>\n    ` : ''}${css}
+  </head>
+  <body>
+    <div id="root">${body}</div>
+  </body>
+</html>
+`;
+  await mkdir(`${client}${lang}/${path}`, { recursive: true });
+  await writeFile(`${client}${lang}/${path}index.html`, page);
+}
+
+// The guide (/<lang>/agentic-browser/) and the Qutai vs <competitor> pages (/<lang>/vs/<id>/), written for search and
+// AI answers (WEB-17); static, no script. The guide carries FAQPage structured data.
+const fillName = (s, vars) => s.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+const VS_PATHS = COMPETITORS.map((c) => `vs/${c.id}/`);
+for (const lang of LANGS) {
+  await writePage({
+    path: 'agentic-browser/',
+    lang,
+    title: GUIDE.metaTitle[lang],
+    description: GUIDE.metaDescription[lang],
+    body: renderGuide(lang),
+    ld: {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      inLanguage: lang,
+      mainEntity: guideFaq(lang).map(({ q, a }) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+    },
+  });
+  for (const c of COMPETITORS) {
+    await writePage({
+      path: `vs/${c.id}/`,
+      lang,
+      title: `${fillName(VS.metaTitle[lang], { name: c.name })} · Qutai`,
+      description: fillName(VS.metaDescription[lang], { name: c.name }),
+      body: renderVs(lang, c.id),
+    });
+  }
+}
+
+// /llms.txt: a short plain-text map of the site for AI assistants and their crawlers (llmstxt.org), in English.
+{
+  const en = messages.en;
+  const list = (items) => items.map(([name, url, note]) => `- [${name}](${url})${note ? `: ${note}` : ''}`).join('\n');
+  await writeFile(
+    `${client}llms.txt`,
+    `# Qutai
+
+> Qutai is an open-source agentic AI browser for Android and iPhone (also iPad and Macs with Apple silicon). Its assistant gets to know you, fills in forms, shops, books and researches for you, right in your tabs, and asks before anything that matters. It works with your own AI key (Anthropic, OpenAI, Google Gemini, OpenRouter or a self-hosted OpenAI-compatible server such as Ollama) or with Qutai Credits bought in the app.
+
+Key facts:
+- Platforms: Android (Google Play); iPhone, iPad and Mac with Apple silicon (App Store beta through TestFlight).
+- Price: the app is free. With your own AI key Qutai charges nothing. Qutai Credits: 100 credits for $1, 550 for $5, 1,200 for $10; credits never expire.
+- Privacy: tabs, history, bookmarks, chats and the assistant's memory stay on the phone; with your own key, requests go straight from the phone to the provider; with Qutai Credits they pass through Qutai's server, which does not store or log them.
+- Control: every step is shown and can be stopped; it asks before payments and other important actions; it never types passwords, card numbers or one-time codes; per-site permissions; a log of what was sent to the AI.
+- Licence: Apache-2.0. Source: ${REPO_URL}
+- Languages of the site: English and Turkish (/tr/).
+
+## Pages
+
+${list([
+  ['Home', `${SITE_URL}/en/`, en['meta.appDescription']],
+  ['Features', `${SITE_URL}/en/features/`, 'everything Qutai does, with example requests and limits'],
+  ['Pricing', `${SITE_URL}/en/pricing/`, 'own key free; Qutai Credits packs'],
+  ['What is an agentic browser?', `${SITE_URL}/en/agentic-browser/`, 'questions and answers about agentic and AI browsers on phones'],
+  ['Support', `${SITE_URL}/en/support/`],
+  ['Privacy policy', `${SITE_URL}/en/privacy-policy/`],
+])}
+
+## Comparisons with other mobile AI browsers
+
+${list(COMPETITORS.map((c) => [fillName(VS.title.en, { name: c.name }), `${SITE_URL}/en/vs/${c.id}/`]))}
+
+## Get it
+
+${list([
+  ['Google Play', PLAY_URL],
+  ['iPhone, iPad and Mac beta (TestFlight)', TESTFLIGHT_URL],
+  ['Source code on GitHub', REPO_URL],
+])}
+`,
+  );
+}
+
 // Pricing: /en/pricing/ and /tr/pricing/, static, no script (src/components/PricingPage.tsx, the content in
 // src/data/pricing.ts).
 const pricingUrl = (lang) => `${SITE_URL}/${lang}/pricing/`;
@@ -364,6 +508,7 @@ for (const lang of LANGS) {
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="${og}" />
+    <script type="application/ld+json">${ldJson(pricingLd(lang))}</script>
     ${css}
   </head>
   <body>
@@ -420,6 +565,7 @@ await writeFile(
 ${LANGS.map((l) => `  <url>\n    <loc>${pageUrl(l)}</loc>\n    <lastmod>${CHECKED}</lastmod>\n${alternates}\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${featuresUrl(l)}</loc>\n    <lastmod>${FEATURES_CHECKED}</lastmod>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${featuresUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${featuresUrl('en')}" />\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${pricingUrl(l)}</loc>\n    <lastmod>${PRICING_CHECKED}</lastmod>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${pricingUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${pricingUrl('en')}" />\n  </url>`).join('\n')}
+${['agentic-browser/', ...VS_PATHS].flatMap((p) => LANGS.map((l) => `  <url>\n    <loc>${SITE_URL}/${l}/${p}</loc>\n    <lastmod>${CHECKED}</lastmod>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${SITE_URL}/${x}/${p}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}/en/${p}" />\n  </url>`)).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${policyUrl(l)}</loc>\n    <lastmod>${privacy.updated}</lastmod>\n${policyAlternates}\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${termsUrl(l)}</loc>\n    <lastmod>${terms.updated}</lastmod>\n${termsAlternates}\n  </url>`).join('\n')}
 ${LANGS.map((l) => `  <url>\n    <loc>${deletionUrl(l)}</loc>\n${LANGS.map((x) => `    <xhtml:link rel="alternate" hreflang="${x}" href="${deletionUrl(x)}" />`).join('\n')}\n    <xhtml:link rel="alternate" hreflang="x-default" href="${deletionUrl('en')}" />\n  </url>`).join('\n')}
@@ -445,4 +591,4 @@ await writeFile(
 );
 
 await rm(`${client}.vite`, { recursive: true });
-console.log(`Prerendered ${LANGS.map((l) => `/${l}/, /${l}/features/, /${l}/pricing/, /${l}/privacy-policy/, /${l}/terms/, /${l}/delete-account/, /${l}/support/`).join(', ')}, 404.html, robots.txt, sitemap.xml, _headers`);
+console.log(`Prerendered ${LANGS.map((l) => `/${l}/, /${l}/features/, /${l}/pricing/, /${l}/agentic-browser/, /${l}/vs/…/, /${l}/privacy-policy/, /${l}/terms/, /${l}/delete-account/, /${l}/support/`).join(', ')}, 404.html, robots.txt, llms.txt, sitemap.xml, _headers`);

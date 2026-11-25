@@ -22,6 +22,7 @@ export const tr: Messages = {
   'nav.status': 'Durum',
   'nav.features': 'Özellikler',
   'nav.pricing': 'Fiyatlar',
+  'footer.guide': 'Agentic tarayıcı nedir?',
   'nav.github': 'GitHub',
   'nav.home': 'Qutai ana sayfa',
 

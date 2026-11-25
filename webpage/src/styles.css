@@ -2623,3 +2623,154 @@ h3 {
     display: none;
   }
 }
+
+/* Guide and comparison pages (/<lang>/agentic-browser/, /<lang>/vs/<id>/). */
+.seo-hero {
+  padding-top: clamp(40px, 7vw, 88px);
+  padding-bottom: clamp(16px, 3vw, 32px);
+  max-width: 900px;
+}
+.seo-hero .eyebrow {
+  display: inline-block;
+  color: var(--accent-ink);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+}
+.seo-hero h1 {
+  font-size: clamp(2.2rem, 5.4vw, 4rem);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+.seo-hero .lede {
+  margin-top: 18px;
+  font-size: clamp(1.04rem, 1.5vw, 1.18rem);
+  color: var(--muted);
+  max-width: 44em;
+}
+.seo-body {
+  padding-top: 8px;
+  max-width: 900px;
+}
+.seo-body > h2,
+.qa h2,
+.vs-others h2 {
+  font-size: clamp(1.5rem, 3vw, 2.1rem);
+  margin-top: 40px;
+}
+.qa {
+  padding-top: 8px;
+}
+.qa p {
+  margin-top: 12px;
+  max-width: 44em;
+}
+.qa a,
+.vs-links a,
+.vs-others a,
+.vs-index a {
+  color: var(--accent-ink);
+}
+.which {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: grid;
+  gap: 8px;
+}
+.which li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.which .state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.which .state-label {
+  color: var(--muted);
+}
+.vs-row {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.vs-row h3 {
+  font-size: 1.12rem;
+}
+.vs-pair {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.vs-cell {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.vs-cell:first-child {
+  background: var(--us);
+}
+.vs-product {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.vs-cell .state {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+.vs-cell .cell-note {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.93rem;
+  color: var(--muted);
+}
+.vs-cell .cell-source {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 0.86rem;
+  color: var(--accent-ink);
+}
+.vs-links {
+  margin-top: 32px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+}
+.seo-cta {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 14px;
+  align-items: center;
+}
+.vs-others ul {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+@media (max-width: 560px) {
+  .vs-pair {
+    grid-template-columns: 1fr;
+  }
+}

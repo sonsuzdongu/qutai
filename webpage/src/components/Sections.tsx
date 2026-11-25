@@ -552,6 +552,9 @@ export function Footer() {
             <a href={`/${lang}/pricing/`}>{t('nav.pricing')}</a>
           </li>
           <li>
+            <a href={`/${lang}/agentic-browser/`}>{t('footer.guide')}</a>
+          </li>
+          <li>
             <a href={privacyPolicyPath(lang)}>{t('footer.appPrivacy')}</a>
           </li>
           <li>

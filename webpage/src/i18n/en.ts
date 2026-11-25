@@ -21,6 +21,7 @@ export const en = {
   'nav.status': 'Status',
   'nav.features': 'Features',
   'nav.pricing': 'Pricing',
+  'footer.guide': 'What is an agentic browser?',
   'nav.github': 'GitHub',
   'nav.home': 'Qutai home',
 
