@@ -101,6 +101,8 @@
     "build:aab:pro-mode": "node scripts/build/release.mjs aab --pro-mode",
     "build:ipa:pro-mode": "node scripts/build/release.mjs ipa --pro-mode",
     "test:version": "node scripts/test-support/run.mjs version --verbose",
+    "test:build": "node scripts/test-support/run.mjs build --verbose",
+    "test:support": "node scripts/test-support/run.mjs support --verbose",
     "test:useragent": "node scripts/test-support/run.mjs useragent --verbose",
     "test:layout": "node scripts/test-support/run.mjs layout --verbose",
     "test:apps": "node scripts/test-support/run.mjs apps --verbose",

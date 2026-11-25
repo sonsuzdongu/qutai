@@ -14,7 +14,7 @@ import { availableParallelism } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { mkdirSync } from 'node:fs';
-import { SUITES } from './suites.mjs';
+import { SUITES, filesOf } from './suites.mjs';
 import { COVERAGE_DIR, coverageArgs, summarise } from './coverage.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -36,7 +36,10 @@ if (coverage) mkdirSync(join(ROOT, COVERAGE_DIR), { recursive: true });
 function command(suite, name) {
   const loader = suite.plain ? [] : ['--no-warnings', '--experimental-transform-types', '--import', suite.loader ?? './scripts/test-support/loader.mjs'];
   const cover = coverage && !suite.plain ? coverageArgs(ROOT, name) : [];
-  return [...loader, '--test', ...cover, ...(suite.forceExit ? ['--test-force-exit'] : []), ...suite.files];
+  const files = filesOf(suite);
+  // With no files node would look for tests everywhere; a glob that matches nothing is a mistake in suites.mjs.
+  if (!files.length) throw new Error(`Suite "${name}" matches no test file (suites.mjs).`);
+  return [...loader, '--test', ...cover, ...(suite.forceExit ? ['--test-force-exit'] : []), ...files];
 }
 
 function run(name) {
