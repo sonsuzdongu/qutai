@@ -6,7 +6,7 @@ import { siteColor } from '../ui/siteColor';
 import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles, readableColumn, radii, common, usePalette } from '../ui/theme';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { incognitoInfoKey } from '../device/webviewProfile';
 import { getLanguage, t, type Language } from '../i18n';
 import { hostOf } from '../i18n/format';
@@ -14,6 +14,7 @@ import { Bookmark, listBookmarks, onBookmarksChanged } from '../storage/bookmark
 import { getDb } from '../storage/db';
 import { HistoryEntry, listHistory, onHistoryRemoved } from '../storage/history';
 import { hideTopSite, TopSite, topSites } from '../storage/topSites';
+import { removeSiteIcons, useSiteIcon } from '../storage/siteIcons';
 import { dialog } from './Dialog';
 import type { LibraryTab } from './LibraryScreen';
 import { MyAppsSection } from './MyApps';
@@ -103,7 +104,10 @@ export function NewTabPage({ incognito, darkMode, active, onNavigate, onAskForAp
         onPress: () =>
           getDb()
             .then((db) => hideTopSite(db, site.host))
-            .then(() => setReload((n) => n + 1))
+            .then(() => {
+              removeSiteIcons([site.host]);
+              setReload((n) => n + 1);
+            })
             .catch((e) => reportStorageFailure('newTab.hideSite', e, 'user')),
       },
     ]);
@@ -153,9 +157,7 @@ export function NewTabPage({ incognito, darkMode, active, onNavigate, onAskForAp
                     onLongPress={() => removeSite(site)}
                     accessibilityLabel={site.title || site.host}
                   >
-                    <View style={[styles.tileIcon, { backgroundColor: siteColor(site.host) }]}>
-                      <Text style={styles.tileLetter}>{(site.host[0] || '?').toUpperCase()}</Text>
-                    </View>
+                    <SiteBadge host={site.host} size="tile" />
                     <Text style={styles.tileTitle} numberOfLines={1}>
                       {site.title || site.host}
                     </Text>
@@ -275,9 +277,7 @@ function LinkRow({ title, url, onPress }: { title: string; url: string; onPress:
   const host = hostOf(url);
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]}>
-      <View style={[styles.linkIcon, { backgroundColor: siteColor(host) }]}>
-        <Text style={styles.linkLetter}>{(host[0] || '?').toUpperCase()}</Text>
-      </View>
+      <SiteBadge host={host} size="row" />
       <View style={styles.flex}>
         <Text style={styles.linkTitle} numberOfLines={1}>
           {title || host}
@@ -290,7 +290,35 @@ function LinkRow({ title, url, onPress }: { title: string; url: string; onPress:
   );
 }
 
-/** A stable colour per site, so tiles are recognisable without loading favicons from third parties. */
+/**
+ * The site's own icon when one is kept on the phone (UI-72, storage/siteIcons.ts; never fetched from here), on a
+ * light neutral tile so dark or transparent icons stay visible in dark mode too; otherwise, and if the file can't be
+ * drawn, a stable colour with the site's first letter (UI-18).
+ */
+function SiteBadge({ host, size }: { host: string; size: 'tile' | 'row' }) {
+  const styles = useStyles();
+  const uri = useSiteIcon(host);
+  const [failed, setFailed] = useState<string | null>(null);
+  const tile = size === 'tile';
+  if (uri && failed !== uri) {
+    return (
+      <View style={[tile ? styles.tileIcon : styles.linkIcon, styles.iconTile]}>
+        <Image
+          source={{ uri }}
+          style={tile ? styles.tileImage : styles.linkImage}
+          resizeMode="contain"
+          onError={() => setFailed(uri)}
+          accessibilityIgnoresInvertColors
+        />
+      </View>
+    );
+  }
+  return (
+    <View style={[tile ? styles.tileIcon : styles.linkIcon, { backgroundColor: siteColor(host) }]}>
+      <Text style={tile ? styles.tileLetter : styles.linkLetter}>{(host[0] || '?').toUpperCase()}</Text>
+    </View>
+  );
+}
 
 const useStyles = makeStyles((c) => ({
   flex: { flex: 1 },
@@ -303,6 +331,10 @@ const useStyles = makeStyles((c) => ({
   tile: { width: '25%', alignItems: 'center', gap: 6 },
   tileIcon: { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   tileLetter: { color: c.onTint, fontSize: 22, fontWeight: '700' },
+  // White in both themes (onTint): most icons are drawn for a light browser tab strip.
+  iconTile: { backgroundColor: c.onTint, borderWidth: StyleSheet.hairlineWidth, borderColor: c.border, overflow: 'hidden' },
+  tileImage: { width: 34, height: 34 },
+  linkImage: { width: 20, height: 20 },
   tileTitle: { fontSize: 12, color: c.text, maxWidth: '90%' },
   section: { ...common(c).card, paddingVertical: 6 },
   sectionHeader: {

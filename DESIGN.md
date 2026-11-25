@@ -19,6 +19,7 @@ Last updated: 2026-11-25
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-25:** The new tab page shows sites' own icons, kept on the phone from visits in normal tabs (fetched only from the visited site, https, no cookies, weekly, cache folder, deleted with history or cached files); opening it still makes no request (`UI-72`, `UI-18` changed, `DATA-31`; owner's request).
 - **2026-11-25:** History can delete many visits at once: Select (or a long press), tick visits, "Select all" picks every visit on screen, Delete asks once and removes them all or none; a new search keeps only the chosen visits still on screen (`UI-71`; owner's request).
 - **2026-11-25:** The custom endpoint's "takes images" setting now travels in backups with the endpoint's address; older backups keep the phone's value (`DATA-32`; owner's decision).
 - **2026-11-25:** Backups now carry "Don't ask again", sites' own script settings, background tasks and their notification, Gemini streaming, the cost and action-marker switches and voice input's languages; restoring restores them, older backups keep the phone's values (`DATA-32`, `SITE-9`, `SCR-8`; owner's decision).

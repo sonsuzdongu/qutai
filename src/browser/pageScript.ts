@@ -2752,6 +2752,19 @@ export const PAGE_SCRIPT = String.raw`
     return false;
   }
 
+  // Site icons for the new tab page (src/browser/siteIcons.ts, UI-72): the page's own icon links, read-only.
+  function siteIcons() {
+    var out = [];
+    var links = document.querySelectorAll('link[rel][href]');
+    for (var i = 0; i < links.length && out.length < 20; i++) {
+      var l = links[i];
+      var rel = String(l.getAttribute('rel') || '').toLowerCase();
+      if (!/(^|\s)(icon|apple-touch-icon|apple-touch-icon-precomposed)(\s|$)/.test(rel)) continue;
+      out.push({ href: String(l.href || ''), rel: rel, sizes: String(l.getAttribute('sizes') || ''), type: String(l.getAttribute('type') || '') });
+    }
+    return out;
+  }
+
   function pageSignals() {
     var kinds = {};
     var blocks = document.querySelectorAll('script[type="application/ld+json"]');
@@ -2911,6 +2924,7 @@ export const PAGE_SCRIPT = String.raw`
 
   var commands = {
     pageSignals: pageSignals,
+    siteIcons: siteIcons,
     readPage: readPage,
     readSource: readSource,
     click: click,

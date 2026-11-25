@@ -27,7 +27,7 @@ how a reinstall and "Clear browsing data" remove it, and the complete list of wh
 8. **Clear browsing data** (Settings) removes, for the last hour, day, week or everything: history, cache, recently
    closed tabs, conversations, the activity history, the "What was sent to the AI" list, downloads and saved pages.
    Memory has its own controls ([section 11](11-memory.md)).
-9. **What leaves the phone** (open-source build): see the rules DATA-14 to DATA-20 and DATA-24 (card pictures). In pro mode, also Qutai's server
+9. **What leaves the phone** (open-source build): see the rules DATA-14 to DATA-20, DATA-24 (card pictures) and DATA-31 (site icons). In pro mode, also Qutai's server
    for the pro features the user uses ([section 1](01-open-source-and-pro.md)).
 
 ## The rules
@@ -97,6 +97,9 @@ how a reinstall and "Clear browsing data" remove it, and the complete list of wh
   Status: Default (implementing session, 2026-11-20) · Why: what leaves the phone must be written down (`DATA-20`) · Privacy policy: the pro policy names RevenueCat and the purchase record but not the IP and device information or the lookups; proposed sentence in [41](41-legal-texts.md) › Limits, not edited (another pro legal bump is the owner's call) · Enforced: In the app: src/purchases/revenuecat.ts (configure), src/purchases/index.ts (revenueCat, reportPendingPurchases) · Source: README.md › Buying credits › What the app sends to RevenueCat
 - **`DATA-30`** A save or a clearing that fails is said, and the screen stays usable: Clear browsing data closes only when everything asked for was cleared, otherwise it says "Couldn't clear everything" and stays open for another try (the failure is recorded, `DATA-26`); the spoken introduction goes back to its rows when the database couldn't be opened, and the typed profile questions say "Couldn't save" and go on.
   Status: Default (implementing session, 21 Nov 2026 code review; open to change) · Why: before, the clearing screen closed as if it had worked, and the two profile screens stayed on "saving" with no way out · Enforced: src/components/ClearDataScreen.tsx, src/intro/flow.ts (saveFailed), src/components/VoiceIntro.tsx (save), src/components/ProfileQuestions.tsx (saveSlot, loadSummary) · Tests: scripts/intro-tests/flow.test.ts
+
+- **`DATA-31`** Site icons for the new tab page (`UI-72`) are requested by the phone from the site the user is visiting in a normal tab, or the server that site's page names for its icon (often its own CDN), at most once per site per 7 days. The request carries no cookies, no Referer and the platform's default User-Agent; the site sees the phone's IP address and that its icon was asked for, as when any browser loads a favicon. Nothing goes to an icon service or to Qutai, and opening the new tab page makes no request. Kept on the phone in the cache folder (not in backups, `DATA-5`); removed by Clear browsing data › Cached files, and for sites with no visit left by any deletion of history (`DATA-21`). Privacy policy not changed (`DATA-20`); proposed sentence for the owner, beside the card pictures one: "When you visit a site in a normal tab, Qutai may load that site's own icon from it (without your cookies) to show on the new tab page; it is kept only on your phone."
+  Status: Default (implementing session, 25 Nov 2026; open to change) · Why: written down because it is a request the page itself may not make (an apple-touch-icon), though only to the site already being visited · Enforced: In the app: src/storage/siteIcons.ts, src/chat/cardImages.ts (fetchBytes)
 
 
 ## Details

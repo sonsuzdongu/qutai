@@ -70,6 +70,7 @@ export type PageCommand =
   | 'readerArticle'
   | 'readerProbe'
   | 'pageSignals'
+  | 'siteIcons'
   | 'findInPage'
   | 'findStep'
   | 'clearFind'

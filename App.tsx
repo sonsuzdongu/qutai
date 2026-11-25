@@ -244,6 +244,7 @@ import { holdSplash } from './src/ui/launch';
 import { darkPalette, lightPalette } from './src/ui/theme';
 import { usePersistSession } from './src/storage/usePersistSession';
 import { useRecordHistory } from './src/storage/useRecordHistory';
+import { clearSiteIcons } from './src/storage/siteIcons';
 import { setIncognitoProbe } from './src/analytics';
 import { askAnalyticsConsentOnce } from './src/analytics/consentPrompt';
 import { maybeAskForReview } from './src/device/reviewPrompt';
@@ -1907,6 +1908,8 @@ function BrowserApp({
       browser.tabs.find((x) => x.webview && !x.incognito)?.webview?.clearCache?.(true);
       clearInsecureExceptions();
       browser.clearCertificateExceptions();
+      // Site icons on the new tab page (UI-72); clearing history removes those of sites with no visit left.
+      clearSiteIcons();
     }
     toast.show(t('clearData.done'));
   };

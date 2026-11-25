@@ -181,6 +181,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `DATA-28` | Every settings change is a patch on the live settings, never a render-time copy; writes go one after another with the latest settings | Default | 2026-11-20 |
 | `DATA-29` | Pro builds only: buying talks to RevenueCat and Google Play Billing (account id, products, purchases, IP and device info); RevenueCat contacted only around Buy credits | Default | 2026-11-20 |
 | `DATA-30` | A failed clearing or profile save is said and the screen stays usable (no silent close, no stuck "saving") | Default | 2026-11-21 |
+| `DATA-31` | Site icons requested only from the site being visited (or its icon server), no cookies or Referer, weekly; no icon service; policy sentence proposed, not edited | Default | 2026-11-25 |
 | `DATA-32` | Backups carry "Don't ask again", sites' own script settings, background tasks and their notification, Gemini streaming, cost, action marker, voice languages, custom endpoint images; old backups keep the phone's values; checked like the loader | Owner | 2026-11-25 |
 
 ## [4. Page content is untrusted](04-untrusted-content.md)
@@ -860,7 +861,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-15` | The logo always animates (still under the system's Reduce motion); the "Animate the logo" switch was… | Default |  |
 | `UI-16` | Haptics are on by default and the app's switch turns all of them off; decorative ticks follow Android's… | Default |  |
 | `UI-17` | Launch shows no logo: the native splash is the theme's background colour; the mark fades in over 450 ms on… | Default |  |
-| `UI-18` | The new tab page is Qutai's own screen (no web page loaded); it loads no site icons from third parties (a… | Default |  |
+| `UI-18` | The new tab page is Qutai's own screen, makes no request when opened, never uses icon services (icons kept from visits, `UI-72`, else a letter)… | Default | 2026-11-25 |
 | `UI-19` | Suggestions in the empty panel are chosen on the phone from a few markers in the page's code (structured… | Default |  |
 | `UI-21` | One look for listening and working: the light ("Işık"); the trial switch and the other two looks removed | Owner | 2026-11-21 |
 | `UI-22` | The address bar's suggestion list never empties between letters; the search engine is asked only after a 200 ms typing… | Owner (engine pause) | 2026-11-19 |
@@ -913,6 +914,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-69` | JSON and other plain-text pages use the scheme's colours, readable in dark theme. | Owner | 2026-11-24 |
 | `UI-70` | The new tab page refreshes when history is deleted; "Recently visited" opens and closes, kept on the phone. | Owner | 2026-11-25 |
 | `UI-71` | History has a select mode: choose visits, "Select all" on screen, delete them at once; a search keeps only the chosen ones still shown. | Owner | 2026-11-25 |
+| `UI-72` | New tab page shows sites' own icons kept from visits (https, no cookies, ≤ 200 KB, PNG/JPEG/GIF/WebP/ICO, weekly), on a light tile; cache folder only; gone with history or cached files | Default | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

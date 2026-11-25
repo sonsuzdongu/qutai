@@ -97,8 +97,15 @@ function remember(url: string, entry: Entry): null {
   return null;
 }
 
-/** The response's bytes, or null (an error status, a redirect to something not https, too large, a timeout). */
-function fetchBytes(url: string): Promise<Uint8Array | null> {
+/**
+ * The response's bytes, or null (an error status, a redirect to something not https or to an ad host, too large, a
+ * timeout). Without cookies or Referer, as above; also used for site icons (storage/siteIcons.ts, UI-72).
+ */
+export function fetchBytes(
+  url: string,
+  maxBytes = MAX_BYTES,
+  accept = 'image/webp,image/jpeg,image/png,image/gif;q=0.8',
+): Promise<Uint8Array | null> {
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
     let done = false;
@@ -115,10 +122,10 @@ function fetchBytes(url: string): Promise<Uint8Array | null> {
     xhr.open('GET', url);
     xhr.withCredentials = false;
     xhr.responseType = 'arraybuffer';
-    xhr.setRequestHeader('Accept', 'image/webp,image/jpeg,image/png,image/gif;q=0.8');
+    xhr.setRequestHeader('Accept', accept);
     // Stops the download as soon as it passes the limit (React Native reports progress when a listener is set).
     xhr.onprogress = (e) => {
-      if (e.loaded > MAX_BYTES) {
+      if (e.loaded > maxBytes) {
         xhr.abort();
         finish(null);
       }
@@ -129,9 +136,9 @@ function fetchBytes(url: string): Promise<Uint8Array | null> {
       const finalUrl = xhr.responseURL || url;
       if (xhr.status !== 200 || !safeHttpsUrl(finalUrl) || (blockAds && isAdUrl(finalUrl))) return finish(null);
       const length = Number(xhr.getResponseHeader('content-length'));
-      if (Number.isFinite(length) && length > MAX_BYTES) return finish(null);
+      if (Number.isFinite(length) && length > maxBytes) return finish(null);
       const body = xhr.response as ArrayBuffer | null;
-      if (!body || body.byteLength > MAX_BYTES) return finish(null);
+      if (!body || body.byteLength > maxBytes) return finish(null);
       finish(new Uint8Array(body));
     };
     xhr.send();
