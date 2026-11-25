@@ -925,6 +925,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-77` | Mac only: no iPad-style input bar under focused page or mini-app fields, and the layout ignores the reported keyboard; iPad and iPhone unchanged. | Owner | 2026-11-25 |
 | `UI-78` | "Clear history" sits above the History list, always reachable. | Owner | 2026-11-25 |
 | `UI-79` | Mac only: no phantom top/bottom safe-area insets (status bar, home indicator), so content starts right under the title bar; iPhone and iPad unchanged. | Owner | 2026-11-25 |
+| `UI-80` | Address suggestions show only once something is typed; no empty box or Paste and go row. | Owner | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

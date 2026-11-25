@@ -400,7 +400,6 @@ export const ja: Record<keyof typeof en, string> = {
   'address.usingMicrophone': 'このサイトはマイクを使用しています。タップして停止するか、権限を変更します。',
   'address.notSecure': '保護されていない通信',
   'omnibox.ask': 'Qutai に質問:「{text}」',
-  'omnibox.pasteAndGo': '貼り付けて移動',
 
   'menu.close': 'メニューを閉じる',
   'menu.forward': '進む',
@@ -1641,6 +1640,7 @@ export const ja: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': '最後のタブ',
   'shortcuts.nextTab': '次のタブ',
   'shortcuts.prevTab': '前のタブ',
+  'shortcuts.voice': 'Qutai に話しかける（長押し、または 2 回タップ）',
   'tabs.closed': 'タブを閉じました',
   'tabs.undo': '元に戻す',
   'tabs.recentlyClosed': '最近閉じたタブ',

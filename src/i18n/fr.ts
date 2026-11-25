@@ -399,7 +399,6 @@ export const fr: Record<keyof typeof en, string> = {
   'address.usingMicrophone': 'Ce site utilise votre micro. Appuyez pour l’arrêter ou modifier ses autorisations.',
   'address.notSecure': 'Non sécurisé',
   'omnibox.ask': 'Demander à Qutai : « {text} »',
-  'omnibox.pasteAndGo': 'Coller et ouvrir',
 
   'menu.close': 'Fermer le menu',
   'menu.forward': 'Suivant',
@@ -1640,6 +1639,7 @@ export const fr: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Dernier onglet',
   'shortcuts.nextTab': 'Onglet suivant',
   'shortcuts.prevTab': 'Onglet précédent',
+  'shortcuts.voice': 'Parler à Qutai (maintenir, ou toucher deux fois)',
   'tabs.closed': 'Onglet fermé',
   'tabs.undo': 'Annuler',
   'tabs.recentlyClosed': 'Récemment fermés',

@@ -402,6 +402,8 @@ export function AddressBar({
             accessibilityLabel={t('common.close')}
             accessibilityRole="button"
           />
+          {/* Nothing until something is typed: no empty box (and no paste row) on a fresh tab (UI-80). */}
+          {text.trim() !== '' && (
           <OmniboxSuggestions
             text={text}
             incognito={incognito}
@@ -419,6 +421,7 @@ export function AddressBar({
               onAsk(query);
             }}
           />
+          )}
         </BarOverlay>
       )}
     </View>

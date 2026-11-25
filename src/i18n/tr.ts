@@ -389,7 +389,6 @@ export const tr: Record<keyof typeof en, string> = {
   'address.usingMicrophone': 'Bu site mikrofonunuzu kullanıyor. Durdurmak ya da izinlerini değiştirmek için dokunun.',
   'address.notSecure': 'Güvenli değil',
   'omnibox.ask': 'Qutai’a sor: “{text}”',
-  'omnibox.pasteAndGo': 'Yapıştır ve git',
 
   'menu.close': 'Menüyü kapat',
   'menu.forward': 'İleri',
@@ -1631,6 +1630,7 @@ export const tr: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Son sekme',
   'shortcuts.nextTab': 'Sonraki sekme',
   'shortcuts.prevTab': 'Önceki sekme',
+  'shortcuts.voice': 'Qutai ile konuşun (basılı tutun ya da iki kez dokunun)',
   'tabs.closed': 'Sekme kapatıldı',
   'tabs.undo': 'Geri al',
   'tabs.recentlyClosed': 'Son kapatılanlar',

@@ -400,7 +400,6 @@ export const ptBR: Record<keyof typeof en, string> = {
   'address.usingMicrophone': 'Este site está usando seu microfone. Toque para interromper ou alterar as permissões dele.',
   'address.notSecure': 'Não seguro',
   'omnibox.ask': 'Perguntar ao Qutai: “{text}”',
-  'omnibox.pasteAndGo': 'Colar e acessar',
 
   'menu.close': 'Fechar menu',
   'menu.forward': 'Avançar',
@@ -1641,6 +1640,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Última guia',
   'shortcuts.nextTab': 'Próxima guia',
   'shortcuts.prevTab': 'Guia anterior',
+  'shortcuts.voice': 'Falar com o Qutai (segure ou toque duas vezes)',
   'tabs.closed': 'Guia fechada',
   'tabs.undo': 'Desfazer',
   'tabs.recentlyClosed': 'Fechadas recentemente',

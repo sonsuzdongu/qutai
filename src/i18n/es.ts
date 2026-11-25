@@ -400,7 +400,6 @@ export const es: Record<keyof typeof en, string> = {
   'address.usingMicrophone': 'Este sitio está usando tu micrófono. Toca para detenerlo o cambiar sus permisos.',
   'address.notSecure': 'No seguro',
   'omnibox.ask': 'Preguntar a Qutai: «{text}»',
-  'omnibox.pasteAndGo': 'Pegar e ir',
 
   'menu.close': 'Cerrar menú',
   'menu.forward': 'Adelante',
@@ -1637,6 +1636,7 @@ export const es: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Última pestaña',
   'shortcuts.nextTab': 'Pestaña siguiente',
   'shortcuts.prevTab': 'Pestaña anterior',
+  'shortcuts.voice': 'Hablar con Qutai (mantén pulsado o toca dos veces)',
   'tabs.closed': 'Pestaña cerrada',
   'tabs.undo': 'Deshacer',
   'tabs.recentlyClosed': 'Cerradas recientemente',

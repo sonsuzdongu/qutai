@@ -187,6 +187,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-79`** On a Mac, Qutai's content starts right under the macOS title bar: UIKit there still reports top and bottom safe-area insets for a status bar and a home indicator the window doesn't have, which left an empty band (white in the light theme) under the title bar. On a Mac only, every view's safe-area insets drop their top and bottom parts (left and right are kept), so the screens, modal screens, sheets, toasts, the assistant panel, the working light and web pages' `env(safe-area-inset-*)` all use none. Seen on the owner's Mac (25 Nov 2026): the band is gone. The code also tries to write the window's raw insets to the system log ("Qutai Mac safe area"), but nothing appeared there on that run, so the exact values macOS reported are not known. iPhone and iPad are unchanged.
   Status: Decided by the owner (25 Nov 2026) · Why: the owner saw the band on the Mac build · Enforced: In the app: modules/qutai-entry/ios/QutaiEntryModule.swift (MacSafeArea, installed when the module is created, Mac only)
 
+- **`UI-80`** The address bar's suggestion panel appears only once something is typed: a fresh tab (or an emptied field) shows no box. The "Paste and go" row that filled the empty panel is gone (the system paste in the text field still works). History is looked up 120 ms after the last letter (at least every 360 ms while typing) and the search engine 200 ms after typing pauses (`REMOTE_DEBOUNCE_MS`).
+  Status: Decided by the owner (25 Nov 2026) · Enforced: In the app: src/components/AddressBar.tsx, src/components/OmniboxSuggestions.tsx, src/browser/omniboxResults.ts (debounces)
+
 ## Details
 
 **Icons**

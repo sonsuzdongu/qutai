@@ -1,6 +1,5 @@
-import * as Clipboard from 'expo-clipboard';
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { OmniboxResults, Shown } from '../browser/omniboxResults';
 import { fetchSuggestions, SearchEngineId } from '../browser/search';
@@ -74,20 +73,8 @@ export function OmniboxSuggestions({
   const darkUI = incognito || !!dark;
   const query = text.trim();
   const reduceMotion = useReduceMotion();
-  const [canPaste, setCanPaste] = useState(false);
   const remoteAllowed = suggestionsEnabled && !incognito && query.length > 0 && !looksLikeUrl(query);
   const { results, shown } = useResults(query, remoteAllowed, searchEngine);
-
-  useEffect(() => {
-    if (query || Platform.OS === 'ios') return;
-    let cancelled = false;
-    Clipboard.hasStringAsync()
-      .then((has) => !cancelled && setCanPaste(has))
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [query]);
 
   // The list grows and shrinks smoothly instead of jumping to its new height.
   const height = useSharedValue(-1);
@@ -119,7 +106,6 @@ export function OmniboxSuggestions({
     >
       <Animated.View style={heightStyle}>
         <ScrollView keyboardShouldPersistTaps="always" style={styles.scroll} onContentSizeChange={onContentSize}>
-          {!query && <PasteRow android={canPaste} incognito={darkUI} onPaste={go} />}
 
           {/* "Ask Qutai" only for more than one word: an address or a single word is a place to go (UI-52). */}
           {/\S\s+\S/.test(query.trim()) && (
@@ -159,48 +145,6 @@ export function OmniboxSuggestions({
         </ScrollView>
       </Animated.View>
     </View>
-  );
-}
-
-function PasteRow({
-  android,
-  incognito,
-  onPaste,
-}: {
-  android: boolean;
-  incognito: boolean;
-  onPaste: (text: string) => void;
-}) {
-  const styles = useStyles();
-  // iOS's own paste button reads the clipboard without the "Allow Paste" prompt.
-  if (Platform.OS === 'ios') {
-    if (!Clipboard.isPasteButtonAvailable) return null;
-    return (
-      <View style={styles.pasteButtonRow}>
-        <Clipboard.ClipboardPasteButton
-          acceptedContentTypes={['plain-text', 'url']}
-          displayMode="iconAndLabel"
-          cornerStyle="capsule"
-          style={styles.pasteButton}
-          onPress={(data) => {
-            if (data.type === 'text' && data.text.trim()) onPaste(data.text.trim());
-          }}
-        />
-      </View>
-    );
-  }
-  if (!android) return null;
-  return (
-    <Row
-      icon="copy"
-      title={t('omnibox.pasteAndGo')}
-      incognito={incognito}
-      onPress={() => {
-        Clipboard.getStringAsync()
-          .then((text) => text.trim() && onPaste(text.trim()))
-          .catch(() => {});
-      }}
-    />
   );
 }
 
@@ -280,6 +224,4 @@ const useStyles = makeStyles((c) => ({
   textDark: { color: '#f2f1f5' },
   subtitle: { fontSize: 12, color: c.textSecondary, marginTop: 1 },
   accent: { color: c.tintText, fontWeight: '600' },
-  pasteButtonRow: { paddingHorizontal: 16, paddingVertical: 10 },
-  pasteButton: { height: 36, width: 150 },
 }));

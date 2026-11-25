@@ -399,7 +399,6 @@ export const id: Record<keyof typeof en, string> = {
   'address.usingMicrophone': 'Situs ini sedang menggunakan mikrofon Anda. Ketuk untuk menghentikannya atau mengubah izinnya.',
   'address.notSecure': 'Tidak aman',
   'omnibox.ask': 'Tanya Qutai: “{text}”',
-  'omnibox.pasteAndGo': 'Tempel dan buka',
 
   'menu.close': 'Tutup menu',
   'menu.forward': 'Maju',
@@ -1640,6 +1639,7 @@ export const id: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Tab terakhir',
   'shortcuts.nextTab': 'Tab berikutnya',
   'shortcuts.prevTab': 'Tab sebelumnya',
+  'shortcuts.voice': 'Bicara dengan Qutai (tahan, atau ketuk dua kali)',
   'tabs.closed': 'Tab ditutup',
   'tabs.undo': 'Urungkan',
   'tabs.recentlyClosed': 'Baru saja ditutup',

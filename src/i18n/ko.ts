@@ -398,7 +398,6 @@ export const ko: Record<keyof typeof en, string> = {
   'address.usingMicrophone': '이 사이트가 마이크를 사용 중입니다. 탭하여 중지하거나 권한을 변경하세요.',
   'address.notSecure': '주의 요함',
   'omnibox.ask': 'Qutai에게 묻기: “{text}”',
-  'omnibox.pasteAndGo': '붙여넣기 및 이동',
 
   'menu.close': '메뉴 닫기',
   'menu.forward': '앞으로',
@@ -1639,6 +1638,7 @@ export const ko: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': '마지막 탭',
   'shortcuts.nextTab': '다음 탭',
   'shortcuts.prevTab': '이전 탭',
+  'shortcuts.voice': 'Qutai에게 말하기(길게 누르거나 두 번 탭)',
   'tabs.closed': '탭이 닫혔습니다',
   'tabs.undo': '실행취소',
   'tabs.recentlyClosed': '최근에 닫은 탭',

@@ -388,7 +388,6 @@ export const en = {
   'address.usingMicrophone': 'This site is using your microphone. Tap to stop it or change its permissions.',
   'address.notSecure': 'Not secure',
   'omnibox.ask': 'Ask Qutai: “{text}”',
-  'omnibox.pasteAndGo': 'Paste and go',
 
   'menu.close': 'Close menu',
   'menu.forward': 'Forward',
@@ -1632,6 +1631,7 @@ export const en = {
   'shortcuts.lastTab': 'Last tab',
   'shortcuts.nextTab': 'Next tab',
   'shortcuts.prevTab': 'Previous tab',
+  'shortcuts.voice': 'Talk to Qutai (hold, or tap twice)',
   'tabs.closed': 'Tab closed',
   'tabs.undo': 'Undo',
   'tabs.recentlyClosed': 'Recently closed',
