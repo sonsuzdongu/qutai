@@ -121,6 +121,8 @@ export class OmniboxResults<L extends LocalItem = LocalItem> {
   private remoteSeq = 0;
   private remoteController: AbortController | null = null;
   private frozen = false;
+  /** A row is highlighted with the arrow keys (UI-88): the list holds still until the highlight goes. */
+  private keyHeld = false;
   private freezeTimer: unknown = null;
   private held: Shown<L> | null = null;
   private disposed = false;
@@ -191,6 +193,21 @@ export class OmniboxResults<L extends LocalItem = LocalItem> {
     this.freezeTimer = null;
     if (!this.frozen) return;
     this.frozen = false;
+    this.release();
+  }
+
+  /**
+   * The arrow keys highlight a row (UI-88): answers that land meanwhile wait, so the rows never move under the
+   * highlight; they show once it goes (no time limit, unlike a touch).
+   */
+  holdForKeys(on: boolean): void {
+    if (this.keyHeld === on) return;
+    this.keyHeld = on;
+    if (!on) this.release();
+  }
+
+  private release() {
+    if (this.frozen || this.keyHeld) return;
     const held = this.held;
     this.held = null;
     if (held && !this.disposed) this.show(held);
@@ -279,7 +296,7 @@ export class OmniboxResults<L extends LocalItem = LocalItem> {
   }
 
   private show(next: Shown<L>): void {
-    if (this.frozen) {
+    if (this.frozen || this.keyHeld) {
       this.held = next;
       return;
     }

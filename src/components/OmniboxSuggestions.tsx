@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, ScrollView, type ScrollViewInstance, Text, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { ADDRESS_BAR_TIMING, OmniboxResults, Shown } from '../browser/omniboxResults';
 import { fetchSuggestions, SearchEngineId } from '../browser/search';
@@ -25,6 +25,22 @@ type Props = {
   suggestionsEnabled: boolean;
   onNavigate: (url: string) => void;
   onAsk: (text: string) => void;
+  /** The row the arrow keys highlight (UI-88), by its place in the list; null: none. */
+  highlight?: number | null;
+  /** The rows as the arrow keys see them, after every change. */
+  onRows?: (rows: SuggestionRow[]) => void;
+};
+
+/** One row of the list, top to bottom: what the field shows while it is highlighted, and what Return does with it. */
+export type SuggestionRow = { key: string; fill: string; activate: () => void };
+
+type RowSpec = SuggestionRow & {
+  icon: IconName;
+  title: string;
+  subtitle?: string;
+  accent?: boolean;
+  /** History and engine rows fade in and move smoothly. */
+  animated: boolean;
 };
 
 const MAX_HEIGHT = 360;
@@ -70,6 +86,8 @@ export function OmniboxSuggestions({
   suggestionsEnabled,
   onNavigate,
   onAsk,
+  highlight = null,
+  onRows,
 }: Props) {
   const styles = useStyles();
   const darkUI = incognito || !!dark;
@@ -94,6 +112,80 @@ export function OmniboxSuggestions({
     : [];
   const motion = reduceMotion ? {} : { entering: FadeIn.duration(FADE_MS), layout: LinearTransition.duration(RESIZE_MS) };
 
+  const rows: RowSpec[] = [];
+  // "Ask Qutai" only for more than one word: an address or a single word is a place to go (UI-52).
+  if (/\S\s+\S/.test(query.trim())) {
+    rows.push({
+      key: 'ask',
+      icon: 'assistant',
+      title: t('omnibox.ask', { text: query }),
+      accent: true,
+      fill: query,
+      activate: () => onAsk(query),
+      animated: false,
+    });
+  }
+  // One "go" row in a fixed place: the typed address, or a search for the typed words.
+  if (query.length > 0) {
+    rows.push({
+      key: 'go',
+      icon: looksLikeUrl(query) ? 'link' : 'find',
+      title: query,
+      fill: query,
+      activate: () => go(query),
+      animated: false,
+    });
+  }
+  for (const item of localItems) {
+    rows.push({
+      key: `local:${item.url}`,
+      icon: item.bookmarked ? 'bookmarked' : 'history',
+      title: item.title || hostOf(item.url),
+      subtitle: item.url.replace(/^https?:\/\/(www\.)?/i, ''),
+      fill: item.url,
+      activate: () => onNavigate(item.url),
+      animated: true,
+    });
+  }
+  for (const suggestion of remoteItems) {
+    rows.push({
+      key: `remote:${suggestion}`,
+      icon: 'find',
+      title: suggestion,
+      fill: suggestion,
+      activate: () => go(suggestion),
+      animated: true,
+    });
+  }
+
+  // The address bar learns the rows (for the arrow keys) after every render, with their latest actions.
+  useEffect(() => {
+    onRows?.(rows);
+  });
+
+  // While a row is highlighted the list holds still (answers wait until the highlight goes).
+  const highlighted = highlight !== null && highlight >= 0 && highlight < rows.length ? rows[highlight].key : null;
+  useEffect(() => {
+    results.holdForKeys(highlighted !== null);
+  }, [results, highlighted]);
+
+  // The highlighted row is scrolled into view.
+  const scrollRef = useRef<ScrollViewInstance>(null);
+  const frames = useRef(new Map<string, { y: number; height: number }>());
+  const scrollY = useRef(0);
+  const viewHeight = useRef(MAX_HEIGHT);
+  useEffect(() => {
+    if (highlighted === null) return;
+    const frame = frames.current.get(highlighted);
+    if (!frame) return;
+    const top = scrollY.current;
+    const bottom = top + viewHeight.current;
+    if (frame.y < top) scrollRef.current?.scrollTo({ y: frame.y, animated: !reduceMotion });
+    else if (frame.y + frame.height > bottom) {
+      scrollRef.current?.scrollTo({ y: frame.y + frame.height - viewHeight.current, animated: !reduceMotion });
+    }
+  }, [highlighted, reduceMotion]);
+
   return (
     <View
       style={[
@@ -107,41 +199,37 @@ export function OmniboxSuggestions({
       onTouchCancel={() => results.touchEnd()}
     >
       <Animated.View style={heightStyle}>
-        <ScrollView keyboardShouldPersistTaps="always" style={styles.scroll} onContentSizeChange={onContentSize}>
-
-          {/* "Ask Qutai" only for more than one word: an address or a single word is a place to go (UI-52). */}
-          {/\S\s+\S/.test(query.trim()) && (
-            <Row
-              icon="assistant"
-              title={t('omnibox.ask', { text: query })}
-              incognito={darkUI}
-              accent
-              onPress={() => onAsk(query)}
-            />
-          )}
-          {/* One "go" row in a fixed place: the typed address, or a search for the typed words. */}
-          {query.length > 0 && (
-            <Row
-              icon={looksLikeUrl(query) ? 'link' : 'find'}
-              title={query}
-              incognito={darkUI}
-              onPress={() => go(query)}
-            />
-          )}
-          {localItems.map((item) => (
-            <Animated.View key={`local:${item.url}`} {...motion}>
+        <ScrollView
+          ref={scrollRef}
+          keyboardShouldPersistTaps="always"
+          style={styles.scroll}
+          onContentSizeChange={onContentSize}
+          onLayout={(e) => {
+            viewHeight.current = e.nativeEvent.layout.height;
+          }}
+          onScroll={(e) => {
+            scrollY.current = e.nativeEvent.contentOffset.y;
+          }}
+          scrollEventThrottle={32}
+        >
+          {rows.map((row) => (
+            <Animated.View
+              key={row.key}
+              {...(row.animated ? motion : {})}
+              onLayout={(e) => {
+                const { y, height } = e.nativeEvent.layout;
+                frames.current.set(row.key, { y, height });
+              }}
+            >
               <Row
-                icon={item.bookmarked ? 'bookmarked' : 'history'}
-                title={item.title || hostOf(item.url)}
-                subtitle={item.url.replace(/^https?:\/\/(www\.)?/i, '')}
+                icon={row.icon}
+                title={row.title}
+                subtitle={row.subtitle}
                 incognito={darkUI}
-                onPress={() => onNavigate(item.url)}
+                accent={row.accent}
+                highlighted={row.key === highlighted}
+                onPress={row.activate}
               />
-            </Animated.View>
-          ))}
-          {remoteItems.map((suggestion) => (
-            <Animated.View key={`remote:${suggestion}`} {...motion}>
-              <Row icon="find" title={suggestion} incognito={darkUI} onPress={() => go(suggestion)} />
             </Animated.View>
           ))}
         </ScrollView>
@@ -156,6 +244,7 @@ function Row({
   subtitle,
   incognito,
   accent,
+  highlighted,
   onPress,
 }: {
   icon: IconName;
@@ -163,6 +252,8 @@ function Row({
   subtitle?: string;
   incognito: boolean;
   accent?: boolean;
+  /** The arrow keys' row (UI-88). */
+  highlighted?: boolean;
   onPress: () => void;
 }) {
   const styles = useStyles();
@@ -170,8 +261,12 @@ function Row({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && (incognito ? styles.pressedDark : styles.pressed)]}
+      style={({ pressed }) => [
+        styles.row,
+        (pressed || highlighted) && (incognito ? styles.pressedDark : styles.pressed),
+      ]}
       accessibilityRole="button"
+      accessibilityState={{ selected: !!highlighted }}
     >
       <Icon
         name={icon}

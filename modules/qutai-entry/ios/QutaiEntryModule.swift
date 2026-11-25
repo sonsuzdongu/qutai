@@ -205,7 +205,7 @@ final class KeyShortcuts {
         title: item["title"] as? String ?? "",
         image: nil,
         action: #selector(UIResponder.qutaiKeyShortcut(_:)),
-        input: input == "tab" ? "\t" : input,
+        input: KeyShortcuts.keyInput(input),
         modifierFlags: flags,
         propertyList: id
       )
@@ -216,6 +216,18 @@ final class KeyShortcuts {
         command.wantsPriorityOverSystemBehavior = true
       }
       return command
+    }
+  }
+
+  /// The key as UIKeyCommand takes it: named keys ("tab", the arrows and Escape for the address bar's suggestions,
+  /// UI-88) or the character itself.
+  static func keyInput(_ input: String) -> String {
+    switch input {
+    case "tab": return "\t"
+    case "up": return UIKeyCommand.inputUpArrow
+    case "down": return UIKeyCommand.inputDownArrow
+    case "escape": return UIKeyCommand.inputEscape
+    default: return input
     }
   }
 

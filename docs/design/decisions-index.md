@@ -938,6 +938,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-85` | Mac and iPad only: a reload button right of the address field (dimmed on the new tab page); phones keep ⋮ › Reload and pull to refresh. | Owner | 2026-11-26 |
 | `UI-86` | Mac and iPad: ⌘W only closes the tab (system File › Close removed from the menu bar); ⌘Q quits without asking (no supported way to confirm). | Owner | 2026-11-26 |
 | `UI-87` | Web pages on an opaque WebView (iOS and Android), so a dark page's unpainted areas show its own dark base colour, not the app's white. | Owner | 2026-11-26 |
+| `UI-88` | Mac and iPad keyboard: ↑/↓ move through the address bar's suggestions the way they point (list above a bottom bar), the field shows the row, Return opens it, Esc clears the highlight then ends editing; no lookup while arrowing, the list holds still. | Owner | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

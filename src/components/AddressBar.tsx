@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -25,7 +25,9 @@ import { useReduceMotion } from '../utils/useReduceMotion';
 import { nudgeKeyboard } from '../utils/keyboardNudge';
 import { showKeyboardFor } from '../utils/showKeyboard';
 import { BarOverlay } from './BarOverlay';
-import { OmniboxSuggestions } from './OmniboxSuggestions';
+import { OmniboxSuggestions, type SuggestionRow } from './OmniboxSuggestions';
+import { fieldText, moveHighlight } from '../browser/omniboxSelection';
+import { useSuggestionKeys } from '../device/keyShortcuts';
 import { omniboxOverlayFrame } from './overlaySlot';
 import type { HoldHandlers } from './PushToTalk';
 
@@ -138,9 +140,22 @@ export function AddressBar({
   const [text, setText] = useState(url);
   // What the clear button removed, so one tap can bring it back (an accidental clear is common).
   const [cleared, setCleared] = useState<string | null>(null);
+  // The suggestion the arrow keys highlight (UI-88): the field shows its text, and what was typed (`text`) stays
+  // what the list looks up, so arrowing never starts a new lookup. Typing ends the highlight.
+  const [highlighted, setHighlighted] = useState<{ index: number; fill: string } | null>(null);
+  const highlight = highlighted?.index ?? null;
+  const setHighlight = (index: number | null) => {
+    const fill = fieldText(text, suggestionRows.current, index);
+    setHighlighted(index === null ? null : { index, fill });
+  };
+  const suggestionRows = useRef<SuggestionRow[]>([]);
+  const noteSuggestionRows = useCallback((rows: SuggestionRow[]) => {
+    suggestionRows.current = rows;
+  }, []);
   const changeText = (next: string) => {
     setText(next);
     setCleared(null);
+    setHighlighted(null);
   };
   const [editing, setEditing] = useState(false);
   const inputRef = useRef<TextInputInstance>(null);
@@ -204,6 +219,20 @@ export function AddressBar({
     setEditing(false);
   };
 
+  // Mac and iPad keyboards (UI-88): ↑ / ↓ move through the suggestions the way they point on screen (the list opens
+  // above a bottom bar), Return opens the highlighted row, Esc takes the highlight away and then ends editing.
+  const suggestionsShown = editing && text.trim() !== '';
+  if (!suggestionsShown && highlighted !== null) setHighlighted(null);
+  useSuggestionKeys(suggestionsShown, (key) => {
+    if (key === 'escape') {
+      if (highlight !== null) setHighlight(null);
+      else finishEditing();
+      return;
+    }
+    setHighlight(moveHighlight(highlight, suggestionRows.current.length, key, bottom));
+  });
+  const shownText = highlighted ? highlighted.fill : text;
+
   return (
     <View
       style={[styles.bar, bottom && styles.barBottom, dark?.bar]}
@@ -225,7 +254,7 @@ export function AddressBar({
             style={[styles.fieldText, styles.fieldTextFlex, styles.input, dark?.text]}
             maxFontSizeMultiplier={MAX_FONT_SCALE}
             placeholderTextColor={darkUI ? '#a9a8b3' : '#6b6862'}
-            value={text}
+            value={shownText}
             onChangeText={changeText}
             onBlur={() => {
               endNudge();
@@ -233,6 +262,8 @@ export function AddressBar({
               setCleared(null);
             }}
             onSubmitEditing={() => {
+              const row = highlight !== null ? suggestionRows.current[highlight] : undefined;
+              if (row) return row.activate();
               if (!text.trim()) return;
               finishEditing();
               onSubmit(toUrl(text, searchEngine));
@@ -436,6 +467,8 @@ export function AddressBar({
               finishEditing();
               onAsk(query);
             }}
+            highlight={highlight}
+            onRows={noteSuggestionRows}
           />
           )}
         </BarOverlay>
