@@ -52,11 +52,11 @@ export const BACKUP_POLICY = {
   customImages: 'phone',
   customHeaders: 'keys',
   confirmActions: 'backup',
-  // Permissions the user gave on this phone (PAY-7, SCR-*, "Don't ask again"): each phone is asked again.
-  alwaysAllow: 'phone',
+  // "Don't ask again" and per-site script settings travel (owner, 25 Nov 2026); the two switches stay (PAY-7, SCR-*).
+  alwaysAllow: 'backup',
   assistantPayments: 'phone',
   assistantScripts: 'phone',
-  scriptSites: 'phone',
+  scriptSites: 'backup',
   searchEngine: 'backup',
   searchSuggestions: 'backup',
   textZoom: 'backup',
@@ -79,19 +79,19 @@ export const BACKUP_POLICY = {
   backgroundPlayback: 'backup',
   autoplaySound: 'backup',
   pictureInPicture: 'backup',
-  backgroundTasks: 'phone',
-  notifyTaskDone: 'phone',
-  geminiStreaming: 'phone',
-  showCost: 'phone',
-  showActionMarker: 'phone',
+  backgroundTasks: 'backup',
+  notifyTaskDone: 'backup',
+  geminiStreaming: 'backup',
+  showCost: 'backup',
+  showActionMarker: 'backup',
   readerTheme: 'backup',
   readerFont: 'backup',
   readerEasyReading: 'backup',
   voiceAutoSend: 'backup',
   // The answer about the phone's online speech service: each phone asks again.
   voiceOnline: 'phone',
-  voiceLanguage: 'phone',
-  voiceLastLanguage: 'phone',
+  voiceLanguage: 'backup',
+  voiceLastLanguage: 'backup',
   voiceHoldToTalk: 'backup',
   // First-run and legal state stay with the phone.
   onboarded: 'phone',
@@ -139,6 +139,16 @@ export function backupSettings(s: Settings): BackupSettings {
     // The answer about the phone's online speech service stays on this phone: each phone asks again.
     voiceAutoSend: s.voiceAutoSend,
     voiceHoldToTalk: s.voiceHoldToTalk,
+    // In backups since 25 Nov 2026 (owner); older backups leave this phone's values.
+    alwaysAllow: [...s.alwaysAllow],
+    scriptSites: s.scriptSites.map((x) => ({ ...x })),
+    backgroundTasks: s.backgroundTasks,
+    notifyTaskDone: s.notifyTaskDone,
+    geminiStreaming: s.geminiStreaming,
+    showCost: s.showCost,
+    showActionMarker: s.showActionMarker,
+    voiceLanguage: s.voiceLanguage,
+    voiceLastLanguage: s.voiceLastLanguage,
   };
 }
 
@@ -227,6 +237,16 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
     take('readerEasyReading', s.readerEasyReading);
     take('voiceAutoSend', s.voiceAutoSend);
     take('voiceHoldToTalk', s.voiceHoldToTalk);
+    take('backgroundTasks', s.backgroundTasks);
+    take('notifyTaskDone', s.notifyTaskDone);
+    take('geminiStreaming', s.geminiStreaming);
+    take('showCost', s.showCost);
+    take('showActionMarker', s.showActionMarker);
+    take('voiceLanguage', s.voiceLanguage);
+    take('voiceLastLanguage', s.voiceLastLanguage);
+    // Lists: merge takes the backup's only where this phone has none (its own choices stay); replace takes it.
+    if (s.alwaysAllow && (mode === 'replace' || !current.alwaysAllow.length)) next.alwaysAllow = [...s.alwaysAllow];
+    if (s.scriptSites && (mode === 'replace' || !current.scriptSites.length)) next.scriptSites = s.scriptSites.map((x) => ({ ...x }));
     if (s.customBaseUrl && normalizeBaseUrl(s.customBaseUrl, { allowCleartext: ALLOW_CLEARTEXT }).ok)
       take('customBaseUrl', s.customBaseUrl);
     for (const id of PROVIDER_ORDER) {

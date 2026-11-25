@@ -274,8 +274,8 @@ export function clampTextZoom(value: number): number {
   return Math.min(TEXT_ZOOM_MAX, Math.max(TEXT_ZOOM_MIN, Math.round(value / 10) * 10));
 }
 
-/** A language or tag for voice input ("tr", "en-GB"). */
-function isLanguageTag(value: string | null): value is string {
+/** A language or tag for voice input ("tr", "en-GB"); also the backup's check (backup/payload.ts). */
+export function isLanguageTag(value: string | null): value is string {
   return !!value && /^[a-zA-Z]{2,3}(?:[-_][a-zA-Z0-9]{2,8}){0,3}$/.test(value);
 }
 

@@ -181,6 +181,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `DATA-28` | Every settings change is a patch on the live settings, never a render-time copy; writes go one after another with the latest settings | Default | 2026-11-20 |
 | `DATA-29` | Pro builds only: buying talks to RevenueCat and Google Play Billing (account id, products, purchases, IP and device info); RevenueCat contacted only around Buy credits | Default | 2026-11-20 |
 | `DATA-30` | A failed clearing or profile save is said and the screen stays usable (no silent close, no stuck "saving") | Default | 2026-11-21 |
+| `DATA-32` | Backups carry "Don't ask again", sites' own script settings, background tasks and their notification, Gemini streaming, cost, action marker, voice languages; old backups keep the phone's values; checked like the loader | Owner | 2026-11-25 |
 
 ## [4. Page content is untrusted](04-untrusted-content.md)
 

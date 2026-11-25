@@ -38,7 +38,7 @@ The assistant can also read and change Qutai's appearance and browsing settings 
 There is no sync, so Settings › Backup exports everything to one password-protected file
 (`qutai-backup-YYYY-MM-DD.qutai`, saved through the share sheet to Files, Drive…) and imports it on this or another
 phone. Always in a backup: bookmarks and folders, history, the assistant's memory (with its categories and which memories are hidden from the AI), site permissions (assistant level, personal information and
-location) and preferences (including reader mode, appearance and custom instructions). Optional: open tabs and tab groups (on by default),
+location) and preferences (including reader mode, appearance, custom instructions, "Don't ask again" choices and sites' own script settings). Optional: open tabs and tab groups (on by default),
 the assistant's conversations (off) and its activity history (off), and the AI provider keys (off; only with an explicit
 "Include my AI provider keys"). Never in a backup: incognito data (it is never stored), downloads and saved pages,
 the "What was sent to the AI" list,

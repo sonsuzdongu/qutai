@@ -25,6 +25,8 @@ const OTHER: Partial<Settings> = {
   readerFont: 'sans',
   apiKeys: { ...DEFAULT_SETTINGS.apiKeys, anthropic: 'sk-test-key' },
   customHeaders: [{ name: 'X-Test', value: 'token' }],
+  alwaysAllow: ['notification', 'location'],
+  scriptSites: [{ host: 'example.test', setting: 'off' }],
   voiceLanguage: 'tr',
   voiceLastLanguage: 'tr-TR',
   voiceOnline: 'allow' as Settings['voiceOnline'],

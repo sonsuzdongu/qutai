@@ -22,6 +22,8 @@ import { MAX_RULES, parseRuleLine, siteHost as ruleSite } from '../content/siteR
 import { readBackupStyles, type BackupStyle } from '../content/userStyles';
 import { readBackupScripts, type BackupScript } from '../content/userScripts';
 import { readBackupApps, type BackupApps } from '../apps/appBackup';
+import { cleanAlwaysAllow, type AlwaysAllowKind } from '../agent/alwaysAllow';
+import { cleanScriptSites, isLanguageTag, type ScriptSite } from '../storage/settings';
 
 /**
  * What goes inside a backup: versioned JSON by kind of data, independent of the SQLite schema, so a
@@ -148,6 +150,18 @@ export type BackupSettings = Partial<{
   readerEasyReading: boolean;
   voiceAutoSend: boolean;
   voiceHoldToTalk: boolean;
+  /** These are missing in backups made before 25 Nov 2026 (this phone's values are kept on restore). */
+  alwaysAllow: AlwaysAllowKind[];
+  scriptSites: ScriptSite[];
+  backgroundTasks: boolean;
+  notifyTaskDone: boolean;
+  geminiStreaming: boolean;
+  showCost: boolean;
+  showActionMarker: boolean;
+  /** 'auto' or a language tag. */
+  voiceLanguage: string;
+  /** '' or a language tag. */
+  voiceLastLanguage: string;
 }>;
 
 export type BackupPayload = {
@@ -444,6 +458,11 @@ export const BOOLEAN_SETTINGS = [
   'readerEasyReading',
   'voiceAutoSend',
   'voiceHoldToTalk',
+  'backgroundTasks',
+  'notifyTaskDone',
+  'geminiStreaming',
+  'showCost',
+  'showActionMarker',
 ] as const;
 
 function parseSettings(v: unknown): BackupSettings | undefined {
@@ -478,6 +497,13 @@ function parseSettings(v: unknown): BackupSettings | undefined {
   if (readerTheme) out.readerTheme = readerTheme;
   const readerFont = oneOf(v.readerFont, READER_FONTS);
   if (readerFont) out.readerFont = readerFont;
+  // Checked as the settings loader checks them (storage/settings.ts): known kinds only, well-formed hosts and settings.
+  if (Array.isArray(v.alwaysAllow)) out.alwaysAllow = cleanAlwaysAllow(v.alwaysAllow);
+  if (Array.isArray(v.scriptSites)) out.scriptSites = cleanScriptSites(v.scriptSites);
+  if (v.voiceLanguage === 'auto' || (typeof v.voiceLanguage === 'string' && isLanguageTag(v.voiceLanguage)))
+    out.voiceLanguage = v.voiceLanguage;
+  if (v.voiceLastLanguage === '' || (typeof v.voiceLastLanguage === 'string' && isLanguageTag(v.voiceLastLanguage)))
+    out.voiceLastLanguage = v.voiceLastLanguage;
   if (typeof v.customInstructions === 'string')
     out.customInstructions = restoredCustomInstructions(v.customInstructions, v.retiredInstructionsRemoved);
   return out;
