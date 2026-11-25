@@ -1578,7 +1578,6 @@ h3 {
 }
 
 .picker {
-  display: none;
   border: 0;
   padding: 0;
   margin-bottom: 14px;
@@ -1589,9 +1588,40 @@ h3 {
   margin-bottom: 8px;
 }
 
-.picker legend .muted {
-  display: block;
-  font-size: 0.88rem;
+.notes-bar {
+  max-width: 1180px;
+  margin: 0 auto 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  font-size: 0.9rem;
+}
+
+.notes-bar p {
+  margin: 0;
+}
+
+.notes-toggle {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.notes-toggle[aria-pressed='true'] {
+  background: var(--bg-alt);
+}
+
+.notes-toggle:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .chips {
@@ -1719,6 +1749,34 @@ h3 {
   left: 0;
 }
 
+.cell summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.cell summary::-webkit-details-marker {
+  display: none;
+}
+
+.cell summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.cell-more {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
+.cell[open] .cell-more {
+  opacity: 1;
+}
+
 .cell-note {
   display: block;
   margin-top: 4px;
@@ -1750,19 +1808,35 @@ h3 {
   color: var(--text);
 }
 
+.cmp.enhanced .off {
+  display: none;
+}
+
+.cmp.enhanced.pair {
+  min-width: 0;
+  font-size: 0.92rem;
+}
+
+.cmp.enhanced.pair .feature-col {
+  width: 40%;
+  min-width: 0;
+}
+
+.cmp.enhanced.pair td {
+  width: 30%;
+}
+
+.cmp.enhanced.all:not(.notes) {
+  min-width: 880px;
+}
+
+.cmp.enhanced:not(.notes) td {
+  vertical-align: middle;
+}
+
 @media (max-width: 760px) {
-  .picker {
-    display: block;
-  }
-  .cmp.enhanced {
-    min-width: 0;
-  }
-  .cmp.enhanced .off {
-    display: none;
-  }
-  .cmp.enhanced .feature-col {
+  .cmp.enhanced.pair .feature-col {
     width: 34%;
-    min-width: 0;
   }
   .cmp:not(.enhanced) .feature-col {
     width: 150px;
@@ -2328,4 +2402,11 @@ h3 {
   .medallion .petal .petal-fill {
     transition: none;
   }
+}
+
+/* Qutai next to one competitor: a narrower table, centred like the text around it. */
+.table-scroll:has(.cmp.pair) {
+  max-width: 980px;
+  margin-left: auto;
+  margin-right: auto;
 }

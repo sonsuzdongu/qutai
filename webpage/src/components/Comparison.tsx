@@ -24,17 +24,49 @@ function StateMark({ state }: { state: State }) {
   return <Icon name={icon} size={18} className={`mark mark-${state}`} />;
 }
 
-function CellView({ cell, product, feature, isPrice }: { cell: Cell; product: Product; feature: string; isPrice: boolean }) {
+/**
+ * One cell: the state (or the price) first; its note and source sit in a <details> that opens on a tap, or for every
+ * cell at once with "Show notes". Without JavaScript the <details> still opens on a tap.
+ */
+function CellView({
+  cell,
+  product,
+  feature,
+  isPrice,
+  allOpen,
+}: {
+  cell: Cell;
+  product: Product;
+  feature: string;
+  isPrice: boolean;
+  allOpen: boolean;
+}) {
   const { t, lang } = useI18n();
+  const [open, setOpen] = useState(false);
   const label = isPrice && cell.value ? cell.value[lang] : t(STATE_LABEL[cell.state]);
+  const state = (
+    <span className={`state state-${cell.state}`}>
+      {!(isPrice && cell.value) && <StateMark state={cell.state} />}
+      <span className={cell.state === 'unknown' ? 'state-label muted' : 'state-label'}>{label}</span>
+    </span>
+  );
+  const hasSource = !!cell.source && product.id !== 'qutai';
+  if (!cell.note && !hasSource) return state;
   return (
-    <>
-      <span className={`state state-${cell.state}`}>
-        {!(isPrice && cell.value) && <StateMark state={cell.state} />}
-        <span className={cell.state === 'unknown' ? 'state-label muted' : 'state-label'}>{label}</span>
-      </span>
+    <details
+      className="cell"
+      open={allOpen || open}
+      onToggle={(e) => {
+        const now = (e.currentTarget as HTMLDetailsElement).open;
+        if (!allOpen) setOpen(now);
+      }}
+    >
+      <summary>
+        {state}
+        <Icon name="info" size={14} className="cell-more" />
+      </summary>
       {cell.note && <span className="cell-note">{cell.note[lang]}</span>}
-      {cell.source && product.id !== 'qutai' && (
+      {hasSource && (
         <a
           className="cell-source"
           href={cell.source}
@@ -46,11 +78,13 @@ function CellView({ cell, product, feature, isPrice }: { cell: Cell; product: Pr
           <Icon name="external" size={12} />
         </a>
       )}
-    </>
+    </details>
   );
 }
 
 const noSubscribe = () => () => {};
+/** The picker's choice that shows every competitor. */
+const ALL = 'all';
 
 /** False in the prerendered HTML and during hydration, true once React runs in the browser. */
 function useHydrated() {
@@ -63,12 +97,15 @@ function useHydrated() {
 
 export function Comparison() {
   const { t, lang } = useI18n();
-  // Small screens compare Qutai with one competitor at a time. Without JavaScript (or before hydration), every
-  // column is there and the table scrolls sideways with the feature names pinned.
+  // Qutai next to one competitor at a time (or all of them), states first and notes on a tap or with "Show notes".
+  // Without JavaScript (or before hydration), every column is there and the table scrolls sideways with the feature
+  // names pinned.
   const enhanced = useHydrated();
-  const [pick, setPick] = useState(DEFAULT_PICK);
+  const [pick, setPick] = useState<string>(DEFAULT_PICK);
+  const [notes, setNotes] = useState(false);
+  const all = pick === ALL;
 
-  const off = (id: string) => (enhanced && id !== QUTAI.id && id !== pick ? ' off' : '');
+  const off = (id: string) => (enhanced && !all && id !== QUTAI.id && id !== pick ? ' off' : '');
   const products = [QUTAI, ...COMPETITORS];
   const excluded = EXCLUDED.map((e) => `${e.name} (${e.reason[lang]})`).join('; ');
 
@@ -97,7 +134,7 @@ export function Comparison() {
       {enhanced && (
         <fieldset className="picker">
           <legend>
-            {t('compare.pickLabel')} <span className="muted">{t('compare.pickHint')}</span>
+            {t('compare.pickLabel')}
           </legend>
           <div className="chips">
             {COMPETITORS.map((c) => (
@@ -106,12 +143,24 @@ export function Comparison() {
                 {c.name}
               </label>
             ))}
+            <label className={all ? 'chip on' : 'chip'}>
+              <input type="radio" name="compare-with" checked={all} onChange={() => setPick(ALL)} />
+              {t('compare.all')}
+            </label>
           </div>
         </fieldset>
       )}
+      {enhanced && (
+        <div className="notes-bar">
+          <p className="muted">{t('compare.tapHint')}</p>
+          <button type="button" className="notes-toggle" aria-pressed={notes} onClick={() => setNotes((v) => !v)}>
+            {t(notes ? 'compare.notesHide' : 'compare.notesShow')}
+          </button>
+        </div>
+      )}
 
       <div className="table-scroll" tabIndex={0} role="region" aria-labelledby="compare-title">
-        <table className={enhanced ? 'cmp enhanced' : 'cmp'}>
+        <table className={enhanced ? `cmp enhanced${all ? ' all' : ' pair'}${notes ? ' notes' : ''}` : 'cmp'}>
           <caption className="sr-only">{t('compare.caption')}</caption>
           <thead>
             <tr>
@@ -140,7 +189,13 @@ export function Comparison() {
                   </th>
                   {products.map((p) => (
                     <td key={p.id} className={`${p.id === 'qutai' ? 'us' : ''}${off(p.id)}`}>
-                      <CellView cell={p.cells[r.id]} product={p} feature={r.label[lang]} isPrice={r.id === 'price'} />
+                      <CellView
+                        cell={p.cells[r.id]}
+                        product={p}
+                        feature={r.label[lang]}
+                        isPrice={r.id === 'price'}
+                        allOpen={notes}
+                      />
                     </td>
                   ))}
                 </tr>

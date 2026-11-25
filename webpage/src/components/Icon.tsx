@@ -23,6 +23,7 @@ export const PATHS = {
   no: 'M7 7l10 10M17 7 7 17',
   desktop: 'M3 5h18v11H3zM8 20h8M12 16v4',
   dash: 'M8 12h8',
+  info: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 11v5M12 8h.01',
   compare: 'M4 4h6v16H4zM14 4h6v16h-6zM6.5 8h1M16.5 8h1M6.5 12h1M16.5 12h1',
   cart: 'M3 4h2l2.5 11h10L20 7H6.2M9 20h.01M17 20h.01',
   calendar: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4M9 15l2 2 4-4',
