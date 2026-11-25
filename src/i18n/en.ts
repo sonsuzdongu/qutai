@@ -2224,6 +2224,7 @@ export const en = {
   'intro.title': 'Your assistant is here',
   'intro.tap': 'Tap the Qutai button to open the assistant: ask about the page, give it a task or just talk.',
   'intro.hold': 'Hold it to start talking straight away. Lift your finger to send, slide away to cancel.',
+  'intro.holdKey': 'On this Mac, hold ⌥ Space to talk and release it to send.',
   'intro.holdScreenReader': 'To talk, use the button’s “Start voice message” action.',
   'intro.gotIt': 'Got it',
   'profile.useLocation': 'Use my location',

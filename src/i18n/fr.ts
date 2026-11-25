@@ -2230,6 +2230,7 @@ export const fr: Record<keyof typeof en, string> = {
   'intro.title': 'Votre assistant est là',
   'intro.tap': 'Appuyez sur le bouton Qutai pour ouvrir l’assistant : posez une question sur la page, confiez-lui une tâche ou discutez simplement.',
   'intro.hold': 'Maintenez-le appuyé pour parler tout de suite. Relâchez pour envoyer, faites glisser votre doigt ailleurs pour annuler.',
+  'intro.holdKey': 'Sur ce Mac, maintenez ⌥ Espace pour parler et relâchez pour envoyer.',
   'intro.holdScreenReader': 'Pour parler, utilisez l’action « Commencer un message vocal » du bouton.',
   'intro.gotIt': 'J’ai compris',
   'profile.useLocation': 'Utiliser ma position',

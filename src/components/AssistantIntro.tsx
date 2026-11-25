@@ -24,6 +24,7 @@ import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
 import { makeStyles, usePalette, radii } from '../ui/theme';
 import { useScreenReader } from './useHoldGesture';
+import { isIosAppOnMac } from '../device/macDevice';
 
 /**
  * The first-run introduction to the Qutai button: after setup, the browser dims except for the button in the address
@@ -214,6 +215,13 @@ export function AssistantIntro({ visible, holdToTalk, barAtBottom, onOpenAssista
           <View style={styles.line}>
             <Icon name="microphone" size={18} color={palette.tintText} />
             <Text style={styles.body}>{holdLine}</Text>
+          </View>
+        )}
+        {/* On a Mac only: the keyboard's push-to-talk (UI-81), which works where holding the button does. */}
+        {holdToTalk && isIosAppOnMac && (
+          <View style={styles.line}>
+            <Icon name="keyboard" size={18} color={palette.tintText} />
+            <Text style={styles.body}>{t('intro.holdKey')}</Text>
           </View>
         )}
         <Pressable

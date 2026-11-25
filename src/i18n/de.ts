@@ -2216,6 +2216,7 @@ export const de: Record<keyof typeof en, string> = {
   'intro.title': 'Ihr Assistent ist da',
   'intro.tap': 'Tippen Sie auf die Qutai-Taste, um den Assistenten zu öffnen: Fragen Sie zur Seite, geben Sie ihm eine Aufgabe oder unterhalten Sie sich einfach.',
   'intro.hold': 'Halten Sie sie gedrückt, um sofort zu sprechen. Zum Senden loslassen, zum Abbrechen wegwischen.',
+  'intro.holdKey': 'Auf diesem Mac ⌥ Leertaste halten, um zu sprechen, und loslassen, um zu senden.',
   'intro.holdScreenReader': 'Zum Sprechen nutzen Sie die Aktion „Sprachnachricht starten“ der Taste.',
   'intro.gotIt': 'Verstanden',
   'profile.useLocation': 'Meinen Standort verwenden',

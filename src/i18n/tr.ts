@@ -2229,6 +2229,7 @@ export const tr: Record<keyof typeof en, string> = {
   'intro.title': 'Asistanınız burada',
   'intro.tap': 'Asistanı açmak için Qutai düğmesine dokunun: sayfayı sorun, bir görev verin ya da sohbet edin.',
   'intro.hold': 'Hemen konuşmaya başlamak için basılı tutun. Göndermek için parmağınızı kaldırın, iptal için kaydırın.',
+  'intro.holdKey': 'Bu Mac’te konuşmak için ⌥ Boşluk’u basılı tutun, göndermek için bırakın.',
   'intro.holdScreenReader': 'Konuşmak için düğmenin “Sesli mesaj başlat” eylemini kullanın.',
   'intro.gotIt': 'Anladım',
   'profile.useLocation': 'Konumumu kullan',

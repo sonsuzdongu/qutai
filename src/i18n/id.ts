@@ -2230,6 +2230,7 @@ export const id: Record<keyof typeof en, string> = {
   'intro.title': 'Asisten Anda ada di sini',
   'intro.tap': 'Ketuk tombol Qutai untuk membuka asisten: tanyakan tentang halaman, beri tugas, atau sekadar mengobrol.',
   'intro.hold': 'Tahan tombol untuk langsung mulai berbicara. Angkat jari untuk mengirim, geser menjauh untuk membatalkan.',
+  'intro.holdKey': 'Di Mac ini, tahan ⌥ Spasi untuk bicara dan lepaskan untuk mengirim.',
   'intro.holdScreenReader': 'Untuk berbicara, gunakan tindakan “Mulai pesan suara” pada tombol.',
   'intro.gotIt': 'Mengerti',
   'profile.useLocation': 'Gunakan lokasi saya',

@@ -2231,6 +2231,7 @@ export const ja: Record<keyof typeof en, string> = {
   'intro.title': 'ここからアシスタントを使えます',
   'intro.tap': 'Qutai ボタンをタップするとアシスタントが開きます。ページについて質問したり、タスクを任せたり、ただ話しかけたりできます。',
   'intro.hold': '長押しするとすぐに話し始められます。指を離すと送信、スライドして離すとキャンセルします。',
+  'intro.holdKey': 'この Mac では ⌥ スペースを押し続けて話し、離すと送信します。',
   'intro.holdScreenReader': '話すには、ボタンの「音声メッセージを開始」アクションを使ってください。',
   'intro.gotIt': 'OK',
   'profile.useLocation': '現在地を使用',

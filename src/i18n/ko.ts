@@ -2229,6 +2229,7 @@ export const ko: Record<keyof typeof en, string> = {
   'intro.title': '어시스턴트가 여기 있습니다',
   'intro.tap': 'Qutai 버튼을 탭하여 어시스턴트를 여세요. 페이지에 대해 묻거나, 작업을 맡기거나, 그냥 대화할 수 있습니다.',
   'intro.hold': '길게 누르면 바로 말할 수 있습니다. 손가락을 떼면 전송되고, 밖으로 밀면 취소됩니다.',
+  'intro.holdKey': '이 Mac에서는 ⌥ 스페이스를 길게 눌러 말하고, 놓으면 전송됩니다.',
   'intro.holdScreenReader': '말하려면 버튼의 ‘음성 메시지 시작’ 동작을 사용하세요.',
   'intro.gotIt': '확인',
   'profile.useLocation': '내 위치 사용',
