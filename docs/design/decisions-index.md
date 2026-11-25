@@ -805,7 +805,7 @@ Moved to Details (ids retired, not reused): `MEDIA-1`, `MEDIA-8`, `MEDIA-9`, `ME
 |---|---|---|---|
 | `VOICE-1` | Speech becomes text only through the phone's system speech recogniser (on-device, or Apple's / Google's… | Default |  |
 | `VOICE-2` | Recognition runs on the phone whenever that can be enforced; Qutai decides "on-device" itself (iOS only… | Default |  |
-| `VOICE-3` | Online recognition (Apple's or Google's service) is used only after a one-time explicit agreement naming… | Default |  |
+| `VOICE-3` | Online recognition (Apple's or Google's service) is used only after a one-time explicit agreement naming… (a Mac starts with it on, `VOICE-25`) | Default |  |
 | `VOICE-4` | Incognito conversations never use online recognition; without on-device recognition voice input is off… | Default |  |
 | `VOICE-5` | No audio is written to disk (`persist: false`) and no audio goes to Qutai or the AI provider; only the… | Default |  |
 | `VOICE-6` | Voice consent and the voice settings are not changeable by the assistant from the chat. | Default |  |
@@ -820,6 +820,7 @@ Moved to Details (ids retired, not reused): `MEDIA-1`, `MEDIA-8`, `MEDIA-9`, `ME
 | `VOICE-19` | Read-aloud uses the most natural installed voice (iOS Premium › Enhanced › Siri › compact; Android by the… | Default |  |
 | `VOICE-21` | A language with no installed voice is read with the phone's default voice and Qutai says so once per… | Default |  |
 | `VOICE-24` | Read-aloud stays on the phone's own speech engine; an on-device neural voice (Supertonic-3) was evaluated and… | Owner | 2026-11-19 |
+| `VOICE-25` | On a Mac speech is always recognised online by Apple; "online speech" starts on for a fresh Mac install (stored answers kept, phones/iPads ask); off → message pointing to the setting | Owner | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `VOICE-10`, `VOICE-12`, `VOICE-16`, `VOICE-18`, `VOICE-20`, `VOICE-22`, `VOICE-23`
 
@@ -831,6 +832,7 @@ Moved to Details (ids retired, not reused): `VOICE-10`, `VOICE-12`, `VOICE-16`, 
 | `LANG-2` | The default interface language is the first of the phone's languages that Qutai has, otherwise English. | Owner | not recorded |
 | `LANG-3` | Settings › Language uses the system's per-app language on Android 13+ (both ways), Qutai's own stored… | Default |  |
 | `LANG-24` | iOS: Settings › Language lists the languages and switches at once, writing the same per-app value as iOS Settings; iOS's own texts follow next launch. | Owner | 2026-11-24 |
+| `LANG-25` | Texts follow the device: "this phone" on phones and Android, "this iPad" on an iPad, "this Mac" on a Mac, via `{@phrase}` marks and per-language tables | Owner | 2026-11-25 |
 | `LANG-5` | Turkish interface text addresses the user as "siz", including the setup questions, legal texts, iOS… | Owner | 2026-11-16 |
 | `LANG-6` | Exceptions to "siz": texts the user sends to the assistant (suggestion prompts, custom-instruction… | Default |  |
 | `LANG-22` | Turkish suffixes on "Qutai" follow its pronunciation "Kutay": Qutai'ın, Qutai'ı, Qutai'a, Qutai'da, Qutai'dan (no buffer consonant, back… | Owner | 2026-11-20 |

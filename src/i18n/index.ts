@@ -1,5 +1,7 @@
 import { getLocales, useLocales } from 'expo-localization';
 import { useSyncExternalStore } from 'react';
+import { DEVICE_WORDS } from './device';
+import { fillDeviceWords, type DeviceKind } from './deviceWords';
 import { en } from './en';
 import { LANGUAGE_INFO, matchLanguage, type Language } from './languages';
 
@@ -139,13 +141,28 @@ function pluralForm(spec: string, n: number, language: Language): string {
 
 /** Looks up a UI string in the app's language (English when it has none) and fills in its placeholders. */
 export function t(key: MessageKey, params?: Record<string, string | number>): string {
-  const template = dictionary(current)[key] || en[key];
-  return format(template, params);
+  return format(template(current, key), params);
 }
 
 /** The same string in a given language, for text that must not follow the app's (tests, the language picker). */
 export function tIn(language: Language, key: MessageKey, params?: Record<string, string | number>): string {
-  return format(dictionary(language)[key] || en[key], params, language);
+  return format(template(language, key), params, language);
+}
+
+/**
+ * The device the wording follows (src/i18n/deviceWords.ts): "this phone" on a phone, "this iPad" on an iPad, "this Mac"
+ * on a Mac. Set once at startup (src/i18n/startup.ts); a phone until then, and in tests.
+ */
+let device: DeviceKind = 'phone';
+
+export function setDeviceKind(kind: DeviceKind) {
+  device = kind;
+}
+
+/** A key's string in a language (English when it has none), with its device phrases filled in for this device. */
+function template(language: Language, key: MessageKey): string {
+  const own = dictionary(language)[key];
+  return own ? fillDeviceWords(own, DEVICE_WORDS[language], device) : fillDeviceWords(en[key], DEVICE_WORDS.en, device);
 }
 
 function subscribe(listener: () => void) {

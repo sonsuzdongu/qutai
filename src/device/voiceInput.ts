@@ -8,6 +8,7 @@ import { dialog, dialogState } from '../components/Dialog';
 import { t } from '../i18n';
 import { shouldKeepListening, voiceErrorOutcome } from './voiceError';
 import { languageName, languageOf } from './voiceLanguage';
+import { isIosAppOnMac } from './macDevice';
 import { offerSettings } from './settings';
 import { isSpeaking, setMicrophoneGuard, stopSpeaking } from './speech';
 
@@ -328,7 +329,9 @@ export async function voicePlan(languages: string[]): Promise<VoicePlan> {
       const phoneLanguage = getLocales()[0]?.languageCode?.toLowerCase();
       let onDevice = false;
       try {
-        onDevice = phoneLanguage === language && M.supportsOnDeviceRecognition();
+        // On a Mac the iOS app gets no on-device recogniser (the check may still say yes): always Apple's online one,
+        // so the online setting and its question apply, and incognito says why voice input is off (VOICE-25).
+        onDevice = !isIosAppOnMac && phoneLanguage === language && M.supportsOnDeviceRecognition();
       } catch {}
       return { lang, onDevice, downloadable: null, fellBackFrom: skipped, rest };
     }
@@ -716,7 +719,10 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
     available = M.isRecognitionAvailable();
   } catch {}
   if (!available) {
-    dialog.alert(t('voice.title'), t(Platform.OS === 'ios' ? 'voice.unavailableIos' : 'voice.unavailableAndroid'));
+    dialog.alert(
+      t('voice.title'),
+      t(isIosAppOnMac ? 'voice.unavailableMac' : Platform.OS === 'ios' ? 'voice.unavailableIos' : 'voice.unavailableAndroid'),
+    );
     return;
   }
 
@@ -734,12 +740,13 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
       const buttons = plan.downloadable
         ? [{ text: t('common.cancel'), style: 'cancel' as const }, { text: t('voice.download') }]
         : undefined;
-      const result = await dialog.show({ title: t('voice.title'), message: t('voice.incognitoOff'), buttons });
+      const message = t(isIosAppOnMac ? 'voice.incognitoOffMac' : 'voice.incognitoOff');
+      const result = await dialog.show({ title: t('voice.title'), message, buttons });
       if (plan.downloadable && result.button === 1) await startDownload(options, plan.downloadable);
       return;
     }
     if (options.online === 'declined') {
-      dialog.alert(t('voice.title'), t('voice.onlineDeclined'));
+      dialog.alert(t('voice.title'), t(isIosAppOnMac ? 'voice.onlineDeclinedMac' : 'voice.onlineDeclined'));
       return;
     }
     // Push-to-talk: the question comes up instead of listening (the finger is up by the time it's answered).

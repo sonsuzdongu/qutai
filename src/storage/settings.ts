@@ -9,7 +9,8 @@ import { AlwaysAllowKind, parseAlwaysAllow, serializeAlwaysAllow } from '../agen
 import { removeDefaultStyleLine, removeRetiredInstructionLines } from '../agent/retiredInstructions';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
 import { secureStoreReady } from './secureStoreGate';
-import { stripDevice } from '../device/macDevice';
+import { isIosAppOnMac, stripDevice } from '../device/macDevice';
+import { voiceOnlineFor } from '../device/voiceOnlineDefault';
 import { addressBarPositionFor, offersTabStrip } from '../ui/tabStrip';
 
 /** A Mac or an iPad: the address bar starts at the top and the tab strip is offered (UI-73, UI-74). */
@@ -193,7 +194,8 @@ export const DEFAULT_SETTINGS: Settings = {
   readerFont: 'serif',
   readerEasyReading: false,
   voiceAutoSend: false,
-  voiceOnline: 'ask',
+  // On by default on a Mac only, where voice input needs Apple's online speech service (src/device/voiceOnlineDefault.ts).
+  voiceOnline: voiceOnlineFor(null, isIosAppOnMac),
   voiceLanguage: 'auto',
   voiceLastLanguage: '',
   voiceHoldToTalk: true,
@@ -455,7 +457,7 @@ export async function loadSettings(): Promise<Settings> {
     readerFont: READER_FONTS.includes(readerFont as ReaderFont) ? (readerFont as ReaderFont) : 'serif',
     readerEasyReading: readerEasyReading === 'true',
     voiceAutoSend: voiceAutoSend === 'true',
-    voiceOnline: voiceOnline === 'allowed' || voiceOnline === 'declined' ? voiceOnline : 'ask',
+    voiceOnline: voiceOnlineFor(voiceOnline, isIosAppOnMac),
     voiceLanguage: isLanguageTag(voiceLanguage) ? voiceLanguage : 'auto',
     voiceLastLanguage: isLanguageTag(voiceLastLanguage) ? voiceLastLanguage : '',
     voiceHoldToTalk: voiceHoldToTalk !== 'false',
