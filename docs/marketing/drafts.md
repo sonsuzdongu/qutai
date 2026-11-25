@@ -286,45 +286,66 @@ r/androidapps kendini tanıtma için bu topluluğu öneriyor. Kurallar sayfası 
 gönderiden sonra doğru flair seçilsin, görseller doğrudan Reddit'e (ya da Imgur'a) yüklensin. Göndermeden önce kenar
 çubuğunu okuyun; bağlantıların gövdede mi, yorumda mı istendiğine bakın.
 
-**Biçim:** Galeri gönderisi (5 ekran görüntüsü, doğrudan Reddit'e yüklenir) ve altında gövde metni. Görseller:
+**Vurgu (sahibin 26 Kasım notu):** Qutai'ın asıl gücü sekme karşılaştırması değil, formları doldurması ve
+tarayıcıyı sizin yerinize kullanarak görevleri bitirmesi; bir de sizi hatırlaması. Gönderi buna göre kuruldu. Hikâye:
+Claude in Chrome'u çok beğendiniz, mobilde karşılığını bulamadınız, en büyük rakip Comet de zayıf kaldı. Comet
+cümlesi sizin kişisel deneyiminiz olarak yazıldı, olgu iddiası olarak değil; Reddit'te rakip kötülemek ters
+tepebilir, o yüzden tek cümlede bırakın.
 
-1. İki sekmenin karşılaştırıldığı tablo cevabı
-2. Qutai'ın onay penceresi ("Qutai wants to do this" ya da ödeme onayı)
-3. Q'ya basılı tutarak sesli komut (dinleme anı)
-4. Ayarlar › Asistan: Qutai Credits ya da kendi anahtarınız
-5. Tarayıcı tarafı: okuma modu ya da reklam engelleme
+**Biçim:** Galeri gönderisi (5 ekran görüntüsü, doğrudan Reddit'e yüklenir) ve altında gövde metni. Görseller
+Android'den, sırayla:
+
+1. Bir form doldurulurken: alanın etrafındaki halka ve alttaki adım satırı ("Typing into …"), yanında Stop
+2. "Enter your personal information on …?" sorusu (bir kez / her zaman / asla)
+3. Qutai'ın ödeme onayı penceresi (site, tutar, sipariş, ödeme yöntemi)
+4. Ayarlar › Hafıza: kategorilere ayrılmış kayıtlar (test bilgileriyle)
+5. Q'ya basılı tutarak sesli görev verme (dinleme anı)
 
 Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, kart ya da bildirim görünmesin.
 
 **Başlık seçenekleri:**
 
-1. `Qutai – an open-source Android browser whose AI assistant can actually use the page`
-2. `I built a browser where the AI compares your tabs, fills in forms and asks before it pays`
-3. `Qutai: AI browser for Android – compare tabs, fill forms, research with sources (open source)`
+1. `I loved Claude in Chrome but found nothing like it on Android, so I built Qutai: an open-source browser that fills in forms and does tasks for you`
+2. `Qutai – an open-source Android browser whose AI fills in forms and finishes tasks for you, and asks before it pays`
+3. `I built an AI browser for Android that remembers your details and fills in forms for you (open source)`
 
-Önerim 1: kısa, ne olduğunu söylüyor, "open-source" bu kitlede güven veriyor.
+Önerim 1: hikâyeyi başlıkta anlatıyor ve Claude in Chrome'u bilen okur ne olduğunu hemen anlıyor. Uzun bulursanız 2.
 
 **Gövde:**
 
-> Hi! I'm the developer, one person in Turkey. Qutai is a free, open-source (Apache-2.0) Android browser with an
-> assistant built in. Tap the Q in the address bar, or hold it and talk, and ask in your own words.
+> Hi! I'm the developer, one person in Turkey.
+>
+> I really liked Claude in Chrome on my computer: you give it a task and it does it in your browser. On my phone I
+> couldn't find anything like it. The closest, Perplexity's Comet, felt weak when I tried it. So I built Qutai, a
+> free, open-source (Apache-2.0) Android browser with an assistant that uses the browser for you.
+>
+> Tap the Q in the address bar, or hold it and talk, and give it a task in your own words. It taps, types, picks
+> options, scrolls and opens tabs, one visible step at a time: a ring marks the field it's about to type into, a
+> line at the bottom says what it's doing, and you can stop it any time.
 >
 > What I use it for:
 >
-> - Open two or three product pages and ask which one to get. It reads each tab without switching and answers with
->   a table of price, delivery and warranty (also as a CSV file).
-> - "Add the cheaper one to my cart, size 42." It asks before it puts your saved address into a site. Paying,
->   posting, deleting and account changes always wait for your approval in Qutai's own window. Card numbers,
->   passwords and one-time codes are never typed.
-> - Fill in a booking form, then add it to your calendar or set a reminder.
-> - Deep research: it reads many pages and PDFs and writes a report with its sources (takes a few minutes).
+> - **Forms.** "Fill in this form with my details." It fills the fields, picks the options and fixes the errors the
+>   form reports. Sign-ups, applications, contact forms, delivery details.
+> - **Orders, all the way to checkout.** "Order dinner for two from this restaurant." It puts the food in the cart
+>   and fills in your name, address and delivery note. Then you choose who pays: tap the last button yourself, or
+>   let the assistant pay and approve each payment in Qutai's own window, which shows the site, the total, the order
+>   and the payment method.
+> - **Bookings.** It finds a table or an appointment, fills in the form, then offers to add it to your calendar or
+>   set a reminder.
+> - **Posting for you.** Comments, reviews and contact messages: it shows you the exact text and the button it will
+>   press, and presses it once you say yes.
+> - **Repeat jobs.** Save a request as a task and run it by name. On Android a task can keep working in the
+>   background if you turn that on, with a notification when it's done or needs you.
 >
-> Android-only bits: tasks can keep running in the background (opt-in, with a notification), share a link to Qutai,
-> a home-screen widget, picture-in-picture video.
+> **It remembers you, on your phone.** Tell it once, by voice or by typing: your addresses, sizes, diet, budget,
+> how you like answers. It sorts what it learns into categories and uses it in later tasks without asking again, so
+> each task needs less explaining. Before your name, address or phone go into a site, it asks whether that site may
+> have them: once, always or never. You can see, edit and delete every memory in Settings, and lock one so the AI
+> only sees a label. Passwords, card numbers, one-time codes and IBANs are never kept, even if you ask.
 >
-> It's also a normal browser: tabs and groups, incognito tabs with a fingerprint lock, ad and tracker blocking
-> (EasyList, EasyPrivacy, AdGuard or your own lists), reader mode with read aloud, bookmark folders with Chrome
-> import, and an encrypted backup.
+> It's also a normal browser: tabs and groups, incognito tabs with a fingerprint lock, ad and tracker blocking,
+> reader mode with read aloud, bookmark folders with Chrome import, an encrypted backup.
 >
 > Two ways to pay for the AI:
 >
@@ -335,11 +356,11 @@ Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, k
 >
 > Either way, "What was sent to the AI" in Settings lists every request: which site, which model, what went with it.
 >
-> Honest bits: it's young (0.1.34) and I'm one person, so expect rough edges. How well the assistant does depends on
-> the model and the site. Hidden instructions on web pages can still mislead any AI assistant: the risky steps wait
-> for you, but read what an approval says before you tap.
+> Honest bits: it's young (0.1.34) and I'm one person, so expect rough edges. How well a task goes depends on the
+> model and the site. Hidden instructions on web pages can still mislead any AI assistant: paying, posting,
+> deleting and account changes always wait for your tap, but read what an approval says before you tap.
 >
-> I'd love to hear where it gets stuck, which sites break it, and what's missing before you'd use it every day.
+> I'd love to hear which forms and tasks it gets stuck on, and what's missing before you'd use it every day.
 >
 > Google Play: https://play.google.com/store/apps/details?id=com.sonsuzdongu.qutai
 > Source: https://github.com/sonsuzdongu/qutai
