@@ -643,8 +643,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Ten languages', 'On dil'),
         body: t(
-          'English, Turkish, German, Spanish, Brazilian Portuguese, French, Japanese, Korean, Russian and Indonesian, following the phone or chosen in Settings. The privacy policy and terms are available in all ten.',
-          'Türkçe, İngilizce, Almanca, İspanyolca, Brezilya Portekizcesi, Fransızca, Japonca, Korece, Rusça ve Endonezce; telefonun diline uyar ya da Ayarlar’dan seçilir. Gizlilik politikası ve kullanım koşulları da on dilin hepsinde var.',
+          'English, Turkish, German, Spanish, Brazilian Portuguese, French, Japanese, Korean, Russian and Indonesian, following the phone or chosen in Settings. The assistant answers in the language you write in. The privacy policy and terms are available in all ten.',
+          'Türkçe, İngilizce, Almanca, İspanyolca, Brezilya Portekizcesi, Fransızca, Japonca, Korece, Rusça ve Endonezce; telefonun diline uyar ya da Ayarlar’dan seçilir. Asistan, ona hangi dilde yazarsanız o dilde cevap verir. Gizlilik politikası ve kullanım koşulları da on dilin hepsinde var.',
         ),
       },
       {

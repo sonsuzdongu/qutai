@@ -214,6 +214,8 @@ export const en = {
   'browser.desktop.title': 'On iPad and Mac',
   'browser.desktop.body':
     'Tabs in a strip like a desktop browser, the address bar at the top, ⌘T, ⌘W, ⌘L and the other browser shortcuts, and ⌥Space held down to talk to Qutai. Sites get their desktop layout.',
+  'browser.languages.title': 'Ten languages',
+  'browser.languages.body': 'English, Türkçe, Deutsch, Español, Português (Brasil), Français, 日本語, 한국어, Русский and Bahasa Indonesia. Qutai follows your phone’s language or the one you pick in Settings, and the assistant answers in the language you write in.',
   'browser.more': 'See every feature, with example requests',
   'browser.styles.title': 'Your own look for any site',
   'browser.styles.body':

@@ -45,7 +45,7 @@ function head(lang) {
     installUrl: PLAY_URL,
     softwareHelp: `${SITE_URL}/${lang}/support/`,
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-    featureList: [t['hero.chip1'], t['hero.chip2'], t['hero.chip3'], t['hero.chip4']].join(', '),
+    featureList: [t['hero.chip1'], t['hero.chip2'], t['hero.chip3'], t['hero.chip4'], `${t['browser.languages.title']}: ${t['browser.languages.body'].split('. ')[0]}`].join(', '),
   };
   return [
     `<title>${esc(t['meta.title'])}</title>`,
@@ -443,7 +443,7 @@ Key facts:
 - Privacy: tabs, history, bookmarks, chats and the assistant's memory stay on the phone; with your own key, requests go straight from the phone to the provider; with Qutai Credits they pass through Qutai's server, which does not store or log them.
 - Control: every step is shown and can be stopped; it asks before payments and other important actions; it never types passwords, card numbers or one-time codes; per-site permissions; a log of what was sent to the AI.
 - Licence: Apache-2.0. Source: ${REPO_URL}
-- Languages of the site: English and Turkish (/tr/).
+- Languages: the app's whole interface is in ten languages: English, Turkish (Türkçe), German (Deutsch), Spanish (Español), Portuguese, Brazil (Português (Brasil)), French (Français), Japanese (日本語), Korean (한국어), Russian (Русский) and Indonesian (Bahasa Indonesia). It follows the device's language by default and can be changed in the app (on iPhone and iPad it is the app's own language setting); the assistant answers in the language you write in. The privacy policy and terms are in all ten. This website is in English and Turkish (/tr/).
 
 ## Pages
 

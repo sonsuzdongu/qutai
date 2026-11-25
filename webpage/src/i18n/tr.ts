@@ -222,6 +222,8 @@ export const tr: Messages = {
   'browser.desktop.title': 'iPad’de ve Mac’te',
   'browser.desktop.body':
     'Masaüstü tarayıcılardaki gibi şerit hâlinde sekmeler, üstte adres çubuğu, ⌘T, ⌘W, ⌘L ve diğer tarayıcı kısayolları; Qutai ile konuşmak için ⌥Boşluk’a basılı tutun. Siteler masaüstü görünümlerini gösterir.',
+  'browser.languages.title': 'On dil',
+  'browser.languages.body': 'Türkçe, English, Deutsch, Español, Português (Brasil), Français, 日本語, 한국어, Русский ve Bahasa Indonesia. Qutai telefonunuzun dilini kullanır ya da Ayarlar’dan seçtiğiniz dili; asistan da ona hangi dilde yazarsanız o dilde cevap verir.',
   'browser.more': 'Bütün özellikler, örnek isteklerle',
   'browser.styles.title': 'Her site, istediğiniz görünümde',
   'browser.styles.body':
