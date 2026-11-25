@@ -181,6 +181,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-77`** On a Mac only, a focused text field in a page or a mini app shows no iPad-style input bar at the bottom of the window (the grey bar with form arrows and shortcut buttons, useless with a real keyboard): Qutai's web views hide their keyboard accessory and input assistant there. On a Mac Qutai's layout also ignores what iOS reports as a keyboard (the page, the address bar and the panel never move for it). iPad and iPhone keep today's behaviour. Not yet checked on a Mac whether Qutai's own text fields (address bar, message field) show such a bar.
   Status: Decided by the owner (25 Nov 2026) · Why: the owner saw the bar slide up on x.com's compose box on a Mac · Enforced: In the app: src/components/BrowserView.tsx and AppRunner.tsx (hideKeyboardAccessoryView), src/utils/useKeyboardHeight.ts and useKeyboardVisible.ts (isIosAppOnMac)
 
+- **`UI-78`** Library › History's "Clear history" is in the bar above the list (left, opposite "Select"), not after the last visit: the list loads more as it scrolls, so its end could never be reached. Hidden while searching and in select mode, as before.
+  Status: Decided by the owner (25 Nov 2026) · Enforced: In the app: src/components/LibraryScreen.tsx (HistoryTab)
+
 ## Details
 
 **Icons**

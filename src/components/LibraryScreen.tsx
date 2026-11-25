@@ -288,6 +288,14 @@ function HistoryList({ query, onOpen, backRef }: { query: string; onOpen: (url: 
         </View>
       ) : entries.length > 0 ? (
         <View style={styles.selectBar}>
+          {/* Above the list, not after it: the list loads more as it scrolls, so its end may never come (UI-78). */}
+          {!result.loadedQuery ? (
+            <Pressable onPress={clearAll} hitSlop={8} accessibilityRole="button">
+              <Text style={styles.danger} numberOfLines={1}>
+                {t('library.clearHistory')}
+              </Text>
+            </Pressable>
+          ) : null}
           <View style={styles.flex} />
           <Pressable onPress={() => startSelecting()} hitSlop={8} accessibilityRole="button">
             <Text style={styles.action} numberOfLines={1}>
@@ -333,15 +341,7 @@ function HistoryList({ query, onOpen, backRef }: { query: string; onOpen: (url: 
         ListEmptyComponent={
           spinner ? undefined : <Empty title={t(result.loadedQuery ? 'library.noResults' : 'library.emptyHistory')} />
         }
-        ListFooterComponent={
-          spinner ? (
-            <ActivityIndicator style={styles.footer} />
-          ) : entries.length > 0 && !result.loadedQuery && !selecting ? (
-            <Pressable onPress={clearAll} style={styles.footer} accessibilityRole="button">
-              <Text style={styles.danger}>{t('library.clearHistory')}</Text>
-            </Pressable>
-          ) : undefined
-        }
+        ListFooterComponent={spinner ? <ActivityIndicator style={styles.footer} /> : undefined}
       />
       {selecting ? (
         <View style={styles.deleteBar}>

@@ -923,6 +923,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 
 | `UI-76` | Mac and iPad keyboard shortcuts: ⌘T, ⌘⇧N, ⌘W, ⌘⇧T, ⌘R, ⌘L, ⌘F, ⌘[ ⌘], ⌘1…9, ⌃Tab/⌃⇧Tab; text editing keys never taken; ⌘L/⌘F/⌘R stay Qutai's in page fields. | Owner | 2026-11-25 |
 | `UI-77` | Mac only: no iPad-style input bar under focused page or mini-app fields, and the layout ignores the reported keyboard; iPad and iPhone unchanged. | Owner | 2026-11-25 |
+| `UI-78` | "Clear history" sits above the History list, always reachable. | Owner | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 
