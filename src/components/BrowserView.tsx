@@ -50,6 +50,7 @@ import { dialog } from './Dialog';
 import { CrashPage, ErrorPage } from './ErrorPage';
 import type { LibraryTab } from './LibraryScreen';
 import { NewTabPage } from './NewTabPage';
+import { isIosAppOnMac } from '../device/macDevice';
 import { ReaderPrefs, ReaderView } from './ReaderView';
 
 /**
@@ -390,6 +391,9 @@ function TabWebView({
           <WebView
             key={tab.webviewKey}
             ref={(ref) => tab.setWebView(ref)}
+            // A Mac has a real keyboard: no iPad-style bar (form arrows, shortcut buttons) under a focused page field
+            // (UI-77). iPad and iPhone keep it.
+            hideKeyboardAccessoryView={isIosAppOnMac}
             source={tab.source}
             style={styles.flex}
             onMessage={(e) => {

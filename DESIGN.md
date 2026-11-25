@@ -19,6 +19,7 @@ Last updated: 2026-11-25
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-25:** On a Mac, focusing a field in a page no longer slides up the iPad-style input bar, and the layout no longer moves for it (`UI-77`; owner's request).
 - **2026-11-25:** Mac and iPad: the tab strip also shows with the address bar at the bottom, right above it (`UI-74`), and desktop browser keyboard shortcuts (⌘T, ⌘W, ⌘⇧T, ⌘R, ⌘L, ⌘F, ⌘[ ⌘], ⌘1…9, ⌃Tab, ⌘⇧N) work with a hardware keyboard (`UI-76`; owner's request).
 - **2026-11-25:** Texts follow the device: "this phone" reads "this iPad" on an iPad and "this Mac" on a Mac in all ten languages, phones unchanged (`LANG-25`); on a Mac "online speech" starts on for fresh installs since only Apple's online recogniser works there, and voice input explains the setting when it is off (`VOICE-25`, `VOICE-3` changed; owner).
 - **2026-11-25:** The working light has square corners on Mac and iPad (`UI-75`).

@@ -24,6 +24,7 @@ import { AppReview } from './AppImport';
 import { exportApp } from './appActions';
 import { reportApp } from './reportFlow';
 import { reportsAvailable } from '../report/report';
+import { isIosAppOnMac } from '../device/macDevice';
 
 /**
  * The runner (docs/mini-apps.md › The runtime): one app, full screen, in its own WebView with an opaque origin, no
@@ -178,6 +179,8 @@ function Runner({ request, onEdit, onFix, onNotice }: Props & { request: RunnerR
         <WebView
           key={`${loaded.id}:${loaded.version}:${snap.reload}`}
           ref={session.setWebView}
+          // No iPad-style bar under a focused field on a Mac (UI-77).
+          hideKeyboardAccessoryView={isIosAppOnMac}
           style={[styles.flex, { backgroundColor: palette.bg }]}
           // The app's own origin under .invalid (never resolves): apart from every site's cookies and storage and from
           // other apps; web storage and cookies are refused by the document's lockdown.

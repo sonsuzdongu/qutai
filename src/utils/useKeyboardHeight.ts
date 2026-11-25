@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Dimensions, Keyboard, KeyboardEvent, KeyboardMetrics, LayoutAnimation, Platform } from 'react-native';
+import { isIosAppOnMac } from '../device/macDevice';
 
 /**
  * How far up from the bottom of the window the on-screen keyboard reaches.
@@ -14,13 +15,19 @@ function cover(metrics: KeyboardMetrics) {
   return Math.max(0, Math.round(Dimensions.get('window').height - metrics.screenY));
 }
 
-/** The open keyboard's cover (see above), 0 when it is closed. */
+/**
+ * The open keyboard's cover (see above), 0 when it is closed. Always 0 on a Mac (UI-77): it has a real keyboard, and
+ * the only thing iOS reports there is its input bar at the bottom of the window, which must not push the page or the
+ * bars up.
+ */
 export function useKeyboardHeight() {
   const [height, setHeight] = useState(() => {
+    if (isIosAppOnMac) return 0;
     const metrics = Keyboard.isVisible() ? Keyboard.metrics() : undefined;
     return metrics ? cover(metrics) : 0;
   });
   useEffect(() => {
+    if (isIosAppOnMac) return;
     // iOS has "will" events, which line up with the keyboard animation (the layout change animates
     // along with it, as KeyboardAvoidingView does); Android only has "did", sent again when the height
     // changes while open (emoji panel, suggestions bar).
