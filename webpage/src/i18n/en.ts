@@ -6,7 +6,7 @@
 export const en = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai is the AI assistant in your phone’s browser: an open-source browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant reads the page when you ask and uses it for you, with Qutai Credits or your own AI key; keeps your data on your phone and asks before sensitive actions. In development.',
+    'Qutai is the AI assistant in your phone’s browser: an open-source browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant reads the page when you ask and uses it for you, with Qutai Credits or your own AI key; keeps your data on your phone and asks before sensitive actions. On Google Play; in beta testing on the App Store.',
   'meta.ogAlt': 'The Qutai logo, a blue Q, next to the words: Qutai, Agentic Browser.',
   'meta.appDescription':
     'An open-source AI browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant reads a web page when you ask and uses it for you, with Qutai Credits or your own AI provider key.',
@@ -35,7 +35,8 @@ export const en = {
   'hero.lede':
     'Qutai is a browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant reads the page when you ask, and uses it for you.',
   'hero.github': 'View on GitHub',
-  'hero.status': 'In development. Coming to the App Store (iPhone, iPad and Mac) and Google Play; not released yet.',
+  'hero.play': 'Get it on Google Play',
+  'hero.status': 'Out now on Google Play. In beta testing on the App Store for iPhone, iPad and Mac.',
 
   'hero.chip1': 'Reads your tabs',
   'hero.chip2': 'Remembers you',
@@ -246,7 +247,7 @@ export const en = {
   'compare.methodology.2':
     'Every competitor cell is based on the vendor’s own pages: feature pages, help centres, pricing pages and store listings. Each cell links its source and the date we checked it. If we could not confirm a feature from such a page, the cell says “Not confirmed”, which does not mean the feature is missing.',
   'compare.methodology.3':
-    'Qutai’s column describes what is in its source code today. Qutai is not released yet, and most of these features have not yet been tested on a real phone.',
+    'Qutai’s column describes what is in its source code today. Qutai is new: it is on Google Play and in beta testing on the App Store, and not every feature has been tried on every device yet.',
   'compare.methodology.4':
     'Product names are trademarks of their owners. This comparison reflects public information as of the date above and is not endorsed by any of the companies named.',
   'compare.correction': 'Report a correction',
@@ -263,7 +264,7 @@ export const en = {
   'status.kicker': 'Status',
   'status.title': 'Where it stands, honestly.',
   'status.body':
-    'Qutai is in development. It is not in the App Store or Google Play yet, and most of what this page describes is implemented in the code but has not yet been tested on a real phone.',
+    'Qutai is out on Google Play for Android, and in beta testing on the App Store for iPhone, iPad and Mac. It is new: not everything this page describes has been tried on every device yet.',
   'status.today': 'In the code today',
   'status.today.1': 'The assistant: reading, tapping, typing, fixing form errors, tabs, deep research with sources',
   'status.today.2':
@@ -285,9 +286,9 @@ export const en = {
   'status.limits.7':
     'Hidden instructions on web pages: we test against pages built to mislead the assistant and keep tightening the app’s own checks, but we are not perfect. Paying, posting, deleting, account changes, calls and messages always wait for your tap, yet the assistant can still be misled into a slanted summary, a bad link or a step that needs no approval. Read what an approval says before you tap, and treat the assistant’s summary of an unfamiliar page as a summary, not a verdict',
   'status.planned': 'Planned',
-  'status.planned.1': 'Release in the App Store and Google Play',
+  'status.planned.1': 'Release on the App Store, now in beta testing',
   'status.planned.2': 'End-to-end encrypted sync for those who choose an account',
-  'status.planned.3': 'Buying Qutai Credits in the App Store and Google Play',
+  'status.planned.3': 'Buying Qutai Credits on the App Store (on Google Play it works today)',
   'status.planned.4': 'Share extension and widget on iPhone',
   'status.planned.5': 'For apps: phone features such as location, notifications and the camera, internet for sites you choose, a home-screen shortcut',
 

@@ -7,7 +7,7 @@ import type { Messages } from './en';
 export const tr: Messages = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai, iPhone, iPad, Apple silicon işlemcili Mac ve Android için açık kaynak bir tarayıcı; içindeki yapay zekâ asistanı, istediğinizde sayfayı okur ve sizin için kullanır. Qutai Kredileriyle ya da kendi AI anahtarınızla çalışır, verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Henüz geliştirme aşamasında.',
+    'Qutai, iPhone, iPad, Apple silicon işlemcili Mac ve Android için açık kaynak bir tarayıcı; içindeki yapay zekâ asistanı, istediğinizde sayfayı okur ve sizin için kullanır. Qutai Kredileriyle ya da kendi AI anahtarınızla çalışır, verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Google Play’de; App Store’da beta testinde.',
   'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: Qutai, Agentic Browser.',
   'meta.appDescription':
     'iPhone, iPad, Apple silicon işlemcili Mac ve Android için açık kaynak, yapay zekâ asistanlı bir tarayıcı: asistan, istediğinizde web sayfasını okur ve Qutai Kredileriyle ya da kendi AI anahtarınızla sizin için kullanır.',
@@ -35,7 +35,8 @@ export const tr: Messages = {
   'hero.tagline': 'Telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız.',
   'hero.lede': 'Qutai, istediğinizde sayfayı okuyup sizin için kullanan bir asistanla gelen iPhone, iPad, Apple silicon işlemcili Mac ve Android tarayıcısı.',
   'hero.github': 'GitHub’da inceleyin',
-  'hero.status': 'Geliştirme aşamasında. App Store (iPhone, iPad ve Mac) ve Google Play için hazırlanıyor; henüz yayımlanmadı.',
+  'hero.play': 'Google Play’den indirin',
+  'hero.status': 'Google Play’de yayında. iPhone, iPad ve Mac için App Store’da beta testinde.',
 
   'hero.chip1': 'Sekmeleri okur',
   'hero.chip2': 'Sizi hatırlar',
@@ -254,7 +255,7 @@ export const tr: Messages = {
   'compare.methodology.2':
     'Rakiplerle ilgili her hücre üreticinin kendi sayfalarına dayanıyor: özellik sayfaları, yardım merkezleri, fiyat sayfaları ve mağaza sayfaları. Her hücrede kaynağın bağlantısı ve kontrol tarihi var. Bir özelliği böyle bir sayfadan doğrulayamadıysak hücrede “Doğrulanmadı” yazıyor; bu, özelliğin olmadığı anlamına gelmiyor.',
   'compare.methodology.3':
-    'Qutai sütunu, kaynak kodunda bugün olanı anlatıyor. Qutai henüz yayımlanmadı ve bu özelliklerin çoğu gerçek bir telefonda denenmedi.',
+    'Qutai sütunu, kaynak kodunda bugün olanı anlatıyor. Qutai yeni: Google Play’de yayında, App Store’da beta testinde; her özellik henüz her cihazda denenmedi.',
   'compare.methodology.4':
     'Ürün adları sahiplerinin ticari markalarıdır. Bu karşılaştırma, yukarıdaki tarihte herkese açık olan bilgilere dayanır; adı geçen şirketlerin hiçbiri tarafından onaylanmamıştır.',
   'compare.correction': 'Düzeltme bildirin',
@@ -271,7 +272,7 @@ export const tr: Messages = {
   'status.kicker': 'Durum',
   'status.title': 'Bugün neredeyiz, açıkça.',
   'status.body':
-    'Qutai geliştirme aşamasında. Henüz App Store’da ya da Google Play’de yok; bu sayfada anlatılanların çoğu kodda hazır ama gerçek bir telefonda henüz denenmedi.',
+    'Qutai, Android için Google Play’de yayında; iPhone, iPad ve Mac için App Store’da beta testinde. Yeni bir uygulama: bu sayfada anlatılanların hepsi henüz her cihazda denenmedi.',
   'status.today': 'Bugün kodda olanlar',
   'status.today.1':
     'Asistan: okuma, dokunma, yazma, form hatalarını düzeltme, sekmelerle çalışma, kaynaklı derin araştırma',
@@ -302,9 +303,9 @@ export const tr: Messages = {
   'status.limits.7':
     'Web sayfalarına gizlenmiş talimatlar: asistanı yanıltmak için hazırlanmış sayfalarla deniyor ve uygulamanın kendi denetimlerini sıkılaştırmaya devam ediyoruz, ama kusursuz değiliz. Ödeme, paylaşım, silme, hesap değişiklikleri, aramalar ve mesajlar her zaman sizin dokunuşunuzu bekler; yine de asistan bir sayfa yüzünden taraflı bir özet çıkarabilir, kötü bir bağlantı önerebilir ya da onay gerektirmeyen bir adım atabilir. Onay penceresinde yazanı okuyup öyle dokunun; asistanın tanımadığınız bir sayfa hakkındaki özetini bir hüküm değil, bir özet olarak görün',
   'status.planned': 'Planlananlar',
-  'status.planned.1': 'App Store ve Google Play’de yayın',
+  'status.planned.1': 'App Store’da yayın (şu anda beta testinde)',
   'status.planned.2': 'Hesap açanlar için uçtan uca şifreli eşitleme',
-  'status.planned.3': 'Qutai Kredilerini App Store ve Google Play’den satın alma',
+  'status.planned.3': 'Qutai Kredilerini App Store’dan satın alma (Google Play’de bugün çalışıyor)',
   'status.planned.4': 'iPhone’da paylaşım uzantısı ve widget',
   'status.planned.5': 'Uygulamalar için: konum, bildirim ve kamera gibi telefon özellikleri, seçtiğiniz sitelere internet, ana ekran kısayolu',
 

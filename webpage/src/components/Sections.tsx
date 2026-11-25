@@ -1,6 +1,6 @@
 import type { MessageKey } from '../i18n/en';
 import { useI18n } from '../lib/i18n';
-import { ISSUES_URL, LICENSE_URL, REPO_URL, deleteAccountPath, privacyPolicyPath, supportPath, termsPath } from '../lib/site';
+import { ISSUES_URL, LICENSE_URL, PLAY_URL, REPO_URL, deleteAccountPath, privacyPolicyPath, supportPath, termsPath } from '../lib/site';
 import { Icon, type IconName } from './Icon';
 import { Miniature, type ArtName } from './Miniature';
 import { PhoneMock } from './PhoneMock';
@@ -76,7 +76,11 @@ export function Hero() {
         <p className="tagline">{t('hero.tagline')}</p>
         <p className="lede">{t('hero.lede')}</p>
         <div className="hero-actions">
-          <a className="button primary" href={REPO_URL}>
+          <a className="button primary" href={PLAY_URL}>
+            <Icon name="phone" size={20} />
+            {t('hero.play')}
+          </a>
+          <a className="button secondary" href={REPO_URL}>
             <Icon name="github" size={20} />
             {t('hero.github')}
           </a>

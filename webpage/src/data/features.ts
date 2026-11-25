@@ -51,8 +51,8 @@ export const PAGE = {
     'Belki beklediğiniz ama Qutai’da olmayanlar, ve bunun yerine ne yaptığı.',
   ),
   status: t(
-    'Qutai is in development and not released yet. Most of this has been tried in the iOS simulator and the Android emulator and in tests, much of it not yet on a real phone. What the assistant manages also depends on the AI model you choose and on the site.',
-    'Qutai geliştirme aşamasında, henüz yayımlanmadı. Buradakilerin çoğu iOS simülatöründe, Android emülatöründe ve testlerde denendi; birçoğu gerçek bir telefonda henüz denenmedi. Asistanın neyi başaracağı seçtiğiniz yapay zekâ modeline ve siteye göre de değişir.',
+    'Qutai is out on Google Play and in beta testing on the App Store. It is new: much of this has been tried in the iOS simulator, the Android emulator and tests, and not all of it on every device yet. What the assistant manages also depends on the AI model you choose and on the site.',
+    'Qutai Google Play’de yayında, App Store’da beta testinde. Yeni bir uygulama: buradakilerin çoğu iOS simülatöründe, Android emülatöründe ve testlerde denendi; hepsi henüz her cihazda denenmedi. Asistanın neyi başaracağı seçtiğiniz yapay zekâ modeline ve siteye göre de değişir.',
   ),
   checked: t('Checked against the design record on', 'Tasarım kaydıyla karşılaştırma tarihi:'),
   home: t('Back to the home page', 'Ana sayfaya dön'),
@@ -574,8 +574,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Qutai Credits', 'Qutai Kredileri'),
         body: t(
-          'In the official builds: no key, and no tier or model to choose; Qutai picks the model, and the app doesn’t show which one answered. Requests pass through Qutai’s server to Anthropic; the server keeps the account, the credits and, per request, the model, tokens and cost; never your messages, pages or memory. Buying credits in the App Store and Google Play is being prepared.',
-          'Resmî sürümlerde: anahtar da yok, seçmeniz gereken bir paket ya da model de; modeli Qutai belirler, uygulama hangi modelin yanıt verdiğini göstermez. İstekler Qutai sunucusu üzerinden Anthropic’e gider; sunucu hesabı, kredileri ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı, sayfaları ya da hafızanızı asla. App Store ve Google Play’den kredi satın alma hazırlanıyor.',
+          'In the official builds: no key, and no tier or model to choose; Qutai picks the model, and the app doesn’t show which one answered. Requests pass through Qutai’s server to Anthropic; the server keeps the account, the credits and, per request, the model, tokens and cost; never your messages, pages or memory. You buy credits in the app through Google Play; on the App Store this comes with the release.',
+          'Resmî sürümlerde: anahtar da yok, seçmeniz gereken bir paket ya da model de; modeli Qutai belirler, uygulama hangi modelin yanıt verdiğini göstermez. İstekler Qutai sunucusu üzerinden Anthropic’e gider; sunucu hesabı, kredileri ve her istek için modeli, token sayısını ve tutarı tutar; mesajlarınızı, sayfaları ya da hafızanızı asla. Krediler uygulamada Google Play üzerinden satın alınır; App Store’da bu, yayınla birlikte gelecek.',
         ),
       },
       {
