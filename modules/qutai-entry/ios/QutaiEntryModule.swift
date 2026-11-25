@@ -11,6 +11,11 @@ public class QutaiEntryModule: Module {
     Name("QutaiEntry")
     Events("onEntry", "onShortcut")
 
+    // On a Mac: no phantom status-bar / home-indicator insets (UI-79). Before JavaScript lays anything out.
+    OnCreate {
+      MacSafeArea.installIfNeeded()
+    }
+
     Function("takePending") { () -> [[String: Any]] in
       EntryQueue.shared.take()
     }
@@ -235,5 +240,40 @@ extension UIResponder {
   @objc func qutaiKeyShortcut(_ sender: UIKeyCommand) {
     guard let id = sender.propertyList as? String else { return }
     KeyShortcuts.shared.fire(id)
+  }
+}
+
+/// On a Mac ("Designed for iPad"), UIKit still reports top and bottom safe-area insets for a status bar and a home
+/// indicator the window doesn't have, which left an empty band under the macOS title bar (UI-79). Every view's
+/// `safeAreaInsets` getter drops them there, so React Native's SafeAreaView and SafeAreaProvider (and so every inset the
+/// app reads), modal screens and web pages' `env(safe-area-inset-*)` start right under the title bar. Left and right
+/// insets are kept. iPhone and iPad: not installed. The window's raw insets are logged once per value ("Qutai Mac safe
+/// area"), to check what macOS reports.
+enum MacSafeArea {
+  private static var installed = false
+  private static var logged = Set<String>()
+
+  static func installIfNeeded() {
+    guard ProcessInfo.processInfo.isiOSAppOnMac, !installed else { return }
+    installed = true
+    let selector = #selector(getter: UIView.safeAreaInsets)
+    guard let method = class_getInstanceMethod(UIView.self, selector) else { return }
+    typealias Getter = @convention(c) (UIView, Selector) -> UIEdgeInsets
+    let original = unsafeBitCast(method_getImplementation(method), to: Getter.self)
+    let block: @convention(block) (UIView) -> UIEdgeInsets = { view in
+      var insets = original(view, selector)
+      if view is UIWindow || view.window?.rootViewController?.view === view { note(insets) }
+      insets.top = 0
+      insets.bottom = 0
+      return insets
+    }
+    method_setImplementation(method, imp_implementationWithBlock(block))
+  }
+
+  private static func note(_ insets: UIEdgeInsets) {
+    let key = "top=\(insets.top) left=\(insets.left) bottom=\(insets.bottom) right=\(insets.right)"
+    guard !logged.contains(key) else { return }
+    logged.insert(key)
+    NSLog("Qutai Mac safe area (window or root view, before UI-79): %@", key)
   }
 }

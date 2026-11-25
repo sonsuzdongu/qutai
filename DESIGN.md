@@ -19,6 +19,7 @@ Last updated: 2026-11-25
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-25:** On a Mac the app starts right under the title bar: the phantom status-bar and home-indicator insets are dropped there (`UI-79`; owner's report).
 - **2026-11-25:** "Clear history" moves above the History list, where long lists can reach it (`UI-78`).
 - **2026-11-25:** On a Mac, focusing a field in a page no longer slides up the iPad-style input bar, and the layout no longer moves for it (`UI-77`; owner's request).
 - **2026-11-25:** Texts follow the device: "this phone" reads "this iPad" on an iPad and "this Mac" on a Mac in all ten languages, phones unchanged (`LANG-25`); on a Mac "online speech" starts on for fresh installs since only Apple's online recogniser works there, and voice input explains the setting when it is off (`VOICE-25`, `VOICE-3` changed; owner).
