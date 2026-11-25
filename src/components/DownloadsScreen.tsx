@@ -169,9 +169,12 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
     const done = item.state === 'done';
     if (done && !item.missing) {
       actions.push(
-        { icon: 'openInNew', label: t('downloads.open'), onPress: () => open(item) },
-        ...(store.canSaveCopy ? [{ icon: 'download' as const, label: t('downloads.saveCopy'), onPress: () => save(item) }] : []),
-        { icon: 'share', label: t('downloads.share'), onPress: () => share(item) },
+        // These show a system screen: only once the sheet has gone (ActionSheet afterClose).
+        { icon: 'openInNew', label: t('downloads.open'), onPress: () => open(item), afterClose: true },
+        ...(store.canSaveCopy
+          ? [{ icon: 'download' as const, label: t('downloads.saveCopy'), onPress: () => save(item), afterClose: true }]
+          : []),
+        { icon: 'share', label: t('downloads.share'), onPress: () => share(item), afterClose: true },
       );
       if (onAsk && isPdf(item) && Platform.OS === 'ios') {
         actions.push({ icon: 'assistant', label: t('downloads.ask'), onPress: () => onAsk(item) });

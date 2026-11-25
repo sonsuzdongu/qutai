@@ -82,6 +82,9 @@ func presentWhenSettled(_ controller: UIViewController, fallback: UIViewControll
     }
     return
   }
+  // Logged ("Qutai present"), so a report of a closing dialog can be checked against what it was shown on.
+  NSLog("Qutai present: %@ on %@ (attempt %d)", String(describing: type(of: controller)),
+        String(describing: type(of: presenter)), attempt)
   presenter.present(controller, animated: true) {
     done(true)
   }
@@ -161,6 +164,7 @@ final class ExportDelegate: NSObject, UIDocumentPickerDelegate, UIAdaptivePresen
   }
 
   func finish(_ result: String) {
+    if done != nil { NSLog("Qutai save dialog: %@", result) }
     done?(result)
     done = nil
     if ExportDelegate.active === self {

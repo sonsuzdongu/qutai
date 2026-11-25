@@ -36,6 +36,8 @@ type Props = {
   contentStyle?: StyleProp<ViewStyle>;
   /** Space under the content, above the navigation bar or home indicator. */
   bottomPadding?: number;
+  /** The sheet has gone from the screen (iOS: its modal is dismissed; see ActionSheet's afterClose). */
+  onDismiss?: () => void;
   children: ReactNode;
 };
 
@@ -47,7 +49,7 @@ type Props = {
  * keeps clear of a landscape notch, and never grows past the status bar (or the keyboard) — its
  * content scrolls instead, at any font size.
  */
-export function BottomSheet({ visible, onClose, style, contentStyle, bottomPadding = 8, children }: Props) {
+export function BottomSheet({ visible, onClose, style, contentStyle, bottomPadding = 8, onDismiss, children }: Props) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboardHeight();
@@ -57,6 +59,7 @@ export function BottomSheet({ visible, onClose, style, contentStyle, bottomPaddi
       transparent
       animationType="slide"
       onRequestClose={onClose}
+      onDismiss={onDismiss}
       statusBarTranslucent
       navigationBarTranslucent
     >

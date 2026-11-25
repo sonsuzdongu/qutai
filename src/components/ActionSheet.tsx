@@ -1,9 +1,24 @@
+import { useRef } from 'react';
 import { Pressable, Text } from 'react-native';
 import { Icon, IconName } from '../ui/Icon';
 import { darkPalette, makeStyles, usePalette } from '../ui/theme';
 import { BottomSheet } from './BottomSheet';
 
-export type SheetAction = { label: string; onPress: () => void; destructive?: boolean; icon?: IconName };
+export type SheetAction = {
+  label: string;
+  onPress: () => void;
+  destructive?: boolean;
+  icon?: IconName;
+  /**
+   * Runs only once the sheet has gone: for an action that shows a system screen (the save dialog, Quick Look, the
+   * share sheet). Shown while the sheet's modal was still closing, such a screen was dismissed with it at once, and on
+   * a Mac the window stopped responding (DL-19, 26 Nov 2026).
+   */
+  afterClose?: boolean;
+};
+
+/** Longest wait for the sheet's dismissal before an afterClose action runs anyway (Android has no onDismiss). */
+const AFTER_CLOSE_FALLBACK_MS = 700;
 
 type Props = { title: string | null; actions: SheetAction[]; dark?: boolean; onClose: () => void };
 
@@ -13,8 +28,15 @@ export function ActionSheet({ title, actions, dark, onClose }: Props) {
   const styles = useStyles(dark);
   const system = usePalette();
   const palette = dark ? darkPalette : system;
+  // An afterClose action waiting for the sheet to go: run once, on its dismissal or after the fallback.
+  const waiting = useRef<(() => void) | null>(null);
+  const runWaiting = () => {
+    const run = waiting.current;
+    waiting.current = null;
+    run?.();
+  };
   return (
-    <BottomSheet visible={title !== null} onClose={onClose} style={styles.sheet}>
+    <BottomSheet visible={title !== null} onClose={onClose} onDismiss={runWaiting} style={styles.sheet}>
       <Text style={styles.title} numberOfLines={1} accessibilityRole="header">
         {title}
       </Text>
@@ -23,7 +45,9 @@ export function ActionSheet({ title, actions, dark, onClose }: Props) {
           key={action.label}
           onPress={() => {
             onClose();
-            action.onPress();
+            if (!action.afterClose) return action.onPress();
+            waiting.current = action.onPress;
+            setTimeout(runWaiting, AFTER_CLOSE_FALLBACK_MS);
           }}
           style={({ pressed }) => [styles.row, pressed && styles.pressed]}
           accessibilityRole="button"
