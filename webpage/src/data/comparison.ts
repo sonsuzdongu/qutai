@@ -148,7 +148,7 @@ export const QUTAI: Product = {
       source: src('README.md'),
     },
     phoneHandoffs: {
-      state: 'partial',
+      state: 'yes',
       note: t(
         'Reads and writes your calendar with your approval; calls, texts, WhatsApp and email, also to a contact found by name, are a button or a draft that you send.',
         'Onayınızla takvimi okur ve yazar; arama, SMS, WhatsApp ve e-posta, rehberden adıyla bulunan kişiye de, sizin gönderdiğiniz bir düğme ya da taslaktır.',
