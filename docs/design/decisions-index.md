@@ -921,7 +921,6 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-73` | On a Mac or an iPad the address bar starts at the top (bottom on phones, by device type); a stored or restored choice is never changed. | Owner | 2026-11-25 |
 | `UI-74` | Mac and iPad only (never phones or Android): a tab strip right above the address bar, top or bottom, in windows ≥ 700 pt, setting on by default: current kind's tabs, icon, title, ×, +, group labels that fold. | Owner | 2026-11-25 |
 | `UI-75` | The working light has rounded corners on phones, square on Mac and iPad. | Owner | 2026-11-25 |
-
 | `UI-76` | Mac and iPad keyboard shortcuts: ⌘T, ⌘⇧N, ⌘W, ⌘⇧T, ⌘R, ⌘L, ⌘F, ⌘[ ⌘], ⌘1…9, ⌃Tab/⌃⇧Tab; text editing keys never taken; ⌘L/⌘F/⌘R stay Qutai's in page fields. | Owner | 2026-11-25 |
 | `UI-77` | Mac only: no iPad-style input bar under focused page or mini-app fields, and the layout ignores the reported keyboard; iPad and iPhone unchanged. | Owner | 2026-11-25 |
 | `UI-78` | "Clear history" sits above the History list, always reachable. | Owner | 2026-11-25 |
