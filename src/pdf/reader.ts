@@ -160,6 +160,20 @@ function serial<T>(work: () => Promise<T>): Promise<T> {
 }
 
 /**
+ * The scripts that hand a PDF's base64 to the reader page, a million characters each. The whole string is checked
+ * first: base64 holds no quotes, backslashes or line breaks, so each piece can go into the script as it is; anything
+ * else is refused before a script is built.
+ */
+export function pieceScripts(pieces: string, data: string): string[] {
+  if (/[^A-Za-z0-9+/=]/.test(data)) throw new PdfReadError('The file is not a valid PDF.', 'invalid');
+  const out: string[] = [];
+  for (let i = 0; i < data.length; i += PIECE_CHARS) {
+    out.push(`window.__qutaiPdf.piece(${pieces},"${data.slice(i, i + PIECE_CHARS)}");true;`);
+  }
+  return out;
+}
+
+/**
  * Opens a PDF in the reader, unless the same `key` (its address or attachment id) is still open. `load` gives its
  * bytes in base64 and is called only when they are needed.
  */
@@ -171,12 +185,8 @@ export function openPdf(key: string, load: () => Promise<string>): Promise<PdfIn
     keepAlive();
     const view = webview;
     if (!view) throw new PdfReadError('The PDF reader is not running.', 'failed');
-    // Base64 holds no quotes or backslashes, so each piece goes into the script as it is.
-    if (/[^A-Za-z0-9+/=]/.test(data.slice(0, 64))) throw new PdfReadError('The file is not a valid PDF.', 'invalid');
     const pieces = JSON.stringify(`d${++counter}`);
-    for (let i = 0; i < data.length; i += PIECE_CHARS) {
-      view.injectJavaScript(`window.__qutaiPdf.piece(${pieces},"${data.slice(i, i + PIECE_CHARS)}");true;`);
-    }
+    for (const script of pieceScripts(pieces, data)) view.injectJavaScript(script);
     openKey = null;
     const info = await call<PdfInfo>((id) => `window.__qutaiPdf.open(${JSON.stringify(id)},${JSON.stringify(key)},${pieces})`);
     openKey = key;
