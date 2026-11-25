@@ -252,7 +252,7 @@ import { usePersistSession } from './src/storage/usePersistSession';
 import { useRecordHistory } from './src/storage/useRecordHistory';
 import { TabStrip } from './src/components/TabStrip';
 import { stripDevice } from './src/device/macDevice';
-import { showTabStrip } from './src/ui/tabStrip';
+import { offersTabStrip, showTabStrip } from './src/ui/tabStrip';
 import { useKeyShortcuts } from './src/device/keyShortcuts';
 import { shortcutTab, type ShortcutEvent } from './src/ui/keyShortcuts';
 import { DEFAULT_ZOOM_LEVEL, zoomReplacesTextSize } from './src/browser/pageZoom';
@@ -281,6 +281,8 @@ function applyTheme(theme: ThemeSetting) {
 
 /** A Mac: the page menu's Text size is Zoom (UI-84). */
 const MAC_ZOOM_MENU = zoomReplacesTextSize(stripDevice);
+/** Mac and iPad: the address bar has a reload button (UI-85). */
+const RELOAD_BUTTON = offersTabStrip(stripDevice);
 const memoryStore = deviceMemoryStore(getDb);
 const sitePermissions = new SitePermissionStore(getDb);
 // "Always allow" in a task's dialogs (src/task/dialogs.ts) is saved here.
@@ -2090,6 +2092,9 @@ function BrowserApp({
       assistantHoldActive={ptt.bubble.phase !== 'idle'}
       onSubmit={(url) => tab.loadUrl(upgradeToHttps(url, settings.httpsOnly))}
       onBack={() => (tab.canGoBack ? tab.historyBack() : tab.showNewTab())}
+      // Mac and iPad: a reload button in the bar (UI-85); phones keep it in the ⋮ menu and pull to refresh.
+      onReload={RELOAD_BUTTON ? () => tab.reload() : undefined}
+      reloadDisabled={onNewTab}
       readerState={onNewTab ? 'none' : tab.reader ? 'on' : tab.readerAvailable ? 'available' : 'none'}
       onToggleReader={toggleReader}
       onOpenMenu={() => {

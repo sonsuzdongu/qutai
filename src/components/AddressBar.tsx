@@ -89,6 +89,10 @@ type Props = {
   onSubmit: (url: string) => void;
   onAsk: (text: string) => void;
   onBack: () => void;
+  /** Mac and iPad (UI-85): a reload button after Back; absent on phones and Android. Undefined: no button. */
+  onReload?: () => void;
+  /** The reload button is shown but has nothing to reload (the new tab page). */
+  reloadDisabled?: boolean;
   onOpenMenu: () => void;
   onOpenTabs: () => void;
   onToggleAssistant: () => void;
@@ -124,6 +128,8 @@ export function AddressBar({
   onSubmit,
   onAsk,
   onBack,
+  onReload,
+  reloadDisabled,
   onOpenMenu,
   onOpenTabs,
   onToggleAssistant,
@@ -211,6 +217,15 @@ export function AddressBar({
         incognito={darkUI}
         accessibilityLabel={t('address.back')}
       />
+      {onReload && (
+        <IconButton
+          icon="reload"
+          onPress={onReload}
+          disabled={reloadDisabled}
+          incognito={darkUI}
+          accessibilityLabel={t('menu.reload')}
+        />
+      )}
 
       {/* A TextInput scrolls long URLs to the cursor, so a plain Text is shown until the user taps to edit. */}
       {editing ? (

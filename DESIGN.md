@@ -19,6 +19,7 @@ Last updated: 2026-11-26
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-26:** Mac and iPad: a reload button in the address bar (`UI-85`; owner). Page zoom now works through the page's viewport width instead of WKWebView.pageZoom, which left pages laid out too wide (sideways scrolling) and text small on most sites (`UI-84`; owner's report).
 - **2026-11-26:** On a Mac the page menu's Text size is now Zoom (Yakınlaştırma), the same per-site level as ⌘+ / ⌘− / ⌘0; on an iPad Text size now scales the page (as page zoom, like Safari on iPad); it did nothing there or on the Mac before (`UI-84`; owner).
 - **2026-11-26:** On a Mac, web pages now show at Safari's size (page zoom 1.299 against macOS's 77% iPad scale), and ⌘+ / ⌘− / ⌘0 zoom pages on a Mac or iPad keyboard, remembered per site like Safari (`UI-84`, `UI-76`; owner).
 - **2026-11-25:** "Allow developer tools" in Settings › Security lets Safari's Web Inspector (Chrome's on Android) see Qutai's tabs, with steps to open it; on by default on a Mac only, never incognito tabs on iOS (`WPERM-20`). A Mac's Safari version in the User-Agent follows Safari's own numbering before macOS 26 (`DATA-33`; owner).

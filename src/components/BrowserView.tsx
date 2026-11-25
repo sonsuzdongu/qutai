@@ -58,6 +58,7 @@ import { NewTabPage } from './NewTabPage';
 import { tabInspectable } from '../browser/devTools';
 import { isIosAppOnMac, stripDevice } from '../device/macDevice';
 import { baseZoomFor, pageZoomTextSize, textSizeByPageZoom, webViewPageZoom } from '../browser/pageZoom';
+import { viewportZoomScript } from '../browser/viewportZoom';
 import { useSiteZoomLevel } from '../browser/siteZoom';
 import { ReaderPrefs, ReaderView } from './ReaderView';
 
@@ -66,6 +67,8 @@ import { ReaderPrefs, ReaderView } from './ReaderView';
 const IOS_BASE_PAGE_ZOOM = baseZoomFor(stripDevice);
 /** iPhone: the Settings text size is text-size-adjust; a Mac and an iPad ignore that, so it is page zoom there. */
 const IOS_TEXT_SIZE_ADJUST = Platform.OS === 'ios' && !textSizeByPageZoom(stripDevice);
+/** A Mac and an iPad zoom pages through the viewport (UI-84); iPhone and Android don't. */
+const IOS_VIEWPORT_ZOOM = Platform.OS === 'ios' && textSizeByPageZoom(stripDevice);
 /**
  * Renders every tab's WebView stacked on top of each other. Hidden tabs stay
  * mounted and laid out (only made invisible) so they keep their state and the
@@ -202,6 +205,15 @@ function TabWebView({
   const iosIncognito = tab.incognito && Platform.OS === 'ios';
   const androidIncognito = tab.incognito && Platform.OS === 'android';
   const { textZoom, blockAds, blockingOffSites } = newTabActions;
+  // Page zoom on a Mac and an iPad (UI-84): the device's base zoom (a Mac shows pages at Safari's size) times the site's
+  // ⌘+/⌘− level, through the page's viewport (viewportZoomScript). The Settings text size: text-size-adjust on iPhone,
+  // part of the zoom on an iPad; on a Mac the menu's Zoom replaces it.
+  const zoomLevel = useSiteZoomLevel(siteKey(tab.url), tab.incognito);
+  const pageZoom = IOS_VIEWPORT_ZOOM
+    ? webViewPageZoom(zoomLevel, IOS_BASE_PAGE_ZOOM, pageZoomTextSize(stripDevice, textZoom))
+    : 1;
+  const zoomName = `__qutaiZoom${tab.messageNonce}`;
+  const zoomScript = IOS_VIEWPORT_ZOOM ? viewportZoomScript(pageZoom, zoomName) : '';
   // The page script blocker (complements the native one: it catches what scripts add later) skips off sites itself.
   const { siteRules, userBlockedHosts } = newTabActions;
   const adScript = useMemo(
@@ -235,6 +247,7 @@ function TabWebView({
   // only, and the geolocation bridge.
   // Also keeps blobs a page creates readable for its downloads (BLOB_KEEP_SCRIPT).
   const mainFrameEarly = [
+    zoomScript,
     adScript,
     rulesScript,
     stylesScript,
@@ -355,14 +368,15 @@ function TabWebView({
     tab.webview?.injectJavaScript(`if (window.top === window) (function () {\n${stylesScript}\n})(); true;`);
   }, [tab, stylesScript]);
 
-  // iOS page zoom (UI-84): the device's base zoom (a Mac draws pages at Safari's size) times the site's ⌘+/⌘− level.
-  // The Settings text size works on top of it: text-size-adjust on iPhone, part of the page zoom on an iPad; on a Mac
-  // the menu's Zoom replaces it.
-  const zoomLevel = useSiteZoomLevel(siteKey(tab.url), tab.incognito);
-  const pageZoom =
-    Platform.OS === 'ios'
-      ? webViewPageZoom(zoomLevel, IOS_BASE_PAGE_ZOOM, pageZoomTextSize(stripDevice, textZoom))
-      : undefined;
+  // A new zoom reaches the page already on screen (the script installed at its start then only changes the zoom).
+  const firstZoom = useRef(true);
+  useEffect(() => {
+    if (firstZoom.current) {
+      firstZoom.current = false;
+      return;
+    }
+    if (IOS_VIEWPORT_ZOOM) tab.webview?.injectJavaScript(`${viewportZoomScript(pageZoom, zoomName)} true;`);
+  }, [tab, pageZoom, zoomName]);
 
   // iOS: apply a new text size to the page already on screen too.
   useEffect(() => {
@@ -716,8 +730,6 @@ function TabWebView({
             // own document is checked natively against the filter lists' domains; iOS: the compiled WebKit rule lists
             // are attached. Not on sites where the user turned it off. Incognito tabs block the same way.
             contentBlocking={blockAds}
-            // Page zoom (UI-84, patched react-native-webview: WKWebView.pageZoom). iOS only.
-            pageZoom={pageZoom}
             contentBlockingOffSites={offSitesProp}
             contentRuleLists={ruleListsProp}
             onContentBlocked={(e) => tab.handleContentBlocked(e.nativeEvent.blocked)}

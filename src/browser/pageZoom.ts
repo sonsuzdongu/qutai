@@ -1,6 +1,8 @@
 /**
- * Page zoom (UI-84 in docs/design/27-interface.md): the WebView's own page zoom (WKWebView.pageZoom), so the whole page
- * (layout, text and images) scales and lays out again, as in Safari's View › Zoom In.
+ * Page zoom (UI-84 in docs/design/27-interface.md): the whole page (layout, text and images) scales and lays out again,
+ * as in Safari's View › Zoom In. Done with the page's viewport (viewportZoomScript): the page lays out at the view's width
+ * divided by the zoom and WebKit scales it up to fill the view, sharp. (WKWebView.pageZoom was tried first: on iOS it
+ * scales the content without narrowing the layout, so pages ran off to the right and text stayed small.)
  *
  * Two parts multiply: the device's base zoom (a Mac draws an iPad app at about 77%, so pages there start at the size
  * Safari and Chrome on the same Mac show them) and the user's zoom level for the site (⌘+ / ⌘− / ⌘0, Safari's steps,
@@ -70,11 +72,16 @@ export function textSizeByPageZoom(device: ZoomDevice): boolean {
 }
 
 /**
- * What the WebView is given: the device's base zoom times the site's level (times the Settings text size where that
+ * What the page is zoomed by: the device's base zoom times the site's level (times the Settings text size where that
  * is page zoom, textSizeByPageZoom), to three decimals.
  */
 export function webViewPageZoom(level: number, base: number, textSize = 100): number {
   return Math.round(base * (level / 100) * (textSize / 100) * 1000) / 1000;
+}
+
+/** The width a page lays out at: the view's width (points) divided by the zoom, never under 320 CSS px. */
+export function viewportWidthFor(viewWidth: number, zoom: number): number {
+  return Math.max(320, Math.round(viewWidth / (zoom > 0 ? zoom : 1)));
 }
 
 /**
