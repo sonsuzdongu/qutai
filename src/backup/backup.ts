@@ -49,7 +49,7 @@ export const BACKUP_POLICY = {
   apiKeys: 'keys',
   models: 'backup',
   customBaseUrl: 'backup',
-  customImages: 'phone',
+  customImages: 'backup',
   customHeaders: 'keys',
   confirmActions: 'backup',
   // "Don't ask again" and per-site script settings travel (owner, 25 Nov 2026); the two switches stay (PAY-7, SCR-*).
@@ -149,6 +149,7 @@ export function backupSettings(s: Settings): BackupSettings {
     showActionMarker: s.showActionMarker,
     voiceLanguage: s.voiceLanguage,
     voiceLastLanguage: s.voiceLastLanguage,
+    customImages: s.customImages,
   };
 }
 
@@ -244,6 +245,7 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
     take('showActionMarker', s.showActionMarker);
     take('voiceLanguage', s.voiceLanguage);
     take('voiceLastLanguage', s.voiceLastLanguage);
+    take('customImages', s.customImages);
     // Lists: merge takes the backup's only where this phone has none (its own choices stay); replace takes it.
     if (s.alwaysAllow && (mode === 'replace' || !current.alwaysAllow.length)) next.alwaysAllow = [...s.alwaysAllow];
     if (s.scriptSites && (mode === 'replace' || !current.scriptSites.length)) next.scriptSites = s.scriptSites.map((x) => ({ ...x }));

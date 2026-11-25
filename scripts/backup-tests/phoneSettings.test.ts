@@ -1,14 +1,14 @@
-// Nine settings that used to stay on the phone travel in backups since 25 Nov 2026 (owner; DATA-5): "Don't ask again",
-// per-site script settings, background tasks and their notification, Gemini streaming, the cost, the action marker and
-// voice input's languages. Restored values are checked like the settings loader checks them; a backup made before
-// leaves this phone's values.
+// Ten settings that used to stay on the phone travel in backups since 25 Nov 2026 (owner; DATA-5): "Don't ask again",
+// per-site script settings, background tasks and their notification, Gemini streaming, the cost, the action marker,
+// voice input's languages and whether the custom endpoint's model takes images. Restored values are checked like the
+// settings loader checks them; a backup made before leaves this phone's values.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { DEFAULT_SETTINGS, type Settings } from '../../src/storage/settings.ts';
 import { parseBackup, serializeBackup, PAYLOAD_VERSION, type BackupPayload } from '../../src/backup/payload.ts';
 import { backupSettings, mergeSettings } from '../../src/backup/backup.ts';
 
-const ADDED = ['alwaysAllow', 'scriptSites', 'backgroundTasks', 'notifyTaskDone', 'geminiStreaming', 'showCost', 'showActionMarker', 'voiceLanguage', 'voiceLastLanguage'] as const;
+const ADDED = ['alwaysAllow', 'scriptSites', 'backgroundTasks', 'notifyTaskDone', 'geminiStreaming', 'showCost', 'showActionMarker', 'voiceLanguage', 'voiceLastLanguage', 'customImages'] as const;
 
 const backedUp: Settings = {
   ...DEFAULT_SETTINGS,
@@ -21,6 +21,7 @@ const backedUp: Settings = {
   showActionMarker: false,
   voiceLanguage: 'tr',
   voiceLastLanguage: 'en-GB',
+  customImages: !DEFAULT_SETTINGS.customImages,
 };
 const phone: Settings = {
   ...DEFAULT_SETTINGS,
@@ -71,6 +72,7 @@ test('restored values are checked: unknown kinds, bad hosts and settings, and ba
     ],
     backgroundTasks: 'yes',
     showCost: 0,
+    customImages: 'true',
     voiceLanguage: 'not a tag!',
     voiceLastLanguage: 'x',
   }).settings!;
@@ -78,6 +80,7 @@ test('restored values are checked: unknown kinds, bad hosts and settings, and ba
   assert.deepEqual(read.scriptSites, [{ host: 'good.example', setting: 'off' }]);
   assert.equal(read.backgroundTasks, undefined);
   assert.equal(read.showCost, undefined);
+  assert.equal(read.customImages, undefined);
   assert.equal(read.voiceLanguage, undefined);
   assert.equal(read.voiceLastLanguage, undefined);
   assert.equal(roundTrip({ voiceLanguage: 'auto', voiceLastLanguage: '' }).settings!.voiceLanguage, 'auto');

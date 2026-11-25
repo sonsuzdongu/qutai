@@ -19,6 +19,7 @@ Last updated: 2026-11-25
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-25:** The custom endpoint's "takes images" setting now travels in backups with the endpoint's address; older backups keep the phone's value (`DATA-32`; owner's decision).
 - **2026-11-25:** Backups now carry "Don't ask again", sites' own script settings, background tasks and their notification, Gemini streaming, the cost and action-marker switches and voice input's languages; restoring restores them, older backups keep the phone's values (`DATA-32`, `SITE-9`, `SCR-8`; owner's decision).
 - **2026-11-25:** Safety nets before launch, no behaviour change: every test file under scripts/ runs in a suite (three never did) and a check keeps it so (`HOUSE-21`); the page-side payment and secret-field guards run in headless Chrome in `npm test`; every setting is marked in or out of the backup and tsc requires it for new ones (`DATA-5`); the PDF reader checks the whole base64 before injecting it.
 - **2026-11-25:** The new tab page updates when history is deleted, and "Recently visited" can be collapsed (`UI-70`).

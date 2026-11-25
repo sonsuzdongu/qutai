@@ -162,6 +162,8 @@ export type BackupSettings = Partial<{
   voiceLanguage: string;
   /** '' or a language tag. */
   voiceLastLanguage: string;
+  /** The custom endpoint's model takes images; missing in backups made before 25 Nov 2026. */
+  customImages: boolean;
 }>;
 
 export type BackupPayload = {
@@ -463,6 +465,7 @@ export const BOOLEAN_SETTINGS = [
   'geminiStreaming',
   'showCost',
   'showActionMarker',
+  'customImages',
 ] as const;
 
 function parseSettings(v: unknown): BackupSettings | undefined {
