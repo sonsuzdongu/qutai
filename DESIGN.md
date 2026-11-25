@@ -19,6 +19,7 @@ Last updated: 2026-11-26
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-26:** Mac and iPad: ⌘W only closes the tab, never the app (system File › Close removed); ⌘Q confirmation not possible for an iOS app on a Mac (`UI-86`; owner).
 - **2026-11-26:** Mac and iPad: a reload button right of the address field (`UI-85`; owner). Page zoom now works through the page's viewport width instead of WKWebView.pageZoom, which left pages laid out too wide (sideways scrolling) and text small on most sites (`UI-84`; owner's report).
 - **2026-11-26:** On a Mac the page menu's Text size is now Zoom (Yakınlaştırma), the same per-site level as ⌘+ / ⌘− / ⌘0; on an iPad Text size now scales the page (as page zoom, like Safari on iPad); it did nothing there or on the Mac before (`UI-84`; owner).
 - **2026-11-26:** On a Mac, web pages now show at Safari's size (page zoom 1.299 against macOS's 77% iPad scale), and ⌘+ / ⌘− / ⌘0 zoom pages on a Mac or iPad keyboard, remembered per site like Safari (`UI-84`, `UI-76`; owner).

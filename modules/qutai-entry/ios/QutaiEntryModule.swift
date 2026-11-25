@@ -14,6 +14,7 @@ public class QutaiEntryModule: Module {
     // On a Mac: no phantom status-bar / home-indicator insets (UI-79). Before JavaScript lays anything out.
     OnCreate {
       MacSafeArea.installIfNeeded()
+      SystemCloseMenu.installIfNeeded()
     }
 
     Function("takePending") { () -> [[String: Any]] in
@@ -339,5 +340,38 @@ enum MacSafeArea {
     guard !logged.contains(key) else { return }
     logged.insert(key)
     NSLog("Qutai Mac safe area (window or root view, before UI-79): %@", key)
+  }
+}
+
+/// On a Mac and an iPad, the system menu bar has File › Close (⌘W), which closes the window, and with Qutai's single
+/// window quits the app. It could take ⌘W before the app's own "close tab" key command (UI-76), so ⌘W sometimes closed
+/// the app instead of the tab (owner, 26 Nov 2026). The item is removed from the main menu, so ⌘W always reaches the
+/// app's key command and only ever closes the current tab (UI-86). The window still closes from its red button. Added
+/// to the app delegate's class at run time (no change to ios/), keeping whatever menu building it already does.
+enum SystemCloseMenu {
+  private static var installed = false
+
+  static func installIfNeeded() {
+    DispatchQueue.main.async {
+      guard UIDevice.current.userInterfaceIdiom == .pad, !installed,
+            let delegate = UIApplication.shared.delegate as? UIResponder else { return }
+      installed = true
+      let cls: AnyClass = type(of: delegate)
+      let selector = #selector(UIResponder.buildMenu(with:))
+      typealias Build = @convention(c) (AnyObject, Selector, UIMenuBuilder) -> Void
+      let previous = class_getMethodImplementation(cls, selector).map { unsafeBitCast($0, to: Build.self) }
+      let block: @convention(block) (AnyObject, UIMenuBuilder) -> Void = { object, builder in
+        previous?(object, selector, builder)
+        guard builder.system == .main else { return }
+        builder.remove(menu: .close)
+        NSLog("Qutai menu: system Close (⌘W) removed")
+      }
+      let imp = imp_implementationWithBlock(block)
+      if let method = class_getInstanceMethod(cls, selector), !class_addMethod(cls, selector, imp, method_getTypeEncoding(method)) {
+        method_setImplementation(method, imp)
+      }
+      // The menu bar was built at launch, before this ran.
+      UIMenuSystem.main.setNeedsRebuild()
+    }
   }
 }
