@@ -1135,7 +1135,7 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-4` | A purchase is credited and refunded at most once, in any order; a refund that arrives first blocks the… | Default |  |
 | `BUY-5` | The development server accepts only test (sandbox) purchases and the production server only real ones, except the switch for listed… | Default | 2026-11-20 |
 | `BUY-6` | Credits are bought only through the store's in-app purchase at the store's own price; the app never shows… | Default |  |
-| `BUY-7` | A pack's credits are fixed once it exists, and a purchase keeps the credits it had when first recorded; a… | Default |  |
+| `BUY-7` | A purchase keeps the credits it had when first recorded, whatever happens to its pack later; a product sold… | Default | 2026-11-25 |
 | `BUY-8` | A refund or revocation at the store takes the credits back, even into a negative balance. | Default |  |
 | `BUY-9` | Today a refund that Apple later cancels does not give the credits back automatically; support can grant… | **Waiting** |  |
 | `BUY-10` | RevenueCat's notifications are checked by signature (within 5 minutes) before they are read, are limited… | Default |  |
@@ -1163,6 +1163,7 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-34` | The buy screen and the rating message name only the phone's own store (or none); ten languages. | Owner | 2026-11-21 |
 | `BUY-35` | The kept list of uncredited purchases is never written over when it couldn't be read; unsaved changes stay in memory | Default | 2026-11-21 |
 | `BUY-36` | The missing-credits check asks about all kept purchases at once, once each, no waits; no waiting count on the screen. | Owner | 2026-11-24 |
+| `BUY-37` | A pack's credits are changed in the admin panel (Credits…, whole credits 1–1,000,000, both stores, audited); only purchases recorded after the save get it. | Owner | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `BUY-14`, `BUY-20`
 

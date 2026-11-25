@@ -19,6 +19,7 @@ Last updated: 2026-11-25
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-25:** How many credits a pack gives is changed in the admin panel (Prices and packs › Credits…, audited), whole credits for both stores; only purchases the server records after the save get the new amount, a deploy never overwrites it, and phones see it within about two minutes (`BUY-37`, `BUY-7` changed; owner's request; backend only, no migration).
 - **2026-11-25:** Checked: Payment Request, Google Pay and Apple Pay buttons never hang in Qutai and pages fall back to their own checkout; nothing changed (`WPERM-19`).
 - **2026-11-25:** Checked: "Copy" buttons on pages already work on both platforms and pages still can't read the clipboard without the user; nothing changed (`WPERM-18`).
 - **2026-11-25:** Sites, routers and intranet pages that ask for a user name and password (HTTP Basic/Digest) get Qutai's own sign-in dialog; nothing keeps the password (`WPERM-17`).
