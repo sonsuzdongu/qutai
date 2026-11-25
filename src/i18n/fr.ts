@@ -1639,7 +1639,7 @@ export const fr: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Dernier onglet',
   'shortcuts.nextTab': 'Onglet suivant',
   'shortcuts.prevTab': 'Onglet précédent',
-  'shortcuts.voice': 'Parler à Qutai (maintenir, ou toucher pour commencer et encore pour envoyer)',
+  'shortcuts.voice': 'Parler à Qutai (maintenir)',
   'tabs.closed': 'Onglet fermé',
   'tabs.undo': 'Annuler',
   'tabs.recentlyClosed': 'Récemment fermés',

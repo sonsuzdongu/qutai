@@ -1639,7 +1639,7 @@ export const id: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Tab terakhir',
   'shortcuts.nextTab': 'Tab berikutnya',
   'shortcuts.prevTab': 'Tab sebelumnya',
-  'shortcuts.voice': 'Bicara dengan Qutai (tahan, atau ketuk untuk mulai dan ketuk lagi untuk mengirim)',
+  'shortcuts.voice': 'Bicara dengan Qutai (tahan)',
   'tabs.closed': 'Tab ditutup',
   'tabs.undo': 'Urungkan',
   'tabs.recentlyClosed': 'Baru saja ditutup',

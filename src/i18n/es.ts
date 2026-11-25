@@ -1636,7 +1636,7 @@ export const es: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Última pestaña',
   'shortcuts.nextTab': 'Pestaña siguiente',
   'shortcuts.prevTab': 'Pestaña anterior',
-  'shortcuts.voice': 'Hablar con Qutai (mantén pulsado, o toca para empezar y otra vez para enviar)',
+  'shortcuts.voice': 'Hablar con Qutai (mantén pulsado)',
   'tabs.closed': 'Pestaña cerrada',
   'tabs.undo': 'Deshacer',
   'tabs.recentlyClosed': 'Cerradas recientemente',

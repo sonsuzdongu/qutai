@@ -1638,7 +1638,7 @@ export const ko: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': '마지막 탭',
   'shortcuts.nextTab': '다음 탭',
   'shortcuts.prevTab': '이전 탭',
-  'shortcuts.voice': 'Qutai에게 말하기(길게 누르기, 또는 탭해서 시작하고 다시 탭해서 보내기)',
+  'shortcuts.voice': 'Qutai에게 말하기(길게 누르기)',
   'tabs.closed': '탭이 닫혔습니다',
   'tabs.undo': '실행취소',
   'tabs.recentlyClosed': '최근에 닫은 탭',

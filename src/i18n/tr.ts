@@ -1630,7 +1630,7 @@ export const tr: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Son sekme',
   'shortcuts.nextTab': 'Sonraki sekme',
   'shortcuts.prevTab': 'Önceki sekme',
-  'shortcuts.voice': 'Qutai ile konuşun (basılı tutun ya da başlatmak için dokunun, göndermek için yine dokunun)',
+  'shortcuts.voice': 'Qutai ile konuşun (basılı tutun)',
   'tabs.closed': 'Sekme kapatıldı',
   'tabs.undo': 'Geri al',
   'tabs.recentlyClosed': 'Son kapatılanlar',

@@ -2122,23 +2122,28 @@ function BrowserApp({
   // "Hold to talk" on, the panel closed, no lock or full screen); voice consent, the microphone permission, incognito
   // and a running task are handled by the push-to-talk itself, as for the button.
   const voiceKey = useRef<VoiceKeyState>(VOICE_KEY_IDLE);
-  // The session ended on its own (sent, nothing heard, cancelled): the next press starts a new one.
-  if (ptt.bubble.phase === 'idle' && voiceKey.current.kind === 'toggled') voiceKey.current = VOICE_KEY_IDLE;
   const onVoiceKey = (event: 'down' | 'up') => {
     const canStart =
       !lock && !screen && !panelOpen && settings.showAssistantButton && settings.voiceHoldToTalk;
     if (event === 'down' && voiceKey.current.kind === 'idle' && !canStart) return;
     const step = voiceKeyStep(voiceKey.current, event, Date.now());
+    voiceKey.current = step.state;
     if (step.action === 'start') {
+      const press = step.state;
       const measured = measureAssistantButton((anchor) => {
+        // Already let go while the button was being found: nothing starts.
+        if (voiceKey.current !== press) return;
         ptt.handlers.pressIn();
         ptt.handlers.start(anchor);
       });
-      if (!measured) return;
+      // The button isn't on screen: no session, so the release does nothing either.
+      if (!measured) voiceKey.current = VOICE_KEY_IDLE;
     } else if (step.action === 'release') {
       ptt.handlers.release();
+    } else if (step.action === 'cancel') {
+      // Let go almost at once: too short a hold, nothing is sent and listening stops.
+      ptt.handlers.cancel();
     }
-    voiceKey.current = step.state;
   };
   useKeyShortcuts((id: ShortcutEvent) => {
     if (id === 'voiceDown' || id === 'voiceUp') return onVoiceKey(id === 'voiceDown' ? 'down' : 'up');

@@ -1629,7 +1629,7 @@ export const de: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Letzter Tab',
   'shortcuts.nextTab': 'Nächster Tab',
   'shortcuts.prevTab': 'Vorheriger Tab',
-  'shortcuts.voice': 'Mit Qutai sprechen (halten, oder tippen zum Starten und erneut zum Senden)',
+  'shortcuts.voice': 'Mit Qutai sprechen (gedrückt halten)',
   'tabs.closed': 'Tab geschlossen',
   'tabs.undo': 'Rückgängig',
   'tabs.recentlyClosed': 'Kürzlich geschlossen',
