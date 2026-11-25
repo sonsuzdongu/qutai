@@ -516,8 +516,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Background playback', 'Arka planda çalma'),
         body: t(
-          'Sound keeps playing with the screen locked; on Android a video can shrink to picture-in-picture. Some video sites still stop it.',
-          'Ekran kilitliyken de ses çalmaya devam eder; Android’de video küçük bir pencerede oynamaya devam edebilir. Bazı video siteleri yine de durdurur.',
+          'Sound keeps playing with the screen locked; on Android a video can shrink to picture-in-picture. Some video sites still stop it. Sites can’t start a video with sound until you touch the page, unless you allow it in Settings. On Android, a wide video in full screen turns the screen sideways by itself.',
+          'Ekran kilitliyken de ses çalmaya devam eder; Android’de video küçük bir pencerede oynamaya devam edebilir. Bazı video siteleri yine de durdurur. Siz sayfaya dokunmadan hiçbir site sesli video başlatamaz; isterseniz Ayarlar’dan buna izin verirsiniz. Android’de geniş bir videoyu tam ekrana aldığınızda ekran kendiliğinden yan döner.',
         ),
       },
       {
@@ -556,8 +556,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Encrypted backup', 'Şifreli yedek'),
         body: t(
-          'No sync: export everything to one password-protected file and import it on another phone, merging or replacing.',
-          'Eşitleme yok: her şeyi parolalı tek bir dosyaya aktarırsınız, başka bir telefonda da mevcut verilerle birleştirerek ya da onların yerine geri yüklersiniz.',
+          'Export everything, settings included, to one password-protected file and import it on another device, merging or replacing. There is no live sync.',
+          'Ayarlarınız dahil her şeyi parolalı tek bir dosyaya aktarın; başka bir cihazda mevcut verilerle birleştirerek ya da onların yerine geri yükleyin. Canlı eşitleme yoktur.',
         ),
       },
     ],
@@ -628,10 +628,17 @@ export const GROUPS: Group[] = [
       {
         title: t('Bookmarks and history', 'Yer imleri ve geçmiş'),
         body: t(
-          'Bookmarks in folders, imported from and exported to the file Chrome, Firefox, Safari or Edge use; the assistant can search your history.',
-          'Yer imlerinizi klasörlere ayırın; Chrome, Firefox, Safari ya da Edge’den aldığınız dosyayı içe aktarın, aynı biçimde dışa verin. Asistan geçmişinizde de arama yapabilir.',
+          'Bookmarks in folders, imported from and exported to the file Chrome, Firefox, Safari or Edge use; the assistant can search your history. In History, select many visits and delete them at once.',
+          'Yer imlerinizi klasörlere ayırın; Chrome, Firefox, Safari ya da Edge’den aldığınız dosyayı içe aktarın, aynı biçimde dışa verin. Asistan geçmişinizde de arama yapabilir. Geçmişte birçok ziyareti seçip tek seferde silebilirsiniz.',
         ),
         asks: [t('Find the recipe page I read last week', 'Geçen hafta okuduğum yemek tarifi sayfasını bul')],
+      },
+      {
+        title: t('Works with today’s sites', 'Bugünün siteleriyle uyumlu'),
+        body: t(
+          '“Sign in with Google” and payment windows open as real pop-ups and return to the page that opened them. A site’s own Share button opens the share sheet, passkeys and security keys work on Android, and routers or intranet pages that ask for a user name and password get Qutai’s own sign-in box, which keeps nothing. Pages can’t trap you: Back skips the entries a page added without you touching it.',
+          '“Google ile giriş yap” ve ödeme pencereleri gerçek açılır pencere olarak açılır, iş bitince sizi açıldıkları sayfaya geri götürür. Sitenin kendi Paylaş düğmesi paylaşım menüsünü açar; Android’de geçiş anahtarları ve güvenlik anahtarları çalışır. Kullanıcı adı ve parola isteyen modem ya da şirket içi sayfalarda Qutai kendi giriş kutusunu gösterir ve hiçbir şeyi saklamaz. Sayfalar sizi tuzağa düşüremez: Geri, sizin dokunmadığınız, sayfanın kendi eklediği adımları atlar.',
+        ),
       },
       {
         title: t('Ten languages', 'On dil'),

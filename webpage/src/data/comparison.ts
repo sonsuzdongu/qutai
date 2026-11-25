@@ -132,7 +132,7 @@ const src = (path: string) => `${REPO}/blob/main/${path}`;
 export const QUTAI: Product = {
   id: 'qutai',
   name: 'Qutai',
-  platforms: t('iOS and Android, in development', 'iOS ve Android, geliştirme aşamasında'),
+  platforms: t('iPhone, iPad, Mac and Android', 'iPhone, iPad, Mac ve Android'),
   cells: {
     agent: {
       state: 'yes',
