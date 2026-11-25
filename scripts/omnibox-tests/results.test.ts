@@ -253,3 +253,29 @@ test('turning suggestions on or switching engine reports a change, so the same t
   h.results.setQuery('gal', { force: true });
   assert.deepEqual(h.results.launches, ['gal', 'gal']);
 });
+
+test('the address bar waits for a 350 ms pause: no lookup per key press, one of each after the pause (UI-82)', async () => {
+  const { ADDRESS_BAR_TIMING } = await import('../../src/browser/omniboxResults.ts');
+  const timers = fakeTimers();
+  const remoteSent: string[] = [];
+  const results = new OmniboxResults({
+    ...ADDRESS_BAR_TIMING,
+    timers,
+    lookupLocal: () => new Promise(() => {}),
+    lookupRemote: (query) => {
+      remoteSent.push(query);
+      return new Promise(() => {});
+    },
+    onChange: () => {},
+  });
+  // Slow typing, 300 ms per letter: still no lookup while the letters keep coming.
+  for (const q of ['g', 'ga', 'gal', 'gala']) {
+    results.setQuery(q);
+    timers.advance(300);
+  }
+  assert.deepEqual(results.launches, []);
+  assert.deepEqual(remoteSent, []);
+  timers.advance(60);
+  assert.deepEqual(results.launches, ['gala']);
+  assert.deepEqual(remoteSent, ['gala']);
+});

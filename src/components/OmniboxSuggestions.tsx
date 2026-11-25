@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeIn, LinearTransition, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { OmniboxResults, Shown } from '../browser/omniboxResults';
+import { ADDRESS_BAR_TIMING, OmniboxResults, Shown } from '../browser/omniboxResults';
 import { fetchSuggestions, SearchEngineId } from '../browser/search';
 import { looksLikeUrl, toUrl } from '../browser/url';
 import { getLanguage, t } from '../i18n';
@@ -41,6 +41,8 @@ function useResults(query: string, remoteAllowed: boolean, searchEngine: SearchE
   const [results] = useState(
     () =>
       new OmniboxResults<LocalSuggestion>({
+        // Both lookups wait for a 350 ms pause in typing (UI-82).
+        ...ADDRESS_BAR_TIMING,
         lookupLocal: (q) => getDb().then((db) => localSuggestions(db, q)),
         onChange: setShown,
       }),

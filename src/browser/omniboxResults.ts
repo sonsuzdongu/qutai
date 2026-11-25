@@ -28,24 +28,34 @@ export type OmniboxResultsOptions<L extends LocalItem> = {
   timers?: Timers;
   debounceMs?: number;
   maxWaitMs?: number;
+  /** Look the first letter after a pause up at once (default); the app waits for every pause instead (UI-82). */
+  leading?: boolean;
   remoteDebounceMs?: number;
   freezeMaxMs?: number;
 };
 
 /**
- * Typing faster than this skips the letters in between; the first letter after a pause is looked up at once.
- * A history lookup takes about 3 ms on a Mac at 5,000 visits and an estimated 10 to 25 ms on a mid-range phone, and
- * thumb typing is about 100 to 250 ms per letter, so 120 ms lets slow typing refresh on every letter and fast typing
- * on every few.
+ * The engine's defaults: typing faster than this skips the letters in between; the first letter after a pause is looked
+ * up at once. The address bar itself uses ADDRESS_BAR_TIMING (below).
  */
 export const LOOKUP_DEBOUNCE_MS = 120;
-/** While letters keep coming, the list still refreshes at least this often. */
+/** While letters keep coming, the list still refreshes at least this often (engine default). */
 export const LOOKUP_MAX_WAIT_MS = 360;
-/**
- * The typed text goes to the search engine only after typing has paused this long (owner, 19 Nov 2026): a word typed
- * without a pause is one request, with the finished text.
- */
+/** The typed text goes to the search engine only after typing has paused this long (engine default). */
 export const REMOTE_DEBOUNCE_MS = 200;
+
+/**
+ * The address bar's timing (owner, 25 Nov 2026, UI-82): history and the search engine are both asked only once typing
+ * has paused for 350 ms, never on every key press and never in the middle of a burst of typing. A history lookup takes
+ * about 3 ms on a Mac at 5,000 visits and 10 to 25 ms on a mid-range phone; the wait is for calm, not speed. A cleared
+ * field still empties the list at once.
+ */
+export const ADDRESS_BAR_TIMING = {
+  debounceMs: 350,
+  maxWaitMs: Infinity,
+  remoteDebounceMs: 350,
+  leading: false,
+} as const;
 /** Safety net: a touch whose end never arrives stops holding the list back after this long. */
 export const FREEZE_MAX_MS = 3000;
 
@@ -124,6 +134,7 @@ export class OmniboxResults<L extends LocalItem = LocalItem> {
       debounceMs: LOOKUP_DEBOUNCE_MS,
       maxWaitMs: LOOKUP_MAX_WAIT_MS,
       remoteDebounceMs: REMOTE_DEBOUNCE_MS,
+      leading: true,
       freezeMaxMs: FREEZE_MAX_MS,
       ...options,
       timers: options.timers ?? realTimers,
@@ -153,10 +164,10 @@ export class OmniboxResults<L extends LocalItem = LocalItem> {
     this.wantedQuery = query;
     this.scheduleRemote(query);
     const now = this.o.timers.now();
-    const idle = now - this.lastChangeAt >= this.o.debounceMs;
+    const idle = this.o.leading && now - this.lastChangeAt >= this.o.debounceMs;
     this.lastChangeAt = now;
     if (!query || idle || force) {
-      // A cleared field, the first letter after a pause, or a changed setting: at once.
+      // A cleared field, a changed setting, or (with `leading`) the first letter after a pause: at once.
       this.cancelPending();
       this.launch(query);
       return;
