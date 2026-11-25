@@ -52,6 +52,20 @@ function CellView({
   );
   const hasSource = !!cell.source && product.id !== 'qutai';
   if (!cell.note && !hasSource) return state;
+  // Prices are read, not scanned: the price row keeps its note in view.
+  if (isPrice)
+    return (
+      <>
+        {state}
+        {cell.note && <span className="cell-note">{cell.note[lang]}</span>}
+        {hasSource && (
+          <a className="cell-source" href={cell.source} rel="noopener noreferrer nofollow" aria-label={t('compare.sourceFor', { name: product.name, feature })}>
+            {t('compare.source')}
+            <Icon name="external" size={12} />
+          </a>
+        )}
+      </>
+    );
   return (
     <details
       className="cell"

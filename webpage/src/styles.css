@@ -1817,6 +1817,27 @@ h3 {
   font-size: 0.92rem;
 }
 
+.cmp.enhanced.pair .cell-note,
+.cmp.enhanced.pair .prod-name,
+.cmp.enhanced.pair .prod-platforms {
+  overflow-wrap: anywhere;
+}
+
+.cmp .state:has(.mark) .state-label {
+  white-space: nowrap;
+}
+
+@media (max-width: 420px) {
+  .cmp.enhanced.pair th,
+  .cmp.enhanced.pair td {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+  .cmp.enhanced.pair .cell summary {
+    gap: 4px;
+  }
+}
+
 .cmp.enhanced.pair .feature-col {
   width: 40%;
   min-width: 0;
@@ -1832,6 +1853,10 @@ h3 {
 
 .cmp.enhanced:not(.notes) td {
   vertical-align: middle;
+}
+
+.cmp.enhanced tbody:last-of-type tr:last-child td {
+  vertical-align: top;
 }
 
 @media (max-width: 760px) {

@@ -224,8 +224,8 @@ export const QUTAI: Product = {
       state: 'yes',
       value: t('Free app, pay as you use', 'Uygulama ücretsiz, kullandıkça ödersiniz'),
       note: t(
-        'The app is free and open source. For the AI, buy Qutai Credits in the app (on Google Play today), or use your own key and pay your AI provider for what you use.',
-        'Uygulama ücretsiz ve açık kaynak. Yapay zekâ için uygulamadan Qutai Kredisi alın (bugün Google Play’de) ya da kendi anahtarınızı kullanıp kullandığınız kadarını sağlayıcınıza ödeyin.',
+        'The app is free and open source. For the AI, use your own AI provider and pay it for what you use, or buy Qutai Credits in the app.',
+        'Uygulama ücretsiz ve açık kaynak. Yapay zekâ için dilerseniz kendi sağlayıcınızı kullanır, kullandığınız kadarını ona ödersiniz; dilerseniz de Qutai Kredilerini uygulamanın içinden satın alırsınız.',
       ),
       source: src('README.md'),
     },
