@@ -242,13 +242,13 @@ export const COMPETITORS: Product[] = [
     platforms: t('iOS and Android', 'iOS ve Android'),
     cells: {
       agent: {
-        state: 'yes',
+        state: 'partial',
         note: t(
-          'With “Smart task automation” it navigates sites and finishes a task by itself, such as adding items to the cart or trying promo codes at checkout; only while the app is open.',
-          '“Smart task automation” ile sitelerde gezinip görevi kendisi bitiriyor; örneğin ürünleri sepete ekliyor ya da ödeme adımında indirim kodlarını deniyor. Yalnızca uygulama açıkken çalışıyor.',
+          'Perplexity says it can finish tasks such as shopping or trying promo codes on Android, and fill in sign-up forms on iPhone, where it works in a browser on Perplexity’s servers that gets your cookies for the task. In our own test it could not fill in a form for us.',
+          'Perplexity’ye göre Android’de alışveriş yapmak ya da indirim kodu denemek gibi görevleri bitirebiliyor; iPhone’da kayıt formlarını doldurabiliyor, ama bunu Perplexity’nin sunucusundaki bir tarayıcıda, o iş için çerezlerinizi oraya aktararak yapıyor. Bizim denememizde bizim yerimize form dolduramadı.',
         ),
         source: 'https://www.perplexity.ai/help-center/comet/en/articles/12875447-comet-for-android-quick-start-and-key-features',
-        checked: D,
+        checked: '2026-11-26',
       },
       research: {
         state: 'yes',
