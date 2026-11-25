@@ -18,7 +18,12 @@ import { pageStyleState } from '../browser/pageStyleState';
 import { iosStoreKey } from '../device/cookieStore';
 import { siteKey } from '../agent/sitePolicy';
 import { allowInsecure, upgradeToHttps } from '../browser/httpsOnly';
-import { DESKTOP_USER_AGENT, DESKTOP_VIEWPORT_SCRIPT, textZoomScript } from '../browser/desktopMode';
+import {
+  desktopModeUserAgent,
+  DESKTOP_VIEWPORT_SCRIPT,
+  SAFARI_APPLICATION_NAME,
+  textZoomScript,
+} from '../browser/desktopMode';
 import { isAppLinkError, linkTarget, toLoadError } from '../browser/navigation';
 import { certificateExceptionsFor, mayBypassCertificate, noteValidCertificate } from '../browser/certificateExceptions';
 import { isLocalUrl } from '../browser/localNetwork';
@@ -292,7 +297,11 @@ function TabWebView({
   const palette = usePalette();
   // Android: Chrome's own user agent instead of the WebView's "embedded browser" one (fewer bot checks).
   const chromeUserAgent = useChromeUserAgent();
-  const userAgent = tab.desktop ? DESKTOP_USER_AGENT : Platform.OS === 'android' ? chromeUserAgent : undefined;
+  const userAgent = tab.desktop
+    ? desktopModeUserAgent(chromeUserAgent)
+    : Platform.OS === 'android'
+      ? chromeUserAgent
+      : undefined;
   // Downloads started outside the WebView's listener (long-press menu, the assistant) send the same user agent.
   useEffect(() => {
     tab.setUserAgent(userAgent);
@@ -611,6 +620,9 @@ function TabWebView({
               );
             }}
             userAgent={userAgent}
+            // iOS: Safari's own ending for this device and system ("Version/26.0 … Safari/…"), which WKWebView leaves out;
+            // without it Gmail called Qutai an unsupported browser (DATA-33). Never a Qutai string (DATA-23).
+            applicationNameForUserAgent={SAFARI_APPLICATION_NAME}
             contentMode={tab.desktop ? 'desktop' : 'recommended'}
             thirdPartyCookiesEnabled={!newTabActions.blockThirdPartyCookies}
             // Videos can go full screen (Android) and play in the page (iOS; also a page's camera preview).

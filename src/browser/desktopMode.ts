@@ -1,10 +1,26 @@
 import { Platform } from 'react-native';
+import { stripDevice } from '../device/macDevice';
+import { desktopUserAgent, safariApplicationName } from './safariUserAgent';
 
-/** Desktop identities, so sites serve their desktop layout. */
-export const DESKTOP_USER_AGENT =
+/**
+ * Desktop-site mode's identity, so sites serve their desktop layout, built from the real versions (DATA-33): the
+ * system's Safari version on iOS, the WebView engine's Chrome version on Android (`learnedUserAgent`).
+ */
+export function desktopModeUserAgent(learnedUserAgent: string | undefined): string {
+  return Platform.OS === 'ios'
+    ? desktopUserAgent('ios', { osVersion: Platform.Version })
+    : desktopUserAgent('android', { learnedUserAgent });
+}
+
+/**
+ * iOS, iPadOS and the iOS app on a Mac: Safari's ending of the user agent for this device and system version, given to
+ * every browser tab as WKWebView's `applicationNameForUserAgent` (DATA-33); undefined on Android or if unreadable.
+ */
+export const SAFARI_APPLICATION_NAME: string | undefined =
   Platform.OS === 'ios'
-    ? 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15'
-    : 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
+    ? (safariApplicationName(Platform.Version, stripDevice === 'phone' ? 'phone' : stripDevice === 'mac' ? 'mac' : 'pad') ??
+      undefined)
+    : undefined;
 
 /**
  * Responsive sites lay out to the device width given by their viewport tag no matter which

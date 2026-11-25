@@ -183,6 +183,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `DATA-30` | A failed clearing or profile save is said and the screen stays usable (no silent close, no stuck "saving") | Default | 2026-11-21 |
 | `DATA-31` | Site icons requested only from the site being visited (or its icon server), no cookies or Referer, weekly; no icon service; policy sentence proposed, not edited | Default | 2026-11-25 |
 | `DATA-32` | Backups carry "Don't ask again", sites' own script settings, background tasks and their notification, Gemini streaming, cost, action marker, voice languages, custom endpoint images; old backups keep the phone's values; checked like the loader | Owner | 2026-11-25 |
+| `DATA-33` | iOS/iPadOS/Mac tabs end their User-Agent like Safari on that device, with the system's Safari version; desktop-site mode uses the real Safari/Chrome versions; never a Qutai string. | Owner | 2026-11-25 |
 
 ## [4. Page content is untrusted](04-untrusted-content.md)
 

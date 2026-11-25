@@ -166,7 +166,17 @@ test('no web view, download or image save adds the token (the sources say so)', 
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
     const rel = file.slice(root.length);
-    assert.ok(!/applicationNameForUserAgent/.test(text), `${rel} sets applicationNameForUserAgent`);
+    // The only applicationNameForUserAgent is Safari's own ending (DATA-33, src/browser/safariUserAgent.ts), which
+    // carries no Qutai string (checked in safariUserAgent.test.ts).
+    for (const use of text.match(/applicationNameForUserAgent=\{[^}]*\}/g) ?? []) {
+      assert.equal(use, 'applicationNameForUserAgent={SAFARI_APPLICATION_NAME}', `${rel}: ${use}`);
+    }
+    assert.ok(
+      !/applicationNameForUserAgent(?!=\{SAFARI_APPLICATION_NAME\})/.test(text) ||
+        rel === 'src/browser/desktopMode.ts' ||
+        rel === 'src/browser/safariUserAgent.ts',
+      `${rel} sets applicationNameForUserAgent to something other than Safari's ending`,
+    );
     assert.ok(!/userAgentSuffix/.test(text), `${rel} passes a userAgentSuffix`);
     if (!rel.startsWith('src/net/')) {
       assert.ok(!/QUTAI_SERVER_USER_AGENT|withQutaiToken|appUserAgent\(/.test(text), `${rel} uses the server User-Agent outside src/net`);
