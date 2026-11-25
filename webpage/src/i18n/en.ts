@@ -298,7 +298,7 @@ export const en = {
     'Hidden instructions on web pages: we test against pages built to mislead the assistant and keep tightening the app’s own checks, but we are not perfect. Paying, posting, deleting, account changes, calls and messages wait for your tap (posting only until you let a site skip the question), yet the assistant can still be misled into a slanted summary, a bad link or a step that needs no approval. Read what an approval says before you tap, and treat the assistant’s summary of an unfamiliar page as a summary, not a verdict',
   'status.planned': 'Planned',
   'status.planned.1': 'Release on the App Store, now in beta testing',
-  'status.planned.2': 'End-to-end encrypted sync for those who choose an account',
+  'status.planned.2': 'Live sync between your devices, end-to-end encrypted, for those with an account (today: an encrypted backup kept in your account)',
   'status.planned.3': 'Buying Qutai Credits on the App Store (on Google Play it works today)',
   'status.planned.4': 'Share extension and widget on iPhone',
   'status.planned.5': 'For apps: phone features such as location, notifications and the camera, internet for sites you choose, a home-screen shortcut',

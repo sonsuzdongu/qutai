@@ -315,7 +315,7 @@ export const tr: Messages = {
     'Web sayfalarına gizlenmiş talimatlar: asistanı yanıltmak için hazırlanmış sayfalarla deniyor ve uygulamanın kendi denetimlerini sıkılaştırmaya devam ediyoruz, ama kusursuz değiliz. Ödeme, paylaşım, silme, hesap değişiklikleri, aramalar ve mesajlar sizin dokunuşunuzu bekler (paylaşımda, bir siteye sormadan paylaşma izni vermediyseniz); yine de asistan bir sayfa yüzünden taraflı bir özet çıkarabilir, kötü bir bağlantı önerebilir ya da onay gerektirmeyen bir adım atabilir. Onay penceresinde yazanı okuyup öyle dokunun; asistanın tanımadığınız bir sayfa hakkındaki özetini bir hüküm değil, bir özet olarak görün',
   'status.planned': 'Planlananlar',
   'status.planned.1': 'App Store’da yayın (şu anda beta testinde)',
-  'status.planned.2': 'Hesap açanlar için uçtan uca şifreli eşitleme',
+  'status.planned.2': 'Hesap açanlar için cihazlar arasında uçtan uca şifreli canlı eşitleme (bugün: hesabınızda saklanan şifreli yedek)',
   'status.planned.3': 'Qutai Kredilerini App Store’dan satın alma (Google Play’de bugün çalışıyor)',
   'status.planned.4': 'iPhone’da paylaşım uzantısı ve widget',
   'status.planned.5': 'Uygulamalar için: konum, bildirim ve kamera gibi telefon özellikleri, seçtiğiniz sitelere internet, ana ekran kısayolu',
