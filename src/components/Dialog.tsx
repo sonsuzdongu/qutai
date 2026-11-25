@@ -78,8 +78,14 @@ export type DialogOptions = {
      * What is typed, for the keyboard and autofill: an email address (email keyboard, no capitals or corrections) or
      * a one-time code from a message (number pad; iOS offers the code from Mail). Plain text when absent.
      */
-    kind?: 'email' | 'code';
+    kind?: 'email' | 'code' | 'username';
   };
+  /**
+   * A password field under the text field (a site's sign-in request): hidden as typed, never autocorrected, and
+   * returned only in the result (nothing keeps it). It may be left empty. `private`: no autofill hints on either
+   * field, so the phone's password manager neither fills nor offers to save them (incognito).
+   */
+  password?: { label: string; private?: boolean };
   /** Aborting dismisses the dialog (or drops it from the queue) as if no button was pressed. */
   signal?: AbortSignal;
   /** No button is emphasised: a choice of equal weight (the analytics consent question, SRV-31). */
@@ -87,7 +93,7 @@ export type DialogOptions = {
 };
 
 /** button: the index of the pressed button in `buttons`, null when dismissed by the signal. choice: see `choices`. */
-export type DialogResult = { button: number | null; checked: boolean; text: string; choice: number };
+export type DialogResult = { button: number | null; checked: boolean; text: string; choice: number; password: string };
 
 type Entry = {
   id: number;
@@ -148,7 +154,7 @@ function settle(entry: Entry, result: DialogResult) {
 function show(options: DialogOptions): Promise<DialogResult> {
   return new Promise((resolve) => {
     const { signal } = options;
-    const dismissed = { button: null, checked: false, text: '', choice: options.choices?.initial ?? 0 };
+    const dismissed = { button: null, checked: false, text: '', choice: options.choices?.initial ?? 0, password: '' };
     if (signal?.aborted) return resolve(dismissed);
     const buttons = options.buttons?.length ? options.buttons.slice(0, 3) : [{ text: t('common.ok') }];
     const onAbort = () => settle(entry, dismissed);
@@ -255,11 +261,12 @@ function DialogView({ entry }: { entry: Entry }) {
   const reduceMotion = useReduceMotion();
   const keyboard = useKeyboardHeight();
   const { fontScale, height } = useWindowDimensions();
-  const { title, message, details, link, lines, buttons, checkbox, input, image, choices, equalButtons } = entry.options;
+  const { title, message, details, link, lines, buttons, checkbox, input, password, image, choices, equalButtons } = entry.options;
 
   const [checked, setChecked] = useState(checkbox?.initial ?? false);
   const [choice, setChoice] = useState(choices?.initial ?? 0);
   const [text, setText] = useState(input?.initial ?? '');
+  const [secret, setSecret] = useState('');
   // Side by side when they fit; three buttons, large text or a label that wraps stack them.
   const [stacked, setStacked] = useState(buttons.length > 2 || fontScale > 1.3);
   const [progress] = useState(() => new Animated.Value(0));
@@ -268,6 +275,7 @@ function DialogView({ entry }: { entry: Entry }) {
   const closing = useRef(false);
   const titleRef = useRef<ComponentRef<typeof Text>>(null);
   const inputRef = useRef<ComponentRef<typeof TextInput>>(null);
+  const passwordRef = useRef<ComponentRef<typeof TextInput>>(null);
 
   // iOS ignores a presentation while another one is still in progress; try again until it shows.
   useEffect(() => {
@@ -307,7 +315,7 @@ function DialogView({ entry }: { entry: Entry }) {
     if (input) Keyboard.dismiss();
     // A light confirmation for the dialog's action (Allow, Save…); none for Cancel / Deny or a destructive one.
     if (index !== cancelIndex && buttons[index]?.style !== 'destructive') confirmHaptic();
-    const result = { button: index, checked, text, choice };
+    const result = { button: index, checked, text, choice, password: secret };
     if (reduceMotion) return settle(entry, result);
     Animated.timing(progress, {
       toValue: 0,
@@ -440,11 +448,36 @@ function DialogView({ entry }: { entry: Entry }) {
                 placeholder={input.placeholder ?? input.label}
                 accessibilityLabel={input.label}
                 selectTextOnFocus
-                returnKeyType="done"
-                onSubmitEditing={() => !missingText && primaryIndex >= 0 && choose(primaryIndex)}
+                returnKeyType={password ? 'next' : 'done'}
+                onSubmitEditing={() =>
+                  password ? passwordRef.current?.focus() : !missingText && primaryIndex >= 0 && choose(primaryIndex)
+                }
+                submitBehavior={password ? 'submit' : undefined}
                 maxLength={input.maxLength}
                 maxFontSizeMultiplier={MAX_FONT_SCALE}
                 {...inputKindProps(input.kind)}
+                {...(password?.private ? { autoComplete: 'off', textContentType: 'none' } : {})}
+              />
+            )}
+
+            {password && (
+              <TextInput
+                ref={passwordRef}
+                style={[styles.input, styles.secondInput]}
+                placeholderTextColor={palette.textSecondary}
+                value={secret}
+                onChangeText={setSecret}
+                placeholder={password.label}
+                accessibilityLabel={password.label}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+                autoComplete={password.private ? 'off' : 'current-password'}
+                textContentType={password.private ? 'none' : 'password'}
+                returnKeyType="done"
+                onSubmitEditing={() => !missingText && primaryIndex >= 0 && choose(primaryIndex)}
+                maxLength={1024}
+                maxFontSizeMultiplier={MAX_FONT_SCALE}
               />
             )}
 
@@ -567,6 +600,7 @@ const useStyles = makeStyles((c) => ({
   lineText: { flex: 1 },
   image: { width: '100%', maxHeight: 200, borderRadius: 8, backgroundColor: c.border },
   input: { ...common(c).input, fontSize: 16 },
+  secondInput: { marginTop: 10 },
   checkRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -614,7 +648,10 @@ const useStyles = makeStyles((c) => ({
 }));
 
 /** Keyboard and autofill settings of the dialog's text field for an email address or a one-time code. */
-function inputKindProps(kind: 'email' | 'code' | undefined): Partial<TextInputProps> {
+function inputKindProps(kind: 'email' | 'code' | 'username' | undefined): Partial<TextInputProps> {
+  if (kind === 'username') {
+    return { autoCapitalize: 'none', autoCorrect: false, autoComplete: 'username', textContentType: 'username' };
+  }
   if (kind === 'email') {
     return { keyboardType: 'email-address', autoCapitalize: 'none', autoCorrect: false, autoComplete: 'email', textContentType: 'emailAddress' };
   }

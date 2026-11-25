@@ -26,6 +26,8 @@ import { endLaunchChain, mayOfferExternal, noteUserGesture, touchedRecently } fr
 import { isUserTap, windowOpensInFront } from '../browser/pendingNavigation';
 import { closesOnWindowClose, closesRefusedPopup, planPopupOpen } from '../browser/popups';
 import { releasePopup } from '../device/popupWindows';
+import { HttpAuthQueue, httpAuthDialogParts, parseHttpAuthRequest, type HttpAuthRequest } from '../browser/httpAuth';
+import { answerHttpAuth, cancelHttpAuth } from '../device/httpAuth';
 import { parseShareMessage, shareDoneScript, webShareScript } from '../browser/webShare';
 import { shareFromPage } from '../device/link';
 import { FORM_ANSWER_IDLE, formAnswer } from '../browser/formResubmission';
@@ -145,6 +147,24 @@ export function BrowserView({
       {/* The working glow and the action marker are drawn at screen level (App.tsx, docs/working-mode.md). */}
     </View>
   );
+}
+
+/** Asks the user for a site's user name and password and answers the waiting load (Cancel: the site's 401 page). */
+async function askHttpAuth(req: HttpAuthRequest, incognito: boolean): Promise<void> {
+  const parts = httpAuthDialogParts(req);
+  const message = parts.lines
+    .map((line) => (line.key === 'httpAuth.realm' ? t(line.key, { realm: line.realm }) : t(line.key)))
+    .join('\n\n');
+  const result = await dialog.show({
+    title: t(parts.title.key, { host: parts.title.host }),
+    message,
+    input: { label: t('httpAuth.user'), kind: 'username', maxLength: 256 },
+    // Incognito: the phone's password manager neither fills nor offers to save (nothing is remembered).
+    password: { label: t('httpAuth.password'), private: incognito },
+    buttons: [{ text: t('common.cancel'), style: 'cancel' }, { text: t('httpAuth.signIn') }],
+  });
+  if (result.button === 1) answerHttpAuth(req.id, result.text.trim(), result.password);
+  else cancelHttpAuth(req.id);
 }
 
 function TabWebView({
@@ -281,6 +301,19 @@ function TabWebView({
   const [refreshing, setRefreshing] = useState(false);
   // Android: the answer to the WebView's "send the form again?" question (formResubmission.ts).
   const [formResubmission, setFormResubmission] = useState(FORM_ANSWER_IDLE);
+
+  // A site's request for a user name and password (httpAuth.ts): asked with Qutai's dialog, one at a time and only
+  // while this tab is on screen. The answer goes straight to the WebView; nothing keeps the password.
+  const httpAuth = useRef(new HttpAuthQueue());
+  const [httpAuthWaiting, setHttpAuthWaiting] = useState(0);
+  useEffect(() => {
+    const req = httpAuth.current.next(active);
+    if (!req) return;
+    void askHttpAuth(req, tab.incognito).then(() => {
+      httpAuth.current.done(req.id);
+      setHttpAuthWaiting((n) => n + 1);
+    });
+  }, [active, httpAuthWaiting, tab.incognito]);
 
   // Changed rules (saved, switched, removed, an "off" site) reach the page already open at once.
   const firstRules = useRef(true);
@@ -441,6 +474,17 @@ function TabWebView({
                 popupId: plan.popupId,
               });
               if (!front) newTabActions.onOpenedInBackground(opened);
+            }}
+            // A site asks for a user name and password: Qutai's dialog (not the assistant's to answer).
+            httpAuthPrompt
+            onHttpAuthRequest={(e) => {
+              const req = parseHttpAuthRequest(e.nativeEvent);
+              if (!req) {
+                if (typeof e.nativeEvent.id === 'string') cancelHttpAuth(e.nativeEvent.id);
+                return;
+              }
+              httpAuth.current.add(req);
+              setHttpAuthWaiting((n) => n + 1);
             }}
             // The page's pop-up this tab was opened for: its WebView takes it over instead of loading the source.
             popupId={tab.popupId}

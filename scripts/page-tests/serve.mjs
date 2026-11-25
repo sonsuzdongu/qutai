@@ -10,6 +10,7 @@
 //   http://localhost:8811/            the page with the working copy's page script; runs every case and shows a table
 //   http://localhost:8811/?script=head the same with the page script of the last commit (to compare before a fix)
 //   http://localhost:8811/guards      secret fields, payment buttons and destructive or account presses (guards.html)
+//   http://localhost:8811/auth        HTTP Basic sign-in (user qutai, password test-only; the app's dialog)
 //   http://localhost:8811/popup       pop-up windows that post back to window.opener and close themselves (popup.html)
 //   http://localhost:8811/app-breakout the apps break-out test as an app document (frame routes: window.__results)
 // The results are also in window.__pageTestResults (an array of { name, ok, detail }).
@@ -91,6 +92,18 @@ createServer((req, res) => {
       const change = pressRule.changePress(facts);
       res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify({ pay: pay.pay, change: change.change }));
     });
+    return;
+  }
+  if (url.pathname === '/auth') {
+    // HTTP Basic authentication (the app's sign-in dialog): user "qutai", password "test-only". Test values only.
+    const expected = 'Basic ' + Buffer.from('qutai:test-only').toString('base64');
+    if (req.headers.authorization !== expected) {
+      res.writeHead(401, { 'www-authenticate': 'Basic realm="Qutai test area"', 'content-type': 'text/html; charset=utf-8' });
+      res.end('<!doctype html><meta name="viewport" content="width=device-width"><h1>401: not signed in</h1>');
+      return;
+    }
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' });
+    res.end('<!doctype html><meta name="viewport" content="width=device-width"><h1>Signed in as qutai</h1>');
     return;
   }
   if (url.pathname === '/popup') {

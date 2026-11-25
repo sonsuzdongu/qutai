@@ -98,7 +98,7 @@ index 1b5c4c9..ccc73d5 100644
      public void onGeolocationPermissionsShowPrompt(String origin, GeolocationPermissions.Callback callback) {
  
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
-index 80c6803..058d990 100644
+index 80c6803..b81c027 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebView.java
 @@ -38,15 +38,19 @@ import com.facebook.react.uimanager.events.Event;
@@ -164,12 +164,15 @@ index 80c6803..058d990 100644
          if (this.nestedScrollEnabled) {
              requestDisallowInterceptTouchEvent(true);
          }
-@@ -224,6 +262,193 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -224,6 +262,196 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
 +    // Qutai patch: camera and microphone only for "<origin> camera microphone"; null refuses both.
 +    public @Nullable String mediaCaptureGrant = null;
++
++    // Qutai patch: a site's request for a user name and password goes to the app (RNCWebViewHttpAuth).
++    public boolean httpAuthPrompt = false;
 +
 +    // Qutai patch: the id of the opener's new-window request this view hosts (popupId prop, see RNCWebViewPopups),
 +    // and whether it was looked at (taken or not, only before the first load).
@@ -358,7 +361,7 @@ index 80c6803..058d990 100644
      WebChromeClient mWebChromeClient;
      @Override
      public void setWebChromeClient(WebChromeClient client) {
-@@ -253,6 +478,12 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -253,6 +481,12 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
              this.bridgeListener = new WebViewCompat.WebMessageListener() {
                @Override
                public void onPostMessage(@NonNull WebView view, @NonNull WebMessageCompat message, @NonNull Uri sourceOrigin, boolean isMainFrame, @NonNull JavaScriptReplyProxy replyProxy) {
@@ -371,7 +374,7 @@ index 80c6803..058d990 100644
                  RNCWebView.this.onMessage(message.getData(), sourceOrigin.toString());
                }
              };
-@@ -403,6 +634,67 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -403,6 +637,67 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          }
      }
  
@@ -439,11 +442,13 @@ index 80c6803..058d990 100644
      protected void dispatchEvent(WebView webView, Event event) {
          ThemedReactContext reactContext = getThemedReactContext();
          int reactTag = RNCWebViewWrapper.getReactTagFromWebView(webView);
-@@ -419,7 +711,17 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -419,7 +714,19 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          if (mWebChromeClient != null) {
              mWebChromeClient.onHideCustomView();
          }
 +        contentBlockerDestroyed = true;
++        // Qutai patch: a password request still open is cancelled (the WebView must get an answer).
++        RNCWebViewHttpAuth.cancelAll(this);
 +        // Qutai patch: a question still open is answered "don't send again" (the WebView must get an answer).
 +        formResubmissionId++;
 +        answerFormResubmission(false);
@@ -457,7 +462,7 @@ index 80c6803..058d990 100644
      }
  
    public ThemedReactContext getThemedReactContext() {
-@@ -446,7 +748,13 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
+@@ -446,7 +753,13 @@ public class RNCWebView extends WebView implements LifecycleEventListener {
          public void postMessage(String message) {
              if (mWebView.getMessagingEnabled()) {
                  // Post to main thread because `mWebView.getUrl()` requires to be executed on main.
@@ -562,7 +567,7 @@ index 0000000..95b43f2
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
-index 209b855..882f955 100644
+index 209b855..0c04b11 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewClient.java
 @@ -1,6 +1,7 @@
@@ -708,7 +713,27 @@ index 209b855..882f955 100644
      @Override
      public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
          final String url = request.getUrl().toString();
-@@ -156,6 +230,15 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -144,6 +218,19 @@ public class RNCWebViewClient extends WebViewClient {
+             handler.proceed(basicAuthCredential.username, basicAuthCredential.password);
+             return;
+         }
++        // Qutai patch: the app asks the user (its own dialog) when it said it would (httpAuthPrompt); see
++        // RNCWebViewHttpAuth. Otherwise the default: cancelled, the site's 401 page.
++        if (view instanceof RNCWebView && ((RNCWebView) view).httpAuthPrompt) {
++            RNCWebView webView = (RNCWebView) view;
++            WritableMap data = Arguments.createMap();
++            data.putString("id", RNCWebViewHttpAuth.hold(handler, webView));
++            data.putString("host", host == null ? "" : host);
++            data.putString("realm", realm == null ? "" : realm);
++            data.putString("url", webView.getUrl() == null ? "" : webView.getUrl());
++            webView.dispatchEvent(webView, new com.reactnativecommunity.webview.events.TopHttpAuthRequestEvent(
++                RNCWebViewWrapper.getReactTagFromWebView(webView), data));
++            return;
++        }
+         super.onReceivedHttpAuthRequest(view, handler, host, realm);
+     }
+ 
+@@ -156,6 +243,15 @@ public class RNCWebViewClient extends WebViewClient {
          String topWindowUrl = webView.getUrl();
          String failingUrl = error.getUrl();
  
@@ -724,7 +749,7 @@ index 209b855..882f955 100644
          // Cancel request after obtaining top-level URL.
          // If request is cancelled before obtaining top-level URL, undesired behavior may occur.
          // Undesired behavior: Return value of WebView.getUrl() may be the current URL instead of the failing URL.
-@@ -191,6 +274,13 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -191,6 +287,13 @@ public class RNCWebViewClient extends WebViewClient {
          }
  
          description = descriptionPrefix + description;
@@ -738,7 +763,7 @@ index 209b855..882f955 100644
  
        if (!topWindowUrl.equalsIgnoreCase(failingUrl)) {
          // If error is not due to top-level navigation, then do not call onReceivedError()
-@@ -248,6 +338,17 @@ public class RNCWebViewClient extends WebViewClient {
+@@ -248,6 +351,17 @@ public class RNCWebViewClient extends WebViewClient {
          UIManagerHelper.getEventDispatcherForReactTag((ReactContext) webView.getContext(), reactTag).dispatchEvent(new TopLoadingErrorEvent(reactTag, eventData));
      }
  
@@ -1064,6 +1089,86 @@ index 0000000..f144112
 +        });
 +    }
 +}
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewHttpAuth.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewHttpAuth.java
+new file mode 100644
+index 0000000..57f666d
+--- /dev/null
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewHttpAuth.java
+@@ -0,0 +1,74 @@
++package com.reactnativecommunity.webview;
++
++import android.webkit.HttpAuthHandler;
++
++import androidx.annotation.Nullable;
++import androidx.annotation.UiThread;
++
++import java.lang.ref.WeakReference;
++import java.util.HashMap;
++import java.util.Iterator;
++import java.util.Map;
++
++/**
++ * Qutai patch: a site's request for a user name and password (HTTP Basic or Digest, a 401 with WWW-Authenticate)
++ * answered by the app's own dialog. The WebView waits on the HttpAuthHandler; it is kept here under an id that the
++ * app's onHttpAuthRequest event carries, and the app answers through RNCWebViewModule (answerHttpAuth /
++ * cancelHttpAuth), never through a view prop, so the password is never part of the view's props. Nothing is
++ * stored: the WebView's own credential store is not used (proceed is called each time). A request whose WebView
++ * goes away is cancelled.
++ *
++ * All methods run on the UI thread.
++ */
++public final class RNCWebViewHttpAuth {
++    private static final class Pending {
++        final HttpAuthHandler handler;
++        final WeakReference<RNCWebView> view;
++
++        Pending(HttpAuthHandler handler, RNCWebView view) {
++            this.handler = handler;
++            this.view = new WeakReference<>(view);
++        }
++    }
++
++    private static final Map<String, Pending> sPending = new HashMap<>();
++    private static int sCounter = 0;
++
++    private RNCWebViewHttpAuth() {}
++
++    @UiThread
++    public static String hold(HttpAuthHandler handler, RNCWebView view) {
++        String id = "h" + (++sCounter);
++        sPending.put(id, new Pending(handler, view));
++        return id;
++    }
++
++    @UiThread
++    public static void answer(String id, String username, String password) {
++        Pending p = sPending.remove(id);
++        if (p == null) return;
++        p.handler.proceed(username, password);
++    }
++
++    /** The user cancelled: the WebView shows the site's own 401 page. */
++    @UiThread
++    public static void cancel(@Nullable String id) {
++        if (id == null) return;
++        Pending p = sPending.remove(id);
++        if (p != null) p.handler.cancel();
++    }
++
++    /** The WebView is going away: its open requests are cancelled. */
++    @UiThread
++    public static void cancelAll(RNCWebView view) {
++        Iterator<Map.Entry<String, Pending>> it = sPending.entrySet().iterator();
++        while (it.hasNext()) {
++            Pending p = it.next().getValue();
++            RNCWebView v = p.view.get();
++            if (v == null || v == view) {
++                it.remove();
++                p.handler.cancel();
++            }
++        }
++    }
++}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewInsets.java b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewInsets.java
 new file mode 100644
 index 0000000..438745c
@@ -1145,7 +1250,7 @@ index 0000000..438745c
 +    }
 +}
 diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
-index f83033b..7909fb3 100644
+index f83033b..517c242 100644
 --- a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
 +++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/RNCWebViewManagerImpl.kt
 @@ -1,6 +1,5 @@
@@ -1278,10 +1383,15 @@ index f83033b..7909fb3 100644
          mPendingSource?.let { source ->
              loadSource(viewWrapper, source)
          }
-@@ -696,6 +689,11 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
+@@ -696,6 +689,16 @@ class RNCWebViewManagerImpl(private val newArch: Boolean = false) {
  
      }
  
++    // Qutai patch: see RNCWebViewHttpAuth.
++    fun setHttpAuthPrompt(viewWrapper: RNCWebViewWrapper, value: Boolean) {
++        viewWrapper.webView.httpAuthPrompt = value
++    }
++
 +    // Qutai patch: see RNCWebViewPopups.
 +    fun setPopupId(viewWrapper: RNCWebViewWrapper, value: String?) {
 +        viewWrapper.webView.popupId = value
@@ -1897,8 +2007,39 @@ index 0000000..2560f55
 +  override fun dispatch(rctEventEmitter: RCTEventEmitter) =
 +    rctEventEmitter.receiveEvent(viewTag, eventName, mEventData)
 +}
+diff --git a/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopHttpAuthRequestEvent.kt b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopHttpAuthRequestEvent.kt
+new file mode 100644
+index 0000000..f425960
+--- /dev/null
++++ b/node_modules/react-native-webview/android/src/main/java/com/reactnativecommunity/webview/events/TopHttpAuthRequestEvent.kt
+@@ -0,0 +1,25 @@
++package com.reactnativecommunity.webview.events
++
++import com.facebook.react.bridge.WritableMap
++import com.facebook.react.uimanager.events.Event
++import com.facebook.react.uimanager.events.RCTEventEmitter
++
++/**
++ * Qutai patch: a site asks for a user name and password (HTTP Basic or Digest). Carries the request's id, the host and
++ * the realm; the app answers through RNCWebViewModule (see RNCWebViewHttpAuth).
++ */
++class TopHttpAuthRequestEvent(viewId: Int, private val mEventData: WritableMap) :
++  Event<TopHttpAuthRequestEvent>(viewId) {
++  companion object {
++    const val EVENT_NAME = "topHttpAuthRequest"
++  }
++
++  override fun getEventName(): String = EVENT_NAME
++
++  override fun canCoalesce(): Boolean = false
++
++  override fun getCoalescingKey(): Short = 0
++
++  override fun dispatch(rctEventEmitter: RCTEventEmitter) =
++    rctEventEmitter.receiveEvent(viewTag, eventName, mEventData)
++}
 diff --git a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index fa8efb8..ef5ecbb 100644
+index fa8efb8..ebc878a 100644
 --- a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 @@ -23,6 +23,8 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
@@ -1910,7 +2051,7 @@ index fa8efb8..ef5ecbb 100644
  import com.reactnativecommunity.webview.events.TopRenderProcessGoneEvent;
  import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEvent;
  
-@@ -160,6 +162,74 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -160,6 +162,81 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
          mRNCWebViewManagerImpl.setIncognito(view, value);
      }
  
@@ -1926,6 +2067,13 @@ index fa8efb8..ef5ecbb 100644
 +    @ReactProp(name = "documentStartScript")
 +    public void setDocumentStartScript(RNCWebViewWrapper view, @Nullable String value) {
 +        view.getWebView().setDocumentStartScript(value);
++    }
++
++    // Qutai patch: a site's request for a user name and password goes to the app (see RNCWebViewHttpAuth).
++    @Override
++    @ReactProp(name = "httpAuthPrompt")
++    public void setHttpAuthPrompt(RNCWebViewWrapper view, boolean value) {
++        mRNCWebViewManagerImpl.setHttpAuthPrompt(view, value);
 +    }
 +
 +    // Qutai patch: the opener's new-window request this WebView hosts (see RNCWebViewPopups).
@@ -1985,7 +2133,7 @@ index fa8efb8..ef5ecbb 100644
      @Override
      @ReactProp(name = "injectedJavaScript")
      public void setInjectedJavaScript(RNCWebViewWrapper view, @Nullable String value) {
-@@ -429,6 +499,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -429,6 +506,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
      @Override
      public void setMediaCapturePermissionGrantType(RNCWebViewWrapper view, @Nullable String value) {}
  
@@ -1999,7 +2147,7 @@ index fa8efb8..ef5ecbb 100644
      @Override
      public void setFraudulentWebsiteWarningEnabled(RNCWebViewWrapper view, boolean value) {}
      /* !iOS PROPS - no implemented here */
-@@ -537,6 +614,11 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -537,6 +621,12 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
          export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
          export.put(TopHttpErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpError"));
          export.put(TopRenderProcessGoneEvent.EVENT_NAME, MapBuilder.of("registrationName", "onRenderProcessGone"));
@@ -2008,11 +2156,12 @@ index fa8efb8..ef5ecbb 100644
 +        export.put(TopFileDownloadEvent.EVENT_NAME, MapBuilder.of("registrationName", "onFileDownload"));
 +        export.put(com.reactnativecommunity.webview.events.TopFormResubmissionEvent.EVENT_NAME, MapBuilder.of("registrationName", "onFormResubmission"));
 +        export.put(com.reactnativecommunity.webview.events.TopCloseWindowEvent.EVENT_NAME, MapBuilder.of("registrationName", "onCloseWindow"));
++        export.put(com.reactnativecommunity.webview.events.TopHttpAuthRequestEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpAuthRequest"));
          export.put(TopCustomMenuSelectionEvent.EVENT_NAME, MapBuilder.of("registrationName", "onCustomMenuSelection"));
          export.put(TopOpenWindowEvent.EVENT_NAME, MapBuilder.of("registrationName", "onOpenWindow"));
          return export;
 diff --git a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewModule.java b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewModule.java
-index ca9ff96..78e8af0 100644
+index ca9ff96..74a0ba4 100644
 --- a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewModule.java
 +++ b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewModule.java
 @@ -6,7 +6,9 @@ import android.webkit.ValueCallback;
@@ -2025,7 +2174,7 @@ index ca9ff96..78e8af0 100644
  import com.facebook.react.module.annotations.ReactModule;
  
  @ReactModule(name = RNCWebViewModuleImpl.NAME)
-@@ -23,6 +25,60 @@ public class RNCWebViewModule extends NativeRNCWebViewModuleSpec {
+@@ -23,6 +25,71 @@ public class RNCWebViewModule extends NativeRNCWebViewModuleSpec {
          mRNCWebViewModuleImpl.shouldStartLoadWithLockIdentifier(shouldStart, lockIdentifier);
      }
  
@@ -2049,6 +2198,17 @@ index ca9ff96..78e8af0 100644
 +    @Override
 +    public void releasePopup(String id) {
 +        UiThreadUtil.runOnUiThread(() -> RNCWebViewPopups.release(id));
++    }
++
++    // Qutai patch: the user's answer to a site's request for a user name and password (see RNCWebViewHttpAuth).
++    @Override
++    public void answerHttpAuth(String id, String username, String password) {
++        UiThreadUtil.runOnUiThread(() -> RNCWebViewHttpAuth.answer(id, username, password));
++    }
++
++    @Override
++    public void cancelHttpAuth(String id) {
++        UiThreadUtil.runOnUiThread(() -> RNCWebViewHttpAuth.cancel(id));
 +    }
 +
 +    // Qutai patch: network ad and tracker blocking (see RNCWebViewContentBlocker). The rule list methods are iOS's.
@@ -2087,7 +2247,7 @@ index ca9ff96..78e8af0 100644
          return mRNCWebViewModuleImpl.startPhotoPickerIntent(acceptTypes, allowMultiple, callback, isCaptureEnabled);
      }
 diff --git a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index 974337f..06e2646 100644
+index 974337f..e2413c5 100644
 --- a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 @@ -19,6 +19,8 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
@@ -2099,7 +2259,7 @@ index 974337f..06e2646 100644
  import com.reactnativecommunity.webview.events.TopRenderProcessGoneEvent;
  import com.reactnativecommunity.webview.events.TopShouldStartLoadWithRequestEvent;
  
-@@ -127,6 +129,64 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
+@@ -127,6 +129,70 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
          mRNCWebViewManagerImpl.setIncognito(view, value);
      }
  
@@ -2113,6 +2273,12 @@ index 974337f..06e2646 100644
 +    @ReactProp(name = "documentStartScript")
 +    public void setDocumentStartScript(RNCWebViewWrapper view, @Nullable String value) {
 +        view.getWebView().setDocumentStartScript(value);
++    }
++
++    // Qutai patch: a site's request for a user name and password goes to the app (see RNCWebViewHttpAuth).
++    @ReactProp(name = "httpAuthPrompt")
++    public void setHttpAuthPrompt(RNCWebViewWrapper view, boolean value) {
++        mRNCWebViewManagerImpl.setHttpAuthPrompt(view, value);
 +    }
 +
 +    // Qutai patch: the opener's new-window request this WebView hosts (see RNCWebViewPopups).
@@ -2164,7 +2330,7 @@ index 974337f..06e2646 100644
      @ReactProp(name = "injectedJavaScript")
      public void setInjectedJavaScript(RNCWebViewWrapper view, @Nullable String value) {
          mRNCWebViewManagerImpl.setInjectedJavaScript(view, value);
-@@ -304,6 +364,11 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
+@@ -304,6 +370,12 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper> {
          export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
          export.put(TopHttpErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpError"));
          export.put(TopRenderProcessGoneEvent.EVENT_NAME, MapBuilder.of("registrationName", "onRenderProcessGone"));
@@ -2173,11 +2339,12 @@ index 974337f..06e2646 100644
 +        export.put(TopFileDownloadEvent.EVENT_NAME, MapBuilder.of("registrationName", "onFileDownload"));
 +        export.put(com.reactnativecommunity.webview.events.TopFormResubmissionEvent.EVENT_NAME, MapBuilder.of("registrationName", "onFormResubmission"));
 +        export.put(com.reactnativecommunity.webview.events.TopCloseWindowEvent.EVENT_NAME, MapBuilder.of("registrationName", "onCloseWindow"));
++        export.put(com.reactnativecommunity.webview.events.TopHttpAuthRequestEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpAuthRequest"));
          export.put(TopCustomMenuSelectionEvent.EVENT_NAME, MapBuilder.of("registrationName", "onCustomMenuSelection"));
          export.put(TopOpenWindowEvent.EVENT_NAME, MapBuilder.of("registrationName", "onOpenWindow"));
          return export;
 diff --git a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewModule.java b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewModule.java
-index 07f2eee..f691fb8 100644
+index 07f2eee..695f08d 100644
 --- a/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewModule.java
 +++ b/node_modules/react-native-webview/android/src/oldarch/com/reactnativecommunity/webview/RNCWebViewModule.java
 @@ -6,7 +6,9 @@ import android.webkit.ValueCallback;
@@ -2190,7 +2357,7 @@ index 07f2eee..f691fb8 100644
  import com.facebook.react.bridge.ReactContextBaseJavaModule;
  import com.facebook.react.bridge.ReactMethod;
  import com.facebook.react.module.annotations.ReactModule;
-@@ -25,6 +27,60 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule {
+@@ -25,6 +27,71 @@ public class RNCWebViewModule extends ReactContextBaseJavaModule {
          mRNCWebViewModuleImpl.shouldStartLoadWithLockIdentifier(shouldStart, lockIdentifier);
      }
  
@@ -2214,6 +2381,17 @@ index 07f2eee..f691fb8 100644
 +    @ReactMethod
 +    public void releasePopup(String id) {
 +        UiThreadUtil.runOnUiThread(() -> RNCWebViewPopups.release(id));
++    }
++
++    // Qutai patch: the user's answer to a site's request for a user name and password (see RNCWebViewHttpAuth).
++    @ReactMethod
++    public void answerHttpAuth(String id, String username, String password) {
++        UiThreadUtil.runOnUiThread(() -> RNCWebViewHttpAuth.answer(id, username, password));
++    }
++
++    @ReactMethod
++    public void cancelHttpAuth(String id) {
++        UiThreadUtil.runOnUiThread(() -> RNCWebViewHttpAuth.cancel(id));
 +    }
 +
 +    // Qutai patch: network ad and tracker blocking (see RNCWebViewContentBlocker). The rule list methods are iOS's.
@@ -2252,13 +2430,26 @@ index 07f2eee..f691fb8 100644
          return mRNCWebViewModuleImpl.startPhotoPickerIntent(acceptTypes, allowMultiple, callback, isCaptureEnabled);
      }
 diff --git a/node_modules/react-native-webview/apple/RNCWebView.mm b/node_modules/react-native-webview/apple/RNCWebView.mm
-index 2be7877..e313713 100644
+index 2be7877..d2479f3 100644
 --- a/node_modules/react-native-webview/apple/RNCWebView.mm
 +++ b/node_modules/react-native-webview/apple/RNCWebView.mm
-@@ -190,6 +190,16 @@ - (instancetype)initWithFrame:(CGRect)frame
+@@ -190,6 +190,29 @@ - (instancetype)initWithFrame:(CGRect)frame
                  webViewEventEmitter->onLoadingProgress(data);
              }
          };
++        // Qutai patch: a site asks for a user name and password.
++        _view.onHttpAuthRequest = [self](NSDictionary* dictionary) {
++            if (_eventEmitter) {
++                auto webViewEventEmitter = std::static_pointer_cast<RNCWebViewEventEmitter const>(_eventEmitter);
++                facebook::react::RNCWebViewEventEmitter::OnHttpAuthRequest data = {
++                    .id = nullSafeString([dictionary valueForKey:@"id"]),
++                    .host = nullSafeString([dictionary valueForKey:@"host"]),
++                    .realm = nullSafeString([dictionary valueForKey:@"realm"]),
++                    .url = nullSafeString([dictionary valueForKey:@"url"])
++                };
++                webViewEventEmitter->onHttpAuthRequest(data);
++            }
++        };
 +        // Qutai patch: a page closed its own window.
 +        _view.onCloseWindow = [self](NSDictionary* dictionary) {
 +            if (_eventEmitter) {
@@ -2272,7 +2463,7 @@ index 2be7877..e313713 100644
          _view.onContentProcessDidTerminate = [self](NSDictionary* dictionary) {
              if (_eventEmitter) {
                  auto webViewEventEmitter = std::static_pointer_cast<RNCWebViewEventEmitter const>(_eventEmitter);
-@@ -445,7 +455,8 @@ - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &
+@@ -445,7 +468,8 @@ - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &
                  if (_eventEmitter) {
                      auto webViewEventEmitter = std::static_pointer_cast<RNCWebViewEventEmitter const>(_eventEmitter);
                      facebook::react::RNCWebViewEventEmitter::OnOpenWindow data = {
@@ -2282,10 +2473,14 @@ index 2be7877..e313713 100644
                      };
                      webViewEventEmitter->onOpenWindow(data);
                  }
-@@ -467,7 +478,30 @@ - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &
+@@ -467,7 +491,34 @@ - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &
      }
  #endif
  
++    // Qutai patch: a site's request for a user name and password goes to the app.
++    if (oldViewProps.httpAuthPrompt != newViewProps.httpAuthPrompt) {
++        [_view setHttpAuthPrompt:newViewProps.httpAuthPrompt];
++    }
 +    // Qutai patch: the page's pop-up this WebView takes over (read when its web view is created).
 +    if (oldViewProps.popupId != newViewProps.popupId) {
 +        [_view setPopupId:RCTNSStringFromString(newViewProps.popupId)];
@@ -2314,10 +2509,10 @@ index 2be7877..e313713 100644
          if (newViewProps.mediaCapturePermissionGrantType == RNCWebViewMediaCapturePermissionGrantType::Prompt) {
              [_view setMediaCapturePermissionGrantType:RNCWebViewPermissionGrantType_Prompt];
 diff --git a/node_modules/react-native-webview/apple/RNCWebViewImpl.h b/node_modules/react-native-webview/apple/RNCWebViewImpl.h
-index 1f637c1..6c8bcf7 100644
+index 1f637c1..ee7a968 100644
 --- a/node_modules/react-native-webview/apple/RNCWebViewImpl.h
 +++ b/node_modules/react-native-webview/apple/RNCWebViewImpl.h
-@@ -132,8 +132,25 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
+@@ -132,8 +132,32 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
  @property (nonatomic, assign) BOOL textInteractionEnabled;
  #endif
  
@@ -2332,6 +2527,13 @@ index 1f637c1..6c8bcf7 100644
 +@property (nonatomic, copy) NSString * _Nullable popupId;
 +@property (nonatomic, copy) RCTDirectEventBlock _Nullable onCloseWindow;
 ++ (void)releasePopup:(NSString * _Nonnull)popupId;
++// Qutai patch: a site's request for a user name and password (HTTP Basic or Digest) goes to the app
++// (onHttpAuthRequest with an id, host and realm) instead of being refused; the app answers with answerHttpAuth or
++// cancelHttpAuth. Nothing is stored.
++@property (nonatomic, assign) BOOL httpAuthPrompt;
++@property (nonatomic, copy) RCTDirectEventBlock _Nullable onHttpAuthRequest;
+++ (void)answerHttpAuth:(NSString * _Nonnull)authId username:(NSString * _Nonnull)username password:(NSString * _Nonnull)password;
+++ (void)cancelHttpAuth:(NSString * _Nonnull)authId;
 +// Qutai patch: a key naming this WebView's data store for the cookie list (RNCWebViewModule getCookies).
 +@property (nonatomic, copy) NSString * _Nullable webviewProfile;
 ++ (WKWebsiteDataStore * _Nullable)dataStoreForProfileKey:(NSString * _Nonnull)key;
@@ -2344,10 +2546,36 @@ index 1f637c1..6c8bcf7 100644
  
  #if !TARGET_OS_OSX
 diff --git a/node_modules/react-native-webview/apple/RNCWebViewImpl.m b/node_modules/react-native-webview/apple/RNCWebViewImpl.m
-index 3890426..68321d2 100644
+index 3890426..4a877b7 100644
 --- a/node_modules/react-native-webview/apple/RNCWebViewImpl.m
 +++ b/node_modules/react-native-webview/apple/RNCWebViewImpl.m
-@@ -152,6 +152,51 @@ @implementation RNCWebViewImpl
+@@ -114,6 +114,25 @@ - (void)scrollWheel:(NSEvent *)theEvent {
+ #endif // TARGET_OS_OSX
+ @end
+ 
++/** Qutai patch: a site's request for a user name and password waiting for the user's answer. */
++@interface RNCHttpAuthRequest : NSObject
++@property (nonatomic, copy) void (^handler)(NSURLSessionAuthChallengeDisposition, NSURLCredential * _Nullable);
++@property (nonatomic, weak) id view;
++@end
++@implementation RNCHttpAuthRequest
++@end
++
++static NSUInteger RNCHttpAuthCounter = 0;
++static NSMutableDictionary<NSString *, RNCHttpAuthRequest *> *RNCHttpAuthRequests(void)
++{
++  static NSMutableDictionary<NSString *, RNCHttpAuthRequest *> *requests;
++  static dispatch_once_t once;
++  dispatch_once(&once, ^{
++    requests = [NSMutableDictionary new];
++  });
++  return requests;
++}
++
+ @interface RNCWebViewImpl () <WKUIDelegate, WKNavigationDelegate, WKScriptMessageHandler, WKHTTPCookieStoreObserver,
+ #if !TARGET_OS_OSX
+ UIScrollViewDelegate,
+@@ -152,6 +171,51 @@ @implementation RNCWebViewImpl
  #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 130000 /* __IPHONE_13_0 */
    BOOL _savedAutomaticallyAdjustsScrollIndicatorInsets;
  #endif
@@ -2399,7 +2627,7 @@ index 3890426..68321d2 100644
  }
  
  - (instancetype)initWithFrame:(CGRect)frame
-@@ -393,9 +438,21 @@ - (WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWe
+@@ -393,9 +457,21 @@ - (WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWe
      NSURL *url = navigationAction.request.URL;
  
      if (_onOpenWindow) {
@@ -2422,7 +2650,7 @@ index 3890426..68321d2 100644
      } else {
        [webView loadRequest:navigationAction.request];
      }
-@@ -403,6 +460,14 @@ - (WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWe
+@@ -403,6 +479,14 @@ - (WKWebView *)webView:(WKWebView *)webView createWebViewWithConfiguration:(WKWe
    return nil;
  }
  
@@ -2437,7 +2665,7 @@ index 3890426..68321d2 100644
  /**
   * Enables file input on macos, see https://developer.apple.com/documentation/webkit/wkuidelegate/1641952-webview
   */
-@@ -515,8 +580,24 @@ - (WKWebViewConfiguration *)setUpWkWebViewConfig
+@@ -515,8 +599,24 @@ - (WKWebViewConfiguration *)setUpWkWebViewConfig
  - (void)didMoveToWindow
  {
    if (self.window != nil && _webView == nil) {
@@ -2464,7 +2692,7 @@ index 3890426..68321d2 100644
      [self setBackgroundColor: _savedBackgroundColor];
  #if !TARGET_OS_OSX
      // Apply once at creation time. The prop is documented as non-reactive —
-@@ -585,10 +666,15 @@ - (void)didMoveToWindow
+@@ -585,10 +685,15 @@ - (void)didMoveToWindow
        _webView.inspectable = _webviewDebuggingEnabled;
  #endif
  
@@ -2481,7 +2709,73 @@ index 3890426..68321d2 100644
    }
  
  #if !TARGET_OS_OSX
-@@ -1300,6 +1386,28 @@ - (void)webView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSSt
+@@ -627,6 +732,8 @@ - (void)destroyWebView
+ - (void)removeFromSuperview
+ #endif
+ {
++  // Qutai patch: a password request still open is answered (WebKit must get an answer).
++  [self cancelHttpAuthRequests];
+   if (_webView) {
+     [_webView.configuration.userContentController removeScriptMessageHandlerForName:HistoryShimName];
+     [_webView.configuration.userContentController removeScriptMessageHandlerForName:MessageHandlerName];
+@@ -1205,9 +1312,56 @@ - (void)                    webView:(WKWebView *)webView
+       return;
+     }
+   }
++  // Qutai patch: a site's request for a user name and password (HTTP Basic or Digest) goes to the app's own dialog
++  // when it said it would (httpAuthPrompt). The load waits under an id; the app answers through RNCWebViewModule
++  // (answerHttpAuth / cancelHttpAuth). The credential is used once and never stored.
++  NSString *method = challenge.protectionSpace.authenticationMethod;
++  if (_httpAuthPrompt && _onHttpAuthRequest
++      && ([method isEqualToString:NSURLAuthenticationMethodHTTPBasic] || [method isEqualToString:NSURLAuthenticationMethodHTTPDigest])) {
++    NSString *authId = [NSString stringWithFormat:@"h%lu", (unsigned long)++RNCHttpAuthCounter];
++    RNCHttpAuthRequest *request = [RNCHttpAuthRequest new];
++    request.handler = completionHandler;
++    request.view = self;
++    RNCHttpAuthRequests()[authId] = request;
++    NSMutableDictionary<NSString *, id> *event = [self baseEvent];
++    [event addEntriesFromDictionary:@{
++      @"id": authId,
++      @"host": challenge.protectionSpace.host ?: @"",
++      @"realm": challenge.protectionSpace.realm ?: @"",
++    }];
++    _onHttpAuthRequest(event);
++    return;
++  }
+   completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+ }
+ 
++/** Qutai patch: the user's answer to a site's request for a user name and password (see httpAuthPrompt). */
+++ (void)answerHttpAuth:(NSString *)authId username:(NSString *)username password:(NSString *)password
++{
++  RNCHttpAuthRequest *request = RNCHttpAuthRequests()[authId];
++  if (request == nil) return;
++  [RNCHttpAuthRequests() removeObjectForKey:authId];
++  NSURLCredential *credential = [NSURLCredential credentialWithUser:username password:password persistence:NSURLCredentialPersistenceNone];
++  request.handler(NSURLSessionAuthChallengeUseCredential, credential);
++}
++
++/** Qutai patch: the user cancelled (or the WebView goes): the load goes on without credentials, the site's 401 page. */
+++ (void)cancelHttpAuth:(NSString *)authId
++{
++  RNCHttpAuthRequest *request = RNCHttpAuthRequests()[authId];
++  if (request == nil) return;
++  [RNCHttpAuthRequests() removeObjectForKey:authId];
++  request.handler(NSURLSessionAuthChallengeRejectProtectionSpace, nil);
++}
++
++- (void)cancelHttpAuthRequests
++{
++  for (NSString *authId in [RNCHttpAuthRequests() allKeys]) {
++    RNCHttpAuthRequest *request = RNCHttpAuthRequests()[authId];
++    if (request.view == nil || request.view == self) [RNCWebViewImpl cancelHttpAuth:authId];
++  }
++}
++
+ #pragma mark - WKNavigationDelegate methods
+ 
+ /**
+@@ -1300,6 +1454,28 @@ - (void)webView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSSt
  }
  
  #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 150000 /* iOS 15 */
@@ -2510,7 +2804,7 @@ index 3890426..68321d2 100644
  /**
   * Media capture permissions (prevent multiple prompts)
   */
-@@ -1308,6 +1416,10 @@ - (void)                         webView:(WKWebView *)webView
+@@ -1308,6 +1484,10 @@ - (void)                         webView:(WKWebView *)webView
                          initiatedByFrame:(WKFrameInfo *)frame
                                      type:(WKMediaCaptureType)type
                           decisionHandler:(void (^)(WKPermissionDecision decision))decisionHandler {
@@ -2521,7 +2815,7 @@ index 3890426..68321d2 100644
    if (_mediaCapturePermissionGrantType == RNCWebViewPermissionGrantType_GrantIfSameHost_ElsePrompt || _mediaCapturePermissionGrantType == RNCWebViewPermissionGrantType_GrantIfSameHost_ElseDeny) {
      if ([origin.host isEqualToString:webView.URL.host]) {
        decisionHandler(WKPermissionDecisionGrant);
-@@ -1456,6 +1568,10 @@ - (void)                    webView:(WKWebView *)webView
+@@ -1456,6 +1636,10 @@ - (void)                    webView:(WKWebView *)webView
                      decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler
  {
    WKNavigationResponsePolicy policy = WKNavigationResponsePolicyAllow;
@@ -2532,7 +2826,7 @@ index 3890426..68321d2 100644
    if ([navigationResponse.response isKindOfClass:[NSHTTPURLResponse class]]) {
      NSHTTPURLResponse *response = (NSHTTPURLResponse *)navigationResponse.response;
      NSInteger statusCode = response.statusCode;
-@@ -1499,8 +1615,16 @@ - (void)               webView:(WKWebView *)webView
+@@ -1499,8 +1683,16 @@ - (void)               webView:(WKWebView *)webView
    didFailProvisionalNavigation:(WKNavigation *)navigation
                       withError:(NSError *)error
  {
@@ -2550,7 +2844,7 @@ index 3890426..68321d2 100644
        // NSURLErrorCancelled is reported when a page has a redirect OR if you load
        // a new URL in the WebView before the previous one came back. We can just
        // ignore these since they aren't real errors.
-@@ -1508,8 +1632,7 @@ - (void)               webView:(WKWebView *)webView
+@@ -1508,8 +1700,7 @@ - (void)               webView:(WKWebView *)webView
        return;
      }
  
@@ -2560,7 +2854,7 @@ index 3890426..68321d2 100644
        // Error code 102 "Frame load interrupted" is raised by the WKWebView
        // when the URL is from an http redirect. This is a common pattern when
        // implementing OAuth with a WebView.
-@@ -1842,6 +1965,108 @@ - (void)syncCookiesToWebView:(void (^)(void))completion {
+@@ -1842,6 +2033,108 @@ - (void)syncCookiesToWebView:(void (^)(void))completion {
    [self writeCookiesToWebView:cookies completion:completion];
  }
  
@@ -2670,7 +2964,7 @@ index 3890426..68321d2 100644
    [wkWebViewConfig.userContentController removeAllUserScripts];
    [wkWebViewConfig.userContentController removeScriptMessageHandlerForName:MessageHandlerName];
 diff --git a/node_modules/react-native-webview/apple/RNCWebViewModule.mm b/node_modules/react-native-webview/apple/RNCWebViewModule.mm
-index 547b95f..8928131 100644
+index 547b95f..920d14c 100644
 --- a/node_modules/react-native-webview/apple/RNCWebViewModule.mm
 +++ b/node_modules/react-native-webview/apple/RNCWebViewModule.mm
 @@ -1,6 +1,8 @@
@@ -2682,7 +2976,7 @@ index 547b95f..8928131 100644
  
  #ifdef RCT_NEW_ARCH_ENABLED
  #import <React/RCTFabricComponentsPlugins.h>
-@@ -21,6 +23,191 @@ @implementation RNCWebViewModule
+@@ -21,6 +23,206 @@ @implementation RNCWebViewModule
      [[RNCWebViewDecisionManager getInstance] setResult:shouldStart forLockIdentifier:(int)lockIdentifier];
  }
  
@@ -2695,6 +2989,21 @@ index 547b95f..8928131 100644
 +RCT_EXPORT_METHOD(endProfile:(NSString *)name) {}
 +
 +RCT_EXPORT_METHOD(deleteUnusedProfiles:(NSString *)prefix) {}
++
++// Qutai patch: the user's answer to a site's request for a user name and password.
++RCT_EXPORT_METHOD(answerHttpAuth:(NSString *)authId username:(NSString *)username password:(NSString *)password)
++{
++    dispatch_async(dispatch_get_main_queue(), ^{
++        [RNCWebViewImpl answerHttpAuth:authId username:username password:password];
++    });
++}
++
++RCT_EXPORT_METHOD(cancelHttpAuth:(NSString *)authId)
++{
++    dispatch_async(dispatch_get_main_queue(), ^{
++        [RNCWebViewImpl cancelHttpAuth:authId];
++    });
++}
 +
 +// Qutai patch: the app refused a page's new window (onOpenWindow popupId): it goes without opening.
 +RCT_EXPORT_METHOD(releasePopup:(NSString *)popupId)
@@ -2875,10 +3184,10 @@ index 547b95f..8928131 100644
  - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:(const facebook::react::ObjCTurboModule::InitParams &)params {
    return std::make_shared<facebook::react::NativeRNCWebViewModuleSpecJSI>(params);
 diff --git a/node_modules/react-native-webview/lib/NativeRNCWebViewModule.d.ts b/node_modules/react-native-webview/lib/NativeRNCWebViewModule.d.ts
-index ae60768..ac25124 100644
+index ae60768..dba1bc5 100644
 --- a/node_modules/react-native-webview/lib/NativeRNCWebViewModule.d.ts
 +++ b/node_modules/react-native-webview/lib/NativeRNCWebViewModule.d.ts
-@@ -2,6 +2,16 @@ import type { TurboModule } from 'react-native';
+@@ -2,6 +2,18 @@ import type { TurboModule } from 'react-native';
  import { Double } from 'react-native/Libraries/Types/CodegenTypes';
  export interface Spec extends TurboModule {
      shouldStartLoadWithLockIdentifier(shouldStart: boolean, lockIdentifier: Double): void;
@@ -2886,6 +3195,8 @@ index ae60768..ac25124 100644
 +    endProfile(name: string): void;
 +    deleteUnusedProfiles(prefix: string): void;
 +    releasePopup(id: string): void;
++    answerHttpAuth(id: string, username: string, password: string): void;
++    cancelHttpAuth(id: string): void;
 +    loadContentBlocker(path: string): Promise<number>;
 +    compileContentRuleList(identifier: string, path: string): Promise<void>;
 +    hasContentRuleList(identifier: string): Promise<boolean>;
@@ -2896,10 +3207,10 @@ index ae60768..ac25124 100644
  declare const _default: Spec;
  export default _default;
 diff --git a/node_modules/react-native-webview/lib/WebViewTypes.d.ts b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
-index f666e81..bad5b02 100644
+index f666e81..87c7015 100644
 --- a/node_modules/react-native-webview/lib/WebViewTypes.d.ts
 +++ b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
-@@ -86,7 +86,14 @@ export interface WebViewRenderProcessGoneDetail {
+@@ -86,7 +86,23 @@ export interface WebViewRenderProcessGoneDetail {
  }
  export interface WebViewOpenWindow {
      targetUrl: string;
@@ -2911,10 +3222,19 @@ index f666e81..bad5b02 100644
 +    url: string;
 +}
 +export type WebViewCloseWindowEvent = NativeSyntheticEvent<WebViewCloseWindow>;
++/** Qutai patch: a site asks for a user name and password (HTTP Basic or Digest); answer through the module. */
++export interface WebViewHttpAuthRequest {
++    /** Answer with RNCWebViewModule.answerHttpAuth(id, user, password) or cancelHttpAuth(id). */
++    id: string;
++    host: string;
++    realm: string;
++    url: string;
++}
++export type WebViewHttpAuthRequestEvent = NativeSyntheticEvent<WebViewHttpAuthRequest>;
  export type WebViewEvent = NativeSyntheticEvent<WebViewNativeEvent>;
  export type WebViewProgressEvent = NativeSyntheticEvent<WebViewNativeProgressEvent>;
  export type WebViewNavigationEvent = NativeSyntheticEvent<WebViewNavigation>;
-@@ -97,6 +104,21 @@ export type WebViewErrorEvent = NativeSyntheticEvent<WebViewError>;
+@@ -97,6 +113,21 @@ export type WebViewErrorEvent = NativeSyntheticEvent<WebViewError>;
  export type WebViewTerminatedEvent = NativeSyntheticEvent<WebViewNativeEvent>;
  export type WebViewHttpErrorEvent = NativeSyntheticEvent<WebViewHttpError>;
  export type WebViewRenderProcessGoneEvent = NativeSyntheticEvent<WebViewRenderProcessGoneDetail>;
@@ -2936,7 +3256,7 @@ index f666e81..bad5b02 100644
  export type WebViewOpenWindowEvent = NativeSyntheticEvent<WebViewOpenWindow>;
  export type WebViewScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
  export type DataDetectorTypes = 'phoneNumber' | 'link' | 'address' | 'calendarEvent' | 'trackingNumber' | 'flightNumber' | 'lookupSuggestion' | 'none' | 'all';
-@@ -582,6 +604,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+@@ -582,6 +613,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
       * Available on iOS 15 and later.
       */
      mediaCapturePermissionGrantType?: MediaCapturePermissionGrantType;
@@ -2951,7 +3271,7 @@ index f666e81..bad5b02 100644
      /**
       * A Boolean value which, when set to `true`, WebView will be rendered with Apple Pay support.
       *  Once set, websites will be able to invoke apple pay from React Native Webview.
-@@ -779,6 +809,21 @@ export interface MacOSWebViewProps extends WebViewSharedProps {
+@@ -779,6 +818,21 @@ export interface MacOSWebViewProps extends WebViewSharedProps {
  export interface AndroidWebViewProps extends WebViewSharedProps {
      onNavigationStateChange?: (event: WebViewNavigation) => void;
      onContentSizeChange?: (event: WebViewEvent) => void;
@@ -2973,7 +3293,7 @@ index f666e81..bad5b02 100644
      /**
       * Function that is invoked when the `WebView` process crashes or is killed by the OS.
       * Works only on Android (minimum API level 26).
-@@ -974,6 +1019,65 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -974,6 +1028,72 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
      onLoadSubResourceError?: (event: WebViewErrorEvent) => void;
  }
  export interface WebViewSharedProps extends ViewProps {
@@ -3007,6 +3327,13 @@ index f666e81..bad5b02 100644
 +
 +    /** Qutai patch: the page closed its own window (window.close() in a window a page opened). */
 +    onCloseWindow?: (event: WebViewCloseWindowEvent) => void;
++
++    /**
++     * Qutai patch: a site's request for a user name and password (HTTP Basic or Digest) goes to onHttpAuthRequest
++     * instead of being refused; the app answers through RNCWebViewModule. Nothing is stored.
++     */
++    httpAuthPrompt?: boolean;
++    onHttpAuthRequest?: (event: WebViewHttpAuthRequestEvent) => void;
 +    /**
 +     * Qutai patch: network ad and tracker blocking. Android: every request except the page's own document is checked
 +     * against the domains loaded with RNCWebViewModule.loadContentBlocker (shouldInterceptRequest) and blocked with an
@@ -3040,10 +3367,10 @@ index f666e81..bad5b02 100644
       * Loads static html or a uri (with optional headers) in the WebView.
       */
 diff --git a/node_modules/react-native-webview/src/NativeRNCWebViewModule.ts b/node_modules/react-native-webview/src/NativeRNCWebViewModule.ts
-index 146bdf3..792f7e4 100644
+index 146bdf3..06575bd 100644
 --- a/node_modules/react-native-webview/src/NativeRNCWebViewModule.ts
 +++ b/node_modules/react-native-webview/src/NativeRNCWebViewModule.ts
-@@ -4,6 +4,30 @@ import { Double } from 'react-native/Libraries/Types/CodegenTypes';
+@@ -4,6 +4,33 @@ import { Double } from 'react-native/Libraries/Types/CodegenTypes';
  
  export interface Spec extends TurboModule {
    shouldStartLoadWithLockIdentifier(shouldStart: boolean, lockIdentifier: Double): void;
@@ -3056,6 +3383,9 @@ index 146bdf3..792f7e4 100644
 +  deleteUnusedProfiles(prefix: string): void;
 +  // Qutai patch: the app refused a page's new window (onOpenWindow popupId): it never opens.
 +  releasePopup(id: string): void;
++  // Qutai patch: the user's answer to a site's request for a user name and password (onHttpAuthRequest).
++  answerHttpAuth(id: string, username: string, password: string): void;
++  cancelHttpAuth(id: string): void;
 +  // Qutai patch: network ad and tracker blocking (each platform's methods resolve and do nothing on the other).
 +  /** Android: loads the domain file (see RNCWebViewContentBlocker); "" turns blocking off. Resolves with its size. */
 +  loadContentBlocker(path: string): Promise<number>;
@@ -3075,15 +3405,22 @@ index 146bdf3..792f7e4 100644
  
  export default TurboModuleRegistry.getEnforcing<Spec>('RNCWebViewModule');
 diff --git a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
-index ca3af15..899002f 100644
+index ca3af15..c6ea8f1 100644
 --- a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
 +++ b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
-@@ -32,6 +32,12 @@ export type WebViewMessageEvent = Readonly<{
+@@ -32,6 +32,19 @@ export type WebViewMessageEvent = Readonly<{
  }>;
  export type WebViewOpenWindowEvent = Readonly<{
    targetUrl: string;
 +  // Qutai patch: see popupId in WebViewTypes.ts ("" or absent when the window opened the old way).
 +  popupId: string;
++}>;
++// Qutai patch: a site asks for a user name and password (HTTP Basic or Digest).
++type WebViewHttpAuthRequestEvent = Readonly<{
++  id: string;
++  host: string;
++  realm: string;
++  url: string;
 +}>;
 +// Qutai patch: a page closed its own window.
 +type WebViewCloseWindowEvent = Readonly<{
@@ -3091,7 +3428,7 @@ index ca3af15..899002f 100644
  }>;
  export type WebViewHttpErrorEvent = Readonly<{
    url: string;
-@@ -124,6 +130,17 @@ type WebViewRenderProcessGoneEvent = Readonly<{
+@@ -124,6 +137,17 @@ type WebViewRenderProcessGoneEvent = Readonly<{
    didCrash: boolean;
  }>;
  
@@ -3109,7 +3446,7 @@ index ca3af15..899002f 100644
  type WebViewDownloadEvent = Readonly<{
    downloadUrl: string;
  }>;
-@@ -136,6 +153,27 @@ export interface NativeProps extends ViewProps {
+@@ -136,6 +160,30 @@ export interface NativeProps extends ViewProps {
    allowsProtectedMedia?: boolean;
    allowsFullscreenVideo?: boolean;
    androidLayerType?: WithDefault<'none' | 'software' | 'hardware', 'none'>;
@@ -3127,6 +3464,9 @@ index ca3af15..899002f 100644
 +  // Qutai patch: see popupId and onCloseWindow in WebViewTypes.ts.
 +  popupId?: string;
 +  onCloseWindow?: DirectEventHandler<WebViewCloseWindowEvent>;
++  // Qutai patch: see httpAuthPrompt and onHttpAuthRequest in WebViewTypes.ts.
++  httpAuthPrompt?: WithDefault<boolean, false>;
++  onHttpAuthRequest?: DirectEventHandler<WebViewHttpAuthRequestEvent>;
 +  // Qutai patch: network ad and tracker blocking, see contentBlocking in WebViewTypes.ts.
 +  contentBlocking?: WithDefault<boolean, false>;
 +  contentBlockingOffSites?: string;
@@ -3137,7 +3477,7 @@ index ca3af15..899002f 100644
    cacheMode?: WithDefault<
      'LOAD_DEFAULT' | 'LOAD_CACHE_ELSE_NETWORK' | 'LOAD_NO_CACHE' | 'LOAD_CACHE_ONLY',
      'LOAD_DEFAULT'
-@@ -208,6 +246,8 @@ export interface NativeProps extends ViewProps {
+@@ -208,6 +256,8 @@ export interface NativeProps extends ViewProps {
      'prompt' | 'grant' | 'deny' | 'grantIfSameHostElsePrompt' | 'grantIfSameHostElseDeny',
      'prompt'
    >;
@@ -3147,10 +3487,10 @@ index ca3af15..899002f 100644
    pullToRefreshEnabled?: boolean;
    refreshControlLightMode?: boolean;
 diff --git a/node_modules/react-native-webview/src/WebViewTypes.ts b/node_modules/react-native-webview/src/WebViewTypes.ts
-index 4e7247f..15d6a0c 100644
+index 4e7247f..0209d10 100644
 --- a/node_modules/react-native-webview/src/WebViewTypes.ts
 +++ b/node_modules/react-native-webview/src/WebViewTypes.ts
-@@ -127,7 +127,14 @@ export interface WebViewRenderProcessGoneDetail {
+@@ -127,7 +127,23 @@ export interface WebViewRenderProcessGoneDetail {
  
  export interface WebViewOpenWindow {
    targetUrl: string;
@@ -3162,10 +3502,19 @@ index 4e7247f..15d6a0c 100644
 +  url: string;
 +}
 +export type WebViewCloseWindowEvent = NativeSyntheticEvent<WebViewCloseWindow>;
++/** Qutai patch: a site asks for a user name and password (HTTP Basic or Digest); answer through the module. */
++export interface WebViewHttpAuthRequest {
++  /** Answer with RNCWebViewModule.answerHttpAuth(id, user, password) or cancelHttpAuth(id). */
++  id: string;
++  host: string;
++  realm: string;
++  url: string;
++}
++export type WebViewHttpAuthRequestEvent = NativeSyntheticEvent<WebViewHttpAuthRequest>;
  
  export type WebViewEvent = NativeSyntheticEvent<WebViewNativeEvent>;
  
-@@ -149,6 +156,21 @@ export type WebViewHttpErrorEvent = NativeSyntheticEvent<WebViewHttpError>;
+@@ -149,6 +165,21 @@ export type WebViewHttpErrorEvent = NativeSyntheticEvent<WebViewHttpError>;
  
  export type WebViewRenderProcessGoneEvent = NativeSyntheticEvent<WebViewRenderProcessGoneDetail>;
  
@@ -3187,7 +3536,7 @@ index 4e7247f..15d6a0c 100644
  export type WebViewOpenWindowEvent = NativeSyntheticEvent<WebViewOpenWindow>;
  
  export type WebViewScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
-@@ -730,6 +752,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+@@ -730,6 +761,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
     */
    mediaCapturePermissionGrantType?: MediaCapturePermissionGrantType;
  
@@ -3202,7 +3551,7 @@ index 4e7247f..15d6a0c 100644
    /**
     * A Boolean value which, when set to `true`, WebView will be rendered with Apple Pay support.
     *  Once set, websites will be able to invoke apple pay from React Native Webview.
-@@ -950,6 +980,24 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -950,6 +989,24 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
    onNavigationStateChange?: (event: WebViewNavigation) => void;
    onContentSizeChange?: (event: WebViewEvent) => void;
  
@@ -3227,7 +3576,7 @@ index 4e7247f..15d6a0c 100644
    /**
     * Function that is invoked when the `WebView` process crashes or is killed by the OS.
     * Works only on Android (minimum API level 26).
-@@ -1172,6 +1220,71 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -1172,6 +1229,78 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
  }
  
  export interface WebViewSharedProps extends ViewProps {
@@ -3266,6 +3615,13 @@ index 4e7247f..15d6a0c 100644
 +
 +  /** Qutai patch: the page closed its own window (window.close() in a window a page opened). */
 +  onCloseWindow?: (event: WebViewCloseWindowEvent) => void;
++
++  /**
++   * Qutai patch: a site's request for a user name and password (HTTP Basic or Digest) goes to onHttpAuthRequest
++   * instead of being refused; the app answers through RNCWebViewModule. Nothing is stored.
++   */
++  httpAuthPrompt?: boolean;
++  onHttpAuthRequest?: (event: WebViewHttpAuthRequestEvent) => void;
 +
 +  /**
 +   * Qutai patch: network ad and tracker blocking. Android: every request except the page's own document is checked
