@@ -40,26 +40,25 @@ test('only a Mac or an iPad offers the strip, decided by the device, not the wid
   assert.ok(!offersTabStrip('android'));
 });
 
-test('the strip shows on a wide Mac or iPad window with the bar at the top and the setting on', () => {
+test('the strip shows on a wide Mac or iPad window with the setting on, the bar at the top or the bottom', () => {
   assert.equal(TAB_STRIP_MIN_WIDTH, 700);
-  assert.ok(showTabStrip({ width: 1200, height: 800 }, 'mac', 'top', true));
-  assert.ok(showTabStrip({ width: 700, height: 600 }, 'mac', 'top', true));
-  assert.ok(showTabStrip({ width: 834, height: 1194 }, 'tablet', 'top', true));
-  assert.ok(showTabStrip({ width: 744, height: 1133 }, 'tablet', 'top', true));
+  assert.ok(showTabStrip({ width: 1200, height: 800 }, 'mac', true));
+  assert.ok(showTabStrip({ width: 700, height: 600 }, 'mac', true));
+  assert.ok(showTabStrip({ width: 834, height: 1194 }, 'tablet', true));
+  assert.ok(showTabStrip({ width: 744, height: 1133 }, 'tablet', true));
 });
 
-test('the strip hides with the setting off, the bar at the bottom or a narrow window', () => {
-  assert.ok(!showTabStrip({ width: 1200, height: 800 }, 'mac', 'top', false));
-  assert.ok(!showTabStrip({ width: 1200, height: 800 }, 'mac', 'bottom', true));
-  assert.ok(!showTabStrip({ width: 699, height: 800 }, 'mac', 'top', true));
+test('the strip hides with the setting off or in a narrow window', () => {
+  assert.ok(!showTabStrip({ width: 1200, height: 800 }, 'mac', false));
+  assert.ok(!showTabStrip({ width: 699, height: 800 }, 'mac', true));
   // iPad Split View half.
-  assert.ok(!showTabStrip({ width: 507, height: 1024 }, 'tablet', 'top', true));
+  assert.ok(!showTabStrip({ width: 507, height: 1024 }, 'tablet', true));
 });
 
 test('a phone or an Android device never gets the strip, whatever the width', () => {
-  assert.ok(!showTabStrip({ width: 932, height: 430 }, 'phone', 'top', true));
-  assert.ok(!showTabStrip({ width: 915, height: 412 }, 'android', 'top', true));
-  assert.ok(!showTabStrip({ width: 1280, height: 800 }, 'android', 'top', true));
+  assert.ok(!showTabStrip({ width: 932, height: 430 }, 'phone', true));
+  assert.ok(!showTabStrip({ width: 915, height: 412 }, 'android', true));
+  assert.ok(!showTabStrip({ width: 1280, height: 800 }, 'android', true));
 });
 
 test('tabs share the room between the minimum and maximum width', () => {

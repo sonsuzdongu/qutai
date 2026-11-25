@@ -32,5 +32,6 @@
   "apps.nameLabel",
   "apps.versionLine",
   "account.methodWithAddress",
-  "settings.version"
+  "settings.version",
+  "shortcuts.tab"
 ]

@@ -248,6 +248,8 @@ import { useRecordHistory } from './src/storage/useRecordHistory';
 import { TabStrip } from './src/components/TabStrip';
 import { stripDevice } from './src/device/macDevice';
 import { showTabStrip } from './src/ui/tabStrip';
+import { useKeyShortcuts } from './src/device/keyShortcuts';
+import { shortcutTab, type ShortcutId } from './src/ui/keyShortcuts';
 import { clearSiteIcons } from './src/storage/siteIcons';
 import { setIncognitoProbe } from './src/analytics';
 import { askAnalyticsConsentOnce } from './src/analytics/consentPrompt';
@@ -2089,9 +2091,10 @@ function BrowserApp({
   const barAtBottom = settings.addressBarPosition === 'bottom';
   // The bottom address bar's height, so a toast stays above it (UI-48).
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
-  // The desktop-style tab strip above the top bar on a Mac or an iPad in a wide window; never on a phone (UI-74).
+  // The desktop-style tab strip above the address bar (top or bottom) on a Mac or an iPad in a wide window; never on a
+  // phone (UI-74).
   const windowSize = useWindowDimensions();
-  const stripShown = showTabStrip(windowSize, stripDevice, settings.addressBarPosition, settings.tabStrip);
+  const stripShown = showTabStrip(windowSize, stripDevice, settings.tabStrip);
   const [stripHeight, setStripHeight] = useState(0);
   const closeStripTab = (closing: typeof tab) => {
     bump();
@@ -2100,6 +2103,52 @@ function BrowserApp({
       toast.show(t('tabs.closed'), { label: t('tabs.undo'), onPress: () => browser.reopenClosed(0) });
     }
   };
+  // Keyboard shortcuts on a Mac or an iPad with a hardware keyboard (UI-76): not while the app lock or a full screen
+  // (Settings, the tab switcher, the Library…) is in front; with the assistant panel open they act on the page behind.
+  const openTabFromKeyboard = (incognito: boolean) => {
+    browser.openTab(undefined, { incognito });
+    setPanelOpen(false);
+    setFindFor(null);
+    // Not behind the incognito lock: the keyboard would come up over the lock screen.
+    if (!incognito || !settings.incognitoLock || incognitoUnlocked) setAddressEdit({ id: Date.now(), text: '' });
+  };
+  useKeyShortcuts((id: ShortcutId) => {
+    if (lock || screen) return;
+    switch (id) {
+      case 'newTab':
+        return openTabFromKeyboard(tab.incognito);
+      case 'newIncognitoTab':
+        return openTabFromKeyboard(true);
+      case 'closeTab':
+        return closeStripTab(tab);
+      case 'reopenTab':
+        return void browser.reopenClosed(0);
+      case 'reload':
+        if (!onNewTab) tab.reload();
+        return;
+      case 'focusAddress':
+        setFindFor(null);
+        return setAddressEdit({ id: Date.now(), text: onNewTab ? '' : tab.address.url });
+      case 'find':
+        if (!onNewTab) setFindFor({ tabId: tab.id, url: tab.url, reader: !!tab.reader });
+        return;
+      case 'back':
+        if (tab.canGoBack) tab.historyBack();
+        else if (tab.openedFromNewTab) tab.showNewTab();
+        return;
+      case 'forward':
+        if (tab.canGoForward) tab.historyForward();
+        return;
+      default: {
+        const target = shortcutTab(
+          id,
+          browser.tabsOf(tab.incognito).map((x) => x.id),
+          browser.activeId,
+        );
+        if (target) browser.switchTab(target);
+      }
+    }
+  });
   coveredRef.current = panelOpen || settingsVisible || tabsVisible || screen?.kind === 'library' || tasksScreen !== null;
   // The step strip's line: the running conversation's latest step line, in the user's language.
   const stripSource = runningChat ? currentStripLine(runningChat.items.slice(-12)) : 'thinking';
@@ -2110,7 +2159,7 @@ function BrowserApp({
         ? t('working.answering')
         : stripSource.text;
   // Above the home indicator and, when it is at the bottom, the address bar.
-  const stripBottom = insets.bottom + (barAtBottom ? 60 : 0) + 12;
+  const stripBottom = insets.bottom + (barAtBottom ? 60 + (stripShown ? stripHeight : 0) : 0) + 12;
 
   // The chat panel's functions keep their identity from one render to the next, so the memoised panel redraws only
   // when something it shows changes, not each time the app redraws for the page (UI-29).
@@ -2359,13 +2408,23 @@ function BrowserApp({
               <SelectionBar
                 actions={selectionActions(selectedText)}
                 dark={tab.incognito || darkMode}
-                bottomOffset={barAtBottom ? 52 : 0}
+                bottomOffset={barAtBottom ? 52 + (stripShown ? stripHeight : 0) : 0}
               />
             ) : null}
     </>
   );
   // The slow-site line floats over the page next to the bar instead of taking room, so the page never moves (UI-68).
   const barArea = topBar;
+  const tabStrip = stripShown ? (
+    <TabStrip
+      browser={browser}
+      width={windowSize.width - insets.left - insets.right}
+      darkMode={darkMode}
+      onCloseTab={closeStripTab}
+      onNewTab={(incognito) => browser.openTab(undefined, { incognito })}
+      onHeight={setStripHeight}
+    />
+  ) : null;
   const barStatus = findOpen ? null : navStatus;
 
   // Product analytics (pro builds, SRV-31): never from an incognito tab; the one-time consent question once nothing else
@@ -2400,22 +2459,29 @@ function BrowserApp({
           {/* Expo apps on Android are edge-to-edge, so the window no longer resizes for the keyboard: the page, and the address bar when it is at the bottom, stay above it. */}
           {barAtBottom ? (
             <KeyboardAvoidingContainer style={styles.flex}>
-              <BarLayout position="bottom" bar={barArea} status={barStatus} onBarHeight={setBottomBarHeight}>
+              <BarLayout
+                position="bottom"
+                bar={
+                  // Both at the bottom: the strip right above the bar, in the bar's own box so the toast, the slow-site
+                  // line and the address suggestions keep clear of both (UI-74).
+                  tabStrip ? (
+                    <>
+                      {tabStrip}
+                      {barArea}
+                    </>
+                  ) : (
+                    barArea
+                  )
+                }
+                status={barStatus}
+                onBarHeight={setBottomBarHeight}
+              >
                 <View style={styles.flex}>{pageContent}</View>
               </BarLayout>
             </KeyboardAvoidingContainer>
           ) : (
             <>
-              {stripShown ? (
-                <TabStrip
-                  browser={browser}
-                  width={windowSize.width - insets.left - insets.right}
-                  darkMode={darkMode}
-                  onCloseTab={closeStripTab}
-                  onNewTab={(incognito) => browser.openTab(undefined, { incognito })}
-                  onHeight={setStripHeight}
-                />
-              ) : null}
+              {tabStrip}
               <BarLayout position="top" bar={barArea} status={barStatus}>
                 <KeyboardAvoidingContainer style={styles.flex}>{pageContent}</KeyboardAvoidingContainer>
               </BarLayout>
@@ -2524,7 +2590,7 @@ function BrowserApp({
           incognito={tab.incognito}
           darkMode={darkMode}
           anchor={barAtBottom ? 'bottom' : 'top'}
-          topOffset={stripShown ? stripHeight : 0}
+          stripOffset={stripShown ? stripHeight : 0}
           onClose={() => setMenuVisible(false)}
         />
         <AppScreens

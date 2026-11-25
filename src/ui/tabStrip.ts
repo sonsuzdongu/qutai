@@ -32,16 +32,12 @@ export function addressBarPositionFor(stored: string | null | undefined, wideDev
 }
 
 /**
- * Whether the tab strip shows: only on a Mac or an iPad, with the setting on, the address bar at the top and a window at
- * least TAB_STRIP_MIN_WIDTH wide. Phones and Android never get it, so they look exactly as before.
+ * Whether the tab strip shows: only on a Mac or an iPad, with the setting on and a window at least TAB_STRIP_MIN_WIDTH
+ * wide, above the address bar wherever it is (at the top, or both at the bottom). Phones and Android never get it, so
+ * they look exactly as before.
  */
-export function showTabStrip(
-  window: WindowSize,
-  device: StripDevice,
-  position: 'top' | 'bottom',
-  enabled: boolean,
-): boolean {
-  return offersTabStrip(device) && enabled && position === 'top' && window.width >= TAB_STRIP_MIN_WIDTH;
+export function showTabStrip(window: WindowSize, device: StripDevice, enabled: boolean): boolean {
+  return offersTabStrip(device) && enabled && window.width >= TAB_STRIP_MIN_WIDTH;
 }
 
 /** One tab's width: the room shared by the tabs, kept between STRIP_TAB_MIN and STRIP_TAB_MAX (then it scrolls). */

@@ -78,7 +78,7 @@ export type Settings = {
   theme: ThemeSetting;
   /** Address bar at the top (default) or the bottom of the screen. */
   addressBarPosition: 'top' | 'bottom';
-  /** Mac and iPad: the tabs in a strip above the top address bar (UI-74); on by default, never offered on a phone. */
+  /** Mac and iPad: the tabs in a strip right above the address bar (UI-74); on by default, never offered on a phone. */
   tabStrip: boolean;
   /** Light vibrations for taps like switching tabs. */
   haptics: boolean;
