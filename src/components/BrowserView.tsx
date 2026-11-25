@@ -426,6 +426,8 @@ function TabWebView({
             onLoadProgress={(e) => tab.handleLoadProgress(e.nativeEvent.progress)}
             onLoadEnd={(e) => {
               tab.handleWebViewLoadEnd(e.nativeEvent.url);
+              // A page has loaded: a tab opened from another app no longer counts its redirects as the user's tap.
+              if (/^https?:/i.test(e.nativeEvent.url)) endLaunchChain(tab);
               // A woken tab back on its page: where it was scrolled.
               const y = tab.takeScrollRestore(e.nativeEvent.url);
               if (y !== null) tab.webview?.injectJavaScript(restoreScrollScript(y));
@@ -438,8 +440,6 @@ function TabWebView({
                 }, 1500);
               }
               setRefreshing(false);
-              // A page has loaded: a tab opened from another app no longer counts its redirects as the user's tap.
-              if (/^https?:/i.test(e.nativeEvent.url)) endLaunchChain(tab);
               // Is this page an article? (reader mode indicator)
               tab.probeReaderSoon();
             }}
