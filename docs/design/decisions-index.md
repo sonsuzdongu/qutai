@@ -502,6 +502,7 @@ Moved to Details (ids retired, not reused): `LOG-7`
 | `TABS-32` | The long-press menu never opens while scrolling (move, touchcancel, any scroll, a touch stopping a fling); opens once per press | Default | 2026-11-24 |
 | `TABS-33` | Back skips entries a page added without a touch on the entry left (Android: the WebView's own; iOS: the page script goes back itself); never a user-made entry | Default | 2026-11-24 |
 | `TABS-34` | A page's window is a real pop-up that keeps window.opener (sign-in, payment windows); window.close() closes it and returns to the opener; ads still refused; the opener of a pop-up on screen never sleeps | Default | 2026-11-25 |
+| `TABS-35` | iOS: same-document navigations (pushState, #fragment, Navigation API intercept such as Reddit's links) end the loading state, seen natively from the WebView's address; react-native-webview's pushState-wrapping history shim removed. | Owner | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-8`
 
@@ -768,7 +769,7 @@ Moved to Details (ids retired, not reused): `APPS-6`, `APPS-20`, `APPS-19`, `APP
 | `DL-16` | The home screen widget shows no history, tabs or other personal data. | Default |  |
 | `DL-17` | "Add to home screen" is not offered for incognito tabs. | Default |  |
 | `DL-18` | Android: a link from another app counts as the user's tap for its first load's redirects (any app scheme, never shown as a page); Google Play links the… | Owner | 2026-11-24 |
-| `DL-19` | "Open" on a download: iPhone shares, iPad previews in Quick Look, a Mac opens it in the Mac's app (else Quick Look, else share); a Mac also has "Save…" (system save dialog). | Owner | 2026-11-25 |
+| `DL-19` | "Open" on a download: iPhone shares, iPad previews in Quick Look, a Mac opens it in the Mac's app (else Quick Look, else share); a Mac also has "Save…" (system save dialog), shown once the ⋯ sheet has closed and never left waiting. | Owner | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `DL-12`
 
@@ -936,6 +937,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-84` | Page zoom (through the page's viewport width, not WKWebView.pageZoom): a Mac starts pages at 1.299 (macOS draws iPad apps at 77%) so they match Safari; ⌘+ / ⌘− / ⌘0 in Safari's steps (50–300%), remembered per site; on a Mac the menu's Text size is Zoom (that per-site level); iPad text size = page zoom, iPhone text-size-adjust; 100% = Safari's size. | Owner | 2026-11-26 |
 | `UI-85` | Mac and iPad only: a reload button right of the address field (dimmed on the new tab page); phones keep ⋮ › Reload and pull to refresh. | Owner | 2026-11-26 |
 | `UI-86` | Mac and iPad: ⌘W only closes the tab (system File › Close removed from the menu bar); ⌘Q quits without asking (no supported way to confirm). | Owner | 2026-11-26 |
+| `UI-87` | Web pages on an opaque WebView (iOS and Android), so a dark page's unpainted areas show its own dark base colour, not the app's white. | Owner | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

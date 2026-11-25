@@ -325,3 +325,20 @@ for (const os of ['android', 'ios'] as const) {
     }
   });
 }
+
+test('ios: a link the page handles itself (Navigation API, Reddit) ends when the page reports it (TABS-35)', async () => {
+  const { a } = await start('ios');
+  const link = `${base}/r/somewhere`;
+  // iOS asks the app about the click and reports its load start; the page then intercepts the navigation
+  // (navigateEvent.intercept): the address changes, no document loads, and no progress or load end follows.
+  a.noteNavigationRequest(link, true);
+  a.handleLoadStart(link, undefined);
+  a.handleNavigationStateChange({ url: link, title: '', loading: true, canGoBack: true, canGoForward: false } as never);
+  assert.equal(a.busy, true, 'the click is waiting');
+  // The patched WebView sees the address change with no document loading and reports it as a load end (onLoadEnd).
+  a.handleWebViewLoadEnd(link);
+  a.handleNavigationStateChange({ url: link, title: 'Somewhere', loading: false, canGoBack: true, canGoForward: false } as never);
+  assert.equal(a.busy, false, 'nothing is loading any more');
+  assert.equal(a.nav.lastEnd?.reason, 'loaded', 'the line fills and fades, no "very slow" line');
+  assert.equal(a.address.url, link, 'the address bar shows the new address');
+});

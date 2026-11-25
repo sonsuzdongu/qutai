@@ -20,16 +20,18 @@ public class QutaiFileOpenerModule: Module {
     AsyncFunction("preview") { (uri: String, promise: Promise) in
       guard let url = downloadURL(uri) else { return promise.resolve("gone") }
       guard QLPreviewController.canPreview(url as NSURL) else { return promise.resolve("unsupported") }
-      guard let presenter = self.appContext?.utilities?.currentViewController() else {
-        return promise.reject("ERR_NO_SCREEN", "No screen to show the preview on")
-      }
       let source = PreviewSource(url: url)
       let controller = QLPreviewController()
       controller.dataSource = source
       controller.delegate = source
       PreviewSource.active = source
-      presenter.present(controller, animated: true) {
-        promise.resolve("shown")
+      presentWhenSettled(controller, fallback: self.appContext?.utilities?.currentViewController()) { shown in
+        if shown {
+          promise.resolve("shown")
+        } else {
+          PreviewSource.active = nil
+          promise.reject("ERR_NO_SCREEN", "No screen to show the preview on")
+        }
       }
     }
     .runOnQueue(.main)
@@ -48,19 +50,62 @@ public class QutaiFileOpenerModule: Module {
     /// folder in Files). "saved", "cancelled" or "gone".
     AsyncFunction("saveCopy") { (uri: String, promise: Promise) in
       guard let url = downloadURL(uri) else { return promise.resolve("gone") }
-      guard let presenter = self.appContext?.utilities?.currentViewController() else {
-        return promise.reject("ERR_NO_SCREEN", "No screen to show the save dialog on")
-      }
+      // Only one save dialog at a time: one still open answers "cancelled" first.
+      ExportDelegate.active?.finish("cancelled")
       let picker = UIDocumentPickerViewController(forExporting: [url], asCopy: true)
       let delegate = ExportDelegate { result in
         promise.resolve(result)
       }
       picker.delegate = delegate
+      // Closed without an answer (the screen under it went away): "cancelled", never a promise left waiting.
+      picker.presentationController?.delegate = delegate
       ExportDelegate.active = delegate
-      presenter.present(picker, animated: true)
+      presentWhenSettled(picker, fallback: self.appContext?.utilities?.currentViewController()) { shown in
+        if !shown { delegate.finish("failed") }
+      }
     }
     .runOnQueue(.main)
   }
+}
+
+/// Presents a system screen (the save dialog, Quick Look) once nothing is opening or closing, on the top screen that
+/// is still up. The Downloads screen's ⋯ sheet starts closing as its "Save…" or "Open" runs: presented on that closing
+/// sheet, the save dialog went with it at once, its answer never came, and on a Mac the window stopped responding
+/// (owner, 26 Nov 2026; DL-19). Waits up to about 2 s for the transitions to end; `done(false)` when there is no screen.
+func presentWhenSettled(_ controller: UIViewController, fallback: UIViewController?, attempt: Int = 0,
+                        done: @escaping (Bool) -> Void) {
+  let top = settledTopController() ?? fallback
+  guard let presenter = top else { return done(false) }
+  if isTransitioning(presenter), attempt < 20 {
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+      presentWhenSettled(controller, fallback: fallback, attempt: attempt + 1, done: done)
+    }
+    return
+  }
+  presenter.present(controller, animated: true) {
+    done(true)
+  }
+}
+
+/// The key window's top presented screen, skipping one that is being dismissed.
+private func settledTopController() -> UIViewController? {
+  let windows = UIApplication.shared.connectedScenes
+    .compactMap { $0 as? UIWindowScene }
+    .filter { $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive }
+    .flatMap { $0.windows }
+  guard let root = (windows.first { $0.isKeyWindow } ?? windows.first)?.rootViewController else { return nil }
+  var top = root
+  while let next = top.presentedViewController, !next.isBeingDismissed {
+    top = next
+  }
+  return top
+}
+
+private func isTransitioning(_ controller: UIViewController) -> Bool {
+  if controller.isBeingPresented || controller.isBeingDismissed || controller.transitionCoordinator != nil { return true }
+  // A screen above it still on its way out.
+  if let above = controller.presentedViewController, above.isBeingDismissed { return true }
+  return false
 }
 
 /// The file URL for a download, only when it is an existing file inside Documents/Downloads (symlinks resolved).
@@ -107,7 +152,7 @@ final class PreviewSource: NSObject, QLPreviewControllerDataSource, QLPreviewCon
 }
 
 /// The export picker's answer, reported once; kept alive while the picker is on screen.
-final class ExportDelegate: NSObject, UIDocumentPickerDelegate {
+final class ExportDelegate: NSObject, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {
   static var active: ExportDelegate?
   private var done: ((String) -> Void)?
 
@@ -115,7 +160,7 @@ final class ExportDelegate: NSObject, UIDocumentPickerDelegate {
     self.done = done
   }
 
-  private func finish(_ result: String) {
+  func finish(_ result: String) {
     done?(result)
     done = nil
     if ExportDelegate.active === self {
@@ -128,6 +173,10 @@ final class ExportDelegate: NSObject, UIDocumentPickerDelegate {
   }
 
   func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
+    finish("cancelled")
+  }
+
+  func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
     finish("cancelled")
   }
 }

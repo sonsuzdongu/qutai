@@ -19,6 +19,9 @@ Last updated: 2026-11-26
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-26:** Mac: Downloads › ⋯ › "Save…" no longer closes at once and freezes the window: the save dialog waits for the ⋯ sheet to close (`DL-19`; owner's report).
+- **2026-11-26:** iOS: links a page handles itself through the Navigation API (Reddit) no longer leave the tab loading with "the connection is very slow"; same-document address changes are now seen natively and the history shim script is gone (`TABS-35`; owner).
+- **2026-11-26:** Web pages on an opaque WebView on iOS and Android, as in Safari and Chrome: a dark page's unpainted areas take its own base colour (`UI-87`).
 - **2026-11-26:** Mac and iPad: ⌘W only closes the tab, never the app (system File › Close removed); ⌘Q confirmation not possible for an iOS app on a Mac (`UI-86`; owner).
 - **2026-11-26:** Mac and iPad: a reload button right of the address field (`UI-85`; owner). Page zoom now works through the page's viewport width instead of WKWebView.pageZoom, which left pages laid out too wide (sideways scrolling) and text small on most sites (`UI-84`; owner's report).
 - **2026-11-26:** On a Mac the page menu's Text size is now Zoom (Yakınlaştırma), the same per-site level as ⌘+ / ⌘− / ⌘0; on an iPad Text size now scales the page (as page zoom, like Safari on iPad); it did nothing there or on the Mac before (`UI-84`; owner).

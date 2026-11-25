@@ -17,7 +17,7 @@ type NativeFileOpener = {
   canPreview(uri: string): boolean;
   preview(uri: string): Promise<'shown' | 'unsupported' | 'gone'>;
   openInApp(uri: string): Promise<boolean>;
-  saveCopy(uri: string): Promise<'saved' | 'cancelled' | 'gone'>;
+  saveCopy(uri: string): Promise<'saved' | 'cancelled' | 'gone' | 'failed'>;
 };
 const fileOpener = requireOptionalNativeModule<NativeFileOpener>('QutaiFileOpener');
 
