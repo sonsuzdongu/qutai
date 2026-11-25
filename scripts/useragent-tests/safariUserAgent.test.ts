@@ -51,3 +51,14 @@ test("desktop-site mode uses the WebView engine's Chrome version on Android", ()
   // Not learned yet: a fallback until the first page tells Qutai the engine version.
   assert.match(desktopUserAgent('android', {}), /Chrome\/\d+\.0\.0\.0 Safari\/537\.36$/);
 });
+
+test("a Mac's Safari version: three ahead of macOS 11-15, the same number from macOS 26 on", () => {
+  assert.equal(safariVersion('15.6', 'mac'), '18.6');
+  assert.equal(safariVersion('14.0', 'mac'), '17.0');
+  assert.equal(safariVersion('27.0.1', 'mac'), '27.0');
+  assert.equal(safariVersion('26.1', 'mac'), '26.1');
+  assert.equal(safariApplicationName('15.6', 'mac'), 'Version/18.6 Safari/605.1.15');
+  // iPhone and iPad follow the OS number.
+  assert.equal(safariVersion('18.6', 'pad'), '18.6');
+  assert.equal(safariVersion('18.6'), '18.6');
+});

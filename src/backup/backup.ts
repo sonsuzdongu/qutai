@@ -69,6 +69,8 @@ export const BACKUP_POLICY = {
   theme: 'backup',
   addressBarPosition: 'backup',
   tabStrip: 'backup',
+  // Opening the tabs to a connected computer's inspector is this device's choice (WPERM-20).
+  devTools: 'phone',
   haptics: 'backup',
   httpsOnly: 'backup',
   blockThirdPartyCookies: 'backup',

@@ -57,7 +57,7 @@ import { FilterListsScreen } from './FilterListsScreen';
 import { siteRules } from '../storage/siteRules';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
-import { stripDevice } from '../device/macDevice';
+import { isIosAppOnMac, stripDevice } from '../device/macDevice';
 import { offersTabStrip } from '../ui/tabStrip';
 
 /** What Settings says beside a "Don't ask again" switch: where the data goes, or what is still asked. */
@@ -631,6 +631,32 @@ function SettingsPages({
                 }
                 value={settings.incognitoLock}
                 onChange={(on) => setLock('incognitoLock', on)}
+              />
+              {/* Safari's Web Inspector / Chrome's DevTools on a connected computer (WPERM-20); off by default except on a Mac. */}
+              <GroupSwitch
+                title={t('settings.devTools')}
+                hint={
+                  Platform.OS === 'ios'
+                    ? `${t('settings.devToolsHint')} ${t('settings.devToolsIncognito')}`
+                    : t('settings.devToolsHint')
+                }
+                value={settings.devTools}
+                onChange={(devTools) => set({ devTools })}
+              />
+              <GroupLink
+                title={t('settings.devToolsHow')}
+                onPress={() =>
+                  dialog.alert(
+                    t('settings.devToolsHow'),
+                    t(
+                      Platform.OS === 'android'
+                        ? 'settings.devToolsStepsAndroid'
+                        : isIosAppOnMac
+                          ? 'settings.devToolsStepsMac'
+                          : 'settings.devToolsStepsIos',
+                    ),
+                  )
+                }
               />
             </SettingsSection>
           </>

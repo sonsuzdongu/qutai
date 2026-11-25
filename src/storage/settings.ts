@@ -10,6 +10,7 @@ import { removeDefaultStyleLine, removeRetiredInstructionLines } from '../agent/
 import { cleanCustomInstructions } from '../agent/systemPrompt';
 import { secureStoreReady } from './secureStoreGate';
 import { isIosAppOnMac, stripDevice } from '../device/macDevice';
+import { devToolsFor } from '../browser/devTools';
 import { voiceOnlineFor } from '../device/voiceOnlineDefault';
 import { addressBarPositionFor, offersTabStrip } from '../ui/tabStrip';
 
@@ -80,6 +81,8 @@ export type Settings = {
   addressBarPosition: 'top' | 'bottom';
   /** Mac and iPad: the tabs in a strip right above the address bar (UI-74); on by default, never offered on a phone. */
   tabStrip: boolean;
+  /** Safari's Web Inspector / Chrome's DevTools may see Qutai's tabs (WPERM-20); on by default on a Mac only. */
+  devTools: boolean;
   /** Light vibrations for taps like switching tabs. */
   haptics: boolean;
   /** Open sites over https:// only, asking before falling back to http://. */
@@ -175,6 +178,7 @@ export const DEFAULT_SETTINGS: Settings = {
   // Top on a Mac or an iPad, bottom elsewhere (UI-73): also what a backup's merge treats as "never changed".
   addressBarPosition: addressBarPositionFor(null, wideDevice),
   tabStrip: true,
+  devTools: devToolsFor(null, isIosAppOnMac),
   haptics: true,
   httpsOnly: false,
   blockThirdPartyCookies: true,
@@ -224,6 +228,7 @@ const KEYS = {
   theme: 'theme',
   addressBarPosition: 'address_bar_position',
   tabStrip: 'tab_strip',
+  devTools: 'dev_tools',
   haptics: 'haptics',
   httpsOnly: 'https_only',
   blockThirdPartyCookies: 'block_third_party_cookies',
@@ -326,6 +331,7 @@ export async function loadSettings(): Promise<Settings> {
     theme,
     addressBarPosition,
     tabStrip,
+    devTools,
     haptics,
     httpsOnly,
     blockThirdPartyCookies,
@@ -376,6 +382,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.theme),
     get(KEYS.addressBarPosition),
     get(KEYS.tabStrip),
+    get(KEYS.devTools),
     get(KEYS.haptics),
     get(KEYS.httpsOnly),
     get(KEYS.blockThirdPartyCookies),
@@ -438,6 +445,7 @@ export async function loadSettings(): Promise<Settings> {
     // Never chosen: at the top on a Mac or an iPad, at the bottom elsewhere (UI-73); a stored choice always wins.
     addressBarPosition: addressBarPositionFor(addressBarPosition, wideDevice),
     tabStrip: tabStrip !== 'false',
+    devTools: devToolsFor(devTools, isIosAppOnMac),
     haptics: haptics !== 'false',
     httpsOnly: httpsOnly === 'true',
     blockThirdPartyCookies: blockThirdPartyCookies !== 'false',
@@ -562,6 +570,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.theme, settings.theme),
     set(KEYS.addressBarPosition, settings.addressBarPosition),
     set(KEYS.tabStrip, String(settings.tabStrip)),
+    set(KEYS.devTools, String(settings.devTools)),
     set(KEYS.haptics, String(settings.haptics)),
     set(KEYS.httpsOnly, String(settings.httpsOnly)),
     set(KEYS.blockThirdPartyCookies, String(settings.blockThirdPartyCookies)),

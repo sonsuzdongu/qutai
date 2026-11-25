@@ -388,6 +388,7 @@ Moved to Details (ids retired, not reused): `BLK-5`, `BLK-8`, `BLK-9`, `BLK-10`,
 | `WPERM-17` | A site's request for a user name and password (HTTP Basic/Digest) gets Qutai's own dialog (host, realm, http warning); Cancel shows the 401 page; the password is never stored, logged or seen by the assistant | Default | 2026-11-25 |
 | `WPERM-18` | Page copy buttons use the WebViews' own clipboard rules (write after a tap; no-tap writes and page reads refused, iOS reads only via WebKit's Paste button); no bridge needed | Default | 2026-11-25 |
 | `WPERM-19` | Payment Request / Google Pay / Apple Pay never hang: Android has no PaymentRequest, Google Pay opens its pop-up; iOS Apple Pay rejects at once (scripts injected) | Default | 2026-11-25 |
+| `WPERM-20` | "Allow developer tools": Safari's Web Inspector / Chrome's DevTools may see Qutai's tabs; on by default on a Mac only, never incognito tabs on iOS, not in backups, not in the settings tool; steps shown under it. | Owner | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `WPERM-8`, `WPERM-11`
 

@@ -55,6 +55,7 @@ import { dialog } from './Dialog';
 import { CrashPage, ErrorPage } from './ErrorPage';
 import type { LibraryTab } from './LibraryScreen';
 import { NewTabPage } from './NewTabPage';
+import { tabInspectable } from '../browser/devTools';
 import { isIosAppOnMac } from '../device/macDevice';
 import { ReaderPrefs, ReaderView } from './ReaderView';
 
@@ -68,6 +69,8 @@ export type TabActions = {
   httpsOnly: boolean;
   /** Android: block third-party cookies (iOS always does). */
   blockThirdPartyCookies: boolean;
+  /** "Allow developer tools" (WPERM-20). */
+  devTools: boolean;
   /** Dark theme is on. */
   darkMode: boolean;
   blockAds: boolean;
@@ -623,6 +626,9 @@ function TabWebView({
             // iOS: Safari's own ending for this device and system ("Version/26.0 … Safari/…"), which WKWebView leaves out;
             // without it Gmail called Qutai an unsupported browser (DATA-33). Never a Qutai string (DATA-23).
             applicationNameForUserAgent={SAFARI_APPLICATION_NAME}
+            // Safari's Web Inspector / Chrome's DevTools on a connected computer, when allowed; never an incognito tab on
+            // iOS (WPERM-20).
+            webviewDebuggingEnabled={tabInspectable(newTabActions.devTools, tab.incognito, Platform.OS === 'ios' ? 'ios' : 'android')}
             contentMode={tab.desktop ? 'desktop' : 'recommended'}
             thirdPartyCookiesEnabled={!newTabActions.blockThirdPartyCookies}
             // Videos can go full screen (Android) and play in the page (iOS; also a page's camera preview).

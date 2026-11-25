@@ -2441,6 +2441,7 @@ function BrowserApp({
                   keptScripts: settings.assistantScripts && siteRules.scripts.some((s) => s.enabled),
                   httpsOnly: settings.httpsOnly,
                   blockThirdPartyCookies: settings.blockThirdPartyCookies,
+                  devTools: settings.devTools,
                   hideCookieBanners: settings.hideCookieBanners,
                   blockVideoAds: settings.blockVideoAds,
                   onContextMenu: (source, target) => {

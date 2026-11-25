@@ -19,6 +19,7 @@ Last updated: 2026-11-25
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-25:** "Allow developer tools" in Settings › Security lets Safari's Web Inspector (Chrome's on Android) see Qutai's tabs, with steps to open it; on by default on a Mac only, never incognito tabs on iOS (`WPERM-20`). A Mac's Safari version in the User-Agent follows Safari's own numbering before macOS 26 (`DATA-33`; owner).
 - **2026-11-25:** iPad and Mac tabs no longer say "Mobile" in the User-Agent (it now matches Safari exactly), so sites such as eksisozluk.com serve their full desktop page (`DATA-33`; owner's report).
 - **2026-11-26:** A new tab opens with the cursor in the address bar (`UI-83`).
 - **2026-11-25:** The assistant says "your Mac" / "this iPad" too: each message's note names the device, tool results use it, and the agent profile says "device" (one profile for every device; new profile id `b061e44e…` must be registered on the servers before release) (`LANG-26`; owner).

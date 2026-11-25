@@ -10,12 +10,17 @@
 
 export type AppleDevice = 'phone' | 'pad' | 'mac';
 
-/** Safari's version on this system: the OS version's major and minor ("26.1"; "26" → "26.0"); null if unreadable. */
-export function safariVersion(osVersion: string | number | null | undefined): string | null {
+/**
+ * Safari's version on this system, major and minor ("26.1"; "26" → "26.0"); null if unreadable. iOS and iPadOS: the
+ * OS version (Safari 17 on iOS 17, 26 on iOS 26). A Mac: from macOS 26 on the same number; before that Safari ran
+ * three ahead of macOS (macOS 13 → Safari 16, 14 → 17, 15 → 18), so 11 to 15 get three added.
+ */
+export function safariVersion(osVersion: string | number | null | undefined, device: AppleDevice = 'phone'): string | null {
   const match = String(osVersion ?? '').match(/^(\d+)(?:\.(\d+))?/);
   if (!match) return null;
-  const major = Number(match[1]);
+  let major = Number(match[1]);
   if (!major) return null;
+  if (device === 'mac' && major >= 11 && major <= 15) major += 3;
   return `${major}.${Number(match[2] ?? 0)}`;
 }
 
@@ -25,7 +30,7 @@ export function safariVersion(osVersion: string | number | null | undefined): st
  * Safari/605.1.15". Null when the version can't be read (the web view keeps its own ending).
  */
 export function safariApplicationName(osVersion: string | number | null | undefined, device: AppleDevice): string | null {
-  const version = safariVersion(osVersion);
+  const version = safariVersion(osVersion, device);
   if (!version) return null;
   return device === 'phone' ? `Version/${version} Mobile/15E148 Safari/604.1` : `Version/${version} Safari/605.1.15`;
 }
