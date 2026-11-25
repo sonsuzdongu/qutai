@@ -43,10 +43,31 @@ export async function listHistory(
 
 export async function deleteHistoryEntry(db: Db, id: number): Promise<void> {
   await db.runAsync('DELETE FROM history WHERE id = ?', [id]);
+  notifyHistoryRemoved();
 }
 
 export async function clearHistory(db: Db): Promise<void> {
   await db.runAsync('DELETE FROM history', []);
+  notifyHistoryRemoved();
+}
+
+// ---------- Change notices ----------
+
+const removedListeners = new Set<() => void>();
+
+/**
+ * Called after visits are deleted (one entry, a time range, everything), so what shows them while it stays on screen
+ * follows at once: the new tab page's recent visits and top sites (UI-70). Returns the unsubscribe function.
+ */
+export function onHistoryRemoved(listener: () => void): () => void {
+  removedListeners.add(listener);
+  return () => {
+    removedListeners.delete(listener);
+  };
+}
+
+function notifyHistoryRemoved(): void {
+  removedListeners.forEach((listener) => listener());
 }
 
 export async function pruneHistory(db: Db, now = Date.now()): Promise<void> {
@@ -120,4 +141,5 @@ export async function mostVisitedSites(
 /** Deletes visits from `from` on (0 deletes everything). */
 export async function deleteHistorySince(db: Db, from: number): Promise<void> {
   await db.runAsync('DELETE FROM history WHERE visited_at >= ?', [from]);
+  notifyHistoryRemoved();
 }

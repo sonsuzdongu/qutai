@@ -17,6 +17,7 @@ const OTHER_KEYS = [
   'account_session', // account/storage.ts
   'account_device_id', // account/storage.ts
   'credits_disclosure_accepted', // credits/index.ts
+  'newtab_recent_open', // components/NewTabPage.tsx
   // purchases/index.ts: only the app's retry queue for reporting purchases. Credits live in the server's ledger with
   // the account, and the server's store webhook credits a purchase even if the app never reports it, so clearing
   // this loses nothing.

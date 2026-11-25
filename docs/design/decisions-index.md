@@ -910,6 +910,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-67` | Android: pages get only the safe-area insets that really cover the WebView (no navigation-bar inset above the bottom address bar) | Default | 2026-11-24 |
 | `UI-68` | The slow-site line floats over the page at 90 % opacity next to the address bar; the page never moves for it. | Owner | 2026-11-24 |
 | `UI-69` | JSON and other plain-text pages use the scheme's colours, readable in dark theme. | Owner | 2026-11-24 |
+| `UI-70` | The new tab page refreshes when history is deleted; "Recently visited" opens and closes, kept on the phone. | Owner | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

@@ -1,17 +1,18 @@
 import { ReactNode, useEffect, useState } from 'react';
+import * as SecureStore from 'expo-secure-store';
 import { Aurora } from '../ui/Aurora';
 import { GradientText } from '../ui/BrandGradient';
 import { siteColor } from '../ui/siteColor';
 import { Icon } from '../ui/Icon';
 import { QutaiMark } from '../ui/QutaiMark';
-import { makeStyles, readableColumn, radii, common } from '../ui/theme';
+import { makeStyles, readableColumn, radii, common, usePalette } from '../ui/theme';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { incognitoInfoKey } from '../device/webviewProfile';
 import { getLanguage, t, type Language } from '../i18n';
 import { hostOf } from '../i18n/format';
 import { Bookmark, listBookmarks, onBookmarksChanged } from '../storage/bookmarks';
 import { getDb } from '../storage/db';
-import { HistoryEntry, listHistory } from '../storage/history';
+import { HistoryEntry, listHistory, onHistoryRemoved } from '../storage/history';
 import { hideTopSite, TopSite, topSites } from '../storage/topSites';
 import { dialog } from './Dialog';
 import type { LibraryTab } from './LibraryScreen';
@@ -64,6 +65,9 @@ export function NewTabPage({ incognito, darkMode, active, onNavigate, onAskForAp
   const [reload, setReload] = useState(0);
   // Bookmarks the assistant adds or removes show at once.
   useEffect(() => onBookmarksChanged(() => setReload((n) => n + 1)), []);
+  // Visits deleted in the Library (or by clearing data) leave the recent list and the top sites at once (UI-70).
+  useEffect(() => onHistoryRemoved(() => setReload((n) => n + 1)), []);
+  const [recentOpen, setRecentOpen] = useRecentOpen();
 
   useEffect(() => {
     // Incognito never shows anything from history or bookmarks.
@@ -171,10 +175,16 @@ export function NewTabPage({ incognito, darkMode, active, onNavigate, onAskForAp
               )}
 
               {data.recent.length > 0 && (
-                <Section title={t('newTab.recent')} onSeeAll={() => onOpenLibrary('history')}>
-                  {data.recent.map((h) => (
-                    <LinkRow key={h.id} title={h.title} url={h.url} onPress={() => onNavigate(h.url)} />
-                  ))}
+                <Section
+                  title={t('newTab.recent')}
+                  onSeeAll={() => onOpenLibrary('history')}
+                  open={recentOpen}
+                  onToggle={() => setRecentOpen(!recentOpen)}
+                >
+                  {recentOpen &&
+                    data.recent.map((h) => (
+                      <LinkRow key={h.id} title={h.title} url={h.url} onPress={() => onNavigate(h.url)} />
+                    ))}
                 </Section>
               )}
             </>
@@ -185,12 +195,57 @@ export function NewTabPage({ incognito, darkMode, active, onNavigate, onAskForAp
   );
 }
 
-function Section({ title, onSeeAll, children }: { title: string; onSeeAll: () => void; children: ReactNode }) {
+/** Stored on the phone: whether "Recently visited" is open (UI-70); open until the user closes it. */
+const RECENT_OPEN_KEY = 'newtab_recent_open';
+
+function useRecentOpen(): [boolean, (open: boolean) => void] {
+  const [open, setOpen] = useState(true);
+  useEffect(() => {
+    SecureStore.getItemAsync(RECENT_OPEN_KEY)
+      .then((v) => v === '0' && setOpen(false))
+      .catch(() => {});
+  }, []);
+  const set = (next: boolean) => {
+    setOpen(next);
+    SecureStore.setItemAsync(RECENT_OPEN_KEY, next ? '1' : '0').catch(() => {});
+  };
+  return [open, set];
+}
+
+function Section({
+  title,
+  onSeeAll,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  onSeeAll: () => void;
+  /** With onToggle: the title row opens and closes the section. */
+  open?: boolean;
+  onToggle?: () => void;
+  children: ReactNode;
+}) {
   const styles = useStyles();
+  const palette = usePalette();
   return (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>{title}</Text>
+        {onToggle ? (
+          <Pressable
+            onPress={onToggle}
+            hitSlop={8}
+            style={styles.sectionToggle}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: !!open }}
+            accessibilityLabel={title}
+          >
+            <Text style={styles.sectionTitle}>{title}</Text>
+            <Icon name={open ? 'chevronUp' : 'chevronDown'} size={16} color={palette.textSecondary} />
+          </Pressable>
+        ) : (
+          <Text style={styles.sectionTitle}>{title}</Text>
+        )}
         <Pressable onPress={onSeeAll} hitSlop={8} accessibilityRole="button">
           <Text style={styles.seeAll}>{t('newTab.seeAll')}</Text>
         </Pressable>
@@ -243,6 +298,7 @@ const useStyles = makeStyles((c) => ({
     paddingVertical: 6,
   },
   sectionTitle: { fontSize: 13, fontWeight: '600', color: c.textSecondary },
+  sectionToggle: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   seeAll: { fontSize: 13, color: c.tintText, fontWeight: '600' },
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 8 },
   pressed: { backgroundColor: c.pressed },

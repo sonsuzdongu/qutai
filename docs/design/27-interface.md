@@ -157,6 +157,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-69`** A plain-text document (JSON, .txt, .csv, `+json` types) gets the colour scheme's own background and text colours (`Canvas` / `CanvasText`), so in dark theme it is light text on a dark page instead of white on white; HTML and XML pages are untouched.
   Status: Decided by the owner (24 Nov 2026: a JSON page was white text on white) · Enforced: In the app: src/browser/plainTextTheme.ts, src/components/BrowserView.tsx (pageSetupScript); scripts/navigation-tests/plainTextTheme.test.ts
 
+- **`UI-70`** The new tab page follows deleted history at once: deleting a visit, a time range or all history refreshes "Recently visited" and the top sites while the page stays on screen. "Recently visited" opens and closes from its title (a chevron shows which); the choice is kept on the phone (cleared by a reinstall), open by default.
+  Status: Decided by the owner (25 Nov 2026) · Enforced: In the app: src/storage/history.ts (onHistoryRemoved), src/components/NewTabPage.tsx (Section, useRecentOpen), src/storage/installCheck.ts
+
 ## Details
 
 **Icons**
