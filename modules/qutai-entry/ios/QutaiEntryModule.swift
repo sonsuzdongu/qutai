@@ -230,6 +230,13 @@ final class KeyShortcuts {
   private func installPressWatch() {
     guard !pressWatchInstalled else { return }
     pressWatchInstalled = true
+    // The window losing focus (another app, a Mac's menu, the app going away) ends a held ⌥Space: its key-up may
+    // never come here (UI-81).
+    for name in [UIApplication.willResignActiveNotification, UIScene.willDeactivateNotification] {
+      NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { _ in
+        KeyShortcuts.shared.voiceLost()
+      }
+    }
     let selector = #selector(UIApplication.sendEvent(_:))
     guard let method = class_getInstanceMethod(UIApplication.self, selector) else { return }
     typealias Send = @convention(c) (UIApplication, Selector, UIEvent) -> Void
@@ -239,6 +246,12 @@ final class KeyShortcuts {
       original(app, selector, event)
     }
     method_setImplementation(method, imp_implementationWithBlock(block))
+  }
+
+  fileprivate func voiceLost() {
+    guard voiceDown else { return }
+    voiceDown = false
+    listener?("voiceCancel")
   }
 
   private func watch(_ event: UIPressesEvent) {

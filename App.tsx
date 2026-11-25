@@ -255,7 +255,13 @@ import { stripDevice } from './src/device/macDevice';
 import { showTabStrip } from './src/ui/tabStrip';
 import { useKeyShortcuts } from './src/device/keyShortcuts';
 import { shortcutTab, type ShortcutEvent } from './src/ui/keyShortcuts';
-import { VOICE_KEY_IDLE, voiceKeyStep, type VoiceKeyState } from './src/ui/voiceKey';
+import {
+  VOICE_KEY_IDLE,
+  VOICE_MIN_HOLD_MS,
+  voiceKeyStep,
+  type VoiceKeyEvent,
+  type VoiceKeyState,
+} from './src/ui/voiceKey';
 import { clearSiteIcons } from './src/storage/siteIcons';
 import { setIncognitoProbe } from './src/analytics';
 import { askAnalyticsConsentOnce } from './src/analytics/consentPrompt';
@@ -2122,31 +2128,59 @@ function BrowserApp({
   // "Hold to talk" on, the panel closed, no lock or full screen); voice consent, the microphone permission, incognito
   // and a running task are handled by the push-to-talk itself, as for the button.
   const voiceKey = useRef<VoiceKeyState>(VOICE_KEY_IDLE);
-  const onVoiceKey = (event: 'down' | 'up') => {
-    const canStart =
-      !lock && !screen && !panelOpen && settings.showAssistantButton && settings.voiceHoldToTalk;
-    if (event === 'down' && voiceKey.current.kind === 'idle' && !canStart) return;
-    const step = voiceKeyStep(voiceKey.current, event, Date.now());
+  const voicePress = useRef(0);
+  const onVoiceKey = (event: VoiceKeyEvent, press = voicePress.current) => {
+    const canStart = !lock && !screen && !panelOpen && settings.showAssistantButton && settings.voiceHoldToTalk;
+    if (event === 'down') {
+      if (voiceKey.current.kind !== 'idle') return;
+      if (!canStart) return;
+      press = ++voicePress.current;
+    }
+    // The hold time passed but something came in front meanwhile: this press does nothing.
+    if (event === 'timer' && !canStart && voiceKey.current.kind === 'armed') {
+      voiceKey.current = VOICE_KEY_IDLE;
+      return;
+    }
+    const step = voiceKeyStep(voiceKey.current, event, press);
     voiceKey.current = step.state;
-    if (step.action === 'start') {
-      const press = step.state;
-      const measured = measureAssistantButton((anchor) => {
-        // Already let go while the button was being found: nothing starts.
-        if (voiceKey.current !== press) return;
-        ptt.handlers.pressIn();
-        ptt.handlers.start(anchor);
-      });
-      // The button isn't on screen: no session, so the release does nothing either.
-      if (!measured) voiceKey.current = VOICE_KEY_IDLE;
-    } else if (step.action === 'release') {
-      ptt.handlers.release();
-    } else if (step.action === 'cancel') {
-      // Let go almost at once: too short a hold, nothing is sent and listening stops.
-      ptt.handlers.cancel();
+    switch (step.action) {
+      case 'arm':
+        // Only a real hold reaches the microphone: quick presses never start (or stop) the audio.
+        setTimeout(() => onVoiceKeyRef.current('timer', press), VOICE_MIN_HOLD_MS);
+        return;
+      case 'start': {
+        const measured = measureAssistantButton((anchor) => {
+          // Let go while the button was being found: nothing starts.
+          if (voiceKey.current !== step.state) return;
+          ptt.handlers.pressIn();
+          ptt.handlers.start(anchor);
+        });
+        // The button isn't on screen: no session, so the release does nothing either.
+        if (!measured) voiceKey.current = VOICE_KEY_IDLE;
+        return;
+      }
+      case 'release':
+        return ptt.handlers.release();
+      case 'cancel':
+        return ptt.handlers.cancel();
     }
   };
+  // The timer calls the latest version (it sees the current settings and screens).
+  const onVoiceKeyRef = useRef(onVoiceKey);
+  useEffect(() => {
+    onVoiceKeyRef.current = onVoiceKey;
+  });
+  // Qutai leaving the front ends a held ⌥Space like losing the window.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next !== 'active') onVoiceKeyRef.current('blur');
+    });
+    return () => sub.remove();
+  }, []);
   useKeyShortcuts((id: ShortcutEvent) => {
-    if (id === 'voiceDown' || id === 'voiceUp') return onVoiceKey(id === 'voiceDown' ? 'down' : 'up');
+    if (id === 'voiceDown') return onVoiceKey('down');
+    if (id === 'voiceUp') return onVoiceKey('up');
+    if (id === 'voiceCancel') return onVoiceKey('blur');
     if (lock || screen) return;
     switch (id) {
       case 'newTab':

@@ -45,6 +45,7 @@ test('only known ids are accepted from the native side', () => {
 test('the voice key arrives as its press and release, never as itself', () => {
   assert.ok(isShortcutEvent('voiceDown'));
   assert.ok(isShortcutEvent('voiceUp'));
+  assert.ok(isShortcutEvent('voiceCancel'));
   assert.ok(isShortcutEvent('reload'));
   assert.ok(!isShortcutEvent('voice'));
   assert.ok(!isShortcutEvent('paste'));

@@ -72,10 +72,15 @@ export const TEXT_EDITING: { input: string; modifiers: ShortcutModifier[] }[] = 
 ];
 
 /** What the native side reports: a shortcut, or the voice key going down or up. */
-export type ShortcutEvent = Exclude<ShortcutId, 'voice'> | 'voiceDown' | 'voiceUp';
+export type ShortcutEvent = Exclude<ShortcutId, 'voice'> | 'voiceDown' | 'voiceUp' | 'voiceCancel';
 
 export function isShortcutEvent(value: unknown): value is ShortcutEvent {
-  return value === 'voiceDown' || value === 'voiceUp' || (value !== 'voice' && isShortcutId(value));
+  return (
+    value === 'voiceDown' ||
+    value === 'voiceUp' ||
+    value === 'voiceCancel' ||
+    (value !== 'voice' && isShortcutId(value))
+  );
 }
 
 export function isShortcutId(value: unknown): value is ShortcutId {

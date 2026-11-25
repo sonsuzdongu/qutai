@@ -19,6 +19,7 @@ Last updated: 2026-11-25
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-25:** Quick repeated ⌥ Space presses no longer crash the Mac app or leave the microphone on: the microphone starts only after 300 ms held, voice sessions never overlap, and the recogniser reports audio format errors instead of crashing (`UI-81`, `VOICE-26`; owner's crash report).
 - **2026-11-25:** ⌥ Space listens only while held: no tap-to-toggle, a press let go within 300 ms is cancelled (`UI-81`; owner, after trying it on the Mac).
 - **2026-11-25:** On a Mac the Qutai button tour also says ⌥ Space talks to Qutai (`UI-81`; owner's request).
 - **2026-11-25:** Address bar suggestions wait for a 350 ms pause in typing, for history and the search engine alike (`UI-82`).

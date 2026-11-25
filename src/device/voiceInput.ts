@@ -77,6 +77,8 @@ const DEFAULT_TAGS: Record<string, string> = {
 };
 /** If stop() gets no "end" from the recogniser in time, the session is aborted. */
 const STOP_TIMEOUT_MS = 2500;
+/** The longest a new start waits for the recogniser to end a session already let go of (VOICE-26). */
+const SETTLE_MAX_MS = 1500;
 const LOCALES_TIMEOUT_MS = 3000;
 /** The recogniser's language lists are read once and kept this long (a downloaded language clears them). */
 const LOCALES_CACHE_MS = 10 * 60 * 1000;
@@ -455,6 +457,32 @@ let session: Session | null = null;
 let continuing = false;
 /** Set when listening is called off while it is still being prepared (prompts, permission). */
 let cancelled = false;
+/**
+ * A session was let go of here before the recogniser said it ended (cut off, or its stop timed out): it is still
+ * tearing its microphone down. A new start waits for that end (at most SETTLE_MAX_MS), never two at once: starting a
+ * second audio engine over the first crashed iOS on a Mac with quick repeated ⌥Space presses (VOICE-26).
+ */
+let settling: Promise<void> | null = null;
+
+function settleAfter(M: SpeechModule['ExpoSpeechRecognitionModule']) {
+  if (settling) return;
+  settling = new Promise<void>((resolve) => {
+    let done = false;
+    const end = () => {
+      if (done) return;
+      done = true;
+      sub?.remove();
+      clearTimeout(timer);
+      settling = null;
+      resolve();
+    };
+    let sub: { remove(): void } | null = null;
+    try {
+      sub = M.addListener('end', end);
+    } catch {}
+    const timer = setTimeout(end, SETTLE_MAX_MS);
+  });
+}
 
 function join(base: string, words: string): string {
   if (!words) return base;
@@ -473,9 +501,11 @@ const ERROR_KEYS: Partial<Record<ExpoSpeechRecognitionErrorCode, Parameters<type
   interrupted: 'voice.error.interrupted',
 };
 
-function finish() {
+/** `nativeEnded`: called for the recogniser's own end event; otherwise it is still stopping (see `settling`). */
+function finish(nativeEnded = false) {
   const s = session;
   if (!s) return;
+  if (!nativeEnded && module) settleAfter(module.ExpoSpeechRecognitionModule);
   const asked = state === 'stopping';
   session = null;
   mark('end');
@@ -690,6 +720,12 @@ export async function startVoiceInput(options: VoiceOptions, fellBackFrom: strin
   // Product analytics (with consent, never from incognito, SRV-31): only that voice input was used, not a retry.
   if (!fellBackFrom) track('feature_used', { feature: 'voice_input' });
   try {
+    // The previous session's microphone is still being torn down: start after it, unless called off meanwhile.
+    if (settling) {
+      mark('settling');
+      await settling;
+      if (cancelled) return false;
+    }
     await begin(options, fellBackFrom);
   } catch (e) {
     if (e instanceof VoiceNeedsBuildError) dialog.alert(t('voice.title'), e.message);
@@ -831,7 +867,7 @@ async function begin(options: VoiceOptions, fellBackFrom: string | null) {
       if (session === s) setLevel(Math.max(0, Math.min(1, event.value / 10)));
     }),
     M.addListener('end', () => {
-      if (session === s) finish();
+      if (session === s) finish(true);
     }),
   );
   function listeningNow() {

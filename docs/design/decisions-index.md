@@ -822,6 +822,7 @@ Moved to Details (ids retired, not reused): `MEDIA-1`, `MEDIA-8`, `MEDIA-9`, `ME
 | `VOICE-21` | A language with no installed voice is read with the phone's default voice and Qutai says so once per… | Default |  |
 | `VOICE-24` | Read-aloud stays on the phone's own speech engine; an on-device neural voice (Supertonic-3) was evaluated and… | Owner | 2026-11-19 |
 | `VOICE-25` | On a Mac speech is always recognised online by Apple; "online speech" starts on for a fresh Mac install (stored answers kept, phones/iPads ask); off → message pointing to the setting | Owner | 2026-11-25 |
+| `VOICE-26` | One voice session at a time: a start waits for the recogniser to end the previous one (≤ 1.5 s); the patched recogniser tears down a leftover audio engine and reports format errors instead of crashing. | Default | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `VOICE-10`, `VOICE-12`, `VOICE-16`, `VOICE-18`, `VOICE-20`, `VOICE-22`, `VOICE-23`
 
@@ -926,7 +927,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-78` | "Clear history" sits above the History list, always reachable. | Owner | 2026-11-25 |
 | `UI-79` | Mac only: no phantom top/bottom safe-area insets (status bar, home indicator), so content starts right under the title bar; iPhone and iPad unchanged. | Owner | 2026-11-25 |
 | `UI-80` | Address suggestions show only once something is typed; no empty box or Paste and go row. | Owner | 2026-11-25 |
-| `UI-81` | Mac and iPad: ⌥Space is the Qutai button's push-to-talk (listens only while held, release sends; a press under 300 ms is cancelled), only where the button's hold would listen; the Mac's Qutai button tour mentions it. | Owner | 2026-11-25 |
+| `UI-81` | Mac and iPad: ⌥Space is the Qutai button's push-to-talk (listens only while held, release sends; the microphone starts after 300 ms held, quicker presses do nothing; focus loss cancels), only where the button's hold would listen; the Mac's Qutai button tour mentions it. | Owner | 2026-11-25 |
 | `UI-82` | Address bar: history and the search engine are asked only after a 350 ms pause in typing. | Owner | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
