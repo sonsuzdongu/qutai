@@ -276,3 +276,75 @@ Kurallar `webpage/video/README.md`'deki gibi: yalnızca gerçek kayıt, markası
 
 Türkçe sürüm aynı akış, altyazılar sitedeki Türkçe metinlerden ("Sekmelerinizi okur", "Önce sorar", "Kendi AI
 anahtarınız").
+
+---
+
+## 8. r/droidappshowcase (26 Kasım 2026)
+
+r/androidapps kendini tanıtma için bu topluluğu öneriyor. Kurallar sayfası bu ortamdan açılamadı. Bir ayna sayfasında
+(Şubat 2026, [r.datuan.dev](https://r.datuan.dev/r/droidappshowcase)) şu yazıyor: başlık kısa ve açıklayıcı olsun,
+gönderiden sonra doğru flair seçilsin, görseller doğrudan Reddit'e (ya da Imgur'a) yüklensin. Göndermeden önce kenar
+çubuğunu okuyun; bağlantıların gövdede mi, yorumda mı istendiğine bakın.
+
+**Biçim:** Galeri gönderisi (5 ekran görüntüsü, doğrudan Reddit'e yüklenir) ve altında gövde metni. Görseller:
+
+1. İki sekmenin karşılaştırıldığı tablo cevabı
+2. Qutai'ın onay penceresi ("Qutai wants to do this" ya da ödeme onayı)
+3. Q'ya basılı tutarak sesli komut (dinleme anı)
+4. Ayarlar › Asistan: Qutai Credits ya da kendi anahtarınız
+5. Tarayıcı tarafı: okuma modu ya da reklam engelleme
+
+Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, kart ya da bildirim görünmesin.
+
+**Başlık seçenekleri:**
+
+1. `Qutai – an open-source Android browser whose AI assistant can actually use the page`
+2. `I built a browser where the AI compares your tabs, fills in forms and asks before it pays`
+3. `Qutai: AI browser for Android – compare tabs, fill forms, research with sources (open source)`
+
+Önerim 1: kısa, ne olduğunu söylüyor, "open-source" bu kitlede güven veriyor.
+
+**Gövde:**
+
+> Hi! I'm the developer, one person in Turkey. Qutai is a free, open-source (Apache-2.0) Android browser with an
+> assistant built in. Tap the Q in the address bar, or hold it and talk, and ask in your own words.
+>
+> What I use it for:
+>
+> - Open two or three product pages and ask which one to get. It reads each tab without switching and answers with
+>   a table of price, delivery and warranty (also as a CSV file).
+> - "Add the cheaper one to my cart, size 42." It asks before it puts your saved address into a site. Paying,
+>   posting, deleting and account changes always wait for your approval in Qutai's own window. Card numbers,
+>   passwords and one-time codes are never typed.
+> - Fill in a booking form, then add it to your calendar or set a reminder.
+> - Deep research: it reads many pages and PDFs and writes a report with its sources (takes a few minutes).
+>
+> Android-only bits: tasks can keep running in the background (opt-in, with a notification), share a link to Qutai,
+> a home-screen widget, picture-in-picture video.
+>
+> It's also a normal browser: tabs and groups, incognito tabs with a fingerprint lock, ad and tracker blocking
+> (EasyList, EasyPrivacy, AdGuard or your own lists), reader mode with read aloud, bookmark folders with Chrome
+> import, and an encrypted backup.
+>
+> Two ways to pay for the AI:
+>
+> - **Qutai Credits:** sign in and buy credits in the app, no key to manage. Requests pass through my server, which
+>   doesn't store or log them.
+> - **Your own key:** Anthropic, OpenAI, Gemini, OpenRouter, or your own server (Ollama, LM Studio). Requests then go
+>   straight from your phone to that provider, no account needed.
+>
+> Either way, "What was sent to the AI" in Settings lists every request: which site, which model, what went with it.
+>
+> Honest bits: it's young (0.1.34) and I'm one person, so expect rough edges. How well the assistant does depends on
+> the model and the site. Hidden instructions on web pages can still mislead any AI assistant: the risky steps wait
+> for you, but read what an approval says before you tap.
+>
+> I'd love to hear where it gets stuck, which sites break it, and what's missing before you'd use it every day.
+>
+> Google Play: https://play.google.com/store/apps/details?id=com.sonsuzdongu.qutai
+> Source: https://github.com/sonsuzdongu/qutai
+> Website: https://qutai.sonsuzdongu.com
+
+**Sonrası:** Gönderiden hemen sonra flair seçin. İlk 2–3 saat yorumlara kendiniz cevap verin. Aynı gün aynı metni
+başka bir topluluğa atmayın. Metni kendi sesinize göre değiştirin: Reddit, AI ile yazılmış gibi duran metinlere
+sert tepki veriyor.
