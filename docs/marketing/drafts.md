@@ -313,7 +313,7 @@ Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, k
 
 **Gövde:**
 
-> Hi! I'm the developer, one person in Turkey.
+> Hi! I'm the developer.
 >
 > I really liked Claude in Chrome on my computer: you give it a task and it does it in your browser. On my phone I
 > couldn't find anything like it. The closest, Perplexity's Comet, felt weak when I tried it. So I built Qutai, a
