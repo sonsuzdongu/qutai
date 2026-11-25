@@ -305,11 +305,15 @@ Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, k
 
 **Başlık seçenekleri:**
 
-1. `I loved Claude in Chrome but found nothing like it on my phone, so I built Qutai: an open-source mobile browser that fills in forms and does tasks for you`
-2. `Qutai – an open-source mobile browser whose AI fills in forms and finishes tasks for you, and asks before it pays`
-3. `I built a mobile AI browser that remembers your details, fills in forms and even builds small apps for you (open source)`
+1. `Qutai – an AI agent that works in your mobile browser: it fills in forms and does tasks for you (open source)`
+2. `I built an AI agent that lives in your phone's browser and does the tapping and typing for you`
+3. `An open-source AI agent in a mobile browser, like Claude in Chrome but on your phone`
+4. `I loved Claude in Chrome but found nothing like it on my phone, so I built Qutai: an open-source mobile browser that fills in forms and does tasks for you`
 
-Önerim 1: hikâyeyi başlıkta anlatıyor ve Claude in Chrome'u bilen okur ne olduğunu hemen anlıyor. Uzun bulursanız 2.
+Önerim 1: "mobil tarayıcıda çalışan bir yapay zekâ ajanı" fikrini en kısa ve net söyleyen seçenek; ne yaptığını
+(form, görev) ve açık kaynağı da içeriyor. 2 daha kişisel ve Reddit'in "ben yaptım" diline yakın. 3, Claude in
+Chrome'u bilen okura ne olduğunu tek bakışta anlatır; ama başka bir ürünün adını başlıkta kullanmak bazı
+topluluklarda reklam gibi algılanabilir. 4 önceki önerim, hikâyeyi başlıkta anlatıyor ama uzun.
 
 **Gövde:**
 
