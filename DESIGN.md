@@ -19,6 +19,7 @@ Last updated: 2026-11-25
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-26:** A new tab opens with the cursor in the address bar (`UI-83`).
 - **2026-11-25:** The assistant says "your Mac" / "this iPad" too: each message's note names the device, tool results use it, and the agent profile says "device" (one profile for every device; new profile id `b061e44e…` must be registered on the servers before release) (`LANG-26`; owner).
 - **2026-11-25:** iPhone, iPad and Mac tabs now send Safari's real version in the User-Agent, so Gmail no longer calls Qutai an unsupported browser; desktop-site mode uses the real Safari / Chrome versions (`DATA-33`, `DATA-23` adjusted; owner).
 - **2026-11-25:** Quick repeated ⌥ Space presses no longer crash the Mac app or leave the microphone on: the microphone starts only after 300 ms held, voice sessions never overlap, and the recogniser reports audio format errors instead of crashing (`UI-81`, `VOICE-26`; owner's crash report).

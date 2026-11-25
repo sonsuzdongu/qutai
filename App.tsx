@@ -1400,6 +1400,16 @@ function BrowserApp({
 
   // Page actions make no sense on the app's own new tab page.
   const onNewTab = tab.isNewTab;
+  // A blank new tab coming to the front (⋮ › New tab, the tab switcher's or the strip's +, ⌘T, closing the last tab)
+  // opens with the cursor in the address bar, ready to type (UI-83). Not at launch, and not behind the incognito lock.
+  const lastActiveId = useRef(tab.id);
+  useEffect(() => {
+    if (lastActiveId.current === tab.id) return;
+    lastActiveId.current = tab.id;
+    if (!tab.isNewTab) return;
+    if (tab.incognito && settings.incognitoLock && !incognitoUnlocked) return;
+    setAddressEdit({ id: Date.now(), text: '' });
+  }, [tab.id, tab.isNewTab, tab.incognito, settings.incognitoLock, incognitoUnlocked]);
   const findOpen = findFor?.tabId === tab.id && findFor.url === tab.url && findFor.reader === !!tab.reader;
 
   /** Turns reader mode on (when the page has an article to show) or off. */

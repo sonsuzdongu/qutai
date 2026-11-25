@@ -196,6 +196,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-82`** In the address bar, history and the search engine are both asked only once typing has paused for 350 ms (`ADDRESS_BAR_TIMING`): no lookup on each key press or during a burst of typing, then one history lookup and one engine request with the finished text. A cleared field empties the list at once. (Before: history 120 ms with the first letter at once and a refresh at least every 360 ms; the engine after 200 ms.)
   Status: Decided by the owner (25 Nov 2026) · Enforced: In the app: src/browser/omniboxResults.ts (ADDRESS_BAR_TIMING, `leading` option), src/components/OmniboxSuggestions.tsx; scripts/omnibox-tests/results.test.ts
 
+- **`UI-83`** A blank new tab that comes to the front opens with the cursor in the address bar (⋮ › New tab, the tab switcher's and the tab strip's +, ⌘T, the tab left after closing the last one); on a phone the keyboard comes up. Not when the app starts, and not behind the incognito lock.
+  Status: Decided by the owner (26 Nov 2026) · Enforced: In the app: App.tsx (effect on the active tab)
+
 ## Details
 
 **Icons**
