@@ -297,7 +297,7 @@ Android'den, sırayla:
 
 1. Bir form doldurulurken: alanın etrafındaki halka ve alttaki adım satırı ("Typing into …"), yanında Stop
 2. "Enter your personal information on …?" sorusu (bir kez / her zaman / asla)
-3. Qutai'ın ödeme onayı penceresi (site, tutar, sipariş, ödeme yöntemi)
+3. Qutai'ın yazdığı küçük bir uygulama: önizleme ya da yeni sekme sayfasındaki "My apps"
 4. Ayarlar › Hafıza: kategorilere ayrılmış kayıtlar (test bilgileriyle)
 5. Q'ya basılı tutarak sesli görev verme (dinleme anı)
 
@@ -305,9 +305,9 @@ Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, k
 
 **Başlık seçenekleri:**
 
-1. `I loved Claude in Chrome but found nothing like it on Android, so I built Qutai: an open-source browser that fills in forms and does tasks for you`
-2. `Qutai – an open-source Android browser whose AI fills in forms and finishes tasks for you, and asks before it pays`
-3. `I built an AI browser for Android that remembers your details and fills in forms for you (open source)`
+1. `I loved Claude in Chrome but found nothing like it on my phone, so I built Qutai: an open-source mobile browser that fills in forms and does tasks for you`
+2. `Qutai – an open-source mobile browser whose AI fills in forms and finishes tasks for you, and asks before it pays`
+3. `I built a mobile AI browser that remembers your details, fills in forms and even builds small apps for you (open source)`
 
 Önerim 1: hikâyeyi başlıkta anlatıyor ve Claude in Chrome'u bilen okur ne olduğunu hemen anlıyor. Uzun bulursanız 2.
 
@@ -317,7 +317,8 @@ Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, k
 >
 > I really liked Claude in Chrome on my computer: you give it a task and it does it in your browser. On my phone I
 > couldn't find anything like it. The closest, Perplexity's Comet, felt weak when I tried it. So I built Qutai, a
-> free, open-source (Apache-2.0) Android browser with an assistant that uses the browser for you.
+> free, open-source (Apache-2.0) mobile browser with an assistant that uses the browser for you. It's on Google Play,
+> and in beta on iPhone through TestFlight.
 >
 > Tap the Q in the address bar, or hold it and talk, and give it a task in your own words. It taps, types, picks
 > options, scrolls and opens tabs, one visible step at a time: a ring marks the field it's about to type into, a
@@ -327,16 +328,16 @@ Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, k
 >
 > - **Forms.** "Fill in this form with my details." It fills the fields, picks the options and fixes the errors the
 >   form reports. Sign-ups, applications, contact forms, delivery details.
-> - **Orders, all the way to checkout.** "Order dinner for two from this restaurant." It puts the food in the cart
->   and fills in your name, address and delivery note. Then you choose who pays: tap the last button yourself, or
->   let the assistant pay and approve each payment in Qutai's own window, which shows the site, the total, the order
->   and the payment method.
-> - **Bookings.** It finds a table or an appointment, fills in the form, then offers to add it to your calendar or
->   set a reminder.
 > - **Posting for you.** Comments, reviews and contact messages: it shows you the exact text and the button it will
 >   press, and presses it once you say yes.
 > - **Repeat jobs.** Save a request as a task and run it by name. On Android a task can keep working in the
 >   background if you turn that on, with a notification when it's done or needs you.
+> - **Vibe coding, inside the browser.** "Make me an app where I can keep my notes." Qutai writes it, opens a
+>   preview, fixes its own errors and changes it when you ask, keeping earlier versions so you can go back. Your apps
+>   wait in My apps on the new tab page. Each runs sealed off from your browsing: no internet, no other sites'
+>   cookies, its data on the phone. You can share an app as a file.
+> - **Orders and bookings.** It fills the cart and the checkout form; you pay, or approve each payment in Qutai's own
+>   window. It books a table and offers to put it in your calendar.
 >
 > **It remembers you, on your phone.** Tell it once, by voice or by typing: your addresses, sizes, diet, budget,
 > how you like answers. It sorts what it learns into categories and uses it in later tasks without asking again, so
@@ -360,9 +361,12 @@ Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, k
 > model and the site. Hidden instructions on web pages can still mislead any AI assistant: paying, posting,
 > deleting and account changes always wait for your tap, but read what an approval says before you tap.
 >
+> Apps have no internet and no phone features such as the camera or location yet.
+>
 > I'd love to hear which forms and tasks it gets stuck on, and what's missing before you'd use it every day.
 >
 > Google Play: https://play.google.com/store/apps/details?id=com.sonsuzdongu.qutai
+> iPhone beta (TestFlight): https://testflight.apple.com/join/q6QvR9Wx
 > Source: https://github.com/sonsuzdongu/qutai
 > Website: https://qutai.sonsuzdongu.com
 
