@@ -305,15 +305,16 @@ Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, k
 
 **Başlık seçenekleri:**
 
-1. `Qutai – an AI agent that works in your mobile browser: it fills in forms and does tasks for you (open source)`
-2. `I built an AI agent that lives in your phone's browser and does the tapping and typing for you`
-3. `An open-source AI agent in a mobile browser, like Claude in Chrome but on your phone`
-4. `I loved Claude in Chrome but found nothing like it on my phone, so I built Qutai: an open-source mobile browser that fills in forms and does tasks for you`
+Bu toplulukta başlık en fazla 65 karakter (sahibin 26 Kasım notu). Hepsi sayıldı:
 
-Önerim 1: "mobil tarayıcıda çalışan bir yapay zekâ ajanı" fikrini en kısa ve net söyleyen seçenek; ne yaptığını
-(form, görev) ve açık kaynağı da içeriyor. 2 daha kişisel ve Reddit'in "ben yaptım" diline yakın. 3, Claude in
-Chrome'u bilen okura ne olduğunu tek bakışta anlatır; ama başka bir ürünün adını başlıkta kullanmak bazı
-topluluklarda reklam gibi algılanabilir. 4 önceki önerim, hikâyeyi başlıkta anlatıyor ama uzun.
+1. `Qutai: an open-source AI agent that works in your mobile browser` (64)
+2. `Qutai: an AI agent in your mobile browser that does tasks for you` (65)
+3. `Qutai – an AI agent in your phone's browser that fills in forms` (63)
+4. `I built an AI agent that uses your phone's browser for you` (58)
+
+Önerim 1: "mobil tarayıcıda çalışan bir yapay zekâ ajanı" fikri ve açık kaynak, sınırın içinde. Ne yaptığını
+(form, görev) gövdenin ilk satırları anlatıyor. 2 sınırda tam 65; yapıştırırken sonuna boşluk kaçmasın. Claude in
+Chrome'lu başlıklar sınıra sığmadığı için çıkarıldı; o hikâye gövdenin ilk paragrafında.
 
 **Gövde:**
 
