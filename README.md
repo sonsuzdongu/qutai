@@ -1,5 +1,13 @@
 # Qutai
 
+**Qutai is an open-source agentic AI browser for Android and iPhone** (also iPad and Mac with Apple silicon). Its
+assistant gets to know you, fills in forms, shops, books and researches for you, right in your tabs, and asks before
+anything that matters. Use it with your own AI key (Anthropic, OpenAI, Google Gemini, OpenRouter or a self-hosted
+OpenAI-compatible server) or with Qutai Credits, no key needed.
+[Google Play](https://play.google.com/store/apps/details?id=com.sonsuzdongu.qutai) ·
+[iPhone, iPad and Mac beta (TestFlight)](https://testflight.apple.com/join/q6QvR9Wx) ·
+[Website](https://qutai.sonsuzdongu.com) · [Pricing](https://qutai.sonsuzdongu.com/en/pricing/)
+
 > **How Qutai works and why:** [`DESIGN.md`](DESIGN.md) is the map of every design decision (rules, reasons, status), with one file per area in [`docs/design/`](docs/design/). Read it before changing behaviour, and update it with every change.
 
 An AI-powered mobile browser for iOS and Android: an agent that can read and use the page for you,
