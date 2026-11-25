@@ -8,7 +8,7 @@
  * - A competitor cell must come from the vendor's own current page (feature page, help centre, pricing page or
  *   the app's store listing) about the MOBILE app. Put the URL in `source` and the day you read it in `checked`.
  *   Exception: the owner's own test of the mobile app, with no `source`, a note that says it was our test, and
- *   the test's day in `checked` (Brave's `agent` cell, 25 Nov 2026).
+ *   the test's day in `checked` (the `agent` cells of Brave and Opera, 25 Nov 2026).
  *   If no such page settles it, use `unknown` (shown as a neutral dash, never as "no").
  * - Only the mobile app counts: a feature that exists only in the desktop version is `no` for that row.
  * - Write notes in your own words; never copy a vendor's text.
@@ -706,7 +706,14 @@ export const COMPETITORS: Product[] = [
     name: 'Opera (Opera AI)',
     platforms: t('iOS and Android', 'iOS ve Android'),
     cells: {
-      agent: U,
+      agent: {
+        state: 'no',
+        note: t(
+          'Our own test of the mobile app: Opera AI could not fill in forms or tap links on a page.',
+          'Mobil uygulamada kendi denememiz: Opera AI bir sayfada form dolduramadı, bağlantılara dokunamadı.',
+        ),
+        checked: '2026-11-25',
+      },
       research: {
         state: 'partial',
         note: t('Answers from current web information with links; multi-tab research not documented.', 'Güncel web bilgisiyle bağlantılı yanıtlar; çok sekmeli araştırma belgelenmemiş.'),
