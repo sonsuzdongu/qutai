@@ -415,6 +415,7 @@ export const de: Record<keyof typeof en, string> = {
   'menu.reader': 'Leseansicht',
   'menu.readerNone': 'Leseansicht (hier kein Artikel)',
   'menu.textSize': 'Textgröße',
+  'menu.zoom': 'Zoom',
   'menu.blockAdsHere': 'Werbung auf dieser Website blockieren',
   'menu.desktopSite': 'Desktop-Version',
   'menu.savePdf': 'Als PDF speichern',

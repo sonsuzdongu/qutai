@@ -2563,7 +2563,7 @@ index 1f637c1..98efda8 100644
  
  #if !TARGET_OS_OSX
 diff --git a/node_modules/react-native-webview/apple/RNCWebViewImpl.m b/node_modules/react-native-webview/apple/RNCWebViewImpl.m
-index 3890426..7efc3d6 100644
+index 3890426..1a37148 100644
 --- a/node_modules/react-native-webview/apple/RNCWebViewImpl.m
 +++ b/node_modules/react-native-webview/apple/RNCWebViewImpl.m
 @@ -114,6 +114,25 @@ - (void)scrollWheel:(NSEvent *)theEvent {
@@ -2885,7 +2885,23 @@ index 3890426..7efc3d6 100644
        // Error code 102 "Frame load interrupted" is raised by the WKWebView
        // when the URL is from an http redirect. This is a common pattern when
        // implementing OAuth with a WebView.
-@@ -1842,6 +2038,122 @@ - (void)syncCookiesToWebView:(void (^)(void))completion {
+@@ -1579,6 +1775,15 @@ -(void)appWillResignActive
+  * Called when the navigation is complete.
+  * @see https://fburl.com/rtys6jlb
+  */
++/**
++ * Qutai patch: a new page committed; keeps the page zoom (a navigation to another site may move the page to a new web
++ * content process).
++ */
++- (void)webView:(WKWebView *)webView didCommitNavigation:(WKNavigation *)navigation
++{
++  [self applyPageZoom];
++}
++
+ - (void)webView:(WKWebView *)webView
+ didFinishNavigation:(WKNavigation *)navigation
+ {
+@@ -1842,6 +2047,122 @@ - (void)syncCookiesToWebView:(void (^)(void))completion {
    [self writeCookiesToWebView:cookies completion:completion];
  }
  

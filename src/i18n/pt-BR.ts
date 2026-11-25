@@ -416,6 +416,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'menu.reader': 'Modo de leitura',
   'menu.readerNone': 'Modo de leitura (nenhum artigo aqui)',
   'menu.textSize': 'Tamanho do texto',
+  'menu.zoom': 'Zoom',
   'menu.blockAdsHere': 'Bloquear anúncios neste site',
   'menu.desktopSite': 'Versão para computador',
   'menu.savePdf': 'Salvar como PDF',

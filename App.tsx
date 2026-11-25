@@ -117,7 +117,7 @@ import {
 } from './src/components/AssistantIntro';
 import { CalendarChoiceHost } from './src/components/CalendarChoiceScreen';
 import { SelectionAction, SelectionBar } from './src/components/SelectionBar';
-import { TextSizeSheet } from './src/components/TextSizeSheet';
+import { PageZoomSheet, TextSizeSheet } from './src/components/TextSizeSheet';
 import { ReaderSettingsSheet } from './src/components/ReaderSettingsSheet';
 import { conversationModelInfo, ModelSheet } from './src/components/ModelSheet';
 import { sleep } from './src/utils/sleep';
@@ -255,8 +255,8 @@ import { stripDevice } from './src/device/macDevice';
 import { showTabStrip } from './src/ui/tabStrip';
 import { useKeyShortcuts } from './src/device/keyShortcuts';
 import { shortcutTab, type ShortcutEvent } from './src/ui/keyShortcuts';
-import { DEFAULT_ZOOM_LEVEL } from './src/browser/pageZoom';
-import { siteZoom } from './src/browser/siteZoom';
+import { DEFAULT_ZOOM_LEVEL, zoomReplacesTextSize } from './src/browser/pageZoom';
+import { siteZoom, useSiteZoomLevel } from './src/browser/siteZoom';
 import {
   VOICE_KEY_IDLE,
   VOICE_MIN_HOLD_MS,
@@ -279,6 +279,8 @@ function applyTheme(theme: ThemeSetting) {
   Appearance.setColorScheme(theme === 'system' ? 'unspecified' : theme);
 }
 
+/** A Mac: the page menu's Text size is Zoom (UI-84). */
+const MAC_ZOOM_MENU = zoomReplacesTextSize(stripDevice);
 const memoryStore = deviceMemoryStore(getDb);
 const sitePermissions = new SitePermissionStore(getDb);
 // "Always allow" in a task's dialogs (src/task/dialogs.ts) is saved here.
@@ -1427,6 +1429,9 @@ function BrowserApp({
     });
   };
   const currentSite = siteKey(tab.url);
+  // The site ⌘+ / ⌘− / ⌘0 and a Mac's menu Zoom act on (UI-84): none on the new tab page or in reader mode.
+  const zoomSite = onNewTab || tab.reader ? null : currentSite;
+  const zoomLevel = useSiteZoomLevel(zoomSite, tab.incognito);
   const iconRow: IconItem[] = [
     {
       icon: 'forward',
@@ -1649,12 +1654,19 @@ function BrowserApp({
               return shot.truncated ? `${saved} ${t('menu.captureTruncated', { count: shot.screens })}` : saved;
             }),
         },
-        {
-          icon: 'textSize',
-          section: true,
-          label: t('menu.textSize'),
-          onPress: () => setTextSizeVisible(true),
-        },
+        // A Mac: "Zoom" for this site (UI-84) in place of the text size; nothing to zoom without a site.
+        ...(MAC_ZOOM_MENU
+          ? zoomSite
+            ? [{ icon: 'textSize' as const, section: true, label: t('menu.zoom'), onPress: () => setTextSizeVisible(true) }]
+            : []
+          : [
+              {
+                icon: 'textSize' as const,
+                section: true,
+                label: t('menu.textSize'),
+                onPress: () => setTextSizeVisible(true),
+              },
+            ]),
         {
           // This site's sheet (with a link to every site); without a site (new tab, Qutai's own pages), the list.
           icon: 'shield',
@@ -2226,7 +2238,7 @@ function BrowserApp({
       case 'zoomOut':
       case 'actualSize': {
         // The page zoom for the tab's site (UI-84), remembered per site like Safari; shown in a toast as Safari shows it.
-        const site = onNewTab || tab.reader ? null : siteKey(tab.url);
+        const site = zoomSite;
         if (!site) return;
         const level =
           id === 'actualSize'
@@ -2796,12 +2808,21 @@ function BrowserApp({
           }}
           onClose={() => setPermissionHost(null)}
         />
-        <TextSizeSheet
-          visible={textSizeVisible}
-          zoom={settings.textZoom}
-          onChange={(textZoom) => changeSettings({ textZoom })}
-          onClose={() => setTextSizeVisible(false)}
-        />
+        {MAC_ZOOM_MENU ? (
+          <PageZoomSheet
+            visible={textSizeVisible && !!zoomSite}
+            level={zoomLevel}
+            onChange={(level) => siteZoom.set(zoomSite, tab.incognito, level)}
+            onClose={() => setTextSizeVisible(false)}
+          />
+        ) : (
+          <TextSizeSheet
+            visible={textSizeVisible}
+            zoom={settings.textZoom}
+            onChange={(textZoom) => changeSettings({ textZoom })}
+            onClose={() => setTextSizeVisible(false)}
+          />
+        )}
         <ModelSheet
           visible={!!modelSheetFor}
           settings={settings}

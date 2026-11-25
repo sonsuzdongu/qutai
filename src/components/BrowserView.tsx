@@ -57,13 +57,15 @@ import type { LibraryTab } from './LibraryScreen';
 import { NewTabPage } from './NewTabPage';
 import { tabInspectable } from '../browser/devTools';
 import { isIosAppOnMac, stripDevice } from '../device/macDevice';
-import { baseZoomFor, webViewPageZoom } from '../browser/pageZoom';
+import { baseZoomFor, pageZoomTextSize, textSizeByPageZoom, webViewPageZoom } from '../browser/pageZoom';
 import { useSiteZoomLevel } from '../browser/siteZoom';
 import { ReaderPrefs, ReaderView } from './ReaderView';
 
 
 /** iOS: the page zoom that shows pages at their normal size (a Mac: Safari's size, UI-84). */
 const IOS_BASE_PAGE_ZOOM = baseZoomFor(stripDevice);
+/** iPhone: the Settings text size is text-size-adjust; a Mac and an iPad ignore that, so it is page zoom there. */
+const IOS_TEXT_SIZE_ADJUST = Platform.OS === 'ios' && !textSizeByPageZoom(stripDevice);
 /**
  * Renders every tab's WebView stacked on top of each other. Hidden tabs stay
  * mounted and laid out (only made invisible) so they keep their state and the
@@ -294,7 +296,7 @@ function TabWebView({
     tab.desktop && Platform.OS === 'android' ? DESKTOP_VIEWPORT_SCRIPT : '',
     Platform.OS === 'android' ? PULL_STATE_SCRIPT : '',
     Platform.OS === 'android' ? USER_AGENT_SCRIPT : '',
-    Platform.OS === 'ios' && textZoom !== 100 ? textZoomScript(textZoom) : '',
+    IOS_TEXT_SIZE_ADJUST && textZoom !== 100 ? textZoomScript(textZoom) : '',
     // Where the page was scrolled, so a woken tab comes back there (incognito tabs never sleep).
     tab.incognito ? '' : SCROLL_MEMORY_SCRIPT,
     newTabActions.forceZoom ? FORCE_ZOOM_SCRIPT : '',
@@ -354,13 +356,17 @@ function TabWebView({
   }, [tab, stylesScript]);
 
   // iOS page zoom (UI-84): the device's base zoom (a Mac draws pages at Safari's size) times the site's ⌘+/⌘− level.
-  // The Settings text size (textZoomScript) works on top of it.
+  // The Settings text size works on top of it: text-size-adjust on iPhone, part of the page zoom on an iPad; on a Mac
+  // the menu's Zoom replaces it.
   const zoomLevel = useSiteZoomLevel(siteKey(tab.url), tab.incognito);
-  const pageZoom = Platform.OS === 'ios' ? webViewPageZoom(zoomLevel, IOS_BASE_PAGE_ZOOM) : undefined;
+  const pageZoom =
+    Platform.OS === 'ios'
+      ? webViewPageZoom(zoomLevel, IOS_BASE_PAGE_ZOOM, pageZoomTextSize(stripDevice, textZoom))
+      : undefined;
 
   // iOS: apply a new text size to the page already on screen too.
   useEffect(() => {
-    if (Platform.OS === 'ios') tab.webview?.injectJavaScript(textZoomScript(textZoom));
+    if (IOS_TEXT_SIZE_ADJUST) tab.webview?.injectJavaScript(textZoomScript(textZoom));
   }, [tab, textZoom]);
 
   // The camera / microphone grant reached the WebView: the page may now call the real getUserMedia.

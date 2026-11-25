@@ -415,6 +415,7 @@ export const id: Record<keyof typeof en, string> = {
   'menu.reader': 'Mode baca',
   'menu.readerNone': 'Mode baca (tidak ada artikel di sini)',
   'menu.textSize': 'Ukuran teks',
+  'menu.zoom': 'Zoom',
   'menu.blockAdsHere': 'Blokir iklan di situs ini',
   'menu.desktopSite': 'Situs desktop',
   'menu.savePdf': 'Simpan sebagai PDF',

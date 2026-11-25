@@ -933,7 +933,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-81` | Mac and iPad: ⌥Space is the Qutai button's push-to-talk (listens only while held, release sends; the microphone starts after 300 ms held, quicker presses do nothing; focus loss cancels), only where the button's hold would listen; the Mac's Qutai button tour mentions it. | Owner | 2026-11-25 |
 | `UI-82` | Address bar: history and the search engine are asked only after a 350 ms pause in typing. | Owner | 2026-11-25 |
 | `UI-83` | A new blank tab opens with the cursor in the address bar (not at launch or behind the incognito lock). | Owner | 2026-11-26 |
-| `UI-84` | Page zoom: a Mac starts pages at 1.299 (macOS draws iPad apps at 77%) so they match Safari; ⌘+ / ⌘− / ⌘0 in Safari's steps (50–300%), remembered per site; × Settings text size. | Owner | 2026-11-26 |
+| `UI-84` | Page zoom: a Mac starts pages at 1.299 (macOS draws iPad apps at 77%) so they match Safari; ⌘+ / ⌘− / ⌘0 in Safari's steps (50–300%), remembered per site; on a Mac the menu's Text size is Zoom (that per-site level); iPad text size = page zoom, iPhone text-size-adjust; 100% = Safari's size. | Owner | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

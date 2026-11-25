@@ -404,6 +404,7 @@ export const en = {
   'menu.reader': 'Reader mode',
   'menu.readerNone': 'Reader mode (no article here)',
   'menu.textSize': 'Text size',
+  'menu.zoom': 'Zoom',
   'menu.blockAdsHere': 'Block ads on this site',
   'menu.desktopSite': 'Desktop site',
   'menu.savePdf': 'Save as PDF',

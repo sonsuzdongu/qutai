@@ -416,6 +416,7 @@ export const ja: Record<keyof typeof en, string> = {
   'menu.reader': 'リーダー モード',
   'menu.readerNone': 'リーダー モード（記事がありません）',
   'menu.textSize': '文字サイズ',
+  'menu.zoom': 'ズーム',
   'menu.blockAdsHere': 'このサイトで広告をブロック',
   'menu.desktopSite': 'PC 版サイト',
   'menu.savePdf': 'PDF として保存',

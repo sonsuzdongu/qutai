@@ -414,6 +414,7 @@ export const ko: Record<keyof typeof en, string> = {
   'menu.reader': '읽기 모드',
   'menu.readerNone': '읽기 모드(기사 없음)',
   'menu.textSize': '글자 크기',
+  'menu.zoom': '확대/축소',
   'menu.blockAdsHere': '이 사이트에서 광고 차단',
   'menu.desktopSite': '데스크톱 사이트',
   'menu.savePdf': 'PDF로 저장',

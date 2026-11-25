@@ -4,6 +4,7 @@ import { formatPercent } from '../i18n/format';
 import { makeStyles, radii, common } from '../ui/theme';
 import { clampTextZoom, TEXT_ZOOM_MAX, TEXT_ZOOM_MIN } from '../storage/settings';
 import { BottomSheet } from './BottomSheet';
+import { DEFAULT_ZOOM_LEVEL, MAX_ZOOM_LEVEL, MIN_ZOOM_LEVEL, stepZoom } from '../browser/pageZoom';
 
 type Props = {
   visible: boolean;
@@ -90,3 +91,60 @@ const useStyles = makeStyles((c) => ({
   resetText: { fontSize: 15, color: c.tintText, fontWeight: '600' },
   disabled: { opacity: 0.35 },
 }));
+
+type ZoomProps = {
+  visible: boolean;
+  /** The site's zoom level in percent (100 = Safari's size). */
+  level: number;
+  onChange: (level: number) => void;
+  onClose: () => void;
+};
+
+/**
+ * A Mac's "Zoom" sheet (UI-84), in place of the text size: the site's page zoom, the same level ⌘+ / ⌘− / ⌘0 change,
+ * in Safari's steps; 100% is the size Safari shows.
+ */
+export function PageZoomSheet({ visible, level, onChange, onClose }: ZoomProps) {
+  const styles = useStyles();
+  return (
+    <BottomSheet visible={visible} onClose={onClose} style={styles.sheet} contentStyle={styles.content} bottomPadding={16}>
+      <View style={styles.header}>
+        <Text style={styles.title}>{t('menu.zoom')}</Text>
+        <Pressable accessibilityRole="button" onPress={onClose} hitSlop={8}>
+          <Text style={styles.done}>{t('common.done')}</Text>
+        </Pressable>
+      </View>
+      <View style={styles.controls}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => onChange(stepZoom(level, 'out'))}
+          disabled={level <= MIN_ZOOM_LEVEL}
+          style={[styles.step, level <= MIN_ZOOM_LEVEL && styles.disabled]}
+          accessibilityLabel={t('shortcuts.zoomOut')}
+        >
+          <Text style={styles.stepLarge}>−</Text>
+        </Pressable>
+        <Text style={styles.value} accessibilityLiveRegion="polite">
+          {formatPercent(level)}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => onChange(stepZoom(level, 'in'))}
+          disabled={level >= MAX_ZOOM_LEVEL}
+          style={[styles.step, level >= MAX_ZOOM_LEVEL && styles.disabled]}
+          accessibilityLabel={t('shortcuts.zoomIn')}
+        >
+          <Text style={styles.stepLarge}>+</Text>
+        </Pressable>
+      </View>
+      <Pressable
+        onPress={() => onChange(DEFAULT_ZOOM_LEVEL)}
+        disabled={level === DEFAULT_ZOOM_LEVEL}
+        style={styles.reset}
+        accessibilityRole="button"
+      >
+        <Text style={[styles.resetText, level === DEFAULT_ZOOM_LEVEL && styles.disabled]}>{t('shortcuts.actualSize')}</Text>
+      </Pressable>
+    </BottomSheet>
+  );
+}

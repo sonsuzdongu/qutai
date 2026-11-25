@@ -33,5 +33,6 @@
   "apps.versionLine",
   "account.methodWithAddress",
   "settings.version",
-  "shortcuts.tab"
+  "shortcuts.tab",
+  "menu.zoom"
 ]

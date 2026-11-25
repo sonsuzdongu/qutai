@@ -405,6 +405,7 @@ export const tr: Record<keyof typeof en, string> = {
   'menu.reader': 'Okuma modu',
   'menu.readerNone': 'Okuma modu (burada makale yok)',
   'menu.textSize': 'Yazı boyutu',
+  'menu.zoom': 'Yakınlaştırma',
   'menu.blockAdsHere': 'Bu sitede reklamları engelle',
   'menu.desktopSite': 'Masaüstü sitesi',
   'menu.savePdf': 'PDF olarak kaydet',

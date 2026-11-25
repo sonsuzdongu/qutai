@@ -47,9 +47,34 @@ export function stepZoom(level: number, direction: 'in' | 'out'): number {
   return MIN_ZOOM_LEVEL;
 }
 
-/** What the WebView is given: the device's base zoom times the site's level, to three decimals. */
-export function webViewPageZoom(level: number, base: number): number {
-  return Math.round(base * (level / 100) * 1000) / 1000;
+/**
+ * On a Mac the page menu's "Text size" is "Zoom" (owner, 26 Nov 2026): it shows and changes the site's zoom level, the
+ * same one ⌘+ / ⌘− / ⌘0 change, and the Settings text size is not applied there (one control, one value per site).
+ */
+export function zoomReplacesTextSize(device: ZoomDevice): boolean {
+  return device === 'mac';
+}
+
+/** The text size that goes into the page zoom (textSizeByPageZoom): none where Zoom replaces it. */
+export function pageZoomTextSize(device: ZoomDevice, textSize: number): number {
+  return zoomReplacesTextSize(device) || !textSizeByPageZoom(device) ? 100 : textSize;
+}
+
+/**
+ * Whether the Settings text size is applied as page zoom: on a Mac and an iPad, WebKit browses as a desktop and
+ * ignores -webkit-text-size-adjust (the iPhone's text size path), so the text size scales the whole page there, as
+ * Safari's text size does on an iPad. iPhone keeps text-size-adjust (text only); Android its WebView's textZoom.
+ */
+export function textSizeByPageZoom(device: ZoomDevice): boolean {
+  return device === 'mac' || device === 'tablet';
+}
+
+/**
+ * What the WebView is given: the device's base zoom times the site's level (times the Settings text size where that
+ * is page zoom, textSizeByPageZoom), to three decimals.
+ */
+export function webViewPageZoom(level: number, base: number, textSize = 100): number {
+  return Math.round(base * (level / 100) * (textSize / 100) * 1000) / 1000;
 }
 
 /**

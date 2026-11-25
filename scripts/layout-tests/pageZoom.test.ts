@@ -7,9 +7,12 @@ import {
   MAC_BASE_PAGE_ZOOM,
   normalizeZoomLevel,
   SiteZoomLevels,
+  pageZoomTextSize,
   stepZoom,
+  textSizeByPageZoom,
   webViewPageZoom,
   ZOOM_LEVELS,
+  zoomReplacesTextSize,
 } from '../../src/browser/pageZoom';
 
 test("the steps are Safari's, 50% to 300%, with 100% among them", () => {
@@ -42,6 +45,16 @@ test('the WebView gets the base times the level', () => {
   assert.equal(webViewPageZoom(125, 1), 1.25);
   assert.equal(webViewPageZoom(100, MAC_BASE_PAGE_ZOOM), MAC_BASE_PAGE_ZOOM);
   assert.equal(webViewPageZoom(50, 1.299), 0.65);
+});
+
+test('on a Mac and an iPad the Settings text size is part of the page zoom; iPhone keeps text-size-adjust', () => {
+  assert.equal(textSizeByPageZoom('mac'), true);
+  assert.equal(textSizeByPageZoom('tablet'), true);
+  assert.equal(textSizeByPageZoom('phone'), false);
+  assert.equal(textSizeByPageZoom('android'), false);
+  assert.equal(webViewPageZoom(100, MAC_BASE_PAGE_ZOOM, 150), 1.949);
+  assert.equal(webViewPageZoom(125, 1, 120), 1.5);
+  assert.equal(webViewPageZoom(100, 1, 100), 1);
 });
 
 test('stored levels snap to a step; anything else is not a level', () => {
@@ -77,4 +90,16 @@ test('a saved list is read back, leaving out what is unreadable', () => {
   assert.equal(SiteZoomLevels.fromJson(null).size, 0);
   assert.equal(SiteZoomLevels.fromJson([1, 2]).size, 0);
   assert.equal(SiteZoomLevels.fromJson('{}').size, 0);
+});
+
+test("a Mac's menu Zoom replaces the text size: one value per site", () => {
+  assert.equal(zoomReplacesTextSize('mac'), true);
+  assert.equal(zoomReplacesTextSize('tablet'), false);
+  assert.equal(zoomReplacesTextSize('phone'), false);
+  // The Settings text size never reaches a Mac's page zoom; an iPad's does; iPhone and Android use their own paths.
+  assert.equal(pageZoomTextSize('mac', 150), 100);
+  assert.equal(pageZoomTextSize('tablet', 150), 150);
+  assert.equal(pageZoomTextSize('phone', 150), 100);
+  assert.equal(pageZoomTextSize('android', 150), 100);
+  assert.equal(webViewPageZoom(125, MAC_BASE_PAGE_ZOOM, pageZoomTextSize('mac', 150)), 1.624);
 });

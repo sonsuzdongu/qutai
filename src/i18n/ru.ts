@@ -415,6 +415,7 @@ export const ru: Record<keyof typeof en, string> = {
   'menu.reader': 'Режим чтения',
   'menu.readerNone': 'Режим чтения (здесь нет статьи)',
   'menu.textSize': 'Размер текста',
+  'menu.zoom': 'Масштаб',
   'menu.blockAdsHere': 'Блокировать рекламу на этом сайте',
   'menu.desktopSite': 'Версия для ПК',
   'menu.savePdf': 'Сохранить как PDF',
