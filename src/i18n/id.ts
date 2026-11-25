@@ -1648,6 +1648,7 @@ export const id: Record<keyof typeof en, string> = {
   'shortcuts.nextTab': 'Tab berikutnya',
   'shortcuts.prevTab': 'Tab sebelumnya',
   'shortcuts.voice': 'Bicara dengan Qutai (tahan)',
+  'shortcuts.toggleAssistant': 'Buka atau tutup Qutai',
   'shortcuts.zoomIn': 'Perbesar',
   'shortcuts.zoomOut': 'Perkecil',
   'shortcuts.actualSize': 'Ukuran sebenarnya',

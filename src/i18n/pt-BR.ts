@@ -1649,6 +1649,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'shortcuts.nextTab': 'Próxima guia',
   'shortcuts.prevTab': 'Guia anterior',
   'shortcuts.voice': 'Falar com o Qutai (segure)',
+  'shortcuts.toggleAssistant': 'Abrir ou fechar o Qutai',
   'shortcuts.zoomIn': 'Ampliar',
   'shortcuts.zoomOut': 'Reduzir',
   'shortcuts.actualSize': 'Tamanho real',

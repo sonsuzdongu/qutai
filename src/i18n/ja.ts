@@ -1649,6 +1649,7 @@ export const ja: Record<keyof typeof en, string> = {
   'shortcuts.nextTab': '次のタブ',
   'shortcuts.prevTab': '前のタブ',
   'shortcuts.voice': 'Qutai に話しかける（押し続ける）',
+  'shortcuts.toggleAssistant': 'Qutai を開く／閉じる',
   'shortcuts.zoomIn': '拡大',
   'shortcuts.zoomOut': '縮小',
   'shortcuts.actualSize': '実際のサイズ',

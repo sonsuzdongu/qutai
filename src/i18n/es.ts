@@ -1645,6 +1645,7 @@ export const es: Record<keyof typeof en, string> = {
   'shortcuts.nextTab': 'Pestaña siguiente',
   'shortcuts.prevTab': 'Pestaña anterior',
   'shortcuts.voice': 'Hablar con Qutai (mantén pulsado)',
+  'shortcuts.toggleAssistant': 'Abrir o cerrar Qutai',
   'shortcuts.zoomIn': 'Acercar',
   'shortcuts.zoomOut': 'Alejar',
   'shortcuts.actualSize': 'Tamaño real',

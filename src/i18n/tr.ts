@@ -1639,6 +1639,7 @@ export const tr: Record<keyof typeof en, string> = {
   'shortcuts.nextTab': 'Sonraki sekme',
   'shortcuts.prevTab': 'Önceki sekme',
   'shortcuts.voice': 'Qutai ile konuşun (basılı tutun)',
+  'shortcuts.toggleAssistant': 'Qutai’ı açın veya kapatın',
   'shortcuts.zoomIn': 'Yakınlaştır',
   'shortcuts.zoomOut': 'Uzaklaştır',
   'shortcuts.actualSize': 'Gerçek boyut',

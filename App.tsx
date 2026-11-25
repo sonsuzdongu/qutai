@@ -2232,6 +2232,9 @@ function BrowserApp({
       case 'find':
         if (!onNewTab) setFindFor({ tabId: tab.id, url: tab.url, reader: !!tab.reader });
         return;
+      case 'toggleAssistant':
+        // ⌘E, as a tap on the Qutai button (UI-89): also when the button is hidden, as the ⋮ menu's Ask Qutai.
+        return setPanelOpen((v) => !v);
       case 'back':
         if (tab.canGoBack) tab.historyBack();
         else if (tab.openedFromNewTab) tab.showNewTab();

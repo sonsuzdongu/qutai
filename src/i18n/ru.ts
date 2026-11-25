@@ -1648,6 +1648,7 @@ export const ru: Record<keyof typeof en, string> = {
   'shortcuts.nextTab': 'Следующая вкладка',
   'shortcuts.prevTab': 'Предыдущая вкладка',
   'shortcuts.voice': 'Говорить с Qutai (удерживайте)',
+  'shortcuts.toggleAssistant': 'Открыть или закрыть Qutai',
   'shortcuts.zoomIn': 'Увеличить',
   'shortcuts.zoomOut': 'Уменьшить',
   'shortcuts.actualSize': 'Фактический размер',

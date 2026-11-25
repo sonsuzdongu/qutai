@@ -1647,6 +1647,7 @@ export const ko: Record<keyof typeof en, string> = {
   'shortcuts.nextTab': '다음 탭',
   'shortcuts.prevTab': '이전 탭',
   'shortcuts.voice': 'Qutai에게 말하기(길게 누르기)',
+  'shortcuts.toggleAssistant': 'Qutai 열기 또는 닫기',
   'shortcuts.zoomIn': '확대',
   'shortcuts.zoomOut': '축소',
   'shortcuts.actualSize': '실제 크기',

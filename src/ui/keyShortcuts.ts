@@ -20,6 +20,8 @@ export type ShortcutId =
   | 'find'
   | 'back'
   | 'forward'
+  /** ⌘E: open or close the assistant panel, as a tap on the Qutai button (UI-89). */
+  | 'toggleAssistant'
   | 'nextTab'
   | 'prevTab'
   /** ⌘+ (also ⌘=), ⌘−, ⌘0: the page zoom for the site (UI-84, browser/pageZoom.ts). */
@@ -56,6 +58,7 @@ export const SHORTCUTS: Shortcut[] = [
   { id: 'find', input: 'f', modifiers: ['command'], title: { key: 'menu.find' } },
   { id: 'back', input: '[', modifiers: ['command'], title: { key: 'address.back' } },
   { id: 'forward', input: ']', modifiers: ['command'], title: { key: 'menu.forward' } },
+  { id: 'toggleAssistant', input: 'e', modifiers: ['command'], title: { key: 'shortcuts.toggleAssistant' } },
   { id: 'nextTab', input: 'tab', modifiers: ['control'], title: { key: 'shortcuts.nextTab' } },
   { id: 'prevTab', input: 'tab', modifiers: ['control', 'shift'], title: { key: 'shortcuts.prevTab' } },
   { id: 'zoomIn', input: '+', modifiers: ['command'], title: { key: 'shortcuts.zoomIn' } },

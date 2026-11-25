@@ -1638,6 +1638,7 @@ export const de: Record<keyof typeof en, string> = {
   'shortcuts.nextTab': 'Nächster Tab',
   'shortcuts.prevTab': 'Vorheriger Tab',
   'shortcuts.voice': 'Mit Qutai sprechen (gedrückt halten)',
+  'shortcuts.toggleAssistant': 'Qutai öffnen oder schließen',
   'shortcuts.zoomIn': 'Vergrößern',
   'shortcuts.zoomOut': 'Verkleinern',
   'shortcuts.actualSize': 'Originalgröße',

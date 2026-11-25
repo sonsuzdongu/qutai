@@ -19,6 +19,7 @@ Last updated: 2026-11-26
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-26:** Mac and iPad keyboard: ⌘E opens and closes the assistant panel (`UI-89`, `UI-76`; owner).
 - **2026-11-26:** Mac and iPad keyboard: ↑/↓, Return and Esc in the address bar's suggestions (`UI-88`; owner).
 - **2026-11-26:** Mac: Downloads › ⋯ › "Save…" no longer closes at once and freezes the window: the save dialog waits for the ⋯ sheet to close (`DL-19`; owner's report).
 - **2026-11-26:** iOS: links a page handles itself through the Navigation API (Reddit) no longer leave the tab loading with "the connection is very slow"; same-document address changes are now seen natively and the history shim script is gone (`TABS-35`; owner).

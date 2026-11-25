@@ -1640,6 +1640,7 @@ export const en = {
   'shortcuts.nextTab': 'Next tab',
   'shortcuts.prevTab': 'Previous tab',
   'shortcuts.voice': 'Talk to Qutai (hold)',
+  'shortcuts.toggleAssistant': 'Open or close Qutai',
   'shortcuts.zoomIn': 'Zoom in',
   'shortcuts.zoomOut': 'Zoom out',
   'shortcuts.actualSize': 'Actual size',

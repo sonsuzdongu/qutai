@@ -926,7 +926,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-73` | On a Mac or an iPad the address bar starts at the top (bottom on phones, by device type); a stored or restored choice is never changed. | Owner | 2026-11-25 |
 | `UI-74` | Mac and iPad only (never phones or Android): a tab strip right above the address bar, top or bottom, in windows ≥ 700 pt, setting on by default: current kind's tabs, icon, title, ×, +, group labels that fold. | Owner | 2026-11-25 |
 | `UI-75` | The working light has rounded corners on phones, square on Mac and iPad. | Owner | 2026-11-25 |
-| `UI-76` | Mac and iPad keyboard shortcuts: ⌘T, ⌘⇧N, ⌘W, ⌘⇧T, ⌘R, ⌘L, ⌘F, ⌘[ ⌘], ⌘1…9, ⌃Tab/⌃⇧Tab, ⌘+ ⌘− ⌘0 (`UI-84`); text editing keys never taken; ⌘L/⌘F/⌘R stay Qutai's in page fields. | Owner | 2026-11-25 |
+| `UI-76` | Mac and iPad keyboard shortcuts: ⌘T, ⌘⇧N, ⌘W, ⌘⇧T, ⌘R, ⌘L, ⌘F, ⌘[ ⌘], ⌘1…9, ⌃Tab/⌃⇧Tab, ⌘+ ⌘− ⌘0 (`UI-84`), ⌘E (`UI-89`); text editing keys never taken; ⌘L/⌘F/⌘R stay Qutai's in page fields. | Owner | 2026-11-25 |
 | `UI-77` | Mac only: no iPad-style input bar under focused page or mini-app fields, and the layout ignores the reported keyboard; iPad and iPhone unchanged. | Owner | 2026-11-25 |
 | `UI-78` | "Clear history" sits above the History list, always reachable. | Owner | 2026-11-25 |
 | `UI-79` | Mac only: no phantom top/bottom safe-area insets (status bar, home indicator), so content starts right under the title bar; iPhone and iPad unchanged. | Owner | 2026-11-25 |
@@ -939,6 +939,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-86` | Mac and iPad: ⌘W only closes the tab (system File › Close removed from the menu bar); ⌘Q quits without asking (no supported way to confirm). | Owner | 2026-11-26 |
 | `UI-87` | Web pages on an opaque WebView (iOS and Android), so a dark page's unpainted areas show its own dark base colour, not the app's white. | Owner | 2026-11-26 |
 | `UI-88` | Mac and iPad keyboard: ↑/↓ move through the address bar's suggestions the way they point (list above a bottom bar), the field shows the row, Return opens it, Esc clears the highlight then ends editing; no lookup while arrowing, the list holds still. | Owner | 2026-11-26 |
+| `UI-89` | Mac and iPad keyboard: ⌘E opens or closes the assistant panel like a tap on the Qutai button, also with the button hidden; not behind the app lock or a full screen. | Owner | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 
