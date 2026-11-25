@@ -5,7 +5,7 @@ import type { IconName } from '../components/Icon';
  * backend/DESIGN.md) as of the date below. Only what the code does; limits said plainly. When a feature lands or
  * changes, update its item here in both languages, together with the home page.
  */
-export const FEATURES_CHECKED = '2026-11-25';
+export const FEATURES_CHECKED = '2026-11-26';
 
 export type Text = { en: string; tr: string };
 const t = (en: string, tr: string): Text => ({ en, tr });
@@ -256,8 +256,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Custom instructions', 'Özel talimatlar'),
         body: t(
-          'How you like answers, followed in every request. Setup starts you with short, to-the-point answers; change that line whenever you like.',
-          'Yanıtları nasıl istediğinizi bir kez yazın; her istekte buna uyar. Kurulum, kısa ve öz yanıtlarla başlatır; o satırı istediğiniz zaman değiştirebilirsiniz.',
+          'How you like answers, followed in every request. They start empty: the assistant keeps its answers short on its own.',
+          'Yanıtları nasıl istediğinizi bir kez yazın, her istekte buna uyar. Başta boştur; asistan zaten kısa yanıt verir.',
         ),
       },
     ],
@@ -282,8 +282,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Posting and sending with your approval', 'Onayınızla paylaşma ve gönderme'),
         body: t(
-          'Comments, replies, reviews, contact forms and messages on a site: Qutai reads the exact text in the box and shows it with the button it will press once. If the text changes, nothing is pressed.',
-          'Yorum, yanıt, değerlendirme, iletişim formu ya da bir sitedeki mesaj: Qutai kutudaki metni kendisi okur, basacağı düğmeyle birlikte size gösterir ve onayınızla bir kez basar. Metin bu arada değişirse hiçbir şeye basmaz.',
+          'Comments, replies, reviews, contact forms and messages on a site: Qutai reads the exact text in the box and shows it with the button it will press once. If the text changes, nothing is pressed. On a site you trust, tick “Post on … without asking from now on”: the dialog is skipped there, but the text and the page are still checked before each press, and the site’s settings let you take it back.',
+          'Yorum, yanıt, değerlendirme, iletişim formu ya da bir sitedeki mesaj: Qutai kutudaki metni kendisi okur, basacağı düğmeyle birlikte size gösterir ve onayınızla bir kez basar. Metin bu arada değişirse hiçbir şeye basmaz. Güvendiğiniz bir sitede “Bundan sonra … üzerinde sormadan paylaş” kutusunu işaretlerseniz o sitede pencere açılmaz; ama metin ve sayfa her basıştan önce yine denetlenir. İzni sitenin ayarlarından geri alabilirsiniz.',
         ),
         asks: [t('Comment “Great video, thanks!” on this video', 'Bu videoya “Harika video, teşekkürler!” diye yorum yaz')],
       },
@@ -390,8 +390,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Ad and tracker blocking', 'Reklam ve izleyici engelleme'),
         body: t(
-          'On by default, from filter lists the phone downloads (EasyList, EasyPrivacy, AdGuard Turkish, regional lists or any list by address). The assistant can hide a leftover ad box or block a domain after you approve; the rule goes to My rules.',
-          'Baştan açık gelir; telefonun indirdiği filtre listeleriyle çalışır (EasyList, EasyPrivacy, AdGuard Turkish, bölgesel listeler ya da adresiyle eklediğiniz bir liste). Boş kalan bir reklam kutusunu gizlemesini ya da bir alan adını engellemesini asistandan isteyebilirsiniz; onaylarsanız kural Kendi kurallarım’a eklenir.',
+          'On by default, from filter lists the phone downloads (EasyList, EasyPrivacy, AdGuard Turkish, regional lists or any list by address). The assistant can hide a leftover ad box or block a domain after you approve; the rule goes to My rules. ⋮ › Block ads on this site turns it off for one site.',
+          'Baştan açık gelir; telefonun indirdiği filtre listeleriyle çalışır (EasyList, EasyPrivacy, AdGuard Turkish, bölgesel listeler ya da adresiyle eklediğiniz bir liste). Boş kalan bir reklam kutusunu gizlemesini ya da bir alan adını engellemesini asistandan isteyebilirsiniz; onaylarsanız kural Kendi kurallarım’a eklenir. Bir sitede engellemeyi kapatmak için ⋮ › Bu sitede reklamları engelle’ye dokunun.',
         ),
         asks: [t('Hide this empty gap at the top', 'Üstteki bu boş alanı gizle')],
       },
@@ -424,8 +424,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Scripts on pages, if you allow them', 'İzin verirseniz sayfalarda betik çalıştırır'),
         body: t(
-          'Off by default. Questions that only read run on a sealed copy of the page with no internet or sign-in. A script on the live page needs your approval with its code, is refused on sign-in, payment and bank pages, and can then do what the site’s own code can do.',
-          'Baştan kapalıdır. Yalnızca bilgi okuyan sorular, sayfanın internete ve oturumunuza bağlı olmayan kapalı bir kopyasında çalışır. Canlı sayfada çalışacak bir betiğin kodunu görüp onay verirsiniz; giriş, ödeme ve banka sayfalarında betik çalıştırılmaz. Onayladığınız betik, sitenin kendi kodunun yapabildiği her şeyi yapabilir.',
+          'Off by default. Questions that only read run on a sealed copy of the page with no internet or sign-in. A script on the live page needs your approval with its code, is refused on sign-in, payment and bank pages, and can then do what the site’s own code can do. On a site you choose, “Run scripts on … without asking from now on” skips the dialog; every other check stays, and never in incognito.',
+          'Baştan kapalıdır. Yalnızca bilgi okuyan sorular, sayfanın internete ve oturumunuza bağlı olmayan kapalı bir kopyasında çalışır. Canlı sayfada çalışacak bir betiğin kodunu görüp onay verirsiniz; giriş, ödeme ve banka sayfalarında betik çalıştırılmaz. Onayladığınız betik, sitenin kendi kodunun yapabildiği her şeyi yapabilir. Seçtiğiniz bir sitede “Bundan sonra … üzerinde betikleri sormadan çalıştır” kutusunu işaretlerseniz pencere açılmaz; diğer denetimlerin hepsi sürer, gizli modda ise bu izin hiç işlemez.',
         ),
         asks: [
           t('How many links are on this page?', 'Bu sayfada kaç bağlantı var?'),
@@ -614,8 +614,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Tabs, groups and the address bar', 'Sekmeler, gruplar ve adres çubuğu'),
         body: t(
-          'Idle tabs sleep to save memory; swipe on the address bar to switch tabs, and put the bar at the top or the bottom. It slides away while you scroll down and comes back on a small scroll up (or keep it always visible), and it shows the site’s domain clearly, with the rest of the address subdued.',
-          'Kullanmadığınız sekmeler bellek harcamasın diye uykuya geçer. Sekmeler arasında geçmek için adres çubuğunu kaydırın; çubuğu ekranın üstüne ya da altına alabilirsiniz. Aşağı kaydırırken çubuk gizlenir, biraz yukarı kaydırınca geri gelir (isterseniz hep görünür kalır); sitenin alan adını belirgin, adresin geri kalanını soluk gösterir.',
+          'Idle tabs sleep to save memory; swipe on the address bar to switch tabs, and put the bar at the top or the bottom, where it stays while you scroll, so it never covers a site’s own header or menu. It shows the site’s domain clearly, with the rest of the address subdued.',
+          'Kullanmadığınız sekmeler bellek harcamasın diye uykuya geçer. Sekmeler arasında geçmek için adres çubuğunu kaydırın; çubuğu ekranın üstüne ya da altına alabilirsiniz. Sayfayı kaydırırken yerinden kıpırdamaz, sitenin kendi başlığını ya da menüsünü de örtmez. Sitenin alan adı belirgin, adresin geri kalanı soluk görünür.',
         ),
       },
       {
@@ -710,8 +710,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Developer tools', 'Geliştirici araçları'),
         body: t(
-          'Safari’s Web Inspector can open the pages in Qutai, never incognito tabs. Settings › Security › Allow developer tools turns it on or off (on by default on a Mac only) and shows the steps.',
-          'Safari’nin Web Inspector’ı Qutai’daki sayfaları açabilir; gizli sekmeleri asla. Ayarlar › Güvenlik › Geliştirici araçlarına izin ver bunu açar ya da kapatır (yalnızca Mac’te baştan açık) ve adımları gösterir.',
+          'Safari’s Web Inspector can open the pages in Qutai, never incognito tabs. Settings › Privacy and security › Allow developer tools turns it on or off (on by default on a Mac only) and shows the steps.',
+          'Safari’nin Web Inspector’ı Qutai’daki sayfaları açabilir; gizli sekmeleri asla. Ayarlar › Gizlilik ve güvenlik › Geliştirici araçlarına izin ver bunu açar ya da kapatır (yalnızca Mac’te baştan açık) ve adımları gösterir.',
         ),
       },
     ],
@@ -730,10 +730,10 @@ export const LEAVES: { to: Text; what: Text; when: Text }[] = [
   {
     to: t('Qutai’s server (official builds)', 'Qutai sunucusu (resmî sürümler)'),
     what: t(
-      'Sign-in details; with Qutai Credits, the AI requests on their way, not stored or logged; your encrypted backup file; the app’s version and build',
-      'Giriş bilgileri; Qutai Kredileri kullanıyorsanız yapay zekâya giden istekler (saklanmaz, kayda geçirilmez); şifreli yedek dosyanız; uygulamanın sürümü ve derleme numarası',
+      'Sign-in details; with Qutai Credits, the AI requests on their way, not stored or logged; your encrypted backup file; the app’s version and build; a proof from Apple or Google that the request comes from the real app; if you allow it, anonymous usage events without your account',
+      'Giriş bilgileri; Qutai Kredileri kullanıyorsanız yapay zekâya giden istekler (saklanmaz, kayda geçirilmez); şifreli yedek dosyanız; uygulamanın sürümü ve derleme numarası; isteğin gerçek uygulamadan geldiğine dair Apple’ın ya da Google’ın verdiği kanıt; izin verirseniz hesabınıza bağlanmayan, anonim kullanım olayları',
     ),
-    when: t('Only when signed in and using those features', 'Yalnızca giriş yaptıysanız ve bu özellikleri kullanıyorsanız'),
+    when: t('Only when signed in and using those features; usage events only after you say yes', 'Yalnızca giriş yaptıysanız ve bu özellikleri kullanıyorsanız; kullanım olayları ancak siz izin verirseniz'),
   },
   {
     to: t('Your search engine', 'Arama motorunuz'),
@@ -764,8 +764,8 @@ export const LEAVES: { to: Text; what: Text; when: Text }[] = [
   {
     to: t('Web sites', 'Web siteleri'),
     what: t(
-      'What you or the assistant type and send, after the approvals above',
-      'Sizin ya da asistanın yazıp gönderdikleri; yukarıdaki onaylardan sonra',
+      'What you or the assistant type and send, after the approvals above; a request for the site’s icon for the new tab page, at most weekly, without cookies',
+      'Sizin ya da asistanın yazıp gönderdikleri, yukarıdaki onaylardan sonra; yeni sekme sayfası için sitenin simgesi, haftada en fazla bir kez ve çerezsiz',
     ),
     when: t('As you browse', 'Gezindikçe'),
   },
@@ -808,8 +808,8 @@ export const NOT_BUILT: Text[] = [
     'Qutai’da yapılan uygulamalar için mağaza ya da galeri yok: yalnızca dosya olarak paylaşılır.',
   ),
   t(
-    'No in-place page translation: the Translate chip translates in the chat.',
-    'Sayfayı yerinde çevirme yok: Çevir seçeneği sohbette çevirir.',
+    'No in-place page translation: ask the assistant to translate, and it does so in the chat.',
+    'Sayfayı yerinde çevirme yok; çevirmesini asistandan isteyin, sohbette çevirir.',
   ),
   t('The assistant can’t write to your clipboard; only you copy.', 'Asistan panonuza yazamaz; kopyalayan yalnızca sizsiniz.'),
 ];

@@ -84,11 +84,11 @@ export const tr: Messages = {
   'mock.panelTitle': 'Qutai',
   'mock.model': 'Claude · bu sohbet',
   'mock.user': 'Bunu diğer sekmedeki ayakkabıyla karşılaştır, ucuz olanı 42 numara sepete ekle.',
-  'mock.actionReadTab': 'Sekme 2 okunuyor',
+  'mock.actionReadTab': '“Ridge Runner 2” sekmesi okunuyor',
   'mock.actionReadPage': 'Sayfa okunuyor',
   'mock.answer': 'Bu 450 TL daha ucuz; tabanı ve topuk farkı aynı. 42 numarayı sepetine ekliyorum.',
   'mock.confirmTitle': 'Qutai bu işlemi yapmak istiyor',
-  'mock.confirmBody': 'Tıklanıyor (ref 31)',
+  'mock.confirmBody': '“Sepete ekle” dokunuluyor',
   'mock.confirmAlways': 'magaza.example için hep izin ver',
   'mock.deny': 'Reddet',
   'mock.allow': 'İzin ver',
@@ -113,8 +113,8 @@ export const tr: Messages = {
   'agent.compare.title': 'Ürünleri sekmeler arasında karşılaştırır',
   'agent.compare.body':
     'İki üç ürün sayfası açıp hangisinin size uygun olduğunu sorun. Qutai sekme değiştirmeden hepsini okur; fiyatı, teslimat süresini ve özellikleri not eder, bir tabloyla yanıt verir. İsterseniz tabloyu CSV dosyası olarak da alırsınız.',
-  'agent.compare.step1': 'Sekme 2 okunuyor',
-  'agent.compare.step2': 'Sekme 3 okunuyor',
+  'agent.compare.step1': '“Trail Runner 4” sekmesi okunuyor',
+  'agent.compare.step2': '“Ridge Runner 2” sekmesi okunuyor',
   'agent.compare.step3': 'Fiyat, teslimat, garanti yan yana',
   'agent.checkout.title': 'Sizin için alışveriş yapar',
   'agent.checkout.body':
@@ -131,12 +131,12 @@ export const tr: Messages = {
   'agent.booking.call': 'Ara',
   'agent.research.title': 'Kaynaklı araştırma',
   'agent.research.body':
-    'Derin araştırma birçok sayfayı ve PDF’i bulup okur, not alır ve kaynakları altında listelenen bir rapor yazar. Raporu PDF olarak paylaşabilirsiniz. Birkaç dakika sürer, API kredinizden de daha fazla harcar.',
+    'Derin araştırma birçok sayfayı ve PDF’i bulup okur, not alır ve kaynakları altında listelenen bir rapor yazar. Raporu PDF olarak paylaşabilirsiniz. Birkaç dakika sürer; kısa bir sorudan daha çok kredi ya da API ücreti harcar.',
   'agent.research.step1': 'Arandı: İstanbul’da elektrikli bisiklet kuralları',
   'agent.research.step2': 'Sayfa okunuyor',
   'agent.research.step3': 'Kaynaklar',
   'agent.footnote':
-    'Asistanın neyi başaracağı seçtiğiniz modele ve siteye göre değişir. Bunlar kodun bugün yapabildiklerinden örnekler; çoğu henüz gerçek bir telefonda denenmedi.',
+    'Asistanın neyi başaracağı seçtiğiniz modele ve siteye göre değişir. Bunlar uygulamanın yapabildiklerinden örnekler. Qutai yeni; hepsi henüz her cihazda denenmedi.',
 
   'privacy.kicker': 'Gizlilik, en baştan',
   'privacy.title': 'Seçim sizin. Telefon sizin. Karar sizin.',
@@ -176,18 +176,18 @@ export const tr: Messages = {
     'Gizli sekmeler geçmiş tutmaz; bunlara dokunan sohbetler yalnızca bellekte kalır. Orada hafıza, konum ve takvim kullanılmaz; gizli sekmeleri kilitleyebilirsiniz.',
   'privacy.confirm.title': 'Önemli adımda sorar',
   'privacy.confirm.body':
-    'Hassas adımlar onayınızı bekler. Bir sitede paylaşım, yorum, değerlendirme ya da mesaj, tam metni gösteren Qutai penceresinde siz onaylayınca gider; web sayfasındaki bir yazı bunları onaylayamaz. Arama, SMS, WhatsApp ve e-posta yalnızca hazırlanır, gönderen sizsiniz. Bildirim, takvim etkinliği, hatırlatıcı, takvim ya da konum okuma ve sıradan indirmeler için “Bir daha sorma” diyebilir, bunu Ayarlar’dan geri alabilirsiniz; “hayır” cevabınız ise hiç hatırlanmaz. Yüklemeler ve riskli dosyalar her seferinde sorulur.',
+    'Hassas adımlar onayınızı bekler. Bir sitede paylaşım, yorum, değerlendirme ya da mesaj, tam metni gösteren Qutai penceresinde siz onaylayınca gider; web sayfasındaki bir yazı bunları onaylayamaz. Güvendiğiniz bir sitede “Bundan sonra … üzerinde sormadan paylaş” kutusunu işaretleyebilirsiniz; Qutai yine de her basıştan önce metni ve sayfayı denetler, bu izni de sitenin ayarlarından geri alırsınız. Arama, SMS, WhatsApp ve e-posta yalnızca hazırlanır, gönderen sizsiniz. Bildirim, takvim etkinliği, hatırlatıcı, takvim ya da konum okuma ve sıradan indirmeler için “Bir daha sorma” diyebilir, bunu Ayarlar’dan geri alabilirsiniz; “hayır” cevabınız ise hiç hatırlanmaz. Yüklemeler ve riskli dosyalar her seferinde sorulur.',
   'privacy.contacts.title': 'Kişileriniz telefonda kalır',
   'privacy.contacts.body':
     '“Ahmet’i ara” ya da “bunu Mehmet Bey’e e-postayla gönder” dediğinizde asistan yalnızca söylediğiniz adı arar, o da telefonda. Yapay zekâ eşleşen adları ve “cep” gibi etiketleri görür; numaraları ve adresleri hiçbir zaman görmez. Birden fazla kişi çıkarsa Qutai’ın kendi listesinden siz seçersiniz; Ara’ya basan da mesajı gönderen de yine sizsiniz. İzin ilk kullanımda istenir, gizli modda kapalıdır.',
   'privacy.scripts.title': 'Betikler yalnızca izin verirseniz',
   'privacy.scripts.body':
-    'Varsayılan olarak kapalıdır. Açarsanız asistan “burada kaç bağlantı var?” gibi soruları, sayfanın internete ve oturumunuza bağlı olmayan kapalı bir kopyasında çalışan küçük bir betikle yanıtlar. Canlı sayfada çalışacak bir betiğin kodunu ve uyarılarını görüp onay verirsiniz; giriş, ödeme ve banka sayfalarında betik çalıştırılmaz. Onayladığınız betik, sitenin kendi kodunun yapabildiği her şeyi yapabilir. Sakladığınız betikler yalnızca kendi sitelerinde çalışır, kodları değişince yeniden onay ister.',
+    'Varsayılan olarak kapalıdır. Açarsanız asistan “burada kaç bağlantı var?” gibi soruları, sayfanın internete ve oturumunuza bağlı olmayan kapalı bir kopyasında çalışan küçük bir betikle yanıtlar. Canlı sayfada çalışacak bir betiğin kodunu ve uyarılarını görüp onay verirsiniz; giriş, ödeme ve banka sayfalarında betik çalıştırılmaz. Onayladığınız betik, sitenin kendi kodunun yapabildiği her şeyi yapabilir. Seçtiğiniz bir sitede asistanın tek seferlik betikleri pencere açılmadan da çalışabilir; diğer denetimler aynen sürer. Sakladığınız betikler yalnızca kendi sitelerinde çalışır, kodları değişince yeniden onay ister.',
   'privacy.apps.title': 'Kendi uygulamalarınız, dış dünyaya kapalı',
   'privacy.apps.body':
     '“Notlarımı tutabileceğim bir uygulama yap” demeniz yeter: Qutai uygulamayı yazar, önizlemesini açar, kendi hatalarını düzeltir, istediğinizde değiştirir. Eski sürümleri saklar; dilediğinizde geri dönersiniz. Uygulamalarınız yeni sekme sayfasında, Uygulamalarım bölümünde durur. Her biri tarayıcıdan ayrı, kendi alanında çalışır: internete, sitelerin çerezlerine ya da oturumlarına, başka uygulamaların verisine erişemez. Verileri telefonda kalır, uygulama başına en fazla 5 MB. Bir uygulamayı dosya olarak paylaşabilirsiniz; içe aktarılan uygulama siz onaylayana kadar kapalı kalır. Uygulamalar şifreli yedeğinize de girer. Uygulama yazdırmak sıradan bir asistan isteğidir; kendi anahtarınızla ya da Qutai Kredileriyle ödenir.',
   'privacy.note':
-    'Qutai hizmeti tamamen isteğe bağlıdır: Apple, Google ya da e-postayla giriş yapıp kendi anahtarınız yerine Qutai Kredileri kullanabilir, seçmeniz gereken bir şey yok, modeli Qutai belirler. Qutai sunucusu hesabınızı, kredilerinizi ve her istek için modeli, token sayısını ve tutarı tutar, uygulamanın sürümünü ve derleme numarasını görür; mesajlarınızı ve sayfaları tutmaz. Depodan derlenen sürümlerde bu hizmet yoktur, uygulama Qutai sunucusuna hiç bağlanmaz.',
+    'Qutai hizmeti tamamen isteğe bağlıdır: Apple, Google ya da e-postayla giriş yapıp kendi anahtarınız yerine Qutai Kredileri kullanabilir, seçmeniz gereken bir şey yok, modeli Qutai belirler. Qutai sunucusu hesabınızı, kredilerinizi ve her istek için modeli, token sayısını ve tutarı tutar, uygulamanın sürümünü ve derleme numarasını görür; mesajlarınızı ve sayfaları tutmaz. Hesabınıza bağlanmayan anonim kullanım bilgileri ise ancak size sorulduğunda evet derseniz gönderilir. Depodan derlenen sürümlerde bu hizmet yoktur, uygulama Qutai sunucusuna hiç bağlanmaz.',
 
   'browser.kicker': 'Üstelik tam bir tarayıcı',
   'browser.title': 'Bir tarayıcıdan beklediğiniz her şey, takip edilmeden.',
@@ -208,13 +208,13 @@ export const tr: Messages = {
     'Kendi çerezleri ve site verileri vardır, kapatınca silinir; isterseniz yüz ya da parmak izinizle kilitlersiniz.',
   'browser.backup.title': 'Şifreli yedek',
   'browser.backup.body':
-    'Hesap gerekmez, eşitleme de yok: her şeyi parolalı tek bir dosyaya aktarıp başka bir telefonda geri yüklersiniz.',
+    'Canlı eşitleme yok, hesap da gerekmez: her şeyi parolalı tek bir dosyaya aktarır, başka bir cihazda geri yüklersiniz. Resmî sürümlerde bu dosya Qutai hesabınızda da durabilir; isterseniz her gün kendiliğinden alınır.',
   'browser.bookmarks.title': 'Klasörlü yer imleri',
   'browser.bookmarks.body':
     'Chrome, Firefox, Safari ya da Edge’den dışa aktardığınız dosyayı içe alın; aynı biçimde dışa da verin.',
   'browser.voice.title': 'Sesle yazma',
   'browser.voice.body':
-    'Görevleri telefonun kendi konuşma tanıma özelliğiyle söyleyin; telefon ve dil destekliyorsa ses telefonda yazıya çevrilir. Paneli açmadan konuşmak için Q düğmesine basılı tutun; Qutai sohbetin dilinde dinler.',
+    'Görevleri telefonun kendi konuşma tanıma özelliğiyle söyleyin; telefon ve dil destekliyorsa ses telefonda yazıya çevrilir (Mac’te bu iş Apple’ın çevrim içi hizmetiyle yapılır). Paneli açmadan konuşmak için Q düğmesine basılı tutun; Qutai sohbetin dilinde dinler.',
   'browser.save.title': 'PDF ve tam sayfa ekran görüntüsü',
   'browser.save.body':
     'Sayfayı PDF olarak ya da tamamının tek parça ekran görüntüsü olarak kaydedin, çevrimdışı okumak için saklayın.',
@@ -235,7 +235,7 @@ export const tr: Messages = {
   'compare.kicker': 'Karşılaştırma',
   'compare.title': 'Mobilde Qutai ve diğerleri',
   'compare.lede':
-    'Yalnızca mobil uygulamalar; her üreticinin kendi herkese açık sayfalarına baktık. Doğrulayamadığımız yerde tahmin yürütmedik, hücreye bunu yazdık.',
+    'Yalnızca mobil uygulamalar; her üreticinin kendi herkese açık sayfalarına baktık, notunda belirttiğimiz birkaç hücrede de uygulamayı kendimiz denedik. Doğrulayamadığımız yerde tahmin yürütmedik, hücreye bunu yazdık.',
   'compare.checked': 'Son kontrol: {date}',
   'compare.caption': 'Qutai ve yapay zekâ asistanlı diğer mobil tarayıcıların özellikleri',
   'compare.feature': 'Özellik',
@@ -309,7 +309,7 @@ export const tr: Messages = {
     'Canlı sayfada onayladığınız bir betik, o sitedeki oturumunuzla sitenin kendi kodunun yapabildiği her şeyi yapabilir; yalnızca bilgi okuyan sorular ise kapalı bir kopyada çalışır',
   'status.limits.6': 'Uygulamaların henüz interneti ve konum, kamera, bildirim gibi telefon özellikleri yok',
   'status.limits.7':
-    'Web sayfalarına gizlenmiş talimatlar: asistanı yanıltmak için hazırlanmış sayfalarla deniyor ve uygulamanın kendi denetimlerini sıkılaştırmaya devam ediyoruz, ama kusursuz değiliz. Ödeme, paylaşım, silme, hesap değişiklikleri, aramalar ve mesajlar her zaman sizin dokunuşunuzu bekler; yine de asistan bir sayfa yüzünden taraflı bir özet çıkarabilir, kötü bir bağlantı önerebilir ya da onay gerektirmeyen bir adım atabilir. Onay penceresinde yazanı okuyup öyle dokunun; asistanın tanımadığınız bir sayfa hakkındaki özetini bir hüküm değil, bir özet olarak görün',
+    'Web sayfalarına gizlenmiş talimatlar: asistanı yanıltmak için hazırlanmış sayfalarla deniyor ve uygulamanın kendi denetimlerini sıkılaştırmaya devam ediyoruz, ama kusursuz değiliz. Ödeme, paylaşım, silme, hesap değişiklikleri, aramalar ve mesajlar sizin dokunuşunuzu bekler (paylaşımda, bir siteye sormadan paylaşma izni vermediyseniz); yine de asistan bir sayfa yüzünden taraflı bir özet çıkarabilir, kötü bir bağlantı önerebilir ya da onay gerektirmeyen bir adım atabilir. Onay penceresinde yazanı okuyup öyle dokunun; asistanın tanımadığınız bir sayfa hakkındaki özetini bir hüküm değil, bir özet olarak görün',
   'status.planned': 'Planlananlar',
   'status.planned.1': 'App Store’da yayın (şu anda beta testinde)',
   'status.planned.2': 'Hesap açanlar için uçtan uca şifreli eşitleme',

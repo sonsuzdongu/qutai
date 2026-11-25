@@ -84,11 +84,11 @@ export const en = {
   'mock.panelTitle': 'Qutai', // app: chat.title
   'mock.model': 'Claude · this chat', // app: chat.modelThisChat
   'mock.user': 'Compare this with the shoe in my other tab and add the cheaper one to my cart, size 42.',
-  'mock.actionReadTab': 'Reading tab 2', // app: action.readTab
+  'mock.actionReadTab': 'Reading tab “Ridge Runner 2”', // app: action.readTab
   'mock.actionReadPage': 'Reading the page', // app: action.readPage
   'mock.answer': 'This one is €12 cheaper with the same sole and drop. Adding size 42 to your cart.',
   'mock.confirmTitle': 'Qutai wants to do this', // app: confirm.title
-  'mock.confirmBody': 'Clicking (ref 31)', // app: action.click
+  'mock.confirmBody': 'Tapping “Add to cart”', // app: action.click
   'mock.confirmAlways': 'Always allow on shop.example', // app: confirm.always
   'mock.deny': 'Deny', // app: confirm.deny
   'mock.allow': 'Allow', // app: confirm.allow
@@ -109,8 +109,8 @@ export const en = {
   'agent.compare.title': 'Compare products across tabs',
   'agent.compare.body':
     'Open two or three product pages and ask which one fits. Qutai reads each tab without switching away, notes prices, delivery times and specs, and answers with a table it can also hand you as a CSV file.',
-  'agent.compare.step1': 'Reading tab 2',
-  'agent.compare.step2': 'Reading tab 3',
+  'agent.compare.step1': 'Reading tab “Trail Runner 4”',
+  'agent.compare.step2': 'Reading tab “Ridge Runner 2”',
   'agent.compare.step3': 'Price, delivery, warranty side by side',
   'agent.checkout.title': 'Shops for you, all the way to checkout',
   'agent.checkout.body':
@@ -127,12 +127,12 @@ export const en = {
   'agent.booking.call': 'Call', // app: chat.call
   'agent.research.title': 'Research with sources',
   'agent.research.body':
-    'Deep research searches and reads many pages and PDFs, takes notes and writes a report with its sources listed under the answer. Share it as a PDF. It takes a few minutes and uses more of your API credit.',
+    'Deep research searches and reads many pages and PDFs, takes notes and writes a report with its sources listed under the answer. Share it as a PDF. It takes a few minutes and costs more than a quick question, in credits or on your own key.',
   'agent.research.step1': 'Searched: e-bike rules in London', // app: action.webSearch
   'agent.research.step2': 'Reading the page',
   'agent.research.step3': 'Sources',
   'agent.footnote':
-    'What the assistant manages depends on the model you choose and on the site. These are examples of what the code supports; most of it has not yet been tested on a real phone.',
+    'What the assistant manages depends on the model you choose and on the site. These are examples of what the app supports; Qutai is new, and not all of it has been tried on every device yet.',
 
   'privacy.kicker': 'Privacy by design',
   'privacy.title': 'Your choice. Your phone. Your say.',
@@ -172,18 +172,18 @@ export const en = {
     'Incognito tabs keep no history, and conversations that touch them stay in memory only. Memory, location and calendar are off there, and the incognito tabs can be locked.',
   'privacy.confirm.title': 'Asks before it matters',
   'privacy.confirm.body':
-    'Sensitive steps wait for your yes. Posts, comments, reviews and messages sent through a site go out only after you approve them in Qutai’s own window, which shows the exact text; words on a web page can never approve them. Calls, texts, WhatsApp messages and emails are only drafts that you send. A notification, a calendar entry, a reminder, reading your calendar or location, and an ordinary download can be allowed with “Don’t ask again”, which you can take back in Settings; a no is never remembered. Uploads and risky files are asked about every time.',
+    'Sensitive steps wait for your yes. Posts, comments, reviews and messages sent through a site go out only after you approve them in Qutai’s own window, which shows the exact text; words on a web page can never approve them. If you trust a site, you can tick “Post on … without asking from now on”; Qutai still checks the text and the page before each press, and you can undo it in the site’s settings. Calls, texts, WhatsApp messages and emails are only drafts that you send. A notification, a calendar entry, a reminder, reading your calendar or location, and an ordinary download can be allowed with “Don’t ask again”, which you can take back in Settings; a no is never remembered. Uploads and risky files are asked about every time.',
   'privacy.contacts.title': 'Your contacts stay on the phone',
   'privacy.contacts.body':
     '“Call James” or “email this to Mr Clarke”: the assistant looks up only the name you said, on the phone. The AI sees matching names and labels such as “mobile”, never numbers or addresses. If several people match, you pick in Qutai’s own list, and you still tap Call or send the message yourself. Asked at first use, off in incognito.',
   'privacy.scripts.title': 'Scripts only if you allow them',
   'privacy.scripts.body':
-    'Off by default. Turned on, the assistant answers questions like “how many links are here?” with a script on a sealed copy of the page, with no internet and no sign-in. A script on the live page needs your approval with its full code and warnings, is refused on sign-in, payment and bank pages, and can then do what the site’s own code can do. Scripts you keep run only on their site and are asked about again when their code changes.',
+    'Off by default. Turned on, the assistant answers questions like “how many links are here?” with a script on a sealed copy of the page, with no internet and no sign-in. A script on the live page needs your approval with its full code and warnings, is refused on sign-in, payment and bank pages, and can then do what the site’s own code can do. On a site you choose, the assistant’s one-off scripts can run without the dialog; every other check stays. Scripts you keep run only on their site and are asked about again when their code changes.',
   'privacy.apps.title': 'Your own apps, sealed off',
   'privacy.apps.body':
     'Ask for “an app where I can keep my notes” and Qutai writes it, opens a preview, fixes its own errors and changes it when you ask, keeping earlier versions so you can go back. Your apps wait in My apps on the new tab page. Each runs in its own view, apart from your browsing: no internet, no other sites’ cookies or sign-ins, no other app’s data. Its data stays on the phone, up to 5 MB per app. Share an app as a file; an imported one stays off until you approve it, and apps go into your encrypted backup. Writing an app is an ordinary assistant request, paid with your own key or Qutai Credits.',
   'privacy.note':
-    'The Qutai service is optional: sign in with Apple, Google or email, use Qutai Credits instead of your own key, with nothing to choose: Qutai picks the model. Qutai’s server keeps your account, your credits and, for each request, the model, the token count and the cost, and sees the app’s version and build; not your messages or pages. Builds from the repository leave it out and never contact a Qutai server.',
+    'The Qutai service is optional: sign in with Apple, Google or email, use Qutai Credits instead of your own key, with nothing to choose: Qutai picks the model. Qutai’s server keeps your account, your credits and, for each request, the model, the token count and the cost, and sees the app’s version and build; not your messages or pages. Anonymous usage events, without your account, are sent only if you say yes when asked. Builds from the repository leave it out and never contact a Qutai server.',
 
   'browser.kicker': 'And a browser too',
   'browser.title': 'Everything you expect from a browser, minus the tracking.',
@@ -202,12 +202,12 @@ export const en = {
   'browser.private.body': 'Their own cookies and site data, gone when you close them, with an optional biometric lock.',
   'browser.backup.title': 'Encrypted backup',
   'browser.backup.body':
-    'No account needed and no sync: export everything to one password-protected file and import it on another phone.',
+    'No live sync, and no account needed: export everything to one password-protected file and import it on another device. In the official builds the same file can also wait in your Qutai account, made automatically once a day if you like.',
   'browser.bookmarks.title': 'Bookmarks in folders',
   'browser.bookmarks.body': 'Import the file Chrome, Firefox, Safari or Edge exports, and export the same format.',
   'browser.voice.title': 'Voice input',
   'browser.voice.body':
-    'Dictate tasks with the phone’s own speech recognition, on the device when the phone and language allow. Hold the Q button to talk without opening the panel; Qutai listens in the language of your conversation.',
+    'Dictate tasks with the phone’s own speech recognition, on the device when the phone and language allow (on a Mac, through Apple’s online service). Hold the Q button to talk without opening the panel; Qutai listens in the language of your conversation.',
   'browser.save.title': 'PDF and full-page screenshots',
   'browser.save.body': 'Save a page as PDF or a stitched screenshot of the whole page, or keep it for offline reading.',
   'browser.desktop.title': 'On iPad and Mac',
@@ -227,7 +227,7 @@ export const en = {
   'compare.kicker': 'Comparison',
   'compare.title': 'How Qutai compares on mobile',
   'compare.lede':
-    'The mobile apps only, from each vendor’s own public pages. Where we could not confirm something, the cell says so instead of guessing.',
+    'The mobile apps only, from each vendor’s own public pages and, where a cell says so, our own test of the app. Where we could not confirm something, the cell says so instead of guessing.',
   'compare.checked': 'Last checked: {date}',
   'compare.caption': 'Features of Qutai and other mobile browsers with AI assistants',
   'compare.feature': 'Feature',
@@ -282,7 +282,7 @@ export const en = {
   'status.today.5': 'Saved tasks you can run by name, reminders, PDF reading, image attachments and on-phone image filters, downloads and CSV export',
   'status.today.6': 'Reader mode, read aloud, voice input, ad and tracker blocking with your own rules, encrypted backup',
   'status.today.7': 'Ten interface languages (English, Turkish, German, Spanish, Brazilian Portuguese, French, Japanese, Korean, Russian, Indonesian), following the phone or chosen in Settings; labels for screen readers and room for large text',
-  'status.today.8': 'Your own styles for sites, a page’s cookie list whose values never go to the AI, and scripts on pages (off by default, approved with the code shown)',
+  'status.today.8': 'Your own styles for sites, a page’s cookie list whose values never go to the AI, and scripts on pages (off by default, approved with the code shown, or without asking on sites you choose)',
   'status.today.9': 'Small apps the assistant writes for you inside Qutai: offline, kept apart from your browsing, with versions to go back to',
   'status.limits': 'Limits to know',
   'status.limits.1': 'Background tasks are Android-only and opt-in, with a notification when a task ends or needs you; on iPhone, iPad and Mac a task pauses when you leave the app',
@@ -292,7 +292,7 @@ export const en = {
   'status.limits.5': 'A script you approve on the live page can do what the site’s own code can do, with your sign-in there; questions that only read the page run on a sealed copy instead',
   'status.limits.6': 'Apps have no internet and no phone features such as location, camera or notifications yet',
   'status.limits.7':
-    'Hidden instructions on web pages: we test against pages built to mislead the assistant and keep tightening the app’s own checks, but we are not perfect. Paying, posting, deleting, account changes, calls and messages always wait for your tap, yet the assistant can still be misled into a slanted summary, a bad link or a step that needs no approval. Read what an approval says before you tap, and treat the assistant’s summary of an unfamiliar page as a summary, not a verdict',
+    'Hidden instructions on web pages: we test against pages built to mislead the assistant and keep tightening the app’s own checks, but we are not perfect. Paying, posting, deleting, account changes, calls and messages wait for your tap (posting only until you let a site skip the question), yet the assistant can still be misled into a slanted summary, a bad link or a step that needs no approval. Read what an approval says before you tap, and treat the assistant’s summary of an unfamiliar page as a summary, not a verdict',
   'status.planned': 'Planned',
   'status.planned.1': 'Release on the App Store, now in beta testing',
   'status.planned.2': 'End-to-end encrypted sync for those who choose an account',
