@@ -357,7 +357,7 @@ Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, k
 >
 > Either way, "What was sent to the AI" in Settings lists every request: which site, which model, what went with it.
 >
-> Honest bits: it's young (0.1.34) and I'm one person, so expect rough edges. How well a task goes depends on the
+> Honest bits: it's young (0.1.34), so expect rough edges. How well a task goes depends on the
 > model and the site. Hidden instructions on web pages can still mislead any AI assistant: paying, posting,
 > deleting and account changes always wait for your tap, but read what an approval says before you tap.
 >
