@@ -46,6 +46,24 @@ export async function deleteHistoryEntry(db: Db, id: number): Promise<void> {
   notifyHistoryRemoved();
 }
 
+/** Batch size for `IN (…)` lists, well under SQLite's limit on bound values. */
+const DELETE_BATCH = 500;
+
+/**
+ * Deletes the chosen visits (History › Select, UI-71) in one transaction, so a failure leaves none of them deleted
+ * rather than some.
+ */
+export async function deleteHistoryEntries(db: Db, ids: readonly number[]): Promise<void> {
+  if (ids.length === 0) return;
+  await db.withTransactionAsync(async () => {
+    for (let i = 0; i < ids.length; i += DELETE_BATCH) {
+      const batch = ids.slice(i, i + DELETE_BATCH);
+      await db.runAsync(`DELETE FROM history WHERE id IN (${batch.map(() => '?').join(',')})`, batch);
+    }
+  });
+  notifyHistoryRemoved();
+}
+
 export async function clearHistory(db: Db): Promise<void> {
   await db.runAsync('DELETE FROM history', []);
   notifyHistoryRemoved();

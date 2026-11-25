@@ -160,6 +160,9 @@ The look-and-feel rules that apply across the app: icons, dialogs, labels, the a
 - **`UI-70`** The new tab page follows deleted history at once: deleting a visit, a time range or all history refreshes "Recently visited" and the top sites while the page stays on screen. "Recently visited" opens and closes from its title (a chevron shows which); the choice is kept on the phone (cleared by a reinstall), open by default.
   Status: Decided by the owner (25 Nov 2026) · Enforced: In the app: src/storage/history.ts (onHistoryRemoved), src/components/NewTabPage.tsx (Section, useRecentOpen), src/storage/installCheck.ts
 
+- **`UI-71`** History (Library › History) has a select mode: "Select" above the list, or a long press on a visit (which starts with that visit chosen), shows a checkbox on every row; a tap chooses or unchooses, and choosing closes the keyboard a search left open so the Delete bar at the bottom shows; "Select all" chooses every visit on screen (the loaded results of the current search) and becomes "Deselect all" once they all are; "{n} selected" and Cancel sit beside it. "Delete (n)" at the bottom asks once ("Delete n visits from history?", can't be undone) and removes exactly the chosen visits in one transaction (all or none; a failure is reported and nothing is removed). A new search keeps only the chosen visits that are still on screen, so Delete never removes a visit the user can't see; "Select all" then picks the new results. Cancel, Android's back button or deleting ends select mode; Clear history and the per-row ✕ are hidden meanwhile. The new tab page follows at once (`UI-70`).
+  Status: Decided by the owner (25 Nov 2026) · Enforced: In the app: src/components/LibraryScreen.tsx (HistoryList), src/components/historySelection.ts (keepShown), src/storage/history.ts (deleteHistoryEntries); scripts/storage-tests/historySelection.test.ts
+
 ## Details
 
 **Icons**

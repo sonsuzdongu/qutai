@@ -1,7 +1,8 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react';
+import { MutableRefObject, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Keyboard,
   Pressable,
   SectionList,
   StyleSheet,
@@ -47,7 +48,8 @@ import { Db, getDb } from '../storage/db';
 import { ActionSheet, SheetAction } from './ActionSheet';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAvoidingContainer } from './KeyboardAware';
-import { clearHistory, deleteHistoryEntry, HistoryEntry, listHistory } from '../storage/history';
+import { keepShown } from './historySelection';
+import { clearHistory, deleteHistoryEntries, deleteHistoryEntry, HistoryEntry, listHistory } from '../storage/history';
 import { HEADER_FONT_SCALE } from './ScreenHeader';
 import { WholeWordsText } from './WholeWordsText';
 import { reportStorageFailure } from '../storage/failures';
@@ -65,16 +67,24 @@ const PAGE_SIZE = 60;
 
 /** Bookmarks and history in one screen, like the library in mobile browsers. */
 export function LibraryScreen({ visible, initialTab, onOpen, onClose }: Props) {
+  // Android's back button first leaves History's select mode (UI-71), then closes the screen.
+  const backRef = useRef<(() => boolean) | null>(null);
+  const requestClose = () => {
+    if (backRef.current?.()) return;
+    onClose();
+  };
   return (
-    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <AppModal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={requestClose}>
       {/* Mounted only while visible, so it always opens fresh on the requested tab. */}
-      {visible && <LibraryContent initialTab={initialTab} onOpen={onOpen} onClose={onClose} />}
+      {visible && <LibraryContent initialTab={initialTab} onOpen={onOpen} onClose={onClose} backRef={backRef} />}
       <DialogHost />
     </AppModal>
   );
 }
 
-function LibraryContent({ initialTab, onOpen, onClose }: Omit<Props, 'visible'>) {
+type BackRef = MutableRefObject<(() => boolean) | null>;
+
+function LibraryContent({ initialTab, onOpen, onClose, backRef }: Omit<Props, 'visible'> & { backRef: BackRef }) {
   const styles = useStyles();
   const palette = usePalette();
   const [tab, setTab] = useState<LibraryTab>(initialTab);
@@ -114,7 +124,7 @@ function LibraryContent({ initialTab, onOpen, onClose }: Omit<Props, 'visible'>)
         returnKeyType="search"
       />
       {tab === 'history' ? (
-        <HistoryList query={query} onOpen={onOpen} />
+        <HistoryList query={query} onOpen={onOpen} backRef={backRef} />
       ) : (
         <BookmarkList query={query} onOpen={onOpen} />
       )}
@@ -122,8 +132,9 @@ function LibraryContent({ initialTab, onOpen, onClose }: Omit<Props, 'visible'>)
   );
 }
 
-function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) => void }) {
+function HistoryList({ query, onOpen, backRef }: { query: string; onOpen: (url: string) => void; backRef: BackRef }) {
   const styles = useStyles();
+  const palette = usePalette();
   // `loadedQuery` tells which search the entries belong to; while it differs from `query`, a load is running.
   const [result, setResult] = useState<{ loadedQuery: string | null; entries: HistoryEntry[]; done: boolean }>({
     loadedQuery: null,
@@ -136,6 +147,10 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
   // While a new search runs, the previous results (or "no results") stay as they are; the spinner is only for the
   // first load and for older pages, so nothing flickers on every letter.
   const spinner = result.loadedQuery === null || loadingMore;
+  // Select mode (UI-71): the chosen visits, always a subset of the rows on screen.
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<ReadonlySet<number>>(() => new Set());
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -143,12 +158,56 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
       .then((db) => listHistory(db, { query, limit: PAGE_SIZE }))
       .catch((e) => (reportStorageFailure('history.list', e, 'user'), [] as HistoryEntry[]))
       .then((page) => {
-        if (!cancelled) setResult({ loadedQuery: query, entries: page, done: page.length < PAGE_SIZE });
+        if (cancelled) return;
+        setResult({ loadedQuery: query, entries: page, done: page.length < PAGE_SIZE });
+        // A new search shows other rows: what was chosen and is no longer on screen is no longer chosen, so Delete
+        // only ever removes visits the user can see; "Select all" then picks the new results.
+        setSelected((prev) => keepShown(prev, page));
       });
     return () => {
       cancelled = true;
     };
   }, [query]);
+
+  const endSelecting = () => {
+    setSelecting(false);
+    setSelected(new Set());
+  };
+  useEffect(() => {
+    backRef.current = selecting
+      ? () => {
+          endSelecting();
+          return true;
+        }
+      : null;
+    return () => {
+      backRef.current = null;
+    };
+  }, [selecting, backRef]);
+
+  // The keyboard a search leaves open would cover the Delete bar at the bottom: choosing closes it.
+  const toggle = (id: number) => {
+    Keyboard.dismiss();
+    tick();
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const startSelecting = (first?: HistoryEntry) => {
+    Keyboard.dismiss();
+    bump();
+    setSelecting(true);
+    setSelected(first ? new Set([first.id]) : new Set());
+  };
+  const allSelected = entries.length > 0 && entries.every((e) => selected.has(e.id));
+  const toggleAll = () => {
+    Keyboard.dismiss();
+    tick();
+    setSelected(allSelected ? new Set() : new Set(entries.map((e) => e.id)));
+  };
 
   const loadMore = async () => {
     if (loading || done || entries.length === 0) return;
@@ -167,6 +226,33 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
     setResult((prev) => ({ ...prev, entries: prev.entries.filter((e) => e.id !== entry.id) }));
   };
 
+  const deleteSelected = () => {
+    const ids = entries.filter((e) => selected.has(e.id)).map((e) => e.id);
+    if (ids.length === 0 || deleting) return;
+    dialog.alert(t('library.deleteSelectedConfirm', { count: ids.length }), t('library.cannotUndo'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('library.delete'),
+        style: 'destructive',
+        onPress: async () => {
+          setDeleting(true);
+          try {
+            await deleteHistoryEntries(await getDb(), ids);
+            const gone = new Set(ids);
+            setResult((prev) => ({ ...prev, entries: prev.entries.filter((e) => !gone.has(e.id)) }));
+            success();
+            endSelecting();
+          } catch (e) {
+            reportStorageFailure('history.delete', e, 'user');
+            dialog.alert(t('common.error', { message: e instanceof Error ? e.message : String(e) }));
+          } finally {
+            setDeleting(false);
+          }
+        },
+      },
+    ]);
+  };
+
   const clearAll = () => {
     dialog.alert(t('library.clearHistoryConfirm'), t('library.cannotUndo'), [
       { text: t('common.cancel'), style: 'cancel' },
@@ -181,40 +267,99 @@ function HistoryList({ query, onOpen }: { query: string; onOpen: (url: string) =
     ]);
   };
 
+  const count = selected.size;
   return (
-    <SectionList
-      contentContainerStyle={readableColumn}
-      sections={groupByDay(entries, (e) => e.visitedAt)}
-      keyExtractor={(e) => String(e.id)}
-      stickySectionHeadersEnabled
-      keyboardShouldPersistTaps="handled"
-      renderSectionHeader={({ section }) => <Text style={styles.sectionHeader}>{section.title}</Text>}
-      renderItem={({ item }) => (
-        <Row
-          title={item.title}
-          url={item.url}
-          meta={timeLabel(item.visitedAt)}
-          onPress={() => onOpen(item.url)}
-          onRemove={() => remove(item)}
-        />
-      )}
-      onEndReached={() => {
-        loadMore().catch(() => {});
-      }}
-      onEndReachedThreshold={0.5}
-      ListEmptyComponent={
-        spinner ? undefined : <Empty title={t(result.loadedQuery ? 'library.noResults' : 'library.emptyHistory')} />
-      }
-      ListFooterComponent={
-        spinner ? (
-          <ActivityIndicator style={styles.footer} />
-        ) : entries.length > 0 && !result.loadedQuery ? (
-          <Pressable onPress={clearAll} style={styles.footer} accessibilityRole="button">
-            <Text style={styles.danger}>{t('library.clearHistory')}</Text>
+    <View style={styles.flex}>
+      {selecting ? (
+        <View style={styles.selectBar}>
+          <Pressable onPress={toggleAll} hitSlop={8} accessibilityRole="button" disabled={entries.length === 0}>
+            <Text style={[styles.action, entries.length === 0 && styles.dimmed]} numberOfLines={1}>
+              {t(allSelected ? 'library.deselectAll' : 'library.selectAll')}
+            </Text>
           </Pressable>
-        ) : undefined
-      }
-    />
+          <Text style={styles.selectCount} numberOfLines={1} accessibilityLiveRegion="polite">
+            {t('library.selectedCount', { count })}
+          </Text>
+          <Pressable onPress={endSelecting} hitSlop={8} accessibilityRole="button">
+            <Text style={[styles.action, styles.bold]} numberOfLines={1}>
+              {t('common.cancel')}
+            </Text>
+          </Pressable>
+        </View>
+      ) : entries.length > 0 ? (
+        <View style={styles.selectBar}>
+          <View style={styles.flex} />
+          <Pressable onPress={() => startSelecting()} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.action} numberOfLines={1}>
+              {t('library.select')}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+      <SectionList
+        style={styles.flex}
+        contentContainerStyle={readableColumn}
+        sections={groupByDay(entries, (e) => e.visitedAt)}
+        keyExtractor={(e) => String(e.id)}
+        extraData={selecting ? selected : null}
+        keyboardDismissMode="on-drag"
+        stickySectionHeadersEnabled
+        keyboardShouldPersistTaps="handled"
+        renderSectionHeader={({ section }) => <Text style={styles.sectionHeader}>{section.title}</Text>}
+        renderItem={({ item }) =>
+          selecting ? (
+            <Row
+              title={item.title}
+              url={item.url}
+              meta={timeLabel(item.visitedAt)}
+              onPress={() => toggle(item.id)}
+              selected={selected.has(item.id)}
+            />
+          ) : (
+            <Row
+              title={item.title}
+              url={item.url}
+              meta={timeLabel(item.visitedAt)}
+              onPress={() => onOpen(item.url)}
+              onLongPress={() => startSelecting(item)}
+              onRemove={() => remove(item)}
+            />
+          )
+        }
+        onEndReached={() => {
+          loadMore().catch(() => {});
+        }}
+        onEndReachedThreshold={0.5}
+        ListEmptyComponent={
+          spinner ? undefined : <Empty title={t(result.loadedQuery ? 'library.noResults' : 'library.emptyHistory')} />
+        }
+        ListFooterComponent={
+          spinner ? (
+            <ActivityIndicator style={styles.footer} />
+          ) : entries.length > 0 && !result.loadedQuery && !selecting ? (
+            <Pressable onPress={clearAll} style={styles.footer} accessibilityRole="button">
+              <Text style={styles.danger}>{t('library.clearHistory')}</Text>
+            </Pressable>
+          ) : undefined
+        }
+      />
+      {selecting ? (
+        <View style={styles.deleteBar}>
+          <Pressable
+            onPress={deleteSelected}
+            disabled={count === 0 || deleting}
+            style={({ pressed }) => [styles.deleteButton, pressed && styles.pressed, (count === 0 || deleting) && styles.dimmed]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: count === 0 || deleting }}
+          >
+            <Icon name="trash" size={18} color={palette.danger} />
+            <Text style={styles.danger} numberOfLines={1}>
+              {t('library.deleteSelected', { count })}
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -812,14 +957,20 @@ function Row({
   url,
   meta,
   onPress,
+  onLongPress,
   onRemove,
   onMore,
+  selected,
 }: {
   title: string;
   url: string;
   meta?: string;
   onPress: () => void;
+  /** Long press when there is no options sheet (History: starts select mode). */
+  onLongPress?: () => void;
   onRemove?: () => void;
+  /** Select mode: a checkbox instead of the ✕ button, and a tap toggles it. */
+  selected?: boolean;
   /** Options sheet: a ⋯ button and long press instead of the ✕ button. */
   onMore?: () => void;
 }) {
@@ -828,9 +979,10 @@ function Row({
   const host = hostOf(url);
   return (
     <Pressable
-      accessibilityRole="button"
+      accessibilityRole={selected === undefined ? 'button' : 'checkbox'}
+      accessibilityState={selected === undefined ? undefined : { checked: selected }}
       onPress={onPress}
-      onLongPress={onMore}
+      onLongPress={onMore ?? onLongPress}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
       accessibilityActions={onMore ? [{ name: 'longpress', label: t('library.options') }] : undefined}
       onAccessibilityAction={onMore ? (e) => e.nativeEvent.actionName === 'longpress' && onMore() : undefined}
@@ -846,7 +998,11 @@ function Row({
           {meta ? `${meta} · ${host}` : host}
         </Text>
       </View>
-      {onMore ? (
+      {selected !== undefined ? (
+        <View style={[styles.checkBox, selected && styles.checkBoxOn]}>
+          {selected && <Icon name="check" size={16} color={palette.onTint} />}
+        </View>
+      ) : onMore ? (
         <Pressable onPress={onMore} hitSlop={10} style={styles.remove} accessibilityRole="button" accessibilityLabel={t('library.options')}>
           <Icon name="more" size={16} color={palette.textSecondary} />
         </Pressable>
@@ -914,6 +1070,42 @@ const useStyles = makeStyles((c) => ({
   rowTitle: { fontSize: 15, color: c.text },
   rowUrl: { fontSize: 12, color: c.textSecondary },
   remove: { width: 28, height: 28, alignItems: 'center', justifyContent: 'center' },
+  checkBox: {
+    width: 22,
+    height: 22,
+    marginHorizontal: 3,
+    borderRadius: radii.inner,
+    borderWidth: 2,
+    borderColor: c.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkBoxOn: { backgroundColor: c.tint, borderColor: c.tint },
+  selectBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    minHeight: 30,
+  },
+  selectCount: { flexShrink: 1, fontSize: 14, color: c.textSecondary, textAlign: 'center' },
+  deleteBar: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: c.border,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: radii.control,
+  },
   footer: { paddingVertical: 20, alignItems: 'center' },
   danger: { color: c.danger, fontSize: 15, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32, gap: 6 },
