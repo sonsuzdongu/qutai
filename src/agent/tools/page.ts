@@ -20,6 +20,7 @@ import { scriptTool } from '../scriptTool';
 import { fenceUntrusted } from '../untrusted';
 import { hiddenNeedlesFor, type PageSnapshot, type SourceSnapshot, normalizeUrl, showTab, pdfButtons } from './shared';
 import type { ToolContext, ToolOutput } from '../executeTool';
+import { deviceName } from '../uiLabels';
 
 /**
  * The page tools: reading the page and its source, navigating, clicking, typing, scrolling, screenshots, PDF and
@@ -338,7 +339,7 @@ export async function pageTool(name: string, input: Record<string, unknown>, ctx
           const saved =
             shot.images > 1
               ? `Saved a full-page screenshot to the user's photo library as ${shot.images} images, because the page ` +
-                'is too long for one image on this phone; they are cut between screens.'
+                `is too long for one image on this ${deviceName()}; they are cut between screens.`
               : "Saved a full-page screenshot to the user's photo library as one image.";
           const cut = shot.truncated
             ? ` The page was very long; only its first ${shot.screens} screens were captured (the limit for endless pages).`
@@ -355,7 +356,7 @@ export async function pageTool(name: string, input: Record<string, unknown>, ctx
     if (e instanceof PermissionDeniedError) {
       return {
         content:
-          `Permission denied: ${e.message} Offer the user (with ask_user) to open Qutai's page in the phone's ` +
+          `Permission denied: ${e.message} Offer the user (with ask_user) to open Qutai's page in the ${deviceName()}'s ` +
           'settings with open_settings (target system), where they can allow it.',
         isError: true,
       };

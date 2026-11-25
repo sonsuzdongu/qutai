@@ -4,7 +4,7 @@ import { MAX_SMS_BODY } from '../../device/sms';
 import { MAX_WHATSAPP_BODY, normalizeWhatsAppNumber } from '../../device/whatsapp';
 import { toInternational } from '../../device/phoneRegion';
 import { contactForUse } from '../contactTool';
-import { uiLabel } from '../uiLabels';
+import { deviceName, uiLabel } from '../uiLabels';
 import { cutText } from '../../utils/wellFormed';
 import type { ToolContext, ToolOutput } from '../executeTool';
 
@@ -125,7 +125,7 @@ export async function draftWhatsAppTool(input: Record<string, unknown>, ctx: Too
       contact: { label: contact.label, ...(intl.added ? { added: intl.added } : {}) },
     });
     const added = intl.added
-      ? ` The number was saved without a country code, so ${intl.added} was added (from ${countryCode ? 'country_code' : "the phone's region"}); the card says so, and the user can check it.`
+      ? ` The number was saved without a country code, so ${intl.added} was added (from ${countryCode ? 'country_code' : `the ${deviceName()}'s region`}); the card says so, and the user can check it.`
       : '';
     return {
       content:

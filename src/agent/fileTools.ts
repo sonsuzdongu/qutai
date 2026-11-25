@@ -7,6 +7,7 @@ import { openPdf, PdfReadError, pdfRender, pdfText } from '../pdf/reader';
 import type { ToolContext, ToolOutput } from './executeTool';
 import { siteKey } from './sitePolicy';
 import { settingNotice } from './stepLine';
+import { deviceName } from './uiLabels';
 
 /** Tools that work on files: the user's attachments (view_attachment) and PDFs (read_pdf). */
 
@@ -32,7 +33,7 @@ export async function viewAttachmentTool(input: Record<string, unknown>, ctx: To
   if ('content' in found) return found;
   const data = found.model ? await modelImageData(found.id).catch(() => null) : null;
   if (!data || !found.model)
-    return { content: `The image ${found.id} "${found.name}" is no longer on this phone.`, isError: true };
+    return { content: `The image ${found.id} "${found.name}" is no longer on this ${deviceName()}.`, isError: true };
   const size = found.width && found.height ? `${found.width}×${found.height}, ` : '';
   return {
     content: `Image ${found.id} "${found.name}" (${size}shown at ${found.model.width}×${found.model.height}), attached by the user.`,
@@ -72,7 +73,7 @@ async function pdfSource(input: Record<string, unknown>, ctx: ToolContext): Prom
       again: `attachment_id="${found.id}"`,
       load: async () => {
         const file = originalFile(found.id);
-        if (!file) throw new PdfReadError(`The attachment ${found.id} is no longer on this phone.`, 'failed');
+        if (!file) throw new PdfReadError(`The attachment ${found.id} is no longer on this ${deviceName()}.`, 'failed');
         if (file.size > MAX_PDF_BYTES) throw new PdfReadError('The PDF is larger than 30 MB, too large to read here.', 'failed');
         return file.base64();
       },

@@ -19,7 +19,7 @@ import type { ToolContext, ToolOutput } from './executeTool';
 import { declinedNotice, settingNotice } from './stepLine';
 import { transfer, type FileTarget } from './imageTools';
 import { siteKey } from './sitePolicy';
-import { uiLabel } from './uiLabels';
+import { deviceName, uiLabel } from './uiLabels';
 import { cutText } from '../utils/wellFormed';
 import { contactForUse } from './contactTool';
 
@@ -125,7 +125,7 @@ export async function draftEmailTool(input: Record<string, unknown>, ctx: ToolCo
     if (outcome.route === 'share') {
       return {
         content:
-          'No mail account is set up in the phone\'s system mail composer, and a mailto link cannot carry files, so ' +
+          `No mail account is set up in the ${deviceName()}'s system mail composer, and a mailto link cannot carry files, so ` +
           `the share sheet was opened instead${attached}, with the subject${outcome.textCopied ? ', and the body copied to the clipboard as well (some apps leave shared text out)' : ' and the body'}. ` +
           'The user picks their mail app there (e.g. Gmail), checks the recipient and sends it themselves. Tell the ' +
           `user this in those words; do not say it was sent.${contactsNote}`,
@@ -325,7 +325,7 @@ export async function uploadFileTool(input: Record<string, unknown>, ctx: ToolCo
 function saveHint(item: Shareable): string {
   const button =
     item.origin === 'attached'
-      ? 'file they attached (it is already on their phone)'
+      ? `file they attached (it is already on their ${deviceName()})`
       : Platform.OS === 'android'
         ? `${uiLabel('chat.fileSave')} button on its card (to put it in a folder)`
         : `${uiLabel('chat.fileShareIos')} button on its card (then "Save to Files")`;

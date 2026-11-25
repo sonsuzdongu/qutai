@@ -7,7 +7,7 @@ import type { ToolContext, ToolOutput } from './executeTool';
 import { mayWrite, settingClass, type SettingsToolKey } from './settingsClass';
 import { settingFromUser } from './settingsOrigin';
 import { declinedNotice, settingNotice } from './stepLine';
-import { uiLabel, uiPath } from './uiLabels';
+import { deviceName, uiLabel, uiPath } from './uiLabels';
 
 /**
  * The settings the assistant may change from the chat (the settings tool), and nothing else.
@@ -413,7 +413,7 @@ export async function settingsTool(input: Record<string, unknown>, ctx: ToolCont
       continue;
     }
     if (unavailable(key)) {
-      problems.push(`${uiLabel(spec.label)} is not available on this phone.`);
+      problems.push(`${uiLabel(spec.label)} is not available on this ${deviceName()}.`);
       continue;
     }
     const parsed = parseValue(key, spec, value);

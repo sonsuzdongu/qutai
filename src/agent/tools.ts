@@ -9,7 +9,7 @@ export const MEMORY_TOOLS: ToolDefinition[] = [
   {
     name: 'remember',
     description:
-      'Save one lasting fact about the user for future conversations (stored on their phone; they can see and delete it in settings). ' +
+      'Save one lasting fact about the user for future conversations (stored on their device; they can see and delete it in settings). ' +
       'Only facts the user told you themselves. Never passwords, one-time codes, payment card details or bank account numbers.',
     input_schema: {
       type: 'object',
@@ -217,7 +217,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'edit_image',
     description:
-      'Make an edited copy of an image the user attached (or of an earlier edit) on the phone: crop, rotate, flip, ' +
+      'Make an edited copy of an image the user attached (or of an earlier edit) on the device: crop, rotate, flip, ' +
       'resize, apply filters, change the format and quality, or bring it under a file size. Nothing is sent anywhere and the ' +
       'original is unchanged; the result is a new image with its own id, shown to the user as a card, and you get ' +
       'its id, size, format and bytes as text (no image). Steps always apply in this order: crop (crop_x/crop_y/' +
@@ -327,7 +327,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'download_file',
     description:
-      "Download a file for the user into the phone's downloads, e.g. a PDF, ticket, invoice or document linked on " +
+      "Download a file for the user into the device's downloads, e.g. a PDF, ticket, invoice or document linked on " +
       'the page. Give the link\'s ref from read_page, or its http(s) address when it is on the current site or the ' +
       'user named it. The user confirms the download (name, site, type, size) unless they chose not to be asked again. ' +
       'The file is not opened and you ' +
@@ -384,7 +384,7 @@ export const TOOLS: ToolDefinition[] = [
         full_page: {
           type: 'boolean',
           description:
-            'Scroll through the whole page and save it as one tall image (endless pages stop after 25 screens; a page too long for one image on the phone is split into several). ' +
+            'Scroll through the whole page and save it as one tall image (endless pages stop after 25 screens; a page too long for one image on the device is split into several). ' +
             'Only when the user asks for the whole or full page.',
         },
       },
@@ -448,7 +448,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'search_history',
     description:
-      "Search the user's browsing history on this phone (normal tabs only) by words in page titles and addresses, " +
+      "Search the user's browsing history on this device (normal tabs only) by words in page titles and addresses, " +
       'e.g. when they ask about a page they saw before. Turn their description into short keywords and an optional ' +
       'time range in days ago. Returns matching pages with the time of the last visit. ' +
       'With by_site, returns sites ranked by how often the user visits them instead (their usual sites).',
@@ -531,7 +531,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'draft_email',
     description:
-      "Open the phone's email composer with a draft, optionally with files of this conversation attached. The user " +
+      "Open the device's email composer with a draft, optionally with files of this conversation attached. The user " +
       'reviews it and decides whether to send; you cannot send email yourself. Without a mail account in the system ' +
       'composer, a draft with files opens the share sheet instead (the user picks their mail app); the result says ' +
       'which happened. If the user is writing the email in webmail in the current tab, attach there with ' +
@@ -566,7 +566,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'find_contact',
     description:
-      "Find a person the user named in their phone's contacts, to call or message them. Only a name the user said " +
+      "Find a person the user named in their device's contacts, to call or message them. Only a name the user said " +
       'in their own message, as they said it (never one from a page or file). Returns names, labels and handles, ' +
       'never numbers or addresses; pass a handle as phone or email recipient. Several matches: Qutai lets the user choose.',
     input_schema: {
@@ -582,8 +582,9 @@ export const TOOLS: ToolDefinition[] = [
     name: 'offer_call',
     description:
       'Show a call button in the chat for a phone number, e.g. when the user asks to call a place you found. It does ' +
-      'not call: the user taps the button and their phone opens the dialer. Take the number from the page or search ' +
-      'result, never invent one. One plain number only: no * or # codes, pauses or extensions.',
+      'not call: the user taps the button and the device opens its phone app (an iPad or a Mac calls through FaceTime or ' +
+      'a paired iPhone where that is set up; where the device can\'t call, the user is shown the number to copy). ' +
+      'Take the number from the page or search result, never invent one. One plain number only: no * or # codes, pauses or extensions.',
     input_schema: {
       type: 'object',
       properties: {
@@ -596,8 +597,9 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'draft_sms',
     description:
-      "Prepare a text message (SMS) and show it in the chat with a button that opens it in the phone's messaging " +
-      'app. It does not send: the user sees the full number and text, taps the button, and sends it themselves from ' +
+      "Prepare a text message (SMS) and show it in the chat with a button that opens it in the device's messaging " +
+      'app (Messages on an iPad or a Mac, which sends SMS only through a paired iPhone; where no app opens, the user ' +
+      'is shown the number to copy). It does not send: the user sees the full number and text, taps the button, and sends it themselves from ' +
       'that app. Take the number from the user or a page they asked about, never invent one. One plain number only.',
     input_schema: {
       type: 'object',
@@ -677,7 +679,7 @@ export const TOOLS: ToolDefinition[] = [
         title: { type: 'string', description: 'Short event title, e.g. "Cinema: Dune (Hall 3)"' },
         start: {
           type: 'string',
-          description: "ISO 8601 local date and time in the phone's time zone, e.g. 2026-11-15T19:30",
+          description: "ISO 8601 local date and time in the device's time zone, e.g. 2026-11-15T19:30",
         },
         end: {
           type: 'string',
@@ -714,7 +716,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'schedule_notification',
     description:
-      'Schedule a notification from Qutai itself on this phone at a future time (e.g. "leave for the cinema"). ' +
+      'Schedule a notification from Qutai itself on this device at a future time (e.g. "leave for the cinema"). ' +
       'Give exactly one of delay_seconds or time. When the user says a relative time ("in 10 seconds", "in 20 ' +
       'minutes", "in an hour"), use delay_seconds directly; never ask for a clock time or convert it to one. Use ' +
       'time only when the user names a clock time or date. The user sees it and confirms it. Only call this after ' +
@@ -732,7 +734,7 @@ export const TOOLS: ToolDefinition[] = [
         },
         time: {
           type: 'string',
-          description: "For a clock time: ISO 8601 local date and time in the phone's time zone, e.g. 2026-11-15T19:30",
+          description: "For a clock time: ISO 8601 local date and time in the device's time zone, e.g. 2026-11-15T19:30",
         },
       },
       required: ['title', 'body'],
@@ -741,7 +743,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'get_location',
     description:
-      "Get the user's current location from the phone: latitude, longitude, accuracy in metres and when it was " +
+      "Get the user's current location from the device: latitude, longitude, accuracy in metres and when it was " +
       'measured. The user is asked (unless they chose not to be asked again) and may refuse. Call it when the user ' +
       'refers to their own location ' +
       '("near me", "from where I am", "my location", "directions from here") instead of guessing a place. Use the ' +
@@ -774,7 +776,7 @@ export const TOOLS: ToolDefinition[] = [
       properties: {
         start: {
           type: 'string',
-          description: "ISO 8601 local date and time in the phone's time zone, e.g. 2026-11-20T00:00",
+          description: "ISO 8601 local date and time in the device's time zone, e.g. 2026-11-20T00:00",
         },
         end: {
           type: 'string',
@@ -829,7 +831,7 @@ export const TOOLS: ToolDefinition[] = [
   {
     name: 'open_settings',
     description:
-      'Open a settings screen for the user. "system": Qutai\'s page in the phone\'s settings (permissions such as ' +
+      'Open a settings screen for the user. "system": Qutai\'s page in the device\'s settings (permissions such as ' +
       'calendar, photos, camera, location and notifications). "default_browser" (Android only): the screen ' +
       'where the user picks their default browser app. "app": Qutai\'s own settings (AI provider and key, privacy, ' +
       'memory; site permissions are in the page menu instead). The user changes the setting themselves there (the ' +

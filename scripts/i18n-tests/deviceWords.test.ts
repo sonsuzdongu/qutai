@@ -4,7 +4,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { DEVICE_WORDS } from '../../src/i18n/device/index.ts';
-import { DEVICE_PHRASE, deviceKindOf, fillDeviceWords, phoneForm } from '../../src/i18n/deviceWords.ts';
+import { DEVICE_PHRASE, deviceKindOf, deviceNameEn, fillDeviceWords, phoneForm } from '../../src/i18n/deviceWords.ts';
+import { deviceName, interfaceLanguageNote } from '../../src/agent/uiLabels.ts';
+import { agentProfileJson } from '../../src/credits/profile.ts';
 import { en } from '../../src/i18n/en.ts';
 import { LANGUAGES, type Language } from '../../src/i18n/languages.ts';
 import { provideDictionary, setDeviceKind, setLanguage, t, tIn } from '../../src/i18n/index.ts';
@@ -86,4 +88,33 @@ test('en: on an iPad or a Mac, no text says "phone" unless it means the telephon
       .map(([key]) => key);
     assert.deepEqual(left, [], `${device}: still says phone: ${left.join(', ')}`);
   }
+});
+
+test('the assistant is told the device, and tool results name it', () => {
+  assert.equal(deviceNameEn('phone'), 'phone');
+  assert.equal(deviceNameEn('tablet', true), 'an iPad');
+  assert.equal(deviceNameEn('mac', true), 'a Mac');
+  try {
+    setDeviceKind('mac');
+    assert.equal(deviceName(), 'Mac');
+    assert.match(interfaceLanguageNote(), /The user's device: a Mac\.$/);
+    setDeviceKind('tablet');
+    assert.match(interfaceLanguageNote(), /The user's device: an iPad\.$/);
+  } finally {
+    setDeviceKind('phone');
+  }
+  assert.match(interfaceLanguageNote(), /The user's device: a phone\.$/);
+});
+
+test('the agent profile is the same on every device and never calls the device a phone', () => {
+  const profile = agentProfileJson();
+  setDeviceKind('mac');
+  try {
+    assert.equal(agentProfileJson(), profile, 'the profile must not depend on the device (one registered profile)');
+  } finally {
+    setDeviceKind('phone');
+  }
+  // "phone" may appear only as the telephone (numbers, the phone app, account settings) or in the device rule itself.
+  const device = /\b(this|the|their|your) phone\b|phone's|phone’s|on the phone\b/i;
+  assert.equal(device.test(profile), false, profile.match(device)?.[0]);
 });

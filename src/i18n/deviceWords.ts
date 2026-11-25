@@ -42,3 +42,9 @@ export function fillDeviceWords(template: string, words: DeviceWords | undefined
 export function deviceKindOf(device: 'mac' | 'tablet' | 'android' | 'phone'): DeviceKind {
   return device === 'mac' ? 'mac' : device === 'tablet' ? 'tablet' : 'phone';
 }
+
+/** The device in English for what the assistant reads: "phone", "iPad", "Mac"; with an article: "a phone", "an iPad", "a Mac". */
+export function deviceNameEn(device: DeviceKind, article = false): string {
+  const name = device === 'mac' ? 'Mac' : device === 'tablet' ? 'iPad' : 'phone';
+  return article ? `${device === 'tablet' ? 'an' : 'a'} ${name}` : name;
+}

@@ -5,7 +5,7 @@ import { ContactHandles, looksLikeHandle, type ContactValue } from './contactHan
 import { checkQuery, CONTACT_EMAIL, matchContacts, modelLabel, saidByUser, type ContactName } from './contactMatch';
 import type { ToolContext, ToolOutput } from './executeTool';
 import { errorNotice, incognitoNotice, settingNotice } from './stepLine';
-import { uiPath } from './uiLabels';
+import { deviceName, uiPath } from './uiLabels';
 
 /**
  * find_contact, and contact handles in offer_call / draft_sms / draft_whatsapp / draft_email (docs/contacts.md). The
@@ -113,7 +113,7 @@ function stateRefusal(state: ContactsState): ToolOutput {
   if (state === 'blocked')
     return {
       content:
-        'Contacts access is turned off for Qutai in the phone\'s settings, so nothing was looked up. Ask the user for ' +
+        `Contacts access is turned off for Qutai in the ${deviceName()}'s settings, so nothing was looked up. Ask the user for ` +
         `the number or address, or tell them they can allow it in Qutai's settings, ${uiPath('settings.title', 'settings.assistant', 'settings.contactsTitle')}.`,
       isError: true,
       notice: settingNotice(t('contacts.blockedNotice')),
@@ -172,7 +172,7 @@ export async function findContactTool(input: Record<string, unknown>, ctx: ToolC
     people.push({ handle: access.handles.issue(scope, { name: m.name, values }, now), name: m.name, values });
   }
 
-  const head = `Contacts matching "${query}" (looked up on the phone; numbers and addresses are never shown to you):`;
+  const head = `Contacts matching "${query}" (looked up on the ${deviceName()}; numbers and addresses are never shown to you):`;
   const use = 'Pass a handle as phone to offer_call, draft_sms or draft_whatsapp, or in draft_email\'s to; the user sees the real number or address.';
   // The rows that fit the request: each value of the asked kind, or each person.
   const kind = channel ? kindOf(channel) : null;

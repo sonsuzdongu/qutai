@@ -835,6 +835,7 @@ Moved to Details (ids retired, not reused): `VOICE-10`, `VOICE-12`, `VOICE-16`, 
 | `LANG-3` | Settings › Language uses the system's per-app language on Android 13+ (both ways), Qutai's own stored… | Default |  |
 | `LANG-24` | iOS: Settings › Language lists the languages and switches at once, writing the same per-app value as iOS Settings; iOS's own texts follow next launch. | Owner | 2026-11-24 |
 | `LANG-25` | Texts follow the device: "this phone" on phones and Android, "this iPad" on an iPad, "this Mac" on a Mac, via `{@phrase}` marks and per-language tables | Owner | 2026-11-25 |
+| `LANG-26` | The assistant names the device: the per-message note says phone / iPad / Mac and tool results use it; the agent profile says "device" (one profile for all) | Owner | 2026-11-25 |
 | `LANG-5` | Turkish interface text addresses the user as "siz", including the setup questions, legal texts, iOS… | Owner | 2026-11-16 |
 | `LANG-6` | Exceptions to "siz": texts the user sends to the assistant (suggestion prompts, custom-instruction… | Default |  |
 | `LANG-22` | Turkish suffixes on "Qutai" follow its pronunciation "Kutay": Qutai'ın, Qutai'ı, Qutai'a, Qutai'da, Qutai'dan (no buffer consonant, back… | Owner | 2026-11-20 |

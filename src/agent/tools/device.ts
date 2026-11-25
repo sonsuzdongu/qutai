@@ -6,7 +6,7 @@ import { kindForSchedule } from '../alwaysAllow';
 import { t } from '../../i18n';
 import { ensureLocationPermission, LocationUnavailableError, readPosition } from '../../device/location';
 import { openSystemSettings, PermissionDeniedError } from '../../device/settings';
-import { uiLabel, uiPath } from '../uiLabels';
+import { deviceName, uiLabel, uiPath } from '../uiLabels';
 import { declinedNotice, incognitoNotice } from '../stepLine';
 import { siteKey } from '../sitePolicy';
 import { describeCalendarRead, describePlan, formatCalendarRead, localIso, planCalendarRead, planSchedule, SchedulingTool } from '../scheduling';
@@ -41,21 +41,21 @@ export async function openSettingsTool(input: Record<string, unknown>, ctx: Tool
     return { content: 'target must be "system", "default_browser" or "app".', isError: true };
   // INTRO-32: without Apple's web-browser entitlement the phone's Default Browser App list doesn't offer Qutai.
   if (target === 'default_browser' && Platform.OS === 'ios')
-    return { content: "Qutai can't be chosen as the default browser on iPhone and iPad yet. Tell the user that plainly; don't send them to the phone's settings for it.", isError: true };
+    return { content: `Qutai can't be chosen as the default browser on iPhone, iPad or Mac yet. Tell the user that plainly; don't send them to the ${deviceName()}'s settings for it.`, isError: true };
   try {
     if (target === 'default_browser') await openDefaultBrowserSettings();
     else await openSystemSettings();
   } catch (e) {
     return {
       content:
-        `The phone refused to open its settings (${e instanceof Error ? e.message : String(e)}). ` +
-        "Tell the user where to find it themselves: Qutai's page in the phone's settings app, under its apps.",
+        `The ${deviceName()} refused to open its settings (${e instanceof Error ? e.message : String(e)}). ` +
+        `Tell the user where to find it themselves: Qutai's page in the ${deviceName()}'s settings app, under its apps.`,
       isError: true,
     };
   }
   return {
     content:
-      "Opened the phone's settings; the user has left Qutai to change the setting there. Don't call more tools now: " +
+      `Opened the ${deviceName()}'s settings; the user has left Qutai to change the setting there. Don't call more tools now: ` +
       'tell them in one short sentence what to change, and wait for them to say they are done.',
     isError: false,
   };
@@ -214,7 +214,7 @@ export async function locationTool(input: Record<string, unknown>, ctx: ToolCont
       return {
         content:
           'Permission denied: the user has not allowed Qutai to use their location. Offer them (with ask_user) to ' +
-          "open Qutai's page in the phone's settings with open_settings (target system), where they can allow it, " +
+          `open Qutai's page in the ${deviceName()}'s settings with open_settings (target system), where they can allow it, ` +
           'or ask them for a starting point. Do not call get_location again unless they say they allowed it.',
         isError: true,
       };
@@ -222,7 +222,7 @@ export async function locationTool(input: Record<string, unknown>, ctx: ToolCont
     if (e instanceof LocationUnavailableError && e.reason === 'servicesOff') {
       return {
         content:
-          "Location services are turned off on the phone. Tell the user to turn on location in the phone's " +
+          `Location services are turned off on the ${deviceName()}. Tell the user to turn on location in the ${deviceName()}'s ` +
           'settings, or ask them for a starting point.',
         isError: true,
       };

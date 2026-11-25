@@ -11,7 +11,7 @@ import {
 import { modelFile, saveImageFileToPhotos } from '../device/attachments';
 import { editImage, ImageEditError, UploadableImage, uploadableImage } from '../device/imageEdit';
 import { PermissionDeniedError } from '../device/settings';
-import { uiLabel } from './uiLabels';
+import { deviceName, uiLabel } from './uiLabels';
 import { t } from '../i18n';
 import type { ToolContext, ToolOutput } from './executeTool';
 import { declinedNotice, settingNotice } from './stepLine';
@@ -150,7 +150,7 @@ async function photosFallback(
       return {
         content:
           `${why} Saving to the photo library was refused: the user has not allowed Qutai to add photos. Offer them ` +
-          "(with ask_user) to open Qutai's page in the phone's settings with open_settings, or to use the " +
+          `(with ask_user) to open Qutai's page in the ${deviceName()}'s settings with open_settings, or to use the ` +
           `${uiLabel('chat.imageSave')} button on the image's card.`,
         isError: true,
       };

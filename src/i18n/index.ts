@@ -159,6 +159,11 @@ export function setDeviceKind(kind: DeviceKind) {
   device = kind;
 }
 
+/** The device the wording follows; also named to the assistant (src/agent/uiLabels.ts). */
+export function getDeviceKind(): DeviceKind {
+  return device;
+}
+
 /** A key's string in a language (English when it has none), with its device phrases filled in for this device. */
 function template(language: Language, key: MessageKey): string {
   const own = dictionary(language)[key];
