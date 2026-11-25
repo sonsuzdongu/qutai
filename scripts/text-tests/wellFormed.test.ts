@@ -14,6 +14,7 @@ import type { ModelRequest, Turn } from '../../src/ai/types.ts';
 import { directWire } from '../../src/ai/wire.ts';
 import { cleanCustomInstructions } from '../../src/agent/systemPrompt.ts';
 import { PAGE_SCRIPT } from '../../src/browser/pageScript.ts';
+import { pageScriptPart } from '../test-support/pageScriptPart.mjs';
 import { MAX_SELECTION_CHARS, parseSelection, SELECTION_SCRIPT } from '../../src/browser/selection.ts';
 import { createCreditsProvider } from '../../src/credits/provider.ts';
 import { formatPdfText } from '../../src/pdf/format.ts';
@@ -166,10 +167,8 @@ test('wellFormedJson is cheap on a large well-formed conversation (one regex tes
 
 /** The page script's text helpers, evaluated as the WebView would. */
 function pageHelpers(): { wf(s: unknown): string; cut(s: unknown, n: number): string; clean(s: unknown): string; pairBoundary(s: string, n: number): number } {
-  const start = PAGE_SCRIPT.indexOf('  var PAIR_OR_LONE');
-  const end = PAGE_SCRIPT.indexOf('  function getRef(');
-  assert.ok(start > 0 && end > start, 'helpers found in the page script');
-  return new Function(`${PAGE_SCRIPT.slice(start, end)}; return { wf: wf, cut: cut, clean: clean, pairBoundary: pairBoundary };`)();
+  const helpers = pageScriptPart(PAGE_SCRIPT, '  var PAIR_OR_LONE', '  function getRef(');
+  return new Function(`${helpers}; return { wf: wf, cut: cut, clean: clean, pairBoundary: pairBoundary };`)();
 }
 
 test('page script: cut, clean and wf behave like the app’s helper (labels, values, read-aloud text)', () => {
@@ -184,17 +183,15 @@ test('page script: cut, clean and wf behave like the app’s helper (labels, val
 });
 
 test('page script: readSource pages on pair boundaries, the pieces join to the whole source', () => {
-  const start = PAGE_SCRIPT.indexOf('  function readSource(');
-  const end = PAGE_SCRIPT.indexOf('  function fireMouse(');
-  const helpersStart = PAGE_SCRIPT.indexOf('  var PAIR_OR_LONE');
-  const helpersEnd = PAGE_SCRIPT.indexOf('  function getRef(');
+  const source = pageScriptPart(PAGE_SCRIPT, '  function readSource(', '  function fireMouse(');
+  const helpers = pageScriptPart(PAGE_SCRIPT, '  var PAIR_OR_LONE', '  function getRef(');
   // 20 000 units per page: put an emoji across the first boundary.
   const html = `<html><body>${'a'.repeat(20000 - '<html><body>'.length - 1)}🩴${'b'.repeat(30)}</body></html>`;
   const document = { doctype: null, documentElement: { outerHTML: html }, title: 'T' };
   const readSource = new Function(
     'document',
     'location',
-    `var MAX_CHARS = 20000;\n${PAGE_SCRIPT.slice(helpersStart, helpersEnd)}\n${PAGE_SCRIPT.slice(start, end)}\nreturn readSource;`,
+    `var MAX_CHARS = 20000;\n${helpers}\n${source}\nreturn readSource;`,
   )(document, { href: 'https://example.test/' });
   const first = readSource(0);
   assert.equal(first.truncated, true);

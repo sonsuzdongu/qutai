@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { PAGE_SCRIPT } from '../../src/browser/pageScript.ts';
+import { pageScriptPart } from '../test-support/pageScriptPart.mjs';
 import { isSecretKind, secretFieldText } from '../../src/agent/outwardApproval.ts';
 
 type Facts = {
@@ -16,9 +17,8 @@ type Facts = {
   textSecurity?: boolean;
   digitBoxes?: number;
 };
-const start = PAGE_SCRIPT.indexOf('  var SECRET_PASSWORD');
-const end = PAGE_SCRIPT.indexOf('  // ---------- end of secretKind');
-const secretKind = new Function(`${PAGE_SCRIPT.slice(start, end)}; return secretKind;`)() as (f: Facts) => string | null;
+const secretKindSource = pageScriptPart(PAGE_SCRIPT, '  var SECRET_PASSWORD', '  // ---------- end of secretKind');
+const secretKind = new Function(`${secretKindSource}; return secretKind;`)() as (f: Facts) => string | null;
 const k = (f: Facts) => secretKind({ type: 'text', autocomplete: '', inputMode: '', hints: '', maxLength: null, pattern: '', textSecurity: false, digitBoxes: 0, ...f });
 
 test('passwords: type, autocomplete, masking style, words in ten languages, custom elements', () => {
