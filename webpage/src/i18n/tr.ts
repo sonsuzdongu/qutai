@@ -7,10 +7,10 @@ import type { Messages } from './en';
 export const tr: Messages = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai, iPhone, iPad, Apple silicon işlemcili Mac ve Android için açık kaynak bir tarayıcı; içindeki yapay zekâ asistanı, istediğinizde sayfayı okur ve sizin için kullanır. Qutai Kredileriyle ya da kendi AI anahtarınızla çalışır, verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Google Play’de; App Store’da beta testinde.',
+    'Qutai, telefonunuzun tarayıcısındaki yapay zekâ asistanı: iPhone, iPad, Apple silicon işlemcili Mac ve Android için açık kaynak bir tarayıcı. Asistanı sizi tanır ve sayfadaki işi sizin yerinize yapar: form doldurur, alışverişinizi ve rezervasyonlarınızı halleder, araştırır. Qutai Kredileriyle ya da kendi AI anahtarınızla çalışır; verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Google Play’de; App Store’da beta testinde.',
   'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: Qutai, Agentic Browser.',
   'meta.appDescription':
-    'iPhone, iPad, Apple silicon işlemcili Mac ve Android için açık kaynak, yapay zekâ asistanlı bir tarayıcı: asistan, istediğinizde web sayfasını okur ve Qutai Kredileriyle ya da kendi AI anahtarınızla sizin için kullanır.',
+    'iPhone, iPad, Apple silicon işlemcili Mac ve Android için açık kaynak, yapay zekâ asistanlı bir tarayıcı: asistan sizi tanır; form doldurur, alışverişinizi ve rezervasyonlarınızı halleder, sizin için araştırır. Qutai Kredileriyle ya da kendi AI anahtarınızla çalışır.',
 
   'nav.skip': 'İçeriğe geç',
   'nav.label': 'Bölümler',
@@ -34,21 +34,21 @@ export const tr: Messages = {
   'hero.eyebrow': 'Yapay zekâ odaklı tarayıcı',
   'hero.title': 'Yapay zekâyla, yapay zekâ için yapıldı.',
   'hero.tagline': 'Telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız.',
-  'hero.lede': 'Qutai, istediğinizde sayfayı okuyup sizin için kullanan bir asistanla gelen iPhone, iPad, Apple silicon işlemcili Mac ve Android tarayıcısı.',
+  'hero.lede': 'Qutai; iPhone, iPad, Apple silicon işlemcili Mac ve Android için bir tarayıcı. Asistanı sizi tanır ve sayfadaki işi sizin yerinize yapar: form, alışveriş, rezervasyon, araştırma.',
   'hero.github': 'GitHub’da inceleyin',
   'hero.play': 'Google Play’den indirin',
   'hero.beta': 'iPhone, iPad ve Mac betası',
   'hero.status': 'Google Play’de yayında. iPhone, iPad ve Mac için App Store’da beta testinde.',
 
-  'hero.chip1': 'Sekmeleri okur',
-  'hero.chip2': 'Sizi hatırlar',
-  'hero.chip3': 'Önce sorar',
+  'hero.chip1': 'Sizi tanır',
+  'hero.chip2': 'Formları doldurur',
+  'hero.chip3': 'Sizin için araştırır',
   'hero.chip4':
-    'Qutai Kredileri ya da kendi anahtarınız',
+    'Önce sorar',
 
   'statement.kicker': 'Qutai hakkında',
   'statement.text':
-    'Qutai, merkezinde bir asistan olan bir tarayıcı. İstediğinizde sayfayı okur, sekmelerinizi karşılaştırır, form doldurur, rezervasyon yapar, araştırır. Ona anlattıklarınızı telefonunuzda hatırlar; önemli bir adımdan önce durup size sorar.',
+    'Qutai, merkezinde bir asistan olan bir tarayıcı. Sizi tanır; anlattıklarınızı telefonunuzda saklar. Formları sizin bilgilerinizle doldurur, alışverişinizi ve rezervasyonlarınızı halleder, web’de araştırıp bulduklarını derler; hepsini sekmelerinizin içinde yapar. Önemli bir adımdan önce de durup size sorar.',
 
   'art.placeholder': 'Minyatür hazırlanıyor',
   'art.hero.alt': 'Osmanlı minyatürü: renkli kaftanlı robot kâtipler bir saray kütüphanesinde tabletlerde web sayfaları okuyor; pencereden Haliç ve Galata Kulesi görünüyor.',
@@ -58,7 +58,7 @@ export const tr: Messages = {
   'art.research.alt': 'Osmanlı minyatürü: gece, açık kitaplar, gök küresi ve usturlap arasında bir robot âlim rapor yazıyor.',
   'art.memory.alt': 'Osmanlı minyatürü: robot diz çöküp hatıraları sedefli bir sandığa yerleştiriyor; sahibi sedirden izliyor.',
 
-  'agent.compare.kicker': 'Oku, karşılaştır, karar ver',
+  'agent.forms.kicker': 'Sizi tanır, formu doldurur',
   'agent.checkout.kicker': 'Sepet, bilgiler, ödeme',
   'agent.booking.kicker': 'Ayırt, yaz, hatırlat',
   'agent.research.kicker': 'Ara, oku, kaynak göster',
@@ -75,7 +75,7 @@ export const tr: Messages = {
   'start.step3.body': 'Adres çubuğundaki Q’ya dokunup ne istediğinizi kendi sözlerinizle söyleyin.',
 
   'mock.label':
-    'Qutai uygulamasının bir çizimi: asistan paneli açık bir mağaza sayfası. Kullanıcı Qutai’dan bu ayakkabıyı diğer sekmedekiyle karşılaştırıp ucuz olanı sepete eklemesini istiyor. Qutai iki sekmeyi okuyup yanıt veriyor; bir pencere Sepete ekle tıklaması için kullanıcıdan izin istiyor.',
+    'Qutai uygulamasının bir çizimi: asistan paneli açık bir mağaza sayfası. Kullanıcı Qutai’dan ayakkabıyı 42 numara sepete eklemesini ve teslimat bilgilerini doldurmasını istiyor. Qutai sayfayı okuyup numarayı seçiyor ve yanıt veriyor; bir pencere Sepete ekle dokunuşu için kullanıcıdan izin istiyor.',
   'mock.caption': 'Çizim; uygulamanın arayüzünden ve metinlerinden sadeleştirildi.',
   'mock.url': 'magaza.example/trail-runner',
   'mock.pageKicker': 'Koşu',
@@ -84,10 +84,10 @@ export const tr: Messages = {
   'mock.pageButton': 'Sepete ekle',
   'mock.panelTitle': 'Qutai',
   'mock.model': 'Claude · bu sohbet',
-  'mock.user': 'Bunu diğer sekmedeki ayakkabıyla karşılaştır, ucuz olanı 42 numara sepete ekle.',
-  'mock.actionReadTab': '“Ridge Runner 2” sekmesi okunuyor',
+  'mock.user': 'Bunu 42 numara sepete ekle, teslimat bilgilerimi de doldur.',
+  'mock.actionSelect': 'Numara seçiliyor: 42',
   'mock.actionReadPage': 'Sayfa okunuyor',
-  'mock.answer': 'Bu 450 TL daha ucuz; tabanı ve topuk farkı aynı. 42 numarayı sepetine ekliyorum.',
+  'mock.answer': '42 numara stokta. Sepetinize ekliyorum; ardından adresinizi hafızadan dolduracağım.',
   'mock.confirmTitle': 'Qutai bu işlemi yapmak istiyor',
   'mock.confirmBody': '“Sepete ekle” dokunuluyor',
   'mock.confirmAlways': 'magaza.example için hep izin ver',
@@ -96,9 +96,9 @@ export const tr: Messages = {
   'mock.placeholder': 'Bir görev verin…',
 
   'agent.kicker': 'Asistan',
-  'agent.title': 'Sıkıcı kısmı ona bırakın.',
+  'agent.title': 'Adımları değil, işi verin.',
   'agent.lede':
-    'Qutai’ın asistanı siz isteyince sekmelerinizde çalışır: sayfayı okur, dokunur, yazar, gerektiğinde yeni sekme açıp karşılaştırır. Ne yaptığını adım adım görürsünüz; üzerinde çalıştığı sayfa hafifçe parlar, istediğiniz an durdurabilirsiniz. İş bitince adımlar tek satıra toplanır. Ona anlattıklarınızı da hatırlar; zamanla daha az anlatmanız gerekir.',
+    'Qutai’ın asistanı siz isteyince sekmelerinizde çalışır: sayfayı okur, dokunur, yazar, gerektiğinde yeni sekme açar. Ne yaptığını adım adım görürsünüz; üzerinde çalıştığı sayfa hafifçe parlar, istediğiniz an durdurabilirsiniz. İş bitince adımlar tek satıra toplanır. Ona anlattıklarınızı da hatırlar; zamanla daha az anlatmanız gerekir.',
   'agent.memory.kicker': 'Hafıza, telefonunuzda',
   'agent.memory.title': 'Sizi tanır, öğrendiklerini telefonunuzda saklar.',
   'agent.memory.body':
@@ -111,17 +111,16 @@ export const tr: Messages = {
     'Yalnızca isteklerinizle birlikte, seçtiğiniz AI sağlayıcısına gider (Qutai Kredileriyle Qutai sunucusu üzerinden) ve “Yapay zekâya gönderilenler” listesinde görünür. Kimlik numaraları ve kilitlediğiniz bilgiler yalnızca etiket olarak gider',
   'agent.memory.point4':
     'Şifre, kart numarası ve tek kullanımlık kodları asla saklamaz; bilgilerinizi bir siteye girmeden önce o site için izninizi ister',
-  'agent.compare.title': 'Ürünleri sekmeler arasında karşılaştırır',
-  'agent.compare.body':
-    'İki üç ürün sayfası açıp hangisinin size uygun olduğunu sorun. Qutai sekme değiştirmeden hepsini okur; fiyatı, teslimat süresini ve özellikleri not eder, bir tabloyla yanıt verir. İsterseniz tabloyu CSV dosyası olarak da alırsınız.',
-  'agent.compare.step1': '“Trail Runner 4” sekmesi okunuyor',
-  'agent.compare.step2': '“Ridge Runner 2” sekmesi okunuyor',
-  'agent.compare.step3': 'Fiyat, teslimat, garanti yan yana',
+  'agent.forms.title': 'Formları sizin bilgilerinizle doldurur',
+  'agent.forms.body':
+    'Üyelik, başvuru, teslimat ya da iletişim formu fark etmez: Qutai formu okur, ona anlattıklarınızla doldurabildiği her alanı doldurur. Bilgilerinizi bir sitede ilk kez kullanmadan önce size sorar. Şifre, kart numarası ve tek kullanımlık kodları asla yazmaz; onlar sizde kalır.',
+  'agent.forms.step1': 'Kişisel bilgileriniz basvuru.example sitesine girilsin mi?',
+  'agent.forms.step2': '[12] alanına yazdı',
   'agent.checkout.title': 'Sizin için alışveriş yapar',
   'agent.checkout.body':
-    'İstediklerinizi sepete ekler; adınızı, adresinizi ve kaydettiğiniz teslimat notunu girer. Hafızadaki bilgilerinizi o sitede kullanmadan önce size sorar. Ödemeyi kimin yapacağına siz karar verirsiniz: son düğmeye kendiniz basarsınız ya da Ayarlar’da “Asistan ödemeleri tamamlasın”ı açarsınız; o zaman her ödeme, siteyi, sayfadaki tutarı, siparişi ve ödeme yöntemini gösteren Qutai penceresinde onayınızı bekler. Kart numarası, güvenlik kodu, şifre ve tek kullanımlık kod asla yazılmaz; bankanın doğrulaması (3-D Secure) sizde kalır.',
-  'agent.checkout.step1': 'Kişisel bilgileriniz magaza.example sitesine girilsin mi?',
-  'agent.checkout.step2': '[12] alanına yazdı',
+    'Ne aradığınızı söyleyin. Ürünü bulur, numaranızı seçer, sepete ekler; adınızı, adresinizi ve kaydettiğiniz teslimat notunu girer. Hafızadaki bilgilerinizi o sitede kullanmadan önce size sorar. Ödemeyi kimin yapacağına siz karar verirsiniz: son düğmeye kendiniz basarsınız ya da Ayarlar’da “Asistan ödemeleri tamamlasın”ı açarsınız; o zaman her ödeme, siteyi, sayfadaki tutarı, siparişi ve ödeme yöntemini gösteren Qutai penceresinde onayınızı bekler. Kart numarası, güvenlik kodu, şifre ve tek kullanımlık kod asla yazılmaz; bankanın doğrulaması (3-D Secure) sizde kalır.',
+  'agent.checkout.step1': 'Numara seçiliyor: 42',
+  'agent.checkout.step2': '“Sepete ekle” dokunuluyor',
   'agent.checkout.step3': 'magaza.example sitesinde 2.490 TL ödensin mi?',
   'agent.booking.title': 'Rezervasyonu yapar, takviminize ekler',
   'agent.booking.body':
@@ -130,9 +129,9 @@ export const tr: Messages = {
   'agent.booking.callName': 'Kebap Evi',
   'agent.booking.callNumber': '+90 212 555 01 23',
   'agent.booking.call': 'Ara',
-  'agent.research.title': 'Kaynaklı araştırma',
+  'agent.research.title': 'Sizin için araştırır, kaynak gösterir',
   'agent.research.body':
-    'Derin araştırma birçok sayfayı ve PDF’i bulup okur, not alır ve kaynakları altında listelenen bir rapor yazar. Raporu PDF olarak paylaşabilirsiniz. Birkaç dakika sürer; kısa bir sorudan daha çok kredi ya da API ücreti harcar.',
+    'Gerçek bir soru sorun, gerisini derin araştırma halleder: web’de arar, sayfa sayfa okur, not alır ve kaynaklarını altında listeleyen bir rapor yazar. Birkaç dakika sürer; kısa bir sorudan daha çok kredi ya da API ücreti harcar.',
   'agent.research.step1': 'Arandı: İstanbul’da elektrikli bisiklet kuralları',
   'agent.research.step2': 'Sayfa okunuyor',
   'agent.research.step3': 'Kaynaklar',

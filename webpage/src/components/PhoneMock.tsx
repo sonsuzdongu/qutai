@@ -47,12 +47,12 @@ export function PhoneMock() {
             <div className="ph-msgs">
               <p className="ph-user">{t('mock.user')}</p>
               <p className="ph-action">
-                <Icon name="tabs" size={12} />
-                {t('mock.actionReadTab')}
-              </p>
-              <p className="ph-action">
                 <Icon name="reader" size={12} />
                 {t('mock.actionReadPage')}
+              </p>
+              <p className="ph-action">
+                <Icon name="list" size={12} />
+                {t('mock.actionSelect')}
               </p>
               <p className="ph-answer">{t('mock.answer')}</p>
             </div>

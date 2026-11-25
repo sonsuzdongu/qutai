@@ -66,10 +66,10 @@ export function Header({ page }: { page?: string } = {}) {
 export function Hero() {
   const { t, lang } = useI18n();
   const points: { key: MessageKey; icon: IconName }[] = [
-    { key: 'hero.chip1', icon: 'tabs' },
-    { key: 'hero.chip2', icon: 'bookmark' },
-    { key: 'hero.chip3', icon: 'hand' },
-    { key: 'hero.chip4', icon: 'key' },
+    { key: 'hero.chip1', icon: 'bookmark' },
+    { key: 'hero.chip2', icon: 'list' },
+    { key: 'hero.chip3', icon: 'research' },
+    { key: 'hero.chip4', icon: 'hand' },
   ];
   return (
     <section className="hero" aria-labelledby="hero-title">
@@ -172,7 +172,7 @@ function Trail({ steps }: { steps: Step[] }) {
 }
 
 type Scenario = {
-  id: 'compare' | 'checkout' | 'booking' | 'research';
+  id: 'forms' | 'checkout' | 'booking' | 'research';
   art: ArtName;
   steps: Step[];
   call?: boolean;
@@ -180,20 +180,19 @@ type Scenario = {
 
 const SCENARIOS: Scenario[] = [
   {
-    id: 'compare',
-    art: 'compare',
+    id: 'forms',
+    art: 'checkout',
     steps: [
-      { icon: 'tabs', text: 'agent.compare.step1' },
-      { icon: 'tabs', text: 'agent.compare.step2' },
-      { icon: 'list', text: 'agent.compare.step3' },
+      { icon: 'hand', text: 'agent.forms.step1', tone: 'ask' },
+      { icon: 'code', text: 'agent.forms.step2' },
     ],
   },
   {
     id: 'checkout',
-    art: 'checkout',
+    art: 'compare',
     steps: [
-      { icon: 'hand', text: 'agent.checkout.step1', tone: 'ask' },
-      { icon: 'code', text: 'agent.checkout.step2' },
+      { icon: 'list', text: 'agent.checkout.step1' },
+      { icon: 'cart', text: 'agent.checkout.step2' },
       { icon: 'cart', text: 'agent.checkout.step3', tone: 'ask' },
     ],
   },

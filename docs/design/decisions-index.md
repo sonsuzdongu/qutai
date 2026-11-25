@@ -1378,6 +1378,7 @@ Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`
 | `WEB-13` | The site has an account deletion page (`/en/delete-account/`, `/tr/delete-account/`, and `/delete-account`… | Owner | 2026-11-21 |
 | `WEB-14` | The site has a terms-of-use page (`/en/terms/`, `/tr/terms/`, `/terms` redirects) with the pro build's terms… | Owner | 2026-11-21 |
 | `WEB-15` | The site has a pricing page (`/en/pricing/`, `/tr/pricing/`, `/pricing` redirects): own key free, Qutai Credits packs 100 / 550 / 1,200 for $1 / $5 / $10… | Owner | 2026-11-26 |
+| `WEB-16` | The home page leads with the agent (knows you, fills in forms, shops, books, researches); tab comparison and PDFs are not headline features… | Owner | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 

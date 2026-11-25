@@ -19,6 +19,7 @@ Last updated: 2026-11-26
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-26:** Website home page leads with the agent: knows you, fills in forms, shops, books, researches; tab comparison and PDFs leave the headline (`WEB-16`; owner).
 - **2026-11-26:** Website: a pricing page (`/en/pricing/`, `/tr/pricing/`): your own key is free; Qutai Credits come in packs of 100 credits for $1, 550 for $5 and 1,200 for $10 (`WEB-15`, `BUY-25`; owner).
 - **2026-11-26:** Mac and iPad keyboard: ⌘E opens and closes the assistant panel (`UI-89`, `UI-76`; owner).
 - **2026-11-26:** Mac and iPad keyboard: ↑/↓, Return and Esc in the address bar's suggestions (`UI-88`; owner).

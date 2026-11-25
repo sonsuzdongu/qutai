@@ -6,10 +6,10 @@
 export const en = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai is the AI assistant in your phone’s browser: an open-source browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant reads the page when you ask and uses it for you, with Qutai Credits or your own AI key; keeps your data on your phone and asks before sensitive actions. On Google Play; in beta testing on the App Store.',
+    'Qutai is the AI assistant in your phone’s browser: an open-source browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant gets to know you and does the work on the page for you: it fills in forms, shops, books and researches, with Qutai Credits or your own AI key. Your data stays on your phone, and it asks before sensitive actions. On Google Play; in beta testing on the App Store.',
   'meta.ogAlt': 'The Qutai logo, a blue Q, next to the words: Qutai, Agentic Browser.',
   'meta.appDescription':
-    'An open-source AI browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant reads a web page when you ask and uses it for you, with Qutai Credits or your own AI provider key.',
+    'An open-source AI browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant gets to know you and fills in forms, shops, books and researches for you, with Qutai Credits or your own AI provider key.',
 
   'nav.skip': 'Skip to content',
   'nav.label': 'Sections',
@@ -34,21 +34,21 @@ export const en = {
   'hero.title': 'Built with AI. Built for AI.',
   'hero.tagline': 'The AI assistant in your phone’s browser.',
   'hero.lede':
-    'Qutai is a browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant reads the page when you ask, and uses it for you.',
+    'Qutai is a browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant gets to know you and does the work on the page for you: forms, shopping, bookings and research.',
   'hero.github': 'View on GitHub',
   'hero.play': 'Get it on Google Play',
   'hero.beta': 'iPhone, iPad and Mac beta',
   'hero.status': 'Out now on Google Play. In beta testing on the App Store for iPhone, iPad and Mac.',
 
-  'hero.chip1': 'Reads your tabs',
-  'hero.chip2': 'Remembers you',
-  'hero.chip3': 'Asks first',
+  'hero.chip1': 'Gets to know you',
+  'hero.chip2': 'Fills in forms',
+  'hero.chip3': 'Researches for you',
   'hero.chip4':
-    'Qutai Credits or your own key',
+    'Asks first',
 
   'statement.kicker': 'About Qutai',
   'statement.text':
-    'Qutai is a browser with an assistant at its core. When you ask, it reads the page, compares your tabs, fills in forms, books and researches, remembers what you tell it on your phone, and stops to ask before anything that matters.',
+    'Qutai is a browser with an assistant at its core. It gets to know you, and keeps what you tell it on your phone. It fills in forms with your details, shops and books for you, and researches the web and writes up what it finds, all right in your tabs. Before anything that matters, it stops and asks.',
 
   'art.placeholder': 'Miniature in preparation',
   'art.hero.alt': 'Ottoman miniature: robot scribes in colourful kaftans read web pages on tablets in a palace library, with the Golden Horn and Galata Tower through the window.',
@@ -58,7 +58,7 @@ export const en = {
   'art.research.alt': 'Ottoman miniature: at night, a robot scholar writes a report among open books, a celestial globe and an astrolabe.',
   'art.memory.alt': 'Ottoman miniature: a robot kneels and sorts keepsakes into an inlaid chest while its owner watches from the sofa.',
 
-  'agent.compare.kicker': 'Read, compare, decide',
+  'agent.forms.kicker': 'Knows you, fills it in',
   'agent.checkout.kicker': 'Cart, details, payment',
   'agent.booking.kicker': 'Book, note, remind',
   'agent.research.kicker': 'Search, read, cite',
@@ -75,7 +75,7 @@ export const en = {
   'start.step3.body': 'Tap the Q in the address bar and say what you need, in your own words.',
 
   'mock.label':
-    'Illustration of the Qutai app: a shop page with the assistant panel open. The user asks Qutai to compare the shoe with the one in another tab and add the cheaper one to the cart. Qutai reads both tabs, answers, and a dialog asks the user to allow the click on Add to cart.',
+    'Illustration of the Qutai app: a shop page with the assistant panel open. The user asks Qutai to add the shoe to the cart in size 42 and fill in the delivery details. Qutai reads the page, selects the size and answers, and a dialog asks the user to allow the tap on Add to cart.',
   'mock.caption': 'Illustration, simplified from the app’s interface and strings.',
   'mock.url': 'shop.example/trail-runner',
   'mock.pageKicker': 'Running',
@@ -84,10 +84,10 @@ export const en = {
   'mock.pageButton': 'Add to cart',
   'mock.panelTitle': 'Qutai', // app: chat.title
   'mock.model': 'Claude · this chat', // app: chat.modelThisChat
-  'mock.user': 'Compare this with the shoe in my other tab and add the cheaper one to my cart, size 42.',
-  'mock.actionReadTab': 'Reading tab “Ridge Runner 2”', // app: action.readTab
+  'mock.user': 'Add this to my cart in size 42 and fill in my delivery details.',
+  'mock.actionSelect': 'Selecting in Size: 42', // app: action.select
   'mock.actionReadPage': 'Reading the page', // app: action.readPage
-  'mock.answer': 'This one is €12 cheaper with the same sole and drop. Adding size 42 to your cart.',
+  'mock.answer': 'Size 42 is in stock. Adding it to your cart, then I’ll fill in your address from memory.',
   'mock.confirmTitle': 'Qutai wants to do this', // app: confirm.title
   'mock.confirmBody': 'Tapping “Add to cart”', // app: action.click
   'mock.confirmAlways': 'Always allow on shop.example', // app: confirm.always
@@ -96,9 +96,9 @@ export const en = {
   'mock.placeholder': 'Give a task…', // app: chat.placeholder
 
   'agent.kicker': 'The assistant',
-  'agent.title': 'Hand it the tedious part.',
+  'agent.title': 'Give it the task, not the steps.',
   'agent.lede':
-    'Qutai’s assistant works in your tabs when you ask: it reads the page, taps, types, opens and compares tabs, step by step. Every step is shown as it happens, the page it works on glows softly, and you can stop it at any time; when it is done, the steps fold into one line. And it remembers what you tell it, so each task needs less explaining than the last.',
+    'Qutai’s assistant works in your tabs when you ask: it reads the page, taps, types, opens new tabs, step by step. Every step is shown as it happens, the page it works on glows softly, and you can stop it at any time; when it is done, the steps fold into one line. And it remembers what you tell it, so each task needs less explaining than the last.',
   'agent.memory.kicker': 'Memory, on your phone',
   'agent.memory.title': 'It gets to know you, and keeps it on your phone.',
   'agent.memory.body':
@@ -107,17 +107,16 @@ export const en = {
   'agent.memory.point2': 'Stored on the phone; yours to see, edit and delete in Settings, and included in your encrypted backup',
   'agent.memory.point3': 'Sent only with your requests, to the AI provider you chose (through Qutai’s server with Qutai Credits), and listed in “What was sent to the AI”; ID numbers and memories you lock go only as a label',
   'agent.memory.point4': 'Never passwords, card numbers or one-time codes; it asks per site before entering your details',
-  'agent.compare.title': 'Compare products across tabs',
-  'agent.compare.body':
-    'Open two or three product pages and ask which one fits. Qutai reads each tab without switching away, notes prices, delivery times and specs, and answers with a table it can also hand you as a CSV file.',
-  'agent.compare.step1': 'Reading tab “Trail Runner 4”',
-  'agent.compare.step2': 'Reading tab “Ridge Runner 2”',
-  'agent.compare.step3': 'Price, delivery, warranty side by side',
+  'agent.forms.title': 'Fills in forms with what it knows about you',
+  'agent.forms.body':
+    'Sign-ups, applications, delivery or contact details: Qutai reads the form and fills every field it can from what you have told it, and asks before it uses your details on a site for the first time. Passwords, card numbers and one-time codes are never typed; those stay with you.',
+  'agent.forms.step1': 'Enter your personal information on apply.example?', // app: personal.title
+  'agent.forms.step2': 'Typed into [12]', // app: action.typeRedacted
   'agent.checkout.title': 'Shops for you, all the way to checkout',
   'agent.checkout.body':
-    'It puts what you want in the cart and enters your name, address and the delivery note you saved, after asking whether it may use your remembered details on that site. Then you choose who pays: press the last button yourself, or turn on “Let the assistant complete payments” in Settings and approve each payment in Qutai’s own window, which shows the site, the total on the page, the order and the payment method. Card numbers, security codes, passwords and one-time codes are never typed, and your bank’s check (3-D Secure) stays with you.',
-  'agent.checkout.step1': 'Enter your personal information on shop.example?', // app: personal.title
-  'agent.checkout.step2': 'Typed into [12]', // app: action.typeRedacted
+    'Tell it what you are after. It finds the product, picks your size, puts it in the cart and enters your name, address and the delivery note you saved, after asking whether it may use your remembered details on that site. Then you choose who pays: press the last button yourself, or turn on “Let the assistant complete payments” in Settings and approve each payment in Qutai’s own window, which shows the site, the total on the page, the order and the payment method. Card numbers, security codes, passwords and one-time codes are never typed, and your bank’s check (3-D Secure) stays with you.',
+  'agent.checkout.step1': 'Selecting in Size: 42', // app: action.select
+  'agent.checkout.step2': 'Tapping “Add to cart”', // app: action.click
   'agent.checkout.step3': 'Pay €64.90 on shop.example?', // app: approval.payTitle
   'agent.booking.title': 'Book it, then put it in your calendar',
   'agent.booking.body':
@@ -126,9 +125,9 @@ export const en = {
   'agent.booking.callName': 'Rose Street Kitchen',
   'agent.booking.callNumber': '+44 20 7946 0123', // a number set aside for fiction
   'agent.booking.call': 'Call', // app: chat.call
-  'agent.research.title': 'Research with sources',
+  'agent.research.title': 'Researches for you, with sources',
   'agent.research.body':
-    'Deep research searches and reads many pages and PDFs, takes notes and writes a report with its sources listed under the answer. Share it as a PDF. It takes a few minutes and costs more than a quick question, in credits or on your own key.',
+    'Ask a real question and deep research takes it from there: it searches the web, reads page after page, takes notes and writes a report with its sources listed under it. It takes a few minutes and costs more than a quick question, in credits or on your own key.',
   'agent.research.step1': 'Searched: e-bike rules in London', // app: action.webSearch
   'agent.research.step2': 'Reading the page',
   'agent.research.step3': 'Sources',
