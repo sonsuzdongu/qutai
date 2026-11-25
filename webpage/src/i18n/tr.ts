@@ -254,7 +254,7 @@ export const tr: Messages = {
   'compare.methodology.1':
     'Tarayıcıların masaüstü sürümlerine değil, iPhone ve Android uygulamalarına baktık; yalnızca masaüstünde olan bir özellik burada sayılmaz.',
   'compare.methodology.2':
-    'Rakiplerle ilgili her hücre üreticinin kendi sayfalarına dayanıyor: özellik sayfaları, yardım merkezleri, fiyat sayfaları ve mağaza sayfaları. Her hücrede kaynağın bağlantısı ve kontrol tarihi var. Bir özelliği böyle bir sayfadan doğrulayamadıysak hücrede “Doğrulanmadı” yazıyor; bu, özelliğin olmadığı anlamına gelmiyor.',
+    'Rakiplerle ilgili her hücre üreticinin kendi sayfalarına dayanıyor: özellik sayfaları, yardım merkezleri, fiyat sayfaları ve mağaza sayfaları. Her hücrede kaynağın bağlantısı ve kontrol tarihi var. Bir özelliği uygulamada kendimiz denediysek notta bu yazıyor ve bağlantı yok. Bir özelliği iki yoldan da doğrulayamadıysak hücrede “Doğrulanmadı” yazıyor; bu, özelliğin olmadığı anlamına gelmiyor.',
   'compare.methodology.3':
     'Qutai sütunu, kaynak kodunda bugün olanı anlatıyor. Qutai yeni: Google Play’de yayında, App Store’da beta testinde; her özellik henüz her cihazda denenmedi.',
   'compare.methodology.4':

@@ -246,7 +246,7 @@ export const en = {
   'compare.methodology.1':
     'We looked at each browser’s iPhone and Android app, not its desktop version: a feature that exists only on desktop counts as not available here.',
   'compare.methodology.2':
-    'Every competitor cell is based on the vendor’s own pages: feature pages, help centres, pricing pages and store listings. Each cell links its source and the date we checked it. If we could not confirm a feature from such a page, the cell says “Not confirmed”, which does not mean the feature is missing.',
+    'Every competitor cell is based on the vendor’s own pages: feature pages, help centres, pricing pages and store listings. Each cell links its source and the date we checked it. Where we tried a feature in the app ourselves, the note says so and there is no link. If we could not confirm a feature either way, the cell says “Not confirmed”, which does not mean the feature is missing.',
   'compare.methodology.3':
     'Qutai’s column describes what is in its source code today. Qutai is new: it is on Google Play and in beta testing on the App Store, and not every feature has been tried on every device yet.',
   'compare.methodology.4':
