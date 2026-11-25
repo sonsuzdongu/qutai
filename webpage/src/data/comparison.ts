@@ -84,8 +84,8 @@ export const GROUPS: Group[] = [
       {
         id: 'directToProvider',
         label: {
-          en: 'Requests go straight from the phone to a provider you choose',
-          tr: 'İstekler telefondan doğrudan seçtiğiniz sağlayıcıya gider',
+          en: 'AI requests can go straight to a provider you choose, with no server in between',
+          tr: 'Yapay zekâ istekleri, isterseniz aracı sunucu olmadan seçtiğiniz sağlayıcıya gider',
         },
       },
       {
@@ -179,8 +179,8 @@ export const QUTAI: Product = {
     directToProvider: {
       state: 'yes',
       note: t(
-        'With your own key, no Qutai server in between; with Qutai Credits, requests pass through Qutai’s server, which doesn’t store or log them.',
-        'Kendi anahtarınızla arada Qutai sunucusu yok; Qutai Kredileriyle istekler Qutai sunucusundan geçer, orada saklanmaz ve kayda geçirilmez.',
+        'With your own key, requests go from the phone straight to your provider, with no Qutai server in between. With Qutai Credits, they pass through Qutai’s server, which doesn’t store or log them.',
+        'Kendi anahtarınızla istekler telefondan doğrudan sağlayıcınıza gider; arada Qutai sunucusu olmaz. Qutai Kredileriyle istekler Qutai sunucusundan geçer; orada saklanmaz, kayda geçirilmez.',
       ),
       source: src('src/ai/providers.ts'),
     },
@@ -212,17 +212,20 @@ export const QUTAI: Product = {
       source: src('README.md'),
     },
     sync: {
-      state: 'no',
-      note: t('An encrypted backup file instead; optional sync is planned.', 'Yerine şifreli yedek dosyası; isteğe bağlı eşitleme planlanıyor.'),
-      source: src('README.md'),
+      state: 'partial',
+      note: t(
+        'No live sync, but an encrypted backup: in the official builds it is kept in your Qutai account (daily if you turn that on) and restored on another device; in every build you can export it as a file and import it elsewhere.',
+        'Canlı eşitleme yok, şifreli yedek var: resmî sürümlerde Qutai hesabınızda saklanır (isterseniz her gün kendiliğinden) ve başka bir cihazda geri yüklenir; her sürümde dosya olarak dışa verip başka yerde içe aktarabilirsiniz.',
+      ),
+      source: src('docs/design/36-server-backup.md'),
     },
     availability: { state: 'yes', note: t('Google Play; the App Store in beta testing (TestFlight).', 'Google Play’de; App Store’da beta testinde (TestFlight).') },
     price: {
       state: 'yes',
-      value: t('Free, open source', 'Ücretsiz, açık kaynak'),
+      value: t('Free app, pay as you use', 'Uygulama ücretsiz, kullandıkça ödersiniz'),
       note: t(
-        'With your own key you pay your AI provider for what you use; or buy Qutai Credits from Qutai.',
-        'Kendi anahtarınızla kullandığınız kadarını AI sağlayıcınıza ödersiniz; dilerseniz Qutai’dan Qutai Kredileri alırsınız.',
+        'The app is free and open source. For the AI, buy Qutai Credits in the app (on Google Play today), or use your own key and pay your AI provider for what you use.',
+        'Uygulama ücretsiz ve açık kaynak. Yapay zekâ için uygulamadan Qutai Kredisi alın (bugün Google Play’de) ya da kendi anahtarınızı kullanıp kullandığınız kadarını sağlayıcınıza ödeyin.',
       ),
       source: src('README.md'),
     },
