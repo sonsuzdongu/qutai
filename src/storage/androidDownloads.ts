@@ -2,7 +2,7 @@ import { requireOptionalNativeModule } from 'expo';
 import type { Tab } from '../browser/Tab';
 import { t } from '../i18n';
 import { siteOf } from '../device/download';
-import type { DownloadBackend, DownloadItem, OpenResult, PageWriter, StartRequest } from './downloads';
+import type { DownloadBackend, DownloadItem, OpenResult, PageWriter, SaveResult, StartRequest } from './downloads';
 
 type Subscription = { remove(): void };
 
@@ -66,6 +66,7 @@ function referrerOf(tab: Tab): string | null {
 export class AndroidDownloads implements DownloadBackend {
   readonly canPause = true;
   readonly canShowFolder = true;
+  readonly canSaveCopy = false;
   private items: DownloadItem[] = [];
   private listeners = new Set<() => void>();
 
@@ -172,6 +173,10 @@ export class AndroidDownloads implements DownloadBackend {
 
   showFolder() {
     return this.native.showFolder();
+  }
+
+  async saveCopy(): Promise<SaveResult> {
+    return 'failed';
   }
 
   seen() {

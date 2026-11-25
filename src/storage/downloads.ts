@@ -76,11 +76,16 @@ export type PageWriter = {
  */
 export type OpenResult = 'opened' | 'noApp' | 'gone' | 'denied' | 'failed';
 
+/** How "Save…" went (the system's export picker, DL-19). */
+export type SaveResult = 'saved' | 'cancelled' | 'gone' | 'failed';
+
 export interface DownloadBackend {
   /** Pause / resume / retry exist. */
   readonly canPause: boolean;
   /** "Show in folder" exists (Android: the system's Downloads view). */
   readonly canShowFolder: boolean;
+  /** "Save…" exists (a Mac: the system's export picker, DL-19). */
+  readonly canSaveCopy: boolean;
   load(): Promise<void>;
   list(): DownloadItem[];
   start(request: StartRequest): Promise<string>;
@@ -102,6 +107,8 @@ export interface DownloadBackend {
   open(id: string): Promise<OpenResult>;
   share(id: string, title: string): Promise<OpenResult>;
   showFolder(): Promise<boolean>;
+  /** Saves a copy where the user picks (only when canSaveCopy). */
+  saveCopy(id: string): Promise<SaveResult>;
   /** The screen is open (Android: the finished-download notifications go). */
   seen(): void;
   subscribe(listener: () => void): () => void;
@@ -128,6 +135,10 @@ export class DownloadStore {
 
   get canShowFolder() {
     return this.backend.canShowFolder;
+  }
+
+  get canSaveCopy() {
+    return this.backend.canSaveCopy;
   }
 
   load(): Promise<void> {
@@ -170,6 +181,7 @@ export class DownloadStore {
   open = (id: string) => this.backend.open(id);
   share = (id: string, title: string) => this.backend.share(id, title);
   showFolder = () => this.backend.showFolder();
+  saveCopy = (id: string) => this.backend.saveCopy(id);
   seen = () => this.backend.seen();
 
   /** Hears about every download that finishes or fails from now on. */

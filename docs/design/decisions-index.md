@@ -766,6 +766,7 @@ Moved to Details (ids retired, not reused): `APPS-6`, `APPS-20`, `APPS-19`, `APP
 | `DL-16` | The home screen widget shows no history, tabs or other personal data. | Default |  |
 | `DL-17` | "Add to home screen" is not offered for incognito tabs. | Default |  |
 | `DL-18` | Android: a link from another app counts as the user's tap for its first load's redirects (any app scheme, never shown as a page); Google Play links the… | Owner | 2026-11-24 |
+| `DL-19` | "Open" on a download: iPhone shares, iPad previews in Quick Look, a Mac opens it in the Mac's app (else Quick Look, else share); a Mac also has "Save…" (system save dialog). | Owner | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `DL-12`
 

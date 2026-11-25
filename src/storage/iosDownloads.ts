@@ -1,12 +1,25 @@
+import { requireOptionalNativeModule } from 'expo';
 import { Directory, File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import type { Tab } from '../browser/Tab';
 import { fileNameFromUrl, mimeForName, safeFileName, siteOf, uniqueName } from '../device/download';
 import { parseDataUrl } from '../device/saveImage';
 import { Db } from './db';
-import type { DownloadBackend, DownloadItem, OpenResult, PageWriter, StartRequest } from './downloads';
+import { stripDevice } from '../device/macDevice';
+import type { DownloadBackend, DownloadItem, OpenResult, PageWriter, SaveResult, StartRequest } from './downloads';
+import { offersSaveCopy, openSteps } from './openFileSteps';
 import { reportStorageFailure } from './failures';
 import { newId } from '../utils/ids';
+
+/** modules/qutai-downloads/ios: Quick Look, the system's app for the type, the export picker (DL-19). Missing on a
+ * binary built before it existed (an over-the-air update): Open then shares, as before, and "Save…" isn't offered. */
+type NativeFileOpener = {
+  canPreview(uri: string): boolean;
+  preview(uri: string): Promise<'shown' | 'unsupported' | 'gone'>;
+  openInApp(uri: string): Promise<boolean>;
+  saveCopy(uri: string): Promise<'saved' | 'cancelled' | 'gone'>;
+};
+const fileOpener = requireOptionalNativeModule<NativeFileOpener>('QutaiFileOpener');
 
 /** Files larger than this are downloaded directly instead of through the page (which holds them in memory). */
 const PAGE_FETCH_MAX_BYTES = 25e6;
@@ -74,6 +87,14 @@ function unlessAborted<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> 
   });
 }
 
+function safely<T>(read: () => T, fallback: T): T {
+  try {
+    return read();
+  } catch {
+    return fallback;
+  }
+}
+
 function base64ToBytes(base64: string): Uint8Array {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -91,6 +112,7 @@ function base64ToBytes(base64: string): Uint8Array {
 export class IosDownloads implements DownloadBackend {
   readonly canPause = false;
   readonly canShowFolder = false;
+  readonly canSaveCopy = fileOpener != null && offersSaveCopy(stripDevice);
   private items: DownloadItem[] = [];
   private controllers = new Map<string, AbortController>();
   private listeners = new Set<() => void>();
@@ -335,8 +357,25 @@ export class IosDownloads implements DownloadBackend {
     this.emit();
   }
 
+  /** iPhone: the share sheet. iPad: Quick Look. Mac: the Mac's app for the type, else Quick Look (DL-19). */
   async open(id: string): Promise<OpenResult> {
-    return this.share(id, '');
+    const item = this.items.find((i) => i.id === id);
+    if (!item?.uri || !new File(item.uri).exists) return 'gone';
+    const uri = item.uri;
+    const canPreview = fileOpener ? safely(() => fileOpener.canPreview(uri), false) : false;
+    for (const step of fileOpener ? openSteps(stripDevice, canPreview) : ['share']) {
+      if (step === 'app' && (await fileOpener!.openInApp(uri).catch(() => false))) return 'opened';
+      if (step === 'preview' && (await fileOpener!.preview(uri).catch(() => 'failed')) === 'shown') return 'opened';
+      if (step === 'share') return this.share(id, '');
+    }
+    return 'failed';
+  }
+
+  async saveCopy(id: string): Promise<SaveResult> {
+    const item = this.items.find((i) => i.id === id);
+    if (!item?.uri || !new File(item.uri).exists) return 'gone';
+    if (!fileOpener) return 'failed';
+    return fileOpener.saveCopy(item.uri);
   }
 
   async share(id: string, title: string): Promise<OpenResult> {

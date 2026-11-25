@@ -1,5 +1,5 @@
 import { t } from '../i18n';
-import type { DownloadItem, DownloadStore, OpenResult } from '../storage/downloads';
+import type { DownloadItem, DownloadStore, OpenResult, SaveResult } from '../storage/downloads';
 import { dialog } from './Dialog';
 import { APP_FILE_EXTENSION } from '../apps/appFile';
 import { appImporter } from '../apps/importState';
@@ -14,6 +14,19 @@ export async function shareDownload(store: DownloadStore, item: DownloadItem, no
   }
   if (result === 'gone') notify(t('downloads.gone'));
   else if (result !== 'opened') notify(t('downloads.shareFailed'));
+}
+
+/** "Save…" (Mac, DL-19): the system's export picker; a short notice once saved, or when it could not be. */
+export async function saveDownload(store: DownloadStore, item: DownloadItem, notify: (message: string) => void) {
+  let result: SaveResult;
+  try {
+    result = await store.saveCopy(item.id);
+  } catch {
+    result = 'failed';
+  }
+  if (result === 'saved') notify(t('downloads.saved'));
+  else if (result === 'gone') notify(t('downloads.gone'));
+  else if (result === 'failed') notify(t('downloads.saveFailed'));
 }
 
 /**

@@ -13,7 +13,7 @@ import { ActionSheet, SheetAction } from './ActionSheet';
 import { MODAL_SCREEN_EDGES } from './BottomSheet';
 import { DialogHost, dialog } from './Dialog';
 import { downloadFraction } from './DownloadIndicator';
-import { openDownload, shareDownload } from './openDownload';
+import { openDownload, saveDownload, shareDownload } from './openDownload';
 import { Toast, useToast } from './Toast';
 import { ScreenHeader } from './ScreenHeader';
 import { WholeWordsText } from './WholeWordsText';
@@ -149,6 +149,7 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
 
   const open = (item: DownloadItem) => void openDownload(store, item, toast.show, onClose);
   const share = (item: DownloadItem) => void shareDownload(store, item, toast.show);
+  const save = (item: DownloadItem) => void saveDownload(store, item, toast.show);
 
   const deleteFile = async (item: DownloadItem) => {
     const ok = await dialog.confirm({
@@ -169,6 +170,7 @@ export function DownloadsScreen({ visible, store, copyText, onAsk, onClose }: Pr
     if (done && !item.missing) {
       actions.push(
         { icon: 'openInNew', label: t('downloads.open'), onPress: () => open(item) },
+        ...(store.canSaveCopy ? [{ icon: 'download' as const, label: t('downloads.saveCopy'), onPress: () => save(item) }] : []),
         { icon: 'share', label: t('downloads.share'), onPress: () => share(item) },
       );
       if (onAsk && isPdf(item) && Platform.OS === 'ios') {
