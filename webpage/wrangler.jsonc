@@ -14,7 +14,7 @@
     "not_found_handling": "404-page",
     // Only the bare root needs code (the language redirect); everything else is served as a static file
     // without running the Worker.
-    "run_worker_first": ["/", "/privacy-policy", "/privacy-policy/", "/features", "/features/", "/delete-account", "/delete-account/", "/support", "/support/", "/intent/*", "/.well-known/apple-app-site-association", "/.well-known/assetlinks.json"]
+    "run_worker_first": ["/", "/privacy-policy", "/privacy-policy/", "/features", "/features/", "/pricing", "/pricing/", "/delete-account", "/delete-account/", "/support", "/support/", "/terms", "/terms/", "/intent/*", "/.well-known/apple-app-site-association", "/.well-known/assetlinks.json"]
   },
   // The sign-in email's link (https://<site>/intent/sign-in/email?token=…) opens the app with this scheme and, on
   // Android, this package (worker/intent.ts). Override per environment or in .dev.vars for `wrangler dev`.

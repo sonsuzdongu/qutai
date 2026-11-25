@@ -158,6 +158,13 @@ for (const lang of ['en', 'tr']) {
 expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/features/'), 'sitemap lists the features page');
 expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/pricing/'), 'sitemap lists the pricing page');
 expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/vs/comet/') && (await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/agentic-browser/'), 'sitemap lists the guide and comparison pages');
+// Every short address the Worker redirects (/features, /pricing, …) must reach the Worker first, or the assets answer 404.
+{
+  const worker = await readFile(new URL('../worker/index.ts', import.meta.url), 'utf8');
+  const wrangler = await readFile(new URL('../wrangler.jsonc', import.meta.url), 'utf8');
+  for (const [, path] of worker.matchAll(/url\.pathname === '(\/[a-z-]+)'/g))
+    expect(wrangler.includes(`"${path}"`) && wrangler.includes(`"${path}/"`), `wrangler run_worker_first has ${path} and ${path}/`);
+}
 expect((await readFile(`${dist}llms.txt`, 'utf8').catch(() => '')).startsWith('# Qutai'), 'llms.txt');
 
 for (const f of ['robots.txt', 'sitemap.xml', '404.html', '_headers', 'og-en.png', 'og-tr.png', 'apple-touch-icon.png']) {
